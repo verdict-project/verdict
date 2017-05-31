@@ -1,3 +1,7 @@
+******************************************
+Verdict: Interactive Analysis of Big Data
+******************************************
+
 Verdict is an approximate, big data analytics system. Verdict is good because:
 
 1. **200x faster by sacrificing only 1% accuracy**
@@ -18,7 +22,7 @@ Verdict is an approximate, big data analytics system. Verdict is good because:
    Verdict; then, Verdict automatically reads data from your database. Verdict
    is also shipped with a command-line interface.
 
-Find more about Verdict at `<http://verdictdb.org>`.
+Find more about Verdict at `<http://verdictdb.org>`_.
 
 
 *****************
