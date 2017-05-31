@@ -123,7 +123,6 @@
           <descriptorRefs>
             <descriptorRef>jar-with-dependencies</descriptorRef>
           </descriptorRefs>
-          <outputDirectory>../target</outputDirectory>
         </configuration>
         <executions>
           <execution>

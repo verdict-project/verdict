@@ -19,3 +19,8 @@
 .intro-row {
     height: 200px;
 }
+
+table.docutils td {
+    padding: 5px 8px 5px 5px;
+    width: 200px;
+}

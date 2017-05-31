@@ -61,7 +61,7 @@ connections.
 .. toctree::
     :maxdepth: 2
 
-    documentation/features.rst
+    documentation/secure.rst
 
 
 Configuration
@@ -91,7 +91,26 @@ you need urgently, you can always email our team.
 API Docs
 ===================================
 
-* `Core Documentation <javadoc/core/index.html>`_
-* `JDBC Documentation <javadoc/jdbc/index.html>`_
+* `Javadoc <apidocs/index.html>`_
+
+
+Verdict Architecture
+===================================
+
+.. toctree::
+    :maxdepth: 2
+
+    documentation/architecture.rst
+
+Academic Contributions
+===================================
+
+Our research in approximate query processing has produced many research papers
+at top-tier conferences.
+
+.. toctree::
+    :maxdepth: 2
+
+    documentation/academic.rst
 
 

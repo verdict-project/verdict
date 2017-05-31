@@ -3,6 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+.. title:: Verdict: Interactive Big Data Analytics
+
 .. raw:: html
 
     <div class="verdict-intro">
@@ -60,10 +62,35 @@ Easy of use
 ===================================
 
 Verdict is a client-side library: no servers, no port configurations, no extra
-user authentication, etc. You can simply make a JDBC connection to Verdict;
-then, Verdict automatically reads data from your database. Verdict is also
-shipped with a command-line interface.
+user authentication, etc. Verdict simply issues rewritten SQL queries to your databases on behalf of
+the client. The use of Verdict does not introduce any security breaches. Verdict relies on standard
+protocols for communicating with the databases, which can be configured to be secure.
 
+|
+
+-----------------
+
+How Verdict provides speedups?
+===================================
+
+Verdict is built upon the theories of approximate query processing (AQP) and our
+novel architecture of AQP-as-a-middleware. Verdict's huge speedups are possible
+because, even from a small fraction of the entire data, we can reliably estimate
+many important statistics of the entire data. Verdict exploits that the values
+of many aggregate functions that commonly appear in analytic queries can be expressed using those
+statistics of the entire data, which can be estimated using samples.
+
+
+Who develop Verdict?
+===================================
+
+Verdict is developed and maintained primarily by the database group at the
+University of Michigan, Ann Arbor. The database group at the University of
+Michigan, Ann Arbor is a leading research lab in the area of approximate query
+processing and big data analytics.
+Our research in approximate query processing has produced many academic research
+papers (:ref:`academic`), and the knowledge we have gained from those
+experiences is used for building Verdict.
 
 
 .. **Code Documentation**

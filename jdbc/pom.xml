@@ -8,7 +8,6 @@
   <artifactId>verdict-jdbc</artifactId>
   <version>0.2.0-SNAPSHOT</version>
   <build>
-    <sourceDirectory>src</sourceDirectory>
     <plugins>
         <plugin>
             <groupId>org.apache.maven.plugins</groupId>
@@ -29,7 +28,6 @@
                 <descriptorRefs>
                     <descriptorRef>jar-with-dependencies</descriptorRef>
                 </descriptorRefs>
-                <outputDirectory>../target</outputDirectory>
             </configuration>
         </plugin>
     </plugins>

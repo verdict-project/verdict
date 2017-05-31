@@ -9,7 +9,7 @@ database using Verdict's command-line interface *veeline*. Note that Verdict
 provides fast big data analytics as working on top of an existing database. In
 this guide, we will set Verdict to connect to MySQL. Connecting to the other
 databases follow the same instruction except for a connection string (as will be
-describe below).
+described below).
 
 
 Prerequisites
@@ -57,8 +57,8 @@ Preparing Test Data
 ====================================
 
 We will create a test table in MySQL for this guide. Suppose MySQL is installed
-locally, and its username/password is verdict/verdict, and the user 'verdict'
-has read/write access to the database schema 'test'.
+locally, and its username/password is verdict/verdict, and the user :code:`verdict`
+has read/write access to the database schema :code:`test`.
 
 Go to the :code:`veeline` directory, and run the :code:`gen_test_table.sql`
 script by typing:
@@ -76,7 +76,7 @@ Connecting to Database using Veeline
 ====================================
 
 Veeline is a command-line interface for Verdict. In the 'veeline' directory,
-typing below command will start veeline and connect to MySQL database.
+type the below command to start veeline and connect to the MySQL database.
 
 .. code-block:: bash
 
@@ -89,7 +89,7 @@ verdict/verdict, one can start veeline by typing:
 
 .. code-block:: bash
 
-    veeline/bin/veeline -h mysql://localhost:3306 -u verdict -p verdict
+    bin/veeline -h mysql://localhost:3306 -u verdict -p verdict
 
 This command will display a prompt :code:`verdict:MySQL>`.
 
@@ -141,7 +141,7 @@ sample of the :code:`test_table` table, type:
     INFO   2017-05-30 23:01:37,578 - [VerdictCreateSampleQuery] Create a 1.0000 percentage sample of test_table.
     1 row affected (12.483 seconds)
 
-By default, :code:`create sample` query creates 1% sample. :ref:`features` lists
+By default, :code:`create sample` query creates 1% sample. :ref:`features` page lists
 more options.
 
 
@@ -151,9 +151,9 @@ Approximate Analysis
 We will first issue two queries through Verdict. Next, we will compare those
 approximate answers by Verdict to the exact answers. For this guide, we will use
 relatively simple aggregate queries; however, Verdict supports complex nested
-queries as well.
+queries as presented :ref:`examples` page.
 
-The first query is a count query.
+The first query is a groupby-count query.
 
 .. code-block:: bash
 
@@ -171,7 +171,7 @@ The first query is a count query.
     5 rows selected (0.09 seconds)
 
 
-The second query is an average query.
+The second query is an groupby-average query.
 
 .. code-block:: bash
 
@@ -188,9 +188,9 @@ The second query is an average query.
     +-------+----------------------+
     5 rows selected (0.105 seconds)
 
-On average, Verdict took about 0.1 second for processing those queries. Now let
-us compare this to the exact results. To disable Verdict's approximate analysis,
-we set a :code:`bypass` option to true as follows:
+On average, Verdict took about 0.1 second for answering those queries. Now let
+us compare these to the exact results. To disable Verdict's approximate
+processing, we set a :code:`bypass` option to true as follows:
 
 .. code-block:: bash
 
@@ -241,4 +241,21 @@ Exiting Veeline
 =====================
 
 You can exit veeline by typing :code:`!quit`.
+
+
+
+Learn More
+=====================
+
+We describe more veeline options in the :ref:`veeline` page.
+
+Your application can connect to Verdict programmatically using the standard JDBC
+interface provided by Verdict (see :ref:`jdbc` page).
+
+Verdict supports secure access to your database using Kerberos and SSL. See
+:ref:`secure` page.
+
+If you want to understand the architecture of Verdict, see :ref:`architecture`
+page.
+
 

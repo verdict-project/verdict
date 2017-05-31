@@ -18,8 +18,10 @@ help:
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
 %: Makefile
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
-	#javadoc -d _build/html/javadoc/core -sourcepath ../core/src/main/java -subpackages edu.umich.verdict
-	#javadoc -d _build/html/javadoc/jdbc -sourcepath ../jdbc/src/main/java -subpackages edu.umich.verdict.jdbc
+
+javadoc:
+	cd ..; mvn javadoc:aggregate
+	mv ../target/site/apidocs _build/html
 
 clean:
 	rm -rf _build
