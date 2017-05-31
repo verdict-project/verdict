@@ -1,0 +1,10 @@
+#!/bin/bash
+# sqlline - Script to launch SQL shell on Unix, Linux or Mac OS
+
+BINPATH=$(dirname $0)
+VERDICT_PATH=$BINPATH/../../target
+LIBPATH=$BINPATH/../../libs
+
+java -cp "$BINPATH/*:$LIBPATH/*:$VERDICT_PATH/*" \
+     -Dlog4j.configuration=file:$BINPATH/../conf/log4j.properties \
+     sqlline.SqlLine "$@"
