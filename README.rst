@@ -8,15 +8,15 @@ Verdict is an approximate, big data analytics system. Verdict is good because:
    Verdict can give you 99% accurate answers for your big data queries in a
    fraction of the time needed for calculating exact answers. If your data is
    too big to analyze in a couple of seconds, you will like Verdict.
-1. **No change to your database**
+2. **No change to your database**
    Verdict is a middleware standing between your application and your database.
    You can just issue the same queries as before and get approximate answers
    right away. Of course, Verdict handles exact query processing too.
-1. **Runs on (almost) any database**
+3. **Runs on (almost) any database**
    Verdict can run on any database that supports standard SQL. We already have
    drivers for Hive, Impala, and MySQL. We’ll soon add drivers for some other
    popular databases.
-1. **Easy of use**
+4. **Easy of use**
    Verdict is a client-side library: no servers, no port configurations, no
    extra user authentication, etc. You can simply make a JDBC connection to
    Verdict; then, Verdict automatically reads data from your database. Verdict
@@ -44,11 +44,11 @@ Prerequisites
    from `Oracle website
    <http://www.oracle.com/technetwork/java/javase/downloads/index.html>`_ or can
    install open JDK using package managers such as :code:`apt-get`.
-1. **Apache Maven** The official instruction for installing Apache Maven is
+2. **Apache Maven** The official instruction for installing Apache Maven is
    available from `Maven website
    <https://maven.apache.org/install.html>`_. Apache Maven is also available
    from many package managers.
-1. **Supported Database** :ref:`features` page lists supported databases. In
+3. **Supported Database** :ref:`features` page lists supported databases. In
    this guide, we will use MySQL since it is already installed in many operating
    systems. Using this guide for other databases only requires the change of
    connection string (which includes the name of your database, host address, etc.).
@@ -101,7 +101,7 @@ Connecting to Database using Veeline
 ====================================
 
 Veeline is a command-line interface for Verdict. In the 'veeline' directory,
-typing below command will start veeline and connect to MySQL database.
+typing below command will start veeline and connect to the MySQL database.
 
 .. code-block:: bash
 
