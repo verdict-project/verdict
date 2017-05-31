@@ -1,0 +1,279 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Documentation &#8212; Verdict 0.2 documentation</title>
+    
+    <link rel="stylesheet" href="_static/sphinx13.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/css/verdict.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="search" type="application/opensearchdescription+xml"
+          title="Search within Verdict 0.2 documentation"
+          href="_static/opensearch.xml"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300,400,700'
+          rel='stylesheet' type='text/css' />
+    <script>
+        (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+         (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new
+         Date();a=s.createElement(o),
+         m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+         })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+        ga('create', 'UA-90971135-3', 'auto');
+        ga('send', 'pageview');
+    </script>
+ 
+    <style type="text/css">
+      table.right { float: right; margin-left: 20px; }
+      table.right td { border: 1px solid #ccc; }
+      
+    </style>
+    <script type="text/javascript">
+      // intelligent scrolling of the sidebar content
+      $(window).scroll(function() {
+        var sb = $('.sphinxsidebarwrapper');
+        var win = $(window);
+        var sbh = sb.height();
+        var offset = $('.sphinxsidebar').position()['top'];
+        var wintop = win.scrollTop();
+        var winbot = wintop + win.innerHeight();
+        var curtop = sb.position()['top'];
+        var curbot = curtop + sbh;
+        // does sidebar fit in window?
+        if (sbh < win.innerHeight()) {
+          // yes: easy case -- always keep at the top
+          sb.css('top', $u.min([$u.max([0, wintop - offset - 10]),
+                                $(document).height() - sbh - 200]));
+        } else {
+          // no: only scroll if top/bottom edge of sidebar is at
+          // top/bottom edge of window
+          if (curtop > wintop && curbot > winbot) {
+            sb.css('top', $u.max([wintop - offset - 10, 0]));
+          } else if (curtop < wintop && curbot < winbot) {
+            sb.css('top', $u.min([winbot - sbh - offset - 20,
+                                  $(document).height() - sbh - 200]));
+          }
+        }
+      });
+    </script>
+
+  </head>
+  <body role="document">
+<div class="pageheader">
+  <ul>
+    <li><a href="download.html">Download</a></li>
+    <li><a href="#">Documentation</a></li>
+    <li><a href="examples.html">Examples</a></li>
+    <li><a href="community.html">Community</a></li>
+  </ul>
+  <div>
+    <a href="index.html">
+      <img src="_static/verdictheader.png" alt="Verdict" />
+    </a>
+  </div>
+</div>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li><a href="index.html">Verdict home</a>&#160;|</li>
+        <li><a href="#">Documentation</a> &#187;</li>
+ 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Documentation</a><ul>
+<li><a class="reference internal" href="#getting-started">Getting Started</a></li>
+<li><a class="reference internal" href="#connecting-to-databases-using-veeline">Connecting to Databases using Veeline</a></li>
+<li><a class="reference internal" href="#connecting-to-databases-using-verdict-s-jdbc-driver">Connecting to Databases using Verdict&#8217;s JDBC Driver</a></li>
+<li><a class="reference internal" href="#features">Features</a></li>
+<li><a class="reference internal" href="#secure-access">Secure Access</a></li>
+<li><a class="reference internal" href="#configuration">Configuration</a></li>
+<li><a class="reference internal" href="#development-plans">Development Plans</a></li>
+<li><a class="reference internal" href="#api-docs">API Docs</a></li>
+<li><a class="reference internal" href="#verdict-architecture">Verdict Architecture</a></li>
+<li><a class="reference internal" href="#academic-contributions">Academic Contributions</a></li>
+</ul>
+</li>
+</ul>
+
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/documentation.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="documentation">
+<h1>Documentation<a class="headerlink" href="#documentation" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="getting-started">
+<h2>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h2>
+<p>Get familar with Verdict in five minutes.</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="documentation/tutorial.html">Getting Started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="documentation/tutorial.html#prerequisites">Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="documentation/tutorial.html#download-and-install">Download and Install</a></li>
+<li class="toctree-l2"><a class="reference internal" href="documentation/tutorial.html#preparing-test-data">Preparing Test Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="documentation/tutorial.html#connecting-to-database-using-veeline">Connecting to Database using Veeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="documentation/tutorial.html#basic-veeline-commands">Basic Veeline Commands</a></li>
+<li class="toctree-l2"><a class="reference internal" href="documentation/tutorial.html#sample-creation">Sample Creation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="documentation/tutorial.html#approximate-analysis">Approximate Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="documentation/tutorial.html#exiting-veeline">Exiting Veeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="documentation/tutorial.html#learn-more">Learn More</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="connecting-to-databases-using-veeline">
+<h2>Connecting to Databases using Veeline<a class="headerlink" href="#connecting-to-databases-using-veeline" title="Permalink to this headline">¶</a></h2>
+<p>Veeline is a command-line interface that ships with Verdict. You can connect to
+your databases (e.g., Hive, Impala, MySQL) using veeline and issue analytic
+queries.</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="documentation/veeline_to_databases.html">Connecting to Databases using Veeline</a></li>
+</ul>
+</div>
+</div>
+<div class="section" id="connecting-to-databases-using-verdict-s-jdbc-driver">
+<h2>Connecting to Databases using Verdict&#8217;s JDBC Driver<a class="headerlink" href="#connecting-to-databases-using-verdict-s-jdbc-driver" title="Permalink to this headline">¶</a></h2>
+<p>Verdict provides the standard JDBC protocol. The existing application that makes
+JDBC connections to databases requires minimal changes.</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="documentation/jdbc_to_databases.html">Connecting to Databases using Verdict&#8217;s JDBC Driver</a></li>
+</ul>
+</div>
+</div>
+<div class="section" id="features">
+<h2>Features<a class="headerlink" href="#features" title="Permalink to this headline">¶</a></h2>
+<p>Verdict is under active (and fast) developments, and its features grow fast.
+Here, we summarizes important features currently supported by Verdict.</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="documentation/features.html">Features</a></li>
+</ul>
+</div>
+</div>
+<div class="section" id="secure-access">
+<h2>Secure Access<a class="headerlink" href="#secure-access" title="Permalink to this headline">¶</a></h2>
+<p>Verdict supports secure access to your databases using Kerberos and SSL
+connections.</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="documentation/secure.html">Secure Access to Your Database</a></li>
+</ul>
+</div>
+</div>
+<div class="section" id="configuration">
+<h2>Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h2>
+<p>The users can customize Verdict to best suit their needs.</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="documentation/configuration.html">Configuration</a></li>
+</ul>
+</div>
+</div>
+<div class="section" id="development-plans">
+<h2>Development Plans<a class="headerlink" href="#development-plans" title="Permalink to this headline">¶</a></h2>
+<p>Verdict will include exiciting new features as soon as possible. We describe
+several features we will develop and deploy in the future. If there are features
+you need urgently, you can always email our team.</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="documentation/developments.html">Development Plans</a></li>
+</ul>
+</div>
+</div>
+<div class="section" id="api-docs">
+<h2>API Docs<a class="headerlink" href="#api-docs" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><a class="reference external" href="apidocs/index.html">Javadoc</a></li>
+</ul>
+</div>
+<div class="section" id="verdict-architecture">
+<h2>Verdict Architecture<a class="headerlink" href="#verdict-architecture" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="documentation/architecture.html">Verdict Architecture</a></li>
+</ul>
+</div>
+</div>
+<div class="section" id="academic-contributions">
+<h2>Academic Contributions<a class="headerlink" href="#academic-contributions" title="Permalink to this headline">¶</a></h2>
+<p>Our research in approximate query processing has produced many research papers
+at top-tier conferences.</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="documentation/academic.html">Academic Contributions</a></li>
+</ul>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li><a href="index.html">Verdict home</a>&#160;|</li>
+        <li><a href="#">Documentation</a> &#187;</li>
+ 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    </div>
+  </body>
+</html>

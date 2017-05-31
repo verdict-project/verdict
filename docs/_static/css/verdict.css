@@ -1,0 +1,26 @@
+.verdict-intro {
+    background-color: rgba(9, 75, 115, 0.2);
+    border-radius: 10px;
+    padding: 5px 30px 10px 30px;
+    margin: 20px 0px 30px 0px;
+}
+
+.verdict-intro-text {
+    font-size: 20px;
+    opacity: 1.0;
+    text-align: center;
+}
+
+.intro-image {
+    width: 300px;
+    height: 170px;
+}
+
+.intro-row {
+    height: 200px;
+}
+
+table.docutils td {
+    padding: 5px 8px 5px 5px;
+    width: 200px;
+}
