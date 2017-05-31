@@ -101,7 +101,7 @@ Connecting to Database using Veeline
 ====================================
 
 Veeline is a command-line interface for Verdict. In the 'veeline' directory,
-typing below command will start veeline and connect to MySQL database.
+typing below command will start veeline and connect to the MySQL database.
 
 .. code-block:: bash
 
