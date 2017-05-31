@@ -1,7 +1,7 @@
 # Verdict
 (Website: http://verdictdb.org/)
 
-The current version is deprecated. A new (fast) version will be uploaded by May 30 2017.
+This is the new version 0.2.0. This readme file will be updated accordingly.
 
 ## 1. Introduction
 Verdict makes database users able to get fast, approximate results for their aggregate queries on big data. 
