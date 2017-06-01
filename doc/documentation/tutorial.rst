@@ -1,8 +1,8 @@
 .. _getting_started:
 
-*****************
-Getting Started
-*****************
+*************************
+Quick Start Guide
+*************************
 
 In this guide, we will download Verdict, and issue analytic SQL queries to your
 database using Verdict's command-line interface *veeline*. Note that Verdict
@@ -19,10 +19,12 @@ Prerequisites
    from `Oracle website
    <http://www.oracle.com/technetwork/java/javase/downloads/index.html>`_ or can
    install open JDK using package managers such as :code:`apt-get`.
+
 1. **Apache Maven** The official instruction for installing Apache Maven is
    available from `Maven website
    <https://maven.apache.org/install.html>`_. Apache Maven is also available
    from many package managers.
+
 1. **Supported Database** :ref:`features` page lists supported databases. In
    this guide, we will use MySQL since it is already installed in many operating
    systems. Using this guide for other databases only requires the change of

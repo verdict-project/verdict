@@ -5,6 +5,15 @@ Verdict Community
 Contributors
 ===================================
 
+Verdict is developed and maintained primarily by the database group at the
+University of Michigan, Ann Arbor. The database group at the University of
+Michigan, Ann Arbor is a leading research lab in the area of approximate query
+processing and big data analytics.
+Our research in approximate query processing has produced many academic research
+papers (:ref:`academic`), and the knowledge we have gained from those
+experiences is used for building Verdict.
+
+
 .. tabularcolumns:: |p{3cm}|p{10cm}|
 
 +---------------------------+-------------------------------------------------+

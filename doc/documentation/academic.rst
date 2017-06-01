@@ -1,8 +1,15 @@
 .. _academic:
 
 ************************
-Academic Contributions
+Research
 ************************
+
+Verdict is built upon the theories of approximate query processing (AQP) and our
+novel architecture of AQP-as-a-middleware. Verdict's huge speedups are possible
+because, even from a small fraction of the entire data, we can reliably estimate
+many important statistics of the entire data. Verdict exploits that the values
+of many aggregate functions that commonly appear in analytic queries can be expressed using those
+statistics of the entire data, which can be estimated using samples.
 
 Our research in approximate query processing has produced many research papers
 at top-tier conferences.

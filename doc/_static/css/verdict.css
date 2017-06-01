@@ -24,3 +24,8 @@ table.docutils td {
     padding: 5px 8px 5px 5px;
     width: 200px;
 }
+
+.more-padding {
+    padding-left: 20px;
+    padding-right: 20px;
+}
