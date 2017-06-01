@@ -14,7 +14,6 @@ papers (:ref:`academic`), and the knowledge we have gained from those
 experiences is used for building Verdict.
 
 
-.. tabularcolumns:: |p{3cm}|p{10cm}|
 
 +---------------------------+-------------------------------------------------+
 | Name                      | Organization                                    |

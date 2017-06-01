@@ -3,7 +3,7 @@ Documentation
 *****************
 
 
-Getting Started
+Quick Start Guide
 ===================================
 
 Get familar with Verdict in five minutes.
@@ -94,19 +94,12 @@ API Docs
 * `Javadoc <apidocs/index.html>`_
 
 
-Verdict Architecture
-===================================
 
-.. toctree::
-    :maxdepth: 2
-
-    documentation/architecture.rst
-
-Academic Contributions
+Research
 ===================================
 
 Our research in approximate query processing has produced many research papers
-at top-tier conferences.
+at top-tier conferences. This knowledge is used for building Verdict.
 
 .. toctree::
     :maxdepth: 2

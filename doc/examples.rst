@@ -18,8 +18,8 @@ Dataset Description
 We generated 124 GB dataset by scaling (160 times) the publicly-available sales record of an
 actual online grocery store (`Instacart
 <https://www.instacart.com/datasets/grocery-shopping-2017>`_). We uploaded those
-data into Hadoop Distributed File System with five SSD-attached data nodes. We
-visualize the database schema of the dataset below.
+data into Hadoop Distributed File System with five SSD-attached data nodes. The
+database schema of the dataset and the sizes of tables are shown below.
 
 .. image:: _static/images/example-schema.png
     :width: 600px
@@ -28,7 +28,7 @@ visualize the database schema of the dataset below.
 
 .. rst-class:: text-center
 
-    **The schema of 124GB dataset**
+    **The schema of 124GB sales record dataset**
 
 |
 
@@ -155,7 +155,7 @@ Verdict achieved a 165 times speedup in this example.
 |
 
 
-Q4. Aggregation + Grouping + Filter (another)
+Q4. Aggregation + Grouping + Filter
 ===============================================
 
 The fourth query analyzes what departments were the most popular overall.
@@ -250,7 +250,7 @@ Verdict achieved a 210 times speedup in this example.
 |
 
 
-Q6. Data Mining (another Joins + Nested Queries)
+Q6. Data Mining (Joins + Nested Queries)
 ==================================================
 
 The sixth query analyzes the most popular items purchased by loyal shoppers.
@@ -310,16 +310,14 @@ Notes
 
 These examples demonstrated that Verdict could bring large speedups for complex big
 data analytics tasks. Although Verdict's query processing is based on samples,
-Verdict knows the way to properly correct the sample-based answers; thus, the
-final answers returned by Verdict were highly accurate compared to the exact
-answers.
+Verdict knows how to properly adjust the sample-based answers to obtain accurate
+estimates of the exact answers. As a result, the final answers by Verdict were
+accurate compared to the (exact) answers from Impala.
 
 Note that Verdict is *not* a substitute for existing database systems.  Working
 on top of them, Verdict brings interactive big data analytics capability to
 those existing databases, based on the theory of approximate query processing.
-Due to this nature, Verdict naturally exploits the optimized distributed
-computing infrastructures of existing database systems. In other words, if
-Impala or Spark SQL develops more efficient join algorithms, Verdict also
-benefits from those developments.
+This also indicates that Verdict can process its queries in a massively
+parallel way by exploiting those existing infrastructures.
 
 
