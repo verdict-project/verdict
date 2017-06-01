@@ -1,7 +1,5 @@
 package edu.umich.verdict.query;
 
-import java.util.List;
-
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.misc.Interval;
@@ -57,6 +55,25 @@ public class VerdictSelectStatementBaseVisitor extends VerdictSQLBaseVisitor<Str
 		if (aggregate != null) return aggregate;
 		else if (nextResult != null) return nextResult;
 		else return null;
+	}
+	
+	@Override
+	public String visitCreate_table_as_select(VerdictSQLParser.Create_table_as_selectContext ctx) {
+		StringBuilder sql = new StringBuilder();
+		sql.append("CREATE TABLE");
+		if (ctx.IF() != null) sql.append(" IF NOT EXISTS");
+		sql.append(String.format(" %s AS ", ctx.table_name().getText()));
+		sql.append(visit(ctx.select_statement()));
+		return sql.toString();
+	}
+	
+	@Override
+	public String visitCreate_view(VerdictSQLParser.Create_viewContext ctx) {
+		StringBuilder sql = new StringBuilder();
+		sql.append("CREATE VIEW");
+		sql.append(String.format(" %s AS ", ctx.view_name().getText()));
+		sql.append(visit(ctx.select_statement()));
+		return sql.toString();
 	}
 	
 	@Override

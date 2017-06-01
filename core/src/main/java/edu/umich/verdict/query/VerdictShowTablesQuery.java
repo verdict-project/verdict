@@ -10,13 +10,13 @@ import edu.umich.verdict.datatypes.VerdictResultSet;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.util.VerdictLogger;
 
-public class VerdictOtherShowTablesQuery extends VerdictQuery {
+public class VerdictShowTablesQuery extends VerdictQuery {
 
-	public VerdictOtherShowTablesQuery(String q, VerdictContext vc) {
+	public VerdictShowTablesQuery(String q, VerdictContext vc) {
 		super(q, vc);
 	}
 
-	public VerdictOtherShowTablesQuery(VerdictQuery parent) {
+	public VerdictShowTablesQuery(VerdictQuery parent) {
 		super(parent.queryString, parent.vc);
 	}
 	

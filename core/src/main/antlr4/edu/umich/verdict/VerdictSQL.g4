@@ -36,6 +36,12 @@ verdict_statement
     | show_samples_statement
     | config_statement
     | other_statement
+    | create_table
+    | create_table_as_select
+    | create_view
+    | drop_table
+    | delete_statement
+    | drop_view
     ;
 
 create_sample_statement
@@ -277,6 +283,10 @@ create_statistics
 // https://msdn.microsoft.com/en-us/library/ms174979.aspx
 create_table
     : CREATE TABLE table_name '(' column_def_table_constraint (','? column_def_table_constraint)* ','? ')' (ON id | DEFAULT)? ';'?
+    ;
+
+create_table_as_select
+    : CREATE TABLE (IF NOT EXISTS)? table_name AS select_statement ';'?
     ;
 
 // https://msdn.microsoft.com/en-us/library/ms187956.aspx

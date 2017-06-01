@@ -17,8 +17,6 @@ import edu.umich.verdict.util.VerdictLogger;
 /**
  * This class is responsible to choose the best method to handle a given SQL query.
  * 
- * Currently, we have only one method that relies on analytic computations as much as possible.
- * 
  * @author Yongjoo Park
  *
  */
@@ -30,7 +28,8 @@ public class VerdictQuery {
 
 	public enum Type {
 		SELECT, CREATE_SAMPLE, DROP_SAMPLE, SHOW_SAMPLE, CONFIG, DESCRIBE_TABLE,
-		OTHER_USE, OTHER_SHOW_TABLES, OTHER_SHOW_DATABASES, NOSUPPORT;
+		OTHER_USE, OTHER_SHOW_TABLES, OTHER_SHOW_DATABASES, NOSUPPORT,
+		CREATE_TABLE, CREATE_TABLE_AS_SELECT, DROP_TABLE, DELETE_FROM, CREATE_VIEW, DROP_VIEW
 	}
 
 	/**
@@ -47,6 +46,32 @@ public class VerdictQuery {
 		return queryString;
 	}
 
+	/**
+	 * This is the main entry point for all Verdict queries. Whether a given query expects a result set to be returned
+	 * will be determined by analyzing the query itself. For instance, "CREATE TABLE" query should not expect any result
+	 * set to be returned, while "SELECT ..." query expects a result set.
+	 * 
+	 * Verdict recognizes the following types of queries.
+	 * A. Types of the queries that expect a result set:
+	 *   1. SELECT ...
+	 *   2. DESCRIBE TABLE
+	 *   3. USE DATABASE (empty result set)
+	 *   4. SHOW TABLES
+	 *   5. SHOW DATABASES
+	 *   6. SHOW SAMPLE
+	 * 
+	 * B. Types of the queries that expect updates.
+	 * 1. CREAET SAMPLE
+	 * 2. DROP SAMPLE
+	 * 3. CREATE TABLE (AS SELECT) (TODO)
+	 * 4. DROP TABLE  (TODO)
+	 * 5. DELETE FROM (TODO)
+	 * 6. CREATE VIEW (TODO)
+	 * 7. DROP VIEW   (TODO)
+	 * 
+	 * @return ResultSet if the query belongs to the type A, otherwise return null.
+	 * @throws VerdictException
+	 */
 	public ResultSet compute() throws VerdictException {
 		VerdictQuery query = null;
 		Type queryType = getStatementType();
@@ -58,7 +83,11 @@ public class VerdictQuery {
 			if (vc.getConf().doesContain("bypass") && vc.getConf().getBoolean("bypass")) {
 				VerdictLogger.info("Verdict bypasses this query. Run \"set bypass=\'false\'\""
 						+ " to enable Verdict's approximate query processing.");
-				query = new ByPassVerdictQuery(this);
+				if (isUpdateType(queryType)) {
+					query = new ByPassVerdictUpdateQuery(this);
+				} else {
+					query = new ByPassVerdictQuery(this);
+				}
 			} else {
 				if (queryType.equals(Type.SELECT)) {
 					query = new VerdictSelectQuery(this);
@@ -71,11 +100,20 @@ public class VerdictQuery {
 				} else if (queryType.equals(Type.DESCRIBE_TABLE)) {
 					query = new VerdictDescribeTableQuery(this);
 				} else if (queryType.equals(Type.OTHER_USE)) {
-					query = new VerdictOtherUseQuery(this);
+					query = new VerdictUseDatabaseQuery(this);
 				} else if (queryType.equals(Type.OTHER_SHOW_TABLES)) {
-					query = new VerdictOtherShowTablesQuery(this);
+					query = new VerdictShowTablesQuery(this);
 				} else if (queryType.equals(Type.OTHER_SHOW_DATABASES)) {
-					query = new VerdictOtherShowDatabasesQuery(this);
+					query = new VerdictShowDatabasesQuery(this);
+				} else if (queryType.equals(Type.CREATE_TABLE) ||
+						   queryType.equals(Type.DROP_TABLE) ||
+						   queryType.equals(Type.DELETE_FROM) ||
+						   queryType.equals(Type.DROP_VIEW)) {
+					query = new ByPassVerdictUpdateQuery(this);
+				} else if (queryType.equals(Type.CREATE_TABLE_AS_SELECT)) {
+					query = new VerdictCreateTableAsSelectQuery(this);
+				} else if (queryType.equals(Type.CREATE_VIEW)) {
+					query = new VerdictCreateViewAsSelectQuery(this);
 				} else {
 					VerdictLogger.error(this, "Unsupported query: " + queryString);
 					throw new VerdictException("Unsupported query.");
@@ -84,6 +122,15 @@ public class VerdictQuery {
 		}
 
 		return query.compute();
+	}
+	
+	protected boolean isUpdateType(Type type) {
+		if (type.equals(Type.SELECT) || type.equals(Type.SHOW_SAMPLE) || type.equals(Type.DESCRIBE_TABLE)
+		 || type.equals(Type.OTHER_USE) || type.equals(Type.OTHER_SHOW_TABLES) || type.equals(Type.OTHER_SHOW_DATABASES)) {
+			return false;
+		} else {
+			return true;
+		}
 	}
 
 	protected Type getStatementType() {
@@ -148,6 +195,42 @@ public class VerdictQuery {
 				type = Type.OTHER_SHOW_DATABASES;
 				return type;
 			}
+			
+			@Override
+			public Type visitCreate_table(VerdictSQLParser.Create_tableContext ctx) {
+				type = Type.CREATE_TABLE;
+				return type;
+			}
+			
+			@Override
+			public Type visitCreate_table_as_select(VerdictSQLParser.Create_table_as_selectContext ctx) {
+				type = Type.CREATE_TABLE_AS_SELECT;
+				return type;
+			}
+			
+			@Override
+			public Type visitDrop_table(VerdictSQLParser.Drop_tableContext ctx) {
+				type = Type.DROP_TABLE;
+				return type;
+			}
+			
+			@Override
+			public Type visitDelete_statement(VerdictSQLParser.Delete_statementContext ctx) {
+				type = Type.DELETE_FROM;
+				return type;
+			}
+			
+			@Override
+			public Type visitCreate_view(VerdictSQLParser.Create_viewContext ctx) {
+				type = Type.CREATE_VIEW;
+				return type;
+			}
+			
+			@Override
+			public Type visitDrop_view(VerdictSQLParser.Drop_viewContext ctx) {
+				type = Type.DROP_VIEW;
+				return type;
+			}
 		};
 
 		return visitor.visit(p.verdict_statement());
@@ -155,13 +238,3 @@ public class VerdictQuery {
 
 }
 
-class VerdictSQLBaseVisitorWithMsg<T> extends VerdictSQLBaseVisitor<T> {
-	public String err_msg = null;
-
-	protected String getOriginalText(ParserRuleContext ctx, String queryString) {
-		int a = ctx.start.getStartIndex();
-		int b = ctx.stop.getStopIndex();
-		Interval interval = new Interval(a,b);
-		return CharStreams.fromString(queryString).getText(interval);
-	}
-}
