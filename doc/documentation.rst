@@ -40,7 +40,7 @@ JDBC connections to databases requires minimal changes.
     documentation/jdbc_to_databases.rst
 
 
-Features
+Supported Queries
 ====================================================
 
 Verdict is under active (and fast) developments, and its features grow fast.

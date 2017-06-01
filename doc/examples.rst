@@ -38,7 +38,7 @@ Q1. Simple Aggregation
 
 The first query asks the total number of orders in the dataset.
 
-.. code:: sql
+.. code-block:: sql
 
     -- Q1. Total number of orders
     select count(*) as c from orders;
@@ -77,7 +77,7 @@ Q2. Aggregation with Grouping
 The second query analyzes how the number of orders changes during the time of
 day, by counting the total number of orders for every hour.
 
-.. code:: sql
+.. code-block:: sql
 
     -- Q2. What times of the day more orders are placed?
     select order_hour_of_day, count(*) as c from orders
@@ -116,7 +116,7 @@ Q3. Aggregation + Grouping + Filter
 
 The third query analyzes what products were mostly sold over the weekends.
 
-.. code:: sql
+.. code-block:: sql
 
     -- Q3. What products were most popular over the weekends?
     SELECT product_name, count(*) as order_count
@@ -160,7 +160,7 @@ Q4. Aggregation + Grouping + Filter
 
 The fourth query analyzes what departments were the most popular overall.
 
-.. code:: sql
+.. code-block:: sql
 
     -- Q4. What departments are most popular overall?
     SELECT departments.department_id, department, count(*) as order_count
@@ -205,7 +205,7 @@ The fifth query analyzes the number of loyal customers by looking at the
 reorder frequency. This query only analyzes the customers who made orders more
 than average.
 
-.. code:: sql
+.. code-block:: sql
 
     -- Q5. Find the number of loyal customers based on their purchase frequency?
     SELECT 5*round(d1/5) as reorder_after_days, COUNT(*)
@@ -255,7 +255,7 @@ Q6. Data Mining (Joins + Nested Queries)
 
 The sixth query analyzes the most popular items purchased by loyal shoppers.
 
-.. code:: sql
+.. code-block:: sql
 
     -- Q6. What are the most popular items bought by our frequent customers?
     SELECT product_name, count(*) as freq_order_count

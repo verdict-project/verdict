@@ -25,7 +25,19 @@ table.docutils td {
     width: 200px;
 }
 
-.more-padding {
-    padding-left: 20px;
-    padding-right: 20px;
+table.center {
+    margin-left:auto;
+    margin-right:auto;
+}
+
+table {
+    margin-top: 20px;
+    margin-bottom: 30px;
+}
+
+th {
+    background-color: #C6C6DB;
+    font-weight: bold;
+    height: 30px;
+    vertical-align: middle;
 }
