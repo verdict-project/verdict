@@ -1,6 +1,7 @@
 package edu.umich.verdict.query;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -15,11 +16,23 @@ import edu.umich.verdict.util.VerdictLogger;
 
 class VerdictApproximateSelectStatementVisitor extends VerdictSelectStatementBaseVisitor  {
 	
-	private VerdictContext vc;
+	protected VerdictContext vc;
 	
-	private VerdictQuerySyntaxException e;
+	protected VerdictQuerySyntaxException e;
 	
 	protected ArrayList<Boolean> aggColumnIndicator;
+	
+	// This field stores the tables sources of only current level. That is, does not store the table sources
+	// of the subqueries.
+	// Note: currently, this field does not contain derived fields.
+	protected final ArrayList<TableUniqueName> replacedTableSources = new ArrayList<TableUniqueName>();
+
+	// This field stores the replaced table sources of all levels.
+	// left is the original table name, and the right is the replaced table name.
+	protected final Map<TableUniqueName, TableUniqueName> cumulativeReplacedTableSources = new TreeMap<TableUniqueName, TableUniqueName>();
+	
+	protected Map<TableUniqueName, String> tableAliases = new HashMap<TableUniqueName, String>();
+
 	
 	public VerdictApproximateSelectStatementVisitor(VerdictContext vc, String queryString) {
 		super(queryString);
@@ -36,22 +49,13 @@ class VerdictApproximateSelectStatementVisitor extends VerdictSelectStatementBas
 		return aggColumnIndicator;
 	}
 	
-	// This field stores the tables sources of only current level. That is, does not store the table sources
-	// of the subqueries.
-	// Note: currently, this field does not containi derived fields.
-	private final ArrayList<TableUniqueName> replacedTableSources = new ArrayList<TableUniqueName>();
-	
-	// This field stores the replaced table sources of all levels.
-	// left is the original table name, and the right is the replaced table name.
-	private final Map<TableUniqueName, TableUniqueName> cumulativeReplacedTableSources = new TreeMap<TableUniqueName, TableUniqueName>();
-	
 	public Map<TableUniqueName, TableUniqueName> getCumulativeSampleTables() {
 		return cumulativeReplacedTableSources;
 	}
 	
-	private double sampleSizeToOriginalTableSizeRatio = -1;
+	protected double sampleSizeToOriginalTableSizeRatio = -1;
 	
-	private double getSampleSizeToOriginalTableSizeRatio() {
+	protected double getSampleSizeToOriginalTableSizeRatio() {
 		if (sampleSizeToOriginalTableSizeRatio == -1) {
 			double sampleToOriginalRatio = 1.0;		// originalTableSize / sampleSize
 			for (TableUniqueName t : replacedTableSources) {
@@ -68,13 +72,32 @@ class VerdictApproximateSelectStatementVisitor extends VerdictSelectStatementBas
 		return sampleSizeToOriginalTableSizeRatio;
 	}
 	
+	private int aliasIndex = 1;
+	
+	protected String genAlias() {
+		return String.format("v%d_%d", depth, aliasIndex++);
+	}
+	
+	@Override
+	public String visitHinted_table_name_item(VerdictSQLParser.Hinted_table_name_itemContext ctx) {
+		String tableNameItem = visit(ctx.table_name_with_hint());
+		String alias = null;
+		if (ctx.as_table_alias() == null) {
+			alias = genAlias();
+		} else {
+			alias = ctx.as_table_alias().getText();
+		}
+		tableAliases.put(TableUniqueName.uname(vc, tableNameItem), alias);
+		return tableNameItem + " " + alias;
+	}
+	
 	@Override
 	protected String tableSourceReplacer(String originalTableName) {
 		TableUniqueName uTableName = TableUniqueName.uname(vc, originalTableName);
 		TableUniqueName newTableSource = vc.getMeta().getSampleTableNameIfExistsElseOriginal(uTableName);
-		replacedTableSources.add(uTableName);
 		// note: newTableSource might be same as uTableName if there's no sample table exists.
 		if (!uTableName.equals(newTableSource)) {
+			replacedTableSources.add(uTableName);
 			cumulativeReplacedTableSources.put(uTableName, newTableSource);
 		}
 		return newTableSource.toString();
@@ -82,8 +105,13 @@ class VerdictApproximateSelectStatementVisitor extends VerdictSelectStatementBas
 	
 	@Override
 	protected String tableNameReplacer(String originalTableName) {
-		return vc.getMeta().getSampleTableNameIfExistsElseOriginal(
-				TableUniqueName.uname(vc, originalTableName)).toString();
+		if (tableAliases.values().contains(originalTableName)) {
+			// we don't have to replace the table name if aliases were used.
+			return originalTableName;
+		} else {
+			return tableAliases.get(vc.getMeta().getSampleTableNameIfExistsElseOriginal(
+					TableUniqueName.uname(vc, originalTableName)));
+		}
 	}
 	
 	@Override
@@ -101,9 +129,9 @@ class VerdictApproximateSelectStatementVisitor extends VerdictSelectStatementBas
 		return query.toString();
 	}
 	
-	private int select_list_elem_num = 0;	// 1 for the first column, 2 for the second column, and so on.
+	protected int select_list_elem_num = 0;	// 1 for the first column, 2 for the second column, and so on.
 	
-	private String quoteString() {
+	protected String quoteString() {
 		return vc.getDbms().getQuoteString();
 	}
 	
@@ -140,7 +168,7 @@ class VerdictApproximateSelectStatementVisitor extends VerdictSelectStatementBas
 		while (aggColumnIndicator.size() < select_list_elem_num-1) {
 			aggColumnIndicator.add(false);		// pad zero
 		}
-		aggColumnIndicator.add(true);			// TODO this must be adapted according to the sample size.
+		aggColumnIndicator.add(true);
 		
 		if (ctx.AVG() != null) {
 			return String.format("AVG(%s)", visit(ctx.all_distinct_expression()), getSampleSizeToOriginalTableSizeRatio());
@@ -153,6 +181,10 @@ class VerdictApproximateSelectStatementVisitor extends VerdictSelectStatementBas
 		return null;	// we don't handle other aggregate functions for now.
 	}
 	
+	protected String extraIndentBeforeTableSourceName(int sourceIndex) {
+		return (sourceIndex == 1) ? "" : " ";
+	}
+	
 	@Override
 	public String visitQuery_specification(VerdictSQLParser.Query_specificationContext ctx) {
 		// FROM clause
@@ -160,14 +192,14 @@ class VerdictApproximateSelectStatementVisitor extends VerdictSelectStatementBas
 		// original tables.
 		StringBuilder fromClause = new StringBuilder(200);
 		fromClause.append("FROM ");
-		boolean isFirstTableSource = true;
+		int sourceIndex = 1;
 		for (VerdictSQLParser.Table_sourceContext tctx : ctx.table_source()) {
-			if (isFirstTableSource) {
-				fromClause.append(visit(tctx));
+			if (sourceIndex == 1) {
+				fromClause.append(extraIndentBeforeTableSourceName(sourceIndex) + visit(tctx));
 			} else {
-				fromClause.append(String.format(", %s", visit(tctx)));
+				fromClause.append(String.format(",%s%s", extraIndentBeforeTableSourceName(sourceIndex), visit(tctx)));
 			}
-			isFirstTableSource = false;
+			sourceIndex++;
 		}
 		
 		// SELECT list

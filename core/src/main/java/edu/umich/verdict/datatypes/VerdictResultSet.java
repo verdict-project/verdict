@@ -32,6 +32,13 @@ public class VerdictResultSet implements ResultSet {
 	private List<Double> errors;
 	private Map<Integer, Integer> columnMap;
 
+	/**
+	 * Wraps the standard {@link java.sql.ResultSet ResultSet} class to report errors.
+	 * @param resultSet
+	 * @param errors If not null and there is an entry corresponding to a column (e.g., i-th errors entry for the i-th
+	 * column), the values in the column are approximate values, and the errors.get(i-1) provide the upper bound on the
+	 * standard deviation.
+	 */
 	public VerdictResultSet(ResultSet resultSet, List<Double> errors) {
 		this.resultSet = resultSet;
 		this.errors = errors;

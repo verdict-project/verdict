@@ -1,5 +1,10 @@
 package edu.umich.verdict.query;
 
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.misc.Interval;
@@ -25,6 +30,9 @@ public class VerdictSelectStatementBaseVisitor extends VerdictSQLBaseVisitor<Str
 	protected int defaultIndent = 0;
 	
 	protected String indentString = "";
+	
+	// pair of original table name and its alias
+//	protected Map<String, String> tableAliases = new HashMap<String, String>();
 	
 	public VerdictSelectStatementBaseVisitor(String queryString) {
 		this.queryString = queryString;
@@ -353,7 +361,13 @@ public class VerdictSelectStatementBaseVisitor extends VerdictSQLBaseVisitor<Str
 	
 	@Override
 	public String visitHinted_table_name_item(VerdictSQLParser.Hinted_table_name_itemContext ctx) {
-		return visit(ctx.table_name_with_hint());
+		String tableNameItem = visit(ctx.table_name_with_hint());
+		if (ctx.as_table_alias() == null) {
+			return tableNameItem;
+		} else {
+			String alias = ctx.as_table_alias().getText();
+			return tableNameItem + " " + alias;
+		}
 	}
 	
 	@Override

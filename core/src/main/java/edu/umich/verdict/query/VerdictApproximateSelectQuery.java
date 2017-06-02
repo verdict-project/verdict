@@ -29,6 +29,12 @@ public class VerdictApproximateSelectQuery extends VerdictSelectQuery {
 		super(parent);
 	}
 
+	/**
+	 * Verdict currently supports the aggregation queries when the outer-most query includes aggregations.
+	 * TODO: lift this assumption so that we also support the queries with aggregations in subqueries.
+	 * @param queryString
+	 * @return
+	 */
 	public static boolean doesSupport(String queryString) {
 		VerdictSQLLexer l = new VerdictSQLLexer(CharStreams.fromString(queryString));
 		VerdictSQLParser p = new VerdictSQLParser(new CommonTokenStream(l));
@@ -78,6 +84,7 @@ public class VerdictApproximateSelectQuery extends VerdictSelectQuery {
 	}
 	
 	// TODO: this will not be used in the future.
+	// The errors must be estimated using the variance.
 	private List<Double> convertAggColumnToDefaultError(List<Boolean> AggregateColumnIndicator,
 			Map<TableUniqueName, TableUniqueName> replacedTables) {
 		List<Double> errors = new ArrayList<Double>();
@@ -98,4 +105,15 @@ public class VerdictApproximateSelectQuery extends VerdictSelectQuery {
 		}
 		return Pair.of(rewrittenQuery, queryRewriter);
 	}
+	
+	// bootstrapping rules
+	//
+	// Keeping multiplicities
+	// 1. as soon as aggregation appears (possibly with a groupby clause), we can drop the multiplicities.
+	// 2. otherwise, we need to propagate the multiplicities to the outer query.
+	// 3. if the multiplicity remains at the most outer query, we can drop the multiplicities.
+	//
+	// Keysets
+	// 1. If a top-level query includes a groupby; then, the groupby columns should be keysets. (this is always the case).
+	// 2. We don't have to track the keysets for the subqueries in the where clause.
 };
