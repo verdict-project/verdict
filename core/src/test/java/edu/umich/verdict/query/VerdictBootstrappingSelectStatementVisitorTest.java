@@ -24,7 +24,7 @@ public class VerdictBootstrappingSelectStatementVisitorTest {
 		conf.setPassword("verdict");
 		VerdictContext vc = new VerdictContext(conf);
 		
-		String sql = "select avg(A1) from lineitem ll, orders o where ll.l_orderkey = o_orderkey";
+		String sql = "select count(*) from lineitem, orders where lineitem.l_orderkey = orders.o_orderkey";
 		
 		VerdictSQLLexer l = new VerdictSQLLexer(CharStreams.fromString(sql));
 		VerdictSQLParser p = new VerdictSQLParser(new CommonTokenStream(l));

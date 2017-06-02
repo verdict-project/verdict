@@ -42,7 +42,7 @@ the time needed for calculating exact answers. If your data is too big to
 analyze in a couple of seconds, you will like Verdict.
 
 
-**No change to your database**
+**No changes to your database**
 ===================================
 
 Verdict is a middleware standing between your application and your database. You can
@@ -50,12 +50,15 @@ just issue the same queries as before and get approximate answers right away. Of
 course, Verdict handles exact query processing too.
 
 
-**Runs on (almost) any database**
-===================================
+**Runs on all SQL-based engines**
+=================================================================
 
-Verdict can run on any database that supports standard SQL.
-We already have drivers for Hive, Impala, and MySQL. We'll soon add drivers
-for some other popular databases.
+Verdict can run on any database that supports standard SQL (both traditional and
+modern).  We already have drivers for Hive, Impala, and MySQL.  We're in the
+process of adding drivers for many other databases too (Amazon Redshift, Spark
+SQL, HP Vertica, Oracle, Teradata, MS SQL Server, ...). If you are using a DB
+that's not in this list, please shoot us an email and we will happily add a
+driver for your database too.
 
 
 **Ease of use**

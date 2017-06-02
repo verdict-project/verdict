@@ -10,6 +10,30 @@ import edu.umich.verdict.util.VerdictLogger;
 
 public class VerdictBootstrappingSelectStatementVisitor extends VerdictApproximateSelectStatementVisitor {
 	
+	// poissonDist[k] is the probability that a tuple appears k times when n is very large.
+	final private static double[] poissonDist = {
+			0.367879441171442,
+			0.367879441171442,
+			0.183939720585721,
+			0.061313240195240,
+			0.015328310048810,
+			0.003065662009762,
+			0.000510943668294,
+			0.000072991952613,
+			0.000009123994077,
+			0.000001013777120,
+			0.000000101377712
+	};
+	
+	// conditionalProb[k] is the probability that a tuple appears k times conditioned that the tuple does not appear
+	// more than k times.
+	final private static double[] conditionalProb;
+	
+	static {
+		conditionalProb = new double[poissonDist.length];
+		conditionalProb[0] = 0.5;
+	}
+	
 	protected Map<TableUniqueName, String> sampleTableAlias = new HashMap<TableUniqueName, String>();
 
 	public VerdictBootstrappingSelectStatementVisitor(VerdictContext vc, String queryString) {
@@ -35,13 +59,21 @@ public class VerdictBootstrappingSelectStatementVisitor extends VerdictApproxima
 	}
 	
 	protected String multiplicityExpression() {
-		return String.format(
-				"(case when rand() > 0.9 then 5"
-				+ " when rand() > 0.9 then 4"
-				+ " when rand() > 0.9 then 3"
-				+ " when rand() > 0.9 then 2"
-				+ " when rand() > 0.9 then 1"
-				+ " else 0 end)");
+		return multiplicityExpression(null);
+	}
+	
+	protected String multiplicityExpression(String param) {
+		if (param != null && param.equals("1")) {
+			return "1 AS verdict_mul";
+		} else {
+			return String.format(
+					"(case when rand() > 0.9 then 5"
+					+ " when rand() > 0.9 then 4"
+					+ " when rand() > 0.9 then 3"
+					+ " when rand() > 0.9 then 2"
+					+ " when rand() > 0.9 then 1"
+					+ " else 0 end) AS verdict_mul");
+		}
 	}
 	
 	@Override

@@ -98,7 +98,9 @@ public class VerdictApproximateSelectQuery extends VerdictSelectQuery {
 		VerdictSQLLexer l = new VerdictSQLLexer(CharStreams.fromString(queryString));
 		VerdictSQLParser p = new VerdictSQLParser(new CommonTokenStream(l));
 		
-		VerdictApproximateSelectStatementVisitor queryRewriter = new VerdictApproximateSelectStatementVisitor(vc, queryString);
+//		VerdictApproximateSelectStatementVisitor queryRewriter = new VerdictApproximateSelectStatementVisitor(vc, queryString);
+		VerdictApproximateSelectStatementVisitor queryRewriter = new VerdictBootstrappingSelectStatementVisitor(vc, queryString);
+		
 		String rewrittenQuery = queryRewriter.visit(p.select_statement());
 		if (queryRewriter.getException() != null) {
 			throw queryRewriter.getException();

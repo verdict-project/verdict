@@ -6,7 +6,9 @@ Mailing Lists
 ===================================
 
 For broad, opinion based, ask for external resources, debug issues, bugs, contributing to the
-project, and scenarios, it is recommended you use the :code:`verdict-user@umich.edu` mailing list.
+project, and scenarios, it is recommended you to use the :code:`verdict-user@umich.edu` mailing list.
+Anyone can join the mailing list at `this website
+<https://mcommunity.umich.edu/#group:Verdict%20Users>`_.
 
 
 
