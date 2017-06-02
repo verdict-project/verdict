@@ -4,7 +4,7 @@
 Download
 *****************
 
-The current version is 0.2.0-beta.
+The latest version is 0.2.0-beta.
 
 **Source code and command line interface**: `verdict-v0.2.0-beta.zip
 <https://github.com/mozafari/verdict/releases/download/v0.2.0/verdict-v0.2.0-beta.zip>`_.

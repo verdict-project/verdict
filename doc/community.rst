@@ -2,6 +2,23 @@
 Verdict Community
 ********************
 
+Mailing Lists
+===================================
+
+For broad, opinion based, ask for external resources, debug issues, bugs, contributing to the
+project, and scenarios, it is recommended you use the :code:`verdict-user@umich.edu` mailing list.
+
+
+
+Issue Tracker
+===================================
+
+This project tracks bugs on `Bugzilla <http://bigdata.eecs.umich.edu/bugzilla>`_. Software bugs,
+whether they were found by users or by developers, should be submitted to the Verdict Bugzilla issue
+tracker.
+
+
+
 Contributors
 ===================================
 

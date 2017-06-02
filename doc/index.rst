@@ -9,7 +9,7 @@
 
     <div class="verdict-intro">
         <p class="verdict-intro-text">
-        <b>Verdict</b> is an approximate, big data analytics system.
+        <b>Verdict</b> is an interactive-speed, resource-efficient query processor.
         </p>
     </div>
 
@@ -58,12 +58,12 @@ We already have drivers for Hive, Impala, and MySQL. We'll soon add drivers
 for some other popular databases.
 
 
-**Easy of use**
+**Ease of use**
 ===================================
 
-Verdict is a client-side library: no servers, no port configurations, no extra
+Using Verdict requires almost zero setup: no servers, no port configurations, no extra
 user authentication, etc. Verdict simply issues rewritten SQL queries to your databases on behalf of
-the client. The use of Verdict does not introduce any security breaches. Verdict relies on standard
+users. The use of Verdict does not introduce any security breaches. Verdict relies on standard
 protocols for communicating with the databases, which can be configured to be secure.
 
 |
