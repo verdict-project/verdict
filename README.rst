@@ -16,7 +16,7 @@ Verdict is an approximate, big data analytics system. Verdict is good because:
    Verdict can run on any database that supports standard SQL. We already have
    drivers for Hive, Impala, and MySQL. We’ll soon add drivers for some other
    popular databases.
-4. **Easy of use**
+4. **Ease of use**
    Verdict is a client-side library: no servers, no port configurations, no
    extra user authentication, etc. You can simply make a JDBC connection to
    Verdict; then, Verdict automatically reads data from your database. Verdict
