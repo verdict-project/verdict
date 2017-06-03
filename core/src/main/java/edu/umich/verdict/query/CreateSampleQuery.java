@@ -17,15 +17,15 @@ import static edu.umich.verdict.util.NameHelpers.*;
 
 import java.sql.ResultSet;
 
-public class VerdictCreateSampleQuery extends VerdictQuery {
+public class CreateSampleQuery extends Query {
 	
 	private final double sampleRatio = 0.01;
 
-	public VerdictCreateSampleQuery(String q, VerdictContext vc) {
+	public CreateSampleQuery(String q, VerdictContext vc) {
 		super(q, vc);
 	}
 	
-	public VerdictCreateSampleQuery(VerdictQuery parent) {
+	public CreateSampleQuery(Query parent) {
 		super(parent.queryString, parent.vc);
 	}
 	

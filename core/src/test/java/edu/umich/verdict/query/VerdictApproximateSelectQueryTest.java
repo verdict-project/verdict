@@ -3,7 +3,7 @@ package edu.umich.verdict.query;
 import edu.umich.verdict.VerdictConf;
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.exceptions.VerdictException;
-import edu.umich.verdict.query.VerdictApproximateSelectQuery;
+import edu.umich.verdict.query.ApproximateSelectQuery;
 
 public class VerdictApproximateSelectQueryTest {
 
@@ -22,17 +22,17 @@ public class VerdictApproximateSelectQueryTest {
 		
 		
 		String sql1 = "select count(*) from orders";
-		VerdictApproximateSelectQuery sq = new VerdictApproximateSelectQuery(sql1, vc);
+		ApproximateSelectQuery sq = new ApproximateSelectQuery(sql1, vc);
 		System.out.println(sq.rewriteQuery());
 		
 		String sql2 = "select user_id, count(*) from orders group by user_id";
-		sq = new VerdictApproximateSelectQuery(sql2, vc);
+		sq = new ApproximateSelectQuery(sql2, vc);
 		System.out.println(sq.rewriteQuery());
 		
 		String sql3 = "select order_hour_of_day, count(*) as c from orders"
 				+ " group by order_hour_of_day"
 				+ " order by order_hour_of_day";
-		sq = new VerdictApproximateSelectQuery(sql3, vc);
+		sq = new ApproximateSelectQuery(sql3, vc);
 		System.out.println(sq.rewriteQuery());
 		
 		String sql4 = "SELECT product_name, count(*) as order_count"
@@ -43,7 +43,7 @@ public class VerdictApproximateSelectQueryTest {
 				+ "				GROUP BY product_name"
 				+ "				ORDER BY order_count DESC"
 				+ "				LIMIT 5";
-		sq = new VerdictApproximateSelectQuery(sql4, vc);
+		sq = new ApproximateSelectQuery(sql4, vc);
 		System.out.println(sq.rewriteQuery());
 		
 		String sql5 = "SELECT departments.department_id, department, count(*) as order_count"
@@ -53,7 +53,7 @@ public class VerdictApproximateSelectQueryTest {
 				+ "   AND products.department_id = departments.department_id"
 				+ " GROUP BY department_id, department"
 				+ " ORDER BY order_count DESC";
-		sq = new VerdictApproximateSelectQuery(sql5, vc);
+		sq = new ApproximateSelectQuery(sql5, vc);
 		System.out.println(sq.rewriteQuery());
 		
 		String sql6 = "SELECT 5*round(d1/5) as reorder_after_days, COUNT(*)"
@@ -69,7 +69,7 @@ public class VerdictApproximateSelectQueryTest {
 				+ "                   GROUP BY user_id) t1)"
 				+ " group by reorder_after_days"
 				+ " order by reorder_after_days";
-		sq = new VerdictApproximateSelectQuery(sql6, vc);
+		sq = new ApproximateSelectQuery(sql6, vc);
 		System.out.println(sq.rewriteQuery());
 		
 		String sql7 = "SELECT product_name, count(*) as freq_order_count"
@@ -89,7 +89,7 @@ public class VerdictApproximateSelectQueryTest {
 		+ "		GROUP BY product_name"
 		+ "		ORDER BY freq_order_count DESC"
 		+ "		LIMIT 10";
-		sq = new VerdictApproximateSelectQuery(sql7, vc);
+		sq = new ApproximateSelectQuery(sql7, vc);
 		System.out.println(sq.rewriteQuery());
 	}
 

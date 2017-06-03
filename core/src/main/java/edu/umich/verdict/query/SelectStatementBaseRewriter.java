@@ -19,7 +19,7 @@ import edu.umich.verdict.util.VerdictLogger;
  * @author Yongjoo Park
  *
  */
-public class VerdictSelectStatementBaseVisitor extends VerdictSQLBaseVisitor<String> {
+public class SelectStatementBaseRewriter extends VerdictSQLBaseVisitor<String> {
 	
 	protected String queryString;
 	
@@ -34,7 +34,7 @@ public class VerdictSelectStatementBaseVisitor extends VerdictSQLBaseVisitor<Str
 	// pair of original table name and its alias
 //	protected Map<String, String> tableAliases = new HashMap<String, String>();
 	
-	public VerdictSelectStatementBaseVisitor(String queryString) {
+	public SelectStatementBaseRewriter(String queryString) {
 		this.queryString = queryString;
 	}
 	

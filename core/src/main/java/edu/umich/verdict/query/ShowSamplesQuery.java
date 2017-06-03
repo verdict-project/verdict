@@ -10,13 +10,13 @@ import edu.umich.verdict.dbms.Dbms;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.util.VerdictLogger;
 
-public class VerdictShowSampleQuery extends VerdictQuery {
+public class ShowSamplesQuery extends SelectQuery {
 
-	public VerdictShowSampleQuery(String q, VerdictContext vc) {
+	public ShowSamplesQuery(String q, VerdictContext vc) {
 		super(q, vc);
 	}
 
-	public VerdictShowSampleQuery(VerdictQuery parent) {
+	public ShowSamplesQuery(Query parent) {
 		super(parent.queryString, parent.vc);
 	}
 

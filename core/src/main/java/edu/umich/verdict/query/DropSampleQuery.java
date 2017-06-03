@@ -12,13 +12,13 @@ import edu.umich.verdict.VerdictSQLParser;
 import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
 
-public class VerdictDropSampleQuery extends VerdictQuery {
+public class DropSampleQuery extends Query {
 
-	public VerdictDropSampleQuery(String q, VerdictContext vc) {
+	public DropSampleQuery(String q, VerdictContext vc) {
 		super(q, vc);
 	}
 	
-	public VerdictDropSampleQuery(VerdictQuery parent) {
+	public DropSampleQuery(Query parent) {
 		super(parent.queryString, parent.vc);
 	}
 	

@@ -16,14 +16,14 @@ import edu.umich.verdict.datatypes.VerdictResultSet;
 import edu.umich.verdict.exceptions.VerdictException;
 
 
-public class VerdictConfigQuery extends VerdictQuery {
+public class ConfigQuery extends SelectQuery {
 
-	public VerdictConfigQuery(String q, VerdictContext vc) {
+	public ConfigQuery(String q, VerdictContext vc) {
 		super(q, vc);
 		// TODO Auto-generated constructor stub
 	}
 
-	public VerdictConfigQuery(VerdictQuery parent) {
+	public ConfigQuery(Query parent) {
 		super(parent.queryString, parent.vc);
 	}
 

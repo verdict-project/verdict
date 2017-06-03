@@ -8,7 +8,7 @@ import edu.umich.verdict.VerdictSQLParser;
 import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.util.VerdictLogger;
 
-public class VerdictBootstrappingSelectStatementVisitor extends VerdictApproximateSelectStatementVisitor {
+public class BootstrapSelectStatementRewriter extends AnalyticSelectStatementRewriter {
 	
 	// poissonDist[k] is the probability that a tuple appears k times when n is very large.
 	final private static double[] poissonDist = {
@@ -31,12 +31,16 @@ public class VerdictBootstrappingSelectStatementVisitor extends VerdictApproxima
 	
 	static {
 		conditionalProb = new double[poissonDist.length];
-		conditionalProb[0] = 0.5;
+		double cdf = 0;
+		for (int i = 0; i < poissonDist.length; i++) {
+			cdf += poissonDist[i];
+			conditionalProb[i] = poissonDist[i] / cdf;
+		}
 	}
 	
 	protected Map<TableUniqueName, String> sampleTableAlias = new HashMap<TableUniqueName, String>();
 
-	public VerdictBootstrappingSelectStatementVisitor(VerdictContext vc, String queryString) {
+	public BootstrapSelectStatementRewriter(VerdictContext vc, String queryString) {
 		super(vc, queryString);
 	}
 	
@@ -66,13 +70,13 @@ public class VerdictBootstrappingSelectStatementVisitor extends VerdictApproxima
 		if (param != null && param.equals("1")) {
 			return "1 AS verdict_mul";
 		} else {
-			return String.format(
-					"(case when rand() > 0.9 then 5"
-					+ " when rand() > 0.9 then 4"
-					+ " when rand() > 0.9 then 3"
-					+ " when rand() > 0.9 then 2"
-					+ " when rand() > 0.9 then 1"
-					+ " else 0 end) AS verdict_mul");
+			StringBuilder elem = new StringBuilder();
+			elem.append("(case");
+			for (int k = conditionalProb.length - 1; k > 0 ; k--) {
+				elem.append(String.format(" when rand() > %.8f then %d", conditionalProb[k], k));
+			}
+			elem.append(" else 0 end) AS verdict_mul");
+			return elem.toString();
 		}
 	}
 	

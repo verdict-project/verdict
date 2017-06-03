@@ -9,13 +9,13 @@ import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.datatypes.VerdictResultSet;
 import edu.umich.verdict.exceptions.VerdictException;
 
-public class VerdictShowDatabasesQuery extends VerdictQuery {
+public class ShowDatabasesQuery extends SelectQuery {
 
-	public VerdictShowDatabasesQuery(String q, VerdictContext vc) {
+	public ShowDatabasesQuery(String q, VerdictContext vc) {
 		super(q, vc);
 	}
 
-	public VerdictShowDatabasesQuery(VerdictQuery parent) {
+	public ShowDatabasesQuery(Query parent) {
 		super(parent.queryString, parent.vc);
 	}
 	

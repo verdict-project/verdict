@@ -17,14 +17,14 @@ import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.util.VerdictLogger;
 
-public class VerdictDescribeTableQuery extends VerdictQuery {
+public class DescribeTableQuery extends SelectQuery {
 
-	public VerdictDescribeTableQuery(String q, VerdictContext vc) {
+	public DescribeTableQuery(String q, VerdictContext vc) {
 		super(q, vc);
 		// TODO Auto-generated constructor stub
 	}
 
-	public VerdictDescribeTableQuery(VerdictQuery parent) {
+	public DescribeTableQuery(Query parent) {
 		super(parent.queryString, parent.vc);
 	}
 
