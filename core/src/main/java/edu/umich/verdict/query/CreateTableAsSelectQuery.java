@@ -11,13 +11,13 @@ import edu.umich.verdict.VerdictSQLParser;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.util.VerdictLogger;
 
-public class VerdictCreateTableAsSelectQuery extends VerdictQuery {
+public class CreateTableAsSelectQuery extends Query {
 
-	public VerdictCreateTableAsSelectQuery(String q, VerdictContext vc) {
+	public CreateTableAsSelectQuery(String q, VerdictContext vc) {
 		super(q, vc);
 	}
 	
-	public VerdictCreateTableAsSelectQuery(VerdictQuery parent) {
+	public CreateTableAsSelectQuery(Query parent) {
 		super(parent.queryString, parent.vc);
 	}
 	
@@ -36,14 +36,14 @@ public class VerdictCreateTableAsSelectQuery extends VerdictQuery {
 		VerdictSQLLexer l = new VerdictSQLLexer(CharStreams.fromString(query));
 		VerdictSQLParser p = new VerdictSQLParser(new CommonTokenStream(l));
 		
-		VerdictSelectStatementBaseVisitor visitor = new VerdictSelectStatementBaseVisitor(query) {
+		SelectStatementBaseRewriter visitor = new SelectStatementBaseRewriter(query) {
 			@Override
 			public String visitCreate_table_as_select(VerdictSQLParser.Create_table_as_selectContext ctx) {
 				StringBuilder sql = new StringBuilder();
 				sql.append("CREATE TABLE");
 				if (ctx.IF() != null) sql.append(" IF NOT EXISTS");
 				sql.append(String.format(" %s AS \n", ctx.table_name().getText()));
-				VerdictApproximateSelectStatementVisitor selectVisitor = new VerdictApproximateSelectStatementVisitor(vc, query);
+				AnalyticSelectStatementRewriter selectVisitor = new AnalyticSelectStatementRewriter(vc, query);
 				selectVisitor.setIndentLevel(2);
 				sql.append(selectVisitor.visit(ctx.select_statement()));
 				return sql.toString();

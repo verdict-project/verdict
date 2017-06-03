@@ -5,13 +5,13 @@ import java.sql.ResultSet;
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.exceptions.VerdictException;
 
-public class ByPassVerdictQuery extends VerdictQuery {
+public class ByPassSelectQuery extends SelectQuery {
 
-	public ByPassVerdictQuery(String q, VerdictContext vc) {
+	public ByPassSelectQuery(String q, VerdictContext vc) {
 		super(q, vc);
 	}
 	
-	public ByPassVerdictQuery(VerdictQuery parent) {
+	public ByPassSelectQuery(Query parent) {
 		super(parent.queryString, parent.vc);
 	}
 	

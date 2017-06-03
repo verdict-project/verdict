@@ -14,7 +14,7 @@ import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictQuerySyntaxException;
 import edu.umich.verdict.util.VerdictLogger;
 
-class VerdictApproximateSelectStatementVisitor extends VerdictSelectStatementBaseVisitor  {
+class AnalyticSelectStatementRewriter extends SelectStatementBaseRewriter  {
 	
 	protected VerdictContext vc;
 	
@@ -34,7 +34,7 @@ class VerdictApproximateSelectStatementVisitor extends VerdictSelectStatementBas
 	protected Map<TableUniqueName, String> tableAliases = new HashMap<TableUniqueName, String>();
 
 	
-	public VerdictApproximateSelectStatementVisitor(VerdictContext vc, String queryString) {
+	public AnalyticSelectStatementRewriter(VerdictContext vc, String queryString) {
 		super(queryString);
 		this.vc = vc;
 		this.e = null;
@@ -234,7 +234,7 @@ class VerdictApproximateSelectStatementVisitor extends VerdictSelectStatementBas
 	@Override
 	public String visitSubquery(VerdictSQLParser.SubqueryContext ctx) {
 		depth++;
-		VerdictApproximateSelectStatementVisitor subqueryVisitor = new VerdictApproximateSelectStatementVisitor(vc, queryString);
+		AnalyticSelectStatementRewriter subqueryVisitor = new AnalyticSelectStatementRewriter(vc, queryString);
 		subqueryVisitor.setIndentLevel(defaultIndent + 4);
 		String ret = subqueryVisitor.visit(ctx.select_statement());
 		cumulativeReplacedTableSources.putAll(subqueryVisitor.getCumulativeSampleTables());

@@ -19,13 +19,13 @@ import edu.umich.verdict.datatypes.VerdictResultSet;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.util.VerdictLogger;
 
-public class VerdictApproximateSelectQuery extends VerdictSelectQuery {
+public class ApproximateSelectQuery extends SelectQuery {
 
-	public VerdictApproximateSelectQuery(String queryString, VerdictContext vc) {
+	public ApproximateSelectQuery(String queryString, VerdictContext vc) {
 		super(queryString, vc);
 	}
 
-	public VerdictApproximateSelectQuery(VerdictQuery parent) {
+	public ApproximateSelectQuery(Query parent) {
 		super(parent);
 	}
 
@@ -64,7 +64,7 @@ public class VerdictApproximateSelectQuery extends VerdictSelectQuery {
 	
 	@Override
 	public ResultSet compute() throws VerdictException {
-		Pair<String, VerdictApproximateSelectStatementVisitor> rewrittenQueryAndVisitor = rewriteQuery();
+		Pair<String, AnalyticSelectStatementRewriter> rewrittenQueryAndVisitor = rewriteQuery();
 		
 		String rewrittenQuery = rewrittenQueryAndVisitor.getLeft();
 		List<Boolean> AggregateColumnIndicator = rewrittenQueryAndVisitor.getRight().getAggregateColumnIndicator();
@@ -94,12 +94,12 @@ public class VerdictApproximateSelectQuery extends VerdictSelectQuery {
 		return errors;
 	}
 	
-	protected Pair<String, VerdictApproximateSelectStatementVisitor> rewriteQuery() throws VerdictException {
+	protected Pair<String, AnalyticSelectStatementRewriter> rewriteQuery() throws VerdictException {
 		VerdictSQLLexer l = new VerdictSQLLexer(CharStreams.fromString(queryString));
 		VerdictSQLParser p = new VerdictSQLParser(new CommonTokenStream(l));
 		
 //		VerdictApproximateSelectStatementVisitor queryRewriter = new VerdictApproximateSelectStatementVisitor(vc, queryString);
-		VerdictApproximateSelectStatementVisitor queryRewriter = new VerdictBootstrappingSelectStatementVisitor(vc, queryString);
+		AnalyticSelectStatementRewriter queryRewriter = new BootstrapSelectStatementRewriter(vc, queryString);
 		
 		String rewrittenQuery = queryRewriter.visit(p.select_statement());
 		if (queryRewriter.getException() != null) {

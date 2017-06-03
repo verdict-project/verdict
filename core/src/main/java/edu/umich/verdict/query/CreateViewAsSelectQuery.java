@@ -11,13 +11,13 @@ import edu.umich.verdict.VerdictSQLParser;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.util.VerdictLogger;
 
-public class VerdictCreateViewAsSelectQuery extends VerdictQuery {
+public class CreateViewAsSelectQuery extends Query {
 
-	public VerdictCreateViewAsSelectQuery(String q, VerdictContext vc) {
+	public CreateViewAsSelectQuery(String q, VerdictContext vc) {
 		super(q, vc);
 	}
 
-	public VerdictCreateViewAsSelectQuery(VerdictQuery parent) {
+	public CreateViewAsSelectQuery(Query parent) {
 		super(parent.queryString, parent.vc);
 	}
 	
@@ -36,13 +36,13 @@ public class VerdictCreateViewAsSelectQuery extends VerdictQuery {
 		VerdictSQLLexer l = new VerdictSQLLexer(CharStreams.fromString(query));
 		VerdictSQLParser p = new VerdictSQLParser(new CommonTokenStream(l));
 		
-		VerdictSelectStatementBaseVisitor visitor = new VerdictSelectStatementBaseVisitor(query) {
+		SelectStatementBaseRewriter visitor = new SelectStatementBaseRewriter(query) {
 			@Override
 			public String visitCreate_view(VerdictSQLParser.Create_viewContext ctx) {
 				StringBuilder sql = new StringBuilder();
 				sql.append("CREATE VIEW");
 				sql.append(String.format(" %s AS \n", ctx.view_name().getText()));
-				VerdictApproximateSelectStatementVisitor selectVisitor = new VerdictApproximateSelectStatementVisitor(vc, query);
+				AnalyticSelectStatementRewriter selectVisitor = new AnalyticSelectStatementRewriter(vc, query);
 				selectVisitor.setIndentLevel(2);
 				sql.append(selectVisitor.visit(ctx.select_statement()));
 				return sql.toString();

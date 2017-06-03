@@ -6,7 +6,7 @@ import com.google.common.base.Optional;
 
 import edu.umich.verdict.dbms.Dbms;
 import edu.umich.verdict.exceptions.VerdictException;
-import edu.umich.verdict.query.VerdictQuery;
+import edu.umich.verdict.query.Query;
 import edu.umich.verdict.util.VerdictLogger;
 
 
@@ -74,7 +74,7 @@ public class VerdictContext {
 	public ResultSet executeQuery(String sql) throws VerdictException {
 		VerdictLogger.debug(this, "A query execution starts:");
 		VerdictLogger.debugPretty(this, sql, "  ");
-		VerdictQuery vq = new VerdictQuery(sql, this);
+		Query vq = new Query(sql, this);
 		ResultSet rs = vq.compute();
 		VerdictLogger.debug(this, "A query execution finished");
 		return rs;

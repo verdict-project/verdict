@@ -7,7 +7,7 @@ import java.sql.Statement;
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.exceptions.VerdictException;
 
-public class DefaultSelectQueryPlan extends VerdictSelectQuery {
+public class DefaultSelectQueryPlan extends SelectQuery {
 	
 	
 	public DefaultSelectQueryPlan(String query, VerdictContext vc) {

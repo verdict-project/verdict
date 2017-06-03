@@ -8,7 +8,7 @@ import edu.umich.verdict.VerdictSQLParser;
 import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.util.VerdictLogger;
 
-public class VerdictBootstrappingSelectStatementVisitor extends VerdictApproximateSelectStatementVisitor {
+public class BootstrapSelectStatementRewriter extends AnalyticSelectStatementRewriter {
 	
 	// poissonDist[k] is the probability that a tuple appears k times when n is very large.
 	final private static double[] poissonDist = {
@@ -36,7 +36,7 @@ public class VerdictBootstrappingSelectStatementVisitor extends VerdictApproxima
 	
 	protected Map<TableUniqueName, String> sampleTableAlias = new HashMap<TableUniqueName, String>();
 
-	public VerdictBootstrappingSelectStatementVisitor(VerdictContext vc, String queryString) {
+	public BootstrapSelectStatementRewriter(VerdictContext vc, String queryString) {
 		super(vc, queryString);
 	}
 	

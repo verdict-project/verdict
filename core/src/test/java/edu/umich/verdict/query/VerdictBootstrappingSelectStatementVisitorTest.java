@@ -31,7 +31,7 @@ public class VerdictBootstrappingSelectStatementVisitorTest {
 		
 //		VerdictApproximateSelectStatementVisitor visitor = new VerdictApproximateSelectStatementVisitor(vc, sql);
 		
-		VerdictBootstrappingSelectStatementVisitor visitor = new VerdictBootstrappingSelectStatementVisitor(vc, sql);
+		BootstrapSelectStatementRewriter visitor = new BootstrapSelectStatementRewriter(vc, sql);
 		String rewritten = visitor.visit(p.select_statement().query_expression().query_specification());
 		
 		System.out.println(rewritten);
