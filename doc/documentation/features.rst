@@ -1,8 +1,29 @@
 .. _features:
 
 ****************************************************
-Supported Queries
+Supported Databases and Queries
 ****************************************************
+
+====================================================
+Supported Databases
+====================================================
+
+Currently, Verdict supports the following databases:
+
+1. Hive
+2. Impala
+3. MySQL
+
+We are in the process of adding drivers for other databases. Verdict's core modules do not need any
+modifications. The role of those drivers is to follow some database-specific syntax and the
+behaviors of their JDBC drivers. For example, Hive uses backticks for including special characters
+(e.g., parentheses) in aliases, while many others use double or single quotes. We need to test such
+minor adjustments for new databases drivers.
+
+
+====================================================
+Supported Queries
+====================================================
 
 Verdict supports a subset of standard SQL statements, which we overview below. Our team is currently
 extending the types of queries Verdict can support. Please email our development team if there are

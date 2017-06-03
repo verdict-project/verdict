@@ -113,5 +113,21 @@ public class VerdictBootstrappingSelectStatementVisitor extends VerdictApproxima
 		}
 	}
 	
+	protected String tableSourceReplacerSingleNested(String originalTableName) {
+		TableUniqueName uTableName = TableUniqueName.uname(vc, originalTableName);
+		TableUniqueName newTableSource = vc.getMeta().getSampleTableNameIfExistsElseOriginal(uTableName);
+		originalTableNameItem = newTableSource;
+		if (!uTableName.equals(newTableSource)) {
+			replacedTableSources.add(uTableName);
+			cumulativeReplacedTableSources.put(uTableName, newTableSource);
+			return String.format("(SELECT *, %s\n%sFROM %s)",
+					multiplicityExpression(),
+					indentString + "      ",
+					newTableSource);
+		} else {
+			return newTableSource.toString();
+		}
+	}
+	
 }
 

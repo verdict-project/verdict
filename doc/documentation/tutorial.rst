@@ -20,12 +20,12 @@ Prerequisites
    <http://www.oracle.com/technetwork/java/javase/downloads/index.html>`_ or can
    install open JDK using package managers such as :code:`apt-get`.
 
-1. **Apache Maven** The official instruction for installing Apache Maven is
+2. **Apache Maven** The official instruction for installing Apache Maven is
    available from `Maven website
    <https://maven.apache.org/install.html>`_. Apache Maven is also available
    from many package managers.
 
-1. **Supported Database** :ref:`features` page lists supported databases. In
+3. **Supported Database** :ref:`features` page lists supported databases. In
    this guide, we will use MySQL since it is already installed in many operating
    systems. Using this guide for other databases only requires the change of
    connection string (which includes the name of your database, host address, etc.).
@@ -35,18 +35,20 @@ Download and Install
 =====================
 
 Download the zip file that includes source code and command-line interface from
-the :ref:`download` page. Unzip the downloaded file and go to the directory. Then, type:
+the :ref:`download` page. Unzip the downloaded file and go to the directory.
+
+Type the following command to compile the source code.
 
 .. code-block:: bash
 
-    mvn package
+    bash$ mvn package
 
 Successful compilation creates three jar files in the :code:`target` directory
 as follows.
 
 .. code-block:: bash
 
-    pyongjoo@umich:verdict $ ls -l target
+    bash$ ls -l target
     total 16000
     drwxr-xr-x   5 pyongjoo  staff   170B May 30 21:58 .
     drwxr-xr-x  14 pyongjoo  staff   476B May 30 20:24 ..
@@ -67,7 +69,7 @@ script by typing:
 
 .. code-block:: bash
 
-    pyongjoo@umich:verdict $ mysql -u verdict -pverdict test < gen_test_table.sql
+    bash$ mysql -u verdict -pverdict test < gen_test_table.sql
 
 The script creates a table named :code:`test_table`. The table follows a
 schema :code:`(name INT, value DOUBLE)`. The script also populates about 8
@@ -82,16 +84,18 @@ type the below command to start veeline and connect to the MySQL database.
 
 .. code-block:: bash
 
-    bin/veeline -h mysql://<host addrses>:<port> -u <username> -p <password>
+    bash$ bin/veeline -h mysql://<host addrses>[:<port>] -u <username> -p <password>
 
 For other databases, a different database name should be used after the
-:code:`-h` argument. :ref:`veeline` page lists the names for other databases.
+:code:`-h` argument. :ref:`veeline` page lists the names for other databases. If the port number is
+not specified, Verdict uses a database-specific default port number. (The default port numbers are
+set in the :code:`core/src/main/resources/default.conf` file).
 If MySQL is installed locally, and its username/password is
 verdict/verdict, one can start veeline by typing:
 
 .. code-block:: bash
 
-    bin/veeline -h mysql://localhost:3306 -u verdict -p verdict
+    bash$ bin/veeline -h mysql://localhost:3306 -u verdict -p verdict
 
 This command will display a prompt :code:`verdict:MySQL>`.
 
