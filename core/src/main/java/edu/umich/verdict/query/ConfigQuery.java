@@ -16,7 +16,7 @@ import edu.umich.verdict.datatypes.VerdictResultSet;
 import edu.umich.verdict.exceptions.VerdictException;
 
 
-public class ConfigQuery extends Query {
+public class ConfigQuery extends SelectQuery {
 
 	public ConfigQuery(String q, VerdictContext vc) {
 		super(q, vc);

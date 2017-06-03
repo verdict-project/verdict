@@ -9,7 +9,7 @@ import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.datatypes.VerdictResultSet;
 import edu.umich.verdict.exceptions.VerdictException;
 
-public class ShowDatabasesQuery extends Query {
+public class ShowDatabasesQuery extends SelectQuery {
 
 	public ShowDatabasesQuery(String q, VerdictContext vc) {
 		super(q, vc);

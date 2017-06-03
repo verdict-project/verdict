@@ -17,7 +17,7 @@ import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.util.VerdictLogger;
 
-public class DescribeTableQuery extends Query {
+public class DescribeTableQuery extends SelectQuery {
 
 	public DescribeTableQuery(String q, VerdictContext vc) {
 		super(q, vc);

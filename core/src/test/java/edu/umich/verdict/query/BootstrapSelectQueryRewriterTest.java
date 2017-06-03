@@ -9,9 +9,9 @@ import edu.umich.verdict.VerdictSQLLexer;
 import edu.umich.verdict.VerdictSQLParser;
 import edu.umich.verdict.exceptions.VerdictException;
 
-public class VerdictBootstrappingSelectStatementVisitorTest {
+public class BootstrapSelectQueryRewriterTest {
 
-	public VerdictBootstrappingSelectStatementVisitorTest() {
+	public BootstrapSelectQueryRewriterTest() {
 	}
 
 	public static void main(String[] args) throws VerdictException {
@@ -24,7 +24,9 @@ public class VerdictBootstrappingSelectStatementVisitorTest {
 		conf.setPassword("verdict");
 		VerdictContext vc = new VerdictContext(conf);
 		
-		String sql = "select count(*) from lineitem, orders where lineitem.l_orderkey = orders.o_orderkey";
+		String sql = "select l_shipmode, count(*) from lineitem, orders"
+				+ " where l_orderkey = o_orderkey"
+				+ " group by l_shipmode";
 		
 		VerdictSQLLexer l = new VerdictSQLLexer(CharStreams.fromString(sql));
 		VerdictSQLParser p = new VerdictSQLParser(new CommonTokenStream(l));
