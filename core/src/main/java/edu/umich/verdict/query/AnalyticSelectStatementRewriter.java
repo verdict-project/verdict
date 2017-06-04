@@ -34,13 +34,22 @@ class AnalyticSelectStatementRewriter extends SelectStatementBaseRewriter  {
 	// This field stores the tables sources of only current level. That is, does not store the table sources
 	// of the subqueries.
 	// Note: currently, this field does not contain derived fields.
+	// TODO: this may be replaced with a single double value that indicates the sampling probability.
 	protected final ArrayList<TableUniqueName> replacedTableSources = new ArrayList<TableUniqueName>();
 
 	// This field stores the replaced table sources of all levels.
 	// left is the original table name, and the right is the replaced table name.
 	protected final Map<TableUniqueName, TableUniqueName> cumulativeReplacedTableSources = new TreeMap<TableUniqueName, TableUniqueName>();
 	
+	// For every table source, we remember the table name and its alias.
+	// This info is used in the other clauses (such as where clause and select list) for replacing the table names with
+	// their proper aliases.
 	protected Map<TableUniqueName, String> tableAliases = new HashMap<TableUniqueName, String>();
+	
+	// Records the column index of a mean aggregation and the column index for its error.
+	// If the right value is 0, it means there's no error info column.
+	// All valid column indexes are not smaller than 1 (namely, one-indexed).
+	protected Map<Integer, Integer> meanColIndex2ErrColIndex;
 
 	
 	public AnalyticSelectStatementRewriter(VerdictContext vc, String queryString) {
@@ -49,6 +58,7 @@ class AnalyticSelectStatementRewriter extends SelectStatementBaseRewriter  {
 		this.e = null;
 		aggColumnIndicator = new ArrayList<Boolean>();
 		colName2Aliases = new ArrayList<Pair<String, String>>();
+		meanColIndex2ErrColIndex = new HashMap<Integer, Integer>();
 	}
 	
 	public VerdictQuerySyntaxException getException() {
@@ -75,6 +85,10 @@ class AnalyticSelectStatementRewriter extends SelectStatementBaseRewriter  {
 		}
 	}
 	
+	public Map<Integer, Integer> getMean2ErrorColumnMap() {
+		return meanColIndex2ErrColIndex;
+	}
+	
 	protected double sampleSizeToOriginalTableSizeRatio = -1;
 	
 	protected double getSampleSizeToOriginalTableSizeRatio() {
@@ -97,7 +111,7 @@ class AnalyticSelectStatementRewriter extends SelectStatementBaseRewriter  {
 	private int aliasIndex = 1;
 	
 	protected String genAlias() {
-		return String.format("v%d_%d", depth, aliasIndex++);
+		return String.format("v%d_%d_%d", depth, this.hashCode()%1000, aliasIndex++);
 	}
 	
 	@Override
@@ -131,6 +145,8 @@ class AnalyticSelectStatementRewriter extends SelectStatementBaseRewriter  {
 			// we don't have to replace the table name if aliases were used.
 			return originalTableName;
 		} else {
+			// find the name of the effective table (whether an original table or a sample table), then find the 
+			// proper alias we used for the table source.
 			return tableAliases.get(vc.getMeta().getSampleTableNameIfExistsElseOriginal(
 					TableUniqueName.uname(vc, originalTableName)));
 		}

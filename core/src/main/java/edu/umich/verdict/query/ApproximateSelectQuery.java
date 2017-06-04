@@ -15,8 +15,10 @@ import edu.umich.verdict.VerdictSQLBaseVisitor;
 import edu.umich.verdict.VerdictSQLLexer;
 import edu.umich.verdict.VerdictSQLParser;
 import edu.umich.verdict.datatypes.TableUniqueName;
+import edu.umich.verdict.datatypes.VerdictResultColumnMap;
 import edu.umich.verdict.datatypes.VerdictResultSet;
 import edu.umich.verdict.exceptions.VerdictException;
+import edu.umich.verdict.util.TypeCasting;
 import edu.umich.verdict.util.VerdictLogger;
 
 public class ApproximateSelectQuery extends SelectQuery {
@@ -64,11 +66,13 @@ public class ApproximateSelectQuery extends SelectQuery {
 	
 	@Override
 	public ResultSet compute() throws VerdictException {
-		Pair<String, AnalyticSelectStatementRewriter> rewrittenQueryAndVisitor = rewriteQuery();
+		Pair<String, AnalyticSelectStatementRewriter> rewrittenQueryAndRewriter = rewriteQuery();
 		
-		String rewrittenQuery = rewrittenQueryAndVisitor.getLeft();
-		List<Boolean> AggregateColumnIndicator = rewrittenQueryAndVisitor.getRight().getAggregateColumnIndicator();
-		Map<TableUniqueName, TableUniqueName> replacedTables = rewrittenQueryAndVisitor.getRight().getCumulativeSampleTables();
+		String rewrittenQuery = rewrittenQueryAndRewriter.getLeft();
+		AnalyticSelectStatementRewriter rewriter = rewrittenQueryAndRewriter.getRight();
+//		List<Boolean> AggregateColumnIndicator = rewrittenQueryAndRewriter.getRight().getAggregateColumnIndicator();
+		Map<TableUniqueName, TableUniqueName> replacedTables = rewriter.getCumulativeSampleTables();
+		Map<Integer, Integer> meanAndErrorColumnMap = rewriter.getMean2ErrorColumnMap();
 		
 		VerdictLogger.debug(this, "The input query was rewritten to:");
 		VerdictLogger.debugPretty(this, rewrittenQuery, "  ");
@@ -77,9 +81,13 @@ public class ApproximateSelectQuery extends SelectQuery {
 			VerdictLogger.info(String.format("Verdict is using a sample table for %s", original));
 		}
 		
-		ResultSet rs = new VerdictResultSet(
-				vc.getDbms().executeQuery(rewrittenQuery),
-				convertAggColumnToDefaultError(AggregateColumnIndicator, replacedTables));
+		ResultSet rsFromDB = vc.getDbms().executeQuery(rewrittenQuery);
+		VerdictResultColumnMap columnInfo = new VerdictResultColumnMap(
+				rewriter.getMean2ErrorColumnMap(),
+				TypeCasting.listToReverseMap(rewriter.getColName2Aliases()),
+				rsFromDB);
+		
+		ResultSet rs = new VerdictResultSet(rsFromDB, columnInfo);
 		return rs;
 	}
 	

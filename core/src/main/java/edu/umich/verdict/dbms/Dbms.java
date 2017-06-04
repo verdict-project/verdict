@@ -413,4 +413,12 @@ public class Dbms {
 	public String getQuoteString() {
 		return "\"";
 	}
+
+	public String varianceFunction() {
+		return "VAR_SAMP";
+	}
+	
+	public String stddevFunction() {
+		return "STDDEV";
+	}
 }

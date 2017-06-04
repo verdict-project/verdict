@@ -10,7 +10,7 @@ import edu.umich.verdict.util.TypeCasting;
 public class VerdictResultSetMetaData implements ResultSetMetaData {
 	
 	ResultSetMetaData meta;
-	List<Double> errors;
+	VerdictResultColumnMap columnInfo;
 	Map<Integer, Integer> columnMap;
 	
 	private int getMappedColumn(int i) {
@@ -21,13 +21,13 @@ public class VerdictResultSetMetaData implements ResultSetMetaData {
 		}
 	}
 	
-	public VerdictResultSetMetaData(ResultSetMetaData meta, List<Double> errors)  {
+	public VerdictResultSetMetaData(ResultSetMetaData meta, VerdictResultColumnMap columnInfo)  {
 		this.meta = meta;
-		this.errors = errors;
+		this.columnInfo = columnInfo;
 	}
 
-	public VerdictResultSetMetaData(ResultSetMetaData meta, List<Double> errors, Map<Integer, Integer> columnMap)  {
-		this(meta, errors);
+	public VerdictResultSetMetaData(ResultSetMetaData meta, VerdictResultColumnMap columnInfo, Map<Integer, Integer> columnMap)  {
+		this(meta, columnInfo);
 		this.columnMap = columnMap;
 	}
 
@@ -86,8 +86,8 @@ public class VerdictResultSetMetaData implements ResultSetMetaData {
 
 	@Override
 	public String getColumnLabel(int column) throws SQLException {
-		if (errors != null && errors.size() >= column && errors.get(getMappedColumn(column)-1) > 0) {
-			return String.format("%s %s", meta.getColumnLabel(getMappedColumn(column)), "(Approx)");
+		if (columnInfo != null) {
+			return columnInfo.getColumnLabel(getMappedColumn(column));
 		} else {
 			return meta.getColumnLabel(getMappedColumn(column));
 		} 

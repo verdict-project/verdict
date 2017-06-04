@@ -29,7 +29,7 @@ import edu.umich.verdict.datatypes.VerdictResultSetMetaData;
 public class VerdictResultSet implements ResultSet {
 	
 	private ResultSet resultSet;
-	private List<Double> errors;
+	VerdictResultColumnMap columnInfo;
 	private Map<Integer, Integer> columnMap;
 
 	/**
@@ -39,13 +39,13 @@ public class VerdictResultSet implements ResultSet {
 	 * column), the values in the column are approximate values, and the errors.get(i-1) provide the upper bound on the
 	 * standard deviation.
 	 */
-	public VerdictResultSet(ResultSet resultSet, List<Double> errors) {
+	public VerdictResultSet(ResultSet resultSet, VerdictResultColumnMap columnInfo) {
 		this.resultSet = resultSet;
-		this.errors = errors;
+		this.columnInfo = columnInfo;
 	}
 	
-	public VerdictResultSet(ResultSet resultSet, List<Double> errors, Map<Integer, Integer> columnMap) {
-		this(resultSet, errors);
+	public VerdictResultSet(ResultSet resultSet, VerdictResultColumnMap columnInfo, Map<Integer, Integer> columnMap) {
+		this(resultSet, columnInfo);
 		this.columnMap = columnMap;
 	}
 	
@@ -356,9 +356,9 @@ public class VerdictResultSet implements ResultSet {
 	@Override
 	public ResultSetMetaData getMetaData() throws SQLException {
 		if (columnMap == null)
-			return new VerdictResultSetMetaData(resultSet.getMetaData(), errors);
+			return new VerdictResultSetMetaData(resultSet.getMetaData(), columnInfo);
 		else
-			return new VerdictResultSetMetaData(resultSet.getMetaData(), errors, columnMap);
+			return new VerdictResultSetMetaData(resultSet.getMetaData(), columnInfo, columnMap);
 	}
 
 	@Override

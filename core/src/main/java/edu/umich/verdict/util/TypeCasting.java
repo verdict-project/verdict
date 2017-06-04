@@ -3,12 +3,32 @@ package edu.umich.verdict.util;
 import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+
+import org.apache.commons.lang3.tuple.Pair;
 
 import edu.umich.verdict.VerdictConf;
 import edu.umich.verdict.VerdictContext;
 
 public class TypeCasting {
+	
+	public static <T,S> Map<T,S> listToMap(List<Pair<T,S>> list) {
+		Map<T,S> amap = new HashMap<T,S>();
+		for (Pair<T,S> p : list) {
+			amap.put(p.getKey(), p.getValue());
+		}
+		return amap;
+	}
+	
+	public static <T,S> Map<T,S> listToReverseMap(List<Pair<S,T>> list) {
+		Map<T,S> amap = new HashMap<T,S>();
+		for (Pair<S,T> p : list) {
+			amap.put(p.getValue(), p.getKey());
+		}
+		return amap;
+	}
+	
 	
 	public static Double toDouble(Object obj) {
 		if (obj instanceof Double) return (Double) obj;

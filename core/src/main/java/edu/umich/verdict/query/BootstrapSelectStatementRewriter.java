@@ -1,5 +1,6 @@
 package edu.umich.verdict.query;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -9,9 +10,16 @@ import org.apache.commons.lang3.tuple.Pair;
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.VerdictSQLParser;
 import edu.umich.verdict.datatypes.TableUniqueName;
+import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.util.VerdictLogger;
 
 public class BootstrapSelectStatementRewriter extends AnalyticSelectStatementRewriter {
+	
+	final String RAND_COLNAME = vc.getConf().get("bootstrap_random_value_colname");
+
+	final String MULTIPLICITY = vc.getConf().get("bootstrap_multiplicity_colname");
+
+	protected String resampleMethod;
 	
 	// poissonDist[k] is the probability that a tuple appears k times when n is very large.
 	final private static double[] poissonDist = {
@@ -56,8 +64,15 @@ public class BootstrapSelectStatementRewriter extends AnalyticSelectStatementRew
 
 	public BootstrapSelectStatementRewriter(VerdictContext vc, String queryString) {
 		super(vc, queryString);
+		resampleMethod = "con";
 	}
 	
+	public void setResampleMethod(String m) throws VerdictException {
+		if (m.equals("con") || m.equals("1")) {
+			throw new VerdictException("Unexpected resample method: " + m);
+		}
+		resampleMethod = m;
+	}
 	
 	
 	/**
@@ -70,6 +85,93 @@ public class BootstrapSelectStatementRewriter extends AnalyticSelectStatementRew
 	 */
 	@Override
 	public String visitQuery_specification(VerdictSQLParser.Query_specificationContext ctx) {
+		StringBuilder sql = new StringBuilder(2000);
+		
+		// this statement computes the mean value
+		AnalyticSelectStatementRewriter meanRewriter = new AnalyticSelectStatementRewriter(vc, queryString);
+		meanRewriter.setDepth(depth+1);
+		meanRewriter.setIndentLevel(defaultIndent + 6);
+		String mainSql = meanRewriter.visit(ctx);
+		cumulativeReplacedTableSources.putAll(meanRewriter.getCumulativeSampleTables());
+		
+		// this statement computes the standard deviation
+		BootstrapSelectStatementRewriter varianceRewriter = new BootstrapSelectStatementRewriter(vc, queryString);
+		varianceRewriter.setDepth(depth+1);
+		varianceRewriter.setIndentLevel(defaultIndent + 6);
+		String subSql = varianceRewriter.varianceComputationStatement(ctx);
+		
+		String leftAlias = genAlias();
+		String rightAlias = genAlias();
+		
+		// we combine those two statements using join.
+		List<Pair<String, String>> thisColumnName2Aliases = new ArrayList<Pair<String, String>>();
+		
+		List<Pair<String, String>> leftColName2Aliases = meanRewriter.getColName2Aliases();
+//		List<Boolean> leftAggColIndicator = meanRewriter.getAggregateColumnIndicator();
+		
+		List<Pair<String, String>> rightColName2Aliases = varianceRewriter.getColName2Aliases();
+//		List<Boolean> rightAggColIndicator = varianceRewriter.getAggregateColumnIndicator();
+		
+		sql.append(String.format("%sSELECT", indentString));
+		int leftSelectElemIndex = 0;
+		int totalSelectElemIndex = 0;
+		for (Pair<String, String> colName2Alias : leftColName2Aliases) {
+			leftSelectElemIndex++;
+			if (leftSelectElemIndex == 1) sql.append(" ");
+			else sql.append(", ");
+			
+			if (meanRewriter.isAggregateColumn(leftSelectElemIndex)) {
+				// mean
+				totalSelectElemIndex++;
+				String alias = genAlias();
+				sql.append(String.format("%s.%s AS %s", leftAlias, colName2Alias.getRight(), alias));
+				thisColumnName2Aliases.add(Pair.of(colName2Alias.getLeft(), alias));
+				
+				// error (standard deviation * 1.96 (for 95% confidence interval))
+				totalSelectElemIndex++;
+				alias = genAlias();
+				String matchingAliasName = null;
+				for (Pair<String, String> r : rightColName2Aliases) {
+					if (colName2Alias.getLeft().equals(r.getLeft())) {
+						matchingAliasName = r.getRight();
+					}
+				}
+				sql.append(String.format(", %s.%s AS %s", rightAlias, matchingAliasName, alias));
+				thisColumnName2Aliases.add(Pair.of(colName2Alias.getLeft(), alias));
+				
+				meanColIndex2ErrColIndex.put(totalSelectElemIndex-1, totalSelectElemIndex);
+			} else {
+				totalSelectElemIndex++;
+				sql.append(String.format("%s.%s AS %s", leftAlias, colName2Alias.getRight(), colName2Alias.getRight()));
+				thisColumnName2Aliases.add(Pair.of(colName2Alias.getLeft(), colName2Alias.getRight()));
+			}
+		}
+		colName2Aliases = thisColumnName2Aliases;
+		
+		sql.append(String.format("\n%sFROM (\n", indentString));
+		sql.append(mainSql);
+		sql.append(String.format("\n%s     ) AS %s", indentString, leftAlias));
+		sql.append(" LEFT JOIN (\n");
+		sql.append(subSql);
+		sql.append(String.format("%s) AS %s", indentString, rightAlias));
+		sql.append(String.format(" ON %s.l_shipmode = %s.l_shipmode", leftAlias, rightAlias));
+		
+		return sql.toString();
+	}
+	
+	protected String visitQuery_specificationForSingleTrial(VerdictSQLParser.Query_specificationContext ctx) {
+		return super.visitQuery_specification(ctx);
+	}
+	
+	protected String varianceFunction() {
+		return vc.getDbms().varianceFunction();
+	}
+	
+	protected String stddevFunction() {
+		return vc.getDbms().stddevFunction();
+	}
+	
+	protected String varianceComputationStatement(VerdictSQLParser.Query_specificationContext ctx) {
 		List<Pair<String, String>> subqueryColName2Aliases = null;
 		BootstrapSelectStatementRewriter singleRewriter = null;
 		
@@ -77,26 +179,26 @@ public class BootstrapSelectStatementRewriter extends AnalyticSelectStatementRew
 		int trialNum = vc.getConf().getInt("bootstrap_trial_num");
 		for (int i = 0; i < trialNum; i++) {
 			singleRewriter = new BootstrapSelectStatementRewriter(vc, queryString);
-			singleRewriter.setIndentLevel(2);
-			singleRewriter.setDepth(1);
+			singleRewriter.setIndentLevel(defaultIndent + 6);
+			singleRewriter.setDepth(depth+1);
 			String singleTrialQuery = singleRewriter.visitQuery_specificationForSingleTrial(ctx);
 			if (i == 0) {
 				subqueryColName2Aliases = singleRewriter.getColName2Aliases();
 			}
-			if (i > 0) unionedFrom.append("\n  UNION\n");
+			if (i > 0) unionedFrom.append(String.format("\n%s    UNION\n", indentString));
 			unionedFrom.append(singleTrialQuery);
 		}
 		
 		StringBuilder sql = new StringBuilder(2000);
-		sql.append("SELECT");
+		sql.append(String.format("%sSELECT", indentString));
 		int selectElemIndex = 0;
 		for (Pair<String, String> e : subqueryColName2Aliases) {
 			selectElemIndex++;
 			sql.append((selectElemIndex > 1)? ", " : " ");
 			if (singleRewriter.isAggregateColumn(selectElemIndex)) {
 				String alias = genAlias();
-				sql.append(String.format("AVG(%s) AS %s",
-						e.getRight(), alias));
+				sql.append(String.format("%s(%s) AS %s",
+						stddevFunction(), e.getRight(), alias));
 				colName2Aliases.add(Pair.of(e.getLeft(), alias));
 			} else {
 				if (e.getLeft().equals(e.getRight())) sql.append(e.getLeft());
@@ -104,10 +206,10 @@ public class BootstrapSelectStatementRewriter extends AnalyticSelectStatementRew
 				colName2Aliases.add(Pair.of(e.getLeft(), e.getRight()));
 			}
 		}
-		sql.append("\nFROM (\n");
+		sql.append(String.format("\n%sFROM (\n", indentString));
 		sql.append(unionedFrom.toString());
-		sql.append("\n) AS t");
-		sql.append("\nGROUP BY");
+		sql.append(String.format("\n%s) AS %s", indentString, genAlias()));
+		sql.append(String.format("\n%sGROUP BY", indentString));
 		for (int colIndex = 1; colIndex <= subqueryColName2Aliases.size(); colIndex++) {
 			if (!singleRewriter.isAggregateColumn(colIndex)) {
 				if (colIndex > 1) {
@@ -119,10 +221,6 @@ public class BootstrapSelectStatementRewriter extends AnalyticSelectStatementRew
 		}
 		
 		return sql.toString();
-	}
-	
-	protected String visitQuery_specificationForSingleTrial(VerdictSQLParser.Query_specificationContext ctx) {
-		return super.visitQuery_specification(ctx);
 	}
 	
 	
@@ -151,11 +249,8 @@ public class BootstrapSelectStatementRewriter extends AnalyticSelectStatementRew
 	}
 	
 	protected String multiplicityExpression() {
-		return multiplicityExpression("con");
+		return multiplicityExpression(resampleMethod);
 	}
-	
-	final String RAND_COLNAME = vc.getConf().get("bootstrap_random_value_colname");
-	final String MULTIPLICITY = vc.getConf().get("bootstrap_multiplicity_colname");
 	
 	protected String multiplicityExpression(String param) {
 		if (param != null && param.equals("1")) {
