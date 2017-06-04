@@ -15,7 +15,7 @@ import edu.umich.verdict.VerdictSQLBaseVisitor;
 import edu.umich.verdict.VerdictSQLLexer;
 import edu.umich.verdict.VerdictSQLParser;
 import edu.umich.verdict.datatypes.TableUniqueName;
-import edu.umich.verdict.datatypes.VerdictResultColumnMap;
+import edu.umich.verdict.datatypes.VerdictApproxResultMeta;
 import edu.umich.verdict.datatypes.VerdictResultSet;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.util.TypeCasting;
@@ -82,7 +82,7 @@ public class ApproximateSelectQuery extends SelectQuery {
 		}
 		
 		ResultSet rsFromDB = vc.getDbms().executeQuery(rewrittenQuery);
-		VerdictResultColumnMap columnInfo = new VerdictResultColumnMap(
+		VerdictApproxResultMeta columnInfo = new VerdictApproxResultMeta(
 				meanAndErrorColumnMap,
 				TypeCasting.listToReverseMap(rewriter.getColName2Aliases()),
 				rsFromDB);

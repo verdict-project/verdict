@@ -10,6 +10,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.VerdictSQLParser;
+import edu.umich.verdict.datatypes.Alias;
 import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.util.VerdictLogger;
@@ -77,6 +78,8 @@ public class BootstrapSelectStatementRewriter extends AnalyticSelectStatementRew
 	
 	
 	/**
+	 * Rewrites a query for combining mean estimate and the variance estimate.
+	 * 
 	 * This function is pretty convoluted to make use of the overloaded functions in this class definition and 
 	 * {@link AnalyticSelectStatementRewriter#visitQuery_specification(edu.umich.verdict.VerdictSQLParser.Query_specificationContext) 
 	 * visitQuery_specification} of the base class for every bootstrap trial.
@@ -101,23 +104,24 @@ public class BootstrapSelectStatementRewriter extends AnalyticSelectStatementRew
 		varianceRewriter.setIndentLevel(defaultIndent + 6);
 		String subSql = varianceRewriter.varianceComputationStatement(ctx);
 		
-		String leftAlias = genAlias();
-		String rightAlias = genAlias();
+		Alias leftAlias = Alias.genDerivedTableAlias(depth);		// table alias name for mean statement
+		Alias rightAlias = Alias.genDerivedTableAlias(depth);		// table alias name for variance statement
 		
 		// we combine those two statements using join.
-		List<Pair<String, String>> thisColumnName2Aliases = new ArrayList<Pair<String, String>>();
+		List<Pair<String, Alias>> thisColumnName2Aliases = new ArrayList<Pair<String, Alias>>();
 		
-		List<Pair<String, String>> leftColName2Aliases = meanRewriter.getColName2Aliases();
+		List<Pair<String, Alias>> leftColName2Aliases = meanRewriter.getColName2Aliases();
 //		List<Boolean> leftAggColIndicator = meanRewriter.getAggregateColumnIndicator();
 		
-		List<Pair<String, String>> rightColName2Aliases = varianceRewriter.getColName2Aliases();
+		List<Pair<String, Alias>> rightColName2Aliases = varianceRewriter.getColName2Aliases();
 //		List<Boolean> rightAggColIndicator = varianceRewriter.getAggregateColumnIndicator();
 		
 		sql.append(String.format("%sSELECT", indentString));
 		int totalSelectElemIndex = 0;
 		List<Integer> groupbyIndex = new ArrayList<Integer>();
 		for (int leftSelectElemIndex = 1; leftSelectElemIndex <= leftColName2Aliases.size(); leftSelectElemIndex++) {
-			Pair<String, String> colName2Alias = leftColName2Aliases.get(leftSelectElemIndex-1);
+			Pair<String, Alias> leftColName2Alias = leftColName2Aliases.get(leftSelectElemIndex-1);
+			Pair<String, Alias> rightColName2Alias = rightColName2Aliases.get(leftSelectElemIndex-1);
 			
 			if (leftSelectElemIndex == 1) sql.append(" ");
 			else sql.append(", ");
@@ -125,24 +129,23 @@ public class BootstrapSelectStatementRewriter extends AnalyticSelectStatementRew
 			if (meanRewriter.isAggregateColumn(leftSelectElemIndex)) {
 				// mean
 				totalSelectElemIndex++;
-				String alias = genAlias();
-				sql.append(String.format("%s.%s AS %s", leftAlias, colName2Alias.getValue(), alias));
-				thisColumnName2Aliases.add(Pair.of(colName2Alias.getKey(), alias));
+				Alias alias = leftColName2Alias.getValue();	// we propagate the alias names
+				sql.append(String.format("%s.%s AS %s", leftAlias, alias, alias));
+				thisColumnName2Aliases.add(Pair.of(leftColName2Alias.getKey(), alias));
 				
 				// error (standard deviation * 1.96 (for 95% confidence interval))
 				totalSelectElemIndex++;
-				alias = genAlias();
-				sql.append(String.format(", %s.%s AS %s", rightAlias,
-						rightColName2Aliases.get(leftSelectElemIndex-1).getValue(), alias));
-				thisColumnName2Aliases.add(Pair.of(colName2Alias.getKey(), alias));
+				alias = rightColName2Alias.getValue();
+				sql.append(String.format(", %s.%s AS %s", rightAlias, alias, alias));
+				thisColumnName2Aliases.add(Pair.of(rightColName2Alias.getKey(), alias));
 				
 				meanColIndex2ErrColIndex.put(totalSelectElemIndex-1, totalSelectElemIndex);
 			} else {
 				totalSelectElemIndex++;
-				String alias = genAlias();
-				sql.append(String.format("%s.%s AS %s", leftAlias, colName2Alias.getValue(), alias));
+				Alias alias = leftColName2Alias.getValue();
+				sql.append(String.format("%s.%s AS %s", leftAlias, alias, alias));
 				groupbyIndex.add(leftSelectElemIndex);
-				thisColumnName2Aliases.add(Pair.of(colName2Alias.getKey(), alias));
+				thisColumnName2Aliases.add(Pair.of(leftColName2Alias.getKey(), alias));
 			}
 		}
 		colName2Aliases = thisColumnName2Aliases;
@@ -161,6 +164,11 @@ public class BootstrapSelectStatementRewriter extends AnalyticSelectStatementRew
 		return sql.toString();
 	}
 	
+	/**
+	 * Writes a query for a single bootstrap trial. This function makes uses of several overloaded methods by this class.
+	 * @param ctx
+	 * @return
+	 */
 	protected String visitQuery_specificationForSingleTrial(VerdictSQLParser.Query_specificationContext ctx) {
 		return super.visitQuery_specification(ctx);
 	}
@@ -177,8 +185,12 @@ public class BootstrapSelectStatementRewriter extends AnalyticSelectStatementRew
 		return "_";
 	}
 	
+	protected String errColumnName(String regularName) {
+		return String.format(vc.getConf().get("error_column_pattern"), regularName);
+	}
+	
 	protected String varianceComputationStatement(VerdictSQLParser.Query_specificationContext ctx) {
-		List<Pair<String, String>> subqueryColName2Aliases = null;
+		List<Pair<String, Alias>> subqueryColName2Aliases = null;
 		BootstrapSelectStatementRewriter singleRewriter = null;
 		
 		StringBuilder unionedFrom = new StringBuilder(2000);
@@ -198,23 +210,24 @@ public class BootstrapSelectStatementRewriter extends AnalyticSelectStatementRew
 		StringBuilder sql = new StringBuilder(2000);
 		sql.append(String.format("%sSELECT", indentString));
 		int selectElemIndex = 0;
-		for (Pair<String, String> e : subqueryColName2Aliases) {
+		for (Pair<String, Alias> e : subqueryColName2Aliases) {
 			selectElemIndex++;
 			sql.append((selectElemIndex > 1)? ", " : " ");
 			if (singleRewriter.isAggregateColumn(selectElemIndex)) {
-				String alias = genAlias();
-				sql.append(String.format("%s(%s) AS %s",
-						stddevFunction(), e.getValue(), alias));
+				String stddevColname = String.format("%s(%s)", stddevFunction(), e.getValue());
+				Alias alias = Alias.genAlias(depth, errColumnName(e.getValue().getProperName()));
+				sql.append(String.format("%s AS %s", stddevColname, alias));
 				colName2Aliases.add(Pair.of(e.getKey() + errorIndicator(), alias));
 			} else {
-				String alias = genAlias();
-				sql.append(String.format("%s AS %s", e.getValue(), alias));
+				Alias colname = e.getValue();
+				Alias alias = Alias.genAlias(depth, colname.originalName());
+				sql.append(String.format("%s AS %s", colname, alias));
 				colName2Aliases.add(Pair.of(e.getKey(), alias));
 			}
 		}
 		sql.append(String.format("\n%sFROM (\n", indentString));
 		sql.append(unionedFrom.toString());
-		sql.append(String.format("\n%s) AS %s", indentString, genAlias()));
+		sql.append(String.format("\n%s) AS %s", indentString, Alias.genDerivedTableAlias(depth)));
 		sql.append(String.format("\n%sGROUP BY", indentString));
 		
 		for (int colIndex = 1; colIndex <= subqueryColName2Aliases.size(); colIndex++) {
@@ -291,11 +304,11 @@ public class BootstrapSelectStatementRewriter extends AnalyticSelectStatementRew
 	@Override
 	public String visitHinted_table_name_item(VerdictSQLParser.Hinted_table_name_itemContext ctx) {
 		String tableNameItem = visit(ctx.table_name_with_hint());
-		String alias = null;
+		Alias alias = null;
 		if (ctx.as_table_alias() == null) {
-			alias = genAlias();
+			alias = Alias.genAlias(depth, tableNameItem);
 		} else {
-			alias = ctx.as_table_alias().getText();
+			alias = new Alias(tableNameItem, ctx.as_table_alias().getText());
 		}
 		tableAliases.put(aliasedTableNameItem, alias);
 		return tableNameItem + " " + alias;
@@ -353,7 +366,7 @@ public class BootstrapSelectStatementRewriter extends AnalyticSelectStatementRew
 							RAND_COLNAME,
 							indentString + "            ",
 							newTableSource,
-							genAlias()));
+							Alias.genDerivedTableAlias(depth)));
 		} else {
 			return newTableSource.toString();
 		}
@@ -365,7 +378,7 @@ public class BootstrapSelectStatementRewriter extends AnalyticSelectStatementRew
 		orderby.append("ORDER BY");
 		boolean isFirst = true;
 		for (VerdictSQLParser.Order_by_expressionContext octx : ctx.order_by_expression()) {
-			String alias = findAliasedExpression(visit(octx));
+			Alias alias = findAliasedExpression(visit(octx));
 			
 			if (isFirst) orderby.append(" ");
 			else 	     orderby.append(", ");
@@ -386,13 +399,13 @@ public class BootstrapSelectStatementRewriter extends AnalyticSelectStatementRew
 	 * @param colExpr The original text
 	 * @return An alias we declared
 	 */
-	private String findAliasedExpression(String colExpr) {
-		for (Pair<String, String> e : colName2Aliases) {
+	private Alias findAliasedExpression(String colExpr) {
+		for (Pair<String, Alias> e : colName2Aliases) {
 			if (colExpr.equalsIgnoreCase(e.getLeft())) {
 				return e.getRight();
 			}
 		}
-		return null;
+		return new Alias(colExpr, colExpr);
 	}
 	
 }

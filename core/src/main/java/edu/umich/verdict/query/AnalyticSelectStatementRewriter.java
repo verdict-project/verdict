@@ -11,6 +11,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.VerdictSQLParser;
+import edu.umich.verdict.datatypes.Alias;
 import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictQuerySyntaxException;
 import edu.umich.verdict.util.VerdictLogger;
@@ -30,7 +31,7 @@ class AnalyticSelectStatementRewriter extends SelectStatementBaseRewriter  {
 	//    is explicitly specified.
 	// 4. all declared aliases are stored in this field so that an outer query can access.
 	// 5. the displayed column labels should be properly handled by VerdictResultSet class.
-	protected List<Pair<String, String>> colName2Aliases;
+	protected List<Pair<String, Alias>> colName2Aliases;
 	
 	// This field stores the tables sources of only current level. That is, does not store the table sources
 	// of the subqueries.
@@ -45,7 +46,7 @@ class AnalyticSelectStatementRewriter extends SelectStatementBaseRewriter  {
 	// For every table source, we remember the table name and its alias.
 	// This info is used in the other clauses (such as where clause and select list) for replacing the table names with
 	// their proper aliases.
-	protected Map<TableUniqueName, String> tableAliases = new HashMap<TableUniqueName, String>();
+	protected Map<TableUniqueName, Alias> tableAliases = new HashMap<TableUniqueName, Alias>();
 	
 	// Records the column index of a mean aggregation and the column index for its error.
 	// If the right value is 0, it means there's no error info column.
@@ -58,7 +59,7 @@ class AnalyticSelectStatementRewriter extends SelectStatementBaseRewriter  {
 		this.vc = vc;
 		this.e = null;
 		aggColumnIndicator = new ArrayList<Boolean>();
-		colName2Aliases = new ArrayList<Pair<String, String>>();
+		colName2Aliases = new ArrayList<Pair<String, Alias>>();
 		meanColIndex2ErrColIndex = new HashMap<Integer, Integer>();
 	}
 	
@@ -70,7 +71,7 @@ class AnalyticSelectStatementRewriter extends SelectStatementBaseRewriter  {
 		return aggColumnIndicator;
 	}
 	
-	public List<Pair<String, String>> getColName2Aliases() {
+	public List<Pair<String, Alias>> getColName2Aliases() {
 		return colName2Aliases;
 	}
 	
@@ -109,20 +110,14 @@ class AnalyticSelectStatementRewriter extends SelectStatementBaseRewriter  {
 		return sampleSizeToOriginalTableSizeRatio;
 	}
 	
-	private int aliasIndex = 1;
-	
-	protected String genAlias() {
-		return String.format("v%d_%d", depth, aliasIndex++);
-	}
-	
 	@Override
 	public String visitHinted_table_name_item(VerdictSQLParser.Hinted_table_name_itemContext ctx) {
 		String tableNameItem = visit(ctx.table_name_with_hint());
-		String alias = null;
+		Alias alias = null;
 		if (ctx.as_table_alias() == null) {
-			alias = genAlias();
+			alias = Alias.genAlias(depth, tableNameItem);
 		} else {
-			alias = ctx.as_table_alias().getText();
+			alias = new Alias(tableNameItem, ctx.as_table_alias().getText());
 		}
 		tableAliases.put(TableUniqueName.uname(vc, tableNameItem), alias);
 		return tableNameItem + " " + alias;
@@ -149,7 +144,7 @@ class AnalyticSelectStatementRewriter extends SelectStatementBaseRewriter  {
 			// find the name of the effective table (whether an original table or a sample table), then find the 
 			// proper alias we used for the table source.
 			return tableAliases.get(vc.getMeta().getSampleTableNameIfExistsElseOriginal(
-					TableUniqueName.uname(vc, originalTableName)));
+					TableUniqueName.uname(vc, originalTableName))).toString();
 		}
 	}
 	
@@ -178,7 +173,7 @@ class AnalyticSelectStatementRewriter extends SelectStatementBaseRewriter  {
 	public String visitSelect_list_elem(VerdictSQLParser.Select_list_elemContext ctx) {
 		select_list_elem_num++;
 		String newSelectListElem = null;
-		Pair<String, String> colName2Alias = null;
+		Pair<String, Alias> colName2Alias = null;
 		
 		if (ctx.getText().equals("*")) {
 			// TODO: replace * with all columns in the (joined) source table.
@@ -188,14 +183,15 @@ class AnalyticSelectStatementRewriter extends SelectStatementBaseRewriter  {
 			elem.append(visit(ctx.expression()));
 			
 			SelectStatementBaseRewriter baseRewriter = new SelectStatementBaseRewriter(queryString);
+			String colName = baseRewriter.visit(ctx.expression());
 			
 			if (ctx.column_alias() != null) {
-				String alias = ctx.column_alias().getText();
+				Alias alias = new Alias(colName, ctx.column_alias().getText());
 				elem.append(String.format(" AS %s", alias));
-				colName2Alias = Pair.of(baseRewriter.visit(ctx.expression()), alias);
+				colName2Alias = Pair.of(colName, alias);
 			} else {
 				// We add a pseudo column alias
-				String alias = genAlias();
+				Alias alias = Alias.genAlias(depth, colName);
 				elem.append(String.format(" AS %s", alias));
 				colName2Alias = Pair.of(baseRewriter.visit(ctx.expression()), alias);
 			}
@@ -320,9 +316,9 @@ class AnalyticSelectStatementRewriter extends SelectStatementBaseRewriter  {
 	@Override
 	public String visitGroup_by_item(VerdictSQLParser.Group_by_itemContext ctx) {
 		String groupName = ctx.getText();
-		String alias = groupName;
+		Alias alias = new Alias(groupName, groupName);
 		
-		for (Pair<String, String> e : colName2Aliases) {
+		for (Pair<String, Alias> e : colName2Aliases) {
 			if (e.getKey().equals(groupName)) {
 				alias = e.getValue();
 				break;
@@ -331,7 +327,7 @@ class AnalyticSelectStatementRewriter extends SelectStatementBaseRewriter  {
 		
 		if (isFirstGroup) {
 			isFirstGroup = false;
-			return alias;
+			return alias.toString();
 		}
 		else {
 			return ", " + alias;

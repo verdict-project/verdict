@@ -10,7 +10,7 @@ import edu.umich.verdict.util.TypeCasting;
 public class VerdictResultSetMetaData implements ResultSetMetaData {
 	
 	ResultSetMetaData meta;
-	VerdictResultColumnMap columnInfo;
+	VerdictApproxResultMeta columnInfo;
 	Map<Integer, Integer> columnMap;
 	
 	private int getMappedColumn(int i) {
@@ -21,12 +21,12 @@ public class VerdictResultSetMetaData implements ResultSetMetaData {
 		}
 	}
 	
-	public VerdictResultSetMetaData(ResultSetMetaData meta, VerdictResultColumnMap columnInfo)  {
+	public VerdictResultSetMetaData(ResultSetMetaData meta, VerdictApproxResultMeta columnInfo)  {
 		this.meta = meta;
 		this.columnInfo = columnInfo;
 	}
 
-	public VerdictResultSetMetaData(ResultSetMetaData meta, VerdictResultColumnMap columnInfo, Map<Integer, Integer> columnMap)  {
+	public VerdictResultSetMetaData(ResultSetMetaData meta, VerdictApproxResultMeta columnInfo, Map<Integer, Integer> columnMap)  {
 		this(meta, columnInfo);
 		this.columnMap = columnMap;
 	}

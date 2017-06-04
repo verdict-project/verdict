@@ -27,7 +27,7 @@ public class MySQLBootstrappingTest {
 		
 		String sql2 = "select l_shipmode, avg(l_discount) / avg(l_tax) from lineitem group by l_shipmode";
 		
-		String sql3 = "select l_shipdate, count(*) from lineitem group by l_shipdate order by count(*) desc limit 10";
+		String sql3 = "select l_shipdate, count(*) as R from lineitem group by l_shipdate order by R desc limit 10";
 		
 		
 		ResultSet rs1 = vc.executeQuery(sql3);

@@ -29,7 +29,7 @@ import edu.umich.verdict.datatypes.VerdictResultSetMetaData;
 public class VerdictResultSet implements ResultSet {
 	
 	private ResultSet resultSet;
-	VerdictResultColumnMap columnInfo;
+	VerdictApproxResultMeta columnInfo;
 	private Map<Integer, Integer> columnMap;
 
 	/**
@@ -39,12 +39,12 @@ public class VerdictResultSet implements ResultSet {
 	 * column), the values in the column are approximate values, and the errors.get(i-1) provide the upper bound on the
 	 * standard deviation.
 	 */
-	public VerdictResultSet(ResultSet resultSet, VerdictResultColumnMap columnInfo) {
+	public VerdictResultSet(ResultSet resultSet, VerdictApproxResultMeta columnInfo) {
 		this.resultSet = resultSet;
 		this.columnInfo = columnInfo;
 	}
 	
-	public VerdictResultSet(ResultSet resultSet, VerdictResultColumnMap columnInfo, Map<Integer, Integer> columnMap) {
+	public VerdictResultSet(ResultSet resultSet, VerdictApproxResultMeta columnInfo, Map<Integer, Integer> columnMap) {
 		this(resultSet, columnInfo);
 		this.columnMap = columnMap;
 	}
