@@ -20,7 +20,16 @@ class AnalyticSelectStatementRewriter extends SelectStatementBaseRewriter  {
 	
 	protected VerdictQuerySyntaxException e;
 	
-	protected ArrayList<Boolean> aggColumnIndicator;
+	protected List<Boolean> aggColumnIndicator;
+	
+	// Alias propagation
+	// 1. we declare aliases for all columns.
+	// 2. the alias of a non-aggregate column can simply be the column name itself.
+	// 3. the alias of an aggregate column is an automatically generalized name (using genAlias()) unless its alias
+	//    is explicitly specified.
+	// 4. all declared aliases are stored in this field so that an outer query can access.
+	// 5. the displayed column labels should be properly handled by VerdictResultSet class.
+	protected List<Pair<String, String>> colName2Aliases;
 	
 	// This field stores the tables sources of only current level. That is, does not store the table sources
 	// of the subqueries.
@@ -39,6 +48,7 @@ class AnalyticSelectStatementRewriter extends SelectStatementBaseRewriter  {
 		this.vc = vc;
 		this.e = null;
 		aggColumnIndicator = new ArrayList<Boolean>();
+		colName2Aliases = new ArrayList<Pair<String, String>>();
 	}
 	
 	public VerdictQuerySyntaxException getException() {
@@ -49,8 +59,20 @@ class AnalyticSelectStatementRewriter extends SelectStatementBaseRewriter  {
 		return aggColumnIndicator;
 	}
 	
+	public List<Pair<String, String>> getColName2Aliases() {
+		return colName2Aliases;
+	}
+	
 	public Map<TableUniqueName, TableUniqueName> getCumulativeSampleTables() {
 		return cumulativeReplacedTableSources;
+	}
+	
+	public boolean isAggregateColumn(int columnIndex) {
+		if (aggColumnIndicator.size() >= columnIndex && aggColumnIndicator.get(columnIndex-1)) {
+			return aggColumnIndicator.get(columnIndex-1);
+		} else {
+			return false;
+		}
 	}
 	
 	protected double sampleSizeToOriginalTableSizeRatio = -1;
@@ -138,33 +160,61 @@ class AnalyticSelectStatementRewriter extends SelectStatementBaseRewriter  {
 	@Override
 	public String visitSelect_list_elem(VerdictSQLParser.Select_list_elemContext ctx) {
 		select_list_elem_num++;
+		String newSelectListElem = null;
+		Pair<String, String> colName2Alias = null;
 		
 		if (ctx.getText().equals("*")) {
 			// TODO: replace * with all columns in the (joined) source table.
-			return "*";
+			newSelectListElem = "*";
 		} else {
 			StringBuilder elem = new StringBuilder();
 			elem.append(visit(ctx.expression()));
 			
 			if (ctx.column_alias() != null) {
-				elem.append(String.format(" AS %s", ctx.column_alias().getText()));
+				String alias = ctx.column_alias().getText();
+				elem.append(String.format(" AS %s", alias));
+				colName2Alias = Pair.of(ctx.expression().getText(), alias);
 			} else {
-				if (depth != 0) {
-					String msg = "An aggregate expression in subqueries must have an alias.";
-					VerdictLogger.error(this, msg);
-					e = new VerdictQuerySyntaxException(msg);
+				// no alias explicitly declared
+				if (isAggregateColumn(select_list_elem_num)) {
+					// We add a pseudo column alias
+					String alias = genAlias();
+					elem.append(String.format(" AS %s", alias));
+					colName2Alias = Pair.of(ctx.getText(), alias);
+					
+//					if (depth != 0) {
+//						String msg = "An aggregate expression in subqueries must have an alias.";
+//						VerdictLogger.error(this, msg);
+//						e = new VerdictQuerySyntaxException(msg);
+//					} else {
+//						
+//					}
 				} else {
-					// We don't want to expose our rewritten expression
-					elem.append(String.format(" AS %s%s%s", quoteString(), ctx.getText(), quoteString()));
+					// no need to generate alias for non-aggregate expression.
+					// outer queries can easily refer to them.
+					String colExpr = elem.toString();
+					colName2Alias = Pair.of(colExpr, colExpr);
 				}
 			}
 			
-			return elem.toString();
+			newSelectListElem = elem.toString();
 		}
+		
+		colName2Aliases.add(colName2Alias);
+		return newSelectListElem;
 	}
 	
+	protected boolean withinQuerySpecification = false;
+	
 	@Override
-	public String visitAggregate_windowed_function(VerdictSQLParser.Aggregate_windowed_functionContext ctx) {
+	public String visitAggregate_windowed_function(VerdictSQLParser.Aggregate_windowed_functionContext ctx) { 
+		if (withinQuerySpecification)
+			return visitAggregate_function_within_query_specification(ctx);
+		else
+			return visitAggregate_function_outside_query_specification(ctx);
+	}
+	
+	protected String visitAggregate_function_within_query_specification(VerdictSQLParser.Aggregate_windowed_functionContext ctx) {
 		while (aggColumnIndicator.size() < select_list_elem_num-1) {
 			aggColumnIndicator.add(false);		// pad zero
 		}
@@ -181,15 +231,38 @@ class AnalyticSelectStatementRewriter extends SelectStatementBaseRewriter  {
 		return null;	// we don't handle other aggregate functions for now.
 	}
 	
+	protected String visitAggregate_function_outside_query_specification(VerdictSQLParser.Aggregate_windowed_functionContext ctx) {
+		return super.visitAggregate_windowed_function(ctx);
+	}
+	
 	protected String extraIndentBeforeTableSourceName(int sourceIndex) {
 		return (sourceIndex == 1) ? "" : " ";
 	}
 	
 	@Override
 	public String visitQuery_specification(VerdictSQLParser.Query_specificationContext ctx) {
-		// FROM clause
+		withinQuerySpecification = true;
 		// We process the FROM clause first to get the ratio between the samples (if we use them) and the
 		// original tables.
+		String fromClause = rewrittenFromClause(ctx);
+		
+		String selectList = rewrittenSelectList(ctx);
+		
+		String whereClause = rewrittenWhereClause(ctx);
+		
+		String groupbyClause = rewrittenGroupbyClause(ctx);
+		
+		StringBuilder query = new StringBuilder(1000);
+		query.append(indentString); query.append(selectList.toString());
+		query.append("\n" + indentString); query.append(fromClause.toString());
+		if (whereClause.length() > 0) { query.append("\n"); query.append(indentString); query.append(whereClause.toString()); }
+		if (groupbyClause.length() > 0) { query.append("\n"); query.append(indentString); query.append(groupbyClause.toString()); }
+		
+		withinQuerySpecification = false;
+		return query.toString();
+	}
+	
+	protected String rewrittenFromClause(VerdictSQLParser.Query_specificationContext ctx) {
 		StringBuilder fromClause = new StringBuilder(200);
 		fromClause.append("FROM ");
 		int sourceIndex = 1;
@@ -201,20 +274,26 @@ class AnalyticSelectStatementRewriter extends SelectStatementBaseRewriter  {
 			}
 			sourceIndex++;
 		}
-		
-		// SELECT list
+		return fromClause.toString();
+	}
+	
+	protected String rewrittenSelectList(VerdictSQLParser.Query_specificationContext ctx) {
 		StringBuilder selectList = new StringBuilder(200);
 		selectList.append("SELECT ");
 		selectList.append(visit(ctx.select_list()));
-		
-		// WHERE clause
+		return selectList.toString();
+	}
+	
+	protected String rewrittenWhereClause(VerdictSQLParser.Query_specificationContext ctx) {
 		StringBuilder whereClause = new StringBuilder(200);
 		if (ctx.where != null) {
 			whereClause.append("WHERE ");
 			whereClause.append(visit(ctx.where));
 		}
-		
-		// Others
+		return whereClause.toString();
+	}
+	
+	protected String rewrittenGroupbyClause(VerdictSQLParser.Query_specificationContext ctx) {
 		StringBuilder otherClause = new StringBuilder(200);
 		if (ctx.group_by_item() != null && ctx.group_by_item().size() > 0) {
 			otherClause.append("GROUP BY ");
@@ -222,23 +301,16 @@ class AnalyticSelectStatementRewriter extends SelectStatementBaseRewriter  {
 				otherClause.append(visit(gctx));
 			}
 		}
-		
-		StringBuilder query = new StringBuilder(1000);
-		query.append(indentString); query.append(selectList.toString());
-		query.append("\n" + indentString); query.append(fromClause.toString());
-		if (whereClause.length() > 0) { query.append("\n"); query.append(indentString); query.append(whereClause.toString()); }
-		if (otherClause.length() > 0) {  query.append("\n"); query.append(indentString); query.append(otherClause.toString()); }
-		return query.toString();
+		return otherClause.toString();
 	}
 	
 	@Override
 	public String visitSubquery(VerdictSQLParser.SubqueryContext ctx) {
-		depth++;
 		AnalyticSelectStatementRewriter subqueryVisitor = new AnalyticSelectStatementRewriter(vc, queryString);
 		subqueryVisitor.setIndentLevel(defaultIndent + 4);
+		subqueryVisitor.setDepth(depth+1);
 		String ret = subqueryVisitor.visit(ctx.select_statement());
 		cumulativeReplacedTableSources.putAll(subqueryVisitor.getCumulativeSampleTables());
-		depth--;
 		return ret;
 	}
 	

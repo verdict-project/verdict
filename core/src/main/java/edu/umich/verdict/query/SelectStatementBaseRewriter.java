@@ -43,6 +43,10 @@ public class SelectStatementBaseRewriter extends VerdictSQLBaseVisitor<String> {
 		this.indentString = new String(new char[defaultIndent]).replace("\0", " ");
 	}
 	
+	public void setDepth(int depth) {
+		this.depth = depth;
+	}
+	
 	protected String tableSourceReplacer(String originalTableName) {
 		return originalTableName;
 	}
@@ -100,7 +104,7 @@ public class SelectStatementBaseRewriter extends VerdictSQLBaseVisitor<String> {
 	}
 	
 	@Override
-	public String visitQuery_specification(VerdictSQLParser.Query_specificationContext ctx) {				
+	public String visitQuery_specification(VerdictSQLParser.Query_specificationContext ctx) {
 		// Construct a query string after processing all subqueries.
 		// The processed subqueries are stored as a view.
 		StringBuilder query = new StringBuilder(200);
@@ -308,6 +312,7 @@ public class SelectStatementBaseRewriter extends VerdictSQLBaseVisitor<String> {
 		}
 		VerdictLogger.error(this, String.format("Unexpected aggregate function expression: %s", ctx.getText()));
 		return null;	// we don't handle other aggregate functions for now.
+		
 	}
 	
 	@Override
