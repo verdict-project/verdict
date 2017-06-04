@@ -5,6 +5,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -19,17 +20,21 @@ import edu.umich.verdict.util.VerdictLogger;
 import static edu.umich.verdict.util.NameHelpers.*;
 
 public class VerdictMeta {
-
-	// key: fully quantified sample table name
-	// value: sample size and the original table size associated with the sample
-//	private HashMap<TableUniqueName, SampleInfo> sampleSizeMeta;
 	
-	// key: fully quantified original table name
-	// value: fully quantified sample table name (which should be in META_SCHEMA)
-//	private HashMap<TableUniqueName, TableUniqueName> sampleNameMeta;
+	/**
+	 * Works as a cache for a single query execution.
+	 * key: original table
+	 * value: sample size info
+	 */
+	private Map<TableUniqueName, SampleInfo> sampleSizeMeta;
 	
-//	private final TableUniqueName META_SIZE_TABLE = TableUniqueName.uname("verdictmeta", "meta_size");
-//	private final TableUniqueName META_NAME_TABLE = TableUniqueName.uname("verdictmeta", "meta_name");
+	/**
+	 * Works as a cache for a single query execution.
+	 * key: original table
+	 * value: sample table
+	 */
+	private Map<TableUniqueName, TableUniqueName> sampleNameMeta;
+	
 	
 	private final String META_SIZE_TABLE;
 	private final String META_NAME_TABLE;
@@ -40,53 +45,18 @@ public class VerdictMeta {
 		this.vc = vc;
 		META_NAME_TABLE = vc.getConf().get("meta_name_table");
 		META_SIZE_TABLE = vc.getConf().get("meta_size_table");
-		
-//		replaceMetaInfo();
+		sampleSizeMeta = new HashMap<TableUniqueName, SampleInfo>();
+		sampleNameMeta = new HashMap<TableUniqueName, TableUniqueName>();
 	}
 	
 	private Dbms getMetaDbms() {
 		return vc.getMetaDbms();
 	}
 	
-//	public void replaceMetaInfo() throws VerdictException {
-//		sampleSizeMeta = new HashMap<TableUniqueName, SampleInfo>();
-//		sampleNameMeta = new HashMap<TableUniqueName, TableUniqueName>();
-//		createMetaTablesInDMBS();	// create if not exists
-//		initializeSampleMetaFromDBMS();
-//	}
-	
-//	private void initializeSampleMetaFromDBMS() throws VerdictException {
-//		ResultSet rs;
-//		try {
-//			// sample sizes
-//			String sql = String.format("SELECT schemaname, tablename, samplesize, originaltablesize FROM %s",
-//					getMetaSizeTableName());
-//			rs = getMetaDbms().executeQuery(sql);
-//			
-//			while (rs.next()) {
-//				String schemaName = rs.getString(1);
-//				String tableName = rs.getString(2);
-//				long sampleSize = rs.getLong(3);
-//				long originalTableSize = rs.getLong(4);
-//				insertSampleSizeInfoLocally(schemaName, tableName, sampleSize, originalTableSize);
-//			}
-//			
-//			// sample names
-//			sql = String.format("SELECT originalschemaname, originaltablename, sampleschemaaname, sampletablename FROM %s",
-//					getMetaNameTableName());
-//			rs = getMetaDbms().executeQuery(sql);
-//			
-//			while (rs.next()) {
-//				String originalSchemaName = rs.getString(1);
-//				String originalTableName = rs.getString(2);
-//				String sampleSchemaName = rs.getString(3);
-//				String sampleTableName = rs.getString(4);
-//				insertSampleNameInfoLocally(originalSchemaName, originalTableName, sampleSchemaName, sampleTableName);
-//			}
-//		} catch (SQLException e) {
-//			throw new VerdictException(StackTraceReader.stackTrace2String(e));
-//		}
-//	}
+	public void clearSampleInfo() {
+		sampleSizeMeta.clear();
+		sampleNameMeta.clear();
+	}
 	
 	/**
 	 * Insert sample info into local data structure (for quick access) and into the DBMS (for persistence).
@@ -110,45 +80,8 @@ public class VerdictMeta {
 		getMetaDbms().updateSampleSizeEntryIntoDBMS(
 				fullSampleName.schemaName, fullSampleName.tableName, sampleSize, originalTableSize,
 				getMetaSizeTableName(fullSampleName));
-		
-//		insertSampleNameInfo(originalSchemaName, originalTableName, fullSampleName.schemaName, fullSampleName.tableName);
-//		insertSampleSizeInfo(fullSampleName.schemaName, fullSampleName.tableName, sampleSize, originalTableSize);
 	}
-	
-//	private void insertSampleNameInfo(String originalSchemaName, String originalTableName, String sampleSchemaName,
-//			String sampleTableName) throws VerdictException {
-//		insertSampleNameInfoLocally(originalSchemaName, originalTableName, sampleSchemaName, sampleTableName);
-//		
-//	}
-	
-//	private void insertSampleNameInfoLocally(String originalSchemaName, String originalTableName, String sampleSchemaName,
-//			String sampleTableName) {
-//		TableUniqueName originalTable = new TableUniqueName(originalSchemaName, originalTableName);
-//		TableUniqueName sampleTable = new TableUniqueName(sampleSchemaName, sampleTableName);
-//		sampleNameMeta.put(originalTable, sampleTable);
-//	}
-	
-
-	/**
-	 * Inserts the size info into {@link #META_SIZE_TABLE} and into the DBMS (for persistence).
-	 * @param schemaName sample's schema name
-	 * @param tableName sample table name
-	 * @param sampleSize
-	 * @param originalTableSize
-	 * @throws VerdictException 
-	 */
-//	private void insertSampleSizeInfo(String schemaName, String tableName, long sampleSize, long originalTableSize)
-//			throws VerdictException {		
-//		insertSampleSizeInfoLocally(schemaName, tableName, sampleSize, originalTableSize);
-//		
-//	}
-	
-//	private void insertSampleSizeInfoLocally(String schemaName, String tableName, long sampleSize, long originalTableSize) {
-//		TableUniqueName n = new TableUniqueName(schemaName, tableName);
-//		SampleInfo s = new SampleInfo(sampleSize, originalTableSize);
-//		sampleSizeMeta.put(n, s);
-//	}
-	
+		
 	/**
 	 * Delete sample info from {@link #META_SIZE_TABLE} (for quick access) and from the DBMS (for persistence).
 	 * @param originalSchemaName
@@ -163,37 +96,14 @@ public class VerdictMeta {
 		TableUniqueName sampleTableName = sampleTableUniqueNameOf(originalTableName);
 		getMetaDbms().deleteSampleSizeEntryFromDBMS(sampleTableName.schemaName, sampleTableName.tableName,
 				getMetaSizeTableName(sampleTableName));
-		
-//		deleteSampleNameInfo(originalTableName);
-//		deleteSampleSizeInfo(sampleTableUniqueNameOf(originalTableName));
 	}
-	
-//	private void deleteSampleNameInfo(TableUniqueName originalUname) throws VerdictException {
-//		sampleNameMeta.remove(originalUname);
-//		getMetaDbms().deleteSampleNameEntryFromDBMS(originalUname.schemaName, originalUname.tableName, getMetaNameTableName(originalUname));
-//	}
-
-//	private void deleteSampleSizeInfo(TableUniqueName sampleUniqueName) throws VerdictException {
-//		sampleSizeMeta.remove(sampleUniqueName);
-//		getMetaDbms().deleteSampleSizeEntryFromDBMS(sampleUniqueName.schemaName, sampleUniqueName.tableName, getMetaSizeTableName(sampleUniqueName));
-//	}
-	
-//	/**
-//	 * Returns, if exists, the size of the sample for the specified original table. Otherwise return -1.
-//	 * @param originalSchemaName
-//	 * @param originalTableName
-//	 * @return
-//	 */
-//	public long getSampleSizeByOriginalTableNameIfExists(String originalSchemaName, String originalTableName) {
-//		TableUniqueName sampleUname = sampleNameMeta.get(TableUniqueName.uname(originalSchemaName, originalTableName));
-//		SampleInfo info = sampleSizeMeta.get(sampleUname);
-//		if (info != null)
-//			return info.sampleSize;
-//		else
-//			return -1;
-//	}
-	
+		
 	public Pair<Long, Long> getSampleAndOriginalTableSizeByOriginalTableNameIfExists(TableUniqueName originalTableName) {
+		if (sampleSizeMeta.containsKey(originalTableName)) {
+			SampleInfo info = sampleSizeMeta.get(originalTableName);
+			return Pair.of(info.sampleSize, info.originalTableSize);
+		}
+		
 		ResultSet rs;
 		Long sampleSize = null;
 		Long originalTableSize = null;
@@ -211,34 +121,18 @@ public class VerdictMeta {
 		} catch (VerdictException | SQLException e) {}
 		
 		if (sampleSize != null) {
+			sampleSizeMeta.put(originalTableName, new SampleInfo(sampleSize, originalTableSize));
 			return Pair.of(sampleSize, originalTableSize);
 		} else {
 			return Pair.of(-1L, -1L);
 		}
 	}
-	
-	/**
-	 * Returns the size of the original table, if a sample has been created for the table. Otherwise return -1.
-	 * @param originalSchemaName
-	 * @param originalTableName
-	 * @return
-	 */
-//	public long getOriginalTableSizeByOriginalTableNameIfSampleExists(String originalSchemaName, String originalTableName) {
-//		if (getSampleSizeByOriginalTableNameIfExists(originalSchemaName, originalTableName) >= 0) {
-//			TableUniqueName sampleUname = sampleNameMeta.get(TableUniqueName.uname(originalSchemaName, originalTableName));
-//			SampleInfo info = sampleSizeMeta.get(sampleUname);
-//			return info.originalTableSize; 
-//		}
-//		else {
-//			return -1;
-//		}
-//	}
-	
-//	public long getOriginalTableSizeByOriginalTableNameIfSampleExists(TableUniqueName uniqueName) {
-//		return getOriginalTableSizeByOriginalTableNameIfSampleExists(uniqueName.schemaName, uniqueName.tableName);
-//	}
 
 	public TableUniqueName getSampleTableNameIfExistsElseOriginal(TableUniqueName originalTableName) {
+		if (sampleNameMeta.containsKey(originalTableName)) {
+			return sampleNameMeta.get(originalTableName);
+		}
+		
 		String sampleSchemaName = null;
 		String sampleTableName = null;
 		
@@ -255,7 +149,9 @@ public class VerdictMeta {
 		} catch (VerdictException | SQLException e) {} 
 
 		if (sampleSchemaName != null) {
-			return TableUniqueName.uname(sampleSchemaName, sampleTableName);
+			TableUniqueName sampleTableUName = TableUniqueName.uname(sampleSchemaName, sampleTableName);
+			sampleNameMeta.put(originalTableName, sampleTableUName);
+			return sampleTableUName;
 		} else {
 			return originalTableName;
 		}

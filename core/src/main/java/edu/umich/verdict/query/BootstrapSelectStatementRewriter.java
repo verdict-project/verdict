@@ -2,6 +2,7 @@ package edu.umich.verdict.query;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -113,10 +114,11 @@ public class BootstrapSelectStatementRewriter extends AnalyticSelectStatementRew
 //		List<Boolean> rightAggColIndicator = varianceRewriter.getAggregateColumnIndicator();
 		
 		sql.append(String.format("%sSELECT", indentString));
-		int leftSelectElemIndex = 0;
 		int totalSelectElemIndex = 0;
-		for (Pair<String, String> colName2Alias : leftColName2Aliases) {
-			leftSelectElemIndex++;
+		List<Integer> groupbyIndex = new ArrayList<Integer>();
+		for (int leftSelectElemIndex = 1; leftSelectElemIndex <= leftColName2Aliases.size(); leftSelectElemIndex++) {
+			Pair<String, String> colName2Alias = leftColName2Aliases.get(leftSelectElemIndex-1);
+			
 			if (leftSelectElemIndex == 1) sql.append(" ");
 			else sql.append(", ");
 			
@@ -124,26 +126,23 @@ public class BootstrapSelectStatementRewriter extends AnalyticSelectStatementRew
 				// mean
 				totalSelectElemIndex++;
 				String alias = genAlias();
-				sql.append(String.format("%s.%s AS %s", leftAlias, colName2Alias.getRight(), alias));
-				thisColumnName2Aliases.add(Pair.of(colName2Alias.getLeft(), alias));
+				sql.append(String.format("%s.%s AS %s", leftAlias, colName2Alias.getValue(), alias));
+				thisColumnName2Aliases.add(Pair.of(colName2Alias.getKey(), alias));
 				
 				// error (standard deviation * 1.96 (for 95% confidence interval))
 				totalSelectElemIndex++;
 				alias = genAlias();
-				String matchingAliasName = null;
-				for (Pair<String, String> r : rightColName2Aliases) {
-					if (colName2Alias.getLeft().equals(r.getLeft())) {
-						matchingAliasName = r.getRight();
-					}
-				}
-				sql.append(String.format(", %s.%s AS %s", rightAlias, matchingAliasName, alias));
-				thisColumnName2Aliases.add(Pair.of(colName2Alias.getLeft(), alias));
+				sql.append(String.format(", %s.%s AS %s", rightAlias,
+						rightColName2Aliases.get(leftSelectElemIndex-1).getValue(), alias));
+				thisColumnName2Aliases.add(Pair.of(colName2Alias.getKey(), alias));
 				
 				meanColIndex2ErrColIndex.put(totalSelectElemIndex-1, totalSelectElemIndex);
 			} else {
 				totalSelectElemIndex++;
-				sql.append(String.format("%s.%s AS %s", leftAlias, colName2Alias.getRight(), colName2Alias.getRight()));
-				thisColumnName2Aliases.add(Pair.of(colName2Alias.getLeft(), colName2Alias.getRight()));
+				String alias = genAlias();
+				sql.append(String.format("%s.%s AS %s", leftAlias, colName2Alias.getValue(), alias));
+				groupbyIndex.add(leftSelectElemIndex);
+				thisColumnName2Aliases.add(Pair.of(colName2Alias.getKey(), alias));
 			}
 		}
 		colName2Aliases = thisColumnName2Aliases;
@@ -154,7 +153,10 @@ public class BootstrapSelectStatementRewriter extends AnalyticSelectStatementRew
 		sql.append(" LEFT JOIN (\n");
 		sql.append(subSql);
 		sql.append(String.format("%s) AS %s", indentString, rightAlias));
-		sql.append(String.format(" ON %s.l_shipmode = %s.l_shipmode", leftAlias, rightAlias));
+		for (Integer gid : groupbyIndex) {
+			sql.append(String.format(" ON %s.%s = %s.%s", leftAlias, leftColName2Aliases.get(gid-1).getValue(),
+														  rightAlias, rightColName2Aliases.get(gid-1).getValue()));
+		}
 		
 		return sql.toString();
 	}
@@ -169,6 +171,10 @@ public class BootstrapSelectStatementRewriter extends AnalyticSelectStatementRew
 	
 	protected String stddevFunction() {
 		return vc.getDbms().stddevFunction();
+	}
+	
+	private String errorIndicator() {
+		return "_";
 	}
 	
 	protected String varianceComputationStatement(VerdictSQLParser.Query_specificationContext ctx) {
@@ -198,28 +204,29 @@ public class BootstrapSelectStatementRewriter extends AnalyticSelectStatementRew
 			if (singleRewriter.isAggregateColumn(selectElemIndex)) {
 				String alias = genAlias();
 				sql.append(String.format("%s(%s) AS %s",
-						stddevFunction(), e.getRight(), alias));
-				colName2Aliases.add(Pair.of(e.getLeft(), alias));
+						stddevFunction(), e.getValue(), alias));
+				colName2Aliases.add(Pair.of(e.getKey() + errorIndicator(), alias));
 			} else {
-				if (e.getLeft().equals(e.getRight())) sql.append(e.getLeft());
-				else sql.append(String.format("%s AS %s", e.getLeft(), e.getRight()));
-				colName2Aliases.add(Pair.of(e.getLeft(), e.getRight()));
+				String alias = genAlias();
+				sql.append(String.format("%s AS %s", e.getValue(), alias));
+				colName2Aliases.add(Pair.of(e.getKey(), alias));
 			}
 		}
 		sql.append(String.format("\n%sFROM (\n", indentString));
 		sql.append(unionedFrom.toString());
 		sql.append(String.format("\n%s) AS %s", indentString, genAlias()));
 		sql.append(String.format("\n%sGROUP BY", indentString));
+		
 		for (int colIndex = 1; colIndex <= subqueryColName2Aliases.size(); colIndex++) {
 			if (!singleRewriter.isAggregateColumn(colIndex)) {
 				if (colIndex > 1) {
-					sql.append(String.format(", %s", subqueryColName2Aliases.get(colIndex-1).getRight()));
+					sql.append(String.format(", %s", colName2Aliases.get(colIndex-1).getValue()));
 				} else {
-					sql.append(String.format(" %s", subqueryColName2Aliases.get(colIndex-1).getRight()));
+					sql.append(String.format(" %s", colName2Aliases.get(colIndex-1).getValue()));
 				}
 			}
 		}
-		
+			
 		return sql.toString();
 	}
 	
@@ -358,7 +365,7 @@ public class BootstrapSelectStatementRewriter extends AnalyticSelectStatementRew
 		orderby.append("ORDER BY");
 		boolean isFirst = true;
 		for (VerdictSQLParser.Order_by_expressionContext octx : ctx.order_by_expression()) {
-			String alias = findAliasedExpression(visit(octx.expression()));
+			String alias = findAliasedExpression(visit(octx));
 			
 			if (isFirst) orderby.append(" ");
 			else 	     orderby.append(", ");

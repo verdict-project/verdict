@@ -396,7 +396,7 @@ public class SelectStatementBaseRewriter extends VerdictSQLBaseVisitor<String> {
 	
 	// group by
 	
-	private boolean isFirstGroup = true;
+	protected boolean isFirstGroup = true;
 	
 	@Override
 	public String visitGroup_by_item(VerdictSQLParser.Group_by_itemContext ctx) {

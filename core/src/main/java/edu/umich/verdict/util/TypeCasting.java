@@ -30,6 +30,14 @@ public class TypeCasting {
 	}
 	
 	
+	public static <S,T> Map<S,T> reverseMap(Map<T,S> amap) {
+		Map<S,T> newMap = new HashMap<S,T>();
+		for (Map.Entry<T,S> e : amap.entrySet()) {
+			newMap.put(e.getValue(), e.getKey());
+		}
+		return newMap;
+	}
+
 	public static Double toDouble(Object obj) {
 		if (obj instanceof Double) return (Double) obj;
 		else if (obj instanceof Float) return ((Float) obj).doubleValue();

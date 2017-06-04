@@ -24,10 +24,13 @@ public class MySQLBootstrappingTest {
 		VerdictContext vc = new VerdictContext(conf);
 		
 		String sql = "select l_shipmode, count(*) from lineitem group by l_shipmode order by count(*) desc";
-//		String sql = "select count(*) from nation";
-//		String sql = "SELECT *, rand() AS verdict_rand FROM tpch1G.sample_tpch1G_nation";
 		
-		ResultSet rs1 = vc.executeQuery(sql);
+		String sql2 = "select l_shipmode, avg(l_discount) / avg(l_tax) from lineitem group by l_shipmode";
+		
+		String sql3 = "select l_shipdate, count(*) from lineitem group by l_shipdate order by count(*) desc limit 10";
+		
+		
+		ResultSet rs1 = vc.executeQuery(sql3);
 		ResultSetConversion.printResultSet(rs1);
 
 	}

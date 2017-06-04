@@ -83,7 +83,7 @@ public class ApproximateSelectQuery extends SelectQuery {
 		
 		ResultSet rsFromDB = vc.getDbms().executeQuery(rewrittenQuery);
 		VerdictResultColumnMap columnInfo = new VerdictResultColumnMap(
-				rewriter.getMean2ErrorColumnMap(),
+				meanAndErrorColumnMap,
 				TypeCasting.listToReverseMap(rewriter.getColName2Aliases()),
 				rsFromDB);
 		

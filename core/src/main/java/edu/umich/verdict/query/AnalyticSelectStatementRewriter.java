@@ -2,6 +2,7 @@ package edu.umich.verdict.query;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -111,7 +112,7 @@ class AnalyticSelectStatementRewriter extends SelectStatementBaseRewriter  {
 	private int aliasIndex = 1;
 	
 	protected String genAlias() {
-		return String.format("v%d_%d_%d", depth, this.hashCode()%1000, aliasIndex++);
+		return String.format("v%d_%d", depth, aliasIndex++);
 	}
 	
 	@Override
@@ -186,37 +187,23 @@ class AnalyticSelectStatementRewriter extends SelectStatementBaseRewriter  {
 			StringBuilder elem = new StringBuilder();
 			elem.append(visit(ctx.expression()));
 			
+			SelectStatementBaseRewriter baseRewriter = new SelectStatementBaseRewriter(queryString);
+			
 			if (ctx.column_alias() != null) {
 				String alias = ctx.column_alias().getText();
 				elem.append(String.format(" AS %s", alias));
-				colName2Alias = Pair.of(ctx.expression().getText(), alias);
+				colName2Alias = Pair.of(baseRewriter.visit(ctx.expression()), alias);
 			} else {
-				// no alias explicitly declared
-				if (isAggregateColumn(select_list_elem_num)) {
-					// We add a pseudo column alias
-					String alias = genAlias();
-					elem.append(String.format(" AS %s", alias));
-					colName2Alias = Pair.of(ctx.getText(), alias);
-					
-//					if (depth != 0) {
-//						String msg = "An aggregate expression in subqueries must have an alias.";
-//						VerdictLogger.error(this, msg);
-//						e = new VerdictQuerySyntaxException(msg);
-//					} else {
-//						
-//					}
-				} else {
-					// no need to generate alias for non-aggregate expression.
-					// outer queries can easily refer to them.
-					String colExpr = elem.toString();
-					colName2Alias = Pair.of(colExpr, colExpr);
-				}
+				// We add a pseudo column alias
+				String alias = genAlias();
+				elem.append(String.format(" AS %s", alias));
+				colName2Alias = Pair.of(baseRewriter.visit(ctx.expression()), alias);
 			}
 			
 			newSelectListElem = elem.toString();
 		}
 		
-		colName2Aliases.add(colName2Alias);
+		colName2Aliases.add(Pair.of(colName2Alias.getKey(), colName2Alias.getValue()));
 		return newSelectListElem;
 	}
 	
@@ -328,6 +315,27 @@ class AnalyticSelectStatementRewriter extends SelectStatementBaseRewriter  {
 		String ret = subqueryVisitor.visit(ctx.select_statement());
 		cumulativeReplacedTableSources.putAll(subqueryVisitor.getCumulativeSampleTables());
 		return ret;
+	}
+	
+	@Override
+	public String visitGroup_by_item(VerdictSQLParser.Group_by_itemContext ctx) {
+		String groupName = ctx.getText();
+		String alias = groupName;
+		
+		for (Pair<String, String> e : colName2Aliases) {
+			if (e.getKey().equals(groupName)) {
+				alias = e.getValue();
+				break;
+			}
+		}
+		
+		if (isFirstGroup) {
+			isFirstGroup = false;
+			return alias;
+		}
+		else {
+			return ", " + alias;
+		}
 	}
 	
 }
