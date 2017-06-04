@@ -308,7 +308,7 @@ class AnalyticSelectStatementRewriter extends SelectStatementBaseRewriter  {
 		AnalyticSelectStatementRewriter subqueryVisitor = new AnalyticSelectStatementRewriter(vc, queryString);
 		subqueryVisitor.setIndentLevel(defaultIndent + 4);
 		subqueryVisitor.setDepth(depth+1);
-		String ret = subqueryVisitor.visit(ctx.select_statement());
+		String ret = subqueryVisitor.visit(ctx.select_statement().query_expression());
 		cumulativeReplacedTableSources.putAll(subqueryVisitor.getCumulativeSampleTables());
 		return ret;
 	}

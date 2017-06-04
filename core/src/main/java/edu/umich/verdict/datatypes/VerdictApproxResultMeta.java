@@ -40,13 +40,6 @@ public class VerdictApproxResultMeta {
 				}
 			}
 		}
-		
-//		for (Map.Entry<Integer, Integer> entry : aggColumn2ErrorColumn.entrySet()) {
-//			if (entry.getValue().equals(columnIndex)) {
-//				// if an error column, use the modified name
-//				baseName = String.format(vc.getConf().get("error_column_pattern"), baseName);
-//			}
-//		}
 
 		return baseName;
 	}

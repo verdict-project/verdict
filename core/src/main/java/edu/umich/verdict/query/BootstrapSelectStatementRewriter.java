@@ -76,6 +76,22 @@ public class BootstrapSelectStatementRewriter extends AnalyticSelectStatementRew
 		resampleMethod = m;
 	}
 	
+	private String confidenceMultiplier() {
+		String confLevel = vc.getConf().get("confidence");
+		if (confLevel.equals("90%")) {
+			return "1.645";
+		} else if (confLevel.equals("95%")) {
+			return "1.96";
+		} else if (confLevel.equals("98%")) {
+			return "2.326";
+		} else if (confLevel.equals("99%")) {
+			return "2.576";
+		} else {
+			VerdictLogger.warn(this, String.format("Unexpected confidence: %s.", confLevel)
+					+ "The confidence interval must be one of (90%, 95%, 98%, 99%). Default 95% is used.");
+			return "1.96";
+		}
+	}	
 	
 	/**
 	 * Rewrites a query for combining mean estimate and the variance estimate.
@@ -109,12 +125,8 @@ public class BootstrapSelectStatementRewriter extends AnalyticSelectStatementRew
 		
 		// we combine those two statements using join.
 		List<Pair<String, Alias>> thisColumnName2Aliases = new ArrayList<Pair<String, Alias>>();
-		
 		List<Pair<String, Alias>> leftColName2Aliases = meanRewriter.getColName2Aliases();
-//		List<Boolean> leftAggColIndicator = meanRewriter.getAggregateColumnIndicator();
-		
 		List<Pair<String, Alias>> rightColName2Aliases = varianceRewriter.getColName2Aliases();
-//		List<Boolean> rightAggColIndicator = varianceRewriter.getAggregateColumnIndicator();
 		
 		sql.append(String.format("%sSELECT", indentString));
 		int totalSelectElemIndex = 0;
@@ -136,7 +148,7 @@ public class BootstrapSelectStatementRewriter extends AnalyticSelectStatementRew
 				// error (standard deviation * 1.96 (for 95% confidence interval))
 				totalSelectElemIndex++;
 				alias = rightColName2Alias.getValue();
-				sql.append(String.format(", %s.%s AS %s", rightAlias, alias, alias));
+				sql.append(String.format(", (%s.%s)*%s AS %s", rightAlias, alias, confidenceMultiplier(), alias));
 				thisColumnName2Aliases.add(Pair.of(rightColName2Alias.getKey(), alias));
 				
 				meanColIndex2ErrColIndex.put(totalSelectElemIndex-1, totalSelectElemIndex);
@@ -162,6 +174,20 @@ public class BootstrapSelectStatementRewriter extends AnalyticSelectStatementRew
 		}
 		
 		return sql.toString();
+	}
+	
+	protected String visitSelect_statementForSingleTrial(VerdictSQLParser.Select_statementContext ctx) {
+		StringBuilder query = new StringBuilder(1000);
+		query.append(visitQuery_specificationForSingleTrial(ctx.query_expression().query_specification()));
+		
+		if (ctx.order_by_clause() != null) {
+			query.append(String.format("\n%s", indentString + visit(ctx.order_by_clause())));
+		}
+		
+		if (ctx.limit_clause() != null) {
+			query.append(String.format("\n%s", indentString + visit(ctx.limit_clause())));
+		}
+		return query.toString();
 	}
 	
 	/**
@@ -370,6 +396,16 @@ public class BootstrapSelectStatementRewriter extends AnalyticSelectStatementRew
 		} else {
 			return newTableSource.toString();
 		}
+	}
+	
+	@Override
+	public String visitSubquery(VerdictSQLParser.SubqueryContext ctx) {
+		BootstrapSelectStatementRewriter subqueryRewriter = new BootstrapSelectStatementRewriter(vc, queryString);
+		subqueryRewriter.setIndentLevel(defaultIndent + 4);
+		subqueryRewriter.setDepth(depth+1);
+		String ret = subqueryRewriter.visitSelect_statementForSingleTrial(ctx.select_statement());
+		cumulativeReplacedTableSources.putAll(subqueryRewriter.getCumulativeSampleTables());
+		return ret;
 	}
 	
 	@Override
