@@ -19,6 +19,9 @@ public class VerdictContext {
 	private Dbms dbms;
 	private Dbms metaDbms;		// contains persistent info of VerdictMeta
 	
+	// used for refreshing meta data.
+	private long queryUid;
+	
 	/**
 	 *  copy constructor
 	 * @param conf
@@ -30,6 +33,7 @@ public class VerdictContext {
 		this.dbms = another.dbms;
 		this.metaDbms = another.metaDbms;
 		this.dbms.createNewStatementWithoutClosing();
+		this.queryUid = 0;
 	}
 	
 	/**
@@ -72,6 +76,7 @@ public class VerdictContext {
 	}
 	
 	public ResultSet executeQuery(String sql) throws VerdictException {
+		queryUid++;
 		VerdictLogger.debug(this, "A query execution starts:");
 		VerdictLogger.debugPretty(this, sql, "  ");
 		Query vq = new Query(sql, this);
@@ -113,6 +118,10 @@ public class VerdictContext {
 	
 	public void destroy() throws VerdictException {
 		dbms.close();
+	}
+	
+	public long getCurrentQid() {
+		return queryUid;
 	}
 	
 //	public void setLogLevel(String level) {

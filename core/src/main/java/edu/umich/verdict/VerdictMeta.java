@@ -5,7 +5,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -35,6 +37,11 @@ public class VerdictMeta {
 	 */
 	private Map<TableUniqueName, TableUniqueName> sampleNameMeta;
 	
+	/**
+	 * remembers for what query id and schema, we have updated the meta info.
+	 */
+	private Set<Pair<Long, String>> uptodateSchemas;
+	
 	
 	private final String META_SIZE_TABLE;
 	private final String META_NAME_TABLE;
@@ -47,6 +54,7 @@ public class VerdictMeta {
 		META_SIZE_TABLE = vc.getConf().get("meta_size_table");
 		sampleSizeMeta = new HashMap<TableUniqueName, SampleInfo>();
 		sampleNameMeta = new HashMap<TableUniqueName, TableUniqueName>();
+		uptodateSchemas = new HashSet<Pair<Long, String>>();
 	}
 	
 	private Dbms getMetaDbms() {
@@ -97,61 +105,89 @@ public class VerdictMeta {
 		getMetaDbms().deleteSampleSizeEntryFromDBMS(sampleTableName.schemaName, sampleTableName.tableName,
 				getMetaSizeTableName(sampleTableName));
 	}
-		
-	public Pair<Long, Long> getSampleAndOriginalTableSizeByOriginalTableNameIfExists(TableUniqueName originalTableName) {
-		if (sampleSizeMeta.containsKey(originalTableName)) {
-			SampleInfo info = sampleSizeMeta.get(originalTableName);
-			return Pair.of(info.sampleSize, info.originalTableSize);
+	
+	public void refreshSampleInfoIfNeeded(TableUniqueName originalTableName) {
+		if (!uptodateSchemas.contains(Pair.of(vc.getCurrentQid(), originalTableName.schemaName))) {
+			refreshSampleInfo(originalTableName);
+			uptodateSchemas.add(Pair.of(vc.getCurrentQid(), originalTableName.schemaName));
 		}
-		
+	}
+	
+	public void refreshSampleInfo(TableUniqueName originalTableName) {
 		ResultSet rs;
-		Long sampleSize = null;
-		Long originalTableSize = null;
+		
+		TableUniqueName metaNameTable = getMetaNameTableName(originalTableName);
+		TableUniqueName metaSizeTable = getMetaSizeTableName(originalTableName);
+		
 		try {
-			TableUniqueName sampleName = sampleTableUniqueNameOf(originalTableName);
-			String sql = String.format("SELECT schemaname, tablename, samplesize, originaltablesize FROM %s"
-					+ " WHERE schemaname = \"%s\" AND tablename = \"%s\"",
-					getMetaSizeTableName(originalTableName), sampleName.schemaName, sampleName.tableName);
+			String sql = String.format("SELECT originalschemaname, originaltablename, "
+					+ "sampleschemaaname, sampletablename FROM %s", metaNameTable);
 			rs = getMetaDbms().executeQuery(sql);
 			
 			while (rs.next()) {
-				sampleSize = rs.getLong(3);
-				originalTableSize = rs.getLong(4);
+				String originalSchemaName = rs.getString(1);
+				String originalTabName = rs.getString(2);
+				String sampleSchemaName = rs.getString(3);
+				String sampleTabName = rs.getString(4);
+				sampleNameMeta.put(TableUniqueName.uname(originalSchemaName, originalTabName),
+						TableUniqueName.uname(sampleSchemaName, sampleTabName));
 			}
+			
+			sql = String.format("SELECT schemaaname, tablename, samplesize, originaltablesize "
+					+ " FROM %s", metaSizeTable);
+			rs = getMetaDbms().executeQuery(sql);
+			
+			while (rs.next()) {
+				String sampleSchemaName = rs.getString(1);
+				String sampleTabName = rs.getString(2);
+				Long sampleSize = rs.getLong(3);
+				Long originalTableSize = rs.getLong(4);
+				sampleSizeMeta.put(TableUniqueName.uname(sampleSchemaName, sampleTabName),
+						new SampleInfo(sampleSize, originalTableSize));
+			}
+			
+//			String sql = String.format("SELECT originalschemaname, originaltablename, "
+//					+ "sampleschemaaname, sampletablename, "
+//					+ "samplesize, originaltablesize FROM %s, %s "
+//					+ "WHERE %s.sampleschemaaname = %s.schemaname AND %s.sampletablename = %s.tablename",
+//					metaNameTable, metaSizeTable,
+//					metaNameTable, metaSizeTable, metaNameTable, metaSizeTable);
+//			rs = getMetaDbms().executeQuery(sql);
+//
+//			while (rs.next()) {
+//				String originalSchemaName = rs.getString(1);
+//				String originalTabName = rs.getString(2);
+//				String sampleSchemaName = rs.getString(3);
+//				String sampleTabName = rs.getString(4);
+//				Long sampleSize = rs.getLong(5);
+//				Long originalTableSize = rs.getLong(6);
+//				
+//				sampleNameMeta.put(TableUniqueName.uname(originalSchemaName, originalTabName),
+//						TableUniqueName.uname(sampleSchemaName, sampleTabName));
+//				sampleSizeMeta.put(TableUniqueName.uname(originalSchemaName, originalTabName),
+//						new SampleInfo(sampleSize, originalTableSize));
+//			}
 		} catch (VerdictException | SQLException e) {}
+
+		VerdictLogger.debug(this, "Sample meta data updated.");
+	}
+
+	public Pair<Long, Long> getSampleAndOriginalTableSizeByOriginalTableNameIfExists(TableUniqueName originalTableName) {
+		refreshSampleInfoIfNeeded(originalTableName);
 		
-		if (sampleSize != null) {
-			sampleSizeMeta.put(originalTableName, new SampleInfo(sampleSize, originalTableSize));
-			return Pair.of(sampleSize, originalTableSize);
+		if (sampleSizeMeta.containsKey(originalTableName)) {
+			SampleInfo info = sampleSizeMeta.get(originalTableName);
+			return Pair.of(info.sampleSize, info.originalTableSize);
 		} else {
 			return Pair.of(-1L, -1L);
 		}
 	}
 
 	public TableUniqueName getSampleTableNameIfExistsElseOriginal(TableUniqueName originalTableName) {
+		refreshSampleInfoIfNeeded(originalTableName);
+		
 		if (sampleNameMeta.containsKey(originalTableName)) {
 			return sampleNameMeta.get(originalTableName);
-		}
-		
-		String sampleSchemaName = null;
-		String sampleTableName = null;
-		
-		try {
-			String sql = String.format("SELECT originalschemaname, originaltablename, sampleschemaaname, sampletablename FROM %s"
-					+ " WHERE originalschemaname = \"%s\" AND originaltablename = \"%s\"",
-					getMetaNameTableName(originalTableName), originalTableName.schemaName, originalTableName.tableName); 
-			ResultSet rs = getMetaDbms().executeQuery(sql);
-	
-			while (rs.next()) {
-				sampleSchemaName = rs.getString(3);
-				sampleTableName = rs.getString(4);
-			}
-		} catch (VerdictException | SQLException e) {} 
-
-		if (sampleSchemaName != null) {
-			TableUniqueName sampleTableUName = TableUniqueName.uname(sampleSchemaName, sampleTableName);
-			sampleNameMeta.put(originalTableName, sampleTableUName);
-			return sampleTableUName;
 		} else {
 			return originalTableName;
 		}
