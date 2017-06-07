@@ -30,10 +30,10 @@ public class ImpalaThroughVerdictTest {
 		
 		System.out.println("Decimal Number: " + java.sql.Types.DECIMAL);
 		// Q2
-		ResultSet rs2 = vc.executeQuery("select order_hour_of_day, count(*) as c from orders"
-				+ " group by order_hour_of_day"
-				+ " order by order_hour_of_day");
-		ResultSetConversion.printResultSet(rs2);
+//		ResultSet rs2 = vc.executeQuery("select order_hour_of_day, count(*) as c from orders"
+//				+ " group by order_hour_of_day"
+//				+ " order by order_hour_of_day");
+//		ResultSetConversion.printResultSet(rs2);
 		
 		// Q3
 //		ResultSet rs3 = vc.executeQuery("SELECT product_name, count(*) as order_count"
@@ -74,24 +74,24 @@ public class ImpalaThroughVerdictTest {
 //		ResultSetConversion.printResultSet(rs5);
 		
 		// Q6
-//		ResultSet rs6 = vc.executeQuery("SELECT product_name, count(*) as freq_order_count"
-//		+ " FROM order_products, orders, products, departments"
-//		+ " WHERE orders.order_id = order_products.order_id"
-//		+ "	  AND order_products.product_id = products.product_id"
-//		+ "	  AND products.department_id = departments.department_id"
-//		+ "	  AND user_id IN ("
-//		+ "		          SELECT user_id"
-//		+ "		          FROM (SELECT user_id, count(*) as order_count"
-//		+ "						FROM orders"
-//		+ "						GROUP BY user_id) t1"
-//		+ "		          WHERE order_count > (SELECT AVG(order_count) as large_order_count"
-//		+ "		                               FROM (SELECT user_id, count(*) as order_count"
-//		+ "											 FROM orders"
-//		+ "											 GROUP BY user_id) t2 ))"
-//		+ "		GROUP BY product_name"
-//		+ "		ORDER BY freq_order_count DESC"
-//		+ "		LIMIT 10");
-//		ResultSetConversion.printResultSet(rs6);
+		ResultSet rs6 = vc.executeQuery("SELECT product_name, count(*) as freq_order_count"
+		+ " FROM order_products, orders, products, departments"
+		+ " WHERE orders.order_id = order_products.order_id"
+		+ "	  AND order_products.product_id = products.product_id"
+		+ "	  AND products.department_id = departments.department_id"
+		+ "	  AND user_id IN ("
+		+ "		          SELECT user_id"
+		+ "		          FROM (SELECT user_id, count(*) as order_count"
+		+ "						FROM orders"
+		+ "						GROUP BY user_id) t1"
+		+ "		          WHERE order_count > (SELECT AVG(order_count) as large_order_count"
+		+ "		                               FROM (SELECT user_id, count(*) as order_count"
+		+ "											 FROM orders"
+		+ "											 GROUP BY user_id) t2 ))"
+		+ "		GROUP BY product_name"
+		+ "		ORDER BY freq_order_count DESC"
+		+ "		LIMIT 10");
+		ResultSetConversion.printResultSet(rs6);
 		
 		
 //		Answer anst1 = vc.executeQuery("select 5*round(days_since_prior/5) as d1, count(*) from orders where days_since_prior is not null group by d1 order by d1");

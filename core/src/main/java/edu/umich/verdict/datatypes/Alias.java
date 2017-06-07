@@ -12,6 +12,7 @@ public class Alias implements Comparable<Alias> {
 	
 	private static int aliasIndex = 0;
 	
+	// This field is more of a name that should be displayed to the user
 	private String originalName;			// set to "C" for "COUNT(*) AS C"
 	
 	private String aliasName;

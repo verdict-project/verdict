@@ -3,6 +3,7 @@ package edu.umich.verdict.util;
 import com.google.common.base.Optional;
 
 import edu.umich.verdict.VerdictContext;
+import edu.umich.verdict.datatypes.TableUniqueName;
 
 public class NameHelpers {
 	
@@ -38,6 +39,36 @@ public class NameHelpers {
 		}
 		else {
 			return originalTableName;
+		}
+	}
+	
+	public static String colNameOfColName(String originalColName) {
+		String[] tokens = originalColName.split("\\.");
+		if (tokens.length > 1) {
+			return tokens[tokens.length-1];
+		}
+		else {
+			return originalColName;
+		}
+	}
+	
+	public static String tabNameOfColName(String originalColName) {
+		String[] tokens = originalColName.split("\\.");
+		if (tokens.length > 1) {
+			return tokens[tokens.length-2];
+		} else {
+			return "";
+		}
+	}
+	
+	public static TableUniqueName tabUniqueNameOfColName(VerdictContext vc, String originalColName) {
+		String[] tokens = originalColName.split("\\.");
+		if (tokens.length > 2) {
+			return TableUniqueName.uname(tokens[tokens.length-3], tokens[tokens.length-2]);
+		} else if (tokens.length > 1) {
+			return TableUniqueName.uname(vc, tokens[tokens.length-2]);
+		} else {
+			return null;
 		}
 	}
 	
