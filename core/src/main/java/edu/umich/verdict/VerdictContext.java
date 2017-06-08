@@ -49,8 +49,8 @@ public class VerdictContext {
 								conf.getHost(),
 								conf.getPort(),
 								conf.getDbmsSchema(),
-								conf.getUser(),
-								conf.getPassword(),
+								(conf.getBoolean("no_user_password"))? "" : conf.getUser(),
+								(conf.getBoolean("no_user_password"))? "" : conf.getPassword(),
 								conf.get(conf.getDbms() + ".jdbc_class_name"));
 		VerdictLogger.info( 
 				(conf.getDbmsSchema() != null) ?
