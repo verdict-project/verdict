@@ -123,7 +123,6 @@ public class VerdictMeta {
 			String sql = String.format("SELECT originalschemaname, originaltablename, "
 					+ "sampleschemaaname, sampletablename FROM %s", metaNameTable);
 			rs = getMetaDbms().executeQuery(sql);
-			
 			while (rs.next()) {
 				String originalSchemaName = rs.getString(1);
 				String originalTabName = rs.getString(2);
@@ -132,11 +131,11 @@ public class VerdictMeta {
 				sampleNameMeta.put(TableUniqueName.uname(originalSchemaName, originalTabName),
 						TableUniqueName.uname(sampleSchemaName, sampleTabName));
 			}
+			rs.close();
 			
-			sql = String.format("SELECT schemaaname, tablename, samplesize, originaltablesize "
+			sql = String.format("SELECT schemaname, tablename, samplesize, originaltablesize "
 					+ " FROM %s", metaSizeTable);
 			rs = getMetaDbms().executeQuery(sql);
-			
 			while (rs.next()) {
 				String sampleSchemaName = rs.getString(1);
 				String sampleTabName = rs.getString(2);
@@ -145,6 +144,7 @@ public class VerdictMeta {
 				sampleSizeMeta.put(TableUniqueName.uname(sampleSchemaName, sampleTabName),
 						new SampleInfo(sampleSize, originalTableSize));
 			}
+			rs.close();
 			
 //			String sql = String.format("SELECT originalschemaname, originaltablename, "
 //					+ "sampleschemaaname, sampletablename, "
@@ -167,7 +167,9 @@ public class VerdictMeta {
 //				sampleSizeMeta.put(TableUniqueName.uname(originalSchemaName, originalTabName),
 //						new SampleInfo(sampleSize, originalTableSize));
 //			}
-		} catch (VerdictException | SQLException e) {}
+		} catch (VerdictException | SQLException e) {
+			VerdictLogger.warn(e);
+		}
 
 		VerdictLogger.debug(this, "Sample meta data updated.");
 	}
@@ -175,8 +177,10 @@ public class VerdictMeta {
 	public Pair<Long, Long> getSampleAndOriginalTableSizeByOriginalTableNameIfExists(TableUniqueName originalTableName) {
 		refreshSampleInfoIfNeeded(originalTableName);
 		
-		if (sampleSizeMeta.containsKey(originalTableName)) {
-			SampleInfo info = sampleSizeMeta.get(originalTableName);
+		TableUniqueName sampleTableName = sampleTableUniqueNameOf(originalTableName);
+		
+		if (sampleSizeMeta.containsKey(sampleTableName)) {
+			SampleInfo info = sampleSizeMeta.get(sampleTableName);
 			return Pair.of(info.sampleSize, info.originalTableSize);
 		} else {
 			return Pair.of(-1L, -1L);

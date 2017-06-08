@@ -30,10 +30,10 @@ public class ImpalaThroughVerdictTest {
 		
 		System.out.println("Decimal Number: " + java.sql.Types.DECIMAL);
 		// Q2
-		ResultSet rs2 = vc.executeQuery("select order_hour_of_day, count(*) as c from orders"
-				+ " group by order_hour_of_day"
-				+ " order by order_hour_of_day");
-		ResultSetConversion.printResultSet(rs2);
+//		ResultSet rs2 = vc.executeQuery("select order_hour_of_day, count(*) as c from orders"
+//				+ " group by order_hour_of_day"
+//				+ " order by order_hour_of_day");
+//		ResultSetConversion.printResultSet(rs2);
 		
 		// Q3
 //		ResultSet rs3 = vc.executeQuery("SELECT product_name, count(*) as order_count"
@@ -48,14 +48,14 @@ public class ImpalaThroughVerdictTest {
 
 		
 		// Q4
-//		ResultSet rs4 = vc.executeQuery("SELECT departments.department_id, department, count(*) as order_count"
-//				+ " FROM order_products, orders, products, departments"
-//				+ " WHERE orders.order_id = order_products.order_id"
-//				+ "   AND order_products.product_id = products.product_id"
-//				+ "   AND products.department_id = departments.department_id"
-//				+ " GROUP BY department_id, department"
-//				+ " ORDER BY order_count DESC");
-//		ResultSetConversion.printResultSet(rs4);
+		ResultSet rs4 = vc.executeQuery("SELECT departments.department_id, department, count(*) as order_count"
+				+ " FROM order_products, orders, products, departments"
+				+ " WHERE orders.order_id = order_products.order_id"
+				+ "   AND order_products.product_id = products.product_id"
+				+ "   AND products.department_id = departments.department_id"
+				+ " GROUP BY department_id, department"
+				+ " ORDER BY order_count DESC");
+		ResultSetConversion.printResultSet(rs4);
 		
 		// Q5
 //		ResultSet rs5 = vc.executeQuery("SELECT 5*round(d1/5) as reorder_after_days, COUNT(*)"
