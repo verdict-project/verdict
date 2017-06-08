@@ -41,10 +41,6 @@ public class VerdictConnection implements Connection {
      * @throws SQLException
      */
     public VerdictConnection(String url, Properties info) throws SQLException {
-    	for (Map.Entry<Object, Object> e : info.entrySet()) {
-    		VerdictLogger.debug(this, String.format("passed properties: %s = %s", e.getValue(), e.getValue()));
-    	}
-    	
     	try{
 	    	// set properties from the config file
 	    	if (info.contains("configfile")) {
@@ -60,6 +56,10 @@ public class VerdictConnection implements Connection {
 	    		info.setProperty(inlineMatcher.group("key"), inlineMatcher.group("value"));
 	    	}
 	    	conf.setProperties(info);
+	    	
+	    	for (Map.Entry<Object, Object> e : info.entrySet()) {
+	    		VerdictLogger.debug(this, String.format("connection properties: %s = %s", e.getKey(), e.getValue()));
+	    	}
 	    	
 	    	// set properties from the url string.    	
 	    	Pattern urlOptions = Pattern.compile("^jdbc:verdict:(?<dbms>\\w+)://(?<host>[\\.a-zA-Z0-9\\-]+)(?::(?<port>\\d+))?(?:/(?<schema>\\w+))?");
