@@ -41,6 +41,10 @@ public class VerdictConnection implements Connection {
      * @throws SQLException
      */
     public VerdictConnection(String url, Properties info) throws SQLException {
+    	for (Map.Entry<Object, Object> e : info.entrySet()) {
+    		VerdictLogger.debug(this, String.format("passed properties: %s = %s", e.getValue(), e.getValue()));
+    	}
+    	
     	try{
 	    	// set properties from the config file
 	    	if (info.contains("configfile")) {
