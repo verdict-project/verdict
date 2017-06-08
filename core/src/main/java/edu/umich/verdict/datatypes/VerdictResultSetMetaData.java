@@ -95,7 +95,8 @@ public class VerdictResultSetMetaData implements ResultSetMetaData {
 
 	@Override
 	public String getColumnName(int column) throws SQLException {
-		return meta.getColumnName(getMappedColumn(column));
+		return getColumnLabel(column);
+//		return meta.getColumnName(getMappedColumn(column));
 	}
 
 	@Override
