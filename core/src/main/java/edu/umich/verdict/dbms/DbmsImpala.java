@@ -3,9 +3,11 @@ package edu.umich.verdict.dbms;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
 
 import com.google.common.base.Optional;
 
@@ -35,21 +37,21 @@ public class DbmsImpala extends Dbms {
 	protected void createSampleTableFromTempTable(TableUniqueName tempTableName, TableUniqueName sampleTableName, double sampleRatio)
 			throws VerdictException {
 		VerdictLogger.debug(this, "Creating a sample table of " + tempTableName);
-		executeUpdate(String.format("CREATE TABLE %s AS SELECT * FROM %s WHERE verdict_rand < %f",
-				sampleTableName.fullyQuantifiedName(), tempTableName, sampleRatio));
+		executeUpdate(String.format("CREATE TABLE %s AS SELECT * FROM %s WHERE verdict_rand <= %f",
+				sampleTableName, tempTableName, sampleRatio));
 	}
 
 	@Override
-	public Pair<Long, Long> createSampleTableOf(String originalTableName, double sampleRatio) throws VerdictException {
-		TableUniqueName sampleTableName = vc.getMeta().sampleTableUniqueNameOf(originalTableName);
+	public Triple<Long, Long, String> createUniformRandomSampleTableOf(String originalTableName, double samplingRatio) throws VerdictException {
 		TableUniqueName fullyQuantifiedOriginalTableName = TableUniqueName.uname(vc, originalTableName);
 		
-		dropTable(sampleTableName);
+		dropUniformRandomSampleTableOf(fullyQuantifiedOriginalTableName, samplingRatio);
 		TableUniqueName tempTableName = createTempTableWithRand(originalTableName);
-		createSampleTableFromTempTable(tempTableName, sampleTableName, sampleRatio);
+		TableUniqueName sampleTableName = vc.getMeta().newSampleTableUniqueNameOf(originalTableName);
+		createSampleTableFromTempTable(tempTableName, sampleTableName, samplingRatio);
 		dropTable(tempTableName);
 		
-		return Pair.of(getTableSize(sampleTableName), getTableSize(fullyQuantifiedOriginalTableName));
+		return Triple.of(getTableSize(sampleTableName), getTableSize(fullyQuantifiedOriginalTableName), sampleTableName.tableName);
 	}
 	
 	protected TableUniqueName createTempTableExlucdingNameEntry(
@@ -62,10 +64,13 @@ public class DbmsImpala extends Dbms {
 	
 	@Override
 	public void updateSampleNameEntryIntoDBMS(String originalSchemaName, String originalTableName,
-			String sampleSchemaName, String sampleTableName, TableUniqueName metaNameTableName) throws VerdictException {
+			String sampleSchemaName, String sampleTableName,
+			String sampleType, Double samplingRatio, List<String> columnNames,
+			TableUniqueName metaNameTableName) throws VerdictException {
 		TableUniqueName tempTableName = createTempTableExlucdingNameEntry(originalSchemaName, originalTableName, metaNameTableName);
-		insertSampleNameEntryIntoDBMS(originalSchemaName, originalTableName, sampleSchemaName, sampleTableName, tempTableName);
-		VerdictLogger.debug(this, "Created a temp table with the new smaple name info: " + tempTableName);
+		insertSampleNameEntryIntoDBMS(originalSchemaName, originalTableName, sampleSchemaName, sampleTableName,
+				sampleType, samplingRatio, columnNames, tempTableName);
+		VerdictLogger.debug(this, "Created a temp table with the new sample name info: " + tempTableName);
 		
 		// copy temp table to the original meta name table after inserting a new entry.
 		dropTable(metaNameTableName);
@@ -165,7 +170,10 @@ public class DbmsImpala extends Dbms {
 				+ " (originalschemaname STRING, "
 				+ " originaltablename STRING, "
 				+ " sampleschemaaname STRING, "
-				+ " sampletablename STRING)";
+				+ " sampletablename STRING, "
+				+ " sampletype STRING, "
+				+ " samplingratio DOUBLE, "
+				+ " columnnames STRING)";
 		executeUpdate(sql);
 	}
 	

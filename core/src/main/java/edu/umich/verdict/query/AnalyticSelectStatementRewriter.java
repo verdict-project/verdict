@@ -88,6 +88,11 @@ class AnalyticSelectStatementRewriter extends SelectStatementBaseRewriter  {
 		return cumulativeReplacedTableSources;
 	}
 	
+	/**
+	 * Returns if columnIndex-th select list element includes an aggregate function.
+	 * @param columnIndex
+	 * @return
+	 */
 	public boolean isAggregateColumn(int columnIndex) {
 		if (aggColumnIndicator.size() >= columnIndex && aggColumnIndicator.get(columnIndex-1)) {
 			return aggColumnIndicator.get(columnIndex-1);
@@ -261,6 +266,7 @@ class AnalyticSelectStatementRewriter extends SelectStatementBaseRewriter  {
 		if (withinQuerySpecification)
 			return visitAggregate_function_within_query_specification(ctx);
 		else
+			// used for orderby clause, groupby clause, etc.
 			return visitAggregate_function_outside_query_specification(ctx);
 	}
 	
@@ -362,12 +368,14 @@ class AnalyticSelectStatementRewriter extends SelectStatementBaseRewriter  {
 	 */
 	@Override
 	public String visitDerived_table_source_item(VerdictSQLParser.Derived_table_source_itemContext ctx) {
+		// visit subquery
 		AnalyticSelectStatementRewriter subqueryVisitor = new AnalyticSelectStatementRewriter(vc, queryString);
 		subqueryVisitor.setIndentLevel(defaultIndent + 4);
 		subqueryVisitor.setDepth(depth+1);
 		String derivedTable = subqueryVisitor.visit(ctx.derived_table().subquery().select_statement().query_expression());
 		cumulativeReplacedTableSources.putAll(subqueryVisitor.getCumulativeSampleTables());
 		
+		// set alias
 		Alias alias = new Alias("subquery", ctx.as_table_alias().getText());
 		derivedTableColName2Aliases.put(alias.toString(), TypeCasting.listToMap(subqueryVisitor.getColName2Aliases()));
 		

@@ -44,8 +44,16 @@ verdict_statement
     | drop_view
     ;
 
+//WITH SIZE size=(FLOAT | DECIMAL) '%' (STORE poission_cols=DECIMAL POISSON COLUMNS)? (STRATIFIED BY column_name (',' column_name)*)?
 create_sample_statement
-    : CREATE (size=(FLOAT | DECIMAL) '%')? SAMPLE FROM table=table_name //WITH SIZE size=(FLOAT | DECIMAL) '%' (STORE poission_cols=DECIMAL POISSON COLUMNS)? (STRATIFIED BY column_name (',' column_name)*)?
+    : CREATE (size=(FLOAT | DECIMAL) '%')? SAMPLE FROM table=table_name (sample_type)?
+    ;
+    
+sample_type
+    : HASH ON column_name                               # universal_sample
+    | UNIFORM                                           # uniform_random_sample
+    | STRATIFIED ON column_name (',' column_name)*      # stratified_sample
+    | AUTOMATIC                                         # automatic_sample
     ;
 
 delete_sample_statement

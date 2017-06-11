@@ -1,13 +1,12 @@
 package edu.umich.verdict.dbms;
 
+import edu.umich.verdict.datatypes.SampleParam;
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.datatypes.VerdictResultSet;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.util.StackTraceReader;
 import edu.umich.verdict.util.VerdictLogger;
-
-import static edu.umich.verdict.util.NameHelpers.*;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -16,9 +15,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
 
 import com.google.common.base.Optional;
 
@@ -229,12 +230,13 @@ public class Dbms {
 	 * @param sampleRatio
 	 * @throws VerdictException
 	 */
-	protected void justCreateSampleTableOf(TableUniqueName originalTableName, double sampleRatio) throws VerdictException {
-		TableUniqueName sampleTableName = vc.getMeta().sampleTableUniqueNameOf(originalTableName);
+	protected TableUniqueName justCreateUniformRandomSampleTableOf(TableUniqueName originalTableName, double sampleRatio) throws VerdictException {
+		TableUniqueName sampleTableName = vc.getMeta().newSampleTableUniqueNameOf(originalTableName);
 		String sql = String.format("CREATE TABLE %s SELECT * FROM %s WHERE rand() < %f;",
-										sampleTableName.fullyQuantifiedName(), originalTableName, sampleRatio);
+										sampleTableName, originalTableName, sampleRatio);
 		VerdictLogger.debug(this, String.format("Create a table: %s", sql));
 		this.executeUpdate(sql);
+		return sampleTableName;
 	}
 	
 	public long getTableSize(TableUniqueName tableName) throws VerdictException {
@@ -251,14 +253,66 @@ public class Dbms {
 		return cnt;
 	}
 
-	public Pair<Long, Long> createSampleTableOf(String originalTableName, double sampleRatio) throws VerdictException {
-		TableUniqueName sampleTableName = vc.getMeta().sampleTableUniqueNameOf(originalTableName);
+	public Triple<Long, Long, String> createUniformRandomSampleTableOf(String originalTableName, double samplingRatio) throws VerdictException {
 		TableUniqueName fullyQuantifiedOriginalTableName = TableUniqueName.uname(vc, originalTableName);
 
-		dropTable(sampleTableName);
-		justCreateSampleTableOf(fullyQuantifiedOriginalTableName, sampleRatio);
+		dropUniformRandomSampleTableOf(fullyQuantifiedOriginalTableName, samplingRatio);
+		TableUniqueName sampleTableName = justCreateUniformRandomSampleTableOf(fullyQuantifiedOriginalTableName, samplingRatio);
 		
-		return Pair.of(getTableSize(sampleTableName), getTableSize(fullyQuantifiedOriginalTableName));
+		return Triple.of(getTableSize(sampleTableName), getTableSize(fullyQuantifiedOriginalTableName), sampleTableName.tableName);
+	}
+	
+	public void dropUniformRandomSampleTableOf(TableUniqueName originalTableName, double sampleRatio) throws VerdictException {
+		List<Pair<SampleParam, TableUniqueName>> sampleInfo = vc.getMeta().getSampleInfofor(originalTableName);
+		TableUniqueName sampleName = null;
+		for (Pair<SampleParam, TableUniqueName> e : sampleInfo) {
+			SampleParam p = e.getLeft();
+			if (p.sampleType.equals("uniform") && p.samplingRatio == sampleRatio) {
+				sampleName = e.getValue();
+			}
+		}
+		if (sampleName != null) {
+			dropTable(sampleName);
+		}
+	}
+	
+	/**
+	 * Creates a universal sample table without dropping an old table.
+	 * @param originalTableName
+	 * @param sampleRatio
+	 * @throws VerdictException
+	 */
+	protected TableUniqueName justCreateUniversalSampleTableOf(TableUniqueName originalTableName, double sampleRatio) throws VerdictException {
+		TableUniqueName sampleTableName = vc.getMeta().newSampleTableUniqueNameOf(originalTableName);
+		String sql = String.format("CREATE TABLE %s SELECT * FROM %s "
+								 + "WHERE mod(cast(conv(substr(md5(user_id),17,32),16,10) as unsigned), 10000) <= %.4f",
+								 sampleTableName, originalTableName, sampleRatio*10000);
+		VerdictLogger.debug(this, String.format("Create a table: %s", sql));
+		this.executeUpdate(sql);
+		return sampleTableName;
+	}
+	
+	public Triple<Long, Long, String> createUniversalSampleTableOf(String originalTableName, double samplingRatio, String columnName) throws VerdictException {
+		TableUniqueName fullyQuantifiedOriginalTableName = TableUniqueName.uname(vc, originalTableName);
+
+		dropUniversalSampleTableOf(fullyQuantifiedOriginalTableName, samplingRatio, columnName);
+		TableUniqueName sampleTableName = justCreateUniversalSampleTableOf(fullyQuantifiedOriginalTableName, samplingRatio);
+		
+		return Triple.of(getTableSize(sampleTableName), getTableSize(fullyQuantifiedOriginalTableName), sampleTableName.tableName);
+	}
+	
+	public void dropUniversalSampleTableOf(TableUniqueName originalTableName, double sampleRatio, String columnName) throws VerdictException {
+		List<Pair<SampleParam, TableUniqueName>> sampleInfo = vc.getMeta().getSampleInfofor(originalTableName);
+		TableUniqueName sampleName = null;
+		for (Pair<SampleParam, TableUniqueName> e : sampleInfo) {
+			SampleParam p = e.getLeft();
+			if (p.sampleType.equals("universal") && p.samplingRatio == sampleRatio && p.columnNames.get(0).equals(columnName)) {
+				sampleName = e.getValue();
+			}
+		}
+		if (sampleName != null) {
+			dropTable(sampleName);
+		}
 	}
 
 	public Connection getDbmsConnection() {
@@ -274,23 +328,47 @@ public class Dbms {
 		}
 	}
 	
-	public void updateSampleNameEntryIntoDBMS(String originalSchemaName, String originalTableName,
-			String sampleSchemaName, String sampleTableName, TableUniqueName metaNameTableName) throws VerdictException {
-		deleteSampleNameEntryFromDBMS(originalSchemaName, originalTableName, metaNameTableName);
-		insertSampleNameEntryIntoDBMS(originalSchemaName, originalTableName, sampleSchemaName, sampleTableName, metaNameTableName);
+	protected String columnNameListToString(List<String> columnNames) {
+		StringBuilder b = new StringBuilder();
+		boolean isFirst = true;
+		for (String c : columnNames) {
+			if (isFirst) b.append(c);
+			else b.append(","+c);
+			isFirst = false;
+		}
+		return b.toString();
 	}
 	
-	public void deleteSampleNameEntryFromDBMS(String originalSchemaName, String originalTableName, TableUniqueName metaNameTableName)
+	protected String samplingRatioToString(double samplingRatio) {
+		return String.format("%.4f", samplingRatio);
+	}
+	
+	public void updateSampleNameEntryIntoDBMS(
+			String originalSchemaName, String originalTableName,
+			String sampleSchemaName, String sampleTableName,
+			String sampleType, Double samplingRatio, List<String> columnNames,
+			TableUniqueName metaNameTableName) throws VerdictException {
+		deleteSampleNameEntryFromDBMS(originalSchemaName, originalTableName, sampleType, samplingRatio, columnNames, metaNameTableName);
+		insertSampleNameEntryIntoDBMS(originalSchemaName, originalTableName, sampleSchemaName, sampleTableName,
+				sampleType, samplingRatio, columnNames,	metaNameTableName);
+	}
+	
+	public void deleteSampleNameEntryFromDBMS(String originalSchemaName, String originalTableName,
+			String sampleType, Double samplingRatio, List<String> columnNames, TableUniqueName metaNameTableName)
 			throws VerdictException {
-		String sql = String.format("DELETE FROM %s WHERE originalschemaname = \"%s\" AND originaltablename = \"%s\"",
-				metaNameTableName, originalSchemaName, originalTableName);
+		String sql = String.format("DELETE FROM %s WHERE originalschemaname = \"%s\" AND originaltablename = \"%s\" "
+				+ "AND sampletype = \"%s\" AND samplingratio = %s AND columnnames = \"%s\" ",
+				metaNameTableName, originalSchemaName, originalTableName,
+				sampleType, samplingRatioToString(samplingRatio), columnNameListToString(columnNames));
 		executeUpdate(sql);
 	}
 	
 	protected void insertSampleNameEntryIntoDBMS(String originalSchemaName, String originalTableName,
-			String sampleSchemaName, String sampleTableName, TableUniqueName metaNameTableName) throws VerdictException {
-		String sql = String.format("INSERT INTO %s VALUES (\"%s\", \"%s\", \"%s\", \"%s\")", metaNameTableName,
-				originalSchemaName, originalTableName, sampleSchemaName, sampleTableName);
+			String sampleSchemaName, String sampleTableName,
+			String sampleType, Double samplingRatio, List<String> columnNames, TableUniqueName metaNameTableName) throws VerdictException {
+		String sql = String.format("INSERT INTO %s VALUES (\"%s\", \"%s\", \"%s\", \"%s\", \"%s\", %s, \"%s\")", metaNameTableName,
+				originalSchemaName, originalTableName, sampleSchemaName, sampleTableName,
+				sampleType, samplingRatioToString(samplingRatio), columnNameListToString(columnNames));
 		executeUpdate(sql);
 	}
 	
@@ -383,18 +461,23 @@ public class Dbms {
 			TableUniqueName sizeTableName,
 			TableUniqueName nameTableName) throws VerdictException {
 		VerdictLogger.debug(this, "Creating meta tables if not exist.");
-		String sql = String.format("CREATE TABLE IF NOT EXISTS %s", sizeTableName)
+		
+		String sql = String.format("CREATE TABLE IF NOT EXISTS %s", nameTableName)
+				+ " (originalschemaname VARCHAR(50), "
+				+ " originaltablename VARCHAR(50), "
+				+ " sampleschemaaname VARCHAR(50), "
+				+ " sampletablename VARCHAR(50), "
+				+ " sampletype VARCHAR(20), "
+				+ " samplingratio DOUBLE, "
+				+ " columnnames VARCHAR(200))";
+		executeUpdate(sql);
+		
+		// sample info
+		sql = String.format("CREATE TABLE IF NOT EXISTS %s", sizeTableName)
 				+ " (schemaname VARCHAR(50), "
 				+ " tablename VARCHAR(50), "
 				+ " samplesize BIGINT, "
 				+ " originaltablesize BIGINT)";
-		executeUpdate(sql);
-
-		sql = String.format("CREATE TABLE IF NOT EXISTS %s", nameTableName)
-				+ " (originalschemaname VARCHAR(50), "
-				+ " originaltablename VARCHAR(50), "
-				+ " sampleschemaaname VARCHAR(50), "
-				+ " sampletablename VARCHAR(50))";
 		executeUpdate(sql);
 	}
 	
@@ -421,4 +504,5 @@ public class Dbms {
 	public String stddevFunction() {
 		return "STDDEV";
 	}
+
 }
