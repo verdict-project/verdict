@@ -11,9 +11,13 @@ import java.util.TreeMap;
 import org.apache.commons.lang3.tuple.Pair;
 
 import edu.umich.verdict.VerdictContext;
+import edu.umich.verdict.VerdictSQLBaseVisitor;
 import edu.umich.verdict.VerdictSQLParser;
 import edu.umich.verdict.datatypes.Alias;
+import edu.umich.verdict.datatypes.ColumnName;
+import edu.umich.verdict.datatypes.SampleParam;
 import edu.umich.verdict.datatypes.TableUniqueName;
+import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.exceptions.VerdictQuerySyntaxException;
 import edu.umich.verdict.util.NameHelpers;
 import edu.umich.verdict.util.TypeCasting;
@@ -44,8 +48,10 @@ class AnalyticSelectStatementRewriter extends SelectStatementBaseRewriter  {
 	// This field stores the tables sources of only current level. That is, does not store the table sources
 	// of the subqueries.
 	// Note: currently, this field does not contain derived fields.
-	// TODO: this may be replaced with a single double value that indicates the sampling probability.
-	protected final ArrayList<TableUniqueName> replacedTableSources = new ArrayList<TableUniqueName>();
+	// map of original table to a sample table.
+	// Key: original table name
+	// Value: pair of a sample name and its sample creation parameter
+	protected Map<TableUniqueName, Pair<SampleParam, TableUniqueName>> replacedTableSources;
 
 	// This field stores the replaced table sources of all levels.
 	// left is the original table name, and the right is the replaced table name.
@@ -110,14 +116,13 @@ class AnalyticSelectStatementRewriter extends SelectStatementBaseRewriter  {
 	protected double getSampleSizeToOriginalTableSizeRatio() {
 		if (sampleSizeToOriginalTableSizeRatio == -1) {
 			double sampleToOriginalRatio = 1.0;		// originalTableSize / sampleSize
-			for (TableUniqueName t : replacedTableSources) {
-				Pair<Long,Long> sampleAndOriginalSize =
-						vc.getMeta().getSampleAndOriginalTableSizeByOriginalTableNameIfExists(t);
-				double sampleSize = (double) sampleAndOriginalSize.getLeft();
-				double originalTableSize = (double) sampleAndOriginalSize.getRight();
-				
-				sampleToOriginalRatio *= originalTableSize / sampleSize;
-				VerdictLogger.debug(this, String.format("%s size ratio. sample size: %f, original size: %f", t, sampleSize, originalTableSize));
+			for (Map.Entry<TableUniqueName, Pair<SampleParam, TableUniqueName>> e : replacedTableSources.entrySet()) {
+				SampleParam p = e.getValue().getLeft();
+				sampleToOriginalRatio = 1 / p.samplingRatio;
+				TableUniqueName sampleTable = e.getValue().getRight();
+				Pair<Long, Long> originalAndSampleSizes = vc.getMeta().getSampleSizeOf(sampleTable);
+				VerdictLogger.debug(this, String.format("%s size ratio. sample size: %d, original size: %d",
+						sampleTable, originalAndSampleSizes.getRight(), originalAndSampleSizes.getLeft()));
 			}
 			sampleSizeToOriginalTableSizeRatio = sampleToOriginalRatio;
 		}
@@ -139,14 +144,14 @@ class AnalyticSelectStatementRewriter extends SelectStatementBaseRewriter  {
 	
 	@Override
 	protected String tableSourceReplacer(String originalTableName) {
-		TableUniqueName uTableName = TableUniqueName.uname(vc, originalTableName);
-		TableUniqueName newTableSource = vc.getMeta().getSampleTableNameIfExistsElseOriginal(uTableName);
-		// note: newTableSource might be same as uTableName if there's no sample table exists.
-		if (!uTableName.equals(newTableSource)) {
-			replacedTableSources.add(uTableName);
-			cumulativeReplacedTableSources.put(uTableName, newTableSource);
+		TableUniqueName originalTable = TableUniqueName.uname(vc, originalTableName);
+		if (replacedTableSources.containsKey(originalTable)) {
+			Pair<SampleParam, TableUniqueName> chosen = replacedTableSources.get(originalTable);
+			cumulativeReplacedTableSources.put(originalTable, chosen.getRight());
+			return chosen.getRight().toString();
+		} else {
+			return originalTable.toString();
 		}
-		return newTableSource.toString();
 	}
 	
 	@Override
@@ -157,8 +162,13 @@ class AnalyticSelectStatementRewriter extends SelectStatementBaseRewriter  {
 		} else {
 			// find the name of the effective table (whether an original table or a sample table), then find the 
 			// proper alias we used for the table source.
-			return tableAliases.get(vc.getMeta().getSampleTableNameIfExistsElseOriginal(
-					TableUniqueName.uname(vc, originalTableName))).toString();
+			TableUniqueName originalTable = TableUniqueName.uname(vc, originalTableName);
+			if (replacedTableSources.containsKey(originalTable)) {
+				Pair<SampleParam, TableUniqueName> sampleParamAndTable = replacedTableSources.get(originalTable);
+				return tableAliases.get(sampleParamAndTable.getRight()).toString();
+			} else {
+				return tableAliases.get(originalTable).toString();
+			}
 		}
 	}
 	
@@ -277,11 +287,16 @@ class AnalyticSelectStatementRewriter extends SelectStatementBaseRewriter  {
 		aggColumnIndicator.add(true);
 		
 		if (ctx.AVG() != null) {
-			return String.format("AVG(%s)", visit(ctx.all_distinct_expression()), getSampleSizeToOriginalTableSizeRatio());
+			return String.format("AVG(%s)", visit(ctx.all_distinct_expression()));
 		} else if (ctx.SUM() != null) {
 			return String.format("(SUM(%s) * %f)", visit(ctx.all_distinct_expression()), getSampleSizeToOriginalTableSizeRatio());
 		} else if (ctx.COUNT() != null) {
-			return String.format("ROUND((COUNT(*) * %f))", getSampleSizeToOriginalTableSizeRatio());
+			if (ctx.all_distinct_expression() != null && ctx.all_distinct_expression().DISTINCT() != null) {
+				String colName = ctx.all_distinct_expression().expression().getText();
+				return String.format("ROUND((COUNT(DISTINCT %s) * %f))", colName, getSampleSizeToOriginalTableSizeRatio());
+			} else {
+				return String.format("ROUND((COUNT(*) * %f))", getSampleSizeToOriginalTableSizeRatio());
+			}
 		}
 		VerdictLogger.error(this, String.format("Unexpected aggregate function expression: %s", ctx.getText()));
 		return null;	// we don't handle other aggregate functions for now.
@@ -297,6 +312,10 @@ class AnalyticSelectStatementRewriter extends SelectStatementBaseRewriter  {
 	
 	@Override
 	public String visitQuery_specification(VerdictSQLParser.Query_specificationContext ctx) {
+		ProperSampleAnalyzer sampleAnalyzer = new ProperSampleAnalyzer(vc, queryString);
+		sampleAnalyzer.visit(ctx);
+		replacedTableSources = sampleAnalyzer.getOriginalToSampleTable();
+		
 		withinQuerySpecification = true;
 		// We process the FROM clause first to get the ratio between the samples (if we use them) and the
 		// original tables.
@@ -450,3 +469,123 @@ class AnalyticSelectStatementRewriter extends SelectStatementBaseRewriter  {
 	}
 	
 }
+
+
+/**
+ * Obtain pairs of original table names and the names of their proper samples. Here, a proper sample means is a sample
+ * table that can be used in place of an original table without much affecting 
+ * @author Yongjoo Park
+ *
+ */
+class ProperSampleAnalyzer extends SelectStatementBaseRewriter {
+	
+	private boolean withinQuerySpecification = false;
+	
+	private List<ColumnName> distinctColumns = new ArrayList<ColumnName>();
+	
+	private VerdictContext vc;
+	
+	private List<Pair<TableUniqueName, String>> tableSourcesWithAlias = new ArrayList<Pair<TableUniqueName, String>>();
+	
+	private VerdictException e;
+	
+	/**
+	 * Map from the original table name to its proper sample name.
+	 */
+	private Map<TableUniqueName, Pair<SampleParam, TableUniqueName>> originalToSampleTable =
+			new HashMap<TableUniqueName, Pair<SampleParam, TableUniqueName>>();
+	
+	public Map<TableUniqueName, Pair<SampleParam, TableUniqueName>> getOriginalToSampleTable() {
+		return originalToSampleTable;
+	}
+	
+	public ProperSampleAnalyzer(VerdictContext vc, String queryString) {
+		super(queryString);
+		this.vc = vc;
+	}
+	
+	@Override
+	public String visitQuery_specification(VerdictSQLParser.Query_specificationContext ctx) {
+		withinQuerySpecification = true;
+		for (VerdictSQLParser.Table_sourceContext tctx : ctx.table_source()) {
+			visit(tctx);
+		}
+		visit(ctx.select_list());
+		withinQuerySpecification = false;
+		analyzePossibleSamples();
+		return null;
+	}
+	
+	private ColumnName distinctColumnInTable(TableUniqueName tableName) {
+		for (ColumnName c : distinctColumns) {
+			if (c.getTableSource().equals(tableName)) {
+				return c;
+			}
+		}
+		return null;
+	}
+	
+	private void analyzePossibleSamples() {
+		for (Pair<TableUniqueName, String> e : tableSourcesWithAlias) {
+			TableUniqueName originalTable = e.getLeft();
+			List<Pair<SampleParam, TableUniqueName>> samples = vc.getMeta().getSampleInfoFor(originalTable);
+			Pair<SampleParam, TableUniqueName> bestCandidateForSample = null;
+			ColumnName dc = distinctColumnInTable(originalTable);	// columns for which distinct-count is specified
+			
+			for (Pair<SampleParam, TableUniqueName> e2 : samples) {
+				SampleParam param = e2.getLeft();
+				
+				if (bestCandidateForSample == null) {
+					bestCandidateForSample = e2;
+				} else if (param.sampleType.equals("universal") && dc != null && param.columnNames.contains(dc.localColumnName())) {
+					bestCandidateForSample = e2;
+				}
+			}
+			
+			if (bestCandidateForSample != null) {
+				originalToSampleTable.put(originalTable, bestCandidateForSample);
+			}
+		}
+	}
+	
+	@Override
+	public String visitHinted_table_name_item(VerdictSQLParser.Hinted_table_name_itemContext ctx) {
+		String tableNameItem = visit(ctx.table_name_with_hint());
+		if (ctx.as_table_alias() == null) {
+			if (tableNameItem != null) {
+				TableUniqueName originalTable = TableUniqueName.uname(vc, tableNameItem);
+				tableSourcesWithAlias.add(Pair.of(originalTable, (String) null));
+			}
+		} else {
+			TableUniqueName originalTable = TableUniqueName.uname(vc, tableNameItem);
+			String alias = ctx.as_table_alias().getText();
+			tableSourcesWithAlias.add(Pair.of(originalTable, alias));
+		}
+		return null;
+	}
+	
+	@Override
+	public String visitAggregate_windowed_function(VerdictSQLParser.Aggregate_windowed_functionContext ctx) {
+		if (!withinQuerySpecification) return null;
+		
+		if (ctx.AVG() != null) {
+		} else if (ctx.SUM() != null) {
+		} else if (ctx.COUNT() != null) {
+			if (ctx.all_distinct_expression() != null && ctx.all_distinct_expression().DISTINCT() != null) {
+				String colName = ctx.all_distinct_expression().expression().getText();
+				try {
+					distinctColumns.add(ColumnName.uname(vc, tableSourcesWithAlias, colName));
+				} catch (VerdictException e) {
+					this.e = e;
+				}
+			}
+		}
+		return null;	// we don't handle other aggregate functions for now.
+	}
+	
+	@Override
+	public String visitSubquery(VerdictSQLParser.SubqueryContext ctx) {
+		return null;
+	}
+}
+

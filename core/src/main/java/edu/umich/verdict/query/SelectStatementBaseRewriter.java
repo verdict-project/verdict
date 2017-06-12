@@ -308,7 +308,16 @@ public class SelectStatementBaseRewriter extends VerdictSQLBaseVisitor<String> {
 		} else if (ctx.SUM() != null) {
 			return String.format("SUM(%s)", visit(ctx.all_distinct_expression()));
 		} else if (ctx.COUNT() != null) {
-			return "COUNT(*)";
+			if (ctx.all_distinct_expression() != null) {
+				String colName = ctx.all_distinct_expression().expression().getText();
+				if (ctx.all_distinct_expression().DISTINCT() != null) {
+					return String.format("COUNT(DISTINCT %s)", colName);
+				} else {
+					return String.format("COUNT(%s)", colName);
+				}
+			} else {
+				return String.format("COUNT(*)");
+			}
 		}
 		VerdictLogger.error(this, String.format("Unexpected aggregate function expression: %s", ctx.getText()));
 		return null;	// we don't handle other aggregate functions for now.

@@ -11,6 +11,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.VerdictSQLParser;
 import edu.umich.verdict.datatypes.Alias;
+import edu.umich.verdict.datatypes.SampleParam;
 import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.util.VerdictLogger;
@@ -350,53 +351,57 @@ public class BootstrapSelectStatementRewriter extends AnalyticSelectStatementRew
 			return tableSourceReplacerSingleNested(originalTableName);
 		} else if (bootstrap_sampling_method.equals("double_nested")) {
 			VerdictLogger.warn(this, "Double-nested bootstrap sampling is erroroneous; thus, it should be avoided.");
-			return tableSourceReplacerDoubleNested(originalTableName);
+//			return tableSourceReplacerDoubleNested(originalTableName);
+			return null;
 		} else {
 			return tableSourceReplacerSingleNested(originalTableName);
 		}
 	}
 	
 	protected String tableSourceReplacerSingleNested(String originalTableName) {
-		TableUniqueName uTableName = TableUniqueName.uname(vc, originalTableName);
-		TableUniqueName newTableSource = vc.getMeta().getSampleTableNameIfExistsElseOriginal(uTableName);
-		aliasedTableNameItem = newTableSource;
-		if (!uTableName.equals(newTableSource)) {
-			replacedTableSources.add(uTableName);
-			cumulativeReplacedTableSources.put(uTableName, newTableSource);
+		TableUniqueName originalTable = TableUniqueName.uname(vc, originalTableName);
+		aliasedTableNameItem = originalTable;
+		
+		List<Pair<SampleParam, TableUniqueName>> sampleInfo = vc.getMeta().getSampleInfoFor(originalTable);
+		if (sampleInfo.size() > 0) {
+			Pair<SampleParam, TableUniqueName> chosen = sampleInfo.get(0);
+			aliasedTableNameItem = chosen.getRight();
+			replacedTableSources.put(originalTable, chosen);
+			cumulativeReplacedTableSources.put(originalTable, chosen.getRight());
 			return String.format("(SELECT *, %s\n%sFROM %s)",
 					multiplicityExpression(),
 					indentString + "      ",
-					newTableSource);
+					chosen.getRight());
 		} else {
-			return newTableSource.toString();
+			return originalTable.toString();
 		}
 	}
 	
-	/**
-	 * This must not be used. The rand() AS verdict_rand is not materialized; thus, every call of verdict_rand produces
-	 * a different value.
-	 * @param originalTableName
-	 * @return
-	 */
-	protected String tableSourceReplacerDoubleNested(String originalTableName) {
-		TableUniqueName uTableName = TableUniqueName.uname(vc, originalTableName);
-		TableUniqueName newTableSource = vc.getMeta().getSampleTableNameIfExistsElseOriginal(uTableName);
-		aliasedTableNameItem = newTableSource;
-		if (!uTableName.equals(newTableSource)) {
-			replacedTableSources.add(uTableName);
-			cumulativeReplacedTableSources.put(uTableName, newTableSource);
-			return String.format("(SELECT *, %s\n%sFROM %s",
-					multiplicityExpression("cumul"),
-					indentString + "      ",
-					String.format("(SELECT *, rand() AS %s\n%sFROM %s) %s)",
-							RAND_COLNAME,
-							indentString + "            ",
-							newTableSource,
-							Alias.genDerivedTableAlias(depth)));
-		} else {
-			return newTableSource.toString();
-		}
-	}
+//	/**
+//	 * This must not be used. The rand() AS verdict_rand is not materialized; thus, every call of verdict_rand produces
+//	 * a different value.
+//	 * @param originalTableName
+//	 * @return
+//	 */
+//	protected String tableSourceReplacerDoubleNested(String originalTableName) {
+//		TableUniqueName uTableName = TableUniqueName.uname(vc, originalTableName);
+//		TableUniqueName newTableSource = vc.getMeta().getSampleTableNameIfExistsElseOriginal(uTableName);
+//		aliasedTableNameItem = newTableSource;
+//		if (!uTableName.equals(newTableSource)) {
+//			replacedTableSources.add(uTableName);
+//			cumulativeReplacedTableSources.put(uTableName, newTableSource);
+//			return String.format("(SELECT *, %s\n%sFROM %s",
+//					multiplicityExpression("cumul"),
+//					indentString + "      ",
+//					String.format("(SELECT *, rand() AS %s\n%sFROM %s) %s)",
+//							RAND_COLNAME,
+//							indentString + "            ",
+//							newTableSource,
+//							Alias.genDerivedTableAlias(depth)));
+//		} else {
+//			return newTableSource.toString();
+//		}
+//	}
 	
 	@Override
 	public String visitSubquery(VerdictSQLParser.SubqueryContext ctx) {

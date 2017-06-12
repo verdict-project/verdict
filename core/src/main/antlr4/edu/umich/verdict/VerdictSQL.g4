@@ -46,7 +46,7 @@ verdict_statement
 
 //WITH SIZE size=(FLOAT | DECIMAL) '%' (STORE poission_cols=DECIMAL POISSON COLUMNS)? (STRATIFIED BY column_name (',' column_name)*)?
 create_sample_statement
-    : CREATE (size=(FLOAT | DECIMAL) '%')? SAMPLE FROM table=table_name (sample_type)?
+    : CREATE (size=(FLOAT | DECIMAL) '%')? SAMPLE (FROM | OF) table=table_name (sample_type)?
     ;
     
 sample_type
@@ -57,7 +57,7 @@ sample_type
     ;
 
 delete_sample_statement
-    : (DELETE | DROP) SAMPLE sample=table_name
+    : (DELETE | DROP) (size=(FLOAT | DECIMAL) '%')? SAMPLE OF table=table_name (sample_type)?
     ;
 
 show_samples_statement

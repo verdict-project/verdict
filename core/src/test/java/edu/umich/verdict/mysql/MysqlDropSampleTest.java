@@ -10,12 +10,14 @@ public class MysqlDropSampleTest {
 		
 		VerdictConf conf = new VerdictConf();
 		conf.setDbms("mysql");
-		conf.setHost("localhost:3306");
-		conf.setDbmsSchema("tpch1G");
-		conf.set("user", "root");
+		conf.setHost("localhost");
+		conf.setPort("3306");
+		conf.setDbmsSchema("instacart1g");
+		conf.setUser("verdict");
+		conf.setPassword("verdict");
 		VerdictContext vc = new VerdictContext(conf);
 		
-//		Answer answer = vc.executeQuery("drop sample customer");
+		vc.executeQuery("drop sample of orders hash on user_id");
 		vc.destroy();
 
 		System.out.println("Done");

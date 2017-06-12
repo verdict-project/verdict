@@ -5,8 +5,6 @@ import org.antlr.v4.runtime.CommonTokenStream;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 
-import com.google.common.base.Optional;
-
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.VerdictSQLBaseVisitor;
 import edu.umich.verdict.VerdictSQLLexer;
@@ -76,7 +74,7 @@ public class CreateSampleQuery extends Query {
 	}
 	
 	protected void createUniformRandomSample(String tableName, double samplingRatio) throws VerdictException {
-		VerdictLogger.info(this, String.format("Create a %.4f% uniform random sample of %s.", samplingRatio*100, tableName));
+		VerdictLogger.info(this, String.format("Create a %.4f uniform random sample of %s.", samplingRatio*100, tableName));
 		
 		Triple<Long, Long, String> sampleAndOriginalSizesAndSampleName = vc.getDbms().createUniformRandomSampleTableOf(tableName, samplingRatio);
 		Long sampleSize = sampleAndOriginalSizesAndSampleName.getLeft();
@@ -89,7 +87,7 @@ public class CreateSampleQuery extends Query {
 	}
 	
 	protected void createUniversalSample(String tableName, double samplingRatio, String columnName) throws VerdictException {
-		VerdictLogger.info(this, String.format("Create a %.4f% universal sample of %s.", samplingRatio*100, tableName));
+		VerdictLogger.info(this, String.format("Create a %.4f universal sample of %s.", samplingRatio*100, tableName));
 		
 		Triple<Long, Long, String> sampleAndOriginalSizesAndSampleName = vc.getDbms().createUniversalSampleTableOf(tableName, samplingRatio, columnName);
 		Long sampleSize = sampleAndOriginalSizesAndSampleName.getLeft();
@@ -101,7 +99,7 @@ public class CreateSampleQuery extends Query {
 		
 		vc.getMeta().insertSampleInfo(
 				schemaOfTableName(vc.getCurrentSchema(), tableName).get(), tableNameOfTableName(tableName), sampleTableName,
-				sampleSize, tableSize, "uniform", samplingRatio, columnNames);
+				sampleSize, tableSize, "universal", samplingRatio, columnNames);
 	}
 	
 	protected void createStratifiedSample(String tableName, double samplingRatio, List<String> columnNames) {
@@ -116,7 +114,7 @@ public class CreateSampleQuery extends Query {
 	 * [second elem] a list of column names on which to build samples
 	 */
 	protected List<Pair<String, List<String>>> getSuggestedSamples(String tableName) {
-		return null;
+		return new ArrayList<Pair<String, List<String>>>();
 	}
 
 }

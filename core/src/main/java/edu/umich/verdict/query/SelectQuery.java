@@ -21,7 +21,12 @@ public class SelectQuery extends Query {
 	
 	@Override
 	public ResultSet compute() throws VerdictException {
-		ApproximateSelectQuery query = new ApproximateSelectQuery(queryString, vc);
+		SelectQuery query = null;
+		if (ApproximateSelectQuery.doesSupport(queryString)) {
+			query = new ApproximateSelectQuery(queryString, vc);
+		} else {
+			query = new ByPassSelectQuery(this);
+		}
 		return query.compute();
 	}
 }

@@ -44,6 +44,10 @@ public class VerdictMeta {
 	 */
 	private Set<Pair<Long, String>> uptodateSchemas;
 	
+	/**
+	 * remembers tables and their column names.
+	 */
+	private Map<TableUniqueName, List<String>> tableToColumnNames;
 	
 	private final String META_SIZE_TABLE;
 	private final String META_NAME_TABLE;
@@ -57,6 +61,7 @@ public class VerdictMeta {
 		sampleSizeMeta = new HashMap<TableUniqueName, SampleSizeInfo>();
 		sampleNameMeta = new HashMap<TableUniqueName, Map<SampleParam, TableUniqueName>>();
 		uptodateSchemas = new HashSet<Pair<Long, String>>();
+		tableToColumnNames = new HashMap<TableUniqueName, List<String>>();
 	}
 	
 	private Dbms getMetaDbms() {
@@ -66,6 +71,20 @@ public class VerdictMeta {
 	public void clearSampleInfo() {
 		sampleSizeMeta.clear();
 		sampleNameMeta.clear();
+	}
+	
+	public List<String> getColumnNames(TableUniqueName tableName) {
+		refreshSampleInfoIfNeeded(tableName.schemaName);
+		if (tableToColumnNames.containsKey(tableName)) {
+			return tableToColumnNames.get(tableName);
+		} else {
+			return new ArrayList<String>();
+		}
+	}
+	
+	public Map<TableUniqueName, List<String>> getTableAndColumnNames(String schemaName) {
+		refreshSampleInfoIfNeeded(schemaName);
+		return tableToColumnNames;
 	}
 	
 	/**
@@ -103,12 +122,18 @@ public class VerdictMeta {
 			String sampleType, double samplingRatio, List<String> columnNames) throws VerdictException {
 		refreshSampleInfoIfNeeded(originalTableName.schemaName);
 		SampleParam p = new SampleParam(originalTableName, sampleType, samplingRatio, columnNames);
-		TableUniqueName sampleTableName = sampleNameMeta.get(originalTableName).get(p);
 		
-		getMetaDbms().deleteSampleNameEntryFromDBMS(originalTableName.schemaName, originalTableName.tableName,
-				sampleType, samplingRatio, columnNames,	getMetaNameTableName(originalTableName));
-		getMetaDbms().deleteSampleSizeEntryFromDBMS(sampleTableName.schemaName, sampleTableName.tableName,
-				getMetaSizeTableName(sampleTableName));
+		if (sampleNameMeta.containsKey(originalTableName)) {
+			TableUniqueName sampleTableName = sampleNameMeta.get(originalTableName).get(p);
+			
+			getMetaDbms().deleteSampleNameEntryFromDBMS(originalTableName.schemaName, originalTableName.tableName,
+					sampleType, samplingRatio, columnNames,	getMetaNameTableName(originalTableName));
+			getMetaDbms().deleteSampleSizeEntryFromDBMS(sampleTableName.schemaName, sampleTableName.tableName,
+					getMetaSizeTableName(sampleTableName));
+		} else {
+			VerdictLogger.warn(String.format("No sample table for the parameter: [%s, %s, %.4f, %s]",
+					originalTableName, sampleType, samplingRatio, columnNames.toString()));
+		}
 	}
 	
 	public void refreshSampleInfoIfNeeded(String schemaName) {
@@ -125,7 +150,8 @@ public class VerdictMeta {
 		TableUniqueName metaSizeTable = getMetaSizeTableName(schemaName);
 		
 		try {
-			String sql = String.format("SELECT originalschemaname, originaltablename, sampleschemaaname, sampletablename "
+			// sample name
+			String sql = String.format("SELECT originalschemaname, originaltablename, sampleschemaaname, sampletablename, "
 					+ " sampletype, samplingratio, columnnames FROM %s", metaNameTable);
 			rs = getMetaDbms().executeQuery(sql);
 			while (rs.next()) {
@@ -135,7 +161,9 @@ public class VerdictMeta {
 				String sampleTabName = rs.getString(4);
 				String sampleType = rs.getString(5);
 				double samplingRatio = rs.getDouble(6);
-				List<String> columnNames = Arrays.asList(rs.getString(7).split(","));
+				String columnNamesString = rs.getString(7);
+				List<String> columnNames = (columnNamesString.length() == 0)?
+						new ArrayList<String>() : Arrays.asList(columnNamesString.split(","));
 				
 				TableUniqueName originalTable = TableUniqueName.uname(originalSchemaName, originalTabName);
 				if (!sampleNameMeta.containsKey(originalTable)) {
@@ -147,6 +175,7 @@ public class VerdictMeta {
 			}
 			rs.close();
 			
+			// sample size
 			sql = String.format("SELECT schemaname, tablename, samplesize, originaltablesize "
 					+ " FROM %s", metaSizeTable);
 			rs = getMetaDbms().executeQuery(sql);
@@ -159,11 +188,25 @@ public class VerdictMeta {
 						new SampleSizeInfo(sampleSize, originalTableSize));
 			}
 			rs.close();
+			
+			// tables and their column names
+			rs = getMetaDbms().getAllTableAndColumns(schemaName);
+			while (rs.next()) {
+				String tableName = rs.getString(1);
+				String columnName = rs.getString(2);
+				TableUniqueName tableUName = TableUniqueName.uname(schemaName, tableName); 
+				if (!tableToColumnNames.containsKey(tableUName)) {
+					tableToColumnNames.put(tableUName, new ArrayList<String>());
+				}
+				tableToColumnNames.get(tableUName).add(columnName);
+			}
+			rs.close();
+			
 		} catch (VerdictException | SQLException e) {
-			VerdictLogger.warn(e);
+//			VerdictLogger.warn(e);
 		}
 
-		VerdictLogger.debug(this, "Sample meta data updated.");
+		VerdictLogger.debug(this, "Sample meta data refreshed.");
 	}
 	
 	public Pair<Long, Long> getSampleAndOriginalTableSizeBySampleTableNameIfExists(TableUniqueName sampleTableName) {
@@ -176,13 +219,30 @@ public class VerdictMeta {
 		}
 	}
 	
-	public List<Pair<SampleParam, TableUniqueName>> getSampleInfofor(TableUniqueName originalTableName) {
+	/**
+	 * Returns the sample creation parameters and the names of the created samples for a given original table.
+	 * @param originalTableName
+	 * @return A list of sample creation parameters and a sample table name.
+	 */
+	public List<Pair<SampleParam, TableUniqueName>> getSampleInfoFor(TableUniqueName originalTableName) {
 		refreshSampleInfoIfNeeded(originalTableName.schemaName);
 		List<Pair<SampleParam, TableUniqueName>> sampleInfo = new ArrayList<Pair<SampleParam, TableUniqueName>>();
-		for (Map.Entry<SampleParam, TableUniqueName> e : sampleNameMeta.get(originalTableName).entrySet()) {
-			sampleInfo.add(Pair.of(e.getKey(), e.getValue()));
+		if (sampleNameMeta.containsKey(originalTableName)) {
+			for (Map.Entry<SampleParam, TableUniqueName> e : sampleNameMeta.get(originalTableName).entrySet()) {
+				sampleInfo.add(Pair.of(e.getKey(), e.getValue()));
+			}
 		}
 		return sampleInfo;
+	}
+	
+	/**
+	 * Returns a pair of the original table size and the sample size for a given sample name.
+	 * @param sampleTableName
+	 * @return
+	 */
+	public Pair<Long, Long> getSampleSizeOf(TableUniqueName sampleTableName) {
+		SampleSizeInfo a = sampleSizeMeta.get(sampleTableName);
+		return Pair.of(a.originalTableSize, a.sampleSize);
 	}
 
 //	public Pair<Long, Long> getSampleAndOriginalTableSizeByOriginalTableNameIfExists(TableUniqueName originalTableName) {
