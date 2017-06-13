@@ -24,7 +24,7 @@ public class MysqlBasicAggregationTest {
 		
 		VerdictContext vc = new VerdictContext(conf);
 		
-		ResultSet rs0 = vc.executeQuery("select count(distinct user_id) from orders");
+		ResultSet rs0 = vc.executeQuery("select count(distinct order_id) from orders");
 		ResultSetConversion.printResultSet(rs0);
 
 //		ResultSet rs1 = vc.executeQuery("select l_shipmode, avg(l_discount) / avg(l_tax) from lineitem group by l_shipmode");

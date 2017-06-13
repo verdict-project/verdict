@@ -13,12 +13,8 @@ import edu.umich.verdict.util.VerdictLogger;
 
 public class CreateTableAsSelectQuery extends Query {
 
-	public CreateTableAsSelectQuery(String q, VerdictContext vc) {
-		super(q, vc);
-	}
-	
-	public CreateTableAsSelectQuery(Query parent) {
-		super(parent.queryString, parent.vc);
+	public CreateTableAsSelectQuery(VerdictContext vc, String q) {
+		super(vc, q);
 	}
 	
 	@Override

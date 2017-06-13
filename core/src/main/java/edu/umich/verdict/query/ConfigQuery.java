@@ -18,13 +18,8 @@ import edu.umich.verdict.exceptions.VerdictException;
 
 public class ConfigQuery extends SelectQuery {
 
-	public ConfigQuery(String q, VerdictContext vc) {
-		super(q, vc);
-		// TODO Auto-generated constructor stub
-	}
-
-	public ConfigQuery(Query parent) {
-		super(parent.queryString, parent.vc);
+	public ConfigQuery(VerdictContext vc, String q) {
+		super(vc, q);
 	}
 
 	@Override

@@ -12,18 +12,15 @@ import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.VerdictSQLBaseVisitor;
 import edu.umich.verdict.VerdictSQLLexer;
 import edu.umich.verdict.VerdictSQLParser;
+import edu.umich.verdict.VerdictSQLParser.Column_nameContext;
 import edu.umich.verdict.datatypes.SampleParam;
 import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
 
 public class DropSampleQuery extends Query {
 
-	public DropSampleQuery(String q, VerdictContext vc) {
-		super(q, vc);
-	}
-	
-	public DropSampleQuery(Query parent) {
-		super(parent.queryString, parent.vc);
+	public DropSampleQuery(VerdictContext vc, String q) {
+		super(vc, q);
 	}
 	
 	@Override
@@ -66,7 +63,7 @@ public class DropSampleQuery extends Query {
 	}
 	
 	private boolean isSampleTypeEqual(String t1, String t2) {
-		if (t1.equals("automatic") || t2.equals("automatic")) {
+		if (t1.equals("recommended") || t2.equals("recommended")) {
 			return true;
 		} else {
 			return t1.equals(t2);
@@ -82,7 +79,7 @@ class DeleteSampleStatementVisitor extends VerdictSQLBaseVisitor<Void> {
 	
 	private Double samplingRatio = -1.0;	// negative value is for delete everything
 	
-	private String sampleType = "automatic";
+	private String sampleType = "recommended";
 	
 	private List<String> columnNames = new ArrayList<String>();
 	
@@ -104,39 +101,36 @@ class DeleteSampleStatementVisitor extends VerdictSQLBaseVisitor<Void> {
 	
 	@Override
 	public Void visitDelete_sample_statement(VerdictSQLParser.Delete_sample_statementContext ctx) {
-		tableName = ctx.table_name().getText();
 		if (ctx.size != null) {
 			samplingRatio = 0.01 * Double.valueOf(ctx.size.getText());
 		}
-		visit(ctx.sample_type());
+		visitChildren(ctx);
 		return null;
 	}
 	
 	@Override
-	public Void visitUniform_random_sample(VerdictSQLParser.Uniform_random_sampleContext ctx) {
-		sampleType = "uniform";
+	public Void visitTable_name(VerdictSQLParser.Table_nameContext ctx) {
+		tableName = ctx.getText();
 		return null;
 	}
 	
 	@Override
-	public Void visitUniversal_sample(VerdictSQLParser.Universal_sampleContext ctx) {
-		sampleType = "universal";
-		columnNames.add(ctx.column_name().getText());
-		return null;
-	}
-	
-	@Override
-	public Void visitStratified_sample(VerdictSQLParser.Stratified_sampleContext ctx) {
-		sampleType = "stratified";
-		for (VerdictSQLParser.Column_nameContext name : ctx.column_name()) {
-			columnNames.add(name.getText());
+	public Void visitSample_type(VerdictSQLParser.Sample_typeContext ctx) {
+		if (ctx.UNIFORM() != null) {
+			sampleType = "uniform";
+		} else if (ctx.UNIVERSE() != null) {
+			sampleType = "universe";
+		} else if (ctx.STRATIFIED() != null) {
+			sampleType = "stratified";
 		}
 		return null;
 	}
 	
 	@Override
-	public Void visitAutomatic_sample(VerdictSQLParser.Automatic_sampleContext ctx) {
-		sampleType = "automatic";
+	public Void visitOn_columns(VerdictSQLParser.On_columnsContext ctx) {
+		for (Column_nameContext c : ctx.column_name()) {
+			columnNames.add(c.getText());
+		}
 		return null;
 	}
 	

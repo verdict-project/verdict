@@ -13,14 +13,10 @@ import edu.umich.verdict.util.VerdictLogger;
 
 public class CreateViewAsSelectQuery extends Query {
 
-	public CreateViewAsSelectQuery(String q, VerdictContext vc) {
-		super(q, vc);
+	public CreateViewAsSelectQuery(VerdictContext vc, String q) {
+		super(vc, q);
 	}
 
-	public CreateViewAsSelectQuery(Query parent) {
-		super(parent.queryString, parent.vc);
-	}
-	
 	@Override
 	public ResultSet compute() throws VerdictException {
 		String rewrittenQuery = rewriteQuery(queryString);

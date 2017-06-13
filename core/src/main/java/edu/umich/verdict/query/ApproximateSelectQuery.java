@@ -23,12 +23,8 @@ import edu.umich.verdict.util.VerdictLogger;
 
 public class ApproximateSelectQuery extends SelectQuery {
 
-	public ApproximateSelectQuery(String queryString, VerdictContext vc) {
-		super(queryString, vc);
-	}
-
-	public ApproximateSelectQuery(Query parent) {
-		super(parent);
+	public ApproximateSelectQuery(VerdictContext vc, String queryString) {
+		super(vc, queryString);
 	}
 
 	/**

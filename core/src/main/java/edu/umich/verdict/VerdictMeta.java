@@ -16,6 +16,7 @@ import java.util.Set;
 import org.apache.commons.lang3.tuple.Pair;
 
 import edu.umich.verdict.datatypes.SampleParam;
+import edu.umich.verdict.datatypes.SampleSizeInfo;
 import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.dbms.Dbms;
 import edu.umich.verdict.exceptions.VerdictException;
@@ -236,13 +237,12 @@ public class VerdictMeta {
 	}
 	
 	/**
-	 * Returns a pair of the original table size and the sample size for a given sample name.
+	 * Returns the sample and original table size for the given sample table name.
 	 * @param sampleTableName
 	 * @return
 	 */
-	public Pair<Long, Long> getSampleSizeOf(TableUniqueName sampleTableName) {
-		SampleSizeInfo a = sampleSizeMeta.get(sampleTableName);
-		return Pair.of(a.originalTableSize, a.sampleSize);
+	public SampleSizeInfo getSampleSizeOf(TableUniqueName sampleTableName) {
+		return sampleSizeMeta.get(sampleTableName);
 	}
 
 //	public Pair<Long, Long> getSampleAndOriginalTableSizeByOriginalTableNameIfExists(TableUniqueName originalTableName) {
@@ -308,21 +308,5 @@ public class VerdictMeta {
 	
 	public TableUniqueName getMetaNameTableName(String schemaName) {
 		return TableUniqueName.uname(schemaName, META_NAME_TABLE);
-	}
-}
-
-
-class SampleSizeInfo {
-	public long sampleSize = 0;
-	public long originalTableSize = 0;
-	
-	public SampleSizeInfo(long sampleSize, long originalTableSize) {
-		this.sampleSize = sampleSize;
-		this.originalTableSize = originalTableSize;
-	}
-	
-	@Override
-	public String toString() {
-		return String.format("sample (%d out of %d)", sampleSize, originalTableSize);
 	}
 }

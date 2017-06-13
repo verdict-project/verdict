@@ -7,12 +7,8 @@ import edu.umich.verdict.exceptions.VerdictException;
 
 public class ByPassSelectQuery extends SelectQuery {
 
-	public ByPassSelectQuery(String q, VerdictContext vc) {
-		super(q, vc);
-	}
-	
-	public ByPassSelectQuery(Query parent) {
-		super(parent.queryString, parent.vc);
+	public ByPassSelectQuery(VerdictContext vc, String q) {
+		super(vc, q);
 	}
 	
 	@Override

@@ -15,14 +15,10 @@ import edu.umich.verdict.exceptions.VerdictException;
 
 public class UseDatabaseQuery extends Query {
 
-	public UseDatabaseQuery(String q, VerdictContext vc) {
-		super(q, vc);
+	public UseDatabaseQuery(VerdictContext vc, String q) {
+		super(vc, q);
 	}
 
-	public UseDatabaseQuery(Query parent) {
-		super(parent.queryString, parent.vc);
-	}
-	
 	@Override
 	public ResultSet compute() throws VerdictException {
 		VerdictSQLLexer l = new VerdictSQLLexer(CharStreams.fromString(queryString));

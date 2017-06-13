@@ -11,12 +11,8 @@ import edu.umich.verdict.exceptions.VerdictException;
 
 public class ShowDatabasesQuery extends SelectQuery {
 
-	public ShowDatabasesQuery(String q, VerdictContext vc) {
-		super(q, vc);
-	}
-
-	public ShowDatabasesQuery(Query parent) {
-		super(parent.queryString, parent.vc);
+	public ShowDatabasesQuery(VerdictContext vc, String q) {
+		super(vc, q);
 	}
 	
 	@Override

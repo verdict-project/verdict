@@ -16,6 +16,7 @@ import edu.umich.verdict.VerdictSQLParser;
 import edu.umich.verdict.datatypes.Alias;
 import edu.umich.verdict.datatypes.ColumnName;
 import edu.umich.verdict.datatypes.SampleParam;
+import edu.umich.verdict.datatypes.SampleSizeInfo;
 import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.exceptions.VerdictQuerySyntaxException;
@@ -120,9 +121,9 @@ class AnalyticSelectStatementRewriter extends SelectStatementBaseRewriter  {
 				SampleParam p = e.getValue().getLeft();
 				sampleToOriginalRatio = 1 / p.samplingRatio;
 				TableUniqueName sampleTable = e.getValue().getRight();
-				Pair<Long, Long> originalAndSampleSizes = vc.getMeta().getSampleSizeOf(sampleTable);
+				SampleSizeInfo sizeInfo = vc.getMeta().getSampleSizeOf(sampleTable);
 				VerdictLogger.debug(this, String.format("%s size ratio. sample size: %d, original size: %d",
-						sampleTable, originalAndSampleSizes.getRight(), originalAndSampleSizes.getLeft()));
+						sampleTable, sizeInfo.sampleSize, sizeInfo.originalTableSize));
 			}
 			sampleSizeToOriginalTableSizeRatio = sampleToOriginalRatio;
 		}

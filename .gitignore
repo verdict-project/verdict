@@ -17,3 +17,6 @@ target/
 .classpath
 .project
 .settings
+
+# log
+*.log

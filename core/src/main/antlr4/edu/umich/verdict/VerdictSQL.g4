@@ -46,18 +46,22 @@ verdict_statement
 
 //WITH SIZE size=(FLOAT | DECIMAL) '%' (STORE poission_cols=DECIMAL POISSON COLUMNS)? (STRATIFIED BY column_name (',' column_name)*)?
 create_sample_statement
-    : CREATE (size=(FLOAT | DECIMAL) '%')? SAMPLE (FROM | OF) table=table_name (sample_type)?
+    : CREATE (size=(FLOAT | DECIMAL) '%')? (sample_type)? SAMPLE (FROM | OF) original_table=table_name (on_columns)?
     ;
     
 sample_type
-    : HASH ON column_name                               # universal_sample
-    | UNIFORM                                           # uniform_random_sample
-    | STRATIFIED ON column_name (',' column_name)*      # stratified_sample
-    | AUTOMATIC                                         # automatic_sample
+    : UNIFORM
+    | UNIVERSE
+    | STRATIFIED
+    | RECOMMENDED
+    ;
+    
+on_columns
+    : ON column_name (',' column_name)*
     ;
 
 delete_sample_statement
-    : (DELETE | DROP) (size=(FLOAT | DECIMAL) '%')? SAMPLE OF table=table_name (sample_type)?
+    : (DELETE | DROP) (size=(FLOAT | DECIMAL) '%')? (sample_type)? SAMPLE OF original_table=table_name (on_columns)?
     ;
 
 show_samples_statement
@@ -1434,6 +1438,7 @@ RANGE:                           R A N G E;
 RANK:                            R A N K;
 READONLY:                        R E A D O N L Y;
 READ_ONLY:                       R E A D '_' O N L Y;
+RECOMMENDED:                     R E C O M M E N D E D;
 RECOMPILE:                       R E C O M P I L E;
 RELATIVE:                        R E L A T I V E;
 REMOTE:                          R E M O T E;
@@ -1468,6 +1473,7 @@ TYPE:                            T Y P E;
 TYPE_WARNING:                    T Y P E '_' W A R N I N G;
 UNBOUNDED:                       U N B O U N D E D;
 UNCOMMITTED:                     U N C O M M I T T E D;
+UNIVERSE:                        U N I V E R S E;
 UNKNOWN:                         U N K N O W N;
 USING:                           U S I N G;
 VAR:                             V A R;

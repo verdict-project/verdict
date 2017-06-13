@@ -9,24 +9,19 @@ import org.antlr.v4.runtime.misc.Interval;
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.exceptions.VerdictException;
 
-public class SelectQuery extends Query {
+public abstract class SelectQuery extends Query {
 
-	public SelectQuery(String queryString, VerdictContext vc) {
-		super(queryString, vc);
+	public SelectQuery(VerdictContext vc, String queryString) {
+		super(vc, queryString);
 	}
 	
-	public SelectQuery(Query parent) {
-		super(parent.queryString, parent.vc);
-	}
-	
-	@Override
-	public ResultSet compute() throws VerdictException {
+	public static SelectQuery getInstance(VerdictContext vc, String queryString) {
 		SelectQuery query = null;
 		if (ApproximateSelectQuery.doesSupport(queryString)) {
-			query = new ApproximateSelectQuery(queryString, vc);
+			query = new ApproximateSelectQuery(vc, queryString);
 		} else {
-			query = new ByPassSelectQuery(this);
+			query = new ByPassSelectQuery(vc, queryString);
 		}
-		return query.compute();
+		return query;
 	}
 }

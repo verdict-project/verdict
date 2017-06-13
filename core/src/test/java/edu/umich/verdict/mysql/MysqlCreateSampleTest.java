@@ -12,12 +12,12 @@ public class MysqlCreateSampleTest {
 		conf.setDbms("mysql");
 		conf.setHost("localhost");
 		conf.setPort("3306");
-		conf.setDbmsSchema("tpch1G");
+		conf.setDbmsSchema("instacart1g");
 		conf.setUser("verdict");
 		conf.setPassword("verdict");
 		VerdictContext vc = new VerdictContext(conf);
 		
-		vc.executeQuery("create 1% sample from lineitem");
+		vc.executeQuery("create sample of order_products");
 		
 		vc.destroy();
 		

@@ -32,8 +32,10 @@ public class VerdictContext {
 		this.meta = another.meta;
 		this.dbms = another.dbms;
 		this.metaDbms = another.metaDbms;
+		this.queryUid = another.queryUid;
 		this.dbms.createNewStatementWithoutClosing();
-		this.queryUid = 0;
+//		this.queryUid = 0;
+//		this.meta.clearSampleInfo();
 	}
 	
 	/**
@@ -76,12 +78,11 @@ public class VerdictContext {
 	}
 	
 	public ResultSet executeQuery(String sql) throws VerdictException {
-		queryUid++;
-		VerdictLogger.debug(this, "A query execution starts:");
+		VerdictLogger.debug(this, "An input query:");
 		VerdictLogger.debugPretty(this, sql, "  ");
-		Query vq = new Query(sql, this);
+		Query vq = Query.getInstance(this, sql);
 		ResultSet rs = vq.compute();
-		VerdictLogger.debug(this, "A query execution finished");
+		VerdictLogger.debug(this, "The query execution finished.");
 		return rs;
 	}
 	
@@ -91,6 +92,14 @@ public class VerdictContext {
 //		vq.computeUpdate();
 //		VerdictLogger.info(this, "A query execution finished");
 //	}
+	
+	public void incrementQid() {
+		queryUid += 1;
+	}
+	
+	public long getQid() {
+		return queryUid;
+	}
 	
 	public VerdictMeta getMeta() {
 		return meta;

@@ -11,6 +11,7 @@ import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.VerdictSQLBaseVisitor;
 import edu.umich.verdict.VerdictSQLLexer;
 import edu.umich.verdict.VerdictSQLParser;
+import edu.umich.verdict.datatypes.Alias;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.util.VerdictLogger;
 
@@ -20,7 +21,7 @@ import edu.umich.verdict.util.VerdictLogger;
  * @author Yongjoo Park
  *
  */
-public class Query {
+public abstract class Query {
 
 	protected final String queryString;
 
@@ -37,9 +38,12 @@ public class Query {
 	 * @param q query string
 	 * @param vc
 	 */
-	public Query(String q, VerdictContext vc) {
+	public Query(VerdictContext vc, String q) {
 		queryString = q;
 		this.vc = vc;
+		vc.incrementQid();
+		vc.getMeta().clearSampleInfo();
+		Alias.resetAliasIndex();
 	}
 
 	public String getQueryString() {
@@ -72,59 +76,61 @@ public class Query {
 	 * @return ResultSet if the query belongs to the type A, otherwise return null.
 	 * @throws VerdictException
 	 */
-	public ResultSet compute() throws VerdictException {
+	public abstract ResultSet compute() throws VerdictException;
+	
+	public static Query getInstance(VerdictContext vc, String queryString) throws VerdictException {
 		Query query = null;
-		Type queryType = getStatementType();
-		VerdictLogger.debug(this, String.format("A query type: %s", queryType.toString()));
+		Type queryType = getStatementType(queryString);
+		VerdictLogger.debug(Query.class, String.format("[%d] A query type: %s", vc.getQid(), queryType.toString()));
 		
 		if (queryType.equals(Type.CONFIG)) {
-			query = new ConfigQuery(this);
+			query = new ConfigQuery(vc, queryString);
 		} else {
 			if (vc.getConf().doesContain("bypass") && vc.getConf().getBoolean("bypass")) {
 				VerdictLogger.info("Verdict bypasses this query. Run \"set bypass=\'false\'\""
 						+ " to enable Verdict's approximate query processing.");
 				if (isUpdateType(queryType)) {
-					query = new ByPassVerdictUpdateQuery(this);
+					query = new ByPassVerdictUpdateQuery(vc, queryString);
 				} else {
-					query = new ByPassSelectQuery(this);
+					query = new ByPassSelectQuery(vc, queryString);
 				}
 			} else {
 				if (queryType.equals(Type.SELECT)) {
-					query = new SelectQuery(this);
+					query = SelectQuery.getInstance(vc, queryString);
 				} else if (queryType.equals(Type.CREATE_SAMPLE)) {
-					query = new CreateSampleQuery(this);
+					query = new CreateSampleQuery(vc, queryString);
 				} else if (queryType.equals(Type.DROP_SAMPLE)) {
-					query = new DropSampleQuery(this);
+					query = new DropSampleQuery(vc, queryString);
 				} else if (queryType.equals(Type.SHOW_SAMPLE)) {
-					query = new ShowSamplesQuery(this);
+					query = new ShowSamplesQuery(vc, queryString);
 				} else if (queryType.equals(Type.DESCRIBE_TABLE)) {
-					query = new DescribeTableQuery(this);
+					query = new DescribeTableQuery(vc, queryString);
 				} else if (queryType.equals(Type.OTHER_USE)) {
-					query = new UseDatabaseQuery(this);
+					query = new UseDatabaseQuery(vc, queryString);
 				} else if (queryType.equals(Type.OTHER_SHOW_TABLES)) {
-					query = new ShowTablesQuery(this);
+					query = new ShowTablesQuery(vc, queryString);
 				} else if (queryType.equals(Type.OTHER_SHOW_DATABASES)) {
-					query = new ShowDatabasesQuery(this);
+					query = new ShowDatabasesQuery(vc, queryString);
 				} else if (queryType.equals(Type.CREATE_TABLE) ||
 						   queryType.equals(Type.DROP_TABLE) ||
 						   queryType.equals(Type.DELETE_FROM) ||
 						   queryType.equals(Type.DROP_VIEW)) {
-					query = new ByPassVerdictUpdateQuery(this);
+					query = new ByPassVerdictUpdateQuery(vc, queryString);
 				} else if (queryType.equals(Type.CREATE_TABLE_AS_SELECT)) {
-					query = new CreateTableAsSelectQuery(this);
+					query = new CreateTableAsSelectQuery(vc, queryString);
 				} else if (queryType.equals(Type.CREATE_VIEW)) {
-					query = new CreateViewAsSelectQuery(this);
+					query = new CreateViewAsSelectQuery(vc, queryString);
 				} else {
-					VerdictLogger.error(this, "Unsupported query: " + queryString);
+					VerdictLogger.error("Unsupported query: " + queryString);
 					throw new VerdictException("Unsupported query.");
 				}				
 			}
 		}
 
-		return query.compute();
+		return query;
 	}
 	
-	protected boolean isUpdateType(Type type) {
+	protected static boolean isUpdateType(Type type) {
 		if (type.equals(Type.SELECT) || type.equals(Type.SHOW_SAMPLE) || type.equals(Type.DESCRIBE_TABLE)
 		 || type.equals(Type.OTHER_USE) || type.equals(Type.OTHER_SHOW_TABLES) || type.equals(Type.OTHER_SHOW_DATABASES)) {
 			return false;
@@ -133,7 +139,7 @@ public class Query {
 		}
 	}
 
-	protected Type getStatementType() {
+	protected static Type getStatementType(String queryString) {
 		VerdictSQLLexer l = new VerdictSQLLexer(CharStreams.fromString(queryString));
 		VerdictSQLParser p = new VerdictSQLParser(new CommonTokenStream(l));
 

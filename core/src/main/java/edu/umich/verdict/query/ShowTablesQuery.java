@@ -12,12 +12,8 @@ import edu.umich.verdict.util.VerdictLogger;
 
 public class ShowTablesQuery extends SelectQuery {
 
-	public ShowTablesQuery(String q, VerdictContext vc) {
-		super(q, vc);
-	}
-
-	public ShowTablesQuery(Query parent) {
-		super(parent.queryString, parent.vc);
+	public ShowTablesQuery(VerdictContext vc, String q) {
+		super(vc, q);
 	}
 	
 	@Override

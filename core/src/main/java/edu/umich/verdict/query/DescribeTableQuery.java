@@ -19,13 +19,8 @@ import edu.umich.verdict.util.VerdictLogger;
 
 public class DescribeTableQuery extends SelectQuery {
 
-	public DescribeTableQuery(String q, VerdictContext vc) {
-		super(q, vc);
-		// TODO Auto-generated constructor stub
-	}
-
-	public DescribeTableQuery(Query parent) {
-		super(parent.queryString, parent.vc);
+	public DescribeTableQuery(VerdictContext vc, String q) {
+		super(vc, q);
 	}
 
 	@Override

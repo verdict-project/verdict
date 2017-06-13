@@ -23,6 +23,10 @@ public class Alias implements Comparable<Alias> {
 		this.aliasName = aliasName;
 	}
 	
+	public static void resetAliasIndex() {
+		aliasIndex = 0;
+	}
+	
 	public static Alias genAlias(int depth, String originalName) {
 		aliasIndex++;
 		String aliasName = String.format("v%d_%d", depth, aliasIndex);

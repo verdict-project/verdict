@@ -12,12 +12,8 @@ import edu.umich.verdict.util.VerdictLogger;
 
 public class ShowSamplesQuery extends SelectQuery {
 
-	public ShowSamplesQuery(String q, VerdictContext vc) {
-		super(q, vc);
-	}
-
-	public ShowSamplesQuery(Query parent) {
-		super(parent.queryString, parent.vc);
+	public ShowSamplesQuery(VerdictContext vc, String q) {
+		super(vc, q);
 	}
 
 	@Override

@@ -277,36 +277,36 @@ public class Dbms {
 	}
 	
 	/**
-	 * Creates a universal sample table without dropping an old table.
+	 * Creates a universe sample table without dropping an old table.
 	 * @param originalTableName
 	 * @param sampleRatio
 	 * @throws VerdictException
 	 */
-	protected TableUniqueName justCreateUniversalSampleTableOf(TableUniqueName originalTableName, double sampleRatio) throws VerdictException {
+	protected TableUniqueName justCreateUniverseSampleTableOf(TableUniqueName originalTableName, double sampleRatio, String columnName) throws VerdictException {
 		TableUniqueName sampleTableName = vc.getMeta().newSampleTableUniqueNameOf(originalTableName);
 		String sql = String.format("CREATE TABLE %s SELECT * FROM %s "
-								 + "WHERE mod(cast(conv(substr(md5(user_id),17,32),16,10) as unsigned), 10000) <= %.4f",
-								 sampleTableName, originalTableName, sampleRatio*10000);
+								 + "WHERE mod(cast(conv(substr(md5(%s),17,32),16,10) as unsigned), 10000) <= %.4f",
+								 sampleTableName, originalTableName, columnName, sampleRatio*10000);
 		VerdictLogger.debug(this, String.format("Create a table: %s", sql));
 		this.executeUpdate(sql);
 		return sampleTableName;
 	}
 	
-	public Triple<Long, Long, String> createUniversalSampleTableOf(String originalTableName, double samplingRatio, String columnName) throws VerdictException {
+	public Triple<Long, Long, String> createUniverseSampleTableOf(String originalTableName, double samplingRatio, String columnName) throws VerdictException {
 		TableUniqueName fullyQuantifiedOriginalTableName = TableUniqueName.uname(vc, originalTableName);
 
-		dropUniversalSampleTableOf(fullyQuantifiedOriginalTableName, samplingRatio, columnName);
-		TableUniqueName sampleTableName = justCreateUniversalSampleTableOf(fullyQuantifiedOriginalTableName, samplingRatio);
+		dropUniverseSampleTableOf(fullyQuantifiedOriginalTableName, samplingRatio, columnName);
+		TableUniqueName sampleTableName = justCreateUniverseSampleTableOf(fullyQuantifiedOriginalTableName, samplingRatio, columnName);
 		
 		return Triple.of(getTableSize(sampleTableName), getTableSize(fullyQuantifiedOriginalTableName), sampleTableName.tableName);
 	}
 	
-	public void dropUniversalSampleTableOf(TableUniqueName originalTableName, double sampleRatio, String columnName) throws VerdictException {
+	public void dropUniverseSampleTableOf(TableUniqueName originalTableName, double sampleRatio, String columnName) throws VerdictException {
 		List<Pair<SampleParam, TableUniqueName>> sampleInfo = vc.getMeta().getSampleInfoFor(originalTableName);
 		TableUniqueName sampleName = null;
 		for (Pair<SampleParam, TableUniqueName> e : sampleInfo) {
 			SampleParam p = e.getLeft();
-			if (p.sampleType.equals("universal") && p.samplingRatio == sampleRatio && p.columnNames.get(0).equals(columnName)) {
+			if (p.sampleType.equals("universe") && p.samplingRatio == sampleRatio && p.columnNames.get(0).equals(columnName)) {
 				sampleName = e.getValue();
 			}
 		}

@@ -7,12 +7,8 @@ import edu.umich.verdict.exceptions.VerdictException;
 
 public class ByPassVerdictUpdateQuery extends Query {
 
-	public ByPassVerdictUpdateQuery(String q, VerdictContext vc) {
-		super(q, vc);
-	}
-	
-	public ByPassVerdictUpdateQuery(Query parent) {
-		super(parent.queryString, parent.vc);
+	public ByPassVerdictUpdateQuery(VerdictContext vc, String q) {
+		super(vc, q);
 	}
 	
 	@Override
