@@ -16,6 +16,7 @@ import edu.umich.verdict.VerdictSQLParser.Column_nameContext;
 import edu.umich.verdict.datatypes.SampleParam;
 import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
+import edu.umich.verdict.util.VerdictLogger;
 
 public class DropSampleQuery extends Query {
 
@@ -47,9 +48,10 @@ public class DropSampleQuery extends Query {
 			TableUniqueName sampleName = e.getRight();
 			if (isSamplingRatioEqual(param.samplingRatio, samplingRatio)
 					&& isSampleTypeEqual(param.sampleType, sampleType)
-					&& param.columnNames.equals(columnNames)) {
+					&& isColumnNamesEqual(param.columnNames, columnNames)) {
 				vc.getDbms().dropTable(sampleName);
-				vc.getMeta().deleteSampleInfo(param.originalTable, param.sampleType, param.samplingRatio, columnNames);
+				vc.getMeta().deleteSampleInfo(param);
+				VerdictLogger.info(String.format("Deleted a sample table %s and its meta information.", sampleName));
 			}
 		}
 	}
@@ -67,6 +69,16 @@ public class DropSampleQuery extends Query {
 			return true;
 		} else {
 			return t1.equals(t2);
+		}
+	}
+	
+	private boolean isColumnNamesEqual(List<String> colNamesOfSample, List<String> colNamesInStatement) {
+		if (colNamesInStatement.size() == 0) {
+			return true;
+		} else if (colNamesOfSample.equals(colNamesInStatement)) {
+			return true;
+		} else {
+			return false;
 		}
 	}
 

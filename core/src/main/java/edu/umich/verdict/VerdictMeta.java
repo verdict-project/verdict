@@ -96,22 +96,16 @@ public class VerdictMeta {
 	 * @param originalTableSize
 	 * @throws VerdictException 
 	 */
-	public void insertSampleInfo(String originalSchemaName, String originalTableName, String sampleTableName,
-								 long sampleSize, long originalTableSize,
-								 String sampleType, Double samplingRatio, List<String> columnNames) throws VerdictException {
-		TableUniqueName fullSampleName = TableUniqueName.uname(originalSchemaName, sampleTableName);
-		vc.getMetaDbms().createMetaTablesInDMBS(TableUniqueName.uname(originalSchemaName, originalTableName),
+	public void insertSampleInfo(SampleParam param, long sampleSize, long originalTableSize) throws VerdictException {
+		TableUniqueName fullSampleName = param.sampleTableName();
+		
+		vc.getMetaDbms().createMetaTablesInDMBS(param.originalTable,
 				getMetaSizeTableName(fullSampleName),
 				getMetaNameTableName(fullSampleName));
 		
-		getMetaDbms().updateSampleNameEntryIntoDBMS(
-				originalSchemaName, originalTableName, fullSampleName.schemaName, fullSampleName.tableName,
-				sampleType, samplingRatio, columnNames,
-				getMetaNameTableName(fullSampleName));
+		getMetaDbms().updateSampleNameEntryIntoDBMS(param, getMetaNameTableName(fullSampleName));
 		
-		getMetaDbms().updateSampleSizeEntryIntoDBMS(
-				fullSampleName.schemaName, fullSampleName.tableName, sampleSize, originalTableSize,
-				getMetaSizeTableName(fullSampleName));
+		getMetaDbms().updateSampleSizeEntryIntoDBMS(param, sampleSize, originalTableSize, getMetaSizeTableName(fullSampleName));
 	}
 		
 	/**
@@ -119,21 +113,17 @@ public class VerdictMeta {
 	 * @param originalTableName
 	 * @throws VerdictException 
 	 */
-	public void deleteSampleInfo(TableUniqueName originalTableName,
-			String sampleType, double samplingRatio, List<String> columnNames) throws VerdictException {
-		refreshSampleInfoIfNeeded(originalTableName.schemaName);
-		SampleParam p = new SampleParam(originalTableName, sampleType, samplingRatio, columnNames);
+	public void deleteSampleInfo(SampleParam param) throws VerdictException {
+		refreshSampleInfoIfNeeded(param.originalTable.schemaName);
+		TableUniqueName originalTable = param.originalTable;
 		
-		if (sampleNameMeta.containsKey(originalTableName)) {
-			TableUniqueName sampleTableName = sampleNameMeta.get(originalTableName).get(p);
-			
-			getMetaDbms().deleteSampleNameEntryFromDBMS(originalTableName.schemaName, originalTableName.tableName,
-					sampleType, samplingRatio, columnNames,	getMetaNameTableName(originalTableName));
-			getMetaDbms().deleteSampleSizeEntryFromDBMS(sampleTableName.schemaName, sampleTableName.tableName,
-					getMetaSizeTableName(sampleTableName));
+		if (sampleNameMeta.containsKey(originalTable)) {
+			TableUniqueName sampleTableName = sampleNameMeta.get(originalTable).get(param);
+			getMetaDbms().deleteSampleNameEntryFromDBMS(param, getMetaNameTableName(originalTable));
+			getMetaDbms().deleteSampleSizeEntryFromDBMS(param, getMetaSizeTableName(sampleTableName));
 		} else {
 			VerdictLogger.warn(String.format("No sample table for the parameter: [%s, %s, %.4f, %s]",
-					originalTableName, sampleType, samplingRatio, columnNames.toString()));
+					param.originalTable, param.sampleType, param.samplingRatio, param.columnNames.toString()));
 		}
 	}
 	
@@ -191,7 +181,8 @@ public class VerdictMeta {
 			rs.close();
 			
 			// tables and their column names
-			rs = getMetaDbms().getAllTableAndColumns(schemaName);
+			tableToColumnNames.clear();
+			rs = vc.getDbms().getAllTableAndColumns(schemaName);
 			while (rs.next()) {
 				String tableName = rs.getString(1);
 				String columnName = rs.getString(2);
@@ -268,21 +259,21 @@ public class VerdictMeta {
 //		}
 //	}
 	
-	/**
-	 * Obtains the name of the sample table for the given original table. This function performs a syntactic transformation,
-	 * without semantic checks.
-	 * @param originalTableName
-	 * @return
-	 */
-	public TableUniqueName newSampleTableUniqueNameOf(TableUniqueName originalTableName) {
-		String currentTime = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
-		String localTableName = String.format("sample_%s_%s", originalTableName.tableName, currentTime);
-		return TableUniqueName.uname(originalTableName.schemaName, localTableName);
-	}
-	
-	public TableUniqueName newSampleTableUniqueNameOf(String originalTableName) {
-		return newSampleTableUniqueNameOf(TableUniqueName.uname(vc, originalTableName));
-	}
+//	/**
+//	 * Obtains the name of the sample table for the given original table. This function performs a syntactic transformation,
+//	 * without semantic checks.
+//	 * @param originalTableName
+//	 * @return
+//	 */
+//	public TableUniqueName newSampleTableUniqueNameOf(TableUniqueName originalTableName) {
+//		String currentTime = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
+//		String localTableName = String.format("sample_%s_%s", originalTableName.tableName, currentTime);
+//		return TableUniqueName.uname(originalTableName.schemaName, localTableName);
+//	}
+//	
+//	public TableUniqueName newSampleTableUniqueNameOf(String originalTableName) {
+//		return newSampleTableUniqueNameOf(TableUniqueName.uname(vc, originalTableName));
+//	}
 	
 	/**
 	 * 

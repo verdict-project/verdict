@@ -3,7 +3,6 @@ package edu.umich.verdict.query;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.commons.lang3.tuple.Triple;
 
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.VerdictSQLBaseVisitor;
@@ -13,12 +12,12 @@ import edu.umich.verdict.VerdictSQLParser.Column_nameContext;
 import edu.umich.verdict.datatypes.SampleParam;
 import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
-import edu.umich.verdict.relation.ApproxRelation;
-import edu.umich.verdict.relation.functions.AggFunction;
-import static edu.umich.verdict.relation.functions.AggFunction.*;
+import edu.umich.verdict.relation.SampleRelation;
+import edu.umich.verdict.relation.expr.ColNameExpr;
+import edu.umich.verdict.relation.expr.Expr;
+import edu.umich.verdict.relation.expr.FuncExpr;
 import edu.umich.verdict.util.VerdictLogger;
 
-import static edu.umich.verdict.util.NameHelpers.*;
 
 import java.sql.ResultSet;
 import java.util.ArrayList;
@@ -42,7 +41,7 @@ public class CreateSampleQuery extends Query {
 		String sampleType = visitor.getSampleType();
 		List<String> columnNames = visitor.getColumnNames();
 		
-		buildSamples(tableName, samplingRatio, sampleType, columnNames);
+		buildSamples(new SampleParam(TableUniqueName.uname(vc, tableName), sampleType, samplingRatio, columnNames));
 		
 		return null;
 	}
@@ -57,25 +56,33 @@ public class CreateSampleQuery extends Query {
 	 * 		for stratified sampling, this is a list of (possibly) multiple column names.
 	 * @throws VerdictException 
 	 */
-	protected void buildSamples(String tableName, double samplingRatio, String sampleType, List<String> columnNames) throws VerdictException {
-		if (sampleType.equals("uniform")) {
-			createUniformRandomSample(tableName, samplingRatio);
-		} else if (sampleType.equals("universe")) {
-			if (columnNames.size() == 0) {
+	protected void buildSamples(SampleParam param) throws VerdictException {
+		if (param.sampleType.equals("uniform")) {
+			createUniformRandomSample(param);
+		} else if (param.sampleType.equals("universe")) {
+			if (param.columnNames.size() == 0) {
 				VerdictLogger.error("A column name must be specified for universe samples. Nothing is done.");
 			} else {
-				if (columnNames.size() > 1) {
+				if (param.columnNames.size() > 1) {
 					VerdictLogger.warn(String.format("Only one column name is expected for universe samples."
-							+ " The first column (%s) is used.", columnNames.get(0)));
+							+ " The first column (%s) is used.", param.columnNames.get(0)));
 				}
-				createUniverseSample(tableName, samplingRatio, columnNames.get(0));
+				createUniverseSample(param);
 			}
-		} else if (sampleType.equals("stratified")) {
-			createStratifiedSample(tableName, samplingRatio, columnNames);
+		} else if (param.sampleType.equals("stratified")) {
+			if (param.columnNames.size() == 0) {
+				VerdictLogger.error("A column name must be specified for universe samples. Nothing is done.");
+			} else {
+				if (param.columnNames.size() > 1) {
+					VerdictLogger.warn(String.format("Only one column name is supported for stratified samples."
+							+ " The first column (%s) is used.", param.columnNames.get(0)));
+				}
+				createStratifiedSample(param);
+			}
 		} else {	// recommended
-			buildSamples(tableName, samplingRatio, "uniform", columnNames);		// build a uniform sample
-			List<Pair<SampleParam, TableUniqueName>> sampleInfo = vc.getMeta().getSampleInfoFor(TableUniqueName.uname(vc, tableName));
-			SampleParam param = null;
+			TableUniqueName originalTable = param.originalTable;
+			buildSamples(new SampleParam(originalTable, "uniform", param.samplingRatio, new ArrayList<String>()));		// build a uniform sample
+			List<Pair<SampleParam, TableUniqueName>> sampleInfo = vc.getMeta().getSampleInfoFor(originalTable);
 			TableUniqueName sampleName = null;
 			for (Pair<SampleParam, TableUniqueName> e : sampleInfo) {
 				param = e.getLeft();
@@ -83,60 +90,50 @@ public class CreateSampleQuery extends Query {
 			}
 			
 			if (param != null && sampleName != null) {
-				TableUniqueName originalTable = TableUniqueName.uname(vc, tableName);
-				List<AggFunction> aggs = new ArrayList<AggFunction>();
-//				aggs.add(count());
+				List<Expr> aggs = new ArrayList<Expr>();
+				aggs.add(FuncExpr.count());
 				List<String> cnames = vc.getMeta().getColumnNames(originalTable);
 				for (String c : cnames) {
-					aggs.add(countDistinct(c));
+					aggs.add(FuncExpr.approxCountDistinct(new ColNameExpr(c)));
 				}
-				List<Object> rs = (new ApproxRelation(vc, originalTable, param)).aggOnSample(aggs).collect().get(0);
+				List<Object> rs = SampleRelation.from(vc, param).aggOnSample(aggs).collect().get(0);
 				
-//				long sampleSize = (Long) rs.get(0);
-				for (int i = 0; i < rs.size(); i++) {
+				long sampleSize = (Long) rs.get(0);
+				for (int i = 1; i < rs.size(); i++) {
 					long cd = (Long) rs.get(i);
-					String cname = cnames.get(i);
-					if (cd > 1000) {
+					String cname = cnames.get(i-1);
+					if (cd > sampleSize * 0.01) {
 						List<String> sampleOn = new ArrayList<String>();
 						sampleOn.add(cname);
-						buildSamples(tableName, samplingRatio, "universe", sampleOn);		// build a universe sample
+						buildSamples(new SampleParam(originalTable, "universe", param.samplingRatio, sampleOn));		// build a universe sample
+					} else {
+						List<String> sampleOn = new ArrayList<String>();
+						sampleOn.add(cname);
+						buildSamples(new SampleParam(originalTable, "stratified", param.samplingRatio, sampleOn));		// build a stratified sample
 					}
 				}
 			}
 		}
 	}
 	
-	protected void createUniformRandomSample(String tableName, double samplingRatio) throws VerdictException {
-		VerdictLogger.info(this, String.format("Create a %.4f%% uniform random sample of %s.", samplingRatio*100, tableName));
-		
-		Triple<Long, Long, String> sampleAndOriginalSizesAndSampleName = vc.getDbms().createUniformRandomSampleTableOf(tableName, samplingRatio);
-		Long sampleSize = sampleAndOriginalSizesAndSampleName.getLeft();
-		Long tableSize = sampleAndOriginalSizesAndSampleName.getMiddle();
-		String sampleTableName = sampleAndOriginalSizesAndSampleName.getRight();
-		
-		vc.getMeta().insertSampleInfo(
-				schemaOfTableName(vc.getCurrentSchema(), tableName).get(), tableNameOfTableName(tableName), sampleTableName,
-				sampleSize, tableSize, "uniform", samplingRatio, new ArrayList<String>());
+	protected void createUniformRandomSample(SampleParam param) throws VerdictException {
+		VerdictLogger.info(this, String.format("Create a %.2f%% uniform random sample of %s.", param.samplingRatio*100, param.originalTable));
+		Pair<Long, Long> sampleAndOriginalSizes = vc.getDbms().createUniformRandomSampleTableOf(param);
+		vc.getMeta().insertSampleInfo(param, sampleAndOriginalSizes.getLeft(), sampleAndOriginalSizes.getRight());
 	}
 	
-	protected void createUniverseSample(String tableName, double samplingRatio, String columnName) throws VerdictException {
-		VerdictLogger.info(this, String.format("Create a %.4f%% universe sample of %s on %s.", samplingRatio*100, tableName, columnName));
-		
-		Triple<Long, Long, String> sampleAndOriginalSizesAndSampleName = vc.getDbms().createUniverseSampleTableOf(tableName, samplingRatio, columnName);
-		Long sampleSize = sampleAndOriginalSizesAndSampleName.getLeft();
-		Long tableSize = sampleAndOriginalSizesAndSampleName.getMiddle();
-		String sampleTableName = sampleAndOriginalSizesAndSampleName.getRight();
-		
-		List<String> columnNames = new ArrayList<String>();
-		columnNames.add(columnName);
-		
-		vc.getMeta().insertSampleInfo(
-				schemaOfTableName(vc.getCurrentSchema(), tableName).get(), tableNameOfTableName(tableName), sampleTableName,
-				sampleSize, tableSize, "universe", samplingRatio, columnNames);
+	protected void createUniverseSample(SampleParam param) throws VerdictException {
+		String columnName = param.columnNames.get(0);
+		VerdictLogger.info(this, String.format("Create a %.2f%% universe sample of %s on %s.", param.samplingRatio*100, param.originalTable, columnName));
+		Pair<Long, Long> sampleAndOriginalSizes = vc.getDbms().createUniverseSampleTableOf(param);
+		vc.getMeta().insertSampleInfo(param, sampleAndOriginalSizes.getLeft(), sampleAndOriginalSizes.getRight());
 	}
 	
-	protected void createStratifiedSample(String tableName, double samplingRatio, List<String> columnNames) {
-		VerdictLogger.warn(this, "Stratified samples are currently not supported. Skip this process.");
+	protected void createStratifiedSample(SampleParam param) throws VerdictException {
+		String columnName = param.columnNames.get(0);
+		VerdictLogger.info(this, String.format("Create a %.2f%% stratified sample of %s on %s.", param.samplingRatio*100, param.originalTable, columnName));
+		Pair<Long, Long> sampleAndOriginalSizes = vc.getDbms().createStratifiedSampleTableOf(param);
+		vc.getMeta().insertSampleInfo(param, sampleAndOriginalSizes.getLeft(), sampleAndOriginalSizes.getRight());
 	}
 	
 	/**

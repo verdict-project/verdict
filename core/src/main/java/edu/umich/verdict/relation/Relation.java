@@ -8,48 +8,28 @@ import java.util.List;
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
+import edu.umich.verdict.relation.expr.Expr;
 
-public class Relation {
+public interface Relation {
 	
-	protected VerdictContext vc;
+	public boolean isApproximate();
 	
-	protected TableUniqueName tableName;
-
-	public Relation(VerdictContext vc, TableUniqueName tableName) {
-		this.vc = vc;
-		this.tableName = tableName;
-	}
+	public List<List<Object>> collect() throws VerdictException;
 	
-	public boolean isApproximate() {
-		return false;
-	}
+	public ResultSet collectResultSet() throws VerdictException;
 	
-	public List<List<Object>> collect() throws VerdictException {
-		List<List<Object>> result = new ArrayList<List<Object>>();
-		ResultSet rs = collectResultSet();
-		try {
-			int colCount = rs.getMetaData().getColumnCount();
-			while (rs.next()) {
-				List<Object> row = new ArrayList<Object>();	
-				for (int i = 1; i <= colCount; i++) {
-					row.add(rs.getObject(i));
-				}
-				result.add(row);
-			}
-		} catch (SQLException e) {
-			throw new VerdictException(e);
-		}
-		return result;
-	}
+	public TableUniqueName getTableName();
 	
-	public ResultSet collectResultSet() throws VerdictException {
-		return vc.getDbms().executeQuery(toSql());
-	}
+	public boolean isDerivedTable();
 	
-	public String toSql() {
-		StringBuilder sql = new StringBuilder();
-		sql.append("SELECT * FROM " + tableName);
-		return sql.toString();
-	}
+	public long count() throws VerdictException;
+	
+	public double sum(Expr expr) throws VerdictException;
+	
+	public double avg(Expr expr) throws VerdictException;
+	
+	public long countDistinct(Expr expr) throws VerdictException;
+	
+	public long approxCountDistinct(Expr expr) throws VerdictException;
 
 }

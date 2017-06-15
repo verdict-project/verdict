@@ -2,6 +2,7 @@ package edu.umich.verdict.dbms;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -9,12 +10,19 @@ import java.util.Map;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 
 import edu.umich.verdict.VerdictContext;
+import edu.umich.verdict.datatypes.SampleParam;
 import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.datatypes.VerdictResultSet;
 import edu.umich.verdict.exceptions.VerdictException;
+import edu.umich.verdict.relation.ApproxRelation;
+import edu.umich.verdict.relation.ExactRelation;
+import edu.umich.verdict.relation.Relation;
+import edu.umich.verdict.relation.SampleRelation;
+import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.util.VerdictLogger;
 
 public class DbmsImpala extends Dbms {
@@ -26,7 +34,7 @@ public class DbmsImpala extends Dbms {
 	}
 
 	// @return temp table name
-	protected TableUniqueName createTempTableWithRand(String originalTableName) throws VerdictException {
+	protected TableUniqueName createTempTableWithRand(TableUniqueName originalTableName) throws VerdictException {
 		TableUniqueName tempTableName = generateTempTableName();
 		VerdictLogger.debug(this, "Creating a temp table with random numbers: " + tempTableName);
 		executeUpdate(String.format("CREATE TABLE %s AS SELECT *, rand(unix_timestamp()) as verdict_rand FROM %s",
@@ -34,42 +42,38 @@ public class DbmsImpala extends Dbms {
 		return tempTableName;
 	}
 	
-	protected void createSampleTableFromTempTable(TableUniqueName tempTableName, TableUniqueName sampleTableName, double sampleRatio)
+	protected void createUniformSampleTableFromTempTable(TableUniqueName tempTableName, SampleParam param)
 			throws VerdictException {
 		VerdictLogger.debug(this, "Creating a sample table of " + tempTableName);
 		executeUpdate(String.format("CREATE TABLE %s AS SELECT * FROM %s WHERE verdict_rand <= %f",
-				sampleTableName, tempTableName, sampleRatio));
+				param.sampleTableName(), tempTableName, param.samplingRatio));
 	}
 
 	@Override
-	public Triple<Long, Long, String> createUniformRandomSampleTableOf(String originalTableName, double samplingRatio) throws VerdictException {
-		TableUniqueName fullyQuantifiedOriginalTableName = TableUniqueName.uname(vc, originalTableName);
-		
-		dropUniformRandomSampleTableOf(fullyQuantifiedOriginalTableName, samplingRatio);
-		TableUniqueName tempTableName = createTempTableWithRand(originalTableName);
-		TableUniqueName sampleTableName = vc.getMeta().newSampleTableUniqueNameOf(originalTableName);
-		createSampleTableFromTempTable(tempTableName, sampleTableName, samplingRatio);
+	public Pair<Long, Long> createUniformRandomSampleTableOf(SampleParam param) throws VerdictException {
+		dropTable(param.sampleTableName());
+		TableUniqueName tempTableName = createTempTableWithRand(param.originalTable);
+		createUniformSampleTableFromTempTable(tempTableName, param);
 		dropTable(tempTableName);
 		
-		return Triple.of(getTableSize(sampleTableName), getTableSize(fullyQuantifiedOriginalTableName), sampleTableName.tableName);
+		return Pair.of(getTableSize(param.sampleTableName()), getTableSize(param.originalTable));
 	}
 	
-	protected TableUniqueName createTempTableExlucdingNameEntry(
-			String originalSchemaName, String originalTableName, TableUniqueName metaNameTableName) throws VerdictException {
+	protected TableUniqueName createTempTableExlucdingNameEntry(SampleParam param, TableUniqueName metaNameTableName) throws VerdictException {
 		TableUniqueName tempTableName = generateTempTableName();
-		executeUpdate(String.format("CREATE TABLE %s AS SELECT * FROM %s WHERE originalschemaname <> \"%s\" OR originaltablename <> \"%s\"",
-				tempTableName, metaNameTableName, originalSchemaName, originalTableName));
+		TableUniqueName originalTableName = param.originalTable;
+		executeUpdate(String.format("CREATE TABLE %s AS SELECT * FROM %s "
+				+ "WHERE originalschemaname <> \"%s\" OR originaltablename <> \"%s\" OR sampletype <> \"%s\""
+				+ "OR samplingratio <> %s OR columnnames <> \"%s\"",
+				tempTableName, metaNameTableName, originalTableName.schemaName, originalTableName.tableName,
+				param.sampleType, samplingRatioToString(param.samplingRatio), columnNameListToString(param.columnNames)));
 		return tempTableName;
 	}
 	
 	@Override
-	public void updateSampleNameEntryIntoDBMS(String originalSchemaName, String originalTableName,
-			String sampleSchemaName, String sampleTableName,
-			String sampleType, Double samplingRatio, List<String> columnNames,
-			TableUniqueName metaNameTableName) throws VerdictException {
-		TableUniqueName tempTableName = createTempTableExlucdingNameEntry(originalSchemaName, originalTableName, metaNameTableName);
-		insertSampleNameEntryIntoDBMS(originalSchemaName, originalTableName, sampleSchemaName, sampleTableName,
-				sampleType, samplingRatio, columnNames, tempTableName);
+	public void updateSampleNameEntryIntoDBMS(SampleParam param, TableUniqueName metaNameTableName) throws VerdictException {
+		TableUniqueName tempTableName = createTempTableExlucdingNameEntry(param, metaNameTableName);
+		insertSampleNameEntryIntoDBMS(param, tempTableName);
 		VerdictLogger.debug(this, "Created a temp table with the new sample name info: " + tempTableName);
 		
 		// copy temp table to the original meta name table after inserting a new entry.
@@ -79,26 +83,102 @@ public class DbmsImpala extends Dbms {
 		dropTable(tempTableName);
 	}
 	
-	protected TableUniqueName createTempTableExlucdingSizeEntry(
-			String schemaName, String tableName, TableUniqueName metaSizeTableName) throws VerdictException {
+	protected TableUniqueName createTempTableExlucdingSizeEntry(SampleParam param, TableUniqueName metaSizeTableName) throws VerdictException {
 		TableUniqueName tempTableName = generateTempTableName();
+		TableUniqueName sampleTableName = param.sampleTableName();
 		executeUpdate(String.format("CREATE TABLE %s AS SELECT * FROM %s WHERE schemaname <> \"%s\" OR tablename <> \"%s\" ",
-				tempTableName, metaSizeTableName, schemaName, tableName));
+				tempTableName, metaSizeTableName, sampleTableName.schemaName, sampleTableName.tableName));
 		return tempTableName;
 	}
 	
 	@Override
-	public void updateSampleSizeEntryIntoDBMS(String schemaName, String tableName,
-			long sampleSize, long originalTableSize, TableUniqueName metaSizeTableName) throws VerdictException {
-		TableUniqueName tempTableName = createTempTableExlucdingSizeEntry(schemaName, tableName, metaSizeTableName);
-		insertSampleSizeEntryIntoDBMS(schemaName, tableName, sampleSize, originalTableSize, tempTableName);
+	public void updateSampleSizeEntryIntoDBMS(SampleParam param, long sampleSize, long originalTableSize, TableUniqueName metaSizeTableName) throws VerdictException {
+		TableUniqueName tempTableName = createTempTableExlucdingSizeEntry(param, metaSizeTableName);
+		insertSampleSizeEntryIntoDBMS(param, sampleSize, originalTableSize, tempTableName);
 		VerdictLogger.debug(this, "Created a temp table with the new sample size info: " + tempTableName);
 		
 		// copy temp table to the original meta size table after inserting a new entry.
 		dropTable(metaSizeTableName);
 		executeUpdate(String.format("CREATE TABLE %s AS SELECT * FROM %s", metaSizeTableName, tempTableName));
-		VerdictLogger.debug(this, String.format("Moved the temp table (%s) to the meta name table (%s).", tempTableName, metaSizeTableName));
+		VerdictLogger.debug(this, String.format("Moved the temp table (%s) to the meta size table (%s).", tempTableName, metaSizeTableName));
 		dropTable(tempTableName);
+	}
+	
+	/**
+	 * Creates a universe sample table without dropping an old table.
+	 * @param originalTableName
+	 * @param sampleRatio
+	 * @throws VerdictException
+	 */
+	@Override
+	protected TableUniqueName justCreateUniverseSampleTableOf(SampleParam param) throws VerdictException {
+		TableUniqueName sampleTableName = param.sampleTableName();
+		String sql = String.format("CREATE TABLE %s AS SELECT * FROM %s "
+								 + "WHERE abs(fnv_hash(%s)) %% 10000 <= %.4f",
+								 sampleTableName, param.originalTable, param.columnNames.get(0), param.samplingRatio*10000);
+		VerdictLogger.debug(this, String.format("Create a table: %s", sql));
+		this.executeUpdate(sql);
+		return sampleTableName;
+	}
+	
+	private String columnNamesInString(TableUniqueName tableName) {
+		List<String> colNames = vc.getMeta().getColumnNames(tableName);
+		List<String> colNamesWithTable = new ArrayList<String>();
+		for (String c : colNames) {
+			colNamesWithTable.add(String.format("%s.%s", tableName.tableName, c));
+		}
+		return Joiner.on(", ").join(colNamesWithTable);
+	}
+	
+	protected TableUniqueName createTempTableWithGroupCountsAndRand(SampleParam param) throws VerdictException {
+		TableUniqueName tempTableName = generateTempTableName();
+		TableUniqueName originalTableName = param.originalTable;
+		String groupName = param.columnNames.get(0);
+		VerdictLogger.debug(this, "Creating a temp table with group counts and random numbers: " + tempTableName);
+		executeUpdate(String.format("CREATE TABLE %s AS SELECT %s, verdict_grp_size, rand(unix_timestamp()) as verdict_rand",
+						tempTableName, columnNamesInString(originalTableName))
+				+ String.format(" FROM %s, (SELECT %s, COUNT(*) AS verdict_grp_size FROM %s GROUP BY %s) verdict_t1",
+						originalTableName, groupName, originalTableName, groupName)
+				+ String.format(" WHERE %s.%s = verdict_t1.%s", originalTableName, groupName, groupName));
+		return tempTableName;
+	}
+	
+	@Override
+	protected void justCreateStratifiedSampleTableof(SampleParam param) throws VerdictException {
+		TableUniqueName tempTableName = createTempTableWithGroupCountsAndRand(param);
+		createStratifiedSampleFromTempTable(tempTableName, param);
+		dropTable(tempTableName);
+	}
+	
+	protected void createStratifiedSampleFromTempTable(TableUniqueName tempTableName, SampleParam param) throws VerdictException {
+		VerdictLogger.debug(this, "Creating a sample table from " + tempTableName);
+		Relation r = SampleRelation.from(vc, new SampleParam(param.originalTable, "uniform", null, new ArrayList<String>()));
+		long originalTableSize = r.count();
+		String groupName = param.columnNames.get(0);
+		long groupCount = ExactRelation.from(vc, tempTableName).approxCountDistinct(ColNameExpr.from(groupName));
+		String sql = String.format("CREATE TABLE %s AS", param.sampleTableName()) 
+				+ " SELECT * FROM ("
+				+ String.format(" SELECT *, %d*%f/%d/verdict_grp_size AS verdict_sampling_prob FROM %s) t1",
+						originalTableSize, param.samplingRatio, groupCount, tempTableName)
+				+ " WHERE verdict_rand <= verdict_sampling_prob";
+		VerdictLogger.debug(this, "Sample creation query: " + sql);
+		executeUpdate(sql);
+	}
+	
+	@Override
+	public void deleteSampleNameEntryFromDBMS(SampleParam param, TableUniqueName metaNameTableName) throws VerdictException {
+		TableUniqueName tempTable = createTempTableExlucdingNameEntry(param, metaNameTableName);
+		dropTable(metaNameTableName);
+		moveTable(tempTable, metaNameTableName);
+		dropTable(tempTable);
+	}
+	
+	@Override
+	public void deleteSampleSizeEntryFromDBMS(SampleParam param, TableUniqueName metaSizeTableName) throws VerdictException {
+		TableUniqueName tempTable = createTempTableExlucdingSizeEntry(param, metaSizeTableName);
+		dropTable(metaSizeTableName);
+		moveTable(tempTable, metaSizeTableName);
+		dropTable(tempTable);
 	}
 	
 	@Override
@@ -108,6 +188,19 @@ public class DbmsImpala extends Dbms {
 			Map<Integer, Integer> colMap = new HashMap<Integer, Integer>();
 			colMap.put(1, 1);
 			return new VerdictResultSet(rs, null, colMap);
+		} catch (SQLException e) {
+			throw new VerdictException(e);
+		}
+	}
+	
+	@Override
+	public ResultSet getAllTableAndColumns(String schemaName) throws VerdictException {
+		try {
+			ResultSet rs = conn.getMetaData().getColumns(null, schemaName, "%", "%");
+			Map<Integer, Integer> columnMap = new HashMap<Integer, Integer>();
+			columnMap.put(1, 3);	// table name
+			columnMap.put(2, 4);	// column name
+			return new VerdictResultSet(rs, null, columnMap);
 		} catch (SQLException e) {
 			throw new VerdictException(e);
 		}
