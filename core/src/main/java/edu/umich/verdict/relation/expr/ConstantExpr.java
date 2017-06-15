@@ -21,7 +21,12 @@ public class ConstantExpr extends Expr {
 	}
 
 	@Override
-	public Expr accept(ExprVisitor v) throws VerdictException {
+	public Expr accept(ExprModifier v) throws VerdictException {
+		return v.call(this);
+	}
+
+	@Override
+	public <T> T accept(ExprVisitor<T> v) throws VerdictException {
 		return v.call(this);
 	}
 

@@ -30,6 +30,6 @@ public interface Relation {
 	
 	public long countDistinct(Expr expr) throws VerdictException;
 	
-	public long approxCountDistinct(Expr expr) throws VerdictException;
+//	public long approxCountDistinct(Expr expr) throws VerdictException;
 
 }

@@ -3,6 +3,8 @@ package edu.umich.verdict.datatypes;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.common.base.Joiner;
+
 
 public class SampleParam {
 
@@ -20,6 +22,15 @@ public class SampleParam {
 		} else {
 			this.columnNames = columnNames;
 		}
+	}
+	
+	public String colNamesInString() {
+		return Joiner.on(",").join(columnNames);
+	}
+	
+	@Override
+	public String toString() {
+		return String.format("(%s,%s,%.2f,%s)", originalTable.tableName, sampleType, samplingRatio, colNamesInString());
 	}
 	
 	@Override

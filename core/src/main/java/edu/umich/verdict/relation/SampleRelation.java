@@ -30,7 +30,7 @@ public class SampleRelation extends ExactRelation implements Relation, ApproxRel
 	protected SampleSizeInfo info;
 	
 	protected boolean derived;
-
+	
 	protected SampleRelation(VerdictContext vc, SampleParam param) {
 		super(vc, param.originalTable);
 		this.param = param;
@@ -133,7 +133,7 @@ public class SampleRelation extends ExactRelation implements Relation, ApproxRel
 	}
 	
 	public long count() throws VerdictException {
-		return TypeCasting.toLongint(agg(FuncExpr.count()).transform().collect().get(0).get(0));
+		return TypeCasting.toLong(agg(FuncExpr.count()).queriable().collect().get(0).get(0));
 	}
 	
 	@Override
@@ -168,4 +168,22 @@ public class SampleRelation extends ExactRelation implements Relation, ApproxRel
 		return sql.toString();
 	}
 
+	@Override
+	public String toString() {
+		return "SampleTable(" + param.toString() + ")";
+	}
+
+	@Override
+	public int hashCode() {
+		return sampleTableName.hashCode();
+	}
+
+	@Override
+	public boolean equals(Object a) {
+		if (a instanceof SampleRelation) {
+			return sampleTableName.equals(((SampleRelation) a).getSampleName());
+		} else {
+			return false;
+		}
+	}
 }

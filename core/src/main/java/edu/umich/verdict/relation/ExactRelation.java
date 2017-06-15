@@ -34,6 +34,12 @@ public class ExactRelation implements Relation {
 		return r;
 	}
 	
+	public static ExactRelation from(VerdictContext vc, String tableName) {
+		ExactRelation r = new ExactRelation(vc, TableUniqueName.uname(vc, tableName));
+		r.setDerivedTable(false);
+		return r;
+	}
+	
 	@Override
 	public boolean isDerivedTable() {
 		return derivedTable;
@@ -92,19 +98,36 @@ public class ExactRelation implements Relation {
 	public AggregatedRelation agg(List<Expr> functions) {
 		return new AggregatedRelation(vc, this, functions);
 	}
+	
+	public AggregatedSampleRelation approxAgg(List<Expr> functions) throws VerdictException {
+		return agg(functions).approx();
+	}
+	
+	public AggregatedSampleRelation approxAgg(Expr... functions) throws VerdictException {
+		return agg(functions).approx();
+	}
+	
 
 	@Override
 	public long count() throws VerdictException {
 		Relation r = agg(FuncExpr.count());
 		List<List<Object>> rs = r.collect();
-		return TypeCasting.toLongint(rs.get(0).get(0));
+		return TypeCasting.toLong(rs.get(0).get(0));
+	}
+	
+	public long approxCount() throws VerdictException {
+		return TypeCasting.toLong(approxAgg(FuncExpr.count()).collect().get(0).get(0));
 	}
 
 	@Override
 	public double sum(Expr expr) throws VerdictException {
 		Relation r = agg(FuncExpr.sum(expr));
 		List<List<Object>> rs = r.collect();
-		return (Double) rs.get(0).get(0);
+		return TypeCasting.toDouble(rs.get(0).get(0));
+	}
+	
+	public double approxSum(Expr expr) throws VerdictException {
+		return TypeCasting.toDouble(approxAgg(FuncExpr.sum(expr)).collect().get(0).get(0));
 	}
 
 	@Override
@@ -114,19 +137,23 @@ public class ExactRelation implements Relation {
 		return (Double) rs.get(0).get(0);
 	}
 	
+	public double approxAvg(Expr expr) throws VerdictException {
+		return TypeCasting.toDouble(approxAgg(FuncExpr.avg(expr)).collect().get(0).get(0));
+	}
+	
 	@Override
 	public long countDistinct(Expr expr) throws VerdictException {
 		Relation r = agg(FuncExpr.countDistinct(expr));
 		List<List<Object>> rs = r.collect();
-		return TypeCasting.toLongint(rs.get(0).get(0));
-	}
-
-	@Override
-	public long approxCountDistinct(Expr expr) throws VerdictException {
-		Relation r = agg(FuncExpr.approxCountDistinct(expr));
-		List<List<Object>> rs = r.collect();
-		return TypeCasting.toLongint(rs.get(0).get(0));
+		return TypeCasting.toLong(rs.get(0).get(0));
 	}
 	
+	public long approxCountDistinct(Expr expr) throws VerdictException {
+		return TypeCasting.toLong(approxAgg(FuncExpr.countDistinct(expr)).collect().get(0).get(0));
+	}
+	
+	public long approxCountDistinct(String expr) throws VerdictException {
+		return TypeCasting.toLong(approxAgg(FuncExpr.countDistinct(Expr.from(expr))).collect().get(0).get(0));
+	}
 	
 }

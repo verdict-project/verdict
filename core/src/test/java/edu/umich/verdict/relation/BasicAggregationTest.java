@@ -5,6 +5,11 @@ import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.datatypes.SampleParam;
 import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
+import edu.umich.verdict.util.ResultSetConversion;
+
+import static edu.umich.verdict.relation.expr.FuncExpr.*;
+
+import java.sql.ResultSet;
 
 public class BasicAggregationTest {
 
@@ -17,10 +22,15 @@ public class BasicAggregationTest {
 		conf.set("no_user_password", "true");
 		VerdictContext vc = new VerdictContext(conf);
 		
-		TableUniqueName t = TableUniqueName.uname(vc, "orders");
-		SampleParam p = new SampleParam(t, "uniform", 0.01, null);
-		Relation r = SampleRelation.from(vc, p);
-		System.out.println(r.count());
+//		TableUniqueName t = TableUniqueName.uname(vc, "orders");
+//		SampleParam p = new SampleParam(t, "uniform", 0.01, null);
+//		Relation r = SampleRelation.from(vc, p);
+//		System.out.println(r.count());
+		
+		ExactRelation r = ExactRelation.from(vc, "orders");
+		ResultSet rs = r.approxAgg(count(), countDistinct("user_id")).collectResultSet();
+//		ResultSet rs = r.agg(count()).approx().collectResultSet();
+		ResultSetConversion.printResultSet(rs);
 		
 		vc.destroy();
 	}

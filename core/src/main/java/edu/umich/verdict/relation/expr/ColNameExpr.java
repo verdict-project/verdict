@@ -24,12 +24,23 @@ public class ColNameExpr extends Expr {
 		this.tab = tab;
 		this.schema = schema;
 	}
+	
+	public static ColNameExpr from(String expr) {
+		String[] t = expr.split("\\.");
+		if (t.length > 2) {
+			return new ColNameExpr(t[2], t[1], t[0]);
+		} else if (t.length == 2) {
+			return new ColNameExpr(t[1], t[0]);
+		} else {
+			return new ColNameExpr(t[0]);
+		}
+	}
 
 	@Override
 	public String toString(VerdictContext vc) {
 		if (schema == null) {
 			if (tab == null) {
-				return String.format("%s.%s", vc.getCurrentSchema(), col);
+				return String.format("%s", col);
 			} else {
 				return String.format("%s.%s", tab, col);
 			}
@@ -38,7 +49,12 @@ public class ColNameExpr extends Expr {
 		}
 	}
 	
-	public Expr accept(ExprVisitor v) throws VerdictException {
+	public Expr accept(ExprModifier v) throws VerdictException {
+		return v.call(this);
+	}
+
+	@Override
+	public <T> T accept(ExprVisitor<T> v) throws VerdictException {
 		return v.call(this);
 	}
 

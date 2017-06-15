@@ -1,6 +1,7 @@
 package edu.umich.verdict.util;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -29,6 +30,13 @@ public class TypeCasting {
 		return amap;
 	}
 	
+	public static <T,S> List<Pair<T,S>> mapToList(Map<T,S> map) {
+		List<Pair<T,S>> l = new ArrayList<Pair<T,S>>();
+		for (Map.Entry<T,S> e : map.entrySet()) {
+			l.add(Pair.of(e.getKey(), e.getValue()));
+		}
+		return l;
+	}
 	
 	public static <S,T> Map<S,T> reverseMap(Map<T,S> amap) {
 		Map<S,T> newMap = new HashMap<S,T>();
@@ -50,7 +58,7 @@ public class TypeCasting {
 		}
 	}
 	
-	public static long toLongint(Object obj) {
+	public static long toLong(Object obj) {
 		if (obj instanceof Double) return Math.round((Double) obj);
 		else if (obj instanceof Float) return Math.round((Float) obj);
 		else if (obj instanceof BigDecimal) return ((BigDecimal) obj).toBigInteger().longValue();

@@ -16,15 +16,24 @@ public class BinaryOpExpr extends Expr {
 		this.right = right;
 		this.op = op;
 	}
+	
+	public static BinaryOpExpr from(Expr left, Expr right, String op) {
+		return new BinaryOpExpr(left, right, op);
+	}
 
 	@Override
 	public String toString(VerdictContext vc) {
-		return String.format("(%s %s %s)", left.toString(vc), op, right.toString(vc));
+		return String.format("%s %s %s", left.toString(vc), op, right.toString(vc));
 	}
 
-	public Expr accept(ExprVisitor v) throws VerdictException {
+	public Expr accept(ExprModifier v) throws VerdictException {
 		left = v.visit(left);
 		right = v.visit(right);
+		return v.call(this);
+	}
+
+	@Override
+	public <T> T accept(ExprVisitor<T> v) throws VerdictException {
 		return v.call(this);
 	}
 }
