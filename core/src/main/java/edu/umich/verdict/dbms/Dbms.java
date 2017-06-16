@@ -122,7 +122,7 @@ public class Dbms {
 		}
 	}
 	
-	protected String composeUrl(String dbms, String host, String port, String schema, String user, String password) {
+	protected String composeUrl(String dbms, String host, String port, String schema, String user, String password) throws VerdictException {
 		StringBuilder url = new StringBuilder();
 		url.append(String.format("jdbc:%s://%s:%s", dbms, host, port));
 		
@@ -140,6 +140,22 @@ public class Dbms {
 			url.append((isFirstParam)? "?" : "&");
 			url.append(String.format("password=%s", password));
 			isFirstParam = false;
+		}
+		
+		if (vc.getConf().get("kerberos") == "true") {
+			String krbRealm = vc.getConf().get("krbRealm");
+			String krbHost = vc.getConf().get("krbHost");
+			
+			if (krbRealm == null || krbHost == null) {
+				String error  = String.format("Kerberos Realm or Host missing.\nRealm:%s\nHost:%s",
+						   					  krbRealm, krbHost);
+				
+				VerdictLogger.error(error);
+				throw new VerdictException(error);
+			}
+			
+			url.append(String.format(";AuthMech=%s;KrbRealm=%s;KrbHostFQDN=%s;KrbServiceName=%s;KrbAuthType=%s",
+					 "1", krbRealm, krbHost, "hive", "2"));
 		}
 		
 		return url.toString();

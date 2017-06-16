@@ -58,7 +58,7 @@ public class VerdictConnection implements Connection {
 	    	conf.setProperties(info);
 	    	
 	    	// set properties from the url string.    	
-	    	Pattern urlOptions = Pattern.compile("^jdbc:verdict:(?<dbms>\\w+)://(?<host>[\\.a-zA-Z0-9\\-]+)(?::(?<port>\\d+))?(?:/(?<schema>\\w+))?");
+	    	Pattern urlOptions = Pattern.compile("^jdbc:verdict:(?<dbms>\\w+)://(?<host>[\\.a-zA-Z0-9\\-]+)(?::(?<port>\\d+))?(?:/(?<schema>\\w+))?(\\?principal=(?<principal>.*))?");
             Matcher urlMatcher = urlOptions.matcher(url);
             if (!urlMatcher.find())
                 throw new SQLException("Invalid URL.");
@@ -94,6 +94,25 @@ public class VerdictConnection implements Connection {
 //            	conf.setMetaPassword(conf.getPassword());
 //            }
             
+            if (urlMatcher.group("principal") != null) {
+	            String principal = urlMatcher.group("principal");
+	            String princSeparator = "(?<db>.*)/(?<host>.*)@(?<realm>.*)";
+	            
+	            Pattern princPattern = Pattern.compile(princSeparator);
+	            Matcher princMatcher = princPattern.matcher(principal);
+	            
+	            if (princMatcher.find()) {
+	            	String krbHost = princMatcher.group("host");
+	            	String krbRealm = princMatcher.group("realm");
+	            	conf.set("kerberos", "true");
+	                conf.set("krbHost", krbHost);
+	                conf.set("krbRealm", krbRealm);
+	                conf.set("principal", principal);
+	            } else {
+	            	throw new VerdictException("Principal \"" + principal + "\" could not be parsed.\n"
+	            								+ "Make sure the principal is in the form: user/host@REALM");
+	            }
+            }
     		this.vc = new VerdictContext(conf); 
             
         } catch (VerdictException e) {
