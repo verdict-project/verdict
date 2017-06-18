@@ -12,7 +12,7 @@ import edu.umich.verdict.VerdictSQLParser.Column_nameContext;
 import edu.umich.verdict.datatypes.SampleParam;
 import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
-import edu.umich.verdict.relation.SampleRelation;
+import edu.umich.verdict.relation.ApproxSingleRelation;
 import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.relation.expr.FuncExpr;
@@ -94,9 +94,9 @@ public class CreateSampleQuery extends Query {
 				aggs.add(FuncExpr.count());
 				List<String> cnames = vc.getMeta().getColumnNames(originalTable);
 				for (String c : cnames) {
-					aggs.add(FuncExpr.approxCountDistinct(new ColNameExpr(c)));
+					aggs.add(FuncExpr.approxCountDistinct(ColNameExpr.from(c), vc));
 				}
-				List<Object> rs = SampleRelation.from(vc, param).aggOnSample(aggs).collect().get(0);
+				List<Object> rs = ApproxSingleRelation.from(vc, param).aggOnSample(aggs).collect().get(0);
 				
 				long sampleSize = (Long) rs.get(0);
 				for (int i = 1; i < rs.size(); i++) {

@@ -35,9 +35,21 @@ public class ColNameExpr extends Expr {
 			return new ColNameExpr(t[0]);
 		}
 	}
+	
+	public String getCol() {
+		return col;
+	}
+	
+	public String getTab() {
+		return tab;
+	}
+	
+	public String getSchema() {
+		return schema;
+	}
 
 	@Override
-	public String toString(VerdictContext vc) {
+	public String toString() {
 		if (schema == null) {
 			if (tab == null) {
 				return String.format("%s", col);
@@ -49,12 +61,8 @@ public class ColNameExpr extends Expr {
 		}
 	}
 	
-	public Expr accept(ExprModifier v) throws VerdictException {
-		return v.call(this);
-	}
-
 	@Override
-	public <T> T accept(ExprVisitor<T> v) throws VerdictException {
+	public <T> T accept(ExprVisitor<T> v) {
 		return v.call(this);
 	}
 

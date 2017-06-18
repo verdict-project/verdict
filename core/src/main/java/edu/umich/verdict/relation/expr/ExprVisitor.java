@@ -7,10 +7,10 @@ public abstract class ExprVisitor<T> {
 	public ExprVisitor() {
 	}
 	
-	public T visit(Expr expr) throws VerdictException {
+	public T visit(Expr expr) {
 		return expr.accept(this);
 	}
 	
-	public abstract T call(Expr expr) throws VerdictException;
+	public abstract T call(Expr expr);
 
 }

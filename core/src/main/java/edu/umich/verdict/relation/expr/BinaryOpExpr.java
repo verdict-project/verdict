@@ -22,18 +22,12 @@ public class BinaryOpExpr extends Expr {
 	}
 
 	@Override
-	public String toString(VerdictContext vc) {
-		return String.format("%s %s %s", left.toString(vc), op, right.toString(vc));
-	}
-
-	public Expr accept(ExprModifier v) throws VerdictException {
-		left = v.visit(left);
-		right = v.visit(right);
-		return v.call(this);
+	public String toString() {
+		return String.format("%s %s %s", left.toString(), op, right.toString());
 	}
 
 	@Override
-	public <T> T accept(ExprVisitor<T> v) throws VerdictException {
+	public <T> T accept(ExprVisitor<T> v) {
 		return v.call(this);
 	}
 }

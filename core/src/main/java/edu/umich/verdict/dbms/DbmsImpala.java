@@ -18,10 +18,10 @@ import edu.umich.verdict.datatypes.SampleParam;
 import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.datatypes.VerdictResultSet;
 import edu.umich.verdict.exceptions.VerdictException;
-import edu.umich.verdict.relation.ApproxRelation;
 import edu.umich.verdict.relation.ExactRelation;
-import edu.umich.verdict.relation.Relation;
-import edu.umich.verdict.relation.SampleRelation;
+import edu.umich.verdict.relation.SingleRelation;
+import edu.umich.verdict.relation.ApproxRelation;
+import edu.umich.verdict.relation.ApproxSingleRelation;
 import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.util.VerdictLogger;
 
@@ -152,10 +152,10 @@ public class DbmsImpala extends Dbms {
 	
 	protected void createStratifiedSampleFromTempTable(TableUniqueName tempTableName, SampleParam param) throws VerdictException {
 		VerdictLogger.debug(this, "Creating a sample table from " + tempTableName);
-		Relation r = SampleRelation.from(vc, new SampleParam(param.originalTable, "uniform", null, new ArrayList<String>()));
+		ApproxRelation r = ApproxSingleRelation.from(vc, new SampleParam(param.originalTable, "uniform", null, new ArrayList<String>()));
 		long originalTableSize = r.count();
 		String groupName = param.columnNames.get(0);
-		long groupCount = ExactRelation.from(vc, tempTableName).approxCountDistinct(ColNameExpr.from(groupName));
+		long groupCount = SingleRelation.from(vc, tempTableName).approxCountDistinct(ColNameExpr.from(groupName));
 		String sql = String.format("CREATE TABLE %s AS", param.sampleTableName()) 
 				+ " SELECT * FROM ("
 				+ String.format(" SELECT *, %d*%f/%d/verdict_grp_size AS verdict_sampling_prob FROM %s) t1",

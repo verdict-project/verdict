@@ -18,21 +18,26 @@ public abstract class Expr {
 	public static Expr from(String expr) {
 		VerdictSQLLexer l = new VerdictSQLLexer(CharStreams.fromString(expr));
 		VerdictSQLParser p = new VerdictSQLParser(new CommonTokenStream(l));
-		ExpressionGen g = new ExpressionGen();
-		return g.visit(p.expression());
+		return from(p.expression());
 	}
 	
-	public abstract String toString(VerdictContext vc);
+	public static Expr from(VerdictSQLParser.ExpressionContext ctx) {
+		ExpressionGen g = new ExpressionGen();
+		return g.visit(ctx);
+	}
+	
+//	public abstract String toString(VerdictContext vc);
 	
 	@Override
 	public String toString() {
-		VerdictLogger.error(this, "Calling toString() method without VerdictContext is not allowed.");
-		return "toString called without VerdictContext";
+		return "Expr Base";
 	}
 	
-	public abstract Expr accept(ExprModifier v) throws VerdictException;
+	public Expr accept(ExprModifier v) {
+		return v.call(this);
+	}
 	
-	public abstract <T> T accept(ExprVisitor<T> v) throws VerdictException;
+	public abstract <T> T accept(ExprVisitor<T> v);
 
 }
 

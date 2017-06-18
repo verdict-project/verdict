@@ -9,6 +9,8 @@ import java.util.Map;
 
 import org.apache.commons.lang3.tuple.Pair;
 
+import com.google.common.base.Joiner;
+
 import edu.umich.verdict.VerdictConf;
 import edu.umich.verdict.VerdictContext;
 
@@ -58,6 +60,14 @@ public class TypeCasting {
 		}
 	}
 	
+	public static List<Double> toDoubleList(List<Object> ol) {
+		List<Double> dl = new ArrayList<Double>();
+		for (Object o : ol) {
+			dl.add(toDouble(o));
+		}
+		return dl;
+	}
+	
 	public static long toLong(Object obj) {
 		if (obj instanceof Double) return Math.round((Double) obj);
 		else if (obj instanceof Float) return Math.round((Float) obj);
@@ -68,6 +78,14 @@ public class TypeCasting {
 			VerdictLogger.error("Cannot convert to long value, just returnning 0: " + obj.toString());
 			return 0;
 		}
+	}
+	
+	public static List<Long> toLongList(List<Object> ol) {
+		List<Long> ll = new ArrayList<Long>();
+		for (Object o : ol) {
+			ll.add(toLong(o));
+		}
+		return ll;
 	}
 	
 	/**

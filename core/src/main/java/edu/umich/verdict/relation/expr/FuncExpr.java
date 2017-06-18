@@ -12,7 +12,7 @@ import edu.umich.verdict.exceptions.VerdictException;
 public class FuncExpr extends Expr {
 	
 	public enum FuncName {
-		COUNT, SUM, AVG, COUNT_DISTINCT, ROUND, MAX, MIN
+		COUNT, SUM, AVG, COUNT_DISTINCT, ROUND, MAX, MIN, IMPALA_APPROX_COUNT_DISTINCT
 	}
 	
 	protected Expr expression;
@@ -27,6 +27,7 @@ public class FuncExpr extends Expr {
 			.put(FuncName.ROUND, "ROUND(%s)")
 			.put(FuncName.MAX, "MAX(%s)")
 			.put(FuncName.MIN, "MIN(%s)")
+			.put(FuncName.IMPALA_APPROX_COUNT_DISTINCT, "NDV(%s)")
 			.build();
 	
 	public FuncExpr(FuncName fname, Expr expr) {
@@ -38,12 +39,20 @@ public class FuncExpr extends Expr {
 		return funcname;
 	}
 	
+	public Expr getExpr() {
+		return expression;
+	}
+	
+	public String getExprInString() {
+		return getExpr().toString();
+	}
+	
 	public static FuncExpr avg(Expr expr) {
 		return new FuncExpr(FuncName.AVG, expr);
 	}
 	
 	public static FuncExpr avg(String expr) {
-		return new FuncExpr(FuncName.AVG, Expr.from(expr));
+		return avg(Expr.from(expr));
 	}
 	
 	public static FuncExpr sum(Expr expr) {
@@ -51,7 +60,7 @@ public class FuncExpr extends Expr {
 	}
 	
 	public static FuncExpr sum(String expr) {
-		return new FuncExpr(FuncName.SUM, Expr.from(expr));
+		return sum(Expr.from(expr));
 	}
 	
 	public static FuncExpr count() {
@@ -63,7 +72,7 @@ public class FuncExpr extends Expr {
 	}
 	
 	public static FuncExpr countDistinct(String expr) {
-		return new FuncExpr(FuncName.COUNT_DISTINCT, Expr.from(expr));
+		return countDistinct(Expr.from(expr));
 	}
 	
 	public static FuncExpr round(Expr expr) {
@@ -78,39 +87,25 @@ public class FuncExpr extends Expr {
 		return new FuncExpr(FuncName.MAX, expr);
 	}
 	
-	public static FuncExpr approxCountDistinct(Expr expr) {
-		return new ApproximateCountDistinctFunction(expr);
-	}
-
-	public String toString(VerdictContext vc) {
-		return String.format(functionPattern.get(funcname), expression.toString(vc));
-	}
-
-	public Expr accept(ExprModifier v) throws VerdictException {
-		expression = v.visit(expression);
-		return v.call(this);
-	}
-
-	@Override
-	public <T> T accept(ExprVisitor<T> v) throws VerdictException {
-		return v.call(this);
-	}
-}
-
-
-class ApproximateCountDistinctFunction extends FuncExpr {
-
-	public ApproximateCountDistinctFunction(Expr expr) {
-		super(FuncName.COUNT_DISTINCT, expr);
-	}
-	
-	@Override
-	public String toString(VerdictContext vc) {
-		if (vc.getDbms().getName().equals("impala")) {
-			return String.format("NDV(%s)", expression);
+	public static FuncExpr approxCountDistinct(Expr expr, VerdictContext vc) {
+		if (vc.getDbms().getName().equalsIgnoreCase("impala")) {
+			return new FuncExpr(FuncName.IMPALA_APPROX_COUNT_DISTINCT, expr);
 		} else {
-			return super.toString(vc);
+			return new FuncExpr(FuncName.COUNT_DISTINCT, expr);
 		}
 	}
 	
+	public static FuncExpr approxCountDistinct(String expr, VerdictContext vc) {
+		return approxCountDistinct(Expr.from(expr), vc);
+	}
+	
+	@Override
+	public String toString() {
+		return String.format(functionPattern.get(funcname), expression.toString());
+	}
+
+	@Override
+	public <T> T accept(ExprVisitor<T> v) {
+		return v.call(this);
+	}
 }

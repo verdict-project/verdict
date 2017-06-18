@@ -14,19 +14,18 @@ public class ConstantExpr extends Expr {
 	public static ConstantExpr from(Object value) {
 		return new ConstantExpr(value);
 	}
+	
+	public static ConstantExpr from(String value) {
+		return from((Object) value); 
+	}
 
 	@Override
-	public String toString(VerdictContext vc) {
+	public String toString() {
 		return value.toString();
 	}
 
 	@Override
-	public Expr accept(ExprModifier v) throws VerdictException {
-		return v.call(this);
-	}
-
-	@Override
-	public <T> T accept(ExprVisitor<T> v) throws VerdictException {
+	public <T> T accept(ExprVisitor<T> v) {
 		return v.call(this);
 	}
 

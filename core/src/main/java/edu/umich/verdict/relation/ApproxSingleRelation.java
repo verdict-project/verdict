@@ -1,9 +1,14 @@
 package edu.umich.verdict.relation;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
+
+import com.google.common.collect.ImmutableMap;
 
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.datatypes.SampleParam;
@@ -21,7 +26,7 @@ import edu.umich.verdict.util.VerdictLogger;
  * @author Yongjoo Park
  *
  */
-public class SampleRelation extends ExactRelation implements Relation, ApproxRelation {
+public class ApproxSingleRelation extends ApproxRelation {
 	
 	protected TableUniqueName sampleTableName;
 	
@@ -31,10 +36,17 @@ public class SampleRelation extends ExactRelation implements Relation, ApproxRel
 	
 	protected boolean derived;
 	
-	protected SampleRelation(VerdictContext vc, SampleParam param) {
-		super(vc, param.originalTable);
+	protected ApproxSingleRelation(VerdictContext vc, TableUniqueName sampleTableName, SampleParam param, SampleSizeInfo info) {
+		super(vc);
+		this.sampleTableName = sampleTableName;
 		this.param = param;
-		this.derived = true;
+		this.info = info;
+		derived = false;
+	}
+	
+	protected ApproxSingleRelation(VerdictContext vc, SampleParam param) {
+		super(vc);
+		this.param = param;
 		
 		// set this.info
 		TableUniqueName originalTable = param.originalTable;
@@ -77,30 +89,89 @@ public class SampleRelation extends ExactRelation implements Relation, ApproxRel
 	 * @param param
 	 * @return
 	 */
-	public static SampleRelation from(VerdictContext vc, SampleParam param) {
-		SampleRelation r = new SampleRelation(vc, param);
-		r.setDerivedTable(false);
-		return r;
+	public static ApproxSingleRelation from(VerdictContext vc, SampleParam param) {
+		if (param.sampleType.equals("nosample")) {
+			return asis(SingleRelation.from(vc, param.originalTable));
+		} else {
+			return new ApproxSingleRelation(vc, param);
+		}
 	}
 	
+	public static ApproxSingleRelation asis(SingleRelation r) {
+		return new ApproxSingleRelation(
+				r.vc,
+				r.getTableName(), 
+				new SampleParam(r.getTableName(), "nosample", 1.0, null),
+				new SampleSizeInfo(-1, -1));
+	}
+	
+	public TableUniqueName getSampleName() {
+		return sampleTableName;
+	}
+
+	public long getSampleSize() {
+		return info.sampleSize;
+	}
+
+	public long getOriginalTableSize() {
+		return info.originalTableSize;
+	}
+
+	public double getSamplingRatio() {
+		return param.samplingRatio;
+	}
+
+	public String getSampleType() {
+		return param.sampleType;
+	}
+
 	public TableUniqueName getOriginalTableName() {
 		return getTableName();
 	}
 	
-	public boolean isDerivedTable() {
-		return derived;
+	public TableUniqueName getTableName() {
+		return param.originalTable;
 	}
 	
-	public void setDerivedTable(boolean a) {
-		derived = a;
+	/*
+	 * Approx
+	 */
+
+	@Override
+	public ExactRelation rewrite() {
+		return SingleRelation.from(vc, getSampleName());
 	}
 	
-	public ExactRelation sampleAsExactRelation() {
-		return ExactRelation.from(vc, getSampleName());
+	@Override
+	protected double samplingProbabilityFor(FuncExpr f) {
+//		Set<String> cols = new HashSet<String>(vc.getMeta().getColumnNames(getTableName()));
+		
+		if (f.getFuncName().equals(FuncExpr.FuncName.COUNT_DISTINCT)) {
+			if (getSampleType().equals("universe")) {
+				return getSamplingRatio();
+			} else if (getSampleType().equals("stratified")) {
+				return 1.0;
+			} else {
+				VerdictLogger.warn(this, String.format("%s sample should not be used for count-distinct.", getSampleType()));
+				return 1.0;
+			}
+		} else {	// SUM, COUNT
+			return getSampleSize() / (double) getOriginalTableSize();
+		}
 	}
+	
+	@Override
+	protected Map<String, String> tableSubstitution() {
+		Map<String, String> s = ImmutableMap.of(param.originalTable.tableName, sampleTableName.tableName);
+		return s;
+	}
+	
+	/*
+	 * Aggregations
+	 */
 	
 	public AggregatedRelation aggOnSample(List<Expr> functions) {
-		return sampleAsExactRelation().agg(functions);
+		return rewrite().agg(functions);
 	}
 	
 	public AggregatedRelation aggOnSample(Expr... functions) {
@@ -108,13 +179,13 @@ public class SampleRelation extends ExactRelation implements Relation, ApproxRel
 	}
 	
 	public long countOnSample() throws VerdictException {
-		Relation r = aggOnSample(FuncExpr.count());
+		ExactRelation r = aggOnSample(FuncExpr.count());
 		List<List<Object>> rs = r.collect();
 		return (Long) rs.get(0).get(0);
 	}
 	
 	public long countDistinctOnSample(Expr expression) throws VerdictException {
-		Relation r = aggOnSample(FuncExpr.countDistinct(expression));
+		ExactRelation r = aggOnSample(FuncExpr.countDistinct(expression));
 		List<List<Object>> rs = r.collect();
 		return (Long) rs.get(0).get(0);
 	}
@@ -124,53 +195,22 @@ public class SampleRelation extends ExactRelation implements Relation, ApproxRel
 	 * @param functions
 	 * @return
 	 */
-	public AggregatedSampleRelation agg(Expr... functions) {
+	public ApproxAggregatedRelation agg(Expr... functions) {
 		return agg(Arrays.asList(functions));
 	}
 	
-	public AggregatedSampleRelation agg(List<Expr> functions) {
-		return new AggregatedSampleRelation(vc, this, functions);
+	public ApproxAggregatedRelation agg(List<Expr> functions) {
+		return new ApproxAggregatedRelation(vc, this, functions);
 	}
 	
 	public long count() throws VerdictException {
-		return TypeCasting.toLong(agg(FuncExpr.count()).queriable().collect().get(0).get(0));
+		return TypeCasting.toLong(agg(FuncExpr.count()).rewrite().collect().get(0).get(0));
 	}
 	
-	@Override
-	public boolean isApproximate() {
-		return true;
-	}
-
-	public TableUniqueName getSampleName() {
-		return sampleTableName;
-	}
 	
-	public long getSampleSize() {
-		return info.sampleSize;
-	}
-	
-	public long getOriginalTableSize() {
-		return info.originalTableSize;
-	}
-	
-	public double getSamplingRatio() {
-		return param.samplingRatio;
-	}
-	
-	public String getSampleType() {
-		return param.sampleType;
-	}
-	
-	@Override
-	public String toSql() throws VerdictException {
-		StringBuilder sql = new StringBuilder();
-		sql.append("SELECT * FROM " + sampleTableName);
-		return sql.toString();
-	}
-
 	@Override
 	public String toString() {
-		return "SampleTable(" + param.toString() + ")";
+		return "ApproxSingleRelation(" + param.toString() + ")";
 	}
 
 	@Override
@@ -180,10 +220,11 @@ public class SampleRelation extends ExactRelation implements Relation, ApproxRel
 
 	@Override
 	public boolean equals(Object a) {
-		if (a instanceof SampleRelation) {
-			return sampleTableName.equals(((SampleRelation) a).getSampleName());
+		if (a instanceof ApproxSingleRelation) {
+			return sampleTableName.equals(((ApproxSingleRelation) a).getSampleName());
 		} else {
 			return false;
 		}
 	}
+	
 }

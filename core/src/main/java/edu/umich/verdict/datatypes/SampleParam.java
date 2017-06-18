@@ -6,7 +6,7 @@ import java.util.List;
 import com.google.common.base.Joiner;
 
 
-public class SampleParam {
+public class SampleParam implements Comparable<SampleParam> {
 
 	public TableUniqueName originalTable;
 	public String sampleType;
@@ -67,5 +67,10 @@ public class SampleParam {
 		} else {
 			return false;
 		}
+	}
+
+	@Override
+	public int compareTo(SampleParam o) {
+		return originalTable.compareTo(o);
 	}
 }

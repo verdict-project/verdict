@@ -2,21 +2,14 @@ package edu.umich.verdict.relation;
 
 import edu.umich.verdict.VerdictConf;
 import edu.umich.verdict.VerdictContext;
-import edu.umich.verdict.datatypes.SampleParam;
-import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
-import edu.umich.verdict.util.ResultSetConversion;
-
-import static edu.umich.verdict.relation.expr.FuncExpr.*;
-
-import java.sql.ResultSet;
 
 public class BasicAggregationTest {
 
 	public static void main(String[] args) throws VerdictException {
 		VerdictConf conf = new VerdictConf();
 		conf.setDbms("impala");
-		conf.setHost("ec2-54-174-219-128.compute-1.amazonaws.com");
+		conf.setHost("salat1.eecs.umich.edu");
 		conf.setPort("21050");
 		conf.setDbmsSchema("instacart1g");
 		conf.set("no_user_password", "true");
@@ -27,10 +20,11 @@ public class BasicAggregationTest {
 //		Relation r = SampleRelation.from(vc, p);
 //		System.out.println(r.count());
 		
-		ExactRelation r = ExactRelation.from(vc, "orders");
-		ResultSet rs = r.approxAgg(count(), countDistinct("user_id")).collectResultSet();
+		SingleRelation r = SingleRelation.from(vc, "orders");
+		System.out.println(r.filter("order_dow = 1").approxCount());
+//		ResultSet rs = r.approxAgg(count(), countDistinct("user_id")).collectResultSet();
 //		ResultSet rs = r.agg(count()).approx().collectResultSet();
-		ResultSetConversion.printResultSet(rs);
+//		ResultSetConversion.printResultSet(rs);
 		
 		vc.destroy();
 	}

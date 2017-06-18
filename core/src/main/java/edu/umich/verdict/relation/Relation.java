@@ -6,30 +6,116 @@ import java.util.ArrayList;
 import java.util.List;
 
 import edu.umich.verdict.VerdictContext;
-import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
+import edu.umich.verdict.exceptions.VerdictUnexpectedMethodCall;
 import edu.umich.verdict.relation.expr.Expr;
+import edu.umich.verdict.util.ResultSetConversion;
+import edu.umich.verdict.util.StackTraceReader;
+import edu.umich.verdict.util.VerdictLogger;
 
-public interface Relation {
+/**
+ * Both {@link ExactRelation} and {@link ApproxRelation} must extends this class.
+ * @author Yongjoo Park
+ *
+ */
+public abstract class Relation {
 	
-	public boolean isApproximate();
+	protected VerdictContext vc;
 	
-	public List<List<Object>> collect() throws VerdictException;
+	protected boolean subquery;
 	
-	public ResultSet collectResultSet() throws VerdictException;
+	protected boolean approximate;
 	
-	public TableUniqueName getTableName();
+	protected String alias;
 	
-	public boolean isDerivedTable();
+	public Relation(VerdictContext vc) {
+		this.vc = vc;
+		this.subquery = false;
+		this.approximate = false;
+	}
 	
-	public long count() throws VerdictException;
+	public boolean isSubquery() {
+		return subquery;
+	}
 	
-	public double sum(Expr expr) throws VerdictException;
+	public void setSubquery(boolean a) {
+		this.subquery = a;
+	}
 	
-	public double avg(Expr expr) throws VerdictException;
+	public boolean isApproximate() {
+		return approximate;
+	}
 	
-	public long countDistinct(Expr expr) throws VerdictException;
+	public String getAliasName() {
+		return alias;
+	}
 	
-//	public long approxCountDistinct(Expr expr) throws VerdictException;
+	public void setAliasName(String a) {
+		alias = a;
+	}
+	
+	/**
+	 * Expression that would appear in sql statement.
+	 * SingleSourceRelation: table name
+	 * JoinedSourceRelation: join expression
+	 * FilteredRelation: select * where condition from sourceExpr()
+	 * AggregatedRelation: select groupby, agg where condition from sourceExpr()
+	 * @return
+	 * @throws VerdictUnexpectedMethodCall 
+	 */
+	protected abstract String toSql();
+	
+	/*
+	 * Aggregation
+	 */
+
+	public abstract long count() throws VerdictException;
+
+	public abstract double sum(String expr) throws VerdictException;
+	
+	public abstract double avg(String expr) throws VerdictException;
+	
+	public abstract long countDistinct(String expr) throws VerdictException;
+	
+	/*
+	 * Collect results
+	 */
+	
+	public ResultSet collectResultSet() throws VerdictException {
+		String sql = toSql();
+		VerdictLogger.info("The query to db: " + sql);
+		return vc.getDbms().executeQuery(sql);
+	}
+	
+	public List<List<Object>> collect() throws VerdictException {
+		List<List<Object>> result = new ArrayList<List<Object>>();
+		ResultSet rs = collectResultSet();
+		try {
+			int colCount = rs.getMetaData().getColumnCount();
+			while (rs.next()) {
+				List<Object> row = new ArrayList<Object>();	
+				for (int i = 1; i <= colCount; i++) {
+					row.add(rs.getObject(i));
+				}
+				result.add(row);
+			}
+		} catch (SQLException e) {
+			throw new VerdictException(e);
+		}
+		return result;
+	}
+	
+	public String collectAsString() {
+		try {
+			return ResultSetConversion.resultSetToString(collectResultSet());
+		} catch (VerdictException e) {
+			return StackTraceReader.stackTrace2String(e);
+		}
+	}
+	
+	@Override
+	public String toString() {
+		return this.getClass().getSimpleName();
+	}
 
 }

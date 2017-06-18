@@ -8,17 +8,12 @@ public class StarExpr extends Expr {
 	public StarExpr() {}
 
 	@Override
-	public String toString(VerdictContext vc) {
+	public String toString() {
 		return "*";
 	}
 
 	@Override
-	public Expr accept(ExprModifier v) throws VerdictException {
-		return v.call(this);
-	}
-
-	@Override
-	public <T> T accept(ExprVisitor<T> v) throws VerdictException {
+	public <T> T accept(ExprVisitor<T> v) {
 		return v.call(this);
 	}
 
