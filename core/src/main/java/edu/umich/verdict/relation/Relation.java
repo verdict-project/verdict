@@ -9,6 +9,7 @@ import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.exceptions.VerdictUnexpectedMethodCall;
 import edu.umich.verdict.relation.expr.Expr;
+import edu.umich.verdict.relation.expr.SelectElem;
 import edu.umich.verdict.util.ResultSetConversion;
 import edu.umich.verdict.util.StackTraceReader;
 import edu.umich.verdict.util.VerdictLogger;
@@ -116,6 +117,18 @@ public abstract class Relation {
 	@Override
 	public String toString() {
 		return this.getClass().getSimpleName();
+	}
+	
+	/*
+	 * Helpers
+	 */
+	
+	protected List<Expr> exprsInSelectElems(List<SelectElem> elems) {
+		List<Expr> exprs = new ArrayList<Expr>();
+		for (SelectElem e : elems) {
+			exprs.add(e.getExpr());
+		}
+		return exprs;
 	}
 
 }

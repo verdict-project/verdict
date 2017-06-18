@@ -14,17 +14,20 @@ import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.relation.expr.OrderByExpr;
 
-public class OrderedRelation extends ExactRelation {
+public class LimitedRelation extends ExactRelation {
 	
-	protected ExactRelation source;
+	private ExactRelation source;
 	
-	protected List<OrderByExpr> orderby;
-	
-	protected OrderedRelation(VerdictContext vc, ExactRelation source, List<OrderByExpr> orderby) {
+	private long limit;
+
+	public LimitedRelation(VerdictContext vc, ExactRelation source, long limit) {
 		super(vc);
 		this.source = source;
-		this.orderby = orderby;
-		subquery = true;
+		this.limit = limit;
+	}
+	
+	public ExactRelation getSource() {
+		return source;
 	}
 
 	@Override
@@ -34,7 +37,7 @@ public class OrderedRelation extends ExactRelation {
 
 	@Override
 	public ApproxRelation approx() throws VerdictException {
-		return new ApproxOrderedRelation(vc, source.approx(), orderby);
+		return new ApproxLimitedRelation(vc, source.approx(), limit);
 	}
 
 	@Override
@@ -51,8 +54,7 @@ public class OrderedRelation extends ExactRelation {
 	protected String toSql() {
 		StringBuilder sql = new StringBuilder();
 		sql.append(source.toSql());
-		sql.append(" ORDER BY ");
-		sql.append(Joiner.on(", ").join(orderby));
+		sql.append(" LIMIT " + limit);
 		return sql.toString();
 	}
 

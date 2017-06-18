@@ -11,10 +11,7 @@ import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.util.VerdictLogger;
 
 public abstract class Expr {
-
-	public Expr() {}
 	
-	// TODO: write this using the antlr4 parser.
 	public static Expr from(String expr) {
 		VerdictSQLLexer l = new VerdictSQLLexer(CharStreams.fromString(expr));
 		VerdictSQLParser p = new VerdictSQLParser(new CommonTokenStream(l));
@@ -55,5 +52,10 @@ class ExpressionGen extends VerdictSQLBaseVisitor<Expr> {
 	@Override
 	public Expr visitBinary_operator_expression(VerdictSQLParser.Binary_operator_expressionContext ctx) {
 		return new BinaryOpExpr(visit(ctx.expression(0)), visit(ctx.expression(1)), ctx.op.getText());  
+	}
+	
+	@Override
+	public Expr visitFunction_call_expression(VerdictSQLParser.Function_call_expressionContext ctx) {
+		return FuncExpr.from(ctx.function_call());
 	}
 }

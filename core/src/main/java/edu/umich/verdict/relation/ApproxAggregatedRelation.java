@@ -13,24 +13,25 @@ import edu.umich.verdict.relation.expr.ConstantExpr;
 import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.relation.expr.ExprModifier;
 import edu.umich.verdict.relation.expr.FuncExpr;
+import edu.umich.verdict.relation.expr.SelectElem;
 
 public class ApproxAggregatedRelation extends ApproxRelation {
 	
 	private ApproxRelation source;
 	
-	private List<Expr> functions;
+	private List<SelectElem> elems;
 
-	public ApproxAggregatedRelation(VerdictContext vc, ApproxRelation source, List<Expr> functions) {
+	public ApproxAggregatedRelation(VerdictContext vc, ApproxRelation source, List<SelectElem> elems) {
 		super(vc);
 		this.source = source;
-		this.functions = functions;
+		this.elems = elems;
 	}
 
 	@Override
 	public ExactRelation rewrite() {
-		List<Expr> scaled = new ArrayList<Expr>();
-		for (Expr f : functions) {
-			scaled.add(transformForSingleFunction(f));
+		List<SelectElem> scaled = new ArrayList<SelectElem>();
+		for (SelectElem e : elems) {
+			scaled.add(new SelectElem(transformForSingleFunction(e.getExpr()), e.getAlias()));
 		}
 		return new AggregatedRelation(vc, source.rewrite(), scaled);
 	}

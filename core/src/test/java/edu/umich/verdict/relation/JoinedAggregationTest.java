@@ -22,8 +22,9 @@ public class JoinedAggregationTest {
 				r1.join(r2).where("order_products.order_id = orders.order_id")
 				.join(r3).where("order_products.product_id = products.product_id")
 				.groupby("product_name")
-				.approxCounts()
-				.orderby("count(*)")
+				.approxAgg("count(*) as order_count")
+				.orderby("order_count desc")
+				.limit(10)
 				.collectAsString());
 //		System.out.println(
 //				r1.join(r2).where("order_products.order_id = orders.order_id")

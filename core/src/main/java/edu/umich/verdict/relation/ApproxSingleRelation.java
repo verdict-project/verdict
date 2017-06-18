@@ -190,22 +190,22 @@ public class ApproxSingleRelation extends ApproxRelation {
 		return (Long) rs.get(0).get(0);
 	}
 	
-	/**
-	 * Computes aggregate function answers that could be obtained when they were run on the original table.
-	 * @param functions
-	 * @return
-	 */
-	public ApproxAggregatedRelation agg(Expr... functions) {
-		return agg(Arrays.asList(functions));
-	}
+//	/**
+//	 * Computes aggregate function answers that could be obtained when they were run on the original table.
+//	 * @param functions
+//	 * @return
+//	 */
+//	public ApproxAggregatedRelation agg(Expr... functions) {
+//		return agg(Arrays.asList(functions));
+//	}
+//	
+//	public ApproxAggregatedRelation agg(List<Expr> functions) {
+//		return new ApproxAggregatedRelation(vc, this, functions);
+//	}
 	
-	public ApproxAggregatedRelation agg(List<Expr> functions) {
-		return new ApproxAggregatedRelation(vc, this, functions);
-	}
-	
-	public long count() throws VerdictException {
-		return TypeCasting.toLong(agg(FuncExpr.count()).rewrite().collect().get(0).get(0));
-	}
+//	public long count() throws VerdictException {
+//		return TypeCasting.toLong(agg(FuncExpr.count()).rewrite().collect().get(0).get(0));
+//	}
 	
 	
 	@Override

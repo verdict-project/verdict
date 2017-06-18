@@ -14,6 +14,8 @@ import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.relation.expr.ExprModifier;
 import edu.umich.verdict.relation.expr.FuncExpr;
+import edu.umich.verdict.relation.expr.OrderByExpr;
+import edu.umich.verdict.relation.expr.SelectElem;
 import edu.umich.verdict.util.TypeCasting;
 
 public abstract class ApproxRelation extends Relation {
@@ -27,12 +29,16 @@ public abstract class ApproxRelation extends Relation {
 	 * Approx
 	 */
 	
-	public ApproxAggregatedRelation agg(Expr... functions) {
-		return agg(Arrays.asList(functions));
+	public ApproxAggregatedRelation agg(Object... elems) {
+		return agg(Arrays.asList(elems));
 	}
 	
-	public ApproxAggregatedRelation agg(List<Expr> functions) {
-		return new ApproxAggregatedRelation(vc, this, functions);
+	public ApproxAggregatedRelation agg(List<Object> elems) {
+		List<SelectElem> se = new ArrayList<SelectElem>();
+		for (Object e : elems) {
+			se.add(SelectElem.from(e.toString()));
+		}
+		return new ApproxAggregatedRelation(vc, this, se);
 	}
 
 	@Override
@@ -83,11 +89,15 @@ public abstract class ApproxRelation extends Relation {
 	
 	public ApproxRelation orderby(String orderby) {
 		String[] tokens = orderby.split(",");
-		List<ColNameExpr> cols = new ArrayList<ColNameExpr>();
+		List<OrderByExpr> o = new ArrayList<OrderByExpr>();
 		for (String t : tokens) {
-			cols.add(ColNameExpr.from(t));
+			o.add(OrderByExpr.from(t));
 		}
-		return new ApproxOrderedRelation(vc, this, cols);
+		return new ApproxOrderedRelation(vc, this, o);
+	}
+	
+	public ApproxRelation limit(long limit) {
+		return new ApproxLimitedRelation(vc, this, limit);
 	}
 	
 	/*

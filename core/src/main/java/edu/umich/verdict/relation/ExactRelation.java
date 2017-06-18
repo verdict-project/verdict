@@ -18,6 +18,7 @@ import edu.umich.verdict.relation.condition.Cond;
 import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.relation.expr.FuncExpr;
+import edu.umich.verdict.relation.expr.SelectElem;
 import edu.umich.verdict.util.ResultSetConversion;
 import edu.umich.verdict.util.TypeCasting;
 import edu.umich.verdict.util.VerdictLogger;
@@ -73,12 +74,20 @@ public abstract class ExactRelation extends Relation {
 	 * Aggregation
 	 */
 	
-	public AggregatedRelation agg(Expr... functions) {
-		return agg(Arrays.asList(functions));
+	public AggregatedRelation agg(Object... elems) {
+		return agg(Arrays.asList(elems));
 	}
 	
-	public AggregatedRelation agg(List<Expr> functions) {
-		return new AggregatedRelation(vc, this, functions);
+	public AggregatedRelation agg(List<Object> elems) {
+		List<SelectElem> se = new ArrayList<SelectElem>();
+		for (Object e : elems) {
+			se.add(SelectElem.from(e.toString()));
+		}
+		return new AggregatedRelation(vc, this, se);
+	}
+	
+	public AggregatedRelation agg(Expr... exprs) {
+		return agg(Arrays.asList(exprs));
 	}
 	
 	@Override
@@ -114,12 +123,12 @@ public abstract class ExactRelation extends Relation {
 	 * Approx Aggregation
 	 */
 
-	public ApproxRelation approxAgg(List<Expr> functions) throws VerdictException {
-		return agg(functions).approx();
+	public ApproxRelation approxAgg(List<Object> elems) throws VerdictException {
+		return agg(elems).approx();
 	}
 	
-	public ApproxRelation approxAgg(Expr... functions) throws VerdictException {
-		return agg(functions).approx();
+	public ApproxRelation approxAgg(Object... elems) throws VerdictException {
+		return agg(elems).approx();
 	}
 
 	public long approxCount() throws VerdictException {

@@ -16,17 +16,18 @@ import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.relation.condition.Cond;
 import edu.umich.verdict.relation.expr.Expr;
+import edu.umich.verdict.relation.expr.SelectElem;
 
 public class AggregatedRelation extends ExactRelation {
 
 	protected ExactRelation source;
 	
-	protected List<Expr> functions;
+	protected List<SelectElem> elems;
 	
-	protected AggregatedRelation(VerdictContext vc, ExactRelation source, List<Expr> functions) {
+	protected AggregatedRelation(VerdictContext vc, ExactRelation source, List<SelectElem> elems) {
 		super(vc);
 		this.source = source;
-		this.functions = functions;
+		this.elems = elems;
 		subquery = true;
 	}
 	
@@ -40,13 +41,13 @@ public class AggregatedRelation extends ExactRelation {
 	 */
 	
 	public ApproxRelation approx() throws VerdictException {
-		Map<Set<SampleParam>, Double> candidates = source.findSample(functions);
+		Map<Set<SampleParam>, Double> candidates = source.findSample(exprsInSelectElems(elems));
 		Map<TableUniqueName, SampleParam> best = chooseBest(candidates);
 		return approxWith(best);
 	}
 	
 	public ApproxRelation approxWith(Map<TableUniqueName, SampleParam> replace) {
-		return new ApproxAggregatedRelation(vc, source.approxWith(replace), functions);
+		return new ApproxAggregatedRelation(vc, source.approxWith(replace), elems);
 	}
 
 	public Map<Set<SampleParam>, Double> findSample(List<Expr> functions) {
@@ -62,7 +63,7 @@ public class AggregatedRelation extends ExactRelation {
 		sql.append("SELECT ");
 		sql.append(Joiner.on(", ").join(groupby));
 		if (groupby.size() > 0) sql.append(", ");
-		sql.append(Joiner.on(", ").join(functions));
+		sql.append(Joiner.on(", ").join(elems));
 		return sql.toString();
 	}
 	

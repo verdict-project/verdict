@@ -1,31 +1,27 @@
 package edu.umich.verdict.relation;
 
-import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.ImmutableMap;
 
 import edu.umich.verdict.VerdictContext;
-import edu.umich.verdict.relation.expr.ColNameExpr;
-import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.relation.expr.FuncExpr;
-import edu.umich.verdict.relation.expr.OrderByExpr;
 
-public class ApproxOrderedRelation extends ApproxRelation {
+public class ApproxLimitedRelation extends ApproxRelation {
 	
 	private ApproxRelation source;
 	
-	private List<OrderByExpr> orderby;
+	private long limit;
 	
-	public ApproxOrderedRelation(VerdictContext vc, ApproxRelation source, List<OrderByExpr> orderby) {
+	public ApproxLimitedRelation(VerdictContext vc, ApproxRelation source, long limit) {
 		super(vc);
 		this.source = source;
-		this.orderby = orderby;
+		this.limit = limit;
 	}
 
 	@Override
 	public ExactRelation rewrite() {
-		return new OrderedRelation(vc, source.rewrite(), orderby); 
+		return new LimitedRelation(vc, source.rewrite(), limit);
 	}
 
 	@Override
