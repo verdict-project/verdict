@@ -21,9 +21,9 @@ public class JoinedAggregationTest {
 		System.out.println(
 				r1.join(r2).where("order_products.order_id = orders.order_id")
 				.join(r3).where("order_products.product_id = products.product_id")
-				.groupby("order_dow")
-				.approxCountDistincts("orders.user_id")
-				.orderby("order_dow")
+				.groupby("product_name")
+				.approxCounts()
+				.orderby("count(*)")
 				.collectAsString());
 //		System.out.println(
 //				r1.join(r2).where("order_products.order_id = orders.order_id")

@@ -75,14 +75,6 @@ public class JoinedRelation extends ExactRelation {
 		}
 	}
 	
-	protected String sourceExpr(ExactRelation source) {
-		if (source instanceof SingleRelation) {
-			return ((SingleRelation) source).getTableName().toString();
-		} else {
-			return source.toSql();
-		}
-	}
-	
 	protected String joinClause() {
 		if (joinCols == null) {
 			VerdictLogger.warn(this, "Join conditions are null. Inner join will throw an error.");
