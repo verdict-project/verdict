@@ -124,7 +124,7 @@ public class Dbms {
 		}
 	}
 	
-	protected String composeUrl(String dbms, String host, String port, String schema, String user, String password) {
+	protected String composeUrl(String dbms, String host, String port, String schema, String user, String password) throws VerdictException {
 		StringBuilder url = new StringBuilder();
 		url.append(String.format("jdbc:%s://%s:%s", dbms, host, port));
 		
