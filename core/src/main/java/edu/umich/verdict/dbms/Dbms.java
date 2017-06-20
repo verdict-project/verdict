@@ -142,20 +142,23 @@ public class Dbms {
 			isFirstParam = false;
 		}
 		
-		if (vc.getConf().get("kerberos") == "true") {
-			String krbRealm = vc.getConf().get("krbRealm");
-			String krbHost = vc.getConf().get("krbHost");
+		if (vc.getConf().doesContain("principal")) {
+			String principal = vc.getConf().get("principal");
 			
-			if (krbRealm == null || krbHost == null) {
-				String error  = String.format("Kerberos Realm or Host missing.\nRealm:%s\nHost:%s",
-						   					  krbRealm, krbHost);
+			Pattern princPattern = Pattern.compile("(?<service>.*)/(?<host>.*)@(?<realm>.*)");
+			
+			Matcher princMatcher = princPattern.matcher(principal);
+			
+			if (princMatcher.find()) {
+				String krbRealm = princMatcher.group("realm");
+				String krbHost = princMatcher.group("host");
 				
-				VerdictLogger.error(error);
-				throw new VerdictException(error);
-			}
-			
-			url.append(String.format(";AuthMech=%s;KrbRealm=%s;KrbHostFQDN=%s;KrbServiceName=%s;KrbAuthType=%s",
-					 "1", krbRealm, krbHost, "hive", "2"));
+				url.append(String.format(";AuthMech=%s;KrbRealm=%s;KrbHostFQDN=%s;KrbServiceName=%s;KrbAuthType=%s",
+						 "1", krbRealm, krbHost, "hive", "2"));
+			} else {
+				VerdictLogger.error("Error: principal \"" + principal + "\" could not be parsed.\n"
+						+ "Make sure the principal is in the form service/host@REALM");
+			}		
 		}
 		
 		return url.toString();
