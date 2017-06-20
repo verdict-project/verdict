@@ -50,7 +50,7 @@ public class VerdictConnection implements Connection {
 	    	}
 	    	
 	    	// set properties from the passed connection string.
-	    	Pattern inlineOptions = Pattern.compile("(?<key>[a-zA-Z0-9_]+)=[\"']?(?<value>[a-zA-Z0-9_/\\.\\\\:-]+)[\"']?");
+	    	Pattern inlineOptions = Pattern.compile("(?<key>[a-zA-Z0-9_]+)=[\"']?(?<value>[a-zA-Z0-9@_/\\.\\\\:-]+)[\"']?");
 	    	Matcher inlineMatcher = inlineOptions.matcher(url);
 	    	while (inlineMatcher.find()) {
 	    		info.setProperty(inlineMatcher.group("key"), inlineMatcher.group("value"));
@@ -58,7 +58,8 @@ public class VerdictConnection implements Connection {
 	    	conf.setProperties(info);
 	    	
 	    	// set properties from the url string.    	
-	    	Pattern urlOptions = Pattern.compile("^jdbc:verdict:(?<dbms>\\w+)://(?<host>[\\.a-zA-Z0-9\\-]+)(?::(?<port>\\d+))?(?:/(?<schema>\\w+))?");
+	    	Pattern urlOptions = Pattern.compile("^jdbc:verdict:(?<dbms>\\w+)://(?<host>[\\.a-zA-Z0-9\\-]+)(?::(?<port>\\d+))?(?:/(?<schema>\\w+))?"
+	    										+ "(\\?(?<extras>.*))?");
             Matcher urlMatcher = urlOptions.matcher(url);
             if (!urlMatcher.find())
                 throw new SQLException("Invalid URL.");
@@ -93,6 +94,15 @@ public class VerdictConnection implements Connection {
 //            if (conf.getMetaPassword() == null) {
 //            	conf.setMetaPassword(conf.getPassword());
 //            }
+            
+            String extras = urlMatcher.group("extras");
+            if (extras != null) {
+	            Matcher extraMatcher = inlineOptions.matcher(extras);
+	            
+	            while (extraMatcher.find()) {
+	            	conf.set(extraMatcher.group("key"), extraMatcher.group("value"));
+	            }
+            }
             
     		this.vc = new VerdictContext(conf); 
             
