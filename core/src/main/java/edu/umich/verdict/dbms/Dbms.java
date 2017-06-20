@@ -17,6 +17,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -122,7 +124,7 @@ public class Dbms {
 		}
 	}
 	
-	protected String composeUrl(String dbms, String host, String port, String schema, String user, String password) {
+	protected String composeUrl(String dbms, String host, String port, String schema, String user, String password) throws VerdictException {
 		StringBuilder url = new StringBuilder();
 		url.append(String.format("jdbc:%s://%s:%s", dbms, host, port));
 		
@@ -140,6 +142,25 @@ public class Dbms {
 			url.append((isFirstParam)? "?" : "&");
 			url.append(String.format("password=%s", password));
 			isFirstParam = false;
+		}
+		
+		if (vc.getConf().doesContain("principal")) {
+			String principal = vc.getConf().get("principal");
+			
+			Pattern princPattern = Pattern.compile("(?<service>.*)/(?<host>.*)@(?<realm>.*)");
+			
+			Matcher princMatcher = princPattern.matcher(principal);
+			
+			if (princMatcher.find()) {
+				String krbRealm = princMatcher.group("realm");
+				String krbHost = princMatcher.group("host");
+				
+				url.append(String.format(";AuthMech=%s;KrbRealm=%s;KrbHostFQDN=%s;KrbServiceName=%s;KrbAuthType=%s",
+						 "1", krbRealm, krbHost, "hive", "2"));
+			} else {
+				VerdictLogger.error("Error: principal \"" + principal + "\" could not be parsed.\n"
+						+ "Make sure the principal is in the form service/host@REALM");
+			}		
 		}
 		
 		return url.toString();

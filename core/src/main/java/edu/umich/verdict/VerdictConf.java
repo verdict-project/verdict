@@ -94,12 +94,12 @@ public class VerdictConf {
     }
 
     public String get(String key) {
-    	return configs.get(key);
+    	return configs.get(key.toLowerCase());
     }
     
     public String getOr(String key, Object defaultValue) {
-    	if (configs.containsKey(key)) {
-    		return configs.get(key);
+    	if (configs.containsKey(key.toLowerCase())) {
+    		return configs.get(key.toLowerCase());
     	} else {
     		return defaultValue.toString();
     	}
@@ -130,7 +130,7 @@ public class VerdictConf {
     }
     
     public boolean doesContain(String key) {
-    	return configs.containsKey(key);
+    	return configs.containsKey(key.toLowerCase());
     }
     
     // data DBMS
