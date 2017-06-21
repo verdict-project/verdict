@@ -152,11 +152,12 @@ public class Dbms {
 			Matcher princMatcher = princPattern.matcher(principal);
 			
 			if (princMatcher.find()) {
+				String service = princMatcher.group("service");
 				String krbRealm = princMatcher.group("realm");
 				String krbHost = princMatcher.group("host");
 				
 				url.append(String.format(";AuthMech=%s;KrbRealm=%s;KrbHostFQDN=%s;KrbServiceName=%s;KrbAuthType=%s",
-						 "1", krbRealm, krbHost, "hive", "2"));
+						 "1", krbRealm, krbHost, service, "2"));
 			} else {
 				VerdictLogger.error("Error: principal \"" + principal + "\" could not be parsed.\n"
 						+ "Make sure the principal is in the form service/host@REALM");
