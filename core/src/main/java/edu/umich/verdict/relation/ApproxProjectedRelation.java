@@ -23,7 +23,9 @@ public class ApproxProjectedRelation extends ApproxRelation {
 
 	@Override
 	public ExactRelation rewrite() {
-		return new ProjectedRelation(vc, source.rewrite(), elems);
+		ExactRelation r = new ProjectedRelation(vc, source.rewrite(), elems);
+		r.setAliasName(getAliasName());
+		return r;
 	}
 
 	@Override

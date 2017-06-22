@@ -20,6 +20,7 @@ import edu.umich.verdict.VerdictSQLLexer;
 import edu.umich.verdict.VerdictSQLParser;
 import edu.umich.verdict.VerdictSQLParser.Group_by_itemContext;
 import edu.umich.verdict.VerdictSQLParser.Join_partContext;
+import edu.umich.verdict.VerdictSQLParser.Order_by_expressionContext;
 import edu.umich.verdict.VerdictSQLParser.Select_list_elemContext;
 import edu.umich.verdict.VerdictSQLParser.Table_sourceContext;
 import edu.umich.verdict.datatypes.SampleParam;
@@ -31,12 +32,14 @@ import edu.umich.verdict.relation.condition.Cond;
 import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.relation.expr.FuncExpr;
+import edu.umich.verdict.relation.expr.OrderByExpr;
 import edu.umich.verdict.relation.expr.SelectElem;
 import edu.umich.verdict.util.ResultSetConversion;
 import edu.umich.verdict.util.StackTraceReader;
 import edu.umich.verdict.util.TypeCasting;
 import edu.umich.verdict.util.VerdictLogger;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 
 /**
@@ -186,11 +189,11 @@ public abstract class ExactRelation extends Relation {
 	
 	public ExactRelation orderby(String orderby) {
 		String[] tokens = orderby.split(",");
-		List<ColNameExpr> cols = new ArrayList<ColNameExpr>();
+		List<OrderByExpr> cols = new ArrayList<OrderByExpr>();
 		for (String t : tokens) {
-			cols.add(ColNameExpr.from(t));
+			cols.add(OrderByExpr.from(t));
 		}
-		return new GroupedRelation(vc, this, cols);
+		return new OrderedRelation(vc, this, cols);
 	}
 	
 	public ExactRelation limit(long limit) {
@@ -337,7 +340,12 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
 		ExactRelation r = visit(ctx.query_expression());
 		
 		if (ctx.order_by_clause() != null) {
-			r = r.orderby(getOriginalText(ctx.order_by_clause()));
+			List<OrderByExpr> orderby = new ArrayList<OrderByExpr>();
+			for (Order_by_expressionContext o : ctx.order_by_clause().order_by_expression()) {
+				orderby.add(new OrderByExpr(Expr.from(o.expression()),
+						(o.DESC() != null)? "DESC" : "ASC"));
+			}
+			r = new OrderedRelation(vc, r, orderby);
 		}
 		
 		if (ctx.limit_clause() != null) {
@@ -417,10 +425,19 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
 		
 		SelectListExtractor select = new SelectListExtractor();
 		Triple<List<SelectElem>, List<SelectElem>, List<SelectElem>> elems = select.visit(ctx.select_list());
-		if (elems.getMiddle().size() > 0) {
+		if (elems.getMiddle().size() > 0) {		// if there are aggregate functions
 			r = new AggregatedRelation(vc, r, elems.getMiddle());
-			r.setAliasName(Relation.genAlias());
-			r = new ProjectedRelation(vc, r, elems.getRight());
+			r.setAliasName(Relation.genTableAlias());
+			
+			List<SelectElem> prj = new ArrayList<SelectElem>();
+			for (SelectElem e : elems.getRight()) {
+				if (e.aliasPresent()) {
+					prj.add(new SelectElem(Expr.from(e.getAlias()), e.getAlias()));
+				} else {
+					prj.add(e);
+				}
+			}
+			r = new ProjectedRelation(vc, r, prj);
 		} else {
 			r = new ProjectedRelation(vc, r, elems.getRight());
 		}

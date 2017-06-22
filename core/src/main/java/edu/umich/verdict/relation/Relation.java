@@ -171,7 +171,7 @@ public abstract class Relation {
 	
 	private static int alias_no = 1;
 	
-	public static String genAlias() {
+	public static String genTableAlias() {
 		String n = String.format("v%d", alias_no);
 		alias_no++;
 		return n;
@@ -421,10 +421,10 @@ class PrettyPrintVisitor extends VerdictSQLBaseVisitor<String> {
 		String rightCol = visit(right);
 		
 		if (leftCol == null || rightCol == null) return null;
-		else if (op.equals("*")) return leftCol + "*" + rightCol;
-		else if (op.equals("+")) return leftCol + "+" + rightCol;
-		else if (op.equals("/")) return leftCol + "/" + rightCol;
-		else if (op.equals("-")) return leftCol + "-" + rightCol;
+		else if (op.equals("*")) return leftCol + " * " + rightCol;
+		else if (op.equals("+")) return leftCol + " + " + rightCol;
+		else if (op.equals("/")) return leftCol + " / " + rightCol;
+		else if (op.equals("-")) return leftCol + " - " + rightCol;
 		else return null;
 	}
 	
@@ -443,7 +443,7 @@ class PrettyPrintVisitor extends VerdictSQLBaseVisitor<String> {
 		StringBuilder sql = new StringBuilder();
 		sql.append(visit(ctx.table_source_item()));
 		for (Join_partContext jctx : ctx.join_part()) {
-			sql.append(String.format(" %s", visit(jctx)));
+			sql.append("\n" + indent + "     " + visit(jctx));
 		}
 		return sql.toString();
 	}

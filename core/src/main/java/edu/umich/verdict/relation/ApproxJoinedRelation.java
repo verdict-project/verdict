@@ -77,7 +77,9 @@ public class ApproxJoinedRelation extends ApproxRelation {
 		for (Pair<Expr, Expr> p : joinCols) {
 			cols.add(Pair.of(exprWithTableNamesSubstituted(p.getLeft(), sub), exprWithTableNamesSubstituted(p.getRight(), sub)));
 		}
-		return JoinedRelation.from(vc, source1.rewrite(), source2.rewrite(), cols);
+		ExactRelation r = JoinedRelation.from(vc, source1.rewrite(), source2.rewrite(), cols);
+		r.setAliasName(getAliasName());
+		return r;
 	}
 	
 	@Override

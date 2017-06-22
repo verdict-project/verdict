@@ -43,7 +43,9 @@ public class AggregatedRelation extends ExactRelation {
 	public ApproxRelation approx() throws VerdictException {
 		Map<Set<SampleParam>, Double> candidates = source.findSample(exprsInSelectElems(elems));
 		Map<TableUniqueName, SampleParam> best = chooseBest(candidates);
-		return approxWith(best);
+		ApproxRelation a = approxWith(best);
+		a.setAliasName(getAliasName());
+		return a;
 	}
 	
 	public ApproxRelation approxWith(Map<TableUniqueName, SampleParam> replace) {

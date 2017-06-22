@@ -33,7 +33,9 @@ public class ProjectedRelation extends ExactRelation {
 
 	@Override
 	public ApproxRelation approx() throws VerdictException {
-		return new ApproxProjectedRelation(vc, source.approx(), elems);
+		ApproxRelation a = new ApproxProjectedRelation(vc, source.approx(), elems);
+		a.setAliasName(getAliasName());
+		return a;
 	}
 
 	@Override
@@ -60,12 +62,7 @@ public class ProjectedRelation extends ExactRelation {
 	public String toSql() {
 		StringBuilder sql = new StringBuilder();
 		sql.append(selectSql());
-		sql.append(" FROM ");
-		if (source instanceof AggregatedRelation) {
-			sql.append(((AggregatedRelation) source).withoutSelectSql());
-		} else {
-			sql.append(sourceExpr(source));
-		}
+		sql.append(" FROM "); sql.append(sourceExpr(source));
 		return sql.toString();
 	}
 

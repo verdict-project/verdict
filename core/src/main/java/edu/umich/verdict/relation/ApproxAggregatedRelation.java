@@ -33,7 +33,9 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 		for (SelectElem e : elems) {
 			scaled.add(new SelectElem(transformForSingleFunction(e.getExpr()), e.getAlias()));
 		}
-		return new AggregatedRelation(vc, source.rewrite(), scaled);
+		ExactRelation r = new AggregatedRelation(vc, source.rewrite(), scaled);
+		r.setAliasName(getAliasName());
+		return r;
 	}
 	
 	@Override

@@ -34,7 +34,9 @@ public class OrderedRelation extends ExactRelation {
 
 	@Override
 	public ApproxRelation approx() throws VerdictException {
-		return new ApproxOrderedRelation(vc, source.approx(), orderby);
+		ApproxRelation a = new ApproxOrderedRelation(vc, source.approx(), orderby);
+		a.setAliasName(getAliasName());
+		return a;
 	}
 
 	@Override

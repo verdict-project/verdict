@@ -21,7 +21,9 @@ public class ApproxLimitedRelation extends ApproxRelation {
 
 	@Override
 	public ExactRelation rewrite() {
-		return new LimitedRelation(vc, source.rewrite(), limit);
+		ExactRelation r = new LimitedRelation(vc, source.rewrite(), limit);
+		r.setAliasName(getAliasName());
+		return r;
 	}
 
 	@Override

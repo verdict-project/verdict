@@ -135,27 +135,15 @@ public class SingleRelation extends ExactRelation {
 		return score_sum / aggExprs.size();
 	}
 	
-	
-//	protected Map<TableUniqueName, ApproxSingleRelation> chooseBest(Map<Set<SampleParam>, Integer> candidates) {
-//		List<Pair<Set<ApproxSingleRelation>, Integer>> clist = TypeCasting.mapToList(candidates);
-//		Collections.sort(clist, new Comparator<Pair<Set<ApproxSingleRelation>, Integer>>() {
-//			public int compare(Pair<Set<ApproxSingleRelation>, Integer> o1, Pair<Set<ApproxSingleRelation>, Integer> o2) {
-//				return o2.getValue() - o1.getValue();
-//			}
-//		});
-//		
-//		Map<TableUniqueName, ApproxSingleRelation> best = new HashMap<TableUniqueName, ApproxSingleRelation>();
-//		for (ApproxSingleRelation s : clist.get(0).getLeft()) {
-//			best.put(s.getOriginalTableName(), s);
-//		}
-//		return best;
-//	}
-	
 	protected ApproxSingleRelation approxWith(Map<TableUniqueName, SampleParam> replace) {
 		if (replace.containsKey(getTableName())) {
-			return ApproxSingleRelation.from(vc, replace.get(getTableName()));
+			ApproxSingleRelation a = ApproxSingleRelation.from(vc, replace.get(getTableName()));
+			a.setAliasName(getAliasName());
+			return a;
 		} else {
-			return ApproxSingleRelation.asis(this); 
+			ApproxSingleRelation a = ApproxSingleRelation.asis(this);
+			a.setAliasName(getAliasName());
+			return a;
 		}
 	}
 

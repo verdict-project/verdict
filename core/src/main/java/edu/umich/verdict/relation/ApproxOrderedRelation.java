@@ -25,7 +25,9 @@ public class ApproxOrderedRelation extends ApproxRelation {
 
 	@Override
 	public ExactRelation rewrite() {
-		return new OrderedRelation(vc, source.rewrite(), orderby); 
+		ExactRelation r = new OrderedRelation(vc, source.rewrite(), orderby);
+		r.setAliasName(getAliasName());
+		return r;
 	}
 
 	@Override

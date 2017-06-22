@@ -17,7 +17,11 @@ public class SelectElem {
 	
 	public SelectElem(Expr expr, String alias) {
 		this.expr = expr;
-		this.alias = Optional.fromNullable(alias);
+		if (alias == null && expr.isagg()) {
+			this.alias = Optional.of(genColumnAlias());		// aggregate expressions must be aliased.
+		} else {
+			this.alias = Optional.fromNullable(alias);
+		}
 	}
 	
 	public SelectElem(Expr expr) {
@@ -40,6 +44,14 @@ public class SelectElem {
 		};
 		
 		return v.visit(p.select_list_elem());
+	}
+	
+	private static int column_alias_num = 1;
+	
+	public static String genColumnAlias() {
+		String a = String.format("expr%d", column_alias_num);
+		column_alias_num++;
+		return a;
 	}
 	
 	public Expr getExpr() {

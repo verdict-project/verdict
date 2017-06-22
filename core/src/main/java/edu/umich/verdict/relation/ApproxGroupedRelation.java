@@ -36,7 +36,9 @@ public class ApproxGroupedRelation extends ApproxRelation {
 		for (ColNameExpr e : groupby) {
 			replaced.add((ColNameExpr) exprWithTableNamesSubstituted(e, sub));
 		}
-		return new GroupedRelation(vc, source.rewrite(), replaced);
+		ExactRelation r = new GroupedRelation(vc, source.rewrite(), replaced);
+		r.setAliasName(r.getAliasName());
+		return r;
 	}
 
 	@Override

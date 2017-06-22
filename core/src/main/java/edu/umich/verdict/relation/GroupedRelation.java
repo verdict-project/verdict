@@ -52,7 +52,9 @@ public class GroupedRelation extends ExactRelation {
 
 	@Override
 	protected ApproxRelation approxWith(Map<TableUniqueName, SampleParam> replace) {
-		return new ApproxGroupedRelation(vc, source.approxWith(replace), groupby);
+		ApproxRelation a = new ApproxGroupedRelation(vc, source.approxWith(replace), groupby);
+		a.setAliasName(getAliasName());
+		return a;
 	}
 
 	@Override

@@ -139,7 +139,9 @@ public class ApproxSingleRelation extends ApproxRelation {
 
 	@Override
 	public ExactRelation rewrite() {
-		return SingleRelation.from(vc, getSampleName());
+		ExactRelation r = SingleRelation.from(vc, getSampleName());
+		r.setAliasName(getAliasName());
+		return r;
 	}
 	
 	@Override

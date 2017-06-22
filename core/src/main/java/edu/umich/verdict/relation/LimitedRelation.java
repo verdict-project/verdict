@@ -37,7 +37,9 @@ public class LimitedRelation extends ExactRelation {
 
 	@Override
 	public ApproxRelation approx() throws VerdictException {
-		return new ApproxLimitedRelation(vc, source.approx(), limit);
+		ApproxRelation a = new ApproxLimitedRelation(vc, source.approx(), limit);
+		a.setAliasName(getAliasName());
+		return a;
 	}
 
 	@Override

@@ -35,7 +35,9 @@ public class ApproxFilteredRelation extends ApproxRelation {
 
 	@Override
 	public ExactRelation rewrite() {
-		return new FilteredRelation(vc, source.rewrite(), condWithApprox(cond, tableSubstitution()));
+		ExactRelation r = new FilteredRelation(vc, source.rewrite(), condWithApprox(cond, tableSubstitution()));
+		r.setAliasName(getAliasName());
+		return r;
 	}
 	
 	@Override
