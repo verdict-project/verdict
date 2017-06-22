@@ -18,12 +18,15 @@ public class ApproxSqlTest {
 		conf.set("no_user_password", "true");
 		VerdictContext vc = new VerdictContext(conf);
 		
-		String sql = "select order_hour_of_day, count(*)"
-				+ " from order_products, orders"
-				+ " where order_products.order_id = orders.order_id"
-				+ "   AND order_dow = 0 or order_dow = 1"
-				+ " group by order_hour_of_day"
-				+ " order by order_hour_of_day asc";
+//		String sql = "select order_hour_of_day, count(*)"
+//				+ " from order_products, orders"
+//				+ " where order_products.order_id = orders.order_id"
+//				+ "   AND order_dow = 0 or order_dow = 1"
+//				+ " group by order_hour_of_day"
+//				+ " order by order_hour_of_day asc";
+		
+		String sql = "select count(*), count(distinct user_id) "
+				+ "from orders";
 		
 		ExactRelation r = ExactRelation.from(vc, sql);
 		ApproxRelation a = r.approx();

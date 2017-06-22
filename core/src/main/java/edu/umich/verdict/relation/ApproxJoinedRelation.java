@@ -30,11 +30,22 @@ public class ApproxJoinedRelation extends ApproxRelation {
 	
 	private List<Pair<Expr, Expr>> joinCols;
 	
+	/**
+	 * 
+	 * @param vc
+	 * @param source1
+	 * @param source2
+	 * @param joinCols An empty joinCols indicates CROSS JOIN
+	 */
 	public ApproxJoinedRelation(VerdictContext vc, ApproxRelation source1, ApproxRelation source2, List<Pair<Expr, Expr>> joinCols) {
 		super(vc);
 		this.source1 = source1;
 		this.source2 = source2;
-		this.joinCols = joinCols;
+		if (joinCols == null) {
+			this.joinCols = new ArrayList<Pair<Expr, Expr>>();
+		} else {
+			this.joinCols = joinCols;
+		}
 	}
 	
 	public static ApproxJoinedRelation from(VerdictContext vc, ApproxRelation source1, ApproxRelation source2, List<Pair<Expr, Expr>> joinCols) {

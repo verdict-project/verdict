@@ -58,8 +58,8 @@ public class GroupedRelation extends ExactRelation {
 	}
 
 	@Override
-	protected Map<Set<SampleParam>, Double> findSample(List<Expr> functions) {
-		return source.findSample(functions);
+	protected Map<Set<SampleParam>, List<Double>> findSample(Expr expr) {
+		return source.findSample(expr);
 	}
 	
 	/*

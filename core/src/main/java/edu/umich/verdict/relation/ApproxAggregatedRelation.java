@@ -26,6 +26,14 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 		this.source = source;
 		this.elems = elems;
 	}
+	
+	public ApproxRelation getSource() {
+		return source;
+	}
+	
+	public List<SelectElem> getSelectList() {
+		return elems;
+	}
 
 	@Override
 	public ExactRelation rewrite() {

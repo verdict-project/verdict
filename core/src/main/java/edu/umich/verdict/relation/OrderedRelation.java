@@ -45,11 +45,6 @@ public class OrderedRelation extends ExactRelation {
 	}
 
 	@Override
-	protected Map<Set<SampleParam>, Double> findSample(List<Expr> functions) {
-		return new HashMap<Set<SampleParam>, Double>();
-	}
-
-	@Override
 	public String toSql() {
 		StringBuilder sql = new StringBuilder();
 		sql.append(source.toSql());
