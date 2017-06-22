@@ -30,4 +30,9 @@ public class BinaryOpExpr extends Expr {
 	public <T> T accept(ExprVisitor<T> v) {
 		return v.call(this);
 	}
+	
+	@Override
+	public boolean isagg() {
+		return left.isagg() || right.isagg();
+	}
 }

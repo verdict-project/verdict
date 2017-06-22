@@ -1,7 +1,5 @@
 package edu.umich.verdict.relation.condition;
 
-import edu.umich.verdict.VerdictContext;
-
 public class OrCond extends Cond {
 	
 	private Cond left;
@@ -18,8 +16,8 @@ public class OrCond extends Cond {
 	}
 
 	@Override
-	public String toString(VerdictContext vc) {
-		return String.format("(%s) OR (%s)", left.toString(vc), right.toString(vc));
+	public String toString() {
+		return String.format("(%s) OR (%s)", left.toString(), right.toString());
 	}
 
 }

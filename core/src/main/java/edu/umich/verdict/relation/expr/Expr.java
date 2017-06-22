@@ -35,6 +35,10 @@ public abstract class Expr {
 	}
 	
 	public abstract <T> T accept(ExprVisitor<T> v);
+	
+	public boolean isagg() {
+		return false;
+	}
 
 }
 

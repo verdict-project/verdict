@@ -108,11 +108,11 @@ public class SelectStatementBaseRewriter extends VerdictSQLBaseVisitor<String> {
 		// Construct a query string after processing all subqueries.
 		// The processed subqueries are stored as a view.
 		StringBuilder query = new StringBuilder(200);
-		query.append("SELECT ");
+		query.append("\n" + indentString + "SELECT ");
 		query.append(visit(ctx.select_list()));
 		query.append(" ");
 		
-		query.append("FROM ");
+		query.append("\n" + indentString + "FROM ");
 		boolean isFirstTableSource = true;
 		for (VerdictSQLParser.Table_sourceContext tctx : ctx.table_source()) {
 			if (isFirstTableSource) {
@@ -125,13 +125,13 @@ public class SelectStatementBaseRewriter extends VerdictSQLBaseVisitor<String> {
 		query.append(" ");
 		
 		if (ctx.where != null) {
-			query.append("WHERE ");
+			query.append("\n" + indentString + "WHERE ");
 			query.append(visit(ctx.where));
 			query.append(" ");
 		}
 		
 		if (ctx.group_by_item() != null && ctx.group_by_item().size() > 0) {
-			query.append("GROUP BY ");
+			query.append("\n" + indentString + "GROUP BY ");
 			for (VerdictSQLParser.Group_by_itemContext gctx : ctx.group_by_item()) {
 				query.append(visit(gctx));
 			}
@@ -422,7 +422,7 @@ public class SelectStatementBaseRewriter extends VerdictSQLBaseVisitor<String> {
 	@Override
 	public String visitOrder_by_clause(VerdictSQLParser.Order_by_clauseContext ctx) {
 		StringBuilder orderby = new StringBuilder();
-		orderby.append("ORDER BY");
+		orderby.append("\n" + indentString + "ORDER BY");
 		boolean isFirst = true;
 		for (VerdictSQLParser.Order_by_expressionContext octx : ctx.order_by_expression()) {
 			orderby.append(String.format(
@@ -441,6 +441,6 @@ public class SelectStatementBaseRewriter extends VerdictSQLBaseVisitor<String> {
 	
 	@Override
 	public String visitLimit_clause(VerdictSQLParser.Limit_clauseContext ctx) {
-		return getOriginalText(ctx);
+		return "\n" + indentString + getOriginalText(ctx);
 	}
 }

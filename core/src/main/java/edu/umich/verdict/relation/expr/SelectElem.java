@@ -51,7 +51,15 @@ public class SelectElem {
 	}
 	
 	public String getAlias() {
-		return alias.get();
+		if (alias.isPresent()) {
+			return alias.get();
+		} else {
+			return null;
+		}
+	}
+	
+	public boolean isagg() {
+		return expr.isagg();
 	}
 	
 	@Override

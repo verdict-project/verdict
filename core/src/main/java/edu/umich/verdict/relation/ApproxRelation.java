@@ -16,7 +16,9 @@ import edu.umich.verdict.relation.expr.ExprModifier;
 import edu.umich.verdict.relation.expr.FuncExpr;
 import edu.umich.verdict.relation.expr.OrderByExpr;
 import edu.umich.verdict.relation.expr.SelectElem;
+import edu.umich.verdict.relation.expr.SubqueryExpr;
 import edu.umich.verdict.util.TypeCasting;
+import edu.umich.verdict.util.VerdictLogger;
 
 public abstract class ApproxRelation extends Relation {
 
@@ -42,23 +44,23 @@ public abstract class ApproxRelation extends Relation {
 	}
 
 	@Override
-	public long count() throws VerdictException {
-		return TypeCasting.toLong(agg(FuncExpr.count()).collect().get(0).get(0));
+	public ApproxAggregatedRelation count() throws VerdictException {
+		return agg(FuncExpr.count());
 	}
 
 	@Override
-	public double sum(String expr) throws VerdictException {
-		return TypeCasting.toDouble(agg(FuncExpr.sum(Expr.from(expr))).collect().get(0).get(0));
+	public ApproxAggregatedRelation sum(String expr) throws VerdictException {
+		return agg(FuncExpr.sum(Expr.from(expr)));
 	}
 
 	@Override
-	public double avg(String expr) throws VerdictException {
-		return TypeCasting.toDouble(agg(FuncExpr.avg(Expr.from(expr))).collect().get(0).get(0));
+	public ApproxAggregatedRelation avg(String expr) throws VerdictException {
+		return agg(FuncExpr.avg(Expr.from(expr)));
 	}
 
 	@Override
-	public long countDistinct(String expr) throws VerdictException {
-		return TypeCasting.toLong(agg(FuncExpr.countDistinct(Expr.from(expr))).collect().get(0).get(0));
+	public ApproxAggregatedRelation countDistinct(String expr) throws VerdictException {
+		return agg(FuncExpr.countDistinct(Expr.from(expr)));
 	}
 	
 	/**
@@ -105,7 +107,7 @@ public abstract class ApproxRelation extends Relation {
 	 */
 
 	@Override
-	protected String toSql() {
+	public String toSql() {
 		return rewrite().toSql();
 	}
 	
@@ -136,13 +138,25 @@ public abstract class ApproxRelation extends Relation {
 	 * @param sub Map of original table name and its substitution.
 	 * @return
 	 */
-	protected Cond condWithTableNamesSubstituted(Cond cond, final Map<String, String> sub) {
+	protected Cond condWithApprox(Cond cond, final Map<String, String> sub) {
 		CondModifier v = new CondModifier() {
 			ExprModifier v2 = new ExprModifier() {
 				public Expr call(Expr expr) {
 					if (expr instanceof ColNameExpr) {
 						ColNameExpr e = (ColNameExpr) expr;
 						return new ColNameExpr(e.getCol(), sub.get(e.getTab()), e.getSchema());
+					} else if (expr instanceof SubqueryExpr) {
+						Relation r = ((SubqueryExpr) expr).getSubquery();
+						if (r instanceof ExactRelation) {
+							try {
+								return SubqueryExpr.from(((ExactRelation) r).approx());
+							} catch (VerdictException e) {
+								VerdictLogger.error(this, e.getMessage());
+								return expr;
+							}
+						} else {
+							return expr;
+						}
 					} else {
 						return expr;
 					}
@@ -152,7 +166,7 @@ public abstract class ApproxRelation extends Relation {
 			public Cond call(Cond cond) {
 				if (cond instanceof CompCond) {
 					CompCond c = (CompCond) cond;
-					return CompCond.from(v2.visit(c.getLeft()), v2.visit(c.getRight()), c.getOp());
+					return CompCond.from(v2.visit(c.getLeft()), c.getOp(), v2.visit(c.getRight()));
 				} else {
 					return cond;
 				}

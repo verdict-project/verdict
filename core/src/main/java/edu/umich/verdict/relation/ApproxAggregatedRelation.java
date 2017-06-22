@@ -56,8 +56,10 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 					FuncExpr s = (FuncExpr) exprWithTableNamesSubstituted(expr, sub);
 					if (f.getFuncName().equals(FuncExpr.FuncName.COUNT) || f.getFuncName().equals(FuncExpr.FuncName.COUNT_DISTINCT)) {
 						return FuncExpr.round(BinaryOpExpr.from(s, ConstantExpr.from(1.0 / samplingProbabilityFor(f)), "*"));
-					} else {
+					} else if (f.getFuncName().equals(FuncExpr.FuncName.SUM)) {
 						return BinaryOpExpr.from(s, ConstantExpr.from(1.0 / samplingProbabilityFor(f)), "*");
+					} else {
+						return expr;
 					}
 				} else {
 					return expr;

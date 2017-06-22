@@ -63,12 +63,12 @@ public class FilteredRelation extends ExactRelation {
 	 * sql
 	 */
 	
-	protected String toSql() {
+	public String toSql() {
 		StringBuilder sql = new StringBuilder();
 		sql.append("SELECT * ");
 		
 		Pair<Optional<Cond>, ExactRelation> filtersAndNextR = allPrecedingFilters(this);
-		String csql = (filtersAndNextR.getLeft().isPresent())? filtersAndNextR.getLeft().get().toString(vc) : "";
+		String csql = (filtersAndNextR.getLeft().isPresent())? filtersAndNextR.getLeft().get().toString() : "";
 		
 		sql.append(String.format(" FROM %s", sourceExpr(source)));
 		if (csql.length() > 0) { sql.append(" WHERE "); sql.append(csql); }

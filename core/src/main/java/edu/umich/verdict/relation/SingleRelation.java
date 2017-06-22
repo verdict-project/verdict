@@ -48,7 +48,7 @@ public class SingleRelation extends ExactRelation {
 	}
 	
 	@Override
-	protected String toSql() {
+	public String toSql() {
 		StringBuilder sql = new StringBuilder();
 		sql.append("SELECT * FROM " + tableName);
 		return sql.toString();

@@ -1,5 +1,7 @@
 package edu.umich.verdict.relation.condition;
 
+import java.util.List;
+
 import edu.umich.verdict.VerdictContext;
 
 public class AndCond extends Cond {
@@ -31,8 +33,28 @@ public class AndCond extends Cond {
 	}
 
 	@Override
-	public String toString(VerdictContext vc) {
-		return String.format("(%s) AND (%s)", left.toString(vc), right.toString(vc));
+	public String toString() {
+		return String.format("(%s) AND (%s)", left, right);
+	}
+	
+	@Override
+	public Cond searchForJoinCondition(List<String> joinedTableName, String rightTableName) {
+		Cond j = null;
+		j = left.searchForJoinCondition(joinedTableName, rightTableName);
+		if (j == null) j = right.searchForJoinCondition(joinedTableName, rightTableName);
+		return j;
+	}
+	
+	@Override
+	public Cond remove(Cond j) {
+		if (left.equals(j)) {
+			return right;
+		} else if (right.equals(j)) {
+			return left;
+		} else {
+			return from(left.remove(j), right.remove(j));
+		}
+		
 	}
 
 }

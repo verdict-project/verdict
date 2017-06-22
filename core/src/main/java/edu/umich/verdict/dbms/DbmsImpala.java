@@ -153,7 +153,7 @@ public class DbmsImpala extends Dbms {
 	protected void createStratifiedSampleFromTempTable(TableUniqueName tempTableName, SampleParam param) throws VerdictException {
 		VerdictLogger.debug(this, "Creating a sample table from " + tempTableName);
 		ApproxRelation r = ApproxSingleRelation.from(vc, new SampleParam(param.originalTable, "uniform", null, new ArrayList<String>()));
-		long originalTableSize = r.count();
+		long originalTableSize = r.countValue();
 		String groupName = param.columnNames.get(0);
 		long groupCount = SingleRelation.from(vc, tempTableName).approxCountDistinct(ColNameExpr.from(groupName));
 		String sql = String.format("CREATE TABLE %s AS", param.sampleTableName()) 

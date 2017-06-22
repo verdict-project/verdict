@@ -67,14 +67,29 @@ public class AggregatedRelation extends ExactRelation {
 		return sql.toString();
 	}
 	
-	protected String toSql() {
+	protected String withoutSelectSql() {
 		StringBuilder sql = new StringBuilder();
 		
 		Pair<List<Expr>, ExactRelation> groupsAndNextR = allPrecedingGroupbys(this.source);
 		List<Expr> groupby = groupsAndNextR.getLeft();
 		
 		Pair<Optional<Cond>, ExactRelation> filtersAndNextR = allPrecedingFilters(groupsAndNextR.getRight());
-		String csql = (filtersAndNextR.getLeft().isPresent())? filtersAndNextR.getLeft().get().toString(vc) : "";
+		String csql = (filtersAndNextR.getLeft().isPresent())? filtersAndNextR.getLeft().get().toString() : "";
+		
+		sql.append(String.format(" FROM %s", sourceExpr(filtersAndNextR.getRight())));
+		if (csql.length() > 0) { sql.append(" WHERE "); sql.append(csql); }
+		if (groupby.size() > 0) { sql.append(" GROUP BY "); sql.append(Joiner.on(", ").join(groupby)); }
+		return sql.toString();
+	}
+	
+	public String toSql() {
+		StringBuilder sql = new StringBuilder();
+		
+		Pair<List<Expr>, ExactRelation> groupsAndNextR = allPrecedingGroupbys(this.source);
+		List<Expr> groupby = groupsAndNextR.getLeft();
+		
+		Pair<Optional<Cond>, ExactRelation> filtersAndNextR = allPrecedingFilters(groupsAndNextR.getRight());
+		String csql = (filtersAndNextR.getLeft().isPresent())? filtersAndNextR.getLeft().get().toString() : "";
 		
 		sql.append(selectSql(groupby));
 		sql.append(String.format(" FROM %s", sourceExpr(filtersAndNextR.getRight())));

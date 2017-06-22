@@ -48,7 +48,7 @@ public class OrderedRelation extends ExactRelation {
 	}
 
 	@Override
-	protected String toSql() {
+	public String toSql() {
 		StringBuilder sql = new StringBuilder();
 		sql.append(source.toSql());
 		sql.append(" ORDER BY ");

@@ -82,9 +82,11 @@ public class JoinedRelation extends ExactRelation {
 		
 		StringBuilder sql = new StringBuilder(100);
 		sql.append(String.format("%s INNER JOIN %s ON", sourceExpr(source1), sourceExpr(source2)));
-		for (int i = 0; i < joinCols.size(); i++) {
-			if (i != 0) sql.append(" AND");
-			sql.append(String.format(" %s = %s", joinCols.get(i).getLeft(), joinCols.get(i).getRight()));
+		if (joinCols != null) {
+			for (int i = 0; i < joinCols.size(); i++) {
+				if (i != 0) sql.append(" AND");
+				sql.append(String.format(" %s = %s", joinCols.get(i).getLeft(), joinCols.get(i).getRight()));
+			}
 		}
 		return sql.toString();
 	}
@@ -197,7 +199,7 @@ public class JoinedRelation extends ExactRelation {
 	 * Sql
 	 */
 	
-	protected String toSql() {
+	public String toSql() {
 		StringBuilder sql = new StringBuilder();
 		sql.append(String.format("SELECT * FROM %s", joinClause()));
 		return sql.toString();

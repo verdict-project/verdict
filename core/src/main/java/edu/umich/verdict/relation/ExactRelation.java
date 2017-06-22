@@ -7,19 +7,33 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.antlr.v4.runtime.CharStreams;
+import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.misc.Interval;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
 
 import edu.umich.verdict.VerdictContext;
+import edu.umich.verdict.VerdictSQLBaseVisitor;
+import edu.umich.verdict.VerdictSQLLexer;
+import edu.umich.verdict.VerdictSQLParser;
+import edu.umich.verdict.VerdictSQLParser.Group_by_itemContext;
+import edu.umich.verdict.VerdictSQLParser.Join_partContext;
+import edu.umich.verdict.VerdictSQLParser.Select_list_elemContext;
+import edu.umich.verdict.VerdictSQLParser.Table_sourceContext;
 import edu.umich.verdict.datatypes.SampleParam;
 import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.relation.condition.AndCond;
+import edu.umich.verdict.relation.condition.CompCond;
 import edu.umich.verdict.relation.condition.Cond;
 import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.relation.expr.FuncExpr;
 import edu.umich.verdict.relation.expr.SelectElem;
 import edu.umich.verdict.util.ResultSetConversion;
+import edu.umich.verdict.util.StackTraceReader;
 import edu.umich.verdict.util.TypeCasting;
 import edu.umich.verdict.util.VerdictLogger;
 
@@ -35,6 +49,14 @@ public abstract class ExactRelation extends Relation {
 	public ExactRelation(VerdictContext vc) {
 		super(vc);
 	}
+	
+	public static ExactRelation from(VerdictContext vc, String sql) {
+		VerdictSQLLexer l = new VerdictSQLLexer(CharStreams.fromString(sql));
+		VerdictSQLParser p = new VerdictSQLParser(new CommonTokenStream(l));
+		RelationGen g = new RelationGen(vc, sql);
+		return g.visit(p.select_statement());
+	}
+	
 	
 //	/**
 //	 * Returns an expression for a (possibly joined) table source.
@@ -58,6 +80,13 @@ public abstract class ExactRelation extends Relation {
 	 * Filtering
 	 */
 	
+	/**
+	 * Returns a relation with an extra filtering condition.
+	 * The immediately following filter (or where) function on the joined relation will work as a join condition.
+	 * @param cond
+	 * @return
+	 * @throws VerdictException
+	 */
 	public ExactRelation filter(Cond cond) throws VerdictException {
 		return new FilteredRelation(vc, this, cond);
 	}
@@ -67,6 +96,10 @@ public abstract class ExactRelation extends Relation {
 	}
 	
 	public ExactRelation where(String cond) throws VerdictException {
+		return filter(cond);
+	}
+	
+	public ExactRelation where(Cond cond) throws VerdictException {
 		return filter(cond);
 	}
 	
@@ -86,28 +119,24 @@ public abstract class ExactRelation extends Relation {
 		return new AggregatedRelation(vc, this, se);
 	}
 	
-	public AggregatedRelation agg(Expr... exprs) {
-		return agg(Arrays.asList(exprs));
-	}
-	
 	@Override
-	public long count() throws VerdictException {
-		return TypeCasting.toLong(agg(FuncExpr.count()).collect().get(0).get(0));
+	public AggregatedRelation count() throws VerdictException {
+		return agg(FuncExpr.count());
 	}
 
 	@Override
-	public double sum(String expr) throws VerdictException {
-		return TypeCasting.toDouble(agg(FuncExpr.sum(Expr.from(expr))).collect().get(0).get(0));
+	public AggregatedRelation sum(String expr) throws VerdictException {
+		return agg(FuncExpr.sum(Expr.from(expr)));
 	}
 
 	@Override
-	public double avg(String expr) throws VerdictException {
-		return TypeCasting.toDouble(agg(FuncExpr.avg(Expr.from(expr))).collect().get(0).get(0));
+	public AggregatedRelation avg(String expr) throws VerdictException {
+		return agg(FuncExpr.avg(Expr.from(expr)));
 	}
 
 	@Override
-	public long countDistinct(String expr) throws VerdictException {
-		return TypeCasting.toLong(agg(FuncExpr.countDistinct(Expr.from(expr))).collect().get(0).get(0));
+	public AggregatedRelation countDistinct(String expr) throws VerdictException {
+		return agg(FuncExpr.countDistinct(Expr.from(expr)));
 	}
 	
 	public GroupedRelation groupby(String group) {
@@ -164,6 +193,14 @@ public abstract class ExactRelation extends Relation {
 		return new GroupedRelation(vc, this, cols);
 	}
 	
+	public ExactRelation limit(long limit) {
+		return new LimitedRelation(vc, this, limit);
+	}
+	
+	public ExactRelation limit(String limit) {
+		return limit(Integer.valueOf(limit));
+	}
+	
 	/*
 	 * Joins
 	 */
@@ -204,7 +241,9 @@ public abstract class ExactRelation extends Relation {
 	 * @param functions
 	 * @return A map from a candidate to score.
 	 */
-	protected abstract Map<Set<SampleParam>, Double> findSample(List<Expr> functions);
+	protected Map<Set<SampleParam>, Double> findSample(List<Expr> functions) {
+		return new HashMap<Set<SampleParam>, Double>();
+	}
 	
 	protected Map<TableUniqueName, SampleParam> chooseBest(Map<Set<SampleParam>, Double> candidates) {
 		Set<SampleParam> best = null;
@@ -275,8 +314,196 @@ public abstract class ExactRelation extends Relation {
 		} else if (source instanceof JoinedRelation) {
 			return ((JoinedRelation) source).joinClause();
 		} else {
-			return source.toSql();
+			return String.format("(%s) AS %s", source.toSql(), source.getAliasName());
 		}
 	}
 	
 }
+
+
+class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
+	
+	private VerdictContext vc;
+	
+	private String sql;
+	
+	public RelationGen(VerdictContext vc, String sql) {
+		this.vc = vc;
+		this.sql = sql;
+	}
+	
+	@Override
+	public ExactRelation visitSelect_statement(VerdictSQLParser.Select_statementContext ctx) {
+		ExactRelation r = visit(ctx.query_expression());
+		
+		if (ctx.order_by_clause() != null) {
+			r = r.orderby(getOriginalText(ctx.order_by_clause()));
+		}
+		
+		if (ctx.limit_clause() != null) {
+			r = r.limit(ctx.limit_clause().getText());
+		}
+		
+		return r;
+	}
+	
+	@Override
+	public ExactRelation visitQuery_specification(VerdictSQLParser.Query_specificationContext ctx) {
+		// parse the where clause
+		Cond where = null;
+		if (ctx.WHERE() != null) {
+			where = Cond.from(getOriginalText(ctx.where));
+		}
+		
+		// parse the from clause
+		// if a subquery is found; another instance of this class will be created and be used.
+		// we convert all the table sources into ExactRelation instances. Those ExactRelation instances will be joined
+		// either using the join condition explicitly stated using the INNER JOIN ON statements or using the conditions
+		// in the where clause.
+		ExactRelation r = null;
+		List<String> joinedTableName = new ArrayList<String>();
+		
+		for (Table_sourceContext s : ctx.table_source()) {
+			TableSourceExtractor e = new TableSourceExtractor();
+			ExactRelation r1 = e.visit(s);
+			if (r == null) r = r1;
+			else {
+				JoinedRelation r2 = new JoinedRelation(vc, r, r1, null);
+				Cond j = null;
+			
+				// search for join conditions
+				if (r1 instanceof SingleRelation && where != null) {
+					String n = ((SingleRelation) r1).getTableName().tableName;
+					j = where.searchForJoinCondition(joinedTableName, n);
+					if (j == null && r1.getAliasName() != null) {
+						j = where.searchForJoinCondition(joinedTableName, r1.getAliasName());
+					}
+				} else if (r2.getAliasName() != null && where != null) {
+					j = where.searchForJoinCondition(joinedTableName, r2.getAliasName());
+				}
+				
+				if (j != null) {
+					try {
+						r2.setJoinCond(j);
+					} catch (VerdictException e1) {
+						VerdictLogger.error(StackTraceReader.stackTrace2String(e1));
+					}
+					where = where.remove(j);
+				}
+				
+				r = r2;
+			}
+			
+			// add both table names and the alias to joined table names
+			if (r1 instanceof SingleRelation) {
+				joinedTableName.add(((SingleRelation) r1).getTableName().tableName);
+			}
+			if (r1.getAliasName() != null) {
+				joinedTableName.add(r1.getAliasName());
+			}
+		}
+		
+		if (where != null) {
+			r = new FilteredRelation(vc, r, where);
+		}
+		
+		if (ctx.GROUP() != null) {
+			List<ColNameExpr> groupby = new ArrayList<ColNameExpr>();
+			for (Group_by_itemContext g : ctx.group_by_item()) {
+				groupby.add(ColNameExpr.from(g.getText()));
+			}
+			r = new GroupedRelation(vc, r, groupby);
+		}
+		
+		SelectListExtractor select = new SelectListExtractor();
+		Triple<List<SelectElem>, List<SelectElem>, List<SelectElem>> elems = select.visit(ctx.select_list());
+		if (elems.getMiddle().size() > 0) {
+			r = new AggregatedRelation(vc, r, elems.getMiddle());
+			r.setAliasName(Relation.genAlias());
+			r = new ProjectedRelation(vc, r, elems.getRight());
+		} else {
+			r = new ProjectedRelation(vc, r, elems.getRight());
+		}
+		
+		return r;
+	}
+	
+	// Returs a triple of
+	// 1. non-aggregate select list elements
+	// 2. aggregate select list elements.
+	// 3. both of them in order.
+	class SelectListExtractor extends VerdictSQLBaseVisitor<Triple<List<SelectElem>, List<SelectElem>, List<SelectElem>>> {
+		@Override public Triple<List<SelectElem>, List<SelectElem>, List<SelectElem>> visitSelect_list(VerdictSQLParser.Select_listContext ctx) {
+			List<SelectElem> nonagg = new ArrayList<SelectElem>();
+			List<SelectElem> agg = new ArrayList<SelectElem>();
+			List<SelectElem> both = new ArrayList<SelectElem>();
+			for (Select_list_elemContext a : ctx.select_list_elem()) {
+				SelectElem e = SelectElem.from(getOriginalText(a));
+				if (e.isagg()) {
+					agg.add(e);
+				} else {
+					nonagg.add(e);
+				}
+				both.add(e);
+			}
+			return Triple.of(nonagg, agg, both);
+		}
+	}
+	
+	// The tableSource returned from this class is supported to include all necessary join conditions; thus, we do not
+	// need to search for their join conditions in the where clause.
+	class TableSourceExtractor extends VerdictSQLBaseVisitor<ExactRelation> {
+		public List<ExactRelation> relations = new ArrayList<ExactRelation>();
+		
+		private Cond joinCond = null;
+		
+		@Override
+		public ExactRelation visitTable_source_item_joined(VerdictSQLParser.Table_source_item_joinedContext ctx) {
+			ExactRelation r = visit(ctx.table_source_item());
+			for (Join_partContext j : ctx.join_part()) {
+				ExactRelation r2 = visit(j);
+				r = new JoinedRelation(vc, r, r2, null);
+				if (joinCond != null) {
+					try {
+						((JoinedRelation) r).setJoinCond(joinCond);
+					} catch (VerdictException e) {
+						VerdictLogger.error(StackTraceReader.stackTrace2String(e));
+					}
+					joinCond = null;
+				}
+			}
+			return r;
+		}
+		
+		@Override
+		public ExactRelation visitHinted_table_name_item(VerdictSQLParser.Hinted_table_name_itemContext ctx) {
+			String tableName = ctx.table_name_with_hint().table_name().getText();
+			ExactRelation r = SingleRelation.from(vc, tableName);
+			if (ctx.as_table_alias() != null) {
+				r.setAliasName(ctx.as_table_alias().table_alias().getText());
+			}
+			return r;
+		}
+		
+		@Override
+		public ExactRelation visitJoin_part(VerdictSQLParser.Join_partContext ctx) {
+			if (ctx.INNER() != null) {
+				TableSourceExtractor ext = new TableSourceExtractor();
+				ExactRelation r = ext.visit(ctx.table_source());
+				joinCond = Cond.from(getOriginalText(ctx.search_condition()));
+				return r;
+			} else {
+				VerdictLogger.error(this, "Unsupported join condition: " + getOriginalText(ctx));
+				return null;
+			}
+		}
+	}
+	
+	protected String getOriginalText(ParserRuleContext ctx) {
+		int a = ctx.start.getStartIndex();
+	    int b = ctx.stop.getStopIndex();
+	    Interval interval = new Interval(a,b);
+	    return CharStreams.fromString(sql).getText(interval);
+	}
+}
+

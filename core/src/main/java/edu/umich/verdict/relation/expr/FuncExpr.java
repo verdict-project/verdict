@@ -177,4 +177,14 @@ public class FuncExpr extends Expr {
 	public <T> T accept(ExprVisitor<T> v) {
 		return v.call(this);
 	}
+	
+	@Override
+	public boolean isagg() {
+		if (funcname.equals(FuncName.AVG) || funcname.equals(FuncName.SUM) || funcname.equals(FuncName.COUNT)
+			|| funcname.equals(FuncName.COUNT_DISTINCT)) {
+			return true;
+		} else {
+			return false;
+		}	
+	}
 }

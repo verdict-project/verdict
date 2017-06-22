@@ -46,12 +46,7 @@ public class LimitedRelation extends ExactRelation {
 	}
 
 	@Override
-	protected Map<Set<SampleParam>, Double> findSample(List<Expr> functions) {
-		return new HashMap<Set<SampleParam>, Double>();
-	}
-
-	@Override
-	protected String toSql() {
+	public String toSql() {
 		StringBuilder sql = new StringBuilder();
 		sql.append(source.toSql());
 		sql.append(" LIMIT " + limit);

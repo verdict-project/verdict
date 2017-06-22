@@ -1,5 +1,7 @@
 package edu.umich.verdict.relation.condition;
 
+import java.util.List;
+
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 
@@ -20,17 +22,17 @@ public abstract class Cond {
 		CondGen g = new CondGen();
 		return g.visit(p.search_condition());
 	}
-	
-	public abstract String toString(VerdictContext vc);
-	
-	@Override
-	public String toString() {
-		VerdictLogger.error(this, "Calling toString() method without VerdictContext is not allowed.");
-		return "toString called without VerdictContext";
-	}
 
 	public Cond accept(CondModifier v) {
 		return v.call(this);
+	}
+
+	public Cond searchForJoinCondition(List<String> joinedTableName, String rightTableName) {
+		return null;
+	}
+
+	public Cond remove(Cond j) {
+		return this;
 	}
 
 }
@@ -42,7 +44,7 @@ class CondGen extends VerdictSQLBaseVisitor<Cond> {
 	public Cond visitComp_expr_predicate(VerdictSQLParser.Comp_expr_predicateContext ctx) {
 		Expr e1 = Expr.from(ctx.expression(0));
 		Expr e2 = Expr.from(ctx.expression(1));
-		return CompCond.from(e1, e2, ctx.comparison_operator().getText());
+		return CompCond.from(e1, ctx.comparison_operator().getText(), e2);
 	}
 	
 	@Override
