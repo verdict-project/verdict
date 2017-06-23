@@ -21,6 +21,7 @@ import edu.umich.verdict.relation.condition.CompCond;
 import edu.umich.verdict.relation.condition.Cond;
 import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.Expr;
+import edu.umich.verdict.relation.expr.SelectElem;
 import edu.umich.verdict.util.VerdictLogger;
 
 public class JoinedRelation extends ExactRelation {
@@ -77,18 +78,19 @@ public class JoinedRelation extends ExactRelation {
 	}
 	
 	protected String joinClause() {
-		if (joinCols == null) {
-			VerdictLogger.warn(this, "Join conditions are null. Inner join will throw an error.");
-		}
-		
 		StringBuilder sql = new StringBuilder(100);
-		sql.append(String.format("%s INNER JOIN %s ON", sourceExpr(source1), sourceExpr(source2)));
-		if (joinCols != null) {
+		
+		if (joinCols == null || joinCols.size() == 0) {
+			VerdictLogger.info(this, "No join conditions specified; cross join is used.");
+			sql.append(String.format("%s CROSS JOIN %s", sourceExpr(source1), sourceExpr(source2)));
+		} else {
+			sql.append(String.format("%s INNER JOIN %s ON", sourceExpr(source1), sourceExpr(source2)));
 			for (int i = 0; i < joinCols.size(); i++) {
 				if (i != 0) sql.append(" AND");
 				sql.append(String.format(" %s = %s", joinCols.get(i).getLeft(), joinCols.get(i).getRight()));
 			}
 		}
+		
 		return sql.toString();
 	}
 	
@@ -109,35 +111,35 @@ public class JoinedRelation extends ExactRelation {
 	/**
 	 * Finds proper samples for each child; then, merge them.
 	 */
-	protected Map<Set<SampleParam>, List<Double>> findSample(Expr expr) {
-		Map<Set<SampleParam>, List<Double>> candidates1 = source1.findSample(expr);
-		Map<Set<SampleParam>, List<Double>> candidates2 = source2.findSample(expr);
+	protected List<SampleGroup> findSample(SelectElem elem) {
+		List<SampleGroup> candidates1 = source1.findSample(elem);
+		List<SampleGroup> candidates2 = source2.findSample(elem);
 		return combineCandidates(candidates1, candidates2);
 	}
 	
-	private Map<Set<SampleParam>, List<Double>> combineCandidates(
-			Map<Set<SampleParam>, List<Double>> candidates1,
-			Map<Set<SampleParam>, List<Double>> candidates2) {
+	private List<SampleGroup> combineCandidates(
+			List<SampleGroup> candidates1,
+			List<SampleGroup> candidates2) {
+		List<SampleGroup> combined = new ArrayList<SampleGroup>();
 		
-		Map<Set<SampleParam>, List<Double>> combined = new HashMap<Set<SampleParam>, List<Double>>();
-		for (Map.Entry<Set<SampleParam>, List<Double>> c1 : candidates1.entrySet()) {
-			Set<SampleParam> set1 = c1.getKey();
-			double cost1 = c1.getValue().get(0);
-			double samplingProb1 = c1.getValue().get(1);
-			for (Map.Entry<Set<SampleParam>, List<Double>> c2 : candidates2.entrySet()) {
-				Set<SampleParam> set2 = c2.getKey();
-				double cost2 = c2.getValue().get(0);
-				double samplingProb2 = c2.getValue().get(1);
+		for (SampleGroup c1 : candidates1) {
+			Set<SampleParam> set1 = c1.sampleSet();
+			double cost1 = c1.cost();
+			double samplingProb1 = c1.samplingProb();
+			
+			for (SampleGroup c2 : candidates2) {
+				Set<SampleParam> set2 = c2.sampleSet();
+				double cost2 = c2.cost();
+				double samplingProb2 = c2.samplingProb();
 				
 				Set<SampleParam> union = new HashSet<SampleParam>(set1);
 				union.addAll(set2);
-//				combined.put(union, c1.getValue() + c2.getValue());
 				
 				// add benefits to universe samples if they coincide with the join columns.
 				if (universeSampleApplicable(set1, set2)) {
-					combined.put(union, Arrays.asList(cost1 + cost2, Math.min(samplingProb1, samplingProb2)));
+					combined.add(new SampleGroup(union, c1.getElems(), Math.min(samplingProb1, samplingProb2), cost1 + cost2));
 				} else {
-					combined.put(union, Arrays.asList(cost1 + cost2, samplingProb1 * samplingProb2));
+					combined.add(new SampleGroup(union, c1.getElems(), samplingProb1 * samplingProb2, cost1 + cost2));
 				}
 			}
 		}

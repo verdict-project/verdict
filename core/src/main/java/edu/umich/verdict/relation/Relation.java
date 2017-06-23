@@ -113,8 +113,8 @@ public abstract class Relation {
 	
 	public ResultSet collectResultSet() throws VerdictException {
 		String sql = toSql();
-//		VerdictLogger.info("The query to db: " + sql);
-		VerdictLogger.debug(this, "A rewritten query:");
+		VerdictLogger.info("The query to db: " + sql);
+		VerdictLogger.debug(this, "A query to db:");
 		VerdictLogger.debugPretty(this, Relation.prettyPrintSql(sql), " ");
 		return vc.getDbms().executeQuery(sql);
 	}

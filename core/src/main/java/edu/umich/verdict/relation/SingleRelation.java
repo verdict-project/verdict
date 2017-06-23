@@ -22,6 +22,7 @@ import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.relation.expr.ExprVisitor;
 import edu.umich.verdict.relation.expr.FuncExpr;
+import edu.umich.verdict.relation.expr.SelectElem;
 import edu.umich.verdict.util.VerdictLogger;
 
 public class SingleRelation extends ExactRelation {
@@ -73,13 +74,13 @@ public class SingleRelation extends ExactRelation {
 	}
 
 	@Override
-	protected Map<Set<SampleParam>, List<Double>> findSample(Expr expr) {
-		Map<Set<SampleParam>, List<Double>> scoredCandidate = new HashMap<Set<SampleParam>, List<Double>>();
+	protected List<SampleGroup> findSample(SelectElem elem) {
+		List<SampleGroup> candidates = new ArrayList<SampleGroup>();
 
 		// Get all the samples
 		List<Pair<SampleParam, TableUniqueName>> availableSamples = vc.getMeta().getSampleInfoFor(getTableName());
 		// add a relation itself in case there's no available sample.
-//		availableSamples.add(Pair.of(asSampleParam(), getTableName()));
+		availableSamples.add(Pair.of(asSampleParam(), getTableName()));
 		
 		// If there's no sample; we do not know the size of the original table. In this case, we simply assume the
 		// size is 1M.
@@ -95,14 +96,14 @@ public class SingleRelation extends ExactRelation {
 			if (sizeInfo != null) {		// if not an original table
 				sampleTableSize = (double) sizeInfo.sampleSize;
 			}
-			double samplingProb = samplingProb(p.getLeft(), expr);
+			double samplingProb = samplingProb(p.getLeft(), elem.getExpr());
 			
 			if (samplingProb >= 0) {
-				scoredCandidate.put(ImmutableSet.of(p.getLeft()), Arrays.asList(sampleTableSize, samplingProb));
+				candidates.add(new SampleGroup(ImmutableSet.of(p.getLeft()), Arrays.asList(elem), samplingProb, sampleTableSize));
 			}
 		}
 		
-		return scoredCandidate;
+		return candidates;
 	}
 	
 	/**
@@ -121,13 +122,23 @@ public class SingleRelation extends ExactRelation {
 			if (fu.getExpr() instanceof ColNameExpr) {
 				fcol = ((ColNameExpr) fu.getExpr()).getCol();
 			}
-			if (fu.getFuncName().equals(FuncExpr.FuncName.COUNT_DISTINCT) && cols.contains(fcol)) {
-				if (param.sampleType.equals("universe")) {
-					return param.samplingRatio;
-				} else if (param.sampleType.equals("stratified")) {
-					return 1;
+			if (fu.getFuncName().equals(FuncExpr.FuncName.COUNT_DISTINCT)) {
+				if (cols.contains(fcol)) {
+					if (param.sampleType.equals("universe") && param.columnNames.contains(fcol)) {
+						return param.samplingRatio;
+					} else if (param.sampleType.equals("stratified") && param.columnNames.contains(fcol)) {
+						return 1;
+					} else if (param.sampleType.equals("nosample")) {
+						return 1;
+					} else {
+						return -1;		// uniform random samples must not be used for COUNT-DISTINCT
+					}
 				} else {
-					return -1;		// uniform random samples must not be used for COUNT-DISTINCT
+					if (!param.sampleType.equals("nosample")) {
+						return -1;		// no sampled table should be joined for count-distinct.
+					} else {
+						return 1;
+					}
 				}
 			} else {
 				if (param.sampleType.equals("stratified")) {

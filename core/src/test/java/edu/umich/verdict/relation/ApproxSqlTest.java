@@ -25,8 +25,9 @@ public class ApproxSqlTest {
 //				+ " group by order_hour_of_day"
 //				+ " order by order_hour_of_day asc";
 		
-		String sql = "select count(*), count(distinct user_id) "
-				+ "from orders";
+		String sql = "select count(*), count(distinct user_id), count(distinct order_id) "
+				+ "from orders ";
+//				+ "where order_products.order_id = orders.order_id";
 		
 		ExactRelation r = ExactRelation.from(vc, sql);
 		ApproxRelation a = r.approx();

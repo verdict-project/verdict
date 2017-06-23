@@ -48,26 +48,24 @@ public class AggregatedRelation extends ExactRelation {
 	 */
 	
 	public ApproxRelation approx() throws VerdictException {
-		List<Expr> exprs = exprsInSelectElems(elems);
-		
 		// for each expression, we obtain pairs of sample candidates and the costs of using them. 
-		List<Pair<Map<Set<SampleParam>, List<Double>>, SelectElem>> candidates_list = new ArrayList<Pair<Map<Set<SampleParam>, List<Double>>, SelectElem>>();
-		for (int i = 0; i < exprs.size(); i++) {
-			Map<Set<SampleParam>, List<Double>> candidates = source.findSample(exprs.get(i));
-			candidates_list.add(Pair.of(candidates, elems.get(i)));
+		List<List<SampleGroup>> candidates_list = new ArrayList<List<SampleGroup>>();
+		for (int i = 0; i < elems.size(); i++) {
+			List<SampleGroup> candidates = source.findSample(elems.get(i));
+			candidates_list.add(candidates);
 		}
 		
 		// We test if we can consolidate those sample candidates so that the number of select statements is less than
 		// the number of the expressions. In the worst case (e.g., all count-distinct), the number of select statements
 		// will be equal to the number of the expressions. If the cost of running those select statements individually
 		// is higher than the cost of running a single select statement using the original tables, we do not use samples.
-		List<Pair<Set<SampleParam>, List<SelectElem>>> consolidated = consolidate(candidates_list);
+		SamplePlan plan = consolidate(candidates_list);
 		List<ApproxAggregatedRelation> individuals = new ArrayList<ApproxAggregatedRelation>();
 		
-		for (Pair<Set<SampleParam>, List<SelectElem>> p : consolidated) {
-			List<SelectElem> elemsPart = p.getRight();
-			Set<SampleParam> samplesPart = p.getLeft();
-			individuals.add(new ApproxAggregatedRelation(vc, source.approxWith(attachTableMapping(samplesPart)), elemsPart));
+		for (SampleGroup group : plan.getSampleGroups()) {
+			List<SelectElem> elems = group.getElems();
+			Set<SampleParam> samplesPart = group.sampleSet();
+			individuals.add(new ApproxAggregatedRelation(vc, source.approxWith(attachTableMapping(samplesPart)), elems));
 		}
 		
 		// join the results from those multiple relations (if there are more than one)

@@ -17,6 +17,7 @@ import edu.umich.verdict.exceptions.VerdictUnexpectedMethodCall;
 import edu.umich.verdict.relation.condition.AndCond;
 import edu.umich.verdict.relation.condition.Cond;
 import edu.umich.verdict.relation.expr.Expr;
+import edu.umich.verdict.relation.expr.SelectElem;
 
 public class FilteredRelation extends ExactRelation {
 	
@@ -57,8 +58,8 @@ public class FilteredRelation extends ExactRelation {
 		return a;
 	}
 
-	protected Map<Set<SampleParam>, List<Double>> findSample(Expr expr) {
-		return source.findSample(expr);
+	protected List<SampleGroup> findSample(SelectElem elem) {
+		return source.findSample(elem);
 	}
 	
 	/*

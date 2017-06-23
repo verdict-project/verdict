@@ -2,6 +2,7 @@ package edu.umich.verdict.relation;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -245,8 +246,8 @@ public abstract class ExactRelation extends Relation {
 	 * @param functions
 	 * @return A map from a candidate to [cost, sampling prob].
 	 */
-	protected Map<Set<SampleParam>, List<Double>> findSample(Expr expr) {
-		return new HashMap<Set<SampleParam>, List<Double>>();
+	protected List<SampleGroup> findSample(SelectElem elem) {
+		return new ArrayList<SampleGroup>();
 	}
 	
 	/**
@@ -256,80 +257,18 @@ public abstract class ExactRelation extends Relation {
 	 * @param candidates_list
 	 * @return
 	 */
-	protected List<Pair<Set<SampleParam>, List<SelectElem>>> consolidate(
-			List<Pair<Map<Set<SampleParam>, List<Double>>, SelectElem>> candidates_list) {
+	protected SamplePlan consolidate(
+			List<List<SampleGroup>> candidates_list) {
+		SamplePlans plans = new SamplePlans();
 		
-		List<Pair<Set<SampleParam>, List<SelectElem>>> consolidated = new ArrayList<Pair<Set<SampleParam>, List<SelectElem>>>();
-		
-		// estimate the cost of using the original tables.
-		
-		
-		for (Pair<Map<Set<SampleParam>, List<Double>>, SelectElem> candidatesExpr : candidates_list) {
-			Map<Set<SampleParam>, List<Double>> candidates = candidatesExpr.getLeft();
-			SelectElem elem = candidatesExpr.getRight();
-			
-			// testing: simply choose the one with the highest sampling probability.
-			Set<SampleParam> best = null;
-			double highestSamplingProb = Double.NEGATIVE_INFINITY;
-			for (Map.Entry<Set<SampleParam>, List<Double>> e : candidates.entrySet()) {
-				Set<SampleParam> set = e.getKey();
-				double cost = e.getValue().get(0);
-				double samplingProb = e.getValue().get(1);
-				
-				if (samplingProb > highestSamplingProb) {
-					highestSamplingProb = samplingProb;
-					best = set;
-				}
-			}
-			
-			consolidated.add(Pair.of(best, Arrays.asList(elem)));
+		// create candidate plans
+		for (List<SampleGroup> groups : candidates_list) {
+			plans.consolidateNewExpr(groups);
 		}
 		
-		return consolidated;
+		double relative_cost_ratio = vc.getConf().getDouble("relative_target_cost");
+		return plans.bestPlan(relative_cost_ratio);
 	}
-	
-	
-//	protected Map<TableUniqueName, SampleParam> chooseBest(Map<Set<SampleParam>, Double> candidates, List<Expr> exprs) {
-//		double cost_upper_limit = vc.getConf().getDouble("relative_target_cost") * 1.1;
-//		
-//		List<Set<SampleParam>> candidatesWithinLimit = new ArrayList<Set<SampleParam>>();
-//		for (Map.Entry<Set<SampleParam>, Double> e : candidates.entrySet()) {
-////			VerdictLogger.debug(this, String.format("candidate sample: %s, score: %f", e.getKey(), e.getValue()));
-//			if (e.getValue() < cost_upper_limit) {
-//				candidatesWithinLimit.add(e.getKey());
-//			}
-//		}
-//		
-//		// find the one with the largest (effective) sampling probability among the ones that satisfy the limit.
-//		double max_sampling_prob = 0;
-//		Set<SampleParam> best = null;
-//		for (Set<SampleParam> candidate : candidatesWithinLimit) {
-//			double prob = effectiveSamplingProb(candidate, exprs); 
-//			if (prob > max_sampling_prob) {
-//				max_sampling_prob = prob;
-//				best = candidate;
-//			}
-//		}
-//		
-//		// compose the return value.
-//		Map<TableUniqueName, SampleParam> map = new HashMap<TableUniqueName, SampleParam>();
-//		if (best != null) {
-//			for (SampleParam s : best) {
-//				map.put(s.originalTable, s);
-//			}
-//		}
-//		
-//		return map;
-//	}
-	
-//	private double effectiveSamplingProb(Set<SampleParam> candidate, List<Expr> exprs) {
-//		
-//	}
-//	
-//	private double effectiveSamplingProb(SampleParam param, List<Expr> exprs) {
-//		
-//	}
-
 	
 	/*
 	 * Helpers

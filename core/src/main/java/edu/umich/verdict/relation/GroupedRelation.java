@@ -18,6 +18,7 @@ import edu.umich.verdict.relation.condition.Cond;
 import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.relation.expr.FuncExpr;
+import edu.umich.verdict.relation.expr.SelectElem;
 
 public class GroupedRelation extends ExactRelation {
 
@@ -58,8 +59,8 @@ public class GroupedRelation extends ExactRelation {
 	}
 
 	@Override
-	protected Map<Set<SampleParam>, List<Double>> findSample(Expr expr) {
-		return source.findSample(expr);
+	protected List<SampleGroup> findSample(SelectElem elem) {
+		return source.findSample(elem);
 	}
 	
 	/*
