@@ -73,4 +73,18 @@ class CondGen extends VerdictSQLBaseVisitor<Cond> {
 		return concat;
 	}
 	
+	@Override
+	public Cond visitBracket_predicate(VerdictSQLParser.Bracket_predicateContext ctx) {
+		return visit(ctx.search_condition());
+	}
+	
+	@Override
+	public Cond visitSearch_condition_not(VerdictSQLParser.Search_condition_notContext ctx) {
+		if (ctx.NOT() == null) {
+			return visit(ctx.predicate());
+		} else {
+			return NotCond.from(visit(ctx.predicate()));
+		}
+	}
+	
 }

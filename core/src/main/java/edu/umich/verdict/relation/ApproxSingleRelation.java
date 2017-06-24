@@ -153,6 +153,8 @@ public class ApproxSingleRelation extends ApproxRelation {
 				return getSamplingRatio();
 			} else if (getSampleType().equals("stratified")) {
 				return 1.0;
+			} else if (getSampleType().equals("nosample")) {
+				return 1.0;
 			} else {
 				VerdictLogger.warn(this, String.format("%s sample should not be used for count-distinct.", getSampleType()));
 				return 1.0;

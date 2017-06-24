@@ -42,6 +42,11 @@ public class SamplePlan {
 		return sampleGroups;
 	}
 	
+	@Override
+	public String toString() {
+		return sampleGroups.toString();
+	}
+	
 	public double cost() {
 		if (cachedCost != null) return cachedCost;
 		
@@ -62,7 +67,7 @@ public class SamplePlan {
 		for (SampleGroup g : sampleGroups) {
 			samplingProb += 1 / g.samplingProb();
 		}
-		return 1 / samplingProb;
+		return sampleGroups.size() / samplingProb;
 	}
 	
 	/**

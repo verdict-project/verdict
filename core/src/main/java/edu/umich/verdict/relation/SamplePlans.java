@@ -100,13 +100,13 @@ public class SamplePlans {
 		double bestSamplingProb = Double.NEGATIVE_INFINITY;
 		for (SamplePlan plan : plans) {
 			double cost = plan.cost();
-			System.out.println("cost: " + cost);
 			if (cost < original_cost * relative_cost_ratio) {
 				double samplingProb = plan.harmonicSamplingProb();
 				if (samplingProb > bestSamplingProb) {
 					bestSamplingProb = samplingProb;
 					best = plan;
 				}
+//				System.out.println(plan.toString() + " " + cost + " " + plan.harmonicSamplingProb());
 			}
 		}
 

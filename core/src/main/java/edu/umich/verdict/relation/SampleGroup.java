@@ -44,6 +44,11 @@ public class SampleGroup {
 		return samples;
 	}
 	
+	@Override
+	public String toString() {
+		return samples.toString();
+	}
+	
 	public boolean isEqualSample(SampleGroup o) {
 		return this.samples.equals(o.samples);
 	}

@@ -64,8 +64,18 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 				if (expr instanceof FuncExpr) {
 					FuncExpr f = (FuncExpr) expr;
 					FuncExpr s = (FuncExpr) exprWithTableNamesSubstituted(expr, sub);
-					if (f.getFuncName().equals(FuncExpr.FuncName.COUNT) || f.getFuncName().equals(FuncExpr.FuncName.COUNT_DISTINCT)) {
+					if (f.getFuncName().equals(FuncExpr.FuncName.COUNT)) { 
 						return FuncExpr.round(BinaryOpExpr.from(s, ConstantExpr.from(1.0 / samplingProbabilityFor(f)), "*"));
+					} else if (f.getFuncName().equals(FuncExpr.FuncName.COUNT_DISTINCT)) {
+						String dbname = vc.getDbms().getName();
+						if (dbname.equals("impala")) {
+							return FuncExpr.round(
+									BinaryOpExpr.from(new FuncExpr(
+											FuncExpr.FuncName.IMPALA_APPROX_COUNT_DISTINCT, s.getExpr()),
+											ConstantExpr.from(1.0 / samplingProbabilityFor(f)), "*"));
+						} else {
+							return FuncExpr.round(BinaryOpExpr.from(s, ConstantExpr.from(1.0 / samplingProbabilityFor(f)), "*"));
+						}
 					} else if (f.getFuncName().equals(FuncExpr.FuncName.SUM)) {
 						return BinaryOpExpr.from(s, ConstantExpr.from(1.0 / samplingProbabilityFor(f)), "*");
 					} else {

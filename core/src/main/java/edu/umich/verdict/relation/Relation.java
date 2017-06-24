@@ -405,6 +405,8 @@ class PrettyPrintVisitor extends VerdictSQLBaseVisitor<String> {
 			} else {
 				return String.format("COUNT(*)");
 			}
+		} else if (ctx.NDV() != null) {
+			return String.format("NDV(%s)", visit(ctx.all_distinct_expression()));
 		}
 		VerdictLogger.error(this, String.format("Unexpected aggregate function expression: %s", ctx.getText()));
 		return null;	// we don't handle other aggregate functions for now.

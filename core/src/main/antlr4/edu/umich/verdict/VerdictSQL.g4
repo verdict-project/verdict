@@ -868,6 +868,7 @@ aggregate_windowed_function
     | VAR '(' all_distinct_expression ')' over_clause?
     | VARP '(' all_distinct_expression ')' over_clause?
     | COUNT '(' ('*' | all_distinct_expression) ')' over_clause?
+    | NDV '(' ('*' | all_distinct_expression) ')' over_clause?
     | COUNT_BIG '(' ('*' | all_distinct_expression) ')' over_clause?
     ;
 
@@ -1418,6 +1419,7 @@ MIN_ACTIVE_ROWVERSION:           M I N '_' A C T I V E '_' R O W V E R S I O N;
 MODIFY:                          M O D I F Y;
 NEXT:                            N E X T;
 NAME:                            N A M E;
+NDV:                             N D V;
 NOCOUNT:                         N O C O U N T;
 NOEXPAND:                        N O E X P A N D;
 NORECOMPUTE:                     N O R E C O M P U T E;

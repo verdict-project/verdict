@@ -36,7 +36,12 @@ public class JoinedRelation extends ExactRelation {
 		super(vc);
 		this.source1 = source1;
 		this.source2 = source2;
-		this.joinCols = joinCols;
+		
+		if (joinCols == null) {
+			this.joinCols = new ArrayList<Pair<Expr, Expr>>();
+		} else {
+			this.joinCols = joinCols;
+		}
 	}
 	
 	public static JoinedRelation from(VerdictContext vc, ExactRelation source1, ExactRelation source2, List<Pair<Expr, Expr>> joinCols) {
