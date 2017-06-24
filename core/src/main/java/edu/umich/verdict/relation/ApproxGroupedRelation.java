@@ -42,6 +42,7 @@ public class ApproxGroupedRelation extends ApproxRelation {
 	}
 
 	@Override
+	// TODO: make this more accurate
 	protected double samplingProbabilityFor(FuncExpr f) {
 		return source.samplingProbabilityFor(f);
 	}
@@ -49,6 +50,16 @@ public class ApproxGroupedRelation extends ApproxRelation {
 	@Override
 	protected Map<String, String> tableSubstitution() {
 		return source.tableSubstitution();
+	}
+
+	@Override
+	protected String sampleType() {
+		return source.sampleType();
+	}
+
+	@Override
+	protected List<String> sampleColumns() {
+		return source.sampleColumns();
 	}
 
 }

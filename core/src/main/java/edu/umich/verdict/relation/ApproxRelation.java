@@ -80,6 +80,18 @@ public abstract class ApproxRelation extends Relation {
 	protected abstract double samplingProbabilityFor(FuncExpr f);
 	
 	/**
+	 * Returns an effective sample type of this relation.
+	 * @return One of "uniform", "universe", "stratified", "nosample".
+	 */
+	protected abstract String sampleType();
+	
+	/**
+	 * Returns a set of columns on which a sample is created. Only meaningful for stratified and universe samples.
+	 * @return
+	 */
+	protected abstract List<String> sampleColumns();
+	
+	/**
 	 * Pairs of original table name and a sample table name. This function does not inspect subqueries.
 	 * @return
 	 */

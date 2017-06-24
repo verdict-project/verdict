@@ -1,8 +1,10 @@
 package edu.umich.verdict.relation;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -95,7 +97,66 @@ public class ApproxJoinedRelation extends ApproxRelation {
 	
 	@Override
 	protected double samplingProbabilityFor(FuncExpr f) {
-		return source1.samplingProbabilityFor(f) * source2.samplingProbabilityFor(f);
+		if (isUniverseSample()) {
+			return Math.min(source1.samplingProbabilityFor(f), source2.samplingProbabilityFor(f));
+		} else {
+			return source1.samplingProbabilityFor(f) * source2.samplingProbabilityFor(f);
+		}
+	}
+	
+	private boolean isUniverseSample() {
+		List<Expr> leftJoinCols = new ArrayList<Expr>();
+		List<Expr> rightJoinCols = new ArrayList<Expr>();
+		for (Pair<Expr, Expr> pair : joinCols) {
+			leftJoinCols.add(pair.getLeft());
+			rightJoinCols.add(pair.getRight());
+		}
+		
+		return source1.sampleType().equals("universe") && source2.sampleType().equals("universe")
+				&& joinColumnsEqualToSampleColumns(leftJoinCols, source1.sampleColumns())
+				&& joinColumnsEqualToSampleColumns(rightJoinCols, source2.sampleColumns());
+	}
+	
+	@Override
+	public String sampleType() {
+		if (isUniverseSample()) {
+			return "universe";
+		} else if (source1.sampleType().equals("stratified") && source2.sampleType().equals("stratified")) {
+			return null;
+		} else if (source1.sampleType().equals("stratified") || source2.sampleType().equals("stratified")) {
+			return "stratified";
+		} else if (source1.sampleType().equals("uniform") || source2.sampleType().equals("uniform")) {
+			return "uniform";
+		} else if (source1.sampleType().equals("nosample") && source2.sampleType().equals("nosample")) {
+			return "nosample";
+		} else {
+			return null;
+		}
+	}
+	
+	@Override
+	public List<String> sampleColumns() {
+		if (sampleType().equals("stratified")) {
+			if (source1.sampleType().equals("stratified")) {
+				return source1.sampleColumns();
+			} else {
+				return source2.sampleColumns();
+			}
+		} else if (sampleType().equals("universe")) {
+			return source1.sampleColumns();
+		} else {
+			return null;
+		}
+	}
+	
+	private boolean joinColumnsEqualToSampleColumns(List<Expr> joinCols, List<String> sampleColNames) {
+		List<String> joinColNames = new ArrayList<String>();
+		for (Expr expr : joinCols) {
+			if (expr instanceof ColNameExpr) {
+				joinColNames.add(((ColNameExpr) expr).getCol());
+			}
+		}
+		return joinColNames.equals(sampleColNames);
 	}
 	
 	@Override

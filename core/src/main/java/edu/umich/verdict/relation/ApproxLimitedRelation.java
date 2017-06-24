@@ -1,5 +1,6 @@
 package edu.umich.verdict.relation;
 
+import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.ImmutableMap;
@@ -34,6 +35,16 @@ public class ApproxLimitedRelation extends ApproxRelation {
 	@Override
 	protected Map<String, String> tableSubstitution() {
 		return ImmutableMap.of();
+	}
+
+	@Override
+	protected String sampleType() {
+		return null;
+	}
+
+	@Override
+	protected List<String> sampleColumns() {
+		return null;
 	}
 
 }

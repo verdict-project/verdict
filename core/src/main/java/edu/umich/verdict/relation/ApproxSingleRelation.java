@@ -146,8 +146,6 @@ public class ApproxSingleRelation extends ApproxRelation {
 	
 	@Override
 	protected double samplingProbabilityFor(FuncExpr f) {
-//		Set<String> cols = new HashSet<String>(vc.getMeta().getColumnNames(getTableName()));
-		
 		if (f.getFuncName().equals(FuncExpr.FuncName.COUNT_DISTINCT)) {
 			if (getSampleType().equals("universe")) {
 				return getSamplingRatio();
@@ -164,6 +162,16 @@ public class ApproxSingleRelation extends ApproxRelation {
 		}
 	}
 	
+	@Override
+	protected String sampleType() {
+		return getSampleType();
+	}
+	
+	@Override
+	protected List<String> sampleColumns() {
+		return param.columnNames;
+	}
+
 	@Override
 	protected Map<String, String> tableSubstitution() {
 		Map<String, String> s = ImmutableMap.of(param.originalTable.tableName, sampleTableName.tableName);

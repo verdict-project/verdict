@@ -65,7 +65,7 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 					FuncExpr f = (FuncExpr) expr;
 					FuncExpr s = (FuncExpr) exprWithTableNamesSubstituted(expr, sub);
 					if (f.getFuncName().equals(FuncExpr.FuncName.COUNT)) { 
-						return FuncExpr.round(BinaryOpExpr.from(s, ConstantExpr.from(1.0 / samplingProbabilityFor(f)), "*"));
+						return FuncExpr.round(BinaryOpExpr.from(s, ConstantExpr.from(1.0 / source.samplingProbabilityFor(f)), "*"));
 					} else if (f.getFuncName().equals(FuncExpr.FuncName.COUNT_DISTINCT)) {
 						String dbname = vc.getDbms().getName();
 						if (dbname.equals("impala")) {
@@ -74,10 +74,10 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 											FuncExpr.FuncName.IMPALA_APPROX_COUNT_DISTINCT, s.getExpr()),
 											ConstantExpr.from(1.0 / samplingProbabilityFor(f)), "*"));
 						} else {
-							return FuncExpr.round(BinaryOpExpr.from(s, ConstantExpr.from(1.0 / samplingProbabilityFor(f)), "*"));
+							return FuncExpr.round(BinaryOpExpr.from(s, ConstantExpr.from(1.0 / source.samplingProbabilityFor(f)), "*"));
 						}
 					} else if (f.getFuncName().equals(FuncExpr.FuncName.SUM)) {
-						return BinaryOpExpr.from(s, ConstantExpr.from(1.0 / samplingProbabilityFor(f)), "*");
+						return BinaryOpExpr.from(s, ConstantExpr.from(1.0 / source.samplingProbabilityFor(f)), "*");
 					} else {
 						return expr;
 					}
@@ -88,5 +88,15 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 		};
 		
 		return v.visit(f);
+	}
+
+	@Override
+	protected String sampleType() {
+		return source.sampleType();
+	}
+
+	@Override
+	protected List<String> sampleColumns() {
+		return source.sampleColumns();
 	}
 }

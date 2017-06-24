@@ -40,4 +40,14 @@ public class ApproxOrderedRelation extends ApproxRelation {
 		return ImmutableMap.of();
 	}
 
+	@Override
+	protected String sampleType() {
+		return source.sampleType();
+	}
+
+	@Override
+	protected List<String> sampleColumns() {
+		return source.sampleColumns();
+	}
+
 }
