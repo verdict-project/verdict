@@ -12,6 +12,8 @@ import java.util.TreeSet;
 
 import org.apache.commons.lang3.tuple.Pair;
 
+import com.google.common.collect.ImmutableSet;
+
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.datatypes.SampleParam;
 import edu.umich.verdict.datatypes.TableUniqueName;
@@ -131,11 +133,13 @@ public class JoinedRelation extends ExactRelation {
 			Set<SampleParam> set1 = c1.sampleSet();
 			double cost1 = c1.cost();
 			double samplingProb1 = c1.samplingProb();
+			String type1 = c1.sampleType();
 			
 			for (SampleGroup c2 : candidates2) {
 				Set<SampleParam> set2 = c2.sampleSet();
 				double cost2 = c2.cost();
 				double samplingProb2 = c2.samplingProb();
+				String type2 = c2.sampleType();
 				
 				Set<SampleParam> union = new HashSet<SampleParam>(set1);
 				union.addAll(set2);
@@ -144,7 +148,13 @@ public class JoinedRelation extends ExactRelation {
 				if (universeSampleApplicable(set1, set2)) {
 					combined.add(new SampleGroup(union, c1.getElems(), Math.min(samplingProb1, samplingProb2), cost1 + cost2));
 				} else {
-					combined.add(new SampleGroup(union, c1.getElems(), samplingProb1 * samplingProb2, cost1 + cost2));
+					Set<String> joinedType = ImmutableSet.of(type1, type2);
+					if (joinedType.equals(ImmutableSet.of("stratified", "universe"))
+						|| joinedType.equals(ImmutableSet.of("universe", "universe"))) {
+						// not allowed
+					} else {
+						combined.add(new SampleGroup(union, c1.getElems(), samplingProb1 * samplingProb2, cost1 + cost2));
+					}
 				}
 			}
 		}

@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import edu.umich.verdict.VerdictContext;
+import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.relation.condition.CompCond;
 import edu.umich.verdict.relation.condition.Cond;
@@ -74,6 +75,30 @@ public abstract class ApproxRelation extends Relation {
 	
 	/**
 	 * Computes an appropriate sampling probability for a particular aggregate function.
+	 * For uniform random sample, returns the ratio between the sample table and the original table.
+	 * For universe sample,
+	 *  if the aggregate function is COUNT, AVG, SUM, returns the ratio between the sample table and the original table.
+	 *  if the aggregate function is COUNT-DISTINCT, returns the sampling probability.
+	 * For stratified sample, this method returns the sampling probability only for the joined tables.
+	 * 
+	 * Verdict sample rules.
+	 * 
+	 * For COUNT, AVG, and SUM, uniform random samples, universe samples, stratified samples, or no samples can be used.
+	 * For COUNT-DISTINCT, universe sample, stratified samples, or no samples can be used. For stratified samples, the
+	 * distinct number of groups is assumed to be limited.
+	 * 
+	 * Verdict join rules.
+	 * 
+	 * (uniform, uniform)       -> uniform
+	 * (uniform, stratified)    -> stratified
+	 * (uniform, universe)		-> uniform
+	 * (uniform, no sample)     -> uniform
+	 * (stratified, stratified) -> stratified
+	 * (stratified, universe)   -> no allowed
+	 * (stratified, no sample)  -> stratified
+	 * (universe, universe)     -> universe   (only when the columns on which samples are built coincide)
+	 * (universe, no sample)    -> universe
+	 * 
 	 * @param f
 	 * @return
 	 */
@@ -84,6 +109,8 @@ public abstract class ApproxRelation extends Relation {
 	 * @return One of "uniform", "universe", "stratified", "nosample".
 	 */
 	protected abstract String sampleType();
+	
+	protected abstract List<TableUniqueName> accumulateStratifiedSamples();
 	
 	/**
 	 * Returns a set of columns on which a sample is created. Only meaningful for stratified and universe samples.

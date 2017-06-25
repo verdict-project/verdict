@@ -25,7 +25,7 @@ public class Sql2ExactRelationTest {
 				+ " where order_dow = 0 or order_dow = 1"
 				+ " group by order_dow";
 		ExactRelation r = ExactRelation.from(vc, sql2);
-		System.out.println(Relation.prettyPrintSql(r.toSql()));
+		System.out.println(Relation.prettyfySql(r.toSql()));
 		
 		vc.destroy();
 	}

@@ -114,22 +114,39 @@ public class SingleRelation extends ExactRelation {
 	 * @return
 	 */
 	private double samplingProb(SampleParam param, Expr expr) {
-		if (expr instanceof FuncExpr) {
-			Set<String> cols = new HashSet<String>(vc.getMeta().getColumnNames(getTableName()));
-			
-			FuncExpr fu = (FuncExpr) expr;
-			String fcol = fu.getExprInString();
-			if (fu.getExpr() instanceof ColNameExpr) {
-				fcol = ((ColNameExpr) fu.getExpr()).getCol();
+		
+		// extract all aggregate functions out of the select list element.
+		ExprVisitor<List<FuncExpr>> collectAggFuncs = new ExprVisitor<List<FuncExpr>>() {
+			private List<FuncExpr> seen = new ArrayList<FuncExpr>();
+			public List<FuncExpr> call(Expr expr) {
+				if (expr instanceof FuncExpr) {
+					seen.add((FuncExpr) expr);
+				}
+				return seen;
 			}
-			if (fu.getFuncName().equals(FuncExpr.FuncName.COUNT_DISTINCT)) {
+		};
+		List<FuncExpr> funcs = collectAggFuncs.visit(expr);
+		
+		// it is almost always expected that "expr" includes at least one aggregate function, but we place this
+		// just in case.
+		if (funcs.size() == 0) return param.samplingRatio;
+		
+		Set<String> cols = new HashSet<String>(vc.getMeta().getColumnNames(getTableName()));
+		List<Double> probs = new ArrayList<Double>();
+		for (FuncExpr fexpr : funcs) {
+			String fcol = fexpr.getExprInString();
+			if (fexpr.getExpr() instanceof ColNameExpr) {
+				fcol = ((ColNameExpr) fexpr.getExpr()).getCol();
+			}
+			
+			if (fexpr.getFuncName().equals(FuncExpr.FuncName.COUNT_DISTINCT)) {
 				if (cols.contains(fcol)) {
 					if (param.sampleType.equals("universe") && param.columnNames.contains(fcol)) {
-						return param.samplingRatio;
+						probs.add(param.samplingRatio);
 					} else if (param.sampleType.equals("stratified") && param.columnNames.contains(fcol)) {
-						return 1;
+						probs.add(1.0);
 					} else if (param.sampleType.equals("nosample")) {
-						return 1;
+						probs.add(1.0);
 					} else {
 						return -1;		// uniform random samples must not be used for COUNT-DISTINCT
 					}
@@ -137,25 +154,33 @@ public class SingleRelation extends ExactRelation {
 					if (!param.sampleType.equals("nosample")) {
 						return -1;		// no sampled table should be joined for count-distinct.
 					} else {
-						return 1;
+						probs.add(1.0);
 					}
 				}
-			} else {
-				if (param.sampleType.equals("stratified")) {
-					VerdictLogger.warn(this, "Stratifeid samples are not supported yet.");
-					return -1;		// stratified samples are not supported yet.
-				} else {
-					SampleSizeInfo size = vc.getMeta().getSampleSizeOf(param.sampleTableName());
+			} else {	// COUNT, SUM, AVG
+				SampleSizeInfo size = vc.getMeta().getSampleSizeOf(param.sampleTableName());
+				
+				if (param.sampleType.equals("stratified") && param.columnNames.contains(fcol)) {
+					// we heuristically multiply 2.0 to encourage the use of stratified sample.
+					probs.add(size.sampleSize / (double) size.originalTableSize * 2.0);
+				} else {	
 					if (size == null) {
-						return 1.0;		// the original table
+						probs.add(1.0);		// the original table
 					} else {
-						return size.sampleSize / (double) size.originalTableSize;
+						probs.add(size.sampleSize / (double) size.originalTableSize);
 					}
 				}
 			}
-		} else {
-			return param.samplingRatio;
 		}
+		
+		// returns the harmonic mean of probs
+		double hmean = 0;
+		for (Double p : probs) {
+			hmean += 1.0 / p;
+		}
+		hmean = probs.size() / hmean;
+				
+		return hmean;
 	}
 
 	private double costOfSample(SampleParam param, List<Expr> aggExprs) {

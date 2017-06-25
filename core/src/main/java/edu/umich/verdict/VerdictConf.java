@@ -24,6 +24,8 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Scanner;
 
+import edu.umich.verdict.util.VerdictLogger;
+
 public class VerdictConf {
 	
     private HashMap<String, String> configs = new HashMap<String, String>();
@@ -117,6 +119,9 @@ public class VerdictConf {
     }
 
     public VerdictConf set(String key, String value) {
+    	if (key.equals("log4j.loglevel")) {
+    		VerdictLogger.setLogLevel(value);
+    	}
         configs.put(key.toLowerCase(), value);
         return this;
     }

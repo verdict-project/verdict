@@ -13,14 +13,27 @@ import edu.umich.verdict.util.VerdictLogger;
 public class VerdictContext {
 	
 	private VerdictConf conf;
+	
 	private VerdictMeta meta;
 	
-	// DBMS fields
+	/*
+	 *  DBMS fields
+	 */
 	private Dbms dbms;
+	
 	private Dbms metaDbms;		// contains persistent info of VerdictMeta
+	
 	
 	// used for refreshing meta data.
 	private long queryUid;
+	
+	
+	/* 
+	 * predefined constants
+	 */
+	
+	// the column name for the sampling probabilities in a stratified sample. 
+	private final String ST_SAMPLING_PROB_COL = "verdict_sampling_prob";
 	
 	/**
 	 *  copy constructor
@@ -34,8 +47,6 @@ public class VerdictContext {
 		this.metaDbms = another.metaDbms;
 		this.queryUid = another.queryUid;
 		this.dbms.createNewStatementWithoutClosing();
-//		this.queryUid = 0;
-//		this.meta.clearSampleInfo();
 	}
 	
 	/**
@@ -62,18 +73,6 @@ public class VerdictContext {
 								conf.getDbms(), conf.getHost(), conf.getPort()));
 		
 		metaDbms = dbms;
-
-//		metaDbms = Dbms.getInstance(this,
-//									conf.getMetaDbms(),
-//									conf.getMetaHost(),
-//									conf.getMetaPort(),
-//									conf.getMetaDbmsSchema(),
-//									conf.getMetaUser(),
-//									conf.getMetaPassword(),
-//									conf.get(conf.getMetaDbms() + ".jdbc_class_name"));
-//		VerdictLogger.info(this, String.format("Connected to meta DB: %s//%s/%s",
-//				conf.getMetaDbms(), conf.getMetaHost(), conf.getMetaDbmsSchema()));
-		
 		meta = new VerdictMeta(this);		// this must be called after DB connection is created.
 	}
 	
@@ -85,13 +84,6 @@ public class VerdictContext {
 		VerdictLogger.debug(this, "The query execution finished.");
 		return rs;
 	}
-	
-//	public void executeUpdate(String sql) throws VerdictException {
-//		VerdictLogger.info(this, "A query execution starts: " + sql);
-//		VerdictQuery vq = new VerdictQuery(sql, this);
-//		vq.computeUpdate();
-//		VerdictLogger.info(this, "A query execution finished");
-//	}
 	
 	public void incrementQid() {
 		queryUid += 1;
@@ -133,8 +125,7 @@ public class VerdictContext {
 		return queryUid;
 	}
 	
-//	public void setLogLevel(String level) {
-//		VerdictLogger.setLogLevel(level);
-//	}
-	
+	public String colnameStratifiedSamplingProb() {
+		return ST_SAMPLING_PROB_COL;
+	}
 }

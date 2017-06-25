@@ -19,6 +19,7 @@ import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.datatypes.VerdictResultSet;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.relation.ExactRelation;
+import edu.umich.verdict.relation.Relation;
 import edu.umich.verdict.relation.SingleRelation;
 import edu.umich.verdict.relation.ApproxRelation;
 import edu.umich.verdict.relation.ApproxSingleRelation;
@@ -122,27 +123,53 @@ public class DbmsImpala extends Dbms {
 	}
 	
 	private String columnNamesInString(TableUniqueName tableName) {
+		return columnNamesInString(tableName, tableName.tableName);
+	}
+	
+	private String columnNamesInString(TableUniqueName tableName, String subTableName) {
 		List<String> colNames = vc.getMeta().getColumnNames(tableName);
 		List<String> colNamesWithTable = new ArrayList<String>();
 		for (String c : colNames) {
-			colNamesWithTable.add(String.format("%s.%s", tableName.tableName, c));
+			colNamesWithTable.add(String.format("%s.%s", subTableName, c));
 		}
 		return Joiner.on(", ").join(colNamesWithTable);
 	}
 	
+	/**
+	 * Creates a temp table that includes
+	 * 1. all the columns in the original table.
+	 * 2. the size of the group on which this stratified sample is being created.
+	 * 3. a random number between 0 and 1.
+	 * @param param
+	 * @return
+	 * @throws VerdictException
+	 */
 	protected TableUniqueName createTempTableWithGroupCountsAndRand(SampleParam param) throws VerdictException {
 		TableUniqueName tempTableName = generateTempTableName();
 		TableUniqueName originalTableName = param.originalTable;
-		String groupName = param.columnNames.get(0);
+		String groupName = Joiner.on(", ").join(param.columnNames);
+		
 		VerdictLogger.debug(this, "Creating a temp table with group counts and random numbers: " + tempTableName);
-		executeUpdate(String.format("CREATE TABLE %s AS SELECT %s, verdict_grp_size, rand(unix_timestamp()) as verdict_rand",
+		String sql = String.format("CREATE TABLE %s AS SELECT %s, verdict_grp_size, rand(unix_timestamp()) as verdict_rand",
 						tempTableName, columnNamesInString(originalTableName))
-				+ String.format(" FROM %s, (SELECT %s, COUNT(*) AS verdict_grp_size FROM %s GROUP BY %s) verdict_t1",
-						originalTableName, groupName, originalTableName, groupName)
-				+ String.format(" WHERE %s.%s = verdict_t1.%s", originalTableName, groupName, groupName));
+				+ String.format(" FROM %s, (SELECT %s, COUNT(*) AS verdict_grp_size FROM %s GROUP BY %s) t1",
+						originalTableName, groupName, originalTableName, groupName);
+		List<String> joinCond = new ArrayList<String>();
+		for (String g : param.columnNames) {
+			joinCond.add(String.format("%s.%s = t1.%s", originalTableName, g, g));
+		}
+		sql = sql + " WHERE " + Joiner.on(" AND ").join(joinCond);
+		
+		VerdictLogger.debug(this, "The query used for the temp table: ");
+		VerdictLogger.debugPretty(this, Relation.prettyfySql(sql), "  ");
+		
+		executeUpdate(sql);
 		return tempTableName;
 	}
 	
+	/**
+	 * 
+	 */
 	@Override
 	protected void justCreateStratifiedSampleTableof(SampleParam param) throws VerdictException {
 		TableUniqueName tempTableName = createTempTableWithGroupCountsAndRand(param);
@@ -150,18 +177,40 @@ public class DbmsImpala extends Dbms {
 		dropTable(tempTableName);
 	}
 	
+	/**
+	 * Creates a stratified sample from a temp table, which is created by
+	 *  {@link DbmsImpala#createTempTableWithGroupCountsAndRand createTempTableWithGroupCountsAndRand}.
+	 * The created stratified sample includes a sampling probability for every tuple (in column name "verdict_sampling_prob")
+	 * so that it can be used for computing the final answer.
+	 * 
+	 * The sampling probability for each tuple is determined as:
+	 *   min( 1.0, (original table size) * (sampling ratio param) / (number of groups) / (size of the group) )
+	 * 
+	 * @param tempTableName
+	 * @param param
+	 * @throws VerdictException
+	 */
 	protected void createStratifiedSampleFromTempTable(TableUniqueName tempTableName, SampleParam param) throws VerdictException {
+		TableUniqueName originalTableName = param.originalTable;
+		String samplingProbColName = vc.colnameStratifiedSamplingProb();
+		
 		VerdictLogger.debug(this, "Creating a sample table from " + tempTableName);
 		ApproxRelation r = ApproxSingleRelation.from(vc, new SampleParam(param.originalTable, "uniform", null, new ArrayList<String>()));
 		long originalTableSize = r.countValue();
-		String groupName = param.columnNames.get(0);
-		long groupCount = SingleRelation.from(vc, tempTableName).approxCountDistinct(ColNameExpr.from(groupName));
+		
+		List<String> groupName = param.columnNames;
+		long groupCount = SingleRelation.from(vc, tempTableName).groupby(groupName).count().countValue();
+		String tempColName = Relation.genColumnAlias();
+		
 		String sql = String.format("CREATE TABLE %s AS", param.sampleTableName()) 
-				+ " SELECT * FROM ("
-				+ String.format(" SELECT *, %d*%f/%d/verdict_grp_size AS verdict_sampling_prob FROM %s) t1",
-						originalTableSize, param.samplingRatio, groupCount, tempTableName)
-				+ " WHERE verdict_rand <= verdict_sampling_prob";
-		VerdictLogger.debug(this, "Sample creation query: " + sql);
+				+ String.format(" SELECT %s, (CASE WHEN %s < 1.0 THEN %s ELSE 1.0 END) AS %s FROM (",
+						columnNamesInString(originalTableName, "t1"), tempColName, tempColName, samplingProbColName)
+				+ String.format(" SELECT *, %d*%f/%d/verdict_grp_size AS %s FROM %s) t1",
+						originalTableSize, param.samplingRatio, groupCount, tempColName, tempTableName)
+				+ " WHERE verdict_rand <= " + tempColName;
+		VerdictLogger.debug(this, "The query used for sample creation: ");
+		VerdictLogger.debugPretty(this, Relation.prettyfySql(sql), "  ");
+		
 		executeUpdate(sql);
 	}
 	

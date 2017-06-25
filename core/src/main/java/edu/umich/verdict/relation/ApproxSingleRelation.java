@@ -158,13 +158,26 @@ public class ApproxSingleRelation extends ApproxRelation {
 				return 1.0;
 			}
 		} else {	// SUM, COUNT
-			return getSampleSize() / (double) getOriginalTableSize();
+			if (getSampleType().equals("stratified")) {
+				return 1.0;		// the sampling probability for stratified samples is handled by accumulateStratifiedSamples().
+			} else {
+				return getSampleSize() / (double) getOriginalTableSize();
+			}
 		}
 	}
 	
 	@Override
 	protected String sampleType() {
 		return getSampleType();
+	}
+	
+	@Override
+	protected List<TableUniqueName> accumulateStratifiedSamples() {
+		if (param.sampleType.equals("stratified")) {
+			return Arrays.asList(param.originalTable);
+		} else {
+			return Arrays.asList();
+		}
 	}
 	
 	@Override
@@ -201,24 +214,6 @@ public class ApproxSingleRelation extends ApproxRelation {
 		List<List<Object>> rs = r.collect();
 		return (Long) rs.get(0).get(0);
 	}
-	
-//	/**
-//	 * Computes aggregate function answers that could be obtained when they were run on the original table.
-//	 * @param functions
-//	 * @return
-//	 */
-//	public ApproxAggregatedRelation agg(Expr... functions) {
-//		return agg(Arrays.asList(functions));
-//	}
-//	
-//	public ApproxAggregatedRelation agg(List<Expr> functions) {
-//		return new ApproxAggregatedRelation(vc, this, functions);
-//	}
-	
-//	public long count() throws VerdictException {
-//		return TypeCasting.toLong(agg(FuncExpr.count()).rewrite().collect().get(0).get(0));
-//	}
-	
 	
 	@Override
 	public String toString() {

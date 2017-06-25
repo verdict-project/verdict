@@ -1,6 +1,7 @@
 package edu.umich.verdict.relation;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -9,6 +10,7 @@ import java.util.Set;
 import org.apache.commons.lang3.tuple.Pair;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.datatypes.Alias;
@@ -97,14 +99,14 @@ public class ApproxJoinedRelation extends ApproxRelation {
 	
 	@Override
 	protected double samplingProbabilityFor(FuncExpr f) {
-		if (isUniverseSample()) {
+		if (areMatchingUniverseSamples()) {
 			return Math.min(source1.samplingProbabilityFor(f), source2.samplingProbabilityFor(f));
 		} else {
 			return source1.samplingProbabilityFor(f) * source2.samplingProbabilityFor(f);
 		}
 	}
 	
-	private boolean isUniverseSample() {
+	private boolean areMatchingUniverseSamples() {
 		List<Expr> leftJoinCols = new ArrayList<Expr>();
 		List<Expr> rightJoinCols = new ArrayList<Expr>();
 		for (Pair<Expr, Expr> pair : joinCols) {
@@ -119,33 +121,46 @@ public class ApproxJoinedRelation extends ApproxRelation {
 	
 	@Override
 	public String sampleType() {
-		if (isUniverseSample()) {
+		Set<String> sampleTypeSet = ImmutableSet.of(source1.sampleType(), source2.sampleType());
+		
+		if (areMatchingUniverseSamples()) {
 			return "universe";
-		} else if (source1.sampleType().equals("stratified") && source2.sampleType().equals("stratified")) {
-			return null;
-		} else if (source1.sampleType().equals("stratified") || source2.sampleType().equals("stratified")) {
-			return "stratified";
-		} else if (source1.sampleType().equals("uniform") || source2.sampleType().equals("uniform")) {
+		} else if (sampleTypeSet.equals(ImmutableSet.of("uniform", "uniform"))) {
 			return "uniform";
-		} else if (source1.sampleType().equals("nosample") && source2.sampleType().equals("nosample")) {
-			return "nosample";
+		} else if (sampleTypeSet.equals(ImmutableSet.of("uniform", "stratified"))) {
+			return "stratified";
+		} else if (sampleTypeSet.equals(ImmutableSet.of("uniform", "universe"))) {
+			return "uniform";
+		} else if (sampleTypeSet.equals(ImmutableSet.of("uniform", "nosample"))) {
+			return "uniform";
+		} else if (sampleTypeSet.equals(ImmutableSet.of("stratified", "stratified"))) {
+			return "stratified";
+		} else if (sampleTypeSet.equals(ImmutableSet.of("stratified", "nosample"))) {
+			return "stratified";
+		} else if (sampleTypeSet.equals(ImmutableSet.of("universe", "nosample"))) {
+			return "universe";
 		} else {
 			return null;
 		}
 	}
 	
 	@Override
+	protected List<TableUniqueName> accumulateStratifiedSamples() {
+		List<TableUniqueName> union = new ArrayList<TableUniqueName>(source1.accumulateStratifiedSamples());
+		union.addAll(source2.accumulateStratifiedSamples());
+		return union;
+	}
+	
+	@Override
 	public List<String> sampleColumns() {
 		if (sampleType().equals("stratified")) {
-			if (source1.sampleType().equals("stratified")) {
-				return source1.sampleColumns();
-			} else {
-				return source2.sampleColumns();
-			}
+			List<String> union = new ArrayList<String>(source1.sampleColumns());
+			union.addAll(source2.sampleColumns());
+			return union;
 		} else if (sampleType().equals("universe")) {
 			return source1.sampleColumns();
 		} else {
-			return null;
+			return Arrays.asList();
 		}
 	}
 	

@@ -36,6 +36,28 @@ public class SampleGroup {
 		return cost;
 	}
 	
+	public String sampleType() {
+		String type = null;
+		for (SampleParam param : samples) {
+			if (type == null) {
+				type = param.sampleType;
+			} else {
+				if (type.equals("uniform")) {
+					if (param.sampleType.equals("stratified")) {
+						type = "stratified";
+					} else {
+						type = "uniform";
+					}
+				} else if (type.equals("stratified")) {
+					type = "stratified";
+				} else if (type.equals("universe")) {
+					type = "universe";
+				}
+			}
+		}
+		return type;
+	}
+	
 	public List<SelectElem> getElems() {
 		return elems;
 	}

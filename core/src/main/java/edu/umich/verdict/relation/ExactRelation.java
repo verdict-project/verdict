@@ -146,8 +146,12 @@ public abstract class ExactRelation extends Relation {
 	
 	public GroupedRelation groupby(String group) {
 		String[] tokens = group.split(",");
+		return groupby(Arrays.asList(tokens));
+	}
+	
+	public GroupedRelation groupby(List<String> group_list) {
 		List<ColNameExpr> groups = new ArrayList<ColNameExpr>();
-		for (String t : tokens) {
+		for (String t : group_list) {
 			groups.add(ColNameExpr.from(t));
 		}
 		return new GroupedRelation(vc, this, groups);
@@ -317,7 +321,11 @@ public abstract class ExactRelation extends Relation {
 		} else if (source instanceof JoinedRelation) {
 			return ((JoinedRelation) source).joinClause();
 		} else {
-			return String.format("(%s) AS %s", source.toSql(), source.getAliasName());
+			String alias = source.getAliasName();
+			if (alias == null) {
+				alias = Relation.genTableAlias();
+			}
+			return String.format("(%s) AS %s", source.toSql(), alias);
 		}
 	}
 	

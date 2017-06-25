@@ -16,7 +16,9 @@ import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.VerdictSQLBaseVisitor;
 import edu.umich.verdict.VerdictSQLLexer;
 import edu.umich.verdict.VerdictSQLParser;
+import edu.umich.verdict.VerdictSQLParser.ExpressionContext;
 import edu.umich.verdict.VerdictSQLParser.Join_partContext;
+import edu.umich.verdict.VerdictSQLParser.Search_conditionContext;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.exceptions.VerdictUnexpectedMethodCall;
 import edu.umich.verdict.query.SelectStatementBaseRewriter;
@@ -113,9 +115,9 @@ public abstract class Relation {
 	
 	public ResultSet collectResultSet() throws VerdictException {
 		String sql = toSql();
-		VerdictLogger.info("The query to db: " + sql);
+//		VerdictLogger.info("The query to db: " + sql);
 		VerdictLogger.debug(this, "A query to db:");
-		VerdictLogger.debugPretty(this, Relation.prettyPrintSql(sql), " ");
+		VerdictLogger.debugPretty(this, Relation.prettyfySql(sql), " ");
 		return vc.getDbms().executeQuery(sql);
 	}
 	
@@ -162,17 +164,23 @@ public abstract class Relation {
 		return exprs;
 	}
 
-	public static String prettyPrintSql(String sql) {
+	public static String prettyfySql(String sql) {
 		VerdictSQLLexer l = new VerdictSQLLexer(CharStreams.fromString(sql));
 		VerdictSQLParser p = new VerdictSQLParser(new CommonTokenStream(l));
 		PrettyPrintVisitor r = new PrettyPrintVisitor(sql);
-		return r.visit(p.select_statement());
+		return r.visit(p.verdict_statement());
 	}
 	
 	private static int alias_no = 1;
 	
 	public static String genTableAlias() {
-		String n = String.format("v%d", alias_no);
+		String n = String.format("vt%d", alias_no);
+		alias_no++;
+		return n;
+	}
+	
+	public static String genColumnAlias() {
+		String n = String.format("vc%d", alias_no);
 		alias_no++;
 		return n;
 	}
@@ -196,6 +204,18 @@ class PrettyPrintVisitor extends VerdictSQLBaseVisitor<String> {
 	
 	public void setIndent(String indent) {
 		this.indent = indent;
+	}
+	
+	@Override public String visitCreate_table_as_select(VerdictSQLParser.Create_table_as_selectContext ctx) {
+		String create = String.format("CREATE TABLE %s%s AS\n",
+				(ctx.IF() != null)? "IF NOT EXISTS " : "",
+				ctx.table_name().getText());
+		
+		PrettyPrintVisitor v = new PrettyPrintVisitor(sql);
+		v.setIndent(indent + "    ");
+		String select = v.visit(ctx.select_statement());
+		
+		return create + select;
 	}
 	
 	@Override
@@ -358,6 +378,49 @@ class PrettyPrintVisitor extends VerdictSQLBaseVisitor<String> {
 				ctx.expression(0).getText(), (ctx.NOT() == null)? "" : "NOT", ctx.expression(1).getText());
 	}
 	
+	@Override public String visitCase_expr(VerdictSQLParser.Case_exprContext ctx) {
+		StringBuilder sql = new StringBuilder();
+		sql.append("CASE");
+		List<ExpressionContext> exprs = ctx.expression(); 
+		
+		List<Search_conditionContext> search_conds = ctx.search_condition();
+		if (search_conds.size() > 0) {	// second case
+			for (int i = 0; i < search_conds.size(); i++) {
+				sql.append(" WHEN ");
+				sql.append(visit(search_conds.get(i)));
+				sql.append(" THEN ");
+				sql.append(visit(exprs.get(i)));
+			}
+			
+			if (exprs.size() > search_conds.size()) {
+				sql.append(" ELSE ");
+				sql.append(visit(exprs.get(exprs.size()-1)));
+			}
+		} else {	// first case
+			sql.append(" ");
+			sql.append(exprs.get(0));
+			for (int j = 0; j < (exprs.size()-1)/2; j++) {
+				int i1 = j*2 + 1;
+				int i2 = j*2 + 2;
+				sql.append(" WHEN ");
+				sql.append(visit(exprs.get(i1)));
+				sql.append(" THEN ");
+				sql.append(visit(exprs.get(i2)));
+			}
+			if (ctx.ELSE() != null) {
+				sql.append(" ELSE ");
+				sql.append(exprs.get(exprs.size()-1));
+			}
+		}
+		
+		sql.append(" END");
+		return sql.toString();
+	}
+	
+	@Override public String visitBracket_expression(VerdictSQLParser.Bracket_expressionContext ctx) {
+		return "(" + visit(ctx.expression()) + ")";
+	}
+	
 	@Override
 	public String visitBracket_predicate(VerdictSQLParser.Bracket_predicateContext ctx) {
 		return String.format("(%s)", visit(ctx.search_condition()));
@@ -385,7 +448,12 @@ class PrettyPrintVisitor extends VerdictSQLBaseVisitor<String> {
 	
 	@Override public String visitMathematical_function_expression(VerdictSQLParser.Mathematical_function_expressionContext ctx)
 	{
-		return String.format("%s(%s)", ctx.unary_mathematical_function().getText(), visit(ctx.expression()));
+		if (ctx.expression() != null) {
+			return String.format("%s(%s)", ctx.unary_mathematical_function().getText(), visit(ctx.expression()));
+		} else {
+			return String.format("%s()", ctx.noparam_mathematical_function().getText());
+		}
+		
 	}
 	
 	@Override

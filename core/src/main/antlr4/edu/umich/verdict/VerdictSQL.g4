@@ -848,10 +848,15 @@ ranking_windowed_function
 
 mathematical_function_expression
     : unary_mathematical_function '(' expression ')'
+    | noparam_mathematical_function '(' ')'
     ;
 
 unary_mathematical_function
-    : ROUND | FLOOR | CEIL | EXP | LN | LOG10 | LOG2 | SIN | COS | TAN | SIGN
+    : ROUND | FLOOR | CEIL | EXP | LN | LOG10 | LOG2 | SIN | COS | TAN | SIGN | RAND
+    ;
+    
+noparam_mathematical_function
+    : RAND | UNIX_TIMESTAMP
     ;
 
 // https://msdn.microsoft.com/en-us/library/ms173454.aspx
@@ -1436,6 +1441,7 @@ PARTITION:                       P A R T I T I O N;
 PATH:                            P A T H;
 PRECEDING:                       P R E C E D I N G;
 PRIOR:                           P R I O R;
+RAND:                            R A N D;
 RANGE:                           R A N G E;
 RANK:                            R A N K;
 READONLY:                        R E A D O N L Y;
@@ -1476,6 +1482,7 @@ TYPE_WARNING:                    T Y P E '_' W A R N I N G;
 UNBOUNDED:                       U N B O U N D E D;
 UNCOMMITTED:                     U N C O M M I T T E D;
 UNIVERSE:                        U N I V E R S E;
+UNIX_TIMESTAMP:                  U N I X '_' T I M E S T A M P;
 UNKNOWN:                         U N K N O W N;
 USING:                           U S I N G;
 VAR:                             V A R;

@@ -1,11 +1,13 @@
 package edu.umich.verdict.relation;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.ImmutableMap;
 
 import edu.umich.verdict.VerdictContext;
+import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.relation.expr.FuncExpr;
 
 public class ApproxLimitedRelation extends ApproxRelation {
@@ -40,6 +42,11 @@ public class ApproxLimitedRelation extends ApproxRelation {
 	@Override
 	protected String sampleType() {
 		return null;
+	}
+	
+	@Override
+	protected List<TableUniqueName> accumulateStratifiedSamples() {
+		return source.accumulateStratifiedSamples();
 	}
 
 	@Override

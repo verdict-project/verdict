@@ -67,37 +67,37 @@ public class GroupedRelation extends ExactRelation {
 	 * Aggs
 	 */
 	
-	public ExactRelation counts() throws VerdictException {
-		return agg(FuncExpr.count());
-	}
-	
-	public ExactRelation avgs(String expr) throws VerdictException {
-		return agg(FuncExpr.avg(expr));
-	}
-	
-	public ExactRelation sums(String expr) throws VerdictException {
-		return agg(FuncExpr.sum(expr));
-	}
-	
-	public ExactRelation countDistincts(String expr) throws VerdictException {
-		return agg(FuncExpr.countDistinct(expr));
-	}
-	
-	public ApproxRelation approxCounts() throws VerdictException {
-		return approxAgg(FuncExpr.count());
-	}
-	
-	public ApproxRelation approxAvgs(String expr) throws VerdictException {
-		return approxAgg(FuncExpr.avg(expr));
-	}
-	
-	public ApproxRelation approxSums(String expr) throws VerdictException {
-		return approxAgg(FuncExpr.sum(expr));
-	}
-	
-	public ApproxRelation approxCountDistincts(String expr) throws VerdictException {
-		return approxAgg(FuncExpr.countDistinct(expr));
-	}
+//	public ExactRelation counts() throws VerdictException {
+//		return agg(FuncExpr.count());
+//	}
+//	
+//	public ExactRelation avgs(String expr) throws VerdictException {
+//		return agg(FuncExpr.avg(expr));
+//	}
+//	
+//	public ExactRelation sums(String expr) throws VerdictException {
+//		return agg(FuncExpr.sum(expr));
+//	}
+//	
+//	public ExactRelation countDistincts(String expr) throws VerdictException {
+//		return agg(FuncExpr.countDistinct(expr));
+//	}
+//	
+//	public ApproxRelation approxCounts() throws VerdictException {
+//		return approxAgg(FuncExpr.count());
+//	}
+//	
+//	public ApproxRelation approxAvgs(String expr) throws VerdictException {
+//		return approxAgg(FuncExpr.avg(expr));
+//	}
+//	
+//	public ApproxRelation approxSums(String expr) throws VerdictException {
+//		return approxAgg(FuncExpr.sum(expr));
+//	}
+//	
+//	public ApproxRelation approxCountDistincts(String expr) throws VerdictException {
+//		return approxAgg(FuncExpr.countDistinct(expr));
+//	}
 	
 	
 	/*
