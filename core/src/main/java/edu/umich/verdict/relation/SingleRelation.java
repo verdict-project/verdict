@@ -60,17 +60,21 @@ public class SingleRelation extends ExactRelation {
 	
 	@Override
 	protected String getSourceName() {
-		return (alias == null)? tableName.toString() : getAliasName();
+		return tableName.toString();
+//		return (alias == null)? tableName.toString() : getAliasName();
 	}
 	
 	/*
 	 * Approx
 	 */
 	
+	/**
+	 * For meaningful approximation, the parent relation must obtain an approximate version with approxWith method.
+	 */
 	@Override
 	public ApproxRelation approx() throws VerdictException {
-		// TODO Auto-generated method stub
-		return null;
+		// no approx
+		return ApproxSingleRelation.asis(this);
 	}
 
 	@Override
@@ -160,16 +164,24 @@ public class SingleRelation extends ExactRelation {
 			} else {	// COUNT, SUM, AVG
 				SampleSizeInfo size = vc.getMeta().getSampleSizeOf(param.sampleTableName());
 				
-				if (param.sampleType.equals("stratified") && param.columnNames.contains(fcol)) {
-					// we heuristically multiply 2.0 to encourage the use of stratified sample.
-					probs.add(size.sampleSize / (double) size.originalTableSize * 2.0);
-				} else {	
-					if (size == null) {
-						probs.add(1.0);		// the original table
-					} else {
-						probs.add(size.sampleSize / (double) size.originalTableSize);
-					}
+				if (size == null) {
+					probs.add(1.0);		// the original table
+				} else if (param.sampleType.equals("stratified") && param.columnNames.contains(fcol)) {
+					return -1;
+				} else {
+					probs.add(size.sampleSize / (double) size.originalTableSize);
 				}
+				
+//				if (param.sampleType.equals("stratified") && param.columnNames.contains(fcol)) {
+//					// we heuristically multiply 2.0 to encourage the use of stratified sample.
+//					probs.add(size.sampleSize / (double) size.originalTableSize * 2.0);
+//				} else {
+//					if (size == null) {
+//						probs.add(1.0);		// the original table
+//					} else {
+//						probs.add(size.sampleSize / (double) size.originalTableSize);
+//					}
+//				}
 			}
 		}
 		

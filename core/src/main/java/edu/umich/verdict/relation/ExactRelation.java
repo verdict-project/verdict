@@ -2,11 +2,8 @@ package edu.umich.verdict.relation;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -28,20 +25,16 @@ import edu.umich.verdict.datatypes.SampleParam;
 import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.relation.condition.AndCond;
-import edu.umich.verdict.relation.condition.CompCond;
 import edu.umich.verdict.relation.condition.Cond;
 import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.Expr;
-import edu.umich.verdict.relation.expr.ExprVisitor;
 import edu.umich.verdict.relation.expr.FuncExpr;
 import edu.umich.verdict.relation.expr.OrderByExpr;
 import edu.umich.verdict.relation.expr.SelectElem;
-import edu.umich.verdict.util.ResultSetConversion;
 import edu.umich.verdict.util.StackTraceReader;
 import edu.umich.verdict.util.TypeCasting;
 import edu.umich.verdict.util.VerdictLogger;
 
-import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 
 /**
@@ -82,6 +75,23 @@ public abstract class ExactRelation extends Relation {
 	protected abstract String getSourceName();
 	
 	/*
+	 * Projection
+	 */
+	
+	public ExactRelation select(List<String> elems) {
+		List<SelectElem> selectElems = new ArrayList<SelectElem>();
+		for (String e : elems) {
+			selectElems.add(SelectElem.from(e));
+		}
+		return new ProjectedRelation(vc, this, selectElems);
+	}
+	
+	public ExactRelation select(String elems) {
+		String[] tokens = elems.split(",");
+		return select(Arrays.asList(tokens));
+	}
+	
+	/*
 	 * Filtering
 	 */
 	
@@ -119,7 +129,11 @@ public abstract class ExactRelation extends Relation {
 	public AggregatedRelation agg(List<Object> elems) {
 		List<SelectElem> se = new ArrayList<SelectElem>();
 		for (Object e : elems) {
-			se.add(SelectElem.from(e.toString()));
+			if (e instanceof Expr) {
+				se.add(new SelectElem((Expr) e));
+			} else {
+				se.add(SelectElem.from(e.toString()));
+			}
 		}
 		return new AggregatedRelation(vc, this, se);
 	}
@@ -214,19 +228,19 @@ public abstract class ExactRelation extends Relation {
 	 * Joins
 	 */
 	
-	public JoinedRelation join(SingleRelation r, List<Pair<Expr, Expr>> joinColumns) {
+	public JoinedRelation join(ExactRelation r, List<Pair<Expr, Expr>> joinColumns) {
 		return JoinedRelation.from(vc, this, r, joinColumns);
 	}
 	
-	public JoinedRelation join(SingleRelation r, Cond cond) throws VerdictException {
+	public JoinedRelation join(ExactRelation r, Cond cond) throws VerdictException {
 		return JoinedRelation.from(vc, this, r, cond);
 	}
 	
-	public JoinedRelation join(SingleRelation r, String cond) throws VerdictException {
+	public JoinedRelation join(ExactRelation r, String cond) throws VerdictException {
 		return join(r, Cond.from(cond));
 	}
 	
-	public JoinedRelation join(SingleRelation r) throws VerdictException {
+	public JoinedRelation join(ExactRelation r) throws VerdictException {
 		return join(r, (Cond) null);
 	}	
 	
@@ -357,7 +371,7 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
 		}
 		
 		if (ctx.limit_clause() != null) {
-			r = r.limit(ctx.limit_clause().getText());
+			r = r.limit(ctx.limit_clause().number().getText());
 		}
 		
 		return r;

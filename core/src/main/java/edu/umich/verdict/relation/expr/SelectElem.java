@@ -35,11 +35,17 @@ public class SelectElem {
 		VerdictSQLBaseVisitor<SelectElem> v = new VerdictSQLBaseVisitor<SelectElem>() {
 			@Override
 			public SelectElem visitSelect_list_elem(VerdictSQLParser.Select_list_elemContext ctx) {
-				if (ctx.column_alias() == null) {
-					return new SelectElem(Expr.from(ctx.expression()));
+				SelectElem elem = null;
+				if (ctx.getText().equals("*")) {
+					elem = new SelectElem(new StarExpr());
 				} else {
-					return new SelectElem(Expr.from(ctx.expression()), ctx.column_alias().getText());
+					elem = new SelectElem(Expr.from(ctx.expression()));
 				}
+				
+				if (ctx.column_alias() != null) {
+					elem.setAlias(ctx.column_alias().getText());
+				}
+				return elem;
 			}	
 		};
 		
@@ -68,6 +74,10 @@ public class SelectElem {
 		} else {
 			return null;
 		}
+	}
+	
+	public void setAlias(String alias) {
+		this.alias = Optional.of(alias);
 	}
 	
 	public boolean isagg() {

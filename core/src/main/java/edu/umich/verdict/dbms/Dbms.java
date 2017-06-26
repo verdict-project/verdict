@@ -19,7 +19,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.commons.lang3.tuple.Triple;
 
 import com.google.common.base.Optional;
 
@@ -83,6 +82,8 @@ public class Dbms {
 			dbms = new DbmsImpala(vc, dbName, host, port, schema, user, password, jdbcClassName);
 		} else if (dbName.equals("hive") || dbName.equals("hive2")) {
 			dbms = new DbmsHive(vc, dbName, host, port, schema, user, password, jdbcClassName);
+		} else if (dbName.equals("dummy")) {
+			dbms = new DbmsDummy(vc);
 		} else {
 			String msg = String.format("Unsupported DBMS: %s", dbName);
 			VerdictLogger.error("Dbms", msg);

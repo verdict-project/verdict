@@ -21,7 +21,6 @@ import edu.umich.verdict.VerdictSQLParser.Join_partContext;
 import edu.umich.verdict.VerdictSQLParser.Search_conditionContext;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.exceptions.VerdictUnexpectedMethodCall;
-import edu.umich.verdict.query.SelectStatementBaseRewriter;
 import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.relation.expr.SelectElem;
 import edu.umich.verdict.util.ResultSetConversion;
@@ -48,6 +47,7 @@ public abstract class Relation {
 		this.vc = vc;
 		this.subquery = false;
 		this.approximate = false;
+		this.alias = genTableAlias();
 	}
 	
 	public boolean isSubquery() {
@@ -115,7 +115,7 @@ public abstract class Relation {
 	
 	public ResultSet collectResultSet() throws VerdictException {
 		String sql = toSql();
-//		VerdictLogger.info("The query to db: " + sql);
+		VerdictLogger.info("The query to db: " + sql);
 		VerdictLogger.debug(this, "A query to db:");
 		VerdictLogger.debugPretty(this, Relation.prettyfySql(sql), " ");
 		return vc.getDbms().executeQuery(sql);
@@ -224,11 +224,11 @@ class PrettyPrintVisitor extends VerdictSQLBaseVisitor<String> {
 		query.append(visit(ctx.query_expression()));
 		
 		if (ctx.order_by_clause() != null) {
-			query.append(String.format("\n%s", indent + visit(ctx.order_by_clause())));
+			query.append("\n" + indent + visit(ctx.order_by_clause()));
 		}
 		
 		if (ctx.limit_clause() != null) {
-			query.append(String.format("\n%s", indent + visit(ctx.limit_clause())));
+			query.append("\n" + indent + visit(ctx.limit_clause()));
 		}
 		return query.toString();
 	}
@@ -252,7 +252,7 @@ class PrettyPrintVisitor extends VerdictSQLBaseVisitor<String> {
 			}
 			isFirstTableSource = false;
 		}
-		query.append(" ");
+//		query.append(" ");
 		
 		if (ctx.where != null) {
 			query.append("\n" + indent + "WHERE ");
@@ -276,11 +276,21 @@ class PrettyPrintVisitor extends VerdictSQLBaseVisitor<String> {
 	
 	@Override
 	public String visitSelect_list(VerdictSQLParser.Select_listContext ctx) {
-		List<String> elems = new ArrayList<String>();
+		StringBuilder sql = new StringBuilder(500);
+		int i = 0;
 		for (VerdictSQLParser.Select_list_elemContext ectx : ctx.select_list_elem()) {
-			elems.add(visit(ectx));
+			if (i > 0) {
+				sql.append(", ");
+			}
+			
+			if (i > 0 && i%5 == 0) {
+				sql.append("\n" + indent + "       ");
+			}
+			
+			sql.append(visit(ectx));
+			i++;
 		}
-		return Joiner.on(", ").join(elems);
+		return sql.toString();
 	}
 	
 	@Override
@@ -324,7 +334,7 @@ class PrettyPrintVisitor extends VerdictSQLBaseVisitor<String> {
 	@Override
 	public String visitSubquery(VerdictSQLParser.SubqueryContext ctx) {
 		PrettyPrintVisitor v = new PrettyPrintVisitor(sql);
-		v.setIndent(indent + "    ");
+		v.setIndent(indent + "     ");
 		return v.visit(ctx.select_statement());
 	}
 	
@@ -500,7 +510,7 @@ class PrettyPrintVisitor extends VerdictSQLBaseVisitor<String> {
 	
 	@Override
 	public String visitSubquery_expression(VerdictSQLParser.Subquery_expressionContext ctx) {
-		return String.format("(\n%s)", visit(ctx.subquery()));
+		return "\n" + indent + String.format("(%s)", visit(ctx.subquery()));
 	}
 
 	@Override
@@ -513,7 +523,7 @@ class PrettyPrintVisitor extends VerdictSQLBaseVisitor<String> {
 		StringBuilder sql = new StringBuilder();
 		sql.append(visit(ctx.table_source_item()));
 		for (Join_partContext jctx : ctx.join_part()) {
-			sql.append("\n" + indent + "     " + visit(jctx));
+			sql.append(visit(jctx));
 		}
 		return sql.toString();
 	}
@@ -521,7 +531,8 @@ class PrettyPrintVisitor extends VerdictSQLBaseVisitor<String> {
 	@Override
 	public String visitJoin_part(VerdictSQLParser.Join_partContext ctx) {
 		if (ctx.INNER() != null) {
-			return String.format("INNER JOIN %s ON %s", visit(ctx.table_source()), visit(ctx.search_condition()));
+			return "\n" + indent + "     " + String.format("INNER JOIN %s ", visit(ctx.table_source()))
+				 + "\n" + indent + "     " + String.format("ON %s", visit(ctx.search_condition()));
 		} else if (ctx.OUTER() != null) {
 			return String.format("%s OUTER JOIN %s ON %s", ctx.join_type.getText(), visit(ctx.table_source()), visit(ctx.search_condition()));
 		} else if (ctx.CROSS() != null) {
@@ -575,7 +586,7 @@ class PrettyPrintVisitor extends VerdictSQLBaseVisitor<String> {
 	
 	@Override
 	public String visitLimit_clause(VerdictSQLParser.Limit_clauseContext ctx) {
-		return "\n" + indent + "LIMIT " + ctx.number().getText();
+		return "LIMIT " + ctx.number().getText();
 	}
 	
 	protected String getOriginalText(ParserRuleContext ctx) {

@@ -96,7 +96,8 @@ public abstract class Query {
 				}
 			} else {
 				if (queryType.equals(Type.SELECT)) {
-					query = SelectQuery.getInstance(vc, queryString);
+//					query = SelectQuery.getInstance(vc, queryString);
+					query = new SelectQuery(vc, queryString);
 				} else if (queryType.equals(Type.CREATE_SAMPLE)) {
 					query = new CreateSampleQuery(vc, queryString);
 				} else if (queryType.equals(Type.DROP_SAMPLE)) {

@@ -6,6 +6,8 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import edu.umich.verdict.util.VerdictLogger;
+
 public class SamplePlans {
 	
 	private List<SamplePlan> plans;
@@ -106,7 +108,7 @@ public class SamplePlans {
 					bestSamplingProb = samplingProb;
 					best = plan;
 				}
-//				System.out.println(plan.toString() + " " + cost + " " + plan.harmonicSamplingProb());
+				VerdictLogger.debug(this, plan.toString() + ", cost: " + cost + ", prob: " + plan.harmonicSamplingProb());
 			}
 		}
 

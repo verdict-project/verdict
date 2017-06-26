@@ -25,6 +25,10 @@ public class ProjectedRelation extends ExactRelation {
 		this.source = source;
 		this.elems = elems;
 	}
+	
+	public ExactRelation getSource() {
+		return source;
+	}
 
 	@Override
 	protected String getSourceName() {

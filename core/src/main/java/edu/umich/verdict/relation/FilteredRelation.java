@@ -1,9 +1,7 @@
 package edu.umich.verdict.relation;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -13,10 +11,7 @@ import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.datatypes.SampleParam;
 import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
-import edu.umich.verdict.exceptions.VerdictUnexpectedMethodCall;
-import edu.umich.verdict.relation.condition.AndCond;
 import edu.umich.verdict.relation.condition.Cond;
-import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.relation.expr.SelectElem;
 
 public class FilteredRelation extends ExactRelation {
@@ -41,7 +36,7 @@ public class FilteredRelation extends ExactRelation {
 
 	@Override
 	protected String getSourceName() {
-		return (alias == null)? source.getSourceName() : getAliasName();
+		return getAliasName();
 	}	
 	
 	/*

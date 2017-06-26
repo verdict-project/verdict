@@ -125,7 +125,7 @@ public class VerdictContext {
 		return queryUid;
 	}
 	
-	public String colnameStratifiedSamplingProb() {
+	public String samplingProbColName() {
 		return ST_SAMPLING_PROB_COL;
 	}
 }

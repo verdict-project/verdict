@@ -40,7 +40,7 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 	@Override
 	public ExactRelation rewrite() {
 		List<SelectElem> scaled = new ArrayList<SelectElem>();
-		List<TableUniqueName> stratifiedSampleTables = accumulateStratifiedSamples();
+		List<TableUniqueName> stratifiedSampleTables = source.accumulateStratifiedSamples();
 		for (SelectElem e : elems) {
 			scaled.add(new SelectElem(transformForSingleFunction(e.getExpr(), stratifiedSampleTables), e.getAlias()));
 		}
@@ -72,10 +72,10 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 					if (f.getFuncName().equals(FuncExpr.FuncName.COUNT)) { 
 						Expr scale = ConstantExpr.from(samplingProb);
 						for (TableUniqueName t : stratifiedSampleTables) {
-							scale = BinaryOpExpr.from(scale, new ColNameExpr(vc.colnameStratifiedSamplingProb(), t.tableName), "*");
+							scale = BinaryOpExpr.from(scale, new ColNameExpr(vc.samplingProbColName(), t.tableName), "*");
 						}
 						scale = BinaryOpExpr.from(ConstantExpr.from(1.0), scale, "/");
-						return FuncExpr.round(BinaryOpExpr.from(s, scale, "*"));
+						return FuncExpr.round(FuncExpr.sum(scale));
 					}
 					else if (f.getFuncName().equals(FuncExpr.FuncName.COUNT_DISTINCT)) {
 						String dbname = vc.getDbms().getName();
@@ -91,11 +91,11 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 					else if (f.getFuncName().equals(FuncExpr.FuncName.SUM)) {
 						Expr scale = ConstantExpr.from(samplingProb);
 						for (TableUniqueName t : stratifiedSampleTables) {
-							scale = BinaryOpExpr.from(scale, new ColNameExpr(vc.colnameStratifiedSamplingProb(), t.tableName), "*");
+							scale = BinaryOpExpr.from(scale, new ColNameExpr(vc.samplingProbColName(), t.tableName), "*");
 						}
 						scale = BinaryOpExpr.from(ConstantExpr.from(1.0), scale, "/");
-						return BinaryOpExpr.from(s, scale, "*");
-					} else {
+						return FuncExpr.sum(BinaryOpExpr.from(s.getExpr(), scale, "*"));
+					} else { 		// AVG
 						return expr;
 					}
 				} else {

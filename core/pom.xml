@@ -62,6 +62,30 @@
 					</descriptorRefs>
 				</configuration>
 			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-failsafe-plugin</artifactId>
+				<version>2.13</version>
+				<configuration>
+					<groups>edu.umich.verdict.IntegrationTest</groups>
+				</configuration>
+				<executions>
+					<execution>
+						<goals>
+							<goal>integration-test</goal>
+						</goals>
+						<configuration>
+							<includes>
+								<include>**/*.class</include>
+							</includes>
+						</configuration>
+					</execution>
+				</executions>
+
+				<!--<executions> <execution> <id>integration-test</id> <goals> <goal>integration-test</goal> 
+					</goals> </execution> <execution> <id>verify</id> <goals> <goal>verify</goal> 
+					</goals> </execution> </executions> -->
+			</plugin>
 		</plugins>
 	</build>
 	<dependencies>
@@ -89,6 +113,12 @@
 			<groupId>com.joptimizer</groupId>
 			<artifactId>joptimizer</artifactId>
 			<version>3.5.1</version>
+		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.12</version>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
 </project>

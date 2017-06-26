@@ -20,7 +20,7 @@ public class BinaryOpExpr extends Expr {
 
 	@Override
 	public String toString() {
-		return String.format("%s %s %s", left.toString(), op, right.toString());
+		return String.format("(%s %s %s)", left.toString(), op, right.toString());
 	}
 
 	@Override

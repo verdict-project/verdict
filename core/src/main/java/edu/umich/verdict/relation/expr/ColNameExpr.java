@@ -44,6 +44,10 @@ public class ColNameExpr extends Expr {
 	public String getSchema() {
 		return schema;
 	}
+	
+	public void setTab(String tab) {
+		this.tab = tab;
+	}
 
 	@Override
 	public String toString() {

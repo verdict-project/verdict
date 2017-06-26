@@ -18,12 +18,23 @@ public class ApproxSqlTest {
 		conf.set("no_user_password", "true");
 		VerdictContext vc = new VerdictContext(conf);
 		
-		String sql = "select order_hour_of_day, count(distinct product_id), count(*)"
-				+ " from order_products, orders"
-				+ " where order_products.order_id = orders.order_id"
-				+ "   AND order_dow = 0 or order_dow = 1"
-				+ " group by order_hour_of_day"
-				+ " order by order_hour_of_day asc";
+//		String sql = "select order_hour_of_day, count(distinct product_id), count(*)"
+//				+ " from order_products, orders"
+//				+ " where order_products.order_id = orders.order_id"
+//				+ "   AND order_dow = 0 or order_dow = 1"
+//				+ " group by order_hour_of_day"
+//				+ " order by order_hour_of_day asc";
+		
+//		String sql = "select order_dow, count(*) "
+//				+ "from orders "
+//				+ "group by order_dow "
+//				+ "order by order_dow asc";
+		
+//		String sql = "select count(*) "
+//				+ "from orders";
+		
+		String sql = "select avg(days_since_prior) "
+				+ "from orders";
 		
 //		String sql = "select count(*), count(distinct user_id), count(distinct order_id) "
 //				+ "from orders";

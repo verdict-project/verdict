@@ -174,7 +174,7 @@ public class ApproxSingleRelation extends ApproxRelation {
 	@Override
 	protected List<TableUniqueName> accumulateStratifiedSamples() {
 		if (param.sampleType.equals("stratified")) {
-			return Arrays.asList(param.originalTable);
+			return Arrays.asList(param.sampleTableName());
 		} else {
 			return Arrays.asList();
 		}
@@ -195,11 +195,11 @@ public class ApproxSingleRelation extends ApproxRelation {
 	 * Aggregations
 	 */
 	
-	public AggregatedRelation aggOnSample(List<Expr> functions) {
+	public AggregatedRelation aggOnSample(List<Object> functions) {
 		return rewrite().agg(functions);
 	}
 	
-	public AggregatedRelation aggOnSample(Expr... functions) {
+	public AggregatedRelation aggOnSample(Object... functions) {
 		return aggOnSample(Arrays.asList(functions));
 	}
 	

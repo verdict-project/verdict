@@ -1,5 +1,6 @@
 package edu.umich.verdict.relation;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -60,45 +61,35 @@ public class GroupedRelation extends ExactRelation {
 
 	@Override
 	protected List<SampleGroup> findSample(SelectElem elem) {
-		return source.findSample(elem);
+		// if the groupby coincides with the stratified sample's columns, we scale its sampling probability heuristically
+		List<SampleGroup> scaled = new ArrayList<SampleGroup>();
+		
+		for (SampleGroup sg : source.findSample(elem)) {
+			boolean includeSTsamplesWithMatchingGroup = false;
+			for (SampleParam param : sg.sampleSet()) {				
+				if (param.sampleType.equals("stratified")) {
+					List<String> group = new ArrayList<String>();
+					for (ColNameExpr ce : groupby) {
+						group.add(ce.getCol());
+					}
+					if (group.equals(param.columnNames)) {
+						includeSTsamplesWithMatchingGroup = true;
+					}
+				}
+			}
+			
+			if (includeSTsamplesWithMatchingGroup) {
+				scaled.add(new SampleGroup(sg.sampleSet(), sg.getElems(), sg.samplingProb()*2, sg.cost()));
+			} else if (sg.sampleType().equals("stratified")) {
+				// don't support yet.
+			} else {
+				// regular case
+				scaled.add(sg);
+			}
+		}
+		
+		return scaled;
 	}
-	
-	/*
-	 * Aggs
-	 */
-	
-//	public ExactRelation counts() throws VerdictException {
-//		return agg(FuncExpr.count());
-//	}
-//	
-//	public ExactRelation avgs(String expr) throws VerdictException {
-//		return agg(FuncExpr.avg(expr));
-//	}
-//	
-//	public ExactRelation sums(String expr) throws VerdictException {
-//		return agg(FuncExpr.sum(expr));
-//	}
-//	
-//	public ExactRelation countDistincts(String expr) throws VerdictException {
-//		return agg(FuncExpr.countDistinct(expr));
-//	}
-//	
-//	public ApproxRelation approxCounts() throws VerdictException {
-//		return approxAgg(FuncExpr.count());
-//	}
-//	
-//	public ApproxRelation approxAvgs(String expr) throws VerdictException {
-//		return approxAgg(FuncExpr.avg(expr));
-//	}
-//	
-//	public ApproxRelation approxSums(String expr) throws VerdictException {
-//		return approxAgg(FuncExpr.sum(expr));
-//	}
-//	
-//	public ApproxRelation approxCountDistincts(String expr) throws VerdictException {
-//		return approxAgg(FuncExpr.countDistinct(expr));
-//	}
-	
 	
 	/*
 	 * Sql

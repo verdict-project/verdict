@@ -1,14 +1,10 @@
 package edu.umich.verdict.relation;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
-import java.util.TreeSet;
 
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -94,12 +90,23 @@ public class JoinedRelation extends ExactRelation {
 			sql.append(String.format("%s INNER JOIN %s ON", sourceExpr(source1), sourceExpr(source2)));
 			for (int i = 0; i < joinCols.size(); i++) {
 				if (i != 0) sql.append(" AND");
-				sql.append(String.format(" %s = %s", joinCols.get(i).getLeft(), joinCols.get(i).getRight()));
+				sql.append(String.format(" %s = %s",
+						attachTableNameIfEmpty(joinCols.get(i).getLeft(), source1.getSourceName()),
+						attachTableNameIfEmpty(joinCols.get(i).getRight(), source2.getSourceName())));
 			}
 		}
 		
 		return sql.toString();
 	}
+	
+	private String attachTableNameIfEmpty(Expr colName, String tableName) {
+		ColNameExpr c = ColNameExpr.from(colName.toString());
+		if (c.getTab() == null) {
+			c.setTab(tableName);
+		}
+		return c.toString();
+	}
+	
 	
 	/*
 	 * Approx

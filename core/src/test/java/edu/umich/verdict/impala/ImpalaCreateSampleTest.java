@@ -15,7 +15,7 @@ public class ImpalaCreateSampleTest {
 		conf.set("no_user_password", "true");
 
 		VerdictContext vc = new VerdictContext(conf);
-		vc.executeQuery("create sample of orders");
+		vc.executeQuery("create stratified sample of orders on order_dow");
 		vc.destroy();
 		System.out.println("Done");
 	}

@@ -90,7 +90,7 @@ public class CreateSampleQuery extends Query {
 			}
 			
 			if (param != null && sampleName != null) {
-				List<Expr> aggs = new ArrayList<Expr>();
+				List<Object> aggs = new ArrayList<Object>();
 				aggs.add(FuncExpr.count());
 				List<String> cnames = vc.getMeta().getColumnNames(originalTable);
 				for (String c : cnames) {

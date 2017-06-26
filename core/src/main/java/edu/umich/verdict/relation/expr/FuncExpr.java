@@ -59,6 +59,7 @@ public class FuncExpr extends Expr {
 			.put(FuncName.COS, "COS(%s)")
 			.put(FuncName.TAN, "TAN(%s)")
 			.put(FuncName.SIGN, "SIGN(%s)")
+			.put(FuncName.UNKNOWN, "UNKNOWN(%s)")
 			.build();
 	
 	public FuncExpr(FuncName fname, Expr expr) {
