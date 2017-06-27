@@ -20,3 +20,6 @@ target/
 
 # log
 *.log
+
+# Test configuration files
+*.test

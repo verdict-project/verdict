@@ -1,5 +1,8 @@
 package edu.umich.verdict.relation.expr;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 
@@ -7,7 +10,10 @@ import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.VerdictSQLBaseVisitor;
 import edu.umich.verdict.VerdictSQLLexer;
 import edu.umich.verdict.VerdictSQLParser;
+import edu.umich.verdict.VerdictSQLParser.ExpressionContext;
+import edu.umich.verdict.VerdictSQLParser.Search_conditionContext;
 import edu.umich.verdict.exceptions.VerdictException;
+import edu.umich.verdict.relation.condition.Cond;
 import edu.umich.verdict.util.VerdictLogger;
 
 public abstract class Expr {
@@ -62,4 +68,10 @@ class ExpressionGen extends VerdictSQLBaseVisitor<Expr> {
 	public Expr visitFunction_call_expression(VerdictSQLParser.Function_call_expressionContext ctx) {
 		return FuncExpr.from(ctx.function_call());
 	}
+	
+	@Override
+	public Expr visitCase_expr(VerdictSQLParser.Case_exprContext ctx) {
+		return CaseExpr.from(ctx);
+	}
+	
 }

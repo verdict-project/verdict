@@ -182,8 +182,8 @@ public class DbmsImpala extends Dbms {
 		TableUniqueName rnTempTable = tempTables.getLeft();
 		TableUniqueName grpTempTable = tempTables.getRight();
 		createStratifiedSampleFromTempTable(rnTempTable, grpTempTable, param);
-//		dropTable(rnTempTable);
-//		dropTable(grpTempTable);
+		dropTable(rnTempTable);
+		dropTable(grpTempTable);
 	}
 	
 	/**
@@ -246,7 +246,7 @@ public class DbmsImpala extends Dbms {
 		VerdictLogger.debugPretty(this, Relation.prettyfySql(sql2), "  ");
 		executeUpdate(sql2);
 		
-//		dropTable(sampleTempTable);
+		dropTable(sampleTempTable);
 	}
 	
 	@Override

@@ -29,6 +29,23 @@ public abstract class ApproxRelation extends Relation {
 	}
 	
 	/*
+	 * Aggregations
+	 */
+	
+	public ApproxGroupedRelation groupby(String group) {
+		String[] tokens = group.split(",");
+		return groupby(Arrays.asList(tokens));
+	}
+	
+	public ApproxGroupedRelation groupby(List<String> group_list) {
+		List<ColNameExpr> groups = new ArrayList<ColNameExpr>();
+		for (String t : group_list) {
+			groups.add(ColNameExpr.from(t));
+		}
+		return new ApproxGroupedRelation(vc, this, groups);
+	}
+	
+	/*
 	 * Approx
 	 */
 	

@@ -9,7 +9,11 @@ import com.google.common.collect.ImmutableMap;
 
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.datatypes.TableUniqueName;
+import edu.umich.verdict.relation.condition.Cond;
+import edu.umich.verdict.relation.condition.IsCond;
+import edu.umich.verdict.relation.condition.NullCond;
 import edu.umich.verdict.relation.expr.BinaryOpExpr;
+import edu.umich.verdict.relation.expr.CaseExpr;
 import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.ConstantExpr;
 import edu.umich.verdict.relation.expr.Expr;
@@ -65,16 +69,20 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 		ExprModifier v = new ExprModifier() {
 			public Expr call(Expr expr) {
 				if (expr instanceof FuncExpr) {
+					// Take two different approaches:
+					// 1. stratified samples: use the verdict_sampling_prob column (in each tuple).
+					// 2. other samples: use either the uniform sampling probability or the ratio between the sample
+					//    size and the original table size.
+					
 					FuncExpr f = (FuncExpr) expr;
 					FuncExpr s = (FuncExpr) exprWithTableNamesSubstituted(expr, sub);
 					double samplingProb = source.samplingProbabilityFor(f);
 					
-					if (f.getFuncName().equals(FuncExpr.FuncName.COUNT)) { 
-						Expr scale = ConstantExpr.from(samplingProb);
+					if (f.getFuncName().equals(FuncExpr.FuncName.COUNT)) {
+						Expr scale = ConstantExpr.from(1.0 / samplingProb);
 						for (TableUniqueName t : stratifiedSampleTables) {
-							scale = BinaryOpExpr.from(scale, new ColNameExpr(vc.samplingProbColName(), t.tableName), "*");
+							scale = BinaryOpExpr.from(scale, new ColNameExpr(vc.samplingProbColName(), t.tableName), "/");
 						}
-						scale = BinaryOpExpr.from(ConstantExpr.from(1.0), scale, "/");
 						return FuncExpr.round(FuncExpr.sum(scale));
 					}
 					else if (f.getFuncName().equals(FuncExpr.FuncName.COUNT_DISTINCT)) {
@@ -89,14 +97,26 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 						}
 					}
 					else if (f.getFuncName().equals(FuncExpr.FuncName.SUM)) {
-						Expr scale = ConstantExpr.from(samplingProb);
+						Expr scale = ConstantExpr.from(1.0 / samplingProb);
 						for (TableUniqueName t : stratifiedSampleTables) {
-							scale = BinaryOpExpr.from(scale, new ColNameExpr(vc.samplingProbColName(), t.tableName), "*");
+							scale = BinaryOpExpr.from(scale, new ColNameExpr(vc.samplingProbColName(), t.tableName), "/");
 						}
-						scale = BinaryOpExpr.from(ConstantExpr.from(1.0), scale, "/");
 						return FuncExpr.sum(BinaryOpExpr.from(s.getExpr(), scale, "*"));
-					} else { 		// AVG
-						return expr;
+					}
+					else if (f.getFuncName().equals(FuncExpr.FuncName.AVG)) {
+						Expr scale = ConstantExpr.from(1.0 / samplingProb);
+						for (TableUniqueName t : stratifiedSampleTables) {
+							scale = BinaryOpExpr.from(scale, new ColNameExpr(vc.samplingProbColName(), t.tableName), "/");
+						}
+						Expr sumEst = FuncExpr.sum(BinaryOpExpr.from(s.getExpr(), scale, "*"));
+						// this count filters out the null expressions.
+						Expr countEst = FuncExpr.sum(
+								new CaseExpr(Arrays.<Cond>asList(new IsCond(s.getExpr(), new NullCond())),
+											 Arrays.<Expr>asList(ConstantExpr.from("0"), scale)));
+						return BinaryOpExpr.from(sumEst, countEst, "/");
+					}
+					else {		// expected not to be visited
+						return s;
 					}
 				} else {
 					return expr;

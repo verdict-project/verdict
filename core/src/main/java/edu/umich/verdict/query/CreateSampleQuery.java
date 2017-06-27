@@ -81,38 +81,45 @@ public class CreateSampleQuery extends Query {
 			}
 		} else {	// recommended
 			TableUniqueName originalTable = param.originalTable;
-			buildSamples(new SampleParam(originalTable, "uniform", param.samplingRatio, new ArrayList<String>()));		// build a uniform sample
-			List<Pair<SampleParam, TableUniqueName>> sampleInfo = vc.getMeta().getSampleInfoFor(originalTable);
-			TableUniqueName sampleName = null;
-			for (Pair<SampleParam, TableUniqueName> e : sampleInfo) {
-				param = e.getLeft();
-				sampleName = e.getRight();
-			}
+			SampleParam ursParam = new SampleParam(originalTable, "uniform", param.samplingRatio, new ArrayList<String>()); 
+			buildSamples(ursParam);		// build a uniform sample
+//			List<Pair<SampleParam, TableUniqueName>> sampleInfo = vc.getMeta().getSampleInfoFor(originalTable);
 			
-			if (param != null && sampleName != null) {
-				List<Object> aggs = new ArrayList<Object>();
-				aggs.add(FuncExpr.count());
-				List<String> cnames = vc.getMeta().getColumnNames(originalTable);
-				for (String c : cnames) {
-					aggs.add(FuncExpr.approxCountDistinct(ColNameExpr.from(c), vc));
-				}
-				List<Object> rs = ApproxSingleRelation.from(vc, param).aggOnSample(aggs).collect().get(0);
+//			TableUniqueName sampleName = null;
+//			for (Pair<SampleParam, TableUniqueName> e : sampleInfo) {
+//				param = e.getLeft();
+//				sampleName = e.getRight();
+//			}
+//			
+//			if (param != null && sampleName != null) {
+			List<Object> aggs = new ArrayList<Object>();
+			aggs.add(FuncExpr.count());
+			List<String> cnames = vc.getMeta().getColumnNames(originalTable);
+			for (String c : cnames) {
+				aggs.add(FuncExpr.approxCountDistinct(ColNameExpr.from(c), vc));
+			}
+			List<Object> rs = ApproxSingleRelation.from(vc, ursParam).aggOnSample(aggs).collect().get(0);
+
+			long sampleSize = (Long) rs.get(0);
+			int universeCounter = 0;
+			int stratifiedCounter = 0;
+			for (int i = 1; i < rs.size(); i++) {
+				long cd = (Long) rs.get(i);
+				String cname = cnames.get(i-1);
 				
-				long sampleSize = (Long) rs.get(0);
-				for (int i = 1; i < rs.size(); i++) {
-					long cd = (Long) rs.get(i);
-					String cname = cnames.get(i-1);
-					if (cd > sampleSize * 0.01) {
-						List<String> sampleOn = new ArrayList<String>();
-						sampleOn.add(cname);
-						buildSamples(new SampleParam(originalTable, "universe", param.samplingRatio, sampleOn));		// build a universe sample
-					} else {
-						List<String> sampleOn = new ArrayList<String>();
-						sampleOn.add(cname);
-						buildSamples(new SampleParam(originalTable, "stratified", param.samplingRatio, sampleOn));		// build a stratified sample
-					}
+				if (cd > sampleSize * 0.01 && universeCounter < 10) {
+					List<String> sampleOn = new ArrayList<String>();
+					sampleOn.add(cname);
+					buildSamples(new SampleParam(originalTable, "universe", param.samplingRatio, sampleOn));		// build a universe sample
+					universeCounter += 1;
+				} else if (stratifiedCounter < 10){
+					List<String> sampleOn = new ArrayList<String>();
+					sampleOn.add(cname);
+					buildSamples(new SampleParam(originalTable, "stratified", param.samplingRatio, sampleOn));		// build a stratified sample
+					stratifiedCounter += 1;
 				}
 			}
+//			}
 		}
 	}
 	

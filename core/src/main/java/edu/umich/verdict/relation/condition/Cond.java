@@ -9,6 +9,7 @@ import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.VerdictSQLBaseVisitor;
 import edu.umich.verdict.VerdictSQLLexer;
 import edu.umich.verdict.VerdictSQLParser;
+import edu.umich.verdict.VerdictSQLParser.Search_conditionContext;
 import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.util.VerdictLogger;
 
@@ -19,8 +20,12 @@ public abstract class Cond {
 	public static Cond from(String cond) {
 		VerdictSQLLexer l = new VerdictSQLLexer(CharStreams.fromString(cond));
 		VerdictSQLParser p = new VerdictSQLParser(new CommonTokenStream(l));
+		return from(p.search_condition());
+	}
+	
+	public static Cond from(Search_conditionContext ctx) {
 		CondGen g = new CondGen();
-		return g.visit(p.search_condition());
+		return g.visit(ctx);
 	}
 
 	public Cond accept(CondModifier v) {
@@ -84,6 +89,22 @@ class CondGen extends VerdictSQLBaseVisitor<Cond> {
 			return visit(ctx.predicate());
 		} else {
 			return NotCond.from(visit(ctx.predicate()));
+		}
+	}
+	
+	@Override
+	public Cond visitIs_predicate(VerdictSQLParser.Is_predicateContext ctx) {
+		Expr left = Expr.from(ctx.expression());
+		Cond right = visit(ctx.null_notnull());
+		return new IsCond(left, right);
+	}
+	
+	@Override
+	public Cond visitNull_notnull(VerdictSQLParser.Null_notnullContext ctx) {
+		if (ctx.NOT() == null) {
+			return new NullCond();
+		} else {
+			return new NotCond(new NullCond());
 		}
 	}
 	
