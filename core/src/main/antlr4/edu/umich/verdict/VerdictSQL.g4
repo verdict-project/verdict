@@ -36,14 +36,32 @@ verdict_statement
     | show_samples_statement
     | config_statement
     | other_statement
+    | create_table
+    | create_table_as_select
+    | create_view
+    | drop_table
+    | delete_statement
+    | drop_view
     ;
 
+//WITH SIZE size=(FLOAT | DECIMAL) '%' (STORE poission_cols=DECIMAL POISSON COLUMNS)? (STRATIFIED BY column_name (',' column_name)*)?
 create_sample_statement
-    : CREATE (size=(FLOAT | DECIMAL) '%')? SAMPLE FROM table=table_name //WITH SIZE size=(FLOAT | DECIMAL) '%' (STORE poission_cols=DECIMAL POISSON COLUMNS)? (STRATIFIED BY column_name (',' column_name)*)?
+    : CREATE (size=(FLOAT | DECIMAL) '%')? (sample_type)? SAMPLE (FROM | OF) original_table=table_name (on_columns)?
+    ;
+    
+sample_type
+    : UNIFORM
+    | UNIVERSE
+    | STRATIFIED
+    | RECOMMENDED
+    ;
+    
+on_columns
+    : ON column_name (',' column_name)*
     ;
 
 delete_sample_statement
-    : (DELETE | DROP) SAMPLE sample=table_name
+    : (DELETE | DROP) (size=(FLOAT | DECIMAL) '%')? (sample_type)? SAMPLE OF original_table=table_name (on_columns)?
     ;
 
 show_samples_statement
@@ -60,6 +78,7 @@ other_statement
     | show_tables_statement
     | show_databases_statement
     | describe_table_statement
+    | refresh_statement
     ;
 
 //config_set_statement: SET key=config_key '=' value=config_value percent='%'?;
@@ -279,6 +298,10 @@ create_table
     : CREATE TABLE table_name '(' column_def_table_constraint (','? column_def_table_constraint)* ','? ')' (ON id | DEFAULT)? ';'?
     ;
 
+create_table_as_select
+    : CREATE TABLE (IF NOT EXISTS)? table_name AS select_statement ';'?
+    ;
+
 // https://msdn.microsoft.com/en-us/library/ms187956.aspx
 create_view
     : CREATE VIEW view_name ('(' column_name (',' column_name)* ')')?
@@ -443,6 +466,10 @@ show_databases_statement
 
 describe_table_statement
     : DESCRIBE table=id ';'?
+    ;
+    
+refresh_statement
+    : REFRESH
     ;
 
 execute_clause
@@ -826,10 +853,15 @@ ranking_windowed_function
 
 mathematical_function_expression
     : unary_mathematical_function '(' expression ')'
+    | noparam_mathematical_function '(' ')'
     ;
 
 unary_mathematical_function
-    : ROUND | FLOOR | CEIL | EXP | LN | LOG10 | LOG2 | SIN | COS | TAN | SIGN
+    : ROUND | FLOOR | CEIL | EXP | LN | LOG10 | LOG2 | SIN | COS | TAN | SIGN | RAND
+    ;
+    
+noparam_mathematical_function
+    : RAND | UNIX_TIMESTAMP
     ;
 
 // https://msdn.microsoft.com/en-us/library/ms173454.aspx
@@ -846,6 +878,7 @@ aggregate_windowed_function
     | VAR '(' all_distinct_expression ')' over_clause?
     | VARP '(' all_distinct_expression ')' over_clause?
     | COUNT '(' ('*' | all_distinct_expression) ')' over_clause?
+    | NDV '(' ('*' | all_distinct_expression) ')' over_clause?
     | COUNT_BIG '(' ('*' | all_distinct_expression) ')' over_clause?
     ;
 
@@ -1396,6 +1429,7 @@ MIN_ACTIVE_ROWVERSION:           M I N '_' A C T I V E '_' R O W V E R S I O N;
 MODIFY:                          M O D I F Y;
 NEXT:                            N E X T;
 NAME:                            N A M E;
+NDV:                             N D V;
 NOCOUNT:                         N O C O U N T;
 NOEXPAND:                        N O E X P A N D;
 NORECOMPUTE:                     N O R E C O M P U T E;
@@ -1412,11 +1446,14 @@ PARTITION:                       P A R T I T I O N;
 PATH:                            P A T H;
 PRECEDING:                       P R E C E D I N G;
 PRIOR:                           P R I O R;
+RAND:                            R A N D;
 RANGE:                           R A N G E;
 RANK:                            R A N K;
 READONLY:                        R E A D O N L Y;
 READ_ONLY:                       R E A D '_' O N L Y;
+RECOMMENDED:                     R E C O M M E N D E D;
 RECOMPILE:                       R E C O M P I L E;
+REFRESH:                         R E F R E S H;
 RELATIVE:                        R E L A T I V E;
 REMOTE:                          R E M O T E;
 REPEATABLE:                      R E P E A T A B L E;
@@ -1450,6 +1487,8 @@ TYPE:                            T Y P E;
 TYPE_WARNING:                    T Y P E '_' W A R N I N G;
 UNBOUNDED:                       U N B O U N D E D;
 UNCOMMITTED:                     U N C O M M I T T E D;
+UNIVERSE:                        U N I V E R S E;
+UNIX_TIMESTAMP:                  U N I X '_' T I M E S T A M P;
 UNKNOWN:                         U N K N O W N;
 USING:                           U S I N G;
 VAR:                             V A R;

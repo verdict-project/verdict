@@ -3,7 +3,7 @@ Documentation
 *****************
 
 
-Getting Started
+Quick Start Guide
 ===================================
 
 Get familar with Verdict in five minutes.
@@ -40,7 +40,7 @@ JDBC connections to databases requires minimal changes.
     documentation/jdbc_to_databases.rst
 
 
-Features
+Supported Queries
 ====================================================
 
 Verdict is under active (and fast) developments, and its features grow fast.
@@ -94,19 +94,12 @@ API Docs
 * `Javadoc <apidocs/index.html>`_
 
 
-Verdict Architecture
-===================================
 
-.. toctree::
-    :maxdepth: 2
-
-    documentation/architecture.rst
-
-Academic Contributions
+Research
 ===================================
 
 Our research in approximate query processing has produced many research papers
-at top-tier conferences.
+at top-tier conferences. This knowledge is used for building Verdict.
 
 .. toctree::
     :maxdepth: 2

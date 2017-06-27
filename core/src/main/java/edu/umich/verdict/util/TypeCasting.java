@@ -1,15 +1,53 @@
 package edu.umich.verdict.util;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+
+import org.apache.commons.lang3.tuple.Pair;
+
+import com.google.common.base.Joiner;
 
 import edu.umich.verdict.VerdictConf;
 import edu.umich.verdict.VerdictContext;
 
 public class TypeCasting {
 	
+	public static <T,S> Map<T,S> listToMap(List<Pair<T,S>> list) {
+		Map<T,S> amap = new HashMap<T,S>();
+		for (Pair<T,S> p : list) {
+			amap.put(p.getKey(), p.getValue());
+		}
+		return amap;
+	}
+	
+	public static <T,S> Map<T,S> listToReverseMap(List<Pair<S,T>> list) {
+		Map<T,S> amap = new HashMap<T,S>();
+		for (Pair<S,T> p : list) {
+			amap.put(p.getValue(), p.getKey());
+		}
+		return amap;
+	}
+	
+	public static <T,S> List<Pair<T,S>> mapToList(Map<T,S> map) {
+		List<Pair<T,S>> l = new ArrayList<Pair<T,S>>();
+		for (Map.Entry<T,S> e : map.entrySet()) {
+			l.add(Pair.of(e.getKey(), e.getValue()));
+		}
+		return l;
+	}
+	
+	public static <S,T> Map<S,T> reverseMap(Map<T,S> amap) {
+		Map<S,T> newMap = new HashMap<S,T>();
+		for (Map.Entry<T,S> e : amap.entrySet()) {
+			newMap.put(e.getValue(), e.getKey());
+		}
+		return newMap;
+	}
+
 	public static Double toDouble(Object obj) {
 		if (obj instanceof Double) return (Double) obj;
 		else if (obj instanceof Float) return ((Float) obj).doubleValue();
@@ -22,7 +60,15 @@ public class TypeCasting {
 		}
 	}
 	
-	public static long toLongint(Object obj) {
+	public static List<Double> toDoubleList(List<Object> ol) {
+		List<Double> dl = new ArrayList<Double>();
+		for (Object o : ol) {
+			dl.add(toDouble(o));
+		}
+		return dl;
+	}
+	
+	public static long toLong(Object obj) {
 		if (obj instanceof Double) return Math.round((Double) obj);
 		else if (obj instanceof Float) return Math.round((Float) obj);
 		else if (obj instanceof BigDecimal) return ((BigDecimal) obj).toBigInteger().longValue();
@@ -32,6 +78,14 @@ public class TypeCasting {
 			VerdictLogger.error("Cannot convert to long value, just returnning 0: " + obj.toString());
 			return 0;
 		}
+	}
+	
+	public static List<Long> toLongList(List<Object> ol) {
+		List<Long> ll = new ArrayList<Long>();
+		for (Object o : ol) {
+			ll.add(toLong(o));
+		}
+		return ll;
 	}
 	
 	/**

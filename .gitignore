@@ -17,3 +17,9 @@ target/
 .classpath
 .project
 .settings
+
+# log
+*.log
+
+# Test configuration files
+*.test

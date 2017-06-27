@@ -24,7 +24,8 @@ public class VerdictStatement implements Statement {
     	this.connection = connection;
     	try {
     		// a new verdict context does not share the underlying statement.
-			this.vc = new VerdictContext(vc);
+			this.vc = vc;
+			vc.getDbms().createNewStatementWithoutClosing();
 			this.stmt = this.vc.getDbms().createStatement();
 		} catch (VerdictException e) {
 			throw new SQLException(StackTraceReader.stackTrace2String(e));

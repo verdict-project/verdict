@@ -7,19 +7,19 @@ public class VerdictLogger {
 	
 	final static Logger logger = Logger.getLogger(VerdictLogger.class);
 	
-//	public static void setLogLevel(String level) {
-//		if (level.equalsIgnoreCase("debug")) {
-//			logger.setLevel(Level.DEBUG);
-//		} else if (level.equalsIgnoreCase("info")) {
-//			logger.setLevel(Level.INFO);
-//		} else if (level.equalsIgnoreCase("warn")) {
-//			logger.setLevel(Level.WARN);
-//		} else if (level.equalsIgnoreCase("error")) {
-//			logger.setLevel(Level.ERROR);
-//		} else {
-//			logger.setLevel(Level.DEBUG);
-//		}
-//	}
+	public static void setLogLevel(String level) {
+		if (level.equalsIgnoreCase("debug")) {
+			logger.setLevel(Level.DEBUG);
+		} else if (level.equalsIgnoreCase("info")) {
+			logger.setLevel(Level.INFO);
+		} else if (level.equalsIgnoreCase("warn")) {
+			logger.setLevel(Level.WARN);
+		} else if (level.equalsIgnoreCase("error")) {
+			logger.setLevel(Level.ERROR);
+		} else {
+			logger.setLevel(Level.DEBUG);
+		}
+	}
 	
 	public static void info(Object msg) {
 		logger.info(msg);

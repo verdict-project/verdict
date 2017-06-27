@@ -57,6 +57,10 @@ public class VerdictConnection implements Connection {
 	    	}
 	    	conf.setProperties(info);
 	    	
+	    	for (Map.Entry<Object, Object> e : info.entrySet()) {
+	    		VerdictLogger.debug(this, String.format("connection properties: %s = %s", e.getKey(), e.getValue()));
+	    	}
+	    	
 	    	// set properties from the url string.    	
 	    	Pattern urlOptions = Pattern.compile("^jdbc:verdict:(?<dbms>\\w+)://(?<host>[\\.a-zA-Z0-9\\-]+)(?::(?<port>\\d+))?(?:/(?<schema>\\w+))?"
 	    										+ "(\\?(?<extras>.*))?");
