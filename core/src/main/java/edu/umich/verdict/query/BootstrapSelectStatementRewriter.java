@@ -2,7 +2,6 @@ package edu.umich.verdict.query;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -16,6 +15,7 @@ import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.util.VerdictLogger;
 
+@Deprecated
 public class BootstrapSelectStatementRewriter extends AnalyticSelectStatementRewriter {
 	
 	final String RAND_COLNAME = vc.getConf().get("bootstrap_random_value_colname");

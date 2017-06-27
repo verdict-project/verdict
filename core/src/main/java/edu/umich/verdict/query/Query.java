@@ -4,8 +4,6 @@ import java.sql.ResultSet;
 
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
-import org.antlr.v4.runtime.ParserRuleContext;
-import org.antlr.v4.runtime.misc.Interval;
 
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.VerdictSQLBaseVisitor;
@@ -29,7 +27,7 @@ public abstract class Query {
 
 	public enum Type {
 		SELECT, CREATE_SAMPLE, DROP_SAMPLE, SHOW_SAMPLE, CONFIG, DESCRIBE_TABLE,
-		OTHER_USE, OTHER_SHOW_TABLES, OTHER_SHOW_DATABASES, NOSUPPORT,
+		OTHER_USE, OTHER_SHOW_TABLES, OTHER_SHOW_DATABASES, NOSUPPORT, OTHER_REFRESH,
 		CREATE_TABLE, CREATE_TABLE_AS_SELECT, DROP_TABLE, DELETE_FROM, CREATE_VIEW, DROP_VIEW
 	}
 
@@ -112,6 +110,8 @@ public abstract class Query {
 					query = new ShowTablesQuery(vc, queryString);
 				} else if (queryType.equals(Type.OTHER_SHOW_DATABASES)) {
 					query = new ShowDatabasesQuery(vc, queryString);
+				} else if (queryType.equals(Type.OTHER_REFRESH)) {
+					query = new RefreshQuery(vc, queryString);
 				} else if (queryType.equals(Type.CREATE_TABLE) ||
 						   queryType.equals(Type.DROP_TABLE) ||
 						   queryType.equals(Type.DELETE_FROM) ||
@@ -188,6 +188,12 @@ public abstract class Query {
 			@Override
 			public Type visitShow_tables_statement(VerdictSQLParser.Show_tables_statementContext ctx) {
 				type = Type.OTHER_SHOW_TABLES;
+				return type;
+			}
+			
+			@Override
+			public Type visitRefresh_statement(VerdictSQLParser.Refresh_statementContext ctx) {
+				type = Type.OTHER_REFRESH;
 				return type;
 			}
 

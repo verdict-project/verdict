@@ -4,13 +4,11 @@ import java.sql.ResultSet;
 
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
-import org.apache.commons.lang3.tuple.Pair;
 
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.VerdictSQLBaseVisitor;
 import edu.umich.verdict.VerdictSQLLexer;
 import edu.umich.verdict.VerdictSQLParser;
-import edu.umich.verdict.datatypes.VerdictResultSet;
 import edu.umich.verdict.exceptions.VerdictException;
 
 public class UseDatabaseQuery extends Query {
@@ -36,7 +34,9 @@ public class UseDatabaseQuery extends Query {
 			}
 		};
 		
-		vc.getDbms().changeDatabase(visitor.visit(p.use_statement()));
+		String schema = visitor.visit(p.use_statement());
+		vc.getDbms().changeDatabase(schema);
+		vc.getMeta().refreshSampleInfo(schema);
 		
 		return null;
 	}

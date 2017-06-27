@@ -74,6 +74,10 @@ public class VerdictContext {
 		
 		metaDbms = dbms;
 		meta = new VerdictMeta(this);		// this must be called after DB connection is created.
+		
+		if (conf.getDbmsSchema() != null) {
+			meta.refreshSampleInfo(conf.getDbmsSchema());
+		}
 	}
 	
 	public ResultSet executeQuery(String sql) throws VerdictException {

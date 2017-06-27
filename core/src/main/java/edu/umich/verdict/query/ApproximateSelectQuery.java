@@ -21,6 +21,7 @@ import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.util.TypeCasting;
 import edu.umich.verdict.util.VerdictLogger;
 
+@Deprecated
 public class ApproximateSelectQuery extends SelectQuery {
 
 	public ApproximateSelectQuery(VerdictContext vc, String queryString) {

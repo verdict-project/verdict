@@ -114,6 +114,32 @@ public class AggregationIT extends BaseIT {
 		assertColsEqual(expected, actual, 1);
 		assertColsSimilar(expected, actual, 2, error);
 	}
+	
+	protected void testSimpleCountDistinctFor(String tableName, String aggCol, String sampleType, List<String> sampleColumns) throws SQLException, VerdictException {
+		String sql = String.format("select count(distinct %s) from %s", aggCol, tableName);
+		List<List<Object>> expected = collectResult(stmt.executeQuery(sql));
+		
+		TableUniqueName originalTable = TableUniqueName.uname(vc, tableName);
+		ApproxRelation r = ApproxSingleRelation.from(vc, new SampleParam(originalTable, sampleType, samplingRatio, sampleColumns));
+		List<List<Object>> actual = collectResult(r.countDistinct(aggCol).collectResultSet());
+		
+		printTestCase(sql, expected, actual);
+		assertColsSimilar(expected, actual, 1, error);
+	}
+	
+	protected void testGroupbyCountDistinctFor(String tableName, String aggCol, List<String> groupby, String sampleType, List<String> sampleColumns) throws SQLException, VerdictException {
+		String groups = Joiner.on(", ").join(groupby);
+		String sql = String.format("select %s, count(distinct %s) from %s group by %s order by %s", groups, aggCol, tableName, groups, groups);
+		List<List<Object>> expected = collectResult(stmt.executeQuery(sql));
+		
+		TableUniqueName originalTable = TableUniqueName.uname(vc, tableName);
+		ApproxRelation r = ApproxSingleRelation.from(vc, new SampleParam(originalTable, sampleType, samplingRatio, sampleColumns));
+		List<List<Object>> actual = collectResult(r.groupby(groups).countDistinct(aggCol).orderby(groups).collectResultSet());
+		
+		printTestCase(sql, expected, actual);
+		assertColsEqual(expected, actual, 1);
+		assertColsSimilar(expected, actual, 2, error);
+	}
 
 	protected List<List<Object>> collectResult(ResultSet rs) throws SQLException {
 		List<List<Object>> result = new ArrayList<List<Object>>();
@@ -215,7 +241,7 @@ public class AggregationIT extends BaseIT {
 	public void simpleAvgUsingUniformSample() throws VerdictException, SQLException {
 		testSimpleAvgFor("orders", "days_since_prior", "uniform", Arrays.<String>asList());
 	}
-
+	
 	@Test
 	public void groupbyCountUsingUniformSample() throws VerdictException, SQLException {
 		testGroupbyCountFor("orders", Arrays.asList("order_hour_of_day"), "uniform", Arrays.<String>asList());
@@ -277,6 +303,16 @@ public class AggregationIT extends BaseIT {
 	}
 
 	@Test
+	public void simpleCountDistinctUsingUniverseSample() throws VerdictException, SQLException {
+		testSimpleCountDistinctFor("orders", "user_id", "universe", Arrays.asList("user_id"));
+	}
+
+	@Test
+	public void simpleCountDistinctUsingUniverseSample2() throws VerdictException, SQLException {
+		testSimpleCountDistinctFor("orders", "order_id", "universe", Arrays.asList("order_id"));
+	}
+	
+	@Test
 	public void groupbyCountUsingUniverseSample() throws VerdictException, SQLException {
 		testGroupbyCountFor("orders", Arrays.asList("order_hour_of_day"), "universe", Arrays.<String>asList("order_id"));
 	}
@@ -294,6 +330,26 @@ public class AggregationIT extends BaseIT {
 	@Test
 	public void groupbySumUsingUniverseSample2() throws VerdictException, SQLException {
 		testGroupbySumFor("orders", "days_since_prior", Arrays.asList("order_hour_of_day"), "universe", Arrays.<String>asList("order_id"));
+	}
+	
+	@Test
+	public void groupbyAvgUsingUniverseSample() throws VerdictException, SQLException {
+		testGroupbyAvgFor("orders", "days_since_prior", Arrays.asList("order_hour_of_day"), "universe", Arrays.<String>asList("user_id"));
+	}
+
+	@Test
+	public void groupbyAvgUsingUniverseSample2() throws VerdictException, SQLException {
+		testGroupbyAvgFor("orders", "days_since_prior", Arrays.asList("order_hour_of_day"), "universe", Arrays.<String>asList("order_id"));
+	}
+
+	@Test
+	public void groupbyCountDistinctUsingUniverseSample() throws VerdictException, SQLException {
+		testGroupbyCountDistinctFor("orders", "user_id", Arrays.asList("order_hour_of_day"), "universe", Arrays.asList("user_id"));
+	}
+
+	@Test
+	public void groupbyCountDistinctUsingUniverseSample2() throws VerdictException, SQLException {
+		testGroupbyCountDistinctFor("orders", "order_id", Arrays.asList("order_hour_of_day"), "universe", Arrays.asList("order_id"));
 	}
 
 	@Test
@@ -314,6 +370,16 @@ public class AggregationIT extends BaseIT {
 	@Test
 	public void simpleAvgUsingStratifiedSample3() throws VerdictException, SQLException {
 		testSimpleAvgFor("orders", "days_since_prior", "stratified", Arrays.<String>asList("order_hour_of_day"));
+	}
+	
+	@Test
+	public void simpleCountDistinctUsingStratifiedSample() throws VerdictException, SQLException {
+		testSimpleCountDistinctFor("orders", "order_number", "stratified", Arrays.<String>asList("order_number"));
+	}
+	
+	@Test
+	public void simpleCountDistinctUsingStratifiedSample2() throws VerdictException, SQLException {
+		testSimpleCountDistinctFor("orders", "order_hour_of_day", "stratified", Arrays.<String>asList("order_hour_of_day"));
 	}
 
 	@Test

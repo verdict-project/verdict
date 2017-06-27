@@ -14,7 +14,6 @@ import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.relation.ApproxSingleRelation;
 import edu.umich.verdict.relation.expr.ColNameExpr;
-import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.relation.expr.FuncExpr;
 import edu.umich.verdict.util.VerdictLogger;
 
@@ -83,15 +82,7 @@ public class CreateSampleQuery extends Query {
 			TableUniqueName originalTable = param.originalTable;
 			SampleParam ursParam = new SampleParam(originalTable, "uniform", param.samplingRatio, new ArrayList<String>()); 
 			buildSamples(ursParam);		// build a uniform sample
-//			List<Pair<SampleParam, TableUniqueName>> sampleInfo = vc.getMeta().getSampleInfoFor(originalTable);
 			
-//			TableUniqueName sampleName = null;
-//			for (Pair<SampleParam, TableUniqueName> e : sampleInfo) {
-//				param = e.getLeft();
-//				sampleName = e.getRight();
-//			}
-//			
-//			if (param != null && sampleName != null) {
 			List<Object> aggs = new ArrayList<Object>();
 			aggs.add(FuncExpr.count());
 			List<String> cnames = vc.getMeta().getColumnNames(originalTable);
@@ -119,8 +110,9 @@ public class CreateSampleQuery extends Query {
 					stratifiedCounter += 1;
 				}
 			}
-//			}
 		}
+		
+		vc.getMeta().refreshSampleInfo(param.originalTable.schemaName);
 	}
 	
 	protected void createUniformRandomSample(SampleParam param) throws VerdictException {

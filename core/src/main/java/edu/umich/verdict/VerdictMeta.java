@@ -128,7 +128,8 @@ public class VerdictMeta {
 	}
 	
 	public void refreshSampleInfoIfNeeded(String schemaName) {
-		if (!uptodateSchemas.contains(Pair.of(vc.getCurrentQid(), schemaName))) {
+		if (vc.getConf().getBoolean("refresh_meta_before_every_query")
+			&& !uptodateSchemas.contains(Pair.of(vc.getCurrentQid(), schemaName))) {
 			refreshSampleInfo(schemaName);
 			uptodateSchemas.add(Pair.of(vc.getCurrentQid(), schemaName));
 		}

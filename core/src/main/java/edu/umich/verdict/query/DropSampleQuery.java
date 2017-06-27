@@ -37,6 +37,7 @@ public class DropSampleQuery extends Query {
 		List<String> columnNames = visitor.getColumnNames();
 		
 		deleteSampleOf(tableName, samplingRatio, sampleType, columnNames);
+		vc.getMeta().refreshSampleInfo(vc.getCurrentSchema().get());
 		return null;
 	}
 	

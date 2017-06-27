@@ -78,6 +78,7 @@ other_statement
     | show_tables_statement
     | show_databases_statement
     | describe_table_statement
+    | refresh_statement
     ;
 
 //config_set_statement: SET key=config_key '=' value=config_value percent='%'?;
@@ -465,6 +466,10 @@ show_databases_statement
 
 describe_table_statement
     : DESCRIBE table=id ';'?
+    ;
+    
+refresh_statement
+    : REFRESH
     ;
 
 execute_clause
@@ -1448,6 +1453,7 @@ READONLY:                        R E A D O N L Y;
 READ_ONLY:                       R E A D '_' O N L Y;
 RECOMMENDED:                     R E C O M M E N D E D;
 RECOMPILE:                       R E C O M P I L E;
+REFRESH:                         R E F R E S H;
 RELATIVE:                        R E L A T I V E;
 REMOTE:                          R E M O T E;
 REPEATABLE:                      R E P E A T A B L E;

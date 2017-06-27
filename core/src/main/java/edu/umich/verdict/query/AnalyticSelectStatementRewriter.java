@@ -2,16 +2,13 @@ package edu.umich.verdict.query;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.TreeMap;
 
 import org.apache.commons.lang3.tuple.Pair;
 
 import edu.umich.verdict.VerdictContext;
-import edu.umich.verdict.VerdictSQLBaseVisitor;
 import edu.umich.verdict.VerdictSQLParser;
 import edu.umich.verdict.datatypes.Alias;
 import edu.umich.verdict.datatypes.ColumnName;
@@ -24,6 +21,7 @@ import edu.umich.verdict.util.NameHelpers;
 import edu.umich.verdict.util.TypeCasting;
 import edu.umich.verdict.util.VerdictLogger;
 
+@Deprecated
 class AnalyticSelectStatementRewriter extends SelectStatementBaseRewriter  {
 	
 	protected VerdictContext vc;

@@ -10,7 +10,6 @@ public class NestedQueryTest {
 	public static void main(String[] args) throws VerdictException {
 		VerdictConf conf = new VerdictConf();
 		conf.setDbms("impala");
-		conf.setHost("salat1.eecs.umich.edu");
 		conf.setPort("21050");
 		conf.setDbmsSchema("instacart1g");
 		conf.set("no_user_password", "true");

@@ -31,14 +31,15 @@ public class ShowSamplesQuery extends SelectQuery {
 			Dbms dbms = vc.getDbms();
 			rs = dbms.executeQuery(
 					String.format("SELECT s.originaltablename AS \"Original Table\","
-							+ " t.originaltablesize AS \"Original Table Size\","
-							+ " s.sampletablename AS \"Sample Table\","
-							+ " t.samplesize AS \"Sample Table Size\","
 							+ " s.sampletype AS \"Type\","
 							+ " s.samplingratio AS \"Sampling Ratio\","
-							+ " s.columnnames AS \"On columns\""
+							+ " s.columnnames AS \"On columns\","
+							+ " t.originaltablesize AS \"Original Table Size\","
+							+ " t.samplesize AS \"Sample Table Size\","
+							+ " s.sampletablename AS \"Sample Table Name\""
 							+ " FROM %s AS s, %s AS t"
-							+ " WHERE s.sampleschemaaname = t.schemaname AND s.sampletablename = t.tablename",
+							+ " WHERE s.sampleschemaaname = t.schemaname AND s.sampletablename = t.tablename"
+							+ " ORDER BY s.originaltablename, s.sampletype, s.samplingratio, s.columnnames",
 							vc.getMeta().getMetaNameTableName(currentSchema.get()),
 							vc.getMeta().getMetaSizeTableName(currentSchema.get())
 							));
