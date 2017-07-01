@@ -12,9 +12,9 @@ import edu.umich.verdict.util.VerdictLogger;
 
 public class VerdictContext {
 	
-	private VerdictConf conf;
+	final private VerdictConf conf;
 	
-	private VerdictMeta meta;
+	final private VerdictMeta meta;
 	
 	/*
 	 *  DBMS fields

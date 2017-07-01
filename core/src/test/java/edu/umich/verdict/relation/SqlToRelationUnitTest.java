@@ -2,7 +2,11 @@ package edu.umich.verdict.relation;
 
 import static org.junit.Assert.*;
 
+import java.util.Arrays;
+
 import org.junit.Test;
+
+import com.google.common.base.Joiner;
 
 import edu.umich.verdict.VerdictConf;
 import edu.umich.verdict.VerdictContext;
@@ -33,6 +37,20 @@ public class SqlToRelationUnitTest {
 			System.out.println(StackTraceReader.stackTrace2String(e));
 			assert(false);
 		}
+	}
+	
+	@Test
+	public void test2() throws VerdictException {
+		VerdictConf conf = new VerdictConf();
+		conf.setDbms("dummy");
+		VerdictContext vc = new VerdictContext(conf);
+		
+		Relation tableWithRand = SingleRelation.from(vc, "table1")
+				 .join(SingleRelation.from(vc, "table2"),
+				 	   Joiner.on(" AND ").join(Arrays.asList("col1 = col1")))
+				 .select("a, b, c, verdict_grp_size, rand(unix_timestamp()) as verdict_rand");
+		
+		System.out.println(tableWithRand.toSql());
 	}
 
 }

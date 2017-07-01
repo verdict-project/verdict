@@ -183,17 +183,25 @@ public class VerdictMeta {
 			
 			// tables and their column names
 			tableToColumnNames.clear();
-			rs = vc.getDbms().getAllTableAndColumns(schemaName);
-			while (rs.next()) {
-				String tableName = rs.getString(1);
-				String columnName = rs.getString(2);
-				TableUniqueName tableUName = TableUniqueName.uname(schemaName, tableName); 
+			List<Pair<String, String>> tabCols = vc.getDbms().getAllTableAndColumns(schemaName);
+			for (Pair<String, String> tabCol : tabCols) {
+				TableUniqueName tableUName = TableUniqueName.uname(schemaName, tabCol.getLeft());
 				if (!tableToColumnNames.containsKey(tableUName)) {
 					tableToColumnNames.put(tableUName, new ArrayList<String>());
 				}
-				tableToColumnNames.get(tableUName).add(columnName);
+				tableToColumnNames.get(tableUName).add(tabCol.getRight());
 			}
-			rs.close();
+			
+//			while (rs.next()) {
+//				String tableName = rs.getString(1);
+//				String columnName = rs.getString(2);
+//				TableUniqueName tableUName = TableUniqueName.uname(schemaName, tableName); 
+//				if (!tableToColumnNames.containsKey(tableUName)) {
+//					tableToColumnNames.put(tableUName, new ArrayList<String>());
+//				}
+//				tableToColumnNames.get(tableUName).add(columnName);
+//			}
+//			rs.close();
 			
 		} catch (VerdictException | SQLException e) {
 //			VerdictLogger.warn(e);

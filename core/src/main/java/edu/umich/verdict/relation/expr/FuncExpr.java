@@ -18,7 +18,8 @@ public class FuncExpr extends Expr {
 	
 	public enum FuncName {
 		COUNT, SUM, AVG, COUNT_DISTINCT, IMPALA_APPROX_COUNT_DISTINCT,
-		ROUND, MAX, MIN, FLOOR, CEIL, EXP, LN, LOG10, LOG2, SIN, COS, TAN, SIGN,
+		ROUND, MAX, MIN, FLOOR, CEIL, EXP, LN, LOG10, LOG2, SIN, COS, TAN,
+		SIGN, RAND, UNIX_TIMESTAMP,
 		UNKNOWN
 	}
 	
@@ -38,6 +39,8 @@ public class FuncExpr extends Expr {
 			.put("COS", FuncName.COS)
 			.put("TAN", FuncName.TAN)
 			.put("SIGN", FuncName.SIGN)
+			.put("RAND", FuncName.RAND)
+			.put("UNIX_TIMESTAMP", FuncName.UNIX_TIMESTAMP)
 			.build();
 
 	protected static Map<FuncName, String> functionPattern = ImmutableMap.<FuncName, String>builder()
@@ -59,6 +62,8 @@ public class FuncExpr extends Expr {
 			.put(FuncName.COS, "COS(%s)")
 			.put(FuncName.TAN, "TAN(%s)")
 			.put(FuncName.SIGN, "SIGN(%s)")
+			.put(FuncName.RAND, "RAND(%s)")
+			.put(FuncName.UNIX_TIMESTAMP, "UNIX_TIMESTAMP(%s)")
 			.put(FuncName.UNKNOWN, "UNKNOWN(%s)")
 			.build();
 	
@@ -94,11 +99,24 @@ public class FuncExpr extends Expr {
 			
 			@Override
 			public FuncExpr visitMathematical_function_expression(VerdictSQLParser.Mathematical_function_expressionContext ctx) {
-				String fname = ctx.unary_mathematical_function().getText();
-				if (string2FunctionType.containsKey(fname)) {
-					return new FuncExpr(string2FunctionType.get(fname), Expr.from(ctx.expression()));
+				if (ctx.unary_mathematical_function() != null) {
+					String fname = ctx.unary_mathematical_function().getText().toUpperCase();
+					if (string2FunctionType.containsKey(fname)) {
+						if (ctx.expression() == null) {
+							return new FuncExpr(string2FunctionType.get(fname), null);
+						} else {
+							return new FuncExpr(string2FunctionType.get(fname), Expr.from(ctx.expression()));
+						}
+					} else {
+						return new FuncExpr(FuncName.UNKNOWN, Expr.from(ctx.expression()));
+					}
 				} else {
-					return new FuncExpr(FuncName.UNKNOWN, Expr.from(ctx.expression()));
+					String fname = ctx.noparam_mathematical_function().getText().toUpperCase();
+					if (string2FunctionType.containsKey(fname)) {
+						return new FuncExpr(string2FunctionType.get(fname), null);
+					} else {
+						return new FuncExpr(FuncName.UNKNOWN, null);
+					}
 				}
 			}
 		};
@@ -171,7 +189,11 @@ public class FuncExpr extends Expr {
 	
 	@Override
 	public String toString() {
-		return String.format(functionPattern.get(funcname), expression.toString());
+		if (expression == null) {
+			return String.format(functionPattern.get(funcname), "");
+		} else {
+			return String.format(functionPattern.get(funcname), expression.toString());
+		}
 	}
 
 	@Override

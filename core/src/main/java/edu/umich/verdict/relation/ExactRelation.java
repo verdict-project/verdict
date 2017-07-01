@@ -311,6 +311,11 @@ public abstract class ExactRelation extends Relation {
 		return Pair.of(groupbys, t);
 	}
 
+	/**
+	 * Collects all the filters in the antecedents of the parameter relation.
+	 * @param r
+	 * @return
+	 */
 	protected Pair<Optional<Cond>, ExactRelation> allPrecedingFilters(ExactRelation r) {
 		Optional<Cond> c = Optional.absent();
 		ExactRelation t = r;
@@ -331,7 +336,7 @@ public abstract class ExactRelation extends Relation {
 
 	protected String sourceExpr(ExactRelation source) {
 		if (source instanceof SingleRelation) {
-			return ((SingleRelation) source).getTableName().toString();
+			return ((SingleRelation) source).getTableName().tableName;
 		} else if (source instanceof JoinedRelation) {
 			return ((JoinedRelation) source).joinClause();
 		} else {

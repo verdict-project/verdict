@@ -8,6 +8,7 @@ import java.util.List;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.misc.Interval;
 
 import com.google.common.base.Joiner;
@@ -166,6 +167,13 @@ public abstract class Relation {
 
 	public static String prettyfySql(String sql) {
 		VerdictSQLLexer l = new VerdictSQLLexer(CharStreams.fromString(sql));
+		
+//		for (Token token = l.nextToken();
+//				token.getType() != Token.EOF;
+//				token = l.nextToken()) {
+//			System.out.println(token.getType());
+//		}
+		
 		VerdictSQLParser p = new VerdictSQLParser(new CommonTokenStream(l));
 		PrettyPrintVisitor r = new PrettyPrintVisitor(sql);
 		return r.visit(p.verdict_statement());

@@ -37,17 +37,19 @@ public class DbmsImpala extends Dbms {
 	// @return temp table name
 	protected TableUniqueName createTempTableWithRand(TableUniqueName originalTableName) throws VerdictException {
 		TableUniqueName tempTableName = generateTempTableName();
-		VerdictLogger.debug(this, "Creating a temp table with random numbers: " + tempTableName);
+		VerdictLogger.debug(this, "Creates a temp table with random numbers: " + tempTableName);
 		executeUpdate(String.format("CREATE TABLE %s AS SELECT *, rand(unix_timestamp()) as verdict_rand FROM %s",
 				tempTableName, originalTableName));
+		VerdictLogger.debug(this, "Done.");
 		return tempTableName;
 	}
 	
 	protected void createUniformSampleTableFromTempTable(TableUniqueName tempTableName, SampleParam param)
 			throws VerdictException {
-		VerdictLogger.debug(this, "Creating a sample table of " + tempTableName);
+		VerdictLogger.debug(this, "Creates a sample table of " + tempTableName);
 		executeUpdate(String.format("CREATE TABLE %s AS SELECT * FROM %s WHERE verdict_rand <= %f",
 				param.sampleTableName(), tempTableName, param.samplingRatio));
+		VerdictLogger.debug(this, "Done.");
 	}
 
 	@Override
@@ -78,9 +80,9 @@ public class DbmsImpala extends Dbms {
 		VerdictLogger.debug(this, "Created a temp table with the new sample name info: " + tempTableName);
 		
 		// copy temp table to the original meta name table after inserting a new entry.
+		VerdictLogger.debug(this, String.format("Moves the temp table (%s) to the meta name table (%s).", tempTableName, metaNameTableName));
 		dropTable(metaNameTableName);
 		executeUpdate(String.format("CREATE TABLE %s AS SELECT * FROM %s", metaNameTableName, tempTableName));
-		VerdictLogger.debug(this, String.format("Moved the temp table (%s) to the meta name table (%s).", tempTableName, metaNameTableName));
 		dropTable(tempTableName);
 	}
 	
@@ -100,9 +102,10 @@ public class DbmsImpala extends Dbms {
 		
 		// copy temp table to the original meta size table after inserting a new entry.
 		dropTable(metaSizeTableName);
-		executeUpdate(String.format("CREATE TABLE %s AS SELECT * FROM %s", metaSizeTableName, tempTableName));
-		VerdictLogger.debug(this, String.format("Moved the temp table (%s) to the meta size table (%s).", tempTableName, metaSizeTableName));
-		dropTable(tempTableName);
+		moveTable(tempTableName, metaSizeTableName);
+//		executeUpdate(String.format("CREATE TABLE %s AS SELECT * FROM %s", metaSizeTableName, tempTableName));
+//		VerdictLogger.debug(this, String.format("Moved the temp table (%s) to the meta size table (%s).", tempTableName, metaSizeTableName));
+//		dropTable(tempTableName);
 	}
 	
 	/**
@@ -117,8 +120,9 @@ public class DbmsImpala extends Dbms {
 		String sql = String.format("CREATE TABLE %s AS SELECT * FROM %s "
 								 + "WHERE abs(fnv_hash(%s)) %% 10000 <= %.4f",
 								 sampleTableName, param.originalTable, param.columnNames.get(0), param.samplingRatio*10000);
-		VerdictLogger.debug(this, String.format("Create a table: %s", sql));
+		VerdictLogger.debug(this, String.format("Creates a table: %s", sql));
 		this.executeUpdate(sql);
+		VerdictLogger.debug(this, "Done.");
 		return sampleTableName;
 	}
 	
@@ -157,14 +161,22 @@ public class DbmsImpala extends Dbms {
 		VerdictLogger.debugPretty(this, Relation.prettyfySql(sql1), "  ");
 		executeUpdate(sql1);
 		
-		String sql2 = String.format("CREATE TABLE %s AS SELECT %s, verdict_grp_size, rand(unix_timestamp()) as verdict_rand ",
-									rnTempTable, columnNamesInString(originalTableName))
-				+ String.format("FROM %s, %s", originalTableName, grpTempTable);
+//		String sql2 = String.format("CREATE TABLE %s AS SELECT %s, verdict_grp_size, rand(unix_timestamp()) as verdict_rand ",
+//									rnTempTable, columnNamesInString(originalTableName))
+//				+ String.format("FROM %s, %s", originalTableName, grpTempTable);
+		
 		List<String> joinCond = new ArrayList<String>();
 		for (String g : param.columnNames) {
-			joinCond.add(String.format("%s.%s = %s.%s", originalTableName, g, grpTempTable, g));
+			joinCond.add(String.format("%s = %s", g, g));
 		}
-		sql2 = sql2 + " WHERE " + Joiner.on(" AND ").join(joinCond);
+		Relation tableWithRand = SingleRelation.from(vc, originalTableName)
+								 .join(SingleRelation.from(vc, grpTempTable),
+								 	   Joiner.on(" AND ").join(joinCond))
+								 .select(String.format("%s, verdict_grp_size, rand(unix_timestamp()) as verdict_rand",
+								 		 columnNamesInString(originalTableName)));
+		String sql2 = String.format("CREATE TABLE %s AS %s", rnTempTable, tableWithRand.toSql());
+		
+//		sql2 = sql2 + " WHERE " + Joiner.on(" AND ").join(joinCond);
 		
 		VerdictLogger.debug(this, "The query used for the temp table with group counts and random numbers.");
 		VerdictLogger.debugPretty(this, Relation.prettyfySql(sql2), "  ");
@@ -254,7 +266,6 @@ public class DbmsImpala extends Dbms {
 		TableUniqueName tempTable = createTempTableExlucdingNameEntry(param, metaNameTableName);
 		dropTable(metaNameTableName);
 		moveTable(tempTable, metaNameTableName);
-		dropTable(tempTable);
 	}
 	
 	@Override
@@ -262,7 +273,6 @@ public class DbmsImpala extends Dbms {
 		TableUniqueName tempTable = createTempTableExlucdingSizeEntry(param, metaSizeTableName);
 		dropTable(metaSizeTableName);
 		moveTable(tempTable, metaSizeTableName);
-		dropTable(tempTable);
 	}
 	
 	@Override
@@ -278,16 +288,32 @@ public class DbmsImpala extends Dbms {
 	}
 	
 	@Override
-	public ResultSet getAllTableAndColumns(String schemaName) throws VerdictException {
+	public List<Pair<String, String>> getAllTableAndColumns(String schemaName) throws VerdictException {
+		List<Pair<String, String>> tabCols = new ArrayList<Pair<String, String>>();
+		
 		try {
-			ResultSet rs = conn.getMetaData().getColumns(null, schemaName, "%", "%");
-			Map<Integer, Integer> columnMap = new HashMap<Integer, Integer>();
-			columnMap.put(1, 3);	// table name
-			columnMap.put(2, 4);	// column name
-			return new VerdictResultSet(rs, null, columnMap);
+			List<String> tables = new ArrayList<String>();
+			
+			ResultSet tableRS = getTableNames(schemaName);
+			while (tableRS.next()) {
+				String table = tableRS.getString(1);
+				tables.add(table);
+			} 
+			tableRS.close();
+			
+			for (String table : tables) {
+				ResultSet columnRS = describeTable(TableUniqueName.uname(schemaName, table));
+				while (columnRS.next()) {
+					String column = columnRS.getString(1);
+					tabCols.add(Pair.of(table, column));
+				}
+				columnRS.close();
+			}
 		} catch (SQLException e) {
 			throw new VerdictException(e);
 		}
+		
+		return tabCols;
 	}
 	
 	@Override
@@ -335,7 +361,7 @@ public class DbmsImpala extends Dbms {
 			TableUniqueName originalTableName,
 			TableUniqueName sizeTableName,
 			TableUniqueName nameTableName) throws VerdictException {
-		VerdictLogger.debug(this, "Creating meta tables if not exist.");
+		VerdictLogger.debug(this, "Creates meta tables if not exist.");
 		String sql = String.format("CREATE TABLE IF NOT EXISTS %s", sizeTableName)
 				+ " (schemaname STRING, "
 				+ " tablename STRING, "
@@ -352,6 +378,8 @@ public class DbmsImpala extends Dbms {
 				+ " samplingratio DOUBLE, "
 				+ " columnnames STRING)";
 		executeUpdate(sql);
+		
+		VerdictLogger.debug(this, "Meta tables created.");
 	}
 	
 	@Override

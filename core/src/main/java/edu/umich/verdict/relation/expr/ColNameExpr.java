@@ -51,15 +51,21 @@ public class ColNameExpr extends Expr {
 
 	@Override
 	public String toString() {
-		if (schema == null) {
-			if (tab == null) {
-				return String.format("%s", col);
-			} else {
-				return String.format("%s.%s", tab, col);
-			}
+		if (tab == null) {
+			return String.format("%s", col);
 		} else {
-			return String.format("%s.%s.%s", schema, tab, col);
+			return String.format("%s.%s", tab, col);
 		}
+//		
+//		if (schema == null) {
+//			if (tab == null) {
+//				return String.format("%s", col);
+//			} else {
+//				return String.format("%s.%s", tab, col);
+//			}
+//		} else {
+//			return String.format("%s.%s.%s", schema, tab, col);
+//		}
 	}
 	
 	@Override
