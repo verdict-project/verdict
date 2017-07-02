@@ -20,6 +20,7 @@ import edu.umich.verdict.datatypes.SampleSizeInfo;
 import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.dbms.Dbms;
 import edu.umich.verdict.exceptions.VerdictException;
+import edu.umich.verdict.relation.SingleRelation;
 import edu.umich.verdict.util.VerdictLogger;
 
 
@@ -142,45 +143,6 @@ public class VerdictMeta {
 		TableUniqueName metaSizeTable = getMetaSizeTableName(schemaName);
 		
 		try {
-			// sample name
-			String sql = String.format("SELECT originalschemaname, originaltablename, sampleschemaaname, sampletablename, "
-					+ " sampletype, samplingratio, columnnames FROM %s", metaNameTable);
-			rs = getMetaDbms().executeQuery(sql);
-			while (rs.next()) {
-				String originalSchemaName = rs.getString(1);
-				String originalTabName = rs.getString(2);
-				String sampleSchemaName = rs.getString(3);
-				String sampleTabName = rs.getString(4);
-				String sampleType = rs.getString(5);
-				double samplingRatio = rs.getDouble(6);
-				String columnNamesString = rs.getString(7);
-				List<String> columnNames = (columnNamesString.length() == 0)?
-						new ArrayList<String>() : Arrays.asList(columnNamesString.split(","));
-				
-				TableUniqueName originalTable = TableUniqueName.uname(originalSchemaName, originalTabName);
-				if (!sampleNameMeta.containsKey(originalTable)) {
-					sampleNameMeta.put(originalTable, new HashMap<SampleParam, TableUniqueName>());
-				}
-				sampleNameMeta.get(originalTable).put(
-						new SampleParam(originalTable, sampleType, samplingRatio, columnNames),
-						TableUniqueName.uname(sampleSchemaName, sampleTabName));
-			}
-			rs.close();
-			
-			// sample size
-			sql = String.format("SELECT schemaname, tablename, samplesize, originaltablesize "
-					+ " FROM %s", metaSizeTable);
-			rs = getMetaDbms().executeQuery(sql);
-			while (rs.next()) {
-				String sampleSchemaName = rs.getString(1);
-				String sampleTabName = rs.getString(2);
-				Long sampleSize = rs.getLong(3);
-				Long originalTableSize = rs.getLong(4);
-				sampleSizeMeta.put(TableUniqueName.uname(sampleSchemaName, sampleTabName),
-						new SampleSizeInfo(sampleSize, originalTableSize));
-			}
-			rs.close();
-			
 			// tables and their column names
 			tableToColumnNames.clear();
 			List<Pair<String, String>> tabCols = vc.getDbms().getAllTableAndColumns(schemaName);
@@ -192,17 +154,47 @@ public class VerdictMeta {
 				tableToColumnNames.get(tableUName).add(tabCol.getRight());
 			}
 			
-//			while (rs.next()) {
-//				String tableName = rs.getString(1);
-//				String columnName = rs.getString(2);
-//				TableUniqueName tableUName = TableUniqueName.uname(schemaName, tableName); 
-//				if (!tableToColumnNames.containsKey(tableUName)) {
-//					tableToColumnNames.put(tableUName, new ArrayList<String>());
-//				}
-//				tableToColumnNames.get(tableUName).add(columnName);
-//			}
-//			rs.close();
-			
+			if (tableToColumnNames.containsKey(metaNameTable)) {
+				// sample name
+				rs = SingleRelation.from(vc, metaNameTable)
+					 .select("originalschemaname, originaltablename, sampleschemaaname, sampletablename, sampletype, samplingratio, columnnames")
+				     .collectResultSet();
+				while (rs.next()) {
+					String originalSchemaName = rs.getString(1);
+					String originalTabName = rs.getString(2);
+					String sampleSchemaName = rs.getString(3);
+					String sampleTabName = rs.getString(4);
+					String sampleType = rs.getString(5);
+					double samplingRatio = rs.getDouble(6);
+					String columnNamesString = rs.getString(7);
+					List<String> columnNames = (columnNamesString.length() == 0)? new ArrayList<String>() : Arrays.asList(columnNamesString.split(","));
+
+					TableUniqueName originalTable = TableUniqueName.uname(originalSchemaName, originalTabName);
+					if (!sampleNameMeta.containsKey(originalTable)) {
+						sampleNameMeta.put(originalTable, new HashMap<SampleParam, TableUniqueName>());
+					}
+					sampleNameMeta.get(originalTable).put(
+							new SampleParam(originalTable, sampleType, samplingRatio, columnNames),
+							TableUniqueName.uname(sampleSchemaName, sampleTabName));
+				}
+				rs.close();
+			}
+
+			if (tableToColumnNames.containsKey(metaSizeTable)) {
+				// sample size
+				rs = SingleRelation.from(vc, metaSizeTable)
+					 .select("schemaname, tablename, samplesize, originaltablesize")
+					 .collectResultSet();
+				while (rs.next()) {
+					String sampleSchemaName = rs.getString(1);
+					String sampleTabName = rs.getString(2);
+					Long sampleSize = rs.getLong(3);
+					Long originalTableSize = rs.getLong(4);
+					sampleSizeMeta.put(TableUniqueName.uname(sampleSchemaName, sampleTabName),
+							new SampleSizeInfo(sampleSize, originalTableSize));
+				}
+				rs.close();
+			}
 		} catch (VerdictException | SQLException e) {
 //			VerdictLogger.warn(e);
 		}

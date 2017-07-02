@@ -10,9 +10,11 @@ import java.sql.SQLException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import edu.umich.verdict.exceptions.VerdictException;
 
+@Category(IntegrationTest.class)
 public class HiveSampleIT extends SampleIT {
 
 	@BeforeClass
@@ -30,28 +32,40 @@ public class HiveSampleIT extends SampleIT {
 		vc = new VerdictContext(conf);
 		
 		String url = String.format("jdbc:hive2://%s:%s/%s", host, port, schema);
-		Connection conn = DriverManager.getConnection(url);
+		conn = DriverManager.getConnection(url);
 		stmt = conn.createStatement();
 	}
 	
 	@Override
-	public void createStratifiedSample() throws VerdictException {
-		super.createStratifiedSample();
+	public void createStratifiedSampleTest() throws VerdictException {
+		super.createStratifiedSampleTest();
 	}
 
 	@AfterClass
-	public static void destroy() throws VerdictException {
+	public static void destroy() throws VerdictException, SQLException {
+		stmt.close();
+		conn.close();
 		vc.destroy();
 	}
 
 	@Override
-	public void createRecommendedSample() throws VerdictException {
-		super.createRecommendedSample();
+	public void createUniverseSampleTest() throws VerdictException {
+		super.createUniverseSampleTest();
+	}
+
+	@Override
+	public void createRecommendedSampleTest() throws VerdictException {
+		super.createRecommendedSampleTest();
 	}
 
 	@Override
 	public void getColumnNamesTest() throws VerdictException {
 		super.getColumnNamesTest();
+	}
+
+	@Override
+	public void dropRecommendedSampleTest() throws VerdictException {
+		super.dropRecommendedSampleTest();
 	}
 
 }

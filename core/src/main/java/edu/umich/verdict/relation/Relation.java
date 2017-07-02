@@ -20,6 +20,7 @@ import edu.umich.verdict.VerdictSQLParser;
 import edu.umich.verdict.VerdictSQLParser.ExpressionContext;
 import edu.umich.verdict.VerdictSQLParser.Join_partContext;
 import edu.umich.verdict.VerdictSQLParser.Search_conditionContext;
+import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.exceptions.VerdictUnexpectedMethodCall;
 import edu.umich.verdict.relation.expr.Expr;
@@ -179,18 +180,28 @@ public abstract class Relation {
 		return r.visit(p.verdict_statement());
 	}
 	
-	private static int alias_no = 1;
+	private static int tab_alias_no = 1;
 	
 	public static String genTableAlias() {
-		String n = String.format("vt%d", alias_no);
-		alias_no++;
+		String n = String.format("vt%d", tab_alias_no);
+		tab_alias_no++;
 		return n;
 	}
 	
+	private static int col_alias_no = 1;
+	
 	public static String genColumnAlias() {
-		String n = String.format("vc%d", alias_no);
-		alias_no++;
+		String n = String.format("vc%d", col_alias_no);
+		col_alias_no++;
 		return n;
+	}
+	
+	private static int temp_tab_no = 1;
+	
+	public static TableUniqueName getTempTableName(VerdictContext vc) {
+		String n = String.format("vt%d_%d", vc.getContextId()%100, temp_tab_no);
+		temp_tab_no++;
+		return TableUniqueName.uname(vc, n);
 	}
 	
 }

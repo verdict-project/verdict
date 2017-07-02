@@ -36,7 +36,7 @@ public class DbmsImpala extends Dbms {
 
 	// @return temp table name
 	protected TableUniqueName createTempTableWithRand(TableUniqueName originalTableName) throws VerdictException {
-		TableUniqueName tempTableName = generateTempTableName();
+		TableUniqueName tempTableName = Relation.getTempTableName(vc);
 		VerdictLogger.debug(this, "Creates a temp table with random numbers: " + tempTableName);
 		executeUpdate(String.format("CREATE TABLE %s AS SELECT *, rand(unix_timestamp()) as verdict_rand FROM %s",
 				tempTableName, originalTableName));
@@ -63,7 +63,7 @@ public class DbmsImpala extends Dbms {
 	}
 	
 	protected TableUniqueName createTempTableExlucdingNameEntry(SampleParam param, TableUniqueName metaNameTableName) throws VerdictException {
-		TableUniqueName tempTableName = generateTempTableName();
+		TableUniqueName tempTableName = Relation.getTempTableName(vc);
 		TableUniqueName originalTableName = param.originalTable;
 		executeUpdate(String.format("CREATE TABLE %s AS SELECT * FROM %s "
 				+ "WHERE originalschemaname <> \"%s\" OR originaltablename <> \"%s\" OR sampletype <> \"%s\""
@@ -87,7 +87,7 @@ public class DbmsImpala extends Dbms {
 	}
 	
 	protected TableUniqueName createTempTableExlucdingSizeEntry(SampleParam param, TableUniqueName metaSizeTableName) throws VerdictException {
-		TableUniqueName tempTableName = generateTempTableName();
+		TableUniqueName tempTableName = Relation.getTempTableName(vc);
 		TableUniqueName sampleTableName = param.sampleTableName();
 		executeUpdate(String.format("CREATE TABLE %s AS SELECT * FROM %s WHERE schemaname <> \"%s\" OR tablename <> \"%s\" ",
 				tempTableName, metaSizeTableName, sampleTableName.schemaName, sampleTableName.tableName));
@@ -149,8 +149,8 @@ public class DbmsImpala extends Dbms {
 	 * @throws VerdictException
 	 */
 	protected Pair<TableUniqueName, TableUniqueName> createTempTableWithGroupCountsAndRand(SampleParam param) throws VerdictException {
-		TableUniqueName rnTempTable = generateTempTableName();
-		TableUniqueName grpTempTable = generateTempTableName();
+		TableUniqueName rnTempTable = Relation.getTempTableName(vc);
+		TableUniqueName grpTempTable = Relation.getTempTableName(vc);
 		
 		TableUniqueName originalTableName = param.originalTable;
 		String groupName = Joiner.on(", ").join(param.columnNames);
@@ -215,7 +215,7 @@ public class DbmsImpala extends Dbms {
 			throws VerdictException
 	{
 		TableUniqueName originalTableName = param.originalTable;
-		TableUniqueName sampleTempTable = generateTempTableName();
+		TableUniqueName sampleTempTable = Relation.getTempTableName(vc);
 		String samplingProbColName = vc.samplingProbColName();
 		
 		VerdictLogger.debug(this, "Creating a sample table using " + rnTempTable + " and " + grpTempTable);

@@ -420,14 +420,14 @@ public class Dbms {
 		this.executeUpdate(sql);
 	}
 	
-	/**
-	 * This method is not thread-safe
-	 * @return
-	 */
-	public TableUniqueName generateTempTableName() {
-		String tableName = String.format("verdict_temp_table_%d", System.nanoTime());
-		return TableUniqueName.uname(vc, tableName);
-	}
+//	/**
+//	 * This method is not thread-safe
+//	 * @return
+//	 */
+//	public TableUniqueName generateTempTableName() {
+//		String tableName = String.format("verdict_temp_table_%d", System.nanoTime());
+//		return TableUniqueName.uname(vc, tableName);
+//	}
 	
 	public ResultSet getDatabaseNames() throws VerdictException {
 		try {

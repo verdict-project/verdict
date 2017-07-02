@@ -36,8 +36,8 @@ public class DbmsHive extends DbmsImpala {
 	
 	protected TableUniqueName justCreateUniverseSampleTableOf(SampleParam param) throws VerdictException {
 		TableUniqueName sampleTableName = param.sampleTableName();
-		String sql = String.format("CREATE TABLE %s SELECT * FROM %s "
-								 + "WHERE pmod(conv(substr(md5(aisle_id),17,16),16,10),10000) <= %.4f",
+		String sql = String.format("CREATE TABLE %s AS SELECT * FROM %s "
+								 + "WHERE pmod(conv(substr(md5(%s),17,16),16,10),10000) <= %.4f",
 								 sampleTableName, param.originalTable, param.columnNames.get(0), param.samplingRatio*10000);
 		VerdictLogger.debug(this, String.format("Creates a table: %s", sql));
 		this.executeUpdate(sql);

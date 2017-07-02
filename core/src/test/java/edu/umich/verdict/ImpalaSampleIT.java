@@ -30,7 +30,7 @@ public class ImpalaSampleIT extends SampleIT {
 		vc = new VerdictContext(conf);
 		
 		String url = String.format("jdbc:impala://%s:%s/%s", host, port, schema);
-		Connection conn = DriverManager.getConnection(url);
+		conn = DriverManager.getConnection(url);
 		stmt = conn.createStatement();
 	}
 	
@@ -39,4 +39,14 @@ public class ImpalaSampleIT extends SampleIT {
 		vc.destroy();
 	}
 
+	@Override
+	public void createRecommendedSampleTest() throws VerdictException {
+		super.createRecommendedSampleTest();
+	}
+
+	@Override
+	public void dropRecommendedSampleTest() throws VerdictException {
+		super.dropRecommendedSampleTest();
+	}
+	
 }

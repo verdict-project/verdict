@@ -17,9 +17,9 @@ public class ColNameExpr extends Expr {
 	}
 
 	public ColNameExpr(String col, String tab, String schema) {
-		this.col = col;
-		this.tab = tab;
-		this.schema = schema;
+		this.col = col.toLowerCase();
+		this.tab = (tab != null)? tab.toLowerCase() : tab;
+		this.schema = (schema != null)? schema.toLowerCase() : schema;
 	}
 	
 	public static ColNameExpr from(String expr) {

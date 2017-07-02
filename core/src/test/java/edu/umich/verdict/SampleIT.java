@@ -12,13 +12,18 @@ import edu.umich.verdict.exceptions.VerdictException;
 public class SampleIT extends BaseIT {
 
 	@Test
-	public void createRecommendedSample() throws VerdictException {
-		vc.executeQuery("CREATE SAMPLE OF ORDERS");
+	public void createRecommendedSampleTest() throws VerdictException {
+		vc.executeQuery("CREATE SAMPLE OF orders");
 	}
 	
 	@Test
-	public void createStratifiedSample() throws VerdictException {
-		vc.executeQuery("CREATE STRATIFIED SAMPLE OF ORDERS ON ORDER_DOW");
+	public void createStratifiedSampleTest() throws VerdictException {
+		vc.executeQuery("CREATE STRATIFIED SAMPLE OF orders ON order_dow");
+	}
+	
+	@Test
+	public void createUniverseSampleTest() throws VerdictException {
+		vc.executeQuery("CREATE UNIVERSE SAMPLE OF orders ON user_id");
 	}
 	
 	@Test
@@ -26,6 +31,11 @@ public class SampleIT extends BaseIT {
 		TableUniqueName orders = TableUniqueName.uname(vc, "orders");
 		List<String> columns = vc.getMeta().getColumnNames(orders);
 		System.out.println(columns);
+	}
+	
+	@Test
+	public void dropRecommendedSampleTest() throws VerdictException {
+		vc.executeQuery("DROP SAMPLE OF orders");
 	}
 
 }
