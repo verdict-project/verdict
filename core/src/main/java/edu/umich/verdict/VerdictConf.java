@@ -24,11 +24,19 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Scanner;
 
+import com.google.common.collect.ImmutableMap;
+
 import edu.umich.verdict.util.VerdictLogger;
 
 public class VerdictConf {
 	
     private HashMap<String, String> configs = new HashMap<String, String>();
+    
+    private final Map<String, String> configKeySynonyms =
+    		new ImmutableMap.Builder<String, String>()
+    		.put("byapss", "verdict.bypass")
+    		.put("loglevel", "verdict.loglevel")
+    		.build();
     
     public VerdictConf() {
         setDefaults();
@@ -96,6 +104,9 @@ public class VerdictConf {
     }
 
     public String get(String key) {
+    	if (configKeySynonyms.containsKey(key)) {
+    		return get(configKeySynonyms.get(key));
+    	}
     	return configs.get(key.toLowerCase());
     }
     
@@ -119,7 +130,11 @@ public class VerdictConf {
     }
 
     public VerdictConf set(String key, String value) {
-    	if (key.equals("log4j.loglevel")) {
+    	if (configKeySynonyms.containsKey(key)) {
+    		return set(configKeySynonyms.get(key), value);
+    	}
+    	
+    	if (key.equals("verdict.loglevel")) {
     		VerdictLogger.setLogLevel(value);
     	}
         configs.put(key.toLowerCase(), value);

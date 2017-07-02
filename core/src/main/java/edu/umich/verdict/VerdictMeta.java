@@ -58,8 +58,8 @@ public class VerdictMeta {
 	
 	public VerdictMeta(VerdictContext vc) throws VerdictException {
 		this.vc = vc;
-		META_NAME_TABLE = vc.getConf().get("meta_name_table");
-		META_SIZE_TABLE = vc.getConf().get("meta_size_table");
+		META_NAME_TABLE = vc.getConf().get("verdict.meta_name_table");
+		META_SIZE_TABLE = vc.getConf().get("verdict.meta_size_table");
 		sampleSizeMeta = new HashMap<TableUniqueName, SampleSizeInfo>();
 		sampleNameMeta = new HashMap<TableUniqueName, Map<SampleParam, TableUniqueName>>();
 		uptodateSchemas = new HashSet<Pair<Long, String>>();
