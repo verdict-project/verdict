@@ -40,7 +40,7 @@ public abstract class Query {
 		queryString = q;
 		this.vc = vc;
 		vc.incrementQid();
-		vc.getMeta().clearSampleInfo();
+//		vc.getMeta().clearSampleInfo();
 		Alias.resetAliasIndex();
 	}
 
@@ -112,6 +112,8 @@ public abstract class Query {
 					query = new ShowDatabasesQuery(vc, queryString);
 				} else if (queryType.equals(Type.OTHER_REFRESH)) {
 					query = new RefreshQuery(vc, queryString);
+//				} else if (queryType.equals(Type.CREATE_TABLE)) {
+//					query = new CreateTableQuery(vc, queryString);
 				} else if (queryType.equals(Type.CREATE_TABLE) ||
 						   queryType.equals(Type.DROP_TABLE) ||
 						   queryType.equals(Type.DELETE_FROM) ||

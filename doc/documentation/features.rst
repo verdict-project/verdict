@@ -1,7 +1,7 @@
 .. _features:
 
 ****************************************************
-Supported Databases and Queries
+Supported Databases
 ****************************************************
 
 ====================================================
@@ -21,15 +21,16 @@ behaviors of their JDBC drivers. For example, Hive uses backticks for including 
 minor adjustments for new databases drivers.
 
 
-====================================================
+****************************************************
 Supported Queries
-====================================================
+****************************************************
 
 Verdict supports a subset of standard SQL statements, which we overview below. Our team is currently
 extending the types of queries Verdict can support. Please email our development team if there are
 important features Verdict misses.
 
 
+====================================================
 Select Statement
 ====================================================
 
@@ -38,25 +39,27 @@ the :code:`where` clause, a :code:`group by` clause, a :code:`having` clause, mu
 :code:`from` clause, and subqueries (i.e., nested select statements)
 in the :code:`from` clause and the :code:`where` clause.
 
-Verdict supports the following aggregate functions currently:
+Verdict supports the following aggregate functions:
 
 .. rst-class:: center
 
-    +------------------------+------------------------------+
-    | Aggregate function     | Remarks                      |
-    +========================+==============================+
-    | AVG                    |                              |
-    +------------------------+------------------------------+
-    | COUNT                  |                              |
-    +------------------------+------------------------------+
-    | SUM                    |                              |
-    +------------------------+------------------------------+
+    +-----------------------------+------------------------------+
+    | Aggregate function          | Remarks                      |
+    +=============================+==============================+
+    | COUNT(*)                    |                              |
+    +-----------------------------+------------------------------+
+    | SUM(expression)             |                              |
+    +-----------------------------+------------------------------+
+    | AVG(expression)             |                              |
+    +-----------------------------+------------------------------+
+    | COUNT(DISTINCT expresion)   |                              |
+    +-----------------------------+------------------------------+
 
 
 
 The composition of the above aggregate functions is also allowed. For example, :code:`AVG(sales) *
 AVG(discount)` can be specified in the select statement.  We are currently extending Verdict to support
-other aggregate functions, such as :code:`COUNT(distinct column)`, :code:`VAR`, :code:`STDEV`, etc.
+other aggregate functions, such as :code:`VAR`, :code:`STDEV`, etc.
 
 The select statement may include the following mathematical functions:
 
@@ -93,6 +96,7 @@ The goal of Verdict is to support most of the built-in functions supported by `H
 <https://cwiki.apache.org/confluence/display/Hive/LanguageManual+UDF>`_.
 
 
+====================================================
 Sample Statement
 ====================================================
 
@@ -113,10 +117,12 @@ sample size is not specified, the sample size is set to 1% by default.
 
 .. code-block:: sql
 
-    CREATE [xx%] SAMPLE FROM table_name;
+    CREATE [xx%] [(UNIFORM | UNIVERSE | STRATIFIED | RECOMMENDED)] SAMPLE (OF | FROM) table_name [ON columns];
 
-A sample creation statement also creates two meta data tables in the same catalog as the original
-table. By default, the names of the meta tables are :code:`verdict_meta_name` and
+For default usage, simply type :code:`CREATE SAMPLE OF table`. Then, Verdict automatically creates a
+set of samples after analyzing the table.
+A sample creation statement also creates two metadata tables in the same catalog as the original
+table. By default, the names of the metadata tables are :code:`verdict_meta_name` and
 :code:`verdict_meta_size`. The names of these meta tables can be changed in the configuration file
 (see :ref:`configuration`).
 
@@ -139,15 +145,16 @@ sizes of the original tables and the sample tables.
 Sample Deletion
 ****************************************************
 
-A delete sample statement deletes the sample created for :code:`table_name`. The meta data are
+A delete sample statement deletes the sample created for :code:`table_name`. The metadata tables are
 updated accordingly.
 
 .. code-block:: sql
 
-    (DELETE | DROP) SAMPLE table_name;
+    (DELETE | DROP) [(UNIFORM | UNIVERSE | STRATIFIED | RECOMMENDED)] SAMPLE OF table_name [ON columns];
 
 
 
+====================================================
 Other DML Statement
 ====================================================
 
@@ -158,7 +165,7 @@ the sample tables. This feature is to support complex nested queries more conven
 want this option, the users can turn off the feature by :code:`set bypass='true'`.
 
 
-Table Statement
+Create Table Statement
 ****************************************************
 
 Verdict supports the standard create table statement.

@@ -1,6 +1,7 @@
 package edu.umich.verdict;
 
 import java.sql.ResultSet;
+import java.util.concurrent.ThreadLocalRandom;
 
 import com.google.common.base.Optional;
 
@@ -12,9 +13,9 @@ import edu.umich.verdict.util.VerdictLogger;
 
 public class VerdictContext {
 	
-	private VerdictConf conf;
+	final private VerdictConf conf;
 	
-	private VerdictMeta meta;
+	final private VerdictMeta meta;
 	
 	/*
 	 *  DBMS fields
@@ -26,6 +27,8 @@ public class VerdictContext {
 	
 	// used for refreshing meta data.
 	private long queryUid;
+	
+	final private int contextId;
 	
 	
 	/* 
@@ -47,6 +50,7 @@ public class VerdictContext {
 		this.metaDbms = another.metaDbms;
 		this.queryUid = another.queryUid;
 		this.dbms.createNewStatementWithoutClosing();
+		this.contextId = another.contextId;
 	}
 	
 	/**
@@ -78,6 +82,8 @@ public class VerdictContext {
 		if (conf.getDbmsSchema() != null) {
 			meta.refreshSampleInfo(conf.getDbmsSchema());
 		}
+
+		this.contextId = ThreadLocalRandom.current().nextInt(0, 10000);
 	}
 	
 	public ResultSet executeQuery(String sql) throws VerdictException {
@@ -91,6 +97,10 @@ public class VerdictContext {
 	
 	public void incrementQid() {
 		queryUid += 1;
+	}
+	
+	public int getContextId() {
+		return contextId;
 	}
 	
 	public long getQid() {

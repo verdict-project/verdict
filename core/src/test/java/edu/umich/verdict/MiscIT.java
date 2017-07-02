@@ -1,8 +1,14 @@
 package edu.umich.verdict;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.List;
+
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
 
 import edu.umich.verdict.exceptions.VerdictException;
+import edu.umich.verdict.util.ResultSetConversion;
 
 public class MiscIT extends BaseIT {
 
@@ -26,5 +32,13 @@ public class MiscIT extends BaseIT {
 	public void describeTables() throws VerdictException {
 		String sql = "describe orders";
 		runSql(sql);
+	}
+	
+	@Test
+	public void getColumnsTest() throws VerdictException, SQLException {
+		List<Pair<String, String>> tabCols = vc.getDbms().getAllTableAndColumns("instacart1g");
+		for (Pair<String, String> tabCol : tabCols) {
+			System.out.println(tabCol.getLeft() + " " + tabCol.getRight());
+		}
 	}
 }

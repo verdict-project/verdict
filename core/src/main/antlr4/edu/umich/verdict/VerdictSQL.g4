@@ -102,8 +102,9 @@ config_key: ID('.' (ID | TRIALS))*;
 //    ;
 
 config_value
-    : DOUBLE_QUOTE_STRING
+    : DOUBLE_QUOTE_ID
     | STRING
+    | ID (',' ID)*
     ;
 
 SIZE: S I Z E;
@@ -119,7 +120,7 @@ CONFIDENCE: C O N F I D E N C E;
 TRIALS: T R I A L S;
 
 
-DOUBLE_QUOTE_STRING: '"' (~'"' | '\\"')* '"';
+//DOUBLE_QUOTE_STRING: '"' (~'"' | '\\"')* '"';
 
 confidence_clause: CONFIDENCE confidence=(FLOAT | DECIMAL) percent='%'?;
 
@@ -156,10 +157,8 @@ ddl_clause
     | create_statistics
     | create_table
     | create_view
-
     | alter_table
     | alter_database
-
     | drop_index
     | drop_procedure
     | drop_statistics
@@ -295,8 +294,13 @@ create_statistics
 
 // https://msdn.microsoft.com/en-us/library/ms174979.aspx
 create_table
-    : CREATE TABLE table_name '(' column_def_table_constraint (','? column_def_table_constraint)* ','? ')' (ON id | DEFAULT)? ';'?
+    : CREATE TABLE table_name '(' column_def_table_constraint (','? column_def_table_constraint)* ','? ')'
+//      create_table_option* ';'?
     ;
+    
+//create_table_option
+//    : table_option_key=(LOCATION | TYPE | FIELDS_SEPARATED_BY | ESCAPED_BY | QUOTED_BY) table_option_value=(ID | DOUBLE_QUOTE_STRING | STRING)
+//    ;
 
 create_table_as_select
     : CREATE TABLE (IF NOT EXISTS)? table_name AS select_statement ';'?
@@ -861,7 +865,7 @@ unary_mathematical_function
     ;
     
 noparam_mathematical_function
-    : RAND | UNIX_TIMESTAMP
+    : UNIX_TIMESTAMP
     ;
 
 // https://msdn.microsoft.com/en-us/library/ms173454.aspx
@@ -983,7 +987,7 @@ scalar_function_name
 // https://msdn.microsoft.com/en-us/library/ms187752.aspx
 // TODO: implement runtime check or add new tokens.
 data_type
-    /*: BIGINT
+/*    : BIGINT
     | BINARY '(' DECIMAL ')'
     | BIT
     | CHAR '(' DECIMAL ')'
@@ -992,6 +996,7 @@ data_type
     | DATETIME2
     | DATETIMEOFFSET '(' DECIMAL ')'
     | DECIMAL '(' DECIMAL ',' DECIMAL ')'
+    | DOUBLE
     | FLOAT
     | GEOGRAPHY
     | GEOMETRY
@@ -1015,7 +1020,7 @@ data_type
     | UNIQUEIDENTIFIER
     | VARBINARY '(' DECIMAL | MAX ')'
     | VARCHAR '(' DECIMAL | MAX ')'
-    | XML*/
+    | XML */
     : id IDENTITY? ('(' (DECIMAL | MAX) (',' DECIMAL)? ')')?
     ;
 
@@ -1044,7 +1049,7 @@ sign
 
 // https://msdn.microsoft.com/en-us/library/ms175874.aspx
 id
-    : simple_id
+    : ID
     | DOUBLE_QUOTE_ID
     | SQUARE_BRACKET_ID
     | BACKTICK_ID
@@ -1395,9 +1400,11 @@ DENSE_RANK:                      D E N S E '_' R A N K;
 DISABLE:                         D I S A B L E;
 DYNAMIC:                         D Y N A M I C;
 ENCRYPTION:                      E N C R Y P T I O N;
+ESCAPED_BY:                      E S C A P E D ' ' B Y;
 EXP:                             E X P;
 FAST:                            F A S T;
 FAST_FORWARD:                    F A S T '_' F O R W A R D;
+FIELDS_SEPARATED_BY:             F I E L D S ' ' S E P A R A T E D ' ' B Y;
 FIRST:                           F I R S T;
 FLOOR:                           F L O O R;
 FOLLOWING:                       F O L L O W I N G;
@@ -1417,6 +1424,7 @@ LAST:                            L A S T;
 LEVEL:                           L E V E L;
 LN:                              L N;
 LOCAL:                           L O C A L;
+LOCATION:                        L O C A T I O N;
 LOCK_ESCALATION:                 L O C K '_' E S C A L A T I O N;
 LOG2:                            L O G '2';
 LOG10:                           L O G '10';
@@ -1446,6 +1454,7 @@ PARTITION:                       P A R T I T I O N;
 PATH:                            P A T H;
 PRECEDING:                       P R E C E D I N G;
 PRIOR:                           P R I O R;
+QUOTED_BY:                       Q U O T E D ' ' B Y;
 RAND:                            R A N D;
 RANGE:                           R A N G E;
 RANK:                            R A N K;

@@ -14,6 +14,7 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -243,14 +244,17 @@ public class Dbms {
 	
 	public void dropTable(TableUniqueName tableName) throws VerdictException {
 		String sql = String.format("DROP TABLE IF EXISTS %s", tableName);
-		VerdictLogger.debug(this, String.format("Drop table: %s", sql));
+		VerdictLogger.debug(this, String.format("Drops table: %s", sql));
 		this.executeUpdate(sql);
+		VerdictLogger.debug(this, tableName + " has been dropped.");
 	}
 	
 	protected void moveTable(TableUniqueName from, TableUniqueName to) throws VerdictException {
 		String sql = String.format("CREATE TABLE %s AS SELECT * FROM %s", to, from);
-		VerdictLogger.debug(this, String.format("Move %s to %s", from, to));
+		VerdictLogger.debug(this, String.format("Moves table %s to table %s", from, to));
 		executeUpdate(sql);
+		dropTable(from);
+		VerdictLogger.debug(this, "Moving table done.");
 	}
 
 	
@@ -264,8 +268,9 @@ public class Dbms {
 		TableUniqueName sampleTableName = param.sampleTableName();
 		String sql = String.format("CREATE TABLE %s SELECT * FROM %s WHERE rand() < %f;",
 										sampleTableName, param.originalTable, param.samplingRatio);
-		VerdictLogger.debug(this, String.format("Create a table: %s", sql));
+		VerdictLogger.debug(this, String.format("Creates a table: %s", sql));
 		this.executeUpdate(sql);
+		VerdictLogger.debug(this, "Done.");
 		return sampleTableName;
 	}
 	
@@ -300,8 +305,9 @@ public class Dbms {
 		String sql = String.format("CREATE TABLE %s SELECT * FROM %s "
 								 + "WHERE mod(cast(conv(substr(md5(%s),17,32),16,10) as unsigned), 10000) <= %.4f",
 								 sampleTableName, param.originalTable, param.columnNames.get(0), param.samplingRatio*10000);
-		VerdictLogger.debug(this, String.format("Create a table: %s", sql));
+		VerdictLogger.debug(this, String.format("Creates a table: %s", sql));
 		this.executeUpdate(sql);
+		VerdictLogger.debug(this, "Done.");
 		return sampleTableName;
 	}
 	
@@ -414,14 +420,14 @@ public class Dbms {
 		this.executeUpdate(sql);
 	}
 	
-	/**
-	 * This method is not thread-safe
-	 * @return
-	 */
-	public TableUniqueName generateTempTableName() {
-		String tableName = String.format("verdict_temp_table_%d", System.nanoTime());
-		return TableUniqueName.uname(vc, tableName);
-	}
+//	/**
+//	 * This method is not thread-safe
+//	 * @return
+//	 */
+//	public TableUniqueName generateTempTableName() {
+//		String tableName = String.format("verdict_temp_table_%d", System.nanoTime());
+//		return TableUniqueName.uname(vc, tableName);
+//	}
 	
 	public ResultSet getDatabaseNames() throws VerdictException {
 		try {
@@ -431,16 +437,19 @@ public class Dbms {
 		}
 	}
 	
-	public ResultSet getAllTableAndColumns(String schemaName) throws VerdictException {
+	public List<Pair<String, String>> getAllTableAndColumns(String schemaName) throws VerdictException {
+		List<Pair<String, String>> tabCols = new ArrayList<Pair<String, String>>();
 		try {
 			ResultSet rs = conn.getMetaData().getColumns(schemaName, null, "%", "%");
-			Map<Integer, Integer> columnMap = new HashMap<Integer, Integer>();
-			columnMap.put(1, 3);	// table name
-			columnMap.put(2, 4);	// column name
-			return new VerdictResultSet(rs, null, columnMap);
+			while (rs.next()) {
+				String table = rs.getString(3);
+				String column = rs.getString(4);
+				tabCols.add(Pair.of(table, column));
+			}
 		} catch (SQLException e) {
 			throw new VerdictException(e);
 		}
+		return tabCols;
 	}
 	
 	public ResultSet getTableNames(String schemaName) throws VerdictException {
@@ -474,7 +483,7 @@ public class Dbms {
 			TableUniqueName originalTableName,
 			TableUniqueName sizeTableName,
 			TableUniqueName nameTableName) throws VerdictException {
-		VerdictLogger.debug(this, "Creating meta tables if not exist.");
+		VerdictLogger.debug(this, "Creates meta tables if not exist.");
 		
 		String sql = String.format("CREATE TABLE IF NOT EXISTS %s", nameTableName)
 				+ " (originalschemaname VARCHAR(50), "
@@ -493,6 +502,8 @@ public class Dbms {
 				+ " samplesize BIGINT, "
 				+ " originaltablesize BIGINT)";
 		executeUpdate(sql);
+		
+		VerdictLogger.debug(this, "Finished createing meta tables if not exist.");
 	}
 	
 	public boolean doesMetaTablesExist(String schemaName) throws VerdictException {

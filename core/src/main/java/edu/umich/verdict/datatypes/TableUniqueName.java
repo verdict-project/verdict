@@ -10,8 +10,8 @@ public class TableUniqueName implements Comparable {
 	public final String tableName;
 	
 	public TableUniqueName(String schemaName, String tableName) {
-		this.schemaName = schemaName;
-		this.tableName = tableName;
+		this.schemaName = (schemaName != null)? schemaName.toLowerCase() : schemaName;
+		this.tableName = (tableName != null)? tableName.toLowerCase() : tableName;
 	}
 	
 	public static TableUniqueName uname(String schemaName, String tableName) {

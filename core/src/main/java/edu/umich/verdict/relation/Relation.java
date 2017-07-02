@@ -8,6 +8,7 @@ import java.util.List;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.misc.Interval;
 
 import com.google.common.base.Joiner;
@@ -19,6 +20,7 @@ import edu.umich.verdict.VerdictSQLParser;
 import edu.umich.verdict.VerdictSQLParser.ExpressionContext;
 import edu.umich.verdict.VerdictSQLParser.Join_partContext;
 import edu.umich.verdict.VerdictSQLParser.Search_conditionContext;
+import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.exceptions.VerdictUnexpectedMethodCall;
 import edu.umich.verdict.relation.expr.Expr;
@@ -166,23 +168,40 @@ public abstract class Relation {
 
 	public static String prettyfySql(String sql) {
 		VerdictSQLLexer l = new VerdictSQLLexer(CharStreams.fromString(sql));
+		
+//		for (Token token = l.nextToken();
+//				token.getType() != Token.EOF;
+//				token = l.nextToken()) {
+//			System.out.println(token.getType());
+//		}
+		
 		VerdictSQLParser p = new VerdictSQLParser(new CommonTokenStream(l));
 		PrettyPrintVisitor r = new PrettyPrintVisitor(sql);
 		return r.visit(p.verdict_statement());
 	}
 	
-	private static int alias_no = 1;
+	private static int tab_alias_no = 1;
 	
 	public static String genTableAlias() {
-		String n = String.format("vt%d", alias_no);
-		alias_no++;
+		String n = String.format("vt%d", tab_alias_no);
+		tab_alias_no++;
 		return n;
 	}
 	
+	private static int col_alias_no = 1;
+	
 	public static String genColumnAlias() {
-		String n = String.format("vc%d", alias_no);
-		alias_no++;
+		String n = String.format("vc%d", col_alias_no);
+		col_alias_no++;
 		return n;
+	}
+	
+	private static int temp_tab_no = 1;
+	
+	public static TableUniqueName getTempTableName(VerdictContext vc) {
+		String n = String.format("vt%d_%d", vc.getContextId()%100, temp_tab_no);
+		temp_tab_no++;
+		return TableUniqueName.uname(vc, n);
 	}
 	
 }

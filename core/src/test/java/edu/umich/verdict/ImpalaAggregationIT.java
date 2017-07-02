@@ -5,6 +5,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.experimental.categories.Category;
 
@@ -30,6 +31,11 @@ public class ImpalaAggregationIT extends AggregationIT {
 		String url = String.format("jdbc:impala://%s:%s/%s", host, port, schema);
 		Connection conn = DriverManager.getConnection(url);
 		stmt = conn.createStatement();
+	}
+	
+	@AfterClass
+	public static void destroy() throws VerdictException {
+		vc.destroy();
 	}
 
 	@Override
