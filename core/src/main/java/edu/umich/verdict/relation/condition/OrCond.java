@@ -15,6 +15,27 @@ public class OrCond extends Cond {
 		return new OrCond(left, right);
 	}
 
+	public Cond getLeft() {
+		return left;
+	}
+
+	public void setLeft(Cond left) {
+		this.left = left;
+	}
+
+	public Cond getRight() {
+		return right;
+	}
+
+	public void setRight(Cond right) {
+		this.right = right;
+	}
+
+	@Override
+	public Cond accept(CondModifier v) {
+		return from(left.accept(v), right.accept(v));
+	}
+
 	@Override
 	public String toString() {
 		return String.format("(%s) OR (%s)", left.toString(), right.toString());

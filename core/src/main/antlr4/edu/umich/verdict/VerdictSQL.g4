@@ -861,7 +861,8 @@ mathematical_function_expression
     ;
 
 unary_mathematical_function
-    : ROUND | FLOOR | CEIL | EXP | LN | LOG10 | LOG2 | SIN | COS | TAN | SIGN | RAND
+    : ROUND | FLOOR | CEIL | EXP | LN | LOG10 | LOG2 | SIN | COS | TAN | SIGN | RAND | FNV_HASH | ABS
+    | STDDEV | SQRT
     ;
     
 noparam_mathematical_function
@@ -1373,6 +1374,7 @@ WRITETEXT:                       W R I T E T E X T;
 
 // Additional keywords (they can be id).
 ABSOLUTE:                        A B S O L U T E;
+ABS:                             A B S;
 APPLY:                           A P P L Y;
 AUTO:                            A U T O;
 AVG:                             A V G;
@@ -1409,6 +1411,7 @@ FIRST:                           F I R S T;
 FLOOR:                           F L O O R;
 FOLLOWING:                       F O L L O W I N G;
 FORWARD_ONLY:                    F O R W A R D '_' O N L Y;
+FNV_HASH:                        F N V '_' H A S H;
 FULLSCAN:                        F U L L S C A N;
 GLOBAL:                          G L O B A L;
 GO:                              G O;
@@ -1485,8 +1488,10 @@ SPATIAL_WINDOW_MAX_CELLS:        S P A T I A L '_' W I N D O W '_' M A X '_' C E
 STATIC:                          S T A T I C;
 STATS_STREAM:                    S T A T S '_' S T R E A M;
 STDEV:                           S T D E V;
+STDDEV:                          S T D D E V;
 STDEVP:                          S T D E V P;
 SUM:                             S U M;
+SQRT:                            S Q R T;
 TAN:                             T A N;
 THROW:                           T H R O W;
 TIES:                            T I E S;

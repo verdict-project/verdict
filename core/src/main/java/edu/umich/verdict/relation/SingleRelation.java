@@ -277,5 +277,16 @@ public class SingleRelation extends ExactRelation {
 	protected SampleParam asSampleParam() {
 		return new SampleParam(getTableName(), NOSAMPLE, 1.0, null);
 	}
+
+	@Override
+	public List<SelectElem> getSelectList() {
+		TableUniqueName table = getTableName();
+		List<String> columns = vc.getMeta().getColumnNames(table);
+		List<SelectElem> elems = new ArrayList<SelectElem>();
+		for (String c : columns) {
+			elems.add(new SelectElem(new ColNameExpr(c, table.tableName)));
+		}
+		return elems;
+	}
 	
 }

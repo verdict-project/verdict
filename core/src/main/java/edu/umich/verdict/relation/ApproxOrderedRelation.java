@@ -12,6 +12,7 @@ import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.relation.expr.FuncExpr;
 import edu.umich.verdict.relation.expr.OrderByExpr;
+import edu.umich.verdict.util.VerdictLogger;
 
 public class ApproxOrderedRelation extends ApproxRelation {
 	
@@ -26,10 +27,29 @@ public class ApproxOrderedRelation extends ApproxRelation {
 	}
 
 	@Override
-	public ExactRelation rewrite() {
-		ExactRelation r = new OrderedRelation(vc, source.rewrite(), orderby);
+	public ExactRelation rewriteForPointEstimate() {
+		ExactRelation r = new OrderedRelation(vc, source.rewriteForPointEstimate(), orderby);
 		r.setAliasName(getAliasName());
 		return r;
+	}
+	
+	@Override
+	public ExactRelation rewriteWithSubsampledErrorBounds() {
+		ExactRelation r = new OrderedRelation(vc, source.rewriteWithSubsampledErrorBounds(), orderby);
+		r.setAliasName(getAliasName());
+		return r;
+	}
+	
+	@Override
+	public ExactRelation rewriteWithPartition() {
+		ExactRelation r = new OrderedRelation(vc, source.rewriteWithPartition(), orderby);
+		r.setAliasName(getAliasName());
+		return r;
+	}
+	
+	@Override
+	protected ColNameExpr partitionColumn() {
+		return source.partitionColumn();
 	}
 
 	@Override

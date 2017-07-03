@@ -7,8 +7,10 @@ import com.google.common.collect.ImmutableMap;
 
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.datatypes.TableUniqueName;
+import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.FuncExpr;
 import edu.umich.verdict.relation.expr.SelectElem;
+import edu.umich.verdict.util.VerdictLogger;
 
 public class ApproxProjectedRelation extends ApproxRelation {
 	
@@ -21,12 +23,35 @@ public class ApproxProjectedRelation extends ApproxRelation {
 		this.source = source;
 		this.elems = elems;
 	}
+	
+	public List<SelectElem> getSelectElems() {
+		return elems;
+	}
 
 	@Override
-	public ExactRelation rewrite() {
-		ExactRelation r = new ProjectedRelation(vc, source.rewrite(), elems);
+	public ExactRelation rewriteForPointEstimate() {
+		ExactRelation r = new ProjectedRelation(vc, source.rewriteForPointEstimate(), elems);
 		r.setAliasName(getAliasName());
 		return r;
+	}
+	
+	@Override
+	public ExactRelation rewriteWithSubsampledErrorBounds() {
+		ExactRelation r = new ProjectedRelation(vc, source.rewriteWithSubsampledErrorBounds(), elems);
+		r.setAliasName(getAliasName());
+		return r;
+	}
+	
+	@Override
+	public ExactRelation rewriteWithPartition() {
+		ExactRelation r = new ProjectedRelation(vc, source.rewriteWithPartition(), elems);
+		r.setAliasName(getAliasName());
+		return r;
+	}
+	
+	@Override
+	protected ColNameExpr partitionColumn() {
+		return source.partitionColumn();
 	}
 
 	@Override

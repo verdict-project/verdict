@@ -73,4 +73,9 @@ public class FilteredRelation extends ExactRelation {
 		return sql.toString();
 	}
 
+	@Override
+	public List<SelectElem> getSelectList() {
+		return source.getSelectList();
+	}
+
 }

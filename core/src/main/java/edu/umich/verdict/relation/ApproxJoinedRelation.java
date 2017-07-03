@@ -86,15 +86,24 @@ public class ApproxJoinedRelation extends ApproxRelation {
 	 */
 	
 	@Override
-	public ExactRelation rewrite() {
-		Map<String, String> sub = tableSubstitution();
-		List<Pair<Expr, Expr>> cols = new ArrayList<Pair<Expr, Expr>>();
-		for (Pair<Expr, Expr> p : joinCols) {
-			cols.add(Pair.of(exprWithTableNamesSubstituted(p.getLeft(), sub), exprWithTableNamesSubstituted(p.getRight(), sub)));
-		}
-		ExactRelation r = JoinedRelation.from(vc, source1.rewrite(), source2.rewrite(), cols);
+	public ExactRelation rewriteForPointEstimate() {
+		List<Pair<Expr, Expr>> newJoinCond = joinCondWithTablesSubstitutioned();
+		ExactRelation r = JoinedRelation.from(vc, source1.rewriteForPointEstimate(), source2.rewriteForPointEstimate(), newJoinCond);
 		r.setAliasName(getAliasName());
 		return r;
+	}
+	
+	@Override
+	public ExactRelation rewriteWithPartition() {
+		List<Pair<Expr, Expr>> newJoinCond = joinCondWithTablesSubstitutioned();
+		ExactRelation r = JoinedRelation.from(vc, source1.rewriteWithPartition(), source2.rewriteWithPartition(), newJoinCond);
+		r.setAliasName(getAliasName());
+		return r;
+	}
+	
+	@Override
+	protected ColNameExpr partitionColumn() {
+		return source1.partitionColumn();
 	}
 	
 	@Override
@@ -177,6 +186,16 @@ public class ApproxJoinedRelation extends ApproxRelation {
 	@Override
 	protected Map<String, String> tableSubstitution() {
 		return ImmutableMap.<String,String>builder().putAll(source1.tableSubstitution()).putAll(source2.tableSubstitution()).build();
+	}
+	
+	protected List<Pair<Expr, Expr>> joinCondWithTablesSubstitutioned() {
+		Map<String, String> sub = tableSubstitution();
+		// replaces the table names in the join conditions with the sample tables.
+		List<Pair<Expr, Expr>> cols = new ArrayList<Pair<Expr, Expr>>();
+		for (Pair<Expr, Expr> p : joinCols) {
+			cols.add(Pair.of(exprWithTableNamesSubstituted(p.getLeft(), sub), exprWithTableNamesSubstituted(p.getRight(), sub)));
+		}
+		return cols;
 	}
 
 }

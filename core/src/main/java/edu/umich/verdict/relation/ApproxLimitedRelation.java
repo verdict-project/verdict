@@ -8,7 +8,9 @@ import com.google.common.collect.ImmutableMap;
 
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.datatypes.TableUniqueName;
+import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.FuncExpr;
+import edu.umich.verdict.util.VerdictLogger;
 
 public class ApproxLimitedRelation extends ApproxRelation {
 	
@@ -23,10 +25,29 @@ public class ApproxLimitedRelation extends ApproxRelation {
 	}
 
 	@Override
-	public ExactRelation rewrite() {
-		ExactRelation r = new LimitedRelation(vc, source.rewrite(), limit);
+	public ExactRelation rewriteForPointEstimate() {
+		ExactRelation r = new LimitedRelation(vc, source.rewriteForPointEstimate(), limit);
 		r.setAliasName(getAliasName());
 		return r;
+	}
+	
+	@Override
+	public ExactRelation rewriteWithSubsampledErrorBounds() {
+		ExactRelation r = new LimitedRelation(vc, source.rewriteWithSubsampledErrorBounds(), limit);
+		r.setAliasName(getAliasName());
+		return r;
+	}
+	
+	@Override
+	public ExactRelation rewriteWithPartition() {
+		ExactRelation r = new LimitedRelation(vc, source.rewriteWithPartition(), limit);
+		r.setAliasName(getAliasName());
+		return r;
+	}
+	
+	@Override
+	protected ColNameExpr partitionColumn() {
+		return source.partitionColumn();
 	}
 
 	@Override

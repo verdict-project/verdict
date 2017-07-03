@@ -13,6 +13,7 @@ import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.relation.expr.OrderByExpr;
+import edu.umich.verdict.relation.expr.SelectElem;
 
 public class LimitedRelation extends ExactRelation {
 	
@@ -53,6 +54,11 @@ public class LimitedRelation extends ExactRelation {
 		sql.append(source.toSql());
 		sql.append(" LIMIT " + limit);
 		return sql.toString();
+	}
+
+	@Override
+	public List<SelectElem> getSelectList() {
+		return source.getSelectList();
 	}
 
 }

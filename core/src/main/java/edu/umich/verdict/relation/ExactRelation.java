@@ -74,6 +74,9 @@ public abstract class ExactRelation extends Relation {
 	 */
 	protected abstract String getSourceName();
 	
+	public abstract List<SelectElem> getSelectList();
+	
+	
 	/*
 	 * Projection
 	 */

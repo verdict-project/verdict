@@ -281,10 +281,11 @@ class PrettyPrintVisitor extends VerdictSQLBaseVisitor<String> {
 		
 		if (ctx.group_by_item() != null && ctx.group_by_item().size() > 0) {
 			query.append("\n" + indent + "GROUP BY ");
+			List<String> groupby = new ArrayList<String>();
 			for (VerdictSQLParser.Group_by_itemContext gctx : ctx.group_by_item()) {
-				query.append(visit(gctx));
+				groupby.add(visit(gctx));
 			}
-			query.append(" ");
+			query.append(Joiner.on(", ").join(groupby));
 		}
 		
 		String sql = query.toString();
@@ -524,6 +525,7 @@ class PrettyPrintVisitor extends VerdictSQLBaseVisitor<String> {
 		else if (op.equals("+")) return leftCol + " + " + rightCol;
 		else if (op.equals("/")) return leftCol + " / " + rightCol;
 		else if (op.equals("-")) return leftCol + " - " + rightCol;
+		else if (op.equals("%")) return leftCol + " % " + rightCol;
 		else return null;
 	}
 	

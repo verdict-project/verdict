@@ -42,15 +42,101 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 	}
 
 	@Override
-	public ExactRelation rewrite() {
+	public ExactRelation rewriteForPointEstimate() {
 		List<SelectElem> scaled = new ArrayList<SelectElem>();
 		List<TableUniqueName> stratifiedSampleTables = source.accumulateStratifiedSamples();
 		for (SelectElem e : elems) {
 			scaled.add(new SelectElem(transformForSingleFunction(e.getExpr(), stratifiedSampleTables), e.getAlias()));
 		}
-		ExactRelation r = new AggregatedRelation(vc, source.rewrite(), scaled);
+		ExactRelation r = new AggregatedRelation(vc, source.rewriteForPointEstimate(), scaled);
 		r.setAliasName(getAliasName());
 		return r;
+	}
+	
+	private String partitionSizeAlias = "verdict_psize";
+	
+	@Override
+	public ExactRelation rewriteWithSubsampledErrorBounds() {
+		ExactRelation r = rewriteWithPartition();
+		List<SelectElem> selectElems = ((AggregatedRelation) r).getAggList();
+		
+		// another wrapper to combine all subsampled aggregations.
+		List<SelectElem> finalAgg = new ArrayList<SelectElem>();
+//		for (SelectElem e : scaled) {
+		for (int i = 0; i < selectElems.size() - 1; i++) {	// excluding the last one which is psize
+			SelectElem e = selectElems.get(i);
+			ColNameExpr est = new ColNameExpr(e.getAlias(), r.getAliasName());
+			ColNameExpr psize = new ColNameExpr(partitionSizeAlias, r.getAliasName());
+			
+			// average estimate
+			finalAgg.add(new SelectElem(
+					BinaryOpExpr.from(
+							FuncExpr.sum(BinaryOpExpr.from(est, psize, "*")),
+							FuncExpr.sum(psize), "/"),
+					e.getAlias()));
+
+			// error estimation
+			finalAgg.add(new SelectElem(
+					BinaryOpExpr.from(
+							BinaryOpExpr.from(FuncExpr.stddev(est), FuncExpr.sqrt(FuncExpr.avg(psize)), "*"),
+							FuncExpr.sqrt(FuncExpr.sum(psize)),
+							"/")));
+		}
+		
+		/*
+		 * Example input query:
+		 * select category, avg(col)
+		 * from t
+		 * group by category
+		 * 
+		 * Transformed query:
+		 * select category, sum(est * psize) / sum(psize) AS final_est
+		 * from (
+		 *   select category, avg(col) AS est, count(*) as psize
+		 *   from t
+		 *   group by category, verdict_partition) AS vt1
+		 * group by category
+		 * 
+		 * where t1 was obtained by rewriteWithPartition().
+		 */ 
+		if (source instanceof ApproxGroupedRelation) {
+			List<ColNameExpr> groupby = ((ApproxGroupedRelation) source).getGroupby();
+			r = new GroupedRelation(vc, r, groupby);
+		}
+		
+		r = new AggregatedRelation(vc, r, finalAgg);
+		return r;
+	}
+	
+	/**
+	 * This relation must include partition numbers, and the answers must be scaled properly. Note that {@link ApproxRelation#rewriteWithSubsampledErrorBounds()}
+	 * is used only for the statement including final error bounds; all internal manipulations must be performed by
+	 * this method.
+	 * @return
+	 */
+	protected ExactRelation rewriteWithPartition() {
+		List<SelectElem> scaledElems = new ArrayList<SelectElem>();
+		List<TableUniqueName> stratifiedSampleTables = source.accumulateStratifiedSamples();
+		for (SelectElem e : elems) {
+			Expr scaled = transformForSingleFunction(e.getExpr(), stratifiedSampleTables);
+			scaledElems.add(new SelectElem(scaled, e.getAlias()));
+		}
+		scaledElems.add(new SelectElem(FuncExpr.count(), partitionSizeAlias));
+		ExactRelation r = new AggregatedRelation(vc, partitionedSource(), scaledElems);
+		return r;
+	}
+	
+	private ExactRelation partitionedSource() {
+		if (source instanceof ApproxGroupedRelation) {
+			return source.rewriteWithPartition();
+		} else {
+			return (new ApproxGroupedRelation(vc, source, Arrays.<ColNameExpr>asList())).rewriteWithPartition();
+		}
+	}
+	
+	@Override
+	protected ColNameExpr partitionColumn() {
+		return source.partitionColumn();
 	}
 	
 	@Override
@@ -110,9 +196,7 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 						}
 						Expr sumEst = FuncExpr.sum(BinaryOpExpr.from(s.getExpr(), scale, "*"));
 						// this count filters out the null expressions.
-						Expr countEst = FuncExpr.sum(
-								new CaseExpr(Arrays.<Cond>asList(new IsCond(s.getExpr(), new NullCond())),
-											 Arrays.<Expr>asList(ConstantExpr.from("0"), scale)));
+						Expr countEst = countNotNull(s.getExpr(), scale);
 						return BinaryOpExpr.from(sumEst, countEst, "/");
 					}
 					else {		// expected not to be visited
@@ -125,6 +209,12 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 		};
 		
 		return v.visit(f);
+	}
+	
+	private FuncExpr countNotNull(Expr nullcheck, Expr expr) {
+		return FuncExpr.sum(
+				new CaseExpr(Arrays.<Cond>asList(new IsCond(nullcheck, new NullCond())),
+						     Arrays.<Expr>asList(ConstantExpr.from("0"), expr)));
 	}
 
 	@Override

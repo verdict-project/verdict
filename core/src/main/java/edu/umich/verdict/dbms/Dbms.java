@@ -5,6 +5,7 @@ import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.datatypes.VerdictResultSet;
 import edu.umich.verdict.exceptions.VerdictException;
+import edu.umich.verdict.relation.SingleRelation;
 import edu.umich.verdict.util.StackTraceReader;
 import edu.umich.verdict.util.VerdictLogger;
 
@@ -264,14 +265,15 @@ public class Dbms {
 	 * @param sampleRatio
 	 * @throws VerdictException
 	 */
-	protected TableUniqueName justCreateUniformRandomSampleTableOf(SampleParam param) throws VerdictException {
-		TableUniqueName sampleTableName = param.sampleTableName();
-		String sql = String.format("CREATE TABLE %s SELECT * FROM %s WHERE rand() < %f;",
-										sampleTableName, param.originalTable, param.samplingRatio);
+	protected void justCreateUniformRandomSampleTableOf(SampleParam param) throws VerdictException {
+		String sql = String.format("CREATE TABLE %s AS ", param.sampleTableName()) + 
+				 SingleRelation.from(vc, param.originalTable)
+			 	 .where("rand() <= " + param.samplingRatio)
+				 .select("*, round(rand()*100)%100 AS " + partitionColumnName()).toSql();
+		
 		VerdictLogger.debug(this, String.format("Creates a table: %s", sql));
 		this.executeUpdate(sql);
 		VerdictLogger.debug(this, "Done.");
-		return sampleTableName;
 	}
 	
 	public long getTableSize(TableUniqueName tableName) throws VerdictException {
@@ -300,15 +302,16 @@ public class Dbms {
 	 * @param sampleRatio
 	 * @throws VerdictException
 	 */
-	protected TableUniqueName justCreateUniverseSampleTableOf(SampleParam param) throws VerdictException {
+	protected void justCreateUniverseSampleTableOf(SampleParam param) throws VerdictException {
 		TableUniqueName sampleTableName = param.sampleTableName();
-		String sql = String.format("CREATE TABLE %s SELECT * FROM %s "
-								 + "WHERE mod(cast(conv(substr(md5(%s),17,32),16,10) as unsigned), 10000) <= %.4f",
-								 sampleTableName, param.originalTable, param.columnNames.get(0), param.samplingRatio*10000);
+		String sql = String.format("CREATE TABLE %s AS ", sampleTableName) + 
+				 	 SingleRelation.from(vc, param.originalTable)
+				 	 .where(String.format("mod(cast(conv(substr(md5(%s),17,32),16,10) as unsigned), 10000) <= %.4f", param.columnNames.get(0), param.samplingRatio*10000))
+				 	 .select("*, round(rand()*100)%100 AS " + partitionColumnName()).toSql();
+		
 		VerdictLogger.debug(this, String.format("Creates a table: %s", sql));
 		this.executeUpdate(sql);
 		VerdictLogger.debug(this, "Done.");
-		return sampleTableName;
 	}
 	
 	public Pair<Long, Long> createUniverseSampleTableOf(SampleParam param) throws VerdictException {
@@ -324,7 +327,7 @@ public class Dbms {
 	}
 	
 	protected void justCreateStratifiedSampleTableof(SampleParam param) throws VerdictException {
-		throw new VerdictException("unimplemented");
+		VerdictLogger.warn(this, "Stratified samples are not implemented for MySQL. Do nothing");
 	}
 
 	public Connection getDbmsConnection() {
@@ -530,4 +533,7 @@ public class Dbms {
 		return "STDDEV";
 	}
 
+	protected String partitionColumnName() {
+		return vc.getConf().get("verdict.partition_column_name");
+	}
 }

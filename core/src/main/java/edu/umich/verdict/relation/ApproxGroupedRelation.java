@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.tuple.Pair;
+
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.relation.expr.ColNameExpr;
@@ -31,19 +33,29 @@ public class ApproxGroupedRelation extends ApproxRelation {
 	}
 
 	@Override
-	public ExactRelation rewrite() {
-		Map<String, String> sub = tableSubstitution();
-		List<ColNameExpr> replaced = new ArrayList<ColNameExpr>();
-		for (ColNameExpr e : groupby) {
-			replaced.add((ColNameExpr) exprWithTableNamesSubstituted(e, sub));
-		}
-		ExactRelation r = new GroupedRelation(vc, source.rewrite(), replaced);
+	public ExactRelation rewriteForPointEstimate() {
+		List<ColNameExpr> newGroupby = groupbyWithTablesSubstituted();
+		ExactRelation r = new GroupedRelation(vc, source.rewriteForPointEstimate(), newGroupby);
 		r.setAliasName(r.getAliasName());
 		return r;
 	}
+	
+	@Override
+	public ExactRelation rewriteWithPartition() {
+		List<ColNameExpr> newGroupby = groupbyWithTablesSubstituted();
+		newGroupby.add((ColNameExpr) exprWithTableNamesSubstituted(partitionColumn(), tableSubstitution()));
+		ExactRelation r = new GroupedRelation(vc, source.rewriteWithPartition(), newGroupby);
+		r.setAliasName(r.getAliasName());
+		return r;
+	}
+	
+	@Override
+	protected ColNameExpr partitionColumn() {
+		return source.partitionColumn();
+	}
 
 	@Override
-	// TODO: make this more accurate
+	// TODO: make this more accurate for handling IN and EXISTS predicates.
 	protected double samplingProbabilityFor(FuncExpr f) {
 		return source.samplingProbabilityFor(f);
 	}
@@ -51,6 +63,15 @@ public class ApproxGroupedRelation extends ApproxRelation {
 	@Override
 	protected Map<String, String> tableSubstitution() {
 		return source.tableSubstitution();
+	}
+	
+	protected List<ColNameExpr> groupbyWithTablesSubstituted() {
+		Map<String, String> sub = tableSubstitution();
+		List<ColNameExpr> replaced = new ArrayList<ColNameExpr>();
+		for (ColNameExpr e : groupby) {
+			replaced.add((ColNameExpr) exprWithTableNamesSubstituted(e, sub));
+		}
+		return replaced;
 	}
 
 	@Override

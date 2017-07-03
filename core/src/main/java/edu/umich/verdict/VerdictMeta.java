@@ -236,6 +236,45 @@ public class VerdictMeta {
 	public SampleSizeInfo getSampleSizeOf(TableUniqueName sampleTableName) {
 		return sampleSizeMeta.get(sampleTableName);
 	}
+	
+	public SampleSizeInfo getSampleSizeOf(SampleParam param) {
+		TableUniqueName sampleTable = lookForSampleTable(param);
+		return vc.getMeta().getSampleSizeOf(sampleTable);
+	}
+	
+	public TableUniqueName lookForSampleTable(SampleParam param) {
+		TableUniqueName originalTable = param.originalTable;
+		List<Pair<SampleParam, TableUniqueName>> sampleInfo = vc.getMeta().getSampleInfoFor(originalTable);
+		TableUniqueName sampleTable = null;
+		
+		for (Pair<SampleParam, TableUniqueName> e : sampleInfo) {
+			SampleParam p = e.getLeft();
+			
+			if (param.samplingRatio == null) {
+				if (p.originalTable.equals(param.originalTable)
+						&& p.sampleType.equals(param.sampleType)
+						&& p.columnNames.equals(param.columnNames)) {
+					sampleTable = e.getRight();
+				}
+			} else {
+				if (p.equals(param)) {
+					sampleTable = e.getRight();
+				}
+			}
+		}
+		
+		if (sampleTable == null) {
+			if (param.sampleType.equals("universe") || param.sampleType.equals("stratified")) {
+				VerdictLogger.error(this, String.format("No %.2f%% %s sample table on %s found for the table %s.",
+						param.samplingRatio*100, param.sampleType, param.columnNames.toString(), originalTable));
+			} else if (param.sampleType.equals("uniform")) {
+				VerdictLogger.error(this, String.format("No %.2f%% %s sample table found for the table %s.",
+						param.samplingRatio*100, param.sampleType, originalTable));
+			}
+		}
+		
+		return sampleTable;
+	}
 
 //	public Pair<Long, Long> getSampleAndOriginalTableSizeByOriginalTableNameIfExists(TableUniqueName originalTableName) {
 //		refreshSampleInfoIfNeeded(originalTableName);

@@ -19,7 +19,7 @@ public class FuncExpr extends Expr {
 	public enum FuncName {
 		COUNT, SUM, AVG, COUNT_DISTINCT, IMPALA_APPROX_COUNT_DISTINCT,
 		ROUND, MAX, MIN, FLOOR, CEIL, EXP, LN, LOG10, LOG2, SIN, COS, TAN,
-		SIGN, RAND, UNIX_TIMESTAMP,
+		SIGN, RAND, UNIX_TIMESTAMP, FNV_HASH, ABS, STDDEV, SQRT,
 		UNKNOWN
 	}
 	
@@ -41,29 +41,37 @@ public class FuncExpr extends Expr {
 			.put("SIGN", FuncName.SIGN)
 			.put("RAND", FuncName.RAND)
 			.put("UNIX_TIMESTAMP", FuncName.UNIX_TIMESTAMP)
+			.put("FNV_HASH", FuncName.FNV_HASH)
+			.put("ABS", FuncName.ABS)
+			.put("STDDEV", FuncName.STDDEV)
+			.put("SQRT", FuncName.SQRT)
 			.build();
 
 	protected static Map<FuncName, String> functionPattern = ImmutableMap.<FuncName, String>builder()
-			.put(FuncName.COUNT,  "COUNT(%s)")
-			.put(FuncName.SUM, "SUM(%s)")
-			.put(FuncName.AVG, "AVG(%s)")
-			.put(FuncName.COUNT_DISTINCT, "COUNT(DISTINCT %s)")
-			.put(FuncName.IMPALA_APPROX_COUNT_DISTINCT, "NDV(%s)")
-			.put(FuncName.ROUND, "ROUND(%s)")
-			.put(FuncName.MIN, "MIN(%s)")
-			.put(FuncName.MAX, "MAX(%s)")
-			.put(FuncName.FLOOR, "FLOOR(%s)")
-			.put(FuncName.CEIL, "CEIL(%s)")
-			.put(FuncName.EXP, "EXP(%s)")
-			.put(FuncName.LN, "LN(%s)")
-			.put(FuncName.LOG10, "LOG10(%s)")
-			.put(FuncName.LOG2, "LOG2(%s)")
-			.put(FuncName.SIN, "SIN(%s)")
-			.put(FuncName.COS, "COS(%s)")
-			.put(FuncName.TAN, "TAN(%s)")
-			.put(FuncName.SIGN, "SIGN(%s)")
-			.put(FuncName.RAND, "RAND(%s)")
-			.put(FuncName.UNIX_TIMESTAMP, "UNIX_TIMESTAMP(%s)")
+			.put(FuncName.COUNT,  "count(%s)")
+			.put(FuncName.SUM, "sum(%s)")
+			.put(FuncName.AVG, "avg(%s)")
+			.put(FuncName.COUNT_DISTINCT, "count(distinct %s)")
+			.put(FuncName.IMPALA_APPROX_COUNT_DISTINCT, "ndv(%s)")
+			.put(FuncName.ROUND, "round")
+			.put(FuncName.MIN, "min(%s)")
+			.put(FuncName.MAX, "max(%s)")
+			.put(FuncName.FLOOR, "floor(%s)")
+			.put(FuncName.CEIL, "ceil(%s)")
+			.put(FuncName.EXP, "exp(%s)")
+			.put(FuncName.LN, "ln(%s)")
+			.put(FuncName.LOG10, "log10(%s)")
+			.put(FuncName.LOG2, "log2(%s)")
+			.put(FuncName.SIN, "sin(%s)")
+			.put(FuncName.COS, "cos(%s)")
+			.put(FuncName.TAN, "tan(%s)")
+			.put(FuncName.SIGN, "sign(%s)")
+			.put(FuncName.RAND, "rand(%s)")
+			.put(FuncName.UNIX_TIMESTAMP, "unix_timestamp(%s)")
+			.put(FuncName.FNV_HASH, "fnv_hash(%s)")
+			.put(FuncName.ABS, "abs(%s)")
+			.put(FuncName.STDDEV, "stddev(%s)")
+			.put(FuncName.SQRT, "sqrt(%s)")
 			.put(FuncName.UNKNOWN, "UNKNOWN(%s)")
 			.build();
 	
@@ -175,6 +183,14 @@ public class FuncExpr extends Expr {
 		return new FuncExpr(FuncName.MAX, expr);
 	}
 	
+	public static FuncExpr stddev(Expr expr) {
+		return new FuncExpr(FuncName.STDDEV, expr);
+	}
+	
+	public static FuncExpr sqrt(Expr expr) {
+		return new FuncExpr(FuncName.SQRT, expr);
+	}
+	
 	public static FuncExpr approxCountDistinct(Expr expr, VerdictContext vc) {
 		if (vc.getDbms().getName().equalsIgnoreCase("impala")) {
 			return new FuncExpr(FuncName.IMPALA_APPROX_COUNT_DISTINCT, expr);
@@ -206,8 +222,10 @@ public class FuncExpr extends Expr {
 		if (funcname.equals(FuncName.AVG) || funcname.equals(FuncName.SUM) || funcname.equals(FuncName.COUNT)
 			|| funcname.equals(FuncName.COUNT_DISTINCT)) {
 			return true;
+		} else if (expression != null) {
+			return expression.isagg();
 		} else {
 			return false;
-		}	
+		}
 	}
 }

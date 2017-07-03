@@ -13,6 +13,7 @@ import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.relation.expr.OrderByExpr;
+import edu.umich.verdict.relation.expr.SelectElem;
 
 public class OrderedRelation extends ExactRelation {
 	
@@ -51,6 +52,11 @@ public class OrderedRelation extends ExactRelation {
 		sql.append(" ORDER BY ");
 		sql.append(Joiner.on(", ").join(orderby));
 		return sql.toString();
+	}
+
+	@Override
+	public List<SelectElem> getSelectList() {
+		return source.getSelectList();
 	}
 
 }

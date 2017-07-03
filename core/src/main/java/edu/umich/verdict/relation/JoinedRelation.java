@@ -244,4 +244,12 @@ public class JoinedRelation extends ExactRelation {
 		VerdictLogger.error(this, "The source name of a joined table should not be called.");
 		return null;
 	}
+
+	@Override
+	public List<SelectElem> getSelectList() {
+		List<SelectElem> elems = new ArrayList<SelectElem>();
+		elems.addAll(source1.getSelectList());
+		elems.addAll(source2.getSelectList());
+		return elems;
+	}
 }

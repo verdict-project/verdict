@@ -5,12 +5,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang3.tuple.Pair;
+
 import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
 
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.datatypes.SampleParam;
 import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
+import edu.umich.verdict.relation.condition.Cond;
 import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.relation.expr.SelectElem;
 
@@ -66,8 +70,19 @@ public class ProjectedRelation extends ExactRelation {
 	public String toSql() {
 		StringBuilder sql = new StringBuilder();
 		sql.append(selectSql());
-		sql.append(" FROM "); sql.append(sourceExpr(source));
+		
+		Pair<Optional<Cond>, ExactRelation> filtersAndNextR = allPrecedingFilters(this.source);
+		String csql = (filtersAndNextR.getLeft().isPresent())? filtersAndNextR.getLeft().get().toString() : "";
+		
+		sql.append(String.format(" FROM %s", sourceExpr(filtersAndNextR.getRight())));
+		if (csql.length() > 0) { sql.append(" WHERE "); sql.append(csql); }
+		
 		return sql.toString();
+	}
+
+	@Override
+	public List<SelectElem> getSelectList() {
+		return elems;
 	}
 
 }

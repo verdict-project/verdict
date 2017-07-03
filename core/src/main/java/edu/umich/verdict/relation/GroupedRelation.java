@@ -100,11 +100,8 @@ public class GroupedRelation extends ExactRelation {
 		StringBuilder sql = new StringBuilder();
 		sql.append("SELECT * ");
 		
-		StringBuilder gsql = new StringBuilder();
 		Pair<List<Expr>, ExactRelation> groupsAndNextR = allPrecedingGroupbys(this.source);
-		for (Expr e : groupsAndNextR.getLeft()) {
-			gsql.append(e);
-		}
+		String gsql = Joiner.on(", ").join(groupsAndNextR.getLeft());
 		
 		Pair<Optional<Cond>, ExactRelation> filtersAndNextR = allPrecedingFilters(groupsAndNextR.getRight());
 		String csql = (filtersAndNextR.getLeft().isPresent())? filtersAndNextR.getLeft().get().toString() : "";
@@ -113,6 +110,11 @@ public class GroupedRelation extends ExactRelation {
 		if (csql.length() > 0) { sql.append(" WHERE "); sql.append(csql); }
 		if (gsql.length() > 0) { sql.append(" GROUP BY "); sql.append(gsql); }
 		return sql.toString();
+	}
+
+	@Override
+	public List<SelectElem> getSelectList() {
+		return source.getSelectList();
 	}
 
 }

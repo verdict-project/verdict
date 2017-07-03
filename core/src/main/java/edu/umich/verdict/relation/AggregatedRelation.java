@@ -43,6 +43,10 @@ public class AggregatedRelation extends ExactRelation {
 		return source;
 	}
 	
+	public List<SelectElem> getAggList() {
+		return elems;
+	}
+	
 	/*
 	 * Approx
 	 */
@@ -119,6 +123,7 @@ public class AggregatedRelation extends ExactRelation {
 		return sql.toString();
 	}
 	
+	@Deprecated
 	protected String withoutSelectSql() {
 		StringBuilder sql = new StringBuilder();
 		
@@ -148,6 +153,21 @@ public class AggregatedRelation extends ExactRelation {
 		if (csql.length() > 0) { sql.append(" WHERE "); sql.append(csql); }
 		if (groupby.size() > 0) { sql.append(" GROUP BY "); sql.append(Joiner.on(", ").join(groupby)); }
 		return sql.toString();
+	}
+
+	@Override
+	public List<SelectElem> getSelectList() {
+		List<SelectElem> elems = new ArrayList<SelectElem>();
+		
+		Pair<List<Expr>, ExactRelation> groupsAndNextR = allPrecedingGroupbys(this.source);
+		List<Expr> groupby = groupsAndNextR.getLeft();
+		for (Expr g : groupby) {
+			elems.add(new SelectElem(g));
+		}
+		
+		elems.addAll(this.elems);		// agg list
+		
+		return elems;
 	}
 
 }

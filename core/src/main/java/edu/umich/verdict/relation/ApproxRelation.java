@@ -8,9 +8,11 @@ import java.util.Map;
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
+import edu.umich.verdict.relation.condition.AndCond;
 import edu.umich.verdict.relation.condition.CompCond;
 import edu.umich.verdict.relation.condition.Cond;
 import edu.umich.verdict.relation.condition.CondModifier;
+import edu.umich.verdict.relation.condition.OrCond;
 import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.relation.expr.ExprModifier;
@@ -26,6 +28,19 @@ public abstract class ApproxRelation extends Relation {
 	public ApproxRelation(VerdictContext vc) {
 		super(vc);
 		approximate = true;
+	}
+	
+	public String sourceTableName() {
+		if (this instanceof ApproxSingleRelation) {
+			ApproxSingleRelation r = (ApproxSingleRelation) this;
+			if (r.getAliasName() != null) {
+				return r.getAliasName();
+			} else {
+				return r.getSampleName().tableName;
+			}
+		} else {
+			return this.getAliasName();
+		}
 	}
 	
 	/*
@@ -85,10 +100,43 @@ public abstract class ApproxRelation extends Relation {
 	 * Properly scale all aggregation functions so that the final answers are correct.
 	 * For ApproxAggregatedRelation: returns a AggregatedRelation instance whose result is approximately correct.
 	 * For ApproxSingleRelation, ApproxJoinedRelation, and ApproxFilteredRelaation: returns
-	 * a select statement from sample tables. The rewritten sql doesn't have much meaning unless used by ApproxAggregatedRelation. 
+	 * a select statement from sample tables. The rewritten sql doesn't have much meaning if not used by ApproxAggregatedRelation. 
 	 * @return
 	 */
-	public abstract ExactRelation rewrite();
+	public ExactRelation rewrite() {
+		if (vc.getConf().get("verdict.error_bound_method").equals("nobound")) {
+			return rewriteForPointEstimate();
+		} else if (vc.getConf().get("verdict.error_bound_method").equals("subsampling")) {
+			return rewriteWithSubsampledErrorBounds();
+		} else if (vc.getConf().get("verdict.error_bound_method").equals("bootstrapping")) {
+			return rewriteWithBootstrappedErrorBounds();
+		} else {
+			VerdictLogger.error(this, "Unsupported error bound computation method: " + vc.getConf().get("verdict.error_bound_method"));
+			return null;
+		}
+	}
+	
+	public abstract ExactRelation rewriteForPointEstimate();
+	
+	public ExactRelation rewriteWithSubsampledErrorBounds() {
+		VerdictLogger.error(this, String.format("Calling a method, %s, on unappropriate class", "rewriteWithSubsampledErrorBounds()"));
+		return null;
+	}
+	
+	/**
+	 * Internal method for {@link ApproxRelation#rewriteWithSubsampledErrorBounds()}.
+	 * @return
+	 */
+	protected abstract ExactRelation rewriteWithPartition();
+	
+	protected String partitionColumnName() {
+		return vc.getConf().get("verdict.partition_column_name");
+	}
+	
+	// returns effective partition column name for a possibly joined table.
+	protected abstract ColNameExpr partitionColumn();
+	
+	public ExactRelation rewriteWithBootstrappedErrorBounds() { return null; }
 	
 	/**
 	 * Computes an appropriate sampling probability for a particular aggregate function.
@@ -164,7 +212,8 @@ public abstract class ApproxRelation extends Relation {
 
 	@Override
 	public String toSql() {
-		return rewrite().toSql();
+		ExactRelation r = rewrite();
+		return r.toSql();
 	}
 	
 	/*
@@ -186,49 +235,6 @@ public abstract class ApproxRelation extends Relation {
 			}
 		};
 		return v.visit(expr);
-	}
-	
-	/**
-	 * Returns a new condition in which old column names are replaced with the column names of sample tables. 
-	 * @param cond
-	 * @param sub Map of original table name and its substitution.
-	 * @return
-	 */
-	protected Cond condWithApprox(Cond cond, final Map<String, String> sub) {
-		CondModifier v = new CondModifier() {
-			ExprModifier v2 = new ExprModifier() {
-				public Expr call(Expr expr) {
-					if (expr instanceof ColNameExpr) {
-						ColNameExpr e = (ColNameExpr) expr;
-						return new ColNameExpr(e.getCol(), sub.get(e.getTab()), e.getSchema());
-					} else if (expr instanceof SubqueryExpr) {
-						Relation r = ((SubqueryExpr) expr).getSubquery();
-						if (r instanceof ExactRelation) {
-							try {
-								return SubqueryExpr.from(((ExactRelation) r).approx());
-							} catch (VerdictException e) {
-								VerdictLogger.error(this, e.getMessage());
-								return expr;
-							}
-						} else {
-							return expr;
-						}
-					} else {
-						return expr;
-					}
-				}
-			};
-			
-			public Cond call(Cond cond) {
-				if (cond instanceof CompCond) {
-					CompCond c = (CompCond) cond;
-					return CompCond.from(v2.visit(c.getLeft()), c.getOp(), v2.visit(c.getRight()));
-				} else {
-					return cond;
-				}
-			}			
-		};
-		return v.visit(cond);
 	}
 
 }
