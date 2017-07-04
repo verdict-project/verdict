@@ -18,7 +18,7 @@ public class SampleIT extends BaseIT {
 	
 	@Test
 	public void createStratifiedSampleTest() throws VerdictException {
-		vc.executeQuery("CREATE STRATIFIED SAMPLE OF orders ON order_dow");
+		vc.executeQuery("create stratified sample of orders ON order_dow");
 	}
 	
 	@Test

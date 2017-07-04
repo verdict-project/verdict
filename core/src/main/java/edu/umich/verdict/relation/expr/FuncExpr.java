@@ -27,6 +27,8 @@ public class FuncExpr extends Expr {
 	
 	protected FuncName funcname;
 	
+	protected OverClause overClause;
+	
 	protected static Map<String, FuncName> string2FunctionType = ImmutableMap.<String, FuncName>builder()
 			.put("ROUND", FuncName.ROUND)
 			.put("FLOOR", FuncName.FLOOR)
@@ -53,7 +55,7 @@ public class FuncExpr extends Expr {
 			.put(FuncName.AVG, "avg(%s)")
 			.put(FuncName.COUNT_DISTINCT, "count(distinct %s)")
 			.put(FuncName.IMPALA_APPROX_COUNT_DISTINCT, "ndv(%s)")
-			.put(FuncName.ROUND, "round")
+			.put(FuncName.ROUND, "round(%s)")
 			.put(FuncName.MIN, "min(%s)")
 			.put(FuncName.MAX, "max(%s)")
 			.put(FuncName.FLOOR, "floor(%s)")
@@ -75,9 +77,14 @@ public class FuncExpr extends Expr {
 			.put(FuncName.UNKNOWN, "UNKNOWN(%s)")
 			.build();
 	
-	public FuncExpr(FuncName fname, Expr expr) {
+	public FuncExpr(FuncName fname, Expr expr, OverClause overClause) {
 		this.expression = expr;
 		this.funcname = fname;
+		this.overClause = overClause;
+	}
+	
+	public FuncExpr(FuncName fname, Expr expr) {
+		this(fname, expr, null);
 	}
 	
 	public static FuncExpr from(String expr) {
@@ -90,19 +97,33 @@ public class FuncExpr extends Expr {
 		VerdictSQLBaseVisitor<FuncExpr> v = new VerdictSQLBaseVisitor<FuncExpr>() {
 			@Override
 			public FuncExpr visitAggregate_windowed_function(VerdictSQLParser.Aggregate_windowed_functionContext ctx) {
+				FuncName fname;
+				Expr expr = null;
+				if (ctx.all_distinct_expression() != null) {
+					expr = Expr.from(ctx.all_distinct_expression().expression());
+				}
+				OverClause overClause = null;
+				
 				if (ctx.AVG() != null) {
-					return new FuncExpr(FuncName.AVG, Expr.from(ctx.all_distinct_expression().expression()));
+					fname = FuncName.AVG;
 				} else if (ctx.SUM() != null) {
-					return new FuncExpr(FuncName.SUM, Expr.from(ctx.all_distinct_expression().expression()));
+					fname = FuncName.SUM;
 				} else if (ctx.COUNT() != null) {
 					if (ctx.all_distinct_expression() != null && ctx.all_distinct_expression().DISTINCT() != null) {
-						return new FuncExpr(FuncName.COUNT_DISTINCT, Expr.from(ctx.all_distinct_expression().expression()));
+						fname = FuncName.COUNT_DISTINCT;
 					} else {
-						return new FuncExpr(FuncName.COUNT, new StarExpr());
+						fname = FuncName.COUNT;
+						expr = new StarExpr();
 					}
 				} else {
-					return new FuncExpr(FuncName.UNKNOWN, Expr.from(ctx.all_distinct_expression().expression()));
+					fname = FuncName.UNKNOWN;
 				}
+				
+				if (ctx.over_clause() != null) {
+					overClause = OverClause.from(ctx.over_clause());
+				}
+				
+				return new FuncExpr(fname, expr, overClause);
 			}
 			
 			@Override
@@ -205,11 +226,17 @@ public class FuncExpr extends Expr {
 	
 	@Override
 	public String toString() {
+		StringBuilder sql = new StringBuilder(50);
 		if (expression == null) {
-			return String.format(functionPattern.get(funcname), "");
+			sql.append(String.format(functionPattern.get(funcname), ""));
 		} else {
-			return String.format(functionPattern.get(funcname), expression.toString());
+			sql.append(String.format(functionPattern.get(funcname), expression.toString()));
 		}
+		
+		if (overClause != null) {
+			sql.append(" " + overClause.toString());
+		}
+		return sql.toString();
 	}
 
 	@Override

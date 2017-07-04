@@ -3,6 +3,7 @@ package edu.umich.verdict.dbms;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,9 +23,14 @@ import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.relation.ExactRelation;
 import edu.umich.verdict.relation.Relation;
 import edu.umich.verdict.relation.SingleRelation;
+import edu.umich.verdict.relation.condition.CompCond;
 import edu.umich.verdict.relation.ApproxRelation;
 import edu.umich.verdict.relation.ApproxSingleRelation;
+import edu.umich.verdict.relation.expr.BinaryOpExpr;
 import edu.umich.verdict.relation.expr.ColNameExpr;
+import edu.umich.verdict.relation.expr.ConstantExpr;
+import edu.umich.verdict.relation.expr.Expr;
+import edu.umich.verdict.relation.expr.SubqueryExpr;
 import edu.umich.verdict.util.VerdictLogger;
 
 public class DbmsImpala extends Dbms {
@@ -200,12 +206,48 @@ public class DbmsImpala extends Dbms {
 	 */
 	@Override
 	protected void justCreateStratifiedSampleTableof(SampleParam param) throws VerdictException {
-		Pair<TableUniqueName, TableUniqueName> tempTables = createTempTableWithGroupCountsAndRand(param);
-		TableUniqueName rnTempTable = tempTables.getLeft();
-		TableUniqueName grpTempTable = tempTables.getRight();
-		createStratifiedSampleFromTempTable(rnTempTable, grpTempTable, param);
-		dropTable(rnTempTable);
-		dropTable(grpTempTable);
+		SampleSizeInfo info = vc.getMeta().getSampleSizeOf(new SampleParam(param.originalTable, "uniform", null, new ArrayList<String>()));
+		long originalTableSize = info.originalTableSize;
+		double samplingProbability = param.samplingRatio;
+		String groupName = Joiner.on(", ").join(param.columnNames);
+		String samplingProbColName = vc.samplingProbColName();
+		TableUniqueName sampleTable = param.sampleTableName();
+		String allColumns = Joiner.on(", ").join(vc.getMeta().getColumnNames(param.originalTable));
+		
+		ExactRelation groupNumRel = SingleRelation.from(vc, param.originalTable)
+									.countDistinct(groupName);
+		Expr threshold = BinaryOpExpr.from(
+				ConstantExpr.from(originalTableSize),
+				BinaryOpExpr.from(
+						BinaryOpExpr.from(
+								ConstantExpr.from(samplingProbability),
+								ConstantExpr.from("grp_size"), "/"),
+						SubqueryExpr.from(groupNumRel),
+						"/"),
+				"*");
+		ExactRelation sampleWithGrpSize
+		  = SingleRelation.from(vc, param.originalTable)
+			.select(Arrays.asList("*", String.format("count(*) over (partition by %s) AS grp_size", groupName)))
+			.where(CompCond.from(Expr.from("rand(unix_timestamp())"), "<", threshold));
+		ExactRelation sampleWithSamplingProb
+		  = sampleWithGrpSize.select(
+				  allColumns + ", "
+		          + String.format("count(*) over (partition by %s) / grp_size AS %s", groupName, samplingProbColName) + ", "
+		          + randomPartitionColumn());
+		
+		System.out.println(sampleWithSamplingProb.toSql());
+		String sql = String.format("CREATE TABLE %s AS ", sampleTable)
+					 + sampleWithSamplingProb.toSql();
+		VerdictLogger.debug(this, "The query used for creating a stratified sample:");
+		VerdictLogger.debugPretty(this, Relation.prettyfySql(sql), "  ");
+		executeUpdate(sql);
+		
+//		Pair<TableUniqueName, TableUniqueName> tempTables = createTempTableWithGroupCountsAndRand(param);
+//		TableUniqueName rnTempTable = tempTables.getLeft();
+//		TableUniqueName grpTempTable = tempTables.getRight();
+//		createStratifiedSampleFromTempTable(rnTempTable, grpTempTable, param);
+//		dropTable(rnTempTable);
+//		dropTable(grpTempTable);
 	}
 	
 	/**
@@ -221,6 +263,7 @@ public class DbmsImpala extends Dbms {
 	 * @param param
 	 * @throws VerdictException
 	 */
+	@Deprecated
 	protected void createStratifiedSampleFromTempTable(TableUniqueName rnTempTable, TableUniqueName grpTempTable, SampleParam param)
 			throws VerdictException
 	{

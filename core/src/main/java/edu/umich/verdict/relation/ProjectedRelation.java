@@ -1,6 +1,7 @@
 package edu.umich.verdict.relation;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -15,7 +16,9 @@ import edu.umich.verdict.datatypes.SampleParam;
 import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.relation.condition.Cond;
+import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.Expr;
+import edu.umich.verdict.relation.expr.ExprVisitor;
 import edu.umich.verdict.relation.expr.SelectElem;
 
 public class ProjectedRelation extends ExactRelation {
@@ -83,6 +86,39 @@ public class ProjectedRelation extends ExactRelation {
 	@Override
 	public List<SelectElem> getSelectList() {
 		return elems;
+	}
+	
+	@Override
+	public List<SelectElem> selectElemsWithAggregateSource() {
+		List<SelectElem> sourceAggElems = source.selectElemsWithAggregateSource();
+		final Set<String> sourceAggAliases = new HashSet<String>();
+		for (SelectElem e : sourceAggElems) {
+			sourceAggAliases.add(e.getAlias());
+		}
+		
+		ExprVisitor<Boolean> v = new ExprVisitor<Boolean>() {
+			private boolean aggSourceObserved = false;
+
+			@Override
+			public Boolean call(Expr expr) {
+				if (expr instanceof ColNameExpr) {
+					if (sourceAggAliases.contains(((ColNameExpr) expr).getCol())) {
+						aggSourceObserved = true;
+					}
+				}
+				return aggSourceObserved;
+			}
+		};
+		
+		// now examine each select list elem
+		List<SelectElem> aggElems = new ArrayList<SelectElem>();
+		for (SelectElem e : elems) {
+			if (v.visit(e.getExpr())) {
+				aggElems.add(e);
+			}
+		}
+		
+		return aggElems;
 	}
 
 }

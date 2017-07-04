@@ -6,6 +6,7 @@ import java.util.List;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 
+import edu.umich.verdict.VerdictConf;
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.VerdictSQLBaseVisitor;
 import edu.umich.verdict.VerdictSQLLexer;
@@ -18,14 +19,34 @@ import edu.umich.verdict.util.VerdictLogger;
 
 public abstract class Expr {
 	
+	private static VerdictContext dummyContext;
+	
+	static {
+		VerdictConf conf = new VerdictConf();
+		conf.setDbms("dummy");
+		try {
+			dummyContext = new VerdictContext(conf);
+		} catch (VerdictException e) {
+			e.printStackTrace();
+		}
+	}
+	
 	public static Expr from(String expr) {
+		return from(dummyContext, expr);
+	}
+	
+	public static Expr from(VerdictContext vc, String expr) {
 		VerdictSQLLexer l = new VerdictSQLLexer(CharStreams.fromString(expr));
 		VerdictSQLParser p = new VerdictSQLParser(new CommonTokenStream(l));
-		return from(p.expression());
+		return from(vc, p.expression());
 	}
 	
 	public static Expr from(VerdictSQLParser.ExpressionContext ctx) {
-		ExpressionGen g = new ExpressionGen();
+		return from(dummyContext, ctx);
+	}
+	
+	public static Expr from(VerdictContext vc, VerdictSQLParser.ExpressionContext ctx) {
+		ExpressionGen g = new ExpressionGen(vc);
 		return g.visit(ctx);
 	}
 	
@@ -49,6 +70,13 @@ public abstract class Expr {
 }
 
 class ExpressionGen extends VerdictSQLBaseVisitor<Expr> {
+	
+	private VerdictContext vc;
+	
+	public ExpressionGen(VerdictContext vc) {
+		this.vc = vc;
+	}
+	
 	@Override
 	public Expr visitPrimitive_expression(VerdictSQLParser.Primitive_expressionContext ctx) {
 		return ConstantExpr.from(ctx.getText());
@@ -72,6 +100,16 @@ class ExpressionGen extends VerdictSQLBaseVisitor<Expr> {
 	@Override
 	public Expr visitCase_expr(VerdictSQLParser.Case_exprContext ctx) {
 		return CaseExpr.from(ctx);
+	}
+	
+	@Override
+	public Expr visitBracket_expression(VerdictSQLParser.Bracket_expressionContext ctx) {
+		return visit(ctx.expression());
+	}
+	
+	@Override
+	public Expr visitSubquery_expression(VerdictSQLParser.Subquery_expressionContext ctx) {
+		return SubqueryExpr.from(vc, ctx);
 	}
 	
 }

@@ -69,12 +69,14 @@ public class VerdictContext {
 								(conf.getBoolean("no_user_password"))? "" : conf.getUser(),
 								(conf.getBoolean("no_user_password"))? "" : conf.getPassword(),
 								conf.get(conf.getDbms() + ".jdbc_class_name"));
-		VerdictLogger.info( 
-				(conf.getDbmsSchema() != null) ?
-						String.format("Connected to database: %s//%s:%s/%s",
-								conf.getDbms(), conf.getHost(), conf.getPort(), conf.getDbmsSchema())
-						: String.format("Connected to database: %s//%s:%s",
-								conf.getDbms(), conf.getHost(), conf.getPort()));
+		if (!conf.getDbms().equals("dummy")) {
+			VerdictLogger.info(
+					(conf.getDbmsSchema() != null) ?
+							String.format("Connected to database: %s//%s:%s/%s",
+									conf.getDbms(), conf.getHost(), conf.getPort(), conf.getDbmsSchema())
+							: String.format("Connected to database: %s//%s:%s",
+									conf.getDbms(), conf.getHost(), conf.getPort()));
+		}
 		
 		metaDbms = dbms;
 		meta = new VerdictMeta(this);		// this must be called after DB connection is created.

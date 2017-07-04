@@ -23,7 +23,7 @@ public class SubsamplingSqlConversionTest {
 		String converted;
 		ResultSet rs;
 		
-		sql = "select avg(days_since_prior) from orders";
+		sql = "select count(*) from orders";
 		r = ExactRelation.from(vc, sql);
 		converted = r.approx().toSql();
 		System.out.println(converted);
@@ -31,7 +31,7 @@ public class SubsamplingSqlConversionTest {
 		rs = vc.executeQuery(sql);
 		ResultSetConversion.printResultSet(rs);
 		
-		sql = "select order_dow, avg(days_since_prior) from orders group by order_dow";
+		sql = "select order_dow, count(*) from orders group by order_dow order by order_dow";
 		r = ExactRelation.from(vc, sql);
 		converted = r.approx().toSql();
 		System.out.println(converted);

@@ -31,7 +31,10 @@ public class SelectElem {
 	public static SelectElem from(String elem) {
 		VerdictSQLLexer l = new VerdictSQLLexer(CharStreams.fromString(elem));
 		VerdictSQLParser p = new VerdictSQLParser(new CommonTokenStream(l));
-		
+		return from(p.select_list_elem());
+	}
+	
+	public static SelectElem from(VerdictSQLParser.Select_list_elemContext ctx) {
 		VerdictSQLBaseVisitor<SelectElem> v = new VerdictSQLBaseVisitor<SelectElem>() {
 			@Override
 			public SelectElem visitSelect_list_elem(VerdictSQLParser.Select_list_elemContext ctx) {
@@ -49,7 +52,7 @@ public class SelectElem {
 			}	
 		};
 		
-		return v.visit(p.select_list_elem());
+		return v.visit(ctx);
 	}
 	
 	private static int column_alias_num = 1;

@@ -48,5 +48,10 @@ public class ImpalaSampleIT extends SampleIT {
 	public void dropRecommendedSampleTest() throws VerdictException {
 		super.dropRecommendedSampleTest();
 	}
+
+	@Override
+	public void createStratifiedSampleTest() throws VerdictException {
+		super.createStratifiedSampleTest();
+	}
 	
 }

@@ -4,12 +4,32 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 
+import edu.umich.verdict.relation.Relation;
+
 public class ExprTest {
 
 	@Test
-	public void caseExpr() {
+	public void caseExprTest() {
 		Expr a = Expr.from("CASE WHEN a < 5 THEN 1 WHEN a < 10 THEN 2 ELSE 3 END");
-		System.out.println(a.toString());
+		assertEquals(a.toString(), "(CASE WHEN a < 5 THEN 1 WHEN a < 10 THEN 2 ELSE 3 END)");
+	}
+	
+	@Test
+	public void partitonExprTest() {
+		Expr a = Expr.from("count(*) over (partition by order_dow)");
+		assertEquals(a.toString(), "count(*) OVER (partition by order_dow)");
+		
+		Expr b = Expr.from("count(*) over ()");
+		assertEquals(b.toString(), "count(*) OVER ()");
+		
+		Expr c = Expr.from("sum(prices * (1 - discount)) over (partition by ship_method)");
+		assertEquals(c.toString(), "sum((prices * (1 - discount))) OVER (partition by ship_method)");
+	}
+	
+	@Test
+	public void matheFuncTest() {
+		Expr a = Expr.from("round(rand(unix_timestamp())*100)%100");
+		assertEquals(a.toString(), "(round((rand(unix_timestamp()) * 100)) % 100)");
 	}
 
 }

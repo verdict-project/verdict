@@ -59,6 +59,22 @@ public class AggregatedRelation extends ExactRelation {
 			candidates_list.add(candidates);
 		}
 		
+		// check if any of them include sample tables. If no sample table is included, we do not approximate.
+		boolean includeSample = false;
+		for (List<SampleGroup> candidates : candidates_list) {
+			for (SampleGroup g : candidates) {
+				if (g.samplingProb() < 1.0) {
+					includeSample = true;
+					break;
+				}
+			}
+			if (includeSample) break;
+		}
+		
+		if (!includeSample) {
+			return new NoApproxRelation(this);
+		}
+		
 		// We test if we can consolidate those sample candidates so that the number of select statements is less than
 		// the number of the expressions. In the worst case (e.g., all count-distinct), the number of select statements
 		// will be equal to the number of the expressions. If the cost of running those select statements individually
@@ -167,6 +183,11 @@ public class AggregatedRelation extends ExactRelation {
 		
 		elems.addAll(this.elems);		// agg list
 		
+		return elems;
+	}
+
+	@Override
+	public List<SelectElem> selectElemsWithAggregateSource() {
 		return elems;
 	}
 

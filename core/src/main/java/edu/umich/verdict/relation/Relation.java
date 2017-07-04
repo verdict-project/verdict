@@ -13,6 +13,7 @@ import org.antlr.v4.runtime.misc.Interval;
 
 import com.google.common.base.Joiner;
 
+import edu.umich.verdict.VerdictConf;
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.VerdictSQLBaseVisitor;
 import edu.umich.verdict.VerdictSQLLexer;
@@ -24,6 +25,7 @@ import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.exceptions.VerdictUnexpectedMethodCall;
 import edu.umich.verdict.relation.expr.Expr;
+import edu.umich.verdict.relation.expr.FuncExpr;
 import edu.umich.verdict.relation.expr.SelectElem;
 import edu.umich.verdict.util.ResultSetConversion;
 import edu.umich.verdict.util.StackTraceReader;
@@ -300,12 +302,12 @@ class PrettyPrintVisitor extends VerdictSQLBaseVisitor<String> {
 		int i = 0;
 		for (VerdictSQLParser.Select_list_elemContext ectx : ctx.select_list_elem()) {
 			if (i > 0) {
-				sql.append(", ");
+				sql.append(",\n" + indent + "       ");
 			}
 			
-			if (i > 0 && i%5 == 0) {
-				sql.append("\n" + indent + "       ");
-			}
+//			if (i > 0 && i%5 == 0) {
+//				sql.append("\n" + indent + "       ");
+//			}
 			
 			sql.append(visit(ectx));
 			i++;
@@ -354,7 +356,7 @@ class PrettyPrintVisitor extends VerdictSQLBaseVisitor<String> {
 	@Override
 	public String visitSubquery(VerdictSQLParser.SubqueryContext ctx) {
 		PrettyPrintVisitor v = new PrettyPrintVisitor(sql);
-		v.setIndent(indent + "     ");
+		v.setIndent(indent + "  ");
 		return v.visit(ctx.select_statement());
 	}
 	
@@ -367,6 +369,9 @@ class PrettyPrintVisitor extends VerdictSQLBaseVisitor<String> {
 	public String visitComp_expr_predicate(VerdictSQLParser.Comp_expr_predicateContext ctx) {
 		String exp1 = visit(ctx.expression(0));
 		String exp2 = visit(ctx.expression(1));
+//		String exp1 = Expr.from(ctx.expression(0)).toString();
+//		Expr expr = Expr.from(ctx.expression(1));
+//		String exp2 = Expr.from(ctx.expression(1)).toString();
 		return String.format("%s %s %s", exp1, ctx.comparison_operator().getText(), exp2);
 	}
 	
@@ -476,6 +481,11 @@ class PrettyPrintVisitor extends VerdictSQLBaseVisitor<String> {
 		return tabName.toString();
 	}
 	
+	@Override
+	public String visitFunction_call_expression(VerdictSQLParser.Function_call_expressionContext ctx) {
+		return FuncExpr.from(ctx.function_call()).toString();
+	}
+	
 	@Override public String visitMathematical_function_expression(VerdictSQLParser.Mathematical_function_expressionContext ctx)
 	{
 		if (ctx.expression() != null) {
@@ -483,7 +493,6 @@ class PrettyPrintVisitor extends VerdictSQLBaseVisitor<String> {
 		} else {
 			return String.format("%s()", ctx.noparam_mathematical_function().getText());
 		}
-		
 	}
 	
 	@Override
@@ -507,8 +516,7 @@ class PrettyPrintVisitor extends VerdictSQLBaseVisitor<String> {
 			return String.format("NDV(%s)", visit(ctx.all_distinct_expression()));
 		}
 		VerdictLogger.error(this, String.format("Unexpected aggregate function expression: %s", ctx.getText()));
-		return null;	// we don't handle other aggregate functions for now.
-		
+		return null;	// we don't handle other aggregate functions for now.	
 	}
 	
 	@Override
@@ -531,7 +539,7 @@ class PrettyPrintVisitor extends VerdictSQLBaseVisitor<String> {
 	
 	@Override
 	public String visitSubquery_expression(VerdictSQLParser.Subquery_expressionContext ctx) {
-		return "\n" + indent + String.format("(%s)", visit(ctx.subquery()));
+		return "(\n" + indent + visit(ctx.subquery()) + ")";
 	}
 
 	@Override

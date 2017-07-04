@@ -30,6 +30,10 @@ public abstract class ApproxRelation extends Relation {
 		approximate = true;
 	}
 	
+	public String errColSuffix() {
+		return "_err";
+	}
+	
 	public String sourceTableName() {
 		if (this instanceof ApproxSingleRelation) {
 			ApproxSingleRelation r = (ApproxSingleRelation) this;
@@ -188,6 +192,7 @@ public abstract class ApproxRelation extends Relation {
 	 * @return
 	 */
 	protected abstract Map<String, String> tableSubstitution();
+	
 	
 	/*
 	 * order by and limit
