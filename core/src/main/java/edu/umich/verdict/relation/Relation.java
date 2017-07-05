@@ -606,14 +606,14 @@ class PrettyPrintVisitor extends VerdictSQLBaseVisitor<String> {
 		if (ctx.as_table_alias() == null) {
 			return tableNameItem;
 		} else {
-			String alias = ctx.as_table_alias().getText();
+			String alias = ctx.as_table_alias().table_alias().getText();
 			return tableNameItem + " " + alias;
 		}
 	}
 	
 	@Override
 	public String visitDerived_table_source_item(VerdictSQLParser.Derived_table_source_itemContext ctx) {
-		return String.format("(\n%s) AS %s", visit(ctx.derived_table().subquery()), ctx.as_table_alias().table_alias().getText());
+		return String.format("(\n%s) %s", visit(ctx.derived_table().subquery()), ctx.as_table_alias().table_alias().getText());
 	}
 	
 	@Override

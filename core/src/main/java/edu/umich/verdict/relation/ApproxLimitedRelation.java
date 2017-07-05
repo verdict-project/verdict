@@ -9,6 +9,7 @@ import com.google.common.collect.ImmutableMap;
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.relation.expr.ColNameExpr;
+import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.relation.expr.FuncExpr;
 import edu.umich.verdict.util.VerdictLogger;
 
@@ -47,8 +48,8 @@ public class ApproxLimitedRelation extends ApproxRelation {
 	}
 	
 	@Override
-	protected double samplingProbabilityFor(FuncExpr f) {
-		return source.samplingProbabilityFor(f);
+	protected List<Expr> samplingProbabilityExprsFor(FuncExpr f) {
+		return source.samplingProbabilityExprsFor(f);
 	}
 
 	@Override

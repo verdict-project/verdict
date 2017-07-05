@@ -342,7 +342,9 @@ public class Dbms {
 	 */
 	public ExactRelation augmentWithRandomPartitionNum(ExactRelation r) {
 		int pcount = partitionCount();
-		return r.select("*, " + String.format("mod(rand() * %d, %d) AS %s", pcount, pcount, partitionColumnName()));
+		ExactRelation aug = r.select("*, " + String.format("mod(rand() * %d, %d) AS %s", pcount, pcount, partitionColumnName()));
+		aug.setAliasName(r.getAliasName());
+		return aug;
 	}
 
 	public void close() throws VerdictException {

@@ -103,12 +103,39 @@ public class ApproxJoinedRelation extends ApproxRelation {
 	}
 	
 	@Override
-	protected double samplingProbabilityFor(FuncExpr f) {
+	protected List<Expr> samplingProbabilityExprsFor(FuncExpr f) {
 		if (areMatchingUniverseSamples()) {
-			return Math.min(source1.samplingProbabilityFor(f), source2.samplingProbabilityFor(f));
-		} else {
-			return source1.samplingProbabilityFor(f) * source2.samplingProbabilityFor(f);
+			// get the first pair to check the table names to be joined.
+			Pair<Expr, Expr> ajoinCol = joinCols.get(0);
+			Expr l = ajoinCol.getLeft();
+			Expr r = ajoinCol.getRight();
+			
+			// we properly handles a join of two universe samples only if the join conditions are column names.
+			// that is, they should not be some expressions of those column names.
+			if ((l instanceof ColNameExpr) && (r instanceof ColNameExpr)) {
+				List<Expr> samplingProbExprs = new ArrayList<Expr>();
+				ColNameExpr rc = (ColNameExpr) r;
+				// add all sampling probability columns from the left table.
+				// here, we make an assumption that the sampling probabilities of the universe samples to be joined
+				// are equal.
+				samplingProbExprs.addAll(source1.samplingProbabilityExprsFor(f));
+				
+				// when adding right expressions from the right table, we exclude the column on which universe sample
+				// is created.
+				for (Expr e : source2.samplingProbabilityExprsFor(f)) {
+					if ((e instanceof ColNameExpr) && ((ColNameExpr) e).getTab().equals(rc.getTab())) {
+						continue;
+					} else {
+						samplingProbExprs.add(e);
+					}
+				}
+				return samplingProbExprs;
+			}
 		}
+		
+		List<Expr> samplingProbExprs = new ArrayList<Expr>(source1.samplingProbabilityExprsFor(f));
+		samplingProbExprs.addAll(source2.samplingProbabilityExprsFor(f));
+		return samplingProbExprs;
 	}
 	
 	private boolean areMatchingUniverseSamples() {

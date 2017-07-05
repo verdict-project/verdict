@@ -137,8 +137,9 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 			groupby.addAll(((ApproxGroupedRelation) source).getGroupby());
 		}
 		
+		final Map<String, String> sub = source.tableSubstitution();
 		for (SelectElem e : elems) {
-			Expr scaled = transformForSingleFunctionWithPartitionSize(e.getExpr(), samplingProbCols, groupby, newSource.partitionColumn());
+			Expr scaled = transformForSingleFunctionWithPartitionSize(e.getExpr(), samplingProbCols, groupby, newSource.partitionColumn(), sub);
 			scaledElems.add(new SelectElem(scaled, e.getAlias()));
 		}
 		scaledElems.add(new SelectElem(FuncExpr.count(), partitionSizeAlias));
@@ -166,16 +167,17 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 	}
 	
 	@Override
-	protected double samplingProbabilityFor(FuncExpr f) {
-		return 1.0;
+	protected List<Expr> samplingProbabilityExprsFor(FuncExpr f) {
+		return Arrays.asList();
 	}
 	
 	private Expr transformForSingleFunctionWithPartitionSize(
 			Expr f,
 			final List<ColNameExpr> samplingProbCols,
 			List<ColNameExpr> groupby,
-			final ColNameExpr partitionCol) {
-		final Map<String, String> sub = source.tableSubstitution();
+			final ColNameExpr partitionCol,
+			final Map<String, String> tablesNamesSub) {
+		
 		final List<Expr> groupbyExpr = new ArrayList<Expr>();
 		for (ColNameExpr c : groupby) {
 			groupbyExpr.add((Expr) c);
@@ -190,35 +192,35 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 					//    size and the original table size.
 					
 					FuncExpr f = (FuncExpr) expr;
-					FuncExpr s = (FuncExpr) exprWithTableNamesSubstituted(expr, sub);
-					double samplingProb = source.samplingProbabilityFor(f);
+					FuncExpr s = (FuncExpr) exprWithTableNamesSubstituted(expr, tablesNamesSub);
+					List<Expr> samplingProbExprs = source.samplingProbabilityExprsFor(f);
 					
 					if (f.getFuncName().equals(FuncExpr.FuncName.COUNT)) {
-						Expr est = FuncExpr.sum(scaleForSampling(samplingProb, samplingProbCols));
+						Expr est = FuncExpr.sum(scaleForSampling(samplingProbExprs));
 						est = scaleWithPartitionSize(est, groupbyExpr, partitionCol);
 						return est;
 					}
 					else if (f.getFuncName().equals(FuncExpr.FuncName.COUNT_DISTINCT)) {
 						String dbname = vc.getDbms().getName();
+						Expr scale = scaleForSampling(samplingProbExprs);
 						if (dbname.equals("impala")) {
 							Expr est = BinaryOpExpr.from(
 									new FuncExpr(FuncExpr.FuncName.IMPALA_APPROX_COUNT_DISTINCT, s.getUnaryExpr()),
-									ConstantExpr.from(1.0 / samplingProb),
-									"*");
+									scale, "*");
 							est = scaleWithPartitionSize(est, groupbyExpr, partitionCol);
 							return est;
 						} else {
-							return BinaryOpExpr.from(s, ConstantExpr.from(1.0 / samplingProb), "*");
+							return BinaryOpExpr.from(s, scale, "*");
 						}
 					}
 					else if (f.getFuncName().equals(FuncExpr.FuncName.SUM)) {
-						Expr est = scaleForSampling(samplingProb, samplingProbCols);
+						Expr est = scaleForSampling(samplingProbExprs);
 						est = FuncExpr.sum(BinaryOpExpr.from(s.getUnaryExpr(), est, "*"));
 						est = scaleWithPartitionSize(est, groupbyExpr, partitionCol);
 						return est;
 					}
 					else if (f.getFuncName().equals(FuncExpr.FuncName.AVG)) {
-						Expr scale = scaleForSampling(samplingProb, samplingProbCols);
+						Expr scale = scaleForSampling(samplingProbExprs);
 						Expr sumEst = FuncExpr.sum(BinaryOpExpr.from(s.getUnaryExpr(), scale, "*"));
 						// this count-est filters out the null expressions.
 						Expr countEst = countNotNull(s.getUnaryExpr(), scale);
@@ -236,9 +238,9 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 		return v.visit(f);
 	}
 	
-	private Expr scaleForSampling(double samplingProb, List<ColNameExpr> samplingProbCols) {
-		Expr scale = ConstantExpr.from(1.0 / samplingProb);
-		for (ColNameExpr c : samplingProbCols) {
+	private Expr scaleForSampling(List<Expr> samplingProbCols) {
+		Expr scale = ConstantExpr.from(1.0);
+		for (Expr c : samplingProbCols) {
 			scale = BinaryOpExpr.from(scale, c, "/");
 		}
 		return scale;
@@ -267,30 +269,32 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 					
 					FuncExpr f = (FuncExpr) expr;
 					FuncExpr s = (FuncExpr) exprWithTableNamesSubstituted(expr, sub);
-					double samplingProb = source.samplingProbabilityFor(f);
+					List<Expr> samplingProbExprs = source.samplingProbabilityExprsFor(f);
 					
 					if (f.getFuncName().equals(FuncExpr.FuncName.COUNT)) {
-						Expr est = FuncExpr.sum(scaleForSampling(samplingProbCols));
+						Expr scale = scaleForSampling(samplingProbExprs);
+						Expr est = FuncExpr.sum(scale);
 						return FuncExpr.round(est);
 					}
 					else if (f.getFuncName().equals(FuncExpr.FuncName.COUNT_DISTINCT)) {
 						String dbname = vc.getDbms().getName();
+						Expr scale = scaleForSampling(samplingProbExprs);
 						if (dbname.equals("impala")) {
 							return FuncExpr.round(
 									BinaryOpExpr.from(new FuncExpr(
 											FuncExpr.FuncName.IMPALA_APPROX_COUNT_DISTINCT, s.getUnaryExpr()),
-											ConstantExpr.from(1.0 / samplingProb), "*"));
+											scale, "*"));
 						} else {
-							return FuncExpr.round(BinaryOpExpr.from(s, ConstantExpr.from(1.0 / samplingProb), "*"));
+							return FuncExpr.round(BinaryOpExpr.from(s, scale, "*"));
 						}
 					}
 					else if (f.getFuncName().equals(FuncExpr.FuncName.SUM)) {
-						Expr est = scaleForSampling(samplingProb, samplingProbCols);
-						est = FuncExpr.sum(BinaryOpExpr.from(s.getUnaryExpr(), est, "*"));
+						Expr scale = scaleForSampling(samplingProbExprs);
+						Expr est = FuncExpr.sum(BinaryOpExpr.from(s.getUnaryExpr(), scale, "*"));
 						return est;
 					}
 					else if (f.getFuncName().equals(FuncExpr.FuncName.AVG)) {
-						Expr scale = scaleForSampling(samplingProb, samplingProbCols);
+						Expr scale = scaleForSampling(samplingProbExprs);
 						Expr sumEst = FuncExpr.sum(BinaryOpExpr.from(s.getUnaryExpr(), scale, "*"));
 						// this count-est filters out the null expressions.
 						Expr countEst = countNotNull(s.getUnaryExpr(), scale);

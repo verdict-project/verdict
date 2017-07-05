@@ -25,17 +25,25 @@ public class SubsamplingSqlConversionTest {
 		
 		sql = "select count(*) from orders";
 		r = ExactRelation.from(vc, sql);
-		converted = r.approx().toSql();
-		System.out.println(converted);
-		System.out.println(Relation.prettyfySql(converted));
+//		converted = r.approx().toSql();
+//		System.out.println(converted);
+//		System.out.println(Relation.prettyfySql(converted));
+		rs = vc.executeQuery(sql);
+		ResultSetConversion.printResultSet(rs);
+		
+		sql = "select sum(orders.days_since_prior) from orders";
+		r = ExactRelation.from(vc, sql);
+//		converted = r.approx().toSql();
+//		System.out.println(converted);
+//		System.out.println(Relation.prettyfySql(converted));
 		rs = vc.executeQuery(sql);
 		ResultSetConversion.printResultSet(rs);
 		
 		sql = "select order_dow, count(*) from orders group by order_dow order by order_dow";
 		r = ExactRelation.from(vc, sql);
-		converted = r.approx().toSql();
-		System.out.println(converted);
-		System.out.println(Relation.prettyfySql(converted));
+//		converted = r.approx().toSql();
+//		System.out.println(converted);
+//		System.out.println(Relation.prettyfySql(converted));
 		rs = vc.executeQuery(sql);
 		ResultSetConversion.printResultSet(rs);
 		

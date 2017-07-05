@@ -16,6 +16,7 @@ import edu.umich.verdict.datatypes.SampleSizeInfo;
 import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.relation.expr.ColNameExpr;
+import edu.umich.verdict.relation.expr.ConstantExpr;
 import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.relation.expr.FuncExpr;
 import edu.umich.verdict.util.TypeCasting;
@@ -116,7 +117,9 @@ public class ApproxSingleRelation extends ApproxRelation {
 	
 	@Override
 	public ExactRelation rewriteWithPartition() {
-		ExactRelation r = vc.getDbms().augmentWithRandomPartitionNum(SingleRelation.from(vc, getSampleName()));
+		ExactRelation r = SingleRelation.from(vc, getSampleName());
+		r.setAliasName(getAliasName());
+		r = vc.getDbms().augmentWithRandomPartitionNum(r);
 		r.setAliasName(getAliasName());
 		return r;
 	}
@@ -128,23 +131,24 @@ public class ApproxSingleRelation extends ApproxRelation {
 //	}
 
 	@Override
-	protected double samplingProbabilityFor(FuncExpr f) {
+	protected List<Expr> samplingProbabilityExprsFor(FuncExpr f) {
 		if (f.getFuncName().equals(FuncExpr.FuncName.COUNT_DISTINCT)) {
 			if (getSampleType().equals("universe")) {
-				return getSamplingRatio();
+				return Arrays.<Expr>asList(ConstantExpr.from(getSamplingRatio()));
 			} else if (getSampleType().equals("stratified")) {
-				return 1.0;
+				return Arrays.<Expr>asList(ConstantExpr.from(1.0));
 			} else if (getSampleType().equals("nosample")) {
-				return 1.0;
+				return Arrays.<Expr>asList(ConstantExpr.from(1.0));
 			} else {
 				VerdictLogger.warn(this, String.format("%s sample should not be used for count-distinct.", getSampleType()));
-				return 1.0;
+				return Arrays.<Expr>asList(ConstantExpr.from(1.0));
 			}
 		} else {	// SUM, COUNT
-			if (getSampleType().equals("stratified")) {
-				return 1.0;		// the sampling probability for stratified samples is handled by accumulateStratifiedSamples().
+			if (!getSampleType().equals("nosample")) {
+				String samplingProbCol = samplingProbabilityColumnName();
+				return Arrays.<Expr>asList(new ColNameExpr(samplingProbCol, alias));
 			} else {
-				return getSampleSize() / (double) getOriginalTableSize();
+				return Arrays.<Expr>asList();
 			}
 		}
 	}
@@ -161,7 +165,7 @@ public class ApproxSingleRelation extends ApproxRelation {
 
 	@Override
 	protected Map<String, String> tableSubstitution() {
-		Map<String, String> s = ImmutableMap.of(param.originalTable.tableName, sampleTableName.tableName);
+		Map<String, String> s = ImmutableMap.of(param.originalTable.tableName, alias);
 		return s;
 	}
 	

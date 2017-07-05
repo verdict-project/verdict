@@ -78,13 +78,22 @@ public class ApproxProjectedRelation extends ApproxRelation {
 	}
 	
 	@Override
-	protected double samplingProbabilityFor(FuncExpr f) {
-		return source.samplingProbabilityFor(f);
+	protected List<Expr> samplingProbabilityExprsFor(FuncExpr f) {
+		List<Expr> exprs = source.samplingProbabilityExprsFor(f);
+		List<Expr> exprsWithNewAlias = new ArrayList<Expr>();
+		for (Expr e : exprs) {
+			if (e instanceof ColNameExpr) {
+				exprsWithNewAlias.add(new ColNameExpr(((ColNameExpr) e).getCol(), alias));
+			} else {
+				exprsWithNewAlias.add(e);
+			}
+		}
+		return exprsWithNewAlias;
 	}
 
 	@Override
 	protected Map<String, String> tableSubstitution() {
-		return ImmutableMap.of();
+		return source.tableSubstitution();
 	}
 
 	@Override

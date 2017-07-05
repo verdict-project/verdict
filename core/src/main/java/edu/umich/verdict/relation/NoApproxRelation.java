@@ -8,6 +8,7 @@ import java.util.Map;
 
 import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.relation.expr.ColNameExpr;
+import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.relation.expr.FuncExpr;
 
 public class NoApproxRelation extends ApproxRelation {
@@ -35,8 +36,8 @@ public class NoApproxRelation extends ApproxRelation {
 	}
 
 	@Override
-	protected double samplingProbabilityFor(FuncExpr f) {
-		return 1.0;
+	protected List<Expr> samplingProbabilityExprsFor(FuncExpr f) {
+		return Arrays.asList();
 	}
 
 	@Override

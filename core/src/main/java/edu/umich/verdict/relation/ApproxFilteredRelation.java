@@ -125,8 +125,8 @@ public class ApproxFilteredRelation extends ApproxRelation {
 	}
 	
 	@Override
-	protected double samplingProbabilityFor(FuncExpr f) {
-		return source.samplingProbabilityFor(f);
+	protected List<Expr> samplingProbabilityExprsFor(FuncExpr f) {
+		return source.samplingProbabilityExprsFor(f);
 	}
 
 	@Override

@@ -59,8 +59,8 @@ public class ApproxGroupedRelation extends ApproxRelation {
 
 	@Override
 	// TODO: make this more accurate for handling IN and EXISTS predicates.
-	protected double samplingProbabilityFor(FuncExpr f) {
-		return source.samplingProbabilityFor(f);
+	protected List<Expr> samplingProbabilityExprsFor(FuncExpr f) {
+		return source.samplingProbabilityExprsFor(f);
 	}
 
 	@Override

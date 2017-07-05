@@ -50,9 +50,7 @@ public class SingleRelation extends ExactRelation {
 	
 	@Override
 	public String toSql() {
-		StringBuilder sql = new StringBuilder();
-		sql.append("SELECT * FROM " + tableName);
-		return sql.toString();
+		return select("*").toSql();
 	}
 	
 	@Override

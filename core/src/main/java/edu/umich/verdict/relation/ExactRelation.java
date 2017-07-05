@@ -344,7 +344,10 @@ public abstract class ExactRelation extends Relation {
 
 	protected String sourceExpr(ExactRelation source) {
 		if (source instanceof SingleRelation) {
-			return ((SingleRelation) source).getTableName().tableName;
+			SingleRelation asource = (SingleRelation) source;
+			String tableName = asource.getTableName().tableName;
+			String alias = asource.getAliasName();
+			return String.format("%s AS %s", tableName, alias);
 		} else if (source instanceof JoinedRelation) {
 			return ((JoinedRelation) source).joinClause();
 		} else {

@@ -171,7 +171,7 @@ public abstract class ApproxRelation extends Relation {
 	 * @param f
 	 * @return
 	 */
-	protected abstract double samplingProbabilityFor(FuncExpr f);
+	protected abstract List<Expr> samplingProbabilityExprsFor(FuncExpr f);
 	
 	/**
 	 * Returns an effective sample type of this relation.
