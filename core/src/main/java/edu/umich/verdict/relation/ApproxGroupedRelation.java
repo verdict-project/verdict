@@ -22,6 +22,7 @@ public class ApproxGroupedRelation extends ApproxRelation {
 		super(vc);
 		this.source = source;
 		this.groupby = groupby;
+		this.alias = source.alias;
 	}
 	
 	public ApproxRelation getSource() {
@@ -79,11 +80,6 @@ public class ApproxGroupedRelation extends ApproxRelation {
 	@Override
 	protected String sampleType() {
 		return source.sampleType();
-	}
-	
-	@Override
-	protected List<TableUniqueName> accumulateStratifiedSamples() {
-		return source.accumulateStratifiedSamples();
 	}
 
 	@Override

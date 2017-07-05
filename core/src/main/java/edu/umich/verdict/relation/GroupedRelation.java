@@ -31,6 +31,7 @@ public class GroupedRelation extends ExactRelation {
 		super(vc);
 		this.source = source;
 		this.groupby = groupby;
+		this.alias = source.alias;
 	}
 	
 	public ExactRelation getSource() {
@@ -122,6 +123,11 @@ public class GroupedRelation extends ExactRelation {
 		ColNameExpr col = source.partitionColumn();
 		col.setTab(getAliasName());
 		return col;
+	}
+
+	@Override
+	public List<ColNameExpr> accumulateSamplingProbColumns() {
+		return source.accumulateSamplingProbColumns();
 	}
 
 }

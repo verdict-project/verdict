@@ -40,6 +40,8 @@ public class JoinedRelation extends ExactRelation {
 		} else {
 			this.joinCols = joinCols;
 		}
+		
+		this.alias = null;
 	}
 	
 	public static JoinedRelation from(VerdictContext vc, ExactRelation source1, ExactRelation source2, List<Pair<Expr, Expr>> joinCols) {
@@ -260,5 +262,12 @@ public class JoinedRelation extends ExactRelation {
 		} else {
 			return col2;
 		}
+	}
+
+	@Override
+	public List<ColNameExpr> accumulateSamplingProbColumns() {
+		List<ColNameExpr> union = new ArrayList<ColNameExpr>(source1.accumulateSamplingProbColumns());
+		union.addAll(source2.accumulateSamplingProbColumns());
+		return union;
 	}
 }

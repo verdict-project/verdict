@@ -26,6 +26,7 @@ public class LimitedRelation extends ExactRelation {
 		super(vc);
 		this.source = source;
 		this.limit = limit;
+		this.alias = source.alias;
 	}
 	
 	public ExactRelation getSource() {
@@ -67,6 +68,11 @@ public class LimitedRelation extends ExactRelation {
 		ColNameExpr col = source.partitionColumn();
 		col.setTab(getAliasName());
 		return col;
+	}
+
+	@Override
+	public List<ColNameExpr> accumulateSamplingProbColumns() {
+		return source.accumulateSamplingProbColumns();
 	}
 
 }

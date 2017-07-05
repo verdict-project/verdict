@@ -45,12 +45,14 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 
 	@Override
 	public ExactRelation rewriteForPointEstimate() {
+		ExactRelation newSource = source.rewriteForPointEstimate();
+		
 		List<SelectElem> scaled = new ArrayList<SelectElem>();
-		List<TableUniqueName> stratifiedSampleTables = source.accumulateStratifiedSamples();
+		List<ColNameExpr> samplingProbColumns = newSource.accumulateSamplingProbColumns();
 		for (SelectElem e : elems) {
-			scaled.add(new SelectElem(transformForSingleFunction(e.getExpr(), stratifiedSampleTables), e.getAlias()));
+			scaled.add(new SelectElem(transformForSingleFunction(e.getExpr(), samplingProbColumns), e.getAlias()));
 		}
-		ExactRelation r = new AggregatedRelation(vc, source.rewriteForPointEstimate(), scaled);
+		ExactRelation r = new AggregatedRelation(vc, newSource, scaled);
 		r.setAliasName(getAliasName());
 		return r;
 	}
@@ -129,14 +131,14 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 		ExactRelation newSource = partitionedSource();
 		
 		List<SelectElem> scaledElems = new ArrayList<SelectElem>();
-		List<TableUniqueName> stratifiedSampleTables = source.accumulateStratifiedSamples();
+		List<ColNameExpr> samplingProbCols = newSource.accumulateSamplingProbColumns();
 		List<ColNameExpr> groupby = new ArrayList<ColNameExpr>();
 		if (source instanceof ApproxGroupedRelation) {
 			groupby.addAll(((ApproxGroupedRelation) source).getGroupby());
 		}
 		
 		for (SelectElem e : elems) {
-			Expr scaled = transformForSingleFunctionWithPartitionSize(e.getExpr(), stratifiedSampleTables, groupby, newSource.partitionColumn());
+			Expr scaled = transformForSingleFunctionWithPartitionSize(e.getExpr(), samplingProbCols, groupby, newSource.partitionColumn());
 			scaledElems.add(new SelectElem(scaled, e.getAlias()));
 		}
 		scaledElems.add(new SelectElem(FuncExpr.count(), partitionSizeAlias));
@@ -170,7 +172,7 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 	
 	private Expr transformForSingleFunctionWithPartitionSize(
 			Expr f,
-			final List<TableUniqueName> stratifiedSampleTables,
+			final List<ColNameExpr> samplingProbCols,
 			List<ColNameExpr> groupby,
 			final ColNameExpr partitionCol) {
 		final Map<String, String> sub = source.tableSubstitution();
@@ -192,7 +194,7 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 					double samplingProb = source.samplingProbabilityFor(f);
 					
 					if (f.getFuncName().equals(FuncExpr.FuncName.COUNT)) {
-						Expr est = FuncExpr.sum(scaleForSampling(samplingProb, stratifiedSampleTables));
+						Expr est = FuncExpr.sum(scaleForSampling(samplingProb, samplingProbCols));
 						est = scaleWithPartitionSize(est, groupbyExpr, partitionCol);
 						return est;
 					}
@@ -210,13 +212,13 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 						}
 					}
 					else if (f.getFuncName().equals(FuncExpr.FuncName.SUM)) {
-						Expr est = scaleForSampling(samplingProb, stratifiedSampleTables);
+						Expr est = scaleForSampling(samplingProb, samplingProbCols);
 						est = FuncExpr.sum(BinaryOpExpr.from(s.getUnaryExpr(), est, "*"));
 						est = scaleWithPartitionSize(est, groupbyExpr, partitionCol);
 						return est;
 					}
 					else if (f.getFuncName().equals(FuncExpr.FuncName.AVG)) {
-						Expr scale = scaleForSampling(samplingProb, stratifiedSampleTables);
+						Expr scale = scaleForSampling(samplingProb, samplingProbCols);
 						Expr sumEst = FuncExpr.sum(BinaryOpExpr.from(s.getUnaryExpr(), scale, "*"));
 						// this count-est filters out the null expressions.
 						Expr countEst = countNotNull(s.getUnaryExpr(), scale);
@@ -234,10 +236,10 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 		return v.visit(f);
 	}
 	
-	private Expr scaleForSampling(double samplingProb, List<TableUniqueName> stratifiedSampleTables) {
+	private Expr scaleForSampling(double samplingProb, List<ColNameExpr> samplingProbCols) {
 		Expr scale = ConstantExpr.from(1.0 / samplingProb);
-		for (TableUniqueName t : stratifiedSampleTables) {
-			scale = BinaryOpExpr.from(scale, new ColNameExpr(vc.samplingProbColName(), t.tableName), "/");
+		for (ColNameExpr c : samplingProbCols) {
+			scale = BinaryOpExpr.from(scale, c, "/");
 		}
 		return scale;
 	}
@@ -252,7 +254,7 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 		return scaled;
 	}
 
-	private Expr transformForSingleFunction(Expr f, final List<TableUniqueName> stratifiedSampleTables) {
+	private Expr transformForSingleFunction(Expr f, final List<ColNameExpr> samplingProbCols) {
 		final Map<String, String> sub = source.tableSubstitution();
 		
 		ExprModifier v = new ExprModifier() {
@@ -268,7 +270,7 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 					double samplingProb = source.samplingProbabilityFor(f);
 					
 					if (f.getFuncName().equals(FuncExpr.FuncName.COUNT)) {
-						Expr est = FuncExpr.sum(scaleForSampling(samplingProb, stratifiedSampleTables));
+						Expr est = FuncExpr.sum(scaleForSampling(samplingProb, samplingProbCols));
 						return FuncExpr.round(est);
 					}
 					else if (f.getFuncName().equals(FuncExpr.FuncName.COUNT_DISTINCT)) {
@@ -283,12 +285,12 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 						}
 					}
 					else if (f.getFuncName().equals(FuncExpr.FuncName.SUM)) {
-						Expr est = scaleForSampling(samplingProb, stratifiedSampleTables);
+						Expr est = scaleForSampling(samplingProb, samplingProbCols);
 						est = FuncExpr.sum(BinaryOpExpr.from(s.getUnaryExpr(), est, "*"));
 						return est;
 					}
 					else if (f.getFuncName().equals(FuncExpr.FuncName.AVG)) {
-						Expr scale = scaleForSampling(samplingProb, stratifiedSampleTables);
+						Expr scale = scaleForSampling(samplingProb, samplingProbCols);
 						Expr sumEst = FuncExpr.sum(BinaryOpExpr.from(s.getUnaryExpr(), scale, "*"));
 						// this count-est filters out the null expressions.
 						Expr countEst = countNotNull(s.getUnaryExpr(), scale);
@@ -315,11 +317,6 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 	@Override
 	protected String sampleType() {
 		return source.sampleType();
-	}
-	
-	@Override
-	protected List<TableUniqueName> accumulateStratifiedSamples() {
-		return Arrays.asList();
 	}
 
 	@Override

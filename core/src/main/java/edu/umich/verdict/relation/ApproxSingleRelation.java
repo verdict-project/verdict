@@ -155,15 +155,6 @@ public class ApproxSingleRelation extends ApproxRelation {
 	}
 	
 	@Override
-	protected List<TableUniqueName> accumulateStratifiedSamples() {
-		if (param.sampleType.equals("stratified")) {
-			return Arrays.asList(param.sampleTableName());
-		} else {
-			return Arrays.asList();
-		}
-	}
-	
-	@Override
 	protected List<String> sampleColumns() {
 		return param.columnNames;
 	}

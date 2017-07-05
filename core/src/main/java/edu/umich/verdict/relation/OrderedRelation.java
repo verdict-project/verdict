@@ -27,6 +27,7 @@ public class OrderedRelation extends ExactRelation {
 		this.source = source;
 		this.orderby = orderby;
 		subquery = true;
+		this.alias = source.alias;
 	}
 
 	@Override
@@ -65,6 +66,11 @@ public class OrderedRelation extends ExactRelation {
 		ColNameExpr col = source.partitionColumn();
 		col.setTab(getAliasName());
 		return col;
+	}
+
+	@Override
+	public List<ColNameExpr> accumulateSamplingProbColumns() {
+		return source.accumulateSamplingProbColumns();
 	}
 
 }

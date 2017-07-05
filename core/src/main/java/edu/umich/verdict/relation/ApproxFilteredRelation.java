@@ -34,6 +34,7 @@ public class ApproxFilteredRelation extends ApproxRelation {
 		super(vc);
 		this.source = source;
 		this.cond = cond;
+		this.alias = source.alias;
 	}
 
 	public ApproxRelation getSource() {
@@ -101,7 +102,7 @@ public class ApproxFilteredRelation extends ApproxRelation {
 		ExactRelation joinedSource = source.rewriteWithPartition();
 		for (ApproxRelation a : relToJoin) {
 			List<Pair<Expr, Expr>> joinCol = Arrays.asList(Pair.<Expr, Expr>of(
-					source.partitionColumn(),
+					joinedSource.partitionColumn(),
 					new ColNameExpr(partitionColumnName(), a.sourceTableName())));
 			joinedSource = JoinedRelation.from(vc, joinedSource, a.rewriteWithPartition(), joinCol);
 		}
@@ -124,11 +125,6 @@ public class ApproxFilteredRelation extends ApproxRelation {
 	}
 	
 	@Override
-	protected ColNameExpr partitionColumn() {
-		return source.partitionColumn();
-	}
-	
-	@Override
 	protected double samplingProbabilityFor(FuncExpr f) {
 		return source.samplingProbabilityFor(f);
 	}
@@ -143,11 +139,6 @@ public class ApproxFilteredRelation extends ApproxRelation {
 		return source.sampleType();
 	}
 	
-	@Override
-	protected List<TableUniqueName> accumulateStratifiedSamples() {
-		return source.accumulateStratifiedSamples();
-	}
-
 	@Override
 	protected List<String> sampleColumns() {
 		return source.sampleColumns();

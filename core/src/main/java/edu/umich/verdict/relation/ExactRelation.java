@@ -370,9 +370,7 @@ public abstract class ExactRelation extends Relation {
 	 */
 	public abstract ColNameExpr partitionColumn();
 	
-	public String partitionColumnName() {
-		
-	}
+	public abstract List<ColNameExpr> accumulateSamplingProbColumns();
 	
 }
 

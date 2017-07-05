@@ -50,6 +50,7 @@ public class ApproxJoinedRelation extends ApproxRelation {
 		} else {
 			this.joinCols = joinCols;
 		}
+		this.alias = null;
 	}
 	
 	public static ApproxJoinedRelation from(VerdictContext vc, ApproxRelation source1, ApproxRelation source2, List<Pair<Expr, Expr>> joinCols) {
@@ -102,11 +103,6 @@ public class ApproxJoinedRelation extends ApproxRelation {
 	}
 	
 	@Override
-	protected ColNameExpr partitionColumn() {
-		return source1.partitionColumn();
-	}
-	
-	@Override
 	protected double samplingProbabilityFor(FuncExpr f) {
 		if (areMatchingUniverseSamples()) {
 			return Math.min(source1.samplingProbabilityFor(f), source2.samplingProbabilityFor(f));
@@ -151,13 +147,6 @@ public class ApproxJoinedRelation extends ApproxRelation {
 		} else {
 			return null;
 		}
-	}
-	
-	@Override
-	protected List<TableUniqueName> accumulateStratifiedSamples() {
-		List<TableUniqueName> union = new ArrayList<TableUniqueName>(source1.accumulateStratifiedSamples());
-		union.addAll(source2.accumulateStratifiedSamples());
-		return union;
 	}
 	
 	@Override

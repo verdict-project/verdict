@@ -133,9 +133,9 @@ public abstract class ApproxRelation extends Relation {
 	 */
 	protected abstract ExactRelation rewriteWithPartition();
 	
-	protected String partitionColumnName() {
-		return vc.getDbms().partitionColumnName();
-	}
+//	protected String partitionColumnName() {
+//		return vc.getDbms().partitionColumnName();
+//	}
 	
 	// returns effective partition column name for a possibly joined table.
 //	protected abstract ColNameExpr partitionColumn();
@@ -179,7 +179,7 @@ public abstract class ApproxRelation extends Relation {
 	 */
 	protected abstract String sampleType();
 	
-	protected abstract List<TableUniqueName> accumulateStratifiedSamples();
+//	protected abstract List<ColNameExpr> accumulateSamplingProbColumns();
 	
 	/**
 	 * Returns a set of columns on which a sample is created. Only meaningful for stratified and universe samples.

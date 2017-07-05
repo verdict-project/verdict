@@ -24,6 +24,7 @@ public class ApproxOrderedRelation extends ApproxRelation {
 		super(vc);
 		this.source = source;
 		this.orderby = orderby;
+		this.alias = source.alias;
 	}
 
 	@Override
@@ -48,11 +49,6 @@ public class ApproxOrderedRelation extends ApproxRelation {
 	}
 	
 	@Override
-	protected ColNameExpr partitionColumn() {
-		return source.partitionColumn();
-	}
-
-	@Override
 	protected double samplingProbabilityFor(FuncExpr f) {
 		return source.samplingProbabilityFor(f);
 	}
@@ -65,11 +61,6 @@ public class ApproxOrderedRelation extends ApproxRelation {
 	@Override
 	protected String sampleType() {
 		return source.sampleType();
-	}
-	
-	@Override
-	protected List<TableUniqueName> accumulateStratifiedSamples() {
-		return source.accumulateStratifiedSamples();
 	}
 
 	@Override

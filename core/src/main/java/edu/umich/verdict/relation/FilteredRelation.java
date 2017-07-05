@@ -25,6 +25,7 @@ public class FilteredRelation extends ExactRelation {
 		super(vc);
 		this.source = source;
 		this.cond = cond;
+		this.alias = source.alias;
 	}
 
 	public ExactRelation getSource() {
@@ -84,6 +85,11 @@ public class FilteredRelation extends ExactRelation {
 		ColNameExpr col = source.partitionColumn();
 		col.setTab(getAliasName());
 		return col;
+	}
+
+	@Override
+	public List<ColNameExpr> accumulateSamplingProbColumns() {
+		return source.accumulateSamplingProbColumns();
 	}
 
 }

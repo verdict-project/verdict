@@ -78,11 +78,6 @@ public class ApproxProjectedRelation extends ApproxRelation {
 	}
 	
 	@Override
-	protected ColNameExpr partitionColumn() {
-		return source.partitionColumn();
-	}
-
-	@Override
 	protected double samplingProbabilityFor(FuncExpr f) {
 		return source.samplingProbabilityFor(f);
 	}
@@ -95,11 +90,6 @@ public class ApproxProjectedRelation extends ApproxRelation {
 	@Override
 	protected String sampleType() {
 		return source.sampleType();
-	}
-	
-	@Override
-	protected List<TableUniqueName> accumulateStratifiedSamples() {
-		return source.accumulateStratifiedSamples();
 	}
 
 	@Override

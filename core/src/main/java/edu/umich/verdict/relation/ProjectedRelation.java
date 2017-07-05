@@ -123,11 +123,32 @@ public class ProjectedRelation extends ExactRelation {
 
 	@Override
 	public ColNameExpr partitionColumn() {
+		String pcol = partitionColumnName();
+		ColNameExpr col = null;
 		
+		// first inspect if there is a randomly generated partition column in this instance's projection list
+		for (SelectElem elem : elems) {
+			String alias = elem.getAlias();
+			if (alias != null && alias.equals(pcol)) {
+				col = new ColNameExpr(pcol, getAliasName());
+			}
+		}
 		
-		ColNameExpr col = source.partitionColumn();
-		col.setTab(getAliasName());
+		if (col == null) {
+			col = source.partitionColumn();
+		}
+		
 		return col;
+	}
+
+	@Override
+	public List<ColNameExpr> accumulateSamplingProbColumns() {
+		List<ColNameExpr> exprs = source.accumulateSamplingProbColumns();
+		List<ColNameExpr> exprsInNewTable = new ArrayList<ColNameExpr>(); 
+		for (ColNameExpr c : exprs) {
+			exprsInNewTable.add(new ColNameExpr(c.getCol(), getAliasName()));
+		}
+		return exprsInNewTable;
 	}
 
 }

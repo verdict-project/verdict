@@ -22,6 +22,7 @@ public class ApproxLimitedRelation extends ApproxRelation {
 		super(vc);
 		this.source = source;
 		this.limit = limit;
+		this.alias = source.alias;
 	}
 
 	@Override
@@ -46,11 +47,6 @@ public class ApproxLimitedRelation extends ApproxRelation {
 	}
 	
 	@Override
-	protected ColNameExpr partitionColumn() {
-		return source.partitionColumn();
-	}
-
-	@Override
 	protected double samplingProbabilityFor(FuncExpr f) {
 		return source.samplingProbabilityFor(f);
 	}
@@ -63,11 +59,6 @@ public class ApproxLimitedRelation extends ApproxRelation {
 	@Override
 	protected String sampleType() {
 		return null;
-	}
-	
-	@Override
-	protected List<TableUniqueName> accumulateStratifiedSamples() {
-		return source.accumulateStratifiedSamples();
 	}
 
 	@Override

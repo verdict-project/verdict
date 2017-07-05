@@ -1,6 +1,7 @@
 package edu.umich.verdict.relation;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,11 +42,6 @@ public class NoApproxRelation extends ApproxRelation {
 	@Override
 	protected String sampleType() {
 		return "nosample";
-	}
-
-	@Override
-	protected List<TableUniqueName> accumulateStratifiedSamples() {
-		return new ArrayList<TableUniqueName>();
 	}
 
 	@Override

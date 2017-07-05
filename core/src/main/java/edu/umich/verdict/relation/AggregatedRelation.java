@@ -1,6 +1,7 @@
 package edu.umich.verdict.relation;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -196,6 +197,11 @@ public class AggregatedRelation extends ExactRelation {
 		ColNameExpr col = source.partitionColumn();
 		col.setTab(getAliasName());
 		return col;
+	}
+
+	@Override
+	public List<ColNameExpr> accumulateSamplingProbColumns() {
+		return Arrays.asList();
 	}
 
 }

@@ -293,5 +293,18 @@ public class SingleRelation extends ExactRelation {
 	public ColNameExpr partitionColumn() {
 		return null;
 	}
+
+	@Override
+	public List<ColNameExpr> accumulateSamplingProbColumns() {
+		List<ColNameExpr> samplingProbCols = new ArrayList<ColNameExpr>();
+		List<String> cols = vc.getMeta().getColumnNames(tableName);
+		String samplingProbColName = samplingProbabilityColumnName();
+		for (String c : cols) {
+			if (c.equals(samplingProbColName)) {
+				samplingProbCols.add(new ColNameExpr(samplingProbColName, tableName.tableName));
+			}
+		}
+		return samplingProbCols;
+	}
 	
 }

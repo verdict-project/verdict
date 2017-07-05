@@ -206,6 +206,14 @@ public abstract class Relation {
 		return TableUniqueName.uname(vc, n);
 	}
 	
+	public String partitionColumnName() {
+		return vc.getDbms().partitionColumnName();
+	}
+	
+	public String samplingProbabilityColumnName() {
+		return vc.getConf().get("verdict.sampling_probability_column");
+	}
+	
 }
 
 
