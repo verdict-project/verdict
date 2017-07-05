@@ -296,10 +296,10 @@ public class SelectStatementBaseRewriter extends VerdictSQLBaseVisitor<String> {
 //		return visit(ctx.aggregate_windowed_function());
 //	}
 	
-	@Override public String visitMathematical_function_expression(VerdictSQLParser.Mathematical_function_expressionContext ctx)
-	{
-		return String.format("%s(%s)", ctx.unary_mathematical_function().getText(), visit(ctx.expression()));
-	}
+//	@Override public String visitMathematical_function_expression(VerdictSQLParser.Mathematical_function_expressionContext ctx)
+//	{
+//		return String.format("%s(%s)", ctx.unary_mathematical_function().getText(), visit(ctx.expression()));
+//	}
 	
 	@Override
 	public String visitAggregate_windowed_function(VerdictSQLParser.Aggregate_windowed_functionContext ctx) {

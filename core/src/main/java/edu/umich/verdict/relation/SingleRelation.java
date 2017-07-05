@@ -136,9 +136,9 @@ public class SingleRelation extends ExactRelation {
 		Set<String> cols = new HashSet<String>(vc.getMeta().getColumnNames(getTableName()));
 		List<Double> probs = new ArrayList<Double>();
 		for (FuncExpr fexpr : funcs) {
-			String fcol = fexpr.getExprInString();
-			if (fexpr.getExpr() instanceof ColNameExpr) {
-				fcol = ((ColNameExpr) fexpr.getExpr()).getCol();
+			String fcol = fexpr.getUnaryExprInString();
+			if (fexpr.getUnaryExpr() instanceof ColNameExpr) {
+				fcol = ((ColNameExpr) fexpr.getUnaryExpr()).getCol();
 			}
 			
 			if (fexpr.getFuncName().equals(FuncExpr.FuncName.COUNT_DISTINCT)) {
@@ -287,6 +287,11 @@ public class SingleRelation extends ExactRelation {
 			elems.add(new SelectElem(new ColNameExpr(c, table.tableName)));
 		}
 		return elems;
+	}
+
+	@Override
+	public ColNameExpr partitionColumn() {
+		return null;
 	}
 	
 }

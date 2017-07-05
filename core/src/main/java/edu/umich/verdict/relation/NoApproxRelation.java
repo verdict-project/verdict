@@ -34,11 +34,6 @@ public class NoApproxRelation extends ApproxRelation {
 	}
 
 	@Override
-	protected ColNameExpr partitionColumn() {
-		return null;
-	}
-
-	@Override
 	protected double samplingProbabilityFor(FuncExpr f) {
 		return 1.0;
 	}

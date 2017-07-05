@@ -234,9 +234,7 @@ public class JoinedRelation extends ExactRelation {
 	 */
 	
 	public String toSql() {
-		StringBuilder sql = new StringBuilder();
-		sql.append(String.format("SELECT * FROM %s", joinClause()));
-		return sql.toString();
+		return this.select("*").toSql();
 	}
 
 	@Override
@@ -251,5 +249,16 @@ public class JoinedRelation extends ExactRelation {
 		elems.addAll(source1.getSelectList());
 		elems.addAll(source2.getSelectList());
 		return elems;
+	}
+
+	@Override
+	public ColNameExpr partitionColumn() {
+		ColNameExpr col1 = source1.partitionColumn();
+		ColNameExpr col2 = source2.partitionColumn();
+		if (col1 != null) {
+			return col1;
+		} else {
+			return col2;
+		}
 	}
 }

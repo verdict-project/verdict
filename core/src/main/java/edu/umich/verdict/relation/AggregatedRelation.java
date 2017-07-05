@@ -191,4 +191,11 @@ public class AggregatedRelation extends ExactRelation {
 		return elems;
 	}
 
+	@Override
+	public ColNameExpr partitionColumn() {
+		ColNameExpr col = source.partitionColumn();
+		col.setTab(getAliasName());
+		return col;
+	}
+
 }

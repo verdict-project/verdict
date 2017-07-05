@@ -134,11 +134,11 @@ public abstract class ApproxRelation extends Relation {
 	protected abstract ExactRelation rewriteWithPartition();
 	
 	protected String partitionColumnName() {
-		return vc.getConf().get("verdict.partition_column_name");
+		return vc.getDbms().partitionColumnName();
 	}
 	
 	// returns effective partition column name for a possibly joined table.
-	protected abstract ColNameExpr partitionColumn();
+//	protected abstract ColNameExpr partitionColumn();
 	
 	public ExactRelation rewriteWithBootstrappedErrorBounds() { return null; }
 	
@@ -233,7 +233,7 @@ public abstract class ApproxRelation extends Relation {
 					return new ColNameExpr(e.getCol(), sub.get(e.getTab()), e.getSchema());
 				} else if (expr instanceof FuncExpr) {
 					FuncExpr e = (FuncExpr) expr;
-					return new FuncExpr(e.getFuncName(), visit(e.getExpr()));
+					return new FuncExpr(e.getFuncName(), visit(e.getUnaryExpr()));
 				} else {
 					return expr;
 				}

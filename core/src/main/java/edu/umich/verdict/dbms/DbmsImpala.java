@@ -118,6 +118,11 @@ public class DbmsImpala extends Dbms {
 //		dropTable(tempTableName);
 	}
 	
+	@Override
+	public ExactRelation augmentWithRandomPartitionNum(ExactRelation r) {
+		return r.select("*, " + randomPartitionColumn());
+	}
+
 	/**
 	 * Creates a universe sample table without dropping an old table.
 	 * @param originalTableName
@@ -139,7 +144,8 @@ public class DbmsImpala extends Dbms {
 	}
 	
 	private String randomPartitionColumn() {
-		return "round(rand(unix_timestamp())*100)%100 AS " + partitionColumnName();
+		int pcount = partitionCount();
+		return String.format("round(rand(unix_timestamp())*%d) %% %d AS %s", pcount, pcount, partitionColumnName());
 	}
 	
 	private String columnNamesInString(TableUniqueName tableName) {

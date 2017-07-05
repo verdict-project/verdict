@@ -5,6 +5,7 @@ import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.datatypes.VerdictResultSet;
 import edu.umich.verdict.exceptions.VerdictException;
+import edu.umich.verdict.relation.ExactRelation;
 import edu.umich.verdict.relation.SingleRelation;
 import edu.umich.verdict.util.StackTraceReader;
 import edu.umich.verdict.util.VerdictLogger;
@@ -333,6 +334,16 @@ public class Dbms {
 	public Connection getDbmsConnection() {
 		return conn;
 	}
+	
+	/**
+	 * Attach a new column in which random integers between 0 and partitionCount-1 (inclusive) are populated. 
+	 * @param partitionCount
+	 * @return
+	 */
+	public ExactRelation augmentWithRandomPartitionNum(ExactRelation r) {
+		int pcount = partitionCount();
+		return r.select("*, " + String.format("mod(rand() * %d, %d) AS %s", pcount, pcount, partitionColumnName()));
+	}
 
 	public void close() throws VerdictException {
 		try {
@@ -533,7 +544,11 @@ public class Dbms {
 		return "STDDEV";
 	}
 
-	protected String partitionColumnName() {
-		return vc.getConf().get("verdict.partition_column_name");
+	public String partitionColumnName() {
+		return vc.getConf().get("verdict.subsampling_partition_column_name");
+	}
+	
+	public int partitionCount() {
+		return vc.getConf().getInt("verdict.subsampling_partition_count");
 	}
 }

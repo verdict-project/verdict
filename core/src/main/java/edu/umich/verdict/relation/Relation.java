@@ -486,13 +486,28 @@ class PrettyPrintVisitor extends VerdictSQLBaseVisitor<String> {
 		return FuncExpr.from(ctx.function_call()).toString();
 	}
 	
-	@Override public String visitMathematical_function_expression(VerdictSQLParser.Mathematical_function_expressionContext ctx)
-	{
-		if (ctx.expression() != null) {
-			return String.format("%s(%s)", ctx.unary_mathematical_function().getText(), visit(ctx.expression()));
-		} else {
-			return String.format("%s()", ctx.noparam_mathematical_function().getText());
-		}
+//	@Override public String visitMathematical_function_expression(VerdictSQLParser.Mathematical_function_expressionContext ctx)
+//	{
+//		if (ctx.expression() != null) {
+//			return String.format("%s(%s)", ctx.unary_mathematical_function().getText(), visit(ctx.expression()));
+//		} else {
+//			return String.format("%s()", ctx.noparam_mathematical_function().getText());
+//		}
+//	}
+	
+	@Override
+	public String visitUnary_mathematical_function(VerdictSQLParser.Unary_mathematical_functionContext ctx) {
+		return String.format("%s(%s)", ctx.getText(), visit(ctx.expression()));
+	}
+	
+	@Override
+	public String visitNoparam_mathematical_function(VerdictSQLParser.Noparam_mathematical_functionContext ctx) {
+		return String.format("%s()", ctx.getText());
+	}
+	
+	@Override
+	public String visitBinary_mathematical_function(VerdictSQLParser.Binary_mathematical_functionContext ctx) {
+		return String.format("%s(%s, %s)", ctx.getText(), visit(ctx.expression(0)), visit(ctx.expression(1)));
 	}
 	
 	@Override

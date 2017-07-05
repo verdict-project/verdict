@@ -42,17 +42,19 @@ public class ApproxGroupedRelation extends ApproxRelation {
 	
 	@Override
 	public ExactRelation rewriteWithPartition() {
+		ExactRelation newSource = source.rewriteWithPartition();
 		List<ColNameExpr> newGroupby = groupbyWithTablesSubstituted();
-		newGroupby.add((ColNameExpr) exprWithTableNamesSubstituted(partitionColumn(), tableSubstitution()));
-		ExactRelation r = new GroupedRelation(vc, source.rewriteWithPartition(), newGroupby);
+//		newGroupby.add((ColNameExpr) exprWithTableNamesSubstituted(partitionColumn(), tableSubstitution()));
+		newGroupby.add(newSource.partitionColumn());
+		ExactRelation r = new GroupedRelation(vc, newSource, newGroupby);
 		r.setAliasName(r.getAliasName());
 		return r;
 	}
 	
-	@Override
-	protected ColNameExpr partitionColumn() {
-		return source.partitionColumn();
-	}
+//	@Override
+//	protected ColNameExpr partitionColumn() {
+//		return source.partitionColumn();
+//	}
 
 	@Override
 	// TODO: make this more accurate for handling IN and EXISTS predicates.

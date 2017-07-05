@@ -363,6 +363,16 @@ public abstract class ExactRelation extends Relation {
 	public List<SelectElem> selectElemsWithAggregateSource() {
 		return new ArrayList<SelectElem>();
 	}
+
+	/**
+	 * Used for subsampling-based error estimation. Should return the partition column of this instance.
+	 * @return
+	 */
+	public abstract ColNameExpr partitionColumn();
+	
+	public String partitionColumnName() {
+		
+	}
 	
 }
 

@@ -12,6 +12,7 @@ import edu.umich.verdict.datatypes.SampleParam;
 import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.relation.condition.Cond;
+import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.SelectElem;
 
 public class FilteredRelation extends ExactRelation {
@@ -76,6 +77,13 @@ public class FilteredRelation extends ExactRelation {
 	@Override
 	public List<SelectElem> getSelectList() {
 		return source.getSelectList();
+	}
+
+	@Override
+	public ColNameExpr partitionColumn() {
+		ColNameExpr col = source.partitionColumn();
+		col.setTab(getAliasName());
+		return col;
 	}
 
 }

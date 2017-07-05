@@ -1,5 +1,8 @@
 package edu.umich.verdict.relation.expr;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 import org.antlr.v4.runtime.CharStreams;
@@ -19,11 +22,11 @@ public class FuncExpr extends Expr {
 	public enum FuncName {
 		COUNT, SUM, AVG, COUNT_DISTINCT, IMPALA_APPROX_COUNT_DISTINCT,
 		ROUND, MAX, MIN, FLOOR, CEIL, EXP, LN, LOG10, LOG2, SIN, COS, TAN,
-		SIGN, RAND, UNIX_TIMESTAMP, FNV_HASH, ABS, STDDEV, SQRT,
+		SIGN, RAND, UNIX_TIMESTAMP, FNV_HASH, ABS, STDDEV, SQRT, MOD,
 		UNKNOWN
 	}
 	
-	protected Expr expression;
+	protected List<Expr> expressions;
 	
 	protected FuncName funcname;
 	
@@ -47,6 +50,7 @@ public class FuncExpr extends Expr {
 			.put("ABS", FuncName.ABS)
 			.put("STDDEV", FuncName.STDDEV)
 			.put("SQRT", FuncName.SQRT)
+			.put("MOD", FuncName.MOD)
 			.build();
 
 	protected static Map<FuncName, String> functionPattern = ImmutableMap.<FuncName, String>builder()
@@ -74,17 +78,32 @@ public class FuncExpr extends Expr {
 			.put(FuncName.ABS, "abs(%s)")
 			.put(FuncName.STDDEV, "stddev(%s)")
 			.put(FuncName.SQRT, "sqrt(%s)")
+			.put(FuncName.MOD, "mod(%s, %s)")
 			.put(FuncName.UNKNOWN, "UNKNOWN(%s)")
 			.build();
 	
-	public FuncExpr(FuncName fname, Expr expr, OverClause overClause) {
-		this.expression = expr;
+	public FuncExpr(FuncName fname, Expr expr1, Expr expr2, OverClause overClause) {
+		this.expressions = new ArrayList<Expr>();
+		if (expr1 != null) {
+			this.expressions.add(expr1);
+			if (expr2 != null) {
+				this.expressions.add(expr2);
+			}
+		}
 		this.funcname = fname;
 		this.overClause = overClause;
 	}
 	
+	public FuncExpr(FuncName fname, Expr expr, OverClause overClause) {
+		this(fname, expr, null, overClause);
+	}
+	
+	public FuncExpr(FuncName fname, Expr expr1, Expr expr2) {
+		this(fname, expr1, expr2, null);
+	}
+	
 	public FuncExpr(FuncName fname, Expr expr) {
-		this(fname, expr, null);
+		this(fname, expr, null, null);
 	}
 	
 	public static FuncExpr from(String expr) {
@@ -127,27 +146,39 @@ public class FuncExpr extends Expr {
 			}
 			
 			@Override
-			public FuncExpr visitMathematical_function_expression(VerdictSQLParser.Mathematical_function_expressionContext ctx) {
-				if (ctx.unary_mathematical_function() != null) {
-					String fname = ctx.unary_mathematical_function().getText().toUpperCase();
-					if (string2FunctionType.containsKey(fname)) {
-						if (ctx.expression() == null) {
-							return new FuncExpr(string2FunctionType.get(fname), null);
-						} else {
-							return new FuncExpr(string2FunctionType.get(fname), Expr.from(ctx.expression()));
-						}
-					} else {
-						return new FuncExpr(FuncName.UNKNOWN, Expr.from(ctx.expression()));
-					}
-				} else {
-					String fname = ctx.noparam_mathematical_function().getText().toUpperCase();
-					if (string2FunctionType.containsKey(fname)) {
-						return new FuncExpr(string2FunctionType.get(fname), null);
-					} else {
-						return new FuncExpr(FuncName.UNKNOWN, null);
-					}
-				}
+			public FuncExpr visitUnary_mathematical_function(VerdictSQLParser.Unary_mathematical_functionContext ctx) {
+				String fname = ctx.function_name.getText().toUpperCase();
+				FuncName funcName = string2FunctionType.containsKey(fname)? string2FunctionType.get(fname) : FuncName.UNKNOWN;
+				return new FuncExpr(funcName, Expr.from(ctx.expression()));
 			}
+			
+			@Override
+			public FuncExpr visitNoparam_mathematical_function(VerdictSQLParser.Noparam_mathematical_functionContext ctx) {
+				String fname = ctx.function_name.getText().toUpperCase();
+				FuncName funcName = string2FunctionType.containsKey(fname)? string2FunctionType.get(fname) : FuncName.UNKNOWN;
+				return new FuncExpr(funcName, null);
+			}
+			
+			@Override
+			public FuncExpr visitBinary_mathematical_function(VerdictSQLParser.Binary_mathematical_functionContext ctx) {
+				String fname = ctx.function_name.getText().toUpperCase();
+				FuncName funcName = string2FunctionType.containsKey(fname)? string2FunctionType.get(fname) : FuncName.UNKNOWN;
+				return new FuncExpr(funcName, Expr.from(ctx.expression(0)), Expr.from(ctx.expression(1)));
+			}
+			
+//			@Override
+//			public FuncExpr visitMathematical_function_expression(VerdictSQLParser.Mathematical_function_expressionContext ctx) {
+//				if (ctx.unary_mathematical_function() != null) {
+//					
+//				} else {
+//					String fname = ctx.noparam_mathematical_function().getText().toUpperCase();
+//					if (string2FunctionType.containsKey(fname)) {
+//						return new FuncExpr(string2FunctionType.get(fname), null);
+//					} else {
+//						return new FuncExpr(FuncName.UNKNOWN, null);
+//					}
+//				}
+//			}
 		};
 		return v.visit(ctx);
 	}
@@ -156,12 +187,12 @@ public class FuncExpr extends Expr {
 		return funcname;
 	}
 	
-	public Expr getExpr() {
-		return expression;
+	public Expr getUnaryExpr() {
+		return expressions.get(0);
 	}
 	
-	public String getExprInString() {
-		return getExpr().toString();
+	public String getUnaryExprInString() {
+		return getUnaryExpr().toString();
 	}
 	
 	public static FuncExpr avg(Expr expr) {
@@ -227,10 +258,12 @@ public class FuncExpr extends Expr {
 	@Override
 	public String toString() {
 		StringBuilder sql = new StringBuilder(50);
-		if (expression == null) {
+		if (expressions.size() == 0) {
 			sql.append(String.format(functionPattern.get(funcname), ""));
+		} else if (expressions.size() == 1) {
+			sql.append(String.format(functionPattern.get(funcname), expressions.get(0).toString()));
 		} else {
-			sql.append(String.format(functionPattern.get(funcname), expression.toString()));
+			sql.append(String.format(functionPattern.get(funcname), expressions.get(0).toString(), expressions.get(1).toString()));
 		}
 		
 		if (overClause != null) {
@@ -249,10 +282,11 @@ public class FuncExpr extends Expr {
 		if (funcname.equals(FuncName.AVG) || funcname.equals(FuncName.SUM) || funcname.equals(FuncName.COUNT)
 			|| funcname.equals(FuncName.COUNT_DISTINCT)) {
 			return true;
-		} else if (expression != null) {
-			return expression.isagg();
 		} else {
-			return false;
+			for (Expr expr : expressions) {
+				if (expr.isagg()) return true;
+			}
 		}
+		return false;
 	}
 }

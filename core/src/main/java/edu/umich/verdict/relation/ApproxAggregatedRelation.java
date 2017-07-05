@@ -126,6 +126,8 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 	 * @return
 	 */
 	protected ExactRelation rewriteWithPartition() {
+		ExactRelation newSource = partitionedSource();
+		
 		List<SelectElem> scaledElems = new ArrayList<SelectElem>();
 		List<TableUniqueName> stratifiedSampleTables = source.accumulateStratifiedSamples();
 		List<ColNameExpr> groupby = new ArrayList<ColNameExpr>();
@@ -134,11 +136,11 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 		}
 		
 		for (SelectElem e : elems) {
-			Expr scaled = transformForSingleFunctionWithPartitionSize(e.getExpr(), stratifiedSampleTables, groupby);
+			Expr scaled = transformForSingleFunctionWithPartitionSize(e.getExpr(), stratifiedSampleTables, groupby, newSource.partitionColumn());
 			scaledElems.add(new SelectElem(scaled, e.getAlias()));
 		}
 		scaledElems.add(new SelectElem(FuncExpr.count(), partitionSizeAlias));
-		ExactRelation r = new AggregatedRelation(vc, partitionedSource(), scaledElems);
+		ExactRelation r = new AggregatedRelation(vc, newSource, scaledElems);
 		
 		return r;
 	}
@@ -151,10 +153,10 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 		}
 	}
 	
-	@Override
-	protected ColNameExpr partitionColumn() {
-		return source.partitionColumn();
-	}
+//	@Override
+//	protected ColNameExpr partitionColumn() {
+//		return source.partitionColumn();
+//	}
 	
 	@Override
 	protected Map<String, String> tableSubstitution() {
@@ -166,7 +168,11 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 		return source.samplingProbabilityFor(f);
 	}
 	
-	private Expr transformForSingleFunctionWithPartitionSize(Expr f, final List<TableUniqueName> stratifiedSampleTables, List<ColNameExpr> groupby) {
+	private Expr transformForSingleFunctionWithPartitionSize(
+			Expr f,
+			final List<TableUniqueName> stratifiedSampleTables,
+			List<ColNameExpr> groupby,
+			final ColNameExpr partitionCol) {
 		final Map<String, String> sub = source.tableSubstitution();
 		final List<Expr> groupbyExpr = new ArrayList<Expr>();
 		for (ColNameExpr c : groupby) {
@@ -187,17 +193,17 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 					
 					if (f.getFuncName().equals(FuncExpr.FuncName.COUNT)) {
 						Expr est = FuncExpr.sum(scaleForSampling(samplingProb, stratifiedSampleTables));
-						est = scaleWithPartitionSize(est, groupbyExpr);
+						est = scaleWithPartitionSize(est, groupbyExpr, partitionCol);
 						return est;
 					}
 					else if (f.getFuncName().equals(FuncExpr.FuncName.COUNT_DISTINCT)) {
 						String dbname = vc.getDbms().getName();
 						if (dbname.equals("impala")) {
 							Expr est = BinaryOpExpr.from(
-									new FuncExpr(FuncExpr.FuncName.IMPALA_APPROX_COUNT_DISTINCT, s.getExpr()),
+									new FuncExpr(FuncExpr.FuncName.IMPALA_APPROX_COUNT_DISTINCT, s.getUnaryExpr()),
 									ConstantExpr.from(1.0 / samplingProb),
 									"*");
-							est = scaleWithPartitionSize(est, groupbyExpr);
+							est = scaleWithPartitionSize(est, groupbyExpr, partitionCol);
 							return est;
 						} else {
 							return BinaryOpExpr.from(s, ConstantExpr.from(1.0 / samplingProb), "*");
@@ -205,15 +211,15 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 					}
 					else if (f.getFuncName().equals(FuncExpr.FuncName.SUM)) {
 						Expr est = scaleForSampling(samplingProb, stratifiedSampleTables);
-						est = FuncExpr.sum(BinaryOpExpr.from(s.getExpr(), est, "*"));
-						est = scaleWithPartitionSize(est, groupbyExpr);
+						est = FuncExpr.sum(BinaryOpExpr.from(s.getUnaryExpr(), est, "*"));
+						est = scaleWithPartitionSize(est, groupbyExpr, partitionCol);
 						return est;
 					}
 					else if (f.getFuncName().equals(FuncExpr.FuncName.AVG)) {
 						Expr scale = scaleForSampling(samplingProb, stratifiedSampleTables);
-						Expr sumEst = FuncExpr.sum(BinaryOpExpr.from(s.getExpr(), scale, "*"));
+						Expr sumEst = FuncExpr.sum(BinaryOpExpr.from(s.getUnaryExpr(), scale, "*"));
 						// this count-est filters out the null expressions.
-						Expr countEst = countNotNull(s.getExpr(), scale);
+						Expr countEst = countNotNull(s.getUnaryExpr(), scale);
 						return BinaryOpExpr.from(sumEst, countEst, "/");
 					}
 					else {		// expected not to be visited
@@ -236,12 +242,10 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 		return scale;
 	}
 	
-	private Expr scaleWithPartitionSize(Expr expr, List<Expr> groupby) {
-		ColNameExpr pcol = partitionColumn();
-		pcol.setTab(null);
+	private Expr scaleWithPartitionSize(Expr expr, List<Expr> groupby, ColNameExpr partitionCol) {
 		List<Expr> includingPcol = new ArrayList<Expr>();
 		includingPcol.addAll(groupby);
-		includingPcol.add((Expr) pcol);
+		includingPcol.add((Expr) partitionCol);
 		
 		Expr scaled = BinaryOpExpr.from(expr, new FuncExpr(FuncExpr.FuncName.COUNT, new StarExpr(), new OverClause(includingPcol)), "/");
 		scaled = BinaryOpExpr.from(scaled, new FuncExpr(FuncExpr.FuncName.COUNT, new StarExpr(), new OverClause(groupby)), "*");
@@ -272,7 +276,7 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 						if (dbname.equals("impala")) {
 							return FuncExpr.round(
 									BinaryOpExpr.from(new FuncExpr(
-											FuncExpr.FuncName.IMPALA_APPROX_COUNT_DISTINCT, s.getExpr()),
+											FuncExpr.FuncName.IMPALA_APPROX_COUNT_DISTINCT, s.getUnaryExpr()),
 											ConstantExpr.from(1.0 / samplingProb), "*"));
 						} else {
 							return FuncExpr.round(BinaryOpExpr.from(s, ConstantExpr.from(1.0 / samplingProb), "*"));
@@ -280,14 +284,14 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 					}
 					else if (f.getFuncName().equals(FuncExpr.FuncName.SUM)) {
 						Expr est = scaleForSampling(samplingProb, stratifiedSampleTables);
-						est = FuncExpr.sum(BinaryOpExpr.from(s.getExpr(), est, "*"));
+						est = FuncExpr.sum(BinaryOpExpr.from(s.getUnaryExpr(), est, "*"));
 						return est;
 					}
 					else if (f.getFuncName().equals(FuncExpr.FuncName.AVG)) {
 						Expr scale = scaleForSampling(samplingProb, stratifiedSampleTables);
-						Expr sumEst = FuncExpr.sum(BinaryOpExpr.from(s.getExpr(), scale, "*"));
+						Expr sumEst = FuncExpr.sum(BinaryOpExpr.from(s.getUnaryExpr(), scale, "*"));
 						// this count-est filters out the null expressions.
-						Expr countEst = countNotNull(s.getExpr(), scale);
+						Expr countEst = countNotNull(s.getUnaryExpr(), scale);
 						return BinaryOpExpr.from(sumEst, countEst, "/");
 					}
 					else {		// expected not to be visited

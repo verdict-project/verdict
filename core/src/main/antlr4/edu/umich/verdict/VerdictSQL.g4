@@ -856,17 +856,24 @@ ranking_windowed_function
     ;
 
 mathematical_function_expression
-    : unary_mathematical_function '(' expression ')'
-    | noparam_mathematical_function '(' ')'
+    : unary_mathematical_function
+    | noparam_mathematical_function
+    | binary_mathematical_function
+    ;
+
+binary_mathematical_function
+    : function_name=MOD
+      '(' expression ',' expression ')'
     ;
 
 unary_mathematical_function
-    : ROUND | FLOOR | CEIL | EXP | LN | LOG10 | LOG2 | SIN | COS | TAN | SIGN | RAND | FNV_HASH | ABS
-    | STDDEV | SQRT
+    : function_name=(ROUND | FLOOR | CEIL | EXP | LN | LOG10 | LOG2 | SIN | COS | TAN | SIGN | RAND | FNV_HASH | ABS | STDDEV | SQRT)
+      '(' expression ')'
     ;
     
 noparam_mathematical_function
-    : UNIX_TIMESTAMP
+    : function_name=UNIX_TIMESTAMP
+      '(' ')'
     ;
 
 // https://msdn.microsoft.com/en-us/library/ms173454.aspx
@@ -1437,6 +1444,7 @@ MARK:                            M A R K;
 MAX:                             M A X;
 MIN:                             M I N;
 MIN_ACTIVE_ROWVERSION:           M I N '_' A C T I V E '_' R O W V E R S I O N;
+MOD:                             M O D;
 MODIFY:                          M O D I F Y;
 NEXT:                            N E X T;
 NAME:                            N A M E;

@@ -116,16 +116,16 @@ public class ApproxSingleRelation extends ApproxRelation {
 	
 	@Override
 	public ExactRelation rewriteWithPartition() {
-		ExactRelation r = SingleRelation.from(vc, getSampleName());
+		ExactRelation r = vc.getDbms().augmentWithRandomPartitionNum(SingleRelation.from(vc, getSampleName()));
 		r.setAliasName(getAliasName());
 		return r;
 	}
 	
-	@Override
-	protected ColNameExpr partitionColumn() {
-		String col = partitionColumnName();
-		return new ColNameExpr(col, getTableName().tableName);
-	}
+//	@Override
+//	protected ColNameExpr partitionColumn() {
+//		String col = partitionColumnName();
+//		return new ColNameExpr(col, getTableName().tableName);
+//	}
 
 	@Override
 	protected double samplingProbabilityFor(FuncExpr f) {
