@@ -211,7 +211,7 @@ public abstract class Relation {
 	}
 	
 	public String samplingProbabilityColumnName() {
-		return vc.getConf().get("verdict.sampling_probability_column");
+		return vc.getDbms().samplingProbabilityColumnName();
 	}
 	
 }
@@ -562,7 +562,7 @@ class PrettyPrintVisitor extends VerdictSQLBaseVisitor<String> {
 	
 	@Override
 	public String visitSubquery_expression(VerdictSQLParser.Subquery_expressionContext ctx) {
-		return "(\n" + indent + visit(ctx.subquery()) + ")";
+		return "(\n" + visit(ctx.subquery()) + ")";
 	}
 
 	@Override

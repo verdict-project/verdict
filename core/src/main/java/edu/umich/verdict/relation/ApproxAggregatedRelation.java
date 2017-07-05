@@ -167,7 +167,7 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 	
 	@Override
 	protected double samplingProbabilityFor(FuncExpr f) {
-		return source.samplingProbabilityFor(f);
+		return 1.0;
 	}
 	
 	private Expr transformForSingleFunctionWithPartitionSize(
@@ -270,7 +270,7 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 					double samplingProb = source.samplingProbabilityFor(f);
 					
 					if (f.getFuncName().equals(FuncExpr.FuncName.COUNT)) {
-						Expr est = FuncExpr.sum(scaleForSampling(samplingProb, samplingProbCols));
+						Expr est = FuncExpr.sum(scaleForSampling(samplingProbCols));
 						return FuncExpr.round(est);
 					}
 					else if (f.getFuncName().equals(FuncExpr.FuncName.COUNT_DISTINCT)) {

@@ -551,4 +551,8 @@ public class Dbms {
 	public int partitionCount() {
 		return vc.getConf().getInt("verdict.subsampling_partition_count");
 	}
+
+	public String samplingProbabilityColumnName() {
+		return vc.getConf().get("verdict.sampling_probability_column");
+	}
 }

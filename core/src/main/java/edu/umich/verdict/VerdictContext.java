@@ -140,8 +140,5 @@ public class VerdictContext {
 	public long getCurrentQid() {
 		return queryUid;
 	}
-	
-	public String samplingProbColName() {
-		return ST_SAMPLING_PROB_COL;
-	}
+
 }
