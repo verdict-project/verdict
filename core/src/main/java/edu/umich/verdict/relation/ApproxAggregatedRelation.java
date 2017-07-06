@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 
 import edu.umich.verdict.VerdictContext;
@@ -57,7 +58,9 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 		return r;
 	}
 	
-	private final String partitionSizeAlias = "verdict_psize";
+	private final String partitionSizeAlias = "__vpsize";
+	
+	private final String groupSizeAlias = "__vgsize";
 	
 	@Override
 	public ExactRelation rewriteWithSubsampledErrorBounds() {
@@ -65,19 +68,21 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 //		List<SelectElem> selectElems = r.selectElemsWithAggregateSource();
 		List<SelectElem> selectElems = ((AggregatedRelation) r).getAggList();
 		
-		assert(selectElems.size() == elems.size());
+//		assert(selectElems.size() == elems.size());
 		
 		// another wrapper to combine all subsampled aggregations.
 		List<SelectElem> finalAgg = new ArrayList<SelectElem>();
+		
 		for (int i = 0; i < selectElems.size() - 1; i++) {	// excluding the last one which is psize
 			SelectElem e = selectElems.get(i);
 			ColNameExpr est = new ColNameExpr(e.getAlias(), r.getAliasName());
 			ColNameExpr psize = new ColNameExpr(partitionSizeAlias, r.getAliasName());
 			
 			// average estimate
-			Expr meanEst = BinaryOpExpr.from(
-							FuncExpr.sum(BinaryOpExpr.from(est, psize, "*")),
-							FuncExpr.sum(psize), "/");
+//			Expr meanEst = BinaryOpExpr.from(
+//							FuncExpr.sum(BinaryOpExpr.from(est, psize, "*")),
+//							FuncExpr.sum(psize), "/");
+			Expr meanEst = FuncExpr.avg(est);
 			Expr originalAggExpr = elems.get(i).getExpr(); 
 			if (originalAggExpr instanceof FuncExpr) {
 				if (((FuncExpr) originalAggExpr).getFuncName().equals(FuncExpr.FuncName.COUNT)
@@ -130,6 +135,7 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 	protected ExactRelation rewriteWithPartition() {
 		ExactRelation newSource = partitionedSource();
 		
+		// first scaling; for sampling probability.
 		List<SelectElem> scaledElems = new ArrayList<SelectElem>();
 		List<ColNameExpr> samplingProbCols = newSource.accumulateSamplingProbColumns();
 		List<ColNameExpr> groupby = new ArrayList<ColNameExpr>();
@@ -139,11 +145,22 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 		
 		final Map<String, String> sub = source.tableSubstitution();
 		for (SelectElem e : elems) {
+//			Expr scaled = transformForSingleFunction(e.getExpr(), samplingProbCols);
 			Expr scaled = transformForSingleFunctionWithPartitionSize(e.getExpr(), samplingProbCols, groupby, newSource.partitionColumn(), sub);
 			scaledElems.add(new SelectElem(scaled, e.getAlias()));
 		}
 		scaledElems.add(new SelectElem(FuncExpr.count(), partitionSizeAlias));
 		ExactRelation r = new AggregatedRelation(vc, newSource, scaledElems);
+		
+//		// second scaling; by the ratio between the partition size and the sum of partition sizes.
+//		// needed for count and sum.
+//		List<SelectElem> partitionScaledElems = new ArrayList<SelectElem>();
+//		for (int i = 0; i < scaledElems.size() - 1; i++) {		// including the psize column
+//			Expr expr = scaledElems.get(i).getExpr();
+//			Expr scaled = scaleByPartitionRatio(expr);
+//			partitionScaledElems.add(new SelectElem(scaled, scaledElems.get(i).getAlias()));
+//			
+//		}
 		
 		return r;
 	}
@@ -154,6 +171,31 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 		} else {
 			return (new ApproxGroupedRelation(vc, source, Arrays.<ColNameExpr>asList())).rewriteWithPartition();
 		}
+//		ExactRelation r;
+//		if (source instanceof ApproxGroupedRelation) {
+//			List<ColNameExpr> groupby = ((ApproxGroupedRelation) source).getGroupby();
+//			List<ColNameExpr> partitionby = new ArrayList<ColNameExpr>(groupby);
+//			partitionby.add(ColNameExpr.from(partitionColumnName()));
+//			
+//			ApproxRelation a = new ApproxProjectedRelation(vc, ((ApproxGroupedRelation) source).getSource(),
+//					Arrays.asList(
+//							new SelectElem(new StarExpr()),
+//							new SelectElem(Expr.from(String.format("count(*) over (partition by %s)", Joiner.on(", ").join(partitionby))), partitionSizeAlias),
+//							new SelectElem(Expr.from(String.format("count(*) over (partition by %s)", Joiner.on(", ").join(groupby))), groupSizeAlias)));
+//			a.setAliasName(source.getAliasName());
+//			
+//			r = (new ApproxGroupedRelation(vc, a, groupby)).rewriteWithPartition();
+//		} else {
+//			ApproxRelation a = new ApproxProjectedRelation(vc, source,
+//					Arrays.asList(
+//							new SelectElem(new StarExpr()),
+//							new SelectElem(Expr.from(String.format("count(*) over (partition by %s)", partitionColumnName())), partitionSizeAlias),
+//							new SelectElem(Expr.from(String.format("count(*) over ()")), groupSizeAlias)));
+//			a.setAliasName(source.getAliasName());
+////			r = source.select(String.format("*, count(*) over (partition by %s) AS %s", partitionColumnName(), ));
+//			r = (new ApproxGroupedRelation(vc, a, Arrays.<ColNameExpr>asList())).rewriteWithPartition();
+//		}
+//		return r;
 	}
 	
 //	@Override
@@ -207,7 +249,9 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 							Expr est = BinaryOpExpr.from(
 									new FuncExpr(FuncExpr.FuncName.IMPALA_APPROX_COUNT_DISTINCT, s.getUnaryExpr()),
 									scale, "*");
-							est = scaleWithPartitionSize(est, groupbyExpr, partitionCol);
+							if (sampleType().equals("universe")) {
+								est = scaleWithPartitionSize(est, groupbyExpr, partitionCol);
+							}
 							return est;
 						} else {
 							return BinaryOpExpr.from(s, scale, "*");
@@ -247,12 +291,16 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 	}
 	
 	private Expr scaleWithPartitionSize(Expr expr, List<Expr> groupby, ColNameExpr partitionCol) {
-		List<Expr> includingPcol = new ArrayList<Expr>();
-		includingPcol.addAll(groupby);
-		includingPcol.add((Expr) partitionCol);
+//		List<Expr> includingPcol = new ArrayList<Expr>();
+//		includingPcol.addAll(groupby);
+//		includingPcol.add((Expr) partitionCol);
 		
-		Expr scaled = BinaryOpExpr.from(expr, new FuncExpr(FuncExpr.FuncName.COUNT, new StarExpr(), new OverClause(includingPcol)), "/");
-		scaled = BinaryOpExpr.from(scaled, new FuncExpr(FuncExpr.FuncName.COUNT, new StarExpr(), new OverClause(groupby)), "*");
+//		Expr scaled = BinaryOpExpr.from(expr, new FuncExpr(FuncExpr.FuncName.COUNT, new StarExpr(), new OverClause(includingPcol)), "/");
+//		scaled = BinaryOpExpr.from(scaled, new FuncExpr(FuncExpr.FuncName.COUNT, new StarExpr(), new OverClause(groupby)), "*");
+		
+//		Expr scaled = BinaryOpExpr.from(expr, FuncExpr.count(), "/");
+		Expr scaled = BinaryOpExpr.from(expr, new FuncExpr(FuncExpr.FuncName.AVG, FuncExpr.count(), new OverClause(groupby)), "/");
+		scaled = BinaryOpExpr.from(scaled, new FuncExpr(FuncExpr.FuncName.SUM, FuncExpr.count(), new OverClause(groupby)), "*");
 		return scaled;
 	}
 

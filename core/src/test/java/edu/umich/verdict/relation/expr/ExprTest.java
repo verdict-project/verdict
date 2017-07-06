@@ -24,12 +24,19 @@ public class ExprTest {
 		
 		Expr c = Expr.from("sum(prices * (1 - discount)) over (partition by ship_method)");
 		assertEquals(c.toString(), "sum((prices * (1 - discount))) OVER (partition by ship_method)");
+		
+		Expr d = Expr.from("count(*) over (partition by order_dow, __vpart)");
+		System.out.println(d);
+//		assertEquals(b.toString(), "count(*) OVER ()");
 	}
 	
 	@Test
 	public void matheFuncTest() {
 		Expr a = Expr.from("round(rand(unix_timestamp())*100)%100");
 		assertEquals(a.toString(), "(round((rand(unix_timestamp()) * 100)) % 100)");
+		
+		a = Expr.from("ndv(user_id)");
+		assertEquals(a.toString(), "ndv(user_id)");
 	}
 
 }

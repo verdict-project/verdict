@@ -25,5 +25,11 @@ public class PrettyPrintTest {
 				+ "WHERE rand(unix_timestamp()) < (3421082 * (0.01 / (grp_size / (SELECT count(distinct order_dow) AS expr1 FROM orders))))";
 		System.out.println(Relation.prettyfySql(sql));
 	}
+	
+	@Test
+	public void ndvTest() {
+		String sql = "select ndv(user_id) from orders;";
+		System.out.println(Relation.prettyfySql(sql));
+	}
 
 }

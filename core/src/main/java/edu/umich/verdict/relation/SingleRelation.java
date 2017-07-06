@@ -289,7 +289,7 @@ public class SingleRelation extends ExactRelation {
 
 	@Override
 	public ColNameExpr partitionColumn() {
-		return null;
+		return new ColNameExpr(vc.getDbms().partitionColumnName(), getAliasName());
 	}
 
 	@Override

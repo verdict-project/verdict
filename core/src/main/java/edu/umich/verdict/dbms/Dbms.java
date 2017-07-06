@@ -307,12 +307,17 @@ public class Dbms {
 		TableUniqueName sampleTableName = param.sampleTableName();
 		String sql = String.format("CREATE TABLE %s AS ", sampleTableName) + 
 				 	 SingleRelation.from(vc, param.originalTable)
-				 	 .where(String.format("mod(cast(conv(substr(md5(%s),17,32),16,10) as unsigned), 10000) <= %.4f", param.columnNames.get(0), param.samplingRatio*10000))
+				 	 .where(modOfHash(param.columnNames.get(0), 10000)
+				 			 + String.format(" <= %.4f", param.samplingRatio*10000))
 				 	 .select("*, round(rand()*100)%100 AS " + partitionColumnName()).toSql();
 		
 		VerdictLogger.debug(this, String.format("Creates a table: %s", sql));
 		this.executeUpdate(sql);
 		VerdictLogger.debug(this, "Done.");
+	}
+	
+	public String modOfHash(String col, int mod) {
+		return String.format("mod(cast(conv(substr(md5(%s),17,32),16,10) as unsigned), %d)", col, mod);
 	}
 	
 	public Pair<Long, Long> createUniverseSampleTableOf(SampleParam param) throws VerdictException {

@@ -134,6 +134,8 @@ public class FuncExpr extends Expr {
 						fname = FuncName.COUNT;
 						expr = new StarExpr();
 					}
+				} else if (ctx.NDV() != null) {
+					fname = FuncName.IMPALA_APPROX_COUNT_DISTINCT;
 				} else {
 					fname = FuncName.UNKNOWN;
 				}

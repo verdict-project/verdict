@@ -890,7 +890,7 @@ aggregate_windowed_function
     | VAR '(' all_distinct_expression ')' over_clause?
     | VARP '(' all_distinct_expression ')' over_clause?
     | COUNT '(' ('*' | all_distinct_expression) ')' over_clause?
-    | NDV '(' ('*' | all_distinct_expression) ')' over_clause?
+    | NDV '(' all_distinct_expression ')' over_clause?
     | COUNT_BIG '(' ('*' | all_distinct_expression) ')' over_clause?
     ;
 

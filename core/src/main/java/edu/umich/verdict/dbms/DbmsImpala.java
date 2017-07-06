@@ -91,7 +91,8 @@ public class DbmsImpala extends Dbms {
 						        .where(CompCond.from(Expr.from("rand(unix_timestamp())"), "<", threshold));
 		sampled = sampled.select(
 					Joiner.on(", ").join(colNames) +
-					", count(*) over () / __total_size AS " + samplingProbColName);		// attach sampling prob
+					", count(*) over () / __total_size AS " + samplingProbColName + ", " +  // attach sampling prob
+					randomPartitionColumn());										 // attach partition number
 		String sql = String.format("create table %s AS ", param.sampleTableName()) + sampled.toSql();
 		VerdictLogger.debug(this, "The query used for creating a stratified sample:");
 		VerdictLogger.debugPretty(this, Relation.prettyfySql(sql), "  ");
@@ -167,11 +168,11 @@ public class DbmsImpala extends Dbms {
 		ExactRelation withSize = SingleRelation.from(vc, param.originalTable)
 		 					     .select("*, count(*) over () AS __total_size");
 		ExactRelation sampled = withSize.where(
-									String.format(
-										"abs(fnv_hash(%s)) %% 10000 <= %.4f",
-										param.columnNames.get(0),
-										param.samplingRatio*10000))
-					 			.select(Joiner.on(", ").join(colNames) + ", count(*) over () / __total_size AS " + samplingProbCol);
+									modOfHash(param.columnNames.get(0), 1000000) + 
+									String.format(" <= %.2f", param.samplingRatio*1000000))
+					 			.select(Joiner.on(", ").join(colNames)
+					 					+ ", count(*) over () / __total_size AS " + samplingProbCol + ", "
+					 					+ randomPartitionColumn());
 		
 		String sql = String.format("CREATE TABLE %s AS ", sampleTableName)
 				     + sampled.toSql();
@@ -180,6 +181,11 @@ public class DbmsImpala extends Dbms {
 		VerdictLogger.debugPretty(this, Relation.prettyfySql(sql), "  ");
 		this.executeUpdate(sql);
 		VerdictLogger.debug(this, "Done.");
+	}
+	
+	@Override
+	public String modOfHash(String col, int mod) {
+		return String.format("abs(fnv_hash(%s)) %% %d", col, mod);
 	}
 	
 	private String randomPartitionColumn() {
@@ -278,7 +284,8 @@ public class DbmsImpala extends Dbms {
 		ExactRelation sampleWithSamplingProb
 		  = sampleWithGrpSize.select(
 				  allColumns + ", "
-		          + String.format("count(*) over (partition by %s) / grp_size AS %s", groupName, samplingProbColName));
+		          + String.format("count(*) over (partition by %s) / grp_size AS %s", groupName, samplingProbColName) + ", "
+		  		  + randomPartitionColumn());
 		
 		System.out.println(sampleWithSamplingProb.toSql());
 		String sql = String.format("CREATE TABLE %s AS ", sampleTable)

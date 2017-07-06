@@ -122,7 +122,9 @@ public abstract class ApproxRelation extends Relation {
 	
 	public abstract ExactRelation rewriteForPointEstimate();
 	
+	
 	public ExactRelation rewriteWithSubsampledErrorBounds() {
+		
 		VerdictLogger.error(this, String.format("Calling a method, %s, on unappropriate class", "rewriteWithSubsampledErrorBounds()"));
 		return null;
 	}

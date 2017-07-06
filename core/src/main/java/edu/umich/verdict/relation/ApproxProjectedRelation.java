@@ -53,7 +53,7 @@ public class ApproxProjectedRelation extends ApproxRelation {
 			}
 		}
 		
-		// we look for error bound columns based on the assumption that the error bound columns have the suffix attached
+		// we search for error bound columns based on the assumption that the error bound columns have the suffix attached
 		// to the original agg columns. The suffix is obtained from the ApproxRelation#errColSuffix() method.
 		// ApproxAggregatedRelation#rewriteWithSubsampledErrorBounds() method is responsible for having those columns. 
 		List<SelectElem> elemsWithErr = new ArrayList<SelectElem>();

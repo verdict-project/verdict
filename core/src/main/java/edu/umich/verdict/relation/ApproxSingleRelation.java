@@ -1,5 +1,6 @@
 package edu.umich.verdict.relation;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -8,6 +9,7 @@ import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 
 import edu.umich.verdict.VerdictContext;
@@ -115,17 +117,47 @@ public class ApproxSingleRelation extends ApproxRelation {
 		return r;
 	}
 	
+	/**
+	 * No Approximation is performed when this method is called directly.
+	 */
+	@Override
+	public ExactRelation rewriteWithSubsampledErrorBounds() {
+		return SingleRelation.from(vc, getOriginalTableName());
+	}
+
 	@Override
 	public ExactRelation rewriteWithPartition() {
-		ExactRelation r = SingleRelation.from(vc, getSampleName());
-		r.setAliasName(getAliasName());
-		r = vc.getDbms().augmentWithRandomPartitionNum(r);
-		r.setAliasName(getAliasName());
-		return r;
+		if (param.sampleType.equals("universe")) {
+			List<String> colNames = vc.getMeta().getColumnNames(param.sampleTableName());
+			String partitionColName = partitionColumnName();
+			
+			// we will create a new partition column using a hash function, so discard an existing one.
+			List<String> newColNames = new ArrayList<String>();
+			for (String c : colNames) {
+				if (!c.equals(partitionColName)) {
+					newColNames.add(c);
+				}
+			}
+			
+			// a new relation
+			ExactRelation r = SingleRelation.from(vc, getSampleName());
+			r = r.select(Joiner.on(", ").join(newColNames) + ", "
+				     	 + vc.getDbms().modOfHash(param.columnNames.get(0), 100) + " AS " + partitionColName);
+			r.setAliasName(getAliasName());
+			return r;
+			
+		} else {
+			ExactRelation r = SingleRelation.from(vc, getSampleName());
+			r.setAliasName(getAliasName());
+			return r;
+		}
+//		r = vc.getDbms().augmentWithRandomPartitionNum(r);
+//		r.setAliasName(getAliasName());
+//		return r;
 	}
 	
 //	@Override
-//	protected ColNameExpr partitionColumn() {
+//	public ColNameExpr partitionColumn() {
 //		String col = partitionColumnName();
 //		return new ColNameExpr(col, getTableName().tableName);
 //	}
