@@ -109,9 +109,12 @@ public class ApproxJoinedRelation extends ApproxRelation {
 	
 	@Override
 	public ExactRelation rewriteWithPartition() {
+		ExactRelation newSource1 = source1.rewriteWithPartition();
+		ExactRelation newSource2 = source2.rewriteWithPartition();
+		
 		List<Pair<Expr, Expr>> newJoinCond = joinCondWithTablesSubstitutioned();
-		newJoinCond.add(Pair.<Expr, Expr>of(new ColNameExpr(partitionColumnName()), new ColNameExpr(partitionColumnName())));
-		ExactRelation r = JoinedRelation.from(vc, source1.rewriteWithPartition(), source2.rewriteWithPartition(), newJoinCond);
+		newJoinCond.add(Pair.<Expr, Expr>of(newSource1.partitionColumn(), newSource2.partitionColumn()));
+		ExactRelation r = JoinedRelation.from(vc, newSource1, newSource2, newJoinCond);
 		r.setAliasName(getAliasName());
 		return r;
 	}

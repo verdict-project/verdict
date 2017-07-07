@@ -87,7 +87,8 @@ public class SqlToRelationUnitTest {
 			 	   + "where t1.col = t2.col AND "
 			 	   + "      t1.col2 = t3.col2 AND "
 			 	   + "      t1.col3 = t4.col3 AND "
-			 	   + "      t1.col4 = 'air'";
+			 	   + "      t1.col4 = 'air' "
+			 	   + "group by g";
 
 		ExactRelation r = ExactRelation.from(vc, sql);
 		System.out.println(r);

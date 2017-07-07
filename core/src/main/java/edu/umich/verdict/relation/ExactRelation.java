@@ -505,6 +505,9 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
 			r = new AggregatedRelation(vc, r, aggs);
 			r.setAliasName(Relation.genTableAlias());
 			
+			// we put another layer on top of AggregatedRelation if the select list does not include all of:
+			// 1. the group-by columns if exists
+			// 2. aggregate expressions.
 			List<SelectElem> prj = new ArrayList<SelectElem>();
 			for (SelectElem e : elems.getRight()) {
 				if (aggs.contains(e)) {

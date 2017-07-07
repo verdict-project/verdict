@@ -319,4 +319,23 @@ public class FuncExpr extends Expr {
 		}
 		return false;
 	}
+	
+	@Override
+	public boolean isCountDistinct() {
+		if (funcname.equals(FuncName.COUNT_DISTINCT)) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
+	@Override
+	public boolean isCount() {
+		if (funcname.equals(FuncName.COUNT)) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
 }

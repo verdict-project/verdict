@@ -59,7 +59,7 @@ public class ApproxProjectedRelation extends ApproxRelation {
 		List<SelectElem> elemsWithErr = new ArrayList<SelectElem>();
 		for (SelectElem e : elems) {
 			elemsWithErr.add(e);
-			String errColName = e.getExpr().getText() + errColSuffix();
+			String errColName = errColName(e.getExpr().getText());
 			if (colAliases.contains(errColName)) {
 				elemsWithErr.add(new SelectElem(new ColNameExpr(errColName), errColName));
 			}
@@ -74,7 +74,7 @@ public class ApproxProjectedRelation extends ApproxRelation {
 	public ExactRelation rewriteWithPartition() {
 		ExactRelation newSource = source.rewriteWithPartition();
 		List<SelectElem> newElems = new ArrayList<SelectElem>(elems);
-		newElems.add(new SelectElem(new ColNameExpr(partitionColumnName(), newSource.getAliasName()), partitionColumnName()));
+		newElems.add(new SelectElem(newSource.partitionColumn(), partitionColumnName()));
 		ExactRelation r = new ProjectedRelation(vc, newSource, newElems);
 		r.setAliasName(getAliasName());
 		return r;

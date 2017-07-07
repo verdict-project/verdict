@@ -67,8 +67,6 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 	
 	private final String partitionSizeAlias = "__vpsize";
 	
-	private final String groupSizeAlias = "__vgsize";
-	
 	@Override
 	public ExactRelation rewriteWithSubsampledErrorBounds() {
 		ExactRelation r = rewriteWithPartition();
@@ -79,31 +77,37 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 		List<SelectElem> finalAgg = new ArrayList<SelectElem>();
 		
 		for (int i = 0; i < selectElems.size() - 1; i++) {	// excluding the last one which is psize
-			SelectElem e = selectElems.get(i);
-			ColNameExpr est = new ColNameExpr(e.getAlias(), r.getAliasName());
+			// odd columns are for mean estimation
+			// even columns are for err estimation
+			if (i%2 == 1) continue;
+			
+			SelectElem meanElem = selectElems.get(i);
+			SelectElem errElem = selectElems.get(i+1);
+			ColNameExpr est = new ColNameExpr(meanElem.getAlias(), r.getAliasName());
+			ColNameExpr errEst = new ColNameExpr(errElem.getAlias(), r.getAliasName());
 			ColNameExpr psize = new ColNameExpr(partitionSizeAlias, r.getAliasName());
 			
+			Expr originalAggExpr = elems.get(i/2).getExpr();
+			
 			// average estimate
-//			Expr meanEst = BinaryOpExpr.from(
-//							FuncExpr.sum(BinaryOpExpr.from(est, psize, "*")),
-//							FuncExpr.sum(psize), "/");
-			Expr meanEst = FuncExpr.avg(est);
-			Expr originalAggExpr = elems.get(i).getExpr(); 
-			if (originalAggExpr instanceof FuncExpr) {
-				if (((FuncExpr) originalAggExpr).getFuncName().equals(FuncExpr.FuncName.COUNT)
-					|| ((FuncExpr) originalAggExpr).getFuncName().equals(FuncExpr.FuncName.COUNT_DISTINCT)) {
-					meanEst = FuncExpr.round(meanEst);
+			Expr meanEstExpr = null;
+			if (originalAggExpr.isCountDistinct()) {
+				meanEstExpr = FuncExpr.round(FuncExpr.avg(est));
+			} else {
+				meanEstExpr = BinaryOpExpr.from(FuncExpr.sum(BinaryOpExpr.from(est, psize, "*")),
+	                    					FuncExpr.sum(psize), "/");
+				if (originalAggExpr.isCount()) {
+					meanEstExpr = FuncExpr.round(meanEstExpr);
 				}
 			}
-			finalAgg.add(new SelectElem(meanEst, e.getAlias()));
+			finalAgg.add(new SelectElem(meanEstExpr, meanElem.getAlias()));
 
 			// error estimation
-			finalAgg.add(new SelectElem(
-					BinaryOpExpr.from(
-							BinaryOpExpr.from(FuncExpr.stddev(est), FuncExpr.sqrt(FuncExpr.avg(psize)), "*"),
-							FuncExpr.sqrt(FuncExpr.sum(psize)),
-							"/"),
-					e.getAlias() + errColSuffix()));
+			Expr errEstExpr = BinaryOpExpr.from(
+					BinaryOpExpr.from(FuncExpr.stddev(errEst), FuncExpr.sqrt(FuncExpr.avg(psize)), "*"),
+					FuncExpr.sqrt(FuncExpr.sum(psize)),
+					"/");
+			finalAgg.add(new SelectElem(errEstExpr, errElem.getAlias()));
 		}
 		
 		/*
@@ -155,9 +159,13 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 		
 		final Map<String, String> sub = source.tableSubstitution();
 		for (SelectElem e : elems) {
-//			Expr scaled = transformForSingleFunction(e.getExpr(), samplingProbCols);
-			Expr scaled = transformForSingleFunctionWithPartitionSize(e.getExpr(), samplingProbCols, groupby, newSource.partitionColumn(), sub);
+			// for mean estimation
+			Expr scaled = transformForSingleFunctionWithPartitionSize(e.getExpr(), samplingProbCols, groupby, newSource.partitionColumn(), sub, false);
 			scaledElems.add(new SelectElem(scaled, e.getAlias()));
+			
+			// for error estimation
+			Expr scaledErr = transformForSingleFunctionWithPartitionSize(e.getExpr(), samplingProbCols, groupby, newSource.partitionColumn(), sub, true);
+			scaledElems.add(new SelectElem(scaledErr, errColName(e.getAlias())));
 		}
 		scaledElems.add(new SelectElem(FuncExpr.count(), partitionSizeAlias));
 		ExactRelation r = new AggregatedRelation(vc, newSource, scaledElems);
@@ -188,7 +196,8 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 			final List<ColNameExpr> samplingProbCols,
 			List<ColNameExpr> groupby,
 			final ColNameExpr partitionCol,
-			final Map<String, String> tablesNamesSub) {
+			final Map<String, String> tablesNamesSub,
+			final boolean forErrorEst) {
 		
 		final List<Expr> groupbyExpr = new ArrayList<Expr>();
 		for (ColNameExpr c : groupby) {
@@ -209,7 +218,7 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 					
 					if (f.getFuncName().equals(FuncExpr.FuncName.COUNT)) {
 						Expr est = FuncExpr.sum(scaleForSampling(samplingProbExprs));
-						est = scaleWithPartitionSize(est, groupbyExpr, partitionCol);
+						est = scaleWithPartitionSize(est, groupbyExpr, partitionCol, forErrorEst);
 						return est;
 					}
 					else if (f.getFuncName().equals(FuncExpr.FuncName.COUNT_DISTINCT)) {
@@ -225,14 +234,14 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 						
 						est = BinaryOpExpr.from(est, scale, "*");
 						if (sampleType().equals("universe")) {
-							est = scaleWithPartitionSize(est, groupbyExpr, partitionCol);
+							est = scaleWithPartitionSize(est, groupbyExpr, partitionCol, forErrorEst);
 						}
 						return est;
 					}
 					else if (f.getFuncName().equals(FuncExpr.FuncName.SUM)) {
 						Expr est = scaleForSampling(samplingProbExprs);
 						est = FuncExpr.sum(BinaryOpExpr.from(s.getUnaryExpr(), est, "*"));
-						est = scaleWithPartitionSize(est, groupbyExpr, partitionCol);
+						est = scaleWithPartitionSize(est, groupbyExpr, partitionCol, forErrorEst);
 						return est;
 					}
 					else if (f.getFuncName().equals(FuncExpr.FuncName.AVG)) {
@@ -262,10 +271,27 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 		return scale;
 	}
 	
-	private Expr scaleWithPartitionSize(Expr expr, List<Expr> groupby, ColNameExpr partitionCol) {
+	private Expr scaleWithPartitionSize(Expr expr, List<Expr> groupby, ColNameExpr partitionCol, boolean forErrorEst) {
 //		Expr scaled = BinaryOpExpr.from(expr, FuncExpr.count(), "/");
-		Expr scaled = BinaryOpExpr.from(expr, new FuncExpr(FuncExpr.FuncName.AVG, FuncExpr.count(), new OverClause(groupby)), "/");
-		scaled = BinaryOpExpr.from(scaled, new FuncExpr(FuncExpr.FuncName.SUM, FuncExpr.count(), new OverClause(groupby)), "*");
+		
+		Expr scaled = null;
+		
+		if (!forErrorEst) {
+			if (expr.isCountDistinct()) {
+				// scale by the partition count. the ratio between average partition size and the sum of them should be
+				// almost same as the inverse of the partition count.
+				scaled = BinaryOpExpr.from(expr, new FuncExpr(FuncExpr.FuncName.AVG, FuncExpr.count(), new OverClause(groupby)), "/");
+				scaled = BinaryOpExpr.from(scaled, new FuncExpr(FuncExpr.FuncName.SUM, FuncExpr.count(), new OverClause(groupby)), "*");	
+			} else {
+				scaled = BinaryOpExpr.from(expr, FuncExpr.count(), "/");
+				scaled = BinaryOpExpr.from(scaled, new FuncExpr(FuncExpr.FuncName.SUM, FuncExpr.count(), new OverClause(groupby)), "*");
+			}
+		} else {
+			// for error estimations, we do not exactly scale with the partition size ratios.
+			scaled = BinaryOpExpr.from(expr, new FuncExpr(FuncExpr.FuncName.AVG, FuncExpr.count(), new OverClause(groupby)), "/");
+			scaled = BinaryOpExpr.from(scaled, new FuncExpr(FuncExpr.FuncName.SUM, FuncExpr.count(), new OverClause(groupby)), "*");
+		}
+		
 		return scaled;
 	}
 

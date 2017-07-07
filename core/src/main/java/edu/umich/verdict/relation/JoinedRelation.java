@@ -93,9 +93,9 @@ public class JoinedRelation extends ExactRelation {
 			sql.append(String.format("%s INNER JOIN %s ON", sourceExpr(source1), sourceExpr(source2)));
 			for (int i = 0; i < joinCols.size(); i++) {
 				if (i != 0) sql.append(" AND");
-				sql.append(String.format(" %s = %s",
-						attachTableNameIfEmpty(joinCols.get(i).getLeft(), source1.getSourceName()),
-						attachTableNameIfEmpty(joinCols.get(i).getRight(), source2.getSourceName())));
+				sql.append(String.format(" %s = %s", joinCols.get(i).getLeft(), joinCols.get(i).getRight())); 
+//						attachTableNameIfEmpty(joinCols.get(i).getLeft(), source1.getSourceName()),
+//						attachTableNameIfEmpty(joinCols.get(i).getRight(), source2.getSourceName())));
 			}
 		}
 		

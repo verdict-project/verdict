@@ -30,8 +30,8 @@ public abstract class ApproxRelation extends Relation {
 		approximate = true;
 	}
 	
-	public String errColSuffix() {
-		return "_err";
+	public String errColName(String col) {
+		return col + "_err";
 	}
 	
 	public String sourceTableName() {

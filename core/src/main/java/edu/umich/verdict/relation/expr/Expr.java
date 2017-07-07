@@ -76,6 +76,14 @@ public abstract class Expr {
 	public boolean isagg() {
 		return false;
 	}
+	
+	public boolean isCountDistinct() {
+		return false;
+	}
+	
+	public boolean isCount() {
+		return false;
+	}
 
 }
 
