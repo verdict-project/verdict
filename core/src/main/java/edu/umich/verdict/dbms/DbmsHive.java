@@ -120,7 +120,8 @@ public class DbmsHive extends DbmsImpala {
 	
 	@Override
 	public String modOfHash(String col, int mod) {
-		return String.format("pmod(conv(substr(md5(cast(%s AS string)),17,16),16,10), %d)", col, mod);
+//		return String.format("pmod(conv(substr(md5(cast(%s AS string)),17,16),16,10), %d)", col, mod);
+		return String.format("pmod(conv(substr(md5(%s),17,16),16,10), %d)", col, mod);
 	}
 
 	@Override

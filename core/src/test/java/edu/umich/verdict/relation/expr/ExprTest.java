@@ -44,5 +44,11 @@ public class ExprTest {
 		Expr a = Expr.from("abs(fnv_hash(cast(user_id as string)))%1000000");
 		System.out.println(a.toString());
 	}
+	
+	@Test
+	public void hiveHashTest() {
+		Expr a = Expr.from("pmod(conv(substr(md5(cast(user_id AS string)),17,16),16,10), 100)");
+		System.out.println(a.toString());
+	}
 
 }

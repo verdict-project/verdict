@@ -92,6 +92,7 @@ public class DbmsImpala extends Dbms {
 					randomPartitionColumn());										 // attach partition number
 		String sql = String.format("create table %s AS ", param.sampleTableName()) + sampled.toSql();
 		VerdictLogger.debug(this, "The query used for creating a uniform random sample:");
+//		VerdictLogger.debug(sql);
 		VerdictLogger.debugPretty(this, Relation.prettyfySql(sql), "  ");
 		
 		executeUpdate(sql);

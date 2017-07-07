@@ -57,15 +57,15 @@ public class ProjectedRelation extends ExactRelation {
 	protected String selectSql() {
 		StringBuilder sql = new StringBuilder();
 		sql.append("SELECT ");
-		List<String> elemWithAlias = new ArrayList<String>();
-		for (SelectElem e : elems) {
-			if (e.getAlias() != null) {
-				elemWithAlias.add(String.format("%s AS %s", e.getExpr(), e.getAlias()));
-			} else {
-				elemWithAlias.add(e.getExpr().toString());
-			}
-		}
-		sql.append(Joiner.on(", ").join(elemWithAlias));
+//		List<String> elemWithAlias = new ArrayList<String>();
+//		for (SelectElem e : elems) {
+//			if (e.getAlias() != null) {
+//				elemWithAlias.add(String.format("%s AS %s", e.getExpr(), e.getAlias()));
+//			} else {
+//				elemWithAlias.add(e.getExpr().toString());
+//			}
+//		}
+		sql.append(Joiner.on(", ").join(elems));
 		return sql.toString();
 	}
 

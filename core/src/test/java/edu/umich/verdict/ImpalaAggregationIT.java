@@ -39,10 +39,11 @@ public class ImpalaAggregationIT extends AggregationIT {
 	}
 
 	@Override
-	public void simpleAvgUsingUniformSample() throws VerdictException, SQLException {
+	public void simpleAvgUsingUniverseSample() throws VerdictException, SQLException {
 		// TODO Auto-generated method stub
-		super.simpleAvgUsingUniformSample();
+		super.simpleAvgUsingUniverseSample();
 	}
+
 	
 	
 

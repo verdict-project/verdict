@@ -95,8 +95,22 @@ public abstract class ExactRelation extends Relation {
 	}
 	
 	public ExactRelation select(String elems) {
-		String[] tokens = elems.split(",");
-		return select(Arrays.asList(tokens));
+		VerdictSQLLexer l = new VerdictSQLLexer(CharStreams.fromString(elems));
+		VerdictSQLParser p = new VerdictSQLParser(new CommonTokenStream(l));
+		return select(p.select_list());
+	}
+	
+	public ExactRelation select(VerdictSQLParser.Select_listContext ctx) {
+		VerdictSQLBaseVisitor<List<SelectElem>> elemVisitor = new VerdictSQLBaseVisitor<List<SelectElem>>() {
+			private List<SelectElem> selectElems = new ArrayList<SelectElem>();
+			@Override
+			public List<SelectElem> visitSelect_list_elem(VerdictSQLParser.Select_list_elemContext ctx) {
+				selectElems.add(SelectElem.from(ctx));
+				return selectElems;
+			}
+		};
+		List<SelectElem> selectElems = elemVisitor.visit(ctx);
+		return new ProjectedRelation(vc, this, selectElems);
 	}
 	
 	/*

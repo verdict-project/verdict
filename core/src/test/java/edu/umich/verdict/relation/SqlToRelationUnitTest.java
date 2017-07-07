@@ -16,6 +16,7 @@ import com.google.common.base.Joiner;
 import edu.umich.verdict.VerdictConf;
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.exceptions.VerdictException;
+import edu.umich.verdict.relation.expr.SelectElem;
 import edu.umich.verdict.util.StackTraceReader;
 
 public class SqlToRelationUnitTest {
@@ -92,6 +93,20 @@ public class SqlToRelationUnitTest {
 		System.out.println(r);
 		System.out.println(r.toSql());
 		System.out.println(Relation.prettyfySql(r.toSql()));
+	}
+	
+	@Test
+	public void selectFunctionsWithCommaTest() {
+		ExactRelation r = SingleRelation.from(vc, "mytable");
+		r = r.select("a, b, c, pmod(cast(user_id as string), 100) AS __vpart");
+		System.out.println(r.toSql());
+	}
+	
+	@Test
+	public void selectFunctionsWithCommaTest2() {
+		ExactRelation r = SingleRelation.from(vc, "mytable");
+		r = r.select("*, 1 AS one, count(*) OVER () AS `__total_size`");
+		System.out.println(r.toSql());
 	}
 
 }

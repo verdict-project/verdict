@@ -24,7 +24,7 @@ public class SelectElem {
 				this.alias = Optional.fromNullable(alias);
 			}
 		} else {
-			this.alias = Optional.fromNullable(alias.replace("\"", "").replace("`", ""));
+			setAlias(alias);
 		}
 	}
 	
@@ -84,7 +84,7 @@ public class SelectElem {
 	}
 	
 	public void setAlias(String alias) {
-		this.alias = Optional.of(alias);
+		this.alias = Optional.of(alias.replace("\"", "").replace("`", ""));
 	}
 	
 	public boolean isagg() {
