@@ -40,6 +40,11 @@ public class ImpalaSampleIT extends SampleIT {
 	}
 
 	@Override
+	public void createUniformSampleTest() throws VerdictException {
+		super.createUniformSampleTest();
+	}
+
+	@Override
 	public void createRecommendedSampleTest() throws VerdictException {
 		super.createRecommendedSampleTest();
 	}
@@ -47,6 +52,16 @@ public class ImpalaSampleIT extends SampleIT {
 	@Override
 	public void dropRecommendedSampleTest() throws VerdictException {
 		super.dropRecommendedSampleTest();
+	}
+
+	@Override
+	public void createUniverseSampleTest() throws VerdictException {
+		super.createUniverseSampleTest();
+	}
+
+	@Override
+	public void createStratifiedSampleTest() throws VerdictException {
+		super.createStratifiedSampleTest();
 	}
 	
 }

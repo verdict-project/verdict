@@ -1,6 +1,7 @@
 package edu.umich.verdict.relation;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -68,7 +69,7 @@ public class SampleGroup {
 	
 	@Override
 	public String toString() {
-		return samples.toString();
+		return samples.toString() + "=>" + elems.toString();
 	}
 	
 	public boolean isEqualSample(SampleGroup o) {
@@ -81,5 +82,11 @@ public class SampleGroup {
 	
 	public Pair<Set<SampleParam>, List<SelectElem>> unroll() {
 		return Pair.of(samples, elems);
+	}
+	
+	public SampleGroup duplicate() {
+		Set<SampleParam> copiedSamples = new HashSet<SampleParam>(samples);
+		List<SelectElem> copiedElems = new ArrayList<SelectElem>(elems);
+		return new SampleGroup(copiedSamples, copiedElems, samplingProb, cost);
 	}
 }

@@ -99,16 +99,17 @@ public class SamplePlans {
 
 		// find the best plan (the plan whose cost is not too large and its sampling prob is good)
 		SamplePlan best = null;
-		double bestSamplingProb = Double.NEGATIVE_INFINITY;
+		double bestScore = Double.NEGATIVE_INFINITY;
 		for (SamplePlan plan : plans) {
 			double cost = plan.cost();
 			if (cost < original_cost * relative_cost_ratio) {
 				double samplingProb = plan.harmonicSamplingProb();
-				if (samplingProb > bestSamplingProb) {
-					bestSamplingProb = samplingProb;
+				double thisScore = computeScore(cost, samplingProb);
+				if (thisScore > bestScore) {
+					bestScore = thisScore;
 					best = plan;
 				}
-				VerdictLogger.debug(this, plan.toString() + ", cost: " + cost + ", prob: " + plan.harmonicSamplingProb());
+//				VerdictLogger.debug(this, plan.toString() + ", cost: " + cost + ", prob: " + plan.harmonicSamplingProb());
 			}
 		}
 
@@ -117,6 +118,10 @@ public class SamplePlans {
 		} else {
 			return original_plan;
 		}
+	}
+	
+	private double computeScore(double cost, double samplingProbability) {
+		return samplingProbability / Math.sqrt(cost);
 	}
 
 }

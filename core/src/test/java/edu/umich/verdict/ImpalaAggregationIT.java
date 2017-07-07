@@ -39,33 +39,11 @@ public class ImpalaAggregationIT extends AggregationIT {
 	}
 
 	@Override
-	public void simpleCountDistinctUsingUniverseSample() throws VerdictException, SQLException {
-		super.simpleCountDistinctUsingUniverseSample();
+	public void simpleAvgUsingUniformSample() throws VerdictException, SQLException {
+		// TODO Auto-generated method stub
+		super.simpleAvgUsingUniformSample();
 	}
-
-	@Override
-	public void simpleCountDistinctUsingUniverseSample2() throws VerdictException, SQLException {
-		super.simpleCountDistinctUsingUniverseSample2();
-	}
-
-	@Override
-	public void simpleCountDistinctUsingStratifiedSample() throws VerdictException, SQLException {
-		super.simpleCountDistinctUsingStratifiedSample();
-	}
-
-	@Override
-	public void simpleCountDistinctUsingStratifiedSample2() throws VerdictException, SQLException {
-		super.simpleCountDistinctUsingStratifiedSample2();
-	}
-
-	@Override
-	public void groupbyCountDistinctUsingUniverseSample() throws VerdictException, SQLException {
-		super.groupbyCountDistinctUsingUniverseSample();
-	}
-
-	@Override
-	public void groupbyCountDistinctUsingUniverseSample2() throws VerdictException, SQLException {
-		super.groupbyCountDistinctUsingUniverseSample2();
-	}
+	
+	
 
 }

@@ -25,6 +25,7 @@ import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.relation.expr.ExprModifier;
 import edu.umich.verdict.relation.expr.FuncExpr;
+import edu.umich.verdict.util.VerdictLogger;
 
 public class ApproxJoinedRelation extends ApproxRelation {
 
@@ -50,6 +51,7 @@ public class ApproxJoinedRelation extends ApproxRelation {
 		} else {
 			this.joinCols = joinCols;
 		}
+		this.alias = null;
 	}
 	
 	public static ApproxJoinedRelation from(VerdictContext vc, ApproxRelation source1, ApproxRelation source2, List<Pair<Expr, Expr>> joinCols) {
@@ -86,24 +88,63 @@ public class ApproxJoinedRelation extends ApproxRelation {
 	 */
 	
 	@Override
-	public ExactRelation rewrite() {
-		Map<String, String> sub = tableSubstitution();
-		List<Pair<Expr, Expr>> cols = new ArrayList<Pair<Expr, Expr>>();
-		for (Pair<Expr, Expr> p : joinCols) {
-			cols.add(Pair.of(exprWithTableNamesSubstituted(p.getLeft(), sub), exprWithTableNamesSubstituted(p.getRight(), sub)));
-		}
-		ExactRelation r = JoinedRelation.from(vc, source1.rewrite(), source2.rewrite(), cols);
+	public ExactRelation rewriteForPointEstimate() {
+		List<Pair<Expr, Expr>> newJoinCond = joinCondWithTablesSubstitutioned();
+		ExactRelation r = new JoinedRelation(vc, source1.rewriteForPointEstimate(), source2.rewriteForPointEstimate(), newJoinCond);
 		r.setAliasName(getAliasName());
 		return r;
 	}
 	
 	@Override
-	protected double samplingProbabilityFor(FuncExpr f) {
+	public ExactRelation rewriteWithSubsampledErrorBounds() {
+		ExactRelation r1 = source1.rewriteWithSubsampledErrorBounds();
+		ExactRelation r2 = source2.rewriteWithSubsampledErrorBounds();
+		List<Pair<Expr, Expr>> newJoinCond = joinCondWithTablesSubstitutioned();
+		return new JoinedRelation(vc, r1, r2, newJoinCond);
+	}
+	
+	@Override
+	public ExactRelation rewriteWithPartition() {
+		List<Pair<Expr, Expr>> newJoinCond = joinCondWithTablesSubstitutioned();
+		ExactRelation r = JoinedRelation.from(vc, source1.rewriteWithPartition(), source2.rewriteWithPartition(), newJoinCond);
+		r.setAliasName(getAliasName());
+		return r;
+	}
+	
+	@Override
+	protected List<Expr> samplingProbabilityExprsFor(FuncExpr f) {
 		if (areMatchingUniverseSamples()) {
-			return Math.min(source1.samplingProbabilityFor(f), source2.samplingProbabilityFor(f));
-		} else {
-			return source1.samplingProbabilityFor(f) * source2.samplingProbabilityFor(f);
+			// get the first pair to check the table names to be joined.
+			Pair<Expr, Expr> ajoinCol = joinCols.get(0);
+			Expr l = ajoinCol.getLeft();
+			Expr r = ajoinCol.getRight();
+			
+			// we properly handles a join of two universe samples only if the join conditions are column names.
+			// that is, they should not be some expressions of those column names.
+			if ((l instanceof ColNameExpr) && (r instanceof ColNameExpr)) {
+				List<Expr> samplingProbExprs = new ArrayList<Expr>();
+				ColNameExpr rc = (ColNameExpr) r;
+				// add all sampling probability columns from the left table.
+				// here, we make an assumption that the sampling probabilities of the universe samples to be joined
+				// are equal.
+				samplingProbExprs.addAll(source1.samplingProbabilityExprsFor(f));
+				
+				// when adding right expressions from the right table, we exclude the column on which universe sample
+				// is created.
+				for (Expr e : source2.samplingProbabilityExprsFor(f)) {
+					if ((e instanceof ColNameExpr) && ((ColNameExpr) e).getTab().equals(rc.getTab())) {
+						continue;
+					} else {
+						samplingProbExprs.add(e);
+					}
+				}
+				return samplingProbExprs;
+			}
 		}
+		
+		List<Expr> samplingProbExprs = new ArrayList<Expr>(source1.samplingProbabilityExprsFor(f));
+		samplingProbExprs.addAll(source2.samplingProbabilityExprsFor(f));
+		return samplingProbExprs;
 	}
 	
 	private boolean areMatchingUniverseSamples() {
@@ -145,13 +186,6 @@ public class ApproxJoinedRelation extends ApproxRelation {
 	}
 	
 	@Override
-	protected List<TableUniqueName> accumulateStratifiedSamples() {
-		List<TableUniqueName> union = new ArrayList<TableUniqueName>(source1.accumulateStratifiedSamples());
-		union.addAll(source2.accumulateStratifiedSamples());
-		return union;
-	}
-	
-	@Override
 	public List<String> sampleColumns() {
 		if (sampleType().equals("stratified")) {
 			List<String> union = new ArrayList<String>(source1.sampleColumns());
@@ -177,6 +211,16 @@ public class ApproxJoinedRelation extends ApproxRelation {
 	@Override
 	protected Map<String, String> tableSubstitution() {
 		return ImmutableMap.<String,String>builder().putAll(source1.tableSubstitution()).putAll(source2.tableSubstitution()).build();
+	}
+	
+	protected List<Pair<Expr, Expr>> joinCondWithTablesSubstitutioned() {
+		Map<String, String> sub = tableSubstitution();
+		// replaces the table names in the join conditions with the sample tables.
+		List<Pair<Expr, Expr>> cols = new ArrayList<Pair<Expr, Expr>>();
+		for (Pair<Expr, Expr> p : joinCols) {
+			cols.add(Pair.of(exprWithTableNamesSubstituted(p.getLeft(), sub), exprWithTableNamesSubstituted(p.getRight(), sub)));
+		}
+		return cols;
 	}
 
 }

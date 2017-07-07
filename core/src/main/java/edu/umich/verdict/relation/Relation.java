@@ -13,6 +13,7 @@ import org.antlr.v4.runtime.misc.Interval;
 
 import com.google.common.base.Joiner;
 
+import edu.umich.verdict.VerdictConf;
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.VerdictSQLBaseVisitor;
 import edu.umich.verdict.VerdictSQLLexer;
@@ -24,6 +25,7 @@ import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.exceptions.VerdictUnexpectedMethodCall;
 import edu.umich.verdict.relation.expr.Expr;
+import edu.umich.verdict.relation.expr.FuncExpr;
 import edu.umich.verdict.relation.expr.SelectElem;
 import edu.umich.verdict.util.ResultSetConversion;
 import edu.umich.verdict.util.StackTraceReader;
@@ -204,6 +206,14 @@ public abstract class Relation {
 		return TableUniqueName.uname(vc, n);
 	}
 	
+	public String partitionColumnName() {
+		return vc.getDbms().partitionColumnName();
+	}
+	
+	public String samplingProbabilityColumnName() {
+		return vc.getDbms().samplingProbabilityColumnName();
+	}
+	
 }
 
 
@@ -281,10 +291,11 @@ class PrettyPrintVisitor extends VerdictSQLBaseVisitor<String> {
 		
 		if (ctx.group_by_item() != null && ctx.group_by_item().size() > 0) {
 			query.append("\n" + indent + "GROUP BY ");
+			List<String> groupby = new ArrayList<String>();
 			for (VerdictSQLParser.Group_by_itemContext gctx : ctx.group_by_item()) {
-				query.append(visit(gctx));
+				groupby.add(visit(gctx));
 			}
-			query.append(" ");
+			query.append(Joiner.on(", ").join(groupby));
 		}
 		
 		String sql = query.toString();
@@ -299,12 +310,12 @@ class PrettyPrintVisitor extends VerdictSQLBaseVisitor<String> {
 		int i = 0;
 		for (VerdictSQLParser.Select_list_elemContext ectx : ctx.select_list_elem()) {
 			if (i > 0) {
-				sql.append(", ");
+				sql.append(",\n" + indent + "       ");
 			}
 			
-			if (i > 0 && i%5 == 0) {
-				sql.append("\n" + indent + "       ");
-			}
+//			if (i > 0 && i%5 == 0) {
+//				sql.append("\n" + indent + "       ");
+//			}
 			
 			sql.append(visit(ectx));
 			i++;
@@ -317,12 +328,14 @@ class PrettyPrintVisitor extends VerdictSQLBaseVisitor<String> {
 		if (ctx.getText().equals("*")) {
 			return "*";
 		} else {
-			StringBuilder elem = new StringBuilder();
-			elem.append(visit(ctx.expression()));
-			if (ctx.column_alias() != null) {
-				elem.append(String.format(" AS %s", ctx.column_alias().getText()));
-			}
-			return elem.toString();
+//			StringBuilder elem = new StringBuilder();
+//			elem.append(visit(ctx.expression()));
+//			if (ctx.column_alias() != null) {
+//				elem.append(String.format(" AS %s", ctx.column_alias().getText()));
+//			}
+			Expr expr = Expr.from(ctx.expression());
+			String alias = (ctx.column_alias() == null)? null : ctx.column_alias().getText();
+			return (new SelectElem(expr, alias)).toString();
 		}
 	}
 	
@@ -353,7 +366,7 @@ class PrettyPrintVisitor extends VerdictSQLBaseVisitor<String> {
 	@Override
 	public String visitSubquery(VerdictSQLParser.SubqueryContext ctx) {
 		PrettyPrintVisitor v = new PrettyPrintVisitor(sql);
-		v.setIndent(indent + "     ");
+		v.setIndent(indent + "  ");
 		return v.visit(ctx.select_statement());
 	}
 	
@@ -366,6 +379,9 @@ class PrettyPrintVisitor extends VerdictSQLBaseVisitor<String> {
 	public String visitComp_expr_predicate(VerdictSQLParser.Comp_expr_predicateContext ctx) {
 		String exp1 = visit(ctx.expression(0));
 		String exp2 = visit(ctx.expression(1));
+//		String exp1 = Expr.from(ctx.expression(0)).toString();
+//		Expr expr = Expr.from(ctx.expression(1));
+//		String exp2 = Expr.from(ctx.expression(1)).toString();
 		return String.format("%s %s %s", exp1, ctx.comparison_operator().getText(), exp2);
 	}
 	
@@ -475,14 +491,33 @@ class PrettyPrintVisitor extends VerdictSQLBaseVisitor<String> {
 		return tabName.toString();
 	}
 	
-	@Override public String visitMathematical_function_expression(VerdictSQLParser.Mathematical_function_expressionContext ctx)
-	{
-		if (ctx.expression() != null) {
-			return String.format("%s(%s)", ctx.unary_mathematical_function().getText(), visit(ctx.expression()));
-		} else {
-			return String.format("%s()", ctx.noparam_mathematical_function().getText());
-		}
-		
+	@Override
+	public String visitFunction_call_expression(VerdictSQLParser.Function_call_expressionContext ctx) {
+		return FuncExpr.from(ctx.function_call()).toString();
+	}
+	
+//	@Override public String visitMathematical_function_expression(VerdictSQLParser.Mathematical_function_expressionContext ctx)
+//	{
+//		if (ctx.expression() != null) {
+//			return String.format("%s(%s)", ctx.unary_mathematical_function().getText(), visit(ctx.expression()));
+//		} else {
+//			return String.format("%s()", ctx.noparam_mathematical_function().getText());
+//		}
+//	}
+	
+	@Override
+	public String visitUnary_mathematical_function(VerdictSQLParser.Unary_mathematical_functionContext ctx) {
+		return String.format("%s(%s)", ctx.getText(), visit(ctx.expression()));
+	}
+	
+	@Override
+	public String visitNoparam_mathematical_function(VerdictSQLParser.Noparam_mathematical_functionContext ctx) {
+		return String.format("%s()", ctx.getText());
+	}
+	
+	@Override
+	public String visitBinary_mathematical_function(VerdictSQLParser.Binary_mathematical_functionContext ctx) {
+		return String.format("%s(%s, %s)", ctx.getText(), visit(ctx.expression(0)), visit(ctx.expression(1)));
 	}
 	
 	@Override
@@ -506,8 +541,7 @@ class PrettyPrintVisitor extends VerdictSQLBaseVisitor<String> {
 			return String.format("NDV(%s)", visit(ctx.all_distinct_expression()));
 		}
 		VerdictLogger.error(this, String.format("Unexpected aggregate function expression: %s", ctx.getText()));
-		return null;	// we don't handle other aggregate functions for now.
-		
+		return null;	// we don't handle other aggregate functions for now.	
 	}
 	
 	@Override
@@ -524,12 +558,13 @@ class PrettyPrintVisitor extends VerdictSQLBaseVisitor<String> {
 		else if (op.equals("+")) return leftCol + " + " + rightCol;
 		else if (op.equals("/")) return leftCol + " / " + rightCol;
 		else if (op.equals("-")) return leftCol + " - " + rightCol;
+		else if (op.equals("%")) return leftCol + " % " + rightCol;
 		else return null;
 	}
 	
 	@Override
 	public String visitSubquery_expression(VerdictSQLParser.Subquery_expressionContext ctx) {
-		return "\n" + indent + String.format("(%s)", visit(ctx.subquery()));
+		return "(\n" + visit(ctx.subquery()) + ")";
 	}
 
 	@Override
@@ -550,14 +585,14 @@ class PrettyPrintVisitor extends VerdictSQLBaseVisitor<String> {
 	@Override
 	public String visitJoin_part(VerdictSQLParser.Join_partContext ctx) {
 		if (ctx.INNER() != null) {
-			return "\n" + indent + "     " + String.format("INNER JOIN %s ", visit(ctx.table_source()))
-				 + "\n" + indent + "     " + String.format("ON %s", visit(ctx.search_condition()));
+			return "\n" + indent + "  " + String.format("INNER JOIN %s ", visit(ctx.table_source()))
+				 + "\n" + indent + "  " + String.format("ON %s", visit(ctx.search_condition()));
 		} else if (ctx.OUTER() != null) {
-			return String.format("%s OUTER JOIN %s ON %s", ctx.join_type.getText(), visit(ctx.table_source()), visit(ctx.search_condition()));
+			return "\n" + indent + "  " + String.format("%s OUTER JOIN %s ON %s", ctx.join_type.getText(), visit(ctx.table_source()), visit(ctx.search_condition()));
 		} else if (ctx.CROSS() != null) {
-			return String.format("CROSS JOIN %s", visit(ctx.table_source()));
+			return "\n" + indent + "  " + String.format("CROSS JOIN %s", visit(ctx.table_source()));
 		} else {
-			return String.format("UNSUPPORTED JOIN (%s)", ctx.getText());
+			return "\n" + indent + "  " + String.format("UNSUPPORTED JOIN (%s)", ctx.getText());
 		}
 	}
 	
@@ -573,14 +608,14 @@ class PrettyPrintVisitor extends VerdictSQLBaseVisitor<String> {
 		if (ctx.as_table_alias() == null) {
 			return tableNameItem;
 		} else {
-			String alias = ctx.as_table_alias().getText();
+			String alias = ctx.as_table_alias().table_alias().getText();
 			return tableNameItem + " " + alias;
 		}
 	}
 	
 	@Override
 	public String visitDerived_table_source_item(VerdictSQLParser.Derived_table_source_itemContext ctx) {
-		return String.format("(\n%s) AS %s", visit(ctx.derived_table().subquery()), ctx.as_table_alias().table_alias().getText());
+		return String.format("(\n%s) %s", visit(ctx.derived_table().subquery()), ctx.as_table_alias().table_alias().getText());
 	}
 	
 	@Override

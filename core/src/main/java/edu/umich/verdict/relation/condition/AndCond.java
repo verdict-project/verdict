@@ -29,7 +29,7 @@ public class AndCond extends Cond {
 	
 	@Override
 	public Cond accept(CondModifier v) {
-		return v.call(this);
+		return from(left.accept(v), right.accept(v));
 	}
 
 	@Override

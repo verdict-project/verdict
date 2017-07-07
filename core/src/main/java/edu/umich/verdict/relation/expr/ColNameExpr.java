@@ -17,9 +17,9 @@ public class ColNameExpr extends Expr {
 	}
 
 	public ColNameExpr(String col, String tab, String schema) {
-		this.col = col.toLowerCase();
-		this.tab = (tab != null)? tab.toLowerCase() : tab;
-		this.schema = (schema != null)? schema.toLowerCase() : schema;
+		this.col = col.toLowerCase().replace("\"", "").replace("`", "");
+		this.tab = (tab != null)? tab.toLowerCase().replace("\"", "").replace("`", "") : tab;
+		this.schema = (schema != null)? schema.toLowerCase().replace("\"", "").replace("`", "") : schema;
 	}
 	
 	public static ColNameExpr from(String expr) {
@@ -52,20 +52,18 @@ public class ColNameExpr extends Expr {
 	@Override
 	public String toString() {
 		if (tab == null) {
+			return String.format("%s", quote(col));
+		} else {
+			return String.format("%s.%s", quote(tab), quote(col));
+		}
+	}
+	
+	public String getText() {
+		if (tab == null) {
 			return String.format("%s", col);
 		} else {
 			return String.format("%s.%s", tab, col);
 		}
-//		
-//		if (schema == null) {
-//			if (tab == null) {
-//				return String.format("%s", col);
-//			} else {
-//				return String.format("%s.%s", tab, col);
-//			}
-//		} else {
-//			return String.format("%s.%s.%s", schema, tab, col);
-//		}
 	}
 	
 	@Override

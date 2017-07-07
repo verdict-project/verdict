@@ -8,7 +8,10 @@ import com.google.common.collect.ImmutableMap;
 
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.datatypes.TableUniqueName;
+import edu.umich.verdict.relation.expr.ColNameExpr;
+import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.relation.expr.FuncExpr;
+import edu.umich.verdict.util.VerdictLogger;
 
 public class ApproxLimitedRelation extends ApproxRelation {
 	
@@ -20,18 +23,33 @@ public class ApproxLimitedRelation extends ApproxRelation {
 		super(vc);
 		this.source = source;
 		this.limit = limit;
+		this.alias = source.alias;
 	}
 
 	@Override
-	public ExactRelation rewrite() {
-		ExactRelation r = new LimitedRelation(vc, source.rewrite(), limit);
+	public ExactRelation rewriteForPointEstimate() {
+		ExactRelation r = new LimitedRelation(vc, source.rewriteForPointEstimate(), limit);
 		r.setAliasName(getAliasName());
 		return r;
 	}
-
+	
 	@Override
-	protected double samplingProbabilityFor(FuncExpr f) {
-		return source.samplingProbabilityFor(f);
+	public ExactRelation rewriteWithSubsampledErrorBounds() {
+		ExactRelation r = new LimitedRelation(vc, source.rewriteWithSubsampledErrorBounds(), limit);
+		r.setAliasName(getAliasName());
+		return r;
+	}
+	
+	@Override
+	public ExactRelation rewriteWithPartition() {
+		ExactRelation r = new LimitedRelation(vc, source.rewriteWithPartition(), limit);
+		r.setAliasName(getAliasName());
+		return r;
+	}
+	
+	@Override
+	protected List<Expr> samplingProbabilityExprsFor(FuncExpr f) {
+		return source.samplingProbabilityExprsFor(f);
 	}
 
 	@Override
@@ -42,11 +60,6 @@ public class ApproxLimitedRelation extends ApproxRelation {
 	@Override
 	protected String sampleType() {
 		return null;
-	}
-	
-	@Override
-	protected List<TableUniqueName> accumulateStratifiedSamples() {
-		return source.accumulateStratifiedSamples();
 	}
 
 	@Override

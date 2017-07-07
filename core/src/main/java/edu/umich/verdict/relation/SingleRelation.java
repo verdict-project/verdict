@@ -9,6 +9,7 @@ import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
 
 import edu.umich.verdict.VerdictContext;
@@ -50,9 +51,7 @@ public class SingleRelation extends ExactRelation {
 	
 	@Override
 	public String toSql() {
-		StringBuilder sql = new StringBuilder();
-		sql.append("SELECT * FROM " + tableName);
-		return sql.toString();
+		return select("*").toSql();
 	}
 	
 	@Override
@@ -136,9 +135,9 @@ public class SingleRelation extends ExactRelation {
 		Set<String> cols = new HashSet<String>(vc.getMeta().getColumnNames(getTableName()));
 		List<Double> probs = new ArrayList<Double>();
 		for (FuncExpr fexpr : funcs) {
-			String fcol = fexpr.getExprInString();
-			if (fexpr.getExpr() instanceof ColNameExpr) {
-				fcol = ((ColNameExpr) fexpr.getExpr()).getCol();
+			String fcol = fexpr.getUnaryExprInString();
+			if (fexpr.getUnaryExpr() instanceof ColNameExpr) {
+				fcol = ((ColNameExpr) fexpr.getUnaryExpr()).getCol();
 			}
 			
 			if (fexpr.getFuncName().equals(FuncExpr.FuncName.COUNT_DISTINCT)) {
@@ -277,5 +276,41 @@ public class SingleRelation extends ExactRelation {
 	protected SampleParam asSampleParam() {
 		return new SampleParam(getTableName(), NOSAMPLE, 1.0, null);
 	}
+
+	@Override
+	public List<SelectElem> getSelectList() {
+		TableUniqueName table = getTableName();
+		List<String> columns = vc.getMeta().getColumnNames(table);
+		List<SelectElem> elems = new ArrayList<SelectElem>();
+		for (String c : columns) {
+			elems.add(new SelectElem(new ColNameExpr(c, table.tableName)));
+		}
+		return elems;
+	}
+
+	@Override
+	public ColNameExpr partitionColumn() {
+		return new ColNameExpr(vc.getDbms().partitionColumnName(), getAliasName());
+	}
+
+	@Override
+	public List<ColNameExpr> accumulateSamplingProbColumns() {
+		List<ColNameExpr> samplingProbCols = new ArrayList<ColNameExpr>();
+		List<String> cols = vc.getMeta().getColumnNames(tableName);
+		String samplingProbColName = samplingProbabilityColumnName();
+		for (String c : cols) {
+			if (c.equals(samplingProbColName)) {
+				samplingProbCols.add(new ColNameExpr(samplingProbColName, tableName.tableName));
+			}
+		}
+		return samplingProbCols;
+	}
 	
+	@Override
+	protected String toStringWithIndent(String indent) {
+		StringBuilder s = new StringBuilder(1000);
+		s.append(indent);
+		s.append(String.format("%s(%s, %s)\n", this.getClass().getSimpleName(), getTableName(), getAliasName()));
+		return s.toString();
+	}
 }

@@ -11,8 +11,10 @@ import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.datatypes.SampleParam;
 import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
+import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.relation.expr.OrderByExpr;
+import edu.umich.verdict.relation.expr.SelectElem;
 
 public class LimitedRelation extends ExactRelation {
 	
@@ -24,6 +26,7 @@ public class LimitedRelation extends ExactRelation {
 		super(vc);
 		this.source = source;
 		this.limit = limit;
+		this.alias = source.alias;
 	}
 	
 	public ExactRelation getSource() {
@@ -53,6 +56,32 @@ public class LimitedRelation extends ExactRelation {
 		sql.append(source.toSql());
 		sql.append(" LIMIT " + limit);
 		return sql.toString();
+	}
+
+	@Override
+	public List<SelectElem> getSelectList() {
+		return source.getSelectList();
+	}
+
+	@Override
+	public ColNameExpr partitionColumn() {
+		ColNameExpr col = source.partitionColumn();
+		col.setTab(getAliasName());
+		return col;
+	}
+
+	@Override
+	public List<ColNameExpr> accumulateSamplingProbColumns() {
+		return source.accumulateSamplingProbColumns();
+	}
+	
+	@Override
+	protected String toStringWithIndent(String indent) {
+		StringBuilder s = new StringBuilder(1000);
+		s.append(indent);
+		s.append(String.format("%s(%s) [%d]\n", this.getClass().getSimpleName(), getAliasName(), limit));
+		s.append(source.toStringWithIndent(indent + "  "));
+		return s.toString();
 	}
 
 }

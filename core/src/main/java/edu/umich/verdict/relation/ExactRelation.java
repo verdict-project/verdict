@@ -51,8 +51,13 @@ public abstract class ExactRelation extends Relation {
 	public static ExactRelation from(VerdictContext vc, String sql) {
 		VerdictSQLLexer l = new VerdictSQLLexer(CharStreams.fromString(sql));
 		VerdictSQLParser p = new VerdictSQLParser(new CommonTokenStream(l));
-		RelationGen g = new RelationGen(vc, sql);
+		RelationGen g = new RelationGen(vc);
 		return g.visit(p.select_statement());
+	}
+	
+	public static ExactRelation from(VerdictContext vc, VerdictSQLParser.Select_statementContext ctx) {
+		RelationGen g = new RelationGen(vc);
+		return g.visit(ctx);
 	}
 	
 	
@@ -73,6 +78,9 @@ public abstract class ExactRelation extends Relation {
 	 * @return
 	 */
 	protected abstract String getSourceName();
+	
+	public abstract List<SelectElem> getSelectList();
+	
 	
 	/*
 	 * Projection
@@ -145,17 +153,17 @@ public abstract class ExactRelation extends Relation {
 
 	@Override
 	public AggregatedRelation sum(String expr) throws VerdictException {
-		return agg(FuncExpr.sum(Expr.from(expr)));
+		return agg(FuncExpr.sum(Expr.from(vc, expr)));
 	}
 
 	@Override
 	public AggregatedRelation avg(String expr) throws VerdictException {
-		return agg(FuncExpr.avg(Expr.from(expr)));
+		return agg(FuncExpr.avg(Expr.from(vc, expr)));
 	}
 
 	@Override
 	public AggregatedRelation countDistinct(String expr) throws VerdictException {
-		return agg(FuncExpr.countDistinct(Expr.from(expr)));
+		return agg(FuncExpr.countDistinct(Expr.from(vc, expr)));
 	}
 	
 	public GroupedRelation groupby(String group) {
@@ -200,7 +208,7 @@ public abstract class ExactRelation extends Relation {
 	}
 	
 	public long approxCountDistinct(String expr) throws VerdictException {
-		return TypeCasting.toLong(approxAgg(FuncExpr.countDistinct(Expr.from(expr))).collect().get(0).get(0));
+		return TypeCasting.toLong(approxAgg(FuncExpr.countDistinct(Expr.from(vc, expr))).collect().get(0).get(0));
 	}
 	
 	/*
@@ -285,7 +293,8 @@ public abstract class ExactRelation extends Relation {
 		}
 		
 		double relative_cost_ratio = vc.getConf().getDouble("relative_target_cost");
-		return plans.bestPlan(relative_cost_ratio);
+		SamplePlan best = plans.bestPlan(relative_cost_ratio);
+		return best;
 	}
 	
 	/*
@@ -336,7 +345,10 @@ public abstract class ExactRelation extends Relation {
 
 	protected String sourceExpr(ExactRelation source) {
 		if (source instanceof SingleRelation) {
-			return ((SingleRelation) source).getTableName().tableName;
+			SingleRelation asource = (SingleRelation) source;
+			String tableName = asource.getTableName().tableName;
+			String alias = asource.getAliasName();
+			return String.format("%s AS %s", tableName, alias);
 		} else if (source instanceof JoinedRelation) {
 			return ((JoinedRelation) source).joinClause();
 		} else {
@@ -348,6 +360,28 @@ public abstract class ExactRelation extends Relation {
 		}
 	}
 	
+	/**
+	 * This function tracks select list elements whose answers could be approximate when run on a sample.
+	 * @return
+	 */
+	public List<SelectElem> selectElemsWithAggregateSource() {
+		return new ArrayList<SelectElem>();
+	}
+
+	/**
+	 * Used for subsampling-based error estimation. Should return the partition column of this instance.
+	 * @return
+	 */
+	public abstract ColNameExpr partitionColumn();
+	
+	public abstract List<ColNameExpr> accumulateSamplingProbColumns();
+	
+	@Override
+	public String toString() {
+		return toStringWithIndent("");
+	}
+	
+	protected abstract String toStringWithIndent(String indent);
 }
 
 
@@ -355,11 +389,8 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
 	
 	private VerdictContext vc;
 	
-	private String sql;
-	
-	public RelationGen(VerdictContext vc, String sql) {
+	public RelationGen(VerdictContext vc) {
 		this.vc = vc;
-		this.sql = sql;
 	}
 	
 	@Override
@@ -369,7 +400,7 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
 		if (ctx.order_by_clause() != null) {
 			List<OrderByExpr> orderby = new ArrayList<OrderByExpr>();
 			for (Order_by_expressionContext o : ctx.order_by_clause().order_by_expression()) {
-				orderby.add(new OrderByExpr(Expr.from(o.expression()),
+				orderby.add(new OrderByExpr(Expr.from(vc, o.expression()),
 						(o.DESC() != null)? "DESC" : "ASC"));
 			}
 			r = new OrderedRelation(vc, r, orderby);
@@ -387,7 +418,7 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
 		// parse the where clause
 		Cond where = null;
 		if (ctx.WHERE() != null) {
-			where = Cond.from(getOriginalText(ctx.where));
+			where = Cond.from(ctx.where);
 		}
 		
 		// parse the from clause
@@ -452,21 +483,31 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
 		
 		SelectListExtractor select = new SelectListExtractor();
 		Triple<List<SelectElem>, List<SelectElem>, List<SelectElem>> elems = select.visit(ctx.select_list());
+		List<SelectElem> nonaggs = elems.getLeft();
+		List<SelectElem> aggs = elems.getMiddle();
+		List<SelectElem> bothInOrder = elems.getRight();
+		
 		if (elems.getMiddle().size() > 0) {		// if there are aggregate functions
-			r = new AggregatedRelation(vc, r, elems.getMiddle());
+			r = new AggregatedRelation(vc, r, aggs);
 			r.setAliasName(Relation.genTableAlias());
 			
 			List<SelectElem> prj = new ArrayList<SelectElem>();
 			for (SelectElem e : elems.getRight()) {
-				if (e.aliasPresent()) {
+				if (aggs.contains(e)) {
+					// based on the assumption that agg expressions are always aliased.
+					// we define an alias if it doesn't exists.
 					prj.add(new SelectElem(Expr.from(e.getAlias()), e.getAlias()));
 				} else {
-					prj.add(e);
+					if (e.aliasPresent()) {
+						prj.add(new SelectElem(e.getExpr(), e.getAlias()));
+					} else {
+						prj.add(e);
+					}	
 				}
 			}
 			r = new ProjectedRelation(vc, r, prj);
 		} else {
-			r = new ProjectedRelation(vc, r, elems.getRight());
+			r = new ProjectedRelation(vc, r, bothInOrder);
 		}
 		
 		return r;
@@ -482,7 +523,7 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
 			List<SelectElem> agg = new ArrayList<SelectElem>();
 			List<SelectElem> both = new ArrayList<SelectElem>();
 			for (Select_list_elemContext a : ctx.select_list_elem()) {
-				SelectElem e = SelectElem.from(getOriginalText(a));
+				SelectElem e = SelectElem.from(a);
 				if (e.isagg()) {
 					agg.add(e);
 				} else {
@@ -530,24 +571,34 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
 		}
 		
 		@Override
+		public ExactRelation visitDerived_table_source_item(VerdictSQLParser.Derived_table_source_itemContext ctx) {
+			RelationGen gen = new RelationGen(vc);
+			ExactRelation r = gen.visit(ctx.derived_table().subquery().select_statement());
+			if (ctx.as_table_alias() != null) {
+				r.setAliasName(ctx.as_table_alias().table_alias().getText());
+			}
+			return r;
+		}
+		
+		@Override
 		public ExactRelation visitJoin_part(VerdictSQLParser.Join_partContext ctx) {
 			if (ctx.INNER() != null) {
 				TableSourceExtractor ext = new TableSourceExtractor();
 				ExactRelation r = ext.visit(ctx.table_source());
-				joinCond = Cond.from(getOriginalText(ctx.search_condition()));
+				joinCond = Cond.from(ctx.search_condition());
 				return r;
 			} else {
-				VerdictLogger.error(this, "Unsupported join condition: " + getOriginalText(ctx));
+				VerdictLogger.error(this, "Unsupported join condition: " + ctx.getText());
 				return null;
 			}
 		}
 	}
 	
-	protected String getOriginalText(ParserRuleContext ctx) {
-		int a = ctx.start.getStartIndex();
-	    int b = ctx.stop.getStopIndex();
-	    Interval interval = new Interval(a,b);
-	    return CharStreams.fromString(sql).getText(interval);
-	}
+//	protected String getOriginalText(ParserRuleContext ctx) {
+//		int a = ctx.start.getStartIndex();
+//	    int b = ctx.stop.getStopIndex();
+//	    Interval interval = new Interval(a,b);
+//	    return CharStreams.fromString(sql).getText(interval);
+//	}
 }
 

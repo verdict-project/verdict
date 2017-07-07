@@ -5,6 +5,8 @@ import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.datatypes.VerdictResultSet;
 import edu.umich.verdict.exceptions.VerdictException;
+import edu.umich.verdict.relation.ExactRelation;
+import edu.umich.verdict.relation.SingleRelation;
 import edu.umich.verdict.util.StackTraceReader;
 import edu.umich.verdict.util.VerdictLogger;
 
@@ -264,14 +266,15 @@ public class Dbms {
 	 * @param sampleRatio
 	 * @throws VerdictException
 	 */
-	protected TableUniqueName justCreateUniformRandomSampleTableOf(SampleParam param) throws VerdictException {
-		TableUniqueName sampleTableName = param.sampleTableName();
-		String sql = String.format("CREATE TABLE %s SELECT * FROM %s WHERE rand() < %f;",
-										sampleTableName, param.originalTable, param.samplingRatio);
+	protected void justCreateUniformRandomSampleTableOf(SampleParam param) throws VerdictException {
+		String sql = String.format("CREATE TABLE %s AS ", param.sampleTableName()) + 
+				 SingleRelation.from(vc, param.originalTable)
+			 	 .where("rand() <= " + param.samplingRatio)
+				 .select("*, round(rand()*100)%100 AS " + partitionColumnName()).toSql();
+		
 		VerdictLogger.debug(this, String.format("Creates a table: %s", sql));
 		this.executeUpdate(sql);
 		VerdictLogger.debug(this, "Done.");
-		return sampleTableName;
 	}
 	
 	public long getTableSize(TableUniqueName tableName) throws VerdictException {
@@ -300,15 +303,21 @@ public class Dbms {
 	 * @param sampleRatio
 	 * @throws VerdictException
 	 */
-	protected TableUniqueName justCreateUniverseSampleTableOf(SampleParam param) throws VerdictException {
+	protected void justCreateUniverseSampleTableOf(SampleParam param) throws VerdictException {
 		TableUniqueName sampleTableName = param.sampleTableName();
-		String sql = String.format("CREATE TABLE %s SELECT * FROM %s "
-								 + "WHERE mod(cast(conv(substr(md5(%s),17,32),16,10) as unsigned), 10000) <= %.4f",
-								 sampleTableName, param.originalTable, param.columnNames.get(0), param.samplingRatio*10000);
+		String sql = String.format("CREATE TABLE %s AS ", sampleTableName) + 
+				 	 SingleRelation.from(vc, param.originalTable)
+				 	 .where(modOfHash(param.columnNames.get(0), 10000)
+				 			 + String.format(" <= %.4f", param.samplingRatio*10000))
+				 	 .select("*, round(rand()*100)%100 AS " + partitionColumnName()).toSql();
+		
 		VerdictLogger.debug(this, String.format("Creates a table: %s", sql));
 		this.executeUpdate(sql);
 		VerdictLogger.debug(this, "Done.");
-		return sampleTableName;
+	}
+	
+	public String modOfHash(String col, int mod) {
+		return String.format("mod(cast(conv(substr(md5(%s),17,32),16,10) as unsigned), %d)", col, mod);
 	}
 	
 	public Pair<Long, Long> createUniverseSampleTableOf(SampleParam param) throws VerdictException {
@@ -324,11 +333,23 @@ public class Dbms {
 	}
 	
 	protected void justCreateStratifiedSampleTableof(SampleParam param) throws VerdictException {
-		throw new VerdictException("unimplemented");
+		VerdictLogger.warn(this, "Stratified samples are not implemented for MySQL. Do nothing");
 	}
 
 	public Connection getDbmsConnection() {
 		return conn;
+	}
+	
+	/**
+	 * Attach a new column in which random integers between 0 and partitionCount-1 (inclusive) are populated. 
+	 * @param partitionCount
+	 * @return
+	 */
+	public ExactRelation augmentWithRandomPartitionNum(ExactRelation r) {
+		int pcount = partitionCount();
+		ExactRelation aug = r.select("*, " + String.format("mod(rand() * %d, %d) AS %s", pcount, pcount, partitionColumnName()));
+		aug.setAliasName(r.getAliasName());
+		return aug;
 	}
 
 	public void close() throws VerdictException {
@@ -530,4 +551,19 @@ public class Dbms {
 		return "STDDEV";
 	}
 
+	public String partitionColumnName() {
+		return vc.getConf().get("verdict.subsampling_partition_column_name");
+	}
+	
+	public int partitionCount() {
+		return vc.getConf().getInt("verdict.subsampling_partition_count");
+	}
+
+	public String samplingProbabilityColumnName() {
+		return vc.getConf().get("verdict.sampling_probability_column");
+	}
+	
+	protected String quote(String expr) {
+		return String.format("\"%s\"", expr);
+	}
 }

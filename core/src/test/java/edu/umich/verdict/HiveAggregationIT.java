@@ -37,35 +37,13 @@ public class HiveAggregationIT extends AggregationIT {
 	public static void destroy() throws VerdictException {
 		vc.destroy();
 	}
+
+	@Override
+	public void simpleAvg() throws VerdictException, SQLException {
+		// TODO Auto-generated method stub
+		super.simpleAvg();
+	}
 	
-	@Override
-	public void simpleCountDistinctUsingUniverseSample() throws VerdictException, SQLException {
-		super.simpleCountDistinctUsingUniverseSample();
-	}
-
-	@Override
-	public void simpleCountDistinctUsingUniverseSample2() throws VerdictException, SQLException {
-		super.simpleCountDistinctUsingUniverseSample2();
-	}
-
-	@Override
-	public void simpleCountDistinctUsingStratifiedSample() throws VerdictException, SQLException {
-		super.simpleCountDistinctUsingStratifiedSample();
-	}
-
-	@Override
-	public void simpleCountDistinctUsingStratifiedSample2() throws VerdictException, SQLException {
-		super.simpleCountDistinctUsingStratifiedSample2();
-	}
-
-	@Override
-	public void groupbyCountDistinctUsingUniverseSample() throws VerdictException, SQLException {
-		super.groupbyCountDistinctUsingUniverseSample();
-	}
-
-	@Override
-	public void groupbyCountDistinctUsingUniverseSample2() throws VerdictException, SQLException {
-		super.groupbyCountDistinctUsingUniverseSample2();
-	}
+	
 
 }

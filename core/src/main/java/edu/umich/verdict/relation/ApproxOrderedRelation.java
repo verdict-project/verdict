@@ -12,6 +12,7 @@ import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.relation.expr.FuncExpr;
 import edu.umich.verdict.relation.expr.OrderByExpr;
+import edu.umich.verdict.util.VerdictLogger;
 
 public class ApproxOrderedRelation extends ApproxRelation {
 	
@@ -23,18 +24,33 @@ public class ApproxOrderedRelation extends ApproxRelation {
 		super(vc);
 		this.source = source;
 		this.orderby = orderby;
+		this.alias = source.alias;
 	}
 
 	@Override
-	public ExactRelation rewrite() {
-		ExactRelation r = new OrderedRelation(vc, source.rewrite(), orderby);
+	public ExactRelation rewriteForPointEstimate() {
+		ExactRelation r = new OrderedRelation(vc, source.rewriteForPointEstimate(), orderby);
 		r.setAliasName(getAliasName());
 		return r;
 	}
-
+	
 	@Override
-	protected double samplingProbabilityFor(FuncExpr f) {
-		return source.samplingProbabilityFor(f);
+	public ExactRelation rewriteWithSubsampledErrorBounds() {
+		ExactRelation r = new OrderedRelation(vc, source.rewriteWithSubsampledErrorBounds(), orderby);
+		r.setAliasName(getAliasName());
+		return r;
+	}
+	
+	@Override
+	public ExactRelation rewriteWithPartition() {
+		ExactRelation r = new OrderedRelation(vc, source.rewriteWithPartition(), orderby);
+		r.setAliasName(getAliasName());
+		return r;
+	}
+	
+	@Override
+	protected List<Expr> samplingProbabilityExprsFor(FuncExpr f) {
+		return source.samplingProbabilityExprsFor(f);
 	}
 
 	@Override
@@ -45,11 +61,6 @@ public class ApproxOrderedRelation extends ApproxRelation {
 	@Override
 	protected String sampleType() {
 		return source.sampleType();
-	}
-	
-	@Override
-	protected List<TableUniqueName> accumulateStratifiedSamples() {
-		return source.accumulateStratifiedSamples();
 	}
 
 	@Override

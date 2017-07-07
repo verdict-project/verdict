@@ -58,8 +58,8 @@ public class VerdictMeta {
 	
 	public VerdictMeta(VerdictContext vc) throws VerdictException {
 		this.vc = vc;
-		META_NAME_TABLE = vc.getConf().get("meta_name_table");
-		META_SIZE_TABLE = vc.getConf().get("meta_size_table");
+		META_NAME_TABLE = vc.getConf().get("verdict.meta_name_table");
+		META_SIZE_TABLE = vc.getConf().get("verdict.meta_size_table");
 		sampleSizeMeta = new HashMap<TableUniqueName, SampleSizeInfo>();
 		sampleNameMeta = new HashMap<TableUniqueName, Map<SampleParam, TableUniqueName>>();
 		uptodateSchemas = new HashSet<Pair<Long, String>>();
@@ -154,6 +154,7 @@ public class VerdictMeta {
 				tableToColumnNames.get(tableUName).add(tabCol.getRight());
 			}
 			
+			sampleNameMeta.clear();
 			if (tableToColumnNames.containsKey(metaNameTable)) {
 				// sample name
 				rs = SingleRelation.from(vc, metaNameTable)
@@ -180,6 +181,7 @@ public class VerdictMeta {
 				rs.close();
 			}
 
+			sampleSizeMeta.clear();
 			if (tableToColumnNames.containsKey(metaSizeTable)) {
 				// sample size
 				rs = SingleRelation.from(vc, metaSizeTable)
@@ -235,6 +237,53 @@ public class VerdictMeta {
 	 */
 	public SampleSizeInfo getSampleSizeOf(TableUniqueName sampleTableName) {
 		return sampleSizeMeta.get(sampleTableName);
+	}
+	
+	public SampleSizeInfo getSampleSizeOf(SampleParam param) {
+		TableUniqueName sampleTable = lookForSampleTable(param);
+		if (sampleTable == null) {
+			return null;
+		}
+		return vc.getMeta().getSampleSizeOf(sampleTable);
+	}
+	
+	public TableUniqueName lookForSampleTable(SampleParam param) {
+		TableUniqueName originalTable = param.originalTable;
+		List<Pair<SampleParam, TableUniqueName>> sampleInfo = vc.getMeta().getSampleInfoFor(originalTable);
+		TableUniqueName sampleTable = null;
+		
+		for (Pair<SampleParam, TableUniqueName> e : sampleInfo) {
+			SampleParam p = e.getLeft();
+			
+			if (param.samplingRatio == null) {
+				if (p.originalTable.equals(param.originalTable)
+						&& p.sampleType.equals(param.sampleType)
+						&& p.columnNames.equals(param.columnNames)) {
+					sampleTable = e.getRight();
+				}
+			} else {
+				if (p.equals(param)) {
+					sampleTable = e.getRight();
+				}
+			}
+		}
+		
+		if (sampleTable == null) {
+			if (param.sampleType.equals("universe") || param.sampleType.equals("stratified")) {
+				VerdictLogger.error(this, String.format("No %.2f%% %s sample table on %s found for the table %s.",
+						param.samplingRatio*100, param.sampleType, param.columnNames.toString(), originalTable));
+			} else if (param.sampleType.equals("uniform")) {
+				if (param.samplingRatio != null) {
+					VerdictLogger.error(this, String.format("No %.2f%% %s sample table found for the table %s.",
+							param.samplingRatio*100, param.sampleType, originalTable));
+				} else {
+					VerdictLogger.error(this, String.format("No %s sample table found for the table %s.",
+							param.sampleType, originalTable));
+				}
+			}
+		}
+		
+		return sampleTable;
 	}
 
 //	public Pair<Long, Long> getSampleAndOriginalTableSizeByOriginalTableNameIfExists(TableUniqueName originalTableName) {

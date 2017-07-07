@@ -30,7 +30,16 @@ public class GroupedRelation extends ExactRelation {
 	public GroupedRelation(VerdictContext vc, ExactRelation source, List<ColNameExpr> groupby) {
 		super(vc);
 		this.source = source;
-		this.groupby = groupby;
+		List<ColNameExpr> groupbyWithSource = new ArrayList<ColNameExpr>();
+		for (ColNameExpr expr : groupby) {
+			if (expr.getTab() == null) {
+				groupbyWithSource.add(new ColNameExpr(expr.getCol(), source.getAliasName()));
+			} else {
+				groupbyWithSource.add(expr);
+			}
+		}
+		this.groupby = groupbyWithSource;
+		this.alias = source.alias;
 	}
 	
 	public ExactRelation getSource() {
@@ -100,11 +109,8 @@ public class GroupedRelation extends ExactRelation {
 		StringBuilder sql = new StringBuilder();
 		sql.append("SELECT * ");
 		
-		StringBuilder gsql = new StringBuilder();
 		Pair<List<Expr>, ExactRelation> groupsAndNextR = allPrecedingGroupbys(this.source);
-		for (Expr e : groupsAndNextR.getLeft()) {
-			gsql.append(e);
-		}
+		String gsql = Joiner.on(", ").join(groupsAndNextR.getLeft());
 		
 		Pair<Optional<Cond>, ExactRelation> filtersAndNextR = allPrecedingFilters(groupsAndNextR.getRight());
 		String csql = (filtersAndNextR.getLeft().isPresent())? filtersAndNextR.getLeft().get().toString() : "";
@@ -113,6 +119,32 @@ public class GroupedRelation extends ExactRelation {
 		if (csql.length() > 0) { sql.append(" WHERE "); sql.append(csql); }
 		if (gsql.length() > 0) { sql.append(" GROUP BY "); sql.append(gsql); }
 		return sql.toString();
+	}
+
+	@Override
+	public List<SelectElem> getSelectList() {
+		return source.getSelectList();
+	}
+
+	@Override
+	public ColNameExpr partitionColumn() {
+		ColNameExpr col = source.partitionColumn();
+		col.setTab(getAliasName());
+		return col;
+	}
+
+	@Override
+	public List<ColNameExpr> accumulateSamplingProbColumns() {
+		return source.accumulateSamplingProbColumns();
+	}
+	
+	@Override
+	protected String toStringWithIndent(String indent) {
+		StringBuilder s = new StringBuilder(1000);
+		s.append(indent);
+		s.append(String.format("%s(%s) [%s]\n", this.getClass().getSimpleName(), getAliasName(), Joiner.on(", ").join(groupby)));
+		s.append(source.toStringWithIndent(indent + "  "));
+		return s.toString();
 	}
 
 }
