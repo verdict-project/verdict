@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.commons.lang3.tuple.Triple;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -24,10 +23,7 @@ import edu.umich.verdict.relation.ExactRelation;
 import edu.umich.verdict.relation.Relation;
 import edu.umich.verdict.relation.SingleRelation;
 import edu.umich.verdict.relation.condition.CompCond;
-import edu.umich.verdict.relation.ApproxRelation;
-import edu.umich.verdict.relation.ApproxSingleRelation;
 import edu.umich.verdict.relation.expr.BinaryOpExpr;
-import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.ConstantExpr;
 import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.relation.expr.SubqueryExpr;

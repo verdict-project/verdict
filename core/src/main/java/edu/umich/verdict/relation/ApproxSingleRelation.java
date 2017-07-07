@@ -130,6 +130,7 @@ public class ApproxSingleRelation extends ApproxRelation {
 		if (param.sampleType.equals("universe")) {
 			List<String> colNames = vc.getMeta().getColumnNames(param.sampleTableName());
 			String partitionColName = partitionColumnName();
+			int partitionCount = 100;
 			
 			// we will create a new partition column using a hash function, so discard an existing one.
 			List<String> newColNames = new ArrayList<String>();
@@ -142,7 +143,7 @@ public class ApproxSingleRelation extends ApproxRelation {
 			// a new relation
 			ExactRelation r = SingleRelation.from(vc, getSampleName());
 			r = r.select(Joiner.on(", ").join(newColNames) + ", "
-				     	 + vc.getDbms().modOfHash(param.columnNames.get(0), 100) + " AS " + partitionColName);
+				     	 + vc.getDbms().modOfHash(param.columnNames.get(0), partitionCount) + " AS " + partitionColName);
 			r.setAliasName(getAliasName());
 			return r;
 			

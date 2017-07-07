@@ -52,10 +52,11 @@ public class SampleParam implements Comparable<SampleParam> {
 		if (columnNames.size() > 0) colNames.append("_");
 		for (String n : columnNames) colNames.append(n);
 		
-		return TableUniqueName.uname(originalTable.schemaName,
+		return TableUniqueName.uname(
+				originalTable.schemaName,
 				String.format("vs_%s_%s_%s", originalTable.tableName, typeShortName,
-						String.format("%.4f", samplingRatio).replace('.', '_'))
-				+ ((colNames.length() > 0)? colNames.toString() : ""));
+							  String.format("%.4f", samplingRatio).replace('.', '_'))
+				 + ((colNames.length() > 0)? colNames.toString() : ""));
 	}
 	
 	@Override

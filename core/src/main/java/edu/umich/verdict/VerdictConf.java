@@ -250,6 +250,15 @@ public class VerdictConf {
 	public String getPort() {
 		return get("port");
 	}
+	
+	public double errorBoundConfidenceInPercentage() {
+		String p = get("verdict.confidence_internal_probability").replace("%", "");
+		return Double.valueOf(p);
+	}
+	
+	public int subsamplingPartitionCount() {
+		return getInt("verdict.subsampling_partition_count");
+	}
 }
 
 

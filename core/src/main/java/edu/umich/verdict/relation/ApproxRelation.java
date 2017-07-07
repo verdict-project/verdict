@@ -242,5 +242,27 @@ public abstract class ApproxRelation extends Relation {
 		};
 		return v.visit(expr);
 	}
+	
+	protected double confidenceIntervalMultiplier() {
+		double confidencePercentage = vc.getConf().errorBoundConfidenceInPercentage();
+		if (confidencePercentage == 99.9) {
+			return 3.291;
+		} else if (confidencePercentage == 99.5) {
+			return 2.807;
+		} else if (confidencePercentage == 99) {
+			return 2.576;
+		} else if (confidencePercentage == 95) {
+			return 1.96;
+		} else if (confidencePercentage == 90) {
+			return 1.645;
+		} else if (confidencePercentage == 85) {
+			return 1.44;
+		} else if (confidencePercentage == 80) {
+			return 1.282;
+		} else {
+			VerdictLogger.warn(this, String.format("Unsupported confidence: %s%%. Uses the default 95%%.", confidencePercentage));
+			return 1.96;	// 95% by default.
+		}
+	}
 
 }

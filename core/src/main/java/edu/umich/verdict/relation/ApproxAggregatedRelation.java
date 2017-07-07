@@ -5,11 +5,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 
 import edu.umich.verdict.VerdictContext;
-import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.relation.condition.Cond;
 import edu.umich.verdict.relation.condition.IsCond;
 import edu.umich.verdict.relation.condition.NullCond;
@@ -22,7 +20,6 @@ import edu.umich.verdict.relation.expr.ExprModifier;
 import edu.umich.verdict.relation.expr.FuncExpr;
 import edu.umich.verdict.relation.expr.OverClause;
 import edu.umich.verdict.relation.expr.SelectElem;
-import edu.umich.verdict.relation.expr.StarExpr;
 
 public class ApproxAggregatedRelation extends ApproxRelation {
 	
@@ -107,6 +104,7 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 					BinaryOpExpr.from(FuncExpr.stddev(errEst), FuncExpr.sqrt(FuncExpr.avg(psize)), "*"),
 					FuncExpr.sqrt(FuncExpr.sum(psize)),
 					"/");
+			errEstExpr = BinaryOpExpr.from(errEstExpr, ConstantExpr.from(confidenceIntervalMultiplier()), "*");
 			finalAgg.add(new SelectElem(errEstExpr, errElem.getAlias()));
 		}
 		

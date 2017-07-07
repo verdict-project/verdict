@@ -1,8 +1,5 @@
 package edu.umich.verdict.dbms;
 
-import java.sql.SQLException;
-
-import edu.umich.verdict.VerdictConf;
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.exceptions.VerdictException;
 

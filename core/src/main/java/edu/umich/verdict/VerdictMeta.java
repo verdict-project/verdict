@@ -3,10 +3,8 @@ package edu.umich.verdict;
 import java.sql.ResultSet;
 
 import java.sql.SQLException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -285,45 +283,6 @@ public class VerdictMeta {
 		
 		return sampleTable;
 	}
-
-//	public Pair<Long, Long> getSampleAndOriginalTableSizeByOriginalTableNameIfExists(TableUniqueName originalTableName) {
-//		refreshSampleInfoIfNeeded(originalTableName);
-//		
-//		TableUniqueName sampleTableName = sampleTableUniqueNameOf(originalTableName);
-//		
-//		if (sampleSizeMeta.containsKey(sampleTableName)) {
-//			SampleInfo info = sampleSizeMeta.get(sampleTableName);
-//			return Pair.of(info.sampleSize, info.originalTableSize);
-//		} else {
-//			return Pair.of(-1L, -1L);
-//		}
-//	}
-
-//	public TableUniqueName getSampleTableNameIfExistsElseOriginal(TableUniqueName originalTableName) {
-//		refreshSampleInfoIfNeeded(originalTableName.schemaName);
-//		
-//		if (sampleNameMeta.containsKey(originalTableName)) {
-//			return sampleNameMeta.get(originalTableName);
-//		} else {
-//			return originalTableName;
-//		}
-//	}
-	
-//	/**
-//	 * Obtains the name of the sample table for the given original table. This function performs a syntactic transformation,
-//	 * without semantic checks.
-//	 * @param originalTableName
-//	 * @return
-//	 */
-//	public TableUniqueName newSampleTableUniqueNameOf(TableUniqueName originalTableName) {
-//		String currentTime = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
-//		String localTableName = String.format("sample_%s_%s", originalTableName.tableName, currentTime);
-//		return TableUniqueName.uname(originalTableName.schemaName, localTableName);
-//	}
-//	
-//	public TableUniqueName newSampleTableUniqueNameOf(String originalTableName) {
-//		return newSampleTableUniqueNameOf(TableUniqueName.uname(vc, originalTableName));
-//	}
 	
 	/**
 	 * 
@@ -331,11 +290,11 @@ public class VerdictMeta {
 	 * @return
 	 */
 	public TableUniqueName getMetaSizeTableName(TableUniqueName relatedTableName) {
-		return TableUniqueName.uname(relatedTableName.schemaName, META_SIZE_TABLE);
+		return TableUniqueName.uname(metaCatalogForDataCatalog(relatedTableName.schemaName), META_SIZE_TABLE);
 	}
 	
 	public TableUniqueName getMetaSizeTableName(String schemaName) {
-		return TableUniqueName.uname(schemaName, META_SIZE_TABLE);
+		return TableUniqueName.uname(metaCatalogForDataCatalog(schemaName), META_SIZE_TABLE);
 	}
 	
 	/**
@@ -344,10 +303,15 @@ public class VerdictMeta {
 	 * @return
 	 */
 	public TableUniqueName getMetaNameTableName(TableUniqueName relatedTableName) {
-		return TableUniqueName.uname(relatedTableName.schemaName, META_NAME_TABLE);
+		return TableUniqueName.uname(metaCatalogForDataCatalog(relatedTableName.schemaName), META_NAME_TABLE);
 	}
 	
 	public TableUniqueName getMetaNameTableName(String schemaName) {
-		return TableUniqueName.uname(schemaName, META_NAME_TABLE);
+		return TableUniqueName.uname(metaCatalogForDataCatalog(schemaName), META_NAME_TABLE);
 	}
+	
+	public String metaCatalogForDataCatalog(String dataCatalog) {
+		return dataCatalog + vc.getConf().get("verdict.meta_catalog_suffix");
+	}
+	
 }
