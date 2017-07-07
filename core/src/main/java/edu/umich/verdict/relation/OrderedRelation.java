@@ -72,5 +72,14 @@ public class OrderedRelation extends ExactRelation {
 	public List<ColNameExpr> accumulateSamplingProbColumns() {
 		return source.accumulateSamplingProbColumns();
 	}
+	
+	@Override
+	protected String toStringWithIndent(String indent) {
+		StringBuilder s = new StringBuilder(1000);
+		s.append(indent);
+		s.append(String.format("%s(%s) [%s]\n", this.getClass().getSimpleName(), getAliasName(), Joiner.on(", ").join(orderby)));
+		s.append(source.toStringWithIndent(indent + "  "));
+		return s.toString();
+	}
 
 }

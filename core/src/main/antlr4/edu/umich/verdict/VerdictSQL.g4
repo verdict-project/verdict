@@ -859,16 +859,23 @@ mathematical_function_expression
     : unary_mathematical_function
     | noparam_mathematical_function
     | binary_mathematical_function
+    | ternary_mathematical_function
+    ;
+    
+ternary_mathematical_function
+    : function_name=(CONV | SUBSTR)
+      '(' expression ',' expression ',' expression ')'
     ;
 
 binary_mathematical_function
-    : function_name=MOD
+    : function_name=(MOD | PMOD)
       '(' expression ',' expression ')'
     ;
 
 unary_mathematical_function
-    : function_name=(ROUND | FLOOR | CEIL | EXP | LN | LOG10 | LOG2 | SIN | COS | TAN | SIGN | RAND | FNV_HASH | ABS | STDDEV | SQRT)
+    : function_name=(ROUND | FLOOR | CEIL | EXP | LN | LOG10 | LOG2 | SIN | COS | TAN | SIGN | RAND | FNV_HASH | ABS | STDDEV | SQRT | MD5)
       '(' expression ')'
+    | function_name=CAST '(' cast_as_expression ')'
     ;
     
 noparam_mathematical_function
@@ -896,6 +903,10 @@ aggregate_windowed_function
 
 all_distinct_expression
     : (ALL | DISTINCT)? expression
+    ;
+    
+cast_as_expression
+    : expression AS data_type
     ;
 
 // https://msdn.microsoft.com/en-us/library/ms189461.aspx
@@ -1057,7 +1068,7 @@ sign
 
 // https://msdn.microsoft.com/en-us/library/ms175874.aspx
 id
-    : ID
+    : simple_id
     | DOUBLE_QUOTE_ID
     | SQUARE_BRACKET_ID
     | BACKTICK_ID
@@ -1219,6 +1230,7 @@ CONSTRAINT:                      C O N S T R A I N T;
 CONTAINS:                        C O N T A I N S;
 CONTAINSTABLE:                   C O N T A I N S T A B L E;
 CONTINUE:                        C O N T I N U E;
+CONV:                            C O N V;
 CONVERT:                         C O N V E R T;
 CREATE:                          C R E A T E;
 CROSS:                           C R O S S;
@@ -1346,6 +1358,7 @@ SET:                             S E T;
 SETUSER:                         S E T U S E R;
 SHUTDOWN:                        S H U T D O W N;
 SOME:                            S O M E;
+SUBSTR:                          S U B S T R;
 STATISTICS:                      S T A T I S T I C S;
 SYSTEM_USER:                     S Y S T E M '_' U S E R;
 TABLE:                           T A B L E;
@@ -1442,6 +1455,7 @@ LOGIN:                           L O G I N;
 LOOP:                            L O O P;
 MARK:                            M A R K;
 MAX:                             M A X;
+MD5:                             M D '5';
 MIN:                             M I N;
 MIN_ACTIVE_ROWVERSION:           M I N '_' A C T I V E '_' R O W V E R S I O N;
 MOD:                             M O D;
@@ -1463,6 +1477,7 @@ OUTPUT:                          O U T P U T;
 OWNER:                           O W N E R;
 PARTITION:                       P A R T I T I O N;
 PATH:                            P A T H;
+PMOD:                            P M O D;
 PRECEDING:                       P R E C E D I N G;
 PRIOR:                           P R I O R;
 QUOTED_BY:                       Q U O T E D ' ' B Y;

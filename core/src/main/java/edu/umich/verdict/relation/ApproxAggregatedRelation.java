@@ -30,6 +30,8 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 	
 	private List<SelectElem> elems;
 
+	private boolean includeGroupsInToSql = true;
+
 	public ApproxAggregatedRelation(VerdictContext vc, ApproxRelation source, List<SelectElem> elems) {
 		super(vc);
 		this.source = source;
@@ -43,6 +45,10 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 	public List<SelectElem> getSelectList() {
 		return elems;
 	}
+	
+	public void setIncludeGroupsInToSql(boolean o) {
+		includeGroupsInToSql = o;
+	}
 
 	@Override
 	public ExactRelation rewriteForPointEstimate() {
@@ -55,6 +61,7 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 		}
 		ExactRelation r = new AggregatedRelation(vc, newSource, scaled);
 		r.setAliasName(getAliasName());
+		((AggregatedRelation) r).setIncludeGroupsInToSql(includeGroupsInToSql);
 		return r;
 	}
 	
@@ -67,8 +74,6 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 		ExactRelation r = rewriteWithPartition();
 //		List<SelectElem> selectElems = r.selectElemsWithAggregateSource();
 		List<SelectElem> selectElems = ((AggregatedRelation) r).getAggList();
-		
-//		assert(selectElems.size() == elems.size());
 		
 		// another wrapper to combine all subsampled aggregations.
 		List<SelectElem> finalAgg = new ArrayList<SelectElem>();
@@ -119,10 +124,15 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 		 */ 
 		if (source instanceof ApproxGroupedRelation) {
 			List<ColNameExpr> groupby = ((ApproxGroupedRelation) source).getGroupby();
-			r = new GroupedRelation(vc, r, groupby);
+			List<ColNameExpr> groupbyInNewSource = new ArrayList<ColNameExpr>();
+			for (ColNameExpr g : groupby) {
+				groupbyInNewSource.add(new ColNameExpr(g.getCol(), r.getAliasName()));
+			}
+			r = new GroupedRelation(vc, r, groupbyInNewSource);
 		}
 		
 		r = new AggregatedRelation(vc, r, finalAgg);
+		r.setAliasName(getAliasName());
 		return r;
 	}
 	
@@ -135,7 +145,7 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 	protected ExactRelation rewriteWithPartition() {
 		ExactRelation newSource = partitionedSource();
 		
-		// first scaling; for sampling probability.
+		// select list elements are scaled considering both sampling probabilities and partitioning for subsampling.
 		List<SelectElem> scaledElems = new ArrayList<SelectElem>();
 		List<ColNameExpr> samplingProbCols = newSource.accumulateSamplingProbColumns();
 		List<ColNameExpr> groupby = new ArrayList<ColNameExpr>();
@@ -152,16 +162,6 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 		scaledElems.add(new SelectElem(FuncExpr.count(), partitionSizeAlias));
 		ExactRelation r = new AggregatedRelation(vc, newSource, scaledElems);
 		
-//		// second scaling; by the ratio between the partition size and the sum of partition sizes.
-//		// needed for count and sum.
-//		List<SelectElem> partitionScaledElems = new ArrayList<SelectElem>();
-//		for (int i = 0; i < scaledElems.size() - 1; i++) {		// including the psize column
-//			Expr expr = scaledElems.get(i).getExpr();
-//			Expr scaled = scaleByPartitionRatio(expr);
-//			partitionScaledElems.add(new SelectElem(scaled, scaledElems.get(i).getAlias()));
-//			
-//		}
-		
 		return r;
 	}
 	
@@ -171,37 +171,7 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 		} else {
 			return (new ApproxGroupedRelation(vc, source, Arrays.<ColNameExpr>asList())).rewriteWithPartition();
 		}
-//		ExactRelation r;
-//		if (source instanceof ApproxGroupedRelation) {
-//			List<ColNameExpr> groupby = ((ApproxGroupedRelation) source).getGroupby();
-//			List<ColNameExpr> partitionby = new ArrayList<ColNameExpr>(groupby);
-//			partitionby.add(ColNameExpr.from(partitionColumnName()));
-//			
-//			ApproxRelation a = new ApproxProjectedRelation(vc, ((ApproxGroupedRelation) source).getSource(),
-//					Arrays.asList(
-//							new SelectElem(new StarExpr()),
-//							new SelectElem(Expr.from(String.format("count(*) over (partition by %s)", Joiner.on(", ").join(partitionby))), partitionSizeAlias),
-//							new SelectElem(Expr.from(String.format("count(*) over (partition by %s)", Joiner.on(", ").join(groupby))), groupSizeAlias)));
-//			a.setAliasName(source.getAliasName());
-//			
-//			r = (new ApproxGroupedRelation(vc, a, groupby)).rewriteWithPartition();
-//		} else {
-//			ApproxRelation a = new ApproxProjectedRelation(vc, source,
-//					Arrays.asList(
-//							new SelectElem(new StarExpr()),
-//							new SelectElem(Expr.from(String.format("count(*) over (partition by %s)", partitionColumnName())), partitionSizeAlias),
-//							new SelectElem(Expr.from(String.format("count(*) over ()")), groupSizeAlias)));
-//			a.setAliasName(source.getAliasName());
-////			r = source.select(String.format("*, count(*) over (partition by %s) AS %s", partitionColumnName(), ));
-//			r = (new ApproxGroupedRelation(vc, a, Arrays.<ColNameExpr>asList())).rewriteWithPartition();
-//		}
-//		return r;
 	}
-	
-//	@Override
-//	protected ColNameExpr partitionColumn() {
-//		return source.partitionColumn();
-//	}
 	
 	@Override
 	protected Map<String, String> tableSubstitution() {
@@ -291,13 +261,6 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 	}
 	
 	private Expr scaleWithPartitionSize(Expr expr, List<Expr> groupby, ColNameExpr partitionCol) {
-//		List<Expr> includingPcol = new ArrayList<Expr>();
-//		includingPcol.addAll(groupby);
-//		includingPcol.add((Expr) partitionCol);
-		
-//		Expr scaled = BinaryOpExpr.from(expr, new FuncExpr(FuncExpr.FuncName.COUNT, new StarExpr(), new OverClause(includingPcol)), "/");
-//		scaled = BinaryOpExpr.from(scaled, new FuncExpr(FuncExpr.FuncName.COUNT, new StarExpr(), new OverClause(groupby)), "*");
-		
 //		Expr scaled = BinaryOpExpr.from(expr, FuncExpr.count(), "/");
 		Expr scaled = BinaryOpExpr.from(expr, new FuncExpr(FuncExpr.FuncName.AVG, FuncExpr.count(), new OverClause(groupby)), "/");
 		scaled = BinaryOpExpr.from(scaled, new FuncExpr(FuncExpr.FuncName.SUM, FuncExpr.count(), new OverClause(groupby)), "*");

@@ -59,7 +59,7 @@ public class ApproxProjectedRelation extends ApproxRelation {
 		List<SelectElem> elemsWithErr = new ArrayList<SelectElem>();
 		for (SelectElem e : elems) {
 			elemsWithErr.add(e);
-			String errColName = e.getExpr().toString() + errColSuffix();
+			String errColName = e.getExpr().getText() + errColSuffix();
 			if (colAliases.contains(errColName)) {
 				elemsWithErr.add(new SelectElem(new ColNameExpr(errColName), errColName));
 			}

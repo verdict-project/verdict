@@ -31,12 +31,18 @@ public class ExprTest {
 	}
 	
 	@Test
-	public void matheFuncTest() {
+	public void mathFuncTest() {
 		Expr a = Expr.from("round(rand(unix_timestamp())*100)%100");
 		assertEquals(a.toString(), "(round((rand(unix_timestamp()) * 100)) % 100)");
 		
 		a = Expr.from("ndv(user_id)");
 		assertEquals(a.toString(), "ndv(user_id)");
+	}
+	
+	@Test
+	public void castExprTest() {
+		Expr a = Expr.from("abs(fnv_hash(cast(user_id as string)))%1000000");
+		System.out.println(a.toString());
 	}
 
 }

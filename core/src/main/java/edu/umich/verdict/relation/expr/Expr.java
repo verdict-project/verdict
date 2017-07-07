@@ -52,9 +52,18 @@ public abstract class Expr {
 	
 //	public abstract String toString(VerdictContext vc);
 	
+	// to Sql String; use getText() to get the pure string representation.
 	@Override
 	public String toString() {
 		return "Expr Base";
+	}
+	
+	public static String quote(String s) {
+		return String.format("`%s`", s);
+	}
+	
+	public String getText() {
+		return toString();
 	}
 	
 	public Expr accept(ExprModifier v) {

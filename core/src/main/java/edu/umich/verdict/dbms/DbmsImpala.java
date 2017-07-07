@@ -76,30 +76,32 @@ public class DbmsImpala extends Dbms {
 	@Override
 	public Pair<Long, Long> createUniformRandomSampleTableOf(SampleParam param) throws VerdictException {
 		dropTable(param.sampleTableName());
-//		TableUniqueName tempTableName = createTempTableWithRand(param.originalTable);
-//		createUniformSampleTableFromTempTable(tempTableName, param);
-//		dropTable(tempTableName);
 		
-		String samplingProbColName = vc.getDbms().samplingProbabilityColumnName();
+		String samplingProbColInQuote = quote(vc.getDbms().samplingProbabilityColumnName());
 		List<String> colNames = vc.getMeta().getColumnNames(param.originalTable);
 		
 		// This query exploits the fact that if subquery is combined with a regular column in a comparison condition,
 		// Impala properly generates a random number for every row and makes a comparison.
 		Expr threshold = ConstantExpr.from(String.format("one * (select %f from %s limit 1)", param.samplingRatio, param.originalTable));
 		ExactRelation sampled = SingleRelation.from(vc, param.originalTable)
-				                .select("*, 1 AS one, count(*) OVER () AS __total_size")
+				                .select("*, 1 AS one, count(*) OVER () AS " + quote("__total_size"))
 						        .where(CompCond.from(Expr.from("rand(unix_timestamp())"), "<", threshold));
 		sampled = sampled.select(
 					Joiner.on(", ").join(colNames) +
-					", count(*) over () / __total_size AS " + samplingProbColName + ", " +  // attach sampling prob
+					", count(*) over () / " + quote("__total_size") + " AS " + samplingProbColInQuote + ", " +  // attach sampling prob
 					randomPartitionColumn());										 // attach partition number
 		String sql = String.format("create table %s AS ", param.sampleTableName()) + sampled.toSql();
-		VerdictLogger.debug(this, "The query used for creating a stratified sample:");
+		VerdictLogger.debug(this, "The query used for creating a uniform random sample:");
 		VerdictLogger.debugPretty(this, Relation.prettyfySql(sql), "  ");
 		
 		executeUpdate(sql);
 		
 		return Pair.of(getTableSize(param.sampleTableName()), getTableSize(param.originalTable));
+	}
+	
+	@Override
+	protected String quote(String expr) {
+		return String.format("`%s`", expr);
 	}
 	
 	protected TableUniqueName createTempTableExlucdingNameEntry(SampleParam param, TableUniqueName metaNameTableName) throws VerdictException {
@@ -169,7 +171,7 @@ public class DbmsImpala extends Dbms {
 		 					     .select("*, count(*) over () AS __total_size");
 		ExactRelation sampled = withSize.where(
 									modOfHash(param.columnNames.get(0), 1000000) + 
-									String.format(" <= %.2f", param.samplingRatio*1000000))
+									String.format(" < %.2f", param.samplingRatio*1000000))
 					 			.select(Joiner.on(", ").join(colNames)
 					 					+ ", count(*) over () / __total_size AS " + samplingProbCol + ", "
 					 					+ randomPartitionColumn());
@@ -185,10 +187,10 @@ public class DbmsImpala extends Dbms {
 	
 	@Override
 	public String modOfHash(String col, int mod) {
-		return String.format("abs(fnv_hash(%s)) %% %d", col, mod);
+		return String.format("abs(fnv_hash(cast(%s AS STRING))) %% %d", col, mod);
 	}
 	
-	private String randomPartitionColumn() {
+	protected String randomPartitionColumn() {
 		int pcount = partitionCount();
 		return String.format("round(rand(unix_timestamp())*%d) %% %d AS %s", pcount, pcount, partitionColumnName());
 	}
@@ -259,6 +261,12 @@ public class DbmsImpala extends Dbms {
 	@Override
 	protected void justCreateStratifiedSampleTableof(SampleParam param) throws VerdictException {
 		SampleSizeInfo info = vc.getMeta().getSampleSizeOf(new SampleParam(param.originalTable, "uniform", null, new ArrayList<String>()));
+		if (info == null) {
+			String msg = "A uniform random must first be created before creating a stratified sample.";
+			VerdictLogger.error(this, msg);
+			throw new VerdictException(msg);
+		}
+		
 		long originalTableSize = info.originalTableSize;
 		double samplingProbability = param.samplingRatio;
 		String groupName = Joiner.on(", ").join(param.columnNames);
@@ -287,19 +295,11 @@ public class DbmsImpala extends Dbms {
 		          + String.format("count(*) over (partition by %s) / grp_size AS %s", groupName, samplingProbColName) + ", "
 		  		  + randomPartitionColumn());
 		
-		System.out.println(sampleWithSamplingProb.toSql());
 		String sql = String.format("CREATE TABLE %s AS ", sampleTable)
 					 + sampleWithSamplingProb.toSql();
 		VerdictLogger.debug(this, "The query used for creating a stratified sample:");
 		VerdictLogger.debugPretty(this, Relation.prettyfySql(sql), "  ");
 		executeUpdate(sql);
-		
-//		Pair<TableUniqueName, TableUniqueName> tempTables = createTempTableWithGroupCountsAndRand(param);
-//		TableUniqueName rnTempTable = tempTables.getLeft();
-//		TableUniqueName grpTempTable = tempTables.getRight();
-//		createStratifiedSampleFromTempTable(rnTempTable, grpTempTable, param);
-//		dropTable(rnTempTable);
-//		dropTable(grpTempTable);
 	}
 	
 	/**

@@ -25,6 +25,7 @@ import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.relation.expr.ExprModifier;
 import edu.umich.verdict.relation.expr.FuncExpr;
+import edu.umich.verdict.util.VerdictLogger;
 
 public class ApproxJoinedRelation extends ApproxRelation {
 
@@ -89,9 +90,17 @@ public class ApproxJoinedRelation extends ApproxRelation {
 	@Override
 	public ExactRelation rewriteForPointEstimate() {
 		List<Pair<Expr, Expr>> newJoinCond = joinCondWithTablesSubstitutioned();
-		ExactRelation r = JoinedRelation.from(vc, source1.rewriteForPointEstimate(), source2.rewriteForPointEstimate(), newJoinCond);
+		ExactRelation r = new JoinedRelation(vc, source1.rewriteForPointEstimate(), source2.rewriteForPointEstimate(), newJoinCond);
 		r.setAliasName(getAliasName());
 		return r;
+	}
+	
+	@Override
+	public ExactRelation rewriteWithSubsampledErrorBounds() {
+		ExactRelation r1 = source1.rewriteWithSubsampledErrorBounds();
+		ExactRelation r2 = source2.rewriteWithSubsampledErrorBounds();
+		List<Pair<Expr, Expr>> newJoinCond = joinCondWithTablesSubstitutioned();
+		return new JoinedRelation(vc, r1, r2, newJoinCond);
 	}
 	
 	@Override

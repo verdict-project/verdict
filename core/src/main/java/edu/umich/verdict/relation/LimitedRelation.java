@@ -74,5 +74,14 @@ public class LimitedRelation extends ExactRelation {
 	public List<ColNameExpr> accumulateSamplingProbColumns() {
 		return source.accumulateSamplingProbColumns();
 	}
+	
+	@Override
+	protected String toStringWithIndent(String indent) {
+		StringBuilder s = new StringBuilder(1000);
+		s.append(indent);
+		s.append(String.format("%s(%s) [%d]\n", this.getClass().getSimpleName(), getAliasName(), limit));
+		s.append(source.toStringWithIndent(indent + "  "));
+		return s.toString();
+	}
 
 }

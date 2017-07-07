@@ -8,6 +8,7 @@ import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
 
 import edu.umich.verdict.VerdictContext;
@@ -86,7 +87,7 @@ public class JoinedRelation extends ExactRelation {
 		StringBuilder sql = new StringBuilder(100);
 		
 		if (joinCols == null || joinCols.size() == 0) {
-			VerdictLogger.info(this, "No join conditions specified; cross join is used.");
+			VerdictLogger.debug(this, "No join conditions specified; cross join is used.");
 			sql.append(String.format("%s CROSS JOIN %s", sourceExpr(source1), sourceExpr(source2)));
 		} else {
 			sql.append(String.format("%s INNER JOIN %s ON", sourceExpr(source1), sourceExpr(source2)));
@@ -269,5 +270,15 @@ public class JoinedRelation extends ExactRelation {
 		List<ColNameExpr> union = new ArrayList<ColNameExpr>(source1.accumulateSamplingProbColumns());
 		union.addAll(source2.accumulateSamplingProbColumns());
 		return union;
+	}
+	
+	@Override
+	protected String toStringWithIndent(String indent) {
+		StringBuilder s = new StringBuilder(1000);
+		s.append(indent);
+		s.append(String.format("%s(%s) [%s]\n", this.getClass().getSimpleName(), getAliasName(), Joiner.on(", ").join(joinCols)));
+		s.append(source1.toStringWithIndent(indent + "  "));
+		s.append(source2.toStringWithIndent(indent + "  "));
+		return s.toString();
 	}
 }

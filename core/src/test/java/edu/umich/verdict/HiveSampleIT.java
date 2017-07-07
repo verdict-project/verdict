@@ -68,4 +68,10 @@ public class HiveSampleIT extends SampleIT {
 		super.dropRecommendedSampleTest();
 	}
 
+	@Override
+	public void createUniformSampleTest() throws VerdictException {
+		// TODO Auto-generated method stub
+		super.createUniformSampleTest();
+	}
+
 }

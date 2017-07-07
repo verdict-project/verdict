@@ -22,7 +22,8 @@ public class FuncExpr extends Expr {
 	public enum FuncName {
 		COUNT, SUM, AVG, COUNT_DISTINCT, IMPALA_APPROX_COUNT_DISTINCT,
 		ROUND, MAX, MIN, FLOOR, CEIL, EXP, LN, LOG10, LOG2, SIN, COS, TAN,
-		SIGN, RAND, UNIX_TIMESTAMP, FNV_HASH, ABS, STDDEV, SQRT, MOD,
+		SIGN, RAND, UNIX_TIMESTAMP, FNV_HASH, ABS, STDDEV, SQRT, MOD, PMOD,
+		CAST, CONV, SUBSTR, MD5,
 		UNKNOWN
 	}
 	
@@ -47,10 +48,15 @@ public class FuncExpr extends Expr {
 			.put("RAND", FuncName.RAND)
 			.put("UNIX_TIMESTAMP", FuncName.UNIX_TIMESTAMP)
 			.put("FNV_HASH", FuncName.FNV_HASH)
+			.put("MD5", FuncName.MD5)
 			.put("ABS", FuncName.ABS)
 			.put("STDDEV", FuncName.STDDEV)
 			.put("SQRT", FuncName.SQRT)
 			.put("MOD", FuncName.MOD)
+			.put("PMOD", FuncName.PMOD)
+			.put("CONV", FuncName.CONV)
+			.put("SUBSTR", FuncName.SUBSTR)
+			.put("CAST", FuncName.CAST)
 			.build();
 
 	protected static Map<FuncName, String> functionPattern = ImmutableMap.<FuncName, String>builder()
@@ -75,35 +81,51 @@ public class FuncExpr extends Expr {
 			.put(FuncName.RAND, "rand(%s)")
 			.put(FuncName.UNIX_TIMESTAMP, "unix_timestamp(%s)")
 			.put(FuncName.FNV_HASH, "fnv_hash(%s)")
+			.put(FuncName.MD5, "md5(%s)")
 			.put(FuncName.ABS, "abs(%s)")
 			.put(FuncName.STDDEV, "stddev(%s)")
 			.put(FuncName.SQRT, "sqrt(%s)")
 			.put(FuncName.MOD, "mod(%s, %s)")
+			.put(FuncName.PMOD, "pmod(%s, %s)")
+			.put(FuncName.CONV, "conv(%s, %s, %s)")
+			.put(FuncName.SUBSTR, "substr(%s, %s, %s)")
+			.put(FuncName.CAST, "cast(%s as %s)")
 			.put(FuncName.UNKNOWN, "UNKNOWN(%s)")
 			.build();
 	
-	public FuncExpr(FuncName fname, Expr expr1, Expr expr2, OverClause overClause) {
+	public FuncExpr(FuncName fname, Expr expr1, Expr expr2, Expr expr3, OverClause overClause) {
 		this.expressions = new ArrayList<Expr>();
 		if (expr1 != null) {
 			this.expressions.add(expr1);
 			if (expr2 != null) {
 				this.expressions.add(expr2);
+				if (expr3 != null) {
+					this.expressions.add(expr3);
+				}
 			}
 		}
 		this.funcname = fname;
 		this.overClause = overClause;
 	}
 	
+	public FuncExpr(FuncName fname, Expr expr1, Expr expr2, OverClause overClause) {
+		this(fname, expr1, expr2, null, overClause);
+	}
+	
 	public FuncExpr(FuncName fname, Expr expr, OverClause overClause) {
 		this(fname, expr, null, overClause);
 	}
 	
+	public FuncExpr(FuncName fname, Expr expr1, Expr expr2, Expr expr3) {
+		this(fname, expr1, expr2, expr3, null);
+	}
+	
 	public FuncExpr(FuncName fname, Expr expr1, Expr expr2) {
-		this(fname, expr1, expr2, null);
+		this(fname, expr1, expr2, null, null);
 	}
 	
 	public FuncExpr(FuncName fname, Expr expr) {
-		this(fname, expr, null, null);
+		this(fname, expr, null, null, null);
 	}
 	
 	public static FuncExpr from(String expr) {
@@ -151,7 +173,13 @@ public class FuncExpr extends Expr {
 			public FuncExpr visitUnary_mathematical_function(VerdictSQLParser.Unary_mathematical_functionContext ctx) {
 				String fname = ctx.function_name.getText().toUpperCase();
 				FuncName funcName = string2FunctionType.containsKey(fname)? string2FunctionType.get(fname) : FuncName.UNKNOWN;
-				return new FuncExpr(funcName, Expr.from(ctx.expression()));
+				if (fname.equals("CAST")) {
+					return new FuncExpr(funcName,
+							Expr.from(ctx.cast_as_expression().expression()),
+							ConstantExpr.from(ctx.cast_as_expression().data_type().getText()));
+				} else {
+					return new FuncExpr(funcName, Expr.from(ctx.expression()));
+				}
 			}
 			
 			@Override
@@ -168,19 +196,12 @@ public class FuncExpr extends Expr {
 				return new FuncExpr(funcName, Expr.from(ctx.expression(0)), Expr.from(ctx.expression(1)));
 			}
 			
-//			@Override
-//			public FuncExpr visitMathematical_function_expression(VerdictSQLParser.Mathematical_function_expressionContext ctx) {
-//				if (ctx.unary_mathematical_function() != null) {
-//					
-//				} else {
-//					String fname = ctx.noparam_mathematical_function().getText().toUpperCase();
-//					if (string2FunctionType.containsKey(fname)) {
-//						return new FuncExpr(string2FunctionType.get(fname), null);
-//					} else {
-//						return new FuncExpr(FuncName.UNKNOWN, null);
-//					}
-//				}
-//			}
+			@Override
+			public FuncExpr visitTernary_mathematical_function(VerdictSQLParser.Ternary_mathematical_functionContext ctx) {
+				String fname = ctx.function_name.getText().toUpperCase();
+				FuncName funcName = string2FunctionType.containsKey(fname)? string2FunctionType.get(fname) : FuncName.UNKNOWN;
+				return new FuncExpr(funcName, Expr.from(ctx.expression(0)), Expr.from(ctx.expression(1)), Expr.from(ctx.expression(2)));
+			}
 		};
 		return v.visit(ctx);
 	}
@@ -264,8 +285,13 @@ public class FuncExpr extends Expr {
 			sql.append(String.format(functionPattern.get(funcname), ""));
 		} else if (expressions.size() == 1) {
 			sql.append(String.format(functionPattern.get(funcname), expressions.get(0).toString()));
-		} else {
+		} else if (expressions.size() == 2) {
 			sql.append(String.format(functionPattern.get(funcname), expressions.get(0).toString(), expressions.get(1).toString()));
+		} else {
+			sql.append(String.format(functionPattern.get(funcname),
+					expressions.get(0).toString(),
+					expressions.get(1).toString(),
+					expressions.get(2).toString()));
 		}
 		
 		if (overClause != null) {

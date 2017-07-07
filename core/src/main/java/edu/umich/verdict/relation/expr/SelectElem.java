@@ -17,10 +17,14 @@ public class SelectElem {
 	
 	public SelectElem(Expr expr, String alias) {
 		this.expr = expr;
-		if (alias == null && expr.isagg()) {
-			this.alias = Optional.of(genColumnAlias());		// aggregate expressions must be aliased.
+		if (alias == null) {
+			if (expr.isagg()) {
+				this.alias = Optional.of(genColumnAlias());		// aggregate expressions must be aliased.
+			} else {
+				this.alias = Optional.fromNullable(alias);
+			}
 		} else {
-			this.alias = Optional.fromNullable(alias);
+			this.alias = Optional.fromNullable(alias.replace("\"", "").replace("`", ""));
 		}
 	}
 	
@@ -90,7 +94,7 @@ public class SelectElem {
 	@Override
 	public String toString() {
 		if (alias.isPresent()) {
-			return String.format("%s AS %s", expr.toString(), alias.get());
+			return String.format("%s AS %s", expr.toString(), Expr.quote(alias.get()));
 		} else {
 			return expr.toString();
 		}

@@ -293,7 +293,8 @@ public abstract class ExactRelation extends Relation {
 		}
 		
 		double relative_cost_ratio = vc.getConf().getDouble("relative_target_cost");
-		return plans.bestPlan(relative_cost_ratio);
+		SamplePlan best = plans.bestPlan(relative_cost_ratio);
+		return best;
 	}
 	
 	/*
@@ -375,6 +376,12 @@ public abstract class ExactRelation extends Relation {
 	
 	public abstract List<ColNameExpr> accumulateSamplingProbColumns();
 	
+	@Override
+	public String toString() {
+		return toStringWithIndent("");
+	}
+	
+	protected abstract String toStringWithIndent(String indent);
 }
 
 
@@ -476,21 +483,31 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
 		
 		SelectListExtractor select = new SelectListExtractor();
 		Triple<List<SelectElem>, List<SelectElem>, List<SelectElem>> elems = select.visit(ctx.select_list());
+		List<SelectElem> nonaggs = elems.getLeft();
+		List<SelectElem> aggs = elems.getMiddle();
+		List<SelectElem> bothInOrder = elems.getRight();
+		
 		if (elems.getMiddle().size() > 0) {		// if there are aggregate functions
-			r = new AggregatedRelation(vc, r, elems.getMiddle());
+			r = new AggregatedRelation(vc, r, aggs);
 			r.setAliasName(Relation.genTableAlias());
 			
 			List<SelectElem> prj = new ArrayList<SelectElem>();
 			for (SelectElem e : elems.getRight()) {
-				if (e.aliasPresent()) {
-					prj.add(new SelectElem(Expr.from(vc, e.getAlias()), e.getAlias()));
+				if (aggs.contains(e)) {
+					// based on the assumption that agg expressions are always aliased.
+					// we define an alias if it doesn't exists.
+					prj.add(new SelectElem(Expr.from(e.getAlias()), e.getAlias()));
 				} else {
-					prj.add(e);
+					if (e.aliasPresent()) {
+						prj.add(new SelectElem(e.getExpr(), e.getAlias()));
+					} else {
+						prj.add(e);
+					}	
 				}
 			}
 			r = new ProjectedRelation(vc, r, prj);
 		} else {
-			r = new ProjectedRelation(vc, r, elems.getRight());
+			r = new ProjectedRelation(vc, r, bothInOrder);
 		}
 		
 		return r;
@@ -547,6 +564,16 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
 		public ExactRelation visitHinted_table_name_item(VerdictSQLParser.Hinted_table_name_itemContext ctx) {
 			String tableName = ctx.table_name_with_hint().table_name().getText();
 			ExactRelation r = SingleRelation.from(vc, tableName);
+			if (ctx.as_table_alias() != null) {
+				r.setAliasName(ctx.as_table_alias().table_alias().getText());
+			}
+			return r;
+		}
+		
+		@Override
+		public ExactRelation visitDerived_table_source_item(VerdictSQLParser.Derived_table_source_itemContext ctx) {
+			RelationGen gen = new RelationGen(vc);
+			ExactRelation r = gen.visit(ctx.derived_table().subquery().select_statement());
 			if (ctx.as_table_alias() != null) {
 				r.setAliasName(ctx.as_table_alias().table_alias().getText());
 			}

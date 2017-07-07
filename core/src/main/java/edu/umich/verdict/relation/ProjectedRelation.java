@@ -150,5 +150,14 @@ public class ProjectedRelation extends ExactRelation {
 		}
 		return exprsInNewTable;
 	}
+	
+	@Override
+	protected String toStringWithIndent(String indent) {
+		StringBuilder s = new StringBuilder(1000);
+		s.append(indent);
+		s.append(String.format("%s(%s) [%s]\n", this.getClass().getSimpleName(), getAliasName(), Joiner.on(", ").join(elems)));
+		s.append(source.toStringWithIndent(indent + "  "));
+		return s.toString();
+	}
 
 }

@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.apache.commons.lang3.tuple.Pair;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 
 import edu.umich.verdict.VerdictContext;
@@ -92,4 +93,12 @@ public class FilteredRelation extends ExactRelation {
 		return source.accumulateSamplingProbColumns();
 	}
 
+	@Override
+	protected String toStringWithIndent(String indent) {
+		StringBuilder s = new StringBuilder(1000);
+		s.append(indent);
+		s.append(String.format("%s(%s) [%s]\n", this.getClass().getSimpleName(), getAliasName(), cond.toString()));
+		s.append(source.toStringWithIndent(indent + "  "));
+		return s.toString();
+	}
 }

@@ -154,6 +154,7 @@ public class VerdictMeta {
 				tableToColumnNames.get(tableUName).add(tabCol.getRight());
 			}
 			
+			sampleNameMeta.clear();
 			if (tableToColumnNames.containsKey(metaNameTable)) {
 				// sample name
 				rs = SingleRelation.from(vc, metaNameTable)
@@ -180,6 +181,7 @@ public class VerdictMeta {
 				rs.close();
 			}
 
+			sampleSizeMeta.clear();
 			if (tableToColumnNames.containsKey(metaSizeTable)) {
 				// sample size
 				rs = SingleRelation.from(vc, metaSizeTable)
@@ -239,6 +241,9 @@ public class VerdictMeta {
 	
 	public SampleSizeInfo getSampleSizeOf(SampleParam param) {
 		TableUniqueName sampleTable = lookForSampleTable(param);
+		if (sampleTable == null) {
+			return null;
+		}
 		return vc.getMeta().getSampleSizeOf(sampleTable);
 	}
 	
@@ -268,8 +273,13 @@ public class VerdictMeta {
 				VerdictLogger.error(this, String.format("No %.2f%% %s sample table on %s found for the table %s.",
 						param.samplingRatio*100, param.sampleType, param.columnNames.toString(), originalTable));
 			} else if (param.sampleType.equals("uniform")) {
-				VerdictLogger.error(this, String.format("No %.2f%% %s sample table found for the table %s.",
-						param.samplingRatio*100, param.sampleType, originalTable));
+				if (param.samplingRatio != null) {
+					VerdictLogger.error(this, String.format("No %.2f%% %s sample table found for the table %s.",
+							param.samplingRatio*100, param.sampleType, originalTable));
+				} else {
+					VerdictLogger.error(this, String.format("No %s sample table found for the table %s.",
+							param.sampleType, originalTable));
+				}
 			}
 		}
 		

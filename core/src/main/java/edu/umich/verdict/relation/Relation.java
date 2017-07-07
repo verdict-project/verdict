@@ -328,12 +328,14 @@ class PrettyPrintVisitor extends VerdictSQLBaseVisitor<String> {
 		if (ctx.getText().equals("*")) {
 			return "*";
 		} else {
-			StringBuilder elem = new StringBuilder();
-			elem.append(visit(ctx.expression()));
-			if (ctx.column_alias() != null) {
-				elem.append(String.format(" AS %s", ctx.column_alias().getText()));
-			}
-			return elem.toString();
+//			StringBuilder elem = new StringBuilder();
+//			elem.append(visit(ctx.expression()));
+//			if (ctx.column_alias() != null) {
+//				elem.append(String.format(" AS %s", ctx.column_alias().getText()));
+//			}
+			Expr expr = Expr.from(ctx.expression());
+			String alias = (ctx.column_alias() == null)? null : ctx.column_alias().getText();
+			return (new SelectElem(expr, alias)).toString();
 		}
 	}
 	
@@ -583,14 +585,14 @@ class PrettyPrintVisitor extends VerdictSQLBaseVisitor<String> {
 	@Override
 	public String visitJoin_part(VerdictSQLParser.Join_partContext ctx) {
 		if (ctx.INNER() != null) {
-			return "\n" + indent + "     " + String.format("INNER JOIN %s ", visit(ctx.table_source()))
-				 + "\n" + indent + "     " + String.format("ON %s", visit(ctx.search_condition()));
+			return "\n" + indent + "  " + String.format("INNER JOIN %s ", visit(ctx.table_source()))
+				 + "\n" + indent + "  " + String.format("ON %s", visit(ctx.search_condition()));
 		} else if (ctx.OUTER() != null) {
-			return String.format("%s OUTER JOIN %s ON %s", ctx.join_type.getText(), visit(ctx.table_source()), visit(ctx.search_condition()));
+			return "\n" + indent + "  " + String.format("%s OUTER JOIN %s ON %s", ctx.join_type.getText(), visit(ctx.table_source()), visit(ctx.search_condition()));
 		} else if (ctx.CROSS() != null) {
-			return String.format("CROSS JOIN %s", visit(ctx.table_source()));
+			return "\n" + indent + "  " + String.format("CROSS JOIN %s", visit(ctx.table_source()));
 		} else {
-			return String.format("UNSUPPORTED JOIN (%s)", ctx.getText());
+			return "\n" + indent + "  " + String.format("UNSUPPORTED JOIN (%s)", ctx.getText());
 		}
 	}
 	

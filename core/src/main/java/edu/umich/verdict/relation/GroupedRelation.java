@@ -30,7 +30,15 @@ public class GroupedRelation extends ExactRelation {
 	public GroupedRelation(VerdictContext vc, ExactRelation source, List<ColNameExpr> groupby) {
 		super(vc);
 		this.source = source;
-		this.groupby = groupby;
+		List<ColNameExpr> groupbyWithSource = new ArrayList<ColNameExpr>();
+		for (ColNameExpr expr : groupby) {
+			if (expr.getTab() == null) {
+				groupbyWithSource.add(new ColNameExpr(expr.getCol(), source.getAliasName()));
+			} else {
+				groupbyWithSource.add(expr);
+			}
+		}
+		this.groupby = groupbyWithSource;
 		this.alias = source.alias;
 	}
 	
@@ -128,6 +136,15 @@ public class GroupedRelation extends ExactRelation {
 	@Override
 	public List<ColNameExpr> accumulateSamplingProbColumns() {
 		return source.accumulateSamplingProbColumns();
+	}
+	
+	@Override
+	protected String toStringWithIndent(String indent) {
+		StringBuilder s = new StringBuilder(1000);
+		s.append(indent);
+		s.append(String.format("%s(%s) [%s]\n", this.getClass().getSimpleName(), getAliasName(), Joiner.on(", ").join(groupby)));
+		s.append(source.toStringWithIndent(indent + "  "));
+		return s.toString();
 	}
 
 }

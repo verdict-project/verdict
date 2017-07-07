@@ -37,12 +37,13 @@ public class ImpalaAggregationIT extends AggregationIT {
 	public static void destroy() throws VerdictException {
 		vc.destroy();
 	}
-	
+
 	@Override
-	public void simpleAvg() throws VerdictException, SQLException {
+	public void simpleAvgUsingUniformSample() throws VerdictException, SQLException {
 		// TODO Auto-generated method stub
-		super.simpleAvg();
+		super.simpleAvgUsingUniformSample();
 	}
+	
 	
 
 }

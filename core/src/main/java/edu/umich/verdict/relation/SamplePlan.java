@@ -11,8 +11,8 @@ import edu.umich.verdict.relation.expr.SelectElem;
 
 /**
  * Stores information about what samples to use to compute multiple expressions. A single SampleGroup instance stores
- * the mapping from a set of samples to a list of expressions to answer using the set, and this class multiple number
- * of such SampleGroup instances.
+ * the mapping from a set of samples to a list of expressions to answer using the set, and this class includes multiple number
+ * of such SampleGroup instances so that they can answer the user-submitted query when combined.
  * @author Yongjoo Park
  */
 public class SamplePlan {
@@ -33,7 +33,7 @@ public class SamplePlan {
 	public SamplePlan duplicate() {
 		List<SampleGroup> copy = new ArrayList<SampleGroup>();
 		for (SampleGroup g : sampleGroups) {
-			copy.add(g);
+			copy.add(g.duplicate());
 		}
 		return new SamplePlan(copy);
 	}
@@ -45,6 +45,14 @@ public class SamplePlan {
 	@Override
 	public String toString() {
 		return sampleGroups.toString();
+	}
+	
+	public String toPrettyString() {
+		StringBuilder s = new StringBuilder();
+		for (SampleGroup g : sampleGroups) {
+			s.append(g.toString()); s.append("\n");
+		}
+		return s.toString();
 	}
 	
 	public double cost() {

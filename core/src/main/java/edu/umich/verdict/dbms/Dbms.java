@@ -562,4 +562,8 @@ public class Dbms {
 	public String samplingProbabilityColumnName() {
 		return vc.getConf().get("verdict.sampling_probability_column");
 	}
+	
+	protected String quote(String expr) {
+		return String.format("\"%s\"", expr);
+	}
 }
