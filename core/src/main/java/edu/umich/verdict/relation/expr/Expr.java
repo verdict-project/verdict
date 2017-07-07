@@ -46,6 +46,7 @@ public abstract class Expr {
 	}
 	
 	public static Expr from(VerdictContext vc, VerdictSQLParser.ExpressionContext ctx) {
+		if (vc == null) vc = dummyContext;
 		ExpressionGen g = new ExpressionGen(vc);
 		return g.visit(ctx);
 	}

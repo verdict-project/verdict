@@ -54,6 +54,10 @@ public class ApproxJoinedRelation extends ApproxRelation {
 		this.alias = null;
 	}
 	
+	public ApproxJoinedRelation(VerdictContext vc, ApproxRelation source1, ApproxRelation source2) {
+		this(vc, source1, source2, Arrays.<Pair<Expr,Expr>>asList());
+	}
+	
 	public static ApproxJoinedRelation from(VerdictContext vc, ApproxRelation source1, ApproxRelation source2, List<Pair<Expr, Expr>> joinCols) {
 		ApproxJoinedRelation r = new ApproxJoinedRelation(vc, source1, source2, joinCols);
 		return r;
@@ -106,6 +110,7 @@ public class ApproxJoinedRelation extends ApproxRelation {
 	@Override
 	public ExactRelation rewriteWithPartition() {
 		List<Pair<Expr, Expr>> newJoinCond = joinCondWithTablesSubstitutioned();
+		newJoinCond.add(Pair.<Expr, Expr>of(new ColNameExpr(partitionColumnName()), new ColNameExpr(partitionColumnName())));
 		ExactRelation r = JoinedRelation.from(vc, source1.rewriteWithPartition(), source2.rewriteWithPartition(), newJoinCond);
 		r.setAliasName(getAliasName());
 		return r;

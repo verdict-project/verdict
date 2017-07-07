@@ -12,9 +12,15 @@ import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.datatypes.SampleParam;
 import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
+import edu.umich.verdict.relation.condition.CompCond;
 import edu.umich.verdict.relation.condition.Cond;
+import edu.umich.verdict.relation.condition.CondModifier;
 import edu.umich.verdict.relation.expr.ColNameExpr;
+import edu.umich.verdict.relation.expr.Expr;
+import edu.umich.verdict.relation.expr.ExprModifier;
 import edu.umich.verdict.relation.expr.SelectElem;
+import edu.umich.verdict.relation.expr.SubqueryExpr;
+import edu.umich.verdict.util.VerdictLogger;
 
 public class FilteredRelation extends ExactRelation {
 	
@@ -51,9 +57,15 @@ public class FilteredRelation extends ExactRelation {
 	}
 	
 	protected ApproxRelation approxWith(Map<TableUniqueName, SampleParam> replace) {
-		ApproxRelation a = new ApproxFilteredRelation(vc, source.approxWith(replace), cond);
+		ApproxRelation a = new ApproxFilteredRelation(vc, source.approxWith(replace), approxPossibleSubqueries(cond));
 		a.setAliasName(getAliasName());
 		return a;
+	}
+	
+	private Cond approxPossibleSubqueries(Cond cond) {
+		ApproxSubqueryModifier v = new ApproxSubqueryModifier();
+		Cond modified = v.visit(cond);
+		return modified;
 	}
 
 	protected List<SampleGroup> findSample(SelectElem elem) {
@@ -101,4 +113,39 @@ public class FilteredRelation extends ExactRelation {
 		s.append(source.toStringWithIndent(indent + "  "));
 		return s.toString();
 	}
+}
+
+
+class ApproxSubqueryModifier extends CondModifier {
+	
+	ExprModifier v2 = new ExprModifier() {
+		public Expr call(Expr expr) {
+			if (expr instanceof SubqueryExpr) {
+				Relation r = ((SubqueryExpr) expr).getSubquery();
+				if (r instanceof ExactRelation) {
+					ApproxRelation a = null;
+					try {
+						a = ((ExactRelation) r).approx();
+					} catch (VerdictException e) {
+						VerdictLogger.error(this, e.getMessage());
+						VerdictLogger.error(this, "A subquery is not approximated.");
+						return expr;
+					}
+					return new SubqueryExpr(a);
+				}
+			}
+			return expr;
+		}
+	};
+
+	@Override
+	public Cond call(Cond cond) {
+		if (cond instanceof CompCond) {
+			CompCond c = (CompCond) cond;
+			return CompCond.from(v2.visit(c.getLeft()), c.getOp(), v2.visit(c.getRight()));
+		} else {
+			return cond;
+		}
+	}
+	
 }

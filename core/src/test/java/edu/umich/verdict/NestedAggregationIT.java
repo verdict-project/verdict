@@ -1,18 +1,20 @@
 package edu.umich.verdict;
 
+import static org.junit.Assert.*;
+
 import java.io.FileNotFoundException;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.experimental.categories.Category;
+import org.junit.Test;
 
 import edu.umich.verdict.exceptions.VerdictException;
+import edu.umich.verdict.util.ResultSetConversion;
 
-@Category(IntegrationTest.class)
-public class ImpalaAggregationIT extends AggregationIT {
+public class NestedAggregationIT extends BaseIT {
 	
 	@BeforeClass
 	public static void connect() throws VerdictException, SQLException, FileNotFoundException {
@@ -32,24 +34,12 @@ public class ImpalaAggregationIT extends AggregationIT {
 		Connection conn = DriverManager.getConnection(url);
 		stmt = conn.createStatement();
 	}
-	
-	@AfterClass
-	public static void destroy() throws VerdictException {
-		vc.destroy();
-	}
 
-	@Override
-	public void groupbyCountDistinctUsingUniverseSample() throws VerdictException, SQLException {
-		// TODO Auto-generated method stub
-		super.groupbyCountDistinctUsingUniverseSample();
+	@Test
+	public void avgOverAvgTest() throws VerdictException {
+		String sql = "select avg(days_since_prior) from orders where days_since_prior > (select avg(days_since_prior) from orders)";
+		ResultSet rs = vc.executeQuery(sql);
+		ResultSetConversion.printResultSet(rs);
 	}
-
-	@Override
-	public void groupbyCountDistinctUsingUniverseSample2() throws VerdictException, SQLException {
-		// TODO Auto-generated method stub
-		super.groupbyCountDistinctUsingUniverseSample2();
-	}
-
-	
 
 }

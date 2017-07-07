@@ -215,17 +215,19 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 					else if (f.getFuncName().equals(FuncExpr.FuncName.COUNT_DISTINCT)) {
 						String dbname = vc.getDbms().getName();
 						Expr scale = scaleForSampling(samplingProbExprs);
+						Expr est = null;
+						
 						if (dbname.equals("impala")) {
-							Expr est = BinaryOpExpr.from(
-									new FuncExpr(FuncExpr.FuncName.IMPALA_APPROX_COUNT_DISTINCT, s.getUnaryExpr()),
-									scale, "*");
-							if (sampleType().equals("universe")) {
-								est = scaleWithPartitionSize(est, groupbyExpr, partitionCol);
-							}
-							return est;
+							est = new FuncExpr(FuncExpr.FuncName.IMPALA_APPROX_COUNT_DISTINCT, s.getUnaryExpr());
 						} else {
-							return BinaryOpExpr.from(s, scale, "*");
+							est = new FuncExpr(FuncExpr.FuncName.COUNT_DISTINCT, s.getUnaryExpr());
 						}
+						
+						est = BinaryOpExpr.from(est, scale, "*");
+						if (sampleType().equals("universe")) {
+							est = scaleWithPartitionSize(est, groupbyExpr, partitionCol);
+						}
+						return est;
 					}
 					else if (f.getFuncName().equals(FuncExpr.FuncName.SUM)) {
 						Expr est = scaleForSampling(samplingProbExprs);

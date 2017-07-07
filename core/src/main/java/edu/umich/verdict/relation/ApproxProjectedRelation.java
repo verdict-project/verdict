@@ -72,7 +72,10 @@ public class ApproxProjectedRelation extends ApproxRelation {
 	
 	@Override
 	public ExactRelation rewriteWithPartition() {
-		ExactRelation r = new ProjectedRelation(vc, source.rewriteWithPartition(), elems);
+		ExactRelation newSource = source.rewriteWithPartition();
+		List<SelectElem> newElems = new ArrayList<SelectElem>(elems);
+		newElems.add(new SelectElem(new ColNameExpr(partitionColumnName(), newSource.getAliasName()), partitionColumnName()));
+		ExactRelation r = new ProjectedRelation(vc, newSource, newElems);
 		r.setAliasName(getAliasName());
 		return r;
 	}

@@ -432,7 +432,7 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
 		// parse the where clause
 		Cond where = null;
 		if (ctx.WHERE() != null) {
-			where = Cond.from(ctx.where);
+			where = Cond.from(vc, ctx.where);
 		}
 		
 		// parse the from clause

@@ -873,7 +873,7 @@ binary_mathematical_function
     ;
 
 unary_mathematical_function
-    : function_name=(ROUND | FLOOR | CEIL | EXP | LN | LOG10 | LOG2 | SIN | COS | TAN | SIGN | RAND | FNV_HASH | ABS | STDDEV | SQRT | MD5)
+    : function_name=(ROUND | FLOOR | CEIL | EXP | LN | LOG10 | LOG2 | SIN | COS | TAN | SIGN | RAND | FNV_HASH | ABS | STDDEV | SQRT | MD5 | CRC32)
       '(' expression ')'
     | function_name=CAST '(' cast_as_expression ')'
     ;
@@ -1412,6 +1412,7 @@ COOKIE:                          C O O K I E;
 COS:                             C O S;
 COUNT:                           C O U N T;
 COUNT_BIG:                       C O U N T '_' B I G;
+CRC32:                           C R C '32';
 DATEADD:                         D A T E A D D;
 DATEDIFF:                        D A T E D I F F;
 DATENAME:                        D A T E N A M E;

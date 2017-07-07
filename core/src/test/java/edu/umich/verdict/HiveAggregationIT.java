@@ -44,4 +44,23 @@ public class HiveAggregationIT extends AggregationIT {
 		super.simpleAvgUsingUniverseSample();
 	}
 
+	@Override
+	public void simpleCountUsingUniverseSample() throws VerdictException, SQLException {
+		// TODO Auto-generated method stub
+		super.simpleCountUsingUniverseSample();
+	}
+
+	@Override
+	public void groupbyCountDistinctUsingUniverseSample() throws VerdictException, SQLException {
+		// TODO Auto-generated method stub
+		super.groupbyCountDistinctUsingUniverseSample();
+	}
+
+	@Override
+	public void groupbyCountDistinctUsingUniverseSample2() throws VerdictException, SQLException {
+		// TODO Auto-generated method stub
+		super.groupbyCountDistinctUsingUniverseSample2();
+	}
+
+	
 }

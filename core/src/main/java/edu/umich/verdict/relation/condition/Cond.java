@@ -27,6 +27,11 @@ public abstract class Cond {
 		CondGen g = new CondGen();
 		return g.visit(ctx);
 	}
+	
+	public static Cond from(VerdictContext vc, Search_conditionContext ctx) {
+		CondGen g = new CondGen(vc);
+		return g.visit(ctx);
+	}
 
 	public Cond accept(CondModifier v) {
 		return v.call(this);
@@ -45,10 +50,20 @@ public abstract class Cond {
 
 class CondGen extends VerdictSQLBaseVisitor<Cond> {
 	
+	private VerdictContext vc;
+	
+	public CondGen() {
+		
+	}
+	
+	public CondGen(VerdictContext vc) {
+		this.vc = vc;
+	}
+	
 	@Override
 	public Cond visitComp_expr_predicate(VerdictSQLParser.Comp_expr_predicateContext ctx) {
-		Expr e1 = Expr.from(ctx.expression(0));
-		Expr e2 = Expr.from(ctx.expression(1));
+		Expr e1 = Expr.from(vc, ctx.expression(0));
+		Expr e2 = Expr.from(vc, ctx.expression(1));
 		return CompCond.from(e1, ctx.comparison_operator().getText(), e2);
 	}
 	

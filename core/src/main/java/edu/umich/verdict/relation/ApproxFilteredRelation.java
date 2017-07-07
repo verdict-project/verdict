@@ -99,15 +99,21 @@ public class ApproxFilteredRelation extends ApproxRelation {
 		Cond modifiedCond = modifiedCondWithRelToJoin.getLeft();
 		List<ApproxRelation> relToJoin = modifiedCondWithRelToJoin.getRight();
 		
-		ExactRelation joinedSource = source.rewriteWithPartition();
+		ApproxRelation joinedSource = source;
 		for (ApproxRelation a : relToJoin) {
-			List<Pair<Expr, Expr>> joinCol = Arrays.asList(Pair.<Expr, Expr>of(
-					joinedSource.partitionColumn(),
-					new ColNameExpr(partitionColumnName(), a.sourceTableName())));
-			joinedSource = JoinedRelation.from(vc, joinedSource, a.rewriteWithPartition(), joinCol);
+			joinedSource = new ApproxJoinedRelation(vc, joinedSource, a);
 		}
 		
-		ExactRelation r = new FilteredRelation(vc, joinedSource, modifiedCond);
+//		ExactRelation joinedSource = source.rewriteWithPartition();
+//		for (ApproxRelation a : relToJoin) {
+//			List<Pair<Expr, Expr>> joinCol = Arrays.asList(Pair.<Expr, Expr>of(
+//					joinedSource.partitionColumn(),
+//					new ColNameExpr(partitionColumnName(), a.sourceTableName())));
+//			joinedSource = JoinedRelation.from(vc, joinedSource, a.rewriteWithPartition(), joinCol);
+//		}
+		
+		ExactRelation newSource = joinedSource.rewriteWithPartition();
+		ExactRelation r = new FilteredRelation(vc, newSource, modifiedCond);
 		r.setAliasName(getAliasName());
 		return r;
 	}
@@ -147,7 +153,7 @@ public class ApproxFilteredRelation extends ApproxRelation {
 }
 
 class CondModifierForSubsampling extends CondModifier {
-	private List<ApproxRelation> compToRelations = new ArrayList<ApproxRelation>();
+	private List<ApproxRelation> compToRelations = new ArrayList<ApproxRelation>();		// relations to compare
 	
 	private Map<String, String> sub;
 	

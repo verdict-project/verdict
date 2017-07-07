@@ -56,9 +56,7 @@ public class SingleRelation extends ExactRelation {
 	
 	@Override
 	protected String getSourceName() {
-		return tableName.tableName;
-//		return tableName.toString();
-//		return (alias == null)? tableName.toString() : getAliasName();
+		return (alias == null)? tableName.tableName : getAliasName();
 	}
 	
 	/*

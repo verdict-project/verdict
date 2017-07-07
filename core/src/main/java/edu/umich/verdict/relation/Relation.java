@@ -366,7 +366,7 @@ class PrettyPrintVisitor extends VerdictSQLBaseVisitor<String> {
 	@Override
 	public String visitSubquery(VerdictSQLParser.SubqueryContext ctx) {
 		PrettyPrintVisitor v = new PrettyPrintVisitor(sql);
-		v.setIndent(indent + "  ");
+		v.setIndent(indent + "     ");
 		return v.visit(ctx.select_statement());
 	}
 	
@@ -585,14 +585,14 @@ class PrettyPrintVisitor extends VerdictSQLBaseVisitor<String> {
 	@Override
 	public String visitJoin_part(VerdictSQLParser.Join_partContext ctx) {
 		if (ctx.INNER() != null) {
-			return "\n" + indent + "  " + String.format("INNER JOIN %s ", visit(ctx.table_source()))
-				 + "\n" + indent + "  " + String.format("ON %s", visit(ctx.search_condition()));
+			return "\n" + indent + "     " + String.format("INNER JOIN %s ", visit(ctx.table_source()))
+				 + "\n" + indent + "     " + String.format("ON %s", visit(ctx.search_condition()));
 		} else if (ctx.OUTER() != null) {
-			return "\n" + indent + "  " + String.format("%s OUTER JOIN %s ON %s", ctx.join_type.getText(), visit(ctx.table_source()), visit(ctx.search_condition()));
+			return "\n" + indent + "     " + String.format("%s OUTER JOIN %s ON %s", ctx.join_type.getText(), visit(ctx.table_source()), visit(ctx.search_condition()));
 		} else if (ctx.CROSS() != null) {
-			return "\n" + indent + "  " + String.format("CROSS JOIN %s", visit(ctx.table_source()));
+			return "\n" + indent + "     " + String.format("CROSS JOIN %s", visit(ctx.table_source()));
 		} else {
-			return "\n" + indent + "  " + String.format("UNSUPPORTED JOIN (%s)", ctx.getText());
+			return "\n" + indent + "     " + String.format("UNSUPPORTED JOIN (%s)", ctx.getText());
 		}
 	}
 	

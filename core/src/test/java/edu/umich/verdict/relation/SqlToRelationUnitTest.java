@@ -108,5 +108,34 @@ public class SqlToRelationUnitTest {
 		r = r.select("*, 1 AS one, count(*) OVER () AS `__total_size`");
 		System.out.println(r.toSql());
 	}
+	
+	@Test
+	public void complexTest1() {
+		String sql = " SELECT `vt12`.`order_hour_of_day`, " +
+					"        round(avg(`vt12`.`expr1`)) AS `expr1`, " +
+					"        ((stddev(`vt12`.`expr1`) * sqrt(avg(`vt12`.`__vpsize`))) / sqrt(sum(`vt12`.`__vpsize`))) AS `expr1_err`  " +
+					" FROM ( " +
+					"   SELECT `vt5`.`order_hour_of_day`, " +
+					"          `vt5`.`__vpart`, " +
+					"          (count(distinct `user_id`) * (1.0 / 0.1)) AS `expr1`, " +
+					"          count(*) AS `__vpsize`  " +
+					"   FROM ( " +
+					"     SELECT `order_id`, " +
+					"            `user_id`, " +
+					"            `eval_set`, " +
+					"            `order_number`, " +
+					"            `order_dow`, " +
+					"            `order_hour_of_day`, " +
+					"            `days_since_prior`, " +
+					"            `__vprob`, " +
+					"            pmod(crc32(`user_id`), 100) AS `__vpart`  " +
+					"     FROM vs_orders_uv_0_1000_user_id vt9) vt5 " +
+					"   GROUP BY `vt5`.`order_hour_of_day`, `vt5`.`__vpart`) vt12 " +
+					" GROUP BY `vt12`.`order_hour_of_day` " +
+					" ORDER BY `order_hour_of_day`";
+		ExactRelation r = ExactRelation.from(vc, sql);
+		System.out.println(r.toSql());
+		System.out.println(Relation.prettyfySql(r.toSql()));
+	}
 
 }

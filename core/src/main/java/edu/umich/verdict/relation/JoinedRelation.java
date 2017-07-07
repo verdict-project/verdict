@@ -102,12 +102,12 @@ public class JoinedRelation extends ExactRelation {
 		return sql.toString();
 	}
 	
-	private String attachTableNameIfEmpty(Expr colName, String tableName) {
+	private ColNameExpr attachTableNameIfEmpty(Expr colName, String tableName) {
 		ColNameExpr c = ColNameExpr.from(colName.toString());
 		if (c.getTab() == null) {
 			c.setTab(tableName);
 		}
-		return c.toString();
+		return c;
 	}
 	
 	
