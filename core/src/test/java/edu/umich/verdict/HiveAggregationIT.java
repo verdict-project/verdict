@@ -39,11 +39,9 @@ public class HiveAggregationIT extends AggregationIT {
 	}
 
 	@Override
-	public void simpleAvg() throws VerdictException, SQLException {
+	public void simpleAvgUsingUniverseSample() throws VerdictException, SQLException {
 		// TODO Auto-generated method stub
-		super.simpleAvg();
+		super.simpleAvgUsingUniverseSample();
 	}
-	
-	
 
 }
