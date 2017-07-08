@@ -107,7 +107,7 @@ public class DbmsImpala extends Dbms {
 		executeUpdate(String.format("CREATE TABLE %s AS SELECT * FROM %s "
 				+ "WHERE originalschemaname <> \"%s\" OR originaltablename <> \"%s\" OR sampletype <> \"%s\""
 				+ "OR samplingratio <> %s OR columnnames <> \"%s\"",
-				tempTableName, metaNameTableName, originalTableName.schemaName, originalTableName.tableName,
+				tempTableName, metaNameTableName, originalTableName.getSchemaName(), originalTableName.getTableName(),
 				param.sampleType, samplingRatioToString(param.samplingRatio), columnNameListToString(param.columnNames)));
 		return tempTableName;
 	}
@@ -129,7 +129,7 @@ public class DbmsImpala extends Dbms {
 		TableUniqueName tempTableName = Relation.getTempTableName(vc);
 		TableUniqueName sampleTableName = param.sampleTableName();
 		executeUpdate(String.format("CREATE TABLE %s AS SELECT * FROM %s WHERE schemaname <> \"%s\" OR tablename <> \"%s\" ",
-				tempTableName, metaSizeTableName, sampleTableName.schemaName, sampleTableName.tableName));
+				tempTableName, metaSizeTableName, sampleTableName.getSchemaName(), sampleTableName.getTableName()));
 		return tempTableName;
 	}
 	
@@ -193,7 +193,7 @@ public class DbmsImpala extends Dbms {
 	}
 	
 	private String columnNamesInString(TableUniqueName tableName) {
-		return columnNamesInString(tableName, tableName.tableName);
+		return columnNamesInString(tableName, tableName.getTableName());
 	}
 	
 	private String columnNamesInString(TableUniqueName tableName, String subTableName) {
@@ -257,7 +257,7 @@ public class DbmsImpala extends Dbms {
 	 */
 	@Override
 	protected void justCreateStratifiedSampleTableof(SampleParam param) throws VerdictException {
-		SampleSizeInfo info = vc.getMeta().getSampleSizeOf(new SampleParam(param.originalTable, "uniform", null, new ArrayList<String>()));
+		SampleSizeInfo info = vc.getMeta().getSampleSizeOf(new SampleParam(vc, param.originalTable, "uniform", null, new ArrayList<String>()));
 		if (info == null) {
 			String msg = "A uniform random must first be created before creating a stratified sample.";
 			VerdictLogger.error(this, msg);
@@ -321,7 +321,7 @@ public class DbmsImpala extends Dbms {
 		String samplingProbColName = vc.getDbms().samplingProbabilityColumnName();
 		
 		VerdictLogger.debug(this, "Creating a sample table using " + rnTempTable + " and " + grpTempTable);
-		SampleSizeInfo info = vc.getMeta().getSampleSizeOf(new SampleParam(param.originalTable, "uniform", null, new ArrayList<String>()));
+		SampleSizeInfo info = vc.getMeta().getSampleSizeOf(new SampleParam(vc, param.originalTable, "uniform", null, new ArrayList<String>()));
 		long originalTableSize = info.originalTableSize;
 		
 		long groupCount = SingleRelation.from(vc, grpTempTable).countValue();
@@ -361,7 +361,7 @@ public class DbmsImpala extends Dbms {
 				                    .join(
 				                      grpRatioRel,
 				                      Joiner.on(" AND ").join(joinCond))
-				    			    .select(columnNamesInString(originalTableName, sampleTempTable.tableName)
+				    			    .select(columnNamesInString(originalTableName, sampleTempTable.getTableName())
 				    			    		+ String.format(", %s", samplingProbColName)
 				    			    		+ String.format(", %s", partitionColumnName()));
 		String sql2 = String.format("CREATE TABLE %s AS ", param.sampleTableName()) + stSampleRel.toSql();
@@ -445,7 +445,7 @@ public class DbmsImpala extends Dbms {
 	public ResultSet describeTable(TableUniqueName tableUniqueName)  throws VerdictException {
 		try {
 			ResultSet rs = conn.getMetaData().getColumns(
-					null, tableUniqueName.schemaName, tableUniqueName.tableName, "%");
+					null, tableUniqueName.getSchemaName(), tableUniqueName.getTableName(), "%");
 			Map<Integer, Integer> columnMap = new HashMap<Integer, Integer>();
 			columnMap.put(1, 4);	// column name
 			columnMap.put(2, 6); 	// data type name
@@ -497,8 +497,11 @@ public class DbmsImpala extends Dbms {
 	public boolean doesMetaTablesExist(String schemaName) throws VerdictException {
 		String[] types = {"TABLE"};
 		try {
-			ResultSet rs = vc.getDbms().getDbmsConnection().getMetaData().getTables(
-					null, schemaName, vc.getMeta().getMetaNameTableName(currentSchema.get()).tableName, types);
+			ResultSet rs = vc.getDbms().getDbmsConnection().getMetaData()
+					 .getTables(null,
+							    vc.getMeta().metaCatalogForDataCatalog(schemaName),
+							    vc.getMeta().getMetaNameTableForOriginalSchema(currentSchema.get()).getTableName(),
+							    types);
 			if (!rs.next()) return false;
 			else return true;
 		} catch (SQLException e) {

@@ -2,12 +2,8 @@ package edu.umich.verdict.relation;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-
-import org.apache.commons.lang3.tuple.Pair;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
@@ -21,7 +17,6 @@ import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.ConstantExpr;
 import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.relation.expr.FuncExpr;
-import edu.umich.verdict.util.TypeCasting;
 import edu.umich.verdict.util.VerdictLogger;
 
 /**
@@ -74,7 +69,7 @@ public class ApproxSingleRelation extends ApproxRelation {
 		return new ApproxSingleRelation(
 				r.vc,
 				r.getTableName(), 
-				new SampleParam(r.getTableName(), "nosample", 1.0, null),
+				new SampleParam(r.vc, r.getTableName(), "nosample", 1.0, null),
 				new SampleSizeInfo(-1, -1));
 	}
 	
@@ -198,7 +193,7 @@ public class ApproxSingleRelation extends ApproxRelation {
 
 	@Override
 	protected Map<String, String> tableSubstitution() {
-		Map<String, String> s = ImmutableMap.of(param.originalTable.tableName, alias);
+		Map<String, String> s = ImmutableMap.of(param.originalTable.getTableName(), alias);
 		return s;
 	}
 	

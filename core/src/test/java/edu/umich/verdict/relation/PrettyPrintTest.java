@@ -1,7 +1,5 @@
 package edu.umich.verdict.relation;
 
-import static org.junit.Assert.*;
-
 import org.junit.Test;
 
 public class PrettyPrintTest {

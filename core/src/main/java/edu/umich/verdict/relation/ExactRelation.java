@@ -7,10 +7,10 @@ import java.util.Map;
 
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
-import org.antlr.v4.runtime.ParserRuleContext;
-import org.antlr.v4.runtime.misc.Interval;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
+
+import com.google.common.base.Optional;
 
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.VerdictSQLBaseVisitor;
@@ -34,8 +34,6 @@ import edu.umich.verdict.relation.expr.SelectElem;
 import edu.umich.verdict.util.StackTraceReader;
 import edu.umich.verdict.util.TypeCasting;
 import edu.umich.verdict.util.VerdictLogger;
-
-import com.google.common.base.Optional;
 
 /**
  * Base class for exact relations (and any relational operations on them).
@@ -360,7 +358,7 @@ public abstract class ExactRelation extends Relation {
 	protected String sourceExpr(ExactRelation source) {
 		if (source instanceof SingleRelation) {
 			SingleRelation asource = (SingleRelation) source;
-			String tableName = asource.getTableName().tableName;
+			TableUniqueName tableName = asource.getTableName();
 			String alias = asource.getAliasName();
 			return String.format("%s AS %s", tableName, alias);
 		} else if (source instanceof JoinedRelation) {
@@ -453,7 +451,7 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
 			
 				// search for join conditions
 				if (r1 instanceof SingleRelation && where != null) {
-					String n = ((SingleRelation) r1).getTableName().tableName;
+					String n = ((SingleRelation) r1).getTableName().getTableName();
 					j = where.searchForJoinCondition(joinedTableName, n);
 					if (j == null && r1.getAliasName() != null) {
 						j = where.searchForJoinCondition(joinedTableName, r1.getAliasName());
@@ -476,7 +474,7 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
 			
 			// add both table names and the alias to joined table names
 			if (r1 instanceof SingleRelation) {
-				joinedTableName.add(((SingleRelation) r1).getTableName().tableName);
+				joinedTableName.add(((SingleRelation) r1).getTableName().getTableName());
 			}
 			if (r1.getAliasName() != null) {
 				joinedTableName.add(r1.getAliasName());

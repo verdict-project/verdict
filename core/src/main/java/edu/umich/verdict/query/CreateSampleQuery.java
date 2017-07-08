@@ -1,5 +1,9 @@
 package edu.umich.verdict.query;
 
+import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.apache.commons.lang3.tuple.Pair;
@@ -16,11 +20,6 @@ import edu.umich.verdict.relation.ApproxSingleRelation;
 import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.FuncExpr;
 import edu.umich.verdict.util.VerdictLogger;
-
-
-import java.sql.ResultSet;
-import java.util.ArrayList;
-import java.util.List;
 
 public class CreateSampleQuery extends Query {
 	
@@ -40,7 +39,7 @@ public class CreateSampleQuery extends Query {
 		String sampleType = visitor.getSampleType();
 		List<String> columnNames = visitor.getColumnNames();
 		
-		buildSamples(new SampleParam(TableUniqueName.uname(vc, tableName), sampleType, samplingRatio, columnNames));
+		buildSamples(new SampleParam(vc, TableUniqueName.uname(vc, tableName), sampleType, samplingRatio, columnNames));
 		
 		return null;
 	}
@@ -56,6 +55,8 @@ public class CreateSampleQuery extends Query {
 	 * @throws VerdictException 
 	 */
 	protected void buildSamples(SampleParam param) throws VerdictException {
+		vc.getDbms().createDatabase(param.sampleTableName().getSchemaName());
+		
 		if (param.sampleType.equals("uniform")) {
 			createUniformRandomSample(param);
 		} else if (param.sampleType.equals("universe")) {
@@ -80,7 +81,7 @@ public class CreateSampleQuery extends Query {
 			}
 		} else {	// recommended
 			TableUniqueName originalTable = param.originalTable;
-			SampleParam ursParam = new SampleParam(originalTable, "uniform", param.samplingRatio, new ArrayList<String>()); 
+			SampleParam ursParam = new SampleParam(vc, originalTable, "uniform", param.samplingRatio, new ArrayList<String>()); 
 			buildSamples(ursParam);		// build a uniform sample
 			
 			List<Object> aggs = new ArrayList<Object>();
@@ -101,18 +102,18 @@ public class CreateSampleQuery extends Query {
 				if (cd > sampleSize * 0.01 && universeCounter < 10) {
 					List<String> sampleOn = new ArrayList<String>();
 					sampleOn.add(cname);
-					buildSamples(new SampleParam(originalTable, "universe", param.samplingRatio, sampleOn));		// build a universe sample
+					buildSamples(new SampleParam(vc, originalTable, "universe", param.samplingRatio, sampleOn));		// build a universe sample
 					universeCounter += 1;
 				} else if (stratifiedCounter < 10){
 					List<String> sampleOn = new ArrayList<String>();
 					sampleOn.add(cname);
-					buildSamples(new SampleParam(originalTable, "stratified", param.samplingRatio, sampleOn));		// build a stratified sample
+					buildSamples(new SampleParam(vc, originalTable, "stratified", param.samplingRatio, sampleOn));		// build a stratified sample
 					stratifiedCounter += 1;
 				}
 			}
 		}
 		
-		vc.getMeta().refreshSampleInfo(param.originalTable.schemaName);
+		vc.getMeta().refreshSampleInfo(param.originalTable.getSchemaName());
 	}
 	
 	protected void createUniformRandomSample(SampleParam param) throws VerdictException {

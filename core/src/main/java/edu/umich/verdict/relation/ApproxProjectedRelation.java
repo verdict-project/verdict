@@ -6,16 +6,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.common.collect.ImmutableMap;
-
 import edu.umich.verdict.VerdictContext;
-import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.Expr;
-import edu.umich.verdict.relation.expr.ExprVisitor;
 import edu.umich.verdict.relation.expr.FuncExpr;
 import edu.umich.verdict.relation.expr.SelectElem;
-import edu.umich.verdict.util.VerdictLogger;
 
 public class ApproxProjectedRelation extends ApproxRelation {
 	

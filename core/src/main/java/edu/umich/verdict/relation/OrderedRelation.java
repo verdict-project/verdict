@@ -1,9 +1,7 @@
 package edu.umich.verdict.relation;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import com.google.common.base.Joiner;
 
@@ -12,7 +10,6 @@ import edu.umich.verdict.datatypes.SampleParam;
 import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.relation.expr.ColNameExpr;
-import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.relation.expr.OrderByExpr;
 import edu.umich.verdict.relation.expr.SelectElem;
 

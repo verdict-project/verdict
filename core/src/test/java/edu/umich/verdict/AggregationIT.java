@@ -42,7 +42,7 @@ public class AggregationIT extends BaseIT {
 		List<List<Object>> expected = collectResult(stmt.executeQuery(sql));
 		
 		TableUniqueName originalTable = TableUniqueName.uname(vc, tableName);
-		ApproxRelation r = ApproxSingleRelation.from(vc, new SampleParam(originalTable, sampleType, samplingRatio, sampleColumns));
+		ApproxRelation r = ApproxSingleRelation.from(vc, new SampleParam(vc, originalTable, sampleType, samplingRatio, sampleColumns));
 		List<List<Object>> actual = collectResult(r.count().collectResultSet());
 		
 		printTestCase(sql, expected, actual);
@@ -55,7 +55,7 @@ public class AggregationIT extends BaseIT {
 		List<List<Object>> expected = collectResult(stmt.executeQuery(sql));
 		
 		TableUniqueName originalTable = TableUniqueName.uname(vc, tableName);
-		ApproxRelation r = ApproxSingleRelation.from(vc, new SampleParam(originalTable, sampleType, samplingRatio, sampleColumns));
+		ApproxRelation r = ApproxSingleRelation.from(vc, new SampleParam(vc, originalTable, sampleType, samplingRatio, sampleColumns));
 		List<List<Object>> actual = collectResult(r.groupby(groups).count().orderby(groups).collectResultSet());
 		
 		printTestCase(sql, expected, actual);
@@ -68,7 +68,7 @@ public class AggregationIT extends BaseIT {
 		List<List<Object>> expected = collectResult(stmt.executeQuery(sql));
 		
 		TableUniqueName originalTable = TableUniqueName.uname(vc, tableName);
-		ApproxRelation r = ApproxSingleRelation.from(vc, new SampleParam(originalTable, sampleType, samplingRatio, sampleColumns));
+		ApproxRelation r = ApproxSingleRelation.from(vc, new SampleParam(vc, originalTable, sampleType, samplingRatio, sampleColumns));
 		List<List<Object>> actual = collectResult(r.avg(aggCol).collectResultSet());
 		
 		printTestCase(sql, expected, actual);
@@ -81,7 +81,7 @@ public class AggregationIT extends BaseIT {
 		List<List<Object>> expected = collectResult(stmt.executeQuery(sql));
 		
 		TableUniqueName originalTable = TableUniqueName.uname(vc, tableName);
-		ApproxRelation r = ApproxSingleRelation.from(vc, new SampleParam(originalTable, sampleType, samplingRatio, sampleColumns));
+		ApproxRelation r = ApproxSingleRelation.from(vc, new SampleParam(vc, originalTable, sampleType, samplingRatio, sampleColumns));
 		List<List<Object>> actual = collectResult(r.groupby(groups).avg(aggCol).orderby(groups).collectResultSet());
 		
 		printTestCase(sql, expected, actual);
@@ -94,7 +94,7 @@ public class AggregationIT extends BaseIT {
 		List<List<Object>> expected = collectResult(stmt.executeQuery(sql));
 		
 		TableUniqueName originalTable = TableUniqueName.uname(vc, tableName);
-		ApproxRelation r = ApproxSingleRelation.from(vc, new SampleParam(originalTable, sampleType, samplingRatio, sampleColumns));
+		ApproxRelation r = ApproxSingleRelation.from(vc, new SampleParam(vc, originalTable, sampleType, samplingRatio, sampleColumns));
 		List<List<Object>> actual = collectResult(r.sum(aggCol).collectResultSet());
 		
 		printTestCase(sql, expected, actual);
@@ -107,7 +107,7 @@ public class AggregationIT extends BaseIT {
 		List<List<Object>> expected = collectResult(stmt.executeQuery(sql));
 		
 		TableUniqueName originalTable = TableUniqueName.uname(vc, tableName);
-		ApproxRelation r = ApproxSingleRelation.from(vc, new SampleParam(originalTable, sampleType, samplingRatio, sampleColumns));
+		ApproxRelation r = ApproxSingleRelation.from(vc, new SampleParam(vc, originalTable, sampleType, samplingRatio, sampleColumns));
 		List<List<Object>> actual = collectResult(r.groupby(groups).sum(aggCol).orderby(groups).collectResultSet());
 		
 		printTestCase(sql, expected, actual);
@@ -120,7 +120,7 @@ public class AggregationIT extends BaseIT {
 		List<List<Object>> expected = collectResult(stmt.executeQuery(sql));
 		
 		TableUniqueName originalTable = TableUniqueName.uname(vc, tableName);
-		ApproxRelation r = ApproxSingleRelation.from(vc, new SampleParam(originalTable, sampleType, samplingRatio, sampleColumns));
+		ApproxRelation r = ApproxSingleRelation.from(vc, new SampleParam(vc, originalTable, sampleType, samplingRatio, sampleColumns));
 		List<List<Object>> actual = collectResult(r.countDistinct(aggCol).collectResultSet());
 		
 		printTestCase(sql, expected, actual);
@@ -133,7 +133,7 @@ public class AggregationIT extends BaseIT {
 		List<List<Object>> expected = collectResult(stmt.executeQuery(sql));
 		
 		TableUniqueName originalTable = TableUniqueName.uname(vc, tableName);
-		ApproxRelation r = ApproxSingleRelation.from(vc, new SampleParam(originalTable, sampleType, samplingRatio, sampleColumns));
+		ApproxRelation r = ApproxSingleRelation.from(vc, new SampleParam(vc, originalTable, sampleType, samplingRatio, sampleColumns));
 		List<List<Object>> actual = collectResult(r.groupby(groups).countDistinct(aggCol).orderby(groups).collectResultSet());
 		
 		printTestCase(sql, expected, actual);

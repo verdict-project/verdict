@@ -9,7 +9,6 @@ import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
 
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
 
 import edu.umich.verdict.VerdictContext;
@@ -56,7 +55,7 @@ public class SingleRelation extends ExactRelation {
 	
 	@Override
 	protected String getSourceName() {
-		return (alias == null)? tableName.tableName : getAliasName();
+		return (alias == null)? tableName.getTableName() : getAliasName();
 	}
 	
 	/*
@@ -272,7 +271,7 @@ public class SingleRelation extends ExactRelation {
 	 */
 	
 	protected SampleParam asSampleParam() {
-		return new SampleParam(getTableName(), NOSAMPLE, 1.0, null);
+		return new SampleParam(vc, getTableName(), NOSAMPLE, 1.0, null);
 	}
 
 	@Override
@@ -281,7 +280,7 @@ public class SingleRelation extends ExactRelation {
 		List<String> columns = vc.getMeta().getColumnNames(table);
 		List<SelectElem> elems = new ArrayList<SelectElem>();
 		for (String c : columns) {
-			elems.add(new SelectElem(new ColNameExpr(c, table.tableName)));
+			elems.add(new SelectElem(new ColNameExpr(c, table.getTableName())));
 		}
 		return elems;
 	}
@@ -298,7 +297,7 @@ public class SingleRelation extends ExactRelation {
 		String samplingProbColName = samplingProbabilityColumnName();
 		for (String c : cols) {
 			if (c.equals(samplingProbColName)) {
-				samplingProbCols.add(new ColNameExpr(samplingProbColName, tableName.tableName));
+				samplingProbCols.add(new ColNameExpr(samplingProbColName, tableName.getTableName()));
 			}
 		}
 		return samplingProbCols;

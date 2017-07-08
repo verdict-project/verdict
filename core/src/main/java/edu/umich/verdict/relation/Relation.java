@@ -8,12 +8,10 @@ import java.util.List;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.ParserRuleContext;
-import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.misc.Interval;
 
 import com.google.common.base.Joiner;
 
-import edu.umich.verdict.VerdictConf;
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.VerdictSQLBaseVisitor;
 import edu.umich.verdict.VerdictSQLLexer;
@@ -24,7 +22,6 @@ import edu.umich.verdict.VerdictSQLParser.Search_conditionContext;
 import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.exceptions.VerdictUnexpectedMethodCall;
-import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.relation.expr.FuncExpr;
 import edu.umich.verdict.relation.expr.SelectElem;

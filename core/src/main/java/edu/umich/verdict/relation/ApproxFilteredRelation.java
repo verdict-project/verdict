@@ -1,22 +1,15 @@
 package edu.umich.verdict.relation;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.tuple.Pair;
 
-import com.google.common.collect.ImmutableMap;
-
 import edu.umich.verdict.VerdictContext;
-import edu.umich.verdict.datatypes.TableUniqueName;
-import edu.umich.verdict.exceptions.VerdictException;
-import edu.umich.verdict.relation.condition.AndCond;
 import edu.umich.verdict.relation.condition.CompCond;
 import edu.umich.verdict.relation.condition.Cond;
 import edu.umich.verdict.relation.condition.CondModifier;
-import edu.umich.verdict.relation.condition.OrCond;
 import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.relation.expr.ExprModifier;

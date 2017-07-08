@@ -1,6 +1,5 @@
 package edu.umich.verdict;
 
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -8,7 +7,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
 
 import edu.umich.verdict.exceptions.VerdictException;
-import edu.umich.verdict.util.ResultSetConversion;
 
 public class MiscIT extends BaseIT {
 

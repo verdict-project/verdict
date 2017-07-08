@@ -47,7 +47,7 @@ public class DbmsHive extends DbmsImpala {
 	
 	@Override
 	protected void justCreateStratifiedSampleTableof(SampleParam param) throws VerdictException {
-		SampleSizeInfo info = vc.getMeta().getSampleSizeOf(new SampleParam(param.originalTable, "uniform", null, new ArrayList<String>()));
+		SampleSizeInfo info = vc.getMeta().getSampleSizeOf(new SampleParam(vc, param.originalTable, "uniform", null, new ArrayList<String>()));
 		if (info == null) {
 			String msg = "A uniform random must first be created before creating a stratified sample.";
 			VerdictLogger.error(this, msg);

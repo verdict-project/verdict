@@ -1,10 +1,8 @@
 package edu.umich.verdict.relation.expr;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
-
-import edu.umich.verdict.relation.Relation;
 
 public class ExprTest {
 

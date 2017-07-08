@@ -1,6 +1,5 @@
 package edu.umich.verdict.relation;
 
-import java.sql.ResultSet;
 import java.util.Arrays;
 import java.util.List;
 
@@ -9,7 +8,6 @@ import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.datatypes.SampleParam;
 import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
-import edu.umich.verdict.util.ResultSetConversion;
 
 public class ApproxSqlTest {
 
@@ -30,7 +28,7 @@ public class ApproxSqlTest {
 		double samplingRatio = 0.1;
 		
 		TableUniqueName originalTable = TableUniqueName.uname(vc, tableName);
-		ApproxRelation r = ApproxSingleRelation.from(vc, new SampleParam(originalTable, sampleType, samplingRatio, sampleColumns));
+		ApproxRelation r = ApproxSingleRelation.from(vc, new SampleParam(vc, originalTable, sampleType, samplingRatio, sampleColumns));
 		r.avg(aggCol).collectResultSet();
 		
 		vc.destroy();

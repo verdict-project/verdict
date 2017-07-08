@@ -1,10 +1,5 @@
 package edu.umich.verdict.query;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.misc.Interval;

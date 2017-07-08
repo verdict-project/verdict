@@ -2,8 +2,6 @@ package edu.umich.verdict.relation.condition;
 
 import java.util.List;
 
-import edu.umich.verdict.VerdictContext;
-
 public class AndCond extends Cond {
 	
 	private Cond left;

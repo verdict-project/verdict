@@ -1,7 +1,5 @@
 package edu.umich.verdict.relation;
 
-import static org.junit.Assert.*;
-
 import java.util.Arrays;
 
 import org.junit.Test;
@@ -25,7 +23,7 @@ public class SubsamplingPartitionTest {
 		VerdictContext vc = new VerdictContext(conf);
 		
 		TableUniqueName orders = TableUniqueName.uname(vc, "orders");
-		SampleParam param = new SampleParam(orders, "uniform", 0.01, Arrays.<String>asList());
+		SampleParam param = new SampleParam(vc, orders, "uniform", 0.01, Arrays.<String>asList());
 		ExactRelation r = ApproxSingleRelation.from(vc, param).rewriteWithPartition();
 		
 		System.out.println(r.toSql());

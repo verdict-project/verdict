@@ -6,21 +6,13 @@ import java.util.List;
 import java.util.Map;
 
 import edu.umich.verdict.VerdictContext;
-import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
-import edu.umich.verdict.relation.condition.AndCond;
-import edu.umich.verdict.relation.condition.CompCond;
-import edu.umich.verdict.relation.condition.Cond;
-import edu.umich.verdict.relation.condition.CondModifier;
-import edu.umich.verdict.relation.condition.OrCond;
 import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.relation.expr.ExprModifier;
 import edu.umich.verdict.relation.expr.FuncExpr;
 import edu.umich.verdict.relation.expr.OrderByExpr;
 import edu.umich.verdict.relation.expr.SelectElem;
-import edu.umich.verdict.relation.expr.SubqueryExpr;
-import edu.umich.verdict.util.TypeCasting;
 import edu.umich.verdict.util.VerdictLogger;
 
 public abstract class ApproxRelation extends Relation {
@@ -40,7 +32,7 @@ public abstract class ApproxRelation extends Relation {
 			if (r.getAliasName() != null) {
 				return r.getAliasName();
 			} else {
-				return r.getSampleName().tableName;
+				return r.getSampleName().getTableName();
 			}
 		} else {
 			return this.getAliasName();

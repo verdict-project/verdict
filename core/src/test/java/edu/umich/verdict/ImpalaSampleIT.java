@@ -1,15 +1,11 @@
 package edu.umich.verdict;
 
-import static org.junit.Assert.*;
-
 import java.io.FileNotFoundException;
-import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Test;
 
 import edu.umich.verdict.exceptions.VerdictException;
 
@@ -37,6 +33,12 @@ public class ImpalaSampleIT extends SampleIT {
 	@AfterClass
 	public static void destroy() throws VerdictException {
 		vc.destroy();
+	}
+
+	@Override
+	public void showSampleTest() throws VerdictException {
+		// TODO Auto-generated method stub
+		super.showSampleTest();
 	}
 
 	@Override

@@ -210,7 +210,7 @@ public class JoinedRelation extends ExactRelation {
 		for (SampleParam param : set) {
 			Set<String> paramCols = new HashSet<String>(param.columnNames);
 			if (param.sampleType.equals("universe")
-					&& param.originalTable.tableName.equals(t)
+					&& param.originalTable.getTableName().equals(t)
 					&& paramCols.equals(jc)) {
 				return true;
 			}

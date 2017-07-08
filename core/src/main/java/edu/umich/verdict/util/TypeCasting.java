@@ -9,9 +9,6 @@ import java.util.Map;
 
 import org.apache.commons.lang3.tuple.Pair;
 
-import com.google.common.base.Joiner;
-
-import edu.umich.verdict.VerdictConf;
 import edu.umich.verdict.VerdictContext;
 
 public class TypeCasting {

@@ -11,7 +11,6 @@ import edu.umich.verdict.VerdictSQLLexer;
 import edu.umich.verdict.VerdictSQLParser;
 import edu.umich.verdict.VerdictSQLParser.Search_conditionContext;
 import edu.umich.verdict.relation.expr.Expr;
-import edu.umich.verdict.util.VerdictLogger;
 
 public abstract class Cond {
 

@@ -4,10 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang3.tuple.Pair;
-
 import edu.umich.verdict.VerdictContext;
-import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.relation.expr.FuncExpr;

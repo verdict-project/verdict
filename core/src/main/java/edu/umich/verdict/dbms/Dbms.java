@@ -1,15 +1,5 @@
 package edu.umich.verdict.dbms;
 
-import edu.umich.verdict.datatypes.SampleParam;
-import edu.umich.verdict.VerdictContext;
-import edu.umich.verdict.datatypes.TableUniqueName;
-import edu.umich.verdict.datatypes.VerdictResultSet;
-import edu.umich.verdict.exceptions.VerdictException;
-import edu.umich.verdict.relation.ExactRelation;
-import edu.umich.verdict.relation.SingleRelation;
-import edu.umich.verdict.util.StackTraceReader;
-import edu.umich.verdict.util.VerdictLogger;
-
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
@@ -26,6 +16,16 @@ import java.util.regex.Pattern;
 import org.apache.commons.lang3.tuple.Pair;
 
 import com.google.common.base.Optional;
+
+import edu.umich.verdict.VerdictContext;
+import edu.umich.verdict.datatypes.SampleParam;
+import edu.umich.verdict.datatypes.TableUniqueName;
+import edu.umich.verdict.datatypes.VerdictResultSet;
+import edu.umich.verdict.exceptions.VerdictException;
+import edu.umich.verdict.relation.ExactRelation;
+import edu.umich.verdict.relation.SingleRelation;
+import edu.umich.verdict.util.StackTraceReader;
+import edu.umich.verdict.util.VerdictLogger;
 
 /**
  * This class is responsible for choosing a right DBMS class.
@@ -220,6 +220,15 @@ public class Dbms {
 		}
 	}
 	
+	public void createDatabase(String database) throws VerdictException {
+		createCatalog(database);
+	}
+	
+	public void createCatalog(String catalog) throws VerdictException {
+		String sql = String.format("create database if not exists %s", catalog);
+		executeUpdate(sql);
+	}
+	
 	/**
 	 * changes to another database (or equivalently, schema). This is conceptually equal to the use statement in MySQL.
 	 * @throws VerdictException
@@ -386,7 +395,7 @@ public class Dbms {
 		TableUniqueName originalTableName = param.originalTable;
 		String sql = String.format("DELETE FROM %s WHERE originalschemaname = \"%s\" AND originaltablename = \"%s\" "
 				+ "AND sampletype = \"%s\" AND samplingratio = %s AND columnnames = \"%s\" ",
-				metaNameTableName, originalTableName.schemaName, originalTableName.tableName,
+				metaNameTableName, originalTableName.getSchemaName(), originalTableName.getTableName(),
 				param.sampleType, samplingRatioToString(param.samplingRatio), columnNameListToString(param.columnNames));
 		executeUpdate(sql);
 	}
@@ -395,7 +404,7 @@ public class Dbms {
 		TableUniqueName originalTableName = param.originalTable;
 		TableUniqueName sampleTableName = param.sampleTableName();
 		String sql = String.format("INSERT INTO %s VALUES (\"%s\", \"%s\", \"%s\", \"%s\", \"%s\", %s, \"%s\")", metaNameTableName,
-				originalTableName.schemaName, originalTableName.tableName, sampleTableName.schemaName, sampleTableName.tableName,
+				originalTableName.getSchemaName(), originalTableName.getTableName(), sampleTableName.getSchemaName(), sampleTableName.getTableName(),
 				param.sampleType, samplingRatioToString(param.samplingRatio), columnNameListToString(param.columnNames));
 		executeUpdate(sql);
 	}
@@ -408,14 +417,14 @@ public class Dbms {
 	public void deleteSampleSizeEntryFromDBMS(SampleParam param, TableUniqueName metaSizeTableName) throws VerdictException {
 		TableUniqueName sampleTableName = param.sampleTableName();
 		String sql = String.format("DELETE FROM %s WHERE schemaname = \"%s\" AND tablename = \"%s\" ",
-				metaSizeTableName, sampleTableName.schemaName, sampleTableName.tableName);
+				metaSizeTableName, sampleTableName.getSchemaName(), sampleTableName.getTableName());
 		executeUpdate(sql);
 	}
 	
 	protected void insertSampleSizeEntryIntoDBMS(SampleParam param,	long sampleSize, long originalTableSize, TableUniqueName metaSizeTableName) throws VerdictException {
 		TableUniqueName sampleTableName = param.sampleTableName();
 		String sql = String.format("INSERT INTO %s VALUES (\"%s\", \"%s\", %d, %d)",
-				metaSizeTableName, sampleTableName.schemaName, sampleTableName.tableName, sampleSize, originalTableSize);
+				metaSizeTableName, sampleTableName.getSchemaName(), sampleTableName.getTableName(), sampleSize, originalTableSize);
 		executeUpdate(sql);
 	}
 	
@@ -489,7 +498,7 @@ public class Dbms {
 	public ResultSet describeTable(TableUniqueName tableUniqueName)  throws VerdictException {
 		try {
 			ResultSet rs = conn.getMetaData().getColumns(
-					tableUniqueName.schemaName, null, tableUniqueName.tableName, "%");
+					tableUniqueName.getSchemaName(), null, tableUniqueName.getTableName(), "%");
 			Map<Integer, Integer> columnMap = new HashMap<Integer, Integer>();
 			columnMap.put(1, 4);	// column name
 			columnMap.put(2, 6); 	// data type name
@@ -530,8 +539,11 @@ public class Dbms {
 	public boolean doesMetaTablesExist(String schemaName) throws VerdictException {
 		String[] types = {"TABLE"};
 		try {
-			ResultSet rs = vc.getDbms().getDbmsConnection().getMetaData().getTables(
-					null, schemaName, vc.getMeta().getMetaNameTableName(currentSchema.get()).tableName, types);
+			ResultSet rs = vc.getDbms().getDbmsConnection().getMetaData()
+							 .getTables(null,
+									    vc.getMeta().metaCatalogForDataCatalog(schemaName),
+									    vc.getMeta().getMetaNameTableForOriginalSchema(currentSchema.get()).getTableName(),
+									    types);
 			if (!rs.next()) return false;
 			else return true;
 		} catch (SQLException e) {

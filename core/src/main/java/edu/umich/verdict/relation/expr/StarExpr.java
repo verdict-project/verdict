@@ -1,8 +1,5 @@
 package edu.umich.verdict.relation.expr;
 
-import edu.umich.verdict.VerdictContext;
-import edu.umich.verdict.exceptions.VerdictException;
-
 public class StarExpr extends Expr {
 
 	public StarExpr() {}

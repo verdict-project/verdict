@@ -2,7 +2,6 @@ package edu.umich.verdict.datatypes;
 
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import java.util.List;
 import java.util.Map;
 
 import edu.umich.verdict.util.TypeCasting;

@@ -5,10 +5,24 @@ import com.google.common.base.Optional;
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.util.NameHelpers;
 
-public class TableUniqueName implements Comparable {
-	public final String schemaName;
-	public final String tableName;
+public class TableUniqueName implements Comparable<TableUniqueName> {
 	
+	private final String schemaName;
+	
+	private final String tableName;
+	
+	public String getDatabaseName() {
+		return getSchemaName();
+	}
+	
+	public String getSchemaName() {
+		return schemaName;
+	}
+
+	public String getTableName() {
+		return tableName;
+	}
+
 	public TableUniqueName(String schemaName, String tableName) {
 		this.schemaName = (schemaName != null)? schemaName.toLowerCase() : schemaName;
 		this.tableName = (tableName != null)? tableName.toLowerCase() : tableName;
@@ -51,17 +65,11 @@ public class TableUniqueName implements Comparable {
 		return fullyQuantifiedName(schemaName, tableName);
 	}
 
-	@Override
-	public int compareTo(Object another) {
-		if (another instanceof TableUniqueName) {
-			TableUniqueName t = (TableUniqueName) another;
-			if (this.schemaName.compareTo(t.schemaName) == 0) {
-				return this.tableName.compareTo(t.tableName);
-			} else {
-				return this.schemaName.compareTo(t.schemaName);
-			}
+	public int compareTo(TableUniqueName another) {
+		if (this.schemaName.compareTo(another.schemaName) == 0) {
+			return this.tableName.compareTo(another.tableName);
 		} else {
-			return 0;
+			return this.schemaName.compareTo(another.schemaName);
 		}
 	}
 }

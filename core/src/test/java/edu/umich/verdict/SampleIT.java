@@ -1,15 +1,21 @@
 package edu.umich.verdict;
 
-import static org.junit.Assert.*;
-
+import java.sql.ResultSet;
 import java.util.List;
 
 import org.junit.Test;
 
 import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
+import edu.umich.verdict.util.ResultSetConversion;
 
 public class SampleIT extends BaseIT {
+	
+	@Test
+	public void showSampleTest() throws VerdictException {
+		ResultSet rs = vc.executeQuery("show samples");
+		ResultSetConversion.printResultSet(rs);
+	}
 
 	@Test
 	public void createRecommendedSampleTest() throws VerdictException {

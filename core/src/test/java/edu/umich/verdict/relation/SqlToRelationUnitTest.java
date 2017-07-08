@@ -1,23 +1,16 @@
 package edu.umich.verdict.relation;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 
 import java.io.FileNotFoundException;
-import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.Arrays;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.google.common.base.Joiner;
-
 import edu.umich.verdict.VerdictConf;
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.exceptions.VerdictException;
-import edu.umich.verdict.relation.expr.SelectElem;
-import edu.umich.verdict.util.StackTraceReader;
 
 public class SqlToRelationUnitTest {
 	

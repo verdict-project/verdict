@@ -1,13 +1,11 @@
 package edu.umich.verdict.relation.expr;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
-import org.apache.commons.lang3.tuple.Pair;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -15,7 +13,6 @@ import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.VerdictSQLBaseVisitor;
 import edu.umich.verdict.VerdictSQLLexer;
 import edu.umich.verdict.VerdictSQLParser;
-import edu.umich.verdict.exceptions.VerdictException;
 
 public class FuncExpr extends Expr {
 	

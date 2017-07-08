@@ -54,7 +54,7 @@ public class ColNameExpr extends Expr {
 		if (tab == null) {
 			return String.format("%s", quote(col));
 		} else {
-			return String.format("%s.%s", quote(tab), quote(col));
+			return String.format("%s.%s", tab, quote(col));
 		}
 	}
 	

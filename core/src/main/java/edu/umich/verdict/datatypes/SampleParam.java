@@ -5,15 +5,55 @@ import java.util.List;
 
 import com.google.common.base.Joiner;
 
+import edu.umich.verdict.VerdictContext;
+
 
 public class SampleParam implements Comparable<SampleParam> {
 
-	public TableUniqueName originalTable;
-	public String sampleType;
-	public Double samplingRatio;
-	public List<String> columnNames;
+	private VerdictContext vc;
 	
-	public SampleParam(TableUniqueName originalTable, String sampleType, Double samplingRatio, List<String> columnNames) {
+	public TableUniqueName originalTable;
+	
+	public String sampleType;
+	
+	public Double samplingRatio;
+	
+	public List<String> columnNames;
+
+	public TableUniqueName getOriginalTable() {
+		return originalTable;
+	}
+
+	public void setOriginalTable(TableUniqueName originalTable) {
+		this.originalTable = originalTable;
+	}
+
+	public String getSampleType() {
+		return sampleType;
+	}
+
+	public void setSampleType(String sampleType) {
+		this.sampleType = sampleType;
+	}
+
+	public Double getSamplingRatio() {
+		return samplingRatio;
+	}
+
+	public void setSamplingRatio(Double samplingRatio) {
+		this.samplingRatio = samplingRatio;
+	}
+
+	public List<String> getColumnNames() {
+		return columnNames;
+	}
+
+	public void setColumnNames(List<String> columnNames) {
+		this.columnNames = columnNames;
+	}
+
+	public SampleParam(VerdictContext vc, TableUniqueName originalTable, String sampleType, Double samplingRatio, List<String> columnNames) {
+		this.vc = vc;
 		this.originalTable = originalTable;
 		this.sampleType = sampleType;
 		this.samplingRatio = samplingRatio;
@@ -30,7 +70,7 @@ public class SampleParam implements Comparable<SampleParam> {
 	
 	@Override
 	public String toString() {
-		return String.format("(%s,%s,%.2f,%s)", originalTable.tableName, sampleType, samplingRatio, colNamesInString());
+		return String.format("(%s,%s,%.2f,%s)", originalTable.getTableName(), sampleType, samplingRatio, colNamesInString());
 	}
 	
 	@Override
@@ -53,8 +93,8 @@ public class SampleParam implements Comparable<SampleParam> {
 		for (String n : columnNames) colNames.append(n);
 		
 		return TableUniqueName.uname(
-				originalTable.schemaName,
-				String.format("vs_%s_%s_%s", originalTable.tableName, typeShortName,
+				vc.getMeta().metaCatalogForDataCatalog(originalTable.getSchemaName()),
+				String.format("vs_%s_%s_%s", originalTable.getTableName(), typeShortName,
 							  String.format("%.4f", samplingRatio).replace('.', '_'))
 				 + ((colNames.length() > 0)? colNames.toString() : ""));
 	}
@@ -72,6 +112,6 @@ public class SampleParam implements Comparable<SampleParam> {
 
 	@Override
 	public int compareTo(SampleParam o) {
-		return originalTable.compareTo(o);
+		return originalTable.compareTo(o.originalTable);
 	}
 }
