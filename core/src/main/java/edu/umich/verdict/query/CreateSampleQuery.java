@@ -4,13 +4,10 @@ import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.antlr.v4.runtime.CharStreams;
-import org.antlr.v4.runtime.CommonTokenStream;
 import org.apache.commons.lang3.tuple.Pair;
 
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.VerdictSQLBaseVisitor;
-import edu.umich.verdict.VerdictSQLLexer;
 import edu.umich.verdict.VerdictSQLParser;
 import edu.umich.verdict.VerdictSQLParser.Column_nameContext;
 import edu.umich.verdict.datatypes.SampleParam;
@@ -19,6 +16,7 @@ import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.relation.ApproxSingleRelation;
 import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.FuncExpr;
+import edu.umich.verdict.util.StringManupulations;
 import edu.umich.verdict.util.VerdictLogger;
 
 public class CreateSampleQuery extends Query {
@@ -29,8 +27,7 @@ public class CreateSampleQuery extends Query {
 	
 	@Override
 	public ResultSet compute() throws VerdictException {
-		VerdictSQLLexer l = new VerdictSQLLexer(CharStreams.fromString(queryString));
-		VerdictSQLParser p = new VerdictSQLParser(new CommonTokenStream(l));
+		VerdictSQLParser p = StringManupulations.parserOf(queryString);
 		CreateSampleStatementVisitor visitor = new CreateSampleStatementVisitor();
 		visitor.visit(p.create_sample_statement());
 		

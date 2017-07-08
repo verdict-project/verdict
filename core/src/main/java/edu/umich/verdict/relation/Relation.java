@@ -5,8 +5,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.antlr.v4.runtime.CharStreams;
-import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.misc.Interval;
 
@@ -14,7 +13,6 @@ import com.google.common.base.Joiner;
 
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.VerdictSQLBaseVisitor;
-import edu.umich.verdict.VerdictSQLLexer;
 import edu.umich.verdict.VerdictSQLParser;
 import edu.umich.verdict.VerdictSQLParser.ExpressionContext;
 import edu.umich.verdict.VerdictSQLParser.Join_partContext;
@@ -27,6 +25,7 @@ import edu.umich.verdict.relation.expr.FuncExpr;
 import edu.umich.verdict.relation.expr.SelectElem;
 import edu.umich.verdict.util.ResultSetConversion;
 import edu.umich.verdict.util.StackTraceReader;
+import edu.umich.verdict.util.StringManupulations;
 import edu.umich.verdict.util.TypeCasting;
 import edu.umich.verdict.util.VerdictLogger;
 
@@ -167,15 +166,7 @@ public abstract class Relation {
 	}
 
 	public static String prettyfySql(String sql) {
-		VerdictSQLLexer l = new VerdictSQLLexer(CharStreams.fromString(sql));
-		
-//		for (Token token = l.nextToken();
-//				token.getType() != Token.EOF;
-//				token = l.nextToken()) {
-//			System.out.println(token.getType());
-//		}
-		
-		VerdictSQLParser p = new VerdictSQLParser(new CommonTokenStream(l));
+		VerdictSQLParser p = StringManupulations.parserOf(sql);
 		PrettyPrintVisitor r = new PrettyPrintVisitor(sql);
 		return r.visit(p.verdict_statement());
 	}
@@ -645,6 +636,6 @@ class PrettyPrintVisitor extends VerdictSQLBaseVisitor<String> {
 		int a = ctx.start.getStartIndex();
 	    int b = ctx.stop.getStopIndex();
 	    Interval interval = new Interval(a,b);
-	    return CharStreams.fromString(sql).getText(interval);
+	    return (new ANTLRInputStream(sql)).getText(interval);
 	}
 }

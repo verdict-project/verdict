@@ -1,14 +1,11 @@
 package edu.umich.verdict.relation.expr;
 
-import org.antlr.v4.runtime.CharStreams;
-import org.antlr.v4.runtime.CommonTokenStream;
-
 import edu.umich.verdict.VerdictConf;
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.VerdictSQLBaseVisitor;
-import edu.umich.verdict.VerdictSQLLexer;
 import edu.umich.verdict.VerdictSQLParser;
 import edu.umich.verdict.exceptions.VerdictException;
+import edu.umich.verdict.util.StringManupulations;
 
 public abstract class Expr {
 	
@@ -29,8 +26,7 @@ public abstract class Expr {
 	}
 	
 	public static Expr from(VerdictContext vc, String expr) {
-		VerdictSQLLexer l = new VerdictSQLLexer(CharStreams.fromString(expr));
-		VerdictSQLParser p = new VerdictSQLParser(new CommonTokenStream(l));
+		VerdictSQLParser p = StringManupulations.parserOf(expr);
 		return from(vc, p.expression());
 	}
 	

@@ -2,23 +2,19 @@ package edu.umich.verdict.relation.condition;
 
 import java.util.List;
 
-import org.antlr.v4.runtime.CharStreams;
-import org.antlr.v4.runtime.CommonTokenStream;
-
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.VerdictSQLBaseVisitor;
-import edu.umich.verdict.VerdictSQLLexer;
 import edu.umich.verdict.VerdictSQLParser;
 import edu.umich.verdict.VerdictSQLParser.Search_conditionContext;
 import edu.umich.verdict.relation.expr.Expr;
+import edu.umich.verdict.util.StringManupulations;
 
 public abstract class Cond {
 
 	public Cond() {}
 	
 	public static Cond from(String cond) {
-		VerdictSQLLexer l = new VerdictSQLLexer(CharStreams.fromString(cond));
-		VerdictSQLParser p = new VerdictSQLParser(new CommonTokenStream(l));
+		VerdictSQLParser p = StringManupulations.parserOf(cond);
 		return from(p.search_condition());
 	}
 	

@@ -2,7 +2,7 @@ package edu.umich.verdict.query;
 
 import java.sql.ResultSet;
 
-import org.antlr.v4.runtime.CharStreams;
+import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 
 import edu.umich.verdict.VerdictContext;
@@ -29,7 +29,7 @@ public class CreateViewAsSelectQuery extends Query {
 	}
 
 	private String rewriteQuery(final String query) {
-		VerdictSQLLexer l = new VerdictSQLLexer(CharStreams.fromString(query));
+		VerdictSQLLexer l = new VerdictSQLLexer(new ANTLRInputStream(query));
 		VerdictSQLParser p = new VerdictSQLParser(new CommonTokenStream(l));
 		
 		SelectStatementBaseRewriter visitor = new SelectStatementBaseRewriter(query) {

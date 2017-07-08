@@ -3,15 +3,12 @@ package edu.umich.verdict.relation.expr;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.antlr.v4.runtime.CharStreams;
-import org.antlr.v4.runtime.CommonTokenStream;
-
-import edu.umich.verdict.VerdictSQLLexer;
 import edu.umich.verdict.VerdictSQLParser;
 import edu.umich.verdict.VerdictSQLParser.Case_exprContext;
 import edu.umich.verdict.VerdictSQLParser.ExpressionContext;
 import edu.umich.verdict.VerdictSQLParser.Search_conditionContext;
 import edu.umich.verdict.relation.condition.Cond;
+import edu.umich.verdict.util.StringManupulations;
 import edu.umich.verdict.util.VerdictLogger;
 
 /**
@@ -37,8 +34,7 @@ public class CaseExpr extends Expr {
 	}
 	
 	public static CaseExpr from(String expr) {
-		VerdictSQLLexer l = new VerdictSQLLexer(CharStreams.fromString(expr));
-		VerdictSQLParser p = new VerdictSQLParser(new CommonTokenStream(l));
+		VerdictSQLParser p = StringManupulations.parserOf(expr);
 		return from(p.case_expr());
 	}
 	

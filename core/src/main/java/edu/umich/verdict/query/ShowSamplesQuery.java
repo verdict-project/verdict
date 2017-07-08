@@ -5,7 +5,6 @@ import java.sql.ResultSet;
 import com.google.common.base.Optional;
 
 import edu.umich.verdict.VerdictContext;
-import edu.umich.verdict.dbms.Dbms;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.relation.ExactRelation;
 import edu.umich.verdict.relation.Relation;

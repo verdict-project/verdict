@@ -1,11 +1,16 @@
 package edu.umich.verdict.util;
 
+import org.antlr.v4.runtime.ANTLRInputStream;
+import org.antlr.v4.runtime.CommonTokenStream;
+
 import com.google.common.base.Optional;
 
 import edu.umich.verdict.VerdictContext;
+import edu.umich.verdict.VerdictSQLLexer;
+import edu.umich.verdict.VerdictSQLParser;
 import edu.umich.verdict.datatypes.TableUniqueName;
 
-public class NameHelpers {
+public class StringManupulations {
 	
 	public static int viewNameId = 0;
 	
@@ -93,4 +98,9 @@ public class NameHelpers {
 		else 				 return  schema.get() + "." + tableNameOfTableName(originalTableName);
 	}
 	
+	public static VerdictSQLParser parserOf(String text) {
+		VerdictSQLLexer l = new VerdictSQLLexer(new ANTLRInputStream(text));
+		VerdictSQLParser p = new VerdictSQLParser(new CommonTokenStream(l));
+		return p;
+	}
 }

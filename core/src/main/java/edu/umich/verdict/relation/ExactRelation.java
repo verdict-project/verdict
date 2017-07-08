@@ -5,8 +5,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import org.antlr.v4.runtime.CharStreams;
-import org.antlr.v4.runtime.CommonTokenStream;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 
@@ -14,7 +12,6 @@ import com.google.common.base.Optional;
 
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.VerdictSQLBaseVisitor;
-import edu.umich.verdict.VerdictSQLLexer;
 import edu.umich.verdict.VerdictSQLParser;
 import edu.umich.verdict.VerdictSQLParser.Group_by_itemContext;
 import edu.umich.verdict.VerdictSQLParser.Join_partContext;
@@ -32,6 +29,7 @@ import edu.umich.verdict.relation.expr.FuncExpr;
 import edu.umich.verdict.relation.expr.OrderByExpr;
 import edu.umich.verdict.relation.expr.SelectElem;
 import edu.umich.verdict.util.StackTraceReader;
+import edu.umich.verdict.util.StringManupulations;
 import edu.umich.verdict.util.TypeCasting;
 import edu.umich.verdict.util.VerdictLogger;
 
@@ -47,8 +45,7 @@ public abstract class ExactRelation extends Relation {
 	}
 	
 	public static ExactRelation from(VerdictContext vc, String sql) {
-		VerdictSQLLexer l = new VerdictSQLLexer(CharStreams.fromString(sql));
-		VerdictSQLParser p = new VerdictSQLParser(new CommonTokenStream(l));
+		VerdictSQLParser p = StringManupulations.parserOf(sql);
 		RelationGen g = new RelationGen(vc);
 		return g.visit(p.select_statement());
 	}
@@ -93,8 +90,7 @@ public abstract class ExactRelation extends Relation {
 	}
 	
 	public ExactRelation select(String elems) {
-		VerdictSQLLexer l = new VerdictSQLLexer(CharStreams.fromString(elems));
-		VerdictSQLParser p = new VerdictSQLParser(new CommonTokenStream(l));
+		VerdictSQLParser p = StringManupulations.parserOf(elems);
 		return select(p.select_list());
 	}
 	

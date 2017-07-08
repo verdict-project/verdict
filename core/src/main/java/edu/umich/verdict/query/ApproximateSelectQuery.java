@@ -6,18 +6,16 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-import org.antlr.v4.runtime.CharStreams;
-import org.antlr.v4.runtime.CommonTokenStream;
 import org.apache.commons.lang3.tuple.Pair;
 
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.VerdictSQLBaseVisitor;
-import edu.umich.verdict.VerdictSQLLexer;
 import edu.umich.verdict.VerdictSQLParser;
 import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.datatypes.VerdictApproxResultMeta;
 import edu.umich.verdict.datatypes.VerdictResultSet;
 import edu.umich.verdict.exceptions.VerdictException;
+import edu.umich.verdict.util.StringManupulations;
 import edu.umich.verdict.util.TypeCasting;
 import edu.umich.verdict.util.VerdictLogger;
 
@@ -35,8 +33,7 @@ public class ApproximateSelectQuery extends SelectQuery {
 	 * @return
 	 */
 	public static boolean doesSupport(String queryString) {
-		VerdictSQLLexer l = new VerdictSQLLexer(CharStreams.fromString(queryString));
-		VerdictSQLParser p = new VerdictSQLParser(new CommonTokenStream(l));
+		VerdictSQLParser p = StringManupulations.parserOf(queryString);
 		
 		final HashSet<String> aggs = new HashSet<String>();
 		VerdictSQLBaseVisitor<String> visitor = new VerdictSQLBaseVisitor<String>() {
@@ -100,8 +97,7 @@ public class ApproximateSelectQuery extends SelectQuery {
 	}
 	
 	protected Pair<String, AnalyticSelectStatementRewriter> rewriteQuery() throws VerdictException {
-		VerdictSQLLexer l = new VerdictSQLLexer(CharStreams.fromString(queryString));
-		VerdictSQLParser p = new VerdictSQLParser(new CommonTokenStream(l));
+		VerdictSQLParser p = StringManupulations.parserOf(queryString);
 		
 		AnalyticSelectStatementRewriter queryRewriter = null;
 		

@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.antlr.v4.runtime.CharStreams;
+import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -24,7 +24,7 @@ public class CreateTableQuery extends Query {
 
 	@Override
 	public ResultSet compute() throws VerdictException {
-		VerdictSQLLexer l = new VerdictSQLLexer(CharStreams.fromString(queryString));
+		VerdictSQLLexer l = new VerdictSQLLexer(new ANTLRInputStream(queryString));
 		VerdictSQLParser p = new VerdictSQLParser(new CommonTokenStream(l));
 		CreateTableQueryParser parser = new CreateTableQueryParser();
 		parser.visit(p.create_table());

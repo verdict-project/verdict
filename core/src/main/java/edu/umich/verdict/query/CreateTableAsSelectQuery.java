@@ -2,13 +2,10 @@ package edu.umich.verdict.query;
 
 import java.sql.ResultSet;
 
-import org.antlr.v4.runtime.CharStreams;
-import org.antlr.v4.runtime.CommonTokenStream;
-
 import edu.umich.verdict.VerdictContext;
-import edu.umich.verdict.VerdictSQLLexer;
 import edu.umich.verdict.VerdictSQLParser;
 import edu.umich.verdict.exceptions.VerdictException;
+import edu.umich.verdict.util.StringManupulations;
 import edu.umich.verdict.util.VerdictLogger;
 
 public class CreateTableAsSelectQuery extends Query {
@@ -29,8 +26,7 @@ public class CreateTableAsSelectQuery extends Query {
 	}
 
 	private String rewriteQuery(final String query) {
-		VerdictSQLLexer l = new VerdictSQLLexer(CharStreams.fromString(query));
-		VerdictSQLParser p = new VerdictSQLParser(new CommonTokenStream(l));
+		VerdictSQLParser p = StringManupulations.parserOf(queryString);
 		
 		SelectStatementBaseRewriter visitor = new SelectStatementBaseRewriter(query) {
 			@Override

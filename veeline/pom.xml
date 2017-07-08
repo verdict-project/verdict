@@ -4,12 +4,11 @@
   <parent>
     <groupId>edu.umich.verdict</groupId>
     <artifactId>verdict-db</artifactId>
-    <version>0.2.0</version>
+    <version>${verdict.version}</version>
   </parent>
 
   <artifactId>verdict-veeline</artifactId>
   <packaging>jar</packaging>
-  <version>0.2.0-SNAPSHOT</version>
   <name>veeline</name>
   <url>http://verdictdb.org</url>
 
