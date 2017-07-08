@@ -16,7 +16,7 @@ public class SubsamplingMultipleAggregationTest {
 		conf.setPort("21050");
 		conf.setDbmsSchema("instacart1g");
 		conf.set("no_user_password", "true");
-		VerdictContext vc = new VerdictContext(conf);
+		VerdictContext vc = VerdictContext.from(conf);
 		
 		String sql;
 		ExactRelation r;

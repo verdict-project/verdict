@@ -17,6 +17,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import com.google.common.base.Optional;
 
+import edu.umich.verdict.VerdictConf;
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.datatypes.SampleParam;
 import edu.umich.verdict.datatypes.TableUniqueName;
@@ -51,6 +52,13 @@ public class Dbms {
 		VerdictLogger.debug(this, "A new dbms connection with schema: " + currentSchema);
 	}
 	
+	protected Dbms(VerdictContext vc, String dbName) {
+		this.vc = vc;
+		this.dbName = dbName;
+		conn = null;
+		stmt = null;
+	}
+	
 	protected Dbms(VerdictContext vc,
 			    String dbName,
 			    String host,
@@ -72,7 +80,30 @@ public class Dbms {
 		conn = makeDbmsConnection(url, jdbcClassName);
 	}
 	
-	public static Dbms getInstance(VerdictContext vc,
+	public static Dbms from(VerdictContext vc, VerdictConf conf) throws VerdictException {
+		Dbms dbms = Dbms.getInstance(
+			 	  vc,
+			 	  conf.getDbms(),
+			 	  conf.getHost(),
+			 	  conf.getPort(),
+			 	  conf.getDbmsSchema(),
+			 	  (conf.getBoolean("no_user_password"))? "" : conf.getUser(),
+			 	  (conf.getBoolean("no_user_password"))? "" : conf.getPassword(),
+			 	  conf.get(conf.getDbms() + ".jdbc_class_name"));
+		
+		if (!conf.getDbms().equals("dummy")) {
+			VerdictLogger.info(
+					(conf.getDbmsSchema() != null) ?
+							String.format("Connected to database: %s//%s:%s/%s",
+									conf.getDbms(), conf.getHost(), conf.getPort(), conf.getDbmsSchema())
+							: String.format("Connected to database: %s//%s:%s",
+									conf.getDbms(), conf.getHost(), conf.getPort()));
+		}
+		
+		return dbms;
+	}
+	
+	protected static Dbms getInstance(VerdictContext vc,
 			String dbName,
 			String host,
 			String port,
@@ -80,6 +111,7 @@ public class Dbms {
 			String user,
 			String password,
 			String jdbcClassName) throws VerdictException {
+		
 		Dbms dbms = null;
 		if (dbName.equals("mysql")) {
 			dbms = new DbmsMySQL(vc, dbName, host, port, schema, user, password, jdbcClassName);
@@ -94,6 +126,7 @@ public class Dbms {
 			VerdictLogger.error("Dbms", msg);
 			throw new VerdictException(msg);
 		}
+		
 		return dbms;
 	}
 	

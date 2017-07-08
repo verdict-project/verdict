@@ -12,7 +12,7 @@ public class JoinedAggregationTest {
 		conf.setPort("21050");
 		conf.setDbmsSchema("instacart1g");
 		conf.set("no_user_password", "true");
-		VerdictContext vc = new VerdictContext(conf);
+		VerdictContext vc = VerdictContext.from(conf);
 		
 		SingleRelation r1 = SingleRelation.from(vc, "order_products");
 		SingleRelation r2 = SingleRelation.from(vc, "orders");

@@ -14,7 +14,7 @@ public class ImpalaCreateSampleTest {
 		conf.setDbmsSchema("instacart1g");
 		conf.set("no_user_password", "true");
 
-		VerdictContext vc = new VerdictContext(conf);
+		VerdictContext vc = VerdictContext.from(conf);
 		vc.executeQuery("create uniform sample of orders");
 		vc.destroy();
 		System.out.println("Done");

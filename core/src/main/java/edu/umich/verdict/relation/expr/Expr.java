@@ -15,7 +15,7 @@ public abstract class Expr {
 		VerdictConf conf = new VerdictConf();
 		conf.setDbms("dummy");
 		try {
-			dummyContext = new VerdictContext(conf);
+			dummyContext = VerdictContext.from(conf);
 		} catch (VerdictException e) {
 			e.printStackTrace();
 		}

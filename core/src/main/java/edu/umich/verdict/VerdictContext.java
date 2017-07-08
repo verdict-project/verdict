@@ -3,6 +3,8 @@ package edu.umich.verdict;
 import java.sql.ResultSet;
 import java.util.concurrent.ThreadLocalRandom;
 
+import org.apache.spark.sql.SQLContext;
+
 import com.google.common.base.Optional;
 
 import edu.umich.verdict.dbms.Dbms;
@@ -13,9 +15,9 @@ import edu.umich.verdict.util.VerdictLogger;
 
 public class VerdictContext {
 	
-	final private VerdictConf conf;
+	final protected VerdictConf conf;
 	
-	final private VerdictMeta meta;
+	protected VerdictMeta meta;
 	
 	/*
 	 *  DBMS fields
@@ -31,12 +33,59 @@ public class VerdictContext {
 	final private int contextId;
 	
 	
-	/* 
-	 * predefined constants
-	 */
+	public Dbms getDbms() {
+		return dbms;
+	}
+
+	public void setDbms(Dbms dbms) {
+		this.dbms = dbms;
+		this.metaDbms = dbms;
+	}
+
+	public int getContextId() {
+		return contextId;
+	}
+
+	public long getQid() {
+		return queryUid;
+	}
+
+	public VerdictMeta getMeta() {
+		return meta;
+	}
 	
-	// the column name for the sampling probabilities in a stratified sample. 
-	private final String ST_SAMPLING_PROB_COL = "verdict_sampling_prob";
+	public void setMeta(VerdictMeta meta) {
+		this.meta = meta;
+	}
+
+	public String getDefaultSchema() {
+		return conf.getDbmsSchema();
+	}
+
+	public VerdictConf getConf() {
+		return conf;
+	}
+
+	public Dbms getMetaDbms() {
+		return metaDbms;
+	}
+
+	public Optional<String> getCurrentSchema() {
+		return dbms.getCurrentSchema();
+	}
+
+	public void destroy() throws VerdictException {
+		dbms.close();
+	}
+
+	public long getCurrentQid() {
+		return queryUid;
+	}
+
+	protected VerdictContext(VerdictConf conf) {
+		this.conf = conf;
+		this.contextId = ThreadLocalRandom.current().nextInt(0, 10000);
+	}
 	
 	/**
 	 *  copy constructor
@@ -58,35 +107,18 @@ public class VerdictContext {
 	 * @param conf
 	 * @throws VerdictException
 	 */
-	public VerdictContext(VerdictConf conf) throws VerdictException {
-		this.conf = conf;
-		
-		dbms = Dbms.getInstance(this,
-								conf.getDbms(),
-								conf.getHost(),
-								conf.getPort(),
-								conf.getDbmsSchema(),
-								(conf.getBoolean("no_user_password"))? "" : conf.getUser(),
-								(conf.getBoolean("no_user_password"))? "" : conf.getPassword(),
-								conf.get(conf.getDbms() + ".jdbc_class_name"));
-		if (!conf.getDbms().equals("dummy")) {
-			VerdictLogger.info(
-					(conf.getDbmsSchema() != null) ?
-							String.format("Connected to database: %s//%s:%s/%s",
-									conf.getDbms(), conf.getHost(), conf.getPort(), conf.getDbmsSchema())
-							: String.format("Connected to database: %s//%s:%s",
-									conf.getDbms(), conf.getHost(), conf.getPort()));
-		}
-		
-		metaDbms = dbms;
-		meta = new VerdictMeta(this);		// this must be called after DB connection is created.
+	public static VerdictContext from(VerdictConf conf) throws VerdictException {
+		VerdictContext vc = new VerdictContext(conf);
+		vc.setDbms(Dbms.from(vc, conf));
+		vc.setMeta(new VerdictMeta(vc));		// this must be called after DB connection is created.
 		
 		if (conf.getDbmsSchema() != null) {
-			meta.refreshSampleInfo(conf.getDbmsSchema());
+			vc.getMeta().refreshSampleInfo(conf.getDbmsSchema());
 		}
-
-		this.contextId = ThreadLocalRandom.current().nextInt(0, 10000);
+		
+		return vc;
 	}
+
 	
 	public ResultSet executeQuery(String sql) throws VerdictException {
 		VerdictLogger.debug(this, "An input query:");
@@ -99,46 +131,6 @@ public class VerdictContext {
 	
 	public void incrementQid() {
 		queryUid += 1;
-	}
-	
-	public int getContextId() {
-		return contextId;
-	}
-	
-	public long getQid() {
-		return queryUid;
-	}
-	
-	public VerdictMeta getMeta() {
-		return meta;
-	}
-	
-	public String getDefaultSchema() {
-		return conf.getDbmsSchema();
-	}
-	
-	public VerdictConf getConf() {
-		return conf;
-	}
-	
-	public Dbms getDbms() {
-		return dbms;
-	}
-	
-	public Dbms getMetaDbms() {
-		return metaDbms;
-	}
-	
-	public Optional<String> getCurrentSchema() {
-		return dbms.getCurrentSchema();
-	}
-	
-	public void destroy() throws VerdictException {
-		dbms.close();
-	}
-	
-	public long getCurrentQid() {
-		return queryUid;
 	}
 
 }

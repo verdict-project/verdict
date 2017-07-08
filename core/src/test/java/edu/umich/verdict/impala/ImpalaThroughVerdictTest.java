@@ -16,7 +16,7 @@ public class ImpalaThroughVerdictTest {
 		conf.setHost("ec2-34-202-126-188.compute-1.amazonaws.com:21050");
 		conf.setDbmsSchema("instacart100g");
 
-		VerdictContext vc = new VerdictContext(conf);
+		VerdictContext vc = VerdictContext.from(conf);
 		
 //		vc.executeQuery("create 1% sample from orders");
 //		vc.executeQuery("create 1% sample from order_products");

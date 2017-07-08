@@ -21,7 +21,7 @@ public class MySQLBootstrappingTest {
 		conf.setDbmsSchema("tpch1G");
 		conf.setUser("verdict");
 		conf.setPassword("verdict");
-		VerdictContext vc = new VerdictContext(conf);
+		VerdictContext vc = VerdictContext.from(conf);
 		
 		String sql = "select l_shipmode, count(*) from lineitem group by l_shipmode order by count(*) desc";
 		

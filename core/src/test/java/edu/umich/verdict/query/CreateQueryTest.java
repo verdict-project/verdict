@@ -30,7 +30,7 @@ public class CreateQueryTest {
 		conf.setPort(port);
 		conf.setDbmsSchema(schema);
 		conf.set("no_user_password", "true");
-		vc = new VerdictContext(conf);
+		vc = VerdictContext.from(conf);
 	}
 	
 	@AfterClass

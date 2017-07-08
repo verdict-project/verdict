@@ -20,7 +20,7 @@ public class SubsamplingPartitionTest {
 		conf.setPort("21050");
 		conf.setDbmsSchema("instacart1g");
 		conf.set("no_user_password", "true");
-		VerdictContext vc = new VerdictContext(conf);
+		VerdictContext vc = VerdictContext.from(conf);
 		
 		TableUniqueName orders = TableUniqueName.uname(vc, "orders");
 		SampleParam param = new SampleParam(vc, orders, "uniform", 0.01, Arrays.<String>asList());

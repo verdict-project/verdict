@@ -108,7 +108,7 @@ public class VerdictConnection implements Connection {
 	            }
             }
             
-    		this.vc = new VerdictContext(conf); 
+    		this.vc = VerdictContext.from(conf); 
             
         } catch (VerdictException e) {
 			throw new SQLException(StackTraceReader.stackTrace2String(e));

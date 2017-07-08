@@ -20,7 +20,7 @@ public class SqlToRelationUnitTest {
 	public static void connect() throws VerdictException, SQLException, FileNotFoundException {
 		VerdictConf conf = new VerdictConf();
 		conf.setDbms("dummy");
-		vc = new VerdictContext(conf);
+		vc = VerdictContext.from(conf);
 	}
 
 	@Test
