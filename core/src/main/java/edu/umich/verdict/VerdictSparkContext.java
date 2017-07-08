@@ -17,6 +17,7 @@ public class VerdictSparkContext extends VerdictContext {
 
 	public VerdictSparkContext(SQLContext sqlContext) throws VerdictException {
 		this(sqlContext, new VerdictConf());
+		conf.setDbms("spark");
 		setDbms(Dbms.from(this, conf));
 	}
 	

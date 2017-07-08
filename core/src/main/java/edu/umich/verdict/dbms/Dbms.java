@@ -121,6 +121,8 @@ public class Dbms {
 			dbms = new DbmsHive(vc, dbName, host, port, schema, user, password, jdbcClassName);
 		} else if (dbName.equals("dummy")) {
 			dbms = new DbmsDummy(vc);
+		} else if (dbName.equals("spark")) {
+			dbms = new DbmsSpark(vc);
 		} else {
 			String msg = String.format("Unsupported DBMS: %s", dbName);
 			VerdictLogger.error("Dbms", msg);
