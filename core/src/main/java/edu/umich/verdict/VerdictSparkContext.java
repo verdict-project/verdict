@@ -23,6 +23,7 @@ public class VerdictSparkContext extends VerdictContext {
 	
 	public VerdictSparkContext(SQLContext sqlContext, VerdictConf conf) throws VerdictException {
 		super(conf);
+		this.sqlContext = sqlContext;
 	}
 	
 	public DataFrame executeSparkQuery(String sql) {
