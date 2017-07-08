@@ -25,7 +25,7 @@ public class VerdictSparkContext extends VerdictContext {
 		super(conf);
 	}
 	
-	DataFrame executeSparkQuery(String sql) {
+	public DataFrame executeSparkQuery(String sql) {
 		DataFrame df = sqlContext.sql(sql);
 		return df;
 	}
