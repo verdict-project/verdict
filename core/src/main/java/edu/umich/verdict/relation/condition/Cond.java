@@ -3,7 +3,6 @@ package edu.umich.verdict.relation.condition;
 import java.util.List;
 
 import edu.umich.verdict.VerdictContext;
-import edu.umich.verdict.VerdictJDBCContext;
 import edu.umich.verdict.VerdictSQLBaseVisitor;
 import edu.umich.verdict.VerdictSQLParser;
 import edu.umich.verdict.VerdictSQLParser.Search_conditionContext;

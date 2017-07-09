@@ -11,7 +11,6 @@ import org.apache.commons.lang3.tuple.Triple;
 import com.google.common.base.Optional;
 
 import edu.umich.verdict.VerdictContext;
-import edu.umich.verdict.VerdictJDBCContext;
 import edu.umich.verdict.VerdictSQLBaseVisitor;
 import edu.umich.verdict.VerdictSQLParser;
 import edu.umich.verdict.VerdictSQLParser.Group_by_itemContext;

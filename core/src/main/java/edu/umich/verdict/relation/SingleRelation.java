@@ -12,7 +12,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import com.google.common.collect.ImmutableSet;
 
 import edu.umich.verdict.VerdictContext;
-import edu.umich.verdict.VerdictJDBCContext;
 import edu.umich.verdict.datatypes.SampleParam;
 import edu.umich.verdict.datatypes.SampleSizeInfo;
 import edu.umich.verdict.datatypes.TableUniqueName;

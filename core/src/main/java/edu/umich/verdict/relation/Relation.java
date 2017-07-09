@@ -13,7 +13,6 @@ import org.apache.spark.sql.DataFrame;
 import com.google.common.base.Joiner;
 
 import edu.umich.verdict.VerdictContext;
-import edu.umich.verdict.VerdictJDBCContext;
 import edu.umich.verdict.VerdictSQLBaseVisitor;
 import edu.umich.verdict.VerdictSQLParser;
 import edu.umich.verdict.VerdictSQLParser.ExpressionContext;

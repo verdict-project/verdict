@@ -1,11 +1,7 @@
 package edu.umich.verdict.query;
 
-import java.sql.ResultSet;
-
 import edu.umich.verdict.VerdictJDBCContext;
-import edu.umich.verdict.VerdictSQLParser;
 import edu.umich.verdict.exceptions.VerdictException;
-import edu.umich.verdict.util.StringManupulations;
 import edu.umich.verdict.util.VerdictLogger;
 
 public class CreateTableAsSelectQuery extends Query {

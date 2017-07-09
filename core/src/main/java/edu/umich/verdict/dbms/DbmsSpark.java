@@ -1,12 +1,9 @@
 package edu.umich.verdict.dbms;
 
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.spark.sql.DataFrame;
@@ -14,10 +11,8 @@ import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SQLContext;
 
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 
 import edu.umich.verdict.VerdictContext;
-import edu.umich.verdict.VerdictJDBCContext;
 import edu.umich.verdict.datatypes.SampleParam;
 import edu.umich.verdict.datatypes.SampleSizeInfo;
 import edu.umich.verdict.datatypes.TableUniqueName;

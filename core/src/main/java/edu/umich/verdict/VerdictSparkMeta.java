@@ -2,7 +2,6 @@ package edu.umich.verdict;
 
 import edu.umich.verdict.datatypes.SampleParam;
 import edu.umich.verdict.datatypes.TableUniqueName;
-import edu.umich.verdict.dbms.Dbms;
 import edu.umich.verdict.exceptions.VerdictException;
 
 public class VerdictSparkMeta extends VerdictMeta {

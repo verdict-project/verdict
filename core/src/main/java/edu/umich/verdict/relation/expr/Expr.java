@@ -1,11 +1,8 @@
 package edu.umich.verdict.relation.expr;
 
-import edu.umich.verdict.VerdictConf;
 import edu.umich.verdict.VerdictContext;
-import edu.umich.verdict.VerdictJDBCContext;
 import edu.umich.verdict.VerdictSQLBaseVisitor;
 import edu.umich.verdict.VerdictSQLParser;
-import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.util.StringManupulations;
 
 public abstract class Expr {

@@ -1,10 +1,8 @@
 package edu.umich.verdict;
 
 import java.sql.ResultSet;
-import java.util.concurrent.ThreadLocalRandom;
 
 import org.apache.spark.sql.DataFrame;
-import org.apache.spark.sql.SQLContext;
 
 import com.google.common.base.Optional;
 

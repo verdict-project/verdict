@@ -1,6 +1,5 @@
 package edu.umich.verdict.query;
 
-import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 

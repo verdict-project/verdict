@@ -20,7 +20,6 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 
 import edu.umich.verdict.VerdictContext;
-import edu.umich.verdict.datatypes.SampleParam;
 import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.datatypes.VerdictResultSet;
 import edu.umich.verdict.exceptions.VerdictException;

@@ -1,23 +1,15 @@
 package edu.umich.verdict.query;
 
-import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang3.tuple.Pair;
-
 import edu.umich.verdict.VerdictJDBCContext;
 import edu.umich.verdict.VerdictSQLBaseVisitor;
 import edu.umich.verdict.VerdictSQLParser;
 import edu.umich.verdict.datatypes.TableUniqueName;
-import edu.umich.verdict.datatypes.VerdictApproxResultMeta;
-import edu.umich.verdict.datatypes.VerdictResultSet;
-import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.util.StringManupulations;
-import edu.umich.verdict.util.TypeCasting;
-import edu.umich.verdict.util.VerdictLogger;
 
 @Deprecated
 public class ApproximateSelectQuery extends SelectQuery {

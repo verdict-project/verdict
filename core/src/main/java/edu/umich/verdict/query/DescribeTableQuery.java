@@ -1,7 +1,5 @@
 package edu.umich.verdict.query;
 
-import java.sql.ResultSet;
-
 import edu.umich.verdict.VerdictJDBCContext;
 import edu.umich.verdict.VerdictSQLBaseVisitor;
 import edu.umich.verdict.VerdictSQLParser;
