@@ -10,6 +10,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import com.google.common.base.Joiner;
 
 import edu.umich.verdict.VerdictContext;
+import edu.umich.verdict.VerdictJDBCContext;
 import edu.umich.verdict.datatypes.SampleParam;
 import edu.umich.verdict.datatypes.SampleSizeInfo;
 import edu.umich.verdict.datatypes.TableUniqueName;
@@ -35,16 +36,36 @@ public class DbmsHive extends DbmsImpala {
 		return "`";
 	}
 	
-	@Override
-	public ResultSet describeTable(TableUniqueName tableUniqueName)  throws VerdictException {
-		return executeQuery(String.format("describe %s", tableUniqueName));
-	}
+//	@Override
+//	public ResultSet describeTableInResultSet(TableUniqueName tableUniqueName)  throws VerdictException {
+//		return executeJdbcQuery(String.format("describe %s", tableUniqueName));
+//	}
+//	
+//	@Override
+//	public ResultSet getDatabaseNamesInResultSet() throws VerdictException {
+//		return executeJdbcQuery("show databases");
+//	}
 	
 	@Override
-	public ResultSet getDatabaseNames() throws VerdictException {
-		return executeQuery("show databases");
+	protected void justCreateUniformRandomSampleTableOf(SampleParam param) throws VerdictException {
+		String samplingProbCol = vc.getDbms().samplingProbabilityColumnName();
+		List<String> colNames = vc.getMeta().getColumnNames(param.originalTable);
+		
+		ExactRelation sampled = SingleRelation.from(vc, param.originalTable)
+					            .select("*, count(*) OVER () AS __total_size")
+						        .where(CompCond.from(Expr.from("rand(unix_timestamp())"), "<", ConstantExpr.from(param.samplingRatio)));
+		sampled = sampled.select(
+				Joiner.on(", ").join(colNames) +
+				", count(*) over () / __total_size" + " AS " + samplingProbCol + ", " +  // attach sampling prob
+				randomPartitionColumn());										 // attach partition number
+		
+		String sql = String.format("create table %s AS ", param.sampleTableName()) + sampled.toSql();
+		VerdictLogger.debug(this, "The query used for creating a uniform random sample:");
+		VerdictLogger.debugPretty(this, Relation.prettyfySql(sql), "  ");
+		
+		executeUpdate(sql);
 	}
-	
+
 	@Override
 	protected void justCreateStratifiedSampleTableof(SampleParam param) throws VerdictException {
 		SampleSizeInfo info = vc.getMeta().getSampleSizeOf(new SampleParam(vc, param.originalTable, "uniform", null, new ArrayList<String>()));
@@ -110,7 +131,6 @@ public class DbmsHive extends DbmsImpala {
 		VerdictLogger.debug(this, String.format("Creates a table: %s using the following statement:", sampleTableName));
 		VerdictLogger.debugPretty(this, Relation.prettyfySql(sql), "  ");
 		this.executeUpdate(sql);
-		VerdictLogger.debug(this, "Done.");
 	}
 	
 	@Override
@@ -119,33 +139,9 @@ public class DbmsHive extends DbmsImpala {
 //		return String.format("pmod(conv(substr(md5(%s),17,16),16,10), %d)", col, mod);
 		return String.format("pmod(crc32(%s),%d)", col, mod);
 	}
-
-	@Override
-	public Pair<Long, Long> createUniformRandomSampleTableOf(SampleParam param) throws VerdictException {
-		dropTable(param.sampleTableName());
-		
-		String samplingProbColInQuote = quote(vc.getDbms().samplingProbabilityColumnName());
-		List<String> colNames = vc.getMeta().getColumnNames(param.originalTable);
-		
-		ExactRelation sampled = SingleRelation.from(vc, param.originalTable)
-                .select("*, count(*) OVER () AS " + quote("__total_size"))
-		        .where(CompCond.from(Expr.from("rand(unix_timestamp())"), "<", ConstantExpr.from(param.samplingRatio)));
-		sampled = sampled.select(
-				Joiner.on(", ").join(colNames) +
-				", count(*) over () / " + quote("__total_size") + " AS " + samplingProbColInQuote + ", " +  // attach sampling prob
-				randomPartitionColumn());										 // attach partition number
-		
-		String sql = String.format("create table %s AS ", param.sampleTableName()) + sampled.toSql();
-		VerdictLogger.debug(this, "The query used for creating a uniform random sample:");
-		VerdictLogger.debugPretty(this, Relation.prettyfySql(sql), "  ");
-		
-		executeUpdate(sql);
-		
-		return Pair.of(getTableSize(param.sampleTableName()), getTableSize(param.originalTable));
-	}
 	
-	protected String quote(String expr) {
-		return String.format("`%s`", expr);
-	}
+//	protected String quote(String expr) {
+//		return String.format("`%s`", expr);
+//	}
 	
 }

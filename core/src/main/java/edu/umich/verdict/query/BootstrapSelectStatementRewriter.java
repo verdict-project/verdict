@@ -7,7 +7,7 @@ import java.util.Map;
 
 import org.apache.commons.lang3.tuple.Pair;
 
-import edu.umich.verdict.VerdictContext;
+import edu.umich.verdict.VerdictJDBCContext;
 import edu.umich.verdict.VerdictSQLParser;
 import edu.umich.verdict.datatypes.Alias;
 import edu.umich.verdict.datatypes.SampleParam;
@@ -65,7 +65,7 @@ public class BootstrapSelectStatementRewriter extends AnalyticSelectStatementRew
 	
 	protected Map<TableUniqueName, String> sampleTableAlias = new HashMap<TableUniqueName, String>();
 
-	public BootstrapSelectStatementRewriter(VerdictContext vc, String queryString) {
+	public BootstrapSelectStatementRewriter(VerdictJDBCContext vc, String queryString) {
 		super(vc, queryString);
 		resampleMethod = "con";
 	}

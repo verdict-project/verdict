@@ -2,6 +2,7 @@ package edu.umich.verdict.relation.expr;
 
 import edu.umich.verdict.VerdictConf;
 import edu.umich.verdict.VerdictContext;
+import edu.umich.verdict.VerdictJDBCContext;
 import edu.umich.verdict.VerdictSQLBaseVisitor;
 import edu.umich.verdict.VerdictSQLParser;
 import edu.umich.verdict.exceptions.VerdictException;
@@ -12,13 +13,7 @@ public abstract class Expr {
 	private static VerdictContext dummyContext;
 	
 	static {
-		VerdictConf conf = new VerdictConf();
-		conf.setDbms("dummy");
-		try {
-			dummyContext = VerdictContext.from(conf);
-		} catch (VerdictException e) {
-			e.printStackTrace();
-		}
+		dummyContext = VerdictContext.dummyContext();
 	}
 	
 	public static Expr from(String expr) {

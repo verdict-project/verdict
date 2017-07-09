@@ -1,10 +1,11 @@
 package edu.umich.verdict.jdbc;
 
 import edu.umich.verdict.VerdictConf;
-import edu.umich.verdict.VerdictContext;
+import edu.umich.verdict.VerdictJDBCContext;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.util.StackTraceReader;
 import edu.umich.verdict.util.VerdictLogger;
+import edu.umich.verdict.dbms.DbmsJDBC;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -20,11 +21,11 @@ public class VerdictConnection implements Connection {
 //    private final DbConnector connector;
 //    private final Connection innerConnection;
     private final VerdictConf conf;
-    private VerdictContext vc;
+    private VerdictJDBCContext vc;
     private boolean isOpen = true;
     
     private Connection getDbmsConnection() {
-    	return vc.getDbms().getDbmsConnection();
+    	return ((DbmsJDBC) vc.getDbms()).getDbmsConnection();
     }
     
 //    public void setLogLevel(String level) {
@@ -108,7 +109,7 @@ public class VerdictConnection implements Connection {
 	            }
             }
             
-    		this.vc = VerdictContext.from(conf); 
+    		this.vc = VerdictJDBCContext.from(conf); 
             
         } catch (VerdictException e) {
 			throw new SQLException(StackTraceReader.stackTrace2String(e));

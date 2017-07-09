@@ -5,7 +5,7 @@ import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
 
-import edu.umich.verdict.VerdictContext;
+import edu.umich.verdict.VerdictJDBCContext;
 import edu.umich.verdict.exceptions.VerdictException;
 
 public class ColumnName {
@@ -54,7 +54,7 @@ public class ColumnName {
 	 * @throws VerdictException 
 	 */
 	private static Pair<TableUniqueName, String> effectiveTableSourceForColumn(
-			VerdictContext vc, String tableName, String columnName, List<Pair<TableUniqueName, String>> tableSources) throws VerdictException {
+			VerdictJDBCContext vc, String tableName, String columnName, List<Pair<TableUniqueName, String>> tableSources) throws VerdictException {
 		if (tableName != null) {
 			for (Pair<TableUniqueName, String> e : tableSources) {
 				if (tableName.equals(e.getLeft().getTableName()) || tableName.equals(e.getRight())) {
@@ -90,7 +90,7 @@ public class ColumnName {
 	 * @return
 	 * @throws VerdictException 
 	 */
-	public static ColumnName uname(VerdictContext vc, List<Pair<TableUniqueName, String>> tableSources, String columnName) throws VerdictException {
+	public static ColumnName uname(VerdictJDBCContext vc, List<Pair<TableUniqueName, String>> tableSources, String columnName) throws VerdictException {
 		Pair<String, String> tc = parseTableAndColumnName(columnName);
 		Pair<TableUniqueName, String> tableNameAndAlias = effectiveTableSourceForColumn(vc, tc.getLeft(), tc.getRight(), tableSources);
 		String tableName = (tableNameAndAlias.getRight() == null)? tableNameAndAlias.getLeft().getTableName() : tableNameAndAlias.getRight(); 

@@ -5,11 +5,11 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.Map;
 
-import edu.umich.verdict.VerdictContext;
+import edu.umich.verdict.VerdictJDBCContext;
 
 public class VerdictApproxResultMeta {
 	
-	VerdictContext vc;
+	VerdictJDBCContext vc;
 	
 	private Map<Integer, Integer> aggColumn2ErrorColumn;
 	

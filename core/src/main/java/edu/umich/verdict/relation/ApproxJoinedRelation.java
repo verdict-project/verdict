@@ -12,6 +12,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import edu.umich.verdict.VerdictContext;
+import edu.umich.verdict.VerdictJDBCContext;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.relation.condition.AndCond;
 import edu.umich.verdict.relation.condition.CompCond;
@@ -51,12 +52,12 @@ public class ApproxJoinedRelation extends ApproxRelation {
 		this(vc, source1, source2, Arrays.<Pair<Expr,Expr>>asList());
 	}
 	
-	public static ApproxJoinedRelation from(VerdictContext vc, ApproxRelation source1, ApproxRelation source2, List<Pair<Expr, Expr>> joinCols) {
+	public static ApproxJoinedRelation from(VerdictJDBCContext vc, ApproxRelation source1, ApproxRelation source2, List<Pair<Expr, Expr>> joinCols) {
 		ApproxJoinedRelation r = new ApproxJoinedRelation(vc, source1, source2, joinCols);
 		return r;
 	}
 	
-	public static ApproxJoinedRelation from(VerdictContext vc, ApproxRelation source1, ApproxRelation source2, Cond cond) throws VerdictException {
+	public static ApproxJoinedRelation from(VerdictJDBCContext vc, ApproxRelation source1, ApproxRelation source2, Cond cond) throws VerdictException {
 		return from(vc, source1, source2, extractJoinConds(cond));
 	}
 	

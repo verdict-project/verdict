@@ -8,6 +8,7 @@ import java.util.Map;
 import com.google.common.collect.ImmutableMap;
 
 import edu.umich.verdict.VerdictContext;
+import edu.umich.verdict.VerdictJDBCContext;
 import edu.umich.verdict.relation.condition.Cond;
 import edu.umich.verdict.relation.condition.IsCond;
 import edu.umich.verdict.relation.condition.NullCond;

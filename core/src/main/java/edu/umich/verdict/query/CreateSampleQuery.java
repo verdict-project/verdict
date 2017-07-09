@@ -6,7 +6,7 @@ import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
 
-import edu.umich.verdict.VerdictContext;
+import edu.umich.verdict.VerdictJDBCContext;
 import edu.umich.verdict.VerdictSQLBaseVisitor;
 import edu.umich.verdict.VerdictSQLParser;
 import edu.umich.verdict.VerdictSQLParser.Column_nameContext;
@@ -21,12 +21,12 @@ import edu.umich.verdict.util.VerdictLogger;
 
 public class CreateSampleQuery extends Query {
 	
-	public CreateSampleQuery(VerdictContext vc, String q) {
+	public CreateSampleQuery(VerdictJDBCContext vc, String q) {
 		super(vc, q);
 	}
 	
 	@Override
-	public ResultSet compute() throws VerdictException {
+	public void compute() throws VerdictException {
 		VerdictSQLParser p = StringManupulations.parserOf(queryString);
 		CreateSampleStatementVisitor visitor = new CreateSampleStatementVisitor();
 		visitor.visit(p.create_sample_statement());
@@ -37,8 +37,6 @@ public class CreateSampleQuery extends Query {
 		List<String> columnNames = visitor.getColumnNames();
 		
 		buildSamples(new SampleParam(vc, TableUniqueName.uname(vc, tableName), sampleType, samplingRatio, columnNames));
-		
-		return null;
 	}
 	
 	/**

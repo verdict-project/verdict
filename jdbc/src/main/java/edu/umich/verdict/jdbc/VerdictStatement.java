@@ -1,7 +1,8 @@
 package edu.umich.verdict.jdbc;
 
-import edu.umich.verdict.VerdictContext;
+import edu.umich.verdict.VerdictJDBCContext;
 import edu.umich.verdict.datatypes.VerdictResultSet;
+import edu.umich.verdict.dbms.DbmsJDBC;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.util.StackTraceReader;
 import edu.umich.verdict.util.VerdictLogger;
@@ -15,18 +16,18 @@ public class VerdictStatement implements Statement {
     private Statement stmt;
 	
     private final ArrayList<String> batch = new ArrayList<String>();	// TODO: support batch operations.
-    private final VerdictContext vc;
+    private final VerdictJDBCContext vc;
     
     private ResultSet answer;
     
 
-    public VerdictStatement(VerdictConnection connection, VerdictContext vc) throws SQLException {
+    public VerdictStatement(VerdictConnection connection, VerdictJDBCContext vc) throws SQLException {
     	this.connection = connection;
     	try {
     		// a new verdict context does not share the underlying statement.
 			this.vc = vc;
-			vc.getDbms().createNewStatementWithoutClosing();
-			this.stmt = this.vc.getDbms().createStatement();
+			((DbmsJDBC) vc.getDbms()).createNewStatementWithoutClosing();
+			this.stmt = ((DbmsJDBC) vc.getDbms()).createStatement();
 		} catch (VerdictException e) {
 			throw new SQLException(StackTraceReader.stackTrace2String(e));
 		}
@@ -53,7 +54,7 @@ public class VerdictStatement implements Statement {
     @Override
     public void close() throws SQLException {
     	try {
-			vc.getDbms().closeStatement();
+			((DbmsJDBC) vc.getDbms()).closeStatement();
 		} catch (VerdictException e) {
 			new SQLException(StackTraceReader.stackTrace2String(e));
 		}

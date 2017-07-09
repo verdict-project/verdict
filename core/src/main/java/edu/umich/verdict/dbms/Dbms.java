@@ -8,17 +8,24 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.spark.sql.DataFrame;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 
 import edu.umich.verdict.VerdictConf;
 import edu.umich.verdict.VerdictContext;
+import edu.umich.verdict.VerdictJDBCContext;
 import edu.umich.verdict.datatypes.SampleParam;
 import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.datatypes.VerdictResultSet;
@@ -31,53 +38,28 @@ import edu.umich.verdict.util.VerdictLogger;
 /**
  * This class is responsible for choosing a right DBMS class.
  */
-public class Dbms {
+public abstract class Dbms {
 	
-	protected final Connection conn;
 	protected final String dbName;
+	
 	protected Optional<String> currentSchema;
+	
 	protected VerdictContext vc;
-	private Statement stmt;		// created Statements must be registered here.
+	
 	
 	/**
 	 * Copy constructor for not sharing the underlying statement.
 	 * @param another
 	 */
 	public Dbms(Dbms another) {
-		conn = another.conn;
 		dbName = another.dbName;
 		currentSchema = another.currentSchema;
 		vc = another.vc;
-		stmt = null;
-		VerdictLogger.debug(this, "A new dbms connection with schema: " + currentSchema);
 	}
 	
 	protected Dbms(VerdictContext vc, String dbName) {
 		this.vc = vc;
 		this.dbName = dbName;
-		conn = null;
-		stmt = null;
-	}
-	
-	protected Dbms(VerdictContext vc,
-			    String dbName,
-			    String host,
-			    String port,
-			    String schema,
-			    String user,
-			    String password,
-			    String jdbcClassName)
-			throws VerdictException {
-		this.vc = vc;
-		this.dbName = dbName;
-		currentSchema = Optional.fromNullable(schema);
-		String url = composeUrl(dbName,
-							   host,
-							   port,
-							   schema,
-							   user,
-							   password);
-		conn = makeDbmsConnection(url, jdbcClassName);
 	}
 	
 	public static Dbms from(VerdictContext vc, VerdictConf conf) throws VerdictException {
@@ -91,7 +73,9 @@ public class Dbms {
 			 	  (conf.getBoolean("no_user_password"))? "" : conf.getPassword(),
 			 	  conf.get(conf.getDbms() + ".jdbc_class_name"));
 		
-		if (!conf.getDbms().equals("dummy")) {
+		Set<String> jdbcDbmsNames = Sets.newHashSet("mysql", "impala", "hive", "hive2");
+		
+		if (jdbcDbmsNames.contains(conf.getDbms())) {
 			VerdictLogger.info(
 					(conf.getDbmsSchema() != null) ?
 							String.format("Connected to database: %s//%s:%s/%s",
@@ -121,8 +105,6 @@ public class Dbms {
 			dbms = new DbmsHive(vc, dbName, host, port, schema, user, password, jdbcClassName);
 		} else if (dbName.equals("dummy")) {
 			dbms = new DbmsDummy(vc);
-		} else if (dbName.equals("spark")) {
-			dbms = new DbmsSpark(vc);
 		} else {
 			String msg = String.format("Unsupported DBMS: %s", dbName);
 			VerdictLogger.error("Dbms", msg);
@@ -130,81 +112,6 @@ public class Dbms {
 		}
 		
 		return dbms;
-	}
-	
-	public Statement createStatement() throws VerdictException {
-		try {
-			if (stmt != null) closeStatement();
-			stmt = conn.createStatement();
-		} catch (SQLException e) {
-			throw new VerdictException(e);
-		}
-		return stmt;
-	}
-	
-	public Statement createNewStatementWithoutClosing() throws VerdictException {
-		try {
-			stmt = conn.createStatement();
-		} catch (SQLException e) {
-			throw new VerdictException(e);
-		}
-		return stmt;
-	}
-	
-	public Statement createStatementIfNotExists() throws VerdictException {
-		if (stmt == null) createStatement();
-		return stmt;
-	}
-	
-	public void closeStatement() throws VerdictException {
-		try {
-			if (stmt != null) stmt.close();
-		} catch (SQLException e) {
-			throw new VerdictException(e);
-		}
-	}
-	
-	protected String composeUrl(String dbms, String host, String port, String schema, String user, String password) throws VerdictException {
-		StringBuilder url = new StringBuilder();
-		url.append(String.format("jdbc:%s://%s:%s", dbms, host, port));
-		
-		if (schema != null) {
-			url.append(String.format("/%s", schema));
-		}
-
-		boolean isFirstParam = true;
-		if (user != null && user.length() != 0) {
-			url.append((isFirstParam)? "?" : "&");
-			url.append(String.format("user=%s", user));
-			isFirstParam = false;
-		}
-		if (password != null && password.length() != 0) {
-			url.append((isFirstParam)? "?" : "&");
-			url.append(String.format("password=%s", password));
-			isFirstParam = false;
-		}
-		
-		if (vc.getConf().doesContain("principal")) {
-			String principal = vc.getConf().get("principal");
-			
-			Pattern princPattern = Pattern.compile("(?<service>.*)/(?<host>.*)@(?<realm>.*)");
-			
-			Matcher princMatcher = princPattern.matcher(principal);
-			
-			if (princMatcher.find()) {
-				String service = princMatcher.group("service");
-				String krbRealm = princMatcher.group("realm");
-				String krbHost = princMatcher.group("host");
-				
-				url.append(String.format(";AuthMech=%s;KrbRealm=%s;KrbHostFQDN=%s;KrbServiceName=%s;KrbAuthType=%s",
-						 "1", krbRealm, krbHost, service, "2"));
-			} else {
-				VerdictLogger.error("Error: principal \"" + principal + "\" could not be parsed.\n"
-						+ "Make sure the principal is in the form service/host@REALM");
-			}		
-		}
-		
-		return url.toString();
 	}
 
 	public String getName() {
@@ -215,45 +122,27 @@ public class Dbms {
 		return currentSchema;
 	}
 	
-	public boolean execute(String query) throws VerdictException {
-		createStatementIfNotExists();
-		try {
-			return stmt.execute(query);
-		} catch (SQLException e) {
-			throw new VerdictException(e);
-		}
-	}
-	
-	public ResultSet executeQuery(String query) throws VerdictException {
-		createStatementIfNotExists();
-		ResultSet rs;
-		try {
-			rs = stmt.executeQuery(query);
-		} catch (SQLException e) {
-			throw new VerdictException(e);
-		}
+	public ResultSet executeJdbcQuery(String sql) throws VerdictException {
+		execute(sql);
+		ResultSet rs = getResultSet();
 		return rs;
 	}
 	
-	public void executeUpdate(String query) throws VerdictException { 
-		createStatementIfNotExists();
-		try {
-			stmt.executeUpdate(query);
-		} catch (SQLException e) {
-			throw new VerdictException(e);
-		}
+	public DataFrame executeSparkQuery(String sql) throws VerdictException {
+		execute(sql);
+		DataFrame rs = getDataFrame();
+		return rs;
 	}
 	
-	protected Connection makeDbmsConnection(String url, String className) throws VerdictException  {
-		try {
-			Class.forName(className);
-			VerdictLogger.debug(this, "JDBC connection string: " + url);
-			Connection conn = DriverManager.getConnection(url);
-			return conn;
-		} catch (ClassNotFoundException | SQLException e) {
-			throw new VerdictException(e);
-		}
-	}
+	public abstract boolean execute(String sql) throws VerdictException;
+	
+	public abstract ResultSet getResultSet();
+	
+	public abstract DataFrame getDataFrame();
+	
+	public abstract void executeUpdate(String sql) throws VerdictException;
+
+	public abstract void changeDatabase(String schemaName) throws VerdictException;
 	
 	public void createDatabase(String database) throws VerdictException {
 		createCatalog(database);
@@ -264,75 +153,59 @@ public class Dbms {
 		executeUpdate(sql);
 	}
 	
-	/**
-	 * changes to another database (or equivalently, schema). This is conceptually equal to the use statement in MySQL.
-	 * @throws VerdictException
-	 */
-	public void changeDatabase(String schemaName) throws VerdictException {
-		try {
-			conn.setCatalog(schemaName);
-			currentSchema = Optional.fromNullable(schemaName);
-			VerdictLogger.info("Database changed to: " + schemaName);
-		} catch (SQLException e) {
-			throw new VerdictException(e);
-		}
-	}
-	
-	public ResultSet showTables() throws VerdictException {
-		try {
-			DatabaseMetaData md = conn.getMetaData();
-			ResultSet rs = md.getTables(null, null, "%", null);
-			return rs;
-		} catch (SQLException e) {
-			throw new VerdictException(e);
-		}
-	}
-	
 	public void dropTable(TableUniqueName tableName) throws VerdictException {
 		String sql = String.format("DROP TABLE IF EXISTS %s", tableName);
 		VerdictLogger.debug(this, String.format("Drops table: %s", sql));
-		this.executeUpdate(sql);
+		executeUpdate(sql);
 		VerdictLogger.debug(this, tableName + " has been dropped.");
 	}
 	
-	protected void moveTable(TableUniqueName from, TableUniqueName to) throws VerdictException {
-		String sql = String.format("CREATE TABLE %s AS SELECT * FROM %s", to, from);
+	public void moveTable(TableUniqueName from, TableUniqueName to) throws VerdictException {
 		VerdictLogger.debug(this, String.format("Moves table %s to table %s", from, to));
+		String sql = String.format("CREATE TABLE %s AS SELECT * FROM %s", to, from);
+		dropTable(to);
 		executeUpdate(sql);
 		dropTable(from);
 		VerdictLogger.debug(this, "Moving table done.");
 	}
 
-	
-	/**
-	 * Creates a sample table without dropping an old table.
-	 * @param originalTableName
-	 * @param sampleRatio
-	 * @throws VerdictException
-	 */
-	protected void justCreateUniformRandomSampleTableOf(SampleParam param) throws VerdictException {
-		String sql = String.format("CREATE TABLE %s AS ", param.sampleTableName()) + 
-				 SingleRelation.from(vc, param.originalTable)
-			 	 .where("rand() <= " + param.samplingRatio)
-				 .select("*, round(rand()*100)%100 AS " + partitionColumnName()).toSql();
-		
-		VerdictLogger.debug(this, String.format("Creates a table: %s", sql));
-		this.executeUpdate(sql);
-		VerdictLogger.debug(this, "Done.");
+	public List<Pair<String, String>> getAllTableAndColumns(String schema) throws VerdictException {
+		List<Pair<String, String>> tablesAndColumns = new ArrayList<Pair<String, String>>();
+		List<String> tables = getTables(schema);
+		for (String table : tables) {
+			List<String> columns = getColumns(TableUniqueName.uname(schema, table));
+			for (String column : columns) {
+				tablesAndColumns.add(Pair.of(table, column));
+			}
+		}
+		return tablesAndColumns;
 	}
 	
-	public long getTableSize(TableUniqueName tableName) throws VerdictException {
-		ResultSet rs;
-		long cnt = 0;
-		try {
-			String sql = String.format("SELECT COUNT(*) FROM %s", tableName);
-			rs = this.executeQuery(sql);
-			while(rs.next()) {cnt = rs.getLong(1);	}
-			rs.close();
-		} catch (SQLException e) {
-			throw new VerdictException(StackTraceReader.stackTrace2String(e));
+	public abstract List<String> getTables(String schema) throws VerdictException;
+	
+	public abstract List<String> getColumns(TableUniqueName table) throws VerdictException;
+
+	public abstract void deleteEntry(TableUniqueName tableName, List<Pair<String, String>> colAndValues) throws VerdictException;
+
+	public abstract void insertEntry(TableUniqueName tableName, List<String> values) throws VerdictException;
+
+	public abstract long getTableSize(TableUniqueName tableName) throws VerdictException;
+
+	public abstract void createMetaTablesInDMBS(TableUniqueName originalTableName,
+												TableUniqueName sizeTableName,
+												TableUniqueName nameTableName) throws VerdictException;
+	
+	public boolean doesMetaTablesExist(String schemaName) throws VerdictException {
+		String metaSchema = vc.getMeta().metaCatalogForDataCatalog(schemaName);
+		String metaNameTable = vc.getMeta().getMetaNameTableForOriginalSchema(currentSchema.get()).getTableName();
+		String metaSizeTable = vc.getMeta().getMetaSizeTableForOriginalSchema(currentSchema.get()).getTableName();
+		
+		Set<String> tables = new HashSet<String>(getTables(metaSchema));
+		if (tables.contains(metaNameTable) && tables.contains(metaSizeTable)) {
+			return true;
+		} else {
+			return false;
 		}
-		return cnt;
 	}
 
 	public Pair<Long, Long> createUniformRandomSampleTableOf(SampleParam param) throws VerdictException {
@@ -340,35 +213,28 @@ public class Dbms {
 		justCreateUniformRandomSampleTableOf(param);
 		return Pair.of(getTableSize(param.sampleTableName()), getTableSize(param.originalTable));
 	}
-	
+
 	/**
-	 * Creates a universe sample table without dropping an old table.
+	 * Creates a sample table without dropping an old table.
 	 * @param originalTableName
 	 * @param sampleRatio
 	 * @throws VerdictException
 	 */
-	protected void justCreateUniverseSampleTableOf(SampleParam param) throws VerdictException {
-		TableUniqueName sampleTableName = param.sampleTableName();
-		String sql = String.format("CREATE TABLE %s AS ", sampleTableName) + 
-				 	 SingleRelation.from(vc, param.originalTable)
-				 	 .where(modOfHash(param.columnNames.get(0), 10000)
-				 			 + String.format(" <= %.4f", param.samplingRatio*10000))
-				 	 .select("*, round(rand()*100)%100 AS " + partitionColumnName()).toSql();
-		
-		VerdictLogger.debug(this, String.format("Creates a table: %s", sql));
-		this.executeUpdate(sql);
-		VerdictLogger.debug(this, "Done.");
-	}
-	
-	public String modOfHash(String col, int mod) {
-		return String.format("mod(cast(conv(substr(md5(%s),17,32),16,10) as unsigned), %d)", col, mod);
-	}
+	protected abstract void justCreateUniformRandomSampleTableOf(SampleParam param) throws VerdictException;
 	
 	public Pair<Long, Long> createUniverseSampleTableOf(SampleParam param) throws VerdictException {
 		dropTable(param.sampleTableName());
 		justCreateUniverseSampleTableOf(param);
 		return Pair.of(getTableSize(param.sampleTableName()), getTableSize(param.originalTable));
 	}
+
+	/**
+	 * Creates a universe sample table without dropping an old table.
+	 * @param originalTableName
+	 * @param sampleRatio
+	 * @throws VerdictException
+	 */
+	protected abstract void justCreateUniverseSampleTableOf(SampleParam param) throws VerdictException;
 	
 	public Pair<Long, Long> createStratifiedSampleTableOf(SampleParam param) throws VerdictException {
 		dropTable(param.sampleTableName());
@@ -376,50 +242,8 @@ public class Dbms {
 		return Pair.of(getTableSize(param.sampleTableName()), getTableSize(param.originalTable));
 	}
 	
-	protected void justCreateStratifiedSampleTableof(SampleParam param) throws VerdictException {
-		VerdictLogger.warn(this, "Stratified samples are not implemented for MySQL. Do nothing");
-	}
+	protected abstract void justCreateStratifiedSampleTableof(SampleParam param) throws VerdictException;
 
-	public Connection getDbmsConnection() {
-		return conn;
-	}
-	
-	/**
-	 * Attach a new column in which random integers between 0 and partitionCount-1 (inclusive) are populated. 
-	 * @param partitionCount
-	 * @return
-	 */
-	public ExactRelation augmentWithRandomPartitionNum(ExactRelation r) {
-		int pcount = partitionCount();
-		ExactRelation aug = r.select("*, " + String.format("mod(rand() * %d, %d) AS %s", pcount, pcount, partitionColumnName()));
-		aug.setAliasName(r.getAliasName());
-		return aug;
-	}
-
-	public void close() throws VerdictException {
-		try {
-			closeStatement();
-			if (conn != null) conn.close();
-		} catch (SQLException e) {
-			throw new VerdictException(e);
-		}
-	}
-	
-	protected String columnNameListToString(List<String> columnNames) {
-		StringBuilder b = new StringBuilder();
-		boolean isFirst = true;
-		for (String c : columnNames) {
-			if (isFirst) b.append(c);
-			else b.append(","+c);
-			isFirst = false;
-		}
-		return b.toString();
-	}
-	
-	protected String samplingRatioToString(double samplingRatio) {
-		return String.format("%.4f", samplingRatio);
-	}
-	
 	public void updateSampleNameEntryIntoDBMS(SampleParam param, TableUniqueName metaNameTableName) throws VerdictException {
 		deleteSampleNameEntryFromDBMS(param, metaNameTableName);
 		insertSampleNameEntryIntoDBMS(param, metaNameTableName);
@@ -428,20 +252,29 @@ public class Dbms {
 	public void deleteSampleNameEntryFromDBMS(SampleParam param, TableUniqueName metaNameTableName)
 			throws VerdictException {
 		TableUniqueName originalTableName = param.originalTable;
-		String sql = String.format("DELETE FROM %s WHERE originalschemaname = \"%s\" AND originaltablename = \"%s\" "
-				+ "AND sampletype = \"%s\" AND samplingratio = %s AND columnnames = \"%s\" ",
-				metaNameTableName, originalTableName.getSchemaName(), originalTableName.getTableName(),
-				param.sampleType, samplingRatioToString(param.samplingRatio), columnNameListToString(param.columnNames));
-		executeUpdate(sql);
+		List<Pair<String, String>> colAndValues = new ArrayList<Pair<String, String>>();
+		colAndValues.add(Pair.of("originalschemaname", originalTableName.getSchemaName()));
+		colAndValues.add(Pair.of("originaltablename", originalTableName.getTableName()));
+		colAndValues.add(Pair.of("sampletype", param.sampleType));
+		colAndValues.add(Pair.of("samplingratio", samplingRatioToString(param.samplingRatio)));
+		colAndValues.add(Pair.of("columnnames", columnNameListToString(param.columnNames)));
+		deleteEntry(metaNameTableName, colAndValues);
 	}
 	
 	protected void insertSampleNameEntryIntoDBMS(SampleParam param, TableUniqueName metaNameTableName) throws VerdictException {
 		TableUniqueName originalTableName = param.originalTable;
 		TableUniqueName sampleTableName = param.sampleTableName();
-		String sql = String.format("INSERT INTO %s VALUES (\"%s\", \"%s\", \"%s\", \"%s\", \"%s\", %s, \"%s\")", metaNameTableName,
-				originalTableName.getSchemaName(), originalTableName.getTableName(), sampleTableName.getSchemaName(), sampleTableName.getTableName(),
-				param.sampleType, samplingRatioToString(param.samplingRatio), columnNameListToString(param.columnNames));
-		executeUpdate(sql);
+		
+		List<String> values = new ArrayList<String>();
+		values.add(originalTableName.getSchemaName());
+		values.add(originalTableName.getTableName());
+		values.add(sampleTableName.getSchemaName());
+		values.add(sampleTableName.getTableName());
+		values.add(param.sampleType);
+		values.add(samplingRatioToString(param.samplingRatio));
+		values.add(columnNameListToString(param.columnNames));
+		
+		insertEntry(metaNameTableName, values);
 	}
 	
 	public void updateSampleSizeEntryIntoDBMS(SampleParam param, long sampleSize, long originalTableSize, TableUniqueName metaSizeTableName) throws VerdictException {
@@ -451,149 +284,33 @@ public class Dbms {
 	
 	public void deleteSampleSizeEntryFromDBMS(SampleParam param, TableUniqueName metaSizeTableName) throws VerdictException {
 		TableUniqueName sampleTableName = param.sampleTableName();
-		String sql = String.format("DELETE FROM %s WHERE schemaname = \"%s\" AND tablename = \"%s\" ",
-				metaSizeTableName, sampleTableName.getSchemaName(), sampleTableName.getTableName());
-		executeUpdate(sql);
+		List<Pair<String, String>> colAndValues = new ArrayList<Pair<String, String>>();
+		colAndValues.add(Pair.of("schemaname", sampleTableName.getSchemaName()));
+		colAndValues.add(Pair.of("tablename", sampleTableName.getTableName()));
+		deleteEntry(metaSizeTableName, colAndValues);
 	}
 	
 	protected void insertSampleSizeEntryIntoDBMS(SampleParam param,	long sampleSize, long originalTableSize, TableUniqueName metaSizeTableName) throws VerdictException {
 		TableUniqueName sampleTableName = param.sampleTableName();
-		String sql = String.format("INSERT INTO %s VALUES (\"%s\", \"%s\", %d, %d)",
-				metaSizeTableName, sampleTableName.getSchemaName(), sampleTableName.getTableName(), sampleSize, originalTableSize);
-		executeUpdate(sql);
+		List<String> values = new ArrayList<String>();
+		values.add(sampleTableName.getSchemaName());
+		values.add(sampleTableName.getTableName());
+		values.add(String.valueOf(sampleSize));
+		values.add(String.valueOf(originalTableSize));
+		insertEntry(metaSizeTableName, values);
 	}
 	
-	/**
-	 * This method does not guarantee fast deletion (especially in Impala or Hive)
-	 * @param tableName
-	 * @param condition
-	 * @throws VerdictException 
-	 */
-	public void deleteRowsIn(String tableName, String condition) throws VerdictException {
-		String sql = String.format("DELETE FROM %s WHERE %s", tableName, condition);
-		this.executeUpdate(sql);
-	}
-	
-	/**
-	 * This method does not guarantee fast insertion (especially in Impala or Hive)
-	 * @param tableName
-	 * @param condition
-	 * @throws VerdictException 
-	 */
-	public void insertRowsIn(String tableName, String values) throws VerdictException {
-		String sql = String.format("INSERT INTO %s VALUES (%s)", tableName, values);
-		this.executeUpdate(sql);
-	}
-	
-//	/**
-//	 * This method is not thread-safe
-//	 * @return
-//	 */
-//	public TableUniqueName generateTempTableName() {
-//		String tableName = String.format("verdict_temp_table_%d", System.nanoTime());
-//		return TableUniqueName.uname(vc, tableName);
-//	}
-	
-	public ResultSet getDatabaseNames() throws VerdictException {
-		try {
-			return conn.getMetaData().getCatalogs();
-		} catch (SQLException e) {
-			throw new VerdictException(e);
-		}
-	}
-	
-	public List<Pair<String, String>> getAllTableAndColumns(String schemaName) throws VerdictException {
-		List<Pair<String, String>> tabCols = new ArrayList<Pair<String, String>>();
-		try {
-			ResultSet rs = conn.getMetaData().getColumns(schemaName, null, "%", "%");
-			while (rs.next()) {
-				String table = rs.getString(3);
-				String column = rs.getString(4);
-				tabCols.add(Pair.of(table, column));
-			}
-		} catch (SQLException e) {
-			throw new VerdictException(e);
-		}
-		return tabCols;
-	}
-	
-	public ResultSet getTableNames(String schemaName) throws VerdictException {
-		try {
-			String[] types = {"TABLE", "VIEW"};
-			ResultSet rs = conn.getMetaData().getTables(schemaName, null, "%", types);
-			Map<Integer, Integer> columnMap = new HashMap<Integer, Integer>();
-			columnMap.put(1, 3);	// table name
-			columnMap.put(2, 4);	// table type
-			return new VerdictResultSet(rs, null, columnMap);
-		} catch (SQLException e) {
-			throw new VerdictException(e);
-		}
-	}
-	
-	public ResultSet describeTable(TableUniqueName tableUniqueName)  throws VerdictException {
-		try {
-			ResultSet rs = conn.getMetaData().getColumns(
-					tableUniqueName.getSchemaName(), null, tableUniqueName.getTableName(), "%");
-			Map<Integer, Integer> columnMap = new HashMap<Integer, Integer>();
-			columnMap.put(1, 4);	// column name
-			columnMap.put(2, 6); 	// data type name
-			columnMap.put(3, 12); 	// remarks
-			return new VerdictResultSet(rs, null, columnMap);
-		} catch (SQLException e) {
-			throw new VerdictException(e);
-		}
-	}
-	
-	public void createMetaTablesInDMBS(
-			TableUniqueName originalTableName,
-			TableUniqueName sizeTableName,
-			TableUniqueName nameTableName) throws VerdictException {
-		VerdictLogger.debug(this, "Creates meta tables if not exist.");
-		
-		String sql = String.format("CREATE TABLE IF NOT EXISTS %s", nameTableName)
-				+ " (originalschemaname VARCHAR(50), "
-				+ " originaltablename VARCHAR(50), "
-				+ " sampleschemaaname VARCHAR(50), "
-				+ " sampletablename VARCHAR(50), "
-				+ " sampletype VARCHAR(20), "
-				+ " samplingratio DOUBLE, "
-				+ " columnnames VARCHAR(200))";
-		executeUpdate(sql);
-		
-		// sample info
-		sql = String.format("CREATE TABLE IF NOT EXISTS %s", sizeTableName)
-				+ " (schemaname VARCHAR(50), "
-				+ " tablename VARCHAR(50), "
-				+ " samplesize BIGINT, "
-				+ " originaltablesize BIGINT)";
-		executeUpdate(sql);
-		
-		VerdictLogger.debug(this, "Finished createing meta tables if not exist.");
-	}
-	
-	public boolean doesMetaTablesExist(String schemaName) throws VerdictException {
-		String[] types = {"TABLE"};
-		try {
-			ResultSet rs = vc.getDbms().getDbmsConnection().getMetaData()
-							 .getTables(null,
-									    vc.getMeta().metaCatalogForDataCatalog(schemaName),
-									    vc.getMeta().getMetaNameTableForOriginalSchema(currentSchema.get()).getTableName(),
-									    types);
-			if (!rs.next()) return false;
-			else return true;
-		} catch (SQLException e) {
-			throw new VerdictException(e);
-		}
-	}
-	
+	@Deprecated
 	public String getQuoteString() {
-		return "\"";
+		return "`";
 	}
 
+	@Deprecated
 	public String varianceFunction() {
 		return "VAR_SAMP";
 	}
 	
+	@Deprecated
 	public String stddevFunction() {
 		return "STDDEV";
 	}
@@ -610,7 +327,27 @@ public class Dbms {
 		return vc.getConf().get("verdict.sampling_probability_column");
 	}
 	
+	public abstract String modOfHash(String col, int mod);
+
 	protected String quote(String expr) {
 		return String.format("\"%s\"", expr);
 	}
+
+	protected String columnNameListToString(List<String> columnNames) {
+		return Joiner.on(",").join(columnNames);
+	}
+
+	protected String samplingRatioToString(double samplingRatio) {
+		return String.format("%.4f", samplingRatio);
+	}
+	
+	public boolean isJDBC() {
+		return false;
+	}
+	
+	public boolean isSpark() {
+		return false;
+	}
+
+	public abstract void close() throws VerdictException;
 }

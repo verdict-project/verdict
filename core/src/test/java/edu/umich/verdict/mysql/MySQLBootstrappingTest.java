@@ -3,7 +3,7 @@ package edu.umich.verdict.mysql;
 import java.sql.ResultSet;
 
 import edu.umich.verdict.VerdictConf;
-import edu.umich.verdict.VerdictContext;
+import edu.umich.verdict.VerdictJDBCContext;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.util.ResultSetConversion;
 
@@ -21,7 +21,7 @@ public class MySQLBootstrappingTest {
 		conf.setDbmsSchema("tpch1G");
 		conf.setUser("verdict");
 		conf.setPassword("verdict");
-		VerdictContext vc = VerdictContext.from(conf);
+		VerdictJDBCContext vc = VerdictJDBCContext.from(conf);
 		
 		String sql = "select l_shipmode, count(*) from lineitem group by l_shipmode order by count(*) desc";
 		

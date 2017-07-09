@@ -8,7 +8,7 @@ import java.util.TreeMap;
 
 import org.apache.commons.lang3.tuple.Pair;
 
-import edu.umich.verdict.VerdictContext;
+import edu.umich.verdict.VerdictJDBCContext;
 import edu.umich.verdict.VerdictSQLParser;
 import edu.umich.verdict.datatypes.Alias;
 import edu.umich.verdict.datatypes.ColumnName;
@@ -24,7 +24,7 @@ import edu.umich.verdict.util.VerdictLogger;
 @Deprecated
 class AnalyticSelectStatementRewriter extends SelectStatementBaseRewriter  {
 	
-	protected VerdictContext vc;
+	protected VerdictJDBCContext vc;
 	
 	protected VerdictQuerySyntaxException e;
 	
@@ -67,7 +67,7 @@ class AnalyticSelectStatementRewriter extends SelectStatementBaseRewriter  {
 	protected Map<Integer, Integer> meanColIndex2ErrColIndex;
 
 	
-	public AnalyticSelectStatementRewriter(VerdictContext vc, String queryString) {
+	public AnalyticSelectStatementRewriter(VerdictJDBCContext vc, String queryString) {
 		super(queryString);
 		this.vc = vc;
 		this.e = null;
@@ -482,7 +482,7 @@ class ProperSampleAnalyzer extends SelectStatementBaseRewriter {
 	
 	private List<ColumnName> distinctColumns = new ArrayList<ColumnName>();
 	
-	private VerdictContext vc;
+	private VerdictJDBCContext vc;
 	
 	private List<Pair<TableUniqueName, String>> tableSourcesWithAlias = new ArrayList<Pair<TableUniqueName, String>>();
 	
@@ -498,7 +498,7 @@ class ProperSampleAnalyzer extends SelectStatementBaseRewriter {
 		return originalToSampleTable;
 	}
 	
-	public ProperSampleAnalyzer(VerdictContext vc, String queryString) {
+	public ProperSampleAnalyzer(VerdictJDBCContext vc, String queryString) {
 		super(queryString);
 		this.vc = vc;
 	}

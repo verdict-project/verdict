@@ -9,7 +9,7 @@ import java.util.Map;
 
 import org.apache.commons.lang3.tuple.Pair;
 
-import edu.umich.verdict.VerdictContext;
+import edu.umich.verdict.VerdictJDBCContext;
 
 public class TypeCasting {
 	
@@ -129,7 +129,7 @@ public class TypeCasting {
 		return (dbName.equals("impala") || dbName.equals("hive"))? true : false;
 	}
 	
-	public static String dbDatatypeNameWithDefaultParam(VerdictContext vc, int type) {
+	public static String dbDatatypeNameWithDefaultParam(VerdictJDBCContext vc, int type) {
 		String dbName = vc.getDbms().getName();
 		String typename = dbDatatypeName(type);
 		

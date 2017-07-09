@@ -8,10 +8,12 @@ import java.util.List;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.misc.Interval;
+import org.apache.spark.sql.DataFrame;
 
 import com.google.common.base.Joiner;
 
 import edu.umich.verdict.VerdictContext;
+import edu.umich.verdict.VerdictJDBCContext;
 import edu.umich.verdict.VerdictSQLBaseVisitor;
 import edu.umich.verdict.VerdictSQLParser;
 import edu.umich.verdict.VerdictSQLParser.ExpressionContext;
@@ -119,7 +121,17 @@ public abstract class Relation {
 		VerdictLogger.debug(this, "A query to db: " + sql);
 		VerdictLogger.debug(this, "A query to db:");
 		VerdictLogger.debugPretty(this, Relation.prettyfySql(sql), " ");
-		return vc.getDbms().executeQuery(sql);
+		ResultSet rs = vc.getDbms().executeJdbcQuery(sql);
+		return rs;
+	}
+	
+	public DataFrame collectDataFrame() throws VerdictException {
+		String sql = toSql();
+		VerdictLogger.debug(this, "A query to db: " + sql);
+		VerdictLogger.debug(this, "A query to db:");
+		VerdictLogger.debugPretty(this, Relation.prettyfySql(sql), " ");
+		DataFrame df = vc.getDbms().executeSparkQuery(sql);
+		return df;
 	}
 	
 	public List<List<Object>> collect() throws VerdictException {

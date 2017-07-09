@@ -5,7 +5,7 @@ import org.antlr.v4.runtime.CommonTokenStream;
 
 import com.google.common.base.Optional;
 
-import edu.umich.verdict.VerdictContext;
+import edu.umich.verdict.VerdictJDBCContext;
 import edu.umich.verdict.VerdictSQLLexer;
 import edu.umich.verdict.VerdictSQLParser;
 import edu.umich.verdict.datatypes.TableUniqueName;
@@ -66,7 +66,7 @@ public class StringManupulations {
 		}
 	}
 	
-	public static TableUniqueName tabUniqueNameOfColName(VerdictContext vc, String originalColName) {
+	public static TableUniqueName tabUniqueNameOfColName(VerdictJDBCContext vc, String originalColName) {
 		String[] tokens = originalColName.split("\\.");
 		if (tokens.length > 2) {
 			return TableUniqueName.uname(tokens[tokens.length-3], tokens[tokens.length-2]);

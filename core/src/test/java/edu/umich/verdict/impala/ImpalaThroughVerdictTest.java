@@ -3,7 +3,7 @@ package edu.umich.verdict.impala;
 import java.sql.ResultSet;
 
 import edu.umich.verdict.VerdictConf;
-import edu.umich.verdict.VerdictContext;
+import edu.umich.verdict.VerdictJDBCContext;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.util.ResultSetConversion;
 
@@ -16,7 +16,7 @@ public class ImpalaThroughVerdictTest {
 		conf.setHost("ec2-34-202-126-188.compute-1.amazonaws.com:21050");
 		conf.setDbmsSchema("instacart100g");
 
-		VerdictContext vc = VerdictContext.from(conf);
+		VerdictJDBCContext vc = VerdictJDBCContext.from(conf);
 		
 //		vc.executeQuery("create 1% sample from orders");
 //		vc.executeQuery("create 1% sample from order_products");

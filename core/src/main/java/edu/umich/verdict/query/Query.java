@@ -2,7 +2,10 @@ package edu.umich.verdict.query;
 
 import java.sql.ResultSet;
 
+import org.apache.spark.sql.DataFrame;
+
 import edu.umich.verdict.VerdictContext;
+import edu.umich.verdict.VerdictJDBCContext;
 import edu.umich.verdict.VerdictSQLBaseVisitor;
 import edu.umich.verdict.VerdictSQLParser;
 import edu.umich.verdict.datatypes.Alias;
@@ -21,6 +24,11 @@ public abstract class Query {
 	protected final String queryString;
 
 	protected final VerdictContext vc;
+	
+	protected ResultSet rs;
+	
+	protected DataFrame df;
+
 
 	public enum Type {
 		SELECT, CREATE_SAMPLE, DROP_SAMPLE, SHOW_SAMPLE, CONFIG, DESCRIBE_TABLE,
@@ -71,9 +79,33 @@ public abstract class Query {
 	 * @return ResultSet if the query belongs to the type A, otherwise return null.
 	 * @throws VerdictException
 	 */
-	public abstract ResultSet compute() throws VerdictException;
+	public void compute() throws VerdictException {
+		rs = null;
+		df = null;
+	}
 	
-	public static Query getInstance(VerdictContext vc, String queryString) throws VerdictException {
+	public ResultSet getResultSet() {
+		return rs;
+	}
+
+	public DataFrame getDataFrame() {
+		return df;
+	}
+	
+	public ResultSet computeResultSet() throws VerdictException {
+		compute();
+		ResultSet rs = getResultSet();
+		return rs;
+	}
+	
+	public DataFrame computeDataFrame() throws VerdictException {
+		compute();
+		DataFrame df = getDataFrame();
+		return df;
+	}
+	
+	
+	public static Query getInstance(VerdictJDBCContext vc, String queryString) throws VerdictException {
 		Query query = null;
 		Type queryType = getStatementType(queryString);
 		VerdictLogger.debug(Query.class, String.format("[%d] A query type: %s", vc.getQid(), queryType.toString()));

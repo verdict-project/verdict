@@ -1,23 +1,25 @@
 package edu.umich.verdict;
 
 import java.sql.ResultSet;
+import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 
+import org.apache.spark.sql.DataFrame;
 import org.apache.spark.sql.SQLContext;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.Sets;
 
 import edu.umich.verdict.dbms.Dbms;
 import edu.umich.verdict.exceptions.VerdictException;
-import edu.umich.verdict.query.Query;
-import edu.umich.verdict.util.VerdictLogger;
 
+public abstract class VerdictContext {
 
-public class VerdictContext {
-	
 	final protected VerdictConf conf;
 	
 	protected VerdictMeta meta;
+	
+	final static protected Set<String> JDBC_DBMS = Sets.newHashSet("mysql", "impala", "hive", "hive2");
 	
 	/*
 	 *  DBMS fields
@@ -30,7 +32,7 @@ public class VerdictContext {
 	// used for refreshing meta data.
 	private long queryUid;
 	
-	final private int contextId;
+	final protected int contextId;
 	
 	
 	public Dbms getDbms() {
@@ -82,55 +84,41 @@ public class VerdictContext {
 		return queryUid;
 	}
 
-	protected VerdictContext(VerdictConf conf) {
-		this.conf = conf;
-		this.contextId = ThreadLocalRandom.current().nextInt(0, 10000);
-	}
-	
-	/**
-	 *  copy constructor
-	 * @param conf
-	 * @throws VerdictException
-	 */
-	public VerdictContext(VerdictContext another) throws VerdictException {
-		this.conf = another.conf;
-		this.meta = another.meta;
-		this.dbms = another.dbms;
-		this.metaDbms = another.metaDbms;
-		this.queryUid = another.queryUid;
-		this.dbms.createNewStatementWithoutClosing();
-		this.contextId = another.contextId;
-	}
-	
-	/**
-	 * Makes connections to the 'data' DBMS and 'meta' DBMS.
-	 * @param conf
-	 * @throws VerdictException
-	 */
-	public static VerdictContext from(VerdictConf conf) throws VerdictException {
-		VerdictContext vc = new VerdictContext(conf);
-		vc.setDbms(Dbms.from(vc, conf));
-		vc.setMeta(new VerdictMeta(vc));		// this must be called after DB connection is created.
-		
-		if (conf.getDbmsSchema() != null) {
-			vc.getMeta().refreshSampleInfo(conf.getDbmsSchema());
-		}
-		
-		return vc;
-	}
-
-	
-	public ResultSet executeQuery(String sql) throws VerdictException {
-		VerdictLogger.debug(this, "An input query:");
-		VerdictLogger.debugPretty(this, sql, "  ");
-		Query vq = Query.getInstance(this, sql);
-		ResultSet rs = vq.compute();
-		VerdictLogger.debug(this, "The query execution finished.");
-		return rs;
-	}
-	
 	public void incrementQid() {
 		queryUid += 1;
 	}
-
+	
+	protected VerdictContext(VerdictConf conf, int contextId) {
+		this.conf = conf;
+		this.contextId = contextId;
+	}
+	
+	protected VerdictContext(VerdictConf conf) {
+		this(conf, ThreadLocalRandom.current().nextInt(0, 10000));
+	}
+	
+	public static VerdictContext dummyContext() {
+		VerdictConf conf = new VerdictConf();
+		conf.setDbms("dummy");
+		VerdictContext dummyContext;
+		try {
+			dummyContext = VerdictJDBCContext.from(conf);
+			return dummyContext;
+		} catch (VerdictException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+	
+	public static VerdictContext from(SQLContext sqlContext) throws VerdictException {
+		VerdictContext vc = new VerdictSparkContext(sqlContext);
+		return vc;
+	}
+	
+	public abstract void execute(String sql) throws VerdictException;
+	
+	public abstract ResultSet getResultSet();
+	
+	public abstract DataFrame getDataFrame();
+	
 }

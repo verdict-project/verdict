@@ -9,18 +9,18 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import edu.umich.verdict.VerdictConf;
-import edu.umich.verdict.VerdictContext;
+import edu.umich.verdict.VerdictJDBCContext;
 import edu.umich.verdict.exceptions.VerdictException;
 
 public class SqlToRelationUnitTest {
 	
-	static VerdictContext vc;
+	static VerdictJDBCContext vc;
 	
 	@BeforeClass
 	public static void connect() throws VerdictException, SQLException, FileNotFoundException {
 		VerdictConf conf = new VerdictConf();
 		conf.setDbms("dummy");
-		vc = VerdictContext.from(conf);
+		vc = VerdictJDBCContext.from(conf);
 	}
 
 	@Test

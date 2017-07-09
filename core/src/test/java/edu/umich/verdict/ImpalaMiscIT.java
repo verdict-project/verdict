@@ -23,7 +23,7 @@ public class ImpalaMiscIT extends MiscIT {
 		conf.setPort(port);
 		conf.setDbmsSchema(schema);
 		conf.set("no_user_password", "true");
-		vc = new VerdictContext(conf);
+		vc = new VerdictJDBCContext(conf);
 
 		String url = String.format("jdbc:impala://%s:%s/%s", host, port, schema);
 		Connection conn = DriverManager.getConnection(url);

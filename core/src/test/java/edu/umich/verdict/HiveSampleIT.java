@@ -25,7 +25,7 @@ public class HiveSampleIT extends SampleIT {
 		conf.setPort(port);
 		conf.setDbmsSchema(schema);
 		conf.set("no_user_password", "true");
-		vc = new VerdictContext(conf);
+		vc = new VerdictJDBCContext(conf);
 		
 		String url = String.format("jdbc:hive2://%s:%s/%s", host, port, schema);
 		conn = DriverManager.getConnection(url);

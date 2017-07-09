@@ -26,7 +26,7 @@ public class HiveAggregationIT extends AggregationIT {
 		conf.setPort(port);
 		conf.setDbmsSchema(schema);
 		conf.set("no_user_password", "true");
-		vc = new VerdictContext(conf);
+		vc = new VerdictJDBCContext(conf);
 		
 		String url = String.format("jdbc:hive2://%s:%s/%s", host, port, schema);
 		Connection conn = DriverManager.getConnection(url);

@@ -2,22 +2,24 @@ package edu.umich.verdict.query;
 
 import java.sql.ResultSet;
 
-import edu.umich.verdict.VerdictContext;
+import edu.umich.verdict.VerdictJDBCContext;
 import edu.umich.verdict.VerdictSQLBaseVisitor;
 import edu.umich.verdict.VerdictSQLParser;
 import edu.umich.verdict.datatypes.TableUniqueName;
+import edu.umich.verdict.dbms.DbmsJDBC;
+import edu.umich.verdict.dbms.DbmsSpark;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.util.StringManupulations;
 import edu.umich.verdict.util.VerdictLogger;
 
 public class DescribeTableQuery extends SelectQuery {
 
-	public DescribeTableQuery(VerdictContext vc, String q) {
+	public DescribeTableQuery(VerdictJDBCContext vc, String q) {
 		super(vc, q);
 	}
 
 	@Override
-	public ResultSet compute() throws VerdictException {
+	public void compute() throws VerdictException {
 		VerdictSQLParser p = StringManupulations.parserOf(queryString);
 
 		VerdictSQLBaseVisitor<String> visitor = new VerdictSQLBaseVisitor<String>() {
@@ -33,13 +35,16 @@ public class DescribeTableQuery extends SelectQuery {
 		};
 		
 		String tableName = visitor.visit(p.describe_table_statement());
-		TableUniqueName tableUniqueName = TableUniqueName.uname(vc, tableName);
+		TableUniqueName table = TableUniqueName.uname(vc, tableName);
 		
-		if (tableUniqueName.getSchemaName() == null) {
+		if (table.getSchemaName() == null) {
 			VerdictLogger.info("No database schema selected or specified; cannot show tables.");
-			return null;
 		} else {
-			return vc.getDbms().describeTable(tableUniqueName);
+			if (vc.getDbms().isJDBC()) {
+				rs = ((DbmsJDBC) vc.getDbms()).describeTableInResultSet(table);
+			} else if (vc.getDbms().isSpark()) {
+				df = ((DbmsSpark) vc.getDbms()).describeTableInDataFrame(table);
+			}
 		}
 	}
 }

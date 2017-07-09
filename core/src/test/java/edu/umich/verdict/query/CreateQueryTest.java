@@ -11,12 +11,12 @@ import org.junit.Test;
 
 import edu.umich.verdict.BaseIT;
 import edu.umich.verdict.VerdictConf;
-import edu.umich.verdict.VerdictContext;
+import edu.umich.verdict.VerdictJDBCContext;
 import edu.umich.verdict.exceptions.VerdictException;
 
 public class CreateQueryTest {
 	
-	protected static VerdictContext vc;
+	protected static VerdictJDBCContext vc;
 	
 	@BeforeClass
 	public static void connect() throws VerdictException, SQLException, FileNotFoundException {
@@ -30,7 +30,7 @@ public class CreateQueryTest {
 		conf.setPort(port);
 		conf.setDbmsSchema(schema);
 		conf.set("no_user_password", "true");
-		vc = VerdictContext.from(conf);
+		vc = VerdictJDBCContext.from(conf);
 	}
 	
 	@AfterClass

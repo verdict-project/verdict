@@ -6,7 +6,7 @@ import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
 
-import edu.umich.verdict.VerdictContext;
+import edu.umich.verdict.VerdictJDBCContext;
 import edu.umich.verdict.VerdictSQLBaseVisitor;
 import edu.umich.verdict.VerdictSQLParser;
 import edu.umich.verdict.VerdictSQLParser.Column_nameContext;
@@ -18,12 +18,12 @@ import edu.umich.verdict.util.VerdictLogger;
 
 public class DropSampleQuery extends Query {
 
-	public DropSampleQuery(VerdictContext vc, String q) {
+	public DropSampleQuery(VerdictJDBCContext vc, String q) {
 		super(vc, q);
 	}
 	
 	@Override
-	public ResultSet compute() throws VerdictException {
+	public void compute() throws VerdictException {
 		VerdictSQLParser p = StringManupulations.parserOf(queryString);
 		DeleteSampleStatementVisitor visitor = new DeleteSampleStatementVisitor();
 		visitor.visit(p.delete_sample_statement());
@@ -35,7 +35,6 @@ public class DropSampleQuery extends Query {
 		
 		deleteSampleOf(tableName, samplingRatio, sampleType, columnNames);
 		vc.getMeta().refreshSampleInfo(vc.getCurrentSchema().get());
-		return null;
 	}
 	
 	protected void deleteSampleOf(String tableName, double samplingRatio, String sampleType, List<String> columnNames) throws VerdictException {
