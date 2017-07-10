@@ -22,7 +22,6 @@ public class VerdictLogger {
 			logger.setLevel(Level.DEBUG);
 		}
 		VerdictLogger.info("Verdict's log level set to : " + level);
-		System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));;
 	}
 	
 	public static void info(Object msg) {
