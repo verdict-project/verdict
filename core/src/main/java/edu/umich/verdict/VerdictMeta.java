@@ -83,7 +83,15 @@ public class VerdictMeta {
 	
 	public Map<TableUniqueName, List<String>> getTableAndColumnNames(String schemaName) {
 		refreshSampleInfoIfNeeded(schemaName);
-		return tableToColumnNames;
+		Map<TableUniqueName, List<String>> inSchema = new HashMap<TableUniqueName, List<String>>();
+		for (Map.Entry<TableUniqueName, List<String>> entry : tableToColumnNames.entrySet()) {
+			TableUniqueName table = entry.getKey();
+			List<String> columns = entry.getValue();
+			if (table.getSchemaName().equals(schemaName)) {
+				inSchema.put(table, columns);
+			}
+		}
+		return inSchema;
 	}
 	
 	/**
