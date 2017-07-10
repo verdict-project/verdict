@@ -128,10 +128,7 @@ public class DbmsSpark extends Dbms {
 		String with = "'";
 		sql.append(Joiner.on(", ").join(StringManupulations.quoteEveryString(values, with)));
 		sql.append(") t");
-		String sql1 = sql.toString();
-		System.out.println(sql1);
-		executeUpdate(sql1);
-//		executeUpdate(sql.toString());
+		executeUpdate(sql.toString());
 	}
 
 	@Override
@@ -287,7 +284,7 @@ public class DbmsSpark extends Dbms {
 
 	@Override
 	public String modOfHash(String col, int mod) {
-		return String.format("crc32(cast(%s as string)) %% %d)", col, mod);
+		return String.format("crc32(cast(%s as string)) %% %d", col, mod);
 	}
 	
 	@Override

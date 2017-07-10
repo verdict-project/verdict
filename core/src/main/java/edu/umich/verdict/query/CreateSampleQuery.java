@@ -65,7 +65,7 @@ public class CreateSampleQuery extends Query {
 			}
 		} else if (param.sampleType.equals("stratified")) {
 			if (param.columnNames.size() == 0) {
-				VerdictLogger.error("A column name must be specified for universe samples. Nothing is done.");
+				VerdictLogger.error("A column name must be specified for stratified samples. Nothing is done.");
 			} else {
 				if (param.columnNames.size() > 1) {
 					VerdictLogger.warn(String.format("Only one column name is supported for stratified samples."
