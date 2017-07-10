@@ -10,7 +10,8 @@ public abstract class Expr {
 	private static VerdictContext dummyContext;
 	
 	static {
-		dummyContext = VerdictContext.dummyContext();
+//		dummyContext = VerdictContext.dummyContext();
+		dummyContext = null;
 	}
 	
 	public static Expr from(String expr) {

@@ -1,5 +1,7 @@
 package edu.umich.verdict.util;
 
+import java.util.Arrays;
+
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
@@ -20,6 +22,7 @@ public class VerdictLogger {
 			logger.setLevel(Level.DEBUG);
 		}
 		VerdictLogger.info("Verdict's log level set to : " + level);
+		System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));;
 	}
 	
 	public static void info(Object msg) {

@@ -97,18 +97,18 @@ public abstract class VerdictContext {
 		this(conf, ThreadLocalRandom.current().nextInt(0, 10000));
 	}
 	
-	public static VerdictContext dummyContext() {
-		VerdictConf conf = new VerdictConf();
-		conf.setDbms("dummy");
-		VerdictContext dummyContext;
-		try {
-			dummyContext = VerdictJDBCContext.from(conf);
-			return dummyContext;
-		} catch (VerdictException e) {
-			e.printStackTrace();
-		}
-		return null;
-	}
+//	public static VerdictContext dummyContext() {
+//		VerdictConf conf = new VerdictConf();
+//		conf.setDbms("dummy");
+//		VerdictContext dummyContext;
+//		try {
+//			dummyContext = VerdictJDBCContext.from(conf);
+//			return dummyContext;
+//		} catch (VerdictException e) {
+//			e.printStackTrace();
+//		}
+//		return null;
+//	}
 	
 	public static VerdictContext from(SQLContext sqlContext) throws VerdictException {
 		VerdictContext vc = new VerdictSparkContext(sqlContext);
