@@ -327,7 +327,8 @@ public abstract class DbmsJDBC extends Dbms {
 		StringBuilder sql = new StringBuilder(1000);
 		sql.append(String.format("insert into %s values ", tableName));
 		sql.append("(");
-		sql.append(Joiner.on(", ").join(StringManupulations.quoteEveryString(values)));
+		String with = "'";
+		sql.append(Joiner.on(", ").join(StringManupulations.quoteEveryString(values, with)));
 		sql.append(")");
 		executeUpdate(sql.toString());
 	}

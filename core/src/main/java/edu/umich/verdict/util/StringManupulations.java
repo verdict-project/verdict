@@ -107,16 +107,16 @@ public class StringManupulations {
 		return p;
 	}
 	
-	public static List<String> quoteEveryString(List<String> list) {
+	public static List<String> quoteEveryString(List<String> list, String with) {
 		List<String> quoted = new ArrayList<String>();
 		for (String e : list) {
-			quoted.add(quote(e));
+			quoted.add(quote(e, with));
 		}
 		return quoted;
 	}
 	
-	private static String quote(String e) {
-		return String.format("`%s`", e.replace("\"", "").replaceAll("`", ""));
+	private static String quote(String e, String with) {
+		return String.format("%s%s%s", with, e.replace("\"", "").replace("`", "").replace("'", ""), with);
 	}
 	
 }

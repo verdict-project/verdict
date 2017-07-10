@@ -125,7 +125,8 @@ public class DbmsSpark extends Dbms {
 		StringBuilder sql = new StringBuilder(1000);
 		sql.append(String.format("insert into %s ", tableName));
 		sql.append("select t.* from (select ");
-		sql.append(Joiner.on(", ").join(StringManupulations.quoteEveryString(values)));
+		String with = "'";
+		sql.append(Joiner.on(", ").join(StringManupulations.quoteEveryString(values, with)));
 		sql.append(") t");
 		String sql1 = sql.toString();
 		System.out.println(sql1);
@@ -252,7 +253,8 @@ public class DbmsSpark extends Dbms {
 	}
 	
 	protected TableUniqueName createTempTableExlucdingNameEntry(SampleParam param, TableUniqueName metaNameTableName) throws VerdictException {
-		TableUniqueName tempTableName = Relation.getTempTableName(vc);
+		String metaSchema = param.sampleTableName().getSchemaName();
+		TableUniqueName tempTableName = Relation.getTempTableName(metaSchema);
 		TableUniqueName originalTableName = param.originalTable;
 		executeUpdate(String.format("CREATE TABLE %s AS SELECT * FROM %s "
 				+ "WHERE originalschemaname <> \"%s\" OR originaltablename <> \"%s\" OR sampletype <> \"%s\""
@@ -270,7 +272,8 @@ public class DbmsSpark extends Dbms {
 	}
 
 	protected TableUniqueName createTempTableExlucdingSizeEntry(SampleParam param, TableUniqueName metaSizeTableName) throws VerdictException {
-		TableUniqueName tempTableName = Relation.getTempTableName(vc);
+		String metaSchema = param.sampleTableName().getSchemaName();
+		TableUniqueName tempTableName = Relation.getTempTableName(metaSchema);
 		TableUniqueName sampleTableName = param.sampleTableName();
 		executeUpdate(String.format("CREATE TABLE %s AS SELECT * FROM %s WHERE schemaname <> \"%s\" OR tablename <> \"%s\" ",
 				tempTableName, metaSizeTableName, sampleTableName.getSchemaName(), sampleTableName.getTableName()));

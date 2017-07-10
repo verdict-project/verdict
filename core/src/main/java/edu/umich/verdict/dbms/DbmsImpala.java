@@ -224,7 +224,8 @@ public class DbmsImpala extends DbmsJDBC {
 	}
 
 	protected TableUniqueName createTempTableExlucdingNameEntry(SampleParam param, TableUniqueName metaNameTableName) throws VerdictException {
-		TableUniqueName tempTableName = Relation.getTempTableName(vc);
+		String metaSchema = param.sampleTableName().getSchemaName();
+		TableUniqueName tempTableName = Relation.getTempTableName(metaSchema);
 		TableUniqueName originalTableName = param.originalTable;
 		executeUpdate(String.format("CREATE TABLE %s AS SELECT * FROM %s "
 				+ "WHERE originalschemaname <> \"%s\" OR originaltablename <> \"%s\" OR sampletype <> \"%s\""
@@ -247,7 +248,8 @@ public class DbmsImpala extends DbmsJDBC {
 	}
 
 	protected TableUniqueName createTempTableExlucdingSizeEntry(SampleParam param, TableUniqueName metaSizeTableName) throws VerdictException {
-		TableUniqueName tempTableName = Relation.getTempTableName(vc);
+		String metaSchema = param.sampleTableName().getSchemaName();
+		TableUniqueName tempTableName = Relation.getTempTableName(metaSchema);
 		TableUniqueName sampleTableName = param.sampleTableName();
 		executeUpdate(String.format("CREATE TABLE %s AS SELECT * FROM %s WHERE schemaname <> \"%s\" OR tablename <> \"%s\" ",
 				tempTableName, metaSizeTableName, sampleTableName.getSchemaName(), sampleTableName.getTableName()));
