@@ -47,10 +47,12 @@
           <plugin>
               <groupId>org.apache.maven.plugins</groupId>
               <artifactId>maven-source-plugin</artifactId>
+              <version>3.0.1</version>
           </plugin>
           <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-compiler-plugin</artifactId>
+          <version>3.6.1</version>
           <configuration>
             <source>${maven.java.version}</source>
             <target>${maven.java.version}</target>
@@ -58,26 +60,16 @@
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-source-plugin</artifactId>
-          <executions>
-            <execution>
-              <goals>
-                <goal>jar</goal>
-              </goals>
-            </execution>
-          </executions>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-assembly-plugin</artifactId>
-          <executions>
+          <version>3.0.0</version>
+          <!--<executions>
             <execution>
               <phase>package</phase>
               <goals>
                 <goal>single</goal>
               </goals>
             </execution>
-          </executions>
+          </executions>-->
           <configuration>
             <descriptorRefs>
               <descriptorRef>jar-with-dependencies</descriptorRef>
