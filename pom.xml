@@ -16,7 +16,6 @@
       <maven.failsafe.version>2.13</maven.failsafe.version>
       <maven.surefire.version>2.12.4</maven.surefire.version>
       <maven.javadoc.version>2.10.4</maven.javadoc.version>
-      <maven.antlr4.version>4.3</maven.antlr4.version>
       <skipTests>true</skipTests>
       <spark.core.version>1.6.0-cdh5.11.1</spark.core.version>
       <spark.sql.version>1.6.0-cdh5.11.1</spark.sql.version>
