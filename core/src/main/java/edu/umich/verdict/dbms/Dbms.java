@@ -45,6 +45,7 @@ public abstract class Dbms {
 	protected Dbms(VerdictContext vc, String dbName) {
 		this.vc = vc;
 		this.dbName = dbName;
+		currentSchema = Optional.absent();
 	}
 	
 	public static Dbms from(VerdictContext vc, VerdictConf conf) throws VerdictException {
