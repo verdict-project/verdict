@@ -116,14 +116,17 @@ public class DbmsSpark extends Dbms {
 	@Override
 	public void deleteEntry(TableUniqueName tableName, List<Pair<String, String>> colAndValues)
 			throws VerdictException {
-		// TODO Auto-generated method stub
-		
+		VerdictLogger.warn(this, "deleteEntry() not implemented for DbmsSpark");
 	}
 
 	@Override
 	public void insertEntry(TableUniqueName tableName, List<String> values) throws VerdictException {
-		// TODO Auto-generated method stub
-		
+		StringBuilder sql = new StringBuilder(1000);
+		sql.append(String.format("insert into %s ", tableName));
+		sql.append("select t.* from (select ");
+		sql.append(Joiner.on(", ").join(values));
+		sql.append(") t");
+		executeUpdate(sql.toString());
 	}
 
 	@Override
