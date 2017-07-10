@@ -222,7 +222,7 @@ public class VerdictMeta {
 		}
 		
 		uptodateSchemas.put(schemaName, vc.getCurrentQid());
-		VerdictLogger.debug(this, "Sample meta data refreshed.");
+		VerdictLogger.info(this, "Verdict meta data was refreshed.");
 	}
 	
 	private void populateTableAndColumnInfoFor(String schema) throws VerdictException {

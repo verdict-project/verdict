@@ -300,7 +300,7 @@ public abstract class ExactRelation extends Relation {
 			plans.consolidateNewExpr(groups);
 		}
 		
-		double relative_cost_ratio = vc.getConf().getDouble("relative_target_cost");
+		double relative_cost_ratio = vc.getConf().getRelativeTargetCost();
 		SamplePlan best = plans.bestPlan(relative_cost_ratio);
 		return best;
 	}

@@ -248,6 +248,10 @@ public class VerdictConf {
 	public int subsamplingPartitionCount() {
 		return getInt("verdict.subsampling_partition_count");
 	}
+	
+	public double getRelativeTargetCost() {
+		return getDouble("verdict.relative_target_cost");
+	}
 }
 
 
