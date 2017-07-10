@@ -41,11 +41,6 @@ public class DbmsSpark extends Dbms {
 		this.sqlContext = sqlContext;
 	}
 
-//	public DataFrame executeSparkQuery(String sql) {
-//		DataFrame df = sqlContext.sql(sql);
-//		return df;
-//	}
-	
 	public DataFrame getDatabaseNamesInDataFrame() throws VerdictException {
 		DataFrame df = executeSparkQuery("show databases");
 		return df;
@@ -240,6 +235,39 @@ public class DbmsSpark extends Dbms {
 		VerdictLogger.debug(this, String.format("Creates a table: %s using the following statement:", sampleTableName));
 		VerdictLogger.debugPretty(this, Relation.prettyfySql(sql), "  ");
 		this.executeUpdate(sql);
+	}
+	
+	@Override
+	public void updateSampleNameEntryIntoDBMS(SampleParam param, TableUniqueName metaNameTableName) throws VerdictException {
+		TableUniqueName tempTableName = createTempTableExlucdingNameEntry(param, metaNameTableName);
+		insertSampleNameEntryIntoDBMS(param, tempTableName);
+		moveTable(tempTableName, metaNameTableName);
+	}
+	
+	protected TableUniqueName createTempTableExlucdingNameEntry(SampleParam param, TableUniqueName metaNameTableName) throws VerdictException {
+		TableUniqueName tempTableName = Relation.getTempTableName(vc);
+		TableUniqueName originalTableName = param.originalTable;
+		executeUpdate(String.format("CREATE TABLE %s AS SELECT * FROM %s "
+				+ "WHERE originalschemaname <> \"%s\" OR originaltablename <> \"%s\" OR sampletype <> \"%s\""
+				+ "OR samplingratio <> %s OR columnnames <> \"%s\"",
+				tempTableName, metaNameTableName, originalTableName.getSchemaName(), originalTableName.getTableName(),
+				param.sampleType, samplingRatioToString(param.samplingRatio), columnNameListToString(param.columnNames)));
+		return tempTableName;
+	}
+	
+	@Override
+	public void updateSampleSizeEntryIntoDBMS(SampleParam param, long sampleSize, long originalTableSize, TableUniqueName metaSizeTableName) throws VerdictException {
+		TableUniqueName tempTableName = createTempTableExlucdingSizeEntry(param, metaSizeTableName);
+		insertSampleSizeEntryIntoDBMS(param, sampleSize, originalTableSize, tempTableName);
+		moveTable(tempTableName, metaSizeTableName);
+	}
+
+	protected TableUniqueName createTempTableExlucdingSizeEntry(SampleParam param, TableUniqueName metaSizeTableName) throws VerdictException {
+		TableUniqueName tempTableName = Relation.getTempTableName(vc);
+		TableUniqueName sampleTableName = param.sampleTableName();
+		executeUpdate(String.format("CREATE TABLE %s AS SELECT * FROM %s WHERE schemaname <> \"%s\" OR tablename <> \"%s\" ",
+				tempTableName, metaSizeTableName, sampleTableName.getSchemaName(), sampleTableName.getTableName()));
+		return tempTableName;
 	}
 
 	protected String randomPartitionColumn() {

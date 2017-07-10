@@ -210,18 +210,18 @@ public class DbmsImpala extends DbmsJDBC {
 	}
 	
 	@Override
-		public void updateSampleNameEntryIntoDBMS(SampleParam param, TableUniqueName metaNameTableName) throws VerdictException {
-			TableUniqueName tempTableName = createTempTableExlucdingNameEntry(param, metaNameTableName);
-			insertSampleNameEntryIntoDBMS(param, tempTableName);
-			moveTable(tempTableName, metaNameTableName);
-	//		VerdictLogger.debug(this, "Created a temp table with the new sample name info: " + tempTableName);
-	//		
-	//		// copy temp table to the original meta name table after inserting a new entry.
-	//		VerdictLogger.debug(this, String.format("Moves the temp table (%s) to the meta name table (%s).", tempTableName, metaNameTableName));
-	//		dropTable(metaNameTableName);
-	//		executeUpdate(String.format("CREATE TABLE %s AS SELECT * FROM %s", metaNameTableName, tempTableName));
-	//		dropTable(tempTableName);
-		}
+	public void updateSampleNameEntryIntoDBMS(SampleParam param, TableUniqueName metaNameTableName) throws VerdictException {
+		TableUniqueName tempTableName = createTempTableExlucdingNameEntry(param, metaNameTableName);
+		insertSampleNameEntryIntoDBMS(param, tempTableName);
+		moveTable(tempTableName, metaNameTableName);
+		//		VerdictLogger.debug(this, "Created a temp table with the new sample name info: " + tempTableName);
+		//		
+		//		// copy temp table to the original meta name table after inserting a new entry.
+		//		VerdictLogger.debug(this, String.format("Moves the temp table (%s) to the meta name table (%s).", tempTableName, metaNameTableName));
+		//		dropTable(metaNameTableName);
+		//		executeUpdate(String.format("CREATE TABLE %s AS SELECT * FROM %s", metaNameTableName, tempTableName));
+		//		dropTable(tempTableName);
+	}
 
 	protected TableUniqueName createTempTableExlucdingNameEntry(SampleParam param, TableUniqueName metaNameTableName) throws VerdictException {
 		TableUniqueName tempTableName = Relation.getTempTableName(vc);
@@ -235,16 +235,16 @@ public class DbmsImpala extends DbmsJDBC {
 	}
 	
 	@Override
-		public void updateSampleSizeEntryIntoDBMS(SampleParam param, long sampleSize, long originalTableSize, TableUniqueName metaSizeTableName) throws VerdictException {
-			TableUniqueName tempTableName = createTempTableExlucdingSizeEntry(param, metaSizeTableName);
-			insertSampleSizeEntryIntoDBMS(param, sampleSize, originalTableSize, tempTableName);
-			moveTable(tempTableName, metaSizeTableName);
-//			VerdictLogger.debug(this, "Created a temp table with the new sample size info: " + tempTableName);
-			// copy temp table to the original meta size table after inserting a new entry.
-	//		executeUpdate(String.format("CREATE TABLE %s AS SELECT * FROM %s", metaSizeTableName, tempTableName));
-	//		VerdictLogger.debug(this, String.format("Moved the temp table (%s) to the meta size table (%s).", tempTableName, metaSizeTableName));
-	//		dropTable(tempTableName);
-		}
+	public void updateSampleSizeEntryIntoDBMS(SampleParam param, long sampleSize, long originalTableSize, TableUniqueName metaSizeTableName) throws VerdictException {
+		TableUniqueName tempTableName = createTempTableExlucdingSizeEntry(param, metaSizeTableName);
+		insertSampleSizeEntryIntoDBMS(param, sampleSize, originalTableSize, tempTableName);
+		moveTable(tempTableName, metaSizeTableName);
+		//			VerdictLogger.debug(this, "Created a temp table with the new sample size info: " + tempTableName);
+		// copy temp table to the original meta size table after inserting a new entry.
+		//		executeUpdate(String.format("CREATE TABLE %s AS SELECT * FROM %s", metaSizeTableName, tempTableName));
+		//		VerdictLogger.debug(this, String.format("Moved the temp table (%s) to the meta size table (%s).", tempTableName, metaSizeTableName));
+		//		dropTable(tempTableName);
+	}
 
 	protected TableUniqueName createTempTableExlucdingSizeEntry(SampleParam param, TableUniqueName metaSizeTableName) throws VerdictException {
 		TableUniqueName tempTableName = Relation.getTempTableName(vc);
