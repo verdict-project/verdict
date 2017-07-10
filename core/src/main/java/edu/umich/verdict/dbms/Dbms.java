@@ -32,6 +32,22 @@ public abstract class Dbms {
 	protected VerdictContext vc;
 	
 	
+	public VerdictContext getVc() {
+		return vc;
+	}
+
+	public void setVc(VerdictContext vc) {
+		this.vc = vc;
+	}
+
+	public String getDbName() {
+		return dbName;
+	}
+
+	public void setCurrentSchema(Optional<String> currentSchema) {
+		this.currentSchema = currentSchema;
+	}
+
 	/**
 	 * Copy constructor for not sharing the underlying statement.
 	 * @param another

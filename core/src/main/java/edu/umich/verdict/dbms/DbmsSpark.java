@@ -11,6 +11,7 @@ import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SQLContext;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
 
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.datatypes.SampleParam;
@@ -52,6 +53,8 @@ public class DbmsSpark extends Dbms {
 	
 	public void changeDatabase(String schema) throws VerdictException {
 		execute(String.format("use %s", schema));
+		currentSchema = Optional.fromNullable(schema);
+		VerdictLogger.info("Database changed to: " + schema);
 	}
 
 	public DataFrame getTablesInDataFrame(String schemaName) throws VerdictException {
