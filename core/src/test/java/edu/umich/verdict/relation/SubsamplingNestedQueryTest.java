@@ -26,7 +26,7 @@ public class SubsamplingNestedQueryTest {
 		
 		sql = "select avg(days_since_prior) from orders where days_since_prior > (select avg(days_since_prior) from orders)";
 		r = ExactRelation.from(vc, sql);
-		rs = vc.executeQuery(sql);
+		rs = vc.executeJdbcQuery(sql);
 		ResultSetConversion.printResultSet(rs);
 	}
 

@@ -48,7 +48,7 @@ public class SubsamplingMultipleAggregationTest {
 			+ "from orders "
 			+ "group by order_dow "
 			+ "order by order_dow) t1";
-		rs = vc.executeQuery(sql);
+		rs = vc.executeJdbcQuery(sql);
 		ResultSetConversion.printResultSet(rs);
 		
 		vc.destroy();

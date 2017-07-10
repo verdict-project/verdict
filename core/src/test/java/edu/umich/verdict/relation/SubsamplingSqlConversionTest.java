@@ -28,7 +28,7 @@ public class SubsamplingSqlConversionTest {
 //		converted = r.approx().toSql();
 //		System.out.println(converted);
 //		System.out.println(Relation.prettyfySql(converted));
-		rs = vc.executeQuery(sql);
+		rs = vc.executeJdbcQuery(sql);
 		ResultSetConversion.printResultSet(rs);
 		
 		sql = "select sum(orders.days_since_prior) from orders";
@@ -36,7 +36,7 @@ public class SubsamplingSqlConversionTest {
 //		converted = r.approx().toSql();
 //		System.out.println(converted);
 //		System.out.println(Relation.prettyfySql(converted));
-		rs = vc.executeQuery(sql);
+		rs = vc.executeJdbcQuery(sql);
 		ResultSetConversion.printResultSet(rs);
 		
 		sql = "select order_dow, count(*) from orders group by order_dow order by order_dow";
@@ -44,7 +44,7 @@ public class SubsamplingSqlConversionTest {
 //		converted = r.approx().toSql();
 //		System.out.println(converted);
 //		System.out.println(Relation.prettyfySql(converted));
-		rs = vc.executeQuery(sql);
+		rs = vc.executeJdbcQuery(sql);
 		ResultSetConversion.printResultSet(rs);
 		
 		vc.destroy();

@@ -7,6 +7,8 @@ import org.apache.spark.sql.SQLContext;
 
 import edu.umich.verdict.dbms.DbmsSpark;
 import edu.umich.verdict.exceptions.VerdictException;
+import edu.umich.verdict.query.Query;
+import edu.umich.verdict.util.VerdictLogger;
 
 /**
  * Spark 1.6 support
@@ -14,6 +16,8 @@ import edu.umich.verdict.exceptions.VerdictException;
  *
  */
 public class VerdictSparkContext extends VerdictContext {
+	
+	private DataFrame df;
 
 	public VerdictSparkContext(SQLContext sqlContext) throws VerdictException {
 		this(sqlContext, new VerdictConf());
@@ -24,16 +28,13 @@ public class VerdictSparkContext extends VerdictContext {
 	public VerdictSparkContext(SQLContext sqlContext, VerdictConf conf) throws VerdictException {
 		super(conf);
 	}
-	
-	public DataFrame executeSparkQuery(String sql) throws VerdictException {
-		DataFrame df = ((DbmsSpark) getDbms()).executeSparkQuery(sql);
-		return df;
-	}
 
 	@Override
 	public void execute(String sql) throws VerdictException {
-		// TODO Auto-generated method stub
-		
+		VerdictLogger.debug(this, "An input query:");
+		VerdictLogger.debugPretty(this, sql, "  ");
+		Query vq = Query.getInstance(this, sql);
+		df = vq.computeDataFrame();
 	}
 
 	@Override
@@ -44,7 +45,6 @@ public class VerdictSparkContext extends VerdictContext {
 
 	@Override
 	public DataFrame getDataFrame() {
-		// TODO Auto-generated method stub
-		return null;
+		return df;
 	}
 }

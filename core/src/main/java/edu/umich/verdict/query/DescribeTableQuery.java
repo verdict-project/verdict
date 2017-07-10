@@ -1,5 +1,6 @@
 package edu.umich.verdict.query;
 
+import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.VerdictJDBCContext;
 import edu.umich.verdict.VerdictSQLBaseVisitor;
 import edu.umich.verdict.VerdictSQLParser;
@@ -12,7 +13,7 @@ import edu.umich.verdict.util.VerdictLogger;
 
 public class DescribeTableQuery extends SelectQuery {
 
-	public DescribeTableQuery(VerdictJDBCContext vc, String q) {
+	public DescribeTableQuery(VerdictContext vc, String q) {
 		super(vc, q);
 	}
 

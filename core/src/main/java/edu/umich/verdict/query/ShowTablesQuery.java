@@ -1,5 +1,6 @@
 package edu.umich.verdict.query;
 
+import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.VerdictJDBCContext;
 import edu.umich.verdict.dbms.DbmsJDBC;
 import edu.umich.verdict.dbms.DbmsSpark;
@@ -8,7 +9,7 @@ import edu.umich.verdict.util.VerdictLogger;
 
 public class ShowTablesQuery extends SelectQuery {
 
-	public ShowTablesQuery(VerdictJDBCContext vc, String q) {
+	public ShowTablesQuery(VerdictContext vc, String q) {
 		super(vc, q);
 	}
 	

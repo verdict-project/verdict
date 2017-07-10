@@ -2,6 +2,7 @@ package edu.umich.verdict.query;
 
 import com.google.common.base.Optional;
 
+import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.VerdictJDBCContext;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.relation.ExactRelation;
@@ -11,7 +12,7 @@ import edu.umich.verdict.util.VerdictLogger;
 
 public class ShowSamplesQuery extends SelectQuery {
 
-	public ShowSamplesQuery(VerdictJDBCContext vc, String q) {
+	public ShowSamplesQuery(VerdictContext vc, String q) {
 		super(vc, q);
 	}
 

@@ -48,7 +48,7 @@ public class CreateQueryTest {
 //				+ "quoted by \"\\\"\"";
 		
 		System.out.println(sql);
-		vc.executeQuery(sql);
+		vc.executeJdbcQuery(sql);
 		
 	}
 	

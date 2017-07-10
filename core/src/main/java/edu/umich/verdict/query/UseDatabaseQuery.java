@@ -1,5 +1,6 @@
 package edu.umich.verdict.query;
 
+import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.VerdictJDBCContext;
 import edu.umich.verdict.VerdictSQLBaseVisitor;
 import edu.umich.verdict.VerdictSQLParser;
@@ -8,7 +9,7 @@ import edu.umich.verdict.util.StringManupulations;
 
 public class UseDatabaseQuery extends Query {
 
-	public UseDatabaseQuery(VerdictJDBCContext vc, String q) {
+	public UseDatabaseQuery(VerdictContext vc, String q) {
 		super(vc, q);
 	}
 

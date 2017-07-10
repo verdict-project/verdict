@@ -1,5 +1,6 @@
 package edu.umich.verdict.query;
 
+import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.VerdictJDBCContext;
 import edu.umich.verdict.dbms.DbmsJDBC;
 import edu.umich.verdict.dbms.DbmsSpark;
@@ -7,7 +8,7 @@ import edu.umich.verdict.exceptions.VerdictException;
 
 public class ByPassSelectQuery extends SelectQuery {
 
-	public ByPassSelectQuery(VerdictJDBCContext vc, String q) {
+	public ByPassSelectQuery(VerdictContext vc, String q) {
 		super(vc, q);
 	}
 	

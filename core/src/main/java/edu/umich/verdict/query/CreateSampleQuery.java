@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
 
+import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.VerdictJDBCContext;
 import edu.umich.verdict.VerdictSQLBaseVisitor;
 import edu.umich.verdict.VerdictSQLParser;
@@ -20,7 +21,7 @@ import edu.umich.verdict.util.VerdictLogger;
 
 public class CreateSampleQuery extends Query {
 	
-	public CreateSampleQuery(VerdictJDBCContext vc, String q) {
+	public CreateSampleQuery(VerdictContext vc, String q) {
 		super(vc, q);
 	}
 	

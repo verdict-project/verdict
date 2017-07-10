@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
 
+import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.VerdictJDBCContext;
 import edu.umich.verdict.VerdictSQLBaseVisitor;
 import edu.umich.verdict.VerdictSQLParser;
@@ -14,7 +15,7 @@ import edu.umich.verdict.util.StringManupulations;
 
 public class ConfigQuery extends SelectQuery {
 
-	public ConfigQuery(VerdictJDBCContext vc, String q) {
+	public ConfigQuery(VerdictContext vc, String q) {
 		super(vc, q);
 	}
 

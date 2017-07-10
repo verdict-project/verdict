@@ -121,4 +121,16 @@ public abstract class VerdictContext {
 	
 	public abstract DataFrame getDataFrame();
 	
+	public ResultSet executeJdbcQuery(String sql) throws VerdictException {
+		execute(sql);
+		ResultSet rs = getResultSet();
+		return rs;
+	}
+	
+	public DataFrame executeSparkQuery(String sql) throws VerdictException {
+		execute(sql);
+		DataFrame df = getDataFrame();
+		return df;
+	}
+	
 }

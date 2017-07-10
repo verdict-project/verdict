@@ -24,14 +24,14 @@ public class AggregationIT extends BaseIT {
 
 	protected void testSimpleAggQuery(String sql) throws SQLException, VerdictException {
 		List<List<Object>> expected = collectResult(stmt.executeQuery(sql));
-		List<List<Object>> actual = collectResult(vc.executeQuery(sql));
+		List<List<Object>> actual = collectResult(vc.executeJdbcQuery(sql));
 		printTestCase(sql, expected, actual);
 		assertColsSimilar(expected, actual, 1, error);
 	}
 
 	protected void testGroupbyAggQuery(String sql) throws SQLException, VerdictException {
 		List<List<Object>> expected = collectResult(stmt.executeQuery(sql));
-		List<List<Object>> actual = collectResult(vc.executeQuery(sql));
+		List<List<Object>> actual = collectResult(vc.executeJdbcQuery(sql));
 		printTestCase(sql, expected, actual);
 		assertColsEqual(expected, actual, 1);
 		assertColsSimilar(expected, actual, 2, error);
@@ -210,14 +210,14 @@ public class AggregationIT extends BaseIT {
 	@Test
 	public void selectLimit() throws VerdictException, SQLException {
 		String sql = "select * from orders limit 5";
-		vc.executeQuery(sql);
+		vc.executeJdbcQuery(sql);
 	}
 
 	@Test
 	public void simpleOrderby() throws VerdictException, SQLException {
 		String sql = "select order_id, user_id, eval_set, order_number, order_dow from orders order by order_id limit 5";
 		List<List<Object>> expected = collectResult(stmt.executeQuery(sql));
-		List<List<Object>> actual = collectResult(vc.executeQuery(sql));
+		List<List<Object>> actual = collectResult(vc.executeJdbcQuery(sql));
 		printTestCase(sql, expected, actual);
 		
 		assertColsEqual(expected, actual, 1);

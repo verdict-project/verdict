@@ -36,7 +36,7 @@ public class NestedAggregationIT extends BaseIT {
 	@Test
 	public void avgOverAvgTest() throws VerdictException {
 		String sql = "select avg(days_since_prior) from orders where days_since_prior > (select avg(days_since_prior) from orders)";
-		ResultSet rs = vc.executeQuery(sql);
+		ResultSet rs = vc.executeJdbcQuery(sql);
 		ResultSetConversion.printResultSet(rs);
 	}
 

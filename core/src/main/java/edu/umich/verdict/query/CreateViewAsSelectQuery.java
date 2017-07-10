@@ -1,12 +1,13 @@
 package edu.umich.verdict.query;
 
+import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.VerdictJDBCContext;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.util.VerdictLogger;
 
 public class CreateViewAsSelectQuery extends Query {
 
-	public CreateViewAsSelectQuery(VerdictJDBCContext vc, String q) {
+	public CreateViewAsSelectQuery(VerdictContext vc, String q) {
 		super(vc, q);
 	}
 

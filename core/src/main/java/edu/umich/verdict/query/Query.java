@@ -5,7 +5,6 @@ import java.sql.ResultSet;
 import org.apache.spark.sql.DataFrame;
 
 import edu.umich.verdict.VerdictContext;
-import edu.umich.verdict.VerdictJDBCContext;
 import edu.umich.verdict.VerdictSQLBaseVisitor;
 import edu.umich.verdict.VerdictSQLParser;
 import edu.umich.verdict.datatypes.Alias;
@@ -105,7 +104,7 @@ public abstract class Query {
 	}
 	
 	
-	public static Query getInstance(VerdictJDBCContext vc, String queryString) throws VerdictException {
+	public static Query getInstance(VerdictContext vc, String queryString) throws VerdictException {
 		Query query = null;
 		Type queryType = getStatementType(queryString);
 		VerdictLogger.debug(Query.class, String.format("[%d] A query type: %s", vc.getQid(), queryType.toString()));

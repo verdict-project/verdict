@@ -10,6 +10,15 @@
       <antlr4.visitor>true</antlr4.visitor>
       <antlr4.version>4.5.3</antlr4.version>
       <maven.java.version>1.7</maven.java.version>
+      <spark.core.version>1.6.0-cdh5.11.1</spark.core.version>
+      <spark.sql.version>1.6.0-cdh5.11.1</spark.sql.version>
+      <log4j.version>1.2.17</log4j.version>
+      <google.guava.version>19.0</google.guava.version>
+      <apache.commons.version>3.5</apache.commons.version>
+      <junit.version>4.12</junit.version>
+      <maven.failsafe.version>2.13</maven.failsafe.version>
+      <maven.surefire.version>2.12.4</maven.surefire.version>
+      <maven.javadoc.version>2.10.4</maven.javadoc.version>
   </properties>
 
   <groupId>edu.umich.verdict</groupId>
@@ -79,7 +88,7 @@
         <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-surefire-plugin</artifactId>
-            <version>2.12.4</version>
+            <version>${maven.surefire.version}</version>
             <configuration>
                 <skipTests>${skipTests}</skipTests>
             </configuration>
@@ -87,7 +96,7 @@
         <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-javadoc-plugin</artifactId>
-            <version>2.10.4</version>
+            <version>${maven.javadoc.version}</version>
             <configuration>
                 <additionalparam>-Xdoclint:none</additionalparam>
             </configuration>

@@ -1,7 +1,6 @@
 package edu.umich.verdict.jdbc;
 
 import edu.umich.verdict.VerdictJDBCContext;
-import edu.umich.verdict.datatypes.VerdictResultSet;
 import edu.umich.verdict.dbms.DbmsJDBC;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.util.StackTraceReader;
@@ -44,7 +43,7 @@ public class VerdictStatement implements Statement {
     public int executeUpdate(String sql) throws SQLException {
     	VerdictLogger.debug(this, String.format("executeUpdate() called with: %s", sql));
     	try {
-			vc.executeQuery(sql);
+			vc.executeJdbcQuery(sql);
 		} catch (VerdictException e) {
 			new SQLException(StackTraceReader.stackTrace2String(e));
 		}
@@ -119,7 +118,7 @@ public class VerdictStatement implements Statement {
     public boolean execute(String sql) throws SQLException {
     	VerdictLogger.debug(this, String.format("execute() called with: %s", sql));
     	try {
-    		answer = vc.executeQuery(sql);
+    		answer = vc.executeJdbcQuery(sql);
     	} catch (VerdictException e) {
     		throw new SQLException(StackTraceReader.stackTrace2String(e));
     	}

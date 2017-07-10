@@ -11,7 +11,7 @@ import edu.umich.verdict.exceptions.VerdictException;
 public class MiscIT extends BaseIT {
 
 	protected void runSql(String sql) throws VerdictException {
-		vc.executeQuery(sql);
+		vc.executeJdbcQuery(sql);
 	}
 
 	@Test

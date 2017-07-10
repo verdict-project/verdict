@@ -62,7 +62,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-failsafe-plugin</artifactId>
-				<version>2.13</version>
+				<version>${maven.failsafe.version}</version>
 				<configuration>
 					<groups>edu.umich.verdict.IntegrationTest</groups>
 				</configuration>
@@ -94,34 +94,34 @@
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-lang3</artifactId>
-			<version>3.5</version>
+			<version>${apache.commons.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>log4j</groupId>
 			<artifactId>log4j</artifactId>
-			<version>1.2.17</version>
+			<version>${log4j.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava</artifactId>
-			<version>19.0</version>
+			<version>${google.guava.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<version>4.12</version>
+			<version>${junit.version}</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.spark</groupId>
 			<artifactId>spark-core_2.10</artifactId>
-			<version>1.6.0-cdh5.11.1</version>
+			<version>${spark.core.version}</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.spark</groupId>
 			<artifactId>spark-sql_2.10</artifactId>
-			<version>1.6.0-cdh5.11.1</version>
+			<version>${spark.sql.version}</version>
 			<scope>provided</scope>
 		</dependency>
 	</dependencies>

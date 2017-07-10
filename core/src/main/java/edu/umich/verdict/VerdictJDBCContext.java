@@ -123,10 +123,10 @@ public class VerdictJDBCContext extends VerdictContext {
 		VerdictLogger.debug(this, "The query execution finished.");
 	}
 	
-	public ResultSet executeQuery(String sql) throws VerdictException {
-		execute(sql);
-		return getResultSet();
-	}
+//	public ResultSet executeQuery(String sql) throws VerdictException {
+//		execute(sql);
+//		return getResultSet();
+//	}
 
 	@Override
 	public ResultSet getResultSet() {

@@ -13,28 +13,28 @@ public class SampleIT extends BaseIT {
 	
 	@Test
 	public void showSampleTest() throws VerdictException {
-		ResultSet rs = vc.executeQuery("show samples");
+		ResultSet rs = vc.executeJdbcQuery("show samples");
 		ResultSetConversion.printResultSet(rs);
 	}
 
 	@Test
 	public void createRecommendedSampleTest() throws VerdictException {
-		vc.executeQuery("CREATE SAMPLE OF orders");
+		vc.executeJdbcQuery("CREATE SAMPLE OF orders");
 	}
 	
 	@Test
 	public void createUniformSampleTest() throws VerdictException {
-		vc.executeQuery("create uniform sample of orders");
+		vc.executeJdbcQuery("create uniform sample of orders");
 	}
 	
 	@Test
 	public void createStratifiedSampleTest() throws VerdictException {
-		vc.executeQuery("create stratified sample of orders ON order_dow");
+		vc.executeJdbcQuery("create stratified sample of orders ON order_dow");
 	}
 	
 	@Test
 	public void createUniverseSampleTest() throws VerdictException {
-		vc.executeQuery("CREATE UNIVERSE SAMPLE OF orders ON user_id");
+		vc.executeJdbcQuery("CREATE UNIVERSE SAMPLE OF orders ON user_id");
 	}
 	
 	@Test
@@ -46,7 +46,7 @@ public class SampleIT extends BaseIT {
 	
 	@Test
 	public void dropRecommendedSampleTest() throws VerdictException {
-		vc.executeQuery("DROP SAMPLE OF orders");
+		vc.executeJdbcQuery("DROP SAMPLE OF orders");
 	}
 
 }

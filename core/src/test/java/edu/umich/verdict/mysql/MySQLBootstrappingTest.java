@@ -30,7 +30,7 @@ public class MySQLBootstrappingTest {
 		String sql3 = "select l_shipdate, count(*) as R from lineitem group by l_shipdate order by R desc limit 10";
 		
 		
-		ResultSet rs1 = vc.executeQuery(sql3);
+		ResultSet rs1 = vc.executeJdbcQuery(sql3);
 		ResultSetConversion.printResultSet(rs1);
 
 	}

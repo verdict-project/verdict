@@ -22,7 +22,6 @@
     <hsqldb.version>2.3.4</hsqldb.version>
     <jline.version>2.14.3</jline.version>
     <jmockit.version>1.30</jmockit.version>
-    <junit.version>4.12</junit.version>
     <maven-dependency-plugin.version>2.10</maven-dependency-plugin.version>
     <maven-gpg-plugin.version>1.6</maven-gpg-plugin.version>
     <scott-data-hsqldb.version>0.1</scott-data-hsqldb.version>
