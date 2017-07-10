@@ -73,6 +73,11 @@ public class SingleRelation extends ExactRelation {
 
 	@Override
 	protected List<SampleGroup> findSample(SelectElem elem) {
+		// refresh meta data if needed.
+		String schema = getTableName().getSchemaName();
+		vc.getMeta().refreshSampleInfoIfNeeded(schema);
+		
+		// Now the main procedure starts.
 		List<SampleGroup> candidates = new ArrayList<SampleGroup>();
 
 		// Get all the samples

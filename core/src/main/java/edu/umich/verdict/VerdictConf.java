@@ -115,6 +115,9 @@ public class VerdictConf {
     }
 
     public VerdictConf set(String key, String value) {
+    	key = key.toLowerCase();
+    	value = value.toLowerCase();
+    	
     	if (configKeySynonyms.containsKey(key)) {
     		return set(configKeySynonyms.get(key), value);
     	}
@@ -122,7 +125,8 @@ public class VerdictConf {
     	if (key.equals("verdict.loglevel")) {
     		VerdictLogger.setLogLevel(value);
     	}
-        configs.put(key.toLowerCase(), value);
+    	
+        configs.put(key, value);
         return this;
     }
 

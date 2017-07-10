@@ -44,7 +44,7 @@ public class VerdictMeta {
 	/**
 	 * remembers for what query id and schema, we have updated the meta info.
 	 */
-	protected Set<Pair<Long, String>> uptodateSchemas;
+	protected Map<String, Long> uptodateSchemas;
 	
 	/**
 	 * remembers tables and their column names.
@@ -57,7 +57,7 @@ public class VerdictMeta {
 		this.vc = vc;
 		sampleSizeMeta = new HashMap<TableUniqueName, SampleSizeInfo>();
 		sampleNameMeta = new HashMap<TableUniqueName, Map<SampleParam, TableUniqueName>>();
-		uptodateSchemas = new HashSet<Pair<Long, String>>();
+		uptodateSchemas = new HashMap<String, Long>();
 		tableToColumnNames = new HashMap<TableUniqueName, List<String>>();
 		META_NAME_TABLE = vc.getConf().get("verdict.meta_name_table");
 		META_SIZE_TABLE = vc.getConf().get("verdict.meta_size_table");
@@ -134,10 +134,28 @@ public class VerdictMeta {
 	}
 	
 	public void refreshSampleInfoIfNeeded(String schemaName) {
-		if (vc.getConf().getBoolean("refresh_meta_before_every_query")
-			&& !uptodateSchemas.contains(Pair.of(vc.getCurrentQid(), schemaName))) {
+		boolean needToRefresh = false;
+		String refreshOption = vc.getConf().get("verdict.refresh_meta");
+		
+		if (refreshOption.equals("per_session")) {
+			if (!uptodateSchemas.containsKey(schemaName)) {
+				needToRefresh = true;
+			}
+		} else if (refreshOption.equals("per_query")) {
+			// update if the last time when schemaName was updated is before the current qid.
+			if (!uptodateSchemas.containsKey(schemaName)) {
+				needToRefresh = true;
+			} else {
+				if (uptodateSchemas.get(schemaName) < vc.getCurrentQid()) {
+					needToRefresh = true;
+				}
+			}
+		} else if (refreshOption.equals("manual")) {
+			// don't do anything
+		}
+		
+		if (needToRefresh) {
 			refreshSampleInfo(schemaName);
-			uptodateSchemas.add(Pair.of(vc.getCurrentQid(), schemaName));
 		}
 	}
 	
@@ -203,6 +221,7 @@ public class VerdictMeta {
 			VerdictLogger.error(this, e.getMessage());
 		}
 		
+		uptodateSchemas.put(schemaName, vc.getCurrentQid());
 		VerdictLogger.debug(this, "Sample meta data refreshed.");
 	}
 	

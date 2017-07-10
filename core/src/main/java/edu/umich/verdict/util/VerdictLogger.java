@@ -19,6 +19,7 @@ public class VerdictLogger {
 		} else {
 			logger.setLevel(Level.DEBUG);
 		}
+		VerdictLogger.info("Verdict's log level set to : " + level);
 	}
 	
 	public static void info(Object msg) {
