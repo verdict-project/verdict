@@ -25,6 +25,7 @@ import edu.umich.verdict.relation.condition.CompCond;
 import edu.umich.verdict.relation.expr.BinaryOpExpr;
 import edu.umich.verdict.relation.expr.ConstantExpr;
 import edu.umich.verdict.relation.expr.Expr;
+import edu.umich.verdict.util.StringManupulations;
 import edu.umich.verdict.util.VerdictLogger;
 
 public class DbmsSpark extends Dbms {
@@ -124,9 +125,12 @@ public class DbmsSpark extends Dbms {
 		StringBuilder sql = new StringBuilder(1000);
 		sql.append(String.format("insert into %s ", tableName));
 		sql.append("select t.* from (select ");
-		sql.append(Joiner.on(", ").join(values));
+		sql.append(Joiner.on(", ").join(StringManupulations.quoteEveryString(values)));
 		sql.append(") t");
-		executeUpdate(sql.toString());
+		String sql1 = sql.toString();
+		System.out.println(sql1);
+		executeUpdate(sql1);
+//		executeUpdate(sql.toString());
 	}
 
 	@Override

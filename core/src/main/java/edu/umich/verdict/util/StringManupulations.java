@@ -1,5 +1,8 @@
 package edu.umich.verdict.util;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 
@@ -103,4 +106,17 @@ public class StringManupulations {
 		VerdictSQLParser p = new VerdictSQLParser(new CommonTokenStream(l));
 		return p;
 	}
+	
+	public static List<String> quoteEveryString(List<String> list) {
+		List<String> quoted = new ArrayList<String>();
+		for (String e : list) {
+			quoted.add(quote(e));
+		}
+		return quoted;
+	}
+	
+	private static String quote(String e) {
+		return String.format("`%s`", e.replace("\"", "").replaceAll("`", ""));
+	}
+	
 }

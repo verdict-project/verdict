@@ -24,6 +24,7 @@ import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.datatypes.VerdictResultSet;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.util.StackTraceReader;
+import edu.umich.verdict.util.StringManupulations;
 import edu.umich.verdict.util.VerdictLogger;
 
 public abstract class DbmsJDBC extends Dbms {
@@ -324,9 +325,9 @@ public abstract class DbmsJDBC extends Dbms {
 	@Override
 	public void insertEntry(TableUniqueName tableName, List<String> values) throws VerdictException {
 		StringBuilder sql = new StringBuilder(1000);
-		sql.append(String.format("insert into %s ", tableName));
+		sql.append(String.format("insert into %s values ", tableName));
 		sql.append("(");
-		sql.append(Joiner.on(", ").join(values));
+		sql.append(Joiner.on(", ").join(StringManupulations.quoteEveryString(values)));
 		sql.append(")");
 		executeUpdate(sql.toString());
 	}
