@@ -23,6 +23,7 @@ public class VerdictSparkContext extends VerdictContext {
 		this(sqlContext, new VerdictConf());
 		conf.setDbms("spark");
 		setDbms(new DbmsSpark(this, sqlContext));
+		setMeta(new VerdictMeta(this));
 	}
 	
 	public VerdictSparkContext(SQLContext sqlContext, VerdictConf conf) throws VerdictException {

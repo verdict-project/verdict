@@ -94,7 +94,7 @@ public class VerdictJDBCContext extends VerdictContext {
 		this.rs = another.rs;
 	}
 	
-	public VerdictJDBCContext(VerdictConf conf) {
+	protected VerdictJDBCContext(VerdictConf conf) {
 		super(conf);
 	}
 	
@@ -106,7 +106,7 @@ public class VerdictJDBCContext extends VerdictContext {
 	public static VerdictJDBCContext from(VerdictConf conf) throws VerdictException {
 		VerdictJDBCContext vc = new VerdictJDBCContext(conf);
 		vc.setDbms(Dbms.from(vc, conf));
-		vc.setMeta(new VerdictJDBCMeta(vc));		// this must be called after DB connection is created.
+		vc.setMeta(new VerdictMeta(vc));		// this must be called after DB connection is created.
 		
 		if (conf.getDbmsSchema() != null) {
 			vc.getMeta().refreshSampleInfo(conf.getDbmsSchema());

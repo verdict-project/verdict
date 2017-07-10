@@ -9,6 +9,7 @@ import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.misc.Interval;
 import org.apache.spark.sql.DataFrame;
+import org.apache.spark.sql.Row;
 
 import com.google.common.base.Joiner;
 
@@ -135,18 +136,33 @@ public abstract class Relation {
 	
 	public List<List<Object>> collect() throws VerdictException {
 		List<List<Object>> result = new ArrayList<List<Object>>();
-		ResultSet rs = collectResultSet();
-		try {
-			int colCount = rs.getMetaData().getColumnCount();
-			while (rs.next()) {
-				List<Object> row = new ArrayList<Object>();	
-				for (int i = 1; i <= colCount; i++) {
-					row.add(rs.getObject(i));
+		if (vc.getDbms().isJDBC()) {
+			ResultSet rs = collectResultSet();
+			try {
+				int colCount = rs.getMetaData().getColumnCount();
+				while (rs.next()) {
+					List<Object> row = new ArrayList<Object>();	
+					for (int i = 1; i <= colCount; i++) {
+						row.add(rs.getObject(i));
+					}
+					result.add(row);
+				}
+				rs.close();
+			} catch (SQLException e) {
+				throw new VerdictException(e);
+			}
+		}
+		else if (vc.getDbms().isSpark()) {
+			DataFrame df = collectDataFrame();
+			List<Row> rows = df.collectAsList();
+			for (Row r : rows) {
+				int size = r.size();
+				List<Object> row = new ArrayList<Object>();
+				for (int i = 0; i < size; i++) {
+					row.add(r.get(i));
 				}
 				result.add(row);
 			}
-		} catch (SQLException e) {
-			throw new VerdictException(e);
 		}
 		return result;
 	}
