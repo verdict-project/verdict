@@ -8,6 +8,7 @@ import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.VerdictSQLBaseVisitor;
 import edu.umich.verdict.VerdictSQLParser;
 import edu.umich.verdict.datatypes.Alias;
+import edu.umich.verdict.dbms.DbmsSpark;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.util.StringManupulations;
 import edu.umich.verdict.util.VerdictLogger;
@@ -88,7 +89,11 @@ public abstract class Query {
 	}
 
 	public DataFrame getDataFrame() {
-		return df;
+		if (df == null && (vc.getDbms() instanceof DbmsSpark)) {
+			return ((DbmsSpark) vc.getDbms()).emptyDataFrame();
+		} else {
+			return df;
+		}
 	}
 	
 	public ResultSet computeResultSet() throws VerdictException {

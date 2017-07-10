@@ -9,6 +9,9 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.spark.sql.DataFrame;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SQLContext;
+import org.apache.spark.sql.types.StructField;
+import org.apache.spark.sql.types.StructType;
+import org.apache.spark.sql.types.StringType;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -82,6 +85,10 @@ public class DbmsSpark extends Dbms {
 	@Override
 	public DataFrame getDataFrame() {
 		return df;
+	}
+	
+	public DataFrame emptyDataFrame() {
+		return sqlContext.emptyDataFrame();
 	}
 
 	@Override
