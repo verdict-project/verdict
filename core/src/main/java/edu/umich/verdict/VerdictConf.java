@@ -116,7 +116,6 @@ public class VerdictConf {
 
     public VerdictConf set(String key, String value) {
     	key = key.toLowerCase();
-    	value = value.toLowerCase();
     	
     	if (configKeySynonyms.containsKey(key)) {
     		return set(configKeySynonyms.get(key), value);

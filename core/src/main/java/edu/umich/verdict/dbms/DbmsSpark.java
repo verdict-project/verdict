@@ -3,15 +3,14 @@ package edu.umich.verdict.dbms;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.spark.sql.DataFrame;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SQLContext;
-import org.apache.spark.sql.types.StructField;
-import org.apache.spark.sql.types.StructType;
-import org.apache.spark.sql.types.StringType;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -92,6 +91,17 @@ public class DbmsSpark extends Dbms {
 	}
 
 	@Override
+	public Set<String> getDatabases() throws VerdictException {
+		Set<String> databases = new HashSet<String>();
+		List<Row> rows = executeSparkQuery("show databases").collectAsList();
+		for (Row row : rows) {
+			String dbname = row.getString(0); 
+			databases.add(dbname);
+		}
+		return databases;
+	}
+
+	@Override
 	public List<String> getTables(String schema) throws VerdictException {
 		List<String> tables = new ArrayList<String>();
 		List<Row> rows = executeSparkQuery("show tables in " + schema).collectAsList();
@@ -128,12 +138,12 @@ public class DbmsSpark extends Dbms {
 	}
 
 	@Override
-	public void insertEntry(TableUniqueName tableName, List<String> values) throws VerdictException {
+	public void insertEntry(TableUniqueName tableName, List<Object> values) throws VerdictException {
 		StringBuilder sql = new StringBuilder(1000);
 		sql.append(String.format("insert into %s ", tableName));
 		sql.append("select t.* from (select ");
 		String with = "'";
-		sql.append(Joiner.on(", ").join(StringManupulations.quoteEveryString(values, with)));
+		sql.append(Joiner.on(", ").join(StringManupulations.quoteString(values, with)));
 		sql.append(") t");
 		executeUpdate(sql.toString());
 	}
@@ -258,7 +268,7 @@ public class DbmsSpark extends Dbms {
 	
 	protected TableUniqueName createTempTableExlucdingNameEntry(SampleParam param, TableUniqueName metaNameTableName) throws VerdictException {
 		String metaSchema = param.sampleTableName().getSchemaName();
-		TableUniqueName tempTableName = Relation.getTempTableName(metaSchema);
+		TableUniqueName tempTableName = Relation.getTempTableName(vc, metaSchema);
 		TableUniqueName originalTableName = param.originalTable;
 		executeUpdate(String.format("CREATE TABLE %s AS SELECT * FROM %s "
 				+ "WHERE originalschemaname <> \"%s\" OR originaltablename <> \"%s\" OR sampletype <> \"%s\""
@@ -277,11 +287,23 @@ public class DbmsSpark extends Dbms {
 
 	protected TableUniqueName createTempTableExlucdingSizeEntry(SampleParam param, TableUniqueName metaSizeTableName) throws VerdictException {
 		String metaSchema = param.sampleTableName().getSchemaName();
-		TableUniqueName tempTableName = Relation.getTempTableName(metaSchema);
+		TableUniqueName tempTableName = Relation.getTempTableName(vc, metaSchema);
 		TableUniqueName sampleTableName = param.sampleTableName();
 		executeUpdate(String.format("CREATE TABLE %s AS SELECT * FROM %s WHERE schemaname <> \"%s\" OR tablename <> \"%s\" ",
 				tempTableName, metaSizeTableName, sampleTableName.getSchemaName(), sampleTableName.getTableName()));
 		return tempTableName;
+	}
+	
+	@Override
+	public void deleteSampleNameEntryFromDBMS(SampleParam param, TableUniqueName metaNameTableName) throws VerdictException {
+		TableUniqueName tempTable = createTempTableExlucdingNameEntry(param, metaNameTableName);
+		moveTable(tempTable, metaNameTableName);
+	}
+	
+	@Override
+	public void deleteSampleSizeEntryFromDBMS(SampleParam param, TableUniqueName metaSizeTableName) throws VerdictException {
+		TableUniqueName tempTable = createTempTableExlucdingSizeEntry(param, metaSizeTableName);
+		moveTable(tempTable, metaSizeTableName);
 	}
 
 	protected String randomPartitionColumn() {

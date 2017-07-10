@@ -3,7 +3,11 @@ package edu.umich.verdict.query;
 import com.google.common.base.Optional;
 
 import edu.umich.verdict.VerdictContext;
+import edu.umich.verdict.VerdictSQLBaseVisitor;
+import edu.umich.verdict.VerdictSQLParser;
+import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
+import edu.umich.verdict.util.StringManupulations;
 import edu.umich.verdict.util.VerdictLogger;
 
 public class RefreshQuery extends Query {
@@ -14,9 +18,22 @@ public class RefreshQuery extends Query {
 
 	@Override
 	public void compute() throws VerdictException {
-		Optional<String> schema = vc.getCurrentSchema();
-		if (schema.isPresent()) {
-			vc.getMeta().refreshSampleInfo(schema.get());
+		VerdictSQLParser p = StringManupulations.parserOf(queryString);
+		VerdictSQLBaseVisitor<String> visitor = new VerdictSQLBaseVisitor<String>() {
+			@Override
+			public String visitRefresh_statement(VerdictSQLParser.Refresh_statementContext ctx) {
+				String schema = null;
+				if (ctx.schema != null) {
+					schema = ctx.schema.getText();
+				}
+				return schema;
+			}
+		};
+		String schema = visitor.visit(p.refresh_statement());
+		schema = (schema != null)? schema : ( (vc.getCurrentSchema().isPresent())? vc.getCurrentSchema().get() : null );
+
+		if (schema != null) {
+			vc.getMeta().refreshSampleInfo(schema);
 		} else {
 			String msg = "No schema selected. No refresh done.";
 			VerdictLogger.error(msg);

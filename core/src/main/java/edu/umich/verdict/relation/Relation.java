@@ -222,8 +222,8 @@ public abstract class Relation {
 		return TableUniqueName.uname(vc, n);
 	}
 	
-	public static TableUniqueName getTempTableName(String schema) {
-		String n = String.format("vt%d", temp_tab_no);
+	public static TableUniqueName getTempTableName(VerdictContext vc, String schema) {
+		String n = String.format("vt%d_%d", vc.getContextId()%100, temp_tab_no);
 		temp_tab_no++;
 		return TableUniqueName.uname(schema, n);
 	}

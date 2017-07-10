@@ -51,6 +51,8 @@ public class VerdictMeta {
 	 */
 	protected Map<TableUniqueName, List<String>> tableToColumnNames;
 	
+	protected Set<String> schemaNames;		// a.k.a. database names.
+	
 	protected VerdictContext vc;
 
 	public VerdictMeta(VerdictContext vc) {
@@ -58,6 +60,7 @@ public class VerdictMeta {
 		sampleSizeMeta = new HashMap<TableUniqueName, SampleSizeInfo>();
 		sampleNameMeta = new HashMap<TableUniqueName, Map<SampleParam, TableUniqueName>>();
 		uptodateSchemas = new HashMap<String, Long>();
+		schemaNames = new HashSet<String>();
 		tableToColumnNames = new HashMap<TableUniqueName, List<String>>();
 		META_NAME_TABLE = vc.getConf().get("verdict.meta_name_table");
 		META_SIZE_TABLE = vc.getConf().get("verdict.meta_size_table");
@@ -70,6 +73,27 @@ public class VerdictMeta {
 	public void clearSampleInfo() {
 		sampleSizeMeta.clear();
 		sampleNameMeta.clear();
+		schemaNames.clear();
+	}
+	
+	/**
+	 * retrieves cached database names.
+	 * @return
+	 */
+	public Set<String> getDatabases() {
+		if (schemaNames.isEmpty()) {
+			refreshDatabases();
+		}
+		return schemaNames;
+	}
+	
+	public void refreshDatabases() {
+		try {
+			Set<String> databases = vc.getDbms().getDatabases();
+			schemaNames = databases;
+		} catch (VerdictException e) {
+			VerdictLogger.error(e);
+		}
 	}
 	
 	public List<String> getColumnNames(TableUniqueName tableName) {
@@ -217,11 +241,14 @@ public class VerdictMeta {
 							new SampleSizeInfo(sampleSize, originalTableSize));
 				}
 			}
+			
+			uptodateSchemas.put(schemaName, vc.getCurrentQid());
+			uptodateSchemas.put(metaSchema, vc.getCurrentQid());
 		} catch (VerdictException e) {
 			VerdictLogger.error(this, e.getMessage());
 		}
 		
-		uptodateSchemas.put(schemaName, vc.getCurrentQid());
+		
 		VerdictLogger.info(this, "Verdict meta data was refreshed.");
 	}
 	

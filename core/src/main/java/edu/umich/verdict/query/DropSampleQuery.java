@@ -27,17 +27,23 @@ public class DropSampleQuery extends Query {
 		DeleteSampleStatementVisitor visitor = new DeleteSampleStatementVisitor();
 		visitor.visit(p.delete_sample_statement());
 		
-		String tableName = visitor.getTableName();
+		TableUniqueName tableName = visitor.getTableName();
 		Double samplingRatio = visitor.getSamplingRatio();
 		String sampleType = visitor.getSampleType();
 		List<String> columnNames = visitor.getColumnNames();
+		TableUniqueName effectiveTableName = (tableName.getSchemaName() != null)? tableName :
+			( (vc.getCurrentSchema().isPresent())? TableUniqueName.uname(vc, tableName.getTableName()) : null );
+		if (effectiveTableName == null) {
+			VerdictLogger.error("No table is specified; Verdict doesn't do anything.");
+			return;
+		}
 		
-		deleteSampleOf(tableName, samplingRatio, sampleType, columnNames);
-		vc.getMeta().refreshSampleInfo(vc.getCurrentSchema().get());
+		deleteSampleOf(effectiveTableName, samplingRatio, sampleType, columnNames);
+		vc.getMeta().refreshSampleInfo(effectiveTableName.getSchemaName());
 	}
 	
-	protected void deleteSampleOf(String tableName, double samplingRatio, String sampleType, List<String> columnNames) throws VerdictException {
-		List<Pair<SampleParam, TableUniqueName>> sampleParamAndTableName = vc.getMeta().getSampleInfoFor(TableUniqueName.uname(vc, tableName));
+	protected void deleteSampleOf(TableUniqueName tableName, double samplingRatio, String sampleType, List<String> columnNames) throws VerdictException {
+		List<Pair<SampleParam, TableUniqueName>> sampleParamAndTableName = vc.getMeta().getSampleInfoFor(tableName);
 		
 		for (Pair<SampleParam, TableUniqueName> e : sampleParamAndTableName) {
 			SampleParam param = e.getLeft();
@@ -83,7 +89,7 @@ public class DropSampleQuery extends Query {
 
 class DeleteSampleStatementVisitor extends VerdictSQLBaseVisitor<Void> {
 	
-	private String tableName;
+	private TableUniqueName tableName;
 	
 	private Double samplingRatio = -1.0;	// negative value is for delete everything
 	
@@ -91,7 +97,7 @@ class DeleteSampleStatementVisitor extends VerdictSQLBaseVisitor<Void> {
 	
 	private List<String> columnNames = new ArrayList<String>();
 	
-	public String getTableName() {
+	public TableUniqueName getTableName() {
 		return tableName;
 	}
 	
@@ -118,7 +124,12 @@ class DeleteSampleStatementVisitor extends VerdictSQLBaseVisitor<Void> {
 	
 	@Override
 	public Void visitTable_name(VerdictSQLParser.Table_nameContext ctx) {
-		tableName = ctx.getText();
+		String schema = null;
+		if (ctx.schema != null) {
+			schema = ctx.schema.getText();
+		}
+		String table = ctx.table.getText();
+		tableName = TableUniqueName.uname(schema, table);
 		return null;
 	}
 	

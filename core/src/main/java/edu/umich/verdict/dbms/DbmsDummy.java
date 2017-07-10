@@ -1,7 +1,9 @@
 package edu.umich.verdict.dbms;
 
 import java.sql.ResultSet;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.spark.sql.DataFrame;
@@ -52,7 +54,7 @@ public class DbmsDummy extends Dbms {
 	}
 
 	@Override
-	public void insertEntry(TableUniqueName tableName, List<String> values) throws VerdictException {
+	public void insertEntry(TableUniqueName tableName, List<Object> values) throws VerdictException {
 	}
 
 	@Override
@@ -101,6 +103,11 @@ public class DbmsDummy extends Dbms {
 	public List<String> getColumns(TableUniqueName table) throws VerdictException {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	@Override
+	public Set<String> getDatabases() throws VerdictException {
+		return new HashSet<String>();
 	}
 	
 }

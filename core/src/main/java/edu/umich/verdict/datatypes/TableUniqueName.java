@@ -33,8 +33,13 @@ public class TableUniqueName implements Comparable<TableUniqueName> {
 	}
 	
 	public static TableUniqueName uname(VerdictContext vc, String tableName) {
-		return new TableUniqueName(StringManupulations.schemaOfTableName(vc.getCurrentSchema(), tableName).get(),
-								   StringManupulations.tableNameOfTableName(tableName));
+		Optional<String> schema = StringManupulations.schemaOfTableName(vc.getCurrentSchema(), tableName);
+		String table = StringManupulations.tableNameOfTableName(tableName);
+		if (schema.isPresent()) {
+			return new TableUniqueName(schema.get(), table);
+		} else {
+			return new TableUniqueName(null, table);
+		}
 	}
 	
 	public String fullyQuantifiedName() {

@@ -8,8 +8,10 @@ import org.apache.commons.lang3.tuple.Pair;
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.VerdictSQLBaseVisitor;
 import edu.umich.verdict.VerdictSQLParser;
+import edu.umich.verdict.datatypes.VerdictResultSet;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.util.StringManupulations;
+import edu.umich.verdict.util.VerdictLogger;
 
 
 public class ConfigQuery extends SelectQuery {
@@ -49,21 +51,25 @@ public class ConfigQuery extends SelectQuery {
 			String value = vc.getConf().get(keyValue.getLeft());
 			row.add(keyValue.getLeft());
 			row.add(value);
+			
+			if (vc.getDbms().isJDBC()) {
+				// To get a ResultSet, we temporarily create a table
+				List<List<String>> data = new ArrayList<List<String>>();
+				data.add(row);
+				
+				List<String> meta = new ArrayList<String>();
+				meta.add("conf_key");
+				meta.add("conf_value");
+				
+				rs = VerdictResultSet.fromList(data, meta);
+			} else if (vc.getDbms().isSpark()) {
+				VerdictLogger.warn(this, "DataFrame is not generated for Spark yet. The key-value pair is " + keyValue.toString());
+			}
 		} else {
 			// set statement
 			vc.getConf().set(keyValue.getKey(), keyValue.getValue());
 			row.add(keyValue.getLeft());
 			row.add(keyValue.getRight());
 		}
-		
-		// To get a ResultSet, we temporarily create a table
-//		List<List<String>> data = new ArrayList<List<String>>();
-//		data.add(row);
-		
-//		List<String> meta = new ArrayList<String>();
-//		meta.add("conf_key");
-//		meta.add("conf_value");
-		
-//		return VerdictResultSet.fromList(data, meta);
 	}
 }

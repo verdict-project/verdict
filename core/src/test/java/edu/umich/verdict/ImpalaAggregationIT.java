@@ -15,7 +15,7 @@ import edu.umich.verdict.exceptions.VerdictException;
 public class ImpalaAggregationIT extends AggregationIT {
 	
 	@BeforeClass
-	public static void connect() throws VerdictException, SQLException, FileNotFoundException {
+	public static void connect() throws VerdictException, SQLException, FileNotFoundException, ClassNotFoundException {
 		final String host = readHost();
 		final String port = "21050";
 		final String schema = "instacart1g";
@@ -26,9 +26,12 @@ public class ImpalaAggregationIT extends AggregationIT {
 		conf.setPort(port);
 		conf.setDbmsSchema(schema);
 		conf.set("no_user_password", "true");
-		vc = new VerdictJDBCContext(conf);
+		conf.set("verdict.loglevel", "debug");
+		conf.set("verdict.meta_catalog_suffix", "_verdict_impala");
+		vc = VerdictJDBCContext.from(conf);
 		
 		String url = String.format("jdbc:impala://%s:%s/%s", host, port, schema);
+		Class.forName("com.cloudera.impala.jdbc4.Driver");
 		Connection conn = DriverManager.getConnection(url);
 		stmt = conn.createStatement();
 	}

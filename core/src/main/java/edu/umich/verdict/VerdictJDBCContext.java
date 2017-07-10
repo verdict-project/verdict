@@ -15,7 +15,7 @@ import edu.umich.verdict.util.VerdictLogger;
 
 public class VerdictJDBCContext extends VerdictContext {
 	
-	protected VerdictMeta meta;
+	VerdictMeta meta;
 	
 	/*
 	 *  DBMS fields
@@ -94,7 +94,7 @@ public class VerdictJDBCContext extends VerdictContext {
 		this.rs = another.rs;
 	}
 	
-	protected VerdictJDBCContext(VerdictConf conf) {
+	VerdictJDBCContext(VerdictConf conf) {
 		super(conf);
 	}
 	

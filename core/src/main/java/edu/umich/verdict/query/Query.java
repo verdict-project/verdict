@@ -184,7 +184,7 @@ public abstract class Query {
 			protected Type defaultResult() { return type; }
 
 			@Override
-			public Type visitQuery_specification(VerdictSQLParser.Query_specificationContext ctx) {
+			public Type visitSelect_statement(VerdictSQLParser.Select_statementContext ctx) {
 				type = Type.SELECT;
 				return type;
 			}

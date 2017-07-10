@@ -100,6 +100,14 @@ public class TypeCasting {
 		}
 	}
 	
+	public static boolean isObjectNumeric(Object o) {
+		if (o instanceof Double || o instanceof Float || o instanceof Integer || o instanceof Long) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
 	private static final Map<Integer, String> typeInt2TypeName;
 	static {
 		Map<Integer, String> map = new HashMap<Integer, String>();

@@ -65,7 +65,7 @@ delete_sample_statement
     ;
 
 show_samples_statement
-    : SHOW type=(STRATIFIED | UNIFORM | ALL)? SAMPLES (FOR table=table_name)?
+    : SHOW type=(STRATIFIED | UNIFORM | ALL)? SAMPLES ((FOR | OF) table=table_name)?
     ;
 
 config_statement
@@ -228,7 +228,7 @@ insert_statement
 
 // https://msdn.microsoft.com/en-us/library/ms189499.aspx
 select_statement
-    : with_expression? query_expression order_by_clause? limit_clause? ';'?
+    : with_expression? EXACT? query_expression order_by_clause? limit_clause? confidence_clause? ';'?
     ;
 
 // https://msdn.microsoft.com/en-us/library/ms177523.aspx
@@ -461,7 +461,7 @@ use_statement
     ;
 
 show_tables_statement
-    : SHOW TABLES
+    : SHOW TABLES (IN schema=id)? ';'?
     ;
 
 show_databases_statement
@@ -473,7 +473,7 @@ describe_table_statement
     ;
     
 refresh_statement
-    : REFRESH
+    : REFRESH (schema=id)? ';'?
     ;
 
 execute_clause
@@ -1424,6 +1424,7 @@ DISABLE:                         D I S A B L E;
 DYNAMIC:                         D Y N A M I C;
 ENCRYPTION:                      E N C R Y P T I O N;
 ESCAPED_BY:                      E S C A P E D ' ' B Y;
+EXACT:                           E X A C T;
 EXP:                             E X P;
 FAST:                            F A S T;
 FAST_FORWARD:                    F A S T '_' F O R W A R D;

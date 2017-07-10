@@ -2,6 +2,7 @@ package edu.umich.verdict.dbms;
 
 import java.sql.ResultSet;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -156,6 +157,12 @@ public abstract class Dbms {
 	}
 	
 	public void dropTable(TableUniqueName tableName) throws VerdictException {
+		Set<String> databases = vc.getMeta().getDatabases();
+		if (!databases.contains(tableName.getSchemaName())) {
+			VerdictLogger.debug(this, String.format("Database, %s, does not exists. Don't bother to run a drop table statement.", tableName.getSchemaName()));
+			return;
+		}
+		
 		String sql = String.format("DROP TABLE IF EXISTS %s", tableName);
 		VerdictLogger.debug(this, String.format("Drops table: %s", sql));
 		executeUpdate(sql);
@@ -172,6 +179,11 @@ public abstract class Dbms {
 	}
 
 	public List<Pair<String, String>> getAllTableAndColumns(String schema) throws VerdictException {
+		Set<String> databases = vc.getMeta().getDatabases();
+		if (!databases.contains(schema)) {
+			return Arrays.asList();
+		}
+		
 		List<Pair<String, String>> tablesAndColumns = new ArrayList<Pair<String, String>>();
 		List<String> tables = getTables(schema);
 		for (String table : tables) {
@@ -183,13 +195,15 @@ public abstract class Dbms {
 		return tablesAndColumns;
 	}
 	
+	public abstract Set<String> getDatabases() throws VerdictException;
+	
 	public abstract List<String> getTables(String schema) throws VerdictException;
 	
 	public abstract List<String> getColumns(TableUniqueName table) throws VerdictException;
 
 	public abstract void deleteEntry(TableUniqueName tableName, List<Pair<String, String>> colAndValues) throws VerdictException;
 
-	public abstract void insertEntry(TableUniqueName tableName, List<String> values) throws VerdictException;
+	public abstract void insertEntry(TableUniqueName tableName, List<Object> values) throws VerdictException;
 
 	public abstract long getTableSize(TableUniqueName tableName) throws VerdictException;
 
@@ -199,8 +213,8 @@ public abstract class Dbms {
 	
 	public boolean doesMetaTablesExist(String schemaName) throws VerdictException {
 		String metaSchema = vc.getMeta().metaCatalogForDataCatalog(schemaName);
-		String metaNameTable = vc.getMeta().getMetaNameTableForOriginalSchema(currentSchema.get()).getTableName();
-		String metaSizeTable = vc.getMeta().getMetaSizeTableForOriginalSchema(currentSchema.get()).getTableName();
+		String metaNameTable = vc.getMeta().getMetaNameTableForOriginalSchema(schemaName).getTableName();
+		String metaSizeTable = vc.getMeta().getMetaSizeTableForOriginalSchema(schemaName).getTableName();
 		
 		Set<String> tables = new HashSet<String>(getTables(metaSchema));
 		if (tables.contains(metaNameTable) && tables.contains(metaSizeTable)) {
@@ -267,13 +281,13 @@ public abstract class Dbms {
 		TableUniqueName originalTableName = param.originalTable;
 		TableUniqueName sampleTableName = param.sampleTableName();
 		
-		List<String> values = new ArrayList<String>();
+		List<Object> values = new ArrayList<Object>();
 		values.add(originalTableName.getSchemaName());
 		values.add(originalTableName.getTableName());
 		values.add(sampleTableName.getSchemaName());
 		values.add(sampleTableName.getTableName());
 		values.add(param.sampleType);
-		values.add(samplingRatioToString(param.samplingRatio));
+		values.add(param.samplingRatio);
 		values.add(columnNameListToString(param.columnNames));
 		
 		insertEntry(metaNameTableName, values);
@@ -294,11 +308,11 @@ public abstract class Dbms {
 	
 	protected void insertSampleSizeEntryIntoDBMS(SampleParam param,	long sampleSize, long originalTableSize, TableUniqueName metaSizeTableName) throws VerdictException {
 		TableUniqueName sampleTableName = param.sampleTableName();
-		List<String> values = new ArrayList<String>();
+		List<Object> values = new ArrayList<Object>();
 		values.add(sampleTableName.getSchemaName());
 		values.add(sampleTableName.getTableName());
-		values.add(String.valueOf(sampleSize));
-		values.add(String.valueOf(originalTableSize));
+		values.add(sampleSize);
+		values.add(originalTableSize);
 		insertEntry(metaSizeTableName, values);
 	}
 	

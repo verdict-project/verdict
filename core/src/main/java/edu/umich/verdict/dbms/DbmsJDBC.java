@@ -8,8 +8,10 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -94,20 +96,20 @@ public abstract class DbmsJDBC extends Dbms {
 		conn = makeDbmsConnection(url, jdbcClassName);
 	}
 
-	public List<Pair<String, String>> getAllTableAndColumns(String schemaName) throws VerdictException {
-		List<Pair<String, String>> tabCols = new ArrayList<Pair<String, String>>();
-		try {
-			ResultSet rs = conn.getMetaData().getColumns(schemaName, null, "%", "%");
-			while (rs.next()) {
-				String table = rs.getString(3);
-				String column = rs.getString(4);
-				tabCols.add(Pair.of(table, column));
-			}
-		} catch (SQLException e) {
-			throw new VerdictException(e);
-		}
-		return tabCols;
-	}
+//	public List<Pair<String, String>> getAllTableAndColumns(String schemaName) throws VerdictException {
+//		List<Pair<String, String>> tabCols = new ArrayList<Pair<String, String>>();
+//		try {
+//			ResultSet rs = conn.getMetaData().getColumns(schemaName, null, "%", "%");
+//			while (rs.next()) {
+//				String table = rs.getString(3);
+//				String column = rs.getString(4);
+//				tabCols.add(Pair.of(table, column));
+//			}
+//		} catch (SQLException e) {
+//			throw new VerdictException(e);
+//		}
+//		return tabCols;
+//	}
 	
 	public ResultSet describeTableInResultSet(TableUniqueName tableUniqueName)  throws VerdictException {
 		try {
@@ -137,6 +139,21 @@ public abstract class DbmsJDBC extends Dbms {
 		return cnt;
 	}
 	
+	@Override
+	public Set<String> getDatabases() throws VerdictException {
+		Set<String> databases = new HashSet<String>();
+		try {
+			String sql = "show databases";
+			ResultSet rs = executeJdbcQuery(sql);
+			while (rs.next()) {
+				databases.add(rs.getString(1));
+			}
+		} catch (SQLException e) {
+			throw new VerdictException(StackTraceReader.stackTrace2String(e));
+		}
+		return databases;
+	}
+	
 	public void createMetaTablesInDMBS(
 			TableUniqueName originalTableName,
 			TableUniqueName sizeTableName,
@@ -164,7 +181,7 @@ public abstract class DbmsJDBC extends Dbms {
 		VerdictLogger.debug(this, "Finished createing meta tables if not exist.");
 	}
 	
-	protected String composeUrl(String dbms, String host, String port, String schema, String user, String password) throws VerdictException {
+	String composeUrl(String dbms, String host, String port, String schema, String user, String password) throws VerdictException {
 		StringBuilder url = new StringBuilder();
 		url.append(String.format("jdbc:%s://%s:%s", dbms, host, port));
 		
@@ -323,12 +340,12 @@ public abstract class DbmsJDBC extends Dbms {
 	}
 
 	@Override
-	public void insertEntry(TableUniqueName tableName, List<String> values) throws VerdictException {
+	public void insertEntry(TableUniqueName tableName, List<Object> values) throws VerdictException {
 		StringBuilder sql = new StringBuilder(1000);
 		sql.append(String.format("insert into %s values ", tableName));
 		sql.append("(");
 		String with = "'";
-		sql.append(Joiner.on(", ").join(StringManupulations.quoteEveryString(values, with)));
+		sql.append(Joiner.on(", ").join(StringManupulations.quoteString(values, with)));
 		sql.append(")");
 		executeUpdate(sql.toString());
 	}

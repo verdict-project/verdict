@@ -30,12 +30,13 @@ public class CreateSampleQuery extends Query {
 		CreateSampleStatementVisitor visitor = new CreateSampleStatementVisitor();
 		visitor.visit(p.create_sample_statement());
 		
-		String tableName = visitor.getTableName();
+		TableUniqueName tableName = visitor.getTableName();
+		TableUniqueName validTableName = (tableName.getSchemaName() != null)? tableName : TableUniqueName.uname(vc, tableName.getTableName());
 		Double samplingRatio = visitor.getSamplingRatio();
 		String sampleType = visitor.getSampleType();
 		List<String> columnNames = visitor.getColumnNames();
 		
-		buildSamples(new SampleParam(vc, TableUniqueName.uname(vc, tableName), sampleType, samplingRatio, columnNames));
+		buildSamples(new SampleParam(vc, validTableName, sampleType, samplingRatio, columnNames));
 	}
 	
 	/**
@@ -146,7 +147,7 @@ public class CreateSampleQuery extends Query {
 
 class CreateSampleStatementVisitor extends VerdictSQLBaseVisitor<Void> {
 	
-	private String tableName;
+	private TableUniqueName tableName;
 	
 	private Double samplingRatio = 0.01;		// default value is 1%
 	
@@ -154,7 +155,7 @@ class CreateSampleStatementVisitor extends VerdictSQLBaseVisitor<Void> {
 	
 	private List<String> columnNames = new ArrayList<String>();
 	
-	public String getTableName() {
+	public TableUniqueName getTableName() {
 		return tableName;
 	}
 	
@@ -181,7 +182,13 @@ class CreateSampleStatementVisitor extends VerdictSQLBaseVisitor<Void> {
 	
 	@Override
 	public Void visitTable_name(VerdictSQLParser.Table_nameContext ctx) {
-		tableName = ctx.getText();
+		String schema = null;
+		if (ctx.schema != null) {
+			schema = ctx.schema.getText();
+		}
+		String table = ctx.table.getText();
+		
+		tableName = TableUniqueName.uname(schema, table);
 		return null;
 	}
 	

@@ -25,6 +25,8 @@ public class StringManupulations {
 	 * @return
 	 */
 	public static Optional<String> schemaOfTableName(Optional<String> currentSchema, String originalTableName) {
+		if (originalTableName == null) return currentSchema;
+		
 		String[] tokens = originalTableName.split("\\.");
 		if (tokens.length > 1) {
 			return Optional.fromNullable(tokens[0]);
@@ -41,6 +43,8 @@ public class StringManupulations {
 	 * @return
 	 */
 	public static String tableNameOfTableName(String originalTableName) {
+		if (originalTableName == null) return null;
+		
 		String[] tokens = originalTableName.split("\\.");
 		if (tokens.length > 1) {
 			return tokens[1];
@@ -117,6 +121,18 @@ public class StringManupulations {
 	
 	private static String quote(String e, String with) {
 		return String.format("%s%s%s", with, e.replace("\"", "").replace("`", "").replace("'", ""), with);
+	}
+
+	public static List<String> quoteString(List<Object> list, String with) {
+		List<String> quoted = new ArrayList<String>();
+		for (Object e : list) {
+			if (e instanceof String) {
+				quoted.add(quote(e.toString(), with));
+			} else {
+				quoted.add(e.toString());
+			}
+		}
+		return quoted;
 	}
 	
 }

@@ -5,6 +5,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -89,19 +90,10 @@ public class DbmsImpala extends DbmsJDBC {
 				tables.add(table);
 			}
 		} catch (SQLException e) {
+			VerdictLogger.error(this, "Failed to access the database: " + schema);
 			throw new VerdictException(e);
 		}
 		return tables;
-//		String[] types = {"TABLE"};
-//		ResultSet rs;
-//		try {
-//			rs = conn.getMetaData().getTables(null, schemaName, "%", types);
-//			Map<Integer, Integer> columnMap = new HashMap<Integer, Integer>();
-//			columnMap.put(1, 3);	// table name
-//			return new VerdictResultSet(rs, null, columnMap);
-//		} catch (SQLException e) {
-//			throw new VerdictException(e);
-//		}
 	}
 	
 	public List<String> getColumns(TableUniqueName table) throws VerdictException {
@@ -214,18 +206,11 @@ public class DbmsImpala extends DbmsJDBC {
 		TableUniqueName tempTableName = createTempTableExlucdingNameEntry(param, metaNameTableName);
 		insertSampleNameEntryIntoDBMS(param, tempTableName);
 		moveTable(tempTableName, metaNameTableName);
-		//		VerdictLogger.debug(this, "Created a temp table with the new sample name info: " + tempTableName);
-		//		
-		//		// copy temp table to the original meta name table after inserting a new entry.
-		//		VerdictLogger.debug(this, String.format("Moves the temp table (%s) to the meta name table (%s).", tempTableName, metaNameTableName));
-		//		dropTable(metaNameTableName);
-		//		executeUpdate(String.format("CREATE TABLE %s AS SELECT * FROM %s", metaNameTableName, tempTableName));
-		//		dropTable(tempTableName);
 	}
 
 	protected TableUniqueName createTempTableExlucdingNameEntry(SampleParam param, TableUniqueName metaNameTableName) throws VerdictException {
 		String metaSchema = param.sampleTableName().getSchemaName();
-		TableUniqueName tempTableName = Relation.getTempTableName(metaSchema);
+		TableUniqueName tempTableName = Relation.getTempTableName(vc, metaSchema);
 		TableUniqueName originalTableName = param.originalTable;
 		executeUpdate(String.format("CREATE TABLE %s AS SELECT * FROM %s "
 				+ "WHERE originalschemaname <> \"%s\" OR originaltablename <> \"%s\" OR sampletype <> \"%s\""
@@ -249,7 +234,7 @@ public class DbmsImpala extends DbmsJDBC {
 
 	protected TableUniqueName createTempTableExlucdingSizeEntry(SampleParam param, TableUniqueName metaSizeTableName) throws VerdictException {
 		String metaSchema = param.sampleTableName().getSchemaName();
-		TableUniqueName tempTableName = Relation.getTempTableName(metaSchema);
+		TableUniqueName tempTableName = Relation.getTempTableName(vc, metaSchema);
 		TableUniqueName sampleTableName = param.sampleTableName();
 		executeUpdate(String.format("CREATE TABLE %s AS SELECT * FROM %s WHERE schemaname <> \"%s\" OR tablename <> \"%s\" ",
 				tempTableName, metaSizeTableName, sampleTableName.getSchemaName(), sampleTableName.getTableName()));
