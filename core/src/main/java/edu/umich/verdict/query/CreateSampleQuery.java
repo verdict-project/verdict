@@ -111,6 +111,8 @@ public class CreateSampleQuery extends Query {
 		}
 		
 		vc.getMeta().refreshSampleInfo(param.originalTable.getSchemaName());
+		vc.getMeta().refreshDatabases();
+		vc.getMeta().refreshTables(param.originalTable.getSchemaName());
 	}
 	
 	protected void createUniformRandomSample(SampleParam param) throws VerdictException {

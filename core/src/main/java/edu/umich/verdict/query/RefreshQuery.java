@@ -34,6 +34,7 @@ public class RefreshQuery extends Query {
 
 		if (schema != null) {
 			vc.getMeta().refreshSampleInfo(schema);
+			vc.getMeta().refreshTables(schema);
 		} else {
 			String msg = "No schema selected. No refresh done.";
 			VerdictLogger.error(msg);
