@@ -78,6 +78,7 @@ public class VerdictMeta {
 	}
 	
 	public void clearSampleInfo() {
+		uptodateSchemas.clear();
 		sampleSizeMeta.clear();
 		sampleNameMeta.clear();
 		databases.clear();
