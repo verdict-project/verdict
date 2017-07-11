@@ -252,6 +252,8 @@ public class VerdictMeta {
 			if (databases.contains(metaNameTable.getSchemaName())) {
 				Set<String> tables = getTables(metaNameTable.getSchemaName());
 				if (tables != null && tables.contains(metaNameTable.getTableName())) {
+					vc.getDbms().cacheTable(metaNameTable);
+					
 					// sample name
 					result = SingleRelation.from(vc, metaNameTable)
 							.select("originalschemaname, originaltablename, sampleschemaaname, sampletablename, sampletype, samplingratio, columnnames")
@@ -273,6 +275,8 @@ public class VerdictMeta {
 						sampleNameMeta.get(originalTable).put(
 								new SampleParam(vc, originalTable, sampleType, samplingRatio, columnNames),
 								TableUniqueName.uname(sampleSchemaName, sampleTabName));
+						
+						vc.getDbms().cacheTable(TableUniqueName.uname(sampleSchemaName, sampleTabName));
 					}
 				}
 			}
@@ -280,6 +284,8 @@ public class VerdictMeta {
 			if (databases.contains(metaSizeTable.getSchemaName())) {
 				Set<String> tables = getTables(metaSizeTable.getSchemaName());
 				if (tables != null && tables.contains(metaSizeTable.getTableName())) {
+					vc.getDbms().cacheTable(metaSizeTable);
+					
 					// sample size
 					result = SingleRelation.from(vc, metaSizeTable)
 							.select("schemaname, tablename, samplesize, originaltablesize")
@@ -291,6 +297,8 @@ public class VerdictMeta {
 						Long originalTableSize = TypeCasting.toLong(row.get(3));
 						sampleSizeMeta.put(TableUniqueName.uname(sampleSchemaName, sampleTabName),
 								new SampleSizeInfo(sampleSize, originalTableSize));
+						
+						vc.getDbms().cacheTable(TableUniqueName.uname(sampleSchemaName, sampleTabName));
 					}
 				}
 			}
@@ -313,15 +321,15 @@ public class VerdictMeta {
 //		}
 //	}
 	
-	public Pair<Long, Long> getSampleAndOriginalTableSizeBySampleTableNameIfExists(TableUniqueName sampleTableName) {
-		refreshSampleInfoIfNeeded(sampleTableName.getSchemaName());
-		if (sampleSizeMeta.containsKey(sampleTableName)) {
-			SampleSizeInfo info = sampleSizeMeta.get(sampleTableName);
-			return Pair.of(info.sampleSize, info.originalTableSize);
-		} else {
-			return Pair.of(-1L, -1L);
-		}
-	}
+//	public Pair<Long, Long> getSampleAndOriginalTableSizeBySampleTableNameIfExists(TableUniqueName sampleTableName) {
+//		refreshSampleInfoIfNeeded(sampleTableName.getSchemaName());
+//		if (sampleSizeMeta.containsKey(sampleTableName)) {
+//			SampleSizeInfo info = sampleSizeMeta.get(sampleTableName);
+//			return Pair.of(info.sampleSize, info.originalTableSize);
+//		} else {
+//			return Pair.of(-1L, -1L);
+//		}
+//	}
 	
 	/**
 	 * Returns the sample creation parameters and the names of the created samples for a given original table.

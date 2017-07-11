@@ -308,7 +308,9 @@ public class DbmsSpark extends Dbms {
 	
 	@Override
 	public void cacheTable(TableUniqueName tableName) {
-		sqlContext.cacheTable(tableName.toString());
+		if (vc.getConf().cacheSparkSamples()) {
+			sqlContext.cacheTable(tableName.toString());
+		}
 	}
 
 	protected String randomPartitionColumn() {
