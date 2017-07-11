@@ -1,7 +1,9 @@
 package edu.umich.verdict.query;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -81,7 +83,7 @@ public class CreateSampleQuery extends Query {
 			
 			List<Object> aggs = new ArrayList<Object>();
 			aggs.add(FuncExpr.count());
-			List<String> cnames = vc.getMeta().getColumnNames(originalTable);
+			List<String> cnames = new ArrayList<String>(vc.getMeta().getColumns(originalTable));
 			for (String c : cnames) {
 				aggs.add(FuncExpr.approxCountDistinct(ColNameExpr.from(c), vc));
 			}

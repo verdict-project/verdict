@@ -159,7 +159,13 @@ public abstract class Dbms {
 	public void dropTable(TableUniqueName tableName) throws VerdictException {
 		Set<String> databases = vc.getMeta().getDatabases();
 		if (!databases.contains(tableName.getSchemaName())) {
-			VerdictLogger.debug(this, String.format("Database, %s, does not exists. Don't bother to run a drop table statement.", tableName.getSchemaName()));
+			VerdictLogger.debug(this, String.format("Database, %s, does not exists. Verdict doesn't bother to run a drop table statement.", tableName.getSchemaName()));
+			return;
+		}
+		
+		List<String> tables = getTables(tableName.getSchemaName());
+		if (!tables.contains(tableName.getTableName())) {
+			VerdictLogger.debug(this, String.format("Table, %s, does not exists. Verdict doesn't bother to run a drop table statement.", tableName));
 			return;
 		}
 		
@@ -315,6 +321,8 @@ public abstract class Dbms {
 		values.add(originalTableSize);
 		insertEntry(metaSizeTableName, values);
 	}
+	
+	public void cacheTable(TableUniqueName tableName) {}
 	
 	@Deprecated
 	public String getQuoteString() {

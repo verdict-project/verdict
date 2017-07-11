@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
@@ -123,7 +124,7 @@ public class ApproxSingleRelation extends ApproxRelation {
 	@Override
 	public ExactRelation rewriteWithPartition() {
 		if (param.sampleType.equals("universe")) {
-			List<String> colNames = vc.getMeta().getColumnNames(param.sampleTableName());
+			Set<String> colNames = vc.getMeta().getColumns(param.sampleTableName());
 			String partitionColName = partitionColumnName();
 			int partitionCount = 100;
 			

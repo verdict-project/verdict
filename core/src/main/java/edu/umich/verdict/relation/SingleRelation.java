@@ -134,7 +134,7 @@ public class SingleRelation extends ExactRelation {
 		// just in case.
 		if (funcs.size() == 0) return param.samplingRatio;
 		
-		Set<String> cols = new HashSet<String>(vc.getMeta().getColumnNames(getTableName()));
+		Set<String> cols = vc.getMeta().getColumns(getTableName());
 		List<Double> probs = new ArrayList<Double>();
 		for (FuncExpr fexpr : funcs) {
 			String fcol = fexpr.getUnaryExprInString();
@@ -282,7 +282,7 @@ public class SingleRelation extends ExactRelation {
 	@Override
 	public List<SelectElem> getSelectList() {
 		TableUniqueName table = getTableName();
-		List<String> columns = vc.getMeta().getColumnNames(table);
+		Set<String> columns = vc.getMeta().getColumns(table);
 		List<SelectElem> elems = new ArrayList<SelectElem>();
 		for (String c : columns) {
 			elems.add(new SelectElem(new ColNameExpr(c, table.getTableName())));
@@ -298,7 +298,7 @@ public class SingleRelation extends ExactRelation {
 	@Override
 	public List<ColNameExpr> accumulateSamplingProbColumns() {
 		List<ColNameExpr> samplingProbCols = new ArrayList<ColNameExpr>();
-		List<String> cols = vc.getMeta().getColumnNames(tableName);
+		Set<String> cols = vc.getMeta().getColumns(tableName);
 		String samplingProbColName = samplingProbabilityColumnName();
 		for (String c : cols) {
 			if (c.equals(samplingProbColName)) {

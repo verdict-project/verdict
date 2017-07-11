@@ -133,4 +133,9 @@ public abstract class VerdictContext {
 		return df;
 	}
 	
+	public DataFrame sql(String sql) throws VerdictException {
+		DataFrame df = executeSparkQuery(sql);
+		return df;
+	}
+	
 }

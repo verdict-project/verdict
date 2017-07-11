@@ -2,6 +2,7 @@ package edu.umich.verdict.datatypes;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -65,7 +66,7 @@ public class ColumnName {
 		} else {
 			List<Pair<TableUniqueName, String>> allPossiblePairs = new ArrayList<Pair<TableUniqueName, String>>();
 			for (Pair<TableUniqueName, String> e : tableSources) {
-				List<String> columns = vc.getMeta().getColumnNames(e.getLeft());
+				Set<String> columns = vc.getMeta().getColumns(e.getLeft());
 				for (String c : columns) {
 					if (c.equals(columnName)) {
 						allPossiblePairs.add(e);

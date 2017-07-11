@@ -3,6 +3,7 @@ package edu.umich.verdict.dbms;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 import com.google.common.base.Joiner;
 
@@ -45,7 +46,7 @@ public class DbmsHive extends DbmsImpala {
 	@Override
 	protected void justCreateUniformRandomSampleTableOf(SampleParam param) throws VerdictException {
 		String samplingProbCol = vc.getDbms().samplingProbabilityColumnName();
-		List<String> colNames = vc.getMeta().getColumnNames(param.originalTable);
+		Set<String> colNames = vc.getMeta().getColumns(param.originalTable);
 		
 		ExactRelation sampled = SingleRelation.from(vc, param.originalTable)
 					            .select("*, count(*) OVER () AS __total_size")
@@ -76,7 +77,7 @@ public class DbmsHive extends DbmsImpala {
 		String groupName = Joiner.on(", ").join(param.columnNames);
 		String samplingProbColInQuote = quote(vc.getDbms().samplingProbabilityColumnName());
 		TableUniqueName sampleTable = param.sampleTableName();
-		String allColumns = Joiner.on(", ").join(vc.getMeta().getColumnNames(param.originalTable));
+		String allColumns = Joiner.on(", ").join(vc.getMeta().getColumns(param.originalTable));
 		
 		long groupCount = SingleRelation.from(vc, param.originalTable)
 									.countDistinctValue(groupName);
@@ -109,7 +110,7 @@ public class DbmsHive extends DbmsImpala {
 	@Override
 	protected void justCreateUniverseSampleTableOf(SampleParam param) throws VerdictException {
 		TableUniqueName sampleTableName = param.sampleTableName();
-		List<String> colNames = vc.getMeta().getColumnNames(param.originalTable);
+		Set<String> colNames = vc.getMeta().getColumns(param.originalTable);
 		String samplingProbColInQuote = quote(vc.getDbms().samplingProbabilityColumnName());
 				
 		ExactRelation withSize = SingleRelation.from(vc, param.originalTable)

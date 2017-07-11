@@ -12,7 +12,7 @@ import edu.umich.verdict.exceptions.VerdictException;
 public class ImpalaSampleIT extends SampleIT {
 	
 	@BeforeClass
-	public static void connect() throws VerdictException, SQLException, FileNotFoundException {
+	public static void connect() throws VerdictException, SQLException, FileNotFoundException, ClassNotFoundException {
 		final String host = readHost();
 		final String port = "21050";
 		final String schema = "instacart1g";
@@ -23,9 +23,10 @@ public class ImpalaSampleIT extends SampleIT {
 		conf.setPort(port);
 		conf.setDbmsSchema(schema);
 		conf.set("no_user_password", "true");
-		vc = new VerdictJDBCContext(conf);
+		vc = VerdictJDBCContext.from(conf);
 		
 		String url = String.format("jdbc:impala://%s:%s/%s", host, port, schema);
+		Class.forName("com.cloudera.impala.jdbc4.Driver");
 		conn = DriverManager.getConnection(url);
 		stmt = conn.createStatement();
 	}

@@ -20,35 +20,24 @@ public class ShowSamplesQuery extends SelectQuery {
 	@Override
 	public void compute() throws VerdictException {
 		VerdictSQLParser p = StringManupulations.parserOf(queryString);
-		VerdictSQLBaseVisitor<TableUniqueName> visitor = new VerdictSQLBaseVisitor<TableUniqueName>() {
-			private TableUniqueName tableName;
-
-			protected TableUniqueName defaultResult() { return tableName; }
-			
-			@Override public TableUniqueName visitShow_samples_statement(VerdictSQLParser.Show_samples_statementContext ctx) {
-				String schema = null;
-				String table = null;
-				if (ctx.table != null) {
-					if (ctx.table.schema != null) {
-						schema = ctx.table.schema.getText();
-					} 
-					if (ctx.table.table != null) {
-						table = ctx.table.table.getText();
-					}
+		VerdictSQLBaseVisitor<String> visitor = new VerdictSQLBaseVisitor<String>() {
+			@Override public String visitShow_samples_statement(VerdictSQLParser.Show_samples_statementContext ctx) {
+				String database = null;
+				if (ctx.database != null) {
+					database = ctx.database.getText();
 				}
-				return TableUniqueName.uname(schema, table);
+				return database;
 			}
 		};
-		TableUniqueName tableName = visitor.visit(p.show_samples_statement());
-		TableUniqueName validTableName = (tableName.getSchemaName() != null)? tableName : TableUniqueName.uname(vc, tableName.getTableName());
-		String effectiveSchema = validTableName.getSchemaName();
+		String database = visitor.visit(p.show_samples_statement());
+		database = (database != null)? database : ( (vc.getCurrentSchema().isPresent())? vc.getCurrentSchema().get() : null );
 		
-		if (effectiveSchema == null || validTableName.getTableName() == null) {
+		if (database == null) {
 			VerdictLogger.info("No table specified; cannot show samples");
 		} else {
-			ExactRelation nameTable = SingleRelation.from(vc, vc.getMeta().getMetaNameTableForOriginalSchema(effectiveSchema));
+			ExactRelation nameTable = SingleRelation.from(vc, vc.getMeta().getMetaNameTableForOriginalSchema(database));
 			nameTable.setAliasName("s");
-			ExactRelation sizeTable = SingleRelation.from(vc, vc.getMeta().getMetaSizeTableForOriginalSchema(effectiveSchema));
+			ExactRelation sizeTable = SingleRelation.from(vc, vc.getMeta().getMetaSizeTableForOriginalSchema(database));
 			sizeTable.setAliasName("t");
 			
 			Relation info = nameTable.join(sizeTable, "s.sampleschemaaname = t.schemaname AND s.sampletablename = t.tablename")
@@ -62,7 +51,7 @@ public class ShowSamplesQuery extends SelectQuery {
 									 	   + " t.samplesize AS \"Sample Table Size\"")
 								     .orderby("s.originaltablename, s.sampletype, s.samplingratio, s.columnnames");
 		
-			if (!vc.getDbms().doesMetaTablesExist(effectiveSchema)) {
+			if (!vc.getMeta().getDatabases().contains(database)) {
 				return;
 			}
 				

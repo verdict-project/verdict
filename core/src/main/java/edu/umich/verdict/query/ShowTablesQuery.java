@@ -31,8 +31,9 @@ public class ShowTablesQuery extends SelectQuery {
 			}
 		};
 		String schema =  visitor.visit(p.show_tables_statement());
+		schema = (schema != null)? schema : ( (vc.getCurrentSchema().isPresent())? vc.getCurrentSchema().get() : null );
 		
-		if (schema == null && !vc.getCurrentSchema().isPresent()) {
+		if (schema == null) {
 			VerdictLogger.info("No schema specified; cannot show tables.");
 			return;
 		} else {

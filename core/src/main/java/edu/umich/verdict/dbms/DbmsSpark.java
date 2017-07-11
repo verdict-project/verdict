@@ -175,7 +175,7 @@ public class DbmsSpark extends Dbms {
 	@Override
 	protected void justCreateUniformRandomSampleTableOf(SampleParam param) throws VerdictException {
 		String samplingProbCol = vc.getDbms().samplingProbabilityColumnName();
-		List<String> colNames = vc.getMeta().getColumnNames(param.originalTable);
+		Set<String> colNames = vc.getMeta().getColumns(param.originalTable);
 		
 		ExactRelation sampled = SingleRelation.from(vc, param.originalTable)
 					            .select("*, count(*) OVER () AS __total_size")
@@ -206,7 +206,7 @@ public class DbmsSpark extends Dbms {
 		String groupName = Joiner.on(", ").join(param.columnNames);
 		String samplingProbColInQuote = quote(vc.getDbms().samplingProbabilityColumnName());
 		TableUniqueName sampleTable = param.sampleTableName();
-		String allColumns = Joiner.on(", ").join(vc.getMeta().getColumnNames(param.originalTable));
+		String allColumns = Joiner.on(", ").join(vc.getMeta().getColumns(param.originalTable));
 		
 		long groupCount = SingleRelation.from(vc, param.originalTable)
 									.countDistinctValue(groupName);
@@ -239,7 +239,7 @@ public class DbmsSpark extends Dbms {
 	@Override
 	protected void justCreateUniverseSampleTableOf(SampleParam param) throws VerdictException {
 		TableUniqueName sampleTableName = param.sampleTableName();
-		List<String> colNames = vc.getMeta().getColumnNames(param.originalTable);
+		Set<String> colNames = vc.getMeta().getColumns(param.originalTable);
 		String samplingProbColInQuote = quote(vc.getDbms().samplingProbabilityColumnName());
 				
 		ExactRelation withSize = SingleRelation.from(vc, param.originalTable)
@@ -304,6 +304,11 @@ public class DbmsSpark extends Dbms {
 	public void deleteSampleSizeEntryFromDBMS(SampleParam param, TableUniqueName metaSizeTableName) throws VerdictException {
 		TableUniqueName tempTable = createTempTableExlucdingSizeEntry(param, metaSizeTableName);
 		moveTable(tempTable, metaSizeTableName);
+	}
+	
+	@Override
+	public void cacheTable(TableUniqueName tableName) {
+		sqlContext.cacheTable(tableName.toString());
 	}
 
 	protected String randomPartitionColumn() {

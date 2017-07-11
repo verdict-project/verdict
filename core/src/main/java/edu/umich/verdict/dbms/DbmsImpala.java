@@ -36,49 +36,12 @@ public class DbmsImpala extends DbmsJDBC {
 	@Override
 	public ResultSet getDatabaseNamesInResultSet() throws VerdictException {
 		return executeJdbcQuery("show databases");
-//		try {
-//			ResultSet rs = conn.getMetaData().getSchemas(null, "%");
-//			Map<Integer, Integer> colMap = new HashMap<Integer, Integer>();
-//			colMap.put(1, 1);
-//			return new VerdictResultSet(rs, null, colMap);
-//		} catch (SQLException e) {
-//			throw new VerdictException(e);
-//		}
 	}
 	
 	@Override
 	public ResultSet getTablesInResultSet(String schema) throws VerdictException {
 		return executeJdbcQuery("show tables in " + schema);
 	}
-
-//	@Override
-//	public List<Pair<String, String>> getAllTableAndColumns(String schemaName) throws VerdictException {
-//		List<Pair<String, String>> tabCols = new ArrayList<Pair<String, String>>();
-//		
-//		try {
-//			List<String> tables = new ArrayList<String>();
-//			
-//			ResultSet tableRS = getTableNames(schemaName);
-//			while (tableRS.next()) {
-//				String table = tableRS.getString(1);
-//				tables.add(table);
-//			} 
-//			tableRS.close();
-//			
-//			for (String table : tables) {
-//				ResultSet columnRS = describeTable(TableUniqueName.uname(schemaName, table));
-//				while (columnRS.next()) {
-//					String column = columnRS.getString(1);
-//					tabCols.add(Pair.of(table, column));
-//				}
-//				columnRS.close();
-//			}
-//		} catch (SQLException e) {
-//			throw new VerdictException(e);
-//		}
-//		
-//		return tabCols;
-//	}
 
 	@Override
 	public List<String> getTables(String schema) throws VerdictException {
@@ -113,17 +76,6 @@ public class DbmsImpala extends DbmsJDBC {
 	@Override
 	public ResultSet describeTableInResultSet(TableUniqueName tableUniqueName)  throws VerdictException {
 		return executeJdbcQuery(String.format("describe %s", tableUniqueName));
-//		try {
-//			ResultSet rs = conn.getMetaData().getColumns(
-//					null, tableUniqueName.getSchemaName(), tableUniqueName.getTableName(), "%");
-//			Map<Integer, Integer> columnMap = new HashMap<Integer, Integer>();
-//			columnMap.put(1, 4);	// column name
-//			columnMap.put(2, 6); 	// data type name
-//			columnMap.put(3, 12); 	// remarks
-//			return new VerdictResultSet(rs, null, columnMap);
-//		} catch (SQLException e) {
-//			throw new VerdictException(e);
-//		}
 	}
 
 	/**
@@ -163,26 +115,10 @@ public class DbmsImpala extends DbmsJDBC {
 		VerdictLogger.debug(this, "Meta tables created.");
 	}
 
-//	@Override
-//	public boolean doesMetaTablesExist(String schemaName) throws VerdictException {
-//		String[] types = {"TABLE"};
-//		try {
-//			ResultSet rs = conn.getMetaData()
-//					 		   .getTables(null,
-//						 				  vc.getMeta().metaCatalogForDataCatalog(schemaName),
-//						 				  vc.getMeta().getMetaNameTableForOriginalSchema(currentSchema.get()).getTableName(),
-//						 				  types);
-//			if (!rs.next()) return false;
-//			else return true;
-//		} catch (SQLException e) {
-//			throw new VerdictException(e);
-//		}
-//	}
-
 	@Override
 	protected void justCreateUniformRandomSampleTableOf(SampleParam param) throws VerdictException {
 		String samplingProbCol = vc.getDbms().samplingProbabilityColumnName();
-		List<String> colNames = vc.getMeta().getColumnNames(param.originalTable);
+		Set<String> colNames = vc.getMeta().getColumns(param.originalTable);
 		
 		// This query exploits the fact that if subquery is combined with a regular column in a comparison condition,
 		// Impala properly generates a random number for every row and makes a comparison.
@@ -225,11 +161,6 @@ public class DbmsImpala extends DbmsJDBC {
 		TableUniqueName tempTableName = createTempTableExlucdingSizeEntry(param, metaSizeTableName);
 		insertSampleSizeEntryIntoDBMS(param, sampleSize, originalTableSize, tempTableName);
 		moveTable(tempTableName, metaSizeTableName);
-		//			VerdictLogger.debug(this, "Created a temp table with the new sample size info: " + tempTableName);
-		// copy temp table to the original meta size table after inserting a new entry.
-		//		executeUpdate(String.format("CREATE TABLE %s AS SELECT * FROM %s", metaSizeTableName, tempTableName));
-		//		VerdictLogger.debug(this, String.format("Moved the temp table (%s) to the meta size table (%s).", tempTableName, metaSizeTableName));
-		//		dropTable(tempTableName);
 	}
 
 	protected TableUniqueName createTempTableExlucdingSizeEntry(SampleParam param, TableUniqueName metaSizeTableName) throws VerdictException {
@@ -250,7 +181,7 @@ public class DbmsImpala extends DbmsJDBC {
 	@Override
 	protected void justCreateUniverseSampleTableOf(SampleParam param) throws VerdictException {
 		TableUniqueName sampleTableName = param.sampleTableName();
-		List<String> colNames = vc.getMeta().getColumnNames(param.originalTable);
+		Set<String> colNames = vc.getMeta().getColumns(param.originalTable);
 		String samplingProbCol = vc.getDbms().samplingProbabilityColumnName();
 				
 		ExactRelation withSize = SingleRelation.from(vc, param.originalTable)
@@ -281,66 +212,6 @@ public class DbmsImpala extends DbmsJDBC {
 		return String.format("round(rand(unix_timestamp())*%d) %% %d AS %s", pcount, pcount, partitionColumnName());
 	}
 	
-//	private String columnNamesInString(TableUniqueName tableName) {
-//		return columnNamesInString(tableName, tableName.getTableName());
-//	}
-	
-//	private String columnNamesInString(TableUniqueName tableName, String subTableName) {
-//		List<String> colNames = vc.getMeta().getColumnNames(tableName);
-//		List<String> colNamesWithTable = new ArrayList<String>();
-//		for (String c : colNames) {
-//			colNamesWithTable.add(String.format("%s.%s", subTableName, c));
-//		}
-//		return Joiner.on(", ").join(colNamesWithTable);
-//	}
-	
-//	/**
-//	 * Creates a temp table that includes
-//	 * 1. all the columns in the original table.
-//	 * 2. the size of the group on which this stratified sample is being created.
-//	 * 3. a random number between 0 and 1.
-//	 * @param param
-//	 * @return A pair of the table with random numbers and the table that stores the per-group size.
-//	 * @throws VerdictException
-//	 */
-//	@Deprecated
-//	protected Pair<TableUniqueName, TableUniqueName> createTempTableWithGroupCountsAndRand(SampleParam param) throws VerdictException {
-//		TableUniqueName rnTempTable = Relation.getTempTableName(vc);
-//		TableUniqueName grpTempTable = Relation.getTempTableName(vc);
-//		
-//		TableUniqueName originalTableName = param.originalTable;
-//		String groupName = Joiner.on(", ").join(param.columnNames);
-//		
-//		String sql1 = String.format("CREATE TABLE %s AS SELECT %s, COUNT(*) AS total_grp_size FROM %s GROUP BY %s",
-//									grpTempTable, groupName, originalTableName, groupName);
-//		VerdictLogger.debug(this, "The query used for the group-size temp table: ");
-//		VerdictLogger.debugPretty(this, Relation.prettyfySql(sql1), "  ");
-//		executeUpdate(sql1);
-//		
-////		String sql2 = String.format("CREATE TABLE %s AS SELECT %s, verdict_grp_size, rand(unix_timestamp()) as verdict_rand ",
-////									rnTempTable, columnNamesInString(originalTableName))
-////				+ String.format("FROM %s, %s", originalTableName, grpTempTable);
-//		
-//		List<String> joinCond = new ArrayList<String>();
-//		for (String g : param.columnNames) {
-//			joinCond.add(String.format("%s = %s", g, g));
-//		}
-//		Relation tableWithRand = SingleRelation.from(vc, originalTableName)
-//								 .join(SingleRelation.from(vc, grpTempTable),
-//								 	   Joiner.on(" AND ").join(joinCond))
-//								 .select(String.format("%s, total_grp_size, rand(unix_timestamp()) as verdict_rand",
-//								 		 columnNamesInString(originalTableName)));
-//		String sql2 = String.format("CREATE TABLE %s AS %s", rnTempTable, tableWithRand.toSql());
-//		
-////		sql2 = sql2 + " WHERE " + Joiner.on(" AND ").join(joinCond);
-//		
-//		VerdictLogger.debug(this, "The query used for the temp table with group counts and random numbers.");
-//		VerdictLogger.debugPretty(this, Relation.prettyfySql(sql2), "  ");
-//		
-//		executeUpdate(sql2);
-//		return Pair.of(rnTempTable, grpTempTable);
-//	}
-	
 	/**
 	 * 
 	 */
@@ -358,7 +229,7 @@ public class DbmsImpala extends DbmsJDBC {
 		String groupName = Joiner.on(", ").join(param.columnNames);
 		String samplingProbColName = vc.getDbms().samplingProbabilityColumnName();
 		TableUniqueName sampleTable = param.sampleTableName();
-		String allColumns = Joiner.on(", ").join(vc.getMeta().getColumnNames(param.originalTable));
+		String allColumns = Joiner.on(", ").join(vc.getMeta().getColumns(param.originalTable));
 		
 		ExactRelation groupNumRel = SingleRelation.from(vc, param.originalTable)
 									.countDistinct(groupName);
@@ -388,79 +259,6 @@ public class DbmsImpala extends DbmsJDBC {
 		executeUpdate(sql);
 	}
 	
-//	/**
-//	 * Creates a stratified sample from a temp table, which is created by
-//	 *  {@link DbmsImpala#createTempTableWithGroupCountsAndRand createTempTableWithGroupCountsAndRand}.
-//	 * The created stratified sample includes a sampling probability for every tuple (in column name "verdict_sampling_prob")
-//	 * so that it can be used for computing the final answer.
-//	 * 
-//	 * The sampling probability for each tuple is determined as:
-//	 *   min( 1.0, (original table size) * (sampling ratio param) / (number of groups) / (size of the group) )
-//	 * 
-//	 * @param tempTableName
-//	 * @param param
-//	 * @throws VerdictException
-//	 */
-//	@Deprecated
-//	protected void createStratifiedSampleFromTempTable(TableUniqueName rnTempTable, TableUniqueName grpTempTable, SampleParam param)
-//			throws VerdictException
-//	{
-//		TableUniqueName originalTableName = param.originalTable;
-//		TableUniqueName sampleTempTable = Relation.getTempTableName(vc);
-//		String samplingProbColName = vc.getDbms().samplingProbabilityColumnName();
-//		
-//		VerdictLogger.debug(this, "Creating a sample table using " + rnTempTable + " and " + grpTempTable);
-//		SampleSizeInfo info = vc.getMeta().getSampleSizeOf(new SampleParam(vc, param.originalTable, "uniform", null, new ArrayList<String>()));
-//		long originalTableSize = info.originalTableSize;
-//		
-//		long groupCount = SingleRelation.from(vc, grpTempTable).countValue();
-//		String tmpCol1 = Relation.genColumnAlias();
-//		
-//		// create a sample table without the sampling probability
-//		String sql1 = String.format("CREATE TABLE %s AS ", sampleTempTable) 
-//		   		    + String.format("SELECT %s, %s FROM ", columnNamesInString(originalTableName, "t1"), randomPartitionColumn())
-//				    + String.format("(SELECT *, %d*%f/%d/total_grp_size AS %s FROM %s) t1 ",
-//				    				originalTableSize, param.samplingRatio, groupCount, tmpCol1, rnTempTable)
-//				                  + "WHERE verdict_rand <= " + tmpCol1;
-//		VerdictLogger.debug(this, "The query used for sample creation without sampling probabilities: ");
-//		VerdictLogger.debugPretty(this, Relation.prettyfySql(sql1), "  ");
-//		executeUpdate(sql1);
-//		
-//		// attach sampling probability
-//		List<String> joinCond = new ArrayList<String>();
-//		for (String g : param.columnNames) {
-//			joinCond.add(String.format("%s = %s", g, g));
-//		}
-//		
-//		ExactRelation grpRatioBase = SingleRelation.from(vc, sampleTempTable)
-//				 					 .groupby(param.columnNames)
-//				 					 .agg("count(*) AS sample_grp_size")
-//				 					 .join(
-//				 					   SingleRelation.from(vc, grpTempTable),
-//				 					   Joiner.on(" AND ").join(joinCond));
-//		List<String> groupNamesWithTabName = new ArrayList<String>();
-//		for (String col : param.columnNames) {
-//			groupNamesWithTabName.add(grpTempTable + "." + col);
-//		}
-//		ExactRelation grpRatioRel = grpRatioBase
-//								    .select(
-//								      Joiner.on(", ").join(groupNamesWithTabName)
-//								      + String.format(", sample_grp_size / total_grp_size AS %s", samplingProbColName)); 
-//		ExactRelation stSampleRel = SingleRelation.from(vc, sampleTempTable)
-//				                    .join(
-//				                      grpRatioRel,
-//				                      Joiner.on(" AND ").join(joinCond))
-//				    			    .select(columnNamesInString(originalTableName, sampleTempTable.getTableName())
-//				    			    		+ String.format(", %s", samplingProbColName)
-//				    			    		+ String.format(", %s", partitionColumnName()));
-//		String sql2 = String.format("CREATE TABLE %s AS ", param.sampleTableName()) + stSampleRel.toSql();
-//		VerdictLogger.debug(this, "The query used for sample creation with sampling probabilities: ");
-//		VerdictLogger.debugPretty(this, Relation.prettyfySql(sql2), "  ");
-//		executeUpdate(sql2);
-//		
-//		dropTable(sampleTempTable);
-//	}
-	
 	@Override
 	public void deleteSampleNameEntryFromDBMS(SampleParam param, TableUniqueName metaNameTableName) throws VerdictException {
 		TableUniqueName tempTable = createTempTableExlucdingNameEntry(param, metaNameTableName);
@@ -473,8 +271,4 @@ public class DbmsImpala extends DbmsJDBC {
 		moveTable(tempTable, metaSizeTableName);
 	}
 
-//	@Override
-//	protected String quote(String expr) {
-//		return String.format("`%s`", expr);
-//	}
 }

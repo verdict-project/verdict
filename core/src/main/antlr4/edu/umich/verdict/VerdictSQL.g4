@@ -65,7 +65,7 @@ delete_sample_statement
     ;
 
 show_samples_statement
-    : SHOW type=(STRATIFIED | UNIFORM | ALL)? SAMPLES ((FOR | OF) table=table_name)?
+    : SHOW type=(STRATIFIED | UNIFORM | ALL)? SAMPLES ((FOR | OF) database=id)?
     ;
 
 config_statement

@@ -2,6 +2,7 @@ package edu.umich.verdict;
 
 import java.sql.ResultSet;
 import java.util.List;
+import java.util.Set;
 
 import org.junit.Test;
 
@@ -40,7 +41,7 @@ public class SampleIT extends BaseIT {
 	@Test
 	public void getColumnNamesTest() throws VerdictException {
 		TableUniqueName orders = TableUniqueName.uname(vc, "orders");
-		List<String> columns = vc.getMeta().getColumnNames(orders);
+		Set<String> columns = vc.getMeta().getColumns(orders);
 		System.out.println(columns);
 	}
 	

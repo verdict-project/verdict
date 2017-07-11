@@ -141,6 +141,10 @@ public class VerdictConf {
     	return configs.containsKey(key.toLowerCase());
     }
     
+    /*
+	 * Helpers
+	 */
+    
     // data DBMS
     public void setDbmsSchema(String schema) {
 		configs.put("schema", schema);
@@ -181,55 +185,6 @@ public class VerdictConf {
 	public String getPassword() {
 		return get("password");
 	}
-	
-	// Metastore DBMS
-//	public void setMetaDbms(String metadbms) {
-//		set("metadbms", metadbms.toLowerCase());
-//	}
-//	
-//	public String getMetaDbms() {
-//		return get("metadbms");
-//	}
-//	
-//	public void setMetaDbmsSchema(String name) {
-//		set("metaschema", name);
-//	}
-//	
-//	public String getMetaDbmsSchema() {
-//		return get("metaschema");
-//	}
-//
-//	public void setMetaHost(String host) {
-//		set("metahost", host);
-//	}
-//	
-//	public String getMetaHost() {
-//		return get("metahost");
-//	}
-//	
-//	public void setMetaPort(String port) {
-//		set("metaport", "port");
-//	}
-//	
-//	public String getMetaPort() {
-//		return get("metaport");
-//	}
-//	
-//	public void setMetaUser(String user) {
-//		set("metauser", user);
-//	}
-//	
-//	public String getMetaUser() {
-//		return get("metauser");
-//	}
-//	
-//	public void setMetaPassword(String password) {
-//		set("metapassword", password);
-//	}
-//	
-//	public String getMetaPassword() {
-//		return get("metapassword");
-//	}
 
 	public void setPort(String port) {
 		set("port", port);
@@ -251,6 +206,8 @@ public class VerdictConf {
 	public double getRelativeTargetCost() {
 		return getDouble("verdict.relative_target_cost");
 	}
+	
+	public boolean cacheSparkSamples() {
+		return getBoolean("verdict.cache_spark_samples");
+	}
 }
-
-
