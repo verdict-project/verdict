@@ -51,7 +51,7 @@ public class VerdictConnection implements Connection {
 	    	}
 	    	
 	    	// set properties from the passed connection string.
-	    	Pattern inlineOptions = Pattern.compile("(?<key>[a-zA-Z0-9_]+)=[\"']?(?<value>[a-zA-Z0-9@_/\\.\\\\:-]+)[\"']?");
+	    	Pattern inlineOptions = Pattern.compile("(?<key>[a-zA-Z0-9_\\.]+)=[\"']?(?<value>[a-zA-Z0-9@_/\\.\\\\:-]+)[\"']?");
 	    	Matcher inlineMatcher = inlineOptions.matcher(url);
 	    	while (inlineMatcher.find()) {
 	    		info.setProperty(inlineMatcher.group("key"), inlineMatcher.group("value"));

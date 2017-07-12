@@ -79,6 +79,7 @@ other_statement
     | show_databases_statement
     | describe_table_statement
     | refresh_statement
+    | show_config_statement
     ;
 
 //config_set_statement: SET key=config_key '=' value=config_value percent='%'?;
@@ -474,6 +475,10 @@ describe_table_statement
     
 refresh_statement
     : REFRESH (schema=id)? ';'?
+    ;
+    
+show_config_statement
+    : SHOW CONFIG ';'?
     ;
 
 execute_clause
@@ -1408,6 +1413,7 @@ CHECKSUM:                        C H E C K S U M;
 CHECKSUM_AGG:                    C H E C K S U M '_' A G G;
 COMMITTED:                       C O M M I T T E D;
 CONCAT:                          C O N C A T;
+CONFIG:                          C O N F I G;
 COOKIE:                          C O O K I E;
 COS:                             C O S;
 COUNT:                           C O U N T;

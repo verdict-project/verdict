@@ -33,6 +33,7 @@ public abstract class Query {
 	public enum Type {
 		SELECT, CREATE_SAMPLE, DROP_SAMPLE, SHOW_SAMPLE, CONFIG, DESCRIBE_TABLE,
 		OTHER_USE, OTHER_SHOW_TABLES, OTHER_SHOW_DATABASES, NOSUPPORT, OTHER_REFRESH,
+		OTHER_SHOW_CONFIG,
 		CREATE_TABLE, CREATE_TABLE_AS_SELECT, DROP_TABLE, DELETE_FROM, CREATE_VIEW, DROP_VIEW
 	}
 
@@ -152,6 +153,8 @@ public abstract class Query {
 						   queryType.equals(Type.DELETE_FROM) ||
 						   queryType.equals(Type.DROP_VIEW)) {
 					query = new ByPassVerdictUpdateQuery(vc, queryString);
+				} else if (queryType.equals(Type.OTHER_SHOW_CONFIG)) {
+					query = new ShowConfigQuery(vc, queryString);
 				} else if (queryType.equals(Type.CREATE_TABLE_AS_SELECT)) {
 					query = new CreateTableAsSelectQuery(vc, queryString);
 				} else if (queryType.equals(Type.CREATE_VIEW)) {
@@ -240,6 +243,12 @@ public abstract class Query {
 			@Override
 			public Type visitShow_databases_statement(VerdictSQLParser.Show_databases_statementContext ctx) {
 				type = Type.OTHER_SHOW_DATABASES;
+				return type;
+			}
+			
+			@Override
+			public Type visitShow_config_statement(VerdictSQLParser.Show_config_statementContext ctx) {
+				type = Type.OTHER_SHOW_CONFIG;
 				return type;
 			}
 			

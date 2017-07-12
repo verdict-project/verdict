@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Scanner;
+import java.util.TreeMap;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -15,7 +16,7 @@ import edu.umich.verdict.util.VerdictLogger;
 
 public class VerdictConf {
 	
-    private HashMap<String, String> configs = new HashMap<String, String>();
+    private Map<String, String> configs = new TreeMap<String, String>();
     
     private final Map<String, String> configKeySynonyms =
     		new ImmutableMap.Builder<String, String>()
@@ -30,6 +31,10 @@ public class VerdictConf {
     public VerdictConf(Properties properties) {
         this();
         setProperties(properties);
+    }
+    
+    public Map<String, String> getConfigs() {
+    	return configs;
     }
     
     public void setProperties(Properties properties) {

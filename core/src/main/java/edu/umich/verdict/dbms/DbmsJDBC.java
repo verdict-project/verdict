@@ -201,24 +201,33 @@ public abstract class DbmsJDBC extends Dbms {
 			isFirstParam = false;
 		}
 		
-		if (vc.getConf().doesContain("principal")) {
-			String principal = vc.getConf().get("principal");
+		for (Map.Entry<String, String> pair : vc.getConf().getConfigs().entrySet()) {
+			String key = pair.getKey();
+			String value = pair.getValue();
 			
-			Pattern princPattern = Pattern.compile("(?<service>.*)/(?<host>.*)@(?<realm>.*)");
+			if (key.startsWith("verdict") || key.equals("user") || key.equals("password")) {
+				continue;
+			}
 			
-			Matcher princMatcher = princPattern.matcher(principal);
-			
-			if (princMatcher.find()) {
-				String service = princMatcher.group("service");
-				String krbRealm = princMatcher.group("realm");
-				String krbHost = princMatcher.group("host");
+			if (key.equals("principal")) {
+				Pattern princPattern = Pattern.compile("(?<service>.*)/(?<host>.*)@(?<realm>.*)");
+				Matcher princMatcher = princPattern.matcher(value);
 				
-				url.append(String.format(";AuthMech=%s;KrbRealm=%s;KrbHostFQDN=%s;KrbServiceName=%s;KrbAuthType=%s",
-						 "1", krbRealm, krbHost, service, "2"));
-			} else {
-				VerdictLogger.error("Error: principal \"" + principal + "\" could not be parsed.\n"
-						+ "Make sure the principal is in the form service/host@REALM");
-			}		
+				if (princMatcher.find()) {
+					String service = princMatcher.group("service");
+					String krbRealm = princMatcher.group("realm");
+					String krbHost = princMatcher.group("host");
+					
+					url.append(String.format(";AuthMech=%s;KrbRealm=%s;KrbHostFQDN=%s;KrbServiceName=%s;KrbAuthType=%s",
+							 "1", krbRealm, krbHost, service, "2"));
+				} else {
+					VerdictLogger.error("Error: principal \"" + value + "\" could not be parsed.\n"
+							+ "Make sure the principal is in the form service/host@REALM");
+				}
+			}
+			else {
+				url.append(String.format(";%s=%s", key, value));
+			}
 		}
 		
 		return url.toString();
