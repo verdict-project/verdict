@@ -87,19 +87,6 @@
             <version>${spark.hive.version}</version>
             <scope>provided</scope>
         </dependency>
-
-
-        <!-- Test -->
-        <dependency>
-            <groupId>org.scalatest</groupId>
-            <artifactId>scalatest_${scala.compat.version}</artifactId>
-            <version>${org.scalatest.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.holdenkarau</groupId>
-            <artifactId>spark-testing-base_2.10</artifactId>
-            <version>1.6.0_0.7.0</version>
-        </dependency>
         <dependency>
             <groupId>edu.umich.verdict</groupId>
             <artifactId>verdict-core</artifactId>
