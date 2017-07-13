@@ -13,9 +13,8 @@ import org.junit.runner.Result;
 import org.junit.Test;
 import org.junit.runner.notification.Failure;
 
-
-
 import edu.umich.verdict.exceptions.VerdictException;
+
 
 public class SparkAggregationIT extends AggregationIT {
 	
@@ -23,22 +22,40 @@ public class SparkAggregationIT extends AggregationIT {
 	
 	static VerdictSparkContext vc;
 	
+	static String database = "instacart1g";
+	
 	public static void setSqlContext(SQLContext sqlContext) {
 		SparkAggregationIT.sqlContext = sqlContext;
 	}
 	
+	public static String[] test_methods = {"simpleAvg", "simpleAvg2", "simpleCount", "simpleSum", "simpleSum2"};
+	
 	public static void run(SQLContext sqlContext) {
+		sqlContext.sql("use " + database);
 		setSqlContext(sqlContext);
-		Request request = Request.method(edu.umich.verdict.SparkAggregationIT.class, "simpleAvg");
-		JUnitCore jcore = new JUnitCore();
-		Result result = jcore.run(request);
-
-		if (result.getFailureCount() > 0) {
-			List<Failure> failures = result.getFailures();
-			for (Failure f : failures) {
-				System.out.println(f.getTrace());
+		
+		int totalTestCount = 0;
+		int failureCount = 0;
+		
+		for (String name : test_methods) {
+			totalTestCount++;
+			Request request = Request.method(edu.umich.verdict.SparkAggregationIT.class, name);
+			JUnitCore jcore = new JUnitCore();
+			Result result = jcore.run(request);
+	
+			if (result.getFailureCount() > 0) {
+				failureCount++;
+				List<Failure> failures = result.getFailures();
+				for (Failure f : failures) {
+					System.out.println(f.getTrace());
+				}
 			}
 		}
+		
+		System.out.println("All tests finished");
+		System.out.println("Total number of test cases: " + totalTestCount);
+		System.out.println("Number of Successes: " + (totalTestCount - failureCount));
+		System.out.println("Number of Failures: " + failureCount);
 	}
 	
 	@BeforeClass
@@ -68,9 +85,4 @@ public class SparkAggregationIT extends AggregationIT {
 		assertColsSimilar(expected, actual, 1, error);
 	}
 	
-	@Test
-	public void simpleAvg() throws VerdictException {
-		String sql = "select avg(days_since_prior) from instacart1g.orders";
-		testSimpleAggQuery(sql);
-	}
 }
