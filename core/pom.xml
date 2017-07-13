@@ -6,7 +6,7 @@
 		<artifactId>verdict-db</artifactId>
 		<version>${verdict.version}</version>
 	</parent>
-	
+
 	<artifactId>verdict-core</artifactId>
 	<packaging>jar</packaging>
 	<build>
@@ -21,7 +21,7 @@
 						</goals>
 					</execution>
 				</executions>
-			</plugin>
+            </plugin>
 			<plugin>
 				<groupId>org.antlr</groupId>
 				<artifactId>antlr4-maven-plugin</artifactId>
@@ -85,6 +85,7 @@
 			</plugin>
 		</plugins>
 	</build>
+
 	<dependencies>
 		<dependency>
 			<groupId>org.antlr</groupId>
@@ -122,6 +123,12 @@
 			<groupId>org.apache.spark</groupId>
 			<artifactId>spark-sql_2.10</artifactId>
 			<version>${spark.sql.version}</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.spark</groupId>
+			<artifactId>spark-hive_2.10</artifactId>
+			<version>${spark.hive.version}</version>
 			<scope>provided</scope>
 		</dependency>
 	</dependencies>
