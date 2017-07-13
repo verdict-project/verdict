@@ -155,13 +155,13 @@ public class AggregationIT extends BaseIT {
 		
 	}
 
-	protected void assertColsEqual(List<List<Object>> expected, List<List<Object>> actual, int colIndex) throws SQLException {
+	protected void assertColsEqual(List<List<Object>> expected, List<List<Object>> actual, int colIndex) {
 		List<Object> col1 = getColumn(expected, colIndex);
 		List<Object> col2 = getColumn(actual, colIndex);
 		assertArrayEquals(col1.toArray(), col2.toArray());
 	}
 
-	protected void assertColsSimilar(List<List<Object>> expected, List<List<Object>> actual, int colIndex, double error) throws SQLException {
+	protected void assertColsSimilar(List<List<Object>> expected, List<List<Object>> actual, int colIndex, double error) {
 			List<Object> col1 = getColumn(expected, colIndex);
 			List<Object> col2 = getColumn(actual, colIndex);
 			assertEquals(col1.size(), col2.size());
@@ -179,7 +179,7 @@ public class AggregationIT extends BaseIT {
 			assertEquals(avg_err, 0, error);
 		}
 
-	protected List<Object> getColumn(List<List<Object>> ll, int colIndex) throws SQLException {
+	protected List<Object> getColumn(List<List<Object>> ll, int colIndex) {
 		List<Object> column = new ArrayList<Object>();
 		//			int colCount = rs.getMetaData().getColumnCount();
 		for (int i = 0; i < ll.size(); i ++) {
