@@ -39,37 +39,38 @@ public class SparkAggregationIT extends AggregationIT {
 	
 	public static void run(SparkContext sc) {
 		setSparkContext(sc);
-		
-		int totalTestCount = 0;
-		int failureCount = 0;
-		
-		for (String name : test_methods) {
-			totalTestCount++;
-			Request request = Request.method(edu.umich.verdict.SparkAggregationIT.class, name);
-			JUnitCore jcore = new JUnitCore();
-			Result result = jcore.run(request);
-	
-			if (result.getFailureCount() > 0) {
-				failureCount++;
-				List<Failure> failures = result.getFailures();
-				for (Failure f : failures) {
-					System.out.println(f.getTrace());
+		try {
+			vc = new VerdictHiveContext(sc);
+			vc.sql("use " + database);
+			hc = new HiveContext(sc);
+			hc.sql("use " + database);
+
+			int totalTestCount = 0;
+			int failureCount = 0;
+
+			for (String name : test_methods) {
+				totalTestCount++;
+				Request request = Request.method(edu.umich.verdict.SparkAggregationIT.class, name);
+				JUnitCore jcore = new JUnitCore();
+				Result result = jcore.run(request);
+
+				if (result.getFailureCount() > 0) {
+					failureCount++;
+					List<Failure> failures = result.getFailures();
+					for (Failure f : failures) {
+						System.out.println(f.getTrace());
+					}
 				}
 			}
-		}
+			
+			System.out.println("All tests finished");
+			System.out.println("Total number of test cases: " + totalTestCount);
+			System.out.println("Number of Successes: " + (totalTestCount - failureCount));
+			System.out.println("Number of Failures: " + failureCount);
 		
-		System.out.println("All tests finished");
-		System.out.println("Total number of test cases: " + totalTestCount);
-		System.out.println("Number of Successes: " + (totalTestCount - failureCount));
-		System.out.println("Number of Failures: " + failureCount);
-	}
-	
-	@BeforeClass
-	public static void connect() throws VerdictException {
-		vc = new VerdictHiveContext(sc);
-		vc.sql("use " + database);
-		hc = new HiveContext(sc);
-		hc.sql("use " + database);
+		} catch (VerdictException e) {
+			e.printStackTrace();
+		}
 	}
 
 	protected List<List<Object>> collectResult(DataFrame df) {
