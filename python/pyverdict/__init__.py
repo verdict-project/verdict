@@ -1,5 +1,5 @@
 
-from context import VerdictSparkContext
+from context import VerdictHiveContext
 
 __all__ = [
     "VerdictHiveContext"
