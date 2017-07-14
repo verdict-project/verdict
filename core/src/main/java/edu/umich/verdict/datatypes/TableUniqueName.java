@@ -52,7 +52,11 @@ public class TableUniqueName implements Comparable<TableUniqueName> {
 	
 	@Override
 	public int hashCode() {
-		return schemaName.hashCode() + tableName.hashCode();
+		if (schemaName == null) {
+			return tableName.hashCode();
+		} else {
+			return schemaName.hashCode() + tableName.hashCode(); 
+		}
 	}
 	
 	@Override

@@ -5,7 +5,6 @@ import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 
 import org.apache.spark.sql.DataFrame;
-import org.apache.spark.sql.SQLContext;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.Sets;
@@ -109,11 +108,6 @@ public abstract class VerdictContext {
 //		}
 //		return null;
 //	}
-	
-	public static VerdictContext from(SQLContext sqlContext) throws VerdictException {
-		VerdictContext vc = new VerdictSparkContext(sqlContext);
-		return vc;
-	}
 	
 	public abstract void execute(String sql) throws VerdictException;
 	

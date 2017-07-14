@@ -9,7 +9,7 @@
 
   <artifactId>verdict-veeline</artifactId>
   <packaging>jar</packaging>
-  <name>veeline</name>
+  <name>verdict-veeline</name>
   <url>http://verdictdb.org</url>
 
   <properties>
@@ -103,13 +103,6 @@
           <target>1.6</target>
         </configuration>
       </plugin>
-      <!--<plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <configuration>
-          <argLine>-Xmx1024m -javaagent:${org.jmockit:jmockit:jar}</argLine>
-        </configuration>
-      </plugin>-->
       <plugin>
         <artifactId>maven-assembly-plugin</artifactId>
         <configuration>

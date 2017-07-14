@@ -3,9 +3,10 @@ package edu.umich.verdict;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.spark.SparkContext;
 import org.apache.spark.sql.DataFrame;
 import org.apache.spark.sql.Row;
-import org.apache.spark.sql.SQLContext;
+import org.apache.spark.sql.hive.HiveContext;
 import org.junit.BeforeClass;
 import org.junit.runner.JUnitCore;
 import org.junit.runner.Request;
@@ -18,25 +19,26 @@ import edu.umich.verdict.exceptions.VerdictException;
 
 public class SparkAggregationIT extends AggregationIT {
 	
-	static SQLContext sqlContext;
+	static SparkContext sc;
 	
-	static VerdictSparkContext vc;
+	static HiveContext hc;
+	
+	static VerdictHiveContext vc;
 	
 	static String database = "instacart1g";
 	
-	public static void setSqlContext(SQLContext sqlContext) {
-		SparkAggregationIT.sqlContext = sqlContext;
+	public static void setSparkContext(SparkContext sc) {
+		SparkAggregationIT.sc = sc;
 	}
 	
-	public static VerdictSparkContext getVerdictContext() {
+	public static VerdictHiveContext getVerdictContext() {
 		return vc;
 	}
 	
 	public static String[] test_methods = {"simpleAvg", "simpleAvg2", "simpleCount", "simpleSum", "simpleSum2"};
 	
-	public static void run(SQLContext sqlContext) {
-		sqlContext.sql("use " + database);
-		setSqlContext(sqlContext);
+	public static void run(SparkContext sc) {
+		setSparkContext(sc);
 		
 		int totalTestCount = 0;
 		int failureCount = 0;
@@ -64,7 +66,10 @@ public class SparkAggregationIT extends AggregationIT {
 	
 	@BeforeClass
 	public static void connect() throws VerdictException {
-		vc = new VerdictSparkContext(sqlContext);
+		vc = new VerdictHiveContext(sc);
+		vc.sql("use " + database);
+		hc = new HiveContext(sc);
+		hc.sql("use " + database);
 	}
 
 	protected List<List<Object>> collectResult(DataFrame df) {
@@ -83,8 +88,8 @@ public class SparkAggregationIT extends AggregationIT {
 	
 	@Override
 	protected void testSimpleAggQuery(String sql) throws VerdictException {
-		List<List<Object>> expected = collectResult(sqlContext.sql(sql));
-		List<List<Object>> actual = collectResult(vc.executeSparkQuery(sql));
+		List<List<Object>> expected = collectResult(hc.sql(sql));
+		List<List<Object>> actual = collectResult(vc.sql(sql));
 		printTestCase(sql, expected, actual);
 		assertColsSimilar(expected, actual, 1, error);
 	}
