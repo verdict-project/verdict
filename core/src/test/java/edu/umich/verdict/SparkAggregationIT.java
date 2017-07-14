@@ -28,6 +28,10 @@ public class SparkAggregationIT extends AggregationIT {
 		SparkAggregationIT.sqlContext = sqlContext;
 	}
 	
+	public static VerdictSparkContext getVerdictContext() {
+		return vc;
+	}
+	
 	public static String[] test_methods = {"simpleAvg", "simpleAvg2", "simpleCount", "simpleSum", "simpleSum2"};
 	
 	public static void run(SQLContext sqlContext) {
