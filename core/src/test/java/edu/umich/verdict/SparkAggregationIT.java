@@ -137,7 +137,7 @@ public class SparkAggregationIT extends AggregationIT {
 		
 		TableUniqueName originalTable = TableUniqueName.uname(vc, tableName);
 		ApproxRelation r = ApproxSingleRelation.from(vc, new SampleParam(vc, originalTable, sampleType, samplingRatio, sampleColumns));
-		List<List<Object>> actual = collectResult(r.count().collectResultSet());
+		List<List<Object>> actual = collectResult(r.count().collectDataFrame());
 		
 		printTestCase(sql, expected, actual);
 		assertColsSimilar(expected, actual, 1, error);
@@ -151,7 +151,7 @@ public class SparkAggregationIT extends AggregationIT {
 		
 		TableUniqueName originalTable = TableUniqueName.uname(vc, tableName);
 		ApproxRelation r = ApproxSingleRelation.from(vc, new SampleParam(vc, originalTable, sampleType, samplingRatio, sampleColumns));
-		List<List<Object>> actual = collectResult(r.groupby(groups).count().orderby(groups).collectResultSet());
+		List<List<Object>> actual = collectResult(r.groupby(groups).count().orderby(groups).collectDataFrame());
 		
 		printTestCase(sql, expected, actual);
 		assertColsEqual(expected, actual, 1);
@@ -165,7 +165,7 @@ public class SparkAggregationIT extends AggregationIT {
 		
 		TableUniqueName originalTable = TableUniqueName.uname(vc, tableName);
 		ApproxRelation r = ApproxSingleRelation.from(vc, new SampleParam(vc, originalTable, sampleType, samplingRatio, sampleColumns));
-		List<List<Object>> actual = collectResult(r.avg(aggCol).collectResultSet());
+		List<List<Object>> actual = collectResult(r.avg(aggCol).collectDataFrame());
 		
 		printTestCase(sql, expected, actual);
 		assertColsSimilar(expected, actual, 1, error);
@@ -179,7 +179,7 @@ public class SparkAggregationIT extends AggregationIT {
 		
 		TableUniqueName originalTable = TableUniqueName.uname(vc, tableName);
 		ApproxRelation r = ApproxSingleRelation.from(vc, new SampleParam(vc, originalTable, sampleType, samplingRatio, sampleColumns));
-		List<List<Object>> actual = collectResult(r.groupby(groups).avg(aggCol).orderby(groups).collectResultSet());
+		List<List<Object>> actual = collectResult(r.groupby(groups).avg(aggCol).orderby(groups).collectDataFrame());
 		
 		printTestCase(sql, expected, actual);
 		assertColsEqual(expected, actual, 1);
@@ -193,7 +193,7 @@ public class SparkAggregationIT extends AggregationIT {
 		
 		TableUniqueName originalTable = TableUniqueName.uname(vc, tableName);
 		ApproxRelation r = ApproxSingleRelation.from(vc, new SampleParam(vc, originalTable, sampleType, samplingRatio, sampleColumns));
-		List<List<Object>> actual = collectResult(r.sum(aggCol).collectResultSet());
+		List<List<Object>> actual = collectResult(r.sum(aggCol).collectDataFrame());
 		
 		printTestCase(sql, expected, actual);
 		assertColsSimilar(expected, actual, 1, error);
@@ -207,7 +207,7 @@ public class SparkAggregationIT extends AggregationIT {
 		
 		TableUniqueName originalTable = TableUniqueName.uname(vc, tableName);
 		ApproxRelation r = ApproxSingleRelation.from(vc, new SampleParam(vc, originalTable, sampleType, samplingRatio, sampleColumns));
-		List<List<Object>> actual = collectResult(r.groupby(groups).sum(aggCol).orderby(groups).collectResultSet());
+		List<List<Object>> actual = collectResult(r.groupby(groups).sum(aggCol).orderby(groups).collectDataFrame());
 		
 		printTestCase(sql, expected, actual);
 		assertColsEqual(expected, actual, 1);
@@ -221,7 +221,7 @@ public class SparkAggregationIT extends AggregationIT {
 		
 		TableUniqueName originalTable = TableUniqueName.uname(vc, tableName);
 		ApproxRelation r = ApproxSingleRelation.from(vc, new SampleParam(vc, originalTable, sampleType, samplingRatio, sampleColumns));
-		List<List<Object>> actual = collectResult(r.countDistinct(aggCol).collectResultSet());
+		List<List<Object>> actual = collectResult(r.countDistinct(aggCol).collectDataFrame());
 		
 		printTestCase(sql, expected, actual);
 		assertColsSimilar(expected, actual, 1, error);
@@ -235,7 +235,7 @@ public class SparkAggregationIT extends AggregationIT {
 		
 		TableUniqueName originalTable = TableUniqueName.uname(vc, tableName);
 		ApproxRelation r = ApproxSingleRelation.from(vc, new SampleParam(vc, originalTable, sampleType, samplingRatio, sampleColumns));
-		List<List<Object>> actual = collectResult(r.groupby(groups).countDistinct(aggCol).orderby(groups).collectResultSet());
+		List<List<Object>> actual = collectResult(r.groupby(groups).countDistinct(aggCol).orderby(groups).collectDataFrame());
 		
 		printTestCase(sql, expected, actual);
 		assertColsEqual(expected, actual, 1);
