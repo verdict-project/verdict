@@ -1,5 +1,6 @@
 package edu.umich.verdict;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,7 +15,13 @@ import org.junit.runner.Result;
 import org.junit.Test;
 import org.junit.runner.notification.Failure;
 
+import com.google.common.base.Joiner;
+
+import edu.umich.verdict.datatypes.SampleParam;
+import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
+import edu.umich.verdict.relation.ApproxRelation;
+import edu.umich.verdict.relation.ApproxSingleRelation;
 
 
 public class SparkAggregationIT extends AggregationIT {
@@ -35,42 +42,61 @@ public class SparkAggregationIT extends AggregationIT {
 		return vc;
 	}
 	
-	public static String[] test_methods = {"simpleAvg", "simpleAvg2", "simpleCount", "simpleSum", "simpleSum2"};
-	
-	public static void run(SparkContext sc) {
-		setSparkContext(sc);
+	private static void setup() {
 		try {
 			vc = new VerdictHiveContext(sc);
 			vc.sql("use " + database);
 			hc = new HiveContext(sc);
 			hc.sql("use " + database);
-
-			int totalTestCount = 0;
-			int failureCount = 0;
-
-			for (String name : test_methods) {
-				totalTestCount++;
-				Request request = Request.method(edu.umich.verdict.SparkAggregationIT.class, name);
-				JUnitCore jcore = new JUnitCore();
-				Result result = jcore.run(request);
-
-				if (result.getFailureCount() > 0) {
-					failureCount++;
-					List<Failure> failures = result.getFailures();
-					for (Failure f : failures) {
-						System.out.println(f.getTrace());
-					}
-				}
-			}
-			
-			System.out.println("All tests finished");
-			System.out.println("Total number of test cases: " + totalTestCount);
-			System.out.println("Number of Successes: " + (totalTestCount - failureCount));
-			System.out.println("Number of Failures: " + failureCount);
-		
 		} catch (VerdictException e) {
 			e.printStackTrace();
 		}
+	}
+	
+	public static void runAll(SparkContext sc) {
+		setSparkContext(sc);
+		setup();
+
+		JUnitCore jcore = new JUnitCore();
+		Result result = jcore.run(edu.umich.verdict.SparkAggregationIT.class);
+		
+		List<Failure> failures = result.getFailures();
+		for (Failure f : failures) {
+			System.out.println(f.getTrace());
+		}
+		
+		System.out.println("Total number of test cases: " +result.getRunCount());
+		System.out.println("Number of Failures: " + result.getFailureCount());
+	}
+	
+	public static String[] test_methods = {"simpleAvg", "simpleAvg2", "simpleCount", "simpleSum", "simpleSum2"};
+	
+	public static void run(SparkContext sc) {
+		setSparkContext(sc);
+		setup();
+
+		int totalTestCount = 0;
+		int failureCount = 0;
+
+		for (String name : test_methods) {
+			totalTestCount++;
+			Request request = Request.method(edu.umich.verdict.SparkAggregationIT.class, name);
+			JUnitCore jcore = new JUnitCore();
+			Result result = jcore.run(request);
+
+			if (result.getFailureCount() > 0) {
+				failureCount++;
+				List<Failure> failures = result.getFailures();
+				for (Failure f : failures) {
+					System.out.println(f.getTrace());
+				}
+			}
+		}
+
+		System.out.println("All tests finished");
+		System.out.println("Total number of test cases: " + totalTestCount);
+		System.out.println("Number of Successes: " + (totalTestCount - failureCount));
+		System.out.println("Number of Failures: " + failureCount);
 	}
 
 	protected List<List<Object>> collectResult(DataFrame df) {
@@ -93,6 +119,127 @@ public class SparkAggregationIT extends AggregationIT {
 		List<List<Object>> actual = collectResult(vc.sql(sql));
 		printTestCase(sql, expected, actual);
 		assertColsSimilar(expected, actual, 1, error);
+	}
+	
+	@Override
+	protected void testGroupbyAggQuery(String sql) throws SQLException, VerdictException {
+		List<List<Object>> expected = collectResult(hc.sql(sql));
+		List<List<Object>> actual = collectResult(vc.sql(sql));
+		printTestCase(sql, expected, actual);
+		assertColsEqual(expected, actual, 1);
+		assertColsSimilar(expected, actual, 2, error);
+	}
+	
+	@Override
+	protected void testSimpleCountFor(String tableName, String sampleType, List<String> sampleColumns) throws SQLException, VerdictException {
+		String sql = String.format("select count(*) from %s", tableName);
+		List<List<Object>> expected = collectResult(hc.sql(sql));
+		
+		TableUniqueName originalTable = TableUniqueName.uname(vc, tableName);
+		ApproxRelation r = ApproxSingleRelation.from(vc, new SampleParam(vc, originalTable, sampleType, samplingRatio, sampleColumns));
+		List<List<Object>> actual = collectResult(r.count().collectResultSet());
+		
+		printTestCase(sql, expected, actual);
+		assertColsSimilar(expected, actual, 1, error);
+	}
+	
+	@Override
+	protected void testGroupbyCountFor(String tableName, List<String> groupby, String sampleType, List<String> sampleColumns) throws SQLException, VerdictException {
+		String groups = Joiner.on(", ").join(groupby);
+		String sql = String.format("select %s, count(*) from %s group by %s order by %s", groups, tableName, groups, groups);
+		List<List<Object>> expected = collectResult(hc.sql(sql));
+		
+		TableUniqueName originalTable = TableUniqueName.uname(vc, tableName);
+		ApproxRelation r = ApproxSingleRelation.from(vc, new SampleParam(vc, originalTable, sampleType, samplingRatio, sampleColumns));
+		List<List<Object>> actual = collectResult(r.groupby(groups).count().orderby(groups).collectResultSet());
+		
+		printTestCase(sql, expected, actual);
+		assertColsEqual(expected, actual, 1);
+		assertColsSimilar(expected, actual, 2, error);
+	}
+	
+	@Override
+	protected void testSimpleAvgFor(String tableName, String aggCol, String sampleType, List<String> sampleColumns) throws SQLException, VerdictException {
+		String sql = String.format("select avg(%s) from %s", aggCol, tableName);
+		List<List<Object>> expected = collectResult(hc.sql(sql));
+		
+		TableUniqueName originalTable = TableUniqueName.uname(vc, tableName);
+		ApproxRelation r = ApproxSingleRelation.from(vc, new SampleParam(vc, originalTable, sampleType, samplingRatio, sampleColumns));
+		List<List<Object>> actual = collectResult(r.avg(aggCol).collectResultSet());
+		
+		printTestCase(sql, expected, actual);
+		assertColsSimilar(expected, actual, 1, error);
+	}
+	
+	@Override
+	protected void testGroupbyAvgFor(String tableName, String aggCol, List<String> groupby, String sampleType, List<String> sampleColumns) throws SQLException, VerdictException {
+		String groups = Joiner.on(", ").join(groupby);
+		String sql = String.format("select %s, avg(%s) from %s group by %s order by %s", groups, aggCol, tableName, groups, groups);
+		List<List<Object>> expected = collectResult(hc.sql(sql));
+		
+		TableUniqueName originalTable = TableUniqueName.uname(vc, tableName);
+		ApproxRelation r = ApproxSingleRelation.from(vc, new SampleParam(vc, originalTable, sampleType, samplingRatio, sampleColumns));
+		List<List<Object>> actual = collectResult(r.groupby(groups).avg(aggCol).orderby(groups).collectResultSet());
+		
+		printTestCase(sql, expected, actual);
+		assertColsEqual(expected, actual, 1);
+		assertColsSimilar(expected, actual, 2, error);
+	}
+	
+	@Override
+	protected void testSimpleSumFor(String tableName, String aggCol, String sampleType, List<String> sampleColumns) throws SQLException, VerdictException {
+		String sql = String.format("select sum(%s) from %s", aggCol, tableName);
+		List<List<Object>> expected = collectResult(hc.sql(sql));
+		
+		TableUniqueName originalTable = TableUniqueName.uname(vc, tableName);
+		ApproxRelation r = ApproxSingleRelation.from(vc, new SampleParam(vc, originalTable, sampleType, samplingRatio, sampleColumns));
+		List<List<Object>> actual = collectResult(r.sum(aggCol).collectResultSet());
+		
+		printTestCase(sql, expected, actual);
+		assertColsSimilar(expected, actual, 1, error);
+	}
+	
+	@Override
+	protected void testGroupbySumFor(String tableName, String aggCol, List<String> groupby, String sampleType, List<String> sampleColumns) throws SQLException, VerdictException {
+		String groups = Joiner.on(", ").join(groupby);
+		String sql = String.format("select %s, sum(%s) from %s group by %s order by %s", groups, aggCol, tableName, groups, groups);
+		List<List<Object>> expected = collectResult(hc.sql(sql));
+		
+		TableUniqueName originalTable = TableUniqueName.uname(vc, tableName);
+		ApproxRelation r = ApproxSingleRelation.from(vc, new SampleParam(vc, originalTable, sampleType, samplingRatio, sampleColumns));
+		List<List<Object>> actual = collectResult(r.groupby(groups).sum(aggCol).orderby(groups).collectResultSet());
+		
+		printTestCase(sql, expected, actual);
+		assertColsEqual(expected, actual, 1);
+		assertColsSimilar(expected, actual, 2, error);
+	}
+	
+	@Override
+	protected void testSimpleCountDistinctFor(String tableName, String aggCol, String sampleType, List<String> sampleColumns) throws SQLException, VerdictException {
+		String sql = String.format("select count(distinct %s) from %s", aggCol, tableName);
+		List<List<Object>> expected = collectResult(hc.sql(sql));
+		
+		TableUniqueName originalTable = TableUniqueName.uname(vc, tableName);
+		ApproxRelation r = ApproxSingleRelation.from(vc, new SampleParam(vc, originalTable, sampleType, samplingRatio, sampleColumns));
+		List<List<Object>> actual = collectResult(r.countDistinct(aggCol).collectResultSet());
+		
+		printTestCase(sql, expected, actual);
+		assertColsSimilar(expected, actual, 1, error);
+	}
+	
+	@Override
+	protected void testGroupbyCountDistinctFor(String tableName, String aggCol, List<String> groupby, String sampleType, List<String> sampleColumns) throws SQLException, VerdictException {
+		String groups = Joiner.on(", ").join(groupby);
+		String sql = String.format("select %s, count(distinct %s) from %s group by %s order by %s", groups, aggCol, tableName, groups, groups);
+		List<List<Object>> expected = collectResult(hc.sql(sql));
+		
+		TableUniqueName originalTable = TableUniqueName.uname(vc, tableName);
+		ApproxRelation r = ApproxSingleRelation.from(vc, new SampleParam(vc, originalTable, sampleType, samplingRatio, sampleColumns));
+		List<List<Object>> actual = collectResult(r.groupby(groups).countDistinct(aggCol).orderby(groups).collectResultSet());
+		
+		printTestCase(sql, expected, actual);
+		assertColsEqual(expected, actual, 1);
+		assertColsSimilar(expected, actual, 2, error);
 	}
 	
 }
