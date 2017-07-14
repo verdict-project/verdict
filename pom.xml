@@ -19,7 +19,6 @@
         <skipTests>true</skipTests>
         <spark.core.version>1.6.0-cdh5.11.1</spark.core.version>
         <spark.sql.version>1.6.0-cdh5.11.1</spark.sql.version>
-        <spark.hive.version>1.6.0-cdh5.11.1</spark.hive.version>
     </properties>
 
     <groupId>edu.umich.verdict</groupId>
@@ -39,7 +38,7 @@
     <modules>
         <module>core</module>
         <module>jdbc</module>
-        <module>core-scala</module>
+        <!-- <module>core-scala</module> -->
         <module>veeline</module>
     </modules>
 

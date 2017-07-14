@@ -51,11 +51,5 @@
             <version>${spark.sql.version}</version>
             <scope>provided</scope>
         </dependency>
-        <dependency>
-            <groupId>org.apache.spark</groupId>
-            <artifactId>spark-hive_2.10</artifactId>
-            <version>${spark.hive.version}</version>
-            <scope>provided</scope>
-        </dependency>
     </dependencies>
 </project>
