@@ -2,6 +2,7 @@ from py4j.java_gateway import java_import
 from pyspark.sql import DataFrame
 from py4j.java_gateway import java_import
 from pyspark.java_gateway import launch_gateway
+from pyspark import HiveContext
 
 VERDICT_CONTEXT_CLASS = "edu.umich.verdict.VerdictHiveContext"
 
@@ -33,14 +34,18 @@ class VerdictHiveContext(object):
         return self._scala_HiveContext
 
     @property
+    def _jsc(self):
+        return self._python_sc._jsc.sc()
+
+    @property
     def _jvm(self):
         return self._python_HiveContext._sc._gateway.jvm
 
     @property
     def _jverdictContext(self):
-        if self._java_VerdictSparkContext is None:
+        if self._java_VerdictHiveContext is None:
             java_import(self._jvm, VERDICT_CONTEXT_CLASS)
-            self._java_VerdictHiveContext = self._jvm.VerdictHiveContext(self._jhiveContext)
+            self._java_VerdictHiveContext = self._jvm.VerdictHiveContext(self._jsc)
         return self._java_VerdictHiveContext
 
     def toPyDf(self, jdf):
