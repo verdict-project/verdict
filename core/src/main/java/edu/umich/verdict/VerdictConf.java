@@ -26,6 +26,9 @@ import java.util.Scanner;
 
 import com.google.common.collect.ImmutableMap;
 
+import com.google.gson.*;
+import com.google.gson.stream.JsonReader;
+
 import edu.umich.verdict.util.VerdictLogger;
 
 public class VerdictConf {
@@ -62,6 +65,7 @@ public class VerdictConf {
         try {
             ClassLoader cl = this.getClass().getClassLoader();
             updateFromStream(cl.getResourceAsStream("default.conf"));
+            readFromJson(cl.getResourceAsStream("verdict_conf.json"));
         } catch (FileNotFoundException e) {
             System.err.println(e.getMessage());
         }
@@ -79,6 +83,42 @@ public class VerdictConf {
         scanner.close();
         return this;
     }
+    
+    private VerdictConf readFromJson(InputStream stream) {
+    		JsonReader reader = new JsonReader(new InputStreamReader(stream));
+    		reader.setLenient(true);
+    		try {
+				reader.beginObject();
+				
+				while(true) {
+					String key = reader.nextName();
+					if(key.equals("verdict") || key.equals("mysql") || key.equals("impala") || 
+							key.equals("hive2") || key.equals("sparksql")) {
+						key += ".";
+						reader.beginObject();
+						while(reader.hasNext()) {
+							String fullKey = key + reader.nextName();
+							String value = reader.nextString();
+							set(fullKey, value);
+						}
+						reader.endObject();
+					}
+					else {
+						String value = reader.nextString();
+						set(key, value);
+					}
+					
+					if (!reader.hasNext()) {
+						break;
+					}
+				}
+			} catch (IOException e) {
+				System.err.println(e.getMessage());
+			}
+    		
+    		return this;
+    }
+    
 
     public int getInt(String key) {
         return Integer.parseInt(get(key));
@@ -128,7 +168,7 @@ public class VerdictConf {
             val = val.substring(1, val.length() - 1);
         return set(key, val);
     }
-
+    
     public VerdictConf set(String key, String value) {
     	if (configKeySynonyms.containsKey(key)) {
     		return set(configKeySynonyms.get(key), value);
