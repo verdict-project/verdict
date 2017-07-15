@@ -16,15 +16,15 @@ import edu.umich.verdict.util.VerdictLogger;
  * @author Yongjoo Park
  *
  */
-public class VerdictHiveContext extends VerdictContext {
+public class VerdictSparkHiveContext extends VerdictContext {
 	
 	private DataFrame df;
 
-	public VerdictHiveContext(SparkContext sc) throws VerdictException {
+	public VerdictSparkHiveContext(SparkContext sc) throws VerdictException {
 		this(sc, new VerdictConf());
 	}
 	
-	public VerdictHiveContext(SparkContext sc, VerdictConf conf) throws VerdictException {
+	public VerdictSparkHiveContext(SparkContext sc, VerdictConf conf) throws VerdictException {
 		super(conf);
 		conf.setDbms("spark");
 		HiveContext sqlContext = new HiveContext(sc);

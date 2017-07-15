@@ -1,16 +1,15 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
+  <artifactId>verdict-veeline</artifactId>
+  <name>Verdict-veeline</name>
+  <url>http://verdictdb.org</url>
+  <packaging>jar</packaging>
 
   <parent>
     <groupId>edu.umich.verdict</groupId>
-    <artifactId>verdict-db</artifactId>
-    <version>${verdict.version}</version>
+    <artifactId>verdictdb</artifactId>
+    <version>0.3.0</version>
   </parent>
-
-  <artifactId>verdict-veeline</artifactId>
-  <packaging>jar</packaging>
-  <name>verdict-veeline</name>
-  <url>http://verdictdb.org</url>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

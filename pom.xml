@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <properties>
-        <verdict.version>0.2.2-beta</verdict.version>
+        <verdict.version>0.3.0</verdict.version>
         <antlr4.visitor>true</antlr4.visitor>
         <antlr4.version>4.5.3</antlr4.version>
         <apache.commons.version>3.5</apache.commons.version>
@@ -23,9 +23,9 @@
     </properties>
 
     <groupId>edu.umich.verdict</groupId>
-    <artifactId>verdict-db</artifactId>
+    <artifactId>verdictdb</artifactId>
     <packaging>pom</packaging>
-    <version>${verdict.version}</version>
+    <version>0.3.0</version>
     <name>VerdictDB</name>
     <url>http://verdictdb.org</url>
 
