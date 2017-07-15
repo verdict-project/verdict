@@ -64,7 +64,7 @@ public class VerdictConf {
     private VerdictConf setDefaults() {
         try {
             ClassLoader cl = this.getClass().getClassLoader();
-            updateFromStream(cl.getResourceAsStream("default.conf"));
+            //updateFromStream(cl.getResourceAsStream("default.conf"));
             readFromJson(cl.getResourceAsStream("verdict_conf.json"));
         } catch (FileNotFoundException e) {
             System.err.println(e.getMessage());
@@ -84,12 +84,11 @@ public class VerdictConf {
         return this;
     }
     
-    private VerdictConf readFromJson(InputStream stream) {
+    private VerdictConf readFromJson(InputStream stream) throws FileNotFoundException {
     		JsonReader reader = new JsonReader(new InputStreamReader(stream));
     		reader.setLenient(true);
     		try {
 				reader.beginObject();
-				
 				while(true) {
 					String key = reader.nextName();
 					if(key.equals("verdict") || key.equals("mysql") || key.equals("impala") || 
@@ -112,6 +111,7 @@ public class VerdictConf {
 						break;
 					}
 				}
+				
 			} catch (IOException e) {
 				System.err.println(e.getMessage());
 			}
