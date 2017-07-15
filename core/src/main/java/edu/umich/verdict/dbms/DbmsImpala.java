@@ -145,6 +145,8 @@ public class DbmsImpala extends DbmsJDBC {
 								 .select("*, rand(unix_timestamp()) AS __rand");
 		TableUniqueName temp = Relation.getTempTableName(vc, param.sampleTableName().getSchemaName());
 		String sql = String.format("create table %s AS %s", temp, withRand.toSql());
+		VerdictLogger.debug(this, "The query used for creating a temporary table with a column containing random numbers:");
+		VerdictLogger.debugPretty(this, Relation.prettyfySql(sql), "  ");
 		executeUpdate(sql);
 		return temp;
 	}
@@ -156,12 +158,14 @@ public class DbmsImpala extends DbmsJDBC {
 		ExactRelation withRand = SingleRelation.from(vc, temp);
 		long total_size = withRand.countValue();
 		
-		ExactRelation sampled = withRand.select(
+		ExactRelation sampled = withRand
+							   .where("__rand < " + param.samplingRatio)
+							   .select(
 							      Joiner.on(", ").join(colNames) +
 							      ", count(*) over () / " + total_size + " AS " + samplingProbCol + ", " + // attach sampling prob
 							      randomPartitionColumn());
-		String sql = String.format("create table %s AS %s", param.sampleTableName() + sampled.toSql());
-		VerdictLogger.debug(this, "The query used for creating a uniform random sample:");
+		String sql = String.format("create table %s AS %s", param.sampleTableName(), sampled.toSql());
+		VerdictLogger.debug(this, "The query used for creating a uniform random sample from a temporary table:");
 		VerdictLogger.debugPretty(this, Relation.prettyfySql(sql), "  ");
 		executeUpdate(sql);
 	}
