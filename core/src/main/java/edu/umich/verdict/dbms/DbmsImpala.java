@@ -144,7 +144,7 @@ public class DbmsImpala extends DbmsJDBC {
 		ExactRelation withRand = SingleRelation.from(vc, param.originalTable)
 								 .select("*, rand(unix_timestamp()) AS __rand");
 		TableUniqueName temp = Relation.getTempTableName(vc, param.sampleTableName().getSchemaName());
-		String sql = String.format("create table %s AS %s", temp, withRand);
+		String sql = String.format("create table %s AS %s", temp, withRand.toSql());
 		executeUpdate(sql);
 		return temp;
 	}
