@@ -131,5 +131,25 @@ public class SqlToRelationUnitTest {
 		System.out.println(r.toSql());
 		System.out.println(Relation.prettyfySql(r.toSql()));
 	}
+	
+	@Test
+	public void complexTest2() {
+		String sql = "SELECT 5*round(d1/5) as reorder_after_days, COUNT(*) "
+				   + "FROM (SELECT user_id, AVG(days_since_prior) AS d1, COUNT(*) AS c2 "
+	               + "      FROM order_products, orders "
+	               + "      WHERE orders.order_id = order_products.order_id "
+	               + "      AND days_since_prior IS NOT NULL "
+	               + "      GROUP BY user_id) t2 "
+	               + "WHERE c2 > (SELECT AVG(c1) AS a1 "
+	               + "            FROM (SELECT user_id, COUNT(*) AS c1 "
+	               + "                  FROM orders, order_products "
+	               + "                  WHERE orders.order_id = order_products.order_id "
+	               + "                  GROUP BY user_id) t1) "
+	               + "GROUP BY reorder_after_days "
+	               + "ORDER BY reorder_after_days";
+		ExactRelation r = ExactRelation.from(vc, sql);
+		System.out.println(r.toSql());
+		System.out.println(Relation.prettyfySql(r.toSql()));
+	}
 
 }
