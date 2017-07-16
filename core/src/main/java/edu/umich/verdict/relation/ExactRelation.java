@@ -55,6 +55,11 @@ public abstract class ExactRelation extends Relation {
 		return g.visit(ctx);
 	}
 	
+	public ExactRelation withAlias(String alias) {
+		this.setAliasName(alias);
+		return this;
+	}
+	
 	
 //	/**
 //	 * Returns an expression for a (possibly joined) table source.

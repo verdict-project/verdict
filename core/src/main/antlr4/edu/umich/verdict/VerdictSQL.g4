@@ -470,7 +470,7 @@ show_databases_statement
     ;
 
 describe_table_statement
-    : DESCRIBE table=id ';'?
+    : DESCRIBE table=table_name ';'?
     ;
     
 refresh_statement

@@ -3,6 +3,7 @@ package edu.umich.verdict.query;
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.VerdictSQLBaseVisitor;
 import edu.umich.verdict.VerdictSQLParser;
+import edu.umich.verdict.VerdictSQLParser.Table_nameContext;
 import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.dbms.DbmsJDBC;
 import edu.umich.verdict.dbms.DbmsSpark;
@@ -20,20 +21,26 @@ public class DescribeTableQuery extends SelectQuery {
 	public void compute() throws VerdictException {
 		VerdictSQLParser p = StringManupulations.parserOf(queryString);
 
-		VerdictSQLBaseVisitor<String> visitor = new VerdictSQLBaseVisitor<String>() {
-			private String tableName;
+		VerdictSQLBaseVisitor<TableUniqueName> visitor = new VerdictSQLBaseVisitor<TableUniqueName>() {
+			private TableUniqueName tableName;
 
-			protected String defaultResult() { return tableName; }
+			protected TableUniqueName defaultResult() { return tableName; }
 			
 			@Override
-			public String visitDescribe_table_statement(VerdictSQLParser.Describe_table_statementContext ctx) {
-				tableName = ctx.table.getText();
+			public TableUniqueName visitDescribe_table_statement(VerdictSQLParser.Describe_table_statementContext ctx) {
+				String schema = null;
+				Table_nameContext t = ctx.table_name();
+				if (t.schema != null) {
+					schema = t.schema.getText();
+				}
+				String table = t.table.getText();
+				tableName = TableUniqueName.uname(schema, table);
 				return tableName;
 			}
 		};
 		
-		String tableName = visitor.visit(p.describe_table_statement());
-		TableUniqueName table = TableUniqueName.uname(vc, tableName);
+		TableUniqueName tableName = visitor.visit(p.describe_table_statement());
+		TableUniqueName table = (tableName.getSchemaName() != null)? tableName : TableUniqueName.uname(vc, tableName.getTableName());
 		
 		if (table.getSchemaName() == null) {
 			VerdictLogger.info("No database schema selected or specified; cannot show tables.");
