@@ -92,7 +92,7 @@ public class VerdictConf {
         return this;
     }
     
-    public VerdictConf readFromJson(InputStream stream) throws FileNotFoundException {
+    private VerdictConf readFromJson(InputStream stream) throws FileNotFoundException {
     	
     		JsonReader reader = new JsonReader(new InputStreamReader(stream));
     		reader.setLenient(true);
