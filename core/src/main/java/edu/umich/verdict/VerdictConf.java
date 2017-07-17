@@ -44,6 +44,15 @@ public class VerdictConf {
     public VerdictConf() {
         setDefaults();
     }
+    
+    public VerdictConf(String filename) {
+    		try {
+    			ClassLoader cl = this.getClass().getClassLoader();
+			readFromJson(cl.getResourceAsStream(filename));
+		} catch (FileNotFoundException e) {
+			System.err.println(e.getMessage());
+		}
+    }
 
     public VerdictConf(Properties properties) {
         this();
@@ -61,11 +70,10 @@ public class VerdictConf {
         updateFromStream(new FileInputStream(file));
     }
 
-    private VerdictConf setDefaults() {
+	private VerdictConf setDefaults() {
         try {
             ClassLoader cl = this.getClass().getClassLoader();
-            //updateFromStream(cl.getResourceAsStream("default.conf"));
-            readFromJson(cl.getResourceAsStream("verdict_conf.json"));
+            updateFromStream(cl.getResourceAsStream("default.conf"));
         } catch (FileNotFoundException e) {
             System.err.println(e.getMessage());
         }
@@ -84,7 +92,8 @@ public class VerdictConf {
         return this;
     }
     
-    private VerdictConf readFromJson(InputStream stream) throws FileNotFoundException {
+    public VerdictConf readFromJson(InputStream stream) throws FileNotFoundException {
+    	
     		JsonReader reader = new JsonReader(new InputStreamReader(stream));
     		reader.setLenient(true);
     		try {

@@ -50,6 +50,6 @@
 	"sparksql": {
 		"host": "127.0.0.1",
 		"port": "10001",
-		"jdbc_class_name": "?hive.server2.transport.mode=http;hive.server2.thrift.http.path=cliservice"
+		"connection_string_params": "?hive.server2.transport.mode=http;hive.server2.thrift.http.path=cliservice"
 	}	
 }
