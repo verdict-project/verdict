@@ -103,7 +103,6 @@ public class SamplePlans {
 		double fallbackCost = Double.POSITIVE_INFINITY;
 		
 		for (SamplePlan plan : plans) {
-			System.out.println(plan);
 			double cost = plan.cost();
 			if (cost < original_cost * relative_cost_ratio) {
 				double samplingProb = plan.harmonicSamplingProb();
