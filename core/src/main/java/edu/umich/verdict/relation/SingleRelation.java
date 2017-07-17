@@ -318,7 +318,13 @@ public class SingleRelation extends ExactRelation {
 
 	@Override
 	public ColNameExpr partitionColumn() {
-		return new ColNameExpr(vc.getDbms().partitionColumnName(), getAliasName());
+		Set<String> columns = vc.getMeta().getColumns(getTableName());
+		String partitionCol = vc.getDbms().partitionColumnName();
+		if (columns.contains(partitionCol)) {
+			return new ColNameExpr(partitionCol, getAliasName());
+		} else {
+			return null;
+		}
 	}
 
 	@Override

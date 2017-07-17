@@ -53,6 +53,10 @@ public abstract class Relation {
 		this.alias = genTableAlias();
 	}
 	
+	public VerdictContext getVerdictContext() {
+		return vc;
+	}
+	
 	public boolean isSubquery() {
 		return subquery;
 	}
@@ -234,6 +238,10 @@ public abstract class Relation {
 	
 	public String samplingProbabilityColumnName() {
 		return vc.getDbms().samplingProbabilityColumnName();
+	}
+	
+	public static String errorBoundColumn(String original) {
+		return String.format("%s_err", original);
 	}
 	
 }

@@ -56,6 +56,10 @@ public class ProjectedRelation extends ExactRelation {
 	public ExactRelation getSource() {
 		return source;
 	}
+	
+	public List<SelectElem> getSelectElems() {
+		return elems;
+	}
 
 	@Override
 	protected String getSourceName() {
@@ -131,7 +135,7 @@ public class ProjectedRelation extends ExactRelation {
 		
 		// search conditions (or filters in the where clause)
 		Pair<Optional<Cond>, ExactRelation> filtersAndNextR = allPrecedingFilters(t);
-		String csql = (filtersAndNextR.getLeft().isPresent())? filtersAndNextR.getLeft().get().toString() : "";
+		String csql = (filtersAndNextR.getLeft().isPresent())? filtersAndNextR.getLeft().get().toSql() : "";
 		
 		sql.append(String.format(" FROM %s", sourceExpr(filtersAndNextR.getRight())));
 		if (csql.length() > 0) { sql.append(" WHERE "); sql.append(csql); }

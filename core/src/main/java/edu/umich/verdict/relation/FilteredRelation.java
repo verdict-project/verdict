@@ -107,7 +107,7 @@ public class FilteredRelation extends ExactRelation {
 	@Override
 	public ColNameExpr partitionColumn() {
 		ColNameExpr col = source.partitionColumn();
-		col.setTab(getAliasName());
+//		col.setTab(getAliasName());
 		return col;
 	}
 

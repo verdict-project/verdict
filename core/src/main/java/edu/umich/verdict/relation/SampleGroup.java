@@ -40,6 +40,10 @@ public class SampleGroup {
 		return sample;
 	}
 	
+	public void setSample(ApproxRelation a) {
+		sample = a;
+	}
+	
 	public double samplingProb() {
 		return sample.samplingProbability();
 	}

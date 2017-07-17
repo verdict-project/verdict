@@ -22,4 +22,8 @@ public class NotCond extends Cond {
 		return new NotCond(cond.withTableSubstituted(newTab));
 	}
 	
+	@Override
+	public String toSql() {
+		return String.format("NOT %s", cond.toSql());
+	}
 }

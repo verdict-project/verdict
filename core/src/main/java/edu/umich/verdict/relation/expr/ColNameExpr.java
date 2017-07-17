@@ -76,4 +76,8 @@ public class ColNameExpr extends Expr {
 		return new ColNameExpr(col, newTab);
 	}
 
+	@Override
+	public String toSql() {
+		return toString();
+	}
 }

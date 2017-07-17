@@ -83,5 +83,19 @@ public class CaseExpr extends Expr {
 		
 		return new CaseExpr(newConds, newExprs);
 	}
+	
+	@Override
+	public String toSql() {
+		StringBuilder sql = new StringBuilder(100);
+		sql.append("(CASE");
+		for (int i = 0; i < conditions.size(); i++) {
+			sql.append(String.format(" WHEN %s THEN %s", conditions.get(i).toSql(), expressions.get(i).toSql()));
+		}
+		if (expressions.size() > conditions.size()) {
+			sql.append(String.format(" ELSE %s", expressions.get(expressions.size()-1).toSql()));
+		}
+		sql.append(" END)");
+		return sql.toString();
+	}
 
 }

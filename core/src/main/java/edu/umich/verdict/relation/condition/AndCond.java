@@ -59,4 +59,9 @@ public class AndCond extends Cond {
 	public Cond withTableSubstituted(String newTab) {
 		return new AndCond(left.withTableSubstituted(newTab), right.withTableSubstituted(newTab));
 	}
+	
+	@Override
+	public String toSql() {
+		return String.format("(%s) AND (%s)", left.toSql(), right.toSql());
+	}
 }

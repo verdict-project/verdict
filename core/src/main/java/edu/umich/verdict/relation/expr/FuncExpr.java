@@ -345,4 +345,26 @@ public class FuncExpr extends Expr {
 		}
 		return new FuncExpr(funcname, newExprs, overClause);
 	}
+	
+	@Override
+	public String toSql() {
+		StringBuilder sql = new StringBuilder(50);
+		if (expressions.size() == 0) {
+			sql.append(String.format(functionPattern.get(funcname), ""));
+		} else if (expressions.size() == 1) {
+			sql.append(String.format(functionPattern.get(funcname), expressions.get(0).toSql()));
+		} else if (expressions.size() == 2) {
+			sql.append(String.format(functionPattern.get(funcname), expressions.get(0).toSql(), expressions.get(1).toSql()));
+		} else {
+			sql.append(String.format(functionPattern.get(funcname),
+					expressions.get(0).toSql(),
+					expressions.get(1).toSql(),
+					expressions.get(2).toSql()));
+		}
+		
+		if (overClause != null) {
+			sql.append(" " + overClause.toString());
+		}
+		return sql.toString();
+	}
 }

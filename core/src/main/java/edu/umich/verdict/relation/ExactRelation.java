@@ -384,7 +384,7 @@ public abstract class ExactRelation extends Relation {
 //	}
 
 	/**
-	 * Used for subsampling-based error estimation. Should return the partition column of this instance.
+	 * Used for subsampling-based error estimation. Return the partition column of this instance.
 	 * @return
 	 */
 	public abstract ColNameExpr partitionColumn();

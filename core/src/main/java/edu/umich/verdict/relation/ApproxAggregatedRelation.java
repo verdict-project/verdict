@@ -46,6 +46,10 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 //		return elems;
 //	}
 	
+	public List<Expr> getAggList() {
+		return aggs;
+	}
+	
 	public void setIncludeGroupsInToSql(boolean o) {
 		includeGroupsInToSql = o;
 	}
@@ -64,8 +68,6 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 		((AggregatedRelation) r).setIncludeGroupsInToSql(includeGroupsInToSql);
 		return r;
 	}
-	
-	private final String partitionSizeAlias = "__vpsize";
 	
 	@Override
 	public ExactRelation rewriteWithSubsampledErrorBounds() {
@@ -96,7 +98,7 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 				meanEstExpr = FuncExpr.round(FuncExpr.avg(est));
 			} else {
 				meanEstExpr = BinaryOpExpr.from(FuncExpr.sum(BinaryOpExpr.from(est, psize, "*")),
-	                    					FuncExpr.sum(psize), "/");
+	                    					    FuncExpr.sum(psize), "/");
 				if (originalAggExpr.isCount()) {
 					meanEstExpr = FuncExpr.round(meanEstExpr);
 				}
@@ -147,8 +149,16 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 	 * This relation must include partition numbers, and the answers must be scaled properly. Note that {@link ApproxRelation#rewriteWithSubsampledErrorBounds()}
 	 * is used only for the statement including final error bounds; all internal manipulations must be performed by
 	 * this method.
+	 * 
+	 * The rewritten relation transforms original aggregate elements as follows. Every aggregate element is replaced with
+	 * two aggregate elements. One is for mean estimate and the other is for error estimate.
+	 * 
+	 * The rewritten relation includes an extra aggregate element: count(*). This is to compute the partition sizes. These
+	 * partition sizes can be used by an upstream (or parent) relation for computing the final mean estimate. (note that
+	 * computing weighted average provides higher accuracy compared to unweighted average.)
 	 * @return
 	 */
+	@Override
 	protected ExactRelation rewriteWithPartition() {
 		ExactRelation newSource = partitionedSource();
 		
@@ -166,10 +176,11 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 			Expr scaled = transformForSingleFunctionWithPartitionSize(e, samplingProbCols, groupby, newSource.partitionColumn(), sub, false);
 			scaledExpr.add(scaled);
 			
-			// for error estimation
-			Expr scaledErr = transformForSingleFunctionWithPartitionSize(e, samplingProbCols, groupby, newSource.partitionColumn(), sub, true);
-			scaledExpr.add(scaledErr);
+//			// for error estimation
+//			Expr scaledErr = transformForSingleFunctionWithPartitionSize(e, samplingProbCols, groupby, newSource.partitionColumn(), sub, true);
+//			scaledExpr.add(scaledErr);
 		}
+		// to compute the partition size
 		scaledExpr.add(FuncExpr.count());
 		ExactRelation r = new AggregatedRelation(vc, newSource, scaledExpr);
 		

@@ -37,4 +37,9 @@ public class BinaryOpExpr extends Expr {
 	public Expr withTableSubstituted(String newTab) {
 		return new BinaryOpExpr(left.withTableSubstituted(newTab), right.withTableSubstituted(newTab), op);
 	}
+
+	@Override
+	public String toSql() {
+		return String.format("(%s %s %s)", left.toSql(), op, right.toSql());
+	}
 }

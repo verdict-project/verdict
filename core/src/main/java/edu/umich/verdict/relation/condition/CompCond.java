@@ -95,4 +95,9 @@ public class CompCond extends Cond {
 	public Cond withTableSubstituted(String newTab) {
 		return new CompCond(left.withTableSubstituted(newTab), compOp, right.withTableSubstituted(newTab));
 	}
+	
+	@Override
+	public String toSql() {
+		return String.format("%s %s %s", left.toSql(), compOp, right.toSql());
+	}
 }

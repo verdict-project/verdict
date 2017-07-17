@@ -16,6 +16,8 @@ import edu.umich.verdict.relation.expr.SelectElem;
 import edu.umich.verdict.util.VerdictLogger;
 
 public abstract class ApproxRelation extends Relation {
+	
+	protected final String partitionSizeAlias = "__vpsize";
 
 	public ApproxRelation(VerdictContext vc) {
 		super(vc);

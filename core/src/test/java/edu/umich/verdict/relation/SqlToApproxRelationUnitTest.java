@@ -69,8 +69,9 @@ static VerdictJDBCContext vc;
 		ApproxRelation a = r.approx();
 		System.out.println(a);
 		
-		ExactRelation e = a.rewrite();
+		ExactRelation e = a.rewriteWithSubsampledErrorBounds();
 		System.out.println(e);
+		System.out.println(Relation.prettyfySql(e.toSql()));
 	}
 
 }

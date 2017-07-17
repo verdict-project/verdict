@@ -12,5 +12,10 @@ public class TableNameExpr extends Expr {
 	public Expr withTableSubstituted(String newTab) {
 		return this;
 	}
+	
+	@Override
+	public String toSql() {
+		return toString();
+	}
 
 }

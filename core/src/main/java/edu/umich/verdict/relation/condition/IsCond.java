@@ -22,4 +22,9 @@ public class IsCond extends Cond {
 	public Cond withTableSubstituted(String newTab) {
 		return new IsCond(left.withTableSubstituted(newTab), right.withTableSubstituted(newTab));
 	}
+	
+	@Override
+	public String toSql() {
+		return String.format("(%s IS %s)", left.toSql(), right.toSql());
+	}
 }

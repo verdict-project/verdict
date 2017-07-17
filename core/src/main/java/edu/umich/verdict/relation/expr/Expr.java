@@ -93,6 +93,8 @@ public abstract class Expr {
 	
 	public abstract Expr withTableSubstituted(String newTab);
 
+	public abstract String toSql();
+
 }
 
 class ExpressionGen extends VerdictSQLBaseVisitor<Expr> {

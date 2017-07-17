@@ -100,6 +100,8 @@ public class SamplePlan {
 		for (SampleGroup g : copy.sampleGroups) {
 			if (g.isEqualSample(group)) {
 				g.addElem(group.getElems());
+				ApproxAggregatedRelation a = (ApproxAggregatedRelation) g.getSample();
+				g.setSample(new ApproxAggregatedRelation(a.getVerdictContext(), a.getSource(), g.getElems()));
 				merged = true;
 				break;
 			}

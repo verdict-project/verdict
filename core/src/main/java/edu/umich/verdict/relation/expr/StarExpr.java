@@ -18,5 +18,10 @@ public class StarExpr extends Expr {
 	public Expr withTableSubstituted(String newTab) {
 		return this;
 	}
+	
+	@Override
+	public String toSql() {
+		return toString();
+	}
 
 }

@@ -45,6 +45,12 @@ public abstract class Cond {
 	public <T> T accept(CondVisitor<T> condVisitor) {
 		return condVisitor.call(this);
 	}
+
+	/**
+	 * Generates a sql expression.
+	 * @return
+	 */
+	public abstract String toSql();
 }
 
 

@@ -45,4 +45,9 @@ public class OrCond extends Cond {
 	public Cond withTableSubstituted(String newTab) {
 		return new OrCond(left.withTableSubstituted(newTab), right.withTableSubstituted(newTab));
 	}
+	
+	@Override
+	public String toSql() {
+		return String.format("(%s) OR (%s)", left.toSql(), right.toSql());
+	}
 }

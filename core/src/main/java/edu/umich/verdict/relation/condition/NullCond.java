@@ -12,4 +12,9 @@ public class NullCond extends Cond {
 		return this;
 	}
 	
+	@Override
+	public String toSql() {
+		return toString();
+	}
+	
 }
