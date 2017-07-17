@@ -40,7 +40,7 @@ public class AggregatedRelation extends ExactRelation {
 	
 	@Override
 	protected String getSourceName() {
-		return getAliasName();
+		return getAlias();
 	}
 	
 	public ExactRelation getSource() {
@@ -124,8 +124,8 @@ public class AggregatedRelation extends ExactRelation {
 			if (r == null) {
 				r = r1;
 			} else {
-				String ln = r.getAliasName();
-				String rn = r1.getAliasName();
+				String ln = r.getAlias();
+				String rn = r1.getAlias();
 //				r.setAliasName(ln);
 //				r1.setAliasName(rn);
 				if (r1.getSource() instanceof ApproxGroupedRelation) {
@@ -151,7 +151,7 @@ public class AggregatedRelation extends ExactRelation {
 			List<Expr> groupby = ((ApproxGroupedRelation) firstSource).getGroupby();
 			List<SelectElem> newElems = new ArrayList<SelectElem>();
 			for (Expr g : groupby) {
-				newElems.add(new SelectElem(g.withTableSubstituted(individuals.get(0).getAliasName())));
+				newElems.add(new SelectElem(g.withTableSubstituted(individuals.get(0).getAlias())));
 			}
 			for (Expr elem : aggs) {
 				newElems.add(new SelectElem(ConstantExpr.from(elem), Relation.genColumnAlias()));
@@ -159,7 +159,7 @@ public class AggregatedRelation extends ExactRelation {
 			r = new ApproxProjectedRelation(vc, r, newElems);
 		}
 		
-		r.setAliasName(getAliasName());
+		r.setAliasName(getAlias());
 		return r;
 	}
 
@@ -260,7 +260,7 @@ public class AggregatedRelation extends ExactRelation {
 	protected String toStringWithIndent(String indent) {
 		StringBuilder s = new StringBuilder(1000);
 		s.append(indent);
-		s.append(String.format("%s(%s) [%s]\n", this.getClass().getSimpleName(), getAliasName(), Joiner.on(", ").join(aggs)));
+		s.append(String.format("%s(%s) [%s]\n", this.getClass().getSimpleName(), getAlias(), Joiner.on(", ").join(aggs)));
 		s.append(source.toStringWithIndent(indent + "  "));
 		return s.toString();
 	}

@@ -11,6 +11,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 
 import edu.umich.verdict.VerdictContext;
+import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.relation.condition.Cond;
 import edu.umich.verdict.relation.condition.IsCond;
 import edu.umich.verdict.relation.condition.NullCond;
@@ -64,7 +65,7 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 			scaled.add(transformForSingleFunction(e, samplingProbColumns));
 		}
 		ExactRelation r = new AggregatedRelation(vc, newSource, scaled);
-		r.setAliasName(getAliasName());
+		r.setAliasName(getAlias());
 		((AggregatedRelation) r).setIncludeGroupsInToSql(includeGroupsInToSql);
 		return r;
 	}
@@ -86,9 +87,9 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 			
 			SelectElem meanElem = aggElems.get(i);
 			SelectElem errElem = aggElems.get(i+1);
-			ColNameExpr est = new ColNameExpr(meanElem.getAlias(), r.getAliasName());
-			ColNameExpr errEst = new ColNameExpr(errElem.getAlias(), r.getAliasName());
-			ColNameExpr psize = new ColNameExpr(partitionSizeAlias, r.getAliasName());
+			ColNameExpr est = new ColNameExpr(meanElem.getAlias(), r.getAlias());
+			ColNameExpr errEst = new ColNameExpr(errElem.getAlias(), r.getAlias());
+			ColNameExpr psize = new ColNameExpr(partitionSizeAlias, r.getAlias());
 			
 			Expr originalAggExpr = aggs.get(i/2);
 			
@@ -135,13 +136,13 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 			List<Expr> groupbyInNewSource = new ArrayList<Expr>();
 			for (Expr g : groupby) {
 				// replaces the table names in internal colNameExpr
-				groupbyInNewSource.add(g.withTableSubstituted(r.getAliasName()));
+				groupbyInNewSource.add(g.withTableSubstituted(r.getAlias()));
 			}
 			r = new GroupedRelation(vc, r, groupbyInNewSource);
 		}
 		
 		r = new AggregatedRelation(vc, r, finalAgg);
-		r.setAliasName(getAliasName());
+		r.setAliasName(getAlias());
 		return r;
 	}
 	
@@ -170,7 +171,7 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 			groupby.addAll(((ApproxGroupedRelation) source).getGroupby());
 		}
 		
-		final Map<String, String> sub = source.tableSubstitution();
+		final Map<TableUniqueName, String> sub = source.tableSubstitution();
 		for (Expr e : aggs) {
 			// for mean estimation
 			Expr scaled = transformForSingleFunctionWithPartitionSize(e, samplingProbCols, groupby, newSource.partitionColumn(), sub, false);
@@ -196,7 +197,7 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 	}
 	
 	@Override
-	protected Map<String, String> tableSubstitution() {
+	protected Map<TableUniqueName, String> tableSubstitution() {
 		return ImmutableMap.of();
 	}
 	
@@ -210,7 +211,7 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 			final List<ColNameExpr> samplingProbCols,
 			List<Expr> groupby,
 			final ColNameExpr partitionCol,
-			final Map<String, String> tablesNamesSub,
+			final Map<TableUniqueName, String> tablesNamesSub,
 			final boolean forErrorEst) {
 		
 		final List<Expr> groupbyExpr = new ArrayList<Expr>();
@@ -310,7 +311,7 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 	}
 
 	private Expr transformForSingleFunction(Expr f, final List<ColNameExpr> samplingProbCols) {
-		final Map<String, String> sub = source.tableSubstitution();
+		final Map<TableUniqueName, String> sub = source.tableSubstitution();
 		
 		ExprModifier v = new ExprModifier() {
 			public Expr call(Expr expr) {
@@ -392,7 +393,7 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 		s.append(indent);
 		s.append(String.format("%s(%s) [%s] cost: %f\n",
 				this.getClass().getSimpleName(),
-				getAliasName(),
+				getAlias(),
 				Joiner.on(", ").join(aggs),
 				cost()));
 		s.append(source.toStringWithIndent(indent + "  "));

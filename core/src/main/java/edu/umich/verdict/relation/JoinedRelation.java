@@ -121,7 +121,7 @@ public class JoinedRelation extends ExactRelation {
 	
 	protected ApproxRelation approxWith(Map<TableUniqueName, SampleParam> replace) {
 		ApproxRelation a = new ApproxJoinedRelation(vc, source1.approxWith(replace), source2.approxWith(replace), joinCols);
-		a.setAliasName(getAliasName());
+		a.setAliasName(getAlias());
 		return a;
 	}
 	
@@ -291,7 +291,7 @@ public class JoinedRelation extends ExactRelation {
 	protected String toStringWithIndent(String indent) {
 		StringBuilder s = new StringBuilder(1000);
 		s.append(indent);
-		s.append(String.format("%s(%s) [%s]\n", this.getClass().getSimpleName(), getAliasName(), Joiner.on(", ").join(joinCols)));
+		s.append(String.format("%s(%s) [%s]\n", this.getClass().getSimpleName(), getAlias(), Joiner.on(", ").join(joinCols)));
 		s.append(source1.toStringWithIndent(indent + "  "));
 		s.append(source2.toStringWithIndent(indent + "  "));
 		return s.toString();

@@ -46,7 +46,7 @@ public class FilteredRelation extends ExactRelation {
 
 	@Override
 	protected String getSourceName() {
-		return getAliasName();
+		return getAlias();
 	}	
 	
 	/*
@@ -59,7 +59,7 @@ public class FilteredRelation extends ExactRelation {
 	
 	protected ApproxRelation approxWith(Map<TableUniqueName, SampleParam> replace) {
 		ApproxRelation a = new ApproxFilteredRelation(vc, source.approxWith(replace), approxPossibleSubqueries(cond));
-		a.setAliasName(getAliasName());
+		a.setAliasName(getAlias());
 		return a;
 	}
 	
@@ -120,7 +120,7 @@ public class FilteredRelation extends ExactRelation {
 	protected String toStringWithIndent(String indent) {
 		StringBuilder s = new StringBuilder(1000);
 		s.append(indent);
-		s.append(String.format("%s(%s) [%s]\n", this.getClass().getSimpleName(), getAliasName(), cond.toString()));
+		s.append(String.format("%s(%s) [%s]\n", this.getClass().getSimpleName(), getAlias(), cond.toString()));
 		s.append(source.toStringWithIndent(indent + "  "));
 		return s.toString();
 	}

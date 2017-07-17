@@ -362,12 +362,12 @@ public abstract class ExactRelation extends Relation {
 		if (source instanceof SingleRelation) {
 			SingleRelation asource = (SingleRelation) source;
 			TableUniqueName tableName = asource.getTableName();
-			String alias = asource.getAliasName();
+			String alias = asource.getAlias();
 			return String.format("%s AS %s", tableName, alias);
 		} else if (source instanceof JoinedRelation) {
 			return ((JoinedRelation) source).joinClause();
 		} else {
-			String alias = source.getAliasName();
+			String alias = source.getAlias();
 			if (alias == null) {
 				alias = Relation.genTableAlias();
 			}
@@ -456,11 +456,11 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
 				if (r1 instanceof SingleRelation && where != null) {
 					String n = ((SingleRelation) r1).getTableName().getTableName();
 					j = where.searchForJoinCondition(joinedTableName, n);
-					if (j == null && r1.getAliasName() != null) {
-						j = where.searchForJoinCondition(joinedTableName, r1.getAliasName());
+					if (j == null && r1.getAlias() != null) {
+						j = where.searchForJoinCondition(joinedTableName, r1.getAlias());
 					}
-				} else if (r2.getAliasName() != null && where != null) {
-					j = where.searchForJoinCondition(joinedTableName, r2.getAliasName());
+				} else if (r2.getAlias() != null && where != null) {
+					j = where.searchForJoinCondition(joinedTableName, r2.getAlias());
 				}
 				
 				if (j != null) {
@@ -479,8 +479,8 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
 			if (r1 instanceof SingleRelation) {
 				joinedTableName.add(((SingleRelation) r1).getTableName().getTableName());
 			}
-			if (r1.getAliasName() != null) {
-				joinedTableName.add(r1.getAliasName());
+			if (r1.getAlias() != null) {
+				joinedTableName.add(r1.getAlias());
 			}
 		}
 		

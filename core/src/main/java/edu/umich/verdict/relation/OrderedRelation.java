@@ -31,7 +31,7 @@ public class OrderedRelation extends ExactRelation {
 
 	@Override
 	protected String getSourceName() {
-		return getAliasName();
+		return getAlias();
 	}
 	
 	@Override
@@ -42,7 +42,7 @@ public class OrderedRelation extends ExactRelation {
 	@Override
 	public ApproxRelation approx() throws VerdictException {
 		ApproxRelation a = new ApproxOrderedRelation(vc, source.approx(), orderby);
-		a.setAliasName(getAliasName());
+		a.setAliasName(getAlias());
 		return a;
 	}
 
@@ -68,7 +68,7 @@ public class OrderedRelation extends ExactRelation {
 	@Override
 	public ColNameExpr partitionColumn() {
 		ColNameExpr col = source.partitionColumn();
-		col.setTab(getAliasName());
+		col.setTab(getAlias());
 		return col;
 	}
 
@@ -81,7 +81,7 @@ public class OrderedRelation extends ExactRelation {
 	protected String toStringWithIndent(String indent) {
 		StringBuilder s = new StringBuilder(1000);
 		s.append(indent);
-		s.append(String.format("%s(%s) [%s]\n", this.getClass().getSimpleName(), getAliasName(), Joiner.on(", ").join(orderby)));
+		s.append(String.format("%s(%s) [%s]\n", this.getClass().getSimpleName(), getAlias(), Joiner.on(", ").join(orderby)));
 		s.append(source.toStringWithIndent(indent + "  "));
 		return s.toString();
 	}

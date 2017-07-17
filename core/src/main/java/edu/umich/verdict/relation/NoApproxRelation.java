@@ -7,8 +7,10 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableMap;
 
 import edu.umich.verdict.datatypes.SampleSizeInfo;
+import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.relation.expr.FuncExpr;
 
@@ -57,15 +59,15 @@ public class NoApproxRelation extends ApproxRelation {
 	}
 
 	@Override
-	protected Map<String, String> tableSubstitution() {
-		return new HashMap<String, String>();
+	protected Map<TableUniqueName, String> tableSubstitution() {
+		return ImmutableMap.of();
 	}
 
 	@Override
 	protected String toStringWithIndent(String indent) {
 		StringBuilder s = new StringBuilder(1000);
 		s.append(indent);
-		s.append(String.format("%s(%s)\n", this.getClass().getSimpleName(), getAliasName()));
+		s.append(String.format("%s(%s)\n", this.getClass().getSimpleName(), getAlias()));
 		s.append(r.toStringWithIndent(indent + "  "));
 		return s.toString();
 	}

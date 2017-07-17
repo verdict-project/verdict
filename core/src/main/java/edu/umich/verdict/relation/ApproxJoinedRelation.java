@@ -14,6 +14,7 @@ import com.google.common.collect.ImmutableSet;
 
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.VerdictJDBCContext;
+import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.relation.condition.AndCond;
 import edu.umich.verdict.relation.condition.CompCond;
@@ -90,7 +91,7 @@ public class ApproxJoinedRelation extends ApproxRelation {
 	public ExactRelation rewriteForPointEstimate() {
 		List<Pair<Expr, Expr>> newJoinCond = joinCondWithTablesSubstitutioned();
 		ExactRelation r = new JoinedRelation(vc, source1.rewriteForPointEstimate(), source2.rewriteForPointEstimate(), newJoinCond);
-		r.setAliasName(getAliasName());
+		r.setAliasName(getAlias());
 		return r;
 	}
 	
@@ -108,12 +109,22 @@ public class ApproxJoinedRelation extends ApproxRelation {
 		ExactRelation newSource2 = source2.rewriteWithPartition();
 		
 		List<Pair<Expr, Expr>> newJoinCond = joinCondWithTablesSubstitutioned();
-		newJoinCond.add(Pair.<Expr, Expr>of(newSource1.partitionColumn(), newSource2.partitionColumn()));
+//		newJoinCond.add(Pair.<Expr, Expr>of(newSource1.partitionColumn(), newSource2.partitionColumn()));
 		ExactRelation r = JoinedRelation.from(vc, newSource1, newSource2, newJoinCond);
-		r.setAliasName(getAliasName());
+		r.setAliasName(getAlias());
 		return r;
 	}
 	
+	protected List<Pair<Expr, Expr>> joinCondWithTablesSubstitutioned() {
+		Map<TableUniqueName, String> sub = tableSubstitution();
+		// replaces the table names in the join conditions with the sample tables.
+		List<Pair<Expr, Expr>> cols = new ArrayList<Pair<Expr, Expr>>();
+		for (Pair<Expr, Expr> p : joinCols) {
+			cols.add(Pair.of(exprWithTableNamesSubstituted(p.getLeft(), sub), exprWithTableNamesSubstituted(p.getRight(), sub)));
+		}
+		return cols;
+	}
+
 	@Override
 	protected List<Expr> samplingProbabilityExprsFor(FuncExpr f) {
 		if (areMatchingUniverseSamples()) {
@@ -217,27 +228,19 @@ public class ApproxJoinedRelation extends ApproxRelation {
 	}
 	
 	@Override
-	protected Map<String, String> tableSubstitution() {
-		return ImmutableMap.<String,String>builder().putAll(source1.tableSubstitution()).putAll(source2.tableSubstitution()).build();
+	protected Map<TableUniqueName, String> tableSubstitution() {
+		Map<TableUniqueName, String> sub1 = source1.tableSubstitution();
+		Map<TableUniqueName, String> sub2 = source2.tableSubstitution();
+		return ImmutableMap.<TableUniqueName,String>builder().putAll(sub1).putAll(sub2).build();
 	}
 	
-	protected List<Pair<Expr, Expr>> joinCondWithTablesSubstitutioned() {
-		Map<String, String> sub = tableSubstitution();
-		// replaces the table names in the join conditions with the sample tables.
-		List<Pair<Expr, Expr>> cols = new ArrayList<Pair<Expr, Expr>>();
-		for (Pair<Expr, Expr> p : joinCols) {
-			cols.add(Pair.of(exprWithTableNamesSubstituted(p.getLeft(), sub), exprWithTableNamesSubstituted(p.getRight(), sub)));
-		}
-		return cols;
-	}
-
 	@Override
 	protected String toStringWithIndent(String indent) {
 		StringBuilder s = new StringBuilder(1000);
 		s.append(indent);
 		s.append(String.format("%s(%s) [%s], cost: %f\n",
 				this.getClass().getSimpleName(),
-				getAliasName(),
+				getAlias(),
 				Joiner.on(", ").join(joinCols),
 				cost()));
 		s.append(source1.toStringWithIndent(indent + "  "));

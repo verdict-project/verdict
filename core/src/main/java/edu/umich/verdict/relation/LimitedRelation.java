@@ -31,7 +31,7 @@ public class LimitedRelation extends ExactRelation {
 
 	@Override
 	protected String getSourceName() {
-		return getAliasName();
+		return getAlias();
 	}
 	
 	@Override
@@ -42,7 +42,7 @@ public class LimitedRelation extends ExactRelation {
 	@Override
 	public ApproxRelation approx() throws VerdictException {
 		ApproxRelation a = new ApproxLimitedRelation(vc, source.approx(), limit);
-		a.setAliasName(getAliasName());
+		a.setAliasName(getAlias());
 		return a;
 	}
 
@@ -67,7 +67,7 @@ public class LimitedRelation extends ExactRelation {
 	@Override
 	public ColNameExpr partitionColumn() {
 		ColNameExpr col = source.partitionColumn();
-		col.setTab(getAliasName());
+		col.setTab(getAlias());
 		return col;
 	}
 
@@ -80,7 +80,7 @@ public class LimitedRelation extends ExactRelation {
 	protected String toStringWithIndent(String indent) {
 		StringBuilder s = new StringBuilder(1000);
 		s.append(indent);
-		s.append(String.format("%s(%s) [%d]\n", this.getClass().getSimpleName(), getAliasName(), limit));
+		s.append(String.format("%s(%s) [%d]\n", this.getClass().getSimpleName(), getAlias(), limit));
 		s.append(source.toStringWithIndent(indent + "  "));
 		return s.toString();
 	}

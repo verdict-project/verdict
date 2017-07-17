@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import edu.umich.verdict.VerdictContext;
+import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.Expr;
@@ -13,6 +14,7 @@ import edu.umich.verdict.relation.expr.ExprModifier;
 import edu.umich.verdict.relation.expr.FuncExpr;
 import edu.umich.verdict.relation.expr.OrderByExpr;
 import edu.umich.verdict.relation.expr.SelectElem;
+import edu.umich.verdict.relation.expr.SubqueryExpr;
 import edu.umich.verdict.util.VerdictLogger;
 
 public abstract class ApproxRelation extends Relation {
@@ -31,13 +33,13 @@ public abstract class ApproxRelation extends Relation {
 	public String sourceTableName() {
 		if (this instanceof ApproxSingleRelation) {
 			ApproxSingleRelation r = (ApproxSingleRelation) this;
-			if (r.getAliasName() != null) {
-				return r.getAliasName();
+			if (r.getAlias() != null) {
+				return r.getAlias();
 			} else {
 				return r.getSampleName().getTableName();
 			}
 		} else {
-			return this.getAliasName();
+			return this.getAlias();
 		}
 	}
 	
@@ -192,9 +194,10 @@ public abstract class ApproxRelation extends Relation {
 	
 	/**
 	 * Pairs of original table name and a sample table name. This function does not inspect subqueries.
+	 * The substitution expression is an alias (thus, string type).
 	 * @return
 	 */
-	protected abstract Map<String, String> tableSubstitution();
+	protected abstract Map<TableUniqueName, String> tableSubstitution();
 	
 	
 	/*
@@ -237,23 +240,6 @@ public abstract class ApproxRelation extends Relation {
 	 * Helpers
 	 */
 	
-	protected Expr exprWithTableNamesSubstituted(Expr expr, final Map<String, String> sub) {
-		ExprModifier v = new ExprModifier() {
-			public Expr call(Expr expr) {
-				if (expr instanceof ColNameExpr) {
-					ColNameExpr e = (ColNameExpr) expr;
-					return new ColNameExpr(e.getCol(), sub.get(e.getTab()), e.getSchema());
-				} else if (expr instanceof FuncExpr) {
-					FuncExpr e = (FuncExpr) expr;
-					return new FuncExpr(e.getFuncName(), visit(e.getUnaryExpr()));
-				} else {
-					return expr;
-				}
-			}
-		};
-		return v.visit(expr);
-	}
-	
 	protected double confidenceIntervalMultiplier() {
 		double confidencePercentage = vc.getConf().errorBoundConfidenceInPercentage();
 		if (confidencePercentage == 99.9) {
@@ -276,4 +262,73 @@ public abstract class ApproxRelation extends Relation {
 		}
 	}
 
+	protected Expr exprWithTableNamesSubstituted(Expr expr, Map<TableUniqueName, String> sub) {
+		TableNameReplacerInExpr v = new TableNameReplacerInExpr(sub);
+		return v.visit(expr);
+	}
+
 }
+
+
+class TableNameReplacerInExpr extends ExprModifier {
+	
+	final protected Map<TableUniqueName, String> sub;
+	
+	public TableNameReplacerInExpr(Map<TableUniqueName, String> sub) {
+		this.sub = sub;
+	}
+	
+	public Expr call(Expr expr) {
+		if (expr instanceof ColNameExpr) {
+			return replaceColNameExpr((ColNameExpr) expr);
+		} else if (expr instanceof FuncExpr) {
+			return replaceFuncExpr((FuncExpr) expr);
+		} else if (expr instanceof SubqueryExpr) {
+			return replaceSubqueryExpr((SubqueryExpr) expr);
+		} else {
+			return expr;
+		}
+	}
+	
+	/**
+	 * Replaces if
+	 * (1) schema name is omitted in the join condition and the table name matches the table name of the original table
+	 * (2) schema name is fully specified in the join condition and both the schema and table names match the original schema and table names.
+	 * @param expr
+	 * @return
+	 */
+	protected Expr replaceColNameExpr(ColNameExpr expr) {
+		if (expr.getTab() == null) {
+			return expr;
+		}
+		
+		TableUniqueName old = TableUniqueName.uname(expr.getSchema(), expr.getTab());
+		
+		if (old.getSchemaName() == null) {
+			for (Map.Entry<TableUniqueName, String> entry : sub.entrySet()) {
+				TableUniqueName original = entry.getKey();
+				String subAlias = entry.getValue();
+				if (original.getTableName().equals(expr.getTab())) {
+					return new ColNameExpr(expr.getCol(), subAlias);
+				}
+			}
+		} else {
+			if (sub.containsKey(old)) {
+				String rep = sub.get(old);
+				return new ColNameExpr(expr.getCol(), rep);
+			}
+		}
+		// if nothing matched, then return the original expression.
+		return expr;
+	}
+	
+	protected Expr replaceSubqueryExpr(SubqueryExpr expr) {
+		return expr;
+	}
+	
+	protected Expr replaceFuncExpr(FuncExpr expr) {
+		FuncExpr e = (FuncExpr) expr;
+		return new FuncExpr(e.getFuncName(), visit(e.getUnaryExpr()));
+	}
+};
+

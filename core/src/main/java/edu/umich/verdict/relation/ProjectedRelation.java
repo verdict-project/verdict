@@ -63,7 +63,7 @@ public class ProjectedRelation extends ExactRelation {
 
 	@Override
 	protected String getSourceName() {
-		return getAliasName();
+		return getAlias();
 	}
 
 	public List<SelectElem> getAggElems() {
@@ -79,7 +79,7 @@ public class ProjectedRelation extends ExactRelation {
 	@Override
 	public ApproxRelation approx() throws VerdictException {
 		ApproxRelation a = new ApproxProjectedRelation(vc, source.approx(), elems);
-		a.setAliasName(getAliasName());
+		a.setAliasName(getAlias());
 		return a;
 	}
 
@@ -195,7 +195,7 @@ public class ProjectedRelation extends ExactRelation {
 		for (SelectElem elem : elems) {
 			String alias = elem.getAlias();
 			if (alias != null && alias.equals(pcol)) {
-				col = new ColNameExpr(pcol, getAliasName());
+				col = new ColNameExpr(pcol, getAlias());
 			}
 		}
 		
@@ -211,7 +211,7 @@ public class ProjectedRelation extends ExactRelation {
 		List<ColNameExpr> exprs = source.accumulateSamplingProbColumns();
 		List<ColNameExpr> exprsInNewTable = new ArrayList<ColNameExpr>(); 
 		for (ColNameExpr c : exprs) {
-			exprsInNewTable.add(new ColNameExpr(c.getCol(), getAliasName()));
+			exprsInNewTable.add(new ColNameExpr(c.getCol(), getAlias()));
 		}
 		return exprsInNewTable;
 	}
@@ -220,7 +220,7 @@ public class ProjectedRelation extends ExactRelation {
 	protected String toStringWithIndent(String indent) {
 		StringBuilder s = new StringBuilder(1000);
 		s.append(indent);
-		s.append(String.format("%s(%s) [%s]\n", this.getClass().getSimpleName(), getAliasName(), Joiner.on(", ").join(elems)));
+		s.append(String.format("%s(%s) [%s]\n", this.getClass().getSimpleName(), getAlias(), Joiner.on(", ").join(elems)));
 		s.append(source.toStringWithIndent(indent + "  "));
 		return s.toString();
 	}

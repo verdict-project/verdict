@@ -12,7 +12,7 @@ import edu.umich.verdict.VerdictConf;
 import edu.umich.verdict.VerdictJDBCContext;
 import edu.umich.verdict.exceptions.VerdictException;
 
-public class SqlToApproxRelationUnitTest {
+public class SqlRewritingUnitTest {
 	
 	static VerdictJDBCContext vc;
 	
@@ -28,7 +28,7 @@ public class SqlToApproxRelationUnitTest {
 	}
 
 	@Test
-	public void complexTest1() throws VerdictException {
+	public void complexTest2() throws VerdictException {
 		String sql = "SELECT 5*round(d1/5) as reorder_after_days, COUNT(*) "
 				   + "FROM (SELECT user_id, AVG(days_since_prior) AS d1, COUNT(*) AS c2 "
 	               + "      FROM order_products, orders "
@@ -44,7 +44,14 @@ public class SqlToApproxRelationUnitTest {
 	               + "ORDER BY reorder_after_days";
 		ExactRelation r = ExactRelation.from(vc, sql);
 		System.out.println(r);
+		
 		ApproxRelation a = r.approx();
 		System.out.println(a);
+		
+		ExactRelation e = a.rewriteWithSubsampledErrorBounds();
+		System.out.println(e);
+		System.out.println(Relation.prettyfySql(e.toSql()));
 	}
+
+
 }

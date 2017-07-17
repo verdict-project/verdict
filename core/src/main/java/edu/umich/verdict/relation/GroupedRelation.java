@@ -46,7 +46,7 @@ public class GroupedRelation extends ExactRelation {
 
 	@Override
 	protected String getSourceName() {
-		return getAliasName();
+		return getAlias();
 	}
 	
 	/*
@@ -62,7 +62,7 @@ public class GroupedRelation extends ExactRelation {
 	@Override
 	protected ApproxRelation approxWith(Map<TableUniqueName, SampleParam> replace) {
 		ApproxRelation a = new ApproxGroupedRelation(vc, source.approxWith(replace), groupby);
-		a.setAliasName(getAliasName());
+		a.setAliasName(getAlias());
 		return a;
 	}
 	
@@ -150,7 +150,7 @@ public class GroupedRelation extends ExactRelation {
 	protected String toStringWithIndent(String indent) {
 		StringBuilder s = new StringBuilder(1000);
 		s.append(indent);
-		s.append(String.format("%s(%s) [%s]\n", this.getClass().getSimpleName(), getAliasName(), Joiner.on(", ").join(groupby)));
+		s.append(String.format("%s(%s) [%s]\n", this.getClass().getSimpleName(), getAlias(), Joiner.on(", ").join(groupby)));
 		s.append(source.toStringWithIndent(indent + "  "));
 		return s.toString();
 	}

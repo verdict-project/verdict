@@ -10,6 +10,7 @@ import java.util.Set;
 import com.google.common.base.Joiner;
 
 import edu.umich.verdict.VerdictContext;
+import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.relation.expr.BinaryOpExpr;
 import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.ConstantExpr;
@@ -36,7 +37,7 @@ public class ApproxProjectedRelation extends ApproxRelation {
 	@Override
 	public ExactRelation rewriteForPointEstimate() {
 		ExactRelation r = new ProjectedRelation(vc, source.rewriteForPointEstimate(), elems);
-		r.setAliasName(getAliasName());
+		r.setAliasName(getAlias());
 		return r;
 	}
 	
@@ -59,8 +60,8 @@ public class ApproxProjectedRelation extends ApproxRelation {
 					continue;
 				}
 				
-				ColNameExpr est = new ColNameExpr(elem.getAlias(), r.getAliasName());
-				ColNameExpr psize = new ColNameExpr(partitionSizeAlias, r.getAliasName());
+				ColNameExpr est = new ColNameExpr(elem.getAlias(), r.getAlias());
+				ColNameExpr psize = new ColNameExpr(partitionSizeAlias, r.getAlias());
 				
 				// average estimate
 				Expr averaged = null;
@@ -177,7 +178,7 @@ public class ApproxProjectedRelation extends ApproxRelation {
 		// partition number
 		newElems.add(new SelectElem(newSource.partitionColumn(), partitionColumnName()));
 		ExactRelation r = new ProjectedRelation(vc, newSource, newElems);
-		r.setAliasName(getAliasName());
+		r.setAliasName(getAlias());
 		return r;
 	}
 	
@@ -196,7 +197,7 @@ public class ApproxProjectedRelation extends ApproxRelation {
 	}
 
 	@Override
-	protected Map<String, String> tableSubstitution() {
+	protected Map<TableUniqueName, String> tableSubstitution() {
 		return source.tableSubstitution();
 	}
 
@@ -219,7 +220,7 @@ public class ApproxProjectedRelation extends ApproxRelation {
 	protected String toStringWithIndent(String indent) {
 		StringBuilder s = new StringBuilder(1000);
 		s.append(indent);
-		s.append(String.format("%s(%s) [%s]\n", this.getClass().getSimpleName(), getAliasName(), Joiner.on(", ").join(elems)));
+		s.append(String.format("%s(%s) [%s]\n", this.getClass().getSimpleName(), getAlias(), Joiner.on(", ").join(elems)));
 		s.append(source.toStringWithIndent(indent + "  "));
 		return s.toString();
 	}

@@ -7,6 +7,7 @@ import java.util.Map;
 import org.apache.commons.lang3.tuple.Pair;
 
 import edu.umich.verdict.VerdictContext;
+import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.relation.condition.CompCond;
 import edu.umich.verdict.relation.condition.Cond;
 import edu.umich.verdict.relation.condition.CondModifier;
@@ -43,7 +44,7 @@ public class ApproxFilteredRelation extends ApproxRelation {
 	@Override
 	public ExactRelation rewriteForPointEstimate() {
 		ExactRelation r = new FilteredRelation(vc, source.rewriteForPointEstimate(), condWithApprox(cond, tableSubstitution()));
-		r.setAliasName(getAliasName());
+		r.setAliasName(getAlias());
 		return r;
 	}
 	
@@ -53,32 +54,42 @@ public class ApproxFilteredRelation extends ApproxRelation {
 	 * @param sub Map of original table name and its substitution.
 	 * @return
 	 */
-	private Cond condWithApprox(Cond cond, final Map<String, String> sub) {
+	private Cond condWithApprox(Cond cond, final Map<TableUniqueName, String> sub) {
 		CondModifier v = new CondModifier() {
-			ExprModifier v2 = new ExprModifier() {
-				public Expr call(Expr expr) {
-					if (expr instanceof ColNameExpr) {
-						ColNameExpr e = (ColNameExpr) expr;
-						return new ColNameExpr(e.getCol(), sub.get(e.getTab()), e.getSchema());
-					} else if (expr instanceof SubqueryExpr) {
-						Relation r = ((SubqueryExpr) expr).getSubquery();
-						if (r instanceof ApproxRelation) {
-							return SubqueryExpr.from(((ApproxRelation) r).rewrite());
-						} else {
-							VerdictLogger.warn(this, "An exact relation is found in an approximate query statement."
-									+ " Mixing approximate relations with exact relations are not supported.");
-							return expr;
-						}
-					} else {
-						return expr;
-					}
-				}
-			};
+//			ExprModifier v2 = new ExprModifier() {
+//				public Expr call(Expr expr) {
+//					if (expr instanceof ColNameExpr) {
+//						ColNameExpr e = (ColNameExpr) expr;
+//						TableUniqueName old = TableUniqueName.uname(e.getSchema(), e.getTab());
+//						if (sub.containsKey(old)) {
+//							TableUniqueName rep = sub.get(old);
+//							return new ColNameExpr(e.getCol(), rep.getTableName(), rep.getSchemaName());
+//						} else {
+//							return expr;
+//						}
+//						
+//					} else if (expr instanceof SubqueryExpr) {
+//						Relation r = ((SubqueryExpr) expr).getSubquery();
+//						if (r instanceof ApproxRelation) {
+//							return SubqueryExpr.from(((ApproxRelation) r).rewrite());
+//						} else {
+//							VerdictLogger.warn(this, "An exact relation is found in an approximate query statement."
+//									+ " Mixing approximate relations with exact relations are not supported.");
+//							return expr;
+//						}
+//					} else {
+//						return expr;
+//					}
+//				}
+//			};
 			
 			public Cond call(Cond cond) {
 				if (cond instanceof CompCond) {
 					CompCond c = (CompCond) cond;
-					return CompCond.from(v2.visit(c.getLeft()), c.getOp(), v2.visit(c.getRight()));
+					return CompCond.from(
+							exprWithTableNamesSubstituted(c.getLeft(), sub),
+							c.getOp(),
+							exprWithTableNamesSubstituted(c.getRight(), sub));
 				} else {
 					return cond;
 				}
@@ -95,8 +106,13 @@ public class ApproxFilteredRelation extends ApproxRelation {
 		List<ApproxRelation> relToJoin = modifiedCondWithRelToJoin.getRight();
 		
 		ApproxRelation joinedSource = source;
+		String leftmostAlias = source.getAlias();
 		for (ApproxRelation a : relToJoin) {
-			joinedSource = new ApproxJoinedRelation(vc, joinedSource, a);
+			List<Pair<Expr, Expr>> joincond = new ArrayList<Pair<Expr, Expr>>();
+			ColNameExpr leftcol = new ColNameExpr(source.partitionColumnName(), leftmostAlias);
+			ColNameExpr rightcol = new ColNameExpr(a.partitionColumnName(), a.getAlias());
+			joincond.add(Pair.<Expr, Expr>of(leftcol, rightcol));
+			joinedSource = new ApproxJoinedRelation(vc, joinedSource, a, joincond);
 		}
 		
 //		ExactRelation joinedSource = source.rewriteWithPartition();
@@ -109,7 +125,7 @@ public class ApproxFilteredRelation extends ApproxRelation {
 		
 		ExactRelation newSource = joinedSource.rewriteWithPartition();
 		ExactRelation r = new FilteredRelation(vc, newSource, modifiedCond);
-		r.setAliasName(getAliasName());
+		r.setAliasName(getAlias());
 		return r;
 	}
 	
@@ -119,7 +135,7 @@ public class ApproxFilteredRelation extends ApproxRelation {
 	 * @return A pair of (1) the transformed condition and (2) a list of tables to be inner-joined on partition numbers.
 	 * 		   The relations to be joined must have two selectElems: partition number and an aggregate column in order.
 	 */
-	private Pair<Cond, List<ApproxRelation>> transformCondWithPartitionedRelations(Cond cond, Map<String, String> sub) {
+	private Pair<Cond, List<ApproxRelation>> transformCondWithPartitionedRelations(Cond cond, Map<TableUniqueName, String> sub) {
 		CondModifierForSubsampling v = new CondModifierForSubsampling(sub);
 		Cond modified = v.visit(cond);
 		return Pair.of(modified, v.relationsToJoin());
@@ -131,7 +147,7 @@ public class ApproxFilteredRelation extends ApproxRelation {
 	}
 
 	@Override
-	protected Map<String, String> tableSubstitution() {
+	protected Map<TableUniqueName, String> tableSubstitution() {
 		return source.tableSubstitution();
 	}
 
@@ -182,7 +198,7 @@ public class ApproxFilteredRelation extends ApproxRelation {
 	protected String toStringWithIndent(String indent) {
 		StringBuilder s = new StringBuilder(1000);
 		s.append(indent);
-		s.append(String.format("%s(%s) [%s]\n", this.getClass().getSimpleName(), getAliasName(), cond.toString()));
+		s.append(String.format("%s(%s) [%s]\n", this.getClass().getSimpleName(), getAlias(), cond.toString()));
 		s.append(source.toStringWithIndent(indent + "  "));
 		return s.toString();
 	}
@@ -210,23 +226,16 @@ public class ApproxFilteredRelation extends ApproxRelation {
 class CondModifierForSubsampling extends CondModifier {
 	private List<ApproxRelation> compToRelations = new ArrayList<ApproxRelation>();		// relations to compare
 	
-	private Map<String, String> sub;
+	private Map<TableUniqueName, String> sub;
 	
-	public CondModifierForSubsampling(Map<String, String> tableSub) {
+	private ExprModifier v2;
+	
+	public CondModifierForSubsampling(Map<TableUniqueName, String> tableSub) {
 		sub = tableSub;
-	}
-	
-	public List<ApproxRelation> relationsToJoin() {
-		return compToRelations;
-	}
-	
-	ExprModifier v2 = new ExprModifier() {
-		public Expr call(Expr expr) {
-			if (expr instanceof ColNameExpr) {
-				ColNameExpr e = (ColNameExpr) expr;
-				return new ColNameExpr(e.getCol(), sub.get(e.getTab()), e.getSchema());
-			} else if (expr instanceof SubqueryExpr) {
-				Relation r = ((SubqueryExpr) expr).getSubquery();
+		v2 = new TableNameReplacerInExpr(sub) {
+			@Override
+			protected Expr replaceSubqueryExpr(SubqueryExpr expr) {
+				Relation r = expr.getSubquery();
 				if (r instanceof ApproxAggregatedRelation) {
 					// replace the subquery with the first aggregate expression.
 //					compToRelations.add((ApproxRelation) r);
@@ -242,11 +251,13 @@ class CondModifierForSubsampling extends CondModifier {
 							+ " Mixing approximate relations with exact relations are not supported.");
 					return expr;
 				}
-			} else {
-				return expr;
 			}
-		}
-	};
+		};
+	}
+	
+	public List<ApproxRelation> relationsToJoin() {
+		return compToRelations;
+	}
 	
 	public Cond call(Cond cond) {
 		if (cond instanceof CompCond) {

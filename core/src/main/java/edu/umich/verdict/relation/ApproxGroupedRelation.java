@@ -9,6 +9,7 @@ import java.util.Set;
 import com.google.common.base.Joiner;
 
 import edu.umich.verdict.VerdictContext;
+import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.relation.expr.FuncExpr;
@@ -38,7 +39,7 @@ public class ApproxGroupedRelation extends ApproxRelation {
 	public ExactRelation rewriteForPointEstimate() {
 		List<Expr> newGroupby = groupbyWithTablesSubstituted();
 		ExactRelation r = new GroupedRelation(vc, source.rewriteForPointEstimate(), newGroupby);
-		r.setAliasName(r.getAliasName());
+		r.setAliasName(r.getAlias());
 		return r;
 	}
 	
@@ -49,7 +50,7 @@ public class ApproxGroupedRelation extends ApproxRelation {
 //		newGroupby.add((ColNameExpr) exprWithTableNamesSubstituted(partitionColumn(), tableSubstitution()));
 		newGroupby.add(newSource.partitionColumn());
 		ExactRelation r = new GroupedRelation(vc, newSource, newGroupby);
-		r.setAliasName(r.getAliasName());
+		r.setAliasName(r.getAlias());
 		return r;
 	}
 	
@@ -65,12 +66,12 @@ public class ApproxGroupedRelation extends ApproxRelation {
 	}
 
 	@Override
-	protected Map<String, String> tableSubstitution() {
+	protected Map<TableUniqueName, String> tableSubstitution() {
 		return source.tableSubstitution();
 	}
 	
 	protected List<Expr> groupbyWithTablesSubstituted() {
-		Map<String, String> sub = tableSubstitution();
+		Map<TableUniqueName, String> sub = tableSubstitution();
 		List<Expr> replaced = new ArrayList<Expr>();
 		for (Expr e : groupby) {
 			replaced.add(exprWithTableNamesSubstituted(e, sub));
@@ -97,7 +98,7 @@ public class ApproxGroupedRelation extends ApproxRelation {
 	protected String toStringWithIndent(String indent) {
 		StringBuilder s = new StringBuilder(1000);
 		s.append(indent);
-		s.append(String.format("%s(%s) [%s]\n", this.getClass().getSimpleName(), getAliasName(), Joiner.on(", ").join(groupby)));
+		s.append(String.format("%s(%s) [%s]\n", this.getClass().getSimpleName(), getAlias(), Joiner.on(", ").join(groupby)));
 		s.append(source.toStringWithIndent(indent + "  "));
 		return s.toString();
 	}

@@ -63,7 +63,12 @@ public class TableUniqueName implements Comparable<TableUniqueName> {
 	public boolean equals(Object another) {
 		if (another instanceof TableUniqueName) {
 			TableUniqueName t = (TableUniqueName) another;
-			return schemaName.equals(t.schemaName) && tableName.equals(t.tableName);			
+			if (schemaName == null && t.getSchemaName() == null) {
+				return tableName.equals(t.tableName);
+			} else if (schemaName != null && t.getSchemaName() != null) {
+				return schemaName.equals(t.getSchemaName()) && tableName.equals(t.getTableName());
+			}
+			return false;
 		} else {
 			return false;
 		}

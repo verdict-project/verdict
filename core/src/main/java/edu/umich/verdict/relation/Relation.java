@@ -4,10 +4,12 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.misc.Interval;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.spark.sql.DataFrame;
 import org.apache.spark.sql.Row;
 
@@ -22,9 +24,12 @@ import edu.umich.verdict.VerdictSQLParser.Search_conditionContext;
 import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.exceptions.VerdictUnexpectedMethodCall;
+import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.Expr;
+import edu.umich.verdict.relation.expr.ExprModifier;
 import edu.umich.verdict.relation.expr.FuncExpr;
 import edu.umich.verdict.relation.expr.SelectElem;
+import edu.umich.verdict.relation.expr.SubqueryExpr;
 import edu.umich.verdict.util.ResultSetConversion;
 import edu.umich.verdict.util.StackTraceReader;
 import edu.umich.verdict.util.StringManipulations;
@@ -69,7 +74,7 @@ public abstract class Relation {
 		return approximate;
 	}
 	
-	public String getAliasName() {
+	public String getAlias() {
 		return alias;
 	}
 	
@@ -243,9 +248,8 @@ public abstract class Relation {
 	public static String errorBoundColumn(String original) {
 		return String.format("%s_err", original);
 	}
-	
-}
 
+}
 
 class PrettyPrintVisitor extends VerdictSQLBaseVisitor<String> {
 	

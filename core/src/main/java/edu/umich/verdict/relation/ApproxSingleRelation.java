@@ -109,7 +109,7 @@ public class ApproxSingleRelation extends ApproxRelation {
 	@Override
 	public ExactRelation rewriteForPointEstimate() {
 		ExactRelation r = SingleRelation.from(vc, getSampleName());
-		r.setAliasName(getAliasName());
+		r.setAliasName(getAlias());
 		return r;
 	}
 	
@@ -140,12 +140,12 @@ public class ApproxSingleRelation extends ApproxRelation {
 			ExactRelation r = SingleRelation.from(vc, getSampleName());
 			r = r.select(Joiner.on(", ").join(newColNames) + ", "
 				     	 + vc.getDbms().modOfHash(param.columnNames.get(0), partitionCount) + " AS " + partitionColName);
-			r.setAliasName(getAliasName());
+			r.setAliasName(getAlias());
 			return r;
 			
 		} else {
 			ExactRelation r = SingleRelation.from(vc, getSampleName());
-			r.setAliasName(getAliasName());
+			r.setAliasName(getAlias());
 			return r;
 		}
 //		r = vc.getDbms().augmentWithRandomPartitionNum(r);
@@ -206,8 +206,8 @@ public class ApproxSingleRelation extends ApproxRelation {
 	}
 
 	@Override
-	protected Map<String, String> tableSubstitution() {
-		Map<String, String> s = ImmutableMap.of(param.originalTable.getTableName(), alias);
+	protected Map<TableUniqueName, String> tableSubstitution() {
+		Map<TableUniqueName, String> s = ImmutableMap.of(param.originalTable, alias);
 		return s;
 	}
 	
@@ -261,7 +261,7 @@ public class ApproxSingleRelation extends ApproxRelation {
 		s.append(String.format("%s(%s, %s), %s, cost: %f\n",
 				this.getClass().getSimpleName(),
 				getTableName(),
-				getAliasName(),
+				getAlias(),
 				param.toString(),
 				cost()));
 		return s.toString();

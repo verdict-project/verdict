@@ -55,7 +55,7 @@ public class SingleRelation extends ExactRelation {
 	
 	@Override
 	protected String getSourceName() {
-		return (alias == null)? tableName.getTableName() : getAliasName();
+		return (alias == null)? tableName.getTableName() : getAlias();
 	}
 	
 	/*
@@ -276,11 +276,11 @@ public class SingleRelation extends ExactRelation {
 	protected ApproxSingleRelation approxWith(Map<TableUniqueName, SampleParam> replace) {
 		if (replace.containsKey(getTableName())) {
 			ApproxSingleRelation a = ApproxSingleRelation.from(vc, replace.get(getTableName()));
-			a.setAliasName(getAliasName());
+			a.setAliasName(getAlias());
 			return a;
 		} else {
 			ApproxSingleRelation a = ApproxSingleRelation.asis(this);
-			a.setAliasName(getAliasName());
+			a.setAliasName(getAlias());
 			return a;
 		}
 	}
@@ -321,7 +321,7 @@ public class SingleRelation extends ExactRelation {
 		Set<String> columns = vc.getMeta().getColumns(getTableName());
 		String partitionCol = vc.getDbms().partitionColumnName();
 		if (columns.contains(partitionCol)) {
-			return new ColNameExpr(partitionCol, getAliasName());
+			return new ColNameExpr(partitionCol, getAlias());
 		} else {
 			return null;
 		}
@@ -344,7 +344,7 @@ public class SingleRelation extends ExactRelation {
 	protected String toStringWithIndent(String indent) {
 		StringBuilder s = new StringBuilder(1000);
 		s.append(indent);
-		s.append(String.format("%s(%s, %s)\n", this.getClass().getSimpleName(), getTableName(), getAliasName()));
+		s.append(String.format("%s(%s, %s)\n", this.getClass().getSimpleName(), getTableName(), getAlias()));
 		return s.toString();
 	}
 }
