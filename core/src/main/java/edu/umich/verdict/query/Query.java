@@ -10,7 +10,7 @@ import edu.umich.verdict.VerdictSQLParser;
 import edu.umich.verdict.datatypes.Alias;
 import edu.umich.verdict.dbms.DbmsSpark;
 import edu.umich.verdict.exceptions.VerdictException;
-import edu.umich.verdict.util.StringManupulations;
+import edu.umich.verdict.util.StringManipulations;
 import edu.umich.verdict.util.VerdictLogger;
 
 /**
@@ -179,7 +179,7 @@ public abstract class Query {
 	}
 
 	protected static Type getStatementType(String queryString) {
-		VerdictSQLParser p = StringManupulations.parserOf(queryString);
+		VerdictSQLParser p = StringManipulations.parserOf(queryString);
 
 		VerdictSQLBaseVisitor<Type> visitor = new VerdictSQLBaseVisitor<Type>() {
 			private Type type = Type.NOSUPPORT;

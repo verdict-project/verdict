@@ -9,7 +9,7 @@ import edu.umich.verdict.VerdictJDBCContext;
 import edu.umich.verdict.VerdictSQLBaseVisitor;
 import edu.umich.verdict.VerdictSQLParser;
 import edu.umich.verdict.datatypes.TableUniqueName;
-import edu.umich.verdict.util.StringManupulations;
+import edu.umich.verdict.util.StringManipulations;
 
 @Deprecated
 public class ApproximateSelectQuery extends SelectQuery {
@@ -25,7 +25,7 @@ public class ApproximateSelectQuery extends SelectQuery {
 	 * @return
 	 */
 	public static boolean doesSupport(String queryString) {
-		VerdictSQLParser p = StringManupulations.parserOf(queryString);
+		VerdictSQLParser p = StringManipulations.parserOf(queryString);
 		
 		final HashSet<String> aggs = new HashSet<String>();
 		VerdictSQLBaseVisitor<String> visitor = new VerdictSQLBaseVisitor<String>() {

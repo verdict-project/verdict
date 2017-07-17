@@ -8,7 +8,7 @@ import edu.umich.verdict.VerdictSQLParser.Case_exprContext;
 import edu.umich.verdict.VerdictSQLParser.ExpressionContext;
 import edu.umich.verdict.VerdictSQLParser.Search_conditionContext;
 import edu.umich.verdict.relation.condition.Cond;
-import edu.umich.verdict.util.StringManupulations;
+import edu.umich.verdict.util.StringManipulations;
 import edu.umich.verdict.util.VerdictLogger;
 
 /**
@@ -34,7 +34,7 @@ public class CaseExpr extends Expr {
 	}
 	
 	public static CaseExpr from(String expr) {
-		VerdictSQLParser p = StringManupulations.parserOf(expr);
+		VerdictSQLParser p = StringManipulations.parserOf(expr);
 		return from(p.case_expr());
 	}
 	
@@ -67,6 +67,21 @@ public class CaseExpr extends Expr {
 	@Override
 	public <T> T accept(ExprVisitor<T> v) {
 		return v.call(this);
+	}
+	
+	@Override
+	public Expr withTableSubstituted(String newTab) {
+		List<Cond> newConds = new ArrayList<Cond>();
+		for (Cond c : conditions) {
+			newConds.add(c.withTableSubstituted(newTab));
+		}
+		
+		List<Expr> newExprs = new ArrayList<Expr>();
+		for (Expr e : expressions) {
+			newExprs.add(e.withTableSubstituted(newTab));
+		}
+		
+		return new CaseExpr(newConds, newExprs);
 	}
 
 }

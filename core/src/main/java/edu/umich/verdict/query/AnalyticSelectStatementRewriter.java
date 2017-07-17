@@ -17,7 +17,7 @@ import edu.umich.verdict.datatypes.SampleSizeInfo;
 import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.exceptions.VerdictQuerySyntaxException;
-import edu.umich.verdict.util.StringManupulations;
+import edu.umich.verdict.util.StringManipulations;
 import edu.umich.verdict.util.TypeCasting;
 import edu.umich.verdict.util.VerdictLogger;
 
@@ -198,7 +198,7 @@ class AnalyticSelectStatementRewriter extends SelectStatementBaseRewriter  {
 		if (ctx.table_name() != null) {
 			tabName = visit(ctx.table_name());
 		}
-		TableUniqueName tabUniqueName = StringManupulations.tabUniqueNameOfColName(vc, ctx.getText());
+		TableUniqueName tabUniqueName = StringManipulations.tabUniqueNameOfColName(vc, ctx.getText());
 		String colName = ctx.column_name().getText();
 		
 		// if a table name was specified, we change it to its alias name.
@@ -416,7 +416,7 @@ class AnalyticSelectStatementRewriter extends SelectStatementBaseRewriter  {
 		Alias alias = new Alias(groupName, groupName);
 		
 		for (Pair<String, Alias> e : colName2Aliases) {
-			if (StringManupulations.colNameOfColName(e.getKey()).equals(groupName)) {
+			if (StringManipulations.colNameOfColName(e.getKey()).equals(groupName)) {
 				alias = e.getValue();
 				break;
 			}

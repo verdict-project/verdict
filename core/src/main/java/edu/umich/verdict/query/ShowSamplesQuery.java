@@ -8,7 +8,7 @@ import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.relation.ExactRelation;
 import edu.umich.verdict.relation.Relation;
 import edu.umich.verdict.relation.SingleRelation;
-import edu.umich.verdict.util.StringManupulations;
+import edu.umich.verdict.util.StringManipulations;
 import edu.umich.verdict.util.VerdictLogger;
 
 public class ShowSamplesQuery extends SelectQuery {
@@ -19,7 +19,7 @@ public class ShowSamplesQuery extends SelectQuery {
 
 	@Override
 	public void compute() throws VerdictException {
-		VerdictSQLParser p = StringManupulations.parserOf(queryString);
+		VerdictSQLParser p = StringManipulations.parserOf(queryString);
 		VerdictSQLBaseVisitor<String> visitor = new VerdictSQLBaseVisitor<String>() {
 			@Override public String visitShow_samples_statement(VerdictSQLParser.Show_samples_statementContext ctx) {
 				String database = null;

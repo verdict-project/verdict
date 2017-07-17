@@ -8,6 +8,7 @@ import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
@@ -183,8 +184,13 @@ public class ApproxJoinedRelation extends ApproxRelation {
 		} else if (sampleTypeSet.equals(ImmutableSet.of("universe", "nosample"))) {
 			return "universe";
 		} else {
-			return null;
+			return source1.sampleType() + "-" + source2.sampleType();		// unexpected
 		}
+	}
+	
+	@Override
+	public double cost() {
+		return source1.cost() + source2.cost();
 	}
 	
 	@Override
@@ -225,4 +231,38 @@ public class ApproxJoinedRelation extends ApproxRelation {
 		return cols;
 	}
 
+	@Override
+	protected String toStringWithIndent(String indent) {
+		StringBuilder s = new StringBuilder(1000);
+		s.append(indent);
+		s.append(String.format("%s(%s) [%s], cost: %f\n",
+				this.getClass().getSimpleName(),
+				getAliasName(),
+				Joiner.on(", ").join(joinCols),
+				cost()));
+		s.append(source1.toStringWithIndent(indent + "  "));
+		s.append(source2.toStringWithIndent(indent + "  "));
+		return s.toString();
+	}
+	
+	@Override
+	public boolean equals(ApproxRelation o) {
+		if (o instanceof ApproxJoinedRelation) {
+			if (source1.equals(((ApproxJoinedRelation) o).source1) && source2.equals(((ApproxJoinedRelation) o).source2)) {
+				if (joinCols.equals(((ApproxJoinedRelation) o).joinCols)) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	
+	@Override
+	public double samplingProbability() {
+		if (areMatchingUniverseSamples()) {
+			return source1.samplingProbability();
+		} else {
+			return source1.samplingProbability() * source2.samplingProbability();
+		}
+	}
 }

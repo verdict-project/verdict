@@ -124,52 +124,67 @@ public class JoinedRelation extends ExactRelation {
 		a.setAliasName(getAliasName());
 		return a;
 	}
-
-	/**
-	 * Finds proper samples for each child; then, merge them.
-	 */
-	protected List<SampleGroup> findSample(SelectElem elem) {
-		List<SampleGroup> candidates1 = source1.findSample(elem);
-		List<SampleGroup> candidates2 = source2.findSample(elem);
-		return combineCandidates(candidates1, candidates2);
-	}
 	
-	private List<SampleGroup> combineCandidates(
-			List<SampleGroup> candidates1,
-			List<SampleGroup> candidates2) {
-		List<SampleGroup> combined = new ArrayList<SampleGroup>();
+	@Override
+	protected List<ApproxRelation> nBestSamples(Expr elem, int n) throws VerdictException {
+		List<ApproxRelation> ofSources1 = source1.nBestSamples(elem, n);
+		List<ApproxRelation> ofSources2 = source2.nBestSamples(elem, n);
+		List<ApproxRelation> joined = new ArrayList<ApproxRelation>();
 		
-		for (SampleGroup c1 : candidates1) {
-			Set<SampleParam> set1 = c1.sampleSet();
-			double cost1 = c1.cost();
-			double samplingProb1 = c1.samplingProb();
-			String type1 = c1.sampleType();
-			
-			for (SampleGroup c2 : candidates2) {
-				Set<SampleParam> set2 = c2.sampleSet();
-				double cost2 = c2.cost();
-				double samplingProb2 = c2.samplingProb();
-				String type2 = c2.sampleType();
-				
-				Set<SampleParam> union = new HashSet<SampleParam>(set1);
-				union.addAll(set2);
-				
-				// add benefits to universe samples if they coincide with the join columns.
-				if (universeSampleApplicable(set1, set2)) {
-					combined.add(new SampleGroup(union, c1.getElems(), Math.min(samplingProb1, samplingProb2), cost1 + cost2));
-				} else {
-					Set<String> joinedType = ImmutableSet.of(type1, type2);
-					if (joinedType.equals(ImmutableSet.of("stratified", "universe"))
-						|| joinedType.equals(ImmutableSet.of("universe", "universe"))) {
-						// not allowed
-					} else {
-						combined.add(new SampleGroup(union, c1.getElems(), samplingProb1 * samplingProb2, cost1 + cost2));
-					}
-				}
+		for (ApproxRelation a1 : ofSources1) {
+			for (ApproxRelation a2 : ofSources2) {
+				joined.add(new ApproxJoinedRelation(vc, a1, a2, joinCols));
 			}
 		}
-		return combined;
+		
+		return joined;
 	}
+
+//	/**
+//	 * Finds proper samples for each child; then, merge them.
+//	 */
+//	protected List<SampleGroup> findSample(Expr elem) {
+//		List<SampleGroup> candidates1 = source1.findSample(elem);
+//		List<SampleGroup> candidates2 = source2.findSample(elem);
+//		return combineCandidates(candidates1, candidates2);
+//	}
+//	
+//	private List<SampleGroup> combineCandidates(
+//			List<SampleGroup> candidates1,
+//			List<SampleGroup> candidates2) {
+//		List<SampleGroup> combined = new ArrayList<SampleGroup>();
+//		
+//		for (SampleGroup c1 : candidates1) {
+//			Set<SampleParam> set1 = c1.sampleSet();
+//			double cost1 = c1.cost();
+//			double samplingProb1 = c1.samplingProb();
+//			String type1 = c1.sampleType();
+//			
+//			for (SampleGroup c2 : candidates2) {
+//				Set<SampleParam> set2 = c2.sampleSet();
+//				double cost2 = c2.cost();
+//				double samplingProb2 = c2.samplingProb();
+//				String type2 = c2.sampleType();
+//				
+//				Set<SampleParam> union = new HashSet<SampleParam>(set1);
+//				union.addAll(set2);
+//				
+//				// add benefits to universe samples if they coincide with the join columns.
+//				if (universeSampleApplicable(set1, set2)) {
+//					combined.add(new SampleGroup(union, c1.getElems(), Math.min(samplingProb1, samplingProb2), cost1 + cost2));
+//				} else {
+//					Set<String> joinedType = ImmutableSet.of(type1, type2);
+//					if (joinedType.equals(ImmutableSet.of("stratified", "universe"))
+//						|| joinedType.equals(ImmutableSet.of("universe", "universe"))) {
+//						// not allowed
+//					} else {
+//						combined.add(new SampleGroup(union, c1.getElems(), samplingProb1 * samplingProb2, cost1 + cost2));
+//					}
+//				}
+//			}
+//		}
+//		return combined;
+//	}
 	
 	private boolean universeSampleApplicable(Set<SampleParam> set1, Set<SampleParam> set2) {
 		Set<ColNameExpr> lJoinCols = new HashSet<ColNameExpr>();
@@ -246,13 +261,13 @@ public class JoinedRelation extends ExactRelation {
 		return null;
 	}
 
-	@Override
-	public List<SelectElem> getSelectList() {
-		List<SelectElem> elems = new ArrayList<SelectElem>();
-		elems.addAll(source1.getSelectList());
-		elems.addAll(source2.getSelectList());
-		return elems;
-	}
+//	@Override
+//	public List<SelectElem> getSelectList() {
+//		List<SelectElem> elems = new ArrayList<SelectElem>();
+//		elems.addAll(source1.getSelectList());
+//		elems.addAll(source2.getSelectList());
+//		return elems;
+//	}
 
 	@Override
 	public ColNameExpr partitionColumn() {

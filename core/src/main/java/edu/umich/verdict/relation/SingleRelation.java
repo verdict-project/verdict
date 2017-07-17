@@ -70,9 +70,30 @@ public class SingleRelation extends ExactRelation {
 		// no approx
 		return ApproxSingleRelation.asis(this);
 	}
+	
+	@Override
+	protected List<ApproxRelation> nBestSamples(Expr elem, int n) throws VerdictException {
+		// refresh meta data if needed.
+		String schema = getTableName().getSchemaName();
+		vc.getMeta().refreshSampleInfoIfNeeded(schema);
+		
+		List<ApproxRelation> samples = new ArrayList<ApproxRelation>();
+		
+		// Get all the samples
+		List<Pair<SampleParam, TableUniqueName>> availableSamples = vc.getMeta().getSampleInfoFor(getTableName());
+		// add a relation itself in case there's no available sample.
+		availableSamples.add(Pair.of(asSampleParam(), getTableName()));
+		
+		for (Pair<SampleParam, TableUniqueName> pair : availableSamples) {
+			ApproxRelation a = new ApproxSingleRelation(vc, pair.getLeft());
+			samples.add(a);
+		}
+		
+		return samples;
+	}
 
 	@Override
-	protected List<SampleGroup> findSample(SelectElem elem) {
+	protected List<SampleGroup> findSample(Expr elem) {
 		// refresh meta data if needed.
 		String schema = getTableName().getSchemaName();
 		vc.getMeta().refreshSampleInfoIfNeeded(schema);
@@ -94,16 +115,21 @@ public class SingleRelation extends ExactRelation {
 		}
 		
 		for (Pair<SampleParam, TableUniqueName> p : availableSamples) {
-			SampleSizeInfo sizeInfo = vc.getMeta().getSampleSizeOf(p.getRight());
-			double sampleTableSize = originalTableSize;
-			if (sizeInfo != null) {		// if not an original table
-				sampleTableSize = (double) sizeInfo.sampleSize;
-			}
-			double samplingProb = samplingProb(p.getLeft(), elem.getExpr());
+			SampleParam param  = p.getLeft();
 			
-			if (samplingProb >= 0) {
-				candidates.add(new SampleGroup(ImmutableSet.of(p.getLeft()), Arrays.asList(elem), samplingProb, sampleTableSize));
-			}
+//			SampleSizeInfo sizeInfo = vc.getMeta().getSampleSizeOf(p.getRight());
+//			double sampleTableSize = originalTableSize;
+//			if (sizeInfo != null) {		// if not an original table
+//				sampleTableSize = (double) sizeInfo.sampleSize;
+//			}
+//			double samplingProb = samplingProb(p.getLeft(), elem);
+			
+			ApproxRelation a = new ApproxSingleRelation(vc, param);
+			candidates.add(new SampleGroup(a, Arrays.asList(elem)));
+			
+//			if (samplingProb >= 0) {
+//				
+//			}
 		}
 		
 		return candidates;
@@ -279,16 +305,16 @@ public class SingleRelation extends ExactRelation {
 		return new SampleParam(vc, getTableName(), NOSAMPLE, 1.0, null);
 	}
 
-	@Override
-	public List<SelectElem> getSelectList() {
-		TableUniqueName table = getTableName();
-		Set<String> columns = vc.getMeta().getColumns(table);
-		List<SelectElem> elems = new ArrayList<SelectElem>();
-		for (String c : columns) {
-			elems.add(new SelectElem(new ColNameExpr(c, table.getTableName())));
-		}
-		return elems;
-	}
+//	@Override
+//	public List<SelectElem> getSelectList() {
+//		TableUniqueName table = getTableName();
+//		Set<String> columns = vc.getMeta().getColumns(table);
+//		List<SelectElem> elems = new ArrayList<SelectElem>();
+//		for (String c : columns) {
+//			elems.add(new SelectElem(new ColNameExpr(c, table.getTableName())));
+//		}
+//		return elems;
+//	}
 
 	@Override
 	public ColNameExpr partitionColumn() {

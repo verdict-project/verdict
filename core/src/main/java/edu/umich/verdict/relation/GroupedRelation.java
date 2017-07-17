@@ -22,20 +22,21 @@ public class GroupedRelation extends ExactRelation {
 
 	protected ExactRelation source;
 	
-	protected List<ColNameExpr> groupby;
+	protected List<Expr> groupby;
 
-	public GroupedRelation(VerdictContext vc, ExactRelation source, List<ColNameExpr> groupby) {
+	public GroupedRelation(VerdictContext vc, ExactRelation source, List<Expr> groupby) {
 		super(vc);
 		this.source = source;
-		List<ColNameExpr> groupbyWithSource = new ArrayList<ColNameExpr>();
-		for (ColNameExpr expr : groupby) {
-			if (expr.getTab() == null) {
-				groupbyWithSource.add(new ColNameExpr(expr.getCol(), source.getAliasName()));
-			} else {
-				groupbyWithSource.add(expr);
-			}
-		}
-		this.groupby = groupbyWithSource;
+		this.groupby = groupby;
+//		List<ColNameExpr> groupbyWithSource = new ArrayList<ColNameExpr>();
+//		for (ColNameExpr expr : groupby) {
+//			if (expr.getTab() == null) {
+//				groupbyWithSource.add(new ColNameExpr(expr.getCol(), source.getAliasName()));
+//			} else {
+//				groupbyWithSource.add(expr);
+//			}
+//		}
+//		this.groupby = groupbyWithSource;
 		this.alias = source.alias;
 	}
 	
@@ -64,38 +65,48 @@ public class GroupedRelation extends ExactRelation {
 		a.setAliasName(getAliasName());
 		return a;
 	}
-
+	
 	@Override
-	protected List<SampleGroup> findSample(SelectElem elem) {
-		// if the groupby coincides with the stratified sample's columns, we scale its sampling probability heuristically
-		List<SampleGroup> scaled = new ArrayList<SampleGroup>();
-		
-		for (SampleGroup sg : source.findSample(elem)) {
-			boolean includeSTsamplesWithMatchingGroup = false;
-			for (SampleParam param : sg.sampleSet()) {				
-				if (param.sampleType.equals("stratified")) {
-					List<String> group = new ArrayList<String>();
-					for (ColNameExpr ce : groupby) {
-						group.add(ce.getCol());
-					}
-					if (group.equals(param.columnNames)) {
-						includeSTsamplesWithMatchingGroup = true;
-					}
-				}
-			}
-			
-			if (includeSTsamplesWithMatchingGroup) {
-				scaled.add(new SampleGroup(sg.sampleSet(), sg.getElems(), sg.samplingProb()*2, sg.cost()));
-			} else if (sg.sampleType().equals("stratified")) {
-				// don't support yet.
-			} else {
-				// regular case
-				scaled.add(sg);
-			}
+	protected List<ApproxRelation> nBestSamples(Expr elem, int n) throws VerdictException {
+		List<ApproxRelation> ofSources = source.nBestSamples(elem, n);
+		List<ApproxRelation> grouped = new ArrayList<ApproxRelation>();
+		for (ApproxRelation a : ofSources) {
+			grouped.add(new ApproxGroupedRelation(vc, a, groupby));
 		}
-		
-		return scaled;
+		return grouped;
 	}
+
+//	@Override
+//	protected List<SampleGroup> findSample(Expr elem) {
+//		// if the groupby coincides with the stratified sample's columns, we scale its sampling probability heuristically
+//		List<SampleGroup> scaled = new ArrayList<SampleGroup>();
+//		
+//		for (SampleGroup sg : source.findSample(elem)) {
+//			boolean includeSTsamplesWithMatchingGroup = false;
+//			for (SampleParam param : sg.sampleSet()) {				
+//				if (param.sampleType.equals("stratified")) {
+//					List<String> group = new ArrayList<String>();
+//					for (Expr e : groupby) {
+//						group.addAll(e.extractColNames());
+//					}
+//					if (group.equals(param.columnNames)) {
+//						includeSTsamplesWithMatchingGroup = true;
+//					}
+//				}
+//			}
+//			
+//			if (includeSTsamplesWithMatchingGroup) {
+//				scaled.add(new SampleGroup(sg.sampleSet(), sg.getElems(), sg.samplingProb()*2, sg.cost()));
+//			} else if (sg.sampleType().equals("stratified")) {
+//				// don't support yet.
+//			} else {
+//				// regular case
+//				scaled.add(sg);
+//			}
+//		}
+//		
+//		return scaled;
+//	}
 	
 	/*
 	 * Sql
@@ -118,10 +129,10 @@ public class GroupedRelation extends ExactRelation {
 		return sql.toString();
 	}
 
-	@Override
-	public List<SelectElem> getSelectList() {
-		return source.getSelectList();
-	}
+//	@Override
+//	public List<SelectElem> getSelectList() {
+//		return source.getSelectList();
+//	}
 
 	@Override
 	public ColNameExpr partitionColumn() {

@@ -13,7 +13,7 @@ import edu.umich.verdict.VerdictSQLLexer;
 import edu.umich.verdict.VerdictSQLParser;
 import edu.umich.verdict.datatypes.TableUniqueName;
 
-public class StringManupulations {
+public class StringManipulations {
 	
 	public static int viewNameId = 0;
 	
@@ -133,6 +133,10 @@ public class StringManupulations {
 			}
 		}
 		return quoted;
+	}
+	
+	public static String stripQuote(String e) {
+		return e.replace("`", "").replace("\"", "").replace("'", "");
 	}
 	
 }

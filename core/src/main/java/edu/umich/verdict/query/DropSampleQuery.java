@@ -12,7 +12,7 @@ import edu.umich.verdict.VerdictSQLParser.Column_nameContext;
 import edu.umich.verdict.datatypes.SampleParam;
 import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
-import edu.umich.verdict.util.StringManupulations;
+import edu.umich.verdict.util.StringManipulations;
 import edu.umich.verdict.util.VerdictLogger;
 
 public class DropSampleQuery extends Query {
@@ -23,7 +23,7 @@ public class DropSampleQuery extends Query {
 	
 	@Override
 	public void compute() throws VerdictException {
-		VerdictSQLParser p = StringManupulations.parserOf(queryString);
+		VerdictSQLParser p = StringManipulations.parserOf(queryString);
 		DeleteSampleStatementVisitor visitor = new DeleteSampleStatementVisitor();
 		visitor.visit(p.delete_sample_statement());
 		

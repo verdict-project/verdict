@@ -6,7 +6,7 @@ import edu.umich.verdict.VerdictSQLParser;
 import edu.umich.verdict.dbms.DbmsJDBC;
 import edu.umich.verdict.dbms.DbmsSpark;
 import edu.umich.verdict.exceptions.VerdictException;
-import edu.umich.verdict.util.StringManupulations;
+import edu.umich.verdict.util.StringManipulations;
 import edu.umich.verdict.util.VerdictLogger;
 
 public class ShowTablesQuery extends SelectQuery {
@@ -17,7 +17,7 @@ public class ShowTablesQuery extends SelectQuery {
 	
 	@Override
 	public void compute() throws VerdictException {
-		VerdictSQLParser p = StringManupulations.parserOf(queryString);
+		VerdictSQLParser p = StringManipulations.parserOf(queryString);
 		VerdictSQLBaseVisitor<String> visitor = new VerdictSQLBaseVisitor<String>() {
 			private String schemaName = null;
 

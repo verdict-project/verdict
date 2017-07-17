@@ -26,4 +26,8 @@ public class ConstantExpr extends Expr {
 		return v.call(this);
 	}
 
+	@Override
+	public Expr withTableSubstituted(String newTab) {
+		return this;
+	}
 }

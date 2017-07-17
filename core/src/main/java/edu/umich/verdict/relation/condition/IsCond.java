@@ -18,4 +18,8 @@ public class IsCond extends Cond {
 		return String.format("(%s IS %s)", left, right);
 	}
 	
+	@Override
+	public Cond withTableSubstituted(String newTab) {
+		return new IsCond(left.withTableSubstituted(newTab), right.withTableSubstituted(newTab));
+	}
 }

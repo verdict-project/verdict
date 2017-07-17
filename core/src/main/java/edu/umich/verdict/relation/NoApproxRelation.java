@@ -6,6 +6,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.base.Joiner;
+
+import edu.umich.verdict.datatypes.SampleSizeInfo;
 import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.relation.expr.FuncExpr;
 
@@ -39,8 +42,13 @@ public class NoApproxRelation extends ApproxRelation {
 	}
 
 	@Override
-	protected String sampleType() {
+	public String sampleType() {
 		return "nosample";
+	}
+	
+	@Override
+	public double cost() {
+		return 1e6;		// TODO: a better alternative?
 	}
 
 	@Override
@@ -53,4 +61,26 @@ public class NoApproxRelation extends ApproxRelation {
 		return new HashMap<String, String>();
 	}
 
+	@Override
+	protected String toStringWithIndent(String indent) {
+		StringBuilder s = new StringBuilder(1000);
+		s.append(indent);
+		s.append(String.format("%s(%s)\n", this.getClass().getSimpleName(), getAliasName()));
+		s.append(r.toStringWithIndent(indent + "  "));
+		return s.toString();
+	}
+	
+	@Override
+	public boolean equals(ApproxRelation o) {
+		if (o instanceof NoApproxRelation) {
+			return r.equals(((NoApproxRelation) o).r);
+		} else {
+			return false;
+		}
+	}
+
+	@Override
+	public double samplingProbability() {
+		return 1.0;
+	}
 }

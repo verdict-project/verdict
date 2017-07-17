@@ -1,19 +1,13 @@
 package edu.umich.verdict.relation.expr;
 
-public class StarExpr extends Expr {
-
-	public StarExpr() {}
-
-	@Override
-	public String toString() {
-		return "*";
-	}
+// Currently not used.
+public class TableNameExpr extends Expr {
 
 	@Override
 	public <T> T accept(ExprVisitor<T> v) {
 		return v.call(this);
 	}
-	
+
 	@Override
 	public Expr withTableSubstituted(String newTab) {
 		return this;

@@ -6,7 +6,7 @@ import edu.umich.verdict.VerdictSQLParser;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.relation.ApproxRelation;
 import edu.umich.verdict.relation.ExactRelation;
-import edu.umich.verdict.util.StringManupulations;
+import edu.umich.verdict.util.StringManipulations;
 
 public class SelectQuery extends Query {
 	
@@ -20,7 +20,7 @@ public class SelectQuery extends Query {
 		super.compute();
 		ExactRelation r = ExactRelation.from(vc, queryString);
 		
-		VerdictSQLParser p = StringManupulations.parserOf(queryString);
+		VerdictSQLParser p = StringManipulations.parserOf(queryString);
 		VerdictSQLBaseVisitor<Boolean> visitor = new VerdictSQLBaseVisitor<Boolean>() {
 			@Override
 			public Boolean visitSelect_statement(VerdictSQLParser.Select_statementContext ctx) {

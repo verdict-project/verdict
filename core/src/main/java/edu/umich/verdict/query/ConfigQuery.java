@@ -10,7 +10,7 @@ import edu.umich.verdict.VerdictSQLBaseVisitor;
 import edu.umich.verdict.VerdictSQLParser;
 import edu.umich.verdict.datatypes.VerdictResultSet;
 import edu.umich.verdict.exceptions.VerdictException;
-import edu.umich.verdict.util.StringManupulations;
+import edu.umich.verdict.util.StringManipulations;
 import edu.umich.verdict.util.VerdictLogger;
 
 
@@ -22,7 +22,7 @@ public class ConfigQuery extends SelectQuery {
 
 	@Override
 	public void compute() throws VerdictException {
-		VerdictSQLParser p = StringManupulations.parserOf(queryString);
+		VerdictSQLParser p = StringManipulations.parserOf(queryString);
 
 		VerdictSQLBaseVisitor<Pair<String, String>> visitor = new VerdictSQLBaseVisitor<Pair<String, String>>() {
 			private Pair<String, String> keyValue;

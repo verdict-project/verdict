@@ -8,6 +8,7 @@ import com.google.common.collect.ImmutableMap;
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.relation.expr.FuncExpr;
+import edu.umich.verdict.util.VerdictLogger;
 
 public class ApproxLimitedRelation extends ApproxRelation {
 	
@@ -54,8 +55,13 @@ public class ApproxLimitedRelation extends ApproxRelation {
 	}
 
 	@Override
-	protected String sampleType() {
+	public String sampleType() {
 		return null;
+	}
+	
+	@Override
+	public double cost() {
+		return source.cost();
 	}
 
 	@Override
@@ -63,4 +69,31 @@ public class ApproxLimitedRelation extends ApproxRelation {
 		return null;
 	}
 
+	@Override
+	protected String toStringWithIndent(String indent) {
+		StringBuilder s = new StringBuilder(1000);
+		s.append(indent);
+		s.append(String.format("%s(%s) [%d]\n", this.getClass().getSimpleName(), getAliasName(), limit));
+		s.append(source.toStringWithIndent(indent + "  "));
+		return s.toString();
+	}
+	
+	@Override
+	public boolean equals(ApproxRelation o) {
+		if (o instanceof ApproxLimitedRelation) {
+			if (source.equals(((ApproxLimitedRelation) o).source)) {
+				if (limit == ((ApproxLimitedRelation) o).limit) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	@Override
+	public double samplingProbability() {
+		VerdictLogger.warn(this, "sampling probability on LimitedRelation is meaningless.");
+		return 0;
+	}
+	
 }

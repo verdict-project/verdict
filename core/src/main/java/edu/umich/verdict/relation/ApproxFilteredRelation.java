@@ -10,9 +10,11 @@ import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.relation.condition.CompCond;
 import edu.umich.verdict.relation.condition.Cond;
 import edu.umich.verdict.relation.condition.CondModifier;
+import edu.umich.verdict.relation.condition.CondVisitor;
 import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.relation.expr.ExprModifier;
+import edu.umich.verdict.relation.expr.ExprVisitor;
 import edu.umich.verdict.relation.expr.FuncExpr;
 import edu.umich.verdict.relation.expr.SubqueryExpr;
 import edu.umich.verdict.util.VerdictLogger;
@@ -134,8 +136,41 @@ public class ApproxFilteredRelation extends ApproxRelation {
 	}
 
 	@Override
-	protected String sampleType() {
+	public String sampleType() {
 		return source.sampleType();
+	}
+	
+	@Override
+	public double cost() {
+		CondVisitor<Double> v1 = new CondVisitor<Double>() {
+			double cond_cost = 0;
+			
+			ExprVisitor<Double> v2 = new ExprVisitor<Double>() {
+				double subquery_cost = 0;
+				@Override
+				public Double call(Expr expr) {
+					if (expr instanceof SubqueryExpr) {
+						Relation r = ((SubqueryExpr) expr).getSubquery();
+						if (r instanceof ApproxRelation) {
+							subquery_cost += ((ApproxRelation) r).cost();
+						}
+					}
+					return subquery_cost;
+				}
+			};
+			
+			@Override
+			public Double call(Cond cond) {
+				if (cond instanceof CompCond) {
+					cond_cost += v2.visit(((CompCond) cond).getLeft());
+					cond_cost += v2.visit(((CompCond) cond).getRight());
+				}
+				return cond_cost;
+			}
+		};
+		
+		double cost = v1.visit(cond);
+		return cost + source.cost();
 	}
 	
 	@Override
@@ -143,8 +178,35 @@ public class ApproxFilteredRelation extends ApproxRelation {
 		return source.sampleColumns();
 	}
 
+	@Override
+	protected String toStringWithIndent(String indent) {
+		StringBuilder s = new StringBuilder(1000);
+		s.append(indent);
+		s.append(String.format("%s(%s) [%s]\n", this.getClass().getSimpleName(), getAliasName(), cond.toString()));
+		s.append(source.toStringWithIndent(indent + "  "));
+		return s.toString();
+	}
+	
+	@Override
+	public boolean equals(ApproxRelation o) {
+		if (o instanceof ApproxFilteredRelation) {
+			if (source.equals(((ApproxFilteredRelation) o).source)) {
+				if (cond.equals(((ApproxFilteredRelation) o).cond)) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	
+	@Override
+	public double samplingProbability() {
+		return source.samplingProbability();
+	}
+
 }
 
+// modifies the subquery expression in comparison condition
 class CondModifierForSubsampling extends CondModifier {
 	private List<ApproxRelation> compToRelations = new ArrayList<ApproxRelation>();		// relations to compare
 	
@@ -167,8 +229,10 @@ class CondModifierForSubsampling extends CondModifier {
 				Relation r = ((SubqueryExpr) expr).getSubquery();
 				if (r instanceof ApproxAggregatedRelation) {
 					// replace the subquery with the first aggregate expression.
-					compToRelations.add((ApproxRelation) r);
-					return new ColNameExpr(((ApproxAggregatedRelation) r).getSelectList().get(0).getAlias());
+//					compToRelations.add((ApproxRelation) r);
+//					return new ColNameExpr(((ApproxAggregatedRelation) r).getSelectList().get(0).getAlias());
+					VerdictLogger.warn(this, "A non-projected relation is not expected to be found in a subquery.");
+					return expr;
 				} else if (r instanceof ApproxProjectedRelation) {
 					// replace the subquery with the first select elem expression.
 					compToRelations.add((ApproxRelation) r);
@@ -191,5 +255,5 @@ class CondModifierForSubsampling extends CondModifier {
 		} else {
 			return cond;
 		}
-	}			
+	}		
 }

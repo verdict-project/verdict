@@ -90,4 +90,9 @@ public class CompCond extends Cond {
 			return this;
 		}
 	}
+	
+	@Override
+	public Cond withTableSubstituted(String newTab) {
+		return new CompCond(left.withTableSubstituted(newTab), compOp, right.withTableSubstituted(newTab));
+	}
 }

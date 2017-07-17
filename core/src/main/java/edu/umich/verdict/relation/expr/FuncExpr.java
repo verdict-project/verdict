@@ -9,7 +9,7 @@ import com.google.common.collect.ImmutableMap;
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.VerdictSQLBaseVisitor;
 import edu.umich.verdict.VerdictSQLParser;
-import edu.umich.verdict.util.StringManupulations;
+import edu.umich.verdict.util.StringManipulations;
 
 public class FuncExpr extends Expr {
 	
@@ -89,6 +89,12 @@ public class FuncExpr extends Expr {
 			.put(FuncName.UNKNOWN, "UNKNOWN(%s)")
 			.build();
 	
+	public FuncExpr(FuncName fname, List<Expr> exprs, OverClause overClause) {
+		this.expressions = exprs;
+		this.funcname = fname;
+		this.overClause = overClause;
+	}
+	
 	public FuncExpr(FuncName fname, Expr expr1, Expr expr2, Expr expr3, OverClause overClause) {
 		this.expressions = new ArrayList<Expr>();
 		if (expr1 != null) {
@@ -125,7 +131,7 @@ public class FuncExpr extends Expr {
 	}
 	
 	public static FuncExpr from(String expr) {
-		VerdictSQLParser p = StringManupulations.parserOf(expr);
+		VerdictSQLParser p = StringManipulations.parserOf(expr);
 		return from(p.function_call());
 	}
 	
@@ -331,4 +337,12 @@ public class FuncExpr extends Expr {
 		}
 	}
 	
+	@Override
+	public Expr withTableSubstituted(String newTab) {
+		List<Expr> newExprs = new ArrayList<Expr>();
+		for (Expr e : expressions) {
+			newExprs.add(e.withTableSubstituted(newTab));
+		}
+		return new FuncExpr(funcname, newExprs, overClause);
+	}
 }

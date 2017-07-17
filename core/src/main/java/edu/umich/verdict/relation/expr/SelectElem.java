@@ -4,7 +4,7 @@ import com.google.common.base.Optional;
 
 import edu.umich.verdict.VerdictSQLBaseVisitor;
 import edu.umich.verdict.VerdictSQLParser;
-import edu.umich.verdict.util.StringManupulations;
+import edu.umich.verdict.util.StringManipulations;
 
 public class SelectElem {
 
@@ -30,7 +30,7 @@ public class SelectElem {
 	}
 	
 	public static SelectElem from(String elem) {
-		VerdictSQLParser p = StringManupulations.parserOf(elem);
+		VerdictSQLParser p = StringManipulations.parserOf(elem);
 		return from(p.select_list_elem());
 	}
 	

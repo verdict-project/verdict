@@ -386,20 +386,20 @@ public class VerdictMeta {
 			}
 		}
 		
-		if (sampleTable == null) {
-			if (param.sampleType.equals("universe") || param.sampleType.equals("stratified")) {
-				VerdictLogger.error(this, String.format("No %.2f%% %s sample table on %s found for the table %s.",
-						param.samplingRatio*100, param.sampleType, param.columnNames.toString(), originalTable));
-			} else if (param.sampleType.equals("uniform")) {
-				if (param.samplingRatio != null) {
-					VerdictLogger.error(this, String.format("No %.2f%% %s sample table found for the table %s.",
-							param.samplingRatio*100, param.sampleType, originalTable));
-				} else {
-					VerdictLogger.error(this, String.format("No %s sample table found for the table %s.",
-							param.sampleType, originalTable));
-				}
-			}
-		}
+//		if (sampleTable == null) {
+//			if (param.sampleType.equals("universe") || param.sampleType.equals("stratified")) {
+//				VerdictLogger.error(this, String.format("No %.2f%% %s sample table on %s found for the table %s.",
+//						param.samplingRatio*100, param.sampleType, param.columnNames.toString(), originalTable));
+//			} else if (param.sampleType.equals("uniform")) {
+//				if (param.samplingRatio != null) {
+//					VerdictLogger.error(this, String.format("No %.2f%% %s sample table found for the table %s.",
+//							param.samplingRatio*100, param.sampleType, originalTable));
+//				} else {
+//					VerdictLogger.error(this, String.format("No %s sample table found for the table %s.",
+//							param.sampleType, originalTable));
+//				}
+//			}
+//		}
 		
 		return sampleTable;
 	}

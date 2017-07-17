@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.base.Joiner;
+
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.Expr;
@@ -38,7 +40,7 @@ public class ApproxProjectedRelation extends ApproxRelation {
 	@Override
 	public ExactRelation rewriteWithSubsampledErrorBounds() {
 		ExactRelation newSource = source.rewriteWithSubsampledErrorBounds();
-		List<SelectElem> sourceElems = newSource.getSelectList();
+		List<SelectElem> sourceElems = null; // newSource.getSelectList();
 		Set<String> colAliases = new HashSet<String>();
 		for (SelectElem e : sourceElems) {
 			if (e.aliasPresent()) {
@@ -95,8 +97,13 @@ public class ApproxProjectedRelation extends ApproxRelation {
 	}
 
 	@Override
-	protected String sampleType() {
+	public String sampleType() {
 		return source.sampleType();
+	}
+	
+	@Override
+	public double cost() {
+		return source.cost();
 	}
 
 	@Override
@@ -104,4 +111,30 @@ public class ApproxProjectedRelation extends ApproxRelation {
 		return source.sampleColumns();
 	}
 	
+	@Override
+	protected String toStringWithIndent(String indent) {
+		StringBuilder s = new StringBuilder(1000);
+		s.append(indent);
+		s.append(String.format("%s(%s) [%s]\n", this.getClass().getSimpleName(), getAliasName(), Joiner.on(", ").join(elems)));
+		s.append(source.toStringWithIndent(indent + "  "));
+		return s.toString();
+	}
+	
+	@Override
+	public boolean equals(ApproxRelation o) {
+		if (o instanceof ApproxProjectedRelation) {
+			if (source.equals(((ApproxProjectedRelation) o).source)) {
+				if (elems.equals(((ApproxProjectedRelation) o).elems)) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	@Override
+	public double samplingProbability() {
+		return source.samplingProbability();
+	}
+
 }

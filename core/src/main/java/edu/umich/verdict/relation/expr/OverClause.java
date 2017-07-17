@@ -9,7 +9,7 @@ import edu.umich.verdict.VerdictSQLParser;
 import edu.umich.verdict.VerdictSQLParser.ExpressionContext;
 import edu.umich.verdict.VerdictSQLParser.Over_clauseContext;
 import edu.umich.verdict.VerdictSQLParser.Partition_by_clauseContext;
-import edu.umich.verdict.util.StringManupulations;
+import edu.umich.verdict.util.StringManipulations;
 
 public class OverClause {
 
@@ -24,7 +24,7 @@ public class OverClause {
 	}
 	
 	public static OverClause from(String partitionByInString) {
-		VerdictSQLParser p = StringManupulations.parserOf(partitionByInString);
+		VerdictSQLParser p = StringManipulations.parserOf(partitionByInString);
 		return from(p.over_clause());
 	}
 	

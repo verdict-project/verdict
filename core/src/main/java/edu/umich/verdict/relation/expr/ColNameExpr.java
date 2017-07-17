@@ -70,5 +70,10 @@ public class ColNameExpr extends Expr {
 	public <T> T accept(ExprVisitor<T> v) {
 		return v.call(this);
 	}
+	
+	@Override
+	public Expr withTableSubstituted(String newTab) {
+		return new ColNameExpr(col, newTab);
+	}
 
 }

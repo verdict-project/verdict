@@ -148,6 +148,7 @@ public class SqlToRelationUnitTest {
 	               + "GROUP BY reorder_after_days "
 	               + "ORDER BY reorder_after_days";
 		ExactRelation r = ExactRelation.from(vc, sql);
+		System.out.println(r);
 		System.out.println(r.toSql());
 		System.out.println(Relation.prettyfySql(r.toSql()));
 	}

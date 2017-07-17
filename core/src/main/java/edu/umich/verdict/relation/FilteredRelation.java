@@ -1,5 +1,7 @@
 package edu.umich.verdict.relation;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -66,8 +68,18 @@ public class FilteredRelation extends ExactRelation {
 		Cond modified = v.visit(cond);
 		return modified;
 	}
+	
+	@Override
+	protected List<ApproxRelation> nBestSamples(Expr elem, int n) throws VerdictException {
+		List<ApproxRelation> ofSources = source.nBestSamples(elem, n);
+		List<ApproxRelation> filtered = new ArrayList<ApproxRelation>();
+		for (ApproxRelation a : ofSources) {
+			filtered.add(new ApproxFilteredRelation(vc, a, approxPossibleSubqueries(cond)));
+		}
+		return filtered;
+	}
 
-	protected List<SampleGroup> findSample(SelectElem elem) {
+	protected List<SampleGroup> findSample(Expr elem) {
 		return source.findSample(elem);
 	}
 	
@@ -87,10 +99,10 @@ public class FilteredRelation extends ExactRelation {
 		return sql.toString();
 	}
 
-	@Override
-	public List<SelectElem> getSelectList() {
-		return source.getSelectList();
-	}
+//	@Override
+//	public List<SelectElem> getSelectList() {
+//		return source.getSelectList();
+//	}
 
 	@Override
 	public ColNameExpr partitionColumn() {

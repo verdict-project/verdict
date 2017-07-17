@@ -32,4 +32,9 @@ public class BinaryOpExpr extends Expr {
 	public boolean isagg() {
 		return left.isagg() || right.isagg();
 	}
+	
+	@Override
+	public Expr withTableSubstituted(String newTab) {
+		return new BinaryOpExpr(left.withTableSubstituted(newTab), right.withTableSubstituted(newTab), op);
+	}
 }

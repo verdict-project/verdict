@@ -7,7 +7,11 @@ import com.google.common.base.Joiner;
 
 import edu.umich.verdict.VerdictContext;
 
-
+/**
+ * Points to a materialized sample table.
+ * @author Yongjoo Park
+ *
+ */
 public class SampleParam implements Comparable<SampleParam> {
 
 	private VerdictContext vc;

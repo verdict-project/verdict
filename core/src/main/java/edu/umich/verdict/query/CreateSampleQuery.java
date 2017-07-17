@@ -17,7 +17,7 @@ import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.relation.ApproxSingleRelation;
 import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.FuncExpr;
-import edu.umich.verdict.util.StringManupulations;
+import edu.umich.verdict.util.StringManipulations;
 import edu.umich.verdict.util.VerdictLogger;
 
 public class CreateSampleQuery extends Query {
@@ -28,7 +28,7 @@ public class CreateSampleQuery extends Query {
 	
 	@Override
 	public void compute() throws VerdictException {
-		VerdictSQLParser p = StringManupulations.parserOf(queryString);
+		VerdictSQLParser p = StringManipulations.parserOf(queryString);
 		CreateSampleStatementVisitor visitor = new CreateSampleStatementVisitor();
 		visitor.visit(p.create_sample_statement());
 		

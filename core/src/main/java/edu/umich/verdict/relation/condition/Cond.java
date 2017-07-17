@@ -7,14 +7,14 @@ import edu.umich.verdict.VerdictSQLBaseVisitor;
 import edu.umich.verdict.VerdictSQLParser;
 import edu.umich.verdict.VerdictSQLParser.Search_conditionContext;
 import edu.umich.verdict.relation.expr.Expr;
-import edu.umich.verdict.util.StringManupulations;
+import edu.umich.verdict.util.StringManipulations;
 
 public abstract class Cond {
 
 	public Cond() {}
 	
 	public static Cond from(String cond) {
-		VerdictSQLParser p = StringManupulations.parserOf(cond);
+		VerdictSQLParser p = StringManipulations.parserOf(cond);
 		return from(p.search_condition());
 	}
 	
@@ -39,7 +39,12 @@ public abstract class Cond {
 	public Cond remove(Cond j) {
 		return this;
 	}
+	
+	public abstract Cond withTableSubstituted(String newTab);
 
+	public <T> T accept(CondVisitor<T> condVisitor) {
+		return condVisitor.call(this);
+	}
 }
 
 

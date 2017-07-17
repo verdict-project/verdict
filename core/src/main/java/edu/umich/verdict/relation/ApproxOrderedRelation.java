@@ -3,6 +3,7 @@ package edu.umich.verdict.relation;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 
 import edu.umich.verdict.VerdictContext;
@@ -55,8 +56,13 @@ public class ApproxOrderedRelation extends ApproxRelation {
 	}
 
 	@Override
-	protected String sampleType() {
+	public String sampleType() {
 		return source.sampleType();
+	}
+	
+	@Override
+	public double cost() {
+		return source.cost();
 	}
 
 	@Override
@@ -64,4 +70,30 @@ public class ApproxOrderedRelation extends ApproxRelation {
 		return source.sampleColumns();
 	}
 
+	@Override
+	protected String toStringWithIndent(String indent) {
+		StringBuilder s = new StringBuilder(1000);
+		s.append(indent);
+		s.append(String.format("%s(%s) [%s]\n", this.getClass().getSimpleName(), getAliasName(), Joiner.on(", ").join(orderby)));
+		s.append(source.toStringWithIndent(indent + "  "));
+		return s.toString();
+	}
+	
+	@Override
+	public boolean equals(ApproxRelation o) {
+		if (o instanceof ApproxOrderedRelation) {
+			if (source.equals(((ApproxOrderedRelation) o).source)) {
+				if (orderby.equals(((ApproxOrderedRelation) o).orderby)) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	
+	@Override
+	public double samplingProbability() {
+		return source.samplingProbability();
+	}
+	
 }

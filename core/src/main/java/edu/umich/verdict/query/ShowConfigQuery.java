@@ -6,7 +6,7 @@ import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.VerdictSQLBaseVisitor;
 import edu.umich.verdict.VerdictSQLParser;
 import edu.umich.verdict.exceptions.VerdictException;
-import edu.umich.verdict.util.StringManupulations;
+import edu.umich.verdict.util.StringManipulations;
 
 public class ShowConfigQuery extends Query {
 

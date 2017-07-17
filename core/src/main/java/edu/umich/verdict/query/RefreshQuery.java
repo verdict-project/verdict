@@ -7,7 +7,7 @@ import edu.umich.verdict.VerdictSQLBaseVisitor;
 import edu.umich.verdict.VerdictSQLParser;
 import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
-import edu.umich.verdict.util.StringManupulations;
+import edu.umich.verdict.util.StringManipulations;
 import edu.umich.verdict.util.VerdictLogger;
 
 public class RefreshQuery extends Query {
@@ -18,7 +18,7 @@ public class RefreshQuery extends Query {
 
 	@Override
 	public void compute() throws VerdictException {
-		VerdictSQLParser p = StringManupulations.parserOf(queryString);
+		VerdictSQLParser p = StringManipulations.parserOf(queryString);
 		VerdictSQLBaseVisitor<String> visitor = new VerdictSQLBaseVisitor<String>() {
 			@Override
 			public String visitRefresh_statement(VerdictSQLParser.Refresh_statementContext ctx) {

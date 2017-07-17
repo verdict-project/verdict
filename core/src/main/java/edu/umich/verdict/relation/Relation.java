@@ -27,7 +27,7 @@ import edu.umich.verdict.relation.expr.FuncExpr;
 import edu.umich.verdict.relation.expr.SelectElem;
 import edu.umich.verdict.util.ResultSetConversion;
 import edu.umich.verdict.util.StackTraceReader;
-import edu.umich.verdict.util.StringManupulations;
+import edu.umich.verdict.util.StringManipulations;
 import edu.umich.verdict.util.TypeCasting;
 import edu.umich.verdict.util.VerdictLogger;
 
@@ -193,7 +193,7 @@ public abstract class Relation {
 	}
 
 	public static String prettyfySql(String sql) {
-		VerdictSQLParser p = StringManupulations.parserOf(sql);
+		VerdictSQLParser p = StringManipulations.parserOf(sql);
 		PrettyPrintVisitor r = new PrettyPrintVisitor(sql);
 		return r.visit(p.verdict_statement());
 	}

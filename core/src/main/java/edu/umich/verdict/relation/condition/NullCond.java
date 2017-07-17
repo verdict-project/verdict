@@ -7,4 +7,9 @@ public class NullCond extends Cond {
 		return "NULL";
 	}
 
+	@Override
+	public Cond withTableSubstituted(String newTab) {
+		return this;
+	}
+	
 }

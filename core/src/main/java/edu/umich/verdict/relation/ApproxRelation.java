@@ -49,9 +49,9 @@ public abstract class ApproxRelation extends Relation {
 	}
 	
 	public ApproxGroupedRelation groupby(List<String> group_list) {
-		List<ColNameExpr> groups = new ArrayList<ColNameExpr>();
+		List<Expr> groups = new ArrayList<Expr>();
 		for (String t : group_list) {
-			groups.add(ColNameExpr.from(t));
+			groups.add(Expr.from(t));
 		}
 		return new ApproxGroupedRelation(vc, this, groups);
 	}
@@ -65,9 +65,9 @@ public abstract class ApproxRelation extends Relation {
 	}
 	
 	public ApproxAggregatedRelation agg(List<Object> elems) {
-		List<SelectElem> se = new ArrayList<SelectElem>();
+		List<Expr> se = new ArrayList<Expr>();
 		for (Object e : elems) {
-			se.add(SelectElem.from(e.toString()));
+			se.add(Expr.from(e.toString()));
 		}
 		return new ApproxAggregatedRelation(vc, this, se);
 	}
@@ -167,10 +167,18 @@ public abstract class ApproxRelation extends Relation {
 	protected abstract List<Expr> samplingProbabilityExprsFor(FuncExpr f);
 	
 	/**
+	 * rough sampling probability, which is obtained from the sampling params.
+	 * @return
+	 */
+	public abstract double samplingProbability();
+	
+	public abstract double cost();
+
+	/**
 	 * Returns an effective sample type of this relation.
 	 * @return One of "uniform", "universe", "stratified", "nosample".
 	 */
-	protected abstract String sampleType();
+	public abstract String sampleType();
 	
 //	protected abstract List<ColNameExpr> accumulateSamplingProbColumns();
 	
@@ -213,6 +221,15 @@ public abstract class ApproxRelation extends Relation {
 		ExactRelation r = rewrite();
 		return r.toSql();
 	}
+	
+	@Override
+	public String toString() {
+		return toStringWithIndent("");
+	}
+	
+	public abstract boolean equals(ApproxRelation o);
+	
+	protected abstract String toStringWithIndent(String indent);
 	
 	/*
 	 * Helpers

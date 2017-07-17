@@ -183,8 +183,21 @@ public class ApproxSingleRelation extends ApproxRelation {
 	}
 	
 	@Override
-	protected String sampleType() {
+	public String sampleType() {
 		return getSampleType();
+	}
+	
+	@Override
+	public double cost() {
+		if (sampleType().equals("nosample")) {
+			SampleParam ufParam = new SampleParam(vc, param.getOriginalTable(), "uniform", null, Arrays.<String>asList());
+			TableUniqueName ufSample = vc.getMeta().lookForSampleTable(ufParam);
+			SampleSizeInfo info = vc.getMeta().getSampleSizeOf(ufSample);
+			return (info == null)? 1e9 : info.originalTableSize;
+		} else {
+			SampleSizeInfo info = vc.getMeta().getSampleSizeOf(param);
+			return info.sampleSize;
+		}
 	}
 	
 	@Override
@@ -241,4 +254,30 @@ public class ApproxSingleRelation extends ApproxRelation {
 		}
 	}
 	
+	@Override
+	protected String toStringWithIndent(String indent) {
+		StringBuilder s = new StringBuilder(1000);
+		s.append(indent);
+		s.append(String.format("%s(%s, %s), %s, cost: %f\n",
+				this.getClass().getSimpleName(),
+				getTableName(),
+				getAliasName(),
+				param.toString(),
+				cost()));
+		return s.toString();
+	}
+	
+	@Override
+	public boolean equals(ApproxRelation o) {
+		if (o instanceof ApproxSingleRelation) {
+			return param.equals(((ApproxSingleRelation) o).param);
+		} else {
+			return false;
+		}
+	}
+
+	@Override
+	public double samplingProbability() {
+		return param.getSamplingRatio();
+	}
 }

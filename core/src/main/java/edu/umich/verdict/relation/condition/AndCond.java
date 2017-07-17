@@ -55,4 +55,8 @@ public class AndCond extends Cond {
 		
 	}
 
+	@Override
+	public Cond withTableSubstituted(String newTab) {
+		return new AndCond(left.withTableSubstituted(newTab), right.withTableSubstituted(newTab));
+	}
 }

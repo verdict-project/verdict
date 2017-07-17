@@ -26,7 +26,7 @@ import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.datatypes.VerdictResultSet;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.util.StackTraceReader;
-import edu.umich.verdict.util.StringManupulations;
+import edu.umich.verdict.util.StringManipulations;
 import edu.umich.verdict.util.VerdictLogger;
 
 public abstract class DbmsJDBC extends Dbms {
@@ -354,7 +354,7 @@ public abstract class DbmsJDBC extends Dbms {
 		sql.append(String.format("insert into %s values ", tableName));
 		sql.append("(");
 		String with = "'";
-		sql.append(Joiner.on(", ").join(StringManupulations.quoteString(values, with)));
+		sql.append(Joiner.on(", ").join(StringManipulations.quoteString(values, with)));
 		sql.append(")");
 		executeUpdate(sql.toString());
 	}

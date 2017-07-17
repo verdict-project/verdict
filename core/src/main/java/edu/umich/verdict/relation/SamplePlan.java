@@ -7,6 +7,7 @@ import java.util.Set;
 import org.apache.commons.lang3.tuple.Pair;
 
 import edu.umich.verdict.datatypes.SampleParam;
+import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.relation.expr.SelectElem;
 
 /**
@@ -40,6 +41,14 @@ public class SamplePlan {
 	
 	public List<SampleGroup> getSampleGroups() {
 		return sampleGroups;
+	}
+	
+	public List<ApproxAggregatedRelation> getApproxRelations() {
+		List<ApproxAggregatedRelation> a = new ArrayList<ApproxAggregatedRelation>();
+		for (SampleGroup g : getSampleGroups()) {
+			a.add((ApproxAggregatedRelation) g.getSample());
+		}
+		return a;
 	}
 	
 	@Override
@@ -103,11 +112,11 @@ public class SamplePlan {
 		return copy;
 	}
 	
-	public List<Pair<Set<SampleParam>, List<SelectElem>>> unroll() {
-		List<Pair<Set<SampleParam>, List<SelectElem>>> unrolled = new ArrayList<Pair<Set<SampleParam>, List<SelectElem>>>();
-		for (SampleGroup g : sampleGroups) {
-			unrolled.add(g.unroll());
-		}
-		return unrolled;
-	}
+//	public List<Pair<Set<SampleParam>, List<Expr>>> unroll() {
+//		List<Pair<Set<SampleParam>, List<Expr>>> unrolled = new ArrayList<Pair<Set<SampleParam>, List<Expr>>>();
+//		for (SampleGroup g : sampleGroups) {
+//			unrolled.add(g.unroll());
+//		}
+//		return unrolled;
+//	}
 }

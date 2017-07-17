@@ -16,4 +16,10 @@ public class NotCond extends Cond {
 	public String toString() {
 		return String.format("NOT %s", cond);
 	}
+	
+	@Override
+	public Cond withTableSubstituted(String newTab) {
+		return new NotCond(cond.withTableSubstituted(newTab));
+	}
+	
 }

@@ -1,9 +1,13 @@
 package edu.umich.verdict.relation.expr;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.VerdictSQLBaseVisitor;
 import edu.umich.verdict.VerdictSQLParser;
-import edu.umich.verdict.util.StringManupulations;
+import edu.umich.verdict.datatypes.TableUniqueName;
+import edu.umich.verdict.util.StringManipulations;
 
 public abstract class Expr {
 	
@@ -19,7 +23,7 @@ public abstract class Expr {
 	}
 	
 	public static Expr from(VerdictContext vc, String expr) {
-		VerdictSQLParser p = StringManupulations.parserOf(expr);
+		VerdictSQLParser p = StringManipulations.parserOf(expr);
 		return from(vc, p.expression());
 	}
 	
@@ -39,6 +43,10 @@ public abstract class Expr {
 	@Override
 	public String toString() {
 		return "Expr Base";
+	}
+	
+	public String toStringWithoutQuote() {
+		return StringManipulations.stripQuote(toString());
 	}
 	
 	public static String quote(String s) {
@@ -66,6 +74,24 @@ public abstract class Expr {
 	public boolean isCount() {
 		return false;
 	}
+	
+	public List<String> extractColNames() {
+		ExprVisitor<List<String>> v = new ExprVisitor<List<String>>() {
+			private List<String> cols = new ArrayList<String>();
+			
+			@Override
+			public List<String> call(Expr expr) {
+				if (expr instanceof ColNameExpr) {
+					cols.add(((ColNameExpr) expr).getCol());
+				}
+				return cols;
+			}
+		};
+		List<String> cols = v.visit(this);
+		return cols;
+	}
+	
+	public abstract Expr withTableSubstituted(String newTab);
 
 }
 

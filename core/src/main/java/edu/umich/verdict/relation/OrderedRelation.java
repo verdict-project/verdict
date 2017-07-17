@@ -1,5 +1,6 @@
 package edu.umich.verdict.relation;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -10,6 +11,7 @@ import edu.umich.verdict.datatypes.SampleParam;
 import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.relation.expr.ColNameExpr;
+import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.relation.expr.OrderByExpr;
 import edu.umich.verdict.relation.expr.SelectElem;
 
@@ -30,6 +32,11 @@ public class OrderedRelation extends ExactRelation {
 	@Override
 	protected String getSourceName() {
 		return getAliasName();
+	}
+	
+	@Override
+	protected List<ApproxRelation> nBestSamples(Expr elem, int n) throws VerdictException {
+		return source.nBestSamples(elem, n);
 	}
 
 	@Override
@@ -53,10 +60,10 @@ public class OrderedRelation extends ExactRelation {
 		return sql.toString();
 	}
 
-	@Override
-	public List<SelectElem> getSelectList() {
-		return source.getSelectList();
-	}
+//	@Override
+//	public List<SelectElem> getSelectList() {
+//		return source.getSelectList();
+//	}
 
 	@Override
 	public ColNameExpr partitionColumn() {

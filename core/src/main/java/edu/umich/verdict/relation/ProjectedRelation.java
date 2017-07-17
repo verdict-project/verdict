@@ -33,6 +33,26 @@ public class ProjectedRelation extends ExactRelation {
 		this.elems = elems;
 	}
 	
+	public static ProjectedRelation from(VerdictContext vc, AggregatedRelation r) {
+		List<SelectElem> selectElems = new ArrayList<SelectElem>();
+		
+		// groupby expressions
+		if (r.source != null) {
+			Pair<List<Expr>, ExactRelation> groupbyAndPreceding = allPrecedingGroupbys(r.source);
+			List<Expr> groupby = groupbyAndPreceding.getLeft();
+			for (Expr e : groupby) {
+				selectElems.add(new SelectElem(e));
+			}
+		}
+		
+		// aggregate expressions
+		for (Expr e : r.getAggList()) {
+			selectElems.add(new SelectElem(e));		// automatically aliased
+		}
+		ProjectedRelation rel = new ProjectedRelation(vc, r, selectElems);
+		return rel;
+	}
+
 	public ExactRelation getSource() {
 		return source;
 	}
@@ -40,6 +60,16 @@ public class ProjectedRelation extends ExactRelation {
 	@Override
 	protected String getSourceName() {
 		return getAliasName();
+	}
+
+	public List<SelectElem> getAggElems() {
+		List<SelectElem> elems = new ArrayList<SelectElem>();
+		for (SelectElem e : this.elems) {
+			if (e.getExpr().isagg()) {
+				elems.add(e);
+			}
+		}
+		return elems;
 	}
 
 	@Override
@@ -52,6 +82,21 @@ public class ProjectedRelation extends ExactRelation {
 	@Override
 	protected ApproxRelation approxWith(Map<TableUniqueName, SampleParam> replace) {
 		return null;
+	}
+	
+	@Override
+	protected List<ApproxRelation> nBestSamples(Expr elem, int n) throws VerdictException {
+		List<ApproxRelation> ofSources = source.nBestSamples(elem, n);
+		List<ApproxRelation> projected = new ArrayList<ApproxRelation>();
+		for (ApproxRelation a : ofSources) {
+			projected.add(new ApproxProjectedRelation(vc, a, elems));
+		}
+		return projected;
+	}
+	
+	@Override
+	protected List<SampleGroup> findSample(Expr elem) {
+		return new ArrayList<SampleGroup>();
 	}
 	
 	protected String selectSql() {
@@ -74,52 +119,68 @@ public class ProjectedRelation extends ExactRelation {
 		StringBuilder sql = new StringBuilder();
 		sql.append(selectSql());
 		
-		Pair<Optional<Cond>, ExactRelation> filtersAndNextR = allPrecedingFilters(this.source);
+		ExactRelation t = this.source;
+		if (t instanceof AggregatedRelation) {
+			t = ((AggregatedRelation) t).getSource();
+		}
+		
+		// collect groupby
+		Pair<List<Expr>, ExactRelation> groupbyAndNextR = allPrecedingGroupbys(t);
+		List<Expr> groupby = groupbyAndNextR.getLeft();
+		t = groupbyAndNextR.getRight();
+		
+		// search conditions (or filters in the where clause)
+		Pair<Optional<Cond>, ExactRelation> filtersAndNextR = allPrecedingFilters(t);
 		String csql = (filtersAndNextR.getLeft().isPresent())? filtersAndNextR.getLeft().get().toString() : "";
 		
 		sql.append(String.format(" FROM %s", sourceExpr(filtersAndNextR.getRight())));
 		if (csql.length() > 0) { sql.append(" WHERE "); sql.append(csql); }
 		
+		if (groupby.size() > 0) {
+			sql.append(" GROUP BY ");
+			sql.append(Joiner.on(", ").join(groupby));
+		}
+		
 		return sql.toString();
 	}
 
-	@Override
-	public List<SelectElem> getSelectList() {
-		return elems;
-	}
+//	@Override
+//	public List<SelectElem> getSelectList() {
+//		return elems;
+//	}
 	
-	@Override
-	public List<SelectElem> selectElemsWithAggregateSource() {
-		List<SelectElem> sourceAggElems = source.selectElemsWithAggregateSource();
-		final Set<String> sourceAggAliases = new HashSet<String>();
-		for (SelectElem e : sourceAggElems) {
-			sourceAggAliases.add(e.getAlias());
-		}
-		
-		ExprVisitor<Boolean> v = new ExprVisitor<Boolean>() {
-			private boolean aggSourceObserved = false;
-
-			@Override
-			public Boolean call(Expr expr) {
-				if (expr instanceof ColNameExpr) {
-					if (sourceAggAliases.contains(((ColNameExpr) expr).getCol())) {
-						aggSourceObserved = true;
-					}
-				}
-				return aggSourceObserved;
-			}
-		};
-		
-		// now examine each select list elem
-		List<SelectElem> aggElems = new ArrayList<SelectElem>();
-		for (SelectElem e : elems) {
-			if (v.visit(e.getExpr())) {
-				aggElems.add(e);
-			}
-		}
-		
-		return aggElems;
-	}
+//	@Override
+//	public List<SelectElem> selectElemsWithAggregateSource() {
+//		List<SelectElem> sourceAggElems = source.selectElemsWithAggregateSource();
+//		final Set<String> sourceAggAliases = new HashSet<String>();
+//		for (SelectElem e : sourceAggElems) {
+//			sourceAggAliases.add(e.getAlias());
+//		}
+//		
+//		ExprVisitor<Boolean> v = new ExprVisitor<Boolean>() {
+//			private boolean aggSourceObserved = false;
+//
+//			@Override
+//			public Boolean call(Expr expr) {
+//				if (expr instanceof ColNameExpr) {
+//					if (sourceAggAliases.contains(((ColNameExpr) expr).getCol())) {
+//						aggSourceObserved = true;
+//					}
+//				}
+//				return aggSourceObserved;
+//			}
+//		};
+//		
+//		// now examine each select list elem
+//		List<SelectElem> aggElems = new ArrayList<SelectElem>();
+//		for (SelectElem e : elems) {
+//			if (v.visit(e.getExpr())) {
+//				aggElems.add(e);
+//			}
+//		}
+//		
+//		return aggElems;
+//	}
 
 	@Override
 	public ColNameExpr partitionColumn() {
