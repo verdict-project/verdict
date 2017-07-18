@@ -317,7 +317,7 @@ public class DbmsImpala extends DbmsJDBC {
 		// temporarily using this because our JoinedRelation does not support arbitrary condition joins.
 		String select = String.format("SELECT %s, __group_size, rand(unix_timestamp()) AS __rand ",
 									  Joiner.on(", ").join(colNamesWithTab)) +
-				        String.format("FROM %s t1 INNER JOIN (%s) t2 ", param.originalTable, groupSizeTemp) +
+				        String.format("FROM %s t1 INNER JOIN %s t2 ", param.originalTable, groupSizeTemp) +
 				        String.format("ON %s", Joiner.on(" AND ").join(joinCond));
 		String sql2 = String.format("create table %s AS %s", withRandTemp, select);
 		
