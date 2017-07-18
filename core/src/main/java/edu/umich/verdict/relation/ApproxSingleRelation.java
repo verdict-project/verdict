@@ -209,6 +209,12 @@ public class ApproxSingleRelation extends ApproxRelation {
 		return param.columnNames;
 	}
 
+	/**
+	 * Using this substitution pattern can handle:
+	 * 1. user specified his own table alias and using it: no need for substitution since aliases are preserved.
+	 * 2. user specified his own table alias but referring the raw table name: below pattern handles it.
+	 * 3. user didn't specified table aliases: below pattern handles it.
+	 */
 	@Override
 	protected Map<TableUniqueName, String> tableSubstitution() {
 		Map<TableUniqueName, String> s = ImmutableMap.of(param.originalTable, alias);

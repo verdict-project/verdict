@@ -187,7 +187,7 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 		List<ColNameExpr> samplingProbCols = newSource.accumulateSamplingProbColumns();
 		List<Expr> groupby = new ArrayList<Expr>();
 		if (source instanceof ApproxGroupedRelation) {
-			groupby.addAll(((ApproxGroupedRelation) source).getGroupby());
+			groupby.addAll(((ApproxGroupedRelation) source).groupbyWithTablesSubstituted());
 		}
 		
 		final Map<TableUniqueName, String> sub = source.tableSubstitution();
@@ -217,7 +217,7 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 	
 	@Override
 	protected Map<TableUniqueName, String> tableSubstitution() {
-		return ImmutableMap.of();
+		return source.tableSubstitution();
 	}
 	
 	@Override
@@ -228,15 +228,15 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 	private Expr transformForSingleFunctionWithPartitionSize(
 			Expr f,
 			final List<ColNameExpr> samplingProbCols,
-			List<Expr> groupby,
+			final List<Expr> groupby,
 			final ColNameExpr partitionCol,
 			final Map<TableUniqueName, String> tablesNamesSub,
 			final boolean forErrorEst) {
 		
-		final List<Expr> groupbyExpr = new ArrayList<Expr>();
-		for (Expr c : groupby) {
-			groupbyExpr.add((Expr) c);
-		}
+//		final List<Expr> groupbyExpr = new ArrayList<Expr>();
+//		for (Expr c : groupby) {
+//			groupbyExpr.add((Expr) c);
+//		}
 		
 		ExprModifier v = new ExprModifier() {
 			public Expr call(Expr expr) {
@@ -252,7 +252,7 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 					
 					if (f.getFuncName().equals(FuncExpr.FuncName.COUNT)) {
 						Expr est = FuncExpr.sum(scaleForSampling(samplingProbExprs));
-						est = scaleWithPartitionSize(est, groupbyExpr, partitionCol, forErrorEst);
+						est = scaleWithPartitionSize(est, groupby, partitionCol, forErrorEst);
 						return est;
 					}
 					else if (f.getFuncName().equals(FuncExpr.FuncName.COUNT_DISTINCT)) {
@@ -268,14 +268,14 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 						
 						est = BinaryOpExpr.from(est, scale, "*");
 						if (sampleType().equals("universe")) {
-							est = scaleWithPartitionSize(est, groupbyExpr, partitionCol, forErrorEst);
+							est = scaleWithPartitionSize(est, groupby, partitionCol, forErrorEst);
 						}
 						return est;
 					}
 					else if (f.getFuncName().equals(FuncExpr.FuncName.SUM)) {
 						Expr est = scaleForSampling(samplingProbExprs);
 						est = FuncExpr.sum(BinaryOpExpr.from(s.getUnaryExpr(), est, "*"));
-						est = scaleWithPartitionSize(est, groupbyExpr, partitionCol, forErrorEst);
+						est = scaleWithPartitionSize(est, groupby, partitionCol, forErrorEst);
 						return est;
 					}
 					else if (f.getFuncName().equals(FuncExpr.FuncName.AVG)) {

@@ -33,6 +33,14 @@ public class CaseExpr extends Expr {
 		this.expressions = expressions;
 	}
 	
+	public List<Cond> getConditions() {
+		return conditions;
+	}
+	
+	public List<Expr> getExpressions() {
+		return expressions;
+	}
+	
 	public static CaseExpr from(String expr) {
 		VerdictSQLParser p = StringManipulations.parserOf(expr);
 		return from(p.case_expr());

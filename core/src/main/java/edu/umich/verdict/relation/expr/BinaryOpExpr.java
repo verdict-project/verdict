@@ -17,6 +17,18 @@ public class BinaryOpExpr extends Expr {
 	public static BinaryOpExpr from(Expr left, Expr right, String op) {
 		return new BinaryOpExpr(left, right, op);
 	}
+	
+	public Expr getLeft() {
+		return left;
+	}
+	
+	public Expr getRight() {
+		return right;
+	}
+	
+	public String getOp() {
+		return op;
+	}
 
 	@Override
 	public String toString() {

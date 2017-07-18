@@ -2,12 +2,14 @@ package edu.umich.verdict.relation;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableMap;
 
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.datatypes.TableUniqueName;
@@ -15,9 +17,11 @@ import edu.umich.verdict.relation.expr.BinaryOpExpr;
 import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.ConstantExpr;
 import edu.umich.verdict.relation.expr.Expr;
+import edu.umich.verdict.relation.expr.ExprModifier;
 import edu.umich.verdict.relation.expr.FuncExpr;
 import edu.umich.verdict.relation.expr.OverClause;
 import edu.umich.verdict.relation.expr.SelectElem;
+import edu.umich.verdict.relation.expr.SubqueryExpr;
 
 public class ApproxProjectedRelation extends ApproxRelation {
 	
@@ -37,15 +41,26 @@ public class ApproxProjectedRelation extends ApproxRelation {
 
 	@Override
 	public ExactRelation rewriteForPointEstimate() {
-		ExactRelation r = new ProjectedRelation(vc, source.rewriteForPointEstimate(), elems);
+		ExactRelation r = new ProjectedRelation(vc, source.rewriteForPointEstimate(), elemsWithSubstitutedTables());
 		r.setAliasName(getAlias());
 		return r;
+	}
+	
+	private List<SelectElem> elemsWithSubstitutedTables() {
+		List<SelectElem> newElems = new ArrayList<SelectElem>();
+		Map<TableUniqueName, String> sub = source.tableSubstitution();
+		for (SelectElem elem : elems) {
+			Expr newExpr = exprWithTableNamesSubstituted(elem.getExpr(), sub);
+			SelectElem newElem = new SelectElem(newExpr, elem.getAlias());
+			newElems.add(newElem);
+		}
+		return newElems;
 	}
 	
 	@Override
 	public ExactRelation rewriteWithSubsampledErrorBounds() {
 		if (!(source instanceof ApproxAggregatedRelation)) {
-			ExactRelation r = new ProjectedRelation(vc, source.rewriteWithSubsampledErrorBounds(), elems);
+			ExactRelation r = new ProjectedRelation(vc, source.rewriteWithSubsampledErrorBounds(), elemsWithSubstitutedTables());
 			r.setAliasName(getAlias());
 			return r;
 		}
@@ -63,9 +78,10 @@ public class ApproxProjectedRelation extends ApproxRelation {
 			if (!elem.isagg()) {
 				SelectElem newElem = null;
 				if (elem.getAlias() == null) {
-					newElem = new SelectElem(elem.getExpr(), elem.getAlias());
+					Expr newExpr = elem.getExpr().withTableSubstituted(r.getAlias());
+					newElem = new SelectElem(newExpr, elem.getAlias());
 				} else {
-					newElem = new SelectElem(ColNameExpr.from(elem.getAlias()), elem.getAlias());
+					newElem = new SelectElem(new ColNameExpr(elem.getAlias(), r.getAlias()), elem.getAlias());
 				}
 				newElems.add(newElem);
 			} else {
@@ -110,11 +126,11 @@ public class ApproxProjectedRelation extends ApproxRelation {
 			if (!elem.isagg()) {
 				if (elem.aliasPresent()) {
 					if (!elem.getAlias().equals(partitionColumnName())) {
-						newGroupby.add(ColNameExpr.from(elem.getAlias()));
+						newGroupby.add(new ColNameExpr(elem.getAlias(), r.getAlias()));
 					}
 				} else {
 					if (!elem.getExpr().toString().equals(partitionColumnName())) {
-						newGroupby.add(elem.getExpr());
+						newGroupby.add(elem.getExpr().withTableSubstituted(r.getAlias()));
 					}
 				}
 			}
@@ -177,6 +193,7 @@ public class ApproxProjectedRelation extends ApproxRelation {
 	protected ExactRelation rewriteWithPartition(boolean extra) {
 		ExactRelation newSource = source.rewriteWithPartition();
 		List<SelectElem> newElems = new ArrayList<SelectElem>();
+		Map<TableUniqueName, String> sub = source.tableSubstitution();
 		
 		int index = 0;
 		for (SelectElem elem : elems) {
@@ -184,16 +201,19 @@ public class ApproxProjectedRelation extends ApproxRelation {
 			// for an agg element, we found the expression in the source relation.
 			// if there exists an agg element, source relation must be an instance of AggregatedRelation.
 			if (!elem.getExpr().isagg()) {
-				newElems.add(elem);
+				Expr newExpr = exprWithTableNamesSubstituted(elem.getExpr(), sub);	// replace original table references with samples
+				SelectElem newElem = new SelectElem(newExpr, elem.getAlias());
+				newElems.add(newElem);
 			} else {
 				Expr agg = ((AggregatedRelation) newSource).getAggList().get(index++);
+				agg = exprWithTableNamesSubstituted(agg, sub);			// replace original table references with samples
 				newElems.add(new SelectElem(agg, elem.getAlias()));
 //				Expr agg_err = ((AggregatedRelation) newSource).getAggList().get(index++);
 //				newElems.add(new SelectElem(agg_err, Relation.errorBoundColumn(elem.getAlias())));
 			}
 		}
 		
-		// partition size only if the newSource is an instance of AggregatedRelation
+		// partition size column; used for combining the final answer computed on different partitions.
 		if (extra) {
 			newElems.add(new SelectElem(FuncExpr.count(), partitionSizeAlias));
 		}
@@ -219,9 +239,12 @@ public class ApproxProjectedRelation extends ApproxRelation {
 		return exprsWithNewAlias;
 	}
 
+	/**
+	 * Due to the fact that the antecedents of a projected relation does not propagate any substitution.
+	 */
 	@Override
 	protected Map<TableUniqueName, String> tableSubstitution() {
-		return source.tableSubstitution();
+		return ImmutableMap.of();
 	}
 
 	@Override

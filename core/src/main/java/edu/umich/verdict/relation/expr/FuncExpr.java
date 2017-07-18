@@ -130,6 +130,18 @@ public class FuncExpr extends Expr {
 		this(fname, expr, null, null, null);
 	}
 	
+	public List<Expr> getExpressions() {
+		return expressions;
+	}
+	
+	public FuncName getFuncName() {
+		return funcname;
+	}
+	
+	public OverClause getOverClause() {
+		return overClause;
+	}
+	
 	public static FuncExpr from(String expr) {
 		VerdictSQLParser p = StringManipulations.parserOf(expr);
 		return from(p.function_call());
@@ -205,10 +217,6 @@ public class FuncExpr extends Expr {
 			}
 		};
 		return v.visit(ctx);
-	}
-	
-	public FuncName getFuncName() {
-		return funcname;
 	}
 	
 	public Expr getUnaryExpr() {
