@@ -16,6 +16,7 @@ import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.ConstantExpr;
 import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.relation.expr.FuncExpr;
+import edu.umich.verdict.relation.expr.OverClause;
 import edu.umich.verdict.relation.expr.SelectElem;
 
 public class ApproxProjectedRelation extends ApproxRelation {
@@ -43,6 +44,12 @@ public class ApproxProjectedRelation extends ApproxRelation {
 	
 	@Override
 	public ExactRelation rewriteWithSubsampledErrorBounds() {
+		if (!(source instanceof ApproxAggregatedRelation)) {
+			ExactRelation r = new ProjectedRelation(vc, source.rewriteWithSubsampledErrorBounds(), elems);
+			r.setAliasName(getAlias());
+			return r;
+		}
+		
 		ExactRelation r = rewriteWithPartition(true);
 		
 		// construct a new list of select elements. the last element is __vpart, which should be omitted.
@@ -54,7 +61,13 @@ public class ApproxProjectedRelation extends ApproxRelation {
 		for (int i = 0; i < elems.size() - 1; i++) {
 			SelectElem elem = elems.get(i);
 			if (!elem.isagg()) {
-				newElems.add(new SelectElem(ColNameExpr.from(elem.getAlias()), elem.getAlias()));
+				SelectElem newElem = null;
+				if (elem.getAlias() == null) {
+					newElem = new SelectElem(elem.getExpr(), elem.getAlias());
+				} else {
+					newElem = new SelectElem(ColNameExpr.from(elem.getAlias()), elem.getAlias());
+				}
+				newElems.add(newElem);
 			} else {
 				if (elem.getAlias().equals(partitionSizeAlias)) {
 					continue;
@@ -71,7 +84,7 @@ public class ApproxProjectedRelation extends ApproxRelation {
 				} else {
 					// weighted average
 					averaged = BinaryOpExpr.from(FuncExpr.sum(BinaryOpExpr.from(est, psize, "*")),
-		                    					  FuncExpr.sum(psize), "/");
+		                    					  				 FuncExpr.sum(psize), "/");
 					if (elem.getExpr().isCount()) {
 						averaged = FuncExpr.round(averaged);
 					}
@@ -94,11 +107,21 @@ public class ApproxProjectedRelation extends ApproxRelation {
 		// this extra aggregation stage should be grouped by non-agg elements except for __vpart
 		List<Expr> newGroupby = new ArrayList<Expr>();
 		for (SelectElem elem : elems) {
-			if (!elem.isagg() && !elem.getAlias().equals(partitionColumnName())) {
-				newGroupby.add(ColNameExpr.from(elem.getAlias()));
+			if (!elem.isagg()) {
+				if (elem.aliasPresent()) {
+					if (!elem.getAlias().equals(partitionColumnName())) {
+						newGroupby.add(ColNameExpr.from(elem.getAlias()));
+					}
+				} else {
+					if (!elem.getExpr().toString().equals(partitionColumnName())) {
+						newGroupby.add(elem.getExpr());
+					}
+				}
 			}
 		}
-		r = new GroupedRelation(vc, r, newGroupby);
+		if (newGroupby.size() > 0) {
+			r = new GroupedRelation(vc, r, newGroupby);
+		}
 		r = new AggregatedRelation(vc, r, newAggs);
 		r = new ProjectedRelation(vc, r, newElems);
 		

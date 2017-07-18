@@ -113,6 +113,10 @@ public class VerdictMeta {
 		return tables.get(database);
 	}
 	
+	/**
+	 * Currently, we refresh whenever a new sample is built or a user specified to use a database.
+	 * @param database
+	 */
 	public void refreshTables(String database) {
 		try {
 			List<String> tables = vc.getDbms().getTables(database);
@@ -199,6 +203,7 @@ public class VerdictMeta {
 		}
 	}
 	
+	// TODO: double-check when metadata should be refreshed.
 	public void refreshSampleInfoIfNeeded(String schemaName) {
 		boolean needToRefresh = false;
 		String refreshOption = vc.getConf().get("verdict.refresh_meta");

@@ -90,6 +90,10 @@ public class ProjectedRelation extends ExactRelation {
 	
 	@Override
 	protected List<ApproxRelation> nBestSamples(Expr elem, int n) throws VerdictException {
+		
+//		adfafd
+		// TODO: should insert __vprob column.
+		
 		List<ApproxRelation> ofSources = source.nBestSamples(elem, n);
 		List<ApproxRelation> projected = new ArrayList<ApproxRelation>();
 		for (ApproxRelation a : ofSources) {
@@ -98,22 +102,14 @@ public class ProjectedRelation extends ExactRelation {
 		return projected;
 	}
 	
-	@Override
-	protected List<SampleGroup> findSample(Expr elem) {
-		return new ArrayList<SampleGroup>();
-	}
+//	@Override
+//	protected List<SampleGroup> findSample(Expr elem) {
+//		return new ArrayList<SampleGroup>();
+//	}
 	
 	protected String selectSql() {
 		StringBuilder sql = new StringBuilder();
 		sql.append("SELECT ");
-//		List<String> elemWithAlias = new ArrayList<String>();
-//		for (SelectElem e : elems) {
-//			if (e.getAlias() != null) {
-//				elemWithAlias.add(String.format("%s AS %s", e.getExpr(), e.getAlias()));
-//			} else {
-//				elemWithAlias.add(e.getExpr().toString());
-//			}
-//		}
 		sql.append(Joiner.on(", ").join(elems));
 		return sql.toString();
 	}

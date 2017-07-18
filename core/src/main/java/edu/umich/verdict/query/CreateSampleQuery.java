@@ -53,6 +53,7 @@ public class CreateSampleQuery extends Query {
 	 */
 	protected void buildSamples(SampleParam param) throws VerdictException {
 		vc.getDbms().createDatabase(param.sampleTableName().getSchemaName());
+		vc.getMeta().refreshDatabases();
 		
 		if (param.sampleType.equals("uniform")) {
 			createUniformRandomSample(param);

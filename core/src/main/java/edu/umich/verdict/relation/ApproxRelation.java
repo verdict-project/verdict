@@ -17,6 +17,12 @@ import edu.umich.verdict.relation.expr.SelectElem;
 import edu.umich.verdict.relation.expr.SubqueryExpr;
 import edu.umich.verdict.util.VerdictLogger;
 
+/**
+ * ApproxRelation indicates what samples should be used for computing the answer to the original query.
+ * ApproxRelation includes some helper functions for retrieving sample-related information.
+ * @author Yongjoo Park
+ *
+ */
 public abstract class ApproxRelation extends Relation {
 	
 	protected final String partitionSizeAlias = "__vpsize";
@@ -24,10 +30,6 @@ public abstract class ApproxRelation extends Relation {
 	public ApproxRelation(VerdictContext vc) {
 		super(vc);
 		approximate = true;
-	}
-	
-	public String errColName(String col) {
-		return col + "_err";
 	}
 	
 	public String sourceTableName() {
@@ -130,10 +132,12 @@ public abstract class ApproxRelation extends Relation {
 	 */
 	protected abstract ExactRelation rewriteWithPartition();
 	
+	// These functions are moved to ExactRelation
+	// This is because partition column name could be only properly resolved after the rewriting to the
+	// exact relation is finished.
 //	protected String partitionColumnName() {
 //		return vc.getDbms().partitionColumnName();
 //	}
-	
 	// returns effective partition column name for a possibly joined table.
 //	protected abstract ColNameExpr partitionColumn();
 	

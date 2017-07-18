@@ -31,6 +31,8 @@ public class JoinedRelation extends ExactRelation {
 	
 	private List<Pair<Expr, Expr>> joinCols;
 	
+	private String joinType = "INNER";
+	
 	public JoinedRelation(VerdictContext vc, ExactRelation source1, ExactRelation source2, List<Pair<Expr, Expr>> joinCols) {
 		super(vc);
 		this.source1 = source1;
@@ -56,6 +58,10 @@ public class JoinedRelation extends ExactRelation {
 	
 	public List<Pair<Expr, Expr>> getJoinCond() {
 		return joinCols;
+	}
+	
+	public void setJoinType(String type) {
+		joinType = type;
 	}
 	
 	public void setJoinCond(Cond cond) throws VerdictException {
@@ -90,7 +96,7 @@ public class JoinedRelation extends ExactRelation {
 			VerdictLogger.debug(this, "No join conditions specified; cross join is used.");
 			sql.append(String.format("%s CROSS JOIN %s", sourceExpr(source1), sourceExpr(source2)));
 		} else {
-			sql.append(String.format("%s INNER JOIN %s ON", sourceExpr(source1), sourceExpr(source2)));
+			sql.append(String.format("%s %s JOIN %s ON", sourceExpr(source1), joinType, sourceExpr(source2)));
 			for (int i = 0; i < joinCols.size(); i++) {
 				if (i != 0) sql.append(" AND");
 				sql.append(String.format(" %s = %s", joinCols.get(i).getLeft(), joinCols.get(i).getRight())); 
@@ -133,11 +139,20 @@ public class JoinedRelation extends ExactRelation {
 		
 		for (ApproxRelation a1 : ofSources1) {
 			for (ApproxRelation a2 : ofSources2) {
-				joined.add(new ApproxJoinedRelation(vc, a1, a2, joinCols));
+				ApproxJoinedRelation j = new ApproxJoinedRelation(vc, a1, a2, joinCols);
+				System.out.println(j);
+				System.out.println(j.sampleType());
+				if (expectedSampleType(j.sampleType())) {
+					joined.add(j);
+				}
 			}
 		}
 		
 		return joined;
+	}
+	
+	private boolean expectedSampleType(String sampleType) {
+		return availableJoinTypes.contains(sampleType);
 	}
 
 //	/**

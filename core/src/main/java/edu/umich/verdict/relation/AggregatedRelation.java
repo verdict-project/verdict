@@ -23,6 +23,12 @@ import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.relation.expr.SelectElem;
 import edu.umich.verdict.util.VerdictLogger;
 
+/**
+ * Represents aggregation operations on any source relation. This relation is expected to be a child of a
+ * ProjectedRelation instance (which is always ensured when this instance is created from a sql statement).
+ * @author Yongjoo Park
+ *
+ */
 public class AggregatedRelation extends ExactRelation {
 
 	protected ExactRelation source;
@@ -59,9 +65,50 @@ public class AggregatedRelation extends ExactRelation {
 	 * Approx
 	 */
 	
+	/**
+	 * if the source is a grouped relation, only a few sample types are allowed as a source of
+	 * another aggregate relation.
+	 * 1. stratified sample: the groupby column must be equal to the columns on which samples were built on.
+	 *    the sample type of the aggregated relation will be "nosample" and the sample type will be "1.0".
+	 * 2. universe sample: the groupby column must be equal to the columns on which samples where built on.
+	 *    the sample type of the aggregated relation will be "universe" sampled on the same columns.
+	 *    the sampling probability will also stays the same.
+	 */
 	@Override
 	protected List<ApproxRelation> nBestSamples(Expr elem, int n) throws VerdictException {
-		return Arrays.asList(approx());
+		List<ApproxRelation> candidates = new ArrayList<ApproxRelation>();
+		List<ApproxRelation> sourceCandidates = source.nBestSamples(elem, 10);
+		for (ApproxRelation sc : sourceCandidates) {
+			boolean eligible = false;
+			
+			if (sc instanceof ApproxGroupedRelation) {
+				List<Expr> groupby = ((ApproxGroupedRelation) sc).getGroupby();
+				List<String> strGroupby = new ArrayList<String>();
+				for (Expr expr : groupby) {
+					if (expr instanceof ColNameExpr) {
+						strGroupby.add(((ColNameExpr) expr).getCol());
+					}
+				}
+				
+				String sampleType = sc.sampleType();
+				List<String> sampleColumns = sc.sampleColumns();
+				if (sampleType.equals("universe") && strGroupby.equals(sampleColumns)) {
+					eligible = true;
+				} else if (sampleType.equals("stratified") && strGroupby.equals(sampleColumns)) {
+					eligible = true;
+				}
+			} else {
+				eligible = true;
+			}
+			
+			if (eligible) {
+				ApproxRelation c = new ApproxAggregatedRelation(vc, sc, aggs);
+				candidates.add(c);
+			}
+		}
+		return candidates;
+		
+//		return Arrays.asList(approx());
 	}
 	
 	public ApproxRelation approx() throws VerdictException {

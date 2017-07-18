@@ -27,7 +27,7 @@ public class ImpalaAggregationIT extends AggregationIT {
 		conf.setDbmsSchema(schema);
 		conf.set("no_user_password", "true");
 		conf.set("verdict.loglevel", "debug");
-		conf.set("verdict.meta_catalog_suffix", "_verdict_impala");
+		conf.set("verdict.meta_catalog_suffix", "_verdict");
 		vc = VerdictJDBCContext.from(conf);
 		
 		String url = String.format("jdbc:impala://%s:%s/%s", host, port, schema);
@@ -42,15 +42,9 @@ public class ImpalaAggregationIT extends AggregationIT {
 	}
 
 	@Override
-	public void groupbyCountDistinctUsingUniverseSample() throws VerdictException, SQLException {
+	public void simpleCount() throws VerdictException, SQLException {
 		// TODO Auto-generated method stub
-		super.groupbyCountDistinctUsingUniverseSample();
-	}
-
-	@Override
-	public void groupbyCountDistinctUsingUniverseSample2() throws VerdictException, SQLException {
-		// TODO Auto-generated method stub
-		super.groupbyCountDistinctUsingUniverseSample2();
+		super.simpleCount();
 	}
 
 	

@@ -15,7 +15,7 @@ public class ImpalaCreateSampleTest {
 		conf.set("no_user_password", "true");
 
 		VerdictJDBCContext vc = VerdictJDBCContext.from(conf);
-		vc.executeJdbcQuery("create uniform sample of orders");
+		vc.executeJdbcQuery("create stratified sample of orders on days_since_prior");
 		vc.destroy();
 		System.out.println("Done");
 	}

@@ -143,39 +143,55 @@ public abstract class ExactRelation extends Relation {
 	 * Aggregation
 	 */
 	
-	public AggregatedRelation agg(Object... elems) {
+	public ExactRelation agg(Object... elems) {
 		return agg(Arrays.asList(elems));
 	}
 	
-	public AggregatedRelation agg(List<Object> elems) {
-		List<Expr> se = new ArrayList<Expr>();
+	public ExactRelation agg(List<Object> elems) {
+		List<SelectElem> se = new ArrayList<SelectElem>();
 		for (Object e : elems) {
-			if (e instanceof Expr) {
-				se.add((Expr) e);
+			if (e instanceof SelectElem) {
+				se.add((SelectElem) e);
 			} else {
-				se.add(Expr.from(e.toString()));
+				se.add(SelectElem.from(e.toString()));
+			}
+		} 
+		
+		List<Expr> exprs = new ArrayList<Expr>();
+		for (SelectElem elem : se) {
+			exprs.add(elem.getExpr());
+		}
+		
+		// add some groupbys
+		if (this instanceof GroupedRelation) {
+			List<Expr> groupby = ((GroupedRelation) this).getGroupby();
+			for (Expr group : groupby) {
+				se.add(0, new SelectElem(group));
 			}
 		}
-		return new AggregatedRelation(vc, this, se);
+		
+		ExactRelation r = new AggregatedRelation(vc, this, exprs);
+		r = new ProjectedRelation(vc, this, se);
+		return r;
 	}
 	
 	@Override
-	public AggregatedRelation count() throws VerdictException {
+	public ExactRelation count() throws VerdictException {
 		return agg(FuncExpr.count());
 	}
 
 	@Override
-	public AggregatedRelation sum(String expr) throws VerdictException {
+	public ExactRelation sum(String expr) throws VerdictException {
 		return agg(FuncExpr.sum(Expr.from(vc, expr)));
 	}
 
 	@Override
-	public AggregatedRelation avg(String expr) throws VerdictException {
+	public ExactRelation avg(String expr) throws VerdictException {
 		return agg(FuncExpr.avg(Expr.from(vc, expr)));
 	}
 
 	@Override
-	public AggregatedRelation countDistinct(String expr) throws VerdictException {
+	public ExactRelation countDistinct(String expr) throws VerdictException {
 		return agg(FuncExpr.countDistinct(Expr.from(vc, expr)));
 	}
 	
@@ -265,6 +281,30 @@ public abstract class ExactRelation extends Relation {
 		return join(r, (Cond) null);
 	}	
 	
+	public JoinedRelation leftjoin(ExactRelation r, List<Pair<Expr, Expr>> joinColumns) {
+		JoinedRelation j = join(r, joinColumns);
+		j.setJoinType("LEFT");
+		return j;
+	}
+	
+	public JoinedRelation leftjoin(ExactRelation r, Cond cond) throws VerdictException {
+		JoinedRelation j = join(r, cond);
+		j.setJoinType("LEFT");
+		return j;
+	}
+	
+	public JoinedRelation leftjoin(ExactRelation r, String cond) throws VerdictException {
+		JoinedRelation j = join(r, cond);
+		j.setJoinType("LEFT");
+		return j;
+	}
+	
+	public JoinedRelation leftjoin(ExactRelation r) throws VerdictException {
+		JoinedRelation j = join(r);
+		j.setJoinType("LEFT");
+		return j;
+	}
+	
 	/*
 	 * Transformation to ApproxRelation
 	 */
@@ -289,6 +329,28 @@ public abstract class ExactRelation extends Relation {
 		return new ArrayList<SampleGroup>();
 	}
 	
+	/**
+	 * Finds 'n' best ApproxRelation instances that can produce similar answers for aggregate expressions.
+	 * This method is expected to be called by AggregatedRelation initially and propagate recursively to
+	 * descendants to properly build ApproxRelation instances that reflect the structure of the current
+	 * ExactRelation instance.
+	 * 
+	 * One important characteristic is that the returned ApproxRelation instances must be able to used by
+	 * an outer AggregatedRelation for producing properly adjusted answers. This means that the ApproxRelation
+	 * returned by this method must be associated with sampling probability and include two extra meta columns,
+	 * i.e., __vpart and __vprob. One possible exception to this rule is that the source relation is an AggregatedRelataion
+	 * or an ProjectedRelation whose source is an AggregatedRelataion. This is because, in the aggregation
+	 * process, __vprob becomes meaningless. In this case, the aggregated source relation must attach
+	 * __vprob as an constant, and let the information known to outer relations when {@link ApproxRelation#samplingProbabilityExprsFor(FuncExpr)}
+	 * is called.
+	 * 
+	 * If a source relation is an groupby aggregated relation, the aggregated relation's source must be
+	 * a universe sample.
+	 * @param elem
+	 * @param n
+	 * @return
+	 * @throws VerdictException
+	 */
 	protected abstract List<ApproxRelation> nBestSamples(Expr elem, int n) throws VerdictException;
 	
 	/**

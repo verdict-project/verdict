@@ -158,6 +158,8 @@ public abstract class Dbms {
 	
 	public void dropTable(TableUniqueName tableName) throws VerdictException {
 		Set<String> databases = vc.getMeta().getDatabases();
+		// TODO: this is buggy when the database created while a query is executued.
+		// it can happen during sample creations.
 		if (!databases.contains(tableName.getSchemaName())) {
 			VerdictLogger.debug(this, String.format("Database, %s, does not exists. Verdict doesn't bother to run a drop table statement.", tableName.getSchemaName()));
 			return;

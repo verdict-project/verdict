@@ -72,79 +72,98 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 	
 	@Override
 	public ExactRelation rewriteWithSubsampledErrorBounds() {
-		ExactRelation r = rewriteWithPartition();
-		r = ProjectedRelation.from(vc, (AggregatedRelation) r);
-//		List<SelectElem> selectElems = r.selectElemsWithAggregateSource();
-		List<SelectElem> aggElems = ((ProjectedRelation) r).getAggElems();
-		
-		// another wrapper to combine all subsampled aggregations.
-		List<Expr> finalAgg = new ArrayList<Expr>();
-		
-		for (int i = 0; i < aggElems.size() - 1; i++) {	// excluding the last one which is psize
-			// odd columns are for mean estimation
-			// even columns are for err estimation
-			if (i%2 == 1) continue;
-			
-			SelectElem meanElem = aggElems.get(i);
-			SelectElem errElem = aggElems.get(i+1);
-			ColNameExpr est = new ColNameExpr(meanElem.getAlias(), r.getAlias());
-			ColNameExpr errEst = new ColNameExpr(errElem.getAlias(), r.getAlias());
-			ColNameExpr psize = new ColNameExpr(partitionSizeAlias, r.getAlias());
-			
-			Expr originalAggExpr = aggs.get(i/2);
-			
-			// average estimate
-			Expr meanEstExpr = null;
-			if (originalAggExpr.isCountDistinct()) {
-				meanEstExpr = FuncExpr.round(FuncExpr.avg(est));
-			} else {
-				meanEstExpr = BinaryOpExpr.from(FuncExpr.sum(BinaryOpExpr.from(est, psize, "*")),
-	                    					    FuncExpr.sum(psize), "/");
-				if (originalAggExpr.isCount()) {
-					meanEstExpr = FuncExpr.round(meanEstExpr);
-				}
-			}
-			finalAgg.add(meanEstExpr);
-
-			// error estimation
-			Expr errEstExpr = BinaryOpExpr.from(
-					BinaryOpExpr.from(FuncExpr.stddev(errEst), FuncExpr.sqrt(FuncExpr.avg(psize)), "*"),
-					FuncExpr.sqrt(FuncExpr.sum(psize)),
-					"/");
-			errEstExpr = BinaryOpExpr.from(errEstExpr, ConstantExpr.from(confidenceIntervalMultiplier()), "*");
-			finalAgg.add(errEstExpr);
-		}
-		
-		/*
-		 * Example input query:
-		 * select category, avg(col)
-		 * from t
-		 * group by category
-		 * 
-		 * Transformed query:
-		 * select category, sum(est * psize) / sum(psize) AS final_est
-		 * from (
-		 *   select category, avg(col) AS est, count(*) as psize
-		 *   from t
-		 *   group by category, verdict_partition) AS vt1
-		 * group by category
-		 * 
-		 * where t1 was obtained by rewriteWithPartition().
-		 */ 
+		// direct call to this class is not expected; however, we still support it by creating another
+		// ProjectedRelation on this and by calling the method.
+		List<SelectElem> elems = new ArrayList<SelectElem>();
 		if (source instanceof ApproxGroupedRelation) {
 			List<Expr> groupby = ((ApproxGroupedRelation) source).getGroupby();
-			List<Expr> groupbyInNewSource = new ArrayList<Expr>();
-			for (Expr g : groupby) {
-				// replaces the table names in internal colNameExpr
-				groupbyInNewSource.add(g.withTableSubstituted(r.getAlias()));
+			for (Expr group : groupby) {
+				elems.add(new SelectElem(group));
 			}
-			r = new GroupedRelation(vc, r, groupbyInNewSource);
 		}
-		
-		r = new AggregatedRelation(vc, r, finalAgg);
-		r.setAliasName(getAlias());
+		for (Expr agg : aggs) {
+			elems.add(new SelectElem(agg));
+		}
+		ApproxRelation a = new ApproxProjectedRelation(vc, this, elems);
+		ExactRelation r = a.rewriteWithSubsampledErrorBounds();
 		return r;
 	}
+	
+//	@Override
+//	public ExactRelation rewriteWithSubsampledErrorBounds() {
+//		ExactRelation r = rewriteWithPartition();
+//		r = ProjectedRelation.from(vc, (AggregatedRelation) r);
+////		List<SelectElem> selectElems = r.selectElemsWithAggregateSource();
+//		List<SelectElem> aggElems = ((ProjectedRelation) r).getAggElems();
+//		
+//		// another wrapper to combine all subsampled aggregations.
+//		List<Expr> finalAgg = new ArrayList<Expr>();
+//		
+//		for (int i = 0; i < aggElems.size() - 1; i++) {	// excluding the last one which is psize
+//			// odd columns are for mean estimation
+//			// even columns are for err estimation
+//			if (i%2 == 1) continue;
+//			
+//			SelectElem meanElem = aggElems.get(i);
+//			SelectElem errElem = aggElems.get(i+1);
+//			ColNameExpr est = new ColNameExpr(meanElem.getAlias(), r.getAlias());
+//			ColNameExpr errEst = new ColNameExpr(errElem.getAlias(), r.getAlias());
+//			ColNameExpr psize = new ColNameExpr(partitionSizeAlias, r.getAlias());
+//			
+//			Expr originalAggExpr = aggs.get(i/2);
+//			
+//			// average estimate
+//			Expr meanEstExpr = null;
+//			if (originalAggExpr.isCountDistinct()) {
+//				meanEstExpr = FuncExpr.round(FuncExpr.avg(est));
+//			} else {
+//				meanEstExpr = BinaryOpExpr.from(FuncExpr.sum(BinaryOpExpr.from(est, psize, "*")),
+//	                    					    FuncExpr.sum(psize), "/");
+//				if (originalAggExpr.isCount()) {
+//					meanEstExpr = FuncExpr.round(meanEstExpr);
+//				}
+//			}
+//			finalAgg.add(meanEstExpr);
+//
+//			// error estimation
+//			Expr errEstExpr = BinaryOpExpr.from(
+//					BinaryOpExpr.from(FuncExpr.stddev(errEst), FuncExpr.sqrt(FuncExpr.avg(psize)), "*"),
+//					FuncExpr.sqrt(FuncExpr.sum(psize)),
+//					"/");
+//			errEstExpr = BinaryOpExpr.from(errEstExpr, ConstantExpr.from(confidenceIntervalMultiplier()), "*");
+//			finalAgg.add(errEstExpr);
+//		}
+//		
+//		/*
+//		 * Example input query:
+//		 * select category, avg(col)
+//		 * from t
+//		 * group by category
+//		 * 
+//		 * Transformed query:
+//		 * select category, sum(est * psize) / sum(psize) AS final_est
+//		 * from (
+//		 *   select category, avg(col) AS est, count(*) as psize
+//		 *   from t
+//		 *   group by category, verdict_partition) AS vt1
+//		 * group by category
+//		 * 
+//		 * where t1 was obtained by rewriteWithPartition().
+//		 */ 
+//		if (source instanceof ApproxGroupedRelation) {
+//			List<Expr> groupby = ((ApproxGroupedRelation) source).getGroupby();
+//			List<Expr> groupbyInNewSource = new ArrayList<Expr>();
+//			for (Expr g : groupby) {
+//				// replaces the table names in internal colNameExpr
+//				groupbyInNewSource.add(g.withTableSubstituted(r.getAlias()));
+//			}
+//			r = new GroupedRelation(vc, r, groupbyInNewSource);
+//		}
+//		
+//		r = new AggregatedRelation(vc, r, finalAgg);
+//		r.setAliasName(getAlias());
+//		return r;
+//	}
 	
 	/**
 	 * This relation must include partition numbers, and the answers must be scaled properly. Note that {@link ApproxRelation#rewriteWithSubsampledErrorBounds()}
@@ -374,7 +393,26 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 
 	@Override
 	public String sampleType() {
-		return source.sampleType();
+		String sampleType = source.sampleType();
+		
+		if (source instanceof ApproxGroupedRelation) {
+			List<Expr> groupby = ((ApproxGroupedRelation) source).getGroupby();
+			List<String> strGroupby = new ArrayList<String>();
+			for (Expr expr : groupby) {
+				if (expr instanceof ColNameExpr) {
+					strGroupby.add(((ColNameExpr) expr).getCol());
+				}
+			}
+			
+			List<String> sampleColumns = source.sampleColumns();
+			if (sampleType.equals("universe") && strGroupby.equals(sampleColumns)) {
+				return "universe";
+			} else if (sampleType.equals("stratified") && strGroupby.equals(sampleColumns)) {
+				return "stratified";
+			}
+		}
+		
+		return "grouped-" + sampleType;
 	}
 	
 	@Override
@@ -425,29 +463,29 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 		
 		if (source instanceof ApproxGroupedRelation) {
 			List<Expr> groupby = ((ApproxGroupedRelation) source).getGroupby();
-			Set<String> groupbyInString = new HashSet<String>();
-			for (Expr g : groupby) {
-				groupbyInString.add(g.toString());
+			List<String> groupbyInString = new ArrayList<String>();
+			for (Expr expr : groupby) {
+				if (expr instanceof ColNameExpr) {
+					groupbyInString.add(((ColNameExpr) expr).getCol());
+				}
 			}
 			
 			if (source.sampleType().equals("stratified")) {
-				if (groupbyInString.equals(new HashSet<String>(sampleColumns()))) {
+				if (groupbyInString.equals(sampleColumns())) {
 					return 1.0;
 				} else {
 					return 0;
 				}
 			} else if (source.sampleType().equals("universe")) {
-				if (groupbyInString.equals(new HashSet<String>(sampleColumns()))) {
+				if (groupbyInString.equals(sampleColumns())) {
 					return source.samplingProbability();
 				} else {
 					return 0;
 				}
-			} else {
-				return 0;
 			}
-		} else {
-			return 1.0;
 		}
+		
+		return 0;
 	}
 	
 }

@@ -10,7 +10,7 @@ public class BaseIT {
 	
 	protected double error = 0.05;
 	
-	protected double samplingRatio = 0.01;
+	protected double samplingRatio = 0.1;
 	
 	protected static Connection conn;
 	

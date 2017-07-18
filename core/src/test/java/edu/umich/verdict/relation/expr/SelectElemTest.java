@@ -10,6 +10,12 @@ public class SelectElemTest {
 	}
 	
 	@Test
+	public void aliasTest() {
+		SelectElem e = SelectElem.from("count(*) AS __group_size");
+		System.out.println(e.toString());
+	}
+	
+	@Test
 	public void randExprTest() {
 		SelectElem e = SelectElem.from("mod(rand(unix_timestamp()), 100) * 100 AS __vpart");
 		System.out.println(e.toString());

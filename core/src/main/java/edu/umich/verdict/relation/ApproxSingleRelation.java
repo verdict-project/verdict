@@ -215,11 +215,11 @@ public class ApproxSingleRelation extends ApproxRelation {
 	 * Aggregations
 	 */
 	
-	public AggregatedRelation aggOnSample(List<Object> functions) {
+	public ExactRelation aggOnSample(List<Object> functions) {
 		return rewriteForPointEstimate().agg(functions);
 	}
 	
-	public AggregatedRelation aggOnSample(Object... functions) {
+	public ExactRelation aggOnSample(Object... functions) {
 		return aggOnSample(Arrays.asList(functions));
 	}
 	

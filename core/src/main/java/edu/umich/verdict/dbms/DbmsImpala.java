@@ -305,7 +305,7 @@ public class DbmsImpala extends DbmsJDBC {
 		// create a temp table with random numbers
 		List<String> joinCond = new ArrayList<String>();
 		for (String c : param.columnNames) {
-			joinCond.add(String.format("t1.%s = t2.%s", c, c));
+			joinCond.add(String.format("t1.%s = t2.%s OR (t1.%s is null and t2.%s is null)", c, c, c, c));
 		}
 		
 		List<String> colNamesWithTab = new ArrayList<String>();
@@ -313,11 +313,13 @@ public class DbmsImpala extends DbmsJDBC {
 			colNamesWithTab.add(String.format("t1.%s", c));
 		}
 		
-		ExactRelation original = SingleRelation.from(vc, param.originalTable).withAlias("t1");
-		ExactRelation withRand = original.join(groupSize.withAlias("t2"), Joiner.on(" AND ").join(joinCond))
-								.select(Joiner.on(", ").join(colNamesWithTab) + ", " +
-										"__group_size, rand(unix_timestamp()) AS __rand");
-		String sql2 = String.format("create table %s AS %s", withRandTemp, withRand.toSql());
+//		ExactRelation original = SingleRelation.from(vc, param.originalTable).withAlias("t1");
+		// temporarily using this because our JoinedRelation does not support arbitrary condition joins.
+		String select = String.format("SELECT %s, __group_size, rand(unix_timestamp()) AS __rand ",
+									  Joiner.on(", ").join(colNamesWithTab)) +
+				        String.format("FROM %s t1 INNER JOIN (%s) t2 ", param.originalTable, groupSize.toSql()) +
+				        String.format("ON %s", Joiner.on(" AND ").join(joinCond));
+		String sql2 = String.format("create table %s AS %s", withRandTemp, select);
 		
 		VerdictLogger.debug(this, "The query used for creating a temp table with group counts and random numbers.");
 		VerdictLogger.debugPretty(this, Relation.prettyfySql(sql2), "  ");

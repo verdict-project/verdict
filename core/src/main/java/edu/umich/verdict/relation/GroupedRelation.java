@@ -43,6 +43,10 @@ public class GroupedRelation extends ExactRelation {
 	public ExactRelation getSource() {
 		return source;
 	}
+	
+	public List<Expr> getGroupby() {
+		return groupby;
+	}
 
 	@Override
 	protected String getSourceName() {
@@ -66,6 +70,11 @@ public class GroupedRelation extends ExactRelation {
 		return a;
 	}
 	
+	/**
+	 * We view no actual groupby-aggregate operations are performed until encountering AggregatedRelation.
+	 * As this relation being a source of AggregatedRelation, propagating the sample information without
+	 * much modification is convenient.
+	 */
 	@Override
 	protected List<ApproxRelation> nBestSamples(Expr elem, int n) throws VerdictException {
 		List<ApproxRelation> ofSources = source.nBestSamples(elem, n);

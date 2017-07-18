@@ -127,7 +127,7 @@ public class ApproxJoinedRelation extends ApproxRelation {
 
 	@Override
 	protected List<Expr> samplingProbabilityExprsFor(FuncExpr f) {
-		if (areMatchingUniverseSamples()) {
+		if (Relation.areMatchingUniverseSamples(source1, source2, joinCols)) {
 			// get the first pair to check the table names to be joined.
 			Pair<Expr, Expr> ajoinCol = joinCols.get(0);
 			Expr l = ajoinCol.getLeft();
@@ -161,24 +161,24 @@ public class ApproxJoinedRelation extends ApproxRelation {
 		return samplingProbExprs;
 	}
 	
-	private boolean areMatchingUniverseSamples() {
-		List<Expr> leftJoinCols = new ArrayList<Expr>();
-		List<Expr> rightJoinCols = new ArrayList<Expr>();
-		for (Pair<Expr, Expr> pair : joinCols) {
-			leftJoinCols.add(pair.getLeft());
-			rightJoinCols.add(pair.getRight());
-		}
-		
-		return source1.sampleType().equals("universe") && source2.sampleType().equals("universe")
-				&& joinColumnsEqualToSampleColumns(leftJoinCols, source1.sampleColumns())
-				&& joinColumnsEqualToSampleColumns(rightJoinCols, source2.sampleColumns());
-	}
+//	private boolean areMatchingUniverseSamples() {
+//		List<Expr> leftJoinCols = new ArrayList<Expr>();
+//		List<Expr> rightJoinCols = new ArrayList<Expr>();
+//		for (Pair<Expr, Expr> pair : joinCols) {
+//			leftJoinCols.add(pair.getLeft());
+//			rightJoinCols.add(pair.getRight());
+//		}
+//		
+//		return source1.sampleType().equals("universe") && source2.sampleType().equals("universe")
+//				&& joinColumnsEqualToSampleColumns(leftJoinCols, source1.sampleColumns())
+//				&& joinColumnsEqualToSampleColumns(rightJoinCols, source2.sampleColumns());
+//	}
 	
 	@Override
 	public String sampleType() {
 		Set<String> sampleTypeSet = ImmutableSet.of(source1.sampleType(), source2.sampleType());
 		
-		if (areMatchingUniverseSamples()) {
+		if (Relation.areMatchingUniverseSamples(source1, source2, joinCols)) {
 			return "universe";
 		} else if (sampleTypeSet.equals(ImmutableSet.of("uniform", "uniform"))) {
 			return "uniform";
@@ -194,6 +194,8 @@ public class ApproxJoinedRelation extends ApproxRelation {
 			return "stratified";
 		} else if (sampleTypeSet.equals(ImmutableSet.of("universe", "nosample"))) {
 			return "universe";
+		} else if (sampleTypeSet.equals(ImmutableSet.of("nosample", "nosample"))) {
+			return "nosample";
 		} else {
 			return source1.sampleType() + "-" + source2.sampleType();		// unexpected
 		}
@@ -217,15 +219,15 @@ public class ApproxJoinedRelation extends ApproxRelation {
 		}
 	}
 	
-	private boolean joinColumnsEqualToSampleColumns(List<Expr> joinCols, List<String> sampleColNames) {
-		List<String> joinColNames = new ArrayList<String>();
-		for (Expr expr : joinCols) {
-			if (expr instanceof ColNameExpr) {
-				joinColNames.add(((ColNameExpr) expr).getCol());
-			}
-		}
-		return joinColNames.equals(sampleColNames);
-	}
+//	private boolean joinColumnsEqualToSampleColumns(List<Expr> joinCols, List<String> sampleColNames) {
+//		List<String> joinColNames = new ArrayList<String>();
+//		for (Expr expr : joinCols) {
+//			if (expr instanceof ColNameExpr) {
+//				joinColNames.add(((ColNameExpr) expr).getCol());
+//			}
+//		}
+//		return joinColNames.equals(sampleColNames);
+//	}
 	
 	@Override
 	protected Map<TableUniqueName, String> tableSubstitution() {
@@ -262,7 +264,7 @@ public class ApproxJoinedRelation extends ApproxRelation {
 	
 	@Override
 	public double samplingProbability() {
-		if (areMatchingUniverseSamples()) {
+		if (Relation.areMatchingUniverseSamples(source1, source2, joinCols)) {
 			return source1.samplingProbability();
 		} else {
 			return source1.samplingProbability() * source2.samplingProbability();

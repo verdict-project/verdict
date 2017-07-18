@@ -5,6 +5,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.ParserRuleContext;
@@ -14,6 +15,7 @@ import org.apache.spark.sql.DataFrame;
 import org.apache.spark.sql.Row;
 
 import com.google.common.base.Joiner;
+import com.google.common.collect.Sets;
 
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.VerdictSQLBaseVisitor;
@@ -50,6 +52,8 @@ public abstract class Relation {
 	protected boolean approximate;
 	
 	protected String alias;
+	
+	public final static Set<String> availableJoinTypes = Sets.newHashSet("uniform", "universe", "stratified", "nosample");
 	
 	public Relation(VerdictContext vc) {
 		this.vc = vc;
@@ -248,6 +252,35 @@ public abstract class Relation {
 	public static String errorBoundColumn(String original) {
 		return String.format("%s_err", original);
 	}
+	
+	protected static boolean areMatchingUniverseSamples(ApproxRelation r1, ApproxRelation r2, List<Pair<Expr, Expr>> joincond) {
+		List<Expr> leftJoinCols = new ArrayList<Expr>();
+		List<Expr> rightJoinCols = new ArrayList<Expr>();
+		for (Pair<Expr, Expr> pair : joincond) {
+			leftJoinCols.add(pair.getLeft());
+			rightJoinCols.add(pair.getRight());
+		}
+		
+		if (r1.sampleType().equals("universe") && r2.sampleType().equals("universe")) {
+			List<String> cols1 = r1.sampleColumns();
+			List<String> cols2 = r2.sampleColumns();
+			if (joinColumnsEqualToSampleColumns(leftJoinCols, cols1)
+			    && joinColumnsEqualToSampleColumns(rightJoinCols, cols2)) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	private static boolean joinColumnsEqualToSampleColumns(List<Expr> joinCols, List<String> sampleColNames) {
+		List<String> joinColNames = new ArrayList<String>();
+		for (Expr expr : joinCols) {
+			if (expr instanceof ColNameExpr) {
+				joinColNames.add(((ColNameExpr) expr).getCol());
+			}
+		}
+		return joinColNames.equals(sampleColNames);
+	}
 
 }
 
@@ -388,7 +421,7 @@ class PrettyPrintVisitor extends VerdictSQLBaseVisitor<String> {
 		for (VerdictSQLParser.Search_condition_notContext nctx : ctx.search_condition_not()) {
 			c.add(visit(nctx));
 		}
-		return Joiner.on(String.format("\n%s  AND ", indent)).join(c);
+		return Joiner.on(String.format("\n%s  OR ", indent)).join(c);
 	}
 
 	@Override
