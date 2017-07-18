@@ -47,7 +47,11 @@ public class ApproxSingleRelation extends ApproxRelation {
 	protected ApproxSingleRelation(VerdictContext vc, SampleParam param) {
 		super(vc);
 		this.param = param;
-		this.sampleTableName = vc.getMeta().lookForSampleTable(param);
+		if (param.getSampleType().equals("nosample")) {
+			this.sampleTableName = param.getOriginalTable();
+		} else {
+			this.sampleTableName = vc.getMeta().lookForSampleTable(param);
+		}
 		this.info = vc.getMeta().getSampleSizeOf(sampleTableName);
 	}
 	
