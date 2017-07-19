@@ -4,7 +4,7 @@ from py4j.java_gateway import java_import
 from pyspark.java_gateway import launch_gateway
 from pyspark import HiveContext
 
-VERDICT_CONTEXT_CLASS = "edu.umich.verdict.VerdictHiveContext"
+#VERDICT_CONTEXT_CLASS = "edu.umich.verdict.VerdictSparkHiveContext"
 
 
 class VerdictHiveContext(object):
@@ -44,8 +44,8 @@ class VerdictHiveContext(object):
     @property
     def _jverdictContext(self):
         if self._java_VerdictHiveContext is None:
-            java_import(self._jvm, VERDICT_CONTEXT_CLASS)
-            self._java_VerdictHiveContext = self._jvm.VerdictHiveContext(self._jsc)
+            #java_import(self._jvm, VERDICT_CONTEXT_CLASS)
+            self._java_VerdictHiveContext = self._jvm.edu.umich.verdict.VerdictSparkHiveContext(self._jsc)
         return self._java_VerdictHiveContext
 
     def toPyDf(self, jdf):
