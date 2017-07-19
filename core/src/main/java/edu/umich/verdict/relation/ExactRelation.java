@@ -459,6 +459,7 @@ public abstract class ExactRelation extends Relation {
 	}
 	
 	protected abstract String toStringWithIndent(String indent);
+
 }
 
 

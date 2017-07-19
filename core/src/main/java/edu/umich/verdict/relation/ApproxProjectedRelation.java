@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
 import edu.umich.verdict.VerdictContext;
@@ -73,8 +74,14 @@ public class ApproxProjectedRelation extends ApproxRelation {
 		List<SelectElem> newElems = new ArrayList<SelectElem>();
 		List<Expr> newAggs = new ArrayList<Expr>();
 		List<SelectElem> elems = ((ProjectedRelation) r).getSelectElems();
+		
 		for (int i = 0; i < elems.size() - 1; i++) {
 			SelectElem elem = elems.get(i);
+			Optional<SelectElem> originalElem = Optional.absent();
+			if (i < this.elems.size()) {
+				originalElem = Optional.fromNullable(this.elems.get(i));
+			}
+			
 			if (!elem.isagg()) {
 				SelectElem newElem = null;
 				if (elem.getAlias() == null) {
@@ -94,14 +101,14 @@ public class ApproxProjectedRelation extends ApproxRelation {
 				
 				// average estimate
 				Expr averaged = null;
-				if (elem.getExpr().isCountDistinct()) {
+				if (originalElem.isPresent() && originalElem.get().getExpr().isCountDistinct()) {
 					// for count-distinct (i.e., universe samples), weighted average should not be used.
 					averaged = FuncExpr.round(FuncExpr.avg(est));
 				} else {
 					// weighted average
 					averaged = BinaryOpExpr.from(FuncExpr.sum(BinaryOpExpr.from(est, psize, "*")),
 		                    					  				 FuncExpr.sum(psize), "/");
-					if (elem.getExpr().isCount()) {
+					if (originalElem.isPresent() && originalElem.get().getExpr().isCount()) {
 						averaged = FuncExpr.round(averaged);
 					}
 				}
@@ -186,7 +193,7 @@ public class ApproxProjectedRelation extends ApproxRelation {
 	
 	/**
 	 * Inserts extra information if extra is set to true. The extra information is:
-	 * 1. partition size. 
+	 * 1. partition size.
 	 * @param extra
 	 * @return
 	 */
@@ -220,6 +227,14 @@ public class ApproxProjectedRelation extends ApproxRelation {
 		
 		// partition number
 		newElems.add(new SelectElem(newSource.partitionColumn(), partitionColumnName()));
+		
+		// probability expression (only when the source is not an aggregated relation)
+		if (!(source instanceof ApproxAggregatedRelation)) {
+			String probCol = samplingProbabilityColumnName();
+			SelectElem probElem = new SelectElem(new ColNameExpr(probCol), probCol);
+			newElems.add(probElem);
+		}
+		
 		ExactRelation r = new ProjectedRelation(vc, newSource, newElems);
 		r.setAliasName(getAlias());
 		return r;

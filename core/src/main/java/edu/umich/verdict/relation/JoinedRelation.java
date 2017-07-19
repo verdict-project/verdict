@@ -44,7 +44,7 @@ public class JoinedRelation extends ExactRelation {
 			this.joinCols = joinCols;
 		}
 		
-		this.alias = null;
+		this.alias = String.format("%s_%s", source1.getAlias(), source2.getAlias());
 	}
 	
 	public static JoinedRelation from(VerdictContext vc, ExactRelation source1, ExactRelation source2, List<Pair<Expr, Expr>> joinCols) {
@@ -140,8 +140,6 @@ public class JoinedRelation extends ExactRelation {
 		for (ApproxRelation a1 : ofSources1) {
 			for (ApproxRelation a2 : ofSources2) {
 				ApproxJoinedRelation j = new ApproxJoinedRelation(vc, a1, a2, joinCols);
-				System.out.println(j);
-				System.out.println(j.sampleType());
 				if (expectedSampleType(j.sampleType())) {
 					joined.add(j);
 				}

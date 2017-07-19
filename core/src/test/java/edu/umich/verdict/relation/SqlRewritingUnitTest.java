@@ -73,7 +73,63 @@ public class SqlRewritingUnitTest {
 		ExactRelation e = a.rewriteWithSubsampledErrorBounds();
 		System.out.println(e);
 		System.out.println(Relation.prettyfySql(e.toSql()));
-
+	}
+	
+	@Test
+	public void nestedTest1() throws VerdictException {
+		String sql = "select avg(days_since_prior) " + 
+					 "from orders " + 
+				     "where days_since_prior > (select avg(days_since_prior) from orders)"; 
+		
+		ExactRelation r = ExactRelation.from(vc, sql);
+		System.out.println(r);
+		
+		ApproxRelation a = r.approx();
+		System.out.println(a);
+		
+		ExactRelation e = a.rewriteWithSubsampledErrorBounds();
+		System.out.println(e);
+		System.out.println(Relation.prettyfySql(e.toSql()));
+	}
+	
+	@Test
+	public void nestedTest2() throws VerdictException {
+		String sql = "select mydow, count(*) " + 
+				     "from ( " + 
+				     "  select order_dow+1 as mydow " + 
+				     "  from orders) t1 " + 
+				     "group by mydow " + 
+				     "order by mydow";
+		
+		ExactRelation r = ExactRelation.from(vc, sql);
+		System.out.println(r);
+		
+		ApproxRelation a = r.approx();
+		System.out.println(a);
+		
+		ExactRelation e = a.rewriteWithSubsampledErrorBounds();
+		System.out.println(e);
+		System.out.println(Relation.prettyfySql(e.toSql()));
+	}
+	
+	@Test
+	public void nestedTest3() throws VerdictException {
+		String sql = "select count(*)\n" + 
+				     "from (select user_id, avg(days_since_prior) as d1\n" + 
+				     "      from order_products, orders\n" + 
+				     "      WHERE orders.order_id = order_products.order_id\n" + 
+				     "        AND days_since_prior IS NOT NULL\n" + 
+				     "      GROUP BY user_id) t1;\n";
+		
+		ExactRelation r = ExactRelation.from(vc, sql);
+		System.out.println(r);
+		
+		ApproxRelation a = r.approx();
+		System.out.println(a);
+		
+		ExactRelation e = a.rewriteWithSubsampledErrorBounds();
+		System.out.println(e);
+		System.out.println(Relation.prettyfySql(e.toSql()));
 	}
 
 }

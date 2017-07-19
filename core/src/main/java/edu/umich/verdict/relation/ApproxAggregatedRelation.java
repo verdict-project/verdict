@@ -253,6 +253,7 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 					if (f.getFuncName().equals(FuncExpr.FuncName.COUNT)) {
 						Expr est = FuncExpr.sum(scaleForSampling(samplingProbExprs));
 						est = scaleWithPartitionSize(est, groupby, partitionCol, forErrorEst);
+//						est = FuncExpr.round(est);
 						return est;
 					}
 					else if (f.getFuncName().equals(FuncExpr.FuncName.COUNT_DISTINCT)) {
@@ -270,6 +271,7 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 						if (sampleType().equals("universe")) {
 							est = scaleWithPartitionSize(est, groupby, partitionCol, forErrorEst);
 						}
+//						est = FuncExpr.round(est);
 						return est;
 					}
 					else if (f.getFuncName().equals(FuncExpr.FuncName.SUM)) {
