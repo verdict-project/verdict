@@ -8,11 +8,9 @@ import org.apache.spark.SparkContext;
 import org.apache.spark.sql.DataFrame;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.hive.HiveContext;
-import org.junit.BeforeClass;
 import org.junit.runner.JUnitCore;
 import org.junit.runner.Request;
 import org.junit.runner.Result;
-import org.junit.Test;
 import org.junit.runner.notification.Failure;
 
 import com.google.common.base.Joiner;

@@ -91,7 +91,7 @@ public class ApproxJoinedRelation extends ApproxRelation {
 	public ExactRelation rewriteForPointEstimate() {
 		List<Pair<Expr, Expr>> newJoinCond = joinCondWithTablesSubstitutioned();
 		ExactRelation r = new JoinedRelation(vc, source1.rewriteForPointEstimate(), source2.rewriteForPointEstimate(), newJoinCond);
-		r.setAliasName(getAlias());
+		r.setAlias(getAlias());
 		return r;
 	}
 	
@@ -111,7 +111,7 @@ public class ApproxJoinedRelation extends ApproxRelation {
 		List<Pair<Expr, Expr>> newJoinCond = joinCondWithTablesSubstitutioned();
 //		newJoinCond.add(Pair.<Expr, Expr>of(newSource1.partitionColumn(), newSource2.partitionColumn()));
 		ExactRelation r = JoinedRelation.from(vc, newSource1, newSource2, newJoinCond);
-		r.setAliasName(getAlias());
+		r.setAlias(getAlias());
 		return r;
 	}
 	
@@ -189,7 +189,7 @@ public class ApproxJoinedRelation extends ApproxRelation {
 		} else if (sampleTypeSet.equals(ImmutableSet.of("uniform", "nosample"))) {
 			return "uniform";
 		} else if (sampleTypeSet.equals(ImmutableSet.of("stratified", "stratified"))) {
-			return "stratified";
+			return "arbitrary";
 		} else if (sampleTypeSet.equals(ImmutableSet.of("stratified", "nosample"))) {
 			return "stratified";
 		} else if (sampleTypeSet.equals(ImmutableSet.of("universe", "nosample"))) {
@@ -213,7 +213,11 @@ public class ApproxJoinedRelation extends ApproxRelation {
 			union.addAll(source2.sampleColumns());
 			return union;
 		} else if (sampleType().equals("universe")) {
-			return source1.sampleColumns();
+			if (source1.sampleType().equals("universe")) {
+				return source1.sampleColumns();
+			} else {
+				return source2.sampleColumns();
+			}
 		} else {
 			return Arrays.asList();
 		}
@@ -240,10 +244,12 @@ public class ApproxJoinedRelation extends ApproxRelation {
 	protected String toStringWithIndent(String indent) {
 		StringBuilder s = new StringBuilder(1000);
 		s.append(indent);
-		s.append(String.format("%s(%s) [%s], cost: %f\n",
+		s.append(String.format("%s(%s) [%s], sample type: %s (%s), cost: %f\n",
 				this.getClass().getSimpleName(),
 				getAlias(),
 				Joiner.on(", ").join(joinCols),
+				sampleType(),
+				sampleColumns(),
 				cost()));
 		s.append(source1.toStringWithIndent(indent + "  "));
 		s.append(source2.toStringWithIndent(indent + "  "));

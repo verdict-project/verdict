@@ -1,10 +1,8 @@
 package edu.umich.verdict.relation;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -18,7 +16,6 @@ import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.relation.condition.Cond;
 import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.Expr;
-import edu.umich.verdict.relation.expr.ExprVisitor;
 import edu.umich.verdict.relation.expr.SelectElem;
 
 public class ProjectedRelation extends ExactRelation {
@@ -79,7 +76,7 @@ public class ProjectedRelation extends ExactRelation {
 	@Override
 	public ApproxRelation approx() throws VerdictException {
 		ApproxRelation a = new ApproxProjectedRelation(vc, source.approx(), elems);
-		a.setAliasName(getAlias());
+		a.setAlias(getAlias());
 		return a;
 	}
 
@@ -90,8 +87,6 @@ public class ProjectedRelation extends ExactRelation {
 	
 	@Override
 	protected List<ApproxRelation> nBestSamples(Expr elem, int n) throws VerdictException {
-		
-//		adfafd
 		// TODO: should insert __vprob column.
 		
 		List<ApproxRelation> ofSources = source.nBestSamples(elem, n);

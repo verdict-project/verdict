@@ -1,15 +1,9 @@
 package edu.umich.verdict.relation;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
-import org.apache.commons.lang3.tuple.Pair;
-
-import edu.umich.verdict.datatypes.SampleParam;
 import edu.umich.verdict.relation.expr.Expr;
-import edu.umich.verdict.relation.expr.SelectElem;
 
 /**
  * Indicates that {@link SampleGroup#elems} can be computed by joining {@link SampleGroup#sample}.

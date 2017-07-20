@@ -10,7 +10,6 @@ import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.Expr;
-import edu.umich.verdict.relation.expr.SelectElem;
 
 public class LimitedRelation extends ExactRelation {
 	
@@ -42,7 +41,7 @@ public class LimitedRelation extends ExactRelation {
 	@Override
 	public ApproxRelation approx() throws VerdictException {
 		ApproxRelation a = new ApproxLimitedRelation(vc, source.approx(), limit);
-		a.setAliasName(getAlias());
+		a.setAlias(getAlias());
 		return a;
 	}
 

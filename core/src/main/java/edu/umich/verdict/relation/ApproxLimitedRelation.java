@@ -27,21 +27,21 @@ public class ApproxLimitedRelation extends ApproxRelation {
 	@Override
 	public ExactRelation rewriteForPointEstimate() {
 		ExactRelation r = new LimitedRelation(vc, source.rewriteForPointEstimate(), limit);
-		r.setAliasName(getAlias());
+		r.setAlias(getAlias());
 		return r;
 	}
 	
 	@Override
 	public ExactRelation rewriteWithSubsampledErrorBounds() {
 		ExactRelation r = new LimitedRelation(vc, source.rewriteWithSubsampledErrorBounds(), limit);
-		r.setAliasName(getAlias());
+		r.setAlias(getAlias());
 		return r;
 	}
 	
 	@Override
 	public ExactRelation rewriteWithPartition() {
 		ExactRelation r = new LimitedRelation(vc, source.rewriteWithPartition(), limit);
-		r.setAliasName(getAlias());
+		r.setAlias(getAlias());
 		return r;
 	}
 	

@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableMap;
 
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.datatypes.TableUniqueName;
@@ -28,21 +27,21 @@ public class ApproxOrderedRelation extends ApproxRelation {
 	@Override
 	public ExactRelation rewriteForPointEstimate() {
 		ExactRelation r = new OrderedRelation(vc, source.rewriteForPointEstimate(), orderby);
-		r.setAliasName(getAlias());
+		r.setAlias(getAlias());
 		return r;
 	}
 	
 	@Override
 	public ExactRelation rewriteWithSubsampledErrorBounds() {
 		ExactRelation r = new OrderedRelation(vc, source.rewriteWithSubsampledErrorBounds(), orderby);
-		r.setAliasName(getAlias());
+		r.setAlias(getAlias());
 		return r;
 	}
 	
 	@Override
 	public ExactRelation rewriteWithPartition() {
 		ExactRelation r = new OrderedRelation(vc, source.rewriteWithPartition(), orderby);
-		r.setAliasName(getAlias());
+		r.setAlias(getAlias());
 		return r;
 	}
 	

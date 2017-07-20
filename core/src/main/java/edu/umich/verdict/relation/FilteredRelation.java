@@ -1,7 +1,6 @@
 package edu.umich.verdict.relation;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -19,7 +18,6 @@ import edu.umich.verdict.relation.condition.CondModifier;
 import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.relation.expr.ExprModifier;
-import edu.umich.verdict.relation.expr.SelectElem;
 import edu.umich.verdict.relation.expr.SubqueryExpr;
 import edu.umich.verdict.util.VerdictLogger;
 
@@ -59,7 +57,7 @@ public class FilteredRelation extends ExactRelation {
 	
 	protected ApproxRelation approxWith(Map<TableUniqueName, SampleParam> replace) {
 		ApproxRelation a = new ApproxFilteredRelation(vc, source.approxWith(replace), approxPossibleSubqueries(cond));
-		a.setAliasName(getAlias());
+		a.setAlias(getAlias());
 		return a;
 	}
 	

@@ -317,7 +317,7 @@ public class FuncExpr extends Expr {
 	@Override
 	public boolean isagg() {
 		if (funcname.equals(FuncName.AVG) || funcname.equals(FuncName.SUM) || funcname.equals(FuncName.COUNT)
-			|| funcname.equals(FuncName.COUNT_DISTINCT)) {
+			|| funcname.equals(FuncName.COUNT_DISTINCT) || funcname.equals(FuncName.IMPALA_APPROX_COUNT_DISTINCT)) {
 			return true;
 		} else {
 			for (Expr expr : expressions) {

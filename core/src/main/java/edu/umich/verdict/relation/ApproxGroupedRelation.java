@@ -1,16 +1,13 @@
 package edu.umich.verdict.relation;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import com.google.common.base.Joiner;
 
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.datatypes.TableUniqueName;
-import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.relation.expr.FuncExpr;
 
@@ -39,7 +36,7 @@ public class ApproxGroupedRelation extends ApproxRelation {
 	public ExactRelation rewriteForPointEstimate() {
 		List<Expr> newGroupby = groupbyWithTablesSubstituted();
 		ExactRelation r = new GroupedRelation(vc, source.rewriteForPointEstimate(), newGroupby);
-		r.setAliasName(r.getAlias());
+		r.setAlias(r.getAlias());
 		return r;
 	}
 	
@@ -50,7 +47,7 @@ public class ApproxGroupedRelation extends ApproxRelation {
 //		newGroupby.add((ColNameExpr) exprWithTableNamesSubstituted(partitionColumn(), tableSubstitution()));
 		newGroupby.add(newSource.partitionColumn());
 		ExactRelation r = new GroupedRelation(vc, newSource, newGroupby);
-		r.setAliasName(r.getAlias());
+		r.setAlias(r.getAlias());
 		return r;
 	}
 	

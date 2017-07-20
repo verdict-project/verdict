@@ -1,12 +1,9 @@
 package edu.umich.verdict.impala;
 
-import java.sql.ResultSet;
-
 import edu.umich.verdict.VerdictConf;
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.VerdictJDBCContext;
 import edu.umich.verdict.exceptions.VerdictException;
-import edu.umich.verdict.util.ResultSetConversion;
 
 public class ImpalaThroughVerdictTest {
 

@@ -1,7 +1,5 @@
 package edu.umich.verdict.demo;
 
-import static org.junit.Assert.*;
-
 import java.io.FileNotFoundException;
 import java.sql.SQLException;
 

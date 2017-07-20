@@ -1,12 +1,8 @@
 package edu.umich.verdict.relation;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -18,11 +14,8 @@ import edu.umich.verdict.relation.expr.BinaryOpExpr;
 import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.ConstantExpr;
 import edu.umich.verdict.relation.expr.Expr;
-import edu.umich.verdict.relation.expr.ExprModifier;
 import edu.umich.verdict.relation.expr.FuncExpr;
-import edu.umich.verdict.relation.expr.OverClause;
 import edu.umich.verdict.relation.expr.SelectElem;
-import edu.umich.verdict.relation.expr.SubqueryExpr;
 
 public class ApproxProjectedRelation extends ApproxRelation {
 	
@@ -43,7 +36,7 @@ public class ApproxProjectedRelation extends ApproxRelation {
 	@Override
 	public ExactRelation rewriteForPointEstimate() {
 		ExactRelation r = new ProjectedRelation(vc, source.rewriteForPointEstimate(), elemsWithSubstitutedTables());
-		r.setAliasName(getAlias());
+		r.setAlias(getAlias());
 		return r;
 	}
 	
@@ -62,7 +55,7 @@ public class ApproxProjectedRelation extends ApproxRelation {
 	public ExactRelation rewriteWithSubsampledErrorBounds() {
 		if (!(source instanceof ApproxAggregatedRelation)) {
 			ExactRelation r = new ProjectedRelation(vc, source.rewriteWithSubsampledErrorBounds(), elemsWithSubstitutedTables());
-			r.setAliasName(getAlias());
+			r.setAlias(getAlias());
 			return r;
 		}
 		
@@ -83,6 +76,11 @@ public class ApproxProjectedRelation extends ApproxRelation {
 			}
 			
 			if (!elem.isagg()) {
+				// skip the partition number
+				if (elem.aliasPresent() && elem.getAlias().equals(partitionColumnName())) {
+					continue;
+				}
+				
 				SelectElem newElem = null;
 				if (elem.getAlias() == null) {
 					Expr newExpr = elem.getExpr().withTableSubstituted(r.getAlias());
@@ -228,15 +226,34 @@ public class ApproxProjectedRelation extends ApproxRelation {
 		// partition number
 		newElems.add(new SelectElem(newSource.partitionColumn(), partitionColumnName()));
 		
-		// probability expression (only when the source is not an aggregated relation)
+		// probability expression
+		//  if the source is not an aggregated relation, we simply propagates the probability expression.
+		//  if the source is an aggregated relation, we should insert an appropriate value.
+		String probCol = samplingProbabilityColumnName();
 		if (!(source instanceof ApproxAggregatedRelation)) {
-			String probCol = samplingProbabilityColumnName();
 			SelectElem probElem = new SelectElem(new ColNameExpr(probCol), probCol);
 			newElems.add(probElem);
+		} else {
+			ApproxRelation a = ((ApproxAggregatedRelation) source).getSource();
+			if (!(a instanceof ApproxGroupedRelation)) {
+				SelectElem probElem = new SelectElem(new ConstantExpr(1.0), probCol);
+				newElems.add(probElem);
+			} else {
+				if (source.sampleType().equals("universe")) {
+					SelectElem probElem = new SelectElem(new ConstantExpr(source.samplingProbability()), probCol);
+					newElems.add(probElem);
+				} else if (source.sampleType().equals("stratified")) {
+					SelectElem probElem = new SelectElem(new ConstantExpr(1.0), probCol);
+					newElems.add(probElem);
+				} else {
+					SelectElem probElem = new SelectElem(new ConstantExpr(1.0), probCol);
+					newElems.add(probElem);
+				}
+			}
 		}
 		
 		ExactRelation r = new ProjectedRelation(vc, newSource, newElems);
-		r.setAliasName(getAlias());
+		r.setAlias(getAlias());
 		return r;
 	}
 	

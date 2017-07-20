@@ -44,7 +44,7 @@ public class ApproxFilteredRelation extends ApproxRelation {
 	@Override
 	public ExactRelation rewriteForPointEstimate() {
 		ExactRelation r = new FilteredRelation(vc, source.rewriteForPointEstimate(), condWithApprox(cond, tableSubstitution()));
-		r.setAliasName(getAlias());
+		r.setAlias(getAlias());
 		return r;
 	}
 	
@@ -125,7 +125,7 @@ public class ApproxFilteredRelation extends ApproxRelation {
 		
 		ExactRelation newSource = joinedSource.rewriteWithPartition();
 		ExactRelation r = new FilteredRelation(vc, newSource, modifiedCond);
-		r.setAliasName(getAlias());
+		r.setAlias(getAlias());
 		return r;
 	}
 	

@@ -113,7 +113,7 @@ public class ApproxSingleRelation extends ApproxRelation {
 	@Override
 	public ExactRelation rewriteForPointEstimate() {
 		ExactRelation r = SingleRelation.from(vc, getSampleName());
-		r.setAliasName(getAlias());
+		r.setAlias(getAlias());
 		return r;
 	}
 	
@@ -144,12 +144,12 @@ public class ApproxSingleRelation extends ApproxRelation {
 			ExactRelation r = SingleRelation.from(vc, getSampleName());
 			r = r.select(Joiner.on(", ").join(newColNames) + ", "
 				     	 + vc.getDbms().modOfHash(param.columnNames.get(0), partitionCount) + " AS " + partitionColName);
-			r.setAliasName(getAlias());
+			r.setAlias(getAlias());
 			return r;
 			
 		} else {
 			ExactRelation r = SingleRelation.from(vc, getSampleName());
-			r.setAliasName(getAlias());
+			r.setAlias(getAlias());
 			return r;
 		}
 //		r = vc.getDbms().augmentWithRandomPartitionNum(r);

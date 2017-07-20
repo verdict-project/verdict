@@ -81,24 +81,28 @@ public class AggregatedRelation extends ExactRelation {
 		for (ApproxRelation sc : sourceCandidates) {
 			boolean eligible = false;
 			
-			if (sc instanceof ApproxGroupedRelation) {
-				List<Expr> groupby = ((ApproxGroupedRelation) sc).getGroupby();
-				List<String> strGroupby = new ArrayList<String>();
-				for (Expr expr : groupby) {
-					if (expr instanceof ColNameExpr) {
-						strGroupby.add(((ColNameExpr) expr).getCol());
-					}
-				}
-				
-				String sampleType = sc.sampleType();
-				List<String> sampleColumns = sc.sampleColumns();
-				if (sampleType.equals("universe") && strGroupby.equals(sampleColumns)) {
-					eligible = true;
-				} else if (sampleType.equals("stratified") && strGroupby.equals(sampleColumns)) {
-					eligible = true;
-				}
-			} else {
+			if (sc.sampleType().equals("nosample")) {
 				eligible = true;
+			} else {
+				if (sc instanceof ApproxGroupedRelation) {
+					List<Expr> groupby = ((ApproxGroupedRelation) sc).getGroupby();
+					List<String> strGroupby = new ArrayList<String>();
+					for (Expr expr : groupby) {
+						if (expr instanceof ColNameExpr) {
+							strGroupby.add(((ColNameExpr) expr).getCol());
+						}
+					}
+					
+					String sampleType = sc.sampleType();
+					List<String> sampleColumns = sc.sampleColumns();
+					if (sampleType.equals("universe") && strGroupby.equals(sampleColumns)) {
+						eligible = true;
+					} else if (sampleType.equals("stratified") && strGroupby.equals(sampleColumns)) {
+						eligible = true;
+					}
+				} else {
+					eligible = true;
+				}
 			}
 			
 			if (eligible) {
@@ -206,7 +210,7 @@ public class AggregatedRelation extends ExactRelation {
 			r = new ApproxProjectedRelation(vc, r, newElems);
 		}
 		
-		r.setAliasName(getAlias());
+		r.setAlias(getAlias());
 		return r;
 	}
 
@@ -300,7 +304,8 @@ public class AggregatedRelation extends ExactRelation {
 
 	@Override
 	public List<ColNameExpr> accumulateSamplingProbColumns() {
-		return Arrays.asList();
+		ColNameExpr expr = new ColNameExpr(samplingProbabilityColumnName(), getAlias());
+		return Arrays.asList(expr);
 	}
 
 	@Override

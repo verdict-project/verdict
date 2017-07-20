@@ -3,7 +3,6 @@ package edu.umich.verdict.query;
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.VerdictSQLBaseVisitor;
 import edu.umich.verdict.VerdictSQLParser;
-import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.relation.ExactRelation;
 import edu.umich.verdict.relation.Relation;
@@ -36,9 +35,9 @@ public class ShowSamplesQuery extends SelectQuery {
 			VerdictLogger.info("No table specified; cannot show samples");
 		} else {
 			ExactRelation nameTable = SingleRelation.from(vc, vc.getMeta().getMetaNameTableForOriginalSchema(database));
-			nameTable.setAliasName("s");
+			nameTable.setAlias("s");
 			ExactRelation sizeTable = SingleRelation.from(vc, vc.getMeta().getMetaSizeTableForOriginalSchema(database));
-			sizeTable.setAliasName("t");
+			sizeTable.setAlias("t");
 			
 			Relation info = nameTable.join(sizeTable, "s.sampleschemaaname = t.schemaname AND s.sampletablename = t.tablename")
 								     .select("s.originaltablename AS \"Original Table\","

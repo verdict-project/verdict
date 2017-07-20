@@ -2,14 +2,11 @@ package edu.umich.verdict.relation;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
-
-import com.google.common.collect.ImmutableSet;
 
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.datatypes.SampleParam;
@@ -20,7 +17,6 @@ import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.relation.expr.ExprVisitor;
 import edu.umich.verdict.relation.expr.FuncExpr;
-import edu.umich.verdict.relation.expr.SelectElem;
 
 public class SingleRelation extends ExactRelation {
 	
@@ -85,7 +81,13 @@ public class SingleRelation extends ExactRelation {
 		availableSamples.add(Pair.of(asSampleParam(), getTableName()));
 		
 		for (Pair<SampleParam, TableUniqueName> pair : availableSamples) {
+			SampleParam param = pair.getLeft();
+			double samplingProb = samplingProb(param, elem);
+			if (samplingProb < 0) {
+				continue;
+			}
 			ApproxRelation a = new ApproxSingleRelation(vc, pair.getLeft());
+			a.setAlias(getAlias());
 			samples.add(a);
 		}
 		
@@ -143,7 +145,6 @@ public class SingleRelation extends ExactRelation {
 	 * @return
 	 */
 	private double samplingProb(SampleParam param, Expr expr) {
-		
 		// extract all aggregate functions out of the select list element.
 		ExprVisitor<List<FuncExpr>> collectAggFuncs = new ExprVisitor<List<FuncExpr>>() {
 			private List<FuncExpr> seen = new ArrayList<FuncExpr>();
@@ -276,11 +277,11 @@ public class SingleRelation extends ExactRelation {
 	protected ApproxSingleRelation approxWith(Map<TableUniqueName, SampleParam> replace) {
 		if (replace.containsKey(getTableName())) {
 			ApproxSingleRelation a = ApproxSingleRelation.from(vc, replace.get(getTableName()));
-			a.setAliasName(getAlias());
+			a.setAlias(getAlias());
 			return a;
 		} else {
 			ApproxSingleRelation a = ApproxSingleRelation.asis(this);
-			a.setAliasName(getAlias());
+			a.setAlias(getAlias());
 			return a;
 		}
 	}

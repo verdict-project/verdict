@@ -16,7 +16,6 @@ import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.relation.condition.Cond;
 import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.Expr;
-import edu.umich.verdict.relation.expr.SelectElem;
 
 public class GroupedRelation extends ExactRelation {
 
@@ -66,7 +65,7 @@ public class GroupedRelation extends ExactRelation {
 	@Override
 	protected ApproxRelation approxWith(Map<TableUniqueName, SampleParam> replace) {
 		ApproxRelation a = new ApproxGroupedRelation(vc, source.approxWith(replace), groupby);
-		a.setAliasName(getAlias());
+		a.setAlias(getAlias());
 		return a;
 	}
 	

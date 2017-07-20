@@ -1,7 +1,5 @@
 package edu.umich.verdict.relation;
 
-import static org.junit.Assert.*;
-
 import java.io.FileNotFoundException;
 import java.sql.SQLException;
 
@@ -22,9 +20,23 @@ public class SqlRewritingUnitTest {
 		conf.setHost("salat1.eecs.umich.edu");
 		conf.setPort("21050");
 		conf.setDbms("impala");
-		conf.setDbmsSchema("instacart100g");
+		conf.setDbmsSchema("instacart1g");
 		conf.set("verdict.meta_catalog_suffix", "_verdict");
 		vc = VerdictJDBCContext.from(conf);
+	}
+	
+	@Test
+	public void countDistinctTest1() throws VerdictException {
+		String sql = "SELECT count(distinct user_id) FROM orders";
+		ExactRelation r = ExactRelation.from(vc, sql);
+		System.out.println(r);
+		
+		ApproxRelation a = r.approx();
+		System.out.println(a);
+		
+		ExactRelation e = a.rewriteWithSubsampledErrorBounds();
+		System.out.println(e);
+		System.out.println(Relation.prettyfySql(e.toSql()));
 	}
 
 	@Test
@@ -63,6 +75,28 @@ public class SqlRewritingUnitTest {
                      "GROUP BY departments.department_id, department " +
                      "ORDER BY order_count DESC " +
                      "LIMIT 5";
+		
+		ExactRelation r = ExactRelation.from(vc, sql);
+		System.out.println(r);
+		
+		ApproxRelation a = r.approx();
+		System.out.println(a);
+		
+		ExactRelation e = a.rewriteWithSubsampledErrorBounds();
+		System.out.println(e);
+		System.out.println(Relation.prettyfySql(e.toSql()));
+	}
+	
+	@Test
+	public void complexAlias() throws VerdictException {
+		String sql = "SELECT product_name, count(*) as order_count " +
+				"FROM instacart100g.order_products op, instacart100g.orders o, instacart100g.products p " +
+				"WHERE op.order_id = o.order_id " +
+				"  AND op.product_id = p.product_id " +
+				"  AND (order_dow = 0 OR order_dow = 1) " +
+				"GROUP BY product_name " +
+				"ORDER BY order_count DESC " +
+				"LIMIT 5";
 		
 		ExactRelation r = ExactRelation.from(vc, sql);
 		System.out.println(r);

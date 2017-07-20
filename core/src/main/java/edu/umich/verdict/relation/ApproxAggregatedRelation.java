@@ -2,13 +2,10 @@ package edu.umich.verdict.relation;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableMap;
 
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.datatypes.TableUniqueName;
@@ -24,6 +21,7 @@ import edu.umich.verdict.relation.expr.ExprModifier;
 import edu.umich.verdict.relation.expr.FuncExpr;
 import edu.umich.verdict.relation.expr.OverClause;
 import edu.umich.verdict.relation.expr.SelectElem;
+import edu.umich.verdict.util.VerdictLogger;
 
 public class ApproxAggregatedRelation extends ApproxRelation {
 	
@@ -60,12 +58,12 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 		ExactRelation newSource = source.rewriteForPointEstimate();
 		
 		List<Expr> scaled = new ArrayList<Expr>();
-		List<ColNameExpr> samplingProbColumns = newSource.accumulateSamplingProbColumns();
+//		List<ColNameExpr> samplingProbColumns = newSource.accumulateSamplingProbColumns();
 		for (Expr e : aggs) {
-			scaled.add(transformForSingleFunction(e, samplingProbColumns));
+			scaled.add(transformForSingleFunction(e));
 		}
 		ExactRelation r = new AggregatedRelation(vc, newSource, scaled);
-		r.setAliasName(getAlias());
+		r.setAlias(getAlias());
 		((AggregatedRelation) r).setIncludeGroupsInToSql(includeGroupsInToSql);
 		return r;
 	}
@@ -222,7 +220,25 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 	
 	@Override
 	protected List<Expr> samplingProbabilityExprsFor(FuncExpr f) {
-		return Arrays.asList();
+		if (f.getFuncName().equals(FuncExpr.FuncName.COUNT_DISTINCT)) {
+			if (sampleType().equals("universe")) {
+				return Arrays.<Expr>asList(ConstantExpr.from(samplingProbability()));
+			} else if (sampleType().equals("stratified")) {
+				return Arrays.<Expr>asList();
+			} else if (sampleType().equals("nosample")) {
+				return Arrays.<Expr>asList();
+			} else {
+				VerdictLogger.warn(this, String.format("%s sample should not be used for count-distinct.", sampleType()));
+				return Arrays.<Expr>asList(ConstantExpr.from(1.0));
+			}
+		} else {	// SUM, COUNT, AVG
+			if (!sampleType().equals("nosample")) {
+				String samplingProbCol = samplingProbabilityColumnName();
+				return Arrays.<Expr>asList(new ColNameExpr(samplingProbCol, alias));
+			} else {
+				return Arrays.<Expr>asList();
+			}
+		}
 	}
 	
 	private Expr transformForSingleFunctionWithPartitionSize(
@@ -260,15 +276,16 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 						String dbname = vc.getDbms().getName();
 						Expr scale = scaleForSampling(samplingProbExprs);
 						Expr est = null;
+						est = new FuncExpr(FuncExpr.FuncName.COUNT_DISTINCT, s.getUnaryExpr());
 						
-						if (dbname.equals("impala")) {
-							est = new FuncExpr(FuncExpr.FuncName.IMPALA_APPROX_COUNT_DISTINCT, s.getUnaryExpr());
-						} else {
-							est = new FuncExpr(FuncExpr.FuncName.COUNT_DISTINCT, s.getUnaryExpr());
-						}
+//						if (dbname.equals("impala")) {
+//							est = new FuncExpr(FuncExpr.FuncName.IMPALA_APPROX_COUNT_DISTINCT, s.getUnaryExpr());
+//						} else {
+//							
+//						}
 						
 						est = BinaryOpExpr.from(est, scale, "*");
-						if (sampleType().equals("universe")) {
+						if (source.sampleType().equals("universe")) {
 							est = scaleWithPartitionSize(est, groupby, partitionCol, forErrorEst);
 						}
 //						est = FuncExpr.round(est);
@@ -331,7 +348,7 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 		return scaled;
 	}
 
-	private Expr transformForSingleFunction(Expr f, final List<ColNameExpr> samplingProbCols) {
+	private Expr transformForSingleFunction(Expr f) {
 		final Map<TableUniqueName, String> sub = source.tableSubstitution();
 		
 		ExprModifier v = new ExprModifier() {
@@ -412,9 +429,11 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 			} else if (sampleType.equals("stratified") && strGroupby.equals(sampleColumns)) {
 				return "stratified";
 			}
+			
+			return "grouped-" + sampleType;
+		} else {
+			return "nosample";
 		}
-		
-		return "grouped-" + sampleType;
 	}
 	
 	@Override

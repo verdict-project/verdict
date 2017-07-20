@@ -56,7 +56,7 @@ public abstract class ExactRelation extends Relation {
 	}
 	
 	public ExactRelation withAlias(String alias) {
-		this.setAliasName(alias);
+		this.setAlias(alias);
 		return this;
 	}
 	
@@ -451,6 +451,7 @@ public abstract class ExactRelation extends Relation {
 	 */
 	public abstract ColNameExpr partitionColumn();
 	
+	@Deprecated
 	public abstract List<ColNameExpr> accumulateSamplingProbColumns();
 	
 	@Override
@@ -668,7 +669,7 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
 			String tableName = ctx.table_name_with_hint().table_name().getText();
 			ExactRelation r = SingleRelation.from(vc, tableName);
 			if (ctx.as_table_alias() != null) {
-				r.setAliasName(ctx.as_table_alias().table_alias().getText());
+				r.setAlias(ctx.as_table_alias().table_alias().getText());
 			}
 			return r;
 		}
@@ -678,7 +679,7 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
 			RelationGen gen = new RelationGen(vc);
 			ExactRelation r = gen.visit(ctx.derived_table().subquery().select_statement());
 			if (ctx.as_table_alias() != null) {
-				r.setAliasName(ctx.as_table_alias().table_alias().getText());
+				r.setAlias(ctx.as_table_alias().table_alias().getText());
 			}
 			return r;
 		}

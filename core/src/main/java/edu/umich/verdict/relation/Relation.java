@@ -4,7 +4,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.antlr.v4.runtime.ANTLRInputStream;
@@ -28,10 +27,8 @@ import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.exceptions.VerdictUnexpectedMethodCall;
 import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.Expr;
-import edu.umich.verdict.relation.expr.ExprModifier;
 import edu.umich.verdict.relation.expr.FuncExpr;
 import edu.umich.verdict.relation.expr.SelectElem;
-import edu.umich.verdict.relation.expr.SubqueryExpr;
 import edu.umich.verdict.util.ResultSetConversion;
 import edu.umich.verdict.util.StackTraceReader;
 import edu.umich.verdict.util.StringManipulations;
@@ -53,7 +50,15 @@ public abstract class Relation {
 	
 	protected String alias;
 	
-	public final static Set<String> availableJoinTypes = Sets.newHashSet("uniform", "universe", "stratified", "nosample");
+	/**
+	 * uniform: uniform random sample
+	 * arbitrary: sampling probabilities for tuples may be all different. (there's no guarantee on uniformness).
+	 * nosample: the original table itself.
+	 * stratified: stratified on a certain column. It is guaranteed that we do not miss any group.
+	 * universe: hashed on a certain column. It is guaranteed that the tuples with the same attribute values
+	 *           in the column are sampled together.
+	 */
+	public final static Set<String> availableJoinTypes = Sets.newHashSet("uniform", "universe", "stratified", "nosample", "arbitrary");
 	
 	public Relation(VerdictContext vc) {
 		this.vc = vc;
@@ -82,7 +87,7 @@ public abstract class Relation {
 		return alias;
 	}
 	
-	public void setAliasName(String a) {
+	public void setAlias(String a) {
 		alias = a;
 	}
 	

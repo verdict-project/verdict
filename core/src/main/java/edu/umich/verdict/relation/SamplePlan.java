@@ -2,13 +2,6 @@ package edu.umich.verdict.relation;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
-
-import org.apache.commons.lang3.tuple.Pair;
-
-import edu.umich.verdict.datatypes.SampleParam;
-import edu.umich.verdict.relation.expr.Expr;
-import edu.umich.verdict.relation.expr.SelectElem;
 
 /**
  * Stores information about what samples to use to compute multiple expressions. A single SampleGroup instance stores

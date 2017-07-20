@@ -1,7 +1,6 @@
 package edu.umich.verdict;
 
 import java.sql.ResultSet;
-import java.util.List;
 import java.util.Set;
 
 import org.junit.Test;

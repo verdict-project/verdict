@@ -1,11 +1,8 @@
 package edu.umich.verdict.query;
 
-import com.google.common.base.Optional;
-
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.VerdictSQLBaseVisitor;
 import edu.umich.verdict.VerdictSQLParser;
-import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.util.StringManipulations;
 import edu.umich.verdict.util.VerdictLogger;

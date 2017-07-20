@@ -3,7 +3,6 @@ package edu.umich.verdict.dbms;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
@@ -20,11 +19,6 @@ import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.relation.ExactRelation;
 import edu.umich.verdict.relation.Relation;
 import edu.umich.verdict.relation.SingleRelation;
-import edu.umich.verdict.relation.condition.CompCond;
-import edu.umich.verdict.relation.expr.BinaryOpExpr;
-import edu.umich.verdict.relation.expr.ConstantExpr;
-import edu.umich.verdict.relation.expr.Expr;
-import edu.umich.verdict.relation.expr.SubqueryExpr;
 import edu.umich.verdict.util.VerdictLogger;
 
 public class DbmsImpala extends DbmsJDBC {

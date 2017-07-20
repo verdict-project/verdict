@@ -9,7 +9,6 @@ import java.util.Set;
 import org.apache.commons.lang3.tuple.Pair;
 
 import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableSet;
 
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.datatypes.SampleParam;
@@ -20,7 +19,6 @@ import edu.umich.verdict.relation.condition.CompCond;
 import edu.umich.verdict.relation.condition.Cond;
 import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.Expr;
-import edu.umich.verdict.relation.expr.SelectElem;
 import edu.umich.verdict.util.VerdictLogger;
 
 public class JoinedRelation extends ExactRelation {
@@ -127,7 +125,7 @@ public class JoinedRelation extends ExactRelation {
 	
 	protected ApproxRelation approxWith(Map<TableUniqueName, SampleParam> replace) {
 		ApproxRelation a = new ApproxJoinedRelation(vc, source1.approxWith(replace), source2.approxWith(replace), joinCols);
-		a.setAliasName(getAlias());
+		a.setAlias(getAlias());
 		return a;
 	}
 	

@@ -1,6 +1,5 @@
 package edu.umich.verdict.relation;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -13,7 +12,6 @@ import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.relation.expr.OrderByExpr;
-import edu.umich.verdict.relation.expr.SelectElem;
 
 public class OrderedRelation extends ExactRelation {
 	
@@ -42,7 +40,7 @@ public class OrderedRelation extends ExactRelation {
 	@Override
 	public ApproxRelation approx() throws VerdictException {
 		ApproxRelation a = new ApproxOrderedRelation(vc, source.approx(), orderby);
-		a.setAliasName(getAlias());
+		a.setAlias(getAlias());
 		return a;
 	}
 
