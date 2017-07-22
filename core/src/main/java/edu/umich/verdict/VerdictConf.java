@@ -20,11 +20,15 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Scanner;
+import java.util.Set;
 
 import com.google.common.collect.ImmutableMap;
+
+import org.json.*;
 
 import com.google.gson.*;
 import com.google.gson.stream.JsonReader;
@@ -41,17 +45,19 @@ public class VerdictConf {
     		.put("loglevel", "verdict.loglevel")
     		.build();
     
+    private final String DEFAULT_CONFIG_FILE = "default_verdict_conf.json";
+    
     public VerdictConf() {
         setDefaults();
     }
     
-    public VerdictConf(String filename) {
+    public VerdictConf(String jsonFilename) {
+    		this();
     		try {
-    			ClassLoader cl = this.getClass().getClassLoader();
-			readFromJson(cl.getResourceAsStream(filename));
-		} catch (FileNotFoundException e) {
-			System.err.println(e.getMessage());
-		}
+				updateFromJson(jsonFilename);
+			} catch (FileNotFoundException e) {
+				VerdictLogger.error(e.getMessage());
+			}
     }
 
     public VerdictConf(Properties properties) {
@@ -74,6 +80,13 @@ public class VerdictConf {
         try {
             ClassLoader cl = this.getClass().getClassLoader();
             updateFromStream(cl.getResourceAsStream("default.conf"));
+            
+            String filepath = "../config/" + DEFAULT_CONFIG_FILE;
+            File file = new File(filepath);
+            if (file.exists()) {
+            		updateFromJson(DEFAULT_CONFIG_FILE);
+            }
+            
         } catch (FileNotFoundException e) {
             System.err.println(e.getMessage());
         }
@@ -92,40 +105,41 @@ public class VerdictConf {
         return this;
     }
     
-    private VerdictConf readFromJson(InputStream stream) throws FileNotFoundException {
-    	
-    		JsonReader reader = new JsonReader(new InputStreamReader(stream));
-    		reader.setLenient(true);
-    		try {
-				reader.beginObject();
-				while(true) {
-					String key = reader.nextName();
-					if(key.equals("verdict") || key.equals("mysql") || key.equals("impala") || 
-							key.equals("hive2") || key.equals("sparksql")) {
-						key += ".";
-						reader.beginObject();
-						while(reader.hasNext()) {
-							String fullKey = key + reader.nextName();
-							String value = reader.nextString();
-							set(fullKey, value);
-						}
-						reader.endObject();
-					}
-					else {
-						String value = reader.nextString();
-						set(key, value);
-					}
-					
-					if (!reader.hasNext()) {
-						break;
-					}
-				}
-				
-			} catch (IOException e) {
-				System.err.println(e.getMessage());
-			}
+    private HashMap<String, String> updateFromJsonHelper(JSONObject jsonConfig, String prefix){
+    		Set<String> keys = jsonConfig.keySet();
+    		HashMap<String, String> temp = new HashMap<String, String>();
     		
-    		return this;
+    		if (prefix != null && !prefix.equals("")) {
+    			prefix += ".";
+    		}
+
+    		for(String key: keys) {
+    			Object subObj = jsonConfig.get(key);
+    			
+    			if (subObj instanceof JSONObject) {
+    				JSONObject sub = (JSONObject) subObj;
+    				HashMap<String, String> sublevel = updateFromJsonHelper(sub, key);
+    				Set<String> subKeys = sublevel.keySet();
+    				for(String subKey: subKeys) {
+    					temp.put(prefix+subKey, sublevel.get(subKey));
+    				}
+    			}
+    			else {
+    				temp.put(prefix+key, jsonConfig.getString(key));
+    			}
+    		}
+    		return temp;
+    }
+    
+    private void updateFromJson(String filename) throws FileNotFoundException {
+        String filepath = "../config/" + filename;
+        File file = new File(filepath);
+    	
+    		JSONTokener jsonTokener = new JSONTokener(new FileInputStream(file));
+    		JSONObject jsonConfig = new JSONObject(jsonTokener);
+    		HashMap<String, String> newConfigs = updateFromJsonHelper(jsonConfig, "");
+    		
+    		newConfigs.forEach((k, v) -> configs.put(k, v));
     }
     
 

@@ -14,8 +14,8 @@ public class ReadJsonTest {
 	Set keys = pNormal.keySet();
 	
 	@Test
-	public void testVerdictConfString() {
-		VerdictConf vcNested = new VerdictConf("verdict_conf.json");
+	public void testdefault() {
+		VerdictConf vcNested = new VerdictConf("testReading.json");
 		for (Object key:keys) {
 			String aKey = (String) key;
 			assert(vcNested.doesContain(aKey));
@@ -24,13 +24,21 @@ public class ReadJsonTest {
 	}
 	
 	@Test
-	public void testComplicated() {
-		VerdictConf vcMore = new VerdictConf("vc_plain.json");
+	public void testOverwrite() {
+		VerdictConf vcMore = new VerdictConf("testOverwrite.json");
+		assert(vcMore.doesContain("hive2.port"));
+		assertEquals(vcMore.get("hive2.port"), "20000");
+		
+		assert(vcMore.doesContain("verdict.bypass"));
+		assertEquals(vcMore.get("verdict.bypass"), "yes");
+			
 		for (Object key:keys) {
 			String aKey = (String) key;
 			assert(vcMore.doesContain(aKey));
-			assertEquals(vcNormal.get(aKey), vcMore.get(aKey));
+			
+			if (!aKey.equals("hive2.port") && !aKey.equals("verdict.bypass")) {
+				assertEquals(vcNormal.get(aKey), vcMore.get(aKey));
+			}
 		}
 	}
-	
 }
