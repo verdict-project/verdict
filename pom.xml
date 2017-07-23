@@ -22,6 +22,11 @@
   </properties>
 
   <build>
+    <resources>
+        <resource>
+            <directory>../../config</directory>
+        </resource>
+    </resources>
     <pluginManagement>
       <plugins>
           <plugin>
