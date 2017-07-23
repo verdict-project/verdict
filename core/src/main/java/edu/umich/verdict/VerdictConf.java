@@ -30,9 +30,6 @@ import com.google.common.collect.ImmutableMap;
 
 import org.json.*;
 
-import com.google.gson.*;
-import com.google.gson.stream.JsonReader;
-
 import edu.umich.verdict.util.VerdictLogger;
 
 public class VerdictConf {
@@ -54,7 +51,8 @@ public class VerdictConf {
     public VerdictConf(String jsonFilename) {
     		this();
     		try {
-				updateFromJson(jsonFilename);
+    				ClassLoader cl = this.getClass().getClassLoader();
+				updateFromJson(cl.getResourceAsStream(jsonFilename));
 			} catch (FileNotFoundException e) {
 				VerdictLogger.error(e.getMessage());
 			}
@@ -81,12 +79,7 @@ public class VerdictConf {
             ClassLoader cl = this.getClass().getClassLoader();
             updateFromStream(cl.getResourceAsStream("default.conf"));
             
-            String filepath = "../config/" + DEFAULT_CONFIG_FILE;
-            File file = new File(filepath);
-            if (file.exists()) {
-            		updateFromJson(DEFAULT_CONFIG_FILE);
-            }
-            
+            updateFromJson(cl.getResourceAsStream(DEFAULT_CONFIG_FILE));            
         } catch (FileNotFoundException e) {
             System.err.println(e.getMessage());
         }
@@ -131,11 +124,8 @@ public class VerdictConf {
     		return temp;
     }
     
-    private void updateFromJson(String filename) throws FileNotFoundException {
-        String filepath = "../config/" + filename;
-        File file = new File(filepath);
-    	
-    		JSONTokener jsonTokener = new JSONTokener(new FileInputStream(file));
+    private void updateFromJson(InputStream stream) throws FileNotFoundException {
+    		JSONTokener jsonTokener = new JSONTokener(stream);
     		JSONObject jsonConfig = new JSONObject(jsonTokener);
     		HashMap<String, String> newConfigs = updateFromJsonHelper(jsonConfig, "");
     		
