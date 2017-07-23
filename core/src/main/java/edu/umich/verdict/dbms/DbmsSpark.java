@@ -130,7 +130,7 @@ public class DbmsSpark extends Dbms {
 		List<Row> rows = executeSparkQuery("describe " + table).collectAsList();
 		for (Row row : rows) {
 			String column = row.getString(0);
-			String type = row.getString(2);
+			String type = row.getString(1);
 			col2type.put(column, type);
 		}
 		return col2type;
