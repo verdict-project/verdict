@@ -3,7 +3,9 @@ package edu.umich.verdict.dbms;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.datatypes.SampleParam;
@@ -89,17 +91,24 @@ public class DbmsMySQL extends DbmsJDBC {
 	}
 
 	@Override
-	public List<String> getColumns(TableUniqueName table) throws VerdictException {
-		List<String> columns = new ArrayList<String>();
+	public Map<String, String> getColumns(TableUniqueName table) throws VerdictException {
+		Map<String, String> col2type = new LinkedHashMap<String, String>();
 		try {
 			ResultSet rs = executeJdbcQuery("describe " + table);
 			while (rs.next()) {
 				String column = rs.getString(1);
-				columns.add(column);
+				String type = rs.getString(2);
+				col2type.put(column, type);
 			}
 		} catch (SQLException e) {
 			throw new VerdictException(e);
 		}
-		return columns;
+		return col2type;
 	}
+	
+	@Override
+	public String modOfRand(int mod) {
+		return String.format("abs(rand()) %% %d", mod);
+	}
+	
 }

@@ -214,4 +214,16 @@ public class VerdictConf {
 	public boolean cacheSparkSamples() {
 		return getBoolean("verdict.cache_spark_samples");
 	}
+	
+	public String partitionColumnName() {
+		return get("verdict.subsampling_partition_column_name");
+	}
+	
+	public int partitionCount() {
+		return getInt("verdict.subsampling_partition_count");
+	}
+
+	public String samplingProbabilityColumnName() {
+		return get("verdict.sampling_probability_column");
+	}
 }

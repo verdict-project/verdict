@@ -3,6 +3,7 @@ package edu.umich.verdict.dbms;
 import java.sql.ResultSet;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -100,7 +101,7 @@ public class DbmsDummy extends Dbms {
 	}
 
 	@Override
-	public List<String> getColumns(TableUniqueName table) throws VerdictException {
+	public Map<String, String> getColumns(TableUniqueName table) throws VerdictException {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -108,6 +109,11 @@ public class DbmsDummy extends Dbms {
 	@Override
 	public Set<String> getDatabases() throws VerdictException {
 		return new HashSet<String>();
+	}
+	
+	@Override
+	public String modOfRand(int mod) {
+		return null;
 	}
 	
 }

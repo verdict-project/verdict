@@ -14,9 +14,11 @@ import edu.umich.verdict.datatypes.SampleSizeInfo;
 import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.relation.expr.ColNameExpr;
+import edu.umich.verdict.relation.expr.ConstantExpr;
 import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.relation.expr.ExprVisitor;
 import edu.umich.verdict.relation.expr.FuncExpr;
+import edu.umich.verdict.util.VerdictLogger;
 
 public class SingleRelation extends ExactRelation {
 	
@@ -320,10 +322,11 @@ public class SingleRelation extends ExactRelation {
 	@Override
 	public ColNameExpr partitionColumn() {
 		Set<String> columns = vc.getMeta().getColumns(getTableName());
-		String partitionCol = vc.getDbms().partitionColumnName();
+		String partitionCol = vc.getConf().partitionColumnName();
 		if (columns.contains(partitionCol)) {
 			return new ColNameExpr(partitionCol, getAlias());
 		} else {
+			VerdictLogger.error(this, "partition column does not exists in the table: " + getTableName());
 			return null;
 		}
 	}

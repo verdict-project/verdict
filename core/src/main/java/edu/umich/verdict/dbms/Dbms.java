@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -195,8 +196,8 @@ public abstract class Dbms {
 		List<Pair<String, String>> tablesAndColumns = new ArrayList<Pair<String, String>>();
 		List<String> tables = getTables(schema);
 		for (String table : tables) {
-			List<String> columns = getColumns(TableUniqueName.uname(schema, table));
-			for (String column : columns) {
+			Map<String, String> col2type = getColumns(TableUniqueName.uname(schema, table));
+			for (String column : col2type.keySet()) {
 				tablesAndColumns.add(Pair.of(table, column));
 			}
 		}
@@ -207,7 +208,13 @@ public abstract class Dbms {
 	
 	public abstract List<String> getTables(String schema) throws VerdictException;
 	
-	public abstract List<String> getColumns(TableUniqueName table) throws VerdictException;
+	/**
+	 * Retrieves the mapping from column name to its type for a given table.
+	 * @param table
+	 * @return
+	 * @throws VerdictException
+	 */
+	public abstract Map<String, String> getColumns(TableUniqueName table) throws VerdictException;
 
 	public abstract void deleteEntry(TableUniqueName tableName, List<Pair<String, String>> colAndValues) throws VerdictException;
 
@@ -340,20 +347,10 @@ public abstract class Dbms {
 	public String stddevFunction() {
 		return "STDDEV";
 	}
-
-	public String partitionColumnName() {
-		return vc.getConf().get("verdict.subsampling_partition_column_name");
-	}
-	
-	public int partitionCount() {
-		return vc.getConf().getInt("verdict.subsampling_partition_count");
-	}
-
-	public String samplingProbabilityColumnName() {
-		return vc.getConf().get("verdict.sampling_probability_column");
-	}
 	
 	public abstract String modOfHash(String col, int mod);
+	
+	public abstract String modOfRand(int mod);
 
 	protected String quote(String expr) {
 		return String.format("\"%s\"", expr);
@@ -365,6 +362,18 @@ public abstract class Dbms {
 
 	protected String samplingRatioToString(double samplingRatio) {
 		return String.format("%.4f", samplingRatio);
+	}
+	
+	public String partitionColumnName() {
+		return vc.getConf().partitionColumnName();
+	}
+	
+	public int partitionCount() {
+		return vc.getConf().partitionCount();
+	}
+
+	public String samplingProbabilityColumnName() {
+		return vc.getConf().samplingProbabilityColumnName();
 	}
 	
 	public boolean isJDBC() {

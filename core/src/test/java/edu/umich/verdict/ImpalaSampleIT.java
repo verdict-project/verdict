@@ -15,7 +15,7 @@ public class ImpalaSampleIT extends SampleIT {
 	public static void connect() throws VerdictException, SQLException, FileNotFoundException, ClassNotFoundException {
 		final String host = readHost();
 		final String port = "21050";
-		final String schema = "instacart1g";
+		final String schema = "instacart100g";
 		
 		VerdictConf conf = new VerdictConf();
 		conf.setDbms("impala");
@@ -65,6 +65,12 @@ public class ImpalaSampleIT extends SampleIT {
 	@Override
 	public void createStratifiedSampleTest() throws VerdictException {
 		super.createStratifiedSampleTest();
+	}
+
+	@Override
+	public void createStratifiedSampleTest2() throws VerdictException {
+		// TODO Auto-generated method stub
+		super.createStratifiedSampleTest2();
 	}
 	
 }

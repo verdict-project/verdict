@@ -54,9 +54,18 @@ public class VerdictMeta {
 	
 	protected Set<String> databases;		// a.k.a. database names.
 	
-	protected Map<String, Set<String>> tables;
+	protected Map<String, Set<String>> db2tables;
 	
-	protected Map<TableUniqueName, Set<String>> columns;
+	/**
+	 * {tablename1:
+	 *   {columnname1_1: type,
+	 *    columnname1_2: type},
+	 *  tablename2:
+	 *   {columnname2_1: type,
+	 *    columnname2_2: type},
+	 * }
+	 */
+	protected Map<TableUniqueName, Map<String, String>> tab2columns;
 	
 	protected VerdictContext vc;
 
@@ -66,8 +75,8 @@ public class VerdictMeta {
 		sampleNameMeta = new HashMap<TableUniqueName, Map<SampleParam, TableUniqueName>>();
 		uptodateSchemas = new HashMap<String, Long>();
 		databases = new HashSet<String>();
-		tables = new HashMap<String, Set<String>>();
-		columns = new HashMap<TableUniqueName, Set<String>>();
+		db2tables = new HashMap<String, Set<String>>();
+		tab2columns = new HashMap<TableUniqueName, Map<String, String>>();
 //		tableToColumnNames = new HashMap<TableUniqueName, List<String>>();
 		META_NAME_TABLE = vc.getConf().get("verdict.meta_name_table");
 		META_SIZE_TABLE = vc.getConf().get("verdict.meta_size_table");
@@ -82,8 +91,8 @@ public class VerdictMeta {
 		sampleSizeMeta.clear();
 		sampleNameMeta.clear();
 		databases.clear();
-		tables.clear();
-		columns.clear();
+		db2tables.clear();
+		tab2columns.clear();
 	}
 	
 	/**
@@ -107,10 +116,10 @@ public class VerdictMeta {
 	}
 	
 	public Set<String> getTables(String database) {
-		if (!tables.containsKey(database)) {
+		if (!db2tables.containsKey(database)) {
 			refreshTables(database);
 		}
-		return tables.get(database);
+		return db2tables.get(database);
 	}
 	
 	/**
@@ -120,23 +129,32 @@ public class VerdictMeta {
 	public void refreshTables(String database) {
 		try {
 			List<String> tables = vc.getDbms().getTables(database);
-			this.tables.put(database, new TreeSet<String>(tables));
+			this.db2tables.put(database, new TreeSet<String>(tables));
 		} catch (VerdictException e) {
 			VerdictLogger.error(e);
 		}
 	}
 	
 	public Set<String> getColumns(TableUniqueName tableName) {
-		if (!columns.containsKey(tableName)) {
+		if (!tab2columns.containsKey(tableName)) {
 			refreshColumns(tableName);
 		}
-		return columns.get(tableName);
+		Set<String> columns = tab2columns.get(tableName).keySet();
+		return columns;
+	}
+	
+	public Map<String, String> getColumn2Types(TableUniqueName tableName) {
+		if (!tab2columns.containsKey(tableName)) {
+			refreshColumns(tableName);
+		}
+		Map<String, String> col2type = tab2columns.get(tableName);
+		return col2type;
 	}
 	
 	public void refreshColumns(TableUniqueName tableName) {
 		try {
-			List<String> columns = vc.getDbms().getColumns(tableName);
-			this.columns.put(tableName, new TreeSet<String>(columns));
+			Map<String, String> columns = vc.getDbms().getColumns(tableName);
+			this.tab2columns.put(tableName, columns);
 		} catch (VerdictException e) {
 			VerdictLogger.error(e);
 		}

@@ -33,6 +33,11 @@ public class SampleIT extends BaseIT {
 	}
 	
 	@Test
+	public void createStratifiedSampleTest2() throws VerdictException {
+		vc.executeJdbcQuery("create stratified sample of orders ON eval_set");
+	}
+	
+	@Test
 	public void createUniverseSampleTest() throws VerdictException {
 		vc.executeJdbcQuery("CREATE UNIVERSE SAMPLE OF orders ON user_id");
 	}
