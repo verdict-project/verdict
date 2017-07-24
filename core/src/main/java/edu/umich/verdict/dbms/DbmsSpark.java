@@ -203,8 +203,9 @@ public class DbmsSpark extends Dbms {
 	}
 	
 	private TableUniqueName createUniformRandomSampledTable(SampleParam param) throws VerdictException {
-		String whereClause = String.format("rand(unix_timestamp()) < %f", param.samplingRatio);
+		String whereClause = String.format("__rand < %f", param.samplingRatio);
 		ExactRelation sampled = SingleRelation.from(vc, param.getOriginalTable())
+				                .select("*, rand(unix_timestamp()) as __rand")
 				                .where(whereClause)
 				                .select("*, " + randomPartitionColumn());
 		TableUniqueName temp = Relation.getTempTableName(vc, param.sampleTableName().getSchemaName());
