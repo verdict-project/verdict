@@ -19,6 +19,7 @@
 		<spark.core.version>1.6.0-cdh5.11.1</spark.core.version>
 		<spark.sql.version>1.6.0-cdh5.11.1</spark.sql.version>
 		<spark.hive.version>1.6.0-cdh5.11.1</spark.hive.version>
+		<org.json.version>20160810</org.json.version>
 	</properties>
 
 	<groupId>edu.umich.verdict</groupId>
@@ -27,6 +28,12 @@
 	<version>0.3.0</version>
 	<name>VerdictDB</name>
 	<url>http://verdictdb.org</url>
+
+    <modules>
+        <module>core</module>
+        <module>jdbc</module>
+        <module>veeline</module>
+    </modules>
 
 	<repositories>
 		<repository>
