@@ -1,15 +1,38 @@
 package edu.umich.verdict;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.InputStream;
+
+import java.io.*;
+import java.math.BigDecimal;
+import java.net.URL;
+import java.sql.Array;
+import java.sql.Blob;
+import java.sql.Clob;
+import java.sql.Date;
+import java.sql.NClob;
+import java.sql.Ref;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.RowId;
+import java.sql.SQLException;
+import java.sql.SQLWarning;
+import java.sql.SQLXML;
+import java.sql.Statement;
+import java.sql.Time;
+import java.sql.Timestamp;
+import java.util.Calendar;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Scanner;
+import java.util.Set;
 import java.util.TreeMap;
 
+import org.json.JSONObject;
+import org.json.JSONTokener;
+
 import com.google.common.collect.ImmutableMap;
+
 
 import edu.umich.verdict.util.VerdictLogger;
 
@@ -23,8 +46,20 @@ public class VerdictConf {
     		.put("loglevel", "verdict.loglevel")
     		.build();
     
+    private final String DEFAULT_CONFIG_FILE = "default_verdict_conf.json";
+    
     public VerdictConf() {
         setDefaults();
+    }
+    
+    public VerdictConf(String jsonFilename) {
+    		this();
+    		try {
+    				ClassLoader cl = this.getClass().getClassLoader();
+				updateFromJson(cl.getResourceAsStream(jsonFilename));
+			} catch (FileNotFoundException e) {
+				VerdictLogger.error(e.getMessage());
+			}
     }
 
     public VerdictConf(Properties properties) {
@@ -47,10 +82,12 @@ public class VerdictConf {
         updateFromStream(new FileInputStream(file));
     }
 
-    private VerdictConf setDefaults() {
+	private VerdictConf setDefaults() {
         try {
             ClassLoader cl = this.getClass().getClassLoader();
             updateFromStream(cl.getResourceAsStream("default.conf"));
+            
+            updateFromJson(cl.getResourceAsStream(DEFAULT_CONFIG_FILE));            
         } catch (FileNotFoundException e) {
             System.err.println(e.getMessage());
         }
@@ -68,6 +105,41 @@ public class VerdictConf {
         scanner.close();
         return this;
     }
+    
+    private HashMap<String, String> updateFromJsonHelper(JSONObject jsonConfig, String prefix){
+    		Set<String> keys = jsonConfig.keySet();
+    		HashMap<String, String> temp = new HashMap<String, String>();
+    		
+    		if (prefix != null && !prefix.equals("")) {
+    			prefix += ".";
+    		}
+
+    		for(String key: keys) {
+    			Object subObj = jsonConfig.get(key);
+    			
+    			if (subObj instanceof JSONObject) {
+    				JSONObject sub = (JSONObject) subObj;
+    				HashMap<String, String> sublevel = updateFromJsonHelper(sub, key);
+    				Set<String> subKeys = sublevel.keySet();
+    				for(String subKey: subKeys) {
+    					temp.put(prefix+subKey, sublevel.get(subKey));
+    				}
+    			}
+    			else {
+    				temp.put(prefix+key, jsonConfig.getString(key));
+    			}
+    		}
+    		return temp;
+    }
+    
+    private void updateFromJson(InputStream stream) throws FileNotFoundException {
+    		JSONTokener jsonTokener = new JSONTokener(stream);
+    		JSONObject jsonConfig = new JSONObject(jsonTokener);
+    		HashMap<String, String> newConfigs = updateFromJsonHelper(jsonConfig, "");
+    		
+    		newConfigs.forEach((k, v) -> configs.put(k, v));
+    }
+    
 
     public int getInt(String key) {
         return Integer.parseInt(get(key));
@@ -117,7 +189,7 @@ public class VerdictConf {
             val = val.substring(1, val.length() - 1);
         return set(key, val);
     }
-
+    
     public VerdictConf set(String key, String value) {
     	key = key.toLowerCase();
     	
