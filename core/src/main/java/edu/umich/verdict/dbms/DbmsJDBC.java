@@ -317,7 +317,7 @@ public abstract class DbmsJDBC extends Dbms {
 	@Override
 	public void insertEntry(TableUniqueName tableName, List<Object> values) throws VerdictException {
 		StringBuilder sql = new StringBuilder(1000);
-		sql.append(String.format("insert into %s values ", tableName));
+		sql.append(String.format("insert into table %s values ", tableName));
 		sql.append("(");
 		String with = "'";
 		sql.append(Joiner.on(", ").join(StringManipulations.quoteString(values, with)));

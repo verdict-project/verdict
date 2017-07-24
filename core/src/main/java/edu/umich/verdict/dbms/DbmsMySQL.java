@@ -5,11 +5,14 @@ import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
 
+import com.google.common.base.Joiner;
+
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.datatypes.SampleParam;
 import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.relation.SingleRelation;
+import edu.umich.verdict.util.StringManipulations;
 import edu.umich.verdict.util.VerdictLogger;
 
 public class DbmsMySQL extends DbmsJDBC {
@@ -89,6 +92,17 @@ public class DbmsMySQL extends DbmsJDBC {
 		values.add(sampleSize);
 		values.add(originalTableSize);
 		insertEntry(metaSizeTableName, values);
+	}
+	
+	@Override
+	public void insertEntry(TableUniqueName tableName, List<Object> values) throws VerdictException {
+		StringBuilder sql = new StringBuilder(1000);
+		sql.append(String.format("insert into %s values ", tableName));
+		sql.append("(");
+		String with = "'";
+		sql.append(Joiner.on(", ").join(StringManipulations.quoteString(values, with)));
+		sql.append(")");
+		executeUpdate(sql.toString());
 	}
 	
 	@Override
