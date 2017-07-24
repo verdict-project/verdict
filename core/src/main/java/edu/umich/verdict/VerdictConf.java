@@ -6,7 +6,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Scanner;
@@ -98,7 +97,7 @@ public class VerdictConf {
 			prefix += ".";
 		}
 
-		for(String key: keys) {
+		for (String key : keys) {
 			Object subObj = jsonConfig.get(key);
 
 			if (subObj instanceof JSONObject) {
@@ -113,6 +112,7 @@ public class VerdictConf {
 				temp.put(prefix+key, jsonConfig.getString(key));
 			}
 		}
+		
 		return temp;
 	}
 

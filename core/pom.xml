@@ -153,11 +153,6 @@
 			<version>${spark.hive.version}</version>
 			<scope>provided</scope>
 		</dependency>
-		<dependency>
-			<groupId>org.json</groupId>
-			<artifactId>json</artifactId>
-			<version>${org.json.version}</version>
-		</dependency>
 
 		<!-- test supports -->
 		<dependency>
