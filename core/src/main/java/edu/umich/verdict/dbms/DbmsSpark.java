@@ -323,7 +323,7 @@ public class DbmsSpark extends Dbms {
 		}
 		
 		// where clause using rand function
-		String whereClause = String.format("rand(unix_timestamp()) < %d * %f / %d / __group_size",
+		String whereClause = String.format("__rand < %d * %f / %d / __group_size",
 		                                   originalTableSize,
 		                                   param.getSamplingRatio(),
                                            groupCount);
@@ -336,10 +336,12 @@ public class DbmsSpark extends Dbms {
 		
 		// sample table
 		TableUniqueName sampledNoRand = Relation.getTempTableName(vc, param.sampleTableName().getSchemaName());
-		ExactRelation sampled = SingleRelation.from(vc, param.getOriginalTable()).withAlias("s")
-				                .join(SingleRelation.from(vc, groupSizeTemp).withAlias("t"), joinExprs)
-				                .where(whereClause)
-				                .select(Joiner.on(", ").join(selectElems) + ", __group_size");
+		ExactRelation sampled = SingleRelation.from(vc, param.getOriginalTable())
+		                        .select("*, rand(unix_timestamp()) as __rand")
+		                        .withAlias("s")
+		                        .join(SingleRelation.from(vc, groupSizeTemp).withAlias("t"), joinExprs)
+		                        .where(whereClause)
+		                        .select(Joiner.on(", ").join(selectElems) + ", __group_size");
 		String sql1 = String.format("create table %s as %s", sampledNoRand, sampled.toSql());
 		VerdictLogger.debug(this, "The query used for creating a stratified sample without sampling probabilities.");
 		VerdictLogger.debugPretty(this, Relation.prettyfySql(sql1), "  ");
