@@ -8,38 +8,15 @@ import com.google.common.base.Joiner;
 
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.datatypes.SampleParam;
-import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
-import edu.umich.verdict.relation.Relation;
-import edu.umich.verdict.util.VerdictLogger;
 
 public class DbmsImpala extends DbmsJDBC {
 
 	public DbmsImpala(VerdictContext vc, String dbName, String host, String port, String schema, String user,
 			String password, String jdbcClassName) throws VerdictException {
 		super(vc, dbName, host, port, schema, user, password, jdbcClassName);
-		// TODO Auto-generated constructor stub
-	}
-	
-	@Override
-	public void updateSampleNameEntryIntoDBMS(SampleParam param, TableUniqueName metaNameTableName) throws VerdictException {
-		TableUniqueName tempTableName = createTempTableExlucdingNameEntry(param, metaNameTableName);
-		insertSampleNameEntryIntoDBMS(param, tempTableName);
-		moveTable(tempTableName, metaNameTableName);
 	}
 
-	protected TableUniqueName createTempTableExlucdingNameEntry(SampleParam param, TableUniqueName metaNameTableName) throws VerdictException {
-		String metaSchema = param.sampleTableName().getSchemaName();
-		TableUniqueName tempTableName = Relation.getTempTableName(vc, metaSchema);
-		TableUniqueName originalTableName = param.originalTable;
-		executeUpdate(String.format("CREATE TABLE %s AS SELECT * FROM %s "
-				+ "WHERE originalschemaname <> \"%s\" OR originaltablename <> \"%s\" OR sampletype <> \"%s\""
-				+ "OR samplingratio <> %s OR columnnames <> \"%s\"",
-				tempTableName, metaNameTableName, originalTableName.getSchemaName(), originalTableName.getTableName(),
-				param.sampleType, samplingRatioToString(param.samplingRatio), columnNameListToString(param.columnNames)));
-		return tempTableName;
-	}
-	
 	@Override
 	public String modOfHash(String col, int mod) {
 		return String.format("abs(fnv_hash(cast(%s AS STRING))) %% %d", col, mod);

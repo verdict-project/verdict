@@ -41,20 +41,6 @@ public abstract class DbmsJDBC extends Dbms {
 		return executeJdbcQuery("show databases");
 	}
 
-//	@Override
-//	public List<String> getTables(String schemaName) throws VerdictException {
-//		try {
-//			String[] types = {"TABLE", "VIEW"};
-//			ResultSet rs = conn.getMetaData().getTables(schemaName, null, "%", types);
-//			Map<Integer, Integer> columnMap = new HashMap<Integer, Integer>();
-//			columnMap.put(1, 3);	// table name
-//			columnMap.put(2, 4);	// table type
-//			return new VerdictResultSet(rs, null, columnMap);
-//		} catch (SQLException e) {
-//			throw new VerdictException(e);
-//		}
-//	}
-
 	protected ResultSet rs;
 	
 	/**

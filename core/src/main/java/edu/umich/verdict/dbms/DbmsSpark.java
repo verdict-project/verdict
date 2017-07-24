@@ -14,7 +14,6 @@ import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SQLContext;
 
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.datatypes.SampleParam;
