@@ -51,6 +51,10 @@ public class ApproxSingleRelation extends ApproxRelation {
 			this.sampleTableName = param.getOriginalTable();
 		} else {
 			this.sampleTableName = vc.getMeta().lookForSampleTable(param);
+			if (this.sampleTableName == null) {
+				this.sampleTableName = TableUniqueName.uname(vc,
+						param.toString().replace("(",  "").replace(")", "").replace(",", "") + "_does_not_exist");
+			}
 		}
 		this.info = vc.getMeta().getSampleSizeOf(sampleTableName);
 	}
@@ -200,6 +204,9 @@ public class ApproxSingleRelation extends ApproxRelation {
 			return (info == null)? 1e9 : info.originalTableSize;
 		} else {
 			SampleSizeInfo info = vc.getMeta().getSampleSizeOf(param);
+			if (info == null) {
+				return -1;
+			}
 			return info.sampleSize;
 		}
 	}

@@ -254,21 +254,6 @@ public class VerdictMeta {
 		List<List<Object>> result;
 		
 		try {
-			// tables and their column names (we get both of the current schema and its meta schema)
-			// current schema
-//			tableToColumnNames.clear();
-//			populateTableAndColumnInfoFor(schemaName);
-//			
-//			// meta schema
-//			String metaSchema = metaCatalogForDataCatalog(schemaName);
-//			if (!metaSchema.equals(schemaName)) {
-//				populateTableAndColumnInfoFor(metaSchema);
-//				Set<String> databases = vc.getDbms().getDatabases();
-//				if (databases.contains(metaSchema)) {
-//					uptodateSchemas.put(metaSchema, vc.getCurrentQid());
-//				}
-//			}
-			
 			sampleNameMeta.clear();
 			sampleSizeMeta.clear();
 			

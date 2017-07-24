@@ -7,6 +7,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.tuple.Pair;
+
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.datatypes.SampleParam;
 import edu.umich.verdict.datatypes.TableUniqueName;
@@ -20,21 +22,6 @@ public class DbmsMySQL extends DbmsJDBC {
 			String password, String jdbcClassName) throws VerdictException {
 		super(vc, dbName, host, port, schema, user, password, jdbcClassName);
 	}
-	
-//	public boolean doesMetaTablesExist(String schemaName) throws VerdictException {
-//		String[] types = {"TABLE"};
-//		try {
-//			ResultSet rs = conn.getMetaData()
-//							   .getTables(vc.getMeta().metaCatalogForDataCatalog(schemaName),
-//									   	  null,
-//									      vc.getMeta().getMetaNameTableForOriginalSchema(currentSchema.get()).getTableName(),
-//									      types);
-//			if (!rs.next()) return false;
-//			else return true;
-//		} catch (SQLException e) {
-//			throw new VerdictException(e);
-//		}
-//	}
 
 	/**
 	 * Creates a sample table without dropping an old table.
@@ -56,59 +43,73 @@ public class DbmsMySQL extends DbmsJDBC {
 	public String modOfHash(String col, int mod) {
 		return String.format("mod(cast(conv(substr(md5(%s),17,32),16,10) as unsigned), %d)", col, mod);
 	}
+
+	public void deleteSampleNameEntryFromDBMS(SampleParam param, TableUniqueName metaNameTableName)
+			throws VerdictException {
+		TableUniqueName originalTableName = param.originalTable;
+		List<Pair<String, String>> colAndValues = new ArrayList<Pair<String, String>>();
+		colAndValues.add(Pair.of("originalschemaname", originalTableName.getSchemaName()));
+		colAndValues.add(Pair.of("originaltablename", originalTableName.getTableName()));
+		colAndValues.add(Pair.of("sampletype", param.sampleType));
+		colAndValues.add(Pair.of("samplingratio", samplingRatioToString(param.samplingRatio)));
+		colAndValues.add(Pair.of("columnnames", columnNameListToString(param.columnNames)));
+		deleteEntry(metaNameTableName, colAndValues);
+	}
 	
-	protected void justCreateUniverseSampleTableOf(SampleParam param) throws VerdictException {
+	protected void insertSampleNameEntryIntoDBMS(SampleParam param, TableUniqueName metaNameTableName) throws VerdictException {
+		TableUniqueName originalTableName = param.originalTable;
 		TableUniqueName sampleTableName = param.sampleTableName();
-		String sql = String.format("CREATE TABLE %s AS ", sampleTableName) + 
-				 	 SingleRelation.from(vc, param.originalTable)
-				 	 .where(modOfHash(param.columnNames.get(0), 10000)
-				 			 + String.format(" <= %.4f", param.samplingRatio*10000))
-				 	 .select("*, round(rand()*100)%100 AS " + partitionColumnName()).toSql();
 		
-		VerdictLogger.debug(this, String.format("Creates a table: %s", sql));
-		executeUpdate(sql);
-		VerdictLogger.debug(this, "Done.");
+		List<Object> values = new ArrayList<Object>();
+		values.add(originalTableName.getSchemaName());
+		values.add(originalTableName.getTableName());
+		values.add(sampleTableName.getSchemaName());
+		values.add(sampleTableName.getTableName());
+		values.add(param.sampleType);
+		values.add(param.samplingRatio);
+		values.add(columnNameListToString(param.columnNames));
+		
+		insertEntry(metaNameTableName, values);
 	}
-
-	@Override
-	protected void justCreateStratifiedSampleTableof(SampleParam param) throws VerdictException {
-		VerdictLogger.warn(this, "Stratified samples are not implemented for MySQL.");
+	
+	public void updateSampleSizeEntryIntoDBMS(SampleParam param, long sampleSize, long originalTableSize, TableUniqueName metaSizeTableName) throws VerdictException {
+		deleteSampleSizeEntryFromDBMS(param, metaSizeTableName);
+		insertSampleSizeEntryIntoDBMS(param, sampleSize, originalTableSize, metaSizeTableName);
 	}
-
-	@Override
-	public List<String> getTables(String schema) throws VerdictException {
-		List<String> tables = new ArrayList<String>();
-		try {
-			ResultSet rs = executeJdbcQuery("show tables in " + schema);
-			while (rs.next()) {
-				String table = rs.getString(1);
-				tables.add(table);
-			}
-		} catch (SQLException e) {
-			throw new VerdictException(e);
-		}
-		return tables;
+	
+	public void deleteSampleSizeEntryFromDBMS(SampleParam param, TableUniqueName metaSizeTableName) throws VerdictException {
+		TableUniqueName sampleTableName = param.sampleTableName();
+		List<Pair<String, String>> colAndValues = new ArrayList<Pair<String, String>>();
+		colAndValues.add(Pair.of("schemaname", sampleTableName.getSchemaName()));
+		colAndValues.add(Pair.of("tablename", sampleTableName.getTableName()));
+		deleteEntry(metaSizeTableName, colAndValues);
 	}
-
-	@Override
-	public Map<String, String> getColumns(TableUniqueName table) throws VerdictException {
-		Map<String, String> col2type = new LinkedHashMap<String, String>();
-		try {
-			ResultSet rs = executeJdbcQuery("describe " + table);
-			while (rs.next()) {
-				String column = rs.getString(1);
-				String type = rs.getString(2);
-				col2type.put(column, type);
-			}
-		} catch (SQLException e) {
-			throw new VerdictException(e);
-		}
-		return col2type;
+	
+	protected void insertSampleSizeEntryIntoDBMS(SampleParam param,	long sampleSize, long originalTableSize, TableUniqueName metaSizeTableName) throws VerdictException {
+		TableUniqueName sampleTableName = param.sampleTableName();
+		List<Object> values = new ArrayList<Object>();
+		values.add(sampleTableName.getSchemaName());
+		values.add(sampleTableName.getTableName());
+		values.add(sampleSize);
+		values.add(originalTableSize);
+		insertEntry(metaSizeTableName, values);
 	}
 	
 	@Override
 	public String modOfRand(int mod) {
 		return String.format("abs(rand()) %% %d", mod);
+	}
+
+	@Override
+	protected String randomPartitionColumn() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	protected String randomNumberExpression(SampleParam param) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 	
 }

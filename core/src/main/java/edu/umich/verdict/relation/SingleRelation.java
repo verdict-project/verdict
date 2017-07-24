@@ -14,7 +14,6 @@ import edu.umich.verdict.datatypes.SampleSizeInfo;
 import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.relation.expr.ColNameExpr;
-import edu.umich.verdict.relation.expr.ConstantExpr;
 import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.relation.expr.ExprVisitor;
 import edu.umich.verdict.relation.expr.FuncExpr;

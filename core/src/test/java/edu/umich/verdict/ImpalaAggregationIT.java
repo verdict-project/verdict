@@ -47,6 +47,24 @@ public class ImpalaAggregationIT extends AggregationIT {
 		super.simpleCount();
 	}
 
+	@Override
+	public void simpleAvgUsingStratifiedSample() throws VerdictException, SQLException {
+		// TODO Auto-generated method stub
+		super.simpleAvgUsingStratifiedSample();
+	}
+
+	@Override
+	public void simpleAvgUsingStratifiedSample2() throws VerdictException, SQLException {
+		// TODO Auto-generated method stub
+		super.simpleAvgUsingStratifiedSample2();
+	}
+
+	@Override
+	public void simpleAvgUsingStratifiedSample3() throws VerdictException, SQLException {
+		// TODO Auto-generated method stub
+		super.simpleAvgUsingStratifiedSample3();
+	}
+
 	
 
 }

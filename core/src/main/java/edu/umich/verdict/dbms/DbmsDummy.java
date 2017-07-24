@@ -74,18 +74,6 @@ public class DbmsDummy extends Dbms {
 	}
 
 	@Override
-	protected void justCreateUniformRandomSampleTableOf(SampleParam param) throws VerdictException {
-	}
-
-	@Override
-	protected void justCreateUniverseSampleTableOf(SampleParam param) throws VerdictException {
-	}
-
-	@Override
-	protected void justCreateStratifiedSampleTableof(SampleParam param) throws VerdictException {
-	}
-
-	@Override
 	public String modOfHash(String col, int mod) {
 		return null;
 	}
@@ -113,6 +101,16 @@ public class DbmsDummy extends Dbms {
 	
 	@Override
 	public String modOfRand(int mod) {
+		return null;
+	}
+
+	@Override
+	protected String randomPartitionColumn() {
+		return null;
+	}
+
+	@Override
+	protected String randomNumberExpression(SampleParam param) {
 		return null;
 	}
 	

@@ -1,14 +1,13 @@
 package edu.umich.verdict.dbms;
 
 import java.sql.Connection;
-import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -23,7 +22,6 @@ import com.google.common.base.Optional;
 
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.datatypes.TableUniqueName;
-import edu.umich.verdict.datatypes.VerdictResultSet;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.util.StackTraceReader;
 import edu.umich.verdict.util.StringManipulations;
@@ -40,11 +38,7 @@ public abstract class DbmsJDBC extends Dbms {
 	}
 	
 	public ResultSet getDatabaseNamesInResultSet() throws VerdictException {
-		try {
-			return conn.getMetaData().getCatalogs();
-		} catch (SQLException e) {
-			throw new VerdictException(e);
-		}
+		return executeJdbcQuery("show databases");
 	}
 
 //	@Override
@@ -95,56 +89,16 @@ public abstract class DbmsJDBC extends Dbms {
 								password);
 		conn = makeDbmsConnection(url, jdbcClassName);
 	}
-
-//	public List<Pair<String, String>> getAllTableAndColumns(String schemaName) throws VerdictException {
-//		List<Pair<String, String>> tabCols = new ArrayList<Pair<String, String>>();
-//		try {
-//			ResultSet rs = conn.getMetaData().getColumns(schemaName, null, "%", "%");
-//			while (rs.next()) {
-//				String table = rs.getString(3);
-//				String column = rs.getString(4);
-//				tabCols.add(Pair.of(table, column));
-//			}
-//		} catch (SQLException e) {
-//			throw new VerdictException(e);
-//		}
-//		return tabCols;
-//	}
 	
 	public ResultSet describeTableInResultSet(TableUniqueName tableUniqueName)  throws VerdictException {
-		try {
-			ResultSet rs = conn.getMetaData().getColumns(
-					tableUniqueName.getSchemaName(), null, tableUniqueName.getTableName(), "%");
-			Map<Integer, Integer> columnMap = new HashMap<Integer, Integer>();
-			columnMap.put(1, 4);	// column name
-			columnMap.put(2, 6); 	// data type name
-			columnMap.put(3, 12); 	// remarks
-			return new VerdictResultSet(rs, null, columnMap);
-		} catch (SQLException e) {
-			throw new VerdictException(e);
-		}
-	}
-	
-	public long getTableSize(TableUniqueName tableName) throws VerdictException {
-		ResultSet rs;
-		long cnt = 0;
-		try {
-			String sql = String.format("SELECT COUNT(*) FROM %s", tableName);
-			rs = executeJdbcQuery(sql);
-			while(rs.next()) {cnt = rs.getLong(1);	}
-			rs.close();
-		} catch (SQLException e) {
-			throw new VerdictException(StackTraceReader.stackTrace2String(e));
-		}
-		return cnt;
+		return executeJdbcQuery(String.format("describe %s", tableUniqueName));
 	}
 	
 	@Override
 	public Set<String> getDatabases() throws VerdictException {
 		Set<String> databases = new HashSet<String>();
 		try {
-			String sql = "show databases";
-			ResultSet rs = executeJdbcQuery(sql);
+			ResultSet rs = getDatabaseNamesInResultSet();
 			while (rs.next()) {
 				databases.add(rs.getString(1));
 			}
@@ -154,32 +108,68 @@ public abstract class DbmsJDBC extends Dbms {
 		return databases;
 	}
 	
-	public void createMetaTablesInDMBS(
-			TableUniqueName originalTableName,
-			TableUniqueName sizeTableName,
-			TableUniqueName nameTableName) throws VerdictException {
-		VerdictLogger.debug(this, "Creates meta tables if not exist.");
-		
-		String sql = String.format("CREATE TABLE IF NOT EXISTS %s", nameTableName)
-								+ " (originalschemaname VARCHAR(50), "
-								+ " originaltablename VARCHAR(50), "
-								+ " sampleschemaaname VARCHAR(50), "
-								+ " sampletablename VARCHAR(50), "
-								+ " sampletype VARCHAR(20), "
-								+ " samplingratio DOUBLE, "
-								+ " columnnames VARCHAR(200))";
-		executeUpdate(sql);
-		
-		// sample info
-		sql = String.format("CREATE TABLE IF NOT EXISTS %s", sizeTableName)
-						+ " (schemaname VARCHAR(50), "
-						+ " tablename VARCHAR(50), "
-						+ " samplesize BIGINT, "
-						+ " originaltablesize BIGINT)";
-		executeUpdate(sql);
-		
-		VerdictLogger.debug(this, "Finished createing meta tables if not exist.");
+	public ResultSet getTablesInResultSet(String schema) throws VerdictException {
+		return executeJdbcQuery("show tables in " + schema);
 	}
+
+	@Override
+	public List<String> getTables(String schema) throws VerdictException {
+		List<String> tables = new ArrayList<String>();
+		try {
+			ResultSet rs = getTablesInResultSet(schema);
+			while (rs.next()) {
+				String table = rs.getString(1);
+				tables.add(table);
+			}
+		} catch (SQLException e) {
+			VerdictLogger.error(this, "Failed to access the database: " + schema);
+			throw new VerdictException(e);
+		}
+		return tables;
+	}
+	
+	@Override
+	public Map<String, String> getColumns(TableUniqueName table) throws VerdictException {
+		Map<String, String> col2type = new LinkedHashMap<String, String>();
+		try {
+			ResultSet rs = describeTableInResultSet(table);
+			while (rs.next()) {
+				String column = rs.getString(1);
+				String type = rs.getString(2);
+				col2type.put(column, type);
+			}
+		} catch (SQLException e) {
+			throw new VerdictException(e);
+		}
+		return col2type;
+	}
+	
+//	public void createMetaTablesInDMBS(
+//			TableUniqueName originalTableName,
+//			TableUniqueName sizeTableName,
+//			TableUniqueName nameTableName) throws VerdictException {
+//		VerdictLogger.debug(this, "Creates meta tables if not exist.");
+//		
+//		String sql = String.format("CREATE TABLE IF NOT EXISTS %s", nameTableName)
+//								+ " (originalschemaname VARCHAR(50), "
+//								+ " originaltablename VARCHAR(50), "
+//								+ " sampleschemaaname VARCHAR(50), "
+//								+ " sampletablename VARCHAR(50), "
+//								+ " sampletype VARCHAR(20), "
+//								+ " samplingratio DOUBLE, "
+//								+ " columnnames VARCHAR(200))";
+//		executeUpdate(sql);
+//		
+//		// sample info
+//		sql = String.format("CREATE TABLE IF NOT EXISTS %s", sizeTableName)
+//						+ " (schemaname VARCHAR(50), "
+//						+ " tablename VARCHAR(50), "
+//						+ " samplesize BIGINT, "
+//						+ " originaltablesize BIGINT)";
+//		executeUpdate(sql);
+//		
+//		VerdictLogger.debug(this, "Finished createing meta tables if not exist.");
+//	}
 	
 	String composeUrl(String dbms, String host, String port, String schema, String user, String password) throws VerdictException {
 		StringBuilder url = new StringBuilder();
@@ -244,6 +234,20 @@ public abstract class DbmsJDBC extends Dbms {
 		}
 	}
 	
+	public long getTableSize(TableUniqueName tableName) throws VerdictException {
+		ResultSet rs;
+		long cnt = 0;
+		try {
+			String sql = String.format("SELECT COUNT(*) FROM %s", tableName);
+			rs = executeJdbcQuery(sql);
+			while(rs.next()) {cnt = rs.getLong(1);	}
+			rs.close();
+		} catch (SQLException e) {
+			throw new VerdictException(StackTraceReader.stackTrace2String(e));
+		}
+		return cnt;
+	}
+
 	public boolean execute(String sql) throws VerdictException {
 		createStatementIfNotExists();
 		boolean result = false;
@@ -262,30 +266,6 @@ public abstract class DbmsJDBC extends Dbms {
 		createStatementIfNotExists();
 		try {
 			stmt.executeUpdate(query);
-		} catch (SQLException e) {
-			throw new VerdictException(e);
-		}
-	}
-	
-	/**
-	 * changes to another database (or equivalently, schema). This is conceptually equal to the use statement in MySQL.
-	 * @throws VerdictException
-	 */
-	public void changeDatabase(String schemaName) throws VerdictException {
-		try {
-			conn.setCatalog(schemaName);
-			currentSchema = Optional.fromNullable(schemaName);
-			VerdictLogger.info("Database changed to: " + schemaName);
-		} catch (SQLException e) {
-			throw new VerdictException(e);
-		}
-	}
-	
-	public ResultSet getTablesInResultSet(String schema) throws VerdictException {
-		try {
-			DatabaseMetaData md = conn.getMetaData();
-			ResultSet rs = md.getTables(schema, null, "%", null);
-			return rs;
 		} catch (SQLException e) {
 			throw new VerdictException(e);
 		}
