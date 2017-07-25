@@ -17,6 +17,18 @@ public class BinaryOpExpr extends Expr {
 	public static BinaryOpExpr from(Expr left, Expr right, String op) {
 		return new BinaryOpExpr(left, right, op);
 	}
+	
+	public Expr getLeft() {
+		return left;
+	}
+	
+	public Expr getRight() {
+		return right;
+	}
+	
+	public String getOp() {
+		return op;
+	}
 
 	@Override
 	public String toString() {
@@ -31,5 +43,15 @@ public class BinaryOpExpr extends Expr {
 	@Override
 	public boolean isagg() {
 		return left.isagg() || right.isagg();
+	}
+	
+	@Override
+	public Expr withTableSubstituted(String newTab) {
+		return new BinaryOpExpr(left.withTableSubstituted(newTab), right.withTableSubstituted(newTab), op);
+	}
+
+	@Override
+	public String toSql() {
+		return String.format("(%s %s %s)", left.toSql(), op, right.toSql());
 	}
 }

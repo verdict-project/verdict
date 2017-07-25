@@ -1,11 +1,19 @@
 package edu.umich.verdict.util;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.antlr.v4.runtime.ANTLRInputStream;
+import org.antlr.v4.runtime.CommonTokenStream;
+
 import com.google.common.base.Optional;
 
-import edu.umich.verdict.VerdictContext;
+import edu.umich.verdict.VerdictJDBCContext;
+import edu.umich.verdict.VerdictSQLLexer;
+import edu.umich.verdict.VerdictSQLParser;
 import edu.umich.verdict.datatypes.TableUniqueName;
 
-public class NameHelpers {
+public class StringManipulations {
 	
 	public static int viewNameId = 0;
 	
@@ -17,6 +25,8 @@ public class NameHelpers {
 	 * @return
 	 */
 	public static Optional<String> schemaOfTableName(Optional<String> currentSchema, String originalTableName) {
+		if (originalTableName == null) return currentSchema;
+		
 		String[] tokens = originalTableName.split("\\.");
 		if (tokens.length > 1) {
 			return Optional.fromNullable(tokens[0]);
@@ -33,6 +43,8 @@ public class NameHelpers {
 	 * @return
 	 */
 	public static String tableNameOfTableName(String originalTableName) {
+		if (originalTableName == null) return null;
+		
 		String[] tokens = originalTableName.split("\\.");
 		if (tokens.length > 1) {
 			return tokens[1];
@@ -61,7 +73,7 @@ public class NameHelpers {
 		}
 	}
 	
-	public static TableUniqueName tabUniqueNameOfColName(VerdictContext vc, String originalColName) {
+	public static TableUniqueName tabUniqueNameOfColName(VerdictJDBCContext vc, String originalColName) {
 		String[] tokens = originalColName.split("\\.");
 		if (tokens.length > 2) {
 			return TableUniqueName.uname(tokens[tokens.length-3], tokens[tokens.length-2]);
@@ -91,6 +103,40 @@ public class NameHelpers {
 		Optional<String> schema = schemaOfTableName(currentSchema, originalTableName);
 		if (!schema.isPresent()) return tableNameOfTableName(originalTableName); 
 		else 				 return  schema.get() + "." + tableNameOfTableName(originalTableName);
+	}
+	
+	public static VerdictSQLParser parserOf(String text) {
+		VerdictSQLLexer l = new VerdictSQLLexer(new ANTLRInputStream(text));
+		VerdictSQLParser p = new VerdictSQLParser(new CommonTokenStream(l));
+		return p;
+	}
+	
+	public static List<String> quoteEveryString(List<String> list, String with) {
+		List<String> quoted = new ArrayList<String>();
+		for (String e : list) {
+			quoted.add(quote(e, with));
+		}
+		return quoted;
+	}
+	
+	private static String quote(String e, String with) {
+		return String.format("%s%s%s", with, e.replace("\"", "").replace("`", "").replace("'", ""), with);
+	}
+
+	public static List<String> quoteString(List<Object> list, String with) {
+		List<String> quoted = new ArrayList<String>();
+		for (Object e : list) {
+			if (e instanceof String) {
+				quoted.add(quote(e.toString(), with));
+			} else {
+				quoted.add(e.toString());
+			}
+		}
+		return quoted;
+	}
+	
+	public static String stripQuote(String e) {
+		return e.replace("`", "").replace("\"", "").replace("'", "");
 	}
 	
 }

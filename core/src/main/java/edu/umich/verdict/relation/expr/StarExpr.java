@@ -1,8 +1,5 @@
 package edu.umich.verdict.relation.expr;
 
-import edu.umich.verdict.VerdictContext;
-import edu.umich.verdict.exceptions.VerdictException;
-
 public class StarExpr extends Expr {
 
 	public StarExpr() {}
@@ -15,6 +12,16 @@ public class StarExpr extends Expr {
 	@Override
 	public <T> T accept(ExprVisitor<T> v) {
 		return v.call(this);
+	}
+	
+	@Override
+	public Expr withTableSubstituted(String newTab) {
+		return this;
+	}
+	
+	@Override
+	public String toSql() {
+		return toString();
 	}
 
 }

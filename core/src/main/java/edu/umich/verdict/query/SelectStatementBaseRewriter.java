@@ -1,11 +1,6 @@
 package edu.umich.verdict.query;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-
-import org.antlr.v4.runtime.CharStreams;
+import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.misc.Interval;
 
@@ -59,7 +54,7 @@ public class SelectStatementBaseRewriter extends VerdictSQLBaseVisitor<String> {
 		int a = ctx.start.getStartIndex();
 	    int b = ctx.stop.getStopIndex();
 	    Interval interval = new Interval(a,b);
-	    return CharStreams.fromString(queryString).getText(interval);
+	    return (new ANTLRInputStream(queryString)).getText(interval);
 	}
 	
 	@Override

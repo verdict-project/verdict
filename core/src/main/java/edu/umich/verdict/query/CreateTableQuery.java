@@ -1,46 +1,44 @@
 package edu.umich.verdict.query;
 
-import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.antlr.v4.runtime.CharStreams;
-import org.antlr.v4.runtime.CommonTokenStream;
 import org.apache.commons.lang3.tuple.Pair;
 
-import edu.umich.verdict.VerdictContext;
+import edu.umich.verdict.VerdictJDBCContext;
 import edu.umich.verdict.VerdictSQLBaseVisitor;
-import edu.umich.verdict.VerdictSQLLexer;
 import edu.umich.verdict.VerdictSQLParser;
 import edu.umich.verdict.exceptions.VerdictException;
+import edu.umich.verdict.util.VerdictLogger;
 
 public class CreateTableQuery extends Query {
 
-	public CreateTableQuery(VerdictContext vc, String q) {
+	public CreateTableQuery(VerdictJDBCContext vc, String q) {
 		super(vc, q);
 	}
 
 	@Override
-	public ResultSet compute() throws VerdictException {
-		VerdictSQLLexer l = new VerdictSQLLexer(CharStreams.fromString(queryString));
-		VerdictSQLParser p = new VerdictSQLParser(new CommonTokenStream(l));
-		CreateTableQueryParser parser = new CreateTableQueryParser();
-		parser.visit(p.create_table());
-		
-		// read parameters and print them for test
-		System.out.println("table name: " + parser.getTableName());
-		
-		for (Pair<String, String> colDef : parser.getColumnDefinitions()) {
-			System.out.println(String.format("col name: %s, col type: %s", colDef.getKey(), colDef.getValue()));
-		}
-		
-		for (Map.Entry<String, String> e : parser.getOptions().entrySet()) {
-			System.out.println(String.format("option: %s, value: %s", e.getKey(), e.getValue()));
-		}
-		
-		return null;
+	public void compute() throws VerdictException {
+		VerdictLogger.error(this, "Not supported.");
+//		VerdictSQLLexer l = new VerdictSQLLexer(new ANTLRInputStream(queryString));
+//		VerdictSQLParser p = new VerdictSQLParser(new CommonTokenStream(l));
+//		CreateTableQueryParser parser = new CreateTableQueryParser();
+//		parser.visit(p.create_table());
+//		
+//		// read parameters and print them for test
+//		System.out.println("table name: " + parser.getTableName());
+//		
+//		for (Pair<String, String> colDef : parser.getColumnDefinitions()) {
+//			System.out.println(String.format("col name: %s, col type: %s", colDef.getKey(), colDef.getValue()));
+//		}
+//		
+//		for (Map.Entry<String, String> e : parser.getOptions().entrySet()) {
+//			System.out.println(String.format("option: %s, value: %s", e.getKey(), e.getValue()));
+//		}
+//		
+//		return null;
 	}
 
 }

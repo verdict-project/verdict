@@ -1,30 +1,46 @@
 package edu.umich.verdict.jdbc;
 
-import edu.umich.verdict.VerdictConf;
-import edu.umich.verdict.VerdictContext;
-import edu.umich.verdict.exceptions.VerdictException;
-import edu.umich.verdict.util.StackTraceReader;
-import edu.umich.verdict.util.VerdictLogger;
-
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.sql.*;
+import java.sql.Array;
+import java.sql.Blob;
+import java.sql.CallableStatement;
+import java.sql.Clob;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.NClob;
+import java.sql.PreparedStatement;
+import java.sql.SQLClientInfoException;
+import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
+import java.sql.SQLWarning;
+import java.sql.SQLXML;
+import java.sql.Savepoint;
+import java.sql.Statement;
+import java.sql.Struct;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Executor;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import edu.umich.verdict.VerdictConf;
+import edu.umich.verdict.VerdictJDBCContext;
+import edu.umich.verdict.dbms.DbmsJDBC;
+import edu.umich.verdict.exceptions.VerdictException;
+import edu.umich.verdict.util.StackTraceReader;
+import edu.umich.verdict.util.VerdictLogger;
+
 
 public class VerdictConnection implements Connection {
 //    private final DbConnector connector;
 //    private final Connection innerConnection;
     private final VerdictConf conf;
-    private VerdictContext vc;
+    private VerdictJDBCContext vc;
     private boolean isOpen = true;
     
     private Connection getDbmsConnection() {
-    	return vc.getDbms().getDbmsConnection();
+    	return ((DbmsJDBC) vc.getDbms()).getDbmsConnection();
     }
     
 //    public void setLogLevel(String level) {
@@ -50,7 +66,7 @@ public class VerdictConnection implements Connection {
 	    	}
 	    	
 	    	// set properties from the passed connection string.
-	    	Pattern inlineOptions = Pattern.compile("(?<key>[a-zA-Z0-9_]+)=[\"']?(?<value>[a-zA-Z0-9@_/\\.\\\\:-]+)[\"']?");
+	    	Pattern inlineOptions = Pattern.compile("(?<key>[a-zA-Z0-9_\\.]+)=[\"']?(?<value>[a-zA-Z0-9@_/\\.\\\\:-]+)[\"']?");
 	    	Matcher inlineMatcher = inlineOptions.matcher(url);
 	    	while (inlineMatcher.find()) {
 	    		info.setProperty(inlineMatcher.group("key"), inlineMatcher.group("value"));
@@ -73,31 +89,11 @@ public class VerdictConnection implements Connection {
             if (urlMatcher.group("port") != null) {
             	conf.setPort(urlMatcher.group("port"));
             } else {
-            	conf.setPort(conf.get(conf.getDbms() + ".port"));	// assume config file includes it.
+            	conf.setPort(conf.getDefaultPort(conf.getDbms()));		// assume config file includes it.
             }
             if (urlMatcher.group("schema") != null) {
             	conf.setDbmsSchema(urlMatcher.group("schema"));
             }
-            
-//            // if meta DB info is not set, we copy it from the DB user info
-//            if (conf.getMetaDbms() == null) {
-//            	conf.setMetaDbms(conf.getDbms());
-//            }
-//            if (conf.getMetaDbmsSchema() == null) {
-//            	conf.setMetaDbmsSchema(conf.getDbmsSchema());
-//            }
-//            if (conf.getMetaHost() == null) {
-//            	conf.setMetaHost(conf.getHost());
-//            }
-//            if (conf.getMetaPort() == null) {
-//            	conf.setMetaPort(conf.getPort());
-//            }
-//            if (conf.getMetaUser() == null) {
-//            	conf.setMetaUser(conf.getUser());
-//            }
-//            if (conf.getMetaPassword() == null) {
-//            	conf.setMetaPassword(conf.getPassword());
-//            }
             
             String extras = urlMatcher.group("extras");
             if (extras != null) {
@@ -108,7 +104,7 @@ public class VerdictConnection implements Connection {
 	            }
             }
             
-    		this.vc = new VerdictContext(conf); 
+    		this.vc = VerdictJDBCContext.from(conf); 
             
         } catch (VerdictException e) {
 			throw new SQLException(StackTraceReader.stackTrace2String(e));

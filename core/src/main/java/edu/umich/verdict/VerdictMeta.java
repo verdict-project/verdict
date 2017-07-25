@@ -1,17 +1,13 @@
 package edu.umich.verdict;
 
-import java.sql.ResultSet;
-
-import java.sql.SQLException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -21,17 +17,22 @@ import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.dbms.Dbms;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.relation.SingleRelation;
+import edu.umich.verdict.util.TypeCasting;
 import edu.umich.verdict.util.VerdictLogger;
 
 
 public class VerdictMeta {
+	
+	private final String META_SIZE_TABLE;
+	
+	private final String META_NAME_TABLE;
 	
 	/**
 	 * Works as a cache for a single query execution.
 	 * key: sample table
 	 * value: sample size info
 	 */
-	private Map<TableUniqueName, SampleSizeInfo> sampleSizeMeta;
+	protected Map<TableUniqueName, SampleSizeInfo> sampleSizeMeta;
 	
 	/**
 	 * Works as a cache for a single query execution.
@@ -39,55 +40,147 @@ public class VerdictMeta {
 	 * value: key: sample creation params
 	 * 	      value: sample table
 	 */
-	private Map<TableUniqueName, Map<SampleParam, TableUniqueName>> sampleNameMeta;
+	protected Map<TableUniqueName, Map<SampleParam, TableUniqueName>> sampleNameMeta;
 	
 	/**
 	 * remembers for what query id and schema, we have updated the meta info.
 	 */
-	private Set<Pair<Long, String>> uptodateSchemas;
+	protected Map<String, Long> uptodateSchemas;
 	
 	/**
 	 * remembers tables and their column names.
 	 */
-	private Map<TableUniqueName, List<String>> tableToColumnNames;
+//	protected Map<TableUniqueName, List<String>> tableToColumnNames;
 	
-	private final String META_SIZE_TABLE;
-	private final String META_NAME_TABLE;
+	protected Set<String> databases;		// a.k.a. database names.
+	
+	protected Map<String, Set<String>> db2tables;
+	
+	/**
+	 * {tablename1:
+	 *   {columnname1_1: type,
+	 *    columnname1_2: type},
+	 *  tablename2:
+	 *   {columnname2_1: type,
+	 *    columnname2_2: type},
+	 * }
+	 */
+	protected Map<TableUniqueName, Map<String, String>> tab2columns;
 	
 	protected VerdictContext vc;
-	
-	public VerdictMeta(VerdictContext vc) throws VerdictException {
+
+	public VerdictMeta(VerdictContext vc) {
 		this.vc = vc;
-		META_NAME_TABLE = vc.getConf().get("verdict.meta_name_table");
-		META_SIZE_TABLE = vc.getConf().get("verdict.meta_size_table");
 		sampleSizeMeta = new HashMap<TableUniqueName, SampleSizeInfo>();
 		sampleNameMeta = new HashMap<TableUniqueName, Map<SampleParam, TableUniqueName>>();
-		uptodateSchemas = new HashSet<Pair<Long, String>>();
-		tableToColumnNames = new HashMap<TableUniqueName, List<String>>();
+		uptodateSchemas = new HashMap<String, Long>();
+		databases = new HashSet<String>();
+		db2tables = new HashMap<String, Set<String>>();
+		tab2columns = new HashMap<TableUniqueName, Map<String, String>>();
+//		tableToColumnNames = new HashMap<TableUniqueName, List<String>>();
+		META_NAME_TABLE = vc.getConf().metaNameTableName();
+		META_SIZE_TABLE = vc.getConf().metaSizeTableName();
 	}
 	
-	private Dbms getMetaDbms() {
+	protected Dbms getMetaDbms() {
 		return vc.getMetaDbms();
 	}
 	
 	public void clearSampleInfo() {
+		uptodateSchemas.clear();
 		sampleSizeMeta.clear();
 		sampleNameMeta.clear();
+		databases.clear();
+		db2tables.clear();
+		tab2columns.clear();
 	}
 	
-	public List<String> getColumnNames(TableUniqueName tableName) {
-		refreshSampleInfoIfNeeded(tableName.schemaName);
-		if (tableToColumnNames.containsKey(tableName)) {
-			return tableToColumnNames.get(tableName);
-		} else {
-			return new ArrayList<String>();
+	/**
+	 * retrieves cached database names.
+	 * @return
+	 */
+	public Set<String> getDatabases() {
+		if (databases.isEmpty()) {
+			refreshDatabases();
+		}
+		return databases;
+	}
+	
+	public void refreshDatabases() {
+		try {
+			Set<String> databases = vc.getDbms().getDatabases();
+			this.databases = databases;
+		} catch (VerdictException e) {
+			VerdictLogger.error(e);
 		}
 	}
 	
-	public Map<TableUniqueName, List<String>> getTableAndColumnNames(String schemaName) {
-		refreshSampleInfoIfNeeded(schemaName);
-		return tableToColumnNames;
+	public Set<String> getTables(String database) {
+		if (!db2tables.containsKey(database)) {
+			refreshTables(database);
+		}
+		return db2tables.get(database);
 	}
+	
+	/**
+	 * Currently, we refresh whenever a new sample is built or a user specified to use a database.
+	 * @param database
+	 */
+	public void refreshTables(String database) {
+		try {
+			List<String> tables = vc.getDbms().getTables(database);
+			this.db2tables.put(database, new TreeSet<String>(tables));
+		} catch (VerdictException e) {
+			VerdictLogger.error(e);
+		}
+	}
+	
+	public Set<String> getColumns(TableUniqueName tableName) {
+		if (!tab2columns.containsKey(tableName)) {
+			refreshColumns(tableName);
+		}
+		Set<String> columns = tab2columns.get(tableName).keySet();
+		return columns;
+	}
+	
+	public Map<String, String> getColumn2Types(TableUniqueName tableName) {
+		if (!tab2columns.containsKey(tableName)) {
+			refreshColumns(tableName);
+		}
+		Map<String, String> col2type = tab2columns.get(tableName);
+		return col2type;
+	}
+	
+	public void refreshColumns(TableUniqueName tableName) {
+		try {
+			Map<String, String> columns = vc.getDbms().getColumns(tableName);
+			this.tab2columns.put(tableName, columns);
+		} catch (VerdictException e) {
+			VerdictLogger.error(e);
+		}
+	}
+	
+//	public List<String> getColumnNames(TableUniqueName tableName) {
+//		refreshSampleInfoIfNeeded(tableName.getSchemaName());
+//		if (tableToColumnNames.containsKey(tableName)) {
+//			return tableToColumnNames.get(tableName);
+//		} else {
+//			return new ArrayList<String>();
+//		}
+//	}
+	
+//	public Map<TableUniqueName, List<String>> getTableAndColumnNames(String schemaName) {
+//		refreshSampleInfoIfNeeded(schemaName);
+//		Map<TableUniqueName, List<String>> inSchema = new HashMap<TableUniqueName, List<String>>();
+//		for (Map.Entry<TableUniqueName, List<String>> entry : tableToColumnNames.entrySet()) {
+//			TableUniqueName table = entry.getKey();
+//			List<String> columns = entry.getValue();
+//			if (table.getSchemaName().equals(schemaName)) {
+//				inSchema.put(table, columns);
+//			}
+//		}
+//		return inSchema;
+//	}
 	
 	/**
 	 * Insert sample info into local data structure (for quick access) and into the DBMS (for persistence).
@@ -101,12 +194,12 @@ public class VerdictMeta {
 		TableUniqueName fullSampleName = param.sampleTableName();
 		
 		vc.getMetaDbms().createMetaTablesInDMBS(param.originalTable,
-				getMetaSizeTableName(fullSampleName),
-				getMetaNameTableName(fullSampleName));
+				getMetaSizeTableForSampleTable(fullSampleName),
+				getMetaNameTableForSampleTable(fullSampleName));
 		
-		getMetaDbms().updateSampleNameEntryIntoDBMS(param, getMetaNameTableName(fullSampleName));
+		getMetaDbms().updateSampleNameEntryIntoDBMS(param, getMetaNameTableForSampleTable(fullSampleName));
 		
-		getMetaDbms().updateSampleSizeEntryIntoDBMS(param, sampleSize, originalTableSize, getMetaSizeTableName(fullSampleName));
+		getMetaDbms().updateSampleSizeEntryIntoDBMS(param, sampleSize, originalTableSize, getMetaSizeTableForSampleTable(fullSampleName));
 	}
 		
 	/**
@@ -115,104 +208,137 @@ public class VerdictMeta {
 	 * @throws VerdictException 
 	 */
 	public void deleteSampleInfo(SampleParam param) throws VerdictException {
-		refreshSampleInfoIfNeeded(param.originalTable.schemaName);
+		refreshSampleInfoIfNeeded(param.originalTable.getSchemaName());
 		TableUniqueName originalTable = param.originalTable;
 		
 		if (sampleNameMeta.containsKey(originalTable)) {
 			TableUniqueName sampleTableName = sampleNameMeta.get(originalTable).get(param);
-			getMetaDbms().deleteSampleNameEntryFromDBMS(param, getMetaNameTableName(originalTable));
-			getMetaDbms().deleteSampleSizeEntryFromDBMS(param, getMetaSizeTableName(sampleTableName));
+			getMetaDbms().deleteSampleNameEntryFromDBMS(param, getMetaNameTableForOriginalTable(originalTable));
+			getMetaDbms().deleteSampleSizeEntryFromDBMS(param, getMetaSizeTableForSampleTable(sampleTableName));
 		} else {
 			VerdictLogger.warn(String.format("No sample table for the parameter: [%s, %s, %.4f, %s]",
 					param.originalTable, param.sampleType, param.samplingRatio, param.columnNames.toString()));
 		}
 	}
 	
+	// TODO: double-check when metadata should be refreshed.
 	public void refreshSampleInfoIfNeeded(String schemaName) {
-		if (vc.getConf().getBoolean("refresh_meta_before_every_query")
-			&& !uptodateSchemas.contains(Pair.of(vc.getCurrentQid(), schemaName))) {
+		boolean needToRefresh = false;
+		String refreshOption = vc.getConf().metaRefreshPolicy();
+		
+		if (refreshOption.equals("per_session")) {
+			if (!uptodateSchemas.containsKey(schemaName)) {
+				needToRefresh = true;
+			}
+		} else if (refreshOption.equals("per_query")) {
+			// update if the last time when schemaName was updated is before the current qid.
+			if (!uptodateSchemas.containsKey(schemaName)) {
+				needToRefresh = true;
+			} else {
+				if (uptodateSchemas.get(schemaName) < vc.getCurrentQid()) {
+					needToRefresh = true;
+				}
+			}
+		} else if (refreshOption.equals("manual")) {
+			// don't do anything
+		}
+		
+		if (needToRefresh) {
 			refreshSampleInfo(schemaName);
-			uptodateSchemas.add(Pair.of(vc.getCurrentQid(), schemaName));
 		}
 	}
 	
 	public void refreshSampleInfo(String schemaName) {
-		ResultSet rs;
-		
-		TableUniqueName metaNameTable = getMetaNameTableName(schemaName);
-		TableUniqueName metaSizeTable = getMetaSizeTableName(schemaName);
+		TableUniqueName metaNameTable = getMetaNameTableForOriginalSchema(schemaName);
+		TableUniqueName metaSizeTable = getMetaSizeTableForOriginalSchema(schemaName);
+		List<List<Object>> result;
 		
 		try {
-			// tables and their column names
-			tableToColumnNames.clear();
-			List<Pair<String, String>> tabCols = vc.getDbms().getAllTableAndColumns(schemaName);
-			for (Pair<String, String> tabCol : tabCols) {
-				TableUniqueName tableUName = TableUniqueName.uname(schemaName, tabCol.getLeft());
-				if (!tableToColumnNames.containsKey(tableUName)) {
-					tableToColumnNames.put(tableUName, new ArrayList<String>());
+			sampleNameMeta.clear();
+			sampleSizeMeta.clear();
+			
+			Set<String> databases = getDatabases();
+			if (databases.contains(metaNameTable.getSchemaName())) {
+				Set<String> tables = getTables(metaNameTable.getSchemaName());
+				if (tables != null && tables.contains(metaNameTable.getTableName())) {
+					vc.getDbms().cacheTable(metaNameTable);
+					
+					// sample name
+					result = SingleRelation.from(vc, metaNameTable)
+							.select("originalschemaname, originaltablename, sampleschemaaname, sampletablename, sampletype, samplingratio, columnnames")
+							.collect();
+					for (List<Object> row : result) {
+						String originalSchemaName = row.get(0).toString();
+						String originalTabName = row.get(1).toString();
+						String sampleSchemaName = row.get(2).toString();
+						String sampleTabName = row.get(3).toString();
+						String sampleType = row.get(4).toString();
+						double samplingRatio = TypeCasting.toDouble(row.get(5));
+						String columnNamesString = row.get(6).toString();
+						List<String> columnNames = (columnNamesString.length() == 0)? new ArrayList<String>() : Arrays.asList(columnNamesString.split(","));
+						
+						TableUniqueName originalTable = TableUniqueName.uname(originalSchemaName, originalTabName);
+						if (!sampleNameMeta.containsKey(originalTable)) {
+							sampleNameMeta.put(originalTable, new HashMap<SampleParam, TableUniqueName>());
+						}
+						sampleNameMeta.get(originalTable).put(
+								new SampleParam(vc, originalTable, sampleType, samplingRatio, columnNames),
+								TableUniqueName.uname(sampleSchemaName, sampleTabName));
+						
+						vc.getDbms().cacheTable(TableUniqueName.uname(sampleSchemaName, sampleTabName));
+					}
 				}
-				tableToColumnNames.get(tableUName).add(tabCol.getRight());
 			}
 			
-			sampleNameMeta.clear();
-			if (tableToColumnNames.containsKey(metaNameTable)) {
-				// sample name
-				rs = SingleRelation.from(vc, metaNameTable)
-					 .select("originalschemaname, originaltablename, sampleschemaaname, sampletablename, sampletype, samplingratio, columnnames")
-				     .collectResultSet();
-				while (rs.next()) {
-					String originalSchemaName = rs.getString(1);
-					String originalTabName = rs.getString(2);
-					String sampleSchemaName = rs.getString(3);
-					String sampleTabName = rs.getString(4);
-					String sampleType = rs.getString(5);
-					double samplingRatio = rs.getDouble(6);
-					String columnNamesString = rs.getString(7);
-					List<String> columnNames = (columnNamesString.length() == 0)? new ArrayList<String>() : Arrays.asList(columnNamesString.split(","));
-
-					TableUniqueName originalTable = TableUniqueName.uname(originalSchemaName, originalTabName);
-					if (!sampleNameMeta.containsKey(originalTable)) {
-						sampleNameMeta.put(originalTable, new HashMap<SampleParam, TableUniqueName>());
+			if (databases.contains(metaSizeTable.getSchemaName())) {
+				Set<String> tables = getTables(metaSizeTable.getSchemaName());
+				if (tables != null && tables.contains(metaSizeTable.getTableName())) {
+					vc.getDbms().cacheTable(metaSizeTable);
+					
+					// sample size
+					result = SingleRelation.from(vc, metaSizeTable)
+							.select("schemaname, tablename, samplesize, originaltablesize")
+							.collect();
+					for (List<Object> row : result) {
+						String sampleSchemaName = row.get(0).toString();
+						String sampleTabName = row.get(1).toString();
+						Long sampleSize = TypeCasting.toLong(row.get(2));
+						Long originalTableSize = TypeCasting.toLong(row.get(3));
+						sampleSizeMeta.put(TableUniqueName.uname(sampleSchemaName, sampleTabName),
+								new SampleSizeInfo(sampleSize, originalTableSize));
+						
+						vc.getDbms().cacheTable(TableUniqueName.uname(sampleSchemaName, sampleTabName));
 					}
-					sampleNameMeta.get(originalTable).put(
-							new SampleParam(originalTable, sampleType, samplingRatio, columnNames),
-							TableUniqueName.uname(sampleSchemaName, sampleTabName));
 				}
-				rs.close();
 			}
-
-			sampleSizeMeta.clear();
-			if (tableToColumnNames.containsKey(metaSizeTable)) {
-				// sample size
-				rs = SingleRelation.from(vc, metaSizeTable)
-					 .select("schemaname, tablename, samplesize, originaltablesize")
-					 .collectResultSet();
-				while (rs.next()) {
-					String sampleSchemaName = rs.getString(1);
-					String sampleTabName = rs.getString(2);
-					Long sampleSize = rs.getLong(3);
-					Long originalTableSize = rs.getLong(4);
-					sampleSizeMeta.put(TableUniqueName.uname(sampleSchemaName, sampleTabName),
-							new SampleSizeInfo(sampleSize, originalTableSize));
-				}
-				rs.close();
-			}
-		} catch (VerdictException | SQLException e) {
-//			VerdictLogger.warn(e);
+		} catch (VerdictException e) {
+			VerdictLogger.error(this, e.getMessage());
 		}
-
-		VerdictLogger.debug(this, "Sample meta data refreshed.");
+		
+		uptodateSchemas.put(schemaName, vc.getCurrentQid());
+		VerdictLogger.info(this, "Verdict meta data was refreshed.");
 	}
 	
-	public Pair<Long, Long> getSampleAndOriginalTableSizeBySampleTableNameIfExists(TableUniqueName sampleTableName) {
-		refreshSampleInfoIfNeeded(sampleTableName.schemaName);
-		if (sampleSizeMeta.containsKey(sampleTableName)) {
-			SampleSizeInfo info = sampleSizeMeta.get(sampleTableName);
-			return Pair.of(info.sampleSize, info.originalTableSize);
-		} else {
-			return Pair.of(-1L, -1L);
-		}
-	}
+//	private void populateTableAndColumnInfoFor(String schema) throws VerdictException {
+//		List<Pair<String, String>> tabCols = vc.getDbms().getAllTableAndColumns(schema);
+//		for (Pair<String, String> tabCol : tabCols) {
+//			TableUniqueName tableUName = TableUniqueName.uname(schema, tabCol.getLeft());
+//			if (!tableToColumnNames.containsKey(tableUName)) {
+//				tableToColumnNames.put(tableUName, new ArrayList<String>());
+//			}
+//			tableToColumnNames.get(tableUName).add(tabCol.getRight());
+//		}
+//	}
+	
+//	public Pair<Long, Long> getSampleAndOriginalTableSizeBySampleTableNameIfExists(TableUniqueName sampleTableName) {
+//		refreshSampleInfoIfNeeded(sampleTableName.getSchemaName());
+//		if (sampleSizeMeta.containsKey(sampleTableName)) {
+//			SampleSizeInfo info = sampleSizeMeta.get(sampleTableName);
+//			return Pair.of(info.sampleSize, info.originalTableSize);
+//		} else {
+//			return Pair.of(-1L, -1L);
+//		}
+//	}
 	
 	/**
 	 * Returns the sample creation parameters and the names of the created samples for a given original table.
@@ -220,7 +346,7 @@ public class VerdictMeta {
 	 * @return A list of sample creation parameters and a sample table name.
 	 */
 	public List<Pair<SampleParam, TableUniqueName>> getSampleInfoFor(TableUniqueName originalTableName) {
-		refreshSampleInfoIfNeeded(originalTableName.schemaName);
+		refreshSampleInfoIfNeeded(originalTableName.getSchemaName());
 		List<Pair<SampleParam, TableUniqueName>> sampleInfo = new ArrayList<Pair<SampleParam, TableUniqueName>>();
 		if (sampleNameMeta.containsKey(originalTableName)) {
 			for (Map.Entry<SampleParam, TableUniqueName> e : sampleNameMeta.get(originalTableName).entrySet()) {
@@ -268,74 +394,43 @@ public class VerdictMeta {
 			}
 		}
 		
-		if (sampleTable == null) {
-			if (param.sampleType.equals("universe") || param.sampleType.equals("stratified")) {
-				VerdictLogger.error(this, String.format("No %.2f%% %s sample table on %s found for the table %s.",
-						param.samplingRatio*100, param.sampleType, param.columnNames.toString(), originalTable));
-			} else if (param.sampleType.equals("uniform")) {
-				if (param.samplingRatio != null) {
-					VerdictLogger.error(this, String.format("No %.2f%% %s sample table found for the table %s.",
-							param.samplingRatio*100, param.sampleType, originalTable));
-				} else {
-					VerdictLogger.error(this, String.format("No %s sample table found for the table %s.",
-							param.sampleType, originalTable));
-				}
-			}
-		}
+//		if (sampleTable == null) {
+//			if (param.sampleType.equals("universe") || param.sampleType.equals("stratified")) {
+//				VerdictLogger.error(this, String.format("No %.2f%% %s sample table on %s found for the table %s.",
+//						param.samplingRatio*100, param.sampleType, param.columnNames.toString(), originalTable));
+//			} else if (param.sampleType.equals("uniform")) {
+//				if (param.samplingRatio != null) {
+//					VerdictLogger.error(this, String.format("No %.2f%% %s sample table found for the table %s.",
+//							param.samplingRatio*100, param.sampleType, originalTable));
+//				} else {
+//					VerdictLogger.error(this, String.format("No %s sample table found for the table %s.",
+//							param.sampleType, originalTable));
+//				}
+//			}
+//		}
 		
 		return sampleTable;
 	}
-
-//	public Pair<Long, Long> getSampleAndOriginalTableSizeByOriginalTableNameIfExists(TableUniqueName originalTableName) {
-//		refreshSampleInfoIfNeeded(originalTableName);
-//		
-//		TableUniqueName sampleTableName = sampleTableUniqueNameOf(originalTableName);
-//		
-//		if (sampleSizeMeta.containsKey(sampleTableName)) {
-//			SampleInfo info = sampleSizeMeta.get(sampleTableName);
-//			return Pair.of(info.sampleSize, info.originalTableSize);
-//		} else {
-//			return Pair.of(-1L, -1L);
-//		}
-//	}
-
-//	public TableUniqueName getSampleTableNameIfExistsElseOriginal(TableUniqueName originalTableName) {
-//		refreshSampleInfoIfNeeded(originalTableName.schemaName);
-//		
-//		if (sampleNameMeta.containsKey(originalTableName)) {
-//			return sampleNameMeta.get(originalTableName);
-//		} else {
-//			return originalTableName;
-//		}
-//	}
-	
-//	/**
-//	 * Obtains the name of the sample table for the given original table. This function performs a syntactic transformation,
-//	 * without semantic checks.
-//	 * @param originalTableName
-//	 * @return
-//	 */
-//	public TableUniqueName newSampleTableUniqueNameOf(TableUniqueName originalTableName) {
-//		String currentTime = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
-//		String localTableName = String.format("sample_%s_%s", originalTableName.tableName, currentTime);
-//		return TableUniqueName.uname(originalTableName.schemaName, localTableName);
-//	}
-//	
-//	public TableUniqueName newSampleTableUniqueNameOf(String originalTableName) {
-//		return newSampleTableUniqueNameOf(TableUniqueName.uname(vc, originalTableName));
-//	}
 	
 	/**
 	 * 
 	 * @param relatedTableName Either the original table or the sample table.
 	 * @return
 	 */
-	public TableUniqueName getMetaSizeTableName(TableUniqueName relatedTableName) {
-		return TableUniqueName.uname(relatedTableName.schemaName, META_SIZE_TABLE);
+	public TableUniqueName getMetaSizeTableForOriginalTable(TableUniqueName originalTable) {
+		return getMetaSizeTableForOriginalSchema(originalTable.getSchemaName());
 	}
 	
-	public TableUniqueName getMetaSizeTableName(String schemaName) {
-		return TableUniqueName.uname(schemaName, META_SIZE_TABLE);
+	public TableUniqueName getMetaSizeTableForOriginalSchema(String schema) {
+		return TableUniqueName.uname(metaCatalogForDataCatalog(schema), META_SIZE_TABLE);
+	}
+	
+	public TableUniqueName getMetaSizeTableForSampleTable(TableUniqueName sampleTable) {
+		return getMetaSizeTableForSampleSchema(sampleTable.getSchemaName());
+	}
+	
+	public TableUniqueName getMetaSizeTableForSampleSchema(String schema) {
+		return TableUniqueName.uname(schema, META_SIZE_TABLE);
 	}
 	
 	/**
@@ -343,11 +438,24 @@ public class VerdictMeta {
 	 * @param relatedTableName Either the original table or the sample table.
 	 * @return
 	 */
-	public TableUniqueName getMetaNameTableName(TableUniqueName relatedTableName) {
-		return TableUniqueName.uname(relatedTableName.schemaName, META_NAME_TABLE);
+	public TableUniqueName getMetaNameTableForOriginalTable(TableUniqueName originalTable) {
+		return TableUniqueName.uname(metaCatalogForDataCatalog(originalTable.getSchemaName()), META_NAME_TABLE);
 	}
 	
-	public TableUniqueName getMetaNameTableName(String schemaName) {
-		return TableUniqueName.uname(schemaName, META_NAME_TABLE);
+	public TableUniqueName getMetaNameTableForOriginalSchema(String schema) {
+		return TableUniqueName.uname(metaCatalogForDataCatalog(schema), META_NAME_TABLE);
 	}
+	
+	public TableUniqueName getMetaNameTableForSampleTable(TableUniqueName sampleTable) {
+		return TableUniqueName.uname(sampleTable.getSchemaName(), META_NAME_TABLE);
+	}
+	
+	public TableUniqueName getMetaNameTableForSampleSchema(String schema) {
+		return TableUniqueName.uname(schema, META_NAME_TABLE);
+	}
+	
+	public String metaCatalogForDataCatalog(String dataCatalog) {
+		return dataCatalog + vc.getConf().metaDatabaseSuffix();
+	}
+	
 }

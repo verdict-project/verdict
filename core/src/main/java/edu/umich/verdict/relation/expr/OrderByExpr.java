@@ -1,15 +1,12 @@
 package edu.umich.verdict.relation.expr;
 
-import org.antlr.v4.runtime.CharStreams;
-import org.antlr.v4.runtime.CommonTokenStream;
-
 import com.google.common.base.Optional;
 
 import edu.umich.verdict.VerdictSQLBaseVisitor;
-import edu.umich.verdict.VerdictSQLLexer;
 import edu.umich.verdict.VerdictSQLParser;
+import edu.umich.verdict.util.StringManipulations;
 
-public class OrderByExpr {
+public class OrderByExpr extends Expr {
 	
 	private Expr expr;
 	
@@ -24,9 +21,16 @@ public class OrderByExpr {
 		this(expr, null);
 	}
 	
+	public Expr getExpression() {
+		return expr;
+	}
+	
+	public Optional<String> getDirection() {
+		return direction;
+	}
+	
 	public static OrderByExpr from(String expr) {
-		VerdictSQLLexer l = new VerdictSQLLexer(CharStreams.fromString(expr));
-		VerdictSQLParser p = new VerdictSQLParser(new CommonTokenStream(l));
+		VerdictSQLParser p = StringManipulations.parserOf(expr);
 		VerdictSQLBaseVisitor<OrderByExpr> v = new VerdictSQLBaseVisitor<OrderByExpr>() {
 			@Override
 			public OrderByExpr visitOrder_by_expression(VerdictSQLParser.Order_by_expressionContext ctx) {
@@ -44,6 +48,22 @@ public class OrderByExpr {
 		} else {
 			return expr.toString();
 		}
+	}
+
+	@Override
+	public <T> T accept(ExprVisitor<T> v) {
+		return v.call(this);
+	}
+
+	@Override
+	public Expr withTableSubstituted(String newTab) {
+		Expr newExpr = expr.withTableSubstituted(newTab);
+		return new OrderByExpr(newExpr, direction.orNull());
+	}
+
+	@Override
+	public String toSql() {
+		return toString();
 	}
 
 }

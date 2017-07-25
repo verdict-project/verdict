@@ -9,10 +9,7 @@ import java.util.Map;
 
 import org.apache.commons.lang3.tuple.Pair;
 
-import com.google.common.base.Joiner;
-
-import edu.umich.verdict.VerdictConf;
-import edu.umich.verdict.VerdictContext;
+import edu.umich.verdict.VerdictJDBCContext;
 
 public class TypeCasting {
 	
@@ -103,6 +100,14 @@ public class TypeCasting {
 		}
 	}
 	
+	public static boolean isObjectNumeric(Object o) {
+		if (o instanceof Double || o instanceof Float || o instanceof Integer || o instanceof Long) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
 	private static final Map<Integer, String> typeInt2TypeName;
 	static {
 		Map<Integer, String> map = new HashMap<Integer, String>();
@@ -132,7 +137,7 @@ public class TypeCasting {
 		return (dbName.equals("impala") || dbName.equals("hive"))? true : false;
 	}
 	
-	public static String dbDatatypeNameWithDefaultParam(VerdictContext vc, int type) {
+	public static String dbDatatypeNameWithDefaultParam(VerdictJDBCContext vc, int type) {
 		String dbName = vc.getDbms().getName();
 		String typename = dbDatatypeName(type);
 		

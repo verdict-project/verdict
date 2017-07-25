@@ -8,7 +8,7 @@ import java.util.TreeMap;
 
 import org.apache.commons.lang3.tuple.Pair;
 
-import edu.umich.verdict.VerdictContext;
+import edu.umich.verdict.VerdictJDBCContext;
 import edu.umich.verdict.VerdictSQLParser;
 import edu.umich.verdict.datatypes.Alias;
 import edu.umich.verdict.datatypes.ColumnName;
@@ -17,14 +17,14 @@ import edu.umich.verdict.datatypes.SampleSizeInfo;
 import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.exceptions.VerdictQuerySyntaxException;
-import edu.umich.verdict.util.NameHelpers;
+import edu.umich.verdict.util.StringManipulations;
 import edu.umich.verdict.util.TypeCasting;
 import edu.umich.verdict.util.VerdictLogger;
 
 @Deprecated
 class AnalyticSelectStatementRewriter extends SelectStatementBaseRewriter  {
 	
-	protected VerdictContext vc;
+	protected VerdictJDBCContext vc;
 	
 	protected VerdictQuerySyntaxException e;
 	
@@ -67,7 +67,7 @@ class AnalyticSelectStatementRewriter extends SelectStatementBaseRewriter  {
 	protected Map<Integer, Integer> meanColIndex2ErrColIndex;
 
 	
-	public AnalyticSelectStatementRewriter(VerdictContext vc, String queryString) {
+	public AnalyticSelectStatementRewriter(VerdictJDBCContext vc, String queryString) {
 		super(queryString);
 		this.vc = vc;
 		this.e = null;
@@ -198,7 +198,7 @@ class AnalyticSelectStatementRewriter extends SelectStatementBaseRewriter  {
 		if (ctx.table_name() != null) {
 			tabName = visit(ctx.table_name());
 		}
-		TableUniqueName tabUniqueName = NameHelpers.tabUniqueNameOfColName(vc, ctx.getText());
+		TableUniqueName tabUniqueName = StringManipulations.tabUniqueNameOfColName(vc, ctx.getText());
 		String colName = ctx.column_name().getText();
 		
 		// if a table name was specified, we change it to its alias name.
@@ -416,7 +416,7 @@ class AnalyticSelectStatementRewriter extends SelectStatementBaseRewriter  {
 		Alias alias = new Alias(groupName, groupName);
 		
 		for (Pair<String, Alias> e : colName2Aliases) {
-			if (NameHelpers.colNameOfColName(e.getKey()).equals(groupName)) {
+			if (StringManipulations.colNameOfColName(e.getKey()).equals(groupName)) {
 				alias = e.getValue();
 				break;
 			}
@@ -482,7 +482,7 @@ class ProperSampleAnalyzer extends SelectStatementBaseRewriter {
 	
 	private List<ColumnName> distinctColumns = new ArrayList<ColumnName>();
 	
-	private VerdictContext vc;
+	private VerdictJDBCContext vc;
 	
 	private List<Pair<TableUniqueName, String>> tableSourcesWithAlias = new ArrayList<Pair<TableUniqueName, String>>();
 	
@@ -498,7 +498,7 @@ class ProperSampleAnalyzer extends SelectStatementBaseRewriter {
 		return originalToSampleTable;
 	}
 	
-	public ProperSampleAnalyzer(VerdictContext vc, String queryString) {
+	public ProperSampleAnalyzer(VerdictJDBCContext vc, String queryString) {
 		super(queryString);
 		this.vc = vc;
 	}

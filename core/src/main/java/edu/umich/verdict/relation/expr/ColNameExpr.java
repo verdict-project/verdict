@@ -54,7 +54,7 @@ public class ColNameExpr extends Expr {
 		if (tab == null) {
 			return String.format("%s", quote(col));
 		} else {
-			return String.format("%s.%s", quote(tab), quote(col));
+			return String.format("%s.%s", tab, quote(col));
 		}
 	}
 	
@@ -70,5 +70,14 @@ public class ColNameExpr extends Expr {
 	public <T> T accept(ExprVisitor<T> v) {
 		return v.call(this);
 	}
+	
+	@Override
+	public Expr withTableSubstituted(String newTab) {
+		return new ColNameExpr(col, newTab);
+	}
 
+	@Override
+	public String toSql() {
+		return toString();
+	}
 }

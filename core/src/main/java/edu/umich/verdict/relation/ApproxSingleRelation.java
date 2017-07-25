@@ -2,12 +2,9 @@ package edu.umich.verdict.relation;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import org.apache.commons.lang3.tuple.Pair;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
@@ -21,7 +18,6 @@ import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.ConstantExpr;
 import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.relation.expr.FuncExpr;
-import edu.umich.verdict.util.TypeCasting;
 import edu.umich.verdict.util.VerdictLogger;
 
 /**
@@ -51,7 +47,15 @@ public class ApproxSingleRelation extends ApproxRelation {
 	protected ApproxSingleRelation(VerdictContext vc, SampleParam param) {
 		super(vc);
 		this.param = param;
-		this.sampleTableName = vc.getMeta().lookForSampleTable(param);
+		if (param.getSampleType().equals("nosample")) {
+			this.sampleTableName = param.getOriginalTable();
+		} else {
+			this.sampleTableName = vc.getMeta().lookForSampleTable(param);
+			if (this.sampleTableName == null) {
+				this.sampleTableName = TableUniqueName.uname(vc,
+						param.toString().replace("(",  "").replace(")", "").replace(",", "") + "_does_not_exist");
+			}
+		}
 		this.info = vc.getMeta().getSampleSizeOf(sampleTableName);
 	}
 	
@@ -74,7 +78,7 @@ public class ApproxSingleRelation extends ApproxRelation {
 		return new ApproxSingleRelation(
 				r.vc,
 				r.getTableName(), 
-				new SampleParam(r.getTableName(), "nosample", 1.0, null),
+				new SampleParam(r.vc, r.getTableName(), "nosample", 1.0, null),
 				new SampleSizeInfo(-1, -1));
 	}
 	
@@ -113,7 +117,7 @@ public class ApproxSingleRelation extends ApproxRelation {
 	@Override
 	public ExactRelation rewriteForPointEstimate() {
 		ExactRelation r = SingleRelation.from(vc, getSampleName());
-		r.setAliasName(getAliasName());
+		r.setAlias(getAlias());
 		return r;
 	}
 	
@@ -128,8 +132,9 @@ public class ApproxSingleRelation extends ApproxRelation {
 	@Override
 	public ExactRelation rewriteWithPartition() {
 		if (param.sampleType.equals("universe")) {
-			List<String> colNames = vc.getMeta().getColumnNames(param.sampleTableName());
+			Set<String> colNames = vc.getMeta().getColumns(param.sampleTableName());
 			String partitionColName = partitionColumnName();
+			int partitionCount = 100;
 			
 			// we will create a new partition column using a hash function, so discard an existing one.
 			List<String> newColNames = new ArrayList<String>();
@@ -142,13 +147,13 @@ public class ApproxSingleRelation extends ApproxRelation {
 			// a new relation
 			ExactRelation r = SingleRelation.from(vc, getSampleName());
 			r = r.select(Joiner.on(", ").join(newColNames) + ", "
-				     	 + vc.getDbms().modOfHash(param.columnNames.get(0), 100) + " AS " + partitionColName);
-			r.setAliasName(getAliasName());
+				     	 + vc.getDbms().modOfHash(param.columnNames.get(0), partitionCount) + " AS " + partitionColName);
+			r.setAlias(getAlias());
 			return r;
 			
 		} else {
 			ExactRelation r = SingleRelation.from(vc, getSampleName());
-			r.setAliasName(getAliasName());
+			r.setAlias(getAlias());
 			return r;
 		}
 //		r = vc.getDbms().augmentWithRandomPartitionNum(r);
@@ -186,8 +191,24 @@ public class ApproxSingleRelation extends ApproxRelation {
 	}
 	
 	@Override
-	protected String sampleType() {
+	public String sampleType() {
 		return getSampleType();
+	}
+	
+	@Override
+	public double cost() {
+		if (sampleType().equals("nosample")) {
+			SampleParam ufParam = new SampleParam(vc, param.getOriginalTable(), "uniform", null, Arrays.<String>asList());
+			TableUniqueName ufSample = vc.getMeta().lookForSampleTable(ufParam);
+			SampleSizeInfo info = vc.getMeta().getSampleSizeOf(ufSample);
+			return (info == null)? 1e9 : info.originalTableSize;
+		} else {
+			SampleSizeInfo info = vc.getMeta().getSampleSizeOf(param);
+			if (info == null) {
+				return -1;
+			}
+			return info.sampleSize;
+		}
 	}
 	
 	@Override
@@ -195,9 +216,15 @@ public class ApproxSingleRelation extends ApproxRelation {
 		return param.columnNames;
 	}
 
+	/**
+	 * Using this substitution pattern can handle:
+	 * 1. user specified his own table alias and using it: no need for substitution since aliases are preserved.
+	 * 2. user specified his own table alias but referring the raw table name: below pattern handles it.
+	 * 3. user didn't specified table aliases: below pattern handles it.
+	 */
 	@Override
-	protected Map<String, String> tableSubstitution() {
-		Map<String, String> s = ImmutableMap.of(param.originalTable.tableName, alias);
+	protected Map<TableUniqueName, String> tableSubstitution() {
+		Map<TableUniqueName, String> s = ImmutableMap.of(param.originalTable, alias);
 		return s;
 	}
 	
@@ -205,11 +232,11 @@ public class ApproxSingleRelation extends ApproxRelation {
 	 * Aggregations
 	 */
 	
-	public AggregatedRelation aggOnSample(List<Object> functions) {
+	public ExactRelation aggOnSample(List<Object> functions) {
 		return rewriteForPointEstimate().agg(functions);
 	}
 	
-	public AggregatedRelation aggOnSample(Object... functions) {
+	public ExactRelation aggOnSample(Object... functions) {
 		return aggOnSample(Arrays.asList(functions));
 	}
 	
@@ -244,4 +271,30 @@ public class ApproxSingleRelation extends ApproxRelation {
 		}
 	}
 	
+	@Override
+	protected String toStringWithIndent(String indent) {
+		StringBuilder s = new StringBuilder(1000);
+		s.append(indent);
+		s.append(String.format("%s(%s, %s), %s, cost: %f\n",
+				this.getClass().getSimpleName(),
+				getTableName(),
+				getAlias(),
+				param.toString(),
+				cost()));
+		return s.toString();
+	}
+	
+	@Override
+	public boolean equals(ApproxRelation o) {
+		if (o instanceof ApproxSingleRelation) {
+			return param.equals(((ApproxSingleRelation) o).param);
+		} else {
+			return false;
+		}
+	}
+
+	@Override
+	public double samplingProbability() {
+		return param.getSamplingRatio();
+	}
 }

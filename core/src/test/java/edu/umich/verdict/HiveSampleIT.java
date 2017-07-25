@@ -1,15 +1,11 @@
 package edu.umich.verdict;
 
-import static org.junit.Assert.*;
-
 import java.io.FileNotFoundException;
-import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import edu.umich.verdict.exceptions.VerdictException;
@@ -29,7 +25,7 @@ public class HiveSampleIT extends SampleIT {
 		conf.setPort(port);
 		conf.setDbmsSchema(schema);
 		conf.set("no_user_password", "true");
-		vc = new VerdictContext(conf);
+		vc = new VerdictJDBCContext(conf);
 		
 		String url = String.format("jdbc:hive2://%s:%s/%s", host, port, schema);
 		conn = DriverManager.getConnection(url);

@@ -1,9 +1,7 @@
 package edu.umich.verdict.relation;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import com.google.common.base.Joiner;
 
@@ -14,7 +12,6 @@ import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.relation.expr.OrderByExpr;
-import edu.umich.verdict.relation.expr.SelectElem;
 
 public class OrderedRelation extends ExactRelation {
 	
@@ -32,13 +29,18 @@ public class OrderedRelation extends ExactRelation {
 
 	@Override
 	protected String getSourceName() {
-		return getAliasName();
+		return getAlias();
+	}
+	
+	@Override
+	protected List<ApproxRelation> nBestSamples(Expr elem, int n) throws VerdictException {
+		return source.nBestSamples(elem, n);
 	}
 
 	@Override
 	public ApproxRelation approx() throws VerdictException {
 		ApproxRelation a = new ApproxOrderedRelation(vc, source.approx(), orderby);
-		a.setAliasName(getAliasName());
+		a.setAlias(getAlias());
 		return a;
 	}
 
@@ -56,15 +58,15 @@ public class OrderedRelation extends ExactRelation {
 		return sql.toString();
 	}
 
-	@Override
-	public List<SelectElem> getSelectList() {
-		return source.getSelectList();
-	}
+//	@Override
+//	public List<SelectElem> getSelectList() {
+//		return source.getSelectList();
+//	}
 
 	@Override
 	public ColNameExpr partitionColumn() {
 		ColNameExpr col = source.partitionColumn();
-		col.setTab(getAliasName());
+		col.setTab(getAlias());
 		return col;
 	}
 
@@ -77,7 +79,7 @@ public class OrderedRelation extends ExactRelation {
 	protected String toStringWithIndent(String indent) {
 		StringBuilder s = new StringBuilder(1000);
 		s.append(indent);
-		s.append(String.format("%s(%s) [%s]\n", this.getClass().getSimpleName(), getAliasName(), Joiner.on(", ").join(orderby)));
+		s.append(String.format("%s(%s) [%s]\n", this.getClass().getSimpleName(), getAlias(), Joiner.on(", ").join(orderby)));
 		s.append(source.toStringWithIndent(indent + "  "));
 		return s.toString();
 	}

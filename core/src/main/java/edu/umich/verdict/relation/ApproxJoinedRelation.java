@@ -2,20 +2,18 @@ package edu.umich.verdict.relation;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import edu.umich.verdict.VerdictContext;
-import edu.umich.verdict.datatypes.Alias;
-import edu.umich.verdict.datatypes.SampleParam;
-import edu.umich.verdict.datatypes.SampleSizeInfo;
+import edu.umich.verdict.VerdictJDBCContext;
 import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.relation.condition.AndCond;
@@ -23,9 +21,7 @@ import edu.umich.verdict.relation.condition.CompCond;
 import edu.umich.verdict.relation.condition.Cond;
 import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.Expr;
-import edu.umich.verdict.relation.expr.ExprModifier;
 import edu.umich.verdict.relation.expr.FuncExpr;
-import edu.umich.verdict.util.VerdictLogger;
 
 public class ApproxJoinedRelation extends ApproxRelation {
 
@@ -54,12 +50,16 @@ public class ApproxJoinedRelation extends ApproxRelation {
 		this.alias = null;
 	}
 	
-	public static ApproxJoinedRelation from(VerdictContext vc, ApproxRelation source1, ApproxRelation source2, List<Pair<Expr, Expr>> joinCols) {
+	public ApproxJoinedRelation(VerdictContext vc, ApproxRelation source1, ApproxRelation source2) {
+		this(vc, source1, source2, Arrays.<Pair<Expr,Expr>>asList());
+	}
+	
+	public static ApproxJoinedRelation from(VerdictJDBCContext vc, ApproxRelation source1, ApproxRelation source2, List<Pair<Expr, Expr>> joinCols) {
 		ApproxJoinedRelation r = new ApproxJoinedRelation(vc, source1, source2, joinCols);
 		return r;
 	}
 	
-	public static ApproxJoinedRelation from(VerdictContext vc, ApproxRelation source1, ApproxRelation source2, Cond cond) throws VerdictException {
+	public static ApproxJoinedRelation from(VerdictJDBCContext vc, ApproxRelation source1, ApproxRelation source2, Cond cond) throws VerdictException {
 		return from(vc, source1, source2, extractJoinConds(cond));
 	}
 	
@@ -91,7 +91,7 @@ public class ApproxJoinedRelation extends ApproxRelation {
 	public ExactRelation rewriteForPointEstimate() {
 		List<Pair<Expr, Expr>> newJoinCond = joinCondWithTablesSubstitutioned();
 		ExactRelation r = new JoinedRelation(vc, source1.rewriteForPointEstimate(), source2.rewriteForPointEstimate(), newJoinCond);
-		r.setAliasName(getAliasName());
+		r.setAlias(getAlias());
 		return r;
 	}
 	
@@ -105,15 +105,29 @@ public class ApproxJoinedRelation extends ApproxRelation {
 	
 	@Override
 	public ExactRelation rewriteWithPartition() {
+		ExactRelation newSource1 = source1.rewriteWithPartition();
+		ExactRelation newSource2 = source2.rewriteWithPartition();
+		
 		List<Pair<Expr, Expr>> newJoinCond = joinCondWithTablesSubstitutioned();
-		ExactRelation r = JoinedRelation.from(vc, source1.rewriteWithPartition(), source2.rewriteWithPartition(), newJoinCond);
-		r.setAliasName(getAliasName());
+//		newJoinCond.add(Pair.<Expr, Expr>of(newSource1.partitionColumn(), newSource2.partitionColumn()));
+		ExactRelation r = JoinedRelation.from(vc, newSource1, newSource2, newJoinCond);
+		r.setAlias(getAlias());
 		return r;
 	}
 	
+	protected List<Pair<Expr, Expr>> joinCondWithTablesSubstitutioned() {
+		Map<TableUniqueName, String> sub = tableSubstitution();
+		// replaces the table names in the join conditions with the sample tables.
+		List<Pair<Expr, Expr>> cols = new ArrayList<Pair<Expr, Expr>>();
+		for (Pair<Expr, Expr> p : joinCols) {
+			cols.add(Pair.of(exprWithTableNamesSubstituted(p.getLeft(), sub), exprWithTableNamesSubstituted(p.getRight(), sub)));
+		}
+		return cols;
+	}
+
 	@Override
 	protected List<Expr> samplingProbabilityExprsFor(FuncExpr f) {
-		if (areMatchingUniverseSamples()) {
+		if (Relation.areMatchingUniverseSamples(source1, source2, joinCols)) {
 			// get the first pair to check the table names to be joined.
 			Pair<Expr, Expr> ajoinCol = joinCols.get(0);
 			Expr l = ajoinCol.getLeft();
@@ -147,24 +161,24 @@ public class ApproxJoinedRelation extends ApproxRelation {
 		return samplingProbExprs;
 	}
 	
-	private boolean areMatchingUniverseSamples() {
-		List<Expr> leftJoinCols = new ArrayList<Expr>();
-		List<Expr> rightJoinCols = new ArrayList<Expr>();
-		for (Pair<Expr, Expr> pair : joinCols) {
-			leftJoinCols.add(pair.getLeft());
-			rightJoinCols.add(pair.getRight());
-		}
-		
-		return source1.sampleType().equals("universe") && source2.sampleType().equals("universe")
-				&& joinColumnsEqualToSampleColumns(leftJoinCols, source1.sampleColumns())
-				&& joinColumnsEqualToSampleColumns(rightJoinCols, source2.sampleColumns());
-	}
+//	private boolean areMatchingUniverseSamples() {
+//		List<Expr> leftJoinCols = new ArrayList<Expr>();
+//		List<Expr> rightJoinCols = new ArrayList<Expr>();
+//		for (Pair<Expr, Expr> pair : joinCols) {
+//			leftJoinCols.add(pair.getLeft());
+//			rightJoinCols.add(pair.getRight());
+//		}
+//		
+//		return source1.sampleType().equals("universe") && source2.sampleType().equals("universe")
+//				&& joinColumnsEqualToSampleColumns(leftJoinCols, source1.sampleColumns())
+//				&& joinColumnsEqualToSampleColumns(rightJoinCols, source2.sampleColumns());
+//	}
 	
 	@Override
 	public String sampleType() {
 		Set<String> sampleTypeSet = ImmutableSet.of(source1.sampleType(), source2.sampleType());
 		
-		if (areMatchingUniverseSamples()) {
+		if (Relation.areMatchingUniverseSamples(source1, source2, joinCols)) {
 			return "universe";
 		} else if (sampleTypeSet.equals(ImmutableSet.of("uniform", "uniform"))) {
 			return "uniform";
@@ -175,14 +189,21 @@ public class ApproxJoinedRelation extends ApproxRelation {
 		} else if (sampleTypeSet.equals(ImmutableSet.of("uniform", "nosample"))) {
 			return "uniform";
 		} else if (sampleTypeSet.equals(ImmutableSet.of("stratified", "stratified"))) {
-			return "stratified";
+			return "arbitrary";
 		} else if (sampleTypeSet.equals(ImmutableSet.of("stratified", "nosample"))) {
 			return "stratified";
 		} else if (sampleTypeSet.equals(ImmutableSet.of("universe", "nosample"))) {
 			return "universe";
+		} else if (sampleTypeSet.equals(ImmutableSet.of("nosample", "nosample"))) {
+			return "nosample";
 		} else {
-			return null;
+			return source1.sampleType() + "-" + source2.sampleType();		// unexpected
 		}
+	}
+	
+	@Override
+	public double cost() {
+		return source1.cost() + source2.cost();
 	}
 	
 	@Override
@@ -192,35 +213,67 @@ public class ApproxJoinedRelation extends ApproxRelation {
 			union.addAll(source2.sampleColumns());
 			return union;
 		} else if (sampleType().equals("universe")) {
-			return source1.sampleColumns();
+			if (source1.sampleType().equals("universe")) {
+				return source1.sampleColumns();
+			} else {
+				return source2.sampleColumns();
+			}
 		} else {
 			return Arrays.asList();
 		}
 	}
 	
-	private boolean joinColumnsEqualToSampleColumns(List<Expr> joinCols, List<String> sampleColNames) {
-		List<String> joinColNames = new ArrayList<String>();
-		for (Expr expr : joinCols) {
-			if (expr instanceof ColNameExpr) {
-				joinColNames.add(((ColNameExpr) expr).getCol());
-			}
-		}
-		return joinColNames.equals(sampleColNames);
+//	private boolean joinColumnsEqualToSampleColumns(List<Expr> joinCols, List<String> sampleColNames) {
+//		List<String> joinColNames = new ArrayList<String>();
+//		for (Expr expr : joinCols) {
+//			if (expr instanceof ColNameExpr) {
+//				joinColNames.add(((ColNameExpr) expr).getCol());
+//			}
+//		}
+//		return joinColNames.equals(sampleColNames);
+//	}
+	
+	@Override
+	protected Map<TableUniqueName, String> tableSubstitution() {
+		Map<TableUniqueName, String> sub1 = source1.tableSubstitution();
+		Map<TableUniqueName, String> sub2 = source2.tableSubstitution();
+		return ImmutableMap.<TableUniqueName,String>builder().putAll(sub1).putAll(sub2).build();
 	}
 	
 	@Override
-	protected Map<String, String> tableSubstitution() {
-		return ImmutableMap.<String,String>builder().putAll(source1.tableSubstitution()).putAll(source2.tableSubstitution()).build();
+	protected String toStringWithIndent(String indent) {
+		StringBuilder s = new StringBuilder(1000);
+		s.append(indent);
+		s.append(String.format("%s(%s) [%s], sample type: %s (%s), cost: %f\n",
+				this.getClass().getSimpleName(),
+				getAlias(),
+				Joiner.on(", ").join(joinCols),
+				sampleType(),
+				sampleColumns(),
+				cost()));
+		s.append(source1.toStringWithIndent(indent + "  "));
+		s.append(source2.toStringWithIndent(indent + "  "));
+		return s.toString();
 	}
 	
-	protected List<Pair<Expr, Expr>> joinCondWithTablesSubstitutioned() {
-		Map<String, String> sub = tableSubstitution();
-		// replaces the table names in the join conditions with the sample tables.
-		List<Pair<Expr, Expr>> cols = new ArrayList<Pair<Expr, Expr>>();
-		for (Pair<Expr, Expr> p : joinCols) {
-			cols.add(Pair.of(exprWithTableNamesSubstituted(p.getLeft(), sub), exprWithTableNamesSubstituted(p.getRight(), sub)));
+	@Override
+	public boolean equals(ApproxRelation o) {
+		if (o instanceof ApproxJoinedRelation) {
+			if (source1.equals(((ApproxJoinedRelation) o).source1) && source2.equals(((ApproxJoinedRelation) o).source2)) {
+				if (joinCols.equals(((ApproxJoinedRelation) o).joinCols)) {
+					return true;
+				}
+			}
 		}
-		return cols;
+		return false;
 	}
-
+	
+	@Override
+	public double samplingProbability() {
+		if (Relation.areMatchingUniverseSamples(source1, source2, joinCols)) {
+			return source1.samplingProbability();
+		} else {
+			return source1.samplingProbability() * source2.samplingProbability();
+		}
+	}
 }

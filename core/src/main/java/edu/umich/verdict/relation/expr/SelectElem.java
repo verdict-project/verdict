@@ -1,13 +1,10 @@
 package edu.umich.verdict.relation.expr;
 
-import org.antlr.v4.runtime.CharStreams;
-import org.antlr.v4.runtime.CommonTokenStream;
-
 import com.google.common.base.Optional;
 
 import edu.umich.verdict.VerdictSQLBaseVisitor;
-import edu.umich.verdict.VerdictSQLLexer;
 import edu.umich.verdict.VerdictSQLParser;
+import edu.umich.verdict.util.StringManipulations;
 
 public class SelectElem {
 
@@ -33,8 +30,7 @@ public class SelectElem {
 	}
 	
 	public static SelectElem from(String elem) {
-		VerdictSQLLexer l = new VerdictSQLLexer(CharStreams.fromString(elem));
-		VerdictSQLParser p = new VerdictSQLParser(new CommonTokenStream(l));
+		VerdictSQLParser p = StringManipulations.parserOf(elem);
 		return from(p.select_list_elem());
 	}
 	

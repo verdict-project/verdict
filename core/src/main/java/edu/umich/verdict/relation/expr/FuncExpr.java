@@ -1,21 +1,15 @@
 package edu.umich.verdict.relation.expr;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-
-import org.antlr.v4.runtime.CharStreams;
-import org.antlr.v4.runtime.CommonTokenStream;
-import org.apache.commons.lang3.tuple.Pair;
 
 import com.google.common.collect.ImmutableMap;
 
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.VerdictSQLBaseVisitor;
-import edu.umich.verdict.VerdictSQLLexer;
 import edu.umich.verdict.VerdictSQLParser;
-import edu.umich.verdict.exceptions.VerdictException;
+import edu.umich.verdict.util.StringManipulations;
 
 public class FuncExpr extends Expr {
 	
@@ -23,7 +17,7 @@ public class FuncExpr extends Expr {
 		COUNT, SUM, AVG, COUNT_DISTINCT, IMPALA_APPROX_COUNT_DISTINCT,
 		ROUND, MAX, MIN, FLOOR, CEIL, EXP, LN, LOG10, LOG2, SIN, COS, TAN,
 		SIGN, RAND, UNIX_TIMESTAMP, FNV_HASH, ABS, STDDEV, SQRT, MOD, PMOD,
-		CAST, CONV, SUBSTR, MD5,
+		CAST, CONV, SUBSTR, MD5, CRC32,
 		UNKNOWN
 	}
 	
@@ -53,6 +47,7 @@ public class FuncExpr extends Expr {
 			.put("STDDEV", FuncName.STDDEV)
 			.put("SQRT", FuncName.SQRT)
 			.put("MOD", FuncName.MOD)
+			.put("CRC32", FuncName.CRC32)
 			.put("PMOD", FuncName.PMOD)
 			.put("CONV", FuncName.CONV)
 			.put("SUBSTR", FuncName.SUBSTR)
@@ -82,6 +77,7 @@ public class FuncExpr extends Expr {
 			.put(FuncName.UNIX_TIMESTAMP, "unix_timestamp(%s)")
 			.put(FuncName.FNV_HASH, "fnv_hash(%s)")
 			.put(FuncName.MD5, "md5(%s)")
+			.put(FuncName.CRC32, "crc32(%s)")
 			.put(FuncName.ABS, "abs(%s)")
 			.put(FuncName.STDDEV, "stddev(%s)")
 			.put(FuncName.SQRT, "sqrt(%s)")
@@ -92,6 +88,12 @@ public class FuncExpr extends Expr {
 			.put(FuncName.CAST, "cast(%s as %s)")
 			.put(FuncName.UNKNOWN, "UNKNOWN(%s)")
 			.build();
+	
+	public FuncExpr(FuncName fname, List<Expr> exprs, OverClause overClause) {
+		this.expressions = exprs;
+		this.funcname = fname;
+		this.overClause = overClause;
+	}
 	
 	public FuncExpr(FuncName fname, Expr expr1, Expr expr2, Expr expr3, OverClause overClause) {
 		this.expressions = new ArrayList<Expr>();
@@ -128,9 +130,20 @@ public class FuncExpr extends Expr {
 		this(fname, expr, null, null, null);
 	}
 	
+	public List<Expr> getExpressions() {
+		return expressions;
+	}
+	
+	public FuncName getFuncName() {
+		return funcname;
+	}
+	
+	public OverClause getOverClause() {
+		return overClause;
+	}
+	
 	public static FuncExpr from(String expr) {
-		VerdictSQLLexer l = new VerdictSQLLexer(CharStreams.fromString(expr));
-		VerdictSQLParser p = new VerdictSQLParser(new CommonTokenStream(l));
+		VerdictSQLParser p = StringManipulations.parserOf(expr);
 		return from(p.function_call());
 	}
 	
@@ -204,10 +217,6 @@ public class FuncExpr extends Expr {
 			}
 		};
 		return v.visit(ctx);
-	}
-	
-	public FuncName getFuncName() {
-		return funcname;
 	}
 	
 	public Expr getUnaryExpr() {
@@ -308,7 +317,7 @@ public class FuncExpr extends Expr {
 	@Override
 	public boolean isagg() {
 		if (funcname.equals(FuncName.AVG) || funcname.equals(FuncName.SUM) || funcname.equals(FuncName.COUNT)
-			|| funcname.equals(FuncName.COUNT_DISTINCT)) {
+			|| funcname.equals(FuncName.COUNT_DISTINCT) || funcname.equals(FuncName.IMPALA_APPROX_COUNT_DISTINCT)) {
 			return true;
 		} else {
 			for (Expr expr : expressions) {
@@ -316,5 +325,54 @@ public class FuncExpr extends Expr {
 			}
 		}
 		return false;
+	}
+	
+	@Override
+	public boolean isCountDistinct() {
+		if (funcname.equals(FuncName.COUNT_DISTINCT)) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
+	@Override
+	public boolean isCount() {
+		if (funcname.equals(FuncName.COUNT)) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
+	@Override
+	public Expr withTableSubstituted(String newTab) {
+		List<Expr> newExprs = new ArrayList<Expr>();
+		for (Expr e : expressions) {
+			newExprs.add(e.withTableSubstituted(newTab));
+		}
+		return new FuncExpr(funcname, newExprs, overClause);
+	}
+	
+	@Override
+	public String toSql() {
+		StringBuilder sql = new StringBuilder(50);
+		if (expressions.size() == 0) {
+			sql.append(String.format(functionPattern.get(funcname), ""));
+		} else if (expressions.size() == 1) {
+			sql.append(String.format(functionPattern.get(funcname), expressions.get(0).toSql()));
+		} else if (expressions.size() == 2) {
+			sql.append(String.format(functionPattern.get(funcname), expressions.get(0).toSql(), expressions.get(1).toSql()));
+		} else {
+			sql.append(String.format(functionPattern.get(funcname),
+					expressions.get(0).toSql(),
+					expressions.get(1).toSql(),
+					expressions.get(2).toSql()));
+		}
+		
+		if (overClause != null) {
+			sql.append(" " + overClause.toString());
+		}
+		return sql.toString();
 	}
 }

@@ -2,15 +2,15 @@ package edu.umich.verdict.query;
 
 import java.sql.ResultSet;
 
-import org.antlr.v4.runtime.CharStreams;
-import org.antlr.v4.runtime.CommonTokenStream;
+import org.apache.spark.sql.DataFrame;
 
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.VerdictSQLBaseVisitor;
-import edu.umich.verdict.VerdictSQLLexer;
 import edu.umich.verdict.VerdictSQLParser;
 import edu.umich.verdict.datatypes.Alias;
+import edu.umich.verdict.dbms.DbmsSpark;
 import edu.umich.verdict.exceptions.VerdictException;
+import edu.umich.verdict.util.StringManipulations;
 import edu.umich.verdict.util.VerdictLogger;
 
 /**
@@ -24,10 +24,16 @@ public abstract class Query {
 	protected final String queryString;
 
 	protected final VerdictContext vc;
+	
+	protected ResultSet rs;
+	
+	protected DataFrame df;
+
 
 	public enum Type {
 		SELECT, CREATE_SAMPLE, DROP_SAMPLE, SHOW_SAMPLE, CONFIG, DESCRIBE_TABLE,
 		OTHER_USE, OTHER_SHOW_TABLES, OTHER_SHOW_DATABASES, NOSUPPORT, OTHER_REFRESH,
+		OTHER_SHOW_CONFIG,
 		CREATE_TABLE, CREATE_TABLE_AS_SELECT, DROP_TABLE, DELETE_FROM, CREATE_VIEW, DROP_VIEW
 	}
 
@@ -74,7 +80,35 @@ public abstract class Query {
 	 * @return ResultSet if the query belongs to the type A, otherwise return null.
 	 * @throws VerdictException
 	 */
-	public abstract ResultSet compute() throws VerdictException;
+	public void compute() throws VerdictException {
+		rs = null;
+		df = null;
+	}
+	
+	public ResultSet getResultSet() {
+		return rs;
+	}
+
+	public DataFrame getDataFrame() {
+		if (df == null && (vc.getDbms() instanceof DbmsSpark)) {
+			return ((DbmsSpark) vc.getDbms()).emptyDataFrame();
+		} else {
+			return df;
+		}
+	}
+	
+	public ResultSet computeResultSet() throws VerdictException {
+		compute();
+		ResultSet rs = getResultSet();
+		return rs;
+	}
+	
+	public DataFrame computeDataFrame() throws VerdictException {
+		compute();
+		DataFrame df = getDataFrame();
+		return df;
+	}
+	
 	
 	public static Query getInstance(VerdictContext vc, String queryString) throws VerdictException {
 		Query query = null;
@@ -84,7 +118,7 @@ public abstract class Query {
 		if (queryType.equals(Type.CONFIG)) {
 			query = new ConfigQuery(vc, queryString);
 		} else {
-			if (vc.getConf().doesContain("bypass") && vc.getConf().getBoolean("bypass")) {
+			if (vc.getConf().bypass()) {
 				VerdictLogger.info("Verdict bypasses this query. Run \"set bypass=\'false\'\""
 						+ " to enable Verdict's approximate query processing.");
 				if (isUpdateType(queryType)) {
@@ -119,6 +153,8 @@ public abstract class Query {
 						   queryType.equals(Type.DELETE_FROM) ||
 						   queryType.equals(Type.DROP_VIEW)) {
 					query = new ByPassVerdictUpdateQuery(vc, queryString);
+				} else if (queryType.equals(Type.OTHER_SHOW_CONFIG)) {
+					query = new ShowConfigQuery(vc, queryString);
 				} else if (queryType.equals(Type.CREATE_TABLE_AS_SELECT)) {
 					query = new CreateTableAsSelectQuery(vc, queryString);
 				} else if (queryType.equals(Type.CREATE_VIEW)) {
@@ -143,8 +179,7 @@ public abstract class Query {
 	}
 
 	protected static Type getStatementType(String queryString) {
-		VerdictSQLLexer l = new VerdictSQLLexer(CharStreams.fromString(queryString));
-		VerdictSQLParser p = new VerdictSQLParser(new CommonTokenStream(l));
+		VerdictSQLParser p = StringManipulations.parserOf(queryString);
 
 		VerdictSQLBaseVisitor<Type> visitor = new VerdictSQLBaseVisitor<Type>() {
 			private Type type = Type.NOSUPPORT;
@@ -152,7 +187,7 @@ public abstract class Query {
 			protected Type defaultResult() { return type; }
 
 			@Override
-			public Type visitQuery_specification(VerdictSQLParser.Query_specificationContext ctx) {
+			public Type visitSelect_statement(VerdictSQLParser.Select_statementContext ctx) {
 				type = Type.SELECT;
 				return type;
 			}
@@ -208,6 +243,12 @@ public abstract class Query {
 			@Override
 			public Type visitShow_databases_statement(VerdictSQLParser.Show_databases_statementContext ctx) {
 				type = Type.OTHER_SHOW_DATABASES;
+				return type;
+			}
+			
+			@Override
+			public Type visitShow_config_statement(VerdictSQLParser.Show_config_statementContext ctx) {
+				type = Type.OTHER_SHOW_CONFIG;
 				return type;
 			}
 			

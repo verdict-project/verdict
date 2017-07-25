@@ -4,19 +4,20 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
-import org.antlr.v4.runtime.CharStreams;
-import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.ParserRuleContext;
-import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.misc.Interval;
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.spark.sql.DataFrame;
+import org.apache.spark.sql.Row;
 
 import com.google.common.base.Joiner;
+import com.google.common.collect.Sets;
 
-import edu.umich.verdict.VerdictConf;
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.VerdictSQLBaseVisitor;
-import edu.umich.verdict.VerdictSQLLexer;
 import edu.umich.verdict.VerdictSQLParser;
 import edu.umich.verdict.VerdictSQLParser.ExpressionContext;
 import edu.umich.verdict.VerdictSQLParser.Join_partContext;
@@ -24,11 +25,13 @@ import edu.umich.verdict.VerdictSQLParser.Search_conditionContext;
 import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.exceptions.VerdictUnexpectedMethodCall;
+import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.relation.expr.FuncExpr;
 import edu.umich.verdict.relation.expr.SelectElem;
 import edu.umich.verdict.util.ResultSetConversion;
 import edu.umich.verdict.util.StackTraceReader;
+import edu.umich.verdict.util.StringManipulations;
 import edu.umich.verdict.util.TypeCasting;
 import edu.umich.verdict.util.VerdictLogger;
 
@@ -47,11 +50,25 @@ public abstract class Relation {
 	
 	protected String alias;
 	
+	/**
+	 * uniform: uniform random sample
+	 * arbitrary: sampling probabilities for tuples may be all different. (there's no guarantee on uniformness).
+	 * nosample: the original table itself.
+	 * stratified: stratified on a certain column. It is guaranteed that we do not miss any group.
+	 * universe: hashed on a certain column. It is guaranteed that the tuples with the same attribute values
+	 *           in the column are sampled together.
+	 */
+	public final static Set<String> availableJoinTypes = Sets.newHashSet("uniform", "universe", "stratified", "nosample", "arbitrary");
+	
 	public Relation(VerdictContext vc) {
 		this.vc = vc;
 		this.subquery = false;
 		this.approximate = false;
 		this.alias = genTableAlias();
+	}
+	
+	public VerdictContext getVerdictContext() {
+		return vc;
 	}
 	
 	public boolean isSubquery() {
@@ -66,11 +83,11 @@ public abstract class Relation {
 		return approximate;
 	}
 	
-	public String getAliasName() {
+	public String getAlias() {
 		return alias;
 	}
 	
-	public void setAliasName(String a) {
+	public void setAlias(String a) {
 		alias = a;
 	}
 	
@@ -122,23 +139,48 @@ public abstract class Relation {
 		VerdictLogger.debug(this, "A query to db: " + sql);
 		VerdictLogger.debug(this, "A query to db:");
 		VerdictLogger.debugPretty(this, Relation.prettyfySql(sql), " ");
-		return vc.getDbms().executeQuery(sql);
+		ResultSet rs = vc.getDbms().executeJdbcQuery(sql);
+		return rs;
+	}
+	
+	public DataFrame collectDataFrame() throws VerdictException {
+		String sql = toSql();
+		VerdictLogger.debug(this, "A query to db: " + sql);
+		VerdictLogger.debug(this, "A query to db:");
+		VerdictLogger.debugPretty(this, Relation.prettyfySql(sql), " ");
+		DataFrame df = vc.getDbms().executeSparkQuery(sql);
+		return df;
 	}
 	
 	public List<List<Object>> collect() throws VerdictException {
 		List<List<Object>> result = new ArrayList<List<Object>>();
-		ResultSet rs = collectResultSet();
-		try {
-			int colCount = rs.getMetaData().getColumnCount();
-			while (rs.next()) {
-				List<Object> row = new ArrayList<Object>();	
-				for (int i = 1; i <= colCount; i++) {
-					row.add(rs.getObject(i));
+		if (vc.getDbms().isJDBC()) {
+			ResultSet rs = collectResultSet();
+			try {
+				int colCount = rs.getMetaData().getColumnCount();
+				while (rs.next()) {
+					List<Object> row = new ArrayList<Object>();	
+					for (int i = 1; i <= colCount; i++) {
+						row.add(rs.getObject(i));
+					}
+					result.add(row);
+				}
+				rs.close();
+			} catch (SQLException e) {
+				throw new VerdictException(e);
+			}
+		}
+		else if (vc.getDbms().isSpark()) {
+			DataFrame df = collectDataFrame();
+			List<Row> rows = df.collectAsList();
+			for (Row r : rows) {
+				int size = r.size();
+				List<Object> row = new ArrayList<Object>();
+				for (int i = 0; i < size; i++) {
+					row.add(r.get(i));
 				}
 				result.add(row);
 			}
-		} catch (SQLException e) {
-			throw new VerdictException(e);
 		}
 		return result;
 	}
@@ -169,15 +211,7 @@ public abstract class Relation {
 	}
 
 	public static String prettyfySql(String sql) {
-		VerdictSQLLexer l = new VerdictSQLLexer(CharStreams.fromString(sql));
-		
-//		for (Token token = l.nextToken();
-//				token.getType() != Token.EOF;
-//				token = l.nextToken()) {
-//			System.out.println(token.getType());
-//		}
-		
-		VerdictSQLParser p = new VerdictSQLParser(new CommonTokenStream(l));
+		VerdictSQLParser p = StringManipulations.parserOf(sql);
 		PrettyPrintVisitor r = new PrettyPrintVisitor(sql);
 		return r.visit(p.verdict_statement());
 	}
@@ -206,6 +240,12 @@ public abstract class Relation {
 		return TableUniqueName.uname(vc, n);
 	}
 	
+	public static TableUniqueName getTempTableName(VerdictContext vc, String schema) {
+		String n = String.format("vt%d_%d", vc.getContextId()%100, temp_tab_no);
+		temp_tab_no++;
+		return TableUniqueName.uname(schema, n);
+	}
+	
 	public String partitionColumnName() {
 		return vc.getDbms().partitionColumnName();
 	}
@@ -214,8 +254,40 @@ public abstract class Relation {
 		return vc.getDbms().samplingProbabilityColumnName();
 	}
 	
-}
+	public static String errorBoundColumn(String original) {
+		return String.format("%s_err", original);
+	}
+	
+	protected static boolean areMatchingUniverseSamples(ApproxRelation r1, ApproxRelation r2, List<Pair<Expr, Expr>> joincond) {
+		List<Expr> leftJoinCols = new ArrayList<Expr>();
+		List<Expr> rightJoinCols = new ArrayList<Expr>();
+		for (Pair<Expr, Expr> pair : joincond) {
+			leftJoinCols.add(pair.getLeft());
+			rightJoinCols.add(pair.getRight());
+		}
+		
+		if (r1.sampleType().equals("universe") && r2.sampleType().equals("universe")) {
+			List<String> cols1 = r1.sampleColumns();
+			List<String> cols2 = r2.sampleColumns();
+			if (joinColumnsEqualToSampleColumns(leftJoinCols, cols1)
+			    && joinColumnsEqualToSampleColumns(rightJoinCols, cols2)) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	private static boolean joinColumnsEqualToSampleColumns(List<Expr> joinCols, List<String> sampleColNames) {
+		List<String> joinColNames = new ArrayList<String>();
+		for (Expr expr : joinCols) {
+			if (expr instanceof ColNameExpr) {
+				joinColNames.add(((ColNameExpr) expr).getCol());
+			}
+		}
+		return joinColNames.equals(sampleColNames);
+	}
 
+}
 
 class PrettyPrintVisitor extends VerdictSQLBaseVisitor<String> {
 	
@@ -354,7 +426,7 @@ class PrettyPrintVisitor extends VerdictSQLBaseVisitor<String> {
 		for (VerdictSQLParser.Search_condition_notContext nctx : ctx.search_condition_not()) {
 			c.add(visit(nctx));
 		}
-		return Joiner.on(String.format("\n%s  AND ", indent)).join(c);
+		return Joiner.on(String.format("\n%s  OR ", indent)).join(c);
 	}
 
 	@Override
@@ -366,7 +438,7 @@ class PrettyPrintVisitor extends VerdictSQLBaseVisitor<String> {
 	@Override
 	public String visitSubquery(VerdictSQLParser.SubqueryContext ctx) {
 		PrettyPrintVisitor v = new PrettyPrintVisitor(sql);
-		v.setIndent(indent + "  ");
+		v.setIndent(indent + "     ");
 		return v.visit(ctx.select_statement());
 	}
 	
@@ -585,14 +657,14 @@ class PrettyPrintVisitor extends VerdictSQLBaseVisitor<String> {
 	@Override
 	public String visitJoin_part(VerdictSQLParser.Join_partContext ctx) {
 		if (ctx.INNER() != null) {
-			return "\n" + indent + "  " + String.format("INNER JOIN %s ", visit(ctx.table_source()))
-				 + "\n" + indent + "  " + String.format("ON %s", visit(ctx.search_condition()));
+			return "\n" + indent + "     " + String.format("INNER JOIN %s ", visit(ctx.table_source()))
+				 + "\n" + indent + "     " + String.format("ON %s", visit(ctx.search_condition()));
 		} else if (ctx.OUTER() != null) {
-			return "\n" + indent + "  " + String.format("%s OUTER JOIN %s ON %s", ctx.join_type.getText(), visit(ctx.table_source()), visit(ctx.search_condition()));
+			return "\n" + indent + "     " + String.format("%s OUTER JOIN %s ON %s", ctx.join_type.getText(), visit(ctx.table_source()), visit(ctx.search_condition()));
 		} else if (ctx.CROSS() != null) {
-			return "\n" + indent + "  " + String.format("CROSS JOIN %s", visit(ctx.table_source()));
+			return "\n" + indent + "     " + String.format("CROSS JOIN %s", visit(ctx.table_source()));
 		} else {
-			return "\n" + indent + "  " + String.format("UNSUPPORTED JOIN (%s)", ctx.getText());
+			return "\n" + indent + "     " + String.format("UNSUPPORTED JOIN (%s)", ctx.getText());
 		}
 	}
 	
@@ -647,6 +719,6 @@ class PrettyPrintVisitor extends VerdictSQLBaseVisitor<String> {
 		int a = ctx.start.getStartIndex();
 	    int b = ctx.stop.getStopIndex();
 	    Interval interval = new Interval(a,b);
-	    return CharStreams.fromString(sql).getText(interval);
+	    return (new ANTLRInputStream(sql)).getText(interval);
 	}
 }

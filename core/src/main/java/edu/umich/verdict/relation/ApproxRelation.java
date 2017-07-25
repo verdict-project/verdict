@@ -8,42 +8,39 @@ import java.util.Map;
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
-import edu.umich.verdict.relation.condition.AndCond;
-import edu.umich.verdict.relation.condition.CompCond;
-import edu.umich.verdict.relation.condition.Cond;
-import edu.umich.verdict.relation.condition.CondModifier;
-import edu.umich.verdict.relation.condition.OrCond;
 import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.relation.expr.ExprModifier;
 import edu.umich.verdict.relation.expr.FuncExpr;
 import edu.umich.verdict.relation.expr.OrderByExpr;
-import edu.umich.verdict.relation.expr.SelectElem;
 import edu.umich.verdict.relation.expr.SubqueryExpr;
-import edu.umich.verdict.util.TypeCasting;
 import edu.umich.verdict.util.VerdictLogger;
 
+/**
+ * ApproxRelation indicates what samples should be used for computing the answer to the original query.
+ * ApproxRelation includes some helper functions for retrieving sample-related information.
+ * @author Yongjoo Park
+ *
+ */
 public abstract class ApproxRelation extends Relation {
+	
+	protected final String partitionSizeAlias = "__vpsize";
 
 	public ApproxRelation(VerdictContext vc) {
 		super(vc);
 		approximate = true;
 	}
 	
-	public String errColSuffix() {
-		return "_err";
-	}
-	
 	public String sourceTableName() {
 		if (this instanceof ApproxSingleRelation) {
 			ApproxSingleRelation r = (ApproxSingleRelation) this;
-			if (r.getAliasName() != null) {
-				return r.getAliasName();
+			if (r.getAlias() != null) {
+				return r.getAlias();
 			} else {
-				return r.getSampleName().tableName;
+				return r.getSampleName().getTableName();
 			}
 		} else {
-			return this.getAliasName();
+			return this.getAlias();
 		}
 	}
 	
@@ -57,9 +54,9 @@ public abstract class ApproxRelation extends Relation {
 	}
 	
 	public ApproxGroupedRelation groupby(List<String> group_list) {
-		List<ColNameExpr> groups = new ArrayList<ColNameExpr>();
+		List<Expr> groups = new ArrayList<Expr>();
 		for (String t : group_list) {
-			groups.add(ColNameExpr.from(t));
+			groups.add(Expr.from(t));
 		}
 		return new ApproxGroupedRelation(vc, this, groups);
 	}
@@ -73,9 +70,9 @@ public abstract class ApproxRelation extends Relation {
 	}
 	
 	public ApproxAggregatedRelation agg(List<Object> elems) {
-		List<SelectElem> se = new ArrayList<SelectElem>();
+		List<Expr> se = new ArrayList<Expr>();
 		for (Object e : elems) {
-			se.add(SelectElem.from(e.toString()));
+			se.add(Expr.from(e.toString()));
 		}
 		return new ApproxAggregatedRelation(vc, this, se);
 	}
@@ -134,10 +131,12 @@ public abstract class ApproxRelation extends Relation {
 	 */
 	protected abstract ExactRelation rewriteWithPartition();
 	
+	// These functions are moved to ExactRelation
+	// This is because partition column name could be only properly resolved after the rewriting to the
+	// exact relation is finished.
 //	protected String partitionColumnName() {
 //		return vc.getDbms().partitionColumnName();
 //	}
-	
 	// returns effective partition column name for a possibly joined table.
 //	protected abstract ColNameExpr partitionColumn();
 	
@@ -175,10 +174,18 @@ public abstract class ApproxRelation extends Relation {
 	protected abstract List<Expr> samplingProbabilityExprsFor(FuncExpr f);
 	
 	/**
+	 * rough sampling probability, which is obtained from the sampling params.
+	 * @return
+	 */
+	public abstract double samplingProbability();
+	
+	public abstract double cost();
+
+	/**
 	 * Returns an effective sample type of this relation.
 	 * @return One of "uniform", "universe", "stratified", "nosample".
 	 */
-	protected abstract String sampleType();
+	public abstract String sampleType();
 	
 //	protected abstract List<ColNameExpr> accumulateSamplingProbColumns();
 	
@@ -190,9 +197,10 @@ public abstract class ApproxRelation extends Relation {
 	
 	/**
 	 * Pairs of original table name and a sample table name. This function does not inspect subqueries.
+	 * The substitution expression is an alias (thus, string type).
 	 * @return
 	 */
-	protected abstract Map<String, String> tableSubstitution();
+	protected abstract Map<TableUniqueName, String> tableSubstitution();
 	
 	
 	/*
@@ -222,25 +230,108 @@ public abstract class ApproxRelation extends Relation {
 		return r.toSql();
 	}
 	
+	@Override
+	public String toString() {
+		return toStringWithIndent("");
+	}
+	
+	public abstract boolean equals(ApproxRelation o);
+	
+	protected abstract String toStringWithIndent(String indent);
+	
 	/*
 	 * Helpers
 	 */
 	
-	protected Expr exprWithTableNamesSubstituted(Expr expr, final Map<String, String> sub) {
-		ExprModifier v = new ExprModifier() {
-			public Expr call(Expr expr) {
-				if (expr instanceof ColNameExpr) {
-					ColNameExpr e = (ColNameExpr) expr;
-					return new ColNameExpr(e.getCol(), sub.get(e.getTab()), e.getSchema());
-				} else if (expr instanceof FuncExpr) {
-					FuncExpr e = (FuncExpr) expr;
-					return new FuncExpr(e.getFuncName(), visit(e.getUnaryExpr()));
-				} else {
-					return expr;
-				}
-			}
-		};
+	protected double confidenceIntervalMultiplier() {
+		double confidencePercentage = vc.getConf().errorBoundConfidenceInPercentage();
+		if (confidencePercentage == 99.9) {
+			return 3.291;
+		} else if (confidencePercentage == 99.5) {
+			return 2.807;
+		} else if (confidencePercentage == 99) {
+			return 2.576;
+		} else if (confidencePercentage == 95) {
+			return 1.96;
+		} else if (confidencePercentage == 90) {
+			return 1.645;
+		} else if (confidencePercentage == 85) {
+			return 1.44;
+		} else if (confidencePercentage == 80) {
+			return 1.282;
+		} else {
+			VerdictLogger.warn(this, String.format("Unsupported confidence: %s%%. Uses the default 95%%.", confidencePercentage));
+			return 1.96;	// 95% by default.
+		}
+	}
+
+	protected Expr exprWithTableNamesSubstituted(Expr expr, Map<TableUniqueName, String> sub) {
+		TableNameReplacerInExpr v = new TableNameReplacerInExpr(sub);
 		return v.visit(expr);
 	}
 
 }
+
+
+class TableNameReplacerInExpr extends ExprModifier {
+	
+	final protected Map<TableUniqueName, String> sub;
+	
+	public TableNameReplacerInExpr(Map<TableUniqueName, String> sub) {
+		this.sub = sub;
+	}
+	
+	public Expr call(Expr expr) {
+		if (expr instanceof ColNameExpr) {
+			return replaceColNameExpr((ColNameExpr) expr);
+		} else if (expr instanceof FuncExpr) {
+			return replaceFuncExpr((FuncExpr) expr);
+		} else if (expr instanceof SubqueryExpr) {
+			return replaceSubqueryExpr((SubqueryExpr) expr);
+		} else {
+			return expr;
+		}
+	}
+	
+	/**
+	 * Replaces if
+	 * (1) schema name is omitted in the join condition and the table name matches the table name of the original table
+	 * (2) schema name is fully specified in the join condition and both the schema and table names match the original schema and table names.
+	 * @param expr
+	 * @return
+	 */
+	protected Expr replaceColNameExpr(ColNameExpr expr) {
+		if (expr.getTab() == null) {
+			return expr;
+		}
+		
+		TableUniqueName old = TableUniqueName.uname(expr.getSchema(), expr.getTab());
+		
+		if (old.getSchemaName() == null) {
+			for (Map.Entry<TableUniqueName, String> entry : sub.entrySet()) {
+				TableUniqueName original = entry.getKey();
+				String subAlias = entry.getValue();
+				if (original.getTableName().equals(expr.getTab())) {
+					return new ColNameExpr(expr.getCol(), subAlias);
+				}
+			}
+		} else {
+			if (sub.containsKey(old)) {
+				String rep = sub.get(old);
+				return new ColNameExpr(expr.getCol(), rep);
+			}
+		}
+		// if nothing matched, then return the original expression.
+		return expr;
+	}
+	
+	protected Expr replaceSubqueryExpr(SubqueryExpr expr) {
+		return expr;
+	}
+	
+	protected Expr replaceFuncExpr(FuncExpr expr) {
+		FuncExpr e = (FuncExpr) expr;
+		return new FuncExpr(e.getFuncName(), visit(e.getUnaryExpr()));
+	}
+};
+

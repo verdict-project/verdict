@@ -1,20 +1,14 @@
 package edu.umich.verdict.query;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.Map;
-
-import org.antlr.v4.runtime.CharStreams;
-import org.antlr.v4.runtime.CommonTokenStream;
-
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.VerdictSQLBaseVisitor;
-import edu.umich.verdict.VerdictSQLLexer;
 import edu.umich.verdict.VerdictSQLParser;
-import edu.umich.verdict.datatypes.VerdictResultSet;
+import edu.umich.verdict.VerdictSQLParser.Table_nameContext;
 import edu.umich.verdict.datatypes.TableUniqueName;
+import edu.umich.verdict.dbms.DbmsJDBC;
+import edu.umich.verdict.dbms.DbmsSpark;
 import edu.umich.verdict.exceptions.VerdictException;
+import edu.umich.verdict.util.StringManipulations;
 import edu.umich.verdict.util.VerdictLogger;
 
 public class DescribeTableQuery extends SelectQuery {
@@ -24,30 +18,38 @@ public class DescribeTableQuery extends SelectQuery {
 	}
 
 	@Override
-	public ResultSet compute() throws VerdictException {
-		VerdictSQLLexer l = new VerdictSQLLexer(CharStreams.fromString(queryString));
-		VerdictSQLParser p = new VerdictSQLParser(new CommonTokenStream(l));
+	public void compute() throws VerdictException {
+		VerdictSQLParser p = StringManipulations.parserOf(queryString);
 
-		VerdictSQLBaseVisitor<String> visitor = new VerdictSQLBaseVisitor<String>() {
-			private String tableName;
+		VerdictSQLBaseVisitor<TableUniqueName> visitor = new VerdictSQLBaseVisitor<TableUniqueName>() {
+			private TableUniqueName tableName;
 
-			protected String defaultResult() { return tableName; }
+			protected TableUniqueName defaultResult() { return tableName; }
 			
 			@Override
-			public String visitDescribe_table_statement(VerdictSQLParser.Describe_table_statementContext ctx) {
-				tableName = ctx.table.getText();
+			public TableUniqueName visitDescribe_table_statement(VerdictSQLParser.Describe_table_statementContext ctx) {
+				String schema = null;
+				Table_nameContext t = ctx.table_name();
+				if (t.schema != null) {
+					schema = t.schema.getText();
+				}
+				String table = t.table.getText();
+				tableName = TableUniqueName.uname(schema, table);
 				return tableName;
 			}
 		};
 		
-		String tableName = visitor.visit(p.describe_table_statement());
-		TableUniqueName tableUniqueName = TableUniqueName.uname(vc, tableName);
+		TableUniqueName tableName = visitor.visit(p.describe_table_statement());
+		TableUniqueName table = (tableName.getSchemaName() != null)? tableName : TableUniqueName.uname(vc, tableName.getTableName());
 		
-		if (tableUniqueName.schemaName == null) {
+		if (table.getSchemaName() == null) {
 			VerdictLogger.info("No database schema selected or specified; cannot show tables.");
-			return null;
 		} else {
-			return vc.getDbms().describeTable(tableUniqueName);
+			if (vc.getDbms().isJDBC()) {
+				rs = ((DbmsJDBC) vc.getDbms()).describeTableInResultSet(table);
+			} else if (vc.getDbms().isSpark()) {
+				df = ((DbmsSpark) vc.getDbms()).describeTableInDataFrame(table);
+			}
 		}
 	}
 }

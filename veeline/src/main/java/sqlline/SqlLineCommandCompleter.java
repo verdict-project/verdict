@@ -14,7 +14,11 @@ package sqlline;
 import java.util.LinkedList;
 import java.util.List;
 
-import jline.console.completer.*;
+import jline.console.completer.AggregateCompleter;
+import jline.console.completer.ArgumentCompleter;
+import jline.console.completer.Completer;
+import jline.console.completer.NullCompleter;
+import jline.console.completer.StringsCompleter;
 
 /**
  * Suggests completions for a command.

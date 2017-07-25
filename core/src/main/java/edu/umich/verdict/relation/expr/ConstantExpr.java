@@ -1,8 +1,5 @@
 package edu.umich.verdict.relation.expr;
 
-import edu.umich.verdict.VerdictContext;
-import edu.umich.verdict.exceptions.VerdictException;
-
 public class ConstantExpr extends Expr {
 	
 	private Object value;
@@ -29,4 +26,13 @@ public class ConstantExpr extends Expr {
 		return v.call(this);
 	}
 
+	@Override
+	public Expr withTableSubstituted(String newTab) {
+		return this;
+	}
+	
+	@Override
+	public String toSql() {
+		return toString();
+	}
 }

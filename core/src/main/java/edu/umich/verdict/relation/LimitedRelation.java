@@ -1,11 +1,8 @@
 package edu.umich.verdict.relation;
 
-import java.util.HashMap;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-
-import com.google.common.base.Joiner;
 
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.datatypes.SampleParam;
@@ -13,8 +10,6 @@ import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.Expr;
-import edu.umich.verdict.relation.expr.OrderByExpr;
-import edu.umich.verdict.relation.expr.SelectElem;
 
 public class LimitedRelation extends ExactRelation {
 	
@@ -35,13 +30,18 @@ public class LimitedRelation extends ExactRelation {
 
 	@Override
 	protected String getSourceName() {
-		return getAliasName();
+		return getAlias();
+	}
+	
+	@Override
+	protected List<ApproxRelation> nBestSamples(Expr elem, int n) throws VerdictException {
+		return Arrays.asList();
 	}
 
 	@Override
 	public ApproxRelation approx() throws VerdictException {
 		ApproxRelation a = new ApproxLimitedRelation(vc, source.approx(), limit);
-		a.setAliasName(getAliasName());
+		a.setAlias(getAlias());
 		return a;
 	}
 
@@ -58,15 +58,15 @@ public class LimitedRelation extends ExactRelation {
 		return sql.toString();
 	}
 
-	@Override
-	public List<SelectElem> getSelectList() {
-		return source.getSelectList();
-	}
+//	@Override
+//	public List<SelectElem> getSelectList() {
+//		return source.getSelectList();
+//	}
 
 	@Override
 	public ColNameExpr partitionColumn() {
 		ColNameExpr col = source.partitionColumn();
-		col.setTab(getAliasName());
+		col.setTab(getAlias());
 		return col;
 	}
 
@@ -79,7 +79,7 @@ public class LimitedRelation extends ExactRelation {
 	protected String toStringWithIndent(String indent) {
 		StringBuilder s = new StringBuilder(1000);
 		s.append(indent);
-		s.append(String.format("%s(%s) [%d]\n", this.getClass().getSimpleName(), getAliasName(), limit));
+		s.append(String.format("%s(%s) [%d]\n", this.getClass().getSimpleName(), getAlias(), limit));
 		s.append(source.toStringWithIndent(indent + "  "));
 		return s.toString();
 	}

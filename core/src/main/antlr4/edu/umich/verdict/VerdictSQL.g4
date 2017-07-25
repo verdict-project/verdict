@@ -65,7 +65,7 @@ delete_sample_statement
     ;
 
 show_samples_statement
-    : SHOW type=(STRATIFIED | UNIFORM | ALL)? SAMPLES (FOR table=table_name)?
+    : SHOW type=(STRATIFIED | UNIFORM | ALL)? SAMPLES ((FOR | OF) database=id)?
     ;
 
 config_statement
@@ -79,6 +79,7 @@ other_statement
     | show_databases_statement
     | describe_table_statement
     | refresh_statement
+    | show_config_statement
     ;
 
 //config_set_statement: SET key=config_key '=' value=config_value percent='%'?;
@@ -228,7 +229,7 @@ insert_statement
 
 // https://msdn.microsoft.com/en-us/library/ms189499.aspx
 select_statement
-    : with_expression? query_expression order_by_clause? limit_clause? ';'?
+    : with_expression? EXACT? query_expression order_by_clause? limit_clause? confidence_clause? ';'?
     ;
 
 // https://msdn.microsoft.com/en-us/library/ms177523.aspx
@@ -461,7 +462,7 @@ use_statement
     ;
 
 show_tables_statement
-    : SHOW TABLES
+    : SHOW TABLES (IN schema=id)? ';'?
     ;
 
 show_databases_statement
@@ -469,11 +470,15 @@ show_databases_statement
     ;
 
 describe_table_statement
-    : DESCRIBE table=id ';'?
+    : DESCRIBE table=table_name ';'?
     ;
     
 refresh_statement
-    : REFRESH
+    : REFRESH (schema=id)? ';'?
+    ;
+    
+show_config_statement
+    : SHOW CONFIG ';'?
     ;
 
 execute_clause
@@ -873,7 +878,7 @@ binary_mathematical_function
     ;
 
 unary_mathematical_function
-    : function_name=(ROUND | FLOOR | CEIL | EXP | LN | LOG10 | LOG2 | SIN | COS | TAN | SIGN | RAND | FNV_HASH | ABS | STDDEV | SQRT | MD5)
+    : function_name=(ROUND | FLOOR | CEIL | EXP | LN | LOG10 | LOG2 | SIN | COS | TAN | SIGN | RAND | FNV_HASH | ABS | STDDEV | SQRT | MD5 | CRC32)
       '(' expression ')'
     | function_name=CAST '(' cast_as_expression ')'
     ;
@@ -1408,10 +1413,12 @@ CHECKSUM:                        C H E C K S U M;
 CHECKSUM_AGG:                    C H E C K S U M '_' A G G;
 COMMITTED:                       C O M M I T T E D;
 CONCAT:                          C O N C A T;
+CONFIG:                          C O N F I G;
 COOKIE:                          C O O K I E;
 COS:                             C O S;
 COUNT:                           C O U N T;
 COUNT_BIG:                       C O U N T '_' B I G;
+CRC32:                           C R C '32';
 DATEADD:                         D A T E A D D;
 DATEDIFF:                        D A T E D I F F;
 DATENAME:                        D A T E N A M E;
@@ -1423,6 +1430,7 @@ DISABLE:                         D I S A B L E;
 DYNAMIC:                         D Y N A M I C;
 ENCRYPTION:                      E N C R Y P T I O N;
 ESCAPED_BY:                      E S C A P E D ' ' B Y;
+EXACT:                           E X A C T;
 EXP:                             E X P;
 FAST:                            F A S T;
 FAST_FORWARD:                    F A S T '_' F O R W A R D;

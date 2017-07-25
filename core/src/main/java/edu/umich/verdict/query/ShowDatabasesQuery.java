@@ -1,8 +1,8 @@
 package edu.umich.verdict.query;
 
-import java.sql.ResultSet;
-
 import edu.umich.verdict.VerdictContext;
+import edu.umich.verdict.dbms.DbmsJDBC;
+import edu.umich.verdict.dbms.DbmsSpark;
 import edu.umich.verdict.exceptions.VerdictException;
 
 public class ShowDatabasesQuery extends SelectQuery {
@@ -12,8 +12,12 @@ public class ShowDatabasesQuery extends SelectQuery {
 	}
 	
 	@Override
-	public ResultSet compute() throws VerdictException {
-		return vc.getDbms().getDatabaseNames();
+	public void compute() throws VerdictException {
+		if (vc.getDbms() instanceof DbmsJDBC) {
+			rs = ((DbmsJDBC) vc.getDbms()).getDatabaseNamesInResultSet();
+		} else if (vc.getDbms() instanceof DbmsSpark) {
+			df = ((DbmsSpark) vc.getDbms()).getDatabaseNamesInDataFrame();
+		}
 	}
 
 }

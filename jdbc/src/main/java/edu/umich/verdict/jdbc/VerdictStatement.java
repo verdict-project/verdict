@@ -1,13 +1,18 @@
 package edu.umich.verdict.jdbc;
 
-import edu.umich.verdict.VerdictContext;
-import edu.umich.verdict.datatypes.VerdictResultSet;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
+import java.sql.SQLWarning;
+import java.sql.Statement;
+import java.util.ArrayList;
+
+import edu.umich.verdict.VerdictJDBCContext;
+import edu.umich.verdict.dbms.DbmsJDBC;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.util.StackTraceReader;
 import edu.umich.verdict.util.VerdictLogger;
-
-import java.sql.*;
-import java.util.ArrayList;
 
 public class VerdictStatement implements Statement {
 	
@@ -15,18 +20,18 @@ public class VerdictStatement implements Statement {
     private Statement stmt;
 	
     private final ArrayList<String> batch = new ArrayList<String>();	// TODO: support batch operations.
-    private final VerdictContext vc;
+    private final VerdictJDBCContext vc;
     
     private ResultSet answer;
     
 
-    public VerdictStatement(VerdictConnection connection, VerdictContext vc) throws SQLException {
+    public VerdictStatement(VerdictConnection connection, VerdictJDBCContext vc) throws SQLException {
     	this.connection = connection;
     	try {
     		// a new verdict context does not share the underlying statement.
 			this.vc = vc;
-			vc.getDbms().createNewStatementWithoutClosing();
-			this.stmt = this.vc.getDbms().createStatement();
+			((DbmsJDBC) vc.getDbms()).createNewStatementWithoutClosing();
+			this.stmt = ((DbmsJDBC) vc.getDbms()).createStatement();
 		} catch (VerdictException e) {
 			throw new SQLException(StackTraceReader.stackTrace2String(e));
 		}
@@ -43,7 +48,7 @@ public class VerdictStatement implements Statement {
     public int executeUpdate(String sql) throws SQLException {
     	VerdictLogger.debug(this, String.format("executeUpdate() called with: %s", sql));
     	try {
-			vc.executeQuery(sql);
+			vc.executeJdbcQuery(sql);
 		} catch (VerdictException e) {
 			new SQLException(StackTraceReader.stackTrace2String(e));
 		}
@@ -53,7 +58,7 @@ public class VerdictStatement implements Statement {
     @Override
     public void close() throws SQLException {
     	try {
-			vc.getDbms().closeStatement();
+			((DbmsJDBC) vc.getDbms()).closeStatement();
 		} catch (VerdictException e) {
 			new SQLException(StackTraceReader.stackTrace2String(e));
 		}
@@ -118,7 +123,7 @@ public class VerdictStatement implements Statement {
     public boolean execute(String sql) throws SQLException {
     	VerdictLogger.debug(this, String.format("execute() called with: %s", sql));
     	try {
-    		answer = vc.executeQuery(sql);
+    		answer = vc.executeJdbcQuery(sql);
     	} catch (VerdictException e) {
     		throw new SQLException(StackTraceReader.stackTrace2String(e));
     	}

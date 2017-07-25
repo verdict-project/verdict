@@ -20,11 +20,8 @@ import java.sql.Statement;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Calendar;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import edu.umich.verdict.datatypes.VerdictResultSetMetaData;
 
 public class VerdictResultSet implements ResultSet {
 	

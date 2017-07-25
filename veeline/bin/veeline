@@ -1,5 +1,5 @@
 #!/bin/bash
-# sqlline - Script to launch SQL shell on Unix, Linux or Mac OS
+# veeline - script to launch a command line interface
 
 BINPATH=$(dirname $0)
 VERDICT_PATH=$BINPATH/../../target

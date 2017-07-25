@@ -2,12 +2,6 @@ package edu.umich.verdict.relation;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
-
-import org.apache.commons.lang3.tuple.Pair;
-
-import edu.umich.verdict.datatypes.SampleParam;
-import edu.umich.verdict.relation.expr.SelectElem;
 
 /**
  * Stores information about what samples to use to compute multiple expressions. A single SampleGroup instance stores
@@ -40,6 +34,14 @@ public class SamplePlan {
 	
 	public List<SampleGroup> getSampleGroups() {
 		return sampleGroups;
+	}
+	
+	public List<ApproxAggregatedRelation> getApproxRelations() {
+		List<ApproxAggregatedRelation> a = new ArrayList<ApproxAggregatedRelation>();
+		for (SampleGroup g : getSampleGroups()) {
+			a.add((ApproxAggregatedRelation) g.getSample());
+		}
+		return a;
 	}
 	
 	@Override
@@ -91,6 +93,8 @@ public class SamplePlan {
 		for (SampleGroup g : copy.sampleGroups) {
 			if (g.isEqualSample(group)) {
 				g.addElem(group.getElems());
+				ApproxAggregatedRelation a = (ApproxAggregatedRelation) g.getSample();
+				g.setSample(new ApproxAggregatedRelation(a.getVerdictContext(), a.getSource(), g.getElems()));
 				merged = true;
 				break;
 			}
@@ -103,11 +107,11 @@ public class SamplePlan {
 		return copy;
 	}
 	
-	public List<Pair<Set<SampleParam>, List<SelectElem>>> unroll() {
-		List<Pair<Set<SampleParam>, List<SelectElem>>> unrolled = new ArrayList<Pair<Set<SampleParam>, List<SelectElem>>>();
-		for (SampleGroup g : sampleGroups) {
-			unrolled.add(g.unroll());
-		}
-		return unrolled;
-	}
+//	public List<Pair<Set<SampleParam>, List<Expr>>> unroll() {
+//		List<Pair<Set<SampleParam>, List<Expr>>> unrolled = new ArrayList<Pair<Set<SampleParam>, List<Expr>>>();
+//		for (SampleGroup g : sampleGroups) {
+//			unrolled.add(g.unroll());
+//		}
+//		return unrolled;
+//	}
 }

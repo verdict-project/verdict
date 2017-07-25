@@ -1,10 +1,10 @@
 package edu.umich.verdict;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+
 import java.util.Properties;
 import java.util.Set;
 
-import org.junit.Before;
 import org.junit.Test;
 
 public class ReadJsonTest {

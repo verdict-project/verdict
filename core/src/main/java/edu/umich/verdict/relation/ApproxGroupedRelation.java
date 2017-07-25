@@ -4,11 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang3.tuple.Pair;
+import com.google.common.base.Joiner;
 
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.datatypes.TableUniqueName;
-import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.relation.expr.FuncExpr;
 
@@ -16,9 +15,9 @@ public class ApproxGroupedRelation extends ApproxRelation {
 	
 	private ApproxRelation source;
 	
-	private List<ColNameExpr> groupby;
+	private List<Expr> groupby;
 	
-	public ApproxGroupedRelation(VerdictContext vc, ApproxRelation source, List<ColNameExpr> groupby) {
+	public ApproxGroupedRelation(VerdictContext vc, ApproxRelation source, List<Expr> groupby) {
 		super(vc);
 		this.source = source;
 		this.groupby = groupby;
@@ -29,26 +28,26 @@ public class ApproxGroupedRelation extends ApproxRelation {
 		return source;
 	}
 	
-	public List<ColNameExpr> getGroupby() {
+	public List<Expr> getGroupby() {
 		return groupby;
 	}
 
 	@Override
 	public ExactRelation rewriteForPointEstimate() {
-		List<ColNameExpr> newGroupby = groupbyWithTablesSubstituted();
+		List<Expr> newGroupby = groupbyWithTablesSubstituted();
 		ExactRelation r = new GroupedRelation(vc, source.rewriteForPointEstimate(), newGroupby);
-		r.setAliasName(r.getAliasName());
+		r.setAlias(r.getAlias());
 		return r;
 	}
 	
 	@Override
 	public ExactRelation rewriteWithPartition() {
 		ExactRelation newSource = source.rewriteWithPartition();
-		List<ColNameExpr> newGroupby = groupbyWithTablesSubstituted();
+		List<Expr> newGroupby = groupbyWithTablesSubstituted();
 //		newGroupby.add((ColNameExpr) exprWithTableNamesSubstituted(partitionColumn(), tableSubstitution()));
 		newGroupby.add(newSource.partitionColumn());
 		ExactRelation r = new GroupedRelation(vc, newSource, newGroupby);
-		r.setAliasName(r.getAliasName());
+		r.setAlias(r.getAlias());
 		return r;
 	}
 	
@@ -64,27 +63,64 @@ public class ApproxGroupedRelation extends ApproxRelation {
 	}
 
 	@Override
-	protected Map<String, String> tableSubstitution() {
+	protected Map<TableUniqueName, String> tableSubstitution() {
 		return source.tableSubstitution();
 	}
 	
-	protected List<ColNameExpr> groupbyWithTablesSubstituted() {
-		Map<String, String> sub = tableSubstitution();
-		List<ColNameExpr> replaced = new ArrayList<ColNameExpr>();
-		for (ColNameExpr e : groupby) {
-			replaced.add((ColNameExpr) exprWithTableNamesSubstituted(e, sub));
+	protected List<Expr> groupbyWithTablesSubstituted() {
+		Map<TableUniqueName, String> sub = tableSubstitution();
+		List<Expr> replaced = new ArrayList<Expr>();
+		for (Expr e : groupby) {
+			replaced.add(exprWithTableNamesSubstituted(e, sub));
 		}
 		return replaced;
 	}
 
 	@Override
-	protected String sampleType() {
+	public String sampleType() {
 		return source.sampleType();
+	}
+	
+	@Override
+	public double cost() {
+		return source.cost();
 	}
 
 	@Override
 	protected List<String> sampleColumns() {
 		return source.sampleColumns();
+	}
+	
+	@Override
+	protected String toStringWithIndent(String indent) {
+		StringBuilder s = new StringBuilder(1000);
+		s.append(indent);
+		s.append(String.format("%s(%s, %s (%s)) [%s]\n",
+				 	this.getClass().getSimpleName(),
+				 	getAlias(),
+				 	sampleType(),
+				 	sampleColumns().toString(),
+				 	Joiner.on(", ").join(groupby)));
+		s.append(source.toStringWithIndent(indent + "  "));
+		return s.toString();
+	}
+	
+	@Override
+	public boolean equals(ApproxRelation o) {
+		if (o instanceof ApproxGroupedRelation) {
+			if (source.equals(((ApproxGroupedRelation) o).source)) {
+				if (groupby.equals(((ApproxGroupedRelation) o).groupby)) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	// assumes that this method is called by the parent, i.e., ApproxAggregatedRelation.
+	@Override
+	public double samplingProbability() {
+		return source.samplingProbability();
 	}
 
 }

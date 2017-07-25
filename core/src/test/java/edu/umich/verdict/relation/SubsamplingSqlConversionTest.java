@@ -3,7 +3,7 @@ package edu.umich.verdict.relation;
 import java.sql.ResultSet;
 
 import edu.umich.verdict.VerdictConf;
-import edu.umich.verdict.VerdictContext;
+import edu.umich.verdict.VerdictJDBCContext;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.util.ResultSetConversion;
 
@@ -16,7 +16,7 @@ public class SubsamplingSqlConversionTest {
 		conf.setPort("21050");
 		conf.setDbmsSchema("instacart1g");
 		conf.set("no_user_password", "true");
-		VerdictContext vc = new VerdictContext(conf);
+		VerdictJDBCContext vc = VerdictJDBCContext.from(conf);
 		
 		String sql;
 		ExactRelation r;
@@ -28,7 +28,7 @@ public class SubsamplingSqlConversionTest {
 //		converted = r.approx().toSql();
 //		System.out.println(converted);
 //		System.out.println(Relation.prettyfySql(converted));
-		rs = vc.executeQuery(sql);
+		rs = vc.executeJdbcQuery(sql);
 		ResultSetConversion.printResultSet(rs);
 		
 		sql = "select sum(orders.days_since_prior) from orders";
@@ -36,7 +36,7 @@ public class SubsamplingSqlConversionTest {
 //		converted = r.approx().toSql();
 //		System.out.println(converted);
 //		System.out.println(Relation.prettyfySql(converted));
-		rs = vc.executeQuery(sql);
+		rs = vc.executeJdbcQuery(sql);
 		ResultSetConversion.printResultSet(rs);
 		
 		sql = "select order_dow, count(*) from orders group by order_dow order by order_dow";
@@ -44,7 +44,7 @@ public class SubsamplingSqlConversionTest {
 //		converted = r.approx().toSql();
 //		System.out.println(converted);
 //		System.out.println(Relation.prettyfySql(converted));
-		rs = vc.executeQuery(sql);
+		rs = vc.executeJdbcQuery(sql);
 		ResultSetConversion.printResultSet(rs);
 		
 		vc.destroy();

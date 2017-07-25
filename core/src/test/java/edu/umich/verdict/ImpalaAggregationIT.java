@@ -15,7 +15,7 @@ import edu.umich.verdict.exceptions.VerdictException;
 public class ImpalaAggregationIT extends AggregationIT {
 	
 	@BeforeClass
-	public static void connect() throws VerdictException, SQLException, FileNotFoundException {
+	public static void connect() throws VerdictException, SQLException, FileNotFoundException, ClassNotFoundException {
 		final String host = readHost();
 		final String port = "21050";
 		final String schema = "instacart1g";
@@ -26,9 +26,12 @@ public class ImpalaAggregationIT extends AggregationIT {
 		conf.setPort(port);
 		conf.setDbmsSchema(schema);
 		conf.set("no_user_password", "true");
-		vc = new VerdictContext(conf);
+		conf.set("verdict.loglevel", "debug");
+		conf.set("verdict.meta_data.meta_database_suffix", "_verdict");
+		vc = VerdictJDBCContext.from(conf);
 		
 		String url = String.format("jdbc:impala://%s:%s/%s", host, port, schema);
+		Class.forName("com.cloudera.impala.jdbc4.Driver");
 		Connection conn = DriverManager.getConnection(url);
 		stmt = conn.createStatement();
 	}
@@ -39,12 +42,29 @@ public class ImpalaAggregationIT extends AggregationIT {
 	}
 
 	@Override
-	public void simpleAvgUsingUniverseSample() throws VerdictException, SQLException {
+	public void simpleCount() throws VerdictException, SQLException {
 		// TODO Auto-generated method stub
-		super.simpleAvgUsingUniverseSample();
+		super.simpleCount();
 	}
 
-	
+	@Override
+	public void simpleAvgUsingStratifiedSample() throws VerdictException, SQLException {
+		// TODO Auto-generated method stub
+		super.simpleAvgUsingStratifiedSample();
+	}
+
+	@Override
+	public void simpleAvgUsingStratifiedSample2() throws VerdictException, SQLException {
+		// TODO Auto-generated method stub
+		super.simpleAvgUsingStratifiedSample2();
+	}
+
+	@Override
+	public void simpleAvgUsingStratifiedSample3() throws VerdictException, SQLException {
+		// TODO Auto-generated method stub
+		super.simpleAvgUsingStratifiedSample3();
+	}
+
 	
 
 }

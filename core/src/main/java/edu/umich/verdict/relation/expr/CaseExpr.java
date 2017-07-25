@@ -3,15 +3,12 @@ package edu.umich.verdict.relation.expr;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.antlr.v4.runtime.CharStreams;
-import org.antlr.v4.runtime.CommonTokenStream;
-
-import edu.umich.verdict.VerdictSQLLexer;
 import edu.umich.verdict.VerdictSQLParser;
 import edu.umich.verdict.VerdictSQLParser.Case_exprContext;
 import edu.umich.verdict.VerdictSQLParser.ExpressionContext;
 import edu.umich.verdict.VerdictSQLParser.Search_conditionContext;
 import edu.umich.verdict.relation.condition.Cond;
+import edu.umich.verdict.util.StringManipulations;
 import edu.umich.verdict.util.VerdictLogger;
 
 /**
@@ -36,9 +33,16 @@ public class CaseExpr extends Expr {
 		this.expressions = expressions;
 	}
 	
+	public List<Cond> getConditions() {
+		return conditions;
+	}
+	
+	public List<Expr> getExpressions() {
+		return expressions;
+	}
+	
 	public static CaseExpr from(String expr) {
-		VerdictSQLLexer l = new VerdictSQLLexer(CharStreams.fromString(expr));
-		VerdictSQLParser p = new VerdictSQLParser(new CommonTokenStream(l));
+		VerdictSQLParser p = StringManipulations.parserOf(expr);
 		return from(p.case_expr());
 	}
 	
@@ -71,6 +75,35 @@ public class CaseExpr extends Expr {
 	@Override
 	public <T> T accept(ExprVisitor<T> v) {
 		return v.call(this);
+	}
+	
+	@Override
+	public Expr withTableSubstituted(String newTab) {
+		List<Cond> newConds = new ArrayList<Cond>();
+		for (Cond c : conditions) {
+			newConds.add(c.withTableSubstituted(newTab));
+		}
+		
+		List<Expr> newExprs = new ArrayList<Expr>();
+		for (Expr e : expressions) {
+			newExprs.add(e.withTableSubstituted(newTab));
+		}
+		
+		return new CaseExpr(newConds, newExprs);
+	}
+	
+	@Override
+	public String toSql() {
+		StringBuilder sql = new StringBuilder(100);
+		sql.append("(CASE");
+		for (int i = 0; i < conditions.size(); i++) {
+			sql.append(String.format(" WHEN %s THEN %s", conditions.get(i).toSql(), expressions.get(i).toSql()));
+		}
+		if (expressions.size() > conditions.size()) {
+			sql.append(String.format(" ELSE %s", expressions.get(expressions.size()-1).toSql()));
+		}
+		sql.append(" END)");
+		return sql.toString();
 	}
 
 }

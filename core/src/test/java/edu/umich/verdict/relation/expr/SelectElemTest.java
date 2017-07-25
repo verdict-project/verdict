@@ -1,7 +1,5 @@
 package edu.umich.verdict.relation.expr;
 
-import static org.junit.Assert.*;
-
 import org.junit.Test;
 
 public class SelectElemTest {
@@ -9,6 +7,12 @@ public class SelectElemTest {
 	@Test
 	public void starTest() {
 		SelectElem.from("*");
+	}
+	
+	@Test
+	public void aliasTest() {
+		SelectElem e = SelectElem.from("count(*) AS __group_size");
+		System.out.println(e.toString());
 	}
 	
 	@Test

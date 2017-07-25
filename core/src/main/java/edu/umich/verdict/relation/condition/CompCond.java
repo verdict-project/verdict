@@ -2,7 +2,6 @@ package edu.umich.verdict.relation.condition;
 
 import java.util.List;
 
-import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.relation.Relation;
 import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.Expr;
@@ -90,5 +89,15 @@ public class CompCond extends Cond {
 		} else {
 			return this;
 		}
+	}
+	
+	@Override
+	public Cond withTableSubstituted(String newTab) {
+		return new CompCond(left.withTableSubstituted(newTab), compOp, right.withTableSubstituted(newTab));
+	}
+	
+	@Override
+	public String toSql() {
+		return String.format("%s %s %s", left.toSql(), compOp, right.toSql());
 	}
 }

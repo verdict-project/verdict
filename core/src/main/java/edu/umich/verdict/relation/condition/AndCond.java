@@ -2,8 +2,6 @@ package edu.umich.verdict.relation.condition;
 
 import java.util.List;
 
-import edu.umich.verdict.VerdictContext;
-
 public class AndCond extends Cond {
 	
 	private Cond left;
@@ -57,4 +55,13 @@ public class AndCond extends Cond {
 		
 	}
 
+	@Override
+	public Cond withTableSubstituted(String newTab) {
+		return new AndCond(left.withTableSubstituted(newTab), right.withTableSubstituted(newTab));
+	}
+	
+	@Override
+	public String toSql() {
+		return String.format("(%s) AND (%s)", left.toSql(), right.toSql());
+	}
 }

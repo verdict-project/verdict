@@ -6,8 +6,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import edu.umich.verdict.util.VerdictLogger;
-
 public class SamplePlans {
 	
 	private List<SamplePlan> plans;
@@ -26,7 +24,7 @@ public class SamplePlans {
 	
 	/**
 	 * Creates candidate plans that can answer one more expression.
-	 * @param plan A plan that includes SampleGroup instances for a single expression.
+	 * @param groups A candidate approx relations that can answer an expression
 	 */
 	public void consolidateNewExpr(List<SampleGroup> groups) {
 		List<SamplePlan> newPlans = new ArrayList<SamplePlan>();
@@ -100,6 +98,10 @@ public class SamplePlans {
 		// find the best plan (the plan whose cost is not too large and its sampling prob is good)
 		SamplePlan best = null;
 		double bestScore = Double.NEGATIVE_INFINITY;
+		
+		SamplePlan fallback = null;
+		double fallbackCost = Double.POSITIVE_INFINITY;
+		
 		for (SamplePlan plan : plans) {
 			double cost = plan.cost();
 			if (cost < original_cost * relative_cost_ratio) {
@@ -108,15 +110,20 @@ public class SamplePlans {
 				if (thisScore > bestScore) {
 					bestScore = thisScore;
 					best = plan;
-				}
+				}				
 //				VerdictLogger.debug(this, plan.toString() + ", cost: " + cost + ", prob: " + plan.harmonicSamplingProb());
+			}
+			
+			if (cost < fallbackCost) {
+				fallbackCost = cost;
+				fallback = plan;
 			}
 		}
 
 		if (best != null) {
 			return best;
 		} else {
-			return original_plan;
+			return fallback;
 		}
 	}
 	

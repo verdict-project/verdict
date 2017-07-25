@@ -1,16 +1,13 @@
 package edu.umich.verdict.datatypes;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
 
-import edu.umich.verdict.VerdictContext;
+import edu.umich.verdict.VerdictJDBCContext;
 import edu.umich.verdict.exceptions.VerdictException;
-import edu.umich.verdict.util.NameHelpers;
 
 public class ColumnName {
 	
@@ -58,10 +55,10 @@ public class ColumnName {
 	 * @throws VerdictException 
 	 */
 	private static Pair<TableUniqueName, String> effectiveTableSourceForColumn(
-			VerdictContext vc, String tableName, String columnName, List<Pair<TableUniqueName, String>> tableSources) throws VerdictException {
+			VerdictJDBCContext vc, String tableName, String columnName, List<Pair<TableUniqueName, String>> tableSources) throws VerdictException {
 		if (tableName != null) {
 			for (Pair<TableUniqueName, String> e : tableSources) {
-				if (tableName.equals(e.getLeft().tableName) || tableName.equals(e.getRight())) {
+				if (tableName.equals(e.getLeft().getTableName()) || tableName.equals(e.getRight())) {
 					return e;
 				}
 			}
@@ -69,7 +66,7 @@ public class ColumnName {
 		} else {
 			List<Pair<TableUniqueName, String>> allPossiblePairs = new ArrayList<Pair<TableUniqueName, String>>();
 			for (Pair<TableUniqueName, String> e : tableSources) {
-				List<String> columns = vc.getMeta().getColumnNames(e.getLeft());
+				Set<String> columns = vc.getMeta().getColumns(e.getLeft());
 				for (String c : columns) {
 					if (c.equals(columnName)) {
 						allPossiblePairs.add(e);
@@ -94,10 +91,10 @@ public class ColumnName {
 	 * @return
 	 * @throws VerdictException 
 	 */
-	public static ColumnName uname(VerdictContext vc, List<Pair<TableUniqueName, String>> tableSources, String columnName) throws VerdictException {
+	public static ColumnName uname(VerdictJDBCContext vc, List<Pair<TableUniqueName, String>> tableSources, String columnName) throws VerdictException {
 		Pair<String, String> tc = parseTableAndColumnName(columnName);
 		Pair<TableUniqueName, String> tableNameAndAlias = effectiveTableSourceForColumn(vc, tc.getLeft(), tc.getRight(), tableSources);
-		String tableName = (tableNameAndAlias.getRight() == null)? tableNameAndAlias.getLeft().tableName : tableNameAndAlias.getRight(); 
+		String tableName = (tableNameAndAlias.getRight() == null)? tableNameAndAlias.getLeft().getTableName() : tableNameAndAlias.getRight(); 
 		return new ColumnName(tableNameAndAlias.getLeft(), tableName, tc.getRight());
 	}
 	

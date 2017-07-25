@@ -6,8 +6,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.umich.verdict.exceptions.VerdictException;
-
 public class ResultSetConversion {
 	
 	public static String resultSetToString(ResultSet rs) {

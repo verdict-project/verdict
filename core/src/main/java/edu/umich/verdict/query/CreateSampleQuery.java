@@ -1,12 +1,12 @@
 package edu.umich.verdict.query;
 
-import org.antlr.v4.runtime.CharStreams;
-import org.antlr.v4.runtime.CommonTokenStream;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.commons.lang3.tuple.Pair;
 
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.VerdictSQLBaseVisitor;
-import edu.umich.verdict.VerdictSQLLexer;
 import edu.umich.verdict.VerdictSQLParser;
 import edu.umich.verdict.VerdictSQLParser.Column_nameContext;
 import edu.umich.verdict.datatypes.SampleParam;
@@ -15,12 +15,8 @@ import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.relation.ApproxSingleRelation;
 import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.FuncExpr;
+import edu.umich.verdict.util.StringManipulations;
 import edu.umich.verdict.util.VerdictLogger;
-
-
-import java.sql.ResultSet;
-import java.util.ArrayList;
-import java.util.List;
 
 public class CreateSampleQuery extends Query {
 	
@@ -29,20 +25,18 @@ public class CreateSampleQuery extends Query {
 	}
 	
 	@Override
-	public ResultSet compute() throws VerdictException {
-		VerdictSQLLexer l = new VerdictSQLLexer(CharStreams.fromString(queryString));
-		VerdictSQLParser p = new VerdictSQLParser(new CommonTokenStream(l));
+	public void compute() throws VerdictException {
+		VerdictSQLParser p = StringManipulations.parserOf(queryString);
 		CreateSampleStatementVisitor visitor = new CreateSampleStatementVisitor();
 		visitor.visit(p.create_sample_statement());
 		
-		String tableName = visitor.getTableName();
+		TableUniqueName tableName = visitor.getTableName();
+		TableUniqueName validTableName = (tableName.getSchemaName() != null)? tableName : TableUniqueName.uname(vc, tableName.getTableName());
 		Double samplingRatio = visitor.getSamplingRatio();
 		String sampleType = visitor.getSampleType();
 		List<String> columnNames = visitor.getColumnNames();
 		
-		buildSamples(new SampleParam(TableUniqueName.uname(vc, tableName), sampleType, samplingRatio, columnNames));
-		
-		return null;
+		buildSamples(new SampleParam(vc, validTableName, sampleType, samplingRatio, columnNames));
 	}
 	
 	/**
@@ -56,6 +50,9 @@ public class CreateSampleQuery extends Query {
 	 * @throws VerdictException 
 	 */
 	protected void buildSamples(SampleParam param) throws VerdictException {
+		vc.getDbms().createDatabase(param.sampleTableName().getSchemaName());
+		vc.getMeta().refreshDatabases();
+		
 		if (param.sampleType.equals("uniform")) {
 			createUniformRandomSample(param);
 		} else if (param.sampleType.equals("universe")) {
@@ -70,7 +67,7 @@ public class CreateSampleQuery extends Query {
 			}
 		} else if (param.sampleType.equals("stratified")) {
 			if (param.columnNames.size() == 0) {
-				VerdictLogger.error("A column name must be specified for universe samples. Nothing is done.");
+				VerdictLogger.error("A column name must be specified for stratified samples. Nothing is done.");
 			} else {
 				if (param.columnNames.size() > 1) {
 					VerdictLogger.warn(String.format("Only one column name is supported for stratified samples."
@@ -80,12 +77,12 @@ public class CreateSampleQuery extends Query {
 			}
 		} else {	// recommended
 			TableUniqueName originalTable = param.originalTable;
-			SampleParam ursParam = new SampleParam(originalTable, "uniform", param.samplingRatio, new ArrayList<String>()); 
+			SampleParam ursParam = new SampleParam(vc, originalTable, "uniform", param.samplingRatio, new ArrayList<String>()); 
 			buildSamples(ursParam);		// build a uniform sample
 			
 			List<Object> aggs = new ArrayList<Object>();
 			aggs.add(FuncExpr.count());
-			List<String> cnames = vc.getMeta().getColumnNames(originalTable);
+			List<String> cnames = new ArrayList<String>(vc.getMeta().getColumns(originalTable));
 			for (String c : cnames) {
 				aggs.add(FuncExpr.approxCountDistinct(ColNameExpr.from(c), vc));
 			}
@@ -101,18 +98,20 @@ public class CreateSampleQuery extends Query {
 				if (cd > sampleSize * 0.01 && universeCounter < 10) {
 					List<String> sampleOn = new ArrayList<String>();
 					sampleOn.add(cname);
-					buildSamples(new SampleParam(originalTable, "universe", param.samplingRatio, sampleOn));		// build a universe sample
+					buildSamples(new SampleParam(vc, originalTable, "universe", param.samplingRatio, sampleOn));		// build a universe sample
 					universeCounter += 1;
 				} else if (stratifiedCounter < 10){
 					List<String> sampleOn = new ArrayList<String>();
 					sampleOn.add(cname);
-					buildSamples(new SampleParam(originalTable, "stratified", param.samplingRatio, sampleOn));		// build a stratified sample
+					buildSamples(new SampleParam(vc, originalTable, "stratified", param.samplingRatio, sampleOn));		// build a stratified sample
 					stratifiedCounter += 1;
 				}
 			}
 		}
 		
-		vc.getMeta().refreshSampleInfo(param.originalTable.schemaName);
+		vc.getMeta().refreshDatabases();
+		vc.getMeta().refreshTables(param.originalTable.getSchemaName());
+		vc.getMeta().refreshSampleInfo(param.originalTable.getSchemaName());
 	}
 	
 	protected void createUniformRandomSample(SampleParam param) throws VerdictException {
@@ -151,7 +150,7 @@ public class CreateSampleQuery extends Query {
 
 class CreateSampleStatementVisitor extends VerdictSQLBaseVisitor<Void> {
 	
-	private String tableName;
+	private TableUniqueName tableName;
 	
 	private Double samplingRatio = 0.01;		// default value is 1%
 	
@@ -159,7 +158,7 @@ class CreateSampleStatementVisitor extends VerdictSQLBaseVisitor<Void> {
 	
 	private List<String> columnNames = new ArrayList<String>();
 	
-	public String getTableName() {
+	public TableUniqueName getTableName() {
 		return tableName;
 	}
 	
@@ -186,7 +185,13 @@ class CreateSampleStatementVisitor extends VerdictSQLBaseVisitor<Void> {
 	
 	@Override
 	public Void visitTable_name(VerdictSQLParser.Table_nameContext ctx) {
-		tableName = ctx.getText();
+		String schema = null;
+		if (ctx.schema != null) {
+			schema = ctx.schema.getText();
+		}
+		String table = ctx.table.getText();
+		
+		tableName = TableUniqueName.uname(schema, table);
 		return null;
 	}
 	

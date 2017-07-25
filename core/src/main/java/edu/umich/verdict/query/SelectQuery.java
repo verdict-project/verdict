@@ -1,33 +1,48 @@
 package edu.umich.verdict.query;
 
-import java.sql.ResultSet;
-
 import edu.umich.verdict.VerdictContext;
+import edu.umich.verdict.VerdictSQLBaseVisitor;
+import edu.umich.verdict.VerdictSQLParser;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.relation.ApproxRelation;
 import edu.umich.verdict.relation.ExactRelation;
+import edu.umich.verdict.util.StringManipulations;
 
 public class SelectQuery extends Query {
-
+	
+	
 	public SelectQuery(VerdictContext vc, String queryString) {
 		super(vc, queryString);
 	}
 
 	@Override
-	public ResultSet compute() throws VerdictException {
+	public void compute() throws VerdictException {
+		super.compute();
 		ExactRelation r = ExactRelation.from(vc, queryString);
-		ApproxRelation a = r.approx();
-		ResultSet rs = a.collectResultSet();
-		return rs;
+		
+		VerdictSQLParser p = StringManipulations.parserOf(queryString);
+		VerdictSQLBaseVisitor<Boolean> visitor = new VerdictSQLBaseVisitor<Boolean>() {
+			@Override
+			public Boolean visitSelect_statement(VerdictSQLParser.Select_statementContext ctx) {
+				return (ctx.EXACT() != null)? true : false;
+			}
+		};
+		Boolean exact = visitor.visit(p.select_statement());
+		
+		if (exact) {
+			if (vc.getDbms().isJDBC()) {
+				rs = r.collectResultSet();
+			} else if (vc.getDbms().isSpark()) {
+				df = r.collectDataFrame();
+			}
+		} else {
+			ApproxRelation a = r.approx();
+			if (vc.getDbms().isJDBC()) {
+				rs = a.collectResultSet();
+			} else if (vc.getDbms().isSpark()) {
+				df = a.collectDataFrame();
+			}
+		}
 	}
 	
-//	public static SelectQuery getInstance(VerdictContext vc, String queryString) {
-//		SelectQuery query = null;
-//		if (ApproximateSelectQuery.doesSupport(queryString)) {
-//			query = new ApproximateSelectQuery(vc, queryString);
-//		} else {
-//			query = new ByPassSelectQuery(vc, queryString);
-//		}
-//		return query;
-//	}
 }

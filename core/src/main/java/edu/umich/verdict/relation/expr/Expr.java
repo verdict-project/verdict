@@ -3,32 +3,18 @@ package edu.umich.verdict.relation.expr;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.antlr.v4.runtime.CharStreams;
-import org.antlr.v4.runtime.CommonTokenStream;
-
-import edu.umich.verdict.VerdictConf;
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.VerdictSQLBaseVisitor;
-import edu.umich.verdict.VerdictSQLLexer;
 import edu.umich.verdict.VerdictSQLParser;
-import edu.umich.verdict.VerdictSQLParser.ExpressionContext;
-import edu.umich.verdict.VerdictSQLParser.Search_conditionContext;
-import edu.umich.verdict.exceptions.VerdictException;
-import edu.umich.verdict.relation.condition.Cond;
-import edu.umich.verdict.util.VerdictLogger;
+import edu.umich.verdict.util.StringManipulations;
 
 public abstract class Expr {
 	
 	private static VerdictContext dummyContext;
 	
 	static {
-		VerdictConf conf = new VerdictConf();
-		conf.setDbms("dummy");
-		try {
-			dummyContext = new VerdictContext(conf);
-		} catch (VerdictException e) {
-			e.printStackTrace();
-		}
+//		dummyContext = VerdictContext.dummyContext();
+		dummyContext = null;
 	}
 	
 	public static Expr from(String expr) {
@@ -36,8 +22,7 @@ public abstract class Expr {
 	}
 	
 	public static Expr from(VerdictContext vc, String expr) {
-		VerdictSQLLexer l = new VerdictSQLLexer(CharStreams.fromString(expr));
-		VerdictSQLParser p = new VerdictSQLParser(new CommonTokenStream(l));
+		VerdictSQLParser p = StringManipulations.parserOf(expr);
 		return from(vc, p.expression());
 	}
 	
@@ -46,6 +31,7 @@ public abstract class Expr {
 	}
 	
 	public static Expr from(VerdictContext vc, VerdictSQLParser.ExpressionContext ctx) {
+		if (vc == null) vc = dummyContext;
 		ExpressionGen g = new ExpressionGen(vc);
 		return g.visit(ctx);
 	}
@@ -56,6 +42,10 @@ public abstract class Expr {
 	@Override
 	public String toString() {
 		return "Expr Base";
+	}
+	
+	public String toStringWithoutQuote() {
+		return StringManipulations.stripQuote(toString());
 	}
 	
 	public static String quote(String s) {
@@ -75,6 +65,34 @@ public abstract class Expr {
 	public boolean isagg() {
 		return false;
 	}
+	
+	public boolean isCountDistinct() {
+		return false;
+	}
+	
+	public boolean isCount() {
+		return false;
+	}
+	
+	public List<String> extractColNames() {
+		ExprVisitor<List<String>> v = new ExprVisitor<List<String>>() {
+			private List<String> cols = new ArrayList<String>();
+			
+			@Override
+			public List<String> call(Expr expr) {
+				if (expr instanceof ColNameExpr) {
+					cols.add(((ColNameExpr) expr).getCol());
+				}
+				return cols;
+			}
+		};
+		List<String> cols = v.visit(this);
+		return cols;
+	}
+	
+	public abstract Expr withTableSubstituted(String newTab);
+
+	public abstract String toSql();
 
 }
 

@@ -4,10 +4,10 @@
 Download
 *****************
 
-The latest version is 0.2.1.
+The latest version is 0.2.2-beta.
 
-**Source code and command line interface**: `verdict-v0.2.1.zip
-<https://github.com/mozafari/verdict/releases/download/v2.0.1/verdict-v2.0.1.zip>`_.
+**Source code and command line interface**: `verdict-v0.2.2-beta.zip
+<https://github.com/mozafari/verdict/releases/download/v0.2.2-beta/verdict-v0.2.2-beta.zip>`_.
 Download this to follow our :ref:`getting_started` guide.
 
 One can build Verdict JDBC driver and command line interface from the above source code using `Apache Maven

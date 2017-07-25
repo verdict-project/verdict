@@ -1,30 +1,20 @@
 package edu.umich.verdict.query;
 
-import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-import org.antlr.v4.runtime.CharStreams;
-import org.antlr.v4.runtime.CommonTokenStream;
-import org.apache.commons.lang3.tuple.Pair;
-
-import edu.umich.verdict.VerdictContext;
+import edu.umich.verdict.VerdictJDBCContext;
 import edu.umich.verdict.VerdictSQLBaseVisitor;
-import edu.umich.verdict.VerdictSQLLexer;
 import edu.umich.verdict.VerdictSQLParser;
 import edu.umich.verdict.datatypes.TableUniqueName;
-import edu.umich.verdict.datatypes.VerdictApproxResultMeta;
-import edu.umich.verdict.datatypes.VerdictResultSet;
-import edu.umich.verdict.exceptions.VerdictException;
-import edu.umich.verdict.util.TypeCasting;
-import edu.umich.verdict.util.VerdictLogger;
+import edu.umich.verdict.util.StringManipulations;
 
 @Deprecated
 public class ApproximateSelectQuery extends SelectQuery {
 
-	public ApproximateSelectQuery(VerdictContext vc, String queryString) {
+	public ApproximateSelectQuery(VerdictJDBCContext vc, String queryString) {
 		super(vc, queryString);
 	}
 
@@ -35,8 +25,7 @@ public class ApproximateSelectQuery extends SelectQuery {
 	 * @return
 	 */
 	public static boolean doesSupport(String queryString) {
-		VerdictSQLLexer l = new VerdictSQLLexer(CharStreams.fromString(queryString));
-		VerdictSQLParser p = new VerdictSQLParser(new CommonTokenStream(l));
+		VerdictSQLParser p = StringManipulations.parserOf(queryString);
 		
 		final HashSet<String> aggs = new HashSet<String>();
 		VerdictSQLBaseVisitor<String> visitor = new VerdictSQLBaseVisitor<String>() {
@@ -61,32 +50,32 @@ public class ApproximateSelectQuery extends SelectQuery {
 		return (aggs.size() == 1) && aggs.contains("1");
 	}
 	
-	@Override
-	public ResultSet compute() throws VerdictException {
-		Pair<String, AnalyticSelectStatementRewriter> rewrittenQueryAndRewriter = rewriteQuery();
-		
-		String rewrittenQuery = rewrittenQueryAndRewriter.getLeft();
-		AnalyticSelectStatementRewriter rewriter = rewrittenQueryAndRewriter.getRight();
-//		List<Boolean> AggregateColumnIndicator = rewrittenQueryAndRewriter.getRight().getAggregateColumnIndicator();
-		Map<TableUniqueName, TableUniqueName> replacedTables = rewriter.getCumulativeSampleTables();
-		Map<Integer, Integer> meanAndErrorColumnMap = rewriter.getMean2ErrorColumnMap();
-		
-		VerdictLogger.debug(this, "The input query was rewritten to:");
-		VerdictLogger.debugPretty(this, rewrittenQuery, "  ");
-		
-		for (TableUniqueName original : replacedTables.keySet()) {
-			VerdictLogger.info(String.format("Verdict is using a sample table for %s", original));
-		}
-		
-		ResultSet rsFromDB = vc.getDbms().executeQuery(rewrittenQuery);
-		VerdictApproxResultMeta columnInfo = new VerdictApproxResultMeta(
-				meanAndErrorColumnMap,
-				TypeCasting.listToReverseMap(rewriter.getColName2Aliases()),
-				rsFromDB);
-		
-		ResultSet rs = new VerdictResultSet(rsFromDB, columnInfo);
-		return rs;
-	}
+//	@Override
+//	public ResultSet compute() throws VerdictException {
+//		Pair<String, AnalyticSelectStatementRewriter> rewrittenQueryAndRewriter = rewriteQuery();
+//		
+//		String rewrittenQuery = rewrittenQueryAndRewriter.getLeft();
+//		AnalyticSelectStatementRewriter rewriter = rewrittenQueryAndRewriter.getRight();
+////		List<Boolean> AggregateColumnIndicator = rewrittenQueryAndRewriter.getRight().getAggregateColumnIndicator();
+//		Map<TableUniqueName, TableUniqueName> replacedTables = rewriter.getCumulativeSampleTables();
+//		Map<Integer, Integer> meanAndErrorColumnMap = rewriter.getMean2ErrorColumnMap();
+//		
+//		VerdictLogger.debug(this, "The input query was rewritten to:");
+//		VerdictLogger.debugPretty(this, rewrittenQuery, "  ");
+//		
+//		for (TableUniqueName original : replacedTables.keySet()) {
+//			VerdictLogger.info(String.format("Verdict is using a sample table for %s", original));
+//		}
+//		
+//		ResultSet rsFromDB = vc.getDbms().executeQuery(rewrittenQuery);
+//		VerdictApproxResultMeta columnInfo = new VerdictApproxResultMeta(
+//				meanAndErrorColumnMap,
+//				TypeCasting.listToReverseMap(rewriter.getColName2Aliases()),
+//				rsFromDB);
+//		
+//		ResultSet rs = new VerdictResultSet(rsFromDB, columnInfo);
+//		return rs;
+//	}
 	
 	// TODO: this will not be used in the future.
 	// The errors must be estimated using the variance.
@@ -99,24 +88,23 @@ public class ApproximateSelectQuery extends SelectQuery {
 		return errors;
 	}
 	
-	protected Pair<String, AnalyticSelectStatementRewriter> rewriteQuery() throws VerdictException {
-		VerdictSQLLexer l = new VerdictSQLLexer(CharStreams.fromString(queryString));
-		VerdictSQLParser p = new VerdictSQLParser(new CommonTokenStream(l));
-		
-		AnalyticSelectStatementRewriter queryRewriter = null;
-		
-		if (vc.getConf().get("approximation_method").equals("bootstrap")) {
-			queryRewriter = new BootstrapSelectStatementRewriter(vc, queryString);
-		} else {
-			queryRewriter = new AnalyticSelectStatementRewriter(vc, queryString);
-		}
-		
-		String rewrittenQuery = queryRewriter.visit(p.select_statement());
-		if (queryRewriter.getException() != null) {
-			throw queryRewriter.getException();
-		}
-		return Pair.of(rewrittenQuery, queryRewriter);
-	}
+//	protected Pair<String, AnalyticSelectStatementRewriter> rewriteQuery() throws VerdictException {
+//		VerdictSQLParser p = StringManupulations.parserOf(queryString);
+//		
+//		AnalyticSelectStatementRewriter queryRewriter = null;
+//		
+//		if (vc.getConf().get("approximation_method").equals("bootstrap")) {
+//			queryRewriter = new BootstrapSelectStatementRewriter(vc, queryString);
+//		} else {
+//			queryRewriter = new AnalyticSelectStatementRewriter(vc, queryString);
+//		}
+//		
+//		String rewrittenQuery = queryRewriter.visit(p.select_statement());
+//		if (queryRewriter.getException() != null) {
+//			throw queryRewriter.getException();
+//		}
+//		return Pair.of(rewrittenQuery, queryRewriter);
+//	}
 	
 	// bootstrapping rules
 	//

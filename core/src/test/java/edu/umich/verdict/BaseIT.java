@@ -16,7 +16,7 @@ public class BaseIT {
 	
 	protected static Statement stmt;
 	
-	protected static VerdictContext vc;
+	protected static VerdictJDBCContext vc;
 	
 	public static String readHost() throws FileNotFoundException {
 		ClassLoader classLoader = BaseIT.class.getClassLoader();

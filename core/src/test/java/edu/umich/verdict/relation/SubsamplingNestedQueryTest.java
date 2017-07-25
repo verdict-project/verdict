@@ -3,7 +3,7 @@ package edu.umich.verdict.relation;
 import java.sql.ResultSet;
 
 import edu.umich.verdict.VerdictConf;
-import edu.umich.verdict.VerdictContext;
+import edu.umich.verdict.VerdictJDBCContext;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.util.ResultSetConversion;
 
@@ -17,7 +17,7 @@ public class SubsamplingNestedQueryTest {
 		conf.setPort("21050");
 		conf.setDbmsSchema("instacart1g");
 		conf.set("no_user_password", "true");
-		VerdictContext vc = new VerdictContext(conf);
+		VerdictJDBCContext vc = VerdictJDBCContext.from(conf);
 		
 		String sql;
 		ExactRelation r;
@@ -26,7 +26,7 @@ public class SubsamplingNestedQueryTest {
 		
 		sql = "select avg(days_since_prior) from orders where days_since_prior > (select avg(days_since_prior) from orders)";
 		r = ExactRelation.from(vc, sql);
-		rs = vc.executeQuery(sql);
+		rs = vc.executeJdbcQuery(sql);
 		ResultSetConversion.printResultSet(rs);
 	}
 

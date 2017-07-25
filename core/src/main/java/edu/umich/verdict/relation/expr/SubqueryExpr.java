@@ -27,12 +27,21 @@ public class SubqueryExpr extends Expr {
 
 	@Override
 	public <T> T accept(ExprVisitor<T> v) {
-		return v.call(null);
+		return v.call(this);
 	}
 	
 	@Override
 	public String toString() {
-		return "(" + subquery.toSql() + ")";
+		return "(" + subquery.toString() + ")";
 	}
 
+	@Override
+	public Expr withTableSubstituted(String newTab) {
+		return this;
+	}
+	
+	@Override
+	public String toSql() {
+		return "(" + subquery.toSql() + ")";
+	}
 }

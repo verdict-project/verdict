@@ -2,29 +2,29 @@ package edu.umich.verdict.relation.condition;
 
 import java.util.List;
 
-import org.antlr.v4.runtime.CharStreams;
-import org.antlr.v4.runtime.CommonTokenStream;
-
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.VerdictSQLBaseVisitor;
-import edu.umich.verdict.VerdictSQLLexer;
 import edu.umich.verdict.VerdictSQLParser;
 import edu.umich.verdict.VerdictSQLParser.Search_conditionContext;
 import edu.umich.verdict.relation.expr.Expr;
-import edu.umich.verdict.util.VerdictLogger;
+import edu.umich.verdict.util.StringManipulations;
 
 public abstract class Cond {
 
 	public Cond() {}
 	
 	public static Cond from(String cond) {
-		VerdictSQLLexer l = new VerdictSQLLexer(CharStreams.fromString(cond));
-		VerdictSQLParser p = new VerdictSQLParser(new CommonTokenStream(l));
+		VerdictSQLParser p = StringManipulations.parserOf(cond);
 		return from(p.search_condition());
 	}
 	
 	public static Cond from(Search_conditionContext ctx) {
 		CondGen g = new CondGen();
+		return g.visit(ctx);
+	}
+	
+	public static Cond from(VerdictContext vc, Search_conditionContext ctx) {
+		CondGen g = new CondGen(vc);
 		return g.visit(ctx);
 	}
 
@@ -39,16 +39,37 @@ public abstract class Cond {
 	public Cond remove(Cond j) {
 		return this;
 	}
+	
+	public abstract Cond withTableSubstituted(String newTab);
 
+	public <T> T accept(CondVisitor<T> condVisitor) {
+		return condVisitor.call(this);
+	}
+
+	/**
+	 * Generates a sql expression.
+	 * @return
+	 */
+	public abstract String toSql();
 }
 
 
 class CondGen extends VerdictSQLBaseVisitor<Cond> {
 	
+	private VerdictContext vc;
+	
+	public CondGen() {
+		
+	}
+	
+	public CondGen(VerdictContext vc) {
+		this.vc = vc;
+	}
+	
 	@Override
 	public Cond visitComp_expr_predicate(VerdictSQLParser.Comp_expr_predicateContext ctx) {
-		Expr e1 = Expr.from(ctx.expression(0));
-		Expr e2 = Expr.from(ctx.expression(1));
+		Expr e1 = Expr.from(vc, ctx.expression(0));
+		Expr e2 = Expr.from(vc, ctx.expression(1));
 		return CompCond.from(e1, ctx.comparison_operator().getText(), e2);
 	}
 	

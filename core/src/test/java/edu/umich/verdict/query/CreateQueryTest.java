@@ -1,7 +1,5 @@
 package edu.umich.verdict.query;
 
-import static org.junit.Assert.*;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.sql.SQLException;
@@ -13,12 +11,12 @@ import org.junit.Test;
 
 import edu.umich.verdict.BaseIT;
 import edu.umich.verdict.VerdictConf;
-import edu.umich.verdict.VerdictContext;
+import edu.umich.verdict.VerdictJDBCContext;
 import edu.umich.verdict.exceptions.VerdictException;
 
 public class CreateQueryTest {
 	
-	protected static VerdictContext vc;
+	protected static VerdictJDBCContext vc;
 	
 	@BeforeClass
 	public static void connect() throws VerdictException, SQLException, FileNotFoundException {
@@ -32,7 +30,7 @@ public class CreateQueryTest {
 		conf.setPort(port);
 		conf.setDbmsSchema(schema);
 		conf.set("no_user_password", "true");
-		vc = new VerdictContext(conf);
+		vc = VerdictJDBCContext.from(conf);
 	}
 	
 	@AfterClass
@@ -50,7 +48,7 @@ public class CreateQueryTest {
 //				+ "quoted by \"\\\"\"";
 		
 		System.out.println(sql);
-		vc.executeQuery(sql);
+		vc.executeJdbcQuery(sql);
 		
 	}
 	

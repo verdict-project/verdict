@@ -2,12 +2,12 @@ package edu.umich.verdict.relation;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.ImmutableMap;
+
 import edu.umich.verdict.datatypes.TableUniqueName;
-import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.relation.expr.FuncExpr;
 
@@ -41,8 +41,13 @@ public class NoApproxRelation extends ApproxRelation {
 	}
 
 	@Override
-	protected String sampleType() {
+	public String sampleType() {
 		return "nosample";
+	}
+	
+	@Override
+	public double cost() {
+		return 1e6;		// TODO: a better alternative?
 	}
 
 	@Override
@@ -51,8 +56,30 @@ public class NoApproxRelation extends ApproxRelation {
 	}
 
 	@Override
-	protected Map<String, String> tableSubstitution() {
-		return new HashMap<String, String>();
+	protected Map<TableUniqueName, String> tableSubstitution() {
+		return ImmutableMap.of();
 	}
 
+	@Override
+	protected String toStringWithIndent(String indent) {
+		StringBuilder s = new StringBuilder(1000);
+		s.append(indent);
+		s.append(String.format("%s(%s)\n", this.getClass().getSimpleName(), getAlias()));
+		s.append(r.toStringWithIndent(indent + "  "));
+		return s.toString();
+	}
+	
+	@Override
+	public boolean equals(ApproxRelation o) {
+		if (o instanceof NoApproxRelation) {
+			return r.equals(((NoApproxRelation) o).r);
+		} else {
+			return false;
+		}
+	}
+
+	@Override
+	public double samplingProbability() {
+		return 1.0;
+	}
 }
