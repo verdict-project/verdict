@@ -19,7 +19,6 @@ public class VerdictLogger {
 		} else {
 			logger.setLevel(Level.DEBUG);
 		}
-		VerdictLogger.info("Verdict's log level set to: " + level);
 	}
 	
 	public static void info(Object msg) {
@@ -39,7 +38,11 @@ public class VerdictLogger {
 	}
 
 	public static void info(Object caller, String msg) {
-		info(String.format("[%s] %s", caller.getClass().getSimpleName(), msg));
+	    if (logger.getLevel().toString().equalsIgnoreCase("debug")) {
+	        info(String.format("[%s] %s", caller.getClass().getSimpleName(), msg));
+	    } else {
+	        info(String.format("%s", msg));
+	    }
 	}
 
 	public static void error(Object caller, String msg) {

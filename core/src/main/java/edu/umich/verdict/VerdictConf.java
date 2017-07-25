@@ -1,328 +1,287 @@
 package edu.umich.verdict;
 
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Set;
 import java.util.TreeMap;
 
 import com.google.common.collect.ImmutableMap;
 
-import edu.umich.verdict.json.JSONObject;
-import edu.umich.verdict.json.JSONTokener;
 import edu.umich.verdict.util.VerdictLogger;
 
 public class VerdictConf {
 
-	private Map<String, String> configs = new TreeMap<String, String>();
+    private Map<String, String> configs = new TreeMap<String, String>();
 
-	private final Map<String, String> configKeySynonyms =
-			new ImmutableMap.Builder<String, String>()
-			.put("byapss", "verdict.bypass")
-			.put("loglevel", "verdict.loglevel")
-			.put("user", "verdict.dbms.user")
-			.put("password", "verdict.dbms.password")
-			.build();
+    private final Map<String, String> configKeySynonyms =
+            new ImmutableMap.Builder<String, String>()
+            .put("bypass", "verdict.bypass")
+            .put("loglevel", "verdict.loglevel")
+            .put("user", "verdict.jdbc.user")
+            .put("password", "verdict.jdbc.password")
+            .put("principal", "verdict.jdbc.kerberos_principal")
+            .build();
 
-	private final String DEFAULT_CONFIG_FILE = "default_verdict_conf.json";
+    private final String DEFAULT_CONFIG_FILE = "verdict_default.properties";
+    
+    private final String USER_CONFIG_FILE = "verdict.properties";
 
-	public VerdictConf() {
-		setDefaults();
-	}
+    public VerdictConf() {
+        setDefaults();
+        setUserConfig();
+        VerdictLogger.info("Verdict's log level set to: " + get("loglevel"));
+    }
 
-	public VerdictConf(String jsonFilename) {
-		this();
-		try {
-			ClassLoader cl = this.getClass().getClassLoader();
-			updateFromJson(cl.getResourceAsStream(jsonFilename));
-		} catch (FileNotFoundException e) {
-			VerdictLogger.error(e.getMessage());
-		}
-	}
+    public VerdictConf(String propertyFileName) {
+        this();
+        updateFromPropertyFile(propertyFileName);
+    }
 
-	public VerdictConf(Properties properties) {
-		this();
-		setProperties(properties);
-	}
+    public VerdictConf(Properties properties) {
+        this();
+        setProperties(properties);
+    }
 
-	public Map<String, String> getConfigs() {
-		return configs;
-	}
+    private void setDefaults() {
+        updateFromPropertyFile(DEFAULT_CONFIG_FILE);
+    }
+    
+    private void setUserConfig() {
+        updateFromPropertyFile(USER_CONFIG_FILE);
+    }
 
-	public void setProperties(Properties properties) {
-		for (String prop : properties.stringPropertyNames()) {
-			this.set(prop, properties.getProperty(prop));
-		}
-	}
+    public void setProperties(Properties properties) {
+        for (String prop : properties.stringPropertyNames()) {
+            String value = properties.getProperty(prop);
+            if (value.length() > 0) {
+                set(prop, value);
+            }
+        }
+    }
 
-	public VerdictConf(File jsonFilename) throws FileNotFoundException {
-		this();
-		updateFromJson(new FileInputStream(jsonFilename));
-	}
+    private void updateFromPropertyFile(String propertyFileName) {
+        try {
+            InputStream is = this.getClass().getClassLoader().getResourceAsStream(propertyFileName);
+            if (is == null) {
+                return;
+            }
+            Properties p = new Properties();
+            p.load(is);
+            is.close();
+            setProperties(p);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
-	private VerdictConf setDefaults() {
-		try {
-			ClassLoader cl = this.getClass().getClassLoader();
-//			updateFromStream(cl.getResourceAsStream("default.conf"));
+    public Map<String, String> getConfigs() {
+        return configs;
+    }
 
-			updateFromJson(cl.getResourceAsStream(DEFAULT_CONFIG_FILE));            
-		} catch (FileNotFoundException e) {
-			System.err.println(e.getMessage());
-		}
+    public int getInt(String key) {
+        return Integer.parseInt(get(key));
+    }
 
-		return this;
-	}
+    public boolean getBoolean(String key) {
+        String val = get(key);
+        if (val == null)
+            return false;
+        val = val.toLowerCase();
+        return val.equals("on") || val.equals("yes") || val.equals("true") || val.equals("1");
+    }
 
-//	public VerdictConf updateFromStream(InputStream stream) throws FileNotFoundException {
-//		Scanner scanner = new Scanner(stream);
-//		while (scanner.hasNext()) {
-//			String line = scanner.nextLine();
-//			if (!line.isEmpty() && !line.startsWith("#"))
-//				set(line);
-//		}
-//		scanner.close();
-//		return this;
-//	}
+    public double getDouble(String key) {
+        return Double.parseDouble(get(key));
+    }
 
-	private HashMap<String, String> updateFromJsonHelper(JSONObject jsonConfig, String prefix) {
-		Set<String> keys = jsonConfig.keySet();
-		HashMap<String, String> temp = new HashMap<String, String>();
+    public double getPercent(String key) {
+        String val = get(key);
+        if (val.endsWith("%"))
+            return Double.parseDouble(val.substring(0, val.length() - 1)) / 100;
+        return Double.parseDouble(val);
+    }
 
-		if (prefix != null && !prefix.equals("")) {
-			prefix += ".";
-		}
+    public String get(String key) {
+        if (configKeySynonyms.containsKey(key)) {
+            return get(configKeySynonyms.get(key));
+        }
+        return configs.get(key.toLowerCase());
+    }
 
-		for (String key : keys) {
-			Object subObj = jsonConfig.get(key);
+    public String getOr(String key, Object defaultValue) {
+        if (configs.containsKey(key.toLowerCase())) {
+            return configs.get(key.toLowerCase());
+        } else {
+            return defaultValue.toString();
+        }
+    }
 
-			if (subObj instanceof JSONObject) {
-				JSONObject sub = (JSONObject) subObj;
-				HashMap<String, String> sublevel = updateFromJsonHelper(sub, key);
-				Set<String> subKeys = sublevel.keySet();
-				for(String subKey: subKeys) {
-					temp.put(prefix+subKey, sublevel.get(subKey));
-				}
-			}
-			else {
-				temp.put(prefix+key, jsonConfig.get(key).toString());
-			}
-		}
-		
-		return temp;
-	}
+    public VerdictConf set(String keyVal) {
+        int equalIndex = keyVal.indexOf('=');
+        if (equalIndex == -1)
+            return this;
+        String key = keyVal.substring(0, equalIndex).trim();
+        String val = keyVal.substring(equalIndex + 1).trim();
+        if (val.startsWith("\"") && val.endsWith("\""))
+            val = val.substring(1, val.length() - 1);
+        return set(key, val);
+    }
 
-	public void updateFromJson(InputStream stream) throws FileNotFoundException {
-		JSONTokener jsonTokener = new JSONTokener(stream);
-		JSONObject jsonConfig = new JSONObject(jsonTokener);
-		HashMap<String, String> newConfigs = updateFromJsonHelper(jsonConfig, "");
+    public VerdictConf set(String key, String value) {
+        key = key.toLowerCase();
 
-		for (Map.Entry<String, String> e : newConfigs.entrySet()) {
-			String key = e.getKey();
-			String value = e.getValue();
-			set(key, value);
-		}
-	}
+        if (configKeySynonyms.containsKey(key)) {
+            return set(configKeySynonyms.get(key), value);
+        }
 
-	public int getInt(String key) {
-		return Integer.parseInt(get(key));
-	}
+        if (key.equals("verdict.loglevel")) {
+            VerdictLogger.setLogLevel(value);
+        }
 
-	public boolean getBoolean(String key) {
-		String val = get(key);
-		if (val == null)
-			return false;
-		val = val.toLowerCase();
-		return val.equals("on") || val.equals("yes") || val.equals("true") || val.equals("1");
-	}
+        configs.put(key, value);
+        return this;
+    }
 
-	public double getDouble(String key) {
-		return Double.parseDouble(get(key));
-	}
+    public Properties toProperties() {
+        Properties p = new Properties();
+        for (String key : configs.keySet()) {
+            p.setProperty(key, configs.get(key));
+        }
+        return p;
+    }
 
-	public double getPercent(String key) {
-		String val = get(key);
-		if (val.endsWith("%"))
-			return Double.parseDouble(val.substring(0, val.length() - 1)) / 100;
-		return Double.parseDouble(val);
-	}
+    public boolean doesContain(String key) {
+        return configs.containsKey(key.toLowerCase());
+    }
 
-	public String get(String key) {
-		if (configKeySynonyms.containsKey(key)) {
-			return get(configKeySynonyms.get(key));
-		}
-		return configs.get(key.toLowerCase());
-	}
+    /*
+     * Helpers
+     */
 
-	public String getOr(String key, Object defaultValue) {
-		if (configs.containsKey(key.toLowerCase())) {
-			return configs.get(key.toLowerCase());
-		} else {
-			return defaultValue.toString();
-		}
-	}
+    // data DBMS
+    public void setDbmsSchema(String schema) {
+        configs.put("verdict.jdbc.schema", schema);
+    }
 
-	public VerdictConf set(String keyVal) {
-		int equalIndex = keyVal.indexOf('=');
-		if (equalIndex == -1)
-			return this;
-		String key = keyVal.substring(0, equalIndex).trim();
-		String val = keyVal.substring(equalIndex + 1).trim();
-		if (val.startsWith("\"") && val.endsWith("\""))
-			val = val.substring(1, val.length() - 1);
-		return set(key, val);
-	}
+    public String getDbmsSchema() {
+        return get("verdict.jdbc.schema");
+    }
 
-	public VerdictConf set(String key, String value) {
-		key = key.toLowerCase();
+    public void setDbms(String name) {
+        set("verdict.jdbc.dbname", name);
+    }
 
-		if (configKeySynonyms.containsKey(key)) {
-			return set(configKeySynonyms.get(key), value);
-		}
+    public String getDbms() {
+        return get("verdict.jdbc.dbname");
+    }
 
-		if (key.equals("verdict.loglevel")) {
-			VerdictLogger.setLogLevel(value);
-		}
+    public String getDbmsClassName() {
+        return get("verdict.jdbc." + getDbms() + ".class_name");
+    }
 
-		configs.put(key, value);
-		return this;
-	}
+    public void setHost(String host) {
+        set("verdict.jdbc.host", host);
+    }
 
-	public Properties toProperties() {
-		Properties p = new Properties();
-		for (String key : configs.keySet()) {
-			p.setProperty(key, configs.get(key));
-		}
-		return p;
-	}
+    public String getHost() {
+        return get("verdict.jdbc.host");
+    }
 
-	public boolean doesContain(String key) {
-		return configs.containsKey(key.toLowerCase());
-	}
+    public void setUser(String user) {
+        set("verdict.jdbc.user", user);
+    }
 
-	/*
-	 * Helpers
-	 */
+    public String getUser() {
+        return get("verdict.jdbc.user");
+    }
 
-	// data DBMS
-	public void setDbmsSchema(String schema) {
-		configs.put("verdict.dbms.schema", schema);
-	}
+    public void setPassword(String password) {
+        set("verdict.jdbc.password", password);
+    }
 
-	public String getDbmsSchema() {
-		return get("verdict.dbms.schema");
-	}
+    public String getPassword() {
+        return get("verdict.jdbc.password");
+    }
 
-	public void setDbms(String name) {
-		set("verdict.dbms.dbname", name);
-	}
+    public boolean ignoreUserCredentials() {
+        return getBoolean("verdict.jdbc.ignore_user_credentials");
+    }
 
-	public String getDbms() {
-		return get("verdict.dbms.dbname");
-	}
-	
-	public String getDbmsClassName() {
-		return get("verdict.dbms." + getDbms() + ".jdbc_class_name");
-	}
+    public void setPort(String port) {
+        set("verdict.jdbc.port", port);
+    }
 
-	public void setHost(String host) {
-		set("verdict.dbms.host", host);
-	}
+    public String getPort() {
+        return get("verdict.jdbc.port");
+    }
 
-	public String getHost() {
-		return get("verdict.dbms.host");
-	}
+    public String getDefaultPort() {
+        return get("verdict.jdbc." + getDbms() + ".default_port");
+    }
 
-	public void setUser(String user) {
-		set("verdict.dbms.user", user);
-	}
+    public double errorBoundConfidenceInPercentage() {
+        return getPercent("verdict.error_bound.confidence_internal_probability");
+    }
 
-	public String getUser() {
-		return get("verdict.dbms.user");
-	}
+    public double getRelativeTargetCost() {
+        return getPercent("verdict.relative_target_cost");
+    }
 
-	public void setPassword(String password) {
-		set("verdict.dbms.password", password);
-	}
+    public boolean cacheSparkSamples() {
+        return getBoolean("verdict.spark.cache_samples");
+    }
+    
+    public String errorBoundMethod() {
+        return get("verdict.error_bound.method");
+    }
 
-	public String getPassword() {
-		return get("verdict.dbms.password");
-	}
-	
-	public boolean ignoreUserCredentials() {
-		return getBoolean("verdict.ignore_user_credentials");
-	}
+    public int subsamplingPartitionCount() {
+        return getInt("verdict.error_bound.subsampling.partition_count");
+    }
 
-	public void setPort(String port) {
-		set("verdict.dbms.port", port);
-	}
+    public String subsamplingPartitionColumn() {
+        return get("verdict.error_bound.subsampling.partition_column");
+    }
 
-	public String getPort() {
-		return get("verdict.dbms.port");
-	}
-	
-	public String getDefaultPort(String dbms) {
-		return get("verdict.dbms." + dbms + ".port");
-	}
+    public String subsamplingProbabilityColumn() {
+        return get("verdict.error_bound.subsampling.probability_column");
+    }
 
-	public double errorBoundConfidenceInPercentage() {
-		String p = get("verdict.confidence_internal_probability").replace("%", "");
-		return Double.valueOf(p);
-	}
+    public String metaNameTableName() {
+        return get("verdict.meta_data.meta_name_table");
+    }
 
-	public double getRelativeTargetCost() {
-		return getDouble("verdict.relative_target_cost");
-	}
+    public String metaSizeTableName() {
+        return get("verdict.meta_data.meta_size_table");
+    }
 
-	public boolean cacheSparkSamples() {
-		return getBoolean("verdict.spark.cache_samples");
-	}
+    public String metaRefreshPolicy() {
+        return get("verdict.meta_data.refresh_policy");
+    }
 
-	public int subsamplingPartitionCount() {
-		return getInt("verdict.subsampling.partition_count");
-	}
+    public String metaDatabaseSuffix() {
+        return get("verdict.meta_data.meta_database_suffix");
+    }
 
-	public String subsamplingPartitionColumn() {
-		return get("verdict.subsampling.partition_column");
-	}
+    public String bootstrappingRandomValueColumn() {
+        return get("verdict.error_bound.bootstrapping.random_value_column_name");
+    }
 
-	public String subsamplingProbabilityColumn() {
-		return get("verdict.subsampling.probability_column");
-	}
-	
-//	public int partitionCount() {
-//		return getInt("verdict.subsampling.partition_count");
-//	}
+    public String bootstrappingMultiplicityColumn() {
+        return get("verdict.error_bound.bootstrapping.bootstrap_multiplicity_colname");
+    }
 
-	public String metaNameTableName() {
-		return get("verdict.meta_data.meta_name_table");
-	}
-	
-	public String metaSizeTableName() {
-		return get("verdict.meta_data.meta_size_table");
-	}
-	
-	public String metaRefreshPolicy() {
-		return get("verdict.meta_data.refresh_policy");
-	}
-	
-	public String metaDatabaseSuffix() {
-		return get("verdict.meta_data.meta_database_suffix");
-	}
-
-	public String bootstrappingRandomValueColumn() {
-		return get("verdict.bootstrapping.random_value_column_name");
-	}
-	
-	public String bootstrappingMultiplicityColumn() {
-		return get("verdict.bootstrapping.bootstrap_multiplicity_colname");
-	}
-	
-	public boolean bypass() {
-		return getBoolean("verdict.bypass");
-	}
+    public boolean bypass() {
+        return getBoolean("verdict.bypass");
+    }
+    
+    public boolean isJdbcKerberosSet() {
+        return (getJdbcKerberos().equals("n/a"))? false : true;
+    }
+    
+    public String getJdbcKerberos() {
+        return get("verdict.jdbc.kerberos_principal");
+    }
 }

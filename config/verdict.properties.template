@@ -1,0 +1,67 @@
+# Verdict doesn't rewrite a user-submitted query if set to true
+# a user can also prefix "exact" in front of a select statement to bypass that query alone.
+# synonym: bypass
+verdict.bypass=false
+
+# one of debug, info, warn, error
+# synonym: loglevel
+verdict.loglevel=debug
+
+# target runtime (either in fraction or in percentage)
+verdict.relative_target_cost=10%
+
+# jdbc
+## jdbc > authentication
+### user and password (for security, it is recommended to pass this information when making a connection)
+verdict.jdbc.user=
+verdict.jdbc.password=
+### kerberos: either n/a or user/host@domain format
+verdict.jdbc.kerberos_principal=n/a
+### don't include user and password parameters when making a jdbc connection even if they were specified in the params.
+verdict.jdbc.ignore_user_credentials=false
+## jdbc connection
+### One of hive2, impala, redshift (not supported), mysql (deprecated)
+verdict.jdbc.dbname=impala
+verdict.jdbc.host=127.0.0.1
+verdict.jdbc.port=
+verdict.jdbc.schema=default
+### jdbc > connection > mysql
+verdict.jdbc.mysql.default_port=3306
+verdict.jdbc.mysql.class_name=com.mysql.jdbc.Driver
+### jdbc > connection > hive is deprecated and not supported
+### jdbc > connection > hive2
+verdict.jdbc.hive2.default_port=10000
+verdict.jdbc.hive2.class_name=com.cloudera.hive.jdbc4.HS2Driver
+### jdbc > connection > impala
+verdict.jdbc.impala.default_port=21050
+verdict.jdbc.impala.class_name=com.cloudera.impala.jdbc4.Driver
+
+# spark
+verdict.spark.cache_samples=true
+
+# meta data
+verdict.meta_data.meta_name_table=verdict_meta_name
+verdict.meta_data.meta_size_table=verdict_meta_size
+verdict.meta_data.meta_database_suffix=_verdict
+## one of: per_session, per_query, manual
+## for manual, "refresh" query can be used for refershing sample information
+verdict.meta_data.refresh_policy=per_session
+
+# error bound
+## one of: 80%, 85%, 90%, 95%, 99%, 99.5%, 99.9%
+verdict.error_bound.confidence_internal_probability=95%
+## "%s" is replaced by a column name (not supported yet)
+verdict.error_bound.error_column_pattern=err bound of %s
+## one of: subsampling (fast), bootstrapping (slow; only for research), analytic (fastest; not supported yet), no_error_bound
+verdict.error_bound.method=subsampling
+
+# error bound > subsampling
+verdict.error_bound.subsampling.partition_column=__vpart
+verdict.error_bound.subsampling.probability_column=__vprob
+verdict.error_bound.subsampling.partition_count=100
+
+# error bound > bootstrapping (only for research)
+verdict.error_bound.bootstrapping.num_of_trials=100
+verdict.error_bound.bootstrapping.random_value_column_name=verdict_rand
+verdict.error_bound.bootstrapping.bootstrap_sampling_method=single_nested
+verdict.error_bound.bootstrapping.bootstrap_multiplicity_colname=__mul

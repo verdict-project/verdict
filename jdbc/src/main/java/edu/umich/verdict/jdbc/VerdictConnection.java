@@ -60,7 +60,7 @@ public class VerdictConnection implements Connection {
     	try{
 	    	// set properties from the config file
 	    	if (info.contains("configfile")) {
-	    		conf = new VerdictConf(new File(info.getProperty("configfile")));
+	    		conf = new VerdictConf(info.getProperty("configfile"));
 	    	} else {
 	    		conf = new VerdictConf();		// by default, this loads configs from the file
 	    	}
@@ -89,7 +89,7 @@ public class VerdictConnection implements Connection {
             if (urlMatcher.group("port") != null) {
             	conf.setPort(urlMatcher.group("port"));
             } else {
-            	conf.setPort(conf.getDefaultPort(conf.getDbms()));		// assume config file includes it.
+            	conf.setPort(conf.getDefaultPort());		// assume config file includes it.
             }
             if (urlMatcher.group("schema") != null) {
             	conf.setDbmsSchema(urlMatcher.group("schema"));
@@ -108,9 +108,7 @@ public class VerdictConnection implements Connection {
             
         } catch (VerdictException e) {
 			throw new SQLException(StackTraceReader.stackTrace2String(e));
-		} catch (FileNotFoundException e) {
-            throw new SQLException("Config file '" + info.getProperty("config") + "' not found.", e);
-        }
+		}
     }
 
 
