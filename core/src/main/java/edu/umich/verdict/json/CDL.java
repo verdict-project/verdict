@@ -1,4 +1,9 @@
-package org.json;
+package edu.umich.verdict.json;
+
+import edu.umich.verdict.json.JSONArray;
+import edu.umich.verdict.json.JSONException;
+import edu.umich.verdict.json.JSONObject;
+import edu.umich.verdict.json.JSONTokener;
 
 /*
 Copyright (c) 2002 JSON.org

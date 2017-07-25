@@ -1,4 +1,6 @@
-package org.json;
+package edu.umich.verdict.json;
+
+import edu.umich.verdict.json.JSONException;
 
 /*
 Copyright (c) 2002 JSON.org

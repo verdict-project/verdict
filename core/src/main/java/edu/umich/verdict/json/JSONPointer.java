@@ -1,4 +1,4 @@
-package org.json;
+package edu.umich.verdict.json;
 
 import static java.lang.String.format;
 
@@ -8,6 +8,9 @@ import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import edu.umich.verdict.json.JSONArray;
+import edu.umich.verdict.json.JSONObject;
 
 /*
 Copyright (c) 2002 JSON.org

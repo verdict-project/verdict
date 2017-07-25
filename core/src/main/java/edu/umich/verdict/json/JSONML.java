@@ -1,6 +1,12 @@
-package org.json;
+package edu.umich.verdict.json;
 
 import java.util.Map.Entry;
+
+import edu.umich.verdict.json.JSONArray;
+import edu.umich.verdict.json.JSONException;
+import edu.umich.verdict.json.JSONObject;
+import edu.umich.verdict.json.XML;
+import edu.umich.verdict.json.XMLTokener;
 
 /*
 Copyright (c) 2008 JSON.org

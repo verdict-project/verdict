@@ -1,6 +1,10 @@
-package org.json;
+package edu.umich.verdict.json;
 
 import java.io.IOException;
+
+import edu.umich.verdict.json.JSONException;
+import edu.umich.verdict.json.JSONObject;
+import edu.umich.verdict.json.JSONWriter;
 
 /*
 Copyright (c) 2006 JSON.org

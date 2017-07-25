@@ -11,11 +11,10 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.TreeMap;
 
-import org.json.JSONObject;
-import org.json.JSONTokener;
-
 import com.google.common.collect.ImmutableMap;
 
+import edu.umich.verdict.json.JSONObject;
+import edu.umich.verdict.json.JSONTokener;
 import edu.umich.verdict.util.VerdictLogger;
 
 public class VerdictConf {

@@ -1,4 +1,4 @@
-package org.json;
+package edu.umich.verdict.json;
 
 /*
  Copyright (c) 2002 JSON.org
@@ -35,6 +35,10 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
+import edu.umich.verdict.json.JSONException;
+import edu.umich.verdict.json.JSONObject;
+import edu.umich.verdict.json.JSONTokener;
 
 /**
  * A JSONArray is an ordered sequence of values. Its external text form is a

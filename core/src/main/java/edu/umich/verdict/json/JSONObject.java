@@ -1,4 +1,4 @@
-package org.json;
+package edu.umich.verdict.json;
 
 import java.io.Closeable;
 
@@ -42,6 +42,12 @@ import java.util.Iterator;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
+
+import edu.umich.verdict.json.JSONArray;
+import edu.umich.verdict.json.JSONException;
+import edu.umich.verdict.json.JSONString;
+import edu.umich.verdict.json.JSONTokener;
+
 import java.util.ResourceBundle;
 import java.util.Set;
 

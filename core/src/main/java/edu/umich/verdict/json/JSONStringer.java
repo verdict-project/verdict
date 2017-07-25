@@ -1,4 +1,4 @@
-package org.json;
+package edu.umich.verdict.json;
 
 /*
 Copyright (c) 2006 JSON.org
@@ -25,6 +25,8 @@ SOFTWARE.
 */
 
 import java.io.StringWriter;
+
+import edu.umich.verdict.json.JSONWriter;
 
 /**
  * JSONStringer provides a quick and convenient way of producing JSON text.

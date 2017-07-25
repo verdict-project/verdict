@@ -1,4 +1,4 @@
-package org.json;
+package edu.umich.verdict.json;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -6,6 +6,10 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
+
+import edu.umich.verdict.json.JSONArray;
+import edu.umich.verdict.json.JSONException;
+import edu.umich.verdict.json.JSONObject;
 
 /*
 Copyright (c) 2002 JSON.org

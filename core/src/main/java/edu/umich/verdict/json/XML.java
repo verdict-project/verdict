@@ -1,4 +1,4 @@
-package org.json;
+package edu.umich.verdict.json;
 
 /*
 Copyright (c) 2015 JSON.org
@@ -26,6 +26,11 @@ SOFTWARE.
 
 import java.util.Iterator;
 import java.util.Map.Entry;
+
+import edu.umich.verdict.json.JSONArray;
+import edu.umich.verdict.json.JSONException;
+import edu.umich.verdict.json.JSONObject;
+import edu.umich.verdict.json.XMLTokener;
 
 /**
  * This provides static methods to convert an XML text into a JSONObject, and to

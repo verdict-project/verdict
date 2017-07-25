@@ -1,4 +1,4 @@
-package org.json;
+package edu.umich.verdict.json;
 
 /*
 Copyright (c) 2002 JSON.org
@@ -26,6 +26,10 @@ SOFTWARE.
 
 import java.util.Enumeration;
 import java.util.Map.Entry;
+
+import edu.umich.verdict.json.JSONException;
+import edu.umich.verdict.json.JSONObject;
+
 import java.util.Properties;
 
 /**
