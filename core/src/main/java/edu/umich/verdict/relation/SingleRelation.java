@@ -321,7 +321,7 @@ public class SingleRelation extends ExactRelation {
 	@Override
 	public ColNameExpr partitionColumn() {
 		Set<String> columns = vc.getMeta().getColumns(getTableName());
-		String partitionCol = vc.getConf().partitionColumnName();
+		String partitionCol = vc.getConf().subsamplingPartitionColumn();
 		if (columns.contains(partitionCol)) {
 			return new ColNameExpr(partitionCol, getAlias());
 		} else {

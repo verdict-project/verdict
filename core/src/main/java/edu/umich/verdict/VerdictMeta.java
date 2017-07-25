@@ -78,8 +78,8 @@ public class VerdictMeta {
 		db2tables = new HashMap<String, Set<String>>();
 		tab2columns = new HashMap<TableUniqueName, Map<String, String>>();
 //		tableToColumnNames = new HashMap<TableUniqueName, List<String>>();
-		META_NAME_TABLE = vc.getConf().get("verdict.meta_name_table");
-		META_SIZE_TABLE = vc.getConf().get("verdict.meta_size_table");
+		META_NAME_TABLE = vc.getConf().metaNameTableName();
+		META_SIZE_TABLE = vc.getConf().metaSizeTableName();
 	}
 	
 	protected Dbms getMetaDbms() {
@@ -224,7 +224,7 @@ public class VerdictMeta {
 	// TODO: double-check when metadata should be refreshed.
 	public void refreshSampleInfoIfNeeded(String schemaName) {
 		boolean needToRefresh = false;
-		String refreshOption = vc.getConf().get("verdict.refresh_meta");
+		String refreshOption = vc.getConf().metaRefreshPolicy();
 		
 		if (refreshOption.equals("per_session")) {
 			if (!uptodateSchemas.containsKey(schemaName)) {
@@ -455,7 +455,7 @@ public class VerdictMeta {
 	}
 	
 	public String metaCatalogForDataCatalog(String dataCatalog) {
-		return dataCatalog + vc.getConf().get("verdict.meta_catalog_suffix");
+		return dataCatalog + vc.getConf().metaDatabaseSuffix();
 	}
 	
 }

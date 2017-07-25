@@ -78,9 +78,9 @@ public abstract class Dbms {
 			 	  conf.getHost(),
 			 	  conf.getPort(),
 			 	  conf.getDbmsSchema(),
-			 	  (conf.getBoolean("no_user_password"))? "" : conf.getUser(),
-			 	  (conf.getBoolean("no_user_password"))? "" : conf.getPassword(),
-			 	  conf.get(conf.getDbms() + ".jdbc_class_name"));
+			 	  (conf.ignoreUserCredentials())? "" : conf.getUser(),
+			 	  (conf.ignoreUserCredentials())? "" : conf.getPassword(),
+			 	  conf.getDbmsClassName());
 		
 		Set<String> jdbcDbmsNames = Sets.newHashSet("mysql", "impala", "hive", "hive2");
 		
@@ -546,15 +546,15 @@ public abstract class Dbms {
 	}
 	
 	public String partitionColumnName() {
-		return vc.getConf().partitionColumnName();
+		return vc.getConf().subsamplingPartitionColumn();
 	}
 	
 	public int partitionCount() {
-		return vc.getConf().partitionCount();
+		return vc.getConf().subsamplingPartitionCount();
 	}
 
 	public String samplingProbabilityColumnName() {
-		return vc.getConf().samplingProbabilityColumnName();
+		return vc.getConf().subsamplingProbabilityColumn();
 	}
 	
 	public boolean isJDBC() {

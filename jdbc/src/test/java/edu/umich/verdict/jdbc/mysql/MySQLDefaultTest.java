@@ -8,7 +8,6 @@ import java.sql.SQLException;
 import java.sql.SQLWarning;
 
 import edu.umich.verdict.exceptions.VerdictException;
-import edu.umich.verdict.util.ResultSetConversion;
 
 
 public class MySQLDefaultTest {

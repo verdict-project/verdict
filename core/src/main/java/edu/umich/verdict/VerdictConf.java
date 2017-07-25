@@ -8,7 +8,6 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Scanner;
 import java.util.Set;
 import java.util.TreeMap;
 
@@ -27,6 +26,8 @@ public class VerdictConf {
 			new ImmutableMap.Builder<String, String>()
 			.put("byapss", "verdict.bypass")
 			.put("loglevel", "verdict.loglevel")
+			.put("user", "verdict.dbms.user")
+			.put("password", "verdict.dbms.password")
 			.build();
 
 	private final String DEFAULT_CONFIG_FILE = "default_verdict_conf.json";
@@ -60,15 +61,15 @@ public class VerdictConf {
 		}
 	}
 
-	public VerdictConf(File file) throws FileNotFoundException {
+	public VerdictConf(File jsonFilename) throws FileNotFoundException {
 		this();
-		updateFromStream(new FileInputStream(file));
+		updateFromJson(new FileInputStream(jsonFilename));
 	}
 
 	private VerdictConf setDefaults() {
 		try {
 			ClassLoader cl = this.getClass().getClassLoader();
-			updateFromStream(cl.getResourceAsStream("default.conf"));
+//			updateFromStream(cl.getResourceAsStream("default.conf"));
 
 			updateFromJson(cl.getResourceAsStream(DEFAULT_CONFIG_FILE));            
 		} catch (FileNotFoundException e) {
@@ -78,16 +79,16 @@ public class VerdictConf {
 		return this;
 	}
 
-	private VerdictConf updateFromStream(InputStream stream) throws FileNotFoundException {
-		Scanner scanner = new Scanner(stream);
-		while (scanner.hasNext()) {
-			String line = scanner.nextLine();
-			if (!line.isEmpty() && !line.startsWith("#"))
-				set(line);
-		}
-		scanner.close();
-		return this;
-	}
+//	public VerdictConf updateFromStream(InputStream stream) throws FileNotFoundException {
+//		Scanner scanner = new Scanner(stream);
+//		while (scanner.hasNext()) {
+//			String line = scanner.nextLine();
+//			if (!line.isEmpty() && !line.startsWith("#"))
+//				set(line);
+//		}
+//		scanner.close();
+//		return this;
+//	}
 
 	private HashMap<String, String> updateFromJsonHelper(JSONObject jsonConfig, String prefix) {
 		Set<String> keys = jsonConfig.keySet();
@@ -109,14 +110,14 @@ public class VerdictConf {
 				}
 			}
 			else {
-				temp.put(prefix+key, jsonConfig.getString(key));
+				temp.put(prefix+key, jsonConfig.get(key).toString());
 			}
 		}
 		
 		return temp;
 	}
 
-	private void updateFromJson(InputStream stream) throws FileNotFoundException {
+	public void updateFromJson(InputStream stream) throws FileNotFoundException {
 		JSONTokener jsonTokener = new JSONTokener(stream);
 		JSONObject jsonConfig = new JSONObject(jsonTokener);
 		HashMap<String, String> newConfigs = updateFromJsonHelper(jsonConfig, "");
@@ -127,7 +128,6 @@ public class VerdictConf {
 			set(key, value);
 		}
 	}
-
 
 	public int getInt(String key) {
 		return Integer.parseInt(get(key));
@@ -167,7 +167,7 @@ public class VerdictConf {
 		}
 	}
 
-	private VerdictConf set(String keyVal) {
+	public VerdictConf set(String keyVal) {
 		int equalIndex = keyVal.indexOf('=');
 		if (equalIndex == -1)
 			return this;
@@ -211,51 +211,63 @@ public class VerdictConf {
 
 	// data DBMS
 	public void setDbmsSchema(String schema) {
-		configs.put("schema", schema);
+		configs.put("verdict.dbms.schema", schema);
 	}
 
 	public String getDbmsSchema() {
-		return get("schema");
+		return get("verdict.dbms.schema");
 	}
 
 	public void setDbms(String name) {
-		set("dbms", name);
+		set("verdict.dbms.dbname", name);
 	}
 
 	public String getDbms() {
-		return get("dbms");
+		return get("verdict.dbms.dbname");
+	}
+	
+	public String getDbmsClassName() {
+		return get("verdict.dbms." + getDbms() + ".jdbc_class_name");
 	}
 
 	public void setHost(String host) {
-		set("host", host);
+		set("verdict.dbms.host", host);
 	}
 
 	public String getHost() {
-		return get("host");
+		return get("verdict.dbms.host");
 	}
 
 	public void setUser(String user) {
-		set("user", user);
+		set("verdict.dbms.user", user);
 	}
 
 	public String getUser() {
-		return get("user");
+		return get("verdict.dbms.user");
 	}
 
 	public void setPassword(String password) {
-		set("password", password);
+		set("verdict.dbms.password", password);
 	}
 
 	public String getPassword() {
-		return get("password");
+		return get("verdict.dbms.password");
+	}
+	
+	public boolean ignoreUserCredentials() {
+		return getBoolean("verdict.ignore_user_credentials");
 	}
 
 	public void setPort(String port) {
-		set("port", port);
+		set("verdict.dbms.port", port);
 	}
 
 	public String getPort() {
-		return get("port");
+		return get("verdict.dbms.port");
+	}
+	
+	public String getDefaultPort(String dbms) {
+		return get("verdict.dbms." + dbms + ".port");
 	}
 
 	public double errorBoundConfidenceInPercentage() {
@@ -263,27 +275,55 @@ public class VerdictConf {
 		return Double.valueOf(p);
 	}
 
-	public int subsamplingPartitionCount() {
-		return getInt("verdict.subsampling_partition_count");
-	}
-
 	public double getRelativeTargetCost() {
 		return getDouble("verdict.relative_target_cost");
 	}
 
 	public boolean cacheSparkSamples() {
-		return getBoolean("verdict.cache_spark_samples");
+		return getBoolean("verdict.spark.cache_samples");
 	}
 
-	public String partitionColumnName() {
-		return get("verdict.subsampling_partition_column_name");
+	public int subsamplingPartitionCount() {
+		return getInt("verdict.subsampling.partition_count");
 	}
 
-	public int partitionCount() {
-		return getInt("verdict.subsampling_partition_count");
+	public String subsamplingPartitionColumn() {
+		return get("verdict.subsampling.partition_column");
 	}
 
-	public String samplingProbabilityColumnName() {
-		return get("verdict.sampling_probability_column");
+	public String subsamplingProbabilityColumn() {
+		return get("verdict.subsampling.probability_column");
+	}
+	
+//	public int partitionCount() {
+//		return getInt("verdict.subsampling.partition_count");
+//	}
+
+	public String metaNameTableName() {
+		return get("verdict.meta_data.meta_name_table");
+	}
+	
+	public String metaSizeTableName() {
+		return get("verdict.meta_data.meta_size_table");
+	}
+	
+	public String metaRefreshPolicy() {
+		return get("verdict.meta_data.refresh_policy");
+	}
+	
+	public String metaDatabaseSuffix() {
+		return get("verdict.meta_data.meta_database_suffix");
+	}
+
+	public String bootstrappingRandomValueColumn() {
+		return get("verdict.bootstrapping.random_value_column_name");
+	}
+	
+	public String bootstrappingMultiplicityColumn() {
+		return get("verdict.bootstrapping.bootstrap_multiplicity_colname");
+	}
+	
+	public boolean bypass() {
+		return getBoolean("verdict.bypass");
 	}
 }

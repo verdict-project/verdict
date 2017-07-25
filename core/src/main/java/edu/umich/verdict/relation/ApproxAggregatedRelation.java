@@ -41,10 +41,6 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 		return source;
 	}
 	
-//	public List<SelectElem> getSelectList() {
-//		return elems;
-//	}
-	
 	public List<Expr> getAggList() {
 		return aggs;
 	}
@@ -87,82 +83,6 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 		return r;
 	}
 	
-//	@Override
-//	public ExactRelation rewriteWithSubsampledErrorBounds() {
-//		ExactRelation r = rewriteWithPartition();
-//		r = ProjectedRelation.from(vc, (AggregatedRelation) r);
-////		List<SelectElem> selectElems = r.selectElemsWithAggregateSource();
-//		List<SelectElem> aggElems = ((ProjectedRelation) r).getAggElems();
-//		
-//		// another wrapper to combine all subsampled aggregations.
-//		List<Expr> finalAgg = new ArrayList<Expr>();
-//		
-//		for (int i = 0; i < aggElems.size() - 1; i++) {	// excluding the last one which is psize
-//			// odd columns are for mean estimation
-//			// even columns are for err estimation
-//			if (i%2 == 1) continue;
-//			
-//			SelectElem meanElem = aggElems.get(i);
-//			SelectElem errElem = aggElems.get(i+1);
-//			ColNameExpr est = new ColNameExpr(meanElem.getAlias(), r.getAlias());
-//			ColNameExpr errEst = new ColNameExpr(errElem.getAlias(), r.getAlias());
-//			ColNameExpr psize = new ColNameExpr(partitionSizeAlias, r.getAlias());
-//			
-//			Expr originalAggExpr = aggs.get(i/2);
-//			
-//			// average estimate
-//			Expr meanEstExpr = null;
-//			if (originalAggExpr.isCountDistinct()) {
-//				meanEstExpr = FuncExpr.round(FuncExpr.avg(est));
-//			} else {
-//				meanEstExpr = BinaryOpExpr.from(FuncExpr.sum(BinaryOpExpr.from(est, psize, "*")),
-//	                    					    FuncExpr.sum(psize), "/");
-//				if (originalAggExpr.isCount()) {
-//					meanEstExpr = FuncExpr.round(meanEstExpr);
-//				}
-//			}
-//			finalAgg.add(meanEstExpr);
-//
-//			// error estimation
-//			Expr errEstExpr = BinaryOpExpr.from(
-//					BinaryOpExpr.from(FuncExpr.stddev(errEst), FuncExpr.sqrt(FuncExpr.avg(psize)), "*"),
-//					FuncExpr.sqrt(FuncExpr.sum(psize)),
-//					"/");
-//			errEstExpr = BinaryOpExpr.from(errEstExpr, ConstantExpr.from(confidenceIntervalMultiplier()), "*");
-//			finalAgg.add(errEstExpr);
-//		}
-//		
-//		/*
-//		 * Example input query:
-//		 * select category, avg(col)
-//		 * from t
-//		 * group by category
-//		 * 
-//		 * Transformed query:
-//		 * select category, sum(est * psize) / sum(psize) AS final_est
-//		 * from (
-//		 *   select category, avg(col) AS est, count(*) as psize
-//		 *   from t
-//		 *   group by category, verdict_partition) AS vt1
-//		 * group by category
-//		 * 
-//		 * where t1 was obtained by rewriteWithPartition().
-//		 */ 
-//		if (source instanceof ApproxGroupedRelation) {
-//			List<Expr> groupby = ((ApproxGroupedRelation) source).getGroupby();
-//			List<Expr> groupbyInNewSource = new ArrayList<Expr>();
-//			for (Expr g : groupby) {
-//				// replaces the table names in internal colNameExpr
-//				groupbyInNewSource.add(g.withTableSubstituted(r.getAlias()));
-//			}
-//			r = new GroupedRelation(vc, r, groupbyInNewSource);
-//		}
-//		
-//		r = new AggregatedRelation(vc, r, finalAgg);
-//		r.setAliasName(getAlias());
-//		return r;
-//	}
-	
 	/**
 	 * This relation must include partition numbers, and the answers must be scaled properly. Note that {@link ApproxRelation#rewriteWithSubsampledErrorBounds()}
 	 * is used only for the statement including final error bounds; all internal manipulations must be performed by
@@ -182,7 +102,7 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 		
 		// select list elements are scaled considering both sampling probabilities and partitioning for subsampling.
 		List<Expr> scaledExpr = new ArrayList<Expr>();
-		List<ColNameExpr> samplingProbCols = newSource.accumulateSamplingProbColumns();
+//		List<ColNameExpr> samplingProbCols = newSource.accumulateSamplingProbColumns();
 		List<Expr> groupby = new ArrayList<Expr>();
 		if (source instanceof ApproxGroupedRelation) {
 			groupby.addAll(((ApproxGroupedRelation) source).groupbyWithTablesSubstituted());
@@ -191,7 +111,7 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 		final Map<TableUniqueName, String> sub = source.tableSubstitution();
 		for (Expr e : aggs) {
 			// for mean estimation
-			Expr scaled = transformForSingleFunctionWithPartitionSize(e, samplingProbCols, groupby, newSource.partitionColumn(), sub, false);
+			Expr scaled = transformForSingleFunctionWithPartitionSize(e, groupby, newSource.partitionColumn(), sub, false);
 			scaledExpr.add(scaled);
 			
 //			// for error estimation
@@ -243,7 +163,6 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 	
 	private Expr transformForSingleFunctionWithPartitionSize(
 			Expr f,
-			final List<ColNameExpr> samplingProbCols,
 			final List<Expr> groupby,
 			final ColNameExpr partitionCol,
 			final Map<TableUniqueName, String> tablesNamesSub,

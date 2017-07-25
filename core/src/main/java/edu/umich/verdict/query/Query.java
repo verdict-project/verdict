@@ -118,7 +118,7 @@ public abstract class Query {
 		if (queryType.equals(Type.CONFIG)) {
 			query = new ConfigQuery(vc, queryString);
 		} else {
-			if (vc.getConf().doesContain("bypass") && vc.getConf().getBoolean("bypass")) {
+			if (vc.getConf().bypass()) {
 				VerdictLogger.info("Verdict bypasses this query. Run \"set bypass=\'false\'\""
 						+ " to enable Verdict's approximate query processing.");
 				if (isUpdateType(queryType)) {

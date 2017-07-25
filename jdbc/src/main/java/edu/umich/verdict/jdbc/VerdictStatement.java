@@ -1,13 +1,18 @@
 package edu.umich.verdict.jdbc;
 
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
+import java.sql.SQLWarning;
+import java.sql.Statement;
+import java.util.ArrayList;
+
 import edu.umich.verdict.VerdictJDBCContext;
 import edu.umich.verdict.dbms.DbmsJDBC;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.util.StackTraceReader;
 import edu.umich.verdict.util.VerdictLogger;
-
-import java.sql.*;
-import java.util.ArrayList;
 
 public class VerdictStatement implements Statement {
 	

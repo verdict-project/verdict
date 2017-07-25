@@ -11,9 +11,11 @@
 */
 package sqlline;
 
-import java.sql.*;
+import java.sql.SQLException;
 
-import sun.misc.*; // CHECKSTYLE: IGNORE 0
+// CHECKSTYLE: IGNORE 0
+import sun.misc.Signal;
+import sun.misc.SignalHandler;
 
 /**
  * A signal handler for SQLLine which interprets Ctrl+C as a request to cancel

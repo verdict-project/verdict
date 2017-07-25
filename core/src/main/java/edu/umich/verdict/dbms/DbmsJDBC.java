@@ -165,16 +165,13 @@ public abstract class DbmsJDBC extends Dbms {
 			url.append(String.format("/%s", schema));
 		}
 
-		boolean isFirstParam = true;
-		if (user != null && user.length() != 0) {
-			url.append((isFirstParam)? "?" : "&");
+		if (!vc.getConf().ignoreUserCredentials() && user != null && user.length() != 0) {
+			url.append(";");
 			url.append(String.format("user=%s", user));
-			isFirstParam = false;
 		}
-		if (password != null && password.length() != 0) {
-			url.append((isFirstParam)? "?" : "&");
+		if (!vc.getConf().ignoreUserCredentials() && password != null && password.length() != 0) {
+			url.append(";");
 			url.append(String.format("password=%s", password));
-			isFirstParam = false;
 		}
 		
 		for (Map.Entry<String, String> pair : vc.getConf().getConfigs().entrySet()) {
