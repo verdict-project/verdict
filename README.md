@@ -25,13 +25,16 @@ Find more about Verdict at our website: [VerdictDB.org](http://verdictdb.org).
 
 # Getting Started
 
-Verdict currently runs on top of [Apache Spark](https://spark.apache.org/), [Apache (incubating) Impala](https://impala.incubator.apache.org/), and [Apache Hive](https://hive.apache.org/). We are adding drivers for other database systems.
+Verdict can run on top of [Apache Spark](https://spark.apache.org/), [Apache (incubating) Impala](https://impala.incubator.apache.org/), and [Apache Hive](https://hive.apache.org/). We are adding drivers for other database systems.
 
 Using Verdict is easy. Following this guide, you can finish setup in five minutes if you have any of those supported systems ready.
 
-## Building Verdict
+## Downloading Verdict
 
-Download and unzip this [zip file](https://github.com/mozafari/verdict/releases/download/v0.3.0/verdict-0.3.0.zip). Then, simply type `mvn package` in the unzipped directory. The command will download all the dependencies and compile Verdict's code. The command will create three `jar` files in the `target` directory. Then, building Verdict is done!
+1. **Download** and unzip [the latest release](https://github.com/mozafari/verdict/releases/download/v0.3.0/verdict-0.3.0.zip).
+1. **Type** `mvn package` in the unzipped directory. This command will download all the dependencies and compile Verdict's code. The command will create three `jar` files in the `target` directory.
+
+Building Verdict is done!
 
 ### More details
 
@@ -45,7 +48,7 @@ The steps for starting Verdict is slightly different depending on the database s
 
 ### On Apache Spark
 
-Verdict works with Spark by internally creating Spark's HiveContext. In this way, Verdict can load persisted tables through Hive metastore.
+Verdict works with Spark by internally creating Spark's HiveContext. In this way, Verdict can load persisted tables through Hive metastore. Verdict is tested with Apache Spark 1.6.0 (in the Cloudera distribution CDH 5.11). We will support Spark 2.0 shortly.
 
 We show how to use Verdict in `spark-shell` and `pyspark`. Using Verdict in an Spark application written either in Scala or Python is the same.
 
