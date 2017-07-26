@@ -1,6 +1,6 @@
-# Verdict: Interactive-speed, resource-efficient query processor
+# Verdict is Useful
 
-Verdict is an approximate, big data analytics system. Verdict is useful because:
+Verdict is an Interactive-speed, resource-efficient query processor. Verdict is useful because:
 
 1. **200x faster by sacrificing only 1% accuracy**
    Verdict can give you 99% accurate answers for your big data queries in a
@@ -25,7 +25,7 @@ Find more about Verdict at our website: [VerdictDB.org](http://verdictdb.org).
 
 # Getting Started
 
-Verdict currently runs on [Apache Spark](https://spark.apache.org/), [Apache (incubating) Impala](https://impala.incubator.apache.org/), and [Apache Hive](https://hive.apache.org/). We are adding drivers for other database systems.
+Verdict currently runs on top of [Apache Spark](https://spark.apache.org/), [Apache (incubating) Impala](https://impala.incubator.apache.org/), and [Apache Hive](https://hive.apache.org/). We are adding drivers for other database systems.
 
 Using Verdict is easy. Following this guide, you can finish setup in five minutes if you have any of those supported systems ready.
 
@@ -45,6 +45,8 @@ The steps for starting Verdict is slightly different depending on the database s
 
 ### On Apache Spark
 
+Verdict works with Spark by internally creating Spark's HiveContext. In this way, Verdict can load persisted tables through Hive metastore.
+
 We show how to use Verdict in `spark-shell` and `pyspark`. Using Verdict in an Spark application written either in Scala or Python is the same.
 
 #### Verdict-on-Spark
@@ -59,12 +61,16 @@ After spark-shell starts, import and use Verdict as follows.
 
 ```scala
 import edu.umich.verdict.VerdictSparkHiveContext
-val vc = new VerdictSparkHiveContext(sc)   // sc: SparkContext instance
-vc.sql("show databases").show(false)       // Simply displays the databases (or schemas)
+
+scala> val vc = new VerdictSparkHiveContext(sc)   // sc: SparkContext instance
+
+scala> vc.sql("show databases").show(false)       // Simply displays the databases (or often called schemas)
+
 // Creates samples for the table. This step needs to be done only once for the table.
-vc.sql("create sample of database_name.table_name").show(false)
+scala> vc.sql("create sample of database_name.table_name").show(false)
+
 // Now Verdict automatically uses available samples for speeding up this query.
-vc.sql("select count(*) from database_name.table_name").show()
+scala> vc.sql("select count(*) from database_name.table_name").show(false)
 ```
 
 The return value of `VerdictSparkHiveContext#sql()` is a Spark's DataFrame class; thus, any methods that work on Spark's DataFrame work on Verdict's answer seamlessly.
@@ -75,22 +81,27 @@ The return value of `VerdictSparkHiveContext#sql()` is a Spark's DataFrame class
 You can start `pyspark` shell with Verdict as follows.
 
 ```bash
-$ export PYTHONPATH=$(pwd)/target:$PYTHONPATH
+$ export PYTHONPATH=$(pwd)/python:$PYTHONPATH
+
 $ pyspark --driver-class-path target/verdict-core-0.3.0-jar-with-dependencies.jar
 ```
 
-**Limitation**: Note that, in order for the `--driver-class-path` option to work, the jar file (i.e., `target/verdict-core-0.3.0-jar-with-dependencies.jar`) must be present in the Spark's driver node. Verdict will support `--jars` option shortly (this is due to the bug in pyspark).
+**Limitation**: Note that, in order for the `--driver-class-path` option to work, the jar file (i.e., `target/verdict-core-0.3.0-jar-with-dependencies.jar`) must be present in the Spark's driver node. Verdict will support `--jars` option shortly.
 
 After pyspark shell starts, import and use Verdict as follows.
 
 ```python
-from pyverdict import VerdictHiveContext
-vc = VerdictHiveContext(sc)        # sc: SparkContext instance
-vc.sql("show databases").show()    # Simply displays the databases (or schemas)
+>>> from pyverdict import VerdictHiveContext
+
+>>> vc = VerdictHiveContext(sc)        # sc: SparkContext instance
+
+>>> vc.sql("show databases").show()    # Simply displays the databases (or often called schemas)
+
 # Creates samples for the table. This step needs to be done only once for the table.
-vc.sql("create sample of database_name.table_name").show()
+>>> vc.sql("create sample of database_name.table_name").show()
+
 # Now Verdict automatically uses available samples for speeding up this query.
-vc.sql("select count(*) from database_name.table_name").show()
+>>> vc.sql("select count(*) from database_name.table_name").show()
 ```
 
 The return value of `VerdictHiveContext#sql()` is a pyspark's DataFrame class; thus, any methods that work on pyspark's DataFrame work on Verdict's answer seamlessly.
@@ -116,7 +127,9 @@ After `veeline` launches, you can issue regular SQL queries as follows.
 
 ```bash
 verdict:impala> show databases;
+
 verdict:impala> create sample of database_name.table_name;
+
 verdict:impala> select count(*) from database_name.table_name;
 ```
 
@@ -136,7 +149,9 @@ After `veeline` launches, you can issue regular SQL queries as follows.
 
 ```bash
 verdict:Apache Hive> show databases;
+
 verdict:Apache Hive> create sample of database_name.table_name;
+
 verdict:Apache Hive> select count(*) from database_name.table_name;
 ```
 
