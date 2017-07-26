@@ -31,7 +31,7 @@ Using Verdict is easy. Following this guide, you can finish setup in five minute
 
 ## Building Verdict
 
-Download and unzip this [zip file](). Then, simply type `mvn package` in the unzipped directory. The command will download all the dependencies and compile Verdict's code. The command will create three `jar` files in the `target` directory. Then, building Verdict is done!
+Download and unzip this [zip file](https://github.com/mozafari/verdict/releases/download/v0.3.0/verdict-0.3.0.zip). Then, simply type `mvn package` in the unzipped directory. The command will download all the dependencies and compile Verdict's code. The command will create three `jar` files in the `target` directory. Then, building Verdict is done!
 
 ### More details
 
