@@ -1,7 +1,7 @@
 package edu.umich.verdict.relation.expr;
 
 import edu.umich.verdict.VerdictContext;
-import edu.umich.verdict.VerdictSQLParser;
+import edu.umich.verdict.parser.VerdictSQLParser;
 import edu.umich.verdict.relation.ExactRelation;
 import edu.umich.verdict.relation.Relation;
 

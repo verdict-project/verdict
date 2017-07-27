@@ -5,8 +5,8 @@ import java.sql.ResultSet;
 import org.apache.spark.sql.DataFrame;
 
 import edu.umich.verdict.VerdictContext;
-import edu.umich.verdict.VerdictSQLBaseVisitor;
-import edu.umich.verdict.VerdictSQLParser;
+import edu.umich.verdict.parser.VerdictSQLBaseVisitor;
+import edu.umich.verdict.parser.VerdictSQLParser;
 import edu.umich.verdict.datatypes.Alias;
 import edu.umich.verdict.dbms.DbmsSpark;
 import edu.umich.verdict.exceptions.VerdictException;

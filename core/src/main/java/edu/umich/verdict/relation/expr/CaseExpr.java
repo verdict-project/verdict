@@ -3,10 +3,10 @@ package edu.umich.verdict.relation.expr;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.umich.verdict.VerdictSQLParser;
-import edu.umich.verdict.VerdictSQLParser.Case_exprContext;
-import edu.umich.verdict.VerdictSQLParser.ExpressionContext;
-import edu.umich.verdict.VerdictSQLParser.Search_conditionContext;
+import edu.umich.verdict.parser.VerdictSQLParser;
+import edu.umich.verdict.parser.VerdictSQLParser.Case_exprContext;
+import edu.umich.verdict.parser.VerdictSQLParser.ExpressionContext;
+import edu.umich.verdict.parser.VerdictSQLParser.Search_conditionContext;
 import edu.umich.verdict.relation.condition.Cond;
 import edu.umich.verdict.util.StringManipulations;
 import edu.umich.verdict.util.VerdictLogger;

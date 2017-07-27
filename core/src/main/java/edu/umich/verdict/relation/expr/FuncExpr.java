@@ -7,8 +7,8 @@ import java.util.Map;
 import com.google.common.collect.ImmutableMap;
 
 import edu.umich.verdict.VerdictContext;
-import edu.umich.verdict.VerdictSQLBaseVisitor;
-import edu.umich.verdict.VerdictSQLParser;
+import edu.umich.verdict.parser.VerdictSQLBaseVisitor;
+import edu.umich.verdict.parser.VerdictSQLParser;
 import edu.umich.verdict.util.StringManipulations;
 
 public class FuncExpr extends Expr {

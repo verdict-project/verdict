@@ -5,10 +5,10 @@ import java.util.List;
 
 import com.google.common.base.Joiner;
 
-import edu.umich.verdict.VerdictSQLParser;
-import edu.umich.verdict.VerdictSQLParser.ExpressionContext;
-import edu.umich.verdict.VerdictSQLParser.Over_clauseContext;
-import edu.umich.verdict.VerdictSQLParser.Partition_by_clauseContext;
+import edu.umich.verdict.parser.VerdictSQLParser;
+import edu.umich.verdict.parser.VerdictSQLParser.ExpressionContext;
+import edu.umich.verdict.parser.VerdictSQLParser.Over_clauseContext;
+import edu.umich.verdict.parser.VerdictSQLParser.Partition_by_clauseContext;
 import edu.umich.verdict.util.StringManipulations;
 
 public class OverClause {
