@@ -82,4 +82,9 @@ public class NoApproxRelation extends ApproxRelation {
 	public double samplingProbability() {
 		return 1.0;
 	}
+
+    @Override
+    protected boolean doesIncludeSample() {
+        return false;
+    }
 }

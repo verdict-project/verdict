@@ -297,4 +297,13 @@ public class ApproxSingleRelation extends ApproxRelation {
 	public double samplingProbability() {
 		return param.getSamplingRatio();
 	}
+
+    @Override
+    protected boolean doesIncludeSample() {
+        if (!sampleType().equals("nosample")) {
+            return true;
+        } else {
+            return false;
+        }
+    }
 }

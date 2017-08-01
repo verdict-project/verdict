@@ -95,5 +95,10 @@ public class ApproxOrderedRelation extends ApproxRelation {
 	public double samplingProbability() {
 		return source.samplingProbability();
 	}
+
+    @Override
+    protected boolean doesIncludeSample() {
+        return source.doesIncludeSample();
+    }
 	
 }

@@ -25,10 +25,21 @@ import edu.umich.verdict.util.VerdictLogger;
 public abstract class ApproxRelation extends Relation {
 
     protected final String partitionSizeAlias = "__vpsize";
+    
+    protected ExactRelation original;
 
     public ApproxRelation(VerdictContext vc) {
         super(vc);
         approximate = true;
+        original = null;
+    }
+    
+    protected void setOriginalRelation(ExactRelation r) {
+        original = r;
+    }
+    
+    protected ExactRelation getOriginalRelation() {
+        return original;
     }
 
     public String sourceTableName() {
@@ -120,6 +131,18 @@ public abstract class ApproxRelation extends Relation {
     public abstract ExactRelation rewriteForPointEstimate();
 
 
+    /**
+     * Creates an exact relation that computes approximate aggregates and their error bounds using subsampling.
+     * 
+     * If a sample plan does not include any sample tables, it will simply be exact answers; thus, no error bounds are necessary.
+     * 
+     * If a sample plan includes at least one sample table in the table sources, there must exists a partition column (__vpart by default).
+     * {@link ExactRelation#partitionColumn()} finds and returns an appropriate column name for a given source relation.
+     * See the method for details on how the partition column of a table is determined.
+     * Note that the partition columns are defined for rewritten relations.
+     * 
+     * @return
+     */
     public ExactRelation rewriteWithSubsampledErrorBounds() {
         VerdictLogger.error(this, String.format("Calling a method, %s, on unappropriate class", "rewriteWithSubsampledErrorBounds()"));
         return null;
@@ -201,6 +224,13 @@ public abstract class ApproxRelation extends Relation {
      * @return
      */
     protected abstract Map<TableUniqueName, String> tableSubstitution();
+    
+    
+    /**
+     * Returns true if any of the table sources include an non-nosample relation.
+     * @return
+     */
+    protected abstract boolean doesIncludeSample();
 
 
     /*
