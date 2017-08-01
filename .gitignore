@@ -23,3 +23,7 @@ target/
 
 # Test configuration files
 *.test
+nocommit/
+
+# config
+config/verdict.properties

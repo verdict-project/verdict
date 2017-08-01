@@ -9,7 +9,7 @@ import java.util.TreeMap;
 import org.apache.commons.lang3.tuple.Pair;
 
 import edu.umich.verdict.VerdictJDBCContext;
-import edu.umich.verdict.VerdictSQLParser;
+import edu.umich.verdict.parser.VerdictSQLParser;
 import edu.umich.verdict.datatypes.Alias;
 import edu.umich.verdict.datatypes.ColumnName;
 import edu.umich.verdict.datatypes.SampleParam;

@@ -4,9 +4,9 @@ import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.misc.Interval;
 
-import edu.umich.verdict.VerdictSQLBaseVisitor;
-import edu.umich.verdict.VerdictSQLParser;
-import edu.umich.verdict.VerdictSQLParser.Join_partContext;
+import edu.umich.verdict.parser.VerdictSQLBaseVisitor;
+import edu.umich.verdict.parser.VerdictSQLParser;
+import edu.umich.verdict.parser.VerdictSQLParser.Join_partContext;
 import edu.umich.verdict.util.VerdictLogger;
 
 /**

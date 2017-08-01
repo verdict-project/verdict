@@ -17,11 +17,11 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.Sets;
 
 import edu.umich.verdict.VerdictContext;
-import edu.umich.verdict.VerdictSQLBaseVisitor;
-import edu.umich.verdict.VerdictSQLParser;
-import edu.umich.verdict.VerdictSQLParser.ExpressionContext;
-import edu.umich.verdict.VerdictSQLParser.Join_partContext;
-import edu.umich.verdict.VerdictSQLParser.Search_conditionContext;
+import edu.umich.verdict.parser.VerdictSQLBaseVisitor;
+import edu.umich.verdict.parser.VerdictSQLParser;
+import edu.umich.verdict.parser.VerdictSQLParser.ExpressionContext;
+import edu.umich.verdict.parser.VerdictSQLParser.Join_partContext;
+import edu.umich.verdict.parser.VerdictSQLParser.Search_conditionContext;
 import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.exceptions.VerdictUnexpectedMethodCall;

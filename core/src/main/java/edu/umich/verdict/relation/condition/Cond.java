@@ -3,9 +3,9 @@ package edu.umich.verdict.relation.condition;
 import java.util.List;
 
 import edu.umich.verdict.VerdictContext;
-import edu.umich.verdict.VerdictSQLBaseVisitor;
-import edu.umich.verdict.VerdictSQLParser;
-import edu.umich.verdict.VerdictSQLParser.Search_conditionContext;
+import edu.umich.verdict.parser.VerdictSQLBaseVisitor;
+import edu.umich.verdict.parser.VerdictSQLParser;
+import edu.umich.verdict.parser.VerdictSQLParser.Search_conditionContext;
 import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.util.StringManipulations;
 

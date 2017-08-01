@@ -6,8 +6,8 @@ import java.util.List;
 import java.util.Map;
 
 import edu.umich.verdict.VerdictJDBCContext;
-import edu.umich.verdict.VerdictSQLBaseVisitor;
-import edu.umich.verdict.VerdictSQLParser;
+import edu.umich.verdict.parser.VerdictSQLBaseVisitor;
+import edu.umich.verdict.parser.VerdictSQLParser;
 import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.util.StringManipulations;
 

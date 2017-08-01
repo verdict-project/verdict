@@ -77,6 +77,7 @@ public class ProjectedRelation extends ExactRelation {
 	public ApproxRelation approx() throws VerdictException {
 		ApproxRelation a = new ApproxProjectedRelation(vc, source.approx(), elems);
 		a.setAlias(getAlias());
+		a.setOriginalRelation(this);
 		return a;
 	}
 

@@ -220,6 +220,11 @@ public class ApproxFilteredRelation extends ApproxRelation {
 		return source.samplingProbability();
 	}
 
+    @Override
+    protected boolean doesIncludeSample() {
+        return source.doesIncludeSample();
+    }
+
 }
 
 // modifies the subquery expression in comparison condition

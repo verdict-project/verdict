@@ -9,8 +9,8 @@ import org.antlr.v4.runtime.CommonTokenStream;
 import com.google.common.base.Optional;
 
 import edu.umich.verdict.VerdictJDBCContext;
-import edu.umich.verdict.VerdictSQLLexer;
-import edu.umich.verdict.VerdictSQLParser;
+import edu.umich.verdict.parser.VerdictSQLLexer;
+import edu.umich.verdict.parser.VerdictSQLParser;
 import edu.umich.verdict.datatypes.TableUniqueName;
 
 public class StringManipulations {
