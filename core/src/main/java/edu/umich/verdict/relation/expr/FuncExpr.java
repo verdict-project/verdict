@@ -16,8 +16,8 @@ public class FuncExpr extends Expr {
     public enum FuncName {
         COUNT, SUM, AVG, COUNT_DISTINCT, IMPALA_APPROX_COUNT_DISTINCT,
         ROUND, MAX, MIN, FLOOR, CEIL, EXP, LN, LOG10, LOG2, SIN, COS, TAN,
-        SIGN, RAND, UNIX_TIMESTAMP, FNV_HASH, ABS, STDDEV, SQRT, MOD, PMOD,
-        CAST, CONV, SUBSTR, MD5, CRC32,
+        SIGN, RAND, FNV_HASH, ABS, STDDEV, SQRT, MOD, PMOD,
+        CAST, CONV, SUBSTR, MD5, CRC32, UNIX_TIMESTAMP, CURRENT_TIMESTAMP,
         UNKNOWN
     }
 
@@ -43,6 +43,7 @@ public class FuncExpr extends Expr {
             .put("SIGN", FuncName.SIGN)
             .put("RAND", FuncName.RAND)
             .put("UNIX_TIMESTAMP", FuncName.UNIX_TIMESTAMP)
+            .put("CURRENT_TIMESTAMP", FuncName.CURRENT_TIMESTAMP)
             .put("FNV_HASH", FuncName.FNV_HASH)
             .put("MD5", FuncName.MD5)
             .put("ABS", FuncName.ABS)
@@ -77,6 +78,7 @@ public class FuncExpr extends Expr {
             .put(FuncName.SIGN, "sign(%s)")
             .put(FuncName.RAND, "rand(%s)")
             .put(FuncName.UNIX_TIMESTAMP, "unix_timestamp(%s)")
+            .put(FuncName.CURRENT_TIMESTAMP, "current_timestamp(%s)")
             .put(FuncName.FNV_HASH, "fnv_hash(%s)")
             .put(FuncName.MD5, "md5(%s)")
             .put(FuncName.CRC32, "crc32(%s)")
