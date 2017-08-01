@@ -884,7 +884,7 @@ unary_mathematical_function
     ;
     
 noparam_mathematical_function
-    : function_name=UNIX_TIMESTAMP
+    : function_name=(UNIX_TIMESTAMP | CURRENT_TIMESTAMP)
       '(' ')'
     ;
 
