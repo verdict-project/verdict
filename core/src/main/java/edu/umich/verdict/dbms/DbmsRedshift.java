@@ -18,24 +18,24 @@ public class DbmsRedshift extends DbmsJDBC {
 	
 	@Override
 	protected String modOfRand(int mod) {
-		return String.format("abs(rand(unix_timestamp())) %% %d", mod);
+		return String.format("RANDOM() %% %d", mod);
 	}
 
 	@Override
 	public String modOfHash(String col, int mod) {
-		return String.format("pmod(crc32(cast(%s as string)),%d)", col, mod);
+		return String.format("mod(strtol(crc32(cast(%s as text)),16),%d)", col, mod);
 	}
 	
 	@Override
 	protected String randomNumberExpression(SampleParam param) {
-		String expr = "rand(unix_timestamp())";
+		String expr = "RANDOM()";
 		return expr;
 	}
 
 	@Override
 	protected String randomPartitionColumn() {
 		int pcount = partitionCount();
-		return String.format("pmod(round(rand(unix_timestamp())*%d), %d) AS %s", pcount, pcount, partitionColumnName());
+		return String.format("mod(cast(round(RANDOM()*%d) as integer), %d) AS %s", pcount, pcount, partitionColumnName());
 	}
 	
 }
