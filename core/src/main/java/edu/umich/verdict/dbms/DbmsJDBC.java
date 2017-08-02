@@ -138,23 +138,23 @@ public abstract class DbmsJDBC extends Dbms {
             url.append(String.format("/%s", schema));
         }
 
-        if (!vc.getConf().ignoreUserCredentials() && user != null && user.length() != 0 && dbms != "redshift") {
+        if (!vc.getConf().ignoreUserCredentials() && user != null && user.length() != 0) {
             url.append(";");
             url.append(String.format("user=%s", user));
         }
-        if (!vc.getConf().ignoreUserCredentials() && password != null && password.length() != 0 && dbms != "redshift") {
+        if (!vc.getConf().ignoreUserCredentials() && password != null && password.length() != 0) {
             url.append(";");
             url.append(String.format("password=%s", password));
         }
         
-        if (!vc.getConf().ignoreUserCredentials() && user != null && user.length() != 0 && dbms == "redshift") {
-            url.append(";");
-            url.append(String.format("UID=%s", user));
-        }
-        if (!vc.getConf().ignoreUserCredentials() && password != null && password.length() != 0 && dbms == "redshift") {
-            url.append(";");
-            url.append(String.format("PWD=%s", password));
-        }
+//        if (!vc.getConf().ignoreUserCredentials() && user != null && user.length() != 0 && dbms == "redshift") {
+//            url.append(";");
+//            url.append(String.format("UID=%s", user));
+//        }
+//        if (!vc.getConf().ignoreUserCredentials() && password != null && password.length() != 0 && dbms == "redshift") {
+//            url.append(";");
+//            url.append(String.format("PWD=%s", password));
+//        }
         
         // set kerberos option if set
         if (vc.getConf().isJdbcKerberosSet()) {
@@ -215,7 +215,7 @@ public abstract class DbmsJDBC extends Dbms {
         return cnt;
     }
 
-    public boolean execute(String sql) throws VerdictException {
+    public boolean execute(String sql) throws VerdictException {    	
         createStatementIfNotExists();
         boolean result = false;
         try {
