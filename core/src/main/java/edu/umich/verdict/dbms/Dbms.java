@@ -286,9 +286,16 @@ public abstract class Dbms {
                 .select("*, " + randomPartitionColumn());
         TableUniqueName temp = Relation.getTempTableName(vc, param.sampleTableName().getSchemaName());
 
-        String sql = String.format("create table %s as %s", temp, sampled.toSql());
-        VerdictLogger.debug(this, "The query used for creating a temporary table without sampling probabilities:");
-        VerdictLogger.debugPretty(this, Relation.prettyfySql(sql), "  ");
+        String parquetString="";
+		
+		if(vc.getConf().areSamplesStoredAsParquet()) {
+			parquetString = " stored as parquet";
+		}
+		
+		String sql = String.format("create table %s%s as %s", temp, parquetString, sampled.toSql());
+		VerdictLogger.debug(this, "The query used for creating a temporary table without sampling probabilities:");
+		//VerdictLogger.debugPretty(this, Relation.prettyfySql(sql), "  ");
+		VerdictLogger.debug(this, sql);
         executeUpdate(sql);
         return temp;
     }
