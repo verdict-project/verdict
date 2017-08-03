@@ -577,9 +577,9 @@ public abstract class Dbms {
     }
 
     public abstract void close() throws VerdictException;
-
+//add quote string back later (it was "`")
     public String getQuoteString() {
-        return "`";
+        return "";
     }
 
     @Deprecated
