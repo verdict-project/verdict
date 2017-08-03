@@ -2,6 +2,7 @@ package edu.umich.verdict.relation;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -519,10 +520,21 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
         // in the where clause.
         ExactRelation r = null;
         List<String> joinedTableName = new ArrayList<String>();
+        
+        // we remember what base tables have been joined (or appeared). this information is used for
+        // replacing original table names with aliases in join conditions.
+        Map<TableUniqueName, String> baseTables = new HashMap<TableUniqueName, String>();
 
         for (Table_sourceContext s : ctx.table_source()) {
             TableSourceExtractor e = new TableSourceExtractor();
             ExactRelation r1 = e.visit(s);
+            
+            if (r1 instanceof SingleRelation) {
+                TableUniqueName t = ((SingleRelation) r1).getTableName();
+                String a = r1.getAlias();
+                baseTables.put(t,  a);
+            }
+            
             if (r == null) r = r1;
             else {
                 JoinedRelation r2 = new JoinedRelation(vc, r, r1, null);
@@ -541,7 +553,7 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
 
                 if (j != null) {
                     try {
-                        r2.setJoinCond(j);
+                        r2.setJoinCond(j, baseTables);
                     } catch (VerdictException e1) {
                         VerdictLogger.error(StackTraceReader.stackTrace2String(e1));
                     }
