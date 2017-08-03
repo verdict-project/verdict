@@ -93,6 +93,11 @@ public class DbmsDummy extends Dbms {
 		// TODO Auto-generated method stub
 		return null;
 	}
+	
+	@Override
+	public String getQuoteString() {
+        return null;
+    }
 
 	@Override
 	public Set<String> getDatabases() throws VerdictException {

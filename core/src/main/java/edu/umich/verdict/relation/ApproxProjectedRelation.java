@@ -45,7 +45,7 @@ public class ApproxProjectedRelation extends ApproxRelation {
         Map<TableUniqueName, String> sub = source.tableSubstitution();
         for (SelectElem elem : elems) {
             Expr newExpr = exprWithTableNamesSubstituted(elem.getExpr(), sub);
-            SelectElem newElem = new SelectElem(newExpr, elem.getAlias());
+            SelectElem newElem = new SelectElem(vc, newExpr, elem.getAlias());
             newElems.add(newElem);
         }
         return newElems;
@@ -90,9 +90,9 @@ public class ApproxProjectedRelation extends ApproxRelation {
                 SelectElem newElem = null;
                 if (elem.getAlias() == null) {
                     Expr newExpr = elem.getExpr().withTableSubstituted(r.getAlias());
-                    newElem = new SelectElem(newExpr, elem.getAlias());
+                    newElem = new SelectElem(vc, newExpr, elem.getAlias());
                 } else {
-                    newElem = new SelectElem(new ColNameExpr(vc, elem.getAlias(), r.getAlias()), elem.getAlias());
+                    newElem = new SelectElem(vc, new ColNameExpr(vc, elem.getAlias(), r.getAlias()), elem.getAlias());
                 }
                 newElems.add(newElem);
             } else {
@@ -116,7 +116,7 @@ public class ApproxProjectedRelation extends ApproxRelation {
                         averaged = FuncExpr.round(averaged);
                     }
                 }
-                newElems.add(new SelectElem(averaged, elem.getAlias()));
+                newElems.add(new SelectElem(vc, averaged, elem.getAlias()));
                 newAggs.add(averaged);
 
                 // error estimation
@@ -126,7 +126,7 @@ public class ApproxProjectedRelation extends ApproxRelation {
                         FuncExpr.sqrt(FuncExpr.sum(psize)),
                         "/");
                 error = BinaryOpExpr.from(vc, error, ConstantExpr.from(vc, confidenceIntervalMultiplier()), "*");
-                newElems.add(new SelectElem(error, Relation.errorBoundColumn(elem.getAlias())));
+                newElems.add(new SelectElem(vc, error, Relation.errorBoundColumn(elem.getAlias())));
                 newAggs.add(error);
             }
         }
@@ -213,12 +213,12 @@ public class ApproxProjectedRelation extends ApproxRelation {
             // if there exists an agg element, source relation must be an instance of AggregatedRelation.
             if (!elem.getExpr().isagg()) {
                 Expr newExpr = exprWithTableNamesSubstituted(elem.getExpr(), sub);	// replace original table references with samples
-                SelectElem newElem = new SelectElem(newExpr, elem.getAlias());
+                SelectElem newElem = new SelectElem(vc, newExpr, elem.getAlias());
                 newElems.add(newElem);
             } else {
                 Expr agg = ((AggregatedRelation) newSource).getAggList().get(index++);
                 agg = exprWithTableNamesSubstituted(agg, sub);			// replace original table references with samples
-                newElems.add(new SelectElem(agg, elem.getAlias()));
+                newElems.add(new SelectElem(vc, agg, elem.getAlias()));
                 //				Expr agg_err = ((AggregatedRelation) newSource).getAggList().get(index++);
                 //				newElems.add(new SelectElem(agg_err, Relation.errorBoundColumn(elem.getAlias())));
             }
@@ -226,33 +226,33 @@ public class ApproxProjectedRelation extends ApproxRelation {
 
         // partition size column; used for combining the final answer computed on different partitions.
         if (extra) {
-            newElems.add(new SelectElem(FuncExpr.count(), partitionSizeAlias));
+            newElems.add(new SelectElem(vc, FuncExpr.count(), partitionSizeAlias));
         }
 
         // partition number
-        newElems.add(new SelectElem(newSource.partitionColumn(), partitionColumnName()));
+        newElems.add(new SelectElem(vc, newSource.partitionColumn(), partitionColumnName()));
 
         // probability expression
         //  if the source is not an aggregated relation, we simply propagates the probability expression.
         //  if the source is an aggregated relation, we should insert an appropriate value.
         String probCol = samplingProbabilityColumnName();
         if (!(source instanceof ApproxAggregatedRelation)) {
-            SelectElem probElem = new SelectElem(new ColNameExpr(vc, probCol), probCol);
+            SelectElem probElem = new SelectElem(vc, new ColNameExpr(vc, probCol), probCol);
             newElems.add(probElem);
         } else {
             ApproxRelation a = ((ApproxAggregatedRelation) source).getSource();
             if (!(a instanceof ApproxGroupedRelation)) {
-                SelectElem probElem = new SelectElem(new ConstantExpr(vc, 1.0), probCol);
+                SelectElem probElem = new SelectElem(vc, new ConstantExpr(vc, 1.0), probCol);
                 newElems.add(probElem);
             } else {
                 if (source.sampleType().equals("universe")) {
-                    SelectElem probElem = new SelectElem(new ConstantExpr(vc, source.samplingProbability()), probCol);
+                    SelectElem probElem = new SelectElem(vc, new ConstantExpr(vc, source.samplingProbability()), probCol);
                     newElems.add(probElem);
                 } else if (source.sampleType().equals("stratified")) {
-                    SelectElem probElem = new SelectElem(new ConstantExpr(vc, 1.0), probCol);
+                    SelectElem probElem = new SelectElem(vc, new ConstantExpr(vc, 1.0), probCol);
                     newElems.add(probElem);
                 } else {
-                    SelectElem probElem = new SelectElem(new ConstantExpr(vc, 1.0), probCol);
+                    SelectElem probElem = new SelectElem(vc, new ConstantExpr(vc, 1.0), probCol);
                     newElems.add(probElem);
                 }
             }

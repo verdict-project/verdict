@@ -166,7 +166,7 @@ public abstract class ExactRelation extends Relation {
         if (this instanceof GroupedRelation) {
             List<Expr> groupby = ((GroupedRelation) this).getGroupby();
             for (Expr group : groupby) {
-                se.add(0, new SelectElem(group));
+                se.add(0, new SelectElem(vc, group));
             }
         }
 

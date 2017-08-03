@@ -54,15 +54,19 @@ public abstract class Expr {
     public String toStringWithoutQuote() {
         return StringManipulations.stripQuote(toString());
     }
-
-    public String quote(String s) {
-        if (vc == null) {
-            VerdictLogger.error(this, "null VerdictContext");
+    
+    public static String quote(VerdictContext vc, String s) {
+    	if (vc == null) {
+            VerdictLogger.error("null VerdictContext");
             return String.format("`%s`", s);
         } else {
             String q = vc.getDbms().getQuoteString();
             return String.format("%s%s%s", q, s, q);
         }
+    }
+
+    public String quote(String s) {
+    	return Expr.quote(vc, s);
         
     }
 

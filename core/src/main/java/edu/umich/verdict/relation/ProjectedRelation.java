@@ -38,13 +38,13 @@ public class ProjectedRelation extends ExactRelation {
 			Pair<List<Expr>, ExactRelation> groupbyAndPreceding = allPrecedingGroupbys(r.source);
 			List<Expr> groupby = groupbyAndPreceding.getLeft();
 			for (Expr e : groupby) {
-				selectElems.add(new SelectElem(e));
+				selectElems.add(new SelectElem(vc, e));
 			}
 		}
 		
 		// aggregate expressions
 		for (Expr e : r.getAggList()) {
-			selectElems.add(new SelectElem(e));		// automatically aliased
+			selectElems.add(new SelectElem(vc, e));		// automatically aliased
 		}
 		ProjectedRelation rel = new ProjectedRelation(vc, r, selectElems);
 		return rel;

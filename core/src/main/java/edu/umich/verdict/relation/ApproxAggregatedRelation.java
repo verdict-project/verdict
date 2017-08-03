@@ -72,11 +72,11 @@ public class ApproxAggregatedRelation extends ApproxRelation {
         if (source instanceof ApproxGroupedRelation) {
             List<Expr> groupby = ((ApproxGroupedRelation) source).getGroupby();
             for (Expr group : groupby) {
-                elems.add(new SelectElem(group));
+                elems.add(new SelectElem(vc, group));
             }
         }
         for (Expr agg : aggs) {
-            elems.add(new SelectElem(agg));
+            elems.add(new SelectElem(vc, agg));
         }
         ApproxRelation a = new ApproxProjectedRelation(vc, this, elems);
         ExactRelation r = a.rewriteWithSubsampledErrorBounds();

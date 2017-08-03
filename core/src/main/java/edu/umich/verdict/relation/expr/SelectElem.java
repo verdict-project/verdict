@@ -12,9 +12,12 @@ public class SelectElem {
     private Expr expr;
 
     private Optional<String> alias;
+    
+    private VerdictContext vc;
 
-    public SelectElem(Expr expr, String alias) {
+    public SelectElem(VerdictContext vc, Expr expr, String alias) {
         this.expr = expr;
+        this.vc = vc;
         if (alias == null) {
             if (expr.isagg()) {
                 this.alias = Optional.of(genColumnAlias());		// aggregate expressions must be aliased.
@@ -26,8 +29,8 @@ public class SelectElem {
         }
     }
 
-    public SelectElem(Expr expr) {
-        this(expr, null);
+    public SelectElem(VerdictContext vc, Expr expr) {
+        this(vc, expr, null);
     }
 
     public static SelectElem from(VerdictContext vc, String elem) {
@@ -41,9 +44,9 @@ public class SelectElem {
             public SelectElem visitSelect_list_elem(VerdictSQLParser.Select_list_elemContext ctx) {
                 SelectElem elem = null;
                 if (ctx.getText().equals("*")) {
-                    elem = new SelectElem(new StarExpr());
+                    elem = new SelectElem(vc, new StarExpr());
                 } else {
-                    elem = new SelectElem(Expr.from(vc, ctx.expression()));
+                    elem = new SelectElem(vc, Expr.from(vc, ctx.expression()));
                 }
 
                 if (ctx.column_alias() != null) {
@@ -91,7 +94,7 @@ public class SelectElem {
     @Override
     public String toString() {
         if (alias.isPresent()) {
-            return String.format("%s AS %s", expr.toString(), expr.quote(alias.get()));
+            return String.format("%s AS %s", expr.toString(), Expr.quote(vc, alias.get()));
         } else {
             return expr.toString();
         }
