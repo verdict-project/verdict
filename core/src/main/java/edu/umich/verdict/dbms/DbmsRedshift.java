@@ -23,7 +23,7 @@ public class DbmsRedshift extends DbmsJDBC {
 	
 	@Override
 	public String getQuoteString() {
-		return "";
+		return "\"";
 	}
 	
 	@Override
