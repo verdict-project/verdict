@@ -23,6 +23,10 @@ public abstract class Expr {
         }
         this.vc = vc;
     }
+    
+    public VerdictContext getVerdictContext() {
+        return vc;
+    }
 
     private static Expr from(String expr) {
         return from(VerdictContext.dummyContext(), expr);

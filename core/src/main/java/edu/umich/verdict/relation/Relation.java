@@ -30,6 +30,7 @@ import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.relation.expr.ExprModifier;
 import edu.umich.verdict.relation.expr.FuncExpr;
+import edu.umich.verdict.relation.expr.OrderByExpr;
 import edu.umich.verdict.relation.expr.SelectElem;
 import edu.umich.verdict.relation.expr.SubqueryExpr;
 import edu.umich.verdict.util.ResultSetConversion;
@@ -308,6 +309,8 @@ class TableNameReplacerInExpr extends ExprModifier {
             return replaceFuncExpr((FuncExpr) expr);
         } else if (expr instanceof SubqueryExpr) {
             return replaceSubqueryExpr((SubqueryExpr) expr);
+        } else if (expr instanceof OrderByExpr) {
+            return replaceOrderByExpr((OrderByExpr) expr);
         } else {
             return expr;
         }
@@ -352,6 +355,11 @@ class TableNameReplacerInExpr extends ExprModifier {
     protected Expr replaceFuncExpr(FuncExpr expr) {
         FuncExpr e = (FuncExpr) expr;
         return new FuncExpr(e.getFuncName(), visit(e.getUnaryExpr()));
+    }
+    
+    protected Expr replaceOrderByExpr(OrderByExpr expr) {
+        Expr e = expr.getExpression();
+        return new OrderByExpr(expr.getVerdictContext(), visit(e), expr.getDirection().orNull());
     }
 };
 

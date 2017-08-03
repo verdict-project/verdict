@@ -484,16 +484,24 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
     public RelationGen(VerdictContext vc) {
         this.vc = vc;
     }
+    
+    // we remember what base tables have been joined (or appeared). this information is used for
+    // replacing original table names with aliases in join conditions.
+    private Map<TableUniqueName, String> baseTables = new HashMap<TableUniqueName, String>();
 
     @Override
     public ExactRelation visitSelect_statement(VerdictSQLParser.Select_statementContext ctx) {
         ExactRelation r = visit(ctx.query_expression());
+        
+        // table name replacer with aliases
+        TableNameReplacerInExpr tabNameReplacer = new TableNameReplacerInExpr(vc, baseTables);
 
         if (ctx.order_by_clause() != null) {
             List<OrderByExpr> orderby = new ArrayList<OrderByExpr>();
             for (Order_by_expressionContext o : ctx.order_by_clause().order_by_expression()) {
-                orderby.add(new OrderByExpr(vc, Expr.from(vc, o.expression()),
-                        (o.DESC() != null)? "DESC" : "ASC"));
+                OrderByExpr expr = new OrderByExpr(vc, Expr.from(vc, o.expression()),
+                                                   (o.DESC() != null)? "DESC" : "ASC");
+                orderby.add((OrderByExpr) tabNameReplacer.visit(expr));
             }
             r = new OrderedRelation(vc, r, orderby);
         }
@@ -520,10 +528,6 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
         // in the where clause.
         ExactRelation r = null;
         List<String> joinedTableName = new ArrayList<String>();
-        
-        // we remember what base tables have been joined (or appeared). this information is used for
-        // replacing original table names with aliases in join conditions.
-        Map<TableUniqueName, String> baseTables = new HashMap<TableUniqueName, String>();
 
         for (Table_sourceContext s : ctx.table_source()) {
             TableSourceExtractor e = new TableSourceExtractor();
@@ -582,13 +586,22 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
         List<SelectElem> nonaggs = elems.getLeft();
         List<SelectElem> aggs = elems.getMiddle();
         List<SelectElem> bothInOrder = elems.getRight();
+        
+        // table name replacer with aliases
+        TableNameReplacerInExpr tabNameReplacer = new TableNameReplacerInExpr(vc, baseTables);
+        
+        // replace all base tables with their aliases
+        nonaggs = replaceTableNamesWithAliasesIn(nonaggs, tabNameReplacer);
+        aggs = replaceTableNamesWithAliasesIn(aggs, tabNameReplacer);
+        bothInOrder = replaceTableNamesWithAliasesIn(bothInOrder, tabNameReplacer);
 
         // obtains groupby expressions
         // groupby may include an aliased select elem. In that case, we use the original select elem expr.
+        // if the groupby expression includes base table names, we should replace them with their aliases.
         if (ctx.GROUP() != null) {
             List<Expr> groupby = new ArrayList<Expr>();
             for (Group_by_itemContext g : ctx.group_by_item()) {
-                Expr gexpr = Expr.from(vc, g.expression());
+                Expr gexpr = tabNameReplacer.visit(Expr.from(vc, g.expression()));
                 boolean aliasFound = false;
 
                 // search in alises
@@ -639,6 +652,15 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
         }
 
         return r;
+    }
+    
+    private List<SelectElem> replaceTableNamesWithAliasesIn(List<SelectElem> elems, TableNameReplacerInExpr tabNameReplacer) {
+        List<SelectElem> substituted = new ArrayList<SelectElem>();
+        for (SelectElem elem : elems) {
+            Expr replaced = tabNameReplacer.visit(elem.getExpr());
+            substituted.add(new SelectElem(elem.getVerdictContext(), replaced, elem.getAlias()));
+        }
+        return substituted;
     }
 
     // Returs a triple of

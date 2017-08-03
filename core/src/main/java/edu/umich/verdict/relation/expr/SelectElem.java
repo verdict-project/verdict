@@ -14,6 +14,10 @@ public class SelectElem {
     private Optional<String> alias;
     
     private VerdictContext vc;
+    
+    public VerdictContext getVerdictContext() {
+        return vc;
+    }
 
     public SelectElem(VerdictContext vc, Expr expr, String alias) {
         this.expr = expr;
