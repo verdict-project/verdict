@@ -202,10 +202,10 @@ public class AggregatedRelation extends ExactRelation {
             List<Expr> groupby = ((ApproxGroupedRelation) firstSource).getGroupby();
             List<SelectElem> newElems = new ArrayList<SelectElem>();
             for (Expr g : groupby) {
-                newElems.add(new SelectElem(g.withTableSubstituted(individuals.get(0).getAlias())));
+                newElems.add(new SelectElem(vc, g.withTableSubstituted(individuals.get(0).getAlias())));
             }
             for (Expr elem : aggs) {
-                newElems.add(new SelectElem(ConstantExpr.from(vc, elem), Relation.genColumnAlias()));
+                newElems.add(new SelectElem(vc, ConstantExpr.from(vc, elem), Relation.genColumnAlias()));
             }
             r = new ApproxProjectedRelation(vc, r, newElems);
         }

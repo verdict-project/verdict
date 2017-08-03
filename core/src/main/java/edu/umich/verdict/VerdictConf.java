@@ -27,20 +27,26 @@ public class VerdictConf {
     private final String DEFAULT_CONFIG_FILE = "verdict_default.properties";
     
     private final String USER_CONFIG_FILE = "verdict.properties";
-
+    
     public VerdictConf() {
-        setDefaults();
-        setUserConfig();
-        VerdictLogger.info("Verdict's log level set to: " + get("loglevel"));
+    	this(true);
+    }
+
+    public VerdictConf(boolean resetProperties) {
+    	if (resetProperties) { 
+    		setDefaults();
+    		setUserConfig();
+    	}
+//        VerdictLogger.info("Verdict's log level set to: " + get("loglevel"));
     }
 
     public VerdictConf(String propertyFileName) {
-        this();
+        this(true);
         updateFromPropertyFile(propertyFileName);
     }
 
     public VerdictConf(Properties properties) {
-        this();
+        this(true);
         setProperties(properties);
     }
 

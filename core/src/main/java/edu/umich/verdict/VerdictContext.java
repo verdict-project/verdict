@@ -105,7 +105,7 @@ public abstract class VerdictContext {
 	public static VerdictContext dummyContext() {
 	    if (dummyContext != null) return dummyContext;
 	    
-		VerdictConf conf = new VerdictConf();
+		VerdictConf conf = new VerdictConf(false);
 		conf.setDbms("dummy");
 		try {
 			dummyContext = VerdictJDBCContext.from(conf);

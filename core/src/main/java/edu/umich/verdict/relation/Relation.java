@@ -410,7 +410,7 @@ class PrettyPrintVisitor extends VerdictSQLBaseVisitor<String> {
             //			}
             Expr expr = Expr.from(vc, ctx.expression());
             String alias = (ctx.column_alias() == null)? null : ctx.column_alias().getText();
-            return (new SelectElem(expr, alias)).toString();
+            return (new SelectElem(vc, expr, alias)).toString();
         }
     }
 
