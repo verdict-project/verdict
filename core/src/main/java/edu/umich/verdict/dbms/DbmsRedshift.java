@@ -10,6 +10,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
 
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.datatypes.SampleParam;
@@ -20,13 +21,14 @@ import edu.umich.verdict.util.VerdictLogger;
 public class DbmsRedshift extends DbmsJDBC {
 
 	public DbmsRedshift(VerdictContext vc, String dbName, String host, String port, String schema, String user,
-			String password, String jdbcClassName) throws VerdictException {
+			String password, String jdbcClassName) throws VerdictException {		
 		super(vc, dbName, host, port, schema, user, password, jdbcClassName);
+		currentSchema = Optional.of("public");
 	}
 	
 	@Override
 	public String getQuoteString() {
-		return "\\'";
+		return "";
 	}
 	
 	@Override
@@ -45,35 +47,14 @@ public class DbmsRedshift extends DbmsJDBC {
 		return expr;
 	}
 	
-//	@Override
-//    protected String randomNumberExpression(SampleParam param) {
-//        Map<String, String> col2types = vc.getMeta().getColumn2Types(param.originalTable);
-//        Set<String> hashCols = new HashSet<String>();
-//        int precision = 3;
-//        int modValue = (int) Math.pow(10, precision);
-//
-//        for (Map.Entry<String, String> col2type : col2types.entrySet()) {
-//            String col = col2type.getKey();
-//            String type = col2type.getValue();
-//            if (type.toLowerCase().contains("char") || type.toLowerCase().contains("str")) {
-//                hashCols.add(String.format("fnv_hash((case when %s is null then cast(unix_timestamp() as string) else %s end))", col, col));
-//            } else if (type.toLowerCase().contains("time")) {
-//                hashCols.add(String.format("fnv_hash((case when %s is null then current_timestamp() else %s end))", col, col));
-//            } else {
-//                hashCols.add(String.format("fnv_hash((case when %s is null then unix_timestamp() else %s end))", col, col));
-//            }
-//        }
-//        String expr = "abs(fnv_hash("
-//                + Joiner.on(" + ").join(hashCols) 
-//                + String.format(" + unix_timestamp())) %% %d / %d", modValue, modValue);
-//        return expr;
-//    }
 
 	@Override
 	protected String randomPartitionColumn() {
 		int pcount = partitionCount();
 		return String.format("mod(cast(round(RANDOM()*%d) as integer), %d) AS %s", pcount, pcount, partitionColumnName());
 	}
+	
+	
 	
 	@Override
 	String composeUrl(String dbms, String host, String port, String schema, String user, String password) throws VerdictException {
