@@ -290,7 +290,7 @@ public abstract class Dbms {
 
         String sql = String.format("create table %s as %s", temp, sampled.toSql());
         VerdictLogger.debug(this, "The query used for creating a temporary table without sampling probabilities:");
-        VerdictLogger.debugPretty(this, Relation.prettyfySql(sql), "  ");
+        VerdictLogger.debugPretty(this, Relation.prettyfySql(vc, sql), "  ");
         executeUpdate(sql);
         return temp;
     }
@@ -304,7 +304,7 @@ public abstract class Dbms {
                 .select("*, " + String.format("%d / %d as %s", sample_size, total_size, samplingProbCol));
         String sql = String.format("create table %s as %s", param.sampleTableName(), withRand.toSql());
         VerdictLogger.debug(this, "The query used for creating a temporary table without sampling probabilities:");
-        VerdictLogger.debugPretty(this, Relation.prettyfySql(sql), "  ");
+        VerdictLogger.debugPretty(this, Relation.prettyfySql(vc, sql), "  ");
         executeUpdate(sql);
     }
 
@@ -331,7 +331,7 @@ public abstract class Dbms {
                 .agg("count(*) AS __group_size");
         String sql = String.format("create table %s as %s", groupSizeTemp, groupSize.toSql());
         VerdictLogger.debug(this, "The query used for the group-size temp table: ");
-        VerdictLogger.debugPretty(this, Relation.prettyfySql(sql), "  ");
+        VerdictLogger.debugPretty(this, Relation.prettyfySql(vc, sql), "  ");
         executeUpdate(sql);
         return groupSizeTemp;
     }
@@ -364,16 +364,16 @@ public abstract class Dbms {
             }
 
             if (isString) {
-                Expr left = Expr.from(String.format("case when s.%s is null then '%s' else s.%s end", col, NULL_STRING, col));
-                Expr right = Expr.from(String.format("case when t.%s is null then '%s' else t.%s end", col, NULL_STRING, col));
+                Expr left = Expr.from(vc, String.format("case when s.%s is null then '%s' else s.%s end", col, NULL_STRING, col));
+                Expr right = Expr.from(vc, String.format("case when t.%s is null then '%s' else t.%s end", col, NULL_STRING, col));
                 joinExprs.add(Pair.of(left, right));
             } else if (isTimeStamp) {
-                Expr left = Expr.from(String.format("case when s.%s is null then '%s' else s.%s end", col, NULL_TIMESTAMP, col));
-                Expr right = Expr.from(String.format("case when t.%s is null then '%s' else t.%s end", col, NULL_TIMESTAMP, col));
+                Expr left = Expr.from(vc, String.format("case when s.%s is null then '%s' else s.%s end", col, NULL_TIMESTAMP, col));
+                Expr right = Expr.from(vc, String.format("case when t.%s is null then '%s' else t.%s end", col, NULL_TIMESTAMP, col));
                 joinExprs.add(Pair.of(left, right));
             } else {
-                Expr left = Expr.from(String.format("case when s.%s is null then %d else s.%s end", col, NULL_LONG, col));
-                Expr right = Expr.from(String.format("case when t.%s is null then %d else t.%s end", col, NULL_LONG, col));
+                Expr left = Expr.from(vc, String.format("case when s.%s is null then %d else s.%s end", col, NULL_LONG, col));
+                Expr right = Expr.from(vc, String.format("case when t.%s is null then %d else t.%s end", col, NULL_LONG, col));
                 joinExprs.add(Pair.of(left, right));
             }
         }
@@ -400,7 +400,7 @@ public abstract class Dbms {
                 .select(Joiner.on(", ").join(selectElems) + ", __group_size");
         String sql1 = String.format("create table %s as %s", sampledNoRand, sampled.toSql());
         VerdictLogger.debug(this, "The query used for creating a stratified sample without sampling probabilities.");
-        VerdictLogger.debugPretty(this, Relation.prettyfySql(sql1), "  ");
+        VerdictLogger.debugPretty(this, Relation.prettyfySql(vc, sql1), "  ");
         executeUpdate(sql1);
 
         // attach sampling probabilities and random partition number
@@ -414,7 +414,7 @@ public abstract class Dbms {
                         + ", " + randomPartitionColumn());
         String sql2 = String.format("create table %s as %s", param.sampleTableName(), withRand.toSql());
         VerdictLogger.debug(this, "The query used for creating a stratified sample with sampling probabilities.");
-        VerdictLogger.debugPretty(this, Relation.prettyfySql(sql2), "  ");
+        VerdictLogger.debugPretty(this, Relation.prettyfySql(vc, sql2), "  ");
         executeUpdate(sql2);
 
         dropTable(sampledNoRand);
@@ -437,7 +437,7 @@ public abstract class Dbms {
                         String.format(" < %.2f", param.samplingRatio * 1000000));
         String sql = String.format("create table %s AS %s", temp, sampled.toSql());
         VerdictLogger.debug(this, "The query used for creating a universe sample without sampling probability:");
-        VerdictLogger.debugPretty(this, Relation.prettyfySql(sql), "  ");
+        VerdictLogger.debugPretty(this, Relation.prettyfySql(vc, sql), "  ");
         executeUpdate(sql);
         return temp;
     }
@@ -453,7 +453,7 @@ public abstract class Dbms {
                         randomPartitionColumn());
         String sql = String.format("create table %s AS %s", param.sampleTableName(), withProb.toSql());
         VerdictLogger.debug(this, "The query used for creating a universe sample with sampling probability:");
-        VerdictLogger.debugPretty(this, Relation.prettyfySql(sql), "  ");
+        VerdictLogger.debugPretty(this, Relation.prettyfySql(vc, sql), "  ");
         executeUpdate(sql);
     }
 
@@ -578,7 +578,6 @@ public abstract class Dbms {
 
     public abstract void close() throws VerdictException;
 
-    @Deprecated
     public String getQuoteString() {
         return "`";
     }

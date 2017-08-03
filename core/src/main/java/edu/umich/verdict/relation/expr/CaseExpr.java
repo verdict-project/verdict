@@ -3,6 +3,7 @@ package edu.umich.verdict.relation.expr;
 import java.util.ArrayList;
 import java.util.List;
 
+import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.parser.VerdictSQLParser;
 import edu.umich.verdict.parser.VerdictSQLParser.Case_exprContext;
 import edu.umich.verdict.parser.VerdictSQLParser.ExpressionContext;
@@ -22,7 +23,8 @@ public class CaseExpr extends Expr {
 	
 	private List<Expr> expressions;
 	
-	public CaseExpr(List<Cond> conditions, List<Expr> expressions) {
+	public CaseExpr(VerdictContext vc, List<Cond> conditions, List<Expr> expressions) {
+	    super(vc);
 		if (conditions.size() != expressions.size() && conditions.size() +1 != expressions.size()) {
 			VerdictLogger.warn(this,
 					String.format("Incorrect number of conditions (%d) for the number of expressions (%d) in a case expression.",
@@ -41,21 +43,21 @@ public class CaseExpr extends Expr {
 		return expressions;
 	}
 	
-	public static CaseExpr from(String expr) {
+	public static CaseExpr from(VerdictContext vc, String expr) {
 		VerdictSQLParser p = StringManipulations.parserOf(expr);
-		return from(p.case_expr());
+		return from(vc, p.case_expr());
 	}
 	
-	public static CaseExpr from(Case_exprContext ctx) {
+	public static CaseExpr from(VerdictContext vc, Case_exprContext ctx) {
 		List<Cond> conds = new ArrayList<Cond>();
 		for (Search_conditionContext c : ctx.search_condition()) {
-			conds.add(Cond.from(c));
+			conds.add(Cond.from(vc, c));
 		}
 		List<Expr> exprs = new ArrayList<Expr>();
 		for (ExpressionContext e : ctx.expression()) {
-			exprs.add(Expr.from(e));
+			exprs.add(Expr.from(vc, e));
 		}
-		return new CaseExpr(conds, exprs);
+		return new CaseExpr(vc, conds, exprs);
 	}
 	
 	@Override
@@ -89,7 +91,7 @@ public class CaseExpr extends Expr {
 			newExprs.add(e.withTableSubstituted(newTab));
 		}
 		
-		return new CaseExpr(newConds, newExprs);
+		return new CaseExpr(vc, newConds, newExprs);
 	}
 	
 	@Override

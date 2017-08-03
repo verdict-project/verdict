@@ -107,7 +107,7 @@ public class JoinedRelation extends ExactRelation {
 	}
 	
 	private ColNameExpr attachTableNameIfEmpty(Expr colName, String tableName) {
-		ColNameExpr c = ColNameExpr.from(colName.toString());
+		ColNameExpr c = ColNameExpr.from(vc, colName.toString());
 		if (c.getTab() == null) {
 			c.setTab(tableName);
 		}

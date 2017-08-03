@@ -1,9 +1,9 @@
 package edu.umich.verdict.query;
 
 import edu.umich.verdict.VerdictContext;
+import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.parser.VerdictSQLBaseVisitor;
 import edu.umich.verdict.parser.VerdictSQLParser;
-import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.util.StringManipulations;
 import edu.umich.verdict.util.VerdictLogger;
 

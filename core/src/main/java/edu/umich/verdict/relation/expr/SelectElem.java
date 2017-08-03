@@ -2,6 +2,7 @@ package edu.umich.verdict.relation.expr;
 
 import com.google.common.base.Optional;
 
+import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.parser.VerdictSQLBaseVisitor;
 import edu.umich.verdict.parser.VerdictSQLParser;
 import edu.umich.verdict.util.StringManipulations;
@@ -29,12 +30,12 @@ public class SelectElem {
         this(expr, null);
     }
 
-    public static SelectElem from(String elem) {
+    public static SelectElem from(VerdictContext vc, String elem) {
         VerdictSQLParser p = StringManipulations.parserOf(elem);
-        return from(p.select_list_elem());
+        return from(vc, p.select_list_elem());
     }
 
-    public static SelectElem from(VerdictSQLParser.Select_list_elemContext ctx) {
+    public static SelectElem from(final VerdictContext vc, VerdictSQLParser.Select_list_elemContext ctx) {
         VerdictSQLBaseVisitor<SelectElem> v = new VerdictSQLBaseVisitor<SelectElem>() {
             @Override
             public SelectElem visitSelect_list_elem(VerdictSQLParser.Select_list_elemContext ctx) {
@@ -42,7 +43,7 @@ public class SelectElem {
                 if (ctx.getText().equals("*")) {
                     elem = new SelectElem(new StarExpr());
                 } else {
-                    elem = new SelectElem(Expr.from(ctx.expression()));
+                    elem = new SelectElem(Expr.from(vc, ctx.expression()));
                 }
 
                 if (ctx.column_alias() != null) {
@@ -90,7 +91,7 @@ public class SelectElem {
     @Override
     public String toString() {
         if (alias.isPresent()) {
-            return String.format("%s AS %s", expr.toString(), Expr.quote(alias.get()));
+            return String.format("%s AS %s", expr.toString(), expr.quote(alias.get()));
         } else {
             return expr.toString();
         }

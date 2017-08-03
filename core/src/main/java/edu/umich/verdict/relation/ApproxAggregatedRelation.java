@@ -142,19 +142,19 @@ public class ApproxAggregatedRelation extends ApproxRelation {
     protected List<Expr> samplingProbabilityExprsFor(FuncExpr f) {
         if (f.getFuncName().equals(FuncExpr.FuncName.COUNT_DISTINCT)) {
             if (sampleType().equals("universe")) {
-                return Arrays.<Expr>asList(ConstantExpr.from(samplingProbability()));
+                return Arrays.<Expr>asList(ConstantExpr.from(vc, samplingProbability()));
             } else if (sampleType().equals("stratified")) {
                 return Arrays.<Expr>asList();
             } else if (sampleType().equals("nosample")) {
                 return Arrays.<Expr>asList();
             } else {
                 VerdictLogger.warn(this, String.format("%s sample should not be used for count-distinct.", sampleType()));
-                return Arrays.<Expr>asList(ConstantExpr.from(1.0));
+                return Arrays.<Expr>asList(ConstantExpr.from(vc, 1.0));
             }
         } else {	// SUM, COUNT, AVG
             if (!sampleType().equals("nosample")) {
                 String samplingProbCol = samplingProbabilityColumnName();
-                return Arrays.<Expr>asList(new ColNameExpr(samplingProbCol, alias));
+                return Arrays.<Expr>asList(new ColNameExpr(vc, samplingProbCol, alias));
             } else {
                 return Arrays.<Expr>asList();
             }
@@ -173,7 +173,7 @@ public class ApproxAggregatedRelation extends ApproxRelation {
         //			groupbyExpr.add((Expr) c);
         //		}
 
-        ExprModifier v = new ExprModifier() {
+        ExprModifier v = new ExprModifier(vc) {
             public Expr call(Expr expr) {
                 if (expr instanceof FuncExpr) {
                     // Take two different approaches:
@@ -203,7 +203,7 @@ public class ApproxAggregatedRelation extends ApproxRelation {
                         //							
                         //						}
 
-                        est = BinaryOpExpr.from(est, scale, "*");
+                        est = BinaryOpExpr.from(vc, est, scale, "*");
                         if (source.sampleType().equals("universe")) {
                             est = scaleWithPartitionSize(est, groupby, partitionCol, forErrorEst);
                         }
@@ -212,16 +212,16 @@ public class ApproxAggregatedRelation extends ApproxRelation {
                     }
                     else if (f.getFuncName().equals(FuncExpr.FuncName.SUM)) {
                         Expr est = scaleForSampling(samplingProbExprs);
-                        est = FuncExpr.sum(BinaryOpExpr.from(s.getUnaryExpr(), est, "*"));
+                        est = FuncExpr.sum(BinaryOpExpr.from(vc, s.getUnaryExpr(), est, "*"));
                         est = scaleWithPartitionSize(est, groupby, partitionCol, forErrorEst);
                         return est;
                     }
                     else if (f.getFuncName().equals(FuncExpr.FuncName.AVG)) {
                         Expr scale = scaleForSampling(samplingProbExprs);
-                        Expr sumEst = FuncExpr.sum(BinaryOpExpr.from(s.getUnaryExpr(), scale, "*"));
+                        Expr sumEst = FuncExpr.sum(BinaryOpExpr.from(vc, s.getUnaryExpr(), scale, "*"));
                         // this count-est filters out the null expressions.
                         Expr countEst = countNotNull(s.getUnaryExpr(), scale);
-                        return BinaryOpExpr.from(sumEst, countEst, "/");
+                        return BinaryOpExpr.from(vc, sumEst, countEst, "/");
                     }
                     else {		// expected not to be visited
                         return s;
@@ -236,9 +236,9 @@ public class ApproxAggregatedRelation extends ApproxRelation {
     }
 
     private Expr scaleForSampling(List<Expr> samplingProbCols) {
-        Expr scale = ConstantExpr.from(1.0);
+        Expr scale = ConstantExpr.from(vc, 1.0);
         for (Expr c : samplingProbCols) {
-            scale = BinaryOpExpr.from(scale, c, "/");
+            scale = BinaryOpExpr.from(vc, scale, c, "/");
         }
         return scale;
     }
@@ -252,16 +252,16 @@ public class ApproxAggregatedRelation extends ApproxRelation {
             if (expr.isCountDistinct()) {
                 // scale by the partition count. the ratio between average partition size and the sum of them should be
                 // almost same as the inverse of the partition count.
-                scaled = BinaryOpExpr.from(expr, new FuncExpr(FuncExpr.FuncName.AVG, FuncExpr.count(), new OverClause(groupby)), "/");
-                scaled = BinaryOpExpr.from(scaled, new FuncExpr(FuncExpr.FuncName.SUM, FuncExpr.count(), new OverClause(groupby)), "*");	
+                scaled = BinaryOpExpr.from(vc, expr, new FuncExpr(FuncExpr.FuncName.AVG, FuncExpr.count(), new OverClause(groupby)), "/");
+                scaled = BinaryOpExpr.from(vc, scaled, new FuncExpr(FuncExpr.FuncName.SUM, FuncExpr.count(), new OverClause(groupby)), "*");	
             } else {
-                scaled = BinaryOpExpr.from(expr, FuncExpr.count(), "/");
-                scaled = BinaryOpExpr.from(scaled, new FuncExpr(FuncExpr.FuncName.SUM, FuncExpr.count(), new OverClause(groupby)), "*");
+                scaled = BinaryOpExpr.from(vc, expr, FuncExpr.count(), "/");
+                scaled = BinaryOpExpr.from(vc, scaled, new FuncExpr(FuncExpr.FuncName.SUM, FuncExpr.count(), new OverClause(groupby)), "*");
             }
         } else {
             // for error estimations, we do not exactly scale with the partition size ratios.
-            scaled = BinaryOpExpr.from(expr, new FuncExpr(FuncExpr.FuncName.AVG, FuncExpr.count(), new OverClause(groupby)), "/");
-            scaled = BinaryOpExpr.from(scaled, new FuncExpr(FuncExpr.FuncName.SUM, FuncExpr.count(), new OverClause(groupby)), "*");
+            scaled = BinaryOpExpr.from(vc, expr, new FuncExpr(FuncExpr.FuncName.AVG, FuncExpr.count(), new OverClause(groupby)), "/");
+            scaled = BinaryOpExpr.from(vc, scaled, new FuncExpr(FuncExpr.FuncName.SUM, FuncExpr.count(), new OverClause(groupby)), "*");
         }
 
         return scaled;
@@ -270,7 +270,7 @@ public class ApproxAggregatedRelation extends ApproxRelation {
     private Expr transformForSingleFunction(Expr f) {
         final Map<TableUniqueName, String> sub = source.tableSubstitution();
 
-        ExprModifier v = new ExprModifier() {
+        ExprModifier v = new ExprModifier(vc) {
             public Expr call(Expr expr) {
                 if (expr instanceof FuncExpr) {
                     // Take two different approaches:
@@ -292,24 +292,24 @@ public class ApproxAggregatedRelation extends ApproxRelation {
                         Expr scale = scaleForSampling(samplingProbExprs);
                         if (dbname.equals("impala")) {
                             return FuncExpr.round(
-                                    BinaryOpExpr.from(new FuncExpr(
+                                    BinaryOpExpr.from(vc, new FuncExpr(
                                             FuncExpr.FuncName.IMPALA_APPROX_COUNT_DISTINCT, s.getUnaryExpr()),
                                             scale, "*"));
                         } else {
-                            return FuncExpr.round(BinaryOpExpr.from(s, scale, "*"));
+                            return FuncExpr.round(BinaryOpExpr.from(vc, s, scale, "*"));
                         }
                     }
                     else if (f.getFuncName().equals(FuncExpr.FuncName.SUM)) {
                         Expr scale = scaleForSampling(samplingProbExprs);
-                        Expr est = FuncExpr.sum(BinaryOpExpr.from(s.getUnaryExpr(), scale, "*"));
+                        Expr est = FuncExpr.sum(BinaryOpExpr.from(vc, s.getUnaryExpr(), scale, "*"));
                         return est;
                     }
                     else if (f.getFuncName().equals(FuncExpr.FuncName.AVG)) {
                         Expr scale = scaleForSampling(samplingProbExprs);
-                        Expr sumEst = FuncExpr.sum(BinaryOpExpr.from(s.getUnaryExpr(), scale, "*"));
+                        Expr sumEst = FuncExpr.sum(BinaryOpExpr.from(vc, s.getUnaryExpr(), scale, "*"));
                         // this count-est filters out the null expressions.
                         Expr countEst = countNotNull(s.getUnaryExpr(), scale);
-                        return BinaryOpExpr.from(sumEst, countEst, "/");
+                        return BinaryOpExpr.from(vc, sumEst, countEst, "/");
                     }
                     else {		// expected not to be visited
                         return s;
@@ -325,8 +325,8 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 
     private FuncExpr countNotNull(Expr nullcheck, Expr expr) {
         return FuncExpr.sum(
-                new CaseExpr(Arrays.<Cond>asList(new IsCond(nullcheck, new NullCond())),
-                        Arrays.<Expr>asList(ConstantExpr.from("0"), expr)));
+                new CaseExpr(vc, Arrays.<Cond>asList(new IsCond(nullcheck, new NullCond())),
+                        Arrays.<Expr>asList(ConstantExpr.from(vc, "0"), expr)));
     }
 
     @Override

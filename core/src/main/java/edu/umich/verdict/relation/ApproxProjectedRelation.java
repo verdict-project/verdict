@@ -92,7 +92,7 @@ public class ApproxProjectedRelation extends ApproxRelation {
                     Expr newExpr = elem.getExpr().withTableSubstituted(r.getAlias());
                     newElem = new SelectElem(newExpr, elem.getAlias());
                 } else {
-                    newElem = new SelectElem(new ColNameExpr(elem.getAlias(), r.getAlias()), elem.getAlias());
+                    newElem = new SelectElem(new ColNameExpr(vc, elem.getAlias(), r.getAlias()), elem.getAlias());
                 }
                 newElems.add(newElem);
             } else {
@@ -100,8 +100,8 @@ public class ApproxProjectedRelation extends ApproxRelation {
                     continue;
                 }
 
-                ColNameExpr est = new ColNameExpr(elem.getAlias(), r.getAlias());
-                ColNameExpr psize = new ColNameExpr(partitionSizeAlias, r.getAlias());
+                ColNameExpr est = new ColNameExpr(vc, elem.getAlias(), r.getAlias());
+                ColNameExpr psize = new ColNameExpr(vc, partitionSizeAlias, r.getAlias());
 
                 // average estimate
                 Expr averaged = null;
@@ -110,7 +110,7 @@ public class ApproxProjectedRelation extends ApproxRelation {
                     averaged = FuncExpr.round(FuncExpr.avg(est));
                 } else {
                     // weighted average
-                    averaged = BinaryOpExpr.from(FuncExpr.sum(BinaryOpExpr.from(est, psize, "*")),
+                    averaged = BinaryOpExpr.from(vc, FuncExpr.sum(BinaryOpExpr.from(vc, est, psize, "*")),
                             FuncExpr.sum(psize), "/");
                     if (originalElem.isPresent() && originalElem.get().getExpr().isCount()) {
                         averaged = FuncExpr.round(averaged);
@@ -121,11 +121,11 @@ public class ApproxProjectedRelation extends ApproxRelation {
 
                 // error estimation
                 // scale by sqrt(subsample size) / sqrt(sample size)
-                Expr error = BinaryOpExpr.from(
-                        BinaryOpExpr.from(FuncExpr.stddev(est), FuncExpr.sqrt(FuncExpr.avg(psize)), "*"),
+                Expr error = BinaryOpExpr.from(vc,
+                        BinaryOpExpr.from(vc, FuncExpr.stddev(est), FuncExpr.sqrt(FuncExpr.avg(psize)), "*"),
                         FuncExpr.sqrt(FuncExpr.sum(psize)),
                         "/");
-                error = BinaryOpExpr.from(error, ConstantExpr.from(confidenceIntervalMultiplier()), "*");
+                error = BinaryOpExpr.from(vc, error, ConstantExpr.from(vc, confidenceIntervalMultiplier()), "*");
                 newElems.add(new SelectElem(error, Relation.errorBoundColumn(elem.getAlias())));
                 newAggs.add(error);
             }
@@ -137,7 +137,7 @@ public class ApproxProjectedRelation extends ApproxRelation {
             if (!elem.isagg()) {
                 if (elem.aliasPresent()) {
                     if (!elem.getAlias().equals(partitionColumnName())) {
-                        newGroupby.add(new ColNameExpr(elem.getAlias(), r.getAlias()));
+                        newGroupby.add(new ColNameExpr(vc, elem.getAlias(), r.getAlias()));
                     }
                 } else {
                     if (!elem.getExpr().toString().equals(partitionColumnName())) {
@@ -237,22 +237,22 @@ public class ApproxProjectedRelation extends ApproxRelation {
         //  if the source is an aggregated relation, we should insert an appropriate value.
         String probCol = samplingProbabilityColumnName();
         if (!(source instanceof ApproxAggregatedRelation)) {
-            SelectElem probElem = new SelectElem(new ColNameExpr(probCol), probCol);
+            SelectElem probElem = new SelectElem(new ColNameExpr(vc, probCol), probCol);
             newElems.add(probElem);
         } else {
             ApproxRelation a = ((ApproxAggregatedRelation) source).getSource();
             if (!(a instanceof ApproxGroupedRelation)) {
-                SelectElem probElem = new SelectElem(new ConstantExpr(1.0), probCol);
+                SelectElem probElem = new SelectElem(new ConstantExpr(vc, 1.0), probCol);
                 newElems.add(probElem);
             } else {
                 if (source.sampleType().equals("universe")) {
-                    SelectElem probElem = new SelectElem(new ConstantExpr(source.samplingProbability()), probCol);
+                    SelectElem probElem = new SelectElem(new ConstantExpr(vc, source.samplingProbability()), probCol);
                     newElems.add(probElem);
                 } else if (source.sampleType().equals("stratified")) {
-                    SelectElem probElem = new SelectElem(new ConstantExpr(1.0), probCol);
+                    SelectElem probElem = new SelectElem(new ConstantExpr(vc, 1.0), probCol);
                     newElems.add(probElem);
                 } else {
-                    SelectElem probElem = new SelectElem(new ConstantExpr(1.0), probCol);
+                    SelectElem probElem = new SelectElem(new ConstantExpr(vc, 1.0), probCol);
                     newElems.add(probElem);
                 }
             }
@@ -269,7 +269,7 @@ public class ApproxProjectedRelation extends ApproxRelation {
         List<Expr> exprsWithNewAlias = new ArrayList<Expr>();
         for (Expr e : exprs) {
             if (e instanceof ColNameExpr) {
-                exprsWithNewAlias.add(new ColNameExpr(((ColNameExpr) e).getCol(), alias));
+                exprsWithNewAlias.add(new ColNameExpr(vc, ((ColNameExpr) e).getCol(), alias));
             } else {
                 exprsWithNewAlias.add(e);
             }

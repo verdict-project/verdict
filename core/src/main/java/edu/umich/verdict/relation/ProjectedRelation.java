@@ -187,7 +187,7 @@ public class ProjectedRelation extends ExactRelation {
 		for (SelectElem elem : elems) {
 			String alias = elem.getAlias();
 			if (alias != null && alias.equals(pcol)) {
-				col = new ColNameExpr(pcol, getAlias());
+				col = new ColNameExpr(vc, pcol, getAlias());
 			}
 		}
 		
@@ -203,7 +203,7 @@ public class ProjectedRelation extends ExactRelation {
 		List<ColNameExpr> exprs = source.accumulateSamplingProbColumns();
 		List<ColNameExpr> exprsInNewTable = new ArrayList<ColNameExpr>(); 
 		for (ColNameExpr c : exprs) {
-			exprsInNewTable.add(new ColNameExpr(c.getCol(), getAlias()));
+			exprsInNewTable.add(new ColNameExpr(vc, c.getCol(), getAlias()));
 		}
 		return exprsInNewTable;
 	}

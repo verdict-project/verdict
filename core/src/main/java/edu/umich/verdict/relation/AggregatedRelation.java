@@ -205,7 +205,7 @@ public class AggregatedRelation extends ExactRelation {
                 newElems.add(new SelectElem(g.withTableSubstituted(individuals.get(0).getAlias())));
             }
             for (Expr elem : aggs) {
-                newElems.add(new SelectElem(ConstantExpr.from(elem), Relation.genColumnAlias()));
+                newElems.add(new SelectElem(ConstantExpr.from(vc, elem), Relation.genColumnAlias()));
             }
             r = new ApproxProjectedRelation(vc, r, newElems);
         }
@@ -304,7 +304,7 @@ public class AggregatedRelation extends ExactRelation {
 
     @Override
     public List<ColNameExpr> accumulateSamplingProbColumns() {
-        ColNameExpr expr = new ColNameExpr(samplingProbabilityColumnName(), getAlias());
+        ColNameExpr expr = new ColNameExpr(vc, samplingProbabilityColumnName(), getAlias());
         return Arrays.asList(expr);
     }
 

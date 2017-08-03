@@ -171,19 +171,19 @@ public class ApproxSingleRelation extends ApproxRelation {
 	protected List<Expr> samplingProbabilityExprsFor(FuncExpr f) {
 		if (f.getFuncName().equals(FuncExpr.FuncName.COUNT_DISTINCT)) {
 			if (getSampleType().equals("universe")) {
-				return Arrays.<Expr>asList(ConstantExpr.from(getSamplingRatio()));
+				return Arrays.<Expr>asList(ConstantExpr.from(vc, getSamplingRatio()));
 			} else if (getSampleType().equals("stratified")) {
-				return Arrays.<Expr>asList(ConstantExpr.from(1.0));
+				return Arrays.<Expr>asList(ConstantExpr.from(vc, 1.0));
 			} else if (getSampleType().equals("nosample")) {
-				return Arrays.<Expr>asList(ConstantExpr.from(1.0));
+				return Arrays.<Expr>asList(ConstantExpr.from(vc, 1.0));
 			} else {
 				VerdictLogger.warn(this, String.format("%s sample should not be used for count-distinct.", getSampleType()));
-				return Arrays.<Expr>asList(ConstantExpr.from(1.0));
+				return Arrays.<Expr>asList(ConstantExpr.from(vc, 1.0));
 			}
 		} else {	// SUM, COUNT
 			if (!getSampleType().equals("nosample")) {
 				String samplingProbCol = samplingProbabilityColumnName();
-				return Arrays.<Expr>asList(new ColNameExpr(samplingProbCol, alias));
+				return Arrays.<Expr>asList(new ColNameExpr(vc, samplingProbCol, alias));
 			} else {
 				return Arrays.<Expr>asList();
 			}

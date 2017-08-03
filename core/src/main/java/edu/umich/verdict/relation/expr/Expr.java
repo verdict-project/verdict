@@ -7,18 +7,25 @@ import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.parser.VerdictSQLBaseVisitor;
 import edu.umich.verdict.parser.VerdictSQLParser;
 import edu.umich.verdict.util.StringManipulations;
+import edu.umich.verdict.util.VerdictLogger;
 
 public abstract class Expr {
-
-    private static VerdictContext dummyContext;
-
-    static {
-        //		dummyContext = VerdictContext.dummyContext();
-        dummyContext = null;
+    
+    protected VerdictContext vc;
+    
+    protected void setVerdictContext(VerdictContext vc) {
+        this.vc = vc;
+    }
+    
+    public Expr(VerdictContext vc) {
+        if (vc == null) {
+            VerdictLogger.error(this, "null VerdictContext is being set.");
+        }
+        this.vc = vc;
     }
 
-    public static Expr from(String expr) {
-        return from(dummyContext, expr);
+    private static Expr from(String expr) {
+        return from(VerdictContext.dummyContext(), expr);
     }
 
     public static Expr from(VerdictContext vc, String expr) {
@@ -26,12 +33,12 @@ public abstract class Expr {
         return from(vc, p.expression());
     }
 
-    public static Expr from(VerdictSQLParser.ExpressionContext ctx) {
-        return from(dummyContext, ctx);
+    private static Expr from(VerdictSQLParser.ExpressionContext ctx) {
+        return from(VerdictContext.dummyContext(), ctx);
     }
 
     public static Expr from(VerdictContext vc, VerdictSQLParser.ExpressionContext ctx) {
-        if (vc == null) vc = dummyContext;
+        if (vc == null) vc = VerdictContext.dummyContext();
         ExpressionGen g = new ExpressionGen(vc);
         return g.visit(ctx);
     }
@@ -48,8 +55,15 @@ public abstract class Expr {
         return StringManipulations.stripQuote(toString());
     }
 
-    public static String quote(String s) {
-        return String.format("`%s`", s);
+    public String quote(String s) {
+        if (vc == null) {
+            VerdictLogger.error(this, "null VerdictContext");
+            return String.format("`%s`", s);
+        } else {
+            String q = vc.getDbms().getQuoteString();
+            return String.format("%s%s%s", q, s, q);
+        }
+        
     }
 
     public String getText() {
@@ -106,27 +120,27 @@ class ExpressionGen extends VerdictSQLBaseVisitor<Expr> {
 
     @Override
     public Expr visitPrimitive_expression(VerdictSQLParser.Primitive_expressionContext ctx) {
-        return ConstantExpr.from(ctx.getText());
+        return ConstantExpr.from(vc, ctx.getText());
     }
 
     @Override
     public Expr visitColumn_ref_expression(VerdictSQLParser.Column_ref_expressionContext ctx) {
-        return ColNameExpr.from(ctx.getText());
+        return ColNameExpr.from(vc, ctx.getText());
     }
 
     @Override
     public Expr visitBinary_operator_expression(VerdictSQLParser.Binary_operator_expressionContext ctx) {
-        return new BinaryOpExpr(visit(ctx.expression(0)), visit(ctx.expression(1)), ctx.op.getText());  
+        return new BinaryOpExpr(vc, visit(ctx.expression(0)), visit(ctx.expression(1)), ctx.op.getText());  
     }
 
     @Override
     public Expr visitFunction_call_expression(VerdictSQLParser.Function_call_expressionContext ctx) {
-        return FuncExpr.from(ctx.function_call());
+        return FuncExpr.from(vc, ctx.function_call());
     }
 
     @Override
     public Expr visitCase_expr(VerdictSQLParser.Case_exprContext ctx) {
-        return CaseExpr.from(ctx);
+        return CaseExpr.from(vc, ctx);
     }
 
     @Override

@@ -322,7 +322,7 @@ public class SingleRelation extends ExactRelation {
         Set<String> columns = vc.getMeta().getColumns(getTableName());
         String partitionCol = vc.getConf().subsamplingPartitionColumn();
         if (columns.contains(partitionCol)) {
-            return new ColNameExpr(partitionCol, getAlias());
+            return new ColNameExpr(vc, partitionCol, getAlias());
         } else {
             VerdictLogger.error(this, "partition column does not exists in the table: " + getTableName());
             return null;
@@ -336,7 +336,7 @@ public class SingleRelation extends ExactRelation {
         String samplingProbColName = samplingProbabilityColumnName();
         for (String c : cols) {
             if (c.equals(samplingProbColName)) {
-                samplingProbCols.add(new ColNameExpr(samplingProbColName, tableName.getTableName()));
+                samplingProbCols.add(new ColNameExpr(vc, samplingProbColName, tableName.getTableName()));
             }
         }
         return samplingProbCols;

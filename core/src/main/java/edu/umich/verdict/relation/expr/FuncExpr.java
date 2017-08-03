@@ -94,12 +94,14 @@ public class FuncExpr extends Expr {
             .build();
 
     public FuncExpr(FuncName fname, List<Expr> exprs, OverClause overClause) {
+        super(VerdictContext.dummyContext());
         this.expressions = exprs;
         this.funcname = fname;
         this.overClause = overClause;
     }
 
     public FuncExpr(FuncName fname, Expr expr1, Expr expr2, Expr expr3, OverClause overClause) {
+        super(VerdictContext.dummyContext());
         this.expressions = new ArrayList<Expr>();
         if (expr1 != null) {
             this.expressions.add(expr1);
@@ -146,19 +148,19 @@ public class FuncExpr extends Expr {
         return overClause;
     }
 
-    public static FuncExpr from(String expr) {
+    public static FuncExpr from(VerdictContext vc, String expr) {
         VerdictSQLParser p = StringManipulations.parserOf(expr);
-        return from(p.function_call());
+        return from(vc, p.function_call());
     }
 
-    public static FuncExpr from(VerdictSQLParser.Function_callContext ctx) {
+    public static FuncExpr from(final VerdictContext vc, VerdictSQLParser.Function_callContext ctx) {
         VerdictSQLBaseVisitor<FuncExpr> v = new VerdictSQLBaseVisitor<FuncExpr>() {
             @Override
             public FuncExpr visitAggregate_windowed_function(VerdictSQLParser.Aggregate_windowed_functionContext ctx) {
                 FuncName fname;
                 Expr expr = null;
                 if (ctx.all_distinct_expression() != null) {
-                    expr = Expr.from(ctx.all_distinct_expression().expression());
+                    expr = Expr.from(vc, ctx.all_distinct_expression().expression());
                 }
                 OverClause overClause = null;
 
@@ -184,7 +186,7 @@ public class FuncExpr extends Expr {
                 }
 
                 if (ctx.over_clause() != null) {
-                    overClause = OverClause.from(ctx.over_clause());
+                    overClause = OverClause.from(vc, ctx.over_clause());
                 }
 
                 return new FuncExpr(fname, expr, overClause);
@@ -196,10 +198,10 @@ public class FuncExpr extends Expr {
                 FuncName funcName = string2FunctionType.containsKey(fname)? string2FunctionType.get(fname) : FuncName.UNKNOWN;
                 if (fname.equals("CAST")) {
                     return new FuncExpr(funcName,
-                            Expr.from(ctx.cast_as_expression().expression()),
-                            ConstantExpr.from(ctx.cast_as_expression().data_type().getText()));
+                            Expr.from(vc, ctx.cast_as_expression().expression()),
+                            ConstantExpr.from(vc, ctx.cast_as_expression().data_type().getText()));
                 } else {
-                    return new FuncExpr(funcName, Expr.from(ctx.expression()));
+                    return new FuncExpr(funcName, Expr.from(vc, ctx.expression()));
                 }
             }
 
@@ -214,14 +216,14 @@ public class FuncExpr extends Expr {
             public FuncExpr visitBinary_mathematical_function(VerdictSQLParser.Binary_mathematical_functionContext ctx) {
                 String fname = ctx.function_name.getText().toUpperCase();
                 FuncName funcName = string2FunctionType.containsKey(fname)? string2FunctionType.get(fname) : FuncName.UNKNOWN;
-                return new FuncExpr(funcName, Expr.from(ctx.expression(0)), Expr.from(ctx.expression(1)));
+                return new FuncExpr(funcName, Expr.from(vc, ctx.expression(0)), Expr.from(vc, ctx.expression(1)));
             }
 
             @Override
             public FuncExpr visitTernary_mathematical_function(VerdictSQLParser.Ternary_mathematical_functionContext ctx) {
                 String fname = ctx.function_name.getText().toUpperCase();
                 FuncName funcName = string2FunctionType.containsKey(fname)? string2FunctionType.get(fname) : FuncName.UNKNOWN;
-                return new FuncExpr(funcName, Expr.from(ctx.expression(0)), Expr.from(ctx.expression(1)), Expr.from(ctx.expression(2)));
+                return new FuncExpr(funcName, Expr.from(vc, ctx.expression(0)), Expr.from(vc, ctx.expression(1)), Expr.from(vc, ctx.expression(2)));
             }
         };
         return v.visit(ctx);
@@ -239,16 +241,16 @@ public class FuncExpr extends Expr {
         return new FuncExpr(FuncName.AVG, expr);
     }
 
-    public static FuncExpr avg(String expr) {
-        return avg(Expr.from(expr));
+    public static FuncExpr avg(VerdictContext vc, String expr) {
+        return avg(Expr.from(vc, expr));
     }
 
     public static FuncExpr sum(Expr expr) {
         return new FuncExpr(FuncName.SUM, expr);
     }
 
-    public static FuncExpr sum(String expr) {
-        return sum(Expr.from(expr));
+    public static FuncExpr sum(VerdictContext vc, String expr) {
+        return sum(Expr.from(vc, expr));
     }
 
     public static FuncExpr count() {
@@ -259,8 +261,8 @@ public class FuncExpr extends Expr {
         return new FuncExpr(FuncName.COUNT_DISTINCT, expr);
     }
 
-    public static FuncExpr countDistinct(String expr) {
-        return countDistinct(Expr.from(expr));
+    public static FuncExpr countDistinct(VerdictContext vc, String expr) {
+        return countDistinct(Expr.from(vc, expr));
     }
 
     public static FuncExpr round(Expr expr) {
@@ -283,7 +285,7 @@ public class FuncExpr extends Expr {
         return new FuncExpr(FuncName.SQRT, expr);
     }
 
-    public static FuncExpr approxCountDistinct(Expr expr, VerdictContext vc) {
+    public static FuncExpr approxCountDistinct(VerdictContext vc, Expr expr) {
         if (vc.getDbms().getName().equalsIgnoreCase("impala")) {
             return new FuncExpr(FuncName.IMPALA_APPROX_COUNT_DISTINCT, expr);
         } else {
@@ -291,8 +293,8 @@ public class FuncExpr extends Expr {
         }
     }
 
-    public static FuncExpr approxCountDistinct(String expr, VerdictContext vc) {
-        return approxCountDistinct(Expr.from(expr), vc);
+    public static FuncExpr approxCountDistinct(VerdictContext vc, String expr) {
+        return approxCountDistinct(vc, Expr.from(vc, expr));
     }
 
     @Override

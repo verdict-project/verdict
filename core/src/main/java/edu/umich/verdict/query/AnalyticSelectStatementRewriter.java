@@ -9,7 +9,6 @@ import java.util.TreeMap;
 import org.apache.commons.lang3.tuple.Pair;
 
 import edu.umich.verdict.VerdictJDBCContext;
-import edu.umich.verdict.parser.VerdictSQLParser;
 import edu.umich.verdict.datatypes.Alias;
 import edu.umich.verdict.datatypes.ColumnName;
 import edu.umich.verdict.datatypes.SampleParam;
@@ -17,6 +16,7 @@ import edu.umich.verdict.datatypes.SampleSizeInfo;
 import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.exceptions.VerdictQuerySyntaxException;
+import edu.umich.verdict.parser.VerdictSQLParser;
 import edu.umich.verdict.util.StringManipulations;
 import edu.umich.verdict.util.TypeCasting;
 import edu.umich.verdict.util.VerdictLogger;

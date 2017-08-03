@@ -96,18 +96,25 @@ public abstract class VerdictContext {
 		this(conf, ThreadLocalRandom.current().nextInt(0, 10000));
 	}
 	
-//	public static VerdictContext dummyContext() {
-//		VerdictConf conf = new VerdictConf();
-//		conf.setDbms("dummy");
-//		VerdictContext dummyContext;
-//		try {
-//			dummyContext = VerdictJDBCContext.from(conf);
-//			return dummyContext;
-//		} catch (VerdictException e) {
-//			e.printStackTrace();
-//		}
-//		return null;
-//	}
+	private static VerdictContext dummyContext = null;
+	
+	/**
+	 * Singleton dummy VerdictContext. Used only by FuncExpr for setting inherited Expr's VerdictContext field.
+	 * @return
+	 */
+	public static VerdictContext dummyContext() {
+	    if (dummyContext != null) return dummyContext;
+	    
+		VerdictConf conf = new VerdictConf();
+		conf.setDbms("dummy");
+		try {
+			dummyContext = VerdictJDBCContext.from(conf);
+			return dummyContext;
+		} catch (VerdictException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
 	
 	public abstract void execute(String sql) throws VerdictException;
 	
@@ -131,5 +138,5 @@ public abstract class VerdictContext {
 		DataFrame df = executeSparkQuery(sql);
 		return df;
 	}
-	
+
 }

@@ -1,5 +1,7 @@
 package edu.umich.verdict.relation.expr;
 
+import edu.umich.verdict.VerdictContext;
+
 public class BinaryOpExpr extends Expr {
 	
 	private Expr left;
@@ -8,14 +10,15 @@ public class BinaryOpExpr extends Expr {
 	
 	private String op;
 
-	public BinaryOpExpr(Expr left, Expr right, String op) {
+	public BinaryOpExpr(VerdictContext vc, Expr left, Expr right, String op) {
+	    super(vc);
 		this.left = left;
 		this.right = right;
 		this.op = op;
 	}
 	
-	public static BinaryOpExpr from(Expr left, Expr right, String op) {
-		return new BinaryOpExpr(left, right, op);
+	public static BinaryOpExpr from(VerdictContext vc, Expr left, Expr right, String op) {
+		return new BinaryOpExpr(vc, left, right, op);
 	}
 	
 	public Expr getLeft() {
@@ -47,7 +50,7 @@ public class BinaryOpExpr extends Expr {
 	
 	@Override
 	public Expr withTableSubstituted(String newTab) {
-		return new BinaryOpExpr(left.withTableSubstituted(newTab), right.withTableSubstituted(newTab), op);
+		return new BinaryOpExpr(vc, left.withTableSubstituted(newTab), right.withTableSubstituted(newTab), op);
 	}
 
 	@Override
