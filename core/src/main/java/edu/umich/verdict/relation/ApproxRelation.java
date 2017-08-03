@@ -67,7 +67,7 @@ public abstract class ApproxRelation extends Relation {
     public ApproxGroupedRelation groupby(List<String> group_list) {
         List<Expr> groups = new ArrayList<Expr>();
         for (String t : group_list) {
-            groups.add(Expr.from(t));
+            groups.add(Expr.from(vc, t));
         }
         return new ApproxGroupedRelation(vc, this, groups);
     }
@@ -83,7 +83,7 @@ public abstract class ApproxRelation extends Relation {
     public ApproxAggregatedRelation agg(List<Object> elems) {
         List<Expr> se = new ArrayList<Expr>();
         for (Object e : elems) {
-            se.add(Expr.from(e.toString()));
+            se.add(Expr.from(vc, e.toString()));
         }
         return new ApproxAggregatedRelation(vc, this, se);
     }
@@ -95,17 +95,17 @@ public abstract class ApproxRelation extends Relation {
 
     @Override
     public ApproxAggregatedRelation sum(String expr) throws VerdictException {
-        return agg(FuncExpr.sum(Expr.from(expr)));
+        return agg(FuncExpr.sum(Expr.from(vc, expr)));
     }
 
     @Override
     public ApproxAggregatedRelation avg(String expr) throws VerdictException {
-        return agg(FuncExpr.avg(Expr.from(expr)));
+        return agg(FuncExpr.avg(Expr.from(vc, expr)));
     }
 
     @Override
     public ApproxAggregatedRelation countDistinct(String expr) throws VerdictException {
-        return agg(FuncExpr.countDistinct(Expr.from(expr)));
+        return agg(FuncExpr.countDistinct(Expr.from(vc, expr)));
     }
 
     /**
@@ -241,7 +241,7 @@ public abstract class ApproxRelation extends Relation {
         String[] tokens = orderby.split(",");
         List<OrderByExpr> o = new ArrayList<OrderByExpr>();
         for (String t : tokens) {
-            o.add(OrderByExpr.from(t));
+            o.add(OrderByExpr.from(vc, t));
         }
         return new ApproxOrderedRelation(vc, this, o);
     }
@@ -296,7 +296,7 @@ public abstract class ApproxRelation extends Relation {
     }
 
     protected Expr exprWithTableNamesSubstituted(Expr expr, Map<TableUniqueName, String> sub) {
-        TableNameReplacerInExpr v = new TableNameReplacerInExpr(sub);
+        TableNameReplacerInExpr v = new TableNameReplacerInExpr(vc, sub);
         return v.visit(expr);
     }
 
@@ -307,7 +307,8 @@ class TableNameReplacerInExpr extends ExprModifier {
 
     final protected Map<TableUniqueName, String> sub;
 
-    public TableNameReplacerInExpr(Map<TableUniqueName, String> sub) {
+    public TableNameReplacerInExpr(VerdictContext vc, Map<TableUniqueName, String> sub) {
+        super(vc);
         this.sub = sub;
     }
 
@@ -342,13 +343,13 @@ class TableNameReplacerInExpr extends ExprModifier {
                 TableUniqueName original = entry.getKey();
                 String subAlias = entry.getValue();
                 if (original.getTableName().equals(expr.getTab())) {
-                    return new ColNameExpr(expr.getCol(), subAlias);
+                    return new ColNameExpr(vc, expr.getCol(), subAlias);
                 }
             }
         } else {
             if (sub.containsKey(old)) {
                 String rep = sub.get(old);
-                return new ColNameExpr(expr.getCol(), rep);
+                return new ColNameExpr(vc, expr.getCol(), rep);
             }
         }
         // if nothing matched, then return the original expression.

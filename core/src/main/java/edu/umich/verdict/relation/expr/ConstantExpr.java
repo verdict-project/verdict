@@ -1,19 +1,22 @@
 package edu.umich.verdict.relation.expr;
 
+import edu.umich.verdict.VerdictContext;
+
 public class ConstantExpr extends Expr {
 	
 	private Object value;
 
-	public ConstantExpr(Object value) {
+	public ConstantExpr(VerdictContext vc, Object value) {
+	    super(vc);
 		this.value = value;
 	}
 	
-	public static ConstantExpr from(Object value) {
-		return new ConstantExpr(value);
+	public static ConstantExpr from(VerdictContext vc, Object value) {
+		return new ConstantExpr(vc, value);
 	}
 	
-	public static ConstantExpr from(String value) {
-		return from((Object) value); 
+	public static ConstantExpr from(VerdictContext vc, String value) {
+		return from(vc, (Object) value); 
 	}
 
 	@Override

@@ -13,15 +13,15 @@ public abstract class Cond {
 
 	public Cond() {}
 	
-	public static Cond from(String cond) {
+	public static Cond from(VerdictContext vc, String cond) {
 		VerdictSQLParser p = StringManipulations.parserOf(cond);
-		return from(p.search_condition());
+		return from(vc, p.search_condition());
 	}
 	
-	public static Cond from(Search_conditionContext ctx) {
-		CondGen g = new CondGen();
-		return g.visit(ctx);
-	}
+//	public static Cond from(Search_conditionContext ctx) {
+//		CondGen g = new CondGen();
+//		return g.visit(ctx);
+//	}
 	
 	public static Cond from(VerdictContext vc, Search_conditionContext ctx) {
 		CondGen g = new CondGen(vc);
@@ -70,7 +70,7 @@ class CondGen extends VerdictSQLBaseVisitor<Cond> {
 	public Cond visitComp_expr_predicate(VerdictSQLParser.Comp_expr_predicateContext ctx) {
 		Expr e1 = Expr.from(vc, ctx.expression(0));
 		Expr e2 = Expr.from(vc, ctx.expression(1));
-		return CompCond.from(e1, ctx.comparison_operator().getText(), e2);
+		return CompCond.from(vc, e1, ctx.comparison_operator().getText(), e2);
 	}
 	
 	@Override
@@ -115,7 +115,7 @@ class CondGen extends VerdictSQLBaseVisitor<Cond> {
 	
 	@Override
 	public Cond visitIs_predicate(VerdictSQLParser.Is_predicateContext ctx) {
-		Expr left = Expr.from(ctx.expression());
+		Expr left = Expr.from(vc, ctx.expression());
 		Cond right = visit(ctx.null_notnull());
 		return new IsCond(left, right);
 	}

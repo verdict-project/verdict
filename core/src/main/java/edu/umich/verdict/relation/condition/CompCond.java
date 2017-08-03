@@ -2,6 +2,7 @@ package edu.umich.verdict.relation.condition;
 
 import java.util.List;
 
+import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.relation.Relation;
 import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.Expr;
@@ -21,16 +22,16 @@ public class CompCond extends Cond {
 		this.compOp = compOp;
 	}
 	
-	public static CompCond from(Expr left, String compOp, Expr right) {
+	public static CompCond from(VerdictContext vc, Expr left, String compOp, Expr right) {
 		return new CompCond(left, compOp, right);
 	}
 	
-	public static CompCond from(Expr left, String compOp, Relation r) {
-		return from(left, compOp, SubqueryExpr.from(r));
+	public static CompCond from(VerdictContext vc, Expr left, String compOp, Relation r) {
+		return from(vc, left, compOp, SubqueryExpr.from(vc, r));
 	}
 	
-	public static CompCond from(String left, String compOp, Relation r) {
-		return from(Expr.from(left), compOp, SubqueryExpr.from(r));
+	public static CompCond from(VerdictContext vc, String left, String compOp, Relation r) {
+		return from(vc, Expr.from(vc, left), compOp, SubqueryExpr.from(vc, r));
 	}
 	
 	public Expr getLeft() {

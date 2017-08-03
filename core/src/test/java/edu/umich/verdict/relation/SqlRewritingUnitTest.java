@@ -36,7 +36,7 @@ public class SqlRewritingUnitTest {
 		
 		ExactRelation e = a.rewriteWithSubsampledErrorBounds();
 		System.out.println(e);
-		System.out.println(Relation.prettyfySql(e.toSql()));
+		System.out.println(Relation.prettyfySql(vc, e.toSql()));
 	}
 
 	@Test
@@ -62,7 +62,7 @@ public class SqlRewritingUnitTest {
 		
 		ExactRelation e = a.rewriteWithSubsampledErrorBounds();
 		System.out.println(e);
-		System.out.println(Relation.prettyfySql(e.toSql()));
+		System.out.println(Relation.prettyfySql(vc, e.toSql()));
 	}
 
 	@Test
@@ -84,7 +84,7 @@ public class SqlRewritingUnitTest {
 		
 		ExactRelation e = a.rewriteWithSubsampledErrorBounds();
 		System.out.println(e);
-		System.out.println(Relation.prettyfySql(e.toSql()));
+		System.out.println(Relation.prettyfySql(vc, e.toSql()));
 	}
 	
 	@Test
@@ -106,7 +106,7 @@ public class SqlRewritingUnitTest {
 		
 		ExactRelation e = a.rewriteWithSubsampledErrorBounds();
 		System.out.println(e);
-		System.out.println(Relation.prettyfySql(e.toSql()));
+		System.out.println(Relation.prettyfySql(vc, e.toSql()));
 	}
 	
 	@Test
@@ -123,7 +123,7 @@ public class SqlRewritingUnitTest {
 		
 		ExactRelation e = a.rewriteWithSubsampledErrorBounds();
 		System.out.println(e);
-		System.out.println(Relation.prettyfySql(e.toSql()));
+		System.out.println(Relation.prettyfySql(vc, e.toSql()));
 	}
 	
 	@Test
@@ -143,7 +143,7 @@ public class SqlRewritingUnitTest {
 		
 		ExactRelation e = a.rewriteWithSubsampledErrorBounds();
 		System.out.println(e);
-		System.out.println(Relation.prettyfySql(e.toSql()));
+		System.out.println(Relation.prettyfySql(vc, e.toSql()));
 	}
 	
 	@Test
@@ -163,7 +163,7 @@ public class SqlRewritingUnitTest {
 		
 		ExactRelation e = a.rewriteWithSubsampledErrorBounds();
 		System.out.println(e);
-		System.out.println(Relation.prettyfySql(e.toSql()));
+		System.out.println(Relation.prettyfySql(vc, e.toSql()));
 	}
 
 }

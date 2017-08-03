@@ -8,9 +8,9 @@ import java.util.Map;
 import org.apache.commons.lang3.tuple.Pair;
 
 import edu.umich.verdict.VerdictJDBCContext;
+import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.parser.VerdictSQLBaseVisitor;
 import edu.umich.verdict.parser.VerdictSQLParser;
-import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.util.VerdictLogger;
 
 public class CreateTableQuery extends Query {
