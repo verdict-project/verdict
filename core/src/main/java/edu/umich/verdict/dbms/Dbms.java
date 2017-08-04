@@ -162,6 +162,7 @@ public abstract class Dbms {
     public void createDatabase(String database) throws VerdictException {
         createCatalog(database);
     }
+    
 
     public void createCatalog(String catalog) throws VerdictException {
         String sql = String.format("create database if not exists %s", catalog);
