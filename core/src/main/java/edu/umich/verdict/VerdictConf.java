@@ -290,4 +290,12 @@ public class VerdictConf {
     public String getJdbcKerberos() {
         return get("verdict.jdbc.kerberos_principal");
     }
+    
+    public boolean areSamplesStoredAsParquet() {
+    	return (getParquetSamples().equals("true"))? true : false;
+    }
+    
+    public String getParquetSamples() {
+    	return get("verdict.parquet_sample");
+    }
 }
