@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
@@ -23,9 +24,12 @@ import edu.umich.verdict.parser.VerdictSQLParser.Order_by_expressionContext;
 import edu.umich.verdict.parser.VerdictSQLParser.Select_list_elemContext;
 import edu.umich.verdict.parser.VerdictSQLParser.Table_sourceContext;
 import edu.umich.verdict.relation.condition.AndCond;
+import edu.umich.verdict.relation.condition.CompCond;
 import edu.umich.verdict.relation.condition.Cond;
+import edu.umich.verdict.relation.condition.CondModifier;
 import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.Expr;
+import edu.umich.verdict.relation.expr.ExprModifier;
 import edu.umich.verdict.relation.expr.FuncExpr;
 import edu.umich.verdict.relation.expr.OrderByExpr;
 import edu.umich.verdict.relation.expr.SelectElem;
@@ -150,6 +154,15 @@ public abstract class ExactRelation extends Relation {
 
     public ExactRelation agg(List<Object> elems) {
         List<SelectElem> se = new ArrayList<SelectElem>();
+        
+        // add groupby list
+        if (this instanceof GroupedRelation) {
+            List<Expr> groupby = ((GroupedRelation) this).getGroupby();
+            for (Expr group : groupby) {
+                se.add(new SelectElem(vc, group));
+            }
+        }
+        
         for (Object e : elems) {
             if (e instanceof SelectElem) {
                 se.add((SelectElem) e);
@@ -158,21 +171,13 @@ public abstract class ExactRelation extends Relation {
             }
         } 
 
-        List<Expr> exprs = new ArrayList<Expr>();
-        for (SelectElem elem : se) {
-            exprs.add(elem.getExpr());
-        }
+//        List<Expr> exprs = new ArrayList<Expr>();
+//        for (SelectElem elem : se) {
+//            exprs.add(elem.getExpr());
+//        }
 
-        // add some groupbys
-        if (this instanceof GroupedRelation) {
-            List<Expr> groupby = ((GroupedRelation) this).getGroupby();
-            for (Expr group : groupby) {
-                se.add(0, new SelectElem(vc, group));
-            }
-        }
-
-        ExactRelation r = new AggregatedRelation(vc, this, exprs);
-        r = new ProjectedRelation(vc, this, se);
+        ExactRelation r = new AggregatedRelation(vc, this, se);
+//        r = new ProjectedRelation(vc, this, se);
         return r;
     }
 
@@ -512,13 +517,77 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
 
         return r;
     }
+    
+    class ColNameResolver extends CondModifier {
+        
+        private List<TableUniqueName> baseTables;
+        
+        public ColNameResolver(List<TableUniqueName> baseTables) {
+            this.baseTables = baseTables;
+        }
+        
+        ExprModifier m = new ExprModifier(vc) {
+            @Override
+            public ColNameExpr visitColNameExpr(ColNameExpr expr) {
+                if (expr.getSchema() != null) return expr;
+                // schema doesn't exist
+                
+                if (expr.getTab() != null) {
+                    String tab = expr.getTab();
+                    for (TableUniqueName t : baseTables) {
+                        if (t.getTableName().equals(tab)) {
+                            return new ColNameExpr(expr.getVerdictContext(), expr.getCol(), expr.getTab(), t.getSchemaName());
+                        }
+                    }
+                } else {
+                    // tab doesn't exist
+                    for (TableUniqueName t : baseTables) {
+                        Set<String> cols = vc.getMeta().getColumns(t);
+                        if (cols.contains(expr.getCol())) {
+                            return new ColNameExpr(expr.getVerdictContext(), expr.getCol(), t.getTableName(), t.getSchemaName());
+                        }
+                    }
+                }
+                
+                return expr;
+            }
+        };
+        
+        @Override
+        public Cond call(Cond cond) {
+            if (cond instanceof CompCond) {
+                Expr le = ((CompCond) cond).getLeft();
+                Expr re = ((CompCond) cond).getRight();
+                
+                le = m.visit(le);
+                re = m.visit(re);
+                
+                return new CompCond(le, ((CompCond) cond).getOp(), re);
+            } else {
+                return cond;
+            }
+        }
+        
+    }
 
     @Override
     public ExactRelation visitQuery_specification(VerdictSQLParser.Query_specificationContext ctx) {
+        // extract all base tables for column name resolution
+        List<TableUniqueName> allBaseTables = new ArrayList<TableUniqueName>();
+        for (Table_sourceContext s : ctx.table_source()) {
+            TableSourceExtractor e = new TableSourceExtractor();
+            ExactRelation r1 = e.visit(s);
+            if (r1 instanceof SingleRelation) {
+                allBaseTables.add(((SingleRelation) r1).getTableName());
+            }
+        }
+        
         // parse the where clause
         Cond where = null;
         if (ctx.WHERE() != null) {
             where = Cond.from(vc, ctx.where);
+            ColNameResolver resolver = new ColNameResolver(allBaseTables);
+            where = resolver.visit(where);
         }
 
         // parse the from clause
@@ -587,69 +656,77 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
         List<SelectElem> aggs = elems.getMiddle();
         List<SelectElem> bothInOrder = elems.getRight();
         
-        // table name replacer with aliases
-        TableNameReplacerInExpr tabNameReplacer = new TableNameReplacerInExpr(vc, baseTables);
-        
         // replace all base tables with their aliases
+        TableNameReplacerInExpr tabNameReplacer = new TableNameReplacerInExpr(vc, baseTables);
         nonaggs = replaceTableNamesWithAliasesIn(nonaggs, tabNameReplacer);
         aggs = replaceTableNamesWithAliasesIn(aggs, tabNameReplacer);
         bothInOrder = replaceTableNamesWithAliasesIn(bothInOrder, tabNameReplacer);
+        
+        if (aggs.size() == 0) {
+            // simple projection
+            r = new ProjectedRelation(vc, r, bothInOrder);
+        } else {
+            // aggregate relation
+            
+            // step 1: obtains groupby expressions
+            // groupby expressions must be fully resolved from the table sources (without referring to the select list)
+            // resolving groupby names from alises is currently disabled.
+            // if the groupby expression includes base table names, we replace them with their aliases.
+            if (ctx.GROUP() != null) {
+                List<Expr> groupby = new ArrayList<Expr>();
+                for (Group_by_itemContext g : ctx.group_by_item()) {
+                    Expr gexpr = tabNameReplacer.visit(Expr.from(vc, g.expression()));
+                    boolean aliasFound = false;
+    //
+//                    // search in alises
+//                    for (SelectElem s : bothInOrder) {
+//                        if (s.aliasPresent() && gexpr.toStringWithoutQuote().equals(s.getAlias())) {
+//                            groupby.add(s.getExpr());
+//                            aliasFound = true;
+//                            break;
+//                        }
+//                    }
 
-        // obtains groupby expressions
-        // groupby may include an aliased select elem. In that case, we use the original select elem expr.
-        // if the groupby expression includes base table names, we should replace them with their aliases.
-        if (ctx.GROUP() != null) {
-            List<Expr> groupby = new ArrayList<Expr>();
-            for (Group_by_itemContext g : ctx.group_by_item()) {
-                Expr gexpr = tabNameReplacer.visit(Expr.from(vc, g.expression()));
-                boolean aliasFound = false;
-
-                // search in alises
-                for (SelectElem s : bothInOrder) {
-                    if (s.aliasPresent() && gexpr.toStringWithoutQuote().equals(s.getAlias())) {
-                        groupby.add(s.getExpr());
-                        aliasFound = true;
-                        break;
+                    if (!aliasFound) {
+                        groupby.add(gexpr);
                     }
                 }
-
-                if (!aliasFound) {
-                    groupby.add(gexpr);
-                }
+                r = new GroupedRelation(vc, r, groupby);
             }
-            r = new GroupedRelation(vc, r, groupby);
+            
+            r = new AggregatedRelation(vc, r, bothInOrder);
         }
 
-        if (aggs.size() > 0) {		// if there are aggregate functions
-            List<Expr> aggExprs = new ArrayList<Expr>();
-            for (SelectElem se : aggs) {
-                aggExprs.add(se.getExpr());
-            }
-            r = new AggregatedRelation(vc, r, aggExprs);
-            //			r.setAliasName(Relation.genTableAlias());
-
-            // we put another layer on top of AggregatedRelation for
-            // 1. the case where the select list does not include all of groupby and aggregate expressions.
-            // 2. the select elems are not in the order of groupby and aggregations.
-            List<SelectElem> prj = new ArrayList<SelectElem>();
-            for (SelectElem e : bothInOrder) {
-                prj.add(e);
-                //				if (aggs.contains(e)) {
-                //					// based on the assumption that agg expressions are always aliased.
-                //					// we define an alias if it doesn't exists.
-                //					prj.add(new SelectElem(Expr.from(e.getAlias()), e.getAlias()));
-                //				} else {
-                //					if (e.aliasPresent()) {
-                //						prj.add(new SelectElem(e.getExpr(), e.getAlias()));
-                //					} else {
-                //						prj.add(e);
-                //					}	
-                //				}
-            }
-            r = new ProjectedRelation(vc, r, prj);
-        } else {
-            r = new ProjectedRelation(vc, r, bothInOrder);
-        }
+//        if (aggs.size() > 0) {		// if there are aggregate functions
+//            List<Expr> aggExprs = new ArrayList<Expr>();
+//            for (SelectElem se : aggs) {
+//                aggExprs.add(se.getExpr());
+//            }
+//            r = new AggregatedRelation(vc, r, aggExprs);
+//            //			r.setAliasName(Relation.genTableAlias());
+//
+//            // we put another layer on top of AggregatedRelation for
+//            // 1. the case where the select list does not include all of groupby and aggregate expressions.
+//            // 2. the select elems are not in the order of groupby and aggregations.
+//            List<SelectElem> prj = new ArrayList<SelectElem>();
+//            for (SelectElem e : bothInOrder) {
+//                prj.add(e);
+//                //				if (aggs.contains(e)) {
+//                //					// based on the assumption that agg expressions are always aliased.
+//                //					// we define an alias if it doesn't exists.
+//                //					prj.add(new SelectElem(Expr.from(e.getAlias()), e.getAlias()));
+//                //				} else {
+//                //					if (e.aliasPresent()) {
+//                //						prj.add(new SelectElem(e.getExpr(), e.getAlias()));
+//                //					} else {
+//                //						prj.add(e);
+//                //					}	
+//                //				}
+//            }
+//            r = new ProjectedRelation(vc, r, prj);
+//        } else {
+//            r = new ProjectedRelation(vc, r, bothInOrder);
+//        }
 
         return r;
     }

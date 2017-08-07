@@ -28,4 +28,12 @@ public class StarExpr extends Expr {
         return toString();
     }
 
+    @Override
+    public boolean equals(Expr o) {
+        if (o instanceof StarExpr) {
+            return true;
+        }
+        return false;
+    }
+
 }

@@ -11,7 +11,15 @@ public class ConstantExpr extends Expr {
 		this.value = value;
 	}
 	
-	public static ConstantExpr from(VerdictContext vc, Object value) {
+	public Object getValue() {
+        return value;
+    }
+
+    public void setValue(Object value) {
+        this.value = value;
+    }
+
+    public static ConstantExpr from(VerdictContext vc, Object value) {
 		return new ConstantExpr(vc, value);
 	}
 	
@@ -38,4 +46,12 @@ public class ConstantExpr extends Expr {
 	public String toSql() {
 		return toString();
 	}
+
+    @Override
+    public boolean equals(Expr o) {
+        if (o instanceof ConstantExpr) {
+            return getValue().toString().equals(((ConstantExpr) o).getValue().toString());
+        }
+        return false;
+    }
 }

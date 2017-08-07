@@ -47,5 +47,11 @@ public class ImpalaAggregationIT extends AggregationIT {
         super.simpleAvgUsingUniformSample();
     }
 
+    @Override
+    public void groupbyAvgUsingUniverseSample() throws VerdictException, SQLException {
+        // TODO Auto-generated method stub
+        super.groupbyAvgUsingUniverseSample();
+    }
+    
     
 }

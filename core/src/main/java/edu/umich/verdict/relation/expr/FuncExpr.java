@@ -386,4 +386,13 @@ public class FuncExpr extends Expr {
         }
         return sql.toString();
     }
+
+    @Override
+    public boolean equals(Expr o) {
+        if (o instanceof FuncExpr) {
+            return getExpressions().equals(((FuncExpr) o).getExpressions())
+                   && getFuncName().equals(((FuncExpr) o).getFuncName());
+        }
+        return false;
+    }
 }

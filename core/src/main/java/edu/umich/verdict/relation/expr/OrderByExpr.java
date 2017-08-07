@@ -68,4 +68,13 @@ public class OrderByExpr extends Expr {
 		return toString();
 	}
 
+    @Override
+    public boolean equals(Expr o) {
+        if (o instanceof OrderByExpr) {
+            return getExpression().equals(((OrderByExpr) o).getExpression())
+                   && getDirection().equals(((OrderByExpr) o).getDirection());
+        }
+        return false;
+    }
+
 }

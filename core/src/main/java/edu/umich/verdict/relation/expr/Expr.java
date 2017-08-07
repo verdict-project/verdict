@@ -36,6 +36,10 @@ public abstract class Expr {
         VerdictSQLParser p = StringManipulations.parserOf(expr);
         return from(vc, p.expression());
     }
+    
+    private static Expr from(VerdictContext vc, Object obj) {
+        return from(vc, obj.toString());
+    }
 
     private static Expr from(VerdictSQLParser.ExpressionContext ctx) {
         return from(VerdictContext.dummyContext(), ctx);
@@ -115,6 +119,8 @@ public abstract class Expr {
     public abstract Expr withTableSubstituted(String newTab);
 
     public abstract String toSql();
+    
+    public abstract boolean equals(Expr o);
 
 }
 

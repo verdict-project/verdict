@@ -1,5 +1,7 @@
 package edu.umich.verdict.relation.condition;
 
+import edu.umich.verdict.VerdictContext;
+
 public class OrCond extends Cond {
 	
 	private Cond left;
@@ -50,4 +52,13 @@ public class OrCond extends Cond {
 	public String toSql() {
 		return String.format("(%s) OR (%s)", left.toSql(), right.toSql());
 	}
+
+    @Override
+    public boolean equals(Cond o) {
+        if (o instanceof OrCond) {
+            return getLeft().equals(((OrCond) o).getLeft())
+                && getRight().equals(((OrCond) o).getRight());
+        }
+        return false;
+    }
 }

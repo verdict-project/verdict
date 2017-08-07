@@ -21,7 +21,7 @@ public abstract class ExprModifier {
     }
 
     public Expr call(Expr expr) {
-        return expr;
+        return visitExpr(expr);
     }
 
     public Expr visitExpr(Expr expr) {
