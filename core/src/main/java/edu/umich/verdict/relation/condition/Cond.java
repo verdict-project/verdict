@@ -125,8 +125,14 @@ class CondGen extends VerdictSQLBaseVisitor<Cond> {
     
     @Override
     public Cond visitIn_predicate(VerdictSQLParser.In_predicateContext ctx) {
-        Cond inCond = InCond.from(vc, ctx);
+        InCond inCond = InCond.from(vc, ctx);
         return inCond;
+    }
+    
+    @Override
+    public Cond visitLike_predicate(VerdictSQLParser.Like_predicateContext ctx) {
+        LikeCond likeCond = LikeCond.from(vc, ctx);
+        return likeCond;
     }
 
     @Override
