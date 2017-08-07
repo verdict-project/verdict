@@ -5,11 +5,11 @@ import java.sql.ResultSet;
 import org.apache.spark.sql.DataFrame;
 
 import edu.umich.verdict.VerdictContext;
-import edu.umich.verdict.parser.VerdictSQLBaseVisitor;
-import edu.umich.verdict.parser.VerdictSQLParser;
 import edu.umich.verdict.datatypes.Alias;
 import edu.umich.verdict.dbms.DbmsSpark;
 import edu.umich.verdict.exceptions.VerdictException;
+import edu.umich.verdict.parser.VerdictSQLBaseVisitor;
+import edu.umich.verdict.parser.VerdictSQLParser;
 import edu.umich.verdict.util.StringManipulations;
 import edu.umich.verdict.util.VerdictLogger;
 

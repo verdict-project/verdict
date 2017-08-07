@@ -5,6 +5,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.tuple.Pair;
+
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
@@ -13,6 +15,7 @@ import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.relation.expr.ExprModifier;
 import edu.umich.verdict.relation.expr.FuncExpr;
 import edu.umich.verdict.relation.expr.OrderByExpr;
+import edu.umich.verdict.relation.expr.SelectElem;
 import edu.umich.verdict.relation.expr.SubqueryExpr;
 import edu.umich.verdict.util.VerdictLogger;
 
@@ -67,7 +70,7 @@ public abstract class ApproxRelation extends Relation {
     public ApproxGroupedRelation groupby(List<String> group_list) {
         List<Expr> groups = new ArrayList<Expr>();
         for (String t : group_list) {
-            groups.add(Expr.from(t));
+            groups.add(Expr.from(vc, t));
         }
         return new ApproxGroupedRelation(vc, this, groups);
     }
@@ -81,9 +84,19 @@ public abstract class ApproxRelation extends Relation {
     }
 
     public ApproxAggregatedRelation agg(List<Object> elems) {
-        List<Expr> se = new ArrayList<Expr>();
+        List<SelectElem> se = new ArrayList<SelectElem>();
+        
+        // first insert possible groupby list
+        if (this instanceof ApproxGroupedRelation) {
+            List<Expr> groupby = ((ApproxGroupedRelation) this).getGroupby();
+            for (Expr g : groupby) {
+                se.add(new SelectElem(vc, g));
+            }
+        }
+        
+        // now insert aggregation list
         for (Object e : elems) {
-            se.add(Expr.from(e.toString()));
+            se.add(SelectElem.from(vc, e.toString()));
         }
         return new ApproxAggregatedRelation(vc, this, se);
     }
@@ -95,17 +108,17 @@ public abstract class ApproxRelation extends Relation {
 
     @Override
     public ApproxAggregatedRelation sum(String expr) throws VerdictException {
-        return agg(FuncExpr.sum(Expr.from(expr)));
+        return agg(FuncExpr.sum(Expr.from(vc, expr)));
     }
 
     @Override
     public ApproxAggregatedRelation avg(String expr) throws VerdictException {
-        return agg(FuncExpr.avg(Expr.from(expr)));
+        return agg(FuncExpr.avg(Expr.from(vc, expr)));
     }
 
     @Override
     public ApproxAggregatedRelation countDistinct(String expr) throws VerdictException {
-        return agg(FuncExpr.countDistinct(Expr.from(expr)));
+        return agg(FuncExpr.countDistinct(Expr.from(vc, expr)));
     }
 
     /**
@@ -241,7 +254,7 @@ public abstract class ApproxRelation extends Relation {
         String[] tokens = orderby.split(",");
         List<OrderByExpr> o = new ArrayList<OrderByExpr>();
         for (String t : tokens) {
-            o.add(OrderByExpr.from(t));
+            o.add(OrderByExpr.from(vc, t));
         }
         return new ApproxOrderedRelation(vc, this, o);
     }
@@ -296,72 +309,22 @@ public abstract class ApproxRelation extends Relation {
     }
 
     protected Expr exprWithTableNamesSubstituted(Expr expr, Map<TableUniqueName, String> sub) {
-        TableNameReplacerInExpr v = new TableNameReplacerInExpr(sub);
+        TableNameReplacerInExpr v = new TableNameReplacerInExpr(vc, sub);
         return v.visit(expr);
     }
 
+    protected static Pair<List<Expr>, ApproxRelation> allPrecedingGroupbys(ApproxRelation r) {
+        List<Expr> groupbys = new ArrayList<Expr>();
+        ApproxRelation t = r;
+        while (true) {
+            if (t instanceof ApproxGroupedRelation) {
+                groupbys.addAll(((ApproxGroupedRelation) t).getGroupby());
+                t = ((ApproxGroupedRelation) t).getSource();
+            } else {
+                break;
+            }
+        }
+        return Pair.of(groupbys, t);
+    }
 }
-
-
-class TableNameReplacerInExpr extends ExprModifier {
-
-    final protected Map<TableUniqueName, String> sub;
-
-    public TableNameReplacerInExpr(Map<TableUniqueName, String> sub) {
-        this.sub = sub;
-    }
-
-    public Expr call(Expr expr) {
-        if (expr instanceof ColNameExpr) {
-            return replaceColNameExpr((ColNameExpr) expr);
-        } else if (expr instanceof FuncExpr) {
-            return replaceFuncExpr((FuncExpr) expr);
-        } else if (expr instanceof SubqueryExpr) {
-            return replaceSubqueryExpr((SubqueryExpr) expr);
-        } else {
-            return expr;
-        }
-    }
-
-    /**
-     * Replaces if
-     * (1) schema name is omitted in the join condition and the table name matches the table name of the original table
-     * (2) schema name is fully specified in the join condition and both the schema and table names match the original schema and table names.
-     * @param expr
-     * @return
-     */
-    protected Expr replaceColNameExpr(ColNameExpr expr) {
-        if (expr.getTab() == null) {
-            return expr;
-        }
-
-        TableUniqueName old = TableUniqueName.uname(expr.getSchema(), expr.getTab());
-
-        if (old.getSchemaName() == null) {
-            for (Map.Entry<TableUniqueName, String> entry : sub.entrySet()) {
-                TableUniqueName original = entry.getKey();
-                String subAlias = entry.getValue();
-                if (original.getTableName().equals(expr.getTab())) {
-                    return new ColNameExpr(expr.getCol(), subAlias);
-                }
-            }
-        } else {
-            if (sub.containsKey(old)) {
-                String rep = sub.get(old);
-                return new ColNameExpr(expr.getCol(), rep);
-            }
-        }
-        // if nothing matched, then return the original expression.
-        return expr;
-    }
-
-    protected Expr replaceSubqueryExpr(SubqueryExpr expr) {
-        return expr;
-    }
-
-    protected Expr replaceFuncExpr(FuncExpr expr) {
-        FuncExpr e = (FuncExpr) expr;
-        return new FuncExpr(e.getFuncName(), visit(e.getUnaryExpr()));
-    }
-};
 

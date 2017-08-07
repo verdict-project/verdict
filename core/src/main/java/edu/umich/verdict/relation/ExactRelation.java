@@ -2,8 +2,10 @@ package edu.umich.verdict.relation;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
@@ -11,6 +13,9 @@ import org.apache.commons.lang3.tuple.Triple;
 import com.google.common.base.Optional;
 
 import edu.umich.verdict.VerdictContext;
+import edu.umich.verdict.datatypes.SampleParam;
+import edu.umich.verdict.datatypes.TableUniqueName;
+import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.parser.VerdictSQLBaseVisitor;
 import edu.umich.verdict.parser.VerdictSQLParser;
 import edu.umich.verdict.parser.VerdictSQLParser.Group_by_itemContext;
@@ -18,13 +23,13 @@ import edu.umich.verdict.parser.VerdictSQLParser.Join_partContext;
 import edu.umich.verdict.parser.VerdictSQLParser.Order_by_expressionContext;
 import edu.umich.verdict.parser.VerdictSQLParser.Select_list_elemContext;
 import edu.umich.verdict.parser.VerdictSQLParser.Table_sourceContext;
-import edu.umich.verdict.datatypes.SampleParam;
-import edu.umich.verdict.datatypes.TableUniqueName;
-import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.relation.condition.AndCond;
+import edu.umich.verdict.relation.condition.CompCond;
 import edu.umich.verdict.relation.condition.Cond;
+import edu.umich.verdict.relation.condition.CondModifier;
 import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.Expr;
+import edu.umich.verdict.relation.expr.ExprModifier;
 import edu.umich.verdict.relation.expr.FuncExpr;
 import edu.umich.verdict.relation.expr.OrderByExpr;
 import edu.umich.verdict.relation.expr.SelectElem;
@@ -89,7 +94,7 @@ public abstract class ExactRelation extends Relation {
     public ExactRelation select(List<String> elems) {
         List<SelectElem> selectElems = new ArrayList<SelectElem>();
         for (String e : elems) {
-            selectElems.add(SelectElem.from(e));
+            selectElems.add(SelectElem.from(vc, e));
         }
         return new ProjectedRelation(vc, this, selectElems);
     }
@@ -104,7 +109,7 @@ public abstract class ExactRelation extends Relation {
             private List<SelectElem> selectElems = new ArrayList<SelectElem>();
             @Override
             public List<SelectElem> visitSelect_list_elem(VerdictSQLParser.Select_list_elemContext ctx) {
-                selectElems.add(SelectElem.from(ctx));
+                selectElems.add(SelectElem.from(vc, ctx));
                 return selectElems;
             }
         };
@@ -128,7 +133,7 @@ public abstract class ExactRelation extends Relation {
     }
 
     public ExactRelation filter(String cond) throws VerdictException {
-        return filter(Cond.from(cond));
+        return filter(Cond.from(vc, cond));
     }
 
     public ExactRelation where(String cond) throws VerdictException {
@@ -149,29 +154,30 @@ public abstract class ExactRelation extends Relation {
 
     public ExactRelation agg(List<Object> elems) {
         List<SelectElem> se = new ArrayList<SelectElem>();
+        
+        // add groupby list
+        if (this instanceof GroupedRelation) {
+            List<Expr> groupby = ((GroupedRelation) this).getGroupby();
+            for (Expr group : groupby) {
+                se.add(new SelectElem(vc, group));
+            }
+        }
+        
         for (Object e : elems) {
             if (e instanceof SelectElem) {
                 se.add((SelectElem) e);
             } else {
-                se.add(SelectElem.from(e.toString()));
+                se.add(SelectElem.from(vc, e.toString()));
             }
         } 
 
-        List<Expr> exprs = new ArrayList<Expr>();
-        for (SelectElem elem : se) {
-            exprs.add(elem.getExpr());
-        }
+//        List<Expr> exprs = new ArrayList<Expr>();
+//        for (SelectElem elem : se) {
+//            exprs.add(elem.getExpr());
+//        }
 
-        // add some groupbys
-        if (this instanceof GroupedRelation) {
-            List<Expr> groupby = ((GroupedRelation) this).getGroupby();
-            for (Expr group : groupby) {
-                se.add(0, new SelectElem(group));
-            }
-        }
-
-        ExactRelation r = new AggregatedRelation(vc, this, exprs);
-        r = new ProjectedRelation(vc, this, se);
+        ExactRelation r = new AggregatedRelation(vc, this, se);
+//        r = new ProjectedRelation(vc, this, se);
         return r;
     }
 
@@ -203,7 +209,7 @@ public abstract class ExactRelation extends Relation {
     public GroupedRelation groupby(List<String> group_list) {
         List<Expr> groups = new ArrayList<Expr>();
         for (String t : group_list) {
-            groups.add(Expr.from(t));
+            groups.add(Expr.from(vc, t));
         }
         return new GroupedRelation(vc, this, groups);
     }
@@ -248,7 +254,7 @@ public abstract class ExactRelation extends Relation {
         String[] tokens = orderby.split(",");
         List<OrderByExpr> cols = new ArrayList<OrderByExpr>();
         for (String t : tokens) {
-            cols.add(OrderByExpr.from(t));
+            cols.add(OrderByExpr.from(vc, t));
         }
         return new OrderedRelation(vc, this, cols);
     }
@@ -274,7 +280,7 @@ public abstract class ExactRelation extends Relation {
     }
 
     public JoinedRelation join(ExactRelation r, String cond) throws VerdictException {
-        return join(r, Cond.from(cond));
+        return join(r, Cond.from(vc, cond));
     }
 
     public JoinedRelation join(ExactRelation r) throws VerdictException {
@@ -483,16 +489,24 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
     public RelationGen(VerdictContext vc) {
         this.vc = vc;
     }
+    
+    // we remember what base tables have been joined (or appeared). this information is used for
+    // replacing original table names with aliases in join conditions.
+    private Map<TableUniqueName, String> baseTables = new HashMap<TableUniqueName, String>();
 
     @Override
     public ExactRelation visitSelect_statement(VerdictSQLParser.Select_statementContext ctx) {
         ExactRelation r = visit(ctx.query_expression());
+        
+        // table name replacer with aliases
+        TableNameReplacerInExpr tabNameReplacer = new TableNameReplacerInExpr(vc, baseTables);
 
         if (ctx.order_by_clause() != null) {
             List<OrderByExpr> orderby = new ArrayList<OrderByExpr>();
             for (Order_by_expressionContext o : ctx.order_by_clause().order_by_expression()) {
-                orderby.add(new OrderByExpr(Expr.from(vc, o.expression()),
-                        (o.DESC() != null)? "DESC" : "ASC"));
+                OrderByExpr expr = new OrderByExpr(vc, Expr.from(vc, o.expression()),
+                                                   (o.DESC() != null)? "DESC" : "ASC");
+                orderby.add((OrderByExpr) tabNameReplacer.visit(expr));
             }
             r = new OrderedRelation(vc, r, orderby);
         }
@@ -503,13 +517,77 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
 
         return r;
     }
+    
+    class ColNameResolver extends CondModifier {
+        
+        private List<TableUniqueName> baseTables;
+        
+        public ColNameResolver(List<TableUniqueName> baseTables) {
+            this.baseTables = baseTables;
+        }
+        
+        ExprModifier m = new ExprModifier(vc) {
+            @Override
+            public ColNameExpr visitColNameExpr(ColNameExpr expr) {
+                if (expr.getSchema() != null) return expr;
+                // schema doesn't exist
+                
+                if (expr.getTab() != null) {
+                    String tab = expr.getTab();
+                    for (TableUniqueName t : baseTables) {
+                        if (t.getTableName().equals(tab)) {
+                            return new ColNameExpr(expr.getVerdictContext(), expr.getCol(), expr.getTab(), t.getSchemaName());
+                        }
+                    }
+                } else {
+                    // tab doesn't exist
+                    for (TableUniqueName t : baseTables) {
+                        Set<String> cols = vc.getMeta().getColumns(t);
+                        if (cols.contains(expr.getCol())) {
+                            return new ColNameExpr(expr.getVerdictContext(), expr.getCol(), t.getTableName(), t.getSchemaName());
+                        }
+                    }
+                }
+                
+                return expr;
+            }
+        };
+        
+        @Override
+        public Cond call(Cond cond) {
+            if (cond instanceof CompCond) {
+                Expr le = ((CompCond) cond).getLeft();
+                Expr re = ((CompCond) cond).getRight();
+                
+                le = m.visit(le);
+                re = m.visit(re);
+                
+                return new CompCond(le, ((CompCond) cond).getOp(), re);
+            } else {
+                return cond;
+            }
+        }
+        
+    }
 
     @Override
     public ExactRelation visitQuery_specification(VerdictSQLParser.Query_specificationContext ctx) {
+        // extract all base tables for column name resolution
+        List<TableUniqueName> allBaseTables = new ArrayList<TableUniqueName>();
+        for (Table_sourceContext s : ctx.table_source()) {
+            TableSourceExtractor e = new TableSourceExtractor();
+            ExactRelation r1 = e.visit(s);
+            if (r1 instanceof SingleRelation) {
+                allBaseTables.add(((SingleRelation) r1).getTableName());
+            }
+        }
+        
         // parse the where clause
         Cond where = null;
         if (ctx.WHERE() != null) {
             where = Cond.from(vc, ctx.where);
+            ColNameResolver resolver = new ColNameResolver(allBaseTables);
+            where = resolver.visit(where);
         }
 
         // parse the from clause
@@ -523,6 +601,13 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
         for (Table_sourceContext s : ctx.table_source()) {
             TableSourceExtractor e = new TableSourceExtractor();
             ExactRelation r1 = e.visit(s);
+            
+            if (r1 instanceof SingleRelation) {
+                TableUniqueName t = ((SingleRelation) r1).getTableName();
+                String a = r1.getAlias();
+                baseTables.put(t,  a);
+            }
+            
             if (r == null) r = r1;
             else {
                 JoinedRelation r2 = new JoinedRelation(vc, r, r1, null);
@@ -541,7 +626,7 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
 
                 if (j != null) {
                     try {
-                        r2.setJoinCond(j);
+                        r2.setJoinCond(j, baseTables);
                     } catch (VerdictException e1) {
                         VerdictLogger.error(StackTraceReader.stackTrace2String(e1));
                     }
@@ -570,63 +655,89 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
         List<SelectElem> nonaggs = elems.getLeft();
         List<SelectElem> aggs = elems.getMiddle();
         List<SelectElem> bothInOrder = elems.getRight();
+        
+        // replace all base tables with their aliases
+        TableNameReplacerInExpr tabNameReplacer = new TableNameReplacerInExpr(vc, baseTables);
+        nonaggs = replaceTableNamesWithAliasesIn(nonaggs, tabNameReplacer);
+        aggs = replaceTableNamesWithAliasesIn(aggs, tabNameReplacer);
+        bothInOrder = replaceTableNamesWithAliasesIn(bothInOrder, tabNameReplacer);
+        
+        if (aggs.size() == 0) {
+            // simple projection
+            r = new ProjectedRelation(vc, r, bothInOrder);
+        } else {
+            // aggregate relation
+            
+            // step 1: obtains groupby expressions
+            // groupby expressions must be fully resolved from the table sources (without referring to the select list)
+            // resolving groupby names from alises is currently disabled.
+            // if the groupby expression includes base table names, we replace them with their aliases.
+            if (ctx.GROUP() != null) {
+                List<Expr> groupby = new ArrayList<Expr>();
+                for (Group_by_itemContext g : ctx.group_by_item()) {
+                    Expr gexpr = tabNameReplacer.visit(Expr.from(vc, g.expression()));
+                    boolean aliasFound = false;
+    //
+//                    // search in alises
+//                    for (SelectElem s : bothInOrder) {
+//                        if (s.aliasPresent() && gexpr.toStringWithoutQuote().equals(s.getAlias())) {
+//                            groupby.add(s.getExpr());
+//                            aliasFound = true;
+//                            break;
+//                        }
+//                    }
 
-        // obtains groupby expressions
-        // groupby may include an aliased select elem. In that case, we use the original select elem expr.
-        if (ctx.GROUP() != null) {
-            List<Expr> groupby = new ArrayList<Expr>();
-            for (Group_by_itemContext g : ctx.group_by_item()) {
-                Expr gexpr = Expr.from(g.expression());
-                boolean aliasFound = false;
-
-                // search in alises
-                for (SelectElem s : bothInOrder) {
-                    if (s.aliasPresent() && gexpr.toStringWithoutQuote().equals(s.getAlias())) {
-                        groupby.add(s.getExpr());
-                        aliasFound = true;
-                        break;
+                    if (!aliasFound) {
+                        groupby.add(gexpr);
                     }
                 }
-
-                if (!aliasFound) {
-                    groupby.add(gexpr);
-                }
+                r = new GroupedRelation(vc, r, groupby);
             }
-            r = new GroupedRelation(vc, r, groupby);
+            
+            r = new AggregatedRelation(vc, r, bothInOrder);
         }
 
-        if (aggs.size() > 0) {		// if there are aggregate functions
-            List<Expr> aggExprs = new ArrayList<Expr>();
-            for (SelectElem se : aggs) {
-                aggExprs.add(se.getExpr());
-            }
-            r = new AggregatedRelation(vc, r, aggExprs);
-            //			r.setAliasName(Relation.genTableAlias());
-
-            // we put another layer on top of AggregatedRelation for
-            // 1. the case where the select list does not include all of groupby and aggregate expressions.
-            // 2. the select elems are not in the order of groupby and aggregations.
-            List<SelectElem> prj = new ArrayList<SelectElem>();
-            for (SelectElem e : bothInOrder) {
-                prj.add(e);
-                //				if (aggs.contains(e)) {
-                //					// based on the assumption that agg expressions are always aliased.
-                //					// we define an alias if it doesn't exists.
-                //					prj.add(new SelectElem(Expr.from(e.getAlias()), e.getAlias()));
-                //				} else {
-                //					if (e.aliasPresent()) {
-                //						prj.add(new SelectElem(e.getExpr(), e.getAlias()));
-                //					} else {
-                //						prj.add(e);
-                //					}	
-                //				}
-            }
-            r = new ProjectedRelation(vc, r, prj);
-        } else {
-            r = new ProjectedRelation(vc, r, bothInOrder);
-        }
+//        if (aggs.size() > 0) {		// if there are aggregate functions
+//            List<Expr> aggExprs = new ArrayList<Expr>();
+//            for (SelectElem se : aggs) {
+//                aggExprs.add(se.getExpr());
+//            }
+//            r = new AggregatedRelation(vc, r, aggExprs);
+//            //			r.setAliasName(Relation.genTableAlias());
+//
+//            // we put another layer on top of AggregatedRelation for
+//            // 1. the case where the select list does not include all of groupby and aggregate expressions.
+//            // 2. the select elems are not in the order of groupby and aggregations.
+//            List<SelectElem> prj = new ArrayList<SelectElem>();
+//            for (SelectElem e : bothInOrder) {
+//                prj.add(e);
+//                //				if (aggs.contains(e)) {
+//                //					// based on the assumption that agg expressions are always aliased.
+//                //					// we define an alias if it doesn't exists.
+//                //					prj.add(new SelectElem(Expr.from(e.getAlias()), e.getAlias()));
+//                //				} else {
+//                //					if (e.aliasPresent()) {
+//                //						prj.add(new SelectElem(e.getExpr(), e.getAlias()));
+//                //					} else {
+//                //						prj.add(e);
+//                //					}	
+//                //				}
+//            }
+//            r = new ProjectedRelation(vc, r, prj);
+//        } else {
+//            r = new ProjectedRelation(vc, r, bothInOrder);
+//        }
 
         return r;
+    }
+    
+    private List<SelectElem> replaceTableNamesWithAliasesIn(List<SelectElem> elems, TableNameReplacerInExpr tabNameReplacer) {
+        List<SelectElem> substituted = new ArrayList<SelectElem>();
+        for (SelectElem elem : elems) {
+            Expr replaced = tabNameReplacer.visit(elem.getExpr());
+            substituted.add(new SelectElem(elem.getVerdictContext(), replaced, elem.getAlias()));
+        }
+        return substituted;
     }
 
     // Returs a triple of
@@ -639,7 +750,7 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
             List<SelectElem> agg = new ArrayList<SelectElem>();
             List<SelectElem> both = new ArrayList<SelectElem>();
             for (Select_list_elemContext a : ctx.select_list_elem()) {
-                SelectElem e = SelectElem.from(a);
+                SelectElem e = SelectElem.from(vc, a);
                 if (e.isagg()) {
                     agg.add(e);
                 } else {
@@ -701,7 +812,7 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
             if (ctx.INNER() != null) {
                 TableSourceExtractor ext = new TableSourceExtractor();
                 ExactRelation r = ext.visit(ctx.table_source());
-                joinCond = Cond.from(ctx.search_condition());
+                joinCond = Cond.from(vc, ctx.search_condition());
                 return r;
             } else {
                 VerdictLogger.error(this, "Unsupported join condition: " + ctx.getText());

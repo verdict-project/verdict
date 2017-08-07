@@ -1,5 +1,7 @@
 package edu.umich.verdict.relation.condition;
 
+import edu.umich.verdict.VerdictContext;
+
 public class NotCond extends Cond {
 	
 	private Cond cond;
@@ -26,4 +28,12 @@ public class NotCond extends Cond {
 	public String toSql() {
 		return String.format("NOT %s", cond.toSql());
 	}
+
+    @Override
+    public boolean equals(Cond o) {
+        if (o instanceof NotCond) {
+            return cond.equals(o);
+        }
+        return false;
+    }
 }

@@ -1,5 +1,6 @@
 package edu.umich.verdict.relation.condition;
 
+import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.relation.expr.Expr;
 
 public class IsCond extends Cond {
@@ -8,7 +9,23 @@ public class IsCond extends Cond {
 	
 	private Cond right;
 	
-	public IsCond(Expr left, Cond right) {
+	public Expr getLeft() {
+        return left;
+    }
+
+    public void setLeft(Expr left) {
+        this.left = left;
+    }
+
+    public Cond getRight() {
+        return right;
+    }
+
+    public void setRight(Cond right) {
+        this.right = right;
+    }
+
+    public IsCond(Expr left, Cond right) {
 		this.left = left;
 		this.right = right;
 	}
@@ -27,4 +44,13 @@ public class IsCond extends Cond {
 	public String toSql() {
 		return String.format("(%s IS %s)", left.toSql(), right.toSql());
 	}
+
+    @Override
+    public boolean equals(Cond o) {
+        if (o instanceof IsCond) {
+            return getLeft().equals(((IsCond) o).getLeft()) && getRight().equals(((IsCond) o).getRight());
+        }
+        return false;
+    }
+
 }

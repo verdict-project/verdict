@@ -70,7 +70,7 @@ public class SqlToRelationUnitTest {
 		ExactRelation r = ExactRelation.from(vc, sql);
 		System.out.println(r);
 		System.out.println(r.toSql());
-		System.out.println(Relation.prettyfySql(r.toSql()));
+		System.out.println(Relation.prettyfySql(vc, r.toSql()));
 	}
 	
 	@Test
@@ -86,7 +86,7 @@ public class SqlToRelationUnitTest {
 		ExactRelation r = ExactRelation.from(vc, sql);
 		System.out.println(r);
 		System.out.println(r.toSql());
-		System.out.println(Relation.prettyfySql(r.toSql()));
+		System.out.println(Relation.prettyfySql(vc, r.toSql()));
 	}
 	
 	@Test
@@ -129,7 +129,7 @@ public class SqlToRelationUnitTest {
 					" ORDER BY `order_hour_of_day`";
 		ExactRelation r = ExactRelation.from(vc, sql);
 		System.out.println(r.toSql());
-		System.out.println(Relation.prettyfySql(r.toSql()));
+		System.out.println(Relation.prettyfySql(vc, r.toSql()));
 	}
 	
 	@Test
@@ -150,7 +150,7 @@ public class SqlToRelationUnitTest {
 		ExactRelation r = ExactRelation.from(vc, sql);
 		System.out.println(r);
 		System.out.println(r.toSql());
-		System.out.println(Relation.prettyfySql(r.toSql()));
+		System.out.println(Relation.prettyfySql(vc, r.toSql()));
 	}
 
 }

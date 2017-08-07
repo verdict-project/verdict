@@ -6,12 +6,12 @@ import java.util.List;
 import org.apache.commons.lang3.tuple.Pair;
 
 import edu.umich.verdict.VerdictContext;
-import edu.umich.verdict.parser.VerdictSQLBaseVisitor;
-import edu.umich.verdict.parser.VerdictSQLParser;
-import edu.umich.verdict.parser.VerdictSQLParser.Column_nameContext;
 import edu.umich.verdict.datatypes.SampleParam;
 import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
+import edu.umich.verdict.parser.VerdictSQLBaseVisitor;
+import edu.umich.verdict.parser.VerdictSQLParser;
+import edu.umich.verdict.parser.VerdictSQLParser.Column_nameContext;
 import edu.umich.verdict.relation.ApproxSingleRelation;
 import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.FuncExpr;
@@ -84,7 +84,7 @@ public class CreateSampleQuery extends Query {
 			aggs.add(FuncExpr.count());
 			List<String> cnames = new ArrayList<String>(vc.getMeta().getColumns(originalTable));
 			for (String c : cnames) {
-				aggs.add(FuncExpr.approxCountDistinct(ColNameExpr.from(c), vc));
+				aggs.add(FuncExpr.approxCountDistinct(vc, ColNameExpr.from(vc, c)));
 			}
 			List<Object> rs = ApproxSingleRelation.from(vc, ursParam).aggOnSample(aggs).collect().get(0);
 
