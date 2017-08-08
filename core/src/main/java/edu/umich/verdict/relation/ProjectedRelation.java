@@ -93,7 +93,9 @@ public class ProjectedRelation extends ExactRelation {
         List<ApproxRelation> ofSources = source.nBestSamples(elem, n);
         List<ApproxRelation> projected = new ArrayList<ApproxRelation>();
         for (ApproxRelation a : ofSources) {
-            projected.add(new ApproxProjectedRelation(vc, a, elems));
+            ApproxRelation p = new ApproxProjectedRelation(vc, a, elems);
+            p.setAlias(getAlias());
+            projected.add(p);
         }
         return projected;
     }
@@ -179,26 +181,6 @@ public class ProjectedRelation extends ExactRelation {
     //	}
 
     @Override
-    public ColNameExpr partitionColumn() {
-        String pcol = partitionColumnName();
-        ColNameExpr col = null;
-
-        // first inspect if there is a randomly generated partition column in this instance's projection list
-        for (SelectElem elem : elems) {
-            String alias = elem.getAlias();
-            if (alias != null && alias.equals(pcol)) {
-                col = new ColNameExpr(vc, pcol, getAlias());
-            }
-        }
-
-        if (col == null) {
-            col = source.partitionColumn();
-        }
-
-        return col;
-    }
-
-    @Override
     public List<ColNameExpr> accumulateSamplingProbColumns() {
         List<ColNameExpr> exprs = source.accumulateSamplingProbColumns();
         List<ColNameExpr> exprsInNewTable = new ArrayList<ColNameExpr>(); 
@@ -215,6 +197,74 @@ public class ProjectedRelation extends ExactRelation {
         s.append(String.format("%s(%s) [%s]\n", this.getClass().getSimpleName(), getAlias(), Joiner.on(", ").join(elems)));
         s.append(source.toStringWithIndent(indent + "  "));
         return s.toString();
+    }
+
+    //	@Override
+    //	public List<SelectElem> getSelectList() {
+    //		return elems;
+    //	}
+    
+    //	@Override
+    //	public List<SelectElem> selectElemsWithAggregateSource() {
+    //		List<SelectElem> sourceAggElems = source.selectElemsWithAggregateSource();
+    //		final Set<String> sourceAggAliases = new HashSet<String>();
+    //		for (SelectElem e : sourceAggElems) {
+    //			sourceAggAliases.add(e.getAlias());
+    //		}
+    //		
+    //		ExprVisitor<Boolean> v = new ExprVisitor<Boolean>() {
+    //			private boolean aggSourceObserved = false;
+    //
+    //			@Override
+    //			public Boolean call(Expr expr) {
+    //				if (expr instanceof ColNameExpr) {
+    //					if (sourceAggAliases.contains(((ColNameExpr) expr).getCol())) {
+    //						aggSourceObserved = true;
+    //					}
+    //				}
+    //				return aggSourceObserved;
+    //			}
+    //		};
+    //		
+    //		// now examine each select list elem
+    //		List<SelectElem> aggElems = new ArrayList<SelectElem>();
+    //		for (SelectElem e : elems) {
+    //			if (v.visit(e.getExpr())) {
+    //				aggElems.add(e);
+    //			}
+    //		}
+    //		
+    //		return aggElems;
+    //	}
+    
+    @Override
+    public ColNameExpr partitionColumn() {
+        String pcol = partitionColumnName();
+        ColNameExpr col = null;
+    
+        // first inspect if there is a randomly generated partition column in this instance's projection list
+        for (SelectElem elem : elems) {
+            String alias = elem.getAlias();
+            if (alias != null && alias.equals(pcol)) {
+                col = new ColNameExpr(vc, pcol, getAlias());
+            }
+        }
+    
+        if (col == null) {
+            col = source.partitionColumn();
+        }
+    
+        return col;
+    }
+
+    @Override
+    public Expr tupleProbabilityColumn() {
+        return source.tupleProbabilityColumn();
+    }
+
+    @Override
+    public Expr tableSamplingRatio() {
+        return source.tableSamplingRatio();
     }
 
 }

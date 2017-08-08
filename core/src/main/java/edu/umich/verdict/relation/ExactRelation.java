@@ -458,7 +458,7 @@ public abstract class ExactRelation extends Relation {
      * 
      * How a partition column is determined:
      * <ul>
-     * <li>SingleRelation: partition column must exist if a sample table. If not, {@link ExactRelation#partitionColumn()} returns null. </li>
+     * <li>SingleRelation: partition column must exist if it's a sample table. If not, {@link ExactRelation#partitionColumn()} returns null. </li>
      * <li>JoinedRelation: find a first-found sample table</li>
      * <li>ProjectedRelation: the partition column of a source must be preserved.</li>
      * <li>AggregatedRelation: the partition column of a source must be preserved by inserting an extra groupby column.</li>
@@ -468,6 +468,19 @@ public abstract class ExactRelation extends Relation {
      * @return
      */
     public abstract ColNameExpr partitionColumn();
+    
+    /**
+     * The returned contains the tuple-level sampling probability. For universe and uniform samples, this is basically
+     * the ratio of the sample size to the original table size.
+     * @return
+     */
+    public abstract Expr tupleProbabilityColumn();
+    
+    /**
+     * The returned column contains 
+     * @return
+     */
+    public abstract Expr tableSamplingRatio();
 
     @Deprecated
     public abstract List<ColNameExpr> accumulateSamplingProbColumns();
@@ -563,7 +576,7 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
                 }
             }
             
-            VerdictLogger.error(this, String.format("The column name (%s) is not found in the from clause.", expr.toString()));
+            VerdictLogger.error(this, String.format("The specified column, %s, is not found in the tables in the from clause.", expr.toString()));
             return expr;
         }
     }
@@ -863,10 +876,10 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
         return joinedTabeSource;
     }
     
-    private List<SelectElem> replaceTableNamesWithAliasesIn(List<SelectElem> elems, TableNameReplacerInExpr tabNameReplacer) {
+    private List<SelectElem> replaceTableNamesWithAliasesIn(List<SelectElem> elems, TableSourceResolver resolver) {
         List<SelectElem> substituted = new ArrayList<SelectElem>();
         for (SelectElem elem : elems) {
-            Expr replaced = tabNameReplacer.visit(elem.getExpr());
+            Expr replaced = resolver.visit(elem.getExpr());
             substituted.add(new SelectElem(elem.getVerdictContext(), replaced, elem.getAlias()));
         }
         return substituted;

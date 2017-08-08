@@ -786,7 +786,7 @@ derived_table
 
 function_call
     : ranking_windowed_function
-    | mathematical_function_expression
+    | value_manipulation_function
     | aggregate_windowed_function
     ;
 
@@ -860,30 +860,30 @@ ranking_windowed_function
     | ROW_NUMBER '(' ')' over_clause
     ;
 
-mathematical_function_expression
-    : unary_mathematical_function
-    | noparam_mathematical_function
-    | binary_mathematical_function
-    | ternary_mathematical_function
+value_manipulation_function
+    : unary_manipulation_function
+    | noparam_manipulation_function
+    | binary_manipulation_function
+    | ternary_manipulation_function
     ;
     
-ternary_mathematical_function
+ternary_manipulation_function
     : function_name=(CONV | SUBSTR)
       '(' expression ',' expression ',' expression ')'
     ;
 
-binary_mathematical_function
-    : function_name=(MOD | PMOD)
+binary_manipulation_function
+    : function_name=(MOD | PMOD )
       '(' expression ',' expression ')'
     ;
 
-unary_mathematical_function
+unary_manipulation_function
     : function_name=(ROUND | FLOOR | CEIL | EXP | LN | LOG10 | LOG2 | SIN | COS | TAN | SIGN | RAND | FNV_HASH | ABS | STDDEV | SQRT | MD5 | CRC32)
       '(' expression ')'
     | function_name=CAST '(' cast_as_expression ')'
     ;
     
-noparam_mathematical_function
+noparam_manipulation_function
     : function_name=(UNIX_TIMESTAMP | CURRENT_TIMESTAMP)
       '(' ')'
     ;

@@ -308,13 +308,6 @@ public class AggregatedRelation extends ExactRelation {
     //	}
 
     @Override
-    public ColNameExpr partitionColumn() {
-        ColNameExpr col = source.partitionColumn();
-        //		col.setTab(getAliasName());
-        return col;
-    }
-
-    @Override
     public List<ColNameExpr> accumulateSamplingProbColumns() {
         ColNameExpr expr = new ColNameExpr(vc, samplingProbabilityColumnName(), getAlias());
         return Arrays.asList(expr);
@@ -327,6 +320,42 @@ public class AggregatedRelation extends ExactRelation {
         s.append(String.format("%s(%s) [%s]\n", this.getClass().getSimpleName(), getAlias(), Joiner.on(", ").join(elems)));
         s.append(source.toStringWithIndent(indent + "  "));
         return s.toString();
+    }
+
+    //	@Override
+    //	public List<SelectElem> getSelectList() {
+    //		List<SelectElem> elems = new ArrayList<SelectElem>();
+    //		
+    //		Pair<List<Expr>, ExactRelation> groupsAndNextR = allPrecedingGroupbys(this.source);
+    //		List<Expr> groupby = groupsAndNextR.getLeft();
+    //		for (Expr g : groupby) {
+    //			elems.add(new SelectElem(g));
+    //		}
+    //		
+    //		elems.addAll(this.aggs);
+    //		
+    //		return elems;
+    //	}
+    
+    //	@Override
+    //	public List<SelectElem> selectElemsWithAggregateSource() {
+    //		return aggs;
+    //	}
+    
+    @Override
+    public ColNameExpr partitionColumn() {
+        ColNameExpr col = new ColNameExpr(vc, partitionColumnName(), getAlias());
+        return col;
+    }
+
+    @Override
+    public Expr tupleProbabilityColumn() {
+        return new ColNameExpr(vc, samplingProbabilityColumnName(), getAlias());
+    }
+
+    @Override
+    public Expr tableSamplingRatio() {
+        return new ColNameExpr(vc, samplingRatioColumnName(), getAlias());
     }
 
 }

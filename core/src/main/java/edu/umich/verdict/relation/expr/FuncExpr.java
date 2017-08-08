@@ -193,7 +193,7 @@ public class FuncExpr extends Expr {
             }
 
             @Override
-            public FuncExpr visitUnary_mathematical_function(VerdictSQLParser.Unary_mathematical_functionContext ctx) {
+            public FuncExpr visitUnary_manipulation_function(VerdictSQLParser.Unary_manipulation_functionContext ctx) {
                 String fname = ctx.function_name.getText().toUpperCase();
                 FuncName funcName = string2FunctionType.containsKey(fname)? string2FunctionType.get(fname) : FuncName.UNKNOWN;
                 if (fname.equals("CAST")) {
@@ -206,21 +206,21 @@ public class FuncExpr extends Expr {
             }
 
             @Override
-            public FuncExpr visitNoparam_mathematical_function(VerdictSQLParser.Noparam_mathematical_functionContext ctx) {
+            public FuncExpr visitNoparam_manipulation_function(VerdictSQLParser.Noparam_manipulation_functionContext ctx) {
                 String fname = ctx.function_name.getText().toUpperCase();
                 FuncName funcName = string2FunctionType.containsKey(fname)? string2FunctionType.get(fname) : FuncName.UNKNOWN;
                 return new FuncExpr(funcName, null);
             }
 
             @Override
-            public FuncExpr visitBinary_mathematical_function(VerdictSQLParser.Binary_mathematical_functionContext ctx) {
+            public FuncExpr visitBinary_manipulation_function(VerdictSQLParser.Binary_manipulation_functionContext ctx) {
                 String fname = ctx.function_name.getText().toUpperCase();
                 FuncName funcName = string2FunctionType.containsKey(fname)? string2FunctionType.get(fname) : FuncName.UNKNOWN;
                 return new FuncExpr(funcName, Expr.from(vc, ctx.expression(0)), Expr.from(vc, ctx.expression(1)));
             }
 
             @Override
-            public FuncExpr visitTernary_mathematical_function(VerdictSQLParser.Ternary_mathematical_functionContext ctx) {
+            public FuncExpr visitTernary_manipulation_function(VerdictSQLParser.Ternary_manipulation_functionContext ctx) {
                 String fname = ctx.function_name.getText().toUpperCase();
                 FuncName funcName = string2FunctionType.containsKey(fname)? string2FunctionType.get(fname) : FuncName.UNKNOWN;
                 return new FuncExpr(funcName, Expr.from(vc, ctx.expression(0)), Expr.from(vc, ctx.expression(1)), Expr.from(vc, ctx.expression(2)));

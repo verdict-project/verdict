@@ -105,13 +105,6 @@ public class FilteredRelation extends ExactRelation {
     //	}
 
     @Override
-    public ColNameExpr partitionColumn() {
-        ColNameExpr col = source.partitionColumn();
-        //		col.setTab(getAliasName());
-        return col;
-    }
-
-    @Override
     public List<ColNameExpr> accumulateSamplingProbColumns() {
         return source.accumulateSamplingProbColumns();
     }
@@ -123,6 +116,28 @@ public class FilteredRelation extends ExactRelation {
         s.append(String.format("%s(%s) [%s]\n", this.getClass().getSimpleName(), getAlias(), cond.toString()));
         s.append(source.toStringWithIndent(indent + "  "));
         return s.toString();
+    }
+
+    //	@Override
+    //	public List<SelectElem> getSelectList() {
+    //		return source.getSelectList();
+    //	}
+    
+    @Override
+    public ColNameExpr partitionColumn() {
+        ColNameExpr col = source.partitionColumn();
+        //		col.setTab(getAliasName());
+        return col;
+    }
+
+    @Override
+    public Expr tupleProbabilityColumn() {
+        return source.tupleProbabilityColumn();
+    }
+
+    @Override
+    public Expr tableSamplingRatio() {
+        return source.tableSamplingRatio();
     }
 }
 

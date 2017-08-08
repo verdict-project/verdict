@@ -587,8 +587,14 @@ public abstract class Dbms {
         return vc.getConf().subsamplingPartitionCount();
     }
 
+    // tuple-level sampling probability column name
     public String samplingProbabilityColumnName() {
         return vc.getConf().subsamplingProbabilityColumn();
+    }
+    
+    // table-level sampling probability column name
+    public String samplingRatioColumnName() {
+        return "__vratio";
     }
 
     public boolean isJDBC() {

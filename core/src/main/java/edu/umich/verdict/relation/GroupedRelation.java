@@ -143,13 +143,6 @@ public class GroupedRelation extends ExactRelation {
 //	}
 
 	@Override
-	public ColNameExpr partitionColumn() {
-		ColNameExpr col = source.partitionColumn();
-//		col.setTab(getAliasName());
-		return col;
-	}
-
-	@Override
 	public List<ColNameExpr> accumulateSamplingProbColumns() {
 		return source.accumulateSamplingProbColumns();
 	}
@@ -162,5 +155,27 @@ public class GroupedRelation extends ExactRelation {
 		s.append(source.toStringWithIndent(indent + "  "));
 		return s.toString();
 	}
+
+    //	@Override
+    //	public List<SelectElem> getSelectList() {
+    //		return source.getSelectList();
+    //	}
+    
+    	@Override
+    	public ColNameExpr partitionColumn() {
+    		ColNameExpr col = source.partitionColumn();
+    //		col.setTab(getAliasName());
+    		return col;
+    	}
+
+    @Override
+    public Expr tupleProbabilityColumn() {
+        return source.tupleProbabilityColumn();
+    }
+
+    @Override
+    public Expr tableSamplingRatio() {
+        return source.tableSamplingRatio();
+    }
 
 }
