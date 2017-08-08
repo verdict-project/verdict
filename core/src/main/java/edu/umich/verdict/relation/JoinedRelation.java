@@ -27,6 +27,14 @@ public class JoinedRelation extends ExactRelation {
 
     private ExactRelation source2;
 
+    public ExactRelation getLeftSource() {
+        return source1;
+    }
+
+    public ExactRelation getRightSource() {
+        return source2;
+    }
+
     private List<Pair<Expr, Expr>> joinCols;
 
     private String joinType = "INNER";
@@ -50,7 +58,7 @@ public class JoinedRelation extends ExactRelation {
         return r;
     }
 
-    public static JoinedRelation from(VerdictContext vc, ExactRelation source1, ExactRelation source2, Cond cond) throws VerdictException {
+    public static JoinedRelation from(VerdictContext vc, ExactRelation source1, ExactRelation source2, Cond cond) {
         return from(vc, source1, source2, extractJoinConds(cond));
     }
 
@@ -92,7 +100,7 @@ public class JoinedRelation extends ExactRelation {
         setJoinCond(cond, null);
     }
 
-    private static List<Pair<Expr, Expr>> extractJoinConds(Cond cond) throws VerdictException {
+    private static List<Pair<Expr, Expr>> extractJoinConds(Cond cond) {
         if (cond == null) {
             return null;
         }
@@ -108,7 +116,8 @@ public class JoinedRelation extends ExactRelation {
             l.addAll(extractJoinConds(and.getRight()));
             return l;
         } else {
-            throw new VerdictException("Join condition must be an 'and' condition.");
+            VerdictLogger.error("Join condition must be a CompCond instance possibly in an AndCond instance.");
+            return null;
         }
     }
 
@@ -145,7 +154,9 @@ public class JoinedRelation extends ExactRelation {
      */
 
     public ApproxRelation approx() throws VerdictException {
-        return null;
+        ApproxRelation a = new ApproxJoinedRelation(vc, source1.approx(), source2.approx(), joinCols);
+        a.setAlias(getAlias());
+        return a;
     }
 
     protected ApproxRelation approxWith(Map<TableUniqueName, SampleParam> replace) {

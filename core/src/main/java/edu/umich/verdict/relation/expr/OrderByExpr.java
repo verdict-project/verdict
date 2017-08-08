@@ -58,7 +58,7 @@ public class OrderByExpr extends Expr {
 	}
 
 	@Override
-	public Expr withTableSubstituted(String newTab) {
+	public OrderByExpr withTableSubstituted(String newTab) {
 		Expr newExpr = expr.withTableSubstituted(newTab);
 		return new OrderByExpr(vc, newExpr, direction.orNull());
 	}

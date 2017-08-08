@@ -1,11 +1,15 @@
 package edu.umich.verdict.relation.condition;
 
 import java.util.List;
+import java.util.Set;
+
+import org.apache.commons.lang3.tuple.Pair;
 
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.parser.VerdictSQLBaseVisitor;
 import edu.umich.verdict.parser.VerdictSQLParser;
 import edu.umich.verdict.parser.VerdictSQLParser.Search_conditionContext;
+import edu.umich.verdict.relation.ExactRelation;
 import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.util.StringManipulations;
 
@@ -32,7 +36,14 @@ public abstract class Cond {
         return v.call(this);
     }
 
-    public Cond searchForJoinCondition(List<String> joinedTableName, String rightTableName) {
+    /**
+     * 
+     * @param joinedTableName
+     * @return A pair of the join condition and the name of a table to be joined to existing table sources.
+     * Note that, where there exists already joined tables, the right side of the returned String pair is
+     * the new table.
+     */
+    public Pair<Cond, Pair<ExactRelation, ExactRelation>> searchForJoinCondition(List<ExactRelation> tableSources) {
         return null;
     }
 
@@ -125,8 +136,14 @@ class CondGen extends VerdictSQLBaseVisitor<Cond> {
     
     @Override
     public Cond visitIn_predicate(VerdictSQLParser.In_predicateContext ctx) {
-        Cond inCond = InCond.from(vc, ctx);
+        InCond inCond = InCond.from(vc, ctx);
         return inCond;
+    }
+    
+    @Override
+    public Cond visitLike_predicate(VerdictSQLParser.Like_predicateContext ctx) {
+        LikeCond likeCond = LikeCond.from(vc, ctx);
+        return likeCond;
     }
 
     @Override

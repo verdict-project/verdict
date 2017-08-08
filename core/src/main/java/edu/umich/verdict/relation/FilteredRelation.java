@@ -52,7 +52,9 @@ public class FilteredRelation extends ExactRelation {
      */
 
     public ApproxRelation approx() throws VerdictException {
-        return null;
+        ApproxRelation a = new ApproxFilteredRelation(vc, source.approx(), cond);
+        a.setAlias(getAlias());
+        return a;
     }
 
     protected ApproxRelation approxWith(Map<TableUniqueName, SampleParam> replace) {
