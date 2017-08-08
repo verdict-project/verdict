@@ -121,8 +121,34 @@ public class DbmsRedshift extends DbmsJDBC {
 	@Override
 	// this actually gets the schemas instead of database since in redshift database does not mater; schema matters.
 	public ResultSet getDatabaseNamesInResultSet() throws VerdictException {
-//        return executeJdbcQuery("SELECT datname FROM pg_database WHERE datistemplate = false");
+//        return executeJdbcQuery("select nspname from pg_namespace WHERE datistemplate = false");
         return executeJdbcQuery("select nspname from pg_namespace");
+    }
+	
+	@Override
+	public void createMetaTablesInDMBS(
+            TableUniqueName originalTableName,
+            TableUniqueName sizeTableName,
+            TableUniqueName nameTableName) throws VerdictException {
+        VerdictLogger.debug(this, "Creates meta tables if not exist.");
+        String sql = String.format("CREATE TABLE IF NOT EXISTS %s", sizeTableName)
+                + " (schemaname TEXT, "
+                + " tablename TEXT, "
+                + " samplesize BIGINT, "
+                + " originaltablesize BIGINT)";
+        executeUpdate(sql);
+
+        sql = String.format("CREATE TABLE IF NOT EXISTS %s", nameTableName)
+                + " (originalschemaname TEXT, "
+                + " originaltablename TEXT, "
+                + " sampleschemaaname TEXT, "
+                + " sampletablename TEXT, "
+                + " sampletype TEXT, "
+                + " samplingratio DOUBLE, "
+                + " columnnames TEXT)";
+        executeUpdate(sql);
+
+        VerdictLogger.debug(this, "Meta tables created.");
     }
 	
 }
