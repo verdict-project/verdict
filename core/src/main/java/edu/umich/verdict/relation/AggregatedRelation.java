@@ -109,6 +109,7 @@ public class AggregatedRelation extends ExactRelation {
 
             if (eligible) {
                 ApproxRelation c = new ApproxAggregatedRelation(vc, sc, elems);
+                c.setAlias(getAlias());
                 candidates.add(c);
             }
         }
