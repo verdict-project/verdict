@@ -926,6 +926,9 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
             if (ctx.as_table_alias() != null) {
                 r.setAlias(ctx.as_table_alias().table_alias().getText());
             }
+            TableUniqueName tabName = ((SingleRelation) r).getTableName();
+            Set<String> colNames = vc.getMeta().getColumns(tabName);
+            tableAliasAndColNames.put(tabName, Pair.of(r.getAlias(), colNames));
             return r;
         }
 
@@ -936,6 +939,20 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
             if (ctx.as_table_alias() != null) {
                 r.setAlias(ctx.as_table_alias().table_alias().getText());
             }
+            
+            Set<String> colNames = new HashSet<String>();
+            if (r instanceof AggregatedRelation) {
+                List<SelectElem> elems = ((AggregatedRelation) r).getElemList();
+                for (SelectElem elem : elems) {
+                    if (elem.aliasPresent()) {
+                        colNames.add(elem.getAlias());
+                    } else {
+                        colNames.add(elem.getExpr().toSql());
+                    }
+                }
+            }
+            TableUniqueName tabName = new TableUniqueName(null, r.getAlias());
+            tableAliasAndColNames.put(tabName, Pair.of(r.getAlias(), colNames));
             return r;
         }
 

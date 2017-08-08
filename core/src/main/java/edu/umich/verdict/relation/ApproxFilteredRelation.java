@@ -17,6 +17,7 @@ import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.relation.expr.ExprModifier;
 import edu.umich.verdict.relation.expr.ExprVisitor;
 import edu.umich.verdict.relation.expr.FuncExpr;
+import edu.umich.verdict.relation.expr.SelectElem;
 import edu.umich.verdict.relation.expr.SubqueryExpr;
 import edu.umich.verdict.util.VerdictLogger;
 
@@ -249,12 +250,18 @@ class CondModifierForSubsampling extends CondModifier {
                     // replace the subquery with the first aggregate expression.
                     //					compToRelations.add((ApproxRelation) r);
                     //					return new ColNameExpr(((ApproxAggregatedRelation) r).getSelectList().get(0).getAlias());
-                    VerdictLogger.warn(this, "A non-projected relation is not expected to be found in a subquery.");
-                    return expr;
+//                    VerdictLogger.warn(this, "A non-projected relation is not expected to be found in a subquery.");
+                    
+                    // search for the first aggregate expression.
+                    compToRelations.add((ApproxRelation) r);
+                    List<SelectElem> aggs = ((ApproxAggregatedRelation) r).getAggElemList();
+                    return new ColNameExpr(vc, aggs.get(0).getAlias(), r.getAlias());
                 } else if (r instanceof ApproxProjectedRelation) {
                     // replace the subquery with the first select elem expression.
-                    compToRelations.add((ApproxRelation) r);
-                    return new ColNameExpr(vc, ((ApproxProjectedRelation) r).getSelectElems().get(0).getAlias());
+                    VerdictLogger.error(this, "Using non-aggregate select statement in a subquery is not supported yet.");
+                    return expr;
+//                    compToRelations.add((ApproxRelation) r);
+//                    return new ColNameExpr(vc, ((ApproxProjectedRelation) r).getSelectElems().get(0).getAlias());
                 } else {
                     VerdictLogger.warn(this, "An exact relation is found in an approximate query statement."
                             + " Mixing approximate relations with exact relations are not supported.");

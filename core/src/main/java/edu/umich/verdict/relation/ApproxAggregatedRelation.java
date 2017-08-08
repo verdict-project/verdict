@@ -46,6 +46,16 @@ public class ApproxAggregatedRelation extends ApproxRelation {
     public List<SelectElem> getElemList() {
         return elems;
     }
+    
+    public List<SelectElem> getAggElemList() {
+        List<SelectElem> aggs = new ArrayList<SelectElem>();
+        for (SelectElem elem : elems) {
+            if (elem.isagg()) {
+                aggs.add(elem);
+            }
+        }
+        return aggs;
+    }
 
     public void setIncludeGroupsInToSql(boolean o) {
         includeGroupsInToSql = o;
@@ -112,6 +122,11 @@ public class ApproxAggregatedRelation extends ApproxRelation {
             else {
                 // skip the partition size column
                 if (elem.getAlias().equals(partitionSizeAlias)) {
+                    continue;
+                }
+                
+                // skip the extra columns inserted
+                if (!originalElem.isPresent()) {
                     continue;
                 }
 
@@ -227,8 +242,11 @@ public class ApproxAggregatedRelation extends ApproxRelation {
         // to compute the partition size
         scaledElems.add(new SelectElem(vc, FuncExpr.count(), partitionSizeAlias));
         
-        ExactRelation r = new AggregatedRelation(vc, newSource, scaledElems);
+        // insert probability column
+        scaledElems.add(new SelectElem(vc, FuncExpr.avg(ConstantExpr.from(vc, samplingProbability())), samplingProbabilityColumnName()));
         
+        ExactRelation r = new AggregatedRelation(vc, newSource, scaledElems);
+        r.setAlias(getAlias());
         
 //        //		List<ColNameExpr> samplingProbCols = newSource.accumulateSamplingProbColumns();
 //        List<Expr> groupby = new ArrayList<Expr>();
@@ -249,7 +267,7 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 //        // to compute the partition size
 //        scaledExpr.add(FuncExpr.count());
 //        ExactRelation r = new AggregatedRelation(vc, newSource, scaledExpr);
-
+        
         return r;
     }
 
@@ -304,7 +322,15 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 
         ExprModifier v = new ExprModifier(vc) {
             public Expr call(Expr expr) {
-                if (expr instanceof FuncExpr) {
+                if (expr instanceof BinaryOpExpr) {
+                    BinaryOpExpr old = (BinaryOpExpr) expr;
+                    BinaryOpExpr newExpr = new BinaryOpExpr(
+                                               expr.getVerdictContext(),
+                                               visit(old.getLeft()),
+                                               visit(old.getRight()),
+                                               old.getOp());
+                    return newExpr;
+                } else if (expr instanceof FuncExpr) {
                     // Take two different approaches:
                     // 1. stratified samples: use the verdict_sampling_prob column (in each tuple).
                     // 2. other samples: use either the uniform sampling probability or the ratio between the sample
