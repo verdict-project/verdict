@@ -79,6 +79,7 @@ public class ApproxAggregatedRelation extends ApproxRelation {
         }
         
         ExactRelation r = rewriteWithPartition();
+//        String newAlias = genTableAlias();
         
         // put another layer to combine per-partition aggregates
         List<SelectElem> newElems = new ArrayList<SelectElem>();
@@ -163,7 +164,7 @@ public class ApproxAggregatedRelation extends ApproxRelation {
         }
         
         r = new AggregatedRelation(vc, r, newElems);
-
+//        r.setAlias(newAlias);
         return r;
         
 //        // direct call to this class is not expected; however, we still support it by creating another

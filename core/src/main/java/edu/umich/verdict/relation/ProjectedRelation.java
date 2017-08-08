@@ -63,15 +63,15 @@ public class ProjectedRelation extends ExactRelation {
         return getAlias();
     }
 
-    public List<SelectElem> getAggElems() {
-        List<SelectElem> elems = new ArrayList<SelectElem>();
-        for (SelectElem e : this.elems) {
-            if (e.getExpr().isagg()) {
-                elems.add(e);
-            }
-        }
-        return elems;
-    }
+//    public List<SelectElem> getAggElems() {
+//        List<SelectElem> elems = new ArrayList<SelectElem>();
+//        for (SelectElem e : this.elems) {
+//            if (e.getExpr().isagg()) {
+//                elems.add(e);
+//            }
+//        }
+//        return elems;
+//    }
 
     @Override
     public ApproxRelation approx() throws VerdictException {

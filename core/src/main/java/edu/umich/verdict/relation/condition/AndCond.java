@@ -1,8 +1,12 @@
 package edu.umich.verdict.relation.condition;
 
 import java.util.List;
+import java.util.Set;
+
+import org.apache.commons.lang3.tuple.Pair;
 
 import edu.umich.verdict.VerdictContext;
+import edu.umich.verdict.relation.ExactRelation;
 
 public class AndCond extends Cond {
 
@@ -38,10 +42,10 @@ public class AndCond extends Cond {
     }
 
     @Override
-    public Cond searchForJoinCondition(List<String> joinedTableName, String rightTableName) {
-        Cond j = null;
-        j = left.searchForJoinCondition(joinedTableName, rightTableName);
-        if (j == null) j = right.searchForJoinCondition(joinedTableName, rightTableName);
+    public Pair<Cond, Pair<ExactRelation, ExactRelation>> searchForJoinCondition(List<ExactRelation> tableSources) {
+        Pair<Cond, Pair<ExactRelation, ExactRelation>> j = null;
+        j = left.searchForJoinCondition(tableSources);
+        if (j == null) j = right.searchForJoinCondition(tableSources);
         return j;
     }
 
