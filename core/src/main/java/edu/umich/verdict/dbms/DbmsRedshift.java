@@ -42,6 +42,11 @@ public class DbmsRedshift extends DbmsJDBC {
 		return expr;
 	}
 	
+	@Override
+	public void createCatalog(String catalog) throws VerdictException {
+        String sql = String.format("create schema if not exists %s", catalog);
+        executeUpdate(sql);
+    }
 
 	@Override
 	protected String randomPartitionColumn() {
@@ -114,8 +119,10 @@ public class DbmsRedshift extends DbmsJDBC {
     }
 	
 	@Override
+	// this actually gets the schemas instead of database since in redshift database does not mater; schema matters.
 	public ResultSet getDatabaseNamesInResultSet() throws VerdictException {
-        return executeJdbcQuery("SELECT datname FROM pg_database WHERE datistemplate = false");
+//        return executeJdbcQuery("SELECT datname FROM pg_database WHERE datistemplate = false");
+        return executeJdbcQuery("select nspname from pg_namespace");
     }
 	
 }

@@ -19,14 +19,9 @@ public class RedshiftThroughVerdictTest {
         conf.set("loglevel", "debug");
 
         VerdictContext vc = VerdictJDBCContext.from(conf);
-        vc.executeJdbcQuery("SELECT departments.department_id, department, count(*) as order_count\n" + 
-                "FROM order_products, orders, products, departments\n" + 
-                "WHERE orders.order_id = order_products.order_id\n" + 
-                "  AND order_products.product_id = products.product_id\n" + 
-                "  AND products.department_id = departments.department_id\n" + 
-                "GROUP BY departments.department_id, department\n" + 
-                "ORDER BY order_count DESC, departments.department_id DESC\n" + 
-                "LIMIT 5;");
+//        vc.executeJdbcQuery("select count(*) from tpch1g.customer");
+       
+        vc.executeJdbcQuery("create sample of public.orders");
 
         vc.destroy();
     }
