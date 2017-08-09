@@ -99,4 +99,9 @@ public class OrderedRelation extends ExactRelation {
         return source.tableSamplingRatio();
     }
 
+    @Override
+    public Expr distinctCountPartitionColumn() {
+        return source.distinctCountPartitionColumn();
+    }
+
 }
