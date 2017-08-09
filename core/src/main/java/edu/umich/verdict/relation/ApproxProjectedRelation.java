@@ -4,17 +4,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang3.tuple.Pair;
-
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.datatypes.TableUniqueName;
-import edu.umich.verdict.relation.expr.BinaryOpExpr;
 import edu.umich.verdict.relation.expr.ColNameExpr;
-import edu.umich.verdict.relation.expr.ConstantExpr;
 import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.relation.expr.FuncExpr;
 import edu.umich.verdict.relation.expr.SelectElem;
@@ -218,11 +213,18 @@ public class ApproxProjectedRelation extends ApproxRelation {
      */
     @Override
     protected ExactRelation rewriteWithPartition() {
+        ExactRelation newSource = source.rewriteWithPartition();
         List<SelectElem> newElems = new ArrayList<SelectElem>();
         newElems.addAll(elems);
-        newElems.add(new SelectElem(vc, new ColNameExpr(vc, partitionColumnName())));
         
-        ExactRelation r = new ProjectedRelation(vc, source.rewriteWithPartition(), newElems);
+        // prob column (for point estimate and also for subsampling)
+        newElems.add(new SelectElem(vc, newSource.tupleProbabilityColumn(), samplingProbabilityColumnName()));
+        
+        // partition column (for subsampling)
+        newElems.add(new SelectElem(vc, newSource.partitionColumn(), partitionColumnName()));
+        
+        ExactRelation r = new ProjectedRelation(vc, newSource, newElems);
+        r.setAlias(getAlias());
         return r;
         
 //        return rewriteWithPartition(false);

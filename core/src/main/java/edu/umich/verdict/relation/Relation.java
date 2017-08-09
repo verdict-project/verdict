@@ -31,6 +31,7 @@ import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.relation.expr.ExprModifier;
 import edu.umich.verdict.relation.expr.FuncExpr;
 import edu.umich.verdict.relation.expr.OrderByExpr;
+import edu.umich.verdict.relation.expr.OverClause;
 import edu.umich.verdict.relation.expr.SelectElem;
 import edu.umich.verdict.relation.expr.SubqueryExpr;
 import edu.umich.verdict.util.ResultSetConversion;
@@ -253,9 +254,21 @@ public abstract class Relation {
     public String partitionColumnName() {
         return vc.getDbms().partitionColumnName();
     }
+    
+//    /**
+//     * Used when a universe sample is used for distinct-count.
+//     * @return
+//     */
+//    public String distinctCountPartitionColumnName() {
+//        return vc.getDbms().distinctCountPartitionColumnName();
+//    }
 
     public String samplingProbabilityColumnName() {
         return vc.getDbms().samplingProbabilityColumnName();
+    }
+    
+    public String samplingRatioColumnName() {
+        return vc.getDbms().samplingRatioColumnName();
     }
 
     public static String errorBoundColumn(String original) {
@@ -353,8 +366,14 @@ class TableNameReplacerInExpr extends ExprModifier {
     }
 
     protected Expr replaceFuncExpr(FuncExpr expr) {
-        FuncExpr e = (FuncExpr) expr;
-        return new FuncExpr(e.getFuncName(), visit(e.getUnaryExpr()));
+        List<Expr> argument_exprs = expr.getExpressions();
+        OverClause over = expr.getOverClause();
+        List<Expr> new_argument_exprs = new ArrayList<Expr>();
+        for (Expr e : argument_exprs) {
+            new_argument_exprs.add(visit(e));
+        }
+        FuncExpr newExpr = new FuncExpr(expr.getFuncName(), new_argument_exprs, over);
+        return newExpr;
     }
     
     protected Expr replaceOrderByExpr(OrderByExpr expr) {
@@ -386,9 +405,10 @@ class PrettyPrintVisitor extends VerdictSQLBaseVisitor<String> {
     }
 
     @Override public String visitCreate_table_as_select(VerdictSQLParser.Create_table_as_selectContext ctx) {
-        String create = String.format("CREATE TABLE %s%s AS\n",
+        String create = String.format("CREATE TABLE %s%s%s AS\n",
                 (ctx.IF() != null)? "IF NOT EXISTS " : "",
-                        ctx.table_name().getText());
+                ctx.table_name().getText(),
+                (ctx.STORED_AS_PARQUET() != null)? " STORED AS PARQUET" : "");
 
         PrettyPrintVisitor v = new PrettyPrintVisitor(vc, sql);
         v.setIndent(indent + "    ");
@@ -656,17 +676,17 @@ class PrettyPrintVisitor extends VerdictSQLBaseVisitor<String> {
     //	}
 
     @Override
-    public String visitUnary_mathematical_function(VerdictSQLParser.Unary_mathematical_functionContext ctx) {
+    public String visitUnary_manipulation_function(VerdictSQLParser.Unary_manipulation_functionContext ctx) {
         return String.format("%s(%s)", ctx.getText(), visit(ctx.expression()));
     }
 
     @Override
-    public String visitNoparam_mathematical_function(VerdictSQLParser.Noparam_mathematical_functionContext ctx) {
+    public String visitNoparam_manipulation_function(VerdictSQLParser.Noparam_manipulation_functionContext ctx) {
         return String.format("%s()", ctx.getText());
     }
 
     @Override
-    public String visitBinary_mathematical_function(VerdictSQLParser.Binary_mathematical_functionContext ctx) {
+    public String visitBinary_manipulation_function(VerdictSQLParser.Binary_manipulation_functionContext ctx) {
         return String.format("%s(%s, %s)", ctx.getText(), visit(ctx.expression(0)), visit(ctx.expression(1)));
     }
 

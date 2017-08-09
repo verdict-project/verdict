@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -354,6 +355,18 @@ public class VerdictMeta {
             }
         }
         return sampleInfo;
+    }
+    
+    public SampleParam getSampleParamFor(TableUniqueName sampleTableName) {
+        for (Entry<TableUniqueName, Map<SampleParam, TableUniqueName>> a : sampleNameMeta.entrySet()) {
+            Map<SampleParam, TableUniqueName> sampleMeta = a.getValue();
+            for (Entry<SampleParam, TableUniqueName> b : sampleMeta.entrySet()) {
+                if (b.getValue().equals(sampleTableName)) {
+                    return b.getKey();
+                }
+            }
+        }
+        return null;
     }
 
     /**

@@ -10,13 +10,10 @@ import org.apache.commons.lang3.tuple.Pair;
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
-import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.Expr;
-import edu.umich.verdict.relation.expr.ExprModifier;
 import edu.umich.verdict.relation.expr.FuncExpr;
 import edu.umich.verdict.relation.expr.OrderByExpr;
 import edu.umich.verdict.relation.expr.SelectElem;
-import edu.umich.verdict.relation.expr.SubqueryExpr;
 import edu.umich.verdict.util.VerdictLogger;
 
 /**
@@ -207,6 +204,7 @@ public abstract class ApproxRelation extends Relation {
      * @param f
      * @return
      */
+    @Deprecated
     protected abstract List<Expr> samplingProbabilityExprsFor(FuncExpr f);
 
     /**

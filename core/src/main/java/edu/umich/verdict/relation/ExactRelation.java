@@ -28,9 +28,11 @@ import edu.umich.verdict.relation.condition.AndCond;
 import edu.umich.verdict.relation.condition.CompCond;
 import edu.umich.verdict.relation.condition.Cond;
 import edu.umich.verdict.relation.condition.CondModifier;
+import edu.umich.verdict.relation.condition.InCond;
+import edu.umich.verdict.relation.condition.IsCond;
+import edu.umich.verdict.relation.condition.LikeCond;
 import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.Expr;
-import edu.umich.verdict.relation.expr.ExprModifier;
 import edu.umich.verdict.relation.expr.FuncExpr;
 import edu.umich.verdict.relation.expr.OrderByExpr;
 import edu.umich.verdict.relation.expr.SelectElem;
@@ -458,7 +460,7 @@ public abstract class ExactRelation extends Relation {
      * 
      * How a partition column is determined:
      * <ul>
-     * <li>SingleRelation: partition column must exist if a sample table. If not, {@link ExactRelation#partitionColumn()} returns null. </li>
+     * <li>SingleRelation: partition column must exist if it's a sample table. If not, {@link ExactRelation#partitionColumn()} returns null. </li>
      * <li>JoinedRelation: find a first-found sample table</li>
      * <li>ProjectedRelation: the partition column of a source must be preserved.</li>
      * <li>AggregatedRelation: the partition column of a source must be preserved by inserting an extra groupby column.</li>
@@ -468,6 +470,21 @@ public abstract class ExactRelation extends Relation {
      * @return
      */
     public abstract ColNameExpr partitionColumn();
+    
+//    public abstract Expr distinctCountPartitionColumn();
+    
+    /**
+     * The returned contains the tuple-level sampling probability. For universe and uniform samples, this is basically
+     * the ratio of the sample size to the original table size.
+     * @return
+     */
+    public abstract Expr tupleProbabilityColumn();
+    
+    /**
+     * The returned column contains 
+     * @return
+     */
+    public abstract Expr tableSamplingRatio();
 
     @Deprecated
     public abstract List<ColNameExpr> accumulateSamplingProbColumns();
@@ -563,7 +580,7 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
                 }
             }
             
-            VerdictLogger.error(this, String.format("The column name (%s) is not found in the from clause.", expr.toString()));
+            VerdictLogger.error(this, String.format("The specified column, %s, is not found in the tables in the from clause.", expr.toString()));
             return expr;
         }
     }
@@ -579,33 +596,6 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
             this.resolver = new TableSourceResolver(vc, this.baseTables);
         }        
         
-//        ExprModifier m = new ExprModifier(vc) {
-//            @Override
-//            public ColNameExpr visitColNameExpr(ColNameExpr expr) {
-//                if (expr.getSchema() != null) return expr;
-//                // schema doesn't exist
-//                
-//                if (expr.getTab() != null) {
-//                    String tab = expr.getTab();
-//                    for (TableUniqueName t : baseTables) {
-//                        if (t.getTableName().equals(tab)) {
-//                            return new ColNameExpr(expr.getVerdictContext(), expr.getCol(), expr.getTab(), t.getSchemaName());
-//                        }
-//                    }
-//                } else {
-//                    // tab doesn't exist
-//                    for (TableUniqueName t : baseTables) {
-//                        Set<String> cols = vc.getMeta().getColumns(t);
-//                        if (cols.contains(expr.getCol())) {
-//                            return new ColNameExpr(expr.getVerdictContext(), expr.getCol(), t.getTableName(), t.getSchemaName());
-//                        }
-//                    }
-//                }
-//                
-//                return expr;
-//            }
-//        };
-        
         @Override
         public Cond call(Cond cond) {
             if (cond instanceof CompCond) {
@@ -616,6 +606,22 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
                 re = resolver.visit(re);
                 
                 return new CompCond(le, ((CompCond) cond).getOp(), re);
+            } else if (cond instanceof LikeCond) {
+                Expr le = ((LikeCond) cond).getLeft();
+                Expr re = ((LikeCond) cond).getRight();
+                
+                le = resolver.visit(le);
+                re = resolver.visit(re);
+                
+                return new LikeCond(le, re, ((LikeCond) cond).isNot());
+            } else if (cond instanceof InCond) {
+                Expr le = ((InCond) cond).getLeft();
+                le = resolver.visit(le);
+                return new InCond(le, ((InCond) cond).isNot(), ((InCond) cond).getExpressionList());
+            } else if (cond instanceof IsCond) {
+                Expr le = ((IsCond) cond).getLeft();
+                le = resolver.visit(le);
+                return new IsCond(le, ((IsCond) cond).getRight());
             } else {
                 return cond;
             }
@@ -721,61 +727,6 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
             }
         }
 
-//        // parse the from clause
-//        // if a subquery is found; another instance of this class will be created and be used.
-//        // we convert all the table sources into ExactRelation instances. Those ExactRelation instances will be joined
-//        // either using the join condition explicitly stated using the INNER JOIN ON statements or using the conditions
-//        // in the where clause.
-//        ExactRelation r = null;
-//        List<String> joinedTableName = new ArrayList<String>();
-//
-//        for (Table_sourceContext s : ctx.table_source()) {
-//            TableSourceExtractor e = new TableSourceExtractor();
-//            ExactRelation r1 = e.visit(s);
-//            
-//            if (r1 instanceof SingleRelation) {
-//                TableUniqueName t = ((SingleRelation) r1).getTableName();
-//                String a = r1.getAlias();
-//                baseTables.put(t,  a);
-//            }
-//            
-//            if (r == null) r = r1;
-//            else {
-//                JoinedRelation r2 = new JoinedRelation(vc, r, r1, null);
-//                Cond j = null;
-//
-//                // search for join conditions
-//                if (r1 instanceof SingleRelation && where != null) {
-//                    String n = ((SingleRelation) r1).getTableName().getTableName();
-//                    j = where.searchForJoinCondition(joinedTableName, n);
-//                    if (j == null && r1.getAlias() != null) {
-//                        j = where.searchForJoinCondition(joinedTableName, r1.getAlias());
-//                    }
-//                } else if (r2.getAlias() != null && where != null) {
-//                    j = where.searchForJoinCondition(joinedTableName, r2.getAlias());
-//                }
-//
-//                if (j != null) {
-//                    try {
-//                        r2.setJoinCond(j, baseTables);
-//                    } catch (VerdictException e1) {
-//                        VerdictLogger.error(StackTraceReader.stackTrace2String(e1));
-//                    }
-//                    where = where.remove(j);
-//                }
-//
-//                r = r2;
-//            }
-//
-//            // add both table names and the alias to joined table names
-//            if (r1 instanceof SingleRelation) {
-//                joinedTableName.add(((SingleRelation) r1).getTableName().getTableName());
-//            }
-//            if (r1.getAlias() != null) {
-//                joinedTableName.add(r1.getAlias());
-//            }
-//        }
-
         if (where != null) {
             joinedTabeSource = new FilteredRelation(vc, joinedTabeSource, where);
         }
@@ -788,7 +739,6 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
         List<SelectElem> bothInOrder = elems.getRight();
         
         // replace all base tables with their aliases
-//        TableNameReplacerInExpr tabNameReplacer = new TableNameReplacerInExpr(vc, baseTables);
         TableSourceResolver resolver = new TableSourceResolver(vc, tableAliasAndColNames);
         nonaggs = replaceTableNamesWithAliasesIn(nonaggs, resolver);
         aggs = replaceTableNamesWithAliasesIn(aggs, resolver);
@@ -829,44 +779,13 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
             joinedTabeSource = new AggregatedRelation(vc, joinedTabeSource, bothInOrder);
         }
 
-//        if (aggs.size() > 0) {		// if there are aggregate functions
-//            List<Expr> aggExprs = new ArrayList<Expr>();
-//            for (SelectElem se : aggs) {
-//                aggExprs.add(se.getExpr());
-//            }
-//            r = new AggregatedRelation(vc, r, aggExprs);
-//            //			r.setAliasName(Relation.genTableAlias());
-//
-//            // we put another layer on top of AggregatedRelation for
-//            // 1. the case where the select list does not include all of groupby and aggregate expressions.
-//            // 2. the select elems are not in the order of groupby and aggregations.
-//            List<SelectElem> prj = new ArrayList<SelectElem>();
-//            for (SelectElem e : bothInOrder) {
-//                prj.add(e);
-//                //				if (aggs.contains(e)) {
-//                //					// based on the assumption that agg expressions are always aliased.
-//                //					// we define an alias if it doesn't exists.
-//                //					prj.add(new SelectElem(Expr.from(e.getAlias()), e.getAlias()));
-//                //				} else {
-//                //					if (e.aliasPresent()) {
-//                //						prj.add(new SelectElem(e.getExpr(), e.getAlias()));
-//                //					} else {
-//                //						prj.add(e);
-//                //					}	
-//                //				}
-//            }
-//            r = new ProjectedRelation(vc, r, prj);
-//        } else {
-//            r = new ProjectedRelation(vc, r, bothInOrder);
-//        }
-
         return joinedTabeSource;
     }
     
-    private List<SelectElem> replaceTableNamesWithAliasesIn(List<SelectElem> elems, TableNameReplacerInExpr tabNameReplacer) {
+    private List<SelectElem> replaceTableNamesWithAliasesIn(List<SelectElem> elems, TableSourceResolver resolver) {
         List<SelectElem> substituted = new ArrayList<SelectElem>();
         for (SelectElem elem : elems) {
-            Expr replaced = tabNameReplacer.visit(elem.getExpr());
+            Expr replaced = resolver.visit(elem.getExpr());
             substituted.add(new SelectElem(elem.getVerdictContext(), replaced, elem.getAlias()));
         }
         return substituted;
@@ -908,8 +827,10 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
                 ExactRelation r2 = visit(j);
                 r = new JoinedRelation(vc, r, r2, null);
                 if (joinCond != null) {
+                    ColNameResolver resolver = new ColNameResolver(tableAliasAndColNames);
+                    Cond resolved = resolver.visit(joinCond);
                     try {
-                        ((JoinedRelation) r).setJoinCond(joinCond);
+                        ((JoinedRelation) r).setJoinCond(resolved);
                     } catch (VerdictException e) {
                         VerdictLogger.error(StackTraceReader.stackTrace2String(e));
                     }

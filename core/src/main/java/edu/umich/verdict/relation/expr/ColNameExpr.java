@@ -1,7 +1,6 @@
 package edu.umich.verdict.relation.expr;
 
 import edu.umich.verdict.VerdictContext;
-import edu.umich.verdict.util.VerdictLogger;
 
 public class ColNameExpr extends Expr {
 

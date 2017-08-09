@@ -1,7 +1,6 @@
 package edu.umich.verdict.relation;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -14,6 +13,7 @@ import edu.umich.verdict.datatypes.SampleSizeInfo;
 import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.relation.expr.ColNameExpr;
+import edu.umich.verdict.relation.expr.ConstantExpr;
 import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.relation.expr.ExprVisitor;
 import edu.umich.verdict.relation.expr.FuncExpr;
@@ -317,18 +317,6 @@ public class SingleRelation extends ExactRelation {
     //	}
 
     @Override
-    public ColNameExpr partitionColumn() {
-        Set<String> columns = vc.getMeta().getColumns(getTableName());
-        String partitionCol = vc.getConf().subsamplingPartitionColumn();
-        if (columns.contains(partitionCol)) {
-            return new ColNameExpr(vc, partitionCol, getAlias());
-        } else {
-            VerdictLogger.error(this, "partition column does not exists in the table: " + getTableName());
-            return null;
-        }
-    }
-
-    @Override
     public List<ColNameExpr> accumulateSamplingProbColumns() {
         List<ColNameExpr> samplingProbCols = new ArrayList<ColNameExpr>();
         Set<String> cols = vc.getMeta().getColumns(tableName);
@@ -347,5 +335,66 @@ public class SingleRelation extends ExactRelation {
         s.append(indent);
         s.append(String.format("%s(%s, %s)\n", this.getClass().getSimpleName(), getTableName(), getAlias()));
         return s.toString();
+    }
+
+    //	@Override
+    //	public List<SelectElem> getSelectList() {
+    //		TableUniqueName table = getTableName();
+    //		Set<String> columns = vc.getMeta().getColumns(table);
+    //		List<SelectElem> elems = new ArrayList<SelectElem>();
+    //		for (String c : columns) {
+    //			elems.add(new SelectElem(new ColNameExpr(c, table.getTableName())));
+    //		}
+    //		return elems;
+    //	}
+    
+    @Override
+    public ColNameExpr partitionColumn() {
+        Set<String> columns = vc.getMeta().getColumns(getTableName());
+        String partitionCol = vc.getConf().subsamplingPartitionColumn();
+        if (columns.contains(partitionCol)) {
+            return new ColNameExpr(vc, partitionCol, getAlias());
+        } else {
+            VerdictLogger.debug(this, "A partition column does not exists in the table: " + getTableName() +
+                                      "This is an expected behavior if this is not a sample table.");
+            return null;
+        }
+    }
+
+//    @Override
+//    public Expr distinctCountPartitionColumn() {
+//        TableUniqueName uniqueTableName = getTableName();
+//        SampleParam param = vc.getMeta().getSampleParamFor(uniqueTableName);
+//        if (param.getSampleType().equals("universe")) {
+//            return new ColNameExpr(vc, distinctCountPartitionColumnName());
+//        }
+//        return null;
+//    }
+
+    @Override
+    public Expr tupleProbabilityColumn() {
+        TableUniqueName uniqueTableName = getTableName();
+        Set<String> columns = vc.getMeta().getColumns(uniqueTableName);
+        String sampleColumnName = samplingProbabilityColumnName();
+        if (columns.contains(sampleColumnName)) {
+            return new ColNameExpr(vc, sampleColumnName, getAlias());
+        } else {
+            return new ConstantExpr(vc, 1.0);
+        }
+    }
+
+    @Override
+    public Expr tableSamplingRatio() {
+        TableUniqueName uniqueTableName = getTableName();
+        Set<String> columns = vc.getMeta().getColumns(uniqueTableName);
+        String sampleColumnName = samplingProbabilityColumnName();
+        
+        if (columns.contains(sampleColumnName)) {
+            SampleParam param = vc.getMeta().getSampleParamFor(uniqueTableName);
+            double samplingRatio = param.getSamplingRatio();
+            return new ConstantExpr(vc, samplingRatio);
+        } else {
+            return new ConstantExpr(vc, 1.0);
+        }
     }
 }
