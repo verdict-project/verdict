@@ -232,10 +232,11 @@ public abstract class DbmsJDBC extends Dbms {
 
     public void executeUpdate(String query) throws VerdictException { 
 //        createStatementIfNotExists();
-    	createStatement();
+    	createStatement();    	
         try {
             stmt.executeUpdate(query);
         } catch (SQLException e) {
+//        	System.out.println(query);
             throw new VerdictException(e);
         }
     }

@@ -21,7 +21,7 @@ public class RedshiftThroughVerdictTest {
         VerdictContext vc = VerdictJDBCContext.from(conf);
 //        vc.executeJdbcQuery("select count(*) from tpch1g.customer");
        
-        vc.executeJdbcQuery("create sample of public.orders");
+        vc.executeJdbcQuery("create sample of tpch1g.orders");
 
         vc.destroy();
     }

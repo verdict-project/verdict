@@ -303,7 +303,7 @@ public abstract class Dbms {
 
         ExactRelation withRand = SingleRelation.from(vc, temp)
                 .select("*, " + String.format("%d / %d as %s", sample_size, total_size, samplingProbCol));
-        String sql = String.format("create table %s as %s", param.sampleTableName(), withRand.toSql());
+        String sql = String.format("create table %s as %s", param.sampleTableName(), withRand.toSql());        
         VerdictLogger.debug(this, "The query used for creating a temporary table without sampling probabilities:");
         VerdictLogger.debugPretty(this, Relation.prettyfySql(vc, sql), "  ");
         executeUpdate(sql);
@@ -469,8 +469,8 @@ public abstract class Dbms {
         TableUniqueName tempTableName = Relation.getTempTableName(vc, metaSchema);
         TableUniqueName originalTableName = param.originalTable;
         executeUpdate(String.format("CREATE TABLE %s AS SELECT * FROM %s "
-                + "WHERE originalschemaname <> \"%s\" OR originaltablename <> \"%s\" OR sampletype <> \"%s\""
-                + "OR samplingratio <> %s OR columnnames <> \"%s\"",
+                + "WHERE originalschemaname <> '%s' OR originaltablename <> '%s' OR sampletype <> '%s' "
+                + "OR samplingratio <> %s OR columnnames <> '%s'",
                 tempTableName, metaNameTableName, originalTableName.getSchemaName(), originalTableName.getTableName(),
                 param.sampleType, samplingRatioToString(param.samplingRatio), columnNameListToString(param.columnNames)));
         return tempTableName;
@@ -502,7 +502,8 @@ public abstract class Dbms {
         String metaSchema = param.sampleTableName().getSchemaName();
         TableUniqueName tempTableName = Relation.getTempTableName(vc, metaSchema);
         TableUniqueName sampleTableName = param.sampleTableName();
-        executeUpdate(String.format("CREATE TABLE %s AS SELECT * FROM %s WHERE schemaname <> \"%s\" OR tablename <> \"%s\" ",
+        // changed " to ' 
+        executeUpdate(String.format("CREATE TABLE %s AS SELECT * FROM %s WHERE schemaname <> '%s' OR tablename <> '%s' ",
                 tempTableName, metaSizeTableName, sampleTableName.getSchemaName(), sampleTableName.getTableName()));
         return tempTableName;
     }
