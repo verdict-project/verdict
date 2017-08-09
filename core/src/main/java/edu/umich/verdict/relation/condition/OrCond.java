@@ -1,7 +1,5 @@
 package edu.umich.verdict.relation.condition;
 
-import edu.umich.verdict.VerdictContext;
-
 public class OrCond extends Cond {
 	
 	private Cond left;

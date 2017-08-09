@@ -1,13 +1,10 @@
 package edu.umich.verdict.relation.condition;
 
 import java.util.List;
-import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.commons.lang3.tuple.Triple;
 
 import edu.umich.verdict.VerdictContext;
-import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.relation.AggregatedRelation;
 import edu.umich.verdict.relation.ExactRelation;
 import edu.umich.verdict.relation.JoinedRelation;

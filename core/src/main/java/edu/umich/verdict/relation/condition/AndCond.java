@@ -1,11 +1,9 @@
 package edu.umich.verdict.relation.condition;
 
 import java.util.List;
-import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
 
-import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.relation.ExactRelation;
 
 public class AndCond extends Cond {

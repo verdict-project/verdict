@@ -1,6 +1,5 @@
 package edu.umich.verdict.relation.condition;
 
-import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.relation.expr.Expr;
 
 public class IsCond extends Cond {

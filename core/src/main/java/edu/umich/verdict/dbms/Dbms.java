@@ -566,7 +566,7 @@ public abstract class Dbms {
      * @return
      */
     protected String universePartitionColumn(String colName) {
-        return modOfHash(colName, 100);
+        return modOfHash(colName, 100) + " as " + partitionColumnName();
     }
 
     /**

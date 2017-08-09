@@ -1,7 +1,5 @@
 package edu.umich.verdict.relation.condition;
 
-import edu.umich.verdict.VerdictContext;
-
 public class NullCond extends Cond {
 
 	@Override

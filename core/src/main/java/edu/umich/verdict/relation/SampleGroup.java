@@ -3,7 +3,6 @@ package edu.umich.verdict.relation;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.relation.expr.SelectElem;
 
 /**

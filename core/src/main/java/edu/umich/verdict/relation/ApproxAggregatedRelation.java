@@ -335,7 +335,7 @@ public class ApproxAggregatedRelation extends ApproxRelation {
                         // scale with sampling ratio
                         Expr scaled = BinaryOpExpr.from(vc, est, tableSamplingRatioExpr, "/");
                         // scale with partition size
-                        scaled = BinaryOpExpr.from(vc, est, ConstantExpr.from(vc, vc.getConf().subsamplingPartitionCount()), "*");
+                        scaled = BinaryOpExpr.from(vc, scaled, ConstantExpr.from(vc, vc.getConf().subsamplingPartitionCount()), "*");
 //                        est = scaleWithPartitionSize(est, groupby, partitionCol, forErrorEst);
                         return scaled;
                     } else {
