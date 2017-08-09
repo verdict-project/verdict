@@ -322,6 +322,26 @@ public class AggregatedRelation extends ExactRelation {
         return s.toString();
     }
 
+    //	@Override
+    //	public List<SelectElem> getSelectList() {
+    //		List<SelectElem> elems = new ArrayList<SelectElem>();
+    //		
+    //		Pair<List<Expr>, ExactRelation> groupsAndNextR = allPrecedingGroupbys(this.source);
+    //		List<Expr> groupby = groupsAndNextR.getLeft();
+    //		for (Expr g : groupby) {
+    //			elems.add(new SelectElem(g));
+    //		}
+    //		
+    //		elems.addAll(this.aggs);
+    //		
+    //		return elems;
+    //	}
+    
+    //	@Override
+    //	public List<SelectElem> selectElemsWithAggregateSource() {
+    //		return aggs;
+    //	}
+    
     @Override
     public ColNameExpr partitionColumn() {
         ColNameExpr col = new ColNameExpr(vc, partitionColumnName(), getAlias());
@@ -336,12 +356,6 @@ public class AggregatedRelation extends ExactRelation {
     @Override
     public Expr tableSamplingRatio() {
         return new ColNameExpr(vc, samplingRatioColumnName(), getAlias());
-    }
-
-    @Override
-    public Expr distinctCountPartitionColumn() {
-        // TODO Auto-generated method stub
-        return null;
     }
 
 }

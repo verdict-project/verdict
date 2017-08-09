@@ -207,7 +207,6 @@ public abstract class ApproxRelation extends Relation {
      * @param f
      * @return
      */
-    @Deprecated
     protected abstract List<Expr> samplingProbabilityExprsFor(FuncExpr f);
 
     /**

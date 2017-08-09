@@ -368,15 +368,4 @@ public class JoinedRelation extends ExactRelation {
         Expr combined = new BinaryOpExpr(vc, expr1, expr2, "*");
         return combined;
     }
-
-    @Override
-    public Expr distinctCountPartitionColumn() {
-        Expr col1 = source1.distinctCountPartitionColumn();
-        if (col1 != null) {
-            return col1;
-        } else {
-            Expr col2 = source2.distinctCountPartitionColumn();
-            return col2;
-        }
-    }
 }

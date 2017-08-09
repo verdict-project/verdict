@@ -304,7 +304,7 @@ create_table
 //    ;
 
 create_table_as_select
-    : CREATE TABLE (IF NOT EXISTS)? table_name STORED_AS_PARQUET? AS select_statement ';'?
+    : CREATE TABLE (IF NOT EXISTS)? table_name AS select_statement ';'?
     ;
 
 // https://msdn.microsoft.com/en-us/library/ms187956.aspx
@@ -1520,7 +1520,6 @@ STATS_STREAM:                    S T A T S '_' S T R E A M;
 STDEV:                           S T D E V;
 STDDEV:                          S T D D E V;
 STDEVP:                          S T D E V P;
-STORED_AS_PARQUET:               S T O R E D ' ' A S ' ' P A R Q U E T;
 SUM:                             S U M;
 SQRT:                            S Q R T;
 TAN:                             T A N;

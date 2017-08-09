@@ -94,9 +94,4 @@ public class LimitedRelation extends ExactRelation {
         return null;
     }
 
-    @Override
-    public Expr distinctCountPartitionColumn() {
-        return null;
-    }
-
 }

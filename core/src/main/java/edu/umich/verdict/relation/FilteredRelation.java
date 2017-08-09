@@ -139,11 +139,6 @@ public class FilteredRelation extends ExactRelation {
     public Expr tableSamplingRatio() {
         return source.tableSamplingRatio();
     }
-
-    @Override
-    public Expr distinctCountPartitionColumn() {
-        return source.distinctCountPartitionColumn();
-    }
 }
 
 

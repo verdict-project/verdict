@@ -135,12 +135,10 @@ public class ApproxSingleRelation extends ApproxRelation {
         r.setAlias(getAlias());
         return r;
         
-//        // when a universe sample is used for distinct-count, partitions for subsampling are created based
-//        // on the column originally used for the universe hashing.
 //        if (param.sampleType.equals("universe")) {
 //            Set<String> colNames = vc.getMeta().getColumns(param.sampleTableName());
-//            String partitionColName = distinctCountPartitionColumnName();
-//            int partitionCount = vc.getDbms().partitionCount();
+//            String partitionColName = partitionColumnName();
+//            int partitionCount = 100;
 //
 //            // we will create a new partition column using a hash function, so discard an existing one.
 //            List<String> newColNames = new ArrayList<String>();
@@ -156,11 +154,15 @@ public class ApproxSingleRelation extends ApproxRelation {
 //                    + vc.getDbms().modOfHash(param.columnNames.get(0), partitionCount) + " AS " + partitionColName);
 //            r.setAlias(getAlias());
 //            return r;
+//
 //        } else {
 //            ExactRelation r = SingleRelation.from(vc, getSampleName());
 //            r.setAlias(getAlias());
 //            return r;
 //        }
+        //		r = vc.getDbms().augmentWithRandomPartitionNum(r);
+        //		r.setAliasName(getAliasName());
+        //		return r;
     }
 
     //	@Override

@@ -178,9 +178,4 @@ public class GroupedRelation extends ExactRelation {
         return source.tableSamplingRatio();
     }
 
-    @Override
-    public Expr distinctCountPartitionColumn() {
-        return source.distinctCountPartitionColumn();
-    }
-
 }

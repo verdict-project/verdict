@@ -363,16 +363,6 @@ public class SingleRelation extends ExactRelation {
     }
 
     @Override
-    public Expr distinctCountPartitionColumn() {
-        TableUniqueName uniqueTableName = getTableName();
-        SampleParam param = vc.getMeta().getSampleParamFor(uniqueTableName);
-        if (param.getSampleType().equals("universe")) {
-            return new ColNameExpr(vc, distinctCountPartitionColumnName());
-        }
-        return null;
-    }
-
-    @Override
     public Expr tupleProbabilityColumn() {
         TableUniqueName uniqueTableName = getTableName();
         Set<String> columns = vc.getMeta().getColumns(uniqueTableName);
