@@ -254,6 +254,14 @@ public abstract class Relation {
     public String partitionColumnName() {
         return vc.getDbms().partitionColumnName();
     }
+    
+//    /**
+//     * Used when a universe sample is used for distinct-count.
+//     * @return
+//     */
+//    public String distinctCountPartitionColumnName() {
+//        return vc.getDbms().distinctCountPartitionColumnName();
+//    }
 
     public String samplingProbabilityColumnName() {
         return vc.getDbms().samplingProbabilityColumnName();
@@ -397,9 +405,10 @@ class PrettyPrintVisitor extends VerdictSQLBaseVisitor<String> {
     }
 
     @Override public String visitCreate_table_as_select(VerdictSQLParser.Create_table_as_selectContext ctx) {
-        String create = String.format("CREATE TABLE %s%s AS\n",
+        String create = String.format("CREATE TABLE %s%s%s AS\n",
                 (ctx.IF() != null)? "IF NOT EXISTS " : "",
-                        ctx.table_name().getText());
+                ctx.table_name().getText(),
+                (ctx.STORED_AS_PARQUET() != null)? " STORED AS PARQUET" : "");
 
         PrettyPrintVisitor v = new PrettyPrintVisitor(vc, sql);
         v.setIndent(indent + "    ");

@@ -301,16 +301,16 @@ public abstract class Dbms {
         long sample_size = SingleRelation.from(vc, temp).countValue();
 
         String parquetString="";
-		
-		if(vc.getConf().areSamplesStoredAsParquet()) {
-			parquetString = getParquetString();
-		}
+
+        if(vc.getConf().areSamplesStoredAsParquet()) {
+            parquetString = getParquetString();
+        }
         
         ExactRelation withRand = SingleRelation.from(vc, temp)
                 .select("*, " + String.format("%d / %d as %s", sample_size, total_size, samplingProbCol));
         String sql = String.format("create table %s%s as %s", param.sampleTableName(), parquetString, withRand.toSql());
         VerdictLogger.debug(this, "The query used for creating a temporary table without sampling probabilities:");
-        //VerdictLogger.debugPretty(this, Relation.prettyfySql(sql), "  ");
+        VerdictLogger.debugPretty(this, Relation.prettyfySql(vc, sql), "  ");
         VerdictLogger.debug(this, sql);
         executeUpdate(sql);
     }
@@ -421,14 +421,14 @@ public abstract class Dbms {
                         + ", " + randomPartitionColumn());
         
         String parquetString="";
-		
-		if(vc.getConf().areSamplesStoredAsParquet()) {
-			parquetString = getParquetString();
-		}
-		
+
+        if(vc.getConf().areSamplesStoredAsParquet()) {
+            parquetString = getParquetString();
+        }
+
         String sql2 = String.format("create table %s%s as %s", param.sampleTableName(), parquetString, withRand.toSql());
         VerdictLogger.debug(this, "The query used for creating a stratified sample with sampling probabilities.");
-        //VerdictLogger.debugPretty(this, Relation.prettyfySql(sql2), "  ");
+        VerdictLogger.debugPretty(this, Relation.prettyfySql(vc, sql2), "  ");
         VerdictLogger.debug(this, sql2);
         executeUpdate(sql2);
 
@@ -448,15 +448,14 @@ public abstract class Dbms {
     protected TableUniqueName createUniverseSampledTable(SampleParam param) throws VerdictException {
         TableUniqueName temp = Relation.getTempTableName(vc, param.sampleTableName().getSchemaName());
         ExactRelation sampled = SingleRelation.from(vc, param.originalTable)
-                .where(modOfHash(param.columnNames.get(0), 1000000) + 
-                        String.format(" < %.2f", param.samplingRatio * 1000000));
+                .where(universeSampleSamplingCondition(param.getColumnNames().get(0), param.getSamplingRatio()));
         String sql = String.format("create table %s AS %s", temp, sampled.toSql());
         VerdictLogger.debug(this, "The query used for creating a universe sample without sampling probability:");
         VerdictLogger.debugPretty(this, Relation.prettyfySql(vc, sql), "  ");
         executeUpdate(sql);
         return temp;
     }
-
+    
     protected void createUniverseSampleWithProbFromSample(SampleParam param, TableUniqueName temp) throws VerdictException {
         String samplingProbCol = vc.getDbms().samplingProbabilityColumnName();
         ExactRelation sampled = SingleRelation.from(vc, temp);
@@ -465,17 +464,17 @@ public abstract class Dbms {
 
         ExactRelation withProb = sampled.select(
                 String.format("*, %d / %d AS %s", sample_size, total_size, samplingProbCol) + ", " +
-                        randomPartitionColumn());
-        
+                              universePartitionColumn(param.getColumnNames().get(0)));
+
         String parquetString="";
-		
-		if(vc.getConf().areSamplesStoredAsParquet()) {
-			parquetString = getParquetString();
-		}
-		
+
+        if(vc.getConf().areSamplesStoredAsParquet()) {
+            parquetString = getParquetString();
+        }
+
         String sql = String.format("create table %s%s AS %s", param.sampleTableName(), parquetString, withProb.toSql());
         VerdictLogger.debug(this, "The query used for creating a universe sample with sampling probability:");
-        //VerdictLogger.debugPretty(this, Relation.prettyfySql(sql), "  ");
+        VerdictLogger.debugPretty(this, Relation.prettyfySql(vc, sql), "  ");
         VerdictLogger.debug(this, sql);
         executeUpdate(sql);
     }
@@ -556,6 +555,19 @@ public abstract class Dbms {
      * @return
      */
     protected abstract String randomPartitionColumn();
+    
+    protected String universeSampleSamplingCondition(String colName, double samplingRatio) {
+        return modOfHash(colName, 1000000) + String.format(" < %.2f", samplingRatio * 1000000);
+    }
+
+    /**
+     * Column expression that generates a number between 0 and 99. The tuples with the same attribute values
+     * on which a universe sample is created are assigned the same partition number.
+     * @return
+     */
+    protected String universePartitionColumn(String colName) {
+        return modOfHash(colName, 100);
+    }
 
     /**
      * Column expression that generates a number between 0 and 1.
@@ -586,6 +598,10 @@ public abstract class Dbms {
     public int partitionCount() {
         return vc.getConf().subsamplingPartitionCount();
     }
+    
+//    public String distinctCountPartitionColumnName() {
+//        return "__vupart";
+//    }
 
     // tuple-level sampling probability column name
     public String samplingProbabilityColumnName() {

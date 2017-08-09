@@ -13,13 +13,13 @@ public class InCond extends Cond {
     
     Expr left;
     
-    boolean notExists;
+    boolean not;
     
     List<Expr> expressionList;
     
     public InCond(Expr left, boolean not, List<Expr> expressionList) {
         this.left = left;
-        this.notExists = not;
+        this.not = not;
         this.expressionList = expressionList;
     }
     
@@ -31,12 +31,12 @@ public class InCond extends Cond {
         this.left = left;
     }
 
-    public boolean isNotExists() {
-        return notExists;
+    public boolean isNot() {
+        return not;
     }
 
-    public void setNotExists(boolean notExists) {
-        this.notExists = notExists;
+    public void setNot(boolean not) {
+        this.not = not;
     }
 
     public List<Expr> getExpressionList() {
@@ -81,7 +81,7 @@ public class InCond extends Cond {
     public String toSql() {
         StringBuilder sql = new StringBuilder();
         sql.append(left.toSql());
-        if (notExists) sql.append(" NOT");
+        if (not) sql.append(" NOT");
         sql.append(" IN (");
         
         for (int i = 0; i < expressionList.size(); i++) {
@@ -97,7 +97,7 @@ public class InCond extends Cond {
     public boolean equals(Cond o) {
         if (o instanceof InCond) {
             return getLeft().equals(((InCond) o).getLeft())
-                && (isNotExists() == ((InCond) o).isNotExists())
+                && (isNot() == ((InCond) o).isNot())
                 && getExpressionList().equals(((InCond) o).getExpressionList());
         }
         return false;
