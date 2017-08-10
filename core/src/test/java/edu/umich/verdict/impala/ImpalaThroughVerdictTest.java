@@ -10,7 +10,9 @@ import edu.umich.verdict.exceptions.VerdictException;
 
 public class ImpalaThroughVerdictTest {
 
-public static void main(String[] args) throws VerdictException, FileNotFoundException {
+
+    public static void main(String[] args) throws VerdictException, FileNotFoundException {
+
 
         VerdictConf conf = new VerdictConf();
         conf.setDbms("impala");
@@ -21,7 +23,8 @@ public static void main(String[] args) throws VerdictException, FileNotFoundExce
         VerdictContext vc = VerdictJDBCContext.from(conf);
         vc.executeJdbcQuery("set verdict.meta_catalog_suffix=_verdict_impala");
         vc.executeJdbcQuery("refresh instacart1g");
-        vc.executeJdbcQuery("select count(*) from instacart1g.orders");
+        //vc.executeJdbcQuery("select count(*) from instacart1g.orders");
+		vc.executeJdbcQuery("create sample of instacart1g.orders");
 
         vc.destroy();
     }

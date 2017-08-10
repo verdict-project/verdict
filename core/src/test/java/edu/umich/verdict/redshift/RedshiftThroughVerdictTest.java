@@ -19,8 +19,11 @@ public class RedshiftThroughVerdictTest {
         conf.set("loglevel", "debug");
         
         VerdictContext vc = VerdictJDBCContext.from(conf);
-//        vc.executeJdbcQuery("select count(*) from tpch1g.customer");
-        vc.executeJdbcQuery("set search_path to tpch1g,tpch1g_verdict");
+        vc.executeJdbcQuery("set bypass=true");
+        vc.executeJdbcQuery("set search_path = tpch1g,tpch1g_verdict");
+        vc.executeJdbcQuery("set bypass=false");
+        vc.executeJdbcQuery("show tables in tpch1g");
+        vc.executeJdbcQuery("show tables in tpch1g_verdict");
         vc.executeJdbcQuery("create sample of tpch1g.orders");
 
         vc.destroy();
