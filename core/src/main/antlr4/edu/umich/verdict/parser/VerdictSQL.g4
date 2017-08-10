@@ -883,7 +883,7 @@ unary_manipulation_function
     | function_name=CAST '(' cast_as_expression ')'
     ;
     
-noparam_mathematical_function
+noparam_manipulation_function
     : function_name=(UNIX_TIMESTAMP | CURRENT_TIMESTAMP | RANDOM)
       '(' ')'
     ;
