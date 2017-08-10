@@ -52,7 +52,9 @@ public class FilteredRelation extends ExactRelation {
      */
 
     public ApproxRelation approx() throws VerdictException {
-        return null;
+        ApproxRelation a = new ApproxFilteredRelation(vc, source.approx(), cond);
+        a.setAlias(getAlias());
+        return a;
     }
 
     protected ApproxRelation approxWith(Map<TableUniqueName, SampleParam> replace) {
@@ -103,13 +105,6 @@ public class FilteredRelation extends ExactRelation {
     //	}
 
     @Override
-    public ColNameExpr partitionColumn() {
-        ColNameExpr col = source.partitionColumn();
-        //		col.setTab(getAliasName());
-        return col;
-    }
-
-    @Override
     public List<ColNameExpr> accumulateSamplingProbColumns() {
         return source.accumulateSamplingProbColumns();
     }
@@ -122,6 +117,33 @@ public class FilteredRelation extends ExactRelation {
         s.append(source.toStringWithIndent(indent + "  "));
         return s.toString();
     }
+
+    //	@Override
+    //	public List<SelectElem> getSelectList() {
+    //		return source.getSelectList();
+    //	}
+    
+    @Override
+    public ColNameExpr partitionColumn() {
+        ColNameExpr col = source.partitionColumn();
+        //		col.setTab(getAliasName());
+        return col;
+    }
+
+    @Override
+    public Expr tupleProbabilityColumn() {
+        return source.tupleProbabilityColumn();
+    }
+
+    @Override
+    public Expr tableSamplingRatio() {
+        return source.tableSamplingRatio();
+    }
+
+//    @Override
+//    public Expr distinctCountPartitionColumn() {
+//        return source.distinctCountPartitionColumn();
+//    }
 }
 
 

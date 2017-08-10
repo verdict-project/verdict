@@ -5,15 +5,15 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.tuple.Pair;
+
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
-import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.Expr;
-import edu.umich.verdict.relation.expr.ExprModifier;
 import edu.umich.verdict.relation.expr.FuncExpr;
 import edu.umich.verdict.relation.expr.OrderByExpr;
-import edu.umich.verdict.relation.expr.SubqueryExpr;
+import edu.umich.verdict.relation.expr.SelectElem;
 import edu.umich.verdict.util.VerdictLogger;
 
 /**
@@ -81,9 +81,19 @@ public abstract class ApproxRelation extends Relation {
     }
 
     public ApproxAggregatedRelation agg(List<Object> elems) {
-        List<Expr> se = new ArrayList<Expr>();
+        List<SelectElem> se = new ArrayList<SelectElem>();
+        
+        // first insert possible groupby list
+        if (this instanceof ApproxGroupedRelation) {
+            List<Expr> groupby = ((ApproxGroupedRelation) this).getGroupby();
+            for (Expr g : groupby) {
+                se.add(new SelectElem(vc, g));
+            }
+        }
+        
+        // now insert aggregation list
         for (Object e : elems) {
-            se.add(Expr.from(vc, e.toString()));
+            se.add(SelectElem.from(vc, e.toString()));
         }
         return new ApproxAggregatedRelation(vc, this, se);
     }
@@ -194,6 +204,7 @@ public abstract class ApproxRelation extends Relation {
      * @param f
      * @return
      */
+    @Deprecated
     protected abstract List<Expr> samplingProbabilityExprsFor(FuncExpr f);
 
     /**
@@ -300,5 +311,18 @@ public abstract class ApproxRelation extends Relation {
         return v.visit(expr);
     }
 
+    protected static Pair<List<Expr>, ApproxRelation> allPrecedingGroupbys(ApproxRelation r) {
+        List<Expr> groupbys = new ArrayList<Expr>();
+        ApproxRelation t = r;
+        while (true) {
+            if (t instanceof ApproxGroupedRelation) {
+                groupbys.addAll(((ApproxGroupedRelation) t).getGroupby());
+                t = ((ApproxGroupedRelation) t).getSource();
+            } else {
+                break;
+            }
+        }
+        return Pair.of(groupbys, t);
+    }
 }
 

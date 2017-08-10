@@ -45,4 +45,12 @@ public class SubqueryExpr extends Expr {
     public String toSql() {
         return "(" + subquery.toSql() + ")";
     }
+
+    @Override
+    public boolean equals(Expr o) {
+        if (o instanceof SubqueryExpr) {
+            return ((SubqueryExpr) o).getSubquery().equals(((SubqueryExpr) o).getSubquery());
+        }
+        return false;
+    }
 }

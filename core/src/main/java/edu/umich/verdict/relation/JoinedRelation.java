@@ -17,6 +17,7 @@ import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.relation.condition.AndCond;
 import edu.umich.verdict.relation.condition.CompCond;
 import edu.umich.verdict.relation.condition.Cond;
+import edu.umich.verdict.relation.expr.BinaryOpExpr;
 import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.util.VerdictLogger;
@@ -26,6 +27,14 @@ public class JoinedRelation extends ExactRelation {
     private ExactRelation source1;
 
     private ExactRelation source2;
+
+    public ExactRelation getLeftSource() {
+        return source1;
+    }
+
+    public ExactRelation getRightSource() {
+        return source2;
+    }
 
     private List<Pair<Expr, Expr>> joinCols;
 
@@ -50,7 +59,7 @@ public class JoinedRelation extends ExactRelation {
         return r;
     }
 
-    public static JoinedRelation from(VerdictContext vc, ExactRelation source1, ExactRelation source2, Cond cond) throws VerdictException {
+    public static JoinedRelation from(VerdictContext vc, ExactRelation source1, ExactRelation source2, Cond cond) {
         return from(vc, source1, source2, extractJoinConds(cond));
     }
 
@@ -92,7 +101,7 @@ public class JoinedRelation extends ExactRelation {
         setJoinCond(cond, null);
     }
 
-    private static List<Pair<Expr, Expr>> extractJoinConds(Cond cond) throws VerdictException {
+    private static List<Pair<Expr, Expr>> extractJoinConds(Cond cond) {
         if (cond == null) {
             return null;
         }
@@ -108,7 +117,8 @@ public class JoinedRelation extends ExactRelation {
             l.addAll(extractJoinConds(and.getRight()));
             return l;
         } else {
-            throw new VerdictException("Join condition must be an 'and' condition.");
+            VerdictLogger.error("Join condition must be a CompCond instance possibly in an AndCond instance.");
+            return null;
         }
     }
 
@@ -145,7 +155,9 @@ public class JoinedRelation extends ExactRelation {
      */
 
     public ApproxRelation approx() throws VerdictException {
-        return null;
+        ApproxRelation a = new ApproxJoinedRelation(vc, source1.approx(), source2.approx(), joinCols);
+        a.setAlias(getAlias());
+        return a;
     }
 
     protected ApproxRelation approxWith(Map<TableUniqueName, SampleParam> replace) {
@@ -306,17 +318,6 @@ public class JoinedRelation extends ExactRelation {
     //	}
 
     @Override
-    public ColNameExpr partitionColumn() {
-        ColNameExpr col1 = source1.partitionColumn();
-        ColNameExpr col2 = source2.partitionColumn();
-        if (col1 != null) {
-            return col1;
-        } else {
-            return col2;
-        }
-    }
-
-    @Override
     public List<ColNameExpr> accumulateSamplingProbColumns() {
         List<ColNameExpr> union = new ArrayList<ColNameExpr>(source1.accumulateSamplingProbColumns());
         union.addAll(source2.accumulateSamplingProbColumns());
@@ -332,4 +333,50 @@ public class JoinedRelation extends ExactRelation {
         s.append(source2.toStringWithIndent(indent + "  "));
         return s.toString();
     }
+
+    //	@Override
+    //	public List<SelectElem> getSelectList() {
+    //		List<SelectElem> elems = new ArrayList<SelectElem>();
+    //		elems.addAll(source1.getSelectList());
+    //		elems.addAll(source2.getSelectList());
+    //		return elems;
+    //	}
+    
+    @Override
+    public ColNameExpr partitionColumn() {
+        ColNameExpr col1 = source1.partitionColumn();
+        if (col1 != null) {
+            return col1;
+        } else {
+            ColNameExpr col2 = source2.partitionColumn();
+            return col2;
+        }
+    }
+
+    @Override
+    public Expr tupleProbabilityColumn() {
+        Expr expr1 = source1.tupleProbabilityColumn();
+        Expr expr2 = source2.tupleProbabilityColumn();
+        Expr combined = new BinaryOpExpr(vc, expr1, expr2, "*");
+        return combined;
+    }
+
+    @Override
+    public Expr tableSamplingRatio() {
+        Expr expr1 = source1.tableSamplingRatio();
+        Expr expr2 = source2.tableSamplingRatio();
+        Expr combined = new BinaryOpExpr(vc, expr1, expr2, "*");
+        return combined;
+    }
+
+//    @Override
+//    public Expr distinctCountPartitionColumn() {
+//        Expr col1 = source1.distinctCountPartitionColumn();
+//        if (col1 != null) {
+//            return col1;
+//        } else {
+//            Expr col2 = source2.distinctCountPartitionColumn();
+//            return col2;
+//        }
+//    }
 }

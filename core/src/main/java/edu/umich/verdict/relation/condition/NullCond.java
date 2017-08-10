@@ -16,5 +16,13 @@ public class NullCond extends Cond {
 	public String toSql() {
 		return toString();
 	}
-	
+
+    @Override
+    public boolean equals(Cond o) {
+        if (o instanceof NullCond) {
+            return true;
+        }
+        return false;
+    }
+
 }

@@ -304,7 +304,7 @@ create_table
 //    ;
 
 create_table_as_select
-    : CREATE TABLE (IF NOT EXISTS)? table_name STORED_AS_PARQUET? AS select_statement ';'?
+    : CREATE TABLE (IF NOT EXISTS)? table_name AS select_statement ';'?
     ;
 
 // https://msdn.microsoft.com/en-us/library/ms187956.aspx
@@ -786,7 +786,7 @@ derived_table
 
 function_call
     : ranking_windowed_function
-    | value_manipulation_function
+    | mathematical_function_expression
     | aggregate_windowed_function
     ;
 
@@ -860,31 +860,31 @@ ranking_windowed_function
     | ROW_NUMBER '(' ')' over_clause
     ;
 
-value_manipulation_function
-    : unary_manipulation_function
-    | noparam_manipulation_function
-    | binary_manipulation_function
-    | ternary_manipulation_function
+mathematical_function_expression
+    : unary_mathematical_function
+    | noparam_mathematical_function
+    | binary_mathematical_function
+    | ternary_mathematical_function
     ;
     
-ternary_manipulation_function
+ternary_mathematical_function
     : function_name=(CONV | SUBSTR)
       '(' expression ',' expression ',' expression ')'
     ;
 
-binary_manipulation_function
-    : function_name=(MOD | PMOD )
+binary_mathematical_function
+    : function_name=(MOD | PMOD)
       '(' expression ',' expression ')'
     ;
 
-unary_manipulation_function
+unary_mathematical_function
     : function_name=(ROUND | FLOOR | CEIL | EXP | LN | LOG10 | LOG2 | SIN | COS | TAN | SIGN | RAND | FNV_HASH | ABS | STDDEV | SQRT | MD5 | CRC32)
       '(' expression ')'
     | function_name=CAST '(' cast_as_expression ')'
     ;
     
 noparam_mathematical_function
-    : function_name=(UNIX_TIMESTAMP | CURRENT_TIMESTAMP | RANDOM)
+    : function_name=(UNIX_TIMESTAMP | CURRENT_TIMESTAMP)
       '(' ')'
     ;
 
@@ -1489,7 +1489,6 @@ PRECEDING:                       P R E C E D I N G;
 PRIOR:                           P R I O R;
 QUOTED_BY:                       Q U O T E D ' ' B Y;
 RAND:                            R A N D;
-RANDOM:                          R A N D O M;
 RANGE:                           R A N G E;
 RANK:                            R A N K;
 READONLY:                        R E A D O N L Y;
@@ -1521,7 +1520,6 @@ STATS_STREAM:                    S T A T S '_' S T R E A M;
 STDEV:                           S T D E V;
 STDDEV:                          S T D D E V;
 STDEVP:                          S T D E V P;
-STORED_AS_PARQUET:               S T O R E D ' ' A S ' ' P A R Q U E T;
 SUM:                             S U M;
 SQRT:                            S Q R T;
 TAN:                             T A N;

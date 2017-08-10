@@ -24,4 +24,12 @@ public class TableNameExpr extends Expr {
 		return toString();
 	}
 
+    @Override
+    public boolean equals(Expr o) {
+        if (o instanceof TableNameExpr) {
+            return true;
+        }
+        return false;
+    }
+
 }

@@ -42,10 +42,15 @@ public class ImpalaAggregationIT extends AggregationIT {
     }
 
     @Override
-    public void simpleAvgUsingUniformSample() throws VerdictException, SQLException {
+    public void simpleCountDistinctUsingUniverseSample() throws VerdictException, SQLException {
         // TODO Auto-generated method stub
-        super.simpleAvgUsingUniformSample();
+        super.simpleCountDistinctUsingUniverseSample();
     }
 
+    @Override
+    public void groupbySum2() throws VerdictException, SQLException {
+        // TODO Auto-generated method stub
+        super.groupbySum2();
+    }
     
 }

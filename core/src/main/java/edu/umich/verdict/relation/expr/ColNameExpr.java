@@ -1,7 +1,6 @@
 package edu.umich.verdict.relation.expr;
 
 import edu.umich.verdict.VerdictContext;
-import edu.umich.verdict.util.VerdictLogger;
 
 public class ColNameExpr extends Expr {
 
@@ -56,11 +55,13 @@ public class ColNameExpr extends Expr {
 
     @Override
     public String toString() {
-        if (tab == null) {
-            return String.format("%s", quote(col));
-        } else {
+        if (schema == null) {
+            if (tab == null) {
+                return String.format("%s", quote(col));
+            }
             return String.format("%s.%s", tab, quote(col));
         }
+        return String.format("%s.%s.%s", schema, tab, quote(col));
     }
 
     public String getText() {
@@ -84,5 +85,29 @@ public class ColNameExpr extends Expr {
     @Override
     public String toSql() {
         return toString();
+    }
+
+    @Override
+    public boolean equals(Expr o) {
+        if (o instanceof ColNameExpr) {
+            if (getCol().equals(((ColNameExpr) o).getCol())) {
+                if (getTab() == null) {
+                    return true;
+                } else {
+                    if (((ColNameExpr) o).getCol() != null
+                        && getCol().equals(((ColNameExpr) o).getCol())) {
+                        if (getSchema() == null) {
+                            return true;
+                        } else {
+                            if (((ColNameExpr) o).getSchema() != null
+                                && getSchema().equals(((ColNameExpr) o).getSchema())) {
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return false;
     }
 }

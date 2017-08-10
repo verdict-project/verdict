@@ -26,4 +26,12 @@ public class NotCond extends Cond {
 	public String toSql() {
 		return String.format("NOT %s", cond.toSql());
 	}
+
+    @Override
+    public boolean equals(Cond o) {
+        if (o instanceof NotCond) {
+            return cond.equals(o);
+        }
+        return false;
+    }
 }

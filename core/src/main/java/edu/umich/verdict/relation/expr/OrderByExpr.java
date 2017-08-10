@@ -58,7 +58,7 @@ public class OrderByExpr extends Expr {
 	}
 
 	@Override
-	public Expr withTableSubstituted(String newTab) {
+	public OrderByExpr withTableSubstituted(String newTab) {
 		Expr newExpr = expr.withTableSubstituted(newTab);
 		return new OrderByExpr(vc, newExpr, direction.orNull());
 	}
@@ -67,5 +67,14 @@ public class OrderByExpr extends Expr {
 	public String toSql() {
 		return toString();
 	}
+
+    @Override
+    public boolean equals(Expr o) {
+        if (o instanceof OrderByExpr) {
+            return getExpression().equals(((OrderByExpr) o).getExpression())
+                   && getDirection().equals(((OrderByExpr) o).getDirection());
+        }
+        return false;
+    }
 
 }

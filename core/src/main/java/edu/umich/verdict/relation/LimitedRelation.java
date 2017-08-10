@@ -84,4 +84,19 @@ public class LimitedRelation extends ExactRelation {
 		return s.toString();
 	}
 
+    @Override
+    public Expr tupleProbabilityColumn() {
+        return null;
+    }
+
+    @Override
+    public Expr tableSamplingRatio() {
+        return null;
+    }
+
+//    @Override
+//    public Expr distinctCountPartitionColumn() {
+//        return null;
+//    }
+
 }

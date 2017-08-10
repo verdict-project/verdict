@@ -883,8 +883,13 @@ unary_manipulation_function
     | function_name=CAST '(' cast_as_expression ')'
     ;
     
+<<<<<<< HEAD
 noparam_mathematical_function
     : function_name=(UNIX_TIMESTAMP | CURRENT_TIMESTAMP | RANDOM)
+=======
+noparam_manipulation_function
+    : function_name=(UNIX_TIMESTAMP | CURRENT_TIMESTAMP)
+>>>>>>> young/master
       '(' ')'
     ;
 
