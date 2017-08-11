@@ -341,6 +341,17 @@ public class FuncExpr extends Expr {
         }
         return false;
     }
+    
+    @Override
+    public boolean isMeanLikeAggregate() {
+        if (funcname.equals(FuncName.AVG) ||
+            funcname.equals(FuncName.SUM) ||
+            funcname.equals(FuncName.COUNT)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
 
     @Override
     public boolean isCountDistinct() {
@@ -354,6 +365,22 @@ public class FuncExpr extends Expr {
     @Override
     public boolean isCount() {
         if (funcname.equals(FuncName.COUNT)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+    
+    public boolean isMax() {
+        if (funcname.equals(FuncName.MAX)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+    
+    public boolean isMin() {
+        if (funcname.equals(FuncName.MIN)) {
             return true;
         } else {
             return false;

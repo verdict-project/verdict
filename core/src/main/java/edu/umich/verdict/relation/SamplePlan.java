@@ -113,7 +113,7 @@ public class SamplePlan {
         return copy;
     }
     
-    public ApproxRelation toRelation(VerdictContext vc) {
+    public ApproxRelation toRelation(VerdictContext vc, String alias) {
         List<SampleGroup> aggregateSources = getSampleGroups();
         
         // Join the results from those multiple relations (if there are more than one)
@@ -144,6 +144,7 @@ public class SamplePlan {
             }
         }
         
+        r.setAlias(alias);
         return r;
     }
 

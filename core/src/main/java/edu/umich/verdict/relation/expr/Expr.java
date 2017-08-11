@@ -99,6 +99,18 @@ public abstract class Expr {
     public boolean isCount() {
         return false;
     }
+    
+    public boolean isMax() {
+        return false;
+    }
+    
+    public boolean isMin() {
+        return false;
+    }
+    
+    public boolean isMeanLikeAggregate() {
+        return false;
+    }
 
     public List<String> extractColNames() {
         ExprVisitor<List<String>> v = new ExprVisitor<List<String>>() {

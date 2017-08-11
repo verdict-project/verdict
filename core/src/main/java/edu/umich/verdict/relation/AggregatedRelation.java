@@ -78,84 +78,84 @@ public class AggregatedRelation extends ExactRelation {
      */
     @Override
     protected List<ApproxRelation> nBestSamples(Expr elem, int n) throws VerdictException {
-    	SamplePlans plans = candidatesAsRoot();
-    	List<ApproxRelation> candidates = new ArrayList<ApproxRelation>();
-    	List<FuncExpr> funcs = elem.extractFuncExpr();
-    	for (SamplePlan plan : plans.getPlans()) {
-    		ApproxRelation a = plan.toRelation(vc);
-    		boolean isEligible = true;
-    		
-    		for (FuncExpr fexpr : funcs) {
-    			if (fexpr.getFuncName().equals(FuncExpr.FuncName.COUNT) ||
-    				fexpr.getFuncName().equals(FuncExpr.FuncName.AVG) ||
-    				fexpr.getFuncName().equals(FuncExpr.FuncName.SUM) ||
-    				fexpr.getFuncName().equals(FuncExpr.FuncName.COUNT_DISTINCT)) {
-    				if (source instanceof GroupedRelation) {
-    					if (a.sampleType().equals("universe") ||
-    						a.sampleType().equals("stratified") ||
-    						a.sampleType().equals("nosample")) {
-    					} else {
-    						isEligible = false;
-    					}
-    				}
-    			} else {
-    				// for all other functions, we don't perform any approximations.
-    				// this was introduced to handle tpch q15; we need a better mechanism.
-    			}
-    		}
-    		
-    		if (isEligible) {
-    			candidates.add(a);
-    		}
-    	}
-    	
-    	return candidates;
-        
-//        List<ApproxRelation> sourceCandidates = source.nBestSamples(elem, 10);
-//        for (ApproxRelation sc : sourceCandidates) {
-//            boolean eligible = false;
-//
-//            if (sc.sampleType().equals("nosample")) {
-//                eligible = true;
-//            } else {
-//                if (sc instanceof ApproxGroupedRelation) {
-//                    List<Expr> groupby = ((ApproxGroupedRelation) sc).getGroupby();
-//                    List<String> strGroupby = new ArrayList<String>();
-//                    for (Expr expr : groupby) {
-//                        if (expr instanceof ColNameExpr) {
-//                            strGroupby.add(((ColNameExpr) expr).getCol());
-//                        }
-//                    }
-//
-//                    String sampleType = sc.sampleType();
-//                    List<String> sampleColumns = sc.sampleColumns();
-//                    if (sampleType.equals("universe") && strGroupby.equals(sampleColumns)) {
-//                        eligible = true;
-//                    } else if (sampleType.equals("stratified") && strGroupby.equals(sampleColumns)) {
-//                        eligible = true;
-//                    }
-//                } else {
-//                    eligible = true;
-//                }
-//            }
-//
-//            if (eligible) {
-//                ApproxRelation c = new ApproxAggregatedRelation(vc, sc, elems);
-//                c.setAlias(getAlias());
-//                candidates.add(c);
-//            }
-//        }
-//        return candidates;
+        SamplePlans plans = candidatesAsRoot();
+        List<ApproxRelation> candidates = new ArrayList<ApproxRelation>();
+        List<FuncExpr> funcs = elem.extractFuncExpr();
+        for (SamplePlan plan : plans.getPlans()) {
+            ApproxRelation a = plan.toRelation(vc, getAlias());
+            boolean isEligible = true;
+
+            for (FuncExpr fexpr : funcs) {
+                if (fexpr.getFuncName().equals(FuncExpr.FuncName.COUNT) ||
+                        fexpr.getFuncName().equals(FuncExpr.FuncName.AVG) ||
+                        fexpr.getFuncName().equals(FuncExpr.FuncName.SUM) ||
+                        fexpr.getFuncName().equals(FuncExpr.FuncName.COUNT_DISTINCT)) {
+                    if (source instanceof GroupedRelation) {
+                        if (a.sampleType().equals("universe") ||
+                                a.sampleType().equals("stratified") ||
+                                a.sampleType().equals("nosample")) {
+                        } else {
+                            isEligible = false;
+                        }
+                    }
+                } else {
+                    // for all other functions, we don't perform any approximations.
+                    // this was introduced to handle tpch q15; we need a better mechanism.
+                }
+            }
+
+            if (isEligible) {
+                candidates.add(a);
+            }
+        }
+
+        return candidates;
+
+        //        List<ApproxRelation> sourceCandidates = source.nBestSamples(elem, 10);
+        //        for (ApproxRelation sc : sourceCandidates) {
+        //            boolean eligible = false;
+        //
+        //            if (sc.sampleType().equals("nosample")) {
+        //                eligible = true;
+        //            } else {
+        //                if (sc instanceof ApproxGroupedRelation) {
+        //                    List<Expr> groupby = ((ApproxGroupedRelation) sc).getGroupby();
+        //                    List<String> strGroupby = new ArrayList<String>();
+        //                    for (Expr expr : groupby) {
+        //                        if (expr instanceof ColNameExpr) {
+        //                            strGroupby.add(((ColNameExpr) expr).getCol());
+        //                        }
+        //                    }
+        //
+        //                    String sampleType = sc.sampleType();
+        //                    List<String> sampleColumns = sc.sampleColumns();
+        //                    if (sampleType.equals("universe") && strGroupby.equals(sampleColumns)) {
+        //                        eligible = true;
+        //                    } else if (sampleType.equals("stratified") && strGroupby.equals(sampleColumns)) {
+        //                        eligible = true;
+        //                    }
+        //                } else {
+        //                    eligible = true;
+        //                }
+        //            }
+        //
+        //            if (eligible) {
+        //                ApproxRelation c = new ApproxAggregatedRelation(vc, sc, elems);
+        //                c.setAlias(getAlias());
+        //                candidates.add(c);
+        //            }
+        //        }
+        //        return candidates;
     }
-    
+
     private SamplePlans candidatesAsRoot() throws VerdictException {
-    	// these are candidates for the sources of this relation
+        // these are candidates for the sources of this relation
         List<List<SampleGroup>> candidates_list = new ArrayList<List<SampleGroup>>();
-        
+
         for (int i = 0; i < elems.size(); i++) {
             SelectElem elem = elems.get(i);
             Expr agg = elem.getExpr();
-            
+
             // TODO: make this number (10) configurable.
             List<ApproxRelation> candidates = source.nBestSamples(agg, 10);		
             List<SampleGroup> sampleGroups = new ArrayList<SampleGroup>();
@@ -176,6 +176,7 @@ public class AggregatedRelation extends ExactRelation {
     public ApproxRelation approx() throws VerdictException {
         SamplePlans consolidatedPlans = candidatesAsRoot();
         SamplePlan plan = chooseBestPlan(consolidatedPlans);
+        
         if (plan == null) {
             String msg = "No feasible sample plan is found.";
             VerdictLogger.error(this, msg);
@@ -184,18 +185,17 @@ public class AggregatedRelation extends ExactRelation {
         VerdictLogger.debug(this, "The sample plan to use: ");
         VerdictLogger.debugPretty(this, plan.toPrettyString(), "  ");
 
-        ApproxRelation r = plan.toRelation(vc);
-        r.setAlias(getAlias());
+        ApproxRelation r = plan.toRelation(vc, getAlias());
         return r;
     }
 
-//    private Map<TableUniqueName, SampleParam> attachTableMapping(Set<SampleParam> samplesPart) {
-//        Map<TableUniqueName, SampleParam> map = new HashMap<TableUniqueName, SampleParam>();
-//        for (SampleParam param : samplesPart) {
-//            map.put(param.originalTable, param);
-//        }
-//        return map;
-//    }
+    //    private Map<TableUniqueName, SampleParam> attachTableMapping(Set<SampleParam> samplesPart) {
+    //        Map<TableUniqueName, SampleParam> map = new HashMap<TableUniqueName, SampleParam>();
+    //        for (SampleParam param : samplesPart) {
+    //            map.put(param.originalTable, param);
+    //        }
+    //        return map;
+    //    }
 
     public ApproxRelation approxWith(Map<TableUniqueName, SampleParam> replace) {
         return new ApproxAggregatedRelation(vc, source.approxWith(replace), elems);
@@ -296,10 +296,10 @@ public class AggregatedRelation extends ExactRelation {
         return new ColNameExpr(vc, samplingRatioColumnName(), getAlias());
     }
 
-//    @Override
-//    public Expr distinctCountPartitionColumn() {
-//        // TODO Auto-generated method stub
-//        return null;
-//    }
+    //    @Override
+    //    public Expr distinctCountPartitionColumn() {
+    //        // TODO Auto-generated method stub
+    //        return null;
+    //    }
 
 }

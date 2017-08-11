@@ -135,11 +135,16 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 
                 // average estimate
                 Expr averaged = null;
-                if (originalElem.get().getExpr().isCountDistinct()) {
+                Expr originalExpr = originalElem.get().getExpr();
+                if (originalExpr.isCountDistinct()) {
                     // for count-distinct (i.e., universe samples), weighted average should not be used.
                     averaged = FuncExpr.round(FuncExpr.avg(est));
+                } else if (originalExpr.isMax()) {
+                    averaged = FuncExpr.max(est);
+                } else if (originalExpr.isMin()) {
+                    averaged = FuncExpr.min(est);
                 } else {
-                    // weighted average
+                 // weighted average
                     averaged = BinaryOpExpr.from(vc, FuncExpr.sum(BinaryOpExpr.from(vc, est, psize, "*")),
                             FuncExpr.sum(psize), "/");
                     if (originalElem.get().getExpr().isCount()) {
@@ -150,12 +155,16 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 
                 // error estimation
                 // scale by sqrt(subsample size) / sqrt(sample size)
-                Expr error = BinaryOpExpr.from(vc,
-                        BinaryOpExpr.from(vc, FuncExpr.stddev(est), FuncExpr.sqrt(FuncExpr.avg(psize)), "*"),
-                        FuncExpr.sqrt(FuncExpr.sum(psize)),
-                        "/");
-                error = BinaryOpExpr.from(vc, error, ConstantExpr.from(vc, confidenceIntervalMultiplier()), "*");
-                newElems.add(new SelectElem(vc, error, Relation.errorBoundColumn(elem.getAlias())));
+                if (originalExpr.isMax() || originalExpr.isMin()) {
+                    // no error estimations for extreme statistics
+                } else {
+                    Expr error = BinaryOpExpr.from(vc,
+                            BinaryOpExpr.from(vc, FuncExpr.stddev(est), FuncExpr.sqrt(FuncExpr.avg(psize)), "*"),
+                            FuncExpr.sqrt(FuncExpr.sum(psize)),
+                            "/");
+                    error = BinaryOpExpr.from(vc, error, ConstantExpr.from(vc, confidenceIntervalMultiplier()), "*");
+                    newElems.add(new SelectElem(vc, error, Relation.errorBoundColumn(elem.getAlias())));
+                }
             }
         }
         
