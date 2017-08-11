@@ -3,6 +3,12 @@ package edu.umich.verdict.relation;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang3.tuple.Pair;
+
+import edu.umich.verdict.VerdictContext;
+import edu.umich.verdict.relation.expr.Expr;
+import edu.umich.verdict.relation.expr.SelectElem;
+
 /**
  * Stores information about what samples to use to compute multiple expressions. A single SampleGroup instance stores
  * the mapping from a set of samples to a list of expressions to answer using the set, and this class includes multiple number
@@ -106,12 +112,39 @@ public class SamplePlan {
 
         return copy;
     }
+    
+    public ApproxRelation toRelation(VerdictContext vc) {
+        List<SampleGroup> aggregateSources = getSampleGroups();
+        
+        // Join the results from those multiple relations (if there are more than one)
+        // The root (r) will be AggregatedRelation if there is only one relation
+        // The root (r) will be a ProjectedRelation of JoinedRelation if there are more than one relation
+        ApproxRelation r = new ApproxAggregatedRelation(vc, aggregateSources.get(0).getSample(), aggregateSources.get(0).getElems());
+        
+        if (aggregateSources.size() > 1) {
+            for (int i = 1; i < aggregateSources.size(); i++) {
+                ApproxRelation s1 = aggregateSources.get(i).getSample();
+                List<SelectElem> elems1 = aggregateSources.get(i).getElems();
+                ApproxRelation r1 = new ApproxAggregatedRelation(vc, s1, elems1);
+                
+                String ln = r.getAlias();
+                String rn = r1.getAlias();
+                
+                if (!(s1 instanceof ApproxGroupedRelation)) {
+                    r = new ApproxJoinedRelation(vc, r, r1, null);
+                } else {
+                    List<Expr> groupby = ((ApproxGroupedRelation) s1).getGroupby();
+                    List<Pair<Expr, Expr>> joincols = new ArrayList<Pair<Expr, Expr>>();
+                    for (Expr col : groupby) {
+                        // replace table names in internal colNameExpr
+                        joincols.add(Pair.of(col.withTableSubstituted(ln), col.withTableSubstituted(rn)));
+                    }
+                    r = new ApproxJoinedRelation(vc, r, r1, joincols);
+                }
+            }
+        }
+        
+        return r;
+    }
 
-    //	public List<Pair<Set<SampleParam>, List<Expr>>> unroll() {
-    //		List<Pair<Set<SampleParam>, List<Expr>>> unrolled = new ArrayList<Pair<Set<SampleParam>, List<Expr>>>();
-    //		for (SampleGroup g : sampleGroups) {
-    //			unrolled.add(g.unroll());
-    //		}
-    //		return unrolled;
-    //	}
 }

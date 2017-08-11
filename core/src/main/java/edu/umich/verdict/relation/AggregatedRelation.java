@@ -121,10 +121,9 @@ public class AggregatedRelation extends ExactRelation {
         
         for (int i = 0; i < elems.size(); i++) {
             SelectElem elem = elems.get(i);
-//            if (!elem.isagg()) continue;
-            
             Expr agg = elem.getExpr();
-         // TODO: make this number (10) configurable.
+            
+            // TODO: make this number (10) configurable.
             List<ApproxRelation> candidates = source.nBestSamples(agg, 10);		
             List<SampleGroup> sampleGroups = new ArrayList<SampleGroup>();
             for (ApproxRelation a : candidates) {
@@ -147,69 +146,7 @@ public class AggregatedRelation extends ExactRelation {
         VerdictLogger.debug(this, "The sample plan to use: ");
         VerdictLogger.debugPretty(this, plan.toPrettyString(), "  ");
 
-        //		// we create multiple aggregated relations, which, when combined, can answer the user-submitted query.
-        //		List<ApproxAggregatedRelation> individuals = new ArrayList<ApproxAggregatedRelation>();
-        //		for (SampleGroup group : plan.getSampleGroups()) {
-        //			List<Expr> elems = group.getElems();
-        //			Set<SampleParam> samplesPart = group.sampleSet();
-        //			individuals.add(new ApproxAggregatedRelation(vc, source.approxWith(attachTableMapping(samplesPart)), elems));
-        //		}
-
-        List<SampleGroup> aggregateSources = plan.getSampleGroups();
-        
-//        List<ApproxRelation> individualSources = plan.getApproxRelations();
-
-        // Join the results from those multiple relations (if there are more than one)
-        // The root (r) will be AggregatedRelation if there is only one relation
-        // The root (r) will be a ProjectedRelation of JoinedRelation if there are more than one relation
-        ApproxRelation r = new ApproxAggregatedRelation(vc, aggregateSources.get(0).getSample(), aggregateSources.get(0).getElems());
-        
-        if (aggregateSources.size() > 1) {
-            for (int i = 1; i < aggregateSources.size(); i++) {
-                ApproxRelation s1 = aggregateSources.get(i).getSample();
-                List<SelectElem> elems1 = aggregateSources.get(i).getElems();
-                ApproxRelation r1 = new ApproxAggregatedRelation(vc, s1, elems1);
-                
-                String ln = r.getAlias();
-                String rn = r1.getAlias();
-                
-                if (!(s1 instanceof ApproxGroupedRelation)) {
-                    r = new ApproxJoinedRelation(vc, r, r1, null);
-                } else {
-                    List<Expr> groupby = ((ApproxGroupedRelation) s1).getGroupby();
-                    List<Pair<Expr, Expr>> joincols = new ArrayList<Pair<Expr, Expr>>();
-                    for (Expr col : groupby) {
-                        // replace table names in internal colNameExpr
-                        joincols.add(Pair.of(col.withTableSubstituted(ln), col.withTableSubstituted(rn)));
-                    }
-                    r = new ApproxJoinedRelation(vc, r, r1, joincols);
-                }
-            }
-
-//            // if two or more tables are joined, groupby columns become ambiguous. So, we project out the groupby columns
-//            // in the joined relations.
-//            // for aggregate expressions, we use their aliases.
-//            ApproxRelation firstSource = individuals.get(0).getSource();
-//            if (firstSource instanceof ApproxGroupedRelation) {
-//                List<Expr> groupby = ((ApproxGroupedRelation) firstSource).getGroupby();
-//                List<SelectElem> newElems = new ArrayList<SelectElem>();
-//                for (Expr g : groupby) {
-//                    newElems.add(new SelectElem(vc, g.withTableSubstituted(individuals.get(0).getAlias())));
-//                }
-//                for (ApproxProjectedRelation a : allJoined) {
-//                    List<SelectElem> elems = a.getSelectElems();
-//                    for (SelectElem e : elems) {
-//                        if (!e.isagg()) continue;
-//                        newElems.add(new SelectElem(vc, ConstantExpr.from(vc, e.getAlias())));
-//                    }
-//                }
-////                for (Expr elem : aggs) {
-////                    newElems.add(new SelectElem(vc, ConstantExpr.from(vc, elem), Relation.genColumnAlias()));
-////                }
-//                r = new ApproxProjectedRelation(vc, r, newElems);
-//            }
-        }
-
+        ApproxRelation r = plan.toRelation(vc);
         r.setAlias(getAlias());
         return r;
     }
