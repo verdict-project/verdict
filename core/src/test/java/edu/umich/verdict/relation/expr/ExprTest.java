@@ -4,11 +4,19 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
+import edu.umich.verdict.VerdictConf;
 import edu.umich.verdict.VerdictContext;
+import edu.umich.verdict.VerdictJDBCContext;
 
 public class ExprTest {
 
     private static VerdictContext dummyContext = null;
+    
+    @Test
+    public void redshiftModStr() {
+    	Expr a = Expr.from(dummyContext, "mod(strtol(crc32(cast('hello world' as text)),16),30)");
+    	System.out.println(a.toSql());
+    }
     
     @Test
     public void redshiftRandPartition() {
@@ -49,7 +57,8 @@ public class ExprTest {
     @Test
     public void castExprTest() {
         Expr a = Expr.from(dummyContext, "abs(fnv_hash(cast(user_id as string)))%1000000");
-        assertEquals(a.toString(), "(abs(fnv_hash(cast(`user_id` as string))) % 1000000)");
+        // changed `user_id` to 'user_id'
+        assertEquals(a.toString(), "(abs(fnv_hash(cast('user_id' as string))) % 1000000)");
     }
 
     @Test

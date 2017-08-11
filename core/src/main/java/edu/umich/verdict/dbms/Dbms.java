@@ -288,7 +288,7 @@ public abstract class Dbms {
                 .where(whereClause)
                 .select("*, " + randomPartitionColumn());
         TableUniqueName temp = Relation.getTempTableName(vc, param.sampleTableName().getSchemaName());
-
+        dropTable(temp);
         String sql = String.format("create table %s as %s", temp, sampled.toSql());
         VerdictLogger.debug(this, "The query used for creating a temporary table without sampling probabilities:");
         VerdictLogger.debugPretty(this, Relation.prettyfySql(vc, sql), "  ");

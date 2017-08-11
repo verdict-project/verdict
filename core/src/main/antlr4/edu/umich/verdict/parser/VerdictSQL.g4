@@ -873,14 +873,14 @@ ternary_manipulation_function
     ;
 
 binary_manipulation_function
-    : function_name=(MOD | PMOD )
+    : function_name=(MOD | PMOD | STRTOL)
       '(' expression ',' expression ')'
     ;
 
 unary_manipulation_function
     : function_name=(ROUND | FLOOR | CEIL | EXP | LN | LOG10 | LOG2 | SIN | COS | TAN | SIGN | RAND | FNV_HASH | ABS | STDDEV | SQRT | MD5 | CRC32)
       '(' expression ')'
-    | function_name=CAST '(' cast_as_expression ')'
+    | function_name=CAST '(' cast_as_expression ')'    
     ;
     
 noparam_manipulation_function
@@ -1171,6 +1171,7 @@ simple_id
     | STATS_STREAM
     | STDEV
     | STDEVP
+    | STRTOL
     | SUM
     | THROW
     | TIES
@@ -1524,6 +1525,7 @@ STDEVP:                          S T D E V P;
 STORED_AS_PARQUET:               S T O R E D ' ' A S ' ' P A R Q U E T;
 SUM:                             S U M;
 SQRT:                            S Q R T;
+STRTOL:							 S T R T O L;
 TAN:                             T A N;
 THROW:                           T H R O W;
 TIES:                            T I E S;
