@@ -370,19 +370,24 @@ public abstract class ExactRelation extends Relation {
      * @param candidates_list
      * @return
      */
-    protected SamplePlan consolidate(
-            List<List<SampleGroup>> candidates_list) {
+    protected SamplePlans consolidate(List<List<SampleGroup>> candidates_list) {
         SamplePlans plans = new SamplePlans();
-
         // create candidate plans
         for (List<SampleGroup> groups : candidates_list) {
             plans.consolidateNewExpr(groups);
         }
-
+        return plans;
+//        double relative_cost_ratio = vc.getConf().getRelativeTargetCost();
+//        SamplePlan best = plans.bestPlan(relative_cost_ratio);
+//        return best;
+    }
+    
+    protected SamplePlan chooseBestPlan(SamplePlans plans) {
         double relative_cost_ratio = vc.getConf().getRelativeTargetCost();
         SamplePlan best = plans.bestPlan(relative_cost_ratio);
         return best;
     }
+    
 
     /*
      * Helpers

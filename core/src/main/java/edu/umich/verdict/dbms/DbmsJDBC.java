@@ -146,16 +146,16 @@ public abstract class DbmsJDBC extends Dbms {
             url.append(";");
             url.append(String.format("password=%s", password));
         }
-        
-//        if (!vc.getConf().ignoreUserCredentials() && user != null && user.length() != 0 && dbms == "redshift") {
-//            url.append(";");
-//            url.append(String.format("UID=%s", user));
-//        }
-//        if (!vc.getConf().ignoreUserCredentials() && password != null && password.length() != 0 && dbms == "redshift") {
-//            url.append(";");
-//            url.append(String.format("PWD=%s", password));
-//        }
-        
+
+        //        if (!vc.getConf().ignoreUserCredentials() && user != null && user.length() != 0 && dbms == "redshift") {
+        //            url.append(";");
+        //            url.append(String.format("UID=%s", user));
+        //        }
+        //        if (!vc.getConf().ignoreUserCredentials() && password != null && password.length() != 0 && dbms == "redshift") {
+        //            url.append(";");
+        //            url.append(String.format("PWD=%s", password));
+        //        }
+
         // set kerberos option if set
         if (vc.getConf().isJdbcKerberosSet()) {
             String value = vc.getConf().getJdbcKerberos();
@@ -183,7 +183,7 @@ public abstract class DbmsJDBC extends Dbms {
             if (key.startsWith("verdict") || key.equals("user") || key.equals("password")) {
                 continue;
             }
-            
+
             url.append(String.format(";%s=%s", key, value));
         }
 
@@ -216,7 +216,8 @@ public abstract class DbmsJDBC extends Dbms {
     }
 
     public boolean execute(String sql) throws VerdictException {    	
-        createStatementIfNotExists();
+                createStatementIfNotExists();
+//        createStatement();
         boolean result = false;
         try {
             result = stmt.execute(sql);
@@ -228,12 +229,14 @@ public abstract class DbmsJDBC extends Dbms {
         }
         return result;
     }
-
+    
     public void executeUpdate(String query) throws VerdictException { 
-        createStatementIfNotExists();
+        //        createStatementIfNotExists();
+        createStatement();    	
         try {
             stmt.executeUpdate(query);
         } catch (SQLException e) {
+            //        	System.out.println(query);
             throw new VerdictException(e);
         }
     }
@@ -245,6 +248,10 @@ public abstract class DbmsJDBC extends Dbms {
         } catch (SQLException e) {
             throw new VerdictException(e);
         }
+        return stmt;
+    }
+    
+    public Statement getStatement() {
         return stmt;
     }
 

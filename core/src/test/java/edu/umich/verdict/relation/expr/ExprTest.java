@@ -9,6 +9,12 @@ import edu.umich.verdict.VerdictContext;
 public class ExprTest {
 
     private static VerdictContext dummyContext = null;
+    
+    @Test
+    public void redshiftRandPartition() {
+    	Expr a = Expr.from(dummyContext, "mod(cast(round(random()) as integer), 100)");
+    	System.out.println(a.toSql());
+    }
 
     @Test
     public void caseExprTest() {

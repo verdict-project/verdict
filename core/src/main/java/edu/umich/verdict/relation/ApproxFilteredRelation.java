@@ -99,6 +99,13 @@ public class ApproxFilteredRelation extends ApproxRelation {
         };
         return v.visit(cond);
     }
+    
+    @Override
+    public ExactRelation rewriteWithSubsampledErrorBounds() {
+        ExactRelation r = new FilteredRelation(vc, source.rewriteWithSubsampledErrorBounds(), getFilter());
+        r.setAlias(getAlias());
+        return r;
+    }
 
     @Override
     public ExactRelation rewriteWithPartition() {

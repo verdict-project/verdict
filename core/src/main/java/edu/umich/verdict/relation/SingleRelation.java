@@ -95,49 +95,6 @@ public class SingleRelation extends ExactRelation {
         return samples;
     }
 
-//    @Override
-//    protected List<SampleGroup> findSample(Expr elem) {
-//        // refresh meta data if needed.
-//        String schema = getTableName().getSchemaName();
-//        vc.getMeta().refreshSampleInfoIfNeeded(schema);
-//
-//        // Now the main procedure starts.
-//        List<SampleGroup> candidates = new ArrayList<SampleGroup>();
-//
-//        // Get all the samples
-//        List<Pair<SampleParam, TableUniqueName>> availableSamples = vc.getMeta().getSampleInfoFor(getTableName());
-//        // add a relation itself in case there's no available sample.
-//        availableSamples.add(Pair.of(asSampleParam(), getTableName()));
-//
-//        // If there's no sample; we do not know the size of the original table. In this case, we simply assume the
-//        // size is 1M.
-//        double originalTableSize = 1e6;
-//        SampleSizeInfo si = vc.getMeta().getSampleSizeOf(availableSamples.get(0).getRight());
-//        if (si != null) {
-//            originalTableSize = si.originalTableSize;
-//        }
-//
-//        for (Pair<SampleParam, TableUniqueName> p : availableSamples) {
-//            SampleParam param  = p.getLeft();
-//
-//            //			SampleSizeInfo sizeInfo = vc.getMeta().getSampleSizeOf(p.getRight());
-//            //			double sampleTableSize = originalTableSize;
-//            //			if (sizeInfo != null) {		// if not an original table
-//            //				sampleTableSize = (double) sizeInfo.sampleSize;
-//            //			}
-//            //			double samplingProb = samplingProb(p.getLeft(), elem);
-//
-//            ApproxRelation a = new ApproxSingleRelation(vc, param);
-//            candidates.add(new SampleGroup(a, Arrays.asList(elem)));
-//
-//            //			if (samplingProb >= 0) {
-//            //				
-//            //			}
-//        }
-//
-//        return candidates;
-//    }
-
     /**
      * Computes an effective sampling probability for a given sample and an aggregate expression to compute with the sample.
      * A negative return value indicates that the sample must not be used.
@@ -147,16 +104,7 @@ public class SingleRelation extends ExactRelation {
      */
     private double samplingProb(SampleParam param, Expr expr) {
         // extract all aggregate functions out of the select list element.
-        ExprVisitor<List<FuncExpr>> collectAggFuncs = new ExprVisitor<List<FuncExpr>>() {
-            private List<FuncExpr> seen = new ArrayList<FuncExpr>();
-            public List<FuncExpr> call(Expr expr) {
-                if (expr instanceof FuncExpr) {
-                    seen.add((FuncExpr) expr);
-                }
-                return seen;
-            }
-        };
-        List<FuncExpr> funcs = collectAggFuncs.visit(expr);
+        List<FuncExpr> funcs = expr.extractFuncExpr();
 
         // if there's no aggregate expression, we return a default value.
         if (funcs.size() == 0) return param.samplingRatio;

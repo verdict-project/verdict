@@ -162,6 +162,7 @@ public abstract class Dbms {
     public void createDatabase(String database) throws VerdictException {
         createCatalog(database);
     }
+    
 
     public void createCatalog(String catalog) throws VerdictException {
         String sql = String.format("create database if not exists %s", catalog);
@@ -490,8 +491,8 @@ public abstract class Dbms {
         TableUniqueName tempTableName = Relation.getTempTableName(vc, metaSchema);
         TableUniqueName originalTableName = param.originalTable;
         executeUpdate(String.format("CREATE TABLE %s AS SELECT * FROM %s "
-                + "WHERE originalschemaname <> \"%s\" OR originaltablename <> \"%s\" OR sampletype <> \"%s\""
-                + "OR samplingratio <> %s OR columnnames <> \"%s\"",
+                + "WHERE originalschemaname <> '%s' OR originaltablename <> '%s' OR sampletype <> '%s' "
+                + "OR samplingratio <> %s OR columnnames <> '%s'",
                 tempTableName, metaNameTableName, originalTableName.getSchemaName(), originalTableName.getTableName(),
                 param.sampleType, samplingRatioToString(param.samplingRatio), columnNameListToString(param.columnNames)));
         return tempTableName;
@@ -523,7 +524,8 @@ public abstract class Dbms {
         String metaSchema = param.sampleTableName().getSchemaName();
         TableUniqueName tempTableName = Relation.getTempTableName(vc, metaSchema);
         TableUniqueName sampleTableName = param.sampleTableName();
-        executeUpdate(String.format("CREATE TABLE %s AS SELECT * FROM %s WHERE schemaname <> \"%s\" OR tablename <> \"%s\" ",
+        // changed " to ' 
+        executeUpdate(String.format("CREATE TABLE %s AS SELECT * FROM %s WHERE schemaname <> '%s' OR tablename <> '%s' ",
                 tempTableName, metaSizeTableName, sampleTableName.getSchemaName(), sampleTableName.getTableName()));
         return tempTableName;
     }
