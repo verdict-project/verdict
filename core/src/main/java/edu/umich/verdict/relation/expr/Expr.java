@@ -121,6 +121,20 @@ public abstract class Expr {
     public abstract String toSql();
     
     public abstract boolean equals(Expr o);
+    
+    public List<FuncExpr> extractFuncExpr() {
+    	ExprVisitor<List<FuncExpr>> collectAggFuncs = new ExprVisitor<List<FuncExpr>>() {
+            private List<FuncExpr> seen = new ArrayList<FuncExpr>();
+            public List<FuncExpr> call(Expr expr) {
+                if (expr instanceof FuncExpr) {
+                    seen.add((FuncExpr) expr);
+                }
+                return seen;
+            }
+        };
+        List<FuncExpr> funcs = collectAggFuncs.visit(this);
+        return funcs;
+    }
 
 }
 

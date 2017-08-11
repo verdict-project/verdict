@@ -21,6 +21,10 @@ public class SamplePlans {
     public void add(SamplePlan plan) {
         plans.add(plan);
     }
+    
+    public List<SamplePlan> getPlans() {
+    	return plans;
+    }
 
     /**
      * Creates candidate plans that can answer one more expression.
