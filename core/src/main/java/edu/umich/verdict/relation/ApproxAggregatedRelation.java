@@ -179,7 +179,7 @@ public class ApproxAggregatedRelation extends ApproxRelation {
         }
         
         r = new AggregatedRelation(vc, r, newElems);
-//        r.setAlias(newAlias);
+        r.setAlias(getAlias());
         return r;
     }
 
@@ -482,10 +482,17 @@ public class ApproxAggregatedRelation extends ApproxRelation {
     }
 
     @Override
+    public double cost() {
+        return source.cost();
+    }
+
+    @Override
     public String sampleType() {
         String sampleType = source.sampleType();
-
+    
         if (source instanceof ApproxGroupedRelation) {
+            if (sampleType.equals("nosample")) return "nosample";
+            
             List<Expr> groupby = ((ApproxGroupedRelation) source).getGroupby();
             List<String> strGroupby = new ArrayList<String>();
             for (Expr expr : groupby) {
@@ -493,27 +500,45 @@ public class ApproxAggregatedRelation extends ApproxRelation {
                     strGroupby.add(((ColNameExpr) expr).getCol());
                 }
             }
-
+    
             List<String> sampleColumns = source.sampleColumns();
             if (sampleType.equals("universe") && strGroupby.equals(sampleColumns)) {
                 return "universe";
             } else if (sampleType.equals("stratified") && strGroupby.equals(sampleColumns)) {
                 return "stratified";
             }
-
+    
             return "grouped-" + sampleType;
         } else {
             return "nosample";
         }
     }
-
-    @Override
-    public double cost() {
-        return source.cost();
+    
+    private List<String> mappedSourceSampleColumn(List<String> sourceSampleCols) {
+        List<String> cols = new ArrayList<String>();
+        for (SelectElem elem : getElemList()) {
+            Expr e = elem.getExpr();
+            if (!(e instanceof ColNameExpr)) continue;
+            if (sourceSampleCols.contains(((ColNameExpr) e).getCol())) {
+                if (elem.aliasPresent()) {
+                    cols.add(elem.getAlias());
+                } else {
+                    cols.add(((ColNameExpr) e).getCol());
+                }
+            }
+        }
+        return cols;
     }
 
     @Override
     protected List<String> sampleColumns() {
+        if (!(source instanceof ApproxGroupedRelation)) {
+            return Collections.emptyList();
+        } else if (sampleType().equals("stratified") || sampleType().equals("universe")) {
+            List<String> cols = mappedSourceSampleColumn(source.sampleColumns());
+            return cols;
+        }
+        
         return source.sampleColumns();
     }
 
@@ -521,11 +546,12 @@ public class ApproxAggregatedRelation extends ApproxRelation {
     protected String toStringWithIndent(String indent) {
         StringBuilder s = new StringBuilder(1000);
         s.append(indent);
-        s.append(String.format("%s(%s) [%s] type: %s, cost: %f\n",
+        s.append(String.format("%s(%s) [%s] type: %s (%s), cost: %f\n",
                 this.getClass().getSimpleName(),
                 getAlias(),
                 Joiner.on(", ").join(elems),
                 sampleType(),
+                sampleColumns(),
                 cost()));
         s.append(source.toStringWithIndent(indent + "  "));
         return s.toString();

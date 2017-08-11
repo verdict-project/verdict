@@ -52,7 +52,7 @@ public class FilteredRelation extends ExactRelation {
      */
 
     public ApproxRelation approx() throws VerdictException {
-        ApproxRelation a = new ApproxFilteredRelation(vc, source.approx(), cond);
+        ApproxRelation a = new ApproxFilteredRelation(vc, source.approx(), approxPossibleSubqueries(cond));
         a.setAlias(getAlias());
         return a;
     }

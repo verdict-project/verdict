@@ -113,8 +113,6 @@ public class AggregatedRelation extends ExactRelation {
             }
         }
         return candidates;
-
-        //		return Arrays.asList(approx());
     }
 
     public ApproxRelation approx() throws VerdictException {
@@ -126,7 +124,8 @@ public class AggregatedRelation extends ExactRelation {
 //            if (!elem.isagg()) continue;
             
             Expr agg = elem.getExpr();
-            List<ApproxRelation> candidates = source.nBestSamples(agg, 10);		// TODO: make this number (10) configurable.
+         // TODO: make this number (10) configurable.
+            List<ApproxRelation> candidates = source.nBestSamples(agg, 10);		
             List<SampleGroup> sampleGroups = new ArrayList<SampleGroup>();
             for (ApproxRelation a : candidates) {
                 sampleGroups.add(new SampleGroup(a, Arrays.asList(elem)));
@@ -134,27 +133,12 @@ public class AggregatedRelation extends ExactRelation {
             candidates_list.add(sampleGroups);
         }
 
-//        // check if any of them include sample tables. If no sample table is included, we do not approximate.
-//        boolean includeSample = false;
-//        for (List<SampleGroup> candidates : candidates_list) {
-//            for (SampleGroup g : candidates) {
-//                if (g.samplingProb() < 1.0) {
-//                    includeSample = true;
-//                    break;
-//                }
-//            }
-//            if (includeSample) break;
-//        }
-//
-//        if (!includeSample) {
-//            return new NoApproxRelation(this);
-//        }
-
         // We test if we can consolidate those sample candidates so that the number of select statements is less than
         // the number of the expressions. In the worst case (e.g., all count-distinct), the number of select statements
         // will be equal to the number of the expressions. If the cost of running those select statements individually
         // is higher than the cost of running a single select statement using the original tables, samples are not used.
-        SamplePlan plan = consolidate(candidates_list);
+        SamplePlans consolidatedPlans = consolidate(candidates_list);
+        SamplePlan plan = chooseBestPlan(consolidatedPlans);
         if (plan == null) {
             String msg = "No feasible sample plan is found.";
             VerdictLogger.error(this, msg);

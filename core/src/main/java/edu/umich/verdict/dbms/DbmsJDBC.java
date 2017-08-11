@@ -216,8 +216,8 @@ public abstract class DbmsJDBC extends Dbms {
     }
 
     public boolean execute(String sql) throws VerdictException {    	
-        //        createStatementIfNotExists();
-        createStatement();
+                createStatementIfNotExists();
+//        createStatement();
         boolean result = false;
         try {
             result = stmt.execute(sql);
