@@ -16,7 +16,7 @@ public class FuncExpr extends Expr {
     public enum FuncName {
         COUNT, SUM, AVG, COUNT_DISTINCT, IMPALA_APPROX_COUNT_DISTINCT,
         ROUND, MAX, MIN, FLOOR, CEIL, EXP, LN, LOG10, LOG2, SIN, COS, TAN,
-        SIGN, RAND, RANDOM , FNV_HASH, ABS, STDDEV, SQRT, MOD, PMOD,
+        SIGN, STRTOL, RAND, RANDOM , FNV_HASH, ABS, STDDEV, SQRT, MOD, PMOD,
         CAST, CONV, SUBSTR, MD5, CRC32, UNIX_TIMESTAMP, CURRENT_TIMESTAMP,
         UNKNOWN
     }
@@ -50,6 +50,7 @@ public class FuncExpr extends Expr {
             .put("ABS", FuncName.ABS)
             .put("STDDEV", FuncName.STDDEV)
             .put("SQRT", FuncName.SQRT)
+            .put("STRTOL", FuncName.STRTOL)
             .put("MOD", FuncName.MOD)
             .put("CRC32", FuncName.CRC32)
             .put("PMOD", FuncName.PMOD)
@@ -87,6 +88,7 @@ public class FuncExpr extends Expr {
             .put(FuncName.ABS, "abs(%s)")
             .put(FuncName.STDDEV, "stddev(%s)")
             .put(FuncName.SQRT, "sqrt(%s)")
+            .put(FuncName.STRTOL, "strtol(%s, %s)")
             .put(FuncName.MOD, "mod(%s, %s)")
             .put(FuncName.PMOD, "pmod(%s, %s)")
             .put(FuncName.CONV, "conv(%s, %s, %s)")

@@ -237,7 +237,7 @@ public abstract class DbmsJDBC extends Dbms {
             stmt.executeUpdate(query);
         } catch (SQLException e) {
 //        	System.out.println(query);
-            throw new VerdictException(e);
+
         }
     }
 
