@@ -880,7 +880,7 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
                     CompCond comp = (CompCond) resolved;
                     Expr right = comp.getRight();
                     if (right instanceof ColNameExpr) {
-                        if (((ColNameExpr) right).getCol() != r.getAlias()) {
+                        if (((ColNameExpr) right).getTab() != r.getAlias()) {
                             resolved = new CompCond(comp.getRight(), comp.getOp(), comp.getLeft());
                         }
                     }
