@@ -150,6 +150,7 @@ public class AggregatedRelation extends ExactRelation {
         VerdictLogger.debugPretty(this, plan.toPrettyString(), "  ");
 
         ApproxRelation r = plan.toRelation(vc, getAlias());
+        r.setOriginalRelation(this);
         return r;
     }
 
