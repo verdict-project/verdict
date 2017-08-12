@@ -87,4 +87,16 @@ public class NoApproxRelation extends ApproxRelation {
     protected boolean doesIncludeSample() {
         return false;
     }
+
+    @Override
+    public Expr tupleProbabilityColumn() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Expr tableSamplingRatio() {
+        // TODO Auto-generated method stub
+        return null;
+    }
 }

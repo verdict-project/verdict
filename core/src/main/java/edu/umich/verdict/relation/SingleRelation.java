@@ -318,31 +318,4 @@ public class SingleRelation extends ExactRelation {
 //        }
 //        return null;
 //    }
-
-    @Override
-    public Expr tupleProbabilityColumn() {
-        TableUniqueName uniqueTableName = getTableName();
-        Set<String> columns = vc.getMeta().getColumns(uniqueTableName);
-        String sampleColumnName = samplingProbabilityColumnName();
-        if (columns.contains(sampleColumnName)) {
-            return new ColNameExpr(vc, sampleColumnName, getAlias());
-        } else {
-            return new ConstantExpr(vc, 1.0);
-        }
-    }
-
-    @Override
-    public Expr tableSamplingRatio() {
-        TableUniqueName uniqueTableName = getTableName();
-        Set<String> columns = vc.getMeta().getColumns(uniqueTableName);
-        String sampleColumnName = samplingProbabilityColumnName();
-        
-        if (columns.contains(sampleColumnName)) {
-            SampleParam param = vc.getMeta().getSampleParamFor(uniqueTableName);
-            double samplingRatio = param.getSamplingRatio();
-            return new ConstantExpr(vc, samplingRatio);
-        } else {
-            return new ConstantExpr(vc, 1.0);
-        }
-    }
 }

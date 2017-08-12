@@ -92,7 +92,7 @@ public class ApproxProjectedRelation extends ApproxRelation {
         newElems.addAll(elems);
         
         // prob column (for point estimate and also for subsampling)
-        newElems.add(new SelectElem(vc, newSource.tupleProbabilityColumn(), samplingProbabilityColumnName()));
+        newElems.add(new SelectElem(vc, source.tupleProbabilityColumn(), samplingProbabilityColumnName()));
         
         // partition column (for subsampling)
         newElems.add(new SelectElem(vc, newSource.partitionColumn(), partitionColumnName()));
@@ -242,6 +242,16 @@ public class ApproxProjectedRelation extends ApproxRelation {
     @Override
     protected boolean doesIncludeSample() {
         return source.doesIncludeSample();
+    }
+    
+    @Override
+    public Expr tupleProbabilityColumn() {
+        return new ColNameExpr(vc, samplingProbabilityColumnName(), getAlias());
+    }
+
+    @Override
+    public Expr tableSamplingRatio() {
+        return new ColNameExpr(vc, samplingRatioColumnName(), getAlias());
     }
 
 }

@@ -257,24 +257,4 @@ public class ProjectedRelation extends ExactRelation {
         return col;
     }
 
-    @Override
-    public Expr tupleProbabilityColumn() {
-        return new ColNameExpr(vc, samplingProbabilityColumnName(), getAlias());
-    }
-
-    @Override
-    public Expr tableSamplingRatio() {
-        return new ColNameExpr(vc, samplingRatioColumnName(), getAlias());
-    }
-
-//    @Override
-//    public Expr distinctCountPartitionColumn() {
-//        Expr fromSource = source.distinctCountPartitionColumn();
-//        if (fromSource == null) {
-//            return fromSource;
-//        } else {
-//            return new ColNameExpr(vc, distinctCountPartitionColumnName(), getAlias());
-//        }
-//    }
-
 }

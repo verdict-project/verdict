@@ -3,6 +3,7 @@ package edu.umich.verdict.relation;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -307,6 +308,26 @@ public class ApproxSingleRelation extends ApproxRelation {
             return true;
         } else {
             return false;
+        }
+    }
+    
+    @Override
+    public Expr tupleProbabilityColumn() {
+        
+        if (!sampleType().equals("nosample")) {
+            return new ColNameExpr(vc, samplingProbabilityColumnName(), getAlias());
+        } else {
+            return new ConstantExpr(vc, 1.0);
+        }
+    }
+
+    @Override
+    public Expr tableSamplingRatio() {
+        if (!sampleType().equals("nosample")) {
+            double samplingRatio = getSamplingRatio();
+            return new ConstantExpr(vc, samplingRatio);
+        } else {
+            return new ConstantExpr(vc, 1.0);
         }
     }
 }

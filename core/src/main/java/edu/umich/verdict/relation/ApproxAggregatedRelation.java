@@ -217,8 +217,8 @@ public class ApproxAggregatedRelation extends ApproxRelation {
         }
 //        final Map<TableUniqueName, String> sub = source.tableSubstitution();
         ColNameExpr partitionColExpr = newSource.partitionColumn();
-        Expr tupleSamplingProbExpr = newSource.tupleProbabilityColumn();
-        Expr tableSamplingRatioExpr = newSource.tableSamplingRatio();
+        Expr tupleSamplingProbExpr = source.tupleProbabilityColumn();
+        Expr tableSamplingRatioExpr = source.tableSamplingRatio();
         
         SingleFunctionTransformerForSubsampling transformer =
                 new SingleFunctionTransformerForSubsampling(vc, groupby, partitionColExpr, tupleSamplingProbExpr, tableSamplingRatioExpr);
@@ -497,30 +497,7 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 
     @Override
     public String sampleType() {
-        String sampleType = source.sampleType();
-    
-        if (source instanceof ApproxGroupedRelation) {
-            if (sampleType.equals("nosample")) return "nosample";
-            
-            List<Expr> groupby = ((ApproxGroupedRelation) source).getGroupby();
-            List<String> strGroupby = new ArrayList<String>();
-            for (Expr expr : groupby) {
-                if (expr instanceof ColNameExpr) {
-                    strGroupby.add(((ColNameExpr) expr).getCol());
-                }
-            }
-    
-            List<String> sampleColumns = source.sampleColumns();
-            if (sampleType.equals("universe") && strGroupby.equals(sampleColumns)) {
-                return "universe";
-            } else if (sampleType.equals("stratified") && strGroupby.equals(sampleColumns)) {
-                return "stratified";
-            }
-    
-            return "grouped-" + sampleType;
-        } else {
-            return "nosample";
-        }
+       return source.sampleType();
     }
     
     private List<String> mappedSourceSampleColumn(List<String> sourceSampleCols) {
@@ -585,7 +562,9 @@ public class ApproxAggregatedRelation extends ApproxRelation {
      */
     @Override
     public double samplingProbability() {
-        if (source.sampleType().equals("nosample")) {
+        String sourceSampleType = source.sampleType();
+        
+        if (sourceSampleType.equals("nosample")) {
             return 1.0;
         }
 
@@ -598,18 +577,8 @@ public class ApproxAggregatedRelation extends ApproxRelation {
                 }
             }
 
-            if (source.sampleType().equals("stratified")) {
-                if (groupbyInString.equals(sampleColumns())) {
-                    return 1.0;
-                } else {
-                    return 0;
-                }
-            } else if (source.sampleType().equals("universe")) {
-                if (groupbyInString.equals(sampleColumns())) {
-                    return source.samplingProbability();
-                } else {
-                    return 0;
-                }
+            if (sourceSampleType.equals("universe")) {
+                return source.samplingProbability();
             }
         } else {
             return 1.0;
@@ -621,6 +590,16 @@ public class ApproxAggregatedRelation extends ApproxRelation {
     @Override
     protected boolean doesIncludeSample() {
         return source.doesIncludeSample();
+    }
+    
+    @Override
+    public Expr tupleProbabilityColumn() {
+        return new ColNameExpr(vc, samplingProbabilityColumnName(), getAlias());
+    }
+
+    @Override
+    public Expr tableSamplingRatio() {
+        return new ColNameExpr(vc, samplingRatioColumnName(), getAlias());
     }
 
 }

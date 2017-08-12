@@ -477,19 +477,6 @@ public abstract class ExactRelation extends Relation {
     public abstract ColNameExpr partitionColumn();
     
 //    public abstract Expr distinctCountPartitionColumn();
-    
-    /**
-     * The returned contains the tuple-level sampling probability. For universe and uniform samples, this is basically
-     * the ratio of the sample size to the original table size.
-     * @return
-     */
-    public abstract Expr tupleProbabilityColumn();
-    
-    /**
-     * The returned column contains 
-     * @return
-     */
-    public abstract Expr tableSamplingRatio();
 
     @Deprecated
     public abstract List<ColNameExpr> accumulateSamplingProbColumns();
@@ -832,10 +819,8 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
                 ExactRelation r2 = visit(j);
                 r = new JoinedRelation(vc, r, r2, null);
                 if (joinCond != null) {
-                    ColNameResolver resolver = new ColNameResolver(tableAliasAndColNames);
-                    Cond resolved = resolver.visit(joinCond);
                     try {
-                        ((JoinedRelation) r).setJoinCond(resolved);
+                        ((JoinedRelation) r).setJoinCond(joinCond);
                     } catch (VerdictException e) {
                         VerdictLogger.error(StackTraceReader.stackTrace2String(e));
                     }
@@ -887,7 +872,21 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
             if (ctx.INNER() != null) {
                 TableSourceExtractor ext = new TableSourceExtractor();
                 ExactRelation r = ext.visit(ctx.table_source());
-                joinCond = Cond.from(vc, ctx.search_condition());
+                Cond cond = Cond.from(vc, ctx.search_condition());
+                ColNameResolver resolver = new ColNameResolver(tableAliasAndColNames);
+                Cond resolved = resolver.visit(cond);
+                
+                if (resolved instanceof CompCond) {
+                    CompCond comp = (CompCond) resolved;
+                    Expr right = comp.getRight();
+                    if (right instanceof ColNameExpr) {
+                        if (((ColNameExpr) right).getCol() != r.getAlias()) {
+                            resolved = new CompCond(comp.getRight(), comp.getOp(), comp.getLeft());
+                        }
+                    }
+                }
+                
+                joinCond = resolved;
                 return r;
             } else {
                 VerdictLogger.error(this, "Unsupported join condition: " + ctx.getText());

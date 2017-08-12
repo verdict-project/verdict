@@ -110,42 +110,6 @@ public class AggregatedRelation extends ExactRelation {
         }
 
         return candidates;
-
-        //        List<ApproxRelation> sourceCandidates = source.nBestSamples(elem, 10);
-        //        for (ApproxRelation sc : sourceCandidates) {
-        //            boolean eligible = false;
-        //
-        //            if (sc.sampleType().equals("nosample")) {
-        //                eligible = true;
-        //            } else {
-        //                if (sc instanceof ApproxGroupedRelation) {
-        //                    List<Expr> groupby = ((ApproxGroupedRelation) sc).getGroupby();
-        //                    List<String> strGroupby = new ArrayList<String>();
-        //                    for (Expr expr : groupby) {
-        //                        if (expr instanceof ColNameExpr) {
-        //                            strGroupby.add(((ColNameExpr) expr).getCol());
-        //                        }
-        //                    }
-        //
-        //                    String sampleType = sc.sampleType();
-        //                    List<String> sampleColumns = sc.sampleColumns();
-        //                    if (sampleType.equals("universe") && strGroupby.equals(sampleColumns)) {
-        //                        eligible = true;
-        //                    } else if (sampleType.equals("stratified") && strGroupby.equals(sampleColumns)) {
-        //                        eligible = true;
-        //                    }
-        //                } else {
-        //                    eligible = true;
-        //                }
-        //            }
-        //
-        //            if (eligible) {
-        //                ApproxRelation c = new ApproxAggregatedRelation(vc, sc, elems);
-        //                c.setAlias(getAlias());
-        //                candidates.add(c);
-        //            }
-        //        }
-        //        return candidates;
     }
 
     private SamplePlans candidatesAsRoot() throws VerdictException {
@@ -186,16 +150,9 @@ public class AggregatedRelation extends ExactRelation {
         VerdictLogger.debugPretty(this, plan.toPrettyString(), "  ");
 
         ApproxRelation r = plan.toRelation(vc, getAlias());
+        r.setOriginalRelation(this);
         return r;
     }
-
-    //    private Map<TableUniqueName, SampleParam> attachTableMapping(Set<SampleParam> samplesPart) {
-    //        Map<TableUniqueName, SampleParam> map = new HashMap<TableUniqueName, SampleParam>();
-    //        for (SampleParam param : samplesPart) {
-    //            map.put(param.originalTable, param);
-    //        }
-    //        return map;
-    //    }
 
     public ApproxRelation approxWith(Map<TableUniqueName, SampleParam> replace) {
         return new ApproxAggregatedRelation(vc, source.approxWith(replace), elems);
@@ -245,26 +202,6 @@ public class AggregatedRelation extends ExactRelation {
         return sql.toString();
     }
 
-    //	@Override
-    //	public List<SelectElem> getSelectList() {
-    //		List<SelectElem> elems = new ArrayList<SelectElem>();
-    //		
-    //		Pair<List<Expr>, ExactRelation> groupsAndNextR = allPrecedingGroupbys(this.source);
-    //		List<Expr> groupby = groupsAndNextR.getLeft();
-    //		for (Expr g : groupby) {
-    //			elems.add(new SelectElem(g));
-    //		}
-    //		
-    //		elems.addAll(this.aggs);
-    //		
-    //		return elems;
-    //	}
-
-    //	@Override
-    //	public List<SelectElem> selectElemsWithAggregateSource() {
-    //		return aggs;
-    //	}
-
     @Override
     public List<ColNameExpr> accumulateSamplingProbColumns() {
         ColNameExpr expr = new ColNameExpr(vc, samplingProbabilityColumnName(), getAlias());
@@ -285,21 +222,5 @@ public class AggregatedRelation extends ExactRelation {
         ColNameExpr col = new ColNameExpr(vc, partitionColumnName(), getAlias());
         return col;
     }
-
-    @Override
-    public Expr tupleProbabilityColumn() {
-        return new ColNameExpr(vc, samplingProbabilityColumnName(), getAlias());
-    }
-
-    @Override
-    public Expr tableSamplingRatio() {
-        return new ColNameExpr(vc, samplingRatioColumnName(), getAlias());
-    }
-
-    //    @Override
-    //    public Expr distinctCountPartitionColumn() {
-    //        // TODO Auto-generated method stub
-    //        return null;
-    //    }
 
 }
