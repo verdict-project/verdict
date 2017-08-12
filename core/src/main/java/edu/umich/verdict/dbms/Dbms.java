@@ -322,24 +322,19 @@ public abstract class Dbms {
      */
     protected static List<Pair<Integer, Double>> minSamplingProbForStratifiedSamples
                      = new ImmutableList.Builder<Pair<Integer, Double>>()
-                           .add(Pair.of(100000, 0.001293))
-                           .add(Pair.of(50000, 0.002585))
-                           .add(Pair.of(10000, 0.012908))
-                           .add(Pair.of(9000, 0.014339))
-                           .add(Pair.of(8000, 0.016128))
-                           .add(Pair.of(7000, 0.018426))
-                           .add(Pair.of(6000, 0.021489))
-                           .add(Pair.of(5000, 0.025773))
-                           .add(Pair.of(1000, 0.127137))
-                           .add(Pair.of(900, 0.140994))
-                           .add(Pair.of(800, 0.158239))
-                           .add(Pair.of(700, 0.180286))
-                           .add(Pair.of(600, 0.209461))
-                           .add(Pair.of(500, 0.249876))
-                           .add(Pair.of(400, 0.309545))
-                           .add(Pair.of(300, 0.406381))
-                           .add(Pair.of(200, 0.589601))
-                           .add(Pair.of(100, 1.000000))
+                           .add(Pair.of(9000, 0.119933))
+                           .add(Pair.of(8000, 0.134837))
+                           .add(Pair.of(7000, 0.153970))
+                           .add(Pair.of(6000, 0.179427))
+                           .add(Pair.of(5000, 0.214965))
+                           .add(Pair.of(4000, 0.268041))
+                           .add(Pair.of(3000, 0.355850))
+                           .add(Pair.of(2000, 0.528753))
+                           .add(Pair.of(1500, 0.697226))
+                           .add(Pair.of(1400, 0.744320))
+                           .add(Pair.of(1300, 0.797920))
+                           .add(Pair.of(1200, 0.859198))
+                           .add(Pair.of(1100, 0.929034))
                            .build();
     
     public Pair<Long, Long> createStratifiedSampleTableOf(SampleParam param) throws VerdictException {
@@ -418,6 +413,7 @@ public abstract class Dbms {
                                            param.getSamplingRatio(),
                                            groupCount);
         whereClause += " OR __rand < (case";
+        whereClause += String.format(" when __group_size >= 10000 then 1080 / __group_size"); 
         for (Pair<Integer, Double> sizeProb : minSamplingProbForStratifiedSamples) {
             int size = sizeProb.getKey();
             double prob = sizeProb.getValue();
