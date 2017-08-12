@@ -233,6 +233,16 @@ public class ApproxFilteredRelation extends ApproxRelation {
     protected boolean doesIncludeSample() {
         return source.doesIncludeSample();
     }
+    
+    @Override
+    public Expr tupleProbabilityColumn() {
+        return source.tupleProbabilityColumn();
+    }
+
+    @Override
+    public Expr tableSamplingRatio() {
+        return source.tableSamplingRatio();
+    }
 
 }
 

@@ -19,26 +19,31 @@ public class TpchQuery15 {
         conf.set("loglevel", "debug");
 
         VerdictContext vc = VerdictJDBCContext.from(conf);
-        String sql = "select s_suppkey, s_name, s_address, s_phone, total_revenue\n" + 
-                "from (\n" + 
-                "    select l_suppkey as supplier_no,\n" + 
-                "           sum(l_extendedprice * (1 - l_discount)) as total_revenue\n" + 
-                "    from lineitem\n" + 
-                "    where l_shipdate >= '1996-01-01' and l_shipdate < '1996-04-01'\n" + 
-                "    group by l_suppkey) revenue_temp\n" + 
-                "    inner join supplier\n" + 
-                "    on s_suppkey = supplier_no\n" + 
-                "where total_revenue = (\n" + 
-                "        select\n" + 
-                "            max(total_revenue)\n" + 
-                "        from (\n" + 
-                "            select l_suppkey as supplier_no,\n" + 
-                "                   sum(l_extendedprice * (1 - l_discount)) as total_revenue\n" + 
-                "            from lineitem\n" + 
-                "            where l_shipdate >= '1996-01-01' and l_shipdate < '1996-04-01'\n" + 
-                "            group by l_suppkey) revenue_temp)\n" + 
+        String sql0 = "select l_suppkey as supplier_no,\n" + 
+                "       sum(l_extendedprice * (1 - l_discount)) as total_revenue\n" + 
+                "from lineitem\n" + 
+                "where l_shipdate >= '1996-01-01' and l_shipdate < '1996-04-01'\n" + 
+                "group by l_suppkey\n" +
+                "limit 10;\n";
+        
+        String sql1 = "create view revenue_temp as\n" + 
+                "select l_suppkey as supplier_no,\n" + 
+                "       sum(l_extendedprice * (1 - l_discount)) as total_revenue\n" + 
+                "from lineitem\n" + 
+                "where l_shipdate >= '1996-01-01' and l_shipdate < '1996-04-01'\n" + 
+                "group by l_suppkey;\n";
+        
+        String sql2 = "select s_suppkey, s_name, s_address, s_phone, total_revenue\n" + 
+                "from supplier, revenue_temp\n" + 
+                "where s_suppkey = supplier_no\n" + 
+                "  and total_revenue = (\n" + 
+                "        select max(total_revenue)\n" + 
+                "        from revenue_temp)\n" + 
                 "order by s_suppkey;\n";
-        vc.executeJdbcQuery(sql);
+        
+        String sql3 = "drop view revenue_temp;\n";
+        
+        vc.executeJdbcQuery(sql0);
 
         vc.destroy();
     }

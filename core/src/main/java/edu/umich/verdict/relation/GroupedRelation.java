@@ -168,16 +168,6 @@ public class GroupedRelation extends ExactRelation {
     		return col;
     	}
 
-    @Override
-    public Expr tupleProbabilityColumn() {
-        return source.tupleProbabilityColumn();
-    }
-
-    @Override
-    public Expr tableSamplingRatio() {
-        return source.tableSamplingRatio();
-    }
-
 //    @Override
 //    public Expr distinctCountPartitionColumn() {
 //        return source.distinctCountPartitionColumn();
