@@ -52,7 +52,7 @@ public class FilteredRelation extends ExactRelation {
      */
 
     public ApproxRelation approx() throws VerdictException {
-        ApproxRelation a = new ApproxFilteredRelation(vc, source.approx(), cond);
+        ApproxRelation a = new ApproxFilteredRelation(vc, source.approx(), approxPossibleSubqueries(cond));
         a.setAlias(getAlias());
         return a;
     }
@@ -128,16 +128,6 @@ public class FilteredRelation extends ExactRelation {
         ColNameExpr col = source.partitionColumn();
         //		col.setTab(getAliasName());
         return col;
-    }
-
-    @Override
-    public Expr tupleProbabilityColumn() {
-        return source.tupleProbabilityColumn();
-    }
-
-    @Override
-    public Expr tableSamplingRatio() {
-        return source.tableSamplingRatio();
     }
 
 //    @Override

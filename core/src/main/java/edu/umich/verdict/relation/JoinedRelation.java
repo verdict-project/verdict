@@ -353,22 +353,6 @@ public class JoinedRelation extends ExactRelation {
         }
     }
 
-    @Override
-    public Expr tupleProbabilityColumn() {
-        Expr expr1 = source1.tupleProbabilityColumn();
-        Expr expr2 = source2.tupleProbabilityColumn();
-        Expr combined = new BinaryOpExpr(vc, expr1, expr2, "*");
-        return combined;
-    }
-
-    @Override
-    public Expr tableSamplingRatio() {
-        Expr expr1 = source1.tableSamplingRatio();
-        Expr expr2 = source2.tableSamplingRatio();
-        Expr combined = new BinaryOpExpr(vc, expr1, expr2, "*");
-        return combined;
-    }
-
 //    @Override
 //    public Expr distinctCountPartitionColumn() {
 //        Expr col1 = source1.distinctCountPartitionColumn();

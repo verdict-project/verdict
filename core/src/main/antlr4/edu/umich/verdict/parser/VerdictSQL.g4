@@ -878,7 +878,7 @@ binary_manipulation_function
     ;
 
 unary_manipulation_function
-    : function_name=(ROUND | FLOOR | CEIL | EXP | LN | LOG10 | LOG2 | SIN | COS | TAN | SIGN | RAND | FNV_HASH | ABS | STDDEV | SQRT | MD5 | CRC32)
+    : function_name=(ROUND | FLOOR | CEIL | EXP | LN | LOG10 | LOG2 | SIN | COS | TAN | SIGN | RAND | FNV_HASH | ABS | STDDEV | SQRT | MD5 | CRC32 | YEAR )
       '(' expression ')'
     | function_name=CAST '(' cast_as_expression ')'    
     ;
@@ -1545,6 +1545,7 @@ VIEW_METADATA:                   V I E W '_' M E T A D A T A;
 WORK:                            W O R K;
 XML:                             X M L;
 XMLNAMESPACES:                   X M L N A M E S P A C E S;
+YEAR:                            Y E A R;
 
 DOLLAR_ACTION:                   '$' A C T I O N;
 

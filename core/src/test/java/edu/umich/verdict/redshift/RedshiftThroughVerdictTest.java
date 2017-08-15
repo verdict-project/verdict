@@ -30,7 +30,7 @@ public class RedshiftThroughVerdictTest {
         vc.executeJdbcQuery("set bypass=false");
         vc.executeJdbcQuery("show tables in tpch1g");
         vc.executeJdbcQuery("show tables in tpch1g_verdict");
-        vc.executeJdbcQuery("create sample of tpch1g.orders");
+        vc.executeJdbcQuery("create sample of tpch1g.lineitem");
 //        vc.executeJdbcQuery("create sample of tpch1g.lineitem");
 //        vc.executeJdbcQuery("delete sample of tpch1g.orders");
 //        vc.executeJdbcQuery("delete sample of tpch1g.lineitem");

@@ -19,6 +19,7 @@ import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.relation.condition.AndCond;
 import edu.umich.verdict.relation.condition.CompCond;
 import edu.umich.verdict.relation.condition.Cond;
+import edu.umich.verdict.relation.expr.BinaryOpExpr;
 import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.relation.expr.FuncExpr;
@@ -244,12 +245,13 @@ public class ApproxJoinedRelation extends ApproxRelation {
     protected String toStringWithIndent(String indent) {
         StringBuilder s = new StringBuilder(1000);
         s.append(indent);
-        s.append(String.format("%s(%s) [%s], sample type: %s (%s), cost: %f\n",
+        s.append(String.format("%s(%s) [%s], sample type: %s (%s), sampling prob: %f, cost: %f\n",
                 this.getClass().getSimpleName(),
                 getAlias(),
                 Joiner.on(", ").join(joinCols),
                 sampleType(),
                 sampleColumns(),
+                samplingProbability(),
                 cost()));
         s.append(source1.toStringWithIndent(indent + "  "));
         s.append(source2.toStringWithIndent(indent + "  "));
@@ -280,5 +282,26 @@ public class ApproxJoinedRelation extends ApproxRelation {
     @Override
     protected boolean doesIncludeSample() {
         return source1.doesIncludeSample() || source2.doesIncludeSample();
+    }
+    
+    @Override
+    public Expr tupleProbabilityColumn() {
+        Expr expr1 = source1.tupleProbabilityColumn();
+        Expr expr2 = source2.tupleProbabilityColumn();
+        
+        if (sampleType().equals("universe")) {
+            return expr1;
+        } else {
+            Expr combined = new BinaryOpExpr(vc, expr1, expr2, "*");
+            return combined;
+        }
+    }
+
+    @Override
+    public Expr tableSamplingRatio() {
+        Expr expr1 = source1.tableSamplingRatio();
+        Expr expr2 = source2.tableSamplingRatio();
+        Expr combined = new BinaryOpExpr(vc, expr1, expr2, "*");
+        return combined;
     }
 }

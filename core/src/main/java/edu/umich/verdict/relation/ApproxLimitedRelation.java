@@ -101,5 +101,15 @@ public class ApproxLimitedRelation extends ApproxRelation {
     protected boolean doesIncludeSample() {
         return source.doesIncludeSample();
     }
+    
+    @Override
+    public Expr tupleProbabilityColumn() {
+        return null;
+    }
+
+    @Override
+    public Expr tableSamplingRatio() {
+        return null;
+    }
 
 }

@@ -99,6 +99,18 @@ public abstract class Expr {
     public boolean isCount() {
         return false;
     }
+    
+    public boolean isMax() {
+        return false;
+    }
+    
+    public boolean isMin() {
+        return false;
+    }
+    
+    public boolean isMeanLikeAggregate() {
+        return false;
+    }
 
     public List<String> extractColNames() {
         ExprVisitor<List<String>> v = new ExprVisitor<List<String>>() {
@@ -121,6 +133,20 @@ public abstract class Expr {
     public abstract String toSql();
     
     public abstract boolean equals(Expr o);
+    
+    public List<FuncExpr> extractFuncExpr() {
+    	ExprVisitor<List<FuncExpr>> collectAggFuncs = new ExprVisitor<List<FuncExpr>>() {
+            private List<FuncExpr> seen = new ArrayList<FuncExpr>();
+            public List<FuncExpr> call(Expr expr) {
+                if (expr instanceof FuncExpr) {
+                    seen.add((FuncExpr) expr);
+                }
+                return seen;
+            }
+        };
+        List<FuncExpr> funcs = collectAggFuncs.visit(this);
+        return funcs;
+    }
 
 }
 

@@ -78,133 +78,7 @@ public class ApproxProjectedRelation extends ApproxRelation {
         ExactRelation r = new ProjectedRelation(vc, source.rewriteWithSubsampledErrorBounds(), elems);
         r.setAlias(getAlias());
         return r;
-        
-//        // if the source is not an aggregated relation, we do not need any special treatment.
-//        if (!(source instanceof ApproxAggregatedRelation)) {
-//            ExactRelation r = new ProjectedRelation(vc, source.rewriteWithSubsampledErrorBounds(), elemsWithSubstitutedTables());
-//            r.setAlias(getAlias());
-//            return r;
-//        }
-//
-//        ExactRelation r = rewriteWithPartition(true);
-//
-//        // construct a new list of select elements. the last element is __vpart, which should be omitted.
-//        // newElems and newAggs hold almost the same info; just replicate them to follow the structure
-//        // of AggregatedRelation-ProjectedRelation.
-//        List<SelectElem> newElems = new ArrayList<SelectElem>();
-//        List<Expr> newAggs = new ArrayList<Expr>();
-//        List<SelectElem> elems = ((ProjectedRelation) r).getSelectElems();
-//
-//        for (int i = 0; i < elems.size() - 1; i++) {
-//            SelectElem elem = elems.get(i);
-//            Optional<SelectElem> originalElem = Optional.absent();
-//            if (i < this.elems.size()) {
-//                originalElem = Optional.fromNullable(this.elems.get(i));
-//            }
-//
-//            if (!elem.isagg()) {
-//                // skip the partition number
-//                if (elem.aliasPresent() && elem.getAlias().equals(partitionColumnName())) {
-//                    continue;
-//                }
-//
-//                SelectElem newElem = null;
-//                if (elem.getAlias() == null) {
-//                    Expr newExpr = elem.getExpr().withTableSubstituted(r.getAlias());
-//                    newElem = new SelectElem(vc, newExpr, elem.getAlias());
-//                } else {
-//                    newElem = new SelectElem(vc, new ColNameExpr(vc, elem.getAlias(), r.getAlias()), elem.getAlias());
-//                }
-//                newElems.add(newElem);
-//            } else {
-//                if (elem.getAlias().equals(partitionSizeAlias)) {
-//                    continue;
-//                }
-//
-//                ColNameExpr est = new ColNameExpr(vc, elem.getAlias(), r.getAlias());
-//                ColNameExpr psize = new ColNameExpr(vc, partitionSizeAlias, r.getAlias());
-//
-//                // average estimate
-//                Expr averaged = null;
-//                if (originalElem.isPresent() && originalElem.get().getExpr().isCountDistinct()) {
-//                    // for count-distinct (i.e., universe samples), weighted average should not be used.
-//                    averaged = FuncExpr.round(FuncExpr.avg(est));
-//                } else {
-//                    // weighted average
-//                    averaged = BinaryOpExpr.from(vc, FuncExpr.sum(BinaryOpExpr.from(vc, est, psize, "*")),
-//                            FuncExpr.sum(psize), "/");
-//                    if (originalElem.isPresent() && originalElem.get().getExpr().isCount()) {
-//                        averaged = FuncExpr.round(averaged);
-//                    }
-//                }
-//                newElems.add(new SelectElem(vc, averaged, elem.getAlias()));
-//                newAggs.add(averaged);
-//
-//                // error estimation
-//                // scale by sqrt(subsample size) / sqrt(sample size)
-//                Expr error = BinaryOpExpr.from(vc,
-//                        BinaryOpExpr.from(vc, FuncExpr.stddev(est), FuncExpr.sqrt(FuncExpr.avg(psize)), "*"),
-//                        FuncExpr.sqrt(FuncExpr.sum(psize)),
-//                        "/");
-//                error = BinaryOpExpr.from(vc, error, ConstantExpr.from(vc, confidenceIntervalMultiplier()), "*");
-//                newElems.add(new SelectElem(vc, error, Relation.errorBoundColumn(elem.getAlias())));
-//                newAggs.add(error);
-//            }
-//        }
-//
-//        // this extra aggregation stage should be grouped by non-agg elements except for __vpart
-//        List<Expr> newGroupby = new ArrayList<Expr>();
-//        for (SelectElem elem : elems) {
-//            if (!elem.isagg()) {
-//                if (elem.aliasPresent()) {
-//                    if (!elem.getAlias().equals(partitionColumnName())) {
-//                        newGroupby.add(new ColNameExpr(vc, elem.getAlias(), r.getAlias()));
-//                    }
-//                } else {
-//                    if (!elem.getExpr().toString().equals(partitionColumnName())) {
-//                        newGroupby.add(elem.getExpr().withTableSubstituted(r.getAlias()));
-//                    }
-//                }
-//            }
-//        }
-//        if (newGroupby.size() > 0) {
-//            r = new GroupedRelation(vc, r, newGroupby);
-//        }
-//        r = new AggregatedRelation(vc, r, newAggs);
-//        r = new ProjectedRelation(vc, r, newElems);
-//
-//        return r;
     }
-
-    //	@Override
-    //	public ExactRelation rewriteWithSubsampledErrorBounds() {
-    //		ExactRelation newSource = source.rewriteWithSubsampledErrorBounds();
-    //		List<SelectElem> sourceElems = null; // newSource.getSelectList();
-    //		Set<String> colAliases = new HashSet<String>();
-    //		for (SelectElem e : sourceElems) {
-    //			if (e.aliasPresent()) {
-    //				// we're only interested in the columns for which aliases are present.
-    //				// note that every column with aggregate function must have an alias (enforced by ColNameExpr class).
-    //				colAliases.add(e.getAlias());
-    //			}
-    //		}
-    //		
-    //		// we search for error bound columns based on the assumption that the error bound columns have the suffix attached
-    //		// to the original agg columns. The suffix is obtained from the ApproxRelation#errColSuffix() method.
-    //		// ApproxAggregatedRelation#rewriteWithSubsampledErrorBounds() method is responsible for having those columns. 
-    //		List<SelectElem> elemsWithErr = new ArrayList<SelectElem>();
-    //		for (SelectElem e : elems) {
-    //			elemsWithErr.add(e);
-    //			String errColName = errColName(e.getExpr().getText());
-    //			if (colAliases.contains(errColName)) {
-    //				elemsWithErr.add(new SelectElem(new ColNameExpr(errColName), errColName));
-    //			}
-    //		}
-    //		
-    //		ExactRelation r = new ProjectedRelation(vc, newSource, elemsWithErr);
-    //		r.setAliasName(getAliasName());
-    //		return r;
-    //	}
 
     /**
      * Returns an ExactProjectRelation instance. The returned relation must include the partition column.
@@ -218,7 +92,7 @@ public class ApproxProjectedRelation extends ApproxRelation {
         newElems.addAll(elems);
         
         // prob column (for point estimate and also for subsampling)
-        newElems.add(new SelectElem(vc, newSource.tupleProbabilityColumn(), samplingProbabilityColumnName()));
+        newElems.add(new SelectElem(vc, source.tupleProbabilityColumn(), samplingProbabilityColumnName()));
         
         // partition column (for subsampling)
         newElems.add(new SelectElem(vc, newSource.partitionColumn(), partitionColumnName()));
@@ -368,6 +242,16 @@ public class ApproxProjectedRelation extends ApproxRelation {
     @Override
     protected boolean doesIncludeSample() {
         return source.doesIncludeSample();
+    }
+    
+    @Override
+    public Expr tupleProbabilityColumn() {
+        return new ColNameExpr(vc, samplingProbabilityColumnName(), getAlias());
+    }
+
+    @Override
+    public Expr tableSamplingRatio() {
+        return new ColNameExpr(vc, samplingRatioColumnName(), getAlias());
     }
 
 }

@@ -13,6 +13,7 @@ import org.apache.spark.sql.DataFrame;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 
 import edu.umich.verdict.VerdictConf;
@@ -311,13 +312,32 @@ public abstract class Dbms {
                 .select("*, " + String.format("%d / %d as %s", sample_size, total_size, samplingProbCol));
 
         String sql = String.format("create table %s%s as %s", param.sampleTableName(), parquetString, withRand.toSql());
-
         VerdictLogger.debug(this, "The query used for creating a temporary table without sampling probabilities:");
         VerdictLogger.debugPretty(this, Relation.prettyfySql(vc, sql), "  ");
         VerdictLogger.debug(this, sql);
         executeUpdate(sql);
     }
-
+    
+    /**
+     * These are the probabilities for ensuring at least 100 tuples.
+     */
+    protected static List<Pair<Integer, Double>> minSamplingProbForStratifiedSamples
+                     = new ImmutableList.Builder<Pair<Integer, Double>>()
+                           .add(Pair.of(900, 0.140994))
+                           .add(Pair.of(800, 0.158239))
+                           .add(Pair.of(700, 0.180286))
+                           .add(Pair.of(600, 0.209461))
+                           .add(Pair.of(500, 0.249876))
+                           .add(Pair.of(400, 0.309545))
+                           .add(Pair.of(300, 0.406381))
+                           .add(Pair.of(200, 0.589601))
+                           .add(Pair.of(150, 0.756890))
+                           .add(Pair.of(140, 0.801178))
+                           .add(Pair.of(130, 0.849921))
+                           .add(Pair.of(120, 0.902947))
+                           .add(Pair.of(110, 0.958229))
+                           .build();
+    
     public Pair<Long, Long> createStratifiedSampleTableOf(SampleParam param) throws VerdictException {
         SampleSizeInfo info = vc.getMeta().getSampleSizeOf(new SampleParam(vc, param.originalTable, "uniform", null, new ArrayList<String>()));
         if (info == null) {
@@ -337,8 +357,8 @@ public abstract class Dbms {
     private TableUniqueName createGroupSizeTempTable(SampleParam param) throws VerdictException {
         TableUniqueName groupSizeTemp = Relation.getTempTableName(vc, param.sampleTableName().getSchemaName());
         ExactRelation groupSize = SingleRelation.from(vc, param.originalTable)
-                .groupby(param.columnNames)
-                .agg("count(*) AS __group_size");
+                                  .groupby(param.columnNames)
+                                  .agg("count(*) AS __group_size");
         String sql = String.format("create table %s as %s", groupSizeTemp, groupSize.toSql());
         VerdictLogger.debug(this, "The query used for the group-size temp table: ");
         VerdictLogger.debugPretty(this, Relation.prettyfySql(vc, sql), "  ");
@@ -390,9 +410,17 @@ public abstract class Dbms {
 
         // where clause using rand function
         String whereClause = String.format("__rand < %d * %f / %d / __group_size",
-                originalTableSize,
-                param.getSamplingRatio(),
-                groupCount);
+                                           originalTableSize,
+                                           param.getSamplingRatio(),
+                                           groupCount);
+        whereClause += " OR __rand < (case";
+        whereClause += String.format(" when __group_size >= 1000 then 130 / __group_size"); 
+        for (Pair<Integer, Double> sizeProb : minSamplingProbForStratifiedSamples) {
+            int size = sizeProb.getKey();
+            double prob = sizeProb.getValue();
+            whereClause += String.format(" when __group_size >= %d then %f", size, prob);
+        }
+        whereClause += " else 1.0 end)";
 
         // aliased select list
         List<String> selectElems = new ArrayList<String>();
