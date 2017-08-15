@@ -20,20 +20,25 @@ public class RedshiftThroughVerdictTest {
         
         VerdictContext vc = VerdictJDBCContext.from(conf);
         
-//        vc.executeJdbcQuery("set bypass=true");
-//        vc.executeJdbcQuery("set search_path = tpch1g,tpch1g_verdict");
 //        vc.executeJdbcQuery("set bypass=false");
-//        vc.executeJdbcQuery("select count(*) from tpch1g.orders");
-        
-        vc.executeJdbcQuery("set bypass=true");
         vc.executeJdbcQuery("set search_path = tpch1g,tpch1g_verdict");
-        vc.executeJdbcQuery("set bypass=false");
-        vc.executeJdbcQuery("show tables in tpch1g");
-        vc.executeJdbcQuery("show tables in tpch1g_verdict");
-        vc.executeJdbcQuery("create sample of tpch1g.lineitem");
-//        vc.executeJdbcQuery("create sample of tpch1g.lineitem");
-//        vc.executeJdbcQuery("delete sample of tpch1g.orders");
-//        vc.executeJdbcQuery("delete sample of tpch1g.lineitem");
+//        vc.executeJdbcQuery("set bypass=false");
+        
+//        long startTime = System.currentTimeMillis();                
+        vc.executeJdbcQuery("create sample of tpch1g.orders");        
+//        long endTime   = System.currentTimeMillis();
+//        long totalTime = endTime - startTime;
+//        System.out.println(totalTime);
+//
+//        vc.executeJdbcQuery("create stratified sample of tpch1g.lineitem on l_suppkey");
+//
+//        vc.executeJdbcQuery("create universe sample of lineitem on l_orderkey");
+//
+//        vc.executeJdbcQuery("create universe sample of lineitem on l_partkey");
+//
+//        vc.executeJdbcQuery("create uniform sample of orders");
+//
+//        vc.executeJdbcQuery("create universe sample of o_orderkey");
 
         vc.destroy();
     }
