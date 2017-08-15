@@ -20,12 +20,12 @@ public class RedshiftThroughVerdictTest {
         
         VerdictContext vc = VerdictJDBCContext.from(conf);
         
-//        vc.executeJdbcQuery("set bypass=false");
+        vc.executeJdbcQuery("set bypass=true");
         vc.executeJdbcQuery("set search_path = tpch1g,tpch1g_verdict");
-//        vc.executeJdbcQuery("set bypass=false");
+        vc.executeJdbcQuery("set bypass=false");    
         
 //        long startTime = System.currentTimeMillis();                
-        vc.executeJdbcQuery("create sample of tpch1g.orders");        
+//        vc.executeJdbcQuery("create sample of tpch1g.orders");        
 //        long endTime   = System.currentTimeMillis();
 //        long totalTime = endTime - startTime;
 //        System.out.println(totalTime);
