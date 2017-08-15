@@ -865,6 +865,7 @@ value_manipulation_function
     | noparam_manipulation_function
     | binary_manipulation_function
     | ternary_manipulation_function
+    | extract_time_function
     ;
     
 ternary_manipulation_function
@@ -875,6 +876,11 @@ ternary_manipulation_function
 binary_manipulation_function
     : function_name=(MOD | PMOD | STRTOL)
       '(' expression ',' expression ')'
+    ;
+    
+extract_time_function
+	: function_name=EXTRACT
+      '(' expression FROM expression ')'
     ;
 
 unary_manipulation_function
@@ -1101,6 +1107,7 @@ simple_id
     | DISABLE
     | DYNAMIC
     | ENCRYPTION
+    | EXTRACT
     | FAST
     | FAST_FORWARD
     | FIRST
@@ -1432,6 +1439,7 @@ ENCRYPTION:                      E N C R Y P T I O N;
 ESCAPED_BY:                      E S C A P E D ' ' B Y;
 EXACT:                           E X A C T;
 EXP:                             E X P;
+EXTRACT:						 E X T R A C T;
 FAST:                            F A S T;
 FAST_FORWARD:                    F A S T '_' F O R W A R D;
 FIELDS_SEPARATED_BY:             F I E L D S ' ' S E P A R A T E D ' ' B Y;

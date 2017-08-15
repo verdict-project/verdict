@@ -1,6 +1,7 @@
 package edu.umich.verdict.relation.expr;
 
 import edu.umich.verdict.VerdictContext;
+import edu.umich.verdict.parser.VerdictSQLParser.ExpressionContext;
 
 public class ConstantExpr extends Expr {
 	
@@ -25,6 +26,10 @@ public class ConstantExpr extends Expr {
 	
 	public static ConstantExpr from(VerdictContext vc, String value) {
 		return from(vc, (Object) value); 
+	}
+	
+	public static ConstantExpr from(VerdictContext vc, ExpressionContext ctx) {
+		return from(vc, ctx.getText());
 	}
 
 	@Override

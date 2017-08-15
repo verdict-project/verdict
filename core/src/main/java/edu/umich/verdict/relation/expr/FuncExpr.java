@@ -14,7 +14,7 @@ import edu.umich.verdict.util.StringManipulations;
 public class FuncExpr extends Expr {
 
     public enum FuncName {
-        COUNT, SUM, AVG, COUNT_DISTINCT, IMPALA_APPROX_COUNT_DISTINCT,
+        COUNT, SUM, AVG, COUNT_DISTINCT, EXTRACT, IMPALA_APPROX_COUNT_DISTINCT,
         ROUND, MAX, MIN, FLOOR, CEIL, EXP, LN, LOG10, LOG2, SIN, COS, TAN,
         SIGN, STRTOL, RAND, RANDOM , FNV_HASH, ABS, STDDEV, SQRT, MOD, PMOD,
         CAST, CONV, SUBSTR, MD5, CRC32, UNIX_TIMESTAMP, CURRENT_TIMESTAMP,
@@ -57,6 +57,7 @@ public class FuncExpr extends Expr {
             .put("CONV", FuncName.CONV)
             .put("SUBSTR", FuncName.SUBSTR)
             .put("CAST", FuncName.CAST)
+            .put("EXTRACT", FuncName.EXTRACT)
             .build();
 
     protected static Map<FuncName, String> functionPattern = ImmutableMap.<FuncName, String>builder()
@@ -94,6 +95,7 @@ public class FuncExpr extends Expr {
             .put(FuncName.CONV, "conv(%s, %s, %s)")
             .put(FuncName.SUBSTR, "substr(%s, %s, %s)")
             .put(FuncName.CAST, "cast(%s as %s)")
+            .put(FuncName.EXTRACT, "extract(%s from %s)")
             .put(FuncName.UNKNOWN, "UNKNOWN(%s)")
             .build();
 
@@ -229,6 +231,14 @@ public class FuncExpr extends Expr {
                 FuncName funcName = string2FunctionType.containsKey(fname)? string2FunctionType.get(fname) : FuncName.UNKNOWN;
                 return new FuncExpr(funcName, Expr.from(vc, ctx.expression(0)), Expr.from(vc, ctx.expression(1)), Expr.from(vc, ctx.expression(2)));
             }
+            
+            @Override 
+            public FuncExpr visitExtract_time_function(VerdictSQLParser.Extract_time_functionContext ctx) { 
+            	String fname = ctx.function_name.getText().toUpperCase();
+                FuncName funcName = string2FunctionType.containsKey(fname)? string2FunctionType.get(fname) : FuncName.UNKNOWN;
+                return new FuncExpr(funcName, ConstantExpr.from(vc, ctx.expression(0)), Expr.from(vc, ctx.expression(1)));            	
+            }
+            
         };
         return v.visit(ctx);
     }

@@ -90,11 +90,35 @@ public class DbmsRedshift extends DbmsJDBC {
         long sample_size = SingleRelation.from(vc, temp).countValue();
 
         ExactRelation withRand = SingleRelation.from(vc, temp)
-                .select("*, " + String.format("%d / %d as %s", sample_size, total_size, samplingProbCol));
+                .select("*, " + String.format("cast (%d as float) / cast (%d as float) as %s", sample_size, total_size, samplingProbCol));
         dropTable(param.sampleTableName());
         String sql = String.format("create table %s as %s", param.sampleTableName(), withRand.toSql());        
-//        VerdictLogger.debug(this, "The query used for creating a temporary table without sampling probabilities:");
-//        VerdictLogger.debugPretty(this, Relation.prettyfySql(vc, sql), "  ");
+        VerdictLogger.debug(this, "The query used for creating a temporary table without sampling probabilities:");
+        VerdictLogger.debugPretty(this, Relation.prettyfySql(vc, sql), "  ");
+        executeUpdate(sql);
+    }
+	
+	@Override
+	protected void createUniverseSampleWithProbFromSample(SampleParam param, TableUniqueName temp) throws VerdictException {
+        String samplingProbCol = vc.getDbms().samplingProbabilityColumnName();
+        ExactRelation sampled = SingleRelation.from(vc, temp);
+        long total_size = SingleRelation.from(vc, param.originalTable).countValue();
+        long sample_size = sampled.countValue();
+
+        ExactRelation withProb = sampled.select(
+                String.format("*, cast (%d as float)  / cast (%d as float) AS %s", sample_size, total_size, samplingProbCol) + ", " +
+                              universePartitionColumn(param.getColumnNames().get(0)));
+
+        String parquetString="";
+
+        if(vc.getConf().areSamplesStoredAsParquet()) {
+            parquetString = getParquetString();
+        }
+
+        String sql = String.format("create table %s%s AS %s", param.sampleTableName(), parquetString, withProb.toSql());
+        VerdictLogger.debug(this, "The query used for creating a universe sample with sampling probability:");
+        VerdictLogger.debugPretty(this, Relation.prettyfySql(vc, sql), "  ");
+        VerdictLogger.debug(this, sql);
         executeUpdate(sql);
     }
 	

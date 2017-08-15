@@ -19,6 +19,12 @@ public class ExprTest {
     }
     
     @Test
+    public void redshiftExtractStr() {
+    	Expr a = Expr.from(dummyContext, "extract (year from o_orderdate)");
+    	System.out.println(a.toSql());
+    }
+    
+    @Test
     public void redshiftRandPartition() {
     	Expr a = Expr.from(dummyContext, "mod(cast(round(random()) as integer), 100)");
     	System.out.println(a.toSql());
