@@ -184,7 +184,7 @@ public abstract class DbmsJDBC extends Dbms {
     protected Connection makeDbmsConnection(String url, String className) throws VerdictException  {
         try {
             Class.forName(className);
-            String passMasked = url.replaceAll("(password)=([^;]+)", "$1=masked");
+            String passMasked = url.replaceAll("(;password)=([^;]+)", "$1=masked");
             VerdictLogger.info(this, "JDBC connection string (password masked): " + passMasked);
             Connection conn = DriverManager.getConnection(url);
             return conn;

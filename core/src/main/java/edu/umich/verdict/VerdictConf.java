@@ -113,12 +113,12 @@ public class VerdictConf {
         if (configKeySynonyms.containsKey(key)) {
             return get(configKeySynonyms.get(key));
         }
-        return configs.get(key.toLowerCase());
+        return configs.get(key);
     }
 
     public String getOr(String key, Object defaultValue) {
-        if (configs.containsKey(key.toLowerCase())) {
-            return configs.get(key.toLowerCase());
+        if (configs.containsKey(key)) {
+            return configs.get(key);
         } else {
             return defaultValue.toString();
         }
@@ -136,8 +136,6 @@ public class VerdictConf {
     }
 
     public VerdictConf set(String key, String value) {
-        key = key.toLowerCase();
-
         if (configKeySynonyms.containsKey(key)) {
             return set(configKeySynonyms.get(key), value);
         }
@@ -159,7 +157,7 @@ public class VerdictConf {
     }
 
     public boolean doesContain(String key) {
-        return configs.containsKey(key.toLowerCase());
+        return configs.containsKey(key);
     }
 
     /*
