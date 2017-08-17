@@ -238,7 +238,7 @@ public class SqlLine {
 				getClass().getResourceAsStream(
 						"/META-INF/maven/sqlline/sqlline/pom.properties");
 		Properties properties = new Properties();
-		properties.put("artifactId", "veeline");
+		properties.put("artifactId", "Verdict");
 		properties.put("version", "0.3.0");
 		if (inputStream != null) {
 			// If not running from a .jar, pom.properties will not exist, and
@@ -326,56 +326,58 @@ public class SqlLine {
 		final TableNameCompleter tableCompleter = new TableNameCompleter(this);
 		final List<Completer> empty = Collections.emptyList();
 
+		// TODO: we need to define what commands to provide in veeline
 		commandHandlers = Arrays.<CommandHandler>asList(
 				new ReflectiveCommandHandler(this, empty, "quit", "done", "exit"),
 				new ReflectiveCommandHandler(this,
 						new StringsCompleter(getConnectionURLExamples()),
-						"connect", "open"),
-				new ReflectiveCommandHandler(this, empty, "nickname"),
-				new ReflectiveCommandHandler(this, tableCompleter, "describe"),
-				new ReflectiveCommandHandler(this, tableCompleter, "indexes"),
-				new ReflectiveCommandHandler(this, tableCompleter, "primarykeys"),
-				new ReflectiveCommandHandler(this, tableCompleter, "exportedkeys"),
-				new ReflectiveCommandHandler(this, empty, "manual"),
-				new ReflectiveCommandHandler(this, tableCompleter, "importedkeys"),
-				new ReflectiveCommandHandler(this, empty, "procedures"),
-				new ReflectiveCommandHandler(this, empty, "tables"),
-				new ReflectiveCommandHandler(this, empty, "typeinfo"),
-				new ReflectiveCommandHandler(this, tableCompleter, "columns"),
-				new ReflectiveCommandHandler(this, empty, "reconnect"),
-				new ReflectiveCommandHandler(this, tableCompleter, "dropall"),
-				new ReflectiveCommandHandler(this, empty, "history"),
-				new ReflectiveCommandHandler(this,
-						new StringsCompleter(getMetadataMethodNames()), "metadata"),
-				new ReflectiveCommandHandler(this, empty, "nativesql"),
-				new ReflectiveCommandHandler(this, empty, "dbinfo"),
-				new ReflectiveCommandHandler(this, empty, "rehash"),
-				new ReflectiveCommandHandler(this, empty, "verbose"),
-				new ReflectiveCommandHandler(this, new FileNameCompleter(), "run"),
-				new ReflectiveCommandHandler(this, empty, "batch"),
-				new ReflectiveCommandHandler(this, empty, "list"),
-				new ReflectiveCommandHandler(this, empty, "all"),
-				new ReflectiveCommandHandler(this, empty, "go", "#"),
-				new ReflectiveCommandHandler(this, new FileNameCompleter(), "script"),
-				new ReflectiveCommandHandler(this, new FileNameCompleter(), "record"),
-				new ReflectiveCommandHandler(this, empty, "brief"),
-				new ReflectiveCommandHandler(this, empty, "close"),
-				new ReflectiveCommandHandler(this, empty, "closeall"),
-				new ReflectiveCommandHandler(this,
-						new StringsCompleter(getIsolationLevels()), "isolation"),
-				new ReflectiveCommandHandler(this,
-						new StringsCompleter(formats.keySet()), "outputformat"),
-				new ReflectiveCommandHandler(this, empty, "autocommit"),
-				new ReflectiveCommandHandler(this, empty, "commit"),
-				new ReflectiveCommandHandler(this, new FileNameCompleter(),
-						"properties"),
-				new ReflectiveCommandHandler(this, empty, "rollback"),
-				new ReflectiveCommandHandler(this, empty, "help", "?"),
-				new ReflectiveCommandHandler(this, opts.optionCompleters(), "set"),
-				new ReflectiveCommandHandler(this, empty, "save"),
-				new ReflectiveCommandHandler(this, empty, "scan"),
-				new ReflectiveCommandHandler(this, empty, "sql"),
-				new ReflectiveCommandHandler(this, empty, "call"));
+						"verdict_connect", "open")
+//				new ReflectiveCommandHandler(this, empty, "nickname"),
+//				new ReflectiveCommandHandler(this, tableCompleter, "describe"),
+//				new ReflectiveCommandHandler(this, tableCompleter, "indexes"),
+//				new ReflectiveCommandHandler(this, tableCompleter, "primarykeys"),
+//				new ReflectiveCommandHandler(this, tableCompleter, "exportedkeys"),
+//				new ReflectiveCommandHandler(this, empty, "manual"),
+//				new ReflectiveCommandHandler(this, tableCompleter, "importedkeys"),
+//				new ReflectiveCommandHandler(this, empty, "procedures"),
+//				new ReflectiveCommandHandler(this, empty, "tables"),
+//				new ReflectiveCommandHandler(this, empty, "typeinfo"),
+//				new ReflectiveCommandHandler(this, tableCompleter, "columns"),
+//				new ReflectiveCommandHandler(this, empty, "reconnect"),
+//				new ReflectiveCommandHandler(this, tableCompleter, "dropall"),
+//				new ReflectiveCommandHandler(this, empty, "history"),
+//				new ReflectiveCommandHandler(this,
+//						new StringsCompleter(getMetadataMethodNames()), "metadata"),
+//				new ReflectiveCommandHandler(this, empty, "nativesql"),
+//				new ReflectiveCommandHandler(this, empty, "dbinfo"),
+//				new ReflectiveCommandHandler(this, empty, "rehash"),
+//				new ReflectiveCommandHandler(this, empty, "verbose"),
+//				new ReflectiveCommandHandler(this, new FileNameCompleter(), "run"),
+//				new ReflectiveCommandHandler(this, empty, "batch"),
+//				new ReflectiveCommandHandler(this, empty, "list"),
+//				new ReflectiveCommandHandler(this, empty, "all"),
+//				new ReflectiveCommandHandler(this, empty, "go", "#"),
+//				new ReflectiveCommandHandler(this, new FileNameCompleter(), "script"),
+//				new ReflectiveCommandHandler(this, new FileNameCompleter(), "record"),
+//				new ReflectiveCommandHandler(this, empty, "brief"),
+//				new ReflectiveCommandHandler(this, empty, "close"),
+//				new ReflectiveCommandHandler(this, empty, "closeall"),
+//				new ReflectiveCommandHandler(this,
+//						new StringsCompleter(getIsolationLevels()), "isolation"),
+//				new ReflectiveCommandHandler(this,
+//						new StringsCompleter(formats.keySet()), "outputformat"),
+//				new ReflectiveCommandHandler(this, empty, "autocommit"),
+//				new ReflectiveCommandHandler(this, empty, "commit"),
+//				new ReflectiveCommandHandler(this, new FileNameCompleter(),
+//						"properties"),
+//				new ReflectiveCommandHandler(this, empty, "rollback"),
+//				new ReflectiveCommandHandler(this, empty, "help", "?"),
+//				new ReflectiveCommandHandler(this, opts.optionCompleters(), "set"),
+//				new ReflectiveCommandHandler(this, empty, "save"),
+//				new ReflectiveCommandHandler(this, empty, "scan"),
+//				new ReflectiveCommandHandler(this, empty, "sql"),
+//				new ReflectiveCommandHandler(this, empty, "call")
+				);
 
 		sqlLineCommandCompleter = new SqlLineCommandCompleter(this);
 		reflector = new Reflector(this);
@@ -626,7 +628,7 @@ public class SqlLine {
 		
 		// in case meta DB info is not provided
 		String com =
-				COMMAND_PREFIX + "connect "
+				COMMAND_PREFIX + "verdict_connect "
 						+ url + " "
 						+ (user == null || user.length() == 0 ? "''" : user) + " "
 						+ (pass == null || pass.length() == 0 ? "''" : pass) + " "
