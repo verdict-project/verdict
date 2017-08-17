@@ -11,11 +11,13 @@
  */
 package sqlline;
 
+import java.io.BufferedReader;
 import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -45,6 +47,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.ResourceBundle;
+import java.util.Scanner;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.StringTokenizer;
@@ -236,7 +239,7 @@ public class SqlLine {
 						"/META-INF/maven/sqlline/sqlline/pom.properties");
 		Properties properties = new Properties();
 		properties.put("artifactId", "veeline");
-		properties.put("version", "0.3.1");
+		properties.put("version", "0.3.0");
 		if (inputStream != null) {
 			// If not running from a .jar, pom.properties will not exist, and
 			// inputStream is null.
@@ -529,14 +532,19 @@ public class SqlLine {
 			}
 		}
 	}
+	
+	Status initArgs(String[] args, DispatchCallback callback) throws IOException {
+		return initArgs(args, callback, null);
+	}
 
 	/** Parses arguments.
 	 *
 	 * @param args Command-line arguments
 	 * @param callback Status callback
 	 * @return Whether arguments parsed successfully
+	 * @throws IOException 
 	 */
-	Status initArgs(String[] args, DispatchCallback callback) {
+	Status initArgs(String[] args, DispatchCallback callback, ConsoleReader reader) throws IOException {
 		List<String> commands = new LinkedList<String>();
 		List<String> files = new LinkedList<String>();
 		String driver = null;
@@ -594,14 +602,29 @@ public class SqlLine {
 			}
 		}
 		
+		// terminate with usage if the url is not provided.
 		if (url == null) {
 		    output(loc("empty-url"));
 			return Status.ARGS;
 		}
 		
-		// in case meta DB info is not provided
+		// get user input if it's empty
+		if (user == null && reader != null) {
+			System.out.print("Enter user (leave as empty if not needed): ");
+			String userinput;
+			userinput = reader.readLine();
+			user = userinput;
+		}
 		
-
+		// get password if it's not provided
+		if (pass == null && user != null && user.length() > 0  && reader != null) {
+			System.out.print("Enter password: ");
+			String passinput = reader.readLine('*');
+			pass = passinput;
+		}
+		
+		
+		// in case meta DB info is not provided
 		String com =
 				COMMAND_PREFIX + "connect "
 						+ url + " "
@@ -689,7 +712,7 @@ public class SqlLine {
 		}
 
 		final DispatchCallback callback = new DispatchCallback();
-		Status status = initArgs(args, callback);
+		Status status = initArgs(args, callback, reader);
 		switch (status) {
 		case ARGS:
 		    usage();

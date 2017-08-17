@@ -147,15 +147,6 @@ public abstract class DbmsJDBC extends Dbms {
             url.append(String.format("password=%s", password));
         }
 
-        //        if (!vc.getConf().ignoreUserCredentials() && user != null && user.length() != 0 && dbms == "redshift") {
-        //            url.append(";");
-        //            url.append(String.format("UID=%s", user));
-        //        }
-        //        if (!vc.getConf().ignoreUserCredentials() && password != null && password.length() != 0 && dbms == "redshift") {
-        //            url.append(";");
-        //            url.append(String.format("PWD=%s", password));
-        //        }
-
         // set kerberos option if set
         if (vc.getConf().isJdbcKerberosSet()) {
             String value = vc.getConf().getJdbcKerberos();
@@ -193,7 +184,8 @@ public abstract class DbmsJDBC extends Dbms {
     protected Connection makeDbmsConnection(String url, String className) throws VerdictException  {
         try {
             Class.forName(className);
-            VerdictLogger.info(this, "JDBC connection string: " + url);
+            String passMasked = url.replaceAll("(password)=([^;]+)", "$1=masked");
+            VerdictLogger.info(this, "JDBC connection string (password masked): " + passMasked);
             Connection conn = DriverManager.getConnection(url);
             return conn;
         } catch (ClassNotFoundException | SQLException e) {
