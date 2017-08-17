@@ -215,6 +215,8 @@ public abstract class DbmsJDBC extends Dbms {
             result = stmt.execute(sql);
             if (result) {
                 rs = stmt.getResultSet();
+            } else {
+            	rs = null;
             }
         } catch (SQLException e) {
             throw new VerdictException(e);
@@ -223,8 +225,8 @@ public abstract class DbmsJDBC extends Dbms {
     }
     
     public void executeUpdate(String query) throws VerdictException { 
-        //        createStatementIfNotExists();
-        createStatement();    	
+                createStatementIfNotExists();
+//        createStatement();    	
         try {
             stmt.executeUpdate(query);
         } catch (SQLException e) {

@@ -5,7 +5,7 @@ verdict.bypass=false
 
 # one of debug, info, warn, error
 # synonym: loglevel
-verdict.loglevel=debug
+verdict.loglevel=info
 
 # target runtime (either in fraction or in percentage)
 verdict.relative_target_cost=10%

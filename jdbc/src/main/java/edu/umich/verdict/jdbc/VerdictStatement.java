@@ -56,7 +56,7 @@ public class VerdictStatement implements Statement {
         VerdictLogger.debug(this, String.format("execute() called with: %s", sql));
         try {
             answer = vc.executeJdbcQuery(sql);
-            this.stmt = ((DbmsJDBC) vc.getDbms()).getStatement();
+//            this.stmt = ((DbmsJDBC) vc.getDbms()).getStatement();
         } catch (VerdictException e) {
             throw new SQLException(StackTraceReader.stackTrace2String(e));
         }
