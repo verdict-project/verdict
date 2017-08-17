@@ -49,7 +49,7 @@ class SqlLineOpts implements Completer {
   private boolean force = false;
   private boolean incremental = false;
   private boolean showElapsedTime = true;
-  private boolean showWarnings = true;
+  private boolean showWarnings = false;
   private boolean showNestedErrs = false;
   private String numberFormat = "default";
   private int maxWidth = TerminalFactory.get().getWidth();

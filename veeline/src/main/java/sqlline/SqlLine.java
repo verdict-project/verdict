@@ -239,7 +239,7 @@ public class SqlLine {
 						"/META-INF/maven/sqlline/sqlline/pom.properties");
 		Properties properties = new Properties();
 		properties.put("artifactId", "Verdict");
-		properties.put("version", "0.3.0");
+		properties.put("version", "0.3.0-snapshot");
 		if (inputStream != null) {
 			// If not running from a .jar, pom.properties will not exist, and
 			// inputStream is null.
@@ -252,7 +252,6 @@ public class SqlLine {
 
 		return loc(
 				"app-introduction",
-				properties.getProperty("artifactId"),
 				properties.getProperty("version"));
 	}
 

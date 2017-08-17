@@ -88,9 +88,9 @@ public abstract class Dbms {
         if (jdbcDbmsNames.contains(conf.getDbms())) {
             VerdictLogger.info(
                     (conf.getDbmsSchema() != null) ?
-                            String.format("Connected to database: %s//%s:%s/%s",
+                            String.format("Connected to database: %s://%s:%s/%s",
                                     conf.getDbms(), conf.getHost(), conf.getPort(), conf.getDbmsSchema())
-                            : String.format("Connected to database: %s//%s:%s",
+                            : String.format("Connected to database: %s://%s:%s",
                                     conf.getDbms(), conf.getHost(), conf.getPort()));
         }
 
