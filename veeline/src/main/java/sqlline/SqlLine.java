@@ -235,8 +235,8 @@ public class SqlLine {
 				getClass().getResourceAsStream(
 						"/META-INF/maven/sqlline/sqlline/pom.properties");
 		Properties properties = new Properties();
-		properties.put("artifactId", "Verdict");
-		properties.put("version", "0.2");
+		properties.put("artifactId", "veeline");
+		properties.put("version", "0.3.1");
 		if (inputStream != null) {
 			// If not running from a .jar, pom.properties will not exist, and
 			// inputStream is null.
@@ -461,44 +461,44 @@ public class SqlLine {
 	}
 
 	public List<String> getConnectionURLExamples() {
-		return Arrays.asList(
-				"jdbc:JSQLConnect://<hostname>/database=<database>",
-				"jdbc:cloudscape:<database>;create=true",
-				"jdbc:twtds:sqlserver://<hostname>/<database>",
-				"jdbc:daffodilDB_embedded:<database>;create=true",
-				"jdbc:datadirect:db2://<hostname>:50000;databaseName=<database>",
-				"jdbc:inetdae:<hostname>:1433",
-				"jdbc:datadirect:oracle://<hostname>:1521;SID=<database>;"
-						+ "MaxPooledStatements=0",
-						"jdbc:datadirect:sqlserver://<hostname>:1433;SelectMethod=cursor;"
-								+ "DatabaseName=<database>",
-								"jdbc:datadirect:sybase://<hostname>:5000",
-								"jdbc:db2://<hostname>/<database>",
-								"jdbc:hsqldb:<database>",
-								"jdbc:idb:<database>.properties",
-								"jdbc:informix-sqli://<hostname>:1526/<database>:INFORMIXSERVER"
-										+ "=<database>",
-										"jdbc:interbase://<hostname>//<database>.gdb",
-										"jdbc:luciddb:http://<hostname>",
-										"jdbc:microsoft:sqlserver://<hostname>:1433;"
-												+ "DatabaseName=<database>;SelectMethod=cursor",
-												"jdbc:mysql://<hostname>/<database>?autoReconnect=true",
-												"jdbc:oracle:thin:@<hostname>:1521:<database>",
-												"jdbc:pointbase:<database>,database.home=<database>,create=true",
-												"jdbc:postgresql://<hostname>:5432/<database>",
-												"jdbc:postgresql:net//<hostname>/<database>",
-												"jdbc:sybase:Tds:<hostname>:4100/<database>?ServiceName=<database>",
-												"jdbc:weblogic:mssqlserver4:<database>@<hostname>:1433",
-												"jdbc:odbc:<database>",
-												"jdbc:sequelink://<hostname>:4003/[Oracle]",
-												"jdbc:sequelink://<hostname>:4004/[Informix];Database=<database>",
-												"jdbc:sequelink://<hostname>:4005/[Sybase];Database=<database>",
-												"jdbc:sequelink://<hostname>:4006/[SQLServer];Database=<database>",
-												"jdbc:sequelink://<hostname>:4011/[ODBC MS Access];"
-														+ "Database=<database>",
-														"jdbc:openlink://<hostname>/DSN=SQLServerDB/UID=sa/PWD=",
-														"jdbc:solid://<hostname>:<port>/<UID>/<PWD>",
-				"jdbc:dbaw://<hostname>:8889/<database>");
+	    return Arrays.asList(
+	            "jdbc:JSQLConnect://<hostname>/database=<database>",
+	            "jdbc:cloudscape:<database>;create=true",
+	            "jdbc:twtds:sqlserver://<hostname>/<database>",
+	            "jdbc:daffodilDB_embedded:<database>;create=true",
+	            "jdbc:datadirect:db2://<hostname>:50000;databaseName=<database>",
+	            "jdbc:inetdae:<hostname>:1433",
+	            "jdbc:datadirect:oracle://<hostname>:1521;SID=<database>;"
+	                    + "MaxPooledStatements=0",
+	            "jdbc:datadirect:sqlserver://<hostname>:1433;SelectMethod=cursor;"
+	                    + "DatabaseName=<database>",
+	            "jdbc:datadirect:sybase://<hostname>:5000",
+	            "jdbc:db2://<hostname>/<database>",
+	            "jdbc:hsqldb:<database>",
+	            "jdbc:idb:<database>.properties",
+	            "jdbc:informix-sqli://<hostname>:1526/<database>:INFORMIXSERVER"
+	                    + "=<database>",
+	            "jdbc:interbase://<hostname>//<database>.gdb",
+	            "jdbc:luciddb:http://<hostname>",
+	            "jdbc:microsoft:sqlserver://<hostname>:1433;"
+	                    + "DatabaseName=<database>;SelectMethod=cursor",
+	            "jdbc:mysql://<hostname>/<database>?autoReconnect=true",
+	            "jdbc:oracle:thin:@<hostname>:1521:<database>",
+	            "jdbc:pointbase:<database>,database.home=<database>,create=true",
+	            "jdbc:postgresql://<hostname>:5432/<database>",
+	            "jdbc:postgresql:net//<hostname>/<database>",
+	            "jdbc:sybase:Tds:<hostname>:4100/<database>?ServiceName=<database>",
+	            "jdbc:weblogic:mssqlserver4:<database>@<hostname>:1433",
+	            "jdbc:odbc:<database>",
+	            "jdbc:sequelink://<hostname>:4003/[Oracle]",
+	            "jdbc:sequelink://<hostname>:4004/[Informix];Database=<database>",
+	            "jdbc:sequelink://<hostname>:4005/[Sybase];Database=<database>",
+	            "jdbc:sequelink://<hostname>:4006/[SQLServer];Database=<database>",
+	            "jdbc:sequelink://<hostname>:4011/[ODBC MS Access];"
+	                    + "Database=<database>",
+	            "jdbc:openlink://<hostname>/DSN=SQLServerDB/UID=sa/PWD=",
+	            "jdbc:solid://<hostname>:<port>/<UID>/<PWD>",
+	            "jdbc:dbaw://<hostname>:8889/<database>");
 	}
 
 	/**
@@ -595,6 +595,7 @@ public class SqlLine {
 		}
 		
 		if (url == null) {
+		    output(loc("empty-url"));
 			return Status.ARGS;
 		}
 		
@@ -608,7 +609,11 @@ public class SqlLine {
 						+ (pass == null || pass.length() == 0 ? "''" : pass) + " "
 						+ (driver == null ? "" : driver);
 		debug("issuing: " + com);
-		dispatch(com, new DispatchCallback());
+		DispatchCallback connectionCallback = new DispatchCallback(); 
+		dispatch(com, connectionCallback);
+		if (!connectionCallback.isSuccess()) {
+		    return Status.ARGS;
+		}
 
 		if (nickname != null) {
 			dispatch(COMMAND_PREFIX + "nickname " + nickname, new DispatchCallback());
@@ -687,12 +692,12 @@ public class SqlLine {
 		Status status = initArgs(args, callback);
 		switch (status) {
 		case ARGS:
-			usage();
-			// fall through
+		    usage();
+		    // fall through
 		case OTHER:
-			return status;
+		    return status;
 		default:
-			break;
+		    break;
 		}
 
 		try {
