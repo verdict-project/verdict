@@ -1113,7 +1113,7 @@ public class Commands {
 					new DatabaseConnection(sqlLine, driver, url, username, password));
 			sqlLine.getDatabaseConnection().getConnection();
 
-			sqlLine.setCompletions();
+//			sqlLine.setCompletions();
 			callback.setToSuccess();
 		} catch (Exception e) {
 			callback.setToFailure();
