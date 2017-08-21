@@ -98,6 +98,7 @@ public class ConfigQuery extends SelectQuery {
             vc.getConf().set(getKey(), getValue());
             row.add(getKey());
             row.add(getKey());
+            vc.getDbms().execute("select 1;");  // dummy
         }
     }
 }
