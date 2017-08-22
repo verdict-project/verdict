@@ -56,8 +56,8 @@ verdict.error_bound.error_column_pattern=err bound of %s
 verdict.error_bound.method=subsampling
 
 # error bound > subsampling
-verdict.error_bound.subsampling.partition_column=__vpart
-verdict.error_bound.subsampling.probability_column=__vprob
+verdict.error_bound.subsampling.partition_column=verdict_vpart
+verdict.error_bound.subsampling.probability_column=verdict_vprob
 verdict.error_bound.subsampling.partition_count=100
 
 # error bound > bootstrapping (only for research)

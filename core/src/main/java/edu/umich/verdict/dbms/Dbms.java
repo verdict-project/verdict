@@ -38,6 +38,10 @@ public abstract class Dbms {
     protected Optional<String> currentSchema;
 
     protected VerdictContext vc;
+    
+    protected static String groupSizeColName = "verdict_group_size";
+    
+    protected static String groupSizeInSampleColName = "verdict_group_size_in_sample";
 
 
     public VerdictContext getVc() {
@@ -357,7 +361,7 @@ public abstract class Dbms {
         TableUniqueName groupSizeTemp = Relation.getTempTableName(vc, param.sampleTableName().getSchemaName());
         ExactRelation groupSize = SingleRelation.from(vc, param.originalTable)
                                   .groupby(param.columnNames)
-                                  .agg("count(*) AS __group_size");
+                                  .agg(String.format("count(*) AS %s", groupSizeColName));
         String sql = String.format("create table %s as %s", groupSizeTemp, groupSize.toSql());
         VerdictLogger.debug(this, "The query used for the group-size temp table: ");
         VerdictLogger.debugPretty(this, Relation.prettyfySql(vc, sql), "  ");
@@ -408,16 +412,17 @@ public abstract class Dbms {
         }
 
         // where clause using rand function
-        String whereClause = String.format("__rand < %d * %f / %d / __group_size",
+        String whereClause = String.format("__rand < %d * %f / %d / %s",
                                            originalTableSize,
                                            param.getSamplingRatio(),
-                                           groupCount);
+                                           groupCount,
+                                           groupSizeColName);
         whereClause += " OR __rand < (case";
-        whereClause += String.format(" when __group_size >= 1000 then 130 / __group_size"); 
+        whereClause += String.format(" when %s >= 1000 then 130 / %s", groupSizeColName, groupSizeColName); 
         for (Pair<Integer, Double> sizeProb : minSamplingProbForStratifiedSamples) {
             int size = sizeProb.getKey();
             double prob = sizeProb.getValue();
-            whereClause += String.format(" when __group_size >= %d then %f", size, prob);
+            whereClause += String.format(" when %s >= %d then %f", groupSizeColName, size, prob);
         }
         whereClause += " else 1.0 end)";
 
@@ -434,7 +439,7 @@ public abstract class Dbms {
                 .withAlias("s")
                 .join(SingleRelation.from(vc, groupSizeTemp).withAlias("t"), joinExprs)
                 .where(whereClause)
-                .select(Joiner.on(", ").join(selectElems) + ", __group_size");
+                .select(Joiner.on(", ").join(selectElems) + ", " + groupSizeColName);
         String sql1 = String.format("create table %s as %s", sampledNoRand, sampled.toSql());
         VerdictLogger.debug(this, "The query used for creating a stratified sample without sampling probabilities.");
         VerdictLogger.debugPretty(this, Relation.prettyfySql(vc, sql1), "  ");
@@ -443,11 +448,11 @@ public abstract class Dbms {
         // attach sampling probabilities and random partition number
         ExactRelation sampledGroupSize = SingleRelation.from(vc, sampledNoRand)
                 .groupby(param.columnNames)
-                .agg("count(*) AS __group_size_in_sample");
+                .agg("count(*) AS " + groupSizeInSampleColName);
         ExactRelation withRand = SingleRelation.from(vc, sampledNoRand).withAlias("s")
                 .join(sampledGroupSize.withAlias("t"), joinExprs)
                 .select(Joiner.on(", ").join(selectElems)
-                        + String.format(", __group_size_in_sample  / __group_size as %s", samplingProbColName)
+                        + String.format(", %s  / __group_size as %s", groupSizeInSampleColName, samplingProbColName)
                         + ", " + randomPartitionColumn());
         
         String parquetString="";
