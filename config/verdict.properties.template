@@ -31,6 +31,8 @@ verdict.jdbc.mysql.class_name=com.mysql.jdbc.Driver
 ### jdbc > connection > hive is deprecated and not supported
 ### jdbc > connection > hive2
 verdict.jdbc.hive2.default_port=10000
+#### MapR: org.apache.hive.jdbc.HiveDriver
+#### Cloudera: com.cloudera.impala.jdbc4.Driver
 verdict.jdbc.hive2.class_name=com.cloudera.hive.jdbc4.HS2Driver
 ### jdbc > connection > impala
 verdict.jdbc.impala.default_port=21050
