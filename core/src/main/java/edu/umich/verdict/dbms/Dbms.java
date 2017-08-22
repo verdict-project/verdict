@@ -42,6 +42,8 @@ public abstract class Dbms {
     protected static String groupSizeColName = "verdict_group_size";
     
     protected static String groupSizeInSampleColName = "verdict_group_size_in_sample";
+    
+    protected static String randNumColname = "verdict_rand";
 
 
     public VerdictContext getVc() {
@@ -287,9 +289,9 @@ public abstract class Dbms {
     }
 
     protected TableUniqueName createUniformRandomSampledTable(SampleParam param) throws VerdictException {
-        String whereClause = String.format("__rand < %f", param.samplingRatio);
+        String whereClause = String.format("%s < %f", randNumColname, param.samplingRatio);
         ExactRelation sampled = SingleRelation.from(vc, param.getOriginalTable())
-                .select(String.format("*, %s as __rand", randomNumberExpression(param)))
+                .select(String.format("*, %s as %s", randomNumberExpression(param), randNumColname))
                 .where(whereClause)
                 .select("*, " + randomPartitionColumn());
         TableUniqueName temp = Relation.getTempTableName(vc, param.sampleTableName().getSchemaName());
@@ -412,12 +414,13 @@ public abstract class Dbms {
         }
 
         // where clause using rand function
-        String whereClause = String.format("__rand < %d * %f / %d / %s",
+        String whereClause = String.format("%s < %d * %f / %d / %s",
+                                           randNumColname,
                                            originalTableSize,
                                            param.getSamplingRatio(),
                                            groupCount,
                                            groupSizeColName);
-        whereClause += " OR __rand < (case";
+        whereClause += String.format(" OR %s < (case", randNumColname);
         whereClause += String.format(" when %s >= 1000 then 130 / %s", groupSizeColName, groupSizeColName); 
         for (Pair<Integer, Double> sizeProb : minSamplingProbForStratifiedSamples) {
             int size = sizeProb.getKey();
@@ -435,7 +438,7 @@ public abstract class Dbms {
         // sample table
         TableUniqueName sampledNoRand = Relation.getTempTableName(vc, param.sampleTableName().getSchemaName());
         ExactRelation sampled = SingleRelation.from(vc, param.getOriginalTable())
-                .select(String.format("*, %s as __rand", randomNumberExpression(param)))
+                .select(String.format("*, %s as %s", randomNumberExpression(param), randNumColname))
                 .withAlias("s")
                 .join(SingleRelation.from(vc, groupSizeTemp).withAlias("t"), joinExprs)
                 .where(whereClause)
@@ -452,7 +455,7 @@ public abstract class Dbms {
         ExactRelation withRand = SingleRelation.from(vc, sampledNoRand).withAlias("s")
                 .join(sampledGroupSize.withAlias("t"), joinExprs)
                 .select(Joiner.on(", ").join(selectElems)
-                        + String.format(", %s  / __group_size as %s", groupSizeInSampleColName, samplingProbColName)
+                        + String.format(", %s  / %s as %s", groupSizeInSampleColName, groupSizeColName, samplingProbColName)
                         + ", " + randomPartitionColumn());
         
         String parquetString="";
