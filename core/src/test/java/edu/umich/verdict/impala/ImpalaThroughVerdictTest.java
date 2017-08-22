@@ -19,10 +19,10 @@ public class ImpalaThroughVerdictTest {
         conf.set("loglevel", "debug");
 
         VerdictContext vc = VerdictJDBCContext.from(conf);
-        vc.executeJdbcQuery("set verdict.meta_catalog_suffix=_verdict_impala");
-        vc.executeJdbcQuery("use tpch1g");
+//        vc.executeJdbcQuery("set verdict.meta_catalog_suffix=_verdict_impala");
+//        vc.executeJdbcQuery("use tpch1g");
         //vc.executeJdbcQuery("select count(*) from instacart1g.orders");
-        vc.executeJdbcQuery("select count(*) from lineitem;");
+        vc.executeJdbcQuery("select count(*) from instacart1g.orders group by order_hour_of_day");
 
         vc.destroy();
     }
