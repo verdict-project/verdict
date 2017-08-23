@@ -1,21 +1,26 @@
 package edu.umich.verdict.dbms;
 
 import java.sql.ResultSet;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.apache.commons.lang3.tuple.Pair;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.datatypes.SampleParam;
+import edu.umich.verdict.datatypes.SampleSizeInfo;
 import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.relation.ExactRelation;
 import edu.umich.verdict.relation.Relation;
 import edu.umich.verdict.relation.SingleRelation;
+import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.util.StringManipulations;
 import edu.umich.verdict.util.VerdictLogger;
 
@@ -120,6 +125,93 @@ public class DbmsRedshift extends DbmsJDBC {
         VerdictLogger.debugPretty(this, Relation.prettyfySql(vc, sql), "  ");
         VerdictLogger.debug(this, sql);
         executeUpdate(sql);
+    }
+	
+	@Override
+	protected void createStratifiedSampleFromGroupSizeTemp(SampleParam param, TableUniqueName groupSizeTemp) throws VerdictException {
+        Map<String, String> col2types = vc.getMeta().getColumn2Types(param.originalTable);
+        SampleSizeInfo info = vc.getMeta().getSampleSizeOf(new SampleParam(vc, param.originalTable, "uniform", null, new ArrayList<String>()));
+        long originalTableSize = info.originalTableSize;
+        long groupCount = SingleRelation.from(vc, groupSizeTemp).countValue();
+        String samplingProbColName = vc.getDbms().samplingProbabilityColumnName();
+
+        // equijoin expression that considers possible null values
+        List<Pair<Expr, Expr>> joinExprs = new ArrayList<Pair<Expr, Expr>>();
+        for (String col : param.getColumnNames()) {
+            boolean isString = false;
+            boolean isTimeStamp = false;
+
+            if (col2types.containsKey(col)) {
+                if (col2types.get(col).toLowerCase().contains("char") || col2types.get(col).toLowerCase().contains("str")) {
+                    isString = true;
+                } else if (col2types.get(col).toLowerCase().contains("time")) {
+                    isTimeStamp = true;
+                }
+            }
+
+            if (isString) {
+                Expr left = Expr.from(vc, String.format("case when s.%s is null then '%s' else s.%s end", col, NULL_STRING, col));
+                Expr right = Expr.from(vc, String.format("case when t.%s is null then '%s' else t.%s end", col, NULL_STRING, col));
+                joinExprs.add(Pair.of(left, right));
+            } else if (isTimeStamp) {
+                Expr left = Expr.from(vc, String.format("case when s.%s is null then '%s' else s.%s end", col, NULL_TIMESTAMP, col));
+                Expr right = Expr.from(vc, String.format("case when t.%s is null then '%s' else t.%s end", col, NULL_TIMESTAMP, col));
+                joinExprs.add(Pair.of(left, right));
+            } else {
+                Expr left = Expr.from(vc, String.format("case when s.%s is null then %d else s.%s end", col, NULL_LONG, col));
+                Expr right = Expr.from(vc, String.format("case when t.%s is null then %d else t.%s end", col, NULL_LONG, col));
+                joinExprs.add(Pair.of(left, right));
+            }
+        }
+
+        // where clause using rand function
+        String whereClause = String.format("__rand < %d * %f / %d / __group_size",
+                originalTableSize,
+                param.getSamplingRatio(),
+                groupCount);
+
+        // aliased select list
+        List<String> selectElems = new ArrayList<String>();
+        for (String col : col2types.keySet()) {
+            selectElems.add(String.format("s.%s", col));
+        }
+
+        // sample table
+        TableUniqueName sampledNoRand = Relation.getTempTableName(vc, param.sampleTableName().getSchemaName());
+        ExactRelation sampled = SingleRelation.from(vc, param.getOriginalTable())
+                .select(String.format("*, %s as __rand", randomNumberExpression(param)))
+                .withAlias("s")
+                .join(SingleRelation.from(vc, groupSizeTemp).withAlias("t"), joinExprs)
+                .where(whereClause)
+                .select(Joiner.on(", ").join(selectElems) + ", __group_size");
+        String sql1 = String.format("create table %s as %s", sampledNoRand, sampled.toSql());
+        VerdictLogger.debug(this, "The query used for creating a stratified sample without sampling probabilities.");
+        VerdictLogger.debugPretty(this, Relation.prettyfySql(vc, sql1), "  ");
+        executeUpdate(sql1);
+
+        // attach sampling probabilities and random partition number
+        ExactRelation sampledGroupSize = SingleRelation.from(vc, sampledNoRand)
+                .groupby(param.columnNames)
+                .agg("count(*) AS __group_size_in_sample");
+        ExactRelation withRand = SingleRelation.from(vc, sampledNoRand).withAlias("s")
+                .join(sampledGroupSize.withAlias("t"), joinExprs)
+                .select(Joiner.on(", ").join(selectElems)
+                        + String.format(", cast(__group_size_in_sample as float)  / cast(__group_size as float) as %s", samplingProbColName)
+                        + ", " + randomPartitionColumn());
+        
+        String parquetString="";
+
+        if(vc.getConf().areSamplesStoredAsParquet()) {
+            parquetString = getParquetString();
+        }
+
+        String sql2 = String.format("create table %s%s as %s", param.sampleTableName(), parquetString, withRand.toSql());
+        VerdictLogger.debug(this, "The query used for creating a stratified sample with sampling probabilities.");
+        VerdictLogger.debugPretty(this, Relation.prettyfySql(vc, sql2), "  ");
+        VerdictLogger.debug(this, sql2);
+        executeUpdate(sql2);
+
+        dropTable(sampledNoRand);
     }
 	
 	@Override
