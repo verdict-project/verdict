@@ -61,9 +61,10 @@ public class VerdictConf {
     public void setProperties(Properties properties) {
         for (String prop : properties.stringPropertyNames()) {
             String value = properties.getProperty(prop);
-            if (value.length() > 0) {
-                set(prop, value);
-            }
+            set(prop, value);
+//            if (value.length() > 0) {
+//                set(prop, value);
+//            }
         }
     }
 
@@ -130,12 +131,13 @@ public class VerdictConf {
             return this;
         String key = keyVal.substring(0, equalIndex).trim();
         String val = keyVal.substring(equalIndex + 1).trim();
-        if (val.startsWith("\"") && val.endsWith("\""))
-            val = val.substring(1, val.length() - 1);
         return set(key, val);
     }
 
     public VerdictConf set(String key, String value) {
+    	if (value.startsWith("\"") && value.endsWith("\""))
+    		value = value.substring(1, value.length() - 1);
+    	
         if (configKeySynonyms.containsKey(key)) {
             return set(configKeySynonyms.get(key), value);
         }
