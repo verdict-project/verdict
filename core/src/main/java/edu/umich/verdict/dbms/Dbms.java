@@ -455,20 +455,26 @@ public abstract class Dbms {
                                            groupCount,
                                            groupSizeColName);
         
+        // this should set to an appropriate variable.
         List<Pair<Integer, Double>> samplingProbForSize = minSamplingProbForStratifiedSamplesMin10;
         
         whereClause += String.format(" OR %s < (case", randNumColname);
-        whereClause += String.format(" when %s > %d then %s * %f / %d",
-                                     groupSizeColName,
-                                     samplingProbForSize.get(0).getKey(),
-                                     groupSizeColName,
-                                     samplingProbForSize.get(0).getValue(),
-                                     samplingProbForSize.get(0).getKey());
+//        whereClause += String.format(" when %s > %d then %s * %f / %d",
+//                                     groupSizeColName,
+//                                     samplingProbForSize.get(0).getKey(),
+//                                     groupSizeColName,
+//                                     samplingProbForSize.get(0).getValue(),
+//                                     samplingProbForSize.get(0).getKey());
         
         for (Pair<Integer, Double> sizeProb : samplingProbForSize) {
             int size = sizeProb.getKey();
             double prob = sizeProb.getValue();
-            whereClause += String.format(" when %s >= %d then %f", groupSizeColName, size, prob);
+            whereClause += String.format(" when %s >= %d then %f * %d / %s",
+                                         groupSizeColName,
+                                         size,
+                                         prob,
+                                         size,
+                                         groupSizeColName);
         }
         whereClause += " else 1.0 end)";
 
