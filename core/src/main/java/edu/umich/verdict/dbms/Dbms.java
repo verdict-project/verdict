@@ -456,7 +456,7 @@ public abstract class Dbms {
                                            groupSizeColName);
         
         // this should set to an appropriate variable.
-        List<Pair<Integer, Double>> samplingProbForSize = minSamplingProbForStratifiedSamplesMin10;
+        List<Pair<Integer, Double>> samplingProbForSize = minSamplingProbForStratifiedSamplesMin100;
         
         whereClause += String.format(" OR %s < (case", randNumColname);
 //        whereClause += String.format(" when %s > %d then %s * %f / %d",
