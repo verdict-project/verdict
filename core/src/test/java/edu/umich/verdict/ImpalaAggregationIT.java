@@ -27,7 +27,7 @@ public class ImpalaAggregationIT extends AggregationIT {
         conf.setDbmsSchema(schema);
         conf.set("no_user_password", "true");
         conf.set("verdict.loglevel", "debug");
-        conf.set("verdict.meta_data.meta_database_suffix", "_verdict_impala");
+        conf.set("verdict.meta_data.meta_database_suffix", "_verdict");
         vc = VerdictJDBCContext.from(conf);
 
         String url = String.format("jdbc:impala://%s:%s/%s", host, port, schema);

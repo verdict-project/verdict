@@ -1,3 +1,20 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package edu.umich.verdict.dbms;
 
 import java.sql.ResultSet;
@@ -324,9 +341,26 @@ public abstract class Dbms {
     }
     
     /**
+     * These are the probabilities for ensuring at least 10 tuples.
+     */
+    protected static List<Pair<Integer, Double>> minSamplingProbForStratifiedSamplesMin10
+                     = new ImmutableList.Builder<Pair<Integer, Double>>()
+                           .add(Pair.of(100, 0.203759))
+                           .add(Pair.of(50, 0.376508))
+                           .add(Pair.of(40, 0.452739))
+                           .add(Pair.of(30, 0.566406))
+                           .add(Pair.of(20, 0.749565))
+                           .add(Pair.of(15, 0.881575))
+                           .add(Pair.of(14, 0.910660))
+                           .add(Pair.of(13, 0.939528))
+                           .add(Pair.of(12, 0.966718))
+                           .add(Pair.of(11, 0.989236))
+                           .build();
+    
+    /**
      * These are the probabilities for ensuring at least 100 tuples.
      */
-    protected static List<Pair<Integer, Double>> minSamplingProbForStratifiedSamples
+    protected static List<Pair<Integer, Double>> minSamplingProbForStratifiedSamplesMin100
                      = new ImmutableList.Builder<Pair<Integer, Double>>()
                            .add(Pair.of(900, 0.140994))
                            .add(Pair.of(800, 0.158239))
@@ -420,9 +454,18 @@ public abstract class Dbms {
                                            param.getSamplingRatio(),
                                            groupCount,
                                            groupSizeColName);
+        
+        List<Pair<Integer, Double>> samplingProbForSize = minSamplingProbForStratifiedSamplesMin10;
+        
         whereClause += String.format(" OR %s < (case", randNumColname);
-        whereClause += String.format(" when %s >= 1000 then 130 / %s", groupSizeColName, groupSizeColName); 
-        for (Pair<Integer, Double> sizeProb : minSamplingProbForStratifiedSamples) {
+        whereClause += String.format(" when %s > %d then %s * %f / %d",
+                                     groupSizeColName,
+                                     samplingProbForSize.get(0).getKey(),
+                                     groupSizeColName,
+                                     samplingProbForSize.get(0).getValue(),
+                                     samplingProbForSize.get(0).getKey());
+        
+        for (Pair<Integer, Double> sizeProb : samplingProbForSize) {
             int size = sizeProb.getKey();
             double prob = sizeProb.getValue();
             whereClause += String.format(" when %s >= %d then %f", groupSizeColName, size, prob);
