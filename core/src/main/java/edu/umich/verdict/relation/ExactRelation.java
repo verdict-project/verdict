@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -551,10 +552,13 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
                 } else {
                     // table could be an alias or a base table name without schema name
                     // first, check for alias
-                    TableUniqueName a = new TableUniqueName(null, expr.getTab());
-                    if (tabAliasColumns.containsKey(a)) {
-                        return new ColNameExpr(vc, expr.getCol(), tabAliasColumns.get(a).getKey());
+                    for (Pair<String, Set<String>> aliasColumns : tabAliasColumns.values()) {
+                        String alias = aliasColumns.getKey();
+                        if (alias.equals(expr.getTab())) {
+                            return expr;    // no need to change anything
+                        }
                     }
+                    
                     // second, check for table name
                     TableUniqueName t = TableUniqueName.uname(vc, expr.getTab());
                     if (tabAliasColumns.containsKey(t)) {
