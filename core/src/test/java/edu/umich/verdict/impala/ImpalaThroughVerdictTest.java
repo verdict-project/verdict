@@ -25,11 +25,22 @@ public class ImpalaThroughVerdictTest {
 //        vc.executeJdbcQuery("use tpch1g");
         //vc.executeJdbcQuery("select count(*) from instacart1g.orders");
 //        vc.executeJdbcQuery("select count(*) from instacart1g.orders group by order_hour_of_day");
-        vc.executeJdbcQuery("select department, sum(reordered), count(*)\n" + 
-                "from order_products op, products p, departments d\n" + 
-                "where op.product_id = p.product_id\n" + 
-                "  and p.department_id = d.department_id\n" + 
-                "group by department;\n");
+        vc.executeJdbcQuery("select order_hour_of_day, t1.department, c / total as ratio\n" + 
+                "from\n" + 
+                "    (select order_hour_of_day, department, count(*) as c\n" + 
+                "    from order_products op, orders o, products p, departments d\n" + 
+                "    where op.order_id = o.order_id\n" + 
+                "      and op.product_id = p.product_id\n" + 
+                "      and p.department_id = d.department_id\n" + 
+                "    group by order_hour_of_day, d.department) t1,\n" +
+                "    (select department, count(*) as total\n" + 
+                "    from order_products op, orders o, products p, departments d\n" + 
+                "    where op.order_id = o.order_id\n" + 
+                "      and op.product_id = p.product_id\n" + 
+                "      and p.department_id = d.department_id\n" + 
+                "    group by department) t2\n" + 
+                "where t1.department = t2.department\n" + 
+                "order by order_hour_of_day, ratio desc;\n");
 
         vc.destroy();
     }

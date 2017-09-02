@@ -17,9 +17,11 @@ import edu.umich.verdict.util.VerdictLogger;
 public class VerdictStatement implements Statement {
 
     private final VerdictConnection connection;
+    
     private Statement stmt;
 
     private final ArrayList<String> batch = new ArrayList<String>();	// TODO: support batch operations.
+    
     private final VerdictJDBCContext vc;
 
     private ResultSet answer;

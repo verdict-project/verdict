@@ -294,8 +294,11 @@ public class ApproxAggregatedRelation extends ApproxRelation {
             }
         }
         
-        // insert partition number
-        scaledElems.add(new SelectElem(vc, newSource.partitionColumn(), partitionColumnName()));
+        // insert partition number if exists
+        ColNameExpr partitionCol = newSource.partitionColumn();
+        if (partitionCol != null) {
+            scaledElems.add(new SelectElem(vc, newSource.partitionColumn(), partitionColumnName()));
+        }
         
         // to compute the partition size
         scaledElems.add(new SelectElem(vc, FuncExpr.count(), partitionSizeAlias));

@@ -119,8 +119,8 @@ public class VerdictConnection implements Connection {
     }
 
     @Override
-    public PreparedStatement prepareStatement(String sql) throws SQLFeatureNotSupportedException {
-        throw new SQLFeatureNotSupportedException("Verdict doesn't support prepared statements");
+    public PreparedStatement prepareStatement(String sql) throws SQLException {
+        return new VerdictPreparedStatement(sql, vc, this);
     }
 
     @Override

@@ -48,7 +48,10 @@ public class ApproxGroupedRelation extends ApproxRelation {
         ExactRelation newSource = source.rewriteWithPartition();
         List<Expr> newGroupby = groupbyWithTablesSubstituted();
         //		newGroupby.add((ColNameExpr) exprWithTableNamesSubstituted(partitionColumn(), tableSubstitution()));
-        newGroupby.add(newSource.partitionColumn());
+        ColNameExpr partitionCol = newSource.partitionColumn();
+        if (partitionCol != null) {
+            newGroupby.add(partitionCol);
+        }
         ExactRelation r = new GroupedRelation(vc, newSource, newGroupby);
         r.setAlias(r.getAlias());
         return r;
