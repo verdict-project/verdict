@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -370,19 +371,24 @@ public abstract class ExactRelation extends Relation {
      * @param candidates_list
      * @return
      */
-    protected SamplePlan consolidate(
-            List<List<SampleGroup>> candidates_list) {
+    protected SamplePlans consolidate(List<List<SampleGroup>> candidates_list) {
         SamplePlans plans = new SamplePlans();
-
         // create candidate plans
         for (List<SampleGroup> groups : candidates_list) {
             plans.consolidateNewExpr(groups);
         }
-
+        return plans;
+//        double relative_cost_ratio = vc.getConf().getRelativeTargetCost();
+//        SamplePlan best = plans.bestPlan(relative_cost_ratio);
+//        return best;
+    }
+    
+    protected SamplePlan chooseBestPlan(SamplePlans plans) {
         double relative_cost_ratio = vc.getConf().getRelativeTargetCost();
         SamplePlan best = plans.bestPlan(relative_cost_ratio);
         return best;
     }
+    
 
     /*
      * Helpers
@@ -472,19 +478,6 @@ public abstract class ExactRelation extends Relation {
     public abstract ColNameExpr partitionColumn();
     
 //    public abstract Expr distinctCountPartitionColumn();
-    
-    /**
-     * The returned contains the tuple-level sampling probability. For universe and uniform samples, this is basically
-     * the ratio of the sample size to the original table size.
-     * @return
-     */
-    public abstract Expr tupleProbabilityColumn();
-    
-    /**
-     * The returned column contains 
-     * @return
-     */
-    public abstract Expr tableSamplingRatio();
 
     @Deprecated
     public abstract List<ColNameExpr> accumulateSamplingProbColumns();
@@ -559,10 +552,13 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
                 } else {
                     // table could be an alias or a base table name without schema name
                     // first, check for alias
-                    TableUniqueName a = new TableUniqueName(null, expr.getTab());
-                    if (tabAliasColumns.containsKey(a)) {
-                        return new ColNameExpr(vc, expr.getCol(), tabAliasColumns.get(a).getKey());
+                    for (Pair<String, Set<String>> aliasColumns : tabAliasColumns.values()) {
+                        String alias = aliasColumns.getKey();
+                        if (alias.equals(expr.getTab())) {
+                            return expr;    // no need to change anything
+                        }
                     }
+                    
                     // second, check for table name
                     TableUniqueName t = TableUniqueName.uname(vc, expr.getTab());
                     if (tabAliasColumns.containsKey(t)) {
@@ -827,10 +823,8 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
                 ExactRelation r2 = visit(j);
                 r = new JoinedRelation(vc, r, r2, null);
                 if (joinCond != null) {
-                    ColNameResolver resolver = new ColNameResolver(tableAliasAndColNames);
-                    Cond resolved = resolver.visit(joinCond);
                     try {
-                        ((JoinedRelation) r).setJoinCond(resolved);
+                        ((JoinedRelation) r).setJoinCond(joinCond);
                     } catch (VerdictException e) {
                         VerdictLogger.error(StackTraceReader.stackTrace2String(e));
                     }
@@ -882,7 +876,21 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
             if (ctx.INNER() != null) {
                 TableSourceExtractor ext = new TableSourceExtractor();
                 ExactRelation r = ext.visit(ctx.table_source());
-                joinCond = Cond.from(vc, ctx.search_condition());
+                Cond cond = Cond.from(vc, ctx.search_condition());
+                ColNameResolver resolver = new ColNameResolver(tableAliasAndColNames);
+                Cond resolved = resolver.visit(cond);
+                
+                if (resolved instanceof CompCond) {
+                    CompCond comp = (CompCond) resolved;
+                    Expr right = comp.getRight();
+                    if (right instanceof ColNameExpr) {
+                        if (((ColNameExpr) right).getTab() != r.getAlias()) {
+                            resolved = new CompCond(comp.getRight(), comp.getOp(), comp.getLeft());
+                        }
+                    }
+                }
+                
+                joinCond = resolved;
                 return r;
             } else {
                 VerdictLogger.error(this, "Unsupported join condition: " + ctx.getText());

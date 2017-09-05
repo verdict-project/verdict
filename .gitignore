@@ -27,3 +27,6 @@ nocommit/
 
 # config
 config/verdict.properties
+
+# libs
+libs/*.jar

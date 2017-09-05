@@ -61,9 +61,10 @@ public class VerdictConf {
     public void setProperties(Properties properties) {
         for (String prop : properties.stringPropertyNames()) {
             String value = properties.getProperty(prop);
-            if (value.length() > 0) {
-                set(prop, value);
-            }
+            set(prop, value);
+//            if (value.length() > 0) {
+//                set(prop, value);
+//            }
         }
     }
 
@@ -113,12 +114,12 @@ public class VerdictConf {
         if (configKeySynonyms.containsKey(key)) {
             return get(configKeySynonyms.get(key));
         }
-        return configs.get(key.toLowerCase());
+        return configs.get(key);
     }
 
     public String getOr(String key, Object defaultValue) {
-        if (configs.containsKey(key.toLowerCase())) {
-            return configs.get(key.toLowerCase());
+        if (configs.containsKey(key)) {
+            return configs.get(key);
         } else {
             return defaultValue.toString();
         }
@@ -130,14 +131,13 @@ public class VerdictConf {
             return this;
         String key = keyVal.substring(0, equalIndex).trim();
         String val = keyVal.substring(equalIndex + 1).trim();
-        if (val.startsWith("\"") && val.endsWith("\""))
-            val = val.substring(1, val.length() - 1);
         return set(key, val);
     }
 
     public VerdictConf set(String key, String value) {
-        key = key.toLowerCase();
-
+    	if (value.startsWith("\"") && value.endsWith("\""))
+    		value = value.substring(1, value.length() - 1);
+    	
         if (configKeySynonyms.containsKey(key)) {
             return set(configKeySynonyms.get(key), value);
         }
@@ -159,7 +159,7 @@ public class VerdictConf {
     }
 
     public boolean doesContain(String key) {
-        return configs.containsKey(key.toLowerCase());
+        return configs.containsKey(key);
     }
 
     /*

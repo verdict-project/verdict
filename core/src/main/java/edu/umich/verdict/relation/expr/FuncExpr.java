@@ -16,7 +16,7 @@ public class FuncExpr extends Expr {
     public enum FuncName {
         COUNT, SUM, AVG, COUNT_DISTINCT, EXTRACT, IMPALA_APPROX_COUNT_DISTINCT,
         ROUND, MAX, MIN, FLOOR, CEIL, EXP, LN, LOG10, LOG2, SIN, COS, TAN,
-        SIGN, STRTOL, RAND, RANDOM , FNV_HASH, ABS, STDDEV, SQRT, MOD, PMOD,
+        SIGN, STRTOL, RAND, RANDOM , FNV_HASH, ABS, STDDEV, SQRT, MOD, PMOD, YEAR,
         CAST, CONV, SUBSTR, MD5, CRC32, UNIX_TIMESTAMP, CURRENT_TIMESTAMP,
         UNKNOWN
     }
@@ -54,6 +54,7 @@ public class FuncExpr extends Expr {
             .put("MOD", FuncName.MOD)
             .put("CRC32", FuncName.CRC32)
             .put("PMOD", FuncName.PMOD)
+            .put("YEAR", FuncName.YEAR)
             .put("CONV", FuncName.CONV)
             .put("SUBSTR", FuncName.SUBSTR)
             .put("CAST", FuncName.CAST)
@@ -92,6 +93,7 @@ public class FuncExpr extends Expr {
             .put(FuncName.STRTOL, "strtol(%s, %s)")
             .put(FuncName.MOD, "mod(%s, %s)")
             .put(FuncName.PMOD, "pmod(%s, %s)")
+            .put(FuncName.YEAR, "year(%s)")
             .put(FuncName.CONV, "conv(%s, %s, %s)")
             .put(FuncName.SUBSTR, "substr(%s, %s, %s)")
             .put(FuncName.CAST, "cast(%s as %s)")
@@ -351,6 +353,17 @@ public class FuncExpr extends Expr {
         }
         return false;
     }
+    
+    @Override
+    public boolean isMeanLikeAggregate() {
+        if (funcname.equals(FuncName.AVG) ||
+            funcname.equals(FuncName.SUM) ||
+            funcname.equals(FuncName.COUNT)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
 
     @Override
     public boolean isCountDistinct() {
@@ -364,6 +377,22 @@ public class FuncExpr extends Expr {
     @Override
     public boolean isCount() {
         if (funcname.equals(FuncName.COUNT)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+    
+    public boolean isMax() {
+        if (funcname.equals(FuncName.MAX)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+    
+    public boolean isMin() {
+        if (funcname.equals(FuncName.MIN)) {
             return true;
         } else {
             return false;

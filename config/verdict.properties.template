@@ -5,7 +5,7 @@ verdict.bypass=false
 
 # one of debug, info, warn, error
 # synonym: loglevel
-verdict.loglevel=debug
+verdict.loglevel=info
 
 # target runtime (either in fraction or in percentage)
 verdict.relative_target_cost=10%
@@ -31,6 +31,8 @@ verdict.jdbc.mysql.class_name=com.mysql.jdbc.Driver
 ### jdbc > connection > hive is deprecated and not supported
 ### jdbc > connection > hive2
 verdict.jdbc.hive2.default_port=10000
+#### MapR: org.apache.hive.jdbc.HiveDriver
+#### Cloudera: com.cloudera.impala.jdbc4.Driver
 verdict.jdbc.hive2.class_name=com.cloudera.hive.jdbc4.HS2Driver
 ### jdbc > connection > impala
 verdict.jdbc.impala.default_port=21050
@@ -56,8 +58,8 @@ verdict.error_bound.error_column_pattern=err bound of %s
 verdict.error_bound.method=subsampling
 
 # error bound > subsampling
-verdict.error_bound.subsampling.partition_column=__vpart
-verdict.error_bound.subsampling.probability_column=__vprob
+verdict.error_bound.subsampling.partition_column=verdict_vpart
+verdict.error_bound.subsampling.probability_column=verdict_vprob
 verdict.error_bound.subsampling.partition_count=100
 
 # error bound > bootstrapping (only for research)
@@ -67,4 +69,4 @@ verdict.error_bound.bootstrapping.bootstrap_sampling_method=single_nested
 verdict.error_bound.bootstrapping.bootstrap_multiplicity_colname=__mul
 
 # create sample tables in parquet format
-verdict.parquet_sample=false
+verdict.parquet_sample=true

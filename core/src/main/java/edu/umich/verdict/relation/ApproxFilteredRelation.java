@@ -99,6 +99,13 @@ public class ApproxFilteredRelation extends ApproxRelation {
         };
         return v.visit(cond);
     }
+    
+    @Override
+    public ExactRelation rewriteWithSubsampledErrorBounds() {
+        ExactRelation r = new FilteredRelation(vc, source.rewriteWithSubsampledErrorBounds(), getFilter());
+        r.setAlias(getAlias());
+        return r;
+    }
 
     @Override
     public ExactRelation rewriteWithPartition() {
@@ -225,6 +232,16 @@ public class ApproxFilteredRelation extends ApproxRelation {
     @Override
     protected boolean doesIncludeSample() {
         return source.doesIncludeSample();
+    }
+    
+    @Override
+    public Expr tupleProbabilityColumn() {
+        return source.tupleProbabilityColumn();
+    }
+
+    @Override
+    public Expr tableSamplingRatio() {
+        return source.tableSamplingRatio();
     }
 
 }

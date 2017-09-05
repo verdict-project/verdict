@@ -965,7 +965,7 @@ public class Commands {
 		for (int i = 1; i < parts.length; i++) {
 			Properties props = new Properties();
 			props.load(new FileInputStream(parts[i]));
-			connect(props, callback);
+			verdict_connect(props, callback);
 			if (callback.isSuccess()) {
 				successes++;
 				String nickname = getProperty(props, "nickname", "ConnectionNickname");
@@ -982,7 +982,7 @@ public class Commands {
 		}
 	}
 
-	public void connect(String line, DispatchCallback callback) throws Exception {
+	public void verdict_connect(String line, DispatchCallback callback) throws Exception {
 		String example = "Usage: connect <url> <username> <password> <driver>"
 				+ SqlLine.getSeparator();
 
@@ -1017,7 +1017,7 @@ public class Commands {
 			props.setProperty("password", pass);
 		}
 
-		connect(props, callback);
+		verdict_connect(props, callback);
 	}
 
 	public void nickname(String line, DispatchCallback callback)
@@ -1065,7 +1065,7 @@ public class Commands {
 		return null;
 	}
 
-	public void connect(Properties props, DispatchCallback callback)
+	public void verdict_connect(Properties props, DispatchCallback callback)
 			throws IOException {
 		String url = getProperty(props,
 				"url",
@@ -1113,7 +1113,7 @@ public class Commands {
 					new DatabaseConnection(sqlLine, driver, url, username, password));
 			sqlLine.getDatabaseConnection().getConnection();
 
-			sqlLine.setCompletions();
+//			sqlLine.setCompletions();
 			callback.setToSuccess();
 		} catch (Exception e) {
 			callback.setToFailure();

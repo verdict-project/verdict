@@ -11,11 +11,13 @@
  */
 package sqlline;
 
+import java.io.BufferedReader;
 import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -45,6 +47,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.ResourceBundle;
+import java.util.Scanner;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.StringTokenizer;
@@ -236,7 +239,7 @@ public class SqlLine {
 						"/META-INF/maven/sqlline/sqlline/pom.properties");
 		Properties properties = new Properties();
 		properties.put("artifactId", "Verdict");
-		properties.put("version", "0.2");
+		properties.put("version", "0.3.0-snapshot");
 		if (inputStream != null) {
 			// If not running from a .jar, pom.properties will not exist, and
 			// inputStream is null.
@@ -249,7 +252,6 @@ public class SqlLine {
 
 		return loc(
 				"app-introduction",
-				properties.getProperty("artifactId"),
 				properties.getProperty("version"));
 	}
 
@@ -323,56 +325,58 @@ public class SqlLine {
 		final TableNameCompleter tableCompleter = new TableNameCompleter(this);
 		final List<Completer> empty = Collections.emptyList();
 
+		// TODO: we need to define what commands to provide in veeline
 		commandHandlers = Arrays.<CommandHandler>asList(
 				new ReflectiveCommandHandler(this, empty, "quit", "done", "exit"),
 				new ReflectiveCommandHandler(this,
 						new StringsCompleter(getConnectionURLExamples()),
-						"connect", "open"),
-				new ReflectiveCommandHandler(this, empty, "nickname"),
-				new ReflectiveCommandHandler(this, tableCompleter, "describe"),
-				new ReflectiveCommandHandler(this, tableCompleter, "indexes"),
-				new ReflectiveCommandHandler(this, tableCompleter, "primarykeys"),
-				new ReflectiveCommandHandler(this, tableCompleter, "exportedkeys"),
-				new ReflectiveCommandHandler(this, empty, "manual"),
-				new ReflectiveCommandHandler(this, tableCompleter, "importedkeys"),
-				new ReflectiveCommandHandler(this, empty, "procedures"),
-				new ReflectiveCommandHandler(this, empty, "tables"),
-				new ReflectiveCommandHandler(this, empty, "typeinfo"),
-				new ReflectiveCommandHandler(this, tableCompleter, "columns"),
-				new ReflectiveCommandHandler(this, empty, "reconnect"),
-				new ReflectiveCommandHandler(this, tableCompleter, "dropall"),
-				new ReflectiveCommandHandler(this, empty, "history"),
-				new ReflectiveCommandHandler(this,
-						new StringsCompleter(getMetadataMethodNames()), "metadata"),
-				new ReflectiveCommandHandler(this, empty, "nativesql"),
-				new ReflectiveCommandHandler(this, empty, "dbinfo"),
-				new ReflectiveCommandHandler(this, empty, "rehash"),
-				new ReflectiveCommandHandler(this, empty, "verbose"),
-				new ReflectiveCommandHandler(this, new FileNameCompleter(), "run"),
-				new ReflectiveCommandHandler(this, empty, "batch"),
-				new ReflectiveCommandHandler(this, empty, "list"),
-				new ReflectiveCommandHandler(this, empty, "all"),
-				new ReflectiveCommandHandler(this, empty, "go", "#"),
-				new ReflectiveCommandHandler(this, new FileNameCompleter(), "script"),
-				new ReflectiveCommandHandler(this, new FileNameCompleter(), "record"),
-				new ReflectiveCommandHandler(this, empty, "brief"),
-				new ReflectiveCommandHandler(this, empty, "close"),
-				new ReflectiveCommandHandler(this, empty, "closeall"),
-				new ReflectiveCommandHandler(this,
-						new StringsCompleter(getIsolationLevels()), "isolation"),
-				new ReflectiveCommandHandler(this,
-						new StringsCompleter(formats.keySet()), "outputformat"),
-				new ReflectiveCommandHandler(this, empty, "autocommit"),
-				new ReflectiveCommandHandler(this, empty, "commit"),
-				new ReflectiveCommandHandler(this, new FileNameCompleter(),
-						"properties"),
-				new ReflectiveCommandHandler(this, empty, "rollback"),
-				new ReflectiveCommandHandler(this, empty, "help", "?"),
-				new ReflectiveCommandHandler(this, opts.optionCompleters(), "set"),
-				new ReflectiveCommandHandler(this, empty, "save"),
-				new ReflectiveCommandHandler(this, empty, "scan"),
-				new ReflectiveCommandHandler(this, empty, "sql"),
-				new ReflectiveCommandHandler(this, empty, "call"));
+						"verdict_connect", "open")
+//				new ReflectiveCommandHandler(this, empty, "nickname"),
+//				new ReflectiveCommandHandler(this, tableCompleter, "describe"),
+//				new ReflectiveCommandHandler(this, tableCompleter, "indexes"),
+//				new ReflectiveCommandHandler(this, tableCompleter, "primarykeys"),
+//				new ReflectiveCommandHandler(this, tableCompleter, "exportedkeys"),
+//				new ReflectiveCommandHandler(this, empty, "manual"),
+//				new ReflectiveCommandHandler(this, tableCompleter, "importedkeys"),
+//				new ReflectiveCommandHandler(this, empty, "procedures"),
+//				new ReflectiveCommandHandler(this, empty, "tables"),
+//				new ReflectiveCommandHandler(this, empty, "typeinfo"),
+//				new ReflectiveCommandHandler(this, tableCompleter, "columns"),
+//				new ReflectiveCommandHandler(this, empty, "reconnect"),
+//				new ReflectiveCommandHandler(this, tableCompleter, "dropall"),
+//				new ReflectiveCommandHandler(this, empty, "history"),
+//				new ReflectiveCommandHandler(this,
+//						new StringsCompleter(getMetadataMethodNames()), "metadata"),
+//				new ReflectiveCommandHandler(this, empty, "nativesql"),
+//				new ReflectiveCommandHandler(this, empty, "dbinfo"),
+//				new ReflectiveCommandHandler(this, empty, "rehash"),
+//				new ReflectiveCommandHandler(this, empty, "verbose"),
+//				new ReflectiveCommandHandler(this, new FileNameCompleter(), "run"),
+//				new ReflectiveCommandHandler(this, empty, "batch"),
+//				new ReflectiveCommandHandler(this, empty, "list"),
+//				new ReflectiveCommandHandler(this, empty, "all"),
+//				new ReflectiveCommandHandler(this, empty, "go", "#"),
+//				new ReflectiveCommandHandler(this, new FileNameCompleter(), "script"),
+//				new ReflectiveCommandHandler(this, new FileNameCompleter(), "record"),
+//				new ReflectiveCommandHandler(this, empty, "brief"),
+//				new ReflectiveCommandHandler(this, empty, "close"),
+//				new ReflectiveCommandHandler(this, empty, "closeall"),
+//				new ReflectiveCommandHandler(this,
+//						new StringsCompleter(getIsolationLevels()), "isolation"),
+//				new ReflectiveCommandHandler(this,
+//						new StringsCompleter(formats.keySet()), "outputformat"),
+//				new ReflectiveCommandHandler(this, empty, "autocommit"),
+//				new ReflectiveCommandHandler(this, empty, "commit"),
+//				new ReflectiveCommandHandler(this, new FileNameCompleter(),
+//						"properties"),
+//				new ReflectiveCommandHandler(this, empty, "rollback"),
+//				new ReflectiveCommandHandler(this, empty, "help", "?"),
+//				new ReflectiveCommandHandler(this, opts.optionCompleters(), "set"),
+//				new ReflectiveCommandHandler(this, empty, "save"),
+//				new ReflectiveCommandHandler(this, empty, "scan"),
+//				new ReflectiveCommandHandler(this, empty, "sql"),
+//				new ReflectiveCommandHandler(this, empty, "call")
+				);
 
 		sqlLineCommandCompleter = new SqlLineCommandCompleter(this);
 		reflector = new Reflector(this);
@@ -461,44 +465,44 @@ public class SqlLine {
 	}
 
 	public List<String> getConnectionURLExamples() {
-		return Arrays.asList(
-				"jdbc:JSQLConnect://<hostname>/database=<database>",
-				"jdbc:cloudscape:<database>;create=true",
-				"jdbc:twtds:sqlserver://<hostname>/<database>",
-				"jdbc:daffodilDB_embedded:<database>;create=true",
-				"jdbc:datadirect:db2://<hostname>:50000;databaseName=<database>",
-				"jdbc:inetdae:<hostname>:1433",
-				"jdbc:datadirect:oracle://<hostname>:1521;SID=<database>;"
-						+ "MaxPooledStatements=0",
-						"jdbc:datadirect:sqlserver://<hostname>:1433;SelectMethod=cursor;"
-								+ "DatabaseName=<database>",
-								"jdbc:datadirect:sybase://<hostname>:5000",
-								"jdbc:db2://<hostname>/<database>",
-								"jdbc:hsqldb:<database>",
-								"jdbc:idb:<database>.properties",
-								"jdbc:informix-sqli://<hostname>:1526/<database>:INFORMIXSERVER"
-										+ "=<database>",
-										"jdbc:interbase://<hostname>//<database>.gdb",
-										"jdbc:luciddb:http://<hostname>",
-										"jdbc:microsoft:sqlserver://<hostname>:1433;"
-												+ "DatabaseName=<database>;SelectMethod=cursor",
-												"jdbc:mysql://<hostname>/<database>?autoReconnect=true",
-												"jdbc:oracle:thin:@<hostname>:1521:<database>",
-												"jdbc:pointbase:<database>,database.home=<database>,create=true",
-												"jdbc:postgresql://<hostname>:5432/<database>",
-												"jdbc:postgresql:net//<hostname>/<database>",
-												"jdbc:sybase:Tds:<hostname>:4100/<database>?ServiceName=<database>",
-												"jdbc:weblogic:mssqlserver4:<database>@<hostname>:1433",
-												"jdbc:odbc:<database>",
-												"jdbc:sequelink://<hostname>:4003/[Oracle]",
-												"jdbc:sequelink://<hostname>:4004/[Informix];Database=<database>",
-												"jdbc:sequelink://<hostname>:4005/[Sybase];Database=<database>",
-												"jdbc:sequelink://<hostname>:4006/[SQLServer];Database=<database>",
-												"jdbc:sequelink://<hostname>:4011/[ODBC MS Access];"
-														+ "Database=<database>",
-														"jdbc:openlink://<hostname>/DSN=SQLServerDB/UID=sa/PWD=",
-														"jdbc:solid://<hostname>:<port>/<UID>/<PWD>",
-				"jdbc:dbaw://<hostname>:8889/<database>");
+	    return Arrays.asList(
+	            "jdbc:JSQLConnect://<hostname>/database=<database>",
+	            "jdbc:cloudscape:<database>;create=true",
+	            "jdbc:twtds:sqlserver://<hostname>/<database>",
+	            "jdbc:daffodilDB_embedded:<database>;create=true",
+	            "jdbc:datadirect:db2://<hostname>:50000;databaseName=<database>",
+	            "jdbc:inetdae:<hostname>:1433",
+	            "jdbc:datadirect:oracle://<hostname>:1521;SID=<database>;"
+	                    + "MaxPooledStatements=0",
+	            "jdbc:datadirect:sqlserver://<hostname>:1433;SelectMethod=cursor;"
+	                    + "DatabaseName=<database>",
+	            "jdbc:datadirect:sybase://<hostname>:5000",
+	            "jdbc:db2://<hostname>/<database>",
+	            "jdbc:hsqldb:<database>",
+	            "jdbc:idb:<database>.properties",
+	            "jdbc:informix-sqli://<hostname>:1526/<database>:INFORMIXSERVER"
+	                    + "=<database>",
+	            "jdbc:interbase://<hostname>//<database>.gdb",
+	            "jdbc:luciddb:http://<hostname>",
+	            "jdbc:microsoft:sqlserver://<hostname>:1433;"
+	                    + "DatabaseName=<database>;SelectMethod=cursor",
+	            "jdbc:mysql://<hostname>/<database>?autoReconnect=true",
+	            "jdbc:oracle:thin:@<hostname>:1521:<database>",
+	            "jdbc:pointbase:<database>,database.home=<database>,create=true",
+	            "jdbc:postgresql://<hostname>:5432/<database>",
+	            "jdbc:postgresql:net//<hostname>/<database>",
+	            "jdbc:sybase:Tds:<hostname>:4100/<database>?ServiceName=<database>",
+	            "jdbc:weblogic:mssqlserver4:<database>@<hostname>:1433",
+	            "jdbc:odbc:<database>",
+	            "jdbc:sequelink://<hostname>:4003/[Oracle]",
+	            "jdbc:sequelink://<hostname>:4004/[Informix];Database=<database>",
+	            "jdbc:sequelink://<hostname>:4005/[Sybase];Database=<database>",
+	            "jdbc:sequelink://<hostname>:4006/[SQLServer];Database=<database>",
+	            "jdbc:sequelink://<hostname>:4011/[ODBC MS Access];"
+	                    + "Database=<database>",
+	            "jdbc:openlink://<hostname>/DSN=SQLServerDB/UID=sa/PWD=",
+	            "jdbc:solid://<hostname>:<port>/<UID>/<PWD>",
+	            "jdbc:dbaw://<hostname>:8889/<database>");
 	}
 
 	/**
@@ -529,14 +533,19 @@ public class SqlLine {
 			}
 		}
 	}
+	
+	Status initArgs(String[] args, DispatchCallback callback) throws IOException {
+		return initArgs(args, callback, null);
+	}
 
 	/** Parses arguments.
 	 *
 	 * @param args Command-line arguments
 	 * @param callback Status callback
 	 * @return Whether arguments parsed successfully
+	 * @throws IOException 
 	 */
-	Status initArgs(String[] args, DispatchCallback callback) {
+	Status initArgs(String[] args, DispatchCallback callback, ConsoleReader reader) throws IOException {
 		List<String> commands = new LinkedList<String>();
 		List<String> files = new LinkedList<String>();
 		String driver = null;
@@ -594,21 +603,41 @@ public class SqlLine {
 			}
 		}
 		
+		// terminate with usage if the url is not provided.
 		if (url == null) {
+		    output(loc("empty-url"));
 			return Status.ARGS;
 		}
 		
-		// in case meta DB info is not provided
+		// get user input if it's empty
+		if (user == null && reader != null) {
+			System.out.print("Enter user (leave as empty if not needed): ");
+			String userinput;
+			userinput = reader.readLine();
+			user = userinput;
+		}
 		
-
+		// get password if it's not provided
+		if (pass == null && user != null && user.length() > 0  && reader != null) {
+			System.out.print("Enter password: ");
+			String passinput = reader.readLine('*');
+			pass = passinput;
+		}
+		
+		
+		// in case meta DB info is not provided
 		String com =
-				COMMAND_PREFIX + "connect "
+				COMMAND_PREFIX + "verdict_connect "
 						+ url + " "
 						+ (user == null || user.length() == 0 ? "''" : user) + " "
 						+ (pass == null || pass.length() == 0 ? "''" : pass) + " "
 						+ (driver == null ? "" : driver);
 		debug("issuing: " + com);
-		dispatch(com, new DispatchCallback());
+		DispatchCallback connectionCallback = new DispatchCallback(); 
+		dispatch(com, connectionCallback);
+		if (!connectionCallback.isSuccess()) {
+		    return Status.ARGS;
+		}
 
 		if (nickname != null) {
 			dispatch(COMMAND_PREFIX + "nickname " + nickname, new DispatchCallback());
@@ -684,15 +713,15 @@ public class SqlLine {
 		}
 
 		final DispatchCallback callback = new DispatchCallback();
-		Status status = initArgs(args, callback);
+		Status status = initArgs(args, callback, reader);
 		switch (status) {
 		case ARGS:
-			usage();
-			// fall through
+		    usage();
+		    // fall through
 		case OTHER:
-			return status;
+		    return status;
 		default:
-			break;
+		    break;
 		}
 
 		try {

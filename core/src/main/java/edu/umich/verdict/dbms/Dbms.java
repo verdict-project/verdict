@@ -1,3 +1,20 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package edu.umich.verdict.dbms;
 
 import java.sql.ResultSet;
@@ -13,6 +30,7 @@ import org.apache.spark.sql.DataFrame;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 
 import edu.umich.verdict.VerdictConf;
@@ -37,6 +55,12 @@ public abstract class Dbms {
     protected Optional<String> currentSchema;
 
     protected VerdictContext vc;
+    
+    protected static String groupSizeColName = "verdict_group_size";
+    
+    protected static String groupSizeInSampleColName = "verdict_group_size_in_sample";
+    
+    protected static String randNumColname = "verdict_rand";
 
 
     public VerdictContext getVc() {
@@ -87,9 +111,9 @@ public abstract class Dbms {
         if (jdbcDbmsNames.contains(conf.getDbms())) {
             VerdictLogger.info(
                     (conf.getDbmsSchema() != null) ?
-                            String.format("Connected to database: %s//%s:%s/%s",
+                            String.format("Connected to database: %s://%s:%s/%s",
                                     conf.getDbms(), conf.getHost(), conf.getPort(), conf.getDbmsSchema())
-                            : String.format("Connected to database: %s//%s:%s",
+                            : String.format("Connected to database: %s://%s:%s",
                                     conf.getDbms(), conf.getHost(), conf.getPort()));
         }
 
@@ -282,9 +306,9 @@ public abstract class Dbms {
     }
 
     protected TableUniqueName createUniformRandomSampledTable(SampleParam param) throws VerdictException {
-        String whereClause = String.format("__rand < %f", param.samplingRatio);
+        String whereClause = String.format("%s < %f", randNumColname, param.samplingRatio);
         ExactRelation sampled = SingleRelation.from(vc, param.getOriginalTable())
-                .select(String.format("*, %s as __rand", randomNumberExpression(param)))
+                .select(String.format("*, %s as %s", randomNumberExpression(param), randNumColname))
                 .where(whereClause)
                 .select("*, " + randomPartitionColumn());
         TableUniqueName temp = Relation.getTempTableName(vc, param.sampleTableName().getSchemaName());
@@ -309,15 +333,50 @@ public abstract class Dbms {
         
         ExactRelation withRand = SingleRelation.from(vc, temp)
                 .select("*, " + String.format("%d / %d as %s", sample_size, total_size, samplingProbCol));
-
         String sql = String.format("create table %s%s as %s", param.sampleTableName(), parquetString, withRand.toSql());
-
         VerdictLogger.debug(this, "The query used for creating a temporary table without sampling probabilities:");
         VerdictLogger.debugPretty(this, Relation.prettyfySql(vc, sql), "  ");
         VerdictLogger.debug(this, sql);
         executeUpdate(sql);
     }
-
+    
+    /**
+     * These are the probabilities for ensuring at least 10 tuples.
+     */
+    protected static List<Pair<Integer, Double>> minSamplingProbForStratifiedSamplesMin10
+                     = new ImmutableList.Builder<Pair<Integer, Double>>()
+                           .add(Pair.of(100, 0.203759))
+                           .add(Pair.of(50, 0.376508))
+                           .add(Pair.of(40, 0.452739))
+                           .add(Pair.of(30, 0.566406))
+                           .add(Pair.of(20, 0.749565))
+                           .add(Pair.of(15, 0.881575))
+                           .add(Pair.of(14, 0.910660))
+                           .add(Pair.of(13, 0.939528))
+                           .add(Pair.of(12, 0.966718))
+                           .add(Pair.of(11, 0.989236))
+                           .build();
+    
+    /**
+     * These are the probabilities for ensuring at least 100 tuples.
+     */
+    protected static List<Pair<Integer, Double>> minSamplingProbForStratifiedSamplesMin100
+                     = new ImmutableList.Builder<Pair<Integer, Double>>()
+                           .add(Pair.of(900, 0.140994))
+                           .add(Pair.of(800, 0.158239))
+                           .add(Pair.of(700, 0.180286))
+                           .add(Pair.of(600, 0.209461))
+                           .add(Pair.of(500, 0.249876))
+                           .add(Pair.of(400, 0.309545))
+                           .add(Pair.of(300, 0.406381))
+                           .add(Pair.of(200, 0.589601))
+                           .add(Pair.of(150, 0.756890))
+                           .add(Pair.of(140, 0.801178))
+                           .add(Pair.of(130, 0.849921))
+                           .add(Pair.of(120, 0.902947))
+                           .add(Pair.of(110, 0.958229))
+                           .build();
+    
     public Pair<Long, Long> createStratifiedSampleTableOf(SampleParam param) throws VerdictException {
         SampleSizeInfo info = vc.getMeta().getSampleSizeOf(new SampleParam(vc, param.originalTable, "uniform", null, new ArrayList<String>()));
         if (info == null) {
@@ -337,8 +396,8 @@ public abstract class Dbms {
     private TableUniqueName createGroupSizeTempTable(SampleParam param) throws VerdictException {
         TableUniqueName groupSizeTemp = Relation.getTempTableName(vc, param.sampleTableName().getSchemaName());
         ExactRelation groupSize = SingleRelation.from(vc, param.originalTable)
-                .groupby(param.columnNames)
-                .agg("count(*) AS __group_size");
+                                  .groupby(param.columnNames)
+                                  .agg(String.format("count(*) AS %s", groupSizeColName));
         String sql = String.format("create table %s as %s", groupSizeTemp, groupSize.toSql());
         VerdictLogger.debug(this, "The query used for the group-size temp table: ");
         VerdictLogger.debugPretty(this, Relation.prettyfySql(vc, sql), "  ");
@@ -389,10 +448,35 @@ public abstract class Dbms {
         }
 
         // where clause using rand function
-        String whereClause = String.format("__rand < %d * %f / %d / __group_size",
-                originalTableSize,
-                param.getSamplingRatio(),
-                groupCount);
+        String whereClause = String.format("%s < %d * %f / %d / %s",
+                                           randNumColname,
+                                           originalTableSize,
+                                           param.getSamplingRatio(),
+                                           groupCount,
+                                           groupSizeColName);
+        
+        // this should set to an appropriate variable.
+        List<Pair<Integer, Double>> samplingProbForSize = minSamplingProbForStratifiedSamplesMin100;
+        
+        whereClause += String.format(" OR %s < (case", randNumColname);
+//        whereClause += String.format(" when %s > %d then %s * %f / %d",
+//                                     groupSizeColName,
+//                                     samplingProbForSize.get(0).getKey(),
+//                                     groupSizeColName,
+//                                     samplingProbForSize.get(0).getValue(),
+//                                     samplingProbForSize.get(0).getKey());
+        
+        for (Pair<Integer, Double> sizeProb : samplingProbForSize) {
+            int size = sizeProb.getKey();
+            double prob = sizeProb.getValue();
+            whereClause += String.format(" when %s >= %d then %f * %d / %s",
+                                         groupSizeColName,
+                                         size,
+                                         prob,
+                                         size,
+                                         groupSizeColName);
+        }
+        whereClause += " else 1.0 end)";
 
         // aliased select list
         List<String> selectElems = new ArrayList<String>();
@@ -403,11 +487,11 @@ public abstract class Dbms {
         // sample table
         TableUniqueName sampledNoRand = Relation.getTempTableName(vc, param.sampleTableName().getSchemaName());
         ExactRelation sampled = SingleRelation.from(vc, param.getOriginalTable())
-                .select(String.format("*, %s as __rand", randomNumberExpression(param)))
+                .select(String.format("*, %s as %s", randomNumberExpression(param), randNumColname))
                 .withAlias("s")
                 .join(SingleRelation.from(vc, groupSizeTemp).withAlias("t"), joinExprs)
                 .where(whereClause)
-                .select(Joiner.on(", ").join(selectElems) + ", __group_size");
+                .select(Joiner.on(", ").join(selectElems) + ", " + groupSizeColName);
         String sql1 = String.format("create table %s as %s", sampledNoRand, sampled.toSql());
         VerdictLogger.debug(this, "The query used for creating a stratified sample without sampling probabilities.");
         VerdictLogger.debugPretty(this, Relation.prettyfySql(vc, sql1), "  ");
@@ -416,11 +500,11 @@ public abstract class Dbms {
         // attach sampling probabilities and random partition number
         ExactRelation sampledGroupSize = SingleRelation.from(vc, sampledNoRand)
                 .groupby(param.columnNames)
-                .agg("count(*) AS __group_size_in_sample");
+                .agg("count(*) AS " + groupSizeInSampleColName);
         ExactRelation withRand = SingleRelation.from(vc, sampledNoRand).withAlias("s")
                 .join(sampledGroupSize.withAlias("t"), joinExprs)
                 .select(Joiner.on(", ").join(selectElems)
-                        + String.format(", __group_size_in_sample  / __group_size as %s", samplingProbColName)
+                        + String.format(", %s  / %s as %s", groupSizeInSampleColName, groupSizeColName, samplingProbColName)
                         + ", " + randomPartitionColumn());
         
         String parquetString="";

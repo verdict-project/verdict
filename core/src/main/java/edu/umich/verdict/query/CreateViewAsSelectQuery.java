@@ -2,42 +2,43 @@ package edu.umich.verdict.query;
 
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.exceptions.VerdictException;
+import edu.umich.verdict.parser.VerdictSQLParser;
+import edu.umich.verdict.relation.ExactRelation;
+import edu.umich.verdict.relation.Relation;
+import edu.umich.verdict.util.StringManipulations;
 import edu.umich.verdict.util.VerdictLogger;
 
 public class CreateViewAsSelectQuery extends Query {
 
-	public CreateViewAsSelectQuery(VerdictContext vc, String q) {
-		super(vc, q);
-	}
+    public CreateViewAsSelectQuery(VerdictContext vc, String q) {
+        super(vc, q);
+    }
 
-	@Override
-	public void compute() throws VerdictException {
-//		String rewrittenQuery = rewriteQuery(queryString);
-		VerdictLogger.error(this, "Not supported.");
-		
-//		VerdictLogger.debug(this, "The input query was rewritten to:");
-//		VerdictLogger.debugPretty(this, rewrittenQuery, "  ");
-//		
-//		vc.getDbms().executeUpdate(rewrittenQuery);
-	}
-
-//	private String rewriteQuery(final String query) {
-//		VerdictSQLLexer l = new VerdictSQLLexer(new ANTLRInputStream(query));
-//		VerdictSQLParser p = new VerdictSQLParser(new CommonTokenStream(l));
-//		
-//		SelectStatementBaseRewriter visitor = new SelectStatementBaseRewriter(query) {
-//			@Override
-//			public String visitCreate_view(VerdictSQLParser.Create_viewContext ctx) {
-//				StringBuilder sql = new StringBuilder();
-//				sql.append("CREATE VIEW");
-//				sql.append(String.format(" %s AS \n", ctx.view_name().getText()));
-//				AnalyticSelectStatementRewriter selectVisitor = new AnalyticSelectStatementRewriter(vc, query);
-//				selectVisitor.setIndentLevel(2);
-//				sql.append(selectVisitor.visit(ctx.select_statement()));
-//				return sql.toString();
-//			}
-//		};
-//		
-//		return visitor.visit(p.create_view());
-//	}
+    @Override
+    public void compute() throws VerdictException {
+        VerdictSQLParser p = StringManipulations.parserOf(queryString);
+        Relation r = ExactRelation.from(vc, p.create_view().select_statement());
+        p.reset();
+        String viewName = p.create_view().view_name().getText();
+        
+        p.reset();
+        boolean exact = p.create_view().select_statement().EXACT() != null;
+        if (!exact) {
+            r = ((ExactRelation) r).approx();
+        }
+        
+        // compose a query.
+        StringBuilder sql = new StringBuilder();
+        sql.append("CREATE VIEW ");
+        sql.append(viewName);
+        sql.append(" AS ");
+        
+        String selectSql = r.toSql();
+        VerdictLogger.debug(this, String.format("Creates a view (%s) with the following query:", viewName));
+        VerdictLogger.debugPretty(this, Relation.prettyfySql(vc, selectSql), "  ");
+        sql.append(selectSql);
+        
+        vc.getDbms().executeUpdate(sql.toString());
+    }
+    
 }

@@ -145,7 +145,6 @@ sql_clause
 // Data Manipulation Language: https://msdn.microsoft.com/en-us/library/ff848766(v=sql.120).aspx
 dml_clause
     : delete_statement
-    | insert_statement
 //    | select_statement
     | update_statement
     ;
@@ -211,19 +210,6 @@ delete_statement
       output_clause?
       (FROM table_source (',' table_source)*)?
       (WHERE (search_condition | CURRENT OF (GLOBAL? cursor_name | cursor_var=LOCAL_ID)))?
-      for_clause? option_clause? ';'?
-    ;
-
-// https://msdn.microsoft.com/en-us/library/ms174335.aspx
-insert_statement
-    : with_expression?
-      INSERT (TOP '(' expression ')' PERCENT?)?
-      INTO? (ddl_object | rowset_function_limited)
-      with_table_hints?
-      ('(' column_name_list ')')?
-      output_clause?
-      (VALUES '(' expression_list ')' (',' '(' expression_list ')')* |
-               derived_table | execute_statement | dml_table_source | DEFAULT VALUES)
       for_clause? option_clause? ';'?
     ;
 
@@ -397,16 +383,6 @@ cursor_statement
     | fetch_cursor
     // https://msdn.microsoft.com/en-us/library/ms190500(v=sql.120).aspx
     | OPEN GLOBAL? cursor_name ';'?
-    ;
-
-// https://msdn.microsoft.com/en-us/library/ms188332.aspx
-execute_statement
-    : (EXEC | EXECUTE) (return_status=LOCAL_ID '=')? func_proc_name (execute_statement_arg (',' execute_statement_arg)*)? ';'?
-    | (EXEC | EXECUTE) '(' execute_var_string ('+' execute_var_string)* ')' (AS? (LOGIN | USER) '=' STRING)? ';'?
-    ;
-
-execute_statement_arg
-    : (parameter=LOCAL_ID '=')? (constant | LOCAL_ID (OUTPUT | OUT)? | DEFAULT | NULL)
     ;
 
 execute_var_string
@@ -884,7 +860,7 @@ extract_time_function
     ;
 
 unary_manipulation_function
-    : function_name=(ROUND | FLOOR | CEIL | EXP | LN | LOG10 | LOG2 | SIN | COS | TAN | SIGN | RAND | FNV_HASH | ABS | STDDEV | SQRT | MD5 | CRC32)
+    : function_name=(ROUND | FLOOR | CEIL | EXP | LN | LOG10 | LOG2 | SIN | COS | TAN | SIGN | RAND | FNV_HASH | ABS | STDDEV | SQRT | MD5 | CRC32 | YEAR )
       '(' expression ')'
     | function_name=CAST '(' cast_as_expression ')'    
     ;
@@ -1258,7 +1234,7 @@ DATABASES:                       D A T A B A S E S;
 DBCC:                            D B C C;
 DEALLOCATE:                      D E A L L O C A T E;
 DECLARE:                         D E C L A R E;
-DEFAULT:                         D E F A U L T;
+//DEFAULT:                         D E F A U L T;
 DELETE:                          D E L E T E;
 DENY:                            D E N Y;
 DESC:                            D E S C;
@@ -1553,6 +1529,7 @@ VIEW_METADATA:                   V I E W '_' M E T A D A T A;
 WORK:                            W O R K;
 XML:                             X M L;
 XMLNAMESPACES:                   X M L N A M E S P A C E S;
+YEAR:                            Y E A R;
 
 DOLLAR_ACTION:                   '$' A C T I O N;
 

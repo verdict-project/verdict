@@ -3,6 +3,7 @@ package edu.umich.verdict.relation;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -72,11 +73,13 @@ public class ApproxSingleRelation extends ApproxRelation {
     }
 
     public static ApproxSingleRelation asis(SingleRelation r) {
-        return new ApproxSingleRelation(
-                r.vc,
-                r.getTableName(), 
-                new SampleParam(r.vc, r.getTableName(), "nosample", 1.0, null),
-                new SampleSizeInfo(-1, -1));
+        ApproxSingleRelation a = new ApproxSingleRelation(
+                                        r.vc,
+                                        r.getTableName(), 
+                                        new SampleParam(r.vc, r.getTableName(), "nosample", 1.0, null),
+                                        new SampleSizeInfo(-1, -1));
+        a.setAlias(r.getAlias());
+        return a;
     }
 
     public TableUniqueName getSampleName() {
@@ -123,7 +126,9 @@ public class ApproxSingleRelation extends ApproxRelation {
      */
     @Override
     public ExactRelation rewriteWithSubsampledErrorBounds() {
-        return SingleRelation.from(vc, getOriginalTableName());
+        ExactRelation r = SingleRelation.from(vc, getOriginalTableName());
+        r.setAlias(getAlias());
+        return r;
     }
 
     @Override
@@ -200,7 +205,7 @@ public class ApproxSingleRelation extends ApproxRelation {
             SampleParam ufParam = new SampleParam(vc, param.getOriginalTable(), "uniform", null, Arrays.<String>asList());
             TableUniqueName ufSample = vc.getMeta().lookForSampleTable(ufParam);
             SampleSizeInfo info = vc.getMeta().getSampleSizeOf(ufSample);
-            return (info == null)? 1e9 : info.originalTableSize;
+            return (info == null)? 0 : info.originalTableSize;
         } else {
             SampleSizeInfo info = vc.getMeta().getSampleSizeOf(param);
             if (info == null) {
@@ -303,6 +308,26 @@ public class ApproxSingleRelation extends ApproxRelation {
             return true;
         } else {
             return false;
+        }
+    }
+    
+    @Override
+    public Expr tupleProbabilityColumn() {
+        
+        if (!sampleType().equals("nosample")) {
+            return new ColNameExpr(vc, samplingProbabilityColumnName(), getAlias());
+        } else {
+            return new ConstantExpr(vc, 1.0);
+        }
+    }
+
+    @Override
+    public Expr tableSamplingRatio() {
+        if (!sampleType().equals("nosample")) {
+            double samplingRatio = getSamplingRatio();
+            return new ConstantExpr(vc, samplingRatio);
+        } else {
+            return new ConstantExpr(vc, 1.0);
         }
     }
 }

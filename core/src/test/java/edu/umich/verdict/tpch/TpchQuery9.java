@@ -23,7 +23,7 @@ public class TpchQuery9 {
                 "from (\n" + 
                 "  select\n" + 
                 "    n_name as nation,\n" + 
-                "    substr(o_orderdate, 0, 4) as o_year,\n" + 
+                "    year(o_orderdate) as o_year,\n" + 
                 "    l_extendedprice * (1 - l_discount) - ps_supplycost * l_quantity as amount\n" + 
                 "  from\n" + 
                 "    lineitem\n" + 

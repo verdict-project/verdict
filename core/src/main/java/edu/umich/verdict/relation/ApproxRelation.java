@@ -214,6 +214,19 @@ public abstract class ApproxRelation extends Relation {
     public abstract double samplingProbability();
 
     public abstract double cost();
+    
+    /**
+     * The returned contains the tuple-level sampling probability. For universe and uniform samples, this is basically
+     * the ratio of the sample size to the original table size.
+     * @return
+     */
+    public abstract Expr tupleProbabilityColumn();
+    
+    /**
+     * The returned column contains 
+     * @return
+     */
+    public abstract Expr tableSamplingRatio();
 
     /**
      * Returns an effective sample type of this relation.

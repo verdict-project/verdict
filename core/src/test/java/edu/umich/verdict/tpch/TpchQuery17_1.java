@@ -8,7 +8,7 @@ import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.VerdictJDBCContext;
 import edu.umich.verdict.exceptions.VerdictException;
 
-public class TpchQuery17 {
+public class TpchQuery17_1 {
 
     public static void main(String[] args) throws FileNotFoundException, VerdictException {
         VerdictConf conf = new VerdictConf();
@@ -19,21 +19,21 @@ public class TpchQuery17 {
         conf.set("loglevel", "debug");
 
         VerdictContext vc = VerdictJDBCContext.from(conf);
-        String sql = "select sum(l_extendedprice) / 7.0 as avg_yearly\n" + 
+        String sql = "select *\n" + 
                 "from lineitem\n" + 
+                "     inner join part\n" + 
+                "         on l_partkey = p_partkey\n" + 
                 "     inner join (\n" + 
                 "             select l_partkey as partkey, 0.2 * avg(l_quantity) as small_quantity\n" + 
                 "             from lineitem inner join part on l_partkey = p_partkey\n" + 
                 "             group by l_partkey) t\n" + 
-                "       on l_partkey = partkey\n" + 
-                "     inner join part\n" + 
-                "       on l_partkey = p_partkey\n" + 
+                "         on l_partkey = partkey\n" + 
                 "where p_brand = 'Brand#23' and\n" + 
                 "      p_container = 'MED BOX' and\n" + 
-                "      l_quantity < small_quantity;\n";
+                "      l_quantity < small_quantity\n" + 
+                "limit 5;";
         vc.executeJdbcQuery(sql);
 
         vc.destroy();
     }
-
 }
