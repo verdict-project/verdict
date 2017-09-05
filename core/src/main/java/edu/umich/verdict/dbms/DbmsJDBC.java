@@ -208,8 +208,8 @@ public abstract class DbmsJDBC extends Dbms {
     }
 
     public boolean execute(String sql) throws VerdictException {    	
-                createStatementIfNotExists();
-//        createStatement();
+        // createStatementIfNotExists();
+        createStatement();
         boolean result = false;
         try {
             result = stmt.execute(sql);
@@ -225,7 +225,8 @@ public abstract class DbmsJDBC extends Dbms {
     }
     
     public void executeUpdate(String query) throws VerdictException { 
-        createStatementIfNotExists();
+        // createStatementIfNotExists();
+        createStatement();
         try {
             stmt.executeUpdate(query);
         } catch (SQLException e) {

@@ -17,7 +17,7 @@ public class RedshiftThroughVerdictTest {
         conf.setDbms("redshift");
 //        conf.setHost("salat2-verdict.ctkb4oe4rzfm.us-east-1.redshift.amazonaws.com");
 //        conf.setHost("verdict-vldb.crc58e3qof3k.us-east-1.redshift.amazonaws.com");
-        conf.setHost("verdict-vldb.crc58e3qof3k.us-east-1.redshift.amazonaws.com");
+        conf.setHost("verdict-redshift-demo.crc58e3qof3k.us-east-1.redshift.amazonaws.com");
         conf.setPort("5439");		
         conf.setDbmsSchema("dev");
 //        conf.setUser("junhao");
@@ -32,7 +32,7 @@ public class RedshiftThroughVerdictTest {
         
         VerdictContext vc = VerdictJDBCContext.from(conf);        
         vc.executeJdbcQuery("set bypass=true");
-        vc.executeJdbcQuery("set search_path = tpch500g, tpch500g_verdict2");
+        vc.executeJdbcQuery("set search_path = tpch100g_demo");
 //        vc.executeJdbcQuery("set search_path = instacart100g, instacart100g_verdict2");
         vc.executeJdbcQuery("set bypass=false");
 
@@ -165,11 +165,11 @@ public class RedshiftThroughVerdictTest {
 //        System.out.println("\n\n" + "q15");
 //        System.out.println("That took " + (endTime - startTime) + " milliseconds \n\n");
 //        
-        startTime = System.currentTimeMillis();        
-        vc.executeJdbcQuery(q15_other);
-        endTime = System.currentTimeMillis();
-        System.out.println("\n\n" + "q15_other");
-        System.out.println("That took " + (endTime - startTime) + " milliseconds \n\n");
+//        startTime = System.currentTimeMillis();        
+//        vc.executeJdbcQuery(q15_other);
+//        endTime = System.currentTimeMillis();
+//        System.out.println("\n\n" + "q15_other");
+//        System.out.println("That took " + (endTime - startTime) + " milliseconds \n\n");
               
 //        startTime = System.currentTimeMillis();        
 //        rs = vc.executeJdbcQuery(q15_check);
