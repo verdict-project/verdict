@@ -27,22 +27,20 @@ public class ImpalaThroughVerdictTest {
 //        vc.executeJdbcQuery("use tpch1g");
         //vc.executeJdbcQuery("select count(*) from instacart1g.orders");
 //        vc.executeJdbcQuery("select count(*) from instacart1g.orders group by order_hour_of_day");
-        vc.executeJdbcQuery("select order_hour_of_day, t1.department, c / total as ratio\n" + 
-                "from\n" + 
-                "    (select order_hour_of_day, department, count(*) as c\n" + 
-                "    from order_products op, orders o, products p, departments d\n" + 
-                "    where op.order_id = o.order_id\n" + 
-                "      and op.product_id = p.product_id\n" + 
-                "      and p.department_id = d.department_id\n" + 
-                "    group by order_hour_of_day, d.department) t1,\n" +
-                "    (select department, count(*) as total\n" + 
-                "    from order_products op, orders o, products p, departments d\n" + 
-                "    where op.order_id = o.order_id\n" + 
-                "      and op.product_id = p.product_id\n" + 
-                "      and p.department_id = d.department_id\n" + 
-                "    group by department) t2\n" + 
-                "where t1.department = t2.department\n" + 
-                "order by order_hour_of_day, ratio desc;\n");
+        vc.executeJdbcQuery("SELECT 5*round(d1/5) AS reorder_after_days, count(*) as c\n" + 
+                "FROM (SELECT user_id, avg(days_since_prior) AS d1, count(*) AS order_size\n" + 
+                "      FROM order_products INNER JOIN orders\n" + 
+                "        ON orders.order_id = order_products.order_id\n" + 
+                "      GROUP BY user_id) t2\n" + 
+                "     CROSS JOIN\n" + 
+                "     (SELECT AVG(c1) AS avg_order_size\n" + 
+                "      FROM (SELECT count(*) AS c1\n" + 
+                "            FROM order_products INNER JOIN orders\n" + 
+                "              ON orders.order_id = order_products.order_id\n" + 
+                "            GROUP BY user_id) t1) t3\n" + 
+                "WHERE order_size >= avg_order_size\n" + 
+                "GROUP BY reorder_after_days\n" + 
+                "order by reorder_after_days;\n");
 
         vc.destroy();
     }
