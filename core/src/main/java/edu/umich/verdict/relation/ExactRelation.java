@@ -892,6 +892,11 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
                 
                 joinCond = resolved;
                 return r;
+            } else if (ctx.CROSS() != null) {
+                TableSourceExtractor ext = new TableSourceExtractor();
+                ExactRelation r = ext.visit(ctx.table_source());
+                joinCond = null;
+                return r;
             } else {
                 VerdictLogger.error(this, "Unsupported join condition: " + ctx.getText());
                 return null;
