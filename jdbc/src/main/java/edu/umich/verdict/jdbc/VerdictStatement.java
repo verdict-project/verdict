@@ -50,7 +50,7 @@ public class VerdictStatement implements Statement {
     public int executeUpdate(String sql) throws SQLException {
         VerdictLogger.debug(this, String.format("executeUpdate() called with: %s", sql));
         execute(sql);
-        return 0;
+        return getUpdateCount();
     }
 
     @Override
@@ -58,8 +58,10 @@ public class VerdictStatement implements Statement {
         VerdictLogger.debug(this, String.format("execute() called with: %s", sql));
         try {
             answer = vc.executeJdbcQuery(sql);
-//            this.stmt = ((DbmsJDBC) vc.getDbms()).getStatement();
+            this.stmt = ((DbmsJDBC) vc.getDbms()).getStatement();
+            VerdictLogger.debug(this, "Internal statement set to " + System.identityHashCode(stmt));
         } catch (VerdictException e) {
+            VerdictLogger.debug(this, StackTraceReader.stackTrace2String(e));
             throw new SQLException(StackTraceReader.stackTrace2String(e));
         }
         return (answer != null)? true : false;

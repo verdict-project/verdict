@@ -216,6 +216,7 @@ public abstract class Dbms {
 
     public void moveTable(TableUniqueName from, TableUniqueName to) throws VerdictException {
         VerdictLogger.debug(this, String.format("Moves table %s to table %s", from, to));
+        dropTable(to);
         String sql = String.format("CREATE TABLE %s AS SELECT * FROM %s", to, from);
         dropTable(to);
         executeUpdate(sql);
@@ -340,42 +341,7 @@ public abstract class Dbms {
         executeUpdate(sql);
     }
     
-    /**
-     * These are the probabilities for ensuring at least 10 tuples.
-     */
-    protected static List<Pair<Integer, Double>> minSamplingProbForStratifiedSamplesMin10
-                     = new ImmutableList.Builder<Pair<Integer, Double>>()
-                           .add(Pair.of(100, 0.203759))
-                           .add(Pair.of(50, 0.376508))
-                           .add(Pair.of(40, 0.452739))
-                           .add(Pair.of(30, 0.566406))
-                           .add(Pair.of(20, 0.749565))
-                           .add(Pair.of(15, 0.881575))
-                           .add(Pair.of(14, 0.910660))
-                           .add(Pair.of(13, 0.939528))
-                           .add(Pair.of(12, 0.966718))
-                           .add(Pair.of(11, 0.989236))
-                           .build();
     
-    /**
-     * These are the probabilities for ensuring at least 100 tuples.
-     */
-    protected static List<Pair<Integer, Double>> minSamplingProbForStratifiedSamplesMin100
-                     = new ImmutableList.Builder<Pair<Integer, Double>>()
-                           .add(Pair.of(900, 0.140994))
-                           .add(Pair.of(800, 0.158239))
-                           .add(Pair.of(700, 0.180286))
-                           .add(Pair.of(600, 0.209461))
-                           .add(Pair.of(500, 0.249876))
-                           .add(Pair.of(400, 0.309545))
-                           .add(Pair.of(300, 0.406381))
-                           .add(Pair.of(200, 0.589601))
-                           .add(Pair.of(150, 0.756890))
-                           .add(Pair.of(140, 0.801178))
-                           .add(Pair.of(130, 0.849921))
-                           .add(Pair.of(120, 0.902947))
-                           .add(Pair.of(110, 0.958229))
-                           .build();
     
     public Pair<Long, Long> createStratifiedSampleTableOf(SampleParam param) throws VerdictException {
         SampleSizeInfo info = vc.getMeta().getSampleSizeOf(new SampleParam(vc, param.originalTable, "uniform", null, new ArrayList<String>()));
@@ -456,15 +422,9 @@ public abstract class Dbms {
                                            groupSizeColName);
         
         // this should set to an appropriate variable.
-        List<Pair<Integer, Double>> samplingProbForSize = minSamplingProbForStratifiedSamplesMin100;
+        List<Pair<Integer, Double>> samplingProbForSize = vc.getConf().samplingProbabilitiesForStratifiedSamples();
         
         whereClause += String.format(" OR %s < (case", randNumColname);
-//        whereClause += String.format(" when %s > %d then %s * %f / %d",
-//                                     groupSizeColName,
-//                                     samplingProbForSize.get(0).getKey(),
-//                                     groupSizeColName,
-//                                     samplingProbForSize.get(0).getValue(),
-//                                     samplingProbForSize.get(0).getKey());
         
         for (Pair<Integer, Double> sizeProb : samplingProbForSize) {
             int size = sizeProb.getKey();
@@ -536,6 +496,7 @@ public abstract class Dbms {
         TableUniqueName temp = Relation.getTempTableName(vc, param.sampleTableName().getSchemaName());
         ExactRelation sampled = SingleRelation.from(vc, param.originalTable)
                 .where(universeSampleSamplingCondition(param.getColumnNames().get(0), param.getSamplingRatio()));
+        dropTable(temp);
         String sql = String.format("create table %s AS %s", temp, sampled.toSql());
         VerdictLogger.debug(this, "The query used for creating a universe sample without sampling probability:");
         VerdictLogger.debugPretty(this, Relation.prettyfySql(vc, sql), "  ");

@@ -860,7 +860,8 @@ extract_time_function
     ;
 
 unary_manipulation_function
-    : function_name=(ROUND | FLOOR | CEIL | EXP | LN | LOG10 | LOG2 | SIN | COS | TAN | SIGN | RAND | FNV_HASH | ABS | STDDEV | SQRT | MD5 | CRC32 | YEAR )
+    : function_name=(ROUND | FLOOR | CEIL | EXP | LN | LOG10 | LOG2 | SIN | COS | TAN | SIGN | RAND | FNV_HASH
+     | ABS | STDDEV | SQRT | MD5 | CRC32 | YEAR )
       '(' expression ')'
     | function_name=CAST '(' cast_as_expression ')'    
     ;
@@ -1415,7 +1416,7 @@ ENCRYPTION:                      E N C R Y P T I O N;
 ESCAPED_BY:                      E S C A P E D ' ' B Y;
 EXACT:                           E X A C T;
 EXP:                             E X P;
-EXTRACT:						 E X T R A C T;
+EXTRACT:                         E X T R A C T;
 FAST:                            F A S T;
 FAST_FORWARD:                    F A S T '_' F O R W A R D;
 FIELDS_SEPARATED_BY:             F I E L D S ' ' S E P A R A T E D ' ' B Y;
