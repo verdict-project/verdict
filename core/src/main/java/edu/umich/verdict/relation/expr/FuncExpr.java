@@ -429,6 +429,17 @@ public class FuncExpr extends Expr {
         }
         return sql.toString();
     }
+    
+    @Override
+    public int hashCode() {
+        int s = 0;
+        for (Expr e : getExpressions()) {
+            s += e.hashCode();
+        }
+        s += funcname.hashCode();
+        if (overClause == null) s += 1;
+        return s;
+    }
 
     @Override
     public boolean equals(Expr o) {

@@ -57,6 +57,11 @@ public class BinaryOpExpr extends Expr {
     public String toSql() {
         return String.format("(%s %s %s)", left.toSql(), op, right.toSql());
     }
+    
+    @Override
+    public int hashCode() {
+        return left.hashCode() + right.hashCode() + op.hashCode();
+    }
 
     @Override
     public boolean equals(Expr o) {

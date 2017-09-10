@@ -51,6 +51,11 @@ public class ConstantExpr extends Expr {
 	public String toSql() {
 		return toString();
 	}
+	
+	@Override
+    public int hashCode() {
+	    return value.hashCode();
+	}
 
     @Override
     public boolean equals(Expr o) {

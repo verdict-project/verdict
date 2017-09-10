@@ -86,6 +86,18 @@ public class ColNameExpr extends Expr {
     public String toSql() {
         return toString();
     }
+    
+    @Override
+    public int hashCode() {
+        int s = col.hashCode();
+        if (tab != null) {
+            s += tab.hashCode();
+        }
+        if (schema != null) {
+            s += schema.hashCode();
+        }
+        return s;
+    }
 
     @Override
     public boolean equals(Expr o) {

@@ -817,7 +817,7 @@ class PrettyPrintVisitor extends VerdictSQLBaseVisitor<String> {
 
     @Override
     public String visitGroup_by_item(VerdictSQLParser.Group_by_itemContext ctx) {
-        return ctx.getText();
+        return Expr.from(vc, ctx.expression()).toSql();
     }
 
     @Override

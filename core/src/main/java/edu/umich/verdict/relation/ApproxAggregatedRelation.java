@@ -77,7 +77,6 @@ public class ApproxAggregatedRelation extends ApproxRelation {
         }
         ExactRelation r = new AggregatedRelation(vc, newSource, scaled);
         r.setAlias(getAlias());
-        ((AggregatedRelation) r).setIncludeGroupsInToSql(includeGroupsInToSql);
         return r;
     }
 
@@ -188,19 +187,19 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 //            }
 //        }
         
-        for (SelectElem elem : elems) {
-            if (!elem.isagg()) {
-                if (elem.aliasPresent()) {
-                    if (!elem.getAlias().equals(partitionColumnName())) {
-                        newGroupby.add(new ColNameExpr(vc, elem.getAlias(), r.getAlias()));
-                    }
-                } else {
-                    if (!elem.getExpr().toString().equals(partitionColumnName())) {
-                        newGroupby.add(elem.getExpr().withTableSubstituted(r.getAlias()));
-                    }
-                }
-            }
-        }
+//        for (SelectElem elem : elems) {
+//            if (!elem.isagg()) {
+//                if (elem.aliasPresent()) {
+//                    if (!elem.getAlias().equals(partitionColumnName())) {
+//                        newGroupby.add(new ColNameExpr(vc, elem.getAlias(), r.getAlias()));
+//                    }
+//                } else {        // does not happen
+//                    if (!elem.getExpr().toString().equals(partitionColumnName())) {
+//                        newGroupby.add(elem.getExpr().withTableSubstituted(r.getAlias()));
+//                    }
+//                }
+//            }
+//        }
         if (newGroupby.size() > 0) {
             r = new GroupedRelation(vc, r, newGroupby);
         }

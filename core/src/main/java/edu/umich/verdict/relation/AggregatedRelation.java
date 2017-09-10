@@ -37,8 +37,6 @@ public class AggregatedRelation extends ExactRelation {
 
     protected List<SelectElem> elems;
 
-    private boolean includeGroupsInToSql = true;
-
     protected AggregatedRelation(VerdictContext vc, ExactRelation source, List<SelectElem> elems) {
         super(vc);
         this.source = source;
@@ -57,10 +55,6 @@ public class AggregatedRelation extends ExactRelation {
 
     public List<SelectElem> getElemList() {
         return elems;
-    }
-
-    public void setIncludeGroupsInToSql(boolean o) {
-        includeGroupsInToSql = o;
     }
 
     /*
@@ -121,7 +115,7 @@ public class AggregatedRelation extends ExactRelation {
             Expr agg = elem.getExpr();
 
             // TODO: make this number (10) configurable.
-            List<ApproxRelation> candidates = source.nBestSamples(agg, 10);		
+            List<ApproxRelation> candidates = source.nBestSamples(agg, 10);
             List<SampleGroup> sampleGroups = new ArrayList<SampleGroup>();
             for (ApproxRelation a : candidates) {
                 sampleGroups.add(new SampleGroup(a, Arrays.asList(elem)));

@@ -21,10 +21,17 @@ public class BasicConnection {
         Connection conn = DriverManager.getConnection(url);
         Statement statement = conn.createStatement();
         
-        ResultSet rs = statement.executeQuery("show databases");
-        ResultSetConversion.printResultSet(rs);
-        statement.close();
-        System.out.println(statement.isClosed());
+        statement.executeQuery("use tpch100g_demo");
+        
+        statement.executeQuery("select extract(month from o_orderdate) as m,\n" + 
+                "       extract(day from o_orderdate),\n" + 
+                "       count(*)\n" + 
+                "from orders_lineitem\n" + 
+                "group by extract(month from o_orderdate),\n" + 
+                "         extract(day from o_orderdate)\n" + 
+                "order by m, extract(day from o_orderdate)\n" + 
+                "limit 10;\n");
+        
     }
 
 }

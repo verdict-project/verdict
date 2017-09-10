@@ -120,6 +120,10 @@ public abstract class Expr {
             public List<String> call(Expr expr) {
                 if (expr instanceof ColNameExpr) {
                     cols.add(((ColNameExpr) expr).getCol());
+                } else if (expr instanceof FuncExpr) {
+                    for (Expr e : ((FuncExpr) expr).getExpressions()) {
+                        visit(e);
+                    }
                 }
                 return cols;
             }
@@ -131,6 +135,19 @@ public abstract class Expr {
     public abstract Expr withTableSubstituted(String newTab);
 
     public abstract String toSql();
+    
+    @Override
+    public abstract int hashCode();
+    
+    @Override
+    public boolean equals(Object o) {
+        if (o instanceof Expr) {
+            return equals((Expr) o);
+        }
+        else {
+            return false;
+        }
+    }
     
     public abstract boolean equals(Expr o);
     

@@ -116,5 +116,17 @@ public class CaseExpr extends Expr {
         }
         return false;
     }
+    
+    @Override
+    public int hashCode() {
+        int s = 0;
+        for (Cond c : getConditions()) {
+            s += c.hashCode();
+        }
+        for (Expr e : getExpressions()) {
+            s += e.hashCode();
+        }
+        return s;
+    }
 
 }

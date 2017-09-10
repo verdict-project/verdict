@@ -82,13 +82,11 @@ public class ApproxGroupedRelation extends ApproxRelation {
         return replaced;
     }
     
-    private Set<String> groupbyInString() {
+    private Set<String> columnNamesInGroupby() {
         List<Expr> groupby = getGroupby();
         Set<String> strGroupby = new HashSet<String>();
         for (Expr expr : groupby) {
-            if (expr instanceof ColNameExpr) {
-                strGroupby.add(((ColNameExpr) expr).getCol());
-            }
+            strGroupby.addAll(expr.extractColNames());
         }
         return strGroupby;
     }
@@ -98,7 +96,7 @@ public class ApproxGroupedRelation extends ApproxRelation {
         String sampleType = source.sampleType();
         if (sampleType.equals("nosample")) return "nosample";
         
-        Set<String> groupbyStr = groupbyInString();
+        Set<String> groupbyStr = columnNamesInGroupby();
         Set<String> sampleColumns = new HashSet<String>(source.sampleColumns());
         
         if (sampleType.equals("universe") && groupbyStr.equals(sampleColumns)) {
@@ -149,7 +147,7 @@ public class ApproxGroupedRelation extends ApproxRelation {
     // assumes that this method is called by the parent, i.e., ApproxAggregatedRelation.
     @Override
     public double samplingProbability() {
-        Set<String> groupbyStr = groupbyInString();
+        Set<String> groupbyStr = columnNamesInGroupby();
         Set<String> sampleColumns = new HashSet<String>(source.sampleColumns());
         
         if (sampleColumns.equals(groupbyStr)) {

@@ -45,6 +45,11 @@ public class SubqueryExpr extends Expr {
     public String toSql() {
         return "(" + subquery.toSql() + ")";
     }
+    
+    @Override
+    public int hashCode() {
+        return subquery.hashCode();
+    }
 
     @Override
     public boolean equals(Expr o) {
