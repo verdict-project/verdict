@@ -316,6 +316,7 @@ public abstract class Dbms {
         dropTable(temp);
         String sql = String.format("create table %s as %s", temp, sampled.toSql());
         VerdictLogger.debug(this, "The query used for creating a temporary table without sampling probabilities:");
+        VerdictLogger.debug(this, sql);
         VerdictLogger.debugPretty(this, Relation.prettyfySql(vc, sql), "  ");
         executeUpdate(sql);
         return temp;

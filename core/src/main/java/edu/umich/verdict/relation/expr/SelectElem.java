@@ -22,7 +22,7 @@ public class SelectElem {
     public SelectElem(VerdictContext vc, Expr expr, String alias) {
         this.expr = expr;
         this.vc = vc;
-        if (alias == null) {
+        if (alias == null && !expr.getText().equals("*")) {
             this.alias = Optional.of(genColumnAlias(expr));		// aggregate expressions must be aliased.
         } else {
             setAlias(alias);
@@ -89,7 +89,11 @@ public class SelectElem {
     }
 
     public void setAlias(String alias) {
-        this.alias = Optional.of(alias.replace("\"", "").replace("`", ""));
+        if (alias == null) {
+            this.alias = Optional.fromNullable(alias);
+        } else {
+            this.alias = Optional.of(alias.replace("\"", "").replace("`", ""));
+        }
     }
 
     public boolean isagg() {
