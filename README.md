@@ -158,6 +158,26 @@ verdict:Apache Hive> create sample of database_name.table_name;
 verdict:Apache Hive> select count(*) from database_name.table_name;
 ```
 
+#### Verdict-on-Redshift
+
+Type the following command in terminal to launch `veeline` that connects to Hive.
+
+```bash
+$ veeline/bin/veeline -h "redshift://hostname:port/schema;key1=value1;key2=value2;..." -u username -p password
+```
+
+Note that parameters are delimited using semicolons (`;`). The connection string is quoted since the semicolons have special meaning in bash. The user name and password can be passed in the connetion string as parameters, too.
+
+After `veeline` launches, you can issue regular SQL queries as follows.
+
+```bash
+verdict:PostgreSQL> show databases;
+
+verdict:PostgreSQL> create sample of database_name.table_name;
+
+verdict:PostgreSQL> select count(*) from database_name.table_name;
+```
+
 #### Notes on using `veeline`
 
 `veeline` makes a JDBC connection to the database systems that Verdict work on top of (e.g., Impala or Hive). For this, it uses the JDBC drivers stored in the `lib` folder. Our code ships by default with the Cloudera's Impala and Hive JDBC drivers (jar files). However, if these drivers are not compatible with your environment, you can put the compatible JDBC drivers in the `lib` folder after deleting existing ones.
