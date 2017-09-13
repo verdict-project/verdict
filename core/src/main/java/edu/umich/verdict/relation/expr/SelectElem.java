@@ -22,12 +22,8 @@ public class SelectElem {
     public SelectElem(VerdictContext vc, Expr expr, String alias) {
         this.expr = expr;
         this.vc = vc;
-        if (alias == null) {
-            if (expr.isagg()) {
-                this.alias = Optional.of(genColumnAlias());		// aggregate expressions must be aliased.
-            } else {
-                this.alias = Optional.fromNullable(alias);
-            }
+        if (alias == null && !expr.getText().equals("*")) {
+            this.alias = Optional.of(genColumnAlias(expr));		// aggregate expressions must be aliased.
         } else {
             setAlias(alias);
         }
@@ -65,8 +61,13 @@ public class SelectElem {
 
     private static int column_alias_num = 1;
 
-    public static String genColumnAlias() {
-        String a = String.format("expr%d", column_alias_num);
+    public static String genColumnAlias(Expr expr) {
+        String a;
+        if (expr instanceof ColNameExpr) {
+            a = expr.getText();
+        } else {
+            a = String.format("%s_%d", expr.getText().substring(0, 1), column_alias_num);
+        }
         column_alias_num++;
         return a;
     }
@@ -88,7 +89,11 @@ public class SelectElem {
     }
 
     public void setAlias(String alias) {
-        this.alias = Optional.of(alias.replace("\"", "").replace("`", ""));
+        if (alias == null) {
+            this.alias = Optional.fromNullable(alias);
+        } else {
+            this.alias = Optional.of(alias.replace("\"", "").replace("`", ""));
+        }
     }
 
     public boolean isagg() {

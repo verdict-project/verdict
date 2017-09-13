@@ -77,7 +77,6 @@ public class ApproxAggregatedRelation extends ApproxRelation {
         }
         ExactRelation r = new AggregatedRelation(vc, newSource, scaled);
         r.setAlias(getAlias());
-        ((AggregatedRelation) r).setIncludeGroupsInToSql(includeGroupsInToSql);
         return r;
     }
 
@@ -88,12 +87,13 @@ public class ApproxAggregatedRelation extends ApproxRelation {
             return getOriginalRelation();
         }
         
-        ExactRelation r = rewriteWithPartition();
+        ExactRelation r = rewriteWithPartition(true);
 //        String newAlias = genTableAlias();
         
         // put another layer to combine per-partition aggregates
         List<SelectElem> newElems = new ArrayList<SelectElem>();
         List<SelectElem> oldElems = ((AggregatedRelation) r).getElemList();
+        List<Expr> newGroupby = new ArrayList<Expr>();
         
         for (int i = 0; i < oldElems.size(); i++) {
             SelectElem elem = oldElems.get(i);
@@ -111,13 +111,20 @@ public class ApproxAggregatedRelation extends ApproxRelation {
                 }
                 
                 SelectElem newElem = null;
+                Expr newExpr = null;
                 if (elem.getAlias() == null) {
-                    Expr newExpr = elem.getExpr().withTableSubstituted(r.getAlias());
+                    newExpr = elem.getExpr().withTableSubstituted(r.getAlias());
                     newElem = new SelectElem(vc, newExpr, elem.getAlias());
                 } else {
-                    newElem = new SelectElem(vc, new ColNameExpr(vc, elem.getAlias(), r.getAlias()), elem.getAlias());
+                    newExpr = new ColNameExpr(vc, elem.getAlias(), r.getAlias());
+                    newElem = new SelectElem(vc, newExpr, elem.getAlias());
                 }
-                newElems.add(newElem);
+                
+                // groupby element may not be present in the select list.
+                if (originalElem.isPresent()) {
+                    newElems.add(newElem);
+                }
+                newGroupby.add(newExpr);
             }
             else {
                 // skip the partition size column
@@ -169,20 +176,30 @@ public class ApproxAggregatedRelation extends ApproxRelation {
         }
         
         // this extra aggregation stage should be grouped by non-agg elements except for __vpart
-        List<Expr> newGroupby = new ArrayList<Expr>();
-        for (SelectElem elem : elems) {
-            if (!elem.isagg()) {
-                if (elem.aliasPresent()) {
-                    if (!elem.getAlias().equals(partitionColumnName())) {
-                        newGroupby.add(new ColNameExpr(vc, elem.getAlias(), r.getAlias()));
-                    }
-                } else {
-                    if (!elem.getExpr().toString().equals(partitionColumnName())) {
-                        newGroupby.add(elem.getExpr().withTableSubstituted(r.getAlias()));
-                    }
-                }
-            }
-        }
+//        List<Expr> newGroupby = new ArrayList<Expr>();
+//        if (source instanceof ApproxGroupedRelation) {
+//            for (Expr g : ((ApproxGroupedRelation) source).getGroupby()) {
+//                if (g instanceof ColNameExpr && ((ColNameExpr) g).getCol().equals(partitionColumnName())) {
+//                    continue;
+//                } else {
+//                    newGroupby.add(g.withTableSubstituted(r.getAlias()));
+//                }
+//            }
+//        }
+        
+//        for (SelectElem elem : elems) {
+//            if (!elem.isagg()) {
+//                if (elem.aliasPresent()) {
+//                    if (!elem.getAlias().equals(partitionColumnName())) {
+//                        newGroupby.add(new ColNameExpr(vc, elem.getAlias(), r.getAlias()));
+//                    }
+//                } else {        // does not happen
+//                    if (!elem.getExpr().toString().equals(partitionColumnName())) {
+//                        newGroupby.add(elem.getExpr().withTableSubstituted(r.getAlias()));
+//                    }
+//                }
+//            }
+//        }
         if (newGroupby.size() > 0) {
             r = new GroupedRelation(vc, r, newGroupby);
         }
@@ -207,6 +224,15 @@ public class ApproxAggregatedRelation extends ApproxRelation {
      */
     @Override
     protected ExactRelation rewriteWithPartition() {
+        return rewriteWithPartition(false);
+    }
+    
+    /**
+     * 
+     * @param projectUnprojectedGroups This option is used by {@link ApproxAggregatedRelation#rewriteWithSubsampledErrorBounds()}.
+     * @return
+     */
+    protected ExactRelation rewriteWithPartition(boolean projectUnprojectedGroups) {
         ExactRelation newSource = partitionedSource();
 
         // select list elements are scaled considering both sampling probabilities and partitioning for subsampling.
@@ -223,10 +249,34 @@ public class ApproxAggregatedRelation extends ApproxRelation {
         SingleFunctionTransformerForSubsampling transformer =
                 new SingleFunctionTransformerForSubsampling(vc, groupby, partitionColExpr, tupleSamplingProbExpr, tableSamplingRatioExpr);
         
+        // copied groupby expressions (used if projectUnprojectedGroups is set to true)
+        List<ColNameExpr> unappearingGroups = new ArrayList<ColNameExpr>();
+        if (source instanceof ApproxGroupedRelation) {
+            for (Expr e : ((ApproxGroupedRelation) source).getGroupby()) {
+                if (e instanceof ColNameExpr) {
+                    unappearingGroups.add((ColNameExpr) e);
+                }
+            }
+        }
+        
         for (SelectElem elem : elems) {
             if (!elem.isagg())  {
                 // group entry
                 scaledElems.add(elem);
+                
+                // remove from 
+                Expr e = elem.getExpr();
+                if (e instanceof ColNameExpr) {
+                    int i = 0;
+                    for (i = 0; i < unappearingGroups.size(); i++) {
+                        if (unappearingGroups.get(i).getCol().equals(((ColNameExpr) e).getCol())) {
+                            break;
+                        }
+                    }
+                    if (i < unappearingGroups.size()) {
+                        unappearingGroups.remove(i);
+                    }
+                }
             }
             else {
                 Expr agg = elem.getExpr();
@@ -236,8 +286,18 @@ public class ApproxAggregatedRelation extends ApproxRelation {
             }
         }
         
-        // insert partition number
-        scaledElems.add(new SelectElem(vc, newSource.partitionColumn(), partitionColumnName()));
+        // project unappearing groups
+        if (projectUnprojectedGroups) {
+            for (ColNameExpr e : unappearingGroups) {
+                scaledElems.add(new SelectElem(vc, e));
+            }
+        }
+        
+        // insert partition number if exists
+        ColNameExpr partitionCol = newSource.partitionColumn();
+        if (partitionCol != null) {
+            scaledElems.add(new SelectElem(vc, newSource.partitionColumn(), partitionColumnName()));
+        }
         
         // to compute the partition size
         scaledElems.add(new SelectElem(vc, FuncExpr.count(), partitionSizeAlias));

@@ -1,3 +1,20 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package edu.umich.verdict.dbms;
 
 import java.sql.Connection;
@@ -147,15 +164,6 @@ public abstract class DbmsJDBC extends Dbms {
             url.append(String.format("password=%s", password));
         }
 
-        //        if (!vc.getConf().ignoreUserCredentials() && user != null && user.length() != 0 && dbms == "redshift") {
-        //            url.append(";");
-        //            url.append(String.format("UID=%s", user));
-        //        }
-        //        if (!vc.getConf().ignoreUserCredentials() && password != null && password.length() != 0 && dbms == "redshift") {
-        //            url.append(";");
-        //            url.append(String.format("PWD=%s", password));
-        //        }
-
         // set kerberos option if set
         if (vc.getConf().isJdbcKerberosSet()) {
             String value = vc.getConf().getJdbcKerberos();
@@ -193,7 +201,8 @@ public abstract class DbmsJDBC extends Dbms {
     protected Connection makeDbmsConnection(String url, String className) throws VerdictException  {
         try {
             Class.forName(className);
-            VerdictLogger.info(this, "JDBC connection string: " + url);
+            String passMasked = url.replaceAll("(;password)=([^;]+)", "$1=masked").replaceAll("(;PWD)=([^;]+)", "$1=masked");;
+            VerdictLogger.info(this, "JDBC connection string (password masked): " + passMasked);
             Connection conn = DriverManager.getConnection(url);
             return conn;
         } catch (ClassNotFoundException | SQLException e) {
@@ -216,26 +225,33 @@ public abstract class DbmsJDBC extends Dbms {
     }
 
     public boolean execute(String sql) throws VerdictException {    	
-                createStatementIfNotExists();
-//        createStatement();
-        boolean result = false;
+        // createStatementIfNotExists();
+        VerdictLogger.debug(this, "About to run: " + sql);
+        createStatement();
+        VerdictLogger.debug(this, "A new statement id: " + System.identityHashCode(stmt));
+        boolean hasResult = false;
         try {
-            result = stmt.execute(sql);
-            if (result) {
+            hasResult = stmt.execute(sql);
+            if (hasResult) {
                 rs = stmt.getResultSet();
+            } else {
+                rs = null;
             }
         } catch (SQLException e) {
             throw new VerdictException(e);
         }
-        return result;
+        return hasResult;
     }
     
-    public void executeUpdate(String query) throws VerdictException { 
-        //        createStatementIfNotExists();
-        createStatement();    	
+    public void executeUpdate(String sql) throws VerdictException { 
+        // createStatementIfNotExists();
+        VerdictLogger.debug(this, "About to run: " + sql);
+        createStatement();
+        VerdictLogger.debug(this, "A new statement id: " + System.identityHashCode(stmt));
         try {
-            stmt.executeUpdate(query);
-        } catch (SQLException e) {            
+            stmt.executeUpdate(sql);
+            rs = null;
+        } catch (SQLException e) {
             throw new VerdictException(e);
         }
     }
@@ -270,7 +286,10 @@ public abstract class DbmsJDBC extends Dbms {
 
     public void closeStatement() throws VerdictException {
         try {
-            if (stmt != null) stmt.close();
+            if (stmt != null && !stmt.isClosed()) {
+                stmt.close();
+                VerdictLogger.debug(this, "Closed the statement with id: " + System.identityHashCode(stmt));
+            }
         } catch (SQLException e) {
             throw new VerdictException(e);
         }

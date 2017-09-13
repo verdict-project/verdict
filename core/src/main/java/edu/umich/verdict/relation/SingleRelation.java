@@ -104,7 +104,12 @@ public class SingleRelation extends ExactRelation {
      */
     private double samplingProb(SampleParam param, Expr expr) {
         // extract all aggregate functions out of the select list element.
-        List<FuncExpr> funcs = expr.extractFuncExpr();
+        List<FuncExpr> funcs = new ArrayList<FuncExpr>();
+        for (FuncExpr f : expr.extractFuncExpr()) {
+            if (f.isagg()) {
+                funcs.add(f);
+            }
+        }
 
         // if there's no aggregate expression, we return a default value.
         if (funcs.size() == 0) return param.samplingRatio;

@@ -8,7 +8,7 @@
 	<parent>
 		<groupId>edu.umich.verdict</groupId>
 		<artifactId>verdictdb</artifactId>
-        <version>0.3.0</version>
+        <version>0.3.0-snapshot</version>
 	</parent>
 
     <build>
@@ -53,6 +53,14 @@
             <artifactId>spark-sql_2.10</artifactId>
             <version>${spark.sql.version}</version>
             <scope>provided</scope>
+        </dependency>
+        
+        <!-- test supports -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 </project>

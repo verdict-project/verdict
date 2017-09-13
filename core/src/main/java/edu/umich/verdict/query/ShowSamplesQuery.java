@@ -40,15 +40,15 @@ public class ShowSamplesQuery extends SelectQuery {
 			sizeTable.setAlias("t");
 			
 			Relation info = nameTable.join(sizeTable, "s.sampleschemaaname = t.schemaname AND s.sampletablename = t.tablename")
-								     .select("s.originaltablename AS \"Original Table\","
-									 	   + " s.sampletype AS \"Sample Type\","
-									 	   + " t.schemaname AS \"Sample Schema Name\","
-									 	   + " s.sampletablename AS \"Sample Table Name\","
-									 	   + " s.samplingratio AS \"Sampling Ratio\","
-									 	   + " s.columnnames AS \"On columns\","
-									 	   + " t.originaltablesize AS \"Original Table Size\","
-									 	   + " t.samplesize AS \"Sample Table Size\"")
-								     .orderby("s.originaltablename, s.sampletype, s.samplingratio, s.columnnames");
+								     .select("s.originaltablename AS `original_table`,"
+									 	   + " s.sampletype AS `sample_type`,"
+									 	   + " t.schemaname AS `sample_schema_name`,"
+									 	   + " s.sampletablename AS `sample_table_name`,"
+									 	   + " s.samplingratio AS `sampling_ratio`,"
+									 	   + " s.columnnames AS `on_columns`,"
+									 	   + " t.originaltablesize AS `original_table_size`,"
+									 	   + " t.samplesize AS `sample_table_size`")
+								     .orderby("`original_table`, `sample_type`, `sampling_ratio`, `on_columns`");
 		
 			if (!vc.getMeta().getDatabases().contains(database)) {
 				return;

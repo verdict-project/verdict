@@ -185,7 +185,7 @@ class DatabaseConnection {
     }
 
     try {
-      connection.setAutoCommit(sqlLine.getOpts().getAutoCommit());
+//      connection.setAutoCommit(sqlLine.getOpts().getAutoCommit());
       sqlLine.autocommitStatus(connection);
     } catch (Exception e) {
       sqlLine.handleException(e);

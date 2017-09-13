@@ -24,7 +24,8 @@ public class Driver implements java.sql.Driver {
     public Connection connect(String url, Properties info) throws SQLException {
         if(acceptsURL(url))
             return new VerdictConnection(url, info);
-        throw new SQLException("URL is unrecognizable.");
+        return null;
+//        throw new SQLException("URL is unrecognizable.");
     }
 
     @Override

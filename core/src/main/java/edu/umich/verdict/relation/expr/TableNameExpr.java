@@ -23,6 +23,11 @@ public class TableNameExpr extends Expr {
 	public String toSql() {
 		return toString();
 	}
+	
+	@Override
+    public int hashCode() {
+	    return 0;
+	}
 
     @Override
     public boolean equals(Expr o) {

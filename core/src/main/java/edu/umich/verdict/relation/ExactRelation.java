@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -32,6 +33,7 @@ import edu.umich.verdict.relation.condition.InCond;
 import edu.umich.verdict.relation.condition.IsCond;
 import edu.umich.verdict.relation.condition.LikeCond;
 import edu.umich.verdict.relation.expr.ColNameExpr;
+import edu.umich.verdict.relation.expr.ConstantExpr;
 import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.relation.expr.FuncExpr;
 import edu.umich.verdict.relation.expr.OrderByExpr;
@@ -503,6 +505,8 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
     // replacing original table names with aliases in join conditions, and other column name expressions.
     // also, we use this field to attach effective table names to column names.
     private Map<TableUniqueName, Pair<String, Set<String>>> tableAliasAndColNames = new HashMap<TableUniqueName, Pair<String, Set<String>>>();
+    
+    private List<SelectElem> selectElems = null;
 
     @Override
     public ExactRelation visitSelect_statement(VerdictSQLParser.Select_statementContext ctx) {
@@ -510,12 +514,25 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
         
         // table name replacer with aliases
 //        TableSourceResolver resolver = new TableSourceResolver(vc, tableAliasAndColNames);
+        
+        Map<Expr, String> selectExprToAlias = new HashMap<Expr, String>();
+        for (SelectElem elem : selectElems) {
+            selectExprToAlias.put(elem.getExpr(), elem.getAlias());
+        }
+        // use the same resolver as for the select list elements to attach the same tables to the columns
+        TableSourceResolver resolver = new TableSourceResolver(vc, tableAliasAndColNames);
 
         if (ctx.order_by_clause() != null) {
             List<OrderByExpr> orderby = new ArrayList<OrderByExpr>();
             for (Order_by_expressionContext o : ctx.order_by_clause().order_by_expression()) {
-                OrderByExpr expr = new OrderByExpr(vc, Expr.from(vc, o.expression()),
-                                                   (o.DESC() != null)? "DESC" : "ASC");
+                Expr e = Expr.from(vc, o.expression());
+                e = resolver.visit(e);
+                
+                if (selectExprToAlias.containsKey(e)) {
+                    e = ConstantExpr.from(vc, selectExprToAlias.get(e));
+                }
+                
+                OrderByExpr expr = new OrderByExpr(vc, e, (o.DESC() != null)? "DESC" : "ASC");
 //                orderby.add((OrderByExpr) resolver.visit(expr));
                 orderby.add(expr);
             }
@@ -551,10 +568,13 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
                 } else {
                     // table could be an alias or a base table name without schema name
                     // first, check for alias
-                    TableUniqueName a = new TableUniqueName(null, expr.getTab());
-                    if (tabAliasColumns.containsKey(a)) {
-                        return new ColNameExpr(vc, expr.getCol(), tabAliasColumns.get(a).getKey());
+                    for (Pair<String, Set<String>> aliasColumns : tabAliasColumns.values()) {
+                        String alias = aliasColumns.getKey();
+                        if (alias.equals(expr.getTab())) {
+                            return expr;    // no need to change anything
+                        }
                     }
+                    
                     // second, check for table name
                     TableUniqueName t = TableUniqueName.uname(vc, expr.getTab());
                     if (tabAliasColumns.containsKey(t)) {
@@ -735,6 +755,7 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
         nonaggs = replaceTableNamesWithAliasesIn(nonaggs, resolver);
         aggs = replaceTableNamesWithAliasesIn(aggs, resolver);
         bothInOrder = replaceTableNamesWithAliasesIn(bothInOrder, resolver);
+        selectElems = bothInOrder;      // used in visitSelect_statement()
         
         if (aggs.size() == 0) {
             // simple projection
@@ -887,6 +908,11 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
                 }
                 
                 joinCond = resolved;
+                return r;
+            } else if (ctx.CROSS() != null) {
+                TableSourceExtractor ext = new TableSourceExtractor();
+                ExactRelation r = ext.visit(ctx.table_source());
+                joinCond = null;
                 return r;
             } else {
                 VerdictLogger.error(this, "Unsupported join condition: " + ctx.getText());

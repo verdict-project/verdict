@@ -67,6 +67,11 @@ public class OrderByExpr extends Expr {
 	public String toSql() {
 		return toString();
 	}
+	
+	@Override
+    public int hashCode() {
+	    return expr.hashCode();
+	}
 
     @Override
     public boolean equals(Expr o) {

@@ -3,10 +3,14 @@ package edu.umich.verdict;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.TreeMap;
 
+import org.apache.commons.lang3.tuple.Pair;
+
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import edu.umich.verdict.util.VerdictLogger;
@@ -25,19 +29,19 @@ public class VerdictConf {
             .build();
 
     private final String DEFAULT_CONFIG_FILE = "verdict_default.properties";
-    
+
     private final String USER_CONFIG_FILE = "verdict.properties";
-    
+
     public VerdictConf() {
-    	this(true);
+        this(true);
     }
 
     public VerdictConf(boolean resetProperties) {
-    	if (resetProperties) { 
-    		setDefaults();
-    		setUserConfig();
-    	}
-//        VerdictLogger.info("Verdict's log level set to: " + get("loglevel"));
+        if (resetProperties) { 
+            setDefaults();
+            setUserConfig();
+        }
+        //        VerdictLogger.info("Verdict's log level set to: " + get("loglevel"));
     }
 
     public VerdictConf(String propertyFileName) {
@@ -53,7 +57,7 @@ public class VerdictConf {
     private void setDefaults() {
         updateFromPropertyFile(DEFAULT_CONFIG_FILE);
     }
-    
+
     private void setUserConfig() {
         updateFromPropertyFile(USER_CONFIG_FILE);
     }
@@ -61,9 +65,10 @@ public class VerdictConf {
     public void setProperties(Properties properties) {
         for (String prop : properties.stringPropertyNames()) {
             String value = properties.getProperty(prop);
-            if (value.length() > 0) {
-                set(prop, value);
-            }
+            set(prop, value);
+            //            if (value.length() > 0) {
+            //                set(prop, value);
+            //            }
         }
     }
 
@@ -113,12 +118,12 @@ public class VerdictConf {
         if (configKeySynonyms.containsKey(key)) {
             return get(configKeySynonyms.get(key));
         }
-        return configs.get(key.toLowerCase());
+        return configs.get(key);
     }
 
     public String getOr(String key, Object defaultValue) {
-        if (configs.containsKey(key.toLowerCase())) {
-            return configs.get(key.toLowerCase());
+        if (configs.containsKey(key)) {
+            return configs.get(key);
         } else {
             return defaultValue.toString();
         }
@@ -130,13 +135,12 @@ public class VerdictConf {
             return this;
         String key = keyVal.substring(0, equalIndex).trim();
         String val = keyVal.substring(equalIndex + 1).trim();
-        if (val.startsWith("\"") && val.endsWith("\""))
-            val = val.substring(1, val.length() - 1);
         return set(key, val);
     }
 
     public VerdictConf set(String key, String value) {
-        key = key.toLowerCase();
+        if (value.startsWith("\"") && value.endsWith("\""))
+            value = value.substring(1, value.length() - 1);
 
         if (configKeySynonyms.containsKey(key)) {
             return set(configKeySynonyms.get(key), value);
@@ -159,7 +163,7 @@ public class VerdictConf {
     }
 
     public boolean doesContain(String key) {
-        return configs.containsKey(key.toLowerCase());
+        return configs.containsKey(key);
     }
 
     /*
@@ -238,7 +242,7 @@ public class VerdictConf {
     public boolean cacheSparkSamples() {
         return getBoolean("verdict.spark.cache_samples");
     }
-    
+
     public String errorBoundMethod() {
         return get("verdict.error_bound.method");
     }
@@ -282,20 +286,65 @@ public class VerdictConf {
     public boolean bypass() {
         return getBoolean("verdict.bypass");
     }
-    
+
     public boolean isJdbcKerberosSet() {
         return (getJdbcKerberos().equals("n/a"))? false : true;
     }
-    
+
     public String getJdbcKerberos() {
         return get("verdict.jdbc.kerberos_principal");
     }
-    
+
     public boolean areSamplesStoredAsParquet() {
-    	return (getParquetSamples().equals("true"))? true : false;
+        if (getDbms().equals("redshift")) {
+            return false;
+        } else {
+            return (getParquetSamples().equals("true"))? true : false;
+        }
+    }
+
+    public String getParquetSamples() {
+        return get("verdict.parquet_sample");
     }
     
-    public String getParquetSamples() {
-    	return get("verdict.parquet_sample");
+    /**
+     * These are the probabilities for ensuring at least 10 tuples.
+     */
+    protected static List<Pair<Integer, Double>> minSamplingProbForStratifiedSamplesMin10
+                     = new ImmutableList.Builder<Pair<Integer, Double>>()
+                           .add(Pair.of(100, 0.203759))
+                           .add(Pair.of(50, 0.376508))
+                           .add(Pair.of(40, 0.452739))
+                           .add(Pair.of(30, 0.566406))
+                           .add(Pair.of(20, 0.749565))
+                           .add(Pair.of(15, 0.881575))
+                           .add(Pair.of(14, 0.910660))
+                           .add(Pair.of(13, 0.939528))
+                           .add(Pair.of(12, 0.966718))
+                           .add(Pair.of(11, 0.989236))
+                           .build();
+    
+    /**
+     * These are the probabilities for ensuring at least 100 tuples.
+     */
+    protected static List<Pair<Integer, Double>> minSamplingProbForStratifiedSamplesMin100
+                     = new ImmutableList.Builder<Pair<Integer, Double>>()
+                           .add(Pair.of(900, 0.140994))
+                           .add(Pair.of(800, 0.158239))
+                           .add(Pair.of(700, 0.180286))
+                           .add(Pair.of(600, 0.209461))
+                           .add(Pair.of(500, 0.249876))
+                           .add(Pair.of(400, 0.309545))
+                           .add(Pair.of(300, 0.406381))
+                           .add(Pair.of(200, 0.589601))
+                           .add(Pair.of(150, 0.756890))
+                           .add(Pair.of(140, 0.801178))
+                           .add(Pair.of(130, 0.849921))
+                           .add(Pair.of(120, 0.902947))
+                           .add(Pair.of(110, 0.958229))
+                           .build();
+    
+    public List<Pair<Integer, Double>> samplingProbabilitiesForStratifiedSamples() {
+        return minSamplingProbForStratifiedSamplesMin10;
     }
 }
