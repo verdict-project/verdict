@@ -64,7 +64,7 @@ public class SelectElem {
     public static String genColumnAlias(Expr expr) {
         String a;
         if (expr instanceof ColNameExpr) {
-            a = expr.getText();
+            a = ((ColNameExpr) expr).getCol();
         } else {
             a = String.format("%s_%d", expr.getText().substring(0, 1), column_alias_num);
         }
