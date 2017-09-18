@@ -836,6 +836,7 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
         @Override
         public ExactRelation visitTable_source_item_joined(VerdictSQLParser.Table_source_item_joinedContext ctx) {
             ExactRelation r = visit(ctx.table_source_item());
+            //join error location: r2 is null
             for (Join_partContext j : ctx.join_part()) {
                 ExactRelation r2 = visit(j);
                 r = new JoinedRelation(vc, r, r2, null);

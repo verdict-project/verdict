@@ -160,10 +160,10 @@ verdict:Apache Hive> select count(*) from database_name.table_name;
 
 #### Verdict-on-Redshift
 
-Type the following command in terminal to launch `veeline` that connects to Hive.
+Type the following command in terminal to launch `veeline` that connects to Amazon Redshift.
 
 ```bash
-$ veeline/bin/veeline -h "redshift://hostname:port/schema;key1=value1;key2=value2;..." -u username -p password
+$ veeline/bin/veeline -h "redshift://endpoint:port/schema;key1=value1;key2=value2;..." -u username -p password
 ```
 
 Note that parameters are delimited using semicolons (`;`). The connection string is quoted since the semicolons have special meaning in bash. The user name and password can be passed in the connetion string as parameters, too.
