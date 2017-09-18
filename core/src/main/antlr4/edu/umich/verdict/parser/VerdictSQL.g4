@@ -855,8 +855,12 @@ binary_manipulation_function
     ;
     
 extract_time_function
-	: function_name=EXTRACT
-      '(' expression FROM expression ')'
+    : function_name=EXTRACT
+      '(' extract_unit FROM expression ')'
+    ;
+    
+extract_unit
+    : YEAR | expression
     ;
 
 unary_manipulation_function

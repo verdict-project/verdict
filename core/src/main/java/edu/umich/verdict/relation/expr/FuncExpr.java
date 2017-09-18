@@ -236,9 +236,9 @@ public class FuncExpr extends Expr {
             
             @Override 
             public FuncExpr visitExtract_time_function(VerdictSQLParser.Extract_time_functionContext ctx) { 
-            	String fname = ctx.function_name.getText().toUpperCase();
+                String fname = ctx.function_name.getText().toUpperCase();
                 FuncName funcName = string2FunctionType.containsKey(fname)? string2FunctionType.get(fname) : FuncName.UNKNOWN;
-                return new FuncExpr(funcName, ConstantExpr.from(vc, ctx.expression(0)), Expr.from(vc, ctx.expression(1)));            	
+                return new FuncExpr(funcName, ConstantExpr.from(vc, ctx.extract_unit()), Expr.from(vc, ctx.expression()));            	
             }
             
         };
