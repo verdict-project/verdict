@@ -21,6 +21,8 @@ import java.sql.ResultSet;
 
 import org.apache.spark.SparkContext;
 import org.apache.spark.sql.DataFrame;
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Row;
 import org.apache.spark.sql.hive.HiveContext;
 
 import edu.umich.verdict.dbms.DbmsSpark;
@@ -34,7 +36,6 @@ import edu.umich.verdict.util.VerdictLogger;
  *
  */
 public class VerdictSparkHiveContext extends VerdictContext {
-
     private DataFrame df;
     
     private HiveContext sqlContext;
@@ -77,4 +78,10 @@ public class VerdictSparkHiveContext extends VerdictContext {
     public DataFrame getDataFrame() {
         return df;
     }
+    
+    @Override
+	public Dataset<Row> getDataset() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

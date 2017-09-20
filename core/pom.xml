@@ -146,7 +146,6 @@
             <artifactId>guava</artifactId>
             <version>${google.guava.version}</version>
         </dependency>
-
         <dependency>
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-core_2.10</artifactId>
@@ -165,7 +164,25 @@
             <version>${spark.hive.version}</version>
             <scope>provided</scope>
         </dependency>
-
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-core_2.11</artifactId>
+            <version>${spark2.core.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-sql_2.11</artifactId>
+            <version>${spark2.sql.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-hive_2.11</artifactId>
+            <version>${spark2.hive.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        
         <!-- test supports -->
         <dependency>
             <groupId>junit</groupId>

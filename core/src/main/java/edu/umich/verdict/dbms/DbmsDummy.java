@@ -8,6 +8,8 @@ import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.spark.sql.DataFrame;
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Row;
 
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.datatypes.SampleParam;
@@ -116,6 +118,12 @@ public class DbmsDummy extends Dbms {
 
 	@Override
 	protected String randomNumberExpression(SampleParam param) {
+		return null;
+	}
+
+	@Override
+	public Dataset<Row> getDataset() {
+		// TODO Auto-generated method stub
 		return null;
 	}
 	

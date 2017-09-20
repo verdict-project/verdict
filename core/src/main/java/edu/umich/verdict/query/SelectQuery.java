@@ -45,6 +45,7 @@ public class SelectQuery extends Query {
             rs = r.collectResultSet();
         } else {
             df = r.collectDataFrame();
+            ds = r.collectDataset();
         }
     }
 
