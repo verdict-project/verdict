@@ -4,6 +4,7 @@ import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.dbms.DbmsJDBC;
 import edu.umich.verdict.dbms.DbmsSpark;
+import edu.umich.verdict.dbms.DbmsSpark2;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.parser.VerdictSQLBaseVisitor;
 import edu.umich.verdict.parser.VerdictSQLParser;
@@ -49,6 +50,8 @@ public class DescribeTableQuery extends SelectQuery {
 				rs = ((DbmsJDBC) vc.getDbms()).describeTableInResultSet(table);
 			} else if (vc.getDbms().isSpark()) {
 				df = ((DbmsSpark) vc.getDbms()).describeTableInDataFrame(table);
+			} else if (vc.getDbms().isSpark2()) {
+				ds = ((DbmsSpark2) vc.getDbms()).describeTableInDataFrame(table);
 			}
 		}
 	}

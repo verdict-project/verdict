@@ -19,7 +19,9 @@
         <spark.core.version>1.6.0-cdh5.11.1</spark.core.version>
         <spark.sql.version>1.6.0-cdh5.11.1</spark.sql.version>
         <spark.hive.version>1.6.0-cdh5.11.1</spark.hive.version>
-        <spark2.version>2.2.0.cloudera1</spark2.version>
+        <spark2.core.version>2.2.0.cloudera1</spark2.core.version>
+        <spark2.sql.version>2.2.0.cloudera1</spark2.sql.version>
+        <spark2.hive.version>2.2.0.cloudera1</spark2.hive.version>
     </properties>
 
     <groupId>edu.umich.verdict</groupId>

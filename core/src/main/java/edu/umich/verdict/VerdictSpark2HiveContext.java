@@ -2,35 +2,31 @@ package edu.umich.verdict;
 
 import java.sql.ResultSet;
 
+import org.apache.spark.sql.SparkSession;
 import org.apache.spark.SparkContext;
 import org.apache.spark.sql.DataFrame;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.hive.HiveContext;
 
-import edu.umich.verdict.dbms.DbmsSpark;
+import edu.umich.verdict.dbms.DbmsSpark2;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.query.Query;
 import edu.umich.verdict.util.VerdictLogger;
 
-/**
- * Issues queries through Spark's HiveContext. Supports Spark 1.6.
- * @author Yongjoo Park
- *
- */
-public class VerdictSparkHiveContext extends VerdictContext {
+public class VerdictSpark2HiveContext extends VerdictContext {
 	
-	private DataFrame df;
+	private Dataset<Row> df;
 
-	public VerdictSparkHiveContext(SparkContext sc) throws VerdictException {
+	public VerdictSpark2HiveContext(SparkContext sc) throws VerdictException {
 		this(sc, new VerdictConf());
 	}
 	
-	public VerdictSparkHiveContext(SparkContext sc, VerdictConf conf) throws VerdictException {
+	public VerdictSpark2HiveContext(SparkContext sc, VerdictConf conf) throws VerdictException {
 		super(conf);
-		conf.setDbms("spark");
-		HiveContext sqlContext = new HiveContext(sc);
-		setDbms(new DbmsSpark(this, sqlContext));
+		conf.setDbms("spark2");
+		SparkSession sparkSession = SparkSession.builder().getOrCreate();
+		setDbms(new DbmsSpark2(this, sparkSession));
 		setMeta(new VerdictMeta(this));
 	}
 
@@ -39,7 +35,7 @@ public class VerdictSparkHiveContext extends VerdictContext {
 		VerdictLogger.debug(this, "An input query:");
 		VerdictLogger.debugPretty(this, sql, "  ");
 		Query vq = Query.getInstance(this, sql);
-		df = vq.computeDataFrame();
+		df = vq.computeDataset();
 	}
 
 	@Override
@@ -49,13 +45,12 @@ public class VerdictSparkHiveContext extends VerdictContext {
 	}
 
 	@Override
-	public DataFrame getDataFrame() {
+	public Dataset<Row> getDataset() {
 		return df;
 	}
 
 	@Override
-	public Dataset<Row> getDataset() {
-		// TODO Auto-generated method stub
+	public DataFrame getDataFrame() {
 		return null;
 	}
 }
