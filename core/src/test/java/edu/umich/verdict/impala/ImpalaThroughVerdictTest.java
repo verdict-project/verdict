@@ -27,7 +27,7 @@ public class ImpalaThroughVerdictTest {
         VerdictContext vc = VerdictJDBCContext.from(conf);
         ResultSet rs = vc.executeJdbcQuery("show databases;");
 //        vc.executeJdbcQuery("create uniform sample of instacart1g.orders");
-        rs = vc.executeJdbcQuery("select count(*) from instacart1g.orders join instacart1g.order_products on instacart1g.orders.order_id = instacart1g.order_products.order_id limit 10");
+        rs = vc.executeJdbcQuery("select count(*) from instacart1g.orders left join instacart1g.order_products on instacart1g.orders.order_id = instacart1g.order_products.order_id limit 10");
 //        rs = vc.executeJdbcQuery("select count(*) from instacart1g.orders, instacart1g.order_products where instacart1g.orders.order_id = instacart1g.order_products.order_id limit 10");
         ResultSetConversion.printResultSet(rs);
         vc.destroy();
