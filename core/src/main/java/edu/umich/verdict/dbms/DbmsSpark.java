@@ -1,3 +1,20 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package edu.umich.verdict.dbms;
 
 import java.sql.ResultSet;
@@ -33,7 +50,7 @@ public class DbmsSpark extends Dbms {
 
     protected Set<TableUniqueName> cachedTable;
 
-    public DbmsSpark(VerdictContext vc, SQLContext sqlContext) throws VerdictException {	
+    public DbmsSpark(VerdictContext vc, SQLContext sqlContext) throws VerdictException {
         super(vc, DBNAME);
 
         this.sqlContext = sqlContext;
@@ -50,7 +67,7 @@ public class DbmsSpark extends Dbms {
         return df;
     }
 
-    public DataFrame describeTableInDataFrame(TableUniqueName tableUniqueName)  throws VerdictException {
+    public DataFrame describeTableInDataFrame(TableUniqueName tableUniqueName) throws VerdictException {
         DataFrame df = executeSparkQuery(String.format("describe %s", tableUniqueName));
         return df;
     }
@@ -58,8 +75,8 @@ public class DbmsSpark extends Dbms {
     @Override
     public boolean execute(String sql) throws VerdictException {
         df = sqlContext.sql(sql);
-        return (df != null)? true : false;
-        //return (df.count() > 0)? true : false;
+        return (df != null) ? true : false;
+        // return (df.count() > 0)? true : false;
     }
 
     @Override
@@ -86,7 +103,7 @@ public class DbmsSpark extends Dbms {
         Set<String> databases = new HashSet<String>();
         List<Row> rows = getDatabaseNamesInDataFrame().collectAsList();
         for (Row row : rows) {
-            String dbname = row.getString(0); 
+            String dbname = row.getString(0);
             databases.add(dbname);
         }
         return databases;
@@ -180,10 +197,10 @@ public class DbmsSpark extends Dbms {
         return String.format("pmod(abs(rand(unix_timestamp())), %d)", mod);
     }
 
-	@Override
-	public Dataset<Row> getDataset() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    @Override
+    public Dataset<Row> getDataset() {
+        // TODO Auto-generated method stub
+        return null;
+    }
 
 }

@@ -1,3 +1,20 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package edu.umich.verdict.dbms;
 
 import java.util.HashSet;
@@ -41,15 +58,18 @@ public class DbmsImpala extends DbmsJDBC {
             String col = col2type.getKey();
             String type = col2type.getValue();
             if (type.toLowerCase().contains("char") || type.toLowerCase().contains("str")) {
-                hashCols.add(String.format("fnv_hash((case when %s is null then cast(unix_timestamp() as string) else %s end))", col, col));
+                hashCols.add(String.format(
+                        "fnv_hash((case when %s is null then cast(unix_timestamp() as string) else %s end))", col,
+                        col));
             } else if (type.toLowerCase().contains("time")) {
-                hashCols.add(String.format("fnv_hash((case when %s is null then current_timestamp() else %s end))", col, col));
+                hashCols.add(String.format("fnv_hash((case when %s is null then current_timestamp() else %s end))", col,
+                        col));
             } else {
-                hashCols.add(String.format("fnv_hash((case when %s is null then unix_timestamp() else %s end))", col, col));
+                hashCols.add(
+                        String.format("fnv_hash((case when %s is null then unix_timestamp() else %s end))", col, col));
             }
         }
-        String expr = "abs(fnv_hash("
-                + Joiner.on(" + ").join(hashCols) 
+        String expr = "abs(fnv_hash(" + Joiner.on(" + ").join(hashCols)
                 + String.format(" + unix_timestamp())) %% %d / %d", modValue, modValue);
         return expr;
     }
@@ -59,10 +79,10 @@ public class DbmsImpala extends DbmsJDBC {
         return String.format("round(rand(unix_timestamp())*%d) %% %d AS %s", pcount, pcount, partitionColumnName());
     }
 
-	@Override
-	public Dataset<Row> getDataset() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    @Override
+    public Dataset<Row> getDataset() {
+        // TODO Auto-generated method stub
+        return null;
+    }
 
 }

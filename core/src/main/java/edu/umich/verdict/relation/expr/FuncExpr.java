@@ -1,3 +1,20 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package edu.umich.verdict.relation.expr;
 
 import java.util.ArrayList;
@@ -14,11 +31,7 @@ import edu.umich.verdict.util.StringManipulations;
 public class FuncExpr extends Expr {
 
     public enum FuncName {
-        COUNT, SUM, AVG, COUNT_DISTINCT, EXTRACT, IMPALA_APPROX_COUNT_DISTINCT,
-        ROUND, MAX, MIN, FLOOR, CEIL, EXP, LN, LOG10, LOG2, SIN, COS, TAN,
-        SIGN, STRTOL, RAND, RANDOM , FNV_HASH, ABS, STDDEV, SQRT, MOD, PMOD, YEAR,
-        CAST, CONV, SUBSTR, MD5, CRC32, UNIX_TIMESTAMP, CURRENT_TIMESTAMP,
-        UNKNOWN
+        COUNT, SUM, AVG, COUNT_DISTINCT, EXTRACT, IMPALA_APPROX_COUNT_DISTINCT, ROUND, MAX, MIN, FLOOR, CEIL, EXP, LN, LOG10, LOG2, SIN, COS, TAN, SIGN, STRTOL, RAND, RANDOM, FNV_HASH, ABS, STDDEV, SQRT, MOD, PMOD, YEAR, CAST, CONV, SUBSTR, MD5, CRC32, UNIX_TIMESTAMP, CURRENT_TIMESTAMP, UNKNOWN
     }
 
     protected List<Expr> expressions;
@@ -28,78 +41,32 @@ public class FuncExpr extends Expr {
     protected OverClause overClause;
 
     protected static Map<String, FuncName> string2FunctionType = ImmutableMap.<String, FuncName>builder()
-            .put("ROUND", FuncName.ROUND)
-            .put("MIN", FuncName.MIN)
-            .put("MAX", FuncName.MAX)
-            .put("FLOOR", FuncName.FLOOR)
-            .put("CEIL", FuncName.CEIL)
-            .put("EXP", FuncName.EXP)
-            .put("LN", FuncName.LN)
-            .put("LOG10", FuncName.LOG10)
-            .put("LOG2", FuncName.LOG2)
-            .put("SIN", FuncName.SIN)
-            .put("COS", FuncName.COS)
-            .put("TAN", FuncName.TAN)
-            .put("SIGN", FuncName.SIGN)
-            .put("RAND", FuncName.RAND)
-            .put("RANDOM", FuncName.RANDOM)
-            .put("UNIX_TIMESTAMP", FuncName.UNIX_TIMESTAMP)
-            .put("CURRENT_TIMESTAMP", FuncName.CURRENT_TIMESTAMP)
-            .put("FNV_HASH", FuncName.FNV_HASH)
-            .put("MD5", FuncName.MD5)
-            .put("ABS", FuncName.ABS)
-            .put("STDDEV", FuncName.STDDEV)
-            .put("SQRT", FuncName.SQRT)
-            .put("STRTOL", FuncName.STRTOL)
-            .put("MOD", FuncName.MOD)
-            .put("CRC32", FuncName.CRC32)
-            .put("PMOD", FuncName.PMOD)
-            .put("YEAR", FuncName.YEAR)
-            .put("CONV", FuncName.CONV)
-            .put("SUBSTR", FuncName.SUBSTR)
-            .put("CAST", FuncName.CAST)
-            .put("EXTRACT", FuncName.EXTRACT)
-            .build();
+            .put("ROUND", FuncName.ROUND).put("MIN", FuncName.MIN).put("MAX", FuncName.MAX).put("FLOOR", FuncName.FLOOR)
+            .put("CEIL", FuncName.CEIL).put("EXP", FuncName.EXP).put("LN", FuncName.LN).put("LOG10", FuncName.LOG10)
+            .put("LOG2", FuncName.LOG2).put("SIN", FuncName.SIN).put("COS", FuncName.COS).put("TAN", FuncName.TAN)
+            .put("SIGN", FuncName.SIGN).put("RAND", FuncName.RAND).put("RANDOM", FuncName.RANDOM)
+            .put("UNIX_TIMESTAMP", FuncName.UNIX_TIMESTAMP).put("CURRENT_TIMESTAMP", FuncName.CURRENT_TIMESTAMP)
+            .put("FNV_HASH", FuncName.FNV_HASH).put("MD5", FuncName.MD5).put("ABS", FuncName.ABS)
+            .put("STDDEV", FuncName.STDDEV).put("SQRT", FuncName.SQRT).put("STRTOL", FuncName.STRTOL)
+            .put("MOD", FuncName.MOD).put("CRC32", FuncName.CRC32).put("PMOD", FuncName.PMOD).put("YEAR", FuncName.YEAR)
+            .put("CONV", FuncName.CONV).put("SUBSTR", FuncName.SUBSTR).put("CAST", FuncName.CAST)
+            .put("EXTRACT", FuncName.EXTRACT).build();
 
     protected static Map<FuncName, String> functionPattern = ImmutableMap.<FuncName, String>builder()
-            .put(FuncName.COUNT,  "count(%s)")
-            .put(FuncName.SUM, "sum(%s)")
-            .put(FuncName.AVG, "avg(%s)")
-            .put(FuncName.COUNT_DISTINCT, "count(distinct %s)")
-            .put(FuncName.IMPALA_APPROX_COUNT_DISTINCT, "ndv(%s)")
-            .put(FuncName.ROUND, "round(%s)")
-            .put(FuncName.MIN, "min(%s)")
-            .put(FuncName.MAX, "max(%s)")
-            .put(FuncName.FLOOR, "floor(%s)")
-            .put(FuncName.CEIL, "ceil(%s)")
-            .put(FuncName.EXP, "exp(%s)")
-            .put(FuncName.LN, "ln(%s)")
-            .put(FuncName.LOG10, "log10(%s)")
-            .put(FuncName.LOG2, "log2(%s)")
-            .put(FuncName.SIN, "sin(%s)")
-            .put(FuncName.COS, "cos(%s)")
-            .put(FuncName.TAN, "tan(%s)")
-            .put(FuncName.SIGN, "sign(%s)")
-            .put(FuncName.RAND, "rand(%s)")
-            .put(FuncName.RANDOM, "random(%s)")
-            .put(FuncName.UNIX_TIMESTAMP, "unix_timestamp(%s)")
-            .put(FuncName.CURRENT_TIMESTAMP, "current_timestamp(%s)")
-            .put(FuncName.FNV_HASH, "fnv_hash(%s)")
-            .put(FuncName.MD5, "md5(%s)")
-            .put(FuncName.CRC32, "crc32(%s)")
-            .put(FuncName.ABS, "abs(%s)")
-            .put(FuncName.STDDEV, "stddev(%s)")
-            .put(FuncName.SQRT, "sqrt(%s)")
-            .put(FuncName.STRTOL, "strtol(%s, %s)")
-            .put(FuncName.MOD, "mod(%s, %s)")
-            .put(FuncName.PMOD, "pmod(%s, %s)")
-            .put(FuncName.YEAR, "year(%s)")
-            .put(FuncName.CONV, "conv(%s, %s, %s)")
-            .put(FuncName.SUBSTR, "substr(%s, %s, %s)")
-            .put(FuncName.CAST, "cast(%s as %s)")
-            .put(FuncName.EXTRACT, "extract(%s from %s)")
-            .put(FuncName.UNKNOWN, "UNKNOWN(%s)")
-            .build();
+            .put(FuncName.COUNT, "count(%s)").put(FuncName.SUM, "sum(%s)").put(FuncName.AVG, "avg(%s)")
+            .put(FuncName.COUNT_DISTINCT, "count(distinct %s)").put(FuncName.IMPALA_APPROX_COUNT_DISTINCT, "ndv(%s)")
+            .put(FuncName.ROUND, "round(%s)").put(FuncName.MIN, "min(%s)").put(FuncName.MAX, "max(%s)")
+            .put(FuncName.FLOOR, "floor(%s)").put(FuncName.CEIL, "ceil(%s)").put(FuncName.EXP, "exp(%s)")
+            .put(FuncName.LN, "ln(%s)").put(FuncName.LOG10, "log10(%s)").put(FuncName.LOG2, "log2(%s)")
+            .put(FuncName.SIN, "sin(%s)").put(FuncName.COS, "cos(%s)").put(FuncName.TAN, "tan(%s)")
+            .put(FuncName.SIGN, "sign(%s)").put(FuncName.RAND, "rand(%s)").put(FuncName.RANDOM, "random(%s)")
+            .put(FuncName.UNIX_TIMESTAMP, "unix_timestamp(%s)").put(FuncName.CURRENT_TIMESTAMP, "current_timestamp(%s)")
+            .put(FuncName.FNV_HASH, "fnv_hash(%s)").put(FuncName.MD5, "md5(%s)").put(FuncName.CRC32, "crc32(%s)")
+            .put(FuncName.ABS, "abs(%s)").put(FuncName.STDDEV, "stddev(%s)").put(FuncName.SQRT, "sqrt(%s)")
+            .put(FuncName.STRTOL, "strtol(%s, %s)").put(FuncName.MOD, "mod(%s, %s)").put(FuncName.PMOD, "pmod(%s, %s)")
+            .put(FuncName.YEAR, "year(%s)").put(FuncName.CONV, "conv(%s, %s, %s)")
+            .put(FuncName.SUBSTR, "substr(%s, %s, %s)").put(FuncName.CAST, "cast(%s as %s)")
+            .put(FuncName.EXTRACT, "extract(%s from %s)").put(FuncName.UNKNOWN, "UNKNOWN(%s)").build();
 
     public FuncExpr(FuncName fname, List<Expr> exprs, OverClause overClause) {
         super(VerdictContext.dummyContext());
@@ -203,10 +170,10 @@ public class FuncExpr extends Expr {
             @Override
             public FuncExpr visitUnary_manipulation_function(VerdictSQLParser.Unary_manipulation_functionContext ctx) {
                 String fname = ctx.function_name.getText().toUpperCase();
-                FuncName funcName = string2FunctionType.containsKey(fname)? string2FunctionType.get(fname) : FuncName.UNKNOWN;
+                FuncName funcName = string2FunctionType.containsKey(fname) ? string2FunctionType.get(fname)
+                        : FuncName.UNKNOWN;
                 if (fname.equals("CAST")) {
-                    return new FuncExpr(funcName,
-                            Expr.from(vc, ctx.cast_as_expression().expression()),
+                    return new FuncExpr(funcName, Expr.from(vc, ctx.cast_as_expression().expression()),
                             ConstantExpr.from(vc, ctx.cast_as_expression().data_type().getText()));
                 } else {
                     return new FuncExpr(funcName, Expr.from(vc, ctx.expression()));
@@ -214,33 +181,42 @@ public class FuncExpr extends Expr {
             }
 
             @Override
-            public FuncExpr visitNoparam_manipulation_function(VerdictSQLParser.Noparam_manipulation_functionContext ctx) {
+            public FuncExpr visitNoparam_manipulation_function(
+                    VerdictSQLParser.Noparam_manipulation_functionContext ctx) {
                 String fname = ctx.function_name.getText().toUpperCase();
-                FuncName funcName = string2FunctionType.containsKey(fname)? string2FunctionType.get(fname) : FuncName.UNKNOWN;
+                FuncName funcName = string2FunctionType.containsKey(fname) ? string2FunctionType.get(fname)
+                        : FuncName.UNKNOWN;
                 return new FuncExpr(funcName, null);
             }
 
             @Override
-            public FuncExpr visitBinary_manipulation_function(VerdictSQLParser.Binary_manipulation_functionContext ctx) {
+            public FuncExpr visitBinary_manipulation_function(
+                    VerdictSQLParser.Binary_manipulation_functionContext ctx) {
                 String fname = ctx.function_name.getText().toUpperCase();
-                FuncName funcName = string2FunctionType.containsKey(fname)? string2FunctionType.get(fname) : FuncName.UNKNOWN;
+                FuncName funcName = string2FunctionType.containsKey(fname) ? string2FunctionType.get(fname)
+                        : FuncName.UNKNOWN;
                 return new FuncExpr(funcName, Expr.from(vc, ctx.expression(0)), Expr.from(vc, ctx.expression(1)));
             }
 
             @Override
-            public FuncExpr visitTernary_manipulation_function(VerdictSQLParser.Ternary_manipulation_functionContext ctx) {
+            public FuncExpr visitTernary_manipulation_function(
+                    VerdictSQLParser.Ternary_manipulation_functionContext ctx) {
                 String fname = ctx.function_name.getText().toUpperCase();
-                FuncName funcName = string2FunctionType.containsKey(fname)? string2FunctionType.get(fname) : FuncName.UNKNOWN;
-                return new FuncExpr(funcName, Expr.from(vc, ctx.expression(0)), Expr.from(vc, ctx.expression(1)), Expr.from(vc, ctx.expression(2)));
+                FuncName funcName = string2FunctionType.containsKey(fname) ? string2FunctionType.get(fname)
+                        : FuncName.UNKNOWN;
+                return new FuncExpr(funcName, Expr.from(vc, ctx.expression(0)), Expr.from(vc, ctx.expression(1)),
+                        Expr.from(vc, ctx.expression(2)));
             }
-            
-            @Override 
-            public FuncExpr visitExtract_time_function(VerdictSQLParser.Extract_time_functionContext ctx) { 
+
+            @Override
+            public FuncExpr visitExtract_time_function(VerdictSQLParser.Extract_time_functionContext ctx) {
                 String fname = ctx.function_name.getText().toUpperCase();
-                FuncName funcName = string2FunctionType.containsKey(fname)? string2FunctionType.get(fname) : FuncName.UNKNOWN;
-                return new FuncExpr(funcName, ConstantExpr.from(vc, ctx.extract_unit()), Expr.from(vc, ctx.expression()));            	
+                FuncName funcName = string2FunctionType.containsKey(fname) ? string2FunctionType.get(fname)
+                        : FuncName.UNKNOWN;
+                return new FuncExpr(funcName, ConstantExpr.from(vc, ctx.extract_unit()),
+                        Expr.from(vc, ctx.expression()));
             }
-            
+
         };
         return v.visit(ctx);
     }
@@ -321,12 +297,11 @@ public class FuncExpr extends Expr {
         } else if (expressions.size() == 1) {
             sql.append(String.format(functionPattern.get(funcname), expressions.get(0).toString()));
         } else if (expressions.size() == 2) {
-            sql.append(String.format(functionPattern.get(funcname), expressions.get(0).toString(), expressions.get(1).toString()));
+            sql.append(String.format(functionPattern.get(funcname), expressions.get(0).toString(),
+                    expressions.get(1).toString()));
         } else {
-            sql.append(String.format(functionPattern.get(funcname),
-                    expressions.get(0).toString(),
-                    expressions.get(1).toString(),
-                    expressions.get(2).toString()));
+            sql.append(String.format(functionPattern.get(funcname), expressions.get(0).toString(),
+                    expressions.get(1).toString(), expressions.get(2).toString()));
         }
 
         if (overClause != null) {
@@ -343,22 +318,21 @@ public class FuncExpr extends Expr {
     @Override
     public boolean isagg() {
         if (funcname.equals(FuncName.AVG) || funcname.equals(FuncName.SUM) || funcname.equals(FuncName.COUNT)
-         || funcname.equals(FuncName.COUNT_DISTINCT) || funcname.equals(FuncName.IMPALA_APPROX_COUNT_DISTINCT)
-         || funcname.equals(FuncName.MIN) || funcname.equals(FuncName.MAX)) {
+                || funcname.equals(FuncName.COUNT_DISTINCT) || funcname.equals(FuncName.IMPALA_APPROX_COUNT_DISTINCT)
+                || funcname.equals(FuncName.MIN) || funcname.equals(FuncName.MAX)) {
             return true;
         } else {
             for (Expr expr : expressions) {
-                if (expr.isagg()) return true;
+                if (expr.isagg())
+                    return true;
             }
         }
         return false;
     }
-    
+
     @Override
     public boolean isMeanLikeAggregate() {
-        if (funcname.equals(FuncName.AVG) ||
-            funcname.equals(FuncName.SUM) ||
-            funcname.equals(FuncName.COUNT)) {
+        if (funcname.equals(FuncName.AVG) || funcname.equals(FuncName.SUM) || funcname.equals(FuncName.COUNT)) {
             return true;
         } else {
             return false;
@@ -382,7 +356,7 @@ public class FuncExpr extends Expr {
             return false;
         }
     }
-    
+
     public boolean isMax() {
         if (funcname.equals(FuncName.MAX)) {
             return true;
@@ -390,7 +364,7 @@ public class FuncExpr extends Expr {
             return false;
         }
     }
-    
+
     public boolean isMin() {
         if (funcname.equals(FuncName.MIN)) {
             return true;
@@ -416,12 +390,11 @@ public class FuncExpr extends Expr {
         } else if (expressions.size() == 1) {
             sql.append(String.format(functionPattern.get(funcname), expressions.get(0).toSql()));
         } else if (expressions.size() == 2) {
-            sql.append(String.format(functionPattern.get(funcname), expressions.get(0).toSql(), expressions.get(1).toSql()));
+            sql.append(String.format(functionPattern.get(funcname), expressions.get(0).toSql(),
+                    expressions.get(1).toSql()));
         } else {
-            sql.append(String.format(functionPattern.get(funcname),
-                    expressions.get(0).toSql(),
-                    expressions.get(1).toSql(),
-                    expressions.get(2).toSql()));
+            sql.append(String.format(functionPattern.get(funcname), expressions.get(0).toSql(),
+                    expressions.get(1).toSql(), expressions.get(2).toSql()));
         }
 
         if (overClause != null) {
@@ -429,7 +402,7 @@ public class FuncExpr extends Expr {
         }
         return sql.toString();
     }
-    
+
     @Override
     public int hashCode() {
         int s = 0;
@@ -437,7 +410,8 @@ public class FuncExpr extends Expr {
             s += e.hashCode();
         }
         s += funcname.hashCode();
-        if (overClause == null) s += 1;
+        if (overClause == null)
+            s += 1;
         return s;
     }
 
@@ -445,7 +419,7 @@ public class FuncExpr extends Expr {
     public boolean equals(Expr o) {
         if (o instanceof FuncExpr) {
             return getExpressions().equals(((FuncExpr) o).getExpressions())
-                   && getFuncName().equals(((FuncExpr) o).getFuncName());
+                    && getFuncName().equals(((FuncExpr) o).getFuncName());
         }
         return false;
     }

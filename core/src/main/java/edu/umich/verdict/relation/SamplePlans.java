@@ -1,3 +1,20 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package edu.umich.verdict.relation;
 
 import java.util.ArrayList;
@@ -21,14 +38,16 @@ public class SamplePlans {
     public void add(SamplePlan plan) {
         plans.add(plan);
     }
-    
+
     public List<SamplePlan> getPlans() {
-    	return plans;
+        return plans;
     }
 
     /**
      * Creates candidate plans that can answer one more expression.
-     * @param groups A candidate approx relations that can answer an expression
+     * 
+     * @param groups
+     *            A candidate approx relations that can answer an expression
      */
     public void consolidateNewExpr(List<SampleGroup> groups) {
         List<SamplePlan> newPlans = new ArrayList<SamplePlan>();
@@ -37,8 +56,7 @@ public class SamplePlans {
             for (SampleGroup group : groups) {
                 newPlans.add(new SamplePlan(Arrays.asList(group)));
             }
-        }
-        else {
+        } else {
             for (SamplePlan oldPlan : plans) {
                 for (SampleGroup group : groups) {
                     newPlans.add(oldPlan.createByMerge(group));
@@ -50,7 +68,8 @@ public class SamplePlans {
     }
 
     // keeps the top 'num' number of plans.
-    // this method does not remove the plan that includes only a single sample group.
+    // this method does not remove the plan that includes only a single sample
+    // group.
     public void prune(int num) {
 
         Comparator<SamplePlan> costComparator = new Comparator<SamplePlan>() {
@@ -86,7 +105,8 @@ public class SamplePlans {
     }
 
     public SamplePlan bestPlan(double relative_cost_ratio) {
-        // find the original plan (the plan that uses the original tables) and the cost of the plan.
+        // find the original plan (the plan that uses the original tables) and the cost
+        // of the plan.
         double original_cost = Double.NEGATIVE_INFINITY;
         SamplePlan original_plan = null;
         for (SamplePlan plan : plans) {
@@ -99,7 +119,8 @@ public class SamplePlans {
             }
         }
 
-        // find the best plan (the plan whose cost is not too large and its sampling prob is good)
+        // find the best plan (the plan whose cost is not too large and its sampling
+        // prob is good)
         SamplePlan best = null;
         double bestScore = Double.NEGATIVE_INFINITY;
 
@@ -114,8 +135,9 @@ public class SamplePlans {
                 if (thisScore > bestScore) {
                     bestScore = thisScore;
                     best = plan;
-                }				
-                //				VerdictLogger.debug(this, plan.toString() + ", cost: " + cost + ", prob: " + plan.harmonicSamplingProb());
+                }
+                // VerdictLogger.debug(this, plan.toString() + ", cost: " + cost + ", prob: " +
+                // plan.harmonicSamplingProb());
             }
 
             if (cost < fallbackCost) {

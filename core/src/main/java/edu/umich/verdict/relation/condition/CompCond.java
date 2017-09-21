@@ -1,3 +1,20 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package edu.umich.verdict.relation.condition;
 
 import java.util.List;
@@ -71,35 +88,39 @@ public class CompCond extends Cond {
                 String rightTab = ((ColNameExpr) right).getTab();
                 ExactRelation r1 = tableSources.get(0);
                 ExactRelation r2 = null;
-                
+
                 if (doesRelationContain(r1, leftTab)) {
                     r2 = findSourceContaining(tableSources, rightTab);
                 } else if (doesRelationContain(r1, rightTab)) {
                     r2 = findSourceContaining(tableSources, leftTab);
                 }
-                
+
                 if (r2 != null && r1 != r2) {
                     return Pair.of((Cond) this, Pair.of(r1, r2));
                 }
-                
-//                if (!joinedTableAliases.contains(leftTab) && !joinedTableAliases.contains(rightTab)) {
-//                    // the condition does not contain any pre-joined tables.
-//                    if (leftTab != rightTab) {
-//                        return Triple.of((Cond) this, Pair.of(leftTab, rightTab), true);
-//                    }
-//                } else {
-//                    // if there are some tables that are already joined, a new table must be a new table.
-//                    if (joinedTableAliases.contains(leftTab) && !joinedTableAliases.contains(rightTab)) {
-//                        return Triple.of((Cond) this, Pair.of(leftTab, rightTab));
-//                    } else if (!joinedTableAliases.contains(leftTab) && joinedTableAliases.contains(rightTab)) {
-//                        return Triple.of((Cond) this, Pair.of(rightTab, leftTab));
-//                    }
-//                }
+
+                // if (!joinedTableAliases.contains(leftTab) &&
+                // !joinedTableAliases.contains(rightTab)) {
+                // // the condition does not contain any pre-joined tables.
+                // if (leftTab != rightTab) {
+                // return Triple.of((Cond) this, Pair.of(leftTab, rightTab), true);
+                // }
+                // } else {
+                // // if there are some tables that are already joined, a new table must be a
+                // new table.
+                // if (joinedTableAliases.contains(leftTab) &&
+                // !joinedTableAliases.contains(rightTab)) {
+                // return Triple.of((Cond) this, Pair.of(leftTab, rightTab));
+                // } else if (!joinedTableAliases.contains(leftTab) &&
+                // joinedTableAliases.contains(rightTab)) {
+                // return Triple.of((Cond) this, Pair.of(rightTab, leftTab));
+                // }
+                // }
             }
         }
         return null;
     }
-    
+
     private ExactRelation findSourceContaining(List<ExactRelation> tableSources, String tab) {
         for (ExactRelation r : tableSources) {
             if (doesRelationContain(r, tab)) {
@@ -108,36 +129,38 @@ public class CompCond extends Cond {
         }
         return null;
     }
-    
+
     private boolean doesRelationContain(ExactRelation r, String tab) {
         if (r instanceof SingleRelation || r instanceof ProjectedRelation || r instanceof AggregatedRelation) {
             if (r.getAlias().equals(tab)) {
                 return true;
             }
         } else if (r instanceof JoinedRelation) {
-            return doesRelationContain(((JoinedRelation) r).getLeftSource(), tab) ||
-                   doesRelationContain(((JoinedRelation) r).getRightSource(), tab);
+            return doesRelationContain(((JoinedRelation) r).getLeftSource(), tab)
+                    || doesRelationContain(((JoinedRelation) r).getRightSource(), tab);
         }
         return false;
     }
-    
-//    private String searchForTableName(VerdictContext vc, ColNameExpr col, List<TableUniqueName> among) {
-//        if (col.getTab() != null) {
-//            return col.getTab();
-//        } else {
-//            for (TableUniqueName t : among) {
-//                Set<String> cols = vc.getMeta().getColumns(t);
-//                if (cols.contains(col.getCol())) {
-//                    return t.
-//                }
-//            }
-//        }
-//    }
+
+    // private String searchForTableName(VerdictContext vc, ColNameExpr col,
+    // List<TableUniqueName> among) {
+    // if (col.getTab() != null) {
+    // return col.getTab();
+    // } else {
+    // for (TableUniqueName t : among) {
+    // Set<String> cols = vc.getMeta().getColumns(t);
+    // if (cols.contains(col.getCol())) {
+    // return t.
+    // }
+    // }
+    // }
+    // }
 
     @Override
     public boolean equals(Object a) {
         if (a instanceof CompCond) {
-            if (((CompCond) a).getLeft().equals(left) && ((CompCond) a).getRight().equals(right) && ((CompCond) a).getOp().equals(compOp)) {
+            if (((CompCond) a).getLeft().equals(left) && ((CompCond) a).getRight().equals(right)
+                    && ((CompCond) a).getOp().equals(compOp)) {
                 return true;
             } else {
                 return false;
@@ -168,9 +191,8 @@ public class CompCond extends Cond {
     @Override
     public boolean equals(Cond o) {
         if (o instanceof CompCond) {
-            return getOp().equals(((CompCond) o).getOp())
-                && getLeft().equals(((CompCond) o).getLeft())
-                && getRight().equals(((CompCond) o).getRight());
+            return getOp().equals(((CompCond) o).getOp()) && getLeft().equals(((CompCond) o).getLeft())
+                    && getRight().equals(((CompCond) o).getRight());
         }
         return false;
     }

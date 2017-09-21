@@ -5,9 +5,9 @@
     <url>http://verdictdb.org</url>
 	<packaging>jar</packaging>
 
-	<parent>
-		<groupId>edu.umich.verdict</groupId>
-		<artifactId>verdictdb</artifactId>
+    <parent>
+        <groupId>edu.umich.verdict</groupId>
+        <artifactId>verdictdb</artifactId>
         <version>0.3.0-snapshot</version>
 	</parent>
 

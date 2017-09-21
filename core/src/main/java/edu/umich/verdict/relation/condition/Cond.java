@@ -1,3 +1,20 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package edu.umich.verdict.relation.condition;
 
 import java.util.List;
@@ -14,17 +31,18 @@ import edu.umich.verdict.util.StringManipulations;
 
 public abstract class Cond {
 
-    public Cond() {}
+    public Cond() {
+    }
 
     public static Cond from(VerdictContext vc, String cond) {
         VerdictSQLParser p = StringManipulations.parserOf(cond);
         return from(vc, p.search_condition());
     }
 
-    //	public static Cond from(Search_conditionContext ctx) {
-    //		CondGen g = new CondGen();
-    //		return g.visit(ctx);
-    //	}
+    // public static Cond from(Search_conditionContext ctx) {
+    // CondGen g = new CondGen();
+    // return g.visit(ctx);
+    // }
 
     public static Cond from(VerdictContext vc, Search_conditionContext ctx) {
         CondGen g = new CondGen(vc);
@@ -38,9 +56,9 @@ public abstract class Cond {
     /**
      * 
      * @param joinedTableName
-     * @return A pair of the join condition and the name of a table to be joined to existing table sources.
-     * Note that, where there exists already joined tables, the right side of the returned String pair is
-     * the new table.
+     * @return A pair of the join condition and the name of a table to be joined to
+     *         existing table sources. Note that, where there exists already joined
+     *         tables, the right side of the returned String pair is the new table.
      */
     public Pair<Cond, Pair<ExactRelation, ExactRelation>> searchForJoinCondition(List<ExactRelation> tableSources) {
         return null;
@@ -58,14 +76,14 @@ public abstract class Cond {
 
     /**
      * Generates a sql expression.
+     * 
      * @return
      */
     public abstract String toSql();
-    
-    public abstract boolean equals(Cond o);
-    
-}
 
+    public abstract boolean equals(Cond o);
+
+}
 
 class CondGen extends VerdictSQLBaseVisitor<Cond> {
 
@@ -132,13 +150,13 @@ class CondGen extends VerdictSQLBaseVisitor<Cond> {
         Cond right = visit(ctx.null_notnull());
         return new IsCond(left, right);
     }
-    
+
     @Override
     public Cond visitIn_predicate(VerdictSQLParser.In_predicateContext ctx) {
         InCond inCond = InCond.from(vc, ctx);
         return inCond;
     }
-    
+
     @Override
     public Cond visitLike_predicate(VerdictSQLParser.Like_predicateContext ctx) {
         LikeCond likeCond = LikeCond.from(vc, ctx);

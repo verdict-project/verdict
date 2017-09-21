@@ -34,7 +34,8 @@ import edu.umich.verdict.util.StringManipulations;
 import edu.umich.verdict.util.VerdictLogger;
 
 /**
- * This class is responsible for instantiating the subclass that best suits to handle a given SQL query.
+ * This class is responsible for instantiating the subclass that best suits to
+ * handle a given SQL query.
  * 
  * @author Yongjoo Park
  *
@@ -48,27 +49,25 @@ public abstract class Query {
     protected ResultSet rs;
 
     protected DataFrame df;
-    
+
     protected Dataset<Row> ds;
 
-
     public enum Type {
-        SELECT, CREATE_SAMPLE, DROP_SAMPLE, SHOW_SAMPLE, CONFIG, DESCRIBE_TABLE,
-        OTHER_USE, OTHER_SHOW_TABLES, OTHER_SHOW_DATABASES, NOSUPPORT, OTHER_REFRESH,
-        OTHER_SHOW_CONFIG,
-        CREATE_TABLE, CREATE_TABLE_AS_SELECT, DROP_TABLE, DELETE_FROM, CREATE_VIEW, DROP_VIEW
+        SELECT, CREATE_SAMPLE, DROP_SAMPLE, SHOW_SAMPLE, CONFIG, DESCRIBE_TABLE, OTHER_USE, OTHER_SHOW_TABLES, OTHER_SHOW_DATABASES, NOSUPPORT, OTHER_REFRESH, OTHER_SHOW_CONFIG, CREATE_TABLE, CREATE_TABLE_AS_SELECT, DROP_TABLE, DELETE_FROM, CREATE_VIEW, DROP_VIEW
     }
 
     /**
      * This class should be instantiated by Query.
-     * @param q query string
+     * 
+     * @param q
+     *            query string
      * @param vc
      */
     public Query(VerdictContext vc, String q) {
         queryString = q;
         this.vc = vc;
         vc.incrementQid();
-        //		vc.getMeta().clearSampleInfo();
+        // vc.getMeta().clearSampleInfo();
         Alias.resetAliasIndex();
     }
 
@@ -77,27 +76,18 @@ public abstract class Query {
     }
 
     /**
-     * This is the main entry point for all Verdict queries. Whether a given query expects a result set to be returned
-     * will be determined by analyzing the query itself. For instance, "CREATE TABLE" query should not expect any result
-     * set to be returned, while "SELECT ..." query expects a result set.
+     * This is the main entry point for all Verdict queries. Whether a given query
+     * expects a result set to be returned will be determined by analyzing the query
+     * itself. For instance, "CREATE TABLE" query should not expect any result set
+     * to be returned, while "SELECT ..." query expects a result set.
      * 
-     * Verdict recognizes the following types of queries.
-     * A. Types of the queries that expect a result set:
-     *   1. SELECT ...
-     *   2. DESCRIBE TABLE
-     *   3. USE DATABASE (empty result set)
-     *   4. SHOW TABLES
-     *   5. SHOW DATABASES
-     *   6. SHOW SAMPLE
+     * Verdict recognizes the following types of queries. A. Types of the queries
+     * that expect a result set: 1. SELECT ... 2. DESCRIBE TABLE 3. USE DATABASE
+     * (empty result set) 4. SHOW TABLES 5. SHOW DATABASES 6. SHOW SAMPLE
      * 
-     * B. Types of the queries that expect updates.
-     * 1. CREAET SAMPLE
-     * 2. DROP SAMPLE
-     * 3. CREATE TABLE (AS SELECT) (TODO)
-     * 4. DROP TABLE  (TODO)
-     * 5. DELETE FROM (TODO)
-     * 6. CREATE VIEW (TODO)
-     * 7. DROP VIEW   (TODO)
+     * B. Types of the queries that expect updates. 1. CREAET SAMPLE 2. DROP SAMPLE
+     * 3. CREATE TABLE (AS SELECT) (TODO) 4. DROP TABLE (TODO) 5. DELETE FROM (TODO)
+     * 6. CREATE VIEW (TODO) 7. DROP VIEW (TODO)
      * 
      * @return ResultSet if the query belongs to the type A, otherwise return null.
      * @throws VerdictException
@@ -118,7 +108,7 @@ public abstract class Query {
             return df;
         }
     }
-    
+
     public Dataset<Row> getDataset() {
         if (ds == null && (vc.getDbms() instanceof DbmsSpark2)) {
             return ((DbmsSpark2) vc.getDbms()).emptyDataFrame();
@@ -138,13 +128,12 @@ public abstract class Query {
         DataFrame df = getDataFrame();
         return df;
     }
-    
-    public Dataset<Row> computeDataset() throws VerdictException {
-    		compute();
-    		Dataset<Row> ds = getDataset();
-    		return ds;
-    }
 
+    public Dataset<Row> computeDataset() throws VerdictException {
+        compute();
+        Dataset<Row> ds = getDataset();
+        return ds;
+    }
 
     public static Query getInstance(VerdictContext vc, String queryString) throws VerdictException {
         Query query = null;
@@ -157,7 +146,7 @@ public abstract class Query {
                 return query;
             }
         }
-        
+
         if (vc.getConf().bypass()) {
             VerdictLogger.info("Verdict bypasses this query. Run \"set bypass=\'false\'\""
                     + " to enable Verdict's approximate query processing.");
@@ -168,7 +157,7 @@ public abstract class Query {
             }
         } else {
             if (queryType.equals(Type.SELECT)) {
-                //					query = SelectQuery.getInstance(vc, queryString);
+                // query = SelectQuery.getInstance(vc, queryString);
                 query = new SelectQuery(vc, queryString);
             } else if (queryType.equals(Type.CREATE_SAMPLE)) {
                 query = new CreateSampleQuery(vc, queryString);
@@ -186,12 +175,10 @@ public abstract class Query {
                 query = new ShowDatabasesQuery(vc, queryString);
             } else if (queryType.equals(Type.OTHER_REFRESH)) {
                 query = new RefreshQuery(vc, queryString);
-                //				} else if (queryType.equals(Type.CREATE_TABLE)) {
-                //					query = new CreateTableQuery(vc, queryString);
-            } else if (queryType.equals(Type.CREATE_TABLE) ||
-                    queryType.equals(Type.DROP_TABLE) ||
-                    queryType.equals(Type.DELETE_FROM) ||
-                    queryType.equals(Type.DROP_VIEW)) {
+                // } else if (queryType.equals(Type.CREATE_TABLE)) {
+                // query = new CreateTableQuery(vc, queryString);
+            } else if (queryType.equals(Type.CREATE_TABLE) || queryType.equals(Type.DROP_TABLE)
+                    || queryType.equals(Type.DELETE_FROM) || queryType.equals(Type.DROP_VIEW)) {
                 query = new ByPassVerdictUpdateQuery(vc, queryString);
             } else if (queryType.equals(Type.OTHER_SHOW_CONFIG)) {
                 query = new ShowConfigQuery(vc, queryString);
@@ -210,18 +197,20 @@ public abstract class Query {
 
     protected static boolean isUpdateType(Type type) {
         if (type.equals(Type.CREATE_SAMPLE) || type.equals(Type.DROP_SAMPLE) || type.equals(Type.CREATE_TABLE)
-            || type.equals(Type.DROP_TABLE) || type.equals(Type.DELETE_FROM) || type.equals(Type.DROP_VIEW)
-            || type.equals(Type.CREATE_TABLE_AS_SELECT) || type.equals(Type.CREATE_VIEW)) {
+                || type.equals(Type.DROP_TABLE) || type.equals(Type.DELETE_FROM) || type.equals(Type.DROP_VIEW)
+                || type.equals(Type.CREATE_TABLE_AS_SELECT) || type.equals(Type.CREATE_VIEW)) {
             return true;
         } else {
             return false;
         }
-//        if (type.equals(Type.SELECT) || type.equals(Type.SHOW_SAMPLE) || type.equals(Type.DESCRIBE_TABLE)
-//                || type.equals(Type.OTHER_USE) || type.equals(Type.OTHER_SHOW_TABLES) || type.equals(Type.OTHER_SHOW_DATABASES)) {
-//            return false;
-//        } else {
-//            return true;
-//        }
+        // if (type.equals(Type.SELECT) || type.equals(Type.SHOW_SAMPLE) ||
+        // type.equals(Type.DESCRIBE_TABLE)
+        // || type.equals(Type.OTHER_USE) || type.equals(Type.OTHER_SHOW_TABLES) ||
+        // type.equals(Type.OTHER_SHOW_DATABASES)) {
+        // return false;
+        // } else {
+        // return true;
+        // }
     }
 
     protected static Type getStatementType(String queryString) {
@@ -230,7 +219,9 @@ public abstract class Query {
         VerdictSQLBaseVisitor<Type> visitor = new VerdictSQLBaseVisitor<Type>() {
             private Type type = Type.NOSUPPORT;
 
-            protected Type defaultResult() { return type; }
+            protected Type defaultResult() {
+                return type;
+            }
 
             @Override
             public Type visitSelect_statement(VerdictSQLParser.Select_statementContext ctx) {
@@ -242,7 +233,7 @@ public abstract class Query {
             public Type visitCreate_sample_statement(VerdictSQLParser.Create_sample_statementContext ctx) {
                 type = Type.CREATE_SAMPLE;
                 return type;
-            } 
+            }
 
             @Override
             public Type visitDelete_sample_statement(VerdictSQLParser.Delete_sample_statementContext ctx) {
@@ -339,4 +330,3 @@ public abstract class Query {
     }
 
 }
-

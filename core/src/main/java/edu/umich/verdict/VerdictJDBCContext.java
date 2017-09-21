@@ -31,136 +31,136 @@ import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.query.Query;
 import edu.umich.verdict.util.VerdictLogger;
 
-
 public class VerdictJDBCContext extends VerdictContext {
-	
-	VerdictMeta meta;
-	
-	/*
-	 *  DBMS fields
-	 */
-	private Dbms dbms;
-	
-	private Dbms metaDbms;		// contains persistent info of VerdictMeta
-	
-	private ResultSet rs;
-	
-	
-	// used for refreshing meta data.
-	private long queryUid;
-	
-	public Dbms getDbms() {
-		return dbms;
-	}
 
-	public void setDbms(Dbms dbms) {
-		this.dbms = dbms;
-		this.metaDbms = dbms;
-	}
+    VerdictMeta meta;
 
-	public int getContextId() {
-		return contextId;
-	}
+    /*
+     * DBMS fields
+     */
+    private Dbms dbms;
 
-	public long getQid() {
-		return queryUid;
-	}
+    private Dbms metaDbms; // contains persistent info of VerdictMeta
 
-	public VerdictMeta getMeta() {
-		return meta;
-	}
-	
-	public void setMeta(VerdictMeta meta) {
-		this.meta = meta;
-	}
+    private ResultSet rs;
 
-	public String getDefaultSchema() {
-		return conf.getDbmsSchema();
-	}
+    // used for refreshing meta data.
+    private long queryUid;
 
-	public VerdictConf getConf() {
-		return conf;
-	}
+    public Dbms getDbms() {
+        return dbms;
+    }
 
-	public Dbms getMetaDbms() {
-		return metaDbms;
-	}
+    public void setDbms(Dbms dbms) {
+        this.dbms = dbms;
+        this.metaDbms = dbms;
+    }
 
-	public Optional<String> getCurrentSchema() {
-		return dbms.getCurrentSchema();
-	}
+    public int getContextId() {
+        return contextId;
+    }
 
-	public void destroy() throws VerdictException {
-		dbms.close();
-	}
+    public long getQid() {
+        return queryUid;
+    }
 
-	public long getCurrentQid() {
-		return queryUid;
-	}
-	
-	/**
-	 *  copy constructor
-	 * @param conf
-	 * @throws VerdictException
-	 */
-	public VerdictJDBCContext(VerdictJDBCContext another) throws VerdictException {
-		super(another.conf, another.contextId);
-		this.meta = another.meta;
-		this.dbms = another.dbms;
-		this.metaDbms = another.metaDbms;
-		this.queryUid = another.queryUid;
-		((DbmsJDBC) this.dbms).createNewStatementWithoutClosing();
-		this.rs = another.rs;
-	}
-	
-	VerdictJDBCContext(VerdictConf conf) {
-		super(conf);
-	}
-	
-	/**
-	 * Makes connections to the 'data' DBMS and 'meta' DBMS.
-	 * @param conf
-	 * @throws VerdictException
-	 */
-	public static VerdictJDBCContext from(VerdictConf conf) throws VerdictException {
-		VerdictJDBCContext vc = new VerdictJDBCContext(conf);
-		vc.setDbms(Dbms.from(vc, conf));
-		vc.setMeta(new VerdictMeta(vc));		// this must be called after DB connection is created.
-		
-		if (conf.getDbmsSchema() != null) {
-			vc.getMeta().refreshSampleInfo(conf.getDbmsSchema());
-		}
-		
-		return vc;
-	}
-	
-	public void execute(String sql) throws VerdictException {
-		VerdictLogger.debug(this, "An input query:");
-		VerdictLogger.debugPretty(this, sql, "  ");
-		Query vq = Query.getInstance(this, sql);
-		rs = vq.computeResultSet();
-		VerdictLogger.debug(this, "The query execution finished.");
-	}
-	
-//	public ResultSet executeQuery(String sql) throws VerdictException {
-//		execute(sql);
-//		return getResultSet();
-//	}
+    public VerdictMeta getMeta() {
+        return meta;
+    }
 
-	@Override
-	public ResultSet getResultSet() {
-		return rs;
-	}
+    public void setMeta(VerdictMeta meta) {
+        this.meta = meta;
+    }
 
-	@Override
-	public DataFrame getDataFrame() {
-		return null;
-	}
+    public String getDefaultSchema() {
+        return conf.getDbmsSchema();
+    }
 
-	@Override
-	public Dataset<Row> getDataset() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    public VerdictConf getConf() {
+        return conf;
+    }
+
+    public Dbms getMetaDbms() {
+        return metaDbms;
+    }
+
+    public Optional<String> getCurrentSchema() {
+        return dbms.getCurrentSchema();
+    }
+
+    public void destroy() throws VerdictException {
+        dbms.close();
+    }
+
+    public long getCurrentQid() {
+        return queryUid;
+    }
+
+    /**
+     * copy constructor
+     * 
+     * @param conf
+     * @throws VerdictException
+     */
+    public VerdictJDBCContext(VerdictJDBCContext another) throws VerdictException {
+        super(another.conf, another.contextId);
+        this.meta = another.meta;
+        this.dbms = another.dbms;
+        this.metaDbms = another.metaDbms;
+        this.queryUid = another.queryUid;
+        ((DbmsJDBC) this.dbms).createNewStatementWithoutClosing();
+        this.rs = another.rs;
+    }
+
+    VerdictJDBCContext(VerdictConf conf) {
+        super(conf);
+    }
+
+    /**
+     * Makes connections to the 'data' DBMS and 'meta' DBMS.
+     * 
+     * @param conf
+     * @throws VerdictException
+     */
+    public static VerdictJDBCContext from(VerdictConf conf) throws VerdictException {
+        VerdictJDBCContext vc = new VerdictJDBCContext(conf);
+        vc.setDbms(Dbms.from(vc, conf));
+        vc.setMeta(new VerdictMeta(vc)); // this must be called after DB connection is created.
+
+        if (conf.getDbmsSchema() != null) {
+            vc.getMeta().refreshSampleInfo(conf.getDbmsSchema());
+        }
+
+        return vc;
+    }
+
+    public void execute(String sql) throws VerdictException {
+        VerdictLogger.debug(this, "An input query:");
+        VerdictLogger.debugPretty(this, sql, "  ");
+        Query vq = Query.getInstance(this, sql);
+        rs = vq.computeResultSet();
+        VerdictLogger.debug(this, "The query execution finished.");
+    }
+
+    // public ResultSet executeQuery(String sql) throws VerdictException {
+    // execute(sql);
+    // return getResultSet();
+    // }
+
+    @Override
+    public ResultSet getResultSet() {
+        return rs;
+    }
+
+    @Override
+    public DataFrame getDataFrame() {
+        return null;
+    }
+
+    @Override
+    public Dataset<Row> getDataset() {
+        // TODO Auto-generated method stub
+        return null;
+    }
 
 }

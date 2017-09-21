@@ -40,18 +40,16 @@ public abstract class VerdictContext {
     final static protected Set<String> JDBC_DBMS = Sets.newHashSet("mysql", "impala", "hive", "hive2");
 
     /*
-     *  DBMS fields
+     * DBMS fields
      */
     private Dbms dbms;
 
-    private Dbms metaDbms;		// contains persistent info of VerdictMeta
-
+    private Dbms metaDbms; // contains persistent info of VerdictMeta
 
     // used for refreshing meta data.
     private long queryUid;
 
     final protected int contextId;
-
 
     public Dbms getDbms() {
         return dbms;
@@ -118,11 +116,14 @@ public abstract class VerdictContext {
     private static VerdictContext dummyContext = null;
 
     /**
-     * Singleton dummy VerdictContext. Used only by FuncExpr for setting inherited Expr's VerdictContext field.
+     * Singleton dummy VerdictContext. Used only by FuncExpr for setting inherited
+     * Expr's VerdictContext field.
+     * 
      * @return
      */
     public static VerdictContext dummyContext() {
-        if (dummyContext != null) return dummyContext;
+        if (dummyContext != null)
+            return dummyContext;
 
         VerdictConf conf = new VerdictConf(false);
         conf.setDbms("dummy");
@@ -140,7 +141,7 @@ public abstract class VerdictContext {
     public abstract ResultSet getResultSet();
 
     public abstract DataFrame getDataFrame();
-    
+
     public abstract Dataset<Row> getDataset();
 
     public ResultSet executeJdbcQuery(String sql) throws VerdictException {
@@ -154,7 +155,7 @@ public abstract class VerdictContext {
         DataFrame df = getDataFrame();
         return df;
     }
-    
+
     public Dataset<Row> executeSpark2Query(String sql) throws VerdictException {
         execute(sql);
         Dataset<Row> ds = getDataset();
@@ -165,10 +166,10 @@ public abstract class VerdictContext {
         DataFrame df = executeSparkQuery(sql);
         return df;
     }
-    
+
     public Dataset<Row> sql2(String sql) throws VerdictException {
-    		Dataset<Row> ds = executeSpark2Query(sql);
-    		return ds;
+        Dataset<Row> ds = executeSpark2Query(sql);
+        return ds;
     }
 
 }

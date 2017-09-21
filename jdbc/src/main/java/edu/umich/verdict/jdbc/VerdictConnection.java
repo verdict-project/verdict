@@ -1,3 +1,20 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package edu.umich.verdict.jdbc;
 
 import java.io.File;
@@ -31,10 +48,9 @@ import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.util.StackTraceReader;
 import edu.umich.verdict.util.VerdictLogger;
 
-
 public class VerdictConnection implements Connection {
-    //    private final DbConnector connector;
-    //    private final Connection innerConnection;
+    // private final DbConnector connector;
+    // private final Connection innerConnection;
     private final VerdictConf conf;
     private VerdictJDBCContext vc;
     private boolean isOpen = true;
@@ -43,30 +59,33 @@ public class VerdictConnection implements Connection {
         return ((DbmsJDBC) vc.getDbms()).getDbmsConnection();
     }
 
-    //    public void setLogLevel(String level) {
-    //    	vc.setLogLevel(level);
-    //    }
+    // public void setLogLevel(String level) {
+    // vc.setLogLevel(level);
+    // }
 
     /**
-     * Option priorities
-     * 1. Explicitly passed key-values in {@code url}
-     * 2. key-values stored in {@code info}
-     * 3. default properties (automatically handled by {@link edu.umich.verdict.VerdictConf VerdictConf}.
-     * @param url Should be in the format "jdbc:verdict:dbms://host:port[/schema][?config=/path/to/conf]"
+     * Option priorities 1. Explicitly passed key-values in {@code url} 2.
+     * key-values stored in {@code info} 3. default properties (automatically
+     * handled by {@link edu.umich.verdict.VerdictConf VerdictConf}.
+     * 
+     * @param url
+     *            Should be in the format
+     *            "jdbc:verdict:dbms://host:port[/schema][?config=/path/to/conf]"
      * @param info
      * @throws SQLException
      */
     public VerdictConnection(String url, Properties info) throws SQLException {
-        try{
+        try {
             // set properties from the config file
             if (info.contains("configfile")) {
                 conf = new VerdictConf(info.getProperty("configfile"));
             } else {
-                conf = new VerdictConf();		// by default, this loads configs from the file
+                conf = new VerdictConf(); // by default, this loads configs from the file
             }
 
             // set properties from the passed connection string.
-            Pattern inlineOptions = Pattern.compile("(?<key>[a-zA-Z0-9_\\.]+)=[\"']?(?<value>[a-zA-Z0-9@_/\\.\\\\:-]+)[\"']?");
+            Pattern inlineOptions = Pattern
+                    .compile("(?<key>[a-zA-Z0-9_\\.]+)=[\"']?(?<value>[a-zA-Z0-9@_/\\.\\\\:-]+)[\"']?");
             Matcher inlineMatcher = inlineOptions.matcher(url);
             while (inlineMatcher.find()) {
                 info.setProperty(inlineMatcher.group("key"), inlineMatcher.group("value"));
@@ -77,9 +96,10 @@ public class VerdictConnection implements Connection {
                 VerdictLogger.debug(this, String.format("connection properties: %s = %s", e.getKey(), e.getValue()));
             }
 
-            // set properties from the url string.    	
-            Pattern urlOptions = Pattern.compile("^jdbc:verdict:(?<dbms>\\w+)://(?<host>[\\.a-zA-Z0-9\\-]+)(?::(?<port>\\d+))?(?:/(?<schema>\\w+))?"
-                    + "(\\?(?<extras>.*))?");
+            // set properties from the url string.
+            Pattern urlOptions = Pattern.compile(
+                    "^jdbc:verdict:(?<dbms>\\w+)://(?<host>[\\.a-zA-Z0-9\\-]+)(?::(?<port>\\d+))?(?:/(?<schema>\\w+))?"
+                            + "(\\?(?<extras>.*))?");
             Matcher urlMatcher = urlOptions.matcher(url);
             if (!urlMatcher.find())
                 throw new SQLException("Invalid URL.");
@@ -89,7 +109,7 @@ public class VerdictConnection implements Connection {
             if (urlMatcher.group("port") != null) {
                 conf.setPort(urlMatcher.group("port"));
             } else {
-                conf.setPort(conf.getDefaultPort());		// assume config file includes it.
+                conf.setPort(conf.getDefaultPort()); // assume config file includes it.
             }
             if (urlMatcher.group("schema") != null) {
                 conf.setDbmsSchema(urlMatcher.group("schema"));
@@ -104,17 +124,17 @@ public class VerdictConnection implements Connection {
                 }
             }
 
-            this.vc = VerdictJDBCContext.from(conf); 
+            this.vc = VerdictJDBCContext.from(conf);
 
         } catch (VerdictException e) {
             throw new SQLException(StackTraceReader.stackTrace2String(e));
         }
     }
 
-
     @Override
     public Statement createStatement() throws SQLException {
-        // we create a copy of VerdictContext so that the underlying statement is not shared.
+        // we create a copy of VerdictContext so that the underlying statement is not
+        // shared.
         return new VerdictStatement(this, vc);
     }
 
@@ -140,7 +160,7 @@ public class VerdictConnection implements Connection {
 
     @Override
     public boolean getAutoCommit() throws SQLException {
-        return getDbmsConnection().getAutoCommit(); 
+        return getDbmsConnection().getAutoCommit();
     }
 
     @Override
@@ -219,7 +239,8 @@ public class VerdictConnection implements Connection {
     }
 
     @Override
-    public PreparedStatement prepareStatement(String sql, int resultSetType, int resultSetConcurrency) throws SQLException {
+    public PreparedStatement prepareStatement(String sql, int resultSetType, int resultSetConcurrency)
+            throws SQLException {
         throw new SQLFeatureNotSupportedException("Verdict doesn't support prepared statements");
     }
 
@@ -269,17 +290,20 @@ public class VerdictConnection implements Connection {
     }
 
     @Override
-    public Statement createStatement(int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException {
+    public Statement createStatement(int resultSetType, int resultSetConcurrency, int resultSetHoldability)
+            throws SQLException {
         return new VerdictStatement(this, vc);
     }
 
     @Override
-    public PreparedStatement prepareStatement(String sql, int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException {
+    public PreparedStatement prepareStatement(String sql, int resultSetType, int resultSetConcurrency,
+            int resultSetHoldability) throws SQLException {
         throw new SQLFeatureNotSupportedException("Verdict doesn't support prepared statement");
     }
 
     @Override
-    public CallableStatement prepareCall(String sql, int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException {
+    public CallableStatement prepareCall(String sql, int resultSetType, int resultSetConcurrency,
+            int resultSetHoldability) throws SQLException {
         throw new SQLFeatureNotSupportedException("Verdict doesn't support callable statement");
     }
 

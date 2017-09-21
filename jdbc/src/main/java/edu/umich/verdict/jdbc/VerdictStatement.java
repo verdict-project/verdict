@@ -1,3 +1,20 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package edu.umich.verdict.jdbc;
 
 import java.sql.Connection;
@@ -17,22 +34,21 @@ import edu.umich.verdict.util.VerdictLogger;
 public class VerdictStatement implements Statement {
 
     private final VerdictConnection connection;
-    
+
     private Statement stmt;
 
-    private final ArrayList<String> batch = new ArrayList<String>();	// TODO: support batch operations.
-    
+    private final ArrayList<String> batch = new ArrayList<String>(); // TODO: support batch operations.
+
     private final VerdictJDBCContext vc;
 
     private ResultSet answer;
-
 
     public VerdictStatement(VerdictConnection connection, VerdictJDBCContext vc) throws SQLException {
         this.connection = connection;
         try {
             // a new verdict context does not share the underlying statement.
             this.vc = vc;
-//            ((DbmsJDBC) vc.getDbms()).createNewStatementWithoutClosing();
+            // ((DbmsJDBC) vc.getDbms()).createNewStatementWithoutClosing();
             this.stmt = ((DbmsJDBC) vc.getDbms()).createStatement();
         } catch (VerdictException e) {
             throw new SQLException(StackTraceReader.stackTrace2String(e));
@@ -64,7 +80,7 @@ public class VerdictStatement implements Statement {
             VerdictLogger.debug(this, StackTraceReader.stackTrace2String(e));
             throw new SQLException(StackTraceReader.stackTrace2String(e));
         }
-        return (answer != null)? true : false;
+        return (answer != null) ? true : false;
     }
 
     @Override
@@ -143,7 +159,7 @@ public class VerdictStatement implements Statement {
 
     @Override
     public boolean getMoreResults() throws SQLException {
-        //    	VerdictLogger.warn(this, "getMoreResults() is not supported");
+        // VerdictLogger.warn(this, "getMoreResults() is not supported");
         return false;
     }
 
@@ -199,7 +215,7 @@ public class VerdictStatement implements Statement {
 
     @Override
     public boolean getMoreResults(int current) throws SQLException {
-        //    	VerdictLogger.warn(this, "getMoreResults() is not supported");
+        // VerdictLogger.warn(this, "getMoreResults() is not supported");
         return false;
     }
 
@@ -245,7 +261,7 @@ public class VerdictStatement implements Statement {
 
     @Override
     public boolean isClosed() throws SQLException {
-        return (stmt == null)? true : stmt.isClosed();
+        return (stmt == null) ? true : stmt.isClosed();
     }
 
     @Override

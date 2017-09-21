@@ -1,3 +1,20 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package edu.umich.verdict.relation.expr;
 
 import java.util.ArrayList;
@@ -10,20 +27,20 @@ import edu.umich.verdict.util.StringManipulations;
 import edu.umich.verdict.util.VerdictLogger;
 
 public abstract class Expr {
-    
+
     protected VerdictContext vc;
-    
+
     protected void setVerdictContext(VerdictContext vc) {
         this.vc = vc;
     }
-    
+
     public Expr(VerdictContext vc) {
         if (vc == null) {
             VerdictLogger.error(this, "null VerdictContext is being set.");
         }
         this.vc = vc;
     }
-    
+
     public VerdictContext getVerdictContext() {
         return vc;
     }
@@ -36,7 +53,7 @@ public abstract class Expr {
         VerdictSQLParser p = StringManipulations.parserOf(expr);
         return from(vc, p.expression());
     }
-    
+
     private static Expr from(VerdictContext vc, Object obj) {
         return from(vc, obj.toString());
     }
@@ -46,12 +63,13 @@ public abstract class Expr {
     }
 
     public static Expr from(VerdictContext vc, VerdictSQLParser.ExpressionContext ctx) {
-        if (vc == null) vc = VerdictContext.dummyContext();
+        if (vc == null)
+            vc = VerdictContext.dummyContext();
         ExpressionGen g = new ExpressionGen(vc);
         return g.visit(ctx);
     }
 
-    //	public abstract String toString(VerdictContext vc);
+    // public abstract String toString(VerdictContext vc);
 
     // to Sql String; use getText() to get the pure string representation.
     @Override
@@ -62,9 +80,9 @@ public abstract class Expr {
     public String toStringWithoutQuote() {
         return StringManipulations.stripQuote(toString());
     }
-    
+
     public static String quote(VerdictContext vc, String s) {
-    	if (vc == null) {
+        if (vc == null) {
             VerdictLogger.error("null VerdictContext");
             return String.format("`%s`", s);
         } else {
@@ -74,8 +92,8 @@ public abstract class Expr {
     }
 
     public String quote(String s) {
-    	return Expr.quote(vc, s);
-        
+        return Expr.quote(vc, s);
+
     }
 
     public String getText() {
@@ -99,15 +117,15 @@ public abstract class Expr {
     public boolean isCount() {
         return false;
     }
-    
+
     public boolean isMax() {
         return false;
     }
-    
+
     public boolean isMin() {
         return false;
     }
-    
+
     public boolean isMeanLikeAggregate() {
         return false;
     }
@@ -135,25 +153,25 @@ public abstract class Expr {
     public abstract Expr withTableSubstituted(String newTab);
 
     public abstract String toSql();
-    
+
     @Override
     public abstract int hashCode();
-    
+
     @Override
     public boolean equals(Object o) {
         if (o instanceof Expr) {
             return equals((Expr) o);
-        }
-        else {
+        } else {
             return false;
         }
     }
-    
+
     public abstract boolean equals(Expr o);
-    
+
     public List<FuncExpr> extractFuncExpr() {
-    	ExprVisitor<List<FuncExpr>> collectAggFuncs = new ExprVisitor<List<FuncExpr>>() {
+        ExprVisitor<List<FuncExpr>> collectAggFuncs = new ExprVisitor<List<FuncExpr>>() {
             private List<FuncExpr> seen = new ArrayList<FuncExpr>();
+
             public List<FuncExpr> call(Expr expr) {
                 if (expr instanceof FuncExpr) {
                     seen.add((FuncExpr) expr);
@@ -187,7 +205,7 @@ class ExpressionGen extends VerdictSQLBaseVisitor<Expr> {
 
     @Override
     public Expr visitBinary_operator_expression(VerdictSQLParser.Binary_operator_expressionContext ctx) {
-        return new BinaryOpExpr(vc, visit(ctx.expression(0)), visit(ctx.expression(1)), ctx.op.getText());  
+        return new BinaryOpExpr(vc, visit(ctx.expression(0)), visit(ctx.expression(1)), ctx.op.getText());
     }
 
     @Override

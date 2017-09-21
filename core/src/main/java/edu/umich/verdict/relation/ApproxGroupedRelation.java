@@ -1,3 +1,20 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package edu.umich.verdict.relation;
 
 import java.util.ArrayList;
@@ -47,7 +64,8 @@ public class ApproxGroupedRelation extends ApproxRelation {
     public ExactRelation rewriteWithPartition() {
         ExactRelation newSource = source.rewriteWithPartition();
         List<Expr> newGroupby = groupbyWithTablesSubstituted();
-        //		newGroupby.add((ColNameExpr) exprWithTableNamesSubstituted(partitionColumn(), tableSubstitution()));
+        // newGroupby.add((ColNameExpr) exprWithTableNamesSubstituted(partitionColumn(),
+        // tableSubstitution()));
         ColNameExpr partitionCol = newSource.partitionColumn();
         if (partitionCol != null) {
             newGroupby.add(partitionCol);
@@ -57,10 +75,10 @@ public class ApproxGroupedRelation extends ApproxRelation {
         return r;
     }
 
-    //	@Override
-    //	protected ColNameExpr partitionColumn() {
-    //		return source.partitionColumn();
-    //	}
+    // @Override
+    // protected ColNameExpr partitionColumn() {
+    // return source.partitionColumn();
+    // }
 
     @Override
     // TODO: make this more accurate for handling IN and EXISTS predicates.
@@ -81,7 +99,7 @@ public class ApproxGroupedRelation extends ApproxRelation {
         }
         return replaced;
     }
-    
+
     private Set<String> columnNamesInGroupby() {
         List<Expr> groupby = getGroupby();
         Set<String> strGroupby = new HashSet<String>();
@@ -94,11 +112,12 @@ public class ApproxGroupedRelation extends ApproxRelation {
     @Override
     public String sampleType() {
         String sampleType = source.sampleType();
-        if (sampleType.equals("nosample")) return "nosample";
-        
+        if (sampleType.equals("nosample"))
+            return "nosample";
+
         Set<String> groupbyStr = columnNamesInGroupby();
         Set<String> sampleColumns = new HashSet<String>(source.sampleColumns());
-        
+
         if (sampleType.equals("universe") && groupbyStr.equals(sampleColumns)) {
             return "universe";
         } else if (sampleType.equals("stratified") && groupbyStr.equals(sampleColumns)) {
@@ -122,12 +141,8 @@ public class ApproxGroupedRelation extends ApproxRelation {
     protected String toStringWithIndent(String indent) {
         StringBuilder s = new StringBuilder(1000);
         s.append(indent);
-        s.append(String.format("%s(%s, %s (%s)) [%s]\n",
-                this.getClass().getSimpleName(),
-                getAlias(),
-                sampleType(),
-                sampleColumns().toString(),
-                Joiner.on(", ").join(groupby)));
+        s.append(String.format("%s(%s, %s (%s)) [%s]\n", this.getClass().getSimpleName(), getAlias(), sampleType(),
+                sampleColumns().toString(), Joiner.on(", ").join(groupby)));
         s.append(source.toStringWithIndent(indent + "  "));
         return s.toString();
     }
@@ -144,12 +159,13 @@ public class ApproxGroupedRelation extends ApproxRelation {
         return false;
     }
 
-    // assumes that this method is called by the parent, i.e., ApproxAggregatedRelation.
+    // assumes that this method is called by the parent, i.e.,
+    // ApproxAggregatedRelation.
     @Override
     public double samplingProbability() {
         Set<String> groupbyStr = columnNamesInGroupby();
         Set<String> sampleColumns = new HashSet<String>(source.sampleColumns());
-        
+
         if (sampleColumns.equals(groupbyStr)) {
             if (sampleType().equals("universe")) {
                 return Math.min(2 * source.samplingProbability(), 1.0);
@@ -157,7 +173,7 @@ public class ApproxGroupedRelation extends ApproxRelation {
                 return Math.min(5 * source.samplingProbability(), 1.0);
             }
         }
-        
+
         return source.samplingProbability();
     }
 
@@ -165,7 +181,7 @@ public class ApproxGroupedRelation extends ApproxRelation {
     protected boolean doesIncludeSample() {
         return source.doesIncludeSample();
     }
-    
+
     @Override
     public Expr tupleProbabilityColumn() {
         return source.tupleProbabilityColumn();

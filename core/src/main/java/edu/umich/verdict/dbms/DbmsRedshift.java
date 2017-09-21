@@ -1,3 +1,20 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package edu.umich.verdict.dbms;
 
 import java.sql.ResultSet;
@@ -30,7 +47,7 @@ import edu.umich.verdict.util.VerdictLogger;
 public class DbmsRedshift extends DbmsJDBC {
 
     public DbmsRedshift(VerdictContext vc, String dbName, String host, String port, String schema, String user,
-            String password, String jdbcClassName) throws VerdictException {		
+            String password, String jdbcClassName) throws VerdictException {
         super(vc, dbName, host, port, schema, user, password, jdbcClassName);
         currentSchema = Optional.of("public");
     }
@@ -61,18 +78,18 @@ public class DbmsRedshift extends DbmsJDBC {
         String sql = String.format("create schema if not exists %s", catalog);
         executeUpdate(sql);
     }
-    
+
     @Override
     public void changeDatabase(String schemaName) throws VerdictException {
         Set<String> existingSchemas = vc.getMeta().getDatabases();
         String verdictMetaSchema = vc.getMeta().metaCatalogForDataCatalog(schemaName);
-        
+
         if (existingSchemas.contains(verdictMetaSchema)) {
             execute(String.format("set search_path=%s,%s", schemaName, verdictMetaSchema));
         } else {
             execute(String.format("set search_path=%s", schemaName));
         }
-        
+
         currentSchema = Optional.fromNullable(schemaName);
         VerdictLogger.info("Database changed to: " + schemaName);
     }
@@ -80,9 +97,10 @@ public class DbmsRedshift extends DbmsJDBC {
     @Override
     protected String randomPartitionColumn() {
         int pcount = partitionCount();
-        return String.format("mod(cast(round(RANDOM()*%d) as integer), %d) AS %s", pcount, pcount, partitionColumnName());
+        return String.format("mod(cast(round(RANDOM()*%d) as integer), %d) AS %s", pcount, pcount,
+                partitionColumnName());
     }
-    
+
     @Override
     public void insertEntry(TableUniqueName tableName, List<Object> values) throws VerdictException {
         StringBuilder sql = new StringBuilder(1000);
@@ -98,15 +116,16 @@ public class DbmsRedshift extends DbmsJDBC {
      * Includes casting to float
      */
     @Override
-    protected void attachUniformProbabilityToTempTable(SampleParam param, TableUniqueName temp) throws VerdictException {
+    protected void attachUniformProbabilityToTempTable(SampleParam param, TableUniqueName temp)
+            throws VerdictException {
         String samplingProbCol = vc.getDbms().samplingProbabilityColumnName();
         long total_size = SingleRelation.from(vc, param.getOriginalTable()).countValue();
         long sample_size = SingleRelation.from(vc, temp).countValue();
 
-        ExactRelation withRand = SingleRelation.from(vc, temp)
-                .select("*, " + String.format("cast (%d as float) / cast (%d as float) as %s", sample_size, total_size, samplingProbCol));
+        ExactRelation withRand = SingleRelation.from(vc, temp).select("*, " + String
+                .format("cast (%d as float) / cast (%d as float) as %s", sample_size, total_size, samplingProbCol));
         dropTable(param.sampleTableName());
-        String sql = String.format("create table %s as %s", param.sampleTableName(), withRand.toSql());        
+        String sql = String.format("create table %s as %s", param.sampleTableName(), withRand.toSql());
         VerdictLogger.debug(this, "The query used for creating a temporary table without sampling probabilities:");
         VerdictLogger.debugPretty(this, Relation.prettyfySql(vc, sql), "  ");
         VerdictLogger.debug(this, sql);
@@ -114,19 +133,20 @@ public class DbmsRedshift extends DbmsJDBC {
     }
 
     @Override
-    protected void createUniverseSampleWithProbFromSample(SampleParam param, TableUniqueName temp) throws VerdictException {
+    protected void createUniverseSampleWithProbFromSample(SampleParam param, TableUniqueName temp)
+            throws VerdictException {
         String samplingProbCol = vc.getDbms().samplingProbabilityColumnName();
         ExactRelation sampled = SingleRelation.from(vc, temp);
         long total_size = SingleRelation.from(vc, param.originalTable).countValue();
         long sample_size = sampled.countValue();
 
-        ExactRelation withProb = sampled.select(
-                String.format("*, cast (%d as float)  / cast (%d as float) AS %s", sample_size, total_size, samplingProbCol) + ", " +
-                        universePartitionColumn(param.getColumnNames().get(0)));
+        ExactRelation withProb = sampled
+                .select(String.format("*, cast (%d as float)  / cast (%d as float) AS %s", sample_size, total_size,
+                        samplingProbCol) + ", " + universePartitionColumn(param.getColumnNames().get(0)));
 
-        String parquetString="";
+        String parquetString = "";
 
-        if(vc.getConf().areSamplesStoredAsParquet()) {
+        if (vc.getConf().areSamplesStoredAsParquet()) {
             parquetString = getParquetString();
         }
 
@@ -138,9 +158,11 @@ public class DbmsRedshift extends DbmsJDBC {
     }
 
     @Override
-    protected void createStratifiedSampleFromGroupSizeTemp(SampleParam param, TableUniqueName groupSizeTemp) throws VerdictException {
+    protected void createStratifiedSampleFromGroupSizeTemp(SampleParam param, TableUniqueName groupSizeTemp)
+            throws VerdictException {
         Map<String, String> col2types = vc.getMeta().getColumn2Types(param.originalTable);
-        SampleSizeInfo info = vc.getMeta().getSampleSizeOf(new SampleParam(vc, param.originalTable, "uniform", null, new ArrayList<String>()));
+        SampleSizeInfo info = vc.getMeta()
+                .getSampleSizeOf(new SampleParam(vc, param.originalTable, "uniform", null, new ArrayList<String>()));
         long originalTableSize = info.originalTableSize;
         long groupCount = SingleRelation.from(vc, groupSizeTemp).countValue();
         String samplingProbColName = vc.getDbms().samplingProbabilityColumnName();
@@ -152,7 +174,8 @@ public class DbmsRedshift extends DbmsJDBC {
             boolean isTimeStamp = false;
 
             if (col2types.containsKey(col)) {
-                if (col2types.get(col).toLowerCase().contains("char") || col2types.get(col).toLowerCase().contains("str")) {
+                if (col2types.get(col).toLowerCase().contains("char")
+                        || col2types.get(col).toLowerCase().contains("str")) {
                     isString = true;
                 } else if (col2types.get(col).toLowerCase().contains("time")) {
                     isTimeStamp = true;
@@ -160,42 +183,40 @@ public class DbmsRedshift extends DbmsJDBC {
             }
 
             if (isString) {
-                Expr left = Expr.from(vc, String.format("case when s.%s is null then '%s' else s.%s end", col, NULL_STRING, col));
-                Expr right = Expr.from(vc, String.format("case when t.%s is null then '%s' else t.%s end", col, NULL_STRING, col));
+                Expr left = Expr.from(vc,
+                        String.format("case when s.%s is null then '%s' else s.%s end", col, NULL_STRING, col));
+                Expr right = Expr.from(vc,
+                        String.format("case when t.%s is null then '%s' else t.%s end", col, NULL_STRING, col));
                 joinExprs.add(Pair.of(left, right));
             } else if (isTimeStamp) {
-                Expr left = Expr.from(vc, String.format("case when s.%s is null then '%s' else s.%s end", col, NULL_TIMESTAMP, col));
-                Expr right = Expr.from(vc, String.format("case when t.%s is null then '%s' else t.%s end", col, NULL_TIMESTAMP, col));
+                Expr left = Expr.from(vc,
+                        String.format("case when s.%s is null then '%s' else s.%s end", col, NULL_TIMESTAMP, col));
+                Expr right = Expr.from(vc,
+                        String.format("case when t.%s is null then '%s' else t.%s end", col, NULL_TIMESTAMP, col));
                 joinExprs.add(Pair.of(left, right));
             } else {
-                Expr left = Expr.from(vc, String.format("case when s.%s is null then %d else s.%s end", col, NULL_LONG, col));
-                Expr right = Expr.from(vc, String.format("case when t.%s is null then %d else t.%s end", col, NULL_LONG, col));
+                Expr left = Expr.from(vc,
+                        String.format("case when s.%s is null then %d else s.%s end", col, NULL_LONG, col));
+                Expr right = Expr.from(vc,
+                        String.format("case when t.%s is null then %d else t.%s end", col, NULL_LONG, col));
                 joinExprs.add(Pair.of(left, right));
             }
         }
-        
+
         // where clause using rand function
-        String whereClause = String.format("%s < %d * %f / %d / %s",
-                                           randNumColname,
-                                           originalTableSize,
-                                           param.getSamplingRatio(),
-                                           groupCount,
-                                           groupSizeColName);
-        
+        String whereClause = String.format("%s < %d * %f / %d / %s", randNumColname, originalTableSize,
+                param.getSamplingRatio(), groupCount, groupSizeColName);
+
         // this should set to an appropriate variable.
         List<Pair<Integer, Double>> samplingProbForSize = vc.getConf().samplingProbabilitiesForStratifiedSamples();
-        
+
         whereClause += String.format(" OR %s < (case", randNumColname);
-        
+
         for (Pair<Integer, Double> sizeProb : samplingProbForSize) {
             int size = sizeProb.getKey();
             double prob = sizeProb.getValue();
-            whereClause += String.format(" when %s >= %d then %f * %d / %s",
-                                         groupSizeColName,
-                                         size,
-                                         prob,
-                                         size,
-                                         groupSizeColName);
+            whereClause += String.format(" when %s >= %d then %f * %d / %s", groupSizeColName, size, prob, size,
+                    groupSizeColName);
         }
         whereClause += " else 1.0 end)";
 
@@ -204,37 +225,36 @@ public class DbmsRedshift extends DbmsJDBC {
         for (String col : col2types.keySet()) {
             selectElems.add(String.format("s.%s", col));
         }
-        
+
         // sample table
         TableUniqueName sampledNoRand = Relation.getTempTableName(vc, param.sampleTableName().getSchemaName());
         ExactRelation sampled = SingleRelation.from(vc, param.getOriginalTable())
-                .select(String.format("*, %s as %s", randomNumberExpression(param), randNumColname))
-                .withAlias("s")
-                .join(SingleRelation.from(vc, groupSizeTemp).withAlias("t"), joinExprs)
-                .where(whereClause)
+                .select(String.format("*, %s as %s", randomNumberExpression(param), randNumColname)).withAlias("s")
+                .join(SingleRelation.from(vc, groupSizeTemp).withAlias("t"), joinExprs).where(whereClause)
                 .select(Joiner.on(", ").join(selectElems) + ", " + groupSizeColName);
         String sql1 = String.format("create table %s as %s", sampledNoRand, sampled.toSql());
         VerdictLogger.debug(this, "The query used for creating a stratified sample without sampling probabilities.");
         VerdictLogger.debugPretty(this, Relation.prettyfySql(vc, sql1), "  ");
         executeUpdate(sql1);
-        
+
         // attach sampling probabilities and random partition number
-        ExactRelation sampledGroupSize = SingleRelation.from(vc, sampledNoRand)
-                .groupby(param.columnNames)
+        ExactRelation sampledGroupSize = SingleRelation.from(vc, sampledNoRand).groupby(param.columnNames)
                 .agg("count(*) AS " + groupSizeInSampleColName);
         ExactRelation withRand = SingleRelation.from(vc, sampledNoRand).withAlias("s")
-                .join(sampledGroupSize.withAlias("t"), joinExprs)
-                .select(Joiner.on(", ").join(selectElems)
-                        + String.format(", cast(%s as float) / cast(%s as float) as %s", groupSizeInSampleColName, groupSizeColName, samplingProbColName)
-                        + ", " + randomPartitionColumn());
-        
-        String parquetString="";
+                .join(sampledGroupSize.withAlias("t"), joinExprs).select(
+                        Joiner.on(", ").join(selectElems)
+                                + String.format(", cast(%s as float) / cast(%s as float) as %s",
+                                        groupSizeInSampleColName, groupSizeColName, samplingProbColName)
+                                + ", " + randomPartitionColumn());
 
-        if(vc.getConf().areSamplesStoredAsParquet()) {
+        String parquetString = "";
+
+        if (vc.getConf().areSamplesStoredAsParquet()) {
             parquetString = getParquetString();
         }
 
-        String sql2 = String.format("create table %s%s as %s", param.sampleTableName(), parquetString, withRand.toSql());
+        String sql2 = String.format("create table %s%s as %s", param.sampleTableName(), parquetString,
+                withRand.toSql());
         VerdictLogger.debug(this, "The query used for creating a stratified sample with sampling probabilities.");
         VerdictLogger.debugPretty(this, Relation.prettyfySql(vc, sql2), "  ");
         VerdictLogger.debug(this, sql2);
@@ -244,7 +264,8 @@ public class DbmsRedshift extends DbmsJDBC {
     }
 
     @Override
-    String composeUrl(String dbms, String host, String port, String schema, String user, String password) throws VerdictException {
+    String composeUrl(String dbms, String host, String port, String schema, String user, String password)
+            throws VerdictException {
         StringBuilder url = new StringBuilder();
         url.append(String.format("jdbc:%s://%s:%s", dbms, host, port));
 
@@ -277,58 +298,50 @@ public class DbmsRedshift extends DbmsJDBC {
     }
 
     @Override
-    public ResultSet describeTableInResultSet(TableUniqueName tableUniqueName)  throws VerdictException {
-        return executeJdbcQuery(String.format("SELECT \"column\",\"type\" FROM pg_table_def WHERE tablename = '%s' AND schemaname = '%s'",
-                tableUniqueName.getTableName(),
-                tableUniqueName.getSchemaName()
-                ));
+    public ResultSet describeTableInResultSet(TableUniqueName tableUniqueName) throws VerdictException {
+        return executeJdbcQuery(String.format(
+                "SELECT \"column\",\"type\" FROM pg_table_def WHERE tablename = '%s' AND schemaname = '%s'",
+                tableUniqueName.getTableName(), tableUniqueName.getSchemaName()));
     }
 
     @Override
-    public ResultSet getTablesInResultSet(String schema) throws VerdictException {        
-        return executeJdbcQuery(String.format("SELECT DISTINCT tablename FROM pg_table_def WHERE schemaname = '%s'", schema));
+    public ResultSet getTablesInResultSet(String schema) throws VerdictException {
+        return executeJdbcQuery(
+                String.format("SELECT DISTINCT tablename FROM pg_table_def WHERE schemaname = '%s'", schema));
     }
 
     /**
-     *  this actually gets the schemas instead of database since in redshift database does not mater;
-     *  schema matters.
+     * this actually gets the schemas instead of database since in redshift database
+     * does not mater; schema matters.
      */
     @Override
     public ResultSet getDatabaseNamesInResultSet() throws VerdictException {
-        //        return executeJdbcQuery("select nspname from pg_namespace WHERE datistemplate = false");
+        // return executeJdbcQuery("select nspname from pg_namespace WHERE datistemplate
+        // = false");
         return executeJdbcQuery("select nspname from pg_namespace");
     }
 
     @Override
-    public void createMetaTablesInDMBS(
-            TableUniqueName originalTableName,
-            TableUniqueName sizeTableName,
+    public void createMetaTablesInDMBS(TableUniqueName originalTableName, TableUniqueName sizeTableName,
             TableUniqueName nameTableName) throws VerdictException {
         VerdictLogger.debug(this, "Creates meta tables if not exist.");
-        String sql = String.format("CREATE TABLE IF NOT EXISTS %s", sizeTableName)
-                + " (schemaname VARCHAR(120), "
-                + " tablename VARCHAR(120), "
-                + " samplesize BIGINT, "
-                + " originaltablesize BIGINT)";
+        String sql = String.format("CREATE TABLE IF NOT EXISTS %s", sizeTableName) + " (schemaname VARCHAR(120), "
+                + " tablename VARCHAR(120), " + " samplesize BIGINT, " + " originaltablesize BIGINT)";
         executeUpdate(sql);
 
-        sql = String.format("CREATE TABLE IF NOT EXISTS %s", nameTableName)
-                + " (originalschemaname VARCHAR(120), "
-                + " originaltablename VARCHAR(120), "
-                + " sampleschemaaname VARCHAR(120), "
-                + " sampletablename VARCHAR(120), "
-                + " sampletype VARCHAR(120), "
-                + " samplingratio FLOAT, "
+        sql = String.format("CREATE TABLE IF NOT EXISTS %s", nameTableName) + " (originalschemaname VARCHAR(120), "
+                + " originaltablename VARCHAR(120), " + " sampleschemaaname VARCHAR(120), "
+                + " sampletablename VARCHAR(120), " + " sampletype VARCHAR(120), " + " samplingratio FLOAT, "
                 + " columnnames VARCHAR(120))";
         executeUpdate(sql);
 
         VerdictLogger.debug(this, "Meta tables created.");
     }
 
-	@Override
-	public Dataset<Row> getDataset() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    @Override
+    public Dataset<Row> getDataset() {
+        // TODO Auto-generated method stub
+        return null;
+    }
 
 }

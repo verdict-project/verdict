@@ -37,18 +37,14 @@ public class BasicConnection {
         String url = "jdbc:verdict:redshift://verdict-redshift-demo.crc58e3qof3k.us-east-1.redshift.amazonaws.com:5439/dev;UID=admin;PWD=qKUcr2CUgSP3NjHE";
         Connection conn = DriverManager.getConnection(url);
         Statement statement = conn.createStatement();
-        
+
         statement.executeQuery("use tpch100g_demo");
-        
-        statement.executeQuery("select extract(month from o_orderdate) as m,\n" + 
-                "       extract(day from o_orderdate),\n" + 
-                "       count(*)\n" + 
-                "from orders_lineitem\n" + 
-                "group by extract(month from o_orderdate),\n" + 
-                "         extract(day from o_orderdate)\n" + 
-                "order by m, extract(day from o_orderdate)\n" + 
-                "limit 10;\n");
-        
+
+        statement.executeQuery("select extract(month from o_orderdate) as m,\n"
+                + "       extract(day from o_orderdate),\n" + "       count(*)\n" + "from orders_lineitem\n"
+                + "group by extract(month from o_orderdate),\n" + "         extract(day from o_orderdate)\n"
+                + "order by m, extract(day from o_orderdate)\n" + "limit 10;\n");
+
     }
 
 }
