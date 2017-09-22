@@ -51,7 +51,7 @@ public abstract class Query {
         SELECT, CREATE_SAMPLE, DROP_SAMPLE, SHOW_SAMPLE, CONFIG, DESCRIBE_TABLE,
         OTHER_USE, OTHER_SHOW_TABLES, OTHER_SHOW_DATABASES, NOSUPPORT, OTHER_REFRESH,
         OTHER_SHOW_CONFIG,
-        CREATE_TABLE, CREATE_TABLE_AS_SELECT, DROP_TABLE, DELETE_FROM, CREATE_VIEW, DROP_VIEW
+        CREATE_TABLE, CREATE_TABLE_AS_SELECT, DROP_TABLE, CREATE_VIEW, DROP_VIEW
     }
 
     /**
@@ -171,7 +171,6 @@ public abstract class Query {
                 //					query = new CreateTableQuery(vc, queryString);
             } else if (queryType.equals(Type.CREATE_TABLE) ||
                     queryType.equals(Type.DROP_TABLE) ||
-                    queryType.equals(Type.DELETE_FROM) ||
                     queryType.equals(Type.DROP_VIEW)) {
                 query = new ByPassVerdictUpdateQuery(vc, queryString);
             } else if (queryType.equals(Type.OTHER_SHOW_CONFIG)) {
@@ -191,7 +190,7 @@ public abstract class Query {
 
     protected static boolean isUpdateType(Type type) {
         if (type.equals(Type.CREATE_SAMPLE) || type.equals(Type.DROP_SAMPLE) || type.equals(Type.CREATE_TABLE)
-            || type.equals(Type.DROP_TABLE) || type.equals(Type.DELETE_FROM) || type.equals(Type.DROP_VIEW)
+            || type.equals(Type.DROP_TABLE) || type.equals(Type.DROP_VIEW)
             || type.equals(Type.CREATE_TABLE_AS_SELECT) || type.equals(Type.CREATE_VIEW)) {
             return true;
         } else {
@@ -294,12 +293,6 @@ public abstract class Query {
             @Override
             public Type visitDrop_table(VerdictSQLParser.Drop_tableContext ctx) {
                 type = Type.DROP_TABLE;
-                return type;
-            }
-
-            @Override
-            public Type visitDelete_statement(VerdictSQLParser.Delete_statementContext ctx) {
-                type = Type.DELETE_FROM;
                 return type;
             }
 

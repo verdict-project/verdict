@@ -19,7 +19,8 @@ public class DbmsImpala extends DbmsJDBC {
 
     @Override
     public String modOfHash(String col, int mod) {
-        return String.format("abs(fnv_hash(cast(%s AS STRING))) %% %d", col, mod);
+        return String.format("abs(fnv_hash(cast(%s%s%s AS STRING))) %% %d",
+                getQuoteString(), col, getQuoteString(), mod);
     }
 
     @Override

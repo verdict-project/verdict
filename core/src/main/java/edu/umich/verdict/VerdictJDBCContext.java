@@ -107,7 +107,7 @@ public class VerdictJDBCContext extends VerdictContext {
 		this.dbms = another.dbms;
 		this.metaDbms = another.metaDbms;
 		this.queryUid = another.queryUid;
-		((DbmsJDBC) this.dbms).createNewStatementWithoutClosing();
+//		((DbmsJDBC) this.dbms).createNewStatementWithoutClosing();
 		this.rs = another.rs;
 	}
 	

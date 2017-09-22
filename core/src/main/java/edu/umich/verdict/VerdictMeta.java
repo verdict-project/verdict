@@ -178,28 +178,6 @@ public class VerdictMeta {
         }
     }
 
-    //	public List<String> getColumnNames(TableUniqueName tableName) {
-    //		refreshSampleInfoIfNeeded(tableName.getSchemaName());
-    //		if (tableToColumnNames.containsKey(tableName)) {
-    //			return tableToColumnNames.get(tableName);
-    //		} else {
-    //			return new ArrayList<String>();
-    //		}
-    //	}
-
-    //	public Map<TableUniqueName, List<String>> getTableAndColumnNames(String schemaName) {
-    //		refreshSampleInfoIfNeeded(schemaName);
-    //		Map<TableUniqueName, List<String>> inSchema = new HashMap<TableUniqueName, List<String>>();
-    //		for (Map.Entry<TableUniqueName, List<String>> entry : tableToColumnNames.entrySet()) {
-    //			TableUniqueName table = entry.getKey();
-    //			List<String> columns = entry.getValue();
-    //			if (table.getSchemaName().equals(schemaName)) {
-    //				inSchema.put(table, columns);
-    //			}
-    //		}
-    //		return inSchema;
-    //	}
-
     /**
      * Insert sample info into local data structure (for quick access) and into the DBMS (for persistence).
      * @param originalSchemaName

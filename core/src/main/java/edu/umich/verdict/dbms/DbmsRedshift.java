@@ -1,12 +1,11 @@
 package edu.umich.verdict.dbms;
 
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -45,7 +44,8 @@ public class DbmsRedshift extends DbmsJDBC {
 
     @Override
     public String modOfHash(String col, int mod) {
-        return String.format("mod(strtol(crc32(cast(%s as text)),16),%d)", col, mod);
+        return String.format("mod(strtol(crc32(cast(%s%s%s as text)),16),%d)",
+                getQuoteString(), col, getQuoteString(), mod);
     }
 
     @Override
@@ -60,19 +60,32 @@ public class DbmsRedshift extends DbmsJDBC {
         executeUpdate(sql);
     }
     
+    /**
+     * Set the search_path of a Redshift. The search_path (or schemaName parameter) can be multiple strings
+     * separated by commas.
+     */
     @Override
     public void changeDatabase(String schemaName) throws VerdictException {
-        Set<String> existingSchemas = vc.getMeta().getDatabases();
-        String verdictMetaSchema = vc.getMeta().metaCatalogForDataCatalog(schemaName);
+//        Set<String> existingSchemas = vc.getMeta().getDatabases();
+//        String verdictMetaSchema = vc.getMeta().metaCatalogForDataCatalog(schemaName);
+        setSearchPath(schemaName);
+        String[] schemaList = schemaName.split(",");
+        String primarySchema = schemaList[0];
         
-        if (existingSchemas.contains(verdictMetaSchema)) {
-            execute(String.format("set search_path=%s,%s", schemaName, verdictMetaSchema));
+//        if (existingSchemas.contains(verdictMetaSchema)) {
+//            execute(String.format("set search_path=%s,%s", schemaName, verdictMetaSchema));
+//        } else {
+//            execute(String.format("set search_path=%s", schemaName));
+//        }
+        
+        currentSchema = Optional.fromNullable(primarySchema);
+        if (schemaList.length > 1) {
+            VerdictLogger.info(String.format("Search path changed to: %s. For the tables speficied without their"
+                    + " schemas, Verdict assumes that they are in a primary schema (%s). This limitation will be"
+                    + " fixed in a future release.", schemaName, primarySchema));
         } else {
-            execute(String.format("set search_path=%s", schemaName));
+            VerdictLogger.info(String.format("Search path changed to: %s.", schemaName));
         }
-        
-        currentSchema = Optional.fromNullable(schemaName);
-        VerdictLogger.info("Database changed to: " + schemaName);
     }
 
     @Override
@@ -106,8 +119,8 @@ public class DbmsRedshift extends DbmsJDBC {
         dropTable(param.sampleTableName());
         String sql = String.format("create table %s as %s", param.sampleTableName(), withRand.toSql());        
         VerdictLogger.debug(this, "The query used for creating a temporary table without sampling probabilities:");
-        VerdictLogger.debugPretty(this, Relation.prettyfySql(vc, sql), "  ");
-        VerdictLogger.debug(this, sql);
+//        VerdictLogger.debugPretty(this, Relation.prettyfySql(vc, sql), "  ");
+//        VerdictLogger.debug(this, sql);
         executeUpdate(sql);
     }
 
@@ -130,8 +143,8 @@ public class DbmsRedshift extends DbmsJDBC {
 
         String sql = String.format("create table %s%s AS %s", param.sampleTableName(), parquetString, withProb.toSql());
         VerdictLogger.debug(this, "The query used for creating a universe sample with sampling probability:");
-        VerdictLogger.debugPretty(this, Relation.prettyfySql(vc, sql), "  ");
-        VerdictLogger.debug(this, sql);
+//        VerdictLogger.debugPretty(this, Relation.prettyfySql(vc, sql), "  ");
+//        VerdictLogger.debug(this, sql);
         executeUpdate(sql);
     }
 
@@ -213,7 +226,7 @@ public class DbmsRedshift extends DbmsJDBC {
                 .select(Joiner.on(", ").join(selectElems) + ", " + groupSizeColName);
         String sql1 = String.format("create table %s as %s", sampledNoRand, sampled.toSql());
         VerdictLogger.debug(this, "The query used for creating a stratified sample without sampling probabilities.");
-        VerdictLogger.debugPretty(this, Relation.prettyfySql(vc, sql1), "  ");
+//        VerdictLogger.debugPretty(this, Relation.prettyfySql(vc, sql1), "  ");
         executeUpdate(sql1);
         
         // attach sampling probabilities and random partition number
@@ -234,8 +247,8 @@ public class DbmsRedshift extends DbmsJDBC {
 
         String sql2 = String.format("create table %s%s as %s", param.sampleTableName(), parquetString, withRand.toSql());
         VerdictLogger.debug(this, "The query used for creating a stratified sample with sampling probabilities.");
-        VerdictLogger.debugPretty(this, Relation.prettyfySql(vc, sql2), "  ");
-        VerdictLogger.debug(this, sql2);
+//        VerdictLogger.debugPretty(this, Relation.prettyfySql(vc, sql2), "  ");
+//        VerdictLogger.debug(this, sql2);
         executeUpdate(sql2);
 
         dropTable(sampledNoRand);
@@ -275,16 +288,50 @@ public class DbmsRedshift extends DbmsJDBC {
     }
 
     @Override
-    public ResultSet describeTableInResultSet(TableUniqueName tableUniqueName)  throws VerdictException {
-        return executeJdbcQuery(String.format("SELECT \"column\",\"type\" FROM pg_table_def WHERE tablename = '%s' AND schemaname = '%s'",
-                tableUniqueName.getTableName(),
-                tableUniqueName.getSchemaName()
-                ));
+    public ResultSet describeTableInResultSet(TableUniqueName tableUniqueName) throws VerdictException {
+        String schemaName = tableUniqueName.getSchemaName();
+        String tableName = tableUniqueName.getTableName();
+        
+        String search_path = getSearchPath();
+        setSearchPath(schemaName);
+        ResultSet rs = executeJdbcQuery(
+                String.format("SELECT \"column\",\"type\" FROM pg_table_def WHERE tablename = '%s' AND schemaname = '%s'",
+                              tableName, schemaName));
+        setSearchPath(search_path);
+        
+        return rs;
+    }
+    
+    private String getSearchPath() throws VerdictException {
+        ResultSet rs = executeJdbcQuery("show search_path");
+        List<String> searchList = new ArrayList<String>();
+        try {
+            while (rs.next()) {
+                String[] schemaList = rs.getString(1).split(",");
+                for (String a : schemaList) {
+                    searchList.add(StringManipulations.stripQuote(a).trim());
+                }
+            }
+        } catch (SQLException e) {
+            throw new VerdictException(e);
+        }
+        String searchPath = Joiner.on(",").join(searchList);
+        return searchPath;
+    }
+    
+    private void setSearchPath(String search_path) throws VerdictException {
+        List<String> quotedSchemaList = Arrays.asList(search_path.split(","));
+        quotedSchemaList = StringManipulations.quoteEveryString(quotedSchemaList, getQuoteString());
+        executeJdbcQuery(String.format("set search_path=%s", Joiner.on(",").join(quotedSchemaList)));
     }
 
     @Override
-    public ResultSet getTablesInResultSet(String schema) throws VerdictException {        
-        return executeJdbcQuery(String.format("SELECT DISTINCT tablename FROM pg_table_def WHERE schemaname = '%s'", schema));
+    public ResultSet getTablesInResultSet(String schema) throws VerdictException {
+        String search_path = getSearchPath();
+        setSearchPath(schema);
+        ResultSet rs = executeJdbcQuery(String.format("SELECT DISTINCT tablename FROM pg_table_def WHERE schemaname = '%s'", schema));
+        setSearchPath(search_path);
+        return rs;
     }
 
     /**

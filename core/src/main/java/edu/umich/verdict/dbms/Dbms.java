@@ -202,11 +202,11 @@ public abstract class Dbms {
             return;
         }
 
-        List<String> tables = getTables(tableName.getSchemaName());
-        if (!tables.contains(tableName.getTableName())) {
-            VerdictLogger.debug(this, String.format("Table, %s, does not exists. Verdict doesn't bother to run a drop table statement.", tableName));
-            return;
-        }
+//        List<String> tables = getTables(tableName.getSchemaName());
+//        if (!tables.contains(tableName.getTableName())) {
+//            VerdictLogger.debug(this, String.format("Table, %s, does not exists. Verdict doesn't bother to run a drop table statement.", tableName));
+//            return;
+//        }
 
         String sql = String.format("DROP TABLE IF EXISTS %s", tableName);
         VerdictLogger.debug(this, String.format("Drops table: %s", sql));
@@ -316,8 +316,8 @@ public abstract class Dbms {
         dropTable(temp);
         String sql = String.format("create table %s as %s", temp, sampled.toSql());
         VerdictLogger.debug(this, "The query used for creating a temporary table without sampling probabilities:");
-        VerdictLogger.debug(this, sql);
-        VerdictLogger.debugPretty(this, Relation.prettyfySql(vc, sql), "  ");
+//        VerdictLogger.debug(this, sql);
+//        VerdictLogger.debugPretty(this, Relation.prettyfySql(vc, sql), "  ");
         executeUpdate(sql);
         return temp;
     }
@@ -337,8 +337,8 @@ public abstract class Dbms {
                 .select("*, " + String.format("%d / %d as %s", sample_size, total_size, samplingProbCol));
         String sql = String.format("create table %s%s as %s", param.sampleTableName(), parquetString, withRand.toSql());
         VerdictLogger.debug(this, "The query used for creating a temporary table without sampling probabilities:");
-        VerdictLogger.debugPretty(this, Relation.prettyfySql(vc, sql), "  ");
-        VerdictLogger.debug(this, sql);
+//        VerdictLogger.debugPretty(this, Relation.prettyfySql(vc, sql), "  ");
+//        VerdictLogger.debug(this, sql);
         executeUpdate(sql);
     }
     
@@ -366,8 +366,8 @@ public abstract class Dbms {
                                   .groupby(param.columnNames)
                                   .agg(String.format("count(*) AS %s", groupSizeColName));
         String sql = String.format("create table %s as %s", groupSizeTemp, groupSize.toSql());
-        VerdictLogger.debug(this, "The query used for the group-size temp table: ");
-        VerdictLogger.debugPretty(this, Relation.prettyfySql(vc, sql), "  ");
+//        VerdictLogger.debug(this, "The query used for the group-size temp table: ");
+//        VerdictLogger.debugPretty(this, Relation.prettyfySql(vc, sql), "  ");
         executeUpdate(sql);
         return groupSizeTemp;
     }
@@ -454,8 +454,8 @@ public abstract class Dbms {
                 .where(whereClause)
                 .select(Joiner.on(", ").join(selectElems) + ", " + groupSizeColName);
         String sql1 = String.format("create table %s as %s", sampledNoRand, sampled.toSql());
-        VerdictLogger.debug(this, "The query used for creating a stratified sample without sampling probabilities.");
-        VerdictLogger.debugPretty(this, Relation.prettyfySql(vc, sql1), "  ");
+//        VerdictLogger.debug(this, "The query used for creating a stratified sample without sampling probabilities.");
+//        VerdictLogger.debugPretty(this, Relation.prettyfySql(vc, sql1), "  ");
         executeUpdate(sql1);
 
         // attach sampling probabilities and random partition number
@@ -476,8 +476,8 @@ public abstract class Dbms {
 
         String sql2 = String.format("create table %s%s as %s", param.sampleTableName(), parquetString, withRand.toSql());
         VerdictLogger.debug(this, "The query used for creating a stratified sample with sampling probabilities.");
-        VerdictLogger.debugPretty(this, Relation.prettyfySql(vc, sql2), "  ");
-        VerdictLogger.debug(this, sql2);
+//        VerdictLogger.debugPretty(this, Relation.prettyfySql(vc, sql2), "  ");
+//        VerdictLogger.debug(this, sql2);
         executeUpdate(sql2);
 
         dropTable(sampledNoRand);
@@ -499,8 +499,8 @@ public abstract class Dbms {
                 .where(universeSampleSamplingCondition(param.getColumnNames().get(0), param.getSamplingRatio()));
         dropTable(temp);
         String sql = String.format("create table %s AS %s", temp, sampled.toSql());
-        VerdictLogger.debug(this, "The query used for creating a universe sample without sampling probability:");
-        VerdictLogger.debugPretty(this, Relation.prettyfySql(vc, sql), "  ");
+//        VerdictLogger.debug(this, "The query used for creating a universe sample without sampling probability:");
+//        VerdictLogger.debugPretty(this, Relation.prettyfySql(vc, sql), "  ");
         executeUpdate(sql);
         return temp;
     }
@@ -523,8 +523,8 @@ public abstract class Dbms {
 
         String sql = String.format("create table %s%s AS %s", param.sampleTableName(), parquetString, withProb.toSql());
         VerdictLogger.debug(this, "The query used for creating a universe sample with sampling probability:");
-        VerdictLogger.debugPretty(this, Relation.prettyfySql(vc, sql), "  ");
-        VerdictLogger.debug(this, sql);
+//        VerdictLogger.debugPretty(this, Relation.prettyfySql(vc, sql), "  ");
+//        VerdictLogger.debug(this, sql);
         executeUpdate(sql);
     }
 
