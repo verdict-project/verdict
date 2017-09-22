@@ -28,7 +28,7 @@ public class SparkAggregationIT extends AggregationIT {
 	
 	static HiveContext hc;
 	
-	static VerdictSparkHiveContext vc;
+	static VerdictSpark2HiveContext vc;
 	
 	static String database = "instacart1g";
 	
@@ -36,13 +36,13 @@ public class SparkAggregationIT extends AggregationIT {
 		SparkAggregationIT.sc = sc;
 	}
 	
-	public static VerdictSparkHiveContext getVerdictContext() {
+	public static VerdictSpark2HiveContext getVerdictContext() {
 		return vc;
 	}
 	
 	private static void setup() {
 		try {
-			vc = new VerdictSparkHiveContext(sc);
+			vc = new VerdictSpark2HiveContext(sc);
 			vc.sql("use " + database);
 			hc = new HiveContext(sc);
 			hc.sql("use " + database);

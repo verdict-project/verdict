@@ -9,6 +9,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.spark.sql.catalog.Catalog;
+import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.DataFrame;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -23,41 +25,43 @@ import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.util.StringManipulations;
 import edu.umich.verdict.util.VerdictLogger;
 
-public class DbmsSpark extends Dbms {
+public class DbmsSpark2 extends Dbms {
 
-    private static String DBNAME = "spark";
+    private static String DBNAME = "spark2";
 
     protected SQLContext sqlContext;
+    
+    protected SparkSession sparkSession;
 
-    protected DataFrame df;
+    protected Dataset<Row> df;
 
     protected Set<TableUniqueName> cachedTable;
-
-    public DbmsSpark(VerdictContext vc, SQLContext sqlContext) throws VerdictException {	
+    
+    public DbmsSpark2(VerdictContext vc, SparkSession sparkSession) throws VerdictException {	
         super(vc, DBNAME);
 
-        this.sqlContext = sqlContext;
+        this.sparkSession = sparkSession;
         this.cachedTable = new HashSet<TableUniqueName>();
     }
 
-    public DataFrame getDatabaseNamesInDataFrame() throws VerdictException {
-        DataFrame df = executeSparkQuery("show databases");
+    public Dataset<Row> getDatabaseNamesInDataFrame() throws VerdictException {
+        Dataset<Row> df = executeSpark2Query("show databases");
         return df;
     }
 
-    public DataFrame getTablesInDataFrame(String schemaName) throws VerdictException {
-        DataFrame df = executeSparkQuery("show tables in " + schemaName);
+    public Dataset<Row> getTablesInDataFrame(String schemaName) throws VerdictException {
+    		Dataset<Row> df = executeSpark2Query("show tables in " + schemaName);
         return df;
     }
 
-    public DataFrame describeTableInDataFrame(TableUniqueName tableUniqueName)  throws VerdictException {
-        DataFrame df = executeSparkQuery(String.format("describe %s", tableUniqueName));
+    public Dataset<Row> describeTableInDataFrame(TableUniqueName tableUniqueName)  throws VerdictException {
+    		Dataset<Row> df = executeSpark2Query(String.format("describe %s", tableUniqueName));
         return df;
     }
 
     @Override
     public boolean execute(String sql) throws VerdictException {
-        df = sqlContext.sql(sql);
+        df = sparkSession.sql(sql);
         return (df != null)? true : false;
         //return (df.count() > 0)? true : false;
     }
@@ -71,14 +75,19 @@ public class DbmsSpark extends Dbms {
     public ResultSet getResultSet() {
         return null;
     }
-
+    
+    @Override
+    public Dataset<Row> getDataset() {
+    		return df;
+    }
+    
     @Override
     public DataFrame getDataFrame() {
-        return df;
+    		return null;
     }
 
-    public DataFrame emptyDataFrame() {
-        return sqlContext.emptyDataFrame();
+    public Dataset<Row> emptyDataFrame() {
+    		return sparkSession.emptyDataFrame();
     }
 
     @Override
@@ -106,7 +115,7 @@ public class DbmsSpark extends Dbms {
     @Override
     public long getTableSize(TableUniqueName tableName) throws VerdictException {
         String sql = String.format("select count(*) from %s", tableName);
-        DataFrame df = executeSparkQuery(sql);
+        Dataset<Row> df = executeSpark2Query(sql);
         long size = df.collectAsList().get(0).getLong(0);
         return size;
     }
@@ -167,6 +176,11 @@ public class DbmsSpark extends Dbms {
 
     @Override
     public boolean isSpark() {
+        return false;
+    }
+    
+    @Override
+    public boolean isSpark2() {
         return true;
     }
 
@@ -179,11 +193,5 @@ public class DbmsSpark extends Dbms {
     protected String modOfRand(int mod) {
         return String.format("pmod(abs(rand(unix_timestamp())), %d)", mod);
     }
-
-	@Override
-	public Dataset<Row> getDataset() {
-		// TODO Auto-generated method stub
-		return null;
-	}
 
 }

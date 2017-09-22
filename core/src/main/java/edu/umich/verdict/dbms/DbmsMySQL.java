@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Row;
 
 import com.google.common.base.Joiner;
 
@@ -118,6 +120,12 @@ public class DbmsMySQL extends DbmsJDBC {
 
 	@Override
 	protected String randomNumberExpression(SampleParam param) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Dataset<Row> getDataset() {
 		// TODO Auto-generated method stub
 		return null;
 	}

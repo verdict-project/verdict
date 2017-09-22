@@ -27,6 +27,8 @@ import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.spark.sql.DataFrame;
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Row;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -168,12 +170,20 @@ public abstract class Dbms {
         DataFrame rs = getDataFrame();
         return rs;
     }
+    
+    public Dataset<Row> executeSpark2Query(String sql) throws VerdictException {
+        execute(sql);
+        Dataset<Row> rs = getDataset();
+        return rs;
+    }
 
     public abstract boolean execute(String sql) throws VerdictException;
 
     public abstract ResultSet getResultSet();
 
     public abstract DataFrame getDataFrame();
+    
+    public abstract Dataset<Row> getDataset();
 
     public abstract void executeUpdate(String sql) throws VerdictException;
 
@@ -670,6 +680,10 @@ public abstract class Dbms {
     public boolean isSpark() {
         return false;
     }
+    
+    public boolean isSpark2() {
+		return false;
+	}
 
     public abstract void close() throws VerdictException;
 //add quote string back later (it was "`")

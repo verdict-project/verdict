@@ -3,6 +3,7 @@ package edu.umich.verdict.query;
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.dbms.DbmsJDBC;
 import edu.umich.verdict.dbms.DbmsSpark;
+import edu.umich.verdict.dbms.DbmsSpark2;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.parser.VerdictSQLBaseVisitor;
 import edu.umich.verdict.parser.VerdictSQLParser;
@@ -41,6 +42,8 @@ public class ShowTablesQuery extends SelectQuery {
                 rs = ((DbmsJDBC) vc.getDbms()).getTablesInResultSet(schema);
             } else if (vc.getDbms().isSpark()) {
                 df = ((DbmsSpark) vc.getDbms()).getTablesInDataFrame(schema);
+            } else if (vc.getDbms().isSpark2()) {
+            		ds = ((DbmsSpark2) vc.getDbms()).getTablesInDataFrame(schema);
             }
         }
     }

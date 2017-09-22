@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Row;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -369,5 +371,11 @@ public class DbmsRedshift extends DbmsJDBC {
 
         VerdictLogger.debug(this, "Meta tables created.");
     }
+
+	@Override
+	public Dataset<Row> getDataset() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
 }
