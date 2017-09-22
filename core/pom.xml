@@ -171,7 +171,11 @@
             <version>${spark2.hive.version}</version>
             <scope>provided</scope>
         </dependency>
+<<<<<<< HEAD
 
+=======
+        
+>>>>>>> 975443c7900fd0fb0054f2203351c1733df4e3e5
         <!-- test supports -->
         <dependency>
             <groupId>junit</groupId>
