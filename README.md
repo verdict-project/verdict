@@ -1,6 +1,6 @@
 # Verdict: 100x-200x Faster Data Analytics
 
-Verdict enables Interactive-speed, resource-efficient query processor exploiting approximate query processing. Its main features are:
+Verdict brings you Interactive-speed, resource-efficient query processor exploiting approximate query processing. Its main features are:
 
 1. **200x faster by sacrificing only 1% accuracy**
    Verdict can give you 99% accurate answers for your big data queries in a
