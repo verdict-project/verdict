@@ -1,4 +1,4 @@
-package edu.umich.verdict;
+package edu.umich.verdict.impala;
 
 import java.io.FileNotFoundException;
 import java.sql.DriverManager;
@@ -7,6 +7,9 @@ import java.sql.SQLException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 
+import edu.umich.verdict.SampleIT;
+import edu.umich.verdict.VerdictConf;
+import edu.umich.verdict.VerdictJDBCContext;
 import edu.umich.verdict.exceptions.VerdictException;
 
 public class ImpalaSampleIT extends SampleIT {

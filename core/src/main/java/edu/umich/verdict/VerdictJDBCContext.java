@@ -113,7 +113,7 @@ public class VerdictJDBCContext extends VerdictContext {
 		this.rs = another.rs;
 	}
 	
-	VerdictJDBCContext(VerdictConf conf) {
+	public VerdictJDBCContext(VerdictConf conf) {
 		super(conf);
 	}
 	

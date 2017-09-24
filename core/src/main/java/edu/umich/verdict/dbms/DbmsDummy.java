@@ -98,7 +98,7 @@ public class DbmsDummy extends Dbms {
 	
 	@Override
 	public String getQuoteString() {
-        return null;
+        return "`";
     }
 
 	@Override

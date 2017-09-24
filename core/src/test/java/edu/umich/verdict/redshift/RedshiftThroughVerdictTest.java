@@ -15,8 +15,6 @@ public class RedshiftThroughVerdictTest {
 
         VerdictConf conf = new VerdictConf();
         conf.setDbms("redshift");
-//        conf.setHost("salat2-verdict.ctkb4oe4rzfm.us-east-1.redshift.amazonaws.com");
-//        conf.setHost("verdict-vldb.crc58e3qof3k.us-east-1.redshift.amazonaws.com");
         conf.setHost("verdict-redshift-demo.crc58e3qof3k.us-east-1.redshift.amazonaws.com");
         conf.setPort("5439");		
         conf.setDbmsSchema("dev");

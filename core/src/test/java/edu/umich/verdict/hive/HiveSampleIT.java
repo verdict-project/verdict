@@ -1,4 +1,4 @@
-package edu.umich.verdict;
+package edu.umich.verdict.hive;
 
 import java.io.FileNotFoundException;
 import java.sql.DriverManager;
@@ -8,6 +8,10 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.experimental.categories.Category;
 
+import edu.umich.verdict.IntegrationTest;
+import edu.umich.verdict.SampleIT;
+import edu.umich.verdict.VerdictConf;
+import edu.umich.verdict.VerdictJDBCContext;
 import edu.umich.verdict.exceptions.VerdictException;
 
 @Category(IntegrationTest.class)

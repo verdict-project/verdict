@@ -46,6 +46,10 @@
             <id>cloudera</id>
             <url>https://repository.cloudera.com/artifactory/cloudera-repos/</url>
         </repository>
+        <repository>
+            <id>umich-dbgroup</id>
+            <url>http://salat2.eecs.umich.edu:9002/nexus/content/repositories/umich-dbgroup</url>
+        </repository>
     </repositories>
 
     <build>
@@ -99,6 +103,7 @@
                     <version>${maven.surefire.version}</version>
                     <configuration>
                         <skipTests>${skipTests}</skipTests>
+                        <groups>edu.umich.verdict.MinimumTest.class</groups>
                     </configuration>
                 </plugin>
                 <plugin>
