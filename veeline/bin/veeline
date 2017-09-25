@@ -5,6 +5,6 @@ BINPATH=$(dirname $0)
 VERDICT_PATH=$BINPATH/../../target
 LIBPATH=$BINPATH/../../libs
 
-java -cp "$BINPATH/*:$LIBPATH/*:$VERDICT_PATH/*" \
+java -cp "$BINPATH/*:$LIBPATH/*:$VERDICT_PATH/verdict-jdbc-0.3.0-snapshot-jar-with-dependencies.jar:$VERDICT_PATH/verdict-veeline-0.3.0-snapshot-jar-with-dependencies.jar" \
      -Dlog4j.configuration=file:$BINPATH/../conf/log4j.properties \
      sqlline.SqlLine "$@"

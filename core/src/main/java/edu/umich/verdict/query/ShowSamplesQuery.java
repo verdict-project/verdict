@@ -40,6 +40,9 @@ public class ShowSamplesQuery extends SelectQuery {
             } else if (!vc.getMeta().getDatabases().contains(vc.getMeta().metaCatalogForDataCatalog(database))){
                 VerdictLogger.info(String.format("No samples have been created for the database: %s.", database));
                 return;
+            } else if (!vc.getMeta().getTables(database).contains(vc.getMeta().getMetaNameTableForOriginalSchema(database))) {
+                VerdictLogger.info(String.format("No samples have been created for the database: %s.", database));
+                return;
             }
             
             ExactRelation nameTable = SingleRelation.from(vc, vc.getMeta().getMetaNameTableForOriginalSchema(database));
