@@ -835,6 +835,7 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
         @Override
         public ExactRelation visitTable_source_item_joined(VerdictSQLParser.Table_source_item_joinedContext ctx) {
             ExactRelation r = visit(ctx.table_source_item());
+            //join error location: r2 is null
             for (Join_partContext j : ctx.join_part()) {
                 ExactRelation r2 = visit(j);
                 r = new JoinedRelation(vc, r, r2, null);
@@ -889,7 +890,46 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
 
         @Override
         public ExactRelation visitJoin_part(VerdictSQLParser.Join_partContext ctx) {
+        	
             if (ctx.INNER() != null) {
+                TableSourceExtractor ext = new TableSourceExtractor();
+                ExactRelation r = ext.visit(ctx.table_source());
+                Cond cond = Cond.from(vc, ctx.search_condition());
+                ColNameResolver resolver = new ColNameResolver(tableAliasAndColNames);
+                Cond resolved = resolver.visit(cond);
+                
+                if (resolved instanceof CompCond) {
+                    CompCond comp = (CompCond) resolved;
+                    Expr right = comp.getRight();
+                    if (right instanceof ColNameExpr) {
+                        if (((ColNameExpr) right).getTab() != r.getAlias()) {
+                            resolved = new CompCond(comp.getRight(), comp.getOp(), comp.getLeft());
+                        }
+                    }
+                }
+                
+                joinCond = resolved;
+                return r;
+            } else if (ctx.LEFT() != null) {
+                TableSourceExtractor ext = new TableSourceExtractor();
+                ExactRelation r = ext.visit(ctx.table_source());
+                Cond cond = Cond.from(vc, ctx.search_condition());
+                ColNameResolver resolver = new ColNameResolver(tableAliasAndColNames);
+                Cond resolved = resolver.visit(cond);
+                
+                if (resolved instanceof CompCond) {
+                    CompCond comp = (CompCond) resolved;
+                    Expr right = comp.getRight();
+                    if (right instanceof ColNameExpr) {
+                        if (((ColNameExpr) right).getTab() != r.getAlias()) {
+                            resolved = new CompCond(comp.getRight(), comp.getOp(), comp.getLeft());
+                        }
+                    }
+                }
+                
+                joinCond = resolved;
+                return r;
+            } else if (ctx.RIGHT() != null) {
                 TableSourceExtractor ext = new TableSourceExtractor();
                 ExactRelation r = ext.visit(ctx.table_source());
                 Cond cond = Cond.from(vc, ctx.search_condition());

@@ -344,6 +344,7 @@ public abstract class Dbms {
         
         ExactRelation withRand = SingleRelation.from(vc, temp)
                 .select("*, " + String.format("%d / %d as %s", sample_size, total_size, samplingProbCol));
+
         String sql = String.format("create table %s%s as %s", param.sampleTableName(), parquetString, withRand.toSql());
         VerdictLogger.debug(this, "The query used for creating a temporary table without sampling probabilities:");
 //        VerdictLogger.debugPretty(this, Relation.prettyfySql(vc, sql), "  ");
