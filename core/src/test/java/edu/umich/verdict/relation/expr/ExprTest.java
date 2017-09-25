@@ -11,34 +11,39 @@ import edu.umich.verdict.VerdictJDBCContext;
 public class ExprTest {
 
     private static VerdictContext dummyContext = null;
-    
+
     @Test
     public void redshiftModStr() {
-    	Expr a = Expr.from(dummyContext, "mod(strtol(crc32(cast('hello world' as text)),16),30)");
-    	System.out.println(a.toSql());
+        Expr a = Expr.from(dummyContext, "mod(strtol(crc32(cast(\"hello_world\" as text)),16),30)");
+//        System.out.println(a.toSql());
+        assertEquals(a.toString(), "mod(strtol(crc32(cast(`hello_world` as text)), 16), 30)");
     }
-    
+
     @Test
     public void redshiftExtractStr() {
-    	Expr a = Expr.from(dummyContext, "extract (year from o_orderdate)");
-    	System.out.println(a.toSql());
+        Expr a = Expr.from(dummyContext, "extract (year from o_orderdate)");
+        assertEquals(a.toString(), "extract(year from `o_orderdate`)");
+        //        System.out.println(a.toSql());
     }
-    
+
     @Test
     public void redshiftRandPartition() {
-    	Expr a = Expr.from(dummyContext, "mod(cast(round(random()) as integer), 100)");
-    	System.out.println(a.toSql());
+        Expr a = Expr.from(dummyContext, "mod(cast(round(random()) as integer), 100)");
+        assertEquals(a.toString(), "mod(cast(round(random()) as integer), 100)");
+        //        System.out.println(a.toSql());
     }
 
     @Test
     public void caseExprTest() {
         Expr a = Expr.from(dummyContext, "CASE WHEN a < 5 THEN 1 WHEN a < 10 THEN 2 ELSE 3 END");
+        //        System.out.println(a.toString());
         assertEquals(a.toString(), "(CASE WHEN `a` < 5 THEN 1 WHEN `a` < 10 THEN 2 ELSE 3 END)");
     }
 
     @Test
     public void partitonExprTest() {
         Expr a = Expr.from(dummyContext, "count(*) over (partition by order_dow)");
+        //        System.out.println(a.toString());
         assertEquals(a.toString(), "count(*) OVER (partition by `order_dow`)");
 
         Expr b = Expr.from(dummyContext, "count(*) over ()");
@@ -57,19 +62,21 @@ public class ExprTest {
         assertEquals(a.toString(), "(round((rand(unix_timestamp()) * 100)) % 100)");
 
         a = Expr.from(dummyContext, "ndv(user_id)");
+        //        System.out.println(a.toString());
         assertEquals(a.toString(), "ndv(`user_id`)");
     }
 
     @Test
     public void castExprTest() {
         Expr a = Expr.from(dummyContext, "abs(fnv_hash(cast(user_id as string)))%1000000");
-        // changed `user_id` to 'user_id'
-        assertEquals(a.toString(), "(abs(fnv_hash(cast('user_id' as string))) % 1000000)");
+        //        System.out.println(a.toString());
+        assertEquals(a.toString(), "(abs(fnv_hash(cast(`user_id` as string))) % 1000000)");
     }
 
     @Test
     public void hiveHashTest() {
         Expr a = Expr.from(dummyContext, "pmod(conv(substr(md5(cast(user_id AS string)),17,16),16,10), 100)");
+        //        System.out.println(a.toString());
         assertEquals(a.toString(), "pmod(conv(substr(md5(cast(`user_id` as string)), 17, 16), 16, 10), 100)");
 
         Expr b = Expr.from(dummyContext, "pmod(crc32(user_id), 100)");

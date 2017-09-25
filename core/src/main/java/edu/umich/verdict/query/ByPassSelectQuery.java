@@ -3,6 +3,7 @@ package edu.umich.verdict.query;
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.dbms.DbmsJDBC;
 import edu.umich.verdict.dbms.DbmsSpark;
+import edu.umich.verdict.dbms.DbmsSpark2;
 import edu.umich.verdict.exceptions.VerdictException;
 
 public class ByPassSelectQuery extends SelectQuery {
@@ -17,6 +18,8 @@ public class ByPassSelectQuery extends SelectQuery {
 			rs = vc.getDbms().executeJdbcQuery(queryString);
 		} else if (vc.getDbms() instanceof DbmsSpark) {
 			df = vc.getDbms().executeSparkQuery(queryString);
+		} else if (vc.getDbms() instanceof DbmsSpark2) {
+			ds = vc.getDbms().executeSpark2Query(queryString);
 		}
 	}
 

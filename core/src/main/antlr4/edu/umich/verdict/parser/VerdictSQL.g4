@@ -40,7 +40,6 @@ verdict_statement
     | create_table_as_select
     | create_view
     | drop_table
-    | delete_statement
     | drop_view
     ;
 
@@ -136,25 +135,16 @@ tsql_file
     ;
 
 sql_clause
-    : dml_clause
-    | ddl_clause
-    | cfl_statement
+    : ddl_clause
     | other_statement
-    ;
-
-// Data Manipulation Language: https://msdn.microsoft.com/en-us/library/ff848766(v=sql.120).aspx
-dml_clause
-    : delete_statement
-//    | select_statement
-    | update_statement
     ;
 
 // Data Definition Language: https://msdn.microsoft.com/en-us/library/ff848799.aspx)
 ddl_clause
     : //create_function
       create_index
-    | create_procedure
-    | create_statistics
+//    | create_procedure
+//    | create_statistics
     | create_table
     | create_view
     | alter_table
@@ -166,69 +156,11 @@ ddl_clause
     | drop_view
     ;
 
-// Control-of-Flow Language: https://msdn.microsoft.com/en-us/library/ms174290.aspx
-// Labels for better AST traverse.
-cfl_statement
-    // https://msdn.microsoft.com/en-us/library/ms190487.aspx
-    : BEGIN ';'? sql_clause* END ';'?                #begin_statement
-    // https://msdn.microsoft.com/en-us/library/ms181271.aspx
-    | BREAK ';'?                                     #break_statement
-    // https://msdn.microsoft.com/en-us/library/ms174366.aspx
-    | CONTINUE ';'?                                  #continue_statement
-    // https://msdn.microsoft.com/en-us/library/ms180188.aspx
-    | GOTO id ';'?                                   #goto_statement
-    | id ':' ';'?                                    #goto_statement
-    // https://msdn.microsoft.com/en-us/library/ms182717.aspx
-    | IF search_condition sql_clause (ELSE sql_clause)? ';'?  #if_statement
-    // https://msdn.microsoft.com/en-us/library/ms174998.aspx
-    | RETURN expression? ';'?                        #return_statement
-    // https://msdn.microsoft.com/en-us/library/ee677615.aspx
-    | THROW (
-      (DECIMAL | LOCAL_ID) ',' (STRING | LOCAL_ID) ',' (DECIMAL | LOCAL_ID))? ';'?  #throw_statement
-    // https://msdn.microsoft.com/en-us/library/ms175976.aspx
-    | BEGIN TRY ';'? sql_clause* END TRY ';'?
-      BEGIN CATCH ';'? sql_clause* END CATCH ';'?                                   #try_catch_statement
-    // https://msdn.microsoft.com/en-us/library/ms187331.aspx
-    | WAITFOR (DELAY | TIME)  expression ';'?                                       #waitfor_statement
-    // https://msdn.microsoft.com/en-us/library/ms178642.aspx
-    | WHILE search_condition (sql_clause | BREAK ';'? | CONTINUE ';'?)              #while_statement
-    // https://msdn.microsoft.com/en-us/library/ms176047.aspx.
-    | PRINT expression ';'?                                                         #print_statement
-    // https://msdn.microsoft.com/en-us/library/ms178592.aspx
-    | RAISERROR '(' msg=(DECIMAL | STRING | LOCAL_ID) ',' (number | LOCAL_ID) ','
-       (number | LOCAL_ID) (',' (constant | LOCAL_ID))* ')' ';'?                    #raiseerror_statement
-    ;
-
 // DML
-
-// https://msdn.microsoft.com/en-us/library/ms189835.aspx
-delete_statement
-    : with_expression?
-      DELETE (TOP '(' expression ')' PERCENT?)?
-      FROM? (table_alias | ddl_object | rowset_function_limited | table_var=LOCAL_ID)
-      with_table_hints?
-      output_clause?
-      (FROM table_source (',' table_source)*)?
-      (WHERE (search_condition | CURRENT OF (GLOBAL? cursor_name | cursor_var=LOCAL_ID)))?
-      for_clause? option_clause? ';'?
-    ;
 
 // https://msdn.microsoft.com/en-us/library/ms189499.aspx
 select_statement
     : with_expression? EXACT? query_expression order_by_clause? limit_clause? confidence_clause? ';'?
-    ;
-
-// https://msdn.microsoft.com/en-us/library/ms177523.aspx
-update_statement
-    : with_expression?
-      UPDATE (TOP '(' expression ')' PERCENT?)?
-      (ddl_object | rowset_function_limited)
-      with_table_hints?
-      SET update_elem (',' update_elem)*
-      output_clause?
-      (FROM table_source (',' table_source)*)?
-      (WHERE (search_condition_list | CURRENT OF (GLOBAL? cursor_name | cursor_var=LOCAL_ID)))?
-      for_clause? option_clause? ';'?
     ;
 
 // https://msdn.microsoft.com/en-us/library/ms177564.aspx
@@ -254,17 +186,17 @@ create_index
     ;
 
 // https://msdn.microsoft.com/en-us/library/ms187926(v=sql.120).aspx
-create_procedure
-    : CREATE (PROC | PROCEDURE) func_proc_name (';' DECIMAL)?
-      ('('? procedure_param (',' procedure_param)* ')'?)?
-      (WITH procedure_option (',' procedure_option)*)?
-      (FOR REPLICATION)? AS
-      sql_clause+
-    ;
+//create_procedure
+//    : CREATE (PROC | PROCEDURE) func_proc_name (';' DECIMAL)?
+//      ('('? procedure_param (',' procedure_param)* ')'?)?
+//      (WITH procedure_option (',' procedure_option)*)?
+//      (FOR REPLICATION)? AS
+//      sql_clause+
+//    ;
 
-procedure_param
-    : LOCAL_ID (id '.')? AS? data_type VARYING? ('=' default_val=default_value)? (OUT | OUTPUT | READONLY)?
-    ;
+//procedure_param
+//    : LOCAL_ID (id '.')? AS? data_type VARYING? ('=' default_val=default_value)? (OUT | OUTPUT | READONLY)?
+//    ;
 
 procedure_option
     : ENCRYPTION
@@ -855,8 +787,12 @@ binary_manipulation_function
     ;
     
 extract_time_function
-	: function_name=EXTRACT
-      '(' expression FROM expression ')'
+    : function_name=EXTRACT
+      '(' extract_unit FROM expression ')'
+    ;
+    
+extract_unit
+    : YEAR | expression
     ;
 
 unary_manipulation_function
@@ -1235,7 +1171,7 @@ DATABASES:                       D A T A B A S E S;
 DBCC:                            D B C C;
 DEALLOCATE:                      D E A L L O C A T E;
 DECLARE:                         D E C L A R E;
-//DEFAULT:                         D E F A U L T;
+DEFAULT:                         D E F A U L T;
 DELETE:                          D E L E T E;
 DENY:                            D E N Y;
 DESC:                            D E S C;

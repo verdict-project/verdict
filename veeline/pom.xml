@@ -26,9 +26,9 @@
     <scott-data-hsqldb.version>0.1</scott-data-hsqldb.version>
   </properties>
 
-  <prerequisites>
-    <maven>3.2.1</maven><!-- prerequisite of some plugins -->
-  </prerequisites>
+  <!-- <prerequisites>
+    <maven>3.2.1</maven>prerequisite of some plugins
+  </prerequisites -->
 
   <repositories />
 
@@ -84,24 +84,6 @@
           </execution>
         </executions>
       </plugin>-->
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-source-plugin</artifactId>
-        <executions>
-          <execution>
-            <goals>
-              <goal>jar</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <configuration>
-          <source>1.6</source>
-          <target>1.6</target>
-        </configuration>
-      </plugin>
       <plugin>
         <artifactId>maven-assembly-plugin</artifactId>
         <configuration>

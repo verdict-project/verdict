@@ -1,6 +1,6 @@
-# Verdict is Useful
+# Verdict: 100x-200x Faster Data Analytics
 
-Verdict is an Interactive-speed, resource-efficient query processor. Verdict is useful because:
+Verdict brings you Interactive-speed, resource-efficient query processor exploiting approximate query processing. Its main features are:
 
 1. **200x faster by sacrificing only 1% accuracy**
    Verdict can give you 99% accurate answers for your big data queries in a
@@ -25,14 +25,14 @@ Find more about Verdict at our website: [VerdictDB.org](http://verdictdb.org).
 
 # Getting Started
 
-Verdict can run on top of [Apache Spark](https://spark.apache.org/), [Apache (incubating) Impala](https://impala.incubator.apache.org/), and [Apache Hive](https://hive.apache.org/). We are adding drivers for other database systems.
+Verdict can run on top of [Apache Spark](https://spark.apache.org/), [Apache Impala](https://impala.incubator.apache.org/), [Apache Hive](https://hive.apache.org/), and [Amazon Redshift](https://aws.amazon.com/redshift/) We are adding drivers for other database systems.
 
 Using Verdict is easy. Following this guide, you can finish setup in five minutes if you have any of those supported systems ready.
 
 ## Downloading Verdict
 
-1. **Download** and unzip [the latest release](https://github.com/mozafari/verdict/releases/download/v0.3.0/verdict-0.3.0.zip).
-1. **Type** `mvn package` in the unzipped directory. This command will download all the dependencies and compile Verdict's code. The command will create three `jar` files in the `target` directory.
+1. **Pull** `git pull git@github.com:mozafari/verdict.git`
+1. **Type** `mvn package` in the pulled directory. This command will download all the dependencies and compile Verdict's code. The command will create three `jar` files in the `target` directory.
 
 Building Verdict is done!
 

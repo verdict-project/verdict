@@ -2,6 +2,9 @@ package edu.umich.verdict.dbms;
 
 import java.util.List;
 
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Row;
+
 import com.google.common.base.Joiner;
 
 import edu.umich.verdict.VerdictContext;
@@ -53,5 +56,11 @@ public class DbmsHive extends DbmsJDBC {
         int pcount = partitionCount();
         return String.format("pmod(round(rand(unix_timestamp())*%d), %d) AS %s", pcount, pcount, partitionColumnName());
     }
+
+	@Override
+	public Dataset<Row> getDataset() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
 }

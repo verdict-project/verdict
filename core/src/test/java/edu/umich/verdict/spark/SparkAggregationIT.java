@@ -1,4 +1,4 @@
-package edu.umich.verdict;
+package edu.umich.verdict.spark;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -15,6 +15,8 @@ import org.junit.runner.notification.Failure;
 
 import com.google.common.base.Joiner;
 
+import edu.umich.verdict.AggregationIT;
+import edu.umich.verdict.VerdictSpark2HiveContext;
 import edu.umich.verdict.datatypes.SampleParam;
 import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
@@ -28,7 +30,7 @@ public class SparkAggregationIT extends AggregationIT {
 	
 	static HiveContext hc;
 	
-	static VerdictSparkHiveContext vc;
+	static VerdictSpark2HiveContext vc;
 	
 	static String database = "instacart1g";
 	
@@ -36,13 +38,13 @@ public class SparkAggregationIT extends AggregationIT {
 		SparkAggregationIT.sc = sc;
 	}
 	
-	public static VerdictSparkHiveContext getVerdictContext() {
+	public static VerdictSpark2HiveContext getVerdictContext() {
 		return vc;
 	}
 	
 	private static void setup() {
 		try {
-			vc = new VerdictSparkHiveContext(sc);
+			vc = new VerdictSpark2HiveContext(sc);
 			vc.sql("use " + database);
 			hc = new HiveContext(sc);
 			hc.sql("use " + database);
@@ -56,7 +58,7 @@ public class SparkAggregationIT extends AggregationIT {
 		setup();
 
 		JUnitCore jcore = new JUnitCore();
-		Result result = jcore.run(edu.umich.verdict.SparkAggregationIT.class);
+		Result result = jcore.run(edu.umich.verdict.spark.SparkAggregationIT.class);
 		
 		List<Failure> failures = result.getFailures();
 		for (Failure f : failures) {
@@ -78,7 +80,7 @@ public class SparkAggregationIT extends AggregationIT {
 
 		for (String name : test_methods) {
 			totalTestCount++;
-			Request request = Request.method(edu.umich.verdict.SparkAggregationIT.class, name);
+			Request request = Request.method(edu.umich.verdict.spark.SparkAggregationIT.class, name);
 			JUnitCore jcore = new JUnitCore();
 			Result result = jcore.run(request);
 

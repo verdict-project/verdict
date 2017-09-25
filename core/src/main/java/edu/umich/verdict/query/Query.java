@@ -20,10 +20,13 @@ package edu.umich.verdict.query;
 import java.sql.ResultSet;
 
 import org.apache.spark.sql.DataFrame;
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Row;
 
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.datatypes.Alias;
 import edu.umich.verdict.dbms.DbmsSpark;
+import edu.umich.verdict.dbms.DbmsSpark2;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.parser.VerdictSQLBaseVisitor;
 import edu.umich.verdict.parser.VerdictSQLParser;
@@ -45,13 +48,15 @@ public abstract class Query {
     protected ResultSet rs;
 
     protected DataFrame df;
+    
+    protected Dataset<Row> ds;
 
 
     public enum Type {
         SELECT, CREATE_SAMPLE, DROP_SAMPLE, SHOW_SAMPLE, CONFIG, DESCRIBE_TABLE,
         OTHER_USE, OTHER_SHOW_TABLES, OTHER_SHOW_DATABASES, NOSUPPORT, OTHER_REFRESH,
         OTHER_SHOW_CONFIG,
-        CREATE_TABLE, CREATE_TABLE_AS_SELECT, DROP_TABLE, DELETE_FROM, CREATE_VIEW, DROP_VIEW
+        CREATE_TABLE, CREATE_TABLE_AS_SELECT, DROP_TABLE, CREATE_VIEW, DROP_VIEW
     }
 
     /**
@@ -113,6 +118,14 @@ public abstract class Query {
             return df;
         }
     }
+    
+    public Dataset<Row> getDataset() {
+        if (ds == null && (vc.getDbms() instanceof DbmsSpark2)) {
+            return ((DbmsSpark2) vc.getDbms()).emptyDataFrame();
+        } else {
+            return ds;
+        }
+    }
 
     public ResultSet computeResultSet() throws VerdictException {
         compute();
@@ -124,6 +137,12 @@ public abstract class Query {
         compute();
         DataFrame df = getDataFrame();
         return df;
+    }
+    
+    public Dataset<Row> computeDataset() throws VerdictException {
+    		compute();
+    		Dataset<Row> ds = getDataset();
+    		return ds;
     }
 
 
@@ -171,7 +190,6 @@ public abstract class Query {
                 //					query = new CreateTableQuery(vc, queryString);
             } else if (queryType.equals(Type.CREATE_TABLE) ||
                     queryType.equals(Type.DROP_TABLE) ||
-                    queryType.equals(Type.DELETE_FROM) ||
                     queryType.equals(Type.DROP_VIEW)) {
                 query = new ByPassVerdictUpdateQuery(vc, queryString);
             } else if (queryType.equals(Type.OTHER_SHOW_CONFIG)) {
@@ -191,7 +209,7 @@ public abstract class Query {
 
     protected static boolean isUpdateType(Type type) {
         if (type.equals(Type.CREATE_SAMPLE) || type.equals(Type.DROP_SAMPLE) || type.equals(Type.CREATE_TABLE)
-            || type.equals(Type.DROP_TABLE) || type.equals(Type.DELETE_FROM) || type.equals(Type.DROP_VIEW)
+            || type.equals(Type.DROP_TABLE) || type.equals(Type.DROP_VIEW)
             || type.equals(Type.CREATE_TABLE_AS_SELECT) || type.equals(Type.CREATE_VIEW)) {
             return true;
         } else {
@@ -294,12 +312,6 @@ public abstract class Query {
             @Override
             public Type visitDrop_table(VerdictSQLParser.Drop_tableContext ctx) {
                 type = Type.DROP_TABLE;
-                return type;
-            }
-
-            @Override
-            public Type visitDelete_statement(VerdictSQLParser.Delete_statementContext ctx) {
-                type = Type.DELETE_FROM;
                 return type;
             }
 

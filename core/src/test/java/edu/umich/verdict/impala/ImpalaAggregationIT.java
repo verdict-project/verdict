@@ -1,4 +1,4 @@
-package edu.umich.verdict;
+package edu.umich.verdict.impala;
 
 import java.io.FileNotFoundException;
 import java.sql.Connection;
@@ -9,6 +9,10 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.experimental.categories.Category;
 
+import edu.umich.verdict.AggregationIT;
+import edu.umich.verdict.IntegrationTest;
+import edu.umich.verdict.VerdictConf;
+import edu.umich.verdict.VerdictJDBCContext;
 import edu.umich.verdict.exceptions.VerdictException;
 
 @Category(IntegrationTest.class)
@@ -41,16 +45,4 @@ public class ImpalaAggregationIT extends AggregationIT {
         vc.destroy();
     }
 
-    @Override
-    public void simpleCountDistinctUsingUniverseSample() throws VerdictException, SQLException {
-        // TODO Auto-generated method stub
-        super.simpleCountDistinctUsingUniverseSample();
-    }
-
-    @Override
-    public void groupbySum2() throws VerdictException, SQLException {
-        // TODO Auto-generated method stub
-        super.groupbySum2();
-    }
-    
 }

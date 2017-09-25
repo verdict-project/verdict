@@ -53,6 +53,8 @@ public abstract class DbmsJDBC extends Dbms {
     public Connection getDbmsConnection() {
         return conn;
     }
+    
+    protected List<Statement> allOpenStatements;
 
     public ResultSet getDatabaseNamesInResultSet() throws VerdictException {
         return executeJdbcQuery("show databases");
@@ -72,6 +74,7 @@ public abstract class DbmsJDBC extends Dbms {
             conn = null;
         }
         stmt = null;
+        allOpenStatements = new ArrayList<Statement>();
     }
 
     protected DbmsJDBC(VerdictContext vc,
@@ -91,9 +94,11 @@ public abstract class DbmsJDBC extends Dbms {
                 user,
                 password);
         conn = makeDbmsConnection(url, jdbcClassName);
+        stmt = null;
+        allOpenStatements = new ArrayList<Statement>();
     }
 
-    public ResultSet describeTableInResultSet(TableUniqueName tableUniqueName)  throws VerdictException {
+    public ResultSet describeTableInResultSet(TableUniqueName tableUniqueName) throws VerdictException {
         return executeJdbcQuery(String.format("describe %s", tableUniqueName));
     }
 
@@ -258,8 +263,9 @@ public abstract class DbmsJDBC extends Dbms {
 
     public Statement createStatement() throws VerdictException {
         try {
-            if (stmt != null) closeStatement();
+//            if (stmt != null) closeStatement();
             stmt = conn.createStatement();
+            allOpenStatements.add(stmt);
         } catch (SQLException e) {
             throw new VerdictException(e);
         }
@@ -270,26 +276,29 @@ public abstract class DbmsJDBC extends Dbms {
         return stmt;
     }
 
-    public Statement createNewStatementWithoutClosing() throws VerdictException {
-        try {
-            stmt = conn.createStatement();
-        } catch (SQLException e) {
-            throw new VerdictException(e);
-        }
-        return stmt;
-    }
+//    public Statement createNewStatementWithoutClosing() throws VerdictException {
+//        try {
+//            stmt = conn.createStatement();
+//        } catch (SQLException e) {
+//            throw new VerdictException(e);
+//        }
+//        return stmt;
+//    }
 
-    public Statement createStatementIfNotExists() throws VerdictException {
-        if (stmt == null) createStatement();
-        return stmt;
-    }
+//    public Statement createStatementIfNotExists() throws VerdictException {
+//        if (stmt == null) createStatement();
+//        return stmt;
+//    }
 
     public void closeStatement() throws VerdictException {
         try {
-            if (stmt != null && !stmt.isClosed()) {
-                stmt.close();
-                VerdictLogger.debug(this, "Closed the statement with id: " + System.identityHashCode(stmt));
+            for (Statement s : allOpenStatements) {
+                if (s != null && !s.isClosed()) {
+                    s.close();
+                }
             }
+            allOpenStatements.clear();
+            stmt = null;
         } catch (SQLException e) {
             throw new VerdictException(e);
         }
