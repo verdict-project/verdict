@@ -32,7 +32,6 @@ import org.apache.spark.sql.Row;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 
 import edu.umich.verdict.VerdictConf;

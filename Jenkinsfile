@@ -4,17 +4,17 @@ pipeline {
     stages {
         stage('Build') {
             steps {
-                echo 'Empty Building..'
+                sh 'mvn compile'
             }
         }
         stage('Test') {
             steps {
-                echo 'Empty Testing..'
+                sh 'mvn test -DskipTests=false'
             }
         }
         stage('Deploy') {
             steps {
-                echo 'Empty Deploying....'
+                sh 'mvn package'
             }
         }
     }

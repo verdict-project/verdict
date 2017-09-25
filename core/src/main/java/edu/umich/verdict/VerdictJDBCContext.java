@@ -26,7 +26,6 @@ import org.apache.spark.sql.Row;
 import com.google.common.base.Optional;
 
 import edu.umich.verdict.dbms.Dbms;
-import edu.umich.verdict.dbms.DbmsJDBC;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.query.Query;
 import edu.umich.verdict.util.VerdictLogger;

@@ -1,13 +1,9 @@
 package edu.umich.verdict.redshift;
 
-import java.sql.ResultSet;
-import java.sql.Statement;
-
 import edu.umich.verdict.VerdictConf;
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.VerdictJDBCContext;
 import edu.umich.verdict.exceptions.VerdictException;
-import edu.umich.verdict.util.ResultSetConversion;
 
 public class RedshiftThroughVerdictTest {
 

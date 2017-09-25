@@ -103,7 +103,6 @@
                     <version>${maven.surefire.version}</version>
                     <configuration>
                         <skipTests>${skipTests}</skipTests>
-                        <groups>edu.umich.verdict.MinimumTest.class</groups>
                     </configuration>
                 </plugin>
                 <plugin>

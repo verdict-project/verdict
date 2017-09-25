@@ -2,11 +2,11 @@ package edu.umich.verdict;
 
 import java.sql.ResultSet;
 
-import org.apache.spark.sql.SparkSession;
 import org.apache.spark.SparkContext;
 import org.apache.spark.sql.DataFrame;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
+import org.apache.spark.sql.SparkSession;
 
 import edu.umich.verdict.dbms.DbmsSpark2;
 import edu.umich.verdict.exceptions.VerdictException;

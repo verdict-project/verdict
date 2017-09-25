@@ -1,7 +1,5 @@
 package edu.umich.verdict.jdbc;
 
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.sql.Array;
 import java.sql.Blob;
 import java.sql.CallableStatement;

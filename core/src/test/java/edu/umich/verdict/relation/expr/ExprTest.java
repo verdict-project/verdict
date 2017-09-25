@@ -4,9 +4,7 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-import edu.umich.verdict.VerdictConf;
 import edu.umich.verdict.VerdictContext;
-import edu.umich.verdict.VerdictJDBCContext;
 
 public class ExprTest {
 

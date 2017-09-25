@@ -7,16 +7,13 @@ import java.sql.SQLException;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.experimental.categories.Category;
 
 import edu.umich.verdict.AggregationIT;
-import edu.umich.verdict.IntegrationTest;
 import edu.umich.verdict.VerdictConf;
 import edu.umich.verdict.VerdictJDBCContext;
 import edu.umich.verdict.exceptions.VerdictException;
 
-@Category(IntegrationTest.class)
-public class ImpalaAggregationIT extends AggregationIT {
+public class ImpalaAggregationTest extends AggregationIT {
 
     @BeforeClass
     public static void connect() throws VerdictException, SQLException, FileNotFoundException, ClassNotFoundException {
@@ -29,13 +26,12 @@ public class ImpalaAggregationIT extends AggregationIT {
         conf.setHost(host);
         conf.setPort(port);
         conf.setDbmsSchema(schema);
-        conf.set("no_user_password", "true");
         conf.set("verdict.loglevel", "debug");
         conf.set("verdict.meta_data.meta_database_suffix", "_verdict");
         vc = VerdictJDBCContext.from(conf);
 
         String url = String.format("jdbc:impala://%s:%s/%s", host, port, schema);
-        Class.forName("com.cloudera.impala.jdbc4.Driver");
+        Class.forName("com.cloudera.impala.jdbc41.Driver");
         Connection conn = DriverManager.getConnection(url);
         stmt = conn.createStatement();
     }

@@ -10,6 +10,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import com.google.common.base.Joiner;
 
@@ -205,6 +206,13 @@ public class AggregationIT extends BaseIT {
             System.out.println();
         }
         System.out.println();
+    }
+    
+    @Test
+    @Category(edu.umich.verdict.MinimumTest.class)
+    public void basicSelectCount() throws VerdictException {
+        String sql = "select count(*) from tpch1g.lineitem";
+        vc.executeJdbcQuery(sql);
     }
 
     @Test

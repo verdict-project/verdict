@@ -1,175 +1,130 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <artifactId>verdict-veeline</artifactId>
-  <name>Verdict-veeline</name>
-  <url>http://verdictdb.org</url>
-  <packaging>jar</packaging>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <artifactId>verdict-veeline</artifactId>
+    <name>Verdict-veeline</name>
+    <url>http://verdictdb.org</url>
+    <packaging>jar</packaging>
 
-  <parent>
-    <groupId>edu.umich.verdict</groupId>
-    <artifactId>verdictdb</artifactId>
-    <version>0.3.0-snapshot</version>
-  </parent>
+    <parent>
+        <groupId>edu.umich.verdict</groupId>
+        <artifactId>verdictdb</artifactId>
+        <version>0.3.0-snapshot</version>
+    </parent>
 
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <top.dir>${project.basedir}</top.dir>
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <top.dir>${project.basedir}</top.dir>
 
-    <!-- The following list is sorted. -->
-    <docbkx-maven-plugin.version>2.0.17</docbkx-maven-plugin.version>
-    <h2.version>1.4.191</h2.version>
-    <hsqldb.version>2.3.4</hsqldb.version>
-    <jline.version>2.14.5</jline.version>
-    <jmockit.version>1.30</jmockit.version>
-    <maven-dependency-plugin.version>2.10</maven-dependency-plugin.version>
-    <maven-gpg-plugin.version>1.6</maven-gpg-plugin.version>
-    <scott-data-hsqldb.version>0.1</scott-data-hsqldb.version>
-  </properties>
+        <!-- The following list is sorted. -->
+        <docbkx-maven-plugin.version>2.0.17</docbkx-maven-plugin.version>
+        <h2.version>1.4.191</h2.version>
+        <hsqldb.version>2.3.4</hsqldb.version>
+        <jline.version>2.14.5</jline.version>
+        <jmockit.version>1.30</jmockit.version>
+        <maven-dependency-plugin.version>2.10</maven-dependency-plugin.version>
+        <maven-gpg-plugin.version>1.6</maven-gpg-plugin.version>
+        <scott-data-hsqldb.version>0.1</scott-data-hsqldb.version>
+    </properties>
 
-  <!-- <prerequisites>
-    <maven>3.2.1</maven>prerequisite of some plugins
-  </prerequisites -->
+    <!-- <prerequisites> <maven>3.2.1</maven>prerequisite of some plugins 
+        </prerequisites -->
 
-  <repositories />
+    <repositories />
 
-  <build>
-    <plugins>
-      <!--<plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-checkstyle-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>validate</id>
-            <phase>validate</phase>
-            <configuration>
-              <configLocation>${top.dir}/src/main/config/checkstyle/checker.xml</configLocation>
-              <suppressionsLocation>${top.dir}/src/main/config/checkstyle/suppressions.xml</suppressionsLocation>
-              <consoleOutput>true</consoleOutput>
-              <headerLocation>${top.dir}/src/main/config/checkstyle/header.txt</headerLocation>
-              <failOnViolation>true</failOnViolation>
-              <includeTestSourceDirectory>true</includeTestSourceDirectory>
-            </configuration>
-            <goals>
-              <goal>check</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-javadoc-plugin</artifactId>
-        <configuration>
-          <stylesheetfile>${basedir}/doc/styles.css</stylesheetfile>
-          <show>public</show>
-        </configuration>
-        <executions>
-          <execution>
-            <id>attach-javadocs</id>
-            <goals>
-              <goal>jar</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>-->
-      <!--  To allow JMockit to be loaded first in surefire -->
-      <!--<plugin>
-        <artifactId>maven-dependency-plugin</artifactId>
-        <version>${maven-dependency-plugin.version}</version>
-        <executions>
-          <execution>
-            <id>getClasspathFilenames</id>
-            <goals>
-              <goal>properties</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>-->
-      <plugin>
-        <artifactId>maven-assembly-plugin</artifactId>
-        <configuration>
-          <archive>
-            <manifest>
-              <mainClass>sqlline.SqlLine</mainClass>
-            </manifest>
-          </archive>
-          <descriptorRefs>
-            <descriptorRef>jar-with-dependencies</descriptorRef>
-          </descriptorRefs>
-        </configuration>
-        <executions>
-          <execution>
-            <id>make-assembly</id>
-            <phase>package</phase>
-            <goals>
-              <goal>single</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-    </plugins>
-  </build>
-
-  <dependencies>
-    <dependency>
-      <groupId>jline</groupId>
-      <artifactId>jline</artifactId>
-      <version>${jline.version}</version>
-    </dependency>
-    <dependency>
-      <!-- JMockit needs to be on class path before JUnit. -->
-      <groupId>org.jmockit</groupId>
-      <artifactId>jmockit</artifactId>
-      <version>${jmockit.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>${junit.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>net.hydromatic</groupId>
-      <artifactId>scott-data-hsqldb</artifactId>
-      <version>${scott-data-hsqldb.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.hsqldb</groupId>
-      <artifactId>hsqldb</artifactId>
-      <version>${hsqldb.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.h2database</groupId>
-      <artifactId>h2</artifactId>
-      <version>${h2.version}</version>
-      <scope>test</scope>
-    </dependency>
-  </dependencies>
-
-  <!--
-  <profiles>
-    <profile>
-      <id>release</id>
-      <build>
+    <build>
         <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-gpg-plugin</artifactId>
-            <version>${maven-gpg-plugin.version}</version>
-            <executions>
-              <execution>
-                <id>sign-artifacts</id>
-                <phase>verify</phase>
-                <goals>
-                  <goal>sign</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <skipTests>true</skipTests>
+                    <groups>edu.umich.verdict.MinimumTest.class</groups>
+                </configuration>
+            </plugin>
+            <!--<plugin> <groupId>org.apache.maven.plugins</groupId> <artifactId>maven-checkstyle-plugin</artifactId> 
+                <executions> <execution> <id>validate</id> <phase>validate</phase> <configuration> 
+                <configLocation>${top.dir}/src/main/config/checkstyle/checker.xml</configLocation> 
+                <suppressionsLocation>${top.dir}/src/main/config/checkstyle/suppressions.xml</suppressionsLocation> 
+                <consoleOutput>true</consoleOutput> <headerLocation>${top.dir}/src/main/config/checkstyle/header.txt</headerLocation> 
+                <failOnViolation>true</failOnViolation> <includeTestSourceDirectory>true</includeTestSourceDirectory> 
+                </configuration> <goals> <goal>check</goal> </goals> </execution> </executions> 
+                </plugin> <plugin> <groupId>org.apache.maven.plugins</groupId> <artifactId>maven-javadoc-plugin</artifactId> 
+                <configuration> <stylesheetfile>${basedir}/doc/styles.css</stylesheetfile> 
+                <show>public</show> </configuration> <executions> <execution> <id>attach-javadocs</id> 
+                <goals> <goal>jar</goal> </goals> </execution> </executions> </plugin> -->
+            <!-- To allow JMockit to be loaded first in surefire -->
+            <!--<plugin> <artifactId>maven-dependency-plugin</artifactId> 
+                <version>${maven-dependency-plugin.version}</version> <executions> <execution> 
+                <id>getClasspathFilenames</id> <goals> <goal>properties</goal> </goals> </execution> 
+                </executions> </plugin> -->
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <mainClass>sqlline.SqlLine</mainClass>
+                        </manifest>
+                    </archive>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>make-assembly</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
-      </build>
-    </profile>
-  </profiles>-->
+    </build>
+
+    <dependencies>
+        <dependency>
+            <groupId>jline</groupId>
+            <artifactId>jline</artifactId>
+            <version>${jline.version}</version>
+        </dependency>
+        <dependency>
+            <!-- JMockit needs to be on class path before JUnit. -->
+            <groupId>org.jmockit</groupId>
+            <artifactId>jmockit</artifactId>
+            <version>${jmockit.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>net.hydromatic</groupId>
+            <artifactId>scott-data-hsqldb</artifactId>
+            <version>${scott-data-hsqldb.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.hsqldb</groupId>
+            <artifactId>hsqldb</artifactId>
+            <version>${hsqldb.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <version>${h2.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <!-- <profiles> <profile> <id>release</id> <build> <plugins> <plugin> 
+        <groupId>org.apache.maven.plugins</groupId> <artifactId>maven-gpg-plugin</artifactId> 
+        <version>${maven-gpg-plugin.version}</version> <executions> <execution> <id>sign-artifacts</id> 
+        <phase>verify</phase> <goals> <goal>sign</goal> </goals> </execution> </executions> 
+        </plugin> </plugins> </build> </profile> </profiles> -->
 </project>
