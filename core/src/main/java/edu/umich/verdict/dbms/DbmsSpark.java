@@ -57,6 +57,7 @@ public class DbmsSpark extends Dbms {
 
     @Override
     public boolean execute(String sql) throws VerdictException {
+        VerdictLogger.debug(this, "About to run: " + sql);
         df = sqlContext.sql(sql);
         return (df != null)? true : false;
         //return (df.count() > 0)? true : false;
