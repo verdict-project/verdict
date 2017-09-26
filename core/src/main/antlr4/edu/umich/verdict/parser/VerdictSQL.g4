@@ -1,4 +1,21 @@
 /*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/*
 T-SQL (Transact-SQL, MSSQL) grammar.
 The MIT License (MIT).
 Copyright (c) 2015-2016, Ivan Kochurkin (kvanttt@gmail.com), Positive Technologies.
@@ -141,17 +158,10 @@ sql_clause
 
 // Data Definition Language: https://msdn.microsoft.com/en-us/library/ff848799.aspx)
 ddl_clause
-    : //create_function
-      create_index
-//    | create_procedure
-//    | create_statistics
-    | create_table
+    : create_table
     | create_view
     | alter_table
     | alter_database
-    | drop_index
-    | drop_procedure
-    | drop_statistics
     | drop_table
     | drop_view
     ;
@@ -180,46 +190,10 @@ output_column_name
 
 // DDL
 
-// https://msdn.microsoft.com/en-us/library/ms188783.aspx
-create_index
-    : CREATE UNIQUE? clustered? INDEX name=id ON table_name_with_hint '(' column_name_list ')' ';'?
-    ;
-
-// https://msdn.microsoft.com/en-us/library/ms187926(v=sql.120).aspx
-//create_procedure
-//    : CREATE (PROC | PROCEDURE) func_proc_name (';' DECIMAL)?
-//      ('('? procedure_param (',' procedure_param)* ')'?)?
-//      (WITH procedure_option (',' procedure_option)*)?
-//      (FOR REPLICATION)? AS
-//      sql_clause+
-//    ;
-
-//procedure_param
-//    : LOCAL_ID (id '.')? AS? data_type VARYING? ('=' default_val=default_value)? (OUT | OUTPUT | READONLY)?
-//    ;
-
-procedure_option
-    : ENCRYPTION
-    | RECOMPILE
-    | execute_clause
-    ;
-
-// https://msdn.microsoft.com/en-us/library/ms188038.aspx
-create_statistics
-    : CREATE STATISTICS id ON table_name_with_hint '(' column_name_list ')'
-      (WITH (FULLSCAN | SAMPLE DECIMAL (PERCENT | ROWS) | STATS_STREAM)
-            (',' NORECOMPUTE)? (',' INCREMENTAL = on_off)? )? ';'?
-    ;
-
 // https://msdn.microsoft.com/en-us/library/ms174979.aspx
 create_table
     : CREATE TABLE table_name '(' column_def_table_constraint (','? column_def_table_constraint)* ','? ')'
-//      create_table_option* ';'?
     ;
-    
-//create_table_option
-//    : table_option_key=(LOCATION | TYPE | FIELDS_SEPARATED_BY | ESCAPED_BY | QUOTED_BY) table_option_value=(ID | DOUBLE_QUOTE_STRING | STRING)
-//    ;
 
 create_table_as_select
     : CREATE TABLE (IF NOT EXISTS)? table_name STORED_AS_PARQUET? AS select_statement ';'?
@@ -228,12 +202,7 @@ create_table_as_select
 // https://msdn.microsoft.com/en-us/library/ms187956.aspx
 create_view
     : CREATE VIEW view_name ('(' column_name (',' column_name)* ')')?
-      (WITH view_attribute (',' view_attribute)*)?
       AS select_statement (WITH CHECK OPTION)? ';'?
-    ;
-
-view_attribute
-    : ENCRYPTION | SCHEMABINDING | VIEW_METADATA
     ;
 
 // https://msdn.microsoft.com/en-us/library/ms190273.aspx
@@ -245,28 +214,7 @@ alter_table
 // https://msdn.microsoft.com/en-us/library/ms174269.aspx
 alter_database
     : ALTER DATABASE (database=id | CURRENT)
-      (MODIFY NAME '=' new_name=id | COLLATE collation=id | SET database_option) ';'?
-    ;
-
-// https://msdn.microsoft.com/en-us/library/bb522682.aspx
-// Runtime check.
-database_option
-    : id (id | FULL)?
-    ;
-
-// https://msdn.microsoft.com/en-us/library/ms176118.aspx
-drop_index
-    : DROP INDEX (IF EXISTS)? name=id ';'?
-    ;
-
-// https://msdn.microsoft.com/en-us/library/ms174969.aspx
-drop_procedure
-    : DROP PROCEDURE (IF EXISTS)? func_proc_name ';'?
-    ;
-
-// https://msdn.microsoft.com/en-us/library/ms175075.aspx
-drop_statistics
-    : DROP STATISTICS (table_name '.')? name=id ';'
+      MODIFY NAME '=' new_name=id ';'?
     ;
 
 // https://msdn.microsoft.com/en-us/library/ms173790.aspx
@@ -279,89 +227,14 @@ drop_view
     : DROP VIEW (IF EXISTS)? view_name (',' view_name)* ';'?
     ;
 
-rowset_function_limited
-    : openquery
-    | opendatasource
-    ;
-
-// https://msdn.microsoft.com/en-us/library/ms188427(v=sql.120).aspx
-openquery
-    : OPENQUERY '(' linked_server=id ',' query=STRING ')'
-    ;
-
-// https://msdn.microsoft.com/en-us/library/ms179856.aspx
-opendatasource
-    : OPENDATASOURCE '(' provider=STRING ',' init=STRING ')'
-     '.' (database=id)? '.' (scheme=id)? '.' (table=id)
-    ;
-
 // Other statements.
 
-// https://msdn.microsoft.com/en-us/library/ms188927.aspx
-declare_statement
-    : DECLARE declare_local (',' declare_local)* ';'?
-    | DECLARE LOCAL_ID AS? table_type_definition ';'?
-    ;
-
-// https://msdn.microsoft.com/en-us/library/ms181441(v=sql.120).aspx
-cursor_statement
-    // https://msdn.microsoft.com/en-us/library/ms175035(v=sql.120).aspx
-    : CLOSE GLOBAL? cursor_name ';'?
-    // https://msdn.microsoft.com/en-us/library/ms188782(v=sql.120).aspx
-    | DEALLOCATE GLOBAL? cursor_name ';'?
-    // https://msdn.microsoft.com/en-us/library/ms180169(v=sql.120).aspx
-    | declare_cursor
-    // https://msdn.microsoft.com/en-us/library/ms180152(v=sql.120).aspx
-    | fetch_cursor
-    // https://msdn.microsoft.com/en-us/library/ms190500(v=sql.120).aspx
-    | OPEN GLOBAL? cursor_name ';'?
-    ;
-
-execute_var_string
-    : LOCAL_ID
-    | STRING
-    ;
-
-// https://msdn.microsoft.com/en-us/library/ff848791.aspx
-security_statement
-    // https://msdn.microsoft.com/en-us/library/ms188354.aspx
-    : execute_clause ';'?
-    // https://msdn.microsoft.com/en-us/library/ms178632.aspx
-    | REVERT ('(' WITH COOKIE '=' LOCAL_ID ')')? ';'?
-    ;
-
-// https://msdn.microsoft.com/en-us/library/ms190356.aspx
 // https://msdn.microsoft.com/en-us/library/ms189484.aspx
 set_statment
     : SET LOCAL_ID ('.' member_name=id)? '=' expression ';'?
     | SET LOCAL_ID assignment_operator expression ';'?
-    | SET LOCAL_ID '='
-      CURSOR declare_set_cursor_common (FOR (READ ONLY | UPDATE (OF column_name_list)?))? ';'?
     // https://msdn.microsoft.com/en-us/library/ms189837.aspx
     | set_special
-    ;
-
-// https://msdn.microsoft.com/en-us/library/ms174377.aspx
-transaction_statement
-    // https://msdn.microsoft.com/en-us/library/ms188386.aspx
-    : BEGIN DISTRIBUTED (TRAN | TRANSACTION) (id | LOCAL_ID)? ';'?
-    // https://msdn.microsoft.com/en-us/library/ms188929.aspx
-    | BEGIN (TRAN | TRANSACTION) ((id | LOCAL_ID) (WITH MARK STRING)?)? ';'?
-    // https://msdn.microsoft.com/en-us/library/ms190295.aspx
-    | COMMIT (TRAN | TRANSACTION) ((id | LOCAL_ID) (WITH '(' DELAYED_DURABILITY = (OFF | ON) ')')?)? ';'?
-    // https://msdn.microsoft.com/en-us/library/ms178628.aspx
-    | COMMIT WORK? ';'?
-    // https://msdn.microsoft.com/en-us/library/ms181299.aspx
-    | ROLLBACK (TRAN | TRANSACTION) (id | LOCAL_ID)? ';'?
-    // https://msdn.microsoft.com/en-us/library/ms174973.aspx
-    | ROLLBACK WORK? ';'?
-    // https://msdn.microsoft.com/en-us/library/ms188378.aspx
-    | SAVE (TRAN | TRANSACTION) (id | LOCAL_ID)? ';'?
-    ;
-
-// https://msdn.microsoft.com/en-us/library/ms188037.aspx
-go_statement
-    : GO (count=DECIMAL)?
     ;
 
 // https://msdn.microsoft.com/en-us/library/ms188366.aspx
@@ -389,14 +262,6 @@ show_config_statement
     : SHOW CONFIG ';'?
     ;
 
-execute_clause
-    : (EXEC | EXECUTE) AS clause=(CALLER | SELF | OWNER | STRING)
-    ;
-
-declare_local
-    : LOCAL_ID AS? data_type ('=' expression)?
-    ;
-
 table_type_definition
     : TABLE '(' column_def_table_constraint (','? column_def_table_constraint)* ')'
     ;
@@ -408,57 +273,17 @@ column_def_table_constraint
 
 // https://msdn.microsoft.com/en-us/library/ms187742.aspx
 column_definition
-    : column_name (data_type | AS expression) (COLLATE id)? null_notnull?
-      ((CONSTRAINT constraint=id)? DEFAULT constant_expression (WITH VALUES)?
-       | IDENTITY ('(' seed=DECIMAL ',' increment=DECIMAL ')')? (NOT FOR REPLICATION)?)?
-      ROWGUIDCOL?
-      column_constraint*
+    : column_name (data_type | AS expression) null_notnull?
     ;
 
 // https://msdn.microsoft.com/en-us/library/ms186712.aspx
 column_constraint
     :(CONSTRAINT id)? null_notnull?
-      ((PRIMARY KEY | UNIQUE) clustered? index_options?
-      | CHECK (NOT FOR REPLICATION)? '(' search_condition ')')
     ;
 
 // https://msdn.microsoft.com/en-us/library/ms188066.aspx
 table_constraint
-    : (CONSTRAINT id)?
-       ((PRIMARY KEY | UNIQUE) clustered? '(' column_name_list ')' index_options? (ON id)?
-       | CHECK (NOT FOR REPLICATION)? '(' search_condition ')')
-    ;
-
-index_options
-    : WITH '(' index_option (',' index_option)* ')'
-    ;
-
-// https://msdn.microsoft.com/en-us/library/ms186869.aspx
-// Id runtime checking. Id in (PAD_INDEX, FILLFACTOR, IGNORE_DUP_KEY, STATISTICS_NORECOMPUTE, ALLOW_ROW_LOCKS,
-// ALLOW_PAGE_LOCKS, SORT_IN_TEMPDB, ONLINE, MAXDOP, DATA_COMPRESSION, ONLINE).
-index_option
-    : simple_id '=' (simple_id | on_off | DECIMAL)
-    ;
-
-// https://msdn.microsoft.com/en-us/library/ms180169.aspx
-declare_cursor
-    : DECLARE cursor_name CURSOR ';'?
-    | DECLARE cursor_name INSENSITIVE? SCROLL? CURSOR FOR select_statement
-      (FOR (READ ONLY | UPDATE | (OF column_name_list)))? ';'?
-    | DECLARE cursor_name
-      CURSOR  declare_set_cursor_common (FOR UPDATE (OF column_name_list)?)? ';'?
-    ;
-
-declare_set_cursor_common
-    : (LOCAL | GLOBAL)?
-      (FORWARD_ONLY | SCROLL)? (STATIC | KEYSET | DYNAMIC | FAST_FORWARD)?
-      (READ_ONLY | SCROLL_LOCKS | OPTIMISTIC)? TYPE_WARNING?
-      FOR select_statement
-    ;
-
-fetch_cursor
-    : FETCH ((NEXT | PRIOR | FIRST | LAST | ABSOLUTE expression | RELATIVE expression)? FROM)?
-      GLOBAL? cursor_name (INTO LOCAL_ID (',' LOCAL_ID)*)? ';'?
+    : (CONSTRAINT id)? '(' column_name_list ')'
     ;
 
 // https://msdn.microsoft.com/en-us/library/ms190356.aspx
@@ -477,8 +302,7 @@ set_special
 // https://msdn.microsoft.com/en-us/library/ms190286.aspx
 // Operator precendence: https://msdn.microsoft.com/en-us/library/ms190276.aspx
 expression
-    : DEFAULT                                                  #primitive_expression
-    | NULL                                                     #primitive_expression
+    : NULL                                                     #primitive_expression
     | LOCAL_ID                                                 #primitive_expression
     | constant                                                 #primitive_expression
     | function_call                                            #function_call_expression
@@ -1171,7 +995,6 @@ DATABASES:                       D A T A B A S E S;
 DBCC:                            D B C C;
 DEALLOCATE:                      D E A L L O C A T E;
 DECLARE:                         D E C L A R E;
-DEFAULT:                         D E F A U L T;
 DELETE:                          D E L E T E;
 DENY:                            D E N Y;
 DESC:                            D E S C;
