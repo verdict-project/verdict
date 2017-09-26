@@ -222,6 +222,7 @@ public abstract class Dbms {
         String sql = String.format("DROP TABLE IF EXISTS %s", tableName);
         VerdictLogger.debug(this, String.format("Drops table: %s", sql));
         executeUpdate(sql);
+        vc.getMeta().refreshTables(tableName.getDatabaseName());
         VerdictLogger.debug(this, tableName + " has been dropped.");
     }
 
@@ -229,7 +230,6 @@ public abstract class Dbms {
         VerdictLogger.debug(this, String.format("Moves table %s to table %s", from, to));
         dropTable(to);
         String sql = String.format("CREATE TABLE %s AS SELECT * FROM %s", to, from);
-        dropTable(to);
         executeUpdate(sql);
         dropTable(from);
         VerdictLogger.debug(this, "Moving table done.");
