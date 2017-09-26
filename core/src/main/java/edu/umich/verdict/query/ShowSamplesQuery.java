@@ -34,13 +34,15 @@ public class ShowSamplesQuery extends SelectQuery {
         if (database == null) {
             VerdictLogger.info("No table specified; cannot show samples");
         } else {
+            String metaDatabaseName = vc.getMeta().metaCatalogForDataCatalog(database);
+            
             if (!vc.getMeta().getDatabases().contains(database)) {
                 VerdictLogger.info("The specified database does not exist.");
                 return;
-            } else if (!vc.getMeta().getDatabases().contains(vc.getMeta().metaCatalogForDataCatalog(database))){
+            } else if (!vc.getMeta().getDatabases().contains(metaDatabaseName)){
                 VerdictLogger.info(String.format("No samples have been created for the database: %s.", database));
                 return;
-            } else if (!vc.getMeta().getTables(database).contains(vc.getMeta().getMetaNameTableForOriginalSchema(database).getTableName())) {
+            } else if (!vc.getMeta().getTables(metaDatabaseName).contains(vc.getMeta().getMetaNameTableForOriginalSchema(database).getTableName())) {
                 VerdictLogger.info(String.format("No samples have been created for the database: %s.", database));
                 return;
             }

@@ -1,4 +1,21 @@
 /*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/*
 // Licensed to Julian Hyde under one or more contributor license
 // agreements. See the NOTICE file distributed with this work for
 // additional information regarding copyright ownership.
@@ -8,7 +25,7 @@
 // the License. You may obtain a copy of the License at:
 //
 // http://opensource.org/licenses/BSD-3-Clause
-*/
+ */
 package sqlline;
 
 import java.io.File;
@@ -34,428 +51,431 @@ import jline.console.completer.StringsCompleter;
  * Session options.
  */
 class SqlLineOpts implements Completer {
-  public static final String PROPERTY_PREFIX = "sqlline.";
-  public static final String PROPERTY_NAME_EXIT =
-      PROPERTY_PREFIX + "system.exit";
-  private SqlLine sqlLine;
-  private boolean autoSave = false;
-  private boolean silent = false;
-  private boolean color = false;
-  private boolean showHeader = true;
-  private int headerInterval = 100;
-  private boolean fastConnect = true;
-  private boolean autoCommit = true;
-  private boolean verbose = false;
-  private boolean force = false;
-  private boolean incremental = false;
-  private boolean showElapsedTime = true;
-  private boolean showWarnings = false;
-  private boolean showNestedErrs = false;
-  private String numberFormat = "default";
-  private int maxWidth = TerminalFactory.get().getWidth();
-  private int maxHeight = TerminalFactory.get().getHeight();
-  private int maxColumnWidth = 15;
-  int rowLimit = 0;
-  int timeout = -1;
-  private String isolation = "TRANSACTION_REPEATABLE_READ";
-  private String outputFormat = "table";
-  private boolean trimScripts = true;
-  private File rcFile = new File(saveDir(), "sqlline.properties");
-  private String historyFile =
-      new File(saveDir(), "history").getAbsolutePath();
-  private String runFile;
+    
+    public static final String PROPERTY_PREFIX = "sqlline.";
+    public static final String PROPERTY_NAME_EXIT =
+            PROPERTY_PREFIX + "system.exit";
+    private SqlLine sqlLine;
+    private boolean autoSave = false;
+    private boolean silent = false;
+    private boolean color = false;
+    private boolean showHeader = true;
+    private int headerInterval = 100;
+    private boolean fastConnect = true;
+    private boolean autoCommit = true;
+    private boolean verbose = false;
+    private boolean force = false;
+    private boolean incremental = false;
+    private boolean showElapsedTime = true;
+    private boolean showWarnings = false;
+    private boolean showNestedErrs = false;
+    private String numberFormat = "default";
+//    private int maxWidth = TerminalFactory.get().getWidth();
+    private int maxWidth = 2000;
+//    private int maxHeight = TerminalFactory.get().getHeight();
+    private int maxHeight = 2000;
+    private int maxColumnWidth = 100;
+    int rowLimit = 0;
+    int timeout = -1;
+    private String isolation = "TRANSACTION_REPEATABLE_READ";
+    private String outputFormat = "table";
+    private boolean trimScripts = true;
+    private File rcFile = new File(saveDir(), "sqlline.properties");
+    private String historyFile =
+            new File(saveDir(), "history").getAbsolutePath();
+    private String runFile;
 
-  public SqlLineOpts(SqlLine sqlLine) {
-    this.sqlLine = sqlLine;
-  }
-
-  public SqlLineOpts(SqlLine sqlLine, Properties props) {
-    this(sqlLine);
-    loadProperties(props);
-  }
-
-  public List<Completer> optionCompleters() {
-    return Collections.<Completer>singletonList(this);
-  }
-
-  public List<String> possibleSettingValues() {
-    return Arrays.asList("yes", "no");
-  }
-
-  /**
-   * The save directory if HOME/.sqlline/ on UNIX, and HOME/sqlline/ on
-   * Windows.
-   */
-  public File saveDir() {
-    String dir = System.getProperty("sqlline.rcfile");
-    if (dir != null && dir.length() > 0) {
-      return new File(dir);
+    public SqlLineOpts(SqlLine sqlLine) {
+        this.sqlLine = sqlLine;
     }
 
-    String baseDir = System.getProperty(SqlLine.SQLLINE_BASE_DIR);
-    if (baseDir != null && baseDir.length() > 0) {
-      File saveDir = new File(baseDir).getAbsoluteFile();
-      saveDir.mkdirs();
-      return saveDir;
+    public SqlLineOpts(SqlLine sqlLine, Properties props) {
+        this(sqlLine);
+        loadProperties(props);
     }
 
-    File f =
-        new File(
-            System.getProperty("user.home"),
-            ((System.getProperty("os.name").toLowerCase()
-                .indexOf("windows") != -1) ? "" : ".") + "sqlline")
-            .getAbsoluteFile();
-    try {
-      f.mkdirs();
-    } catch (Exception e) {
-      // ignore
+    public List<Completer> optionCompleters() {
+        return Collections.<Completer>singletonList(this);
     }
 
-    return f;
-  }
-
-  public int complete(String buf, int pos, List<CharSequence> candidates) {
-    try {
-      return new StringsCompleter(propertyNames())
-          .complete(buf, pos, candidates);
-    } catch (Throwable t) {
-      return -1;
-    }
-  }
-
-  public void save() throws IOException {
-    OutputStream out = new FileOutputStream(rcFile);
-    save(out);
-    out.close();
-  }
-
-  public void save(OutputStream out) throws IOException {
-    try {
-      Properties props = toProperties();
-
-      // don't save maxwidth: it is automatically set based on
-      // the terminal configuration
-      props.remove(PROPERTY_PREFIX + "maxwidth");
-
-      props.store(out, sqlLine.getApplicationTitle());
-    } catch (Exception e) {
-      sqlLine.handleException(e);
-    }
-  }
-
-  Set<String> propertyNames()
-      throws IllegalAccessException, InvocationTargetException {
-    final TreeSet<String> set = new TreeSet<String>();
-    for (String s : propertyNamesMixed()) {
-      set.add(s.toLowerCase());
-    }
-    return set;
-  }
-
-  Set<String> propertyNamesMixed()
-      throws IllegalAccessException, InvocationTargetException {
-    TreeSet<String> names = new TreeSet<String>();
-
-    // get all the values from getXXX methods
-    for (Method method : getClass().getDeclaredMethods()) {
-      if (!method.getName().startsWith("get")) {
-        continue;
-      }
-
-      if (method.getParameterTypes().length != 0) {
-        continue;
-      }
-
-      String propName = deCamel(method.getName().substring(3));
-      if (propName.equals("run")) {
-        // Not a real property
-        continue;
-      }
-      if (propName.equals("autosave")) {
-        // Deprecated; property is now "autoSave"
-        continue;
-      }
-      names.add(propName);
+    public List<String> possibleSettingValues() {
+        return Arrays.asList("yes", "no");
     }
 
-    return names;
-  }
+    /**
+     * The save directory if HOME/.sqlline/ on UNIX, and HOME/sqlline/ on
+     * Windows.
+     */
+    public File saveDir() {
+        String dir = System.getProperty("sqlline.rcfile");
+        if (dir != null && dir.length() > 0) {
+            return new File(dir);
+        }
 
-  /** Converts "CamelCase" to "camelCase". */
-  private static String deCamel(String s) {
-    return s.substring(0, 1).toLowerCase()
-        + s.substring(1);
-  }
+        String baseDir = System.getProperty(SqlLine.SQLLINE_BASE_DIR);
+        if (baseDir != null && baseDir.length() > 0) {
+            File saveDir = new File(baseDir).getAbsoluteFile();
+            saveDir.mkdirs();
+            return saveDir;
+        }
 
-  public Properties toProperties()
-      throws IllegalAccessException,
-      InvocationTargetException,
-      ClassNotFoundException {
-    Properties props = new Properties();
+        File f =
+                new File(
+                        System.getProperty("user.home"),
+                        ((System.getProperty("os.name").toLowerCase()
+                                .indexOf("windows") != -1) ? "" : ".") + "sqlline")
+                .getAbsoluteFile();
+        try {
+            f.mkdirs();
+        } catch (Exception e) {
+            // ignore
+        }
 
-    for (String name : propertyNames()) {
-      props.setProperty(PROPERTY_PREFIX + name,
-          sqlLine.getReflector().invoke(this, "get" + name).toString());
+        return f;
     }
 
-    sqlLine.debug("properties: " + props.toString());
-    return props;
-  }
-
-  public void load() throws IOException {
-    if (rcFile.exists()) {
-      InputStream in = new FileInputStream(rcFile);
-      load(in);
-      in.close();
+    public int complete(String buf, int pos, List<CharSequence> candidates) {
+        try {
+            return new StringsCompleter(propertyNames())
+                    .complete(buf, pos, candidates);
+        } catch (Throwable t) {
+            return -1;
+        }
     }
-  }
 
-  public void load(InputStream fin) throws IOException {
-    Properties p = new Properties();
-    p.load(fin);
-    loadProperties(p);
-  }
-
-  public void loadProperties(Properties props) {
-    for (String key : Commands.asMap(props).keySet()) {
-      if (key.equals(PROPERTY_NAME_EXIT)) {
-        // fix for sf.net bug 879422
-        continue;
-      }
-      if (key.startsWith(PROPERTY_PREFIX)) {
-        set(key.substring(PROPERTY_PREFIX.length()), props.getProperty(key));
-      }
+    public void save() throws IOException {
+        OutputStream out = new FileOutputStream(rcFile);
+        save(out);
+        out.close();
     }
-  }
 
-  public void set(String key, String value) {
-    set(key, value, false);
-  }
+    public void save(OutputStream out) throws IOException {
+        try {
+            Properties props = toProperties();
 
-  public boolean set(String key, String value, boolean quiet) {
-    try {
-      sqlLine.getReflector().invoke(this, "set" + key, value);
-      return true;
-    } catch (Exception e) {
-      if (!quiet) {
-        // need to use System.err here because when bad command args
-        // are passed this is called before init is done, meaning
-        // that sqlline's error() output chokes because it depends
-        // on properties like text coloring that can get set in
-        // arbitrary order.
-        System.err.println(sqlLine.loc("error-setting", key, e));
-      }
-      return false;
+            // don't save maxwidth: it is automatically set based on
+            // the terminal configuration
+            props.remove(PROPERTY_PREFIX + "maxwidth");
+
+            props.store(out, sqlLine.getApplicationTitle());
+        } catch (Exception e) {
+            sqlLine.handleException(e);
+        }
     }
-  }
 
-  public void setFastConnect(boolean fastConnect) {
-    this.fastConnect = fastConnect;
-  }
+    Set<String> propertyNames()
+            throws IllegalAccessException, InvocationTargetException {
+        final TreeSet<String> set = new TreeSet<String>();
+        for (String s : propertyNamesMixed()) {
+            set.add(s.toLowerCase());
+        }
+        return set;
+    }
 
-  public boolean getFastConnect() {
-    return this.fastConnect;
-  }
+    Set<String> propertyNamesMixed()
+            throws IllegalAccessException, InvocationTargetException {
+        TreeSet<String> names = new TreeSet<String>();
 
-  public void setAutoCommit(boolean autoCommit) {
-    this.autoCommit = autoCommit;
-  }
+        // get all the values from getXXX methods
+        for (Method method : getClass().getDeclaredMethods()) {
+            if (!method.getName().startsWith("get")) {
+                continue;
+            }
 
-  public boolean getAutoCommit() {
-    return this.autoCommit;
-  }
+            if (method.getParameterTypes().length != 0) {
+                continue;
+            }
 
-  public void setVerbose(boolean verbose) {
-    this.verbose = verbose;
-  }
+            String propName = deCamel(method.getName().substring(3));
+            if (propName.equals("run")) {
+                // Not a real property
+                continue;
+            }
+            if (propName.equals("autosave")) {
+                // Deprecated; property is now "autoSave"
+                continue;
+            }
+            names.add(propName);
+        }
 
-  public boolean getVerbose() {
-    return this.verbose;
-  }
+        return names;
+    }
 
-  public void setShowElapsedTime(boolean showElapsedTime) {
-    this.showElapsedTime = showElapsedTime;
-  }
+    /** Converts "CamelCase" to "camelCase". */
+    private static String deCamel(String s) {
+        return s.substring(0, 1).toLowerCase()
+                + s.substring(1);
+    }
 
-  public boolean getShowElapsedTime() {
-    return this.showElapsedTime;
-  }
+    public Properties toProperties()
+            throws IllegalAccessException,
+            InvocationTargetException,
+            ClassNotFoundException {
+        Properties props = new Properties();
 
-  public void setShowWarnings(boolean showWarnings) {
-    this.showWarnings = showWarnings;
-  }
+        for (String name : propertyNames()) {
+            props.setProperty(PROPERTY_PREFIX + name,
+                    sqlLine.getReflector().invoke(this, "get" + name).toString());
+        }
 
-  public boolean getShowWarnings() {
-    return this.showWarnings;
-  }
+        sqlLine.debug("properties: " + props.toString());
+        return props;
+    }
 
-  public void setShowNestedErrs(boolean showNestedErrs) {
-    this.showNestedErrs = showNestedErrs;
-  }
+    public void load() throws IOException {
+        if (rcFile.exists()) {
+            InputStream in = new FileInputStream(rcFile);
+            load(in);
+            in.close();
+        }
+    }
 
-  public boolean getShowNestedErrs() {
-    return this.showNestedErrs;
-  }
+    public void load(InputStream fin) throws IOException {
+        Properties p = new Properties();
+        p.load(fin);
+        loadProperties(p);
+    }
 
-  public void setNumberFormat(String numberFormat) {
-    this.numberFormat = numberFormat;
-  }
+    public void loadProperties(Properties props) {
+        for (String key : Commands.asMap(props).keySet()) {
+            if (key.equals(PROPERTY_NAME_EXIT)) {
+                // fix for sf.net bug 879422
+                continue;
+            }
+            if (key.startsWith(PROPERTY_PREFIX)) {
+                set(key.substring(PROPERTY_PREFIX.length()), props.getProperty(key));
+            }
+        }
+    }
 
-  public String getNumberFormat() {
-    return this.numberFormat;
-  }
+    public void set(String key, String value) {
+        set(key, value, false);
+    }
 
-  public void setMaxWidth(int maxWidth) {
-    this.maxWidth = maxWidth;
-  }
+    public boolean set(String key, String value, boolean quiet) {
+        try {
+            sqlLine.getReflector().invoke(this, "set" + key, value);
+            return true;
+        } catch (Exception e) {
+            if (!quiet) {
+                // need to use System.err here because when bad command args
+                // are passed this is called before init is done, meaning
+                // that sqlline's error() output chokes because it depends
+                // on properties like text coloring that can get set in
+                // arbitrary order.
+                System.err.println(sqlLine.loc("error-setting", key, e));
+            }
+            return false;
+        }
+    }
 
-  public int getMaxWidth() {
-    return this.maxWidth;
-  }
+    public void setFastConnect(boolean fastConnect) {
+        this.fastConnect = fastConnect;
+    }
 
-  public void setMaxColumnWidth(int maxColumnWidth) {
-    this.maxColumnWidth = maxColumnWidth;
-  }
+    public boolean getFastConnect() {
+        return this.fastConnect;
+    }
 
-  public int getMaxColumnWidth() {
-    return this.maxColumnWidth;
-  }
+    public void setAutoCommit(boolean autoCommit) {
+        this.autoCommit = autoCommit;
+    }
 
-  public void setRowLimit(int rowLimit) {
-    this.rowLimit = rowLimit;
-  }
+    public boolean getAutoCommit() {
+        return this.autoCommit;
+    }
 
-  public int getRowLimit() {
-    return this.rowLimit;
-  }
+    public void setVerbose(boolean verbose) {
+        this.verbose = verbose;
+    }
 
-  public void setTimeout(int timeout) {
-    this.timeout = timeout;
-  }
+    public boolean getVerbose() {
+        return this.verbose;
+    }
 
-  public int getTimeout() {
-    return this.timeout;
-  }
+    public void setShowElapsedTime(boolean showElapsedTime) {
+        this.showElapsedTime = showElapsedTime;
+    }
 
-  public void setIsolation(String isolation) {
-    this.isolation = isolation;
-  }
+    public boolean getShowElapsedTime() {
+        return this.showElapsedTime;
+    }
 
-  public String getIsolation() {
-    return this.isolation;
-  }
+    public void setShowWarnings(boolean showWarnings) {
+        this.showWarnings = showWarnings;
+    }
 
-  public void setHistoryFile(String historyFile) {
-    this.historyFile = historyFile;
-  }
+    public boolean getShowWarnings() {
+        return this.showWarnings;
+    }
 
-  public String getHistoryFile() {
-    return this.historyFile;
-  }
+    public void setShowNestedErrs(boolean showNestedErrs) {
+        this.showNestedErrs = showNestedErrs;
+    }
 
-  public void setColor(boolean color) {
-    this.color = color;
-  }
+    public boolean getShowNestedErrs() {
+        return this.showNestedErrs;
+    }
 
-  public boolean getColor() {
-    return this.color;
-  }
+    public void setNumberFormat(String numberFormat) {
+        this.numberFormat = numberFormat;
+    }
 
-  public void setShowHeader(boolean showHeader) {
-    this.showHeader = showHeader;
-  }
+    public String getNumberFormat() {
+        return this.numberFormat;
+    }
 
-  public boolean getShowHeader() {
-    return this.showHeader;
-  }
+    public void setMaxWidth(int maxWidth) {
+        this.maxWidth = maxWidth;
+    }
 
-  public void setHeaderInterval(int headerInterval) {
-    this.headerInterval = headerInterval;
-  }
+    public int getMaxWidth() {
+        return this.maxWidth;
+    }
 
-  public int getHeaderInterval() {
-    return this.headerInterval;
-  }
+    public void setMaxColumnWidth(int maxColumnWidth) {
+        this.maxColumnWidth = maxColumnWidth;
+    }
 
-  public void setForce(boolean force) {
-    this.force = force;
-  }
+    public int getMaxColumnWidth() {
+        return this.maxColumnWidth;
+    }
 
-  public boolean getForce() {
-    return this.force;
-  }
+    public void setRowLimit(int rowLimit) {
+        this.rowLimit = rowLimit;
+    }
 
-  public void setIncremental(boolean incremental) {
-    this.incremental = incremental;
-  }
+    public int getRowLimit() {
+        return this.rowLimit;
+    }
 
-  public boolean getIncremental() {
-    return this.incremental;
-  }
+    public void setTimeout(int timeout) {
+        this.timeout = timeout;
+    }
 
-  public void setSilent(boolean silent) {
-    this.silent = silent;
-  }
+    public int getTimeout() {
+        return this.timeout;
+    }
 
-  public boolean getSilent() {
-    return this.silent;
-  }
+    public void setIsolation(String isolation) {
+        this.isolation = isolation;
+    }
 
-  /** @deprecated Use {@link #setAutoSave(boolean)} */
-  @Deprecated
-  public void setAutosave(boolean autoSave) {
-    setAutoSave(autoSave);
-  }
+    public String getIsolation() {
+        return this.isolation;
+    }
 
-  /** @deprecated Use {@link #getAutoSave()} */
-  @Deprecated
-  public boolean getAutosave() {
-    return getAutoSave();
-  }
+    public void setHistoryFile(String historyFile) {
+        this.historyFile = historyFile;
+    }
 
-  public void setAutoSave(boolean autoSave) {
-    this.autoSave = autoSave;
-  }
+    public String getHistoryFile() {
+        return this.historyFile;
+    }
 
-  public boolean getAutoSave() {
-    return this.autoSave;
-  }
+    public void setColor(boolean color) {
+        this.color = color;
+    }
 
-  public void setOutputFormat(String outputFormat) {
-    this.outputFormat = outputFormat;
-  }
+    public boolean getColor() {
+        return this.color;
+    }
 
-  public String getOutputFormat() {
-    return this.outputFormat;
-  }
+    public void setShowHeader(boolean showHeader) {
+        this.showHeader = showHeader;
+    }
 
-  public void setTrimScripts(boolean trimScripts) {
-    this.trimScripts = trimScripts;
-  }
+    public boolean getShowHeader() {
+        return this.showHeader;
+    }
 
-  public boolean getTrimScripts() {
-    return this.trimScripts;
-  }
+    public void setHeaderInterval(int headerInterval) {
+        this.headerInterval = headerInterval;
+    }
 
-  public void setMaxHeight(int maxHeight) {
-    this.maxHeight = maxHeight;
-  }
+    public int getHeaderInterval() {
+        return this.headerInterval;
+    }
 
-  public int getMaxHeight() {
-    return this.maxHeight;
-  }
+    public void setForce(boolean force) {
+        this.force = force;
+    }
 
-  public File getPropertiesFile() {
-    return rcFile;
-  }
+    public boolean getForce() {
+        return this.force;
+    }
 
-  public void setRun(String runFile) {
-    this.runFile = runFile;
-  }
+    public void setIncremental(boolean incremental) {
+        this.incremental = incremental;
+    }
 
-  public String getRun() {
-    return this.runFile;
-  }
+    public boolean getIncremental() {
+        return this.incremental;
+    }
+
+    public void setSilent(boolean silent) {
+        this.silent = silent;
+    }
+
+    public boolean getSilent() {
+        return this.silent;
+    }
+
+    /** @deprecated Use {@link #setAutoSave(boolean)} */
+    @Deprecated
+    public void setAutosave(boolean autoSave) {
+        setAutoSave(autoSave);
+    }
+
+    /** @deprecated Use {@link #getAutoSave()} */
+    @Deprecated
+    public boolean getAutosave() {
+        return getAutoSave();
+    }
+
+    public void setAutoSave(boolean autoSave) {
+        this.autoSave = autoSave;
+    }
+
+    public boolean getAutoSave() {
+        return this.autoSave;
+    }
+
+    public void setOutputFormat(String outputFormat) {
+        this.outputFormat = outputFormat;
+    }
+
+    public String getOutputFormat() {
+        return this.outputFormat;
+    }
+
+    public void setTrimScripts(boolean trimScripts) {
+        this.trimScripts = trimScripts;
+    }
+
+    public boolean getTrimScripts() {
+        return this.trimScripts;
+    }
+
+    public void setMaxHeight(int maxHeight) {
+        this.maxHeight = maxHeight;
+    }
+
+    public int getMaxHeight() {
+        return this.maxHeight;
+    }
+
+    public File getPropertiesFile() {
+        return rcFile;
+    }
+
+    public void setRun(String runFile) {
+        this.runFile = runFile;
+    }
+
+    public String getRun() {
+        return this.runFile;
+    }
 }
 
 // End SqlLineOpts.java
