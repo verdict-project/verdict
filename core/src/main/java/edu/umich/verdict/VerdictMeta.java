@@ -281,7 +281,12 @@ public class VerdictMeta {
                                 new SampleParam(vc, originalTable, sampleType, samplingRatio, columnNames),
                                 TableUniqueName.uname(sampleSchemaName, sampleTabName));
 
-                        vc.getDbms().cacheTable(TableUniqueName.uname(sampleSchemaName, sampleTabName));
+                        TableUniqueName sampleTable = TableUniqueName.uname(sampleSchemaName, sampleTabName);
+                        if (tables.contains(sampleTabName)) {
+                            vc.getDbms().cacheTable(sampleTable);
+                        } else {
+                            VerdictLogger.error(this, String.format("No sample table (%s) exists. This can cause an unexpected error.", sampleTable));
+                        }
                     }
                 }
             }
@@ -302,8 +307,6 @@ public class VerdictMeta {
                         Long originalTableSize = TypeCasting.toLong(row.get(3));
                         sampleSizeMeta.put(TableUniqueName.uname(sampleSchemaName, sampleTabName),
                                 new SampleSizeInfo(sampleSize, originalTableSize));
-
-                        vc.getDbms().cacheTable(TableUniqueName.uname(sampleSchemaName, sampleTabName));
                     }
                 }
             }
