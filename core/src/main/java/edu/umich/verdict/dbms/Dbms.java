@@ -204,18 +204,20 @@ public abstract class Dbms {
 
     public void dropTable(TableUniqueName tableName) throws VerdictException {
         Set<String> databases = vc.getMeta().getDatabases();
-        // TODO: this is buggy when the database created while a query is executued.
+        // TODO: this is buggy when the database created while a query is executed.
         // it can happen during sample creations.
         if (!databases.contains(tableName.getSchemaName())) {
             VerdictLogger.debug(this, String.format("Database, %s, does not exists. Verdict doesn't bother to run a drop table statement.", tableName.getSchemaName()));
             return;
         }
-
-//        List<String> tables = getTables(tableName.getSchemaName());
-//        if (!tables.contains(tableName.getTableName())) {
-//            VerdictLogger.debug(this, String.format("Table, %s, does not exists. Verdict doesn't bother to run a drop table statement.", tableName));
-//            return;
-//        }
+        
+        // This check is useful for Spark 1.6, since it throws an error even though "if exists" is used
+        // in the "drop table" statement.
+        Set<String> tables = vc.getMeta().getTables(tableName.getDatabaseName());
+        if (!tables.contains(tableName.getTableName())) {
+            VerdictLogger.debug(this, String.format("Table, %s, does not exists. Verdict doesn't bother to run a drop table statement.", tableName));
+            return;
+        }
 
         String sql = String.format("DROP TABLE IF EXISTS %s", tableName);
         VerdictLogger.debug(this, String.format("Drops table: %s", sql));
