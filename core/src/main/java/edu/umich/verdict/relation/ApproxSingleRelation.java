@@ -85,8 +85,8 @@ public class ApproxSingleRelation extends ApproxRelation {
      * @return
      */
     public static ApproxSingleRelation from(VerdictContext vc, SampleParam param) {
-        if (param.sampleType.equals("nosample")) {
-            return asis(SingleRelation.from(vc, param.originalTable));
+        if (param.getSampleType().equals("nosample")) {
+            return asis(SingleRelation.from(vc, param.getOriginalTable()));
         } else {
             return new ApproxSingleRelation(vc, param);
         }
@@ -112,11 +112,11 @@ public class ApproxSingleRelation extends ApproxRelation {
     }
 
     public double getSamplingRatio() {
-        return param.samplingRatio;
+        return param.getSamplingRatio();
     }
 
     public String getSampleType() {
-        return param.sampleType;
+        return param.getSampleType();
     }
 
     public TableUniqueName getOriginalTableName() {
@@ -124,7 +124,7 @@ public class ApproxSingleRelation extends ApproxRelation {
     }
 
     public TableUniqueName getTableName() {
-        return param.originalTable;
+        return param.getOriginalTable();
     }
 
     /*
@@ -239,7 +239,7 @@ public class ApproxSingleRelation extends ApproxRelation {
 
     @Override
     protected List<String> sampleColumns() {
-        return param.columnNames;
+        return param.getColumnNames();
     }
 
     /**
@@ -251,7 +251,7 @@ public class ApproxSingleRelation extends ApproxRelation {
      */
     @Override
     protected Map<TableUniqueName, String> tableSubstitution() {
-        Map<TableUniqueName, String> s = ImmutableMap.of(param.originalTable, alias);
+        Map<TableUniqueName, String> s = ImmutableMap.of(param.getOriginalTable(), alias);
         return s;
     }
 

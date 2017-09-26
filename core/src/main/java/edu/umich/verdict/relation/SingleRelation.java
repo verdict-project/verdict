@@ -131,7 +131,7 @@ public class SingleRelation extends ExactRelation {
 
         // if there's no aggregate expression, we return a default value.
         if (funcs.size() == 0)
-            return param.samplingRatio;
+            return param.getSamplingRatio();
 
         Set<String> cols = vc.getMeta().getColumns(getTableName());
         List<Double> probs = new ArrayList<Double>();
@@ -143,17 +143,17 @@ public class SingleRelation extends ExactRelation {
 
             if (fexpr.getFuncName().equals(FuncExpr.FuncName.COUNT_DISTINCT)) {
                 if (cols.contains(fcol)) {
-                    if (param.sampleType.equals("universe") && param.columnNames.contains(fcol)) {
-                        probs.add(param.samplingRatio);
-                    } else if (param.sampleType.equals("stratified") && param.columnNames.contains(fcol)) {
+                    if (param.getSampleType().equals("universe") && param.getColumnNames().contains(fcol)) {
+                        probs.add(param.getSamplingRatio());
+                    } else if (param.getSampleType().equals("stratified") && param.getColumnNames().contains(fcol)) {
                         probs.add(1.0);
-                    } else if (param.sampleType.equals("nosample")) {
+                    } else if (param.getSampleType().equals("nosample")) {
                         probs.add(1.0);
                     } else {
                         return -1; // uniform random samples must not be used for COUNT-DISTINCT
                     }
                 } else {
-                    if (!param.sampleType.equals("nosample")) {
+                    if (!param.getSampleType().equals("nosample")) {
                         return -1; // no sampled table should be joined for count-distinct.
                     } else {
                         probs.add(1.0);
@@ -166,13 +166,13 @@ public class SingleRelation extends ExactRelation {
 
                 if (size == null) {
                     probs.add(1.0); // the original table
-                } else if (param.sampleType.equals("stratified") && param.columnNames.contains(fcol)) {
+                } else if (param.getSampleType().equals("stratified") && param.getColumnNames().contains(fcol)) {
                     return -1;
                 } else {
                     probs.add(size.sampleSize / (double) size.originalTableSize);
                 }
             } else { // MIN, MAX
-                if (!param.sampleType.equals("nosample")) {
+                if (!param.getSampleType().equals("nosample")) {
                     return -1; // no sampled table should be joined for count-distinct.
                 } else {
                     probs.add(1.0);

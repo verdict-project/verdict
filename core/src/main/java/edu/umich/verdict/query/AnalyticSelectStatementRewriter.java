@@ -142,7 +142,7 @@ class AnalyticSelectStatementRewriter extends SelectStatementBaseRewriter {
             double sampleToOriginalRatio = 1.0; // originalTableSize / sampleSize
             for (Map.Entry<TableUniqueName, Pair<SampleParam, TableUniqueName>> e : replacedTableSources.entrySet()) {
                 SampleParam p = e.getValue().getLeft();
-                sampleToOriginalRatio = 1 / p.samplingRatio;
+                sampleToOriginalRatio = 1 / p.getSamplingRatio();
                 TableUniqueName sampleTable = e.getValue().getRight();
                 SampleSizeInfo sizeInfo = vc.getMeta().getSampleSizeOf(sampleTable);
                 VerdictLogger.debug(this, String.format("%s size ratio. sample size: %d, original size: %d",
@@ -584,8 +584,8 @@ class ProperSampleAnalyzer extends SelectStatementBaseRewriter {
 
                 if (bestCandidateForSample == null) {
                     bestCandidateForSample = e2;
-                } else if (param.sampleType.equals("universal") && dc != null
-                        && param.columnNames.contains(dc.localColumnName())) {
+                } else if (param.getSampleType().equals("universal") && dc != null
+                        && param.getColumnNames().contains(dc.localColumnName())) {
                     bestCandidateForSample = e2;
                 }
             }

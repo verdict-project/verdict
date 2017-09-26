@@ -258,12 +258,6 @@ public abstract class DbmsJDBC extends Dbms {
 
     public Statement createStatement() throws VerdictException {
         try {
-<<<<<<< HEAD
-//            if (stmt != null) closeStatement();
-=======
-            if (stmt != null)
-                closeStatement();
->>>>>>> origin/spark2
             stmt = conn.createStatement();
             allOpenStatements.add(stmt);
         } catch (SQLException e) {
@@ -284,19 +278,6 @@ public abstract class DbmsJDBC extends Dbms {
 //        }
 //        return stmt;
 //    }
-
-<<<<<<< HEAD
-//    public Statement createStatementIfNotExists() throws VerdictException {
-//        if (stmt == null) createStatement();
-//        return stmt;
-//    }
-=======
-    public Statement createStatementIfNotExists() throws VerdictException {
-        if (stmt == null)
-            createStatement();
-        return stmt;
-    }
->>>>>>> origin/spark2
 
     public void closeStatement() throws VerdictException {
         try {

@@ -50,7 +50,7 @@ public class DbmsImpala extends DbmsJDBC {
 
     @Override
     protected String randomNumberExpression(SampleParam param) {
-        Map<String, String> col2types = vc.getMeta().getColumn2Types(param.originalTable);
+        Map<String, String> col2types = vc.getMeta().getColumn2Types(param.getOriginalTable());
         Set<String> hashCols = new HashSet<String>();
         int precision = 3;
         int modValue = (int) Math.pow(10, precision);

@@ -118,9 +118,9 @@ public abstract class Dbms {
             String user, String password, String jdbcClassName) throws VerdictException {
 
         Dbms dbms = null;
-        if (dbName.equals("mysql")) {
-            dbms = new DbmsMySQL(vc, dbName, host, port, schema, user, password, jdbcClassName);
-        } else if (dbName.equals("impala")) {
+//        if (dbName.equals("mysql")) {
+//            dbms = new DbmsMySQL(vc, dbName, host, port, schema, user, password, jdbcClassName);
+        if (dbName.equals("impala")) {
             dbms = new DbmsImpala(vc, dbName, host, port, schema, user, password, jdbcClassName);
         } else if (dbName.equals("hive") || dbName.equals("hive2")) {
             dbms = new DbmsHive(vc, dbName, host, port, schema, user, password, jdbcClassName);
@@ -296,11 +296,11 @@ public abstract class Dbms {
         TableUniqueName temp = createUniformRandomSampledTable(param);
         attachUniformProbabilityToTempTable(param, temp);
         dropTable(temp);
-        return Pair.of(getTableSize(param.sampleTableName()), getTableSize(param.originalTable));
+        return Pair.of(getTableSize(param.sampleTableName()), getTableSize(param.getOriginalTable()));
     }
 
     protected TableUniqueName createUniformRandomSampledTable(SampleParam param) throws VerdictException {
-        String whereClause = String.format("%s < %f", randNumColname, param.samplingRatio);
+        String whereClause = String.format("%s < %f", randNumColname, param.getSamplingRatio());
         ExactRelation sampled = SingleRelation.from(vc, param.getOriginalTable())
                 .select(String.format("*, %s as %s", randomNumberExpression(param), randNumColname)).where(whereClause)
                 .select("*, " + randomPartitionColumn());
@@ -317,8 +317,8 @@ public abstract class Dbms {
     protected void attachUniformProbabilityToTempTable(SampleParam param, TableUniqueName temp)
             throws VerdictException {
         String samplingProbCol = vc.getDbms().samplingProbabilityColumnName();
-        long total_size = SingleRelation.from(vc, param.getOriginalTable()).countValue();
-        long sample_size = SingleRelation.from(vc, temp).countValue();
+        long total_size = vc.getMeta().getTableSize(param.getOriginalTable());
+        long sample_size = vc.getMeta().getTableSize(temp);
 
         String parquetString = "";
 
@@ -338,7 +338,8 @@ public abstract class Dbms {
 
     public Pair<Long, Long> createStratifiedSampleTableOf(SampleParam param) throws VerdictException {
         SampleSizeInfo info = vc.getMeta()
-                .getSampleSizeOf(new SampleParam(vc, param.originalTable, "uniform", null, new ArrayList<String>()));
+                                .getSampleSizeOf(
+                                 new SampleParam(vc, param.getOriginalTable(), "uniform", null, new ArrayList<String>()));
         if (info == null) {
             String msg = "A uniform random must first be created before creating a stratified sample.";
             VerdictLogger.error(this, msg);
@@ -350,12 +351,12 @@ public abstract class Dbms {
         createStratifiedSampleFromGroupSizeTemp(param, groupSizeTemp);
         dropTable(groupSizeTemp);
 
-        return Pair.of(getTableSize(param.sampleTableName()), getTableSize(param.originalTable));
+        return Pair.of(getTableSize(param.sampleTableName()), getTableSize(param.getOriginalTable()));
     }
 
     private TableUniqueName createGroupSizeTempTable(SampleParam param) throws VerdictException {
         TableUniqueName groupSizeTemp = Relation.getTempTableName(vc, param.sampleTableName().getSchemaName());
-        ExactRelation groupSize = SingleRelation.from(vc, param.originalTable).groupby(param.columnNames)
+        ExactRelation groupSize = SingleRelation.from(vc, param.getOriginalTable()).groupby(param.getColumnNames())
                 .agg(String.format("count(*) AS %s", groupSizeColName));
         String sql = String.format("create table %s as %s", groupSizeTemp, groupSize.toSql());
 //        VerdictLogger.debug(this, "The query used for the group-size temp table: ");
@@ -373,9 +374,9 @@ public abstract class Dbms {
 
     protected void createStratifiedSampleFromGroupSizeTemp(SampleParam param, TableUniqueName groupSizeTemp)
             throws VerdictException {
-        Map<String, String> col2types = vc.getMeta().getColumn2Types(param.originalTable);
+        Map<String, String> col2types = vc.getMeta().getColumn2Types(param.getOriginalTable());
         SampleSizeInfo info = vc.getMeta()
-                .getSampleSizeOf(new SampleParam(vc, param.originalTable, "uniform", null, new ArrayList<String>()));
+                .getSampleSizeOf(new SampleParam(vc, param.getOriginalTable(), "uniform", null, new ArrayList<String>()));
         long originalTableSize = info.originalTableSize;
         long groupCount = SingleRelation.from(vc, groupSizeTemp).countValue();
         String samplingProbColName = vc.getDbms().samplingProbabilityColumnName();
@@ -451,7 +452,7 @@ public abstract class Dbms {
         executeUpdate(sql1);
 
         // attach sampling probabilities and random partition number
-        ExactRelation sampledGroupSize = SingleRelation.from(vc, sampledNoRand).groupby(param.columnNames)
+        ExactRelation sampledGroupSize = SingleRelation.from(vc, sampledNoRand).groupby(param.getColumnNames())
                 .agg("count(*) AS " + groupSizeInSampleColName);
         ExactRelation withRand = SingleRelation.from(vc, sampledNoRand).withAlias("s")
                 .join(sampledGroupSize.withAlias("t"), joinExprs)
@@ -480,14 +481,15 @@ public abstract class Dbms {
     public Pair<Long, Long> createUniverseSampleTableOf(SampleParam param) throws VerdictException {
         dropTable(param.sampleTableName());
         TableUniqueName temp = createUniverseSampledTable(param);
-        createUniverseSampleWithProbFromSample(param, temp);
+        long sample_size = createUniverseSampleWithProbFromSample(param, temp);
         dropTable(temp);
-        return Pair.of(getTableSize(param.sampleTableName()), getTableSize(param.originalTable));
+        long originalTableSize = vc.getMeta().getTableSize(param.getOriginalTable());
+        return Pair.of(sample_size, originalTableSize);
     }
 
     protected TableUniqueName createUniverseSampledTable(SampleParam param) throws VerdictException {
         TableUniqueName temp = Relation.getTempTableName(vc, param.sampleTableName().getSchemaName());
-        ExactRelation sampled = SingleRelation.from(vc, param.originalTable)
+        ExactRelation sampled = SingleRelation.from(vc, param.getOriginalTable())
                 .where(universeSampleSamplingCondition(param.getColumnNames().get(0), param.getSamplingRatio()));
         dropTable(temp);
         String sql = String.format("create table %s AS %s", temp, sampled.toSql());
@@ -497,19 +499,25 @@ public abstract class Dbms {
         return temp;
     }
 
-    protected void createUniverseSampleWithProbFromSample(SampleParam param, TableUniqueName temp)
+    /**
+     * 
+     * @param param
+     * @param temp
+     * @return The sample size
+     * @throws VerdictException
+     */
+    protected long createUniverseSampleWithProbFromSample(SampleParam param, TableUniqueName temp)
             throws VerdictException {
         String samplingProbCol = vc.getDbms().samplingProbabilityColumnName();
         ExactRelation sampled = SingleRelation.from(vc, temp);
-        long total_size = SingleRelation.from(vc, param.originalTable).countValue();
-        long sample_size = sampled.countValue();
+        long total_size = vc.getMeta().getTableSize(param.getOriginalTable());
+        long sample_size = vc.getMeta().getTableSize(temp);
 
         ExactRelation withProb = sampled
-                .select(String.format("*, %d / %d AS %s", sample_size, total_size, samplingProbCol) + ", "
-                        + universePartitionColumn(param.getColumnNames().get(0)));
-
+                                 .select(String.format("*, %d / %d AS %s", sample_size, total_size, samplingProbCol) + ", "
+                                         + universePartitionColumn(param.getColumnNames().get(0)));
+        
         String parquetString = "";
-
         if (vc.getConf().areSamplesStoredAsParquet()) {
             parquetString = getParquetString();
         }
@@ -519,6 +527,7 @@ public abstract class Dbms {
 //        VerdictLogger.debugPretty(this, Relation.prettyfySql(vc, sql), "  ");
 //        VerdictLogger.debug(this, sql);
         executeUpdate(sql);
+        return sample_size;
     }
 
     public void updateSampleNameEntryIntoDBMS(SampleParam param, TableUniqueName metaNameTableName)
@@ -532,20 +541,20 @@ public abstract class Dbms {
             throws VerdictException {
         String metaSchema = param.sampleTableName().getSchemaName();
         TableUniqueName tempTableName = Relation.getTempTableName(vc, metaSchema);
-        TableUniqueName originalTableName = param.originalTable;
+        TableUniqueName originalTableName = param.getOriginalTable();
         executeUpdate(String.format(
                 "CREATE TABLE %s AS SELECT * FROM %s "
                         + "WHERE originalschemaname <> '%s' OR originaltablename <> '%s' OR sampletype <> '%s' "
                         + "OR samplingratio <> %s OR columnnames <> '%s'",
                 tempTableName, metaNameTableName, originalTableName.getSchemaName(), originalTableName.getTableName(),
-                param.sampleType, samplingRatioToString(param.samplingRatio),
-                columnNameListToString(param.columnNames)));
+                param.getSampleType(), samplingRatioToString(param.getSamplingRatio()),
+                columnNameListToString(param.getColumnNames())));
         return tempTableName;
     }
 
     protected void insertSampleNameEntryIntoDBMS(SampleParam param, TableUniqueName metaNameTableName)
             throws VerdictException {
-        TableUniqueName originalTableName = param.originalTable;
+        TableUniqueName originalTableName = param.getOriginalTable();
         TableUniqueName sampleTableName = param.sampleTableName();
 
         List<Object> values = new ArrayList<Object>();
@@ -553,9 +562,9 @@ public abstract class Dbms {
         values.add(originalTableName.getTableName());
         values.add(sampleTableName.getSchemaName());
         values.add(sampleTableName.getTableName());
-        values.add(param.sampleType);
-        values.add(param.samplingRatio);
-        values.add(columnNameListToString(param.columnNames));
+        values.add(param.getSampleType());
+        values.add(param.getSamplingRatio());
+        values.add(columnNameListToString(param.getColumnNames()));
 
         insertEntry(metaNameTableName, values);
     }

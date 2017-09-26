@@ -78,7 +78,6 @@ public class DbmsRedshift extends DbmsJDBC {
         String sql = String.format("create schema if not exists %s", catalog);
         executeUpdate(sql);
     }
-<<<<<<< HEAD
     
     /**
      * Set the search_path of a Redshift. The search_path (or schemaName parameter) can be multiple strings
@@ -103,25 +102,9 @@ public class DbmsRedshift extends DbmsJDBC {
             VerdictLogger.info(String.format("Search path changed to: %s. For the tables speficied without their"
                     + " schemas, Verdict assumes that they are in a primary schema (%s). This limitation will be"
                     + " fixed in a future release.", schemaName, primarySchema));
-=======
-
-    @Override
-    public void changeDatabase(String schemaName) throws VerdictException {
-        Set<String> existingSchemas = vc.getMeta().getDatabases();
-        String verdictMetaSchema = vc.getMeta().metaCatalogForDataCatalog(schemaName);
-
-        if (existingSchemas.contains(verdictMetaSchema)) {
-            execute(String.format("set search_path=%s,%s", schemaName, verdictMetaSchema));
->>>>>>> origin/spark2
         } else {
             VerdictLogger.info(String.format("Search path changed to: %s.", schemaName));
         }
-<<<<<<< HEAD
-=======
-
-        currentSchema = Optional.fromNullable(schemaName);
-        VerdictLogger.info("Database changed to: " + schemaName);
->>>>>>> origin/spark2
     }
 
     @Override
@@ -163,36 +146,31 @@ public class DbmsRedshift extends DbmsJDBC {
     }
 
     @Override
-    protected void createUniverseSampleWithProbFromSample(SampleParam param, TableUniqueName temp)
+    protected long createUniverseSampleWithProbFromSample(SampleParam param, TableUniqueName temp)
             throws VerdictException {
         String samplingProbCol = vc.getDbms().samplingProbabilityColumnName();
         ExactRelation sampled = SingleRelation.from(vc, temp);
-        long total_size = SingleRelation.from(vc, param.originalTable).countValue();
+        long total_size = SingleRelation.from(vc, param.getOriginalTable()).countValue();
         long sample_size = sampled.countValue();
 
         ExactRelation withProb = sampled
                 .select(String.format("*, cast (%d as float)  / cast (%d as float) AS %s", sample_size, total_size,
                         samplingProbCol) + ", " + universePartitionColumn(param.getColumnNames().get(0)));
 
-        String parquetString = "";
-
-        if (vc.getConf().areSamplesStoredAsParquet()) {
-            parquetString = getParquetString();
-        }
-
-        String sql = String.format("create table %s%s AS %s", param.sampleTableName(), parquetString, withProb.toSql());
+        String sql = String.format("create table %s AS %s", param.sampleTableName(), withProb.toSql());
         VerdictLogger.debug(this, "The query used for creating a universe sample with sampling probability:");
 //        VerdictLogger.debugPretty(this, Relation.prettyfySql(vc, sql), "  ");
 //        VerdictLogger.debug(this, sql);
         executeUpdate(sql);
+        return sample_size;
     }
 
     @Override
     protected void createStratifiedSampleFromGroupSizeTemp(SampleParam param, TableUniqueName groupSizeTemp)
             throws VerdictException {
-        Map<String, String> col2types = vc.getMeta().getColumn2Types(param.originalTable);
+        Map<String, String> col2types = vc.getMeta().getColumn2Types(param.getOriginalTable());
         SampleSizeInfo info = vc.getMeta()
-                .getSampleSizeOf(new SampleParam(vc, param.originalTable, "uniform", null, new ArrayList<String>()));
+                .getSampleSizeOf(new SampleParam(vc, param.getOriginalTable(), "uniform", null, new ArrayList<String>()));
         long originalTableSize = info.originalTableSize;
         long groupCount = SingleRelation.from(vc, groupSizeTemp).countValue();
         String samplingProbColName = vc.getDbms().samplingProbabilityColumnName();
@@ -268,7 +246,7 @@ public class DbmsRedshift extends DbmsJDBC {
         executeUpdate(sql1);
 
         // attach sampling probabilities and random partition number
-        ExactRelation sampledGroupSize = SingleRelation.from(vc, sampledNoRand).groupby(param.columnNames)
+        ExactRelation sampledGroupSize = SingleRelation.from(vc, sampledNoRand).groupby(param.getColumnNames())
                 .agg("count(*) AS " + groupSizeInSampleColName);
         ExactRelation withRand = SingleRelation.from(vc, sampledNoRand).withAlias("s")
                 .join(sampledGroupSize.withAlias("t"), joinExprs).select(
@@ -329,7 +307,6 @@ public class DbmsRedshift extends DbmsJDBC {
 
     @Override
     public ResultSet describeTableInResultSet(TableUniqueName tableUniqueName) throws VerdictException {
-<<<<<<< HEAD
         String schemaName = tableUniqueName.getSchemaName();
         String tableName = tableUniqueName.getTableName();
         
@@ -364,25 +341,15 @@ public class DbmsRedshift extends DbmsJDBC {
         List<String> quotedSchemaList = Arrays.asList(search_path.split(","));
         quotedSchemaList = StringManipulations.quoteEveryString(quotedSchemaList, getQuoteString());
         executeJdbcQuery(String.format("set search_path=%s", Joiner.on(",").join(quotedSchemaList)));
-=======
-        return executeJdbcQuery(String.format(
-                "SELECT \"column\",\"type\" FROM pg_table_def WHERE tablename = '%s' AND schemaname = '%s'",
-                tableUniqueName.getTableName(), tableUniqueName.getSchemaName()));
->>>>>>> origin/spark2
     }
 
     @Override
     public ResultSet getTablesInResultSet(String schema) throws VerdictException {
-<<<<<<< HEAD
         String search_path = getSearchPath();
         setSearchPath(schema);
         ResultSet rs = executeJdbcQuery(String.format("SELECT DISTINCT tablename FROM pg_table_def WHERE schemaname = '%s'", schema));
         setSearchPath(search_path);
         return rs;
-=======
-        return executeJdbcQuery(
-                String.format("SELECT DISTINCT tablename FROM pg_table_def WHERE schemaname = '%s'", schema));
->>>>>>> origin/spark2
     }
 
     /**

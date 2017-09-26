@@ -25,7 +25,7 @@ import com.google.common.base.Joiner;
 import edu.umich.verdict.VerdictContext;
 
 /**
- * Points to a materialized sample table.
+ * Contains sufficient information for creating a sample table (or for pointing to an existing sample table).
  * 
  * @author Yongjoo Park
  *
@@ -34,13 +34,13 @@ public class SampleParam implements Comparable<SampleParam> {
 
     private VerdictContext vc;
 
-    public TableUniqueName originalTable;
+    private TableUniqueName originalTable;
 
-    public String sampleType;
+    private String sampleType;
 
-    public Double samplingRatio;
+    private Double samplingRatio;
 
-    public List<String> columnNames;
+    private List<String> columnNames;
 
     public TableUniqueName getOriginalTable() {
         return originalTable;

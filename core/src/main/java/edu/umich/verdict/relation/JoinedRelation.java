@@ -298,8 +298,8 @@ public class JoinedRelation extends ExactRelation {
             t = c.getTab();
         }
         for (SampleParam param : set) {
-            Set<String> paramCols = new HashSet<String>(param.columnNames);
-            if (param.sampleType.equals("universe") && param.originalTable.getTableName().equals(t)
+            Set<String> paramCols = new HashSet<String>(param.getColumnNames());
+            if (param.getSampleType().equals("universe") && param.getOriginalTable().getTableName().equals(t)
                     && paramCols.equals(jc)) {
                 return true;
             }

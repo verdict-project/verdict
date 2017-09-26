@@ -38,6 +38,13 @@ import edu.umich.verdict.relation.SingleRelation;
 import edu.umich.verdict.util.TypeCasting;
 import edu.umich.verdict.util.VerdictLogger;
 
+/**
+ * Responsible for two tasks:
+ * 1. Manages the sample information (names and sizes).
+ * 2. Caches metadata (e.g., schema names, table names, table sizes, and so on) 
+ * @author Yongjoo Park
+ *
+ */
 public class VerdictMeta {
 
     private final String META_SIZE_TABLE;
@@ -75,6 +82,8 @@ public class VerdictMeta {
      * {columnname2_1: type, columnname2_2: type}, }
      */
     protected Map<TableUniqueName, Map<String, String>> tab2columns;
+    
+    protected Map<TableUniqueName, Long> tableSizes;
 
     protected VerdictContext vc;
 
@@ -86,6 +95,7 @@ public class VerdictMeta {
         databases = new HashSet<String>();
         db2tables = new HashMap<String, Set<String>>();
         tab2columns = new HashMap<TableUniqueName, Map<String, String>>();
+        tableSizes = new HashMap<TableUniqueName, Long>();
         // tableToColumnNames = new HashMap<TableUniqueName, List<String>>();
         META_NAME_TABLE = vc.getConf().metaNameTableName();
         META_SIZE_TABLE = vc.getConf().metaSizeTableName();
@@ -102,6 +112,15 @@ public class VerdictMeta {
         databases.clear();
         db2tables.clear();
         tab2columns.clear();
+        tableSizes.clear();
+    }
+    
+    public long getTableSize(TableUniqueName tableName) throws VerdictException {
+        if (!tableSizes.containsKey(tableName)) {
+            long tableSize = vc.getDbms().getTableSize(tableName);
+            tableSizes.put(tableName, tableSize);
+        }
+        return tableSizes.get(tableName);
     }
 
     /**
@@ -172,34 +191,6 @@ public class VerdictMeta {
         }
     }
 
-<<<<<<< HEAD
-=======
-    // public List<String> getColumnNames(TableUniqueName tableName) {
-    // refreshSampleInfoIfNeeded(tableName.getSchemaName());
-    // if (tableToColumnNames.containsKey(tableName)) {
-    // return tableToColumnNames.get(tableName);
-    // } else {
-    // return new ArrayList<String>();
-    // }
-    // }
-
-    // public Map<TableUniqueName, List<String>> getTableAndColumnNames(String
-    // schemaName) {
-    // refreshSampleInfoIfNeeded(schemaName);
-    // Map<TableUniqueName, List<String>> inSchema = new HashMap<TableUniqueName,
-    // List<String>>();
-    // for (Map.Entry<TableUniqueName, List<String>> entry :
-    // tableToColumnNames.entrySet()) {
-    // TableUniqueName table = entry.getKey();
-    // List<String> columns = entry.getValue();
-    // if (table.getSchemaName().equals(schemaName)) {
-    // inSchema.put(table, columns);
-    // }
-    // }
-    // return inSchema;
-    // }
-
->>>>>>> origin/spark2
     /**
      * Insert sample info into local data structure (for quick access) and into the
      * DBMS (for persistence).
@@ -213,7 +204,7 @@ public class VerdictMeta {
     public void insertSampleInfo(SampleParam param, long sampleSize, long originalTableSize) throws VerdictException {
         TableUniqueName fullSampleName = param.sampleTableName();
 
-        vc.getMetaDbms().createMetaTablesInDMBS(param.originalTable, getMetaSizeTableForSampleTable(fullSampleName),
+        vc.getMetaDbms().createMetaTablesInDMBS(param.getOriginalTable(), getMetaSizeTableForSampleTable(fullSampleName),
                 getMetaNameTableForSampleTable(fullSampleName));
 
         getMetaDbms().updateSampleNameEntryIntoDBMS(param, getMetaNameTableForSampleTable(fullSampleName));
@@ -230,8 +221,8 @@ public class VerdictMeta {
      * @throws VerdictException
      */
     public void deleteSampleInfo(SampleParam param) throws VerdictException {
-        refreshSampleInfoIfNeeded(param.originalTable.getSchemaName());
-        TableUniqueName originalTable = param.originalTable;
+        refreshSampleInfoIfNeeded(param.getOriginalTable().getSchemaName());
+        TableUniqueName originalTable = param.getOriginalTable();
 
         if (sampleNameMeta.containsKey(originalTable)) {
             TableUniqueName sampleTableName = sampleNameMeta.get(originalTable).get(param);
@@ -239,7 +230,7 @@ public class VerdictMeta {
             getMetaDbms().deleteSampleSizeEntryFromDBMS(param, getMetaSizeTableForSampleTable(sampleTableName));
         } else {
             VerdictLogger.warn(String.format("No sample table for the parameter: [%s, %s, %.4f, %s]",
-                    param.originalTable, param.sampleType, param.samplingRatio, param.columnNames.toString()));
+                    param.getOriginalTable(), param.getSampleType(), param.getSamplingRatio(), param.getColumnNames().toString()));
         }
     }
 
@@ -419,16 +410,16 @@ public class VerdictMeta {
     }
 
     public TableUniqueName lookForSampleTable(SampleParam param) {
-        TableUniqueName originalTable = param.originalTable;
+        TableUniqueName originalTable = param.getOriginalTable();
         List<Pair<SampleParam, TableUniqueName>> sampleInfo = vc.getMeta().getSampleInfoFor(originalTable);
         TableUniqueName sampleTable = null;
 
         for (Pair<SampleParam, TableUniqueName> e : sampleInfo) {
             SampleParam p = e.getLeft();
 
-            if (param.samplingRatio == null) {
-                if (p.originalTable.equals(param.originalTable) && p.sampleType.equals(param.sampleType)
-                        && p.columnNames.equals(param.columnNames)) {
+            if (param.getSamplingRatio() == null) {
+                if (p.getOriginalTable().equals(param.getOriginalTable()) && p.getSampleType().equals(param.getSampleType())
+                        && p.getColumnNames().equals(param.getColumnNames())) {
                     sampleTable = e.getRight();
                 }
             } else {

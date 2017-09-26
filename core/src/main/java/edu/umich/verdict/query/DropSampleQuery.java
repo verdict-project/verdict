@@ -66,9 +66,9 @@ public class DropSampleQuery extends Query {
         for (Pair<SampleParam, TableUniqueName> e : sampleParamAndTableName) {
             SampleParam param = e.getLeft();
             TableUniqueName sampleName = e.getRight();
-            if (isSamplingRatioEqual(param.samplingRatio, samplingRatio)
-                    && isSampleTypeEqual(param.sampleType, sampleType)
-                    && isColumnNamesEqual(param.columnNames, columnNames)) {
+            if (isSamplingRatioEqual(param.getSamplingRatio(), samplingRatio)
+                    && isSampleTypeEqual(param.getSampleType(), sampleType)
+                    && isColumnNamesEqual(param.getColumnNames(), columnNames)) {
                 vc.getDbms().dropTable(sampleName);
                 vc.getMeta().deleteSampleInfo(param);
                 VerdictLogger.info(String.format("Deleted a sample table %s and its meta information.", sampleName));
