@@ -1,3 +1,20 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package edu.umich.verdict.dbms;
 
 import java.sql.ResultSet;
@@ -29,14 +46,14 @@ public class DbmsSpark2 extends Dbms {
     private static String DBNAME = "spark2";
 
     protected SQLContext sqlContext;
-    
+
     protected SparkSession sparkSession;
 
     protected Dataset<Row> df;
 
     protected Set<TableUniqueName> cachedTable;
-    
-    public DbmsSpark2(VerdictContext vc, SparkSession sparkSession) throws VerdictException {	
+
+    public DbmsSpark2(VerdictContext vc, SparkSession sparkSession) throws VerdictException {
         super(vc, DBNAME);
 
         this.sparkSession = sparkSession;
@@ -49,12 +66,12 @@ public class DbmsSpark2 extends Dbms {
     }
 
     public Dataset<Row> getTablesInDataFrame(String schemaName) throws VerdictException {
-    		Dataset<Row> df = executeSpark2Query("show tables in " + schemaName);
+        Dataset<Row> df = executeSpark2Query("show tables in " + schemaName);
         return df;
     }
 
-    public Dataset<Row> describeTableInDataFrame(TableUniqueName tableUniqueName)  throws VerdictException {
-    		Dataset<Row> df = executeSpark2Query(String.format("describe %s", tableUniqueName));
+    public Dataset<Row> describeTableInDataFrame(TableUniqueName tableUniqueName) throws VerdictException {
+        Dataset<Row> df = executeSpark2Query(String.format("describe %s", tableUniqueName));
         return df;
     }
 
@@ -62,8 +79,8 @@ public class DbmsSpark2 extends Dbms {
     public boolean execute(String sql) throws VerdictException {
         VerdictLogger.debug(this, "About to run: " + sql);
         df = sparkSession.sql(sql);
-        return (df != null)? true : false;
-        //return (df.count() > 0)? true : false;
+        return (df != null) ? true : false;
+        // return (df.count() > 0)? true : false;
     }
 
     @Override
@@ -75,19 +92,19 @@ public class DbmsSpark2 extends Dbms {
     public ResultSet getResultSet() {
         return null;
     }
-    
+
     @Override
     public Dataset<Row> getDataset() {
-    		return df;
+        return df;
     }
-    
+
     @Override
     public DataFrame getDataFrame() {
-    		return null;
+        return null;
     }
 
     public Dataset<Row> emptyDataFrame() {
-    		return sparkSession.emptyDataFrame();
+        return sparkSession.emptyDataFrame();
     }
 
     @Override
@@ -95,7 +112,7 @@ public class DbmsSpark2 extends Dbms {
         Set<String> databases = new HashSet<String>();
         List<Row> rows = getDatabaseNamesInDataFrame().collectAsList();
         for (Row row : rows) {
-            String dbname = row.getString(0); 
+            String dbname = row.getString(0);
             databases.add(dbname);
         }
         return databases;
@@ -178,7 +195,7 @@ public class DbmsSpark2 extends Dbms {
     public boolean isSpark() {
         return false;
     }
-    
+
     @Override
     public boolean isSpark2() {
         return true;

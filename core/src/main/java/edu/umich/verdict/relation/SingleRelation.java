@@ -1,3 +1,20 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package edu.umich.verdict.relation;
 
 import java.util.ArrayList;
@@ -50,7 +67,7 @@ public class SingleRelation extends ExactRelation {
 
     @Override
     protected String getSourceName() {
-        return (alias == null)? tableName.getTableName() : getAlias();
+        return (alias == null) ? tableName.getTableName() : getAlias();
     }
 
     /*
@@ -58,7 +75,8 @@ public class SingleRelation extends ExactRelation {
      */
 
     /**
-     * For meaningful approximation, the parent relation must obtain an approximate version with approxWith method.
+     * For meaningful approximation, the parent relation must obtain an approximate
+     * version with approxWith method.
      */
     @Override
     public ApproxRelation approx() throws VerdictException {
@@ -94,8 +112,10 @@ public class SingleRelation extends ExactRelation {
     }
 
     /**
-     * Computes an effective sampling probability for a given sample and an aggregate expression to compute with the sample.
-     * A negative return value indicates that the sample must not be used.
+     * Computes an effective sampling probability for a given sample and an
+     * aggregate expression to compute with the sample. A negative return value
+     * indicates that the sample must not be used.
+     * 
      * @param param
      * @param expr
      * @return
@@ -110,7 +130,8 @@ public class SingleRelation extends ExactRelation {
         }
 
         // if there's no aggregate expression, we return a default value.
-        if (funcs.size() == 0) return param.samplingRatio;
+        if (funcs.size() == 0)
+            return param.samplingRatio;
 
         Set<String> cols = vc.getMeta().getColumns(getTableName());
         List<Double> probs = new ArrayList<Double>();
@@ -129,32 +150,30 @@ public class SingleRelation extends ExactRelation {
                     } else if (param.sampleType.equals("nosample")) {
                         probs.add(1.0);
                     } else {
-                        return -1;		// uniform random samples must not be used for COUNT-DISTINCT
+                        return -1; // uniform random samples must not be used for COUNT-DISTINCT
                     }
                 } else {
                     if (!param.sampleType.equals("nosample")) {
-                        return -1;		// no sampled table should be joined for count-distinct.
+                        return -1; // no sampled table should be joined for count-distinct.
                     } else {
                         probs.add(1.0);
                     }
                 }
-            }
-            else if (fexpr.getFuncName().equals(FuncExpr.FuncName.COUNT)
+            } else if (fexpr.getFuncName().equals(FuncExpr.FuncName.COUNT)
                     || fexpr.getFuncName().equals(FuncExpr.FuncName.SUM)
-                    || fexpr.getFuncName().equals(FuncExpr.FuncName.AVG)) {	// COUNT, SUM, AVG
+                    || fexpr.getFuncName().equals(FuncExpr.FuncName.AVG)) { // COUNT, SUM, AVG
                 SampleSizeInfo size = vc.getMeta().getSampleSizeOf(param.sampleTableName());
 
                 if (size == null) {
-                    probs.add(1.0);		// the original table
+                    probs.add(1.0); // the original table
                 } else if (param.sampleType.equals("stratified") && param.columnNames.contains(fcol)) {
                     return -1;
                 } else {
                     probs.add(size.sampleSize / (double) size.originalTableSize);
                 }
-            }
-            else {    // MIN, MAX
+            } else { // MIN, MAX
                 if (!param.sampleType.equals("nosample")) {
-                    return -1;      // no sampled table should be joined for count-distinct.
+                    return -1; // no sampled table should be joined for count-distinct.
                 } else {
                     probs.add(1.0);
                 }
@@ -174,53 +193,56 @@ public class SingleRelation extends ExactRelation {
     private double costOfSample(SampleParam param, List<Expr> aggExprs) {
         double cost_sum = 0;
 
-        //		return param.samplingRatio * param.
+        // return param.samplingRatio * param.
 
-        //		Set<String> cols = new HashSet<String>(vc.getMeta().getColumnNames(getTableName()));
-        //		
-        //		ExprVisitor<List<FuncExpr>> collectAggFuncs = new ExprVisitor<List<FuncExpr>>() {
-        //			private List<FuncExpr> seen = new ArrayList<FuncExpr>();
-        //			public List<FuncExpr> call(Expr expr) {
-        //				if (expr instanceof FuncExpr) {
-        //					seen.add((FuncExpr) expr);
-        //				}
-        //				return seen;
-        //			}
-        //		};
-        //		
-        //		for (Expr aggExpr : aggExprs) {
-        //			List<FuncExpr> funcs = collectAggFuncs.visit(aggExpr);
-        //			
-        //			for (FuncExpr f : funcs) {
-        //				String fcol = f.getExprInString();
-        //				if (f.getExpr() instanceof ColNameExpr) {
-        //					fcol = ((ColNameExpr) f.getExpr()).getCol();
-        //				}
-        //				if (f.getFuncName().equals(FuncExpr.FuncName.COUNT_DISTINCT) && cols.contains(fcol)) {
-        //					if (param.sampleType.equals("universe")
-        //							&& param.columnNames.contains(fcol)) {
-        //						cost_sum += 50;
-        //					} else if (param.sampleType.equals("stratifeid")
-        //							&& param.columnNames.contains(fcol)) {
-        //						cost_sum += 40;
-        //					} else if (param.sampleType.equals("nosample")) {
-        //					} else {
-        //						cost_sum -= 100;
-        //					}
-        //				} else if (f.getFuncName().equals(FuncExpr.FuncName.COUNT_DISTINCT)) {
-        //					if (param.sampleType.equals("nosample")) {
-        //					} else {
-        //						cost_sum -= 50;
-        //					}
-        //				} else {
-        //					if (param.sampleType.equals("nosample")) {
-        //					} else {
-        //						cost_sum += 10;
-        //					}
-        //				}
-        //			}
-        //		}
-        //		
+        // Set<String> cols = new
+        // HashSet<String>(vc.getMeta().getColumnNames(getTableName()));
+        //
+        // ExprVisitor<List<FuncExpr>> collectAggFuncs = new
+        // ExprVisitor<List<FuncExpr>>() {
+        // private List<FuncExpr> seen = new ArrayList<FuncExpr>();
+        // public List<FuncExpr> call(Expr expr) {
+        // if (expr instanceof FuncExpr) {
+        // seen.add((FuncExpr) expr);
+        // }
+        // return seen;
+        // }
+        // };
+        //
+        // for (Expr aggExpr : aggExprs) {
+        // List<FuncExpr> funcs = collectAggFuncs.visit(aggExpr);
+        //
+        // for (FuncExpr f : funcs) {
+        // String fcol = f.getExprInString();
+        // if (f.getExpr() instanceof ColNameExpr) {
+        // fcol = ((ColNameExpr) f.getExpr()).getCol();
+        // }
+        // if (f.getFuncName().equals(FuncExpr.FuncName.COUNT_DISTINCT) &&
+        // cols.contains(fcol)) {
+        // if (param.sampleType.equals("universe")
+        // && param.columnNames.contains(fcol)) {
+        // cost_sum += 50;
+        // } else if (param.sampleType.equals("stratifeid")
+        // && param.columnNames.contains(fcol)) {
+        // cost_sum += 40;
+        // } else if (param.sampleType.equals("nosample")) {
+        // } else {
+        // cost_sum -= 100;
+        // }
+        // } else if (f.getFuncName().equals(FuncExpr.FuncName.COUNT_DISTINCT)) {
+        // if (param.sampleType.equals("nosample")) {
+        // } else {
+        // cost_sum -= 50;
+        // }
+        // } else {
+        // if (param.sampleType.equals("nosample")) {
+        // } else {
+        // cost_sum += 10;
+        // }
+        // }
+        // }
+        // }
+        //
         return cost_sum / aggExprs.size();
     }
 
@@ -237,16 +259,16 @@ public class SingleRelation extends ExactRelation {
     }
 
     /*
-     *  Aggregation functions
+     * Aggregation functions
      */
 
-    //	protected String tableSourceExpr(SingleSourceRelation source) {
-    //		if (source.isDerivedTable()) {
-    //			return source.toSql();
-    //		} else {
-    //			return source.tableNameExpr();
-    //		}
-    //	}
+    // protected String tableSourceExpr(SingleSourceRelation source) {
+    // if (source.isDerivedTable()) {
+    // return source.toSql();
+    // } else {
+    // return source.tableNameExpr();
+    // }
+    // }
 
     /*
      * Helpers
@@ -256,16 +278,16 @@ public class SingleRelation extends ExactRelation {
         return new SampleParam(vc, getTableName(), NOSAMPLE, 1.0, null);
     }
 
-    //	@Override
-    //	public List<SelectElem> getSelectList() {
-    //		TableUniqueName table = getTableName();
-    //		Set<String> columns = vc.getMeta().getColumns(table);
-    //		List<SelectElem> elems = new ArrayList<SelectElem>();
-    //		for (String c : columns) {
-    //			elems.add(new SelectElem(new ColNameExpr(c, table.getTableName())));
-    //		}
-    //		return elems;
-    //	}
+    // @Override
+    // public List<SelectElem> getSelectList() {
+    // TableUniqueName table = getTableName();
+    // Set<String> columns = vc.getMeta().getColumns(table);
+    // List<SelectElem> elems = new ArrayList<SelectElem>();
+    // for (String c : columns) {
+    // elems.add(new SelectElem(new ColNameExpr(c, table.getTableName())));
+    // }
+    // return elems;
+    // }
 
     @Override
     public List<ColNameExpr> accumulateSamplingProbColumns() {
@@ -288,17 +310,17 @@ public class SingleRelation extends ExactRelation {
         return s.toString();
     }
 
-    //	@Override
-    //	public List<SelectElem> getSelectList() {
-    //		TableUniqueName table = getTableName();
-    //		Set<String> columns = vc.getMeta().getColumns(table);
-    //		List<SelectElem> elems = new ArrayList<SelectElem>();
-    //		for (String c : columns) {
-    //			elems.add(new SelectElem(new ColNameExpr(c, table.getTableName())));
-    //		}
-    //		return elems;
-    //	}
-    
+    // @Override
+    // public List<SelectElem> getSelectList() {
+    // TableUniqueName table = getTableName();
+    // Set<String> columns = vc.getMeta().getColumns(table);
+    // List<SelectElem> elems = new ArrayList<SelectElem>();
+    // for (String c : columns) {
+    // elems.add(new SelectElem(new ColNameExpr(c, table.getTableName())));
+    // }
+    // return elems;
+    // }
+
     @Override
     public ColNameExpr partitionColumn() {
         Set<String> columns = vc.getMeta().getColumns(getTableName());
@@ -306,19 +328,19 @@ public class SingleRelation extends ExactRelation {
         if (columns.contains(partitionCol)) {
             return new ColNameExpr(vc, partitionCol, getAlias());
         } else {
-            VerdictLogger.debug(this, "A partition column does not exists in the table: " + getTableName() +
-                                      "This is an expected behavior if this is not a sample table.");
+            VerdictLogger.debug(this, "A partition column does not exists in the table: " + getTableName()
+                    + "This is an expected behavior if this is not a sample table.");
             return null;
         }
     }
 
-//    @Override
-//    public Expr distinctCountPartitionColumn() {
-//        TableUniqueName uniqueTableName = getTableName();
-//        SampleParam param = vc.getMeta().getSampleParamFor(uniqueTableName);
-//        if (param.getSampleType().equals("universe")) {
-//            return new ColNameExpr(vc, distinctCountPartitionColumnName());
-//        }
-//        return null;
-//    }
+    // @Override
+    // public Expr distinctCountPartitionColumn() {
+    // TableUniqueName uniqueTableName = getTableName();
+    // SampleParam param = vc.getMeta().getSampleParamFor(uniqueTableName);
+    // if (param.getSampleType().equals("universe")) {
+    // return new ColNameExpr(vc, distinctCountPartitionColumnName());
+    // }
+    // return null;
+    // }
 }

@@ -48,7 +48,7 @@ public abstract class DbmsJDBC extends Dbms {
 
     protected final Connection conn;
 
-    protected Statement stmt;		// created Statements must be registered here.
+    protected Statement stmt; // created Statements must be registered here.
 
     public Connection getDbmsConnection() {
         return conn;
@@ -64,6 +64,7 @@ public abstract class DbmsJDBC extends Dbms {
 
     /**
      * Copy constructor for not sharing the underlying statement.
+     * 
      * @param another
      */
     public DbmsJDBC(Dbms another) {
@@ -77,22 +78,11 @@ public abstract class DbmsJDBC extends Dbms {
         allOpenStatements = new ArrayList<Statement>();
     }
 
-    protected DbmsJDBC(VerdictContext vc,
-            String dbName,
-            String host,
-            String port,
-            String schema,
-            String user,
-            String password,
-            String jdbcClassName) throws VerdictException {
+    protected DbmsJDBC(VerdictContext vc, String dbName, String host, String port, String schema, String user,
+            String password, String jdbcClassName) throws VerdictException {
         super(vc, dbName);
         currentSchema = Optional.fromNullable(schema);
-        String url = composeUrl(dbName,
-                host,
-                port,
-                schema,
-                user,
-                password);
+        String url = composeUrl(dbName, host, port, schema, user, password);
         conn = makeDbmsConnection(url, jdbcClassName);
         stmt = null;
         allOpenStatements = new ArrayList<Statement>();
@@ -152,7 +142,8 @@ public abstract class DbmsJDBC extends Dbms {
         return col2type;
     }
 
-    String composeUrl(String dbms, String host, String port, String schema, String user, String password) throws VerdictException {
+    String composeUrl(String dbms, String host, String port, String schema, String user, String password)
+            throws VerdictException {
         StringBuilder url = new StringBuilder();
         url.append(String.format("jdbc:%s://%s:%s", dbms, host, port));
 
@@ -203,10 +194,12 @@ public abstract class DbmsJDBC extends Dbms {
         return url.toString();
     }
 
-    protected Connection makeDbmsConnection(String url, String className) throws VerdictException  {
+    protected Connection makeDbmsConnection(String url, String className) throws VerdictException {
         try {
             Class.forName(className);
-            String passMasked = url.replaceAll("(;password)=([^;]+)", "$1=masked").replaceAll("(;PWD)=([^;]+)", "$1=masked");;
+            String passMasked = url.replaceAll("(;password)=([^;]+)", "$1=masked").replaceAll("(;PWD)=([^;]+)",
+                    "$1=masked");
+            ;
             VerdictLogger.info(this, "JDBC connection string (password masked): " + passMasked);
             Connection conn = DriverManager.getConnection(url);
             return conn;
@@ -221,7 +214,9 @@ public abstract class DbmsJDBC extends Dbms {
         try {
             String sql = String.format("SELECT COUNT(*) FROM %s", tableName);
             rs = executeJdbcQuery(sql);
-            while(rs.next()) {cnt = rs.getLong(1);	}
+            while (rs.next()) {
+                cnt = rs.getLong(1);
+            }
             rs.close();
         } catch (SQLException e) {
             throw new VerdictException(StackTraceReader.stackTrace2String(e));
@@ -229,7 +224,7 @@ public abstract class DbmsJDBC extends Dbms {
         return cnt;
     }
 
-    public boolean execute(String sql) throws VerdictException {    	
+    public boolean execute(String sql) throws VerdictException {
         // createStatementIfNotExists();
         VerdictLogger.debug(this, "About to run: " + sql);
         createStatement();
@@ -247,8 +242,8 @@ public abstract class DbmsJDBC extends Dbms {
         }
         return hasResult;
     }
-    
-    public void executeUpdate(String sql) throws VerdictException { 
+
+    public void executeUpdate(String sql) throws VerdictException {
         // createStatementIfNotExists();
         VerdictLogger.debug(this, "About to run: " + sql);
         createStatement();
@@ -263,7 +258,12 @@ public abstract class DbmsJDBC extends Dbms {
 
     public Statement createStatement() throws VerdictException {
         try {
+<<<<<<< HEAD
 //            if (stmt != null) closeStatement();
+=======
+            if (stmt != null)
+                closeStatement();
+>>>>>>> origin/spark2
             stmt = conn.createStatement();
             allOpenStatements.add(stmt);
         } catch (SQLException e) {
@@ -271,7 +271,7 @@ public abstract class DbmsJDBC extends Dbms {
         }
         return stmt;
     }
-    
+
     public Statement getStatement() {
         return stmt;
     }
@@ -285,10 +285,18 @@ public abstract class DbmsJDBC extends Dbms {
 //        return stmt;
 //    }
 
+<<<<<<< HEAD
 //    public Statement createStatementIfNotExists() throws VerdictException {
 //        if (stmt == null) createStatement();
 //        return stmt;
 //    }
+=======
+    public Statement createStatementIfNotExists() throws VerdictException {
+        if (stmt == null)
+            createStatement();
+        return stmt;
+    }
+>>>>>>> origin/spark2
 
     public void closeStatement() throws VerdictException {
         try {
@@ -315,7 +323,8 @@ public abstract class DbmsJDBC extends Dbms {
     }
 
     @Override
-    public void deleteEntry(TableUniqueName tableName, List<Pair<String, String>> colAndValues) throws VerdictException {
+    public void deleteEntry(TableUniqueName tableName, List<Pair<String, String>> colAndValues)
+            throws VerdictException {
         StringBuilder sql = new StringBuilder(1000);
         sql.append(String.format("delete from %s ", tableName));
         if (colAndValues.size() > 0) {
@@ -348,7 +357,8 @@ public abstract class DbmsJDBC extends Dbms {
     public void close() throws VerdictException {
         try {
             closeStatement();
-            if (conn != null) conn.close();
+            if (conn != null)
+                conn.close();
         } catch (SQLException e) {
             throw new VerdictException(e);
         }

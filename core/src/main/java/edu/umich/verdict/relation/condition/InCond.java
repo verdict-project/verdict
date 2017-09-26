@@ -1,3 +1,20 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package edu.umich.verdict.relation.condition;
 
 import java.util.ArrayList;
@@ -10,19 +27,19 @@ import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.util.VerdictLogger;
 
 public class InCond extends Cond {
-    
+
     Expr left;
-    
+
     boolean not;
-    
+
     List<Expr> expressionList;
-    
+
     public InCond(Expr left, boolean not, List<Expr> expressionList) {
         this.left = left;
         this.not = not;
         this.expressionList = expressionList;
     }
-    
+
     public Expr getLeft() {
         return left;
     }
@@ -51,15 +68,15 @@ public class InCond extends Cond {
         if (ctx.subquery() != null) {
             VerdictLogger.error("Verdict currently does not support IN + subquery condition.");
         }
-        
+
         Expr left = Expr.from(vc, ctx.expression());
-        boolean not = (ctx.NOT() != null)? true : false;
+        boolean not = (ctx.NOT() != null) ? true : false;
         List<Expr> expressionList = new ArrayList<Expr>();
-        
+
         for (ExpressionContext ectx : ctx.expression_list().expression()) {
             expressionList.add(Expr.from(vc, ectx));
         }
-        
+
         return new InCond(left, not, expressionList);
     }
 
@@ -71,7 +88,7 @@ public class InCond extends Cond {
         }
         return this;
     }
-    
+
     @Override
     public String toString() {
         return toSql();
@@ -81,14 +98,16 @@ public class InCond extends Cond {
     public String toSql() {
         StringBuilder sql = new StringBuilder();
         sql.append(left.toSql());
-        if (not) sql.append(" NOT");
+        if (not)
+            sql.append(" NOT");
         sql.append(" IN (");
-        
+
         for (int i = 0; i < expressionList.size(); i++) {
-            if (i > 0) sql.append(", ");
+            if (i > 0)
+                sql.append(", ");
             sql.append(expressionList.get(i).toSql());
         }
-        
+
         sql.append(")");
         return sql.toString();
     }
@@ -96,9 +115,8 @@ public class InCond extends Cond {
     @Override
     public boolean equals(Cond o) {
         if (o instanceof InCond) {
-            return getLeft().equals(((InCond) o).getLeft())
-                && (isNot() == ((InCond) o).isNot())
-                && getExpressionList().equals(((InCond) o).getExpressionList());
+            return getLeft().equals(((InCond) o).getLeft()) && (isNot() == ((InCond) o).isNot())
+                    && getExpressionList().equals(((InCond) o).getExpressionList());
         }
         return false;
     }

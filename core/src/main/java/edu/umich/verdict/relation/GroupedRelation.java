@@ -1,3 +1,20 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package edu.umich.verdict.relation;
 
 import java.util.ArrayList;
@@ -61,9 +78,10 @@ public class GroupedRelation extends ExactRelation {
     }
 
     /**
-     * We view no actual groupby-aggregate operations are performed until encountering AggregatedRelation.
-     * As this relation being a source of AggregatedRelation, propagating the sample information without
-     * much modification is convenient.
+     * We view no actual groupby-aggregate operations are performed until
+     * encountering AggregatedRelation. As this relation being a source of
+     * AggregatedRelation, propagating the sample information without much
+     * modification is convenient.
      */
     @Override
     protected List<ApproxRelation> nBestSamples(Expr elem, int n) throws VerdictException {
@@ -88,18 +106,24 @@ public class GroupedRelation extends ExactRelation {
         String gsql = Joiner.on(", ").join(groupsAndNextR.getLeft());
 
         Pair<Optional<Cond>, ExactRelation> filtersAndNextR = allPrecedingFilters(groupsAndNextR.getRight());
-        String csql = (filtersAndNextR.getLeft().isPresent())? filtersAndNextR.getLeft().get().toString() : "";
+        String csql = (filtersAndNextR.getLeft().isPresent()) ? filtersAndNextR.getLeft().get().toString() : "";
 
         sql.append(String.format(" FROM %s", sourceExpr(source)));
-        if (csql.length() > 0) { sql.append(" WHERE "); sql.append(csql); }
-        if (gsql.length() > 0) { sql.append(" GROUP BY "); sql.append(gsql); }
+        if (csql.length() > 0) {
+            sql.append(" WHERE ");
+            sql.append(csql);
+        }
+        if (gsql.length() > 0) {
+            sql.append(" GROUP BY ");
+            sql.append(gsql);
+        }
         return sql.toString();
     }
 
-    //	@Override
-    //	public List<SelectElem> getSelectList() {
-    //		return source.getSelectList();
-    //	}
+    // @Override
+    // public List<SelectElem> getSelectList() {
+    // return source.getSelectList();
+    // }
 
     @Override
     public List<ColNameExpr> accumulateSamplingProbColumns() {
@@ -110,26 +134,27 @@ public class GroupedRelation extends ExactRelation {
     protected String toStringWithIndent(String indent) {
         StringBuilder s = new StringBuilder(1000);
         s.append(indent);
-        s.append(String.format("%s(%s) [%s]\n", this.getClass().getSimpleName(), getAlias(), Joiner.on(", ").join(groupby)));
+        s.append(String.format("%s(%s) [%s]\n", this.getClass().getSimpleName(), getAlias(),
+                Joiner.on(", ").join(groupby)));
         s.append(source.toStringWithIndent(indent + "  "));
         return s.toString();
     }
 
-    //	@Override
-    //	public List<SelectElem> getSelectList() {
-    //		return source.getSelectList();
-    //	}
+    // @Override
+    // public List<SelectElem> getSelectList() {
+    // return source.getSelectList();
+    // }
 
     @Override
     public ColNameExpr partitionColumn() {
         ColNameExpr col = source.partitionColumn();
-        //		col.setTab(getAliasName());
+        // col.setTab(getAliasName());
         return col;
     }
 
-    //    @Override
-    //    public Expr distinctCountPartitionColumn() {
-    //        return source.distinctCountPartitionColumn();
-    //    }
+    // @Override
+    // public Expr distinctCountPartitionColumn() {
+    // return source.distinctCountPartitionColumn();
+    // }
 
 }

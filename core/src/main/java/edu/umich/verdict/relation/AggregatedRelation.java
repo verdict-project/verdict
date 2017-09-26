@@ -1,3 +1,20 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package edu.umich.verdict.relation;
 
 import java.util.ArrayList;
@@ -22,11 +39,13 @@ import edu.umich.verdict.relation.expr.SelectElem;
 import edu.umich.verdict.util.VerdictLogger;
 
 /**
- * Represents aggregation operations on any source relation. This relation is expected to be a child of a
- * ProjectedRelation instance (which is always ensured when this instance is created from a sql statement).
+ * Represents aggregation operations on any source relation. This relation is
+ * expected to be a child of a ProjectedRelation instance (which is always
+ * ensured when this instance is created from a sql statement).
+ * 
  * @author Yongjoo Park
  * 
- * This class provides extended operations than ProjectedRelation
+ *         This class provides extended operations than ProjectedRelation
  *
  */
 public class AggregatedRelation extends ExactRelation {
@@ -60,13 +79,14 @@ public class AggregatedRelation extends ExactRelation {
      */
 
     /**
-     * if the source is a grouped relation, only a few sample types are allowed as a source of
-     * another aggregate relation.
-     * 1. stratified sample: the groupby column must be equal to the columns on which samples were built on.
-     *    the sample type of the aggregated relation will be "nosample" and the sample type will be "1.0".
-     * 2. universe sample: the groupby column must be equal to the columns on which samples where built on.
-     *    the sample type of the aggregated relation will be "universe" sampled on the same columns.
-     *    the sampling probability will also stays the same.
+     * if the source is a grouped relation, only a few sample types are allowed as a
+     * source of another aggregate relation. 1. stratified sample: the groupby
+     * column must be equal to the columns on which samples were built on. the
+     * sample type of the aggregated relation will be "nosample" and the sample type
+     * will be "1.0". 2. universe sample: the groupby column must be equal to the
+     * columns on which samples where built on. the sample type of the aggregated
+     * relation will be "universe" sampled on the same columns. the sampling
+     * probability will also stays the same.
      */
     @Override
     protected List<ApproxRelation> nBestSamples(Expr elem, int n) throws VerdictException {
@@ -78,14 +98,13 @@ public class AggregatedRelation extends ExactRelation {
             boolean isEligible = true;
 
             for (FuncExpr fexpr : funcs) {
-                if (fexpr.getFuncName().equals(FuncExpr.FuncName.COUNT) ||
-                        fexpr.getFuncName().equals(FuncExpr.FuncName.AVG) ||
-                        fexpr.getFuncName().equals(FuncExpr.FuncName.SUM) ||
-                        fexpr.getFuncName().equals(FuncExpr.FuncName.COUNT_DISTINCT)) {
+                if (fexpr.getFuncName().equals(FuncExpr.FuncName.COUNT)
+                        || fexpr.getFuncName().equals(FuncExpr.FuncName.AVG)
+                        || fexpr.getFuncName().equals(FuncExpr.FuncName.SUM)
+                        || fexpr.getFuncName().equals(FuncExpr.FuncName.COUNT_DISTINCT)) {
                     if (source instanceof GroupedRelation) {
-                        if (a.sampleType().equals("universe") ||
-                                a.sampleType().equals("stratified") ||
-                                a.sampleType().equals("nosample")) {
+                        if (a.sampleType().equals("universe") || a.sampleType().equals("stratified")
+                                || a.sampleType().equals("nosample")) {
                         } else {
                             isEligible = false;
                         }
@@ -121,10 +140,14 @@ public class AggregatedRelation extends ExactRelation {
             candidates_list.add(sampleGroups);
         }
 
-        // We test if we can consolidate those sample candidates so that the number of select statements is less than
-        // the number of the expressions. In the worst case (e.g., all count-distinct), the number of select statements
-        // will be equal to the number of the expressions. If the cost of running those select statements individually
-        // is higher than the cost of running a single select statement using the original tables, samples are not used.
+        // We test if we can consolidate those sample candidates so that the number of
+        // select statements is less than
+        // the number of the expressions. In the worst case (e.g., all count-distinct),
+        // the number of select statements
+        // will be equal to the number of the expressions. If the cost of running those
+        // select statements individually
+        // is higher than the cost of running a single select statement using the
+        // original tables, samples are not used.
         SamplePlans consolidatedPlans = consolidate(candidates_list);
         return consolidatedPlans;
     }
@@ -132,7 +155,7 @@ public class AggregatedRelation extends ExactRelation {
     public ApproxRelation approx() throws VerdictException {
         SamplePlans consolidatedPlans = candidatesAsRoot();
         SamplePlan plan = chooseBestPlan(consolidatedPlans);
-        
+
         if (plan == null) {
             String msg = "No feasible sample plan is found.";
             VerdictLogger.error(this, msg);
@@ -152,7 +175,7 @@ public class AggregatedRelation extends ExactRelation {
 
     /*
      * Sql
-     */	
+     */
 
     protected String selectSql() {
         StringBuilder sql = new StringBuilder();
@@ -170,11 +193,17 @@ public class AggregatedRelation extends ExactRelation {
         List<Expr> groupby = groupsAndNextR.getLeft();
 
         Pair<Optional<Cond>, ExactRelation> filtersAndNextR = allPrecedingFilters(groupsAndNextR.getRight());
-        String csql = (filtersAndNextR.getLeft().isPresent())? filtersAndNextR.getLeft().get().toString() : "";
+        String csql = (filtersAndNextR.getLeft().isPresent()) ? filtersAndNextR.getLeft().get().toString() : "";
 
         sql.append(String.format(" FROM %s", sourceExpr(filtersAndNextR.getRight())));
-        if (csql.length() > 0) { sql.append(" WHERE "); sql.append(csql); }
-        if (groupby.size() > 0) { sql.append(" GROUP BY "); sql.append(Joiner.on(", ").join(groupby)); }
+        if (csql.length() > 0) {
+            sql.append(" WHERE ");
+            sql.append(csql);
+        }
+        if (groupby.size() > 0) {
+            sql.append(" GROUP BY ");
+            sql.append(Joiner.on(", ").join(groupby));
+        }
         return sql.toString();
     }
 
@@ -185,12 +214,18 @@ public class AggregatedRelation extends ExactRelation {
         List<Expr> groupby = groupsAndNextR.getLeft();
 
         Pair<Optional<Cond>, ExactRelation> filtersAndNextR = allPrecedingFilters(groupsAndNextR.getRight());
-        String csql = (filtersAndNextR.getLeft().isPresent())? filtersAndNextR.getLeft().get().toString() : "";
+        String csql = (filtersAndNextR.getLeft().isPresent()) ? filtersAndNextR.getLeft().get().toString() : "";
 
         sql.append(selectSql());
         sql.append(String.format(" FROM %s", sourceExpr(filtersAndNextR.getRight())));
-        if (csql.length() > 0) { sql.append(" WHERE "); sql.append(csql); }
-        if (groupby.size() > 0) { sql.append(" GROUP BY "); sql.append(Joiner.on(", ").join(groupby)); }
+        if (csql.length() > 0) {
+            sql.append(" WHERE ");
+            sql.append(csql);
+        }
+        if (groupby.size() > 0) {
+            sql.append(" GROUP BY ");
+            sql.append(Joiner.on(", ").join(groupby));
+        }
         return sql.toString();
     }
 
@@ -204,7 +239,8 @@ public class AggregatedRelation extends ExactRelation {
     protected String toStringWithIndent(String indent) {
         StringBuilder s = new StringBuilder(1000);
         s.append(indent);
-        s.append(String.format("%s(%s) [%s]\n", this.getClass().getSimpleName(), getAlias(), Joiner.on(", ").join(elems)));
+        s.append(String.format("%s(%s) [%s]\n", this.getClass().getSimpleName(), getAlias(),
+                Joiner.on(", ").join(elems)));
         s.append(source.toStringWithIndent(indent + "  "));
         return s.toString();
     }

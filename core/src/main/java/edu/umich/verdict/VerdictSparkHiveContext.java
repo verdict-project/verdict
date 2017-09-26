@@ -32,12 +32,13 @@ import edu.umich.verdict.util.VerdictLogger;
 
 /**
  * Issues queries through Spark's HiveContext. Supports Spark 1.6.
+ * 
  * @author Yongjoo Park
  *
  */
 public class VerdictSparkHiveContext extends VerdictContext {
     private DataFrame df;
-    
+
     private HiveContext sqlContext;
 
     public VerdictSparkHiveContext(SparkContext sc) throws VerdictException {
@@ -51,9 +52,10 @@ public class VerdictSparkHiveContext extends VerdictContext {
         setDbms(new DbmsSpark(this, sqlContext));
         setMeta(new VerdictMeta(this));
     }
-    
+
     /**
      * Returns the underlying regular HiveContext
+     * 
      * @return
      */
     public HiveContext getHiveContext() {
@@ -78,10 +80,10 @@ public class VerdictSparkHiveContext extends VerdictContext {
     public DataFrame getDataFrame() {
         return df;
     }
-    
+
     @Override
-	public Dataset<Row> getDataset() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    public Dataset<Row> getDataset() {
+        // TODO Auto-generated method stub
+        return null;
+    }
 }

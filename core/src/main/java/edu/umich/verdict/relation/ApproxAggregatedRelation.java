@@ -1,3 +1,20 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package edu.umich.verdict.relation;
 
 import java.util.ArrayList;
@@ -46,7 +63,7 @@ public class ApproxAggregatedRelation extends ApproxRelation {
     public List<SelectElem> getElemList() {
         return elems;
     }
-    
+
     public List<SelectElem> getAggElemList() {
         List<SelectElem> aggs = new ArrayList<SelectElem>();
         for (SelectElem elem : elems) {
@@ -66,7 +83,8 @@ public class ApproxAggregatedRelation extends ApproxRelation {
         ExactRelation newSource = source.rewriteForPointEstimate();
 
         List<SelectElem> scaled = new ArrayList<SelectElem>();
-        //		List<ColNameExpr> samplingProbColumns = newSource.accumulateSamplingProbColumns();
+        // List<ColNameExpr> samplingProbColumns =
+        // newSource.accumulateSamplingProbColumns();
         for (SelectElem elem : elems) {
             if (!elem.isagg()) {
                 scaled.add(elem);
@@ -82,34 +100,35 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 
     @Override
     public ExactRelation rewriteWithSubsampledErrorBounds() {
-        // if this is not an approximate relation effectively, we don't need any special rewriting.
+        // if this is not an approximate relation effectively, we don't need any special
+        // rewriting.
         if (!doesIncludeSample()) {
             return getOriginalRelation();
         }
-        
+
         ExactRelation r = rewriteWithPartition(true);
-//        String newAlias = genTableAlias();
-        
+        // String newAlias = genTableAlias();
+
         // put another layer to combine per-partition aggregates
         List<SelectElem> newElems = new ArrayList<SelectElem>();
         List<SelectElem> oldElems = ((AggregatedRelation) r).getElemList();
         List<Expr> newGroupby = new ArrayList<Expr>();
-        
+
         for (int i = 0; i < oldElems.size(); i++) {
             SelectElem elem = oldElems.get(i);
-            
+
             // used to identify the original aggregation type
             Optional<SelectElem> originalElem = Optional.absent();
             if (i < this.elems.size()) {
                 originalElem = Optional.fromNullable(this.elems.get(i));
             }
-            
+
             if (!elem.isagg()) {
                 // skip the partition number
                 if (elem.aliasPresent() && elem.getAlias().equals(partitionColumnName())) {
                     continue;
                 }
-                
+
                 SelectElem newElem = null;
                 Expr newExpr = null;
                 if (elem.getAlias() == null) {
@@ -119,19 +138,18 @@ public class ApproxAggregatedRelation extends ApproxRelation {
                     newExpr = new ColNameExpr(vc, elem.getAlias(), r.getAlias());
                     newElem = new SelectElem(vc, newExpr, elem.getAlias());
                 }
-                
+
                 // groupby element may not be present in the select list.
                 if (originalElem.isPresent()) {
                     newElems.add(newElem);
                 }
                 newGroupby.add(newExpr);
-            }
-            else {
+            } else {
                 // skip the partition size column
                 if (elem.getAlias().equals(partitionSizeAlias)) {
                     continue;
                 }
-                
+
                 // skip the extra columns inserted
                 if (!originalElem.isPresent()) {
                     continue;
@@ -144,14 +162,15 @@ public class ApproxAggregatedRelation extends ApproxRelation {
                 Expr averaged = null;
                 Expr originalExpr = originalElem.get().getExpr();
                 if (originalExpr.isCountDistinct()) {
-                    // for count-distinct (i.e., universe samples), weighted average should not be used.
+                    // for count-distinct (i.e., universe samples), weighted average should not be
+                    // used.
                     averaged = FuncExpr.round(FuncExpr.avg(est));
                 } else if (originalExpr.isMax()) {
                     averaged = FuncExpr.max(est);
                 } else if (originalExpr.isMin()) {
                     averaged = FuncExpr.min(est);
                 } else {
-                 // weighted average
+                    // weighted average
                     averaged = BinaryOpExpr.from(vc, FuncExpr.sum(BinaryOpExpr.from(vc, est, psize, "*")),
                             FuncExpr.sum(psize), "/");
                     if (originalElem.get().getExpr().isCount()) {
@@ -167,88 +186,97 @@ public class ApproxAggregatedRelation extends ApproxRelation {
                 } else {
                     Expr error = BinaryOpExpr.from(vc,
                             BinaryOpExpr.from(vc, FuncExpr.stddev(est), FuncExpr.sqrt(FuncExpr.avg(psize)), "*"),
-                            FuncExpr.sqrt(FuncExpr.sum(psize)),
-                            "/");
+                            FuncExpr.sqrt(FuncExpr.sum(psize)), "/");
                     error = BinaryOpExpr.from(vc, error, ConstantExpr.from(vc, confidenceIntervalMultiplier()), "*");
                     newElems.add(new SelectElem(vc, error, Relation.errorBoundColumn(elem.getAlias())));
                 }
             }
         }
-        
-        // this extra aggregation stage should be grouped by non-agg elements except for __vpart
-//        List<Expr> newGroupby = new ArrayList<Expr>();
-//        if (source instanceof ApproxGroupedRelation) {
-//            for (Expr g : ((ApproxGroupedRelation) source).getGroupby()) {
-//                if (g instanceof ColNameExpr && ((ColNameExpr) g).getCol().equals(partitionColumnName())) {
-//                    continue;
-//                } else {
-//                    newGroupby.add(g.withTableSubstituted(r.getAlias()));
-//                }
-//            }
-//        }
-        
-//        for (SelectElem elem : elems) {
-//            if (!elem.isagg()) {
-//                if (elem.aliasPresent()) {
-//                    if (!elem.getAlias().equals(partitionColumnName())) {
-//                        newGroupby.add(new ColNameExpr(vc, elem.getAlias(), r.getAlias()));
-//                    }
-//                } else {        // does not happen
-//                    if (!elem.getExpr().toString().equals(partitionColumnName())) {
-//                        newGroupby.add(elem.getExpr().withTableSubstituted(r.getAlias()));
-//                    }
-//                }
-//            }
-//        }
+
+        // this extra aggregation stage should be grouped by non-agg elements except for
+        // __vpart
+        // List<Expr> newGroupby = new ArrayList<Expr>();
+        // if (source instanceof ApproxGroupedRelation) {
+        // for (Expr g : ((ApproxGroupedRelation) source).getGroupby()) {
+        // if (g instanceof ColNameExpr && ((ColNameExpr)
+        // g).getCol().equals(partitionColumnName())) {
+        // continue;
+        // } else {
+        // newGroupby.add(g.withTableSubstituted(r.getAlias()));
+        // }
+        // }
+        // }
+
+        // for (SelectElem elem : elems) {
+        // if (!elem.isagg()) {
+        // if (elem.aliasPresent()) {
+        // if (!elem.getAlias().equals(partitionColumnName())) {
+        // newGroupby.add(new ColNameExpr(vc, elem.getAlias(), r.getAlias()));
+        // }
+        // } else { // does not happen
+        // if (!elem.getExpr().toString().equals(partitionColumnName())) {
+        // newGroupby.add(elem.getExpr().withTableSubstituted(r.getAlias()));
+        // }
+        // }
+        // }
+        // }
         if (newGroupby.size() > 0) {
             r = new GroupedRelation(vc, r, newGroupby);
         }
-        
+
         r = new AggregatedRelation(vc, r, newElems);
         r.setAlias(getAlias());
         return r;
     }
 
     /**
-     * This relation must include partition numbers, and the answers must be scaled properly. Note that {@link ApproxRelation#rewriteWithSubsampledErrorBounds()}
-     * is used only for the statement including final error bounds; all internal manipulations must be performed by
-     * this method.
+     * This relation must include partition numbers, and the answers must be scaled
+     * properly. Note that {@link ApproxRelation#rewriteWithSubsampledErrorBounds()}
+     * is used only for the statement including final error bounds; all internal
+     * manipulations must be performed by this method.
      * 
-     * The rewritten relation transforms original aggregate elements as follows. Every aggregate element is replaced with
-     * two aggregate elements. One is for mean estimate and the other is for error estimate.
+     * The rewritten relation transforms original aggregate elements as follows.
+     * Every aggregate element is replaced with two aggregate elements. One is for
+     * mean estimate and the other is for error estimate.
      * 
-     * The rewritten relation includes an extra aggregate element: count(*). This is to compute the partition sizes. These
-     * partition sizes can be used by an upstream (or parent) relation for computing the final mean estimate. (note that
-     * computing weighted average provides higher accuracy compared to unweighted average.)
+     * The rewritten relation includes an extra aggregate element: count(*). This is
+     * to compute the partition sizes. These partition sizes can be used by an
+     * upstream (or parent) relation for computing the final mean estimate. (note
+     * that computing weighted average provides higher accuracy compared to
+     * unweighted average.)
+     * 
      * @return
      */
     @Override
     protected ExactRelation rewriteWithPartition() {
         return rewriteWithPartition(false);
     }
-    
+
     /**
      * 
-     * @param projectUnprojectedGroups This option is used by {@link ApproxAggregatedRelation#rewriteWithSubsampledErrorBounds()}.
+     * @param projectUnprojectedGroups
+     *            This option is used by
+     *            {@link ApproxAggregatedRelation#rewriteWithSubsampledErrorBounds()}.
      * @return
      */
     protected ExactRelation rewriteWithPartition(boolean projectUnprojectedGroups) {
         ExactRelation newSource = partitionedSource();
 
-        // select list elements are scaled considering both sampling probabilities and partitioning for subsampling.
+        // select list elements are scaled considering both sampling probabilities and
+        // partitioning for subsampling.
         List<SelectElem> scaledElems = new ArrayList<SelectElem>();
         List<Expr> groupby = new ArrayList<Expr>();
         if (source instanceof ApproxGroupedRelation) {
             groupby.addAll(((ApproxGroupedRelation) source).getGroupby());
         }
-//        final Map<TableUniqueName, String> sub = source.tableSubstitution();
+        // final Map<TableUniqueName, String> sub = source.tableSubstitution();
         ColNameExpr partitionColExpr = newSource.partitionColumn();
         Expr tupleSamplingProbExpr = source.tupleProbabilityColumn();
         Expr tableSamplingRatioExpr = source.tableSamplingRatio();
-        
-        SingleFunctionTransformerForSubsampling transformer =
-                new SingleFunctionTransformerForSubsampling(vc, groupby, partitionColExpr, tupleSamplingProbExpr, tableSamplingRatioExpr);
-        
+
+        SingleFunctionTransformerForSubsampling transformer = new SingleFunctionTransformerForSubsampling(vc, groupby,
+                partitionColExpr, tupleSamplingProbExpr, tableSamplingRatioExpr);
+
         // copied groupby expressions (used if projectUnprojectedGroups is set to true)
         List<ColNameExpr> unappearingGroups = new ArrayList<ColNameExpr>();
         if (source instanceof ApproxGroupedRelation) {
@@ -258,13 +286,13 @@ public class ApproxAggregatedRelation extends ApproxRelation {
                 }
             }
         }
-        
+
         for (SelectElem elem : elems) {
-            if (!elem.isagg())  {
+            if (!elem.isagg()) {
                 // group entry
                 scaledElems.add(elem);
-                
-                // remove from 
+
+                // remove from
                 Expr e = elem.getExpr();
                 if (e instanceof ColNameExpr) {
                     int i = 0;
@@ -277,37 +305,38 @@ public class ApproxAggregatedRelation extends ApproxRelation {
                         unappearingGroups.remove(i);
                     }
                 }
-            }
-            else {
+            } else {
                 Expr agg = elem.getExpr();
-//                Expr scaled = transformForSingleFunctionWithPartitionSize(agg, groupby, partitionColExpr, tupleSamplingProbExpr, tableSamplingRatio);
+                // Expr scaled = transformForSingleFunctionWithPartitionSize(agg, groupby,
+                // partitionColExpr, tupleSamplingProbExpr, tableSamplingRatio);
                 Expr scaled = transformer.call(agg);
                 scaledElems.add(new SelectElem(vc, scaled, elem.getAlias()));
             }
         }
-        
+
         // project unappearing groups
         if (projectUnprojectedGroups) {
             for (ColNameExpr e : unappearingGroups) {
                 scaledElems.add(new SelectElem(vc, e));
             }
         }
-        
+
         // insert partition number if exists
         ColNameExpr partitionCol = newSource.partitionColumn();
         if (partitionCol != null) {
             scaledElems.add(new SelectElem(vc, newSource.partitionColumn(), partitionColumnName()));
         }
-        
+
         // to compute the partition size
         scaledElems.add(new SelectElem(vc, FuncExpr.count(), partitionSizeAlias));
-        
+
         // insert sampling probability column (tuple-level)
-        scaledElems.add(new SelectElem(vc, FuncExpr.avg(ConstantExpr.from(vc, samplingProbability())), samplingProbabilityColumnName()));
-        
+        scaledElems.add(new SelectElem(vc, FuncExpr.avg(ConstantExpr.from(vc, samplingProbability())),
+                samplingProbabilityColumnName()));
+
         ExactRelation r = new AggregatedRelation(vc, newSource, scaledElems);
         r.setAlias(getAlias());
-        
+
         return r;
     }
 
@@ -322,7 +351,7 @@ public class ApproxAggregatedRelation extends ApproxRelation {
     @Override
     protected Map<TableUniqueName, String> tableSubstitution() {
         return Collections.<TableUniqueName, String>emptyMap();
-//        return source.tableSubstitution();
+        // return source.tableSubstitution();
     }
 
     @Override
@@ -335,10 +364,11 @@ public class ApproxAggregatedRelation extends ApproxRelation {
             } else if (sampleType().equals("nosample")) {
                 return Arrays.<Expr>asList();
             } else {
-                VerdictLogger.warn(this, String.format("%s sample should not be used for count-distinct.", sampleType()));
+                VerdictLogger.warn(this,
+                        String.format("%s sample should not be used for count-distinct.", sampleType()));
                 return Arrays.<Expr>asList(ConstantExpr.from(vc, 1.0));
             }
-        } else {	// SUM, COUNT, AVG
+        } else { // SUM, COUNT, AVG
             if (!sampleType().equals("nosample")) {
                 String samplingProbCol = samplingProbabilityColumnName();
                 return Arrays.<Expr>asList(new ColNameExpr(vc, samplingProbCol, alias));
@@ -347,95 +377,94 @@ public class ApproxAggregatedRelation extends ApproxRelation {
             }
         }
     }
-    
+
     class SingleFunctionTransformerForSubsampling extends ExprModifier {
-        
+
         final List<Expr> groupby;
-        
+
         final ColNameExpr partitionColExpr;
-        
+
         final Expr tupleSamplingProbExpr;
-        
+
         final Expr tableSamplingRatioExpr;
 
-        public SingleFunctionTransformerForSubsampling(
-                VerdictContext vc,
-                List<Expr> groupby,
-                ColNameExpr partitionColExpr,
-                Expr tupleSamplingProbExpr,
-                Expr tableSamplingRatioExpr) {
+        public SingleFunctionTransformerForSubsampling(VerdictContext vc, List<Expr> groupby,
+                ColNameExpr partitionColExpr, Expr tupleSamplingProbExpr, Expr tableSamplingRatioExpr) {
             super(vc);
             this.groupby = groupby;
             this.partitionColExpr = partitionColExpr;
             this.tupleSamplingProbExpr = tupleSamplingProbExpr;
             this.tableSamplingRatioExpr = tableSamplingRatioExpr;
         }
-        
+
         public Expr call(Expr expr) {
             if (expr instanceof BinaryOpExpr) {
                 BinaryOpExpr old = (BinaryOpExpr) expr;
-                BinaryOpExpr newExpr = new BinaryOpExpr(
-                                           expr.getVerdictContext(),
-                                           visit(old.getLeft()),
-                                           visit(old.getRight()),
-                                           old.getOp());
+                BinaryOpExpr newExpr = new BinaryOpExpr(expr.getVerdictContext(), visit(old.getLeft()),
+                        visit(old.getRight()), old.getOp());
                 return newExpr;
             } else if (expr instanceof FuncExpr) {
                 // Take two different approaches:
                 // 1. stratified samples: use the verdict_sampling_prob column (in each tuple).
-                // 2. other samples: use either the uniform sampling probability or the ratio between the sample
-                //    size and the original table size.
+                // 2. other samples: use either the uniform sampling probability or the ratio
+                // between the sample
+                // size and the original table size.
 
                 FuncExpr f = (FuncExpr) expr;
-//                FuncExpr s = (FuncExpr) exprWithTableNamesSubstituted(expr, tupleSamplingProbExpr);
-//                List<Expr> samplingProbExprs = source.samplingProbabilityExprsFor(f);
+                // FuncExpr s = (FuncExpr) exprWithTableNamesSubstituted(expr,
+                // tupleSamplingProbExpr);
+                // List<Expr> samplingProbExprs = source.samplingProbabilityExprsFor(f);
 
                 if (f.getFuncName().equals(FuncExpr.FuncName.COUNT)) {
                     // scale with sampling probability
-                    Expr scaled = FuncExpr.sum(BinaryOpExpr.from(vc, ConstantExpr.from(vc, 1.0), tupleSamplingProbExpr, "/"));
+                    Expr scaled = FuncExpr
+                            .sum(BinaryOpExpr.from(vc, ConstantExpr.from(vc, 1.0), tupleSamplingProbExpr, "/"));
                     // scale with partition size
                     scaled = BinaryOpExpr.from(vc, scaled, FuncExpr.count(), "/");
-                    scaled = BinaryOpExpr.from(vc, scaled, new FuncExpr(FuncExpr.FuncName.SUM, FuncExpr.count(), new OverClause(groupby)), "*");
+                    scaled = BinaryOpExpr.from(vc, scaled,
+                            new FuncExpr(FuncExpr.FuncName.SUM, FuncExpr.count(), new OverClause(groupby)), "*");
                     return scaled;
-                }
-                else if (f.getFuncName().equals(FuncExpr.FuncName.COUNT_DISTINCT)) {
+                } else if (f.getFuncName().equals(FuncExpr.FuncName.COUNT_DISTINCT)) {
                     if (source.sampleType().equals("universe")) {
                         Expr est = new FuncExpr(FuncExpr.FuncName.COUNT_DISTINCT, f.getUnaryExpr());
                         // scale with sampling ratio
                         Expr scaled = BinaryOpExpr.from(vc, est, tableSamplingRatioExpr, "/");
                         // scale with partition size
-                        scaled = BinaryOpExpr.from(vc, scaled, ConstantExpr.from(vc, vc.getConf().subsamplingPartitionCount()), "*");
-//                        est = scaleWithPartitionSize(est, groupby, partitionCol, forErrorEst);
+                        scaled = BinaryOpExpr.from(vc, scaled,
+                                ConstantExpr.from(vc, vc.getConf().subsamplingPartitionCount()), "*");
+                        // est = scaleWithPartitionSize(est, groupby, partitionCol, forErrorEst);
                         return scaled;
                     } else {
-                        VerdictLogger.warn("Universe sample should be built on the column for accurate distinct-count computations.");
+                        VerdictLogger.warn(
+                                "Universe sample should be built on the column for accurate distinct-count computations.");
                         return f;
                     }
-                }
-                else if (f.getFuncName().equals(FuncExpr.FuncName.SUM)) {
+                } else if (f.getFuncName().equals(FuncExpr.FuncName.SUM)) {
                     // scale with sampling probability
                     Expr scaled = FuncExpr.sum(BinaryOpExpr.from(vc, f.getUnaryExpr(), tupleSamplingProbExpr, "/"));
                     // scale with partition size
                     scaled = BinaryOpExpr.from(vc, scaled, FuncExpr.count(), "/");
-                    scaled = BinaryOpExpr.from(vc, scaled, new FuncExpr(FuncExpr.FuncName.SUM, FuncExpr.count(), new OverClause(groupby)), "*");
+                    scaled = BinaryOpExpr.from(vc, scaled,
+                            new FuncExpr(FuncExpr.FuncName.SUM, FuncExpr.count(), new OverClause(groupby)), "*");
                     return scaled;
-//                    Expr est = scaleForSampling(samplingProbExprs);
-//                    est = FuncExpr.sum(BinaryOpExpr.from(vc, s.getUnaryExpr(), est, "*"));
-//                    est = scaleWithPartitionSize(est, groupby, partitionCol, tableSamplingRatioExpr);
-//                    return est;
-                }
-                else if (f.getFuncName().equals(FuncExpr.FuncName.AVG)) {
+                    // Expr est = scaleForSampling(samplingProbExprs);
+                    // est = FuncExpr.sum(BinaryOpExpr.from(vc, s.getUnaryExpr(), est, "*"));
+                    // est = scaleWithPartitionSize(est, groupby, partitionCol,
+                    // tableSamplingRatioExpr);
+                    // return est;
+                } else if (f.getFuncName().equals(FuncExpr.FuncName.AVG)) {
                     // scale with sampling probability
                     Expr sumEst = FuncExpr.sum(BinaryOpExpr.from(vc, f.getUnaryExpr(), tupleSamplingProbExpr, "/"));
-                    Expr countEst = countNotNull(f.getUnaryExpr(), BinaryOpExpr.from(vc, ConstantExpr.from(vc, 1.0), tupleSamplingProbExpr, "/"));
+                    Expr countEst = countNotNull(f.getUnaryExpr(),
+                            BinaryOpExpr.from(vc, ConstantExpr.from(vc, 1.0), tupleSamplingProbExpr, "/"));
                     Expr scaled = BinaryOpExpr.from(vc, sumEst, countEst, "/");
-//                    Expr scale = scaleForSampling(samplingProbExprs);
-//                    Expr sumEst = FuncExpr.sum(BinaryOpExpr.from(vc, s.getUnaryExpr(), scale, "*"));
-//                    // this count-est filters out the null expressions.
-//                    Expr countEst = countNotNull(s.getUnaryExpr(), scale);
+                    // Expr scale = scaleForSampling(samplingProbExprs);
+                    // Expr sumEst = FuncExpr.sum(BinaryOpExpr.from(vc, s.getUnaryExpr(), scale,
+                    // "*"));
+                    // // this count-est filters out the null expressions.
+                    // Expr countEst = countNotNull(s.getUnaryExpr(), scale);
                     return scaled;
-                }
-                else {      // expected not to be visited
+                } else { // expected not to be visited
                     return f;
                 }
             } else {
@@ -444,19 +473,19 @@ public class ApproxAggregatedRelation extends ApproxRelation {
         }
     }
 
-//    private Expr transformForSingleFunctionWithPartitionSize(
-//            Expr f,
-//            final List<Expr> groupby,
-//            final ColNameExpr partitionColExpr,
-//            final Expr tupleSamplingProbExpr,
-//            final Expr tableSamplingRatioExpr) {
-//        
-//        ExprModifier v = new ExprModifier(vc) {
-//            
-//        };
-//
-//        return v.visit(f);
-//    }
+    // private Expr transformForSingleFunctionWithPartitionSize(
+    // Expr f,
+    // final List<Expr> groupby,
+    // final ColNameExpr partitionColExpr,
+    // final Expr tupleSamplingProbExpr,
+    // final Expr tableSamplingRatioExpr) {
+    //
+    // ExprModifier v = new ExprModifier(vc) {
+    //
+    // };
+    //
+    // return v.visit(f);
+    // }
 
     private Expr scaleForSampling(List<Expr> samplingProbCols) {
         Expr scale = ConstantExpr.from(vc, 1.0);
@@ -469,20 +498,27 @@ public class ApproxAggregatedRelation extends ApproxRelation {
     private Expr scaleWithPartitionSize(Expr expr, List<Expr> groupby, boolean forErrorEst) {
         Expr scaled = null;
 
-        if (!forErrorEst) {     // point estimate
+        if (!forErrorEst) { // point estimate
             if (expr.isCountDistinct()) {
-                // scale by the partition count. the ratio between average partition size and the sum of them should be
+                // scale by the partition count. the ratio between average partition size and
+                // the sum of them should be
                 // almost same as the inverse of the partition count.
-                scaled = BinaryOpExpr.from(vc, expr, new FuncExpr(FuncExpr.FuncName.AVG, FuncExpr.count(), new OverClause(groupby)), "/");
-                scaled = BinaryOpExpr.from(vc, scaled, new FuncExpr(FuncExpr.FuncName.SUM, FuncExpr.count(), new OverClause(groupby)), "*");	
+                scaled = BinaryOpExpr.from(vc, expr,
+                        new FuncExpr(FuncExpr.FuncName.AVG, FuncExpr.count(), new OverClause(groupby)), "/");
+                scaled = BinaryOpExpr.from(vc, scaled,
+                        new FuncExpr(FuncExpr.FuncName.SUM, FuncExpr.count(), new OverClause(groupby)), "*");
             } else {
                 scaled = BinaryOpExpr.from(vc, expr, FuncExpr.count(), "/");
-                scaled = BinaryOpExpr.from(vc, scaled, new FuncExpr(FuncExpr.FuncName.SUM, FuncExpr.count(), new OverClause(groupby)), "*");
+                scaled = BinaryOpExpr.from(vc, scaled,
+                        new FuncExpr(FuncExpr.FuncName.SUM, FuncExpr.count(), new OverClause(groupby)), "*");
             }
         } else {
-            // for error estimations, we do not exactly scale with the partition size ratios.
-            scaled = BinaryOpExpr.from(vc, expr, new FuncExpr(FuncExpr.FuncName.AVG, FuncExpr.count(), new OverClause(groupby)), "/");
-            scaled = BinaryOpExpr.from(vc, scaled, new FuncExpr(FuncExpr.FuncName.SUM, FuncExpr.count(), new OverClause(groupby)), "*");
+            // for error estimations, we do not exactly scale with the partition size
+            // ratios.
+            scaled = BinaryOpExpr.from(vc, expr,
+                    new FuncExpr(FuncExpr.FuncName.AVG, FuncExpr.count(), new OverClause(groupby)), "/");
+            scaled = BinaryOpExpr.from(vc, scaled,
+                    new FuncExpr(FuncExpr.FuncName.SUM, FuncExpr.count(), new OverClause(groupby)), "*");
         }
 
         return scaled;
@@ -496,8 +532,9 @@ public class ApproxAggregatedRelation extends ApproxRelation {
                 if (expr instanceof FuncExpr) {
                     // Take two different approaches:
                     // 1. stratified samples: use the verdict_sampling_prob column (in each tuple).
-                    // 2. other samples: use either the uniform sampling probability or the ratio between the sample
-                    //    size and the original table size.
+                    // 2. other samples: use either the uniform sampling probability or the ratio
+                    // between the sample
+                    // size and the original table size.
 
                     FuncExpr f = (FuncExpr) expr;
                     FuncExpr s = (FuncExpr) exprWithTableNamesSubstituted(expr, sub);
@@ -507,32 +544,27 @@ public class ApproxAggregatedRelation extends ApproxRelation {
                         Expr scale = scaleForSampling(samplingProbExprs);
                         Expr est = FuncExpr.sum(scale);
                         return FuncExpr.round(est);
-                    }
-                    else if (f.getFuncName().equals(FuncExpr.FuncName.COUNT_DISTINCT)) {
+                    } else if (f.getFuncName().equals(FuncExpr.FuncName.COUNT_DISTINCT)) {
                         String dbname = vc.getDbms().getName();
                         Expr scale = scaleForSampling(samplingProbExprs);
                         if (dbname.equals("impala")) {
-                            return FuncExpr.round(
-                                    BinaryOpExpr.from(vc, new FuncExpr(
-                                            FuncExpr.FuncName.IMPALA_APPROX_COUNT_DISTINCT, s.getUnaryExpr()),
-                                            scale, "*"));
+                            return FuncExpr.round(BinaryOpExpr.from(vc,
+                                    new FuncExpr(FuncExpr.FuncName.IMPALA_APPROX_COUNT_DISTINCT, s.getUnaryExpr()),
+                                    scale, "*"));
                         } else {
                             return FuncExpr.round(BinaryOpExpr.from(vc, s, scale, "*"));
                         }
-                    }
-                    else if (f.getFuncName().equals(FuncExpr.FuncName.SUM)) {
+                    } else if (f.getFuncName().equals(FuncExpr.FuncName.SUM)) {
                         Expr scale = scaleForSampling(samplingProbExprs);
                         Expr est = FuncExpr.sum(BinaryOpExpr.from(vc, s.getUnaryExpr(), scale, "*"));
                         return est;
-                    }
-                    else if (f.getFuncName().equals(FuncExpr.FuncName.AVG)) {
+                    } else if (f.getFuncName().equals(FuncExpr.FuncName.AVG)) {
                         Expr scale = scaleForSampling(samplingProbExprs);
                         Expr sumEst = FuncExpr.sum(BinaryOpExpr.from(vc, s.getUnaryExpr(), scale, "*"));
                         // this count-est filters out the null expressions.
                         Expr countEst = countNotNull(s.getUnaryExpr(), scale);
                         return BinaryOpExpr.from(vc, sumEst, countEst, "/");
-                    }
-                    else {		// expected not to be visited
+                    } else { // expected not to be visited
                         return s;
                     }
                 } else {
@@ -545,9 +577,8 @@ public class ApproxAggregatedRelation extends ApproxRelation {
     }
 
     private FuncExpr countNotNull(Expr nullcheck, Expr expr) {
-        return FuncExpr.sum(
-                new CaseExpr(vc, Arrays.<Cond>asList(new IsCond(nullcheck, new NullCond())),
-                        Arrays.<Expr>asList(ConstantExpr.from(vc, "0"), expr)));
+        return FuncExpr.sum(new CaseExpr(vc, Arrays.<Cond>asList(new IsCond(nullcheck, new NullCond())),
+                Arrays.<Expr>asList(ConstantExpr.from(vc, "0"), expr)));
     }
 
     @Override
@@ -557,14 +588,15 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 
     @Override
     public String sampleType() {
-       return source.sampleType();
+        return source.sampleType();
     }
-    
+
     private List<String> mappedSourceSampleColumn(List<String> sourceSampleCols) {
         List<String> cols = new ArrayList<String>();
         for (SelectElem elem : getElemList()) {
             Expr e = elem.getExpr();
-            if (!(e instanceof ColNameExpr)) continue;
+            if (!(e instanceof ColNameExpr))
+                continue;
             if (sourceSampleCols.contains(((ColNameExpr) e).getCol())) {
                 if (elem.aliasPresent()) {
                     cols.add(elem.getAlias());
@@ -584,7 +616,7 @@ public class ApproxAggregatedRelation extends ApproxRelation {
             List<String> cols = mappedSourceSampleColumn(source.sampleColumns());
             return cols;
         }
-        
+
         return source.sampleColumns();
     }
 
@@ -592,13 +624,8 @@ public class ApproxAggregatedRelation extends ApproxRelation {
     protected String toStringWithIndent(String indent) {
         StringBuilder s = new StringBuilder(1000);
         s.append(indent);
-        s.append(String.format("%s(%s) [%s] type: %s (%s), cost: %f\n",
-                this.getClass().getSimpleName(),
-                getAlias(),
-                Joiner.on(", ").join(elems),
-                sampleType(),
-                sampleColumns(),
-                cost()));
+        s.append(String.format("%s(%s) [%s] type: %s (%s), cost: %f\n", this.getClass().getSimpleName(), getAlias(),
+                Joiner.on(", ").join(elems), sampleType(), sampleColumns(), cost()));
         s.append(source.toStringWithIndent(indent + "  "));
         return s.toString();
     }
@@ -616,14 +643,15 @@ public class ApproxAggregatedRelation extends ApproxRelation {
     }
 
     /**
-     * Sampling probability defers based on the sample type and the preceding groupby.
-     * For many cases, sampling probabilities are not easily computable, in which case, we set the return value
-     * to zero, so that the sample is not used for computing another aggregation.
+     * Sampling probability defers based on the sample type and the preceding
+     * groupby. For many cases, sampling probabilities are not easily computable, in
+     * which case, we set the return value to zero, so that the sample is not used
+     * for computing another aggregation.
      */
     @Override
     public double samplingProbability() {
         String sourceSampleType = source.sampleType();
-        
+
         if (sourceSampleType.equals("nosample")) {
             return 1.0;
         }
@@ -651,7 +679,7 @@ public class ApproxAggregatedRelation extends ApproxRelation {
     protected boolean doesIncludeSample() {
         return source.doesIncludeSample();
     }
-    
+
     @Override
     public Expr tupleProbabilityColumn() {
         return new ColNameExpr(vc, samplingProbabilityColumnName(), getAlias());

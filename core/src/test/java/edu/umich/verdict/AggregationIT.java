@@ -1,3 +1,20 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package edu.umich.verdict;
 
 import static org.junit.Assert.assertArrayEquals;
@@ -38,25 +55,30 @@ public class AggregationIT extends BaseIT {
         assertColsSimilar(expected, actual, 2, error);
     }
 
-    protected void testSimpleCountFor(String tableName, String sampleType, List<String> sampleColumns) throws SQLException, VerdictException {
+    protected void testSimpleCountFor(String tableName, String sampleType, List<String> sampleColumns)
+            throws SQLException, VerdictException {
         String sql = String.format("select count(*) from %s", tableName);
         List<List<Object>> expected = collectResult(stmt.executeQuery(sql));
 
         TableUniqueName originalTable = TableUniqueName.uname(vc, tableName);
-        ApproxRelation r = ApproxSingleRelation.from(vc, new SampleParam(vc, originalTable, sampleType, samplingRatio, sampleColumns));
+        ApproxRelation r = ApproxSingleRelation.from(vc,
+                new SampleParam(vc, originalTable, sampleType, samplingRatio, sampleColumns));
         List<List<Object>> actual = collectResult(r.count().collectResultSet());
 
         printTestCase(sql, expected, actual);
         assertColsSimilar(expected, actual, 1, error);
     }
 
-    protected void testGroupbyCountFor(String tableName, List<String> groupby, String sampleType, List<String> sampleColumns) throws SQLException, VerdictException {
+    protected void testGroupbyCountFor(String tableName, List<String> groupby, String sampleType,
+            List<String> sampleColumns) throws SQLException, VerdictException {
         String groups = Joiner.on(", ").join(groupby);
-        String sql = String.format("select %s, count(*) from %s group by %s order by %s", groups, tableName, groups, groups);
+        String sql = String.format("select %s, count(*) from %s group by %s order by %s", groups, tableName, groups,
+                groups);
         List<List<Object>> expected = collectResult(stmt.executeQuery(sql));
 
         TableUniqueName originalTable = TableUniqueName.uname(vc, tableName);
-        ApproxRelation r = ApproxSingleRelation.from(vc, new SampleParam(vc, originalTable, sampleType, samplingRatio, sampleColumns));
+        ApproxRelation r = ApproxSingleRelation.from(vc,
+                new SampleParam(vc, originalTable, sampleType, samplingRatio, sampleColumns));
         List<List<Object>> actual = collectResult(r.groupby(groups).count().orderby(groups).collectResultSet());
 
         printTestCase(sql, expected, actual);
@@ -64,25 +86,30 @@ public class AggregationIT extends BaseIT {
         assertColsSimilar(expected, actual, 2, error);
     }
 
-    protected void testSimpleAvgFor(String tableName, String aggCol, String sampleType, List<String> sampleColumns) throws SQLException, VerdictException {
+    protected void testSimpleAvgFor(String tableName, String aggCol, String sampleType, List<String> sampleColumns)
+            throws SQLException, VerdictException {
         String sql = String.format("select avg(%s) from %s", aggCol, tableName);
         List<List<Object>> expected = collectResult(stmt.executeQuery(sql));
 
         TableUniqueName originalTable = TableUniqueName.uname(vc, tableName);
-        ApproxRelation r = ApproxSingleRelation.from(vc, new SampleParam(vc, originalTable, sampleType, samplingRatio, sampleColumns));
+        ApproxRelation r = ApproxSingleRelation.from(vc,
+                new SampleParam(vc, originalTable, sampleType, samplingRatio, sampleColumns));
         List<List<Object>> actual = collectResult(r.avg(aggCol).collectResultSet());
 
         printTestCase(sql, expected, actual);
         assertColsSimilar(expected, actual, 1, error);
     }
 
-    protected void testGroupbyAvgFor(String tableName, String aggCol, List<String> groupby, String sampleType, List<String> sampleColumns) throws SQLException, VerdictException {
+    protected void testGroupbyAvgFor(String tableName, String aggCol, List<String> groupby, String sampleType,
+            List<String> sampleColumns) throws SQLException, VerdictException {
         String groups = Joiner.on(", ").join(groupby);
-        String sql = String.format("select %s, avg(%s) from %s group by %s order by %s", groups, aggCol, tableName, groups, groups);
+        String sql = String.format("select %s, avg(%s) from %s group by %s order by %s", groups, aggCol, tableName,
+                groups, groups);
         List<List<Object>> expected = collectResult(stmt.executeQuery(sql));
 
         TableUniqueName originalTable = TableUniqueName.uname(vc, tableName);
-        ApproxRelation r = ApproxSingleRelation.from(vc, new SampleParam(vc, originalTable, sampleType, samplingRatio, sampleColumns));
+        ApproxRelation r = ApproxSingleRelation.from(vc,
+                new SampleParam(vc, originalTable, sampleType, samplingRatio, sampleColumns));
         List<List<Object>> actual = collectResult(r.groupby(groups).avg(aggCol).orderby(groups).collectResultSet());
 
         printTestCase(sql, expected, actual);
@@ -90,25 +117,30 @@ public class AggregationIT extends BaseIT {
         assertColsSimilar(expected, actual, 2, error);
     }
 
-    protected void testSimpleSumFor(String tableName, String aggCol, String sampleType, List<String> sampleColumns) throws SQLException, VerdictException {
+    protected void testSimpleSumFor(String tableName, String aggCol, String sampleType, List<String> sampleColumns)
+            throws SQLException, VerdictException {
         String sql = String.format("select sum(%s) from %s", aggCol, tableName);
         List<List<Object>> expected = collectResult(stmt.executeQuery(sql));
 
         TableUniqueName originalTable = TableUniqueName.uname(vc, tableName);
-        ApproxRelation r = ApproxSingleRelation.from(vc, new SampleParam(vc, originalTable, sampleType, samplingRatio, sampleColumns));
+        ApproxRelation r = ApproxSingleRelation.from(vc,
+                new SampleParam(vc, originalTable, sampleType, samplingRatio, sampleColumns));
         List<List<Object>> actual = collectResult(r.sum(aggCol).collectResultSet());
 
         printTestCase(sql, expected, actual);
         assertColsSimilar(expected, actual, 1, error);
     }
 
-    protected void testGroupbySumFor(String tableName, String aggCol, List<String> groupby, String sampleType, List<String> sampleColumns) throws SQLException, VerdictException {
+    protected void testGroupbySumFor(String tableName, String aggCol, List<String> groupby, String sampleType,
+            List<String> sampleColumns) throws SQLException, VerdictException {
         String groups = Joiner.on(", ").join(groupby);
-        String sql = String.format("select %s, sum(%s) from %s group by %s order by %s", groups, aggCol, tableName, groups, groups);
+        String sql = String.format("select %s, sum(%s) from %s group by %s order by %s", groups, aggCol, tableName,
+                groups, groups);
         List<List<Object>> expected = collectResult(stmt.executeQuery(sql));
 
         TableUniqueName originalTable = TableUniqueName.uname(vc, tableName);
-        ApproxRelation r = ApproxSingleRelation.from(vc, new SampleParam(vc, originalTable, sampleType, samplingRatio, sampleColumns));
+        ApproxRelation r = ApproxSingleRelation.from(vc,
+                new SampleParam(vc, originalTable, sampleType, samplingRatio, sampleColumns));
         List<List<Object>> actual = collectResult(r.groupby(groups).sum(aggCol).orderby(groups).collectResultSet());
 
         printTestCase(sql, expected, actual);
@@ -116,26 +148,32 @@ public class AggregationIT extends BaseIT {
         assertColsSimilar(expected, actual, 2, error);
     }
 
-    protected void testSimpleCountDistinctFor(String tableName, String aggCol, String sampleType, List<String> sampleColumns) throws SQLException, VerdictException {
+    protected void testSimpleCountDistinctFor(String tableName, String aggCol, String sampleType,
+            List<String> sampleColumns) throws SQLException, VerdictException {
         String sql = String.format("select count(distinct %s) from %s", aggCol, tableName);
         List<List<Object>> expected = collectResult(stmt.executeQuery(sql));
 
         TableUniqueName originalTable = TableUniqueName.uname(vc, tableName);
-        ApproxRelation r = ApproxSingleRelation.from(vc, new SampleParam(vc, originalTable, sampleType, samplingRatio, sampleColumns));
+        ApproxRelation r = ApproxSingleRelation.from(vc,
+                new SampleParam(vc, originalTable, sampleType, samplingRatio, sampleColumns));
         List<List<Object>> actual = collectResult(r.countDistinct(aggCol).collectResultSet());
 
         printTestCase(sql, expected, actual);
         assertColsSimilar(expected, actual, 1, error);
     }
 
-    protected void testGroupbyCountDistinctFor(String tableName, String aggCol, List<String> groupby, String sampleType, List<String> sampleColumns) throws SQLException, VerdictException {
+    protected void testGroupbyCountDistinctFor(String tableName, String aggCol, List<String> groupby, String sampleType,
+            List<String> sampleColumns) throws SQLException, VerdictException {
         String groups = Joiner.on(", ").join(groupby);
-        String sql = String.format("select %s, count(distinct %s) from %s group by %s order by %s", groups, aggCol, tableName, groups, groups);
+        String sql = String.format("select %s, count(distinct %s) from %s group by %s order by %s", groups, aggCol,
+                tableName, groups, groups);
         List<List<Object>> expected = collectResult(stmt.executeQuery(sql));
 
         TableUniqueName originalTable = TableUniqueName.uname(vc, tableName);
-        ApproxRelation r = ApproxSingleRelation.from(vc, new SampleParam(vc, originalTable, sampleType, samplingRatio, sampleColumns));
-        List<List<Object>> actual = collectResult(r.groupby(groups).countDistinct(aggCol).orderby(groups).collectResultSet());
+        ApproxRelation r = ApproxSingleRelation.from(vc,
+                new SampleParam(vc, originalTable, sampleType, samplingRatio, sampleColumns));
+        List<List<Object>> actual = collectResult(
+                r.groupby(groups).countDistinct(aggCol).orderby(groups).collectResultSet());
 
         printTestCase(sql, expected, actual);
         assertColsEqual(expected, actual, 1);
@@ -146,7 +184,7 @@ public class AggregationIT extends BaseIT {
         List<List<Object>> result = new ArrayList<List<Object>>();
         int colCount = rs.getMetaData().getColumnCount();
         while (rs.next()) {
-            List<Object> row = new ArrayList<Object>();	
+            List<Object> row = new ArrayList<Object>();
             for (int i = 1; i <= colCount; i++) {
                 row.add(rs.getObject(i));
             }
@@ -162,18 +200,20 @@ public class AggregationIT extends BaseIT {
         assertArrayEquals(col1.toArray(), col2.toArray());
     }
 
-    protected void assertColsSimilar(List<List<Object>> expected, List<List<Object>> actual, int colIndex, double error) {
+    protected void assertColsSimilar(List<List<Object>> expected, List<List<Object>> actual, int colIndex,
+            double error) {
         List<Object> col1 = getColumn(expected, colIndex);
         List<Object> col2 = getColumn(actual, colIndex);
         assertEquals(col1.size(), col2.size());
 
         double err_sum = 0;
         for (int i = 0; i < col1.size(); i++) {
-            if (col1.get(i) == null || col1.get(i).toString().equals("null")) continue;
+            if (col1.get(i) == null || col1.get(i).toString().equals("null"))
+                continue;
             double exp = TypeCasting.toDouble(col1.get(i));
-            double act = TypeCasting.toDouble(col2.get(i));	
+            double act = TypeCasting.toDouble(col2.get(i));
             err_sum += Math.abs(exp - act) / Math.abs(exp);
-            //			assertEquals(exp, act, exp*error);
+            // assertEquals(exp, act, exp*error);
         }
         double avg_err = err_sum / (double) col1.size();
         System.out.println("average error: " + avg_err);
@@ -182,9 +222,9 @@ public class AggregationIT extends BaseIT {
 
     protected List<Object> getColumn(List<List<Object>> ll, int colIndex) {
         List<Object> column = new ArrayList<Object>();
-        //			int colCount = rs.getMetaData().getColumnCount();
-        for (int i = 0; i < ll.size(); i ++) {
-            column.add(ll.get(i).get(colIndex-1));
+        // int colCount = rs.getMetaData().getColumnCount();
+        for (int i = 0; i < ll.size(); i++) {
+            column.add(ll.get(i).get(colIndex - 1));
         }
         return column;
     }
@@ -262,7 +302,8 @@ public class AggregationIT extends BaseIT {
 
     @Test
     public void groupbySumUsingUniformSample() throws VerdictException, SQLException {
-        testGroupbySumFor("orders", "days_since_prior", Arrays.asList("order_hour_of_day"), "uniform", Arrays.<String>asList());
+        testGroupbySumFor("orders", "days_since_prior", Arrays.asList("order_hour_of_day"), "uniform",
+                Arrays.<String>asList());
     }
 
     @Test
@@ -272,7 +313,8 @@ public class AggregationIT extends BaseIT {
 
     @Test
     public void groupbyAvgUsingUniformSample() throws VerdictException, SQLException {
-        testGroupbyAvgFor("orders", "days_since_prior", Arrays.asList("order_hour_of_day"), "uniform", Arrays.<String>asList());
+        testGroupbyAvgFor("orders", "days_since_prior", Arrays.asList("order_hour_of_day"), "uniform",
+                Arrays.<String>asList());
     }
 
     @Test
@@ -322,7 +364,8 @@ public class AggregationIT extends BaseIT {
 
     @Test
     public void groupbyCountUsingUniverseSample() throws VerdictException, SQLException {
-        testGroupbyCountFor("orders", Arrays.asList("order_hour_of_day"), "universe", Arrays.<String>asList("order_id"));
+        testGroupbyCountFor("orders", Arrays.asList("order_hour_of_day"), "universe",
+                Arrays.<String>asList("order_id"));
     }
 
     @Test
@@ -332,32 +375,38 @@ public class AggregationIT extends BaseIT {
 
     @Test
     public void groupbySumUsingUniverseSample() throws VerdictException, SQLException {
-        testGroupbySumFor("orders", "days_since_prior", Arrays.asList("order_hour_of_day"), "universe", Arrays.<String>asList("user_id"));
+        testGroupbySumFor("orders", "days_since_prior", Arrays.asList("order_hour_of_day"), "universe",
+                Arrays.<String>asList("user_id"));
     }
 
     @Test
     public void groupbySumUsingUniverseSample2() throws VerdictException, SQLException {
-        testGroupbySumFor("orders", "days_since_prior", Arrays.asList("order_hour_of_day"), "universe", Arrays.<String>asList("order_id"));
+        testGroupbySumFor("orders", "days_since_prior", Arrays.asList("order_hour_of_day"), "universe",
+                Arrays.<String>asList("order_id"));
     }
 
     @Test
     public void groupbyAvgUsingUniverseSample() throws VerdictException, SQLException {
-        testGroupbyAvgFor("orders", "days_since_prior", Arrays.asList("order_hour_of_day"), "universe", Arrays.<String>asList("user_id"));
+        testGroupbyAvgFor("orders", "days_since_prior", Arrays.asList("order_hour_of_day"), "universe",
+                Arrays.<String>asList("user_id"));
     }
 
     @Test
     public void groupbyAvgUsingUniverseSample2() throws VerdictException, SQLException {
-        testGroupbyAvgFor("orders", "days_since_prior", Arrays.asList("order_hour_of_day"), "universe", Arrays.<String>asList("order_id"));
+        testGroupbyAvgFor("orders", "days_since_prior", Arrays.asList("order_hour_of_day"), "universe",
+                Arrays.<String>asList("order_id"));
     }
 
     @Test
     public void groupbyCountDistinctUsingUniverseSample() throws VerdictException, SQLException {
-        testGroupbyCountDistinctFor("orders", "user_id", Arrays.asList("order_hour_of_day"), "universe", Arrays.asList("user_id"));
+        testGroupbyCountDistinctFor("orders", "user_id", Arrays.asList("order_hour_of_day"), "universe",
+                Arrays.asList("user_id"));
     }
 
     @Test
     public void groupbyCountDistinctUsingUniverseSample2() throws VerdictException, SQLException {
-        testGroupbyCountDistinctFor("orders", "order_id", Arrays.asList("order_hour_of_day"), "universe", Arrays.asList("order_id"));
+        testGroupbyCountDistinctFor("orders", "order_id", Arrays.asList("order_hour_of_day"), "universe",
+                Arrays.asList("order_id"));
     }
 
     @Test
@@ -387,7 +436,8 @@ public class AggregationIT extends BaseIT {
 
     @Test
     public void simpleCountDistinctUsingStratifiedSample2() throws VerdictException, SQLException {
-        testSimpleCountDistinctFor("orders", "order_hour_of_day", "stratified", Arrays.<String>asList("order_hour_of_day"));
+        testSimpleCountDistinctFor("orders", "order_hour_of_day", "stratified",
+                Arrays.<String>asList("order_hour_of_day"));
     }
 
     @Test
@@ -402,37 +452,44 @@ public class AggregationIT extends BaseIT {
 
     @Test
     public void groupbyCountUsingStratifiedSample3() throws VerdictException, SQLException {
-        testGroupbyCountFor("orders", Arrays.asList("order_dow"), "stratified", Arrays.<String>asList("order_hour_of_day"));
+        testGroupbyCountFor("orders", Arrays.asList("order_dow"), "stratified",
+                Arrays.<String>asList("order_hour_of_day"));
     }
 
     @Test
     public void groupbySumUsingStratifiedSample() throws VerdictException, SQLException {
-        testGroupbySumFor("orders", "days_since_prior", Arrays.asList("order_dow"), "stratified", Arrays.<String>asList("order_number"));
+        testGroupbySumFor("orders", "days_since_prior", Arrays.asList("order_dow"), "stratified",
+                Arrays.<String>asList("order_number"));
     }
 
     @Test
     public void groupbySumUsingStratifiedSample2() throws VerdictException, SQLException {
-        testGroupbySumFor("orders", "days_since_prior", Arrays.asList("order_dow"), "stratified", Arrays.<String>asList("order_dow"));
+        testGroupbySumFor("orders", "days_since_prior", Arrays.asList("order_dow"), "stratified",
+                Arrays.<String>asList("order_dow"));
     }
 
     @Test
     public void groupbySumUsingStratifiedSample3() throws VerdictException, SQLException {
-        testGroupbySumFor("orders", "days_since_prior", Arrays.asList("order_dow"), "stratified", Arrays.<String>asList("order_hour_of_day"));
+        testGroupbySumFor("orders", "days_since_prior", Arrays.asList("order_dow"), "stratified",
+                Arrays.<String>asList("order_hour_of_day"));
     }
 
     @Test
     public void groupbyAvgUsingStratifiedSample() throws VerdictException, SQLException {
-        testGroupbyAvgFor("orders", "days_since_prior", Arrays.asList("order_dow"), "stratified", Arrays.<String>asList("order_number"));
+        testGroupbyAvgFor("orders", "days_since_prior", Arrays.asList("order_dow"), "stratified",
+                Arrays.<String>asList("order_number"));
     }
 
     @Test
     public void groupbyAvgUsingStratifiedSample2() throws VerdictException, SQLException {
-        testGroupbyAvgFor("orders", "days_since_prior", Arrays.asList("order_dow"), "stratified", Arrays.<String>asList("order_dow"));
+        testGroupbyAvgFor("orders", "days_since_prior", Arrays.asList("order_dow"), "stratified",
+                Arrays.<String>asList("order_dow"));
     }
 
     @Test
     public void groupbyAvgUsingStratifiedSample3() throws VerdictException, SQLException {
-        testGroupbyAvgFor("orders", "days_since_prior", Arrays.asList("order_dow"), "stratified", Arrays.<String>asList("order_hour_of_day"));
+        testGroupbyAvgFor("orders", "days_since_prior", Arrays.asList("order_dow"), "stratified",
+                Arrays.<String>asList("order_hour_of_day"));
     }
 
     @Test
@@ -518,6 +575,5 @@ public class AggregationIT extends BaseIT {
         String sql = "select order_hour_of_day, avg(days_since_prior) from orders group by order_hour_of_day order by order_hour_of_day";
         testGroupbyAggQuery(sql);
     }
-
 
 }

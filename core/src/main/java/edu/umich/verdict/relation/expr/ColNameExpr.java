@@ -1,3 +1,20 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package edu.umich.verdict.relation.expr;
 
 import edu.umich.verdict.VerdictContext;
@@ -20,10 +37,10 @@ public class ColNameExpr extends Expr {
 
     public ColNameExpr(VerdictContext vc, String col, String tab, String schema) {
         super(vc);
-        
+
         this.col = col.toLowerCase().replace("\"", "").replace("`", "");
-        this.tab = (tab != null)? tab.toLowerCase().replace("\"", "").replace("`", "") : tab;
-        this.schema = (schema != null)? schema.toLowerCase().replace("\"", "").replace("`", "") : schema;
+        this.tab = (tab != null) ? tab.toLowerCase().replace("\"", "").replace("`", "") : tab;
+        this.schema = (schema != null) ? schema.toLowerCase().replace("\"", "").replace("`", "") : schema;
     }
 
     public static ColNameExpr from(VerdictContext vc, String expr) {
@@ -86,7 +103,7 @@ public class ColNameExpr extends Expr {
     public String toSql() {
         return toString();
     }
-    
+
     @Override
     public int hashCode() {
         int s = col.hashCode();
@@ -106,13 +123,12 @@ public class ColNameExpr extends Expr {
                 if (getTab() == null) {
                     return true;
                 } else {
-                    if (((ColNameExpr) o).getCol() != null
-                        && getCol().equals(((ColNameExpr) o).getCol())) {
+                    if (((ColNameExpr) o).getCol() != null && getCol().equals(((ColNameExpr) o).getCol())) {
                         if (getSchema() == null) {
                             return true;
                         } else {
                             if (((ColNameExpr) o).getSchema() != null
-                                && getSchema().equals(((ColNameExpr) o).getSchema())) {
+                                    && getSchema().equals(((ColNameExpr) o).getSchema())) {
                                 return true;
                             }
                         }

@@ -1,3 +1,20 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package edu.umich.verdict.relation.expr;
 
 import java.util.ArrayList;
@@ -14,6 +31,7 @@ import edu.umich.verdict.util.VerdictLogger;
 
 /**
  * For (CASE (WHEN condition THEN expression)+ ELSE expression END)
+ * 
  * @author Yongjoo Park
  *
  */
@@ -25,10 +43,10 @@ public class CaseExpr extends Expr {
 
     public CaseExpr(VerdictContext vc, List<Cond> conditions, List<Expr> expressions) {
         super(vc);
-        if (conditions.size() != expressions.size() && conditions.size() +1 != expressions.size()) {
-            VerdictLogger.warn(this,
-                    String.format("Incorrect number of conditions (%d) for the number of expressions (%d) in a case expression.",
-                            conditions.size(), expressions.size()));
+        if (conditions.size() != expressions.size() && conditions.size() + 1 != expressions.size()) {
+            VerdictLogger.warn(this, String.format(
+                    "Incorrect number of conditions (%d) for the number of expressions (%d) in a case expression.",
+                    conditions.size(), expressions.size()));
         }
 
         this.conditions = conditions;
@@ -68,7 +86,7 @@ public class CaseExpr extends Expr {
             sql.append(String.format(" WHEN %s THEN %s", conditions.get(i), expressions.get(i)));
         }
         if (expressions.size() > conditions.size()) {
-            sql.append(String.format(" ELSE %s", expressions.get(expressions.size()-1)));
+            sql.append(String.format(" ELSE %s", expressions.get(expressions.size() - 1)));
         }
         sql.append(" END)");
         return sql.toString();
@@ -102,7 +120,7 @@ public class CaseExpr extends Expr {
             sql.append(String.format(" WHEN %s THEN %s", conditions.get(i).toSql(), expressions.get(i).toSql()));
         }
         if (expressions.size() > conditions.size()) {
-            sql.append(String.format(" ELSE %s", expressions.get(expressions.size()-1).toSql()));
+            sql.append(String.format(" ELSE %s", expressions.get(expressions.size() - 1).toSql()));
         }
         sql.append(" END)");
         return sql.toString();
@@ -116,7 +134,7 @@ public class CaseExpr extends Expr {
         }
         return false;
     }
-    
+
     @Override
     public int hashCode() {
         int s = 0;

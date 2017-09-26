@@ -1,3 +1,20 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package edu.umich.verdict.relation;
 
 import java.util.ArrayList;
@@ -45,7 +62,7 @@ public class FilteredRelation extends ExactRelation {
     @Override
     protected String getSourceName() {
         return getAlias();
-    }	
+    }
 
     /*
      * Approx
@@ -92,17 +109,20 @@ public class FilteredRelation extends ExactRelation {
         sql.append("SELECT * ");
 
         Pair<Optional<Cond>, ExactRelation> filtersAndNextR = allPrecedingFilters(this);
-        String csql = (filtersAndNextR.getLeft().isPresent())? filtersAndNextR.getLeft().get().toString() : "";
+        String csql = (filtersAndNextR.getLeft().isPresent()) ? filtersAndNextR.getLeft().get().toString() : "";
 
         sql.append(String.format(" FROM %s", sourceExpr(source)));
-        if (csql.length() > 0) { sql.append(" WHERE "); sql.append(csql); }
+        if (csql.length() > 0) {
+            sql.append(" WHERE ");
+            sql.append(csql);
+        }
         return sql.toString();
     }
 
-    //	@Override
-    //	public List<SelectElem> getSelectList() {
-    //		return source.getSelectList();
-    //	}
+    // @Override
+    // public List<SelectElem> getSelectList() {
+    // return source.getSelectList();
+    // }
 
     @Override
     public List<ColNameExpr> accumulateSamplingProbColumns() {
@@ -118,31 +138,30 @@ public class FilteredRelation extends ExactRelation {
         return s.toString();
     }
 
-    //	@Override
-    //	public List<SelectElem> getSelectList() {
-    //		return source.getSelectList();
-    //	}
-    
+    // @Override
+    // public List<SelectElem> getSelectList() {
+    // return source.getSelectList();
+    // }
+
     @Override
     public ColNameExpr partitionColumn() {
         ColNameExpr col = source.partitionColumn();
-        //		col.setTab(getAliasName());
+        // col.setTab(getAliasName());
         return col;
     }
 
-//    @Override
-//    public Expr distinctCountPartitionColumn() {
-//        return source.distinctCountPartitionColumn();
-//    }
+    // @Override
+    // public Expr distinctCountPartitionColumn() {
+    // return source.distinctCountPartitionColumn();
+    // }
 }
 
-
 class ApproxSubqueryModifier extends CondModifier {
-    
+
     private VerdictContext vc;
-    
+
     ExprModifier v2;
-    
+
     public ApproxSubqueryModifier(final VerdictContext vc) {
         v2 = new ExprModifier(vc) {
             public Expr call(Expr expr) {
@@ -164,7 +183,6 @@ class ApproxSubqueryModifier extends CondModifier {
             }
         };
     }
-
 
     @Override
     public Cond call(Cond cond) {

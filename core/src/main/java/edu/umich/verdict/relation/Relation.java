@@ -59,7 +59,9 @@ import edu.umich.verdict.util.TypeCasting;
 import edu.umich.verdict.util.VerdictLogger;
 
 /**
- * Both {@link ExactRelation} and {@link ApproxRelation} must extends this class.
+ * Both {@link ExactRelation} and {@link ApproxRelation} must extends this
+ * class.
+ * 
  * @author Yongjoo Park
  *
  */
@@ -74,14 +76,15 @@ public abstract class Relation {
     protected String alias;
 
     /**
-     * uniform: uniform random sample
-     * arbitrary: sampling probabilities for tuples may be all different. (there's no guarantee on uniformness).
-     * nosample: the original table itself.
-     * stratified: stratified on a certain column. It is guaranteed that we do not miss any group.
-     * universe: hashed on a certain column. It is guaranteed that the tuples with the same attribute values
-     *           in the column are sampled together.
+     * uniform: uniform random sample arbitrary: sampling probabilities for tuples
+     * may be all different. (there's no guarantee on uniformness). nosample: the
+     * original table itself. stratified: stratified on a certain column. It is
+     * guaranteed that we do not miss any group. universe: hashed on a certain
+     * column. It is guaranteed that the tuples with the same attribute values in
+     * the column are sampled together.
      */
-    public final static Set<String> availableJoinTypes = Sets.newHashSet("uniform", "universe", "stratified", "nosample", "arbitrary");
+    public final static Set<String> availableJoinTypes = Sets.newHashSet("uniform", "universe", "stratified",
+            "nosample", "arbitrary");
 
     public Relation(VerdictContext vc) {
         this.vc = vc;
@@ -115,13 +118,13 @@ public abstract class Relation {
     }
 
     /**
-     * Expression that would appear in sql statement.
-     * SingleSourceRelation: table name
-     * JoinedSourceRelation: join expression
-     * FilteredRelation: select * where condition from sourceExpr()
-     * AggregatedRelation: select groupby, agg where condition from sourceExpr()
+     * Expression that would appear in sql statement. SingleSourceRelation: table
+     * name JoinedSourceRelation: join expression FilteredRelation: select * where
+     * condition from sourceExpr() AggregatedRelation: select groupby, agg where
+     * condition from sourceExpr()
+     * 
      * @return
-     * @throws VerdictUnexpectedMethodCall 
+     * @throws VerdictUnexpectedMethodCall
      */
     public abstract String toSql();
 
@@ -174,7 +177,7 @@ public abstract class Relation {
         DataFrame df = vc.getDbms().executeSparkQuery(sql);
         return df;
     }
-    
+
     public Dataset<Row> collectDataset() throws VerdictException {
         String sql = toSql();
         VerdictLogger.debug(this, "A query to db: " + sql);
@@ -191,7 +194,7 @@ public abstract class Relation {
             try {
                 int colCount = rs.getMetaData().getColumnCount();
                 while (rs.next()) {
-                    List<Object> row = new ArrayList<Object>();	
+                    List<Object> row = new ArrayList<Object>();
                     for (int i = 1; i <= colCount; i++) {
                         row.add(rs.getObject(i));
                     }
@@ -201,8 +204,7 @@ public abstract class Relation {
             } catch (SQLException e) {
                 throw new VerdictException(e);
             }
-        }
-        else if (vc.getDbms().isSpark()) {
+        } else if (vc.getDbms().isSpark()) {
             DataFrame df = collectDataFrame();
             List<Row> rows = df.collectAsList();
             for (Row r : rows) {
@@ -267,13 +269,13 @@ public abstract class Relation {
     private static int temp_tab_no = 1;
 
     public static TableUniqueName getTempTableName(VerdictContext vc) {
-        String n = String.format("vt%d_%d", vc.getContextId()%100, temp_tab_no);
+        String n = String.format("vt%d_%d", vc.getContextId() % 100, temp_tab_no);
         temp_tab_no++;
         return TableUniqueName.uname(vc, n);
     }
 
     public static TableUniqueName getTempTableName(VerdictContext vc, String schema) {
-        String n = String.format("vt%d_%d", vc.getContextId()%100, temp_tab_no);
+        String n = String.format("vt%d_%d", vc.getContextId() % 100, temp_tab_no);
         temp_tab_no++;
         return TableUniqueName.uname(schema, n);
     }
@@ -281,19 +283,19 @@ public abstract class Relation {
     public String partitionColumnName() {
         return vc.getDbms().partitionColumnName();
     }
-    
-//    /**
-//     * Used when a universe sample is used for distinct-count.
-//     * @return
-//     */
-//    public String distinctCountPartitionColumnName() {
-//        return vc.getDbms().distinctCountPartitionColumnName();
-//    }
+
+    // /**
+    // * Used when a universe sample is used for distinct-count.
+    // * @return
+    // */
+    // public String distinctCountPartitionColumnName() {
+    // return vc.getDbms().distinctCountPartitionColumnName();
+    // }
 
     public String samplingProbabilityColumnName() {
         return vc.getDbms().samplingProbabilityColumnName();
     }
-    
+
     public String samplingRatioColumnName() {
         return vc.getDbms().samplingRatioColumnName();
     }
@@ -302,7 +304,8 @@ public abstract class Relation {
         return String.format("%s_err", original);
     }
 
-    protected static boolean areMatchingUniverseSamples(ApproxRelation r1, ApproxRelation r2, List<Pair<Expr, Expr>> joincond) {
+    protected static boolean areMatchingUniverseSamples(ApproxRelation r1, ApproxRelation r2,
+            List<Pair<Expr, Expr>> joincond) {
         List<Expr> leftJoinCols = new ArrayList<Expr>();
         List<Expr> rightJoinCols = new ArrayList<Expr>();
         for (Pair<Expr, Expr> pair : joincond) {
@@ -357,9 +360,11 @@ class TableNameReplacerInExpr extends ExprModifier {
     }
 
     /**
-     * Replaces if
-     * (1) schema name is omitted in the join condition and the table name matches the table name of the original table
-     * (2) schema name is fully specified in the join condition and both the schema and table names match the original schema and table names.
+     * Replaces if (1) schema name is omitted in the join condition and the table
+     * name matches the table name of the original table (2) schema name is fully
+     * specified in the join condition and both the schema and table names match the
+     * original schema and table names.
+     * 
      * @param expr
      * @return
      */
@@ -402,24 +407,23 @@ class TableNameReplacerInExpr extends ExprModifier {
         FuncExpr newExpr = new FuncExpr(expr.getFuncName(), new_argument_exprs, over);
         return newExpr;
     }
-    
+
     protected Expr replaceOrderByExpr(OrderByExpr expr) {
         Expr e = expr.getExpression();
         return new OrderByExpr(expr.getVerdictContext(), visit(e), expr.getDirection().orNull());
     }
 };
 
-
 class PrettyPrintVisitor extends VerdictSQLBaseVisitor<String> {
 
     protected String sql;
 
     protected String indent = "";
-    
+
     private VerdictContext vc;
 
     // pair of original table name and its alias
-    //	protected Map<String, String> tableAliases = new HashMap<String, String>();
+    // protected Map<String, String> tableAliases = new HashMap<String, String>();
 
     public PrettyPrintVisitor(VerdictContext vc, String sql) {
         this.vc = vc;
@@ -431,11 +435,10 @@ class PrettyPrintVisitor extends VerdictSQLBaseVisitor<String> {
         this.indent = indent;
     }
 
-    @Override public String visitCreate_table_as_select(VerdictSQLParser.Create_table_as_selectContext ctx) {
-        String create = String.format("CREATE TABLE %s%s%s AS\n",
-                (ctx.IF() != null)? "IF NOT EXISTS " : "",
-                ctx.table_name().getText(),
-                (ctx.STORED_AS_PARQUET() != null)? " STORED AS PARQUET" : "");
+    @Override
+    public String visitCreate_table_as_select(VerdictSQLParser.Create_table_as_selectContext ctx) {
+        String create = String.format("CREATE TABLE %s%s%s AS\n", (ctx.IF() != null) ? "IF NOT EXISTS " : "",
+                ctx.table_name().getText(), (ctx.STORED_AS_PARQUET() != null) ? " STORED AS PARQUET" : "");
 
         PrettyPrintVisitor v = new PrettyPrintVisitor(vc, sql);
         v.setIndent(indent + "    ");
@@ -478,7 +481,7 @@ class PrettyPrintVisitor extends VerdictSQLBaseVisitor<String> {
             }
             isFirstTableSource = false;
         }
-        //		query.append(" ");
+        // query.append(" ");
 
         if (ctx.where != null) {
             query.append("\n" + indent + "WHERE ");
@@ -510,9 +513,9 @@ class PrettyPrintVisitor extends VerdictSQLBaseVisitor<String> {
                 sql.append(",\n" + indent + "       ");
             }
 
-            //			if (i > 0 && i%5 == 0) {
-            //				sql.append("\n" + indent + "       ");
-            //			}
+            // if (i > 0 && i%5 == 0) {
+            // sql.append("\n" + indent + " ");
+            // }
 
             sql.append(visit(ectx));
             i++;
@@ -525,13 +528,13 @@ class PrettyPrintVisitor extends VerdictSQLBaseVisitor<String> {
         if (ctx.getText().equals("*")) {
             return "*";
         } else {
-            //			StringBuilder elem = new StringBuilder();
-            //			elem.append(visit(ctx.expression()));
-            //			if (ctx.column_alias() != null) {
-            //				elem.append(String.format(" AS %s", ctx.column_alias().getText()));
-            //			}
+            // StringBuilder elem = new StringBuilder();
+            // elem.append(visit(ctx.expression()));
+            // if (ctx.column_alias() != null) {
+            // elem.append(String.format(" AS %s", ctx.column_alias().getText()));
+            // }
             Expr expr = Expr.from(vc, ctx.expression());
-            String alias = (ctx.column_alias() == null)? null : ctx.column_alias().getText();
+            String alias = (ctx.column_alias() == null) ? null : ctx.column_alias().getText();
             return (new SelectElem(vc, expr, alias)).toString();
         }
     }
@@ -557,7 +560,7 @@ class PrettyPrintVisitor extends VerdictSQLBaseVisitor<String> {
     @Override
     public String visitSearch_condition_not(VerdictSQLParser.Search_condition_notContext ctx) {
         String predicate = visit(ctx.predicate());
-        return ((ctx.NOT() != null) ? "NOT" : "") + predicate;   
+        return ((ctx.NOT() != null) ? "NOT" : "") + predicate;
     }
 
     @Override
@@ -576,26 +579,28 @@ class PrettyPrintVisitor extends VerdictSQLBaseVisitor<String> {
     public String visitComp_expr_predicate(VerdictSQLParser.Comp_expr_predicateContext ctx) {
         String exp1 = visit(ctx.expression(0));
         String exp2 = visit(ctx.expression(1));
-        //		String exp1 = Expr.from(ctx.expression(0)).toString();
-        //		Expr expr = Expr.from(ctx.expression(1));
-        //		String exp2 = Expr.from(ctx.expression(1)).toString();
+        // String exp1 = Expr.from(ctx.expression(0)).toString();
+        // Expr expr = Expr.from(ctx.expression(1));
+        // String exp2 = Expr.from(ctx.expression(1)).toString();
         return String.format("%s %s %s", exp1, ctx.comparison_operator().getText(), exp2);
     }
 
     @Override
     public String visitSetcomp_expr_predicate(VerdictSQLParser.Setcomp_expr_predicateContext ctx) {
-        return String.format("%s %s (\n%s)", ctx.expression().getText(), ctx.comparison_operator().getText(), visit(ctx.subquery()));
+        return String.format("%s %s (\n%s)", ctx.expression().getText(), ctx.comparison_operator().getText(),
+                visit(ctx.subquery()));
     }
 
     @Override
     public String visitComp_between_expr(VerdictSQLParser.Comp_between_exprContext ctx) {
-        return String.format("%s %s BETWEEN %s AND %s",
-                ctx.expression(0).getText(), (ctx.NOT() == null)? "" : "NOT", ctx.expression(1).getText(), ctx.expression(2).getText() );
+        return String.format("%s %s BETWEEN %s AND %s", ctx.expression(0).getText(), (ctx.NOT() == null) ? "" : "NOT",
+                ctx.expression(1).getText(), ctx.expression(2).getText());
     }
 
     @Override
     public String visitIs_predicate(VerdictSQLParser.Is_predicateContext ctx) {
-        return String.format("%s IS %s%s", visit(ctx.expression()), (ctx.null_notnull().NOT() != null) ? "NOT " : "", "NULL");
+        return String.format("%s IS %s%s", visit(ctx.expression()), (ctx.null_notnull().NOT() != null) ? "NOT " : "",
+                "NULL");
     }
 
     private String getExpressions(VerdictSQLParser.Expression_listContext ctx) {
@@ -608,25 +613,24 @@ class PrettyPrintVisitor extends VerdictSQLBaseVisitor<String> {
 
     @Override
     public String visitIn_predicate(VerdictSQLParser.In_predicateContext ctx) {
-        return 	String.format("%s %s IN (%s)",
-                ctx.expression().getText(),
-                (ctx.NOT() == null)? "" : "NOT",
-                        (ctx.subquery() == null)? getExpressions(ctx.expression_list()) : "\n" + visit(ctx.subquery()));
+        return String.format("%s %s IN (%s)", ctx.expression().getText(), (ctx.NOT() == null) ? "" : "NOT",
+                (ctx.subquery() == null) ? getExpressions(ctx.expression_list()) : "\n" + visit(ctx.subquery()));
     }
 
     @Override
     public String visitLike_predicate(VerdictSQLParser.Like_predicateContext ctx) {
-        return String.format("%s %s LIKE %s",
-                ctx.expression(0).getText(), (ctx.NOT() == null)? "" : "NOT", ctx.expression(1).getText());
+        return String.format("%s %s LIKE %s", ctx.expression(0).getText(), (ctx.NOT() == null) ? "" : "NOT",
+                ctx.expression(1).getText());
     }
 
-    @Override public String visitCase_expr(VerdictSQLParser.Case_exprContext ctx) {
+    @Override
+    public String visitCase_expr(VerdictSQLParser.Case_exprContext ctx) {
         StringBuilder sql = new StringBuilder();
         sql.append("CASE");
-        List<ExpressionContext> exprs = ctx.expression(); 
+        List<ExpressionContext> exprs = ctx.expression();
 
         List<Search_conditionContext> search_conds = ctx.search_condition();
-        if (search_conds.size() > 0) {	// second case
+        if (search_conds.size() > 0) { // second case
             for (int i = 0; i < search_conds.size(); i++) {
                 sql.append(" WHEN ");
                 sql.append(visit(search_conds.get(i)));
@@ -636,14 +640,14 @@ class PrettyPrintVisitor extends VerdictSQLBaseVisitor<String> {
 
             if (exprs.size() > search_conds.size()) {
                 sql.append(" ELSE ");
-                sql.append(visit(exprs.get(exprs.size()-1)));
+                sql.append(visit(exprs.get(exprs.size() - 1)));
             }
-        } else {	// first case
+        } else { // first case
             sql.append(" ");
             sql.append(exprs.get(0));
-            for (int j = 0; j < (exprs.size()-1)/2; j++) {
-                int i1 = j*2 + 1;
-                int i2 = j*2 + 2;
+            for (int j = 0; j < (exprs.size() - 1) / 2; j++) {
+                int i1 = j * 2 + 1;
+                int i2 = j * 2 + 2;
                 sql.append(" WHEN ");
                 sql.append(visit(exprs.get(i1)));
                 sql.append(" THEN ");
@@ -651,7 +655,7 @@ class PrettyPrintVisitor extends VerdictSQLBaseVisitor<String> {
             }
             if (ctx.ELSE() != null) {
                 sql.append(" ELSE ");
-                sql.append(exprs.get(exprs.size()-1));
+                sql.append(exprs.get(exprs.size() - 1));
             }
         }
 
@@ -659,7 +663,8 @@ class PrettyPrintVisitor extends VerdictSQLBaseVisitor<String> {
         return sql.toString();
     }
 
-    @Override public String visitBracket_expression(VerdictSQLParser.Bracket_expressionContext ctx) {
+    @Override
+    public String visitBracket_expression(VerdictSQLParser.Bracket_expressionContext ctx) {
         return "(" + visit(ctx.expression()) + ")";
     }
 
@@ -693,14 +698,17 @@ class PrettyPrintVisitor extends VerdictSQLBaseVisitor<String> {
         return FuncExpr.from(vc, ctx.function_call()).toString();
     }
 
-    //	@Override public String visitMathematical_function_expression(VerdictSQLParser.Mathematical_function_expressionContext ctx)
-    //	{
-    //		if (ctx.expression() != null) {
-    //			return String.format("%s(%s)", ctx.unary_mathematical_function().getText(), visit(ctx.expression()));
-    //		} else {
-    //			return String.format("%s()", ctx.noparam_mathematical_function().getText());
-    //		}
-    //	}
+    // @Override public String
+    // visitMathematical_function_expression(VerdictSQLParser.Mathematical_function_expressionContext
+    // ctx)
+    // {
+    // if (ctx.expression() != null) {
+    // return String.format("%s(%s)", ctx.unary_mathematical_function().getText(),
+    // visit(ctx.expression()));
+    // } else {
+    // return String.format("%s()", ctx.noparam_mathematical_function().getText());
+    // }
+    // }
 
     @Override
     public String visitUnary_manipulation_function(VerdictSQLParser.Unary_manipulation_functionContext ctx) {
@@ -738,7 +746,7 @@ class PrettyPrintVisitor extends VerdictSQLBaseVisitor<String> {
             return String.format("NDV(%s)", visit(ctx.all_distinct_expression()));
         }
         VerdictLogger.error(this, String.format("Unexpected aggregate function expression: %s", ctx.getText()));
-        return null;	// we don't handle other aggregate functions for now.	
+        return null; // we don't handle other aggregate functions for now.
     }
 
     @Override
@@ -750,13 +758,20 @@ class PrettyPrintVisitor extends VerdictSQLBaseVisitor<String> {
         String leftCol = visit(left);
         String rightCol = visit(right);
 
-        if (leftCol == null || rightCol == null) return null;
-        else if (op.equals("*")) return leftCol + " * " + rightCol;
-        else if (op.equals("+")) return leftCol + " + " + rightCol;
-        else if (op.equals("/")) return leftCol + " / " + rightCol;
-        else if (op.equals("-")) return leftCol + " - " + rightCol;
-        else if (op.equals("%")) return leftCol + " % " + rightCol;
-        else return null;
+        if (leftCol == null || rightCol == null)
+            return null;
+        else if (op.equals("*"))
+            return leftCol + " * " + rightCol;
+        else if (op.equals("+"))
+            return leftCol + " + " + rightCol;
+        else if (op.equals("/"))
+            return leftCol + " / " + rightCol;
+        else if (op.equals("-"))
+            return leftCol + " - " + rightCol;
+        else if (op.equals("%"))
+            return leftCol + " % " + rightCol;
+        else
+            return null;
     }
 
     @Override
@@ -782,10 +797,11 @@ class PrettyPrintVisitor extends VerdictSQLBaseVisitor<String> {
     @Override
     public String visitJoin_part(VerdictSQLParser.Join_partContext ctx) {
         if (ctx.INNER() != null) {
-            return "\n" + indent + "     " + String.format("INNER JOIN %s ", visit(ctx.table_source()))
-            + "\n" + indent + "     " + String.format("ON %s", visit(ctx.search_condition()));
+            return "\n" + indent + "     " + String.format("INNER JOIN %s ", visit(ctx.table_source())) + "\n" + indent
+                    + "     " + String.format("ON %s", visit(ctx.search_condition()));
         } else if (ctx.OUTER() != null) {
-            return "\n" + indent + "     " + String.format("%s OUTER JOIN %s ON %s", ctx.join_type.getText(), visit(ctx.table_source()), visit(ctx.search_condition()));
+            return "\n" + indent + "     " + String.format("%s OUTER JOIN %s ON %s", ctx.join_type.getText(),
+                    visit(ctx.table_source()), visit(ctx.search_condition()));
         } else if (ctx.CROSS() != null) {
             return "\n" + indent + "     " + String.format("CROSS JOIN %s", visit(ctx.table_source()));
         } else {
@@ -795,7 +811,7 @@ class PrettyPrintVisitor extends VerdictSQLBaseVisitor<String> {
 
     @Override
     public String visitSample_table_name_item(VerdictSQLParser.Sample_table_name_itemContext ctx) {
-        assert(false);		// specifying sample table size is not supported now.
+        assert (false); // specifying sample table size is not supported now.
         return visitChildren(ctx);
     }
 
@@ -812,7 +828,8 @@ class PrettyPrintVisitor extends VerdictSQLBaseVisitor<String> {
 
     @Override
     public String visitDerived_table_source_item(VerdictSQLParser.Derived_table_source_itemContext ctx) {
-        return String.format("(\n%s) %s", visit(ctx.derived_table().subquery()), ctx.as_table_alias().table_alias().getText());
+        return String.format("(\n%s) %s", visit(ctx.derived_table().subquery()),
+                ctx.as_table_alias().table_alias().getText());
     }
 
     @Override
@@ -843,7 +860,7 @@ class PrettyPrintVisitor extends VerdictSQLBaseVisitor<String> {
     protected String getOriginalText(ParserRuleContext ctx) {
         int a = ctx.start.getStartIndex();
         int b = ctx.stop.getStopIndex();
-        Interval interval = new Interval(a,b);
+        Interval interval = new Interval(a, b);
         return (new ANTLRInputStream(sql)).getText(interval);
     }
 }

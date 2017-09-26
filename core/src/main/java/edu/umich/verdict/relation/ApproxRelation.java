@@ -1,3 +1,20 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package edu.umich.verdict.relation;
 
 import java.util.ArrayList;
@@ -17,15 +34,17 @@ import edu.umich.verdict.relation.expr.SelectElem;
 import edu.umich.verdict.util.VerdictLogger;
 
 /**
- * ApproxRelation indicates what samples should be used for computing the answer to the original query.
- * ApproxRelation includes some helper functions for retrieving sample-related information.
+ * ApproxRelation indicates what samples should be used for computing the answer
+ * to the original query. ApproxRelation includes some helper functions for
+ * retrieving sample-related information.
+ * 
  * @author Yongjoo Park
  *
  */
 public abstract class ApproxRelation extends Relation {
 
     protected final String partitionSizeAlias = "__vpsize";
-    
+
     protected ExactRelation original;
 
     public ApproxRelation(VerdictContext vc) {
@@ -33,11 +52,11 @@ public abstract class ApproxRelation extends Relation {
         approximate = true;
         original = null;
     }
-    
+
     protected void setOriginalRelation(ExactRelation r) {
         original = r;
     }
-    
+
     protected ExactRelation getOriginalRelation() {
         return original;
     }
@@ -82,7 +101,7 @@ public abstract class ApproxRelation extends Relation {
 
     public ApproxAggregatedRelation agg(List<Object> elems) {
         List<SelectElem> se = new ArrayList<SelectElem>();
-        
+
         // first insert possible groupby list
         if (this instanceof ApproxGroupedRelation) {
             List<Expr> groupby = ((ApproxGroupedRelation) this).getGroupby();
@@ -90,7 +109,7 @@ public abstract class ApproxRelation extends Relation {
                 se.add(new SelectElem(vc, g));
             }
         }
-        
+
         // now insert aggregation list
         for (Object e : elems) {
             se.add(SelectElem.from(vc, e.toString()));
@@ -119,10 +138,13 @@ public abstract class ApproxRelation extends Relation {
     }
 
     /**
-     * Properly scale all aggregation functions so that the final answers are correct.
-     * For ApproxAggregatedRelation: returns a AggregatedRelation instance whose result is approximately correct.
-     * For ApproxSingleRelation, ApproxJoinedRelation, and ApproxFilteredRelaation: returns
-     * a select statement from sample tables. The rewritten sql doesn't have much meaning if not used by ApproxAggregatedRelation. 
+     * Properly scale all aggregation functions so that the final answers are
+     * correct. For ApproxAggregatedRelation: returns a AggregatedRelation instance
+     * whose result is approximately correct. For ApproxSingleRelation,
+     * ApproxJoinedRelation, and ApproxFilteredRelaation: returns a select statement
+     * from sample tables. The rewritten sql doesn't have much meaning if not used
+     * by ApproxAggregatedRelation.
+     * 
      * @return
      */
     public ExactRelation rewrite() {
@@ -133,73 +155,81 @@ public abstract class ApproxRelation extends Relation {
         } else if (vc.getConf().errorBoundMethod().equals("bootstrapping")) {
             return rewriteWithBootstrappedErrorBounds();
         } else {
-            VerdictLogger.error(this, "Unsupported error bound computation method: " + vc.getConf().get("verdict.error_bound_method"));
+            VerdictLogger.error(this,
+                    "Unsupported error bound computation method: " + vc.getConf().get("verdict.error_bound_method"));
             return null;
         }
     }
 
     public abstract ExactRelation rewriteForPointEstimate();
 
-
     /**
-     * Creates an exact relation that computes approximate aggregates and their error bounds using subsampling.
+     * Creates an exact relation that computes approximate aggregates and their
+     * error bounds using subsampling.
      * 
-     * If a sample plan does not include any sample tables, it will simply be exact answers; thus, no error bounds are necessary.
+     * If a sample plan does not include any sample tables, it will simply be exact
+     * answers; thus, no error bounds are necessary.
      * 
-     * If a sample plan includes at least one sample table in the table sources, there must exists a partition column (__vpart by default).
-     * {@link ExactRelation#partitionColumn()} finds and returns an appropriate column name for a given source relation.
-     * See the method for details on how the partition column of a table is determined.
-     * Note that the partition columns are defined for rewritten relations.
+     * If a sample plan includes at least one sample table in the table sources,
+     * there must exists a partition column (__vpart by default).
+     * {@link ExactRelation#partitionColumn()} finds and returns an appropriate
+     * column name for a given source relation. See the method for details on how
+     * the partition column of a table is determined. Note that the partition
+     * columns are defined for rewritten relations.
      * 
      * @return
      */
     public ExactRelation rewriteWithSubsampledErrorBounds() {
-        VerdictLogger.error(this, String.format("Calling a method, %s, on unappropriate class", "rewriteWithSubsampledErrorBounds()"));
+        VerdictLogger.error(this,
+                String.format("Calling a method, %s, on unappropriate class", "rewriteWithSubsampledErrorBounds()"));
         return null;
     }
 
     /**
-     * Internal method for {@link ApproxRelation#rewriteWithSubsampledErrorBounds()}.
+     * Internal method for
+     * {@link ApproxRelation#rewriteWithSubsampledErrorBounds()}.
+     * 
      * @return
      */
     protected abstract ExactRelation rewriteWithPartition();
 
     // These functions are moved to ExactRelation
-    // This is because partition column name could be only properly resolved after the rewriting to the
+    // This is because partition column name could be only properly resolved after
+    // the rewriting to the
     // exact relation is finished.
-    //	protected String partitionColumnName() {
-    //		return vc.getDbms().partitionColumnName();
-    //	}
+    // protected String partitionColumnName() {
+    // return vc.getDbms().partitionColumnName();
+    // }
     // returns effective partition column name for a possibly joined table.
-    //	protected abstract ColNameExpr partitionColumn();
+    // protected abstract ColNameExpr partitionColumn();
 
-    public ExactRelation rewriteWithBootstrappedErrorBounds() { return null; }
+    public ExactRelation rewriteWithBootstrappedErrorBounds() {
+        return null;
+    }
 
     /**
-     * Computes an appropriate sampling probability for a particular aggregate function.
-     * For uniform random sample, returns the ratio between the sample table and the original table.
-     * For universe sample,
-     *  if the aggregate function is COUNT, AVG, SUM, returns the ratio between the sample table and the original table.
-     *  if the aggregate function is COUNT-DISTINCT, returns the sampling probability.
-     * For stratified sample, this method returns the sampling probability only for the joined tables.
+     * Computes an appropriate sampling probability for a particular aggregate
+     * function. For uniform random sample, returns the ratio between the sample
+     * table and the original table. For universe sample, if the aggregate function
+     * is COUNT, AVG, SUM, returns the ratio between the sample table and the
+     * original table. if the aggregate function is COUNT-DISTINCT, returns the
+     * sampling probability. For stratified sample, this method returns the sampling
+     * probability only for the joined tables.
      * 
      * Verdict sample rules.
      * 
-     * For COUNT, AVG, and SUM, uniform random samples, universe samples, stratified samples, or no samples can be used.
-     * For COUNT-DISTINCT, universe sample, stratified samples, or no samples can be used. For stratified samples, the
+     * For COUNT, AVG, and SUM, uniform random samples, universe samples, stratified
+     * samples, or no samples can be used. For COUNT-DISTINCT, universe sample,
+     * stratified samples, or no samples can be used. For stratified samples, the
      * distinct number of groups is assumed to be limited.
      * 
      * Verdict join rules.
      * 
-     * (uniform, uniform)       -> uniform
-     * (uniform, stratified)    -> stratified
-     * (uniform, universe)		-> uniform
-     * (uniform, no sample)     -> uniform
-     * (stratified, stratified) -> stratified
-     * (stratified, universe)   -> no allowed
-     * (stratified, no sample)  -> stratified
-     * (universe, universe)     -> universe   (only when the columns on which samples are built coincide)
-     * (universe, no sample)    -> universe
+     * (uniform, uniform) -> uniform (uniform, stratified) -> stratified (uniform,
+     * universe) -> uniform (uniform, no sample) -> uniform (stratified, stratified)
+     * -> stratified (stratified, universe) -> no allowed (stratified, no sample) ->
+     * stratified (universe, universe) -> universe (only when the columns on which
+     * samples are built coincide) (universe, no sample) -> universe
      * 
      * @param f
      * @return
@@ -209,53 +239,61 @@ public abstract class ApproxRelation extends Relation {
 
     /**
      * rough sampling probability, which is obtained from the sampling params.
+     * 
      * @return
      */
     public abstract double samplingProbability();
 
     public abstract double cost();
-    
+
     /**
-     * The returned contains the tuple-level sampling probability. For universe and uniform samples, this is basically
-     * the ratio of the sample size to the original table size.
+     * The returned contains the tuple-level sampling probability. For universe and
+     * uniform samples, this is basically the ratio of the sample size to the
+     * original table size.
+     * 
      * @return
      */
     public abstract Expr tupleProbabilityColumn();
-    
+
     /**
-     * The returned column contains 
+     * The returned column contains
+     * 
      * @return
      */
     public abstract Expr tableSamplingRatio();
 
     /**
      * Returns an effective sample type of this relation.
+     * 
      * @return One of "uniform", "universe", "stratified", "nosample".
      */
     public abstract String sampleType();
 
-    //	protected abstract List<ColNameExpr> accumulateSamplingProbColumns();
+    // protected abstract List<ColNameExpr> accumulateSamplingProbColumns();
 
     /**
-     * Returns a set of columns on which a sample is created. Only meaningful for stratified and universe samples.
+     * Returns a set of columns on which a sample is created. Only meaningful for
+     * stratified and universe samples.
+     * 
      * @return
      */
     protected abstract List<String> sampleColumns();
 
     /**
-     * Pairs of original table name and a sample table name. This function does not inspect subqueries.
-     * The substitution expression is an alias (thus, string type).
+     * Pairs of original table name and a sample table name. This function does not
+     * inspect subqueries. The substitution expression is an alias (thus, string
+     * type).
+     * 
      * @return
      */
     protected abstract Map<TableUniqueName, String> tableSubstitution();
-    
-    
+
     /**
      * Returns true if any of the table sources include an non-nosample relation.
+     * 
      * @return
      */
     protected abstract boolean doesIncludeSample();
-
 
     /*
      * order by and limit
@@ -314,8 +352,9 @@ public abstract class ApproxRelation extends Relation {
         } else if (confidencePercentage == 0.80) {
             return 1.282;
         } else {
-            VerdictLogger.warn(this, String.format("Unsupported confidence: %s%%. Uses the default 95%%.", confidencePercentage * 100));
-            return 1.96;	// 95% by default.
+            VerdictLogger.warn(this,
+                    String.format("Unsupported confidence: %s%%. Uses the default 95%%.", confidencePercentage * 100));
+            return 1.96; // 95% by default.
         }
     }
 
@@ -338,4 +377,3 @@ public abstract class ApproxRelation extends Relation {
         return Pair.of(groupbys, t);
     }
 }
-
