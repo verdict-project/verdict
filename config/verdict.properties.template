@@ -36,7 +36,7 @@ verdict.jdbc.hive2.default_port=10000
 verdict.jdbc.hive2.class_name=com.cloudera.hive.jdbc4.HS2Driver
 ### jdbc > connection > impala
 verdict.jdbc.impala.default_port=21050
-verdict.jdbc.impala.class_name=com.cloudera.impala.jdbc4.Driver
+verdict.jdbc.impala.class_name=com.cloudera.impala.jdbc41.Driver
 ### jdbc > connection > redshift
 verdict.jdbc.redshift.default_port=5439
 verdict.jdbc.redshift.class_name=com.amazon.redshift.jdbc41.Driver
