@@ -40,7 +40,7 @@ public class ShowSamplesQuery extends SelectQuery {
             } else if (!vc.getMeta().getDatabases().contains(vc.getMeta().metaCatalogForDataCatalog(database))){
                 VerdictLogger.info(String.format("No samples have been created for the database: %s.", database));
                 return;
-            } else if (!vc.getMeta().getTables(database).contains(vc.getMeta().getMetaNameTableForOriginalSchema(database))) {
+            } else if (!vc.getMeta().getTables(database).contains(vc.getMeta().getMetaNameTableForOriginalSchema(database).getTableName())) {
                 VerdictLogger.info(String.format("No samples have been created for the database: %s.", database));
                 return;
             }
