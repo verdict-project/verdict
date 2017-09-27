@@ -114,7 +114,7 @@ public class DbmsSpark extends Dbms {
         List<String> tables = new ArrayList<String>();
         List<Row> rows = getTablesInDataFrame(schema).collectAsList();
         for (Row row : rows) {
-            String table = row.getString(0);
+            String table = row.getString(1);
             tables.add(table);
         }
         return tables;

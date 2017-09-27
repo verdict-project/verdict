@@ -70,7 +70,7 @@ public class DescribeTableQuery extends SelectQuery {
             } else if (vc.getDbms().isSpark()) {
                 df = ((DbmsSpark) vc.getDbms()).describeTableInDataFrame(table);
             } else if (vc.getDbms().isSpark2()) {
-                ds = ((DbmsSpark2) vc.getDbms()).describeTableInDataFrame(table);
+                ds = ((DbmsSpark2) vc.getDbms()).describeTableInDataset(table);
             }
         }
     }

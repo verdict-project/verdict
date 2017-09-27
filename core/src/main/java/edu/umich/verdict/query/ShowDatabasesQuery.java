@@ -35,7 +35,7 @@ public class ShowDatabasesQuery extends SelectQuery {
         } else if (vc.getDbms() instanceof DbmsSpark) {
             df = ((DbmsSpark) vc.getDbms()).getDatabaseNamesInDataFrame();
         } else if (vc.getDbms() instanceof DbmsSpark2) {
-            ds = ((DbmsSpark2) vc.getDbms()).getDatabaseNamesInDataFrame();
+            ds = ((DbmsSpark2) vc.getDbms()).getDatabaseNamesInDataset();
         }
     }
 

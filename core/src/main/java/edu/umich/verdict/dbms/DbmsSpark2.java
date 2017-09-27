@@ -59,17 +59,17 @@ public class DbmsSpark2 extends Dbms {
         this.cachedTable = new HashSet<TableUniqueName>();
     }
 
-    public Dataset<Row> getDatabaseNamesInDataFrame() throws VerdictException {
+    public Dataset<Row> getDatabaseNamesInDataset() throws VerdictException {
         Dataset<Row> df = executeSpark2Query("show databases");
         return df;
     }
 
-    public Dataset<Row> getTablesInDataFrame(String schemaName) throws VerdictException {
+    public Dataset<Row> getTablesInDataset(String schemaName) throws VerdictException {
         Dataset<Row> df = executeSpark2Query("show tables in " + schemaName);
         return df;
     }
 
-    public Dataset<Row> describeTableInDataFrame(TableUniqueName tableUniqueName) throws VerdictException {
+    public Dataset<Row> describeTableInDataset(TableUniqueName tableUniqueName) throws VerdictException {
         Dataset<Row> df = executeSpark2Query(String.format("describe %s", tableUniqueName));
         return df;
     }
@@ -102,14 +102,14 @@ public class DbmsSpark2 extends Dbms {
         return null;
     }
 
-    public Dataset<Row> emptyDataFrame() {
+    public Dataset<Row> emptyDataset() {
         return sparkSession.emptyDataFrame();
     }
 
     @Override
     public Set<String> getDatabases() throws VerdictException {
         Set<String> databases = new HashSet<String>();
-        List<Row> rows = getDatabaseNamesInDataFrame().collectAsList();
+        List<Row> rows = getDatabaseNamesInDataset().collectAsList();
         for (Row row : rows) {
             String dbname = row.getString(0);
             databases.add(dbname);
@@ -120,7 +120,7 @@ public class DbmsSpark2 extends Dbms {
     @Override
     public List<String> getTables(String schema) throws VerdictException {
         List<String> tables = new ArrayList<String>();
-        List<Row> rows = getTablesInDataFrame(schema).collectAsList();
+        List<Row> rows = getTablesInDataset(schema).collectAsList();
         for (Row row : rows) {
             String table = row.getString(0);
             tables.add(table);
@@ -139,7 +139,7 @@ public class DbmsSpark2 extends Dbms {
     @Override
     public Map<String, String> getColumns(TableUniqueName table) throws VerdictException {
         Map<String, String> col2type = new LinkedHashMap<String, String>();
-        List<Row> rows = describeTableInDataFrame(table).collectAsList();
+        List<Row> rows = describeTableInDataset(table).collectAsList();
         for (Row row : rows) {
             String column = row.getString(0);
             String type = row.getString(1);

@@ -113,7 +113,7 @@ public abstract class Query {
 
     public Dataset<Row> getDataset() {
         if (ds == null && (vc.getDbms() instanceof DbmsSpark2)) {
-            return ((DbmsSpark2) vc.getDbms()).emptyDataFrame();
+            return ((DbmsSpark2) vc.getDbms()).emptyDataset();
         } else {
             return ds;
         }
