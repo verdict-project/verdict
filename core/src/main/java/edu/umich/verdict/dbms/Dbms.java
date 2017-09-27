@@ -284,6 +284,7 @@ public abstract class Dbms {
         executeUpdate(sql);
 
         VerdictLogger.debug(this, "Meta tables created.");
+        vc.getMeta().refreshTables(sizeTableName.getDatabaseName());
     }
 
     public boolean doesMetaTablesExist(String schemaName) throws VerdictException {
@@ -301,11 +302,12 @@ public abstract class Dbms {
 
     public Pair<Long, Long> createUniformRandomSampleTableOf(SampleParam param) throws VerdictException {
         dropTable(param.sampleTableName());
-        // justCreateUniformRandomSampleTableOf(param);
         TableUniqueName temp = createUniformRandomSampledTable(param);
-        attachUniformProbabilityToTempTable(param, temp);
-        dropTable(temp);
-        return Pair.of(getTableSize(param.sampleTableName()), getTableSize(param.getOriginalTable()));
+        long sampleTableSize = attachUniformProbabilityToTempTable(param, temp);
+        dropTable(temp, false);
+        
+        long originalTableSize = vc.getMeta().getTableSize(param.getOriginalTable());
+        return Pair.of(sampleTableSize, originalTableSize);
     }
 
     protected TableUniqueName createUniformRandomSampledTable(SampleParam param) throws VerdictException {
@@ -314,7 +316,7 @@ public abstract class Dbms {
                 .select(String.format("*, %s as %s", randomNumberExpression(param), randNumColname)).where(whereClause)
                 .select("*, " + randomPartitionColumn());
         TableUniqueName temp = Relation.getTempTableName(vc, param.sampleTableName().getSchemaName());
-        dropTable(temp, false);
+        dropTable(temp);
         String sql = String.format("create table %s as %s", temp, sampled.toSql());
         VerdictLogger.debug(this, "The query used for creating a temporary table without sampling probabilities:");
 //        VerdictLogger.debug(this, sql);
@@ -323,11 +325,11 @@ public abstract class Dbms {
         return temp;
     }
 
-    protected void attachUniformProbabilityToTempTable(SampleParam param, TableUniqueName temp)
+    protected long attachUniformProbabilityToTempTable(SampleParam param, TableUniqueName temp)
             throws VerdictException {
         String samplingProbCol = vc.getDbms().samplingProbabilityColumnName();
         long total_size = vc.getMeta().getTableSize(param.getOriginalTable());
-        long sample_size = vc.getMeta().getTableSize(temp);
+        long sample_size = getTableSize(temp);
 
         String parquetString = "";
 
@@ -339,10 +341,11 @@ public abstract class Dbms {
                 .select("*, " + String.format("%d / %d as %s", sample_size, total_size, samplingProbCol));
 
         String sql = String.format("create table %s%s as %s", param.sampleTableName(), parquetString, withRand.toSql());
-        VerdictLogger.debug(this, "The query used for creating a temporary table without sampling probabilities:");
+        VerdictLogger.debug(this, "The query used for creating a temporary table with sampling probabilities:");
 //        VerdictLogger.debugPretty(this, Relation.prettyfySql(vc, sql), "  ");
 //        VerdictLogger.debug(this, sql);
         executeUpdate(sql);
+        return sample_size;
     }
 
     public Pair<Long, Long> createStratifiedSampleTableOf(SampleParam param) throws VerdictException {
@@ -358,9 +361,12 @@ public abstract class Dbms {
         dropTable(param.sampleTableName());
         TableUniqueName groupSizeTemp = createGroupSizeTempTable(param);
         createStratifiedSampleFromGroupSizeTemp(param, groupSizeTemp);
-        dropTable(groupSizeTemp);
+        dropTable(groupSizeTemp, false);
+        
+        long sampleTableSize = getTableSize(param.sampleTableName());
+        long originalTableSize = vc.getMeta().getTableSize(param.getOriginalTable());
 
-        return Pair.of(getTableSize(param.sampleTableName()), getTableSize(param.getOriginalTable()));
+        return Pair.of(sampleTableSize, originalTableSize);
     }
 
     private TableUniqueName createGroupSizeTempTable(SampleParam param) throws VerdictException {
@@ -491,7 +497,7 @@ public abstract class Dbms {
         dropTable(param.sampleTableName());
         TableUniqueName temp = createUniverseSampledTable(param);
         long sample_size = createUniverseSampleWithProbFromSample(param, temp);
-        dropTable(temp);
+        dropTable(temp, false);
         long originalTableSize = vc.getMeta().getTableSize(param.getOriginalTable());
         return Pair.of(sample_size, originalTableSize);
     }
@@ -500,7 +506,7 @@ public abstract class Dbms {
         TableUniqueName temp = Relation.getTempTableName(vc, param.sampleTableName().getSchemaName());
         ExactRelation sampled = SingleRelation.from(vc, param.getOriginalTable())
                 .where(universeSampleSamplingCondition(param.getColumnNames().get(0), param.getSamplingRatio()));
-        dropTable(temp, false);
+        dropTable(temp);
         String sql = String.format("create table %s AS %s", temp, sampled.toSql());
 //        VerdictLogger.debug(this, "The query used for creating a universe sample without sampling probability:");
 //        VerdictLogger.debugPretty(this, Relation.prettyfySql(vc, sql), "  ");

@@ -96,6 +96,16 @@ other_statement
     | describe_table_statement
     | refresh_statement
     | show_config_statement
+    | create_database
+    | drop_database
+    ;
+    
+create_database
+    : CREATE DATABASE (database=id)
+    ;
+    
+drop_database
+    : DROP DATABASE ( IF EXISTS )? (database=id)
     ;
 
 //config_set_statement: SET key=config_key '=' value=config_value percent='%'?;

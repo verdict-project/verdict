@@ -54,7 +54,7 @@ public abstract class Query {
     public enum Type {
         SELECT, CREATE_SAMPLE, DROP_SAMPLE, SHOW_SAMPLE, CONFIG, DESCRIBE_TABLE,
         OTHER_USE, OTHER_SHOW_TABLES, OTHER_SHOW_DATABASES, NOSUPPORT, OTHER_REFRESH,
-        OTHER_SHOW_CONFIG,
+        OTHER_SHOW_CONFIG, CREATE_DATABASE, DROP_DATABASE,
         CREATE_TABLE, CREATE_TABLE_AS_SELECT, DROP_TABLE, CREATE_VIEW, DROP_VIEW
     }
 
@@ -180,8 +180,10 @@ public abstract class Query {
                 //				} else if (queryType.equals(Type.CREATE_TABLE)) {
                 //					query = new CreateTableQuery(vc, queryString);
             } else if (queryType.equals(Type.CREATE_TABLE) ||
-                    queryType.equals(Type.DROP_TABLE) ||
-                    queryType.equals(Type.DROP_VIEW)) {
+                       queryType.equals(Type.DROP_TABLE) ||
+                       queryType.equals(Type.DROP_VIEW) ||
+                       queryType.equals(Type.CREATE_DATABASE) ||
+                       queryType.equals(Type.DROP_DATABASE)) {
                 query = new ByPassVerdictUpdateQuery(vc, queryString);
             } else if (queryType.equals(Type.OTHER_SHOW_CONFIG)) {
                 query = new ShowConfigQuery(vc, queryString);
@@ -199,21 +201,19 @@ public abstract class Query {
     }
 
     protected static boolean isUpdateType(Type type) {
-        if (type.equals(Type.CREATE_SAMPLE) || type.equals(Type.DROP_SAMPLE) || type.equals(Type.CREATE_TABLE)
-            || type.equals(Type.DROP_TABLE) || type.equals(Type.DROP_VIEW)
-            || type.equals(Type.CREATE_TABLE_AS_SELECT) || type.equals(Type.CREATE_VIEW)) {
+        if (type.equals(Type.CREATE_SAMPLE) ||
+            type.equals(Type.DROP_SAMPLE) ||
+            type.equals(Type.CREATE_TABLE) ||
+            type.equals(Type.DROP_TABLE) ||
+            type.equals(Type.DROP_VIEW) ||
+            type.equals(Type.CREATE_TABLE_AS_SELECT) ||
+            type.equals(Type.CREATE_VIEW) ||
+            type.equals(Type.CREATE_DATABASE) ||
+            type.equals(Type.DROP_DATABASE)) {
             return true;
         } else {
             return false;
         }
-        // if (type.equals(Type.SELECT) || type.equals(Type.SHOW_SAMPLE) ||
-        // type.equals(Type.DESCRIBE_TABLE)
-        // || type.equals(Type.OTHER_USE) || type.equals(Type.OTHER_SHOW_TABLES) ||
-        // type.equals(Type.OTHER_SHOW_DATABASES)) {
-        // return false;
-        // } else {
-        // return true;
-        // }
     }
 
     protected static Type getStatementType(String queryString) {
@@ -319,6 +319,18 @@ public abstract class Query {
             @Override
             public Type visitDrop_view(VerdictSQLParser.Drop_viewContext ctx) {
                 type = Type.DROP_VIEW;
+                return type;
+            }
+            
+            @Override
+            public Type visitDrop_database(VerdictSQLParser.Drop_databaseContext ctx) {
+                type = Type.DROP_DATABASE;
+                return type;
+            }
+            
+            @Override
+            public Type visitCreate_database(VerdictSQLParser.Create_databaseContext ctx) {
+                type = Type.CREATE_DATABASE;
                 return type;
             }
         };

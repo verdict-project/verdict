@@ -62,17 +62,12 @@ public class CreateSampleQuery extends Query {
         buildSamples(new SampleParam(vc, validTableName, sampleType, samplingRatio, columnNames));
     }
     
-    protected double heuristicSampleSizeSuggestion(SampleParam param) {
+    protected double heuristicSampleSizeSuggestion(SampleParam param) throws VerdictException {
         VerdictLogger.info(this, "No sampling ratio provided; sample sizes are automatically determined to have at least 1 million tuples.");
-        try {
-            long originalTableSize = vc.getMeta().getTableSize(param.getOriginalTable());
-            long recommendedSampleSize = Math.min(recommendedMinimumSampleSize, originalTableSize);
-            double samplingRatio = recommendedSampleSize / (double) originalTableSize;
-            return samplingRatio;
-        } catch (VerdictException e) {
-            e.printStackTrace();
-            return 0.01;
-        }
+        long originalTableSize = vc.getMeta().getTableSize(param.getOriginalTable());
+        long recommendedSampleSize = Math.min(recommendedMinimumSampleSize, originalTableSize);
+        double samplingRatio = recommendedSampleSize / (double) originalTableSize;
+        return samplingRatio;
     }
 
     /**
@@ -88,7 +83,7 @@ public class CreateSampleQuery extends Query {
      */
     protected void buildSamples(SampleParam param) throws VerdictException {
         String schemaName = param.sampleTableName().getSchemaName();
-        if (vc.getMeta().getDatabases().contains(schemaName)) {
+        if (!vc.getMeta().getDatabases().contains(schemaName)) {
             vc.getDbms().createDatabase(schemaName);
         }
         vc.getMeta().refreshDatabases();

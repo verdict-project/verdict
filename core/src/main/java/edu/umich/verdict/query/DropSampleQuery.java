@@ -47,6 +47,11 @@ public class DropSampleQuery extends Query {
         Double samplingRatio = visitor.getSamplingRatio();
         String sampleType = visitor.getSampleType();
         List<String> columnNames = visitor.getColumnNames();
+        
+        if (tableName == null) {
+            throw new VerdictException("Incorrect drop sample statement.");
+        }
+        
         TableUniqueName effectiveTableName = (tableName.getSchemaName() != null) ? tableName
                 : ((vc.getCurrentSchema().isPresent()) ? TableUniqueName.uname(vc, tableName.getTableName()) : null);
         if (effectiveTableName == null) {

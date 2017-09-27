@@ -128,7 +128,7 @@ public class DbmsRedshift extends DbmsJDBC {
      * Includes casting to float
      */
     @Override
-    protected void attachUniformProbabilityToTempTable(SampleParam param, TableUniqueName temp)
+    protected long attachUniformProbabilityToTempTable(SampleParam param, TableUniqueName temp)
             throws VerdictException {
         String samplingProbCol = vc.getDbms().samplingProbabilityColumnName();
         long total_size = SingleRelation.from(vc, param.getOriginalTable()).countValue();
@@ -142,6 +142,7 @@ public class DbmsRedshift extends DbmsJDBC {
 //        VerdictLogger.debugPretty(this, Relation.prettyfySql(vc, sql), "  ");
 //        VerdictLogger.debug(this, sql);
         executeUpdate(sql);
+        return sample_size;
     }
 
     @Override

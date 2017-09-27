@@ -67,9 +67,8 @@ public class VerdictLogger {
 
     public static void info(Object caller, String msg) {
         if (logger.getLevel().toString().equalsIgnoreCase("debug")) {
-            info(String.format("[%s#%s] %s",
+            info(String.format("[%s] %s",
                     caller.getClass().getSimpleName(),
-                    enclosingMethodName(),
                     msg));
         } else {
             info(String.format("%s", msg));
@@ -88,9 +87,8 @@ public class VerdictLogger {
     }
 
     public static void debug(Object caller, String msg) {
-        debug(String.format("[%s#%s] %s",
+        debug(String.format("[%s] %s",
                 caller.getClass().getSimpleName(),
-                enclosingMethodName(),
                 msg));
     }
 
