@@ -31,3 +31,6 @@ config/verdict.properties
 
 # libs
 libs/*.jar
+
+# misc
+license_update.py
