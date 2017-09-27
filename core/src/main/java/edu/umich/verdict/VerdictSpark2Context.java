@@ -29,15 +29,15 @@ import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.query.Query;
 import edu.umich.verdict.util.VerdictLogger;
 
-public class VerdictSpark2HiveContext extends VerdictContext {
+public class VerdictSpark2Context extends VerdictContext {
 
     private Dataset<Row> df;
 
-    public VerdictSpark2HiveContext(SparkContext sc) throws VerdictException {
+    public VerdictSpark2Context(SparkContext sc) throws VerdictException {
         this(sc, new VerdictConf());
     }
 
-    public VerdictSpark2HiveContext(SparkContext sc, VerdictConf conf) throws VerdictException {
+    public VerdictSpark2Context(SparkContext sc, VerdictConf conf) throws VerdictException {
         super(conf);
         conf.setDbms("spark2");
         SparkSession sparkSession = SparkSession.builder().getOrCreate();
@@ -67,5 +67,9 @@ public class VerdictSpark2HiveContext extends VerdictContext {
     @Override
     public DataFrame getDataFrame() {
         return null;
+    }
+    
+    public Dataset<Row> sql(String sql) throws VerdictException {
+        return executeSpark2Query(sql);
     }
 }

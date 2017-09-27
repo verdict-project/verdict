@@ -85,4 +85,8 @@ public class VerdictSparkHiveContext extends VerdictContext {
         // TODO Auto-generated method stub
         return null;
     }
+    
+    public DataFrame sql(String sql) throws VerdictException {
+        return executeSparkQuery(sql);
+    }
 }

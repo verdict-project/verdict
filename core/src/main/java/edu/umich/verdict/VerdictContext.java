@@ -161,14 +161,4 @@ public abstract class VerdictContext {
         return ds;
     }
 
-    public DataFrame sql(String sql) throws VerdictException {
-        DataFrame df = executeSparkQuery(sql);
-        return df;
-    }
-
-    public Dataset<Row> sql2(String sql) throws VerdictException {
-        Dataset<Row> ds = executeSpark2Query(sql);
-        return ds;
-    }
-
 }

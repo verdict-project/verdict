@@ -101,11 +101,11 @@ other_statement
     ;
     
 create_database
-    : CREATE DATABASE (database=id)
+    : CREATE ( DATABASE | SCHEMA ) (database=id)
     ;
     
 drop_database
-    : DROP DATABASE ( IF EXISTS )? (database=id)
+    : DROP ( DATABASE | SCHEMA ) ( IF EXISTS )? (database=id)
     ;
 
 //config_set_statement: SET key=config_key '=' value=config_value percent='%'?;
