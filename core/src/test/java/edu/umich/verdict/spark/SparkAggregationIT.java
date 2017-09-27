@@ -33,6 +33,7 @@ import com.google.common.base.Joiner;
 
 import edu.umich.verdict.AggregationIT;
 import edu.umich.verdict.VerdictSpark2Context;
+import edu.umich.verdict.VerdictSparkHiveContext;
 import edu.umich.verdict.datatypes.SampleParam;
 import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
@@ -45,7 +46,7 @@ public class SparkAggregationIT extends AggregationIT {
 
     static HiveContext hc;
 
-    static VerdictSpark2Context vc;
+    static VerdictSparkHiveContext vc;
 
     static String database = "instacart1g";
 
@@ -53,13 +54,13 @@ public class SparkAggregationIT extends AggregationIT {
         SparkAggregationIT.sc = sc;
     }
 
-    public static VerdictSpark2Context getVerdictContext() {
+    public static VerdictSparkHiveContext getVerdictContext() {
         return vc;
     }
 
     private static void setup() {
         try {
-            vc = new VerdictSpark2Context(sc);
+            vc = new VerdictSparkHiveContext(sc);
             vc.sql("use " + database);
             hc = new HiveContext(sc);
             hc.sql("use " + database);
