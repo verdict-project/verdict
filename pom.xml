@@ -28,11 +28,11 @@
         <spark2.hive.version>2.2.0.cloudera1</spark2.hive.version>
     </properties>
 
-    <groupId>edu.umich.verdict</groupId>
-    <artifactId>verdictdb</artifactId>
+    <groupId>edu.umich</groupId>
+    <artifactId>verdict</artifactId>
     <packaging>pom</packaging>
     <version>0.3.0-snapshot</version>
-    <name>VerdictDB</name>
+    <name>Verdict</name>
     <url>http://verdictdb.org</url>
 
     <modules>

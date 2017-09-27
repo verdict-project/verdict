@@ -6,8 +6,8 @@
 	<packaging>jar</packaging>
 
     <parent>
-        <groupId>edu.umich.verdict</groupId>
-        <artifactId>verdictdb</artifactId>
+        <groupId>edu.umich</groupId>
+        <artifactId>verdict</artifactId>
         <version>0.3.0-snapshot</version>
 	</parent>
 
@@ -54,7 +54,7 @@
     </build>
     <dependencies>
         <dependency>
-            <groupId>edu.umich.verdict</groupId>
+            <groupId>edu.umich</groupId>
             <artifactId>verdict-core</artifactId>
             <version>${verdict.version}</version>
         </dependency>

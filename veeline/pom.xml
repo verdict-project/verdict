@@ -7,8 +7,8 @@
     <packaging>jar</packaging>
 
     <parent>
-        <groupId>edu.umich.verdict</groupId>
-        <artifactId>verdictdb</artifactId>
+        <groupId>edu.umich</groupId>
+        <artifactId>verdict</artifactId>
         <version>0.3.0-snapshot</version>
     </parent>
 
