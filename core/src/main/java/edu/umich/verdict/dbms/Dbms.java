@@ -187,12 +187,22 @@ public abstract class Dbms {
         String sql = String.format("create database if not exists %s", catalog);
         executeUpdate(sql);
     }
-
+    
     public void dropTable(TableUniqueName tableName) throws VerdictException {
+        dropTable(tableName, true);
+    }
+
+    /**
+     * 
+     * @param tableName
+     * @param check When set to true, issues "drop" statement only when the cached metadata contains the table.
+     * @throws VerdictException
+     */
+    public void dropTable(TableUniqueName tableName, boolean check) throws VerdictException {
         Set<String> databases = vc.getMeta().getDatabases();
         // TODO: this is buggy when the database created while a query is executed.
         // it can happen during sample creations.
-        if (!databases.contains(tableName.getSchemaName())) {
+        if (check && !databases.contains(tableName.getSchemaName())) {
             VerdictLogger.debug(this,
                     String.format(
                             "Database, %s, does not exists. Verdict doesn't bother to run a drop table statement.",
@@ -221,7 +231,7 @@ public abstract class Dbms {
         dropTable(to);
         String sql = String.format("CREATE TABLE %s AS SELECT * FROM %s", to, from);
         executeUpdate(sql);
-        dropTable(from);
+        dropTable(from, false);
         VerdictLogger.debug(this, "Moving table done.");
     }
 
@@ -305,7 +315,7 @@ public abstract class Dbms {
                 .select(String.format("*, %s as %s", randomNumberExpression(param), randNumColname)).where(whereClause)
                 .select("*, " + randomPartitionColumn());
         TableUniqueName temp = Relation.getTempTableName(vc, param.sampleTableName().getSchemaName());
-        dropTable(temp);
+        dropTable(temp, false);
         String sql = String.format("create table %s as %s", temp, sampled.toSql());
         VerdictLogger.debug(this, "The query used for creating a temporary table without sampling probabilities:");
 //        VerdictLogger.debug(this, sql);
@@ -472,7 +482,7 @@ public abstract class Dbms {
 //        VerdictLogger.debug(this, sql2);
         executeUpdate(sql2);
 
-        dropTable(sampledNoRand);
+        dropTable(sampledNoRand, false);
     }
 
     // protected abstract void justCreateStratifiedSampleTableof(SampleParam param)
@@ -491,7 +501,7 @@ public abstract class Dbms {
         TableUniqueName temp = Relation.getTempTableName(vc, param.sampleTableName().getSchemaName());
         ExactRelation sampled = SingleRelation.from(vc, param.getOriginalTable())
                 .where(universeSampleSamplingCondition(param.getColumnNames().get(0), param.getSamplingRatio()));
-        dropTable(temp);
+        dropTable(temp, false);
         String sql = String.format("create table %s AS %s", temp, sampled.toSql());
 //        VerdictLogger.debug(this, "The query used for creating a universe sample without sampling probability:");
 //        VerdictLogger.debugPretty(this, Relation.prettyfySql(vc, sql), "  ");

@@ -64,6 +64,7 @@ public class CreateSampleQuery extends Query {
     }
     
     protected double heuristicSampleSizeSuggestion(SampleParam param) {
+        VerdictLogger.info(this, "No sampling ratio provided; sample sizes are automatically determined to have at least 1 million tuples.");
         try {
             long originalTableSize = vc.getMeta().getTableSize(param.getOriginalTable());
             long recommendedSampleSize = Math.min(recommendedMinimumSampleSize, originalTableSize);
@@ -167,7 +168,7 @@ public class CreateSampleQuery extends Query {
     }
 
     protected void createUniformRandomSample(SampleParam param) throws VerdictException {
-        VerdictLogger.info(this, String.format("Create a %.2f%% uniform random sample of %s.",
+        VerdictLogger.info(this, String.format("Creates a %.2f%% uniform random sample of %s.",
                 param.getSamplingRatio() * 100, param.getOriginalTable()));
         Pair<Long, Long> sampleAndOriginalSizes = vc.getDbms().createUniformRandomSampleTableOf(param);
         vc.getMeta().insertSampleInfo(param, sampleAndOriginalSizes.getLeft(), sampleAndOriginalSizes.getRight());
@@ -175,7 +176,7 @@ public class CreateSampleQuery extends Query {
 
     protected void createUniverseSample(SampleParam param) throws VerdictException {
         String columnName = param.getColumnNames().get(0);
-        VerdictLogger.info(this, String.format("Create a %.2f%% universe sample of %s on %s.",
+        VerdictLogger.info(this, String.format("Creates a %.2f%% universe sample of %s on %s.",
                 param.getSamplingRatio() * 100, param.getOriginalTable(), columnName));
         Pair<Long, Long> sampleAndOriginalSizes = vc.getDbms().createUniverseSampleTableOf(param);
         vc.getMeta().insertSampleInfo(param, sampleAndOriginalSizes.getLeft(), sampleAndOriginalSizes.getRight());
@@ -183,7 +184,7 @@ public class CreateSampleQuery extends Query {
 
     protected void createStratifiedSample(SampleParam param) throws VerdictException {
         String columnName = param.getColumnNames().get(0);
-        VerdictLogger.info(this, String.format("Create a %.2f%% stratified sample of %s on %s.",
+        VerdictLogger.info(this, String.format("Creates a %.2f%% stratified sample of %s on %s.",
                 param.getSamplingRatio() * 100, param.getOriginalTable(), columnName));
         Pair<Long, Long> sampleAndOriginalSizes = vc.getDbms().createStratifiedSampleTableOf(param);
         vc.getMeta().insertSampleInfo(param, sampleAndOriginalSizes.getLeft(), sampleAndOriginalSizes.getRight());

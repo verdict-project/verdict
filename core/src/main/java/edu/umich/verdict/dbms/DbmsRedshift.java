@@ -268,7 +268,7 @@ public class DbmsRedshift extends DbmsJDBC {
 //        VerdictLogger.debug(this, sql2);
         executeUpdate(sql2);
 
-        dropTable(sampledNoRand);
+        dropTable(sampledNoRand, false);
     }
 
     @Override

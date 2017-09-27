@@ -77,7 +77,7 @@ on_columns
     ;
 
 delete_sample_statement
-    : (DELETE | DROP) (size=(FLOAT | DECIMAL) '%')? (sample_type)? SAMPLE OF original_table=table_name (on_columns)?
+    : (DELETE | DROP) (size=(FLOAT | DECIMAL) '%')? (sample_type)? SAMPLES OF original_table=table_name (on_columns)?
     ;
 
 show_samples_statement
