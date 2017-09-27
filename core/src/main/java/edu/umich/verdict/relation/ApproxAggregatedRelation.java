@@ -252,7 +252,10 @@ public class ApproxAggregatedRelation extends ApproxRelation {
     }
 
     /**
+     * Partitioned-aggregation
      * 
+     * select list elements are scaled considering both sampling probabilities and
+     * partitioning for subsampling.
      * @param projectUnprojectedGroups
      *            This option is used by
      *            {@link ApproxAggregatedRelation#rewriteWithSubsampledErrorBounds()}.
@@ -261,14 +264,11 @@ public class ApproxAggregatedRelation extends ApproxRelation {
     protected ExactRelation rewriteWithPartition(boolean projectUnprojectedGroups) {
         ExactRelation newSource = partitionedSource();
 
-        // select list elements are scaled considering both sampling probabilities and
-        // partitioning for subsampling.
         List<SelectElem> scaledElems = new ArrayList<SelectElem>();
         List<Expr> groupby = new ArrayList<Expr>();
         if (source instanceof ApproxGroupedRelation) {
             groupby.addAll(((ApproxGroupedRelation) source).getGroupby());
         }
-        // final Map<TableUniqueName, String> sub = source.tableSubstitution();
         ColNameExpr partitionColExpr = newSource.partitionColumn();
         Expr tupleSamplingProbExpr = source.tupleProbabilityColumn();
         Expr tableSamplingRatioExpr = source.tableSamplingRatio();
@@ -276,7 +276,10 @@ public class ApproxAggregatedRelation extends ApproxRelation {
         SingleFunctionTransformerForSubsampling transformer = new SingleFunctionTransformerForSubsampling(vc, groupby,
                 partitionColExpr, tupleSamplingProbExpr, tableSamplingRatioExpr);
 
-        // copied groupby expressions (used if projectUnprojectedGroups is set to true)
+        // copies groupby expressions (used if projectUnprojectedGroups is set to true)
+        // this extra groupby is needed when the user-submitted query does not include the groupby columns
+        // explicitly (for some reason) in the query.
+        // these extra grouping attributes will be projected out eventually.
         List<ColNameExpr> unappearingGroups = new ArrayList<ColNameExpr>();
         if (source instanceof ApproxGroupedRelation) {
             for (Expr e : ((ApproxGroupedRelation) source).getGroupby()) {

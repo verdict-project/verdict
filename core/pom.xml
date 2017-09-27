@@ -255,6 +255,11 @@
             <artifactId>zookeeper-3.4.6</artifactId>
             <version>2.5.41</version>
         </dependency>
+        <dependency>
+            <groupId>com.amazon.redshift.jdbc</groupId>
+            <artifactId>RedshiftJDBC41</artifactId>
+            <version>1.2.8.1005</version>
+        </dependency>
 
         <!-- test supports -->
         <dependency>

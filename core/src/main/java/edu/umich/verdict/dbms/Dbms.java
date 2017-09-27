@@ -413,21 +413,39 @@ public abstract class Dbms {
 
             if (isString) {
                 Expr left = Expr.from(vc,
-                        String.format("case when s.%s is null then '%s' else s.%s end", col, NULL_STRING, col));
+                        String.format("case when s.%s%s%s is null then '%s' else s.%s%s%s end",
+                                getQuoteString(), col, getQuoteString(),
+                                NULL_STRING,
+                                getQuoteString(), col, getQuoteString()));
                 Expr right = Expr.from(vc,
-                        String.format("case when t.%s is null then '%s' else t.%s end", col, NULL_STRING, col));
+                        String.format("case when t.%s%s%s is null then '%s' else t.%s%s%s end",
+                                getQuoteString(), col, getQuoteString(),
+                                NULL_STRING,
+                                getQuoteString(), col, getQuoteString()));
                 joinExprs.add(Pair.of(left, right));
             } else if (isTimeStamp) {
                 Expr left = Expr.from(vc,
-                        String.format("case when s.%s is null then '%s' else s.%s end", col, NULL_TIMESTAMP, col));
+                        String.format("case when s.%s%s%s is null then '%s' else s.%s%s%s end",
+                                getQuoteString(), col, getQuoteString(),
+                                NULL_TIMESTAMP,
+                                getQuoteString(), col, getQuoteString()));
                 Expr right = Expr.from(vc,
-                        String.format("case when t.%s is null then '%s' else t.%s end", col, NULL_TIMESTAMP, col));
+                        String.format("case when t.%s%s%s is null then '%s' else t.%s%s%s end",
+                                getQuoteString(), col, getQuoteString(),
+                                NULL_TIMESTAMP,
+                                getQuoteString(), col, getQuoteString()));
                 joinExprs.add(Pair.of(left, right));
             } else {
                 Expr left = Expr.from(vc,
-                        String.format("case when s.%s is null then %d else s.%s end", col, NULL_LONG, col));
+                        String.format("case when s.%s%s%s is null then %d else s.%s%s%s end", 
+                                getQuoteString(), col, getQuoteString(),
+                                NULL_LONG,
+                                getQuoteString(), col, getQuoteString()));
                 Expr right = Expr.from(vc,
-                        String.format("case when t.%s is null then %d else t.%s end", col, NULL_LONG, col));
+                        String.format("case when t.%s%s%s is null then %d else t.%s%s%s end", 
+                                getQuoteString(), col, getQuoteString(),
+                                NULL_LONG,
+                                getQuoteString(), col, getQuoteString()));
                 joinExprs.add(Pair.of(left, right));
             }
         }
@@ -452,7 +470,7 @@ public abstract class Dbms {
         // aliased select list
         List<String> selectElems = new ArrayList<String>();
         for (String col : col2types.keySet()) {
-            selectElems.add(String.format("s.%s", col));
+            selectElems.add(String.format("s.%s%s%s", getQuoteString(), col, getQuoteString()));
         }
 
         // sample table
