@@ -16,6 +16,8 @@
 
 package edu.umich.verdict.util;
 
+import java.lang.reflect.Method;
+
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
@@ -52,10 +54,23 @@ public class VerdictLogger {
     public static void warn(Object msg) {
         logger.warn(msg);
     }
+    
+    private static String enclosingMethodName() {
+        return Thread.currentThread().getStackTrace()[3].getMethodName();
+//        Method method = caller.getClass().getEnclosingMethod();
+//        if (method == null) {
+//            return "static";
+//        } else {
+//            return method.getName();
+//        }
+    }
 
     public static void info(Object caller, String msg) {
         if (logger.getLevel().toString().equalsIgnoreCase("debug")) {
-            info(String.format("[%s] %s", caller.getClass().getSimpleName(), msg));
+            info(String.format("[%s#%s] %s",
+                    caller.getClass().getSimpleName(),
+                    enclosingMethodName(),
+                    msg));
         } else {
             info(String.format("%s", msg));
         }
@@ -73,7 +88,10 @@ public class VerdictLogger {
     }
 
     public static void debug(Object caller, String msg) {
-        debug(String.format("[%s] %s", caller.getClass().getSimpleName(), msg));
+        debug(String.format("[%s#%s] %s",
+                caller.getClass().getSimpleName(),
+                enclosingMethodName(),
+                msg));
     }
 
     public static void warn(Object caller, String msg) {

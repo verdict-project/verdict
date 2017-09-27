@@ -212,7 +212,7 @@ public abstract class Dbms {
         // This check is useful for Spark 1.6, since it throws an error even though "if exists" is used
         // in the "drop table" statement.
         Set<String> tables = vc.getMeta().getTables(tableName.getDatabaseName());
-        if (!tables.contains(tableName.getTableName())) {
+        if (check && !tables.contains(tableName.getTableName())) {
             VerdictLogger.debug(this, String.format(
                     "Table, %s, does not exists. Verdict doesn't bother to run a drop table statement.", tableName));
             return;
