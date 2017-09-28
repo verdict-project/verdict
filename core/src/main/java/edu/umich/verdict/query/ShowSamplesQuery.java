@@ -89,7 +89,10 @@ public class ShowSamplesQuery extends SelectQuery {
                 rs = info.collectResultSet();
             } else if (vc.getDbms().isSpark()) {
                 df = info.collectDataFrame();
+            } else if (vc.getDbms().isSpark2()) {
+                ds = info.collectDataset();
             }
+            
         }
     }
 

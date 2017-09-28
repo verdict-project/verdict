@@ -58,8 +58,9 @@ public class SelectQuery extends Query {
 
         if (vc.getDbms().isJDBC()) {
             rs = r.collectResultSet();
-        } else {
+        } else if (vc.getDbms().isSpark()) {
             df = r.collectDataFrame();
+        } else if (vc.getDbms().isSpark2()) {
             ds = r.collectDataset();
         }
     }

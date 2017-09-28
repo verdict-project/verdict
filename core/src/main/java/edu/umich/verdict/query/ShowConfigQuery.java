@@ -35,6 +35,5 @@ public class ShowConfigQuery extends Query {
             String value = kv.getValue();
             System.out.println(key + "\t" + value);
         }
-        vc.getDbms().execute("select 1"); // dummy
     }
 }

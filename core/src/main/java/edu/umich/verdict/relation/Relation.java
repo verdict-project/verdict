@@ -171,8 +171,8 @@ public abstract class Relation {
     public DataFrame collectDataFrame() throws VerdictException {
         String sql = toSql();
         VerdictLogger.debug(this, "A query to db: " + sql);
-        VerdictLogger.debug(this, "A query to db:");
-        VerdictLogger.debugPretty(this, Relation.prettyfySql(vc, sql), " ");
+//        VerdictLogger.debug(this, "A query to db:");
+//        VerdictLogger.debugPretty(this, Relation.prettyfySql(vc, sql), " ");
         DataFrame df = vc.getDbms().executeSparkQuery(sql);
         return df;
     }
@@ -180,8 +180,8 @@ public abstract class Relation {
     public Dataset<Row> collectDataset() throws VerdictException {
         String sql = toSql();
         VerdictLogger.debug(this, "A query to db: " + sql);
-        VerdictLogger.debug(this, "A query to db:");
-        VerdictLogger.debugPretty(this, Relation.prettyfySql(vc, sql), " ");
+//        VerdictLogger.debug(this, "A query to db:");
+//        VerdictLogger.debugPretty(this, Relation.prettyfySql(vc, sql), " ");
         Dataset<Row> ds = vc.getDbms().executeSpark2Query(sql);
         return ds;
     }
