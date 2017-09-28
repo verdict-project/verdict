@@ -214,6 +214,17 @@ public abstract class Relation {
                 }
                 result.add(row);
             }
+        } else if (vc.getDbms().isSpark2()) {
+            Dataset<Row> ds = collectDataset();
+            List<Row> rows = ds.collectAsList();
+            for (Row r : rows) {
+                int size = r.size();
+                List<Object> row = new ArrayList<Object>();
+                for (int i = 0; i < size; i++) {
+                    row.add(r.get(i));
+                }
+                result.add(row);
+            }
         }
         return result;
     }
