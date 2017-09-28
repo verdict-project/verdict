@@ -53,8 +53,11 @@
     </repositories>
 
     <build>
-        <!-- <resources> <resource> <directory>../../config</directory> </resource> 
-            </resources> -->
+        <resources>
+            <resource>
+                <directory>${project.basedir}/config</directory>
+            </resource>
+        </resources>
         <pluginManagement>
             <plugins>
                 <plugin>

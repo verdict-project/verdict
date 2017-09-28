@@ -257,7 +257,7 @@ show_tables_statement
     ;
 
 show_databases_statement
-    : SHOW DATABASES
+    : SHOW ( DATABASES | SCHEMAS )
     ;
 
 describe_table_statement
@@ -1106,6 +1106,7 @@ ROWGUIDCOL:                      R O W G U I D C O L;
 RULE:                            R U L E;
 SAVE:                            S A V E;
 SCHEMA:                          S C H E M A;
+SCHEMAS:                         S C H E M A S;
 SECURITYAUDIT:                   S E C U R I T Y A U D I T;
 SELECT:                          S E L E C T;
 SEMANTICKEYPHRASETABLE:          S E M A N T I C K E Y P H R A S E T A B L E;

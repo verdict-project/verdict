@@ -20,9 +20,9 @@
             <resource>
                 <directory>src/test/resources</directory>
             </resource>
-            <resource>
+            <!-- <resource>
                 <directory>${project.basedir}/../config</directory>
-            </resource>
+            </resource> -->
         </resources>
 
         <plugins>

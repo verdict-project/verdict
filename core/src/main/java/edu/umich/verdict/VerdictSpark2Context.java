@@ -29,6 +29,14 @@ import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.query.Query;
 import edu.umich.verdict.util.VerdictLogger;
 
+/**
+ * import edu.umich.verdict.VerdictSpark2Context<br/>
+ * val vc = new VerdictSpark2Context(sc)<br/>
+ * vc.sql("use mydatabase")<br/>
+ * 
+ * @author Yongjoo Park
+ *
+ */
 public class VerdictSpark2Context extends VerdictContext {
 
     private Dataset<Row> df;
