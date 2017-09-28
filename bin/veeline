@@ -1,0 +1,12 @@
+#!/bin/bash
+# veeline - script to launch Verdict's command line interface
+
+BINPATH=$(dirname $0)
+JAR_DIR=$BINPATH/../jars
+JDBC_JAR=$JAR_DIR/verdict-jdbc-0.3.0-snapshot-jar-with-dependencies.jar
+VEELINE_JAR=$JAR_DIR/verdict-veeline-0.3.0-snapshot-jar-with-dependencies.jar
+verbose=false
+
+java -cp "$JDBC_JAR:$VEELINE_JAR" \
+     -Dlog4j.configuration=file:$BINPATH/../conf/log4j.properties \
+     sqlline.SqlLine --verbose=${verbose} "$@"

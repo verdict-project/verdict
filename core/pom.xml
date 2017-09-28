@@ -12,6 +12,10 @@
         <version>0.3.0-snapshot</version>
     </parent>
 
+    <properties>
+        <main.basedir>${project.parent.basedir}</main.basedir>
+    </properties>
+
     <build>
         <resources>
             <resource>
@@ -20,9 +24,8 @@
             <resource>
                 <directory>src/test/resources</directory>
             </resource>
-            <!-- <resource>
-                <directory>${project.basedir}/../config</directory>
-            </resource> -->
+            <!-- <resource> <directory>${project.basedir}/../config</directory> 
+                </resource> -->
         </resources>
 
         <plugins>
@@ -75,6 +78,7 @@
                             <descriptorRefs>
                                 <descriptorRef>jar-with-dependencies</descriptorRef>
                             </descriptorRefs>
+                            <outputDirectory>${main.basedir}/jars</outputDirectory>
                         </configuration>
                     </execution>
                     <execution>
@@ -85,7 +89,6 @@
                         </goals>
                         <configuration>
                             <descriptors>
-                                <descriptor>src/test/resources/test-jar-with-dependencies.xml</descriptor>
                             </descriptors>
                         </configuration>
                     </execution>

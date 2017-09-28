@@ -26,6 +26,7 @@
         <spark2.core.version>2.2.0.cloudera1</spark2.core.version>
         <spark2.sql.version>2.2.0.cloudera1</spark2.sql.version>
         <spark2.hive.version>2.2.0.cloudera1</spark2.hive.version>
+        <main.basedir>${project.basedir}</main.basedir>
     </properties>
 
     <groupId>edu.umich</groupId>
@@ -55,7 +56,7 @@
     <build>
         <resources>
             <resource>
-                <directory>${project.basedir}/config</directory>
+                <directory>${main.basedir}/conf</directory>
             </resource>
         </resources>
         <pluginManagement>
@@ -97,7 +98,7 @@
                         <descriptorRefs>
                             <descriptorRef>jar-with-dependencies</descriptorRef>
                         </descriptorRefs>
-                        <outputDirectory>../target</outputDirectory>
+                        <outputDirectory>${main.basedir}/jars</outputDirectory>
                     </configuration>
                 </plugin>
                 <plugin>

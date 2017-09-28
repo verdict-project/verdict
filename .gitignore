@@ -11,6 +11,7 @@
 /build/sbt-launch-0.13.9.jar
 /error-test
 target/
+jars/
 *.class
 
 # eclipse

@@ -10,6 +10,10 @@
         <artifactId>verdict</artifactId>
         <version>0.3.0-snapshot</version>
 	</parent>
+    
+    <properties>
+        <main.basedir>${project.parent.basedir}</main.basedir>
+    </properties>
 
     <build>
         <resources>
@@ -41,6 +45,7 @@
                     <descriptorRefs>
                         <descriptorRef>jar-with-dependencies</descriptorRef>
                     </descriptorRefs>
+                    <outputDirectory>${main.basedir}/jars</outputDirectory>
                 </configuration>
             </plugin>
             <plugin>
