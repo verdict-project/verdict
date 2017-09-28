@@ -28,7 +28,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.spark.sql.DataFrame;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
-import org.apache.spark.sql.SQLContext;
+//import org.apache.spark.sql.SQLContext;
 import org.apache.spark.sql.SparkSession;
 
 import com.google.common.base.Joiner;
@@ -44,7 +44,7 @@ public class DbmsSpark2 extends Dbms {
 
     private static String DBNAME = "spark2";
 
-    protected SQLContext sqlContext;
+    //protected SQLContext sqlContext;
 
     protected SparkSession sparkSession;
 
@@ -168,7 +168,7 @@ public class DbmsSpark2 extends Dbms {
     @Override
     public void cacheTable(TableUniqueName tableName) {
         if (vc.getConf().cacheSparkSamples() && !cachedTable.contains(tableName)) {
-            sqlContext.cacheTable(tableName.toString());
+            sparkSession.sql(String.format("cache table %s", tableName.toString()));
             cachedTable.add(tableName);
         }
     }
