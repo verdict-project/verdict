@@ -40,7 +40,9 @@ import edu.umich.verdict.util.VerdictLogger;
  */
 public class CreateSampleQuery extends Query {
     
-    private long recommendedMinimumSampleSize = 1000000;
+    final private int roughAttributeSizeEstimateInByte = 10;
+    
+    final private long hueristicSampleSizeInByte = (long) 2e9;      // 2 GB
     
     public CreateSampleQuery(VerdictContext vc, String q) {
         super(vc, q);
@@ -65,7 +67,11 @@ public class CreateSampleQuery extends Query {
     protected double heuristicSampleSizeSuggestion(SampleParam param) throws VerdictException {
         VerdictLogger.info(this, "No sampling ratio provided; sample sizes are automatically determined to have at least 1 million tuples.");
         long originalTableSize = vc.getMeta().getTableSize(param.getOriginalTable());
-        long recommendedSampleSize = Math.min(recommendedMinimumSampleSize, originalTableSize);
+        
+        int columnCount = vc.getMeta().getColumns(param.getOriginalTable()).size();
+        
+        long recommendedSampleSize = Math.min(originalTableSize,
+                                              hueristicSampleSizeInByte / columnCount / roughAttributeSizeEstimateInByte);
         double samplingRatio = recommendedSampleSize / (double) originalTableSize;
         return samplingRatio;
     }

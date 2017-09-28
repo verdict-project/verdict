@@ -162,8 +162,8 @@ public abstract class Relation {
     public ResultSet collectResultSet() throws VerdictException {
         String sql = toSql();
         VerdictLogger.debug(this, "A query to db: " + sql);
-        VerdictLogger.debug(this, "A query to db:");
-        VerdictLogger.debugPretty(this, Relation.prettyfySql(vc, sql), " ");
+//        VerdictLogger.debug(this, "A query to db:");
+//        VerdictLogger.debugPretty(this, Relation.prettyfySql(vc, sql), " ");
         ResultSet rs = vc.getDbms().executeJdbcQuery(sql);
         return rs;
     }

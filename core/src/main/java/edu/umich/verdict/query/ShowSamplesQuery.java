@@ -84,15 +84,7 @@ public class ShowSamplesQuery extends SelectQuery {
                             + " t.originaltablesize AS `original_table_size`,"
                             + " t.samplesize AS `sample_table_size`")
                     .orderby("`original_table`, `sample_type`, `sampling_ratio`, `on_columns`");
-
-            if (vc.getDbms().isJDBC()) {
-                rs = info.collectResultSet();
-            } else if (vc.getDbms().isSpark()) {
-                df = info.collectDataFrame();
-            } else if (vc.getDbms().isSpark2()) {
-                ds = info.collectDataset();
-            }
-            
+            setResultsFromRelation(info);            
         }
     }
 

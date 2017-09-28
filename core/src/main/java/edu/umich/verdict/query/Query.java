@@ -29,6 +29,7 @@ import edu.umich.verdict.dbms.DbmsSpark2;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.parser.VerdictSQLBaseVisitor;
 import edu.umich.verdict.parser.VerdictSQLParser;
+import edu.umich.verdict.relation.Relation;
 import edu.umich.verdict.util.StringManipulations;
 import edu.umich.verdict.util.VerdictLogger;
 
@@ -71,6 +72,16 @@ public abstract class Query {
         vc.incrementQid();
         // vc.getMeta().clearSampleInfo();
         Alias.resetAliasIndex();
+    }
+    
+    protected void setResultsFromRelation(Relation r) throws VerdictException {
+        if (vc.getDbms().isJDBC()) {
+            rs = r.collectResultSet();
+        } else if (vc.getDbms().isSpark()) {
+            df = r.collectDataFrame();
+        } else if (vc.getDbms().isSpark2()) {
+            ds = r.collectDataset();
+        }
     }
 
     public String getQueryString() {

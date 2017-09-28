@@ -55,14 +55,7 @@ public class SelectQuery extends Query {
     public void compute() throws VerdictException {
         super.compute();
         Relation r = queryToRelation(vc, queryString);
-
-        if (vc.getDbms().isJDBC()) {
-            rs = r.collectResultSet();
-        } else if (vc.getDbms().isSpark()) {
-            df = r.collectDataFrame();
-        } else if (vc.getDbms().isSpark2()) {
-            ds = r.collectDataset();
-        }
+        setResultsFromRelation(r);
     }
 
 }
