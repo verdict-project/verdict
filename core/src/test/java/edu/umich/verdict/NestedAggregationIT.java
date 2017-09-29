@@ -28,7 +28,7 @@ import org.junit.Test;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.util.ResultSetConversion;
 
-public class NestedAggregationIT extends BaseIT {
+public class NestedAggregationIT extends TestBase {
 
     @BeforeClass
     public static void connect() throws VerdictException, SQLException, FileNotFoundException {

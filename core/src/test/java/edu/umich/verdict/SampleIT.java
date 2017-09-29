@@ -25,7 +25,7 @@ import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.util.ResultSetConversion;
 
-public class SampleIT extends BaseIT {
+public class SampleIT extends TestBase {
 
     @Test
     public void showSampleTest() throws VerdictException {

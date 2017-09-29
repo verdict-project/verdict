@@ -100,7 +100,7 @@ public abstract class Dbms {
                 (conf.ignoreUserCredentials()) ? "" : conf.getUser(),
                 (conf.ignoreUserCredentials()) ? "" : conf.getPassword(), conf.getDbmsClassName());
 
-        Set<String> jdbcDbmsNames = Sets.newHashSet("mysql", "impala", "hive", "hive2", "redshift");
+        Set<String> jdbcDbmsNames = Sets.newHashSet("impala", "hive2", "redshift");
 
         if (jdbcDbmsNames.contains(conf.getDbms())) {
             VerdictLogger.info((conf.getDbmsSchema() != null)

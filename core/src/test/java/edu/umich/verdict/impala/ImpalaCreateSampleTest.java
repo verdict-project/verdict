@@ -22,13 +22,14 @@ import java.sql.SQLException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
-import edu.umich.verdict.BaseIT;
+import edu.umich.verdict.TestBase;
 import edu.umich.verdict.VerdictConf;
 import edu.umich.verdict.VerdictJDBCContext;
 import edu.umich.verdict.exceptions.VerdictException;
 
-public class ImpalaCreateSampleTest extends BaseIT {
+public class ImpalaCreateSampleTest extends TestBase {
 
     @BeforeClass
     public static void connect() throws VerdictException, SQLException, FileNotFoundException, ClassNotFoundException {
@@ -42,7 +43,6 @@ public class ImpalaCreateSampleTest extends BaseIT {
     }
     
     @Test
-//    @Category(edu.umich.verdict.MinimumTest.class)
     public void createSamples() throws VerdictException {
         vc.executeJdbcQuery("create sample of lineitem");
     }

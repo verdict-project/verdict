@@ -56,16 +56,4 @@ public class ImpalaAggregationTest extends AggregationIT {
     public static void destroy() throws VerdictException {
         vc.destroy();
     }
-
-    @Override
-    public void simpleCountDistinctUsingUniverseSample() throws VerdictException, SQLException {
-        // TODO Auto-generated method stub
-        super.simpleCountDistinctUsingUniverseSample();
-    }
-
-    @Override
-    public void groupbySum2() throws VerdictException, SQLException {
-        // TODO Auto-generated method stub
-        super.groupbySum2();
-    }
 }

@@ -34,9 +34,14 @@ public class VerdictConf {
 
     private Map<String, String> configs = new TreeMap<String, String>();
 
-    private final Map<String, String> configKeySynonyms = new ImmutableMap.Builder<String, String>()
-            .put("bypass", "verdict.bypass").put("loglevel", "verdict.loglevel").put("user", "verdict.jdbc.user")
-            .put("password", "verdict.jdbc.password").put("principal", "verdict.jdbc.kerberos_principal").build();
+    private final Map<String, String> configKeySynonyms =
+            new ImmutableMap.Builder<String, String>()
+            .put("bypass", "verdict.bypass")
+            .put("loglevel", "verdict.loglevel")
+            .put("user", "verdict.jdbc.user")
+            .put("password", "verdict.jdbc.password")
+            .put("principal", "verdict.jdbc.kerberos_principal")
+            .build();
 
     private final String DEFAULT_CONFIG_FILE = "verdict_default.properties";
 
@@ -51,7 +56,6 @@ public class VerdictConf {
             setDefaults();
             setUserConfig();
         }
-        // VerdictLogger.info("Verdict's log level set to: " + get("loglevel"));
     }
 
     public VerdictConf(String propertyFileName) {
@@ -76,9 +80,6 @@ public class VerdictConf {
         for (String prop : properties.stringPropertyNames()) {
             String value = properties.getProperty(prop);
             set(prop, value);
-            // if (value.length() > 0) {
-            // set(prop, value);
-            // }
         }
     }
 
@@ -232,9 +233,18 @@ public class VerdictConf {
     public void setPort(String port) {
         set("verdict.jdbc.port", port);
     }
+    
+    public void setLoglevel(String level) {
+        set("loglevel", level);
+    }
 
     public String getPort() {
-        return get("verdict.jdbc.port");
+        String explicitPortNumber = get("verdict.jdbc.port");
+        if (explicitPortNumber != null && explicitPortNumber.length() != 0) {
+            return explicitPortNumber;
+        } else {
+            return getDefaultPort();
+        }
     }
 
     public String getDefaultPort() {
@@ -320,20 +330,39 @@ public class VerdictConf {
     /**
      * These are the probabilities for ensuring at least 10 tuples.
      */
-    protected static List<Pair<Integer, Double>> minSamplingProbForStratifiedSamplesMin10 = new ImmutableList.Builder<Pair<Integer, Double>>()
-            .add(Pair.of(100, 0.203759)).add(Pair.of(50, 0.376508)).add(Pair.of(40, 0.452739))
-            .add(Pair.of(30, 0.566406)).add(Pair.of(20, 0.749565)).add(Pair.of(15, 0.881575)).add(Pair.of(14, 0.910660))
-            .add(Pair.of(13, 0.939528)).add(Pair.of(12, 0.966718)).add(Pair.of(11, 0.989236)).build();
+    protected static List<Pair<Integer, Double>> minSamplingProbForStratifiedSamplesMin10 =
+            new ImmutableList.Builder<Pair<Integer, Double>>()
+            .add(Pair.of(100, 0.203759))
+            .add(Pair.of(50, 0.376508))
+            .add(Pair.of(40, 0.452739))
+            .add(Pair.of(30, 0.566406))
+            .add(Pair.of(20, 0.749565))
+            .add(Pair.of(15, 0.881575))
+            .add(Pair.of(14, 0.910660))
+            .add(Pair.of(13, 0.939528))
+            .add(Pair.of(12, 0.966718))
+            .add(Pair.of(11, 0.989236))
+            .build();
 
     /**
      * These are the probabilities for ensuring at least 100 tuples.
      */
-    protected static List<Pair<Integer, Double>> minSamplingProbForStratifiedSamplesMin100 = new ImmutableList.Builder<Pair<Integer, Double>>()
-            .add(Pair.of(900, 0.140994)).add(Pair.of(800, 0.158239)).add(Pair.of(700, 0.180286))
-            .add(Pair.of(600, 0.209461)).add(Pair.of(500, 0.249876)).add(Pair.of(400, 0.309545))
-            .add(Pair.of(300, 0.406381)).add(Pair.of(200, 0.589601)).add(Pair.of(150, 0.756890))
-            .add(Pair.of(140, 0.801178)).add(Pair.of(130, 0.849921)).add(Pair.of(120, 0.902947))
-            .add(Pair.of(110, 0.958229)).build();
+    protected static List<Pair<Integer, Double>> minSamplingProbForStratifiedSamplesMin100 =
+            new ImmutableList.Builder<Pair<Integer, Double>>()
+            .add(Pair.of(900, 0.140994))
+            .add(Pair.of(800, 0.158239))
+            .add(Pair.of(700, 0.180286))
+            .add(Pair.of(600, 0.209461))
+            .add(Pair.of(500, 0.249876))
+            .add(Pair.of(400, 0.309545))
+            .add(Pair.of(300, 0.406381))
+            .add(Pair.of(200, 0.589601))
+            .add(Pair.of(150, 0.756890))
+            .add(Pair.of(140, 0.801178))
+            .add(Pair.of(130, 0.849921))
+            .add(Pair.of(120, 0.902947))
+            .add(Pair.of(110, 0.958229))
+            .build();
 
     public List<Pair<Integer, Double>> samplingProbabilitiesForStratifiedSamples() {
         return minSamplingProbForStratifiedSamplesMin10;

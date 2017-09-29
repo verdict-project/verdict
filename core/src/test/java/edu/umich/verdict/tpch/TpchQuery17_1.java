@@ -18,7 +18,7 @@ package edu.umich.verdict.tpch;
 
 import java.io.FileNotFoundException;
 
-import edu.umich.verdict.BaseIT;
+import edu.umich.verdict.TestBase;
 import edu.umich.verdict.VerdictConf;
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.VerdictJDBCContext;
@@ -29,7 +29,7 @@ public class TpchQuery17_1 {
     public static void main(String[] args) throws FileNotFoundException, VerdictException {
         VerdictConf conf = new VerdictConf();
         conf.setDbms("impala");
-        conf.setHost(BaseIT.readHost());
+        conf.setHost(TestBase.readHost());
         conf.setPort("21050");
         conf.setDbmsSchema("tpch1g");
         conf.set("loglevel", "debug");

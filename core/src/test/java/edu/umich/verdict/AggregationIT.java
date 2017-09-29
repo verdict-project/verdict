@@ -37,7 +37,7 @@ import edu.umich.verdict.relation.ApproxRelation;
 import edu.umich.verdict.relation.ApproxSingleRelation;
 import edu.umich.verdict.util.TypeCasting;
 
-public class AggregationIT extends BaseIT {
+public class AggregationIT extends TestBase {
 
     protected void testSimpleAggQuery(String sql) throws SQLException, VerdictException {
         List<List<Object>> expected = collectResult(stmt.executeQuery(sql));
@@ -248,7 +248,6 @@ public class AggregationIT extends BaseIT {
     }
     
     @Test
-    @Category(edu.umich.verdict.MinimumTest.class)
     public void basicSelectCount() throws VerdictException {
         String sql = "select count(*) from tpch1g.lineitem";
         vc.executeJdbcQuery(sql);

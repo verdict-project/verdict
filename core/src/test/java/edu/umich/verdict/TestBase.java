@@ -22,7 +22,7 @@ import java.sql.Connection;
 import java.sql.Statement;
 import java.util.Scanner;
 
-public class BaseIT {
+public class TestBase {
 
     protected double error = 0.05;
 
@@ -35,7 +35,7 @@ public class BaseIT {
     protected static VerdictJDBCContext vc;
 
     public static String readHost() throws FileNotFoundException {
-        ClassLoader classLoader = BaseIT.class.getClassLoader();
+        ClassLoader classLoader = TestBase.class.getClassLoader();
         File file = new File(classLoader.getResource("integration_test_host.test").getFile());
 
         Scanner scanner = new Scanner(file);
