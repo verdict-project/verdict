@@ -1,3 +1,5 @@
+// Jenkins server hosted on: http://elgordo.eecs.umich.edu:8080/
+
 pipeline {
     agent any
 
