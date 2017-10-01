@@ -5,8 +5,8 @@ from subprocess import call
 from update_build_number import current_version
 
 script_dir = os.path.dirname(os.path.realpath(__file__))
-verdict_doc_dir = "/home/pyongjoo/workspace/verdict-doc"
-verdict_site_dir = "/home/pyongjoo/workspace/verdict-site"
+verdict_doc_dir = os.path.join(script_dir, "../../verdict-doc")
+verdict_site_dir = os.path.join(script_dir, "../../verdict-site")
 sourceforge_scp_base_url = "frs.sourceforge.net:/home/frs/project/verdict"
 sourceforge_download_base_url = "https://sourceforge.net/projects/verdict/files"
 push_to_git = False
