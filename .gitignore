@@ -23,7 +23,6 @@ jars/
 *.log
 
 # Test configuration files
-*.test
 nocommit/
 *NoCommit*
 
