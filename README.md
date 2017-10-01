@@ -48,7 +48,7 @@ The steps for starting Verdict is slightly different depending on the database s
 
 ### On Apache Spark
 
-Verdict works with Spark by internally creating Spark's HiveContext. In this way, Verdict can load persisted tables through Hive metastore. Verdict is tested with Apache Spark 1.6.0 (in the Cloudera distribution CDH 5.11). We will support Spark 2.0 shortly.
+Verdict works with Spark by internally creating Spark's HiveContext. In this way, Verdict can load persisted tables through Hive metastore. Verdict is tested both with Apache Spark 1.6.0 (in the Cloudera distribution CDH 5.11) and Spark 2.0.
 
 We show how to use Verdict in `spark-shell` and `pyspark`. Using Verdict in an Spark application written either in Scala or Python is the same.
 
@@ -60,6 +60,7 @@ You can start `spark-shell` with Verdict as follows.
 $ spark-shell --jars target/verdict-core-0.3.0-jar-with-dependencies.jar
 ```
 
+##### Spark 1.6.0
 After spark-shell starts, import and use Verdict as follows.
 
 ```scala
@@ -77,6 +78,25 @@ scala> vc.sql("select count(*) from database_name.table_name").show(false)
 ```
 
 The return value of `VerdictSparkHiveContext#sql()` is a Spark's DataFrame class; thus, any methods that work on Spark's DataFrame work on Verdict's answer seamlessly.
+
+##### Spark 2.0
+After spark-shell starts, import and use Verdict as follows.
+
+```scala
+import edu.umich.verdict.VerdictSpark2Context
+
+scala> val vc = new VerdictSpark2Context(sc)   // sc: SparkContext instance
+
+scala> vc.sql("show databases").show(false)       // Simply displays the databases (or often called schemas)
+
+// Creates samples for the table. This step needs to be done only once for the table.
+scala> vc.sql("create sample of database_name.table_name").show(false)
+
+// Now Verdict automatically uses available samples for speeding up this query.
+scala> vc.sql("select count(*) from database_name.table_name").show(false)
+```
+
+The return value of `VerdictSpark2Context#sql()` is a Spark's Dataset class; thus, any methods that work on Spark's Dataset work on Verdict's answer seamlessly.
 
 
 #### Verdict-on-PySpark
