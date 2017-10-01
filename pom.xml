@@ -2,7 +2,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <properties>
-        <verdict.version>0.4.2</verdict.version>
+        <verdict.version>0.4.0</verdict.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <antlr4.visitor>true</antlr4.visitor>
         <antlr4.version>4.5.3</antlr4.version>
@@ -30,7 +30,7 @@
     <groupId>edu.umich</groupId>
     <artifactId>verdict</artifactId>
     <packaging>pom</packaging>
-    <version>0.4.2</version>
+    <version>0.4.0</version>
     <name>Verdict</name>
     <url>http://verdictdb.org</url>
 

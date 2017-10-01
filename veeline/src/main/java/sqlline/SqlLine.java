@@ -248,10 +248,10 @@ public class SqlLine {
     String getApplicationTitle() {
         InputStream inputStream =
                 getClass().getResourceAsStream(
-                        "/META-INF/maven/sqlline/sqlline/pom.properties");
+                        "/META-INF/maven/edu.umich/verdict-veeline/pom.properties");
         Properties properties = new Properties();
         properties.put("artifactId", "Verdict");
-        properties.put("version", "0.3.0-snapshot");
+        // properties.put("version", "0.3.0-snapshot");
         if (inputStream != null) {
             // If not running from a .jar, pom.properties will not exist, and
             // inputStream is null.
