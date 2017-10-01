@@ -6,6 +6,7 @@ pipeline {
     stages {
         stage('Build') {
             steps {
+                sh 'mvn clean'
                 sh 'mvn compile'
             }
         }
@@ -16,7 +17,9 @@ pipeline {
         }
         stage('Deploy') {
             steps {
+                sh 'python release/update_build_number.py'
                 sh 'mvn package'
+                sh 'python release/release_jars.py'
             }
         }
     }

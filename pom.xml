@@ -1,10 +1,8 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
-    http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0     http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <properties>
-        <verdict.version>0.4.0</verdict.version>
+        <verdict.version>0.4.2</verdict.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <antlr4.visitor>true</antlr4.visitor>
         <antlr4.version>4.5.3</antlr4.version>
@@ -32,7 +30,7 @@
     <groupId>edu.umich</groupId>
     <artifactId>verdict</artifactId>
     <packaging>pom</packaging>
-    <version>0.4.0</version>
+    <version>0.4.2</version>
     <name>Verdict</name>
     <url>http://verdictdb.org</url>
 
@@ -98,6 +96,7 @@
                         <descriptorRefs>
                             <descriptorRef>jar-with-dependencies</descriptorRef>
                         </descriptorRefs>
+                        <appendAssemblyId>false</appendAssemblyId>
                         <outputDirectory>${main.basedir}/jars</outputDirectory>
                     </configuration>
                 </plugin>

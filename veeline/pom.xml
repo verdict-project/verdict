@@ -1,5 +1,4 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <artifactId>verdict-veeline</artifactId>
     <name>Verdict-veeline</name>
@@ -9,7 +8,7 @@
     <parent>
         <groupId>edu.umich</groupId>
         <artifactId>verdict</artifactId>
-        <version>0.4.0</version>
+        <version>0.4.2</version>
     </parent>
 
     <properties>
@@ -31,7 +30,7 @@
     <!-- <prerequisites> <maven>3.2.1</maven>prerequisite of some plugins 
         </prerequisites -->
 
-    <repositories />
+    <repositories/>
 
     <build>
         <resources>
@@ -76,6 +75,7 @@
                     <descriptorRefs>
                         <descriptorRef>jar-with-dependencies</descriptorRef>
                     </descriptorRefs>
+                    <finalName>verdict-shell-${verdict.version}</finalName>
                     <outputDirectory>${main.basedir}/jars</outputDirectory>
                 </configuration>
                 <executions>
