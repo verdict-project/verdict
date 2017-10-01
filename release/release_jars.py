@@ -1,3 +1,4 @@
+import getpass
 import git
 import re
 import os
@@ -112,12 +113,16 @@ def get_path_to_files_to_upload(j_version):
     paths.append(get_cli_zip_filename(j_version))
     return paths
 
+def call_with_failure(cmd):
+    ret = call(cmd)
+    print 'return code: %d' % ret
+
 def create_sourceforge_dir_if_not_exists(j_version):
     print 'creates a version-specific folder if not exists.'
     v = "%d.%d" % (j_version['major'], j_version['minor'])
     mkdir_str = "mkdir -p /home/frs/project/verdict/%s" % v
-    call(['ssh', "yongjoop,verdict@shell.sourceforge.net", 'create'])
-    call(['ssh', "yongjoop,verdict@shell.sourceforge.net", mkdir_str])
+    call_with_failure(['ssh', "yongjoop,verdict@shell.sourceforge.net", 'create'])
+    call_with_failure(['ssh', "yongjoop,verdict@shell.sourceforge.net", mkdir_str])
 
 def upload_file_to_sourceforge(path, j_version):
     """
@@ -131,9 +136,17 @@ def upload_file_to_sourceforge(path, j_version):
     major_minor = "%d.%d" % (major, minor)
     target = 'yongjoop@%s/%s/' % (sourceforge_scp_base_url, major_minor)
     print 'uploads %s to the %s.' % (path, target)
-    call(['scp', path, target])
+    call_with_failure(['scp', path, target])
+
+def return_true_for_jenkins():
+    if getpass.getuser() == 'jenkins':
+        return True
+    else:
+        return False
 
 if __name__ == "__main__":
+    push_to_git = return_true_for_jenkins()
+
     j_version = current_version()
     zip_command_line_interface(j_version)
     create_sourceforge_dir_if_not_exists(j_version)
@@ -143,3 +156,4 @@ if __name__ == "__main__":
     update_verdict_doc(j_version)
     update_verdict_site(j_version)
     remove_cli_zip(j_version);
+
