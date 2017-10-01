@@ -23,7 +23,7 @@ def remove_cli_zip(j_version):
     call(['rm', get_cli_zip_filename(j_version)])
 
 def zip_command_line_interface(j_version):
-    call(['zip', '-r', get_cli_zip_filename(j_version), 'README.md', 'LICENSE', 'bin/veeline',
+    call(['zip', '-r', get_cli_zip_filename(j_version), 'README.md', 'LICENSE', 'bin/verdict-shell',
           'jars/verdict-shell-%s.jar' % get_version_string(j_version),
           'jars/verdict-jdbc-%s.jar' % get_version_string(j_version),
           'conf/log4j.properties'])
@@ -140,8 +140,10 @@ def upload_file_to_sourceforge(path, j_version):
 
 def return_true_for_jenkins():
     if getpass.getuser() == 'jenkins':
+        'Changes to the verdict websites (and documentation pages) will be pushed to their repositories.'
         return True
     else:
+        'Changes to the verdict websites (and documentation pages) won\'t be pushed.'
         return False
 
 if __name__ == "__main__":
