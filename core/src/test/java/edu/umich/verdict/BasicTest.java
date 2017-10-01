@@ -32,7 +32,12 @@ public abstract class BasicTest extends TestBase {
     
     @Test
     public void test999DeleteDatabase() throws VerdictException {
-        String sql = "drop database tpch1g.lineitem_verdict";
+        String suffix = vc.getConf().get("verdict.meta_data.meta_database_suffix");
+        String sql = String.format("drop table tpch1g%s.verdict_meta_name", suffix);
+        vc.executeJdbcQuery(sql);
+        sql = String.format("drop table tpch1g%s.verdict_meta_size", suffix);
+        vc.executeJdbcQuery(sql);
+        sql = String.format("drop database tpch1g%s", suffix);
         vc.executeJdbcQuery(sql);
     }
     
