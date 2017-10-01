@@ -1,3 +1,4 @@
+import getpass
 import git
 import re
 import os
@@ -137,7 +138,15 @@ def upload_file_to_sourceforge(path, j_version):
     print 'uploads %s to the %s.' % (path, target)
     call_with_failure(['scp', path, target])
 
+def return_true_for_jenkins():
+    if getpass.getuser() == 'jenkins':
+        return True
+    else:
+        return False
+
 if __name__ == "__main__":
+    push_to_git = return_true_for_jenkins()
+
     j_version = current_version()
     zip_command_line_interface(j_version)
     create_sourceforge_dir_if_not_exists(j_version)
