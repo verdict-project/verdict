@@ -70,8 +70,8 @@ def update_veeline_command(j_version):
 
 if __name__ == "__main__":
     j = read_version(version_filename)
-    j = version_with_incremented_build_number(j)
-    save_version_to_file(version_filename, j)
+    #j = version_with_incremented_build_number(j)
+    #save_version_to_file(version_filename, j)
     populate_version_info_in_main_pom(main_pom_file, j)
     for child_pom_file in child_pom_files:
         populate_version_info_in_child_pom(child_pom_file, j)
