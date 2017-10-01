@@ -32,7 +32,7 @@ public abstract class BasicTest extends TestBase {
     
     @Test
     public void test999DeleteDatabase() throws VerdictException {
-        String sql = "delete database tpch1g.lineitem_verdict";
+        String sql = "drop database tpch1g.lineitem_verdict";
         vc.executeJdbcQuery(sql);
     }
     
