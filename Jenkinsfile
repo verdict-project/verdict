@@ -7,7 +7,7 @@ pipeline {
         stage('Build') {
             steps {
                 sh 'mvn clean'
-                sh 'mvn compile -Predshift'
+                sh 'mvn compile -Predshift41'
             }
         }
         stage('Test') {
