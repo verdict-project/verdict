@@ -50,6 +50,19 @@
             </properties>
         </profile>
         <profile>
+            <id>apache-spark-scala2.10</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <properties>
+                <spark.scala.version>2.10</spark.scala.version>
+                <spark.version>1.6.3</spark.version>
+                <spark2.scala.version>2.11</spark2.scala.version>
+                <spark2.version>2.2.0</spark2.version>
+                <platform.name>apache</platform.name>
+            </properties>
+        </profile>
+        <profile>
             <id>cdh5.11.1</id>
             <activation>
                 <activeByDefault>false</activeByDefault>

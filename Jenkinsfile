@@ -19,7 +19,7 @@ pipeline {
             steps {
                 sh 'python release/update_build_number.py'
                 sh 'mvn package -Pcdh5.11.1'
-                sh 'mvn package -Predshift'
+                sh 'mvn package -Predshift41'
                 sh 'mvn package -Papache'
                 sh 'python release/release_jars.py'
                 sh 'mvn clean'
