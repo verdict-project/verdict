@@ -28,6 +28,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import edu.umich.verdict.exceptions.VerdictException;
+import edu.umich.verdict.jdbc.MinimumTest;
 import edu.umich.verdict.jdbc.TestBase;
 
 public class ImpalaThroughVerdictJdbcTest extends TestBase {
@@ -44,7 +45,7 @@ public class ImpalaThroughVerdictJdbcTest extends TestBase {
     }
     
     @Test
-    @Category(edu.umich.verdict.jdbc.MinimumTest.class)
+    @Category(MinimumTest.class)
     public void basicSelectCount() throws SQLException {
         Statement stmt = conn.createStatement();
         stmt.execute("select count(*) from tpch1g.lineitem");

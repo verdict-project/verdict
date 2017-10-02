@@ -18,14 +18,59 @@
         <maven.surefire.version>2.12.4</maven.surefire.version>
         <maven.javadoc.version>2.10.4</maven.javadoc.version>
         <skipTests>true</skipTests>
-        <spark.core.version>1.6.0-cdh5.11.1</spark.core.version>
-        <spark.sql.version>1.6.0-cdh5.11.1</spark.sql.version>
-        <spark.hive.version>1.6.0-cdh5.11.1</spark.hive.version>
-        <spark2.core.version>2.2.0.cloudera1</spark2.core.version>
-        <spark2.sql.version>2.2.0.cloudera1</spark2.sql.version>
-        <spark2.hive.version>2.2.0.cloudera1</spark2.hive.version>
         <main.basedir>${project.basedir}</main.basedir>
+
+        <!-- default spark setting -->
+        <spark.scala.version>2.10</spark.scala.version>
+        <spark.version>1.6.3</spark.version>
+        <spark2.scala.version>2.10</spark2.scala.version>
+        <spark2.version>2.2.0</spark2.version>
+
+        <spark.core.version>${spark.version}</spark.core.version>
+        <spark.sql.version>${spark.version}</spark.sql.version>
+        <spark.hive.version>${spark.version}</spark.hive.version>
+        <spark2.core.version>${spark2.version}</spark2.core.version>
+        <spark2.sql.version>${spark2.version}</spark2.sql.version>
+        <spark2.hive.version>${spark2.version}</spark2.hive.version>
     </properties>
+
+    <profiles>
+        <profile>
+            <id>apache</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <properties>
+                <spark.scala.version>2.10</spark.scala.version>
+                <spark.version>1.6.3</spark.version>
+                <spark2.scala.version>2.11</spark2.scala.version>
+                <spark2.version>2.2.0</spark2.version>
+                <platform.name>apache</platform.name>
+            </properties>
+        </profile>
+        <profile>
+            <id>cdh5.11.1</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <properties>
+                <spark.scala.version>2.10</spark.scala.version>
+                <spark.version>1.6.0-cdh5.11.1</spark.version>
+                <spark2.scala.version>2.11</spark2.scala.version>
+                <spark2.version>2.2.0.cloudera1</spark2.version>
+                <platform.name>cdh5.11.1</platform.name>
+            </properties>
+        </profile>
+        <profile>
+            <id>redshift41</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <properties>
+                <platform.name>redshift</platform.name>
+            </properties>
+        </profile>
+    </profiles>
 
     <groupId>edu.umich</groupId>
     <artifactId>verdict</artifactId>
@@ -44,6 +89,13 @@
         <repository>
             <id>cloudera</id>
             <url>https://repository.cloudera.com/artifactory/cloudera-repos/</url>
+        </repository>
+        <!-- https://maprdocs.mapr.com/51/DevelopmentGuide/Maven-Artifacts-for-MapR_28869748.html -->
+        <repository> 
+            <id>mapr-releases</id>
+            <url>http://repository.mapr.com/maven/</url>
+            <snapshots><enabled>false</enabled></snapshots>
+            <releases><enabled>true</enabled></releases>
         </repository>
         <repository>
             <id>umich-dbgroup</id>
@@ -136,13 +188,34 @@
                             </goals>
                             <phase>site</phase>
                             <configuration>
-                                <!-- Specific configuration for the aggregate 
-                                    report -->
+                                <!-- Specific configuration for the aggregate report -->
                             </configuration>
                         </execution>
                     </executions>
                 </plugin>
             </plugins>
         </pluginManagement>
+        <!-- <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>1.1</version>
+                <executions>
+                    <execution>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <tasks>
+                                <echo>Displaying the values of the properties.</echo>
+                                <echo>[Spark version] ${spark.version}</echo>
+                                <echo>[Spark2 version] ${spark2.version}</echo>
+                            </tasks>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins> -->
     </build>
 </project>

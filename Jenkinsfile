@@ -7,19 +7,22 @@ pipeline {
         stage('Build') {
             steps {
                 sh 'mvn clean'
-                sh 'mvn compile'
+                sh 'mvn compile -Papache'
             }
         }
         stage('Test') {
             steps {
-                sh 'mvn test -DskipTests=false'
+                sh 'mvn test  -Papache -DskipTests=false'
             }
         }
         stage('Deploy') {
             steps {
                 sh 'python release/update_build_number.py'
-                sh 'mvn package'
+                sh 'mvn package -Pcdh5.11.1'
+                sh 'mvn package -Predshift'
+                sh 'mvn package -Papache'
                 sh 'python release/release_jars.py'
+                sh 'mvn clean'
             }
         }
     }

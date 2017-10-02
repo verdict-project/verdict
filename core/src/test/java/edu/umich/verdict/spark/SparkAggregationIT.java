@@ -32,7 +32,6 @@ import org.junit.runner.notification.Failure;
 import com.google.common.base.Joiner;
 
 import edu.umich.verdict.AggregationIT;
-import edu.umich.verdict.VerdictSpark2Context;
 import edu.umich.verdict.VerdictSparkHiveContext;
 import edu.umich.verdict.datatypes.SampleParam;
 import edu.umich.verdict.datatypes.TableUniqueName;

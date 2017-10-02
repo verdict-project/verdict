@@ -7,9 +7,10 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import edu.umich.verdict.exceptions.VerdictException;
+import edu.umich.verdict.TestBase;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-@Category(edu.umich.verdict.MinimumTest.class)
+@Category(MinimumTest.class)
 public abstract class BasicTest extends TestBase {
 
     @Test

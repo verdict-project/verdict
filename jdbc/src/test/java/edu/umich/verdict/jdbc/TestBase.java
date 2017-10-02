@@ -31,5 +31,4 @@ public class TestBase {
         scanner.close();
         return line;
     }
-
 }

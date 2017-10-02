@@ -1,9 +1,11 @@
 import getpass
 import git
+import glob
 import re
 import os
 from subprocess import call
 from update_build_number import current_version
+import yaml
 
 script_dir = os.path.dirname(os.path.realpath(__file__))
 verdict_doc_dir = os.path.join(script_dir, "../../verdict-doc")
@@ -11,22 +13,31 @@ verdict_site_dir = os.path.join(script_dir, "../../verdict-site")
 sourceforge_scp_base_url = "frs.sourceforge.net:/home/frs/project/verdict"
 sourceforge_download_base_url = "https://sourceforge.net/projects/verdict/files"
 push_to_git = False
+supported_platforms = {
+    'CDH': ['cdh5.11.1'],
+    'Redshift': ['redshift']
+}
 
 def get_version_string(j_version):
     return "%s.%s.%s" % (j_version['major'], j_version['minor'], j_version['build'])
 
-def get_cli_zip_filename(j_version):
-    return 'verdict-cli-%s.zip' % get_version_string(j_version)
+def get_cli_zip_filename(platform, j_version):
+    return 'verdict-cli-%s-%s.zip' % (platform, get_version_string(j_version))
 
 def remove_cli_zip(j_version):
     print 'removes cli zip file.'
-    call(['rm', get_cli_zip_filename(j_version)])
+    for f in glob.glob('verdict*.zip'):
+        call(['rm', f])
 
 def zip_command_line_interface(j_version):
-    call(['zip', '-r', get_cli_zip_filename(j_version), 'README.md', 'LICENSE', 'bin/verdict-shell',
-          'jars/verdict-shell-%s.jar' % get_version_string(j_version),
-          'jars/verdict-jdbc-%s.jar' % get_version_string(j_version),
-          'conf/log4j.properties'])
+    for family, versions in supported_platforms.iteritems():
+        for v in versions:
+            zip_name = get_cli_zip_filename(v, j_version)
+            print 'creating a zip archive: %s' % zip_name
+            call(['zip', '-r', zip_name, 'README.md', 'LICENSE', 'bin/verdict-shell',
+                  'jars/verdict-shell-%s.jar' % get_version_string(j_version),
+                  'jars/verdict-jdbc-%s-%s.jar' % (v, get_version_string(j_version)),
+                  'conf/log4j.properties'])
 
 def update_verdict_site(j_version):
     """
@@ -35,35 +46,43 @@ def update_verdict_site(j_version):
     2. the correct compiled jar files.
     """
     print 'updates verdict site.'
+    sf_url = 'https://sourceforge.net/projects/verdict/files/%d.%d' % (j_version['major'], j_version['minor'])
     g = git.cmd.Git(verdict_site_dir)
     g.pull()
     verdict_site_conf_file = os.path.join(verdict_site_dir, '_config.yml')
-    sf_url = 'https://sourceforge.net/projects/verdict/files/%d.%d' % (j_version['major'], j_version['minor'])
-    updated_lines = []
-    for l in open(verdict_site_conf_file):
-        u = l;
-        if re.match("url:.*", l):
-            u = 'url: "http://verdictdb.org/"\n'
-        if re.match("version:.*", l):
-            u = 'version: %s\n' % get_version_string(j_version)
-        if re.match("verdict_core_jar_name:.*", l):
-            u = 'verdict_core_jar_name: verdict-spark-lib-%s.jar\n' % get_version_string(j_version)
-        if re.match("verdict_core_jar_url:.*", l):
-            u = 'verdict_core_jar_url: %s/verdict-spark-lib-%s.jar/download\n' % (sf_url, get_version_string(j_version))
-        if re.match("verdict_jdbc_jar_name:.*", l):
-            u = 'verdict_jdbc_jar_name: verdict-jdbc-%s.jar\n' % get_version_string(j_version)
-        if re.match("verdict_jdbc_jar_url:.*", l):
-            u = 'verdict_jdbc_jar_url: %s/verdict-jdbc-%s.jar/download\n' % (sf_url, get_version_string(j_version))
-        if re.match("verdict_command_line_zip_name:.*", l):
-            u = 'verdict_command_line_zip_name: verdict-cli-%s.zip\n' % get_version_string(j_version)
-        if re.match("verdict_command_line_zip_url:.*", l):
-            u = 'verdict_command_line_zip_url: %s/verdict-cli-%s.zip/download\n' % (sf_url, get_version_string(j_version))
-        if re.match("verdict_veeline_jar_name:.*", l):
-            u = 'verdict_veeline_jar_name: verdict-shell-%s.jar\n' % get_version_string(j_version)
-        updated_lines.append(u)
+
+    y = yaml.load(open(verdict_site_conf_file))
+    y['url'] = "http://verdictdb.org/"
+    y['version'] = get_version_string(j_version)
+
+    # spark (core)
+    y['verdict_core_jar_name'] = 'verdict-spark-lib-%s.jar' % get_version_string(j_version)
+    y['verdict_core_jar_url'] = '%s/verdict-spark-lib-%s.jar/download' % (sf_url, get_version_string(j_version))
+
+    # jdbc
+    yjdbc = {}
+    for family, versions in supported_platforms.iteritems():
+        for v in versions:
+            yjdbc[v] = {}
+            yjdbc[v]['family'] = family
+            yjdbc[v]['name'] = 'verdict-jdbc-%s-%s.jar' % (v, get_version_string(j_version))
+            yjdbc[v]['url'] = '%s/verdict-jdbc-%s-%s.jar/download' % (sf_url, v, get_version_string(j_version))
+    y['verdict_jdbc'] = yjdbc
+
+    # shell
+    yshell = {}
+    for family, versions in supported_platforms.iteritems():
+        for v in versions:
+            yshell[v] = {}
+            yshell[v]['family'] = family
+            yshell[v]['name'] = 'verdict-cli-%s-%s.zip' % (v, get_version_string(j_version))
+            yshell[v]['url'] = '%s/verdict-cli-%s-%s.zip/download' % (sf_url, v, get_version_string(j_version))
+    y['verdict_shell'] = yshell
+
     with open(verdict_site_conf_file, 'w') as fout:
-        fout.write("".join(updated_lines))
-        fout.write("\n")
+        fout.write("# auto generated by release/release_jars.py\n\n")
+        fout.write(yaml.dump(y, default_flow_style=False))
+        
     try:
         g.execute(['git', 'commit', '-am', 'version updated to %s' % get_version_string(j_version)])
     except git.exc.GitCommandError:
@@ -108,14 +127,17 @@ def get_path_to_files_to_upload(j_version):
     get_version_string(j_version)
     paths.append(os.path.join(jars_dir, 
         'verdict-spark-lib-%s.jar' % get_version_string(j_version)))
-    paths.append(os.path.join(jars_dir, 
-        'verdict-jdbc-%s.jar' % get_version_string(j_version)))
-    paths.append(get_cli_zip_filename(j_version))
+    for family, versions in supported_platforms.iteritems():
+        for v in versions:
+            paths.append(os.path.join(jars_dir, 
+                'verdict-jdbc-%s-%s.jar' % (v, get_version_string(j_version))))
+            paths.append(get_cli_zip_filename(v, j_version))
     return paths
 
 def call_with_failure(cmd):
     ret = call(cmd)
-    print 'return code: %d' % ret
+    if ret != 0:
+        raise ValueError('shell return code indicates a failure.')
 
 def create_sourceforge_dir_if_not_exists(j_version):
     print 'creates a version-specific folder if not exists.'
