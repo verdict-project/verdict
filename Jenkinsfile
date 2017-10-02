@@ -7,12 +7,12 @@ pipeline {
         stage('Build') {
             steps {
                 sh 'mvn clean'
-                sh 'mvn compile -Papache'
+                sh 'mvn compile -Predshift'
             }
         }
         stage('Test') {
             steps {
-                sh 'mvn test  -Papache -DskipTests=false'
+                sh 'mvn test -Pcdh5.11.1 -DskipTests=false'
             }
         }
         stage('Deploy') {
