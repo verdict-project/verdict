@@ -20,10 +20,11 @@
         <skipTests>true</skipTests>
         <main.basedir>${project.basedir}</main.basedir>
 
-        <!-- default spark setting -->
+        <!-- default spark setting; -->
+        <!-- Important!! The scala version for spark1 and spark2 must be different. -->
         <spark.scala.version>2.10</spark.scala.version>
         <spark.version>1.6.3</spark.version>
-        <spark2.scala.version>2.10</spark2.scala.version>
+        <spark2.scala.version>2.11</spark2.scala.version>
         <spark2.version>2.2.0</spark2.version>
 
         <spark.core.version>${spark.version}</spark.core.version>
@@ -43,7 +44,7 @@
             <properties>
                 <spark.scala.version>2.10</spark.scala.version>
                 <spark.version>1.6.3</spark.version>
-                <spark2.scala.version>2.10</spark2.scala.version>
+                <spark2.scala.version>2.11</spark2.scala.version>
                 <spark2.version>2.2.0</spark2.version>
                 <platform.name>apache</platform.name>
             </properties>

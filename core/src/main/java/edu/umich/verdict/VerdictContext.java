@@ -23,7 +23,6 @@ import java.util.concurrent.ThreadLocalRandom;
 import org.apache.spark.sql.DataFrame;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
-
 import com.google.common.base.Optional;
 import com.google.common.collect.Sets;
 
