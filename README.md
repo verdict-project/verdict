@@ -38,7 +38,12 @@ Of course, you can issue as many queries as you want after a single preparation 
 
 # Download and Install
 
-You only need to download a couple of jar files to get started. Verdict does not require "sudo" access or any complicated setup process. Visit [this page](http://verdictdb.org/download/) to find out the files relevant to your data analytics platforms. We already provide pre-built jar files for Cloudera distributions, MapR distributions, and official Apache Spark. You can also build from the source code using the standard build tool, Apache Maven.
+You only need to download a couple of jar files to get started. Verdict does not require "sudo" access or any complicated setup process. Go to [this download page](http://verdictdb.org/download/) to find out the files relevant to your data analytics platforms. We already provide pre-built jar files for Cloudera distributions, MapR distributions, and official Apache Spark. You can also build from the source code using the standard build tool, Apache Maven.
+
+
+# How to Connect?
+
+There are several options, such as (1) Verdict's interactive shell and (2) JDBC driver. For Spark, you simply include Verdict's spark library and issue queries to Verdict's SQL context. Verdict works well with popular front-end tools, such as Apache Zeppelin, Hue, Jupyter notebooks, and so on.
 
 
 # How are Such Large Speedups Possible?
