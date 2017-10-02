@@ -22,7 +22,7 @@ Let Verdict do some preparation:
 create sample of big_data_table;
 ```
 
-Now just issue your queries as they were and enjoy 100x faster data analytics!
+Now you just issue standard SQL queries and enjoy 100x faster data analytics!
 
 ```sql
 select city, count(*)
