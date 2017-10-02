@@ -13,10 +13,7 @@ verdict_site_dir = os.path.join(script_dir, "../../verdict-site")
 sourceforge_scp_base_url = "frs.sourceforge.net:/home/frs/project/verdict"
 sourceforge_download_base_url = "https://sourceforge.net/projects/verdict/files"
 push_to_git = False
-supported_platforms = {
-    'CDH': ['cdh5.11.1'],
-    'Redshift': ['redshift']
-}
+supported_platforms = yaml.load(open(os.path.join(script_dir, 'supported_platforms.yml')))
 
 def get_version_string(j_version):
     return "%s.%s.%s" % (j_version['major'], j_version['minor'], j_version['build'])
@@ -31,7 +28,9 @@ def remove_cli_zip(j_version):
 
 def zip_command_line_interface(j_version):
     for family, versions in supported_platforms.iteritems():
-        for v in versions:
+        for v, env in versions.iteritems():
+            if 'shell' not in env:
+                continue
             zip_name = get_cli_zip_filename(v, j_version)
             print 'creating a zip archive: %s' % zip_name
             call(['zip', '-r', zip_name, 'README.md', 'LICENSE', 'bin/verdict-shell',
@@ -56,13 +55,23 @@ def update_verdict_site(j_version):
     y['version'] = get_version_string(j_version)
 
     # spark (core)
-    y['verdict_core_jar_name'] = 'verdict-spark-lib-%s.jar' % get_version_string(j_version)
-    y['verdict_core_jar_url'] = '%s/verdict-spark-lib-%s.jar/download' % (sf_url, get_version_string(j_version))
+    yspark = {}
+    for family, versions in supported_platforms.iteritems():
+        for v, env in versions.iteritems():
+            if 'spark' not in env:
+                continue
+            yspark[v] = {}
+            yspark[v]['family'] = family
+            yspark[v]['name'] = 'verdict-spark-lib-%s-%s.jar' % (v, get_version_string(j_version))
+            yspark[v]['url'] = '%s/verdict-spark-lib-%s-%s.jar/download' % (sf_url, v, get_version_string(j_version))
+    y['verdict_spark'] = yspark
 
     # jdbc
     yjdbc = {}
     for family, versions in supported_platforms.iteritems():
-        for v in versions:
+        for v, env in versions.iteritems():
+            if 'jdbc' not in env:
+                continue
             yjdbc[v] = {}
             yjdbc[v]['family'] = family
             yjdbc[v]['name'] = 'verdict-jdbc-%s-%s.jar' % (v, get_version_string(j_version))
@@ -72,7 +81,9 @@ def update_verdict_site(j_version):
     # shell
     yshell = {}
     for family, versions in supported_platforms.iteritems():
-        for v in versions:
+        for v, env in versions.iteritems():
+            if 'shell' not in env:
+                continue
             yshell[v] = {}
             yshell[v]['family'] = family
             yshell[v]['name'] = 'verdict-cli-%s-%s.zip' % (v, get_version_string(j_version))
@@ -125,13 +136,14 @@ def get_path_to_files_to_upload(j_version):
     paths = []
     jars_dir = os.path.join(script_dir, '../jars')
     get_version_string(j_version)
-    paths.append(os.path.join(jars_dir, 
-        'verdict-spark-lib-%s.jar' % get_version_string(j_version)))
     for family, versions in supported_platforms.iteritems():
-        for v in versions:
-            paths.append(os.path.join(jars_dir, 
-                'verdict-jdbc-%s-%s.jar' % (v, get_version_string(j_version))))
-            paths.append(get_cli_zip_filename(v, j_version))
+        for v, env in versions.iteritems():
+            if 'spark' in env:
+                paths.append(os.path.join(jars_dir, 'verdict-spark-lib-%s-%s.jar' % (v, get_version_string(j_version))))
+            if 'jdbc' in env:
+                paths.append(os.path.join(jars_dir, 'verdict-jdbc-%s-%s.jar' % (v, get_version_string(j_version))))
+            if 'shell' in env:
+                paths.append(get_cli_zip_filename(v, j_version))
     return paths
 
 def call_with_failure(cmd):
@@ -173,7 +185,7 @@ if __name__ == "__main__":
 
     j_version = current_version()
     zip_command_line_interface(j_version)
-    create_sourceforge_dir_if_not_exists(j_version)
+    # create_sourceforge_dir_if_not_exists(j_version)
     file_paths = get_path_to_files_to_upload(j_version)
     for p in file_paths:
         upload_file_to_sourceforge(p, j_version)

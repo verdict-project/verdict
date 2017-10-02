@@ -77,7 +77,7 @@
                             <descriptorRefs>
                                 <descriptorRef>jar-with-dependencies</descriptorRef>
                             </descriptorRefs>
-                            <finalName>verdict-spark-lib-${verdict.version}</finalName>
+                            <finalName>verdict-spark-lib-${platform.name}-${verdict.version}</finalName>
                             <outputDirectory>${main.basedir}/jars</outputDirectory>
                         </configuration>
                     </execution>

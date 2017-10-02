@@ -1,6 +1,13 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0     http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
+    <groupId>edu.umich</groupId>
+    <artifactId>verdict</artifactId>
+    <packaging>pom</packaging>
+    <version>0.4.0</version>
+    <name>Verdict</name>
+    <url>http://verdictdb.org</url>
+
     <properties>
         <verdict.version>0.4.0</verdict.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -48,6 +55,9 @@
                 <spark2.version>2.2.0</spark2.version>
                 <platform.name>apache</platform.name>
             </properties>
+            <modules>
+                <module>core</module>
+            </modules>
         </profile>
         <profile>
             <id>apache-spark-scala2.10</id>
@@ -56,11 +66,54 @@
             </activation>
             <properties>
                 <spark.scala.version>2.10</spark.scala.version>
-                <spark.version>1.6.3</spark.version>
                 <spark2.scala.version>2.11</spark2.scala.version>
-                <spark2.version>2.2.0</spark2.version>
-                <platform.name>apache</platform.name>
+                <platform.name>spark_2.10</platform.name>
             </properties>
+            <modules>
+                <module>core</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>apache-spark2-scala2.10</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <properties>
+                <spark.scala.version>2.11</spark.scala.version>
+                <spark2.scala.version>2.10</spark2.scala.version>
+                <platform.name>spark2_2.10</platform.name>
+            </properties>
+            <modules>
+                <module>core</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>apache-spark-scala2.11</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <properties>
+                <spark.scala.version>2.11</spark.scala.version>
+                <spark2.scala.version>2.10</spark2.scala.version>
+                <platform.name>spark_2.11</platform.name>
+            </properties>
+            <modules>
+                <module>core</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>apache-spark2-scala2.11</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <properties>
+                <spark.scala.version>2.10</spark.scala.version>
+                <spark2.scala.version>2.11</spark2.scala.version>
+                <platform.name>spark2_2.11</platform.name>
+            </properties>
+            <modules>
+                <module>core</module>
+            </modules>
         </profile>
         <profile>
             <id>cdh5.11.1</id>
@@ -74,6 +127,59 @@
                 <spark2.version>2.2.0.cloudera1</spark2.version>
                 <platform.name>cdh5.11.1</platform.name>
             </properties>
+            <modules>
+                <module>core</module>
+                <module>jdbc</module>
+                <module>veeline</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>cdh5.12.1</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <properties>
+                <spark.scala.version>2.10</spark.scala.version>
+                <spark.version>1.6.0-cdh5.12.1</spark.version>
+                <spark2.scala.version>2.11</spark2.scala.version>
+                <spark2.version>2.2.0.cloudera1</spark2.version>
+                <platform.name>cdh5.12.1</platform.name>
+            </properties>
+            <modules>
+                <module>core</module>
+                <module>jdbc</module>
+                <module>veeline</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>mapr-spark2.0.1</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <properties>
+                <spark.scala.version>2.10</spark.scala.version>
+                <spark2.scala.version>2.11</spark2.scala.version>
+                <spark2.version>2.0.1-mapr-1611</spark2.version>
+                <platform.name>mapr-spark2.0.1</platform.name>
+            </properties>
+            <modules>
+                <module>core</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>mapr-spark2.1.0</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <properties>
+                <spark.scala.version>2.10</spark.scala.version>
+                <spark2.scala.version>2.11</spark2.scala.version>
+                <spark2.version>2.1.0-mapr-1703</spark2.version>
+                <platform.name>mapr-spark2.1.0</platform.name>
+            </properties>
+            <modules>
+                <module>core</module>
+            </modules>
         </profile>
         <profile>
             <id>redshift41</id>
@@ -81,23 +187,15 @@
                 <activeByDefault>false</activeByDefault>
             </activation>
             <properties>
-                <platform.name>redshift</platform.name>
+                <platform.name>redshift41</platform.name>
             </properties>
+            <modules>
+                <module>core</module>
+                <module>jdbc</module>
+                <module>veeline</module>
+            </modules>
         </profile>
     </profiles>
-
-    <groupId>edu.umich</groupId>
-    <artifactId>verdict</artifactId>
-    <packaging>pom</packaging>
-    <version>0.4.0</version>
-    <name>Verdict</name>
-    <url>http://verdictdb.org</url>
-
-    <modules>
-        <module>core</module>
-        <module>jdbc</module>
-        <module>veeline</module>
-    </modules>
 
     <repositories>
         <repository>

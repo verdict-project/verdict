@@ -1,0 +1,17 @@
+# platform family: [spec]
+Official Version:
+  spark_2.10: ['spark']
+  spark2_2.10: ['spark']
+  spark_2.11: ['spark']
+  spark2_2.11: ['spark']
+
+CDH:
+  cdh5.11.1: ['spark', 'jdbc', 'shell']
+  cdh5.12.1: ['spark', 'jdbc', 'shell']
+
+MapR:
+  mapr-spark2.0.1: ['spark']
+  mapr-spark2.1.0: ['spark']
+
+Redshift:
+  redshift41: ['jdbc', 'shell']
