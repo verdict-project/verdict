@@ -178,7 +178,7 @@ public class DbmsSpark2 extends Dbms {
 
     @Override
     public String modOfHash(String col, int mod) {
-        return String.format("crc32(cast(%s as string)) %% %d", col, mod);
+        return String.format("crc32(cast(%s%s%s as string)) %% %d", getQuoteString(), col, getQuoteString(), mod);
     }
 
     @Override
