@@ -123,9 +123,6 @@ public class DbmsSpark2 extends Dbms {
         List<Row> rows = getTablesInDataset(schema).collectAsList();
         for (Row row : rows) {
             String table = row.getString(1);
-            if (table.substring(0,1).equals("#")) {
-                break;
-            }
             tables.add(table);
         }
         return tables;
@@ -145,6 +142,9 @@ public class DbmsSpark2 extends Dbms {
         List<Row> rows = describeTableInDataset(table).collectAsList();
         for (Row row : rows) {
             String column = row.getString(0);
+            if (column.substring(0,1).equals("#")) {
+                break;
+            }
             String type = row.getString(1);
             col2type.put(column, type);
         }
