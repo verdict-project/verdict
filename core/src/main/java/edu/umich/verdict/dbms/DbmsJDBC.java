@@ -116,6 +116,9 @@ public abstract class DbmsJDBC extends Dbms {
             ResultSet rs = getTablesInResultSet(schema);
             while (rs.next()) {
                 String table = rs.getString(1);
+                if (table.substring(0,1).equals("#")) {
+                    break;
+                }
                 tables.add(table);
             }
         } catch (SQLException e) {
