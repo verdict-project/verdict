@@ -116,9 +116,6 @@ public abstract class DbmsJDBC extends Dbms {
             ResultSet rs = getTablesInResultSet(schema);
             while (rs.next()) {
                 String table = rs.getString(1);
-                if (table.substring(0,1).equals("#")) {
-                    break;
-                }
                 tables.add(table);
             }
         } catch (SQLException e) {
@@ -135,6 +132,9 @@ public abstract class DbmsJDBC extends Dbms {
             ResultSet rs = describeTableInResultSet(table);
             while (rs.next()) {
                 String column = rs.getString(1);
+                if (column.substring(0,1).equals("#")) {
+                    break;
+                }
                 String type = rs.getString(2);
                 col2type.put(column, type);
             }
