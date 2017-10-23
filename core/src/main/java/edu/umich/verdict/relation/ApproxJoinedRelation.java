@@ -18,6 +18,7 @@ package edu.umich.verdict.relation;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -266,7 +267,12 @@ public class ApproxJoinedRelation extends ApproxRelation {
     protected Map<TableUniqueName, String> tableSubstitution() {
         Map<TableUniqueName, String> sub1 = source1.tableSubstitution();
         Map<TableUniqueName, String> sub2 = source2.tableSubstitution();
-        return ImmutableMap.<TableUniqueName, String>builder().putAll(sub1).putAll(sub2).build();
+        
+        HashMap<TableUniqueName, String> m = new HashMap<TableUniqueName, String>();
+        m.putAll(sub1);
+        m.putAll(sub2);
+        return m;
+//        return ImmutableMap.<TableUniqueName, String>builder().putAll(sub1).putAll(sub2).build();
     }
 
     @Override
