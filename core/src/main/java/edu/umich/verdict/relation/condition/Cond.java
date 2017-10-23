@@ -161,6 +161,11 @@ class CondGen extends VerdictSQLBaseVisitor<Cond> {
         LikeCond likeCond = LikeCond.from(vc, ctx);
         return likeCond;
     }
+    
+    @Override public Cond visitComp_between_expr(VerdictSQLParser.Comp_between_exprContext ctx) {
+        BetweenCond betweenCond = BetweenCond.from(vc, ctx);
+        return betweenCond;
+    }
 
     @Override
     public Cond visitNull_notnull(VerdictSQLParser.Null_notnullContext ctx) {
