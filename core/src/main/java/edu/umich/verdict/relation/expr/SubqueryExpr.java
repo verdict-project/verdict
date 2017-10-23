@@ -35,7 +35,11 @@ public class SubqueryExpr extends Expr {
     }
 
     public static SubqueryExpr from(VerdictContext vc, VerdictSQLParser.Subquery_expressionContext ctx) {
-        return from(vc, ExactRelation.from(vc, ctx.subquery().select_statement()));
+        return from(vc, ctx.subquery());
+    }
+    
+    public static SubqueryExpr from(VerdictContext vc, VerdictSQLParser.SubqueryContext ctx) {
+        return from(vc, ExactRelation.from(vc, ctx.select_statement()));
     }
 
     public Relation getSubquery() {

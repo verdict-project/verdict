@@ -23,6 +23,7 @@ import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.parser.VerdictSQLParser;
 import edu.umich.verdict.parser.VerdictSQLParser.ExpressionContext;
 import edu.umich.verdict.relation.expr.Expr;
+import edu.umich.verdict.relation.expr.SubqueryExpr;
 import edu.umich.verdict.util.VerdictLogger;
 
 public class InCond extends Cond {
@@ -32,11 +33,19 @@ public class InCond extends Cond {
     boolean not;
 
     List<Expr> expressionList;
+    
+    Expr subquery;
 
     public InCond(Expr left, boolean not, List<Expr> expressionList) {
         this.left = left;
         this.not = not;
         this.expressionList = expressionList;
+    }
+    
+    public InCond(Expr left, boolean not, Expr subquery) {
+        this.left = left;
+        this.not = not;
+        this.subquery = subquery;
     }
 
     public Expr getLeft() {
@@ -62,25 +71,38 @@ public class InCond extends Cond {
     public void setExpressionList(List<Expr> expressionList) {
         this.expressionList = expressionList;
     }
+    
+    public Expr getSubquery() {
+        return subquery;
+    }
+    
 
     public static InCond from(VerdictContext vc, VerdictSQLParser.In_predicateContext ctx) {
         if (ctx.subquery() != null) {
             VerdictLogger.error("Verdict currently does not support IN + subquery condition.");
+            Expr left = Expr.from(vc, ctx.expression());
+            boolean not = (ctx.NOT() != null) ? true : false;
+            Expr subquery = SubqueryExpr.from(vc, ctx.subquery());
+            return new InCond(left, not, subquery);
+        } else {
+            Expr left = Expr.from(vc, ctx.expression());
+            boolean not = (ctx.NOT() != null) ? true : false;
+            List<Expr> expressionList = new ArrayList<Expr>();
+
+            for (ExpressionContext ectx : ctx.expression_list().expression()) {
+                expressionList.add(Expr.from(vc, ectx));
+            }
+
+            return new InCond(left, not, expressionList);
         }
-
-        Expr left = Expr.from(vc, ctx.expression());
-        boolean not = (ctx.NOT() != null) ? true : false;
-        List<Expr> expressionList = new ArrayList<Expr>();
-
-        for (ExpressionContext ectx : ctx.expression_list().expression()) {
-            expressionList.add(Expr.from(vc, ectx));
-        }
-
-        return new InCond(left, not, expressionList);
     }
 
     @Override
     public Cond withTableSubstituted(String newTab) {
+        if (expressionList == null) {
+            return this;
+        }
+        
         List<Expr> newExpressions = new ArrayList<Expr>();
         for (Expr expr : expressionList) {
             newExpressions.add(expr.withTableSubstituted(newTab));
@@ -100,11 +122,15 @@ public class InCond extends Cond {
         if (not)
             sql.append(" NOT");
         sql.append(" IN (");
-
-        for (int i = 0; i < expressionList.size(); i++) {
-            if (i > 0)
-                sql.append(", ");
-            sql.append(expressionList.get(i).toSql());
+        
+        if (subquery != null) {
+            sql.append(subquery.toSql());
+        } else {
+            for (int i = 0; i < expressionList.size(); i++) {
+                if (i > 0)
+                    sql.append(", ");
+                sql.append(expressionList.get(i).toSql());
+            }
         }
 
         sql.append(")");
@@ -114,8 +140,12 @@ public class InCond extends Cond {
     @Override
     public boolean equals(Cond o) {
         if (o instanceof InCond) {
-            return getLeft().equals(((InCond) o).getLeft()) && (isNot() == ((InCond) o).isNot())
-                    && getExpressionList().equals(((InCond) o).getExpressionList());
+            if (subquery != null && ((InCond) o).subquery != null) {
+                return subquery.equals(((InCond) o).subquery);
+            } else if (expressionList != null && ((InCond) o).expressionList != null) {
+                return getLeft().equals(((InCond) o).getLeft()) && (isNot() == ((InCond) o).isNot())
+                        && getExpressionList().equals(((InCond) o).getExpressionList());
+            }
         }
         return false;
     }
