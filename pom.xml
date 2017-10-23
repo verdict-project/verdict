@@ -221,9 +221,9 @@
 
     <build>
         <resources>
-            <resource>
+            <!--<resource>
                 <directory>${main.basedir}/conf</directory>
-            </resource>
+            </resource>-->
         </resources>
         <pluginManagement>
             <plugins>
