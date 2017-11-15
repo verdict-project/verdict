@@ -30,7 +30,7 @@ import edu.umich.verdict.util.StringManipulations;
 public class FuncExpr extends Expr {
 
     public enum FuncName {
-        COUNT, SUM, AVG, COUNT_DISTINCT, EXTRACT, IMPALA_APPROX_COUNT_DISTINCT, ROUND, MAX, MIN, FLOOR, CEIL, EXP, LN, LOG10, LOG2, SIN, COS, TAN, SIGN, STRTOL, RAND, RANDOM, FNV_HASH, ABS, STDDEV, SQRT, MOD, PMOD, YEAR, CAST, CONV, SUBSTR, MD5, CRC32, UNIX_TIMESTAMP, CURRENT_TIMESTAMP, UNKNOWN, LOWER
+        COUNT, SUM, AVG, COUNT_DISTINCT, EXTRACT, IMPALA_APPROX_COUNT_DISTINCT, ROUND, MAX, MIN, FLOOR, CEIL, EXP, LN, LOG10, LOG2, SIN, COS, TAN, SIGN, STRTOL, RAND, RANDOM, FNV_HASH, ABS, STDDEV, SQRT, MOD, PMOD, YEAR, CAST, CONV, SUBSTR, MD5, CRC32, UNIX_TIMESTAMP, CURRENT_TIMESTAMP, UNKNOWN, LOWER, UPPER, ASCII, CHARACTER_LENGTH, POW, E, PI, FACTORIAL, CBRT, PERCENTILE, SPLIT, LENGTH, INSTR, TRIM, ASIN, ACOS, ATAN, DEGREES, RADIANS, POSITIVE, NEGATIVE, ENCODE, DECODE
     }
 
     protected List<Expr> expressions;
@@ -49,7 +49,7 @@ public class FuncExpr extends Expr {
             .put("STDDEV", FuncName.STDDEV).put("SQRT", FuncName.SQRT).put("STRTOL", FuncName.STRTOL)
             .put("MOD", FuncName.MOD).put("CRC32", FuncName.CRC32).put("PMOD", FuncName.PMOD).put("YEAR", FuncName.YEAR)
             .put("CONV", FuncName.CONV).put("SUBSTR", FuncName.SUBSTR).put("CAST", FuncName.CAST)
-            .put("EXTRACT", FuncName.EXTRACT).put("LOWER", FuncName.LOWER).build();
+            .put("EXTRACT", FuncName.EXTRACT).put("LOWER", FuncName.LOWER).put("UPPER", FuncName.UPPER).put("ASCII", FuncName.ASCII).put("CHARACTER_LENGTH", FuncName.CHARACTER_LENGTH).put("POW", FuncName.POW).put("E", FuncName.E).put("PI", FuncName.PI).put("FACTORIAL", FuncName.FACTORIAL).put("CBRT", FuncName.CBRT).put("PERCENTILE", FuncName.PERCENTILE).put("SPLIT", FuncName.SPLIT).put("LENGTH", FuncName.LENGTH).put("INSTR", FuncName.INSTR).put("TRIM", FuncName.TRIM).put("ASIN", FuncName.ASIN).put("ACOS", FuncName.ACOS).put("ATAN", FuncName.ATAN).put("DEGREES", FuncName.DEGREES).put("RADIANS", FuncName.RADIANS).put("POSITIVE", FuncName.POSITIVE).put("NEGATIVE", FuncName.NEGATIVE).put("ENCODE", FuncName.ENCODE).put("DECODE", FuncName.DECODE).build();
 
     protected static Map<FuncName, String> functionPattern = ImmutableMap.<FuncName, String>builder()
             .put(FuncName.COUNT, "count(%s)").put(FuncName.SUM, "sum(%s)").put(FuncName.AVG, "avg(%s)")
@@ -65,7 +65,7 @@ public class FuncExpr extends Expr {
             .put(FuncName.STRTOL, "strtol(%s, %s)").put(FuncName.MOD, "mod(%s, %s)").put(FuncName.PMOD, "pmod(%s, %s)")
             .put(FuncName.YEAR, "year(%s)").put(FuncName.CONV, "conv(%s, %s, %s)")
             .put(FuncName.SUBSTR, "substr(%s, %s, %s)").put(FuncName.CAST, "cast(%s as %s)")
-            .put(FuncName.EXTRACT, "extract(%s from %s)").put(FuncName.UNKNOWN, "UNKNOWN(%s)").put(FuncName.LOWER, "lower(%s)").build();
+            .put(FuncName.EXTRACT, "extract(%s from %s)").put(FuncName.UNKNOWN, "UNKNOWN(%s)").put(FuncName.LOWER, "lower(%s)").put(FuncName.UPPER, "upper(%s)").put(FuncName.ASCII, "ascii(%s)").put(FuncName.CHARACTER_LENGTH, "character_length(%s)").put(FuncName.POW, "pow(%s, %s)").put(FuncName.E, "e(%s)").put(FuncName.PI, "pi(%s)").put(FuncName.FACTORIAL, "factorial(%s)").put(FuncName.CBRT, "cbrt(%s)").put(FuncName.PERCENTILE, "percentile(%s, %s)").put(FuncName.SPLIT, "split(%s, %s)").put(FuncName.LENGTH, "length(%s)").put(FuncName.INSTR, "instr(%s, %s)").put(FuncName.TRIM, "trim(%s)").put(FuncName.ASIN, "asin(%s)").put(FuncName.ACOS, "acos(%s)").put(FuncName.ATAN, "atan(%s)").put(FuncName.DEGREES, "degrees(%s)").put(FuncName.RADIANS, "radians(%s)").put(FuncName.POSITIVE, "positive(%s)").put(FuncName.NEGATIVE, "negative(%s)").put(FuncName.ENCODE, "encode(%s, %s)").put(FuncName.DECODE, "decode(%s, %s)").build();
 
     public FuncExpr(FuncName fname, List<Expr> exprs, OverClause overClause) {
         super(VerdictContext.dummyContext());
