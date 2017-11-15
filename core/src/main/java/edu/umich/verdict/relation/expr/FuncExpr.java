@@ -30,7 +30,7 @@ import edu.umich.verdict.util.StringManipulations;
 public class FuncExpr extends Expr {
 
     public enum FuncName {
-        COUNT, SUM, AVG, COUNT_DISTINCT, EXTRACT, IMPALA_APPROX_COUNT_DISTINCT, ROUND, MAX, MIN, FLOOR, CEIL, EXP, LN, LOG10, LOG2, SIN, COS, TAN, SIGN, STRTOL, RAND, RANDOM, FNV_HASH, ABS, STDDEV, SQRT, MOD, PMOD, YEAR, CAST, CONV, SUBSTR, MD5, CRC32, UNIX_TIMESTAMP, CURRENT_TIMESTAMP, UNKNOWN
+        COUNT, SUM, AVG, COUNT_DISTINCT, EXTRACT, IMPALA_APPROX_COUNT_DISTINCT, ROUND, MAX, MIN, FLOOR, CEIL, EXP, LN, LOG10, LOG2, SIN, COS, TAN, SIGN, STRTOL, RAND, RANDOM, FNV_HASH, ABS, STDDEV, SQRT, MOD, PMOD, YEAR, CAST, CONV, SUBSTR, MD5, CRC32, UNIX_TIMESTAMP, CURRENT_TIMESTAMP, UNKNOWN, LOWER
     }
 
     protected List<Expr> expressions;
@@ -49,7 +49,7 @@ public class FuncExpr extends Expr {
             .put("STDDEV", FuncName.STDDEV).put("SQRT", FuncName.SQRT).put("STRTOL", FuncName.STRTOL)
             .put("MOD", FuncName.MOD).put("CRC32", FuncName.CRC32).put("PMOD", FuncName.PMOD).put("YEAR", FuncName.YEAR)
             .put("CONV", FuncName.CONV).put("SUBSTR", FuncName.SUBSTR).put("CAST", FuncName.CAST)
-            .put("EXTRACT", FuncName.EXTRACT).build();
+            .put("EXTRACT", FuncName.EXTRACT).put("LOWER", FuncName.LOWER).build();
 
     protected static Map<FuncName, String> functionPattern = ImmutableMap.<FuncName, String>builder()
             .put(FuncName.COUNT, "count(%s)").put(FuncName.SUM, "sum(%s)").put(FuncName.AVG, "avg(%s)")
@@ -65,7 +65,7 @@ public class FuncExpr extends Expr {
             .put(FuncName.STRTOL, "strtol(%s, %s)").put(FuncName.MOD, "mod(%s, %s)").put(FuncName.PMOD, "pmod(%s, %s)")
             .put(FuncName.YEAR, "year(%s)").put(FuncName.CONV, "conv(%s, %s, %s)")
             .put(FuncName.SUBSTR, "substr(%s, %s, %s)").put(FuncName.CAST, "cast(%s as %s)")
-            .put(FuncName.EXTRACT, "extract(%s from %s)").put(FuncName.UNKNOWN, "UNKNOWN(%s)").build();
+            .put(FuncName.EXTRACT, "extract(%s from %s)").put(FuncName.UNKNOWN, "UNKNOWN(%s)").put(FuncName.LOWER, "lower(%s)").build();
 
     public FuncExpr(FuncName fname, List<Expr> exprs, OverClause overClause) {
         super(VerdictContext.dummyContext());
