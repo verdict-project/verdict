@@ -616,7 +616,7 @@ ternary_manipulation_function
     ;
 
 binary_manipulation_function
-    : function_name=(MOD | PMOD | STRTOL)
+    : function_name=(MOD | PMOD | STRTOL | POW | PERCENTILE | SPLIT | INSTR | ENCODE | DECODE)
       '(' expression ',' expression ')'
     ;
     
@@ -631,13 +631,13 @@ extract_unit
 
 unary_manipulation_function
     : function_name=(ROUND | FLOOR | CEIL | EXP | LN | LOG10 | LOG2 | SIN | COS | TAN | SIGN | RAND | FNV_HASH
-     | ABS | STDDEV | SQRT | MD5 | CRC32 | YEAR )
+     | ABS | STDDEV | SQRT | MD5 | CRC32 | YEAR | LOWER | UPPER | ASCII | CHARACTER_LENGTH | FACTORIAL | CBRT | LENGTH | TRIM | ASIN | ACOS | ATAN | DEGREES | RADIANS | POSITIVE | NEGATIVE)
       '(' expression ')'
     | function_name=CAST '(' cast_as_expression ')'    
     ;
     
 noparam_manipulation_function
-    : function_name=(UNIX_TIMESTAMP | CURRENT_TIMESTAMP | RANDOM)
+    : function_name=(UNIX_TIMESTAMP | CURRENT_TIMESTAMP | RANDOM | E | PI)
       '(' ')'
     ;
 
@@ -965,6 +965,7 @@ AND:                             A N D;
 ANY:                             A N Y;
 AS:                              A S;
 ASC:                             A S C;
+ASCII:                           A S C I I;
 AUTHORIZATION:                   A U T H O R I Z A T I O N;
 BACKUP:                          B A C K U P;
 BEGIN:                           B E G I N;
@@ -1154,7 +1155,10 @@ WRITETEXT:                       W R I T E T E X T;
 // Additional keywords (they can be id).
 ABSOLUTE:                        A B S O L U T E;
 ABS:                             A B S;
+ACOS:                            A C O S;
 APPLY:                           A P P L Y;
+ASIN:                            A S I N;
+ATAN:                            A T A N;
 AUTO:                            A U T O;
 AVG:                             A V G;
 BASE64:                          B A S E '64';
@@ -1162,7 +1166,9 @@ BINARY_CHECKSUM:                 B I N A R Y '_' C H E C K S U M;
 CALLER:                          C A L L E R;
 CAST:                            C A S T;
 CATCH:                           C A T C H;
+CBRT:                            C B R T;
 CEIL:                            C E I L;
+CHARACTER_LENGTH:                C H A R A C T E R '_' L E N G T H;
 CHECKSUM:                        C H E C K S U M;
 CHECKSUM_AGG:                    C H E C K S U M '_' A G G;
 COMMITTED:                       C O M M I T T E D;
@@ -1177,16 +1183,21 @@ DATEADD:                         D A T E A D D;
 DATEDIFF:                        D A T E D I F F;
 DATENAME:                        D A T E N A M E;
 DATEPART:                        D A T E P A R T;
+DECODE:                          D E C O D E;
+DEGREES:                         D E G R E E S;
 DELAY:                           D E L A Y;
 DELETED:                         D E L E T E D;
 DENSE_RANK:                      D E N S E '_' R A N K;
 DISABLE:                         D I S A B L E;
 DYNAMIC:                         D Y N A M I C;
+NATURAL_CONSTANT:                E;
+ENCODE:                          E N C O D E;
 ENCRYPTION:                      E N C R Y P T I O N;
 ESCAPED_BY:                      E S C A P E D ' ' B Y;
 EXACT:                           E X A C T;
 EXP:                             E X P;
 EXTRACT:                         E X T R A C T;
+FACTORIAL:                       F A C T O R I A L;
 FAST:                            F A S T;
 FAST_FORWARD:                    F A S T '_' F O R W A R D;
 FIELDS_SEPARATED_BY:             F I E L D S ' ' S E P A R A T E D ' ' B Y;
@@ -1207,6 +1218,7 @@ ISOLATION:                       I S O L A T I O N;
 KEEPFIXED:                       K E E P F I X E D;
 KEYSET:                          K E Y S E T;
 LAST:                            L A S T;
+LENGTH:                          L E N G T H;
 LEVEL:                           L E V E L;
 LN:                              L N;
 LOCAL:                           L O C A L;
@@ -1216,6 +1228,7 @@ LOG2:                            L O G '2';
 LOG10:                           L O G '10';
 LOGIN:                           L O G I N;
 LOOP:                            L O O P;
+LOWER:                           L O W E R;
 MARK:                            M A R K;
 MAX:                             M A X;
 MD5:                             M D '5';
@@ -1223,6 +1236,7 @@ MIN:                             M I N;
 MIN_ACTIVE_ROWVERSION:           M I N '_' A C T I V E '_' R O W V E R S I O N;
 MOD:                             M O D;
 MODIFY:                          M O D I F Y;
+NEGATIVE:                        N E G A T I V E;
 NEXT:                            N E X T;
 NAME:                            N A M E;
 NDV:                             N D V;
@@ -1240,10 +1254,15 @@ OUTPUT:                          O U T P U T;
 OWNER:                           O W N E R;
 PARTITION:                       P A R T I T I O N;
 PATH:                            P A T H;
+PERCENTILE:                      P E R C E N T I L E;
+PI:                              P I;
 PMOD:                            P M O D;
+POSITIVE:                        P O S I T I V E;
+POW:                             P O W;
 PRECEDING:                       P R E C E D I N G;
 PRIOR:                           P R I O R;
 QUOTED_BY:                       Q U O T E D ' ' B Y;
+RADIANS:                         R A D I A N S;
 RAND:                            R A N D;
 RANDOM:                          R A N D O M;
 RANGE:                           R A N G E;
@@ -1272,6 +1291,7 @@ SIGN:                            S I G N;
 SIN:                             S I N;
 SNAPSHOT:                        S N A P S H O T;
 SPATIAL_WINDOW_MAX_CELLS:        S P A T I A L '_' W I N D O W '_' M A X '_' C E L L S;
+SPLIT:                           S P L I T;
 STATIC:                          S T A T I C;
 STATS_STREAM:                    S T A T S '_' S T R E A M;
 STDEV:                           S T D E V;
@@ -1280,11 +1300,12 @@ STDEVP:                          S T D E V P;
 STORED_AS_PARQUET:               S T O R E D ' ' A S ' ' P A R Q U E T;
 SUM:                             S U M;
 SQRT:                            S Q R T;
-STRTOL:							 S T R T O L;
+STRTOL:                          S T R T O L;
 TAN:                             T A N;
 THROW:                           T H R O W;
 TIES:                            T I E S;
 TIME:                            T I M E;
+TRIM:                            T R I M;
 TRY:                             T R Y;
 TYPE:                            T Y P E;
 TYPE_WARNING:                    T Y P E '_' W A R N I N G;
@@ -1293,6 +1314,7 @@ UNCOMMITTED:                     U N C O M M I T T E D;
 UNIVERSE:                        U N I V E R S E;
 UNIX_TIMESTAMP:                  U N I X '_' T I M E S T A M P;
 UNKNOWN:                         U N K N O W N;
+UPPER:                           U P P E R;
 USING:                           U S I N G;
 VAR:                             V A R;
 VARP:                            V A R P;

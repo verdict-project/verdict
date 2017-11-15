@@ -672,7 +672,11 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
             } else if (cond instanceof InCond) {
                 Expr le = ((InCond) cond).getLeft();
                 le = resolver.visit(le);
-                return new InCond(le, ((InCond) cond).isNot(), ((InCond) cond).getExpressionList());
+                if (((InCond) cond).getSubquery() == null) {
+                    return new InCond(le, ((InCond) cond).isNot(), ((InCond) cond).getExpressionList());
+                } else {
+                    return cond;
+                }
             } else if (cond instanceof IsCond) {
                 Expr le = ((IsCond) cond).getLeft();
                 le = resolver.visit(le);
