@@ -315,6 +315,7 @@ expression
     : NULL                                                     #primitive_expression
     | LOCAL_ID                                                 #primitive_expression
     | constant                                                 #primitive_expression
+    | true_orfalse                                             #primitive_expression
     | function_call                                            #function_call_expression
     | expression COLLATE id                                    #function_call_expression
     | case_expr                                                #case_expression
@@ -467,7 +468,7 @@ select_list
     ;
 
 select_list_elem
-    : (table_name '.')? ('*' | '$' (IDENTITY | ROWGUID))
+    : (table_name '.')? (STAR | '$' (IDENTITY | ROWGUID))
     | column_alias '=' expression
     | expression (AS? column_alias)?
     ;
@@ -752,6 +753,10 @@ clustered
 null_notnull
     : NOT? NULL
     ;
+    
+true_orfalse
+    : TRUE | FALSE
+    ;
 
 scalar_function_name
     : func_proc_name
@@ -1026,6 +1031,7 @@ EXECUTE:                         E X E C U T E;
 EXISTS:                          E X I S T S;
 EXIT:                            E X I T;
 EXTERNAL:                        E X T E R N A L;
+FALSE:                           F A L S E;
 FETCH:                           F E T C H;
 FILE:                            F I L E;
 FILLFACTOR:                      F I L L F A C T O R;
@@ -1131,6 +1137,7 @@ TOP:                             T O P;
 TRAN:                            T R A N;
 TRANSACTION:                     T R A N S A C T I O N;
 TRIGGER:                         T R I G G E R;
+TRUE:                            T R U E;
 TRUNCATE:                        T R U N C A T E;
 TRY_CONVERT:                     T R Y '_' C O N V E R T;
 TSEQUAL:                         T S E Q U A L;

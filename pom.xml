@@ -4,12 +4,12 @@
     <groupId>edu.umich</groupId>
     <artifactId>verdict</artifactId>
     <packaging>pom</packaging>
-    <version>0.4.1</version>
+    <version>0.4.3</version>
     <name>Verdict</name>
     <url>http://verdictdb.org</url>
 
     <properties>
-        <verdict.version>0.4.1</verdict.version>
+        <verdict.version>0.4.3</verdict.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <antlr4.visitor>true</antlr4.visitor>
         <antlr4.version>4.5.3</antlr4.version>
@@ -43,6 +43,64 @@
     </properties>
 
     <profiles>
+        <profile>
+            <id>default</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <version>1.1</version>
+                        <executions>
+                            <execution>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                                <configuration>
+                                    <tasks>
+                                        <echo>&#160;</echo>
+                                        <echo>&#160;</echo>
+                                        <echo>&#160;_   _  ___    ____  ____   ___  _____ ___ _     _____ </echo>
+                                        <echo>| \ | |/ _ \  |  _ \|  _ \ / _ \|  ___|_ _| |   | ____|</echo>
+                                        <echo>|  \| | | | | | |_) | |_) | | | | |_   | || |   |  _|  </echo>
+                                        <echo>| |\  | |_| | |  __/|  _ &lt;| |_| |  _|  | || |___| |___ </echo>
+                                        <echo>|_| \_|\___/  |_|   |_| \_\\___/|_|   |___|_____|_____|</echo>
+                                        <echo>&#160;</echo>
+                                        <echo>&#160;</echo>
+                                        <echo>&#160;____  _____ _     _____ ____ _____ _____ ____  </echo>
+                                        <echo>/ ___|| ____| |   | ____/ ___|_   _| ____|  _ \ </echo>
+                                        <echo>\___ \|  _| | |   |  _|| |     | | |  _| | | | |</echo>
+                                        <echo>&#160;___) | |___| |___| |__| |___  | | | |___| |_| |</echo>
+                                        <echo>|____/|_____|_____|_____\____| |_| |_____|____/</echo> 
+                                        <echo>&#160;</echo>
+                                        <echo>&#160;</echo>
+                                        <echo>ERROR: No profile is selected. You must choose one of</echo>
+                                        <echo>- apache</echo>
+                                        <echo>- apache-spark-scala2.10</echo>
+                                        <echo>- apache-spark2-scala2.10</echo>
+                                        <echo>- apache-spark-scala2.11</echo>
+                                        <echo>- apache-spark2-scala2.11</echo>
+                                        <echo>- cdh5.11.1</echo>
+                                        <echo>- cdh5.12.1</echo>
+                                        <echo>- mapr-spark2.0.1</echo>
+                                        <echo>- mapr-spark2.1.0</echo>
+                                        <echo>- redshift41</echo>
+                                        <echo>&#160;</echo>
+                                        <echo>Example: mvn package -Papache-spark2-scala2.11</echo>
+                                        <echo>&#160;</echo>
+                                        <echo>&#160;</echo>
+                                    </tasks>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
         <profile>
             <id>apache</id>
             <activation>

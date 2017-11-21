@@ -39,6 +39,7 @@ import edu.umich.verdict.relation.expr.ExprModifier;
 import edu.umich.verdict.relation.expr.FuncExpr;
 import edu.umich.verdict.relation.expr.OverClause;
 import edu.umich.verdict.relation.expr.SelectElem;
+import edu.umich.verdict.relation.expr.TableNameExpr;
 import edu.umich.verdict.util.VerdictLogger;
 
 public class ApproxAggregatedRelation extends ApproxRelation {
@@ -690,6 +691,17 @@ public class ApproxAggregatedRelation extends ApproxRelation {
     @Override
     public Expr tableSamplingRatio() {
         return new ColNameExpr(vc, samplingRatioColumnName(), getAlias());
+    }
+
+    @Override
+    public List<ColNameExpr> getAssociatedColumnNames(TableNameExpr tabExpr) {
+        List<ColNameExpr> colnames = new ArrayList<ColNameExpr>();
+        if (tabExpr == null || tabExpr.getTable().equals(getAlias())) {
+            for (SelectElem e : elems) {
+                colnames.add(new ColNameExpr(vc, e.getAlias(), getAlias()));
+            }
+        }
+        return colnames;
     }
 
 }

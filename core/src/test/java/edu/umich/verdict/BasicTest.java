@@ -26,6 +26,12 @@ public abstract class BasicTest extends TestBase {
     }
     
     @Test
+    public void test110NestedCountAll() throws VerdictException {
+        String sql = "select count(*) from (select * from tpch1g.lineitem) t";
+        vc.executeJdbcQuery(sql);
+    }
+    
+    @Test
     public void test900DeleteSample() throws VerdictException {
         String sql = "delete samples of tpch1g.lineitem";
         vc.executeJdbcQuery(sql);

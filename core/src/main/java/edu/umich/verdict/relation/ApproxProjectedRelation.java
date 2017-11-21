@@ -29,6 +29,8 @@ import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.relation.expr.FuncExpr;
 import edu.umich.verdict.relation.expr.SelectElem;
+import edu.umich.verdict.relation.expr.StarExpr;
+import edu.umich.verdict.relation.expr.TableNameExpr;
 
 public class ApproxProjectedRelation extends ApproxRelation {
 
@@ -110,13 +112,34 @@ public class ApproxProjectedRelation extends ApproxRelation {
     protected ExactRelation rewriteWithPartition() {
         ExactRelation newSource = source.rewriteWithPartition();
         List<SelectElem> newElems = new ArrayList<SelectElem>();
-        newElems.addAll(elems);
-
+        
+        // Check if the newElems include star expressions. If so, we don't have to explicitly include
+        // prob column and partition column.
+//        boolean includeStar = false;
+        
+        for (SelectElem e : elems) {
+            if (e.getExpr() instanceof StarExpr) {
+//                includeStar = true;
+                TableNameExpr tabExpr = ((StarExpr) e.getExpr()).getTab();
+                List<ColNameExpr> col_names = source.getAssociatedColumnNames(tabExpr);
+                for (ColNameExpr ce : col_names) {
+                    newElems.add(new SelectElem(vc, ce));
+                }
+            } else {
+                newElems.add(e);
+            }
+        }
+        
         // prob column (for point estimate and also for subsampling)
         newElems.add(new SelectElem(vc, source.tupleProbabilityColumn(), samplingProbabilityColumnName()));
 
         // partition column (for subsampling)
         newElems.add(new SelectElem(vc, newSource.partitionColumn(), partitionColumnName()));
+        
+//        // we manually insert the probability and partition (for subsampling) columns if the star expression
+//        // is not placed on the table from which partition
+//        if (includeStar == false) {
+//        }
 
         ExactRelation r = new ProjectedRelation(vc, newSource, newElems);
         r.setAlias(getAlias());
@@ -282,6 +305,17 @@ public class ApproxProjectedRelation extends ApproxRelation {
     @Override
     public Expr tableSamplingRatio() {
         return new ColNameExpr(vc, samplingRatioColumnName(), getAlias());
+    }
+
+    @Override
+    public List<ColNameExpr> getAssociatedColumnNames(TableNameExpr tabExpr) {
+        List<ColNameExpr> colnames = new ArrayList<ColNameExpr>();
+        if (tabExpr == null || tabExpr.getTable().equals(getAlias())) {
+            for (SelectElem e : elems) {
+                colnames.add(new ColNameExpr(vc, e.getAlias(), getAlias()));
+            }
+        }
+        return colnames;
     }
 
 }

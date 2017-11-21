@@ -35,3 +35,4 @@ libs/*.jar
 # misc
 license_update.py
 *.pyc
+core/src/test/java/edu/umich/verdict/temp/

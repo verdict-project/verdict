@@ -17,12 +17,54 @@
 package edu.umich.verdict.relation.expr;
 
 import edu.umich.verdict.VerdictContext;
+import edu.umich.verdict.parser.VerdictSQLParser.Table_nameContext;
 
 // Currently not used.
 public class TableNameExpr extends Expr {
+    
+    private String schema = null;
+    
+    private String table = null;
 
-    public TableNameExpr(VerdictContext vc) {
+    /**
+     * 
+     * @param vc
+     * @param schema May be null
+     * @param table Must not be null
+     */
+    public TableNameExpr(VerdictContext vc, String schema, String table) {
         super(vc);
+        assert(table != null);
+        this.schema = schema;
+        this.table = table;
+    }
+    
+    public String getSchema() {
+        return schema;
+    }
+
+    public void setSchema(String schema) {
+        this.schema = schema;
+    }
+
+    public String getTable() {
+        return table;
+    }
+
+    public void setTable(String table) {
+        this.table = table;
+    }
+
+    public static TableNameExpr from(VerdictContext vc, Table_nameContext ctx) {
+        String schema = null;
+        String table = null;
+        if (ctx.schema != null) {
+            schema = ctx.schema.getText();
+        }
+        if (ctx.table != null) {
+            table = ctx.table.getText();
+        }
+        return new TableNameExpr (vc, schema, table);
     }
 
     @Override
@@ -38,6 +80,15 @@ public class TableNameExpr extends Expr {
     @Override
     public String toSql() {
         return toString();
+    }
+    
+    @Override
+    public String toString() {
+        if (schema == null) {
+            return table;
+        } else {
+            return schema + "." + table;
+        }
     }
 
     @Override

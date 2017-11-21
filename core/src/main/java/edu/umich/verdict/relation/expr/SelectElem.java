@@ -38,8 +38,9 @@ public class SelectElem {
     public SelectElem(VerdictContext vc, Expr expr, String alias) {
         this.expr = expr;
         this.vc = vc;
-        if (alias == null && !expr.getText().equals("*")) {
-            this.alias = Optional.of(genColumnAlias(expr)); // aggregate expressions must be aliased.
+        if (alias == null && !(expr instanceof StarExpr)) {
+            // by default, we alias every expression except for *.
+            this.alias = Optional.of(genColumnAlias(expr));
         } else {
             setAlias(alias);
         }
@@ -59,8 +60,12 @@ public class SelectElem {
             @Override
             public SelectElem visitSelect_list_elem(VerdictSQLParser.Select_list_elemContext ctx) {
                 SelectElem elem = null;
-                if (ctx.getText().equals("*")) {
-                    elem = new SelectElem(vc, new StarExpr());
+                if (ctx.STAR() != null) {
+                    if (ctx.table_name() == null) {
+                        elem = new SelectElem(vc, new StarExpr());
+                    } else {
+                        elem = new SelectElem(vc, new StarExpr(TableNameExpr.from(vc, ctx.table_name())));
+                    }
                 } else {
                     elem = new SelectElem(vc, Expr.from(vc, ctx.expression()));
                 }

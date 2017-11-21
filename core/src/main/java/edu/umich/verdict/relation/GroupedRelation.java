@@ -147,7 +147,10 @@ public class GroupedRelation extends ExactRelation {
     @Override
     public ColNameExpr partitionColumn() {
         ColNameExpr col = source.partitionColumn();
-        // col.setTab(getAliasName());
+        // this line is added to handle the nested count query, e.g.:
+        // select count(*) from (select * from orders) t;
+        // without this setting, the partition column retains the alias name for orders, not 't'.
+        col.setTab(getAlias());
         return col;
     }
 

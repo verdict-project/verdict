@@ -20,12 +20,15 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.collect.ImmutableMap;
 
 import edu.umich.verdict.datatypes.TableUniqueName;
+import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.relation.expr.FuncExpr;
+import edu.umich.verdict.relation.expr.TableNameExpr;
 
 public class NoApproxRelation extends ApproxRelation {
 
@@ -114,5 +117,10 @@ public class NoApproxRelation extends ApproxRelation {
     public Expr tableSamplingRatio() {
         // TODO Auto-generated method stub
         return null;
+    }
+
+    @Override
+    public List<ColNameExpr> getAssociatedColumnNames(TableNameExpr tabExpr) {
+        return new ArrayList<ColNameExpr>();
     }
 }

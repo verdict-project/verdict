@@ -16,9 +16,11 @@
 
 package edu.umich.verdict.relation;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -31,6 +33,7 @@ import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.ConstantExpr;
 import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.relation.expr.FuncExpr;
+import edu.umich.verdict.relation.expr.TableNameExpr;
 import edu.umich.verdict.util.VerdictLogger;
 
 /**
@@ -348,4 +351,38 @@ public class ApproxSingleRelation extends ApproxRelation {
             return new ConstantExpr(vc, 1.0);
         }
     }
+
+    @Override
+    public List<ColNameExpr> getAssociatedColumnNames(TableNameExpr tabExpr) {
+        List<ColNameExpr> colnames = new ArrayList<ColNameExpr>();
+        TableUniqueName originalTable = param.getOriginalTable();
+        
+        if (tabExpr == null) {
+            colnames = getAllColumnsofOriginalTable();
+        }
+        else if (tabExpr.getSchema() == null) {
+            if (tabExpr.getTable().equals(originalTable.getTableName()) ||
+                tabExpr.getTable().equals(getAlias())) {
+                colnames = getAllColumnsofOriginalTable();
+            }
+        }
+        else if (tabExpr.getSchema().equals(originalTable.getSchemaName()) &&
+                  (tabExpr.getTable().equals(originalTable.getTableName()) ||
+                   tabExpr.getTable().equals(getAlias())) ) {
+            colnames = getAllColumnsofOriginalTable();
+        }
+        
+        return colnames;
+    }
+    
+    private List<ColNameExpr> getAllColumnsofOriginalTable() {
+        List<ColNameExpr> colnames = new ArrayList<ColNameExpr>();
+        TableUniqueName originalTable = param.getOriginalTable();
+        Set<String> columns = vc.getMeta().getColumns(originalTable);
+        for (String col : columns) {
+            colnames.add(new ColNameExpr(vc, col, getAlias()));
+        }
+        return colnames;
+    }
+    
 }
