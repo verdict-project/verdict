@@ -9,7 +9,7 @@
     <parent>
         <groupId>edu.umich</groupId>
         <artifactId>verdict</artifactId>
-        <version>0.4.1</version>
+        <version>0.4.3</version>
     </parent>
 
     <properties>
@@ -146,7 +146,8 @@
         </plugins>
         <pluginManagement>
             <plugins>
-                <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
+                <!--This plugin's configuration is used to store Eclipse 
+                    m2e settings only. It has no influence on the Maven build itself. -->
                 <plugin>
                     <groupId>org.eclipse.m2e</groupId>
                     <artifactId>lifecycle-mapping</artifactId>
@@ -170,7 +171,7 @@
                                         </goals>
                                     </pluginExecutionFilter>
                                     <action>
-                                        <execute></execute>
+                                        <execute />
                                     </action>
                                 </pluginExecution>
                             </pluginExecutions>
@@ -337,6 +338,12 @@
             <groupId>com.cloudera.impala.jdbc</groupId>
             <artifactId>zookeeper-3.4.6</artifactId>
             <version>2.5.41</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.cloudera.hive.jdbc</groupId>
+            <artifactId>HiveJDBC4</artifactId>
+            <version>2.5.4</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

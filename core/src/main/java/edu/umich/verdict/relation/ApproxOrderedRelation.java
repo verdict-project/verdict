@@ -23,9 +23,11 @@ import com.google.common.base.Joiner;
 
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.datatypes.TableUniqueName;
+import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.relation.expr.FuncExpr;
 import edu.umich.verdict.relation.expr.OrderByExpr;
+import edu.umich.verdict.relation.expr.TableNameExpr;
 
 public class ApproxOrderedRelation extends ApproxRelation {
 
@@ -127,6 +129,11 @@ public class ApproxOrderedRelation extends ApproxRelation {
     @Override
     public Expr tableSamplingRatio() {
         return source.tableSamplingRatio();
+    }
+
+    @Override
+    public List<ColNameExpr> getAssociatedColumnNames(TableNameExpr tabExpr) {
+        return source.getAssociatedColumnNames(tabExpr);
     }
 
 }

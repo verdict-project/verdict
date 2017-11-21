@@ -23,8 +23,10 @@ import com.google.common.collect.ImmutableMap;
 
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.datatypes.TableUniqueName;
+import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.relation.expr.FuncExpr;
+import edu.umich.verdict.relation.expr.TableNameExpr;
 import edu.umich.verdict.util.VerdictLogger;
 
 public class ApproxLimitedRelation extends ApproxRelation {
@@ -126,6 +128,11 @@ public class ApproxLimitedRelation extends ApproxRelation {
     @Override
     public Expr tableSamplingRatio() {
         return null;
+    }
+
+    @Override
+    public List<ColNameExpr> getAssociatedColumnNames(TableNameExpr tabExpr) {
+        return source.getAssociatedColumnNames(tabExpr);
     }
 
 }

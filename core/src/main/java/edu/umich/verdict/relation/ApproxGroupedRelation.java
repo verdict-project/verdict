@@ -29,6 +29,7 @@ import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.relation.expr.FuncExpr;
+import edu.umich.verdict.relation.expr.TableNameExpr;
 
 public class ApproxGroupedRelation extends ApproxRelation {
 
@@ -67,6 +68,7 @@ public class ApproxGroupedRelation extends ApproxRelation {
         // tableSubstitution()));
         ColNameExpr partitionCol = newSource.partitionColumn();
         if (partitionCol != null) {
+            partitionCol.setTab(getAlias());
             newGroupby.add(partitionCol);
         }
         ExactRelation r = new GroupedRelation(vc, newSource, newGroupby);
@@ -183,12 +185,19 @@ public class ApproxGroupedRelation extends ApproxRelation {
 
     @Override
     public Expr tupleProbabilityColumn() {
-        return source.tupleProbabilityColumn();
+        Expr e = source.tupleProbabilityColumn();
+        e = e.withTableSubstituted(getAlias());
+        return e;
     }
 
     @Override
     public Expr tableSamplingRatio() {
         return source.tableSamplingRatio();
+    }
+
+    @Override
+    public List<ColNameExpr> getAssociatedColumnNames(TableNameExpr tabExpr) {
+        return source.getAssociatedColumnNames(tabExpr);
     }
 
 }

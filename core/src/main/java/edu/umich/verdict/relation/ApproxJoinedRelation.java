@@ -40,6 +40,7 @@ import edu.umich.verdict.relation.expr.BinaryOpExpr;
 import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.relation.expr.FuncExpr;
+import edu.umich.verdict.relation.expr.TableNameExpr;
 
 public class ApproxJoinedRelation extends ApproxRelation {
 
@@ -333,5 +334,13 @@ public class ApproxJoinedRelation extends ApproxRelation {
         Expr expr2 = source2.tableSamplingRatio();
         Expr combined = new BinaryOpExpr(vc, expr1, expr2, "*");
         return combined;
+    }
+
+    @Override
+    public List<ColNameExpr> getAssociatedColumnNames(TableNameExpr tabExpr) {
+        List<ColNameExpr> colnames = new ArrayList<ColNameExpr>();
+        colnames.addAll(source1.getAssociatedColumnNames(tabExpr));
+        colnames.addAll(source2.getAssociatedColumnNames(tabExpr));
+        return colnames;
     }
 }

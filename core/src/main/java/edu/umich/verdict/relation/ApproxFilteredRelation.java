@@ -35,6 +35,7 @@ import edu.umich.verdict.relation.expr.ExprVisitor;
 import edu.umich.verdict.relation.expr.FuncExpr;
 import edu.umich.verdict.relation.expr.SelectElem;
 import edu.umich.verdict.relation.expr.SubqueryExpr;
+import edu.umich.verdict.relation.expr.TableNameExpr;
 import edu.umich.verdict.util.VerdictLogger;
 
 public class ApproxFilteredRelation extends ApproxRelation {
@@ -266,6 +267,11 @@ public class ApproxFilteredRelation extends ApproxRelation {
     @Override
     public Expr tableSamplingRatio() {
         return source.tableSamplingRatio();
+    }
+
+    @Override
+    public List<ColNameExpr> getAssociatedColumnNames(TableNameExpr tabExpr) {
+        return source.getAssociatedColumnNames(tabExpr);
     }
 
 }

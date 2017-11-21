@@ -19,6 +19,21 @@ package edu.umich.verdict.relation.expr;
 import edu.umich.verdict.VerdictContext;
 
 public class StarExpr extends Expr {
+    
+    TableNameExpr tab = null;
+    
+    public TableNameExpr getTab() {
+        return tab;
+    }
+
+    public void setTab(TableNameExpr tab) {
+        this.tab = tab;
+    }
+
+    public StarExpr(TableNameExpr t) {
+        super(VerdictContext.dummyContext());
+        tab = t;
+    }
 
     public StarExpr() {
         super(VerdictContext.dummyContext());
@@ -26,7 +41,11 @@ public class StarExpr extends Expr {
 
     @Override
     public String toString() {
-        return "*";
+        if (tab == null) {
+            return "*";
+        } else {
+            return tab.toString() + ".*";
+        }
     }
 
     @Override

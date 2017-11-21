@@ -26,10 +26,12 @@ import org.apache.commons.lang3.tuple.Pair;
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
+import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.relation.expr.FuncExpr;
 import edu.umich.verdict.relation.expr.OrderByExpr;
 import edu.umich.verdict.relation.expr.SelectElem;
+import edu.umich.verdict.relation.expr.TableNameExpr;
 import edu.umich.verdict.util.VerdictLogger;
 
 /**
@@ -375,4 +377,10 @@ public abstract class ApproxRelation extends Relation {
         }
         return Pair.of(groupbys, t);
     }
+
+    /**
+     * @param tabExpr Restricted to this table.
+     * @return A list of all column names.
+     */
+    abstract public List<ColNameExpr> getAssociatedColumnNames(TableNameExpr tabExpr);
 }

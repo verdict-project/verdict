@@ -162,7 +162,8 @@ class CondGen extends VerdictSQLBaseVisitor<Cond> {
         return likeCond;
     }
     
-    @Override public Cond visitComp_between_expr(VerdictSQLParser.Comp_between_exprContext ctx) {
+    @Override
+    public Cond visitComp_between_expr(VerdictSQLParser.Comp_between_exprContext ctx) {
         BetweenCond betweenCond = BetweenCond.from(vc, ctx);
         return betweenCond;
     }
@@ -170,10 +171,23 @@ class CondGen extends VerdictSQLBaseVisitor<Cond> {
     @Override
     public Cond visitNull_notnull(VerdictSQLParser.Null_notnullContext ctx) {
         if (ctx.NOT() == null) {
-            return new NullCond();
+            return new NullCond(true);
         } else {
-            return new NotCond(new NullCond());
+            return new NullCond(false);
         }
+    }
+    
+    @Override
+    public Cond visitTrue_orfalse(VerdictSQLParser.True_orfalseContext ctx) {
+        TrueFalseCond c = null;
+        
+        if (ctx.TRUE() != null) {
+            c = new TrueFalseCond(true);
+        } else {
+            c = new TrueFalseCond(false);
+        }
+        
+        return c;
     }
 
 }
