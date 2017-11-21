@@ -16,11 +16,34 @@
 
 package edu.umich.verdict.relation.condition;
 
+/**
+ * NULL or NOT NULL
+ * @author Yongjoo Park
+ *
+ */
 public class NullCond extends Cond {
+    
+    boolean isNull = true;
+    
+    public boolean isNull() {
+        return isNull;
+    }
+
+    public void setNull(boolean isNull) {
+        this.isNull = isNull;
+    }
+    
+    public NullCond() {
+        this(true);
+    }
+
+    public NullCond (boolean isNull) {
+        this.isNull = isNull;
+    }
 
     @Override
     public String toString() {
-        return "NULL";
+        return (isNull)? "NULL" : "NOT NULL";
     }
 
     @Override
@@ -36,7 +59,9 @@ public class NullCond extends Cond {
     @Override
     public boolean equals(Cond o) {
         if (o instanceof NullCond) {
-            return true;
+            if (isNull() == ((NullCond) o).isNull()) {
+                return true;
+            }
         }
         return false;
     }

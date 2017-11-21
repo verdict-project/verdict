@@ -30,7 +30,7 @@ public class NotCond extends Cond {
 
     @Override
     public String toString() {
-        return String.format("NOT %s", cond);
+        return String.format("NOT (%s)", cond);
     }
 
     @Override
@@ -40,7 +40,7 @@ public class NotCond extends Cond {
 
     @Override
     public String toSql() {
-        return String.format("NOT %s", cond.toSql());
+        return String.format("NOT (%s)", cond.toSql());
     }
 
     @Override

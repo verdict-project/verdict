@@ -171,9 +171,9 @@ class CondGen extends VerdictSQLBaseVisitor<Cond> {
     @Override
     public Cond visitNull_notnull(VerdictSQLParser.Null_notnullContext ctx) {
         if (ctx.NOT() == null) {
-            return new NullCond();
+            return new NullCond(true);
         } else {
-            return new NotCond(new NullCond());
+            return new NullCond(false);
         }
     }
     
