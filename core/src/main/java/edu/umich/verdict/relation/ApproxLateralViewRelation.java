@@ -8,6 +8,7 @@ import java.util.Map;
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.relation.expr.ColNameExpr;
+import edu.umich.verdict.relation.expr.ConstantExpr;
 import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.relation.expr.FuncExpr;
 import edu.umich.verdict.relation.expr.LateralFunc;
@@ -72,12 +73,12 @@ public class ApproxLateralViewRelation extends ApproxRelation {
 
     @Override
     public Expr tupleProbabilityColumn() {
-        return null;
+    	return new ConstantExpr(vc, 1.0);
     }
 
     @Override
     public Expr tableSamplingRatio() {
-        return null;
+    	return new ConstantExpr(vc, 1.0);
     }
 
     @Override
@@ -112,7 +113,10 @@ public class ApproxLateralViewRelation extends ApproxRelation {
 
     @Override
     protected String toStringWithIndent(String indent) {
-        return null;
+    	StringBuilder s = new StringBuilder(1000);
+        s.append(indent);
+        s.append(String.format("LATERAL VIEW %s %s AS %s", lateralFunc.toString(), tableAlias, columnAlias));
+        return s.toString();
     }
 
     @Override

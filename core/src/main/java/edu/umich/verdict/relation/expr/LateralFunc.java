@@ -89,6 +89,11 @@ public class LateralFunc extends Expr {
 //        }
         return sql.toString();
     }
+    
+    @Override
+    public String toString() {
+    	return toSql();
+    }
 
     @Override
     public int hashCode() {

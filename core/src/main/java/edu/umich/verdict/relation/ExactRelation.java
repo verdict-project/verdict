@@ -533,7 +533,6 @@ public abstract class ExactRelation extends Relation {
         return toStringWithIndent("");
     }
 
-    @Deprecated
     protected abstract String toStringWithIndent(String indent);
 
 }

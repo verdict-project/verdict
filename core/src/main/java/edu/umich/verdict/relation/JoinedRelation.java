@@ -41,35 +41,34 @@ import edu.umich.verdict.util.VerdictLogger;
 
 public class JoinedRelation extends ExactRelation {
 
-    private ExactRelation source1;
+    public enum JoinType {
+	    INNER, CROSS, LATERAL, LEFT_OUTER, RIGHT_OUTER
+	}
+
+	protected static Map<JoinType, String> joinTypeString =
+	ImmutableMap.<JoinType, String>builder()
+	.put(JoinType.INNER, "INNER JOIN")
+	.put(JoinType.CROSS, "CROSS JOIN")
+	.put(JoinType.LATERAL, "LATERAL VIEW")
+	.put(JoinType.LEFT_OUTER, "LEFT OUTER JOIN")
+	.put(JoinType.RIGHT_OUTER, "RIGHT OUTER JOIN")
+	.build();
+
+	private ExactRelation source1;
 
     private ExactRelation source2;
 
-    public ExactRelation getLeftSource() {
+    private List<Pair<Expr, Expr>> joinCols;
+
+	private JoinType joinType = JoinType.INNER;
+
+	public ExactRelation getLeftSource() {
         return source1;
     }
 
     public ExactRelation getRightSource() {
         return source2;
     }
-
-    private List<Pair<Expr, Expr>> joinCols;
-    
-    public enum JoinType {
-        INNER, CROSS, LATERAL, LEFT_OUTER, RIGHT_OUTER
-    }
-    
-    protected static Map<JoinType, String> joinTypeString =
-            ImmutableMap.<JoinType, String>builder()
-            .put(JoinType.INNER, "INNER JOIN")
-            .put(JoinType.CROSS, "CROSS JOIN")
-            .put(JoinType.LATERAL, "LATERAL VIEW")
-            .put(JoinType.LEFT_OUTER, "LEFT OUTER JOIN")
-            .put(JoinType.RIGHT_OUTER, "RIGHT OUTER JOIN")
-            .build();
-
-    // one of INNER, CROSS, LATERAL
-    private JoinType joinType = JoinType.INNER;
 
     public JoinType getJoinType() {
         return joinType;
@@ -222,6 +221,7 @@ public class JoinedRelation extends ExactRelation {
         for (ApproxRelation a1 : ofSources1) {
             for (ApproxRelation a2 : ofSources2) {
                 ApproxJoinedRelation j = new ApproxJoinedRelation(vc, a1, a2, joinCols);
+                j.setJoinType(getJoinType());
                 if (expectedSampleType(j.sampleType())) {
                     joined.add(j);
                 }

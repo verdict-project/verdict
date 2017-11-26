@@ -334,7 +334,6 @@ public class ApproxSingleRelation extends ApproxRelation {
 
     @Override
     public Expr tupleProbabilityColumn() {
-
         if (!sampleType().equals("nosample")) {
             return new ColNameExpr(vc, samplingProbabilityColumnName(), getAlias());
         } else {

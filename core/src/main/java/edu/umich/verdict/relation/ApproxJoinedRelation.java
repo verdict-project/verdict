@@ -33,6 +33,7 @@ import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.VerdictJDBCContext;
 import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
+import edu.umich.verdict.relation.JoinedRelation.JoinType;
 import edu.umich.verdict.relation.condition.AndCond;
 import edu.umich.verdict.relation.condition.CompCond;
 import edu.umich.verdict.relation.condition.Cond;
@@ -49,8 +50,18 @@ public class ApproxJoinedRelation extends ApproxRelation {
     private ApproxRelation source2;
 
     private List<Pair<Expr, Expr>> joinCols;
+    
+    private JoinType joinType = JoinType.INNER;
 
-    /**
+    public JoinType getJoinType() {
+		return joinType;
+	}
+
+	public void setJoinType(JoinType joinType) {
+		this.joinType = joinType;
+	}
+
+	/**
      * 
      * @param vc
      * @param source1
@@ -135,7 +146,8 @@ public class ApproxJoinedRelation extends ApproxRelation {
         List<Pair<Expr, Expr>> newJoinCond = joinCondWithTablesSubstitutioned();
         // newJoinCond.add(Pair.<Expr, Expr>of(newSource1.partitionColumn(),
         // newSource2.partitionColumn()));
-        ExactRelation r = JoinedRelation.from(vc, newSource1, newSource2, newJoinCond);
+        JoinedRelation r = JoinedRelation.from(vc, newSource1, newSource2, newJoinCond);
+        r.setJoinType(getJoinType());
         r.setAlias(getAlias());
         return r;
     }

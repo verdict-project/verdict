@@ -95,7 +95,10 @@ public class LateralViewRelation extends ExactRelation {
 
     @Override
     protected String toStringWithIndent(String indent) {
-        return null;
+    	StringBuilder s = new StringBuilder(1000);
+        s.append(indent);
+        s.append(String.format("LATERAL VIEW %s %s AS %s", lateralFunc.toString(), tableAlias, columnAlias));
+        return s.toString();
     }
 
     @Override
