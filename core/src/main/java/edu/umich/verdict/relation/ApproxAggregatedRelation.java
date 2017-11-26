@@ -292,10 +292,10 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 
         for (SelectElem elem : elems) {
             if (!elem.isagg()) {
-                // group entry
+                // group-by attribute
                 scaledElems.add(elem);
 
-                // remove from
+                // update unappearingGroups by removing the attributes that appeared
                 Expr e = elem.getExpr();
                 if (e instanceof ColNameExpr) {
                     int i = 0;
