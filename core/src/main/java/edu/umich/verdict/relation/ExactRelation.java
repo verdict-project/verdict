@@ -51,6 +51,7 @@ import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.ConstantExpr;
 import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.relation.expr.FuncExpr;
+import edu.umich.verdict.relation.expr.LateralFunc;
 import edu.umich.verdict.relation.expr.OrderByExpr;
 import edu.umich.verdict.relation.expr.SelectElem;
 import edu.umich.verdict.util.StackTraceReader;
@@ -478,6 +479,10 @@ public abstract class ExactRelation extends Relation {
             return String.format("%s AS %s", tableName, alias);
         } else if (source instanceof JoinedRelation) {
             return ((JoinedRelation) source).joinClause();
+        } else if (source instanceof LateralViewRelation) {
+            ExactRelation presource = ((LateralViewRelation) source).getSource();
+            LateralFunc func = ((LateralViewRelation) source).getLateralFunc();
+            return String.format("%s LATERAL VIEW %s", presource.toSql(), func.toSql());
         } else {
             String alias = source.getAlias();
             if (alias == null) {
@@ -527,6 +532,7 @@ public abstract class ExactRelation extends Relation {
         return toStringWithIndent("");
     }
 
+    @Deprecated
     protected abstract String toStringWithIndent(String indent);
 
 }

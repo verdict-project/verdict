@@ -67,7 +67,7 @@ public class JoinedRelation extends ExactRelation {
             this.joinCols = joinCols;
         }
 
-        this.alias = String.format("%s_%s", source1.getAlias(), source2.getAlias());
+        this.alias = String.format("%s-%s", source1.getAlias(), source2.getAlias());
     }
 
     public static JoinedRelation from(VerdictContext vc, ExactRelation source1, ExactRelation source2,

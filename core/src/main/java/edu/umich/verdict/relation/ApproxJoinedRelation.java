@@ -68,7 +68,7 @@ public class ApproxJoinedRelation extends ApproxRelation {
         } else {
             this.joinCols = joinCols;
         }
-        this.alias = null;
+        this.alias = String.format("%s_%s", source1.getAlias(), source2.getAlias());
     }
 
     public ApproxJoinedRelation(VerdictContext vc, ApproxRelation source1, ApproxRelation source2) {
@@ -237,16 +237,16 @@ public class ApproxJoinedRelation extends ApproxRelation {
     }
 
     @Override
-    public List<String> sampleColumns() {
+    public List<String> getColumnsOnWhichSamplesAreCreated() {
         if (sampleType().equals("stratified")) {
-            List<String> union = new ArrayList<String>(source1.sampleColumns());
-            union.addAll(source2.sampleColumns());
+            List<String> union = new ArrayList<String>(source1.getColumnsOnWhichSamplesAreCreated());
+            union.addAll(source2.getColumnsOnWhichSamplesAreCreated());
             return union;
         } else if (sampleType().equals("universe")) {
             if (source1.sampleType().equals("universe")) {
-                return source1.sampleColumns();
+                return source1.getColumnsOnWhichSamplesAreCreated();
             } else {
-                return source2.sampleColumns();
+                return source2.getColumnsOnWhichSamplesAreCreated();
             }
         } else {
             return Arrays.asList();
@@ -282,7 +282,7 @@ public class ApproxJoinedRelation extends ApproxRelation {
         s.append(indent);
         s.append(String.format("%s(%s) [%s], sample type: %s (%s), sampling prob: %f, cost: %f\n",
                 this.getClass().getSimpleName(), getAlias(), Joiner.on(", ").join(joinCols), sampleType(),
-                sampleColumns(), samplingProbability(), cost()));
+                getColumnsOnWhichSamplesAreCreated(), samplingProbability(), cost()));
         s.append(source1.toStringWithIndent(indent + "  "));
         s.append(source2.toStringWithIndent(indent + "  "));
         return s.toString();

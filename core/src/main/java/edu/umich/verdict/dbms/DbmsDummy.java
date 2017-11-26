@@ -17,6 +17,8 @@
 package edu.umich.verdict.dbms;
 
 import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -102,14 +104,12 @@ public class DbmsDummy extends Dbms {
 
     @Override
     public List<String> getTables(String schema) throws VerdictException {
-        // TODO Auto-generated method stub
-        return null;
+        return new ArrayList<String>();
     }
 
     @Override
     public Map<String, String> getColumns(TableUniqueName table) throws VerdictException {
-        // TODO Auto-generated method stub
-        return null;
+        return new HashMap<String, String>();
     }
 
     @Override
@@ -126,8 +126,7 @@ public class DbmsDummy extends Dbms {
 
     @Override
     public Set<String> getDatabases() throws VerdictException {
-        // TODO Auto-generated method stub
-        return null;
+        return new HashSet<String>();
     }
 
     @Override

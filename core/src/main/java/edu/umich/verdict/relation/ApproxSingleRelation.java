@@ -240,7 +240,7 @@ public class ApproxSingleRelation extends ApproxRelation {
     }
 
     @Override
-    protected List<String> sampleColumns() {
+    protected List<String> getColumnsOnWhichSamplesAreCreated() {
         return param.getColumnNames();
     }
 

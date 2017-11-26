@@ -612,15 +612,15 @@ public class ApproxAggregatedRelation extends ApproxRelation {
     }
 
     @Override
-    protected List<String> sampleColumns() {
+    protected List<String> getColumnsOnWhichSamplesAreCreated() {
         if (!(source instanceof ApproxGroupedRelation)) {
             return Collections.emptyList();
         } else if (sampleType().equals("stratified") || sampleType().equals("universe")) {
-            List<String> cols = mappedSourceSampleColumn(source.sampleColumns());
+            List<String> cols = mappedSourceSampleColumn(source.getColumnsOnWhichSamplesAreCreated());
             return cols;
         }
 
-        return source.sampleColumns();
+        return source.getColumnsOnWhichSamplesAreCreated();
     }
 
     @Override
@@ -628,7 +628,7 @@ public class ApproxAggregatedRelation extends ApproxRelation {
         StringBuilder s = new StringBuilder(1000);
         s.append(indent);
         s.append(String.format("%s(%s) [%s] type: %s (%s), cost: %f\n", this.getClass().getSimpleName(), getAlias(),
-                Joiner.on(", ").join(elems), sampleType(), sampleColumns(), cost()));
+                Joiner.on(", ").join(elems), sampleType(), getColumnsOnWhichSamplesAreCreated(), cost()));
         s.append(source.toStringWithIndent(indent + "  "));
         return s.toString();
     }

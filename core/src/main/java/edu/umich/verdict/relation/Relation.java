@@ -324,8 +324,8 @@ public abstract class Relation {
         }
 
         if (r1.sampleType().equals("universe") && r2.sampleType().equals("universe")) {
-            List<String> cols1 = r1.sampleColumns();
-            List<String> cols2 = r2.sampleColumns();
+            List<String> cols1 = r1.getColumnsOnWhichSamplesAreCreated();
+            List<String> cols2 = r2.getColumnsOnWhichSamplesAreCreated();
             if ((joinColumnsEqualToSampleColumns(leftJoinCols, cols1)
                     && joinColumnsEqualToSampleColumns(rightJoinCols, cols2)) ||
                 (joinColumnsEqualToSampleColumns(leftJoinCols, cols2)

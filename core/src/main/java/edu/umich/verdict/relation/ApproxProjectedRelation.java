@@ -261,8 +261,8 @@ public class ApproxProjectedRelation extends ApproxRelation {
     }
 
     @Override
-    protected List<String> sampleColumns() {
-        return source.sampleColumns();
+    protected List<String> getColumnsOnWhichSamplesAreCreated() {
+        return source.getColumnsOnWhichSamplesAreCreated();
     }
 
     @Override
