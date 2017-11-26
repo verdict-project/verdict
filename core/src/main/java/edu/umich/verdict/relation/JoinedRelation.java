@@ -25,6 +25,7 @@ import java.util.Set;
 import org.apache.commons.lang3.tuple.Pair;
 
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableMap;
 
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.datatypes.SampleParam;
@@ -35,6 +36,7 @@ import edu.umich.verdict.relation.condition.CompCond;
 import edu.umich.verdict.relation.condition.Cond;
 import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.Expr;
+import edu.umich.verdict.relation.expr.LateralFunc.LateralFuncName;
 import edu.umich.verdict.util.VerdictLogger;
 
 public class JoinedRelation extends ExactRelation {
@@ -52,8 +54,66 @@ public class JoinedRelation extends ExactRelation {
     }
 
     private List<Pair<Expr, Expr>> joinCols;
+    
+    public enum JoinType {
+        INNER, CROSS, LATERAL, LEFT_OUTER, RIGHT_OUTER
+    }
+    
+    protected static Map<JoinType, String> joinTypeString =
+            ImmutableMap.<JoinType, String>builder()
+            .put(JoinType.INNER, "INNER JOIN")
+            .put(JoinType.CROSS, "CROSS JOIN")
+            .put(JoinType.LATERAL, "LATERAL VIEW")
+            .put(JoinType.LEFT_OUTER, "LEFT OUTER JOIN")
+            .put(JoinType.RIGHT_OUTER, "RIGHT OUTER JOIN")
+            .build();
 
-    private String joinType = "INNER";
+    // one of INNER, CROSS, LATERAL
+    private JoinType joinType = JoinType.INNER;
+
+    public JoinType getJoinType() {
+        return joinType;
+    }
+    
+    public void setJoinType(JoinType type) {
+        joinType = type;
+    }
+    
+    public List<Pair<Expr, Expr>> getJoinCond() {
+        return joinCols;
+    }
+
+    /**
+     * Sets the join condition. If there are extra substitution request (by the
+     * param 'subs'), we perform table name substitutions as well.
+     * 
+     * @param cond
+     * @param subs
+     * @throws VerdictException
+     */
+    public void setJoinCond(Cond cond, Map<TableUniqueName, String> subs) throws VerdictException {
+        List<Pair<Expr, Expr>> joinColumns = extractJoinConds(cond);
+    
+        // if the original table names are used for join conditions, they must be
+        // replaced with
+        // their alias names. note that all tables are aliased internally.
+        if (subs != null) {
+            TableNameReplacerInExpr rep = new TableNameReplacerInExpr(vc, subs);
+            List<Pair<Expr, Expr>> substituedJoinColumns = new ArrayList<Pair<Expr, Expr>>();
+            for (Pair<Expr, Expr> exprs : joinColumns) {
+                Expr l = rep.visit(exprs.getLeft());
+                Expr r = rep.visit(exprs.getRight());
+                substituedJoinColumns.add(Pair.of(l, r));
+            }
+            joinColumns = substituedJoinColumns;
+        }
+    
+        this.joinCols = joinColumns;
+    }
+
+    public void setJoinCond(Cond cond) throws VerdictException {
+        setJoinCond(cond, null);
+    }
 
     public JoinedRelation(VerdictContext vc, ExactRelation source1, ExactRelation source2,
             List<Pair<Expr, Expr>> joinCols) {
@@ -80,45 +140,7 @@ public class JoinedRelation extends ExactRelation {
         return from(vc, source1, source2, extractJoinConds(cond));
     }
 
-    public List<Pair<Expr, Expr>> getJoinCond() {
-        return joinCols;
-    }
-
-    public void setJoinType(String type) {
-        joinType = type;
-    }
-
-    /**
-     * Sets the join condition. If there are extra substitution request (by the
-     * param 'subs'), we perform the substitution as well.
-     * 
-     * @param cond
-     * @param subs
-     * @throws VerdictException
-     */
-    public void setJoinCond(Cond cond, Map<TableUniqueName, String> subs) throws VerdictException {
-        List<Pair<Expr, Expr>> joinColumns = extractJoinConds(cond);
-
-        // if the original table names are used for join conditions, they must be
-        // replaced with
-        // their alias names. note that all tables are aliased internally.
-        if (subs != null) {
-            TableNameReplacerInExpr rep = new TableNameReplacerInExpr(vc, subs);
-            List<Pair<Expr, Expr>> substituedJoinColumns = new ArrayList<Pair<Expr, Expr>>();
-            for (Pair<Expr, Expr> exprs : joinColumns) {
-                Expr l = rep.visit(exprs.getLeft());
-                Expr r = rep.visit(exprs.getRight());
-                substituedJoinColumns.add(Pair.of(l, r));
-            }
-            joinColumns = substituedJoinColumns;
-        }
-
-        this.joinCols = joinColumns;
-    }
-
-    public void setJoinCond(Cond cond) throws VerdictException {
-        setJoinCond(cond, null);
-    }
+    
 
     private static List<Pair<Expr, Expr>> extractJoinConds(Cond cond) {
         if (cond == null) {
@@ -144,11 +166,15 @@ public class JoinedRelation extends ExactRelation {
     protected String joinClause() {
         StringBuilder sql = new StringBuilder(100);
 
-        if (joinCols == null || joinCols.size() == 0) {
+        if (joinType.equals(JoinType.CROSS) || joinType.equals(JoinType.LATERAL)) {
+            sql.append(String.format("%s %s %s", sourceExpr(source1), joinTypeString.get(joinType), sourceExpr(source2)));
+        }
+        else if (joinCols == null || joinCols.size() == 0) {
             VerdictLogger.debug(this, "No join conditions specified; cross join is used.");
             sql.append(String.format("%s CROSS JOIN %s", sourceExpr(source1), sourceExpr(source2)));
-        } else {
-            sql.append(String.format("%s %s JOIN %s ON", sourceExpr(source1), joinType, sourceExpr(source2)));
+        }
+        else {      // INNER JOIN, LEFT OUTER, RIGHT OUTER
+            sql.append(String.format("%s %s %s ON", sourceExpr(source1), joinTypeString.get(joinType), sourceExpr(source2)));
             for (int i = 0; i < joinCols.size(); i++) {
                 if (i != 0)
                     sql.append(" AND");

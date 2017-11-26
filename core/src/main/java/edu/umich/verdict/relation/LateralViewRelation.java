@@ -22,23 +22,38 @@ import edu.umich.verdict.util.VerdictLogger;
  */
 public class LateralViewRelation extends ExactRelation {
     
-    protected ExactRelation source;
+//    protected ExactRelation source;
     
     protected LateralFunc lateralFunc;
     
-    public ExactRelation getSource() {
-        return source;
+    protected String tableAlias;
+    
+    protected String columnAlias;
+    
+//    public ExactRelation getSource() {
+//        return source;
+//    }
+
+    public String getTableAlias() {
+        return tableAlias;
+    }
+
+    public String getColumnAlias() {
+        return columnAlias;
     }
 
     public LateralFunc getLateralFunc() {
         return lateralFunc;
     }
 
-    public LateralViewRelation(VerdictContext vc, ExactRelation source, LateralFunc lateralFunc) {
+    public LateralViewRelation(VerdictContext vc, LateralFunc lateralFunc, String tableAlias, String columnAlias) {
         super(vc);
-        this.source = source;
+//        this.source = source;
         this.lateralFunc = lateralFunc;
-        this.alias = source.getAlias() + "-" + lateralFunc.getTableAlias();
+//        this.alias = source.getAlias() + "-" + lateralFunc.getTableAlias();
+        this.tableAlias = (tableAlias == null)? genTableAlias() : tableAlias;
+        this.columnAlias = (columnAlias == null)? genColumnAlias() : columnAlias;
+        setAlias(tableAlias);
     }
 
     @Override
@@ -49,36 +64,33 @@ public class LateralViewRelation extends ExactRelation {
 
     @Override
     public ApproxRelation approx() throws VerdictException {
-        ApproxRelation a = new ApproxLateralViewRelation(vc, source.approx(), lateralFunc);
+        ApproxRelation a = new ApproxLateralViewRelation(vc, lateralFunc, tableAlias, columnAlias);
         a.setAlias(getAlias());
         return a;
     }
 
     @Override
     protected ApproxRelation approxWith(Map<TableUniqueName, SampleParam> replace) {
-        ApproxRelation a = new ApproxLateralViewRelation(vc, source.approxWith(replace), lateralFunc);
+        ApproxRelation a = new ApproxLateralViewRelation(vc, lateralFunc, tableAlias, columnAlias);
         a.setAlias(getAlias());
         return a;
     }
 
     @Override
     protected List<ApproxRelation> nBestSamples(Expr elem, int n) throws VerdictException {
-        List<ApproxRelation> ofSource = source.nBestSamples(elem, n);
         List<ApproxRelation> lviews = new ArrayList<ApproxRelation>();
-        for (ApproxRelation a : ofSource) {
-            lviews.add(new ApproxLateralViewRelation(vc, a, lateralFunc));
-        }
+        lviews.add(approx());
         return lviews;
     }
 
     @Override
     public ColNameExpr partitionColumn() {
-        return source.partitionColumn();
+        return null;
     }
 
     @Override
     public List<ColNameExpr> accumulateSamplingProbColumns() {
-        return source.accumulateSamplingProbColumns();
+        return new ArrayList<ColNameExpr>();
     }
 
     @Override

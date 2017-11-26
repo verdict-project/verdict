@@ -506,7 +506,7 @@ join_part
     | CROSS JOIN table_source
     | CROSS APPLY table_source
     | OUTER APPLY table_source
-    | LATERAL VIEW lateral_view_function
+    | LATERAL VIEW lateral_view_function table_alias? (AS? column_alias)?
     ;
 
 table_name_with_hint
@@ -646,7 +646,6 @@ noparam_manipulation_function
 lateral_view_function
     : function_name=EXPLODE
       '(' expression ')'
-       table_alias? (AS? column_alias)?
     ;
 
 

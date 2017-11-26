@@ -40,6 +40,7 @@ import edu.umich.verdict.parser.VerdictSQLParser.Join_partContext;
 import edu.umich.verdict.parser.VerdictSQLParser.Order_by_expressionContext;
 import edu.umich.verdict.parser.VerdictSQLParser.Select_list_elemContext;
 import edu.umich.verdict.parser.VerdictSQLParser.Table_sourceContext;
+import edu.umich.verdict.relation.JoinedRelation.JoinType;
 import edu.umich.verdict.relation.condition.AndCond;
 import edu.umich.verdict.relation.condition.CompCond;
 import edu.umich.verdict.relation.condition.Cond;
@@ -314,25 +315,25 @@ public abstract class ExactRelation extends Relation {
 
     public JoinedRelation leftjoin(ExactRelation r, List<Pair<Expr, Expr>> joinColumns) {
         JoinedRelation j = join(r, joinColumns);
-        j.setJoinType("LEFT");
+        j.setJoinType(JoinType.LEFT_OUTER);
         return j;
     }
 
     public JoinedRelation leftjoin(ExactRelation r, Cond cond) throws VerdictException {
         JoinedRelation j = join(r, cond);
-        j.setJoinType("LEFT");
+        j.setJoinType(JoinType.LEFT_OUTER);
         return j;
     }
 
     public JoinedRelation leftjoin(ExactRelation r, String cond) throws VerdictException {
         JoinedRelation j = join(r, cond);
-        j.setJoinType("LEFT");
+        j.setJoinType(JoinType.LEFT_OUTER);
         return j;
     }
 
     public JoinedRelation leftjoin(ExactRelation r) throws VerdictException {
         JoinedRelation j = join(r);
-        j.setJoinType("LEFT");
+        j.setJoinType(JoinType.LEFT_OUTER);
         return j;
     }
 
@@ -480,9 +481,9 @@ public abstract class ExactRelation extends Relation {
         } else if (source instanceof JoinedRelation) {
             return ((JoinedRelation) source).joinClause();
         } else if (source instanceof LateralViewRelation) {
-            ExactRelation presource = ((LateralViewRelation) source).getSource();
-            LateralFunc func = ((LateralViewRelation) source).getLateralFunc();
-            return String.format("%s LATERAL VIEW %s", presource.toSql(), func.toSql());
+            LateralViewRelation lv = (LateralViewRelation) source;
+            LateralFunc func = lv.getLateralFunc();
+            return String.format("%s %s AS %s", func.toSql(), lv.getTableAlias(), lv.getColumnAlias());
         } else {
             String alias = source.getAlias();
             if (alias == null) {
@@ -895,13 +896,15 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
         }
     }
 
-    // The tableSource returned from this class is supported to include all
+    // The tableSource returned from this class is supposed to include all
     // necessary join conditions; thus, we do not
     // need to search for their join conditions in the where clause.
     class TableSourceExtractor extends VerdictSQLBaseVisitor<ExactRelation> {
         public List<ExactRelation> relations = new ArrayList<ExactRelation>();
 
         private Cond joinCond = null;
+        
+        private JoinType joinType = null;
 
         @Override
         public ExactRelation visitTable_source_item_joined(VerdictSQLParser.Table_source_item_joinedContext ctx) {
@@ -909,15 +912,17 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
             //join error location: r2 is null
             for (Join_partContext j : ctx.join_part()) {
                 ExactRelation r2 = visit(j);
-                r = new JoinedRelation(vc, r, r2, null);
-                if (joinCond != null) {
+                JoinedRelation jr = new JoinedRelation(vc, r, r2, null);
+                if (joinCond != null && (joinType.equals(JoinType.INNER) || joinType.equals(JoinType.CROSS))) {
                     try {
-                        ((JoinedRelation) r).setJoinCond(joinCond);
+                        jr.setJoinCond(joinCond);
                     } catch (VerdictException e) {
                         VerdictLogger.error(StackTraceReader.stackTrace2String(e));
                     }
                     joinCond = null;
                 }
+                jr.setJoinType(joinType);
+                r = jr;
             }
             return r;
         }
@@ -979,9 +984,11 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
                     }
                 }
 
+                joinType = JoinType.INNER;
                 joinCond = resolved;
                 return r;
-            } else if (ctx.LEFT() != null) {
+            }
+            else if (ctx.LEFT() != null) {
                 TableSourceExtractor ext = new TableSourceExtractor();
                 ExactRelation r = ext.visit(ctx.table_source());
                 Cond cond = Cond.from(vc, ctx.search_condition());
@@ -998,9 +1005,11 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
                     }
                 }
                 
+                joinType = JoinType.LEFT_OUTER;
                 joinCond = resolved;
                 return r;
-            } else if (ctx.RIGHT() != null) {
+            }
+            else if (ctx.RIGHT() != null) {
                 TableSourceExtractor ext = new TableSourceExtractor();
                 ExactRelation r = ext.visit(ctx.table_source());
                 Cond cond = Cond.from(vc, ctx.search_condition());
@@ -1017,14 +1026,25 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
                     }
                 }
                 
+                joinType = JoinType.RIGHT_OUTER;
                 joinCond = resolved;
                 return r;
-            } else if (ctx.CROSS() != null) {
+            }
+            else if (ctx.CROSS() != null) {
                 TableSourceExtractor ext = new TableSourceExtractor();
                 ExactRelation r = ext.visit(ctx.table_source());
+                joinType = JoinType.CROSS;
                 joinCond = null;
                 return r;
-            } else {
+            }
+            else if (ctx.LATERAL() != null) {
+                LateralFunc lf = LateralFunc.from(vc, ctx.lateral_view_function());
+                LateralViewRelation r = new LateralViewRelation(vc, lf, ctx.table_alias().getText(), ctx.column_alias().getText());
+                joinType = JoinType.LATERAL;
+                joinCond = null;
+                return r;
+            }
+            else {
                 VerdictLogger.error(this, "Unsupported join condition: " + ctx.getText());
                 return null;
             }

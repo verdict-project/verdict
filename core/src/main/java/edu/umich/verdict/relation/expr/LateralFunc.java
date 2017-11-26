@@ -28,9 +28,9 @@ public class LateralFunc extends Expr {
     
     private Expr expr;
     
-    private String tableAlias;
-    
-    private String columnAlias;
+//    private String tableAlias;
+//    
+//    private String columnAlias;
     
     public LateralFuncName getFuncName() {
         return funcname;
@@ -40,30 +40,31 @@ public class LateralFunc extends Expr {
         return expr;
     }
     
-    public String getTableAlias() {
-        return tableAlias;
-    }
-    
-    public String getColumnAlias() {
-        return columnAlias;
-    }
+//    public String getTableAlias() {
+//        return tableAlias;
+//    }
+//    
+//    public String getColumnAlias() {
+//        return columnAlias;
+//    }
 
-    public LateralFunc(LateralFuncName fname, Expr expr, String tableAlias, String columnAlias) {
+    public LateralFunc(LateralFuncName fname, Expr expr) {
         super(VerdictContext.dummyContext());
+        this.funcname = fname;
         this.expr = expr;
-        this.tableAlias = tableAlias;
-        this.columnAlias = columnAlias;
+//        this.tableAlias = tableAlias;
+//        this.columnAlias = columnAlias;
     }
     
     public static LateralFunc from(final VerdictContext vc, Lateral_view_functionContext ctx) {
         String fname = ctx.function_name.getText().toUpperCase();
-        String tableAlias = (ctx.table_alias() == null)?  null : ctx.table_alias().getText();
-        String columnAlias = (ctx.column_alias() == null)?  null : ctx.column_alias().getText();
+//        String tableAlias = (ctx.table_alias() == null)?  null : ctx.table_alias().getText();
+//        String columnAlias = (ctx.column_alias() == null)?  null : ctx.column_alias().getText();
         
         if (string2FunctionType.containsKey(fname)) {
-            return new LateralFunc(string2FunctionType.get(fname), Expr.from(vc, ctx.expression()), tableAlias, columnAlias);
+            return new LateralFunc(string2FunctionType.get(fname), Expr.from(vc, ctx.expression()));
         }
-        return new LateralFunc(LateralFuncName.UNKNOWN, Expr.from(vc, ctx.expression()), tableAlias, columnAlias);
+        return new LateralFunc(LateralFuncName.UNKNOWN, Expr.from(vc, ctx.expression()));
     }
 
     @Override
@@ -73,19 +74,19 @@ public class LateralFunc extends Expr {
 
     @Override
     public Expr withTableSubstituted(String newTab) {
-        return new LateralFunc(funcname, expr.withTableSubstituted(newTab), tableAlias, columnAlias);
+        return new LateralFunc(funcname, expr.withTableSubstituted(newTab));
     }
 
     @Override
     public String toSql() {
         StringBuilder sql = new StringBuilder(50);
         sql.append(String.format(functionPattern.get(funcname), expr.toSql()));
-        if (tableAlias != null) {
-            sql.append(" " + tableAlias);
-        }
-        if (columnAlias != null) {
-            sql.append(" AS " + columnAlias);
-        }
+//        if (tableAlias != null) {
+//            sql.append(" " + tableAlias);
+//        }
+//        if (columnAlias != null) {
+//            sql.append(" AS " + columnAlias);
+//        }
         return sql.toString();
     }
 

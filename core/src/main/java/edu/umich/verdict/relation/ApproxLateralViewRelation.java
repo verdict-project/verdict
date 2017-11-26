@@ -1,5 +1,7 @@
 package edu.umich.verdict.relation;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -13,89 +15,95 @@ import edu.umich.verdict.relation.expr.TableNameExpr;
 
 public class ApproxLateralViewRelation extends ApproxRelation {
     
-    protected ApproxRelation source;
+//    protected ApproxRelation source;
     
     protected LateralFunc lateralFunc;
     
-    public ApproxRelation getSource() {
-        return source;
-    }
+    protected String tableAlias;
+    
+    protected String columnAlias;
+    
+//    public ApproxRelation getSource() {
+//        return source;
+//    }
 
     public LateralFunc getLateralFunc() {
         return lateralFunc;
     }
 
-    public ApproxLateralViewRelation(VerdictContext vc, ApproxRelation source, LateralFunc lateralFunc) {
+    public ApproxLateralViewRelation(VerdictContext vc, LateralFunc lateralFunc, String tableAlias, String columnAlias) {
         super(vc);
-        this.source = source;
+//        this.source = source;
         this.lateralFunc = lateralFunc;
-        this.alias = source.getAlias() + "-" + lateralFunc.getTableAlias();
+        this.tableAlias = tableAlias;
+        this.columnAlias = columnAlias;
+        setAlias(tableAlias);
+//        this.alias = source.getAlias() + "-" + lateralFunc.getTableAlias();
     }
 
     @Override
     public ExactRelation rewriteForPointEstimate() {
-        ExactRelation r = new LateralViewRelation(vc, source.rewriteForPointEstimate(), lateralFunc);
+        ExactRelation r = new LateralViewRelation(vc, lateralFunc, tableAlias, columnAlias);
         r.setAlias(getAlias());
         return r;
     }
 
     @Override
     protected ExactRelation rewriteWithPartition() {
-        ExactRelation r = new LateralViewRelation(vc, source.rewriteWithPartition(), lateralFunc);
+        ExactRelation r = new LateralViewRelation(vc, lateralFunc, tableAlias, columnAlias);
         r.setAlias(getAlias());
         return r;
     }
 
     @Override
     protected List<Expr> samplingProbabilityExprsFor(FuncExpr f) {
-        return source.samplingProbabilityExprsFor(f);
+        return new ArrayList<Expr>();
     }
 
     @Override
     public double samplingProbability() {
-        return source.samplingProbability();
+        return 1.0;
     }
 
     @Override
     public double cost() {
-        return source.cost();
+        return 1.0;
     }
 
     @Override
     public Expr tupleProbabilityColumn() {
-        return source.tupleProbabilityColumn();
+        return null;
     }
 
     @Override
     public Expr tableSamplingRatio() {
-        return source.tableSamplingRatio();
+        return null;
     }
 
     @Override
     public String sampleType() {
-        return source.sampleType();
+        return "nosample";
     }
 
     @Override
     protected List<String> getColumnsOnWhichSamplesAreCreated() {
-        return source.getColumnsOnWhichSamplesAreCreated();
+        return new ArrayList<String>();
     }
 
     @Override
     protected Map<TableUniqueName, String> tableSubstitution() {
-        return source.tableSubstitution();
+        return new HashMap<TableUniqueName, String>();
     }
 
     @Override
     protected boolean doesIncludeSample() {
-        return source.doesIncludeSample();
+        return false;
     }
 
     @Override
     public boolean equals(ApproxRelation o) {
         if (o instanceof ApproxLateralViewRelation) {
-            if (source.equals(((ApproxLateralViewRelation) o).getSource()) &&
-                lateralFunc.equals(((ApproxLateralViewRelation) o).getLateralFunc())) {
+            if (lateralFunc.equals(((ApproxLateralViewRelation) o).getLateralFunc())) {
                 return true;
             }
         }
@@ -109,7 +117,7 @@ public class ApproxLateralViewRelation extends ApproxRelation {
 
     @Override
     public List<ColNameExpr> getAssociatedColumnNames(TableNameExpr tabExpr) {
-        return source.getAssociatedColumnNames(tabExpr);
+        return new ArrayList<ColNameExpr>();
     }
 
 }
