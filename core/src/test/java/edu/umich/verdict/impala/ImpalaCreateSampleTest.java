@@ -37,14 +37,15 @@ public class ImpalaCreateSampleTest extends TestBase {
         conf.setHost(readHost());
         conf.setDbms("impala");
         conf.setPort("21050");
-        conf.setDbmsSchema("tpch1g");
+        conf.setDbmsSchema("instacart1g");
 
         vc = VerdictJDBCContext.from(conf);
     }
     
     @Test
     public void createSamples() throws VerdictException {
-        vc.executeJdbcQuery("create sample of lineitem");
+        vc.executeJdbcQuery("create 10% sample of orders");
+        vc.executeJdbcQuery("create 10% sample of order_products");
     }
 
     @AfterClass

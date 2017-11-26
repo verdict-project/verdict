@@ -428,7 +428,7 @@ public class ApproxAggregatedRelation extends ApproxRelation {
                             new FuncExpr(FuncExpr.FuncName.SUM, FuncExpr.count(), new OverClause(groupby)), "*");
                     return scaled;
                 } else if (f.getFuncName().equals(FuncExpr.FuncName.COUNT_DISTINCT)) {
-                    if (source.sampleType().equals("universe")) {
+                    if (source.sampleType().contains("universe")) {
                         Expr est = new FuncExpr(FuncExpr.FuncName.COUNT_DISTINCT, f.getUnaryExpr());
                         // scale with sampling ratio
                         Expr scaled = BinaryOpExpr.from(vc, est, tableSamplingRatioExpr, "/");
