@@ -68,10 +68,10 @@ public class ApproxGroupedRelation extends ApproxRelation {
         // tableSubstitution()));
         ColNameExpr partitionCol = newSource.partitionColumn();
         if (partitionCol != null) {
-            // if the newSource is a subquery, the table alias of partitionCol must change.
-        	if (newSource instanceof ProjectedRelation || newSource instanceof AggregatedRelation) {
-        		partitionCol.setTab(getAlias());
-        	}
+//            // if the newSource is a subquery, the table alias of partitionCol must change.
+//        	if (newSource instanceof ProjectedRelation || newSource instanceof AggregatedRelation) {
+//        		partitionCol.setTab(getAlias());
+//        	}
             newGroupby.add(partitionCol);
         }
         ExactRelation r = new GroupedRelation(vc, newSource, newGroupby);
