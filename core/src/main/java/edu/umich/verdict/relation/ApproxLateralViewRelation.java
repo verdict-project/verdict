@@ -115,7 +115,7 @@ public class ApproxLateralViewRelation extends ApproxRelation {
     protected String toStringWithIndent(String indent) {
     	StringBuilder s = new StringBuilder(1000);
         s.append(indent);
-        s.append(String.format("LATERAL VIEW %s %s AS %s", lateralFunc.toString(), tableAlias, columnAlias));
+        s.append(String.format("ApproxLateralView %s %s AS %s\n", lateralFunc.toString(), tableAlias, columnAlias));
         return s.toString();
     }
 

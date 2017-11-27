@@ -37,9 +37,17 @@ public class LateralViewRelation extends ExactRelation {
     public String getTableAlias() {
         return tableAlias;
     }
+    
+    private void setTableAlias(String tableAlias) {
+        this.tableAlias = tableAlias.toLowerCase();
+    }
 
     public String getColumnAlias() {
         return columnAlias;
+    }
+    
+    private void setColumnAlias(String columnAlias) {
+        this.columnAlias = columnAlias.toLowerCase();
     }
 
     public LateralFunc getLateralFunc() {
@@ -51,8 +59,8 @@ public class LateralViewRelation extends ExactRelation {
 //        this.source = source;
         this.lateralFunc = lateralFunc;
 //        this.alias = source.getAlias() + "-" + lateralFunc.getTableAlias();
-        this.tableAlias = (tableAlias == null)? genTableAlias() : tableAlias;
-        this.columnAlias = (columnAlias == null)? genColumnAlias() : columnAlias;
+        setTableAlias((tableAlias == null)? genTableAlias() : tableAlias.toLowerCase());
+        setColumnAlias((columnAlias == null)? genColumnAlias() : columnAlias.toLowerCase());
         setAlias(tableAlias);
     }
 
@@ -97,7 +105,7 @@ public class LateralViewRelation extends ExactRelation {
     protected String toStringWithIndent(String indent) {
     	StringBuilder s = new StringBuilder(1000);
         s.append(indent);
-        s.append(String.format("LATERAL VIEW %s %s AS %s", lateralFunc.toString(), tableAlias, columnAlias));
+        s.append(String.format("LateralView %s %s AS %s\n", lateralFunc.toString(), tableAlias, columnAlias));
         return s.toString();
     }
 

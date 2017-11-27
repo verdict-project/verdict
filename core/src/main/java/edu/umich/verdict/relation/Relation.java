@@ -113,7 +113,7 @@ public abstract class Relation {
     }
 
     public void setAlias(String a) {
-        alias = a;
+        alias = a.toLowerCase();
     }
 
     /**

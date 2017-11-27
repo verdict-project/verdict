@@ -558,16 +558,13 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
     public ExactRelation visitSelect_statement(VerdictSQLParser.Select_statementContext ctx) {
         ExactRelation r = visit(ctx.query_expression());
 
-        // table name replacer with aliases
-        // TableSourceResolver resolver = new TableSourceResolver(vc,
-        // tableAliasAndColNames);
-
+        // If the raw select elements are present in order-by or group-by clauses, we replace them
+        // with their aliases.
         Map<Expr, String> selectExprToAlias = new HashMap<Expr, String>();
         for (SelectElem elem : selectElems) {
             selectExprToAlias.put(elem.getExpr(), elem.getAlias());
         }
-        // use the same resolver as for the select list elements to attach the same
-        // tables to the columns
+        // use the same resolver as for the select list elements to attach the same tables to the columns
         TableSourceResolver resolver = new TableSourceResolver(vc, tableAliasAndColNames);
 
         if (ctx.order_by_clause() != null) {
@@ -640,12 +637,17 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
                 }
             }
 
-            VerdictLogger.error(this, String.format(
-                    "The specified column, %s, is not found in the tables in the from clause.", expr.toString()));
+            VerdictLogger.warn(this, String.format("Verdict could not resolve this column: %s.", expr.toString()));
             return expr;
         }
     }
 
+    /**
+     * If no table names exist, attach table names.
+     * If raw table names are used, replace them with aliases.
+     * @author Yongjoo Park
+     *
+     */
     class ColNameResolver extends CondModifier {
 
         private Map<TableUniqueName, Pair<String, Set<String>>> baseTables;
@@ -701,7 +703,7 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
     @Override
     public ExactRelation visitQuery_specification(VerdictSQLParser.Query_specificationContext ctx) {
         // 1. extract all tables objects for creating joined table sources later.
-        // the complete INNER JOIN expressions is converted to a single ExactRelation
+        // the complete INNER JOIN / CROSS JOIN / LATERAL VIEW expressions are converted to a single ExactRelation
         // object.
         // 2. extract all base table names for column name resolution.
         // a. if a user defines an alias for a table, we expect he is using the alias
@@ -720,36 +722,40 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
             TableSourceExtractor e = new TableSourceExtractor();
             ExactRelation r1 = e.visit(s);
             tableSources.add(r1);
-            if (r1 instanceof SingleRelation) {
-                TableUniqueName tableName = ((SingleRelation) r1).getTableName();
-                String alias = r1.getAlias();
-                Set<String> colNames = vc.getMeta().getColumns(tableName);
-                tableAliasAndColNames.put(tableName, Pair.of(alias, colNames));
-            } else if (r1 instanceof ProjectedRelation) {
-                TableUniqueName tableName = new TableUniqueName(null, r1.getAlias()); // just use alias name
-                List<SelectElem> elems = ((ProjectedRelation) r1).getSelectElems();
-                Set<String> colNames = new HashSet<String>();
-                for (SelectElem elem : elems) {
-                    if (elem.aliasPresent()) {
-                        colNames.add(elem.getAlias());
-                    } else {
-                        colNames.add(elem.getExpr().toSql());
-                    }
-                }
-                tableAliasAndColNames.put(tableName, Pair.of(r1.getAlias(), colNames));
-            } else if (r1 instanceof AggregatedRelation) {
-                TableUniqueName tableName = new TableUniqueName(null, r1.getAlias()); // just use alias name
-                List<SelectElem> elems = ((AggregatedRelation) r1).getElemList();
-                Set<String> colNames = new HashSet<String>();
-                for (SelectElem elem : elems) {
-                    if (elem.aliasPresent()) {
-                        colNames.add(elem.getAlias());
-                    } else {
-                        colNames.add(elem.getExpr().toSql());
-                    }
-                }
-                tableAliasAndColNames.put(tableName, Pair.of(r1.getAlias(), colNames));
-            }
+//            if (r1 instanceof SingleRelation) {
+//                TableUniqueName tableName = ((SingleRelation) r1).getTableName();
+//                String alias = r1.getAlias();
+//                Set<String> colNames = vc.getMeta().getColumns(tableName);
+//                tableAliasAndColNames.put(tableName, Pair.of(alias, colNames));
+//            }
+//            else if (r1 instanceof JoinedRelation) {
+//                
+//            }
+//            else if (r1 instanceof ProjectedRelation) {
+//                TableUniqueName tableName = new TableUniqueName(null, r1.getAlias()); // just use alias name
+//                List<SelectElem> elems = ((ProjectedRelation) r1).getSelectElems();
+//                Set<String> colNames = new HashSet<String>();
+//                for (SelectElem elem : elems) {
+//                    if (elem.aliasPresent()) {
+//                        colNames.add(elem.getAlias());
+//                    } else {
+//                        colNames.add(elem.getExpr().toSql());   // I don't think this should be called, since all elements are aliased.
+//                    }
+//                }
+//                tableAliasAndColNames.put(tableName, Pair.of(r1.getAlias(), colNames));
+//            } else if (r1 instanceof AggregatedRelation) {
+//                TableUniqueName tableName = new TableUniqueName(null, r1.getAlias()); // just use alias name
+//                List<SelectElem> elems = ((AggregatedRelation) r1).getElemList();
+//                Set<String> colNames = new HashSet<String>();
+//                for (SelectElem elem : elems) {
+//                    if (elem.aliasPresent()) {
+//                        colNames.add(elem.getAlias());
+//                    } else {
+//                        colNames.add(elem.getExpr().toSql());
+//                    }
+//                }
+//                tableAliasAndColNames.put(tableName, Pair.of(r1.getAlias(), colNames));
+//            }
         }
 
         // parse the where clause; we also replace all base table names with their alias
@@ -958,6 +964,17 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
                     }
                 }
             }
+            else if (r instanceof ProjectedRelation) {
+                List<SelectElem> elems = ((ProjectedRelation) r).getSelectElems();
+                for (SelectElem elem : elems) {
+                    if (elem.aliasPresent()) {
+                        colNames.add(elem.getAlias());
+                    } else {
+                        colNames.add(elem.getExpr().toSql());   // I don't think this should be called, since all elements are aliased.
+                    }
+                }
+            }
+            
             TableUniqueName tabName = new TableUniqueName(null, r.getAlias());
             tableAliasAndColNames.put(tabName, Pair.of(r.getAlias(), colNames));
             return r;
@@ -1038,9 +1055,18 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
             }
             else if (ctx.LATERAL() != null) {
                 LateralFunc lf = LateralFunc.from(vc, ctx.lateral_view_function());
-                LateralViewRelation r = new LateralViewRelation(vc, lf, ctx.table_alias().getText(), ctx.column_alias().getText());
+                String tableAlias = (ctx.table_alias() == null)? null : ctx.table_alias().getText();
+                String columnAlias = (ctx.column_alias() == null)? null : ctx.column_alias().getText();
+                LateralViewRelation r = new LateralViewRelation(vc, lf, tableAlias, columnAlias);
                 joinType = JoinType.LATERAL;
                 joinCond = null;
+                
+                // used later to update the select list
+                TableUniqueName tabName = new TableUniqueName(null, r.getAlias());
+                Set<String> colNames = new HashSet<String>();
+                colNames.add(r.getColumnAlias());
+                tableAliasAndColNames.put(tabName, Pair.of(r.getAlias(), colNames));
+                
                 return r;
             }
             else {
