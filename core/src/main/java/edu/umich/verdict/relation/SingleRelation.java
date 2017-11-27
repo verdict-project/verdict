@@ -87,7 +87,7 @@ public class SingleRelation extends ExactRelation {
     protected List<ApproxRelation> nBestSamples(Expr elem, int n) throws VerdictException {
         // refresh meta data if needed.
         String schema = getTableName().getSchemaName();
-        vc.getMeta().refreshSampleInfoIfNeeded(schema);
+        vc.getMeta().refreshSampleInfoIfNeeded(schema, true);
 
         List<ApproxRelation> samples = new ArrayList<ApproxRelation>();
 
