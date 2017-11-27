@@ -33,6 +33,7 @@ import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.VerdictJDBCContext;
 import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
+import edu.umich.verdict.relation.JoinedRelation.JoinType;
 import edu.umich.verdict.relation.condition.AndCond;
 import edu.umich.verdict.relation.condition.CompCond;
 import edu.umich.verdict.relation.condition.Cond;
@@ -49,8 +50,18 @@ public class ApproxJoinedRelation extends ApproxRelation {
     private ApproxRelation source2;
 
     private List<Pair<Expr, Expr>> joinCols;
+    
+    private JoinType joinType = JoinType.INNER;
 
-    /**
+    public JoinType getJoinType() {
+		return joinType;
+	}
+
+	public void setJoinType(JoinType joinType) {
+		this.joinType = joinType;
+	}
+
+	/**
      * 
      * @param vc
      * @param source1
@@ -68,7 +79,7 @@ public class ApproxJoinedRelation extends ApproxRelation {
         } else {
             this.joinCols = joinCols;
         }
-        this.alias = null;
+        this.alias = String.format("%s_%s", source1.getAlias(), source2.getAlias());
     }
 
     public ApproxJoinedRelation(VerdictContext vc, ApproxRelation source1, ApproxRelation source2) {
@@ -135,7 +146,8 @@ public class ApproxJoinedRelation extends ApproxRelation {
         List<Pair<Expr, Expr>> newJoinCond = joinCondWithTablesSubstitutioned();
         // newJoinCond.add(Pair.<Expr, Expr>of(newSource1.partitionColumn(),
         // newSource2.partitionColumn()));
-        ExactRelation r = JoinedRelation.from(vc, newSource1, newSource2, newJoinCond);
+        JoinedRelation r = JoinedRelation.from(vc, newSource1, newSource2, newJoinCond);
+        r.setJoinType(getJoinType());
         r.setAlias(getAlias());
         return r;
     }
@@ -237,16 +249,16 @@ public class ApproxJoinedRelation extends ApproxRelation {
     }
 
     @Override
-    public List<String> sampleColumns() {
+    public List<String> getColumnsOnWhichSamplesAreCreated() {
         if (sampleType().equals("stratified")) {
-            List<String> union = new ArrayList<String>(source1.sampleColumns());
-            union.addAll(source2.sampleColumns());
+            List<String> union = new ArrayList<String>(source1.getColumnsOnWhichSamplesAreCreated());
+            union.addAll(source2.getColumnsOnWhichSamplesAreCreated());
             return union;
         } else if (sampleType().equals("universe")) {
             if (source1.sampleType().equals("universe")) {
-                return source1.sampleColumns();
+                return source1.getColumnsOnWhichSamplesAreCreated();
             } else {
-                return source2.sampleColumns();
+                return source2.getColumnsOnWhichSamplesAreCreated();
             }
         } else {
             return Arrays.asList();
@@ -282,7 +294,7 @@ public class ApproxJoinedRelation extends ApproxRelation {
         s.append(indent);
         s.append(String.format("%s(%s) [%s], sample type: %s (%s), sampling prob: %f, cost: %f\n",
                 this.getClass().getSimpleName(), getAlias(), Joiner.on(", ").join(joinCols), sampleType(),
-                sampleColumns(), samplingProbability(), cost()));
+                getColumnsOnWhichSamplesAreCreated(), samplingProbability(), cost()));
         s.append(source1.toStringWithIndent(indent + "  "));
         s.append(source2.toStringWithIndent(indent + "  "));
         return s.toString();

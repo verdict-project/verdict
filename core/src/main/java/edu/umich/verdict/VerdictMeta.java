@@ -260,6 +260,26 @@ public class VerdictMeta {
             refreshSampleInfo(schemaName);
         }
     }
+    
+    private void clearSampleInformationFor(String schemaName) {
+        Map<TableUniqueName, Map<SampleParam, TableUniqueName>> newSampleNameMeta = new HashMap<TableUniqueName, Map<SampleParam, TableUniqueName>>();
+        Map<TableUniqueName, SampleSizeInfo> newSampleSizeMeta = new HashMap<TableUniqueName, SampleSizeInfo>();
+        
+        for (Map.Entry<TableUniqueName, Map<SampleParam, TableUniqueName>> e : sampleNameMeta.entrySet()) {
+            if (!e.getKey().getSchemaName().equals(schemaName)) {
+                newSampleNameMeta.put(e.getKey(), e.getValue());
+            }
+        }
+        
+        for (Map.Entry<TableUniqueName, SampleSizeInfo> e : sampleSizeMeta.entrySet()) {
+            if (!e.getKey().getSchemaName().equals(schemaName)) {
+                newSampleSizeMeta.put(e.getKey(), e.getValue());
+            }
+        }
+        
+        sampleNameMeta = newSampleNameMeta;
+        sampleSizeMeta = newSampleSizeMeta;
+    }
 
     public void refreshSampleInfo(String schemaName) {
         TableUniqueName metaNameTable = getMetaNameTableForOriginalSchema(schemaName);
@@ -267,8 +287,9 @@ public class VerdictMeta {
         List<List<Object>> result;
 
         try {
-            sampleNameMeta.clear();
-            sampleSizeMeta.clear();
+//            sampleNameMeta.clear();
+//            sampleSizeMeta.clear();
+            clearSampleInformationFor(schemaName);
 
             Set<String> databases = getDatabases();
             if (databases.contains(metaNameTable.getSchemaName())) {

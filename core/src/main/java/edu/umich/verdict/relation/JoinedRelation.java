@@ -25,6 +25,7 @@ import java.util.Set;
 import org.apache.commons.lang3.tuple.Pair;
 
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableMap;
 
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.datatypes.SampleParam;
@@ -35,15 +36,33 @@ import edu.umich.verdict.relation.condition.CompCond;
 import edu.umich.verdict.relation.condition.Cond;
 import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.Expr;
+import edu.umich.verdict.relation.expr.LateralFunc.LateralFuncName;
 import edu.umich.verdict.util.VerdictLogger;
 
 public class JoinedRelation extends ExactRelation {
 
-    private ExactRelation source1;
+    public enum JoinType {
+	    INNER, CROSS, LATERAL, LEFT_OUTER, RIGHT_OUTER
+	}
+
+	protected static Map<JoinType, String> joinTypeString =
+	ImmutableMap.<JoinType, String>builder()
+	.put(JoinType.INNER, "INNER JOIN")
+	.put(JoinType.CROSS, "CROSS JOIN")
+	.put(JoinType.LATERAL, "LATERAL VIEW")
+	.put(JoinType.LEFT_OUTER, "LEFT OUTER JOIN")
+	.put(JoinType.RIGHT_OUTER, "RIGHT OUTER JOIN")
+	.build();
+
+	private ExactRelation source1;
 
     private ExactRelation source2;
 
-    public ExactRelation getLeftSource() {
+    private List<Pair<Expr, Expr>> joinCols;
+
+	private JoinType joinType = JoinType.INNER;
+
+	public ExactRelation getLeftSource() {
         return source1;
     }
 
@@ -51,46 +70,21 @@ public class JoinedRelation extends ExactRelation {
         return source2;
     }
 
-    private List<Pair<Expr, Expr>> joinCols;
-
-    private String joinType = "INNER";
-
-    public JoinedRelation(VerdictContext vc, ExactRelation source1, ExactRelation source2,
-            List<Pair<Expr, Expr>> joinCols) {
-        super(vc);
-        this.source1 = source1;
-        this.source2 = source2;
-
-        if (joinCols == null) {
-            this.joinCols = new ArrayList<Pair<Expr, Expr>>();
-        } else {
-            this.joinCols = joinCols;
-        }
-
-        this.alias = String.format("%s_%s", source1.getAlias(), source2.getAlias());
+    public JoinType getJoinType() {
+        return joinType;
     }
-
-    public static JoinedRelation from(VerdictContext vc, ExactRelation source1, ExactRelation source2,
-            List<Pair<Expr, Expr>> joinCols) {
-        JoinedRelation r = new JoinedRelation(vc, source1, source2, joinCols);
-        return r;
+    
+    public void setJoinType(JoinType type) {
+        joinType = type;
     }
-
-    public static JoinedRelation from(VerdictContext vc, ExactRelation source1, ExactRelation source2, Cond cond) {
-        return from(vc, source1, source2, extractJoinConds(cond));
-    }
-
+    
     public List<Pair<Expr, Expr>> getJoinCond() {
         return joinCols;
     }
 
-    public void setJoinType(String type) {
-        joinType = type;
-    }
-
     /**
      * Sets the join condition. If there are extra substitution request (by the
-     * param 'subs'), we perform the substitution as well.
+     * param 'subs'), we perform table name substitutions as well.
      * 
      * @param cond
      * @param subs
@@ -98,7 +92,7 @@ public class JoinedRelation extends ExactRelation {
      */
     public void setJoinCond(Cond cond, Map<TableUniqueName, String> subs) throws VerdictException {
         List<Pair<Expr, Expr>> joinColumns = extractJoinConds(cond);
-
+    
         // if the original table names are used for join conditions, they must be
         // replaced with
         // their alias names. note that all tables are aliased internally.
@@ -112,13 +106,40 @@ public class JoinedRelation extends ExactRelation {
             }
             joinColumns = substituedJoinColumns;
         }
-
+    
         this.joinCols = joinColumns;
     }
 
     public void setJoinCond(Cond cond) throws VerdictException {
         setJoinCond(cond, null);
     }
+
+    public JoinedRelation(VerdictContext vc, ExactRelation source1, ExactRelation source2,
+            List<Pair<Expr, Expr>> joinCols) {
+        super(vc);
+        this.source1 = source1;
+        this.source2 = source2;
+
+        if (joinCols == null) {
+            this.joinCols = new ArrayList<Pair<Expr, Expr>>();
+        } else {
+            this.joinCols = joinCols;
+        }
+
+        this.alias = String.format("%s-%s", source1.getAlias(), source2.getAlias());
+    }
+
+    public static JoinedRelation from(VerdictContext vc, ExactRelation source1, ExactRelation source2,
+            List<Pair<Expr, Expr>> joinCols) {
+        JoinedRelation r = new JoinedRelation(vc, source1, source2, joinCols);
+        return r;
+    }
+
+    public static JoinedRelation from(VerdictContext vc, ExactRelation source1, ExactRelation source2, Cond cond) {
+        return from(vc, source1, source2, extractJoinConds(cond));
+    }
+
+    
 
     private static List<Pair<Expr, Expr>> extractJoinConds(Cond cond) {
         if (cond == null) {
@@ -144,11 +165,15 @@ public class JoinedRelation extends ExactRelation {
     protected String joinClause() {
         StringBuilder sql = new StringBuilder(100);
 
-        if (joinCols == null || joinCols.size() == 0) {
+        if (joinType.equals(JoinType.CROSS) || joinType.equals(JoinType.LATERAL)) {
+            sql.append(String.format("%s %s %s", sourceExpr(source1), joinTypeString.get(joinType), sourceExpr(source2)));
+        }
+        else if (joinCols == null || joinCols.size() == 0) {
             VerdictLogger.debug(this, "No join conditions specified; cross join is used.");
             sql.append(String.format("%s CROSS JOIN %s", sourceExpr(source1), sourceExpr(source2)));
-        } else {
-            sql.append(String.format("%s %s JOIN %s ON", sourceExpr(source1), joinType, sourceExpr(source2)));
+        }
+        else {      // INNER JOIN, LEFT OUTER, RIGHT OUTER
+            sql.append(String.format("%s %s %s ON", sourceExpr(source1), joinTypeString.get(joinType), sourceExpr(source2)));
             for (int i = 0; i < joinCols.size(); i++) {
                 if (i != 0)
                     sql.append(" AND");
@@ -196,6 +221,7 @@ public class JoinedRelation extends ExactRelation {
         for (ApproxRelation a1 : ofSources1) {
             for (ApproxRelation a2 : ofSources2) {
                 ApproxJoinedRelation j = new ApproxJoinedRelation(vc, a1, a2, joinCols);
+                j.setJoinType(getJoinType());
                 if (expectedSampleType(j.sampleType())) {
                     joined.add(j);
                 }

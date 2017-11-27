@@ -506,6 +506,7 @@ join_part
     | CROSS JOIN table_source
     | CROSS APPLY table_source
     | OUTER APPLY table_source
+    | LATERAL VIEW lateral_view_function table_alias? (AS? column_alias)?
     ;
 
 table_name_with_hint
@@ -638,9 +639,15 @@ unary_manipulation_function
     ;
     
 noparam_manipulation_function
-    : function_name=(UNIX_TIMESTAMP | CURRENT_TIMESTAMP | RANDOM | E | PI)
+    : function_name=(UNIX_TIMESTAMP | CURRENT_TIMESTAMP | RANDOM | NATURAL_CONSTANT | PI)
       '(' ')'
     ;
+    
+lateral_view_function
+    : function_name=EXPLODE
+      '(' expression ')'
+    ;
+
 
 // https://msdn.microsoft.com/en-us/library/ms173454.aspx
 aggregate_windowed_function
@@ -1203,6 +1210,7 @@ ENCRYPTION:                      E N C R Y P T I O N;
 ESCAPED_BY:                      E S C A P E D ' ' B Y;
 EXACT:                           E X A C T;
 EXP:                             E X P;
+EXPLODE:                         E X P L O D E;
 EXTRACT:                         E X T R A C T;
 FACTORIAL:                       F A C T O R I A L;
 FAST:                            F A S T;
@@ -1221,10 +1229,12 @@ GROUPING_ID:                     G R O U P I N G '_' I D;
 HASH:                            H A S H;
 INSENSITIVE:                     I N S E N S I T I V E;
 INSERTED:                        I N S E R T E D;
+INSTR:                           I N S T R;
 ISOLATION:                       I S O L A T I O N;
 KEEPFIXED:                       K E E P F I X E D;
 KEYSET:                          K E Y S E T;
 LAST:                            L A S T;
+LATERAL:                         L A T E R A L;
 LENGTH:                          L E N G T H;
 LEVEL:                           L E V E L;
 LN:                              L N;

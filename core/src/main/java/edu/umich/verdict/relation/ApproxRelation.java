@@ -278,7 +278,7 @@ public abstract class ApproxRelation extends Relation {
      * 
      * @return
      */
-    protected abstract List<String> sampleColumns();
+    protected abstract List<String> getColumnsOnWhichSamplesAreCreated();
 
     /**
      * Pairs of original table name and a sample table name. This function does not

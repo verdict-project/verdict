@@ -70,7 +70,7 @@ public class NoApproxRelation extends ApproxRelation {
     }
 
     @Override
-    protected List<String> sampleColumns() {
+    protected List<String> getColumnsOnWhichSamplesAreCreated() {
         return new ArrayList<String>();
     }
 

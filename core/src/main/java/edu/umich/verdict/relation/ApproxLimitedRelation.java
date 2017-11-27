@@ -84,7 +84,7 @@ public class ApproxLimitedRelation extends ApproxRelation {
     }
 
     @Override
-    protected List<String> sampleColumns() {
+    protected List<String> getColumnsOnWhichSamplesAreCreated() {
         return null;
     }
 

@@ -292,10 +292,10 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 
         for (SelectElem elem : elems) {
             if (!elem.isagg()) {
-                // group entry
+                // group-by attribute
                 scaledElems.add(elem);
 
-                // remove from
+                // update unappearingGroups by removing the attributes that appeared
                 Expr e = elem.getExpr();
                 if (e instanceof ColNameExpr) {
                     int i = 0;
@@ -428,7 +428,7 @@ public class ApproxAggregatedRelation extends ApproxRelation {
                             new FuncExpr(FuncExpr.FuncName.SUM, FuncExpr.count(), new OverClause(groupby)), "*");
                     return scaled;
                 } else if (f.getFuncName().equals(FuncExpr.FuncName.COUNT_DISTINCT)) {
-                    if (source.sampleType().equals("universe")) {
+                    if (source.sampleType().contains("universe")) {
                         Expr est = new FuncExpr(FuncExpr.FuncName.COUNT_DISTINCT, f.getUnaryExpr());
                         // scale with sampling ratio
                         Expr scaled = BinaryOpExpr.from(vc, est, tableSamplingRatioExpr, "/");
@@ -612,15 +612,15 @@ public class ApproxAggregatedRelation extends ApproxRelation {
     }
 
     @Override
-    protected List<String> sampleColumns() {
+    protected List<String> getColumnsOnWhichSamplesAreCreated() {
         if (!(source instanceof ApproxGroupedRelation)) {
             return Collections.emptyList();
         } else if (sampleType().equals("stratified") || sampleType().equals("universe")) {
-            List<String> cols = mappedSourceSampleColumn(source.sampleColumns());
+            List<String> cols = mappedSourceSampleColumn(source.getColumnsOnWhichSamplesAreCreated());
             return cols;
         }
 
-        return source.sampleColumns();
+        return source.getColumnsOnWhichSamplesAreCreated();
     }
 
     @Override
@@ -628,7 +628,7 @@ public class ApproxAggregatedRelation extends ApproxRelation {
         StringBuilder s = new StringBuilder(1000);
         s.append(indent);
         s.append(String.format("%s(%s) [%s] type: %s (%s), cost: %f\n", this.getClass().getSimpleName(), getAlias(),
-                Joiner.on(", ").join(elems), sampleType(), sampleColumns(), cost()));
+                Joiner.on(", ").join(elems), sampleType(), getColumnsOnWhichSamplesAreCreated(), cost()));
         s.append(source.toStringWithIndent(indent + "  "));
         return s.toString();
     }

@@ -113,7 +113,7 @@ public class SelectElem {
         if (alias == null) {
             this.alias = Optional.fromNullable(alias);
         } else {
-            this.alias = Optional.of(alias.replace("\"", "").replace("`", ""));
+            this.alias = Optional.of(alias.replace("\"", "").replace("`", "").toLowerCase());
         }
     }
 

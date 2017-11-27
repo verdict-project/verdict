@@ -261,8 +261,8 @@ public class ApproxProjectedRelation extends ApproxRelation {
     }
 
     @Override
-    protected List<String> sampleColumns() {
-        return source.sampleColumns();
+    protected List<String> getColumnsOnWhichSamplesAreCreated() {
+        return source.getColumnsOnWhichSamplesAreCreated();
     }
 
     @Override
@@ -312,7 +312,15 @@ public class ApproxProjectedRelation extends ApproxRelation {
         List<ColNameExpr> colnames = new ArrayList<ColNameExpr>();
         if (tabExpr == null || tabExpr.getTable().equals(getAlias())) {
             for (SelectElem e : elems) {
-                colnames.add(new ColNameExpr(vc, e.getAlias(), getAlias()));
+                if (e.getExpr() instanceof StarExpr) {
+                    TableNameExpr subtabExpr = ((StarExpr) e.getExpr()).getTab();
+                    List<ColNameExpr> col_names = source.getAssociatedColumnNames(subtabExpr);
+                    for (ColNameExpr ce : col_names) {
+                        colnames.add((ColNameExpr) ce.withTableSubstituted(getAlias()));
+                    }
+                } else {
+                    colnames.add(new ColNameExpr(vc, e.getAlias(), getAlias()));
+                }
             }
         }
         return colnames;
