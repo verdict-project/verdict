@@ -18,7 +18,7 @@ Verdict brings you Interactive-speed, resource-efficient data analytics.
 Find more about Verdict at our website: [VerdictDB.org](http://verdictdb.org).
 
 
-# Use Friendly SQL Interface
+## Same SQL
 
 When you issue standard SQL queries as below, Verdict internally converts the query into an alternative form that runs faster on your database. Verdict quickly returns an approximate answer to the query with an error bound (the true answer is within the error bound).
 
@@ -40,22 +40,28 @@ create sample of big_data_table;
 ```
 
 
-# Download and Install
+## Download and install
 
 You only need to download a couple of jar files to get started. Verdict does not require "sudo" access or any complicated setup process. Go to [this download page](http://verdictdb.org/download/) to find out the files relevant to your data analytics platforms. We already provide pre-built jar files for Cloudera distributions, MapR distributions, and official Apache Spark. You can also build from the source code using the standard build tool, Apache Maven.
 
 
-# How to Connect?
+## Standard connection methods
 
-There are several options, such as (1) Verdict's interactive shell and (2) JDBC driver. For Spark, you simply include Verdict's spark library and issue queries to Verdict's SQL context. Verdict works well with popular front-end tools, such as Apache Zeppelin, Hue, Jupyter notebooks, and so on.
+<p align="center">
+<img src="http://verdictdb.org/image/verdict-architecture.png" width="500px" />
+</p>
+
+Verdict supports the standard interface such as JDBC. For Apache Spark, you can simply include Verdict's `jar` file and issue queries to Verdict's SQL context.
+
+Due to its support for standard interface, Verdict integrates easily with popular front-end tools, such as Apache Zeppelin, Hue, Jupyter notebooks, and so on.
 
 
-# Built to Speed Up Big Aggregate Queries
+## Research
 
 Verdict speeds up **aggregate queries**, for which a tiny fraction of the entire data can be used instead for producing highly accurate answers. There are many theories and optimizations as well we developed and implemented inside Verdict for high accuracy and great efficiency. Visit our [research page](http://verdictdb.org/documentation/research/) and see innovations we make.
 
 
-# Open Source and Free for Every Use
+## Free for every use
 
 We maintain Verdict for free under the Apache License so that anyone can benefit from our contributions. If you like our project, please star our Github repository (https://github.com/mozafari/verdict) and send feedback to verdict-user@umich.edu.
 
