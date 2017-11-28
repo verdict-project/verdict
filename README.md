@@ -1,6 +1,10 @@
 # Same SQL, Same DB, 100x-200x Faster Analytics
 
-Verdict brings you Interactive-speed, resource-efficient data analytics. Its main features are:
+<p align="center">
+<img src="http://verdictdb.org/image/verdict-for-impala-speedup.png" width="600px" />
+</p>
+
+Verdict brings you Interactive-speed, resource-efficient data analytics.
 
 1. **200x faster by sacrificing only 1% accuracy**
    Verdict can give you 99% accurate answers for your big data queries in a fraction of the time needed for calculating exact answers. If your data is too big to analyze in a couple of seconds, you will like Verdict.
@@ -14,15 +18,9 @@ Verdict brings you Interactive-speed, resource-efficient data analytics. Its mai
 Find more about Verdict at our website: [VerdictDB.org](http://verdictdb.org).
 
 
-# How to Use Verdict? Simple!
+# Use Friendly SQL Interface
 
-Let Verdict do some preparation:
-
-```sql
-create sample of big_data_table;
-```
-
-Now you just issue standard SQL queries and enjoy 100x faster data analytics!
+When you issue standard SQL queries as below, Verdict internally converts the query into an alternative form that runs faster on your database. Verdict quickly returns an approximate answer to the query with an error bound (the true answer is within the error bound).
 
 ```sql
 select city, count(*)
@@ -33,7 +31,13 @@ order by count(*)
 limit 10;
 ```
 
-Of course, you can issue as many queries as you want after a single preparation for the table you choose; the queries can include arbitrary filtering predicates, joins, etc. See [this page](http://verdictdb.org/documentation/quick_start/) for the examples of different databases.
+The alternative form includes a *sample table* instead of the original data. However, simiply replacing the original tables (e.g., `big_data_table`) with its sample table could result in largely incorrect answers. Verdict automatically handles such translations so its answers are accurate (1-2% within the exact answers).
+
+All you need to do before observing such speedups is creating samples with just a single SQL expression.
+
+```sql
+create sample of big_data_table;
+```
 
 
 # Download and Install
@@ -46,12 +50,12 @@ You only need to download a couple of jar files to get started. Verdict does not
 There are several options, such as (1) Verdict's interactive shell and (2) JDBC driver. For Spark, you simply include Verdict's spark library and issue queries to Verdict's SQL context. Verdict works well with popular front-end tools, such as Apache Zeppelin, Hue, Jupyter notebooks, and so on.
 
 
-# How are Such Large Speedups Possible?
+# Built to Speed Up Big Aggregate Queries
 
-Verdict speeds up aggregate queries, for which a tiny fraction of the entire data can be used instead for producing highly accurate answers. There are many theories and optimizations as well we developed and implemented inside Verdict for high accuracy and great efficiency. Visit our [research page](http://verdictdb.org/documentation/research/) and see innovations we make.
+Verdict speeds up **aggregate queries**, for which a tiny fraction of the entire data can be used instead for producing highly accurate answers. There are many theories and optimizations as well we developed and implemented inside Verdict for high accuracy and great efficiency. Visit our [research page](http://verdictdb.org/documentation/research/) and see innovations we make.
 
 
-# Star our Github repo, Use Verdict for free, and Share your story :-)
+# Open Source and Free for Every Use
 
 We maintain Verdict for free under the Apache License so that anyone can benefit from our contributions. If you like our project, please star our Github repository (https://github.com/mozafari/verdict) and send feedback to verdict-user@umich.edu.
 
