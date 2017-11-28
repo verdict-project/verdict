@@ -18,7 +18,7 @@ Verdict brings you Interactive-speed, resource-efficient data analytics.
 Find more about Verdict at our website: [VerdictDB.org](http://verdictdb.org).
 
 
-## Same SQL
+## Same SQL queries
 
 When you issue standard SQL queries as below, Verdict internally converts the query into an alternative form that runs faster on your database. Verdict quickly returns an approximate answer to the query with an error bound (the true answer is within the error bound).
 
@@ -40,11 +40,6 @@ create sample of big_data_table;
 ```
 
 
-## Download and install
-
-You only need to download a couple of jar files to get started. Verdict does not require "sudo" access or any complicated setup process. Go to [this download page](http://verdictdb.org/download/) to find out the files relevant to your data analytics platforms. We already provide pre-built jar files for Cloudera distributions, MapR distributions, and official Apache Spark. You can also build from the source code using the standard build tool, Apache Maven.
-
-
 ## Standard connection methods
 
 <p align="center">
@@ -54,6 +49,13 @@ You only need to download a couple of jar files to get started. Verdict does not
 Verdict supports the standard interface such as JDBC. For Apache Spark, you can simply include Verdict's `jar` file and issue queries to Verdict's SQL context.
 
 Due to its support for standard interface, Verdict integrates easily with popular front-end tools, such as Apache Zeppelin, Hue, Jupyter notebooks, and so on.
+
+
+
+## Download and install
+
+You only need to download a couple of jar files to get started. Verdict does not require "sudo" access or any complicated setup process. Go to [this download page](http://verdictdb.org/download/) to find out the files relevant to your data analytics platforms. We already provide pre-built jar files for Cloudera distributions, MapR distributions, and official Apache Spark. You can also build from the source code using the standard build tool, Apache Maven.
+
 
 
 ## Research
