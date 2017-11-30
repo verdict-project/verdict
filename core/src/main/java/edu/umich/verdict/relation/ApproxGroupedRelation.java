@@ -189,7 +189,7 @@ public class ApproxGroupedRelation extends ApproxRelation {
     @Override
     public Expr tupleProbabilityColumn() {
         Expr e = source.tupleProbabilityColumn();
-//        e = e.withTableSubstituted(getAlias());   why is this needed?
+        e = e.withTableSubstituted(getAlias());
         return e;
     }
 

@@ -60,7 +60,7 @@ public class DropSampleQuery extends Query {
         }
 
         deleteSampleOf(effectiveTableName, samplingRatio, sampleType, columnNames);
-        vc.getMeta().refreshSampleInfo(effectiveTableName.getSchemaName());
+        vc.getMeta().refreshSampleInfo(effectiveTableName.getSchemaName(), false);
     }
 
     protected void deleteSampleOf(TableUniqueName tableName, double samplingRatio, String sampleType,

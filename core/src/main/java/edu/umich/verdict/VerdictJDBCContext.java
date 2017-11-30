@@ -124,7 +124,7 @@ public class VerdictJDBCContext extends VerdictContext {
         vc.setMeta(new VerdictMeta(vc));		// this must be called after DB connection is created.
 
         if (conf.getDbmsSchema() != null) {
-            vc.getMeta().refreshSampleInfo(conf.getDbmsSchema());
+            vc.getMeta().refreshSampleInfo(conf.getDbmsSchema(), false);
         }
 
         return vc;

@@ -220,7 +220,7 @@ public class VerdictMeta {
      * @throws VerdictException
      */
     public void deleteSampleInfo(SampleParam param) throws VerdictException {
-        refreshSampleInfoIfNeeded(param.getOriginalTable().getSchemaName());
+        refreshSampleInfoIfNeeded(param.getOriginalTable().getSchemaName(), false);
         TableUniqueName originalTable = param.getOriginalTable();
 
         if (sampleNameMeta.containsKey(originalTable)) {
@@ -234,7 +234,7 @@ public class VerdictMeta {
     }
 
     // TODO: double-check when metadata should be refreshed.
-    public void refreshSampleInfoIfNeeded(String schemaName) {
+    public void refreshSampleInfoIfNeeded(String schemaName, boolean isCreateSample) {
         boolean needToRefresh = false;
         String refreshOption = vc.getConf().metaRefreshPolicy();
 
@@ -257,7 +257,7 @@ public class VerdictMeta {
         }
 
         if (needToRefresh) {
-            refreshSampleInfo(schemaName);
+            refreshSampleInfo(schemaName, isCreateSample);
         }
     }
     
@@ -281,7 +281,7 @@ public class VerdictMeta {
         sampleSizeMeta = newSampleSizeMeta;
     }
 
-    public void refreshSampleInfo(String schemaName) {
+    public void refreshSampleInfo(String schemaName, boolean isCreateSample) {
         TableUniqueName metaNameTable = getMetaNameTableForOriginalSchema(schemaName);
         TableUniqueName metaSizeTable = getMetaSizeTableForOriginalSchema(schemaName);
         List<List<Object>> result;
@@ -295,7 +295,9 @@ public class VerdictMeta {
             if (databases.contains(metaNameTable.getSchemaName())) {
                 Set<String> tables = getTables(metaNameTable.getSchemaName());
                 if (tables != null && tables.contains(metaNameTable.getTableName())) {
-                    vc.getDbms().cacheTable(metaNameTable);
+                    if (isCreateSample) {
+                        vc.getDbms().cacheTable(metaNameTable);
+                    }
 
                     // sample name
                     result = SingleRelation.from(vc, metaNameTable).select(
@@ -322,7 +324,9 @@ public class VerdictMeta {
 
                         TableUniqueName sampleTable = TableUniqueName.uname(sampleSchemaName, sampleTabName);
                         if (tables.contains(sampleTabName)) {
-                            vc.getDbms().cacheTable(sampleTable);
+                            if (isCreateSample) {
+                                vc.getDbms().cacheTable(sampleTable);
+                            }
                         } else {
                             VerdictLogger.error(this, String.format("No sample table (%s) exists. This can cause an unexpected error.", sampleTable));
                         }
@@ -333,7 +337,9 @@ public class VerdictMeta {
             if (databases.contains(metaSizeTable.getSchemaName())) {
                 Set<String> tables = getTables(metaSizeTable.getSchemaName());
                 if (tables != null && tables.contains(metaSizeTable.getTableName())) {
-                    vc.getDbms().cacheTable(metaSizeTable);
+                    if (isCreateSample) {
+                        vc.getDbms().cacheTable(metaSizeTable);
+                    }
 
                     // sample size
                     result = SingleRelation.from(vc, metaSizeTable)
@@ -389,7 +395,7 @@ public class VerdictMeta {
      * @return A list of sample creation parameters and a sample table name.
      */
     public List<Pair<SampleParam, TableUniqueName>> getSampleInfoFor(TableUniqueName originalTableName) {
-        refreshSampleInfoIfNeeded(originalTableName.getSchemaName());
+        refreshSampleInfoIfNeeded(originalTableName.getSchemaName(), false);
         List<Pair<SampleParam, TableUniqueName>> sampleInfo = new ArrayList<Pair<SampleParam, TableUniqueName>>();
         if (sampleNameMeta.containsKey(originalTableName)) {
             for (Map.Entry<SampleParam, TableUniqueName> e : sampleNameMeta.get(originalTableName).entrySet()) {
