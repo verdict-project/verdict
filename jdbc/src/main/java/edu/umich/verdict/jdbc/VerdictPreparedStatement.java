@@ -115,7 +115,7 @@ public class VerdictPreparedStatement implements PreparedStatement {
     public void cancel() throws SQLException {
         // TODO Auto-generated method stub
         System.out.print("CANCELING QUERY");
-        stmt.close();
+        stmt.cancel();
 
     }
 
