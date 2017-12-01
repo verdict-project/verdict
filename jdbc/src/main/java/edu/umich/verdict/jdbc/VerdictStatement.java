@@ -131,11 +131,13 @@ public class VerdictStatement implements Statement {
         System.out.print("CANCELING QUERY");
         //stmt.cancel();
 
-        try {
+        stmt.close();
+
+        /**try {
             ((DbmsJDBC) vc.getDbms()).closeStatement();
         } catch (VerdictException e) {
             new SQLException(StackTraceReader.stackTrace2String(e));
-        }
+        }*/
     }
 
     @Override
