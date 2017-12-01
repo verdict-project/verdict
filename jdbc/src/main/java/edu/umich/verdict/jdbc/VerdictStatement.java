@@ -128,7 +128,7 @@ public class VerdictStatement implements Statement {
 
     @Override
     public void cancel() throws SQLException {
-        System.out.print("CANCELING QUERY");
+        //System.out.print("CANCELING QUERY");
         stmt.cancel();
     }
 
