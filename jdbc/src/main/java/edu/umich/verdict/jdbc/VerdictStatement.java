@@ -128,10 +128,9 @@ public class VerdictStatement implements Statement {
 
     @Override
     public void cancel() throws SQLException {
-        System.out.print("CANCELING QUERY");
-        //stmt.cancel();
-
-        stmt.close();
+        stmt.cancel();
+        // closing JDBC connection even pressing CTRL+C doesn't stop the query
+        //stmt.close();
 
         /**try {
             ((DbmsJDBC) vc.getDbms()).closeStatement();
