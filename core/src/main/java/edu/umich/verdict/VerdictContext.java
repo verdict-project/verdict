@@ -20,7 +20,7 @@ import java.sql.ResultSet;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 
-import org.apache.spark.sql.DataFrame;
+//import org.apache.spark.sql.DataFrame;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import com.google.common.base.Optional;
@@ -138,7 +138,9 @@ public abstract class VerdictContext {
 
     public abstract ResultSet getResultSet();
 
-    public abstract DataFrame getDataFrame();
+//    public DataFrame getDataFrame() {
+//        return null;
+//    }
 
     public abstract Dataset<Row> getDataset();
 
@@ -148,11 +150,11 @@ public abstract class VerdictContext {
         return rs;
     }
 
-    public DataFrame executeSparkQuery(String sql) throws VerdictException {
-        execute(sql);
-        DataFrame df = getDataFrame();
-        return df;
-    }
+//    public DataFrame executeSparkQuery(String sql) throws VerdictException {
+//        execute(sql);
+//        DataFrame df = getDataFrame();
+//        return df;
+//    }
 
     public Dataset<Row> executeSpark2Query(String sql) throws VerdictException {
         execute(sql);
