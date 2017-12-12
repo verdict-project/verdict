@@ -138,8 +138,10 @@ public class VerdictStatement implements Statement {
 
         try {
             ((DbmsJDBC) vc.getDbms()).closeStatement();
+            System.out.println("closing in a try statement");
         } catch (VerdictException e) {
             new SQLException(StackTraceReader.stackTrace2String(e));
+            System.out.println("closing exception caught");
         }
         System.out.println("Closing done");
     }
