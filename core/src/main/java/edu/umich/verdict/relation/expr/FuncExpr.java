@@ -48,7 +48,6 @@ public class FuncExpr extends Expr {
             .put("ASCII", FuncName.ASCII)
             .put("ASIN", FuncName.ASIN)
             .put("ATAN", FuncName.ATAN)
-            .put("ATAN", FuncName.ATAN)
             .put("BIN", FuncName.BIN)
             .put("BROUND", FuncName.BROUND)
             .put("CAST", FuncName.CAST)
