@@ -136,14 +136,20 @@ public class VerdictStatement implements Statement {
         stmt.close();
         System.out.println("closing");
 
-        try {
+        /**try {
             ((DbmsJDBC) vc.getDbms()).closeStatement();
             System.out.println("closing in a try statement");
         } catch (VerdictException e) {
             new SQLException(StackTraceReader.stackTrace2String(e));
             System.out.println("closing exception caught");
         }
-        System.out.println("Closing done");
+        System.out.println("Closing done");*/
+        //try {
+            ((DbmsJDBC) vc.getDbms()).getDbmsConnection().close();
+        //} catch (VerdictException e) {
+        //    new SQLException(StackTraceReader.stackTrace2String(e));
+        //    System.out.println("closing exception caught");
+        //}
     }
 
     @Override
