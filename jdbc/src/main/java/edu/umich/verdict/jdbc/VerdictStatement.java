@@ -128,8 +128,9 @@ public class VerdictStatement implements Statement {
 
     @Override
     public void cancel() throws SQLException {
-        System.out.println("Canceling");
-        stmt.cancel();
+        System.out.println("Force Close");
+        connection.close();
+        /**stmt.cancel();
         // closing JDBC connection even pressing CTRL+C doesn't stop the query
         //stmt.close();
         System.out.println("Canceling done");
@@ -143,7 +144,7 @@ public class VerdictStatement implements Statement {
             new SQLException(StackTraceReader.stackTrace2String(e));
             System.out.println("closing exception caught");
         }
-        System.out.println("Closing done");
+        System.out.println("Closing done");*/
     }
 
     @Override

@@ -172,6 +172,7 @@ public class VerdictConnection implements Connection {
 
     @Override
     public void close() throws SQLException {
+        System.out.println("Verdict Connection Closed");
         try {
             vc.destroy();
         } catch (VerdictException e) {
