@@ -133,12 +133,15 @@ public class VerdictStatement implements Statement {
         // closing JDBC connection even pressing CTRL+C doesn't stop the query
         //stmt.close();
         System.out.println("Canceling done");
+        stmt.close();
+        System.out.println("closing");
 
-        /**try {
+        try {
             ((DbmsJDBC) vc.getDbms()).closeStatement();
         } catch (VerdictException e) {
             new SQLException(StackTraceReader.stackTrace2String(e));
-        }*/
+        }
+        System.out.println("Closing done");
     }
 
     @Override
