@@ -31,6 +31,7 @@ conf/verdict.properties
 
 # libs
 libs/*.jar
+jdbc_jars/*.jar
 
 # misc
 license_update.py
