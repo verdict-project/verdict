@@ -48,7 +48,7 @@ public class RefreshQuery extends Query {
         vc.getMeta().clearSampleInfo();
         
         if (schema != null) {
-            vc.getMeta().refreshSampleInfo(schema);
+            vc.getMeta().refreshSampleInfo(schema, false);
 //            vc.getMeta().refreshTables(schema);
 
         } else {

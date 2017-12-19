@@ -24,7 +24,7 @@
                 <directory>src/test/resources</directory>
             </resource>
             <resource>
-                <directory>${main.basedir}/conf</directory>
+                <directory>${project.basedir}/../conf</directory>
             </resource>
         </resources>
 
@@ -77,7 +77,7 @@
                             <descriptorRefs>
                                 <descriptorRef>jar-with-dependencies</descriptorRef>
                             </descriptorRefs>
-                            <finalName>verdict-spark-lib-${platform.name}-${verdict.version}</finalName>
+                            <finalName>verdict-spark-lib-${verdict.version}</finalName>
                             <outputDirectory>${main.basedir}/jars</outputDirectory>
                         </configuration>
                     </execution>
@@ -203,7 +203,7 @@
         </dependency>
         <!-- Some spark libraries must be included for the core module to 
             be compiled -->
-        <dependency>
+        <!-- <dependency>
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-core_${spark.scala.version}</artifactId>
             <version>${spark.core.version}</version>
@@ -220,7 +220,7 @@
             <artifactId>spark-hive_${spark.scala.version}</artifactId>
             <version>${spark.hive.version}</version>
             <scope>provided</scope>
-        </dependency>
+        </dependency> -->
         <dependency>
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-core_${spark2.scala.version}</artifactId>

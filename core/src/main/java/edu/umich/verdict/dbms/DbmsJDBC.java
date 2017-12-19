@@ -31,7 +31,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.spark.sql.DataFrame;
+//import org.apache.spark.sql.DataFrame;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -304,10 +304,10 @@ public abstract class DbmsJDBC extends Dbms {
         return rs;
     }
 
-    @Override
-    public DataFrame getDataFrame() {
-        return null;
-    }
+//    @Override
+//    public DataFrame getDataFrame() {
+//        return null;
+//    }
 
     @Override
     public void deleteEntry(TableUniqueName tableName, List<Pair<String, String>> colAndValues)

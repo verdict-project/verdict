@@ -25,7 +25,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.spark.sql.DataFrame;
+//import org.apache.spark.sql.DataFrame;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 //import org.apache.spark.sql.SQLContext;
@@ -97,10 +97,10 @@ public class DbmsSpark2 extends Dbms {
         return df;
     }
 
-    @Override
-    public DataFrame getDataFrame() {
-        return null;
-    }
+//    @Override
+//    public DataFrame getDataFrame() {
+//        return null;
+//    }
 
     public Dataset<Row> emptyDataset() {
         return sparkSession.emptyDataFrame();

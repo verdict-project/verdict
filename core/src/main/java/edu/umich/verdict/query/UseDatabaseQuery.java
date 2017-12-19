@@ -48,7 +48,7 @@ public class UseDatabaseQuery extends Query {
 
         String schema = visitor.visit(p.use_statement());
         vc.getDbms().changeDatabase(schema);
-        vc.getMeta().refreshSampleInfoIfNeeded(schema);
+        vc.getMeta().refreshSampleInfoIfNeeded(schema, false);
         vc.getMeta().refreshTables(schema);
     }
 }

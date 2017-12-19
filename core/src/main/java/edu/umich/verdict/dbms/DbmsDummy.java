@@ -25,7 +25,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.spark.sql.DataFrame;
+//import org.apache.spark.sql.DataFrame;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 
@@ -50,10 +50,10 @@ public class DbmsDummy extends Dbms {
         return null;
     }
 
-    @Override
-    public DataFrame getDataFrame() {
-        return null;
-    }
+//    @Override
+//    public DataFrame getDataFrame() {
+//        return null;
+//    }
 
     @Override
     public void executeUpdate(String sql) throws VerdictException {
