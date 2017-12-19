@@ -173,12 +173,16 @@ public abstract class DbmsJDBC extends Dbms {
                 String krbRealm = princMatcher.group("realm");
                 String krbHost = princMatcher.group("host");
 
-                url.append(String.format(";AuthMech=%s;KrbRealm=%s;KrbHostFQDN=%s;KrbServiceName=%s;KrbAuthType=%s",
-                        "1", krbRealm, krbHost, service, "2"));
+//                url.append(String.format(";AuthMech=%s;KrbRealm=%s;KrbHostFQDN=%s;KrbServiceName=%s;KrbAuthType=%s",
+//                        "1", krbRealm, krbHost, service, "2"));
+                url.append(String.format(";AuthMech=%s;KrbRealm=%s;KrbHostFQDN=%s;KrbServiceName=%s",
+                        "1", krbRealm, krbHost, service));
             } else {
                 VerdictLogger.error("Error: principal \"" + value + "\" could not be parsed.\n"
                         + "Make sure the principal is in the form service/host@REALM");
             }
+            
+            url.append(String.format(";principal=%s", value));
         }
 
         // pass other configuration options.
