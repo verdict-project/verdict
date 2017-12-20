@@ -36,15 +36,13 @@ def zip_command_line_interface(j_version):
 
     files_to_copy = ['README.md',
                      'LICENSE',
-                     'bin/verdict-shell',
-                     'jars/verdict-spark-lib-%s.jar' % get_version_string(j_version),
-                     'jars/verdict-shell-%s.jar' % get_version_string(j_version),
-                     'jars/verdict-jdbc-%s.jar' % get_version_string(j_version),
-                     'jdbc_jars/README.md',
-                     'conf/log4j.properties']
+                     'bin',
+                     'jars',
+                     'jdbc_jars',
+                     'conf']
 
     for f in files_to_copy:
-        call(['cp', f, folder_name])
+        call(['cp', '-r', f, folder_name])
 
     call(['zip', '-r', zip_name, folder_name])
 
