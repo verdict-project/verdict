@@ -80,7 +80,7 @@ def update_verdict_site(j_version):
     #         yspark[v]['family'] = family
     #         yspark[v]['name'] = 'verdict-spark-lib-%s-%s.jar' % (v, get_version_string(j_version))
     #         yspark[v]['url'] = '%s/verdict-spark-lib-%s-%s.jar/download' % (sf_url, v, get_version_string(j_version))
-    yspark['family'] = 'Spark'
+    yspark['family'] = 'Verdict Spark Library'
     yspark['name'] = 'verdict-spark-lib-%s.jar' % get_version_string(j_version)
     yspark['url'] = '%s/verdict-spark-lib-%s.jar/download' % (sf_url, get_version_string(j_version))
     y['verdict_spark'] = yspark
@@ -95,7 +95,7 @@ def update_verdict_site(j_version):
     #         yjdbc[v]['family'] = family
     #         yjdbc[v]['name'] = 'verdict-jdbc-%s-%s.jar' % (v, get_version_string(j_version))
     #         yjdbc[v]['url'] = '%s/verdict-jdbc-%s-%s.jar/download' % (sf_url, v, get_version_string(j_version))
-    yjdbc['family'] = 'JDBC'
+    yjdbc['family'] = 'Verdict JDBC Driver'
     yjdbc['name'] = 'verdict-spark-lib-%s.jar' % get_version_string(j_version)
     yjdbc['url'] = '%s/verdict-jdbc-%s.jar/download' % (sf_url, get_version_string(j_version))
     y['verdict_jdbc'] = yjdbc
@@ -110,9 +110,9 @@ def update_verdict_site(j_version):
     #         yshell[v]['family'] = family
     #         yshell[v]['name'] = 'verdict-cli-%s-%s.zip' % (v, get_version_string(j_version))
     #         yshell[v]['url'] = '%s/verdict-cli-%s-%s.zip/download' % (sf_url, v, get_version_string(j_version))
-    yshell['family'] = 'JDBC - Command Line Interface'
+    yshell['family'] = 'Command Line Interface (including Verdict JDBC Driver)'
     yshell['name'] = 'verdict-cli-%s.jar' % get_version_string(j_version)
-    yshell['url'] = '%s/verdict-cli-%s.jar/download' % (sf_url, get_version_string(j_version))
+    yshell['url'] = '%s/verdict-cli-%s.zip/download' % (sf_url, get_version_string(j_version))
     y['verdict_shell'] = yshell
 
     with open(verdict_site_conf_file, 'w') as fout:
