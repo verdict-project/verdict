@@ -31,6 +31,7 @@ def zip_command_line_interface(j_version):
     zip_name = get_cli_zip_filename(None, j_version)
     print 'creating a zip archive: %s' % zip_name
     folder_name = 'verdict-cli-%s' % get_version_string(j_version)
+    call(['rm', '-rf', folder_name])
     call(['mkdir', folder_name])
 
     files_to_copy = ['README.md',
@@ -164,7 +165,7 @@ def get_path_to_files_to_upload(j_version):
 
     paths.append(os.path.join(jars_dir, 'verdict-spark-lib-%s.jar' % get_version_string(j_version)))
     paths.append(os.path.join(jars_dir, 'verdict-jdbc-%s.jar' % get_version_string(j_version)))
-    paths.append(get_cli_zip_filename(v, j_version))
+    paths.append(get_cli_zip_filename(None, j_version))
 
     # for family, versions in supported_platforms.iteritems():
     #     for v, env in versions.iteritems():
