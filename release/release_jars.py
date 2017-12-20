@@ -113,7 +113,7 @@ def update_verdict_site(j_version):
     #         yshell[v]['url'] = '%s/verdict-cli-%s-%s.zip/download' % (sf_url, v, get_version_string(j_version))
     yshell['family'] = 'JDBC - Command Line Interface'
     yshell['name'] = 'verdict-cli-%s.jar' % get_version_string(j_version)
-    yshell['url'] = '%s/verdict-cli-%s.jar/download' % (sf_url, get_version_string(j_version))
+    yshell['url'] = '%s/verdict-cli-%s.zip/download' % (sf_url, get_version_string(j_version))
     y['verdict_shell'] = yshell
 
     with open(verdict_site_conf_file, 'w') as fout:
