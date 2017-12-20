@@ -3,14 +3,14 @@
     <artifactId>verdict-jdbc</artifactId>
     <name>Verdict-JDBC</name>
     <url>http://verdictdb.org</url>
-	<packaging>jar</packaging>
+    <packaging>jar</packaging>
 
     <parent>
         <groupId>edu.umich</groupId>
         <artifactId>verdict</artifactId>
         <version>0.4.7</version>
-	</parent>
-    
+    </parent>
+
     <properties>
         <main.basedir>${project.parent.basedir}</main.basedir>
     </properties>
@@ -24,7 +24,7 @@
                 <directory>src/test/resources</directory>
             </resource>
         </resources>
-    
+
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -64,7 +64,7 @@
             <artifactId>verdict-core</artifactId>
             <version>${verdict.version}</version>
         </dependency>
-        
+
         <!-- test supports -->
         <dependency>
             <groupId>junit</groupId>
