@@ -18,13 +18,13 @@ package edu.umich.verdict.query;
 
 import java.sql.ResultSet;
 
-import org.apache.spark.sql.DataFrame;
+//import org.apache.spark.sql.DataFrame;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.datatypes.Alias;
-import edu.umich.verdict.dbms.DbmsSpark;
+//import edu.umich.verdict.dbms.DbmsSpark;
 import edu.umich.verdict.dbms.DbmsSpark2;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.parser.VerdictSQLBaseVisitor;
@@ -48,7 +48,7 @@ public abstract class Query {
 
     protected ResultSet rs;
 
-    protected DataFrame df;
+//    protected DataFrame df;
 
     protected Dataset<Row> ds;
 
@@ -77,8 +77,8 @@ public abstract class Query {
     protected void setResultsFromRelation(Relation r) throws VerdictException {
         if (vc.getDbms().isJDBC()) {
             rs = r.collectResultSet();
-        } else if (vc.getDbms().isSpark()) {
-            df = r.collectDataFrame();
+//        } else if (vc.getDbms().isSpark()) {
+//            df = r.collectDataFrame();
         } else if (vc.getDbms().isSpark2()) {
             ds = r.collectDataset();
         }
@@ -107,20 +107,20 @@ public abstract class Query {
      */
     public void compute() throws VerdictException {
         rs = null;
-        df = null;
+//        df = null;
     }
 
     public ResultSet getResultSet() {
         return rs;
     }
 
-    public DataFrame getDataFrame() {
-        if (df == null && (vc.getDbms() instanceof DbmsSpark)) {
-            return ((DbmsSpark) vc.getDbms()).emptyDataFrame();
-        } else {
-            return df;
-        }
-    }
+//    public DataFrame getDataFrame() {
+//        if (df == null && (vc.getDbms() instanceof DbmsSpark)) {
+//            return ((DbmsSpark) vc.getDbms()).emptyDataFrame();
+//        } else {
+//            return df;
+//        }
+//    }
 
     public Dataset<Row> getDataset() {
         if (ds == null && (vc.getDbms() instanceof DbmsSpark2)) {
@@ -136,11 +136,11 @@ public abstract class Query {
         return rs;
     }
 
-    public DataFrame computeDataFrame() throws VerdictException {
-        compute();
-        DataFrame df = getDataFrame();
-        return df;
-    }
+//    public DataFrame computeDataFrame() throws VerdictException {
+//        compute();
+//        DataFrame df = getDataFrame();
+//        return df;
+//    }
 
     public Dataset<Row> computeDataset() throws VerdictException {
         compute();

@@ -27,7 +27,7 @@ import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.misc.Interval;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.spark.sql.DataFrame;
+//import org.apache.spark.sql.DataFrame;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 
@@ -168,14 +168,14 @@ public abstract class Relation {
         return rs;
     }
 
-    public DataFrame collectDataFrame() throws VerdictException {
-        String sql = toSql();
-        VerdictLogger.debug(this, "A query to db: " + sql);
-//        VerdictLogger.debug(this, "A query to db:");
-//        VerdictLogger.debugPretty(this, Relation.prettyfySql(vc, sql), " ");
-        DataFrame df = vc.getDbms().executeSparkQuery(sql);
-        return df;
-    }
+//    public DataFrame collectDataFrame() throws VerdictException {
+//        String sql = toSql();
+//        VerdictLogger.debug(this, "A query to db: " + sql);
+////        VerdictLogger.debug(this, "A query to db:");
+////        VerdictLogger.debugPretty(this, Relation.prettyfySql(vc, sql), " ");
+//        DataFrame df = vc.getDbms().executeSparkQuery(sql);
+//        return df;
+//    }
 
     public Dataset<Row> collectDataset() throws VerdictException {
         String sql = toSql();
@@ -203,17 +203,17 @@ public abstract class Relation {
             } catch (SQLException e) {
                 throw new VerdictException(e);
             }
-        } else if (vc.getDbms().isSpark()) {
-            DataFrame df = collectDataFrame();
-            List<Row> rows = df.collectAsList();
-            for (Row r : rows) {
-                int size = r.size();
-                List<Object> row = new ArrayList<Object>();
-                for (int i = 0; i < size; i++) {
-                    row.add(r.get(i));
-                }
-                result.add(row);
-            }
+//        } else if (vc.getDbms().isSpark()) {
+//            DataFrame df = collectDataFrame();
+//            List<Row> rows = df.collectAsList();
+//            for (Row r : rows) {
+//                int size = r.size();
+//                List<Object> row = new ArrayList<Object>();
+//                for (int i = 0; i < size; i++) {
+//                    row.add(r.get(i));
+//                }
+//                result.add(row);
+//            }
         } else if (vc.getDbms().isSpark2()) {
             Dataset<Row> ds = collectDataset();
             List<Row> rows = ds.collectAsList();

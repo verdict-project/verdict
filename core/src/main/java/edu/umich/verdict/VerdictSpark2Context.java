@@ -19,7 +19,7 @@ package edu.umich.verdict;
 import java.sql.ResultSet;
 
 import org.apache.spark.SparkContext;
-import org.apache.spark.sql.DataFrame;
+//import org.apache.spark.sql.DataFrame;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
@@ -72,10 +72,10 @@ public class VerdictSpark2Context extends VerdictContext {
         return df;
     }
 
-    @Override
-    public DataFrame getDataFrame() {
-        return null;
-    }
+//    @Override
+//    public DataFrame getDataFrame() {
+//        return null;
+//    }
     
     public Dataset<Row> sql(String sql) throws VerdictException {
         return executeSpark2Query(sql);

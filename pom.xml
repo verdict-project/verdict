@@ -4,12 +4,12 @@
     <groupId>edu.umich</groupId>
     <artifactId>verdict</artifactId>
     <packaging>pom</packaging>
-    <version>0.4.4</version>
+    <version>0.4.7</version>
     <name>Verdict</name>
     <url>http://verdictdb.org</url>
 
     <properties>
-        <verdict.version>0.4.4</verdict.version>
+        <verdict.version>0.4.7</verdict.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <antlr4.visitor>true</antlr4.visitor>
         <antlr4.version>4.5.3</antlr4.version>
@@ -27,10 +27,7 @@
         <skipTests>true</skipTests>
         <main.basedir>${project.basedir}</main.basedir>
 
-        <!-- default spark setting; -->
-        <!-- Important!! The scala version for spark1 and spark2 must be different. -->
-        <spark.scala.version>2.10</spark.scala.version>
-        <spark.version>1.6.3</spark.version>
+        <!-- default spark setting -->
         <spark2.scala.version>2.11</spark2.scala.version>
         <spark2.version>2.2.0</spark2.version>
 
@@ -42,235 +39,28 @@
         <spark2.hive.version>${spark2.version}</spark2.hive.version>
     </properties>
 
-    <profiles>
-        <profile>
-            <id>default</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-antrun-plugin</artifactId>
-                        <version>1.1</version>
-                        <executions>
-                            <execution>
-                                <phase>package</phase>
-                                <goals>
-                                    <goal>run</goal>
-                                </goals>
-                                <configuration>
-                                    <tasks>
-                                        <echo>&#160;</echo>
-                                        <echo>&#160;</echo>
-                                        <echo>&#160;_   _  ___    ____  ____   ___  _____ ___ _     _____ </echo>
-                                        <echo>| \ | |/ _ \  |  _ \|  _ \ / _ \|  ___|_ _| |   | ____|</echo>
-                                        <echo>|  \| | | | | | |_) | |_) | | | | |_   | || |   |  _|  </echo>
-                                        <echo>| |\  | |_| | |  __/|  _ &lt;| |_| |  _|  | || |___| |___ </echo>
-                                        <echo>|_| \_|\___/  |_|   |_| \_\\___/|_|   |___|_____|_____|</echo>
-                                        <echo>&#160;</echo>
-                                        <echo>&#160;</echo>
-                                        <echo>&#160;____  _____ _     _____ ____ _____ _____ ____  </echo>
-                                        <echo>/ ___|| ____| |   | ____/ ___|_   _| ____|  _ \ </echo>
-                                        <echo>\___ \|  _| | |   |  _|| |     | | |  _| | | | |</echo>
-                                        <echo>&#160;___) | |___| |___| |__| |___  | | | |___| |_| |</echo>
-                                        <echo>|____/|_____|_____|_____\____| |_| |_____|____/</echo> 
-                                        <echo>&#160;</echo>
-                                        <echo>&#160;</echo>
-                                        <echo>ERROR: No profile is selected. You must choose one of</echo>
-                                        <echo>- apache</echo>
-                                        <echo>- apache-spark-scala2.10</echo>
-                                        <echo>- apache-spark2-scala2.10</echo>
-                                        <echo>- apache-spark-scala2.11</echo>
-                                        <echo>- apache-spark2-scala2.11</echo>
-                                        <echo>- cdh5.11.1</echo>
-                                        <echo>- cdh5.12.1</echo>
-                                        <echo>- mapr-spark2.0.1</echo>
-                                        <echo>- mapr-spark2.1.0</echo>
-                                        <echo>- redshift41</echo>
-                                        <echo>&#160;</echo>
-                                        <echo>Example: mvn package -Papache-spark2-scala2.11</echo>
-                                        <echo>&#160;</echo>
-                                        <echo>&#160;</echo>
-                                    </tasks>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <profile>
-            <id>apache</id>
-            <activation>
-                <activeByDefault>false</activeByDefault>
-            </activation>
-            <properties>
-                <spark.scala.version>2.10</spark.scala.version>
-                <spark.version>1.6.3</spark.version>
-                <spark2.scala.version>2.11</spark2.scala.version>
-                <spark2.version>2.2.0</spark2.version>
-                <platform.name>apache</platform.name>
-            </properties>
-            <modules>
-                <module>core</module>
-            </modules>
-        </profile>
-        <profile>
-            <id>apache-spark-scala2.10</id>
-            <activation>
-                <activeByDefault>false</activeByDefault>
-            </activation>
-            <properties>
-                <spark.scala.version>2.10</spark.scala.version>
-                <spark2.scala.version>2.11</spark2.scala.version>
-                <platform.name>spark_2.10</platform.name>
-            </properties>
-            <modules>
-                <module>core</module>
-            </modules>
-        </profile>
-        <profile>
-            <id>apache-spark2-scala2.10</id>
-            <activation>
-                <activeByDefault>false</activeByDefault>
-            </activation>
-            <properties>
-                <spark.scala.version>2.11</spark.scala.version>
-                <spark2.scala.version>2.10</spark2.scala.version>
-                <platform.name>spark2_2.10</platform.name>
-            </properties>
-            <modules>
-                <module>core</module>
-            </modules>
-        </profile>
-        <profile>
-            <id>apache-spark-scala2.11</id>
-            <activation>
-                <activeByDefault>false</activeByDefault>
-            </activation>
-            <properties>
-                <spark.scala.version>2.11</spark.scala.version>
-                <spark2.scala.version>2.10</spark2.scala.version>
-                <platform.name>spark_2.11</platform.name>
-            </properties>
-            <modules>
-                <module>core</module>
-            </modules>
-        </profile>
-        <profile>
-            <id>apache-spark2-scala2.11</id>
-            <activation>
-                <activeByDefault>false</activeByDefault>
-            </activation>
-            <properties>
-                <spark.scala.version>2.10</spark.scala.version>
-                <spark2.scala.version>2.11</spark2.scala.version>
-                <platform.name>spark2_2.11</platform.name>
-            </properties>
-            <modules>
-                <module>core</module>
-            </modules>
-        </profile>
-        <profile>
-            <id>cdh5.11.1</id>
-            <activation>
-                <activeByDefault>false</activeByDefault>
-            </activation>
-            <properties>
-                <spark.scala.version>2.10</spark.scala.version>
-                <spark.version>1.6.0-cdh5.11.1</spark.version>
-                <spark2.scala.version>2.11</spark2.scala.version>
-                <spark2.version>2.2.0.cloudera1</spark2.version>
-                <platform.name>cdh5.11.1</platform.name>
-            </properties>
-            <modules>
-                <module>core</module>
-                <module>jdbc</module>
-                <module>veeline</module>
-            </modules>
-        </profile>
-        <profile>
-            <id>cdh5.12.1</id>
-            <activation>
-                <activeByDefault>false</activeByDefault>
-            </activation>
-            <properties>
-                <spark.scala.version>2.10</spark.scala.version>
-                <spark.version>1.6.0-cdh5.12.1</spark.version>
-                <spark2.scala.version>2.11</spark2.scala.version>
-                <spark2.version>2.2.0.cloudera1</spark2.version>
-                <platform.name>cdh5.12.1</platform.name>
-            </properties>
-            <modules>
-                <module>core</module>
-                <module>jdbc</module>
-                <module>veeline</module>
-            </modules>
-        </profile>
-        <profile>
-            <id>mapr-spark2.0.1</id>
-            <activation>
-                <activeByDefault>false</activeByDefault>
-            </activation>
-            <properties>
-                <spark.scala.version>2.10</spark.scala.version>
-                <spark2.scala.version>2.11</spark2.scala.version>
-                <spark2.version>2.0.1-mapr-1611</spark2.version>
-                <platform.name>mapr-spark2.0.1</platform.name>
-            </properties>
-            <modules>
-                <module>core</module>
-            </modules>
-        </profile>
-        <profile>
-            <id>mapr-spark2.1.0</id>
-            <activation>
-                <activeByDefault>false</activeByDefault>
-            </activation>
-            <properties>
-                <spark.scala.version>2.10</spark.scala.version>
-                <spark2.scala.version>2.11</spark2.scala.version>
-                <spark2.version>2.1.0-mapr-1703</spark2.version>
-                <platform.name>mapr-spark2.1.0</platform.name>
-            </properties>
-            <modules>
-                <module>core</module>
-            </modules>
-        </profile>
-        <profile>
-            <id>redshift41</id>
-            <activation>
-                <activeByDefault>false</activeByDefault>
-            </activation>
-            <properties>
-                <platform.name>redshift41</platform.name>
-            </properties>
-            <modules>
-                <module>core</module>
-                <module>jdbc</module>
-                <module>veeline</module>
-            </modules>
-        </profile>
-    </profiles>
+    <modules>
+        <module>core</module>
+        <module>jdbc</module>
+        <module>veeline</module>
+    </modules>
 
     <repositories>
         <repository>
             <id>maven-central-repo</id>
             <url>http://repo1.maven.org/maven2/</url>
         </repository>
-        <repository>
+        <!-- <repository>
             <id>cloudera</id>
             <url>https://repository.cloudera.com/artifactory/cloudera-repos/</url>
-        </repository>
+        </repository> -->
         <!-- https://maprdocs.mapr.com/51/DevelopmentGuide/Maven-Artifacts-for-MapR_28869748.html -->
-        <repository> 
+        <!-- <repository> 
             <id>mapr-releases</id>
             <url>http://repository.mapr.com/maven/</url>
             <snapshots><enabled>false</enabled></snapshots>
             <releases><enabled>true</enabled></releases>
-        </repository>
+        </repository> -->
         <repository>
             <id>umich-dbgroup</id>
             <url>http://salat2.eecs.umich.edu:9002/nexus/content/repositories/umich-dbgroup</url>

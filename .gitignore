@@ -27,10 +27,11 @@ nocommit/
 *NoCommit*
 
 # config
-config/verdict.properties
+conf/verdict.properties
 
 # libs
 libs/*.jar
+jdbc_jars/*.jar
 
 # misc
 license_update.py

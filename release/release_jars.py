@@ -19,7 +19,8 @@ def get_version_string(j_version):
     return "%s.%s.%s" % (j_version['major'], j_version['minor'], j_version['build'])
 
 def get_cli_zip_filename(platform, j_version):
-    return 'verdict-cli-%s-%s.zip' % (platform, get_version_string(j_version))
+    # return 'verdict-cli-%s-%s.zip' % (platform, get_version_string(j_version))
+    return 'verdict-cli-%s.zip' % (get_version_string(j_version))
 
 def remove_cli_zip(j_version):
     print 'removes cli zip file.'
@@ -27,16 +28,32 @@ def remove_cli_zip(j_version):
         call(['rm', f])
 
 def zip_command_line_interface(j_version):
-    for family, versions in supported_platforms.iteritems():
-        for v, env in versions.iteritems():
-            if 'shell' not in env:
-                continue
-            zip_name = get_cli_zip_filename(v, j_version)
-            print 'creating a zip archive: %s' % zip_name
-            call(['zip', '-r', zip_name, 'README.md', 'LICENSE', 'bin/verdict-shell',
-                  'jars/verdict-shell-%s.jar' % get_version_string(j_version),
-                  'jars/verdict-jdbc-%s-%s.jar' % (v, get_version_string(j_version)),
-                  'conf/log4j.properties'])
+    zip_name = get_cli_zip_filename(None, j_version)
+    print 'creating a zip archive: %s' % zip_name
+    folder_name = 'verdict-cli-%s' % get_version_string(j_version)
+    call(['rm', '-rf', folder_name])
+    call(['mkdir', folder_name])
+
+    files_to_copy = ['README.md',
+                     'LICENSE',
+                     'bin/verdict-shell',
+                     'jars/verdict-spark-lib-%s.jar' % get_version_string(j_version),
+                     'jars/verdict-shell-%s.jar' % get_version_string(j_version),
+                     'jars/verdict-jdbc-%s.jar' % get_version_string(j_version),
+                     'jdbc_jars/README.md',
+                     'conf/log4j.properties']
+
+    for f in files_to_copy:
+        call(['cp', f, folder_name])
+
+    call(['zip', '-r', zip_name, folder_name])
+
+    # for family, versions in supported_platforms.iteritems():
+    #     for v, env in versions.iteritems():
+    #         if 'shell' not in env:
+    #             continue
+    #         zip_name = get_cli_zip_filename(v, j_version)
+            
 
 def update_verdict_site(j_version):
     """
@@ -56,38 +73,47 @@ def update_verdict_site(j_version):
 
     # spark (core)
     yspark = {}
-    for family, versions in supported_platforms.iteritems():
-        for v, env in versions.iteritems():
-            if 'spark' not in env:
-                continue
-            yspark[v] = {}
-            yspark[v]['family'] = family
-            yspark[v]['name'] = 'verdict-spark-lib-%s-%s.jar' % (v, get_version_string(j_version))
-            yspark[v]['url'] = '%s/verdict-spark-lib-%s-%s.jar/download' % (sf_url, v, get_version_string(j_version))
+    # for family, versions in supported_platforms.iteritems():
+    #     for v, env in versions.iteritems():
+    #         if 'spark' not in env:
+    #             continue
+    #         yspark[v] = {}
+    #         yspark[v]['family'] = family
+    #         yspark[v]['name'] = 'verdict-spark-lib-%s-%s.jar' % (v, get_version_string(j_version))
+    #         yspark[v]['url'] = '%s/verdict-spark-lib-%s-%s.jar/download' % (sf_url, v, get_version_string(j_version))
+    yspark['family'] = 'Verdict Spark Library'
+    yspark['name'] = 'verdict-spark-lib-%s.jar' % get_version_string(j_version)
+    yspark['url'] = '%s/verdict-spark-lib-%s.jar/download' % (sf_url, get_version_string(j_version))
     y['verdict_spark'] = yspark
 
     # jdbc
     yjdbc = {}
-    for family, versions in supported_platforms.iteritems():
-        for v, env in versions.iteritems():
-            if 'jdbc' not in env:
-                continue
-            yjdbc[v] = {}
-            yjdbc[v]['family'] = family
-            yjdbc[v]['name'] = 'verdict-jdbc-%s-%s.jar' % (v, get_version_string(j_version))
-            yjdbc[v]['url'] = '%s/verdict-jdbc-%s-%s.jar/download' % (sf_url, v, get_version_string(j_version))
+    # for family, versions in supported_platforms.iteritems():
+    #     for v, env in versions.iteritems():
+    #         if 'jdbc' not in env:
+    #             continue
+    #         yjdbc[v] = {}
+    #         yjdbc[v]['family'] = family
+    #         yjdbc[v]['name'] = 'verdict-jdbc-%s-%s.jar' % (v, get_version_string(j_version))
+    #         yjdbc[v]['url'] = '%s/verdict-jdbc-%s-%s.jar/download' % (sf_url, v, get_version_string(j_version))
+    yjdbc['family'] = 'Verdict JDBC Driver'
+    yjdbc['name'] = 'verdict-spark-lib-%s.jar' % get_version_string(j_version)
+    yjdbc['url'] = '%s/verdict-jdbc-%s.jar/download' % (sf_url, get_version_string(j_version))
     y['verdict_jdbc'] = yjdbc
 
     # shell
     yshell = {}
-    for family, versions in supported_platforms.iteritems():
-        for v, env in versions.iteritems():
-            if 'shell' not in env:
-                continue
-            yshell[v] = {}
-            yshell[v]['family'] = family
-            yshell[v]['name'] = 'verdict-cli-%s-%s.zip' % (v, get_version_string(j_version))
-            yshell[v]['url'] = '%s/verdict-cli-%s-%s.zip/download' % (sf_url, v, get_version_string(j_version))
+    # for family, versions in supported_platforms.iteritems():
+    #     for v, env in versions.iteritems():
+    #         if 'shell' not in env:
+    #             continue
+    #         yshell[v] = {}
+    #         yshell[v]['family'] = family
+    #         yshell[v]['name'] = 'verdict-cli-%s-%s.zip' % (v, get_version_string(j_version))
+    #         yshell[v]['url'] = '%s/verdict-cli-%s-%s.zip/download' % (sf_url, v, get_version_string(j_version))
+    yshell['family'] = 'Command Line Interface (including Verdict JDBC Driver)'
+    yshell['name'] = 'verdict-cli-%s.jar' % get_version_string(j_version)
+    yshell['url'] = '%s/verdict-cli-%s.zip/download' % (sf_url, get_version_string(j_version))
     y['verdict_shell'] = yshell
 
     with open(verdict_site_conf_file, 'w') as fout:
@@ -135,15 +161,20 @@ def update_verdict_doc(j_version):
 def get_path_to_files_to_upload(j_version):
     paths = []
     jars_dir = os.path.join(script_dir, '../jars')
-    get_version_string(j_version)
-    for family, versions in supported_platforms.iteritems():
-        for v, env in versions.iteritems():
-            if 'spark' in env:
-                paths.append(os.path.join(jars_dir, 'verdict-spark-lib-%s-%s.jar' % (v, get_version_string(j_version))))
-            if 'jdbc' in env:
-                paths.append(os.path.join(jars_dir, 'verdict-jdbc-%s-%s.jar' % (v, get_version_string(j_version))))
-            if 'shell' in env:
-                paths.append(get_cli_zip_filename(v, j_version))
+    # get_version_string(j_version)
+
+    paths.append(os.path.join(jars_dir, 'verdict-spark-lib-%s.jar' % get_version_string(j_version)))
+    paths.append(os.path.join(jars_dir, 'verdict-jdbc-%s.jar' % get_version_string(j_version)))
+    paths.append(get_cli_zip_filename(None, j_version))
+
+    # for family, versions in supported_platforms.iteritems():
+    #     for v, env in versions.iteritems():
+    #         if 'spark' in env:
+    #             paths.append(os.path.join(jars_dir, 'verdict-spark-lib-%s-%s.jar' % (v, get_version_string(j_version))))
+    #         if 'jdbc' in env:
+    #             paths.append(os.path.join(jars_dir, 'verdict-jdbc-%s-%s.jar' % (v, get_version_string(j_version))))
+    #         if 'shell' in env:
+    #             paths.append(get_cli_zip_filename(v, j_version))
     return paths
 
 def call_with_failure(cmd):

@@ -3,14 +3,14 @@
     <artifactId>verdict-jdbc</artifactId>
     <name>Verdict-JDBC</name>
     <url>http://verdictdb.org</url>
-	<packaging>jar</packaging>
+    <packaging>jar</packaging>
 
     <parent>
         <groupId>edu.umich</groupId>
         <artifactId>verdict</artifactId>
-        <version>0.4.4</version>
-	</parent>
-    
+        <version>0.4.7</version>
+    </parent>
+
     <properties>
         <main.basedir>${project.parent.basedir}</main.basedir>
     </properties>
@@ -24,7 +24,7 @@
                 <directory>src/test/resources</directory>
             </resource>
         </resources>
-    
+
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -45,7 +45,7 @@
                     <descriptorRefs>
                         <descriptorRef>jar-with-dependencies</descriptorRef>
                     </descriptorRefs>
-                    <finalName>verdict-jdbc-${platform.name}-${verdict.version}</finalName>
+                    <finalName>verdict-jdbc-${verdict.version}</finalName>
                     <outputDirectory>${main.basedir}/jars</outputDirectory>
                 </configuration>
             </plugin>
@@ -64,7 +64,7 @@
             <artifactId>verdict-core</artifactId>
             <version>${verdict.version}</version>
         </dependency>
-        
+
         <!-- test supports -->
         <dependency>
             <groupId>junit</groupId>
@@ -76,7 +76,90 @@
 
     <profiles>
         <profile>
-            <id>cdh5.11.1</id>
+            <id>cloudera-hive</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>com.cloudera.hive.jdbc</groupId>
+                    <artifactId>HiveJDBC4</artifactId>
+                    <version>2.5.4</version>
+                </dependency>
+                <dependency>
+                    <groupId>com.cloudera.impala.jdbc</groupId>
+                    <artifactId>commons-codec-1.3</artifactId>
+                    <version>2.4.51</version>
+                </dependency>
+                <dependency>
+                    <groupId>com.cloudera.impala.jdbc</groupId>
+                    <artifactId>commons-logging-1.1.1</artifactId>
+                    <version>2.5.41</version>
+                </dependency>
+                <dependency>
+                    <groupId>com.cloudera.impala.jdbc</groupId>
+                    <artifactId>hive_metastore</artifactId>
+                    <version>2.5.41</version>
+                </dependency>
+                <dependency>
+                    <groupId>com.cloudera.impala.jdbc</groupId>
+                    <artifactId>hive_service</artifactId>
+                    <version>2.5.41</version>
+                </dependency>
+                <dependency>
+                    <groupId>com.cloudera.impala.jdbc</groupId>
+                    <artifactId>httpclient-4.1.3</artifactId>
+                    <version>2.5.41</version>
+                </dependency>
+                <dependency>
+                    <groupId>com.cloudera.impala.jdbc</groupId>
+                    <artifactId>httpcore-4.1.3</artifactId>
+                    <version>2.5.41</version>
+                </dependency>
+                <dependency>
+                    <groupId>com.cloudera.impala.jdbc</groupId>
+                    <artifactId>libfb303-0.9.0</artifactId>
+                    <version>2.5.41</version>
+                </dependency>
+                <dependency>
+                    <groupId>com.cloudera.impala.jdbc</groupId>
+                    <artifactId>libthrift-0.9.0</artifactId>
+                    <version>2.5.41</version>
+                </dependency>
+                <dependency>
+                    <groupId>com.cloudera.impala.jdbc</groupId>
+                    <artifactId>log4j-1.2.14</artifactId>
+                    <version>2.5.41</version>
+                </dependency>
+                <dependency>
+                    <groupId>com.cloudera.impala.jdbc</groupId>
+                    <artifactId>ql</artifactId>
+                    <version>2.5.41</version>
+                </dependency>
+                <dependency>
+                    <groupId>com.cloudera.impala.jdbc</groupId>
+                    <artifactId>slf4j-api-1.5.11</artifactId>
+                    <version>2.5.41</version>
+                </dependency>
+                <dependency>
+                    <groupId>com.cloudera.impala.jdbc</groupId>
+                    <artifactId>slf4j-log4j12-1.5.11</artifactId>
+                    <version>2.5.41</version>
+                </dependency>
+                <dependency>
+                    <groupId>com.cloudera.impala.jdbc</groupId>
+                    <artifactId>TCLIServiceClient</artifactId>
+                    <version>2.5.41</version>
+                </dependency>
+                <dependency>
+                    <groupId>com.cloudera.impala.jdbc</groupId>
+                    <artifactId>zookeeper-3.4.6</artifactId>
+                    <version>2.5.41</version>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>impala</id>
             <activation>
                 <activeByDefault>false</activeByDefault>
             </activation>
@@ -156,15 +239,10 @@
                     <artifactId>zookeeper-3.4.6</artifactId>
                     <version>2.5.41</version>
                 </dependency>
-                <dependency>
-                    <groupId>com.cloudera.hive.jdbc</groupId>
-                    <artifactId>HiveJDBC4</artifactId>
-                    <version>2.5.4</version>
-                </dependency>
             </dependencies>
         </profile>
         <profile>
-            <id>redshift41</id>
+            <id>redshift</id>
             <activation>
                 <activeByDefault>false</activeByDefault>
             </activation>

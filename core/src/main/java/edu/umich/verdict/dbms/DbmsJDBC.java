@@ -31,7 +31,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.spark.sql.DataFrame;
+//import org.apache.spark.sql.DataFrame;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -173,12 +173,16 @@ public abstract class DbmsJDBC extends Dbms {
                 String krbRealm = princMatcher.group("realm");
                 String krbHost = princMatcher.group("host");
 
-                url.append(String.format(";AuthMech=%s;KrbRealm=%s;KrbHostFQDN=%s;KrbServiceName=%s;KrbAuthType=%s",
-                        "1", krbRealm, krbHost, service, "2"));
+//                url.append(String.format(";AuthMech=%s;KrbRealm=%s;KrbHostFQDN=%s;KrbServiceName=%s;KrbAuthType=%s",
+//                        "1", krbRealm, krbHost, service, "2"));
+                url.append(String.format(";AuthMech=%s;KrbRealm=%s;KrbHostFQDN=%s;KrbServiceName=%s",
+                        "1", krbRealm, krbHost, service));
             } else {
                 VerdictLogger.error("Error: principal \"" + value + "\" could not be parsed.\n"
                         + "Make sure the principal is in the form service/host@REALM");
             }
+            
+            url.append(String.format(";principal=%s", value));
         }
 
         // pass other configuration options.
@@ -300,10 +304,10 @@ public abstract class DbmsJDBC extends Dbms {
         return rs;
     }
 
-    @Override
-    public DataFrame getDataFrame() {
-        return null;
-    }
+//    @Override
+//    public DataFrame getDataFrame() {
+//        return null;
+//    }
 
     @Override
     public void deleteEntry(TableUniqueName tableName, List<Pair<String, String>> colAndValues)

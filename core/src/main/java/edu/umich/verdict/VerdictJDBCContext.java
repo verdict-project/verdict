@@ -18,7 +18,7 @@ package edu.umich.verdict;
 
 import java.sql.ResultSet;
 
-import org.apache.spark.sql.DataFrame;
+//import org.apache.spark.sql.DataFrame;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 
@@ -124,7 +124,7 @@ public class VerdictJDBCContext extends VerdictContext {
         vc.setMeta(new VerdictMeta(vc));		// this must be called after DB connection is created.
 
         if (conf.getDbmsSchema() != null) {
-            vc.getMeta().refreshSampleInfo(conf.getDbmsSchema());
+            vc.getMeta().refreshSampleInfo(conf.getDbmsSchema(), false);
         }
 
         return vc;
@@ -143,10 +143,10 @@ public class VerdictJDBCContext extends VerdictContext {
         return rs;
     }
 
-    @Override
-    public DataFrame getDataFrame() {
-        return null;
-    }
+//    @Override
+//    public DataFrame getDataFrame() {
+//        return null;
+//    }
 
     @Override
     public Dataset<Row> getDataset() {

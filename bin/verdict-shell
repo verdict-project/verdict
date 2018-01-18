@@ -3,11 +3,12 @@
 
 BINPATH=$(dirname $0)
 JAR_DIR=$BINPATH/../jars
-VERSION=0.4.4
+JDBC_DIR=$BINPATH/../jdbc_jars
+VERSION=0.4.7
 #JDBC_JAR=$JAR_DIR/verdict-jdbc-$VERSION.jar
 #VEELINE_JAR=$JAR_DIR/verdict-shell-$VERSION.jar
-verbose=false
+verbose=true
 
-java -cp "$JAR_DIR/*" \
+java -cp "$JAR_DIR/*:$JDBC_DIR/*" \
      -Dlog4j.configuration=file:$BINPATH/../conf/log4j.properties \
      sqlline.SqlLine --verbose=${verbose} "$@"
