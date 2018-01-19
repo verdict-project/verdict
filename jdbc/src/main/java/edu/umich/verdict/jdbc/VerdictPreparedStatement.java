@@ -68,6 +68,7 @@ public class VerdictPreparedStatement implements PreparedStatement {
 
     @Override
     public void close() throws SQLException {
+        System.out.println("Query close attempt");
         stmt.close();
     }
 
@@ -114,7 +115,7 @@ public class VerdictPreparedStatement implements PreparedStatement {
     @Override
     public void cancel() throws SQLException {
         // TODO Auto-generated method stub
-
+        //stmt.cancel();
     }
 
     @Override
