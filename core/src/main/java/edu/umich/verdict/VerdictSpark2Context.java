@@ -49,7 +49,7 @@ public class VerdictSpark2Context extends VerdictContext {
         super(conf);
         conf.setDbms("spark2");
         SparkSession sparkSession = SparkSession.builder().getOrCreate();
-        setDbms(new DbmsSpark2(this, sparkSession));
+        setDbms(new DbmsSpark2(this, sparkSession, conf));
         setMeta(new VerdictMeta(this));
     }
 

@@ -24,6 +24,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.base.Optional;
+import edu.umich.verdict.VerdictConf;
 import org.apache.commons.lang3.tuple.Pair;
 //import org.apache.spark.sql.DataFrame;
 import org.apache.spark.sql.Dataset;
@@ -52,11 +54,17 @@ public class DbmsSpark2 extends Dbms {
 
     protected Set<TableUniqueName> cachedTable;
 
-    public DbmsSpark2(VerdictContext vc, SparkSession sparkSession) throws VerdictException {
+    protected VerdictConf conf;
+
+    public DbmsSpark2(VerdictContext vc, SparkSession sparkSession, VerdictConf conf) throws VerdictException {
         super(vc, DBNAME);
+
+        Optional<String> schema = Optional.of(conf.getDbmsSchema());
+        setCurrentSchema(schema);
 
         this.sparkSession = sparkSession;
         this.cachedTable = new HashSet<TableUniqueName>();
+        this.conf = conf;
     }
 
     public Dataset<Row> getDatabaseNamesInDataset() throws VerdictException {
