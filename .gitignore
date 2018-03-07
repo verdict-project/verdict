@@ -4,6 +4,7 @@
 # IntelliJ
 /.idea
 /verdict.iml
+*.iml
 
 # build
 /out
