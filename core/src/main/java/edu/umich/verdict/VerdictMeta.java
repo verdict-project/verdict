@@ -16,15 +16,8 @@
 
 package edu.umich.verdict;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
-import java.util.TreeSet;
 
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -284,6 +277,7 @@ public class VerdictMeta {
     public void refreshSampleInfo(String schemaName, boolean isCreateSample) {
         TableUniqueName metaNameTable = getMetaNameTableForOriginalSchema(schemaName);
         TableUniqueName metaSizeTable = getMetaSizeTableForOriginalSchema(schemaName);
+        Map<TableUniqueName, TableUniqueName> sampleToOriginalTable = new HashMap<>();
         List<List<Object>> result;
 
         try {
@@ -323,6 +317,7 @@ public class VerdictMeta {
                                 TableUniqueName.uname(sampleSchemaName, sampleTabName));
 
                         TableUniqueName sampleTable = TableUniqueName.uname(sampleSchemaName, sampleTabName);
+                        sampleToOriginalTable.put(sampleTable, originalTable);
                         if (tables.contains(sampleTabName)) {
                             if (isCreateSample) {
                                 vc.getDbms().cacheTable(sampleTable);
@@ -349,8 +344,9 @@ public class VerdictMeta {
                         String sampleTabName = row.get(1).toString();
                         Long sampleSize = TypeCasting.toLong(row.get(2));
                         Long originalTableSize = TypeCasting.toLong(row.get(3));
-                        sampleSizeMeta.put(TableUniqueName.uname(sampleSchemaName, sampleTabName),
-                                new SampleSizeInfo(sampleSize, originalTableSize));
+                        TableUniqueName sampleTable = TableUniqueName.uname(sampleSchemaName, sampleTabName);
+                        sampleSizeMeta.put(sampleTable,
+                                new SampleSizeInfo(sampleToOriginalTable.get(sampleTable), sampleSize, originalTableSize));
                     }
                 }
             }
@@ -433,6 +429,15 @@ public class VerdictMeta {
             return null;
         }
         return vc.getMeta().getSampleSizeOf(sampleTable);
+    }
+
+    public SampleSizeInfo getOriginalSizeOf(TableUniqueName tableName) {
+        for (SampleSizeInfo info : sampleSizeMeta.values()) {
+            if (info.originalTable.equals(tableName)) {
+                return info;
+            }
+        }
+        return null;
     }
 
     public TableUniqueName lookForSampleTable(SampleParam param) {

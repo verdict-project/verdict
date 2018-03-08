@@ -96,7 +96,7 @@ public class ApproxSingleRelation extends ApproxRelation {
 
     public static ApproxSingleRelation asis(SingleRelation r) {
         ApproxSingleRelation a = new ApproxSingleRelation(r.vc, r.getTableName(),
-                new SampleParam(r.vc, r.getTableName(), "nosample", 1.0, null), new SampleSizeInfo(-1, -1));
+                new SampleParam(r.vc, r.getTableName(), "nosample", 1.0, null), new SampleSizeInfo(r.getTableName(), -1, -1));
         a.setAlias(r.getAlias());
         return a;
     }
@@ -225,10 +225,7 @@ public class ApproxSingleRelation extends ApproxRelation {
     @Override
     public double cost() {
         if (sampleType().equals("nosample")) {
-            SampleParam ufParam = new SampleParam(vc, param.getOriginalTable(), "uniform", null,
-                    Arrays.<String>asList());
-            TableUniqueName ufSample = vc.getMeta().lookForSampleTable(ufParam);
-            SampleSizeInfo info = vc.getMeta().getSampleSizeOf(ufSample);
+            SampleSizeInfo info = vc.getMeta().getOriginalSizeOf(param.getOriginalTable());
             return (info == null) ? 0 : info.originalTableSize;
         } else {
             SampleSizeInfo info = vc.getMeta().getSampleSizeOf(param);
