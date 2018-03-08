@@ -135,7 +135,7 @@ config_value
     ;
 
 SIZE: S I Z E;
-STORE: S T O R E;
+//STORE: S T O R E;
 POISSON: P O I S S O N;
 COLUMNS: C O L U M N S;
 STRATIFIED: S T R A T I F I E D;
@@ -660,6 +660,7 @@ aggregate_windowed_function
     | SUM '(' all_distinct_expression ')' over_clause?
     | STDEV '(' all_distinct_expression ')' over_clause?
     | STDEVP '(' all_distinct_expression ')' over_clause?
+    | STDDEV_SAMP '(' all_distinct_expression ')' over_clause?
     | VAR '(' all_distinct_expression ')' over_clause?
     | VARP '(' all_distinct_expression ')' over_clause?
     | COUNT '(' ('*' | all_distinct_expression) ')' over_clause?
@@ -937,6 +938,7 @@ simple_id
     | STATS_STREAM
     | STDEV
     | STDEVP
+    | STDDEV_SAMP
     | STRTOL
     | SUM
     | THROW
@@ -1342,6 +1344,7 @@ STATS_STREAM:                    S T A T S '_' S T R E A M;
 STDEV:                           S T D E V;
 STDDEV:                          S T D D E V;
 STDEVP:                          S T D E V P;
+STDDEV_SAMP:                     S T D D E V '_' S A M P;
 STORED_AS_PARQUET:               S T O R E D ' ' A S ' ' P A R Q U E T;
 SUM:                             S U M;
 SQRT:                            S Q R T;
