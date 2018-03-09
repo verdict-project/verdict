@@ -62,6 +62,20 @@ public class DbmsHive extends DbmsJDBC {
     }
 
     @Override
+    public String modOfHash(List<String> columns, int mod) {
+        String concatStr = "";
+        for (int i = 0; i < columns.size(); ++i) {
+            String col = columns.get(i);
+            String castStr = String.format("cast(%s%s%s as string)", getQuoteString(), col, getQuoteString());
+            if (i < columns.size() - 1) {
+                castStr += ",";
+            }
+            concatStr += castStr;
+        }
+        return String.format("crc32(concat_ws('%s', %s)) %% %d", HASH_DELIM, concatStr, mod);
+    }
+
+    @Override
     protected String randomNumberExpression(SampleParam param) {
         String expr = "rand(unix_timestamp())";
         return expr;

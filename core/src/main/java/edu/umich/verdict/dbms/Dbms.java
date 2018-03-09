@@ -61,6 +61,8 @@ public abstract class Dbms {
 
     protected static String randNumColname = "verdict_rand";
 
+    protected static final String HASH_DELIM = ";";
+
     public VerdictContext getVc() {
         return vc;
     }
@@ -657,6 +659,10 @@ public abstract class Dbms {
         return modOfHash(colName, 1000000) + String.format(" < %.2f", samplingRatio * 1000000);
     }
 
+    protected String universeSampleSamplingCondition(List<String> columns, double samplingRatio) {
+        return modOfHash(columns, 1000000) + String.format(" < %.2f", samplingRatio * 1000000);
+    }
+
     /**
      * Column expression that generates a number between 0 and 99. The tuples with
      * the same attribute values on which a universe sample is created are assigned
@@ -669,6 +675,17 @@ public abstract class Dbms {
     }
 
     /**
+     * Column expression that generates a number between 0 and 99. The tuples with
+     * the same attribute values on which a universe sample is created are assigned
+     * the same partition number.
+     *
+     * @return
+     */
+    protected String universePartitionColumn(List<String> columns) {
+        return modOfHash(columns, 100) + " as " + partitionColumnName();
+    }
+
+    /**
      * Column expression that generates a number between 0 and 1.
      *
      * @return
@@ -676,6 +693,8 @@ public abstract class Dbms {
     protected abstract String randomNumberExpression(SampleParam param);
 
     public abstract String modOfHash(String col, int mod);
+
+    public abstract String modOfHash(List<String> columns, int mod);
 
     protected abstract String modOfRand(int mod);
 
