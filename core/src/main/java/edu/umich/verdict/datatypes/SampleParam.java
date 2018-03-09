@@ -86,6 +86,15 @@ public class SampleParam implements Comparable<SampleParam> {
         }
     }
 
+    // Copy constructor
+    public SampleParam(SampleParam other) {
+        this.vc = other.vc;
+        this.originalTable = other.originalTable;
+        this.sampleType = other.sampleType;
+        this.samplingRatio = other.samplingRatio;
+        this.columnNames = new ArrayList<>(other.columnNames);
+    }
+
     public String colNamesInString() {
         return Joiner.on(",").join(columnNames);
     }
