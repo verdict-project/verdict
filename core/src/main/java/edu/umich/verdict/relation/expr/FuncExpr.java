@@ -312,6 +312,8 @@ public class FuncExpr extends Expr {
                     fname = FuncName.MIN;
                 } else if (ctx.MAX() != null) {
                     fname = FuncName.MAX;
+                } else if (ctx.STDDEV_SAMP() != null) {
+                    fname = FuncName.STDDEV_SAMP;
                 } else {
                     fname = FuncName.UNKNOWN;
                 }
