@@ -524,7 +524,7 @@ public abstract class Dbms {
     protected TableUniqueName createUniverseSampledTable(SampleParam param) throws VerdictException {
         TableUniqueName temp = Relation.getTempTableName(vc, param.sampleTableName().getSchemaName());
         ExactRelation sampled = SingleRelation.from(vc, param.getOriginalTable())
-                .where(universeSampleSamplingCondition(param.getColumnNames().get(0), param.getSamplingRatio()));
+                .where(universeSampleSamplingCondition(param.getColumnNames(), param.getSamplingRatio()));
         dropTable(temp);
         String sql = String.format("create table %s AS %s", temp, sampled.toSql());
 //        VerdictLogger.debug(this, "The query used for creating a universe sample without sampling probability:");
@@ -549,7 +549,7 @@ public abstract class Dbms {
 
         ExactRelation withProb = sampled
                                  .select(String.format("*, %d / %d AS %s", sample_size, total_size, samplingProbCol) + ", "
-                                         + universePartitionColumn(param.getColumnNames().get(0)));
+                                         + universePartitionColumn(param.getColumnNames()));
 
         String parquetString = "";
         if (vc.getConf().areSamplesStoredAsParquet()) {
