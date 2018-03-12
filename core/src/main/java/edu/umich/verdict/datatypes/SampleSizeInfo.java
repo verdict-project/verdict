@@ -17,10 +17,12 @@
 package edu.umich.verdict.datatypes;
 
 public class SampleSizeInfo {
+    public TableUniqueName originalTable;
     public long sampleSize = 0;
     public long originalTableSize = 0;
 
-    public SampleSizeInfo(long sampleSize, long originalTableSize) {
+    public SampleSizeInfo(TableUniqueName originalTable, long sampleSize, long originalTableSize) {
+        this.originalTable = originalTable;
         this.sampleSize = sampleSize;
         this.originalTableSize = originalTableSize;
     }

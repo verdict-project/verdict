@@ -52,7 +52,7 @@ public abstract class DbmsJDBC extends Dbms {
     public Connection getDbmsConnection() {
         return conn;
     }
-    
+
     protected List<Statement> allOpenStatements;
 
     public ResultSet getDatabaseNamesInResultSet() throws VerdictException {
@@ -63,7 +63,7 @@ public abstract class DbmsJDBC extends Dbms {
 
     /**
      * Copy constructor for not sharing the underlying statement.
-     * 
+     *
      * @param another
      */
     public DbmsJDBC(Dbms another) {
@@ -132,11 +132,13 @@ public abstract class DbmsJDBC extends Dbms {
             ResultSet rs = describeTableInResultSet(table);
             while (rs.next()) {
                 String column = rs.getString(1);
-                if (column.substring(0,1).equals("#")) {
-                    break;
+                if (!column.isEmpty()) {
+                    if (column.substring(0,1).equals("#")) {
+                        break;
+                    }
+                    String type = rs.getString(2);
+                    col2type.put(column, type);
                 }
-                String type = rs.getString(2);
-                col2type.put(column, type);
             }
         } catch (SQLException e) {
             throw new VerdictException(e);
@@ -181,7 +183,7 @@ public abstract class DbmsJDBC extends Dbms {
                 VerdictLogger.error("Error: principal \"" + value + "\" could not be parsed.\n"
                         + "Make sure the principal is in the form service/host@REALM");
             }
-            
+
             url.append(String.format(";principal=%s", value));
         }
 

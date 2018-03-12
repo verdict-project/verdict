@@ -16,7 +16,7 @@
         <apache.commons.version>3.5</apache.commons.version>
         <junit.version>4.12</junit.version>
         <google.guava.version>19.0</google.guava.version>
-        <log4j.version>1.2.17</log4j.version>
+        <log4j.version>2.0.2</log4j.version>
         <maven.java.version>1.7</maven.java.version>
         <maven.source-plugin.version>3.0.1</maven.source-plugin.version>
         <maven.compiler-plugin.version>3.7.0</maven.compiler-plugin.version>
@@ -31,9 +31,9 @@
         <spark2.scala.version>2.11</spark2.scala.version>
         <spark2.version>2.2.0</spark2.version>
 
-        <spark.core.version>${spark.version}</spark.core.version>
-        <spark.sql.version>${spark.version}</spark.sql.version>
-        <spark.hive.version>${spark.version}</spark.hive.version>
+        <!--<spark.core.version>${spark.version}</spark.core.version>-->
+        <!--<spark.sql.version>${spark.version}</spark.sql.version>-->
+        <!--<spark.hive.version>${spark.version}</spark.hive.version>-->
         <spark2.core.version>${spark2.version}</spark2.core.version>
         <spark2.sql.version>${spark2.version}</spark2.sql.version>
         <spark2.hive.version>${spark2.version}</spark2.hive.version>
@@ -94,6 +94,8 @@
                     <configuration>
                         <source>1.7</source>
                         <target>1.7</target>
+                        <!-- Disable annotation processing for ourselves.-->
+                        <compilerArgument>-proc:none</compilerArgument>
                     </configuration>
                 </plugin>
                 <plugin>
