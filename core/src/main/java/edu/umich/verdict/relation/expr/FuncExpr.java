@@ -20,13 +20,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.parser.VerdictSQLBaseVisitor;
 import edu.umich.verdict.parser.VerdictSQLParser;
 import edu.umich.verdict.util.StringManipulations;
-import org.spark_project.guava.base.Joiner;
 
 public class FuncExpr extends Expr {
 
