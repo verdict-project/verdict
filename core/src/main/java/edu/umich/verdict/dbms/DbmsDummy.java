@@ -99,6 +99,11 @@ public class DbmsDummy extends Dbms {
     }
 
     @Override
+    public String modOfHash(List<String> columns, int mod) {
+        return null;
+    }
+
+    @Override
     public void close() throws VerdictException {
     }
 

@@ -609,9 +609,15 @@ value_manipulation_function
     | noparam_manipulation_function
     | binary_manipulation_function
     | ternary_manipulation_function
+    | nary_manipulation_function
     | extract_time_function
     ;
-    
+
+nary_manipulation_function
+	: function_name=(CONCAT | CONCAT_WS)
+		'(' expression (',' expression)* ')'
+    ;
+
 ternary_manipulation_function
     : function_name=(CONV | SUBSTR)
       '(' expression ',' expression ',' expression ')'
@@ -858,6 +864,7 @@ simple_id
     | CHECKSUM_AGG
     | COMMITTED
     | CONCAT
+    | CONCAT_WS
     | COOKIE
     | COUNT
     | COUNT_BIG
@@ -1194,6 +1201,7 @@ CHECKSUM_AGG:                    C H E C K S U M '_' A G G;
 CHR:                             C H R;
 COMMITTED:                       C O M M I T T E D;
 CONCAT:                          C O N C A T;
+CONCAT_WS:                       C O N C A T '_' W S;
 CONFIG:                          C O N F I G;
 COOKIE:                          C O O K I E;
 COS:                             C O S;

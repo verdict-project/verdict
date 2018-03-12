@@ -17,6 +17,7 @@
 package edu.umich.verdict.dbms;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -40,6 +41,20 @@ public class DbmsImpala extends DbmsJDBC {
     public String modOfHash(String col, int mod) {
         return String.format("abs(fnv_hash(cast(%s%s%s AS STRING))) %% %d",
                 getQuoteString(), col, getQuoteString(), mod);
+    }
+
+    @Override
+    public String modOfHash(List<String> columns, int mod) {
+        String concatStr = "";
+        for (int i = 0; i < columns.size(); ++i) {
+            String col = columns.get(i);
+            String castStr = String.format("cast(%s%s%s AS STRING)", getQuoteString(), col, getQuoteString());
+            if (i < columns.size() - 1) {
+                castStr += ",";
+            }
+            concatStr += castStr;
+        }
+        return String.format("abs(fnv_hash((concat_ws('%s', %s)))) %% %d", HASH_DELIM, concatStr, mod);
     }
 
     @Override

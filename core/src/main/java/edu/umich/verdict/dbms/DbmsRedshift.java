@@ -67,6 +67,20 @@ public class DbmsRedshift extends DbmsJDBC {
     }
 
     @Override
+    public String modOfHash(List<String> columns, int mod) {
+        String concatStr = "";
+        for (int i = 0; i < columns.size(); ++i) {
+            String col = columns.get(i);
+            String castStr = String.format("cast(%s%s%s as text)", getQuoteString(), col, getQuoteString());
+            if (i < columns.size() - 1) {
+                castStr += String.format(",'%s',", HASH_DELIM);
+            }
+            concatStr += castStr;
+        }
+        return String.format("mod(strtol(crc32(concat(%s)),16),%d)", concatStr, mod);
+    }
+
+    @Override
     protected String randomNumberExpression(SampleParam param) {
         String expr = "RANDOM()";
         return expr;

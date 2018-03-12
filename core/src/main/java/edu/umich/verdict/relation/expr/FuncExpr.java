@@ -26,11 +26,20 @@ import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.parser.VerdictSQLBaseVisitor;
 import edu.umich.verdict.parser.VerdictSQLParser;
 import edu.umich.verdict.util.StringManipulations;
+import org.spark_project.guava.base.Joiner;
 
 public class FuncExpr extends Expr {
 
     public enum FuncName {
-        COUNT, SUM, AVG, COUNT_DISTINCT, EXTRACT, IMPALA_APPROX_COUNT_DISTINCT, ROUND, MAX, MIN, FLOOR, CEIL, EXP, LN, LOG10, LOG2, SIN, COS, TAN, SIGN, STRTOL, RAND, RANDOM, FNV_HASH, ABS, STDDEV, SQRT, MOD, PMOD, YEAR, QUARTER, MONTH, DAY, HOUR, MINUTE, SECOND, WEEKOFYEAR, CAST, CONV, SUBSTR, MD5, CRC32, UNIX_TIMESTAMP, CURRENT_TIMESTAMP, UNKNOWN, LOWER, UPPER, ASCII, CHARACTER_LENGTH, POW, E, PI, FACTORIAL, CBRT, PERCENTILE, SPLIT, LENGTH, INSTR, TRIM, ASIN, ACOS, ATAN, DEGREES, RADIANS, POSITIVE, NEGATIVE, ENCODE, DECODE, BROUND, BIN, HEX, UNHEX, SHIFTLEFT, SHIFTRIGHT, SHIFTRIGHTUNSIGNED, FROM_UNIXTIME, TO_DATE, NVL, CHR, FIND_IN_SET, FORMAT_NUMBER, GET_JSON_OBJECT, IN_FILE, LOCATE, LTRIM, REPEAT, REVERSE, SPACE, AES_ENCRYPT, AES_DECRYPT, SHA1, SHA2, STDDEV_SAMP
+        COUNT, SUM, AVG, COUNT_DISTINCT, EXTRACT, IMPALA_APPROX_COUNT_DISTINCT, ROUND, MAX, MIN, FLOOR,
+        CEIL, EXP, LN, LOG10, LOG2, SIN, COS, TAN, SIGN, STRTOL, RAND, RANDOM, FNV_HASH, ABS, STDDEV,
+        SQRT, MOD, PMOD, YEAR, QUARTER, MONTH, DAY, HOUR, MINUTE, SECOND, WEEKOFYEAR, CAST, CONV, SUBSTR,
+        MD5, CRC32, UNIX_TIMESTAMP, CURRENT_TIMESTAMP, UNKNOWN, LOWER, UPPER, ASCII, CHARACTER_LENGTH,
+        POW, E, PI, FACTORIAL, CBRT, PERCENTILE, SPLIT, LENGTH, INSTR, TRIM, ASIN, ACOS, ATAN, DEGREES,
+        RADIANS, POSITIVE, NEGATIVE, ENCODE, DECODE, BROUND, BIN, HEX, UNHEX, SHIFTLEFT, SHIFTRIGHT,
+        SHIFTRIGHTUNSIGNED, FROM_UNIXTIME, TO_DATE, NVL, CHR, FIND_IN_SET, FORMAT_NUMBER, GET_JSON_OBJECT,
+      IN_FILE, LOCATE, LTRIM, REPEAT, REVERSE, SPACE, AES_ENCRYPT, AES_DECRYPT, SHA1, SHA2, STDDEV_SAMP,
+        CONCAT, CONCAT_WS
     }
 
     protected List<Expr> expressions;
@@ -56,6 +65,8 @@ public class FuncExpr extends Expr {
             .put("CHARACTER_LENGTH", FuncName.CHARACTER_LENGTH)
             .put("CHR", FuncName.CHR)
             .put("CONV", FuncName.CONV)
+            .put("CONCAT", FuncName.CONCAT)
+            .put("CONCAT_WS", FuncName.CONCAT_WS)
             .put("COS", FuncName.COS)
             .put("CRC32", FuncName.CRC32)
             .put("CURRENT_TIMESTAMP", FuncName.CURRENT_TIMESTAMP)
@@ -145,6 +156,8 @@ public class FuncExpr extends Expr {
             .put(FuncName.CEIL, "ceil(%s)")
             .put(FuncName.CHARACTER_LENGTH, "character_length(%s)")
             .put(FuncName.CHR, "chr(%s)")
+            .put(FuncName.CONCAT, "concat(%s)")
+            .put(FuncName.CONCAT_WS, "concat_ws(%s)")
             .put(FuncName.CONV, "conv(%s, %s, %s)")
             .put(FuncName.COS, "cos(%s)")
             .put(FuncName.COUNT, "count(%s)")
@@ -367,6 +380,18 @@ public class FuncExpr extends Expr {
             }
 
             @Override
+            public FuncExpr visitNary_manipulation_function(VerdictSQLParser.Nary_manipulation_functionContext ctx) {
+                String fname = ctx.function_name.getText().toUpperCase();
+                FuncName funcName = string2FunctionType.containsKey(fname) ? string2FunctionType.get(fname)
+                    : FuncName.UNKNOWN;
+                List<Expr> exprList = new ArrayList<>();
+                for (VerdictSQLParser.ExpressionContext context : ctx.expression()) {
+                    exprList.add(Expr.from(vc, context));
+                }
+                return new FuncExpr(funcName, exprList, null);
+            }
+
+            @Override
             public FuncExpr visitExtract_time_function(VerdictSQLParser.Extract_time_functionContext ctx) {
                 String fname = ctx.function_name.getText().toUpperCase();
                 FuncName funcName = string2FunctionType.containsKey(fname) ? string2FunctionType.get(fname)
@@ -450,7 +475,15 @@ public class FuncExpr extends Expr {
     @Override
     public String toString() {
         StringBuilder sql = new StringBuilder(50);
-        if (expressions.size() == 0) {
+        if (funcname == FuncName.CONCAT || funcname == FuncName.CONCAT_WS) {
+            Joiner joiner = Joiner.on(",");
+            List<String> exprStrList = new ArrayList<>();
+            for (Expr e : expressions) {
+                exprStrList.add(e.toString());
+            }
+            String expr = joiner.join(exprStrList);
+            sql.append(String.format(functionPattern.get(funcname), expr));
+        } else if (expressions.size() == 0) {
             sql.append(String.format(functionPattern.get(funcname), ""));
         } else if (expressions.size() == 1) {
             sql.append(String.format(functionPattern.get(funcname), expressions.get(0).toString()));
@@ -543,7 +576,15 @@ public class FuncExpr extends Expr {
     @Override
     public String toSql() {
         StringBuilder sql = new StringBuilder(50);
-        if (expressions.size() == 0) {
+        if (funcname == FuncName.CONCAT || funcname == FuncName.CONCAT_WS) {
+            Joiner joiner = Joiner.on(",");
+            List<String> exprStrList = new ArrayList<>();
+            for (Expr e : expressions) {
+                exprStrList.add(e.toString());
+            }
+            String expr = joiner.join(exprStrList);
+            sql.append(String.format(functionPattern.get(funcname), expr));
+        } else if (expressions.size() == 0) {
             sql.append(String.format(functionPattern.get(funcname), ""));
         } else if (expressions.size() == 1) {
             sql.append(String.format(functionPattern.get(funcname), expressions.get(0).toSql()));
