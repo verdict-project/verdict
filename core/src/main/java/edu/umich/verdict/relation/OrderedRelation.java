@@ -48,6 +48,14 @@ public class OrderedRelation extends ExactRelation {
         return getAlias();
     }
 
+    public ExactRelation getSource() {
+        return source;
+    }
+
+    public List<OrderByExpr> getOrderby() {
+        return orderby;
+    }
+
     @Override
     protected List<ApproxRelation> nBestSamples(Expr elem, int n) throws VerdictException {
         return source.nBestSamples(elem, n);
