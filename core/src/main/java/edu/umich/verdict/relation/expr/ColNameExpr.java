@@ -80,6 +80,16 @@ public class ColNameExpr extends Expr implements Comparable {
         return String.format("%s.%s.%s", schema, tab, quote(col));
     }
 
+    public String toStringWithoutQuote() {
+        if (schema == null) {
+            if (tab == null) {
+                return String.format("%s", col);
+            }
+            return String.format("%s.%s", tab, col);
+        }
+        return String.format("%s.%s.%s", schema, tab, col);
+    }
+
     public String getText() {
         if (tab == null) {
             return String.format("%s", col);
