@@ -18,7 +18,7 @@ package edu.umich.verdict.relation.expr;
 
 import edu.umich.verdict.VerdictContext;
 
-public class ColNameExpr extends Expr {
+public class ColNameExpr extends Expr implements Comparable {
 
     private String col;
 
@@ -136,5 +136,11 @@ public class ColNameExpr extends Expr {
             }
         }
         return false;
+    }
+
+    @Override
+    public int compareTo(Object o) {
+        ColNameExpr other = (ColNameExpr) o;
+        return this.toString().compareTo(other.toString());
     }
 }
