@@ -65,6 +65,10 @@ public class ColNameExpr extends Expr implements Comparable {
         return schema;
     }
 
+    public void setSchema(String schema) {
+        this.schema = schema;
+    }
+
     public void setTab(String tab) {
         this.tab = tab;
     }
