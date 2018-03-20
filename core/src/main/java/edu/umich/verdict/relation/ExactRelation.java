@@ -777,7 +777,7 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
         // is null" are not correctly recognized.
         // Support such general join expressions is a TODO item.
         ExactRelation joinedTabeSource = null;
-        while (where != null && tableSources.size() > 1) {
+        while (where != null && tableSources.size() > 0) {
             Pair<Cond, Pair<ExactRelation, ExactRelation>> joinCondAndTabName = where
                     .searchForJoinCondition(tableSources);
             if (joinCondAndTabName == null) {
