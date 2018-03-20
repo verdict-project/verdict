@@ -174,6 +174,10 @@ public class VerdictMeta {
         return col2type;
     }
 
+    public Map<TableUniqueName, Map<String, String>> getTab2columns() {
+        return tab2columns;
+    }
+
     public void refreshColumns(TableUniqueName tableName) {
         try {
             Map<String, String> columns = vc.getDbms().getColumns(tableName);
