@@ -30,6 +30,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import edu.umich.verdict.relation.expr.ColNameExpr;
 import org.apache.commons.lang3.tuple.Pair;
 //import org.apache.spark.sql.DataFrame;
 
@@ -230,6 +231,52 @@ public abstract class DbmsJDBC extends Dbms {
             throw new VerdictException(StackTraceReader.stackTrace2String(e));
         }
         return cnt;
+    }
+
+    public long[] getGroupCount(TableUniqueName tableName, List<Set<ColNameExpr>> columnSetList)
+            throws VerdictException {
+        int setCount = 1;
+        long[] groupCounts = new long[columnSetList.size()];
+        List<String> countStringList = new ArrayList<>();
+        for (Set<ColNameExpr> columnSet : columnSetList) {
+            List<String> colStringList = new ArrayList<>();
+            for (ColNameExpr col : columnSet) {
+                String colString = String.format("COALESCE(CAST(%s as STRING), '%s')",
+                        col.getCol(), NULL_STRING);
+                colStringList.add(colString);
+            }
+            String concatString = "";
+            for (int i = 0; i < colStringList.size(); ++i) {
+                concatString += colStringList.get(i);
+                if (i < colStringList.size() - 1) {
+                    concatString += ", ";
+                }
+            }
+            String countString = String.format("COUNT(DISTINCT(CONCAT_WS(',', %s))) as cnt%d",
+                    concatString, setCount++);
+            countStringList.add(countString);
+        }
+        String sql = "SELECT ";
+        for (int i = 0; i < countStringList.size(); ++i) {
+            sql += countStringList.get(i);
+            if (i < countStringList.size() - 1) {
+                sql += ", ";
+            }
+        }
+        sql += String.format(" FROM %s", tableName);
+
+        ResultSet rs;
+        try {
+            rs = executeJdbcQuery(sql);
+            while (rs.next()) {
+                for (int i = 0; i < groupCounts.length; ++i) {
+                    groupCounts[i] = rs.getLong(i+1);
+                }
+            }
+        } catch (SQLException e) {
+            throw new VerdictException(StackTraceReader.stackTrace2String(e));
+        }
+        return groupCounts;
     }
 
     public boolean execute(String sql) throws VerdictException {

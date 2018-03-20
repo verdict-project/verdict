@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import edu.umich.verdict.relation.expr.ColNameExpr;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -271,6 +272,8 @@ public abstract class Dbms {
     public abstract void insertEntry(TableUniqueName tableName, List<Object> values) throws VerdictException;
 
     public abstract long getTableSize(TableUniqueName tableName) throws VerdictException;
+
+    public abstract long[] getGroupCount(TableUniqueName tableName, List<Set<ColNameExpr>> columnSetList) throws VerdictException;
 
     public void createMetaTablesInDMBS(TableUniqueName originalTableName, TableUniqueName sizeTableName,
             TableUniqueName nameTableName) throws VerdictException {

@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import edu.umich.verdict.relation.expr.ColNameExpr;
 import org.apache.commons.lang3.tuple.Pair;
 //import org.apache.spark.sql.DataFrame;
 import org.apache.spark.sql.Dataset;
@@ -81,6 +82,11 @@ public class DbmsDummy extends Dbms {
     @Override
     public long getTableSize(TableUniqueName tableName) throws VerdictException {
         return 0;
+    }
+
+    @Override
+    public long[] getGroupCount(TableUniqueName tableName, List<Set<ColNameExpr>> columnSetList) throws VerdictException {
+        return new long[0];
     }
 
     @Override
