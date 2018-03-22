@@ -129,6 +129,36 @@ public class CompCond extends Cond {
         return null;
     }
 
+    // dyoon: currently, this function actually replace searchForJoinCondition.
+    // After we ensure that searchForJoinCondition is no longer needed. We should
+    // replace it with this function.
+    /**
+     * Extracts join relations if equal operator was used for an inner join.
+     * @param tableSources
+     * @return a pair of Cond operator and a pair of left and right join tables.
+     * returns null if it is not an inner join.
+     */
+    @Override
+    public Pair<Cond, Pair<ExactRelation, ExactRelation>> extractJoinCondition(
+            List<ExactRelation> tableSources) {
+        if (compOp.equals("=")) {
+            if (left instanceof ColNameExpr && right instanceof ColNameExpr) {
+                String leftTab = ((ColNameExpr) left).getTab();
+                String rightTab = ((ColNameExpr) right).getTab();
+                ExactRelation r1 = findSourceContaining(tableSources, leftTab);
+                ExactRelation r2 = findSourceContaining(tableSources, rightTab);
+
+                String leftOriginalName = getOriginalTableName(tableSources, leftTab);
+                String rightOriginalName = getOriginalTableName(tableSources, rightTab);
+                if (r2 != null && leftOriginalName != null && rightOriginalName != null &&
+                        !leftOriginalName.equals(rightOriginalName)) {
+                    return Pair.of((Cond) this, Pair.of(r1, r2));
+                }
+            }
+        }
+        return null;
+    }
+
     private String getOriginalTableName(List<ExactRelation> tableSources, String alias) {
         for (ExactRelation r : tableSources) {
             String name = getOriginalTableName(r, alias);

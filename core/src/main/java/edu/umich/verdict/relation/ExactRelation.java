@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.avro.generic.GenericData;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 
@@ -535,6 +536,18 @@ public abstract class ExactRelation extends Relation {
 
     protected abstract String toStringWithIndent(String indent);
 
+    // dyoon: hashCode() and equals() based on toString() added so that
+    // ExactRelation can be used in Set class.
+    @Override
+    public int hashCode() {
+        return toString().hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        ExactRelation other = (ExactRelation) obj;
+        return this.toString().equals(obj.toString());
+    }
 }
 
 class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
@@ -776,41 +789,98 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
         // This means that some general join expressions such as "col1 is null and col2
         // is null" are not correctly recognized.
         // Support such general join expressions is a TODO item.
-        ExactRelation joinedTabeSource = null;
-        while (where != null && tableSources.size() > 0) {
+        ExactRelation joinedTableSource = null;
+        Map<Set<ExactRelation>, List<Cond>> joinMap = new HashMap<>();
+
+        // First, obtain a list of all join columns for each of join table pairs.
+        while (where != null) {
             Pair<Cond, Pair<ExactRelation, ExactRelation>> joinCondAndTabName = where
-                    .searchForJoinCondition(tableSources);
+                    .extractJoinCondition(tableSources);
             if (joinCondAndTabName == null) {
                 break;
             }
 
-            // create a joined table source
-            Cond joinCond = joinCondAndTabName.getKey();
-            Pair<ExactRelation, ExactRelation> pairsToJoin = joinCondAndTabName.getValue();
-            List<ExactRelation> newTableSources = new ArrayList<ExactRelation>();
-            ExactRelation joined = JoinedRelation.from(vc, pairsToJoin.getLeft(), pairsToJoin.getRight(), joinCond);
+            // Add a pair of tables for each join.
+            Set<ExactRelation> joinTableSet = new HashSet<>();
+            joinTableSet.add(joinCondAndTabName.getRight().getLeft());
+            joinTableSet.add(joinCondAndTabName.getRight().getRight());
+            if (!joinMap.containsKey(joinTableSet)) {
+                joinMap.put(joinTableSet, new ArrayList<Cond>());
+            }
+            List<Cond> joinCondList = joinMap.get(joinTableSet);
+            joinCondList.add(joinCondAndTabName.getLeft());
 
+            // get the Cond operator for the join and remove it from the current WHERE clause.
+            Cond joinCond = joinCondAndTabName.getKey();
+            where = where.remove(joinCond);
+        }
+
+        // Incrementally construct JoinedRelations for each pair of join tables.
+        for (Set<ExactRelation> joinSet : joinMap.keySet()) {
+            List<Cond> joinCondList = joinMap.get(joinSet);
+            Cond joinCond = null;
+
+            // Merge multiple CompCond operators into AndConds for the join.
+            if (joinCondList.size() == 1) {
+                joinCond = joinCondList.get(0);
+            } else {
+                joinCond = AndCond.from(joinCondList.get(0), joinCondList.get(1));
+                for (int i=2; i < joinCondList.size(); ++i) {
+                    joinCond = AndCond.from(joinCond, joinCondList.get(i));
+                }
+            }
+            ExactRelation[] joinSetArray = new ExactRelation[2];
+            joinSet.toArray(joinSetArray);
+            ExactRelation left = joinSetArray[0];
+            ExactRelation right = joinSetArray[1];
+
+            // If either left of right join source already exists in any of previously
+            // created JoinedRelation, replace it.
+            for (ExactRelation r : tableSources) {
+                if (r instanceof JoinedRelation) {
+                    JoinedRelation j = (JoinedRelation) r;
+                    if (j.containsRelation(left, left.getAlias())) {
+                        left = r;
+                        break;
+                    }
+                }
+            }
+            for (ExactRelation r : tableSources) {
+                if (r instanceof JoinedRelation) {
+                    JoinedRelation j = (JoinedRelation) r;
+                    if (j.containsRelation(right, right.getAlias())) {
+                        right = r;
+                        break;
+                    }
+                }
+            }
+
+            // Create a new JoinedRelation.
+            ExactRelation joined = JoinedRelation.from(vc, left, right, joinCond);
+
+            List<ExactRelation> newTableSources = new ArrayList<>();
             newTableSources.add(joined);
+
+            // Remove any other relations that are already included in JoinedRelations.
             for (ExactRelation t : tableSources) {
-                if (t != pairsToJoin.getLeft() && t != pairsToJoin.getRight()) {
+                if (t != left && t != right) {
                     newTableSources.add(t);
                 }
             }
             tableSources = newTableSources;
-            where = where.remove(joinCond);
         }
 
         // if there is any table sources left, they should be cross-joined.
         for (ExactRelation r : tableSources) {
-            if (joinedTabeSource == null) {
-                joinedTabeSource = r;
+            if (joinedTableSource == null) {
+                joinedTableSource = r;
             } else {
-                joinedTabeSource = new JoinedRelation(vc, joinedTabeSource, r, null);
+                joinedTableSource = new JoinedRelation(vc, joinedTableSource, r, null);
             }
         }
 
         if (where != null) {
-            joinedTabeSource = new FilteredRelation(vc, joinedTabeSource, where);
+            joinedTableSource = new FilteredRelation(vc, joinedTableSource, where);
         }
 
         // parse select list
@@ -829,7 +899,7 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
 
         if (aggs.size() == 0) {
             // simple projection
-            joinedTabeSource = new ProjectedRelation(vc, joinedTabeSource, bothInOrder);
+            joinedTableSource = new ProjectedRelation(vc, joinedTableSource, bothInOrder);
         } else {
             // aggregate relation
 
@@ -858,13 +928,13 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
                         groupby.add(gexpr);
                     }
                 }
-                joinedTabeSource = new GroupedRelation(vc, joinedTabeSource, groupby);
+                joinedTableSource = new GroupedRelation(vc, joinedTableSource, groupby);
             }
 
-            joinedTabeSource = new AggregatedRelation(vc, joinedTabeSource, bothInOrder);
+            joinedTableSource = new AggregatedRelation(vc, joinedTableSource, bothInOrder);
         }
 
-        return joinedTabeSource;
+        return joinedTableSource;
     }
 
     private List<SelectElem> replaceTableNamesWithAliasesIn(List<SelectElem> elems, TableSourceResolver resolver) {
