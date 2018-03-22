@@ -16,13 +16,7 @@
 
 package edu.umich.verdict.relation;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
@@ -66,7 +60,7 @@ import edu.umich.verdict.util.VerdictLogger;
  * @author Yongjoo Park
  *
  */
-public abstract class ExactRelation extends Relation {
+public abstract class ExactRelation extends Relation implements Comparable {
 
     public ExactRelation(VerdictContext vc) {
         super(vc);
@@ -547,6 +541,12 @@ public abstract class ExactRelation extends Relation {
         ExactRelation other = (ExactRelation) obj;
         return this.toString().equals(obj.toString());
     }
+
+    @Override
+    public int compareTo(Object o) {
+        ExactRelation other = (ExactRelation) o;
+        return this.toString().compareTo(other.toString());
+    }
 }
 
 class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
@@ -789,7 +789,7 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
         // is null" are not correctly recognized.
         // Support such general join expressions is a TODO item.
         ExactRelation joinedTableSource = null;
-        Map<Set<ExactRelation>, List<Cond>> joinMap = new HashMap<>();
+        Map<List<ExactRelation>, List<Cond>> joinMap = new HashMap<>();
 
         // First, obtain a list of all join columns for each of join table pairs.
         while (where != null) {
@@ -800,7 +800,7 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
             }
 
             // Add a pair of tables for each join.
-            Set<ExactRelation> joinTableSet = new HashSet<>();
+            List<ExactRelation> joinTableSet = new ArrayList<>();
             joinTableSet.add(joinCondAndTabName.getRight().getLeft());
             joinTableSet.add(joinCondAndTabName.getRight().getRight());
             if (!joinMap.containsKey(joinTableSet)) {
@@ -815,7 +815,7 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
         }
 
         // Incrementally construct JoinedRelations for each pair of join tables.
-        for (Set<ExactRelation> joinSet : joinMap.keySet()) {
+        for (List<ExactRelation> joinSet : joinMap.keySet()) {
             List<Cond> joinCondList = joinMap.get(joinSet);
             Cond joinCond = null;
 
@@ -828,10 +828,8 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
                     joinCond = AndCond.from(joinCond, joinCondList.get(i));
                 }
             }
-            ExactRelation[] joinSetArray = new ExactRelation[2];
-            joinSet.toArray(joinSetArray);
-            ExactRelation left = joinSetArray[0];
-            ExactRelation right = joinSetArray[1];
+            ExactRelation left = joinSet.get(0);
+            ExactRelation right = joinSet.get(1);
 
             // If either left of right join source already exists in any of previously
             // created JoinedRelation, replace it.
