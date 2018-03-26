@@ -54,7 +54,7 @@ public abstract class Cond {
 
     /**
      * 
-     * @param joinedTableName
+     * @param tableSources
      * @return A pair of the join condition and the name of a table to be joined to
      *         existing table sources. Note that, where there exists already joined
      *         tables, the right side of the returned String pair is the new table.
@@ -163,19 +163,11 @@ class CondGen extends VerdictSQLBaseVisitor<Cond> {
         return inCond;
     }
 
-//
     @Override
     public Cond visitExists_predicate(VerdictSQLParser.Exists_predicateContext ctx) {
-
         ExistsCond ExistsCond = edu.umich.verdict.relation.condition.ExistsCond.from(vc,ctx);
         return ExistsCond;
-
     }
-
-
-
-
-
 
     @Override
     public Cond visitLike_predicate(VerdictSQLParser.Like_predicateContext ctx) {
