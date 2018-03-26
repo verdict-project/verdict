@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import edu.umich.verdict.VerdictContext;
@@ -41,6 +42,10 @@ public class FuncExpr extends Expr {
       IN_FILE, LOCATE, LTRIM, REPEAT, REVERSE, SPACE, AES_ENCRYPT, AES_DECRYPT, SHA1, SHA2, STDDEV_SAMP,
         CONCAT, CONCAT_WS
     }
+
+    public static final ImmutableList<FuncName> AGG_FUNC_LIST =
+            ImmutableList.of(FuncName.COUNT, FuncName.SUM, FuncName.AVG, FuncName.COUNT_DISTINCT,
+                    FuncName.IMPALA_APPROX_COUNT_DISTINCT);
 
     protected List<Expr> expressions;
 
