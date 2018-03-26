@@ -64,6 +64,18 @@ public class AndCond extends Cond {
         return j;
     }
 
+    // dyoon: Extracts join conditions from the current AndCond.
+    // This looks a duplicate of searchForJoinCondition, but its implementation under CompCond
+    // differs from that of searchForJoinCondition.
+    @Override
+    public Pair<Cond, Pair<ExactRelation, ExactRelation>> extractJoinCondition(List<ExactRelation> tableSources) {
+        Pair<Cond, Pair<ExactRelation, ExactRelation>> j = null;
+        j = left.extractJoinCondition(tableSources);
+        if (j == null)
+            j = right.extractJoinCondition(tableSources);
+        return j;
+    }
+
     @Override
     public Cond remove(Cond j) {
         if (left.equals(j)) {

@@ -195,6 +195,28 @@ public class JoinedRelation extends ExactRelation {
         return c;
     }
 
+    public boolean containsRelation(ExactRelation r, String tab) {
+        if (source1 instanceof SingleRelation) {
+            if (source1.getAlias().equals(tab)) {
+                return true;
+            }
+        } else if (source1 instanceof JoinedRelation) {
+            JoinedRelation jr = (JoinedRelation) source1;
+            boolean isContain = jr.containsRelation(r, tab);
+            if (isContain) return true;
+        }
+        if (source2 instanceof SingleRelation) {
+            if (source2.getAlias().equals(tab)) {
+                return true;
+            }
+        } else if (source2 instanceof JoinedRelation) {
+            JoinedRelation jr = (JoinedRelation) source2;
+            boolean isContain = jr.containsRelation(r, tab);
+            if (isContain) return true;
+        }
+        return false;
+    }
+
     /*
      * Approx
      */

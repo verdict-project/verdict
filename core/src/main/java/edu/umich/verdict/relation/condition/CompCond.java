@@ -90,11 +90,20 @@ public class CompCond extends Cond {
 
                 if (doesRelationContain(r1, leftTab)) {
                     r2 = findSourceContaining(tableSources, rightTab);
+                    if (r2 != null && r2 instanceof JoinedRelation) {
+                        r2 = findSingleRelation(r2, rightTab);
+                    }
                 } else if (doesRelationContain(r1, rightTab)) {
                     r2 = findSourceContaining(tableSources, leftTab);
+                    if (r2 != null && r2 instanceof JoinedRelation) {
+                        r2 = findSingleRelation(r2, leftTab);
+                    }
                 }
 
-                if (r2 != null && r1 != r2) {
+                String leftOriginalName = getOriginalTableName(tableSources, leftTab);
+                String rightOriginalName = getOriginalTableName(tableSources, rightTab);
+                if (r2 != null && leftOriginalName != null && rightOriginalName != null &&
+                        !leftOriginalName.equals(rightOriginalName)) {
                     return Pair.of((Cond) this, Pair.of(r1, r2));
                 }
 
@@ -119,6 +128,84 @@ public class CompCond extends Cond {
         }
         return null;
     }
+
+    // dyoon: currently, this function actually replace searchForJoinCondition.
+    // After we ensure that searchForJoinCondition is no longer needed. We should
+    // replace it with this function.
+    /**
+     * Extracts join relations if equal operator was used for an inner join.
+     * @param tableSources
+     * @return a pair of Cond operator and a pair of left and right join tables.
+     * returns null if it is not an inner join.
+     */
+    @Override
+    public Pair<Cond, Pair<ExactRelation, ExactRelation>> extractJoinCondition(
+            List<ExactRelation> tableSources) {
+        if (compOp.equals("=")) {
+            if (left instanceof ColNameExpr && right instanceof ColNameExpr) {
+                String leftTab = ((ColNameExpr) left).getTab();
+                String rightTab = ((ColNameExpr) right).getTab();
+                ExactRelation r1 = findSourceContaining(tableSources, leftTab);
+                ExactRelation r2 = findSourceContaining(tableSources, rightTab);
+
+                String leftOriginalName = getOriginalTableName(tableSources, leftTab);
+                String rightOriginalName = getOriginalTableName(tableSources, rightTab);
+                if (r2 != null && leftOriginalName != null && rightOriginalName != null &&
+                        !leftOriginalName.equals(rightOriginalName)) {
+                    return Pair.of((Cond) this, Pair.of(r1, r2));
+                }
+            }
+        }
+        return null;
+    }
+
+    private String getOriginalTableName(List<ExactRelation> tableSources, String alias) {
+        for (ExactRelation r : tableSources) {
+            String name = getOriginalTableName(r, alias);
+            if (name != null) return name;
+        }
+        return null;
+    }
+
+    private String getOriginalTableName(ExactRelation r, String alias) {
+        if (r instanceof SingleRelation) {
+            if (r.getAlias().equals(alias)) {
+                SingleRelation sr = (SingleRelation) r;
+                return sr.getTableName().fullyQuantifiedName();
+            }
+        }
+        else if (r instanceof JoinedRelation) {
+            String result = getOriginalTableName(((JoinedRelation) r).getLeftSource(), alias);
+            if (result == null) {
+                result = getOriginalTableName(((JoinedRelation) r).getRightSource(), alias);
+            }
+            return result;
+        }
+        else if (r instanceof ProjectedRelation) {
+            ProjectedRelation pr = (ProjectedRelation) r;
+            return getOriginalTableName(pr.getSource(), alias);
+        }
+        else if (r instanceof AggregatedRelation) {
+            AggregatedRelation ar = (AggregatedRelation) r;
+            return getOriginalTableName(ar.getSource(), alias);
+        }
+        return null;
+    }
+
+    private ExactRelation findSingleRelation(ExactRelation r, String tab) {
+        if (r instanceof SingleRelation) {
+            if (r.getAlias().equals(tab)) {
+                return r;
+            }
+        } else if (r instanceof JoinedRelation) {
+            JoinedRelation jr = (JoinedRelation) r;
+            ExactRelation res = this.findSingleRelation(jr.getLeftSource(), tab);
+            if (res != null) return res;
+            else return this.findSingleRelation(jr.getRightSource(), tab);
+        }
+        return null;
+    }
+
 
     private ExactRelation findSourceContaining(List<ExactRelation> tableSources, String tab) {
         for (ExactRelation r : tableSources) {

@@ -63,6 +63,13 @@ public abstract class Cond {
         return null;
     }
 
+    /**
+     * Extract first join operation found in the Cond.
+     */
+    public Pair<Cond, Pair<ExactRelation, ExactRelation>> extractJoinCondition(List<ExactRelation> tableSources) {
+        return null;
+    }
+
     public Cond remove(Cond j) {
         return this;
     }
