@@ -21,12 +21,7 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -233,12 +228,12 @@ public abstract class DbmsJDBC extends Dbms {
         return cnt;
     }
 
-    public long[] getGroupCount(TableUniqueName tableName, List<Set<ColNameExpr>> columnSetList)
+    public long[] getGroupCount(TableUniqueName tableName, List<SortedSet<ColNameExpr>> columnSetList)
             throws VerdictException {
         int setCount = 1;
         long[] groupCounts = new long[columnSetList.size()];
         List<String> countStringList = new ArrayList<>();
-        for (Set<ColNameExpr> columnSet : columnSetList) {
+        for (SortedSet<ColNameExpr> columnSet : columnSetList) {
             List<String> colStringList = new ArrayList<>();
             for (ColNameExpr col : columnSet) {
                 String colString = String.format("COALESCE(CAST(%s as STRING), '%s')",

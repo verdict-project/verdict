@@ -17,12 +17,7 @@
 package edu.umich.verdict.dbms;
 
 import java.sql.ResultSet;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import edu.umich.verdict.relation.expr.ColNameExpr;
 import org.apache.commons.lang3.tuple.Pair;
@@ -273,7 +268,8 @@ public abstract class Dbms {
 
     public abstract long getTableSize(TableUniqueName tableName) throws VerdictException;
 
-    public abstract long[] getGroupCount(TableUniqueName tableName, List<Set<ColNameExpr>> columnSetList) throws VerdictException;
+    public abstract long[] getGroupCount(TableUniqueName tableName,
+                                         List<SortedSet<ColNameExpr>> columnSetList) throws VerdictException;
 
     public void createMetaTablesInDMBS(TableUniqueName originalTableName, TableUniqueName sizeTableName,
             TableUniqueName nameTableName) throws VerdictException {
