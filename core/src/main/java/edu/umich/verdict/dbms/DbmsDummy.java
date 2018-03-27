@@ -82,7 +82,7 @@ public class DbmsDummy extends Dbms {
     @Override
     public long[] getGroupCount(TableUniqueName tableName, List<SortedSet<ColNameExpr>> columnSetList)
             throws VerdictException {
-        return new long[0];
+        return null;
     }
 
     @Override

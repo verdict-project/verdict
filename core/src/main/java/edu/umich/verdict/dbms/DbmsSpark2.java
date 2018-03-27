@@ -144,6 +144,9 @@ public class DbmsSpark2 extends Dbms {
     @Override
     public long[] getGroupCount(TableUniqueName tableName, List<SortedSet<ColNameExpr>> columnSetList)
             throws VerdictException {
+        if (columnSetList.isEmpty()) {
+            return null;
+        }
         int setCount = 1;
         long[] groupCounts = new long[columnSetList.size()];
         List<String> countStringList = new ArrayList<>();
