@@ -17,12 +17,7 @@
 package edu.umich.verdict.dbms;
 
 import java.sql.ResultSet;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import edu.umich.verdict.relation.expr.ColNameExpr;
 import org.apache.commons.lang3.tuple.Pair;
@@ -85,7 +80,8 @@ public class DbmsDummy extends Dbms {
     }
 
     @Override
-    public long[] getGroupCount(TableUniqueName tableName, List<Set<ColNameExpr>> columnSetList) throws VerdictException {
+    public long[] getGroupCount(TableUniqueName tableName, List<SortedSet<ColNameExpr>> columnSetList)
+            throws VerdictException {
         return new long[0];
     }
 

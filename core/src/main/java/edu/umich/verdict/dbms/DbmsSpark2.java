@@ -17,12 +17,7 @@
 package edu.umich.verdict.dbms;
 
 import java.sql.ResultSet;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import com.google.common.base.Optional;
 import edu.umich.verdict.VerdictConf;
@@ -147,12 +142,12 @@ public class DbmsSpark2 extends Dbms {
 
     // TODO: this method requires testing.
     @Override
-    public long[] getGroupCount(TableUniqueName tableName, List<Set<ColNameExpr>> columnSetList)
+    public long[] getGroupCount(TableUniqueName tableName, List<SortedSet<ColNameExpr>> columnSetList)
             throws VerdictException {
         int setCount = 1;
         long[] groupCounts = new long[columnSetList.size()];
         List<String> countStringList = new ArrayList<>();
-        for (Set<ColNameExpr> columnSet : columnSetList) {
+        for (SortedSet<ColNameExpr> columnSet : columnSetList) {
             List<String> colStringList = new ArrayList<>();
             for (ColNameExpr col : columnSet) {
                 String colString = String.format("COALESCE(CAST(%s as STRING), '%s')",
