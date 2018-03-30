@@ -39,11 +39,22 @@ public class GroupedRelation extends ExactRelation {
 
     protected List<Expr> groupby;
 
+    protected boolean isRollUp;
+
     public GroupedRelation(VerdictContext vc, ExactRelation source, List<Expr> groupby) {
         super(vc);
         this.source = source;
         this.groupby = groupby;
         this.alias = source.alias;
+        this.isRollUp = false;
+    }
+
+    public GroupedRelation(VerdictContext vc, ExactRelation source, List<Expr> groupby, boolean isRollUp) {
+        super(vc);
+        this.source = source;
+        this.groupby = groupby;
+        this.alias = source.alias;
+        this.isRollUp = isRollUp;
     }
 
     public ExactRelation getSource() {
@@ -52,6 +63,10 @@ public class GroupedRelation extends ExactRelation {
 
     public List<Expr> getGroupby() {
         return groupby;
+    }
+
+    public boolean isRollUp() {
+        return isRollUp;
     }
 
     @Override
@@ -115,6 +130,9 @@ public class GroupedRelation extends ExactRelation {
         if (gsql.length() > 0) {
             sql.append(" GROUP BY ");
             sql.append(gsql);
+            if (isRollUp) {
+                sql.append(" WITH ROLLUP");
+            }
         }
         return sql.toString();
     }
@@ -131,10 +149,11 @@ public class GroupedRelation extends ExactRelation {
 
     @Override
     protected String toStringWithIndent(String indent) {
+        String withRollup = (isRollUp) ? " WITH ROLLUP" : "";
         StringBuilder s = new StringBuilder(1000);
         s.append(indent);
         s.append(String.format("%s(%s) [%s]\n", this.getClass().getSimpleName(), getAlias(),
-                Joiner.on(", ").join(groupby)));
+                Joiner.on(", ").join(groupby) + withRollup));
         s.append(source.toStringWithIndent(indent + "  "));
         return s.toString();
     }

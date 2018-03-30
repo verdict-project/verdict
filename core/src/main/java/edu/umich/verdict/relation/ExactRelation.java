@@ -354,7 +354,7 @@ public abstract class ExactRelation extends Relation implements Comparable {
      * elements of the set will be the sample tables for those two tables. Multiple
      * of such sets serve as candidates.
      * 
-     * @param functions
+     * @param elem
      * @return A map from a candidate to [cost, sampling prob].
      */
     protected List<SampleGroup> findSample(Expr elem) {
@@ -423,7 +423,7 @@ public abstract class ExactRelation extends Relation implements Comparable {
 
     /**
      * 
-     * @param relation
+     * @param r
      *            Starts to collect from this relation
      * @return All found groupby expressions and the first relation that is not a
      *         GroupedRelation.
@@ -925,7 +925,8 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
                         groupby.add(gexpr);
                     }
                 }
-                joinedTableSource = new GroupedRelation(vc, joinedTableSource, groupby);
+                boolean isRollUp = (ctx.ROLLUP() != null);
+                joinedTableSource = new GroupedRelation(vc, joinedTableSource, groupby, isRollUp);
             }
 
             joinedTableSource = new AggregatedRelation(vc, joinedTableSource, bothInOrder);
