@@ -406,7 +406,7 @@ query_specification
       (FROM table_source (',' table_source)*)?
       (WHERE where=search_condition)?
       // https://msdn.microsoft.com/en-us/library/ms177673.aspx
-      (GROUP BY group_by_item (',' group_by_item)*)?
+      (GROUP BY group_by_item (',' group_by_item)* (WITH ROLLUP)?)?
       (HAVING having=search_condition)?
     ;
 
@@ -1323,6 +1323,7 @@ REMOTE:                          R E M O T E;
 REPEAT:                          R E P E A T;
 REPEATABLE:                      R E P E A T A B L E;
 REVERSE:                         R E V E R S E;
+ROLLUP:                          R O L L U P;
 ROOT:                            R O O T;
 ROUND:                           R O U N D;
 ROW:                             R O W;
