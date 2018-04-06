@@ -28,6 +28,10 @@ public class NotCond extends Cond {
         return new NotCond(cond);
     }
 
+    public Cond getCond() {
+        return cond;
+    }
+
     @Override
     public String toString() {
         return String.format("NOT (%s)", cond);
