@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import edu.umich.verdict.relation.expr.SelectElem;
 import org.apache.commons.lang3.tuple.Pair;
 
 import com.google.common.base.Joiner;
@@ -42,7 +43,7 @@ import edu.umich.verdict.util.VerdictLogger;
 public class JoinedRelation extends ExactRelation {
 
     public enum JoinType {
-	    INNER, CROSS, LATERAL, LEFT_OUTER, RIGHT_OUTER
+	    INNER, CROSS, LATERAL, LEFT_OUTER, RIGHT_OUTER, LEFT_SEMI
 	}
 
 	protected static Map<JoinType, String> joinTypeString =
@@ -52,6 +53,7 @@ public class JoinedRelation extends ExactRelation {
 	.put(JoinType.LATERAL, "LATERAL VIEW")
 	.put(JoinType.LEFT_OUTER, "LEFT OUTER JOIN")
 	.put(JoinType.RIGHT_OUTER, "RIGHT OUTER JOIN")
+    .put(JoinType.LEFT_SEMI, "LEFT SEMI JOIN")
 	.build();
 
 	private ExactRelation source1;
@@ -196,24 +198,44 @@ public class JoinedRelation extends ExactRelation {
     }
 
     public boolean containsRelation(ExactRelation r, String tab) {
-        if (source1 instanceof SingleRelation) {
-            if (source1.getAlias().equals(tab)) {
-                return true;
-            }
-        } else if (source1 instanceof JoinedRelation) {
+        if (source1 instanceof JoinedRelation) {
             JoinedRelation jr = (JoinedRelation) source1;
             boolean isContain = jr.containsRelation(r, tab);
             if (isContain) return true;
-        }
-        if (source2 instanceof SingleRelation) {
-            if (source2.getAlias().equals(tab)) {
+        } else {
+            if (source1.getAlias().equals(tab)) {
                 return true;
             }
-        } else if (source2 instanceof JoinedRelation) {
+        }
+        if (source2 instanceof JoinedRelation) {
             JoinedRelation jr = (JoinedRelation) source2;
             boolean isContain = jr.containsRelation(r, tab);
             if (isContain) return true;
+        } else {
+            if (source2.getAlias().equals(tab)) {
+                return true;
+            }
         }
+//        if (source1 instanceof SingleRelation || source1 instanceof AggregatedRelation ||
+//                source1 instanceof ProjectedRelation) {
+//            if (source1.getAlias().equals(tab)) {
+//                return true;
+//            }
+//        } else if (source1 instanceof JoinedRelation) {
+//            JoinedRelation jr = (JoinedRelation) source1;
+//            boolean isContain = jr.containsRelation(r, tab);
+//            if (isContain) return true;
+//        }
+//        if (source2 instanceof SingleRelation || source2 instanceof AggregatedRelation ||
+//                source2 instanceof ProjectedRelation) {
+//            if (source2.getAlias().equals(tab)) {
+//                return true;
+//            }
+//        } else if (source2 instanceof JoinedRelation) {
+//            JoinedRelation jr = (JoinedRelation) source2;
+//            boolean isContain = jr.containsRelation(r, tab);
+//            if (isContain) return true;
+//        }
         return false;
     }
 
@@ -333,7 +355,7 @@ public class JoinedRelation extends ExactRelation {
      * 
      * @param set
      *            A set of sample columns (for possibly multiple joined tables)
-     * @param expr
+     * @param aJoinCols
      *            A set of join columns to check
      * @return
      */
@@ -424,6 +446,13 @@ public class JoinedRelation extends ExactRelation {
             ColNameExpr col2 = source2.partitionColumn();
             return col2;
         }
+    }
+
+    @Override
+    public List<SelectElem> getSelectElemList() {
+        List<SelectElem> selectList = source1.getSelectElemList();
+        selectList.addAll(source2.getSelectElemList());
+        return selectList;
     }
 
     // @Override

@@ -18,18 +18,12 @@ package edu.umich.verdict.relation.condition;
 
 import java.util.List;
 
+import edu.umich.verdict.relation.*;
+import edu.umich.verdict.relation.expr.*;
 import org.apache.commons.lang3.tuple.Pair;
 
 import edu.umich.verdict.VerdictContext;
-import edu.umich.verdict.relation.AggregatedRelation;
-import edu.umich.verdict.relation.ExactRelation;
-import edu.umich.verdict.relation.JoinedRelation;
-import edu.umich.verdict.relation.ProjectedRelation;
-import edu.umich.verdict.relation.Relation;
-import edu.umich.verdict.relation.SingleRelation;
-import edu.umich.verdict.relation.expr.ColNameExpr;
-import edu.umich.verdict.relation.expr.Expr;
-import edu.umich.verdict.relation.expr.SubqueryExpr;
+import parquet.io.api.Binary;
 
 public class CompCond extends Cond {
 
@@ -134,6 +128,9 @@ public class CompCond extends Cond {
     // replace it with this function.
     /**
      * Extracts join relations if equal operator was used for an inner join.
+     * it extracts join relations if equal operator has either ColNameExpr or BinaryOpExpr
+     * on either side. For BinaryOpExpr, it can only parse simple expressions in the format of
+     * <column> <op> <constant>
      * @param tableSources
      * @return a pair of Cond operator and a pair of left and right join tables.
      * returns null if it is not an inner join.
@@ -143,16 +140,102 @@ public class CompCond extends Cond {
             List<ExactRelation> tableSources) {
         if (compOp.equals("=")) {
             if (left instanceof ColNameExpr && right instanceof ColNameExpr) {
-                String leftTab = ((ColNameExpr) left).getTab();
-                String rightTab = ((ColNameExpr) right).getTab();
-                ExactRelation r1 = findSourceContaining(tableSources, leftTab);
-                ExactRelation r2 = findSourceContaining(tableSources, rightTab);
-
-                String leftOriginalName = getOriginalTableName(tableSources, leftTab);
-                String rightOriginalName = getOriginalTableName(tableSources, rightTab);
+                ExactRelation r1 = findSourceContaining(tableSources, (ColNameExpr) left);
+                ExactRelation r2 = findSourceContaining(tableSources, (ColNameExpr) right);
+                String leftOriginalName = (r1 != null) ? getOriginalTableName(tableSources, r1.getAlias()) : null;
+                String rightOriginalName = (r2 != null) ? getOriginalTableName(tableSources, r2.getAlias()) : null;
                 if (r2 != null && leftOriginalName != null && rightOriginalName != null &&
-                        !leftOriginalName.equals(rightOriginalName)) {
+                        !(leftOriginalName.equals(rightOriginalName) &&
+                                r1.getAlias().equals(r2.getAlias()))) {
                     return Pair.of((Cond) this, Pair.of(r1, r2));
+                }
+            } else if (left instanceof ColNameExpr && right instanceof BinaryOpExpr) {
+                BinaryOpExpr binaryOp = (BinaryOpExpr) right;
+                Expr colRight = null;
+                if (binaryOp.getLeft() instanceof ColNameExpr) {
+                    if (binaryOp.getRight() instanceof ConstantExpr) {
+                        colRight = binaryOp.getLeft();
+                    }
+                } else if (binaryOp.getRight() instanceof ColNameExpr) {
+                    if (binaryOp.getLeft() instanceof ConstantExpr) {
+                        colRight = binaryOp.getRight();
+                    }
+                }
+                if (colRight != null) {
+                    ExactRelation r1 = findSourceContaining(tableSources, (ColNameExpr) left);
+                    ExactRelation r2 = findSourceContaining(tableSources, (ColNameExpr) colRight);
+
+                    String leftOriginalName = (r1 != null) ? getOriginalTableName(tableSources, r1.getAlias()) : null;
+                    String rightOriginalName = (r2 != null) ? getOriginalTableName(tableSources, r2.getAlias()) : null;
+                    if (r2 != null && leftOriginalName != null && rightOriginalName != null &&
+                            !(leftOriginalName.equals(rightOriginalName) &&
+                                    r1.getAlias().equals(r2.getAlias()))) {
+                        return Pair.of((Cond) this, Pair.of(r1, r2));
+                    }
+                }
+            } else if (left instanceof BinaryOpExpr && right instanceof ColNameExpr) {
+                BinaryOpExpr binaryOp = (BinaryOpExpr) left;
+                Expr colLeft = null;
+                if (binaryOp.getLeft() instanceof ColNameExpr) {
+                    if (binaryOp.getRight() instanceof ConstantExpr) {
+                        colLeft = binaryOp.getLeft();
+                    }
+                } else if (binaryOp.getRight() instanceof ColNameExpr) {
+                    if (binaryOp.getLeft() instanceof ConstantExpr) {
+                        colLeft = binaryOp.getRight();
+                    }
+                }
+                if (colLeft != null) {
+                    ExactRelation r1 = findSourceContaining(tableSources, (ColNameExpr) colLeft);
+                    ExactRelation r2 = findSourceContaining(tableSources, (ColNameExpr) right);
+
+                    String leftOriginalName = (r1 != null) ?
+                            getOriginalTableName(tableSources, r1.getAlias()) : null;
+                    String rightOriginalName = (r2 != null) ?
+                            getOriginalTableName(tableSources, r2.getAlias()) : null;
+
+                    if (r2 != null && leftOriginalName != null && rightOriginalName != null &&
+                            !(leftOriginalName.equals(rightOriginalName) &&
+                                    r1.getAlias().equals(r2.getAlias()))) {
+                        return Pair.of((Cond) this, Pair.of(r1, r2));
+                    }
+                }
+            } else if (left instanceof BinaryOpExpr && right instanceof BinaryOpExpr) {
+                BinaryOpExpr binaryOp = (BinaryOpExpr) left;
+                Expr colRight = null;
+                Expr colLeft = null;
+                if (binaryOp.getLeft() instanceof ColNameExpr) {
+                    if (binaryOp.getRight() instanceof ConstantExpr) {
+                        colLeft = binaryOp.getLeft();
+                    }
+                } else if (binaryOp.getRight() instanceof ColNameExpr) {
+                    if (binaryOp.getLeft() instanceof ConstantExpr) {
+                        colLeft = binaryOp.getRight();
+                    }
+                }
+                binaryOp = (BinaryOpExpr) right;
+                if (binaryOp.getLeft() instanceof ColNameExpr) {
+                    if (binaryOp.getRight() instanceof ConstantExpr) {
+                        colRight = binaryOp.getLeft();
+                    }
+                } else if (binaryOp.getRight() instanceof ColNameExpr) {
+                    if (binaryOp.getLeft() instanceof ConstantExpr) {
+                        colRight = binaryOp.getRight();
+                    }
+                }
+                if (colLeft != null && colRight != null) {
+                    ExactRelation r1 = findSourceContaining(tableSources, (ColNameExpr) colLeft);
+                    ExactRelation r2 = findSourceContaining(tableSources, (ColNameExpr) colRight);
+
+                    String leftOriginalName = (r1 != null) ?
+                            getOriginalTableName(tableSources, r1.getAlias()) : null;
+                    String rightOriginalName = (r2 != null) ?
+                            getOriginalTableName(tableSources, r2.getAlias()) : null;
+                    if (r2 != null && leftOriginalName != null && rightOriginalName != null &&
+                            !(leftOriginalName.equals(rightOriginalName) &&
+                                    r1.getAlias().equals(r2.getAlias()))) {
+                        return Pair.of((Cond) this, Pair.of(r1, r2));
+                    }
                 }
             }
         }
@@ -183,11 +266,36 @@ public class CompCond extends Cond {
         }
         else if (r instanceof ProjectedRelation) {
             ProjectedRelation pr = (ProjectedRelation) r;
+            if (pr.getAlias().equals(alias)) {
+                if (pr.getName() != null) {
+                    return pr.getName();
+                } else {
+                    return alias;
+                }
+            }
             return getOriginalTableName(pr.getSource(), alias);
         }
         else if (r instanceof AggregatedRelation) {
             AggregatedRelation ar = (AggregatedRelation) r;
+            if (ar.getAlias().equals(alias)) {
+                if (ar.getName() != null) {
+                    return ar.getName();
+                } else {
+                    return alias;
+                }
+            }
             return getOriginalTableName(ar.getSource(), alias);
+        }
+        else if (r instanceof SetRelation) {
+            SetRelation sr = (SetRelation) r;
+            if (sr.getAlias().equals(alias)) {
+                return sr.getName();
+            }
+            String result = getOriginalTableName(((SetRelation) r).getLeftSource(), alias);
+            if (result == null) {
+                result = getOriginalTableName(((SetRelation) r).getRightSource(), alias);
+            }
+            return result;
         }
         return null;
     }
@@ -202,6 +310,11 @@ public class CompCond extends Cond {
             ExactRelation res = this.findSingleRelation(jr.getLeftSource(), tab);
             if (res != null) return res;
             else return this.findSingleRelation(jr.getRightSource(), tab);
+        } else if (r instanceof SetRelation) {
+            SetRelation sr = (SetRelation) r;
+            ExactRelation res = this.findSingleRelation(sr.getLeftSource(), tab);
+            if (res != null) return res;
+            else return this.findSingleRelation(sr.getRightSource(), tab);
         }
         return null;
     }
@@ -217,13 +330,57 @@ public class CompCond extends Cond {
     }
 
     private boolean doesRelationContain(ExactRelation r, String tab) {
-        if (r instanceof SingleRelation || r instanceof ProjectedRelation || r instanceof AggregatedRelation) {
+        if (r.getAlias().equals(tab)) {
+            return true;
+        }
+        if (r instanceof JoinedRelation) {
+            return doesRelationContain(((JoinedRelation) r).getLeftSource(), tab)
+                    || doesRelationContain(((JoinedRelation) r).getRightSource(), tab);
+        } else if (r instanceof SetRelation) {
+            return doesRelationContain(((SetRelation) r).getLeftSource(), tab)
+                    || doesRelationContain(((SetRelation) r).getRightSource(), tab);
+        }
+        return false;
+    }
+
+    private ExactRelation findSourceContaining(List<ExactRelation> tableSources, ColNameExpr col) {
+        for (ExactRelation r : tableSources) {
+            if (doesRelationContain(r, col)) {
+                return r;
+            }
+        }
+        return null;
+    }
+
+    private boolean doesRelationContain(ExactRelation r, ColNameExpr col) {
+        String tab = col.getTab();
+        String colName = col.getCol();
+        if (tab != null) {
             if (r.getAlias().equals(tab)) {
                 return true;
             }
-        } else if (r instanceof JoinedRelation) {
-            return doesRelationContain(((JoinedRelation) r).getLeftSource(), tab)
-                    || doesRelationContain(((JoinedRelation) r).getRightSource(), tab);
+        } else {
+            List<SelectElem> selectElemList = r.getSelectElemList();
+            if (selectElemList != null) {
+                for (SelectElem elem : selectElemList) {
+                    if (elem.aliasPresent()) {
+                        if (elem.getAlias().equals(colName)) {
+                            return true;
+                        }
+                    } else {
+                        if (elem.toString().equals(colName)) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        if (r instanceof JoinedRelation) {
+            return doesRelationContain(((JoinedRelation) r).getLeftSource(), col)
+                    || doesRelationContain(((JoinedRelation) r).getRightSource(), col);
+        } else if (r instanceof SetRelation) {
+            return doesRelationContain(((SetRelation) r).getLeftSource(), col)
+                    || doesRelationContain(((SetRelation) r).getRightSource(), col);
         }
         return false;
     }
@@ -277,8 +434,12 @@ public class CompCond extends Cond {
     @Override
     public boolean equals(Cond o) {
         if (o instanceof CompCond) {
-            return getOp().equals(((CompCond) o).getOp()) && getLeft().equals(((CompCond) o).getLeft())
-                    && getRight().equals(((CompCond) o).getRight());
+//            return getOp().equals(((CompCond) o).getOp()) && getLeft().equals(((CompCond) o).getLeft())
+//                    && getRight().equals(((CompCond) o).getRight());
+            // dyoon: previous method was problematic when CompCond references a subquery, where its
+            // schema was set to null. Changes have been made to look at the actual query string
+            // instead.
+            return this.toString().equals(o.toString());
         }
         return false;
     }
