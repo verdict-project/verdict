@@ -24,6 +24,8 @@
         <maven.failsafe.version>2.13</maven.failsafe.version>
         <maven.surefire.version>2.12.4</maven.surefire.version>
         <maven.javadoc.version>2.10.4</maven.javadoc.version>
+        <hive-jdbc.version>1.2.1</hive-jdbc.version>
+        <hadoop-common.version>2.7.3</hadoop-common.version>
         <skipTests>true</skipTests>
         <main.basedir>${project.basedir}</main.basedir>
 
@@ -184,4 +186,8 @@
             </plugin>
         </plugins> -->
     </build>
+
+    <dependencies>
+    </dependencies>
+
 </project>
