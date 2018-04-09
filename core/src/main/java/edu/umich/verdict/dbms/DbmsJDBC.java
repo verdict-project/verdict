@@ -16,11 +16,8 @@
 
 package edu.umich.verdict.dbms;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.net.ConnectException;
+import java.sql.*;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -207,8 +204,12 @@ public abstract class DbmsJDBC extends Dbms {
             VerdictLogger.info(this, "JDBC connection string (password masked): " + passMasked);
             Connection conn = DriverManager.getConnection(url);
             return conn;
-        } catch (ClassNotFoundException | SQLException e) {
-            throw new VerdictException(e);
+        } catch (ClassNotFoundException e) {
+            VerdictLogger.error(this, "JDBC driver not found.");
+            throw new VerdictException(StackTraceReader.stackTrace2String(e));
+        } catch (SQLException e) {
+            VerdictLogger.error(this, "Failed to connect to the database. Please check the server URL or client JDBC version.");
+            throw new VerdictException(StackTraceReader.stackTrace2String(e));
         }
     }
 
