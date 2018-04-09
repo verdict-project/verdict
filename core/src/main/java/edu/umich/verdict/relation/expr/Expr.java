@@ -193,6 +193,19 @@ class ExpressionGen extends VerdictSQLBaseVisitor<Expr> {
     }
 
     @Override
+    public Expr visitInterval(VerdictSQLParser.IntervalContext ctx) {
+        IntervalExpr.Unit unit = IntervalExpr.Unit.DAY;
+        if (ctx.DAY() != null || ctx.DAYS() != null) {
+            unit = IntervalExpr.Unit.DAY;
+        } else if (ctx.MONTH() != null || ctx.MONTHS() != null) {
+            unit = IntervalExpr.Unit.MONTH;
+        } else if (ctx.YEAR() != null || ctx.YEARS() != null) {
+            unit = IntervalExpr.Unit.YEAR;
+        }
+        return new IntervalExpr(vc, ctx.constant_expression().getText(), unit);
+    }
+
+    @Override
     public Expr visitPrimitive_expression(VerdictSQLParser.Primitive_expressionContext ctx) {
         return ConstantExpr.from(vc, ctx.getText());
     }

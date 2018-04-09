@@ -28,6 +28,7 @@ import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.Expr;
 import edu.umich.verdict.relation.expr.OrderByExpr;
+import edu.umich.verdict.relation.expr.SelectElem;
 
 public class OrderedRelation extends ExactRelation {
 
@@ -112,6 +113,11 @@ public class OrderedRelation extends ExactRelation {
         ColNameExpr col = source.partitionColumn();
         col.setTab(getAlias());
         return col;
+    }
+
+    @Override
+    public List<SelectElem> getSelectElemList() {
+        return source.getSelectElemList();
     }
 
 }

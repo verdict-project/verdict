@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import edu.umich.verdict.relation.expr.*;
 import org.apache.commons.lang3.tuple.Pair;
 
 import com.google.common.base.Optional;
@@ -31,10 +32,6 @@ import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.relation.condition.CompCond;
 import edu.umich.verdict.relation.condition.Cond;
 import edu.umich.verdict.relation.condition.CondModifier;
-import edu.umich.verdict.relation.expr.ColNameExpr;
-import edu.umich.verdict.relation.expr.Expr;
-import edu.umich.verdict.relation.expr.ExprModifier;
-import edu.umich.verdict.relation.expr.SubqueryExpr;
 import edu.umich.verdict.util.VerdictLogger;
 
 public class FilteredRelation extends ExactRelation {
@@ -147,6 +144,11 @@ public class FilteredRelation extends ExactRelation {
         ColNameExpr col = source.partitionColumn();
         // col.setTab(getAliasName());
         return col;
+    }
+
+    @Override
+    public List<SelectElem> getSelectElemList() {
+        return source.getSelectElemList();
     }
 
     // @Override
