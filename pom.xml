@@ -57,7 +57,7 @@
             <url>https://repository.cloudera.com/artifactory/cloudera-repos/</url>
         </repository> -->
         <!-- https://maprdocs.mapr.com/51/DevelopmentGuide/Maven-Artifacts-for-MapR_28869748.html -->
-        <!-- <repository> 
+        <!-- <repository>
             <id>mapr-releases</id>
             <url>http://repository.mapr.com/maven/</url>
             <snapshots><enabled>false</enabled></snapshots>

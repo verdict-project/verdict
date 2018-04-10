@@ -16,7 +16,6 @@
 
 package edu.umich.verdict.dbms;
 
-import java.net.ConnectException;
 import java.sql.*;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -24,7 +23,6 @@ import java.util.regex.Pattern;
 
 import edu.umich.verdict.relation.expr.ColNameExpr;
 import org.apache.commons.lang3.tuple.Pair;
-//import org.apache.spark.sql.DataFrame;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
