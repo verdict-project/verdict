@@ -19,6 +19,7 @@ package edu.umich.verdict.util;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.antlr.runtime.BaseRecognizer;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 
@@ -28,6 +29,7 @@ import edu.umich.verdict.VerdictJDBCContext;
 import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.parser.VerdictSQLLexer;
 import edu.umich.verdict.parser.VerdictSQLParser;
+import org.antlr.v4.runtime.Token;
 
 public class StringManipulations {
 

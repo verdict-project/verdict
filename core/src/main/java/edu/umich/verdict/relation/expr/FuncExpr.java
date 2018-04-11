@@ -40,7 +40,7 @@ public class FuncExpr extends Expr {
         RADIANS, POSITIVE, NEGATIVE, ENCODE, DECODE, BROUND, BIN, HEX, UNHEX, SHIFTLEFT, SHIFTRIGHT,
         SHIFTRIGHTUNSIGNED, FROM_UNIXTIME, TO_DATE, NVL, CHR, FIND_IN_SET, FORMAT_NUMBER, GET_JSON_OBJECT,
       IN_FILE, LOCATE, LTRIM, REPEAT, REVERSE, SPACE, AES_ENCRYPT, AES_DECRYPT, SHA1, SHA2, STDDEV_SAMP,
-        CONCAT, CONCAT_WS
+        CONCAT, CONCAT_WS, RANK, DENSE_RANK, NTILE, ROW_NUMBER, COALESCE
     }
 
     public static final ImmutableList<FuncName> AGG_FUNC_LIST =
@@ -64,6 +64,7 @@ public class FuncExpr extends Expr {
             .put("ATAN", FuncName.ATAN)
             .put("BIN", FuncName.BIN)
             .put("BROUND", FuncName.BROUND)
+            .put("COALESCE", FuncName.COALESCE)
             .put("CAST", FuncName.CAST)
             .put("CBRT", FuncName.CBRT)
             .put("CEIL", FuncName.CEIL)
@@ -143,6 +144,10 @@ public class FuncExpr extends Expr {
             .put("UPPER", FuncName.UPPER)
             .put("WEEKOFYEAR", FuncName.WEEKOFYEAR)
             .put("YEAR", FuncName.YEAR)
+            .put("RANK", FuncName.RANK)
+            .put("DENSE_RANK", FuncName.DENSE_RANK)
+            .put("NTILE", FuncName.NTILE)
+            .put("ROW_NUMBER", FuncName.ROW_NUMBER)
             .build();
 
     protected static Map<FuncName, String> functionPattern = ImmutableMap.<FuncName, String>builder()
@@ -156,6 +161,7 @@ public class FuncExpr extends Expr {
             .put(FuncName.AVG, "avg(%s)")
             .put(FuncName.BIN, "bin(%s)")
             .put(FuncName.BROUND, "bround(%s)")
+            .put(FuncName.COALESCE, "coalesce(%s)")
             .put(FuncName.CAST, "cast(%s as %s)")
             .put(FuncName.CBRT, "cbrt(%s)")
             .put(FuncName.CEIL, "ceil(%s)")
@@ -240,6 +246,10 @@ public class FuncExpr extends Expr {
             .put(FuncName.UPPER, "upper(%s)")
             .put(FuncName.WEEKOFYEAR, "weekofyear(%s)")
             .put(FuncName.YEAR, "year(%s)")
+            .put(FuncName.RANK, "rank(%s)")
+            .put(FuncName.DENSE_RANK, "dense_rank(%s)")
+            .put(FuncName.NTILE, "ntile(%s)")
+            .put(FuncName.ROW_NUMBER, "row_number(%s)")
             .build();
 
     public FuncExpr(FuncName fname, List<Expr> exprs, OverClause overClause) {
@@ -304,6 +314,30 @@ public class FuncExpr extends Expr {
 
     public static FuncExpr from(final VerdictContext vc, VerdictSQLParser.Function_callContext ctx) {
         VerdictSQLBaseVisitor<FuncExpr> v = new VerdictSQLBaseVisitor<FuncExpr>() {
+
+            @Override
+            public FuncExpr visitRanking_windowed_function(VerdictSQLParser.Ranking_windowed_functionContext ctx) {
+                FuncName fname;
+                Expr expr = null;
+                OverClause overClause = null;
+                if (ctx.RANK() != null) {
+                    fname = FuncName.RANK;
+                } else if (ctx.DENSE_RANK() != null) {
+                    fname = FuncName.DENSE_RANK;
+                } else if (ctx.NTILE() != null) {
+                    fname = FuncName.NTILE;
+                } else if (ctx.ROW_NUMBER() != null) {
+                    fname = FuncName.ROW_NUMBER;
+                } else {
+                    fname = FuncName.UNKNOWN;
+                }
+                if (ctx.over_clause() != null) {
+                    overClause = OverClause.from(vc, ctx.over_clause());
+                }
+
+                return new FuncExpr(fname, expr, overClause);
+            }
+
             @Override
             public FuncExpr visitAggregate_windowed_function(VerdictSQLParser.Aggregate_windowed_functionContext ctx) {
                 FuncName fname;
@@ -480,7 +514,8 @@ public class FuncExpr extends Expr {
     @Override
     public String toString() {
         StringBuilder sql = new StringBuilder(50);
-        if (funcname == FuncName.CONCAT || funcname == FuncName.CONCAT_WS) {
+        if (funcname == FuncName.CONCAT || funcname == FuncName.CONCAT_WS ||
+                funcname == FuncName.COALESCE) {
             Joiner joiner = Joiner.on(",");
             List<String> exprStrList = new ArrayList<>();
             for (Expr e : expressions) {
@@ -581,7 +616,8 @@ public class FuncExpr extends Expr {
     @Override
     public String toSql() {
         StringBuilder sql = new StringBuilder(50);
-        if (funcname == FuncName.CONCAT || funcname == FuncName.CONCAT_WS) {
+        if (funcname == FuncName.CONCAT || funcname == FuncName.CONCAT_WS ||
+                funcname == FuncName.COALESCE) {
             Joiner joiner = Joiner.on(",");
             List<String> exprStrList = new ArrayList<>();
             for (Expr e : expressions) {

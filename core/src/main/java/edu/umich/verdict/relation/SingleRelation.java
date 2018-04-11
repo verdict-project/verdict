@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import edu.umich.verdict.relation.expr.SelectElem;
 import org.apache.commons.lang3.tuple.Pair;
 
 import edu.umich.verdict.VerdictContext;
@@ -331,6 +332,11 @@ public class SingleRelation extends ExactRelation {
                     + ", this is an expected behavior if this is not a sample table.");
             return null;
         }
+    }
+
+    @Override
+    public List<SelectElem> getSelectElemList() {
+        return new ArrayList<>();
     }
 
     // @Override

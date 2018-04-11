@@ -31,13 +31,21 @@ import edu.umich.verdict.util.StringManipulations;
 public class OverClause {
 
     protected List<Expr> partitionBy;
+    protected List<Expr> orderBy;
 
     public OverClause() {
-        this.partitionBy = new ArrayList<Expr>();
+        this.partitionBy = new ArrayList<>();
+        this.orderBy = new ArrayList<>();
     }
 
     public OverClause(List<Expr> partitionBy) {
         this.partitionBy = partitionBy;
+        this.orderBy = new ArrayList<>();
+    }
+
+    public OverClause(List<Expr> partitionBy, List<Expr> orderBy) {
+        this.partitionBy = partitionBy;
+        this.orderBy = orderBy;
     }
 
     public static OverClause from(VerdictContext vc, String partitionByInString) {
@@ -47,22 +55,39 @@ public class OverClause {
 
     @Override
     public String toString() {
+        boolean addSpace = false;
+        String str = "OVER (";
         if (partitionBy.size() > 0) {
-            return String.format("OVER (partition by %s)", Joiner.on(", ").join(partitionBy));
-        } else {
-            return "OVER ()";
+            str += String.format("partition by %s", Joiner.on(", ").join(partitionBy));
+            addSpace = true;
         }
+        if (orderBy.size() > 0) {
+            if (addSpace) {
+                str += " ";
+            }
+            str += String.format("order by %s", Joiner.on(", ").join(orderBy));
+            addSpace = true;
+        }
+        str += ")";
+        return str;
     }
 
     public static OverClause from(VerdictContext vc, Over_clauseContext over_clause) {
-        List<Expr> exprs = new ArrayList<Expr>();
+        List<Expr> partitionBys = new ArrayList<Expr>();
+        List<Expr> orderBys = new ArrayList<Expr>();
         if (over_clause.partition_by_clause() != null) {
             Partition_by_clauseContext pctx = over_clause.partition_by_clause();
             for (ExpressionContext ectx : pctx.expression_list().expression()) {
-                exprs.add(Expr.from(vc, ectx));
+                partitionBys.add(Expr.from(vc, ectx));
             }
         }
-        return new OverClause(exprs);
+        if (over_clause.order_by_clause() != null) {
+            VerdictSQLParser.Order_by_clauseContext octx = over_clause.order_by_clause();
+            for (VerdictSQLParser.Order_by_expressionContext ctx : octx.order_by_expression()) {
+                orderBys.add(Expr.from(vc, ctx.expression()));
+            }
+        }
+        return new OverClause(partitionBys, orderBys);
     }
 
 }

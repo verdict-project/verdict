@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import edu.umich.verdict.relation.expr.SelectElem;
 import org.apache.commons.lang3.tuple.Pair;
 
 import com.google.common.base.Joiner;
@@ -167,6 +168,11 @@ public class GroupedRelation extends ExactRelation {
     public ColNameExpr partitionColumn() {
         ColNameExpr col = source.partitionColumn();
         return col;
+    }
+
+    @Override
+    public List<SelectElem> getSelectElemList() {
+        return source.getSelectElemList();
     }
 
     // @Override
