@@ -26,6 +26,8 @@
         <maven.javadoc.version>2.10.4</maven.javadoc.version>
         <hive-jdbc.version>1.2.1</hive-jdbc.version>
         <hadoop-common.version>2.7.3</hadoop-common.version>
+        <apache.derby.version>10.12.1.1</apache.derby.version>
+        <h2database.version>1.4.197</h2database.version>
         <skipTests>true</skipTests>
         <main.basedir>${project.basedir}</main.basedir>
 

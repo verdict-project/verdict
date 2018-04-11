@@ -124,6 +124,8 @@ public abstract class Dbms {
             dbms = new DbmsRedshift(vc, dbName, host, port, schema, user, password, jdbcClassName);
         } else if (dbName.equals("dummy")) {
             dbms = new DbmsDummy(vc);
+        } else if (dbName.equals("h2")) {
+            dbms = new DbmsH2(vc, dbName, host, port, schema, user, password, jdbcClassName);
         } else {
             String msg = String.format("Unsupported DBMS: %s", dbName);
             VerdictLogger.error("Dbms", msg);
@@ -180,8 +182,13 @@ public abstract class Dbms {
     }
 
     public void createCatalog(String catalog) throws VerdictException {
-        String sql = String.format("create database if not exists %s", catalog);
-        executeUpdate(sql);
+        if (dbName.equalsIgnoreCase("h2")) {
+            String sql = String.format("create schema if not exists %s", catalog);
+            executeUpdate(sql);
+        } else {
+            String sql = String.format("create database if not exists %s", catalog);
+            executeUpdate(sql);
+        }
     }
 
     public void dropTable(TableUniqueName tableName) throws VerdictException {

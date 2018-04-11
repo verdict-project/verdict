@@ -16,6 +16,7 @@
 
 package edu.umich.verdict.dbms;
 
+import java.io.File;
 import java.sql.*;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -47,6 +48,9 @@ public abstract class DbmsJDBC extends Dbms {
     protected List<Statement> allOpenStatements;
 
     public ResultSet getDatabaseNamesInResultSet() throws VerdictException {
+        if (dbName.equalsIgnoreCase("h2")) {
+            return executeJdbcQuery("show schemas");
+        }
         return executeJdbcQuery("show databases");
     }
 
@@ -72,7 +76,15 @@ public abstract class DbmsJDBC extends Dbms {
             String password, String jdbcClassName) throws VerdictException {
         super(vc, dbName);
         currentSchema = Optional.fromNullable(schema);
-        String url = composeUrl(dbName, host, port, schema, user, password);
+        String url;
+        if (dbName.equalsIgnoreCase("derby")) {
+            url = String.format("jdbc:derby:derby_data/%s;create=true", schema);
+        } else if (dbName.equalsIgnoreCase("h2")) {
+            String curDir = System.getProperty("user.dir");
+            url = String.format("jdbc:h2:%s/h2_data/h2", curDir);
+        } else {
+            url = composeUrl(dbName, host, port, schema, user, password);
+        }
         conn = makeDbmsConnection(url, jdbcClassName);
         stmt = null;
         allOpenStatements = new ArrayList<Statement>();
@@ -86,9 +98,18 @@ public abstract class DbmsJDBC extends Dbms {
     public Set<String> getDatabases() throws VerdictException {
         Set<String> databases = new HashSet<String>();
         try {
-            ResultSet rs = getDatabaseNamesInResultSet();
-            while (rs.next()) {
-                databases.add(rs.getString(1));
+            if (dbName.equalsIgnoreCase("derby")) {
+                File derbyDir = new File("./derby_data");
+                for (File f : derbyDir.listFiles()) {
+                    if (f.isDirectory()) {
+                        databases.add(f.getName());
+                    }
+                }
+            } else {
+                ResultSet rs = getDatabaseNamesInResultSet();
+                while (rs.next()) {
+                    databases.add(rs.getString(1));
+                }
             }
         } catch (SQLException e) {
             throw new VerdictException(StackTraceReader.stackTrace2String(e));
@@ -121,7 +142,7 @@ public abstract class DbmsJDBC extends Dbms {
         Map<String, String> col2type = new LinkedHashMap<String, String>();
         try {
             ResultSet rs = describeTableInResultSet(table);
-            while (rs.next()) {
+            while (rs != null && rs.next()) {
                 String column = rs.getString(1);
                 if (!column.isEmpty()) {
                     if (column.substring(0,1).equals("#")) {
@@ -201,6 +222,11 @@ public abstract class DbmsJDBC extends Dbms {
             ;
             VerdictLogger.info(this, "JDBC connection string (password masked): " + passMasked);
             Connection conn = DriverManager.getConnection(url);
+            if (dbName.equalsIgnoreCase("h2")) {
+                Statement stmt = conn.createStatement();
+                stmt.execute("CREATE SCHEMA IF NOT EXISTS " + currentSchema.get());
+                stmt.execute("USE " + currentSchema.get());
+            }
             return conn;
         } catch (ClassNotFoundException e) {
             VerdictLogger.error(this, "JDBC driver not found.");
