@@ -978,6 +978,8 @@ simple_id
     | YEARS
     | STORE
     | INTERVAL
+    | TABLES
+    | COLUMNS
     ;
 
 // https://msdn.microsoft.com/en-us/library/ms188074.aspx

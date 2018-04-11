@@ -29,6 +29,7 @@ import edu.umich.verdict.VerdictJDBCContext;
 import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.parser.VerdictSQLLexer;
 import edu.umich.verdict.parser.VerdictSQLParser;
+import org.antlr.v4.runtime.ConsoleErrorListener;
 import org.antlr.v4.runtime.Token;
 
 public class StringManipulations {
@@ -127,7 +128,11 @@ public class StringManipulations {
 
     public static VerdictSQLParser parserOf(String text) {
         VerdictSQLLexer l = new VerdictSQLLexer(new ANTLRInputStream(text));
+        l.removeErrorListeners();
+        l.addErrorListener(new VerdictAntlrErrorListener());
         VerdictSQLParser p = new VerdictSQLParser(new CommonTokenStream(l));
+        p.removeErrorListeners();
+        p.addErrorListener(new VerdictAntlrErrorListener());
         return p;
     }
 

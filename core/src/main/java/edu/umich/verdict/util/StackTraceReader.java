@@ -24,6 +24,7 @@ public class StackTraceReader {
     public static String stackTrace2String(Exception e) {
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);
+        sw.write(e.getMessage());
         VerdictLogger.debug(sw.toString());
         if (VerdictLogger.logger.isDebugEnabled()) {
             e.printStackTrace(pw);

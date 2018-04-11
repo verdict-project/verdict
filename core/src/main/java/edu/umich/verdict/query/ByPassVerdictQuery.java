@@ -19,9 +19,9 @@ package edu.umich.verdict.query;
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.exceptions.VerdictException;
 
-public class ByPassVerdictUpdateQuery extends Query {
+public class ByPassVerdictQuery extends Query {
 
-    public ByPassVerdictUpdateQuery(VerdictContext vc, String q) {
+    public ByPassVerdictQuery(VerdictContext vc, String q) {
         super(vc, q);
     }
 
