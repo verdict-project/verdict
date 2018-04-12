@@ -30,6 +30,7 @@ import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.parser.VerdictSQLLexer;
 import edu.umich.verdict.parser.VerdictSQLParser;
 import org.antlr.v4.runtime.ConsoleErrorListener;
+
 import org.antlr.v4.runtime.Token;
 
 public class StringManipulations {
