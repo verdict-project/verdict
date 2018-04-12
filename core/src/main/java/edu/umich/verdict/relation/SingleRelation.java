@@ -329,7 +329,7 @@ public class SingleRelation extends ExactRelation {
             return new ColNameExpr(vc, partitionCol, getAlias());
         } else {
             VerdictLogger.debug(this, "A partition column does not exists in the table: " + getTableName()
-                    + "This is an expected behavior if this is not a sample table.");
+                    + ", this is an expected behavior if this is not a sample table.");
             return null;
         }
     }

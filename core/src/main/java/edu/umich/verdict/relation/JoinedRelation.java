@@ -175,14 +175,43 @@ public class JoinedRelation extends ExactRelation {
             sql.append(String.format("%s CROSS JOIN %s", sourceExpr(source1), sourceExpr(source2)));
         }
         else {      // INNER JOIN, LEFT OUTER, RIGHT OUTER
-            sql.append(String.format("%s %s %s ON", sourceExpr(source1), joinTypeString.get(joinType), sourceExpr(source2)));
-            for (int i = 0; i < joinCols.size(); i++) {
-                if (i != 0)
-                    sql.append(" AND");
-                sql.append(String.format(" %s = %s", joinCols.get(i).getLeft(), joinCols.get(i).getRight()));
-                // attachTableNameIfEmpty(joinCols.get(i).getLeft(), source1.getSourceName()),
-                // attachTableNameIfEmpty(joinCols.get(i).getRight(),
-                // source2.getSourceName())));
+            if (!(source1 instanceof JoinedRelation) && !(source2 instanceof JoinedRelation)) {
+                sql.append(String.format("%s %s %s ON",
+                        sourceExpr(source1), joinTypeString.get(joinType), sourceExpr(source2)));
+                for (int i = 0; i < joinCols.size(); i++) {
+                    if (i != 0)
+                        sql.append(" AND");
+                    sql.append(String.format(" %s = %s", joinCols.get(i).getLeft(), joinCols.get(i).getRight()));
+                    // attachTableNameIfEmpty(joinCols.get(i).getLeft(), source1.getSourceName()),
+                    // attachTableNameIfEmpty(joinCols.get(i).getRight(),
+                    // source2.getSourceName())));
+                }
+            } else if (source1 instanceof JoinedRelation && !(source2 instanceof JoinedRelation)) {
+                sql.append(String.format("%s %s %s ON",
+                        sourceExpr(source1), joinTypeString.get(joinType), sourceExpr(source2)));
+                for (int i = 0; i < joinCols.size(); i++) {
+                    if (i != 0)
+                        sql.append(" AND");
+                    sql.append(String.format(" %s = %s", joinCols.get(i).getLeft(), joinCols.get(i).getRight()));
+                }
+            } else if (source2 instanceof JoinedRelation && !(source1 instanceof JoinedRelation)) {
+                sql.append(String.format("%s %s %s ON",
+                        sourceExpr(source2), joinTypeString.get(joinType), sourceExpr(source1)));
+                for (int i = 0; i < joinCols.size(); i++) {
+                    if (i != 0)
+                        sql.append(" AND");
+                    sql.append(String.format(" %s = %s", joinCols.get(i).getLeft(), joinCols.get(i).getRight()));
+                }
+            } else if ((source1 instanceof JoinedRelation) && (source2 instanceof JoinedRelation)) {
+                sql.append(String.format("(%s) %s (%s) ON",
+                        sourceExpr(source1), joinTypeString.get(joinType),
+                        sourceExpr(source2)));
+                for (int i = 0; i < joinCols.size(); i++) {
+                    if (i != 0)
+                        sql.append(" AND");
+                    sql.append(String.format(" %s = %s", joinCols.get(i).getLeft(),
+                            joinCols.get(i).getRight()));
+                }
             }
         }
 

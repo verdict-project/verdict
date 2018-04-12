@@ -904,9 +904,43 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
             where = where.remove(joinCond);
         }
 
+        List<List<ExactRelation>> joinSetList = new ArrayList(joinMap.keySet());
+
         // Incrementally construct JoinedRelations for each pair of join tables.
-        for (List<ExactRelation> joinSet : joinMap.keySet()) {
-            List<Cond> joinCondList = joinMap.get(joinSet);
+        while (!joinSetList.isEmpty()) {
+            List<ExactRelation> currentJoinSet = null;
+            boolean sourceInJoinRelation = false;
+            ExactRelation left = null, right = null;
+            for (List<ExactRelation> joinSet : joinSetList) {
+                currentJoinSet = joinSet;
+                left = joinSet.get(0);
+                right = joinSet.get(1);
+
+                // If either left of right join source already exists in any of previously
+                // created JoinedRelation, replace it.
+                for (ExactRelation r : tableSources) {
+                    if (r instanceof JoinedRelation) {
+                        JoinedRelation j = (JoinedRelation) r;
+                        if (j.containsRelation(left, left.getAlias())) {
+                            left = r;
+                            sourceInJoinRelation = true;
+                            break;
+                        }
+                    }
+                }
+                for (ExactRelation r : tableSources) {
+                    if (r instanceof JoinedRelation) {
+                        JoinedRelation j = (JoinedRelation) r;
+                        if (j.containsRelation(right, right.getAlias())) {
+                            right = r;
+                            sourceInJoinRelation = true;
+                            break;
+                        }
+                    }
+                }
+                if (sourceInJoinRelation) break;
+            }
+            List<Cond> joinCondList = joinMap.get(currentJoinSet);
             Cond joinCond = null;
 
             // Merge multiple CompCond operators into AndConds for the join.
@@ -916,29 +950,6 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
                 joinCond = AndCond.from(joinCondList.get(0), joinCondList.get(1));
                 for (int i=2; i < joinCondList.size(); ++i) {
                     joinCond = AndCond.from(joinCond, joinCondList.get(i));
-                }
-            }
-            ExactRelation left = joinSet.get(0);
-            ExactRelation right = joinSet.get(1);
-
-            // If either left of right join source already exists in any of previously
-            // created JoinedRelation, replace it.
-            for (ExactRelation r : tableSources) {
-                if (r instanceof JoinedRelation) {
-                    JoinedRelation j = (JoinedRelation) r;
-                    if (j.containsRelation(left, left.getAlias())) {
-                        left = r;
-                        break;
-                    }
-                }
-            }
-            for (ExactRelation r : tableSources) {
-                if (r instanceof JoinedRelation) {
-                    JoinedRelation j = (JoinedRelation) r;
-                    if (j.containsRelation(right, right.getAlias())) {
-                        right = r;
-                        break;
-                    }
                 }
             }
 
@@ -955,6 +966,7 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
                 }
             }
             tableSources = newTableSources;
+            joinSetList.remove(currentJoinSet);
         }
 
         // if there is any table sources left, they should be cross-joined.
