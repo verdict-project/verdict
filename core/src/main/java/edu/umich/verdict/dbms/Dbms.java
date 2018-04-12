@@ -278,8 +278,8 @@ public abstract class Dbms {
     public abstract long[] getGroupCount(TableUniqueName tableName,
                                          List<SortedSet<ColNameExpr>> columnSetList) throws VerdictException;
 
-    public void createMetaTablesInDMBS(TableUniqueName originalTableName, TableUniqueName sizeTableName,
-            TableUniqueName nameTableName) throws VerdictException {
+    public void createMetaTablesInDBMS(TableUniqueName originalTableName, TableUniqueName sizeTableName,
+                                       TableUniqueName nameTableName) throws VerdictException {
         VerdictLogger.debug(this, "Creates meta tables if not exist.");
         String sql = String.format("CREATE TABLE IF NOT EXISTS %s", sizeTableName) + " (schemaname STRING, "
                 + " tablename STRING, " + " samplesize BIGINT, " + " originaltablesize BIGINT)";

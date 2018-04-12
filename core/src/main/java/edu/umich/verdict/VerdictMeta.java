@@ -19,6 +19,8 @@ package edu.umich.verdict;
 import java.util.*;
 import java.util.Map.Entry;
 
+import edu.umich.verdict.util.StackTraceReader;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
 import edu.umich.verdict.datatypes.SampleParam;
@@ -200,7 +202,7 @@ public class VerdictMeta {
     public void insertSampleInfo(SampleParam param, long sampleSize, long originalTableSize) throws VerdictException {
         TableUniqueName fullSampleName = param.sampleTableName();
 
-        vc.getMetaDbms().createMetaTablesInDMBS(param.getOriginalTable(), getMetaSizeTableForSampleTable(fullSampleName),
+        vc.getMetaDbms().createMetaTablesInDBMS(param.getOriginalTable(), getMetaSizeTableForSampleTable(fullSampleName),
                 getMetaNameTableForSampleTable(fullSampleName));
 
         getMetaDbms().updateSampleNameEntryIntoDBMS(param, getMetaNameTableForSampleTable(fullSampleName));
@@ -328,6 +330,17 @@ public class VerdictMeta {
                             }
                         } else {
                             VerdictLogger.error(this, String.format("No sample table (%s) exists. This can cause an unexpected error.", sampleTable));
+                            try {
+                                VerdictLogger.info(this, String.format("Removing sample table (%s) that does not exist from metadata.", sampleTable));
+                                List<Pair<String,String>> colAndValues = new ArrayList<>();
+                                colAndValues.add(ImmutablePair.of("sampletablename", sampleTabName));
+                                vc.getDbms().deleteEntry(metaNameTable, colAndValues);
+                                colAndValues.clear();
+                                colAndValues.add(ImmutablePair.of("tablename", sampleTabName));
+                                vc.getDbms().deleteEntry(metaSizeTable, colAndValues);
+                            } catch (Exception e) {
+                                VerdictLogger.error(this, StackTraceReader.stackTrace2String(e));
+                            }
                         }
                     }
                 }

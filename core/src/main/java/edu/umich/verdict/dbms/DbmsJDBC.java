@@ -48,9 +48,6 @@ public abstract class DbmsJDBC extends Dbms {
     protected List<Statement> allOpenStatements;
 
     public ResultSet getDatabaseNamesInResultSet() throws VerdictException {
-        if (dbName.equalsIgnoreCase("h2")) {
-            return executeJdbcQuery("show schemas");
-        }
         return executeJdbcQuery("show databases");
     }
 
@@ -108,7 +105,7 @@ public abstract class DbmsJDBC extends Dbms {
             } else {
                 ResultSet rs = getDatabaseNamesInResultSet();
                 while (rs.next()) {
-                    databases.add(rs.getString(1));
+                    databases.add(rs.getString(1).toLowerCase());
                 }
             }
         } catch (SQLException e) {
@@ -127,7 +124,7 @@ public abstract class DbmsJDBC extends Dbms {
         try {
             ResultSet rs = getTablesInResultSet(schema);
             while (rs.next()) {
-                String table = rs.getString(1);
+                String table = rs.getString(1).toLowerCase();
                 tables.add(table);
             }
         } catch (SQLException e) {
@@ -143,12 +140,12 @@ public abstract class DbmsJDBC extends Dbms {
         try {
             ResultSet rs = describeTableInResultSet(table);
             while (rs != null && rs.next()) {
-                String column = rs.getString(1);
+                String column = rs.getString(1).toLowerCase();
                 if (!column.isEmpty()) {
                     if (column.substring(0,1).equals("#")) {
                         break;
                     }
-                    String type = rs.getString(2);
+                    String type = rs.getString(2).toLowerCase();
                     col2type.put(column, type);
                 }
             }
@@ -390,7 +387,7 @@ public abstract class DbmsJDBC extends Dbms {
             sql.append("where ");
             List<String> conds = new ArrayList<String>();
             for (Pair<String, String> p : colAndValues) {
-                conds.add(String.format("%s = %s", p.getLeft(), p.getRight()));
+                conds.add(String.format("%s = '%s'", p.getLeft(), p.getRight()));
             }
             sql.append(Joiner.on(" AND ").join(conds));
         }
