@@ -40,6 +40,7 @@ public class FuncExpr extends Expr {
         RADIANS, POSITIVE, NEGATIVE, ENCODE, DECODE, BROUND, BIN, HEX, UNHEX, SHIFTLEFT, SHIFTRIGHT,
         SHIFTRIGHTUNSIGNED, FROM_UNIXTIME, TO_DATE, NVL, CHR, FIND_IN_SET, FORMAT_NUMBER, GET_JSON_OBJECT,
       IN_FILE, LOCATE, LTRIM, REPEAT, REVERSE, SPACE, AES_ENCRYPT, AES_DECRYPT, SHA1, SHA2, STDDEV_SAMP,
+        CONCAT, CONCAT_WS, RANK, DENSE_RANK, NTILE, ROW_NUMBER, COALESCE, HASH, RPAD, RAWTOHEX
         CONCAT, CONCAT_WS, RANK, DENSE_RANK, NTILE, ROW_NUMBER, COALESCE
     }
 
@@ -90,6 +91,7 @@ public class FuncExpr extends Expr {
             .put("FORMAT_NUMBER", FuncName.FORMAT_NUMBER)
             .put("FROM_UNIXTIME", FuncName.FROM_UNIXTIME)
             .put("GET_JSON_OBJECT", FuncName.GET_JSON_OBJECT)
+            .put("HASH", FuncName.HASH)
             .put("HEX", FuncName.HEX)
             .put("HOUR", FuncName.HOUR)
             .put("INSTR", FuncName.INSTR)
@@ -118,9 +120,11 @@ public class FuncExpr extends Expr {
             .put("RADIANS", FuncName.RADIANS)
             .put("RAND", FuncName.RAND)
             .put("RANDOM", FuncName.RANDOM)
+            .put("RAWTOHEX", FuncName.RAWTOHEX)
             .put("REPEAT", FuncName.REPEAT)
             .put("REVERSE", FuncName.REVERSE)
             .put("ROUND", FuncName.ROUND)
+            .put("RPAD", FuncName.RPAD)
             .put("SECOND", FuncName.SECOND)
             .put("SHA1", FuncName.SHA1)
             .put("SHA2", FuncName.SHA2)
@@ -189,6 +193,7 @@ public class FuncExpr extends Expr {
             .put(FuncName.FORMAT_NUMBER, "format_number(%s, %s)")
             .put(FuncName.FROM_UNIXTIME, "from_unixtime(%s)")
             .put(FuncName.GET_JSON_OBJECT, "get_json_object(%s, %s)")
+            .put(FuncName.HASH, "hash(%s, %s, %s)")
             .put(FuncName.HEX, "hex(%s)")
             .put(FuncName.HOUR, "hour(%s)")
             .put(FuncName.IMPALA_APPROX_COUNT_DISTINCT, "ndv(%s)")
@@ -218,9 +223,11 @@ public class FuncExpr extends Expr {
             .put(FuncName.RADIANS, "radians(%s)")
             .put(FuncName.RAND, "rand(%s)")
             .put(FuncName.RANDOM, "random(%s)")
+            .put(FuncName.RAWTOHEX, "rawtohex(%s)")
             .put(FuncName.REPEAT, "repeat(%s, %s)")
             .put(FuncName.REVERSE, "reverse(%s)")
             .put(FuncName.ROUND, "round(%s)")
+            .put(FuncName.RPAD, "rpad(%s, %s, %s)")
             .put(FuncName.SECOND, "second(%s)")
             .put(FuncName.SHA1, "sha1(%s)")
             .put(FuncName.SHA2, "sha2(%s)")

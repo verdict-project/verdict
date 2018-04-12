@@ -203,8 +203,11 @@ public abstract class Query {
             } else if (queryType.equals(Type.CREATE_VIEW)) {
                 query = new CreateViewAsSelectQuery(vc, queryString);
             } else {
-                VerdictLogger.error("Unsupported query: " + queryString);
-                throw new VerdictException("Unsupported query.");
+                query = new ByPassVerdictQuery(vc, queryString);
+                VerdictLogger.warn("Query is not recognized by VerdictDB. " +
+                        "It is bypassed to the database.");
+//                VerdictLogger.error("Unsupported query: " + queryString);
+//                throw new VerdictException("Unsupported query.");
             }
         }
 
