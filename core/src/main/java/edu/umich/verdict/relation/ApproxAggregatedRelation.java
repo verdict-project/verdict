@@ -447,13 +447,8 @@ public class ApproxAggregatedRelation extends ApproxRelation {
                     Expr scaled = FuncExpr.sum(BinaryOpExpr.from(vc, f.getUnaryExpr(), tupleSamplingProbExpr, "/"));
                     // scale with partition size
                     scaled = BinaryOpExpr.from(vc, scaled, FuncExpr.count(), "/");
-                    if (!groupby.isEmpty()) {
-                        scaled = BinaryOpExpr.from(vc, scaled,
-                                new FuncExpr(FuncExpr.FuncName.SUM, FuncExpr.count(), new OverClause(groupby)), "*");
-                    } else {
-                        // dyoon: is this correct fix? this is applied for H2 embedded database, which does not support OVER() clause.
-                        scaled = BinaryOpExpr.from(vc, scaled, FuncExpr.count(), "*");
-                    }
+                    scaled = BinaryOpExpr.from(vc, scaled,
+                            new FuncExpr(FuncExpr.FuncName.SUM, FuncExpr.count(), new OverClause(groupby)), "*");
                     return scaled;
                     // Expr est = scaleForSampling(samplingProbExprs);
                     // est = FuncExpr.sum(BinaryOpExpr.from(vc, s.getUnaryExpr(), est, "*"));

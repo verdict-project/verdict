@@ -55,9 +55,6 @@ public class OverClause {
 
     @Override
     public String toString() {
-        if (partitionBy.isEmpty() && orderBy.isEmpty()) {
-            return "";
-        }
         boolean addSpace = false;
         String str = "OVER (";
         if (partitionBy.size() > 0) {
