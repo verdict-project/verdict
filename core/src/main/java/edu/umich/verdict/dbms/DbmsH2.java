@@ -24,7 +24,12 @@ public class DbmsH2 extends DbmsJDBC{
         super(vc, dbName, host, port, schema, user, password, jdbcClassName);
     }
 
+
     @Override
+    public String getQuoteString() {
+        return "`";
+    }
+
     protected String modOfRand(int mod) {
         return String.format("random() %% %d", mod);
     }
