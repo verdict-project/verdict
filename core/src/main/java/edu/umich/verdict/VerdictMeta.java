@@ -339,7 +339,7 @@ public class VerdictMeta {
                                 colAndValues.add(ImmutablePair.of("tablename", sampleTabName));
                                 vc.getDbms().deleteEntry(metaSizeTable, colAndValues);
                             } catch (Exception e) {
-                                VerdictLogger.error(this, StackTraceReader.stackTrace2String(e));
+                                VerdictLogger.warn(this, String.format("Removing sample table (%s) has failed. Please check the database.", sampleTable));
                             }
                         }
                     }
