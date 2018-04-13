@@ -338,16 +338,19 @@ public abstract class Dbms {
         long total_size = vc.getMeta().getTableSize(param.getOriginalTable());
         long sample_size = getTableSize(temp);
 
-        String parquetString = "";
+        String storeString = "";
 
         if (vc.getConf().areSamplesStoredAsParquet()) {
-            parquetString = getParquetString();
+            storeString = getParquetString();
+        }
+        if (vc.getConf().areHiveSampleStoredAsOrc()) {
+            storeString = getORCString();
         }
 
         ExactRelation withRand = SingleRelation.from(vc, temp)
                 .select("*, " + String.format("%d / %d as %s", sample_size, total_size, samplingProbCol));
 
-        String sql = String.format("create table %s%s as %s", param.sampleTableName(), parquetString, withRand.toSql());
+        String sql = String.format("create table %s%s as %s", param.sampleTableName(), storeString, withRand.toSql());
         VerdictLogger.debug(this, "The query used for creating a temporary table with sampling probabilities:");
 //        VerdictLogger.debugPretty(this, Relation.prettyfySql(vc, sql), "  ");
 //        VerdictLogger.debug(this, sql);
@@ -499,13 +502,16 @@ public abstract class Dbms {
                 .select(Joiner.on(", ").join(selectElems) + String.format(", %s  / %s as %s", groupSizeInSampleColName,
                         groupSizeColName, samplingProbColName) + ", " + randomPartitionColumn());
 
-        String parquetString = "";
+        String storeString = "";
 
         if (vc.getConf().areSamplesStoredAsParquet()) {
-            parquetString = getParquetString();
+            storeString = getParquetString();
+        }
+        if (vc.getConf().areHiveSampleStoredAsOrc()) {
+            storeString = getORCString();
         }
 
-        String sql2 = String.format("create table %s%s as %s", param.sampleTableName(), parquetString,
+        String sql2 = String.format("create table %s%s as %s", param.sampleTableName(), storeString,
                 withRand.toSql());
         VerdictLogger.debug(this, "The query used for creating a stratified sample with sampling probabilities.");
 //        VerdictLogger.debugPretty(this, Relation.prettyfySql(vc, sql2), "  ");
@@ -557,12 +563,15 @@ public abstract class Dbms {
                                  .select(String.format("*, %d / %d AS %s", sample_size, total_size, samplingProbCol) + ", "
                                          + universePartitionColumn(param.getColumnNames()));
 
-        String parquetString = "";
+        String storeString = "";
         if (vc.getConf().areSamplesStoredAsParquet()) {
-            parquetString = getParquetString();
+            storeString = getParquetString();
+        }
+        if (vc.getConf().areHiveSampleStoredAsOrc()) {
+            storeString = getORCString();
         }
 
-        String sql = String.format("create table %s%s AS %s", param.sampleTableName(), parquetString, withProb.toSql());
+        String sql = String.format("create table %s%s AS %s", param.sampleTableName(), storeString, withProb.toSql());
         VerdictLogger.debug(this, "The query used for creating a universe sample with sampling probability:");
 //        VerdictLogger.debugPretty(this, Relation.prettyfySql(vc, sql), "  ");
 //        VerdictLogger.debug(this, sql);
@@ -769,5 +778,9 @@ public abstract class Dbms {
 
     public String getParquetString() {
         return " stored as parquet";
+    }
+
+    public String getORCString() {
+        return " stored as orc";
     }
 }

@@ -323,6 +323,17 @@ public class VerdictConf {
         }
     }
 
+    public boolean areHiveSampleStoredAsOrc() {
+        if (getDbms().equalsIgnoreCase("hive") || getDbms().equalsIgnoreCase("hive2")) {
+            return getHiveOrcSamples().equalsIgnoreCase("true");
+        }
+        return false;
+    }
+
+    public String getHiveOrcSamples() {
+        return get("verdict.hive.orc_sample");
+    }
+
     public String getParquetSamples() {
         return get("verdict.parquet_sample");
     }
