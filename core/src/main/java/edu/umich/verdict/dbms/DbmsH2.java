@@ -146,10 +146,4 @@ public class DbmsH2 extends DbmsJDBC{
         int pcount = partitionCount();
         return String.format("mod(round(random()*%d), %d) AS %s", pcount, pcount, partitionColumnName());
     }
-
-    @Override
-    public Dataset<Row> getDataset() {
-        // TODO Auto-generated method stub
-        return null;
-    }
 }

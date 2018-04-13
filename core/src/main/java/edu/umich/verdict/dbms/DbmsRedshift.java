@@ -411,11 +411,4 @@ public class DbmsRedshift extends DbmsJDBC {
 
         VerdictLogger.debug(this, "Meta tables created.");
     }
-
-    @Override
-    public Dataset<Row> getDataset() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
 }

@@ -34,6 +34,8 @@ import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.util.StackTraceReader;
 import edu.umich.verdict.util.StringManipulations;
 import edu.umich.verdict.util.VerdictLogger;
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Row;
 
 public abstract class DbmsJDBC extends Dbms {
 
@@ -420,4 +422,8 @@ public abstract class DbmsJDBC extends Dbms {
         }
     }
 
+    @Override
+    public Dataset<Row> getDataset() {
+        return null;
+    }
 }
