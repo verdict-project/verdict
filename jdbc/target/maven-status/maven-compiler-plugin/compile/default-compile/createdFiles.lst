@@ -1,4 +1,0 @@
-edu\umich\verdict\jdbc\Driver.class
-edu\umich\verdict\jdbc\VerdictStatement.class
-edu\umich\verdict\jdbc\VerdictConnection.class
-edu\umich\verdict\jdbc\VerdictPreparedStatement.class
