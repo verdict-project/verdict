@@ -232,14 +232,11 @@
             <version>${hive-jdbc.version}</version>
         </dependency>
         <dependency>
-<<<<<<< HEAD
-=======
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <version>42.2.2</version>
         </dependency>
         <dependency>
->>>>>>> postgresqldriver
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-core_${spark2.scala.version}</artifactId>
             <version>${spark2.core.version}</version>
