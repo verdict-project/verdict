@@ -28,10 +28,19 @@ public class TpchQuery2 {
 
     public static void main(String[] args) throws VerdictException, FileNotFoundException {
         VerdictConf conf = new VerdictConf();
+<<<<<<< HEAD
         conf.setDbms("impala");
         conf.setHost(TestBase.readHost());
         conf.setPort("21050");
         conf.setDbmsSchema("tpch1g");
+=======
+        conf.setDbms("postgresql");
+        conf.setHost("localhost");
+        conf.setPort("5432");
+        conf.setDbmsSchema("tpch1g");
+        conf.setUser("postgres");
+        conf.setPassword("zhongshucheng123");
+>>>>>>> postgresqldriver
         conf.set("loglevel", "debug");
 
         VerdictContext vc = VerdictJDBCContext.from(conf);
