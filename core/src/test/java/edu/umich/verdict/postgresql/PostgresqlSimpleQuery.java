@@ -15,7 +15,6 @@ import edu.umich.verdict.postgresql.PostgresqlBasicTest;
 public class PostgresqlSimpleQuery {
     public static PostgresqlBasicTest postgresqlBasicTest;
     public static void main(String[] args) throws VerdictException, FileNotFoundException {
-
         VerdictConf conf = new VerdictConf();
         conf.setDbms("postgresql");
         conf.setHost("localhost");

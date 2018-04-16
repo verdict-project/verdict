@@ -316,11 +316,7 @@ public class VerdictConf {
     }
 
     public boolean areSamplesStoredAsParquet() {
-<<<<<<< HEAD
-        if (getDbms().equals("redshift")) {
-=======
         if (getDbms().equals("redshift")||getDbms().equals("postgresql")) {
->>>>>>> postgresqldriver
             return false;
         } else {
             return (getParquetSamples().equals("true")) ? true : false;
