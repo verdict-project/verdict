@@ -34,7 +34,8 @@ public class SampleParam implements Serializable, Comparable<SampleParam> {
 
     private static final long serialVersionUID = 1L;
 
-    private VerdictContext vc;
+    // dyoon: we do not need to serialize this.
+    private transient VerdictContext vc;
 
     private TableUniqueName originalTable;
 
@@ -76,8 +77,12 @@ public class SampleParam implements Serializable, Comparable<SampleParam> {
         this.columnNames = columnNames;
     }
 
+    public void setVerdictContext(VerdictContext vc) {
+        this.vc = vc;
+    }
+
     public SampleParam(VerdictContext vc, TableUniqueName originalTable, String sampleType, Double samplingRatio,
-            List<String> columnNames) {
+                       List<String> columnNames) {
         this.vc = vc;
         this.originalTable = originalTable;
         this.sampleType = sampleType;
