@@ -7,6 +7,7 @@ import edu.umich.verdict.exceptions.VerdictException;
 
 
 import java.io.FileNotFoundException;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import static edu.umich.verdict.postgresql.PostgresqlBasicTest.connect;
@@ -25,7 +26,19 @@ public class PostgresqlSimpleQuery {
         conf.set("loglevel", "debug");
 
         VerdictContext vc = VerdictJDBCContext.from(conf);
-        String sql = "select count(*) from tpch1g.lineitem";
+        String sql = "create 1% stratified sample of orders";
+        String sql2 = "select o_orderstatus, avg(o_totalprice) from orders where o_orderkey>62340 group by o_orderstatus";
+        vc.executeJdbcQuery(sql);
+        vc.executeJdbcQuery(sql2);
+        ResultSet rs = vc.getResultSet();
+        try {
+            while (rs.next()) {
+                System.out.println(rs.getInt(2));
+            }
+        } catch(java.sql.SQLException e){
+
+        }
+        sql = "drop samples of orders";
         vc.executeJdbcQuery(sql);
         vc.destroy();
     }

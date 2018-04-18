@@ -83,8 +83,18 @@ public class DbmsPostgreSQL extends DbmsJDBC {
 
     @Override
     public String modOfHash(String col, int mod){
-        return String.format("mod(strtol(crc32(cast(%s%s%s as text)), 16), %d)",
-                getQuoteString(), col, getQuoteString(), mod);
+        String sql = "select " + "mod(('x'||substr(md5(cast(\"" + col + "\" as text)),8))::bit(32)::int, %d)";
+        int module = 0;
+        try{
+            ResultSet temp_rs = stmt.executeQuery(sql);
+            while (temp_rs.next()){
+                module = temp_rs.getInt(1);
+            }
+            temp_rs.close();
+        } catch (java.sql.SQLException e){
+
+        }
+        return String.format("mod(%d, %d)", module, mod);
     }
 
     @Override
@@ -98,7 +108,18 @@ public class DbmsPostgreSQL extends DbmsJDBC {
             }
             concatStr += castStr;
         }
-        return String.format("mod(strtol(crc32(concat(%s))), 16), %d)", concatStr, mod);
+        String sql = "select " + "('x'||substr(md5(concat(" + concatStr + ")),8))::bit(32)::int";
+        int module = 0;
+        try{
+            ResultSet temp_rs = stmt.executeQuery(sql);
+            while (temp_rs.next()){
+                module = temp_rs.getInt(1);
+            }
+            temp_rs.close();
+        } catch (java.sql.SQLException e){
+
+        }
+        return String.format("mod(%d, %d)", module, mod);
     }
 
     @Override
