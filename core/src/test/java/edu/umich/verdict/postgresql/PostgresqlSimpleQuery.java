@@ -26,7 +26,7 @@ public class PostgresqlSimpleQuery {
         conf.set("loglevel", "debug");
 
         VerdictContext vc = VerdictJDBCContext.from(conf);
-        String sql = "create 1% stratified sample of orders";
+        String sql = "create 1% sample of orders";
         String sql2 = "select o_orderstatus, avg(o_totalprice) from orders where o_orderkey>62340 group by o_orderstatus";
         vc.executeJdbcQuery(sql);
         vc.executeJdbcQuery(sql2);

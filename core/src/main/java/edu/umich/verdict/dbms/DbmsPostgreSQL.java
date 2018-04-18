@@ -83,18 +83,8 @@ public class DbmsPostgreSQL extends DbmsJDBC {
 
     @Override
     public String modOfHash(String col, int mod){
-        String sql = "select " + "mod(('x'||substr(md5(cast(\"" + col + "\" as text)),8))::bit(32)::int, %d)";
-        int module = 0;
-        try{
-            ResultSet temp_rs = stmt.executeQuery(sql);
-            while (temp_rs.next()){
-                module = temp_rs.getInt(1);
-            }
-            temp_rs.close();
-        } catch (java.sql.SQLException e){
-
-        }
-        return String.format("mod(%d, %d)", module, mod);
+        return String.format("MOD(CAST(CAST(CONCAT('x', SUBSTR(MD5(cast(%s%s%s as text)),0,8)) AS bit(32)) AS bigint), %d)",
+                getQuoteString(), col, getQuoteString(), mod);
     }
 
     @Override
@@ -108,18 +98,7 @@ public class DbmsPostgreSQL extends DbmsJDBC {
             }
             concatStr += castStr;
         }
-        String sql = "select " + "('x'||substr(md5(concat(" + concatStr + ")),8))::bit(32)::int";
-        int module = 0;
-        try{
-            ResultSet temp_rs = stmt.executeQuery(sql);
-            while (temp_rs.next()){
-                module = temp_rs.getInt(1);
-            }
-            temp_rs.close();
-        } catch (java.sql.SQLException e){
-
-        }
-        return String.format("mod(%d, %d)", module, mod);
+        return String.format("MOD(CAST(CAST(CONCAT('x', SUBSTR(MD5(CONCAT(%s)),0,8)) AS bit(32)) AS bigint), %d)", concatStr, mod);
     }
 
     @Override
