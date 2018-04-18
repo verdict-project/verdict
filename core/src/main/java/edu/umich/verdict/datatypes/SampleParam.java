@@ -145,6 +145,6 @@ public class SampleParam implements Comparable<SampleParam> {
 
     @Override
     public int compareTo(SampleParam o) {
-        return originalTable.compareTo(o.originalTable);
+        return this.toString().compareTo(o.toString());
     }
 }
