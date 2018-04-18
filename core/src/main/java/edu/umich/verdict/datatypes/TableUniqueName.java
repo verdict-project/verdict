@@ -21,7 +21,11 @@ import com.google.common.base.Optional;
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.util.StringManipulations;
 
-public class TableUniqueName implements Comparable<TableUniqueName> {
+import java.io.Serializable;
+
+public class TableUniqueName implements Serializable, Comparable<TableUniqueName> {
+
+    private static final long serialVersionUID = 1L;
 
     private final String schemaName;
 
