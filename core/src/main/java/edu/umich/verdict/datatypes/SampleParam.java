@@ -16,6 +16,7 @@
 
 package edu.umich.verdict.datatypes;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,7 +30,9 @@ import edu.umich.verdict.VerdictContext;
  * @author Yongjoo Park
  *
  */
-public class SampleParam implements Comparable<SampleParam> {
+public class SampleParam implements Serializable, Comparable<SampleParam> {
+
+    private static final long serialVersionUID = 1L;
 
     private VerdictContext vc;
 
@@ -103,6 +106,15 @@ public class SampleParam implements Comparable<SampleParam> {
     public String toString() {
         return String.format("(%s,%s,%.2f,%s)", originalTable.getTableName(), sampleType, samplingRatio,
                 colNamesInString());
+    }
+
+    public String toSqlString() {
+        String columnString = "";
+        if (sampleType.equals("stratified") || sampleType.equals("universe")) {
+            columnString = " on " + Joiner.on(",").join(columnNames);
+        }
+        return String.format("create %.2f%% %s sample of %s%s", samplingRatio, sampleType,
+                originalTable.getTableName(), columnString);
     }
 
     @Override
