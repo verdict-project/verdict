@@ -96,7 +96,7 @@ public class SampleParam implements Comparable<SampleParam> {
     }
 
     public String colNamesInString() {
-        return Joiner.on(",").join(columnNames);
+        return columnNames.isEmpty() ? "N/A" : Joiner.on(",").join(columnNames);
     }
 
     @Override
