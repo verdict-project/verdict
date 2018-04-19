@@ -23,6 +23,8 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.TreeMap;
 
+import edu.umich.verdict.datatypes.SampleParam;
+import edu.umich.verdict.datatypes.TableUniqueName;
 import org.apache.commons.lang3.tuple.Pair;
 
 import com.google.common.collect.ImmutableList;
@@ -33,6 +35,8 @@ import edu.umich.verdict.util.VerdictLogger;
 public class VerdictConf {
 
     private Map<String, String> configs = new TreeMap<String, String>();
+
+    private static Map<TableUniqueName, SampleParam> forcedSamples = null;
 
     private final Map<String, String> configKeySynonyms =
             new ImmutableMap.Builder<String, String>()
@@ -46,6 +50,14 @@ public class VerdictConf {
     private final String DEFAULT_CONFIG_FILE = "verdict_default.properties";
 
     private final String USER_CONFIG_FILE = "verdict.properties";
+
+    private static void setForcedSamples(Map<TableUniqueName, SampleParam> samples) {
+        forcedSamples = samples;
+    }
+
+    public static Map<TableUniqueName, SampleParam> getForcedSamples() {
+        return forcedSamples;
+    }
 
     public VerdictConf() {
         this(true);

@@ -246,7 +246,7 @@ public class SingleRelation extends ExactRelation {
         return cost_sum / aggExprs.size();
     }
 
-    protected ApproxSingleRelation approxWith(Map<TableUniqueName, SampleParam> replace) {
+    public ApproxSingleRelation approxWith(Map<TableUniqueName, SampleParam> replace) {
         if (replace.containsKey(getTableName())) {
             ApproxSingleRelation a = ApproxSingleRelation.from(vc, replace.get(getTableName()));
             a.setAlias(getAlias());

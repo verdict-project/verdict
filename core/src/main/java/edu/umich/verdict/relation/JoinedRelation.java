@@ -278,9 +278,9 @@ public class JoinedRelation extends ExactRelation {
         return a;
     }
 
-    protected ApproxRelation approxWith(Map<TableUniqueName, SampleParam> replace) {
-        ApproxRelation a = new ApproxJoinedRelation(vc, source1.approxWith(replace), source2.approxWith(replace),
-                joinCols);
+    public ApproxRelation approxWith(Map<TableUniqueName, SampleParam> replace) {
+        ApproxRelation a = new ApproxJoinedRelation(vc, source1.approxWith(replace),
+                source2.approxWith(replace), joinCols);
         a.setAlias(getAlias());
         return a;
     }

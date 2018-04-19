@@ -355,7 +355,7 @@ public abstract class ExactRelation extends Relation implements Comparable {
      */
     public abstract ApproxRelation approx() throws VerdictException;
 
-    protected abstract ApproxRelation approxWith(Map<TableUniqueName, SampleParam> replace);
+    public abstract ApproxRelation approxWith(Map<TableUniqueName, SampleParam> replace);
 
     /**
      * Finds sets of samples that could be used for the table sources in a
