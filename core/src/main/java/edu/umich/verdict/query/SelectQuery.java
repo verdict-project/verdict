@@ -51,7 +51,7 @@ public class SelectQuery extends Query {
         if (exact) {
             return r;
         } else {
-            Map<TableUniqueName, SampleParam> forcedSamples = VerdictConf.getForcedSamples();
+            Map<TableUniqueName, SampleParam> forcedSamples = VerdictConf.getSamplesToUse();
             ApproxRelation a = (forcedSamples == null) ? r.approx() : r.approxWith(forcedSamples);
             return a;
         }
