@@ -36,7 +36,7 @@ public class VerdictConf {
 
     private Map<String, String> configs = new TreeMap<String, String>();
 
-    private static Map<TableUniqueName, SampleParam> forcedSamples = null;
+    private static Map<TableUniqueName, SampleParam> samplesToUse = null;
 
     private final Map<String, String> configKeySynonyms =
             new ImmutableMap.Builder<String, String>()
@@ -51,12 +51,12 @@ public class VerdictConf {
 
     private final String USER_CONFIG_FILE = "verdict.properties";
 
-    private static void setForcedSamples(Map<TableUniqueName, SampleParam> samples) {
-        forcedSamples = samples;
+    public static void setSamplesToUse(Map<TableUniqueName, SampleParam> samples) {
+        samplesToUse = samples;
     }
 
-    public static Map<TableUniqueName, SampleParam> getForcedSamples() {
-        return forcedSamples;
+    public static Map<TableUniqueName, SampleParam> getSamplesToUse() {
+        return samplesToUse;
     }
 
     public VerdictConf() {
