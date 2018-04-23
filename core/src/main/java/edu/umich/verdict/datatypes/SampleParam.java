@@ -41,7 +41,7 @@ public class SampleParam implements Serializable, Comparable<SampleParam> {
 
     private String sampleType;
 
-    private Double samplingRatio;
+    private Double samplingRatio; // 1.0 = 100%
 
     private List<String> columnNames;
 
@@ -118,7 +118,7 @@ public class SampleParam implements Serializable, Comparable<SampleParam> {
         if (sampleType.equals("stratified") || sampleType.equals("universe")) {
             columnString = " on " + Joiner.on(",").join(columnNames);
         }
-        return String.format("create %.2f%% %s sample of %s%s", samplingRatio, sampleType,
+        return String.format("create %.2f%% %s sample of %s%s", samplingRatio * 100, sampleType,
                 originalTable.getTableName(), columnString);
     }
 
