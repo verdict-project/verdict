@@ -18,6 +18,7 @@ package edu.umich.verdict.relation;
 
 import java.util.*;
 
+import edu.umich.verdict.relation.condition.*;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 
@@ -35,13 +36,6 @@ import edu.umich.verdict.parser.VerdictSQLParser.Order_by_expressionContext;
 import edu.umich.verdict.parser.VerdictSQLParser.Select_list_elemContext;
 import edu.umich.verdict.parser.VerdictSQLParser.Table_sourceContext;
 import edu.umich.verdict.relation.JoinedRelation.JoinType;
-import edu.umich.verdict.relation.condition.AndCond;
-import edu.umich.verdict.relation.condition.CompCond;
-import edu.umich.verdict.relation.condition.Cond;
-import edu.umich.verdict.relation.condition.CondModifier;
-import edu.umich.verdict.relation.condition.InCond;
-import edu.umich.verdict.relation.condition.IsCond;
-import edu.umich.verdict.relation.condition.LikeCond;
 import edu.umich.verdict.relation.expr.ColNameExpr;
 import edu.umich.verdict.relation.expr.ConstantExpr;
 import edu.umich.verdict.relation.expr.Expr;
@@ -791,6 +785,15 @@ class RelationGen extends VerdictSQLBaseVisitor<ExactRelation> {
                 Expr le = ((IsCond) cond).getLeft();
                 le = resolver.visit(le);
                 return new IsCond(le, ((IsCond) cond).getRight());
+            } else if (cond instanceof BetweenCond) {
+                Expr col = ((BetweenCond) cond).getCol();
+                Expr left = ((BetweenCond) cond).getLeft();
+                Expr right = ((BetweenCond) cond).getRight();
+                col = resolver.visit(col);
+                left = resolver.visit(left);
+                right = resolver.visit(right);
+
+                return new BetweenCond(col, left, right);
             } else {
                 return cond;
             }
