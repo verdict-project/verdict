@@ -180,6 +180,7 @@ public class AggregatedRelation extends ExactRelation {
     public ApproxRelation approxWith(Map<TableUniqueName, SampleParam> replace) {
         ApproxRelation a = new ApproxAggregatedRelation(vc, source.approxWith(replace), elems);
         a.setAlias(getAlias());
+        a.setOriginalRelation(this);
         return a;
     }
 
