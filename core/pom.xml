@@ -262,6 +262,11 @@
             <version>${h2database.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>42.2.2</version>
+        </dependency>
+        <dependency>
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-core_${spark2.scala.version}</artifactId>
             <version>${spark2.core.version}</version>
