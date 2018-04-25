@@ -124,6 +124,8 @@ public abstract class Dbms {
             dbms = new DbmsRedshift(vc, dbName, host, port, schema, user, password, jdbcClassName);
         } else if (dbName.equals("dummy")) {
             dbms = new DbmsDummy(vc);
+        } else if (dbName.equals("postgresql")){
+            dbms = new DbmsPostgreSQL(vc, dbName, host, port, schema, user, password, jdbcClassName);
         } else if (dbName.equals("h2")) {
             dbms = new DbmsH2(vc, dbName, host, port, schema, user, password, jdbcClassName);
         } else {
