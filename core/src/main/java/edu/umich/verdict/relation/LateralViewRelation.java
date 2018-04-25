@@ -79,7 +79,7 @@ public class LateralViewRelation extends ExactRelation {
     }
 
     @Override
-    protected ApproxRelation approxWith(Map<TableUniqueName, SampleParam> replace) {
+    public ApproxRelation approxWith(Map<TableUniqueName, SampleParam> replace) {
         ApproxRelation a = new ApproxLateralViewRelation(vc, lateralFunc, tableAlias, columnAlias);
         a.setAlias(getAlias());
         return a;

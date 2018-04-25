@@ -74,6 +74,7 @@ import jline.TerminalFactory;
 import jline.console.ConsoleReader;
 import jline.console.UserInterruptException;
 import jline.console.completer.Completer;
+import jline.console.completer.FileNameCompleter;
 import jline.console.completer.StringsCompleter;
 import jline.console.history.FileHistory;
 
@@ -342,7 +343,7 @@ public class SqlLine {
                 new ReflectiveCommandHandler(this, empty, "quit", "done", "exit"),
                 new ReflectiveCommandHandler(this,
                         new StringsCompleter(getConnectionURLExamples()),
-                        "verdict_connect", "open")
+                        "verdict_connect", "open"),
                 //				new ReflectiveCommandHandler(this, empty, "nickname"),
                 //				new ReflectiveCommandHandler(this, tableCompleter, "describe"),
                 //				new ReflectiveCommandHandler(this, tableCompleter, "indexes"),
@@ -363,7 +364,7 @@ public class SqlLine {
                 //				new ReflectiveCommandHandler(this, empty, "dbinfo"),
                 //				new ReflectiveCommandHandler(this, empty, "rehash"),
                 //				new ReflectiveCommandHandler(this, empty, "verbose"),
-                //				new ReflectiveCommandHandler(this, new FileNameCompleter(), "run"),
+                				new ReflectiveCommandHandler(this, new FileNameCompleter(), "run")
                 //				new ReflectiveCommandHandler(this, empty, "batch"),
                 //				new ReflectiveCommandHandler(this, empty, "list"),
                 //				new ReflectiveCommandHandler(this, empty, "all"),

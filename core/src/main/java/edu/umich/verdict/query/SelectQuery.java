@@ -16,7 +16,10 @@
 
 package edu.umich.verdict.query;
 
+import edu.umich.verdict.VerdictConf;
 import edu.umich.verdict.VerdictContext;
+import edu.umich.verdict.datatypes.SampleParam;
+import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.parser.VerdictSQLBaseVisitor;
 import edu.umich.verdict.parser.VerdictSQLParser;
@@ -24,6 +27,8 @@ import edu.umich.verdict.relation.ApproxRelation;
 import edu.umich.verdict.relation.ExactRelation;
 import edu.umich.verdict.relation.Relation;
 import edu.umich.verdict.util.StringManipulations;
+
+import java.util.Map;
 
 public class SelectQuery extends Query {
 
@@ -46,7 +51,8 @@ public class SelectQuery extends Query {
         if (exact) {
             return r;
         } else {
-            ApproxRelation a = r.approx();
+            Map<TableUniqueName, SampleParam> forcedSamples = VerdictConf.getSamplesToUse();
+            ApproxRelation a = (forcedSamples == null) ? r.approx() : r.approxWith(forcedSamples);
             return a;
         }
     }

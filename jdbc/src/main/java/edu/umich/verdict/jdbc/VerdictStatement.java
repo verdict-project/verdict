@@ -76,8 +76,8 @@ public class VerdictStatement implements Statement {
             this.stmt = ((DbmsJDBC) vc.getDbms()).getStatement();
             VerdictLogger.debug(this, "Internal statement set to " + System.identityHashCode(stmt));
         } catch (VerdictException e) {
-            VerdictLogger.debug(this, StackTraceReader.stackTrace2String(e));
-            throw new SQLException(StackTraceReader.stackTrace2String(e));
+            VerdictLogger.error(this, StackTraceReader.stackTrace2String(e));
+//            throw new SQLException(StackTraceReader.stackTrace2String(e));
         }
         return (answer != null) ? true : false;
     }

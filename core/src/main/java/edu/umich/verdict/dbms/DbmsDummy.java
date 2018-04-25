@@ -86,8 +86,8 @@ public class DbmsDummy extends Dbms {
     }
 
     @Override
-    public void createMetaTablesInDMBS(TableUniqueName originalTableName, TableUniqueName sizeTableName,
-            TableUniqueName nameTableName) throws VerdictException {
+    public void createMetaTablesInDBMS(TableUniqueName originalTableName, TableUniqueName sizeTableName,
+                                       TableUniqueName nameTableName) throws VerdictException {
     }
 
     @Override

@@ -96,7 +96,7 @@ public class SetRelation extends ExactRelation {
     }
 
     @Override
-    protected ApproxRelation approxWith(Map<TableUniqueName, SampleParam> replace) {
+    public ApproxRelation approxWith(Map<TableUniqueName, SampleParam> replace) {
         ApproxRelation a = new ApproxSetRelation(vc, source1.approxWith(replace),
                 source2.approxWith(replace),
                 type);
