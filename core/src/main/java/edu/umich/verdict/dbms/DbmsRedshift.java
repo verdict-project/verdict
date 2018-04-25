@@ -396,8 +396,8 @@ public class DbmsRedshift extends DbmsJDBC {
     }
 
     @Override
-    public void createMetaTablesInDMBS(TableUniqueName originalTableName, TableUniqueName sizeTableName,
-            TableUniqueName nameTableName) throws VerdictException {
+    public void createMetaTablesInDBMS(TableUniqueName originalTableName, TableUniqueName sizeTableName,
+                                       TableUniqueName nameTableName) throws VerdictException {
         VerdictLogger.debug(this, "Creates meta tables if not exist.");
         String sql = String.format("CREATE TABLE IF NOT EXISTS %s", sizeTableName) + " (schemaname VARCHAR(120), "
                 + " tablename VARCHAR(120), " + " samplesize BIGINT, " + " originaltablesize BIGINT)";
@@ -411,11 +411,4 @@ public class DbmsRedshift extends DbmsJDBC {
 
         VerdictLogger.debug(this, "Meta tables created.");
     }
-
-    @Override
-    public Dataset<Row> getDataset() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
 }

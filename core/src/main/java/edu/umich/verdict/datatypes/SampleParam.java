@@ -16,6 +16,7 @@
 
 package edu.umich.verdict.datatypes;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,15 +30,18 @@ import edu.umich.verdict.VerdictContext;
  * @author Yongjoo Park
  *
  */
-public class SampleParam implements Comparable<SampleParam> {
+public class SampleParam implements Serializable, Comparable<SampleParam> {
 
-    private VerdictContext vc;
+    private static final long serialVersionUID = 1L;
+
+    // dyoon: we do not need to serialize this.
+    private transient VerdictContext vc;
 
     private TableUniqueName originalTable;
 
     private String sampleType;
 
-    private Double samplingRatio;
+    private Double samplingRatio; // 1.0 = 100%
 
     private List<String> columnNames;
 
@@ -73,8 +77,12 @@ public class SampleParam implements Comparable<SampleParam> {
         this.columnNames = columnNames;
     }
 
+    public void setVerdictContext(VerdictContext vc) {
+        this.vc = vc;
+    }
+
     public SampleParam(VerdictContext vc, TableUniqueName originalTable, String sampleType, Double samplingRatio,
-            List<String> columnNames) {
+                       List<String> columnNames) {
         this.vc = vc;
         this.originalTable = originalTable;
         this.sampleType = sampleType;
@@ -96,13 +104,22 @@ public class SampleParam implements Comparable<SampleParam> {
     }
 
     public String colNamesInString() {
-        return Joiner.on(",").join(columnNames);
+        return columnNames.isEmpty() ? "N/A" : Joiner.on(",").join(columnNames);
     }
 
     @Override
     public String toString() {
         return String.format("(%s,%s,%.2f,%s)", originalTable.getTableName(), sampleType, samplingRatio,
                 colNamesInString());
+    }
+
+    public String toSqlString() {
+        String columnString = "";
+        if (sampleType.equals("stratified") || sampleType.equals("universe")) {
+            columnString = " on " + Joiner.on(",").join(columnNames);
+        }
+        return String.format("create %.2f%% %s sample of %s%s", samplingRatio * 100, sampleType,
+                originalTable.getTableName(), columnString);
     }
 
     @Override
@@ -145,6 +162,6 @@ public class SampleParam implements Comparable<SampleParam> {
 
     @Override
     public int compareTo(SampleParam o) {
-        return originalTable.compareTo(o.originalTable);
+        return this.toString().compareTo(o.toString());
     }
 }

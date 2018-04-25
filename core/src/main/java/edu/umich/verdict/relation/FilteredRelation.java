@@ -70,7 +70,7 @@ public class FilteredRelation extends ExactRelation {
         return a;
     }
 
-    protected ApproxRelation approxWith(Map<TableUniqueName, SampleParam> replace) {
+    public ApproxRelation approxWith(Map<TableUniqueName, SampleParam> replace) {
         ApproxRelation a = new ApproxFilteredRelation(vc, source.approxWith(replace), approxPossibleSubqueries(cond));
         a.setAlias(getAlias());
         return a;
