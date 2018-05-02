@@ -41,6 +41,7 @@ import edu.umich.verdict.relation.expr.OverClause;
 import edu.umich.verdict.relation.expr.SelectElem;
 import edu.umich.verdict.relation.expr.TableNameExpr;
 import edu.umich.verdict.util.VerdictLogger;
+import org.apache.commons.lang3.tuple.Pair;
 
 public class ApproxAggregatedRelation extends ApproxRelation {
 
@@ -274,8 +275,11 @@ public class ApproxAggregatedRelation extends ApproxRelation {
         Expr tupleSamplingProbExpr = source.tupleProbabilityColumn();
         Expr tableSamplingRatioExpr = source.tableSamplingRatio();
 
+        Pair<List<Expr>, ApproxRelation> groupsAndNextR = allPrecedingGroupbys(this.source);
+        Pair<Optional<Cond>, ApproxRelation> filtersAndNextR = allPrecedingFilters(groupsAndNextR.getRight());
+        sourceExpr(filtersAndNextR.getRight())
         SingleFunctionTransformerForSubsampling transformer = new SingleFunctionTransformerForSubsampling(vc, groupby,
-                partitionColExpr, tupleSamplingProbExpr, tableSamplingRatioExpr);
+                partitionColExpr, tupleSamplingProbExpr, tableSamplingRatioExpr); //todo: constructor
 
         // copies groupby expressions (used if projectUnprojectedGroups is set to true)
         // this extra groupby is needed when the user-submitted query does not include the groupby columns
@@ -312,7 +316,7 @@ public class ApproxAggregatedRelation extends ApproxRelation {
                 Expr agg = elem.getExpr();
                 // Expr scaled = transformForSingleFunctionWithPartitionSize(agg, groupby,
                 // partitionColExpr, tupleSamplingProbExpr, tableSamplingRatio);
-                Expr scaled = transformer.call(agg);
+                Expr scaled = transformer.call(agg); // todo: get from contents from this or constructor
                 scaledElems.add(new SelectElem(vc, scaled, elem.getAlias()));
             }
         }
@@ -424,8 +428,14 @@ public class ApproxAggregatedRelation extends ApproxRelation {
                             .sum(BinaryOpExpr.from(vc, ConstantExpr.from(vc, 1.0), tupleSamplingProbExpr, "/"));
                     // scale with partition size
                     scaled = BinaryOpExpr.from(vc, scaled, FuncExpr.count(), "/");
-                    scaled = BinaryOpExpr.from(vc, scaled,
-                            new FuncExpr(FuncExpr.FuncName.SUM, FuncExpr.count(), new OverClause(groupby)), "*");
+                    if (vc.getConf().getDbms().equalsIgnoreCase("h2")){
+                        scaled = BinaryOpExpr.from(vc, scaled, String.format("(select asidasodgj)"), "*");
+                        //todo: rewrtie the window function
+                    }
+                    else {
+                        scaled = BinaryOpExpr.from(vc, scaled,
+                                new FuncExpr(FuncExpr.FuncName.SUM, FuncExpr.count(), new OverClause(groupby)), "*");
+                    }
                     return scaled;
                 } else if (f.getFuncName().equals(FuncExpr.FuncName.COUNT_DISTINCT)) {
                     if (source.sampleType().contains("universe")) {
@@ -447,8 +457,14 @@ public class ApproxAggregatedRelation extends ApproxRelation {
                     Expr scaled = FuncExpr.sum(BinaryOpExpr.from(vc, f.getUnaryExpr(), tupleSamplingProbExpr, "/"));
                     // scale with partition size
                     scaled = BinaryOpExpr.from(vc, scaled, FuncExpr.count(), "/");
-                    scaled = BinaryOpExpr.from(vc, scaled,
-                            new FuncExpr(FuncExpr.FuncName.SUM, FuncExpr.count(), new OverClause(groupby)), "*");
+                    if (vc.getConf().getDbms().equalsIgnoreCase("h2")){
+                        scaled = BinaryOpExpr.from(vc, scaled, "(select asidasodgj)", "*");
+                        //todo: rewrtie the window function
+                    }
+                    else {
+                        scaled = BinaryOpExpr.from(vc, scaled,
+                                new FuncExpr(FuncExpr.FuncName.SUM, FuncExpr.count(), new OverClause(groupby)), "*");
+                    }
                     return scaled;
                     // Expr est = scaleForSampling(samplingProbExprs);
                     // est = FuncExpr.sum(BinaryOpExpr.from(vc, s.getUnaryExpr(), est, "*"));
