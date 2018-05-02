@@ -215,7 +215,7 @@ public class AggregatedRelation extends ExactRelation {
         return sql.toString();
     }
 
-    public String toSql() {
+    public String toSql() { //todo: copy
         StringBuilder sql = new StringBuilder();
 
         Pair<List<Expr>, ExactRelation> groupsAndNextR = allPrecedingGroupbys(this.source);
