@@ -42,6 +42,11 @@ public class ColNameExpr extends Expr implements Comparable {
         this.schema = (schema != null) ? schema.toLowerCase().replace("\"", "").replace("`", "") : schema;
     }
 
+    // This is basically a copy constructor.
+    public static ColNameExpr from(VerdictContext vc, ColNameExpr expr) {
+        return new ColNameExpr(vc, expr.getCol(), expr.getTab(), expr.getSchema());
+    }
+
     public static ColNameExpr from(VerdictContext vc, String expr) {
         String[] t = expr.split("\\.");
         if (t.length > 2) {

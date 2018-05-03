@@ -54,7 +54,11 @@ public class VerdictLogger {
     public static void warn(Object msg) {
         logger.warn(msg);
     }
-    
+
+    public static Level getLogLevel() {
+        return logger.getLevel();
+    }
+
     private static String enclosingMethodName() {
         return Thread.currentThread().getStackTrace()[3].getMethodName();
 //        Method method = caller.getClass().getEnclosingMethod();

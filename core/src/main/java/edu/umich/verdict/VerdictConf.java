@@ -23,6 +23,8 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.TreeMap;
 
+import edu.umich.verdict.datatypes.SampleParam;
+import edu.umich.verdict.datatypes.TableUniqueName;
 import org.apache.commons.lang3.tuple.Pair;
 
 import com.google.common.collect.ImmutableList;
@@ -33,6 +35,8 @@ import edu.umich.verdict.util.VerdictLogger;
 public class VerdictConf {
 
     private Map<String, String> configs = new TreeMap<String, String>();
+
+    private static Map<TableUniqueName, SampleParam> samplesToUse = null;
 
     private final Map<String, String> configKeySynonyms =
             new ImmutableMap.Builder<String, String>()
@@ -46,6 +50,14 @@ public class VerdictConf {
     private final String DEFAULT_CONFIG_FILE = "verdict_default.properties";
 
     private final String USER_CONFIG_FILE = "verdict.properties";
+
+    public static void setSamplesToUse(Map<TableUniqueName, SampleParam> samples) {
+        samplesToUse = samples;
+    }
+
+    public static Map<TableUniqueName, SampleParam> getSamplesToUse() {
+        return samplesToUse;
+    }
 
     public VerdictConf() {
         this(true);
@@ -321,6 +333,17 @@ public class VerdictConf {
         } else {
             return (getParquetSamples().equals("true")) ? true : false;
         }
+    }
+
+    public boolean areHiveSampleStoredAsOrc() {
+        if (getDbms().equalsIgnoreCase("hive") || getDbms().equalsIgnoreCase("hive2")) {
+            return getHiveOrcSamples().equalsIgnoreCase("true");
+        }
+        return false;
+    }
+
+    public String getHiveOrcSamples() {
+        return get("verdict.hive.orc_sample");
     }
 
     public String getParquetSamples() {

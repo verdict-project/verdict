@@ -108,8 +108,11 @@ public class ProjectedRelation extends ExactRelation {
     }
 
     @Override
-    protected ApproxRelation approxWith(Map<TableUniqueName, SampleParam> replace) {
-        return null;
+    public ApproxRelation approxWith(Map<TableUniqueName, SampleParam> replace) {
+        ApproxRelation a = new ApproxProjectedRelation(vc, source.approxWith(replace), elems);
+        a.setAlias(getAlias());
+        a.setOriginalRelation(this);
+        return a;
     }
 
     @Override

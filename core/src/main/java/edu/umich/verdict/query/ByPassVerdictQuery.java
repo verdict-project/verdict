@@ -14,22 +14,20 @@
  * limitations under the License.
  */
 
-package edu.umich.verdict.util;
+package edu.umich.verdict.query;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
+import edu.umich.verdict.VerdictContext;
+import edu.umich.verdict.exceptions.VerdictException;
 
-public class StackTraceReader {
+public class ByPassVerdictQuery extends Query {
 
-    public static String stackTrace2String(Exception e) {
-        StringWriter sw = new StringWriter();
-        PrintWriter pw = new PrintWriter(sw);
-        sw.write(e.getMessage());
-        VerdictLogger.debug(sw.toString());
-        if (VerdictLogger.logger.isDebugEnabled()) {
-            e.printStackTrace(pw);
-        }
-        return sw.toString();
+    public ByPassVerdictQuery(VerdictContext vc, String q) {
+        super(vc, q);
+    }
+
+    @Override
+    public void compute() throws VerdictException {
+        vc.getDbms().executeUpdate(queryString);
     }
 
 }

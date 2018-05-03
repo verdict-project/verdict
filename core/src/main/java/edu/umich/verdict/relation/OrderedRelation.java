@@ -70,8 +70,10 @@ public class OrderedRelation extends ExactRelation {
     }
 
     @Override
-    protected ApproxRelation approxWith(Map<TableUniqueName, SampleParam> replace) {
-        return null;
+    public ApproxRelation approxWith(Map<TableUniqueName, SampleParam> replace) {
+        ApproxRelation a = new ApproxOrderedRelation(vc, source.approxWith(replace), orderby);
+        a.setAlias(getAlias());
+        return a;
     }
 
     @Override

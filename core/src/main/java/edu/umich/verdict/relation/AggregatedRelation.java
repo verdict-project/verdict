@@ -178,7 +178,10 @@ public class AggregatedRelation extends ExactRelation {
     }
 
     public ApproxRelation approxWith(Map<TableUniqueName, SampleParam> replace) {
-        return new ApproxAggregatedRelation(vc, source.approxWith(replace), elems);
+        ApproxRelation a = new ApproxAggregatedRelation(vc, source.approxWith(replace), elems);
+        a.setAlias(getAlias());
+        a.setOriginalRelation(this);
+        return a;
     }
 
     /*

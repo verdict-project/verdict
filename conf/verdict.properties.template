@@ -31,15 +31,22 @@ verdict.jdbc.mysql.class_name=com.mysql.jdbc.Driver
 ### jdbc > connection > hive is deprecated and not supported
 ### jdbc > connection > hive2
 verdict.jdbc.hive2.default_port=10000
+#### HDP: org.apache.hive.jdbc.HiveDriver
 #### MapR: org.apache.hive.jdbc.HiveDriver
 #### Cloudera: com.cloudera.impala.jdbc4.Driver
-verdict.jdbc.hive2.class_name=com.cloudera.hive.jdbc4.HS2Driver
+verdict.jdbc.hive2.class_name=org.apache.hive.jdbc.HiveDriver
 ### jdbc > connection > impala
 verdict.jdbc.impala.default_port=21050
 verdict.jdbc.impala.class_name=com.cloudera.impala.jdbc41.Driver
 ### jdbc > connection > redshift
 verdict.jdbc.redshift.default_port=5439
 verdict.jdbc.redshift.class_name=com.amazon.redshift.jdbc41.Driver
+
+# derby
+verdict.jdbc.derby.class_name=org.apache.derby.jdbc.EmbeddedDriver
+
+# h2
+verdict.jdbc.h2.class_name=org.h2.Driver
 
 # spark
 verdict.spark.cache_samples=true
@@ -57,7 +64,11 @@ verdict.meta_data.refresh_policy=per_session
 verdict.error_bound.confidence_internal_probability=95%
 ## "%s" is replaced by a column name (not supported yet)
 verdict.error_bound.error_column_pattern=err bound of %s
-## one of: subsampling (fast), bootstrapping (slow; only for research), analytic (fastest; not supported yet), no_error_bound
+## one of:
+## 1. subsampling (fast),
+## 2. bootstrapping (slow; only for research),
+## 3. analytic (fastest; not supported yet),
+## 4. no_error_bound
 verdict.error_bound.method=subsampling
 
 # error bound > subsampling
@@ -73,3 +84,6 @@ verdict.error_bound.bootstrapping.bootstrap_multiplicity_colname=__mul
 
 # create sample tables in parquet format
 verdict.parquet_sample=true
+
+# create sample tables in ORC format (hive)
+verdict.hive.orc_sample=true

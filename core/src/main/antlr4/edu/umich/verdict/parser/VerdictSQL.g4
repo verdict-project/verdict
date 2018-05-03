@@ -625,7 +625,7 @@ nary_manipulation_function
     ;
 
 ternary_manipulation_function
-    : function_name=(CONV | SUBSTR)
+    : function_name=(CONV | SUBSTR | HASH | RPAD)
       '(' expression ',' expression ',' expression ')'
     ;
 
@@ -644,7 +644,7 @@ extract_unit
     ;
 
 unary_manipulation_function
-    : function_name=(ROUND | FLOOR | CEIL | EXP | LN | LOG10 | LOG2 | SIN | COS | TAN | SIGN | RAND | FNV_HASH
+    : function_name=(ROUND | FLOOR | CEIL | EXP | LN | LOG10 | LOG2 | SIN | COS | TAN | SIGN | RAND | FNV_HASH | RAWTOHEX
      | ABS | STDDEV | SQRT | MD5 | CRC32 | YEAR | QUARTER | MONTH | DAY | HOUR | MINUTE | SECOND | WEEKOFYEAR | LOWER | UPPER | ASCII | CHARACTER_LENGTH | FACTORIAL | CBRT | LENGTH | TRIM | ASIN | ACOS | ATAN | DEGREES | RADIANS | POSITIVE | NEGATIVE | BROUND | BIN | HEX | UNHEX | FROM_UNIXTIME | TO_DATE | CHR | LTRIM | REVERSE | SPACE_FUNCTION | SHA1 | SHA2 )
       '(' expression ')'
     | function_name=CAST '(' cast_as_expression ')'    
@@ -978,6 +978,8 @@ simple_id
     | YEARS
     | STORE
     | INTERVAL
+    | TABLES
+    | COLUMNS
     ;
 
 // https://msdn.microsoft.com/en-us/library/ms188074.aspx
@@ -1076,6 +1078,7 @@ FUNCTION:                        F U N C T I O N;
 GOTO:                            G O T O;
 GRANT:                           G R A N T;
 GROUP:                           G R O U P;
+HASH:                            H A S H;
 HAVING:                          H A V I N G;
 IDENTITY:                        I D E N T I T Y;
 IDENTITYCOL:                     I D E N T I T Y C O L;
@@ -1126,6 +1129,7 @@ PRINT:                           P R I N T;
 PROC:                            P R O C;
 PROCEDURE:                       P R O C E D U R E;
 RAISERROR:                       R A I S E R R O R;
+RAWTOHEX:                        R A W T O H E X;
 READ:                            R E A D;
 READTEXT:                        R E A D T E X T;
 RECONFIGURE:                     R E C O N F I G U R E;
@@ -1140,6 +1144,7 @@ RIGHT:                           R I G H T;
 ROLLBACK:                        R O L L B A C K;
 ROWCOUNT:                        R O W C O U N T;
 ROWGUIDCOL:                      R O W G U I D C O L;
+RPAD:                            R P A D;
 RULE:                            R U L E;
 SAVE:                            S A V E;
 SCHEMA:                          S C H E M A;
@@ -1262,7 +1267,6 @@ GLOBAL:                          G L O B A L;
 GO:                              G O;
 GROUPING:                        G R O U P I N G;
 GROUPING_ID:                     G R O U P I N G '_' I D;
-HASH:                            H A S H;
 HEX:                             H E X;
 HOUR:                            H O U R;
 INSENSITIVE:                     I N S E N S I T I V E;
