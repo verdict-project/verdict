@@ -424,7 +424,7 @@ public class ApproxAggregatedRelation extends ApproxRelation {
                             .sum(BinaryOpExpr.from(vc, ConstantExpr.from(vc, 1.0), tupleSamplingProbExpr, "/"));
                     // scale with partition size
                     scaled = BinaryOpExpr.from(vc, scaled, FuncExpr.count(), "/");
-                    if (vc.getConf().getDbms().equalsIgnoreCase("postgresql")){
+                    if (vc.getConf().getDbms().equalsIgnoreCase("h2")){
                         StringBuilder conditionExpr = new StringBuilder();
                         // get the reference name of the table in from clause
                         String from = ((ColNameExpr)groupby.get(0)).getTab();
@@ -467,7 +467,7 @@ public class ApproxAggregatedRelation extends ApproxRelation {
                     Expr scaled = FuncExpr.sum(BinaryOpExpr.from(vc, f.getUnaryExpr(), tupleSamplingProbExpr, "/"));
                     // scale with partition size
                     scaled = BinaryOpExpr.from(vc, scaled, FuncExpr.count(), "/");
-                    if (vc.getConf().getDbms().equalsIgnoreCase("postgresql")){
+                    if (vc.getConf().getDbms().equalsIgnoreCase("h2")){
                         StringBuilder conditionExpr = new StringBuilder();
                         // get the reference name of the table in from clause
                         String from = ((ColNameExpr)groupby.get(0)).getTab();
