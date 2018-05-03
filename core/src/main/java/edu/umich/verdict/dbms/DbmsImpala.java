@@ -93,11 +93,4 @@ public class DbmsImpala extends DbmsJDBC {
         int pcount = partitionCount();
         return String.format("round(rand(unix_timestamp())*%d) %% %d AS %s", pcount, pcount, partitionColumnName());
     }
-
-    @Override
-    public Dataset<Row> getDataset() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
 }

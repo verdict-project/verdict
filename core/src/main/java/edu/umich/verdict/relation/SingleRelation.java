@@ -246,7 +246,7 @@ public class SingleRelation extends ExactRelation {
         return cost_sum / aggExprs.size();
     }
 
-    protected ApproxSingleRelation approxWith(Map<TableUniqueName, SampleParam> replace) {
+    public ApproxSingleRelation approxWith(Map<TableUniqueName, SampleParam> replace) {
         if (replace.containsKey(getTableName())) {
             ApproxSingleRelation a = ApproxSingleRelation.from(vc, replace.get(getTableName()));
             a.setAlias(getAlias());
@@ -329,7 +329,7 @@ public class SingleRelation extends ExactRelation {
             return new ColNameExpr(vc, partitionCol, getAlias());
         } else {
             VerdictLogger.debug(this, "A partition column does not exists in the table: " + getTableName()
-                    + "This is an expected behavior if this is not a sample table.");
+                    + ", this is an expected behavior if this is not a sample table.");
             return null;
         }
     }

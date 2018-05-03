@@ -63,8 +63,10 @@ public class LimitedRelation extends ExactRelation {
     }
 
     @Override
-    protected ApproxRelation approxWith(Map<TableUniqueName, SampleParam> replace) {
-        return null;
+    public ApproxRelation approxWith(Map<TableUniqueName, SampleParam> replace) {
+        ApproxRelation a = new ApproxLimitedRelation(vc, source.approxWith(replace), limit);
+        a.setAlias(getAlias());
+        return a;
     }
 
     @Override

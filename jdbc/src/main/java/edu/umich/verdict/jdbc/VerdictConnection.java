@@ -97,32 +97,45 @@ public class VerdictConnection implements Connection {
             Pattern urlOptions = Pattern.compile(
                     "^jdbc:verdict:(?<dbms>\\w+)://(?<host>[\\.a-zA-Z0-9\\-]+)(?::(?<port>\\d+))?(?:/(?<schema>\\w+))?"
                             + "(\\?(?<extras>.*))?");
+            Pattern h2UrlOptions = Pattern.compile(
+                    "^jdbc:verdict:h2://(?<schema>\\w+)");
+            boolean isH2Url = false;
             Matcher urlMatcher = urlOptions.matcher(url);
-            if (!urlMatcher.find())
-                throw new SQLException("Invalid URL.");
-
-            conf.setDbms(urlMatcher.group("dbms"));
-            conf.setHost(urlMatcher.group("host"));
-            if (urlMatcher.group("port") != null) {
-                conf.setPort(urlMatcher.group("port"));
-            } else {
-                conf.setPort(conf.getDefaultPort()); // assume config file includes it.
+            if (!urlMatcher.find() || urlMatcher.group("dbms").equalsIgnoreCase("h2")) {
+                urlMatcher = h2UrlOptions.matcher(url);
+                if (!urlMatcher.find()) {
+                    throw new SQLException("Invalid URL.");
+                } else {
+                    isH2Url = true;
+                }
             }
-            if (urlMatcher.group("schema") != null) {
+            if (isH2Url) {
+                conf.setDbms("h2");
+                VerdictLogger.info(this, "H2 Schema = " + urlMatcher.group("schema"));
                 conf.setDbmsSchema(urlMatcher.group("schema"));
-            }
+            } else {
+                conf.setDbms(urlMatcher.group("dbms"));
+                conf.setHost(urlMatcher.group("host"));
+                if (urlMatcher.group("port") != null) {
+                    conf.setPort(urlMatcher.group("port"));
+                } else {
+                    conf.setPort(conf.getDefaultPort()); // assume config file includes it.
+                }
+                if (urlMatcher.group("schema") != null) {
+                    conf.setDbmsSchema(urlMatcher.group("schema"));
+                }
 
-            String extras = urlMatcher.group("extras");
-            if (extras != null) {
-                Matcher extraMatcher = inlineOptions.matcher(extras);
+                String extras = urlMatcher.group("extras");
+                if (extras != null) {
+                    Matcher extraMatcher = inlineOptions.matcher(extras);
 
-                while (extraMatcher.find()) {
-                    conf.set(extraMatcher.group("key"), extraMatcher.group("value"));
+                    while (extraMatcher.find()) {
+                        conf.set(extraMatcher.group("key"), extraMatcher.group("value"));
+                    }
                 }
             }
 
             this.vc = VerdictJDBCContext.from(conf);
-
         } catch (VerdictException e) {
             throw new SQLException(StackTraceReader.stackTrace2String(e));
         }
