@@ -349,7 +349,8 @@ public class DbmsPostgreSQL extends DbmsJDBC {
     }
 
     @Override
-    public void createMetaTablesInDMBS(TableUniqueName originalTableName, TableUniqueName sizeTableName,
+
+    public void createMetaTablesInDBMS(TableUniqueName originalTableName, TableUniqueName sizeTableName,
                                        TableUniqueName nameTableName) throws VerdictException {
         VerdictLogger.debug(this, "Creates meta tables if not exist.");
         String sql = String.format("CREATE TABLE IF NOT EXISTS %s", sizeTableName) + " (schemaname VARCHAR(120), "

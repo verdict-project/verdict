@@ -272,7 +272,7 @@ public class ApproxAggregatedRelation extends ApproxRelation {
         Pair<Optional<Cond>, ApproxRelation> filtersAndNextR = allPrecedingFilters(groupsAndNextR.getRight());
         String csql =  (filtersAndNextR.getLeft().isPresent()) ? filtersAndNextR.getLeft().get().toString() : "";
         SingleFunctionTransformerForSubsampling transformer = new SingleFunctionTransformerForSubsampling(vc, groupby,
-                partitionColExpr, tupleSamplingProbExpr, tableSamplingRatioExpr, csql, group);
+                partitionColExpr, tupleSamplingProbExpr, tableSamplingRatioExpr, csql);
 
         // copies groupby expressions (used if projectUnprojectedGroups is set to true)
         // this extra groupby is needed when the user-submitted query does not include the groupby columns
@@ -388,18 +388,15 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 
         final Expr tableSamplingRatioExpr;
 
-        final List<Expr> group;
-
         final String csql;
 
         public SingleFunctionTransformerForSubsampling(VerdictContext vc, List<Expr> groupby,
-                ColNameExpr partitionColExpr, Expr tupleSamplingProbExpr, Expr tableSamplingRatioExpr, String csql, List<Expr> group) {
+                ColNameExpr partitionColExpr, Expr tupleSamplingProbExpr, Expr tableSamplingRatioExpr, String csql) {
             super(vc);
             this.groupby = groupby;
             this.partitionColExpr = partitionColExpr;
             this.tupleSamplingProbExpr = tupleSamplingProbExpr;
             this.tableSamplingRatioExpr = tableSamplingRatioExpr;
-            this.group = group;
             this.csql = csql;
         }
 
@@ -427,11 +424,13 @@ public class ApproxAggregatedRelation extends ApproxRelation {
                             .sum(BinaryOpExpr.from(vc, ConstantExpr.from(vc, 1.0), tupleSamplingProbExpr, "/"));
                     // scale with partition size
                     scaled = BinaryOpExpr.from(vc, scaled, FuncExpr.count(), "/");
-                    if (vc.getConf().getDbms().equalsIgnoreCase("h2")){
+                    if (vc.getConf().getDbms().equalsIgnoreCase("postgresql")){
                         StringBuilder conditionExpr = new StringBuilder();
-                        String from = tupleSamplingProbExpr.toString().substring(0, tupleSamplingProbExpr.toString().indexOf('.'));
+                        // get the reference name of the table in from clause
+                        String from = ((ColNameExpr)groupby.get(0)).getTab();
                         for (int i=0;i<groupby.size();i++){
-                            String col = groupby.get(i).toString().substring(groupby.get(i).toString().indexOf('.')+1);
+                            // get the column name to translate from window function to correlated query
+                            String col = ((ColNameExpr)groupby.get(i)).getCol();
                             conditionExpr.append(" tmp."+col+"="+ from +"."+col);
                             if (i!=groupby.size()-1){
                                 conditionExpr.append(" AND ");
@@ -440,7 +439,7 @@ public class ApproxAggregatedRelation extends ApproxRelation {
                         if (csql.length()>0) {
                             conditionExpr.append(" AND " + csql.replace(from, "tmp"));
                         }
-                        String subquery = "(SELECT count(1) from " + '?' + " tmp where " + conditionExpr+") ";
+                        String subquery = "(SELECT count(1) from " + unknownTablename + " tmp where " + conditionExpr+") ";
                         scaled = BinaryOpExpr.from(vc, scaled, ConstantExpr.from(vc, subquery), "*");
                     }
                     else {
@@ -468,11 +467,13 @@ public class ApproxAggregatedRelation extends ApproxRelation {
                     Expr scaled = FuncExpr.sum(BinaryOpExpr.from(vc, f.getUnaryExpr(), tupleSamplingProbExpr, "/"));
                     // scale with partition size
                     scaled = BinaryOpExpr.from(vc, scaled, FuncExpr.count(), "/");
-                    if (vc.getConf().getDbms().equalsIgnoreCase("h2")){
+                    if (vc.getConf().getDbms().equalsIgnoreCase("postgresql")){
                         StringBuilder conditionExpr = new StringBuilder();
-                        String from = tupleSamplingProbExpr.toString().substring(0, tupleSamplingProbExpr.toString().indexOf('.'));
+                        // get the reference name of the table in from clause
+                        String from = ((ColNameExpr)groupby.get(0)).getTab();
                         for (int i=0;i<groupby.size();i++){
-                            String col = groupby.get(i).toString().substring(groupby.get(i).toString().indexOf('.')+1);
+                            // get the column name to translate from window function to correlated query
+                            String col = ((ColNameExpr)groupby.get(i)).getCol();
                             conditionExpr.append(" tmp."+col+"="+ from +"."+col);
                             if (i!=groupby.size()-1){
                                 conditionExpr.append(" AND ");
@@ -481,7 +482,7 @@ public class ApproxAggregatedRelation extends ApproxRelation {
                         if (csql.length()>0) {
                             conditionExpr.append(" AND " + csql.replace(from, "tmp"));
                         }
-                        String subquery = "(SELECT count(1) from " + '?' + " tmp where " + conditionExpr+") ";
+                        String subquery = "(SELECT count(1) from " + unknownTablename + " tmp where " + conditionExpr+") ";
                         scaled = BinaryOpExpr.from(vc, scaled, ConstantExpr.from(vc, subquery), "*");
                     }
                     else {
