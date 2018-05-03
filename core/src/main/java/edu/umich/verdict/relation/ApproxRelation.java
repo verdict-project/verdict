@@ -21,17 +21,15 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.base.Optional;
+import edu.umich.verdict.relation.condition.AndCond;
+import edu.umich.verdict.relation.condition.Cond;
+import edu.umich.verdict.relation.expr.*;
 import org.apache.commons.lang3.tuple.Pair;
 
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.datatypes.TableUniqueName;
 import edu.umich.verdict.exceptions.VerdictException;
-import edu.umich.verdict.relation.expr.ColNameExpr;
-import edu.umich.verdict.relation.expr.Expr;
-import edu.umich.verdict.relation.expr.FuncExpr;
-import edu.umich.verdict.relation.expr.OrderByExpr;
-import edu.umich.verdict.relation.expr.SelectElem;
-import edu.umich.verdict.relation.expr.TableNameExpr;
 import edu.umich.verdict.util.VerdictLogger;
 
 /**
@@ -376,6 +374,47 @@ public abstract class ApproxRelation extends Relation {
             }
         }
         return Pair.of(groupbys, t);
+    }
+
+    //copy from ExactRelation; Use for obtaining From table in ApproxAggregatedRelation
+    protected Pair<Optional<Cond>, ApproxRelation> allPrecedingFilters(ApproxRelation r) {
+        Optional<Cond> c = Optional.absent();
+        ApproxRelation t = r;
+        while (true) {
+            if (t instanceof ApproxFilteredRelation) {
+                if (c.isPresent()) {
+                    c = Optional.of((Cond) AndCond.from(c.get(), ((ApproxFilteredRelation) t).getFilter()));
+                } else {
+                    c = Optional.of(((ApproxFilteredRelation) t).getFilter());
+                }
+                t = ((ApproxFilteredRelation) t).getSource();
+            } else {
+                break;
+            }
+        }
+        return Pair.of(c, t);
+    }
+
+    //directly copy from ExactRelation
+    protected String sourceExpr(ApproxRelation source) {
+        if (source instanceof ApproxSingleRelation) {
+            ApproxSingleRelation asource = (ApproxSingleRelation) source;
+            TableUniqueName tableName = asource.getTableName();
+            String alias = asource.getAlias();
+            return String.format("%s AS %s", tableName, alias);
+        } else if (source instanceof ApproxJoinedRelation) {
+            return ((ApproxJoinedRelation) source).joinClause();
+        } else if (source instanceof ApproxLateralViewRelation) {
+            ApproxLateralViewRelation lv = (ApproxLateralViewRelation) source;
+            LateralFunc func = lv.getLateralFunc();
+            return String.format("%s %s AS %s", func.toSql(), lv.getTableAlias(), lv.getColumnAlias());
+        } else {
+            String alias = source.getAlias();
+            if (alias == null) {
+                alias = Relation.genTableAlias();
+            }
+            return String.format("(%s) AS %s", source.toSql(), alias);
+        }
     }
 
     /**

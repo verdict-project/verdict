@@ -223,12 +223,22 @@ public class AggregatedRelation extends ExactRelation {
 
         Pair<List<Expr>, ExactRelation> groupsAndNextR = allPrecedingGroupbys(this.source);
         List<Expr> groupby = groupsAndNextR.getLeft();
-
         Pair<Optional<Cond>, ExactRelation> filtersAndNextR = allPrecedingFilters(groupsAndNextR.getRight());
         String csql = (filtersAndNextR.getLeft().isPresent()) ? filtersAndNextR.getLeft().get().toString() : "";
 
         sql.append(selectSql());
         sql.append(String.format(" FROM %s", sourceExpr(filtersAndNextR.getRight())));
+        String new_sql = sql.toString();
+        // get table name of from clause; replace the unknown table name
+        int idx = sourceExpr(filtersAndNextR.getRight()).indexOf(' ');
+        if (idx != -1){
+            new_sql = new_sql.replace(unknownTablename, sourceExpr(filtersAndNextR.getRight()).substring(0,idx));
+            sql.replace(0,sql.length(), new_sql);
+        } else {
+            new_sql = new_sql.replace(unknownTablename, sourceExpr(filtersAndNextR.getRight()).substring(0,idx));
+            sql.replace(0,sql.length(), new_sql);
+        }
+
         if (csql.length() > 0) {
             sql.append(" WHERE ");
             sql.append(csql);
