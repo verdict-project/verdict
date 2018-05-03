@@ -215,17 +215,26 @@ public class AggregatedRelation extends ExactRelation {
         return sql.toString();
     }
 
-    public String toSql() { //todo: copy
+    public String toSql() {
         StringBuilder sql = new StringBuilder();
 
         Pair<List<Expr>, ExactRelation> groupsAndNextR = allPrecedingGroupbys(this.source);
         List<Expr> groupby = groupsAndNextR.getLeft();
-
         Pair<Optional<Cond>, ExactRelation> filtersAndNextR = allPrecedingFilters(groupsAndNextR.getRight());
         String csql = (filtersAndNextR.getLeft().isPresent()) ? filtersAndNextR.getLeft().get().toString() : "";
 
         sql.append(selectSql());
         sql.append(String.format(" FROM %s", sourceExpr(filtersAndNextR.getRight())));
+        String new_sql = sql.toString();
+        int idx = sourceExpr(filtersAndNextR.getRight()).indexOf(' '); // trying to get table name of from clause
+        if (idx != -1){
+            new_sql = new_sql.replace("?", sourceExpr(filtersAndNextR.getRight()).substring(0,idx));
+            sql.replace(0,sql.length(), new_sql);
+        } else {
+            new_sql = new_sql.replace("?", sourceExpr(filtersAndNextR.getRight()).substring(0,idx));
+            sql.replace(0,sql.length(), new_sql);
+        }
+
         if (csql.length() > 0) {
             sql.append(" WHERE ");
             sql.append(csql);

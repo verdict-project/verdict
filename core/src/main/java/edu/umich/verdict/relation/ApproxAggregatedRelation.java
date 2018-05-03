@@ -27,19 +27,11 @@ import com.google.common.base.Optional;
 
 import edu.umich.verdict.VerdictContext;
 import edu.umich.verdict.datatypes.TableUniqueName;
+import edu.umich.verdict.exceptions.VerdictException;
 import edu.umich.verdict.relation.condition.Cond;
 import edu.umich.verdict.relation.condition.IsCond;
 import edu.umich.verdict.relation.condition.NullCond;
-import edu.umich.verdict.relation.expr.BinaryOpExpr;
-import edu.umich.verdict.relation.expr.CaseExpr;
-import edu.umich.verdict.relation.expr.ColNameExpr;
-import edu.umich.verdict.relation.expr.ConstantExpr;
-import edu.umich.verdict.relation.expr.Expr;
-import edu.umich.verdict.relation.expr.ExprModifier;
-import edu.umich.verdict.relation.expr.FuncExpr;
-import edu.umich.verdict.relation.expr.OverClause;
-import edu.umich.verdict.relation.expr.SelectElem;
-import edu.umich.verdict.relation.expr.TableNameExpr;
+import edu.umich.verdict.relation.expr.*;
 import edu.umich.verdict.util.VerdictLogger;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -274,12 +266,13 @@ public class ApproxAggregatedRelation extends ApproxRelation {
         ColNameExpr partitionColExpr = newSource.partitionColumn();
         Expr tupleSamplingProbExpr = source.tupleProbabilityColumn();
         Expr tableSamplingRatioExpr = source.tableSamplingRatio();
-
+        //get the table name in the from clause
         Pair<List<Expr>, ApproxRelation> groupsAndNextR = allPrecedingGroupbys(this.source);
+        List<Expr> group = groupsAndNextR.getLeft();
         Pair<Optional<Cond>, ApproxRelation> filtersAndNextR = allPrecedingFilters(groupsAndNextR.getRight());
-        sourceExpr(filtersAndNextR.getRight())
+        String csql =  (filtersAndNextR.getLeft().isPresent()) ? filtersAndNextR.getLeft().get().toString() : "";
         SingleFunctionTransformerForSubsampling transformer = new SingleFunctionTransformerForSubsampling(vc, groupby,
-                partitionColExpr, tupleSamplingProbExpr, tableSamplingRatioExpr); //todo: constructor
+                partitionColExpr, tupleSamplingProbExpr, tableSamplingRatioExpr, csql, group);
 
         // copies groupby expressions (used if projectUnprojectedGroups is set to true)
         // this extra groupby is needed when the user-submitted query does not include the groupby columns
@@ -316,7 +309,7 @@ public class ApproxAggregatedRelation extends ApproxRelation {
                 Expr agg = elem.getExpr();
                 // Expr scaled = transformForSingleFunctionWithPartitionSize(agg, groupby,
                 // partitionColExpr, tupleSamplingProbExpr, tableSamplingRatio);
-                Expr scaled = transformer.call(agg); // todo: get from contents from this or constructor
+                Expr scaled = transformer.call(agg);
                 scaledElems.add(new SelectElem(vc, scaled, elem.getAlias()));
             }
         }
@@ -395,13 +388,19 @@ public class ApproxAggregatedRelation extends ApproxRelation {
 
         final Expr tableSamplingRatioExpr;
 
+        final List<Expr> group;
+
+        final String csql;
+
         public SingleFunctionTransformerForSubsampling(VerdictContext vc, List<Expr> groupby,
-                ColNameExpr partitionColExpr, Expr tupleSamplingProbExpr, Expr tableSamplingRatioExpr) {
+                ColNameExpr partitionColExpr, Expr tupleSamplingProbExpr, Expr tableSamplingRatioExpr, String csql, List<Expr> group) {
             super(vc);
             this.groupby = groupby;
             this.partitionColExpr = partitionColExpr;
             this.tupleSamplingProbExpr = tupleSamplingProbExpr;
             this.tableSamplingRatioExpr = tableSamplingRatioExpr;
+            this.group = group;
+            this.csql = csql;
         }
 
         public Expr call(Expr expr) {
@@ -429,8 +428,20 @@ public class ApproxAggregatedRelation extends ApproxRelation {
                     // scale with partition size
                     scaled = BinaryOpExpr.from(vc, scaled, FuncExpr.count(), "/");
                     if (vc.getConf().getDbms().equalsIgnoreCase("h2")){
-                        scaled = BinaryOpExpr.from(vc, scaled, String.format("(select asidasodgj)"), "*");
-                        //todo: rewrtie the window function
+                        StringBuilder conditionExpr = new StringBuilder();
+                        String from = tupleSamplingProbExpr.toString().substring(0, tupleSamplingProbExpr.toString().indexOf('.'));
+                        for (int i=0;i<groupby.size();i++){
+                            String col = groupby.get(i).toString().substring(groupby.get(i).toString().indexOf('.')+1);
+                            conditionExpr.append(" tmp."+col+"="+ from +"."+col);
+                            if (i!=groupby.size()-1){
+                                conditionExpr.append(" AND ");
+                            }
+                        }
+                        if (csql.length()>0) {
+                            conditionExpr.append(" AND " + csql.replace(from, "tmp"));
+                        }
+                        String subquery = "(SELECT count(1) from " + '?' + " tmp where " + conditionExpr+") ";
+                        scaled = BinaryOpExpr.from(vc, scaled, ConstantExpr.from(vc, subquery), "*");
                     }
                     else {
                         scaled = BinaryOpExpr.from(vc, scaled,
@@ -458,8 +469,20 @@ public class ApproxAggregatedRelation extends ApproxRelation {
                     // scale with partition size
                     scaled = BinaryOpExpr.from(vc, scaled, FuncExpr.count(), "/");
                     if (vc.getConf().getDbms().equalsIgnoreCase("h2")){
-                        scaled = BinaryOpExpr.from(vc, scaled, "(select asidasodgj)", "*");
-                        //todo: rewrtie the window function
+                        StringBuilder conditionExpr = new StringBuilder();
+                        String from = tupleSamplingProbExpr.toString().substring(0, tupleSamplingProbExpr.toString().indexOf('.'));
+                        for (int i=0;i<groupby.size();i++){
+                            String col = groupby.get(i).toString().substring(groupby.get(i).toString().indexOf('.')+1);
+                            conditionExpr.append(" tmp."+col+"="+ from +"."+col);
+                            if (i!=groupby.size()-1){
+                                conditionExpr.append(" AND ");
+                            }
+                        }
+                        if (csql.length()>0) {
+                            conditionExpr.append(" AND " + csql.replace(from, "tmp"));
+                        }
+                        String subquery = "(SELECT count(1) from " + '?' + " tmp where " + conditionExpr+") ";
+                        scaled = BinaryOpExpr.from(vc, scaled, ConstantExpr.from(vc, subquery), "*");
                     }
                     else {
                         scaled = BinaryOpExpr.from(vc, scaled,

@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import edu.umich.verdict.util.VerdictLogger;
 import org.apache.commons.lang3.tuple.Pair;
 
 import com.google.common.base.Joiner;
@@ -354,5 +355,41 @@ public class ApproxJoinedRelation extends ApproxRelation {
         colnames.addAll(source1.getAssociatedColumnNames(tabExpr));
         colnames.addAll(source2.getAssociatedColumnNames(tabExpr));
         return colnames;
+    }
+
+    //direct copy from JoinedRelation
+    protected static Map<JoinType, String> joinTypeString =
+            ImmutableMap.<JoinType, String>builder()
+                    .put(JoinType.INNER, "INNER JOIN")
+                    .put(JoinType.CROSS, "CROSS JOIN")
+                    .put(JoinType.LATERAL, "LATERAL VIEW")
+                    .put(JoinType.LEFT_OUTER, "LEFT OUTER JOIN")
+                    .put(JoinType.RIGHT_OUTER, "RIGHT OUTER JOIN")
+                    .put(JoinType.LEFT_SEMI, "LEFT SEMI JOIN")
+                    .build();
+
+    protected String joinClause() {
+        StringBuilder sql = new StringBuilder(100);
+
+        if (joinType.equals(JoinType.CROSS) || joinType.equals(JoinType.LATERAL)) {
+            sql.append(String.format("%s %s %s", sourceExpr(source1), joinTypeString.get(joinType), sourceExpr(source2)));
+        }
+        else if (joinCols == null || joinCols.size() == 0) {
+            VerdictLogger.debug(this, "No join conditions specified; cross join is used.");
+            sql.append(String.format("%s CROSS JOIN %s", sourceExpr(source1), sourceExpr(source2)));
+        }
+        else {      // INNER JOIN, LEFT OUTER, RIGHT OUTER
+            sql.append(String.format("%s %s %s ON", sourceExpr(source1), joinTypeString.get(joinType), sourceExpr(source2)));
+            for (int i = 0; i < joinCols.size(); i++) {
+                if (i != 0)
+                    sql.append(" AND");
+                sql.append(String.format(" %s = %s", joinCols.get(i).getLeft(), joinCols.get(i).getRight()));
+                // attachTableNameIfEmpty(joinCols.get(i).getLeft(), source1.getSourceName()),
+                // attachTableNameIfEmpty(joinCols.get(i).getRight(),
+                // source2.getSourceName())));
+            }
+        }
+
+        return sql.toString();
     }
 }
