@@ -583,12 +583,12 @@ public abstract class Dbms {
 
     public void updateSampleNameEntryIntoDBMS(SampleParam param, TableUniqueName metaNameTableName)
             throws VerdictException {
-        TableUniqueName tempTableName = createTempTableExlucdingNameEntry(param, metaNameTableName);
+        TableUniqueName tempTableName = createTempTableExcludingNameEntry(param, metaNameTableName);
         insertSampleNameEntryIntoDBMS(param, tempTableName);
         moveTable(tempTableName, metaNameTableName);
     }
 
-    protected TableUniqueName createTempTableExlucdingNameEntry(SampleParam param, TableUniqueName metaNameTableName)
+    protected TableUniqueName createTempTableExcludingNameEntry(SampleParam param, TableUniqueName metaNameTableName)
             throws VerdictException {
         String metaSchema = param.sampleTableName().getSchemaName();
         TableUniqueName tempTableName = Relation.getTempTableName(vc, metaSchema);
@@ -622,12 +622,12 @@ public abstract class Dbms {
 
     public void updateSampleSizeEntryIntoDBMS(SampleParam param, long sampleSize, long originalTableSize,
             TableUniqueName metaSizeTableName) throws VerdictException {
-        TableUniqueName tempTableName = createTempTableExlucdingSizeEntry(param, metaSizeTableName);
+        TableUniqueName tempTableName = createTempTableExcludingSizeEntry(param, metaSizeTableName);
         insertSampleSizeEntryIntoDBMS(param, sampleSize, originalTableSize, tempTableName);
         moveTable(tempTableName, metaSizeTableName);
     }
 
-    protected TableUniqueName createTempTableExlucdingSizeEntry(SampleParam param, TableUniqueName metaSizeTableName)
+    protected TableUniqueName createTempTableExcludingSizeEntry(SampleParam param, TableUniqueName metaSizeTableName)
             throws VerdictException {
         String metaSchema = param.sampleTableName().getSchemaName();
         TableUniqueName tempTableName = Relation.getTempTableName(vc, metaSchema);
@@ -652,13 +652,13 @@ public abstract class Dbms {
 
     public void deleteSampleNameEntryFromDBMS(SampleParam param, TableUniqueName metaNameTableName)
             throws VerdictException {
-        TableUniqueName tempTable = createTempTableExlucdingNameEntry(param, metaNameTableName);
+        TableUniqueName tempTable = createTempTableExcludingNameEntry(param, metaNameTableName);
         moveTable(tempTable, metaNameTableName);
     }
 
     public void deleteSampleSizeEntryFromDBMS(SampleParam param, TableUniqueName metaSizeTableName)
             throws VerdictException {
-        TableUniqueName tempTable = createTempTableExlucdingSizeEntry(param, metaSizeTableName);
+        TableUniqueName tempTable = createTempTableExcludingSizeEntry(param, metaSizeTableName);
         moveTable(tempTable, metaSizeTableName);
     }
 
