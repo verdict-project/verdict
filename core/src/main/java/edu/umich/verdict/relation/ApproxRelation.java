@@ -395,6 +395,7 @@ public abstract class ApproxRelation extends Relation {
         return Pair.of(c, t);
     }
 
+    //directly copy from ExactRelation
     protected String sourceExpr(ApproxRelation source) {
         if (source instanceof ApproxSingleRelation) {
             ApproxSingleRelation asource = (ApproxSingleRelation) source;
@@ -403,8 +404,8 @@ public abstract class ApproxRelation extends Relation {
             return String.format("%s AS %s", tableName, alias);
         } else if (source instanceof ApproxJoinedRelation) {
             return ((ApproxJoinedRelation) source).joinClause();
-        } else if (source instanceof LateralViewRelation) {
-            LateralViewRelation lv = (LateralViewRelation) source;
+        } else if (source instanceof ApproxLateralViewRelation) {
+            ApproxLateralViewRelation lv = (ApproxLateralViewRelation) source;
             LateralFunc func = lv.getLateralFunc();
             return String.format("%s %s AS %s", func.toSql(), lv.getTableAlias(), lv.getColumnAlias());
         } else {
