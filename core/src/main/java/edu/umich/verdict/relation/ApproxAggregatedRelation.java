@@ -270,7 +270,7 @@ public class ApproxAggregatedRelation extends ApproxRelation {
         Pair<List<Expr>, ApproxRelation> groupsAndNextR = allPrecedingGroupbys(this.source);
         List<Expr> group = groupsAndNextR.getLeft();
         Pair<Optional<Cond>, ApproxRelation> filtersAndNextR = allPrecedingFilters(groupsAndNextR.getRight());
-        String csql =  (filtersAndNextR.getLeft().isPresent()) ? filtersAndNextR.getLeft().get().toString() : "";
+        String csql =  (filtersAndNextR.getLeft().isPresent()) ? filtersAndNextR.getLeft().get().withNewTablePrefix("tmp_").toString() : "";
         SingleFunctionTransformerForSubsampling transformer = new SingleFunctionTransformerForSubsampling(vc, groupby,
                 partitionColExpr, tupleSamplingProbExpr, tableSamplingRatioExpr, csql);
 
@@ -429,17 +429,23 @@ public class ApproxAggregatedRelation extends ApproxRelation {
                         // get the reference name of the table in from clause
                         String from = ((ColNameExpr)groupby.get(0)).getTab();
                         for (int i=0;i<groupby.size();i++){
-                            // get the column name to translate from window function to correlated query
+                            // get the table and column name to translate from window function to correlated query
                             String col = ((ColNameExpr)groupby.get(i)).getCol();
-                            conditionExpr.append(" tmp."+col+"="+ from +"."+col);
+                            String tab = ((ColNameExpr)groupby.get(i)).getTab();
+                            conditionExpr.append(String.format(" tmp_%s.%s=%s.%s", tab, col, tab, col));
                             if (i!=groupby.size()-1){
                                 conditionExpr.append(" AND ");
                             }
                         }
                         if (csql.length()>0) {
-                            conditionExpr.append(" AND " + csql.replace(from, "tmp"));
+                            conditionExpr.append(" AND " + csql);
                         }
-                        String subquery = "(SELECT count(1) from " + unknownTablename + " tmp where " + conditionExpr+") ";
+
+                        if (conditionExpr.length() > 0) {
+                            conditionExpr.insert(0, " where");
+                        }
+                        String subquery = String.format("(SELECT count(1) from %s%s) ",
+                                UNKNOWN_TABLE_FOR_WINDOW_FUNC, conditionExpr);
                         scaled = BinaryOpExpr.from(vc, scaled, ConstantExpr.from(vc, subquery), "*");
                     }
                     else {
@@ -469,20 +475,23 @@ public class ApproxAggregatedRelation extends ApproxRelation {
                     scaled = BinaryOpExpr.from(vc, scaled, FuncExpr.count(), "/");
                     if (vc.getConf().getDbms().equalsIgnoreCase("h2")){
                         StringBuilder conditionExpr = new StringBuilder();
-                        // get the reference name of the table in from clause
-                        String from = ((ColNameExpr)groupby.get(0)).getTab();
                         for (int i=0;i<groupby.size();i++){
-                            // get the column name to translate from window function to correlated query
+                            // get the table and column name to translate from window function to correlated query
                             String col = ((ColNameExpr)groupby.get(i)).getCol();
-                            conditionExpr.append(" tmp."+col+"="+ from +"."+col);
+                            String tab = ((ColNameExpr)groupby.get(i)).getTab();
+                            conditionExpr.append(String.format(" tmp_%s.%s=%s.%s", tab, col, tab, col));
                             if (i!=groupby.size()-1){
                                 conditionExpr.append(" AND ");
                             }
                         }
                         if (csql.length()>0) {
-                            conditionExpr.append(" AND " + csql.replace(from, "tmp"));
+                            conditionExpr.append(" AND " + csql);
                         }
-                        String subquery = "(SELECT count(1) from " + unknownTablename + " tmp where " + conditionExpr+") ";
+                        if (conditionExpr.length() > 0) {
+                            conditionExpr.insert(0, " where");
+                        }
+                        String subquery = String.format("(SELECT count(1) from %s%s) ",
+                                UNKNOWN_TABLE_FOR_WINDOW_FUNC, conditionExpr);
                         scaled = BinaryOpExpr.from(vc, scaled, ConstantExpr.from(vc, subquery), "*");
                     }
                     else {

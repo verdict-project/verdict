@@ -151,6 +151,8 @@ public abstract class Expr {
 
     public abstract Expr withTableSubstituted(String newTab);
 
+    public abstract Expr withNewTablePrefix(String newPrefix);
+
     public abstract String toSql();
 
     @Override

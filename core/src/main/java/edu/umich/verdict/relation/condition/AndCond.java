@@ -94,6 +94,11 @@ public class AndCond extends Cond {
     }
 
     @Override
+    public Cond withNewTablePrefix(String newPrefix) {
+        return new AndCond(left.withNewTablePrefix(newPrefix), right.withNewTablePrefix(newPrefix));
+    }
+
+    @Override
     public String toSql() {
         return String.format("(%s) AND (%s)", left.toSql(), right.toSql());
     }

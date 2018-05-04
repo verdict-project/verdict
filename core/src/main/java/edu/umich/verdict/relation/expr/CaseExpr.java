@@ -112,6 +112,21 @@ public class CaseExpr extends Expr {
     }
 
     @Override
+    public Expr withNewTablePrefix(String newPrefix) {
+        List<Cond> newConds = new ArrayList<Cond>();
+        for (Cond c : conditions) {
+            newConds.add(c.withNewTablePrefix(newPrefix));
+        }
+
+        List<Expr> newExprs = new ArrayList<Expr>();
+        for (Expr e : expressions) {
+            newExprs.add(e.withNewTablePrefix(newPrefix));
+        }
+
+        return new CaseExpr(vc, newConds, newExprs);
+    }
+
+    @Override
     public String toSql() {
         StringBuilder sql = new StringBuilder(100);
         sql.append("(CASE");

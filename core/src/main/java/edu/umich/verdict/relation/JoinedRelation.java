@@ -218,6 +218,60 @@ public class JoinedRelation extends ExactRelation {
         return sql.toString();
     }
 
+    protected String joinClauseWithTempAlias() {
+        StringBuilder sql = new StringBuilder(100);
+
+        if (joinType.equals(JoinType.CROSS) || joinType.equals(JoinType.LATERAL)) {
+            sql.append(String.format("%s %s %s", sourceExprWithTempAlias(source1), joinTypeString.get(joinType), sourceExprWithTempAlias(source2)));
+        }
+        else if (joinCols == null || joinCols.size() == 0) {
+            VerdictLogger.debug(this, "No join conditions specified; cross join is used.");
+            sql.append(String.format("%s CROSS JOIN %s", sourceExprWithTempAlias(source1), sourceExprWithTempAlias(source2)));
+        }
+        else {      // INNER JOIN, LEFT OUTER, RIGHT OUTER
+            if (!(source1 instanceof JoinedRelation) && !(source2 instanceof JoinedRelation)) {
+                sql.append(String.format("%s %s %s ON",
+                        sourceExprWithTempAlias(source1), joinTypeString.get(joinType), sourceExprWithTempAlias(source2)));
+                for (int i = 0; i < joinCols.size(); i++) {
+                    if (i != 0)
+                        sql.append(" AND");
+                    sql.append(String.format(" tmp_%s = tmp_%s", joinCols.get(i).getLeft(), joinCols.get(i).getRight()));
+                    // attachTableNameIfEmpty(joinCols.get(i).getLeft(), source1.getSourceName()),
+                    // attachTableNameIfEmpty(joinCols.get(i).getRight(),
+                    // source2.getSourceName())));
+                }
+            } else if (source1 instanceof JoinedRelation && !(source2 instanceof JoinedRelation)) {
+                sql.append(String.format("%s %s %s ON",
+                        sourceExprWithTempAlias(source1), joinTypeString.get(joinType), sourceExprWithTempAlias(source2)));
+                for (int i = 0; i < joinCols.size(); i++) {
+                    if (i != 0)
+                        sql.append(" AND");
+                    sql.append(String.format(" tmp_%s = tmp_%s", joinCols.get(i).getLeft(), joinCols.get(i).getRight()));
+                }
+            } else if (source2 instanceof JoinedRelation && !(source1 instanceof JoinedRelation)) {
+                sql.append(String.format("%s %s %s ON",
+                        sourceExprWithTempAlias(source2), joinTypeString.get(joinType), sourceExprWithTempAlias(source1)));
+                for (int i = 0; i < joinCols.size(); i++) {
+                    if (i != 0)
+                        sql.append(" AND");
+                    sql.append(String.format(" tmp_%s = tmp_%s", joinCols.get(i).getLeft(), joinCols.get(i).getRight()));
+                }
+            } else if ((source1 instanceof JoinedRelation) && (source2 instanceof JoinedRelation)) {
+                sql.append(String.format("(%s) %s (%s) ON",
+                        sourceExprWithTempAlias(source1), joinTypeString.get(joinType),
+                        sourceExprWithTempAlias(source2)));
+                for (int i = 0; i < joinCols.size(); i++) {
+                    if (i != 0)
+                        sql.append(" AND");
+                    sql.append(String.format(" tmp_%s = tmp_%s", joinCols.get(i).getLeft(),
+                            joinCols.get(i).getRight()));
+                }
+            }
+        }
+
+        return sql.toString();
+    }
+
     private ColNameExpr attachTableNameIfEmpty(Expr colName, String tableName) {
         ColNameExpr c = ColNameExpr.from(vc, colName.toString());
         if (c.getTab() == null) {

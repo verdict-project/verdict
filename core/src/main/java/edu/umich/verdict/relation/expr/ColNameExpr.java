@@ -118,6 +118,11 @@ public class ColNameExpr extends Expr implements Comparable {
     }
 
     @Override
+    public Expr withNewTablePrefix(String newPrefix) {
+        return new ColNameExpr(vc, col, newPrefix + tab);
+    }
+
+    @Override
     public String toSql() {
         return toString();
     }

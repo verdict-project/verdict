@@ -229,15 +229,17 @@ public class AggregatedRelation extends ExactRelation {
         sql.append(selectSql());
         sql.append(String.format(" FROM %s", sourceExpr(filtersAndNextR.getRight())));
         String new_sql = sql.toString();
+        String sql_with_temp = sourceExprWithTempAlias(filtersAndNextR.getRight());
         // get table name of from clause; replace the unknown table name
-        int idx = sourceExpr(filtersAndNextR.getRight()).indexOf(' ');
-        if (idx != -1){
-            new_sql = new_sql.replace(unknownTablename, sourceExpr(filtersAndNextR.getRight()).substring(0,idx));
-            sql.replace(0,sql.length(), new_sql);
-        } else {
-            new_sql = new_sql.replace(unknownTablename, sourceExpr(filtersAndNextR.getRight()).substring(0,idx));
-            sql.replace(0,sql.length(), new_sql);
-        }
+        new_sql = new_sql.replace(UNKNOWN_TABLE_FOR_WINDOW_FUNC, sql_with_temp);
+        sql.replace(0,sql.length(), new_sql);
+//        if (idx != -1){
+//            new_sql = new_sql.replace(UNKNOWN_TABLE_FOR_WINDOW_FUNC, sourceExpr(filtersAndNextR.getRight()).substring(0,idx));
+//            sql.replace(0,sql.length(), new_sql);
+//        } else {
+//            new_sql = new_sql.replace(UNKNOWN_TABLE_FOR_WINDOW_FUNC, sourceExpr(filtersAndNextR.getRight()).substring(0,idx));
+//            sql.replace(0,sql.length(), new_sql);
+//        }
 
         if (csql.length() > 0) {
             sql.append(" WHERE ");

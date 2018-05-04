@@ -62,6 +62,11 @@ public class SubqueryExpr extends Expr {
     }
 
     @Override
+    public Expr withNewTablePrefix(String newPrefix) {
+        return this;
+    }
+
+    @Override
     public String toSql() {
         return "(" + subquery.toSql() + ")";
     }

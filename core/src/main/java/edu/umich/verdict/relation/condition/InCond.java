@@ -111,6 +111,20 @@ public class InCond extends Cond {
     }
 
     @Override
+    public Cond withNewTablePrefix(String newPrefix) {
+        if (expressionList == null) {
+            return this;
+        }
+
+        Expr newLeft = left.withNewTablePrefix(newPrefix);
+        List<Expr> newExpressions = new ArrayList<Expr>();
+        for (Expr expr : expressionList) {
+            newExpressions.add(expr.withNewTablePrefix(newPrefix));
+        }
+        return new InCond(newLeft, not, newExpressions);
+    }
+
+    @Override
     public String toString() {
         return toSql();
     }

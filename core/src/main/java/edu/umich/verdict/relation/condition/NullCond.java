@@ -52,6 +52,11 @@ public class NullCond extends Cond {
     }
 
     @Override
+    public Cond withNewTablePrefix(String newPrefix) {
+        return this;
+    }
+
+    @Override
     public String toSql() {
         return toString();
     }

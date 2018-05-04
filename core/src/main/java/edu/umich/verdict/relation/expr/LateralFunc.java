@@ -78,6 +78,11 @@ public class LateralFunc extends Expr {
     }
 
     @Override
+    public Expr withNewTablePrefix(String newPrefix) {
+        return new LateralFunc(funcname, expr.withNewTablePrefix(newPrefix));
+    }
+
+    @Override
     public String toSql() {
         StringBuilder sql = new StringBuilder(50);
         sql.append(String.format(functionPattern.get(funcname), expr.toSql()));

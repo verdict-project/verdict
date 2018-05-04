@@ -20,7 +20,12 @@ public class TrueFalseCond extends Cond {
     public Cond withTableSubstituted(String newTab) {
         return this;
     }
-    
+
+    @Override
+    public Cond withNewTablePrefix(String newPrefix) {
+        return this;
+    }
+
     @Override
     public String toString() {
         return (isTrue)? "TRUE" : "FALSE";
