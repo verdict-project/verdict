@@ -496,6 +496,27 @@ public abstract class ExactRelation extends Relation implements Comparable {
         }
     }
 
+    protected String sourceExprWithTempAlias(ExactRelation source) {
+        if (source instanceof SingleRelation) {
+            SingleRelation asource = (SingleRelation) source;
+            TableUniqueName tableName = asource.getTableName();
+            String alias = asource.getAlias();
+            return String.format("%s as tmp_%s", tableName, alias);
+        } else if (source instanceof JoinedRelation) {
+            return ((JoinedRelation) source).joinClauseWithTempAlias();
+        } else if (source instanceof LateralViewRelation) {
+            LateralViewRelation lv = (LateralViewRelation) source;
+            LateralFunc func = lv.getLateralFunc();
+            return String.format("%s tmp_%s AS tmp_%s", func.toSql(), lv.getTableAlias(), lv.getColumnAlias());
+        } else {
+            String alias = source.getAlias();
+            if (alias == null) {
+                alias = Relation.genTableAlias();
+            }
+            return String.format("(%s) as tmp_%s", source.toSql(), alias);
+        }
+    }
+
     // /**
     // * This function tracks select list elements whose answers could be
     // approximate when run on a sample.

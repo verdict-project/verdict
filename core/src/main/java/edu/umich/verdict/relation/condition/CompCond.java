@@ -427,6 +427,11 @@ public class CompCond extends Cond {
     }
 
     @Override
+    public Cond withNewTablePrefix(String newPrefix) {
+        return new CompCond(left.withNewTablePrefix(newPrefix), compOp, right.withNewTablePrefix(newPrefix));
+    }
+
+    @Override
     public String toSql() {
         return String.format("%s %s %s", left.toSql(), compOp, right.toSql());
     }

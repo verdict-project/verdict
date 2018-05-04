@@ -59,6 +59,11 @@ public class StarExpr extends Expr {
     }
 
     @Override
+    public Expr withNewTablePrefix(String newPrefix) {
+        return this;
+    }
+
+    @Override
     public String toSql() {
         return toString();
     }

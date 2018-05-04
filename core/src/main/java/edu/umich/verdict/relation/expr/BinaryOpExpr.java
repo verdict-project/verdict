@@ -70,6 +70,11 @@ public class BinaryOpExpr extends Expr {
     }
 
     @Override
+    public Expr withNewTablePrefix(String newPrefix) {
+        return new BinaryOpExpr(vc, left.withNewTablePrefix(newPrefix), right.withNewTablePrefix(newPrefix), op);
+    }
+
+    @Override
     public String toSql() {
         return String.format("(%s %s %s)", left.toSql(), op, right.toSql());
     }

@@ -69,4 +69,9 @@ public class ExistsCond extends Cond {
         return this;
     }
 
+    @Override
+    public Cond withNewTablePrefix(String newPrefix) {
+        return this;
+    }
+
 }

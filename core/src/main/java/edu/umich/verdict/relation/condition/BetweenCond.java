@@ -55,7 +55,14 @@ public class BetweenCond extends Cond {
                                getLeft().withTableSubstituted(newTab),
                                getRight().withTableSubstituted(newTab));
     }
-    
+
+    @Override
+    public Cond withNewTablePrefix(String newPrefix) {
+        return new BetweenCond(getCol().withNewTablePrefix(newPrefix),
+                getLeft().withNewTablePrefix(newPrefix),
+                getRight().withNewTablePrefix(newPrefix));
+    }
+
     @Override
     public String toString() {
         return toSql();

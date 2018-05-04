@@ -56,6 +56,11 @@ public class IsCond extends Cond {
     }
 
     @Override
+    public Cond withNewTablePrefix(String newPrefix) {
+        return new IsCond(left.withNewTablePrefix(newPrefix), right.withNewTablePrefix(newPrefix));
+    }
+
+    @Override
     public String toSql() {
         return String.format("(%s IS %s)", left.toSql(), right.toSql());
     }

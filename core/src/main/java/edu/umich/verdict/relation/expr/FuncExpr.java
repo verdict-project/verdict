@@ -620,6 +620,15 @@ public class FuncExpr extends Expr {
     }
 
     @Override
+    public Expr withNewTablePrefix(String newPrefix) {
+        List<Expr> newExprs = new ArrayList<Expr>();
+        for (Expr e : expressions) {
+            newExprs.add(e.withNewTablePrefix(newPrefix));
+        }
+        return new FuncExpr(funcname, newExprs, overClause);
+    }
+
+    @Override
     public String toSql() {
         StringBuilder sql = new StringBuilder(50);
         if (funcname == FuncName.CONCAT || funcname == FuncName.CONCAT_WS ||

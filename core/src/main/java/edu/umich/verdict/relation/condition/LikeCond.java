@@ -72,6 +72,11 @@ public class LikeCond extends Cond {
     }
 
     @Override
+    public Cond withNewTablePrefix(String newPrefix) {
+        return new LikeCond(getLeft().withNewTablePrefix(newPrefix), getRight().withNewTablePrefix(newPrefix), isNot());
+    }
+
+    @Override
     public String toString() {
         return toSql();
     }

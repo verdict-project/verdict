@@ -43,6 +43,11 @@ public class NotCond extends Cond {
     }
 
     @Override
+    public Cond withNewTablePrefix(String newPrefix) {
+        return new NotCond(cond.withNewTablePrefix(newPrefix));
+    }
+
+    @Override
     public String toSql() {
         return String.format("NOT (%s)", cond.toSql());
     }

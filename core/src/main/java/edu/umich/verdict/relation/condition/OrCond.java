@@ -63,6 +63,11 @@ public class OrCond extends Cond {
     }
 
     @Override
+    public Cond withNewTablePrefix(String newPrefix) {
+        return new OrCond(left.withNewTablePrefix(newPrefix), right.withNewTablePrefix(newPrefix));
+    }
+
+    @Override
     public String toSql() {
         return String.format("(%s) OR (%s)", left.toSql(), right.toSql());
     }

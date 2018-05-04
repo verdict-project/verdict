@@ -80,6 +80,12 @@ public class OrderByExpr extends Expr {
     }
 
     @Override
+    public Expr withNewTablePrefix(String newPrefix) {
+        Expr newExpr = expr.withNewTablePrefix(newPrefix);
+        return new OrderByExpr(vc, newExpr, direction.orNull());
+    }
+
+    @Override
     public String toSql() {
         return toString();
     }

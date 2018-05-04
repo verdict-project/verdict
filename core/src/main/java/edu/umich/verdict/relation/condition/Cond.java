@@ -76,6 +76,8 @@ public abstract class Cond {
 
     public abstract Cond withTableSubstituted(String newTab);
 
+    public abstract Cond withNewTablePrefix(String newPrefix);
+
     public <T> T accept(CondVisitor<T> condVisitor) {
         return condVisitor.call(this);
     }
