@@ -190,7 +190,7 @@ public class CreateSampleQuery extends Query {
             VerdictLogger.info(this, String.format("Creating a uniform sample first."));
             createUniformRandomSample(uniformSample);
             sampleAndOriginalSizes = vc.getDbms().createUniformRandomSampleTableOf(uniformSample);
-            vc.getMeta().insertSampleInfo(param, sampleAndOriginalSizes.getLeft(),
+            vc.getMeta().insertSampleInfo(uniformSample, sampleAndOriginalSizes.getLeft(),
                 sampleAndOriginalSizes.getRight());
 
             // refresh sample tables & info before creating the stratified sample.
