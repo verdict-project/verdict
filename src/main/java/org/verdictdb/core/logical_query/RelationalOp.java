@@ -1,6 +1,6 @@
 package org.verdictdb.core.logical_query;
 
-import java.util.HashMap;
+import java.util.List;
 
 import org.verdictdb.core.sql.syntax.SyntaxAbstract;
 import org.verdictdb.exception.VerdictDbException;
@@ -24,10 +24,10 @@ public class RelationalOp implements AbstractRelation {
      * <ol>
      * <li>project: projection column list</li>
      * <li>filter: a predicate</li>
-     * <li>aggregate: aggregate column list</li>
+     * <li>aggregate: aggregate column list + groupby list</li>
      * </ol>
      */
-    HashMap<String, Object> parameters;
+    Object parameters;
     
     public RelationalOp(AbstractRelation sourceRelation, String opType) {
         this.sourceRelation = sourceRelation;
@@ -36,12 +36,29 @@ public class RelationalOp implements AbstractRelation {
 
     @Override
     public String toSql(SyntaxAbstract syntax) throws VerdictDbException {
-        // TODO Auto-generated method stub
-        return null;
+        String sql;
+        if (opType.equals("aggregate")) {
+            sql = toSqlAgg(syntax);
+        } else {
+            sql = null;
+        }
+        return sql;
     }
     
-    private String toSqlAgg(SyntaxAbstract syntax) {
-        return null;
+    private String toSqlAgg(SyntaxAbstract syntax) throws VerdictDbException {
+        StringBuilder sql = new StringBuilder();
+        
+        // select
+        sql.append("select");
+        List<AbstractColumn> columns = (List<AbstractColumn>) parameters;
+        for (AbstractColumn a : columns) {
+            sql.append(" " + a.toSql(syntax));
+        }
+        
+        // from
+        sql.append(" from");
+        sql.append(" " + sourceRelation.toSql(syntax));
+        return sql.toString();
     }
 
 }
