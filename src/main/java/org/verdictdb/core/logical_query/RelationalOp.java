@@ -1,10 +1,5 @@
 package org.verdictdb.core.logical_query;
 
-import java.util.List;
-
-import org.verdictdb.core.sql.syntax.SyntaxAbstract;
-import org.verdictdb.exception.VerdictDbException;
-
 public class RelationalOp implements AbstractRelation {
     
     AbstractRelation sourceRelation;
@@ -29,36 +24,34 @@ public class RelationalOp implements AbstractRelation {
      */
     Object parameters;
     
-    public RelationalOp(AbstractRelation sourceRelation, String opType) {
+    public RelationalOp(AbstractRelation sourceRelation, String opType, Object parameters) {
         this.sourceRelation = sourceRelation;
+        this.opType = opType;
+        this.parameters = parameters;
+    }
+
+    public AbstractRelation getSourceRelation() {
+        return sourceRelation;
+    }
+
+    public void setSourceRelation(AbstractRelation sourceRelation) {
+        this.sourceRelation = sourceRelation;
+    }
+
+    public String getOpType() {
+        return opType;
+    }
+
+    public void setOpType(String opType) {
         this.opType = opType;
     }
 
-    @Override
-    public String toSql(SyntaxAbstract syntax) throws VerdictDbException {
-        String sql;
-        if (opType.equals("aggregate")) {
-            sql = toSqlAgg(syntax);
-        } else {
-            sql = null;
-        }
-        return sql;
+    public Object getParameters() {
+        return parameters;
     }
-    
-    private String toSqlAgg(SyntaxAbstract syntax) throws VerdictDbException {
-        StringBuilder sql = new StringBuilder();
-        
-        // select
-        sql.append("select");
-        List<AbstractColumn> columns = (List<AbstractColumn>) parameters;
-        for (AbstractColumn a : columns) {
-            sql.append(" " + a.toSql(syntax));
-        }
-        
-        // from
-        sql.append(" from");
-        sql.append(" " + sourceRelation.toSql(syntax));
-        return sql.toString();
+
+    public void setParameters(Object parameters) {
+        this.parameters = parameters;
     }
 
 }

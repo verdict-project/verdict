@@ -1,8 +1,5 @@
 package org.verdictdb.core.logical_query;
 
-import org.verdictdb.core.sql.syntax.SyntaxAbstract;
-import org.verdictdb.exception.VerdictDbException;
-
 public class ColumnOp implements AbstractColumn {
     
     AbstractColumn source;
@@ -10,6 +7,7 @@ public class ColumnOp implements AbstractColumn {
     /**
      * opType must be one of the following:
      * <ol>
+     * <li>*</li>
      * <li>sum</li>
      * <li>count</li>
      * <li>avg</li>
@@ -21,13 +19,25 @@ public class ColumnOp implements AbstractColumn {
      */
     String opType;
     
-    public ColumnOp(AbstractColumn source, String opType) {
+    public ColumnOp(String opType, AbstractColumn source) {
         this.source = source;
         this.opType = opType;
     }
-    
-    public String toSql(SyntaxAbstract syntax) throws VerdictDbException {
-        return opType + "(" + source.toSql(syntax) + ")";
+
+    public AbstractColumn getSource() {
+        return source;
+    }
+
+    public void setSource(AbstractColumn source) {
+        this.source = source;
+    }
+
+    public String getOpType() {
+        return opType;
+    }
+
+    public void setOpType(String opType) {
+        this.opType = opType;
     }
 
 }

@@ -5,6 +5,4 @@ import org.verdictdb.exception.VerdictDbException;
 
 public interface AbstractRelation {
 
-    public String toSql(SyntaxAbstract syntax) throws VerdictDbException;
-
 }
