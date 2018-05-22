@@ -80,4 +80,16 @@ public class RelationToSqlTest {
         assertEquals(expected, actual);
     }
 
+    @Test
+    public void testSelectAggregatesBaseTable() throws VerdictDbException {
+        BaseTable base = new BaseTable("myschema", "mytable", "t");
+        Object parameters = Arrays.asList(new ColumnOp("avg", new BaseColumn("t", "mycolumn1")),
+                                          new ColumnOp("sum", new BaseColumn("t", "mycolumn1")),
+                                          new ColumnOp("count", new ColumnOp("*", null)));
+        RelationalOp relation = new RelationalOp(base, "select", parameters);
+        String expected = "select avg(`t`.`mycolumn1`), sum(`t`.`mycolumn1`), count(*) from `myschema`.`mytable`";
+        RelationToSql relToSql = new RelationToSql(new HiveSyntax());
+        String actual = relToSql.toSql(relation);
+        assertEquals(expected, actual);
+    }
 }
