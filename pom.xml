@@ -22,7 +22,7 @@
         <maven.failsafe.version>2.13</maven.failsafe.version>
         <maven.surefire.version>2.12.4</maven.surefire.version>
         <maven.javadoc.version>2.10.4</maven.javadoc.version>
-        <skipTests>true</skipTests>
+        <skipTests>false</skipTests>
     </properties>
 
     <build>
