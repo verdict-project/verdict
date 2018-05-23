@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.com/pyongjoo/verdictdb-private.svg?token=ZZ3Q2KaUkfAREhZnVscr&branch=master)](https://travis-ci.com/pyongjoo/verdictdb-private)
+
 # Same SQL, Same DB, 100x-200x Faster Analytics
 
 <p align="center">
