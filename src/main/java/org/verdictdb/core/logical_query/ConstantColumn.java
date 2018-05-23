@@ -18,5 +18,11 @@ public class ConstantColumn implements AbstractColumn {
         c.setValue(Integer.valueOf(value));
         return c;
     }
+    
+    public static ConstantColumn valueOf(String value) {
+        ConstantColumn c = new ConstantColumn();
+        c.setValue(value);
+        return c;
+    }
 
 }

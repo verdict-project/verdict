@@ -20,6 +20,9 @@ public class ColumnOp implements AbstractColumn {
      * <li>and</li>
      * <li>or</li>
      * <li>=</li>
+     * <li><></li>
+     * <li>casewhenelse</li>
+     * <li>not null</li>
      * </ol>
      */
     String opType;
@@ -68,8 +71,20 @@ public class ColumnOp implements AbstractColumn {
         return new ColumnOp("=", Arrays.asList(column1, column2));
     }
     
+    public static ColumnOp notequal(AbstractColumn column1, AbstractColumn column2) {
+        return new ColumnOp("<>", Arrays.asList(column1, column2));
+    }
+    
     public static ColumnOp multiply(AbstractColumn column1, AbstractColumn column2) {
         return new ColumnOp("=", Arrays.asList(column1, column2));
+    }
+    
+    public static ColumnOp casewhenelse(AbstractColumn columnIf, AbstractColumn condition, AbstractColumn columnElse) {
+        return new ColumnOp("casewhenelse", Arrays.asList(columnIf, condition, columnElse));
+    }
+    
+    public static ColumnOp notnull(AbstractColumn column1) {
+        return new ColumnOp("notnull", Arrays.asList(column1));
     }
 
 }

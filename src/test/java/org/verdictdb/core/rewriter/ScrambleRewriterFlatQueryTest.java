@@ -44,8 +44,7 @@ public class ScrambleRewriterFlatQueryTest {
     public void testSelectCountBaseTable() throws VerdictDbException {
         BaseTable base = new BaseTable("myschema", "mytable", "t");
         SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
-                Arrays.<AbstractColumn>asList(new ColumnOp("count")),
-                base);
+                Arrays.<AbstractColumn>asList(new ColumnOp("count")), base);
         ScrambleMeta meta = new ScrambleMeta();
         meta.insertScrumbleMetaEntry("myschema", "mytable", "verdictpartition", "verdictincprob", 10);
         ScrambleRewriter rewriter = new ScrambleRewriter(meta);
@@ -53,6 +52,28 @@ public class ScrambleRewriterFlatQueryTest {
         
         for (int k = 0; k < 10; k++) {
             String expected = "select sum(1 / `t`.`verdictincprob`) "
+                    + "from `myschema`.`mytable` "
+                    + "where `t`.`verdictpartition` = " + k;
+            RelationToSql relToSql = new RelationToSql(new HiveSyntax());
+            String actual = relToSql.toSql(rewritten.get(k));
+            assertEquals(expected, actual);
+        }
+    }
+    
+    @Test
+    public void testSelectAvgBaseTable() throws VerdictDbException {
+        BaseTable base = new BaseTable("myschema", "mytable", "t");
+        SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
+                Arrays.<AbstractColumn>asList(new ColumnOp("avg", new BaseColumn("t", "mycolumn1"))),
+                base);
+        ScrambleMeta meta = new ScrambleMeta();
+        meta.insertScrumbleMetaEntry("myschema", "mytable", "verdictpartition", "verdictincprob", 10);
+        ScrambleRewriter rewriter = new ScrambleRewriter(meta);
+        List<AbstractRelation> rewritten = rewriter.rewrite(relation);
+        
+        for (int k = 0; k < 10; k++) {
+            String expected = "select sum(`t`.`mycolumn1` / `t`.`verdictincprob`), "
+                    + "sum(case 1 when `t`.`mycolumn1` is not null else 0 end / `t`.`verdictincprob`) "
                     + "from `myschema`.`mytable` "
                     + "where `t`.`verdictpartition` = " + k;
             RelationToSql relToSql = new RelationToSql(new HiveSyntax());

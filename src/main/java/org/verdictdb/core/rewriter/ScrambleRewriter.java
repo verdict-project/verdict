@@ -86,6 +86,22 @@ public class ScrambleRewriter {
                                         new ColumnOp("divide", Arrays.asList(ConstantColumn.valueOf(1), probCol)));
                     modifiedSelectList.add(newCol);
                 }
+                else if (col.getOpType().equals("avg")) {
+                    AbstractColumn op = col.getOperand();
+                    AbstractColumn probCol = deriveInclusionProbabilityColumn(relation);
+                    // sum of attribute values
+                    ColumnOp newCol1 = new ColumnOp("sum",
+                                         new ColumnOp("divide", Arrays.asList(op, probCol)));
+                    // number of attribute values
+                    ColumnOp oneIfNotNull = ColumnOp.casewhenelse(
+                                                ConstantColumn.valueOf(1),
+                                                ColumnOp.notnull(op),
+                                                ConstantColumn.valueOf(0));
+                    ColumnOp newCol2 = new ColumnOp("sum",
+                                         new ColumnOp("divide", Arrays.asList(oneIfNotNull, probCol)));
+                    modifiedSelectList.add(newCol1);
+                    modifiedSelectList.add(newCol2);
+                }
                 else {
                     throw new UnexpectedTypeException("Not implemented yet.");
                 }

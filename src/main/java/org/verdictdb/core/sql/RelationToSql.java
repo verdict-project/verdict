@@ -73,6 +73,18 @@ public class RelationToSql {
             else if (columnOp.getOpType().equals("or")) {
                 return withParentheses(columnOp.getOperand(0)) + " or " + withParentheses(columnOp.getOperand(1));
             }
+            else if (columnOp.getOpType().equals("casewhenelse")) {
+                return "case " + withParentheses(columnOp.getOperand(0))
+                     + " when " + withParentheses(columnOp.getOperand(1))
+                     + " else " + withParentheses(columnOp.getOperand(2))
+                     + " end";
+            }
+            else if (columnOp.getOpType().equals("<>")) {
+                return withParentheses(columnOp.getOperand(0)) + " <> " + withParentheses(columnOp.getOperand(1));
+            }
+            else if (columnOp.getOpType().equals("notnull")) {
+                return withParentheses(columnOp.getOperand(0)) + " is not null";
+            }
             else {
                 throw new UnexpectedTypeException("Unexpceted opType of column: " + columnOp.getOpType().toString());
             }
