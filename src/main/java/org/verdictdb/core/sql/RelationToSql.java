@@ -1,12 +1,14 @@
 package org.verdictdb.core.sql;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.verdictdb.core.logical_query.AbstractColumn;
 import org.verdictdb.core.logical_query.AbstractRelation;
 import org.verdictdb.core.logical_query.BaseColumn;
 import org.verdictdb.core.logical_query.BaseTable;
 import org.verdictdb.core.logical_query.ColumnOp;
+import org.verdictdb.core.logical_query.ConstantColumn;
 import org.verdictdb.core.logical_query.SelectQueryOp;
 import org.verdictdb.core.sql.syntax.SyntaxAbstract;
 import org.verdictdb.exception.UnexpectedTypeException;
@@ -28,41 +30,62 @@ public class RelationToSql {
         return relationToSqlPart(relation);
     }
     
-    String toSqlPart(AbstractColumn column) throws UnexpectedTypeException {
+    String columnToSqlPart(AbstractColumn column) throws UnexpectedTypeException {
         if (column instanceof BaseColumn) {
             BaseColumn base = (BaseColumn) column;
             return quoteName(base.getTableSourceAlias()) + "." + quoteName(base.getColumnName());
-        } else if (column instanceof AbstractColumn) {
+        }
+        else if (column instanceof ConstantColumn) {
+            return ((ConstantColumn) column).getValue().toString();
+        }
+        else if (column instanceof ColumnOp) {
             ColumnOp columnOp = (ColumnOp) column;
             if (columnOp.getOpType().equals("*")) {
                 return "*";
             }
             else if (columnOp.getOpType().equals("avg")) {
-                return "avg(" + toSqlPart(columnOp.getOperand()) + ")";
+                return "avg(" + columnToSqlPart(columnOp.getOperand()) + ")";
             }
             else if (columnOp.getOpType().equals("sum")) {
-                return "sum(" + toSqlPart(columnOp.getOperand()) + ")";
+                return "sum(" + columnToSqlPart(columnOp.getOperand()) + ")";
             }
             else if (columnOp.getOpType().equals("count")) {
-                return "count(" + toSqlPart(columnOp.getOperand()) + ")";
+                return "count(" + columnToSqlPart(columnOp.getOperand()) + ")";
             }
             else if (columnOp.getOpType().equals("add")) {
-                return "(" + toSqlPart(columnOp.getOperand(0)) + " + " + toSqlPart(columnOp.getOperand(1)) + ")";
+                return withParentheses(columnOp.getOperand(0)) + " + " + withParentheses(columnOp.getOperand(1));
             }
             else if (columnOp.getOpType().equals("subtract")) {
-                return "(" + toSqlPart(columnOp.getOperand(0)) + " - " + toSqlPart(columnOp.getOperand(1)) + ")";
+                return withParentheses(columnOp.getOperand(0)) + " - " + withParentheses(columnOp.getOperand(1));
             }
             else if (columnOp.getOpType().equals("multiply")) {
-                return "(" + toSqlPart(columnOp.getOperand(0)) + " * " + toSqlPart(columnOp.getOperand(1)) + ")";
+                return withParentheses(columnOp.getOperand(0)) + " * " + withParentheses(columnOp.getOperand(1));
             }
             else if (columnOp.getOpType().equals("divide")) {
-                return "(" + toSqlPart(columnOp.getOperand(0)) + " / " + toSqlPart(columnOp.getOperand(1)) + ")";
+                return withParentheses(columnOp.getOperand(0)) + " / " + withParentheses(columnOp.getOperand(1));
+            }
+            else if (columnOp.getOpType().equals("=")) {
+                return withParentheses(columnOp.getOperand(0)) + " = " + withParentheses(columnOp.getOperand(1));
+            }
+            else if (columnOp.getOpType().equals("and")) {
+                return withParentheses(columnOp.getOperand(0)) + " and " + withParentheses(columnOp.getOperand(1));
+            }
+            else if (columnOp.getOpType().equals("or")) {
+                return withParentheses(columnOp.getOperand(0)) + " or " + withParentheses(columnOp.getOperand(1));
             }
             else {
                 throw new UnexpectedTypeException("Unexpceted opType of column: " + columnOp.getOpType().toString());
             }
         }
         throw new UnexpectedTypeException("Unexpceted argument type: " + column.getClass().toString());
+    }
+    
+    String withParentheses(AbstractColumn column) throws UnexpectedTypeException {
+        String sql = columnToSqlPart(column);
+        if (column instanceof ColumnOp && ((ColumnOp) column).getOpType().equals("*")) {
+            sql = "(" + sql + ")";
+        }
+        return sql;
     }
     
     String relationToSqlPart(AbstractRelation relation) throws VerdictDbException {
@@ -84,10 +107,10 @@ public class RelationToSql {
         boolean isFirstColumn = true;
         for (AbstractColumn a : columns) {
             if (isFirstColumn) {
-                sql.append(" " + toSqlPart(a));
+                sql.append(" " + columnToSqlPart(a));
                 isFirstColumn = false;
             } else {
-                sql.append(", " + toSqlPart(a));
+                sql.append(", " + columnToSqlPart(a));
             }
         }
         
@@ -102,6 +125,13 @@ public class RelationToSql {
             } else {
                 sql.append(", " + relationToSqlPart(r));
             }
+        }
+        
+        // where
+        Optional<AbstractColumn> filter = sel.getFilter();
+        if (filter.isPresent()) {
+            sql.append(" where ");
+            sql.append(columnToSqlPart(filter.get()));
         }
         
         return sql.toString();

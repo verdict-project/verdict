@@ -118,7 +118,7 @@ public class RelationToSqlTest {
         SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
                 Arrays.<AbstractColumn>asList(new ColumnOp("add", operands)),
                 base);
-        String expected = "select (`t`.`mycolumn1` + `t`.`mycolumn2`) from `myschema`.`mytable`";
+        String expected = "select `t`.`mycolumn1` + `t`.`mycolumn2` from `myschema`.`mytable`";
         RelationToSql relToSql = new RelationToSql(new HiveSyntax());
         String actual = relToSql.toSql(relation);
         assertEquals(expected, actual);
@@ -133,7 +133,7 @@ public class RelationToSqlTest {
         SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
                 Arrays.<AbstractColumn>asList(new ColumnOp("subtract", operands)),
                 base);
-        String expected = "select (`t`.`mycolumn1` - `t`.`mycolumn2`) from `myschema`.`mytable`";
+        String expected = "select `t`.`mycolumn1` - `t`.`mycolumn2` from `myschema`.`mytable`";
         RelationToSql relToSql = new RelationToSql(new HiveSyntax());
         String actual = relToSql.toSql(relation);
         assertEquals(expected, actual);
@@ -148,7 +148,7 @@ public class RelationToSqlTest {
         SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
                 Arrays.<AbstractColumn>asList(new ColumnOp("multiply", operands)),
                 base);
-        String expected = "select (`t`.`mycolumn1` * `t`.`mycolumn2`) from `myschema`.`mytable`";
+        String expected = "select `t`.`mycolumn1` * `t`.`mycolumn2` from `myschema`.`mytable`";
         RelationToSql relToSql = new RelationToSql(new HiveSyntax());
         String actual = relToSql.toSql(relation);
         assertEquals(expected, actual);
@@ -163,7 +163,7 @@ public class RelationToSqlTest {
         SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
                 Arrays.<AbstractColumn>asList(new ColumnOp("divide", operands)),
                 base);
-        String expected = "select (`t`.`mycolumn1` / `t`.`mycolumn2`) from `myschema`.`mytable`";
+        String expected = "select `t`.`mycolumn1` / `t`.`mycolumn2` from `myschema`.`mytable`";
         RelationToSql relToSql = new RelationToSql(new HiveSyntax());
         String actual = relToSql.toSql(relation);
         assertEquals(expected, actual);

@@ -2,6 +2,7 @@ package org.verdictdb.core.logical_query;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class SelectQueryOp implements AbstractRelation {
     
@@ -9,7 +10,7 @@ public class SelectQueryOp implements AbstractRelation {
     
     List<AbstractRelation> fromList = new ArrayList<>();
     
-    Predicate filter;
+    Optional<AbstractColumn> filter = Optional.empty();
     
     public SelectQueryOp() {}
     
@@ -29,6 +30,15 @@ public class SelectQueryOp implements AbstractRelation {
     public void addTableSource(AbstractRelation relation) {
         fromList.add(relation);
     }
+    
+    public void addFilterByAnd(AbstractColumn predicate) {
+        if (!filter.isPresent()) {
+            filter = Optional.of(predicate);
+        }
+        else {
+            filter = Optional.<AbstractColumn>of(ColumnOp.and(filter.get(), predicate));
+        }
+    }
 
     public List<AbstractColumn> getSelectList() {
         return selectList;
@@ -38,7 +48,7 @@ public class SelectQueryOp implements AbstractRelation {
         return fromList;
     }
 
-    public Predicate getFilter() {
+    public Optional<AbstractColumn> getFilter() {
         return filter;
     }
 

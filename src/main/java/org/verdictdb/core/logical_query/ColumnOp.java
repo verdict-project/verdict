@@ -6,8 +6,6 @@ import java.util.List;
 
 public class ColumnOp implements AbstractColumn {
     
-    List<AbstractColumn> operands;
-    
     /**
      * opType must be one of the following:
      * <ol>
@@ -19,10 +17,15 @@ public class ColumnOp implements AbstractColumn {
      * <li>multiply</li>
      * <li>subtract</li>
      * <li>divide</li>
+     * <li>and</li>
+     * <li>or</li>
+     * <li>=</li>
      * </ol>
      */
     String opType;
     
+    List<AbstractColumn> operands;
+
     public ColumnOp(String opType) {
         this.opType = opType;
     }
@@ -55,6 +58,18 @@ public class ColumnOp implements AbstractColumn {
 
     public void setOpType(String opType) {
         this.opType = opType;
+    }
+    
+    public static ColumnOp and(AbstractColumn predicate1, AbstractColumn predicate2) {
+        return new ColumnOp("and", Arrays.asList(predicate1, predicate2));
+    }
+    
+    public static ColumnOp equal(AbstractColumn column1, AbstractColumn column2) {
+        return new ColumnOp("=", Arrays.asList(column1, column2));
+    }
+    
+    public static ColumnOp multiply(AbstractColumn column1, AbstractColumn column2) {
+        return new ColumnOp("=", Arrays.asList(column1, column2));
     }
 
 }
