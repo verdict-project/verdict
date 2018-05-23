@@ -1,7 +1,12 @@
 package org.verdictdb.core.rewriter;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.SortedMap;
+
+import org.apache.commons.lang3.tuple.Pair;
 
 public class ScrambleMeta {
     
@@ -14,13 +19,17 @@ public class ScrambleMeta {
             String tableName,
             String partitionColumn,
             String inclusionProbabilityColumn,
-            int partitionCount) {
+            SortedMap<String, Long> partitionInfo) {
         ScrambleMetaForTable tableMeta = new ScrambleMetaForTable();
         tableMeta.setSchemaName(schemaName);
         tableMeta.setTableName(tableName);
         tableMeta.setPartitionColumn(partitionColumn);
-        tableMeta.setPartitionCount(partitionCount);
         tableMeta.setInclusionProbabilityColumn(inclusionProbabilityColumn);
+        
+        for (Map.Entry<String, Long> e : partitionInfo.entrySet()) {
+            tableMeta.addPartitionInfo(e.getKey(), e.getValue());
+        }
+        
         meta.put(metaKey(schemaName, tableName), tableMeta);
     }
     
@@ -39,6 +48,10 @@ public class ScrambleMeta {
     public String getInclusionProbabilityColumn(String schemaName, String tableName) {
         return meta.get(metaKey(schemaName, tableName)).getInclusionProbabilityColumn();
     }
+    
+    public Pair<String, Long> getPartitionAttributeAndSize(String schemaName, String tableName, int partitionNumber) {
+        return meta.get(metaKey(schemaName, tableName)).getPartitionAttributeAndSize(partitionNumber);
+    }
 
 }
 
@@ -56,12 +69,19 @@ class ScrambleMetaForTable {
     
     String partitionColumn;
     
-    int partitionCount;
+    List<Long> partitionSizes = new ArrayList<>();
+    
+    List<String> partitionAttributeValues = new ArrayList<>();
     
     String inclusionProbabilityColumn;
     
     
     public ScrambleMetaForTable() {}
+    
+    public void addPartitionInfo(String partitionAttributeValue, long partitionSize) {
+        partitionAttributeValues.add(partitionAttributeValue);
+        partitionSizes.add(partitionSize);
+    }
     
     public String getSchemaName() {
         return schemaName;
@@ -80,11 +100,7 @@ class ScrambleMetaForTable {
     }
 
     public int getPartitionCount() {
-        return partitionCount;
-    }
-
-    public void setPartitionCount(int partitionCount) {
-        this.partitionCount = partitionCount;
+        return partitionSizes.size();
     }
 
     public String getPartitionColumn() {
@@ -96,7 +112,7 @@ class ScrambleMetaForTable {
     }
     
     public String getPartitionAttributeValue(int i) {
-        return String.valueOf(i);
+        return partitionAttributeValues.get(i);
     }
 
     public String getInclusionProbabilityColumn() {
@@ -105,5 +121,11 @@ class ScrambleMetaForTable {
 
     public void setInclusionProbabilityColumn(String inclusionProbabilityColumn) {
         this.inclusionProbabilityColumn = inclusionProbabilityColumn;
+    }
+    
+    public Pair<String, Long> getPartitionAttributeAndSize(int partitionNumber) {
+        String attr = partitionAttributeValues.get(partitionNumber);
+        Long size = partitionSizes.get(partitionNumber);
+        return Pair.of(attr, size);
     }
 }
