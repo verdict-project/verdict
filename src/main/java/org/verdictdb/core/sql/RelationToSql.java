@@ -7,7 +7,7 @@ import org.verdictdb.core.logical_query.AbstractRelation;
 import org.verdictdb.core.logical_query.BaseColumn;
 import org.verdictdb.core.logical_query.BaseTable;
 import org.verdictdb.core.logical_query.ColumnOp;
-import org.verdictdb.core.logical_query.RelationalOp;
+import org.verdictdb.core.logical_query.SelectQueryOp;
 import org.verdictdb.core.sql.syntax.SyntaxAbstract;
 import org.verdictdb.exception.UnexpectedTypeException;
 import org.verdictdb.exception.VerdictDbException;
@@ -73,27 +73,37 @@ public class RelationToSql {
             return quoteName(base.getSchemaName()) + "." + quoteName(base.getTableName());
         }
         
-        RelationalOp rel = (RelationalOp) relation;
-        if (rel.getOpType().equals("select") || rel.getOpType().equals("aggregate")) {
-            // select
-            sql.append("select");
-            List<AbstractColumn> columns = (List<AbstractColumn>) rel.getParameters();
-            boolean isFirstColumn = true;
-            for (AbstractColumn a : columns) {
-                if (isFirstColumn) {
-                    sql.append(" " + toSqlPart(a));
-                    isFirstColumn = false;
-                } else {
-                    sql.append(", " + toSqlPart(a));
-                }
-            }
-            
-            // from
-            sql.append(" from");
-            sql.append(" " + relationToSqlPart(rel.getSourceRelation()));
-        } else {
-            throw new UnexpectedTypeException("Unexpceted opType in relation: " + rel.getOpType());
+        if (!(relation instanceof SelectQueryOp)) {
+            throw new UnexpectedTypeException("Unexpected relation type: " + relation.getClass().toString());
         }
+        
+        SelectQueryOp sel = (SelectQueryOp) relation;
+        // select
+        sql.append("select");
+        List<AbstractColumn> columns = sel.getSelectList();
+        boolean isFirstColumn = true;
+        for (AbstractColumn a : columns) {
+            if (isFirstColumn) {
+                sql.append(" " + toSqlPart(a));
+                isFirstColumn = false;
+            } else {
+                sql.append(", " + toSqlPart(a));
+            }
+        }
+        
+        // from
+        sql.append(" from");
+        List<AbstractRelation> rels = sel.getFromList();
+        boolean isFirstRel = true;
+        for (AbstractRelation r : rels) {
+            if (isFirstRel) {
+                sql.append(" " + relationToSqlPart(r));
+                isFirstRel = false;
+            } else {
+                sql.append(", " + relationToSqlPart(r));
+            }
+        }
+        
         return sql.toString();
     }
     

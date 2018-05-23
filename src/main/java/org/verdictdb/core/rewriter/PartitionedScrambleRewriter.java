@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.verdictdb.core.logical_query.AbstractRelation;
-import org.verdictdb.core.logical_query.RelationalOp;
+import org.verdictdb.core.logical_query.SelectQueryOp;
 import org.verdictdb.exception.UnexpectedTypeException;
 
 public class PartitionedScrambleRewriter {
@@ -37,14 +37,11 @@ public class PartitionedScrambleRewriter {
     
     AbstractRelation rewriteWithoutMaterialization(AbstractRelation relation, int partitionNumber) 
             throws UnexpectedTypeException {
-        if (!(relation instanceof RelationalOp)) {
+        if (!(relation instanceof SelectQueryOp)) {
             throw new UnexpectedTypeException("Not implemented yet.");
         }
         
-        RelationalOp rel = (RelationalOp) relation;
-        if (!(rel.getOpType().equals("aggregation"))) {
-            throw new UnexpectedTypeException("Not implemented yet.");
-        }
+        SelectQueryOp sel = (SelectQueryOp) relation;
         
         
         // TODO
