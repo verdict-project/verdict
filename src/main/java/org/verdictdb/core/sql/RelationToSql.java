@@ -36,13 +36,29 @@ public class RelationToSql {
             ColumnOp columnOp = (ColumnOp) column;
             if (columnOp.getOpType().equals("*")) {
                 return "*";
-            } else if (columnOp.getOpType().equals("avg")) {
-                return "avg(" + toSqlPart(columnOp.getSource()) + ")";
-            } else if (columnOp.getOpType().equals("sum")) {
-                return "sum(" + toSqlPart(columnOp.getSource()) + ")";
-            } else if (columnOp.getOpType().equals("count")) {
-                return "count(" + toSqlPart(columnOp.getSource()) + ")";
-            } else {
+            }
+            else if (columnOp.getOpType().equals("avg")) {
+                return "avg(" + toSqlPart(columnOp.getOperand()) + ")";
+            }
+            else if (columnOp.getOpType().equals("sum")) {
+                return "sum(" + toSqlPart(columnOp.getOperand()) + ")";
+            }
+            else if (columnOp.getOpType().equals("count")) {
+                return "count(" + toSqlPart(columnOp.getOperand()) + ")";
+            }
+            else if (columnOp.getOpType().equals("add")) {
+                return "(" + toSqlPart(columnOp.getOperand(0)) + " + " + toSqlPart(columnOp.getOperand(1)) + ")";
+            }
+            else if (columnOp.getOpType().equals("subtract")) {
+                return "(" + toSqlPart(columnOp.getOperand(0)) + " - " + toSqlPart(columnOp.getOperand(1)) + ")";
+            }
+            else if (columnOp.getOpType().equals("multiply")) {
+                return "(" + toSqlPart(columnOp.getOperand(0)) + " * " + toSqlPart(columnOp.getOperand(1)) + ")";
+            }
+            else if (columnOp.getOpType().equals("divide")) {
+                return "(" + toSqlPart(columnOp.getOperand(0)) + " / " + toSqlPart(columnOp.getOperand(1)) + ")";
+            }
+            else {
                 throw new UnexpectedTypeException("Unexpceted opType of column: " + columnOp.getOpType().toString());
             }
         }

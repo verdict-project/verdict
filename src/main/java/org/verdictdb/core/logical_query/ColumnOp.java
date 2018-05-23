@@ -1,8 +1,12 @@
 package org.verdictdb.core.logical_query;
 
+import java.util.Arrays;
+import java.util.List;
+
+
 public class ColumnOp implements AbstractColumn {
     
-    AbstractColumn source;
+    List<AbstractColumn> operands;
     
     /**
      * opType must be one of the following:
@@ -19,17 +23,30 @@ public class ColumnOp implements AbstractColumn {
      */
     String opType;
     
-    public ColumnOp(String opType, AbstractColumn source) {
-        this.source = source;
+    public ColumnOp(String opType) {
+        this.opType = opType;
+    }
+    
+    public ColumnOp(String opType, AbstractColumn operand) {
+        this.operands = Arrays.asList(operand);
+        this.opType = opType;
+    }
+    
+    public ColumnOp(String opType, List<AbstractColumn> operands) {
+        this.operands = operands;
         this.opType = opType;
     }
 
-    public AbstractColumn getSource() {
-        return source;
+    public AbstractColumn getOperand() {
+        return getOperand(0);
+    }
+    
+    public AbstractColumn getOperand(int i) {
+        return operands.get(i);
     }
 
-    public void setSource(AbstractColumn source) {
-        this.source = source;
+    public void setOperand(List<AbstractColumn> operands) {
+        this.operands = operands;
     }
 
     public String getOpType() {
