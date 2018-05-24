@@ -4,12 +4,11 @@ import java.util.Arrays;
 import java.util.List;
 
 
-public class ColumnOp implements AbstractColumn {
+public class ColumnOp implements UnnamedColumn, SelectItem {
     
     /**
      * opType must be one of the following:
      * <ol>
-     * <li>*</li>
      * <li>sum</li>
      * <li>count</li>
      * <li>avg</li>
@@ -27,31 +26,31 @@ public class ColumnOp implements AbstractColumn {
      */
     String opType;
     
-    List<AbstractColumn> operands;
+    List<UnnamedColumn> operands;
 
     public ColumnOp(String opType) {
         this.opType = opType;
     }
     
-    public ColumnOp(String opType, AbstractColumn operand) {
+    public ColumnOp(String opType, UnnamedColumn operand) {
         this.operands = Arrays.asList(operand);
         this.opType = opType;
     }
     
-    public ColumnOp(String opType, List<AbstractColumn> operands) {
+    public ColumnOp(String opType, List<UnnamedColumn> operands) {
         this.operands = operands;
         this.opType = opType;
     }
 
-    public AbstractColumn getOperand() {
+    public UnnamedColumn getOperand() {
         return getOperand(0);
     }
     
-    public AbstractColumn getOperand(int i) {
+    public UnnamedColumn getOperand(int i) {
         return operands.get(i);
     }
 
-    public void setOperand(List<AbstractColumn> operands) {
+    public void setOperand(List<UnnamedColumn> operands) {
         this.operands = operands;
     }
 
@@ -63,27 +62,27 @@ public class ColumnOp implements AbstractColumn {
         this.opType = opType;
     }
     
-    public static ColumnOp and(AbstractColumn predicate1, AbstractColumn predicate2) {
+    public static ColumnOp and(UnnamedColumn predicate1, UnnamedColumn predicate2) {
         return new ColumnOp("and", Arrays.asList(predicate1, predicate2));
     }
     
-    public static ColumnOp equal(AbstractColumn column1, AbstractColumn column2) {
+    public static ColumnOp equal(UnnamedColumn column1, UnnamedColumn column2) {
         return new ColumnOp("=", Arrays.asList(column1, column2));
     }
     
-    public static ColumnOp notequal(AbstractColumn column1, AbstractColumn column2) {
+    public static ColumnOp notequal(UnnamedColumn column1, UnnamedColumn column2) {
         return new ColumnOp("<>", Arrays.asList(column1, column2));
     }
     
-    public static ColumnOp multiply(AbstractColumn column1, AbstractColumn column2) {
+    public static ColumnOp multiply(UnnamedColumn column1, UnnamedColumn column2) {
         return new ColumnOp("=", Arrays.asList(column1, column2));
     }
     
-    public static ColumnOp casewhenelse(AbstractColumn columnIf, AbstractColumn condition, AbstractColumn columnElse) {
+    public static ColumnOp casewhenelse(UnnamedColumn columnIf, UnnamedColumn condition, UnnamedColumn columnElse) {
         return new ColumnOp("casewhenelse", Arrays.asList(columnIf, condition, columnElse));
     }
     
-    public static ColumnOp notnull(AbstractColumn column1) {
+    public static ColumnOp notnull(UnnamedColumn column1) {
         return new ColumnOp("notnull", Arrays.asList(column1));
     }
 

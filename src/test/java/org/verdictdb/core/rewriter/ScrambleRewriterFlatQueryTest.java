@@ -7,8 +7,9 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
-import org.verdictdb.core.logical_query.AbstractColumn;
+import org.verdictdb.core.logical_query.SelectItem;
 import org.verdictdb.core.logical_query.AbstractRelation;
+import org.verdictdb.core.logical_query.AliasedColumn;
 import org.verdictdb.core.logical_query.BaseColumn;
 import org.verdictdb.core.logical_query.BaseTable;
 import org.verdictdb.core.logical_query.ColumnOp;
@@ -33,15 +34,15 @@ public class ScrambleRewriterFlatQueryTest {
     public void testSelectSumBaseTable() throws VerdictDbException {
         BaseTable base = new BaseTable("myschema", "mytable", "t");
         SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
-                Arrays.<AbstractColumn>asList(
-                        new ColumnOp("sum", new BaseColumn("t", "mycolumn1"))),
+                Arrays.<SelectItem>asList(
+                        new AliasedColumn(new ColumnOp("sum", new BaseColumn("t", "mycolumn1")), "a")),
                 base);
         ScrambleMeta meta = generateTestScrambleMeta();
         ScrambleRewriter rewriter = new ScrambleRewriter(meta);
         List<AbstractRelation> rewritten = rewriter.rewrite(relation);
         
         for (int k = 0; k < 10; k++) {
-            String expected = "select sum(`t`.`mycolumn1` / `t`.`verdictincprob`) "
+            String expected = "select sum(`t`.`mycolumn1` / `t`.`verdictincprob`) as a "
                     + "from `myschema`.`mytable` "
                     + "where `t`.`verdictpartition` = part" + k;
             RelationToSql relToSql = new RelationToSql(new HiveSyntax());
@@ -54,13 +55,13 @@ public class ScrambleRewriterFlatQueryTest {
     public void testSelectCountBaseTable() throws VerdictDbException {
         BaseTable base = new BaseTable("myschema", "mytable", "t");
         SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
-                Arrays.<AbstractColumn>asList(new ColumnOp("count")), base);
+                Arrays.<SelectItem>asList(new AliasedColumn(new ColumnOp("count"), "a")), base);
         ScrambleMeta meta = generateTestScrambleMeta();
         ScrambleRewriter rewriter = new ScrambleRewriter(meta);
         List<AbstractRelation> rewritten = rewriter.rewrite(relation);
         
         for (int k = 0; k < 10; k++) {
-            String expected = "select sum(1 / `t`.`verdictincprob`) "
+            String expected = "select sum(1 / `t`.`verdictincprob`) as a "
                     + "from `myschema`.`mytable` "
                     + "where `t`.`verdictpartition` = part" + k;
             RelationToSql relToSql = new RelationToSql(new HiveSyntax());
@@ -73,15 +74,15 @@ public class ScrambleRewriterFlatQueryTest {
     public void testSelectAvgBaseTable() throws VerdictDbException {
         BaseTable base = new BaseTable("myschema", "mytable", "t");
         SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
-                Arrays.<AbstractColumn>asList(new ColumnOp("avg", new BaseColumn("t", "mycolumn1"))),
+                Arrays.<SelectItem>asList(new AliasedColumn(new ColumnOp("avg", new BaseColumn("t", "mycolumn1")), "a")),
                 base);
         ScrambleMeta meta = generateTestScrambleMeta();
         ScrambleRewriter rewriter = new ScrambleRewriter(meta);
         List<AbstractRelation> rewritten = rewriter.rewrite(relation);
         
         for (int k = 0; k < 10; k++) {
-            String expected = "select sum(`t`.`mycolumn1` / `t`.`verdictincprob`), "
-                    + "sum(case 1 when `t`.`mycolumn1` is not null else 0 end / `t`.`verdictincprob`) "
+            String expected = "select sum(`t`.`mycolumn1` / `t`.`verdictincprob`) as a_sum, "
+                    + "sum(case 1 when `t`.`mycolumn1` is not null else 0 end / `t`.`verdictincprob`) as a_count "
                     + "from `myschema`.`mytable` "
                     + "where `t`.`verdictpartition` = part" + k;
             RelationToSql relToSql = new RelationToSql(new HiveSyntax());

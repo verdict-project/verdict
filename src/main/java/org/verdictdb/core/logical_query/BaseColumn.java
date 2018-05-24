@@ -1,6 +1,6 @@
 package org.verdictdb.core.logical_query;
 
-public class BaseColumn implements AbstractColumn {
+public class BaseColumn implements UnnamedColumn, SelectItem {
     
     String tableSourceAlias;
     

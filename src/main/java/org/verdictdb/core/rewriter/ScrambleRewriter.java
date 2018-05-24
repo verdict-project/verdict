@@ -5,13 +5,15 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-import org.verdictdb.core.logical_query.AbstractColumn;
+import org.verdictdb.core.logical_query.SelectItem;
 import org.verdictdb.core.logical_query.AbstractRelation;
+import org.verdictdb.core.logical_query.AliasedColumn;
 import org.verdictdb.core.logical_query.BaseColumn;
 import org.verdictdb.core.logical_query.BaseTable;
 import org.verdictdb.core.logical_query.ColumnOp;
 import org.verdictdb.core.logical_query.ConstantColumn;
 import org.verdictdb.core.logical_query.SelectQueryOp;
+import org.verdictdb.core.logical_query.UnnamedColumn;
 import org.verdictdb.exception.UnexpectedTypeException;
 import org.verdictdb.exception.ValueException;
 import org.verdictdb.exception.VerdictDbException;
@@ -44,10 +46,10 @@ public class ScrambleRewriter {
         List<AbstractRelation> rewritten = new ArrayList<AbstractRelation>();
         
         AbstractRelation rewrittenWithoutPartition = rewriteNotIncludingMaterialization(relation);
-        List<AbstractColumn> partitionPredicates = generatePartitionPredicates(relation);
+        List<UnnamedColumn> partitionPredicates = generatePartitionPredicates(relation);
         
         for (int k = 0; k < partitionPredicates.size(); k++) {
-            AbstractColumn partitionPredicate = partitionPredicates.get(k);
+            UnnamedColumn partitionPredicate = partitionPredicates.get(k);
             SelectQueryOp rewritten_k = deepcopySelectQuery((SelectQueryOp) rewrittenWithoutPartition);
             rewritten_k.addFilterByAnd(partitionPredicate);
             rewritten.add(rewritten_k);
@@ -62,7 +64,7 @@ public class ScrambleRewriter {
     
     SelectQueryOp deepcopySelectQuery(SelectQueryOp relation) {
         SelectQueryOp sel = new SelectQueryOp();
-        for (AbstractColumn c : relation.getSelectList()) {
+        for (SelectItem c : relation.getSelectList()) {
             sel.addSelectItem(c);
         }
         for (AbstractRelation r : relation.getFromList()) {
@@ -91,30 +93,37 @@ public class ScrambleRewriter {
         
         SelectQueryOp rewritten = new SelectQueryOp();
         SelectQueryOp sel = (SelectQueryOp) relation;
-        List<AbstractColumn> selectList = sel.getSelectList();
-        List<AbstractColumn> modifiedSelectList = new ArrayList<>();
-        for (AbstractColumn c : selectList) {
+        List<SelectItem> selectList = sel.getSelectList();
+        List<SelectItem> modifiedSelectList = new ArrayList<>();
+        for (SelectItem item : selectList) {
+            if (!(item instanceof AliasedColumn)) {
+                throw new UnexpectedTypeException("Select items must be aliased for this function.");
+            }
+            
+            UnnamedColumn c = ((AliasedColumn) item).getColumn();
+            String aliasName = ((AliasedColumn) item).getAliasName();
+            
             if (c instanceof BaseColumn) {
-                modifiedSelectList.add(c);
+                modifiedSelectList.add(item);
             }
             else if (c instanceof ColumnOp) {
                 ColumnOp col = (ColumnOp) c;
                 if (col.getOpType().equals("sum")) {
-                    AbstractColumn op = col.getOperand();
-                    AbstractColumn probCol = deriveInclusionProbabilityColumn(relation);
+                    UnnamedColumn op = col.getOperand();
+                    UnnamedColumn probCol = deriveInclusionProbabilityColumn(relation);
                     ColumnOp newCol = new ColumnOp("sum",
-                                        new ColumnOp("divide", Arrays.asList(op, probCol)));
-                    modifiedSelectList.add(newCol);
+                                          new ColumnOp("divide", Arrays.asList(op, probCol)));
+                    modifiedSelectList.add(new AliasedColumn(newCol, aliasName));
                 }
                 else if (col.getOpType().equals("count")) {
-                    AbstractColumn probCol = deriveInclusionProbabilityColumn(relation);
+                    UnnamedColumn probCol = deriveInclusionProbabilityColumn(relation);
                     ColumnOp newCol = new ColumnOp("sum",
-                                        new ColumnOp("divide", Arrays.asList(ConstantColumn.valueOf(1), probCol)));
-                    modifiedSelectList.add(newCol);
+                                          new ColumnOp("divide", Arrays.asList(ConstantColumn.valueOf(1), probCol)));
+                    modifiedSelectList.add(new AliasedColumn(newCol, aliasName));
                 }
                 else if (col.getOpType().equals("avg")) {
-                    AbstractColumn op = col.getOperand();
-                    AbstractColumn probCol = deriveInclusionProbabilityColumn(relation);
+                    UnnamedColumn op = col.getOperand();
+                    UnnamedColumn probCol = deriveInclusionProbabilityColumn(relation);
                     // sum of attribute values
                     ColumnOp newCol1 = new ColumnOp("sum",
                                          new ColumnOp("divide", Arrays.asList(op, probCol)));
@@ -125,8 +134,8 @@ public class ScrambleRewriter {
                                                 ConstantColumn.valueOf(0));
                     ColumnOp newCol2 = new ColumnOp("sum",
                                          new ColumnOp("divide", Arrays.asList(oneIfNotNull, probCol)));
-                    modifiedSelectList.add(newCol1);
-                    modifiedSelectList.add(newCol2);
+                    modifiedSelectList.add(new AliasedColumn(newCol1, aliasName + "_sum"));
+                    modifiedSelectList.add(new AliasedColumn(newCol2, aliasName + "_count"));
                 }
                 else {
                     throw new UnexpectedTypeException("Not implemented yet.");
@@ -137,7 +146,7 @@ public class ScrambleRewriter {
             }
         }
         
-        for (AbstractColumn c : modifiedSelectList) {
+        for (SelectItem c : modifiedSelectList) {
             rewritten.addSelectItem(c);
         }
         for (AbstractRelation r : sel.getFromList()) {
@@ -151,16 +160,16 @@ public class ScrambleRewriter {
         return rewritten;
     }
     
-    List<AbstractColumn> generatePartitionPredicates(AbstractRelation relation) throws VerdictDbException {
+    List<UnnamedColumn> generatePartitionPredicates(AbstractRelation relation) throws VerdictDbException {
         if (!(relation instanceof SelectQueryOp)) {
             throw new UnexpectedTypeException("Unexpected relation type: " + relation.getClass().toString());
         }
         
-        List<AbstractColumn> partitionPredicates = new ArrayList<>();
+        List<UnnamedColumn> partitionPredicates = new ArrayList<>();
         SelectQueryOp sel = (SelectQueryOp) relation;
         List<AbstractRelation> fromList = sel.getFromList();
         for (AbstractRelation r : fromList) {
-            Optional<AbstractColumn> c = partitionColumnOfSource(r);
+            Optional<UnnamedColumn> c = partitionColumnOfSource(r);
             if (!c.isPresent()) {
                 continue;
             }
@@ -168,7 +177,7 @@ public class ScrambleRewriter {
                 throw new ValueException("Only a single table can be a scrambled table.");
             }
             
-            AbstractColumn partCol = c.get();
+            UnnamedColumn partCol = c.get();
             List<String> partitionAttributeValues = partitionAttributeValuesOfSource(r);
             for (String v : partitionAttributeValues) {
                 partitionPredicates.add(ColumnOp.equal(partCol, ConstantColumn.valueOf(v)));
@@ -197,13 +206,13 @@ public class ScrambleRewriter {
 //        return ColumnOp.equal(partCol, ConstantColumn.valueOf(partitionValue));
 //    }
     
-    Optional<AbstractColumn> partitionColumnOfSource(AbstractRelation source) throws UnexpectedTypeException {
+    Optional<UnnamedColumn> partitionColumnOfSource(AbstractRelation source) throws UnexpectedTypeException {
         if (source instanceof BaseTable) {
             BaseTable base = (BaseTable) source;
             String colName = scrambleMeta.getPartitionColumn(base.getSchemaName(), base.getTableName());
             String aliasName = base.getTableSourceAlias();
             BaseColumn col = new BaseColumn(aliasName, colName);
-            return Optional.<AbstractColumn>of(col);
+            return Optional.<UnnamedColumn>of(col);
         }
         else {
             throw new UnexpectedTypeException("Not implemented yet.");
@@ -248,16 +257,16 @@ public class ScrambleRewriter {
      * @return
      * @throws UnexpectedTypeException
      */
-    AbstractColumn deriveInclusionProbabilityColumn(AbstractRelation relation) throws UnexpectedTypeException {
+    UnnamedColumn deriveInclusionProbabilityColumn(AbstractRelation relation) throws UnexpectedTypeException {
         if (!(relation instanceof SelectQueryOp)) {
             throw new UnexpectedTypeException("Unexpected relation type: " + relation.getClass().toString());
         }
         
         SelectQueryOp sel = (SelectQueryOp) relation;
         List<AbstractRelation> fromList = sel.getFromList();
-        AbstractColumn incProbCol = null;
+        UnnamedColumn incProbCol = null;
         for (AbstractRelation r : fromList) {
-            Optional<AbstractColumn> c = inclusionProbabilityColumnOfSource(r);
+            Optional<UnnamedColumn> c = inclusionProbabilityColumnOfSource(r);
             if (!c.isPresent()) {
                 continue;
             }
@@ -271,7 +280,7 @@ public class ScrambleRewriter {
         return incProbCol;
     }
     
-    Optional<AbstractColumn> inclusionProbabilityColumnOfSource(AbstractRelation source) throws UnexpectedTypeException {
+    Optional<UnnamedColumn> inclusionProbabilityColumnOfSource(AbstractRelation source) throws UnexpectedTypeException {
         if (source instanceof BaseTable) {
             BaseTable base = (BaseTable) source;
             String colName = scrambleMeta.getInclusionProbabilityColumn(base.getSchemaName(), base.getTableName());
@@ -280,7 +289,7 @@ public class ScrambleRewriter {
             }
             String aliasName = base.getTableSourceAlias();
             BaseColumn col = new BaseColumn(aliasName, colName);
-            return Optional.<AbstractColumn>of(col);
+            return Optional.<UnnamedColumn>of(col);
         }
         else {
             throw new UnexpectedTypeException("Derived tables cannot be used."); 

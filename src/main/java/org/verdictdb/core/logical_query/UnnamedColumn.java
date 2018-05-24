@@ -1,5 +1,5 @@
 package org.verdictdb.core.logical_query;
 
-public interface AbstractColumn {
+public interface UnnamedColumn {
 
 }

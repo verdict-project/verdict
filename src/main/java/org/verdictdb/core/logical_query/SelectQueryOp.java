@@ -6,24 +6,26 @@ import java.util.Optional;
 
 public class SelectQueryOp implements AbstractRelation {
     
-    List<AbstractColumn> selectList = new ArrayList<>();
+    List<SelectItem> selectList = new ArrayList<>();
     
     List<AbstractRelation> fromList = new ArrayList<>();
     
-    Optional<AbstractColumn> filter = Optional.empty();
+    Optional<UnnamedColumn> filter = Optional.empty();
+    
+    List<UnnamedColumn> groupby = new ArrayList<>();
     
     public SelectQueryOp() {}
     
-    public static SelectQueryOp getSelectQueryOp(List<AbstractColumn> columns, AbstractRelation relation) {
+    public static SelectQueryOp getSelectQueryOp(List<SelectItem> columns, AbstractRelation relation) {
         SelectQueryOp sel = new SelectQueryOp();
-        for (AbstractColumn c : columns) {
+        for (SelectItem c : columns) {
             sel.addSelectItem(c);
         }
         sel.addTableSource(relation);
         return sel;
     }
     
-    public void addSelectItem(AbstractColumn column) {
+    public void addSelectItem(SelectItem column) {
         selectList.add(column);
     }
     
@@ -31,16 +33,16 @@ public class SelectQueryOp implements AbstractRelation {
         fromList.add(relation);
     }
     
-    public void addFilterByAnd(AbstractColumn predicate) {
+    public void addFilterByAnd(UnnamedColumn predicate) {
         if (!filter.isPresent()) {
             filter = Optional.of(predicate);
         }
         else {
-            filter = Optional.<AbstractColumn>of(ColumnOp.and(filter.get(), predicate));
+            filter = Optional.<UnnamedColumn>of(ColumnOp.and(filter.get(), predicate));
         }
     }
 
-    public List<AbstractColumn> getSelectList() {
+    public List<SelectItem> getSelectList() {
         return selectList;
     }
 
@@ -48,7 +50,7 @@ public class SelectQueryOp implements AbstractRelation {
         return fromList;
     }
 
-    public Optional<AbstractColumn> getFilter() {
+    public Optional<UnnamedColumn> getFilter() {
         return filter;
     }
 
