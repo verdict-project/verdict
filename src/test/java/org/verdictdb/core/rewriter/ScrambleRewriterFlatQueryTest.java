@@ -1,11 +1,10 @@
 package org.verdictdb.core.rewriter;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.junit.Test;
 import org.verdictdb.core.logical_query.AbstractColumn;
@@ -22,11 +21,11 @@ public class ScrambleRewriterFlatQueryTest {
     
     ScrambleMeta generateTestScrambleMeta() {
         ScrambleMeta meta = new ScrambleMeta();
-        Map<String, Long> partitionInfo = new HashMap<>();
+        List<String> partitionAttrValues = new ArrayList<>();
         for (int k = 0; k < 10; k++) {
-            partitionInfo.put("part" + String.valueOf(k), (long) 1000);
+            partitionAttrValues.add("part" + String.valueOf(k));
         }
-        meta.insertScrumbleMetaEntry("myschema", "mytable", "verdictpartition", "verdictincprob", partitionInfo);
+        meta.insertScrumbleMetaEntry("myschema", "mytable", "verdictpartition", "verdictincprob", partitionAttrValues);
         return meta;
     }
 
