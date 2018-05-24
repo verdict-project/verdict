@@ -28,8 +28,24 @@ public class ScrambleRewriter {
     
     ScrambleMeta scrambleMeta;
     
+    int nextAliasNumber = 1;
+    
     public ScrambleRewriter(ScrambleMeta scrambleMeta) {
         this.scrambleMeta = scrambleMeta;
+    }
+    
+    String generateNextAliasName() {
+        String aliasName = "verdictalias" + nextAliasNumber;
+        nextAliasNumber += 1;
+        return aliasName;
+    }
+    
+    String generateMeanEstimateAliasName(String aliasName) {
+        return aliasName;
+    }
+    
+    String generateStdEstimateAliasName(String aliasName) {
+        return "std_" + aliasName;
     }
     
     /**
@@ -79,6 +95,43 @@ public class ScrambleRewriter {
     /**
      * Rewrite a given query into AQP-enabled form. The rewritten queries do not include any "create table ..."
      * parts.
+     * 
+     * "select other_groups, sum(price) from ... group by other_groups;" is converted to
+     * "select other_groups,
+     *         sum(sub_sum_est) as mean_estimate,
+     *         std(sub_sum_est*sqrt(subsample_size)) / sqrt(sum(subsample_size)) as std_estimate
+     *  from (select other_groups,
+     *               sum(price / prob) as sub_sum_est,
+     *               count(*) as subsample_size
+     *        from ...
+     *        group by sid, other_groups) as sub_table
+     *  group by other_groups;"
+     *  
+     * "select other_groups, avg(price) from ... group by other_groups;" is converted to
+     * "select other_groups,
+     *         sum(sub_sum_est) / sum(sub_count_est) as mean_estimate,
+     *         std(sub_sum_est/sub_count_est*sqrt(subsample_size)) / sqrt(sum(subsample_size)) as std_estimate
+     *  from (select other_groups,
+     *               sum(price / prob) as sub_sum_est,
+     *               sum(case 1 when price is not null else 0 end / prob) as sub_count_est,
+     *               count(*) as subsample_size
+     *        from ...
+     *        group by sid, other_groups) as sub_table
+     *  group by other_groups;"
+     *  This is based on the self-normalized estimator.
+     *  https://statweb.stanford.edu/~owen/mc/Ch-var-is.pdf
+     *  
+     * "select other_groups, count(*) from ... group by other_groups;" is converted to
+     * "select other_groups,
+     *         sum(sub_count_est) as mean_estimate
+     *         sum(sub_count_est*sqrt(subsample_size)) / sqrt(sum(subsample_size)) as std_estimate,
+     *  from (select other_groups,
+     *               sum(1 / prob) as sub_count_est,
+     *               count(*) as subsample_size
+     *        from ...
+     *        group by sid, other_groups) as sub_table
+     *  group by other_groups;"
+     * 
      * @param relation
      * @param partitionNumber
      * @return
@@ -94,32 +147,53 @@ public class ScrambleRewriter {
         SelectQueryOp rewritten = new SelectQueryOp();
         SelectQueryOp sel = (SelectQueryOp) relation;
         List<SelectItem> selectList = sel.getSelectList();
-        List<SelectItem> modifiedSelectList = new ArrayList<>();
+        List<SelectItem> newInnerSelectList = new ArrayList<>();
+        List<SelectItem> newOuterSelectList = new ArrayList<>();
+        String innerTableAliasName = generateNextAliasName();
         for (SelectItem item : selectList) {
             if (!(item instanceof AliasedColumn)) {
-                throw new UnexpectedTypeException("Select items must be aliased for this function.");
+                throw new UnexpectedTypeException("The following select item is not aliased: " + item.toString());
             }
             
             UnnamedColumn c = ((AliasedColumn) item).getColumn();
             String aliasName = ((AliasedColumn) item).getAliasName();
             
             if (c instanceof BaseColumn) {
-                modifiedSelectList.add(item);
+                String aliasForBase = generateNextAliasName();
+                newInnerSelectList.add(new AliasedColumn(c, aliasForBase));
+                newOuterSelectList.add(new AliasedColumn(new BaseColumn(innerTableAliasName, aliasForBase), aliasName));
             }
             else if (c instanceof ColumnOp) {
                 ColumnOp col = (ColumnOp) c;
                 if (col.getOpType().equals("sum")) {
+                    String aliasForSubSumEst = generateNextAliasName();
+                    String aliasForSubsampleSize = generateNextAliasName();
+                    String aliasForMeanEstimate = generateMeanEstimateAliasName(aliasName);
+                    String aliasForStdEstimate = generateStdEstimateAliasName(aliasName);
                     UnnamedColumn op = col.getOperand();
                     UnnamedColumn probCol = deriveInclusionProbabilityColumn(relation);
                     ColumnOp newCol = new ColumnOp("sum",
                                           new ColumnOp("divide", Arrays.asList(op, probCol)));
-                    modifiedSelectList.add(new AliasedColumn(newCol, aliasName));
+                    newInnerSelectList.add(new AliasedColumn(newCol, aliasForSubSumEst));
+                    newInnerSelectList.add(new AliasedColumn(new ColumnOp("count"), aliasForSubsampleSize));
+                    newOuterSelectList.add(new AliasedColumn(
+                                               new ColumnOp("sum", new BaseColumn(innerTableAliasName, aliasForSubSumEst)),
+                                               aliasForMeanEstimate));
+                    newOuterSelectList.add(new AliasedColumn(ColumnOp.divide(
+                                                   new ColumnOp("std",
+                                                       ColumnOp.multiply(
+                                                           new BaseColumn(innerTableAliasName, aliasForSubSumEst),
+                                                           ColumnOp.sqrt(new BaseColumn(innerTableAliasName, aliasForSubsampleSize)))),
+                                                   ColumnOp.sqrt(
+                                                       ColumnOp.sum(new BaseColumn(innerTableAliasName, aliasForSubsampleSize)))),
+                                               aliasForStdEstimate));
+                    newInnerGroupbyList.add()
                 }
                 else if (col.getOpType().equals("count")) {
                     UnnamedColumn probCol = deriveInclusionProbabilityColumn(relation);
                     ColumnOp newCol = new ColumnOp("sum",
                                           new ColumnOp("divide", Arrays.asList(ConstantColumn.valueOf(1), probCol)));
-                    modifiedSelectList.add(new AliasedColumn(newCol, aliasName));
+                    newInnerSelectList.add(new AliasedColumn(newCol, aliasName));
                 }
                 else if (col.getOpType().equals("avg")) {
                     UnnamedColumn op = col.getOperand();
@@ -134,8 +208,8 @@ public class ScrambleRewriter {
                                                 ConstantColumn.valueOf(0));
                     ColumnOp newCol2 = new ColumnOp("sum",
                                          new ColumnOp("divide", Arrays.asList(oneIfNotNull, probCol)));
-                    modifiedSelectList.add(new AliasedColumn(newCol1, aliasName + "_sum"));
-                    modifiedSelectList.add(new AliasedColumn(newCol2, aliasName + "_count"));
+                    newInnerSelectList.add(new AliasedColumn(newCol1, aliasName + "_sum"));
+                    newInnerSelectList.add(new AliasedColumn(newCol2, aliasName + "_count"));
                 }
                 else {
                     throw new UnexpectedTypeException("Not implemented yet.");
@@ -146,7 +220,7 @@ public class ScrambleRewriter {
             }
         }
         
-        for (SelectItem c : modifiedSelectList) {
+        for (SelectItem c : newInnerSelectList) {
             rewritten.addSelectItem(c);
         }
         for (AbstractRelation r : sel.getFromList()) {

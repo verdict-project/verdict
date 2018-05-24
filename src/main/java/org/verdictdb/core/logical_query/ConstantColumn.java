@@ -1,7 +1,7 @@
 package org.verdictdb.core.logical_query;
 
 
-public class ConstantColumn implements UnnamedColumn, SelectItem {
+public class ConstantColumn extends UnnamedColumn implements SelectItem {
     
     Object value;
     

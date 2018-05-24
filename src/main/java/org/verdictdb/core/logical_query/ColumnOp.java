@@ -4,7 +4,7 @@ import java.util.Arrays;
 import java.util.List;
 
 
-public class ColumnOp implements UnnamedColumn, SelectItem {
+public class ColumnOp extends UnnamedColumn implements SelectItem {
     
     /**
      * opType must be one of the following:
@@ -75,7 +75,11 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
     }
     
     public static ColumnOp multiply(UnnamedColumn column1, UnnamedColumn column2) {
-        return new ColumnOp("=", Arrays.asList(column1, column2));
+        return new ColumnOp("*", Arrays.asList(column1, column2));
+    }
+    
+    public static ColumnOp divide(UnnamedColumn column1, UnnamedColumn column2) {
+        return new ColumnOp("/", Arrays.asList(column1, column2));
     }
     
     public static ColumnOp casewhenelse(UnnamedColumn columnIf, UnnamedColumn condition, UnnamedColumn columnElse) {
@@ -84,6 +88,18 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
     
     public static ColumnOp notnull(UnnamedColumn column1) {
         return new ColumnOp("notnull", Arrays.asList(column1));
+    }
+    
+    public static ColumnOp std(UnnamedColumn column1, UnnamedColumn column2) {
+        return new ColumnOp("std", Arrays.asList(column1, column2));
+    }
+    
+    public static ColumnOp sqrt(UnnamedColumn column1) {
+        return new ColumnOp("sqrt", Arrays.asList(column1));
+    }
+    
+    public static ColumnOp sum(UnnamedColumn column1) {
+        return new ColumnOp("sum", Arrays.asList(column1));
     }
 
 }

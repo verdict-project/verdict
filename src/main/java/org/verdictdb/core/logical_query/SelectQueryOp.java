@@ -12,7 +12,7 @@ public class SelectQueryOp implements AbstractRelation {
     
     Optional<UnnamedColumn> filter = Optional.empty();
     
-    List<UnnamedColumn> groupby = new ArrayList<>();
+    List<GroupingAttribute> groupby = new ArrayList<>();
     
     public SelectQueryOp() {}
     
@@ -52,6 +52,10 @@ public class SelectQueryOp implements AbstractRelation {
 
     public Optional<UnnamedColumn> getFilter() {
         return filter;
+    }
+    
+    public List<GroupingAttribute> getGroupby() {
+        return groupby;
     }
 
 }

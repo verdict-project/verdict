@@ -1,5 +1,11 @@
 package org.verdictdb.core.logical_query;
 
+/**
+ * Represents "column as aliasName".
+ * 
+ * @author Yongjoo Park
+ *
+ */
 public class AliasedColumn implements SelectItem {
     
     UnnamedColumn column;

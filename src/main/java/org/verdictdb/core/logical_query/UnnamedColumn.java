@@ -1,5 +1,11 @@
 package org.verdictdb.core.logical_query;
 
-public interface UnnamedColumn {
+/**
+ * Represents the column without alias.
+ * 
+ * @author Yongjoo Park
+ *
+ */
+public abstract class UnnamedColumn {
 
 }
