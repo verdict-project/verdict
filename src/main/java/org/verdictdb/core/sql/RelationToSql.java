@@ -13,7 +13,7 @@ import org.verdictdb.core.logical_query.BaseTable;
 import org.verdictdb.core.logical_query.ColumnOp;
 import org.verdictdb.core.logical_query.ConstantColumn;
 import org.verdictdb.core.logical_query.GroupingAttribute;
-import org.verdictdb.core.logical_query.AliasColumn;
+import org.verdictdb.core.logical_query.AliasReference;
 import org.verdictdb.core.logical_query.SelectQueryOp;
 import org.verdictdb.core.logical_query.UnnamedColumn;
 import org.verdictdb.core.sql.syntax.SyntaxAbstract;
@@ -60,8 +60,8 @@ public class RelationToSql {
         if (column instanceof AsteriskColumn) {
             throw new UnexpectedTypeException("asterisk is not expected in the groupby clause.");
         }
-        if (column instanceof AliasColumn) {
-            return quoteName(((AliasColumn) column).getColumn());
+        if (column instanceof AliasReference) {
+            return quoteName(((AliasReference) column).getAliasName());
         }
         else {
             return unnamedColumnToSqlPart((UnnamedColumn) column);
@@ -190,6 +190,7 @@ public class RelationToSql {
             if (isFirstGroup) {
                 sql.append(" group by ");
                 sql.append(groupingAttributeToSqlPart(a));
+                isFirstGroup = false;
             } else {
                 sql.append(", " + groupingAttributeToSqlPart(a));
             }

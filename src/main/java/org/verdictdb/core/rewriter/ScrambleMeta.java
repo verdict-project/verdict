@@ -34,6 +34,10 @@ public class ScrambleMeta {
         return schemaName + "#" + tableName;
     }
     
+    private String metaKey(String aliasName) {
+        return aliasName;
+    }
+    
     public String getPartitionColumn(String schemaName, String tableName) {
         return meta.get(metaKey(schemaName, tableName)).getPartitionColumn();
     }
@@ -48,6 +52,10 @@ public class ScrambleMeta {
 
     public String getSubsampleColumn(String schemaName, String tableName) {
         return meta.get(metaKey(schemaName, tableName)).getSubsampleColumn();
+    }
+    
+    public String getSubsampleColumn(String aliasName) {
+        return meta.get(metaKey(aliasName)).getSubsampleColumn();
     }
 
     public String getInclusionProbabilityBlockDifferenceColumn(String schemaName, String tableName) {

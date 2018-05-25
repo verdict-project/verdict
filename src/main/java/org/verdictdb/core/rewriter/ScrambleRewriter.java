@@ -2,12 +2,15 @@ package org.verdictdb.core.rewriter;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.verdictdb.core.logical_query.SelectItem;
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.core.logical_query.AbstractRelation;
+import org.verdictdb.core.logical_query.AliasReference;
 import org.verdictdb.core.logical_query.AliasedColumn;
 import org.verdictdb.core.logical_query.BaseColumn;
 import org.verdictdb.core.logical_query.BaseTable;
@@ -64,25 +67,10 @@ public class ScrambleRewriter {
      * @throws VerdictDbException 
      */
     public List<AbstractRelation> rewrite(AbstractRelation relation) throws VerdictDbException {
-//        int partitionCount = derivePartitionCount(relation);
-//        List<AbstractRelation> rewritten = new ArrayList<AbstractRelation>();
-        
         UnnamedColumn subsampleColumn = deriveSubsampleIdColumn(relation);
         AggregationBlockSequence blockSeq = generateAggregationBlockSequence(relation);
         List<AbstractRelation> rewritten = rewriteNotIncludingMaterialization(relation, subsampleColumn, blockSeq);
-//        List<UnnamedColumn> partitionPredicates = generatePartitionPredicates(relation);
-        
-//        for (int k = 0; k < partitionPredicates.size(); k++) {
-//            UnnamedColumn partitionPredicate = partitionPredicates.get(k);
-//            SelectQueryOp rewritten_k = deepcopySelectQuery((SelectQueryOp) rewrittenWithoutPartition);
-//            ((SelectQueryOp) rewritten_k.getFromList().get(0)).addFilterByAnd(partitionPredicate);
-//            rewritten.add(rewritten_k);
-//        }
-        
-//        for (int k = 0; k < partitionCount; k++) {
-//            rewritten.add(rewriteNotIncludingMaterialization(relation, k));
-//        }
-        
+
         return rewritten;
     }
     
@@ -192,6 +180,8 @@ public class ScrambleRewriter {
         List<GroupingAttribute> groupbyList = sel.getGroupby();
         List<GroupingAttribute> newInnerGroupbyList = new ArrayList<>();
         List<GroupingAttribute> newOuterGroupbyList = new ArrayList<>();
+        // The pair is (innerAliasName, outerAliasName)
+        List<Pair<UnnamedColumn, Pair<String, String>>> innerNonaggregateSelectItemToAliases = new ArrayList<>();
         for (SelectItem item : selectList) {
             if (!(item instanceof AliasedColumn)) {
                 throw new UnexpectedTypeException("The following select item is not aliased: " + item.toString());
@@ -204,6 +194,7 @@ public class ScrambleRewriter {
                 String aliasForBase = generateNextAliasName();
                 newInnerSelectList.add(new AliasedColumn(c, aliasForBase));
                 newOuterSelectList.add(new AliasedColumn(new BaseColumn(innerTableAliasName, aliasForBase), aliasName));
+                innerNonaggregateSelectItemToAliases.add(Pair.of(c, Pair.of(aliasForBase, aliasName)));
             }
             else if (c instanceof ColumnOp) {
                 ColumnOp col = (ColumnOp) c;
@@ -238,11 +229,6 @@ public class ScrambleRewriter {
                                 ColumnOp.sqrt(
                                     ColumnOp.sum(new BaseColumn(innerTableAliasName, aliasForSubsampleSize)))),
                             aliasForStdEstimate));
-                    for (GroupingAttribute a : groupbyList) {
-                        newInnerGroupbyList.add(a);
-                        newOuterGroupbyList.add(a);
-                    }
-                    newInnerGroupbyList.add(subsampleId);
                 }
                 else if (col.getOpType().equals("count")) {
                     String aliasForSubCountEst = generateNextAliasName();
@@ -272,11 +258,6 @@ public class ScrambleRewriter {
                                 ColumnOp.sqrt(
                                     ColumnOp.sum(new BaseColumn(innerTableAliasName, aliasForSubsampleSize)))),
                             aliasForStdEstimate));
-                    for (GroupingAttribute a : groupbyList) {
-                        newInnerGroupbyList.add(a);
-                        newOuterGroupbyList.add(a);
-                    }
-                    newInnerGroupbyList.add(subsampleId);
                 }
                 else if (col.getOpType().equals("avg")) {
                     String aliasForSubSumEst = generateNextAliasName();
@@ -321,11 +302,6 @@ public class ScrambleRewriter {
                                 ColumnOp.sqrt(
                                     ColumnOp.sum(new BaseColumn(innerTableAliasName, aliasForSubsampleSize)))),
                             aliasForStdEstimate));
-                    for (GroupingAttribute a : groupbyList) {
-                        newInnerGroupbyList.add(a);
-                        newOuterGroupbyList.add(a);
-                    }
-                    newInnerGroupbyList.add(subsampleId);
                 }
                 else {
                     throw new UnexpectedTypeException("Not implemented yet.");
@@ -335,6 +311,32 @@ public class ScrambleRewriter {
                 throw new UnexpectedTypeException("Unexpected column type: " + c.getClass().toString());
             }
         }
+        
+        for (GroupingAttribute a : groupbyList) {
+            boolean added = false;
+            for (Pair<UnnamedColumn, Pair<String, String>> pair : innerNonaggregateSelectItemToAliases) {
+                UnnamedColumn col = pair.getLeft();
+                String innerAlias = pair.getRight().getLeft();
+                String outerAlias = pair.getRight().getRight();
+                
+                // when grouping attribute is a base column
+                if (a.equals(col)) {
+                    newInnerGroupbyList.add(new AliasReference(innerAlias));
+                    newOuterGroupbyList.add(new AliasReference(outerAlias));
+                    added = true;
+                }
+                // when grouping attribute is the alias to an select item
+                else if (a instanceof AliasReference && ((AliasReference) a).getAliasName().equals(outerAlias)) {
+                    newInnerGroupbyList.add(new AliasReference(innerAlias));
+                    newOuterGroupbyList.add(new AliasReference(outerAlias));
+                    added = true;
+                }
+            }
+            if (added == false) {
+                newInnerGroupbyList.add(a);
+            }
+        }
+        newInnerGroupbyList.add(subsampleId);
         
         // inner query
         for (SelectItem c : newInnerSelectList) {
@@ -417,7 +419,7 @@ public class ScrambleRewriter {
         return subsampleColumns.get(0);
     }
     
-    Optional<UnnamedColumn> subsampleColumnOfSource(AbstractRelation source) throws UnexpectedTypeException {
+    Optional<UnnamedColumn> subsampleColumnOfSource(AbstractRelation source) throws VerdictDbException {
         if (source instanceof BaseTable) {
             BaseTable base = (BaseTable) source;
             String colName = scrambleMeta.getSubsampleColumn(base.getSchemaName(), base.getTableName());
@@ -428,8 +430,17 @@ public class ScrambleRewriter {
             BaseColumn col = new BaseColumn(aliasName, colName);
             return Optional.<UnnamedColumn>of(col);
         }
+        else if (source instanceof SelectQueryOp) {
+            Optional<String> aliasName = ((SelectQueryOp) source).getAliasName();
+            if (!aliasName.isPresent()) {
+                return Optional.empty();
+            }
+            String colName = scrambleMeta.getSubsampleColumn(aliasName.get());
+            BaseColumn col = new BaseColumn(aliasName.get(), colName);
+            return Optional.<UnnamedColumn>of(col);
+        }
         else {
-            throw new UnexpectedTypeException("Derived tables cannot be used."); 
+            throw new UnexpectedTypeException("Unexpected source type: " + source.getClass().toString()); 
         }
     }
     
