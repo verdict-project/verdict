@@ -106,4 +106,8 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
         return new ColumnOp("sum", Arrays.asList(column1));
     }
 
+    public static UnnamedColumn count() {
+        return new ColumnOp("count");
+    }
+
 }

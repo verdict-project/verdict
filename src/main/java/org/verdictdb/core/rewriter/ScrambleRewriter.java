@@ -141,8 +141,8 @@ public class ScrambleRewriter {
      *  
      * "select other_groups, count(*) from ... group by other_groups;" is converted to
      * "select other_groups,
-     *         sum(sub_count_est) as mean_estimate
-     *         sum(sub_count_est*sqrt(subsample_size)) / sqrt(sum(subsample_size)) as std_estimate,
+     *         sum(sub_count_est) as mean_estimate,
+     *         sum(sub_count_est*sqrt(subsample_size)) / sqrt(sum(subsample_size)) as std_estimate
      *  from (select other_groups,
      *               sum(1 / prob) as sub_count_est,
      *               count(*) as subsample_size
@@ -245,26 +245,87 @@ public class ScrambleRewriter {
                     newInnerGroupbyList.add(subsampleId);
                 }
                 else if (col.getOpType().equals("count")) {
+                    String aliasForSubCountEst = generateNextAliasName();
+                    String aliasForSubsampleSize = generateNextAliasName();
+                    String aliasForMeanEstimate = generateMeanEstimateAliasName(aliasName);
+                    String aliasForStdEstimate = generateStdEstimateAliasName(aliasName);
+                    
+                    // inner
                     UnnamedColumn probCol = deriveInclusionProbabilityColumnFromSource(sel.getFromList(), aggblock);
-                    ColumnOp newCol = new ColumnOp("sum",
-                                          new ColumnOp("divide", Arrays.asList(ConstantColumn.valueOf(1), probCol)));
-                    newInnerSelectList.add(new AliasedColumn(newCol, aliasName));
+                    ColumnOp newCol = ColumnOp.sum(ColumnOp.divide(ConstantColumn.valueOf(1), probCol));
+                    newInnerSelectList.add(new AliasedColumn(newCol, aliasForSubCountEst));
+                    newInnerSelectList.add(
+                        new AliasedColumn(
+                            ColumnOp.count(),
+                            aliasForSubsampleSize));
+                    // outer
+                    newOuterSelectList.add(
+                        new AliasedColumn(ColumnOp.sum(new BaseColumn(innerTableAliasName, aliasForSubCountEst)),
+                                          aliasForMeanEstimate));
+                    newOuterSelectList.add(
+                        new AliasedColumn(
+                            ColumnOp.divide(
+                                ColumnOp.std(
+                                    ColumnOp.multiply(
+                                        new BaseColumn(innerTableAliasName, aliasForSubCountEst),
+                                        ColumnOp.sqrt(new BaseColumn(innerTableAliasName, aliasForSubsampleSize)))),
+                                ColumnOp.sqrt(
+                                    ColumnOp.sum(new BaseColumn(innerTableAliasName, aliasForSubsampleSize)))),
+                            aliasForStdEstimate));
+                    for (GroupingAttribute a : groupbyList) {
+                        newInnerGroupbyList.add(a);
+                        newOuterGroupbyList.add(a);
+                    }
+                    newInnerGroupbyList.add(subsampleId);
                 }
                 else if (col.getOpType().equals("avg")) {
-                    UnnamedColumn op = col.getOperand();
+                    String aliasForSubSumEst = generateNextAliasName();
+                    String aliasForSubCountEst = generateNextAliasName();
+                    String aliasForSubsampleSize = generateNextAliasName();
+                    String aliasForMeanEstimate = generateMeanEstimateAliasName(aliasName);
+                    String aliasForStdEstimate = generateStdEstimateAliasName(aliasName);
+                    
+                    // inner
+                    UnnamedColumn op = col.getOperand();        // argument within the avg function
                     UnnamedColumn probCol = deriveInclusionProbabilityColumnFromSource(sel.getFromList(), aggblock);
-                    // sum of attribute values
-                    ColumnOp newCol1 = new ColumnOp("sum",
-                                         new ColumnOp("divide", Arrays.asList(op, probCol)));
-                    // number of attribute values
+                    ColumnOp newCol = ColumnOp.sum(ColumnOp.divide(op, probCol));
+                    newInnerSelectList.add(new AliasedColumn(newCol, aliasForSubSumEst));
                     ColumnOp oneIfNotNull = ColumnOp.casewhenelse(
-                                                ConstantColumn.valueOf(1),
-                                                ColumnOp.notnull(op),
-                                                ConstantColumn.valueOf(0));
-                    ColumnOp newCol2 = new ColumnOp("sum",
-                                         new ColumnOp("divide", Arrays.asList(oneIfNotNull, probCol)));
-                    newInnerSelectList.add(new AliasedColumn(newCol1, aliasName + "_sum"));
-                    newInnerSelectList.add(new AliasedColumn(newCol2, aliasName + "_count"));
+                            ConstantColumn.valueOf(1),
+                            ColumnOp.notnull(op),
+                            ConstantColumn.valueOf(0));
+                    newInnerSelectList.add(
+                        new AliasedColumn(
+                            ColumnOp.sum(ColumnOp.divide(oneIfNotNull, probCol)),
+                            aliasForSubCountEst));
+                    newInnerSelectList.add(
+                        new AliasedColumn(
+                            ColumnOp.sum(oneIfNotNull),
+                            aliasForSubsampleSize));
+                    // outer
+                    newOuterSelectList.add(
+                        new AliasedColumn(
+                            ColumnOp.divide(
+                                ColumnOp.sum(new BaseColumn(innerTableAliasName, aliasForSubSumEst)),
+                                ColumnOp.sum(new BaseColumn(innerTableAliasName, aliasForSubCountEst))),
+                            aliasForMeanEstimate));
+                    newOuterSelectList.add(
+                        new AliasedColumn(
+                            ColumnOp.divide(
+                                ColumnOp.std(
+                                    ColumnOp.multiply(
+                                        ColumnOp.divide(
+                                            new BaseColumn(innerTableAliasName, aliasForSubSumEst),
+                                            new BaseColumn(innerTableAliasName, aliasForSubCountEst)),
+                                        ColumnOp.sqrt(new BaseColumn(innerTableAliasName, aliasForSubsampleSize)))),
+                                ColumnOp.sqrt(
+                                    ColumnOp.sum(new BaseColumn(innerTableAliasName, aliasForSubsampleSize)))),
+                            aliasForStdEstimate));
+                    for (GroupingAttribute a : groupbyList) {
+                        newInnerGroupbyList.add(a);
+                        newOuterGroupbyList.add(a);
+                    }
+                    newInnerGroupbyList.add(subsampleId);
                 }
                 else {
                     throw new UnexpectedTypeException("Not implemented yet.");

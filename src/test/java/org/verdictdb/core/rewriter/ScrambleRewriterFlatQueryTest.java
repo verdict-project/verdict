@@ -67,9 +67,15 @@ public class ScrambleRewriterFlatQueryTest {
         List<AbstractRelation> rewritten = rewriter.rewrite(relation);
         
         for (int k = 0; k < aggblockCount; k++) {
-            String expected = "select sum(1 / `t`.`verdictincprob`) as a "
-                    + "from `myschema`.`mytable` "
-                    + "where `t`.`verdictpartition` = part" + k;
+            String expected = "select sum(`verdictalias1`.`verdictalias2`) as a, "
+                    + "std(`verdictalias1`.`verdictalias2` * sqrt(`verdictalias1`.`verdictalias3`)) / "
+                    + "sqrt(sum(`verdictalias1`.`verdictalias3`)) as std_a "
+                    + "from ("
+                    + "select sum(1 / (`t`.`verdictincprob` + (`t`.`verdictincprobblockdiff` * " + k + "))) as verdictalias2, "
+                    + "count(*) as verdictalias3 "
+                    + "from `myschema`.`mytable` as t "
+                    + "where `t`.`verdictpartition` = " + k + " "
+                    + "group by `t`.`verdictsid`) as verdictalias1";
             RelationToSql relToSql = new RelationToSql(new HiveSyntax());
             String actual = relToSql.toSql(rewritten.get(k));
             assertEquals(expected, actual);
@@ -87,10 +93,18 @@ public class ScrambleRewriterFlatQueryTest {
         List<AbstractRelation> rewritten = rewriter.rewrite(relation);
         
         for (int k = 0; k < aggblockCount; k++) {
-            String expected = "select sum(`t`.`mycolumn1` / `t`.`verdictincprob`) as a_sum, "
-                    + "sum(case 1 when `t`.`mycolumn1` is not null else 0 end / `t`.`verdictincprob`) as a_count "
-                    + "from `myschema`.`mytable` "
-                    + "where `t`.`verdictpartition` = part" + k;
+            String expected = "select sum(`verdictalias1`.`verdictalias2`) / sum(`verdictalias1`.`verdictalias3`) as a, "
+                    + "std((`verdictalias1`.`verdictalias2` / `verdictalias1`.`verdictalias3`)"
+                    + " * sqrt(`verdictalias1`.`verdictalias4`)) / "
+                    + "sqrt(sum(`verdictalias1`.`verdictalias4`)) as std_a "
+                    + "from ("
+                    + "select sum(`t`.`mycolumn1` / (`t`.`verdictincprob` + (`t`.`verdictincprobblockdiff` * " + k + "))) as verdictalias2, "
+                    + "sum((case 1 when `t`.`mycolumn1` is not null else 0 end) / "
+                    + "(`t`.`verdictincprob` + (`t`.`verdictincprobblockdiff` * " + k + "))) as verdictalias3, "
+                    + "sum(case 1 when `t`.`mycolumn1` is not null else 0 end) as verdictalias4 "
+                    + "from `myschema`.`mytable` as t "
+                    + "where `t`.`verdictpartition` = " + k + " "
+                    + "group by `t`.`verdictsid`) as verdictalias1";
             RelationToSql relToSql = new RelationToSql(new HiveSyntax());
             String actual = relToSql.toSql(rewritten.get(k));
             assertEquals(expected, actual);
