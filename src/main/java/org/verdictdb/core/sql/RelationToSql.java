@@ -61,7 +61,7 @@ public class RelationToSql {
             throw new UnexpectedTypeException("asterisk is not expected in the groupby clause.");
         }
         if (column instanceof AliasColumn) {
-            return ((AliasColumn) column).getColumn();
+            return quoteName(((AliasColumn) column).getColumn());
         }
         else {
             return unnamedColumnToSqlPart((UnnamedColumn) column);
