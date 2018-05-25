@@ -16,11 +16,13 @@ public class ScrambleMeta {
             String tableName,
             String partitionColumn,
             String inclusionProbabilityColumn,
+            String subsampleColumn,
             List<String> partitionAttributeValues) {
         ScrambleMetaForTable tableMeta = new ScrambleMetaForTable();
         tableMeta.setSchemaName(schemaName);
         tableMeta.setTableName(tableName);
         tableMeta.setPartitionColumn(partitionColumn);
+        tableMeta.setSubsampleColumn(subsampleColumn);
         tableMeta.setInclusionProbabilityColumn(inclusionProbabilityColumn);
         
         for (String v : partitionAttributeValues) {
@@ -50,6 +52,10 @@ public class ScrambleMeta {
         return meta.get(metaKey(schemaName, tableName)).getPartitionAttributes();
     }
 
+    public String getSubsampleColumn(String schemaName, String tableName) {
+        return meta.get(metaKey(schemaName, tableName)).getSubsampleColumn();
+    }
+
 }
 
 
@@ -66,18 +72,17 @@ class ScrambleMetaForTable {
     
     String partitionColumn;
     
-//    List<Long> partitionSizes = new ArrayList<>();
-    
     List<String> partitionAttributeValues = new ArrayList<>();
     
     String inclusionProbabilityColumn;
+    
+    String subsampleColumn;
     
     
     public ScrambleMetaForTable() {}
     
     public void addPartitionAttributeValue(String partitionAttributeValue) {
         partitionAttributeValues.add(partitionAttributeValue);
-//        partitionSizes.add(partitionSize);
     }
     
     public String getSchemaName() {
@@ -122,5 +127,13 @@ class ScrambleMetaForTable {
     
     public List<String> getPartitionAttributes() {
         return partitionAttributeValues;
+    }
+    
+    public void setSubsampleColumn(String subsampleColumn) {
+        this.subsampleColumn = subsampleColumn;
+    }
+
+    public String getSubsampleColumn() {
+        return subsampleColumn;
     }
 }

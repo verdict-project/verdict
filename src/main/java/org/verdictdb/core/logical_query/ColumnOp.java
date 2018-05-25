@@ -4,7 +4,7 @@ import java.util.Arrays;
 import java.util.List;
 
 
-public class ColumnOp extends UnnamedColumn implements SelectItem {
+public class ColumnOp implements UnnamedColumn, SelectItem {
     
     /**
      * opType must be one of the following:
@@ -18,8 +18,8 @@ public class ColumnOp extends UnnamedColumn implements SelectItem {
      * <li>divide</li>
      * <li>and</li>
      * <li>or</li>
-     * <li>=</li>
-     * <li><></li>
+     * <li>equal</li>
+     * <li>notequal</li>
      * <li>casewhenelse</li>
      * <li>not null</li>
      * </ol>
@@ -67,19 +67,19 @@ public class ColumnOp extends UnnamedColumn implements SelectItem {
     }
     
     public static ColumnOp equal(UnnamedColumn column1, UnnamedColumn column2) {
-        return new ColumnOp("=", Arrays.asList(column1, column2));
+        return new ColumnOp("equal", Arrays.asList(column1, column2));
     }
     
     public static ColumnOp notequal(UnnamedColumn column1, UnnamedColumn column2) {
-        return new ColumnOp("<>", Arrays.asList(column1, column2));
+        return new ColumnOp("notequal", Arrays.asList(column1, column2));
     }
     
     public static ColumnOp multiply(UnnamedColumn column1, UnnamedColumn column2) {
-        return new ColumnOp("*", Arrays.asList(column1, column2));
+        return new ColumnOp("multiply", Arrays.asList(column1, column2));
     }
     
     public static ColumnOp divide(UnnamedColumn column1, UnnamedColumn column2) {
-        return new ColumnOp("/", Arrays.asList(column1, column2));
+        return new ColumnOp("divide", Arrays.asList(column1, column2));
     }
     
     public static ColumnOp casewhenelse(UnnamedColumn columnIf, UnnamedColumn condition, UnnamedColumn columnElse) {
@@ -90,8 +90,8 @@ public class ColumnOp extends UnnamedColumn implements SelectItem {
         return new ColumnOp("notnull", Arrays.asList(column1));
     }
     
-    public static ColumnOp std(UnnamedColumn column1, UnnamedColumn column2) {
-        return new ColumnOp("std", Arrays.asList(column1, column2));
+    public static ColumnOp std(UnnamedColumn column1) {
+        return new ColumnOp("std", Arrays.asList(column1));
     }
     
     public static ColumnOp sqrt(UnnamedColumn column1) {

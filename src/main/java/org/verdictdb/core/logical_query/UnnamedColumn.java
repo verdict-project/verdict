@@ -6,6 +6,6 @@ package org.verdictdb.core.logical_query;
  * @author Yongjoo Park
  *
  */
-public abstract class UnnamedColumn {
+public interface UnnamedColumn extends GroupingAttribute {
 
 }

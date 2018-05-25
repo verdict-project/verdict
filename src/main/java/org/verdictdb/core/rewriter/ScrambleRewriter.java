@@ -12,6 +12,7 @@ import org.verdictdb.core.logical_query.BaseColumn;
 import org.verdictdb.core.logical_query.BaseTable;
 import org.verdictdb.core.logical_query.ColumnOp;
 import org.verdictdb.core.logical_query.ConstantColumn;
+import org.verdictdb.core.logical_query.GroupingAttribute;
 import org.verdictdb.core.logical_query.SelectQueryOp;
 import org.verdictdb.core.logical_query.UnnamedColumn;
 import org.verdictdb.exception.UnexpectedTypeException;
@@ -61,13 +62,14 @@ public class ScrambleRewriter {
 //        int partitionCount = derivePartitionCount(relation);
         List<AbstractRelation> rewritten = new ArrayList<AbstractRelation>();
         
-        AbstractRelation rewrittenWithoutPartition = rewriteNotIncludingMaterialization(relation);
+        UnnamedColumn subsampleId = deriveSubsampleIdColumn(relation);
+        AbstractRelation rewrittenWithoutPartition = rewriteNotIncludingMaterialization(relation, subsampleId);
         List<UnnamedColumn> partitionPredicates = generatePartitionPredicates(relation);
         
         for (int k = 0; k < partitionPredicates.size(); k++) {
             UnnamedColumn partitionPredicate = partitionPredicates.get(k);
             SelectQueryOp rewritten_k = deepcopySelectQuery((SelectQueryOp) rewrittenWithoutPartition);
-            rewritten_k.addFilterByAnd(partitionPredicate);
+            ((SelectQueryOp) rewritten_k.getFromList().get(0)).addFilterByAnd(partitionPredicate);
             rewritten.add(rewritten_k);
         }
         
@@ -84,10 +86,20 @@ public class ScrambleRewriter {
             sel.addSelectItem(c);
         }
         for (AbstractRelation r : relation.getFromList()) {
-            sel.addTableSource(r);
+            if (r instanceof SelectQueryOp) {
+                sel.addTableSource(deepcopySelectQuery((SelectQueryOp) r));
+            } else {
+                sel.addTableSource(r);
+            }
         }
         if (relation.getFilter().isPresent()) {
             sel.addFilterByAnd(relation.getFilter().get());
+        }
+        for (GroupingAttribute a : relation.getGroupby()) {
+            sel.addGroupby(a);
+        }
+        if (relation.getAliasName().isPresent()) {
+            sel.setAliasName(relation.getAliasName().get());
         }
         return sel;
     }
@@ -102,7 +114,7 @@ public class ScrambleRewriter {
      *         std(sub_sum_est*sqrt(subsample_size)) / sqrt(sum(subsample_size)) as std_estimate
      *  from (select other_groups,
      *               sum(price / prob) as sub_sum_est,
-     *               count(*) as subsample_size
+     *               sum(case 1 when price is not null else 0 end) as subsample_size
      *        from ...
      *        group by sid, other_groups) as sub_table
      *  group by other_groups;"
@@ -114,7 +126,7 @@ public class ScrambleRewriter {
      *  from (select other_groups,
      *               sum(price / prob) as sub_sum_est,
      *               sum(case 1 when price is not null else 0 end / prob) as sub_count_est,
-     *               count(*) as subsample_size
+     *               sum(case 1 when price is not null else 0 end) as subsample_size
      *        from ...
      *        group by sid, other_groups) as sub_table
      *  group by other_groups;"
@@ -137,19 +149,24 @@ public class ScrambleRewriter {
      * @return
      * @throws UnexpectedTypeException
      */
-    AbstractRelation rewriteNotIncludingMaterialization(AbstractRelation relation) 
+    AbstractRelation rewriteNotIncludingMaterialization(AbstractRelation relation, UnnamedColumn subsampleId) 
             throws UnexpectedTypeException {
         // must be some select query.
         if (!(relation instanceof SelectQueryOp)) {
             throw new UnexpectedTypeException("Not implemented yet.");
         }
         
-        SelectQueryOp rewritten = new SelectQueryOp();
+        SelectQueryOp rewrittenOuter = new SelectQueryOp();
+        SelectQueryOp rewrittenInner = new SelectQueryOp();
+        String innerTableAliasName = generateNextAliasName();
+        rewrittenInner.setAliasName(innerTableAliasName);
         SelectQueryOp sel = (SelectQueryOp) relation;
         List<SelectItem> selectList = sel.getSelectList();
         List<SelectItem> newInnerSelectList = new ArrayList<>();
         List<SelectItem> newOuterSelectList = new ArrayList<>();
-        String innerTableAliasName = generateNextAliasName();
+        List<GroupingAttribute> groupbyList = sel.getGroupby();
+        List<GroupingAttribute> newInnerGroupbyList = new ArrayList<>();
+        List<GroupingAttribute> newOuterGroupbyList = new ArrayList<>();
         for (SelectItem item : selectList) {
             if (!(item instanceof AliasedColumn)) {
                 throw new UnexpectedTypeException("The following select item is not aliased: " + item.toString());
@@ -172,22 +189,34 @@ public class ScrambleRewriter {
                     String aliasForStdEstimate = generateStdEstimateAliasName(aliasName);
                     UnnamedColumn op = col.getOperand();
                     UnnamedColumn probCol = deriveInclusionProbabilityColumn(relation);
-                    ColumnOp newCol = new ColumnOp("sum",
-                                          new ColumnOp("divide", Arrays.asList(op, probCol)));
+                    ColumnOp newCol = ColumnOp.sum(ColumnOp.divide(op, probCol));
                     newInnerSelectList.add(new AliasedColumn(newCol, aliasForSubSumEst));
-                    newInnerSelectList.add(new AliasedColumn(new ColumnOp("count"), aliasForSubsampleSize));
-                    newOuterSelectList.add(new AliasedColumn(
-                                               new ColumnOp("sum", new BaseColumn(innerTableAliasName, aliasForSubSumEst)),
-                                               aliasForMeanEstimate));
-                    newOuterSelectList.add(new AliasedColumn(ColumnOp.divide(
-                                                   new ColumnOp("std",
-                                                       ColumnOp.multiply(
-                                                           new BaseColumn(innerTableAliasName, aliasForSubSumEst),
-                                                           ColumnOp.sqrt(new BaseColumn(innerTableAliasName, aliasForSubsampleSize)))),
-                                                   ColumnOp.sqrt(
-                                                       ColumnOp.sum(new BaseColumn(innerTableAliasName, aliasForSubsampleSize)))),
-                                               aliasForStdEstimate));
-                    newInnerGroupbyList.add()
+                    ColumnOp oneIfNotNull = ColumnOp.casewhenelse(
+                            ConstantColumn.valueOf(1),
+                            ColumnOp.notnull(op),
+                            ConstantColumn.valueOf(0));
+                    newInnerSelectList.add(
+                        new AliasedColumn(
+                            ColumnOp.sum(oneIfNotNull),
+                            aliasForSubsampleSize));
+                    newOuterSelectList.add(
+                        new AliasedColumn(ColumnOp.sum(new BaseColumn(innerTableAliasName, aliasForSubSumEst)),
+                                          aliasForMeanEstimate));
+                    newOuterSelectList.add(
+                        new AliasedColumn(
+                            ColumnOp.divide(
+                                ColumnOp.std(
+                                    ColumnOp.multiply(
+                                        new BaseColumn(innerTableAliasName, aliasForSubSumEst),
+                                        ColumnOp.sqrt(new BaseColumn(innerTableAliasName, aliasForSubsampleSize)))),
+                                ColumnOp.sqrt(
+                                    ColumnOp.sum(new BaseColumn(innerTableAliasName, aliasForSubsampleSize)))),
+                            aliasForStdEstimate));
+                    for (GroupingAttribute a : groupbyList) {
+                        newInnerGroupbyList.add(a);
+                        newOuterGroupbyList.add(a);
+                    }
+                    newInnerGroupbyList.add(subsampleId);
                 }
                 else if (col.getOpType().equals("count")) {
                     UnnamedColumn probCol = deriveInclusionProbabilityColumn(relation);
@@ -220,18 +249,30 @@ public class ScrambleRewriter {
             }
         }
         
+        // inner query
         for (SelectItem c : newInnerSelectList) {
-            rewritten.addSelectItem(c);
+            rewrittenInner.addSelectItem(c);
         }
         for (AbstractRelation r : sel.getFromList()) {
-            rewritten.addTableSource(r);
+            rewrittenInner.addTableSource(r);
         }
-        
         if (sel.getFilter().isPresent()) {
-            rewritten.addFilterByAnd(sel.getFilter().get());
+            rewrittenInner.addFilterByAnd(sel.getFilter().get());
+        }
+        for (GroupingAttribute a : newInnerGroupbyList) {
+            rewrittenInner.addGroupby(a);
         }
         
-        return rewritten;
+        // outer query
+        for (SelectItem c : newOuterSelectList) {
+            rewrittenOuter.addSelectItem(c);
+        }
+        rewrittenOuter.addTableSource(rewrittenInner);
+        for (GroupingAttribute a : newOuterGroupbyList) {
+            rewrittenOuter.addGroupby(a);
+        }
+        
+        return rewrittenOuter;
     }
     
     List<UnnamedColumn> generatePartitionPredicates(AbstractRelation relation) throws VerdictDbException {
@@ -259,6 +300,44 @@ public class ScrambleRewriter {
         }
         
         return partitionPredicates;
+    }
+    
+    UnnamedColumn deriveSubsampleIdColumn(AbstractRelation relation) throws VerdictDbException {
+        if (!(relation instanceof SelectQueryOp)) {
+            throw new UnexpectedTypeException("Unexpected relation type: " + relation.getClass().toString());
+        }
+        
+        List<UnnamedColumn> subsampleColumns = new ArrayList<>();
+        SelectQueryOp sel = (SelectQueryOp) relation;
+        List<AbstractRelation> fromList = sel.getFromList();
+        for (AbstractRelation r : fromList) {
+            Optional<UnnamedColumn> c = subsampleColumnOfSource(r);
+            if (!c.isPresent()) {
+                continue;
+            }
+            if (subsampleColumns.size() > 0) {
+                throw new ValueException("Only a single table can be a scrambled table.");
+            }
+            subsampleColumns.add(c.get());
+        }
+        
+        return subsampleColumns.get(0);
+    }
+    
+    Optional<UnnamedColumn> subsampleColumnOfSource(AbstractRelation source) throws UnexpectedTypeException {
+        if (source instanceof BaseTable) {
+            BaseTable base = (BaseTable) source;
+            String colName = scrambleMeta.getSubsampleColumn(base.getSchemaName(), base.getTableName());
+            if (colName == null) {
+                return Optional.empty();
+            }
+            String aliasName = base.getTableSourceAlias();
+            BaseColumn col = new BaseColumn(aliasName, colName);
+            return Optional.<UnnamedColumn>of(col);
+        }
+        else {
+            throw new UnexpectedTypeException("Derived tables cannot be used."); 
+        }
     }
     
     List<String> partitionAttributeValuesOfSource(AbstractRelation source) throws UnexpectedTypeException {

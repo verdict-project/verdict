@@ -11,10 +11,13 @@ import org.verdictdb.core.logical_query.BaseColumn;
 import org.verdictdb.core.logical_query.BaseTable;
 import org.verdictdb.core.logical_query.ColumnOp;
 import org.verdictdb.core.logical_query.ConstantColumn;
+import org.verdictdb.core.logical_query.GroupingAttribute;
+import org.verdictdb.core.logical_query.AliasColumn;
 import org.verdictdb.core.logical_query.SelectQueryOp;
 import org.verdictdb.core.logical_query.UnnamedColumn;
 import org.verdictdb.core.sql.syntax.SyntaxAbstract;
 import org.verdictdb.exception.UnexpectedTypeException;
+import org.verdictdb.exception.ValueException;
 import org.verdictdb.exception.VerdictDbException;
 
 public class RelationToSql {
@@ -26,11 +29,11 @@ public class RelationToSql {
     }
     
     public String toSql(AbstractRelation relation) throws VerdictDbException{
-        if (relation instanceof BaseTable) {
-            throw new UnexpectedTypeException("A base table itself cannot be converted to sql.");
+        if (!(relation instanceof SelectQueryOp)) {
+            throw new UnexpectedTypeException("Unexpected type: " + relation.getClass().toString());
         }
         
-        return relationToSqlPart(relation);
+        return selectQueryToSql((SelectQueryOp) relation);
     }
     
     String selectItemToSqlPart(SelectItem item) throws UnexpectedTypeException {
@@ -38,7 +41,7 @@ public class RelationToSql {
             return aliasedColumnToSqlPart((AliasedColumn) item);
         }
         else if (item instanceof UnnamedColumn) {
-            return uncolumnToSqlPart((UnnamedColumn) item);
+            return unnamedColumnToSqlPart((UnnamedColumn) item);
         }
         else {
             throw new UnexpectedTypeException("Unexpceted argument type: " + item.getClass().toString());
@@ -47,10 +50,22 @@ public class RelationToSql {
     
     String aliasedColumnToSqlPart(AliasedColumn acolumn) throws UnexpectedTypeException {
         String aliasName = acolumn.getAliasName();
-        return uncolumnToSqlPart(acolumn.getColumn()) + " as " + aliasName;
+        return unnamedColumnToSqlPart(acolumn.getColumn()) + " as " + aliasName;
     }
     
-    String uncolumnToSqlPart(UnnamedColumn column) throws UnexpectedTypeException {
+    String groupingAttributeToSqlPart(GroupingAttribute column) throws UnexpectedTypeException {
+        if (column instanceof AsteriskColumn) {
+            throw new UnexpectedTypeException("asterisk is not expected in the groupby clause.");
+        }
+        if (column instanceof AliasColumn) {
+            return ((AliasColumn) column).getColumn();
+        }
+        else {
+            return unnamedColumnToSqlPart((UnnamedColumn) column);
+        }
+    }
+    
+    String unnamedColumnToSqlPart(UnnamedColumn column) throws UnexpectedTypeException {
         if (column instanceof BaseColumn) {
             BaseColumn base = (BaseColumn) column;
             return quoteName(base.getTableSourceAlias()) + "." + quoteName(base.getColumnName());
@@ -64,13 +79,19 @@ public class RelationToSql {
         else if (column instanceof ColumnOp) {
             ColumnOp columnOp = (ColumnOp) column;
             if (columnOp.getOpType().equals("avg")) {
-                return "avg(" + uncolumnToSqlPart(columnOp.getOperand()) + ")";
+                return "avg(" + unnamedColumnToSqlPart(columnOp.getOperand()) + ")";
             }
             else if (columnOp.getOpType().equals("sum")) {
-                return "sum(" + uncolumnToSqlPart(columnOp.getOperand()) + ")";
+                return "sum(" + unnamedColumnToSqlPart(columnOp.getOperand()) + ")";
             }
             else if (columnOp.getOpType().equals("count")) {
-                return "count(" + uncolumnToSqlPart(columnOp.getOperand()) + ")";
+                return "count(*)";
+            }
+            else if (columnOp.getOpType().equals("std")) {
+                return "std(" + unnamedColumnToSqlPart(columnOp.getOperand()) + ")";
+            }
+            else if (columnOp.getOpType().equals("sqrt")) {
+                return "sqrt(" + unnamedColumnToSqlPart(columnOp.getOperand()) + ")";
             }
             else if (columnOp.getOpType().equals("add")) {
                 return withParentheses(columnOp.getOperand(0)) + " + " + withParentheses(columnOp.getOperand(1));
@@ -84,7 +105,7 @@ public class RelationToSql {
             else if (columnOp.getOpType().equals("divide")) {
                 return withParentheses(columnOp.getOperand(0)) + " / " + withParentheses(columnOp.getOperand(1));
             }
-            else if (columnOp.getOpType().equals("=")) {
+            else if (columnOp.getOpType().equals("equal")) {
                 return withParentheses(columnOp.getOperand(0)) + " = " + withParentheses(columnOp.getOperand(1));
             }
             else if (columnOp.getOpType().equals("and")) {
@@ -99,7 +120,7 @@ public class RelationToSql {
                      + " else " + withParentheses(columnOp.getOperand(2))
                      + " end";
             }
-            else if (columnOp.getOpType().equals("<>")) {
+            else if (columnOp.getOpType().equals("notequal")) {
                 return withParentheses(columnOp.getOperand(0)) + " <> " + withParentheses(columnOp.getOperand(1));
             }
             else if (columnOp.getOpType().equals("notnull")) {
@@ -113,26 +134,16 @@ public class RelationToSql {
     }
     
     String withParentheses(UnnamedColumn column) throws UnexpectedTypeException {
-        String sql = uncolumnToSqlPart(column);
+        String sql = unnamedColumnToSqlPart(column);
         if (column instanceof ColumnOp && ((ColumnOp) column).getOpType().equals("*")) {
             sql = "(" + sql + ")";
         }
         return sql;
     }
     
-    String relationToSqlPart(AbstractRelation relation) throws VerdictDbException {
+    String selectQueryToSql(SelectQueryOp sel) throws VerdictDbException {
         StringBuilder sql = new StringBuilder();
-        
-        if (relation instanceof BaseTable) {
-            BaseTable base = (BaseTable) relation;
-            return quoteName(base.getSchemaName()) + "." + quoteName(base.getTableName());
-        }
-        
-        if (!(relation instanceof SelectQueryOp)) {
-            throw new UnexpectedTypeException("Unexpected relation type: " + relation.getClass().toString());
-        }
-        
-        SelectQueryOp sel = (SelectQueryOp) relation;
+
         // select
         sql.append("select");
         List<SelectItem> columns = sel.getSelectList();
@@ -163,10 +174,48 @@ public class RelationToSql {
         Optional<UnnamedColumn> filter = sel.getFilter();
         if (filter.isPresent()) {
             sql.append(" where ");
-            sql.append(uncolumnToSqlPart(filter.get()));
+            sql.append(unnamedColumnToSqlPart(filter.get()));
+        }
+        
+        // groupby
+        List<GroupingAttribute> groupby = sel.getGroupby();
+        boolean isFirstGroup = true;
+        for (GroupingAttribute a : groupby) {
+            if (isFirstGroup) {
+                sql.append(" group by ");
+                sql.append(groupingAttributeToSqlPart(a));
+            } else {
+                sql.append(", " + groupingAttributeToSqlPart(a));
+            }
         }
         
         return sql.toString();
+    }
+    
+    String relationToSqlPart(AbstractRelation relation) throws VerdictDbException {
+        StringBuilder sql = new StringBuilder();
+        
+        if (relation instanceof BaseTable) {
+            BaseTable base = (BaseTable) relation;
+            String aliasName = base.getTableSourceAlias();
+            sql.append(quoteName(base.getSchemaName()) + "." + quoteName(base.getTableName()));
+            if (aliasName != null) {
+                sql.append(" as " + aliasName);
+            }
+            return sql.toString();
+        }
+        
+        if (!(relation instanceof SelectQueryOp)) {
+            throw new UnexpectedTypeException("Unexpected relation type: " + relation.getClass().toString());
+        }
+        
+        SelectQueryOp sel = (SelectQueryOp) relation;
+        Optional<String> aliasName = sel.getAliasName();
+        if (!aliasName.isPresent()) {
+            throw new ValueException("An inner select query must be aliased.");
+        }
+        
+        return "(" + selectQueryToSql(sel) + ") as " + aliasName.get();
     }
     
     String quoteName(String name) {

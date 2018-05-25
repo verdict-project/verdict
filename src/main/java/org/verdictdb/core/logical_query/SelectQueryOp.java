@@ -14,6 +14,8 @@ public class SelectQueryOp implements AbstractRelation {
     
     List<GroupingAttribute> groupby = new ArrayList<>();
     
+    Optional<String> aliasName = Optional.empty();
+    
     public SelectQueryOp() {}
     
     public static SelectQueryOp getSelectQueryOp(List<SelectItem> columns, AbstractRelation relation) {
@@ -41,6 +43,14 @@ public class SelectQueryOp implements AbstractRelation {
             filter = Optional.<UnnamedColumn>of(ColumnOp.and(filter.get(), predicate));
         }
     }
+    
+    public void setAliasName(String aliasName) {
+        this.aliasName = Optional.of(aliasName);
+    }
+    
+    public void addGroupby(GroupingAttribute column) {
+        groupby.add(column);
+    }
 
     public List<SelectItem> getSelectList() {
         return selectList;
@@ -56,6 +66,10 @@ public class SelectQueryOp implements AbstractRelation {
     
     public List<GroupingAttribute> getGroupby() {
         return groupby;
+    }
+    
+    public Optional<String> getAliasName() {
+        return aliasName;
     }
 
 }
