@@ -74,6 +74,10 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
         return new ColumnOp("notequal", Arrays.asList(column1, column2));
     }
     
+    public static ColumnOp add(UnnamedColumn column1, UnnamedColumn column2) {
+        return new ColumnOp("add", Arrays.asList(column1, column2));
+    }
+    
     public static ColumnOp multiply(UnnamedColumn column1, UnnamedColumn column2) {
         return new ColumnOp("multiply", Arrays.asList(column1, column2));
     }

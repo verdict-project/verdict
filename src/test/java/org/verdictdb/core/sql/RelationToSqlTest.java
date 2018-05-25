@@ -79,7 +79,7 @@ public class RelationToSqlTest {
                 Arrays.<SelectItem>asList(
                         new ColumnOp("count", new BaseColumn("t", "mycolumn1"))),
                 base);
-        String expected = "select count(`t`.`mycolumn1`) from `myschema`.`mytable` as t";
+        String expected = "select count(*) from `myschema`.`mytable` as t";
         RelationToSql relToSql = new RelationToSql(new HiveSyntax());
         String actual = relToSql.toSql(relation);
         assertEquals(expected, actual);

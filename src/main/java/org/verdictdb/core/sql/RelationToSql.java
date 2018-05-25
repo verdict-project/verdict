@@ -2,6 +2,7 @@ package org.verdictdb.core.sql;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import org.verdictdb.core.logical_query.SelectItem;
 import org.verdictdb.core.logical_query.AbstractRelation;
@@ -19,6 +20,8 @@ import org.verdictdb.core.sql.syntax.SyntaxAbstract;
 import org.verdictdb.exception.UnexpectedTypeException;
 import org.verdictdb.exception.ValueException;
 import org.verdictdb.exception.VerdictDbException;
+
+import com.google.common.collect.Sets;
 
 public class RelationToSql {
     
@@ -133,9 +136,12 @@ public class RelationToSql {
         throw new UnexpectedTypeException("Unexpceted argument type: " + column.getClass().toString());
     }
     
+    Set<String> opTypeNotRequiringParentheses = Sets.newHashSet(
+            "sum", "avg", "count", "std", "sqrt", "notnull");
+    
     String withParentheses(UnnamedColumn column) throws UnexpectedTypeException {
         String sql = unnamedColumnToSqlPart(column);
-        if (column instanceof ColumnOp && ((ColumnOp) column).getOpType().equals("*")) {
+        if (column instanceof ColumnOp && !opTypeNotRequiringParentheses.contains(((ColumnOp) column).getOpType())) {
             sql = "(" + sql + ")";
         }
         return sql;

@@ -20,15 +20,13 @@ import org.verdictdb.exception.VerdictDbException;
 
 public class ScrambleRewriterFlatQueryTest {
     
+    int aggblockCount = 10;
+    
     ScrambleMeta generateTestScrambleMeta() {
         ScrambleMeta meta = new ScrambleMeta();
-        List<String> partitionAttrValues = new ArrayList<>();
-        for (int k = 0; k < 10; k++) {
-            partitionAttrValues.add("part" + String.valueOf(k));
-        }
         meta.insertScrumbleMetaEntry("myschema", "mytable",
-                                     "verdictpartition", "verdictincprob", "verdictsid",
-                                     partitionAttrValues);
+                                     "verdictpartition", "verdictincprob", "verdictincprobblockdiff", "verdictsid",
+                                     aggblockCount);
         return meta;
     }
 
@@ -43,15 +41,15 @@ public class ScrambleRewriterFlatQueryTest {
         ScrambleRewriter rewriter = new ScrambleRewriter(meta);
         List<AbstractRelation> rewritten = rewriter.rewrite(relation);
         
-        for (int k = 0; k < 10; k++) {
+        for (int k = 0; k < aggblockCount; k++) {
             String expected = "select sum(`verdictalias1`.`verdictalias2`) as a, "
                     + "std(`verdictalias1`.`verdictalias2` * sqrt(`verdictalias1`.`verdictalias3`)) / "
                     + "sqrt(sum(`verdictalias1`.`verdictalias3`)) as std_a "
                     + "from ("
-                    + "select sum(`t`.`mycolumn1` / `t`.`verdictincprob`) as verdictalias2, "
+                    + "select sum(`t`.`mycolumn1` / (`t`.`verdictincprob` + (`t`.`verdictincprobblockdiff` * " + k + "))) as verdictalias2, "
                     + "sum(case 1 when `t`.`mycolumn1` is not null else 0 end) as verdictalias3 "
                     + "from `myschema`.`mytable` as t "
-                    + "where `t`.`verdictpartition` = part" + k + " "
+                    + "where `t`.`verdictpartition` = " + k + " "
                     + "group by `t`.`verdictsid`) as verdictalias1";
             RelationToSql relToSql = new RelationToSql(new HiveSyntax());
             String actual = relToSql.toSql(rewritten.get(k));
@@ -68,7 +66,7 @@ public class ScrambleRewriterFlatQueryTest {
         ScrambleRewriter rewriter = new ScrambleRewriter(meta);
         List<AbstractRelation> rewritten = rewriter.rewrite(relation);
         
-        for (int k = 0; k < 10; k++) {
+        for (int k = 0; k < aggblockCount; k++) {
             String expected = "select sum(1 / `t`.`verdictincprob`) as a "
                     + "from `myschema`.`mytable` "
                     + "where `t`.`verdictpartition` = part" + k;
@@ -88,7 +86,7 @@ public class ScrambleRewriterFlatQueryTest {
         ScrambleRewriter rewriter = new ScrambleRewriter(meta);
         List<AbstractRelation> rewritten = rewriter.rewrite(relation);
         
-        for (int k = 0; k < 10; k++) {
+        for (int k = 0; k < aggblockCount; k++) {
             String expected = "select sum(`t`.`mycolumn1` / `t`.`verdictincprob`) as a_sum, "
                     + "sum(case 1 when `t`.`mycolumn1` is not null else 0 end / `t`.`verdictincprob`) as a_count "
                     + "from `myschema`.`mytable` "
