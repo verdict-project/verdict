@@ -43,15 +43,18 @@ public class ScrambleRewriterFlatQueryTest {
         List<AbstractRelation> rewritten = rewriter.rewrite(relation);
         
         for (int k = 0; k < aggblockCount; k++) {
-            String expected = "select sum(`verdictalias1`.`verdictalias2`) as a, "
-                    + "std(`verdictalias1`.`verdictalias2` * sqrt(`verdictalias1`.`verdictalias3`)) / "
-                    + "sqrt(sum(`verdictalias1`.`verdictalias3`)) as std_a "
+            String expected = "select sum(`verdictalias5`.`verdictalias6`) as a, "
+                    + "sum(`verdictalias5`.`verdictalias6` * `verdictalias5`.`verdictalias6`) as sumsquared_a "
                     + "from ("
-                    + "select sum(`t`.`mycolumn1` / (`t`.`verdictincprob` + (`t`.`verdictincprobblockdiff` * " + k + "))) as verdictalias2, "
-                    + "sum(case 1 when `t`.`mycolumn1` is not null else 0 end) as verdictalias3 "
+                    + "select sum(`verdictalias1`.`mycolumn1` / "
+                    + "(`verdictalias1`.`verdictincprob` + (`verdictalias1`.`verdictalias3` * " + k + "))) as verdictalias6, "
+                    + "sum(case 1 when `verdictalias1`.`mycolumn1` is not null else 0 end) as verdictalias7 "
+                    + "from (select *, `t`.`verdictincprob` as verdictalias2, "
+                    + "`t`.`verdictincprobblockdiff` as verdictalias3 "
+                    + "`t`.`verdictsid` as verdictalias4 "
                     + "from `myschema`.`mytable` as t "
-                    + "where `t`.`verdictpartition` = " + k + " "
-                    + "group by `t`.`verdictsid`) as verdictalias1";
+                    + "where `t`.`verdictpartition` = " + k + ") as verdictalias1 "
+                    + "group by `verdictalias1`.`verdictalias4`) as verdictalias5";
             RelationToSql relToSql = new RelationToSql(new HiveSyntax());
             String actual = relToSql.toSql(rewritten.get(k));
             assertEquals(expected, actual);

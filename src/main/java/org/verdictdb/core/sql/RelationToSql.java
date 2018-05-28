@@ -204,7 +204,7 @@ public class RelationToSql {
         
         if (relation instanceof BaseTable) {
             BaseTable base = (BaseTable) relation;
-            String aliasName = base.getTableSourceAlias();
+            String aliasName = base.getAliasName().get();
             sql.append(quoteName(base.getSchemaName()) + "." + quoteName(base.getTableName()));
             if (aliasName != null) {
                 sql.append(" as " + aliasName);

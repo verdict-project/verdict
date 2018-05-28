@@ -4,18 +4,16 @@ import org.verdictdb.core.sql.syntax.SyntaxAbstract;
 import org.verdictdb.exception.UnexpectedTypeException;
 
 
-public class BaseTable implements AbstractRelation {
+public class BaseTable extends AbstractRelation {
     
     String schemaName;
     
     String tableName;
     
-    String tableSourceAlias;
-    
     public BaseTable(String schemaName, String tableName, String tableSourceAlias) {
         this.schemaName = schemaName;
         this.tableName = tableName;
-        this.tableSourceAlias = tableSourceAlias;
+        super.setAliasName(tableSourceAlias);
     }
 
     public String getSchemaName() {
@@ -34,13 +32,13 @@ public class BaseTable implements AbstractRelation {
         this.tableName = tableName;
     }
     
-    public String getTableSourceAlias() {
-        return tableSourceAlias;
-    }
-
-    public void setTableSourceAlias(String tableSourceAlias) {
-        this.tableSourceAlias = tableSourceAlias;
-    }
+//    public String getTableSourceAlias() {
+//        return tableSourceAlias;
+//    }
+//
+//    public void setTableSourceAlias(String tableSourceAlias) {
+//        this.tableSourceAlias = tableSourceAlias;
+//    }
 
     public String toSql(SyntaxAbstract syntax) throws UnexpectedTypeException {
         throw new UnexpectedTypeException("A base table itself cannot be converted to a sql.");
