@@ -11,10 +11,10 @@ public class ScrambleMeta {
     
     public ScrambleMeta() {}
     
-    public void insertScrumbleMetaEntry(
+    public void insertScrambleMetaEntry(
             String schemaName,
             String tableName,
-            String partitionColumn,
+            String aggregationBlockColumn,
             String inclusionProbabilityColumn,
             String inclusionProbBlockDiffColumn,
             String subsampleColumn,
@@ -22,12 +22,29 @@ public class ScrambleMeta {
         ScrambleMetaForTable tableMeta = new ScrambleMetaForTable();
         tableMeta.setSchemaName(schemaName);
         tableMeta.setTableName(tableName);
-        tableMeta.setPartitionColumn(partitionColumn);
+        tableMeta.setAggregationBlockColumn(aggregationBlockColumn);
         tableMeta.setSubsampleColumn(subsampleColumn);
         tableMeta.setInclusionProbabilityColumn(inclusionProbabilityColumn);
         tableMeta.setInclusionProbabilityBlockDifferenceColumn(inclusionProbBlockDiffColumn);
         tableMeta.setAggregationBlockCount(aggregationBlockCount);
         meta.put(metaKey(schemaName, tableName), tableMeta);
+    }
+    
+    public void insertScrambleMetaEntry(
+            String aliasName,
+            String aggregationBlockColumn,
+            String inclusionProbabilityColumn,
+            String inclusionProbBlockDiffColumn,
+            String subsampleColumn,
+            int aggregationBlockCount) {
+        ScrambleMetaForTable tableMeta = new ScrambleMetaForTable();
+        tableMeta.setAliasName(aliasName);
+        tableMeta.setAggregationBlockColumn(aggregationBlockColumn);
+        tableMeta.setSubsampleColumn(subsampleColumn);
+        tableMeta.setInclusionProbabilityColumn(inclusionProbabilityColumn);
+        tableMeta.setInclusionProbabilityBlockDifferenceColumn(inclusionProbBlockDiffColumn);
+        tableMeta.setAggregationBlockCount(aggregationBlockCount);
+        meta.put(metaKey(aliasName), tableMeta);
     }
     
     private String metaKey(String schemaName, String tableName) {
@@ -38,8 +55,8 @@ public class ScrambleMeta {
         return aliasName;
     }
     
-    public String getPartitionColumn(String schemaName, String tableName) {
-        return meta.get(metaKey(schemaName, tableName)).getPartitionColumn();
+    public String getAggregationBlockColumn(String schemaName, String tableName) {
+        return meta.get(metaKey(schemaName, tableName)).getAggregationBlockColumn();
     }
     
     public int getAggregationBlockCount(String schemaName, String tableName) {
@@ -62,6 +79,10 @@ public class ScrambleMeta {
         return meta.get(metaKey(schemaName, tableName)).getInclusionProbabilityBlockDifferenceColumn();
     }
 
+    public boolean isScrambled(String schemaName, String tableName) {
+        return meta.containsKey(metaKey(schemaName, tableName));
+    }
+
 }
 
 
@@ -76,7 +97,9 @@ class ScrambleMetaForTable {
     
     String tableName;
     
-    String partitionColumn;
+    String aliasName;
+    
+    String aggregationBlockColumn;
     
     String inclusionProbabilityColumn;
     
@@ -112,17 +135,25 @@ class ScrambleMetaForTable {
     public void setTableName(String tableName) {
         this.tableName = tableName;
     }
+    
+    public String getAliasName() {
+        return aliasName;
+    }
+    
+    public void setAliasName(String aliasName) {
+        this.aliasName = aliasName;
+    }
 
     public int getAggregationBlockCount() {
         return aggregationBlockCount;
     }
 
-    public String getPartitionColumn() {
-        return partitionColumn;
+    public String getAggregationBlockColumn() {
+        return aggregationBlockColumn;
     }
 
-    public void setPartitionColumn(String partitionColumn) {
-        this.partitionColumn = partitionColumn;
+    public void setAggregationBlockColumn(String aggregationBlockColumn) {
+        this.aggregationBlockColumn = aggregationBlockColumn;
     }
 
     public String getInclusionProbabilityColumn() {

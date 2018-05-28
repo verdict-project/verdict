@@ -44,6 +44,10 @@ public class SelectQueryOp implements AbstractRelation {
         }
     }
     
+    public void clearFilters() {
+        filter = Optional.empty();
+    }
+    
     public void setAliasName(String aliasName) {
         this.aliasName = Optional.of(aliasName);
     }

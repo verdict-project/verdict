@@ -20,6 +20,8 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
      * <li>or</li>
      * <li>equal</li>
      * <li>notequal</li>
+     * <li>notgreaterthan</li>
+     * <li>notlessthan</li>
      * <li>casewhenelse</li>
      * <li>not null</li>
      * </ol>
@@ -49,6 +51,10 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
     public UnnamedColumn getOperand(int i) {
         return operands.get(i);
     }
+    
+    public List<UnnamedColumn> getOperands() {
+        return operands;
+    }
 
     public void setOperand(List<UnnamedColumn> operands) {
         this.operands = operands;
@@ -72,6 +78,14 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
     
     public static ColumnOp notequal(UnnamedColumn column1, UnnamedColumn column2) {
         return new ColumnOp("notequal", Arrays.asList(column1, column2));
+    }
+    
+    public static ColumnOp notgreaterthan(UnnamedColumn column1, UnnamedColumn column2) {
+        return new ColumnOp("notgreaterthan", Arrays.asList(column1, column2));
+    }
+    
+    public static ColumnOp notlessthan(UnnamedColumn column1, UnnamedColumn column2) {
+        return new ColumnOp("notlessthan", Arrays.asList(column1, column2));
     }
     
     public static ColumnOp add(UnnamedColumn column1, UnnamedColumn column2) {

@@ -25,7 +25,7 @@ public class ScrambleRewriterFlatQueryTest {
     
     ScrambleMeta generateTestScrambleMeta() {
         ScrambleMeta meta = new ScrambleMeta();
-        meta.insertScrumbleMetaEntry("myschema", "mytable",
+        meta.insertScrambleMetaEntry("myschema", "mytable",
                                      "verdictpartition", "verdictincprob", "verdictincprobblockdiff", "verdictsid",
                                      aggblockCount);
         return meta;
