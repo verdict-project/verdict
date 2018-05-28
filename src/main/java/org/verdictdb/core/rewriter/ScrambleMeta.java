@@ -16,17 +16,19 @@ public class ScrambleMeta {
             String tableName,
             String partitionColumn,
             String inclusionProbabilityColumn,
-            String inclusionProbBlockDiffColumn,
             String subsampleColumn,
-            int aggregationBlockCount) {
+            List<String> partitionAttributeValues) {
         ScrambleMetaForTable tableMeta = new ScrambleMetaForTable();
         tableMeta.setSchemaName(schemaName);
         tableMeta.setTableName(tableName);
         tableMeta.setPartitionColumn(partitionColumn);
         tableMeta.setSubsampleColumn(subsampleColumn);
         tableMeta.setInclusionProbabilityColumn(inclusionProbabilityColumn);
-        tableMeta.setInclusionProbabilityBlockDifferenceColumn(inclusionProbBlockDiffColumn);
-        tableMeta.setAggregationBlockCount(aggregationBlockCount);
+        
+        for (String v : partitionAttributeValues) {
+            tableMeta.addPartitionAttributeValue(v);
+        }
+        
         meta.put(metaKey(schemaName, tableName), tableMeta);
     }
     
@@ -34,32 +36,24 @@ public class ScrambleMeta {
         return schemaName + "#" + tableName;
     }
     
-    private String metaKey(String aliasName) {
-        return aliasName;
-    }
-    
     public String getPartitionColumn(String schemaName, String tableName) {
         return meta.get(metaKey(schemaName, tableName)).getPartitionColumn();
     }
     
-    public int getAggregationBlockCount(String schemaName, String tableName) {
-        return meta.get(metaKey(schemaName, tableName)).getAggregationBlockCount();
+    public int getPartitionCount(String schemaName, String tableName) {
+        return meta.get(metaKey(schemaName, tableName)).getPartitionCount();
     }
     
     public String getInclusionProbabilityColumn(String schemaName, String tableName) {
         return meta.get(metaKey(schemaName, tableName)).getInclusionProbabilityColumn();
     }
+    
+    public List<String> getPartitionAttributes(String schemaName, String tableName) {
+        return meta.get(metaKey(schemaName, tableName)).getPartitionAttributes();
+    }
 
     public String getSubsampleColumn(String schemaName, String tableName) {
         return meta.get(metaKey(schemaName, tableName)).getSubsampleColumn();
-    }
-    
-    public String getSubsampleColumn(String aliasName) {
-        return meta.get(metaKey(aliasName)).getSubsampleColumn();
-    }
-
-    public String getInclusionProbabilityBlockDifferenceColumn(String schemaName, String tableName) {
-        return meta.get(metaKey(schemaName, tableName)).getInclusionProbabilityBlockDifferenceColumn();
     }
 
 }
@@ -78,23 +72,17 @@ class ScrambleMetaForTable {
     
     String partitionColumn;
     
+    List<String> partitionAttributeValues = new ArrayList<>();
+    
     String inclusionProbabilityColumn;
     
-    String inclusionProbabilityBlockDifferenceColumn;
-    
     String subsampleColumn;
-    
-    int aggregationBlockCount;
     
     
     public ScrambleMetaForTable() {}
     
-    public String getInclusionProbabilityBlockDifferenceColumn() {
-        return inclusionProbabilityBlockDifferenceColumn;
-    }
-
-    public void setAggregationBlockCount(int aggregationBlockCount) {
-        this.aggregationBlockCount = aggregationBlockCount;
+    public void addPartitionAttributeValue(String partitionAttributeValue) {
+        partitionAttributeValues.add(partitionAttributeValue);
     }
     
     public String getSchemaName() {
@@ -113,8 +101,8 @@ class ScrambleMetaForTable {
         this.tableName = tableName;
     }
 
-    public int getAggregationBlockCount() {
-        return aggregationBlockCount;
+    public int getPartitionCount() {
+        return partitionAttributeValues.size();
     }
 
     public String getPartitionColumn() {
@@ -123,6 +111,10 @@ class ScrambleMetaForTable {
 
     public void setPartitionColumn(String partitionColumn) {
         this.partitionColumn = partitionColumn;
+    }
+    
+    public String getPartitionAttributeValue(int i) {
+        return partitionAttributeValues.get(i);
     }
 
     public String getInclusionProbabilityColumn() {
@@ -133,8 +125,8 @@ class ScrambleMetaForTable {
         this.inclusionProbabilityColumn = inclusionProbabilityColumn;
     }
     
-    public void setInclusionProbabilityBlockDifferenceColumn(String inclusionProbabilityBlockDifferenceColumn) {
-        this.inclusionProbabilityBlockDifferenceColumn = inclusionProbabilityBlockDifferenceColumn;
+    public List<String> getPartitionAttributes() {
+        return partitionAttributeValues;
     }
     
     public void setSubsampleColumn(String subsampleColumn) {

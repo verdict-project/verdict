@@ -1,27 +1,15 @@
 package org.verdictdb.core.sql;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
-import org.verdictdb.core.logical_query.SelectItem;
-import org.verdictdb.core.logical_query.AbstractRelation;
-import org.verdictdb.core.logical_query.AliasedColumn;
-import org.verdictdb.core.logical_query.AsteriskColumn;
-import org.verdictdb.core.logical_query.BaseColumn;
-import org.verdictdb.core.logical_query.BaseTable;
-import org.verdictdb.core.logical_query.ColumnOp;
-import org.verdictdb.core.logical_query.ConstantColumn;
-import org.verdictdb.core.logical_query.GroupingAttribute;
-import org.verdictdb.core.logical_query.AliasReference;
-import org.verdictdb.core.logical_query.SelectQueryOp;
-import org.verdictdb.core.logical_query.UnnamedColumn;
+import javafx.util.Pair;
+import org.verdictdb.core.logical_query.*;
 import org.verdictdb.core.sql.syntax.SyntaxAbstract;
 import org.verdictdb.exception.UnexpectedTypeException;
 import org.verdictdb.exception.ValueException;
 import org.verdictdb.exception.VerdictDbException;
-
-import com.google.common.collect.Sets;
 
 public class RelationToSql {
     
@@ -39,7 +27,7 @@ public class RelationToSql {
         return selectQueryToSql((SelectQueryOp) relation);
     }
     
-    String selectItemToSqlPart(SelectItem item) throws UnexpectedTypeException {
+    String selectItemToSqlPart(SelectItem item) throws VerdictDbException {
         if (item instanceof AliasedColumn) {
             return aliasedColumnToSqlPart((AliasedColumn) item);
         }
@@ -51,24 +39,36 @@ public class RelationToSql {
         }
     }
     
-    String aliasedColumnToSqlPart(AliasedColumn acolumn) throws UnexpectedTypeException {
+    String aliasedColumnToSqlPart(AliasedColumn acolumn) throws VerdictDbException {
         String aliasName = acolumn.getAliasName();
         return unnamedColumnToSqlPart(acolumn.getColumn()) + " as " + aliasName;
     }
     
-    String groupingAttributeToSqlPart(GroupingAttribute column) throws UnexpectedTypeException {
+    String groupingAttributeToSqlPart(GroupingAttribute column) throws VerdictDbException {
         if (column instanceof AsteriskColumn) {
             throw new UnexpectedTypeException("asterisk is not expected in the groupby clause.");
         }
-        if (column instanceof AliasReference) {
-            return quoteName(((AliasReference) column).getAliasName());
+        if (column instanceof AliasColumn) {
+            return quoteName(((AliasColumn) column).getColumn());
         }
         else {
-            return unnamedColumnToSqlPart((UnnamedColumn) column);
+            return quoteName(unnamedColumnToSqlPart((UnnamedColumn) column));
+        }
+    }
+
+    Pair<String, String> orderbyAttributeToSqlPart(OrderbyAttribute column) throws VerdictDbException {
+        if (column instanceof AsteriskColumn) {
+            throw new UnexpectedTypeException("asterisk is not expected in the orderby clause");
+        }
+        if (column instanceof AliasColumn) {
+            return ((AliasColumn) column).getOrderedColumn();
+        }
+        else {
+            return new Pair<>(unnamedColumnToSqlPart((UnnamedColumn) column), "asc");
         }
     }
     
-    String unnamedColumnToSqlPart(UnnamedColumn column) throws UnexpectedTypeException {
+    String unnamedColumnToSqlPart(UnnamedColumn column) throws VerdictDbException {
         if (column instanceof BaseColumn) {
             BaseColumn base = (BaseColumn) column;
             return quoteName(base.getTableSourceAlias()) + "." + quoteName(base.getColumnName());
@@ -97,10 +97,10 @@ public class RelationToSql {
                 return "sqrt(" + unnamedColumnToSqlPart(columnOp.getOperand()) + ")";
             }
             else if (columnOp.getOpType().equals("add")) {
-                return withParentheses(columnOp.getOperand(0)) + " + " + withParentheses(columnOp.getOperand(1));
+                return "(" + withParentheses(columnOp.getOperand(0)) + " + " + withParentheses(columnOp.getOperand(1)) + ")";
             }
             else if (columnOp.getOpType().equals("subtract")) {
-                return withParentheses(columnOp.getOperand(0)) + " - " + withParentheses(columnOp.getOperand(1));
+                return "(" + withParentheses(columnOp.getOperand(0)) + " - " + withParentheses(columnOp.getOperand(1)) + ")";
             }
             else if (columnOp.getOpType().equals("multiply")) {
                 return withParentheses(columnOp.getOperand(0)) + " * " + withParentheses(columnOp.getOperand(1));
@@ -115,7 +115,7 @@ public class RelationToSql {
                 return withParentheses(columnOp.getOperand(0)) + " and " + withParentheses(columnOp.getOperand(1));
             }
             else if (columnOp.getOpType().equals("or")) {
-                return withParentheses(columnOp.getOperand(0)) + " or " + withParentheses(columnOp.getOperand(1));
+                return "(" + withParentheses(columnOp.getOperand(0)) + " or " + withParentheses(columnOp.getOperand(1)) + ")";
             }
             else if (columnOp.getOpType().equals("casewhenelse")) {
                 return "case " + withParentheses(columnOp.getOperand(0))
@@ -123,25 +123,109 @@ public class RelationToSql {
                      + " else " + withParentheses(columnOp.getOperand(2))
                      + " end";
             }
+            else if (columnOp.getOpType().equals("whenthenelse")) {
+                return "case "
+                        + "when " + withParentheses(columnOp.getOperand(0))
+                        + " then " + withParentheses(columnOp.getOperand(1))
+                        + " else " + withParentheses(columnOp.getOperand(2))
+                        + " end";
+            }
             else if (columnOp.getOpType().equals("notequal")) {
                 return withParentheses(columnOp.getOperand(0)) + " <> " + withParentheses(columnOp.getOperand(1));
             }
             else if (columnOp.getOpType().equals("notnull")) {
                 return withParentheses(columnOp.getOperand(0)) + " is not null";
             }
+            else if (columnOp.getOpType().equals("interval")) {
+                return "interval '" + withParentheses(columnOp.getOperand(0)) + "' " + withParentheses(columnOp.getOperand(1));
+            }
+            else if (columnOp.getOpType().equals("date")) {
+                return "date '" + withParentheses(columnOp.getOperand()) + "'";
+            }
+            else if (columnOp.getOpType().equals("greater")) {
+                return withParentheses(columnOp.getOperand(0)) + " > " + withParentheses(columnOp.getOperand(1));
+            }
+            else if (columnOp.getOpType().equals("less")) {
+                return withParentheses(columnOp.getOperand(0)) + " < " + withParentheses(columnOp.getOperand(1));
+            }
+            else if (columnOp.getOpType().equals("greaterequal")) {
+                return withParentheses(columnOp.getOperand(0)) + " >= " + withParentheses(columnOp.getOperand(1));
+            }
+            else if (columnOp.getOpType().equals("lessequal")) {
+                return withParentheses(columnOp.getOperand(0)) + " <= " + withParentheses(columnOp.getOperand(1));
+            }
+            else if (columnOp.getOpType().equals("min")) {
+                return "min(" + withParentheses(columnOp.getOperand()) + ")";
+            }
+            else if (columnOp.getOpType().equals("max")) {
+                return "max(" + withParentheses(columnOp.getOperand()) + ")";
+            }
+            else if (columnOp.getOpType().equals("min")) {
+                return "max(" + withParentheses(columnOp.getOperand()) + ")";
+            }
+            else if (columnOp.getOpType().equals("is")) {
+                return  withParentheses(columnOp.getOperand(0)) + " is " + withParentheses(columnOp.getOperand(1));
+            }
+            else if (columnOp.getOpType().equals("like")) {
+                return  withParentheses(columnOp.getOperand(0)) + " like '" + withParentheses(columnOp.getOperand(1)) + "'";
+            }
+            else if (columnOp.getOpType().equals("notlike")) {
+                return  withParentheses(columnOp.getOperand(0)) + " not like '" + withParentheses(columnOp.getOperand(1)) + "'";
+            }
+            else if (columnOp.getOpType().equals("exists")) {
+                return "exists " + withParentheses(columnOp.getOperand());
+            }
+            else if (columnOp.getOpType().equals("notexists")) {
+                return "not exists " + withParentheses(columnOp.getOperand());
+            }
+            else if (columnOp.getOpType().equals("between")) {
+                return withParentheses(columnOp.getOperand(0)) + " between " + withParentheses(columnOp.getOperand(1)) + " and " + withParentheses(columnOp.getOperand(2));
+            }
+            else if (columnOp.getOpType().equals("extract")) {
+                return "extract(" + withParentheses(columnOp.getOperand(0)) + " from " + withParentheses(columnOp.getOperand(1)) + ")";
+            }
+            else if (columnOp.getOpType().equals("in")) {
+                List<UnnamedColumn> columns = columnOp.getOperands();
+                String temp = "";
+                for (int i=1; i<columns.size();i++){
+                    if (i!=columns.size()-1) {
+                        temp = temp + withParentheses(columns.get(i)) + ", ";
+                    }
+                    else temp = temp + withParentheses(columns.get(i));
+                }
+                return withParentheses(columns.get(0)) + " in (" + temp + ")";
+            }
+            else if (columnOp.getOpType().equals("notin")) {
+                List<UnnamedColumn> columns = columnOp.getOperands();
+                String temp = "";
+                for (int i=1; i<columns.size();i++){
+                    if (i!=columns.size()-1) {
+                        temp = temp + withParentheses(columns.get(i)) + ", ";
+                    }
+                    else temp = temp + withParentheses(columns.get(i));
+                }
+                return withParentheses(columns.get(0)) + " not in (" + temp + ")";
+            }
+            else if (columnOp.getOpType().equals("countdistinct")) {
+                return  "count(distinct " + withParentheses(columnOp.getOperand()) + ")";
+            }
+            else if (columnOp.getOpType().equals("substring")) {
+                return "substring(" + withParentheses(columnOp.getOperand(0)) + " from " +
+                        withParentheses(columnOp.getOperand(1)) + " for " + withParentheses(columnOp.getOperand(2)) + ")";
+            }
             else {
                 throw new UnexpectedTypeException("Unexpceted opType of column: " + columnOp.getOpType().toString());
             }
         }
+        else if (column instanceof SubqueryColumn) {
+            return "(" + selectQueryToSql(((SubqueryColumn) column).getSubquery()) + ")";
+        }
         throw new UnexpectedTypeException("Unexpceted argument type: " + column.getClass().toString());
     }
     
-    Set<String> opTypeNotRequiringParentheses = Sets.newHashSet(
-            "sum", "avg", "count", "std", "sqrt", "notnull");
-    
-    String withParentheses(UnnamedColumn column) throws UnexpectedTypeException {
+    String withParentheses(UnnamedColumn column) throws VerdictDbException {
         String sql = unnamedColumnToSqlPart(column);
-        if (column instanceof ColumnOp && !opTypeNotRequiringParentheses.contains(((ColumnOp) column).getOpType())) {
+        if (column instanceof ColumnOp && ((ColumnOp) column).getOpType().equals("*")) {
             sql = "(" + sql + ")";
         }
         return sql;
@@ -162,7 +246,7 @@ public class RelationToSql {
                 sql.append(", " + selectItemToSqlPart(a));
             }
         }
-        
+
         // from
         sql.append(" from");
         List<AbstractRelation> rels = sel.getFromList();
@@ -175,14 +259,14 @@ public class RelationToSql {
                 sql.append(", " + relationToSqlPart(r));
             }
         }
-        
+
         // where
         Optional<UnnamedColumn> filter = sel.getFilter();
         if (filter.isPresent()) {
             sql.append(" where ");
             sql.append(unnamedColumnToSqlPart(filter.get()));
         }
-        
+
         // groupby
         List<GroupingAttribute> groupby = sel.getGroupby();
         boolean isFirstGroup = true;
@@ -195,13 +279,46 @@ public class RelationToSql {
                 sql.append(", " + groupingAttributeToSqlPart(a));
             }
         }
-        
-        return sql.toString();
+
+        //having
+        Optional<UnnamedColumn> having = sel.getHaving();
+        if (having.isPresent()) {
+            sql.append(" having ");
+            sql.append(unnamedColumnToSqlPart(having.get()));
+        }
+
+        //orderby
+        List<OrderbyAttribute> orderby = sel.getOrderby();
+        boolean isFirstOrdered = true;
+        for (OrderbyAttribute a : orderby) {
+            if (isFirstOrdered) {
+                sql.append(" order by ");
+                Pair<String, String> orderedColumn = orderbyAttributeToSqlPart(a);
+                sql.append(quoteName(orderedColumn.getKey()));
+                if (orderedColumn.getValue().equals("desc")) {
+                    sql.append(" desc");
+                }
+                isFirstOrdered = false;
+            } else {
+                Pair<String, String> orderedColumn = orderbyAttributeToSqlPart(a);
+                sql.append(", " + quoteName(orderedColumn.getKey()));
+                if (orderedColumn.getValue().equals("desc")) {
+                    sql.append(" desc");
+                }
+            }
+        }
+            //Limit
+            Optional<UnnamedColumn> limit = sel.getLimit();
+            if (limit.isPresent()) {
+                sql.append(" limit " + unnamedColumnToSqlPart(limit.get()));
+            }
+
+            return sql.toString();
     }
-    
-    String relationToSqlPart(AbstractRelation relation) throws VerdictDbException {
+
+    String relationToSqlPart (AbstractRelation relation) throws VerdictDbException {
         StringBuilder sql = new StringBuilder();
-        
+
         if (relation instanceof BaseTable) {
             BaseTable base = (BaseTable) relation;
             String aliasName = base.getTableSourceAlias();
@@ -211,23 +328,49 @@ public class RelationToSql {
             }
             return sql.toString();
         }
-        
+
+        if (relation instanceof JoinTable) {
+            sql.append("(");
+            sql.append(relationToSqlPart(((JoinTable) relation).getJoinList().get(0)));
+            for (int i = 1; i < ((JoinTable) relation).getJoinList().size(); i++) {
+                if (((JoinTable) relation).getJoinTypeList().get(i - 1).equals(JoinTable.JoinType.inner)) {
+                    sql.append(" inner join ");
+                } else if (((JoinTable) relation).getJoinTypeList().get(i - 1).equals(JoinTable.JoinType.outer)) {
+                    sql.append(" outer join ");
+                } else if (((JoinTable) relation).getJoinTypeList().get(i - 1).equals(JoinTable.JoinType.left)) {
+                    sql.append(" left join ");
+                } else if (((JoinTable) relation).getJoinTypeList().get(i - 1).equals(JoinTable.JoinType.leftouter)) {
+                    sql.append(" left outer join ");
+                } else if (((JoinTable) relation).getJoinTypeList().get(i - 1).equals(JoinTable.JoinType.right)) {
+                    sql.append(" right join ");
+                } else if (((JoinTable) relation).getJoinTypeList().get(i - 1).equals(JoinTable.JoinType.rightouter)) {
+                    sql.append(" right outer join ");
+                }
+                sql.append(relationToSqlPart(((JoinTable) relation).getJoinList().get(i)) + " on " +
+                        withParentheses(((JoinTable) relation).getCondition().get(i - 1)));
+            }
+            sql.append(")");
+            if (((JoinTable) relation).getAliasName().isPresent()) {
+                sql.append(" as " + ((JoinTable) relation).getAliasName().toString());
+            }
+            return sql.toString();
+        }
+
         if (!(relation instanceof SelectQueryOp)) {
             throw new UnexpectedTypeException("Unexpected relation type: " + relation.getClass().toString());
         }
-        
+
         SelectQueryOp sel = (SelectQueryOp) relation;
         Optional<String> aliasName = sel.getAliasName();
         if (!aliasName.isPresent()) {
             throw new ValueException("An inner select query must be aliased.");
         }
-        
+
         return "(" + selectQueryToSql(sel) + ") as " + aliasName.get();
     }
-    
-    String quoteName(String name) {
-        String quoteString = syntax.getQuoteString();
-        return quoteString + name + quoteString;
-    }
 
+        String quoteName (String name){
+            String quoteString = syntax.getQuoteString();
+            return quoteString + name + quoteString;
+        }
 }
