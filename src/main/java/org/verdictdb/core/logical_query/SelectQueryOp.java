@@ -13,6 +13,12 @@ public class SelectQueryOp implements AbstractRelation {
     Optional<UnnamedColumn> filter = Optional.empty();
     
     List<GroupingAttribute> groupby = new ArrayList<>();
+
+    List<OrderbyAttribute> orderby = new ArrayList<>();
+
+    Optional<UnnamedColumn> having = Optional.empty();
+
+    Optional<UnnamedColumn> limit = Optional.empty();
     
     Optional<String> aliasName = Optional.empty();
     
@@ -24,6 +30,27 @@ public class SelectQueryOp implements AbstractRelation {
             sel.addSelectItem(c);
         }
         sel.addTableSource(relation);
+        return sel;
+    }
+
+    public static SelectQueryOp getSelectQueryOp(List<SelectItem> columns, List<AbstractRelation> relation) {
+        SelectQueryOp sel = new SelectQueryOp();
+        for (SelectItem c : columns) {
+            sel.addSelectItem(c);
+        }
+        for (AbstractRelation r : relation) {
+            sel.addTableSource(r);
+        }
+        return sel;
+    }
+
+    public static SelectQueryOp getSelectQueryOp(List<SelectItem> columns, AbstractRelation relation, UnnamedColumn predicate) {
+        SelectQueryOp sel = new SelectQueryOp();
+        for (SelectItem c : columns) {
+            sel.addSelectItem(c);
+        }
+        sel.addTableSource(relation);
+        sel.filter = Optional.of(predicate);
         return sel;
     }
     
@@ -52,6 +79,27 @@ public class SelectQueryOp implements AbstractRelation {
         groupby.add(column);
     }
 
+    public void addGroupby(List<GroupingAttribute> columns){
+        groupby.addAll(columns);
+    }
+
+    public void addOrderby(OrderbyAttribute column) {
+        orderby.add(column);
+    }
+
+    public void addOrderby(List<OrderbyAttribute> columns) {orderby.addAll(columns); }
+
+    public void addHavingByAnd(UnnamedColumn predicate) {
+        if (!having.isPresent()) {
+            having = Optional.of(predicate);
+        }
+        else {
+            having = Optional.<UnnamedColumn>of(ColumnOp.and(having.get(), predicate));
+        }
+    }
+
+    public void addLimit(UnnamedColumn limit) {this.limit = Optional.of(limit); }
+
     public List<SelectItem> getSelectList() {
         return selectList;
     }
@@ -67,9 +115,17 @@ public class SelectQueryOp implements AbstractRelation {
     public List<GroupingAttribute> getGroupby() {
         return groupby;
     }
+
+    public List<OrderbyAttribute> getOrderby() {
+        return orderby;
+    }
     
     public Optional<String> getAliasName() {
         return aliasName;
     }
+
+    public Optional<UnnamedColumn> getLimit() {return limit; }
+
+    public Optional<UnnamedColumn> getHaving() {return having;}
 
 }

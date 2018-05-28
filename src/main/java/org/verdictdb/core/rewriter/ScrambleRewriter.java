@@ -2,15 +2,11 @@ package org.verdictdb.core.rewriter;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import org.verdictdb.core.logical_query.SelectItem;
-import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.core.logical_query.AbstractRelation;
-import org.verdictdb.core.logical_query.AliasReference;
 import org.verdictdb.core.logical_query.AliasedColumn;
 import org.verdictdb.core.logical_query.BaseColumn;
 import org.verdictdb.core.logical_query.BaseTable;
@@ -45,10 +41,6 @@ public class ScrambleRewriter {
         return aliasName;
     }
     
-    void initializeAliasNameSequence() {
-        nextAliasNumber = 1;
-    }
-    
     String generateMeanEstimateAliasName(String aliasName) {
         return aliasName;
     }
@@ -67,10 +59,24 @@ public class ScrambleRewriter {
      * @throws VerdictDbException 
      */
     public List<AbstractRelation> rewrite(AbstractRelation relation) throws VerdictDbException {
-        UnnamedColumn subsampleColumn = deriveSubsampleIdColumn(relation);
-        AggregationBlockSequence blockSeq = generateAggregationBlockSequence(relation);
-        List<AbstractRelation> rewritten = rewriteNotIncludingMaterialization(relation, subsampleColumn, blockSeq);
-
+//        int partitionCount = derivePartitionCount(relation);
+        List<AbstractRelation> rewritten = new ArrayList<AbstractRelation>();
+        
+        UnnamedColumn subsampleId = deriveSubsampleIdColumn(relation);
+        AbstractRelation rewrittenWithoutPartition = rewriteNotIncludingMaterialization(relation, subsampleId);
+        List<UnnamedColumn> partitionPredicates = generatePartitionPredicates(relation);
+        
+        for (int k = 0; k < partitionPredicates.size(); k++) {
+            UnnamedColumn partitionPredicate = partitionPredicates.get(k);
+            SelectQueryOp rewritten_k = deepcopySelectQuery((SelectQueryOp) rewrittenWithoutPartition);
+            ((SelectQueryOp) rewritten_k.getFromList().get(0)).addFilterByAnd(partitionPredicate);
+            rewritten.add(rewritten_k);
+        }
+        
+//        for (int k = 0; k < partitionCount; k++) {
+//            rewritten.add(rewriteNotIncludingMaterialization(relation, k));
+//        }
+        
         return rewritten;
     }
     
@@ -129,8 +135,8 @@ public class ScrambleRewriter {
      *  
      * "select other_groups, count(*) from ... group by other_groups;" is converted to
      * "select other_groups,
-     *         sum(sub_count_est) as mean_estimate,
-     *         sum(sub_count_est*sqrt(subsample_size)) / sqrt(sum(subsample_size)) as std_estimate
+     *         sum(sub_count_est) as mean_estimate
+     *         sum(sub_count_est*sqrt(subsample_size)) / sqrt(sum(subsample_size)) as std_estimate,
      *  from (select other_groups,
      *               sum(1 / prob) as sub_count_est,
      *               count(*) as subsample_size
@@ -141,34 +147,15 @@ public class ScrambleRewriter {
      * @param relation
      * @param partitionNumber
      * @return
-     * @throws VerdictDbException 
+     * @throws UnexpectedTypeException
      */
-    List<AbstractRelation> rewriteNotIncludingMaterialization(
-            AbstractRelation relation,
-            UnnamedColumn subsampleId,
-            AggregationBlockSequence blockSeq)
-    throws VerdictDbException {
-        
+    AbstractRelation rewriteNotIncludingMaterialization(AbstractRelation relation, UnnamedColumn subsampleId) 
+            throws UnexpectedTypeException {
         // must be some select query.
         if (!(relation instanceof SelectQueryOp)) {
-            throw new UnexpectedTypeException("Unexpected relation type: " + relation.getClass().toString());
+            throw new UnexpectedTypeException("Not implemented yet.");
         }
         
-        List<AbstractRelation> rewrittenQueries = new ArrayList<>();
-        for (int k = 0; k < blockSeq.getBlockCount(); k++) {
-            AggregationBlock aggblock = blockSeq.getBlock(k);
-            AbstractRelation rewritten = rewriteSingleAggregationBlock(relation, subsampleId, aggblock);
-            rewrittenQueries.add(rewritten);
-        }
-        return rewrittenQueries;
-    }
-    
-    AbstractRelation rewriteSingleAggregationBlock(
-            AbstractRelation relation,
-            UnnamedColumn subsampleId,
-            AggregationBlock aggblock)
-    throws VerdictDbException {
-        initializeAliasNameSequence();
         SelectQueryOp rewrittenOuter = new SelectQueryOp();
         SelectQueryOp rewrittenInner = new SelectQueryOp();
         String innerTableAliasName = generateNextAliasName();
@@ -180,8 +167,6 @@ public class ScrambleRewriter {
         List<GroupingAttribute> groupbyList = sel.getGroupby();
         List<GroupingAttribute> newInnerGroupbyList = new ArrayList<>();
         List<GroupingAttribute> newOuterGroupbyList = new ArrayList<>();
-        // The pair is (innerAliasName, outerAliasName)
-        List<Pair<UnnamedColumn, Pair<String, String>>> innerNonaggregateSelectItemToAliases = new ArrayList<>();
         for (SelectItem item : selectList) {
             if (!(item instanceof AliasedColumn)) {
                 throw new UnexpectedTypeException("The following select item is not aliased: " + item.toString());
@@ -194,7 +179,6 @@ public class ScrambleRewriter {
                 String aliasForBase = generateNextAliasName();
                 newInnerSelectList.add(new AliasedColumn(c, aliasForBase));
                 newOuterSelectList.add(new AliasedColumn(new BaseColumn(innerTableAliasName, aliasForBase), aliasName));
-                innerNonaggregateSelectItemToAliases.add(Pair.of(c, Pair.of(aliasForBase, aliasName)));
             }
             else if (c instanceof ColumnOp) {
                 ColumnOp col = (ColumnOp) c;
@@ -203,9 +187,8 @@ public class ScrambleRewriter {
                     String aliasForSubsampleSize = generateNextAliasName();
                     String aliasForMeanEstimate = generateMeanEstimateAliasName(aliasName);
                     String aliasForStdEstimate = generateStdEstimateAliasName(aliasName);
-                    
-                    UnnamedColumn op = col.getOperand();        // argument within the sum function
-                    UnnamedColumn probCol = deriveInclusionProbabilityColumnFromSource(sel.getFromList(), aggblock);
+                    UnnamedColumn op = col.getOperand();
+                    UnnamedColumn probCol = deriveInclusionProbabilityColumn(relation);
                     ColumnOp newCol = ColumnOp.sum(ColumnOp.divide(op, probCol));
                     newInnerSelectList.add(new AliasedColumn(newCol, aliasForSubSumEst));
                     ColumnOp oneIfNotNull = ColumnOp.casewhenelse(
@@ -229,79 +212,33 @@ public class ScrambleRewriter {
                                 ColumnOp.sqrt(
                                     ColumnOp.sum(new BaseColumn(innerTableAliasName, aliasForSubsampleSize)))),
                             aliasForStdEstimate));
+                    for (GroupingAttribute a : groupbyList) {
+                        newInnerGroupbyList.add(a);
+                        newOuterGroupbyList.add(a);
+                    }
+                    newInnerGroupbyList.add(subsampleId);
                 }
                 else if (col.getOpType().equals("count")) {
-                    String aliasForSubCountEst = generateNextAliasName();
-                    String aliasForSubsampleSize = generateNextAliasName();
-                    String aliasForMeanEstimate = generateMeanEstimateAliasName(aliasName);
-                    String aliasForStdEstimate = generateStdEstimateAliasName(aliasName);
-                    
-                    // inner
-                    UnnamedColumn probCol = deriveInclusionProbabilityColumnFromSource(sel.getFromList(), aggblock);
-                    ColumnOp newCol = ColumnOp.sum(ColumnOp.divide(ConstantColumn.valueOf(1), probCol));
-                    newInnerSelectList.add(new AliasedColumn(newCol, aliasForSubCountEst));
-                    newInnerSelectList.add(
-                        new AliasedColumn(
-                            ColumnOp.count(),
-                            aliasForSubsampleSize));
-                    // outer
-                    newOuterSelectList.add(
-                        new AliasedColumn(ColumnOp.sum(new BaseColumn(innerTableAliasName, aliasForSubCountEst)),
-                                          aliasForMeanEstimate));
-                    newOuterSelectList.add(
-                        new AliasedColumn(
-                            ColumnOp.divide(
-                                ColumnOp.std(
-                                    ColumnOp.multiply(
-                                        new BaseColumn(innerTableAliasName, aliasForSubCountEst),
-                                        ColumnOp.sqrt(new BaseColumn(innerTableAliasName, aliasForSubsampleSize)))),
-                                ColumnOp.sqrt(
-                                    ColumnOp.sum(new BaseColumn(innerTableAliasName, aliasForSubsampleSize)))),
-                            aliasForStdEstimate));
+                    UnnamedColumn probCol = deriveInclusionProbabilityColumn(relation);
+                    ColumnOp newCol = new ColumnOp("sum",
+                                          new ColumnOp("divide", Arrays.asList(ConstantColumn.valueOf(1), probCol)));
+                    newInnerSelectList.add(new AliasedColumn(newCol, aliasName));
                 }
                 else if (col.getOpType().equals("avg")) {
-                    String aliasForSubSumEst = generateNextAliasName();
-                    String aliasForSubCountEst = generateNextAliasName();
-                    String aliasForSubsampleSize = generateNextAliasName();
-                    String aliasForMeanEstimate = generateMeanEstimateAliasName(aliasName);
-                    String aliasForStdEstimate = generateStdEstimateAliasName(aliasName);
-                    
-                    // inner
-                    UnnamedColumn op = col.getOperand();        // argument within the avg function
-                    UnnamedColumn probCol = deriveInclusionProbabilityColumnFromSource(sel.getFromList(), aggblock);
-                    ColumnOp newCol = ColumnOp.sum(ColumnOp.divide(op, probCol));
-                    newInnerSelectList.add(new AliasedColumn(newCol, aliasForSubSumEst));
+                    UnnamedColumn op = col.getOperand();
+                    UnnamedColumn probCol = deriveInclusionProbabilityColumn(relation);
+                    // sum of attribute values
+                    ColumnOp newCol1 = new ColumnOp("sum",
+                                         new ColumnOp("divide", Arrays.asList(op, probCol)));
+                    // number of attribute values
                     ColumnOp oneIfNotNull = ColumnOp.casewhenelse(
-                            ConstantColumn.valueOf(1),
-                            ColumnOp.notnull(op),
-                            ConstantColumn.valueOf(0));
-                    newInnerSelectList.add(
-                        new AliasedColumn(
-                            ColumnOp.sum(ColumnOp.divide(oneIfNotNull, probCol)),
-                            aliasForSubCountEst));
-                    newInnerSelectList.add(
-                        new AliasedColumn(
-                            ColumnOp.sum(oneIfNotNull),
-                            aliasForSubsampleSize));
-                    // outer
-                    newOuterSelectList.add(
-                        new AliasedColumn(
-                            ColumnOp.divide(
-                                ColumnOp.sum(new BaseColumn(innerTableAliasName, aliasForSubSumEst)),
-                                ColumnOp.sum(new BaseColumn(innerTableAliasName, aliasForSubCountEst))),
-                            aliasForMeanEstimate));
-                    newOuterSelectList.add(
-                        new AliasedColumn(
-                            ColumnOp.divide(
-                                ColumnOp.std(
-                                    ColumnOp.multiply(
-                                        ColumnOp.divide(
-                                            new BaseColumn(innerTableAliasName, aliasForSubSumEst),
-                                            new BaseColumn(innerTableAliasName, aliasForSubCountEst)),
-                                        ColumnOp.sqrt(new BaseColumn(innerTableAliasName, aliasForSubsampleSize)))),
-                                ColumnOp.sqrt(
-                                    ColumnOp.sum(new BaseColumn(innerTableAliasName, aliasForSubsampleSize)))),
-                            aliasForStdEstimate));
+                                                ConstantColumn.valueOf(1),
+                                                ColumnOp.notnull(op),
+                                                ConstantColumn.valueOf(0));
+                    ColumnOp newCol2 = new ColumnOp("sum",
+                                         new ColumnOp("divide", Arrays.asList(oneIfNotNull, probCol)));
+                    newInnerSelectList.add(new AliasedColumn(newCol1, aliasName + "_sum"));
+                    newInnerSelectList.add(new AliasedColumn(newCol2, aliasName + "_count"));
                 }
                 else {
                     throw new UnexpectedTypeException("Not implemented yet.");
@@ -311,32 +248,6 @@ public class ScrambleRewriter {
                 throw new UnexpectedTypeException("Unexpected column type: " + c.getClass().toString());
             }
         }
-        
-        for (GroupingAttribute a : groupbyList) {
-            boolean added = false;
-            for (Pair<UnnamedColumn, Pair<String, String>> pair : innerNonaggregateSelectItemToAliases) {
-                UnnamedColumn col = pair.getLeft();
-                String innerAlias = pair.getRight().getLeft();
-                String outerAlias = pair.getRight().getRight();
-                
-                // when grouping attribute is a base column
-                if (a.equals(col)) {
-                    newInnerGroupbyList.add(new AliasReference(innerAlias));
-                    newOuterGroupbyList.add(new AliasReference(outerAlias));
-                    added = true;
-                }
-                // when grouping attribute is the alias to an select item
-                else if (a instanceof AliasReference && ((AliasReference) a).getAliasName().equals(outerAlias)) {
-                    newInnerGroupbyList.add(new AliasReference(innerAlias));
-                    newOuterGroupbyList.add(new AliasReference(outerAlias));
-                    added = true;
-                }
-            }
-            if (added == false) {
-                newInnerGroupbyList.add(a);
-            }
-        }
-        newInnerGroupbyList.add(subsampleId);
         
         // inner query
         for (SelectItem c : newInnerSelectList) {
@@ -348,8 +259,6 @@ public class ScrambleRewriter {
         if (sel.getFilter().isPresent()) {
             rewrittenInner.addFilterByAnd(sel.getFilter().get());
         }
-        UnnamedColumn aggBlockPredicate = generateAggBlockPredicate(sel.getFromList(), aggblock);
-        rewrittenInner.addFilterByAnd(aggBlockPredicate);
         for (GroupingAttribute a : newInnerGroupbyList) {
             rewrittenInner.addGroupby(a);
         }
@@ -366,35 +275,31 @@ public class ScrambleRewriter {
         return rewrittenOuter;
     }
     
-    UnnamedColumn generateAggBlockPredicate(
-            List<AbstractRelation> fromList,
-            AggregationBlock aggblock)
-    throws VerdictDbException {
+    List<UnnamedColumn> generatePartitionPredicates(AbstractRelation relation) throws VerdictDbException {
+        if (!(relation instanceof SelectQueryOp)) {
+            throw new UnexpectedTypeException("Unexpected relation type: " + relation.getClass().toString());
+        }
+        
         List<UnnamedColumn> partitionPredicates = new ArrayList<>();
-        for (AbstractRelation source : fromList) {
-            if (!(source instanceof BaseTable)) {
-                throw new UnexpectedTypeException("Unexpected source type: " + source.getClass().toString());
-            }
-            
-            BaseTable base = (BaseTable) source;
-            String colName = scrambleMeta.getPartitionColumn(base.getSchemaName(), base.getTableName());
-            if (colName == null) {
+        SelectQueryOp sel = (SelectQueryOp) relation;
+        List<AbstractRelation> fromList = sel.getFromList();
+        for (AbstractRelation r : fromList) {
+            Optional<UnnamedColumn> c = partitionColumnOfSource(r);
+            if (!c.isPresent()) {
                 continue;
             }
             if (partitionPredicates.size() > 0) {
                 throw new ValueException("Only a single table can be a scrambled table.");
             }
-            String aliasName = base.getTableSourceAlias();
-            Pair<Integer, Integer> startEndIndices = aggblock.getBlockIndexOf(base.getSchemaName(), base.getTableName());
-            int startIndex = startEndIndices.getLeft();
-            int endIndex = startEndIndices.getRight();
-            if (startIndex == endIndex) {
-                return ColumnOp.equal(new BaseColumn(aliasName, colName), ConstantColumn.valueOf(endIndex));
-            } else {
-                throw new ValueException("Multiple aggregation blocks are not allowed.");
+            
+            UnnamedColumn partCol = c.get();
+            List<String> partitionAttributeValues = partitionAttributeValuesOfSource(r);
+            for (String v : partitionAttributeValues) {
+                partitionPredicates.add(ColumnOp.equal(partCol, ConstantColumn.valueOf(v)));
             }
         }
-        throw new ValueException("Empty fromList is not expected.");
+        
+        return partitionPredicates;
     }
     
     UnnamedColumn deriveSubsampleIdColumn(AbstractRelation relation) throws VerdictDbException {
@@ -419,7 +324,7 @@ public class ScrambleRewriter {
         return subsampleColumns.get(0);
     }
     
-    Optional<UnnamedColumn> subsampleColumnOfSource(AbstractRelation source) throws VerdictDbException {
+    Optional<UnnamedColumn> subsampleColumnOfSource(AbstractRelation source) throws UnexpectedTypeException {
         if (source instanceof BaseTable) {
             BaseTable base = (BaseTable) source;
             String colName = scrambleMeta.getSubsampleColumn(base.getSchemaName(), base.getTableName());
@@ -430,32 +335,23 @@ public class ScrambleRewriter {
             BaseColumn col = new BaseColumn(aliasName, colName);
             return Optional.<UnnamedColumn>of(col);
         }
-        else if (source instanceof SelectQueryOp) {
-            Optional<String> aliasName = ((SelectQueryOp) source).getAliasName();
-            if (!aliasName.isPresent()) {
-                return Optional.empty();
-            }
-            String colName = scrambleMeta.getSubsampleColumn(aliasName.get());
-            BaseColumn col = new BaseColumn(aliasName.get(), colName);
-            return Optional.<UnnamedColumn>of(col);
-        }
         else {
-            throw new UnexpectedTypeException("Unexpected source type: " + source.getClass().toString()); 
+            throw new UnexpectedTypeException("Derived tables cannot be used."); 
         }
     }
     
-//    List<String> partitionAttributeValuesOfSource(AbstractRelation source) throws UnexpectedTypeException {
-//        if (source instanceof BaseTable) {
-//            BaseTable base = (BaseTable) source;
-//            String schemaName = base.getSchemaName();
-//            String tableName = base.getTableName();
-//            return scrambleMeta.getPartitionAttributes(schemaName, tableName);
-//        }
-//        else {
-//            throw new UnexpectedTypeException("Not implemented yet.");
-//        }
-//        
-//    }
+    List<String> partitionAttributeValuesOfSource(AbstractRelation source) throws UnexpectedTypeException {
+        if (source instanceof BaseTable) {
+            BaseTable base = (BaseTable) source;
+            String schemaName = base.getSchemaName();
+            String tableName = base.getTableName();
+            return scrambleMeta.getPartitionAttributes(schemaName, tableName);
+        }
+        else {
+            throw new UnexpectedTypeException("Not implemented yet.");
+        }
+        
+    }
     
 //    ColumnOp derivePartitionFilter(AbstractRelation relation, int partitionNumber) throws UnexpectedTypeException {
 //        AbstractColumn partCol = derivePartitionColumn(relation);
@@ -512,15 +408,18 @@ public class ScrambleRewriter {
      * 
      * @param relation
      * @return
-     * @throws VerdictDbException 
+     * @throws UnexpectedTypeException
      */
-    UnnamedColumn deriveInclusionProbabilityColumnFromSource(
-            List<AbstractRelation> fromList,
-            AggregationBlock aggblock)
-    throws VerdictDbException {
+    UnnamedColumn deriveInclusionProbabilityColumn(AbstractRelation relation) throws UnexpectedTypeException {
+        if (!(relation instanceof SelectQueryOp)) {
+            throw new UnexpectedTypeException("Unexpected relation type: " + relation.getClass().toString());
+        }
+        
+        SelectQueryOp sel = (SelectQueryOp) relation;
+        List<AbstractRelation> fromList = sel.getFromList();
         UnnamedColumn incProbCol = null;
         for (AbstractRelation r : fromList) {
-            Optional<UnnamedColumn> c = inclusionProbabilityColumnOfSingleSource(r, aggblock);
+            Optional<UnnamedColumn> c = inclusionProbabilityColumnOfSource(r);
             if (!c.isPresent()) {
                 continue;
             }
@@ -534,141 +433,20 @@ public class ScrambleRewriter {
         return incProbCol;
     }
     
-    Optional<UnnamedColumn> inclusionProbabilityColumnOfSingleSource(
-            AbstractRelation source,
-            AggregationBlock aggblock)
-    throws VerdictDbException {
+    Optional<UnnamedColumn> inclusionProbabilityColumnOfSource(AbstractRelation source) throws UnexpectedTypeException {
         if (source instanceof BaseTable) {
             BaseTable base = (BaseTable) source;
-            String incProbCol = scrambleMeta.getInclusionProbabilityColumn(base.getSchemaName(), base.getTableName());
-            String incProbDiff = scrambleMeta.getInclusionProbabilityBlockDifferenceColumn(base.getSchemaName(), base.getTableName());
-            if (incProbCol == null) {
+            String colName = scrambleMeta.getInclusionProbabilityColumn(base.getSchemaName(), base.getTableName());
+            if (colName == null) {
                 return Optional.empty();
             }
-            Pair<Integer, Integer> startEndIndices = aggblock.getBlockIndexOf(base.getSchemaName(), base.getTableName());
             String aliasName = base.getTableSourceAlias();
-            int startIndex = startEndIndices.getLeft();
-            int endIndex = startEndIndices.getRight();
-            if (startIndex == endIndex) {
-                ColumnOp col = ColumnOp.add(
-                        new BaseColumn(aliasName, incProbCol),
-                        ColumnOp.multiply(new BaseColumn(aliasName, incProbDiff), ConstantColumn.valueOf(endIndex)));
-                return Optional.<UnnamedColumn>of(col);
-            } else {
-                throw new ValueException("Multiple aggregation blocks cannot be used.");
-            }
+            BaseColumn col = new BaseColumn(aliasName, colName);
+            return Optional.<UnnamedColumn>of(col);
         }
         else {
             throw new UnexpectedTypeException("Derived tables cannot be used."); 
         }
     }
-    
-    AggregationBlockSequence generateAggregationBlockSequence(AbstractRelation relation) throws VerdictDbException {
-        if (!(relation instanceof SelectQueryOp)) {
-            throw new UnexpectedTypeException("Unexpected argument type: " + relation.getClass().toString());
-        }
-        
-        SelectQueryOp sel = (SelectQueryOp) relation;
-        List<BaseTable> sourceTables = new ArrayList<>();
-        for (AbstractRelation a : sel.getFromList()) {
-            if (!(a instanceof BaseTable)) {
-                throw new UnexpectedTypeException("Unexpected source type: " + a.getClass().toString());
-            }
-            BaseTable base = (BaseTable) a;
-            String col = scrambleMeta.getPartitionColumn(base.getSchemaName(), base.getTableName());
-            if (col != null) {
-                sourceTables.add(base);
-            }
-        }
-        
-        if (sourceTables.size() > 1) {
-            throw new ValueException("More than one scrambled table exists.");
-        }
-        BaseTable base = sourceTables.get(0);
-        int aggBlockCount = scrambleMeta.getAggregationBlockCount(base.getSchemaName(), base.getTableName());
-        AggregationBlockSequence seq = new AggregationBlockSequence();
-        seq.addScrambledTable(base);
-        for (int k = 0; k < aggBlockCount; k++) {
-            seq.addNoJoinBlock(k);
-        }
-        
-        return seq;
-    }
 
 }
-
-
-class AggregationBlockSequence {
-    
-    List<BaseTable> scrambledTables = new ArrayList<>();
-    
-    List<AggregationBlock> blocks = new ArrayList<>();
-    
-    public AggregationBlock getBlock(int number) {
-        return blocks.get(number);
-    }
-    
-    public List<BaseTable> getScrambledTables() {
-        return scrambledTables;
-    }
-    
-    public void addScrambledTable(BaseTable table) {
-        scrambledTables.add(table);
-    }
-    
-    public void addNoJoinBlock(int blockIndex) {
-        blocks.add(new AggregationBlock(blockIndex, scrambledTables));
-    }
-    
-    public int getBlockCount() {
-        return blocks.size();
-    }
-}
-
-
-class AggregationBlock {
-    
-    List<BaseTable> scrambledTables;
-    
-    /**
-     * Each element, i.e., Pair<Integer, Integer>, is the start and end indices of an aggregation block.
-     */
-    List<Pair<Integer, Integer>> blockStartEndIndices = new ArrayList<>();
-    
-    public AggregationBlock(int blockIndex, List<BaseTable> scrambledTables) {
-        blockStartEndIndices.add(Pair.of(blockIndex, blockIndex));
-        this.scrambledTables = scrambledTables;
-    }
-    
-    public AggregationBlock(int blockStartIndex1, int blockEndIndex1, int blockStartIndex2, int blockEndIndex2) {
-        blockStartEndIndices.add(Pair.of(blockStartIndex1, blockEndIndex1));
-        blockStartEndIndices.add(Pair.of(blockStartIndex2, blockEndIndex2));
-    }
-    
-    public int getNoJoinBlockIndex() {
-        return blockStartEndIndices.get(0).getLeft();
-    }
-    
-    public Pair<Integer, Integer> getBlockIndexOf(String schemaName, String tableName) {
-        int order = 0;
-        for (BaseTable base : scrambledTables) {
-            if (base.getSchemaName().equals(schemaName) && base.getTableName().equals(tableName)) {
-                break;
-            } else {
-                order += 1;
-            }
-        }
-        // in case it does not match anything
-        if (order >= scrambledTables.size()) {
-            return null;
-        }
-        return blockStartEndIndices.get(order);
-    }
-    
-    public List<Pair<Integer, Integer>> getDoubleJoinBlockStartEndIndices() {
-        return Arrays.asList(
-                Pair.of(blockStartEndIndices.get(0).getLeft(), blockStartEndIndices.get(0).getRight()),
-                Pair.of(blockStartEndIndices.get(1).getLeft(), blockStartEndIndices.get(1).getRight()));
-    }
-}
-

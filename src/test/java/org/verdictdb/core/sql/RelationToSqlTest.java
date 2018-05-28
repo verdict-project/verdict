@@ -12,7 +12,7 @@ import org.verdictdb.core.logical_query.AsteriskColumn;
 import org.verdictdb.core.logical_query.BaseColumn;
 import org.verdictdb.core.logical_query.BaseTable;
 import org.verdictdb.core.logical_query.ColumnOp;
-import org.verdictdb.core.logical_query.AliasReference;
+import org.verdictdb.core.logical_query.AliasColumn;
 import org.verdictdb.core.logical_query.SelectQueryOp;
 import org.verdictdb.core.logical_query.UnnamedColumn;
 import org.verdictdb.core.sql.syntax.HiveSyntax;
@@ -79,7 +79,7 @@ public class RelationToSqlTest {
                 Arrays.<SelectItem>asList(
                         new ColumnOp("count", new BaseColumn("t", "mycolumn1"))),
                 base);
-        String expected = "select count(*) from `myschema`.`mytable` as t";
+        String expected = "select count(`t`.`mycolumn1`) from `myschema`.`mytable` as t";
         RelationToSql relToSql = new RelationToSql(new HiveSyntax());
         String actual = relToSql.toSql(relation);
         assertEquals(expected, actual);
@@ -181,7 +181,7 @@ public class RelationToSqlTest {
                         new BaseColumn("t", "mygroup"),
                         new AliasedColumn(new ColumnOp("avg", new BaseColumn("t", "mycolumn1")), "myavg")),
                 base);
-        relation.addGroupby(new AliasReference("mygroup"));
+        relation.addGroupby(new AliasColumn("mygroup"));
         String expected = "select `t`.`mygroup`, avg(`t`.`mycolumn1`) as myavg from `myschema`.`mytable` as t group by `mygroup`";
         RelationToSql relToSql = new RelationToSql(new HiveSyntax());
         String actual = relToSql.toSql(relation);
