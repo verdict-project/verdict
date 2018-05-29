@@ -1,9 +1,5 @@
 package org.verdictdb.core.logical_query;
 
-import org.verdictdb.core.sql.syntax.SyntaxAbstract;
-import org.verdictdb.exception.UnexpectedTypeException;
-
-import javax.swing.text.html.Option;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;

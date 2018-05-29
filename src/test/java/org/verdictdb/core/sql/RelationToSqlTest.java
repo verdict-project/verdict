@@ -6,13 +6,13 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
-import org.verdictdb.core.logical_query.SelectItem;
 import org.verdictdb.core.logical_query.AliasReference;
 import org.verdictdb.core.logical_query.AliasedColumn;
 import org.verdictdb.core.logical_query.AsteriskColumn;
 import org.verdictdb.core.logical_query.BaseColumn;
 import org.verdictdb.core.logical_query.BaseTable;
 import org.verdictdb.core.logical_query.ColumnOp;
+import org.verdictdb.core.logical_query.SelectItem;
 import org.verdictdb.core.logical_query.SelectQueryOp;
 import org.verdictdb.core.logical_query.UnnamedColumn;
 import org.verdictdb.core.sql.syntax.HiveSyntax;

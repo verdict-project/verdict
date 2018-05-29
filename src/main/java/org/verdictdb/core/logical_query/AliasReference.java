@@ -4,8 +4,6 @@ import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
-import javafx.util.Pair;
-
 /**
  * Represents the alias name that appears in the group-by clause or in the order-by clause.
  * This column does not include any reference to the table.

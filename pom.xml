@@ -1,4 +1,6 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.verdictdb</groupId>
     <artifactId>verdictdb</artifactId>
@@ -70,20 +72,20 @@
                     <target>1.7</target>
                 </configuration>
             </plugin>
-            <!--&lt;!&ndash; Spark test support &ndash;&gt;-->
-            <!--<plugin>-->
-                <!--<groupId>org.apache.maven.plugins</groupId>-->
-                <!--<artifactId>maven-jar-plugin</artifactId>-->
-                <!--<version>3.0.2</version>-->
-                <!--<executions>-->
-                    <!--<execution>-->
-                        <!--<phase>package</phase>-->
-                        <!--<goals>-->
-                            <!--<goal>test-jar</goal>-->
-                        <!--</goals>-->
-                    <!--</execution>-->
-                <!--</executions>-->
-            <!--</plugin>-->
+            <!--&lt;!&ndash; Spark test support &ndash;&gt; -->
+            <!--<plugin> -->
+            <!--<groupId>org.apache.maven.plugins</groupId> -->
+            <!--<artifactId>maven-jar-plugin</artifactId> -->
+            <!--<version>3.0.2</version> -->
+            <!--<executions> -->
+            <!--<execution> -->
+            <!--<phase>package</phase> -->
+            <!--<goals> -->
+            <!--<goal>test-jar</goal> -->
+            <!--</goals> -->
+            <!--</execution> -->
+            <!--</executions> -->
+            <!--</plugin> -->
         </plugins>
     </build>
 
@@ -107,6 +109,11 @@
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
             <version>${google.guava.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>tech.tablesaw</groupId>
+            <artifactId>tablesaw-core</artifactId>
+            <version>0.11.6</version>
         </dependency>
 
 

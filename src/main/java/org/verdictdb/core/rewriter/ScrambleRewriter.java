@@ -5,9 +5,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
-import org.verdictdb.core.logical_query.SelectItem;
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.core.logical_query.AbstractRelation;
 import org.verdictdb.core.logical_query.AliasReference;
@@ -18,6 +16,7 @@ import org.verdictdb.core.logical_query.BaseTable;
 import org.verdictdb.core.logical_query.ColumnOp;
 import org.verdictdb.core.logical_query.ConstantColumn;
 import org.verdictdb.core.logical_query.GroupingAttribute;
+import org.verdictdb.core.logical_query.SelectItem;
 import org.verdictdb.core.logical_query.SelectQueryOp;
 import org.verdictdb.core.logical_query.UnnamedColumn;
 import org.verdictdb.exception.UnexpectedTypeException;

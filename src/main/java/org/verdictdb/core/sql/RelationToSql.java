@@ -1,12 +1,24 @@
 package org.verdictdb.core.sql;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-import javafx.util.Pair;
-import org.verdictdb.core.logical_query.*;
+import org.verdictdb.core.logical_query.AbstractRelation;
+import org.verdictdb.core.logical_query.AliasReference;
+import org.verdictdb.core.logical_query.AliasedColumn;
+import org.verdictdb.core.logical_query.AsteriskColumn;
+import org.verdictdb.core.logical_query.BaseColumn;
+import org.verdictdb.core.logical_query.BaseTable;
+import org.verdictdb.core.logical_query.ColumnOp;
+import org.verdictdb.core.logical_query.ConstantColumn;
+import org.verdictdb.core.logical_query.GroupingAttribute;
+import org.verdictdb.core.logical_query.JoinTable;
+import org.verdictdb.core.logical_query.OrderbyAttribute;
+import org.verdictdb.core.logical_query.SelectItem;
+import org.verdictdb.core.logical_query.SelectQueryOp;
+import org.verdictdb.core.logical_query.SubqueryColumn;
+import org.verdictdb.core.logical_query.UnnamedColumn;
 import org.verdictdb.core.sql.syntax.SyntaxAbstract;
 import org.verdictdb.exception.UnexpectedTypeException;
 import org.verdictdb.exception.ValueException;
