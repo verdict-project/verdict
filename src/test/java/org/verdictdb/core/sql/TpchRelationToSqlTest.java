@@ -1,6 +1,6 @@
 package org.verdictdb.core.sql;
 
-
+import org.apache.logging.log4j.core.config.Order;
 import org.junit.Test;
 import org.verdictdb.core.logical_query.*;
 import org.verdictdb.core.sql.syntax.HiveSyntax;
@@ -30,9 +30,9 @@ public class TpchRelationToSqlTest {
                 new ColumnOp("add", operand3));
         List<UnnamedColumn> operand5 = Arrays.<UnnamedColumn>asList(
                 new BaseColumn("t", "l_shipdate"),
-                new ColumnOp("subtract", Arrays.asList(
+                new ColumnOp("subtract", Arrays.<UnnamedColumn>asList(
                     new ColumnOp("date", ConstantColumn.valueOf("1998-12-01")),
-                    new ColumnOp("interval", Arrays.asList(ConstantColumn.valueOf(":1"), ConstantColumn.valueOf("day")))
+                    new ColumnOp("interval", Arrays.<UnnamedColumn>asList(ConstantColumn.valueOf(":1"), ConstantColumn.valueOf("day")))
                 )));
         SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
                 Arrays.<SelectItem>asList(
@@ -48,9 +48,9 @@ public class TpchRelationToSqlTest {
                         new AliasedColumn(new ColumnOp("count", new AsteriskColumn()), "count_order")
                 ),
                 base, new ColumnOp("lessequal", operand5));
-        relation.addGroupby(Arrays.asList(new AliasColumn("l_returnflag"),
+        relation.addGroupby(Arrays.<GroupingAttribute>asList(new AliasColumn("l_returnflag"),
                 new AliasColumn("l_linestatus")));
-        relation.addOrderby(Arrays.asList(new AliasColumn("l_returnflag"),
+        relation.addOrderby(Arrays.<OrderbyAttribute>asList(new AliasColumn("l_returnflag"),
                 new AliasColumn("l_linestatus")));
         relation.addLimit(ConstantColumn.valueOf(1));
         String expected = "select `t`.`l_returnflag`, " +
@@ -86,9 +86,9 @@ public class TpchRelationToSqlTest {
         BaseTable partsupp = new BaseTable("tpch", "partsupp", "ps");
         BaseTable nation = new BaseTable("tpch", "nation", "n");
         BaseTable region = new BaseTable("tpch", "region", "r");
-        List<AbstractRelation> from = Arrays.asList(part, supplier, partsupp, nation, region);
+        List<AbstractRelation> from = Arrays.<AbstractRelation>asList(part, supplier, partsupp, nation, region);
         SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
-                Arrays.asList(
+                Arrays.<SelectItem>asList(
                         new BaseColumn("s", "s_acctbal"),
                         new BaseColumn("s", "s_name"),
                         new BaseColumn("n", "n_name"),
@@ -98,55 +98,55 @@ public class TpchRelationToSqlTest {
                         new BaseColumn("s", "s_phone"),
                         new BaseColumn("s", "s_comment")),
         from);
-        relation.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
+        relation.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("p", "p_partkey"),
                 new BaseColumn("ps", "ps_partkey")
         )));
-        relation.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
+        relation.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("s", "s_suppkey"),
                 new BaseColumn("ps", "ps_suppkey")
         )));
-        relation.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
+        relation.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("p", "p_size"),
                 ConstantColumn.valueOf(":1")
         )));
-        relation.addFilterByAnd(new ColumnOp("like", Arrays.asList(
+        relation.addFilterByAnd(new ColumnOp("like", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("p", "p_type"),
                 ConstantColumn.valueOf("%:2")
         )));
-        relation.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
+        relation.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("s", "s_nationkey"),
                 new BaseColumn("n", "n_nationkey")
         )));
-        relation.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
+        relation.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("n", "n_regionkey"),
                 new BaseColumn("r", "r_regionkey")
         )));
-        relation.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
+        relation.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("r", "r_name"),
                 ConstantColumn.valueOf("':3'")
         )));
-        List<AbstractRelation> subqueryFrom = Arrays.asList(partsupp, supplier, nation, region);
+        List<AbstractRelation> subqueryFrom = Arrays.<AbstractRelation>asList(partsupp, supplier, nation, region);
         SelectQueryOp subquery = SelectQueryOp.getSelectQueryOp(
-                Arrays.asList(new ColumnOp("min", new BaseColumn("ps", "ps_supplycost"))),
+                Arrays.<SelectItem>asList(new ColumnOp("min", new BaseColumn("ps", "ps_supplycost"))),
         subqueryFrom);
-        subquery.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
+        subquery.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("p", "p_partkey"),
                 new BaseColumn("ps","ps_partkey")
         )));
-        subquery.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
+        subquery.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("s", "s_suppkey"),
                 new BaseColumn("ps","ps_suppkey")
         )));
-        subquery.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
+        subquery.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("s", "s_nationkey"),
                 new BaseColumn("n","n_nationkey")
         )));
-        subquery.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
+        subquery.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("n", "n_regionkey"),
                 new BaseColumn("r","r_regionkey")
         )));
-        subquery.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
+        subquery.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("r", "r_name"),
                 ConstantColumn.valueOf("':3'")
         )));
@@ -154,7 +154,7 @@ public class TpchRelationToSqlTest {
                 new BaseColumn("ps", "ps_supplycost"),
                 SubqueryColumn.getSubqueryColumn(subquery)
         )));
-        relation.addOrderby(Arrays.asList(
+        relation.addOrderby(Arrays.<OrderbyAttribute>asList(
                 new AliasColumn("s_acctbal", false),
                 new AliasColumn("n_name"),
                 new AliasColumn("s_name"),
@@ -214,9 +214,9 @@ public class TpchRelationToSqlTest {
         AbstractRelation customer = new BaseTable("tpch", "customer", "c");
         AbstractRelation orders = new BaseTable("tpch", "orders", "o");
         AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "l");
-        ColumnOp op1 = new ColumnOp("multiply", Arrays.asList(
+        ColumnOp op1 = new ColumnOp("multiply", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("l", "l_extendedprice"),
-                new ColumnOp("subtract", Arrays.asList(
+                new ColumnOp("subtract", Arrays.<UnnamedColumn>asList(
                         ConstantColumn.valueOf(1),
                         new BaseColumn("l", "l_discount")
                 ))
@@ -229,32 +229,32 @@ public class TpchRelationToSqlTest {
                         new BaseColumn("o", "o_shippriority")
                 ),
         Arrays.asList(customer, orders, lineitem));
-        relation.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
+        relation.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("c", "c_mktsegment"),
                 ConstantColumn.valueOf("':1'")
         )));
-        relation.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
+        relation.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("c", "c_custkey"),
                 new BaseColumn("o", "o_custkey")
         )));
-        relation.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
+        relation.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("l", "l_orderkey"),
                 new BaseColumn("o", "o_orderkey")
         )));
-        relation.addFilterByAnd(new ColumnOp("less", Arrays.asList(
+        relation.addFilterByAnd(new ColumnOp("less", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("o", "o_orderdate"),
                 new ColumnOp("date", ConstantColumn.valueOf(":2"))
         )));
-        relation.addFilterByAnd(new ColumnOp("greater", Arrays.asList(
+        relation.addFilterByAnd(new ColumnOp("greater", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("l", "l_shipdate"),
                 new ColumnOp("date", ConstantColumn.valueOf(":2"))
         )));
-        relation.addGroupby(Arrays.asList(
+        relation.addGroupby(Arrays.<GroupingAttribute>asList(
                 new AliasColumn("l_orderkey"),
                 new AliasColumn("o_orderdate"),
                 new AliasColumn("o_shippriority")
         ));
-        relation.addOrderby(Arrays.asList(
+        relation.addOrderby(Arrays.<OrderbyAttribute>asList(
                 new AliasColumn("revenue", false),
                 new AliasColumn("o_orderdate")
         ));
@@ -296,25 +296,25 @@ public class TpchRelationToSqlTest {
                         new AliasedColumn(new ColumnOp("count", new AsteriskColumn()), "order_count")
                 ),
         orders);
-        relation.addFilterByAnd(new ColumnOp("greaterequal", Arrays.asList(
+        relation.addFilterByAnd(new ColumnOp("greaterequal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("o", "o_orderdate"),
                 new ColumnOp("date", ConstantColumn.valueOf(":1"))
         )));
-        relation.addFilterByAnd(new ColumnOp("less", Arrays.asList(
+        relation.addFilterByAnd(new ColumnOp("less", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("o", "o_orderdate"),
-                new ColumnOp("add", Arrays.asList(
+                new ColumnOp("add", Arrays.<UnnamedColumn>asList(
                         new ColumnOp("date", ConstantColumn.valueOf(":1")),
-                        new ColumnOp("interval", Arrays.asList(ConstantColumn.valueOf("3"), ConstantColumn.valueOf("month")))
+                        new ColumnOp("interval", Arrays.<UnnamedColumn>asList(ConstantColumn.valueOf("3"), ConstantColumn.valueOf("month")))
                 ))
         )));
         SelectQueryOp subquery = SelectQueryOp.getSelectQueryOp(
-                Arrays.asList(new AsteriskColumn()),
+                Arrays.<SelectItem>asList(new AsteriskColumn()),
         new BaseTable("tpch", "lineitem", "l"));
-        subquery.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
+        subquery.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("l", "l_orderkey"),
                 new BaseColumn("o", "o_orderkey")
         )));
-        subquery.addFilterByAnd(new ColumnOp("less", Arrays.asList(
+        subquery.addFilterByAnd(new ColumnOp("less", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("l", "l_commitdate"),
                 new BaseColumn("l", "l_receiptdate")
         )));
@@ -360,10 +360,10 @@ public class TpchRelationToSqlTest {
         SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
                 Arrays.asList(
                         new BaseColumn("n", "n_name"),
-                        new AliasedColumn(new ColumnOp("sum", Arrays.asList(
-                                new ColumnOp("multiply", Arrays.asList(
+                        new AliasedColumn(new ColumnOp("sum", Arrays.<UnnamedColumn>asList(
+                                new ColumnOp("multiply", Arrays.<UnnamedColumn>asList(
                                         new BaseColumn("l", "l_extendedprice"),
-                                        new ColumnOp("subtract", Arrays.asList(
+                                        new ColumnOp("subtract", Arrays.<UnnamedColumn>asList(
                                                 ConstantColumn.valueOf(1),
                                                 new BaseColumn("l", "l_discount")
                                         ))
@@ -371,43 +371,43 @@ public class TpchRelationToSqlTest {
                         )), "revenue")
                 ),
         Arrays.asList(customer, orders, lineitem, supplier, nation, region));
-        relation.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
+        relation.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("c", "c_custkey"),
                 new BaseColumn("o", "o_custkey")
         )));
-        relation.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
+        relation.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("l", "l_orderkey"),
                 new BaseColumn("o", "o_orderkey")
         )));
-        relation.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
+        relation.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("l", "l_suppkey"),
                 new BaseColumn("s", "s_suppkey")
         )));
-        relation.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
+        relation.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("c", "c_nationkey"),
                 new BaseColumn("s", "s_nationkey")
         )));
-        relation.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
+        relation.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("s", "s_nationkey"),
                 new BaseColumn("n", "n_nationkey")
         )));
-        relation.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
+        relation.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("n", "n_regionkey"),
                 new BaseColumn("r", "r_regionkey")
         )));
-        relation.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
+        relation.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("r", "r_name"),
                 ConstantColumn.valueOf("':1'")
         )));
-        relation.addFilterByAnd(new ColumnOp("greaterequal", Arrays.asList(
+        relation.addFilterByAnd(new ColumnOp("greaterequal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("o", "o_orderdate"),
                 new ColumnOp("date", ConstantColumn.valueOf(":2"))
         )));
-        relation.addFilterByAnd(new ColumnOp("less", Arrays.asList(
+        relation.addFilterByAnd(new ColumnOp("less", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("o", "o_orderdate"),
-                new ColumnOp("add", Arrays.asList(
+                new ColumnOp("add", Arrays.<UnnamedColumn>asList(
                         new ColumnOp("date", ConstantColumn.valueOf(":2")),
-                        new ColumnOp("interval", Arrays.asList(ConstantColumn.valueOf("1"), ConstantColumn.valueOf("year")))
+                        new ColumnOp("interval", Arrays.<UnnamedColumn>asList(ConstantColumn.valueOf("1"), ConstantColumn.valueOf("year")))
                 ))
         )));
         relation.addGroupby(new AliasColumn("n_name"));
@@ -447,34 +447,34 @@ public class TpchRelationToSqlTest {
     public void Query6Test() throws VerdictDbException {
         AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "l");
         SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
-                Arrays.asList(
+                Arrays.<SelectItem>asList(
                     new AliasedColumn(new ColumnOp("sum", new ColumnOp("multiply",
-                            Arrays.asList(
+                            Arrays.<UnnamedColumn>asList(
                                     new BaseColumn("l", "l_extendedprice"),
                                     new BaseColumn("l", "l_discount")
                             ))),"revenue")
                 ),
         lineitem);
-        relation.addFilterByAnd(new ColumnOp("greaterequal", Arrays.asList(
+        relation.addFilterByAnd(new ColumnOp("greaterequal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("l", "l_shipdate"),
                 new ColumnOp("date", ConstantColumn.valueOf(":1"))
         )));
-        relation.addFilterByAnd(new ColumnOp("less", Arrays.asList(
+        relation.addFilterByAnd(new ColumnOp("less", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("l", "l_shipdate"),
-                new ColumnOp("add", Arrays.asList(
+                new ColumnOp("add", Arrays.<UnnamedColumn>asList(
                         new ColumnOp("date", ConstantColumn.valueOf(":1")),
-                        new ColumnOp("interval", Arrays.asList(
+                        new ColumnOp("interval", Arrays.<UnnamedColumn>asList(
                                 ConstantColumn.valueOf("1"),
                                 ConstantColumn.valueOf("year")
                         ))
                 ))
         )));
-        relation.addFilterByAnd(new ColumnOp("between", Arrays.asList(
+        relation.addFilterByAnd(new ColumnOp("between", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("l", "l_discount"),
-                new ColumnOp("subtract", Arrays.asList(ConstantColumn.valueOf(":2"), ConstantColumn.valueOf("0.01"))),
-                new ColumnOp("add", Arrays.asList(ConstantColumn.valueOf(":2"), ConstantColumn.valueOf("0.01")))
+                new ColumnOp("subtract", Arrays.<UnnamedColumn>asList(ConstantColumn.valueOf(":2"), ConstantColumn.valueOf("0.01"))),
+                new ColumnOp("add", Arrays.<UnnamedColumn>asList(ConstantColumn.valueOf(":2"), ConstantColumn.valueOf("0.01")))
         )));
-        relation.addFilterByAnd(new ColumnOp("less", Arrays.asList(
+        relation.addFilterByAnd(new ColumnOp("less", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("l", "l_quantity"),
                 ConstantColumn.valueOf(":3"))
         ));
@@ -503,62 +503,62 @@ public class TpchRelationToSqlTest {
         AbstractRelation nation1 = new BaseTable("tpch", "nation", "n1");
         AbstractRelation nation2 = new BaseTable("tpch", "nation", "n2");
         SelectQueryOp subquery = SelectQueryOp.getSelectQueryOp(
-                Arrays.asList(
+                Arrays.<SelectItem>asList(
                         new AliasedColumn(new BaseColumn("n1", "n_name"), "supp_nation"),
                         new AliasedColumn(new BaseColumn("n2", "n_name"), "cust_nation"),
-                        new AliasedColumn(new ColumnOp("extract", Arrays.asList(
+                        new AliasedColumn(new ColumnOp("extract", Arrays.<UnnamedColumn>asList(
                                 ConstantColumn.valueOf("year"),
                                 new BaseColumn("l", "l_shipdate"))), "l_year"),
-                        new AliasedColumn(new ColumnOp("multiply", Arrays.asList(
+                        new AliasedColumn(new ColumnOp("multiply", Arrays.<UnnamedColumn>asList(
                                 new BaseColumn("l", "l_extendedprice"),
-                                new ColumnOp("subtract", Arrays.asList(
+                                new ColumnOp("subtract", Arrays.<UnnamedColumn>asList(
                                         ConstantColumn.valueOf(1), new BaseColumn("l", "l_discount")))
                         )), "volume")
                 ),
         Arrays.asList(supplier, lineitem, orders, customer, nation1, nation2));
-        subquery.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
+        subquery.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("s", "s_suppkey"),
                 new BaseColumn("l", "l_suppkey")
         )));
-        subquery.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
+        subquery.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("o", "o_orderkey"),
                 new BaseColumn("l", "l_orderkey")
         )));
-        subquery.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
+        subquery.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("c", "c_custkey"),
                 new BaseColumn("o", "o_custkey")
         )));
-        subquery.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
+        subquery.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("s", "s_nationkey"),
                 new BaseColumn("n1", "n_nationkey")
         )));
-        subquery.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
+        subquery.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("c", "c_nationkey"),
                 new BaseColumn("n2", "n_nationkey")
         )));
-        subquery.addFilterByAnd(new ColumnOp("or", Arrays.asList(
-                new ColumnOp("and", Arrays.asList(
-                        new ColumnOp("equal", Arrays.asList(
+        subquery.addFilterByAnd(new ColumnOp("or", Arrays.<UnnamedColumn>asList(
+                new ColumnOp("and", Arrays.<UnnamedColumn>asList(
+                        new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                                 new BaseColumn("n1", "n_name"),
                                 ConstantColumn.valueOf("':1'")
                         )),
-                        new ColumnOp("equal", Arrays.asList(
+                        new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                                 new BaseColumn("n2", "n_name"),
                                 ConstantColumn.valueOf("':2'")
                         ))
                 )),
-                new ColumnOp("and", Arrays.asList(
-                        new ColumnOp("equal", Arrays.asList(
+                new ColumnOp("and", Arrays.<UnnamedColumn>asList(
+                        new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                                 new BaseColumn("n1", "n_name"),
                                 ConstantColumn.valueOf("':2'")
                         )),
-                        new ColumnOp("equal", Arrays.asList(
+                        new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                                 new BaseColumn("n2", "n_name"),
                                 ConstantColumn.valueOf("':1'")
                         ))
                 ))
         )));
-        subquery.addFilterByAnd(new ColumnOp("between", Arrays.asList(
+        subquery.addFilterByAnd(new ColumnOp("between", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("l", "l_shipdate"),
                 new ColumnOp("date", ConstantColumn.valueOf("1995-01-01")),
                 new ColumnOp("date", ConstantColumn.valueOf("1996-12-31")))
@@ -572,12 +572,12 @@ public class TpchRelationToSqlTest {
                     new AliasedColumn(new ColumnOp("sum", new BaseColumn("shipping", "volume")), "revenue")
                 ),
         subquery);
-        relation.addGroupby(Arrays.asList(
+        relation.addGroupby(Arrays.<GroupingAttribute>asList(
                 new AliasColumn("supp_nation"),
                 new AliasColumn("cust_nation"),
                 new AliasColumn("l_year")
         ));
-        relation.addOrderby(Arrays.asList(
+        relation.addOrderby(Arrays.<OrderbyAttribute>asList(
                 new AliasColumn("supp_nation"),
                 new AliasColumn("cust_nation"),
                 new AliasColumn("l_year")
@@ -639,53 +639,53 @@ public class TpchRelationToSqlTest {
         AbstractRelation nation2 = new BaseTable("tpch", "nation", "n2");
         AbstractRelation region = new BaseTable("tpch", "region", "r");
         SelectQueryOp subquery = SelectQueryOp.getSelectQueryOp(
-                Arrays.asList(
-                        new AliasedColumn(new ColumnOp("extract", Arrays.asList(ConstantColumn.valueOf("year"), new BaseColumn("o", "o_orderdate"))), "o_year"),
-                        new AliasedColumn(new ColumnOp("multiply", Arrays.asList(
+                Arrays.<SelectItem>asList(
+                        new AliasedColumn(new ColumnOp("extract", Arrays.<UnnamedColumn>asList(ConstantColumn.valueOf("year"), new BaseColumn("o", "o_orderdate"))), "o_year"),
+                        new AliasedColumn(new ColumnOp("multiply", Arrays.<UnnamedColumn>asList(
                                 new BaseColumn("l", "l_extendedprice"),
-                                new ColumnOp("subtract", Arrays.asList(ConstantColumn.valueOf(1), new BaseColumn("l", "l_discount")))
+                                new ColumnOp("subtract", Arrays.<UnnamedColumn>asList(ConstantColumn.valueOf(1), new BaseColumn("l", "l_discount")))
                         )), "volume"),
                         new AliasedColumn(new BaseColumn("n2", "n_name"), "nation")
                 ),
         Arrays.asList(part, supplier, lineitem, orders, customer, nation1, nation2, region));
-        subquery.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
+        subquery.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("p", "p_partkey"),
                 new BaseColumn("l", "l_partkey")
         )));
-        subquery.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
+        subquery.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("s", "s_suppkey"),
                 new BaseColumn("l", "l_suppkey")
         )));
-        subquery.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
+        subquery.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("l", "l_orderkey"),
                 new BaseColumn("o", "o_orderkey")
         )));
-        subquery.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
+        subquery.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("o", "o_custkey"),
                 new BaseColumn("c", "c_custkey")
         )));
-        subquery.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
+        subquery.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("c", "c_nationkey"),
                 new BaseColumn("n1", "n_nationkey")
         )));
-        subquery.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
+        subquery.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("n1", "n_regionkey"),
                 new BaseColumn("r", "r_regionkey")
         )));
-        subquery.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
+        subquery.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("r", "r_name"),
                 ConstantColumn.valueOf("':2'")
         )));
-        subquery.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
+        subquery.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("s", "s_nationkey"),
                 new BaseColumn("n2", "n_nationkey")
         )));
-        subquery.addFilterByAnd(new ColumnOp("between", Arrays.asList(
+        subquery.addFilterByAnd(new ColumnOp("between", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("o", "o_orderdate"),
                 new ColumnOp("date", ConstantColumn.valueOf("1995-01-01")),
                 new ColumnOp("date", ConstantColumn.valueOf("1996-12-31"))
         )));
-        subquery.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
+        subquery.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("p", "p_type"),
                 ConstantColumn.valueOf("':3'")
         )));
@@ -694,9 +694,9 @@ public class TpchRelationToSqlTest {
                 Arrays.asList(
                         new BaseColumn("all_nations", "o_year"),
                         new AliasedColumn(
-                                new ColumnOp("divide",Arrays.asList(
-                                new ColumnOp("sum", new ColumnOp("whenthenelse", Arrays.asList(
-                                    new ColumnOp("equal", Arrays.asList(
+                                new ColumnOp("divide",Arrays.<UnnamedColumn>asList(
+                                new ColumnOp("sum", new ColumnOp("whenthenelse", Arrays.<UnnamedColumn>asList(
+                                    new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                                         new BaseColumn("all_nations", "nation"),
                                         ConstantColumn.valueOf("':1'")
                                 )), new BaseColumn("all_nations", "volume"),
@@ -760,44 +760,44 @@ public class TpchRelationToSqlTest {
         AbstractRelation orders = new BaseTable("tpch", "orders", "o");
         AbstractRelation nation = new BaseTable("tpch", "nation", "n");
         SelectQueryOp subquery = SelectQueryOp.getSelectQueryOp(
-                Arrays.asList(
+                Arrays.<SelectItem>asList(
                         new AliasedColumn(new BaseColumn("n", "n_name"), "nation"),
-                        new AliasedColumn(new ColumnOp("extract", Arrays.asList(ConstantColumn.valueOf("year"), new BaseColumn("o", "o_orderdate"))), "o_year"),
-                        new AliasedColumn(new ColumnOp("subtract", Arrays.asList(
-                                new ColumnOp("multiply", Arrays.asList(
+                        new AliasedColumn(new ColumnOp("extract", Arrays.<UnnamedColumn>asList(ConstantColumn.valueOf("year"), new BaseColumn("o", "o_orderdate"))), "o_year"),
+                        new AliasedColumn(new ColumnOp("subtract", Arrays.<UnnamedColumn>asList(
+                                new ColumnOp("multiply", Arrays.<UnnamedColumn>asList(
                                         new BaseColumn("l", "l_extendedprice"),
-                                        new ColumnOp("subtract", Arrays.asList(ConstantColumn.valueOf(1), new BaseColumn("l", "l_discount")))
+                                        new ColumnOp("subtract", Arrays.<UnnamedColumn>asList(ConstantColumn.valueOf(1), new BaseColumn("l", "l_discount")))
                                 )),
-                                new ColumnOp("multiply", Arrays.asList(
+                                new ColumnOp("multiply", Arrays.<UnnamedColumn>asList(
                                         new BaseColumn("ps", "ps_supplycost"),
                                         new BaseColumn("l", "l_quantity")
                                 ))
                         )), "amount")
                 ),
         Arrays.asList(part, supplier, lineitem, partsupp, orders, nation));
-        subquery.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
+        subquery.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("s", "s_suppkey"),
                 new BaseColumn("l", "l_suppkey")
         )));
-        subquery.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
+        subquery.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("ps", "ps_suppkey"),
                 new BaseColumn("l", "l_suppkey")
         )));
-        subquery.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
+        subquery.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("ps", "ps_partkey"),
                 new BaseColumn("l", "l_partkey")
         )));
-        subquery.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
+        subquery.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("p", "p_partkey"),
                 new BaseColumn("l", "l_partkey")
-        )));subquery.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
+        )));subquery.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("o", "o_orderkey"),
                 new BaseColumn("l", "l_orderkey")
-        )));subquery.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
+        )));subquery.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("s", "s_nationkey"),
                 new BaseColumn("n", "n_nationkey")
         )));
-        subquery.addFilterByAnd(new ColumnOp("like", Arrays.asList(
+        subquery.addFilterByAnd(new ColumnOp("like", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("p", "p_name"),
                 ConstantColumn.valueOf("%:1%")
         )));
@@ -809,8 +809,8 @@ public class TpchRelationToSqlTest {
                         new AliasedColumn(new ColumnOp("sum", new BaseColumn("profit", "amount")), "sum_profit")
                 ),
         subquery);
-        relation.addGroupby(Arrays.asList(new AliasColumn("nation"), new AliasColumn("o_year")));
-        relation.addOrderby(Arrays.asList(new AliasColumn("nation"), new AliasColumn("o_year", false)));
+        relation.addGroupby(Arrays.<GroupingAttribute>asList(new AliasColumn("nation"), new AliasColumn("o_year")));
+        relation.addOrderby(Arrays.<OrderbyAttribute>asList(new AliasColumn("nation"), new AliasColumn("o_year", false)));
         relation.addLimit(ConstantColumn.valueOf(1));
         String expected = "select " +
                 "`profit`.`nation`, " +
@@ -857,12 +857,12 @@ public class TpchRelationToSqlTest {
         AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "l");
         AbstractRelation nation = new BaseTable("tpch", "nation", "n");
         SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
-                Arrays.asList(
+                Arrays.<SelectItem>asList(
                         new BaseColumn("c", "c_custkey"),
                         new BaseColumn("c", "c_name"),
-                        new AliasedColumn(new ColumnOp("sum", new ColumnOp("multiply", Arrays.asList(
+                        new AliasedColumn(new ColumnOp("sum", new ColumnOp("multiply", Arrays.<UnnamedColumn>asList(
                                 new BaseColumn("l","l_extendedprice"),
-                                new ColumnOp("subtract", Arrays.asList(
+                                new ColumnOp("subtract", Arrays.<UnnamedColumn>asList(
                                         ConstantColumn.valueOf(1),
                                         new BaseColumn("l", "l_discount")
                                 ))
@@ -874,34 +874,34 @@ public class TpchRelationToSqlTest {
                         new BaseColumn("c", "c_comment")
                 ),
         Arrays.asList(customer, orders, lineitem, nation));
-        relation.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
+        relation.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("c", "c_custkey"),
                 new BaseColumn("o", "o_custkey")
         )));
-        relation.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
+        relation.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("l", "l_orderkey"),
                 new BaseColumn("o", "o_orderkey")
         )));
-        relation.addFilterByAnd(new ColumnOp("greaterequal", Arrays.asList(
+        relation.addFilterByAnd(new ColumnOp("greaterequal", Arrays.<UnnamedColumn>asList(
            new BaseColumn("o", "o_orderdate"),
            new ColumnOp("date", ConstantColumn.valueOf(":1"))
         )));
-        relation.addFilterByAnd(new ColumnOp("less", Arrays.asList(
+        relation.addFilterByAnd(new ColumnOp("less", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("o", "o_orderdate"),
-                new ColumnOp("add", Arrays.asList(
+                new ColumnOp("add", Arrays.<UnnamedColumn>asList(
                         new ColumnOp("date", ConstantColumn.valueOf(":1")),
-                        new ColumnOp("interval", Arrays.asList(ConstantColumn.valueOf("3"), ConstantColumn.valueOf("month")))
+                        new ColumnOp("interval", Arrays.<UnnamedColumn>asList(ConstantColumn.valueOf("3"), ConstantColumn.valueOf("month")))
                 )
         ))));
-        relation.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
+        relation.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("l", "l_returnflag"),
                 ConstantColumn.valueOf("'R'")
         )));
-        relation.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
+        relation.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("c", "c_nationkey"),
                 new BaseColumn("n", "n_nationkey")
         )));
-        relation.addGroupby(Arrays.asList(
+        relation.addGroupby(Arrays.<GroupingAttribute>asList(
                 new AliasColumn("c_custkey"),
                 new AliasColumn("c_name"),
                 new AliasColumn("c_acctbal"),
@@ -955,51 +955,51 @@ public class TpchRelationToSqlTest {
         AbstractRelation supplier = new BaseTable("tpch", "supplier", "s");
         AbstractRelation nation = new BaseTable("tpch", "nation", "n");
         SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
-                Arrays.asList(
+                Arrays.<SelectItem>asList(
                         new BaseColumn("ps", "ps_partkey"),
-                        new AliasedColumn(new ColumnOp("sum", new ColumnOp("multiply", Arrays.asList(
+                        new AliasedColumn(new ColumnOp("sum", new ColumnOp("multiply", Arrays.<UnnamedColumn>asList(
                                 new BaseColumn("ps", "ps_supplycost"),
                                 new BaseColumn("ps", "ps_availqty")
                         ))), "value")
                 ),
         Arrays.asList(partsupp, supplier, nation));
-        relation.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
+        relation.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("ps", "ps_suppkey"),
                 new BaseColumn("s", "s_suppkey")
         )));
-        relation.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
+        relation.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("s", "s_nationkey"),
                 new BaseColumn("n", "n_nationkey")
         )));
-        relation.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
+        relation.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("n", "n_name"),
                 ConstantColumn.valueOf("':1'")
         )));
         relation.addGroupby(new AliasColumn("ps_partkey"));
         SelectQueryOp subquery = SelectQueryOp.getSelectQueryOp(
-                Arrays.asList(
-                   new ColumnOp("multiply", Arrays.asList(
-                           new ColumnOp("sum", new ColumnOp("multiply", Arrays.asList(
+                Arrays.<SelectItem>asList(
+                   new ColumnOp("multiply", Arrays.<UnnamedColumn>asList(
+                           new ColumnOp("sum", new ColumnOp("multiply", Arrays.<UnnamedColumn>asList(
                                    new BaseColumn("ps", "ps_supplycost"),
                                    new BaseColumn("ps", "ps_availqty")
                            ))),
                            ConstantColumn.valueOf(":2")
                    ))
                 ), Arrays.asList(partsupp, supplier, nation));
-        subquery.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
+        subquery.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("ps", "ps_suppkey"),
                 new BaseColumn("s", "s_suppkey")
         )));
-        subquery.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
+        subquery.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("s", "s_nationkey"),
                 new BaseColumn("n", "n_nationkey")
         )));
-        subquery.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
+        subquery.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("n", "n_name"),
                 ConstantColumn.valueOf("':1'")
         )));
-        relation.addHavingByAnd(new ColumnOp("greater", Arrays.asList(
-                new ColumnOp("sum", new ColumnOp("multiply", Arrays.asList(
+        relation.addHavingByAnd(new ColumnOp("greater", Arrays.<UnnamedColumn>asList(
+                new ColumnOp("sum", new ColumnOp("multiply", Arrays.<UnnamedColumn>asList(
                         new BaseColumn("ps", "ps_supplycost"),
                         new BaseColumn("ps", "ps_availqty")
                 ))),
@@ -1045,14 +1045,14 @@ public class TpchRelationToSqlTest {
         AbstractRelation orders = new BaseTable("tpch", "orders", "o");
         AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "l");
         SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
-                Arrays.asList(
+                Arrays.<SelectItem>asList(
                         new BaseColumn("l", "l_shipmode"),
-                        new AliasedColumn(new ColumnOp("sum", new ColumnOp("whenthenelse", Arrays.asList(
-                                new ColumnOp("or", Arrays.asList(new ColumnOp("equal", Arrays.asList(
+                        new AliasedColumn(new ColumnOp("sum", new ColumnOp("whenthenelse", Arrays.<UnnamedColumn>asList(
+                                new ColumnOp("or", Arrays.<UnnamedColumn>asList(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                                         new BaseColumn("o", "o_orderpriority"),
                                         ConstantColumn.valueOf("'1-URGENT'")
                                         )),
-                                        new ColumnOp("equal", Arrays.asList(
+                                        new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                                                 new BaseColumn("o", "o_orderpriority"),
                                                 ConstantColumn.valueOf("'2-HIGH'")
                                         ))
@@ -1060,12 +1060,12 @@ public class TpchRelationToSqlTest {
                                 ConstantColumn.valueOf(1),
                                 ConstantColumn.valueOf(0)
                         ))), "high_line_count"),
-                        new AliasedColumn(new ColumnOp("sum", new ColumnOp("whenthenelse", Arrays.asList(
-                                new ColumnOp("and", Arrays.asList(new ColumnOp("notequal", Arrays.asList(
+                        new AliasedColumn(new ColumnOp("sum", new ColumnOp("whenthenelse", Arrays.<UnnamedColumn>asList(
+                                new ColumnOp("and", Arrays.<UnnamedColumn>asList(new ColumnOp("notequal", Arrays.<UnnamedColumn>asList(
                                         new BaseColumn("o", "o_orderpriority"),
                                         ConstantColumn.valueOf("'1-URGENT'")
                                         )),
-                                        new ColumnOp("notequal", Arrays.asList(
+                                        new ColumnOp("notequal", Arrays.<UnnamedColumn>asList(
                                                 new BaseColumn("o", "o_orderpriority"),
                                                 ConstantColumn.valueOf("'2-HIGH'")
                                         ))
@@ -1075,33 +1075,33 @@ public class TpchRelationToSqlTest {
                         ))), "low_line_count")
                 ),
         Arrays.asList(orders, lineitem));
-        relation.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
+        relation.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("o", "o_orderkey"),
                 new BaseColumn("l", "l_orderkey")
         )));
-        relation.addFilterByAnd(new ColumnOp("in", Arrays.asList(
+        relation.addFilterByAnd(new ColumnOp("in", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("l", "l_shipmode"),
                 ConstantColumn.valueOf("':1'"),
                 ConstantColumn.valueOf("':2'")
         )));
-        relation.addFilterByAnd(new ColumnOp("less", Arrays.asList(
+        relation.addFilterByAnd(new ColumnOp("less", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("l", "l_commitdate"),
                 new BaseColumn("l", "l_receiptdate")
         )));
 
-        relation.addFilterByAnd(new ColumnOp("less", Arrays.asList(
+        relation.addFilterByAnd(new ColumnOp("less", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("l", "l_shipdate"),
                 new BaseColumn("l", "l_commitdate")
         )));
-        relation.addFilterByAnd(new ColumnOp("greaterequal", Arrays.asList(
+        relation.addFilterByAnd(new ColumnOp("greaterequal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("l", "l_receiptdate"),
                 new ColumnOp("date", ConstantColumn.valueOf(":3"))
         )));
-        relation.addFilterByAnd(new ColumnOp("less", Arrays.asList(
+        relation.addFilterByAnd(new ColumnOp("less", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("l", "l_receiptdate"),
-                new ColumnOp("add", Arrays.asList(
+                new ColumnOp("add", Arrays.<UnnamedColumn>asList(
                         new ColumnOp("date", ConstantColumn.valueOf(":3")),
-                        new ColumnOp("interval", Arrays.asList(ConstantColumn.valueOf("1"), ConstantColumn.valueOf("year")))
+                        new ColumnOp("interval", Arrays.<UnnamedColumn>asList(ConstantColumn.valueOf("1"), ConstantColumn.valueOf("year")))
                 ))
         )));
         relation.addGroupby(new AliasColumn("l_shipmode"));
@@ -1146,19 +1146,19 @@ public class TpchRelationToSqlTest {
         BaseTable customer = new BaseTable("tpch", "customer", "c");
         BaseTable orders = new BaseTable("tpch", "orders", "o");
         JoinTable join = JoinTable.getJoinTable(Arrays.asList(customer, orders),
-                Arrays.asList(JoinTable.JoinType.leftouter),
-                Arrays.asList(new ColumnOp("and", Arrays.asList(
-                        new ColumnOp("equal", Arrays.asList(
+                Arrays.<JoinTable.JoinType>asList(JoinTable.JoinType.leftouter),
+                Arrays.<UnnamedColumn>asList(new ColumnOp("and", Arrays.<UnnamedColumn>asList(
+                        new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                                 new BaseColumn("c", "c_custkey"),
                                 new BaseColumn("o", "o_custkey")
                         )),
-                        new ColumnOp("notlike", Arrays.asList(
+                        new ColumnOp("notlike", Arrays.<UnnamedColumn>asList(
                                 new BaseColumn("o", "o_comment"),
                                 ConstantColumn.valueOf("%:1%:2%")
                         ))
                 ))));
         SelectQueryOp subqery =SelectQueryOp.getSelectQueryOp(
-            Arrays.asList(
+            Arrays.<SelectItem>asList(
                     new BaseColumn("c", "c_custkey"),
                     new ColumnOp("count", new BaseColumn("o", "o_orderkey"))
             ),
@@ -1172,7 +1172,7 @@ public class TpchRelationToSqlTest {
                 ),
         subqery);
         relation.addGroupby(new AliasColumn("c_count"));
-        relation.addOrderby(Arrays.asList(new AliasColumn("custdist", false), new AliasColumn("c_count", false)));
+        relation.addOrderby(Arrays.<OrderbyAttribute>asList(new AliasColumn("custdist", false), new AliasColumn("c_count", false)));
         relation.addLimit(ConstantColumn.valueOf(1));
         String expected = "select " +
                 "`c_orders`.`c_count`, " +
@@ -1205,41 +1205,41 @@ public class TpchRelationToSqlTest {
         AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "l");
         AbstractRelation part = new BaseTable("tpch", "part", "p");
         SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
-                Arrays.asList(
-                        new AliasedColumn(new ColumnOp("divide", Arrays.asList(
-                                new ColumnOp("multiply", Arrays.asList(
+                Arrays.<SelectItem>asList(
+                        new AliasedColumn(new ColumnOp("divide", Arrays.<UnnamedColumn>asList(
+                                new ColumnOp("multiply", Arrays.<UnnamedColumn>asList(
                                         ConstantColumn.valueOf("100.00"),
-                                        new ColumnOp("sum", new ColumnOp("whenthenelse", Arrays.asList(
-                                                new ColumnOp("like", Arrays.asList(
+                                        new ColumnOp("sum", new ColumnOp("whenthenelse", Arrays.<UnnamedColumn>asList(
+                                                new ColumnOp("like", Arrays.<UnnamedColumn>asList(
                                                         new BaseColumn("p", "p_type"),
                                                         ConstantColumn.valueOf("PROMO%")
                                                 )),
-                                                new ColumnOp("multiply", Arrays.asList(
+                                                new ColumnOp("multiply", Arrays.<UnnamedColumn>asList(
                                                         new BaseColumn("l", "l_extendedprice"),
-                                                        new ColumnOp("subtract", Arrays.asList(ConstantColumn.valueOf(1), new BaseColumn("l", "l_discount"))))),
+                                                        new ColumnOp("subtract", Arrays.<UnnamedColumn>asList(ConstantColumn.valueOf(1), new BaseColumn("l", "l_discount"))))),
                                                 ConstantColumn.valueOf(0)
                                         )))
                                 )),
-                                new ColumnOp("sum", new ColumnOp("multiply", Arrays.asList(
+                                new ColumnOp("sum", new ColumnOp("multiply", Arrays.<UnnamedColumn>asList(
                                         new BaseColumn("l", "l_extendedprice"),
-                                        new ColumnOp("subtract", Arrays.asList(ConstantColumn.valueOf(1), new BaseColumn("l", "l_discount")))
+                                        new ColumnOp("subtract", Arrays.<UnnamedColumn>asList(ConstantColumn.valueOf(1), new BaseColumn("l", "l_discount")))
                                 )))
                         )), "promo_revenue")
                 ),
         Arrays.asList(lineitem, part));
-        relation.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
+        relation.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("l", "l_partkey"),
                 new BaseColumn("p", "p_partkey")
         )));
-        relation.addFilterByAnd(new ColumnOp("greaterequal", Arrays.asList(
+        relation.addFilterByAnd(new ColumnOp("greaterequal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("l", "l_shipdate"),
                 new ColumnOp("date", ConstantColumn.valueOf(":1"))
         )));
-        relation.addFilterByAnd(new ColumnOp("less", Arrays.asList(
+        relation.addFilterByAnd(new ColumnOp("less", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("l", "l_shipdate"),
-                new ColumnOp("add", Arrays.asList(
+                new ColumnOp("add", Arrays.<UnnamedColumn>asList(
                         new ColumnOp("date", ConstantColumn.valueOf(":1")),
-                        new ColumnOp("interval", Arrays.asList(ConstantColumn.valueOf("1"), ConstantColumn.valueOf("month")))
+                        new ColumnOp("interval", Arrays.<UnnamedColumn>asList(ConstantColumn.valueOf("1"), ConstantColumn.valueOf("month")))
                 ))
         )));
         relation.addLimit(ConstantColumn.valueOf(1));
@@ -1267,10 +1267,10 @@ public class TpchRelationToSqlTest {
         AbstractRelation supplier = new BaseTable("tpch", "supplier", "s");
         AbstractRelation revenue = new BaseTable("tpch", "revenue", "r");
         SelectQueryOp subquery = SelectQueryOp.getSelectQueryOp(
-                Arrays.asList(new ColumnOp("max", new BaseColumn("r", "total_revenue"))),
+                Arrays.<SelectItem>asList(new ColumnOp("max", new BaseColumn("r", "total_revenue"))),
         revenue);
         SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
-                Arrays.asList(
+                Arrays.<SelectItem>asList(
                         new BaseColumn("s", "s_suppkey"),
                         new BaseColumn("s", "s_name"),
                         new BaseColumn("s", "s_address"),
@@ -1278,11 +1278,11 @@ public class TpchRelationToSqlTest {
                         new BaseColumn("r", "total_revenue")
                 ),
         Arrays.asList(supplier, revenue));
-        relation.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
+        relation.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("s", "s_suppkey"),
                 new BaseColumn("r", "supplier_no")
         )));
-        relation.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
+        relation.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("r", "total_revenue"),
                 SubqueryColumn.getSubqueryColumn(subquery)
         )));
@@ -1325,27 +1325,27 @@ public class TpchRelationToSqlTest {
                         new AliasedColumn(new ColumnOp("countdistinct", new BaseColumn("ps", "ps_suppkey")), "supplier_cnt")
                 ),
         Arrays.asList(partsupp, part));
-        relation.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
+        relation.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("p", "p_partkey"),
                 new BaseColumn("ps", "ps_partkey")
         )));
-        relation.addFilterByAnd(new ColumnOp("notequal", Arrays.asList(
+        relation.addFilterByAnd(new ColumnOp("notequal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("p", "p_brand"),
                 ConstantColumn.valueOf("':1'")
         )));
-        relation.addFilterByAnd(new ColumnOp("notlike", Arrays.asList(
+        relation.addFilterByAnd(new ColumnOp("notlike", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("p", "p_type"),
                 ConstantColumn.valueOf(":2%")
         )));
-        relation.addFilterByAnd(new ColumnOp("in", Arrays.asList(
+        relation.addFilterByAnd(new ColumnOp("in", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("p", "p_size"),
                 ConstantColumn.valueOf(":3"), ConstantColumn.valueOf(":4"), ConstantColumn.valueOf(":5"), ConstantColumn.valueOf(":6"),
                 ConstantColumn.valueOf(":7"), ConstantColumn.valueOf(":8"), ConstantColumn.valueOf(":9"), ConstantColumn.valueOf(":10")
         )));
         SelectQueryOp subquery = SelectQueryOp.getSelectQueryOp(
-                Arrays.asList(new BaseColumn("s", "s_suppkey")),
-        Arrays.asList(new BaseTable("tpch", "supplier", "s")));
-        subquery.addFilterByAnd(new ColumnOp("like", Arrays.asList(
+                Arrays.<SelectItem>asList(new BaseColumn("s", "s_suppkey")),
+        Arrays.<AbstractRelation>asList(new BaseTable("tpch", "supplier", "s")));
+        subquery.addFilterByAnd(new ColumnOp("like", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("s", "s_comment"),
                 ConstantColumn.valueOf("%Customer%Complaints%")
         )));
@@ -1353,12 +1353,12 @@ public class TpchRelationToSqlTest {
                 new BaseColumn("ps", "ps_suppkey"),
                 SubqueryColumn.getSubqueryColumn(subquery)
         )));
-        relation.addGroupby(Arrays.asList(
+        relation.addGroupby(Arrays.<GroupingAttribute>asList(
                 new AliasColumn("p_brand"),
                 new AliasColumn("p_type"),
                 new AliasColumn("p_size")
         ));
-        relation.addOrderby(Arrays.asList(
+        relation.addOrderby(Arrays.<OrderbyAttribute>asList(
                 new AliasColumn("supplier_cnt", false),
                 new AliasColumn("p_brand"),
                 new AliasColumn("p_type"),
@@ -1406,9 +1406,9 @@ public class TpchRelationToSqlTest {
         AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "l");
         AbstractRelation part = new BaseTable("tpch", "part", "p");
         SelectQueryOp subquery = SelectQueryOp.getSelectQueryOp(
-                Arrays.asList(
+                Arrays.<SelectItem>asList(
                         new AliasedColumn(new BaseColumn("l", "l_partkey"), "agg_partkey"),
-                        new AliasedColumn(new ColumnOp("multiply", Arrays.asList(
+                        new AliasedColumn(new ColumnOp("multiply", Arrays.<UnnamedColumn>asList(
                                 ConstantColumn.valueOf("0.2"),
                                 new ColumnOp("avg", new BaseColumn("l", "l_quantity"))
                         )), "avg_quantity")
@@ -1417,30 +1417,30 @@ public class TpchRelationToSqlTest {
         subquery.addGroupby(new AliasColumn("l_partkey"));
         subquery.setAliasName("part_agg");
         SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
-                Arrays.asList(
-                        new AliasedColumn(new ColumnOp("divide", Arrays.asList(
+                Arrays.<SelectItem>asList(
+                        new AliasedColumn(new ColumnOp("divide", Arrays.<UnnamedColumn>asList(
                                 new ColumnOp("sum", new BaseColumn("l", "l_extendedprice")),
                                 ConstantColumn.valueOf("7.0")
                         )), "avg_yearly")
                 ),
         Arrays.asList(lineitem, part, subquery));
-        relation.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
+        relation.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("p", "p_partkey"),
                 new BaseColumn("l", "l_partkey")
         )));
-        relation.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
+        relation.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("part_agg", "agg_partkey"),
                 new BaseColumn("l", "l_partkey")
         )));
-        relation.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
+        relation.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("p", "p_brand"),
                 ConstantColumn.valueOf("':1'")
         )));
-        relation.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
+        relation.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("p", "p_container"),
                 ConstantColumn.valueOf("':2'")
         )));
-        relation.addFilterByAnd(new ColumnOp("less", Arrays.asList(
+        relation.addFilterByAnd(new ColumnOp("less", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("l", "l_quantity"),
                 new BaseColumn("part_agg", "avg_quantity")
         )));
@@ -1469,7 +1469,7 @@ public class TpchRelationToSqlTest {
         AbstractRelation orders = new BaseTable("tpch", "orders", "o");
         AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "l");
         SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
-                Arrays.asList(
+                Arrays.<SelectItem>asList(
                         new BaseColumn("c", "c_name"),
                         new BaseColumn("c", "c_custkey"),
                         new BaseColumn("o", "o_orderkey"),
@@ -1479,10 +1479,10 @@ public class TpchRelationToSqlTest {
                 ),
         Arrays.asList(customer, orders, lineitem));
         SelectQueryOp subquery = SelectQueryOp.getSelectQueryOp(
-                Arrays.asList(new BaseColumn("l", "l_orderkey")),
+                Arrays.<SelectItem>asList(new BaseColumn("l", "l_orderkey")),
         lineitem);
         subquery.addGroupby(new AliasColumn("l_orderkey"));
-        subquery.addHavingByAnd(new ColumnOp("greater", Arrays.asList(
+        subquery.addHavingByAnd(new ColumnOp("greater", Arrays.<UnnamedColumn>asList(
                 new ColumnOp("sum", new BaseColumn("l", "l_quantity")),
                 ConstantColumn.valueOf(":1")
         )));
@@ -1490,22 +1490,22 @@ public class TpchRelationToSqlTest {
                 new BaseColumn("o", "o_orderkey"),
                 SubqueryColumn.getSubqueryColumn(subquery)
         )));
-        relation.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
+        relation.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("c", "c_custkey"),
                 new BaseColumn("o", "o_custkey")
         )));
-        relation.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
+        relation.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("o", "o_orderkey"),
                 new BaseColumn("l", "l_orderkey")
         )));
-        relation.addGroupby(Arrays.asList(
+        relation.addGroupby(Arrays.<GroupingAttribute>asList(
                 new AliasColumn("c_name"),
                 new AliasColumn("c_custkey"),
                 new AliasColumn("o_orderkey"),
                 new AliasColumn("o_orderdate"),
                 new AliasColumn("o_totalprice")
         ));
-        relation.addOrderby(Arrays.asList(
+        relation.addOrderby(Arrays.<OrderbyAttribute>asList(
                 new AliasColumn("o_totalprice", false),
                 new AliasColumn("o_orderdate")
         ));
@@ -1553,33 +1553,33 @@ public class TpchRelationToSqlTest {
         AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "l");
         AbstractRelation part = new BaseTable("tpch", "part", "p");
         SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
-                Arrays.asList(
-                        new AliasedColumn(new ColumnOp("sum", new ColumnOp("multiply", Arrays.asList(
+                Arrays.<SelectItem>asList(
+                        new AliasedColumn(new ColumnOp("sum", new ColumnOp("multiply", Arrays.<UnnamedColumn>asList(
                                 new BaseColumn("l", "l_extendedprice"),
-                                new ColumnOp("subtract", Arrays.asList(
+                                new ColumnOp("subtract", Arrays.<UnnamedColumn>asList(
                                         ConstantColumn.valueOf(1),
                                         new BaseColumn("l", "l_discount")
                                 ))
                         ))), "revenue")
                 ),
         Arrays.asList(lineitem, part));
-        ColumnOp columnOp1 = new ColumnOp("and", Arrays.asList(
-           new ColumnOp("and", Arrays.asList(
-                   new ColumnOp("and", Arrays.asList(
-                           new ColumnOp("and", Arrays.asList(
-                                   new ColumnOp("and", Arrays.asList(
-                                           new ColumnOp("and", Arrays.asList(
-                                                   new ColumnOp("and", Arrays.asList(
-                                                           new ColumnOp("equal", Arrays.asList(
+        ColumnOp columnOp1 = new ColumnOp("and", Arrays.<UnnamedColumn>asList(
+           new ColumnOp("and", Arrays.<UnnamedColumn>asList(
+                   new ColumnOp("and", Arrays.<UnnamedColumn>asList(
+                           new ColumnOp("and", Arrays.<UnnamedColumn>asList(
+                                   new ColumnOp("and", Arrays.<UnnamedColumn>asList(
+                                           new ColumnOp("and", Arrays.<UnnamedColumn>asList(
+                                                   new ColumnOp("and", Arrays.<UnnamedColumn>asList(
+                                                           new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                                                                    new BaseColumn("p", "p_partkey"),
                                                                    new BaseColumn("l", "l_partkey")
                                                            )),
-                                                           new ColumnOp("equal", Arrays.asList(
+                                                           new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                                                                    new BaseColumn("p", "p_brand"),
                                                                    ConstantColumn.valueOf("':1'")
                                                            ))
                                                    )),
-                                                   new ColumnOp("in", Arrays.asList(
+                                                   new ColumnOp("in", Arrays.<UnnamedColumn>asList(
                                                            new BaseColumn("p", "p_container"),
                                                            ConstantColumn.valueOf("'SM CASE'"),
                                                            ConstantColumn.valueOf("'SM BOX'"),
@@ -1587,50 +1587,50 @@ public class TpchRelationToSqlTest {
                                                            ConstantColumn.valueOf("'SM PKG'")
                                                    ))
                                            )),
-                                           new ColumnOp("greaterequal", Arrays.asList(
+                                           new ColumnOp("greaterequal", Arrays.<UnnamedColumn>asList(
                                                    new BaseColumn("l", "l_quantity"),
                                                    ConstantColumn.valueOf(":4")
                                            ))
                                    )),
-                                   new ColumnOp("lessequal", Arrays.asList(
+                                   new ColumnOp("lessequal", Arrays.<UnnamedColumn>asList(
                                            new BaseColumn("l", "l_quantity"),
-                                           new ColumnOp("add", Arrays.asList(ConstantColumn.valueOf(":4"), ConstantColumn.valueOf(10)))
+                                           new ColumnOp("add", Arrays.<UnnamedColumn>asList(ConstantColumn.valueOf(":4"), ConstantColumn.valueOf(10)))
                                    ))
                            )),
-                           new ColumnOp("between", Arrays.asList(
+                           new ColumnOp("between", Arrays.<UnnamedColumn>asList(
                                    new BaseColumn("p", "p_size"),
                                    ConstantColumn.valueOf(1),
                                    ConstantColumn.valueOf(5)
                            ))
                    )),
-                   new ColumnOp("in", Arrays.asList(
+                   new ColumnOp("in", Arrays.<UnnamedColumn>asList(
                            new BaseColumn("l", "l_shipmode"),
                            ConstantColumn.valueOf("'AIR'"),
                            ConstantColumn.valueOf("'AIR REG'")
                    ))
            )),
-           new ColumnOp("equal", Arrays.asList(
+           new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                    new BaseColumn("l", "l_shipinstruct"),
                    ConstantColumn.valueOf("'DELIVER IN PERSON'")
            ))
         ));
-        ColumnOp columnOp2 = new ColumnOp("and", Arrays.asList(
-                new ColumnOp("and", Arrays.asList(
-                        new ColumnOp("and", Arrays.asList(
-                                new ColumnOp("and", Arrays.asList(
-                                        new ColumnOp("and", Arrays.asList(
-                                                new ColumnOp("and", Arrays.asList(
-                                                        new ColumnOp("and", Arrays.asList(
-                                                                new ColumnOp("equal", Arrays.asList(
+        ColumnOp columnOp2 = new ColumnOp("and", Arrays.<UnnamedColumn>asList(
+                new ColumnOp("and", Arrays.<UnnamedColumn>asList(
+                        new ColumnOp("and", Arrays.<UnnamedColumn>asList(
+                                new ColumnOp("and", Arrays.<UnnamedColumn>asList(
+                                        new ColumnOp("and", Arrays.<UnnamedColumn>asList(
+                                                new ColumnOp("and", Arrays.<UnnamedColumn>asList(
+                                                        new ColumnOp("and", Arrays.<UnnamedColumn>asList(
+                                                                new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                                                                         new BaseColumn("p", "p_partkey"),
                                                                         new BaseColumn("l", "l_partkey")
                                                                 )),
-                                                                new ColumnOp("equal", Arrays.asList(
+                                                                new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                                                                         new BaseColumn("p", "p_brand"),
                                                                         ConstantColumn.valueOf("':2'")
                                                                 ))
                                                         )),
-                                                        new ColumnOp("in", Arrays.asList(
+                                                        new ColumnOp("in", Arrays.<UnnamedColumn>asList(
                                                                 new BaseColumn("p", "p_container"),
                                                                 ConstantColumn.valueOf("'MED BAG'"),
                                                                 ConstantColumn.valueOf("'MED BOX'"),
@@ -1638,50 +1638,50 @@ public class TpchRelationToSqlTest {
                                                                 ConstantColumn.valueOf("'MED PACK'")
                                                         ))
                                                 )),
-                                                new ColumnOp("greaterequal", Arrays.asList(
+                                                new ColumnOp("greaterequal", Arrays.<UnnamedColumn>asList(
                                                         new BaseColumn("l", "l_quantity"),
                                                         ConstantColumn.valueOf(":5")
                                                 ))
                                         )),
-                                        new ColumnOp("lessequal", Arrays.asList(
+                                        new ColumnOp("lessequal", Arrays.<UnnamedColumn>asList(
                                                 new BaseColumn("l", "l_quantity"),
-                                                new ColumnOp("add", Arrays.asList(ConstantColumn.valueOf(":5"), ConstantColumn.valueOf(10)))
+                                                new ColumnOp("add", Arrays.<UnnamedColumn>asList(ConstantColumn.valueOf(":5"), ConstantColumn.valueOf(10)))
                                         ))
                                 )),
-                                new ColumnOp("between", Arrays.asList(
+                                new ColumnOp("between", Arrays.<UnnamedColumn>asList(
                                         new BaseColumn("p", "p_size"),
                                         ConstantColumn.valueOf(1),
                                         ConstantColumn.valueOf(10)
                                 ))
                         )),
-                        new ColumnOp("in", Arrays.asList(
+                        new ColumnOp("in", Arrays.<UnnamedColumn>asList(
                                 new BaseColumn("l", "l_shipmode"),
                                 ConstantColumn.valueOf("'AIR'"),
                                 ConstantColumn.valueOf("'AIR REG'")
                         ))
                 )),
-                new ColumnOp("equal", Arrays.asList(
+                new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                         new BaseColumn("l", "l_shipinstruct"),
                         ConstantColumn.valueOf("'DELIVER IN PERSON'")
                 ))
         ));
-        ColumnOp columnOp3 = new ColumnOp("and", Arrays.asList(
-                new ColumnOp("and", Arrays.asList(
-                        new ColumnOp("and", Arrays.asList(
-                                new ColumnOp("and", Arrays.asList(
-                                        new ColumnOp("and", Arrays.asList(
-                                                new ColumnOp("and", Arrays.asList(
-                                                        new ColumnOp("and", Arrays.asList(
-                                                                new ColumnOp("equal", Arrays.asList(
+        ColumnOp columnOp3 = new ColumnOp("and", Arrays.<UnnamedColumn>asList(
+                new ColumnOp("and", Arrays.<UnnamedColumn>asList(
+                        new ColumnOp("and", Arrays.<UnnamedColumn>asList(
+                                new ColumnOp("and", Arrays.<UnnamedColumn>asList(
+                                        new ColumnOp("and", Arrays.<UnnamedColumn>asList(
+                                                new ColumnOp("and", Arrays.<UnnamedColumn>asList(
+                                                        new ColumnOp("and", Arrays.<UnnamedColumn>asList(
+                                                                new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                                                                         new BaseColumn("p", "p_partkey"),
                                                                         new BaseColumn("l", "l_partkey")
                                                                 )),
-                                                                new ColumnOp("equal", Arrays.asList(
+                                                                new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                                                                         new BaseColumn("p", "p_brand"),
                                                                         ConstantColumn.valueOf("':3'")
                                                                 ))
                                                         )),
-                                                        new ColumnOp("in", Arrays.asList(
+                                                        new ColumnOp("in", Arrays.<UnnamedColumn>asList(
                                                                 new BaseColumn("p", "p_container"),
                                                                 ConstantColumn.valueOf("'LG CASE'"),
                                                                 ConstantColumn.valueOf("'LG BOX'"),
@@ -1689,35 +1689,35 @@ public class TpchRelationToSqlTest {
                                                                 ConstantColumn.valueOf("'LG PKG'")
                                                         ))
                                                 )),
-                                                new ColumnOp("greaterequal", Arrays.asList(
+                                                new ColumnOp("greaterequal", Arrays.<UnnamedColumn>asList(
                                                         new BaseColumn("l", "l_quantity"),
                                                         ConstantColumn.valueOf(":6")
                                                 ))
                                         )),
-                                        new ColumnOp("lessequal", Arrays.asList(
+                                        new ColumnOp("lessequal", Arrays.<UnnamedColumn>asList(
                                                 new BaseColumn("l", "l_quantity"),
-                                                new ColumnOp("add", Arrays.asList(ConstantColumn.valueOf(":6"), ConstantColumn.valueOf(10)))
+                                                new ColumnOp("add", Arrays.<UnnamedColumn>asList(ConstantColumn.valueOf(":6"), ConstantColumn.valueOf(10)))
                                         ))
                                 )),
-                                new ColumnOp("between", Arrays.asList(
+                                new ColumnOp("between", Arrays.<UnnamedColumn>asList(
                                         new BaseColumn("p", "p_size"),
                                         ConstantColumn.valueOf(1),
                                         ConstantColumn.valueOf(15)
                                 ))
                         )),
-                        new ColumnOp("in", Arrays.asList(
+                        new ColumnOp("in", Arrays.<UnnamedColumn>asList(
                                 new BaseColumn("l", "l_shipmode"),
                                 ConstantColumn.valueOf("'AIR'"),
                                 ConstantColumn.valueOf("'AIR REG'")
                         ))
                 )),
-                new ColumnOp("equal", Arrays.asList(
+                new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                         new BaseColumn("l", "l_shipinstruct"),
                         ConstantColumn.valueOf("'DELIVER IN PERSON'")
                 ))
         ));
-        relation.addFilterByAnd(new ColumnOp("or", Arrays.asList(
-                new ColumnOp("or", Arrays.asList(
+        relation.addFilterByAnd(new ColumnOp("or", Arrays.<UnnamedColumn>asList(
+                new ColumnOp("or", Arrays.<UnnamedColumn>asList(
                         columnOp1, columnOp2
                 )),
                 columnOp3
@@ -1765,71 +1765,71 @@ public class TpchRelationToSqlTest {
         AbstractRelation supplier = new BaseTable("tpch", "supplier", "s");
         AbstractRelation nation = new BaseTable("tpch", "nation", "n");
         SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
-                Arrays.asList(
+                Arrays.<SelectItem>asList(
                         new BaseColumn("s", "s_name"),
                         new BaseColumn("s", "s_address")
                 ),
         Arrays.asList(supplier, nation));
         SelectQueryOp subsubquery = SelectQueryOp.getSelectQueryOp(
-                Arrays.asList(
+                Arrays.<SelectItem>asList(
                         new AliasedColumn(new BaseColumn("l", "l_partkey"), "agg_partkey"),
                         new AliasedColumn(new BaseColumn("l", "l_suppkey"), "agg_suppkey"),
-                        new AliasedColumn(new ColumnOp("multiply", Arrays.asList(
+                        new AliasedColumn(new ColumnOp("multiply", Arrays.<UnnamedColumn>asList(
                                 ConstantColumn.valueOf("0.5"), new ColumnOp("sum", new BaseColumn("l", "l_quantity")))), "agg_quantity")
                 ),
         new BaseTable("tpch", "lineitem", "l"));
-        subsubquery.addFilterByAnd(new ColumnOp("greaterequal", Arrays.asList(
+        subsubquery.addFilterByAnd(new ColumnOp("greaterequal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("l", "l_shipdate"),
                 new ColumnOp("date", ConstantColumn.valueOf(":2"))
         )));
-        subsubquery.addFilterByAnd(new ColumnOp("less", Arrays.asList(
+        subsubquery.addFilterByAnd(new ColumnOp("less", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("l", "l_shipdate"),
-                new ColumnOp("add", Arrays.asList(
+                new ColumnOp("add", Arrays.<UnnamedColumn>asList(
                         new ColumnOp("date", ConstantColumn.valueOf(":2")),
-                        new ColumnOp("interval", Arrays.asList(ConstantColumn.valueOf("1"), ConstantColumn.valueOf("year")))
+                        new ColumnOp("interval", Arrays.<UnnamedColumn>asList(ConstantColumn.valueOf("1"), ConstantColumn.valueOf("year")))
                 ))
         )));
-        subsubquery.addGroupby(Arrays.asList(
+        subsubquery.addGroupby(Arrays.<GroupingAttribute>asList(
                 new AliasColumn("l_partkey"),
                 new AliasColumn("l_suppkey")
         ));
         subsubquery.setAliasName("agg_lineitem");
         SelectQueryOp subquery = SelectQueryOp.getSelectQueryOp(
-                Arrays.asList(
+                Arrays.<SelectItem>asList(
                         new BaseColumn("ps", "ps_suppkey")
                 ),
         Arrays.asList(new BaseTable("tpch", "partsupp", "ps"), subsubquery));
-        subquery.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
+        subquery.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("agg_lineitem", "agg_partkey"),
                 new BaseColumn("ps", "ps_partkey")
         )));
-        subquery.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
+        subquery.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("agg_lineitem", "agg_suppkey"),
                 new BaseColumn("ps", "ps_suppkey")
         )));
         SelectQueryOp subsubquery2 = SelectQueryOp.getSelectQueryOp(
-                Arrays.asList(new BaseColumn("p", "p_partkey")),
+                Arrays.<SelectItem>asList(new BaseColumn("p", "p_partkey")),
         new BaseTable("tpch", "part", "p"));
-        subsubquery2.addFilterByAnd(new ColumnOp("like", Arrays.asList(
+        subsubquery2.addFilterByAnd(new ColumnOp("like", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("p", "p_name"), ConstantColumn.valueOf(":1%")
         )));
         subquery.addFilterByAnd(new ColumnOp("in", Arrays.asList(
                 new BaseColumn("ps", "ps_partkey"),
                 SubqueryColumn.getSubqueryColumn(subsubquery2)
         )));
-        subquery.addFilterByAnd(new ColumnOp("greater", Arrays.asList(
+        subquery.addFilterByAnd(new ColumnOp("greater", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("ps", "ps_availqty"),
                 new BaseColumn("agg_lineitem", "agg_quantity")
         )));
-        relation.addFilterByAnd(new ColumnOp("in", Arrays.asList(
+        relation.addFilterByAnd(new ColumnOp("in", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("s", "s_suppkey"),
                 SubqueryColumn.getSubqueryColumn(subquery)
         )));
-        relation.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
+        relation.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("s", "s_nationkey"),
                 new BaseColumn("n", "n_nationkey")
         )));
-        relation.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
+        relation.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("n", "n_name"),
                 ConstantColumn.valueOf("':3'")
         )));
@@ -1896,55 +1896,55 @@ public class TpchRelationToSqlTest {
                         new AliasedColumn(new ColumnOp("count"),"numwait")
                 ),
         Arrays.asList(supplier, lineitem, orders, nation));
-        relation.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
+        relation.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("s", "s_suppkey"),
                 new BaseColumn("l1", "l_suppkey")
         )));
-        relation.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
+        relation.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("o", "o_orderkey"),
                 new BaseColumn("l1", "l_orderkey")
         )));
-        relation.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
+        relation.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("o", "o_orderstatus"),
                 ConstantColumn.valueOf("'F'")
         )));
-        relation.addFilterByAnd(new ColumnOp("greater", Arrays.asList(
+        relation.addFilterByAnd(new ColumnOp("greater", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("l1", "l_receiptdate"),
                 new BaseColumn("l1", "l_commitdate")
         )));
-        SelectQueryOp subquery1 = SelectQueryOp.getSelectQueryOp(Arrays.asList(
+        SelectQueryOp subquery1 = SelectQueryOp.getSelectQueryOp(Arrays.<SelectItem>asList(
                 new AsteriskColumn()
         ), new BaseTable("tpch", "lineitem", "l2"));
-        subquery1.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
+        subquery1.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("l2", "l_orderkey"),
                 new BaseColumn("l1", "l_orderkey")
         )));
-        subquery1.addFilterByAnd(new ColumnOp("notequal", Arrays.asList(
+        subquery1.addFilterByAnd(new ColumnOp("notequal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("l2", "l_suppkey"),
                 new BaseColumn("l1", "l_suppkey")
         )));
         relation.addFilterByAnd(new ColumnOp("exists", SubqueryColumn.getSubqueryColumn(subquery1)));
-        SelectQueryOp subquery2 = SelectQueryOp.getSelectQueryOp(Arrays.asList(
+        SelectQueryOp subquery2 = SelectQueryOp.getSelectQueryOp(Arrays.<SelectItem>asList(
                 new AsteriskColumn()
         ), new BaseTable("tpch", "lineitem", "l3"));
-        subquery2.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
+        subquery2.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("l3", "l_orderkey"),
                 new BaseColumn("l1", "l_orderkey")
         )));
-        subquery2.addFilterByAnd(new ColumnOp("notequal", Arrays.asList(
+        subquery2.addFilterByAnd(new ColumnOp("notequal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("l3", "l_suppkey"),
                 new BaseColumn("l1", "l_suppkey")
         )));
-        subquery2.addFilterByAnd(new ColumnOp("greater", Arrays.asList(
+        subquery2.addFilterByAnd(new ColumnOp("greater", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("l3", "l_receiptdate"),
                 new BaseColumn("l3", "l_commitdate")
         )));
         relation.addFilterByAnd(new ColumnOp("notexists", SubqueryColumn.getSubqueryColumn(subquery2)));
-        relation.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
+        relation.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("s", "s_nationkey"),
                 new BaseColumn("n", "n_nationkey")
         )));
-        relation.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
+        relation.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("n", "n_name"),
                 ConstantColumn.valueOf("':1'")
         )));
@@ -2000,15 +2000,15 @@ public class TpchRelationToSqlTest {
     @Test
     public void Query22Test() throws VerdictDbException {
         SelectQueryOp subquery = SelectQueryOp.getSelectQueryOp(
-                Arrays.asList(
-                        new AliasedColumn(new ColumnOp("substring", Arrays.asList(
+                Arrays.<SelectItem>asList(
+                        new AliasedColumn(new ColumnOp("substring", Arrays.<UnnamedColumn>asList(
                                 new BaseColumn("c", "c_phone"),
                                 ConstantColumn.valueOf(1), ConstantColumn.valueOf(2))), "cntrycode"),
                         new BaseColumn("c", "c_acctbal")
                 ),
         new BaseTable("tpch", "customer", "c"));
-        subquery.addFilterByAnd(new ColumnOp("in", Arrays.asList(
-                new ColumnOp("substring", Arrays.asList(
+        subquery.addFilterByAnd(new ColumnOp("in", Arrays.<UnnamedColumn>asList(
+                new ColumnOp("substring", Arrays.<UnnamedColumn>asList(
                         new BaseColumn("c", "c_phone"),
                         ConstantColumn.valueOf(1), ConstantColumn.valueOf(2))),
                 ConstantColumn.valueOf("':1'"), ConstantColumn.valueOf("':2'"), ConstantColumn.valueOf("':3'"),
@@ -2016,14 +2016,14 @@ public class TpchRelationToSqlTest {
                 ConstantColumn.valueOf("':7'")
         )));
         SelectQueryOp subsubquery1 = SelectQueryOp.getSelectQueryOp(
-                Arrays.asList(new ColumnOp("avg", new BaseColumn("c", "c_acctbal"))),
+                Arrays.<SelectItem>asList(new ColumnOp("avg", new BaseColumn("c", "c_acctbal"))),
         new BaseTable("tpch", "customer", "c"));
-        subsubquery1.addFilterByAnd(new ColumnOp("greater", Arrays.asList(
+        subsubquery1.addFilterByAnd(new ColumnOp("greater", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("c", "c_acctbal"),
                 ConstantColumn.valueOf("0.00")
         )));
-        subsubquery1.addFilterByAnd(new ColumnOp("in", Arrays.asList(
-                new ColumnOp("substring", Arrays.asList(
+        subsubquery1.addFilterByAnd(new ColumnOp("in", Arrays.<UnnamedColumn>asList(
+                new ColumnOp("substring", Arrays.<UnnamedColumn>asList(
                         new BaseColumn("c", "c_phone"),
                         ConstantColumn.valueOf(1), ConstantColumn.valueOf(2))),
                 ConstantColumn.valueOf("':1'"), ConstantColumn.valueOf("':2'"), ConstantColumn.valueOf("':3'"),
@@ -2034,9 +2034,9 @@ public class TpchRelationToSqlTest {
                 new BaseColumn("c", "c_acctbal"), SubqueryColumn.getSubqueryColumn(subsubquery1)
         )));
         SelectQueryOp subsubquery2 = SelectQueryOp.getSelectQueryOp(
-                Arrays.asList(new AsteriskColumn()),
+                Arrays.<SelectItem>asList(new AsteriskColumn()),
         new BaseTable("tpch", "orders", "o"));
-        subsubquery2.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
+        subsubquery2.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("o", "o_custkey"),
                 new BaseColumn("c", "c_custkey")
         )));
