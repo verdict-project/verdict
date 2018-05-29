@@ -2,11 +2,12 @@ package org.verdictdb.core.logical_query;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
+
+import com.google.common.base.Optional;
 
 
 public class SelectQueryOp extends AbstractRelation {
@@ -45,17 +46,17 @@ public class SelectQueryOp extends AbstractRelation {
 
   List<AbstractRelation> fromList = new ArrayList<>();
 
-  Optional<UnnamedColumn> filter = Optional.empty();
+  Optional<UnnamedColumn> filter = Optional.absent();
 
   List<GroupingAttribute> groupby = new ArrayList<>();
 
   List<OrderbyAttribute> orderby = new ArrayList<>();
 
-  Optional<UnnamedColumn> having = Optional.empty();
+  Optional<UnnamedColumn> having = Optional.absent();
 
-  Optional<UnnamedColumn> limit = Optional.empty();
+  Optional<UnnamedColumn> limit = Optional.absent();
 
-  Optional<String> aliasName = Optional.empty();
+  Optional<String> aliasName = Optional.absent();
 
   public SelectQueryOp() {}
 
@@ -104,9 +105,9 @@ public class SelectQueryOp extends AbstractRelation {
   }
 
   public void clearFilters() {
-    this.filter = Optional.empty();
+    this.filter = Optional.absent();
   }
-  
+
   public void clearFromList() {
     this.fromList = new ArrayList<>();
   }

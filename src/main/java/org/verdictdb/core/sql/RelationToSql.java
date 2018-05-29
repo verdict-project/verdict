@@ -1,7 +1,6 @@
 package org.verdictdb.core.sql;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 import org.verdictdb.core.logical_query.AbstractRelation;
@@ -24,6 +23,7 @@ import org.verdictdb.exception.UnexpectedTypeException;
 import org.verdictdb.exception.ValueException;
 import org.verdictdb.exception.VerdictDbException;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.Sets;
 
 public class RelationToSql {

@@ -2,7 +2,8 @@ package org.verdictdb.core.logical_query;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
+
+import com.google.common.base.Optional;
 
 public class JoinTable extends AbstractRelation {
 
@@ -18,7 +19,7 @@ public class JoinTable extends AbstractRelation {
 
     List<UnnamedColumn> condition = new ArrayList<>();
 
-    Optional<String> aliasName = Optional.empty();
+    Optional<String> aliasName = Optional.absent();
 
     public static JoinTable getJoinTable(List<BaseTable> joinList, List<JoinType> joinTypeList, List<UnnamedColumn> condition) {
         JoinTable join = new JoinTable();
