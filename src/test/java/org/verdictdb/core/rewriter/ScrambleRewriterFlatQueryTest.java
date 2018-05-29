@@ -155,16 +155,25 @@ public class ScrambleRewriterFlatQueryTest {
     List<AbstractRelation> rewritten = rewriter.rewrite(relation);
 
     for (int k = 0; k < aggblockCount; k++) {
-      String expected = "select `verdictalias1`.`verdictalias2` as mygroup, sum(`verdictalias1`.`verdictalias3`) as a, "
-          + "std(`verdictalias1`.`verdictalias3` * sqrt(`verdictalias1`.`verdictalias4`)) / "
-          + "sqrt(sum(`verdictalias1`.`verdictalias4`)) as std_a "
+      String expected = "select `verdictalias5`.`verdictalias6` as mygroup, "
+          + "sum(`verdictalias5`.`verdictalias7`) as a, "
+          + "sum(`verdictalias5`.`verdictalias7` * "
+          + "sqrt(`verdictalias5`.`verdictalias8`)) as sum_scaled_a, "
+          + "sum(pow(`verdictalias5`.`verdictalias7` * "
+          + "sqrt(`verdictalias5`.`verdictalias8`), 2)) as sumsquared_scaled_a, "
+          + "count(*) as subsample_count "
           + "from ("
-          + "select `t`.`mygroup` as verdictalias2, "
-          + "sum(`t`.`mycolumn1` / (`t`.`verdictincprob` + (`t`.`verdictincprobblockdiff` * " + k + "))) as verdictalias3, "
-          + "sum(case 1 when `t`.`mycolumn1` is not null else 0 end) as verdictalias4 "
+          + "select `verdictalias1`.`mygroup` as verdictalias6, "
+          + "sum(`verdictalias1`.`mycolumn1` / "
+          + "(`verdictalias1`.`verdictalias2` + (`verdictalias1`.`verdictalias3` * " + k
+          + "))) as verdictalias7, "
+          + "sum(case 1 when `verdictalias1`.`mycolumn1` is not null else 0 end) as verdictalias8 "
+          + "from (select *, `t`.`verdictincprob` as verdictalias2, "
+          + "`t`.`verdictincprobblockdiff` as verdictalias3, "
+          + "`t`.`verdictsid` as verdictalias4 "
           + "from `myschema`.`mytable` as t "
-          + "where `t`.`verdictpartition` = " + k + " "
-          + "group by `verdictalias2`, `t`.`verdictsid`) as verdictalias1 "
+          + "where `t`.`verdictpartition` = " + k + ") as verdictalias1 "
+          + "group by `verdictalias6`, `verdictalias1`.`verdictalias4`) as verdictalias5 "
           + "group by `mygroup`";
       RelationToSql relToSql = new RelationToSql(new HiveSyntax());
       String actual = relToSql.toSql(rewritten.get(k));
@@ -186,16 +195,25 @@ public class ScrambleRewriterFlatQueryTest {
     List<AbstractRelation> rewritten = rewriter.rewrite(relation);
 
     for (int k = 0; k < aggblockCount; k++) {
-      String expected = "select `verdictalias1`.`verdictalias2` as myalias, sum(`verdictalias1`.`verdictalias3`) as a, "
-          + "std(`verdictalias1`.`verdictalias3` * sqrt(`verdictalias1`.`verdictalias4`)) / "
-          + "sqrt(sum(`verdictalias1`.`verdictalias4`)) as std_a "
+      String expected = "select `verdictalias5`.`verdictalias6` as myalias, "
+          + "sum(`verdictalias5`.`verdictalias7`) as a, "
+          + "sum(`verdictalias5`.`verdictalias7` * "
+          + "sqrt(`verdictalias5`.`verdictalias8`)) as sum_scaled_a, "
+          + "sum(pow(`verdictalias5`.`verdictalias7` * "
+          + "sqrt(`verdictalias5`.`verdictalias8`), 2)) as sumsquared_scaled_a, "
+          + "count(*) as subsample_count "
           + "from ("
-          + "select `t`.`mygroup` as verdictalias2, "
-          + "sum(`t`.`mycolumn1` / (`t`.`verdictincprob` + (`t`.`verdictincprobblockdiff` * " + k + "))) as verdictalias3, "
-          + "sum(case 1 when `t`.`mycolumn1` is not null else 0 end) as verdictalias4 "
+          + "select `verdictalias1`.`mygroup` as verdictalias6, "
+          + "sum(`verdictalias1`.`mycolumn1` / "
+          + "(`verdictalias1`.`verdictalias2` + (`verdictalias1`.`verdictalias3` * " + k
+          + "))) as verdictalias7, "
+          + "sum(case 1 when `verdictalias1`.`mycolumn1` is not null else 0 end) as verdictalias8 "
+          + "from (select *, `t`.`verdictincprob` as verdictalias2, "
+          + "`t`.`verdictincprobblockdiff` as verdictalias3, "
+          + "`t`.`verdictsid` as verdictalias4 "
           + "from `myschema`.`mytable` as t "
-          + "where `t`.`verdictpartition` = " + k + " "
-          + "group by `verdictalias2`, `t`.`verdictsid`) as verdictalias1 "
+          + "where `t`.`verdictpartition` = " + k + ") as verdictalias1 "
+          + "group by `verdictalias6`, `verdictalias1`.`verdictalias4`) as verdictalias5 "
           + "group by `myalias`";
       RelationToSql relToSql = new RelationToSql(new HiveSyntax());
       String actual = relToSql.toSql(rewritten.get(k));
@@ -216,17 +234,24 @@ public class ScrambleRewriterFlatQueryTest {
     List<AbstractRelation> rewritten = rewriter.rewrite(relation);
 
     for (int k = 0; k < aggblockCount; k++) {
-      String expected = "select `verdictalias1`.`verdictalias2` as mygroup, "
-          + "sum(`verdictalias1`.`verdictalias3`) as a, "
-          + "std(`verdictalias1`.`verdictalias3` * sqrt(`verdictalias1`.`verdictalias4`)) / "
-          + "sqrt(sum(`verdictalias1`.`verdictalias4`)) as std_a "
+      String expected = "select `verdictalias5`.`verdictalias6` as mygroup, "
+          + "sum(`verdictalias5`.`verdictalias7`) as a, "
+          + "sum(`verdictalias5`.`verdictalias7` * "
+          + "sqrt(`verdictalias5`.`verdictalias8`)) as sum_scaled_a, "
+          + "sum(pow(`verdictalias5`.`verdictalias7` * "
+          + "sqrt(`verdictalias5`.`verdictalias8`), 2)) as sumsquared_scaled_a, "
+          + "count(*) as subsample_count "
           + "from ("
-          + "select `t`.`mygroup` as verdictalias2, "
-          + "sum(1 / (`t`.`verdictincprob` + (`t`.`verdictincprobblockdiff` * " + k + "))) as verdictalias3, "
-          + "count(*) as verdictalias4 "
+          + "select `verdictalias1`.`mygroup` as verdictalias6, "
+          + "sum(1 / (`verdictalias1`.`verdictalias2` + (`verdictalias1`.`verdictalias3` * " + k
+          + "))) as verdictalias7, "
+          + "count(*) as verdictalias8 "
+          + "from (select *, `t`.`verdictincprob` as verdictalias2, "
+          + "`t`.`verdictincprobblockdiff` as verdictalias3, "
+          + "`t`.`verdictsid` as verdictalias4 "
           + "from `myschema`.`mytable` as t "
-          + "where `t`.`verdictpartition` = " + k + " "
-          + "group by `verdictalias2`, `t`.`verdictsid`) as verdictalias1 "
+          + "where `t`.`verdictpartition` = " + k + ") as verdictalias1 "
+          + "group by `verdictalias6`, `verdictalias1`.`verdictalias4`) as verdictalias5 "
           + "group by `mygroup`";
       RelationToSql relToSql = new RelationToSql(new HiveSyntax());
       String actual = relToSql.toSql(rewritten.get(k));
@@ -248,20 +273,32 @@ public class ScrambleRewriterFlatQueryTest {
     List<AbstractRelation> rewritten = rewriter.rewrite(relation);
 
     for (int k = 0; k < aggblockCount; k++) {
-      String expected = "select `verdictalias1`.`verdictalias2` as mygroup, "
-          + "sum(`verdictalias1`.`verdictalias3`) / sum(`verdictalias1`.`verdictalias4`) as a, "
-          + "std((`verdictalias1`.`verdictalias3` / `verdictalias1`.`verdictalias4`)"
-          + " * sqrt(`verdictalias1`.`verdictalias5`)) / "
-          + "sqrt(sum(`verdictalias1`.`verdictalias5`)) as std_a "
-          + "from ("
-          + "select `t`.`mygroup` as verdictalias2, "
-          + "sum(`t`.`mycolumn1` / (`t`.`verdictincprob` + (`t`.`verdictincprobblockdiff` * " + k + "))) as verdictalias3, "
-          + "sum((case 1 when `t`.`mycolumn1` is not null else 0 end) / "
-          + "(`t`.`verdictincprob` + (`t`.`verdictincprobblockdiff` * " + k + "))) as verdictalias4, "
-          + "sum(case 1 when `t`.`mycolumn1` is not null else 0 end) as verdictalias5 "
+      String expected = "select `verdictalias5`.`verdictalias6` as mygroup, "
+          + "sum(`verdictalias5`.`verdictalias7`) as a_sum, "
+          + "sum(`verdictalias5`.`verdictalias8`) as a_count, "
+          + "sum(`verdictalias5`.`verdictalias7` * "
+          + "sqrt(`verdictalias5`.`verdictalias9`)) as sum_scaled_a_sum, "
+          + "sum(pow(`verdictalias5`.`verdictalias7` * "
+          + "sqrt(`verdictalias5`.`verdictalias9`), 2)) as sumsquared_scaled_a_sum, "
+          + "sum(`verdictalias5`.`verdictalias8` * "
+          + "sqrt(`verdictalias5`.`verdictalias9`)) as sum_scaled_a_count, "
+          + "sum(pow(`verdictalias5`.`verdictalias8` * "
+          + "sqrt(`verdictalias5`.`verdictalias9`), 2)) as sumsquared_scaled_a_count, "
+          + "count(*) as subsample_count "
+          + "from (select `verdictalias1`.`mygroup` as verdictalias6, "
+          + "sum(`verdictalias1`.`mycolumn1` / "
+          + "(`verdictalias1`.`verdictalias2` + (`verdictalias1`.`verdictalias3` * " + k
+          + "))) as verdictalias7, "
+          + "sum(case 1 when `verdictalias1`.`mycolumn1` is not null else 0 end"
+          + " / (`verdictalias1`.`verdictalias2` + (`verdictalias1`.`verdictalias3` * " + k
+          + "))) as verdictalias8, "
+          + "sum(case 1 when `verdictalias1`.`mycolumn1` is not null else 0 end) as verdictalias9 "
+          + "from (select *, `t`.`verdictincprob` as verdictalias2, "
+          + "`t`.`verdictincprobblockdiff` as verdictalias3, "
+          + "`t`.`verdictsid` as verdictalias4 "
           + "from `myschema`.`mytable` as t "
-          + "where `t`.`verdictpartition` = " + k + " "
-          + "group by `verdictalias2`, `t`.`verdictsid`) as verdictalias1 "
+          + "where `t`.`verdictpartition` = " + k + ") as verdictalias1 "
+          + "group by `verdictalias6`, `verdictalias1`.`verdictalias4`) as verdictalias5 "
           + "group by `mygroup`";
       RelationToSql relToSql = new RelationToSql(new HiveSyntax());
       String actual = relToSql.toSql(rewritten.get(k));
@@ -274,29 +311,41 @@ public class ScrambleRewriterFlatQueryTest {
     BaseTable base = new BaseTable("myschema", "mytable", "t");
     SelectQueryOp nestedSource = SelectQueryOp.getSelectQueryOp(
         Arrays.<SelectItem>asList(
-            new AliasedColumn(ColumnOp.multiply(new BaseColumn("t", "price"), new BaseColumn("t", "discount")),
+            new AliasedColumn(
+                ColumnOp.multiply(new BaseColumn("t", "price"), new BaseColumn("t", "discount")),
                 "discounted_price")),
         base);
+    nestedSource.setAliasName("s");
     SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
         Arrays.<SelectItem>asList(
-            new AliasedColumn(new ColumnOp("sum", new BaseColumn("t", "mycolumn1")), "a")),
+            new AliasedColumn(new ColumnOp("sum", new BaseColumn("s", "discounted_price")), "a")),
         nestedSource);
     ScrambleMeta meta = generateTestScrambleMeta();
     ScrambleRewriter rewriter = new ScrambleRewriter(meta);
     List<AbstractRelation> rewritten = rewriter.rewrite(relation);
 
     for (int k = 0; k < aggblockCount; k++) {
-      String expected = "select sum(`verdictalias2`.`verdictalias3`) as a, "
-          + "std(`verdictalias2`.`verdictalias3` * sqrt(`verdictalias2`.`verdictalias4`)) / "
-          + "sqrt(sum(`verdictalias2`.`verdictalias4`)) as std_a "
+      String expected = "select sum(`verdictalias8`.`verdictalias9`) as a, "
+          + "sum(`verdictalias8`.`verdictalias9` * "
+          + "sqrt(`verdictalias8`.`verdictalias10`)) as sum_scaled_a, "
+          + "sum(pow(`verdictalias8`.`verdictalias9` * "
+          + "sqrt(`verdictalias8`.`verdictalias10`), 2)) as sumsquared_scaled_a, "
+          + "count(*) as subsample_count "
           + "from ("
-          + "select sum(`t`.`mycolumn1` / (`t`.`verdictincprob` + (`t`.`verdictincprobblockdiff` * " + k + "))) as verdictalias3, "
-          + "sum(case 1 when `t`.`mycolumn1` is not null else 0 end) as verdictalias4 "
-          + "from ("
-          + "select `t`.`price` * `t`.`discount` as discounted_price "
+          + "select sum(`s`.`discounted_price` / "
+          + "(`s`.`verdictalias5` + (`s`.`verdictalias6` * " + k
+          + "))) as verdictalias9, "
+          + "sum(case 1 when `s`.`discounted_price` is not null else 0 end) as verdictalias10 "
+          + "from (select `verdictalias1`.`price` * `verdictalias1`.`discount` as discounted_price, "
+          + "`verdictalias1`.`verdictalias2` as verdictalias5, "
+          + "`verdictalias1`.`verdictalias3` as verdictalias6, "
+          + "`verdictalias1`.`verdictalias4` as verdictalias7 "
+          + "from (select *, `t`.`verdictincprob` as verdictalias2, "
+          + "`t`.`verdictincprobblockdiff` as verdictalias3, "
+          + "`t`.`verdictsid` as verdictalias4 "
           + "from `myschema`.`mytable` as t "
-          + "where `t`.`verdictpartition` = " + k + ") as verdictalias1 "
-          + "group by `t`.`verdictsid`) as verdictalias2";
+          + "where `t`.`verdictpartition` = " + k + ") as verdictalias1) as s "
+          + "group by `s`.`verdictalias7`) as verdictalias8";
       RelationToSql relToSql = new RelationToSql(new HiveSyntax());
       String actual = relToSql.toSql(rewritten.get(k));
       assertEquals(expected, actual);

@@ -4,6 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+
 public class SelectQueryOp extends AbstractRelation {
 
   List<SelectItem> selectList = new ArrayList<>();
@@ -45,15 +49,19 @@ public class SelectQueryOp extends AbstractRelation {
   }
   
   public void clearSelectList() {
-    selectList = new ArrayList<>();
+    this.selectList = new ArrayList<>();
   }
 
   public void clearFilters() {
-    filter = Optional.empty();
+    this.filter = Optional.empty();
   }
 
   public void clearFromList() {
     this.fromList = new ArrayList<>();
+  }
+  
+  public void clearGroupby() {
+    this.groupby = new ArrayList<>();
   }
 
 //  public void setAliasName(String aliasName) {
@@ -80,8 +88,19 @@ public class SelectQueryOp extends AbstractRelation {
     return groupby;
   }
 
-//  public Optional<String> getAliasName() {
-//    return aliasName;
-//  }
+  @Override
+  public int hashCode() {
+      return HashCodeBuilder.reflectionHashCode(this);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+      return EqualsBuilder.reflectionEquals(this, obj);
+  }
+  
+  @Override
+  public String toString() {
+      return ToStringBuilder.reflectionToString(this);
+  }
 
 }

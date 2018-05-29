@@ -114,7 +114,14 @@ public class ScrambleRewriter {
     List<SelectItem> selectList = sel.getSelectList();
     sel.clearSelectList();
     for (SelectItem item : selectList) {
-      sel.addSelectItem(findAndReplaceBaseTableReference(item, aliasUpdateMap));
+      sel.addSelectItem(replaceTableReferenceInSelectItem(item, aliasUpdateMap));
+    }
+    
+    // update aliases in the groupby list
+    List<GroupingAttribute> groupbyList = sel.getGroupby();
+    sel.clearGroupby();
+    for (GroupingAttribute group : groupbyList) {
+      sel.addGroupby(replaceTableReferenceInGroupby(group, aliasUpdateMap));
     }
 
     List<AbstractRelation> rewrittenQueries = new ArrayList<>();
@@ -157,16 +164,16 @@ public class ScrambleRewriter {
     return rewrittenQueries;
   }
   
-  SelectItem findAndReplaceBaseTableReference(
+  SelectItem replaceTableReferenceInSelectItem(
       SelectItem oldColumn, Map<String, String> aliasUpdateMap)
           throws UnexpectedTypeException {
     if (oldColumn instanceof UnnamedColumn) {
-      return replaceBaseTableReference((UnnamedColumn) oldColumn, aliasUpdateMap);
+      return replaceTableReferenceInUnnamedColumn((UnnamedColumn) oldColumn, aliasUpdateMap);
     }
     else if (oldColumn instanceof AliasedColumn) {
       AliasedColumn col = (AliasedColumn) oldColumn;
       return new AliasedColumn(
-        replaceBaseTableReference(col.getColumn(), aliasUpdateMap),
+        replaceTableReferenceInUnnamedColumn(col.getColumn(), aliasUpdateMap),
         col.getAliasName());
     }
     else {
@@ -174,7 +181,7 @@ public class ScrambleRewriter {
     }
   }
   
-  UnnamedColumn replaceBaseTableReference(
+  UnnamedColumn replaceTableReferenceInUnnamedColumn(
       UnnamedColumn oldColumn, Map<String, String> aliasUpdateMap)
           throws UnexpectedTypeException {
     if (oldColumn instanceof BaseColumn) {
@@ -187,12 +194,25 @@ public class ScrambleRewriter {
         ColumnOp col = (ColumnOp) oldColumn;
         List<UnnamedColumn> newOperands = new ArrayList<>();
         for (UnnamedColumn c : col.getOperands()) {
-          newOperands.add(replaceBaseTableReference(c, aliasUpdateMap));
+          newOperands.add(replaceTableReferenceInUnnamedColumn(c, aliasUpdateMap));
         }
         return new ColumnOp(col.getOpType(), newOperands);
     }
     else {
       throw new UnexpectedTypeException("Unexpected argument type: " + oldColumn.getClass().toString());
+    }
+  }
+  
+  GroupingAttribute replaceTableReferenceInGroupby(
+      GroupingAttribute oldGroup, Map<String, String> aliasUpdateMap) throws UnexpectedTypeException {
+    if (oldGroup instanceof AliasReference) {
+      return oldGroup;
+    }
+    else if (oldGroup instanceof UnnamedColumn) {
+      return replaceTableReferenceInUnnamedColumn((UnnamedColumn) oldGroup, aliasUpdateMap);
+    }
+    else {
+      throw new UnexpectedTypeException("Unexpected argument type: " + oldGroup.getClass().toString());
     }
   }
   
@@ -329,7 +349,7 @@ public class ScrambleRewriter {
       List<AbstractRelation> oldSources = sel.getFromList();
       sel.clearFromList();
       boolean doesScrambledSourceExist = false;
-      AbstractRelation scrambledSource = null;      // assumes at most one table is a scrambled table.
+      SelectQueryOp scrambledSource = null;      // assumes at most one table is a scrambled table.
       Map<String, String> aliasUpdateMap = new HashMap<>();
       
       for (AbstractRelation source : oldSources) {
@@ -337,7 +357,7 @@ public class ScrambleRewriter {
         sel.addTableSource(rewrittenSource);
         if (scrambleMeta.isScrambled(rewrittenSource.getAliasName().get())) {
           doesScrambledSourceExist = true;
-          scrambledSource = rewrittenSource;
+          scrambledSource = (SelectQueryOp) rewrittenSource;
         }
         aliasUpdateMap.put(source.getAliasName().get(), rewrittenSource.getAliasName().get());
       }
@@ -346,7 +366,14 @@ public class ScrambleRewriter {
       List<SelectItem> selectList = sel.getSelectList();
       sel.clearSelectList();
       for (SelectItem item : selectList) {
-        sel.addSelectItem(findAndReplaceBaseTableReference(item, aliasUpdateMap));
+        sel.addSelectItem(replaceTableReferenceInSelectItem(item, aliasUpdateMap));
+      }
+      
+      // update aliases in the groupby list
+      List<GroupingAttribute> groupbyList = sel.getGroupby();
+      sel.clearGroupby();
+      for (GroupingAttribute group : groupbyList) {
+        sel.addGroupby(replaceTableReferenceInGroupby(group, aliasUpdateMap));
       }
 
       if (!doesScrambledSourceExist) {
@@ -354,16 +381,17 @@ public class ScrambleRewriter {
       }
       else {
         // insert meta columns to the select list of the current relation.
-        BaseTable scrambledTable = (BaseTable) ((SelectQueryOp) scrambledSource).getFromList().get(0);
-        String scrambledTableAliasName = scrambledTable.getAliasName().get();
-        String scrambledSchemaName = scrambledTable.getSchemaName();
-        String scrambledTableName = scrambledTable.getTableName();
+//        BaseTable scrambledTable = (BaseTable) ((SelectQueryOp) scrambledSource).getFromList().get(0);
+//        String scrambledTableAliasName = scrambledTable.getAliasName().get();
+//        String scrambledSchemaName = scrambledTable.getSchemaName();
+//        String scrambledTableName = scrambledTable.getTableName();
+        String scrambledSourceAliasName = scrambledSource.getAliasName().get();
         String inclusionProbabilityColumn =
-            scrambleMeta.getInclusionProbabilityColumn(scrambledSchemaName, scrambledTableName);
+            scrambleMeta.getInclusionProbabilityColumn(scrambledSourceAliasName);
         String inclusionProbBlockDiffColumn =
-            scrambleMeta.getInclusionProbabilityBlockDifferenceColumn(scrambledSchemaName, scrambledTableName);
+            scrambleMeta.getInclusionProbabilityBlockDifferenceColumn(scrambledSourceAliasName);
         String subsampleColumn =
-            scrambleMeta.getSubsampleColumn(scrambledSchemaName, scrambledTableName);
+            scrambleMeta.getSubsampleColumn(scrambledSourceAliasName);
 
         // new select list
         String incProbColAliasName = generateNextAliasName();
@@ -371,11 +399,11 @@ public class ScrambleRewriter {
         String subsampleAliasName = generateNextAliasName();
 
         sel.addSelectItem(new AliasedColumn(
-            new BaseColumn(scrambledTableAliasName, inclusionProbabilityColumn), incProbColAliasName));
+            new BaseColumn(scrambledSourceAliasName, inclusionProbabilityColumn), incProbColAliasName));
         sel.addSelectItem(new AliasedColumn(
-            new BaseColumn(scrambledTableAliasName, inclusionProbBlockDiffColumn), incProbBlockDiffAliasName));
+            new BaseColumn(scrambledSourceAliasName, inclusionProbBlockDiffColumn), incProbBlockDiffAliasName));
         sel.addSelectItem(new AliasedColumn(
-            new BaseColumn(scrambledTableAliasName, subsampleColumn), subsampleAliasName));
+            new BaseColumn(scrambledSourceAliasName, subsampleColumn), subsampleAliasName));
 
         // meta entry
         scrambleMeta.insertScrambleMetaEntry(
