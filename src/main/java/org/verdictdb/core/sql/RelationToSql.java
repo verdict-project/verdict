@@ -1,6 +1,5 @@
 package org.verdictdb.core.sql;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -77,7 +76,10 @@ public class RelationToSql {
             return ((ConstantColumn) column).getValue().toString();
         }
         else if (column instanceof AsteriskColumn) {
-            return "*";
+            if (((AsteriskColumn) column).getTablename() != null) {
+                return ((AsteriskColumn) column).getTablename()+".*";
+            }
+            else return "*";
         }
         else if (column instanceof ColumnOp) {
             ColumnOp columnOp = (ColumnOp) column;
