@@ -1,7 +1,12 @@
 package org.verdictdb.core.logical_query;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
 
 public class ColumnOp implements UnnamedColumn, SelectItem {
@@ -16,10 +21,14 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
      * <li>multiply</li>
      * <li>subtract</li>
      * <li>divide</li>
+     * <li>pow</li>
+     * <li>sqrt</li>
      * <li>and</li>
      * <li>or</li>
      * <li>equal</li>
      * <li>notequal</li>
+     * <li>notgreaterthan</li>
+     * <li>notlessthan</li>
      * <li>casewhenelse</li>
      * <li>whenthenelse</li>
      * <li>not null</li>
@@ -45,7 +54,7 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
      */
     String opType;
     
-    List<UnnamedColumn> operands;
+    List<UnnamedColumn> operands = new ArrayList<>();
 
     public ColumnOp(String opType) {
         this.opType = opType;
@@ -68,8 +77,10 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
     public UnnamedColumn getOperand(int i) {
         return operands.get(i);
     }
-
-    public List<UnnamedColumn> getOperands() {return operands;}
+    
+    public List<UnnamedColumn> getOperands() {
+        return operands;
+    }
 
     public void setOperand(List<UnnamedColumn> operands) {
         this.operands = operands;
@@ -87,12 +98,29 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
         return new ColumnOp("and", Arrays.asList(predicate1, predicate2));
     }
     
+    public static ColumnOp count() {
+      return new ColumnOp("count");
+  }
+    
     public static ColumnOp equal(UnnamedColumn column1, UnnamedColumn column2) {
         return new ColumnOp("equal", Arrays.asList(column1, column2));
     }
     
     public static ColumnOp notequal(UnnamedColumn column1, UnnamedColumn column2) {
         return new ColumnOp("notequal", Arrays.asList(column1, column2));
+    }
+    
+
+    public static ColumnOp notgreaterthan(UnnamedColumn column1, UnnamedColumn column2) {
+        return new ColumnOp("notgreaterthan", Arrays.asList(column1, column2));
+    }
+    
+    public static ColumnOp notlessthan(UnnamedColumn column1, UnnamedColumn column2) {
+        return new ColumnOp("notlessthan", Arrays.asList(column1, column2));
+    }
+    
+    public static ColumnOp add(UnnamedColumn column1, UnnamedColumn column2) {
+        return new ColumnOp("add", Arrays.asList(column1, column2));
     }
     
     public static ColumnOp multiply(UnnamedColumn column1, UnnamedColumn column2) {
@@ -122,6 +150,10 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
     public static ColumnOp sum(UnnamedColumn column1) {
         return new ColumnOp("sum", Arrays.asList(column1));
     }
+    
+    public static ColumnOp pow(UnnamedColumn column1, UnnamedColumn column2) {
+      return new ColumnOp("pow", Arrays.asList(column1, column2));
+  }
 
     public static ColumnOp interval(UnnamedColumn column1, UnnamedColumn column2){
         return new ColumnOp("interval", Arrays.asList(column1, column2));
@@ -199,6 +231,21 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
 
     public static ColumnOp substring(UnnamedColumn column, UnnamedColumn from, UnnamedColumn to){
         return new ColumnOp("substring", Arrays.asList(column, from, to));
+    }
+    
+    @Override
+    public int hashCode() {
+        return HashCodeBuilder.reflectionHashCode(this);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return EqualsBuilder.reflectionEquals(this, obj);
+    }
+    
+    @Override
+    public String toString() {
+        return ToStringBuilder.reflectionToString(this);
     }
 
 }

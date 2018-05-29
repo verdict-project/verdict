@@ -1,8 +1,8 @@
-/*
-    Subquery that may appeared in the select clause, where clause
- */
 package org.verdictdb.core.logical_query;
 
+/**
+ *Subquery that may appeared in the select clause, where clause
+ */
 public class SubqueryColumn implements UnnamedColumn {
     SelectQueryOp subquery = new SelectQueryOp();
 

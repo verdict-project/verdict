@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class JoinTable implements AbstractRelation {
+public class JoinTable extends AbstractRelation {
 
     //May need to expand
     public enum JoinType {
