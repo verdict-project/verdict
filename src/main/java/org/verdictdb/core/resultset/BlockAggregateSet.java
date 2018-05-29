@@ -10,5 +10,10 @@ public class BlockAggregateSet {
    * After performing proper error computations
    */
   Table convertedResultset;
+  
+  public BlockAggregateSet(Table rawdata, Table converted) {
+    this.rawdata = rawdata;
+    this.convertedResultset = converted;
+  }
 
 }

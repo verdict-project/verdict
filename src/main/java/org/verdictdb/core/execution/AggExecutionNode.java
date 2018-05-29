@@ -1,4 +1,4 @@
-package org.verdictdb.core.rewriter;
+package org.verdictdb.core.execution;
 
 import java.util.ArrayList;
 import java.util.List;

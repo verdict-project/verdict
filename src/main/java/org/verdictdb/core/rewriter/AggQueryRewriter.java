@@ -29,13 +29,13 @@ import org.verdictdb.exception.VerdictDbException;
  * @author Yongjoo Park
  *
  */
-public class ScrambleRewriter {
+public class AggQueryRewriter {
 
   ScrambleMeta scrambleMeta;
 
   int nextAliasNumber = 1;
 
-  public ScrambleRewriter(ScrambleMeta scrambleMeta) {
+  public AggQueryRewriter(ScrambleMeta scrambleMeta) {
     this.scrambleMeta = scrambleMeta;
   }
 
@@ -49,25 +49,25 @@ public class ScrambleRewriter {
     nextAliasNumber = 1;
   }
   
-  String generateMeanEstimateAliasName(String aliasName) {
-    return aliasName;
-  }
-  
-  String generateSumSubaggAliasName(String aliasName) {
-    return "sum_scaled_" + aliasName;
-  }
-
-  String generateSumSquaredSubaggAliasName(String aliasName) {
-    return "sumsquared_scaled_" + aliasName;
-  }
-
-  String generateSquaredMeanSubaggAliasName(String aliasName) {
-    return "squaredmean_" + aliasName;
-  }
-  
-  String generateSubsampleCountAliasName() {
-    return "subsample_count";
-  }
+//  String generateMeanEstimateAliasName(String aliasName) {
+//    return aliasName;
+//  }
+//  
+//  String generateSumSubaggAliasName(String aliasName) {
+//    return "sum_scaled_" + aliasName;
+//  }
+//
+//  String generateSumSquaredSubaggAliasName(String aliasName) {
+//    return "sumsquared_scaled_" + aliasName;
+//  }
+//
+//  String generateSquaredMeanSubaggAliasName(String aliasName) {
+//    return "squaredmean_" + aliasName;
+//  }
+//  
+//  String generateSubsampleCountAliasName() {
+//    return "subsample_count";
+//  }
 
   /**
    * 
@@ -448,10 +448,13 @@ public class ScrambleRewriter {
    * Rewrite a given query into AQP-enabled form. The rewritten queries do not include any "create table ..."
    * parts.
    * 
-   * "select other_groups, sum(price) from ... group by other_groups;" is converted to
+   * "select other_groups, sum(price) as alias from ... group by other_groups;" is converted to
    * "select other_groups,
-   *         sum(sub_sum_est) as mean_estimate,
-   *         std(sub_sum_est*sqrt(subsample_size)) / sqrt(sum(subsample_size)) as std_estimate
+   *         sum(sub_sum_est) as sum_alias,
+   *         sum(sub_sum_est * subsample_size) as sum_scaled_sum_alias,
+   *         sum(sub_sum_est * sub_sum_est * subsample_size) as sum_square_scaled_sum_alias,
+   *         count(*) as count_subsample,
+   *         sum(subsample_size) as sum_subsample_size
    *  from (select other_groups,
    *               sum(price / prob) as sub_sum_est,
    *               sum(case 1 when price is not null else 0 end) as subsample_size
@@ -459,10 +462,32 @@ public class ScrambleRewriter {
    *        group by sid, other_groups) as sub_table
    *  group by other_groups;"
    *  
+   *  
+   * "select other_groups, count(*) as alias from ... group by other_groups;" is converted to
+   * "select other_groups,
+   *         sum(sub_count_est) as count_alias,
+   *         sum(sub_count_est * subsample_size) as sum_scaled_count_alias,
+   *         sum(sub_count_est * sub_count_est * subsample_size) as sum_square_scaled_count_alias,
+   *         count(*) as count_subsample,
+   *         sum(subsample_size) as sum_subsample_size
+   *  from (select other_groups,
+   *               sum(1 / prob) as sub_count_est,
+   *               count(*) as subsample_size
+   *        from ...
+   *        group by sid, other_groups) as sub_table
+   *  group by other_groups;"
+   *  
+   *  
    * "select other_groups, avg(price) from ... group by other_groups;" is converted to
    * "select other_groups,
-   *         sum(sub_sum_est) / sum(sub_count_est) as mean_estimate,
-   *         std(sub_sum_est/sub_count_est*sqrt(subsample_size)) / sqrt(sum(subsample_size)) as std_estimate
+   *         sum(sub_sum_est) as sum_alias,
+   *         sum(sub_sum_est * subsample_size) as sum_scaled_sum_alias,
+   *         sum(sub_sum_est * sub_sum_est * subsample_size) as sum_square_scaled_sum_alias,
+   *         sum(sub_count_est) as count_alias,
+   *         sum(sub_count_est * subsample_size) as sum_scaled_count_alias,
+   *         sum(sub_count_est * sub_count_est * subsample_size) as sum_square_scaled_count_alias,
+   *         count(*) as count_subsample,
+   *         sum(subsample_size) as sum_subsample_size
    *  from (select other_groups,
    *               sum(price / prob) as sub_sum_est,
    *               sum(case 1 when price is not null else 0 end / prob) as sub_count_est,
@@ -473,17 +498,6 @@ public class ScrambleRewriter {
    *  This is based on the self-normalized estimator.
    *  https://statweb.stanford.edu/~owen/mc/Ch-var-is.pdf
    *  
-   * "select other_groups, count(*) from ... group by other_groups;" is converted to
-   * "select other_groups,
-   *         sum(sub_count_est) as mean_estimate,
-   *         sum(sub_count_est*sqrt(subsample_size)) / sqrt(sum(subsample_size)) as std_estimate
-   *  from (select other_groups,
-   *               sum(1 / prob) as sub_count_est,
-   *               count(*) as subsample_size
-   *        from ...
-   *        group by sid, other_groups) as sub_table
-   *  group by other_groups;"
-   * 
    * @param relation
    * @param partitionNumber
    * @return
@@ -528,10 +542,12 @@ public class ScrambleRewriter {
         if (col.getOpType().equals("sum")) {
           String aliasForSubSumEst = generateNextAliasName();
           String aliasForSubsampleSize = generateNextAliasName();
-          String aliasForMeanEstimate = generateMeanEstimateAliasName(aliasName);
-          String aliasForSumSquaredSubagg = generateSumSquaredSubaggAliasName(aliasName);
-          String aliasForSumSubagg = generateSumSubaggAliasName(aliasName);
-          String aliasForSubsampleCount = generateSubsampleCountAliasName();
+          
+          String aliasForSumEstimate = RewritingRules.sumEstimateAliasName(aliasName);
+          String aliasForSumScaledSubsum = RewritingRules.sumScaledSumAliasName(aliasName);
+          String aliasForSumSquaredScaledSubsum = RewritingRules.sumSquareScaledSumAliasName(aliasName);
+          String aliasForCountSubsample = RewritingRules.countSubsampleAliasName();
+          String aliasForSumSubsampleSize = RewritingRules.sumSubsampleSizeAliasName();
 
           UnnamedColumn op = col.getOperand();        // argument within the sum function
           ColumnOp newCol = ColumnOp.sum(ColumnOp.divide(op, inclusionProbabilityColumn));
@@ -544,35 +560,43 @@ public class ScrambleRewriter {
               new AliasedColumn(
                   ColumnOp.sum(oneIfNotNull),
                   aliasForSubsampleSize));      // size of each subsample
-          // for mean estimate
+          
+          // outer: for mean estimate
           newOuterSelectList.add(
               new AliasedColumn(ColumnOp.sum(new BaseColumn(innerTableAliasName, aliasForSubSumEst)),
-                  aliasForMeanEstimate));
-          // for standard dev estimate
+                  aliasForSumEstimate));
+          // outer: for error estimate
           newOuterSelectList.add(
               new AliasedColumn(
                   ColumnOp.sum(ColumnOp.multiply(
                       new BaseColumn(innerTableAliasName, aliasForSubSumEst),
-                      ColumnOp.sqrt(new BaseColumn(innerTableAliasName, aliasForSubsampleSize)))),
-                  aliasForSumSubagg));
+                      new BaseColumn(innerTableAliasName, aliasForSubsampleSize))),
+                  aliasForSumScaledSubsum));
           newOuterSelectList.add(
               new AliasedColumn(
-                  ColumnOp.sum(ColumnOp.pow(
+                  ColumnOp.sum(
                       ColumnOp.multiply(
-                          new BaseColumn(innerTableAliasName, aliasForSubSumEst),
-                          ColumnOp.sqrt(new BaseColumn(innerTableAliasName, aliasForSubsampleSize))),
-                      ConstantColumn.valueOf(2))),
-                  aliasForSumSquaredSubagg));
+                          ColumnOp.multiply(
+                              new BaseColumn(innerTableAliasName, aliasForSubSumEst),
+                              new BaseColumn(innerTableAliasName, aliasForSubSumEst)),
+                          new BaseColumn(innerTableAliasName, aliasForSubsampleSize))),
+                  aliasForSumSquaredScaledSubsum));
           newOuterSelectList.add(
-              new AliasedColumn(ColumnOp.count(), aliasForSubsampleCount));
+              new AliasedColumn(ColumnOp.count(), aliasForCountSubsample));
+          newOuterSelectList.add(
+              new AliasedColumn(
+                  ColumnOp.sum(new BaseColumn(innerTableAliasName, aliasForSubsampleSize)),
+                  aliasForSumSubsampleSize));
         }
         else if (col.getOpType().equals("count")) {
           String aliasForSubCountEst = generateNextAliasName();
           String aliasForSubsampleSize = generateNextAliasName();
-          String aliasForMeanEstimate = generateMeanEstimateAliasName(aliasName);
-          String aliasForSumSquaredSubagg = generateSumSquaredSubaggAliasName(aliasName);
-          String aliasForSumSubagg = generateSumSubaggAliasName(aliasName);
-          String aliasForSubsampleCount = generateSubsampleCountAliasName();
+          
+          String aliasForCountEstimate = RewritingRules.countEstimateAliasName(aliasName);
+          String aliasForSumScaledSubcount = RewritingRules.sumScaledCountAliasName(aliasName);
+          String aliasForSumSquaredScaledSubcount = RewritingRules.sumSquareScaledCountAliasName(aliasName);
+          String aliasForCountSubsample = RewritingRules.countSubsampleAliasName();
+          String aliasForSumSubsampleSize = RewritingRules.sumSubsampleSizeAliasName();
 
           // inner
           ColumnOp newCol = ColumnOp.sum(ColumnOp.divide(ConstantColumn.valueOf(1), inclusionProbabilityColumn));
@@ -581,39 +605,48 @@ public class ScrambleRewriter {
               new AliasedColumn(
                   ColumnOp.count(),
                   aliasForSubsampleSize));
+          
           // outer: for mean estimate
           newOuterSelectList.add(
-              new AliasedColumn(ColumnOp.sum(new BaseColumn(innerTableAliasName, aliasForSubCountEst)),
-                  aliasForMeanEstimate));
+              new AliasedColumn(
+                  ColumnOp.sum(new BaseColumn(innerTableAliasName, aliasForSubCountEst)),
+                  aliasForCountEstimate));
           // outer: for standard dev estimate
           newOuterSelectList.add(
               new AliasedColumn(
                   ColumnOp.sum(ColumnOp.multiply(
                       new BaseColumn(innerTableAliasName, aliasForSubCountEst),
-                      ColumnOp.sqrt(new BaseColumn(innerTableAliasName, aliasForSubsampleSize)))),
-                  aliasForSumSubagg));
+                      new BaseColumn(innerTableAliasName, aliasForSubsampleSize))),
+                  aliasForSumScaledSubcount));
           newOuterSelectList.add(
               new AliasedColumn(
-                  ColumnOp.sum(ColumnOp.pow(
+                  ColumnOp.sum(
                       ColumnOp.multiply(
-                          new BaseColumn(innerTableAliasName, aliasForSubCountEst),
-                          ColumnOp.sqrt(new BaseColumn(innerTableAliasName, aliasForSubsampleSize))),
-                      ConstantColumn.valueOf(2))),
-                  aliasForSumSquaredSubagg));
+                          ColumnOp.multiply(
+                              new BaseColumn(innerTableAliasName, aliasForSubCountEst),
+                              new BaseColumn(innerTableAliasName, aliasForSubCountEst)),
+                          new BaseColumn(innerTableAliasName, aliasForSubsampleSize))),
+                  aliasForSumSquaredScaledSubcount));
           newOuterSelectList.add(
-              new AliasedColumn(ColumnOp.count(), aliasForSubsampleCount));
+              new AliasedColumn(ColumnOp.count(), aliasForCountSubsample));
+          newOuterSelectList.add(
+              new AliasedColumn(
+                  ColumnOp.sum(new BaseColumn(innerTableAliasName, aliasForSubsampleSize)),
+                  aliasForSumSubsampleSize));
         }
         else if (col.getOpType().equals("avg")) {
           String aliasForSubSumEst = generateNextAliasName();
           String aliasForSubCountEst = generateNextAliasName();
           String aliasForSubsampleSize = generateNextAliasName();
-          String aliasForSumEstimate = generateMeanEstimateAliasName(aliasName + "_sum");
-          String aliasForCountEstimate = generateMeanEstimateAliasName(aliasName + "_count");
-          String aliasForSumSquaredSubsum = generateSumSquaredSubaggAliasName(aliasName + "_sum");
-          String aliasForSumSubsum = generateSumSubaggAliasName(aliasName + "_sum");
-          String aliasForSumSquaredSubcount = generateSumSquaredSubaggAliasName(aliasName + "_count");
-          String aliasForSumSubcount = generateSumSubaggAliasName(aliasName + "_count");
-          String aliasForSubsampleCount = generateSubsampleCountAliasName();
+          
+          String aliasForSumEstimate = RewritingRules.sumEstimateAliasName(aliasName);
+          String aliasForSumScaledSubsum = RewritingRules.sumScaledSumAliasName(aliasName);
+          String aliasForSumSquaredScaledSubsum = RewritingRules.sumSquareScaledSumAliasName(aliasName);
+          String aliasForCountEstimate = RewritingRules.countEstimateAliasName(aliasName);
+          String aliasForSumScaledSubcount = RewritingRules.sumScaledCountAliasName(aliasName);
+          String aliasForSumSquaredScaledSubcount = RewritingRules.sumSquareScaledCountAliasName(aliasName);
+          String aliasForCountSubsample = RewritingRules.countSubsampleAliasName();
+          String aliasForSumSubsampleSize = RewritingRules.sumSubsampleSizeAliasName();
 
           // inner
           UnnamedColumn op = col.getOperand();        // argument within the avg function
@@ -631,44 +664,53 @@ public class ScrambleRewriter {
               new AliasedColumn(
                   ColumnOp.sum(oneIfNotNull),
                   aliasForSubsampleSize));
+          
           // outer: mean estimate
           newOuterSelectList.add(
-              new AliasedColumn(ColumnOp.sum(new BaseColumn(innerTableAliasName, aliasForSubSumEst)),
+              new AliasedColumn(
+                  ColumnOp.sum(new BaseColumn(innerTableAliasName, aliasForSubSumEst)),
                   aliasForSumEstimate));
           newOuterSelectList.add(
-              new AliasedColumn(ColumnOp.sum(new BaseColumn(innerTableAliasName, aliasForSubCountEst)),
+              new AliasedColumn(
+                  ColumnOp.sum(new BaseColumn(innerTableAliasName, aliasForSubCountEst)),
                   aliasForCountEstimate));
           // outer: standard deviation estimate
           newOuterSelectList.add(
               new AliasedColumn(
                   ColumnOp.sum(ColumnOp.multiply(
                       new BaseColumn(innerTableAliasName, aliasForSubSumEst),
-                      ColumnOp.sqrt(new BaseColumn(innerTableAliasName, aliasForSubsampleSize)))),
-                  aliasForSumSubsum));
+                      new BaseColumn(innerTableAliasName, aliasForSubsampleSize))),
+                  aliasForSumScaledSubsum));
           newOuterSelectList.add(
               new AliasedColumn(
-                  ColumnOp.sum(ColumnOp.pow(
+                  ColumnOp.sum(
                       ColumnOp.multiply(
-                          new BaseColumn(innerTableAliasName, aliasForSubSumEst),
-                          ColumnOp.sqrt(new BaseColumn(innerTableAliasName, aliasForSubsampleSize))),
-                      ConstantColumn.valueOf(2))),
-                  aliasForSumSquaredSubsum));
+                          ColumnOp.multiply(
+                              new BaseColumn(innerTableAliasName, aliasForSubSumEst),
+                              new BaseColumn(innerTableAliasName, aliasForSubSumEst)),
+                          new BaseColumn(innerTableAliasName, aliasForSubsampleSize))),
+                  aliasForSumSquaredScaledSubsum));
           newOuterSelectList.add(
               new AliasedColumn(
                   ColumnOp.sum(ColumnOp.multiply(
                       new BaseColumn(innerTableAliasName, aliasForSubCountEst),
-                      ColumnOp.sqrt(new BaseColumn(innerTableAliasName, aliasForSubsampleSize)))),
-                  aliasForSumSubcount));
+                      new BaseColumn(innerTableAliasName, aliasForSubsampleSize))),
+                  aliasForSumScaledSubcount));
           newOuterSelectList.add(
               new AliasedColumn(
-                  ColumnOp.sum(ColumnOp.pow(
+                  ColumnOp.sum(
                       ColumnOp.multiply(
-                          new BaseColumn(innerTableAliasName, aliasForSubCountEst),
-                          ColumnOp.sqrt(new BaseColumn(innerTableAliasName, aliasForSubsampleSize))),
-                      ConstantColumn.valueOf(2))),
-                  aliasForSumSquaredSubcount));
+                          ColumnOp.multiply(
+                              new BaseColumn(innerTableAliasName, aliasForSubCountEst),
+                              new BaseColumn(innerTableAliasName, aliasForSubCountEst)),
+                          new BaseColumn(innerTableAliasName, aliasForSubsampleSize))),
+                  aliasForSumSquaredScaledSubcount));
           newOuterSelectList.add(
-              new AliasedColumn(ColumnOp.count(), aliasForSubsampleCount));
+              new AliasedColumn(ColumnOp.count(), aliasForCountSubsample));
+          newOuterSelectList.add(
+              new AliasedColumn(
+                  ColumnOp.sum(new BaseColumn(innerTableAliasName, aliasForSubsampleSize)),
+                  aliasForSumSubsampleSize));
         }
         else {
           throw new UnexpectedTypeException("Not implemented yet.");
