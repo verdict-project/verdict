@@ -108,6 +108,10 @@ public class RelationToSql {
             else if (columnOp.getOpType().equals("divide")) {
                 return withParentheses(columnOp.getOperand(0)) + " / " + withParentheses(columnOp.getOperand(1));
             }
+            else if (columnOp.getOpType().equals("pow")) {
+              return "pow(" + unnamedColumnToSqlPart(columnOp.getOperand(0)) + ", "
+                    + unnamedColumnToSqlPart(columnOp.getOperand(1)) + ")";
+            }
             else if (columnOp.getOpType().equals("equal")) {
                 return withParentheses(columnOp.getOperand(0)) + " = " + withParentheses(columnOp.getOperand(1));
             }
@@ -137,7 +141,7 @@ public class RelationToSql {
     }
     
     Set<String> opTypeNotRequiringParentheses = Sets.newHashSet(
-            "sum", "avg", "count", "std", "sqrt", "notnull");
+            "sum", "avg", "count", "std", "sqrt", "notnull", "casewhenelse");
     
     String withParentheses(UnnamedColumn column) throws UnexpectedTypeException {
         String sql = unnamedColumnToSqlPart(column);

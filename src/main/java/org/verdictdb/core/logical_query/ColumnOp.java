@@ -1,5 +1,6 @@
 package org.verdictdb.core.logical_query;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -16,6 +17,8 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
      * <li>multiply</li>
      * <li>subtract</li>
      * <li>divide</li>
+     * <li>pow</li>
+     * <li>sqrt</li>
      * <li>and</li>
      * <li>or</li>
      * <li>equal</li>
@@ -28,7 +31,7 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
      */
     String opType;
     
-    List<UnnamedColumn> operands;
+    List<UnnamedColumn> operands = new ArrayList<>();
 
     public ColumnOp(String opType) {
         this.opType = opType;
@@ -119,6 +122,10 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
     public static ColumnOp sum(UnnamedColumn column1) {
         return new ColumnOp("sum", Arrays.asList(column1));
     }
+    
+    public static ColumnOp pow(UnnamedColumn column1, UnnamedColumn column2) {
+      return new ColumnOp("pow", Arrays.asList(column1, column2));
+  }
 
     public static UnnamedColumn count() {
         return new ColumnOp("count");
