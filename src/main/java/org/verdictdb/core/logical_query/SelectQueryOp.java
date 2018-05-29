@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class SelectQueryOp implements AbstractRelation {
+public class SelectQueryOp implements AbstractRelation, UnnamedColumn {
     
     List<SelectItem> selectList = new ArrayList<>();
     
