@@ -6,18 +6,18 @@ import java.util.List;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.verdictdb.exception.ValueException;
 
-public class ResultSetMeasures {
+public class AggregateMeasures {
 
   List<String> attributeNames;
 
   List<Object> attributeValues;   // will be numeric types
   
-  public ResultSetMeasures() {
+  public AggregateMeasures() {
     this.attributeNames = new ArrayList<>();
     this.attributeValues = new ArrayList<>();
   }
 
-  public ResultSetMeasures(List<String> attributeNames, List<Object> attributeValues) {
+  public AggregateMeasures(List<String> attributeNames, List<Object> attributeValues) {
     this.attributeNames = attributeNames;
     this.attributeValues = attributeValues;
   }
@@ -60,7 +60,7 @@ public class ResultSetMeasures {
       return false;
     if (getClass() != obj.getClass())
       return false;
-    ResultSetMeasures other = (ResultSetMeasures) obj;
+    AggregateMeasures other = (AggregateMeasures) obj;
     if (attributeNames == null) {
       if (other.attributeNames != null)
         return false;

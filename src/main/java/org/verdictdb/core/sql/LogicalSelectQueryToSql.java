@@ -26,11 +26,11 @@ import org.verdictdb.exception.VerdictDbException;
 import com.google.common.base.Optional;
 import com.google.common.collect.Sets;
 
-public class RelationToSql {
+public class LogicalSelectQueryToSql {
 
   SyntaxAbstract syntax;
 
-  public RelationToSql(SyntaxAbstract syntax) {
+  public LogicalSelectQueryToSql(SyntaxAbstract syntax) {
     this.syntax = syntax;
   }
 
@@ -38,7 +38,6 @@ public class RelationToSql {
     if (!(relation instanceof SelectQueryOp)) {
       throw new UnexpectedTypeException("Unexpected type: " + relation.getClass().toString());
     }
-
     return selectQueryToSql((SelectQueryOp) relation);
   }
 

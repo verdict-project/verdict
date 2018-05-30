@@ -7,9 +7,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.verdictdb.core.resultset.ResultSetGroup;
-import org.verdictdb.core.resultset.ResultSetMeasures;
-import org.verdictdb.core.resultset.SingleResultSet;
+import org.verdictdb.core.resultset.AggregateGroup;
+import org.verdictdb.core.resultset.AggregateMeasures;
+import org.verdictdb.core.resultset.AggregateFrame;
 import org.verdictdb.exception.ValueException;
 import org.verdictdb.exception.VerdictDbException;
 import static org.verdictdb.core.rewriter.AliasRenamingRules.*;
@@ -17,7 +17,7 @@ import static org.verdictdb.core.rewriter.AliasRenamingRules.*;
 
 public class SingleResultSetRewriter {
 
-  SingleResultSet rawResultSet;
+  AggregateFrame rawResultSet;
 
   List<String> columnNames;
   
@@ -25,7 +25,7 @@ public class SingleResultSetRewriter {
 
   public SingleResultSetRewriter() {}
 
-  public SingleResultSetRewriter(SingleResultSet rawResultSet) {
+  public SingleResultSetRewriter(AggregateFrame rawResultSet) {
     this.rawResultSet = rawResultSet;
     this.columnNames = rawResultSet.getColumnNames();
   }
@@ -43,22 +43,22 @@ public class SingleResultSetRewriter {
    * @return
    * @throws VerdictDbException
    */
-  public SingleResultSet rewrite(List<String> nonaggColumns, List<Pair<String, String>> aggColumns) 
+  public AggregateFrame rewrite(List<String> nonaggColumns, List<Pair<String, String>> aggColumns) 
       throws VerdictDbException {
     validityCheck(nonaggColumns, aggColumns);
-    SingleResultSet converted = new SingleResultSet(getNewColumnNames(nonaggColumns, aggColumns));
-    for (Entry<ResultSetGroup, ResultSetMeasures> groupAndMeasures : rawResultSet.groupAndMeasuresSet()) {
-      ResultSetGroup singleGroup = groupAndMeasures.getKey();
-      ResultSetMeasures singleMeasures = groupAndMeasures.getValue();
-      ResultSetMeasures convertedMeasures = rewriteMeasures(singleMeasures, aggColumns);
+    AggregateFrame converted = new AggregateFrame(getNewColumnNames(nonaggColumns, aggColumns));
+    for (Entry<AggregateGroup, AggregateMeasures> groupAndMeasures : rawResultSet.groupAndMeasuresSet()) {
+      AggregateGroup singleGroup = groupAndMeasures.getKey();
+      AggregateMeasures singleMeasures = groupAndMeasures.getValue();
+      AggregateMeasures convertedMeasures = rewriteMeasures(singleMeasures, aggColumns);
       converted.addRow(singleGroup, convertedMeasures);
     }
     return converted;
   }
   
-  ResultSetMeasures rewriteMeasures(ResultSetMeasures originalMeasures, List<Pair<String, String>> aggColumns)
+  AggregateMeasures rewriteMeasures(AggregateMeasures originalMeasures, List<Pair<String, String>> aggColumns)
       throws ValueException {
-    ResultSetMeasures rewrittenMeasures = new ResultSetMeasures();
+    AggregateMeasures rewrittenMeasures = new AggregateMeasures();
     for (Pair<String, String> agg : aggColumns) {
       String aggname = agg.getLeft();
       String aggtype = agg.getRight();
@@ -220,7 +220,7 @@ public class SingleResultSetRewriter {
     return newColumnNames;
   }
 
-  Object getMeasureValue(ResultSetMeasures measures, String aliasName) throws ValueException {
+  Object getMeasureValue(AggregateMeasures measures, String aliasName) throws ValueException {
     if (indexCache.containsKey(aliasName)) {
       return measures.getAttributeValueAt(indexCache.get(aliasName));
     }

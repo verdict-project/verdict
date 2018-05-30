@@ -5,19 +5,19 @@ import java.util.List;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
-public class ResultSetGroup {
+public class AggregateGroup {
   
   List<String> attributeNames;
   
   List<Object> attributeValues;
   
-  public ResultSetGroup(List<String> attributeNames, List<Object> attributeValues) {
+  public AggregateGroup(List<String> attributeNames, List<Object> attributeValues) {
     this.attributeNames = attributeNames;
     this.attributeValues = attributeValues;
   }
   
-  public static ResultSetGroup empty() {
-    return new ResultSetGroup(Arrays.<String>asList(), Arrays.asList());
+  public static AggregateGroup empty() {
+    return new AggregateGroup(Arrays.<String>asList(), Arrays.asList());
   }
 
   @Override
@@ -37,7 +37,7 @@ public class ResultSetGroup {
       return false;
     if (getClass() != obj.getClass())
       return false;
-    ResultSetGroup other = (ResultSetGroup) obj;
+    AggregateGroup other = (AggregateGroup) obj;
     if (attributeNames == null) {
       if (other.attributeNames != null)
         return false;
