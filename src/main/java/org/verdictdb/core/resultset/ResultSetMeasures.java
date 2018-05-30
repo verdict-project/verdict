@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.verdictdb.exception.ValueException;
 
 public class ResultSetMeasures {
 
@@ -26,16 +27,20 @@ public class ResultSetMeasures {
     attributeValues.add(attributeValue);
   }
   
-  public int getIndexOfAttributeName(String attributeName) {
-    return attributeNames.indexOf(attributeName);
+  public int getIndexOfAttributeName(String attributeName) throws ValueException {
+    int index = attributeNames.indexOf(attributeName);
+    if (index == -1) {
+      throw new ValueException(attributeName + " does not appear in " + attributeNames);
+    }
+    return index;
   }
   
   public Object getAttributeValueAt(int index) {
     return attributeValues.get(index);
   }
   
-  public Object getAttributeValue(String attributeName) {
-    return attributeValues.get(attributeNames.indexOf(attributeName));
+  public Object getAttributeValue(String attributeName) throws ValueException {
+    return attributeValues.get(getIndexOfAttributeName(attributeName));
   }
 
   @Override

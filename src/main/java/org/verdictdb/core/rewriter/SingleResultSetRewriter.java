@@ -56,7 +56,8 @@ public class SingleResultSetRewriter {
     return converted;
   }
   
-  ResultSetMeasures rewriteMeasures(ResultSetMeasures originalMeasures, List<Pair<String, String>> aggColumns) {
+  ResultSetMeasures rewriteMeasures(ResultSetMeasures originalMeasures, List<Pair<String, String>> aggColumns)
+      throws ValueException {
     ResultSetMeasures rewrittenMeasures = new ResultSetMeasures();
     for (Pair<String, String> agg : aggColumns) {
       String aggname = agg.getLeft();
@@ -219,7 +220,7 @@ public class SingleResultSetRewriter {
     return newColumnNames;
   }
 
-  Object getMeasureValue(ResultSetMeasures measures, String aliasName) {
+  Object getMeasureValue(ResultSetMeasures measures, String aliasName) throws ValueException {
     if (indexCache.containsKey(aliasName)) {
       return measures.getAttributeValueAt(indexCache.get(aliasName));
     }

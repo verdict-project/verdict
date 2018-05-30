@@ -37,8 +37,19 @@ public class SingleResultSet {
     data.put(group, measures);
   }
   
+  public void addRow(ResultSetMeasures measures) {
+    data.put(ResultSetGroup.empty(), measures);
+  }
+  
   public ResultSetMeasures getMeasures(ResultSetGroup group) {
     return data.get(group);
+  }
+  
+  public ResultSetMeasures getMeasures() throws ValueException {
+    if (data.size() > 1) {
+      throw new ValueException("The number of rows is larger than 1. A group must be specified.");
+    }
+    return data.get(ResultSetGroup.empty());
   }
   
   public Set<Entry<ResultSetGroup, ResultSetMeasures>> groupAndMeasuresSet() {

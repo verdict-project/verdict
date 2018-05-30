@@ -5,7 +5,6 @@ import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
-import org.verdictdb.core.resultset.ResultSetGroup;
 import org.verdictdb.core.resultset.ResultSetMeasures;
 import org.verdictdb.core.resultset.SingleResultSet;
 import org.verdictdb.exception.ValueException;
@@ -52,7 +51,7 @@ public class SingleResultSetRewriterTest {
   }
 
   @Test
-  public void testSumRewriting() {
+  public void testSumRewriting() throws ValueException {
     String mysumAlias = "mysum";
     List<String> attrNames = Arrays.asList(
         sumEstimateAliasName(mysumAlias),
@@ -73,7 +72,7 @@ public class SingleResultSetRewriterTest {
   }
 
   @Test
-  public void testCountRewriting() {
+  public void testCountRewriting() throws ValueException {
     String mycountAlias = "mycount";
     List<String> attrNames = Arrays.asList(
         countEstimateAliasName(mycountAlias),
@@ -94,7 +93,7 @@ public class SingleResultSetRewriterTest {
   }
 
   @Test
-  public void testAvgRewriting() {
+  public void testAvgRewriting() throws ValueException {
     String myavgAlias = "myavg";
     List<String> attrNames = Arrays.asList(
         sumEstimateAliasName(myavgAlias),
@@ -136,7 +135,7 @@ public class SingleResultSetRewriterTest {
 
     List<Object> attrValues = Arrays.<Object>asList(1.0, 2.0, 3.0, 4, 5);
     ResultSetMeasures measures = new ResultSetMeasures(columnNames, attrValues);
-    resultSet.addRow(ResultSetGroup.empty(), measures);
+    resultSet.addRow(measures);
 
     // rewriting
     SingleResultSetRewriter rewriter = new SingleResultSetRewriter(resultSet);
@@ -148,6 +147,12 @@ public class SingleResultSetRewriterTest {
     List<String> rewrittenColNames = converted.getColumnNames();
     assertTrue(rewrittenColNames.contains(expectedValueAliasName(mysumAlias)));
     assertTrue(rewrittenColNames.contains(expectedErrorAliasName(mysumAlias)));
+    
+    ResultSetMeasures rewrittenMeasures = converted.getMeasures();
+    Object sumExpectedValue = rewrittenMeasures.getAttributeValue(expectedValueAliasName(mysumAlias));
+    Object sumExpectedError = rewrittenMeasures.getAttributeValue(expectedErrorAliasName(mysumAlias));
+    assertEquals(sumExpectedValue, 1.0);
+    assertEquals(sumExpectedError, Math.sqrt((3.0 - 2*2.0 + 1.0*5) / ((float) 4*5)));
   }
 
 }
