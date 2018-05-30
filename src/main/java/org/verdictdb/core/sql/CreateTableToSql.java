@@ -18,12 +18,15 @@ public class CreateTableToSql {
   public String toSql(CreateTableAsSelect query) throws VerdictDbException{
     StringBuilder sql = new StringBuilder();
     
+    String schemaName = query.getSchemaName();
     String tableName = query.getTableName();
     SelectQueryOp select = query.getSelect();
     
     // table
     sql.append("create table ");
-    sql.append(tableName);
+    sql.append(quoteName(schemaName));
+    sql.append(".");
+    sql.append(quoteName(tableName));
     
     // partitions
     if (syntax.doesSupportTablePartitioning() && query.getPartitionColumns().size() > 0) {
@@ -49,6 +52,11 @@ public class CreateTableToSql {
     sql.append(selectSql);
     
     return sql.toString();
+  }
+  
+  String quoteName (String name){
+    String quoteString = syntax.getQuoteString();
+    return quoteString + name + quoteString;
   }
 
 }

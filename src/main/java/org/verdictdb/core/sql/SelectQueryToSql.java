@@ -31,7 +31,7 @@ public class SelectQueryToSql {
   SyntaxAbstract syntax;
 
   Set<String> opTypeNotRequiringParentheses = Sets.newHashSet(
-  "sum", "avg", "count", "std", "sqrt", "notnull", "casewhenelse", "rand");
+  "sum", "avg", "count", "std", "sqrt", "notnull", "casewhenelse", "rand", "floor");
 
   public SelectQueryToSql(SyntaxAbstract syntax) {
     this.syntax = syntax;
@@ -164,13 +164,16 @@ public class SelectQueryToSql {
         return withParentheses(columnOp.getOperand(0)) + " <= " + withParentheses(columnOp.getOperand(1));
       }
       else if (columnOp.getOpType().equals("min")) {
-        return "min(" + withParentheses(columnOp.getOperand()) + ")";
+        return "min(" + selectItemToSqlPart(columnOp.getOperand()) + ")";
       }
       else if (columnOp.getOpType().equals("max")) {
-        return "max(" + withParentheses(columnOp.getOperand()) + ")";
+        return "max(" + selectItemToSqlPart(columnOp.getOperand()) + ")";
       }
       else if (columnOp.getOpType().equals("min")) {
-        return "max(" + withParentheses(columnOp.getOperand()) + ")";
+        return "max(" + selectItemToSqlPart(columnOp.getOperand()) + ")";
+      }
+      else if (columnOp.getOpType().equals("floor")) {
+        return "floor(" + selectItemToSqlPart(columnOp.getOperand()) + ")";
       }
       else if (columnOp.getOpType().equals("is")) {
         return  withParentheses(columnOp.getOperand(0)) + " is " + withParentheses(columnOp.getOperand(1));
@@ -329,10 +332,9 @@ public class SelectQueryToSql {
 
     if (relation instanceof BaseTable) {
       BaseTable base = (BaseTable) relation;
-      String aliasName = base.getAliasName().get();
       sql.append(quoteName(base.getSchemaName()) + "." + quoteName(base.getTableName()));
-      if (aliasName != null) {
-        sql.append(" as " + aliasName);
+      if (base.getAliasName().isPresent()) {
+        sql.append(" as " + base.getAliasName().get());
       }
       return sql.toString();
     }

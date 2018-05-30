@@ -3,15 +3,14 @@ package org.verdictdb.core.scramble;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.core.logical_query.AliasedColumn;
 import org.verdictdb.core.logical_query.AsteriskColumn;
 import org.verdictdb.core.logical_query.BaseTable;
 import org.verdictdb.core.logical_query.ColumnOp;
 import org.verdictdb.core.logical_query.ConstantColumn;
+import org.verdictdb.core.logical_query.CreateTableAsSelect;
 import org.verdictdb.core.logical_query.SelectItem;
 import org.verdictdb.core.logical_query.SelectQueryOp;
-import org.verdictdb.core.rewriter.ScrambleMetaForTable;
 
 public class UniformScrambler extends Scrambler {
   
@@ -22,7 +21,14 @@ public class UniformScrambler extends Scrambler {
     super(originalSchemaName, originalTableName, scrambledSchemaName, scrambledTableName, aggregationBlockCount);
   }
   
-  Pair<SelectQueryOp, ScrambleMetaForTable> scramblingQuery() {
+  public CreateTableAsSelect scrambledTableCreationQuery() {
+    SelectQueryOp selectQuery = scramblingQuery();
+    CreateTableAsSelect createQuery =
+        new CreateTableAsSelect(scrambledSchemaName, scrambledTableName, selectQuery);
+    return createQuery;
+  }
+  
+  SelectQueryOp scramblingQuery() {
     // block agg index = floor(rand() * aggBlockCount)
     AliasedColumn aggBlockValue = new AliasedColumn(
         ColumnOp.floor(ColumnOp.multiply(
@@ -57,10 +63,8 @@ public class UniformScrambler extends Scrambler {
     
     SelectQueryOp augmentedRelation = SelectQueryOp.getSelectQueryOp(
         newSelectList, 
-        new BaseTable(originalSchemaName, originalTableName, "t"));
-    ScrambleMetaForTable meta = generateMeta();
-    
-    return Pair.of(augmentedRelation, meta);
+        new BaseTable(originalSchemaName, originalTableName));
+    return augmentedRelation;
   }
 
 }

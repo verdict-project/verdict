@@ -10,6 +10,11 @@ public class BaseTable extends AbstractRelation {
     
     String tableName;
     
+    public BaseTable(String schemaName, String tableName) {
+      this.schemaName = schemaName;
+      this.tableName = tableName;
+    }
+    
     public BaseTable(String schemaName, String tableName, String tableSourceAlias) {
         this.schemaName = schemaName;
         this.tableName = tableName;

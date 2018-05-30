@@ -13,15 +13,22 @@ import java.util.List;
  */
 public class CreateTableAsSelect {
   
+  String schemaName;
+  
   String tableName;
   
   SelectQueryOp select;
   
   List<String> partitionColumns = new ArrayList<>();
   
-  public CreateTableAsSelect(String tableName, SelectQueryOp select) {
+  public CreateTableAsSelect(String schemaName, String tableName, SelectQueryOp select) {
+    this.schemaName = schemaName;
     this.tableName = tableName;
     this.select = select;
+  }
+  
+  public String getSchemaName() {
+    return schemaName;
   }
 
   public String getTableName() {
