@@ -5,8 +5,8 @@ import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
-import org.verdictdb.core.resultset.ResultSetMeasures;
-import org.verdictdb.core.resultset.SingleResultSet;
+import org.verdictdb.core.resultset.AggregateMeasures;
+import org.verdictdb.core.resultset.AggregateFrame;
 import org.verdictdb.exception.ValueException;
 import org.verdictdb.exception.VerdictDbException;
 
@@ -25,12 +25,12 @@ public class SingleResultSetRewriterTest {
         sumSquaredScaledSumAliasName(mysumAlias),
         countSubsampleAliasName(),
         sumSubsampleSizeAliasName());
-    SingleResultSet resultSet = new SingleResultSet(columnNames);
+    AggregateFrame resultSet = new AggregateFrame(columnNames);
 
     SingleResultSetRewriter rewriter = new SingleResultSetRewriter(resultSet);
     List<String> nonaggColumns = Arrays.asList("group1", "group2");
     List<Pair<String, String>> aggColumns = Arrays.asList(Pair.of(mysumAlias, "sum"));
-    SingleResultSet converted = rewriter.rewrite(nonaggColumns, aggColumns);
+    AggregateFrame converted = rewriter.rewrite(nonaggColumns, aggColumns);
   }
 
   @Test(expected = ValueException.class)
@@ -42,12 +42,12 @@ public class SingleResultSetRewriterTest {
         sumSquaredScaledSumAliasName(mysumAlias),
         countSubsampleAliasName(),
         sumSubsampleSizeAliasName());
-    SingleResultSet resultSet = new SingleResultSet(columnNames);
+    AggregateFrame resultSet = new AggregateFrame(columnNames);
 
     SingleResultSetRewriter rewriter = new SingleResultSetRewriter(resultSet);
     List<String> nonaggColumns = Arrays.asList("group1", "group2");
     List<Pair<String, String>> aggColumns = Arrays.asList(Pair.of(mysumAlias, "count"));
-    SingleResultSet converted2 = rewriter.rewrite(nonaggColumns, aggColumns);
+    AggregateFrame converted2 = rewriter.rewrite(nonaggColumns, aggColumns);
   }
 
   @Test
@@ -60,9 +60,9 @@ public class SingleResultSetRewriterTest {
         countSubsampleAliasName(),
         sumSubsampleSizeAliasName());
     List<Object> attrValues = Arrays.<Object>asList(1.0, 2.0, 3.0, 4, 5);
-    ResultSetMeasures measures = new ResultSetMeasures(attrNames, attrValues);
+    AggregateMeasures measures = new AggregateMeasures(attrNames, attrValues);
     SingleResultSetRewriter rewriter = new SingleResultSetRewriter();
-    ResultSetMeasures rewrittenMeasures =
+    AggregateMeasures rewrittenMeasures =
         rewriter.rewriteMeasures(measures, Arrays.asList(Pair.of(mysumAlias, "sum")));
 
     Object sumExpectedValue = rewrittenMeasures.getAttributeValue(expectedValueAliasName(mysumAlias));
@@ -81,9 +81,9 @@ public class SingleResultSetRewriterTest {
         countSubsampleAliasName(),
         sumSubsampleSizeAliasName());
     List<Object> attrValues = Arrays.<Object>asList(1.0, 2.0, 3.0, 4, 5);
-    ResultSetMeasures measures = new ResultSetMeasures(attrNames, attrValues);
+    AggregateMeasures measures = new AggregateMeasures(attrNames, attrValues);
     SingleResultSetRewriter rewriter = new SingleResultSetRewriter();
-    ResultSetMeasures rewrittenMeasures =
+    AggregateMeasures rewrittenMeasures =
         rewriter.rewriteMeasures(measures, Arrays.asList(Pair.of(mycountAlias, "count")));
 
     Object countExpectedValue = rewrittenMeasures.getAttributeValue(expectedValueAliasName(mycountAlias));
@@ -105,9 +105,9 @@ public class SingleResultSetRewriterTest {
         countSubsampleAliasName(),
         sumSubsampleSizeAliasName());
     List<Object> attrValues = Arrays.<Object>asList(7.0, 8.0, 9.0, 1.0, 2.0, 3.0, 4, 5);
-    ResultSetMeasures measures = new ResultSetMeasures(attrNames, attrValues);
+    AggregateMeasures measures = new AggregateMeasures(attrNames, attrValues);
     SingleResultSetRewriter rewriter = new SingleResultSetRewriter();
-    ResultSetMeasures rewrittenMeasures =
+    AggregateMeasures rewrittenMeasures =
         rewriter.rewriteMeasures(measures, Arrays.asList(Pair.of(myavgAlias, "avg")));
 
     Object avgExpectedValue = rewrittenMeasures.getAttributeValue(expectedValueAliasName(myavgAlias));
@@ -131,24 +131,24 @@ public class SingleResultSetRewriterTest {
         sumSquaredScaledSumAliasName(mysumAlias),
         countSubsampleAliasName(),
         sumSubsampleSizeAliasName());
-    SingleResultSet resultSet = new SingleResultSet(columnNames);
+    AggregateFrame resultSet = new AggregateFrame(columnNames);
 
     List<Object> attrValues = Arrays.<Object>asList(1.0, 2.0, 3.0, 4, 5);
-    ResultSetMeasures measures = new ResultSetMeasures(columnNames, attrValues);
+    AggregateMeasures measures = new AggregateMeasures(columnNames, attrValues);
     resultSet.addRow(measures);
 
     // rewriting
     SingleResultSetRewriter rewriter = new SingleResultSetRewriter(resultSet);
     List<String> nonaggColumns = Arrays.asList();
     List<Pair<String, String>> aggColumns = Arrays.asList(Pair.of(mysumAlias, "sum"));
-    SingleResultSet converted = rewriter.rewrite(nonaggColumns, aggColumns);
+    AggregateFrame converted = rewriter.rewrite(nonaggColumns, aggColumns);
 
     // assertions
     List<String> rewrittenColNames = converted.getColumnNames();
     assertTrue(rewrittenColNames.contains(expectedValueAliasName(mysumAlias)));
     assertTrue(rewrittenColNames.contains(expectedErrorAliasName(mysumAlias)));
     
-    ResultSetMeasures rewrittenMeasures = converted.getMeasures();
+    AggregateMeasures rewrittenMeasures = converted.getMeasures();
     Object sumExpectedValue = rewrittenMeasures.getAttributeValue(expectedValueAliasName(mysumAlias));
     Object sumExpectedError = rewrittenMeasures.getAttributeValue(expectedErrorAliasName(mysumAlias));
     assertEquals(sumExpectedValue, 1.0);

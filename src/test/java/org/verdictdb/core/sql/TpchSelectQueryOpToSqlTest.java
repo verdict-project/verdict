@@ -10,7 +10,7 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
-public class TpchRelationToSqlTest {
+public class TpchSelectQueryOpToSqlTest {
 
   @Test
   public void Query1Test() throws VerdictDbException {
@@ -73,7 +73,7 @@ public class TpchRelationToSqlTest {
         "`l_returnflag` asc, " +
         "`l_linestatus` asc " +
         "limit 1";
-    RelationToSql relToSql = new RelationToSql(new HiveSyntax());
+    LogicalSelectQueryToSql relToSql = new LogicalSelectQueryToSql(new HiveSyntax());
     String actual = relToSql.toSql(relation);
     assertEquals(expected, actual);
   }
@@ -203,7 +203,7 @@ public class TpchRelationToSqlTest {
         "`s_name` asc, " +
         "`p_partkey` asc " +
         "limit 100";
-    RelationToSql relToSql = new RelationToSql(new HiveSyntax());
+    LogicalSelectQueryToSql relToSql = new LogicalSelectQueryToSql(new HiveSyntax());
     String actual = relToSql.toSql(relation);
     assertEquals(expected, actual);
   }
@@ -281,7 +281,7 @@ public class TpchRelationToSqlTest {
         "`revenue` desc, " +
         "`o_orderdate` asc " +
         "limit 10";
-    RelationToSql relToSql = new RelationToSql(new HiveSyntax());
+    LogicalSelectQueryToSql relToSql = new LogicalSelectQueryToSql(new HiveSyntax());
     String actual = relToSql.toSql(relation);
     assertEquals(expected, actual);
   }
@@ -343,7 +343,7 @@ public class TpchRelationToSqlTest {
         "order by " +
         "`o_orderpriority` asc " +
         "limit 1";
-    RelationToSql relToSql = new RelationToSql(new HiveSyntax());
+    LogicalSelectQueryToSql relToSql = new LogicalSelectQueryToSql(new HiveSyntax());
     String actual = relToSql.toSql(relation);
     assertEquals(expected, actual);
   }
@@ -437,7 +437,7 @@ public class TpchRelationToSqlTest {
         "order by " +
         "`revenue` desc " +
         "limit 1";
-    RelationToSql relToSql = new RelationToSql(new HiveSyntax());
+    LogicalSelectQueryToSql relToSql = new LogicalSelectQueryToSql(new HiveSyntax());
     String actual = relToSql.toSql(relation);
     assertEquals(expected, actual);
   }
@@ -488,7 +488,7 @@ public class TpchRelationToSqlTest {
         "and (`l`.`l_discount` between (:2 - 0.01) and (:2 + 0.01))) " +
         "and (`l`.`l_quantity` < :3) " +
         "limit 1";
-    RelationToSql relToSql = new RelationToSql(new HiveSyntax());
+    LogicalSelectQueryToSql relToSql = new LogicalSelectQueryToSql(new HiveSyntax());
     String actual = relToSql.toSql(relation);
     assertEquals(expected, actual);
   }
@@ -622,7 +622,7 @@ public class TpchRelationToSqlTest {
         "`cust_nation` asc, " +
         "`l_year` asc " +
         "limit 1";
-    RelationToSql relToSql = new RelationToSql(new HiveSyntax());
+    LogicalSelectQueryToSql relToSql = new LogicalSelectQueryToSql(new HiveSyntax());
     String actual = relToSql.toSql(relation);
     assertEquals(expected, actual);
   }
@@ -745,7 +745,7 @@ public class TpchRelationToSqlTest {
         "order by " +
         "`o_year` asc " +
         "limit 1";
-    RelationToSql relToSql = new RelationToSql(new HiveSyntax());
+    LogicalSelectQueryToSql relToSql = new LogicalSelectQueryToSql(new HiveSyntax());
     String actual = relToSql.toSql(relation);
     assertEquals(expected, actual);
   }
@@ -847,7 +847,7 @@ public class TpchRelationToSqlTest {
         "`nation` asc, " +
         "`o_year` desc " +
         "limit 1";
-    RelationToSql relToSql = new RelationToSql(new HiveSyntax());
+    LogicalSelectQueryToSql relToSql = new LogicalSelectQueryToSql(new HiveSyntax());
     String actual = relToSql.toSql(relation);
     assertEquals(expected, actual);
   }
@@ -946,7 +946,7 @@ public class TpchRelationToSqlTest {
         "order by " +
         "`revenue` desc " +
         "limit 20";
-    RelationToSql relToSql = new RelationToSql(new HiveSyntax());
+    LogicalSelectQueryToSql relToSql = new LogicalSelectQueryToSql(new HiveSyntax());
     String actual = relToSql.toSql(relation);
     assertEquals(expected, actual);
   }
@@ -1037,7 +1037,7 @@ public class TpchRelationToSqlTest {
         "order by " +
         "`value` desc " +
         "limit 1";
-    RelationToSql relToSql = new RelationToSql(new HiveSyntax());
+    LogicalSelectQueryToSql relToSql = new LogicalSelectQueryToSql(new HiveSyntax());
     String actual = relToSql.toSql(relation);
     assertEquals(expected, actual);
   }
@@ -1138,7 +1138,7 @@ public class TpchRelationToSqlTest {
         "order by " +
         "`l_shipmode` asc " +
         "limit 1";
-    RelationToSql relToSql = new RelationToSql(new HiveSyntax());
+    LogicalSelectQueryToSql relToSql = new LogicalSelectQueryToSql(new HiveSyntax());
     String actual = relToSql.toSql(relation);
     assertEquals(expected, actual);
   }
@@ -1199,7 +1199,7 @@ public class TpchRelationToSqlTest {
         "`custdist` desc, " +
         "`c_count` desc " +
         "limit 1";
-    RelationToSql relToSql = new RelationToSql(new HiveSyntax());
+    LogicalSelectQueryToSql relToSql = new LogicalSelectQueryToSql(new HiveSyntax());
     String actual = relToSql.toSql(relation);
     assertEquals(expected, actual);
   }
@@ -1261,7 +1261,7 @@ public class TpchRelationToSqlTest {
         "and (`l`.`l_shipdate` >= (date ':1'))) " +
         "and (`l`.`l_shipdate` < ((date ':1') + (interval '1' month))) " +
         "limit 1";
-    RelationToSql relToSql = new RelationToSql(new HiveSyntax());
+    LogicalSelectQueryToSql relToSql = new LogicalSelectQueryToSql(new HiveSyntax());
     String actual = relToSql.toSql(relation);
     assertEquals(expected, actual);
   }
@@ -1312,7 +1312,7 @@ public class TpchRelationToSqlTest {
         "order by " +
         "`s_suppkey` asc " +
         "limit 1";
-    RelationToSql relToSql = new RelationToSql(new HiveSyntax());
+    LogicalSelectQueryToSql relToSql = new LogicalSelectQueryToSql(new HiveSyntax());
     String actual = relToSql.toSql(relation);
     assertEquals(expected, actual);
   }
@@ -1400,7 +1400,7 @@ public class TpchRelationToSqlTest {
         "`p_type` asc, " +
         "`p_size` asc " +
         "limit 1";
-    RelationToSql relToSql = new RelationToSql(new HiveSyntax());
+    LogicalSelectQueryToSql relToSql = new LogicalSelectQueryToSql(new HiveSyntax());
     String actual = relToSql.toSql(relation);
     assertEquals(expected, actual);
   }
@@ -1462,7 +1462,7 @@ public class TpchRelationToSqlTest {
         "and (`p`.`p_container` = ':2')) " +
         "and (`l`.`l_quantity` < `part_agg`.`avg_quantity`) " +
         "limit 1";
-    RelationToSql relToSql = new RelationToSql(new HiveSyntax());
+    LogicalSelectQueryToSql relToSql = new LogicalSelectQueryToSql(new HiveSyntax());
     String actual = relToSql.toSql(relation);
     assertEquals(expected, actual);
   }
@@ -1547,7 +1547,7 @@ public class TpchRelationToSqlTest {
         "`o_totalprice` desc, " +
         "`o_orderdate` asc " +
         "limit 100";
-    RelationToSql relToSql = new RelationToSql(new HiveSyntax());
+    LogicalSelectQueryToSql relToSql = new LogicalSelectQueryToSql(new HiveSyntax());
     String actual = relToSql.toSql(relation);
     assertEquals(expected, actual);
   }
@@ -1760,7 +1760,7 @@ public class TpchRelationToSqlTest {
         "and (`l`.`l_shipinstruct` = 'DELIVER IN PERSON')" +
         ") " +
         "limit 1";
-    RelationToSql relToSql = new RelationToSql(new HiveSyntax());
+    LogicalSelectQueryToSql relToSql = new LogicalSelectQueryToSql(new HiveSyntax());
     String actual = relToSql.toSql(relation);
     assertEquals(expected, actual);
   }
@@ -1884,7 +1884,7 @@ public class TpchRelationToSqlTest {
         "order by " +
         "`s_name` asc " +
         "limit 1";
-    RelationToSql relToSql = new RelationToSql(new HiveSyntax());
+    LogicalSelectQueryToSql relToSql = new LogicalSelectQueryToSql(new HiveSyntax());
     String actual = relToSql.toSql(relation);
     assertEquals(expected, actual);
   }
@@ -1997,7 +1997,7 @@ public class TpchRelationToSqlTest {
         "`numwait` desc, " +
         "`s_name` asc " +
         "limit 100";
-    RelationToSql relToSql = new RelationToSql(new HiveSyntax());
+    LogicalSelectQueryToSql relToSql = new LogicalSelectQueryToSql(new HiveSyntax());
     String actual = relToSql.toSql(relation);
     assertEquals(expected, actual);
   }
@@ -2095,7 +2095,7 @@ public class TpchRelationToSqlTest {
         "order by " +
         "`cntrycode` asc " +
         "limit 1";
-    RelationToSql relToSql = new RelationToSql(new HiveSyntax());
+    LogicalSelectQueryToSql relToSql = new LogicalSelectQueryToSql(new HiveSyntax());
     String actual = relToSql.toSql(relation);
     assertEquals(expected, actual);
   }

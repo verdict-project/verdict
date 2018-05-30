@@ -15,13 +15,13 @@ import org.verdictdb.exception.ValueException;
  * @author Yongjoo Park
  *
  */
-public class SingleResultSet {
+public class AggregateFrame {
   
   List<String> orderedColumnNames;
   
-  Map<ResultSetGroup, ResultSetMeasures> data = new HashMap<>();
+  Map<AggregateGroup, AggregateMeasures> data = new HashMap<>();
   
-  public SingleResultSet(List<String> orderedColumnNames) throws ValueException {
+  public AggregateFrame(List<String> orderedColumnNames) throws ValueException {
     this.orderedColumnNames = orderedColumnNames;
     Set<String> colNames = new HashSet<>(orderedColumnNames);
     if (colNames.size() != orderedColumnNames.size()) {
@@ -33,26 +33,26 @@ public class SingleResultSet {
     return orderedColumnNames;
   }
   
-  public void addRow(ResultSetGroup group, ResultSetMeasures measures) {
+  public void addRow(AggregateGroup group, AggregateMeasures measures) {
     data.put(group, measures);
   }
   
-  public void addRow(ResultSetMeasures measures) {
-    data.put(ResultSetGroup.empty(), measures);
+  public void addRow(AggregateMeasures measures) {
+    data.put(AggregateGroup.empty(), measures);
   }
   
-  public ResultSetMeasures getMeasures(ResultSetGroup group) {
+  public AggregateMeasures getMeasures(AggregateGroup group) {
     return data.get(group);
   }
   
-  public ResultSetMeasures getMeasures() throws ValueException {
+  public AggregateMeasures getMeasures() throws ValueException {
     if (data.size() > 1) {
       throw new ValueException("The number of rows is larger than 1. A group must be specified.");
     }
-    return data.get(ResultSetGroup.empty());
+    return data.get(AggregateGroup.empty());
   }
   
-  public Set<Entry<ResultSetGroup, ResultSetMeasures>> groupAndMeasuresSet() {
+  public Set<Entry<AggregateGroup, AggregateMeasures>> groupAndMeasuresSet() {
     return data.entrySet();
   }
 }

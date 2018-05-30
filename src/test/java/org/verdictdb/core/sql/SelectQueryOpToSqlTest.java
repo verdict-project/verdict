@@ -18,7 +18,7 @@ import org.verdictdb.core.logical_query.UnnamedColumn;
 import org.verdictdb.core.sql.syntax.HiveSyntax;
 import org.verdictdb.exception.VerdictDbException;
 
-public class RelationToSqlTest {
+public class SelectQueryOpToSqlTest {
 
     @Test
     public void testSelectAllBaseTable() throws VerdictDbException {
@@ -27,7 +27,7 @@ public class RelationToSqlTest {
                 Arrays.<SelectItem>asList(new AsteriskColumn()),
                 base);
         String expected = "select * from `myschema`.`mytable` as t";
-        RelationToSql relToSql = new RelationToSql(new HiveSyntax());
+        LogicalSelectQueryToSql relToSql = new LogicalSelectQueryToSql(new HiveSyntax());
         String actual = relToSql.toSql(relation);
         assertEquals(expected, actual);
     }
@@ -41,7 +41,7 @@ public class RelationToSqlTest {
                         new BaseColumn("t", "mycolumn2")),
                 base);
         String expected = "select `t`.`mycolumn1`, `t`.`mycolumn2` from `myschema`.`mytable` as t";
-        RelationToSql relToSql = new RelationToSql(new HiveSyntax());
+        LogicalSelectQueryToSql relToSql = new LogicalSelectQueryToSql(new HiveSyntax());
         String actual = relToSql.toSql(relation);
         assertEquals(expected, actual);
     }
@@ -54,7 +54,7 @@ public class RelationToSqlTest {
                         new ColumnOp("avg", new BaseColumn("t", "mycolumn1"))),
                 base);
         String expected = "select avg(`t`.`mycolumn1`) from `myschema`.`mytable` as t";
-        RelationToSql relToSql = new RelationToSql(new HiveSyntax());
+        LogicalSelectQueryToSql relToSql = new LogicalSelectQueryToSql(new HiveSyntax());
         String actual = relToSql.toSql(relation);
         assertEquals(expected, actual);
     }
@@ -67,7 +67,7 @@ public class RelationToSqlTest {
                         new ColumnOp("sum", new BaseColumn("t", "mycolumn1"))),
                 base);
         String expected = "select sum(`t`.`mycolumn1`) from `myschema`.`mytable` as t";
-        RelationToSql relToSql = new RelationToSql(new HiveSyntax());
+        LogicalSelectQueryToSql relToSql = new LogicalSelectQueryToSql(new HiveSyntax());
         String actual = relToSql.toSql(relation);
         assertEquals(expected, actual);
     }
@@ -80,7 +80,7 @@ public class RelationToSqlTest {
                         new ColumnOp("count", new BaseColumn("t", "mycolumn1"))),
                 base);
         String expected = "select count(*) from `myschema`.`mytable` as t";
-        RelationToSql relToSql = new RelationToSql(new HiveSyntax());
+        LogicalSelectQueryToSql relToSql = new LogicalSelectQueryToSql(new HiveSyntax());
         String actual = relToSql.toSql(relation);
         assertEquals(expected, actual);
     }
@@ -93,7 +93,7 @@ public class RelationToSqlTest {
                         new ColumnOp("count", new AsteriskColumn())),
                 base);
         String expected = "select count(*) from `myschema`.`mytable` as t";
-        RelationToSql relToSql = new RelationToSql(new HiveSyntax());
+        LogicalSelectQueryToSql relToSql = new LogicalSelectQueryToSql(new HiveSyntax());
         String actual = relToSql.toSql(relation);
         assertEquals(expected, actual);
     }
@@ -108,7 +108,7 @@ public class RelationToSqlTest {
                         new ColumnOp("count", new AsteriskColumn())),
                 base);
         String expected = "select avg(`t`.`mycolumn1`), sum(`t`.`mycolumn1`), count(*) from `myschema`.`mytable` as t";
-        RelationToSql relToSql = new RelationToSql(new HiveSyntax());
+        LogicalSelectQueryToSql relToSql = new LogicalSelectQueryToSql(new HiveSyntax());
         String actual = relToSql.toSql(relation);
         assertEquals(expected, actual);
     }
@@ -123,7 +123,7 @@ public class RelationToSqlTest {
                 Arrays.<SelectItem>asList(new ColumnOp("add", operands)),
                 base);
         String expected = "select `t`.`mycolumn1` + `t`.`mycolumn2` from `myschema`.`mytable` as t";
-        RelationToSql relToSql = new RelationToSql(new HiveSyntax());
+        LogicalSelectQueryToSql relToSql = new LogicalSelectQueryToSql(new HiveSyntax());
         String actual = relToSql.toSql(relation);
         assertEquals(expected, actual);
     }
@@ -138,7 +138,7 @@ public class RelationToSqlTest {
                 Arrays.<SelectItem>asList(new ColumnOp("subtract", operands)),
                 base);
         String expected = "select `t`.`mycolumn1` - `t`.`mycolumn2` from `myschema`.`mytable` as t";
-        RelationToSql relToSql = new RelationToSql(new HiveSyntax());
+        LogicalSelectQueryToSql relToSql = new LogicalSelectQueryToSql(new HiveSyntax());
         String actual = relToSql.toSql(relation);
         assertEquals(expected, actual);
     }
@@ -153,7 +153,7 @@ public class RelationToSqlTest {
                 Arrays.<SelectItem>asList(new ColumnOp("multiply", operands)),
                 base);
         String expected = "select `t`.`mycolumn1` * `t`.`mycolumn2` from `myschema`.`mytable` as t";
-        RelationToSql relToSql = new RelationToSql(new HiveSyntax());
+        LogicalSelectQueryToSql relToSql = new LogicalSelectQueryToSql(new HiveSyntax());
         String actual = relToSql.toSql(relation);
         assertEquals(expected, actual);
     }
@@ -168,7 +168,7 @@ public class RelationToSqlTest {
                 Arrays.<SelectItem>asList(new ColumnOp("divide", operands)),
                 base);
         String expected = "select `t`.`mycolumn1` / `t`.`mycolumn2` from `myschema`.`mytable` as t";
-        RelationToSql relToSql = new RelationToSql(new HiveSyntax());
+        LogicalSelectQueryToSql relToSql = new LogicalSelectQueryToSql(new HiveSyntax());
         String actual = relToSql.toSql(relation);
         assertEquals(expected, actual);
     }
@@ -183,7 +183,7 @@ public class RelationToSqlTest {
                 base);
         relation.addGroupby(new AliasReference("mygroup"));
         String expected = "select `t`.`mygroup`, avg(`t`.`mycolumn1`) as myavg from `myschema`.`mytable` as t group by `mygroup`";
-        RelationToSql relToSql = new RelationToSql(new HiveSyntax());
+        LogicalSelectQueryToSql relToSql = new LogicalSelectQueryToSql(new HiveSyntax());
         String actual = relToSql.toSql(relation);
         assertEquals(expected, actual);
     }
@@ -206,7 +206,7 @@ public class RelationToSqlTest {
         String expected = "select * from ("
             + "select `t`.`mygroup`, avg(`t`.`mycolumn1`) as myavg from `myschema`.`mytable` as t group by `mygroup`) as s "
             + "group by `mygroup2`";
-        RelationToSql relToSql = new RelationToSql(new HiveSyntax());
+        LogicalSelectQueryToSql relToSql = new LogicalSelectQueryToSql(new HiveSyntax());
         String actual = relToSql.toSql(outerRelation);
         assertEquals(expected, actual);
     }
