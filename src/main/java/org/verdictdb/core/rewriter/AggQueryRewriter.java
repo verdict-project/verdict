@@ -543,11 +543,11 @@ public class AggQueryRewriter {
           String aliasForSubSumEst = generateNextAliasName();
           String aliasForSubsampleSize = generateNextAliasName();
           
-          String aliasForSumEstimate = RewritingRules.sumEstimateAliasName(aliasName);
-          String aliasForSumScaledSubsum = RewritingRules.sumScaledSumAliasName(aliasName);
-          String aliasForSumSquaredScaledSubsum = RewritingRules.sumSquareScaledSumAliasName(aliasName);
-          String aliasForCountSubsample = RewritingRules.countSubsampleAliasName();
-          String aliasForSumSubsampleSize = RewritingRules.sumSubsampleSizeAliasName();
+          String aliasForSumEstimate = AliasRenamingRules.sumEstimateAliasName(aliasName);
+          String aliasForSumScaledSubsum = AliasRenamingRules.sumScaledSumAliasName(aliasName);
+          String aliasForSumSquaredScaledSubsum = AliasRenamingRules.sumSquaredScaledSumAliasName(aliasName);
+          String aliasForCountSubsample = AliasRenamingRules.countSubsampleAliasName();
+          String aliasForSumSubsampleSize = AliasRenamingRules.sumSubsampleSizeAliasName();
 
           UnnamedColumn op = col.getOperand();        // argument within the sum function
           ColumnOp newCol = ColumnOp.sum(ColumnOp.divide(op, inclusionProbabilityColumn));
@@ -592,11 +592,11 @@ public class AggQueryRewriter {
           String aliasForSubCountEst = generateNextAliasName();
           String aliasForSubsampleSize = generateNextAliasName();
           
-          String aliasForCountEstimate = RewritingRules.countEstimateAliasName(aliasName);
-          String aliasForSumScaledSubcount = RewritingRules.sumScaledCountAliasName(aliasName);
-          String aliasForSumSquaredScaledSubcount = RewritingRules.sumSquareScaledCountAliasName(aliasName);
-          String aliasForCountSubsample = RewritingRules.countSubsampleAliasName();
-          String aliasForSumSubsampleSize = RewritingRules.sumSubsampleSizeAliasName();
+          String aliasForCountEstimate = AliasRenamingRules.countEstimateAliasName(aliasName);
+          String aliasForSumScaledSubcount = AliasRenamingRules.sumScaledCountAliasName(aliasName);
+          String aliasForSumSquaredScaledSubcount = AliasRenamingRules.sumSquaredScaledCountAliasName(aliasName);
+          String aliasForCountSubsample = AliasRenamingRules.countSubsampleAliasName();
+          String aliasForSumSubsampleSize = AliasRenamingRules.sumSubsampleSizeAliasName();
 
           // inner
           ColumnOp newCol = ColumnOp.sum(ColumnOp.divide(ConstantColumn.valueOf(1), inclusionProbabilityColumn));
@@ -639,14 +639,14 @@ public class AggQueryRewriter {
           String aliasForSubCountEst = generateNextAliasName();
           String aliasForSubsampleSize = generateNextAliasName();
           
-          String aliasForSumEstimate = RewritingRules.sumEstimateAliasName(aliasName);
-          String aliasForSumScaledSubsum = RewritingRules.sumScaledSumAliasName(aliasName);
-          String aliasForSumSquaredScaledSubsum = RewritingRules.sumSquareScaledSumAliasName(aliasName);
-          String aliasForCountEstimate = RewritingRules.countEstimateAliasName(aliasName);
-          String aliasForSumScaledSubcount = RewritingRules.sumScaledCountAliasName(aliasName);
-          String aliasForSumSquaredScaledSubcount = RewritingRules.sumSquareScaledCountAliasName(aliasName);
-          String aliasForCountSubsample = RewritingRules.countSubsampleAliasName();
-          String aliasForSumSubsampleSize = RewritingRules.sumSubsampleSizeAliasName();
+          String aliasForSumEstimate = AliasRenamingRules.sumEstimateAliasName(aliasName);
+          String aliasForSumScaledSubsum = AliasRenamingRules.sumScaledSumAliasName(aliasName);
+          String aliasForSumSquaredScaledSubsum = AliasRenamingRules.sumSquaredScaledSumAliasName(aliasName);
+          String aliasForCountEstimate = AliasRenamingRules.countEstimateAliasName(aliasName);
+          String aliasForSumScaledSubcount = AliasRenamingRules.sumScaledCountAliasName(aliasName);
+          String aliasForSumSquaredScaledSubcount = AliasRenamingRules.sumSquaredScaledCountAliasName(aliasName);
+          String aliasForCountSubsample = AliasRenamingRules.countSubsampleAliasName();
+          String aliasForSumSubsampleSize = AliasRenamingRules.sumSubsampleSizeAliasName();
 
           // inner
           UnnamedColumn op = col.getOperand();        // argument within the avg function

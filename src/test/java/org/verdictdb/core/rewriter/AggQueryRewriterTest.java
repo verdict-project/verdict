@@ -18,7 +18,7 @@ import org.verdictdb.core.sql.RelationToSql;
 import org.verdictdb.core.sql.syntax.HiveSyntax;
 import org.verdictdb.exception.VerdictDbException;
 
-public class ScrambleRewriterFlatQueryTest {
+public class AggQueryRewriterTest {
 
   int aggblockCount = 10;
 
@@ -42,11 +42,11 @@ public class ScrambleRewriterFlatQueryTest {
     AggQueryRewriter rewriter = new AggQueryRewriter(meta);
     List<AbstractRelation> rewritten = rewriter.rewrite(relation);
     
-    String aliasForSumEstimate = RewritingRules.sumEstimateAliasName(aliasName);
-    String aliasForSumScaledSubsum = RewritingRules.sumScaledSumAliasName(aliasName);
-    String aliasForSumSquaredScaledSubsum = RewritingRules.sumSquareScaledSumAliasName(aliasName);
-    String aliasForCountSubsample = RewritingRules.countSubsampleAliasName();
-    String aliasForSumSubsampleSize = RewritingRules.sumSubsampleSizeAliasName();
+    String aliasForSumEstimate = AliasRenamingRules.sumEstimateAliasName(aliasName);
+    String aliasForSumScaledSubsum = AliasRenamingRules.sumScaledSumAliasName(aliasName);
+    String aliasForSumSquaredScaledSubsum = AliasRenamingRules.sumSquaredScaledSumAliasName(aliasName);
+    String aliasForCountSubsample = AliasRenamingRules.countSubsampleAliasName();
+    String aliasForSumSubsampleSize = AliasRenamingRules.sumSubsampleSizeAliasName();
 
     for (int k = 0; k < aggblockCount; k++) {
       String expected = "select sum(`verdictalias5`.`verdictalias6`) as " + aliasForSumEstimate + ", "
@@ -83,11 +83,11 @@ public class ScrambleRewriterFlatQueryTest {
     AggQueryRewriter rewriter = new AggQueryRewriter(meta);
     List<AbstractRelation> rewritten = rewriter.rewrite(relation);
     
-    String aliasForCountEstimate = RewritingRules.countEstimateAliasName(aliasName);
-    String aliasForSumScaledSubcount = RewritingRules.sumScaledCountAliasName(aliasName);
-    String aliasForSumSquaredScaledSubcount = RewritingRules.sumSquareScaledCountAliasName(aliasName);
-    String aliasForCountSubsample = RewritingRules.countSubsampleAliasName();
-    String aliasForSumSubsampleSize = RewritingRules.sumSubsampleSizeAliasName();
+    String aliasForCountEstimate = AliasRenamingRules.countEstimateAliasName(aliasName);
+    String aliasForSumScaledSubcount = AliasRenamingRules.sumScaledCountAliasName(aliasName);
+    String aliasForSumSquaredScaledSubcount = AliasRenamingRules.sumSquaredScaledCountAliasName(aliasName);
+    String aliasForCountSubsample = AliasRenamingRules.countSubsampleAliasName();
+    String aliasForSumSubsampleSize = AliasRenamingRules.sumSubsampleSizeAliasName();
 
     for (int k = 0; k < aggblockCount; k++) {
       String expected = "select sum(`verdictalias5`.`verdictalias6`) as " + aliasForCountEstimate + ", "
@@ -125,14 +125,14 @@ public class ScrambleRewriterFlatQueryTest {
     AggQueryRewriter rewriter = new AggQueryRewriter(meta);
     List<AbstractRelation> rewritten = rewriter.rewrite(relation);
     
-    String aliasForSumEstimate = RewritingRules.sumEstimateAliasName(aliasName);
-    String aliasForSumScaledSubsum = RewritingRules.sumScaledSumAliasName(aliasName);
-    String aliasForSumSquaredScaledSubsum = RewritingRules.sumSquareScaledSumAliasName(aliasName);
-    String aliasForCountEstimate = RewritingRules.countEstimateAliasName(aliasName);
-    String aliasForSumScaledSubcount = RewritingRules.sumScaledCountAliasName(aliasName);
-    String aliasForSumSquaredScaledSubcount = RewritingRules.sumSquareScaledCountAliasName(aliasName);
-    String aliasForCountSubsample = RewritingRules.countSubsampleAliasName();
-    String aliasForSumSubsampleSize = RewritingRules.sumSubsampleSizeAliasName();
+    String aliasForSumEstimate = AliasRenamingRules.sumEstimateAliasName(aliasName);
+    String aliasForSumScaledSubsum = AliasRenamingRules.sumScaledSumAliasName(aliasName);
+    String aliasForSumSquaredScaledSubsum = AliasRenamingRules.sumSquaredScaledSumAliasName(aliasName);
+    String aliasForCountEstimate = AliasRenamingRules.countEstimateAliasName(aliasName);
+    String aliasForSumScaledSubcount = AliasRenamingRules.sumScaledCountAliasName(aliasName);
+    String aliasForSumSquaredScaledSubcount = AliasRenamingRules.sumSquaredScaledCountAliasName(aliasName);
+    String aliasForCountSubsample = AliasRenamingRules.countSubsampleAliasName();
+    String aliasForSumSubsampleSize = AliasRenamingRules.sumSubsampleSizeAliasName();
 
     for (int k = 0; k < aggblockCount; k++) {
       String expected = "select sum(`verdictalias5`.`verdictalias6`) as " + aliasForSumEstimate + ", "
@@ -181,11 +181,11 @@ public class ScrambleRewriterFlatQueryTest {
     AggQueryRewriter rewriter = new AggQueryRewriter(meta);
     List<AbstractRelation> rewritten = rewriter.rewrite(relation);
     
-    String aliasForSumEstimate = RewritingRules.sumEstimateAliasName(aliasName);
-    String aliasForSumScaledSubsum = RewritingRules.sumScaledSumAliasName(aliasName);
-    String aliasForSumSquaredScaledSubsum = RewritingRules.sumSquareScaledSumAliasName(aliasName);
-    String aliasForCountSubsample = RewritingRules.countSubsampleAliasName();
-    String aliasForSumSubsampleSize = RewritingRules.sumSubsampleSizeAliasName();
+    String aliasForSumEstimate = AliasRenamingRules.sumEstimateAliasName(aliasName);
+    String aliasForSumScaledSubsum = AliasRenamingRules.sumScaledSumAliasName(aliasName);
+    String aliasForSumSquaredScaledSubsum = AliasRenamingRules.sumSquaredScaledSumAliasName(aliasName);
+    String aliasForCountSubsample = AliasRenamingRules.countSubsampleAliasName();
+    String aliasForSumSubsampleSize = AliasRenamingRules.sumSubsampleSizeAliasName();
 
     for (int k = 0; k < aggblockCount; k++) {
       String expected = "select `verdictalias5`.`verdictalias6` as mygroup, "
@@ -229,11 +229,11 @@ public class ScrambleRewriterFlatQueryTest {
     AggQueryRewriter rewriter = new AggQueryRewriter(meta);
     List<AbstractRelation> rewritten = rewriter.rewrite(relation);
     
-    String aliasForSumEstimate = RewritingRules.sumEstimateAliasName(aliasName);
-    String aliasForSumScaledSubsum = RewritingRules.sumScaledSumAliasName(aliasName);
-    String aliasForSumSquaredScaledSubsum = RewritingRules.sumSquareScaledSumAliasName(aliasName);
-    String aliasForCountSubsample = RewritingRules.countSubsampleAliasName();
-    String aliasForSumSubsampleSize = RewritingRules.sumSubsampleSizeAliasName();
+    String aliasForSumEstimate = AliasRenamingRules.sumEstimateAliasName(aliasName);
+    String aliasForSumScaledSubsum = AliasRenamingRules.sumScaledSumAliasName(aliasName);
+    String aliasForSumSquaredScaledSubsum = AliasRenamingRules.sumSquaredScaledSumAliasName(aliasName);
+    String aliasForCountSubsample = AliasRenamingRules.countSubsampleAliasName();
+    String aliasForSumSubsampleSize = AliasRenamingRules.sumSubsampleSizeAliasName();
 
     for (int k = 0; k < aggblockCount; k++) {
       String expected = "select `verdictalias5`.`verdictalias6` as myalias, "
@@ -276,11 +276,11 @@ public class ScrambleRewriterFlatQueryTest {
     AggQueryRewriter rewriter = new AggQueryRewriter(meta);
     List<AbstractRelation> rewritten = rewriter.rewrite(relation);
     
-    String aliasForCountEstimate = RewritingRules.countEstimateAliasName(aliasName);
-    String aliasForSumScaledSubcount = RewritingRules.sumScaledCountAliasName(aliasName);
-    String aliasForSumSquaredScaledSubcount = RewritingRules.sumSquareScaledCountAliasName(aliasName);
-    String aliasForCountSubsample = RewritingRules.countSubsampleAliasName();
-    String aliasForSumSubsampleSize = RewritingRules.sumSubsampleSizeAliasName();
+    String aliasForCountEstimate = AliasRenamingRules.countEstimateAliasName(aliasName);
+    String aliasForSumScaledSubcount = AliasRenamingRules.sumScaledCountAliasName(aliasName);
+    String aliasForSumSquaredScaledSubcount = AliasRenamingRules.sumSquaredScaledCountAliasName(aliasName);
+    String aliasForCountSubsample = AliasRenamingRules.countSubsampleAliasName();
+    String aliasForSumSubsampleSize = AliasRenamingRules.sumSubsampleSizeAliasName();
 
     for (int k = 0; k < aggblockCount; k++) {
       String expected = "select `verdictalias5`.`verdictalias6` as mygroup, "
@@ -325,14 +325,14 @@ public class ScrambleRewriterFlatQueryTest {
     AggQueryRewriter rewriter = new AggQueryRewriter(meta);
     List<AbstractRelation> rewritten = rewriter.rewrite(relation);
     
-    String aliasForSumEstimate = RewritingRules.sumEstimateAliasName(aliasName);
-    String aliasForSumScaledSubsum = RewritingRules.sumScaledSumAliasName(aliasName);
-    String aliasForSumSquaredScaledSubsum = RewritingRules.sumSquareScaledSumAliasName(aliasName);
-    String aliasForCountEstimate = RewritingRules.countEstimateAliasName(aliasName);
-    String aliasForSumScaledSubcount = RewritingRules.sumScaledCountAliasName(aliasName);
-    String aliasForSumSquaredScaledSubcount = RewritingRules.sumSquareScaledCountAliasName(aliasName);
-    String aliasForCountSubsample = RewritingRules.countSubsampleAliasName();
-    String aliasForSumSubsampleSize = RewritingRules.sumSubsampleSizeAliasName();
+    String aliasForSumEstimate = AliasRenamingRules.sumEstimateAliasName(aliasName);
+    String aliasForSumScaledSubsum = AliasRenamingRules.sumScaledSumAliasName(aliasName);
+    String aliasForSumSquaredScaledSubsum = AliasRenamingRules.sumSquaredScaledSumAliasName(aliasName);
+    String aliasForCountEstimate = AliasRenamingRules.countEstimateAliasName(aliasName);
+    String aliasForSumScaledSubcount = AliasRenamingRules.sumScaledCountAliasName(aliasName);
+    String aliasForSumSquaredScaledSubcount = AliasRenamingRules.sumSquaredScaledCountAliasName(aliasName);
+    String aliasForCountSubsample = AliasRenamingRules.countSubsampleAliasName();
+    String aliasForSumSubsampleSize = AliasRenamingRules.sumSubsampleSizeAliasName();
 
     for (int k = 0; k < aggblockCount; k++) {
       String expected = "select `verdictalias5`.`verdictalias6` as mygroup, "
@@ -388,11 +388,11 @@ public class ScrambleRewriterFlatQueryTest {
     AggQueryRewriter rewriter = new AggQueryRewriter(meta);
     List<AbstractRelation> rewritten = rewriter.rewrite(relation);
     
-    String aliasForSumEstimate = RewritingRules.sumEstimateAliasName(aliasName);
-    String aliasForSumScaledSubsum = RewritingRules.sumScaledSumAliasName(aliasName);
-    String aliasForSumSquaredScaledSubsum = RewritingRules.sumSquareScaledSumAliasName(aliasName);
-    String aliasForCountSubsample = RewritingRules.countSubsampleAliasName();
-    String aliasForSumSubsampleSize = RewritingRules.sumSubsampleSizeAliasName();
+    String aliasForSumEstimate = AliasRenamingRules.sumEstimateAliasName(aliasName);
+    String aliasForSumScaledSubsum = AliasRenamingRules.sumScaledSumAliasName(aliasName);
+    String aliasForSumSquaredScaledSubsum = AliasRenamingRules.sumSquaredScaledSumAliasName(aliasName);
+    String aliasForCountSubsample = AliasRenamingRules.countSubsampleAliasName();
+    String aliasForSumSubsampleSize = AliasRenamingRules.sumSubsampleSizeAliasName();
 
     for (int k = 0; k < aggblockCount; k++) {
       String expected = "select sum(`verdictalias8`.`verdictalias9`) as " + aliasForSumEstimate + ", "
