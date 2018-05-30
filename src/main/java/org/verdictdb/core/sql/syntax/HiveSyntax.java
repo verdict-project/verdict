@@ -12,4 +12,14 @@ public class HiveSyntax implements SyntaxAbstract {
        
     }
 
+    @Override
+    public boolean doesSupportTablePartitioning() {
+      return true;
+    }
+
+    @Override
+    public String randFunction() {
+      return "rand()";
+    }
+
 }

@@ -60,6 +60,14 @@ public class SelectQueryOp extends AbstractRelation {
 
   public SelectQueryOp() {}
 
+  public void addSelectItem(SelectItem column) {
+    selectList.add(column);
+  }
+
+  public void addTableSource(AbstractRelation relation) {
+    fromList.add(relation);
+  }
+
   public void addFilterByAnd(UnnamedColumn predicate) {
     if (!filter.isPresent()) {
       filter = Optional.of(predicate);
@@ -86,8 +94,6 @@ public class SelectQueryOp extends AbstractRelation {
     }
   }
 
-  public void addLimit(UnnamedColumn limit) {this.limit = Optional.of(limit); }
-
   public void addOrderby(List<OrderbyAttribute> columns) {
     orderby.addAll(columns);
   }
@@ -96,13 +102,7 @@ public class SelectQueryOp extends AbstractRelation {
     orderby.add(column);
   }
 
-  public void addSelectItem(SelectItem column) {
-    selectList.add(column);
-  }
-
-  public void addTableSource(AbstractRelation relation) {
-    fromList.add(relation);
-  }
+  public void addLimit(UnnamedColumn limit) {this.limit = Optional.of(limit); }
 
   public void clearFilters() {
     this.filter = Optional.absent();
@@ -120,8 +120,8 @@ public class SelectQueryOp extends AbstractRelation {
     this.selectList = new ArrayList<>();
   }
 
-  public Optional<String> getAliasName() {
-    return aliasName;
+  public List<SelectItem> getSelectList() {
+    return selectList;
   }
 
   public Optional<UnnamedColumn> getFilter() {
@@ -148,8 +148,8 @@ public class SelectQueryOp extends AbstractRelation {
     return orderby;
   }
 
-  public List<SelectItem> getSelectList() {
-    return selectList;
+  public Optional<String> getAliasName() {
+    return aliasName;
   }
 
   public void setAliasName(String aliasName) {

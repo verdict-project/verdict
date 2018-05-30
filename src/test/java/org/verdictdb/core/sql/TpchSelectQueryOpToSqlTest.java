@@ -1,14 +1,28 @@
 package org.verdictdb.core.sql;
 
-import org.junit.Test;
-import org.verdictdb.core.logical_query.*;
-import org.verdictdb.core.sql.syntax.HiveSyntax;
-import org.verdictdb.exception.VerdictDbException;
+import static org.junit.Assert.assertEquals;
 
 import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
+import org.junit.Test;
+import org.verdictdb.core.logical_query.AbstractRelation;
+import org.verdictdb.core.logical_query.AliasReference;
+import org.verdictdb.core.logical_query.AliasedColumn;
+import org.verdictdb.core.logical_query.AsteriskColumn;
+import org.verdictdb.core.logical_query.BaseColumn;
+import org.verdictdb.core.logical_query.BaseTable;
+import org.verdictdb.core.logical_query.ColumnOp;
+import org.verdictdb.core.logical_query.ConstantColumn;
+import org.verdictdb.core.logical_query.GroupingAttribute;
+import org.verdictdb.core.logical_query.JoinTable;
+import org.verdictdb.core.logical_query.OrderbyAttribute;
+import org.verdictdb.core.logical_query.SelectItem;
+import org.verdictdb.core.logical_query.SelectQueryOp;
+import org.verdictdb.core.logical_query.SubqueryColumn;
+import org.verdictdb.core.logical_query.UnnamedColumn;
+import org.verdictdb.core.sql.syntax.HiveSyntax;
+import org.verdictdb.exception.VerdictDbException;
 
 public class TpchSelectQueryOpToSqlTest {
 
@@ -73,7 +87,7 @@ public class TpchSelectQueryOpToSqlTest {
         "`l_returnflag` asc, " +
         "`l_linestatus` asc " +
         "limit 1";
-    LogicalSelectQueryToSql relToSql = new LogicalSelectQueryToSql(new HiveSyntax());
+    SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
     String actual = relToSql.toSql(relation);
     assertEquals(expected, actual);
   }
@@ -203,7 +217,7 @@ public class TpchSelectQueryOpToSqlTest {
         "`s_name` asc, " +
         "`p_partkey` asc " +
         "limit 100";
-    LogicalSelectQueryToSql relToSql = new LogicalSelectQueryToSql(new HiveSyntax());
+    SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
     String actual = relToSql.toSql(relation);
     assertEquals(expected, actual);
   }
@@ -281,7 +295,7 @@ public class TpchSelectQueryOpToSqlTest {
         "`revenue` desc, " +
         "`o_orderdate` asc " +
         "limit 10";
-    LogicalSelectQueryToSql relToSql = new LogicalSelectQueryToSql(new HiveSyntax());
+    SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
     String actual = relToSql.toSql(relation);
     assertEquals(expected, actual);
   }
@@ -343,7 +357,7 @@ public class TpchSelectQueryOpToSqlTest {
         "order by " +
         "`o_orderpriority` asc " +
         "limit 1";
-    LogicalSelectQueryToSql relToSql = new LogicalSelectQueryToSql(new HiveSyntax());
+    SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
     String actual = relToSql.toSql(relation);
     assertEquals(expected, actual);
   }
@@ -437,7 +451,7 @@ public class TpchSelectQueryOpToSqlTest {
         "order by " +
         "`revenue` desc " +
         "limit 1";
-    LogicalSelectQueryToSql relToSql = new LogicalSelectQueryToSql(new HiveSyntax());
+    SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
     String actual = relToSql.toSql(relation);
     assertEquals(expected, actual);
   }
@@ -488,7 +502,7 @@ public class TpchSelectQueryOpToSqlTest {
         "and (`l`.`l_discount` between (:2 - 0.01) and (:2 + 0.01))) " +
         "and (`l`.`l_quantity` < :3) " +
         "limit 1";
-    LogicalSelectQueryToSql relToSql = new LogicalSelectQueryToSql(new HiveSyntax());
+    SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
     String actual = relToSql.toSql(relation);
     assertEquals(expected, actual);
   }
@@ -622,7 +636,7 @@ public class TpchSelectQueryOpToSqlTest {
         "`cust_nation` asc, " +
         "`l_year` asc " +
         "limit 1";
-    LogicalSelectQueryToSql relToSql = new LogicalSelectQueryToSql(new HiveSyntax());
+    SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
     String actual = relToSql.toSql(relation);
     assertEquals(expected, actual);
   }
@@ -745,7 +759,7 @@ public class TpchSelectQueryOpToSqlTest {
         "order by " +
         "`o_year` asc " +
         "limit 1";
-    LogicalSelectQueryToSql relToSql = new LogicalSelectQueryToSql(new HiveSyntax());
+    SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
     String actual = relToSql.toSql(relation);
     assertEquals(expected, actual);
   }
@@ -847,7 +861,7 @@ public class TpchSelectQueryOpToSqlTest {
         "`nation` asc, " +
         "`o_year` desc " +
         "limit 1";
-    LogicalSelectQueryToSql relToSql = new LogicalSelectQueryToSql(new HiveSyntax());
+    SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
     String actual = relToSql.toSql(relation);
     assertEquals(expected, actual);
   }
@@ -946,7 +960,7 @@ public class TpchSelectQueryOpToSqlTest {
         "order by " +
         "`revenue` desc " +
         "limit 20";
-    LogicalSelectQueryToSql relToSql = new LogicalSelectQueryToSql(new HiveSyntax());
+    SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
     String actual = relToSql.toSql(relation);
     assertEquals(expected, actual);
   }
@@ -1037,7 +1051,7 @@ public class TpchSelectQueryOpToSqlTest {
         "order by " +
         "`value` desc " +
         "limit 1";
-    LogicalSelectQueryToSql relToSql = new LogicalSelectQueryToSql(new HiveSyntax());
+    SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
     String actual = relToSql.toSql(relation);
     assertEquals(expected, actual);
   }
@@ -1138,7 +1152,7 @@ public class TpchSelectQueryOpToSqlTest {
         "order by " +
         "`l_shipmode` asc " +
         "limit 1";
-    LogicalSelectQueryToSql relToSql = new LogicalSelectQueryToSql(new HiveSyntax());
+    SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
     String actual = relToSql.toSql(relation);
     assertEquals(expected, actual);
   }
@@ -1199,7 +1213,7 @@ public class TpchSelectQueryOpToSqlTest {
         "`custdist` desc, " +
         "`c_count` desc " +
         "limit 1";
-    LogicalSelectQueryToSql relToSql = new LogicalSelectQueryToSql(new HiveSyntax());
+    SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
     String actual = relToSql.toSql(relation);
     assertEquals(expected, actual);
   }
@@ -1261,7 +1275,7 @@ public class TpchSelectQueryOpToSqlTest {
         "and (`l`.`l_shipdate` >= (date ':1'))) " +
         "and (`l`.`l_shipdate` < ((date ':1') + (interval '1' month))) " +
         "limit 1";
-    LogicalSelectQueryToSql relToSql = new LogicalSelectQueryToSql(new HiveSyntax());
+    SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
     String actual = relToSql.toSql(relation);
     assertEquals(expected, actual);
   }
@@ -1312,7 +1326,7 @@ public class TpchSelectQueryOpToSqlTest {
         "order by " +
         "`s_suppkey` asc " +
         "limit 1";
-    LogicalSelectQueryToSql relToSql = new LogicalSelectQueryToSql(new HiveSyntax());
+    SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
     String actual = relToSql.toSql(relation);
     assertEquals(expected, actual);
   }
@@ -1400,7 +1414,7 @@ public class TpchSelectQueryOpToSqlTest {
         "`p_type` asc, " +
         "`p_size` asc " +
         "limit 1";
-    LogicalSelectQueryToSql relToSql = new LogicalSelectQueryToSql(new HiveSyntax());
+    SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
     String actual = relToSql.toSql(relation);
     assertEquals(expected, actual);
   }
@@ -1462,7 +1476,7 @@ public class TpchSelectQueryOpToSqlTest {
         "and (`p`.`p_container` = ':2')) " +
         "and (`l`.`l_quantity` < `part_agg`.`avg_quantity`) " +
         "limit 1";
-    LogicalSelectQueryToSql relToSql = new LogicalSelectQueryToSql(new HiveSyntax());
+    SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
     String actual = relToSql.toSql(relation);
     assertEquals(expected, actual);
   }
@@ -1547,7 +1561,7 @@ public class TpchSelectQueryOpToSqlTest {
         "`o_totalprice` desc, " +
         "`o_orderdate` asc " +
         "limit 100";
-    LogicalSelectQueryToSql relToSql = new LogicalSelectQueryToSql(new HiveSyntax());
+    SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
     String actual = relToSql.toSql(relation);
     assertEquals(expected, actual);
   }
@@ -1760,7 +1774,7 @@ public class TpchSelectQueryOpToSqlTest {
         "and (`l`.`l_shipinstruct` = 'DELIVER IN PERSON')" +
         ") " +
         "limit 1";
-    LogicalSelectQueryToSql relToSql = new LogicalSelectQueryToSql(new HiveSyntax());
+    SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
     String actual = relToSql.toSql(relation);
     assertEquals(expected, actual);
   }
@@ -1884,7 +1898,7 @@ public class TpchSelectQueryOpToSqlTest {
         "order by " +
         "`s_name` asc " +
         "limit 1";
-    LogicalSelectQueryToSql relToSql = new LogicalSelectQueryToSql(new HiveSyntax());
+    SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
     String actual = relToSql.toSql(relation);
     assertEquals(expected, actual);
   }
@@ -1997,7 +2011,7 @@ public class TpchSelectQueryOpToSqlTest {
         "`numwait` desc, " +
         "`s_name` asc " +
         "limit 100";
-    LogicalSelectQueryToSql relToSql = new LogicalSelectQueryToSql(new HiveSyntax());
+    SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
     String actual = relToSql.toSql(relation);
     assertEquals(expected, actual);
   }
@@ -2095,7 +2109,7 @@ public class TpchSelectQueryOpToSqlTest {
         "order by " +
         "`cntrycode` asc " +
         "limit 1";
-    LogicalSelectQueryToSql relToSql = new LogicalSelectQueryToSql(new HiveSyntax());
+    SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
     String actual = relToSql.toSql(relation);
     assertEquals(expected, actual);
   }

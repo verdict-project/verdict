@@ -26,11 +26,14 @@ import org.verdictdb.exception.VerdictDbException;
 import com.google.common.base.Optional;
 import com.google.common.collect.Sets;
 
-public class LogicalSelectQueryToSql {
+public class SelectQueryToSql {
 
   SyntaxAbstract syntax;
 
-  public LogicalSelectQueryToSql(SyntaxAbstract syntax) {
+  Set<String> opTypeNotRequiringParentheses = Sets.newHashSet(
+  "sum", "avg", "count", "std", "sqrt", "notnull", "casewhenelse", "rand");
+
+  public SelectQueryToSql(SyntaxAbstract syntax) {
     this.syntax = syntax;
   }
 
@@ -219,6 +222,9 @@ public class LogicalSelectQueryToSql {
         return "substring(" + withParentheses(columnOp.getOperand(0)) + " from " +
             withParentheses(columnOp.getOperand(1)) + " for " + withParentheses(columnOp.getOperand(2)) + ")";
       }
+      else if (columnOp.getOpType().equals("rand")) {
+        return syntax.randFunction();
+      }
       else {
         throw new UnexpectedTypeException("Unexpceted opType of column: " + columnOp.getOpType().toString());
       }
@@ -229,9 +235,6 @@ public class LogicalSelectQueryToSql {
     throw new UnexpectedTypeException("Unexpceted argument type: " + column.getClass().toString());
   }
 
-
-  Set<String> opTypeNotRequiringParentheses = Sets.newHashSet(
-      "sum", "avg", "count", "std", "sqrt", "notnull", "casewhenelse");
 
   String withParentheses(UnnamedColumn column) throws VerdictDbException {
     String sql = unnamedColumnToSqlPart(column);

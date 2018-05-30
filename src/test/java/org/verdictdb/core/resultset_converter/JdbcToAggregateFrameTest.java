@@ -1,6 +1,6 @@
 package org.verdictdb.core.resultset_converter;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.sql.Connection;
 import java.sql.DriverManager;

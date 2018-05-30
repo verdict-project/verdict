@@ -1,18 +1,27 @@
 package org.verdictdb.core.rewriter;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.verdictdb.core.rewriter.AliasRenamingRules.countEstimateAliasName;
+import static org.verdictdb.core.rewriter.AliasRenamingRules.countSubsampleAliasName;
+import static org.verdictdb.core.rewriter.AliasRenamingRules.expectedErrorAliasName;
+import static org.verdictdb.core.rewriter.AliasRenamingRules.expectedValueAliasName;
+import static org.verdictdb.core.rewriter.AliasRenamingRules.sumEstimateAliasName;
+import static org.verdictdb.core.rewriter.AliasRenamingRules.sumScaledCountAliasName;
+import static org.verdictdb.core.rewriter.AliasRenamingRules.sumScaledSumAliasName;
+import static org.verdictdb.core.rewriter.AliasRenamingRules.sumSquaredScaledCountAliasName;
+import static org.verdictdb.core.rewriter.AliasRenamingRules.sumSquaredScaledSumAliasName;
+import static org.verdictdb.core.rewriter.AliasRenamingRules.sumSubsampleSizeAliasName;
+
 import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
-import org.verdictdb.core.resultset.AggregateMeasures;
 import org.verdictdb.core.resultset.AggregateFrame;
+import org.verdictdb.core.resultset.AggregateMeasures;
 import org.verdictdb.exception.ValueException;
 import org.verdictdb.exception.VerdictDbException;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.verdictdb.core.rewriter.AliasRenamingRules.*;
 
 public class SingleResultSetRewriterTest {
 

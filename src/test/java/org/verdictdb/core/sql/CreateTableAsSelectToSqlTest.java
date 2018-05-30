@@ -1,6 +1,6 @@
 package org.verdictdb.core.sql;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.util.Arrays;
 
@@ -22,10 +22,39 @@ public class CreateTableAsSelectToSqlTest {
             Arrays.<SelectItem>asList(new AsteriskColumn()),
             base);
     CreateTableAsSelect create = new CreateTableAsSelect("newtable", relation);
-    String expected = "create mytable as select * from `myschema`.`mytable` as t";
-    LogicalSelectQueryToSql relToSql = new LogicalSelectQueryToSql(new HiveSyntax());
-//    String actual = relToSql.toSql(create);
-//    assertEquals(expected, actual);
+    String expected = "create table newtable as select * from `myschema`.`mytable` as t";
+    CreateTableToSql queryToSql = new CreateTableToSql(new HiveSyntax());
+    String actual = queryToSql.toSql(create);
+    assertEquals(expected, actual);
+  }
+  
+  @Test
+  public void selectAllWithPartition1Test() throws VerdictDbException {
+    BaseTable base = new BaseTable("myschema", "mytable", "t");
+    SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
+            Arrays.<SelectItem>asList(new AsteriskColumn()),
+            base);
+    CreateTableAsSelect create = new CreateTableAsSelect("newtable", relation);
+    create.addPartitionColumn("part1");
+    String expected = "create table newtable partitioned by (part1) as select * from `myschema`.`mytable` as t";
+    CreateTableToSql queryToSql = new CreateTableToSql(new HiveSyntax());
+    String actual = queryToSql.toSql(create);
+    assertEquals(expected, actual);
+  }
+  
+  @Test
+  public void selectAllWithPartition2Test() throws VerdictDbException {
+    BaseTable base = new BaseTable("myschema", "mytable", "t");
+    SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
+            Arrays.<SelectItem>asList(new AsteriskColumn()),
+            base);
+    CreateTableAsSelect create = new CreateTableAsSelect("newtable", relation);
+    create.addPartitionColumn("part1");
+    create.addPartitionColumn("part2");
+    String expected = "create table newtable partitioned by (part1, part2) as select * from `myschema`.`mytable` as t";
+    CreateTableToSql queryToSql = new CreateTableToSql(new HiveSyntax());
+    String actual = queryToSql.toSql(create);
+    assertEquals(expected, actual);
   }
 
 }

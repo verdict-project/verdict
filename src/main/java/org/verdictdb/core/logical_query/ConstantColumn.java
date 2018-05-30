@@ -22,6 +22,12 @@ public class ConstantColumn implements UnnamedColumn, SelectItem {
         return c;
     }
     
+    public static ConstantColumn valueOf(double value) {
+      ConstantColumn c = new ConstantColumn();
+      c.setValue(Double.valueOf(value));
+      return c;
+  }
+    
     public static ConstantColumn valueOf(String value) {
         ConstantColumn c = new ConstantColumn();
         c.setValue(value);

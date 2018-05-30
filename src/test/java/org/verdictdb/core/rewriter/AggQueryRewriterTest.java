@@ -14,7 +14,7 @@ import org.verdictdb.core.logical_query.BaseTable;
 import org.verdictdb.core.logical_query.ColumnOp;
 import org.verdictdb.core.logical_query.SelectItem;
 import org.verdictdb.core.logical_query.SelectQueryOp;
-import org.verdictdb.core.sql.LogicalSelectQueryToSql;
+import org.verdictdb.core.sql.SelectQueryToSql;
 import org.verdictdb.core.sql.syntax.HiveSyntax;
 import org.verdictdb.exception.VerdictDbException;
 
@@ -67,7 +67,7 @@ public class AggQueryRewriterTest {
           + "from `myschema`.`mytable` as t "
           + "where `t`.`verdictpartition` = " + k + ") as verdictalias1 "
           + "group by `verdictalias1`.`verdictalias4`) as verdictalias5";
-      LogicalSelectQueryToSql relToSql = new LogicalSelectQueryToSql(new HiveSyntax());
+      SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
       String actual = relToSql.toSql(rewritten.get(k));
       assertEquals(expected, actual);
     }
@@ -108,7 +108,7 @@ public class AggQueryRewriterTest {
           + "from `myschema`.`mytable` as t "
           + "where `t`.`verdictpartition` = " + k + ") as verdictalias1 "
           + "group by `verdictalias1`.`verdictalias4`) as verdictalias5";
-      LogicalSelectQueryToSql relToSql = new LogicalSelectQueryToSql(new HiveSyntax());
+      SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
       String actual = relToSql.toSql(rewritten.get(k));
       assertEquals(expected, actual);
     }
@@ -161,7 +161,7 @@ public class AggQueryRewriterTest {
           + "from `myschema`.`mytable` as t "
           + "where `t`.`verdictpartition` = " + k + ") as verdictalias1 "
           + "group by `verdictalias1`.`verdictalias4`) as verdictalias5";
-      LogicalSelectQueryToSql relToSql = new LogicalSelectQueryToSql(new HiveSyntax());
+      SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
       String actual = relToSql.toSql(rewritten.get(k));
       assertEquals(expected, actual);
     }
@@ -209,7 +209,7 @@ public class AggQueryRewriterTest {
           + "where `t`.`verdictpartition` = " + k + ") as verdictalias1 "
           + "group by `verdictalias6`, `verdictalias1`.`verdictalias4`) as verdictalias5 "
           + "group by `mygroup`";
-      LogicalSelectQueryToSql relToSql = new LogicalSelectQueryToSql(new HiveSyntax());
+      SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
       String actual = relToSql.toSql(rewritten.get(k));
       assertEquals(expected, actual);
     }
@@ -257,7 +257,7 @@ public class AggQueryRewriterTest {
           + "where `t`.`verdictpartition` = " + k + ") as verdictalias1 "
           + "group by `verdictalias6`, `verdictalias1`.`verdictalias4`) as verdictalias5 "
           + "group by `myalias`";
-      LogicalSelectQueryToSql relToSql = new LogicalSelectQueryToSql(new HiveSyntax());
+      SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
       String actual = relToSql.toSql(rewritten.get(k));
       assertEquals(expected, actual);
     }
@@ -305,7 +305,7 @@ public class AggQueryRewriterTest {
           + "group by `verdictalias6`, `verdictalias1`.`verdictalias4`) as verdictalias5 "
           + "group by `mygroup`";
 
-      LogicalSelectQueryToSql relToSql = new LogicalSelectQueryToSql(new HiveSyntax());
+      SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
       String actual = relToSql.toSql(rewritten.get(k));
       assertEquals(expected, actual);
     }
@@ -363,7 +363,7 @@ public class AggQueryRewriterTest {
           + "where `t`.`verdictpartition` = " + k + ") as verdictalias1 "
           + "group by `verdictalias6`, `verdictalias1`.`verdictalias4`) as verdictalias5 "
           + "group by `mygroup`";
-      LogicalSelectQueryToSql relToSql = new LogicalSelectQueryToSql(new HiveSyntax());
+      SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
       String actual = relToSql.toSql(rewritten.get(k));
       assertEquals(expected, actual);
     }
@@ -417,7 +417,7 @@ public class AggQueryRewriterTest {
           + "from `myschema`.`mytable` as t "
           + "where `t`.`verdictpartition` = " + k + ") as verdictalias1) as s "
           + "group by `s`.`verdictalias7`) as verdictalias8";
-      LogicalSelectQueryToSql relToSql = new LogicalSelectQueryToSql(new HiveSyntax());
+      SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
       String actual = relToSql.toSql(rewritten.get(k));
       assertEquals(expected, actual);
     }

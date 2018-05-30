@@ -12,7 +12,9 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 public class ColumnOp implements UnnamedColumn, SelectItem {
     
     /**
-     * opType must be one of the following:
+     * opType must be one of the following.
+     * 
+     * Functions:
      * <ol>
      * <li>sum</li>
      * <li>count</li>
@@ -23,6 +25,16 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
      * <li>divide</li>
      * <li>pow</li>
      * <li>sqrt</li>
+     * <li>min</li>
+     * <li>max</li>
+     * <li>countdistinct</li>
+     * <li>substring</li>
+     * <li>rand</li>
+     * <li>floor</li>
+     * </ol>
+     * 
+     * Comparison:
+     * <ol>
      * <li>and</li>
      * <li>or</li>
      * <li>equal</li>
@@ -38,8 +50,6 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
      * <li>less</li>
      * <li>greaterequal</li>
      * <li>lessequal</li>
-     * <li>min</li>
-     * <li>max</li>
      * <li>is</li>
      * <li>like</li>
      * <li>exists</li>
@@ -48,8 +58,6 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
      * <li>in</li>
      * <li>notin</li>
      * <li>notlike</li>
-     * <li>countdistinct</li>
-     * <li>substring</li>
      * </ol>
      */
     String opType;
@@ -231,6 +239,14 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
 
     public static ColumnOp substring(UnnamedColumn column, UnnamedColumn from, UnnamedColumn to){
         return new ColumnOp("substring", Arrays.asList(column, from, to));
+    }
+    
+    public static ColumnOp rand() {
+      return new ColumnOp("rand");
+    }
+    
+    public static ColumnOp floor(UnnamedColumn column) {
+      return new ColumnOp("floor", column);
     }
     
     @Override
