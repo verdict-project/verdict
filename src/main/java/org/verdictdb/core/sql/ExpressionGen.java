@@ -1,7 +1,5 @@
 package org.verdictdb.core.sql;
 
-import com.sun.org.apache.bcel.internal.classfile.ConstantValue;
-import com.sun.tools.internal.jxc.ap.Const;
 import org.verdictdb.core.logical_query.*;
 import org.verdictdb.parser.*;
 
@@ -42,15 +40,28 @@ public class ExpressionGen extends VerdictSQLBaseVisitor<UnnamedColumn> {
     public BaseColumn visitColumn_ref_expression(VerdictSQLParser.Column_ref_expressionContext ctx) {
         String[] t = ctx.getText().split("\\.");
         if (t.length >= 2) {
-            return new BaseColumn(t[1], t[0]);
+            return new BaseColumn(t[0], t[1]);
         } else {
-            return new BaseColumn(meta.columnAlias.get(t[0]), t[0]);
+            return new BaseColumn(meta.columnAlias.get(t[1]), t[1]);
         }
     }
 
     @Override
     public ColumnOp visitBinary_operator_expression(VerdictSQLParser.Binary_operator_expressionContext ctx) {
-        return new ColumnOp(ctx.op.getText(), Arrays.asList(
+        String opType = null;
+        if (ctx.op.getText().equals("+")){
+            opType = "add";
+        }
+        else if (ctx.op.getText().equals("-")){
+            opType = "subtract";
+        }
+        else if (ctx.op.getText().equals("*")){
+            opType = "multiply";
+        }
+        else if (ctx.op.getText().equals("/")){
+            opType = "divide";
+        }
+        return new ColumnOp(opType, Arrays.asList(
                 visit(ctx.expression(0)),
                 visit(ctx.expression(1))
         ));
@@ -66,7 +77,7 @@ public class ExpressionGen extends VerdictSQLBaseVisitor<UnnamedColumn> {
                 UnnamedColumn col = null;
                 if (ctx.all_distinct_expression() != null) {
                     ExpressionGen g = new ExpressionGen(meta);
-                    col = g.visit(ctx);
+                    col = g.visit(ctx.all_distinct_expression());
                 }
 
                 //OverClause overClause = null;

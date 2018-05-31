@@ -13,7 +13,7 @@ public class JoinTable extends AbstractRelation {
     }
 
 
-    List<BaseTable> joinList = new ArrayList<>();
+    List<AbstractRelation> joinList = new ArrayList<>();
 
     List<JoinType> joinTypeList = new ArrayList<>();
 
@@ -21,7 +21,7 @@ public class JoinTable extends AbstractRelation {
 
     Optional<String> aliasName = Optional.absent();
 
-    public static JoinTable getJoinTable(List<BaseTable> joinList, List<JoinType> joinTypeList, List<UnnamedColumn> condition) {
+    public static JoinTable getJoinTable(List<AbstractRelation> joinList, List<JoinType> joinTypeList, List<UnnamedColumn> condition) {
         JoinTable join = new JoinTable();
         join.joinList = joinList;
         join.joinTypeList = joinTypeList;
@@ -29,7 +29,7 @@ public class JoinTable extends AbstractRelation {
         return join;
     }
 
-    public void addJoinTable(BaseTable joinTable, JoinType joinType, UnnamedColumn conditon){
+    public void addJoinTable(AbstractRelation joinTable, JoinType joinType, UnnamedColumn conditon){
         this.joinList.add(joinTable);
         this.joinTypeList.add(joinType);
         this.condition.add(conditon);
@@ -39,7 +39,7 @@ public class JoinTable extends AbstractRelation {
         this.aliasName = Optional.of(aliasName);
     }
 
-    public List<BaseTable> getJoinList() {
+    public List<AbstractRelation> getJoinList() {
         return joinList;
     }
 

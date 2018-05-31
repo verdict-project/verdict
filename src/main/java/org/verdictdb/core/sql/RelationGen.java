@@ -2,6 +2,7 @@ package org.verdictdb.core.sql;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
+import org.apache.commons.math3.analysis.function.Abs;
 import org.verdictdb.core.logical_query.*;
 import org.verdictdb.parser.*;
 
@@ -25,22 +26,22 @@ public class RelationGen extends VerdictSQLBaseVisitor<AbstractRelation> {
         // with their aliases.
         Map<UnnamedColumn, String> selectExprToAlias = new HashMap<>();
         for (SelectItem elem : selectElems) {
-            selectExprToAlias.put(((AliasedColumn)elem).getColumn(), ((AliasedColumn)elem).getAliasName());
+           // selectExprToAlias.put(((AliasedColumn) elem).getColumn(), ((AliasedColumn) elem).getAliasName());
         }
 
         // use the same resolver as for the select list elements to attach the same tables to the columns
-        TableSourceResolver resolver = new TableSourceResolver(vc, tableAliasAndColNames);
+        //TableSourceResolver resolver = new TableSourceResolver(vc, tableAliasAndColNames);
 
         if (ctx.order_by_clause() != null) {
             for (VerdictSQLParser.Order_by_expressionContext o : ctx.order_by_clause().order_by_expression()) {
                 ExpressionGen g = new ExpressionGen(meta);
                 UnnamedColumn c = g.visit(o);
                 OrderbyAttribute orderbyCol = null;
-                if (c instanceof BaseColumn){
-                    orderbyCol = new OrderbyAttribute(selectExprToAlias.get(c), (o.DESC()==null)?"asc":"desc");
+                if (c instanceof BaseColumn) {
+                    orderbyCol = new OrderbyAttribute(selectExprToAlias.get(c), (o.DESC() == null) ? "asc" : "desc");
                 }
                 if (selectExprToAlias.containsKey(c)) {
-                    orderbyCol = new OrderbyAttribute(selectExprToAlias.get(c), (o.DESC()==null)?"asc":"desc");
+                    orderbyCol = new OrderbyAttribute(selectExprToAlias.get(c), (o.DESC() == null) ? "asc" : "desc");
                 }
                 sel.addOrderby(orderbyCol);
             }
@@ -88,105 +89,12 @@ public class RelationGen extends VerdictSQLBaseVisitor<AbstractRelation> {
      */
     @Override
     public AbstractRelation visitQuery_specification(VerdictSQLParser.Query_specificationContext ctx) {
-        // 1. extract all tables objects for creating joined table sources later.
-        // the complete INNER JOIN / CROSS JOIN / LATERAL VIEW expressions are converted to a single ExactRelation
-        // object.
-        // 2. extract all base table names for column name resolution.
-        // a. if a user defines an alias for a table, we expect he is using the alias
-        // for in column names in place of
-        // of the original table names. If no table name is specified, we find relevant
-        // tables using the base table
-        // names and insert aliases for those column names..
-        // b. if a user doesn't define an alias, we generate a random alias, performs
-        // the same process using the
-        // auto-generated alias.
-        // c. if a user defines an alias for a derived table (he must do so), we extract
-        // the column names for the derived table.
-        List<AbstractRelation> tableSources = new ArrayList<>(); // assume that only the first entry can be
-        // JoinedRelation
-        for (VerdictSQLParser.Table_sourceContext s : ctx.table_source()) {
-            AbstractRelation r1 = this.visit(s);
-            tableSources.add(r1);
 
-        // parse the where clause; we also replace all base table names with their alias
-        // names.
-        UnnamedColumn where = null;
-        if (ctx.WHERE() != null) {
-            CondGen g = new CondGen(meta);
-            where = g.visit(ctx.where);
-            ColNameResolver resolver = new ColNameResolver(tableAliasAndColNames);
-            where = resolver.visit(where);
-            // at this point, all table names in the where clause are all aliased.
-        }
-
-        // parse select list
-        SelectListExtractor select = new SelectListExtractor();
-        Triple<List<SelectElem>, List<SelectElem>, List<SelectElem>> elems = select.visit(ctx.select_list());
-        List<SelectElem> nonaggs = elems.getLeft();
-        List<SelectElem> aggs = elems.getMiddle();
-        List<SelectElem> bothInOrder = elems.getRight();
-
-        // replace all base tables with their aliases
-        TableSourceResolver resolver = new TableSourceResolver(vc, tableAliasAndColNames);
-        nonaggs = replaceTableNamesWithAliasesIn(nonaggs, resolver);
-        aggs = replaceTableNamesWithAliasesIn(aggs, resolver);
-        bothInOrder = replaceTableNamesWithAliasesIn(bothInOrder, resolver);
-        selectElems = bothInOrder; // used in visitSelect_statement()
-
-        if (aggs.size() == 0) {
-            // simple projection
-            joinedTableSource = new ProjectedRelation(vc, joinedTableSource, bothInOrder);
-        } else {
-            // aggregate relation
-
-            // step 1: obtains groupby expressions
-            // groupby expressions must be fully resolved from the table sources (without
-            // referring to the select list)
-            // resolving groupby names from alises is currently disabled.
-            // if the groupby expression includes base table names, we replace them with
-            // their aliases.
-            if (ctx.GROUP() != null) {
-                List<Expr> groupby = new ArrayList<Expr>();
-                for (Group_by_itemContext g : ctx.group_by_item()) {
-                    Expr gexpr = resolver.visit(Expr.from(vc, g.expression()));
-                    boolean aliasFound = false;
-                    //
-                    // // search in alises
-                    // for (SelectElem s : bothInOrder) {
-                    // if (s.aliasPresent() && gexpr.toStringWithoutQuote().equals(s.getAlias())) {
-                    // groupby.add(s.getExpr());
-                    // aliasFound = true;
-                    // break;
-                    // }
-                    // }
-
-                    if (!aliasFound) {
-                        groupby.add(gexpr);
-                    }
-                }
-                if (!groupby.isEmpty()) {
-                    boolean isRollUp = (ctx.ROLLUP() != null);
-                    joinedTableSource = new GroupedRelation(vc, joinedTableSource, groupby, isRollUp);
-                }
-            }
-
-            joinedTableSource = new AggregatedRelation(vc, joinedTableSource, bothInOrder);
-        }
-        SelectQueryOp sel = SelectQueryOp.getSelectQueryOp(
-                Arrays.<SelectItem>asList(),
-        tableSources);
-        sel.addFilterByAnd(where);
-        return joinedTableSource;
-    }
-
-        class SelectListExtractor
-                extends VerdictSQLBaseVisitor<Triple<List<SelectItem>, List<SelectItem>, List<SelectItem>>> {
+        class SelectListExtractor extends VerdictSQLBaseVisitor<List<SelectItem>> {
             @Override
-            public Triple<List<SelectItem>, List<SelectItem>, List<SelectItem>> visitSelect_list(
+            public List<SelectItem> visitSelect_list(
                     VerdictSQLParser.Select_listContext ctx) {
-                List<SelectItem> nonagg = new ArrayList<>();
-                List<SelectItem> agg = new ArrayList<>();
-                List<SelectItem> both = new ArrayList<>();
+                List<SelectItem> selectList = new ArrayList<>();
                 for (VerdictSQLParser.Select_list_elemContext a : ctx.select_list_elem()) {
                     VerdictSQLBaseVisitor<SelectItem> v = new VerdictSQLBaseVisitor<SelectItem>() {
                         @Override
@@ -201,31 +109,255 @@ public class RelationGen extends VerdictSQLBaseVisitor<AbstractRelation> {
                             } else {
                                 ExpressionGen g = new ExpressionGen(meta);
                                 if (g.visit(ctx.expression()) instanceof BaseColumn) {
-                                    elem = (BaseColumn) g.visit(ctx.expression());
+                                    elem = g.visit(ctx.expression());
+                                    if (ctx.column_alias() != null) {
+                                        elem = new AliasedColumn((BaseColumn) elem, ctx.column_alias().getText());
+                                    }
+                                } else if (g.visit(ctx.expression()) instanceof ColumnOp) {
+                                    elem = g.visit(ctx.expression());
+                                    if (ctx.column_alias() != null) {
+                                        elem = new AliasedColumn((ColumnOp) elem, ctx.column_alias().getText());
+                                    }
+                                } else if (g.visit(ctx.expression()) instanceof ConstantColumn) {
+                                    elem = g.visit(ctx.expression());
+                                    if (ctx.column_alias() != null) {
+                                        elem = new AliasedColumn((ConstantColumn) elem, ctx.column_alias().getText());
+                                    }
                                 }
-                                else if (g.visit(ctx.expression()) instanceof ColumnOp) {
-                                    elem = (ColumnOp) g.visit(ctx.expression());
-                                }
-                                else if (g.visit(ctx.expression()) instanceof ConstantColumn) {
-                                    elem = (ConstantColumn) g.visit(ctx.expression());
-                                }
-                            }
-
-                            if (ctx.column_alias() != null) {
-                                elem.setAlias(ctx.column_alias().getText());
                             }
                             return elem;
                         }
                     };
-                    SelectItem e = SelectItem.from(vc, a);
-                    if (e.isagg()) {
-                        agg.add(e);
-                    } else {
-                        nonagg.add(e);
-                    }
-                    both.add(e);
+                    SelectItem e = v.visit(a);
+                    selectList.add(e);
                 }
-                return Triple.of(nonagg, agg, both);
+                return selectList;
             }
         }
+
+        List<AbstractRelation> tableSources = new ArrayList<>(); // assume that only the first entry can be
+        // JoinedRelation
+        for (VerdictSQLParser.Table_sourceContext s : ctx.table_source()) {
+            AbstractRelation r1 = this.visit(s);
+            tableSources.add(r1);
+        }
+        // parse the where clause; we also replace all base table names with their alias
+        // names.
+        UnnamedColumn where = null;
+        if (ctx.WHERE() != null) {
+            CondGen g = new CondGen(meta);
+            where = g.visit(ctx.where);
+            //ColNameResolver resolver = new ColNameResolver(tableAliasAndColNames);
+            //where = resolver.visit(where);
+            // at this point, all table names in the where clause are all aliased.
+        }
+
+        // parse select list
+        SelectListExtractor select = new SelectListExtractor();
+        List<SelectItem> elems = select.visit(ctx.select_list());
+
+        // replace all base tables with their aliases
+        //TableSourceResolver resolver = new TableSourceResolver(vc, tableAliasAndColNames);
+        //elems = replaceTableNamesWithAliasesIn(elems, resolver);
+        selectElems = elems; // used in visitSelect_statement()
+
+        SelectQueryOp sel = SelectQueryOp.getSelectQueryOp(
+                selectElems,
+                tableSources);
+        if (where != null) {
+            sel.addFilterByAnd(where);
+        }
+
+        if (ctx.GROUP() != null) {
+            List<GroupingAttribute> groupby = new ArrayList<GroupingAttribute>();
+            for (VerdictSQLParser.Group_by_itemContext g : ctx.group_by_item()) {
+                class GroupbyGen extends VerdictSQLBaseVisitor<GroupingAttribute> {
+                    MetaData meta;
+                    public GroupbyGen(MetaData meta) {this.meta = meta; }
+                    @Override
+                    public GroupingAttribute visitColumn_ref_expression(VerdictSQLParser.Column_ref_expressionContext ctx) {
+                        String[] t = ctx.getText().split("\\.");
+                        if (t.length >= 2) {
+                            return new AliasReference(t[1]);
+                        } else {
+                            return new AliasReference(t[0]);
+                        }
+                    }
+                }
+                GroupbyGen expg = new GroupbyGen(meta);
+                //GroupingAttribute gexpr = resolver.visit(expg.visit(g));
+                GroupingAttribute gexpr = expg.visit(g);
+                boolean aliasFound = false;
+                if (!aliasFound) {
+                    groupby.add(gexpr);
+                }
+            }
+            if (!groupby.isEmpty()) {
+                sel.addGroupby(groupby);
+                //boolean isRollUp = (ctx.ROLLUP() != null);
+            }
+        }
+        return sel;
+    }
+
+    // The tableSource returned from this class is supposed to include all
+    // necessary join conditions; thus, we do not
+    // need to search for their join conditions in the where clause.
+
+    // dyoon : Apr 02, 2018
+    // Removed this nested class because 1) it seemed necessary; and 2) RelationGen class now
+    // requires to access the information gathered from methods previously resided in this
+    // nested class.
+//    class TableSourceExtractor extends VerdictSQLBaseVisitor<ExactRelation> {
+
+    private List<AbstractRelation> relations = new ArrayList<>();
+
+    private UnnamedColumn joinCond = null;
+
+    private JoinTable.JoinType joinType = null;
+
+    @Override
+    public AbstractRelation visitTable_source_item_joined(VerdictSQLParser.Table_source_item_joinedContext ctx) {
+        AbstractRelation r = this.visit(ctx.table_source_item());
+        if (ctx.join_part().isEmpty()){
+            return r;
+        }
+        JoinTable jr = JoinTable.getJoinTable(Arrays.asList(r), null, null);
+        //join error location: r2 is null
+        for (VerdictSQLParser.Join_partContext j : ctx.join_part()) {
+            AbstractRelation r2 = visit(j);
+            jr.addJoinTable(r2, joinType, joinCond);
+        }
+        return jr;
+    }
+
+    @Override
+    public AbstractRelation visitJoin_part(VerdictSQLParser.Join_partContext ctx) {
+        if (ctx.INNER() != null) {
+            AbstractRelation r = (AbstractRelation) this.visit(ctx.table_source());
+            CondGen g = new CondGen(meta);
+            UnnamedColumn cond = g.visit(ctx.search_condition());
+            //ColNameResolver resolver = new ColNameResolver(tableAliasAndColNames);
+            //Cond resolved = resolver.visit(cond);
+
+            joinType = JoinTable.JoinType.inner;
+            joinCond = cond;
+            return r;
+        }
+        else if (ctx.LEFT() != null) {
+            AbstractRelation r = this.visit(ctx.table_source());
+            CondGen g = new CondGen(meta);
+            UnnamedColumn cond = g.visit(ctx.search_condition());
+            //ColNameResolver resolver = new ColNameResolver(tableAliasAndColNames);
+            //Cond resolved = resolver.visit(cond);
+
+
+            joinType = JoinTable.JoinType.leftouter;
+            //if (ctx.SEMI() != null) {
+            //    joinType = JoinType.LEFT_SEMI;
+            //}
+
+            joinCond = cond;
+            return r;
+        }
+        else if (ctx.RIGHT() != null) {
+            AbstractRelation r = this.visit(ctx.table_source());
+            CondGen g = new CondGen(meta);
+            UnnamedColumn cond = g.visit(ctx.search_condition());
+            //ColNameResolver resolver = new ColNameResolver(tableAliasAndColNames);
+            //Cond resolved = resolver.visit(cond);
+
+            joinType = JoinTable.JoinType.rightouter;
+            joinCond = cond;
+            return r;
+        }
+        /*
+        else if (ctx.CROSS() != null) {
+//                TableSourceExtractor ext = new TableSourceExtractor();
+            ExactRelation r = this.visit(ctx.table_source());
+            joinType = JoinType.CROSS;
+            joinCond = null;
+            return r;
+        }
+        else if (ctx.LATERAL() != null) {
+            LateralFunc lf = LateralFunc.from(vc, ctx.lateral_view_function());
+            String tableAlias = (ctx.table_alias() == null)? null : ctx.table_alias().getText();
+            String columnAlias = (ctx.column_alias() == null)? null : ctx.column_alias().getText();
+            LateralViewRelation r = new LateralViewRelation(vc, lf, tableAlias, columnAlias);
+            joinType = JoinType.LATERAL;
+            joinCond = null;
+
+            // used later to update the select list
+            TableUniqueName tabName = new TableUniqueName(null, r.getAlias());
+            Set<String> colNames = new HashSet<String>();
+            colNames.add(r.getColumnAlias());
+            tableAliasAndColNames.put(tabName, Pair.of(r.getAlias(), colNames));
+
+            return r;
+        }*/
+        else {
+//            VerdictLogger.error(this, "Unsupported join condition: " + ctx.getText());
+//            return null;
+            AbstractRelation r = this.visit(ctx.table_source());
+            CondGen g = new CondGen(meta);
+            UnnamedColumn cond = g.visit(ctx.search_condition());
+            //ColNameResolver resolver = new ColNameResolver(tableAliasAndColNames);
+            //Cond resolved = resolver.visit(cond);
+            joinType = JoinTable.JoinType.inner;
+            joinCond = cond;
+            return r;
+        }
+    }
+
+    @Override
+    public AbstractRelation visitHinted_table_name_item(VerdictSQLParser.Hinted_table_name_itemContext ctx) {
+        String tableName = ctx.table_name_with_hint().table_name().getText();
+        AbstractRelation r = null;
+        if (ctx.as_table_alias()!=null) {
+            //todo
+            r = new BaseTable(ctx.table_name_with_hint().table_name().schema.getText(),
+                    ctx.table_name_with_hint().table_name().table.getText(), ctx.as_table_alias().table_alias().getText());
+        }
+        //TableUniqueName tabName = ((SingleRelation) r).getTableName();
+        //Set<String> colNames = vc.getMeta().getColumns(tabName);
+        //tableAliasAndColNames.put(tabName, Pair.of(r.getAlias(), colNames));
+        return r;
+    }
+
+    @Override
+    public AbstractRelation visitDerived_table_source_item(VerdictSQLParser.Derived_table_source_itemContext ctx) {
+        RelationGen gen = new RelationGen(meta);
+        SelectQueryOp r = (SelectQueryOp) gen.visit(ctx.derived_table().subquery().select_statement());
+        if (ctx.as_table_alias() != null) {
+            r.setAliasName(ctx.as_table_alias().table_alias().getText());
+        }
+    /*
+        Set<String> colNames = new HashSet<String>();
+        if (r instanceof AggregatedRelation) {
+            List<SelectElem> elems = ((AggregatedRelation) r).getElemList();
+            for (SelectElem elem : elems) {
+                if (elem.aliasPresent()) {
+                    colNames.add(elem.getAlias());
+                } else {
+                    colNames.add(elem.getExpr().toSql());
+                }
+            }
+        }
+        else if (r instanceof ProjectedRelation) {
+            List<SelectElem> elems = ((ProjectedRelation) r).getSelectElems();
+            for (SelectElem elem : elems) {
+                if (elem.aliasPresent()) {
+                    colNames.add(elem.getAlias());
+                } else {
+                    colNames.add(elem.getExpr().toSql());   // I don't think this should be called, since all elements are aliased.
+                }
+            }
+        }
+
+        TableUniqueName tabName = new TableUniqueName(null, r.getAlias());
+        tableAliasAndColNames.put(tabName, Pair.of(r.getAlias(), colNames));
+    */
+        return r;
+    }
 }
+
