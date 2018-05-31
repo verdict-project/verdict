@@ -10,6 +10,8 @@ import java.sql.Statement;
 
 import java.util.Random;
 
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.core.logical_query.CreateTableAsSelect;
 import org.verdictdb.core.logical_query.SelectQueryOp;
@@ -21,13 +23,35 @@ import org.verdictdb.core.sql.syntax.HiveSyntax;
 import org.verdictdb.exception.VerdictDbException;
 
 public class UniformScramblerTest {
+  
+  static String originalSchema = "originalschema";
+  
+  static String originalTable = "originalschema";
+  
+  static String newSchema = "newschema";
+  
+  String newTable  = "newtable";
+  
+  static Connection conn;
+  
+  @BeforeClass
+  public static void setupH2Database() throws SQLException {
+    final String DB_CONNECTION = "jdbc:h2:mem:uniformscrambler;DB_CLOSE_DELAY=-1";
+    final String DB_USER = "";
+    final String DB_PASSWORD = "";
+    conn = DriverManager.getConnection(DB_CONNECTION, DB_USER, DB_PASSWORD);
+    conn.createStatement().execute("CREATE SCHEMA " + originalSchema);
+    conn.createStatement().execute("CREATE SCHEMA " + newSchema);
+    populateRandomData(conn, originalSchema, originalTable);
+  }
+  
+  @AfterClass
+  public static void closeH2Connection() throws SQLException {
+    conn.close();
+  }
 
   @Test
   public void testSelectQuery() throws VerdictDbException {
-    String originalSchema = "originalschema";
-    String originalTable = "originalschema";
-    String newSchema = "newschema";
-    String newTable  = "newtable";
     int aggBlockCount = 10;
     UniformScrambler scrambler =
         new UniformScrambler(originalSchema, originalTable, newSchema, newTable, aggBlockCount);
@@ -49,10 +73,6 @@ public class UniformScramblerTest {
   
   @Test
   public void testCreateTableQuery() throws VerdictDbException {
-    String originalSchema = "originalschema";
-    String originalTable = "originalschema";
-    String newSchema = "newschema";
-    String newTable  = "newtable";
     int aggBlockCount = 10;
     UniformScrambler scrambler =
         new UniformScrambler(originalSchema, originalTable, newSchema, newTable, aggBlockCount);
@@ -76,48 +96,23 @@ public class UniformScramblerTest {
   
   @Test
   public void testCreateTableQueryWithH2() throws SQLException, VerdictDbException {
-    String originalSchema = "originalschema";
-    String originalTable = "originalschema";
-    String newSchema = "newschema";
-    String newTable  = "newtable";
-    
-    final String DB_CONNECTION = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1";
-    final String DB_USER = "";
-    final String DB_PASSWORD = "";
-    Connection conn = DriverManager.getConnection(DB_CONNECTION, DB_USER, DB_PASSWORD);
-    conn.createStatement().execute("CREATE SCHEMA " + originalSchema);
-    conn.createStatement().execute("CREATE SCHEMA " + newSchema);
-    populateRandomData(conn, originalSchema, originalTable);
-    
     int aggBlockCount = 1;
     UniformScrambler scrambler =
         new UniformScrambler(originalSchema, originalTable, newSchema, newTable, aggBlockCount);
     CreateTableAsSelect createQuery = scrambler.scrambledTableCreationQuery();
     CreateTableToSql createToSql = new CreateTableToSql(new H2Syntax());
     String scrambleSql = createToSql.toSql(createQuery);
+    conn.createStatement().execute(String.format("DROP TABLE IF EXISTS %s.%s", newSchema, newTable));
     conn.createStatement().execute(scrambleSql);
     
     // retrieve all values
 //    printTableContent(conn, originalSchema, originalTable);
 //    
 //    printTableContent(conn, newSchema, newTable);
-    conn.close();
   }
   
   @Test
   public void testCreateTableQueryCorrectnessWithH2() throws SQLException, VerdictDbException {
-    String originalSchema = "originalschema";
-    String originalTable = "originalschema";
-    String newSchema = "newschema";
-    String newTable  = "newtable";
-    
-    final String DB_CONNECTION = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1";
-    final String DB_USER = "";
-    final String DB_PASSWORD = "";
-    Connection conn = DriverManager.getConnection(DB_CONNECTION, DB_USER, DB_PASSWORD);
-    conn.createStatement().execute("CREATE SCHEMA " + originalSchema);
-    conn.createStatement().execute("CREATE SCHEMA " + newSchema);
-    populateRandomData(conn, originalSchema, originalTable);
     
     int aggBlockCount = 5;
     UniformScrambler scrambler =
@@ -125,6 +120,7 @@ public class UniformScramblerTest {
     CreateTableAsSelect createQuery = scrambler.scrambledTableCreationQuery();
     CreateTableToSql createToSql = new CreateTableToSql(new H2Syntax());
     String scrambleSql = createToSql.toSql(createQuery);
+    conn.createStatement().execute(String.format("DROP TABLE IF EXISTS %s.%s", newSchema, newTable));
     conn.createStatement().execute(scrambleSql);
     
     ResultSet rs = conn.createStatement().executeQuery(
@@ -137,11 +133,9 @@ public class UniformScramblerTest {
     assertEquals(4, rs.getInt(2));
     assertEquals(0.2, rs.getDouble(3), eps);
     assertEquals(0.2, rs.getDouble(4), eps);
-    
-    conn.close();
   }
   
-  void populateRandomData(Connection conn, String schemaName, String tableName) throws SQLException {
+  static void populateRandomData(Connection conn, String schemaName, String tableName) throws SQLException {
     Statement stmt = conn.createStatement();
     stmt.execute(String.format("CREATE TABLE %s.%s(id int, value double)", schemaName, tableName));
     Random r = new Random();
