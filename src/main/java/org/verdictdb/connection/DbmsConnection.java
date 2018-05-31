@@ -1,8 +1,10 @@
-package org.verdictdb.dbms_interface;
+package org.verdictdb.connection;
 
-public interface DbmsInterface {
+public interface DbmsConnection {
   
   public DbmsQueryResult executeQuery(String query);
+  
+  public void close();
 
   /**
    * 

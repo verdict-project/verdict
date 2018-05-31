@@ -1,16 +1,25 @@
-package org.verdictdb.dbms_interface;
+package org.verdictdb.connection;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-public class JdbcInterface implements DbmsInterface {
+public class JdbcConnection implements DbmsConnection {
   
   Connection conn;
   
-  public JdbcInterface(Connection conn) {
+  public JdbcConnection(Connection conn) {
     this.conn = conn;
+  }
+  
+  @Override
+  public void close() {
+    try {
+      this.conn.close();
+    } catch (SQLException e) {
+      e.printStackTrace();
+    }
   }
 
   @Override

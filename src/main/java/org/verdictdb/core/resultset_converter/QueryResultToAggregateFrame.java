@@ -4,9 +4,9 @@ import java.sql.ResultSet;
 
 import org.verdictdb.core.resultset.AggregateFrame;
 
-public class JdbcToAggregateFrame {
+public class QueryResultToAggregateFrame {
   
-  public JdbcToAggregateFrame(ResultSet resultSet) {
+  public QueryResultToAggregateFrame(ResultSet resultSet) {
     
   }
   

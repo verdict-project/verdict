@@ -1,4 +1,4 @@
-package org.verdictdb.dbms_interface;
+package org.verdictdb.connection;
 
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
