@@ -1,22 +1,25 @@
-package org.verdictdb.core.sql.syntax;
+package org.verdictdb.sql.syntax;
 
-public class H2Syntax implements SyntaxAbstract {
+public class HiveSyntax implements SyntaxAbstract {
 
+    @Override
     public String getQuoteString() {
-        return "";
+        return "`";
     }
 
+    @Override
     public void dropTable(String schema, String tablename) {
-
+       
     }
 
     @Override
     public boolean doesSupportTablePartitioning() {
-      return false;
+      return true;
     }
 
     @Override
     public String randFunction() {
       return "rand()";
     }
+
 }

@@ -10,8 +10,8 @@ import org.verdictdb.core.query.BaseTable;
 import org.verdictdb.core.query.CreateTableAsSelect;
 import org.verdictdb.core.query.SelectItem;
 import org.verdictdb.core.query.SelectQueryOp;
-import org.verdictdb.core.sql.syntax.HiveSyntax;
 import org.verdictdb.exception.VerdictDbException;
+import org.verdictdb.sql.syntax.HiveSyntax;
 
 public class CreateTableToSqlTest {
 

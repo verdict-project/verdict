@@ -4,8 +4,8 @@ import java.util.List;
 
 import org.verdictdb.core.query.CreateTableAsSelect;
 import org.verdictdb.core.query.SelectQueryOp;
-import org.verdictdb.core.sql.syntax.SyntaxAbstract;
 import org.verdictdb.exception.VerdictDbException;
+import org.verdictdb.sql.syntax.SyntaxAbstract;
 
 public class CreateTableToSql {
   

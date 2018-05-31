@@ -18,10 +18,10 @@ import org.verdictdb.core.query.SelectItem;
 import org.verdictdb.core.query.SelectQueryOp;
 import org.verdictdb.core.query.SubqueryColumn;
 import org.verdictdb.core.query.UnnamedColumn;
-import org.verdictdb.core.sql.syntax.SyntaxAbstract;
 import org.verdictdb.exception.UnexpectedTypeException;
 import org.verdictdb.exception.ValueException;
 import org.verdictdb.exception.VerdictDbException;
+import org.verdictdb.sql.syntax.SyntaxAbstract;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.Sets;

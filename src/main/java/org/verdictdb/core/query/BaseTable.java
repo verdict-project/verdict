@@ -1,7 +1,7 @@
 package org.verdictdb.core.query;
 
-import org.verdictdb.core.sql.syntax.SyntaxAbstract;
 import org.verdictdb.exception.UnexpectedTypeException;
+import org.verdictdb.sql.syntax.SyntaxAbstract;
 
 
 public class BaseTable extends AbstractRelation {

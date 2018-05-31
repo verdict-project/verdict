@@ -18,8 +18,8 @@ import org.verdictdb.core.rewriter.ScrambleMeta;
 import org.verdictdb.core.rewriter.query.AggQueryRewriter;
 import org.verdictdb.core.rewriter.query.AliasRenamingRules;
 import org.verdictdb.core.sql.SelectQueryToSql;
-import org.verdictdb.core.sql.syntax.HiveSyntax;
 import org.verdictdb.exception.VerdictDbException;
+import org.verdictdb.sql.syntax.HiveSyntax;
 
 public class AggQueryRewriterTest {
 

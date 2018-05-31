@@ -18,9 +18,9 @@ import org.verdictdb.core.query.SelectQueryOp;
 import org.verdictdb.core.rewriter.ScrambleMetaForTable;
 import org.verdictdb.core.sql.CreateTableToSql;
 import org.verdictdb.core.sql.SelectQueryToSql;
-import org.verdictdb.core.sql.syntax.H2Syntax;
-import org.verdictdb.core.sql.syntax.HiveSyntax;
 import org.verdictdb.exception.VerdictDbException;
+import org.verdictdb.sql.syntax.H2Syntax;
+import org.verdictdb.sql.syntax.HiveSyntax;
 
 public class UniformScramblerTest {
   

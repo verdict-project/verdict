@@ -1,4 +1,4 @@
-package org.verdictdb.core.sql.syntax;
+package org.verdictdb.sql.syntax;
 
 public interface SyntaxAbstract {
 
