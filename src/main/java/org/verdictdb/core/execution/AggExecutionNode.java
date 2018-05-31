@@ -3,7 +3,7 @@ package org.verdictdb.core.execution;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.verdictdb.core.logical_query.SelectQueryOp;
+import org.verdictdb.core.query.SelectQueryOp;
 
 /**
  * Will be used to handle nested queries (i.e., the queries including aggregate queries as subqueries).

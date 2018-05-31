@@ -2,8 +2,8 @@ package org.verdictdb.core.sql;
 
 import java.util.List;
 
-import org.verdictdb.core.logical_query.CreateTableAsSelect;
-import org.verdictdb.core.logical_query.SelectQueryOp;
+import org.verdictdb.core.query.CreateTableAsSelect;
+import org.verdictdb.core.query.SelectQueryOp;
 import org.verdictdb.core.sql.syntax.SyntaxAbstract;
 import org.verdictdb.exception.VerdictDbException;
 
