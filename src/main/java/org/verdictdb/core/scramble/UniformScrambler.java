@@ -25,6 +25,7 @@ public class UniformScrambler extends Scrambler {
     SelectQueryOp selectQuery = scramblingQuery();
     CreateTableAsSelect createQuery =
         new CreateTableAsSelect(scrambledSchemaName, scrambledTableName, selectQuery);
+    createQuery.addPartitionColumn(aggregationBlockColumn);
     return createQuery;
   }
   

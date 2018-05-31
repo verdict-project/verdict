@@ -35,11 +35,11 @@ public class CreateTableToSql {
       boolean isFirstColumn = true;
       for (String col : partitionColumns) {
         if (isFirstColumn) {
-          sql.append(col);
+          sql.append(quoteName(col));
           isFirstColumn = false;
         }
         else {
-          sql.append(", " + col);
+          sql.append(", " + quoteName(col));
         }
       }
       sql.append(")");
