@@ -26,22 +26,22 @@ public class CondGen extends VerdictSQLBaseVisitor<UnnamedColumn> {
         ExpressionGen g = new ExpressionGen(meta);
         UnnamedColumn e1 = g.visit(ctx.expression(0));
         UnnamedColumn e2 = g.visit(ctx.expression(1));
-        if (ctx.comparison_operator().getText()=="=") {
+        if (ctx.comparison_operator().getText().equals("=")) {
             return new ColumnOp("equal", Arrays.asList(e1, e2));
         }
-        else if (ctx.comparison_operator().getText()==">") {
+        else if (ctx.comparison_operator().getText().equals(">")) {
             return new ColumnOp("greater", Arrays.asList(e1, e2));
         }
-        else if (ctx.comparison_operator().getText()==">=") {
+        else if (ctx.comparison_operator().getText().equals(">=")) {
             return new ColumnOp("greaterequal", Arrays.asList(e1, e2));
         }
-        else if (ctx.comparison_operator().getText()=="<") {
+        else if (ctx.comparison_operator().getText().equals("<")) {
             return new ColumnOp("less", Arrays.asList(e1, e2));
         }
-        else if (ctx.comparison_operator().getText()=="<=") {
+        else if (ctx.comparison_operator().getText().equals("<=")) {
             return new ColumnOp("lessequal", Arrays.asList(e1, e2));
         }
-        else if (ctx.comparison_operator().getText()=="<>" || ctx.comparison_operator().getText()=="!=") {
+        else if (ctx.comparison_operator().getText().equals("<>") || ctx.comparison_operator().getText().equals("!=")) {
             return new ColumnOp("notequal", Arrays.asList(e1, e2));
         }
         else {

@@ -328,11 +328,16 @@ expression
     | expression op=('+' | '-' | '&' | '^' | '|' | '||') expression   #binary_operator_expression
     | expression comparison_operator expression                #binary_operator_expression
     | interval                                                 #interval_expression
+    | date                                                     #date_expression
     ;
 
 interval
 	: INTERVAL constant_expression (DAY | DAYS | MONTH | MONTHS | YEAR | YEARS)
 	;
+
+date
+    : DATE constant_expression
+    ;
 
 constant_expression
     : NULL
@@ -617,6 +622,7 @@ value_manipulation_function
     | ternary_manipulation_function
     | nary_manipulation_function
     | extract_time_function
+    | substring_function
     ;
 
 nary_manipulation_function
@@ -637,6 +643,11 @@ binary_manipulation_function
 extract_time_function
     : function_name=EXTRACT
       '(' extract_unit FROM expression ')'
+    ;
+
+substring_function
+    : function_name=SUBSTRING
+      '(' expression FROM expression FOR expression ')'
     ;
     
 extract_unit
@@ -836,12 +847,17 @@ constant
     : STRING // string, datetime or uniqueidentifier
     | BINARY
     | number
+    | placeholder
     | sign? (REAL | FLOAT)  // float or decimal
     | sign? '$' (DECIMAL | FLOAT)       // money
     ;
 
 number
     : sign? DECIMAL
+    ;
+
+placeholder
+    : COLON DECIMAL
     ;
 
 sign
@@ -953,6 +969,7 @@ simple_id
     | STDEVP
     | STDDEV_SAMP
     | STRTOL
+    | SUBSTRING
     | SUM
     | THROW
     | TIES
@@ -978,6 +995,7 @@ simple_id
     | YEARS
     | STORE
     | INTERVAL
+    | DATE
     | TABLES
     | COLUMNS
     ;
@@ -1161,6 +1179,7 @@ SETUSER:                         S E T U S E R;
 SHUTDOWN:                        S H U T D O W N;
 SOME:                            S O M E;
 SUBSTR:                          S U B S T R;
+SUBSTRING:                       S U B S T R I N G;
 STATISTICS:                      S T A T I S T I C S;
 SYSTEM_USER:                     S Y S T E M '_' U S E R;
 TABLE:                           T A B L E;
@@ -1228,6 +1247,7 @@ COS:                             C O S;
 COUNT:                           C O U N T;
 COUNT_BIG:                       C O U N T '_' B I G;
 CRC32:                           C R C '32';
+DATE:                            D A T E;
 DATEADD:                         D A T E A D D;
 DATEDIFF:                        D A T E D I F F;
 DATENAME:                        D A T E N A M E;
@@ -1323,6 +1343,7 @@ PARTITION:                       P A R T I T I O N;
 PATH:                            P A T H;
 PERCENTILE:                      P E R C E N T I L E;
 PI:                              P I;
+PLACEHOLDER:                     P L A C E H O L D E R;
 PMOD:                            P M O D;
 POSITIVE:                        P O S I T I V E;
 POW:                             P O W;

@@ -32,6 +32,13 @@ public class ExpressionGen extends VerdictSQLBaseVisitor<UnnamedColumn> {
     }
 
     @Override
+    public ColumnOp visitDate(VerdictSQLParser.DateContext ctx){
+        return new ColumnOp("date", Arrays.<UnnamedColumn>asList(
+                ConstantColumn.valueOf(ctx.constant_expression().getText())
+        ));
+    }
+
+    @Override
     public ConstantColumn visitPrimitive_expression(VerdictSQLParser.Primitive_expressionContext ctx) {
         return ConstantColumn.valueOf(ctx.getText());
     }
@@ -39,10 +46,14 @@ public class ExpressionGen extends VerdictSQLBaseVisitor<UnnamedColumn> {
     @Override
     public BaseColumn visitColumn_ref_expression(VerdictSQLParser.Column_ref_expressionContext ctx) {
         String[] t = ctx.getText().split("\\.");
-        if (t.length >= 2) {
+        if (t.length == 3) {
+            return new BaseColumn(t[0], t[1], t[2]);
+        }
+        else if (t.length == 2) {
             return new BaseColumn(t[0], t[1]);
         } else {
-            return new BaseColumn(meta.columnAlias.get(t[1]), t[1]);
+            return new BaseColumn(t[0]);
+            //return new BaseColumn(meta.columnAlias.get(t[1]), t[1]);
         }
     }
 
@@ -112,32 +123,30 @@ public class ExpressionGen extends VerdictSQLBaseVisitor<UnnamedColumn> {
                 return new ColumnOp(fname, col);
             }
 
-            /*
-            @Override
-            public FuncExpr visitUnary_manipulation_function(VerdictSQLParser.Unary_manipulation_functionContext ctx) {
+            @Override //not supported yet
+            public ColumnOp visitUnary_manipulation_function(VerdictSQLParser.Unary_manipulation_functionContext ctx) {
                 String fname = ctx.function_name.getText().toUpperCase();
-                FuncName funcName = string2FunctionType.containsKey(fname) ? string2FunctionType.get(fname)
-                        : FuncName.UNKNOWN;
                 if (fname.equals("CAST")) {
-                    return new FuncExpr(funcName, Expr.from(vc, ctx.cast_as_expression().expression()),
-                            ConstantExpr.from(vc, ctx.cast_as_expression().data_type().getText()));
+                    return null;
+                    //return new FuncExpr(funcName, Expr.from(vc, ctx.cast_as_expression().expression()),
+                    //        ConstantExpr.from(vc, ctx.cast_as_expression().data_type().getText()));
                 } else {
-                    return new FuncExpr(funcName, Expr.from(vc, ctx.expression()));
+                    return null;
+                    //return new FuncExpr(funcName, Expr.from(vc, ctx.expression()));
                 }
             }
 
-            @Override
-            public FuncExpr visitNoparam_manipulation_function(
+            @Override //not support yet
+            public ColumnOp visitNoparam_manipulation_function(
                     VerdictSQLParser.Noparam_manipulation_functionContext ctx) {
                 String fname = ctx.function_name.getText().toUpperCase();
-                FuncName funcName = string2FunctionType.containsKey(fname) ? string2FunctionType.get(fname)
-                        : FuncName.UNKNOWN;
-                return new FuncExpr(funcName, null);
+                //FuncName funcName = string2FunctionType.containsKey(fname) ? string2FunctionType.get(fname)
+                //        : FuncName.UNKNOWN;
+                //return new FuncExpr(funcName, null);
+                return null;
             }
 
-            */
-
-            @Override
+            @Override //not support yet
             public ColumnOp visitBinary_manipulation_function(
                     VerdictSQLParser.Binary_manipulation_functionContext ctx) {
                 String fname = ctx.function_name.getText().toLowerCase();
@@ -147,7 +156,7 @@ public class ExpressionGen extends VerdictSQLBaseVisitor<UnnamedColumn> {
                 ));
             }
 
-            @Override
+            @Override  // not support yet
             public ColumnOp visitTernary_manipulation_function(
                     VerdictSQLParser.Ternary_manipulation_functionContext ctx) {
                 String fname = ctx.function_name.getText().toLowerCase();
@@ -158,28 +167,39 @@ public class ExpressionGen extends VerdictSQLBaseVisitor<UnnamedColumn> {
                 ));
             }
 
-            /*
-            @Override
-            public FuncExpr visitNary_manipulation_function(VerdictSQLParser.Nary_manipulation_functionContext ctx) {
+            @Override // not support yet
+            public ColumnOp visitNary_manipulation_function(VerdictSQLParser.Nary_manipulation_functionContext ctx) {
                 String fname = ctx.function_name.getText().toUpperCase();
-                FuncName funcName = string2FunctionType.containsKey(fname) ? string2FunctionType.get(fname)
-                        : FuncName.UNKNOWN;
-                List<Expr> exprList = new ArrayList<>();
-                for (VerdictSQLParser.ExpressionContext context : ctx.expression()) {
-                    exprList.add(Expr.from(vc, context));
-                }
-                return new FuncExpr(funcName, exprList, null);
+                //FuncName funcName = string2FunctionType.containsKey(fname) ? string2FunctionType.get(fname)
+                //        : FuncName.UNKNOWN;
+                //List<Expr> exprList = new ArrayList<>();
+                //for (VerdictSQLParser.ExpressionContext context : ctx.expression()) {
+                //    exprList.add(Expr.from(vc, context));
+                //}
+                //return new FuncExpr(funcName, exprList, null);
+                return null;
             }
 
             @Override
-            public FuncExpr visitExtract_time_function(VerdictSQLParser.Extract_time_functionContext ctx) {
-                String fname = ctx.function_name.getText().toUpperCase();
-                FuncName funcName = string2FunctionType.containsKey(fname) ? string2FunctionType.get(fname)
-                        : FuncName.UNKNOWN;
-                return new FuncExpr(funcName, ConstantExpr.from(vc, ctx.extract_unit()),
-                        Expr.from(vc, ctx.expression()));
+            public ColumnOp visitExtract_time_function(VerdictSQLParser.Extract_time_functionContext ctx) {
+                String fname = "extract";
+                ExpressionGen g = new ExpressionGen(meta);
+                return new ColumnOp(fname, Arrays.<UnnamedColumn>asList(
+                        ConstantColumn.valueOf(ctx.extract_unit().getText()),
+                        g.visit(ctx.expression())
+                ));
             }
-            */
+
+            @Override
+            public ColumnOp visitSubstring_function(VerdictSQLParser.Substring_functionContext ctx) {
+                String fname = "substring";
+                ExpressionGen g = new ExpressionGen(meta);
+                return new ColumnOp(fname, Arrays.<UnnamedColumn>asList(
+                        g.visit(ctx.expression(0)),
+                        g.visit(ctx.expression(1)),
+                        g.visit(ctx.expression(2))
+                ));
+            }
         };
         return v.visit(ctx);
     }
@@ -217,8 +237,6 @@ public class ExpressionGen extends VerdictSQLBaseVisitor<UnnamedColumn> {
                 ));
             }
         }
-
-
     }
 
     @Override
@@ -229,17 +247,18 @@ public class ExpressionGen extends VerdictSQLBaseVisitor<UnnamedColumn> {
     @Override
     public SubqueryColumn visitSubquery_expression(VerdictSQLParser.Subquery_expressionContext ctx) {
         RelationGen g = new RelationGen(meta);
-        return SubqueryColumn.getSubqueryColumn((SelectQueryOp) g.visitSubquery_expression(ctx));
+        return SubqueryColumn.getSubqueryColumn((SelectQueryOp) g.visit(ctx.subquery().select_statement()));
     }
 
     public UnnamedColumn getSearch_condition(List<VerdictSQLParser.Search_conditionContext> ctx) {
+        CondGen g = new CondGen(meta);
         if (ctx.size()==1) {
-            return visit(ctx.get(0));
+            return g.visit(ctx.get(0));
         } else {
             UnnamedColumn col = visit(ctx.get(0));
             for (int i=0;i<ctx.size();i++) {
                 col = new ColumnOp("and", Arrays.asList(
-                        col, visit(ctx.get(i))
+                        col, g.visit(ctx.get(i))
                 ));
             }
             return col;

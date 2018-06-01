@@ -35,14 +35,15 @@ public class RelationGen extends VerdictSQLBaseVisitor<AbstractRelation> {
         if (ctx.order_by_clause() != null) {
             for (VerdictSQLParser.Order_by_expressionContext o : ctx.order_by_clause().order_by_expression()) {
                 ExpressionGen g = new ExpressionGen(meta);
-                UnnamedColumn c = g.visit(o);
+                UnnamedColumn c = g.visit(o.expression());
                 OrderbyAttribute orderbyCol = null;
                 if (c instanceof BaseColumn) {
-                    orderbyCol = new OrderbyAttribute(selectExprToAlias.get(c), (o.DESC() == null) ? "asc" : "desc");
+                    orderbyCol = new OrderbyAttribute(((BaseColumn) c).getColumnName(), (o.DESC() == null) ? "asc" : "desc");
+                    //orderbyCol = new OrderbyAttribute(selectExprToAlias.get(c), (o.DESC() == null) ? "asc" : "desc");
                 }
-                if (selectExprToAlias.containsKey(c)) {
-                    orderbyCol = new OrderbyAttribute(selectExprToAlias.get(c), (o.DESC() == null) ? "asc" : "desc");
-                }
+                //if (selectExprToAlias.containsKey(c)) {
+                //    orderbyCol = new OrderbyAttribute(selectExprToAlias.get(c), (o.DESC() == null) ? "asc" : "desc");
+                //}
                 sel.addOrderby(orderbyCol);
             }
         }
@@ -197,6 +198,15 @@ public class RelationGen extends VerdictSQLBaseVisitor<AbstractRelation> {
                 //boolean isRollUp = (ctx.ROLLUP() != null);
             }
         }
+
+        UnnamedColumn having = null;
+        if (ctx.HAVING() != null){
+            CondGen g = new CondGen(meta);
+            having = g.visit(ctx.having);
+        }
+        if (having != null){
+            sel.addHavingByAnd(having);
+        }
         return sel;
     }
 
@@ -217,12 +227,17 @@ public class RelationGen extends VerdictSQLBaseVisitor<AbstractRelation> {
     private JoinTable.JoinType joinType = null;
 
     @Override
+    public AbstractRelation visitTable_source(VerdictSQLParser.Table_sourceContext ctx) {
+        return visitTable_source_item_joined(ctx.table_source_item_joined());
+    }
+
+    @Override
     public AbstractRelation visitTable_source_item_joined(VerdictSQLParser.Table_source_item_joinedContext ctx) {
         AbstractRelation r = this.visit(ctx.table_source_item());
         if (ctx.join_part().isEmpty()){
             return r;
         }
-        JoinTable jr = JoinTable.getJoinTable(Arrays.asList(r), null, null);
+        JoinTable jr = JoinTable.getBaseJoinTable(r, new ArrayList<JoinTable.JoinType>(), new ArrayList<UnnamedColumn>());
         //join error location: r2 is null
         for (VerdictSQLParser.Join_partContext j : ctx.join_part()) {
             AbstractRelation r2 = visit(j);

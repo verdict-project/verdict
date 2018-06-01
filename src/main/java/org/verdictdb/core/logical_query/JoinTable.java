@@ -2,8 +2,12 @@ package org.verdictdb.core.logical_query;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Vector;
 
 import com.google.common.base.Optional;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
 public class JoinTable extends AbstractRelation {
 
@@ -29,10 +33,18 @@ public class JoinTable extends AbstractRelation {
         return join;
     }
 
+    public static JoinTable getBaseJoinTable(AbstractRelation joinBaseTable, List<JoinType> joinTypeList, List<UnnamedColumn> condition) {
+        JoinTable join = new JoinTable();
+        join.joinList.add(joinBaseTable);
+        join.joinTypeList = joinTypeList;
+        join.condition = condition;
+        return join;
+    }
+
     public void addJoinTable(AbstractRelation joinTable, JoinType joinType, UnnamedColumn conditon){
+        this.condition.add(conditon);
         this.joinList.add(joinTable);
         this.joinTypeList.add(joinType);
-        this.condition.add(conditon);
     }
 
     public void SetAliasName(String aliasName){
@@ -53,5 +65,20 @@ public class JoinTable extends AbstractRelation {
 
     public Optional<String> getAliasName() {
         return aliasName;
+    }
+
+    @Override
+    public int hashCode() {
+        return HashCodeBuilder.reflectionHashCode(this);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return EqualsBuilder.reflectionEquals(this, obj);
+    }
+
+    @Override
+    public String toString() {
+        return ToStringBuilder.reflectionToString(this);
     }
 }

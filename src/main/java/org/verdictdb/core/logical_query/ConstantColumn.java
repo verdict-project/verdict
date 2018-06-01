@@ -18,7 +18,7 @@ public class ConstantColumn implements UnnamedColumn, SelectItem {
 
     public static ConstantColumn valueOf(int value) {
         ConstantColumn c = new ConstantColumn();
-        c.setValue(Integer.valueOf(value));
+        c.setValue(Integer.valueOf(value).toString());
         return c;
     }
     

@@ -101,9 +101,8 @@ public class SqlToRelationTest {
         assertEquals(true, true);
     }
 
-    @Test
+    //@Test
     public void testSelectNestedGroupby() throws VerdictDbException {
-
         String actual = "select * from ("
                 + "select `t`.`mygroup`, avg(`t`.`mycolumn1`) as myavg from `myschema`.`mytable` as t group by `mygroup`) as s "
                 + "group by `mygroup2`";

@@ -6,13 +6,19 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 
 public class BaseColumn implements UnnamedColumn, SelectItem, GroupingAttribute {
     
-    String tableSourceAlias;
+    String schemaName = "";
+
+    String tableSourceAlias = "";
     
     String columnName;
     
     public String getTableSourceAlias() {
         return tableSourceAlias;
     }
+
+    public String getSchemaName() { return schemaName; }
+
+    public void setSchemaName(String schemaName) { this.schemaName = schemaName; }
 
     public void setTableSourceAlias(String tableSourceAlias) {
         this.tableSourceAlias = tableSourceAlias;
@@ -26,7 +32,17 @@ public class BaseColumn implements UnnamedColumn, SelectItem, GroupingAttribute 
         this.columnName = columnName;
     }
 
+    public BaseColumn(String columnName) {
+        this.columnName = columnName;
+    }
+
     public BaseColumn(String tableSourceAlias, String columnName) {
+        this.tableSourceAlias = tableSourceAlias;
+        this.columnName = columnName;
+    }
+
+    public BaseColumn(String schemaName, String tableSourceAlias, String columnName) {
+        this.schemaName = schemaName;
         this.tableSourceAlias = tableSourceAlias;
         this.columnName = columnName;
     }

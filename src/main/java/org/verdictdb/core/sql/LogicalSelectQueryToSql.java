@@ -73,7 +73,15 @@ public class LogicalSelectQueryToSql {
   String unnamedColumnToSqlPart(UnnamedColumn column) throws VerdictDbException {
     if (column instanceof BaseColumn) {
       BaseColumn base = (BaseColumn) column;
-      return quoteName(base.getTableSourceAlias()) + "." + quoteName(base.getColumnName());
+      if (base.getSchemaName().equals("")) {
+        if (base.getTableSourceAlias().equals("")){
+          return quoteName(base.getColumnName());
+        }
+        else return quoteName(base.getTableSourceAlias()) + "." + quoteName(base.getColumnName());
+      }
+      else {
+        return quoteName(base.getSchemaName()) + "." + quoteName(base.getTableSourceAlias()) + "." + quoteName(base.getColumnName());
+      }
     }
     else if (column instanceof ConstantColumn) {
       return ((ConstantColumn) column).getValue().toString();
@@ -143,10 +151,10 @@ public class LogicalSelectQueryToSql {
         return withParentheses(columnOp.getOperand(0)) + " is not null";
       }
       else if (columnOp.getOpType().equals("interval")) {
-        return "interval '" + withParentheses(columnOp.getOperand(0)) + "' " + withParentheses(columnOp.getOperand(1));
+        return "interval " + withParentheses(columnOp.getOperand(0)) + " " + withParentheses(columnOp.getOperand(1));
       }
       else if (columnOp.getOpType().equals("date")) {
-        return "date '" + withParentheses(columnOp.getOperand()) + "'";
+        return "date " + withParentheses(columnOp.getOperand());
       }
       else if (columnOp.getOpType().equals("greater")) {
         return withParentheses(columnOp.getOperand(0)) + " > " + withParentheses(columnOp.getOperand(1));
@@ -173,10 +181,10 @@ public class LogicalSelectQueryToSql {
         return  withParentheses(columnOp.getOperand(0)) + " is " + withParentheses(columnOp.getOperand(1));
       }
       else if (columnOp.getOpType().equals("like")) {
-        return  withParentheses(columnOp.getOperand(0)) + " like '" + withParentheses(columnOp.getOperand(1)) + "'";
+        return  withParentheses(columnOp.getOperand(0)) + " like " + withParentheses(columnOp.getOperand(1));
       }
       else if (columnOp.getOpType().equals("notlike")) {
-        return  withParentheses(columnOp.getOperand(0)) + " not like '" + withParentheses(columnOp.getOperand(1)) + "'";
+        return  withParentheses(columnOp.getOperand(0)) + " not like " + withParentheses(columnOp.getOperand(1));
       }
       else if (columnOp.getOpType().equals("exists")) {
         return "exists " + withParentheses(columnOp.getOperand());

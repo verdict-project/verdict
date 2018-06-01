@@ -52,7 +52,7 @@ public class TpchSelectQueryOpToSqlTest {
     relation.addOrderby(Arrays.<OrderbyAttribute>asList(new OrderbyAttribute("l_returnflag"),
         new OrderbyAttribute("l_linestatus")));
     relation.addLimit(ConstantColumn.valueOf(1));
-    String expected = "select `t`.`l_returnflag`, " +
+    String expected = "select t.l_returnflag`, " +
         "`t`.`l_linestatus`, " +
         "sum(`t`.`l_quantity`) as sum_qty, " +
         "sum(`t`.`l_extendedprice`) as sum_base_price, " +
