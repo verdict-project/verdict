@@ -1,17 +1,26 @@
 package org.verdictdb.core.sql;
 
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.core.logical_query.*;
 import org.verdictdb.parser.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 public class ExpressionGen extends VerdictSQLBaseVisitor<UnnamedColumn> {
 
     private MetaData meta;
 
-    public ExpressionGen(MetaData meta) {
+    private HashMap<String, String> tableAliasAndColNames;
+
+    private HashMap<Pair<String, String>, String> tableInfoAndAlias;
+
+    public ExpressionGen(HashMap<String, String> tableAliasAndColNames, HashMap<Pair<String, String>, String> tableInfoAndAlias, MetaData meta) {
+        this.tableAliasAndColNames = tableAliasAndColNames;
+        this.tableInfoAndAlias = tableInfoAndAlias;
         this.meta = meta;
     }
 
@@ -47,13 +56,11 @@ public class ExpressionGen extends VerdictSQLBaseVisitor<UnnamedColumn> {
     public BaseColumn visitColumn_ref_expression(VerdictSQLParser.Column_ref_expressionContext ctx) {
         String[] t = ctx.getText().split("\\.");
         if (t.length == 3) {
-            return new BaseColumn(t[0], t[1], t[2]);
-        }
-        else if (t.length == 2) {
-            return new BaseColumn(t[0], t[1]);
+            return new BaseColumn(tableInfoAndAlias.get(new ImmutablePair<>(t[0], t[1])), t[2]);
+        } else if (t.length == 2) {
+            return new BaseColumn(tableAliasAndColNames.get(t[1]), t[1]);
         } else {
-            return new BaseColumn(t[0]);
-            //return new BaseColumn(meta.columnAlias.get(t[1]), t[1]);
+            return new BaseColumn(tableAliasAndColNames.get(t[0]), t[0]);
         }
     }
 
@@ -87,7 +94,7 @@ public class ExpressionGen extends VerdictSQLBaseVisitor<UnnamedColumn> {
                 String fname;
                 UnnamedColumn col = null;
                 if (ctx.all_distinct_expression() != null) {
-                    ExpressionGen g = new ExpressionGen(meta);
+                    ExpressionGen g = new ExpressionGen(tableAliasAndColNames, tableInfoAndAlias, meta);
                     col = g.visit(ctx.all_distinct_expression());
                 }
 
@@ -183,7 +190,7 @@ public class ExpressionGen extends VerdictSQLBaseVisitor<UnnamedColumn> {
             @Override
             public ColumnOp visitExtract_time_function(VerdictSQLParser.Extract_time_functionContext ctx) {
                 String fname = "extract";
-                ExpressionGen g = new ExpressionGen(meta);
+                ExpressionGen g = new ExpressionGen(tableAliasAndColNames, tableInfoAndAlias, meta);
                 return new ColumnOp(fname, Arrays.<UnnamedColumn>asList(
                         ConstantColumn.valueOf(ctx.extract_unit().getText()),
                         g.visit(ctx.expression())
@@ -193,7 +200,7 @@ public class ExpressionGen extends VerdictSQLBaseVisitor<UnnamedColumn> {
             @Override
             public ColumnOp visitSubstring_function(VerdictSQLParser.Substring_functionContext ctx) {
                 String fname = "substring";
-                ExpressionGen g = new ExpressionGen(meta);
+                ExpressionGen g = new ExpressionGen(tableAliasAndColNames, tableInfoAndAlias, meta);
                 return new ColumnOp(fname, Arrays.<UnnamedColumn>asList(
                         g.visit(ctx.expression(0)),
                         g.visit(ctx.expression(1)),
@@ -251,7 +258,7 @@ public class ExpressionGen extends VerdictSQLBaseVisitor<UnnamedColumn> {
     }
 
     public UnnamedColumn getSearch_condition(List<VerdictSQLParser.Search_conditionContext> ctx) {
-        CondGen g = new CondGen(meta);
+        CondGen g = new CondGen(tableAliasAndColNames, tableInfoAndAlias, meta);
         if (ctx.size()==1) {
             return g.visit(ctx.get(0));
         } else {
