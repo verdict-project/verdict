@@ -62,8 +62,9 @@ public class UniformScramblerTest {
     
     String expected = "select *"
         + String.format(", floor(rand() * %d) as %s", aggBlockCount, meta.getAggregationBlockColumn())
-        + String.format(", floor(rand() * 100) as %s", meta.getSubsampleColumn())
-        + String.format(" from `%s`.`%s`", originalSchema, originalTable);
+        + String.format(", floor(rand() * 100) as %s, ", meta.getSubsampleColumn())
+        + String.format("1 as %s ",  meta.getTierColumn())
+        + String.format("from `%s`.`%s`", originalSchema, originalTable);
     SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
     String actual = relToSql.toSql(scramblingQuery);
     assertEquals(expected, actual);
@@ -83,8 +84,9 @@ public class UniformScramblerTest {
         + String.format("partitioned by (`%s`) ", meta.getAggregationBlockColumn())
         + "as select *"
         + String.format(", floor(rand() * %d) as %s", aggBlockCount, meta.getAggregationBlockColumn())
-        + String.format(", floor(rand() * 100) as %s", meta.getSubsampleColumn())
-        + String.format(" from `%s`.`%s`", originalSchema, originalTable);
+        + String.format(", floor(rand() * 100) as %s, ", meta.getSubsampleColumn())
+        + String.format("1 as %s ",  meta.getTierColumn())
+        + String.format("from `%s`.`%s`", originalSchema, originalTable);
     CreateTableToSql createToSql = new CreateTableToSql(new HiveSyntax());
     String actual = createToSql.toSql(createQuery);
     assertEquals(expected, actual);
@@ -120,15 +122,11 @@ public class UniformScramblerTest {
     conn.createStatement().execute(scrambleSql);
     
     ResultSet rs = conn.createStatement().executeQuery(
-        String.format("select min(verdictAggBlock), max(verdictAggBlock), "
-            + "avg(verdictIncProb), avg(verdictIncProbBlockDiff) "
+        String.format("select min(verdictAggBlock), max(verdictAggBlock) "
             + "from %s.%s", newSchema, newTable));
     rs.next();
-    double eps = 1e-6;
     assertEquals(0, rs.getInt(1));
-    assertEquals(4, rs.getInt(2));
-    assertEquals(0.2, rs.getDouble(3), eps);
-    assertEquals(0.2, rs.getDouble(4), eps);
+    assertEquals(aggBlockCount-1, rs.getInt(2));
   }
   
   static void populateRandomData(Connection conn, String schemaName, String tableName) throws SQLException {
