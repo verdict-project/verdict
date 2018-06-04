@@ -30,5 +30,7 @@ public interface DbmsQueryResult {
    * @return
    */
   public Object getValue(int index);
+  
+  public void printContent();
 
 }

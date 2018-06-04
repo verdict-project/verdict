@@ -1,5 +1,7 @@
 package org.verdictdb.core.query;
 
+import java.util.List;
+
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -37,5 +39,26 @@ public abstract class AbstractRelation {
   @Override
   public String toString() {
       return ToStringBuilder.reflectionToString(this);
+  }
+  
+  public boolean isAggregateQuery() {
+    if (!(this instanceof SelectQueryOp)) {
+      return false;
+    }
+    SelectQueryOp sel = (SelectQueryOp) this;
+    List<SelectItem> selectList = sel.getSelectList();
+    for (SelectItem item : selectList) {
+      if (item instanceof AliasedColumn) {
+        item = ((AliasedColumn) item).getColumn();
+      }
+      
+      if (item instanceof ColumnOp) {
+        ColumnOp col = (ColumnOp) item;
+        if (col.isColumnOpAggregate()) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 }

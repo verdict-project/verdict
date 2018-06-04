@@ -15,13 +15,15 @@ public class Scrambler {
   int aggregationBlockCount;
   
   // Configuration parameters
-  String aggregationBlockColumn = "verdictAggBlock";
+  static String aggregationBlockColumn = "verdictAggBlock";
   
-  String inclusionProbabilityColumn = "verdictIncProb";
+//  static String inclusionProbabilityColumn = "verdictIncProb";
+//  
+//  static String inclusionProbabilityBlockDifferenceColumn = "verdictIncProbBlockDiff";
   
-  String inclusionProbabilityBlockDifferenceColumn = "verdictIncProbBlockDiff";
+  static String subsampleColumn = "verdictSubsampleId";
   
-  String subsampleColumn = "verdictSubsampleId";
+  static String tierColumn = "verdicttier";
   
   public Scrambler(
       String originalSchemaName, String originalTableName,
@@ -40,10 +42,31 @@ public class Scrambler {
     meta.setTableName(scrambledTableName);
     meta.setAggregationBlockCount(aggregationBlockCount);
     meta.setAggregationBlockColumn(aggregationBlockColumn);
-    meta.setInclusionProbabilityColumn(inclusionProbabilityColumn);
-    meta.setInclusionProbabilityBlockDifferenceColumn(inclusionProbabilityBlockDifferenceColumn);
+//    meta.setInclusionProbabilityColumn(inclusionProbabilityColumn);
+//    meta.setInclusionProbabilityBlockDifferenceColumn(inclusionProbabilityBlockDifferenceColumn);
     meta.setSubsampleColumn(subsampleColumn);
+    meta.setTierColumn(tierColumn);
     return meta;
+  }
+
+  public static String getAggregationBlockColumn() {
+    return aggregationBlockColumn;
+  }
+
+//  public static String getInclusionProbabilityColumn() {
+//    return inclusionProbabilityColumn;
+//  }
+
+//  public static String getInclusionProbabilityBlockDifferenceColumn() {
+//    return inclusionProbabilityBlockDifferenceColumn;
+//  }
+
+  public static String getSubsampleColumn() {
+    return subsampleColumn;
+  }
+  
+  public static String getTierColumn() {
+    return tierColumn;
   }
 
 }

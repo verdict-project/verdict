@@ -31,7 +31,7 @@ public class SelectQueryToSql {
   SyntaxAbstract syntax;
 
   Set<String> opTypeNotRequiringParentheses = Sets.newHashSet(
-  "sum", "avg", "count", "std", "sqrt", "notnull", "casewhenelse", "rand", "floor");
+  "sum", "avg", "count", "std", "sqrt", "notnull", "whenthenelse", "rand", "floor");
 
   public SelectQueryToSql(SyntaxAbstract syntax) {
     this.syntax = syntax;
@@ -126,12 +126,12 @@ public class SelectQueryToSql {
       else if (columnOp.getOpType().equals("or")) {
         return withParentheses(columnOp.getOperand(0)) + " or " + withParentheses(columnOp.getOperand(1));
       }
-      else if (columnOp.getOpType().equals("casewhenelse")) {
-        return "case " + withParentheses(columnOp.getOperand(0))
-        + " when " + withParentheses(columnOp.getOperand(1))
-        + " else " + withParentheses(columnOp.getOperand(2))
-        + " end";
-      }
+//      else if (columnOp.getOpType().equals("casewhenelse")) {
+//        return "case " + withParentheses(columnOp.getOperand(0))
+//        + " when " + withParentheses(columnOp.getOperand(1))
+//        + " else " + withParentheses(columnOp.getOperand(2))
+//        + " end";
+//      }
       else if (columnOp.getOpType().equals("whenthenelse")) {
         return "case "
             + "when " + withParentheses(columnOp.getOperand(0))

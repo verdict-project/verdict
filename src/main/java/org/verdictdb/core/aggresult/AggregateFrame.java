@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.exception.ValueException;
 
 /**
@@ -27,6 +28,16 @@ public class AggregateFrame {
     if (colNames.size() != orderedColumnNames.size()) {
       throw new ValueException("The column names seem to include duplicates.");
     }
+  }
+  
+  // TODO
+  public static AggregateFrame fromDmbsQueryResult(DbmsQueryResult result) {
+    return null;
+  }
+
+  // TODO
+  public DbmsQueryResult toDbmsQueryResult() {
+    return null;
   }
   
   public List<String> getColumnNames() {

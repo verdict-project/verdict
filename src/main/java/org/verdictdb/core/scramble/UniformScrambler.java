@@ -38,14 +38,14 @@ public class UniformScrambler extends Scrambler {
         aggregationBlockColumn);
     
     // inclusion probability = 1 / (aggblock count)
-    AliasedColumn incProbValue = new AliasedColumn(
-        ConstantColumn.valueOf(1.0 / aggregationBlockCount),
-        inclusionProbabilityColumn);
+//    AliasedColumn incProbValue = new AliasedColumn(
+//        ConstantColumn.valueOf(1.0 / aggregationBlockCount),
+//        inclusionProbabilityColumn);
     
     // inclusion block difference = 1 / (aggblock count)
-    AliasedColumn incProbBlockDiffValue = new AliasedColumn(
-        ConstantColumn.valueOf(1.0 / aggregationBlockCount),
-        inclusionProbabilityBlockDifferenceColumn);
+//    AliasedColumn incProbBlockDiffValue = new AliasedColumn(
+//        ConstantColumn.valueOf(1.0 / aggregationBlockCount),
+//        inclusionProbabilityBlockDifferenceColumn);
     
     // subsample value: random integer between 0 and 99 (inclusive)
     // = floor(rand() * 100)
@@ -55,12 +55,15 @@ public class UniformScrambler extends Scrambler {
             ConstantColumn.valueOf(100))),
         subsampleColumn);
     
+    AliasedColumn tierValue = new AliasedColumn(ConstantColumn.valueOf(1), tierColumn);
+    
     List<SelectItem> newSelectList = new ArrayList<>();
     newSelectList.add(new AsteriskColumn());
     newSelectList.add(aggBlockValue);
-    newSelectList.add(incProbValue);
-    newSelectList.add(incProbBlockDiffValue);
+//    newSelectList.add(incProbValue);
+//    newSelectList.add(incProbBlockDiffValue);
     newSelectList.add(subsampleValue);
+    newSelectList.add(tierValue);
     
     SelectQueryOp augmentedRelation = SelectQueryOp.getSelectQueryOp(
         newSelectList, 

@@ -28,7 +28,7 @@ public class AggQueryRewriterTest {
   ScrambleMeta generateTestScrambleMeta() {
     ScrambleMeta meta = new ScrambleMeta();
     meta.insertScrambleMetaEntry("myschema", "mytable",
-        "verdictpartition", "verdictincprob", "verdictincprobblockdiff", "verdictsid",
+        "verdictpartition", "verdictsid", "verdicttier",
         aggblockCount);
     return meta;
   }
@@ -52,24 +52,25 @@ public class AggQueryRewriterTest {
     String aliasForSumSubsampleSize = AliasRenamingRules.sumSubsampleSizeAliasName();
 
     for (int k = 0; k < aggblockCount; k++) {
-      String expected = "select sum(`verdictalias5`.`verdictalias6`) as " + aliasForSumEstimate + ", "
-          + "sum(`verdictalias5`.`verdictalias6` * "
-          + "`verdictalias5`.`verdictalias7`) as " + aliasForSumScaledSubsum + ", "
-          + "sum((`verdictalias5`.`verdictalias6` * `verdictalias5`.`verdictalias6`) * "
-          + "`verdictalias5`.`verdictalias7`) as " + aliasForSumSquaredScaledSubsum + ", "
+      String expected = "select `verdictalias4`.`verdictalias5` as verdicttier, "
+          + "sum(`verdictalias4`.`verdictalias6`) as " + aliasForSumEstimate + ", "
+          + "sum(`verdictalias4`.`verdictalias6` * "
+          + "`verdictalias4`.`verdictalias7`) as " + aliasForSumScaledSubsum + ", "
+          + "sum((`verdictalias4`.`verdictalias6` * `verdictalias4`.`verdictalias6`) * "
+          + "`verdictalias4`.`verdictalias7`) as " + aliasForSumSquaredScaledSubsum + ", "
           + "count(*) as " + aliasForCountSubsample + ", "
-          + "sum(`verdictalias5`.`verdictalias7`) as " + aliasForSumSubsampleSize + " "
+          + "sum(`verdictalias4`.`verdictalias7`) as " + aliasForSumSubsampleSize + " "
           + "from ("
-          + "select sum(`verdictalias1`.`mycolumn1` / "
-          + "(`verdictalias1`.`verdictalias2` + (`verdictalias1`.`verdictalias3` * " + k
-          + "))) as verdictalias6, "
-          + "sum(case 1 when `verdictalias1`.`mycolumn1` is not null else 0 end) as verdictalias7 "
-          + "from (select *, `t`.`verdictincprob` as verdictalias2, "
-          + "`t`.`verdictincprobblockdiff` as verdictalias3, "
-          + "`t`.`verdictsid` as verdictalias4 "
+          + "select `verdictalias1`.`verdictalias3` as verdictalias5, "
+          + "sum(`verdictalias1`.`mycolumn1`) as verdictalias6, "
+          + "sum(case when `verdictalias1`.`mycolumn1` is not null then 1 else 0 end) as verdictalias7 "
+          + "from (select *, "
+          + "`t`.`verdictsid` as verdictalias2, "
+          + "`t`.`verdicttier` as verdictalias3 "
           + "from `myschema`.`mytable` as t "
           + "where `t`.`verdictpartition` = " + k + ") as verdictalias1 "
-          + "group by `verdictalias1`.`verdictalias4`) as verdictalias5";
+          + "group by `verdictalias1`.`verdictalias2`, `verdictalias5`) as verdictalias4 "
+          + "group by `verdicttier`";
       SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
       String actual = relToSql.toSql(rewritten.get(k));
       assertEquals(expected, actual);
@@ -93,24 +94,23 @@ public class AggQueryRewriterTest {
     String aliasForSumSubsampleSize = AliasRenamingRules.sumSubsampleSizeAliasName();
 
     for (int k = 0; k < aggblockCount; k++) {
-      String expected = "select sum(`verdictalias5`.`verdictalias6`) as " + aliasForCountEstimate + ", "
-          + "sum(`verdictalias5`.`verdictalias6` * "
-          + "`verdictalias5`.`verdictalias7`) as " + aliasForSumScaledSubcount + ", "
-          + "sum((`verdictalias5`.`verdictalias6` * `verdictalias5`.`verdictalias6`) * "
-          + "`verdictalias5`.`verdictalias7`) as " + aliasForSumSquaredScaledSubcount + ", "
+      String expected = "select `verdictalias4`.`verdictalias5` as verdicttier, "
+          + "sum(`verdictalias4`.`verdictalias6`) as " + aliasForCountEstimate + ", "
+          + "sum(`verdictalias4`.`verdictalias6` * "
+          + "`verdictalias4`.`verdictalias6`) as " + aliasForSumScaledSubcount + ", "
+          + "sum(pow(`verdictalias4`.`verdictalias6`, 3)) as " + aliasForSumSquaredScaledSubcount + ", "
           + "count(*) as " + aliasForCountSubsample + ", "
-          + "sum(`verdictalias5`.`verdictalias7`) as " + aliasForSumSubsampleSize + " "
+          + "sum(`verdictalias4`.`verdictalias6`) as " + aliasForSumSubsampleSize + " "
           + "from ("
-          + "select sum(1 / "
-          + "(`verdictalias1`.`verdictalias2` + (`verdictalias1`.`verdictalias3` * " + k
-          + "))) as verdictalias6, "
-          + "count(*) as verdictalias7 "
-          + "from (select *, `t`.`verdictincprob` as verdictalias2, "
-          + "`t`.`verdictincprobblockdiff` as verdictalias3, "
-          + "`t`.`verdictsid` as verdictalias4 "
+          + "select `verdictalias1`.`verdictalias3` as verdictalias5, "
+          + "count(*) as verdictalias6 "
+          + "from (select *, "
+          + "`t`.`verdictsid` as verdictalias2, "
+          + "`t`.`verdicttier` as verdictalias3 "
           + "from `myschema`.`mytable` as t "
           + "where `t`.`verdictpartition` = " + k + ") as verdictalias1 "
-          + "group by `verdictalias1`.`verdictalias4`) as verdictalias5";
+          + "group by `verdictalias1`.`verdictalias2`, `verdictalias5`) as verdictalias4 "
+          + "group by `verdicttier`";
       SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
       String actual = relToSql.toSql(rewritten.get(k));
       assertEquals(expected, actual);
@@ -138,32 +138,29 @@ public class AggQueryRewriterTest {
     String aliasForSumSubsampleSize = AliasRenamingRules.sumSubsampleSizeAliasName();
 
     for (int k = 0; k < aggblockCount; k++) {
-      String expected = "select sum(`verdictalias5`.`verdictalias6`) as " + aliasForSumEstimate + ", "
-          + "sum(`verdictalias5`.`verdictalias7`) as " + aliasForCountEstimate + ", "
-          + "sum(`verdictalias5`.`verdictalias6` * "
-          + "`verdictalias5`.`verdictalias8`) as " + aliasForSumScaledSubsum + ", "
-          + "sum((`verdictalias5`.`verdictalias6` * `verdictalias5`.`verdictalias6`) * "
-          + "`verdictalias5`.`verdictalias8`) as " + aliasForSumSquaredScaledSubsum + ", "
-          + "sum(`verdictalias5`.`verdictalias7` * "
-          + "`verdictalias5`.`verdictalias8`) as " + aliasForSumScaledSubcount + ", "
-          + "sum((`verdictalias5`.`verdictalias7` * `verdictalias5`.`verdictalias7`) * "
-          + "`verdictalias5`.`verdictalias8`) as " + aliasForSumSquaredScaledSubcount + ", "
+      String expected = "select `verdictalias4`.`verdictalias5` as verdicttier, "
+          + "sum(`verdictalias4`.`verdictalias6`) as " + aliasForSumEstimate + ", "
+          + "sum(`verdictalias4`.`verdictalias7`) as " + aliasForCountEstimate + ", "
+          + "sum(`verdictalias4`.`verdictalias6` * "
+          + "`verdictalias4`.`verdictalias7`) as " + aliasForSumScaledSubsum + ", "
+          + "sum((`verdictalias4`.`verdictalias6` * `verdictalias4`.`verdictalias6`) * "
+          + "`verdictalias4`.`verdictalias7`) as " + aliasForSumSquaredScaledSubsum + ", "
+          + "sum(`verdictalias4`.`verdictalias7` * "
+          + "`verdictalias4`.`verdictalias7`) as " + aliasForSumScaledSubcount + ", "
+          + "sum(pow(`verdictalias4`.`verdictalias7`, 3)) as " + aliasForSumSquaredScaledSubcount + ", "
           + "count(*) as " + aliasForCountSubsample + ", "
-          + "sum(`verdictalias5`.`verdictalias8`) as " + aliasForSumSubsampleSize + " "
+          + "sum(`verdictalias4`.`verdictalias7`) as " + aliasForSumSubsampleSize + " "
           + "from (select "
-          + "sum(`verdictalias1`.`mycolumn1` / "
-          + "(`verdictalias1`.`verdictalias2` + (`verdictalias1`.`verdictalias3` * " + k
-          + "))) as verdictalias6, "    // subsum
-          + "sum(case 1 when `verdictalias1`.`mycolumn1` is not null else 0 end"
-          + " / (`verdictalias1`.`verdictalias2` + (`verdictalias1`.`verdictalias3` * " + k
-          + "))) as verdictalias7, "    // subcount
-          + "sum(case 1 when `verdictalias1`.`mycolumn1` is not null else 0 end) as verdictalias8 "   // subsample size
-          + "from (select *, `t`.`verdictincprob` as verdictalias2, "
-          + "`t`.`verdictincprobblockdiff` as verdictalias3, "
-          + "`t`.`verdictsid` as verdictalias4 "
+          + "`verdictalias1`.`verdictalias3` as verdictalias5, "
+          + "sum(`verdictalias1`.`mycolumn1`) as verdictalias6, "    // subsum
+          + "sum(case when `verdictalias1`.`mycolumn1` is not null then 1 else 0 end) as verdictalias7 "    // subsample size
+          + "from (select *, "
+          + "`t`.`verdictsid` as verdictalias2, "
+          + "`t`.`verdicttier` as verdictalias3 "
           + "from `myschema`.`mytable` as t "
           + "where `t`.`verdictpartition` = " + k + ") as verdictalias1 "
-          + "group by `verdictalias1`.`verdictalias4`) as verdictalias5";
+          + "group by `verdictalias1`.`verdictalias2`, `verdictalias5`) as verdictalias4 "
+          + "group by `verdicttier`";
       SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
       String actual = relToSql.toSql(rewritten.get(k));
       assertEquals(expected, actual);
@@ -191,27 +188,27 @@ public class AggQueryRewriterTest {
     String aliasForSumSubsampleSize = AliasRenamingRules.sumSubsampleSizeAliasName();
 
     for (int k = 0; k < aggblockCount; k++) {
-      String expected = "select `verdictalias5`.`verdictalias6` as mygroup, "
-          + "sum(`verdictalias5`.`verdictalias7`) as " + aliasForSumEstimate + ", "
-          + "sum(`verdictalias5`.`verdictalias7` * "
-          + "`verdictalias5`.`verdictalias8`) as " + aliasForSumScaledSubsum + ", "
-          + "sum((`verdictalias5`.`verdictalias7` * `verdictalias5`.`verdictalias7`) * "
-          + "`verdictalias5`.`verdictalias8`) as " + aliasForSumSquaredScaledSubsum + ", "
+      String expected = "select `verdictalias4`.`verdictalias5` as verdicttier, "
+          + "`verdictalias4`.`verdictalias6` as mygroup, "
+          + "sum(`verdictalias4`.`verdictalias7`) as " + aliasForSumEstimate + ", "
+          + "sum(`verdictalias4`.`verdictalias7` * "
+          + "`verdictalias4`.`verdictalias8`) as " + aliasForSumScaledSubsum + ", "
+          + "sum((`verdictalias4`.`verdictalias7` * `verdictalias4`.`verdictalias7`) * "
+          + "`verdictalias4`.`verdictalias8`) as " + aliasForSumSquaredScaledSubsum + ", "
           + "count(*) as " + aliasForCountSubsample + ", "
-          + "sum(`verdictalias5`.`verdictalias8`) as " + aliasForSumSubsampleSize + " "
+          + "sum(`verdictalias4`.`verdictalias8`) as " + aliasForSumSubsampleSize + " "
           + "from ("
-          + "select `verdictalias1`.`mygroup` as verdictalias6, "
-          + "sum(`verdictalias1`.`mycolumn1` / "
-          + "(`verdictalias1`.`verdictalias2` + (`verdictalias1`.`verdictalias3` * " + k
-          + "))) as verdictalias7, "
-          + "sum(case 1 when `verdictalias1`.`mycolumn1` is not null else 0 end) as verdictalias8 "
-          + "from (select *, `t`.`verdictincprob` as verdictalias2, "
-          + "`t`.`verdictincprobblockdiff` as verdictalias3, "
-          + "`t`.`verdictsid` as verdictalias4 "
+          + "select `verdictalias1`.`verdictalias3` as verdictalias5, "
+          + "`verdictalias1`.`mygroup` as verdictalias6, "
+          + "sum(`verdictalias1`.`mycolumn1`) as verdictalias7, "
+          + "sum(case when `verdictalias1`.`mycolumn1` is not null then 1 else 0 end) as verdictalias8 "
+          + "from (select *, "
+          + "`t`.`verdictsid` as verdictalias2, "
+          + "`t`.`verdicttier` as verdictalias3 "
           + "from `myschema`.`mytable` as t "
           + "where `t`.`verdictpartition` = " + k + ") as verdictalias1 "
-          + "group by `verdictalias6`, `verdictalias1`.`verdictalias4`) as verdictalias5 "
-          + "group by `mygroup`";
+          + "group by `verdictalias1`.`verdictalias2`, `verdictalias5`, `verdictalias6`) as verdictalias4 "
+          + "group by `verdicttier`, `mygroup`";
       SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
       String actual = relToSql.toSql(rewritten.get(k));
       assertEquals(expected, actual);
@@ -239,27 +236,27 @@ public class AggQueryRewriterTest {
     String aliasForSumSubsampleSize = AliasRenamingRules.sumSubsampleSizeAliasName();
 
     for (int k = 0; k < aggblockCount; k++) {
-      String expected = "select `verdictalias5`.`verdictalias6` as myalias, "
-          + "sum(`verdictalias5`.`verdictalias7`) as " + aliasForSumEstimate + ", "
-          + "sum(`verdictalias5`.`verdictalias7` * "
-          + "`verdictalias5`.`verdictalias8`) as " + aliasForSumScaledSubsum + ", "
-          + "sum((`verdictalias5`.`verdictalias7` * `verdictalias5`.`verdictalias7`) * "
-          + "`verdictalias5`.`verdictalias8`) as " + aliasForSumSquaredScaledSubsum + ", "
+      String expected = "select `verdictalias4`.`verdictalias5` as verdicttier, "
+          + "`verdictalias4`.`verdictalias6` as myalias, "
+          + "sum(`verdictalias4`.`verdictalias7`) as " + aliasForSumEstimate + ", "
+          + "sum(`verdictalias4`.`verdictalias7` * "
+          + "`verdictalias4`.`verdictalias8`) as " + aliasForSumScaledSubsum + ", "
+          + "sum((`verdictalias4`.`verdictalias7` * `verdictalias4`.`verdictalias7`) * "
+          + "`verdictalias4`.`verdictalias8`) as " + aliasForSumSquaredScaledSubsum + ", "
           + "count(*) as " + aliasForCountSubsample + ", "
-          + "sum(`verdictalias5`.`verdictalias8`) as " + aliasForSumSubsampleSize + " "
+          + "sum(`verdictalias4`.`verdictalias8`) as " + aliasForSumSubsampleSize + " "
           + "from ("
-          + "select `verdictalias1`.`mygroup` as verdictalias6, "
-          + "sum(`verdictalias1`.`mycolumn1` / "
-          + "(`verdictalias1`.`verdictalias2` + (`verdictalias1`.`verdictalias3` * " + k
-          + "))) as verdictalias7, "
-          + "sum(case 1 when `verdictalias1`.`mycolumn1` is not null else 0 end) as verdictalias8 "
-          + "from (select *, `t`.`verdictincprob` as verdictalias2, "
-          + "`t`.`verdictincprobblockdiff` as verdictalias3, "
-          + "`t`.`verdictsid` as verdictalias4 "
+          + "select `verdictalias1`.`verdictalias3` as verdictalias5, "
+          + "`verdictalias1`.`mygroup` as verdictalias6, "
+          + "sum(`verdictalias1`.`mycolumn1`) as verdictalias7, "
+          + "sum(case when `verdictalias1`.`mycolumn1` is not null then 1 else 0 end) as verdictalias8 "
+          + "from (select *, "
+          + "`t`.`verdictsid` as verdictalias2, "
+          + "`t`.`verdicttier` as verdictalias3 "
           + "from `myschema`.`mytable` as t "
           + "where `t`.`verdictpartition` = " + k + ") as verdictalias1 "
-          + "group by `verdictalias6`, `verdictalias1`.`verdictalias4`) as verdictalias5 "
-          + "group by `myalias`";
+          + "group by `verdictalias1`.`verdictalias2`, `verdictalias5`, `verdictalias6`) as verdictalias4 "
+          + "group by `verdicttier`, `myalias`";
       SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
       String actual = relToSql.toSql(rewritten.get(k));
       assertEquals(expected, actual);
@@ -286,28 +283,25 @@ public class AggQueryRewriterTest {
     String aliasForSumSubsampleSize = AliasRenamingRules.sumSubsampleSizeAliasName();
 
     for (int k = 0; k < aggblockCount; k++) {
-      String expected = "select `verdictalias5`.`verdictalias6` as mygroup, "
-          + "sum(`verdictalias5`.`verdictalias7`) as " + aliasForCountEstimate + ", "
-          + "sum(`verdictalias5`.`verdictalias7` * "
-          + "`verdictalias5`.`verdictalias8`) as " + aliasForSumScaledSubcount + ", "
-          + "sum((`verdictalias5`.`verdictalias7` * `verdictalias5`.`verdictalias7`) * "
-          + "`verdictalias5`.`verdictalias8`) as " + aliasForSumSquaredScaledSubcount + ", "
+      String expected = "select `verdictalias4`.`verdictalias5` as verdicttier, "
+          + "`verdictalias4`.`verdictalias6` as mygroup, "
+          + "sum(`verdictalias4`.`verdictalias7`) as " + aliasForCountEstimate + ", "
+          + "sum(`verdictalias4`.`verdictalias7` * "
+          + "`verdictalias4`.`verdictalias7`) as " + aliasForSumScaledSubcount + ", "
+          + "sum(pow(`verdictalias4`.`verdictalias7`, 3)) as " + aliasForSumSquaredScaledSubcount + ", "
           + "count(*) as " + aliasForCountSubsample + ", "
-          + "sum(`verdictalias5`.`verdictalias8`) as " + aliasForSumSubsampleSize + " "
+          + "sum(`verdictalias4`.`verdictalias7`) as " + aliasForSumSubsampleSize + " "
           + "from ("
-          + "select `verdictalias1`.`mygroup` as verdictalias6, "
-          + "sum(1 / "
-          + "(`verdictalias1`.`verdictalias2` + (`verdictalias1`.`verdictalias3` * " + k
-          + "))) as verdictalias7, "
-          + "count(*) as verdictalias8 "
-          + "from (select *, `t`.`verdictincprob` as verdictalias2, "
-          + "`t`.`verdictincprobblockdiff` as verdictalias3, "
-          + "`t`.`verdictsid` as verdictalias4 "
+          + "select `verdictalias1`.`verdictalias3` as verdictalias5, "
+          + "`verdictalias1`.`mygroup` as verdictalias6, "
+          + "count(*) as verdictalias7 "
+          + "from (select *, "
+          + "`t`.`verdictsid` as verdictalias2, "
+          + "`t`.`verdicttier` as verdictalias3 "
           + "from `myschema`.`mytable` as t "
           + "where `t`.`verdictpartition` = " + k + ") as verdictalias1 "
-          + "group by `verdictalias6`, `verdictalias1`.`verdictalias4`) as verdictalias5 "
-          + "group by `mygroup`";
-
+          + "group by `verdictalias1`.`verdictalias2`, `verdictalias5`, `verdictalias6`) as verdictalias4 "
+          + "group by `verdicttier`, `mygroup`";
       SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
       String actual = relToSql.toSql(rewritten.get(k));
       assertEquals(expected, actual);
@@ -338,34 +332,31 @@ public class AggQueryRewriterTest {
     String aliasForSumSubsampleSize = AliasRenamingRules.sumSubsampleSizeAliasName();
 
     for (int k = 0; k < aggblockCount; k++) {
-      String expected = "select `verdictalias5`.`verdictalias6` as mygroup, "
-          + "sum(`verdictalias5`.`verdictalias7`) as " + aliasForSumEstimate + ", "
-          + "sum(`verdictalias5`.`verdictalias8`) as " + aliasForCountEstimate + ", "
-          + "sum(`verdictalias5`.`verdictalias7` * "
-          + "`verdictalias5`.`verdictalias9`) as " + aliasForSumScaledSubsum + ", "
-          + "sum((`verdictalias5`.`verdictalias7` * `verdictalias5`.`verdictalias7`) * "
-          + "`verdictalias5`.`verdictalias9`) as " + aliasForSumSquaredScaledSubsum + ", "
-          + "sum(`verdictalias5`.`verdictalias8` * "
-          + "`verdictalias5`.`verdictalias9`) as " + aliasForSumScaledSubcount + ", "
-          + "sum((`verdictalias5`.`verdictalias8` * `verdictalias5`.`verdictalias8`) * "
-          + "`verdictalias5`.`verdictalias9`) as " + aliasForSumSquaredScaledSubcount + ", "
+      String expected = "select `verdictalias4`.`verdictalias5` as verdicttier, "
+          + "`verdictalias4`.`verdictalias6` as mygroup, "
+          + "sum(`verdictalias4`.`verdictalias7`) as " + aliasForSumEstimate + ", "
+          + "sum(`verdictalias4`.`verdictalias8`) as " + aliasForCountEstimate + ", "
+          + "sum(`verdictalias4`.`verdictalias7` * "
+          + "`verdictalias4`.`verdictalias8`) as " + aliasForSumScaledSubsum + ", "
+          + "sum((`verdictalias4`.`verdictalias7` * `verdictalias4`.`verdictalias7`) * "
+          + "`verdictalias4`.`verdictalias8`) as " + aliasForSumSquaredScaledSubsum + ", "
+          + "sum(`verdictalias4`.`verdictalias8` * "
+          + "`verdictalias4`.`verdictalias8`) as " + aliasForSumScaledSubcount + ", "
+          + "sum(pow(`verdictalias4`.`verdictalias8`, 3)) as " + aliasForSumSquaredScaledSubcount + ", "
           + "count(*) as " + aliasForCountSubsample + ", "
-          + "sum(`verdictalias5`.`verdictalias9`) as " + aliasForSumSubsampleSize + " "
-          + "from (select `verdictalias1`.`mygroup` as verdictalias6, "
-          + "sum(`verdictalias1`.`mycolumn1` / "
-          + "(`verdictalias1`.`verdictalias2` + (`verdictalias1`.`verdictalias3` * " + k
-          + "))) as verdictalias7, "    // subsum
-          + "sum(case 1 when `verdictalias1`.`mycolumn1` is not null else 0 end"
-          + " / (`verdictalias1`.`verdictalias2` + (`verdictalias1`.`verdictalias3` * " + k
-          + "))) as verdictalias8, "    // subcount
-          + "sum(case 1 when `verdictalias1`.`mycolumn1` is not null else 0 end) as verdictalias9 "   // subsample size
-          + "from (select *, `t`.`verdictincprob` as verdictalias2, "
-          + "`t`.`verdictincprobblockdiff` as verdictalias3, "
-          + "`t`.`verdictsid` as verdictalias4 "
+          + "sum(`verdictalias4`.`verdictalias8`) as " + aliasForSumSubsampleSize + " "
+          + "from (select "
+          + "`verdictalias1`.`verdictalias3` as verdictalias5, "
+          + "`verdictalias1`.`mygroup` as verdictalias6, "
+          + "sum(`verdictalias1`.`mycolumn1`) as verdictalias7, "    // subsum
+          + "sum(case when `verdictalias1`.`mycolumn1` is not null then 1 else 0 end) as verdictalias8 "    // subsample size
+          + "from (select *, "
+          + "`t`.`verdictsid` as verdictalias2, "
+          + "`t`.`verdicttier` as verdictalias3 "
           + "from `myschema`.`mytable` as t "
           + "where `t`.`verdictpartition` = " + k + ") as verdictalias1 "
-          + "group by `verdictalias6`, `verdictalias1`.`verdictalias4`) as verdictalias5 "
-          + "group by `mygroup`";
+          + "group by `verdictalias1`.`verdictalias2`, `verdictalias5`, `verdictalias6`) as verdictalias4 "
+          + "group by `verdicttier`, `mygroup`";
       SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
       String actual = relToSql.toSql(rewritten.get(k));
       assertEquals(expected, actual);
@@ -398,28 +389,28 @@ public class AggQueryRewriterTest {
     String aliasForSumSubsampleSize = AliasRenamingRules.sumSubsampleSizeAliasName();
 
     for (int k = 0; k < aggblockCount; k++) {
-      String expected = "select sum(`verdictalias8`.`verdictalias9`) as " + aliasForSumEstimate + ", "
-          + "sum(`verdictalias8`.`verdictalias9` * "
-          + "`verdictalias8`.`verdictalias10`) as " + aliasForSumScaledSubsum + ", "
-          + "sum((`verdictalias8`.`verdictalias9` * `verdictalias8`.`verdictalias9`) * "
-          + "`verdictalias8`.`verdictalias10`) as " + aliasForSumSquaredScaledSubsum + ", "
+      String expected = "select `verdictalias6`.`verdictalias7` as verdicttier, "
+          + "sum(`verdictalias6`.`verdictalias8`) as " + aliasForSumEstimate + ", "
+          + "sum(`verdictalias6`.`verdictalias8` * "
+          + "`verdictalias6`.`verdictalias9`) as " + aliasForSumScaledSubsum + ", "
+          + "sum((`verdictalias6`.`verdictalias8` * `verdictalias6`.`verdictalias8`) * "
+          + "`verdictalias6`.`verdictalias9`) as " + aliasForSumSquaredScaledSubsum + ", "
           + "count(*) as " + aliasForCountSubsample + ", "
-          + "sum(`verdictalias8`.`verdictalias10`) as " + aliasForSumSubsampleSize + " "
+          + "sum(`verdictalias6`.`verdictalias9`) as " + aliasForSumSubsampleSize + " "
           + "from ("
-          + "select sum(`s`.`discounted_price` / "
-          + "(`s`.`verdictalias5` + (`s`.`verdictalias6` * " + k
-          + "))) as verdictalias9, "
-          + "sum(case 1 when `s`.`discounted_price` is not null else 0 end) as verdictalias10 "
+          + "select `s`.`verdictalias5` as verdictalias7, "
+          + "sum(`s`.`discounted_price`) as verdictalias8, "
+          + "sum(case when `s`.`discounted_price` is not null then 1 else 0 end) as verdictalias9 "
           + "from (select `verdictalias1`.`price` * `verdictalias1`.`discount` as discounted_price, "
-          + "`verdictalias1`.`verdictalias2` as verdictalias5, "
-          + "`verdictalias1`.`verdictalias3` as verdictalias6, "
-          + "`verdictalias1`.`verdictalias4` as verdictalias7 "
-          + "from (select *, `t`.`verdictincprob` as verdictalias2, "
-          + "`t`.`verdictincprobblockdiff` as verdictalias3, "
-          + "`t`.`verdictsid` as verdictalias4 "
+          + "`verdictalias1`.`verdictalias2` as verdictalias4, "
+          + "`verdictalias1`.`verdictalias3` as verdictalias5 "
+          + "from (select *, "
+          + "`t`.`verdictsid` as verdictalias2, "
+          + "`t`.`verdicttier` as verdictalias3 "
           + "from `myschema`.`mytable` as t "
           + "where `t`.`verdictpartition` = " + k + ") as verdictalias1) as s "
-          + "group by `s`.`verdictalias7`) as verdictalias8";
+          + "group by `s`.`verdictalias4`, `verdictalias7`) as verdictalias6 "
+          + "group by `verdicttier`";
       SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
       String actual = relToSql.toSql(rewritten.get(k));
       assertEquals(expected, actual);

@@ -61,4 +61,40 @@ public class JdbcQueryResult implements DbmsQueryResult {
     return value;
   }
 
+  @Override
+  public void printContent() {
+    StringBuilder row;
+    boolean isFirstCol = true;
+    
+    // print column names
+    row = new StringBuilder();
+    for (String col : columnNames) {
+      if (isFirstCol) {
+        row.append(col);
+        isFirstCol = false;
+      }
+      else {
+        row.append("\t" + col);
+      }
+    }
+    System.out.println(row.toString());
+    
+    // print contents
+    int colCount = getColumnCount();
+    while(this.next()) {
+      row = new StringBuilder();
+      for (int i = 0; i < colCount; i++) {
+        if (i == 0) {
+          row.append(getValue(i).toString());
+        }
+        else {
+          row.append("\t");
+          row.append(getValue(i).toString());
+        }
+      }
+      System.out.println(row.toString());
+    }
+    
+  }
+
 }

@@ -5,12 +5,17 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+import org.verdictdb.sql.syntax.SyntaxAbstract;
+
 public class JdbcConnection implements DbmsConnection {
   
   Connection conn;
   
-  public JdbcConnection(Connection conn) {
+  SyntaxAbstract syntax;
+  
+  public JdbcConnection(Connection conn, SyntaxAbstract syntax) {
     this.conn = conn;
+    this.syntax = syntax;
   }
   
   @Override
@@ -46,6 +51,11 @@ public class JdbcConnection implements DbmsConnection {
       e.printStackTrace();
       return 0;
     }
+  }
+
+  @Override
+  public SyntaxAbstract getSyntax() {
+    return syntax;
   }
 
 }

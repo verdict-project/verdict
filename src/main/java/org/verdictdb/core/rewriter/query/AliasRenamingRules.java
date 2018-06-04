@@ -24,7 +24,7 @@ public class AliasRenamingRules {
   }
   
   public static String sumSquaredScaledSumAliasName(String aliasName) {
-    return "sum_square_scaled_sum_" + aliasName;
+    return "sum_squared_scaled_sum_" + aliasName;
   }
   
   public static String sumScaledCountAliasName(String aliasName) {
@@ -32,7 +32,7 @@ public class AliasRenamingRules {
   }
   
   public static String sumSquaredScaledCountAliasName(String aliasName) {
-    return "sum_square_scaled_count_" + aliasName;
+    return "sum_squared_scaled_count_" + aliasName;
   }
   
   public static String countSubsampleAliasName() {

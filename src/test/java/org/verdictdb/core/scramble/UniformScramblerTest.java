@@ -62,8 +62,6 @@ public class UniformScramblerTest {
     
     String expected = "select *"
         + String.format(", floor(rand() * %d) as %s", aggBlockCount, meta.getAggregationBlockColumn())
-        + String.format(", 0.1 as %s", meta.getInclusionProbabilityColumn())
-        + String.format(", 0.1 as %s", meta.getInclusionProbabilityBlockDifferenceColumn())
         + String.format(", floor(rand() * 100) as %s", meta.getSubsampleColumn())
         + String.format(" from `%s`.`%s`", originalSchema, originalTable);
     SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
@@ -85,8 +83,6 @@ public class UniformScramblerTest {
         + String.format("partitioned by (`%s`) ", meta.getAggregationBlockColumn())
         + "as select *"
         + String.format(", floor(rand() * %d) as %s", aggBlockCount, meta.getAggregationBlockColumn())
-        + String.format(", 0.1 as %s", meta.getInclusionProbabilityColumn())
-        + String.format(", 0.1 as %s", meta.getInclusionProbabilityBlockDifferenceColumn())
         + String.format(", floor(rand() * 100) as %s", meta.getSubsampleColumn())
         + String.format(" from `%s`.`%s`", originalSchema, originalTable);
     CreateTableToSql createToSql = new CreateTableToSql(new HiveSyntax());

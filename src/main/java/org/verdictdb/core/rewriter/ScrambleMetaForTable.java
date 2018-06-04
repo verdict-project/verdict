@@ -18,15 +18,17 @@ public class ScrambleMetaForTable {
 //  String partitionColumn;
 //  List<String> partitionAttributeValues = new ArrayList<>();
 
-  String inclusionProbabilityColumn;
+//  String inclusionProbabilityColumn;    // inclusion prob for the first agg block
 
-  String subsampleColumn;
+  String subsampleColumn;               // sid column
 
-  String aggregationBlockColumn;
+  String aggregationBlockColumn;        // agg block number (0 to count-1)
 
-  String inclusionProbabilityBlockDifferenceColumn;
+//  String inclusionProbabilityBlockDifferenceColumn;
 
-  int aggregationBlockCount;
+  int aggregationBlockCount;            // agg block total count
+  
+  String tierColumn;
 
   public ScrambleMetaForTable() {}
 
@@ -78,13 +80,13 @@ public class ScrambleMetaForTable {
     this.aggregationBlockCount = aggregationBlockCount;
   }
 
-  public void setInclusionProbabilityColumn(String inclusionProbabilityColumn) {
-    this.inclusionProbabilityColumn = inclusionProbabilityColumn;
-  }
-
-  public void setInclusionProbabilityBlockDifferenceColumn(String inclusionProbabilityBlockDifferenceColumn) {
-    this.inclusionProbabilityBlockDifferenceColumn = inclusionProbabilityBlockDifferenceColumn;
-  }
+//  public void setInclusionProbabilityColumn(String inclusionProbabilityColumn) {
+//    this.inclusionProbabilityColumn = inclusionProbabilityColumn;
+//  }
+//
+//  public void setInclusionProbabilityBlockDifferenceColumn(String inclusionProbabilityBlockDifferenceColumn) {
+//    this.inclusionProbabilityBlockDifferenceColumn = inclusionProbabilityBlockDifferenceColumn;
+//  }
 
   //  public void setPartitionColumn(String partitionColumn) {
   //    this.partitionColumn = partitionColumn;
@@ -92,6 +94,10 @@ public class ScrambleMetaForTable {
   
     public void setSubsampleColumn(String subsampleColumn) {
       this.subsampleColumn = subsampleColumn;
+    }
+    
+    public void setTierColumn(String tierColumn) {
+      this.tierColumn = tierColumn;
     }
 
   //  public List<String> getPartitionAttributes() {
@@ -130,13 +136,13 @@ public class ScrambleMetaForTable {
     return aggregationBlockCount;
   }
 
-  public String getInclusionProbabilityColumn() {
-    return inclusionProbabilityColumn;
-  }
-
-  public String getInclusionProbabilityBlockDifferenceColumn() {
-    return inclusionProbabilityBlockDifferenceColumn;
-  }
+//  public String getInclusionProbabilityColumn() {
+//    return inclusionProbabilityColumn;
+//  }
+//
+//  public String getInclusionProbabilityBlockDifferenceColumn() {
+//    return inclusionProbabilityBlockDifferenceColumn;
+//  }
 
   
 
@@ -160,9 +166,9 @@ public class ScrambleMetaForTable {
     return subsampleColumn;
   }
 
-  
-
-  
+  public String getTierColumn() {
+    return tierColumn;
+  }
 
 //  public void setPartitionColumn(String partitionColumn) {
 //    this.partitionColumn = partitionColumn;

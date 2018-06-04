@@ -1,5 +1,7 @@
 package org.verdictdb.connection;
 
+import org.verdictdb.sql.syntax.SyntaxAbstract;
+
 public interface DbmsConnection {
   
   public DbmsQueryResult executeQuery(String query);
@@ -13,5 +15,7 @@ public interface DbmsConnection {
    * SQL statements that return nothing
    */
   public int executeUpdate(String query);
+  
+  public SyntaxAbstract getSyntax();
 
 }
