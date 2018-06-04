@@ -521,7 +521,7 @@ join_part
     ;
 
 table_name_with_hint
-    : table_name with_table_hints?
+    : table_name
     ;
 
 // https://msdn.microsoft.com/en-us/library/ms190312.aspx
@@ -554,27 +554,12 @@ as_table_alias
     ;
 
 table_alias
-    : id with_table_hints?
-    ;
-
-// https://msdn.microsoft.com/en-us/library/ms187373.aspx
-with_table_hints
-    : WITH? '(' table_hint (',' table_hint)* ')'
+    : id
     ;
 
 // Id runtime check. Id can be (FORCESCAN, HOLDLOCK, NOLOCK, NOWAIT, PAGLOCK, READCOMMITTED,
 // READCOMMITTEDLOCK, READPAST, READUNCOMMITTED, REPEATABLEREAD, ROWLOCK, TABLOCK, TABLOCKX
 // UPDLOCK, XLOCK)
-
-table_hint
-    : NOEXPAND? ( INDEX '(' index_value (',' index_value)* ')'
-                | INDEX '=' index_value
-                | FORCESEEK ('(' index_value '(' index_column_name  (',' index_column_name)* ')' ')')?
-                | SERIALIZABLE
-                | SNAPSHOT
-                | SPATIAL_WINDOW_MAX_CELLS '=' DECIMAL
-                | ID)?
-    ;
 
 index_column_name
 	: ID

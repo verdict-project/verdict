@@ -30,8 +30,8 @@ public class TpchSelectQueryOpToSqlTest {
     List<UnnamedColumn> operand5 = Arrays.<UnnamedColumn>asList(
         new BaseColumn("t", "l_shipdate"),
         new ColumnOp("subtract", Arrays.<UnnamedColumn>asList(
-            new ColumnOp("date", ConstantColumn.valueOf("1998-12-01")),
-            new ColumnOp("interval", Arrays.<UnnamedColumn>asList(ConstantColumn.valueOf(":1"), ConstantColumn.valueOf("day")))
+            new ColumnOp("date", ConstantColumn.valueOf("'1998-12-01'")),
+            new ColumnOp("interval", Arrays.<UnnamedColumn>asList(ConstantColumn.valueOf("':1'"), ConstantColumn.valueOf("day")))
         )));
     SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
         Arrays.<SelectItem>asList(
@@ -52,7 +52,7 @@ public class TpchSelectQueryOpToSqlTest {
     relation.addOrderby(Arrays.<OrderbyAttribute>asList(new OrderbyAttribute("l_returnflag"),
         new OrderbyAttribute("l_linestatus")));
     relation.addLimit(ConstantColumn.valueOf(1));
-    String expected = "select t.l_returnflag`, " +
+    String expected = "select `t`.`l_returnflag`, " +
         "`t`.`l_linestatus`, " +
         "sum(`t`.`l_quantity`) as sum_qty, " +
         "sum(`t`.`l_extendedprice`) as sum_base_price, " +
@@ -111,7 +111,7 @@ public class TpchSelectQueryOpToSqlTest {
     )));
     relation.addFilterByAnd(new ColumnOp("like", Arrays.<UnnamedColumn>asList(
         new BaseColumn("p", "p_type"),
-        ConstantColumn.valueOf("%:2")
+        ConstantColumn.valueOf("'%:2'")
     )));
     relation.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
         new BaseColumn("s", "s_nationkey"),
@@ -242,11 +242,11 @@ public class TpchSelectQueryOpToSqlTest {
     )));
     relation.addFilterByAnd(new ColumnOp("less", Arrays.<UnnamedColumn>asList(
         new BaseColumn("o", "o_orderdate"),
-        new ColumnOp("date", ConstantColumn.valueOf(":2"))
+        new ColumnOp("date", ConstantColumn.valueOf("':2'"))
     )));
     relation.addFilterByAnd(new ColumnOp("greater", Arrays.<UnnamedColumn>asList(
         new BaseColumn("l", "l_shipdate"),
-        new ColumnOp("date", ConstantColumn.valueOf(":2"))
+        new ColumnOp("date", ConstantColumn.valueOf("':2'"))
     )));
     relation.addGroupby(Arrays.<GroupingAttribute>asList(
         new AliasReference("l_orderkey"),
@@ -297,13 +297,13 @@ public class TpchSelectQueryOpToSqlTest {
         orders);
     relation.addFilterByAnd(new ColumnOp("greaterequal", Arrays.<UnnamedColumn>asList(
         new BaseColumn("o", "o_orderdate"),
-        new ColumnOp("date", ConstantColumn.valueOf(":1"))
+        new ColumnOp("date", ConstantColumn.valueOf("':1'"))
     )));
     relation.addFilterByAnd(new ColumnOp("less", Arrays.<UnnamedColumn>asList(
         new BaseColumn("o", "o_orderdate"),
         new ColumnOp("add", Arrays.<UnnamedColumn>asList(
-            new ColumnOp("date", ConstantColumn.valueOf(":1")),
-            new ColumnOp("interval", Arrays.<UnnamedColumn>asList(ConstantColumn.valueOf("3"), ConstantColumn.valueOf("month")))
+            new ColumnOp("date", ConstantColumn.valueOf("':1'")),
+            new ColumnOp("interval", Arrays.<UnnamedColumn>asList(ConstantColumn.valueOf("'3'"), ConstantColumn.valueOf("month")))
         ))
     )));
     SelectQueryOp subquery = SelectQueryOp.getSelectQueryOp(
@@ -400,13 +400,13 @@ public class TpchSelectQueryOpToSqlTest {
     )));
     relation.addFilterByAnd(new ColumnOp("greaterequal", Arrays.<UnnamedColumn>asList(
         new BaseColumn("o", "o_orderdate"),
-        new ColumnOp("date", ConstantColumn.valueOf(":2"))
+        new ColumnOp("date", ConstantColumn.valueOf("':2'"))
     )));
     relation.addFilterByAnd(new ColumnOp("less", Arrays.<UnnamedColumn>asList(
         new BaseColumn("o", "o_orderdate"),
         new ColumnOp("add", Arrays.<UnnamedColumn>asList(
-            new ColumnOp("date", ConstantColumn.valueOf(":2")),
-            new ColumnOp("interval", Arrays.<UnnamedColumn>asList(ConstantColumn.valueOf("1"), ConstantColumn.valueOf("year")))
+            new ColumnOp("date", ConstantColumn.valueOf("':2'")),
+            new ColumnOp("interval", Arrays.<UnnamedColumn>asList(ConstantColumn.valueOf("'1'"), ConstantColumn.valueOf("year")))
         ))
     )));
     relation.addGroupby(new AliasReference("n_name"));
@@ -456,14 +456,14 @@ public class TpchSelectQueryOpToSqlTest {
         lineitem);
     relation.addFilterByAnd(new ColumnOp("greaterequal", Arrays.<UnnamedColumn>asList(
         new BaseColumn("l", "l_shipdate"),
-        new ColumnOp("date", ConstantColumn.valueOf(":1"))
+        new ColumnOp("date", ConstantColumn.valueOf("':1'"))
     )));
     relation.addFilterByAnd(new ColumnOp("less", Arrays.<UnnamedColumn>asList(
         new BaseColumn("l", "l_shipdate"),
         new ColumnOp("add", Arrays.<UnnamedColumn>asList(
-            new ColumnOp("date", ConstantColumn.valueOf(":1")),
+            new ColumnOp("date", ConstantColumn.valueOf("':1'")),
             new ColumnOp("interval", Arrays.<UnnamedColumn>asList(
-                ConstantColumn.valueOf("1"),
+                ConstantColumn.valueOf("'1'"),
                 ConstantColumn.valueOf("year")
             ))
         ))
@@ -559,8 +559,8 @@ public class TpchSelectQueryOpToSqlTest {
     )));
     subquery.addFilterByAnd(new ColumnOp("between", Arrays.<UnnamedColumn>asList(
         new BaseColumn("l", "l_shipdate"),
-        new ColumnOp("date", ConstantColumn.valueOf("1995-01-01")),
-        new ColumnOp("date", ConstantColumn.valueOf("1996-12-31")))
+        new ColumnOp("date", ConstantColumn.valueOf("'1995-01-01'")),
+        new ColumnOp("date", ConstantColumn.valueOf("'1996-12-31'")))
     ));
     subquery.setAliasName("shipping");
     SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
@@ -681,8 +681,8 @@ public class TpchSelectQueryOpToSqlTest {
     )));
     subquery.addFilterByAnd(new ColumnOp("between", Arrays.<UnnamedColumn>asList(
         new BaseColumn("o", "o_orderdate"),
-        new ColumnOp("date", ConstantColumn.valueOf("1995-01-01")),
-        new ColumnOp("date", ConstantColumn.valueOf("1996-12-31"))
+        new ColumnOp("date", ConstantColumn.valueOf("'1995-01-01'")),
+        new ColumnOp("date", ConstantColumn.valueOf("'1996-12-31'"))
     )));
     subquery.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
         new BaseColumn("p", "p_type"),
@@ -800,7 +800,7 @@ public class TpchSelectQueryOpToSqlTest {
     )));
     subquery.addFilterByAnd(new ColumnOp("like", Arrays.<UnnamedColumn>asList(
         new BaseColumn("p", "p_name"),
-        ConstantColumn.valueOf("%:1%")
+        ConstantColumn.valueOf("'%:1%'")
     )));
     subquery.setAliasName("profit");
     SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
@@ -886,13 +886,13 @@ public class TpchSelectQueryOpToSqlTest {
     )));
     relation.addFilterByAnd(new ColumnOp("greaterequal", Arrays.<UnnamedColumn>asList(
         new BaseColumn("o", "o_orderdate"),
-        new ColumnOp("date", ConstantColumn.valueOf(":1"))
+        new ColumnOp("date", ConstantColumn.valueOf("':1'"))
     )));
     relation.addFilterByAnd(new ColumnOp("less", Arrays.<UnnamedColumn>asList(
         new BaseColumn("o", "o_orderdate"),
         new ColumnOp("add", Arrays.<UnnamedColumn>asList(
-            new ColumnOp("date", ConstantColumn.valueOf(":1")),
-            new ColumnOp("interval", Arrays.<UnnamedColumn>asList(ConstantColumn.valueOf("3"), ConstantColumn.valueOf("month")))
+            new ColumnOp("date", ConstantColumn.valueOf("':1'")),
+            new ColumnOp("interval", Arrays.<UnnamedColumn>asList(ConstantColumn.valueOf("'3'"), ConstantColumn.valueOf("month")))
         )
         ))));
     relation.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
@@ -1097,13 +1097,13 @@ public class TpchSelectQueryOpToSqlTest {
     )));
     relation.addFilterByAnd(new ColumnOp("greaterequal", Arrays.<UnnamedColumn>asList(
         new BaseColumn("l", "l_receiptdate"),
-        new ColumnOp("date", ConstantColumn.valueOf(":3"))
+        new ColumnOp("date", ConstantColumn.valueOf("':3'"))
     )));
     relation.addFilterByAnd(new ColumnOp("less", Arrays.<UnnamedColumn>asList(
         new BaseColumn("l", "l_receiptdate"),
         new ColumnOp("add", Arrays.<UnnamedColumn>asList(
-            new ColumnOp("date", ConstantColumn.valueOf(":3")),
-            new ColumnOp("interval", Arrays.<UnnamedColumn>asList(ConstantColumn.valueOf("1"), ConstantColumn.valueOf("year")))
+            new ColumnOp("date", ConstantColumn.valueOf("':3'")),
+            new ColumnOp("interval", Arrays.<UnnamedColumn>asList(ConstantColumn.valueOf("'1'"), ConstantColumn.valueOf("year")))
         ))
     )));
     relation.addGroupby(new AliasReference("l_shipmode"));
@@ -1156,7 +1156,7 @@ public class TpchSelectQueryOpToSqlTest {
             )),
             new ColumnOp("notlike", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("o", "o_comment"),
-                ConstantColumn.valueOf("%:1%:2%")
+                ConstantColumn.valueOf("'%:1%:2%'")
             ))
         ))));
     SelectQueryOp subqery = SelectQueryOp.getSelectQueryOp(
@@ -1216,7 +1216,7 @@ public class TpchSelectQueryOpToSqlTest {
                     new ColumnOp("sum", new ColumnOp("whenthenelse", Arrays.<UnnamedColumn>asList(
                         new ColumnOp("like", Arrays.<UnnamedColumn>asList(
                             new BaseColumn("p", "p_type"),
-                            ConstantColumn.valueOf("PROMO%")
+                            ConstantColumn.valueOf("'PROMO%'")
                         )),
                         new ColumnOp("multiply", Arrays.<UnnamedColumn>asList(
                             new BaseColumn("l", "l_extendedprice"),
@@ -1237,13 +1237,13 @@ public class TpchSelectQueryOpToSqlTest {
     )));
     relation.addFilterByAnd(new ColumnOp("greaterequal", Arrays.<UnnamedColumn>asList(
         new BaseColumn("l", "l_shipdate"),
-        new ColumnOp("date", ConstantColumn.valueOf(":1"))
+        new ColumnOp("date", ConstantColumn.valueOf("':1'"))
     )));
     relation.addFilterByAnd(new ColumnOp("less", Arrays.<UnnamedColumn>asList(
         new BaseColumn("l", "l_shipdate"),
         new ColumnOp("add", Arrays.<UnnamedColumn>asList(
-            new ColumnOp("date", ConstantColumn.valueOf(":1")),
-            new ColumnOp("interval", Arrays.<UnnamedColumn>asList(ConstantColumn.valueOf("1"), ConstantColumn.valueOf("month")))
+            new ColumnOp("date", ConstantColumn.valueOf("':1'")),
+            new ColumnOp("interval", Arrays.<UnnamedColumn>asList(ConstantColumn.valueOf("'1'"), ConstantColumn.valueOf("month")))
         ))
     )));
     relation.addLimit(ConstantColumn.valueOf(1));
@@ -1339,7 +1339,7 @@ public class TpchSelectQueryOpToSqlTest {
     )));
     relation.addFilterByAnd(new ColumnOp("notlike", Arrays.<UnnamedColumn>asList(
         new BaseColumn("p", "p_type"),
-        ConstantColumn.valueOf(":2%")
+        ConstantColumn.valueOf("':2%'")
     )));
     relation.addFilterByAnd(new ColumnOp("in", Arrays.<UnnamedColumn>asList(
         new BaseColumn("p", "p_size"),
@@ -1351,7 +1351,7 @@ public class TpchSelectQueryOpToSqlTest {
         Arrays.<AbstractRelation>asList(new BaseTable("tpch", "supplier", "s")));
     subquery.addFilterByAnd(new ColumnOp("like", Arrays.<UnnamedColumn>asList(
         new BaseColumn("s", "s_comment"),
-        ConstantColumn.valueOf("%Customer%Complaints%")
+        ConstantColumn.valueOf("'%Customer%Complaints%'")
     )));
     relation.addFilterByAnd(new ColumnOp("notin", Arrays.asList(
         new BaseColumn("ps", "ps_suppkey"),
@@ -1785,13 +1785,13 @@ public class TpchSelectQueryOpToSqlTest {
         new BaseTable("tpch", "lineitem", "l"));
     subsubquery.addFilterByAnd(new ColumnOp("greaterequal", Arrays.<UnnamedColumn>asList(
         new BaseColumn("l", "l_shipdate"),
-        new ColumnOp("date", ConstantColumn.valueOf(":2"))
+        new ColumnOp("date", ConstantColumn.valueOf("':2'"))
     )));
     subsubquery.addFilterByAnd(new ColumnOp("less", Arrays.<UnnamedColumn>asList(
         new BaseColumn("l", "l_shipdate"),
         new ColumnOp("add", Arrays.<UnnamedColumn>asList(
-            new ColumnOp("date", ConstantColumn.valueOf(":2")),
-            new ColumnOp("interval", Arrays.<UnnamedColumn>asList(ConstantColumn.valueOf("1"), ConstantColumn.valueOf("year")))
+            new ColumnOp("date", ConstantColumn.valueOf("':2'")),
+            new ColumnOp("interval", Arrays.<UnnamedColumn>asList(ConstantColumn.valueOf("'1'"), ConstantColumn.valueOf("year")))
         ))
     )));
     subsubquery.addGroupby(Arrays.<GroupingAttribute>asList(
@@ -1816,7 +1816,7 @@ public class TpchSelectQueryOpToSqlTest {
         Arrays.<SelectItem>asList(new BaseColumn("p", "p_partkey")),
         new BaseTable("tpch", "part", "p"));
     subsubquery2.addFilterByAnd(new ColumnOp("like", Arrays.<UnnamedColumn>asList(
-        new BaseColumn("p", "p_name"), ConstantColumn.valueOf(":1%")
+        new BaseColumn("p", "p_name"), ConstantColumn.valueOf("':1%'")
     )));
     subquery.addFilterByAnd(new ColumnOp("in", Arrays.asList(
         new BaseColumn("ps", "ps_partkey"),

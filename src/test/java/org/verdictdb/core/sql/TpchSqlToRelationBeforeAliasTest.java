@@ -1,102 +1,16 @@
 package org.verdictdb.core.sql;
 
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
-import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.core.logical_query.*;
 import org.verdictdb.core.sql.syntax.HiveSyntax;
 import org.verdictdb.exception.VerdictDbException;
 
-import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
-public class TpchSqlToRelationTest {
-
-    private MetaData meta = new MetaData();
-
-    @Before
-    public void setupMetaData() {
-        meta.setDefaultSchema("tpch");
-        meta.addTableData(new MetaData.tableInfo("tpch", "nation"),
-                Arrays.asList(new ImmutablePair<>("n_nationkey", MetaData.dataType.type_long),
-                        new ImmutablePair<>("n_name", MetaData.dataType.type_long),
-                        new ImmutablePair<>("n_regionkey", MetaData.dataType.type_long),
-                        new ImmutablePair<>("n_comment", MetaData.dataType.type_long)));
-        meta.addTableData(new MetaData.tableInfo("tpch", "region"),
-                Arrays.asList(new ImmutablePair<>("r_regionkey", MetaData.dataType.type_long),
-                        new ImmutablePair<>("r_name", MetaData.dataType.type_long),
-                        new ImmutablePair<>("r_comment", MetaData.dataType.type_long)));
-        meta.addTableData(new MetaData.tableInfo("tpch", "part"),
-                Arrays.asList(new ImmutablePair<>("p_partkey", MetaData.dataType.type_long),
-                        new ImmutablePair<>("p_name", MetaData.dataType.type_long),
-                        new ImmutablePair<>("p_mfgr", MetaData.dataType.type_long),
-                        new ImmutablePair<>("p_type", MetaData.dataType.type_long),
-                        new ImmutablePair<>("p_size", MetaData.dataType.type_long),
-                        new ImmutablePair<>("p_container", MetaData.dataType.type_long),
-                        new ImmutablePair<>("p_retailprice", MetaData.dataType.type_long),
-                        new ImmutablePair<>("p_comment", MetaData.dataType.type_long)
-                        ));
-        meta.addTableData(new MetaData.tableInfo("tpch", "supplier"),
-                Arrays.asList(new ImmutablePair<>("s_suppkey", MetaData.dataType.type_long),
-                        new ImmutablePair<>("s_name", MetaData.dataType.type_long),
-                        new ImmutablePair<>("s_address", MetaData.dataType.type_long),
-                        new ImmutablePair<>("s_nationkey", MetaData.dataType.type_long),
-                        new ImmutablePair<>("s_phone", MetaData.dataType.type_long),
-                        new ImmutablePair<>("s_acctbal", MetaData.dataType.type_long),
-                        new ImmutablePair<>("s_comment", MetaData.dataType.type_long)
-                ));
-        meta.addTableData(new MetaData.tableInfo("tpch", "partsupp"),
-                Arrays.asList(new ImmutablePair<>("ps_partkey", MetaData.dataType.type_long),
-                        new ImmutablePair<>("ps_suppkey", MetaData.dataType.type_long),
-                        new ImmutablePair<>("ps_availqty", MetaData.dataType.type_long),
-                        new ImmutablePair<>("ps_supplycost", MetaData.dataType.type_long),
-                        new ImmutablePair<>("ps_comment", MetaData.dataType.type_long)));
-        meta.addTableData(new MetaData.tableInfo("tpch", "customer"),
-                Arrays.asList(new ImmutablePair<>("c_custkey", MetaData.dataType.type_long),
-                        new ImmutablePair<>("c_name", MetaData.dataType.type_long),
-                        new ImmutablePair<>("c_address", MetaData.dataType.type_long),
-                        new ImmutablePair<>("c_nationkey", MetaData.dataType.type_long),
-                        new ImmutablePair<>("c_phone", MetaData.dataType.type_long),
-                        new ImmutablePair<>("c_acctbal", MetaData.dataType.type_long),
-                        new ImmutablePair<>("c_mktsegment", MetaData.dataType.type_long),
-                        new ImmutablePair<>("c_comment", MetaData.dataType.type_long)
-                ));
-        meta.addTableData(new MetaData.tableInfo("tpch", "orders"),
-                Arrays.asList(new ImmutablePair<>("o_orderkey", MetaData.dataType.type_long),
-                        new ImmutablePair<>("o_custkey", MetaData.dataType.type_long),
-                        new ImmutablePair<>("o_orderstatus", MetaData.dataType.type_long),
-                        new ImmutablePair<>("o_totalprice", MetaData.dataType.type_long),
-                        new ImmutablePair<>("o_orderdate", MetaData.dataType.type_long),
-                        new ImmutablePair<>("o_orderpriority", MetaData.dataType.type_long),
-                        new ImmutablePair<>("o_clerk", MetaData.dataType.type_long),
-                        new ImmutablePair<>("o_shippriority", MetaData.dataType.type_long),
-                        new ImmutablePair<>("o_comment", MetaData.dataType.type_long)
-                ));
-        meta.addTableData(new MetaData.tableInfo("tpch", "lineitem"),
-                Arrays.asList(new ImmutablePair<>("l_orderkey", MetaData.dataType.type_long),
-                        new ImmutablePair<>("l_partkey", MetaData.dataType.type_long),
-                        new ImmutablePair<>("l_suppkey", MetaData.dataType.type_long),
-                        new ImmutablePair<>("l_linenumber", MetaData.dataType.type_long),
-                        new ImmutablePair<>("l_quantity", MetaData.dataType.type_long),
-                        new ImmutablePair<>("l_extendedprice", MetaData.dataType.type_long),
-                        new ImmutablePair<>("l_discount", MetaData.dataType.type_long),
-                        new ImmutablePair<>("l_tax", MetaData.dataType.type_long),
-                        new ImmutablePair<>("l_returnflag", MetaData.dataType.type_long),
-                        new ImmutablePair<>("l_linestatus", MetaData.dataType.type_long),
-                        new ImmutablePair<>("l_shipdate", MetaData.dataType.type_long),
-                        new ImmutablePair<>("l_commitdate", MetaData.dataType.type_long),
-                        new ImmutablePair<>("l_receiptdate", MetaData.dataType.type_long),
-                        new ImmutablePair<>("l_shipinstruct", MetaData.dataType.type_long),
-                        new ImmutablePair<>("l_shipmode", MetaData.dataType.type_long),
-                        new ImmutablePair<>("l_comment", MetaData.dataType.type_long)
-                ));
-
-    }
+public class TpchSqlToRelationBeforeAliasTest {
 
     @Test
     public void Query1Test() throws VerdictDbException {
@@ -159,12 +73,12 @@ public class TpchSqlToRelationTest {
                 "l_returnflag asc, " +
                 "l_linestatus asc " +
                 "limit 1";
-        SqlToRelation sqlToRelation = new SqlToRelation(meta);
+        SqlToRelation sqlToRelation = new SqlToRelation(null);
         AbstractRelation relation = sqlToRelation.ToRelation(sql);
         assertEquals(expected, relation);
     }
 
-    //@test
+    @Test
     public void Query2Test() throws VerdictDbException {
         BaseTable part = new BaseTable("tpch", "part", "p");
         BaseTable supplier = new BaseTable("tpch", "supplier", "s");
@@ -289,142 +203,12 @@ public class TpchSqlToRelationTest {
                 "s_name asc, " +
                 "p_partkey asc " +
                 "limit 100";
-        SqlToRelation sqlToRelation = new SqlToRelation(meta);
+        SqlToRelation sqlToRelation = new SqlToRelation(null);
         AbstractRelation relation = sqlToRelation.ToRelation(sql);
         assertEquals(expected, relation);
     }
 
-    ////@test
-    public void Query2Test2() throws VerdictDbException {
-        BaseTable part = new BaseTable("tpch", "part", "p");
-        BaseTable supplier = new BaseTable("tpch", "supplier", "s");
-        BaseTable partsupp = new BaseTable("tpch", "partsupp", "ps");
-        BaseTable nation = new BaseTable("tpch", "nation", "n");
-        BaseTable region = new BaseTable("tpch", "region", "r");
-        List<AbstractRelation> from = Arrays.<AbstractRelation>asList(part, supplier, partsupp, nation, region);
-        SelectQueryOp expected = SelectQueryOp.getSelectQueryOp(
-                Arrays.<SelectItem>asList(
-                        new BaseColumn("tpch","s", "s_acctbal"),
-                        new BaseColumn("tpch", "s", "s_name"),
-                        new BaseColumn("n", "n_name"),
-                        new BaseColumn("p", "p_partkey"),
-                        new BaseColumn("p", "p_mfgr"),
-                        new BaseColumn("s", "s_address"),
-                        new BaseColumn("s", "s_phone"),
-                        new BaseColumn("s", "s_comment")),
-                from);
-        expected.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-                new BaseColumn("p", "p_partkey"),
-                new BaseColumn("ps", "ps_partkey")
-        )));
-        expected.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-                new BaseColumn("s", "s_suppkey"),
-                new BaseColumn("ps", "ps_suppkey")
-        )));
-        expected.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-                new BaseColumn("p", "p_size"),
-                ConstantColumn.valueOf(":1")
-        )));
-        expected.addFilterByAnd(new ColumnOp("like", Arrays.<UnnamedColumn>asList(
-                new BaseColumn("p", "p_type"),
-                ConstantColumn.valueOf("'%:2'")
-        )));
-        expected.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-                new BaseColumn("s", "s_nationkey"),
-                new BaseColumn("n", "n_nationkey")
-        )));
-        expected.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-                new BaseColumn("n", "n_regionkey"),
-                new BaseColumn("r", "r_regionkey")
-        )));
-        expected.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-                new BaseColumn("r", "r_name"),
-                ConstantColumn.valueOf("':3'")
-        )));
-        List<AbstractRelation> subqueryFrom = Arrays.<AbstractRelation>asList(partsupp, supplier, nation, region);
-        SelectQueryOp subquery = SelectQueryOp.getSelectQueryOp(
-                Arrays.<SelectItem>asList(new ColumnOp("min", new BaseColumn("ps", "ps_supplycost"))),
-                subqueryFrom);
-        subquery.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-                new BaseColumn("p", "p_partkey"),
-                new BaseColumn("ps", "ps_partkey")
-        )));
-        subquery.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-                new BaseColumn("s", "s_suppkey"),
-                new BaseColumn("ps", "ps_suppkey")
-        )));
-        subquery.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-                new BaseColumn("s", "s_nationkey"),
-                new BaseColumn("n", "n_nationkey")
-        )));
-        subquery.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-                new BaseColumn("n", "n_regionkey"),
-                new BaseColumn("r", "r_regionkey")
-        )));
-        subquery.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-                new BaseColumn("r", "r_name"),
-                ConstantColumn.valueOf("':3'")
-        )));
-        expected.addFilterByAnd(new ColumnOp("equal", Arrays.asList(
-                new BaseColumn("ps", "ps_supplycost"),
-                SubqueryColumn.getSubqueryColumn(subquery)
-        )));
-        expected.addOrderby(Arrays.<OrderbyAttribute>asList(
-                new OrderbyAttribute("s_acctbal", "desc"),
-                new OrderbyAttribute("n_name"),
-                new OrderbyAttribute("s_name"),
-                new OrderbyAttribute("p_partkey")
-        ));
-        expected.addLimit(ConstantColumn.valueOf(100));
-        String sql = "select " +
-                "tpch.s.s_acctbal, " +
-                "tpch.s.s_name, " +
-                "n.n_name, " +
-                "p.p_partkey, " +
-                "p.p_mfgr, " +
-                "s.s_address, " +
-                "s.s_phone, " +
-                "s.s_comment " +
-                "from " +
-                "tpch.part as p, " +
-                "tpch.supplier as s, " +
-                "tpch.partsupp as ps, " +
-                "tpch.nation as n, " +
-                "tpch.region as r " +
-                "where " +
-                "(((((((p.p_partkey = ps.ps_partkey) " +
-                "and (s.s_suppkey = ps.ps_suppkey)) " +
-                "and (p.p_size = :1)) " +
-                "and (p.p_type like '%:2')) " +
-                "and (s.s_nationkey = n.n_nationkey)) " +
-                "and (n.n_regionkey = r.r_regionkey)) " +
-                "and (r.r_name = ':3')) " +
-                "and (ps.ps_supplycost = (" +
-                "select " +
-                "min(ps.ps_supplycost) " +
-                "from " +
-                "tpch.partsupp as ps, " +
-                "tpch.supplier as s, " +
-                "tpch.nation as n, " +
-                "tpch.region as r " +
-                "where " +
-                "((((p.p_partkey = ps.ps_partkey) " +
-                "and (s.s_suppkey = ps.ps_suppkey)) " +
-                "and (s.s_nationkey = n.n_nationkey)) " +
-                "and (n.n_regionkey = r.r_regionkey)) " +
-                "and (r.r_name = ':3'))) " +
-                "order by " +
-                "s_acctbal desc, " +
-                "n_name asc, " +
-                "s_name asc, " +
-                "p_partkey asc " +
-                "limit 100";
-        SqlToRelation sqlToRelation = new SqlToRelation(meta);
-        AbstractRelation relation = sqlToRelation.ToRelation(sql);
-        assertEquals(expected, relation);
-    }
-
-    //@test
+    @Test
     public void Query3Test() throws VerdictDbException {
         String sql = "select " +
                 "l.l_orderkey, " +
@@ -497,12 +281,12 @@ public class TpchSqlToRelationTest {
                 new OrderbyAttribute("o_orderdate")
         ));
         expected.addLimit(ConstantColumn.valueOf(10));
-        SqlToRelation sqlToRelation = new SqlToRelation(meta);
+        SqlToRelation sqlToRelation = new SqlToRelation(null);
         AbstractRelation relation = sqlToRelation.ToRelation(sql);
         assertEquals(expected, relation);
     }
 
-    //@test
+    @Test
     public void Query4Test() throws VerdictDbException {
         AbstractRelation orders = new BaseTable("tpch", "orders", "o");
         SelectQueryOp expected = SelectQueryOp.getSelectQueryOp(
@@ -559,12 +343,12 @@ public class TpchSqlToRelationTest {
                 "order by " +
                 "o_orderpriority asc " +
                 "limit 1";
-        SqlToRelation sqlToRelation = new SqlToRelation(meta);
+        SqlToRelation sqlToRelation = new SqlToRelation(null);
         AbstractRelation relation = sqlToRelation.ToRelation(sql);
         assertEquals(expected, relation);
     }
 
-    //@test
+    @Test
     public void Query5Test() throws VerdictDbException {
         AbstractRelation customer = new BaseTable("tpch", "customer", "c");
         AbstractRelation orders = new BaseTable("tpch", "orders", "o");
@@ -653,12 +437,12 @@ public class TpchSqlToRelationTest {
                 "order by " +
                 "revenue desc " +
                 "limit 1";
-        SqlToRelation sqlToRelation = new SqlToRelation(meta);
+        SqlToRelation sqlToRelation = new SqlToRelation(null);
         AbstractRelation relation = sqlToRelation.ToRelation(sql);
         assertEquals(expected, relation);
     }
 
-    //@test
+    @Test
     public void Query6Test() throws VerdictDbException {
         AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "l");
         SelectQueryOp expected = SelectQueryOp.getSelectQueryOp(
@@ -704,12 +488,12 @@ public class TpchSqlToRelationTest {
                 "and (l.l_discount between (:2 - 0.01) and (:2 + 0.01))) " +
                 "and (l.l_quantity < :3) " +
                 "limit 1";
-        SqlToRelation sqlToRelation = new SqlToRelation(meta);
+        SqlToRelation sqlToRelation = new SqlToRelation(null);
         AbstractRelation relation = sqlToRelation.ToRelation(sql);
         assertEquals(expected, relation);
     }
 
-    //@test
+    @Test
     public void Query7Test() throws VerdictDbException {
         AbstractRelation supplier = new BaseTable("tpch", "supplier", "s");
         AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "l");
@@ -838,12 +622,12 @@ public class TpchSqlToRelationTest {
                 "cust_nation asc, " +
                 "l_year asc " +
                 "limit 1";
-        SqlToRelation sqlToRelation = new SqlToRelation(meta);
+        SqlToRelation sqlToRelation = new SqlToRelation(null);
         AbstractRelation relation = sqlToRelation.ToRelation(sql);
         assertEquals(expected, relation);
     }
 
-    //@test
+    @Test
     public void Query8Test() throws VerdictDbException {
         AbstractRelation part = new BaseTable("tpch", "part", "p");
         AbstractRelation supplier = new BaseTable("tpch", "supplier", "s");
@@ -961,12 +745,12 @@ public class TpchSqlToRelationTest {
                 "order by " +
                 "o_year asc " +
                 "limit 1";
-        SqlToRelation sqlToRelation = new SqlToRelation(meta);
+        SqlToRelation sqlToRelation = new SqlToRelation(null);
         AbstractRelation relation = sqlToRelation.ToRelation(sql);
         assertEquals(expected, relation);
     }
 
-    //@test
+    @Test
     public void Query9Test() throws VerdictDbException {
         AbstractRelation part = new BaseTable("tpch", "part", "p");
         AbstractRelation supplier = new BaseTable("tpch", "supplier", "s");
@@ -1063,12 +847,12 @@ public class TpchSqlToRelationTest {
                 "nation asc, " +
                 "o_year desc " +
                 "limit 1";
-        SqlToRelation sqlToRelation = new SqlToRelation(meta);
+        SqlToRelation sqlToRelation = new SqlToRelation(null);
         AbstractRelation relation = sqlToRelation.ToRelation(sql);
         assertEquals(expected, relation);
     }
 
-    //@test
+    @Test
     public void Query10Test() throws VerdictDbException {
         AbstractRelation customer = new BaseTable("tpch", "customer", "c");
         AbstractRelation orders = new BaseTable("tpch", "orders", "o");
@@ -1162,12 +946,12 @@ public class TpchSqlToRelationTest {
                 "order by " +
                 "revenue desc " +
                 "limit 20";
-        SqlToRelation sqlToRelation = new SqlToRelation(meta);
+        SqlToRelation sqlToRelation = new SqlToRelation(null);
         AbstractRelation relation = sqlToRelation.ToRelation(sql);
         assertEquals(expected, relation);
     }
 
-    //@test
+    @Test
     public void Query11Test() throws VerdictDbException {
         AbstractRelation partsupp = new BaseTable("tpch", "partsupp", "ps");
         AbstractRelation supplier = new BaseTable("tpch", "supplier", "s");
@@ -1253,12 +1037,12 @@ public class TpchSqlToRelationTest {
                 "order by " +
                 "value desc " +
                 "limit 1";
-        SqlToRelation sqlToRelation = new SqlToRelation(meta);
+        SqlToRelation sqlToRelation = new SqlToRelation(null);
         AbstractRelation relation = sqlToRelation.ToRelation(sql);
         assertEquals(expected, relation);
     }
 
-    //@test
+    @Test
     public void Query12Test() throws VerdictDbException {
         AbstractRelation orders = new BaseTable("tpch", "orders", "o");
         AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "l");
@@ -1354,12 +1138,12 @@ public class TpchSqlToRelationTest {
                 "order by " +
                 "l_shipmode asc " +
                 "limit 1";
-        SqlToRelation sqlToRelation = new SqlToRelation(meta);
+        SqlToRelation sqlToRelation = new SqlToRelation(null);
         AbstractRelation relation = sqlToRelation.ToRelation(sql);
         assertEquals(expected, relation);
     }
 
-    //@test
+    @Test
     public void Query13Test() throws VerdictDbException {
         BaseTable customer = new BaseTable("tpch", "customer", "c");
         BaseTable orders = new BaseTable("tpch", "orders", "o");
@@ -1377,12 +1161,12 @@ public class TpchSqlToRelationTest {
                 ))));
         SelectQueryOp subqery = SelectQueryOp.getSelectQueryOp(
                 Arrays.<SelectItem>asList(
-                        new BaseColumn("c", "c_custkey"),
-                        new ColumnOp("count", new AsteriskColumn())
+                        new AliasedColumn(new BaseColumn("c", "c_custkey"), "c_custkey"),
+                        new AliasedColumn(new ColumnOp("count", new AsteriskColumn()), "c_count")
                 ),
                 join);
         subqery.addGroupby(new AliasReference("c_custkey"));
-        subqery.setAliasName("c_orders(c_custkey,c_count)");
+        subqery.setAliasName("c_orders");
         SelectQueryOp expected = SelectQueryOp.getSelectQueryOp(
                 Arrays.asList(
                         new BaseColumn("c_orders", "c_count"),
@@ -1415,12 +1199,12 @@ public class TpchSqlToRelationTest {
                 "custdist desc, " +
                 "c_count desc " +
                 "limit 1";
-        SqlToRelation sqlToRelation = new SqlToRelation(meta);
+        SqlToRelation sqlToRelation = new SqlToRelation(null);
         AbstractRelation relation = sqlToRelation.ToRelation(sql);
         assertEquals(expected, relation);
     }
 
-    //@test
+    @Test
     public void Query14Test() throws VerdictDbException {
         AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "l");
         AbstractRelation part = new BaseTable("tpch", "part", "p");
@@ -1477,12 +1261,12 @@ public class TpchSqlToRelationTest {
                 "and (l.l_shipdate >= (date ':1'))) " +
                 "and (l.l_shipdate < ((date ':1') + (interval '1' month))) " +
                 "limit 1";
-        SqlToRelation sqlToRelation = new SqlToRelation(meta);
+        SqlToRelation sqlToRelation = new SqlToRelation(null);
         AbstractRelation relation = sqlToRelation.ToRelation(sql);
         assertEquals(expected, relation);
     }
 
-    //@test
+    @Test
     public void Query15Test() throws VerdictDbException {
         AbstractRelation supplier = new BaseTable("tpch", "supplier", "s");
         AbstractRelation revenue = new BaseTable("tpch", "revenue", "r");
@@ -1528,12 +1312,12 @@ public class TpchSqlToRelationTest {
                 "order by " +
                 "s_suppkey asc " +
                 "limit 1";
-        SqlToRelation sqlToRelation = new SqlToRelation(meta);
+        SqlToRelation sqlToRelation = new SqlToRelation(null);
         AbstractRelation relation = sqlToRelation.ToRelation(sql);
         assertEquals(expected, relation);
     }
 
-    //@test
+    @Test
     public void Query16Test() throws VerdictDbException {
         AbstractRelation partsupp = new BaseTable("tpch", "partsupp", "ps");
         AbstractRelation part = new BaseTable("tpch", "part", "p");
@@ -1616,12 +1400,12 @@ public class TpchSqlToRelationTest {
                 "p_type asc, " +
                 "p_size asc " +
                 "limit 1";
-        SqlToRelation sqlToRelation = new SqlToRelation(meta);
+        SqlToRelation sqlToRelation = new SqlToRelation(null);
         AbstractRelation relation = sqlToRelation.ToRelation(sql);
         assertEquals(expected, relation);
     }
 
-    //@test
+    @Test
     public void Query17Test() throws VerdictDbException {
         AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "l");
         AbstractRelation part = new BaseTable("tpch", "part", "p");
@@ -1678,12 +1462,12 @@ public class TpchSqlToRelationTest {
                 "and (p.p_container = ':2')) " +
                 "and (l.l_quantity < part_agg.avg_quantity) " +
                 "limit 1";
-        SqlToRelation sqlToRelation = new SqlToRelation(meta);
+        SqlToRelation sqlToRelation = new SqlToRelation(null);
         AbstractRelation relation = sqlToRelation.ToRelation(sql);
         assertEquals(expected, relation);
     }
 
-    //@test
+    @Test
     public void Query18Test() throws VerdictDbException {
         AbstractRelation customer = new BaseTable("tpch", "customer", "c");
         AbstractRelation orders = new BaseTable("tpch", "orders", "o");
@@ -1763,12 +1547,12 @@ public class TpchSqlToRelationTest {
                 "o_totalprice desc, " +
                 "o_orderdate asc " +
                 "limit 100";
-        SqlToRelation sqlToRelation = new SqlToRelation(meta);
+        SqlToRelation sqlToRelation = new SqlToRelation(null);
         AbstractRelation relation = sqlToRelation.ToRelation(sql);
         assertEquals(expected, relation);
     }
 
-    //@test
+    @Test
     public void Query19Test() throws VerdictDbException {
         AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "l");
         AbstractRelation part = new BaseTable("tpch", "part", "p");
@@ -1976,12 +1760,12 @@ public class TpchSqlToRelationTest {
                 "and (l.l_shipinstruct = 'DELIVER IN PERSON')" +
                 ") " +
                 "limit 1";
-        SqlToRelation sqlToRelation = new SqlToRelation(meta);
+        SqlToRelation sqlToRelation = new SqlToRelation(null);
         AbstractRelation relation = sqlToRelation.ToRelation(sql);
         assertEquals(expected, relation);
     }
 
-    //@test
+    @Test
     public void Query20Test() throws VerdictDbException {
         AbstractRelation supplier = new BaseTable("tpch", "supplier", "s");
         AbstractRelation nation = new BaseTable("tpch", "nation", "n");
@@ -2100,12 +1884,12 @@ public class TpchSqlToRelationTest {
                 "order by " +
                 "s_name asc " +
                 "limit 1";
-        SqlToRelation sqlToRelation = new SqlToRelation(meta);
+        SqlToRelation sqlToRelation = new SqlToRelation(null);
         AbstractRelation relation = sqlToRelation.ToRelation(sql);
         assertEquals(expected, relation);
     }
 
-    //@test
+    @Test
     public void Query21Test() throws VerdictDbException {
         AbstractRelation supplier = new BaseTable("tpch", "supplier", "s");
         AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "l1");
@@ -2213,12 +1997,12 @@ public class TpchSqlToRelationTest {
                 "numwait desc, " +
                 "s_name asc " +
                 "limit 100";
-        SqlToRelation sqlToRelation = new SqlToRelation(meta);
+        SqlToRelation sqlToRelation = new SqlToRelation(null);
         AbstractRelation relation = sqlToRelation.ToRelation(sql);
         assertEquals(expected, relation);
     }
 
-    //@test
+    @Test
     public void Query22Test() throws VerdictDbException {
         SelectQueryOp subquery = SelectQueryOp.getSelectQueryOp(
                 Arrays.<SelectItem>asList(
@@ -2311,7 +2095,7 @@ public class TpchSqlToRelationTest {
                 "order by " +
                 "cntrycode asc " +
                 "limit 1";
-        SqlToRelation sqlToRelation = new SqlToRelation(meta);
+        SqlToRelation sqlToRelation = new SqlToRelation(null);
         AbstractRelation relation = sqlToRelation.ToRelation(sql);
         assertEquals(expected, relation);
     }

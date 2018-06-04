@@ -1,67 +1,36 @@
 package org.verdictdb.core.sql;
 
-import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
-import org.apache.commons.lang3.builder.ToStringBuilder;
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
-
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
 public class MetaData {
 
-    public enum dataType{
-        type_long
-    }
-
-    public static class tableInfo {
+    public class tableInfo {
         String schema;
         String tablename;
+        String alias;
+        List<String> colName = new ArrayList<>();
 
-        public tableInfo(String schema, String tablename) {
+        public tableInfo(String schema, String tablename, String alias, List<String> colName) {
             this.schema = schema;
             this.tablename = tablename;
-        }
-
-        public static tableInfo getTableInfo(String schema, String tablename) {
-            return new tableInfo(schema, tablename);
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            return EqualsBuilder.reflectionEquals(this, obj);
-        }
-
-        @Override
-        public int hashCode() {
-            return HashCodeBuilder.reflectionHashCode(this);
-        }
-
-        @Override
-        public String toString() {
-            return ToStringBuilder.reflectionToString(this);
+            this.alias = alias;
+            this.colName = colName;
         }
 
     }
 
-    private String defaultSchema = "";
+    private List<tableInfo> tables;
 
-    //The value pair: left is column name and right is its type
-    private HashMap<tableInfo, List<ImmutablePair<String, dataType>>> tablesData = new HashMap<>();
+    public HashMap<String, String> columnAlias;
 
-    public MetaData() {}
-
-    public MetaData(HashMap<tableInfo, List<ImmutablePair<String, dataType>>> tablesData) {
-        this.tablesData = tablesData;
+    public MetaData(List<tableInfo> tables) {
+        this.tables = tables;
+        for (tableInfo t : tables) {
+            for (String c : t.colName) {
+                columnAlias.put(c, t.alias);
+            }
+        }
     }
-
-    public void addTableData(tableInfo table, List<ImmutablePair<String, dataType>> columns) { tablesData.put(table, columns); }
-
-    public void setDefaultSchema(String schema) { defaultSchema = schema; }
-
-    public String getDefaultSchema() { return defaultSchema;}
-
-    public HashMap<tableInfo, List<ImmutablePair<String, dataType>>> getTablesData() { return tablesData; }
-
 }

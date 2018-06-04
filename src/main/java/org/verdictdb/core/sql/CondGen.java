@@ -1,6 +1,5 @@
 package org.verdictdb.core.sql;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.core.logical_query.*;
 import org.verdictdb.parser.VerdictSQLBaseVisitor;
 import org.verdictdb.parser.VerdictSQLParser;
@@ -8,26 +7,23 @@ import org.verdictdb.parser.VerdictSQLParser;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 
 public class CondGen extends VerdictSQLBaseVisitor<UnnamedColumn> {
 
     private MetaData meta;
 
-    private HashMap<String, String> tableAliasAndColNames;
+    public CondGen() {
 
-    private HashMap<Pair<String, String>, String> tableInfoAndAlias;
+    }
 
-    public CondGen(HashMap<String, String> tableAliasAndColNames, HashMap<Pair<String, String>, String> tableInfoAndAlias, MetaData meta) {
-        this.tableAliasAndColNames = tableAliasAndColNames;
-        this.tableInfoAndAlias = tableInfoAndAlias;
+    public CondGen(MetaData meta) {
         this.meta = meta;
     }
 
     @Override
     public UnnamedColumn visitComp_expr_predicate(VerdictSQLParser.Comp_expr_predicateContext ctx) {
-        ExpressionGen g = new ExpressionGen(tableAliasAndColNames, tableInfoAndAlias, meta);
+        ExpressionGen g = new ExpressionGen(meta);
         UnnamedColumn e1 = g.visit(ctx.expression(0));
         UnnamedColumn e2 = g.visit(ctx.expression(1));
         if (ctx.comparison_operator().getText().equals("=")) {
@@ -107,7 +103,7 @@ public class CondGen extends VerdictSQLBaseVisitor<UnnamedColumn> {
 
     @Override
     public UnnamedColumn visitIs_predicate(VerdictSQLParser.Is_predicateContext ctx) {
-        ExpressionGen g = new ExpressionGen(tableAliasAndColNames, tableInfoAndAlias, meta);
+        ExpressionGen g = new ExpressionGen(meta);
         UnnamedColumn left = g.visit(ctx.expression());
         UnnamedColumn right = visit(ctx.null_notnull());
         return new ColumnOp("is", Arrays.asList(left, right));
@@ -115,7 +111,7 @@ public class CondGen extends VerdictSQLBaseVisitor<UnnamedColumn> {
 
     @Override
     public UnnamedColumn visitIn_predicate(VerdictSQLParser.In_predicateContext ctx) {
-        ExpressionGen g1 = new ExpressionGen(tableAliasAndColNames, tableInfoAndAlias, meta);
+        ExpressionGen g1 = new ExpressionGen(meta);
         if (ctx.subquery() != null) {
             // VerdictLogger.error("Verdict currently does not support IN + subquery condition.");
             UnnamedColumn left = g1.visit(ctx.expression());
@@ -150,7 +146,7 @@ public class CondGen extends VerdictSQLBaseVisitor<UnnamedColumn> {
 
     @Override
     public UnnamedColumn visitLike_predicate(VerdictSQLParser.Like_predicateContext ctx) {
-        ExpressionGen g = new ExpressionGen(tableAliasAndColNames, tableInfoAndAlias, meta);
+        ExpressionGen g = new ExpressionGen(meta);
         UnnamedColumn left = g.visit(ctx.expression(0));
         UnnamedColumn right = g.visit(ctx.expression(1));
         boolean not = (ctx.NOT() != null) ? true : false;
@@ -160,7 +156,7 @@ public class CondGen extends VerdictSQLBaseVisitor<UnnamedColumn> {
 
     @Override
     public UnnamedColumn visitComp_between_expr(VerdictSQLParser.Comp_between_exprContext ctx) {
-        ExpressionGen g = new ExpressionGen(tableAliasAndColNames, tableInfoAndAlias, meta);
+        ExpressionGen g = new ExpressionGen(meta);
         UnnamedColumn col = g.visit(ctx.expression(0));
         UnnamedColumn left = g.visit(ctx.expression(1));
         UnnamedColumn right = g.visit(ctx.expression(2));
