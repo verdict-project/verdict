@@ -58,13 +58,13 @@ public class SelectQueryOp extends AbstractRelation {
 
   Optional<String> aliasName = Optional.absent();
 
-  public SelectQueryOp() {}
+  public SelectQueryOp() {
+  }
 
   public void addFilterByAnd(UnnamedColumn predicate) {
     if (!filter.isPresent()) {
       filter = Optional.of(predicate);
-    }
-    else {
+    } else {
       filter = Optional.<UnnamedColumn>of(ColumnOp.and(filter.get(), predicate));
     }
   }
@@ -73,20 +73,21 @@ public class SelectQueryOp extends AbstractRelation {
     groupby.add(column);
   }
 
-  public void addGroupby(List<GroupingAttribute> columns){
+  public void addGroupby(List<GroupingAttribute> columns) {
     groupby.addAll(columns);
   }
 
   public void addHavingByAnd(UnnamedColumn predicate) {
     if (!having.isPresent()) {
       having = Optional.of(predicate);
-    }
-    else {
+    } else {
       having = Optional.<UnnamedColumn>of(ColumnOp.and(having.get(), predicate));
     }
   }
 
-  public void addLimit(UnnamedColumn limit) {this.limit = Optional.of(limit); }
+  public void addLimit(UnnamedColumn limit) {
+    this.limit = Optional.of(limit);
+  }
 
   public void addOrderby(List<OrderbyAttribute> columns) {
     orderby.addAll(columns);
@@ -133,16 +134,20 @@ public class SelectQueryOp extends AbstractRelation {
   }
 
   //  public void setAliasName(String aliasName) {
-    //    this.aliasName = Optional.of(aliasName);
-    //  }
+  //    this.aliasName = Optional.of(aliasName);
+  //  }
 
   public List<GroupingAttribute> getGroupby() {
     return groupby;
   }
 
-  public Optional<UnnamedColumn> getHaving() {return having;}
+  public Optional<UnnamedColumn> getHaving() {
+    return having;
+  }
 
-  public Optional<UnnamedColumn> getLimit() {return limit; }
+  public Optional<UnnamedColumn> getLimit() {
+    return limit;
+  }
 
   public List<OrderbyAttribute> getOrderby() {
     return orderby;

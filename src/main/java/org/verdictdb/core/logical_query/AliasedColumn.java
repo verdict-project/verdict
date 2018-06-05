@@ -6,50 +6,49 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 
 /**
  * Represents "column as aliasName".
- * 
- * @author Yongjoo Park
  *
+ * @author Yongjoo Park
  */
 public class AliasedColumn implements SelectItem {
-    
-    UnnamedColumn column;
-    
-    String aliasName;
-    
-    public AliasedColumn(UnnamedColumn column, String aliasName) {
-        this.column = column;
-        this.aliasName = aliasName;
-    }
 
-    public UnnamedColumn getColumn() {
-        return column;
-    }
+  UnnamedColumn column;
 
-    public void setColumn(UnnamedColumn column) {
-        this.column = column;
-    }
+  String aliasName;
 
-    public String getAliasName() {
-        return aliasName;
-    }
+  public AliasedColumn(UnnamedColumn column, String aliasName) {
+    this.column = column;
+    this.aliasName = aliasName;
+  }
 
-    public void setAliasName(String aliasName) {
-        this.aliasName = aliasName;
-    }
-    
-    @Override
-    public int hashCode() {
-        return HashCodeBuilder.reflectionHashCode(this);
-    }
+  public UnnamedColumn getColumn() {
+    return column;
+  }
 
-    @Override
-    public boolean equals(Object obj) {
-        return EqualsBuilder.reflectionEquals(this, obj);
-    }
-    
-    @Override
-    public String toString() {
-        return ToStringBuilder.reflectionToString(this);
-    }
+  public void setColumn(UnnamedColumn column) {
+    this.column = column;
+  }
+
+  public String getAliasName() {
+    return aliasName;
+  }
+
+  public void setAliasName(String aliasName) {
+    this.aliasName = aliasName;
+  }
+
+  @Override
+  public int hashCode() {
+    return HashCodeBuilder.reflectionHashCode(this);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    return EqualsBuilder.reflectionEquals(this, obj);
+  }
+
+  @Override
+  public String toString() {
+    return ToStringBuilder.reflectionToString(this);
+  }
 
 }
