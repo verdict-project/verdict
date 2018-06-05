@@ -47,10 +47,6 @@ public class JoinTable extends AbstractRelation {
     this.joinTypeList.add(joinType);
   }
 
-  public void SetAliasName(String aliasName) {
-    this.aliasName = Optional.of(aliasName);
-  }
-
   public List<AbstractRelation> getJoinList() {
     return joinList;
   }
@@ -61,10 +57,6 @@ public class JoinTable extends AbstractRelation {
 
   public List<UnnamedColumn> getCondition() {
     return condition;
-  }
-
-  public Optional<String> getAliasName() {
-    return aliasName;
   }
 
   @Override
