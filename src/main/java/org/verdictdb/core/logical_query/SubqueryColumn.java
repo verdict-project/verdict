@@ -5,37 +5,38 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 /**
- *Subquery that may appeared in the select clause, where clause
+ * Subquery that may appeared in the select clause, where clause
  */
 public class SubqueryColumn implements UnnamedColumn {
-    SelectQueryOp subquery = new SelectQueryOp();
+  SelectQueryOp subquery = new SelectQueryOp();
 
-    public SubqueryColumn() {}
+  public SubqueryColumn() {
+  }
 
-    public SubqueryColumn(SelectQueryOp relation) {
-        subquery = relation;
-    }
+  public SubqueryColumn(SelectQueryOp relation) {
+    subquery = relation;
+  }
 
-    public static SubqueryColumn getSubqueryColumn(SelectQueryOp relation) {
-        return new SubqueryColumn(relation);
-    }
+  public static SubqueryColumn getSubqueryColumn(SelectQueryOp relation) {
+    return new SubqueryColumn(relation);
+  }
 
-    public SelectQueryOp getSubquery() {
-        return subquery;
-    }
+  public SelectQueryOp getSubquery() {
+    return subquery;
+  }
 
-    @Override
-    public int hashCode() {
-        return HashCodeBuilder.reflectionHashCode(this);
-    }
+  @Override
+  public int hashCode() {
+    return HashCodeBuilder.reflectionHashCode(this);
+  }
 
-    @Override
-    public boolean equals(Object obj) {
-        return EqualsBuilder.reflectionEquals(this, obj);
-    }
+  @Override
+  public boolean equals(Object obj) {
+    return EqualsBuilder.reflectionEquals(this, obj);
+  }
 
-    @Override
-    public String toString() {
-        return ToStringBuilder.reflectionToString(this);
-    }
+  @Override
+  public String toString() {
+    return ToStringBuilder.reflectionToString(this);
+  }
 }

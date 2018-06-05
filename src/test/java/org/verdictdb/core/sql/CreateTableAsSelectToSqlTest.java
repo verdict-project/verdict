@@ -19,8 +19,8 @@ public class CreateTableAsSelectToSqlTest {
   public void selectAllTest() throws VerdictDbException {
     BaseTable base = new BaseTable("myschema", "mytable", "t");
     SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
-            Arrays.<SelectItem>asList(new AsteriskColumn()),
-            base);
+        Arrays.<SelectItem>asList(new AsteriskColumn()),
+        base);
     CreateTableAsSelect create = new CreateTableAsSelect("newtable", relation);
     String expected = "create mytable as select * from `myschema`.`mytable` as t";
     LogicalSelectQueryToSql relToSql = new LogicalSelectQueryToSql(new HiveSyntax());

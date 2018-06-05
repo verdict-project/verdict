@@ -8,20 +8,22 @@ import org.verdictdb.parser.VerdictSQLParser;
 
 public class SqlToRelation {
 
-    MetaData meta;
+  MetaData meta;
 
-    public SqlToRelation(MetaData meta) {this.meta = meta; }
+  public SqlToRelation(MetaData meta) {
+    this.meta = meta;
+  }
 
-    public static VerdictSQLParser parserOf(String text) {
-        VerdictSQLLexer l = new VerdictSQLLexer(new ANTLRInputStream(text));
-        VerdictSQLParser p = new VerdictSQLParser(new CommonTokenStream(l));
-        return p;
-    }
+  public static VerdictSQLParser parserOf(String text) {
+    VerdictSQLLexer l = new VerdictSQLLexer(new ANTLRInputStream(text));
+    VerdictSQLParser p = new VerdictSQLParser(new CommonTokenStream(l));
+    return p;
+  }
 
-    public AbstractRelation ToRelation(String sql) {
-        VerdictSQLParser p = parserOf(sql);
-        RelationGen g = new RelationGen(meta);
-        return g.visit(p.select_statement());
-    }
+  public AbstractRelation ToRelation(String sql) {
+    VerdictSQLParser p = parserOf(sql);
+    RelationGen g = new RelationGen(meta);
+    return g.visit(p.select_statement());
+  }
 }
 

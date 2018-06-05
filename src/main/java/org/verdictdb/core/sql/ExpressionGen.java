@@ -156,14 +156,15 @@ public class ExpressionGen extends VerdictSQLBaseVisitor<UnnamedColumn> {
                 ));
             }
 
-            @Override  // not support yet
+            @Override
             public ColumnOp visitTernary_manipulation_function(
                     VerdictSQLParser.Ternary_manipulation_functionContext ctx) {
                 String fname = ctx.function_name.getText().toLowerCase();
+                ExpressionGen g = new ExpressionGen(meta);
                 return new ColumnOp(fname, Arrays.<UnnamedColumn>asList(
-                        visit(ctx.expression(0)),
-                        visit(ctx.expression(1)),
-                        visit(ctx.expression(2))
+                        g.visit(ctx.expression(0)),
+                        g.visit(ctx.expression(1)),
+                        g.visit(ctx.expression(2))
                 ));
             }
 
@@ -178,27 +179,6 @@ public class ExpressionGen extends VerdictSQLBaseVisitor<UnnamedColumn> {
                 //}
                 //return new FuncExpr(funcName, exprList, null);
                 return null;
-            }
-
-            @Override
-            public ColumnOp visitExtract_time_function(VerdictSQLParser.Extract_time_functionContext ctx) {
-                String fname = "extract";
-                ExpressionGen g = new ExpressionGen(meta);
-                return new ColumnOp(fname, Arrays.<UnnamedColumn>asList(
-                        ConstantColumn.valueOf(ctx.extract_unit().getText()),
-                        g.visit(ctx.expression())
-                ));
-            }
-
-            @Override
-            public ColumnOp visitSubstring_function(VerdictSQLParser.Substring_functionContext ctx) {
-                String fname = "substring";
-                ExpressionGen g = new ExpressionGen(meta);
-                return new ColumnOp(fname, Arrays.<UnnamedColumn>asList(
-                        g.visit(ctx.expression(0)),
-                        g.visit(ctx.expression(1)),
-                        g.visit(ctx.expression(2))
-                ));
             }
         };
         return v.visit(ctx);

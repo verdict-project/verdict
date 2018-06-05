@@ -11,74 +11,74 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 
 public class JoinTable extends AbstractRelation {
 
-    //May need to expand
-    public enum JoinType {
-        left, leftouter, right, rightouter, inner, outer
-    }
+  //May need to expand
+  public enum JoinType {
+    left, leftouter, right, rightouter, inner, outer
+  }
 
 
-    List<AbstractRelation> joinList = new ArrayList<>();
+  List<AbstractRelation> joinList = new ArrayList<>();
 
-    List<JoinType> joinTypeList = new ArrayList<>();
+  List<JoinType> joinTypeList = new ArrayList<>();
 
-    List<UnnamedColumn> condition = new ArrayList<>();
+  List<UnnamedColumn> condition = new ArrayList<>();
 
-    Optional<String> aliasName = Optional.absent();
+  Optional<String> aliasName = Optional.absent();
 
-    public static JoinTable getJoinTable(List<AbstractRelation> joinList, List<JoinType> joinTypeList, List<UnnamedColumn> condition) {
-        JoinTable join = new JoinTable();
-        join.joinList = joinList;
-        join.joinTypeList = joinTypeList;
-        join.condition = condition;
-        return join;
-    }
+  public static JoinTable getJoinTable(List<AbstractRelation> joinList, List<JoinType> joinTypeList, List<UnnamedColumn> condition) {
+    JoinTable join = new JoinTable();
+    join.joinList = joinList;
+    join.joinTypeList = joinTypeList;
+    join.condition = condition;
+    return join;
+  }
 
-    public static JoinTable getBaseJoinTable(AbstractRelation joinBaseTable, List<JoinType> joinTypeList, List<UnnamedColumn> condition) {
-        JoinTable join = new JoinTable();
-        join.joinList.add(joinBaseTable);
-        join.joinTypeList = joinTypeList;
-        join.condition = condition;
-        return join;
-    }
+  public static JoinTable getBaseJoinTable(AbstractRelation joinBaseTable, List<JoinType> joinTypeList, List<UnnamedColumn> condition) {
+    JoinTable join = new JoinTable();
+    join.joinList.add(joinBaseTable);
+    join.joinTypeList = joinTypeList;
+    join.condition = condition;
+    return join;
+  }
 
-    public void addJoinTable(AbstractRelation joinTable, JoinType joinType, UnnamedColumn conditon){
-        this.condition.add(conditon);
-        this.joinList.add(joinTable);
-        this.joinTypeList.add(joinType);
-    }
+  public void addJoinTable(AbstractRelation joinTable, JoinType joinType, UnnamedColumn conditon) {
+    this.condition.add(conditon);
+    this.joinList.add(joinTable);
+    this.joinTypeList.add(joinType);
+  }
 
-    public void SetAliasName(String aliasName){
-        this.aliasName = Optional.of(aliasName);
-    }
+  public void SetAliasName(String aliasName) {
+    this.aliasName = Optional.of(aliasName);
+  }
 
-    public List<AbstractRelation> getJoinList() {
-        return joinList;
-    }
+  public List<AbstractRelation> getJoinList() {
+    return joinList;
+  }
 
-    public List<JoinType> getJoinTypeList() {
-        return joinTypeList;
-    }
+  public List<JoinType> getJoinTypeList() {
+    return joinTypeList;
+  }
 
-    public List<UnnamedColumn> getCondition() {
-        return condition;
-    }
+  public List<UnnamedColumn> getCondition() {
+    return condition;
+  }
 
-    public Optional<String> getAliasName() {
-        return aliasName;
-    }
+  public Optional<String> getAliasName() {
+    return aliasName;
+  }
 
-    @Override
-    public int hashCode() {
-        return HashCodeBuilder.reflectionHashCode(this);
-    }
+  @Override
+  public int hashCode() {
+    return HashCodeBuilder.reflectionHashCode(this);
+  }
 
-    @Override
-    public boolean equals(Object obj) {
-        return EqualsBuilder.reflectionEquals(this, obj);
-    }
+  @Override
+  public boolean equals(Object obj) {
+    return EqualsBuilder.reflectionEquals(this, obj);
+  }
 
-    @Override
-    public String toString() {
-        return ToStringBuilder.reflectionToString(this);
-    }
+  @Override
+  public String toString() {
+    return ToStringBuilder.reflectionToString(this);
+  }
 }

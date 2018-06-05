@@ -5,60 +5,64 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 public class BaseColumn implements UnnamedColumn, SelectItem, GroupingAttribute {
-    
-    String schemaName = "";
 
-    String tableSourceAlias = "";
-    
-    String columnName;
-    
-    public String getTableSourceAlias() {
-        return tableSourceAlias;
-    }
+  String schemaName = "";
 
-    public String getSchemaName() { return schemaName; }
+  String tableSourceAlias = "";
 
-    public void setSchemaName(String schemaName) { this.schemaName = schemaName; }
+  String columnName;
 
-    public void setTableSourceAlias(String tableSourceAlias) {
-        this.tableSourceAlias = tableSourceAlias;
-    }
+  public String getTableSourceAlias() {
+    return tableSourceAlias;
+  }
 
-    public String getColumnName() {
-        return columnName;
-    }
+  public String getSchemaName() {
+    return schemaName;
+  }
 
-    public void setColumnName(String columnName) {
-        this.columnName = columnName;
-    }
+  public void setSchemaName(String schemaName) {
+    this.schemaName = schemaName;
+  }
 
-    public BaseColumn(String columnName) {
-        this.columnName = columnName;
-    }
+  public void setTableSourceAlias(String tableSourceAlias) {
+    this.tableSourceAlias = tableSourceAlias;
+  }
 
-    public BaseColumn(String tableSourceAlias, String columnName) {
-        this.tableSourceAlias = tableSourceAlias;
-        this.columnName = columnName;
-    }
+  public String getColumnName() {
+    return columnName;
+  }
 
-    public BaseColumn(String schemaName, String tableSourceAlias, String columnName) {
-        this.schemaName = schemaName;
-        this.tableSourceAlias = tableSourceAlias;
-        this.columnName = columnName;
-    }
-    
-    @Override
-    public int hashCode() {
-        return HashCodeBuilder.reflectionHashCode(this);
-    }
+  public void setColumnName(String columnName) {
+    this.columnName = columnName;
+  }
 
-    @Override
-    public boolean equals(Object obj) {
-        return EqualsBuilder.reflectionEquals(this, obj);
-    }
-    
-    @Override
-    public String toString() {
-        return ToStringBuilder.reflectionToString(this);
-    }
+  public BaseColumn(String columnName) {
+    this.columnName = columnName;
+  }
+
+  public BaseColumn(String tableSourceAlias, String columnName) {
+    this.tableSourceAlias = tableSourceAlias;
+    this.columnName = columnName;
+  }
+
+  public BaseColumn(String schemaName, String tableSourceAlias, String columnName) {
+    this.schemaName = schemaName;
+    this.tableSourceAlias = tableSourceAlias;
+    this.columnName = columnName;
+  }
+
+  @Override
+  public int hashCode() {
+    return HashCodeBuilder.reflectionHashCode(this);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    return EqualsBuilder.reflectionEquals(this, obj);
+  }
+
+  @Override
+  public String toString() {
+    return ToStringBuilder.reflectionToString(this);
+  }
 }

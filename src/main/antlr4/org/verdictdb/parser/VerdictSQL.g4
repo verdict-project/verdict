@@ -606,8 +606,6 @@ value_manipulation_function
     | binary_manipulation_function
     | ternary_manipulation_function
     | nary_manipulation_function
-    | extract_time_function
-    | substring_function
     ;
 
 nary_manipulation_function
@@ -623,20 +621,6 @@ ternary_manipulation_function
 binary_manipulation_function
     : function_name=(ROUND | MOD | PMOD | STRTOL | POW | PERCENTILE | SPLIT | INSTR | ENCODE | DECODE | SHIFTLEFT | SHIFTRIGHT | SHIFTRIGHTUNSIGNED | NVL | FIND_IN_SET | FORMAT_NUMBER | GET_JSON_OBJECT | IN_FILE | LOCATE | REPEAT | AES_ENCRYPT | AES_DECRYPT)
       '(' expression ',' expression ')'
-    ;
-    
-extract_time_function
-    : function_name=EXTRACT
-      '(' extract_unit FROM expression ')'
-    ;
-
-substring_function
-    : function_name=SUBSTRING
-      '(' expression FROM expression FOR expression ')'
-    ;
-    
-extract_unit
-    : YEAR | expression
     ;
 
 unary_manipulation_function
@@ -832,17 +816,12 @@ constant
     : STRING // string, datetime or uniqueidentifier
     | BINARY
     | number
-    | placeholder
     | sign? (REAL | FLOAT)  // float or decimal
     | sign? '$' (DECIMAL | FLOAT)       // money
     ;
 
 number
     : sign? DECIMAL
-    ;
-
-placeholder
-    : COLON DECIMAL
     ;
 
 sign
@@ -1164,7 +1143,6 @@ SETUSER:                         S E T U S E R;
 SHUTDOWN:                        S H U T D O W N;
 SOME:                            S O M E;
 SUBSTR:                          S U B S T R;
-SUBSTRING:                       S U B S T R I N G;
 STATISTICS:                      S T A T I S T I C S;
 SYSTEM_USER:                     S Y S T E M '_' U S E R;
 TABLE:                           T A B L E;
@@ -1328,7 +1306,6 @@ PARTITION:                       P A R T I T I O N;
 PATH:                            P A T H;
 PERCENTILE:                      P E R C E N T I L E;
 PI:                              P I;
-PLACEHOLDER:                     P L A C E H O L D E R;
 PMOD:                            P M O D;
 POSITIVE:                        P O S I T I V E;
 POW:                             P O W;

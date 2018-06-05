@@ -73,15 +73,7 @@ public class LogicalSelectQueryToSql {
   String unnamedColumnToSqlPart(UnnamedColumn column) throws VerdictDbException {
     if (column instanceof BaseColumn) {
       BaseColumn base = (BaseColumn) column;
-      if (base.getSchemaName().equals("")) {
-        if (base.getTableSourceAlias().equals("")){
-          return quoteName(base.getColumnName());
-        }
-        else return quoteName(base.getTableSourceAlias()) + "." + quoteName(base.getColumnName());
-      }
-      else {
-        return quoteName(base.getSchemaName()) + "." + quoteName(base.getTableSourceAlias()) + "." + quoteName(base.getColumnName());
-      }
+      return quoteName(base.getTableSourceAlias()) + "." + quoteName(base.getColumnName());
     }
     else if (column instanceof ConstantColumn) {
       return ((ConstantColumn) column).getValue().toString();
@@ -195,9 +187,6 @@ public class LogicalSelectQueryToSql {
       else if (columnOp.getOpType().equals("between")) {
         return withParentheses(columnOp.getOperand(0)) + " between " + withParentheses(columnOp.getOperand(1)) + " and " + withParentheses(columnOp.getOperand(2));
       }
-      else if (columnOp.getOpType().equals("extract")) {
-        return "extract(" + withParentheses(columnOp.getOperand(0)) + " from " + withParentheses(columnOp.getOperand(1)) + ")";
-      }
       else if (columnOp.getOpType().equals("in")) {
         List<UnnamedColumn> columns = columnOp.getOperands();
         String temp = "";
@@ -223,9 +212,9 @@ public class LogicalSelectQueryToSql {
       else if (columnOp.getOpType().equals("countdistinct")) {
         return  "count(distinct " + withParentheses(columnOp.getOperand()) + ")";
       }
-      else if (columnOp.getOpType().equals("substring")) {
-        return "substring(" + withParentheses(columnOp.getOperand(0)) + " from " +
-            withParentheses(columnOp.getOperand(1)) + " for " + withParentheses(columnOp.getOperand(2)) + ")";
+      else if (columnOp.getOpType().equals("substr")) {
+        return "substr(" + withParentheses(columnOp.getOperand(0)) + ", " +
+            withParentheses(columnOp.getOperand(1)) + ", " + withParentheses(columnOp.getOperand(2)) + ")";
       }
       else {
         throw new UnexpectedTypeException("Unexpceted opType of column: " + columnOp.getOpType().toString());
