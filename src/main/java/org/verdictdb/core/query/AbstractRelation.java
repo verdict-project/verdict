@@ -12,7 +12,6 @@ import com.google.common.base.Optional;
  * Represents a relation (or a table) that can appear in the from clause.
  *
  * @author Yongjoo Park
- *
  */
 public abstract class AbstractRelation {
 
@@ -28,19 +27,19 @@ public abstract class AbstractRelation {
 
   @Override
   public int hashCode() {
-      return HashCodeBuilder.reflectionHashCode(this);
+    return HashCodeBuilder.reflectionHashCode(this);
   }
 
   @Override
   public boolean equals(Object obj) {
-      return EqualsBuilder.reflectionEquals(this, obj);
+    return EqualsBuilder.reflectionEquals(this, obj);
   }
 
   @Override
   public String toString() {
-      return ToStringBuilder.reflectionToString(this);
+    return ToStringBuilder.reflectionToString(this);
   }
-  
+
   public boolean isAggregateQuery() {
     if (!(this instanceof SelectQueryOp)) {
       return false;
@@ -51,7 +50,7 @@ public abstract class AbstractRelation {
       if (item instanceof AliasedColumn) {
         item = ((AliasedColumn) item).getColumn();
       }
-      
+
       if (item instanceof ColumnOp) {
         ColumnOp col = (ColumnOp) item;
         if (col.isColumnOpAggregate()) {

@@ -15,8 +15,6 @@ import org.verdictdb.core.query.ColumnOp;
 import org.verdictdb.core.query.SelectItem;
 import org.verdictdb.core.query.SelectQueryOp;
 import org.verdictdb.core.rewriter.ScrambleMeta;
-import org.verdictdb.core.rewriter.query.AggQueryRewriter;
-import org.verdictdb.core.rewriter.query.AliasRenamingRules;
 import org.verdictdb.core.sql.SelectQueryToSql;
 import org.verdictdb.exception.VerdictDbException;
 import org.verdictdb.sql.syntax.HiveSyntax;
