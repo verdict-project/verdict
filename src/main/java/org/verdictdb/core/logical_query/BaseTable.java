@@ -19,6 +19,21 @@ public class BaseTable extends AbstractRelation {
     super.setAliasName(tableSourceAlias);
   }
 
+  public static BaseTable getBaseTableWithoutAlias(String schemaName, String tableName){
+    BaseTable t = new BaseTable(tableName);
+    t.setSchemaName(schemaName);
+    return t;
+  }
+
+  public BaseTable(String tableName, String tableSourceAlias){
+    this.tableName = tableName;
+    super.setAliasName(tableSourceAlias);
+  }
+
+  public BaseTable(String tableName){
+    this.tableName = tableName;
+  }
+
   public String getSchemaName() {
     return schemaName;
   }

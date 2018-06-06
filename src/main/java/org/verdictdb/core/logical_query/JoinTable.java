@@ -16,14 +16,11 @@ public class JoinTable extends AbstractRelation {
     left, leftouter, right, rightouter, inner, outer
   }
 
-
   List<AbstractRelation> joinList = new ArrayList<>();
 
   List<JoinType> joinTypeList = new ArrayList<>();
 
   List<UnnamedColumn> condition = new ArrayList<>();
-
-  Optional<String> aliasName = Optional.absent();
 
   public static JoinTable getJoinTable(List<AbstractRelation> joinList, List<JoinType> joinTypeList, List<UnnamedColumn> condition) {
     JoinTable join = new JoinTable();
