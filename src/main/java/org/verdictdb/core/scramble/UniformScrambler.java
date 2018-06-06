@@ -13,14 +13,14 @@ import org.verdictdb.core.query.SelectItem;
 import org.verdictdb.core.query.SelectQueryOp;
 
 public class UniformScrambler extends Scrambler {
-  
+
   public UniformScrambler(
       String originalSchemaName, String originalTableName,
       String scrambledSchemaName, String scrambledTableName,
       int aggregationBlockCount) {
     super(originalSchemaName, originalTableName, scrambledSchemaName, scrambledTableName, aggregationBlockCount);
   }
-  
+
   public CreateTableAsSelect scrambledTableCreationQuery() {
     SelectQueryOp selectQuery = scramblingQuery();
     CreateTableAsSelect createQuery =
@@ -28,7 +28,7 @@ public class UniformScrambler extends Scrambler {
     createQuery.addPartitionColumn(aggregationBlockColumn);
     return createQuery;
   }
-  
+
   SelectQueryOp scramblingQuery() {
     // block agg index = floor(rand() * aggBlockCount)
     AliasedColumn aggBlockValue = new AliasedColumn(
@@ -36,17 +36,17 @@ public class UniformScrambler extends Scrambler {
             ColumnOp.rand(),
             ConstantColumn.valueOf(aggregationBlockCount))),
         aggregationBlockColumn);
-    
+
     // inclusion probability = 1 / (aggblock count)
 //    AliasedColumn incProbValue = new AliasedColumn(
 //        ConstantColumn.valueOf(1.0 / aggregationBlockCount),
 //        inclusionProbabilityColumn);
-    
+
     // inclusion block difference = 1 / (aggblock count)
 //    AliasedColumn incProbBlockDiffValue = new AliasedColumn(
 //        ConstantColumn.valueOf(1.0 / aggregationBlockCount),
 //        inclusionProbabilityBlockDifferenceColumn);
-    
+
     // subsample value: random integer between 0 and 99 (inclusive)
     // = floor(rand() * 100)
     AliasedColumn subsampleValue = new AliasedColumn(
@@ -54,9 +54,9 @@ public class UniformScrambler extends Scrambler {
             ColumnOp.rand(),
             ConstantColumn.valueOf(100))),
         subsampleColumn);
-    
+
     AliasedColumn tierValue = new AliasedColumn(ConstantColumn.valueOf(1), tierColumn);
-    
+
     List<SelectItem> newSelectList = new ArrayList<>();
     newSelectList.add(new AsteriskColumn());
     newSelectList.add(aggBlockValue);
@@ -64,9 +64,9 @@ public class UniformScrambler extends Scrambler {
 //    newSelectList.add(incProbBlockDiffValue);
     newSelectList.add(subsampleValue);
     newSelectList.add(tierValue);
-    
+
     SelectQueryOp augmentedRelation = SelectQueryOp.getSelectQueryOp(
-        newSelectList, 
+        newSelectList,
         new BaseTable(originalSchemaName, originalTableName));
     return augmentedRelation;
   }
