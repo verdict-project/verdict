@@ -56,8 +56,6 @@ public class SelectQueryOp extends AbstractRelation {
 
   Optional<UnnamedColumn> limit = Optional.absent();
 
-  Optional<String> aliasName = Optional.absent();
-
   public SelectQueryOp() {
   }
 
@@ -155,10 +153,6 @@ public class SelectQueryOp extends AbstractRelation {
 
   public List<SelectItem> getSelectList() {
     return selectList;
-  }
-
-  public void setAliasName(String aliasName) {
-    this.aliasName = Optional.of(aliasName);
   }
 
   @Override

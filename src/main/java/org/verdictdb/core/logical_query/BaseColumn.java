@@ -10,6 +10,8 @@ public class BaseColumn implements UnnamedColumn, SelectItem, GroupingAttribute 
 
   String tableSourceAlias = "";
 
+  String tableName = "";
+
   String columnName;
 
   public String getTableSourceAlias() {
@@ -19,6 +21,8 @@ public class BaseColumn implements UnnamedColumn, SelectItem, GroupingAttribute 
   public String getSchemaName() {
     return schemaName;
   }
+
+  public String getTableName() { return tableName; }
 
   public void setSchemaName(String schemaName) {
     this.schemaName = schemaName;
@@ -35,6 +39,8 @@ public class BaseColumn implements UnnamedColumn, SelectItem, GroupingAttribute 
   public void setColumnName(String columnName) {
     this.columnName = columnName;
   }
+
+  public void setTableName(String tableName) { this.tableName = tableName; }
 
   public BaseColumn(String columnName) {
     this.columnName = columnName;

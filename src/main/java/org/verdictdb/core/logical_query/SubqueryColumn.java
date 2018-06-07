@@ -21,6 +21,8 @@ public class SubqueryColumn implements UnnamedColumn {
     return new SubqueryColumn(relation);
   }
 
+  public void setSubquery(SelectQueryOp relation) { subquery = relation; }
+
   public SelectQueryOp getSubquery() {
     return subquery;
   }

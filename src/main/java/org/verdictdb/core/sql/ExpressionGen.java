@@ -53,7 +53,6 @@ public class ExpressionGen extends VerdictSQLBaseVisitor<UnnamedColumn> {
             return new BaseColumn(t[0], t[1]);
         } else {
             return new BaseColumn(t[0]);
-            //return new BaseColumn(meta.columnAlias.get(t[1]), t[1]);
         }
     }
 
@@ -146,13 +145,14 @@ public class ExpressionGen extends VerdictSQLBaseVisitor<UnnamedColumn> {
                 return null;
             }
 
-            @Override //not support yet
+            @Override
             public ColumnOp visitBinary_manipulation_function(
                     VerdictSQLParser.Binary_manipulation_functionContext ctx) {
                 String fname = ctx.function_name.getText().toLowerCase();
+                ExpressionGen g = new ExpressionGen(meta);
                 return new ColumnOp(fname, Arrays.<UnnamedColumn>asList(
-                        visit(ctx.expression(0)),
-                        visit(ctx.expression(1))
+                        g.visit(ctx.expression(0)),
+                        g.visit(ctx.expression(1))
                 ));
             }
 
@@ -180,6 +180,7 @@ public class ExpressionGen extends VerdictSQLBaseVisitor<UnnamedColumn> {
                 //return new FuncExpr(funcName, exprList, null);
                 return null;
             }
+
         };
         return v.visit(ctx);
     }
