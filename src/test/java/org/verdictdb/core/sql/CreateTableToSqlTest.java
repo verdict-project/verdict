@@ -19,21 +19,21 @@ public class CreateTableToSqlTest {
   public void selectAllTest() throws VerdictDbException {
     BaseTable base = new BaseTable("myschema", "mytable", "t");
     SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
-            Arrays.<SelectItem>asList(new AsteriskColumn()),
-            base);
+        Arrays.<SelectItem>asList(new AsteriskColumn()),
+        base);
     CreateTableAsSelect create = new CreateTableAsSelect("newschema", "newtable", relation);
     String expected = "create table `newschema`.`newtable` as select * from `myschema`.`mytable` as t";
     CreateTableToSql queryToSql = new CreateTableToSql(new HiveSyntax());
     String actual = queryToSql.toSql(create);
     assertEquals(expected, actual);
   }
-  
+
   @Test
   public void selectAllWithPartition1Test() throws VerdictDbException {
     BaseTable base = new BaseTable("myschema", "mytable", "t");
     SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
-            Arrays.<SelectItem>asList(new AsteriskColumn()),
-            base);
+        Arrays.<SelectItem>asList(new AsteriskColumn()),
+        base);
     CreateTableAsSelect create = new CreateTableAsSelect("newschema", "newtable", relation);
     create.addPartitionColumn("part1");
     String expected = "create table `newschema`.`newtable` partitioned by (`part1`) as select * from `myschema`.`mytable` as t";
@@ -41,13 +41,13 @@ public class CreateTableToSqlTest {
     String actual = queryToSql.toSql(create);
     assertEquals(expected, actual);
   }
-  
+
   @Test
   public void selectAllWithPartition2Test() throws VerdictDbException {
     BaseTable base = new BaseTable("myschema", "mytable", "t");
     SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
-            Arrays.<SelectItem>asList(new AsteriskColumn()),
-            base);
+        Arrays.<SelectItem>asList(new AsteriskColumn()),
+        base);
     CreateTableAsSelect create = new CreateTableAsSelect("newschema", "newtable", relation);
     create.addPartitionColumn("part1");
     create.addPartitionColumn("part2");

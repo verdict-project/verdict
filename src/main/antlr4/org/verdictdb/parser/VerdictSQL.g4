@@ -328,11 +328,16 @@ expression
     | expression op=('+' | '-' | '&' | '^' | '|' | '||') expression   #binary_operator_expression
     | expression comparison_operator expression                #binary_operator_expression
     | interval                                                 #interval_expression
+    | date                                                     #date_expression
     ;
 
 interval
 	: INTERVAL constant_expression (DAY | DAYS | MONTH | MONTHS | YEAR | YEARS)
 	;
+
+date
+    : DATE constant_expression
+    ;
 
 constant_expression
     : NULL
@@ -516,7 +521,7 @@ join_part
     ;
 
 table_name_with_hint
-    : table_name with_table_hints?
+    : table_name
     ;
 
 // https://msdn.microsoft.com/en-us/library/ms190312.aspx
@@ -549,27 +554,12 @@ as_table_alias
     ;
 
 table_alias
-    : id with_table_hints?
-    ;
-
-// https://msdn.microsoft.com/en-us/library/ms187373.aspx
-with_table_hints
-    : WITH? '(' table_hint (',' table_hint)* ')'
+    : id
     ;
 
 // Id runtime check. Id can be (FORCESCAN, HOLDLOCK, NOLOCK, NOWAIT, PAGLOCK, READCOMMITTED,
 // READCOMMITTEDLOCK, READPAST, READUNCOMMITTED, REPEATABLEREAD, ROWLOCK, TABLOCK, TABLOCKX
 // UPDLOCK, XLOCK)
-
-table_hint
-    : NOEXPAND? ( INDEX '(' index_value (',' index_value)* ')'
-                | INDEX '=' index_value
-                | FORCESEEK ('(' index_value '(' index_column_name  (',' index_column_name)* ')' ')')?
-                | SERIALIZABLE
-                | SNAPSHOT
-                | SPATIAL_WINDOW_MAX_CELLS '=' DECIMAL
-                | ID)?
-    ;
 
 index_column_name
 	: ID
@@ -616,7 +606,6 @@ value_manipulation_function
     | binary_manipulation_function
     | ternary_manipulation_function
     | nary_manipulation_function
-    | extract_time_function
     ;
 
 nary_manipulation_function
@@ -632,15 +621,6 @@ ternary_manipulation_function
 binary_manipulation_function
     : function_name=(ROUND | MOD | PMOD | STRTOL | POW | PERCENTILE | SPLIT | INSTR | ENCODE | DECODE | SHIFTLEFT | SHIFTRIGHT | SHIFTRIGHTUNSIGNED | NVL | FIND_IN_SET | FORMAT_NUMBER | GET_JSON_OBJECT | IN_FILE | LOCATE | REPEAT | AES_ENCRYPT | AES_DECRYPT)
       '(' expression ',' expression ')'
-    ;
-    
-extract_time_function
-    : function_name=EXTRACT
-      '(' extract_unit FROM expression ')'
-    ;
-    
-extract_unit
-    : YEAR | expression
     ;
 
 unary_manipulation_function
@@ -953,6 +933,7 @@ simple_id
     | STDEVP
     | STDDEV_SAMP
     | STRTOL
+    | SUBSTRING
     | SUM
     | THROW
     | TIES
@@ -978,6 +959,7 @@ simple_id
     | YEARS
     | STORE
     | INTERVAL
+    | DATE
     | TABLES
     | COLUMNS
     ;
@@ -1228,6 +1210,7 @@ COS:                             C O S;
 COUNT:                           C O U N T;
 COUNT_BIG:                       C O U N T '_' B I G;
 CRC32:                           C R C '32';
+DATE:                            D A T E;
 DATEADD:                         D A T E A D D;
 DATEDIFF:                        D A T E D I F F;
 DATENAME:                        D A T E N A M E;

@@ -31,13 +31,13 @@ public class SelectQueryToSql {
   SyntaxAbstract syntax;
 
   Set<String> opTypeNotRequiringParentheses = Sets.newHashSet(
-  "sum", "avg", "count", "std", "sqrt", "notnull", "whenthenelse", "rand", "floor");
+      "sum", "avg", "count", "std", "sqrt", "notnull", "whenthenelse", "rand", "floor");
 
   public SelectQueryToSql(SyntaxAbstract syntax) {
     this.syntax = syntax;
   }
 
-  public String toSql(AbstractRelation relation) throws VerdictDbException{
+  public String toSql(AbstractRelation relation) throws VerdictDbException {
     if (!(relation instanceof SelectQueryOp)) {
       throw new UnexpectedTypeException("Unexpected type: " + relation.getClass().toString());
     }
@@ -47,11 +47,9 @@ public class SelectQueryToSql {
   String selectItemToSqlPart(SelectItem item) throws VerdictDbException {
     if (item instanceof AliasedColumn) {
       return aliasedColumnToSqlPart((AliasedColumn) item);
-    }
-    else if (item instanceof UnnamedColumn) {
+    } else if (item instanceof UnnamedColumn) {
       return unnamedColumnToSqlPart((UnnamedColumn) item);
-    }
-    else {
+    } else {
       throw new UnexpectedTypeException("Unexpceted argument type: " + item.getClass().toString());
     }
   }
@@ -67,8 +65,7 @@ public class SelectQueryToSql {
     }
     if (column instanceof AliasReference) {
       return quoteName(((AliasReference) column).getAliasName());
-    }
-    else {
+    } else {
       return unnamedColumnToSqlPart((UnnamedColumn) column);
     }
   }
@@ -77,53 +74,38 @@ public class SelectQueryToSql {
     if (column instanceof BaseColumn) {
       BaseColumn base = (BaseColumn) column;
       return quoteName(base.getTableSourceAlias()) + "." + quoteName(base.getColumnName());
-    }
-    else if (column instanceof ConstantColumn) {
+    } else if (column instanceof ConstantColumn) {
       return ((ConstantColumn) column).getValue().toString();
-    }
-    else if (column instanceof AsteriskColumn) {
+    } else if (column instanceof AsteriskColumn) {
       return "*";
-    }
-    else if (column instanceof ColumnOp) {
+    } else if (column instanceof ColumnOp) {
       ColumnOp columnOp = (ColumnOp) column;
       if (columnOp.getOpType().equals("avg")) {
         return "avg(" + unnamedColumnToSqlPart(columnOp.getOperand()) + ")";
-      }
-      else if (columnOp.getOpType().equals("sum")) {
+      } else if (columnOp.getOpType().equals("sum")) {
         return "sum(" + unnamedColumnToSqlPart(columnOp.getOperand()) + ")";
-      }
-      else if (columnOp.getOpType().equals("count")) {
+      } else if (columnOp.getOpType().equals("count")) {
         return "count(*)";
-      }
-      else if (columnOp.getOpType().equals("std")) {
+      } else if (columnOp.getOpType().equals("std")) {
         return "std(" + unnamedColumnToSqlPart(columnOp.getOperand()) + ")";
-      }
-      else if (columnOp.getOpType().equals("sqrt")) {
+      } else if (columnOp.getOpType().equals("sqrt")) {
         return "sqrt(" + unnamedColumnToSqlPart(columnOp.getOperand()) + ")";
-      }
-      else if (columnOp.getOpType().equals("add")) {
+      } else if (columnOp.getOpType().equals("add")) {
         return withParentheses(columnOp.getOperand(0)) + " + " + withParentheses(columnOp.getOperand(1));
-      }
-      else if (columnOp.getOpType().equals("subtract")) {
+      } else if (columnOp.getOpType().equals("subtract")) {
         return withParentheses(columnOp.getOperand(0)) + " - " + withParentheses(columnOp.getOperand(1));
-      }
-      else if (columnOp.getOpType().equals("multiply")) {
+      } else if (columnOp.getOpType().equals("multiply")) {
         return withParentheses(columnOp.getOperand(0)) + " * " + withParentheses(columnOp.getOperand(1));
-      }
-      else if (columnOp.getOpType().equals("divide")) {
+      } else if (columnOp.getOpType().equals("divide")) {
         return withParentheses(columnOp.getOperand(0)) + " / " + withParentheses(columnOp.getOperand(1));
-      }
-      else if (columnOp.getOpType().equals("pow")) {
+      } else if (columnOp.getOpType().equals("pow")) {
         return "pow(" + unnamedColumnToSqlPart(columnOp.getOperand(0)) + ", "
             + unnamedColumnToSqlPart(columnOp.getOperand(1)) + ")";
-      }
-      else if (columnOp.getOpType().equals("equal")) {
+      } else if (columnOp.getOpType().equals("equal")) {
         return withParentheses(columnOp.getOperand(0)) + " = " + withParentheses(columnOp.getOperand(1));
-      }
-      else if (columnOp.getOpType().equals("and")) {
+      } else if (columnOp.getOpType().equals("and")) {
         return withParentheses(columnOp.getOperand(0)) + " and " + withParentheses(columnOp.getOperand(1));
-      }
-      else if (columnOp.getOpType().equals("or")) {
+      } else if (columnOp.getOpType().equals("or")) {
         return withParentheses(columnOp.getOperand(0)) + " or " + withParentheses(columnOp.getOperand(1));
       }
 //      else if (columnOp.getOpType().equals("casewhenelse")) {
@@ -138,101 +120,71 @@ public class SelectQueryToSql {
             + " then " + withParentheses(columnOp.getOperand(1))
             + " else " + withParentheses(columnOp.getOperand(2))
             + " end";
-      }
-      else if (columnOp.getOpType().equals("notequal")) {
+      } else if (columnOp.getOpType().equals("notequal")) {
         return withParentheses(columnOp.getOperand(0)) + " <> " + withParentheses(columnOp.getOperand(1));
-      }
-      else if (columnOp.getOpType().equals("notnull")) {
+      } else if (columnOp.getOpType().equals("notnull")) {
         return withParentheses(columnOp.getOperand(0)) + " is not null";
-      }
-      else if (columnOp.getOpType().equals("interval")) {
-        return "interval '" + withParentheses(columnOp.getOperand(0)) + "' " + withParentheses(columnOp.getOperand(1));
-      }
-      else if (columnOp.getOpType().equals("date")) {
-        return "date '" + withParentheses(columnOp.getOperand()) + "'";
-      }
-      else if (columnOp.getOpType().equals("greater")) {
+      } else if (columnOp.getOpType().equals("interval")) {
+        return "interval " + withParentheses(columnOp.getOperand(0)) + " " + withParentheses(columnOp.getOperand(1));
+      } else if (columnOp.getOpType().equals("date")) {
+        return "date " + withParentheses(columnOp.getOperand());
+      } else if (columnOp.getOpType().equals("greater")) {
         return withParentheses(columnOp.getOperand(0)) + " > " + withParentheses(columnOp.getOperand(1));
-      }
-      else if (columnOp.getOpType().equals("less")) {
+      } else if (columnOp.getOpType().equals("less")) {
         return withParentheses(columnOp.getOperand(0)) + " < " + withParentheses(columnOp.getOperand(1));
-      }
-      else if (columnOp.getOpType().equals("greaterequal")) {
+      } else if (columnOp.getOpType().equals("greaterequal")) {
         return withParentheses(columnOp.getOperand(0)) + " >= " + withParentheses(columnOp.getOperand(1));
-      }
-      else if (columnOp.getOpType().equals("lessequal")) {
+      } else if (columnOp.getOpType().equals("lessequal")) {
         return withParentheses(columnOp.getOperand(0)) + " <= " + withParentheses(columnOp.getOperand(1));
-      }
-      else if (columnOp.getOpType().equals("min")) {
+      } else if (columnOp.getOpType().equals("min")) {
         return "min(" + selectItemToSqlPart(columnOp.getOperand()) + ")";
-      }
-      else if (columnOp.getOpType().equals("max")) {
+      } else if (columnOp.getOpType().equals("max")) {
         return "max(" + selectItemToSqlPart(columnOp.getOperand()) + ")";
-      }
-      else if (columnOp.getOpType().equals("min")) {
+      } else if (columnOp.getOpType().equals("min")) {
         return "max(" + selectItemToSqlPart(columnOp.getOperand()) + ")";
-      }
-      else if (columnOp.getOpType().equals("floor")) {
+      } else if (columnOp.getOpType().equals("floor")) {
         return "floor(" + selectItemToSqlPart(columnOp.getOperand()) + ")";
-      }
-      else if (columnOp.getOpType().equals("is")) {
-        return  withParentheses(columnOp.getOperand(0)) + " is " + withParentheses(columnOp.getOperand(1));
-      }
-      else if (columnOp.getOpType().equals("like")) {
-        return  withParentheses(columnOp.getOperand(0)) + " like '" + withParentheses(columnOp.getOperand(1)) + "'";
-      }
-      else if (columnOp.getOpType().equals("notlike")) {
-        return  withParentheses(columnOp.getOperand(0)) + " not like '" + withParentheses(columnOp.getOperand(1)) + "'";
-      }
-      else if (columnOp.getOpType().equals("exists")) {
+      } else if (columnOp.getOpType().equals("is")) {
+        return withParentheses(columnOp.getOperand(0)) + " is " + withParentheses(columnOp.getOperand(1));
+      } else if (columnOp.getOpType().equals("like")) {
+        return withParentheses(columnOp.getOperand(0)) + " like " + withParentheses(columnOp.getOperand(1));
+      } else if (columnOp.getOpType().equals("notlike")) {
+        return withParentheses(columnOp.getOperand(0)) + " not like " + withParentheses(columnOp.getOperand(1));
+      } else if (columnOp.getOpType().equals("exists")) {
         return "exists " + withParentheses(columnOp.getOperand());
-      }
-      else if (columnOp.getOpType().equals("notexists")) {
+      } else if (columnOp.getOpType().equals("notexists")) {
         return "not exists " + withParentheses(columnOp.getOperand());
-      }
-      else if (columnOp.getOpType().equals("between")) {
+      } else if (columnOp.getOpType().equals("between")) {
         return withParentheses(columnOp.getOperand(0)) + " between " + withParentheses(columnOp.getOperand(1)) + " and " + withParentheses(columnOp.getOperand(2));
-      }
-      else if (columnOp.getOpType().equals("extract")) {
-        return "extract(" + withParentheses(columnOp.getOperand(0)) + " from " + withParentheses(columnOp.getOperand(1)) + ")";
-      }
-      else if (columnOp.getOpType().equals("in")) {
+      } else if (columnOp.getOpType().equals("in")) {
         List<UnnamedColumn> columns = columnOp.getOperands();
         String temp = "";
-        for (int i=1; i<columns.size();i++){
-          if (i!=columns.size()-1) {
+        for (int i = 1; i < columns.size(); i++) {
+          if (i != columns.size() - 1) {
             temp = temp + withParentheses(columns.get(i)) + ", ";
-          }
-          else temp = temp + withParentheses(columns.get(i));
+          } else temp = temp + withParentheses(columns.get(i));
         }
         return withParentheses(columns.get(0)) + " in (" + temp + ")";
-      }
-      else if (columnOp.getOpType().equals("notin")) {
+      } else if (columnOp.getOpType().equals("notin")) {
         List<UnnamedColumn> columns = columnOp.getOperands();
         String temp = "";
-        for (int i=1; i<columns.size();i++){
-          if (i!=columns.size()-1) {
+        for (int i = 1; i < columns.size(); i++) {
+          if (i != columns.size() - 1) {
             temp = temp + withParentheses(columns.get(i)) + ", ";
-          }
-          else temp = temp + withParentheses(columns.get(i));
+          } else temp = temp + withParentheses(columns.get(i));
         }
         return withParentheses(columns.get(0)) + " not in (" + temp + ")";
-      }
-      else if (columnOp.getOpType().equals("countdistinct")) {
-        return  "count(distinct " + withParentheses(columnOp.getOperand()) + ")";
-      }
-      else if (columnOp.getOpType().equals("substring")) {
-        return "substring(" + withParentheses(columnOp.getOperand(0)) + " from " +
-            withParentheses(columnOp.getOperand(1)) + " for " + withParentheses(columnOp.getOperand(2)) + ")";
-      }
-      else if (columnOp.getOpType().equals("rand")) {
+      } else if (columnOp.getOpType().equals("countdistinct")) {
+        return "count(distinct " + withParentheses(columnOp.getOperand()) + ")";
+      } else if (columnOp.getOpType().equals("substr")) {
+        return "substr(" + withParentheses(columnOp.getOperand(0)) + ", " +
+            withParentheses(columnOp.getOperand(1)) + ", " + withParentheses(columnOp.getOperand(2)) + ")";
+      } else if (columnOp.getOpType().equals("rand")) {
         return syntax.randFunction();
-      }
-      else {
+      } else {
         throw new UnexpectedTypeException("Unexpceted opType of column: " + columnOp.getOpType().toString());
       }
-    }
-    else if (column instanceof SubqueryColumn) {
+    } else if (column instanceof SubqueryColumn) {
       return "(" + selectQueryToSql(((SubqueryColumn) column).getSubquery()) + ")";
     }
     throw new UnexpectedTypeException("Unexpceted argument type: " + column.getClass().toString());
@@ -379,7 +331,7 @@ public class SelectQueryToSql {
     return "(" + selectQueryToSql(sel) + ") as " + aliasName.get();
   }
 
-  String quoteName (String name){
+  String quoteName(String name) {
     String quoteString = syntax.getQuoteString();
     return quoteString + name + quoteString;
   }

@@ -1,10 +1,7 @@
 package org.verdictdb.core.rewriter.query;
 
-import static org.junit.Assert.*;
-
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Arrays;
@@ -30,7 +27,6 @@ import org.verdictdb.core.sql.CreateTableToSql;
 import org.verdictdb.core.sql.SelectQueryToSql;
 import org.verdictdb.exception.VerdictDbException;
 import org.verdictdb.sql.syntax.H2Syntax;
-import org.verdictdb.sql.syntax.HiveSyntax;
 
 public class AggQueryRewriterJdbcTest {
 
