@@ -264,20 +264,20 @@ public class AliasGen {
   }
 
   public void setColNameAndTableAlias(HashMap<String, String> colNameAndTableAlias){
-    for (HashMap.Entry<String, String> entry:colNameAndTableAlias.entrySet()){
-      this.colNameAndTableAlias.put(entry.getKey(), entry.getValue());
+    for (String key:colNameAndTableAlias.keySet()){
+      this.colNameAndTableAlias.put(key, colNameAndTableAlias.get(key));
     }
   }
 
   public void setTableInfoAndAlias(HashMap<Pair<String, String>, String> tableInfoAndAlias){
-    for (HashMap.Entry<Pair<String, String>, String> entry:tableInfoAndAlias.entrySet()){
-      this.tableInfoAndAlias.put(entry.getKey(), entry.getValue());
+    for (Pair<String, String> key:tableInfoAndAlias.keySet()){
+      this.tableInfoAndAlias.put(key, tableInfoAndAlias.get(key));
     }
   }
 
   public void setColNameAndColAlias(HashMap<String, String> colNameAndColAlias) {
-    for (HashMap.Entry<String, String> entry:colNameAndColAlias.entrySet()){
-      this.colNameAndColAlias.put(entry.getKey(), entry.getValue());
+    for (String key:colNameAndColAlias.keySet()){
+      this.colNameAndColAlias.put(key, colNameAndColAlias.get(key));
     }
   }
 
