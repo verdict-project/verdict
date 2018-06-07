@@ -1,6 +1,6 @@
 package org.verdictdb.core.sql;
 
-import org.verdictdb.core.logical_query.*;
+import org.verdictdb.core.query.*;
 import org.verdictdb.parser.VerdictSQLBaseVisitor;
 import org.verdictdb.parser.VerdictSQLParser;
 

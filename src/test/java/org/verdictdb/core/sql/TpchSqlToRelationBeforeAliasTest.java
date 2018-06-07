@@ -1,8 +1,7 @@
 package org.verdictdb.core.sql;
 
 import org.junit.Test;
-import org.verdictdb.core.logical_query.*;
-import org.verdictdb.core.sql.syntax.HiveSyntax;
+import org.verdictdb.core.query.*;
 import org.verdictdb.exception.VerdictDbException;
 
 import java.util.Arrays;

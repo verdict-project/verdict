@@ -2,7 +2,7 @@ package org.verdictdb.core.sql;
 
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
-import org.verdictdb.core.logical_query.AbstractRelation;
+import org.verdictdb.core.query.AbstractRelation;
 import org.verdictdb.parser.VerdictSQLLexer;
 import org.verdictdb.parser.VerdictSQLParser;
 

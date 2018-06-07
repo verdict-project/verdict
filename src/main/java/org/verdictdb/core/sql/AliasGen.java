@@ -2,7 +2,7 @@ package org.verdictdb.core.sql;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
-import org.verdictdb.core.logical_query.*;
+import org.verdictdb.core.query.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;

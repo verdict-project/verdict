@@ -5,7 +5,7 @@
     <groupId>org.verdictdb</groupId>
     <artifactId>verdictdb</artifactId>
     <packaging>jar</packaging>
-    <version>1.0.0</version>
+    <version>0.5.0</version>
     <name>VerdictDB</name>
     <url>http://verdictdb.org</url>
 
@@ -16,7 +16,6 @@
         <apache.commons.version>3.5</apache.commons.version>
         <junit.version>4.12</junit.version>
         <google.guava.version>19.0</google.guava.version>
-        <log4j.version>2.0.2</log4j.version>
         <maven.java.version>1.7</maven.java.version>
         <maven.source-plugin.version>3.0.1</maven.source-plugin.version>
         <maven.compiler-plugin.version>3.7.0</maven.compiler-plugin.version>
@@ -99,11 +98,6 @@
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
             <version>${apache.commons.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-core</artifactId>
-            <version>${log4j.version}</version>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>
