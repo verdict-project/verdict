@@ -149,10 +149,6 @@ public class SelectQueryOp extends AbstractRelation {
     return orderby;
   }
 
-  public Optional<String> getAliasName() {
-    return aliasName;
-  }
-
   @Override
   public boolean equals(Object obj) {
     return EqualsBuilder.reflectionEquals(this, obj);
@@ -167,5 +163,6 @@ public class SelectQueryOp extends AbstractRelation {
   public String toString() {
     return ToStringBuilder.reflectionToString(this);
   }
+
 
 }
