@@ -20,7 +20,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
 import org.verdictdb.core.aggresult.AggregateFrame;
 import org.verdictdb.core.aggresult.AggregateMeasures;
-import org.verdictdb.core.rewriter.aggresult.SingleAggResultRewriter;
 import org.verdictdb.exception.ValueException;
 import org.verdictdb.exception.VerdictDbException;
 

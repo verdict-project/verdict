@@ -3,7 +3,6 @@ package org.verdictdb.core.query;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.google.common.base.Optional;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;

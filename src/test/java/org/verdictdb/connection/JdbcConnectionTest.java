@@ -1,10 +1,7 @@
 package org.verdictdb.connection;
 
-import static org.junit.Assert.*;
-
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -12,8 +9,6 @@ import java.util.List;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.verdictdb.connection.DbmsQueryResult;
-import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.sql.syntax.HiveSyntax;
 
 public class JdbcConnectionTest {

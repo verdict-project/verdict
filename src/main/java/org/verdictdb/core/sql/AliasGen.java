@@ -1,13 +1,26 @@
 package org.verdictdb.core.sql;
 
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
-import org.verdictdb.core.query.*;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Vector;
+
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
+import org.verdictdb.core.query.AbstractRelation;
+import org.verdictdb.core.query.AliasReference;
+import org.verdictdb.core.query.AliasedColumn;
+import org.verdictdb.core.query.AsteriskColumn;
+import org.verdictdb.core.query.BaseColumn;
+import org.verdictdb.core.query.BaseTable;
+import org.verdictdb.core.query.ColumnOp;
+import org.verdictdb.core.query.GroupingAttribute;
+import org.verdictdb.core.query.JoinTable;
+import org.verdictdb.core.query.OrderbyAttribute;
+import org.verdictdb.core.query.SelectItem;
+import org.verdictdb.core.query.SelectQueryOp;
+import org.verdictdb.core.query.SubqueryColumn;
+import org.verdictdb.core.query.UnnamedColumn;
 
 public class AliasGen {
 

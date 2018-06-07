@@ -1,12 +1,12 @@
 package org.verdictdb.core.sql;
 
+import java.util.HashMap;
+import java.util.List;
+
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.tuple.ImmutablePair;
-
-import java.util.HashMap;
-import java.util.List;
 
 public class MetaData {
 

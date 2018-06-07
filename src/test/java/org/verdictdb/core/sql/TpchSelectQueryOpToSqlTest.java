@@ -1,14 +1,28 @@
 package org.verdictdb.core.sql;
 
-import org.junit.Test;
-import org.verdictdb.core.query.*;
-import org.verdictdb.sql.syntax.HiveSyntax;
-import org.verdictdb.exception.VerdictDbException;
+import static org.junit.Assert.assertEquals;
 
 import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
+import org.junit.Test;
+import org.verdictdb.core.query.AbstractRelation;
+import org.verdictdb.core.query.AliasReference;
+import org.verdictdb.core.query.AliasedColumn;
+import org.verdictdb.core.query.AsteriskColumn;
+import org.verdictdb.core.query.BaseColumn;
+import org.verdictdb.core.query.BaseTable;
+import org.verdictdb.core.query.ColumnOp;
+import org.verdictdb.core.query.ConstantColumn;
+import org.verdictdb.core.query.GroupingAttribute;
+import org.verdictdb.core.query.JoinTable;
+import org.verdictdb.core.query.OrderbyAttribute;
+import org.verdictdb.core.query.SelectItem;
+import org.verdictdb.core.query.SelectQueryOp;
+import org.verdictdb.core.query.SubqueryColumn;
+import org.verdictdb.core.query.UnnamedColumn;
+import org.verdictdb.exception.VerdictDbException;
+import org.verdictdb.sql.syntax.HiveSyntax;
 
 public class TpchSelectQueryOpToSqlTest {
 

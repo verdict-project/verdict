@@ -1,6 +1,6 @@
 package org.verdictdb.connection;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.sql.Connection;
 import java.sql.DriverManager;

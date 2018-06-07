@@ -1,11 +1,17 @@
 package org.verdictdb.core.sql;
 
-import org.verdictdb.core.query.*;
-import org.verdictdb.parser.*;
-
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import org.verdictdb.core.query.AsteriskColumn;
+import org.verdictdb.core.query.BaseColumn;
+import org.verdictdb.core.query.ColumnOp;
+import org.verdictdb.core.query.ConstantColumn;
+import org.verdictdb.core.query.SelectQueryOp;
+import org.verdictdb.core.query.SubqueryColumn;
+import org.verdictdb.core.query.UnnamedColumn;
+import org.verdictdb.parser.VerdictSQLBaseVisitor;
+import org.verdictdb.parser.VerdictSQLParser;
 
 public class ExpressionGen extends VerdictSQLBaseVisitor<UnnamedColumn> {
 
