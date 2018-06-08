@@ -1,4 +1,4 @@
-package org.verdictdb.result;
+package org.verdictdb.resulthandler;
 
 import org.verdictdb.connection.DbmsQueryResult;
 

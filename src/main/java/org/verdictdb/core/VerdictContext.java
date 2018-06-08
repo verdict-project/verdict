@@ -2,7 +2,7 @@ package org.verdictdb.core;
 
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.DbmsQueryResult;
-import org.verdictdb.result.AsyncHandler;
+import org.verdictdb.resulthandler.AsyncHandler;
 
 public class VerdictContext {
   

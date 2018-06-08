@@ -150,6 +150,7 @@ public class TpchSqlToRelationAfterAliasTest {
     expected.addOrderby(Arrays.<OrderbyAttribute>asList(new OrderbyAttribute("vc2"),
         new OrderbyAttribute("vc3")));
     expected.addLimit(ConstantColumn.valueOf(1));
+    
     String sql = "select " +
         " l_returnflag, " +
         " l_linestatus, " +

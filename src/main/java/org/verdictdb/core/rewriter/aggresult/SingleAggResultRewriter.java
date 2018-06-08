@@ -72,6 +72,7 @@ public class SingleAggResultRewriter {
     for (Pair<String, String> agg : aggColumns) {
       String aggname = agg.getLeft();
       String aggtype = agg.getRight();
+      
       if (aggtype.equals("sum")) {
         Object sumEstimate = getMeasureValue(originalMeasures, sumEstimateAliasName(aggname));
         Object sumScaledSum = getMeasureValue(originalMeasures, sumScaledSumAliasName(aggname));

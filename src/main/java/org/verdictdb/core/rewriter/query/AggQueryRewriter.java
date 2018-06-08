@@ -50,26 +50,6 @@ public class AggQueryRewriter {
   void initializeAliasNameSequence() {
     nextAliasNumber = 1;
   }
-  
-//  String generateMeanEstimateAliasName(String aliasName) {
-//    return aliasName;
-//  }
-//  
-//  String generateSumSubaggAliasName(String aliasName) {
-//    return "sum_scaled_" + aliasName;
-//  }
-//
-//  String generateSumSquaredSubaggAliasName(String aliasName) {
-//    return "sumsquared_scaled_" + aliasName;
-//  }
-//
-//  String generateSquaredMeanSubaggAliasName(String aliasName) {
-//    return "squaredmean_" + aliasName;
-//  }
-//  
-//  String generateSubsampleCountAliasName() {
-//    return "subsample_count";
-//  }
 
   /**
    * 
