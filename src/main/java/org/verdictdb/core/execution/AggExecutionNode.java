@@ -55,7 +55,7 @@ public class AggExecutionNode {
     String query_string = relToSql.toSql(q);
     
     DbmsQueryResult rawResult = conn.executeQuery(query_string);
-    AggregateFrame newAggResult = AggregateFrame.fromDmbsQueryResult(rawResult);
+    AggregateFrame newAggResult = AggregateFrame.fromDmbsQueryResult(rawResult, nonaggColumns, aggColumns);
     
     SingleAggResultRewriter aggResultRewriter = new SingleAggResultRewriter(newAggResult);
     AggregateFrame rewritten = aggResultRewriter.rewrite(nonaggColumns, aggColumns);
@@ -75,7 +75,7 @@ public class AggExecutionNode {
       String query_string = relToSql.toSql(q);
       
       DbmsQueryResult rawResult = conn.executeQuery(query_string);
-      AggregateFrame newAggResult = AggregateFrame.fromDmbsQueryResult(rawResult);
+      AggregateFrame newAggResult = AggregateFrame.fromDmbsQueryResult(rawResult, nonaggColumns, aggColumns);
       
       // combine with previous answers
       if (i == 0) {
