@@ -15,7 +15,7 @@ import org.verdictdb.core.rewriter.aggresult.SingleAggResultRewriter;
 import org.verdictdb.core.rewriter.query.AggQueryRewriter;
 import org.verdictdb.core.sql.SelectQueryToSql;
 import org.verdictdb.exception.VerdictDbException;
-import org.verdictdb.result.AsyncHandler;
+import org.verdictdb.resulthandler.AsyncHandler;
 import org.verdictdb.sql.syntax.HiveSyntax;
 
 /**
