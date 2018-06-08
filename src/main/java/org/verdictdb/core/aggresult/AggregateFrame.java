@@ -1,12 +1,9 @@
 package org.verdictdb.core.aggresult;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.exception.ValueException;
 
@@ -29,13 +26,45 @@ public class AggregateFrame {
       throw new ValueException("The column names seem to include duplicates.");
     }
   }
-  
-  // TODO
-  public static AggregateFrame fromDmbsQueryResult(DbmsQueryResult result) {
-    return null;
+
+  public static AggregateFrame fromDmbsQueryResult(DbmsQueryResult result, List<String> nonaggColumnsName, List<Pair<String, String>> aggColumns) throws ValueException {
+    List<String> colName = new ArrayList<>();
+    List<String> aggColumnsName = new ArrayList<>();
+    for (Pair<String, String> pair:aggColumns){
+      aggColumnsName.add(pair.getKey());
+    }
+    HashSet<String> aggColumnsSet = new HashSet<>(aggColumnsName);
+    List<Integer> aggColumnIndex = new ArrayList<>();
+    List<Integer> nonaggColumnIndex = new ArrayList<>();
+    List<String> orderedAggColumnName = new ArrayList<>();
+    List<String> orderedNonaggColumnName = new ArrayList<>();
+    for (int i=0;i<result.getColumnCount();i++){
+      colName.add(result.getColumnName(i));
+      if (aggColumnsSet.contains(result.getColumnName(i))){
+        orderedAggColumnName.add(result.getColumnName(i));
+        aggColumnIndex.add(i);
+      }
+      else {
+        orderedNonaggColumnName.add(result.getColumnName(i));
+        nonaggColumnIndex.add(i);
+      }
+    }
+    AggregateFrame aggregateFrame = new AggregateFrame(colName);
+    while (result.next()){
+      List<Object> aggValue = new ArrayList<>();
+      List<Object> nonaggValue = new ArrayList<>();
+      for (int i : aggColumnIndex){
+        aggValue.add(result.getValue(i));
+      }
+      for (int i : nonaggColumnIndex){
+        nonaggValue.add(result.getValue(i));
+      }
+      aggregateFrame.addRow(new AggregateGroup(orderedNonaggColumnName, nonaggValue), new AggregateMeasures(orderedAggColumnName, aggValue));
+    }
+    return aggregateFrame;
   }
 
-  // TODO
+  //TODO
   public DbmsQueryResult toDbmsQueryResult() {
     return null;
   }
