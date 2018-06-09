@@ -1,5 +1,6 @@
 package org.verdictdb.core.aggresult;
 
+import java.lang.reflect.Array;
 import java.util.*;
 import java.util.Map.Entry;
 
@@ -16,6 +17,8 @@ import org.verdictdb.exception.ValueException;
 public class AggregateFrame {
   
   List<String> orderedColumnNames;
+
+  List<Integer> columnTypes = new ArrayList<>();
   
   Map<AggregateGroup, AggregateMeasures> data = new HashMap<>();
   
@@ -30,26 +33,41 @@ public class AggregateFrame {
   public static AggregateFrame fromDmbsQueryResult(DbmsQueryResult result, List<String> nonaggColumnsName, List<Pair<String, String>> aggColumns) throws ValueException {
     List<String> colName = new ArrayList<>();
     List<String> aggColumnsName = new ArrayList<>();
+
     for (Pair<String, String> pair:aggColumns){
       aggColumnsName.add(pair.getKey());
     }
     HashSet<String> aggColumnsSet = new HashSet<>(aggColumnsName);
+    HashSet<String> nonaggColumnsSet = new HashSet<>(nonaggColumnsName);
     List<Integer> aggColumnIndex = new ArrayList<>();
     List<Integer> nonaggColumnIndex = new ArrayList<>();
     List<String> orderedAggColumnName = new ArrayList<>();
     List<String> orderedNonaggColumnName = new ArrayList<>();
+    List<Integer> columnTypes = new ArrayList<>();
+
+    // Get Ordered column name for nonAgg and Agg
     for (int i=0;i<result.getColumnCount();i++){
-      colName.add(result.getColumnName(i));
       if (aggColumnsSet.contains(result.getColumnName(i))){
         orderedAggColumnName.add(result.getColumnName(i));
         aggColumnIndex.add(i);
       }
-      else {
+      else if (nonaggColumnsSet.contains(result.getColumnName(i))){
         orderedNonaggColumnName.add(result.getColumnName(i));
         nonaggColumnIndex.add(i);
       }
     }
+
+    colName.addAll(orderedNonaggColumnName);
+    colName.addAll(orderedAggColumnName);
+    for (int idx : nonaggColumnIndex){
+      columnTypes.add(result.getColumnType(idx));
+    }
+    for (int idx : aggColumnIndex){
+      columnTypes.add(result.getColumnType(idx));
+    }
     AggregateFrame aggregateFrame = new AggregateFrame(colName);
+    aggregateFrame.setColumnTypes(columnTypes);
+
     while (result.next()){
       List<Object> aggValue = new ArrayList<>();
       List<Object> nonaggValue = new ArrayList<>();
@@ -64,11 +82,18 @@ public class AggregateFrame {
     return aggregateFrame;
   }
 
-  //TODO
   public DbmsQueryResult toDbmsQueryResult() {
-    return null;
+    return new AggregateFrameQueryResult(this);
   }
-  
+
+  public void setColumnTypes(List<Integer> columnTypes) {
+    this.columnTypes = columnTypes;
+  }
+
+  public List<Integer> getColumnTypes() {
+    return columnTypes;
+  }
+
   public List<String> getColumnNames() {
     return orderedColumnNames;
   }
