@@ -8,7 +8,7 @@ public class VerdictContext {
   
   DbmsConnection conn;
   
-  DbmsMetadataCache meta = new DbmsMetadataCache();
+//  DbmsMetadataCache meta = new DbmsMetadataCache();
   
   public VerdictContext(DbmsConnection conn) {
     this.conn = conn;
