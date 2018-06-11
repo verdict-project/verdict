@@ -2,13 +2,13 @@ package org.verdictdb.core;
 
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.DbmsQueryResult;
-import org.verdictdb.result.AsyncHandler;
+import org.verdictdb.resulthandler.AsyncHandler;
 
 public class VerdictContext {
   
   DbmsConnection conn;
   
-  DbmsMetadataCache meta = new DbmsMetadataCache();
+//  DbmsMetadataCache meta = new DbmsMetadataCache();
   
   public VerdictContext(DbmsConnection conn) {
     this.conn = conn;
