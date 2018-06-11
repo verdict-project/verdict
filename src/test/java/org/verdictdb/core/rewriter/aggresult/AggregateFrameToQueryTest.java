@@ -180,7 +180,7 @@ public class AggregateFrameToQueryTest {
       String nation = row.get(5).toString();
       stmt.execute(String.format("INSERT INTO PEOPLE(id, name, gender, age, height, nation) VALUES(%s, '%s', '%s', %s, %s, '%s')", id, name, gender, age, height, nation));
     }
-    ResultSet rs = stmt.executeQuery("SELECT sum(age) as agesum, gender, count(*) as cnt, nation as cnt FROM PEOPLE GROUP BY gender, nation");
+    ResultSet rs = stmt.executeQuery("SELECT sum(age) as agesum, gender, count(*) as cnt, nation FROM PEOPLE GROUP BY gender, nation");
     JdbcQueryResult queryResult = new JdbcQueryResult(rs);
     List<String> nonAgg = new ArrayList<>();
     List<Pair<String, String>> agg = new ArrayList<>();
@@ -192,29 +192,29 @@ public class AggregateFrameToQueryTest {
 
     AggregateFrameQueryResult aggregateFrameQueryResult = (AggregateFrameQueryResult) aggregateFrame.toDbmsQueryResult();
     assertEquals(4, aggregateFrameQueryResult.getColumnCount());
-    assertEquals("GENDER", aggregateFrameQueryResult.getColumnName(0));
-    assertEquals("NATION", aggregateFrameQueryResult.getColumnName(1));
-    assertEquals("AGESUM", aggregateFrameQueryResult.getColumnName(2));
-    assertEquals("CNT", aggregateFrameQueryResult.getColumnName(3));
-    while (aggregateFrameQueryResult.next()){
-      if (aggregateFrameQueryResult.getValue(0).equals("male") &&
-          aggregateFrameQueryResult.getValue(1).equals("CHN")){
-        assertEquals(new Long(59), aggregateFrameQueryResult.getValue(2));
-        assertEquals(new Long(3), aggregateFrameQueryResult.getValue(3));
+    assertEquals("AGESUM", aggregateFrameQueryResult.getColumnName(0));
+    assertEquals("GENDER", aggregateFrameQueryResult.getColumnName(1));
+    assertEquals("CNT", aggregateFrameQueryResult.getColumnName(2));
+    assertEquals("NATION", aggregateFrameQueryResult.getColumnName(3));
+    while (aggregateFrameQueryResult.next()) {
+      if (aggregateFrameQueryResult.getValue(1).equals("male") &&
+          aggregateFrameQueryResult.getValue(3).equals("CHN")) {
+        assertEquals(new Long(59), aggregateFrameQueryResult.getValue(0));
+        assertEquals(new Long(3), aggregateFrameQueryResult.getValue(2));
       }
-      else if (aggregateFrameQueryResult.getValue(0).equals("female") &&
-          aggregateFrameQueryResult.getValue(1).equals("CHN")){
-        assertEquals(new Long(18), aggregateFrameQueryResult.getValue(2));
-        assertEquals(new Long(1), aggregateFrameQueryResult.getValue(3));
+      else if (aggregateFrameQueryResult.getValue(1).equals("female") &&
+          aggregateFrameQueryResult.getValue(3).equals("CHN")) {
+        assertEquals(new Long(18), aggregateFrameQueryResult.getValue(0));
+        assertEquals(new Long(1), aggregateFrameQueryResult.getValue(2));
       }
-      else if (aggregateFrameQueryResult.getValue(0).equals("female") &&
-          aggregateFrameQueryResult.getValue(1).equals("USA")){
-        assertEquals(new Long(32), aggregateFrameQueryResult.getValue(2));
-        assertEquals(new Long(2), aggregateFrameQueryResult.getValue(3));
+      else if (aggregateFrameQueryResult.getValue(1).equals("female") &&
+          aggregateFrameQueryResult.getValue(3).equals("USA")) {
+        assertEquals(new Long(32), aggregateFrameQueryResult.getValue(0));
+        assertEquals(new Long(2), aggregateFrameQueryResult.getValue(2));
       }
       else {
-        assertEquals(new Long(32), aggregateFrameQueryResult.getValue(2));
-        assertEquals(new Long(2), aggregateFrameQueryResult.getValue(3));
+        assertEquals(new Long(32), aggregateFrameQueryResult.getValue(0));
+        assertEquals(new Long(2), aggregateFrameQueryResult.getValue(2));
       }
     }
   }

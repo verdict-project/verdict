@@ -2,17 +2,16 @@ package org.verdictdb.core.aggresult;
 
 import org.verdictdb.connection.DbmsQueryResult;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 
 public class AggregateFrameQueryResult implements DbmsQueryResult {
 
   private AggregateFrame aggregateFrame;
   private Iterator it;
   private Map.Entry currentEntry;
+  private List<Integer> orderedColumnIndex = new ArrayList<>();
 
-  public AggregateFrameQueryResult(AggregateFrame aggregateFrame){
+  public AggregateFrameQueryResult(AggregateFrame aggregateFrame) {
     this.aggregateFrame = aggregateFrame;
     it = aggregateFrame.data.entrySet().iterator();
   }
@@ -43,7 +42,7 @@ public class AggregateFrameQueryResult implements DbmsQueryResult {
 
   @Override
   public boolean next() {
-    if (it.hasNext()){
+    if (it.hasNext()) {
       currentEntry = (Map.Entry)it.next();
       return true;
     }
@@ -51,9 +50,10 @@ public class AggregateFrameQueryResult implements DbmsQueryResult {
   }
 
   @Override
-  public Object getValue(int index){
+  public Object getValue(int index) {
     // acquire the value in aggregateGroup
-    if (index < ((AggregateGroup)currentEntry.getKey()).attributeValues.size()){
+    index = aggregateFrame.getOrderedColumnIndex().get(index);
+    if (index < ((AggregateGroup)currentEntry.getKey()).attributeValues.size()) {
       return ((AggregateGroup)currentEntry.getKey()).attributeValues.get(index);
     }
     else { // acquire the value in aggregateMeasure
@@ -63,7 +63,7 @@ public class AggregateFrameQueryResult implements DbmsQueryResult {
   }
 
   @Override
-  public void printContent(){
+  public void printContent() {
     StringBuilder row;
     boolean isFirstCol = true;
 
