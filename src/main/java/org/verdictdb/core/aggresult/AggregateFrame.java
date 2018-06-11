@@ -18,6 +18,8 @@ public class AggregateFrame {
   
   List<String> orderedColumnNames;
 
+  List<Integer> orderedColumnIndex = new ArrayList<>();
+
   List<Integer> columnTypes = new ArrayList<>();
   
   Map<AggregateGroup, AggregateMeasures> data = new HashMap<>();
@@ -32,9 +34,10 @@ public class AggregateFrame {
 
   public static AggregateFrame fromDmbsQueryResult(DbmsQueryResult result, List<String> nonaggColumnsName, List<Pair<String, String>> aggColumns) throws ValueException {
     List<String> colName = new ArrayList<>();
+    List<Integer> colIndex = new ArrayList<>();
     List<String> aggColumnsName = new ArrayList<>();
 
-    for (Pair<String, String> pair:aggColumns){
+    for (Pair<String, String> pair:aggColumns) {
       aggColumnsName.add(pair.getKey());
     }
     HashSet<String> aggColumnsSet = new HashSet<>(aggColumnsName);
@@ -46,35 +49,52 @@ public class AggregateFrame {
     List<Integer> columnTypes = new ArrayList<>();
 
     // Get Ordered column name for nonAgg and Agg
-    for (int i=0;i<result.getColumnCount();i++){
-      if (aggColumnsSet.contains(result.getColumnName(i))){
+    for (int i=0;i<result.getColumnCount();i++) {
+      colName.add(result.getColumnName(i));
+      columnTypes.add(result.getColumnType(i));
+      if (aggColumnsSet.contains(result.getColumnName(i))) {
         orderedAggColumnName.add(result.getColumnName(i));
         aggColumnIndex.add(i);
       }
-      else if (nonaggColumnsSet.contains(result.getColumnName(i))){
+      else if (nonaggColumnsSet.contains(result.getColumnName(i))) {
         orderedNonaggColumnName.add(result.getColumnName(i));
         nonaggColumnIndex.add(i);
       }
+      else {
+        throw new ValueException("The column belongs to nothing.");
+      }
     }
 
-    colName.addAll(orderedNonaggColumnName);
-    colName.addAll(orderedAggColumnName);
-    for (int idx : nonaggColumnIndex){
-      columnTypes.add(result.getColumnType(idx));
-    }
-    for (int idx : aggColumnIndex){
-      columnTypes.add(result.getColumnType(idx));
-    }
     AggregateFrame aggregateFrame = new AggregateFrame(colName);
     aggregateFrame.setColumnTypes(columnTypes);
 
-    while (result.next()){
+    // Set up the ordered column index
+    for (String col : colName) {
+      boolean find = false;
+      for (int i=0;i<orderedNonaggColumnName.size();i++) {
+        if (col.equals(orderedNonaggColumnName.get(i))) {
+          colIndex.add(i);
+          find = true;
+          break;
+        }
+      }
+      if (find) continue;
+      for (int i=0;i<orderedAggColumnName.size();i++) {
+        if (col.equals(orderedAggColumnName.get(i))) {
+          colIndex.add(i+orderedNonaggColumnName.size());
+          break;
+        }
+      }
+    }
+    aggregateFrame.setOrderedColumnIndex(colIndex);
+
+    while (result.next()) {
       List<Object> aggValue = new ArrayList<>();
       List<Object> nonaggValue = new ArrayList<>();
-      for (int i : aggColumnIndex){
+      for (int i : aggColumnIndex) {
         aggValue.add(result.getValue(i));
       }
-      for (int i : nonaggColumnIndex){
+      for (int i : nonaggColumnIndex) {
         nonaggValue.add(result.getValue(i));
       }
       aggregateFrame.addRow(new AggregateGroup(orderedNonaggColumnName, nonaggValue), new AggregateMeasures(orderedAggColumnName, aggValue));
@@ -88,6 +108,14 @@ public class AggregateFrame {
 
   public void setColumnTypes(List<Integer> columnTypes) {
     this.columnTypes = columnTypes;
+  }
+
+  public void setOrderedColumnIndex(List<Integer> orderedColumnIndex) {
+    this.orderedColumnIndex = orderedColumnIndex;
+  }
+
+  public List<Integer> getOrderedColumnIndex() {
+    return orderedColumnIndex;
   }
 
   public List<Integer> getColumnTypes() {
