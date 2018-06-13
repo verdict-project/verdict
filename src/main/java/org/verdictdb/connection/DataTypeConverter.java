@@ -62,7 +62,7 @@ public class DataTypeConverter {
     intToStringMap.put(INTEGER, "integer");
     intToStringMap.put(LONGNVARCHAR, "longnvarchar");
     intToStringMap.put(LONGVARBINARY, "longvarbinary");
-    intToStringMap.put(LONGVARCHAR, "longvarchar");
+    intToStringMap.put(LONGVARCHAR, "longvarJdchar");
     intToStringMap.put(NCHAR, "nchar");
     intToStringMap.put(NCLOB, "nclob");
     intToStringMap.put(NULL, "null");

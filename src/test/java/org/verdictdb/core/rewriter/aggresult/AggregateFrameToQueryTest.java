@@ -170,7 +170,7 @@ public class AggregateFrameToQueryTest {
     contents.add(Arrays.<Object>asList(3, "Bob", "male", 18, 190, "CHN"));
     Statement stmt = conn.createStatement();
     stmt.execute("DROP TABLE PEOPLE IF EXISTS");
-    stmt.execute("CREATE TABLE PEOPLE(id int, name varchar(255), gender varchar(8), age int, height int, nation varchar(8))");
+    stmt.execute("CREATE TABLE PEOPLE(id int, name varchar(255), gender varchar(8), age double, height int, nation varchar(8))");
     for (List<Object> row : contents) {
       String id = row.get(0).toString();
       String name = row.get(1).toString();
@@ -181,6 +181,10 @@ public class AggregateFrameToQueryTest {
       stmt.execute(String.format("INSERT INTO PEOPLE(id, name, gender, age, height, nation) VALUES(%s, '%s', '%s', %s, %s, '%s')", id, name, gender, age, height, nation));
     }
     ResultSet rs = stmt.executeQuery("SELECT sum(age) as agesum, gender, count(*) as cnt, nation FROM PEOPLE GROUP BY gender, nation");
+    while (rs.next()){
+     rs.getString(1);
+    }
+
     JdbcQueryResult queryResult = new JdbcQueryResult(rs);
     List<String> nonAgg = new ArrayList<>();
     List<Pair<String, String>> agg = new ArrayList<>();
