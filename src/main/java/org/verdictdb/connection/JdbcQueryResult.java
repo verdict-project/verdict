@@ -97,4 +97,7 @@ public class JdbcQueryResult implements DbmsQueryResult {
     
   }
 
+  public ResultSet getResultSet() {
+    return resultSet;
+  }
 }

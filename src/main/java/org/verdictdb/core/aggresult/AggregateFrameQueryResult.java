@@ -9,7 +9,6 @@ public class AggregateFrameQueryResult implements DbmsQueryResult {
   private AggregateFrame aggregateFrame;
   private Iterator it;
   private Map.Entry currentEntry;
-  private List<Integer> orderedColumnIndex = new ArrayList<>();
 
   public AggregateFrameQueryResult(AggregateFrame aggregateFrame) {
     this.aggregateFrame = aggregateFrame;
