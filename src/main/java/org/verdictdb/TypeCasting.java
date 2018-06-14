@@ -1,12 +1,7 @@
 package org.verdictdb;
 
-import java.io.InputStream;
 import java.math.BigDecimal;
-import java.sql.Array;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
 
 public class TypeCasting {
 
