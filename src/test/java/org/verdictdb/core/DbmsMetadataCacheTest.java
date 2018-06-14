@@ -15,6 +15,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Properties;
 
 import static org.junit.Assert.assertEquals;
 
@@ -27,8 +28,8 @@ public class DbmsMetadataCacheTest {
   private static Statement stmt;
 
   @BeforeClass
-  public static void setupH2Database() throws SQLException {
-    final String DB_CONNECTION = "jdbc:h2:mem:testconn;DB_CLOSE_DELAY=-1";
+  public static void setupH2Database() throws SQLException, ClassNotFoundException {
+    final String DB_CONNECTION = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1";
     final String DB_USER = "";
     final String DB_PASSWORD = "";
     conn = DriverManager.getConnection(DB_CONNECTION, DB_USER, DB_PASSWORD);
@@ -55,7 +56,6 @@ public class DbmsMetadataCacheTest {
       String birth = row.get(6).toString();
       stmt.execute(String.format("INSERT INTO PEOPLE(id, name, gender, age, height, nation, birth) VALUES(%s, '%s', '%s', %s, %s, '%s', '%s')", id, name, gender, age, height, nation, birth));
     }
-
   }
 
   @Test

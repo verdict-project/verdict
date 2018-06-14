@@ -1,7 +1,6 @@
 package org.verdictdb;
 
-import com.sun.org.apache.xpath.internal.operations.Bool;
-import com.sun.xml.internal.ws.org.objectweb.asm.Type;
+import static java.sql.Types.*;
 import org.verdictdb.connection.DataTypeConverter;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.connection.JdbcQueryResult;
@@ -35,7 +34,7 @@ public class JdbcDriver implements ResultSet {
 
   private boolean judgeValidType(String expected, int columnindex){
     String actual = DataTypeConverter.typeName(queryResult.getColumnType(columnindex));
-    if (queryResult.getColumnType(columnindex) == Type.DOUBLE) actual = "real";
+    if (queryResult.getColumnType(columnindex) == DOUBLE) actual = "real";
     if (expected.equals("boolean")) {
       return actual.equals("boolean") || actual.equals("bit");
     }
