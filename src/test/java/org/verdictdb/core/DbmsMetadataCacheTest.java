@@ -3,7 +3,6 @@ package org.verdictdb.core;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.verdictdb.JdbcDriver;
 import org.verdictdb.connection.DataTypeConverter;
 import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.sql.syntax.H2Syntax;
@@ -14,8 +13,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
-import java.util.Properties;
 
 import static org.junit.Assert.assertEquals;
 
@@ -28,7 +27,7 @@ public class DbmsMetadataCacheTest {
   private static Statement stmt;
 
   @BeforeClass
-  public static void setupH2Database() throws SQLException, ClassNotFoundException {
+  public static void setupH2Database() throws SQLException {
     final String DB_CONNECTION = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1";
     final String DB_USER = "";
     final String DB_PASSWORD = "";
@@ -62,8 +61,8 @@ public class DbmsMetadataCacheTest {
   public void getSchemaTest() throws SQLException {
     List<String> schemas = metadataCache.getSchemas();
     assertEquals(2, schemas.size());
-    assertEquals("PUBLIC", schemas.get(0));
-    assertEquals("INFORMATION_SCHEMA", schemas.get(1));
+    assertEquals(true, schemas.get(0).equals("PUBLIC")||schemas.get(1).equals("PUBLIC"));
+    assertEquals(true, schemas.get(0).equals("INFORMATION_SCHEMA")||schemas.get(1).equals("INFORMATION_SCHEMA"));
   }
 
   @Test
