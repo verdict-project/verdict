@@ -6,6 +6,7 @@ import org.junit.Test;
 import org.verdictdb.connection.DataTypeConverter;
 import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.sql.syntax.H2Syntax;
+import org.verdictdb.sql.syntax.PostgresqlSyntax;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -91,4 +92,5 @@ public class DbmsMetadataCacheTest {
     assertEquals("BIRTH", columns.get(6).getKey());
     assertEquals(DataTypeConverter.typeInt("timestamp"), (int)columns.get(6).getValue());
   }
+
 }
