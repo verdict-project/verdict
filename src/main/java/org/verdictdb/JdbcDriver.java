@@ -29,7 +29,7 @@ public class JdbcDriver implements ResultSet {
   private int rowCount = 0;
 
   private HashSet<String> numericType = new HashSet<>(Arrays.asList(
-      "bigint", "decimal", "float", "integer", "real", "numeric", "tinyint", "smallint", "long"));
+      "bigint", "decimal", "float", "integer", "real", "numeric", "tinyint", "smallint", "long", "double"));
 
   private HashMap<String, Integer> colNameIdx = new HashMap<>();
 
