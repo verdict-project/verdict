@@ -37,7 +37,7 @@ public class DbmsMetadataCache {
   
   public List<String> getSchemas() throws SQLException {
     DbmsQueryResult queryResult = connection.executeQuery(syntax.getSchemaCommand());
-    JdbcDriver jdbcQueryResult = new JdbcDriver(queryResult);
+    JdbcDriver jdbcQueryResult = new JdbcDriver(queryResult, connection.getConnection());
     List<String> schemas = new ArrayList<>();
     while (queryResult.next()) {
       schemas.add(jdbcQueryResult.getString(syntax.getSchemaNameColumnName()));
@@ -48,7 +48,7 @@ public class DbmsMetadataCache {
   
   public List<String> getTables(String schema) throws SQLException {
     DbmsQueryResult queryResult = connection.executeQuery(syntax.getTableCommand(schema));
-    JdbcDriver jdbcQueryResult = new JdbcDriver(queryResult);
+    JdbcDriver jdbcQueryResult = new JdbcDriver(queryResult, connection.getConnection());
     List<String> tables = new ArrayList<>();
     while (queryResult.next()) {
       tables.add(jdbcQueryResult.getString(syntax.getTableNameColumnName()));
@@ -59,7 +59,7 @@ public class DbmsMetadataCache {
   
   public List<Pair<String, Integer>> getColumns(String schema, String table) throws SQLException {
     DbmsQueryResult queryResult = connection.executeQuery(syntax.getColumnsCommand(schema, table));
-    JdbcDriver jdbcQueryResult = new JdbcDriver(queryResult);
+    JdbcDriver jdbcQueryResult = new JdbcDriver(queryResult, connection.getConnection());
     List<Pair<String, Integer>> columns = new ArrayList<>();
     while (queryResult.next()) {
       String type = jdbcQueryResult.getString(syntax.getColumnTypeColumnName());
@@ -84,7 +84,7 @@ public class DbmsMetadataCache {
       throw new SQLException("Database does not support table partitioning");
     }
     DbmsQueryResult queryResult = connection.executeQuery(syntax.getPartitionCommand(schema, table));
-    JdbcDriver jdbcQueryResult = new JdbcDriver(queryResult);
+    JdbcDriver jdbcQueryResult = new JdbcDriver(queryResult, connection.getConnection());
     List<String> partition = new ArrayList<>();
     while (queryResult.next()) {
       partition.add(jdbcQueryResult.getString(0));

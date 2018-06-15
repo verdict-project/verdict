@@ -5,6 +5,7 @@ import org.verdictdb.connection.DataTypeConverter;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.connection.JdbcQueryResult;
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.Reader;
 import java.math.BigDecimal;
@@ -16,6 +17,8 @@ import java.util.*;
 public class JdbcDriver implements ResultSet {
 
   private DbmsQueryResult queryResult;
+
+  private Connection conn;
 
   private Object lastValue = null;
 
@@ -36,19 +39,19 @@ public class JdbcDriver implements ResultSet {
     String actual = DataTypeConverter.typeName(queryResult.getColumnType(columnindex));
     if (queryResult.getColumnType(columnindex) == DOUBLE) actual = "real";
     if (expected.equals("boolean")) {
-      return actual.equals("boolean") || actual.equals("bit");
+      return numericType.contains(actual) || actual.equals("boolean") || actual.equals("bit");
     }
     else if (expected.equals("byte")) {
-      return numericType.contains(actual);
+      return numericType.contains(actual) || actual.equals("boolean") || actual.equals("bit");
     }
     else if (expected.equals("short")) {
-      return numericType.contains(actual);
+      return numericType.contains(actual) || actual.equals("boolean") || actual.equals("bit");
     }
     else if (expected.equals("int")) {
-      return numericType.contains(actual);
+      return numericType.contains(actual) || actual.equals("boolean") || actual.equals("bit");
     }
     else if (expected.equals("long")) {
-      return numericType.contains(actual);
+      return numericType.contains(actual) || actual.equals("boolean") || actual.equals("bit");
     }
     else if (expected.equals("float")) {
       return numericType.contains(actual);
@@ -64,19 +67,20 @@ public class JdbcDriver implements ResultSet {
           || actual.equals("blob");
     }
     else if (expected.equals("date")) {
-      return actual.equals("date");
+      return  actual.equals("timestamp") || actual.equals("date") || actual.equals("time");
     }
     else if (expected.equals("time")) {
-      return actual.equals("time");
+      return  actual.equals("timestamp") || actual.equals("date") || actual.equals("time");
     }
     else if (expected.equals("timestamp")) {
-      return actual.equals("timestamp");
+      return actual.equals("timestamp") || actual.equals("date") || actual.equals("time");
     }
     else if (expected.equals("asciistream")) {
       return actual.equals("clob");
     }
     else if (expected.equals("binarystream")) {
-      return actual.equals("blob");
+      return actual.equals("blob") || actual.equals("binary") || actual.equals("varbinary")
+          || actual.equals("longvarbinary");
     }
     else if (expected.equals("blob")) {
       return actual.equals("blob");
@@ -102,8 +106,9 @@ public class JdbcDriver implements ResultSet {
     else return false;
   }
 
-  public JdbcDriver(DbmsQueryResult queryResult) {
+  public JdbcDriver(DbmsQueryResult queryResult, Connection conn) {
     this.queryResult = queryResult;
+    this.conn = conn;
     for (int i=0; i<queryResult.getColumnCount(); i++) {
       colNameIdx.put(queryResult.getColumnName(i), i);
     }
@@ -162,7 +167,7 @@ public class JdbcDriver implements ResultSet {
       return ((JdbcQueryResult) queryResult).getResultSet().getByte(columnIndex);
     }
     if (judgeValidType("byte", columnIndex)) {
-      lastValue = queryResult.getValue(columnIndex);
+      lastValue = TypeCasting.toByte(queryResult.getValue(columnIndex));
       return (byte)lastValue;
     }
     else throw new SQLException("Not supported data type.");
@@ -258,7 +263,15 @@ public class JdbcDriver implements ResultSet {
       return ((JdbcQueryResult) queryResult).getResultSet().getDate(columnIndex);
     }
     if (judgeValidType("date", columnIndex)) {
-      lastValue = queryResult.getValue(columnIndex);
+      if (queryResult.getValue(columnIndex) instanceof Date){
+        lastValue = queryResult.getValue(columnIndex);
+      }
+      else if (queryResult.getValue(columnIndex) instanceof Timestamp) {
+        lastValue  = new Date(((Timestamp)(queryResult.getValue(columnIndex))).getTime());
+      }
+      else if (queryResult.getValue(columnIndex) instanceof Time) {
+        lastValue =  new Date(((Time)(queryResult.getValue(columnIndex))).getTime());
+      }
       return (Date) lastValue;
     }
     else throw new SQLException("Not supported data type.");
@@ -270,7 +283,15 @@ public class JdbcDriver implements ResultSet {
       return ((JdbcQueryResult) queryResult).getResultSet().getTime(columnIndex);
     }
     if (judgeValidType("time", columnIndex)) {
-      lastValue = queryResult.getValue(columnIndex);
+      if (queryResult.getValue(columnIndex) instanceof Date){
+        lastValue  = new Time(((Date)(queryResult.getValue(columnIndex))).getTime());
+      }
+      else if (queryResult.getValue(columnIndex) instanceof Timestamp) {
+        lastValue  = new Time(((Timestamp)(queryResult.getValue(columnIndex))).getTime());
+      }
+      else if (queryResult.getValue(columnIndex) instanceof Time) {
+        lastValue = queryResult.getValue(columnIndex);
+      }
       return (Time)lastValue;
     }
     else throw new SQLException("Not supported data type.");
@@ -282,7 +303,15 @@ public class JdbcDriver implements ResultSet {
       return ((JdbcQueryResult) queryResult).getResultSet().getTimestamp(columnIndex);
     }
     if (judgeValidType("timestamp", columnIndex)) {
-      lastValue = queryResult.getValue(columnIndex);
+      if (queryResult.getValue(columnIndex) instanceof Date){
+        lastValue  = new Timestamp(((Date)(queryResult.getValue(columnIndex))).getTime());
+      }
+      else if (queryResult.getValue(columnIndex) instanceof Time) {
+        lastValue  = new Timestamp(((Time)(queryResult.getValue(columnIndex))).getTime());
+      }
+      else if (queryResult.getValue(columnIndex) instanceof Timestamp) {
+        lastValue = queryResult.getValue(columnIndex);
+      }
       return (Timestamp) lastValue;
     }
     else throw new SQLException("Not supported data type.");
@@ -319,6 +348,10 @@ public class JdbcDriver implements ResultSet {
     }
     if (judgeValidType("binarystream", columnIndex)) {
       lastValue = queryResult.getValue(columnIndex);
+      if (lastValue instanceof byte[]){
+        ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream((byte[]) lastValue);
+        return byteArrayInputStream;
+      }
       return (InputStream) lastValue;
     }
     else throw new SQLException("Not supported data type.");
@@ -1176,7 +1209,7 @@ public class JdbcDriver implements ResultSet {
     }
     if (judgeValidType("array", columnIndex)) {
       lastValue = queryResult.getValue(columnIndex);
-      return (Array) lastValue;
+      return conn.createArrayOf("object", (Object[]) lastValue);
     }
     else throw new SQLException("Not supported data type.");
   }

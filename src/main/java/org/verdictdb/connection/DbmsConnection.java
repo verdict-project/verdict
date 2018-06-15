@@ -2,6 +2,8 @@ package org.verdictdb.connection;
 
 import org.verdictdb.sql.syntax.SyntaxAbstract;
 
+import java.sql.Connection;
+
 public interface DbmsConnection {
   
   public DbmsQueryResult executeQuery(String query);
@@ -17,5 +19,7 @@ public interface DbmsConnection {
   public int executeUpdate(String query);
   
   public SyntaxAbstract getSyntax();
+
+  public Connection getConnection();
 
 }

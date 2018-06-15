@@ -2,16 +2,21 @@ package org.verdictdb;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
+import org.h2.jdbc.JdbcArray;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.connection.JdbcQueryResult;
 import org.verdictdb.core.aggresult.AggregateFrame;
 import org.verdictdb.core.aggresult.AggregateFrameQueryResult;
+import org.verdictdb.core.sql.SqlToRelationTest;
 import org.verdictdb.exception.ValueException;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -66,7 +71,7 @@ public class JdbcDriverTest {
     agg.add(new ImmutablePair<>("AGESUM", "SUM"));
     AggregateFrame aggregateFrame = AggregateFrame.fromDmbsQueryResult(queryResult, nonAgg, agg);
     AggregateFrameQueryResult aggregateFrameQueryResult = (AggregateFrameQueryResult) aggregateFrame.toDbmsQueryResult();
-    jdbcDriver = new JdbcDriver(aggregateFrameQueryResult);
+    jdbcDriver = new JdbcDriver(aggregateFrameQueryResult, conn);
     List<String> actual = new ArrayList<>();
     List<String> expected = Arrays.asList("female", "male");
     while (jdbcDriver.next()) {
@@ -86,7 +91,7 @@ public class JdbcDriverTest {
     agg.add(new ImmutablePair<>("AGESUM", "SUM"));
     AggregateFrame aggregateFrame = AggregateFrame.fromDmbsQueryResult(queryResult, nonAgg, agg);
     AggregateFrameQueryResult aggregateFrameQueryResult = (AggregateFrameQueryResult) aggregateFrame.toDbmsQueryResult();
-    jdbcDriver = new JdbcDriver(aggregateFrameQueryResult);
+    jdbcDriver = new JdbcDriver(aggregateFrameQueryResult, conn);
     List<String> actual = new ArrayList<>();
     List<String> expected = Arrays.asList("female", "male");
     while (jdbcDriver.next()) {
@@ -106,7 +111,7 @@ public class JdbcDriverTest {
     agg.add(new ImmutablePair<>("AGESUM", "SUM"));
     AggregateFrame aggregateFrame = AggregateFrame.fromDmbsQueryResult(queryResult, nonAgg, agg);
     AggregateFrameQueryResult aggregateFrameQueryResult = (AggregateFrameQueryResult) aggregateFrame.toDbmsQueryResult();
-    jdbcDriver = new JdbcDriver(aggregateFrameQueryResult);
+    jdbcDriver = new JdbcDriver(aggregateFrameQueryResult, conn);
 
     while (jdbcDriver.next()) {
       if (jdbcDriver.getString(0).equals("female")) {
@@ -126,7 +131,7 @@ public class JdbcDriverTest {
     agg.add(new ImmutablePair<>("AGESUM", "SUM"));
     AggregateFrame aggregateFrame = AggregateFrame.fromDmbsQueryResult(queryResult, nonAgg, agg);
     AggregateFrameQueryResult aggregateFrameQueryResult = (AggregateFrameQueryResult) aggregateFrame.toDbmsQueryResult();
-    jdbcDriver = new JdbcDriver(aggregateFrameQueryResult);
+    jdbcDriver = new JdbcDriver(aggregateFrameQueryResult, conn);
 
     while (jdbcDriver.next()) {
       if (jdbcDriver.getString(0).equals("female")) {
@@ -146,7 +151,7 @@ public class JdbcDriverTest {
     agg.add(new ImmutablePair<>("AGESUM", "SUM"));
     AggregateFrame aggregateFrame = AggregateFrame.fromDmbsQueryResult(queryResult, nonAgg, agg);
     AggregateFrameQueryResult aggregateFrameQueryResult = (AggregateFrameQueryResult) aggregateFrame.toDbmsQueryResult();
-    jdbcDriver = new JdbcDriver(aggregateFrameQueryResult);
+    jdbcDriver = new JdbcDriver(aggregateFrameQueryResult, conn);
 
     while (jdbcDriver.next()) {
       if (jdbcDriver.getString(0).equals("female")) {
@@ -166,7 +171,7 @@ public class JdbcDriverTest {
     agg.add(new ImmutablePair<>("AGESUM", "SUM"));
     AggregateFrame aggregateFrame = AggregateFrame.fromDmbsQueryResult(queryResult, nonAgg, agg);
     AggregateFrameQueryResult aggregateFrameQueryResult = (AggregateFrameQueryResult) aggregateFrame.toDbmsQueryResult();
-    jdbcDriver = new JdbcDriver(aggregateFrameQueryResult);
+    jdbcDriver = new JdbcDriver(aggregateFrameQueryResult, conn);
 
     while (jdbcDriver.next()) {
       if (jdbcDriver.getString(0).equals("female")) {
@@ -186,7 +191,7 @@ public class JdbcDriverTest {
     agg.add(new ImmutablePair<>("A", "AVG"));
     AggregateFrame aggregateFrame = AggregateFrame.fromDmbsQueryResult(queryResult, nonAgg, agg);
     AggregateFrameQueryResult aggregateFrameQueryResult = (AggregateFrameQueryResult) aggregateFrame.toDbmsQueryResult();
-    jdbcDriver = new JdbcDriver(aggregateFrameQueryResult);
+    jdbcDriver = new JdbcDriver(aggregateFrameQueryResult, conn);
 
     while (jdbcDriver.next()) {
       if (jdbcDriver.getString(0).equals("female")) {
@@ -210,7 +215,7 @@ public class JdbcDriverTest {
     agg.add(new ImmutablePair<>("A", "AVG"));
     AggregateFrame aggregateFrame = AggregateFrame.fromDmbsQueryResult(queryResult, nonAgg, agg);
     AggregateFrameQueryResult aggregateFrameQueryResult = (AggregateFrameQueryResult) aggregateFrame.toDbmsQueryResult();
-    jdbcDriver = new JdbcDriver(aggregateFrameQueryResult);
+    jdbcDriver = new JdbcDriver(aggregateFrameQueryResult, conn);
 
     while (jdbcDriver.next()) {
       if (jdbcDriver.getString(0).equals("female")) {
@@ -234,7 +239,7 @@ public class JdbcDriverTest {
     agg.add(new ImmutablePair<>("A", "AVG"));
     AggregateFrame aggregateFrame = AggregateFrame.fromDmbsQueryResult(queryResult, nonAgg, agg);
     AggregateFrameQueryResult aggregateFrameQueryResult = (AggregateFrameQueryResult) aggregateFrame.toDbmsQueryResult();
-    jdbcDriver = new JdbcDriver(aggregateFrameQueryResult);
+    jdbcDriver = new JdbcDriver(aggregateFrameQueryResult, conn);
 
     while (jdbcDriver.next()) {
       if (jdbcDriver.getString(0).equals("female")) {
@@ -258,7 +263,7 @@ public class JdbcDriverTest {
     agg.add(new ImmutablePair<>("A", "AVG"));
     AggregateFrame aggregateFrame = AggregateFrame.fromDmbsQueryResult(queryResult, nonAgg, agg);
     AggregateFrameQueryResult aggregateFrameQueryResult = (AggregateFrameQueryResult) aggregateFrame.toDbmsQueryResult();
-    jdbcDriver = new JdbcDriver(aggregateFrameQueryResult);
+    jdbcDriver = new JdbcDriver(aggregateFrameQueryResult, conn);
 
     while (jdbcDriver.next()) {
       if (jdbcDriver.getString(0).equals("female")) {
@@ -282,7 +287,7 @@ public class JdbcDriverTest {
     agg.add(new ImmutablePair<>("A", "AVG"));
     AggregateFrame aggregateFrame = AggregateFrame.fromDmbsQueryResult(queryResult, nonAgg, agg);
     AggregateFrameQueryResult aggregateFrameQueryResult = (AggregateFrameQueryResult) aggregateFrame.toDbmsQueryResult();
-    jdbcDriver = new JdbcDriver(aggregateFrameQueryResult);
+    jdbcDriver = new JdbcDriver(aggregateFrameQueryResult, conn);
 
     while (jdbcDriver.next()) {
       if (jdbcDriver.getString(0).equals("female")) {
@@ -312,7 +317,7 @@ public class JdbcDriverTest {
     agg.add(new ImmutablePair<>("A", "AVG"));
     AggregateFrame aggregateFrame = AggregateFrame.fromDmbsQueryResult(queryResult, nonAgg, agg);
     AggregateFrameQueryResult aggregateFrameQueryResult = (AggregateFrameQueryResult) aggregateFrame.toDbmsQueryResult();
-    jdbcDriver = new JdbcDriver(aggregateFrameQueryResult);
+    jdbcDriver = new JdbcDriver(aggregateFrameQueryResult, conn);
 
     while (jdbcDriver.next()) {
       if (jdbcDriver.getString(0).equals("female")) {
@@ -340,12 +345,195 @@ public class JdbcDriverTest {
     agg.add(new ImmutablePair<>("A", "AVG"));
     AggregateFrame aggregateFrame = AggregateFrame.fromDmbsQueryResult(queryResult, nonAgg, agg);
     AggregateFrameQueryResult aggregateFrameQueryResult = (AggregateFrameQueryResult) aggregateFrame.toDbmsQueryResult();
-    jdbcDriver = new JdbcDriver(aggregateFrameQueryResult);
+    jdbcDriver = new JdbcDriver(aggregateFrameQueryResult, conn);
 
     while (jdbcDriver.next()) {
       Timestamp timestamp = Timestamp.valueOf("2017-10-12 21:22:23.0");
       assertEquals(timestamp, jdbcDriver.getTimestamp(0));
       assertEquals(timestamp, jdbcDriver.getTimestamp("BIRTH"));
+      assertEquals(new Date(timestamp.getTime()), jdbcDriver.getDate(0));
+      assertEquals(new Time(timestamp.getTime()), jdbcDriver.getTime(0));
+    }
+  }
+
+  @Test
+  public void getBinaryTest() throws SQLException, ValueException, IOException {
+    ResultSet rs = stmt.executeQuery("SELECT gender, count(*) as cnt, cast(12 as Binary) as bin FROM PEOPLE GROUP BY gender");
+    JdbcQueryResult queryResult = new JdbcQueryResult(rs);
+    List<String> nonAgg = new ArrayList<>();
+    List<Pair<String, String>> agg = new ArrayList<>();
+    nonAgg.add("GENDER");
+    nonAgg.add("BIN");
+    agg.add(new ImmutablePair<>("CNT", "COUNT"));
+    AggregateFrame aggregateFrame = AggregateFrame.fromDmbsQueryResult(queryResult, nonAgg, agg);
+    AggregateFrameQueryResult aggregateFrameQueryResult = (AggregateFrameQueryResult) aggregateFrame.toDbmsQueryResult();
+    jdbcDriver = new JdbcDriver(aggregateFrameQueryResult, conn);
+
+    while (jdbcDriver.next()) {
+      byte[] bin = jdbcDriver.getBytes(2);
+      assertEquals(12, bin[3]);
+      InputStream binStream = jdbcDriver.getBinaryStream(2);
+      assertEquals(0, binStream.read());
+      assertEquals(0, binStream.read());
+      assertEquals(0, binStream.read());
+      assertEquals(12, binStream.read());
+    }
+  }
+
+  @Test
+  public void getVarbinaryTest() throws SQLException, ValueException, IOException {
+    ResultSet rs = stmt.executeQuery("SELECT gender, count(*) as cnt, cast(12 as varbinary(max)) as bin FROM PEOPLE GROUP BY gender");
+    JdbcQueryResult queryResult = new JdbcQueryResult(rs);
+    List<String> nonAgg = new ArrayList<>();
+    List<Pair<String, String>> agg = new ArrayList<>();
+    nonAgg.add("GENDER");
+    nonAgg.add("BIN");
+    agg.add(new ImmutablePair<>("CNT", "COUNT"));
+    AggregateFrame aggregateFrame = AggregateFrame.fromDmbsQueryResult(queryResult, nonAgg, agg);
+    AggregateFrameQueryResult aggregateFrameQueryResult = (AggregateFrameQueryResult) aggregateFrame.toDbmsQueryResult();
+    jdbcDriver = new JdbcDriver(aggregateFrameQueryResult, conn);
+
+    while (jdbcDriver.next()) {
+      byte[] bin = jdbcDriver.getBytes(2);
+      assertEquals(12, bin[3]);
+      InputStream binStream = jdbcDriver.getBinaryStream(2);
+      assertEquals(0, binStream.read());
+      assertEquals(0, binStream.read());
+      assertEquals(0, binStream.read());
+      assertEquals(12, binStream.read());
+    }
+  }
+
+  @Test
+  public void getLongvarbinaryTest() throws SQLException, ValueException, IOException {
+    ResultSet rs = stmt.executeQuery("SELECT gender, count(*) as cnt, cast(12 as longvarbinary(max)) as bin FROM PEOPLE GROUP BY gender");
+    JdbcQueryResult queryResult = new JdbcQueryResult(rs);
+    List<String> nonAgg = new ArrayList<>();
+    List<Pair<String, String>> agg = new ArrayList<>();
+    nonAgg.add("GENDER");
+    nonAgg.add("BIN");
+    agg.add(new ImmutablePair<>("CNT", "COUNT"));
+    AggregateFrame aggregateFrame = AggregateFrame.fromDmbsQueryResult(queryResult, nonAgg, agg);
+    AggregateFrameQueryResult aggregateFrameQueryResult = (AggregateFrameQueryResult) aggregateFrame.toDbmsQueryResult();
+    jdbcDriver = new JdbcDriver(aggregateFrameQueryResult, conn);
+
+    while (jdbcDriver.next()) {
+      byte[] bin = jdbcDriver.getBytes(2);
+      assertEquals(12, bin[3]);
+      InputStream binStream = jdbcDriver.getBinaryStream(2);
+      assertEquals(0, binStream.read());
+      assertEquals(0, binStream.read());
+      assertEquals(0, binStream.read());
+      assertEquals(12, binStream.read());
+    }
+  }
+
+  @Test
+  public void getBitTest() throws SQLException, ValueException, IOException {
+    ResultSet rs = stmt.executeQuery("SELECT gender, count(*) as cnt, cast(0 as bit) as bool FROM PEOPLE GROUP BY gender");
+    JdbcQueryResult queryResult = new JdbcQueryResult(rs);
+    List<String> nonAgg = new ArrayList<>();
+    List<Pair<String, String>> agg = new ArrayList<>();
+    nonAgg.add("GENDER");
+    nonAgg.add("BOOL");
+    agg.add(new ImmutablePair<>("CNT", "COUNT"));
+    AggregateFrame aggregateFrame = AggregateFrame.fromDmbsQueryResult(queryResult, nonAgg, agg);
+    AggregateFrameQueryResult aggregateFrameQueryResult = (AggregateFrameQueryResult) aggregateFrame.toDbmsQueryResult();
+    jdbcDriver = new JdbcDriver(aggregateFrameQueryResult, conn);
+
+    while (jdbcDriver.next()) {
+      byte bin = jdbcDriver.getByte(2);
+      assertEquals(0, bin);
+      boolean b = jdbcDriver.getBoolean(2);
+      assertEquals(false, b);
+      int i = jdbcDriver.getInt(2);
+      assertEquals(0, i);
+    }
+  }
+
+  @Test
+  public void getBlobTest() throws SQLException, ValueException {
+    ResultSet rs = stmt.executeQuery("SELECT gender, count(*) as cnt, cast(0x1234567 as blob) as b FROM PEOPLE GROUP BY gender");
+    JdbcQueryResult queryResult = new JdbcQueryResult(rs);
+    List<String> nonAgg = new ArrayList<>();
+    List<Pair<String, String>> agg = new ArrayList<>();
+    nonAgg.add("GENDER");
+    nonAgg.add("B");
+    agg.add(new ImmutablePair<>("CNT", "COUNT"));
+    AggregateFrame aggregateFrame = AggregateFrame.fromDmbsQueryResult(queryResult, nonAgg, agg);
+    AggregateFrameQueryResult aggregateFrameQueryResult = (AggregateFrameQueryResult) aggregateFrame.toDbmsQueryResult();
+    jdbcDriver = new JdbcDriver(aggregateFrameQueryResult, conn);
+
+    while (jdbcDriver.next()) {
+      Blob bin = jdbcDriver.getBlob(2);
+      byte[] b = bin.getBytes(0,4);
+      assertEquals(25, b[0]);
+      assertEquals(8, b[1]);
+      assertEquals(-121, b[2]);
+      assertEquals(67, b[3]);
+    }
+  }
+
+  @Test
+  public void getBoolean() throws SQLException, ValueException {
+    ResultSet rs = stmt.executeQuery("SELECT gender, count(*) as cnt, cast(0 as boolean) as b FROM PEOPLE GROUP BY gender");
+    JdbcQueryResult queryResult = new JdbcQueryResult(rs);
+    List<String> nonAgg = new ArrayList<>();
+    List<Pair<String, String>> agg = new ArrayList<>();
+    nonAgg.add("GENDER");
+    nonAgg.add("B");
+    agg.add(new ImmutablePair<>("CNT", "COUNT"));
+    AggregateFrame aggregateFrame = AggregateFrame.fromDmbsQueryResult(queryResult, nonAgg, agg);
+    AggregateFrameQueryResult aggregateFrameQueryResult = (AggregateFrameQueryResult) aggregateFrame.toDbmsQueryResult();
+    jdbcDriver = new JdbcDriver(aggregateFrameQueryResult, conn);
+
+    while (jdbcDriver.next()) {
+      Boolean b = jdbcDriver.getBoolean(2);
+      assertEquals(false, b);
+      int i = jdbcDriver.getInt(2);
+      assertEquals(0, i);
+    }
+  }
+
+  @Test
+  public void getClob() throws SQLException, ValueException {
+    ResultSet rs = stmt.executeQuery("SELECT gender, count(*) as cnt, cast(0x1234567 as clob) as b FROM PEOPLE GROUP BY gender");
+    JdbcQueryResult queryResult = new JdbcQueryResult(rs);
+    List<String> nonAgg = new ArrayList<>();
+    List<Pair<String, String>> agg = new ArrayList<>();
+    nonAgg.add("GENDER");
+    nonAgg.add("B");
+    agg.add(new ImmutablePair<>("CNT", "COUNT"));
+    AggregateFrame aggregateFrame = AggregateFrame.fromDmbsQueryResult(queryResult, nonAgg, agg);
+    AggregateFrameQueryResult aggregateFrameQueryResult = (AggregateFrameQueryResult) aggregateFrame.toDbmsQueryResult();
+    jdbcDriver = new JdbcDriver(aggregateFrameQueryResult, conn);
+
+    while (jdbcDriver.next()) {
+      Clob bin = jdbcDriver.getClob(2);
+      assertEquals(8, bin.length());
+    }
+  }
+
+  @Test
+  public void getArray() throws SQLException, ValueException {
+    ResultSet rs = stmt.executeQuery("SELECT gender, count(*) as cnt, cast((1, 2, 3) as array) as b FROM PEOPLE GROUP BY gender");
+    JdbcQueryResult queryResult = new JdbcQueryResult(rs);
+    List<String> nonAgg = new ArrayList<>();
+    List<Pair<String, String>> agg = new ArrayList<>();
+    nonAgg.add("GENDER");
+    nonAgg.add("B");
+    agg.add(new ImmutablePair<>("CNT", "COUNT"));
+    AggregateFrame aggregateFrame = AggregateFrame.fromDmbsQueryResult(queryResult, nonAgg, agg);
+    AggregateFrameQueryResult aggregateFrameQueryResult = (AggregateFrameQueryResult) aggregateFrame.toDbmsQueryResult();
+    jdbcDriver = new JdbcDriver(aggregateFrameQueryResult, conn);
+
+    while (jdbcDriver.next()) {
+      Array a = jdbcDriver.getArray(2);
+      Object[] arr = (Object[])a.getArray();
+      assertEquals(3, arr.length);
+      assertEquals(1, arr[0]);
+      assertEquals(2, arr[1]);
+      assertEquals(3, arr[2]);
     }
   }
 }

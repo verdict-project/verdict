@@ -101,6 +101,8 @@ public class TypeCasting {
       return ((Short) obj);
     else if (obj instanceof Byte)
       return ((Byte) obj);
+    else if (obj instanceof Boolean)
+      return ((Boolean)obj)?(long) 1:(long)0;
     else {
       throw new SQLException("Not supported data type.");
     }
@@ -121,6 +123,8 @@ public class TypeCasting {
       return ((Short)obj).intValue();
     else if (obj instanceof Byte)
       return ((Byte) obj).intValue();
+    else if (obj instanceof Boolean)
+      return ((Boolean)obj)?1:0;
     else {
       throw new SQLException("Not supported data type.");
     }
@@ -141,6 +145,8 @@ public class TypeCasting {
       return ((Short)obj);
     else if (obj instanceof Byte)
       return ((Byte) obj).shortValue();
+    else if (obj instanceof Boolean)
+      return ((Boolean)obj)?(short)1:(short)0;
     else {
       throw new SQLException("Not supported data type.");
     }
@@ -161,6 +167,8 @@ public class TypeCasting {
       return ((Short)obj).byteValue();
     else if (obj instanceof Byte)
       return ((Byte) obj);
+    else if (obj instanceof Boolean)
+      return ((Boolean)obj)?(byte)1:(byte)0;
     else {
       throw new SQLException("Not supported data type.");
     }
