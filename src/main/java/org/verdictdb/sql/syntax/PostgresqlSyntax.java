@@ -1,6 +1,6 @@
 package org.verdictdb.sql.syntax;
 
-public class HiveSyntax implements SyntaxAbstract {
+public class PostgresqlSyntax implements SyntaxAbstract {
 
   // The column index that stored meta information in the original database
 
@@ -42,26 +42,30 @@ public class HiveSyntax implements SyntaxAbstract {
 
   @Override
   public String randFunction() {
-    return "rand()";
+    return "random()";
   }
 
   @Override
   public String getSchemaCommand() {
-    return "SHOW DATABASES";
+    return "select schema_name from information_schema.schemata";
   }
 
   @Override
   public String getTableCommand(String schema) {
-    return "SHOW TABLES IN " + schema;
+    return "SELECT table_name FROM information_schema.tables " + "WHERE table_schema = '" + schema +"'";
   }
 
   @Override
   public String getColumnsCommand(String schema, String table) {
-    return "DESCRIBE " + schema + "." + table;
+    return "select column_name, data_type " +
+        "from INFORMATION_SCHEMA.COLUMNS where table_name = '" + table + "' and table_schema = '" + schema + "'";
   }
 
   @Override
   public String getPartitionCommand(String schema, String table) {
-    return "SHOW PARTITIONS " + schema + "." + table;
+    return "select relname " +
+        "from pg_inherits i " +
+        "join pg_class c on c.oid = inhrelid " +
+        "where inhparent = '" + schema + "." + table + "'::regclass";
   }
 }
