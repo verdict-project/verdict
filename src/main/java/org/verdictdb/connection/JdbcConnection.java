@@ -58,4 +58,7 @@ public class JdbcConnection implements DbmsConnection {
     return syntax;
   }
 
+  @Override
+  public Connection getConnection() {return conn;}
+
 }

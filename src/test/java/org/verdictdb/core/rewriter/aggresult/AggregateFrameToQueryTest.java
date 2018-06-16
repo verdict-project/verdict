@@ -1,12 +1,5 @@
 package org.verdictdb.core.rewriter.aggresult;
 
-import static org.junit.Assert.assertEquals;
-
-import java.sql.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.AfterClass;
@@ -14,11 +7,18 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.connection.JdbcQueryResult;
 import org.verdictdb.core.aggresult.AggregateFrame;
+import org.verdictdb.core.aggresult.AggregateFrameQueryResult;
 import org.verdictdb.core.aggresult.AggregateGroup;
 import org.verdictdb.exception.ValueException;
 
-public class QueryResultToAggregateFrameTest {
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
+import static org.junit.Assert.assertEquals;
+
+public class AggregateFrameToQueryTest {
   static Connection conn;
 
   @BeforeClass
@@ -32,33 +32,6 @@ public class QueryResultToAggregateFrameTest {
   @AfterClass
   public static void closeH2Connection() throws SQLException {
     conn.close();
-  }
-
-  @Test
-  public void testH2Connection() throws SQLException {
-    List<List<Object>> contents = new ArrayList<>();
-    contents.add(Arrays.<Object>asList(1, "Anju"));
-    contents.add(Arrays.<Object>asList(2, "Sonia"));
-    contents.add(Arrays.<Object>asList(3, "Asha"));
-
-    Statement stmt = conn.createStatement();
-    stmt.execute("CREATE TABLE PERSON(id int, name varchar(255))");
-    for (List<Object> row : contents) {
-      String id = row.get(0).toString();
-      String name = row.get(1).toString();
-      stmt.execute(String.format("INSERT INTO PERSON(id, name) VALUES(%s, '%s')", id, name));
-    }
-
-    ResultSet rs = stmt.executeQuery("SELECT * FROM PERSON");
-    int index = 0;
-    while (rs.next()) {
-      int id = rs.getInt(1);
-      String name = rs.getString(2);
-      assertEquals(contents.get(index).get(0), id);
-      assertEquals(contents.get(index).get(1), name);
-      index += 1;
-    }
-    assertEquals(3, index);
   }
 
   @Test
@@ -85,12 +58,17 @@ public class QueryResultToAggregateFrameTest {
     nonAgg.add("GENDER");
     agg.add(new ImmutablePair<>("CNT", "COUNT"));
     AggregateFrame aggregateFrame = AggregateFrame.fromDmbsQueryResult(queryResult, nonAgg, agg);
-    assertEquals(2, aggregateFrame.getColumnNames().size());
-    List<String> gender = Arrays.asList("GENDER");
-    List<Object> female = new ArrayList<>();
-    female.add("female");
-    AggregateGroup group = new AggregateGroup(gender, female);
-    assertEquals(new Long(2),  aggregateFrame.getMeasures(group).getAttributeValueAt(0));
+
+    AggregateFrameQueryResult aggregateFrameQueryResult = (AggregateFrameQueryResult) aggregateFrame.toDbmsQueryResult();
+    assertEquals(2, aggregateFrameQueryResult.getColumnCount());
+    assertEquals("GENDER", aggregateFrameQueryResult.getColumnName(0));
+    assertEquals("CNT", aggregateFrameQueryResult.getColumnName(1));
+    while (aggregateFrameQueryResult.next()){
+      if (aggregateFrameQueryResult.getValue(0).equals("male")){
+        assertEquals(new Long(3), aggregateFrameQueryResult.getValue(1));
+      }
+      else assertEquals(new Long(2), aggregateFrameQueryResult.getValue(1));
+    }
   }
 
   @Test
@@ -117,12 +95,17 @@ public class QueryResultToAggregateFrameTest {
     nonAgg.add("GENDER");
     agg.add(new ImmutablePair<>("S", "COUNT"));
     AggregateFrame aggregateFrame = AggregateFrame.fromDmbsQueryResult(queryResult, nonAgg, agg);
-    assertEquals(2, aggregateFrame.getColumnNames().size());
-    List<String> gender = Arrays.asList("GENDER");
-    List<Object> female = new ArrayList<>();
-    female.add("female");
-    AggregateGroup group = new AggregateGroup(gender, female);
-    assertEquals(new Long(3),  aggregateFrame.getMeasures(group).getAttributeValueAt(0));
+
+    AggregateFrameQueryResult aggregateFrameQueryResult = (AggregateFrameQueryResult) aggregateFrame.toDbmsQueryResult();
+    assertEquals(2, aggregateFrameQueryResult.getColumnCount());
+    assertEquals("GENDER", aggregateFrameQueryResult.getColumnName(0));
+    assertEquals("S", aggregateFrameQueryResult.getColumnName(1));
+    while (aggregateFrameQueryResult.next()){
+      if (aggregateFrameQueryResult.getValue(0).equals("male")){
+        assertEquals(new Long(9), aggregateFrameQueryResult.getValue(1));
+      }
+      else assertEquals(new Long(3), aggregateFrameQueryResult.getValue(1));
+    }
   }
 
   @Test
@@ -156,13 +139,22 @@ public class QueryResultToAggregateFrameTest {
     agg.add(new ImmutablePair<>("CNT", "COUNT"));
     agg.add(new ImmutablePair<>("AGESUM", "SUM"));
     AggregateFrame aggregateFrame = AggregateFrame.fromDmbsQueryResult(queryResult, nonAgg, agg);
-    assertEquals(3, aggregateFrame.getColumnNames().size());
-    List<String> gender = Arrays.asList("GENDER");
-    List<Object> female = new ArrayList<>();
-    female.add("female");
-    AggregateGroup group = new AggregateGroup(gender, female);
-    assertEquals(new Long(3),  aggregateFrame.getMeasures(group).getAttributeValueAt(0));
-    assertEquals(new Long(50),  aggregateFrame.getMeasures(group).getAttributeValueAt(1));
+
+    AggregateFrameQueryResult aggregateFrameQueryResult = (AggregateFrameQueryResult) aggregateFrame.toDbmsQueryResult();
+    assertEquals(3, aggregateFrameQueryResult.getColumnCount());
+    assertEquals("GENDER", aggregateFrameQueryResult.getColumnName(0));
+    assertEquals("CNT", aggregateFrameQueryResult.getColumnName(1));
+    assertEquals("AGESUM", aggregateFrameQueryResult.getColumnName(2));
+    while (aggregateFrameQueryResult.next()){
+      if (aggregateFrameQueryResult.getValue(0).equals("male")){
+        assertEquals(new Long(5), aggregateFrameQueryResult.getValue(1));
+        assertEquals(new Long(91), aggregateFrameQueryResult.getValue(2));
+      }
+      else {
+        assertEquals(new Long(3), aggregateFrameQueryResult.getValue(1));
+        assertEquals(new Long(50), aggregateFrameQueryResult.getValue(2));
+      }
+    }
   }
 
   @Test
@@ -178,7 +170,7 @@ public class QueryResultToAggregateFrameTest {
     contents.add(Arrays.<Object>asList(3, "Bob", "male", 18, 190, "CHN"));
     Statement stmt = conn.createStatement();
     stmt.execute("DROP TABLE PEOPLE IF EXISTS");
-    stmt.execute("CREATE TABLE PEOPLE(id int, name varchar(255), gender varchar(8), age int, height int, nation varchar(8))");
+    stmt.execute("CREATE TABLE PEOPLE(id int, name varchar(255), gender varchar(8), age double, height int, nation varchar(8))");
     for (List<Object> row : contents) {
       String id = row.get(0).toString();
       String name = row.get(1).toString();
@@ -188,7 +180,11 @@ public class QueryResultToAggregateFrameTest {
       String nation = row.get(5).toString();
       stmt.execute(String.format("INSERT INTO PEOPLE(id, name, gender, age, height, nation) VALUES(%s, '%s', '%s', %s, %s, '%s')", id, name, gender, age, height, nation));
     }
-    ResultSet rs = stmt.executeQuery("SELECT sum(age) as agesum, gender, count(*) as cnt, nation as cnt FROM PEOPLE GROUP BY gender, nation");
+    ResultSet rs = stmt.executeQuery("SELECT sum(age) as agesum, gender, count(*) as cnt, nation FROM PEOPLE GROUP BY gender, nation");
+    while (rs.next()){
+     rs.getString(1);
+    }
+
     JdbcQueryResult queryResult = new JdbcQueryResult(rs);
     List<String> nonAgg = new ArrayList<>();
     List<Pair<String, String>> agg = new ArrayList<>();
@@ -197,13 +193,33 @@ public class QueryResultToAggregateFrameTest {
     agg.add(new ImmutablePair<>("CNT", "COUNT"));
     agg.add(new ImmutablePair<>("AGESUM", "SUM"));
     AggregateFrame aggregateFrame = AggregateFrame.fromDmbsQueryResult(queryResult, nonAgg, agg);
-    assertEquals(4, aggregateFrame.getColumnNames().size());
-    List<String> gender = Arrays.asList("GENDER", "NATION");
-    List<Object> female = new ArrayList<>();
-    female.add("female");
-    female.add("USA");
-    AggregateGroup group = new AggregateGroup(gender, female);
-    assertEquals(new Long(32),  aggregateFrame.getMeasures(group).getAttributeValueAt(0));
-    assertEquals(new Long(2),  aggregateFrame.getMeasures(group).getAttributeValueAt(1));
+
+    AggregateFrameQueryResult aggregateFrameQueryResult = (AggregateFrameQueryResult) aggregateFrame.toDbmsQueryResult();
+    assertEquals(4, aggregateFrameQueryResult.getColumnCount());
+    assertEquals("AGESUM", aggregateFrameQueryResult.getColumnName(0));
+    assertEquals("GENDER", aggregateFrameQueryResult.getColumnName(1));
+    assertEquals("CNT", aggregateFrameQueryResult.getColumnName(2));
+    assertEquals("NATION", aggregateFrameQueryResult.getColumnName(3));
+    while (aggregateFrameQueryResult.next()) {
+      if (aggregateFrameQueryResult.getValue(1).equals("male") &&
+          aggregateFrameQueryResult.getValue(3).equals("CHN")) {
+        assertEquals(new Long(59), aggregateFrameQueryResult.getValue(0));
+        assertEquals(new Long(3), aggregateFrameQueryResult.getValue(2));
+      }
+      else if (aggregateFrameQueryResult.getValue(1).equals("female") &&
+          aggregateFrameQueryResult.getValue(3).equals("CHN")) {
+        assertEquals(new Long(18), aggregateFrameQueryResult.getValue(0));
+        assertEquals(new Long(1), aggregateFrameQueryResult.getValue(2));
+      }
+      else if (aggregateFrameQueryResult.getValue(1).equals("female") &&
+          aggregateFrameQueryResult.getValue(3).equals("USA")) {
+        assertEquals(new Long(32), aggregateFrameQueryResult.getValue(0));
+        assertEquals(new Long(2), aggregateFrameQueryResult.getValue(2));
+      }
+      else {
+        assertEquals(new Long(32), aggregateFrameQueryResult.getValue(0));
+        assertEquals(new Long(2), aggregateFrameQueryResult.getValue(2));
+      }
+    }
   }
 }
