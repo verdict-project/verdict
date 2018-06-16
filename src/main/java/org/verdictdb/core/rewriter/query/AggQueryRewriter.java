@@ -1,3 +1,11 @@
+/*
+ * Copyright 2018 University of Michigan
+ * 
+ * You must contact Barzan Mozafari (mozafari@umich.edu) or Yongjoo Park (pyongjoo@umich.edu) to discuss
+ * how you could use, modify, or distribute this code. By default, this code is not open-sourced and we do
+ * not license this code.
+ */
+
 package org.verdictdb.core.rewriter.query;
 
 import java.util.ArrayList;

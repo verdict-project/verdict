@@ -1,3 +1,11 @@
+/*
+ * Copyright 2018 University of Michigan
+ * 
+ * You must contact Barzan Mozafari (mozafari@umich.edu) or Yongjoo Park (pyongjoo@umich.edu) to discuss
+ * how you could use, modify, or distribute this code. By default, this code is not open-sourced and we do
+ * not license this code.
+ */
+
 package org.verdictdb.core.rewriter.aggresult;
 
 import static org.verdictdb.core.rewriter.query.AliasRenamingRules.countEstimateAliasName;
@@ -24,7 +32,13 @@ import org.verdictdb.core.aggresult.AggregateMeasures;
 import org.verdictdb.exception.ValueException;
 import org.verdictdb.exception.VerdictDbException;
 
-
+/**
+ * Given intermediate aggregate form (either the result of a single query execution or the result of the
+ * aggregates of multiple query results), we convert it to a user-friendly form.
+ * 
+ * @author Yongjoo Park
+ *
+ */
 public class SingleAggResultRewriter {
 
   AggregateFrame rawResultSet;
@@ -55,7 +69,7 @@ public class SingleAggResultRewriter {
    */
   public AggregateFrame rewrite(List<String> nonaggColumns, List<Pair<String, String>> aggColumns) 
       throws VerdictDbException {
-    validityCheck(nonaggColumns, aggColumns);
+    isColumnNamesValid(nonaggColumns, aggColumns);
     AggregateFrame converted = new AggregateFrame(getNewColumnNames(nonaggColumns, aggColumns));
     for (Entry<AggregateGroup, AggregateMeasures> groupAndMeasures : rawResultSet.groupAndMeasuresSet()) {
       AggregateGroup singleGroup = groupAndMeasures.getKey();
@@ -182,7 +196,7 @@ public class SingleAggResultRewriter {
     return rewrittenMeasures;
   }
 
-  void validityCheck(List<String> nonaggColumns, List<Pair<String, String>> aggColumns) throws ValueException {
+  void isColumnNamesValid(List<String> nonaggColumns, List<Pair<String, String>> aggColumns) throws ValueException {
     for (String nonagg: nonaggColumns) {
       mustContain(nonagg);
     }
