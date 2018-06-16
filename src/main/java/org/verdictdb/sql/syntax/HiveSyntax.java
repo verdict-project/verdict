@@ -2,35 +2,28 @@ package org.verdictdb.sql.syntax;
 
 public class HiveSyntax implements SyntaxAbstract {
 
-  // The column name that stored meta information in the original database
-
-  final private String schemaNameColumnName = "database_name";
-
-  final private String TableNameColumnName = "tab_name";
-
-  final private String ColumnNameColumnName = "col_name";
-
-  final private String ColumnTypeColumnName = "data_type";
+  // The column index that stored meta information in the original database
 
   @Override
-  public String getSchemaNameColumnName() {
-    return schemaNameColumnName;
+  public int getSchemaNameColumnIndex() {
+    return 0;
   }
 
   @Override
-  public String getTableNameColumnName() {
-    return TableNameColumnName;
+  public int getTableNameColumnIndex() {
+    return 0;
   }
 
   @Override
-  public String getColumnNameColumnName() {
-    return ColumnNameColumnName;
+  public int getColumnNameColumnIndex() {
+    return 0;
   }
 
   @Override
-  public String getColumnTypeColumnName() {
-    return ColumnTypeColumnName;
+  public int getColumnTypeColumnIndex() {
+    return 1;
   }
+
 
   @Override
   public String getQuoteString() {

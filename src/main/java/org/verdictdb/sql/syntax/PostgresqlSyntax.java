@@ -2,35 +2,28 @@ package org.verdictdb.sql.syntax;
 
 public class PostgresqlSyntax implements SyntaxAbstract {
 
-  // The column name that stored meta information in the original database
-
-  final private String schemaNameColumnName = "schema_name";
-
-  final private String TableNameColumnName = "table_name";
-
-  final private String ColumnNameColumnName = "column_name";
-
-  final private String ColumnTypeColumnName = "data_type";
+  // The column index that stored meta information in the original database
 
   @Override
-  public String getSchemaNameColumnName() {
-    return schemaNameColumnName;
+  public int getSchemaNameColumnIndex() {
+    return 0;
   }
 
   @Override
-  public String getTableNameColumnName() {
-    return TableNameColumnName;
+  public int getTableNameColumnIndex() {
+    return 0;
   }
 
   @Override
-  public String getColumnNameColumnName() {
-    return ColumnNameColumnName;
+  public int getColumnNameColumnIndex() {
+    return 0;
   }
 
   @Override
-  public String getColumnTypeColumnName() {
-    return ColumnTypeColumnName;
+  public int getColumnTypeColumnIndex() {
+    return 1;
   }
+
 
   @Override
   public String getQuoteString() {
@@ -59,7 +52,7 @@ public class PostgresqlSyntax implements SyntaxAbstract {
 
   @Override
   public String getTableCommand(String schema) {
-    return "SELECT * FROM information_schema.tables " + "WHERE table_schema = '" + schema +"'";
+    return "SELECT table_name FROM information_schema.tables " + "WHERE table_schema = '" + schema +"'";
   }
 
   @Override

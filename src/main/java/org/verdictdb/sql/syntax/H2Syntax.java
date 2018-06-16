@@ -2,34 +2,26 @@ package org.verdictdb.sql.syntax;
 
 public class H2Syntax implements SyntaxAbstract {
 
-  // The column name that stored meta information in the original database
-
-  final private String schemaNameColumnName = "SCHEMA_NAME";
-
-  final private String TableNameColumnName = "TABLE_NAME";
-
-  final private String ColumnNameColumnName = "FIELD";
-
-  final private String ColumnTypeColumnName = "TYPE";
+  // The column index that stored meta information in the original database
 
   @Override
-  public String getSchemaNameColumnName() {
-    return schemaNameColumnName;
+  public int getSchemaNameColumnIndex() {
+    return 0;
   }
 
   @Override
-  public String getTableNameColumnName() {
-    return TableNameColumnName;
+  public int getTableNameColumnIndex() {
+    return 0;
   }
 
   @Override
-  public String getColumnNameColumnName() {
-    return ColumnNameColumnName;
+  public int getColumnNameColumnIndex() {
+    return 0;
   }
 
   @Override
-  public String getColumnTypeColumnName() {
-    return ColumnTypeColumnName;
+  public int getColumnTypeColumnIndex() {
+    return 1;
   }
 
   @Override

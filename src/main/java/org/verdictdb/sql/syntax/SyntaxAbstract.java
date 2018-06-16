@@ -16,13 +16,13 @@ public interface SyntaxAbstract {
 
   public String getColumnsCommand(String schema, String table);
 
-  public String getSchemaNameColumnName();
+  public int getSchemaNameColumnIndex();
 
-  public String getTableNameColumnName();
+  public int getTableNameColumnIndex();
 
-  public String getColumnNameColumnName();
+  public int getColumnNameColumnIndex();
 
-  public String getColumnTypeColumnName();
+  public int getColumnTypeColumnIndex();
 
   public String getPartitionCommand(String schema, String table);
 }

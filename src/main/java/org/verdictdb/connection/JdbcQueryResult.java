@@ -11,9 +11,13 @@ public class JdbcQueryResult implements DbmsQueryResult {
   List<String> columnNames = new ArrayList<>();
 
   List<Integer> columnTypes = new ArrayList<>();
-  
+
   ResultSet resultSet;
-  
+
+  List<List<Object>> result = new ArrayList<>();
+
+  int cursor = -1;
+
   public JdbcQueryResult(ResultSet resultSet) throws SQLException {
     this.resultSet = resultSet;
     ResultSetMetaData meta = resultSet.getMetaData();
@@ -21,6 +25,13 @@ public class JdbcQueryResult implements DbmsQueryResult {
     for (int i = 0; i < columnCount; i++) {
       columnNames.add(meta.getColumnName(i+1));
       columnTypes.add(meta.getColumnType(i+1));
+    }
+    while (resultSet.next()) {
+      List<Object> row = new ArrayList<>();
+      for (int i=0; i< columnCount; i++) {
+        row.add(resultSet.getObject(i+1));
+      }
+      result.add(row);
     }
   }
 
@@ -41,6 +52,12 @@ public class JdbcQueryResult implements DbmsQueryResult {
 
   @Override
   public boolean next() {
+    if (cursor<result.size()-1) {
+      cursor++;
+      return true;
+    }
+    else return false;
+    /*
     boolean nextExists = false;
     try {
       nextExists = resultSet.next();
@@ -48,14 +65,16 @@ public class JdbcQueryResult implements DbmsQueryResult {
       e.printStackTrace();
     }
     return nextExists;
+    */
   }
 
   @Override
   public Object getValue(int index) {
     Object value = null;
     try {
-      value = resultSet.getObject(index + 1);
-    } catch (SQLException e) {
+      value = result.get(cursor).get(index);
+      // value = resultSet.getObject(index + 1);
+    } catch (Exception e) {
       e.printStackTrace();
     }
     return value;
@@ -97,7 +116,7 @@ public class JdbcQueryResult implements DbmsQueryResult {
     
   }
 
-  public ResultSet getResultSet() {
-    return resultSet;
+  public List<List<Object>> getResult() {
+    return result;
   }
 }

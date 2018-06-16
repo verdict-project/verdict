@@ -7,7 +7,7 @@ import java.util.List;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
-import org.verdictdb.JdbcDriver;
+import org.verdictdb.JdbcResultSet;
 import org.verdictdb.connection.DataTypeConverter;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.DbmsQueryResult;
@@ -21,14 +21,11 @@ public class DbmsMetadataCache {
 
   private List<String> schemaCache = new ArrayList<>();
 
-  // Key is schema name and value is table names in this schema.
-  private HashMap<String, List<String>> tablesCache = new HashMap<>();
+  private List<String> tablesCache = new ArrayList<>();
 
   private List<String> partitionCache = new ArrayList<>();
 
-  // First Key is schema name and second key is table name.
-  // Value is columns' names and types in this table.
-  private HashMap<Pair<String, String>, List<Pair<String,Integer>>> columnsCache = new HashMap<>();
+  private List<Pair<String,Integer>> columnsCache = new ArrayList<>();
 
   public DbmsMetadataCache(DbmsConnection connection) {
     this.syntax = connection.getSyntax();
@@ -36,40 +33,43 @@ public class DbmsMetadataCache {
   }
   
   public List<String> getSchemas() throws SQLException {
-    DbmsQueryResult queryResult = connection.executeQuery(syntax.getSchemaCommand());
-    JdbcDriver jdbcQueryResult = new JdbcDriver(queryResult, connection.getConnection());
-    List<String> schemas = new ArrayList<>();
-    while (queryResult.next()) {
-      schemas.add(jdbcQueryResult.getString(syntax.getSchemaNameColumnName()));
+    if (!schemaCache.isEmpty()){
+      return schemaCache;
     }
-    schemaCache.addAll(schemas);
-    return schemas;
+    DbmsQueryResult queryResult = connection.executeQuery(syntax.getSchemaCommand());
+    JdbcResultSet jdbcQueryResult = new JdbcResultSet(queryResult);
+    while (queryResult.next()) {
+      schemaCache.add(jdbcQueryResult.getString(syntax.getSchemaNameColumnIndex()));
+    }
+    return schemaCache;
   }
   
   public List<String> getTables(String schema) throws SQLException {
-    DbmsQueryResult queryResult = connection.executeQuery(syntax.getTableCommand(schema));
-    JdbcDriver jdbcQueryResult = new JdbcDriver(queryResult, connection.getConnection());
-    List<String> tables = new ArrayList<>();
-    while (queryResult.next()) {
-      tables.add(jdbcQueryResult.getString(syntax.getTableNameColumnName()));
+    if (!tablesCache.isEmpty()){
+      return tablesCache;
     }
-    tablesCache.put(schema, tables);
-    return tables;
+    DbmsQueryResult queryResult = connection.executeQuery(syntax.getTableCommand(schema));
+    JdbcResultSet jdbcQueryResult = new JdbcResultSet(queryResult);
+    while (queryResult.next()) {
+      tablesCache.add(jdbcQueryResult.getString(syntax.getTableNameColumnIndex()));
+    }
+    return tablesCache;
   }
   
   public List<Pair<String, Integer>> getColumns(String schema, String table) throws SQLException {
+    if (!columnsCache.isEmpty()){
+      return columnsCache;
+    }
     DbmsQueryResult queryResult = connection.executeQuery(syntax.getColumnsCommand(schema, table));
-    JdbcDriver jdbcQueryResult = new JdbcDriver(queryResult, connection.getConnection());
-    List<Pair<String, Integer>> columns = new ArrayList<>();
+    JdbcResultSet jdbcQueryResult = new JdbcResultSet(queryResult);
     while (queryResult.next()) {
-      String type = jdbcQueryResult.getString(syntax.getColumnTypeColumnName());
+      String type = jdbcQueryResult.getString(syntax.getColumnTypeColumnIndex());
       // remove the size of type
       type = type.replaceAll("\\(.*\\)", "");
-      columns.add(new ImmutablePair<>(jdbcQueryResult.getString(syntax.getColumnNameColumnName()),
+      columnsCache.add(new ImmutablePair<>(jdbcQueryResult.getString(syntax.getColumnNameColumnIndex()),
           DataTypeConverter.typeInt(type)));
     }
-    columnsCache.put(new ImmutablePair<>(schema, table), columns);
-    return columns;
+    return columnsCache;
   }
   
   /**
@@ -83,29 +83,15 @@ public class DbmsMetadataCache {
     if (!syntax.doesSupportTablePartitioning()) {
       throw new SQLException("Database does not support table partitioning");
     }
-    DbmsQueryResult queryResult = connection.executeQuery(syntax.getPartitionCommand(schema, table));
-    JdbcDriver jdbcQueryResult = new JdbcDriver(queryResult, connection.getConnection());
-    List<String> partition = new ArrayList<>();
-    while (queryResult.next()) {
-      partition.add(jdbcQueryResult.getString(0));
+    if (!partitionCache.isEmpty()){
+      return partitionCache;
     }
-    partitionCache.addAll(partition);
-    return partition;
-  }
-
-  public HashMap<Pair<String, String>, List<Pair<String, Integer>>> getColumnsCache() {
-    return columnsCache;
-  }
-
-  public HashMap<String, List<String>> getTablesCache() {
-    return tablesCache;
-  }
-
-  public List<String> getSchemaCache() {
-    return schemaCache;
-  }
-
-  public List<String> getPartitionCache() {
+    DbmsQueryResult queryResult = connection.executeQuery(syntax.getPartitionCommand(schema, table));
+    JdbcResultSet jdbcQueryResult = new JdbcResultSet(queryResult);
+    while (queryResult.next()) {
+      partitionCache.add(jdbcQueryResult.getString(0));
+    }
     return partitionCache;
   }
+
 }
