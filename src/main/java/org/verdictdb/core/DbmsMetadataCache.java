@@ -36,11 +36,7 @@ public class DbmsMetadataCache {
     if (!schemaCache.isEmpty()){
       return schemaCache;
     }
-    DbmsQueryResult queryResult = connection.executeQuery(syntax.getSchemaCommand());
-    JdbcResultSet jdbcQueryResult = new JdbcResultSet(queryResult);
-    while (queryResult.next()) {
-      schemaCache.add(jdbcQueryResult.getString(syntax.getSchemaNameColumnIndex()));
-    }
+    schemaCache.addAll(connection.getSchemas());
     return schemaCache;
   }
   
@@ -48,27 +44,15 @@ public class DbmsMetadataCache {
     if (!tablesCache.isEmpty()){
       return tablesCache;
     }
-    DbmsQueryResult queryResult = connection.executeQuery(syntax.getTableCommand(schema));
-    JdbcResultSet jdbcQueryResult = new JdbcResultSet(queryResult);
-    while (queryResult.next()) {
-      tablesCache.add(jdbcQueryResult.getString(syntax.getTableNameColumnIndex()));
-    }
+    tablesCache.addAll(connection.getTables(schema));
     return tablesCache;
   }
-  
+
   public List<Pair<String, Integer>> getColumns(String schema, String table) throws SQLException {
     if (!columnsCache.isEmpty()){
       return columnsCache;
     }
-    DbmsQueryResult queryResult = connection.executeQuery(syntax.getColumnsCommand(schema, table));
-    JdbcResultSet jdbcQueryResult = new JdbcResultSet(queryResult);
-    while (queryResult.next()) {
-      String type = jdbcQueryResult.getString(syntax.getColumnTypeColumnIndex());
-      // remove the size of type
-      type = type.replaceAll("\\(.*\\)", "");
-      columnsCache.add(new ImmutablePair<>(jdbcQueryResult.getString(syntax.getColumnNameColumnIndex()),
-          DataTypeConverter.typeInt(type)));
-    }
+    columnsCache.addAll(connection.getColumns(schema, table));
     return columnsCache;
   }
   
@@ -86,11 +70,7 @@ public class DbmsMetadataCache {
     if (!partitionCache.isEmpty()){
       return partitionCache;
     }
-    DbmsQueryResult queryResult = connection.executeQuery(syntax.getPartitionCommand(schema, table));
-    JdbcResultSet jdbcQueryResult = new JdbcResultSet(queryResult);
-    while (queryResult.next()) {
-      partitionCache.add(jdbcQueryResult.getString(0));
-    }
+    partitionCache.addAll(getPartitionColumns(schema, table));
     return partitionCache;
   }
 
