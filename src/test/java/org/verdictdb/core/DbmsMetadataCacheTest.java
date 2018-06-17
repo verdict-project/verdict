@@ -14,7 +14,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -59,7 +58,7 @@ public class DbmsMetadataCacheTest {
       stmt.execute(String.format("INSERT INTO PEOPLE(id, name, gender, age, height, nation, birth) VALUES(%s, '%s', '%s', %s, %s, '%s', '%s')", id, name, gender, age, height, nation, birth));
     }
 
-    postgresqlConn = DriverManager.getConnection("jdbc:postgresql://localhost/test", "postgres", "");
+    postgresqlConn = DriverManager.getConnection("jdbc:postgresql://localhost/test", "postgres", "zhongshucheng123");
   }
 
   @Test
@@ -105,14 +104,10 @@ public class DbmsMetadataCacheTest {
     statement.execute("DROP TABLE IF EXISTS measurement_y2006m02");
     statement.execute("DROP TABLE IF EXISTS measurement_y2006m03");
     statement.execute("DROP TABLE IF EXISTS measurement_y2006m04");
-    statement.execute("CREATE TABLE measurement(city_id int not null, logdate date not null, peaktemp int, unitsales int) partition by range(logdate)");
-    statement.execute("CREATE TABLE measurement_y2006m02 PARTITION OF measurement FOR VALUES FROM ('2006-02-01') TO ('2006-03-01')");
-    statement.execute("CREATE TABLE measurement_y2006m03 PARTITION OF measurement FOR VALUES FROM ('2006-03-01') TO ('2006-04-01')");
-    statement.execute("CREATE TABLE measurement_y2006m04 PARTITION OF measurement FOR VALUES FROM ('2006-04-01') TO ('2006-05-01')");
+    statement.execute("CREATE TABLE measurement(city_id int not null, logdate date not null, peaktemp int, unitsales int) partition by range(logdate, city_id)");
     List<String> partition = postgresMetadataCache.getPartitionColumns("public", "measurement");
-    assertEquals(3, partition.size());
-    assertEquals("measurement_y2006m02", partition.get(0));
-    assertEquals("measurement_y2006m03", partition.get(1));
-    assertEquals("measurement_y2006m04", partition.get(2));
+    assertEquals(2, partition.size());
+    assertEquals("logdate", partition.get(0));
+    assertEquals("city_id", partition.get(1));
   }
 }
