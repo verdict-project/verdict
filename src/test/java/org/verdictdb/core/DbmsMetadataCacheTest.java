@@ -119,6 +119,6 @@ public class DbmsMetadataCacheTest {
     statement.execute("CREATE TABLE tp (c1 INT, c2 INT, c3 VARCHAR(25)) PARTITION BY HASH(c1 + c2) PARTITIONS 4;");
     partition = mysqlMetadataCache.getPartitionColumns("test", "tp");
     assertEquals(1, partition.size());
-    assertEquals(true, partition.get(0).equals("(c1 + c2)")||partition.get(0).equals("(`c1` + `c2`)"));
+    assertEquals("(c1 + c2)", partition.get(0));
   }
 }
