@@ -14,7 +14,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -26,6 +25,8 @@ public class DbmsMetadataCacheTest {
   private DbmsMetadataCache metadataCache = new DbmsMetadataCache(new JdbcConnection(conn, new H2Syntax()));
 
   private static Statement stmt;
+
+  private static Connection postgresqlConn;
 
   @BeforeClass
   public static void setupH2Database() throws SQLException {
@@ -56,6 +57,8 @@ public class DbmsMetadataCacheTest {
       String birth = row.get(6).toString();
       stmt.execute(String.format("INSERT INTO PEOPLE(id, name, gender, age, height, nation, birth) VALUES(%s, '%s', '%s', %s, %s, '%s', '%s')", id, name, gender, age, height, nation, birth));
     }
+
+    postgresqlConn = DriverManager.getConnection("jdbc:postgresql://localhost/test", "postgres", "");
   }
 
   @Test
@@ -93,4 +96,18 @@ public class DbmsMetadataCacheTest {
     assertEquals(DataTypeConverter.typeInt("timestamp"), (int)columns.get(6).getValue());
   }
 
+  @Test
+  public void getPartitionTest() throws SQLException {
+    Statement statement = postgresqlConn.createStatement();
+    DbmsMetadataCache postgresMetadataCache = new DbmsMetadataCache(new JdbcConnection(postgresqlConn, new PostgresqlSyntax()));
+    statement.execute("DROP TABLE IF EXISTS measurement");
+    statement.execute("DROP TABLE IF EXISTS measurement_y2006m02");
+    statement.execute("DROP TABLE IF EXISTS measurement_y2006m03");
+    statement.execute("DROP TABLE IF EXISTS measurement_y2006m04");
+    statement.execute("CREATE TABLE measurement(city_id int not null, logdate date not null, peaktemp int, unitsales int) partition by range(logdate, city_id)");
+    List<String> partition = postgresMetadataCache.getPartitionColumns("public", "measurement");
+    assertEquals(2, partition.size());
+    assertEquals("logdate", partition.get(0));
+    assertEquals("city_id", partition.get(1));
+  }
 }
