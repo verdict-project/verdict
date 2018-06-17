@@ -27,6 +27,8 @@ public class DbmsMetadataCacheTest {
 
   private static Statement stmt;
 
+  private static Connection postgresqlConn;
+
   @BeforeClass
   public static void setupH2Database() throws SQLException {
     final String DB_CONNECTION = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1";
@@ -56,6 +58,8 @@ public class DbmsMetadataCacheTest {
       String birth = row.get(6).toString();
       stmt.execute(String.format("INSERT INTO PEOPLE(id, name, gender, age, height, nation, birth) VALUES(%s, '%s', '%s', %s, %s, '%s', '%s')", id, name, gender, age, height, nation, birth));
     }
+
+    postgresqlConn = DriverManager.getConnection("jdbc:postgresql://localhost/test", "postgres", "");
   }
 
   @Test
