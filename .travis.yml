@@ -10,3 +10,4 @@ services:
 
 before_script:
   - psql -c 'create database test;' -U postgres
+  - psql -c '\c test' -U postgres

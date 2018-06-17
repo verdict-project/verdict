@@ -97,4 +97,22 @@ public class DbmsMetadataCacheTest {
     assertEquals(DataTypeConverter.typeInt("timestamp"), (int)columns.get(6).getValue());
   }
 
+  @Test
+  public void getPartitionTest() throws SQLException {
+    Statement statement = postgresqlConn.createStatement();
+    DbmsMetadataCache postgresMetadataCache = new DbmsMetadataCache(new JdbcConnection(postgresqlConn, new PostgresqlSyntax()));
+    statement.execute("DROP TABLE IF EXISTS measurement");
+    statement.execute("DROP TABLE IF EXISTS measurement_y2006m02");
+    statement.execute("DROP TABLE IF EXISTS measurement_y2006m03");
+    statement.execute("DROP TABLE IF EXISTS measurement_y2006m04");
+    statement.execute("CREATE TABLE measurement(city_id int not null, logdate date not null, peaktemp int, unitsales int) partition by range(logdate)");
+    statement.execute("CREATE TABLE measurement_y2006m02 PARTITION OF measurement FOR VALUES FROM ('2006-02-01') TO ('2006-03-01')");
+    statement.execute("CREATE TABLE measurement_y2006m03 PARTITION OF measurement FOR VALUES FROM ('2006-03-01') TO ('2006-04-01')");
+    statement.execute("CREATE TABLE measurement_y2006m04 PARTITION OF measurement FOR VALUES FROM ('2006-04-01') TO ('2006-05-01')");
+    List<String> partition = postgresMetadataCache.getPartitionColumns("public", "measurement");
+    assertEquals(3, partition.size());
+    assertEquals("measurement_y2006m02", partition.get(0));
+    assertEquals("measurement_y2006m03", partition.get(1));
+    assertEquals("measurement_y2006m04", partition.get(2));
+  }
 }
