@@ -21,11 +21,11 @@ public class DbmsMetadataCache {
 
   private List<String> schemaCache = new ArrayList<>();
 
-  private List<String> tablesCache = new ArrayList<>();
+  private HashMap<String, List<String>> tablesCache = new HashMap<>();
 
   private List<String> partitionCache = new ArrayList<>();
 
-  private List<Pair<String,Integer>> columnsCache = new ArrayList<>();
+  private HashMap<Pair<String, String>, List<Pair<String,Integer>>> columnsCache = new HashMap<>();
 
   public DbmsMetadataCache(DbmsConnection connection) {
     this.syntax = connection.getSyntax();
@@ -33,7 +33,7 @@ public class DbmsMetadataCache {
   }
   
   public List<String> getSchemas() throws SQLException {
-    if (!schemaCache.isEmpty()){
+    if (!schemaCache.isEmpty()) {
       return schemaCache;
     }
     schemaCache.addAll(connection.getSchemas());
@@ -41,19 +41,20 @@ public class DbmsMetadataCache {
   }
   
   public List<String> getTables(String schema) throws SQLException {
-    if (!tablesCache.isEmpty()){
-      return tablesCache;
+    if (tablesCache.containsKey(schema)&&!tablesCache.get(schema).isEmpty()) {
+      return tablesCache.get(schema);
     }
-    tablesCache.addAll(connection.getTables(schema));
-    return tablesCache;
+    tablesCache.put(schema, connection.getTables(schema));
+    return tablesCache.get(schema);
   }
 
   public List<Pair<String, Integer>> getColumns(String schema, String table) throws SQLException {
-    if (!columnsCache.isEmpty()){
-      return columnsCache;
+    Pair<String, String> key = new ImmutablePair<>(schema,table);
+    if (columnsCache.containsKey(key) && !columnsCache.get(key).isEmpty()) {
+      return columnsCache.get(key);
     }
-    columnsCache.addAll(connection.getColumns(schema, table));
-    return columnsCache;
+    columnsCache.put(key, connection.getColumns(schema, table));
+    return columnsCache.get(key);
   }
   
   /**
@@ -67,7 +68,7 @@ public class DbmsMetadataCache {
     if (!syntax.doesSupportTablePartitioning()) {
       throw new SQLException("Database does not support table partitioning");
     }
-    if (!partitionCache.isEmpty()){
+    if (!partitionCache.isEmpty()) {
       return partitionCache;
     }
     partitionCache.addAll(getPartitionColumns(schema, table));
