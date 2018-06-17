@@ -21,11 +21,11 @@ public class DbmsMetadataCache {
 
   private List<String> schemaCache = new ArrayList<>();
 
-  private List<String> tablesCache = new ArrayList<>();
+  private HashMap<String, List<String>> tablesCache = new HashMap<>();
 
-  private List<String> partitionCache = new ArrayList<>();
+  private HashMap<Pair<String, String>, List<String>> partitionCache = new HashMap<>();
 
-  private List<Pair<String,Integer>> columnsCache = new ArrayList<>();
+  private HashMap<Pair<String, String>, List<Pair<String,Integer>>> columnsCache = new HashMap<>();
 
   public DbmsMetadataCache(DbmsConnection connection) {
     this.syntax = connection.getSyntax();
@@ -33,43 +33,28 @@ public class DbmsMetadataCache {
   }
   
   public List<String> getSchemas() throws SQLException {
-    if (!schemaCache.isEmpty()){
+    if (!schemaCache.isEmpty()) {
       return schemaCache;
     }
-    DbmsQueryResult queryResult = connection.executeQuery(syntax.getSchemaCommand());
-    JdbcResultSet jdbcQueryResult = new JdbcResultSet(queryResult);
-    while (queryResult.next()) {
-      schemaCache.add(jdbcQueryResult.getString(syntax.getSchemaNameColumnIndex()));
-    }
+    schemaCache.addAll(connection.getSchemas());
     return schemaCache;
   }
   
   public List<String> getTables(String schema) throws SQLException {
-    if (!tablesCache.isEmpty()){
-      return tablesCache;
+    if (tablesCache.containsKey(schema)&&!tablesCache.get(schema).isEmpty()) {
+      return tablesCache.get(schema);
     }
-    DbmsQueryResult queryResult = connection.executeQuery(syntax.getTableCommand(schema));
-    JdbcResultSet jdbcQueryResult = new JdbcResultSet(queryResult);
-    while (queryResult.next()) {
-      tablesCache.add(jdbcQueryResult.getString(syntax.getTableNameColumnIndex()));
-    }
-    return tablesCache;
+    tablesCache.put(schema, connection.getTables(schema));
+    return tablesCache.get(schema);
   }
-  
+
   public List<Pair<String, Integer>> getColumns(String schema, String table) throws SQLException {
-    if (!columnsCache.isEmpty()){
-      return columnsCache;
+    Pair<String, String> key = new ImmutablePair<>(schema,table);
+    if (columnsCache.containsKey(key) && !columnsCache.get(key).isEmpty()) {
+      return columnsCache.get(key);
     }
-    DbmsQueryResult queryResult = connection.executeQuery(syntax.getColumnsCommand(schema, table));
-    JdbcResultSet jdbcQueryResult = new JdbcResultSet(queryResult);
-    while (queryResult.next()) {
-      String type = jdbcQueryResult.getString(syntax.getColumnTypeColumnIndex());
-      // remove the size of type
-      type = type.replaceAll("\\(.*\\)", "");
-      columnsCache.add(new ImmutablePair<>(jdbcQueryResult.getString(syntax.getColumnNameColumnIndex()),
-          DataTypeConverter.typeInt(type)));
-    }
-    return columnsCache;
+    columnsCache.put(key, connection.getColumns(schema, table));
+    return columnsCache.get(key);
   }
   
   /**
@@ -83,15 +68,12 @@ public class DbmsMetadataCache {
     if (!syntax.doesSupportTablePartitioning()) {
       throw new SQLException("Database does not support table partitioning");
     }
-    if (!partitionCache.isEmpty()){
-      return partitionCache;
+    Pair<String, String> key = new ImmutablePair<>(schema,table);
+    if (columnsCache.containsKey(key) && !partitionCache.isEmpty()) {
+      return partitionCache.get(key);
     }
-    DbmsQueryResult queryResult = connection.executeQuery(syntax.getPartitionCommand(schema, table));
-    JdbcResultSet jdbcQueryResult = new JdbcResultSet(queryResult);
-    while (queryResult.next()) {
-      partitionCache.add(jdbcQueryResult.getString(0));
-    }
-    return partitionCache;
+    partitionCache.put(key, connection.getPartitionColumns(schema, table));
+    return partitionCache.get(key);
   }
 
 }
