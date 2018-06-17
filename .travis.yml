@@ -4,3 +4,9 @@ jdk:
   - oraclejdk9
   - openjdk7
   - openjdk8
+
+services:
+  - postgresql
+
+before_script:
+  - psql -c 'create database travis_ci_test;' -U postgres
