@@ -23,7 +23,7 @@ public class DbmsMetadataCache {
 
   private HashMap<String, List<String>> tablesCache = new HashMap<>();
 
-  private List<String> partitionCache = new ArrayList<>();
+  private HashMap<Pair<String, String>, List<String>> partitionCache = new HashMap<>();
 
   private HashMap<Pair<String, String>, List<Pair<String,Integer>>> columnsCache = new HashMap<>();
 
@@ -68,11 +68,12 @@ public class DbmsMetadataCache {
     if (!syntax.doesSupportTablePartitioning()) {
       throw new SQLException("Database does not support table partitioning");
     }
-    if (!partitionCache.isEmpty()) {
-      return partitionCache;
+    Pair<String, String> key = new ImmutablePair<>(schema,table);
+    if (columnsCache.containsKey(key) && !partitionCache.isEmpty()) {
+      return partitionCache.get(key);
     }
-    partitionCache.addAll(getPartitionColumns(schema, table));
-    return partitionCache;
+    partitionCache.put(key, connection.getPartitionColumns(schema, table));
+    return partitionCache.get(key);
   }
 
 }
