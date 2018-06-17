@@ -58,7 +58,7 @@ public class DbmsMetadataCacheTest {
       stmt.execute(String.format("INSERT INTO PEOPLE(id, name, gender, age, height, nation, birth) VALUES(%s, '%s', '%s', %s, %s, '%s', '%s')", id, name, gender, age, height, nation, birth));
     }
 
-    postgresqlConn = DriverManager.getConnection("jdbc:postgresql://localhost/test", "postgres", "zhongshucheng123");
+    postgresqlConn = DriverManager.getConnection("jdbc:postgresql://localhost/test", "postgres", "");
   }
 
   @Test
