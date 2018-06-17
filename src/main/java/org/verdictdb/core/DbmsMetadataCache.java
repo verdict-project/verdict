@@ -31,7 +31,7 @@ public class DbmsMetadataCache {
     this.syntax = connection.getSyntax();
     this.connection = connection;
   }
-  
+
   public List<String> getSchemas() throws SQLException {
     if (!schemaCache.isEmpty()){
       return schemaCache;
@@ -43,7 +43,7 @@ public class DbmsMetadataCache {
     }
     return schemaCache;
   }
-  
+
   public List<String> getTables(String schema) throws SQLException {
     if (!tablesCache.isEmpty()){
       return tablesCache;
@@ -55,7 +55,7 @@ public class DbmsMetadataCache {
     }
     return tablesCache;
   }
-  
+
   public List<Pair<String, Integer>> getColumns(String schema, String table) throws SQLException {
     if (!columnsCache.isEmpty()){
       return columnsCache;
@@ -71,10 +71,10 @@ public class DbmsMetadataCache {
     }
     return columnsCache;
   }
-  
+
   /**
    * Only needed for the DBMS that supports partitioning.
-   * 
+   *
    * @param schema
    * @param table
    * @return
