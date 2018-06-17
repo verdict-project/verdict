@@ -10,6 +10,7 @@ sudo: required
 
 services:
   - postgresql
+  - mysql
 
 addons:
   postgresql: "9.6"
@@ -26,3 +27,6 @@ before_script:
   - sudo service postgresql restart
   - psql -c 'create database test;' -U postgres
   - psql -c '\c test' -U postgres
+
+before_install:
+  - mysql -e 'CREATE DATABASE IF NOT EXISTS test;'
