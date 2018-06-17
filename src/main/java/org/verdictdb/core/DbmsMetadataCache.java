@@ -72,7 +72,7 @@ public class DbmsMetadataCache {
     if (columnsCache.containsKey(key) && !partitionCache.isEmpty()) {
       return partitionCache.get(key);
     }
-    partitionCache.put(key, getPartitionColumns(schema, table));
+    partitionCache.put(key, connection.getPartitionColumns(schema, table));
     return partitionCache.get(key);
   }
 
