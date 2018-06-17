@@ -38,8 +38,9 @@ public class JdbcConnection implements DbmsConnection {
       Statement stmt = conn.createStatement();
       ResultSet rs = stmt.executeQuery(query);
       JdbcQueryResult jrs = new JdbcQueryResult(rs);
+      rs.close();
+      stmt.close();
       return jrs;
-      
     } catch (SQLException e) {
       e.printStackTrace();
       return null;
@@ -51,6 +52,7 @@ public class JdbcConnection implements DbmsConnection {
     try {
       Statement stmt = conn.createStatement();
       int r = stmt.executeUpdate(query);
+      stmt.close();
       return r;
     } catch (SQLException e) {
       e.printStackTrace();
