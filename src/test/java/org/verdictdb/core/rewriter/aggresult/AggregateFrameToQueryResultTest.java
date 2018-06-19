@@ -21,7 +21,7 @@ import org.verdictdb.core.aggresult.AggregateFrame;
 import org.verdictdb.core.aggresult.AggregateFrameQueryResult;
 import org.verdictdb.exception.ValueException;
 
-public class AggregateFrameToQueryTest {
+public class AggregateFrameToQueryResultTest {
   static Connection conn;
 
   @BeforeClass
