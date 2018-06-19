@@ -3,6 +3,7 @@ package org.verdictdb.core.query;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 
 /**
  * Represents "column as aliasName".
@@ -48,7 +49,12 @@ public class AliasedColumn implements SelectItem {
 
   @Override
   public String toString() {
-    return ToStringBuilder.reflectionToString(this);
+    return ToStringBuilder.reflectionToString(this, ToStringStyle.SHORT_PREFIX_STYLE);
+  }
+
+  @Override
+  public boolean isAggregateColumn() {
+    return column.isAggregateColumn();
   }
 
 }

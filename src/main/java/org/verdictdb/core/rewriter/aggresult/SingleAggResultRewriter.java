@@ -55,19 +55,18 @@ public class SingleAggResultRewriter {
   }
 
   /**
-   * Rewrites the raw result set into something meaningful.
+   * Rewrites the raw result set into the result set with (intuitive) error bounds.
    *
    * Rewritten (or converted) result set should have the following columns:
    * 1. groups (that appear in the group by clause)
    * 2. aggregate columns
-   * 3.
    *
    * @param rawResultSet
    * @param aggColumns Each pair is (original agg alias, type of agg)
    * @return
    * @throws VerdictDbException
    */
-  public AggregateFrame rewrite(List<String> nonaggColumns, List<Pair<String, String>> aggColumns) 
+  public AggregateFrame rewrite(List<String> nonaggColumns, List<AggNameAndType> aggColumns) 
       throws VerdictDbException {
     isColumnNamesValid(nonaggColumns, aggColumns);
     AggregateFrame converted = new AggregateFrame(getNewColumnNames(nonaggColumns, aggColumns));
@@ -80,12 +79,12 @@ public class SingleAggResultRewriter {
     return converted;
   }
   
-  AggregateMeasures rewriteMeasures(AggregateMeasures originalMeasures, List<Pair<String, String>> aggColumns)
+  AggregateMeasures rewriteMeasures(AggregateMeasures originalMeasures, List<AggNameAndType> aggColumns)
       throws ValueException {
     AggregateMeasures rewrittenMeasures = new AggregateMeasures();
-    for (Pair<String, String> agg : aggColumns) {
-      String aggname = agg.getLeft();
-      String aggtype = agg.getRight();
+    for (AggNameAndType agg : aggColumns) {
+      String aggname = agg.getName();
+      String aggtype = agg.getAggType();
       
       if (aggtype.equals("sum")) {
         Object sumEstimate = getMeasureValue(originalMeasures, sumEstimateAliasName(aggname));
@@ -196,14 +195,14 @@ public class SingleAggResultRewriter {
     return rewrittenMeasures;
   }
 
-  void isColumnNamesValid(List<String> nonaggColumns, List<Pair<String, String>> aggColumns) throws ValueException {
+  void isColumnNamesValid(List<String> nonaggColumns, List<AggNameAndType> aggColumns) throws ValueException {
     for (String nonagg: nonaggColumns) {
       mustContain(nonagg);
     }
 
-    for (Pair<String, String> agg : aggColumns) {
-      String aggAlias = agg.getLeft();
-      String aggType = agg.getRight();
+    for (AggNameAndType agg : aggColumns) {
+      String aggAlias = agg.getName();
+      String aggType = agg.getAggType();
 
       if (aggType.equals("sum")) {
         mustContain(sumEstimateAliasName(aggAlias));
@@ -232,13 +231,13 @@ public class SingleAggResultRewriter {
     }
   }
 
-  List<String> getNewColumnNames(List<String> nonaggColumns, List<Pair<String, String>> aggColumns) {
+  List<String> getNewColumnNames(List<String> nonaggColumns, List<AggNameAndType> aggColumns) {
     List<String> newColumnNames = new ArrayList<>();
     for (String name : nonaggColumns) {
       newColumnNames.add(name);
     }
-    for (Pair<String, String> agg : aggColumns) {
-      String aggname = agg.getLeft();
+    for (AggNameAndType agg : aggColumns) {
+      String aggname = agg.getName();
       newColumnNames.add(expectedValueAliasName(aggname));
       newColumnNames.add(expectedErrorAliasName(aggname));
     }

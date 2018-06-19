@@ -3,6 +3,7 @@ package org.verdictdb.core.query;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.verdictdb.exception.UnexpectedTypeException;
 
 public class AsteriskColumn implements UnnamedColumn, SelectItem {
 
@@ -39,4 +40,10 @@ public class AsteriskColumn implements UnnamedColumn, SelectItem {
   public String toString() {
     return ToStringBuilder.reflectionToString(this);
   }
+
+  @Override
+  public boolean isAggregateColumn() {
+    return false;
+  }
+  
 }

@@ -54,9 +54,9 @@ public class AggregateFrameToQueryTest {
     ResultSet rs = stmt.executeQuery("SELECT gender, count(*) as cnt FROM PEOPLE GROUP BY gender");
     JdbcQueryResult queryResult = new JdbcQueryResult(rs);
     List<String> nonAgg = new ArrayList<>();
-    List<Pair<String, String>> agg = new ArrayList<>();
+    List<AggNameAndType> agg = new ArrayList<>();
     nonAgg.add("GENDER");
-    agg.add(new ImmutablePair<>("CNT", "COUNT"));
+    agg.add(new AggNameAndType("CNT", "COUNT"));
     AggregateFrame aggregateFrame = AggregateFrame.fromDmbsQueryResult(queryResult, nonAgg, agg);
 
     AggregateFrameQueryResult aggregateFrameQueryResult = (AggregateFrameQueryResult) aggregateFrame.toDbmsQueryResult();
@@ -91,9 +91,9 @@ public class AggregateFrameToQueryTest {
     ResultSet rs = stmt.executeQuery("SELECT gender, sum(id) as s FROM PEOPLE GROUP BY gender");
     JdbcQueryResult queryResult = new JdbcQueryResult(rs);
     List<String> nonAgg = new ArrayList<>();
-    List<Pair<String, String>> agg = new ArrayList<>();
+    List<AggNameAndType> agg = new ArrayList<>();
     nonAgg.add("GENDER");
-    agg.add(new ImmutablePair<>("S", "COUNT"));
+    agg.add(new AggNameAndType("S", "COUNT"));
     AggregateFrame aggregateFrame = AggregateFrame.fromDmbsQueryResult(queryResult, nonAgg, agg);
 
     AggregateFrameQueryResult aggregateFrameQueryResult = (AggregateFrameQueryResult) aggregateFrame.toDbmsQueryResult();
@@ -134,10 +134,10 @@ public class AggregateFrameToQueryTest {
     ResultSet rs = stmt.executeQuery("SELECT gender, count(*) as cnt, sum(age) as agesum FROM PEOPLE GROUP BY gender");
     JdbcQueryResult queryResult = new JdbcQueryResult(rs);
     List<String> nonAgg = new ArrayList<>();
-    List<Pair<String, String>> agg = new ArrayList<>();
+    List<AggNameAndType> agg = new ArrayList<>();
     nonAgg.add("GENDER");
-    agg.add(new ImmutablePair<>("CNT", "COUNT"));
-    agg.add(new ImmutablePair<>("AGESUM", "SUM"));
+    agg.add(new AggNameAndType("CNT", "COUNT"));
+    agg.add(new AggNameAndType("AGESUM", "SUM"));
     AggregateFrame aggregateFrame = AggregateFrame.fromDmbsQueryResult(queryResult, nonAgg, agg);
 
     AggregateFrameQueryResult aggregateFrameQueryResult = (AggregateFrameQueryResult) aggregateFrame.toDbmsQueryResult();
@@ -187,11 +187,11 @@ public class AggregateFrameToQueryTest {
 
     JdbcQueryResult queryResult = new JdbcQueryResult(rs);
     List<String> nonAgg = new ArrayList<>();
-    List<Pair<String, String>> agg = new ArrayList<>();
+    List<AggNameAndType> agg = new ArrayList<>();
     nonAgg.add("GENDER");
     nonAgg.add("NATION");
-    agg.add(new ImmutablePair<>("CNT", "COUNT"));
-    agg.add(new ImmutablePair<>("AGESUM", "SUM"));
+    agg.add(new AggNameAndType("CNT", "COUNT"));
+    agg.add(new AggNameAndType("AGESUM", "SUM"));
     AggregateFrame aggregateFrame = AggregateFrame.fromDmbsQueryResult(queryResult, nonAgg, agg);
 
     AggregateFrameQueryResult aggregateFrameQueryResult = (AggregateFrameQueryResult) aggregateFrame.toDbmsQueryResult();

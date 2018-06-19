@@ -3,11 +3,13 @@ package org.verdictdb.core.query;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.verdictdb.exception.UnexpectedTypeException;
 
 /**
- * Subquery that may appeared in the select clause, where clause
+ * Subquery that may appear in the where clause.
  */
 public class SubqueryColumn implements UnnamedColumn {
+  
   SelectQueryOp subquery = new SelectQueryOp();
 
   public SubqueryColumn() {
@@ -43,4 +45,10 @@ public class SubqueryColumn implements UnnamedColumn {
   public String toString() {
     return ToStringBuilder.reflectionToString(this);
   }
+
+  @Override
+  public boolean isAggregateColumn() {
+    return false;
+  }
+  
 }

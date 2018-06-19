@@ -38,7 +38,7 @@ public class SingleAggResultRewriterTest {
 
     SingleAggResultRewriter rewriter = new SingleAggResultRewriter(resultSet);
     List<String> nonaggColumns = Arrays.asList("group1", "group2");
-    List<Pair<String, String>> aggColumns = Arrays.asList(Pair.of(mysumAlias, "sum"));
+    List<AggNameAndType> aggColumns = Arrays.asList(new AggNameAndType(mysumAlias, "sum"));
     AggregateFrame converted = rewriter.rewrite(nonaggColumns, aggColumns);
   }
 
@@ -55,7 +55,7 @@ public class SingleAggResultRewriterTest {
 
     SingleAggResultRewriter rewriter = new SingleAggResultRewriter(resultSet);
     List<String> nonaggColumns = Arrays.asList("group1", "group2");
-    List<Pair<String, String>> aggColumns = Arrays.asList(Pair.of(mysumAlias, "count"));
+    List<AggNameAndType> aggColumns = Arrays.asList(new AggNameAndType(mysumAlias, "count"));
     AggregateFrame converted2 = rewriter.rewrite(nonaggColumns, aggColumns);
   }
 
@@ -72,7 +72,7 @@ public class SingleAggResultRewriterTest {
     AggregateMeasures measures = new AggregateMeasures(attrNames, attrValues);
     SingleAggResultRewriter rewriter = new SingleAggResultRewriter();
     AggregateMeasures rewrittenMeasures =
-        rewriter.rewriteMeasures(measures, Arrays.asList(Pair.of(mysumAlias, "sum")));
+        rewriter.rewriteMeasures(measures, Arrays.asList(new AggNameAndType(mysumAlias, "sum")));
 
     Object sumExpectedValue = rewrittenMeasures.getAttributeValue(expectedValueAliasName(mysumAlias));
     Object sumExpectedError = rewrittenMeasures.getAttributeValue(expectedErrorAliasName(mysumAlias));
@@ -93,7 +93,7 @@ public class SingleAggResultRewriterTest {
     AggregateMeasures measures = new AggregateMeasures(attrNames, attrValues);
     SingleAggResultRewriter rewriter = new SingleAggResultRewriter();
     AggregateMeasures rewrittenMeasures =
-        rewriter.rewriteMeasures(measures, Arrays.asList(Pair.of(mycountAlias, "count")));
+        rewriter.rewriteMeasures(measures, Arrays.asList(new AggNameAndType(mycountAlias, "count")));
 
     Object countExpectedValue = rewrittenMeasures.getAttributeValue(expectedValueAliasName(mycountAlias));
     Object countExpectedError = rewrittenMeasures.getAttributeValue(expectedErrorAliasName(mycountAlias));
@@ -117,7 +117,7 @@ public class SingleAggResultRewriterTest {
     AggregateMeasures measures = new AggregateMeasures(attrNames, attrValues);
     SingleAggResultRewriter rewriter = new SingleAggResultRewriter();
     AggregateMeasures rewrittenMeasures =
-        rewriter.rewriteMeasures(measures, Arrays.asList(Pair.of(myavgAlias, "avg")));
+        rewriter.rewriteMeasures(measures, Arrays.asList(new AggNameAndType(myavgAlias, "avg")));
 
     Object avgExpectedValue = rewrittenMeasures.getAttributeValue(expectedValueAliasName(myavgAlias));
     Object avgExpectedError = rewrittenMeasures.getAttributeValue(expectedErrorAliasName(myavgAlias));
@@ -149,7 +149,7 @@ public class SingleAggResultRewriterTest {
     // rewriting
     SingleAggResultRewriter rewriter = new SingleAggResultRewriter(resultSet);
     List<String> nonaggColumns = Arrays.asList();
-    List<Pair<String, String>> aggColumns = Arrays.asList(Pair.of(mysumAlias, "sum"));
+    List<AggNameAndType> aggColumns = Arrays.asList(new AggNameAndType(mysumAlias, "sum"));
     AggregateFrame converted = rewriter.rewrite(nonaggColumns, aggColumns);
 
     // assertions

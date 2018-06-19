@@ -7,6 +7,7 @@ import java.util.List;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.verdictdb.exception.UnexpectedTypeException;
 
 
 public class ColumnOp implements UnnamedColumn, SelectItem {
@@ -280,6 +281,11 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
       }
     }
     return aggExists;
+  }
+
+  @Override
+  public boolean isAggregateColumn() {
+    return isColumnOpAggregate();
   }
 
 }

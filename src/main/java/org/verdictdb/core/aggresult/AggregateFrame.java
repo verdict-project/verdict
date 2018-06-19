@@ -6,6 +6,7 @@ import java.util.Map.Entry;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.connection.DbmsQueryResult;
+import org.verdictdb.core.rewriter.aggresult.AggNameAndType;
 import org.verdictdb.exception.ValueException;
 
 /**
@@ -32,13 +33,20 @@ public class AggregateFrame {
     }
   }
 
-  public static AggregateFrame fromDmbsQueryResult(DbmsQueryResult result, List<String> nonaggColumnsName, List<Pair<String, String>> aggColumns) throws ValueException {
+  public static AggregateFrame fromDmbsQueryResult(
+      DbmsQueryResult result, 
+      List<String> nonaggColumns, 
+      List<AggNameAndType> aggColumns) throws ValueException {
     List<String> colName = new ArrayList<>();
     List<Integer> colIndex = new ArrayList<>();
+    List<String> nonaggColumnsName = new ArrayList<>();
     List<String> aggColumnsName = new ArrayList<>();
 
-    for (Pair<String, String> pair:aggColumns) {
-      aggColumnsName.add(pair.getKey());
+    for (String col : nonaggColumns) {
+      nonaggColumnsName.add(col.toLowerCase());
+    }
+    for (AggNameAndType pair : aggColumns) {
+      aggColumnsName.add(pair.getName().toLowerCase());
     }
     HashSet<String> aggColumnsSet = new HashSet<>(aggColumnsName);
     HashSet<String> nonaggColumnsSet = new HashSet<>(nonaggColumnsName);
@@ -49,19 +57,20 @@ public class AggregateFrame {
     List<Integer> columnTypes = new ArrayList<>();
 
     // Get Ordered column name for nonAgg and Agg
-    for (int i=0;i<result.getColumnCount();i++) {
-      colName.add(result.getColumnName(i));
+    for (int i=0; i < result.getColumnCount(); i++) {
+      String col = result.getColumnName(i).toLowerCase();
+      colName.add(col);
       columnTypes.add(result.getColumnType(i));
-      if (aggColumnsSet.contains(result.getColumnName(i))) {
-        orderedAggColumnName.add(result.getColumnName(i));
+      if (aggColumnsSet.contains(col)) {
+        orderedAggColumnName.add(col);
         aggColumnIndex.add(i);
       }
-      else if (nonaggColumnsSet.contains(result.getColumnName(i))) {
-        orderedNonaggColumnName.add(result.getColumnName(i));
+      else if (nonaggColumnsSet.contains(col)) {
+        orderedNonaggColumnName.add(col);
         nonaggColumnIndex.add(i);
       }
       else {
-        throw new ValueException("The column belongs to nothing.");
+        throw new ValueException(String.format("An existing column (%s) does not belong to any of specified columns.", col));
       }
     }
 

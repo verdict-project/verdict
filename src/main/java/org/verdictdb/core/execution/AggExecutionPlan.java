@@ -4,6 +4,8 @@ import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.core.query.SelectQueryOp;
 import org.verdictdb.core.rewriter.ScrambleMeta;
 import org.verdictdb.exception.UnexpectedTypeException;
+import org.verdictdb.exception.ValueException;
+import org.verdictdb.exception.VerdictDbException;
 import org.verdictdb.sql.syntax.SyntaxAbstract;
 
 import com.google.common.base.Optional;
@@ -30,9 +32,9 @@ public class AggExecutionPlan {
   /**
    * 
    * @param query  A well-formed select query object
-   * @throws UnexpectedTypeException
+   * @throws VerdictDbException 
    */
-  public AggExecutionPlan(DbmsConnection conn, SelectQueryOp query) throws UnexpectedTypeException {
+  public AggExecutionPlan(DbmsConnection conn, SelectQueryOp query) throws VerdictDbException {
     if (!query.isAggregateQuery()) {
       throw new UnexpectedTypeException(query);
     }
@@ -40,7 +42,7 @@ public class AggExecutionPlan {
     plan(conn, query);
   }
   
-  void plan(DbmsConnection conn, SelectQueryOp query) {
+  void plan(DbmsConnection conn, SelectQueryOp query) throws VerdictDbException {
     ScrambleMeta meta = new ScrambleMeta();
     root = new AggExecutionNode(conn, meta, query);
   }

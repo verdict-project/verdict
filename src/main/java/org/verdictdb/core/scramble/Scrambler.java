@@ -36,14 +36,12 @@ public class Scrambler {
     this.aggregationBlockCount = aggregationBlockCount;
   }
   
-  ScrambleMetaForTable generateMeta() {
+  public ScrambleMetaForTable generateMeta() {
     ScrambleMetaForTable meta = new ScrambleMetaForTable();
     meta.setSchemaName(scrambledSchemaName);
     meta.setTableName(scrambledTableName);
     meta.setAggregationBlockCount(aggregationBlockCount);
     meta.setAggregationBlockColumn(aggregationBlockColumn);
-//    meta.setInclusionProbabilityColumn(inclusionProbabilityColumn);
-//    meta.setInclusionProbabilityBlockDifferenceColumn(inclusionProbabilityBlockDifferenceColumn);
     meta.setSubsampleColumn(subsampleColumn);
     meta.setTierColumn(tierColumn);
     return meta;
