@@ -4,6 +4,7 @@ import static java.sql.Types.*;
 import org.verdictdb.connection.DataTypeConverter;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.connection.JdbcQueryResult;
+import org.verdictdb.exception.UnexpectedTypeException;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -147,65 +148,114 @@ public class JdbcResultSet implements ResultSet {
 
   @Override
   public byte getByte(int columnIndex) throws SQLException {
-    if (isValidType("byte", columnIndex)) {
-      lastValue = TypeCasting.toByte(queryResult.getValue(columnIndex));
-      return (byte)lastValue;
+    try {
+      if (isValidType("byte", columnIndex)) {
+        lastValue = TypeCasting.toByte(queryResult.getValue(columnIndex));
+        return (byte)lastValue;
+      }
+      else {
+        throw new UnexpectedTypeException(queryResult.getValue(columnIndex));
+      }
     }
-    else throw new SQLException("Not supported data type.");
+    catch (UnexpectedTypeException e) {
+      throw new SQLException(e.getMessage());
+    }
   }
 
   @Override
   public short getShort(int columnIndex) throws SQLException {
-    if (isValidType("short", columnIndex)) {
-      lastValue = TypeCasting.toShort(queryResult.getValue(columnIndex));
-      return (short)lastValue;
+    try {
+      if (isValidType("short", columnIndex)) {
+        lastValue = TypeCasting.toShort(queryResult.getValue(columnIndex));
+        return (short)lastValue;
+      }
+      else {
+        throw new UnexpectedTypeException(queryResult.getValue(columnIndex));
+      }
     }
-    else throw new SQLException("Not supported data type.");
+    catch (UnexpectedTypeException e) {
+      throw new SQLException(e.getMessage());
+    }
   }
 
   @Override
   public int getInt(int columnIndex) throws SQLException {
-    if (isValidType("int", columnIndex)) {
-      lastValue = TypeCasting.toInteger(queryResult.getValue(columnIndex));
-      return (int)lastValue;
+    try {
+      if (isValidType("int", columnIndex)) {
+        lastValue = TypeCasting.toInteger(queryResult.getValue(columnIndex));
+        return (int)lastValue;
+      }
+      else {
+        throw new UnexpectedTypeException(queryResult.getValue(columnIndex));
+      }
     }
-    else throw new SQLException("Not supported data type.");
+    catch (UnexpectedTypeException e) {
+      throw new SQLException(e.getMessage());
+    }
   }
 
   @Override
   public long getLong(int columnIndex) throws SQLException {
-    if (isValidType("long", columnIndex)) {
-      lastValue = TypeCasting.toLong(queryResult.getValue(columnIndex));
-      return (long)lastValue;
+    try {
+      if (isValidType("long", columnIndex)) {
+        lastValue = TypeCasting.toLong(queryResult.getValue(columnIndex));
+        return (long)lastValue;
+      }
+      else {
+        throw new UnexpectedTypeException(queryResult.getValue(columnIndex));
+      }
     }
-    else throw new SQLException("Not supported data type.");
+    catch (UnexpectedTypeException e) {
+      throw new SQLException(e.getMessage());
+    }
   }
 
   @Override
   public float getFloat(int columnIndex) throws SQLException {
-    if (isValidType("float", columnIndex)) {
-      lastValue = TypeCasting.toFloat(queryResult.getValue(columnIndex));
-      return (float)lastValue;
+    try {
+      if (isValidType("float", columnIndex)) {
+        lastValue = TypeCasting.toFloat(queryResult.getValue(columnIndex));
+        return (float)lastValue;
+      }
+      else {
+        throw new UnexpectedTypeException(queryResult.getValue(columnIndex));
+      }
     }
-    else throw new SQLException("Not supported data type.");
+    catch (UnexpectedTypeException e) {
+      throw new SQLException(e.getMessage());
+    }
   }
 
   @Override
   public double getDouble(int columnIndex) throws SQLException {
-    if (isValidType("double", columnIndex)) {
-      lastValue = TypeCasting.toDouble(queryResult.getValue(columnIndex));
-      return (double)lastValue;
+    try {
+      if (isValidType("double", columnIndex)) {
+        lastValue = TypeCasting.toDouble(queryResult.getValue(columnIndex));
+        return (double)lastValue;
+      }
+      else {
+        throw new UnexpectedTypeException(queryResult.getValue(columnIndex));
+      }
     }
-    else throw new SQLException("Not supported data type.");
+    catch (UnexpectedTypeException e) {
+      throw new SQLException(e.getMessage());
+    }
   }
 
   @Override
   public BigDecimal getBigDecimal(int columnIndex, int scale) throws SQLException {
-    if (isValidType("bigdecimal", columnIndex)) {
-      lastValue = TypeCasting.toBigDecimal(queryResult.getValue(columnIndex), scale);
-      return (BigDecimal) lastValue;
+    try {
+      if (isValidType("bigdecimal", columnIndex)) {
+        lastValue = TypeCasting.toBigDecimal(queryResult.getValue(columnIndex), scale);
+        return (BigDecimal) lastValue;
+      }
+      else {
+        throw new UnexpectedTypeException(queryResult.getValue(columnIndex));
+      }
     }
-    else throw new SQLException("Not supported data type.");
+    catch (UnexpectedTypeException e) {
+      throw new SQLException(e.getMessage());
+    }
   }
 
   @Override
@@ -477,11 +527,18 @@ public class JdbcResultSet implements ResultSet {
 
   @Override
   public BigDecimal getBigDecimal(int columnIndex) throws SQLException {
-   if (isValidType("bigdecimal", columnIndex)) {
-      lastValue = TypeCasting.toBigDecimal(queryResult.getValue(columnIndex));
-      return (BigDecimal) lastValue;
+    try {
+      if (isValidType("bigdecimal", columnIndex)) {
+        lastValue = TypeCasting.toBigDecimal(queryResult.getValue(columnIndex));
+        return (BigDecimal) lastValue;
+      }
+      else {
+        throw new UnexpectedTypeException(queryResult.getValue(columnIndex));
+      }
     }
-    else throw new SQLException("Not supported data type.");
+   catch (UnexpectedTypeException e) {
+     throw new SQLException(e.getMessage());
+   }
   }
 
   @Override

@@ -20,6 +20,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
 import org.verdictdb.core.aggresult.AggregateFrame;
 import org.verdictdb.core.aggresult.AggregateMeasures;
+import org.verdictdb.exception.UnexpectedTypeException;
 import org.verdictdb.exception.ValueException;
 import org.verdictdb.exception.VerdictDbException;
 
@@ -60,7 +61,7 @@ public class SingleAggResultRewriterTest {
   }
 
   @Test
-  public void testSumRewriting() throws ValueException {
+  public void testSumRewriting() throws ValueException, UnexpectedTypeException {
     String mysumAlias = "mysum";
     List<String> attrNames = Arrays.asList(
         sumEstimateAliasName(mysumAlias),
@@ -81,7 +82,7 @@ public class SingleAggResultRewriterTest {
   }
 
   @Test
-  public void testCountRewriting() throws ValueException {
+  public void testCountRewriting() throws ValueException, UnexpectedTypeException {
     String mycountAlias = "mycount";
     List<String> attrNames = Arrays.asList(
         countEstimateAliasName(mycountAlias),
@@ -102,7 +103,7 @@ public class SingleAggResultRewriterTest {
   }
 
   @Test
-  public void testAvgRewriting() throws ValueException {
+  public void testAvgRewriting() throws ValueException, UnexpectedTypeException {
     String myavgAlias = "myavg";
     List<String> attrNames = Arrays.asList(
         sumEstimateAliasName(myavgAlias),

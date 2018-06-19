@@ -3,9 +3,12 @@ package org.verdictdb;
 import java.math.BigDecimal;
 import java.sql.SQLException;
 
+import org.verdictdb.exception.UnexpectedTypeException;
+import org.verdictdb.exception.ValueException;
+
 public class TypeCasting {
 
-  public static Double toDouble(Object obj) throws SQLException {
+  public static Double toDouble(Object obj) throws UnexpectedTypeException {
     if (obj instanceof Double)
       return (Double) obj;
     else if (obj instanceof Float)
@@ -21,11 +24,11 @@ public class TypeCasting {
     else if (obj instanceof Byte)
       return ((Byte) obj).doubleValue();
     else {
-     throw new SQLException("Not supported data type.");
+     throw new UnexpectedTypeException(obj);
     }
   }
 
-  public static Float toFloat(Object obj) throws SQLException {
+  public static Float toFloat(Object obj) throws UnexpectedTypeException {
     if (obj instanceof Double)
       return ((Double) obj).floatValue();
     else if (obj instanceof Float)
@@ -41,11 +44,11 @@ public class TypeCasting {
     else if (obj instanceof Byte)
       return ((Byte) obj).floatValue();
     else {
-      throw new SQLException("Not supported data type.");
+      throw new UnexpectedTypeException(obj);
     }
   }
 
-  public static BigDecimal toBigDecimal(Object obj) throws SQLException {
+  public static BigDecimal toBigDecimal(Object obj) throws UnexpectedTypeException {
     if (obj instanceof Double)
       return new BigDecimal((Double) obj);
     else if (obj instanceof Float)
@@ -61,11 +64,11 @@ public class TypeCasting {
     else if (obj instanceof Byte)
       return new BigDecimal((Byte) obj);
     else {
-      throw new SQLException("Not supported data type.");
+      throw new UnexpectedTypeException(obj);
     }
   }
 
-  public static BigDecimal toBigDecimal(Object obj, int scale) throws SQLException {
+  public static BigDecimal toBigDecimal(Object obj, int scale) throws UnexpectedTypeException {
     if (obj instanceof Double)
       return new BigDecimal((Double) obj).setScale(scale);
     else if (obj instanceof Float)
@@ -81,12 +84,12 @@ public class TypeCasting {
     else if (obj instanceof Byte)
       return new BigDecimal((Byte) obj).setScale(scale);
     else {
-      throw new SQLException("Not supported data type.");
+      throw new UnexpectedTypeException(obj);
     }
   }
 
 
-  public static long toLong(Object obj) throws SQLException {
+  public static long toLong(Object obj) throws UnexpectedTypeException {
     if (obj instanceof Double)
       return ((Double) obj).intValue();
     else if (obj instanceof Float)
@@ -104,11 +107,11 @@ public class TypeCasting {
     else if (obj instanceof Boolean)
       return ((Boolean)obj)?(long) 1:(long)0;
     else {
-      throw new SQLException("Not supported data type.");
+      throw new UnexpectedTypeException(obj);
     }
   }
 
-  public static Integer toInteger(Object obj) throws SQLException {
+  public static Integer toInteger(Object obj) throws UnexpectedTypeException {
     if (obj instanceof Double)
       return ((Double) obj).intValue();
     else if (obj instanceof Float)
@@ -126,11 +129,11 @@ public class TypeCasting {
     else if (obj instanceof Boolean)
       return ((Boolean)obj)?1:0;
     else {
-      throw new SQLException("Not supported data type.");
+      throw new UnexpectedTypeException(obj);
     }
   }
 
-  public static Short toShort(Object obj) throws SQLException {
+  public static Short toShort(Object obj) throws UnexpectedTypeException {
     if (obj instanceof Double)
       return ((Double) obj).shortValue();
     else if (obj instanceof Float)
@@ -148,11 +151,11 @@ public class TypeCasting {
     else if (obj instanceof Boolean)
       return ((Boolean)obj)?(short)1:(short)0;
     else {
-      throw new SQLException("Not supported data type.");
+      throw new UnexpectedTypeException(obj);
     }
   }
 
-  public static Byte toByte(Object obj) throws SQLException {
+  public static Byte toByte(Object obj) throws UnexpectedTypeException {
     if (obj instanceof Double)
       return ((Double) obj).byteValue();
     else if (obj instanceof Float)
@@ -170,7 +173,7 @@ public class TypeCasting {
     else if (obj instanceof Boolean)
       return ((Boolean)obj)?(byte)1:(byte)0;
     else {
-      throw new SQLException("Not supported data type.");
+      throw new UnexpectedTypeException(obj);
     }
   }
 

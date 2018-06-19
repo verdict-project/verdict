@@ -13,6 +13,7 @@ import java.util.List;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.connection.DbmsConnection;
+import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.core.query.AliasedColumn;
 import org.verdictdb.core.query.BaseColumn;
@@ -92,8 +93,8 @@ public class AggExecutionNodeTest {
         base);
     DbmsConnection dbmsConn = new JdbcConnection(conn, new HiveSyntax());
     AggExecutionNode node = new AggExecutionNode(dbmsConn, meta, relation);
-    node.singleExecute();
-    
+    DbmsQueryResult rs = node.singleExecute();
+    rs.printContent();
   }
 
 }

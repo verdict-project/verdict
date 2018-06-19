@@ -9,7 +9,9 @@
 package org.verdictdb.core.execution;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.connection.DbmsConnection;
@@ -26,6 +28,7 @@ import org.verdictdb.core.rewriter.aggresult.AggNameAndType;
 import org.verdictdb.core.rewriter.aggresult.AggResultCombiner;
 import org.verdictdb.core.rewriter.aggresult.SingleAggResultRewriter;
 import org.verdictdb.core.rewriter.query.AggQueryRewriter;
+import org.verdictdb.core.rewriter.query.AliasRenamingRules;
 import org.verdictdb.core.sql.SelectQueryToSql;
 import org.verdictdb.exception.UnexpectedTypeException;
 import org.verdictdb.exception.ValueException;
@@ -52,11 +55,11 @@ public class AggExecutionNode {
   
   ScrambleMeta meta;
   
-//  // group-by columns
-//  List<String> nonaggColumns;
+  // group-by columns
+  List<String> nonaggColumns;
 //  
-//  // agg columns. pairs of their column names and their types (i.e., sum, avg, count)
-//  List<Pair<String, String>> aggColumns;
+  // agg columns. pairs of their column names and their types (i.e., sum, avg, count)
+  List<AggNameAndType> aggColumns;
   
   SelectQueryOp originalQuery;
   
@@ -67,10 +70,9 @@ public class AggExecutionNode {
     this.conn = conn;
     this.meta = meta;
     this.originalQuery = query;
-//    Pair<List<String>, List<AggNameAndType>> nonaggAndaggs = 
-//        identifyAggColumns(originalQuery.getSelectList());
-//    nonaggColumns = nonaggAndaggs.getLeft();
-//    aggColumns = nonaggAndaggs.getRight();
+    Pair<List<String>, List<AggNameAndType>> cols = identifyAggColumns(originalQuery.getSelectList());
+    nonaggColumns = cols.getLeft();
+    aggColumns = cols.getRight();
   }
   
   Pair<List<String>, List<AggNameAndType>> identifyAggColumns(List<SelectItem> items) 
@@ -162,8 +164,29 @@ public class AggExecutionNode {
         AggregateFrame.fromDmbsQueryResult(rawResult, rewrittenNonaggColumns, rewrittenAggColumns);
     
     // changes the intermediate aggregates to the final aggregates
+//    Set<String> aggAliasNames = new HashSet<>();
+//    List<AggNameAndType> finalAggColumns = new ArrayList<>();
+//    for (AggNameAndType at : rewrittenAggColumns) {
+//      aggAliasNames.add(at.getName());
+//    }
+//    for (AggNameAndType at : rewrittenAggColumns) {
+//      if (at.getAggType().equals("sum") &&
+//          aggAliasNames.contains(AliasRenamingRules.sumScaledSumAliasName(at.getName()))) {
+//        finalAggColumns.add(at);
+//      }
+//      else if (at.getAggType().equals("count") &&
+//          aggAliasNames.contains(AliasRenamingRules.sumScaledCountAliasName(at.getName()))) {
+//        finalAggColumns.add(at);
+//      }
+//      else if (at.getAggType().equals("avg") &&
+//          aggAliasNames.contains(AliasRenamingRules.sumScaledSumAliasName(at.getName())) &&
+//          aggAliasNames.contains(AliasRenamingRules.sumScaledCountAliasName(at.getName()))) {
+//        finalAggColumns.add(at);
+//      }
+//    }
+    
     SingleAggResultRewriter aggResultRewriter = new SingleAggResultRewriter(newAggResult);
-    AggregateFrame rewritten = aggResultRewriter.rewrite(rewrittenNonaggColumns, rewrittenAggColumns);
+    AggregateFrame rewritten = aggResultRewriter.rewrite(nonaggColumns, aggColumns);
     DbmsQueryResult resultToUser = rewritten.toDbmsQueryResult();
     return resultToUser;
   }
