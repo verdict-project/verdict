@@ -9,7 +9,7 @@ import java.util.List;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
-import org.verdictdb.JdbcResultSet;
+import org.verdictdb.jdbc.JdbcResultSet;
 import org.verdictdb.sql.syntax.PostgresqlSyntax;
 import org.verdictdb.sql.syntax.SyntaxAbstract;
 

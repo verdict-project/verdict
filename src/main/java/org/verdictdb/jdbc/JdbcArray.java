@@ -1,4 +1,4 @@
-package org.verdictdb;
+package org.verdictdb.jdbc;
 
 import static java.sql.Types.JAVA_OBJECT;
 

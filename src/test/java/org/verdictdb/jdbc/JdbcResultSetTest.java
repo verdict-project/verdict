@@ -1,4 +1,4 @@
-package org.verdictdb;
+package org.verdictdb.jdbc;
 
 import static org.junit.Assert.assertEquals;
 
@@ -27,6 +27,7 @@ import org.verdictdb.connection.JdbcQueryResult;
 import org.verdictdb.core.aggresult.AggregateFrame;
 import org.verdictdb.core.aggresult.AggregateFrameQueryResult;
 import org.verdictdb.exception.ValueException;
+import org.verdictdb.jdbc.JdbcResultSet;
 
 public class JdbcResultSetTest {
 
