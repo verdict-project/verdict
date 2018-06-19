@@ -18,6 +18,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.core.aggresult.AggregateFrame;
 import org.verdictdb.core.aggresult.AggregateGroup;
 import org.verdictdb.core.aggresult.AggregateMeasures;
+import org.verdictdb.core.rewriter.query.AliasRenamingRules;
 import org.verdictdb.exception.UnexpectedTypeException;
 import org.verdictdb.exception.ValueException;
 import org.verdictdb.exception.VerdictDbException;
@@ -63,21 +64,59 @@ public class SingleAggResultRewriter {
       throws VerdictDbException {
     ensureColumnNamesValidity(nonaggColumns, aggColumns);
     AggregateFrame converted = new AggregateFrame(getNewColumnNames(nonaggColumns, aggColumns));
+    
+    // regroup based on the groups other than the tier column
+    Map<AggregateGroup, List<Pair<Integer, AggregateMeasures>>> regroupedData = new HashMap<>();
     for (Entry<AggregateGroup, AggregateMeasures> groupAndMeasures : rawResultSet.groupAndMeasuresSet()) {
-      AggregateGroup singleGroup = groupAndMeasures.getKey();
-      AggregateMeasures singleMeasures = groupAndMeasures.getValue();
-      AggregateMeasures convertedMeasures = rewriteMeasures(singleMeasures, aggColumns);
+      List<String> newGroupNames = new ArrayList<>();
+      List<Object> newGroupValues = new ArrayList<>();
+      int tierNumber = -1;
+      
+      AggregateGroup previousGroup = groupAndMeasures.getKey();
+      List<String> groupNames = previousGroup.getAttributeNames();
+      List<Object> groupValues = previousGroup.getAttributeValues();
+      for (int i = 0; i < groupNames.size(); i++) {
+        if (groupNames.get(i).equals(AliasRenamingRules.tierAliasName())) {
+          tierNumber = Integer.valueOf(groupValues.get(i).toString());
+        } else {
+          newGroupNames.add(groupNames.get(i));
+          newGroupValues.add(groupValues.get(i));
+        }
+      }
+      
+      AggregateGroup newGroup = new AggregateGroup(newGroupNames, newGroupValues);
+      if (!regroupedData.containsKey(newGroup)) {
+        regroupedData.put(newGroup, new ArrayList<Pair<Integer, AggregateMeasures>>());
+      }
+      regroupedData.get(newGroup).add(Pair.of(tierNumber, groupAndMeasures.getValue()));
+    }
+    
+    // rewrite measure values
+    for (Entry<AggregateGroup, List<Pair<Integer, AggregateMeasures>>> groupAndConsolidatedMeasures
+        : regroupedData.entrySet()) {
+      AggregateGroup singleGroup = groupAndConsolidatedMeasures.getKey();
+      List<Pair<Integer, AggregateMeasures>> consolidatedMeasures = groupAndConsolidatedMeasures.getValue();
+      AggregateMeasures convertedMeasures = rewriteMeasures(consolidatedMeasures, aggColumns);
       converted.addRow(singleGroup, convertedMeasures);
     }
+//    for (Entry<AggregateGroup, AggregateMeasures> groupAndMeasures : rawResultSet.groupAndMeasuresSet()) {
+//      AggregateGroup singleGroup = groupAndMeasures.getKey();
+//      AggregateMeasures singleMeasures = groupAndMeasures.getValue();
+//      AggregateMeasures convertedMeasures = rewriteMeasures(singleMeasures, aggColumns);
+//      converted.addRow(singleGroup, convertedMeasures);
+//    }
     return converted;
   }
   
-  AggregateMeasures rewriteMeasures(AggregateMeasures originalMeasures, List<AggNameAndType> aggColumns)
-      throws ValueException, UnexpectedTypeException {
+  AggregateMeasures rewriteMeasures(
+      List<Pair<Integer, AggregateMeasures>> tierAndMeasures, 
+      List<AggNameAndType> aggColumns)
+          throws ValueException, UnexpectedTypeException {
     AggregateMeasures rewrittenMeasures = new AggregateMeasures();
     for (AggNameAndType agg : aggColumns) {
       String aggname = agg.getName();
       String aggtype = agg.getAggType();
+      AggregateMeasures originalMeasures = tierAndMeasures.get(0).getRight(); // only for uniform sampling
       
       if (aggtype.equals("sum")) {
         Object sumEstimate = getMeasureValue(originalMeasures, sumEstimateAliasName(aggname));

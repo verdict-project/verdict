@@ -21,6 +21,14 @@ public class AggregateGroup {
     this.attributeValues = attributeValues;
   }
   
+  public List<String> getAttributeNames() {
+    return attributeNames;
+  }
+
+  public List<Object> getAttributeValues() {
+    return attributeValues;
+  }
+
   public static AggregateGroup empty() {
     return new AggregateGroup(Arrays.<String>asList(), Arrays.asList());
   }

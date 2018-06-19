@@ -23,7 +23,7 @@ public class JdbcQueryResult implements DbmsQueryResult {
     ResultSetMetaData meta = resultSet.getMetaData();
     int columnCount = meta.getColumnCount();
     for (int i = 0; i < columnCount; i++) {
-      columnNames.add(meta.getColumnLabel(i+1));
+      columnNames.add(meta.getColumnLabel(i+1).toLowerCase());
       columnTypes.add(meta.getColumnType(i+1));
     }
     while (resultSet.next()) {

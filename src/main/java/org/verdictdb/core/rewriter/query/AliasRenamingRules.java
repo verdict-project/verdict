@@ -42,5 +42,9 @@ public class AliasRenamingRules {
   public static String sumSubsampleSizeAliasName() {
     return "sum_subsample_size";
   }
+  
+  public static String tierAliasName() {
+    return "verdicttier";
+  }
 
 }

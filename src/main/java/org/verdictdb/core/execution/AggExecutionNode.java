@@ -164,27 +164,6 @@ public class AggExecutionNode {
         AggregateFrame.fromDmbsQueryResult(rawResult, rewrittenNonaggColumns, rewrittenAggColumns);
     
     // changes the intermediate aggregates to the final aggregates
-//    Set<String> aggAliasNames = new HashSet<>();
-//    List<AggNameAndType> finalAggColumns = new ArrayList<>();
-//    for (AggNameAndType at : rewrittenAggColumns) {
-//      aggAliasNames.add(at.getName());
-//    }
-//    for (AggNameAndType at : rewrittenAggColumns) {
-//      if (at.getAggType().equals("sum") &&
-//          aggAliasNames.contains(AliasRenamingRules.sumScaledSumAliasName(at.getName()))) {
-//        finalAggColumns.add(at);
-//      }
-//      else if (at.getAggType().equals("count") &&
-//          aggAliasNames.contains(AliasRenamingRules.sumScaledCountAliasName(at.getName()))) {
-//        finalAggColumns.add(at);
-//      }
-//      else if (at.getAggType().equals("avg") &&
-//          aggAliasNames.contains(AliasRenamingRules.sumScaledSumAliasName(at.getName())) &&
-//          aggAliasNames.contains(AliasRenamingRules.sumScaledCountAliasName(at.getName()))) {
-//        finalAggColumns.add(at);
-//      }
-//    }
-    
     SingleAggResultRewriter aggResultRewriter = new SingleAggResultRewriter(newAggResult);
     AggregateFrame rewritten = aggResultRewriter.rewrite(nonaggColumns, aggColumns);
     DbmsQueryResult resultToUser = rewritten.toDbmsQueryResult();

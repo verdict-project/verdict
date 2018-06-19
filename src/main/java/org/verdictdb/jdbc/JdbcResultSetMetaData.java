@@ -95,12 +95,12 @@ public class JdbcResultSetMetaData implements ResultSetMetaData {
 
   @Override
   public String getColumnLabel(int column) throws SQLException {
-    return getColumnName(column-1);
+    return queryResult.getColumnName(column-1);
   }
 
   @Override
   public String getColumnName(int column) throws SQLException {
-    return getColumnName(column-1);
+    return getColumnLabel(column);
   }
 
   @Override
