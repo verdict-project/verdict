@@ -374,16 +374,6 @@ public class HiveTpchSelectQueryToSqlTest {
                 ConstantColumn.valueOf("25"))
         ));
         relation.addLimit(ConstantColumn.valueOf(1));
-        String expected = "select " +
-                "sum(`l`.`l_extendedprice` * `l`.`l_discount`) as revenue " +
-                "from " +
-                "`tpch`.`lineitem` as l " +
-                "where " +
-                "(((`l`.`l_shipdate` >= (date ':1')) " +
-                "and (`l`.`l_shipdate` < ((date ':1') + (interval '1' year)))) " +
-                "and (`l`.`l_discount` between (':2' - 0.01) and (':2' + 0.01))) " +
-                "and (`l`.`l_quantity` < ':3') " +
-                "limit 1";
         SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
         String actual = relToSql.toSql(relation);
         List<Object[]> result = shell.executeStatement(actual);
@@ -1521,44 +1511,6 @@ public class HiveTpchSelectQueryToSqlTest {
         relation.addGroupby(new AliasReference("cntrycode"));
         relation.addOrderby(new OrderbyAttribute("cntrycode"));
         relation.addLimit(ConstantColumn.valueOf(1));
-        String expected = "select " +
-                "`custsale`.`cntrycode`, " +
-                "count(*) as numcust, " +
-                "sum(`custsale`.`c_acctbal`) as totacctbal " +
-                "from " +
-                "(" +
-                "select " +
-                "substr(`c`.`c_phone`, 1, 2) as cntrycode, " +
-                "`c`.`c_acctbal` " +
-                "from " +
-                "`tpch`.`customer` as c " +
-                "where " +
-                "(((substr(`c`.`c_phone`, 1, 2)) in " +
-                "(':1', ':2', ':3', ':4', ':5', ':6', ':7')) " +
-                "and (`c`.`c_acctbal` > (" +
-                "select " +
-                "avg(`c`.`c_acctbal`) " +
-                "from " +
-                "`tpch`.`customer` as c " +
-                "where " +
-                "(`c`.`c_acctbal` > 0.00) " +
-                "and ((substr(`c`.`c_phone`, 1, 2)) in " +
-                "(':1', ':2', ':3', ':4', ':5', ':6', ':7'))" +
-                "))) " +
-                "and (not exists (" +
-                "select " +
-                "* " +
-                "from " +
-                "`tpch`.`orders` as o " +
-                "where " +
-                "`o`.`o_custkey` = `c`.`c_custkey`" +
-                ")" +
-                ")) as custsale " +
-                "group by " +
-                "`cntrycode` " +
-                "order by " +
-                "`cntrycode` asc " +
-                "limit 1";
         SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
         String actual = relToSql.toSql(relation);
         List<Object[]> result = shell.executeStatement(actual);
