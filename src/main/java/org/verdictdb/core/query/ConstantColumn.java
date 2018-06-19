@@ -3,7 +3,6 @@ package org.verdictdb.core.query;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
-import org.verdictdb.exception.UnexpectedTypeException;
 
 public class ConstantColumn implements UnnamedColumn, SelectItem {
 

@@ -1,7 +1,5 @@
 package org.verdictdb.core.query;
 
-import org.verdictdb.exception.UnexpectedTypeException;
-
 public interface SelectItem {
   
   /**

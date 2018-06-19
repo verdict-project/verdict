@@ -1,14 +1,5 @@
 package org.verdictdb.jdbc;
 
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.verdictdb.connection.JdbcQueryResult;
-import org.verdictdb.core.aggresult.AggregateFrame;
-import org.verdictdb.core.aggresult.AggregateFrameQueryResult;
-import org.verdictdb.core.rewriter.aggresult.AggNameAndType;
-import org.verdictdb.exception.ValueException;
 import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
@@ -28,15 +19,13 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.connection.JdbcQueryResult;
 import org.verdictdb.core.aggresult.AggregateFrame;
 import org.verdictdb.core.aggresult.AggregateFrameQueryResult;
+import org.verdictdb.core.rewriter.aggresult.AggNameAndType;
 import org.verdictdb.exception.ValueException;
-import org.verdictdb.jdbc.JdbcResultSet;
 
 public class JdbcResultSetTest {
 

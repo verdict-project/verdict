@@ -4,7 +4,6 @@ import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.core.query.SelectQueryOp;
 import org.verdictdb.core.rewriter.ScrambleMeta;
 import org.verdictdb.exception.UnexpectedTypeException;
-import org.verdictdb.exception.ValueException;
 import org.verdictdb.exception.VerdictDbException;
 import org.verdictdb.sql.syntax.SyntaxAbstract;
 
