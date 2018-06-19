@@ -3,7 +3,7 @@ package org.verdictdb.sql.syntax;
 public class MysqlSyntax implements SyntaxAbstract {
   @Override
   public String getQuoteString() {
-    return "`";
+    return "'";
   }
 
   @Override
