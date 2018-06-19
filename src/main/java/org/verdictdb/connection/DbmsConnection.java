@@ -1,8 +1,8 @@
 package org.verdictdb.connection;
 
-import org.verdictdb.sql.syntax.SyntaxAbstract;
-
 import java.sql.Connection;
+
+import org.verdictdb.sql.syntax.SyntaxAbstract;
 
 public interface DbmsConnection {
   

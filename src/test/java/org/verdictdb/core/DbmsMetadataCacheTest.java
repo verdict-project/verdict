@@ -1,12 +1,6 @@
 package org.verdictdb.core;
 
-import org.apache.commons.lang3.tuple.Pair;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.verdictdb.connection.DataTypeConverter;
-import org.verdictdb.connection.JdbcConnection;
-import org.verdictdb.sql.syntax.H2Syntax;
-import org.verdictdb.sql.syntax.PostgresqlSyntax;
+import static org.junit.Assert.assertEquals;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -14,10 +8,14 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
+import org.apache.commons.lang3.tuple.Pair;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.verdictdb.connection.DataTypeConverter;
+import org.verdictdb.connection.JdbcConnection;
+import org.verdictdb.sql.syntax.H2Syntax;
 
 public class DbmsMetadataCacheTest {
 

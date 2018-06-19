@@ -1,22 +1,41 @@
 package org.verdictdb;
 
-import static java.sql.Types.*;
-import org.verdictdb.connection.DataTypeConverter;
-import org.verdictdb.connection.DbmsQueryResult;
-import org.verdictdb.connection.JdbcQueryResult;
+import static java.sql.Types.DOUBLE;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.Reader;
 import java.math.BigDecimal;
 import java.net.URL;
-import java.sql.*;
+import java.sql.Array;
+import java.sql.Blob;
+import java.sql.Clob;
 import java.sql.Date;
-import java.util.*;
+import java.sql.NClob;
+import java.sql.Ref;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.RowId;
+import java.sql.SQLException;
+import java.sql.SQLWarning;
+import java.sql.SQLXML;
+import java.sql.Statement;
+import java.sql.Time;
+import java.sql.Timestamp;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+
+import org.verdictdb.connection.DataTypeConverter;
+import org.verdictdb.connection.DbmsQueryResult;
 
 public class JdbcResultSet implements ResultSet {
 
   private DbmsQueryResult queryResult;
+  
+  private ResultSetMetaData metadata;
 
   private Object lastValue = null;
 
@@ -32,6 +51,14 @@ public class JdbcResultSet implements ResultSet {
       "bigint", "decimal", "float", "integer", "real", "numeric", "tinyint", "smallint", "long", "double"));
 
   private HashMap<String, Integer> colNameIdx = new HashMap<>();
+
+  public JdbcResultSet(DbmsQueryResult queryResult) {
+    this.queryResult = queryResult;
+    for (int i=0; i<queryResult.getColumnCount(); i++) {
+      colNameIdx.put(queryResult.getColumnName(i), i);
+    }
+    metadata = new JdbcResultSetMetaData(queryResult);
+  }
 
   private boolean isValidType(String expected, int columnindex){
     String actual = DataTypeConverter.typeName(queryResult.getColumnType(columnindex));
@@ -102,13 +129,6 @@ public class JdbcResultSet implements ResultSet {
       return actual.equals("nclob");
     }
     else return false;
-  }
-
-  public JdbcResultSet(DbmsQueryResult queryResult) {
-    this.queryResult = queryResult;
-    for (int i=0; i<queryResult.getColumnCount(); i++) {
-      colNameIdx.put(queryResult.getColumnName(i), i);
-    }
   }
 
   @Override
@@ -444,7 +464,7 @@ public class JdbcResultSet implements ResultSet {
 
   @Override
   public ResultSetMetaData getMetaData() throws SQLException {
-    throw new SQLException("Function is not supported yet.");
+    return metadata;
   }
 
   @Override
