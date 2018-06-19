@@ -2,7 +2,11 @@ package org.verdictdb.core.rewriter.aggresult;
 
 import static org.junit.Assert.assertEquals;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;

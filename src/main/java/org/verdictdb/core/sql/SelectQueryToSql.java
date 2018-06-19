@@ -162,6 +162,9 @@ public class SelectQueryToSql {
             + withParentheses(columnOp.getOperand(2));
       } else if (columnOp.getOpType().equals("in")) {
         List<UnnamedColumn> columns = columnOp.getOperands();
+        if (columns.size()==2 && columns.get(1) instanceof SubqueryColumn) {
+          return withParentheses(columns.get(0)) + " in " + withParentheses(columns.get(1));
+        }
         String temp = "";
         for (int i = 1; i < columns.size(); i++) {
           if (i != columns.size() - 1) {
@@ -171,6 +174,9 @@ public class SelectQueryToSql {
         return withParentheses(columns.get(0)) + " in (" + temp + ")";
       } else if (columnOp.getOpType().equals("notin")) {
         List<UnnamedColumn> columns = columnOp.getOperands();
+        if (columns.size()==2 && columns.get(1) instanceof SubqueryColumn) {
+          return withParentheses(columns.get(0)) + " not in " + withParentheses(columns.get(1));
+        }
         String temp = "";
         for (int i = 1; i < columns.size(); i++) {
           if (i != columns.size() - 1) {
@@ -296,7 +302,7 @@ public class SelectQueryToSql {
     }
 
     if (relation instanceof JoinTable) {
-      sql.append("(");
+      //sql.append("(");
       sql.append(relationToSqlPart(((JoinTable) relation).getJoinList().get(0)));
       for (int i = 1; i < ((JoinTable) relation).getJoinList().size(); i++) {
         if (((JoinTable) relation).getJoinTypeList().get(i - 1).equals(JoinTable.JoinType.inner)) {
@@ -315,7 +321,7 @@ public class SelectQueryToSql {
         sql.append(relationToSqlPart(((JoinTable) relation).getJoinList().get(i)) + " on " +
             withParentheses(((JoinTable) relation).getCondition().get(i - 1)));
       }
-      sql.append(")");
+      //sql.append(")");
       if (((JoinTable) relation).getAliasName().isPresent()) {
         sql.append(" as " + ((JoinTable) relation).getAliasName().toString());
       }

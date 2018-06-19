@@ -1,11 +1,11 @@
 package org.verdictdb.connection;
 
-import org.apache.commons.lang3.tuple.Pair;
-import org.verdictdb.sql.syntax.SyntaxAbstract;
-
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
+
+import org.apache.commons.lang3.tuple.Pair;
+import org.verdictdb.sql.syntax.SyntaxAbstract;
 
 public interface DbmsConnection {
   

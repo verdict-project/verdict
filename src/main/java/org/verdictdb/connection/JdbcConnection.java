@@ -9,7 +9,8 @@ import java.util.List;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
-import org.verdictdb.JdbcResultSet;
+import org.verdictdb.jdbc.JdbcResultSet;
+import org.verdictdb.sql.syntax.PostgresqlSyntax;
 import org.verdictdb.sql.syntax.SyntaxAbstract;
 
 public class JdbcConnection implements DbmsConnection {
@@ -110,11 +111,22 @@ public class JdbcConnection implements DbmsConnection {
     List<String> partition = new ArrayList<>();
     DbmsQueryResult queryResult = executeQuery(syntax.getPartitionCommand(schema, table));
     JdbcResultSet jdbcQueryResult = new JdbcResultSet(queryResult);
-    while (queryResult.next()) {
-      partition.add(jdbcQueryResult.getString(0));
+    // the result of postgresql is a vector of column index
+    if (syntax instanceof PostgresqlSyntax) {
+      queryResult.next();
+      Object o = jdbcQueryResult.getObject(0);
+      String[] arr = o.toString().split(" ");
+      List<Pair<String, Integer>> columns = getColumns(schema, table);
+      for (int i=0; i<arr.length; i++) {
+        partition.add(columns.get(Integer.valueOf(arr[i])-1).getKey());
+      }
+    }
+    else {
+      while (queryResult.next()) {
+        partition.add(jdbcQueryResult.getString(0));
+      }
     }
     return partition;
   }
-
 
 }

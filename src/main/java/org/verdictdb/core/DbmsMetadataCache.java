@@ -7,10 +7,7 @@ import java.util.List;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
-import org.verdictdb.JdbcResultSet;
-import org.verdictdb.connection.DataTypeConverter;
 import org.verdictdb.connection.DbmsConnection;
-import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.sql.syntax.SyntaxAbstract;
 
 public class DbmsMetadataCache {
@@ -31,7 +28,7 @@ public class DbmsMetadataCache {
     this.syntax = connection.getSyntax();
     this.connection = connection;
   }
-  
+
   public List<String> getSchemas() throws SQLException {
     if (!schemaCache.isEmpty()) {
       return schemaCache;
@@ -39,7 +36,7 @@ public class DbmsMetadataCache {
     schemaCache.addAll(connection.getSchemas());
     return schemaCache;
   }
-  
+
   public List<String> getTables(String schema) throws SQLException {
     if (tablesCache.containsKey(schema)&&!tablesCache.get(schema).isEmpty()) {
       return tablesCache.get(schema);
@@ -56,10 +53,10 @@ public class DbmsMetadataCache {
     columnsCache.put(key, connection.getColumns(schema, table));
     return columnsCache.get(key);
   }
-  
+
   /**
    * Only needed for the DBMS that supports partitioning.
-   * 
+   *
    * @param schema
    * @param table
    * @return
