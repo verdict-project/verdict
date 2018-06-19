@@ -1200,9 +1200,9 @@ public class TpchSelectQueryOpToSqlTest {
         "`c`.`c_custkey`, " +
         "count(*) " +
         "from " +
-        "(`tpch`.`customer` as c left outer join `tpch`.`orders` as o on " +
+        "`tpch`.`customer` as c left outer join `tpch`.`orders` as o on " +
         "((`c`.`c_custkey` = `o`.`o_custkey`) " +
-        "and (`o`.`o_comment` not like '%:1%:2%'))) " +
+        "and (`o`.`o_comment` not like '%:1%:2%')) " +
         "group by " +
         "`c_custkey`" +
         ") as c_orders (c_custkey, c_count) " +
@@ -1395,14 +1395,14 @@ public class TpchSelectQueryOpToSqlTest {
         "and (`p`.`p_brand` <> ':1')) " +
         "and (`p`.`p_type` not like ':2%')) " +
         "and (`p`.`p_size` in (:3, :4, :5, :6, :7, :8, :9, :10))) " +
-        "and (`ps`.`ps_suppkey` not in ((" +
+        "and (`ps`.`ps_suppkey` not in (" +
         "select " +
         "`s`.`s_suppkey` " +
         "from " +
         "`tpch`.`supplier` as s " +
         "where " +
         "`s`.`s_comment` like '%Customer%Complaints%'" +
-        "))) " +
+        ")) " +
         "group by " +
         "`p_brand`, " +
         "`p_type`, " +
@@ -1539,7 +1539,7 @@ public class TpchSelectQueryOpToSqlTest {
         "`tpch`.`orders` as o, " +
         "`tpch`.`lineitem` as l " +
         "where " +
-        "((`o`.`o_orderkey` in ((" +
+        "((`o`.`o_orderkey` in (" +
         "select " +
         "`l`.`l_orderkey` " +
         "from " +
@@ -1547,7 +1547,7 @@ public class TpchSelectQueryOpToSqlTest {
         "group by " +
         "`l_orderkey` having " +
         "sum(`l`.`l_quantity`) > ':1'" +
-        "))) " +
+        ")) " +
         "and (`c`.`c_custkey` = `o`.`o_custkey`)) " +
         "and (`o`.`o_orderkey` = `l`.`l_orderkey`) " +
         "group by " +
@@ -1860,7 +1860,7 @@ public class TpchSelectQueryOpToSqlTest {
         "`tpch`.`supplier` as s, " +
         "`tpch`.`nation` as n " +
         "where " +
-        "((`s`.`s_suppkey` in ((" +
+        "((`s`.`s_suppkey` in (" +
         "select " +
         "`ps`.`ps_suppkey` " +
         "from " +
@@ -1882,16 +1882,16 @@ public class TpchSelectQueryOpToSqlTest {
         "where " +
         "(((`agg_lineitem`.`agg_partkey` = `ps`.`ps_partkey`) " +
         "and (`agg_lineitem`.`agg_suppkey` = `ps`.`ps_suppkey`)) " +
-        "and (`ps`.`ps_partkey` in ((" +
+        "and (`ps`.`ps_partkey` in (" +
         "select " +
         "`p`.`p_partkey` " +
         "from " +
         "`tpch`.`part` as p " +
         "where " +
         "`p`.`p_name` like ':1%'" +
-        ")))) " +
+        "))) " +
         "and (`ps`.`ps_availqty` > `agg_lineitem`.`agg_quantity`" +
-        ")))) " +
+        "))) " +
         "and (`s`.`s_nationkey` = `n`.`n_nationkey`)) " +
         "and (`n`.`n_name` = ':3') " +
         "order by " +
