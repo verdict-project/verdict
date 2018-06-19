@@ -63,9 +63,8 @@ public class PostgresqlSyntax implements SyntaxAbstract {
 
   @Override
   public String getPartitionCommand(String schema, String table) {
-    return "select relname " +
-        "from pg_inherits i " +
-        "join pg_class c on c.oid = inhrelid " +
-        "where inhparent = '" + schema + "." + table + "'::regclass";
+    return "select partattrs from pg_partitioned_table join pg_class on pg_class.relname='" + table + "' " +
+        "and pg_class.oid = pg_partitioned_table.partrelid join information_schema.tables " +
+        "on table_schema='" + schema + "' and table_name = '" + table + "'";
   }
 }
