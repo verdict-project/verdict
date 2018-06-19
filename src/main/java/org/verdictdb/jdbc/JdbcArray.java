@@ -1,12 +1,12 @@
-package org.verdictdb;
+package org.verdictdb.jdbc;
+
+import static java.sql.Types.JAVA_OBJECT;
 
 import java.sql.Array;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Map;
-
-import static java.sql.Types.JAVA_OBJECT;
 
 public class JdbcArray implements Array {
 

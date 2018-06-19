@@ -1,8 +1,9 @@
 package org.verdictdb.core.aggresult;
 
-import org.verdictdb.connection.DbmsQueryResult;
+import java.util.Iterator;
+import java.util.Map;
 
-import java.util.*;
+import org.verdictdb.connection.DbmsQueryResult;
 
 public class AggregateFrameQueryResult implements DbmsQueryResult {
 
@@ -95,6 +96,5 @@ public class AggregateFrameQueryResult implements DbmsQueryResult {
       System.out.println(row.toString());
     }
   }
-
 
 }

@@ -1,5 +1,16 @@
 package org.verdictdb.core.rewriter.aggresult;
 
+import static org.junit.Assert.assertEquals;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.AfterClass;
@@ -8,15 +19,7 @@ import org.junit.Test;
 import org.verdictdb.connection.JdbcQueryResult;
 import org.verdictdb.core.aggresult.AggregateFrame;
 import org.verdictdb.core.aggresult.AggregateFrameQueryResult;
-import org.verdictdb.core.aggresult.AggregateGroup;
 import org.verdictdb.exception.ValueException;
-
-import java.sql.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import static org.junit.Assert.assertEquals;
 
 public class AggregateFrameToQueryTest {
   static Connection conn;

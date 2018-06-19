@@ -1,4 +1,4 @@
-package org.verdictdb;
+package org.verdictdb.jdbc;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;

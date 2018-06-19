@@ -1,22 +1,41 @@
-package org.verdictdb;
+package org.verdictdb.jdbc;
 
-import static java.sql.Types.*;
-import org.verdictdb.connection.DataTypeConverter;
-import org.verdictdb.connection.DbmsQueryResult;
-import org.verdictdb.connection.JdbcQueryResult;
+import static java.sql.Types.DOUBLE;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.Reader;
 import java.math.BigDecimal;
 import java.net.URL;
-import java.sql.*;
+import java.sql.Array;
+import java.sql.Blob;
+import java.sql.Clob;
 import java.sql.Date;
-import java.util.*;
+import java.sql.NClob;
+import java.sql.Ref;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.RowId;
+import java.sql.SQLException;
+import java.sql.SQLWarning;
+import java.sql.SQLXML;
+import java.sql.Statement;
+import java.sql.Time;
+import java.sql.Timestamp;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+
+import org.verdictdb.connection.DataTypeConverter;
+import org.verdictdb.connection.DbmsQueryResult;
 
 public class JdbcResultSet implements ResultSet {
 
   private DbmsQueryResult queryResult;
+  
+  private ResultSetMetaData metadata;
 
   private Object lastValue = null;
 
@@ -32,6 +51,14 @@ public class JdbcResultSet implements ResultSet {
       "bigint", "decimal", "float", "integer", "real", "numeric", "tinyint", "smallint", "long", "double"));
 
   private HashMap<String, Integer> colNameIdx = new HashMap<>();
+
+  public JdbcResultSet(DbmsQueryResult queryResult) {
+    this.queryResult = queryResult;
+    for (int i = 0; i < queryResult.getColumnCount(); i++) {
+      colNameIdx.put(queryResult.getColumnName(i), i);
+    }
+    metadata = new JdbcResultSetMetaData(queryResult);
+  }
 
   private boolean isValidType(String expected, int columnindex){
     String actual = DataTypeConverter.typeName(queryResult.getColumnType(columnindex));
@@ -102,13 +129,6 @@ public class JdbcResultSet implements ResultSet {
       return actual.equals("nclob");
     }
     else return false;
-  }
-
-  public JdbcResultSet(DbmsQueryResult queryResult) {
-    this.queryResult = queryResult;
-    for (int i=0; i<queryResult.getColumnCount(); i++) {
-      colNameIdx.put(queryResult.getColumnName(i), i);
-    }
   }
 
   @Override
@@ -298,131 +318,135 @@ public class JdbcResultSet implements ResultSet {
     }
     else throw new SQLException("Not supported data type.");
   }
+  
+  String standardizedLabel(String label) {
+    return label.toLowerCase();
+  }
 
   @Override
   public String getString(String columnLabel) throws SQLException {
-    if (colNameIdx.containsKey(columnLabel)) {
-      return getString(colNameIdx.get(columnLabel));
+    if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
+      return getString(colNameIdx.get(standardizedLabel(columnLabel.toLowerCase())));
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }
 
   @Override
   public boolean getBoolean(String columnLabel) throws SQLException {
-    if (colNameIdx.containsKey(columnLabel)) {
-      return getBoolean(colNameIdx.get(columnLabel));
+    if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
+      return getBoolean(colNameIdx.get(standardizedLabel(columnLabel)));
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }
 
   @Override
   public byte getByte(String columnLabel) throws SQLException {
-    if (colNameIdx.containsKey(columnLabel)) {
-      return getByte(colNameIdx.get(columnLabel));
+    if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
+      return getByte(colNameIdx.get(standardizedLabel(columnLabel)));
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }
 
   @Override
   public short getShort(String columnLabel) throws SQLException {
-    if (colNameIdx.containsKey(columnLabel)) {
-      return getShort(colNameIdx.get(columnLabel));
+    if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
+      return getShort(colNameIdx.get(standardizedLabel(columnLabel)));
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }
 
   @Override
   public int getInt(String columnLabel) throws SQLException {
-   if (colNameIdx.containsKey(columnLabel)) {
-      return getInt(colNameIdx.get(columnLabel));
+   if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
+      return getInt(colNameIdx.get(standardizedLabel(columnLabel)));
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }
 
   @Override
   public long getLong(String columnLabel) throws SQLException {
-    if (colNameIdx.containsKey(columnLabel)) {
-      return getLong(colNameIdx.get(columnLabel));
+    if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
+      return getLong(colNameIdx.get(standardizedLabel(columnLabel)));
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }
 
   @Override
   public float getFloat(String columnLabel) throws SQLException {
-    if (colNameIdx.containsKey(columnLabel)) {
-      return getFloat(colNameIdx.get(columnLabel));
+    if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
+      return getFloat(colNameIdx.get(standardizedLabel(columnLabel)));
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }
 
   @Override
   public double getDouble(String columnLabel) throws SQLException {
-    if (colNameIdx.containsKey(columnLabel)) {
-      return getDouble(colNameIdx.get(columnLabel));
+    if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
+      return getDouble(colNameIdx.get(standardizedLabel(columnLabel)));
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }
 
   @Override
   public BigDecimal getBigDecimal(String columnLabel, int scale) throws SQLException {
-    if (colNameIdx.containsKey(columnLabel)) {
-      return getBigDecimal(colNameIdx.get(columnLabel), scale);
+    if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
+      return getBigDecimal(colNameIdx.get(standardizedLabel(columnLabel)), scale);
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }
 
   @Override
   public byte[] getBytes(String columnLabel) throws SQLException {
-    if (colNameIdx.containsKey(columnLabel)) {
-      return getBytes(colNameIdx.get(columnLabel));
+    if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
+      return getBytes(colNameIdx.get(standardizedLabel(columnLabel)));
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }
 
   @Override
   public Date getDate(String columnLabel) throws SQLException {
-   if (colNameIdx.containsKey(columnLabel)) {
-      return getDate(colNameIdx.get(columnLabel));
+   if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
+      return getDate(colNameIdx.get(standardizedLabel(columnLabel)));
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }
 
   @Override
   public Time getTime(String columnLabel) throws SQLException {
-    if (colNameIdx.containsKey(columnLabel)) {
-      return getTime(colNameIdx.get(columnLabel));
+    if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
+      return getTime(colNameIdx.get(standardizedLabel(columnLabel)));
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }
 
   @Override
   public Timestamp getTimestamp(String columnLabel) throws SQLException {
-    if (colNameIdx.containsKey(columnLabel)) {
-      return getTimestamp(colNameIdx.get(columnLabel));
+    if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
+      return getTimestamp(colNameIdx.get(standardizedLabel(columnLabel)));
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }
 
   @Override
   public InputStream getAsciiStream(String columnLabel) throws SQLException {
-    if (colNameIdx.containsKey(columnLabel)) {
-      return getAsciiStream(colNameIdx.get(columnLabel));
+    if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
+      return getAsciiStream(colNameIdx.get(standardizedLabel(columnLabel)));
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }
 
   @Override
   public InputStream getUnicodeStream(String columnLabel) throws SQLException {
-    if (colNameIdx.containsKey(columnLabel)) {
-      return getUnicodeStream(colNameIdx.get(columnLabel));
+    if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
+      return getUnicodeStream(colNameIdx.get(standardizedLabel(columnLabel)));
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }
 
   @Override
   public InputStream getBinaryStream(String columnLabel) throws SQLException {
-    if (colNameIdx.containsKey(columnLabel)) {
-      return getBinaryStream(colNameIdx.get(columnLabel));
+    if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
+      return getBinaryStream(colNameIdx.get(standardizedLabel(columnLabel)));
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }
@@ -444,7 +468,7 @@ public class JdbcResultSet implements ResultSet {
 
   @Override
   public ResultSetMetaData getMetaData() throws SQLException {
-    throw new SQLException("Function is not supported yet.");
+    return metadata;
   }
 
   @Override
@@ -454,15 +478,15 @@ public class JdbcResultSet implements ResultSet {
 
   @Override
   public Object getObject(String columnLabel) throws SQLException {
-    if (colNameIdx.containsKey(columnLabel)) {
-      return getObject(colNameIdx.get(columnLabel));
+    if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
+      return getObject(colNameIdx.get(standardizedLabel(columnLabel)));
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }
 
   @Override
   public int findColumn(String columnLabel) throws SQLException {
-    return colNameIdx.get(columnLabel);
+    return colNameIdx.get(standardizedLabel(columnLabel));
   }
 
   @Override
@@ -486,8 +510,8 @@ public class JdbcResultSet implements ResultSet {
 
   @Override
   public BigDecimal getBigDecimal(String columnLabel) throws SQLException {
-    if (colNameIdx.containsKey(columnLabel)) {
-      return getBigDecimal(colNameIdx.get(columnLabel));
+    if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
+      return getBigDecimal(colNameIdx.get(standardizedLabel(columnLabel)));
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }
@@ -871,37 +895,37 @@ public class JdbcResultSet implements ResultSet {
 
   @Override
   public Object getObject(String columnLabel, Map<String, Class<?>> map) throws SQLException {
-    return getObject(columnLabel);
+    return getObject(standardizedLabel(columnLabel));
   }
 
   @Override
   public Ref getRef(String columnLabel) throws SQLException {
-    if (colNameIdx.containsKey(columnLabel)) {
-      return getRef(colNameIdx.get(columnLabel));
+    if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
+      return getRef(colNameIdx.get(standardizedLabel(columnLabel)));
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }
 
   @Override
   public Blob getBlob(String columnLabel) throws SQLException {
-    if (colNameIdx.containsKey(columnLabel)) {
-      return getBlob(colNameIdx.get(columnLabel));
+    if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
+      return getBlob(colNameIdx.get(standardizedLabel(columnLabel)));
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }
 
   @Override
   public Clob getClob(String columnLabel) throws SQLException {
-    if (colNameIdx.containsKey(columnLabel)) {
-      return getClob(colNameIdx.get(columnLabel));
+    if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
+      return getClob(colNameIdx.get(standardizedLabel(columnLabel)));
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }
 
   @Override
   public Array getArray(String columnLabel) throws SQLException {
-    if (colNameIdx.containsKey(columnLabel)) {
-      return getArray(colNameIdx.get(columnLabel));
+    if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
+      return getArray(colNameIdx.get(standardizedLabel(columnLabel)));
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }
@@ -947,8 +971,8 @@ public class JdbcResultSet implements ResultSet {
 
   @Override
   public URL getURL(String columnLabel) throws SQLException {
-   if (colNameIdx.containsKey(columnLabel)) {
-      return getURL(colNameIdx.get(columnLabel));
+   if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
+      return getURL(colNameIdx.get(standardizedLabel(columnLabel)));
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }
@@ -1004,8 +1028,8 @@ public class JdbcResultSet implements ResultSet {
 
   @Override
   public RowId getRowId(String columnLabel) throws SQLException {
-    if (colNameIdx.containsKey(columnLabel)) {
-      return getRowId(colNameIdx.get(columnLabel));
+    if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
+      return getRowId(colNameIdx.get(standardizedLabel(columnLabel)));
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }
@@ -1061,8 +1085,8 @@ public class JdbcResultSet implements ResultSet {
 
   @Override
   public NClob getNClob(String columnLabel) throws SQLException {
-    if (colNameIdx.containsKey(columnLabel)) {
-      return getNClob(colNameIdx.get(columnLabel));
+    if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
+      return getNClob(colNameIdx.get(standardizedLabel(columnLabel)));
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }
@@ -1078,8 +1102,8 @@ public class JdbcResultSet implements ResultSet {
 
   @Override
   public SQLXML getSQLXML(String columnLabel) throws SQLException {
-    if (colNameIdx.containsKey(columnLabel)) {
-      return getSQLXML(colNameIdx.get(columnLabel));
+    if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
+      return getSQLXML(colNameIdx.get(standardizedLabel(columnLabel)));
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }
@@ -1101,7 +1125,7 @@ public class JdbcResultSet implements ResultSet {
 
   @Override
   public String getNString(String columnLabel) throws SQLException {
-    return getString(columnLabel);
+    return getString(standardizedLabel(columnLabel));
   }
 
   @Override
@@ -1111,7 +1135,7 @@ public class JdbcResultSet implements ResultSet {
 
   @Override
   public Reader getNCharacterStream(String columnLabel) throws SQLException {
-    return getCharacterStream(columnLabel);
+    return getCharacterStream(standardizedLabel(columnLabel));
   }
 
   @Override
@@ -1274,7 +1298,7 @@ public class JdbcResultSet implements ResultSet {
 
   @Override
   public <T> T getObject(String columnLabel, Class<T> type) throws SQLException {
-    return (T)getObject(columnLabel);
+    return (T)getObject(standardizedLabel(columnLabel));
   }
 
   @Override

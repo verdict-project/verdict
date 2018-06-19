@@ -72,7 +72,7 @@ public class JdbcQueryResult implements DbmsQueryResult {
   public Object getValue(int index) {
     Object value = null;
     try {
-      value = result.get(cursor).get(index);
+      value = (Object) result.get(cursor).get(index);
       // value = resultSet.getObject(index + 1);
     } catch (Exception e) {
       e.printStackTrace();
