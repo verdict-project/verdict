@@ -62,8 +62,8 @@ public class AggregateFrameToQueryTest {
 
     AggregateFrameQueryResult aggregateFrameQueryResult = (AggregateFrameQueryResult) aggregateFrame.toDbmsQueryResult();
     assertEquals(2, aggregateFrameQueryResult.getColumnCount());
-    assertEquals("GENDER", aggregateFrameQueryResult.getColumnName(0));
-    assertEquals("CNT", aggregateFrameQueryResult.getColumnName(1));
+    assertEquals("gender", aggregateFrameQueryResult.getColumnName(0));
+    assertEquals("cnt", aggregateFrameQueryResult.getColumnName(1));
     while (aggregateFrameQueryResult.next()){
       if (aggregateFrameQueryResult.getValue(0).equals("male")){
         assertEquals(new Long(3), aggregateFrameQueryResult.getValue(1));
@@ -99,8 +99,8 @@ public class AggregateFrameToQueryTest {
 
     AggregateFrameQueryResult aggregateFrameQueryResult = (AggregateFrameQueryResult) aggregateFrame.toDbmsQueryResult();
     assertEquals(2, aggregateFrameQueryResult.getColumnCount());
-    assertEquals("GENDER", aggregateFrameQueryResult.getColumnName(0));
-    assertEquals("S", aggregateFrameQueryResult.getColumnName(1));
+    assertEquals("gender", aggregateFrameQueryResult.getColumnName(0));
+    assertEquals("s", aggregateFrameQueryResult.getColumnName(1));
     while (aggregateFrameQueryResult.next()){
       if (aggregateFrameQueryResult.getValue(0).equals("male")){
         assertEquals(new Long(9), aggregateFrameQueryResult.getValue(1));
@@ -143,9 +143,9 @@ public class AggregateFrameToQueryTest {
 
     AggregateFrameQueryResult aggregateFrameQueryResult = (AggregateFrameQueryResult) aggregateFrame.toDbmsQueryResult();
     assertEquals(3, aggregateFrameQueryResult.getColumnCount());
-    assertEquals("GENDER", aggregateFrameQueryResult.getColumnName(0));
-    assertEquals("CNT", aggregateFrameQueryResult.getColumnName(1));
-    assertEquals("AGESUM", aggregateFrameQueryResult.getColumnName(2));
+    assertEquals("gender", aggregateFrameQueryResult.getColumnName(0));
+    assertEquals("cnt", aggregateFrameQueryResult.getColumnName(1));
+    assertEquals("agesum", aggregateFrameQueryResult.getColumnName(2));
     while (aggregateFrameQueryResult.next()){
       if (aggregateFrameQueryResult.getValue(0).equals("male")){
         assertEquals(new Long(5), aggregateFrameQueryResult.getValue(1));
@@ -197,10 +197,10 @@ public class AggregateFrameToQueryTest {
 
     AggregateFrameQueryResult aggregateFrameQueryResult = (AggregateFrameQueryResult) aggregateFrame.toDbmsQueryResult();
     assertEquals(4, aggregateFrameQueryResult.getColumnCount());
-    assertEquals("AGESUM", aggregateFrameQueryResult.getColumnName(0));
-    assertEquals("GENDER", aggregateFrameQueryResult.getColumnName(1));
-    assertEquals("CNT", aggregateFrameQueryResult.getColumnName(2));
-    assertEquals("NATION", aggregateFrameQueryResult.getColumnName(3));
+    assertEquals("agesum", aggregateFrameQueryResult.getColumnName(0));
+    assertEquals("gender", aggregateFrameQueryResult.getColumnName(1));
+    assertEquals("cnt", aggregateFrameQueryResult.getColumnName(2));
+    assertEquals("nation", aggregateFrameQueryResult.getColumnName(3));
     while (aggregateFrameQueryResult.next()) {
       if (aggregateFrameQueryResult.getValue(1).equals("male") &&
           aggregateFrameQueryResult.getValue(3).equals("CHN")) {

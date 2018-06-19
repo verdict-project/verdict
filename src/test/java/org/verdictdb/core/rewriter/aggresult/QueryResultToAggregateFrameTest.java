@@ -190,7 +190,7 @@ public class QueryResultToAggregateFrameTest {
       String nation = row.get(5).toString();
       stmt.execute(String.format("INSERT INTO PEOPLE(id, name, gender, age, height, nation) VALUES(%s, '%s', '%s', %s, %s, '%s')", id, name, gender, age, height, nation));
     }
-    ResultSet rs = stmt.executeQuery("SELECT sum(age) as agesum, gender, count(*) as cnt, nation as cnt FROM PEOPLE GROUP BY gender, nation");
+    ResultSet rs = stmt.executeQuery("SELECT sum(age) as agesum, gender, count(*) as cnt, nation as nation FROM PEOPLE GROUP BY gender, nation");
     JdbcQueryResult queryResult = new JdbcQueryResult(rs);
     List<String> nonAgg = new ArrayList<>();
     List<AggNameAndType> agg = new ArrayList<>();

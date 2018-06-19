@@ -8,17 +8,6 @@
 
 package org.verdictdb.core.rewriter.aggresult;
 
-import static org.verdictdb.core.rewriter.query.AliasRenamingRules.countEstimateAliasName;
-import static org.verdictdb.core.rewriter.query.AliasRenamingRules.countSubsampleAliasName;
-import static org.verdictdb.core.rewriter.query.AliasRenamingRules.expectedErrorAliasName;
-import static org.verdictdb.core.rewriter.query.AliasRenamingRules.expectedValueAliasName;
-import static org.verdictdb.core.rewriter.query.AliasRenamingRules.sumEstimateAliasName;
-import static org.verdictdb.core.rewriter.query.AliasRenamingRules.sumScaledCountAliasName;
-import static org.verdictdb.core.rewriter.query.AliasRenamingRules.sumScaledSumAliasName;
-import static org.verdictdb.core.rewriter.query.AliasRenamingRules.sumSquaredScaledCountAliasName;
-import static org.verdictdb.core.rewriter.query.AliasRenamingRules.sumSquaredScaledSumAliasName;
-import static org.verdictdb.core.rewriter.query.AliasRenamingRules.sumSubsampleSizeAliasName;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -29,8 +18,12 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.core.aggresult.AggregateFrame;
 import org.verdictdb.core.aggresult.AggregateGroup;
 import org.verdictdb.core.aggresult.AggregateMeasures;
+import org.verdictdb.exception.UnexpectedTypeException;
 import org.verdictdb.exception.ValueException;
 import org.verdictdb.exception.VerdictDbException;
+import org.verdictdb.jdbc.TypeCasting;
+
+import static org.verdictdb.core.rewriter.query.AliasRenamingRules.*;
 
 /**
  * Given intermediate aggregate form (either the result of a single query execution or the result of the
@@ -68,7 +61,7 @@ public class SingleAggResultRewriter {
    */
   public AggregateFrame rewrite(List<String> nonaggColumns, List<AggNameAndType> aggColumns) 
       throws VerdictDbException {
-    isColumnNamesValid(nonaggColumns, aggColumns);
+    ensureColumnNamesValidity(nonaggColumns, aggColumns);
     AggregateFrame converted = new AggregateFrame(getNewColumnNames(nonaggColumns, aggColumns));
     for (Entry<AggregateGroup, AggregateMeasures> groupAndMeasures : rawResultSet.groupAndMeasuresSet()) {
       AggregateGroup singleGroup = groupAndMeasures.getKey();
@@ -80,7 +73,7 @@ public class SingleAggResultRewriter {
   }
   
   AggregateMeasures rewriteMeasures(AggregateMeasures originalMeasures, List<AggNameAndType> aggColumns)
-      throws ValueException {
+      throws ValueException, UnexpectedTypeException {
     AggregateMeasures rewrittenMeasures = new AggregateMeasures();
     for (AggNameAndType agg : aggColumns) {
       String aggname = agg.getName();
@@ -135,14 +128,15 @@ public class SingleAggResultRewriter {
   }
 
   List<Pair<String, Object>> rewriteSumMeasure(String aggname, Object sumEstimate, Object sumScaledSum,
-      Object sumSquaredScaledSum, Object countSubsamples, Object sumSubsampleSizes) {
+      Object sumSquaredScaledSum, Object countSubsamples, Object sumSubsampleSizes) 
+          throws UnexpectedTypeException {
     List<Pair<String, Object>> rewrittenMeasures = new ArrayList<>();
     
-    double mu = (Double) sumEstimate;
-    double mu_nsi = (Double) sumScaledSum;
-    double musquared_nsi = (Double) sumSquaredScaledSum;
-    double b = ((Integer) countSubsamples).doubleValue();
-    double n = ((Integer) sumSubsampleSizes).doubleValue();
+    double mu = TypeCasting.toDouble(sumEstimate);
+    double mu_nsi = TypeCasting.toDouble(sumScaledSum);
+    double musquared_nsi = TypeCasting.toDouble(sumSquaredScaledSum);
+    double b = TypeCasting.toDouble(countSubsamples);
+    double n = TypeCasting.toDouble(sumSubsampleSizes);
     double mu_err = (musquared_nsi - 2*mu_nsi + mu*mu*n) / (b*n);
     
     rewrittenMeasures.add(Pair.of(expectedValueAliasName(aggname), (Object) mu));
@@ -151,14 +145,15 @@ public class SingleAggResultRewriter {
   }
 
   List<Pair<String, Object>> rewriteCountMeasure(String aggname, Object countEstimate, Object sumScaledCount,
-      Object sumSquaredScaledCount, Object countSubsamples, Object sumSubsampleSizes) {
+      Object sumSquaredScaledCount, Object countSubsamples, Object sumSubsampleSizes) 
+          throws UnexpectedTypeException {
     List<Pair<String, Object>> rewrittenMeasures = new ArrayList<>();
     
-    double mu = (Double) countEstimate;
-    double mu_nsi = (Double) sumScaledCount;
+    double mu = TypeCasting.toDouble(countEstimate);
+    double mu_nsi = TypeCasting.toDouble(sumScaledCount);
     double musquared_nsi = (Double) sumSquaredScaledCount;
-    double b = ((Integer) countSubsamples).doubleValue();
-    double n = ((Integer) sumSubsampleSizes).doubleValue();
+    double b = TypeCasting.toDouble(countSubsamples);
+    double n = TypeCasting.toDouble(sumSubsampleSizes);
     double mu_err = (musquared_nsi - 2*mu_nsi + mu*mu*n) / (b*n);
     
     rewrittenMeasures.add(Pair.of(expectedValueAliasName(aggname), (Object) mu));
@@ -169,19 +164,19 @@ public class SingleAggResultRewriter {
   List<Pair<String, Object>> rewriteAvgMeasure(String aggname,
       Object sumEstimate, Object sumScaledSum, Object sumSquaredScaledSum,
       Object countEstimate, Object sumScaledCount, Object sumSquaredScaledCount,
-      Object countSubsamples, Object sumSubsampleSizes) {
+      Object countSubsamples, Object sumSubsampleSizes) throws UnexpectedTypeException {
     List<Pair<String, Object>> rewrittenMeasures = new ArrayList<>();
     
-    double mu_s = (Double) sumEstimate;
-    double mu_nsi_s = (Double) sumScaledSum;
-    double musquared_nsi_s = (Double) sumSquaredScaledSum;
+    double mu_s = TypeCasting.toDouble(sumEstimate);
+    double mu_nsi_s = TypeCasting.toDouble(sumScaledSum);
+    double musquared_nsi_s = TypeCasting.toDouble(sumSquaredScaledSum);
     
-    double mu_c = (Double) countEstimate;
-    double mu_nsi_c = (Double) sumScaledCount;
-    double musquared_nsi_c = (Double) sumSquaredScaledCount;
+    double mu_c = TypeCasting.toDouble(countEstimate);
+    double mu_nsi_c = TypeCasting.toDouble(sumScaledCount);
+    double musquared_nsi_c = TypeCasting.toDouble(sumSquaredScaledCount);
     
-    double b = ((Integer) countSubsamples).doubleValue();
-    double n = ((Integer) sumSubsampleSizes).doubleValue();
+    double b = TypeCasting.toDouble(countSubsamples);
+    double n = TypeCasting.toDouble(sumSubsampleSizes);
     
     double mu_err_s = (musquared_nsi_s - 2*mu_nsi_s + mu_s*mu_s*n) / (b*n);
     double mu_err_c = (musquared_nsi_c - 2*mu_nsi_c + mu_c*mu_c*n) / (b*n);
@@ -195,7 +190,7 @@ public class SingleAggResultRewriter {
     return rewrittenMeasures;
   }
 
-  void isColumnNamesValid(List<String> nonaggColumns, List<AggNameAndType> aggColumns) throws ValueException {
+  void ensureColumnNamesValidity(List<String> nonaggColumns, List<AggNameAndType> aggColumns) throws ValueException {
     for (String nonagg: nonaggColumns) {
       mustContain(nonagg);
     }

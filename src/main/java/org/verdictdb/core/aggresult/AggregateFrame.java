@@ -8,6 +8,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.core.rewriter.aggresult.AggNameAndType;
 import org.verdictdb.exception.ValueException;
@@ -159,5 +161,10 @@ public class AggregateFrame {
   
   public Set<Entry<AggregateGroup, AggregateMeasures>> groupAndMeasuresSet() {
     return data.entrySet();
+  }
+  
+  @Override
+  public String toString() {
+      return ToStringBuilder.reflectionToString(this, ToStringStyle.SHORT_PREFIX_STYLE);
   }
 }

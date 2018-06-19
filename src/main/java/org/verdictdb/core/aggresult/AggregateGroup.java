@@ -1,9 +1,11 @@
 package org.verdictdb.core.aggresult;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 
 public class AggregateGroup {
   
@@ -12,7 +14,10 @@ public class AggregateGroup {
   List<Object> attributeValues;
   
   public AggregateGroup(List<String> attributeNames, List<Object> attributeValues) {
-    this.attributeNames = attributeNames;
+    this.attributeNames = new ArrayList<>();
+    for (String name : attributeNames) {
+      this.attributeNames.add(name.toLowerCase());
+    }
     this.attributeValues = attributeValues;
   }
   
@@ -53,6 +58,6 @@ public class AggregateGroup {
 
   @Override
   public String toString() {
-      return ToStringBuilder.reflectionToString(this);
+      return ToStringBuilder.reflectionToString(this, ToStringStyle.SHORT_PREFIX_STYLE);
   }
 }
