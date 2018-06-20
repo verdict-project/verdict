@@ -1,6 +1,8 @@
 package org.verdictdb.core.aggresult;
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import org.verdictdb.connection.DbmsQueryResult;
@@ -10,10 +12,24 @@ public class AggregateFrameQueryResult implements DbmsQueryResult {
   private AggregateFrame aggregateFrame;
   private Iterator it;
   private Map.Entry currentEntry;
+  private List<Integer> orderedColumnIndex = new ArrayList<>();
+
 
   public AggregateFrameQueryResult(AggregateFrame aggregateFrame) {
     this.aggregateFrame = aggregateFrame;
     it = aggregateFrame.data.entrySet().iterator();
+    List<String> orderedColumnName = aggregateFrame.getColumnNames();
+    if (!aggregateFrame.data.entrySet().isEmpty()) {
+      AggregateGroup group =((AggregateGroup)(aggregateFrame.data.keySet().toArray()[0]));
+      AggregateMeasures measures = (AggregateMeasures)(aggregateFrame.data.values().toArray()[0]);
+      for (int i=0; i<group.attributeNames.size();i++){
+        orderedColumnIndex.add(orderedColumnName.indexOf(group.attributeNames.get(i)));
+      }
+      for (int i=0; i<measures.attributeNames.size();i++){
+        orderedColumnIndex.add(orderedColumnName.indexOf(measures.attributeNames.get(i)));
+      }
+    }
+
   }
 
   public void setAggregateFrame(AggregateFrame aggregateFrame) {
@@ -52,7 +68,7 @@ public class AggregateFrameQueryResult implements DbmsQueryResult {
   @Override
   public Object getValue(int index) {
     // acquire the value in aggregateGroup
-    index = aggregateFrame.getOrderedColumnIndex().get(index);
+    index = orderedColumnIndex.get(index);
     if (index < ((AggregateGroup)currentEntry.getKey()).attributeValues.size()) {
       return ((AggregateGroup)currentEntry.getKey()).attributeValues.get(index);
     }
