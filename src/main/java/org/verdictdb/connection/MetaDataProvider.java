@@ -14,5 +14,7 @@ public interface MetaDataProvider {
   public List<Pair<String, Integer>> getColumns(String schema, String table) throws SQLException;
 
   public List<String> getPartitionColumns(String schema, String table) throws SQLException;
+  
+  public String getDefaultSchema();
 
 }

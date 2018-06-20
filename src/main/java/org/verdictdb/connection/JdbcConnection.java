@@ -132,15 +132,10 @@ public class JdbcConnection implements DbmsConnection {
   }
 
   @Override
-  public Optional<String> getDefaultSchema() {
+  public String getDefaultSchema() {
     // TODO Auto-generated method stub
     return null;
   }
 
-  @Override
-  public void setDefaultSchema() {
-    // TODO Auto-generated method stub
-    
-  }
 
 }

@@ -11,7 +11,7 @@ import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.MetaDataProvider;
 import org.verdictdb.sql.syntax.SyntaxAbstract;
 
-public class DbmsMetadataCache implements MetaDataProvider {
+public class DbmsMetaDataCache implements MetaDataProvider {
 
   private SyntaxAbstract syntax;
 
@@ -25,7 +25,7 @@ public class DbmsMetadataCache implements MetaDataProvider {
 
   private HashMap<Pair<String, String>, List<Pair<String,Integer>>> columnsCache = new HashMap<>();
 
-  public DbmsMetadataCache(DbmsConnection connection) {
+  public DbmsMetaDataCache(DbmsConnection connection) {
     this.syntax = connection.getSyntax();
     this.connection = connection;
   }
@@ -76,6 +76,11 @@ public class DbmsMetadataCache implements MetaDataProvider {
     }
     partitionCache.put(key, connection.getPartitionColumns(schema, table));
     return partitionCache.get(key);
+  }
+
+  @Override
+  public String getDefaultSchema() {
+    return connection.getDefaultSchema();
   }
 
 }

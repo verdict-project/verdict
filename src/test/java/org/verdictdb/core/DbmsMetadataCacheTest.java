@@ -23,7 +23,7 @@ public class DbmsMetadataCacheTest {
 
   static Connection conn;
 
-  private DbmsMetadataCache metadataCache = new DbmsMetadataCache(new JdbcConnection(conn, new H2Syntax()));
+  private DbmsMetaDataCache metadataCache = new DbmsMetaDataCache(new JdbcConnection(conn, new H2Syntax()));
 
   private static Statement stmt;
 
@@ -103,7 +103,7 @@ public class DbmsMetadataCacheTest {
   public void getPartitionTest() throws SQLException {
     //Test PostgreSQL
     Statement statement = postgresqlConn.createStatement();
-    DbmsMetadataCache postgresMetadataCache = new DbmsMetadataCache(new JdbcConnection(postgresqlConn, new PostgresqlSyntax()));
+    DbmsMetaDataCache postgresMetadataCache = new DbmsMetaDataCache(new JdbcConnection(postgresqlConn, new PostgresqlSyntax()));
     statement.execute("DROP TABLE IF EXISTS measurement");
     statement.execute("DROP TABLE IF EXISTS measurement_y2006m02");
     statement.execute("DROP TABLE IF EXISTS measurement_y2006m03");
@@ -115,7 +115,7 @@ public class DbmsMetadataCacheTest {
     assertEquals("city_id", partition.get(1));
     //Test MySQL
     statement = mysqlConn.createStatement();
-    DbmsMetadataCache mysqlMetadataCache = new DbmsMetadataCache(new JdbcConnection(mysqlConn, new MysqlSyntax()));
+    DbmsMetaDataCache mysqlMetadataCache = new DbmsMetaDataCache(new JdbcConnection(mysqlConn, new MysqlSyntax()));
     statement.execute("DROP TABLE IF EXISTS tp");
     statement.execute("CREATE TABLE tp (c1 INT, c2 INT, c3 VARCHAR(25)) PARTITION BY HASH(c1 + c2) PARTITIONS 4;");
     partition = mysqlMetadataCache.getPartitionColumns("test", "tp");

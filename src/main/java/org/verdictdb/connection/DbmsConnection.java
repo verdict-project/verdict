@@ -24,10 +24,6 @@ public interface DbmsConnection extends MetaDataProvider {
   public SyntaxAbstract getSyntax();
 
   public Connection getConnection();
-  
-  public Optional<String> getDefaultSchema();
-  
-  public void setDefaultSchema();
 
   public void close();
 

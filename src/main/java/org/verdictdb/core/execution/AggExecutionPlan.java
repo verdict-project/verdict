@@ -2,7 +2,7 @@ package org.verdictdb.core.execution;
 
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.StaticMetaData;
-import org.verdictdb.core.DbmsMetadataCache;
+import org.verdictdb.core.DbmsMetaDataCache;
 import org.verdictdb.core.query.AbstractRelation;
 import org.verdictdb.core.query.SelectQueryOp;
 import org.verdictdb.core.rewriter.ScrambleMeta;
@@ -22,7 +22,7 @@ public class AggExecutionPlan {
   
   AggExecutionNode root;
   
-  DbmsMetadataCache meta;
+  DbmsMetaDataCache meta;
   
   /**
    * 
@@ -41,7 +41,7 @@ public class AggExecutionPlan {
    */
   public AggExecutionPlan(DbmsConnection conn, SyntaxAbstract syntax, SelectQueryOp query) throws VerdictDbException {
     this.conn = conn;
-    this.meta = new DbmsMetadataCache(conn);
+    this.meta = new DbmsMetaDataCache(conn);
     if (!query.isAggregateQuery()) {
       throw new UnexpectedTypeException(query);
     }
