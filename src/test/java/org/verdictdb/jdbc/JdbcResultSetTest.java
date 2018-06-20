@@ -81,9 +81,8 @@ public class JdbcResultSetTest {
     List<String> actual = new ArrayList<>();
     List<String> expected = Arrays.asList("female", "male");
     while (jdbcResultSet.next()) {
-      actual.add(jdbcResultSet.getString(1));
+      assertEquals(true, expected.contains(jdbcResultSet.getString(1)));
     }
-    assertEquals(expected, actual);
   }
 
   @Test
@@ -101,9 +100,8 @@ public class JdbcResultSetTest {
     List<String> actual = new ArrayList<>();
     List<String> expected = Arrays.asList("female", "male");
     while (jdbcResultSet.next()) {
-      actual.add(jdbcResultSet.getString("GENDER"));
+      assertEquals(true, expected.contains(jdbcResultSet.getString("GENDER")));
     }
-    assertEquals(expected, actual);
   }
 
   @Test

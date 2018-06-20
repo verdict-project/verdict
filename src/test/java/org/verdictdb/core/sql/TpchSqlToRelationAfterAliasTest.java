@@ -1,11 +1,16 @@
 package org.verdictdb.core.sql;
 
+import static java.sql.Types.BIGINT;
+
 import static org.junit.Assert.assertEquals;
 
+import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Before;
 import org.junit.Test;
 import org.verdictdb.connection.StaticMetaData;
@@ -32,86 +37,94 @@ public class TpchSqlToRelationAfterAliasTest {
 
   @Before
   public void setupMetaData() {
+    List<Pair<String, Integer>> arr = new ArrayList<>();
+    arr.addAll(Arrays.asList(new ImmutablePair<>("n_nationkey", BIGINT),
+        new ImmutablePair<>("n_name", BIGINT),
+        new ImmutablePair<>("n_regionkey", BIGINT),
+        new ImmutablePair<>("n_comment", BIGINT)));
     meta.setDefaultSchema("tpch");
-    meta.addTableData(new StaticMetaData.TableInfo("tpch", "nation"),
-        Arrays.asList(new ImmutablePair<>("n_nationkey", StaticMetaData.dataType.type_long),
-            new ImmutablePair<>("n_name", StaticMetaData.dataType.type_long),
-            new ImmutablePair<>("n_regionkey", StaticMetaData.dataType.type_long),
-            new ImmutablePair<>("n_comment", StaticMetaData.dataType.type_long)));
-    meta.addTableData(new StaticMetaData.TableInfo("tpch", "region"),
-        Arrays.asList(new ImmutablePair<>("r_regionkey", StaticMetaData.dataType.type_long),
-            new ImmutablePair<>("r_name", StaticMetaData.dataType.type_long),
-            new ImmutablePair<>("r_comment", StaticMetaData.dataType.type_long)));
-    meta.addTableData(new StaticMetaData.TableInfo("tpch", "part"),
-        Arrays.asList(new ImmutablePair<>("p_partkey", StaticMetaData.dataType.type_long),
-            new ImmutablePair<>("p_name", StaticMetaData.dataType.type_long),
-            new ImmutablePair<>("p_brand", StaticMetaData.dataType.type_long),
-            new ImmutablePair<>("p_mfgr", StaticMetaData.dataType.type_long),
-            new ImmutablePair<>("p_type", StaticMetaData.dataType.type_long),
-            new ImmutablePair<>("p_size", StaticMetaData.dataType.type_long),
-            new ImmutablePair<>("p_container", StaticMetaData.dataType.type_long),
-            new ImmutablePair<>("p_retailprice", StaticMetaData.dataType.type_long),
-            new ImmutablePair<>("p_comment", StaticMetaData.dataType.type_long)
-            ));
-    meta.addTableData(new StaticMetaData.TableInfo("tpch", "supplier"),
-        Arrays.asList(new ImmutablePair<>("s_suppkey", StaticMetaData.dataType.type_long),
-            new ImmutablePair<>("s_name", StaticMetaData.dataType.type_long),
-            new ImmutablePair<>("s_address", StaticMetaData.dataType.type_long),
-            new ImmutablePair<>("s_nationkey", StaticMetaData.dataType.type_long),
-            new ImmutablePair<>("s_phone", StaticMetaData.dataType.type_long),
-            new ImmutablePair<>("s_acctbal", StaticMetaData.dataType.type_long),
-            new ImmutablePair<>("s_comment", StaticMetaData.dataType.type_long)
-            ));
-    meta.addTableData(new StaticMetaData.TableInfo("tpch", "partsupp"),
-        Arrays.asList(new ImmutablePair<>("ps_partkey", StaticMetaData.dataType.type_long),
-            new ImmutablePair<>("ps_suppkey", StaticMetaData.dataType.type_long),
-            new ImmutablePair<>("ps_availqty", StaticMetaData.dataType.type_long),
-            new ImmutablePair<>("ps_supplycost", StaticMetaData.dataType.type_long),
-            new ImmutablePair<>("ps_comment", StaticMetaData.dataType.type_long)));
-    meta.addTableData(new StaticMetaData.TableInfo("tpch", "customer"),
-        Arrays.asList(new ImmutablePair<>("c_custkey", StaticMetaData.dataType.type_long),
-            new ImmutablePair<>("c_name", StaticMetaData.dataType.type_long),
-            new ImmutablePair<>("c_address", StaticMetaData.dataType.type_long),
-            new ImmutablePair<>("c_nationkey", StaticMetaData.dataType.type_long),
-            new ImmutablePair<>("c_phone", StaticMetaData.dataType.type_long),
-            new ImmutablePair<>("c_acctbal", StaticMetaData.dataType.type_long),
-            new ImmutablePair<>("c_mktsegment", StaticMetaData.dataType.type_long),
-            new ImmutablePair<>("c_comment", StaticMetaData.dataType.type_long)
-            ));
-    meta.addTableData(new StaticMetaData.TableInfo("tpch", "orders"),
-        Arrays.asList(new ImmutablePair<>("o_orderkey", StaticMetaData.dataType.type_long),
-            new ImmutablePair<>("o_custkey", StaticMetaData.dataType.type_long),
-            new ImmutablePair<>("o_orderstatus", StaticMetaData.dataType.type_long),
-            new ImmutablePair<>("o_totalprice", StaticMetaData.dataType.type_long),
-            new ImmutablePair<>("o_orderdate", StaticMetaData.dataType.type_long),
-            new ImmutablePair<>("o_orderpriority", StaticMetaData.dataType.type_long),
-            new ImmutablePair<>("o_clerk", StaticMetaData.dataType.type_long),
-            new ImmutablePair<>("o_shippriority", StaticMetaData.dataType.type_long),
-            new ImmutablePair<>("o_comment", StaticMetaData.dataType.type_long)
-            ));
-    meta.addTableData(new StaticMetaData.TableInfo("tpch", "lineitem"),
-        Arrays.asList(new ImmutablePair<>("l_orderkey", StaticMetaData.dataType.type_long),
-            new ImmutablePair<>("l_partkey", StaticMetaData.dataType.type_long),
-            new ImmutablePair<>("l_suppkey", StaticMetaData.dataType.type_long),
-            new ImmutablePair<>("l_linenumber", StaticMetaData.dataType.type_long),
-            new ImmutablePair<>("l_quantity", StaticMetaData.dataType.type_long),
-            new ImmutablePair<>("l_extendedprice", StaticMetaData.dataType.type_long),
-            new ImmutablePair<>("l_discount", StaticMetaData.dataType.type_long),
-            new ImmutablePair<>("l_tax", StaticMetaData.dataType.type_long),
-            new ImmutablePair<>("l_returnflag", StaticMetaData.dataType.type_long),
-            new ImmutablePair<>("l_linestatus", StaticMetaData.dataType.type_long),
-            new ImmutablePair<>("l_shipdate", StaticMetaData.dataType.type_long),
-            new ImmutablePair<>("l_commitdate", StaticMetaData.dataType.type_long),
-            new ImmutablePair<>("l_receiptdate", StaticMetaData.dataType.type_long),
-            new ImmutablePair<>("l_shipinstruct", StaticMetaData.dataType.type_long),
-            new ImmutablePair<>("l_shipmode", StaticMetaData.dataType.type_long),
-            new ImmutablePair<>("l_comment", StaticMetaData.dataType.type_long)
-            ));
+    meta.addTableData(new StaticMetaData.TableInfo("tpch", "nation"), arr);
+    arr = new ArrayList<>();
+    arr.addAll(Arrays.asList(new ImmutablePair<>("r_regionkey", BIGINT),
+        new ImmutablePair<>("r_name", BIGINT),
+        new ImmutablePair<>("r_comment", BIGINT)));
+    meta.addTableData(new StaticMetaData.TableInfo("tpch", "region"), arr);
+    arr = new ArrayList<>();
+    arr.addAll(Arrays.asList(new ImmutablePair<>("p_partkey", BIGINT),
+        new ImmutablePair<>("p_name", BIGINT),
+        new ImmutablePair<>("p_brand", BIGINT),
+        new ImmutablePair<>("p_mfgr", BIGINT),
+        new ImmutablePair<>("p_type", BIGINT),
+        new ImmutablePair<>("p_size", BIGINT),
+        new ImmutablePair<>("p_container", BIGINT),
+        new ImmutablePair<>("p_retailprice", BIGINT),
+        new ImmutablePair<>("p_comment", BIGINT)
+    ));
+    meta.addTableData(new StaticMetaData.TableInfo("tpch", "part"), arr);
+    arr = new ArrayList<>();
+    arr.addAll(Arrays.asList(new ImmutablePair<>("s_suppkey", BIGINT),
+        new ImmutablePair<>("s_name", BIGINT),
+        new ImmutablePair<>("s_address", BIGINT),
+        new ImmutablePair<>("s_nationkey", BIGINT),
+        new ImmutablePair<>("s_phone", BIGINT),
+        new ImmutablePair<>("s_acctbal", BIGINT),
+        new ImmutablePair<>("s_comment", BIGINT)
+    ));
+    meta.addTableData(new StaticMetaData.TableInfo("tpch", "supplier"), arr);
+    arr = new ArrayList<>();
+    arr.addAll(Arrays.asList(new ImmutablePair<>("ps_partkey", BIGINT),
+        new ImmutablePair<>("ps_suppkey", BIGINT),
+        new ImmutablePair<>("ps_availqty", BIGINT),
+        new ImmutablePair<>("ps_supplycost", BIGINT),
+        new ImmutablePair<>("ps_comment", BIGINT)));
+    meta.addTableData(new StaticMetaData.TableInfo("tpch", "partsupp"), arr);
+    arr = new ArrayList<>();
+    arr.addAll(Arrays.asList(new ImmutablePair<>("c_custkey", BIGINT),
+        new ImmutablePair<>("c_name", BIGINT),
+        new ImmutablePair<>("c_address", BIGINT),
+        new ImmutablePair<>("c_nationkey", BIGINT),
+        new ImmutablePair<>("c_phone", BIGINT),
+        new ImmutablePair<>("c_acctbal", BIGINT),
+        new ImmutablePair<>("c_mktsegment", BIGINT),
+        new ImmutablePair<>("c_comment", BIGINT)
+    ));
+    meta.addTableData(new StaticMetaData.TableInfo("tpch", "customer"), arr);
+    arr = new ArrayList<>();
+    arr.addAll( Arrays.asList(new ImmutablePair<>("o_orderkey", BIGINT),
+        new ImmutablePair<>("o_custkey", BIGINT),
+        new ImmutablePair<>("o_orderstatus", BIGINT),
+        new ImmutablePair<>("o_totalprice", BIGINT),
+        new ImmutablePair<>("o_orderdate", BIGINT),
+        new ImmutablePair<>("o_orderpriority", BIGINT),
+        new ImmutablePair<>("o_clerk", BIGINT),
+        new ImmutablePair<>("o_shippriority", BIGINT),
+        new ImmutablePair<>("o_comment", BIGINT)
+    ));
+    meta.addTableData(new StaticMetaData.TableInfo("tpch", "orders"), arr);
+    arr = new ArrayList<>();
+    arr.addAll( Arrays.asList(new ImmutablePair<>("l_orderkey", BIGINT),
+        new ImmutablePair<>("l_partkey", BIGINT),
+        new ImmutablePair<>("l_suppkey", BIGINT),
+        new ImmutablePair<>("l_linenumber", BIGINT),
+        new ImmutablePair<>("l_quantity", BIGINT),
+        new ImmutablePair<>("l_extendedprice", BIGINT),
+        new ImmutablePair<>("l_discount", BIGINT),
+        new ImmutablePair<>("l_tax", BIGINT),
+        new ImmutablePair<>("l_returnflag", BIGINT),
+        new ImmutablePair<>("l_linestatus", BIGINT),
+        new ImmutablePair<>("l_shipdate", BIGINT),
+        new ImmutablePair<>("l_commitdate", BIGINT),
+        new ImmutablePair<>("l_receiptdate", BIGINT),
+        new ImmutablePair<>("l_shipinstruct", BIGINT),
+        new ImmutablePair<>("l_shipmode", BIGINT),
+        new ImmutablePair<>("l_comment", BIGINT)
+    ));
+    meta.addTableData(new StaticMetaData.TableInfo("tpch", "lineitem"), arr);
 
   }
 
   @Test
-  public void Query1Test() throws VerdictDbException {
+  public void Query1Test() throws VerdictDbException, SQLException,SQLException {
     RelationStandardizer.resetItemID();
     BaseTable base = new BaseTable("tpch", "lineitem", "vt1");
     List<UnnamedColumn> operand1 = Arrays.<UnnamedColumn>asList(
@@ -182,7 +195,7 @@ public class TpchSqlToRelationAfterAliasTest {
   }
 
   @Test
-  public void Query2Test() throws VerdictDbException {
+  public void Query2Test() throws VerdictDbException, SQLException {
     RelationStandardizer.resetItemID();
     BaseTable part = new BaseTable("tpch", "part", "vt1");
     BaseTable supplier = new BaseTable("tpch", "supplier", "vt2");
@@ -322,7 +335,7 @@ public class TpchSqlToRelationAfterAliasTest {
   }
 
   @Test
-  public void Query3Test() throws VerdictDbException {
+  public void Query3Test() throws VerdictDbException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select " +
         "l_orderkey, " +
@@ -403,7 +416,7 @@ public class TpchSqlToRelationAfterAliasTest {
   }
 
   @Test
-  public void Query4Test() throws VerdictDbException {
+  public void Query4Test() throws VerdictDbException, SQLException {
     RelationStandardizer.resetItemID();
     AbstractRelation orders = new BaseTable("tpch", "orders", "vt1");
     SelectQueryOp expected = SelectQueryOp.getSelectQueryOp(
@@ -468,7 +481,7 @@ public class TpchSqlToRelationAfterAliasTest {
   }
 
   @Test
-  public void Query5Test() throws VerdictDbException {
+  public void Query5Test() throws VerdictDbException, SQLException {
     RelationStandardizer.resetItemID();
     AbstractRelation customer = new BaseTable("tpch", "customer", "vt1");
     AbstractRelation orders = new BaseTable("tpch", "orders", "vt2");
@@ -565,7 +578,7 @@ public class TpchSqlToRelationAfterAliasTest {
   }
 
   @Test
-  public void Query6Test() throws VerdictDbException {
+  public void Query6Test() throws VerdictDbException, SQLException {
     RelationStandardizer.resetItemID();
     AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "vt1");
     SelectQueryOp expected = SelectQueryOp.getSelectQueryOp(
@@ -619,7 +632,7 @@ public class TpchSqlToRelationAfterAliasTest {
   }
 
   @Test
-  public void Query7Test() throws VerdictDbException {
+  public void Query7Test() throws VerdictDbException, SQLException {
     RelationStandardizer.resetItemID();
     AbstractRelation supplier = new BaseTable("tpch", "supplier", "vt1");
     AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "vt2");
@@ -755,7 +768,7 @@ public class TpchSqlToRelationAfterAliasTest {
   }
 
   @Test
-  public void Query8Test() throws VerdictDbException {
+  public void Query8Test() throws VerdictDbException, SQLException {
     RelationStandardizer.resetItemID();
     AbstractRelation part = new BaseTable("tpch", "part", "vt1");
     AbstractRelation supplier = new BaseTable("tpch", "supplier", "vt2");
@@ -883,7 +896,7 @@ public class TpchSqlToRelationAfterAliasTest {
   }
 
   @Test
-  public void Query9Test() throws VerdictDbException {
+  public void Query9Test() throws VerdictDbException, SQLException {
     RelationStandardizer.resetItemID();
     AbstractRelation part = new BaseTable("tpch", "part", "vt1");
     AbstractRelation supplier = new BaseTable("tpch", "supplier", "vt2");
@@ -991,7 +1004,7 @@ public class TpchSqlToRelationAfterAliasTest {
   }
 
   @Test
-  public void Query10Test() throws VerdictDbException {
+  public void Query10Test() throws VerdictDbException, SQLException {
     RelationStandardizer.resetItemID();
     AbstractRelation customer = new BaseTable("tpch", "customer", "vt1");
     AbstractRelation orders = new BaseTable("tpch", "orders", "vt2");
@@ -1093,7 +1106,7 @@ public class TpchSqlToRelationAfterAliasTest {
   }
 
   @Test
-  public void Query11Test() throws VerdictDbException {
+  public void Query11Test() throws VerdictDbException, SQLException {
     RelationStandardizer.resetItemID();
     AbstractRelation partsupp = new BaseTable("tpch", "partsupp", "vt1");
     AbstractRelation supplier = new BaseTable("tpch", "supplier", "vt2");
@@ -1189,7 +1202,7 @@ public class TpchSqlToRelationAfterAliasTest {
   }
 
   @Test
-  public void Query12Test() throws VerdictDbException {
+  public void Query12Test() throws VerdictDbException, SQLException {
     RelationStandardizer.resetItemID();
     AbstractRelation orders = new BaseTable("tpch", "orders", "vt1");
     AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "vt2");
@@ -1293,7 +1306,7 @@ public class TpchSqlToRelationAfterAliasTest {
   }
 
   @Test
-  public void Query13Test() throws VerdictDbException {
+  public void Query13Test() throws VerdictDbException, SQLException {
     RelationStandardizer.resetItemID();
     BaseTable customer = new BaseTable("tpch", "customer", "vt1");
     BaseTable orders = new BaseTable("tpch", "orders", "vt2");
@@ -1358,7 +1371,7 @@ public class TpchSqlToRelationAfterAliasTest {
   }
 
   @Test
-  public void Query14Test() throws VerdictDbException {
+  public void Query14Test() throws VerdictDbException, SQLException {
     RelationStandardizer.resetItemID();
     AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "vt1");
     AbstractRelation part = new BaseTable("tpch", "part", "vt2");
@@ -1423,7 +1436,7 @@ public class TpchSqlToRelationAfterAliasTest {
   }
 
   @Test
-  public void Query16Test() throws VerdictDbException {
+  public void Query16Test() throws VerdictDbException, SQLException {
     RelationStandardizer.resetItemID();
     AbstractRelation partsupp = new BaseTable("tpch", "partsupp", "vt1");
     AbstractRelation part = new BaseTable("tpch", "part", "vt2");
@@ -1514,7 +1527,7 @@ public class TpchSqlToRelationAfterAliasTest {
   }
 
   @Test
-  public void Query17Test() throws VerdictDbException {
+  public void Query17Test() throws VerdictDbException, SQLException {
     RelationStandardizer.resetItemID();
     AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "vt1");
     AbstractRelation part = new BaseTable("tpch", "part", "vt2");
@@ -1579,7 +1592,7 @@ public class TpchSqlToRelationAfterAliasTest {
   }
 
   @Test
-  public void Query18Test() throws VerdictDbException {
+  public void Query18Test() throws VerdictDbException, SQLException {
     RelationStandardizer.resetItemID();
     AbstractRelation customer = new BaseTable("tpch", "customer", "vt1");
     AbstractRelation orders = new BaseTable("tpch", "orders", "vt2");
@@ -1667,7 +1680,7 @@ public class TpchSqlToRelationAfterAliasTest {
   }
 
   @Test
-  public void Query19Test() throws VerdictDbException {
+  public void Query19Test() throws VerdictDbException, SQLException {
     RelationStandardizer.resetItemID();
     AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "vt1");
     AbstractRelation part = new BaseTable("tpch", "part", "vt2");
@@ -1886,7 +1899,7 @@ public class TpchSqlToRelationAfterAliasTest {
   }
 
   @Test
-  public void Query20Test() throws VerdictDbException {
+  public void Query20Test() throws VerdictDbException, SQLException {
     RelationStandardizer.resetItemID();
     AbstractRelation supplier = new BaseTable("tpch", "supplier", "vt1");
     AbstractRelation nation = new BaseTable("tpch", "nation", "vt2");
@@ -2013,7 +2026,7 @@ public class TpchSqlToRelationAfterAliasTest {
   }
 
   @Test
-  public void Query21Test() throws VerdictDbException {
+  public void Query21Test() throws VerdictDbException, SQLException {
     RelationStandardizer.resetItemID();
     AbstractRelation supplier = new BaseTable("tpch", "supplier", "vt1");
     AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "l1");
@@ -2129,7 +2142,7 @@ public class TpchSqlToRelationAfterAliasTest {
   }
 
   @Test
-  public void Query22Test() throws VerdictDbException {
+  public void Query22Test() throws VerdictDbException, SQLException {
     RelationStandardizer.resetItemID();
     SelectQueryOp subquery = SelectQueryOp.getSelectQueryOp(
         Arrays.<SelectItem>asList(
