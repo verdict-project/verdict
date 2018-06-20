@@ -13,6 +13,8 @@ import org.verdictdb.jdbc.JdbcResultSet;
 import org.verdictdb.sql.syntax.PostgresqlSyntax;
 import org.verdictdb.sql.syntax.SyntaxAbstract;
 
+import com.google.common.base.Optional;
+
 public class JdbcConnection implements DbmsConnection {
   
   Connection conn;
@@ -127,6 +129,18 @@ public class JdbcConnection implements DbmsConnection {
       }
     }
     return partition;
+  }
+
+  @Override
+  public Optional<String> getDefaultSchema() {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  @Override
+  public void setDefaultSchema() {
+    // TODO Auto-generated method stub
+    
   }
 
 }

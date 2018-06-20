@@ -159,8 +159,8 @@ public class RelationStandardizer {
       if (((BaseTable) table).getSchemaName()==null){
         ((BaseTable) table).setSchemaName(meta.getDefaultSchema());
       }
-      HashMap<MetaData.tableInfo, List<ImmutablePair<String, MetaData.dataType>>> tablesData = meta.getTablesData();
-      List<ImmutablePair<String, MetaData.dataType>> cols = tablesData.get(MetaData.tableInfo.getTableInfo(
+      HashMap<MetaData.TableInfo, List<ImmutablePair<String, MetaData.dataType>>> tablesData = meta.getTablesData();
+      List<ImmutablePair<String, MetaData.dataType>> cols = tablesData.get(MetaData.TableInfo.getTableInfo(
           ((BaseTable) table).getSchemaName(), ((BaseTable) table).getTableName()));
       for (Pair<String, MetaData.dataType> c:cols){
         colNameAndTableAlias.put(c.getKey(), table.getAliasName().get());

@@ -14,17 +14,17 @@ public class MetaData {
     type_long
   }
 
-  public static class tableInfo {
+  public static class TableInfo {
     String schema;
     String tablename;
 
-    public tableInfo(String schema, String tablename) {
+    public TableInfo(String schema, String tablename) {
       this.schema = schema;
       this.tablename = tablename;
     }
 
-    public static tableInfo getTableInfo(String schema, String tablename) {
-      return new tableInfo(schema, tablename);
+    public static TableInfo getTableInfo(String schema, String tablename) {
+      return new TableInfo(schema, tablename);
     }
 
     @Override
@@ -47,20 +47,20 @@ public class MetaData {
   private String defaultSchema = "";
 
   //The value pair: left is column name and right is its type
-  private HashMap<tableInfo, List<ImmutablePair<String, dataType>>> tablesData = new HashMap<>();
+  private HashMap<TableInfo, List<ImmutablePair<String, dataType>>> tablesData = new HashMap<>();
 
   public MetaData() {}
 
-  public MetaData(HashMap<tableInfo, List<ImmutablePair<String, dataType>>> tablesData) {
+  public MetaData(HashMap<TableInfo, List<ImmutablePair<String, dataType>>> tablesData) {
     this.tablesData = tablesData;
   }
 
-  public void addTableData(tableInfo table, List<ImmutablePair<String, dataType>> columns) { tablesData.put(table, columns); }
+  public void addTableData(TableInfo table, List<ImmutablePair<String, dataType>> columns) { tablesData.put(table, columns); }
 
   public void setDefaultSchema(String schema) { defaultSchema = schema; }
 
   public String getDefaultSchema() { return defaultSchema;}
 
-  public HashMap<tableInfo, List<ImmutablePair<String, dataType>>> getTablesData() { return tablesData; }
+  public HashMap<TableInfo, List<ImmutablePair<String, dataType>>> getTablesData() { return tablesData; }
 
 }

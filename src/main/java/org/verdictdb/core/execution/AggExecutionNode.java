@@ -9,9 +9,7 @@
 package org.verdictdb.core.execution;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.connection.DbmsConnection;
@@ -28,7 +26,6 @@ import org.verdictdb.core.rewriter.aggresult.AggNameAndType;
 import org.verdictdb.core.rewriter.aggresult.AggResultCombiner;
 import org.verdictdb.core.rewriter.aggresult.SingleAggResultRewriter;
 import org.verdictdb.core.rewriter.query.AggQueryRewriter;
-import org.verdictdb.core.rewriter.query.AliasRenamingRules;
 import org.verdictdb.core.sql.SelectQueryToSql;
 import org.verdictdb.exception.UnexpectedTypeException;
 import org.verdictdb.exception.ValueException;

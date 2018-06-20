@@ -30,8 +30,8 @@ public class DbmsMetadataCacheTest {
   private static Connection postgresqlConn, mysqlConn;
 
   @BeforeClass
-  public static void setupH2Database() throws SQLException {
-    final String DB_CONNECTION = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1";
+  public static void setupDatabases() throws SQLException {
+    final String DB_CONNECTION = "jdbc:h2:mem:metadatacachetest;DB_CLOSE_DELAY=-1";
     final String DB_USER = "";
     final String DB_PASSWORD = "";
     conn = DriverManager.getConnection(DB_CONNECTION, DB_USER, DB_PASSWORD);
@@ -61,6 +61,7 @@ public class DbmsMetadataCacheTest {
 
     postgresqlConn = DriverManager.getConnection("jdbc:postgresql://localhost/test", "postgres", "");
     mysqlConn = DriverManager.getConnection("jdbc:mysql://localhost/test?autoReconnect=true&useSSL=false", "root", "");
+//    mysqlConn = DriverManager.getConnection("jdbc:mysql://localhost/test", "root", "");
   }
 
   @Test

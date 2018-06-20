@@ -32,16 +32,16 @@ public class TpchSqlToRelationAfterAliasTest {
   @Before
   public void setupMetaData() {
     meta.setDefaultSchema("tpch");
-    meta.addTableData(new MetaData.tableInfo("tpch", "nation"),
+    meta.addTableData(new MetaData.TableInfo("tpch", "nation"),
         Arrays.asList(new ImmutablePair<>("n_nationkey", MetaData.dataType.type_long),
             new ImmutablePair<>("n_name", MetaData.dataType.type_long),
             new ImmutablePair<>("n_regionkey", MetaData.dataType.type_long),
             new ImmutablePair<>("n_comment", MetaData.dataType.type_long)));
-    meta.addTableData(new MetaData.tableInfo("tpch", "region"),
+    meta.addTableData(new MetaData.TableInfo("tpch", "region"),
         Arrays.asList(new ImmutablePair<>("r_regionkey", MetaData.dataType.type_long),
             new ImmutablePair<>("r_name", MetaData.dataType.type_long),
             new ImmutablePair<>("r_comment", MetaData.dataType.type_long)));
-    meta.addTableData(new MetaData.tableInfo("tpch", "part"),
+    meta.addTableData(new MetaData.TableInfo("tpch", "part"),
         Arrays.asList(new ImmutablePair<>("p_partkey", MetaData.dataType.type_long),
             new ImmutablePair<>("p_name", MetaData.dataType.type_long),
             new ImmutablePair<>("p_brand", MetaData.dataType.type_long),
@@ -52,7 +52,7 @@ public class TpchSqlToRelationAfterAliasTest {
             new ImmutablePair<>("p_retailprice", MetaData.dataType.type_long),
             new ImmutablePair<>("p_comment", MetaData.dataType.type_long)
             ));
-    meta.addTableData(new MetaData.tableInfo("tpch", "supplier"),
+    meta.addTableData(new MetaData.TableInfo("tpch", "supplier"),
         Arrays.asList(new ImmutablePair<>("s_suppkey", MetaData.dataType.type_long),
             new ImmutablePair<>("s_name", MetaData.dataType.type_long),
             new ImmutablePair<>("s_address", MetaData.dataType.type_long),
@@ -61,13 +61,13 @@ public class TpchSqlToRelationAfterAliasTest {
             new ImmutablePair<>("s_acctbal", MetaData.dataType.type_long),
             new ImmutablePair<>("s_comment", MetaData.dataType.type_long)
             ));
-    meta.addTableData(new MetaData.tableInfo("tpch", "partsupp"),
+    meta.addTableData(new MetaData.TableInfo("tpch", "partsupp"),
         Arrays.asList(new ImmutablePair<>("ps_partkey", MetaData.dataType.type_long),
             new ImmutablePair<>("ps_suppkey", MetaData.dataType.type_long),
             new ImmutablePair<>("ps_availqty", MetaData.dataType.type_long),
             new ImmutablePair<>("ps_supplycost", MetaData.dataType.type_long),
             new ImmutablePair<>("ps_comment", MetaData.dataType.type_long)));
-    meta.addTableData(new MetaData.tableInfo("tpch", "customer"),
+    meta.addTableData(new MetaData.TableInfo("tpch", "customer"),
         Arrays.asList(new ImmutablePair<>("c_custkey", MetaData.dataType.type_long),
             new ImmutablePair<>("c_name", MetaData.dataType.type_long),
             new ImmutablePair<>("c_address", MetaData.dataType.type_long),
@@ -77,7 +77,7 @@ public class TpchSqlToRelationAfterAliasTest {
             new ImmutablePair<>("c_mktsegment", MetaData.dataType.type_long),
             new ImmutablePair<>("c_comment", MetaData.dataType.type_long)
             ));
-    meta.addTableData(new MetaData.tableInfo("tpch", "orders"),
+    meta.addTableData(new MetaData.TableInfo("tpch", "orders"),
         Arrays.asList(new ImmutablePair<>("o_orderkey", MetaData.dataType.type_long),
             new ImmutablePair<>("o_custkey", MetaData.dataType.type_long),
             new ImmutablePair<>("o_orderstatus", MetaData.dataType.type_long),
@@ -88,7 +88,7 @@ public class TpchSqlToRelationAfterAliasTest {
             new ImmutablePair<>("o_shippriority", MetaData.dataType.type_long),
             new ImmutablePair<>("o_comment", MetaData.dataType.type_long)
             ));
-    meta.addTableData(new MetaData.tableInfo("tpch", "lineitem"),
+    meta.addTableData(new MetaData.TableInfo("tpch", "lineitem"),
         Arrays.asList(new ImmutablePair<>("l_orderkey", MetaData.dataType.type_long),
             new ImmutablePair<>("l_partkey", MetaData.dataType.type_long),
             new ImmutablePair<>("l_suppkey", MetaData.dataType.type_long),

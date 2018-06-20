@@ -7,6 +7,8 @@ import java.util.List;
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.sql.syntax.SyntaxAbstract;
 
+import com.google.common.base.Optional;
+
 public interface DbmsConnection {
   
   public DbmsQueryResult executeQuery(String query);
@@ -24,6 +26,10 @@ public interface DbmsConnection {
   public SyntaxAbstract getSyntax();
 
   public Connection getConnection();
+  
+  public Optional<String> getDefaultSchema();
+  
+  public void setDefaultSchema();
 
   public List<String> getSchemas() throws SQLException;
 
