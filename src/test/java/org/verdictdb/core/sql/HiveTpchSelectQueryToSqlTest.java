@@ -6,7 +6,6 @@ import com.klarna.hiverunner.HiveShell;
 import com.klarna.hiverunner.StandaloneHiveRunner;
 import com.klarna.hiverunner.annotations.HiveSQL;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.verdictdb.core.query.*;
@@ -24,10 +23,10 @@ public class HiveTpchSelectQueryToSqlTest {
 
     @HiveSQL(files = {})
 
-    private static HiveShell shell;
+    private HiveShell shell;
 
-    @BeforeClass
-    public static void setupSourceDatabase() throws Exception {
+    @Before
+    public void setupSourceDatabase() throws Exception {
         shell.execute("CREATE DATABASE tpch");
         File schemaFile = new File("src/test/resources/tpch-schema.sql");
         String schemas = Files.toString(schemaFile, Charsets.UTF_8);
