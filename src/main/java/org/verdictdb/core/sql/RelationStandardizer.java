@@ -22,7 +22,7 @@ import org.verdictdb.core.query.SelectQueryOp;
 import org.verdictdb.core.query.SubqueryColumn;
 import org.verdictdb.core.query.UnnamedColumn;
 
-public class AliasGen {
+public class RelationStandardizer {
 
   private MetaData meta;
 
@@ -37,7 +37,7 @@ public class AliasGen {
   //key is the select column name, value is their alias
   private HashMap<String, String> colNameAndColAlias = new HashMap<>();
 
-  public AliasGen(MetaData meta){
+  public RelationStandardizer(MetaData meta){
     this.meta = meta;
   }
 
@@ -114,11 +114,11 @@ public class AliasGen {
         }
       }
       else if (cond instanceof SubqueryColumn){
-        AliasGen g = new AliasGen(meta);
+        RelationStandardizer g = new RelationStandardizer(meta);
         g.setColNameAndColAlias(colNameAndColAlias);
         g.setColNameAndTableAlias(colNameAndTableAlias);
         g.setTableInfoAndAlias(tableInfoAndAlias);
-        SelectQueryOp newSubquery = g.replaceRelationAlias(((SubqueryColumn) cond).getSubquery());
+        SelectQueryOp newSubquery = g.standardize(((SubqueryColumn) cond).getSubquery());
         ((SubqueryColumn) cond).setSubquery(newSubquery);
       }
     }
@@ -182,12 +182,12 @@ public class AliasGen {
     }
     else if (table instanceof SelectQueryOp) {
       List<String> colName = new ArrayList<>();
-      AliasGen g = new AliasGen(meta);
+      RelationStandardizer g = new RelationStandardizer(meta);
       g.setTableInfoAndAlias(tableInfoAndAlias);
       g.setColNameAndTableAlias(colNameAndTableAlias);
       g.setColNameAndColAlias(colNameAndColAlias);
       String aliasName = table.getAliasName().get();
-      table = g.replaceRelationAlias((SelectQueryOp) table);
+      table = g.standardize((SelectQueryOp) table);
       table.setAliasName(aliasName);
       // Invariant: Only Aliased Column or Asterisk Column should appear in the subquery
       for (SelectItem sel:((SelectQueryOp) table).getSelectList()){
@@ -217,7 +217,7 @@ public class AliasGen {
   /*
    * Figure out the table alias and the columns the table have
    */
-  public List<AbstractRelation> setupTableSources(SelectQueryOp relationToAlias) {
+  private List<AbstractRelation> setupTableSources(SelectQueryOp relationToAlias) {
     List<AbstractRelation> fromList = relationToAlias.getFromList();
     for (int i=0;i<fromList.size();i++) {
       fromList.set(i, setupTableSource(fromList.get(i)).getValue());
@@ -225,7 +225,7 @@ public class AliasGen {
     return fromList;
   }
 
-  public SelectQueryOp replaceRelationAlias(SelectQueryOp relationToAlias){
+  public SelectQueryOp standardize(SelectQueryOp relationToAlias){
     List<AbstractRelation> fromList = setupTableSources(relationToAlias);
     List<SelectItem> selectItemList = replaceSelectList(relationToAlias.getSelectList());
     SelectQueryOp AliasedRelation = SelectQueryOp.getSelectQueryOp(selectItemList, fromList);

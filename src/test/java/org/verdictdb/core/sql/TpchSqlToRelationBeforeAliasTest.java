@@ -86,8 +86,8 @@ public class TpchSqlToRelationBeforeAliasTest {
         "l_returnflag asc, " +
         "l_linestatus asc " +
         "limit 1";
-    SqlToRelation sqlToRelation = new SqlToRelation(null);
-    AbstractRelation relation = sqlToRelation.ToRelation(sql);
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
     assertEquals(expected, relation);
   }
 
@@ -216,8 +216,8 @@ public class TpchSqlToRelationBeforeAliasTest {
         "s_name asc, " +
         "p_partkey asc " +
         "limit 100";
-    SqlToRelation sqlToRelation = new SqlToRelation(null);
-    AbstractRelation relation = sqlToRelation.ToRelation(sql);
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
     assertEquals(expected, relation);
   }
 
@@ -294,8 +294,8 @@ public class TpchSqlToRelationBeforeAliasTest {
         new OrderbyAttribute("o_orderdate")
     ));
     expected.addLimit(ConstantColumn.valueOf(10));
-    SqlToRelation sqlToRelation = new SqlToRelation(null);
-    AbstractRelation relation = sqlToRelation.ToRelation(sql);
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
     assertEquals(expected, relation);
   }
 
@@ -356,8 +356,8 @@ public class TpchSqlToRelationBeforeAliasTest {
         "order by " +
         "o_orderpriority asc " +
         "limit 1";
-    SqlToRelation sqlToRelation = new SqlToRelation(null);
-    AbstractRelation relation = sqlToRelation.ToRelation(sql);
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
     assertEquals(expected, relation);
   }
 
@@ -450,8 +450,8 @@ public class TpchSqlToRelationBeforeAliasTest {
         "order by " +
         "revenue desc " +
         "limit 1";
-    SqlToRelation sqlToRelation = new SqlToRelation(null);
-    AbstractRelation relation = sqlToRelation.ToRelation(sql);
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
     assertEquals(expected, relation);
   }
 
@@ -501,8 +501,8 @@ public class TpchSqlToRelationBeforeAliasTest {
         "and (l.l_discount between (':2' - 0.01) and (':2' + 0.01))) " +
         "and (l.l_quantity < ':3') " +
         "limit 1";
-    SqlToRelation sqlToRelation = new SqlToRelation(null);
-    AbstractRelation relation = sqlToRelation.ToRelation(sql);
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
     assertEquals(expected, relation);
   }
 
@@ -634,8 +634,8 @@ public class TpchSqlToRelationBeforeAliasTest {
         "cust_nation asc, " +
         "l_year asc " +
         "limit 1";
-    SqlToRelation sqlToRelation = new SqlToRelation(null);
-    AbstractRelation relation = sqlToRelation.ToRelation(sql);
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
     assertEquals(expected, relation);
   }
 
@@ -757,8 +757,8 @@ public class TpchSqlToRelationBeforeAliasTest {
         "order by " +
         "o_year asc " +
         "limit 1";
-    SqlToRelation sqlToRelation = new SqlToRelation(null);
-    AbstractRelation relation = sqlToRelation.ToRelation(sql);
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
     assertEquals(expected, relation);
   }
 
@@ -859,8 +859,8 @@ public class TpchSqlToRelationBeforeAliasTest {
         "nation asc, " +
         "o_year desc " +
         "limit 1";
-    SqlToRelation sqlToRelation = new SqlToRelation(null);
-    AbstractRelation relation = sqlToRelation.ToRelation(sql);
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
     assertEquals(expected, relation);
   }
 
@@ -958,8 +958,8 @@ public class TpchSqlToRelationBeforeAliasTest {
         "order by " +
         "revenue desc " +
         "limit 20";
-    SqlToRelation sqlToRelation = new SqlToRelation(null);
-    AbstractRelation relation = sqlToRelation.ToRelation(sql);
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
     assertEquals(expected, relation);
   }
 
@@ -1049,8 +1049,8 @@ public class TpchSqlToRelationBeforeAliasTest {
         "order by " +
         "value desc " +
         "limit 1";
-    SqlToRelation sqlToRelation = new SqlToRelation(null);
-    AbstractRelation relation = sqlToRelation.ToRelation(sql);
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
     assertEquals(expected, relation);
   }
 
@@ -1150,8 +1150,8 @@ public class TpchSqlToRelationBeforeAliasTest {
         "order by " +
         "l_shipmode asc " +
         "limit 1";
-    SqlToRelation sqlToRelation = new SqlToRelation(null);
-    AbstractRelation relation = sqlToRelation.ToRelation(sql);
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
     assertEquals(expected, relation);
   }
 
@@ -1211,8 +1211,8 @@ public class TpchSqlToRelationBeforeAliasTest {
         "custdist desc, " +
         "c_count desc " +
         "limit 1";
-    SqlToRelation sqlToRelation = new SqlToRelation(null);
-    AbstractRelation relation = sqlToRelation.ToRelation(sql);
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
     assertEquals(expected, relation);
   }
 
@@ -1273,8 +1273,8 @@ public class TpchSqlToRelationBeforeAliasTest {
         "and (l.l_shipdate >= (date ':1'))) " +
         "and (l.l_shipdate < ((date ':1') + (interval '1' month))) " +
         "limit 1";
-    SqlToRelation sqlToRelation = new SqlToRelation(null);
-    AbstractRelation relation = sqlToRelation.ToRelation(sql);
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
     assertEquals(expected, relation);
   }
 
@@ -1324,8 +1324,8 @@ public class TpchSqlToRelationBeforeAliasTest {
         "order by " +
         "s_suppkey asc " +
         "limit 1";
-    SqlToRelation sqlToRelation = new SqlToRelation(null);
-    AbstractRelation relation = sqlToRelation.ToRelation(sql);
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
     assertEquals(expected, relation);
   }
 
@@ -1412,8 +1412,8 @@ public class TpchSqlToRelationBeforeAliasTest {
         "p_type asc, " +
         "p_size asc " +
         "limit 1";
-    SqlToRelation sqlToRelation = new SqlToRelation(null);
-    AbstractRelation relation = sqlToRelation.ToRelation(sql);
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
     assertEquals(expected, relation);
   }
 
@@ -1474,8 +1474,8 @@ public class TpchSqlToRelationBeforeAliasTest {
         "and (p.p_container = ':2')) " +
         "and (l.l_quantity < part_agg.avg_quantity) " +
         "limit 1";
-    SqlToRelation sqlToRelation = new SqlToRelation(null);
-    AbstractRelation relation = sqlToRelation.ToRelation(sql);
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
     assertEquals(expected, relation);
   }
 
@@ -1559,8 +1559,8 @@ public class TpchSqlToRelationBeforeAliasTest {
         "o_totalprice desc, " +
         "o_orderdate asc " +
         "limit 100";
-    SqlToRelation sqlToRelation = new SqlToRelation(null);
-    AbstractRelation relation = sqlToRelation.ToRelation(sql);
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
     assertEquals(expected, relation);
   }
 
@@ -1772,8 +1772,8 @@ public class TpchSqlToRelationBeforeAliasTest {
         "and (l.l_shipinstruct = 'DELIVER IN PERSON')" +
         ") " +
         "limit 1";
-    SqlToRelation sqlToRelation = new SqlToRelation(null);
-    AbstractRelation relation = sqlToRelation.ToRelation(sql);
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
     assertEquals(expected, relation);
   }
 
@@ -1896,8 +1896,8 @@ public class TpchSqlToRelationBeforeAliasTest {
         "order by " +
         "s_name asc " +
         "limit 1";
-    SqlToRelation sqlToRelation = new SqlToRelation(null);
-    AbstractRelation relation = sqlToRelation.ToRelation(sql);
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
     assertEquals(expected, relation);
   }
 
@@ -2009,8 +2009,8 @@ public class TpchSqlToRelationBeforeAliasTest {
         "numwait desc, " +
         "s_name asc " +
         "limit 100";
-    SqlToRelation sqlToRelation = new SqlToRelation(null);
-    AbstractRelation relation = sqlToRelation.ToRelation(sql);
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
     assertEquals(expected, relation);
   }
 
@@ -2107,8 +2107,8 @@ public class TpchSqlToRelationBeforeAliasTest {
         "order by " +
         "cntrycode asc " +
         "limit 1";
-    SqlToRelation sqlToRelation = new SqlToRelation(null);
-    AbstractRelation relation = sqlToRelation.ToRelation(sql);
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
     assertEquals(expected, relation);
   }
 }

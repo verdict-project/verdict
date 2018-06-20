@@ -14,19 +14,17 @@ import org.verdictdb.parser.VerdictSQLParser;
 
 public class CondGen extends VerdictSQLBaseVisitor<UnnamedColumn> {
 
-    private MetaData meta;
+//    private MetaData meta;
 
-    public CondGen() {
+    public CondGen() {}
 
-    }
-
-    public CondGen(MetaData meta) {
-        this.meta = meta;
-    }
+//    public CondGen(MetaData meta) {
+//        this.meta = meta;
+//    }
 
     @Override
     public UnnamedColumn visitComp_expr_predicate(VerdictSQLParser.Comp_expr_predicateContext ctx) {
-        ExpressionGen g = new ExpressionGen(meta);
+        ExpressionGen g = new ExpressionGen();
         UnnamedColumn e1 = g.visit(ctx.expression(0));
         UnnamedColumn e2 = g.visit(ctx.expression(1));
         if (ctx.comparison_operator().getText().equals("=")) {
@@ -106,7 +104,7 @@ public class CondGen extends VerdictSQLBaseVisitor<UnnamedColumn> {
 
     @Override
     public UnnamedColumn visitIs_predicate(VerdictSQLParser.Is_predicateContext ctx) {
-        ExpressionGen g = new ExpressionGen(meta);
+        ExpressionGen g = new ExpressionGen();
         UnnamedColumn left = g.visit(ctx.expression());
         UnnamedColumn right = visit(ctx.null_notnull());
         return new ColumnOp("is", Arrays.asList(left, right));
@@ -114,12 +112,12 @@ public class CondGen extends VerdictSQLBaseVisitor<UnnamedColumn> {
 
     @Override
     public UnnamedColumn visitIn_predicate(VerdictSQLParser.In_predicateContext ctx) {
-        ExpressionGen g1 = new ExpressionGen(meta);
+        ExpressionGen g1 = new ExpressionGen();
         if (ctx.subquery() != null) {
             // VerdictLogger.error("Verdict currently does not support IN + subquery condition.");
             UnnamedColumn left = g1.visit(ctx.expression());
             boolean not = (ctx.NOT() != null) ? true : false;
-            RelationGen g2 = new RelationGen(meta);
+            RelationGen g2 = new RelationGen();
             UnnamedColumn subquery = SubqueryColumn.getSubqueryColumn((SelectQueryOp) g2.visit(ctx.subquery()));
             return not ? new ColumnOp("notin", Arrays.asList(left, subquery)) :
                     new ColumnOp("in", Arrays.asList(left, subquery));
@@ -142,14 +140,14 @@ public class CondGen extends VerdictSQLBaseVisitor<UnnamedColumn> {
             // VerdictLogger.error("Exists should be followed by a subquery");
             return null;
         }
-        RelationGen g = new RelationGen(meta);
+        RelationGen g = new RelationGen();
         UnnamedColumn subquery = SubqueryColumn.getSubqueryColumn((SelectQueryOp) g.visit(ctx.subquery()));
         return new ColumnOp("exists", subquery);
     }
 
     @Override
     public UnnamedColumn visitLike_predicate(VerdictSQLParser.Like_predicateContext ctx) {
-        ExpressionGen g = new ExpressionGen(meta);
+        ExpressionGen g = new ExpressionGen();
         UnnamedColumn left = g.visit(ctx.expression(0));
         UnnamedColumn right = g.visit(ctx.expression(1));
         boolean not = (ctx.NOT() != null) ? true : false;
@@ -159,7 +157,7 @@ public class CondGen extends VerdictSQLBaseVisitor<UnnamedColumn> {
 
     @Override
     public UnnamedColumn visitComp_between_expr(VerdictSQLParser.Comp_between_exprContext ctx) {
-        ExpressionGen g = new ExpressionGen(meta);
+        ExpressionGen g = new ExpressionGen();
         UnnamedColumn col = g.visit(ctx.expression(0));
         UnnamedColumn left = g.visit(ctx.expression(1));
         UnnamedColumn right = g.visit(ctx.expression(2));

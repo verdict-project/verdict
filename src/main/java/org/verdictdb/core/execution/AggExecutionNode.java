@@ -38,7 +38,7 @@ public class AggExecutionNode {
   
   SelectQueryOp originalQuery;
   
-//  SelectQueryOp rewrittenQuery;
+  List<AggExecutionNode> dependencies = new ArrayList<>();
   
   public AggExecutionNode(DbmsConnection conn, ScrambleMeta meta, SelectQueryOp query) {
     this.conn = conn;

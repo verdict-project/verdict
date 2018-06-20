@@ -6,13 +6,13 @@ import org.verdictdb.core.query.AbstractRelation;
 import org.verdictdb.parser.VerdictSQLLexer;
 import org.verdictdb.parser.VerdictSQLParser;
 
-public class SqlToRelation {
+public class NonValidatingSQLParser {
 
-  MetaData meta;
+//  MetaData meta;
 
-  public SqlToRelation(MetaData meta) {
-    this.meta = meta;
-  }
+  public NonValidatingSQLParser() {}
+//    this.meta = meta;
+//  }
 
   public static VerdictSQLParser parserOf(String text) {
     VerdictSQLLexer l = new VerdictSQLLexer(new ANTLRInputStream(text));
@@ -20,9 +20,9 @@ public class SqlToRelation {
     return p;
   }
 
-  public AbstractRelation ToRelation(String sql) {
+  public AbstractRelation toRelation(String sql) {
     VerdictSQLParser p = parserOf(sql);
-    RelationGen g = new RelationGen(meta);
+    RelationGen g = new RelationGen();
     return g.visit(p.select_statement());
   }
 }
