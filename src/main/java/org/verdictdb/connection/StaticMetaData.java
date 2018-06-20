@@ -1,18 +1,15 @@
 package org.verdictdb.connection;
 
-import java.util.HashMap;
-import java.util.List;
+import java.sql.SQLException;
+import java.util.*;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 
-public class StaticMetaData {
-
-  public enum dataType{
-    type_long
-  }
+public class StaticMetaData implements MetaDataProvider{
 
   public static class TableInfo {
     String schema;
@@ -47,20 +44,68 @@ public class StaticMetaData {
   private String defaultSchema = "";
 
   //The value pair: left is column name and right is its type
-  private HashMap<TableInfo, List<ImmutablePair<String, dataType>>> tablesData = new HashMap<>();
+  private HashMap<TableInfo, List<Pair<String, Integer>>> tablesData = new HashMap<>();
+
+  private List<String> schemas = new ArrayList<>();
+
+  private HashMap<String, List<String>> tables = new HashMap<>();
+
+  private HashMap<Pair<String, String>, List<Pair<String, Integer>>> columns = new HashMap<>();
+
+  private HashMap<Pair<String, String>, List<String>> partitions = new HashMap<>();
 
   public StaticMetaData() {}
 
-  public StaticMetaData(HashMap<TableInfo, List<ImmutablePair<String, dataType>>> tablesData) {
+  public StaticMetaData(HashMap<TableInfo, List<Pair<String, Integer>>> tablesData) {
     this.tablesData = tablesData;
+    for (Map.Entry<TableInfo, List<Pair<String, Integer>>> entry:tablesData.entrySet()) {
+      if (!schemas.contains(entry.getKey().schema)) {
+        schemas.add(entry.getKey().schema);
+      }
+      tables.get(entry.getKey().schema).add(entry.getKey().tablename);
+      columns.put(new ImmutablePair<>(entry.getKey().schema, entry.getKey().tablename),
+          entry.getValue());
+    }
   }
 
-  public void addTableData(TableInfo table, List<ImmutablePair<String, dataType>> columns) { tablesData.put(table, columns); }
+  public void addTableData(TableInfo table, List<Pair<String, Integer>> column) {
+    tablesData.put(table, column);
+    if (!schemas.contains(table.schema)) {
+      schemas.add(table.schema);
+      tables.put(table.schema, new ArrayList<String>());
+    }
+    tables.get(table.schema).add(table.tablename);
+    columns.put(new ImmutablePair<>(table.schema, table.tablename), column);
+  }
+
+  public void addPartition(TableInfo table, List<String> column) {
+    partitions.put(new ImmutablePair<>(table.schema, table.tablename), column);
+  }
 
   public void setDefaultSchema(String schema) { defaultSchema = schema; }
 
+  @Override
+  public List<String> getSchemas() throws SQLException {
+    return schemas;
+  }
+
+  @Override
+  public List<String> getTables(String schema) throws SQLException {
+    return tables.get(schema);
+  }
+
+  @Override
+  public List<Pair<String, Integer>> getColumns(String schema, String table) throws SQLException {
+    return columns.get(new ImmutablePair<>(schema, table));
+  }
+
+  @Override
+  public List<String> getPartitionColumns(String schema, String table) throws SQLException {
+    return partitions.get(new ImmutablePair<>(schema, table));
+  }
+
   public String getDefaultSchema() { return defaultSchema;}
 
-  public HashMap<TableInfo, List<ImmutablePair<String, dataType>>> getTablesData() { return tablesData; }
+  public HashMap<TableInfo, List<Pair<String, Integer>>> getTablesData() { return tablesData; }
 
 }
