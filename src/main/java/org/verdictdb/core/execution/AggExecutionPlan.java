@@ -1,11 +1,11 @@
 package org.verdictdb.core.execution;
 
 import org.verdictdb.connection.DbmsConnection;
+import org.verdictdb.connection.StaticMetaData;
 import org.verdictdb.core.DbmsMetadataCache;
 import org.verdictdb.core.query.AbstractRelation;
 import org.verdictdb.core.query.SelectQueryOp;
 import org.verdictdb.core.rewriter.ScrambleMeta;
-import org.verdictdb.core.sql.MetaData;
 import org.verdictdb.core.sql.NonValidatingSQLParser;
 import org.verdictdb.exception.UnexpectedTypeException;
 import org.verdictdb.exception.ValueException;

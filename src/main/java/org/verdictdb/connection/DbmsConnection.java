@@ -9,12 +9,10 @@ import org.verdictdb.sql.syntax.SyntaxAbstract;
 
 import com.google.common.base.Optional;
 
-public interface DbmsConnection {
+public interface DbmsConnection extends MetaDataProvider {
   
   public DbmsQueryResult executeQuery(String query);
   
-  public void close();
-
   /**
    * 
    * @param sql
@@ -31,12 +29,6 @@ public interface DbmsConnection {
   
   public void setDefaultSchema();
 
-  public List<String> getSchemas() throws SQLException;
-
-  List<String> getTables(String schema) throws SQLException;
-
-  public List<Pair<String, Integer>> getColumns(String schema, String table) throws SQLException;
-
-  public List<String> getPartitionColumns(String schema, String table) throws SQLException;
+  public void close();
 
 }

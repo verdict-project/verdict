@@ -7,6 +7,7 @@ import java.util.Vector;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
+import org.verdictdb.connection.StaticMetaData;
 import org.verdictdb.core.query.AbstractRelation;
 import org.verdictdb.core.query.AliasReference;
 import org.verdictdb.core.query.AliasedColumn;
@@ -24,7 +25,7 @@ import org.verdictdb.core.query.UnnamedColumn;
 
 public class RelationStandardizer {
 
-  private MetaData meta;
+  private StaticMetaData meta;
 
   private static long itemID = 1;
 
@@ -37,7 +38,7 @@ public class RelationStandardizer {
   //key is the select column name, value is their alias
   private HashMap<String, String> colNameAndColAlias = new HashMap<>();
 
-  public RelationStandardizer(MetaData meta){
+  public RelationStandardizer(StaticMetaData meta){
     this.meta = meta;
   }
 
@@ -159,10 +160,10 @@ public class RelationStandardizer {
       if (((BaseTable) table).getSchemaName()==null){
         ((BaseTable) table).setSchemaName(meta.getDefaultSchema());
       }
-      HashMap<MetaData.TableInfo, List<ImmutablePair<String, MetaData.dataType>>> tablesData = meta.getTablesData();
-      List<ImmutablePair<String, MetaData.dataType>> cols = tablesData.get(MetaData.TableInfo.getTableInfo(
+      HashMap<StaticMetaData.TableInfo, List<ImmutablePair<String, StaticMetaData.dataType>>> tablesData = meta.getTablesData();
+      List<ImmutablePair<String, StaticMetaData.dataType>> cols = tablesData.get(StaticMetaData.TableInfo.getTableInfo(
           ((BaseTable) table).getSchemaName(), ((BaseTable) table).getTableName()));
-      for (Pair<String, MetaData.dataType> c:cols){
+      for (Pair<String, StaticMetaData.dataType> c:cols){
         colNameAndTableAlias.put(c.getKey(), table.getAliasName().get());
         colName.add(c.getKey());
       }

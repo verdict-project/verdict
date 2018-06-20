@@ -8,6 +8,7 @@ import java.util.List;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.junit.Before;
 import org.junit.Test;
+import org.verdictdb.connection.StaticMetaData;
 import org.verdictdb.core.query.AbstractRelation;
 import org.verdictdb.core.query.AliasReference;
 import org.verdictdb.core.query.AliasedColumn;
@@ -27,84 +28,84 @@ import org.verdictdb.exception.VerdictDbException;
 
 public class TpchSqlToRelationAfterAliasTest {
 
-  private MetaData meta = new MetaData();
+  private StaticMetaData meta = new StaticMetaData();
 
   @Before
   public void setupMetaData() {
     meta.setDefaultSchema("tpch");
-    meta.addTableData(new MetaData.TableInfo("tpch", "nation"),
-        Arrays.asList(new ImmutablePair<>("n_nationkey", MetaData.dataType.type_long),
-            new ImmutablePair<>("n_name", MetaData.dataType.type_long),
-            new ImmutablePair<>("n_regionkey", MetaData.dataType.type_long),
-            new ImmutablePair<>("n_comment", MetaData.dataType.type_long)));
-    meta.addTableData(new MetaData.TableInfo("tpch", "region"),
-        Arrays.asList(new ImmutablePair<>("r_regionkey", MetaData.dataType.type_long),
-            new ImmutablePair<>("r_name", MetaData.dataType.type_long),
-            new ImmutablePair<>("r_comment", MetaData.dataType.type_long)));
-    meta.addTableData(new MetaData.TableInfo("tpch", "part"),
-        Arrays.asList(new ImmutablePair<>("p_partkey", MetaData.dataType.type_long),
-            new ImmutablePair<>("p_name", MetaData.dataType.type_long),
-            new ImmutablePair<>("p_brand", MetaData.dataType.type_long),
-            new ImmutablePair<>("p_mfgr", MetaData.dataType.type_long),
-            new ImmutablePair<>("p_type", MetaData.dataType.type_long),
-            new ImmutablePair<>("p_size", MetaData.dataType.type_long),
-            new ImmutablePair<>("p_container", MetaData.dataType.type_long),
-            new ImmutablePair<>("p_retailprice", MetaData.dataType.type_long),
-            new ImmutablePair<>("p_comment", MetaData.dataType.type_long)
+    meta.addTableData(new StaticMetaData.TableInfo("tpch", "nation"),
+        Arrays.asList(new ImmutablePair<>("n_nationkey", StaticMetaData.dataType.type_long),
+            new ImmutablePair<>("n_name", StaticMetaData.dataType.type_long),
+            new ImmutablePair<>("n_regionkey", StaticMetaData.dataType.type_long),
+            new ImmutablePair<>("n_comment", StaticMetaData.dataType.type_long)));
+    meta.addTableData(new StaticMetaData.TableInfo("tpch", "region"),
+        Arrays.asList(new ImmutablePair<>("r_regionkey", StaticMetaData.dataType.type_long),
+            new ImmutablePair<>("r_name", StaticMetaData.dataType.type_long),
+            new ImmutablePair<>("r_comment", StaticMetaData.dataType.type_long)));
+    meta.addTableData(new StaticMetaData.TableInfo("tpch", "part"),
+        Arrays.asList(new ImmutablePair<>("p_partkey", StaticMetaData.dataType.type_long),
+            new ImmutablePair<>("p_name", StaticMetaData.dataType.type_long),
+            new ImmutablePair<>("p_brand", StaticMetaData.dataType.type_long),
+            new ImmutablePair<>("p_mfgr", StaticMetaData.dataType.type_long),
+            new ImmutablePair<>("p_type", StaticMetaData.dataType.type_long),
+            new ImmutablePair<>("p_size", StaticMetaData.dataType.type_long),
+            new ImmutablePair<>("p_container", StaticMetaData.dataType.type_long),
+            new ImmutablePair<>("p_retailprice", StaticMetaData.dataType.type_long),
+            new ImmutablePair<>("p_comment", StaticMetaData.dataType.type_long)
             ));
-    meta.addTableData(new MetaData.TableInfo("tpch", "supplier"),
-        Arrays.asList(new ImmutablePair<>("s_suppkey", MetaData.dataType.type_long),
-            new ImmutablePair<>("s_name", MetaData.dataType.type_long),
-            new ImmutablePair<>("s_address", MetaData.dataType.type_long),
-            new ImmutablePair<>("s_nationkey", MetaData.dataType.type_long),
-            new ImmutablePair<>("s_phone", MetaData.dataType.type_long),
-            new ImmutablePair<>("s_acctbal", MetaData.dataType.type_long),
-            new ImmutablePair<>("s_comment", MetaData.dataType.type_long)
+    meta.addTableData(new StaticMetaData.TableInfo("tpch", "supplier"),
+        Arrays.asList(new ImmutablePair<>("s_suppkey", StaticMetaData.dataType.type_long),
+            new ImmutablePair<>("s_name", StaticMetaData.dataType.type_long),
+            new ImmutablePair<>("s_address", StaticMetaData.dataType.type_long),
+            new ImmutablePair<>("s_nationkey", StaticMetaData.dataType.type_long),
+            new ImmutablePair<>("s_phone", StaticMetaData.dataType.type_long),
+            new ImmutablePair<>("s_acctbal", StaticMetaData.dataType.type_long),
+            new ImmutablePair<>("s_comment", StaticMetaData.dataType.type_long)
             ));
-    meta.addTableData(new MetaData.TableInfo("tpch", "partsupp"),
-        Arrays.asList(new ImmutablePair<>("ps_partkey", MetaData.dataType.type_long),
-            new ImmutablePair<>("ps_suppkey", MetaData.dataType.type_long),
-            new ImmutablePair<>("ps_availqty", MetaData.dataType.type_long),
-            new ImmutablePair<>("ps_supplycost", MetaData.dataType.type_long),
-            new ImmutablePair<>("ps_comment", MetaData.dataType.type_long)));
-    meta.addTableData(new MetaData.TableInfo("tpch", "customer"),
-        Arrays.asList(new ImmutablePair<>("c_custkey", MetaData.dataType.type_long),
-            new ImmutablePair<>("c_name", MetaData.dataType.type_long),
-            new ImmutablePair<>("c_address", MetaData.dataType.type_long),
-            new ImmutablePair<>("c_nationkey", MetaData.dataType.type_long),
-            new ImmutablePair<>("c_phone", MetaData.dataType.type_long),
-            new ImmutablePair<>("c_acctbal", MetaData.dataType.type_long),
-            new ImmutablePair<>("c_mktsegment", MetaData.dataType.type_long),
-            new ImmutablePair<>("c_comment", MetaData.dataType.type_long)
+    meta.addTableData(new StaticMetaData.TableInfo("tpch", "partsupp"),
+        Arrays.asList(new ImmutablePair<>("ps_partkey", StaticMetaData.dataType.type_long),
+            new ImmutablePair<>("ps_suppkey", StaticMetaData.dataType.type_long),
+            new ImmutablePair<>("ps_availqty", StaticMetaData.dataType.type_long),
+            new ImmutablePair<>("ps_supplycost", StaticMetaData.dataType.type_long),
+            new ImmutablePair<>("ps_comment", StaticMetaData.dataType.type_long)));
+    meta.addTableData(new StaticMetaData.TableInfo("tpch", "customer"),
+        Arrays.asList(new ImmutablePair<>("c_custkey", StaticMetaData.dataType.type_long),
+            new ImmutablePair<>("c_name", StaticMetaData.dataType.type_long),
+            new ImmutablePair<>("c_address", StaticMetaData.dataType.type_long),
+            new ImmutablePair<>("c_nationkey", StaticMetaData.dataType.type_long),
+            new ImmutablePair<>("c_phone", StaticMetaData.dataType.type_long),
+            new ImmutablePair<>("c_acctbal", StaticMetaData.dataType.type_long),
+            new ImmutablePair<>("c_mktsegment", StaticMetaData.dataType.type_long),
+            new ImmutablePair<>("c_comment", StaticMetaData.dataType.type_long)
             ));
-    meta.addTableData(new MetaData.TableInfo("tpch", "orders"),
-        Arrays.asList(new ImmutablePair<>("o_orderkey", MetaData.dataType.type_long),
-            new ImmutablePair<>("o_custkey", MetaData.dataType.type_long),
-            new ImmutablePair<>("o_orderstatus", MetaData.dataType.type_long),
-            new ImmutablePair<>("o_totalprice", MetaData.dataType.type_long),
-            new ImmutablePair<>("o_orderdate", MetaData.dataType.type_long),
-            new ImmutablePair<>("o_orderpriority", MetaData.dataType.type_long),
-            new ImmutablePair<>("o_clerk", MetaData.dataType.type_long),
-            new ImmutablePair<>("o_shippriority", MetaData.dataType.type_long),
-            new ImmutablePair<>("o_comment", MetaData.dataType.type_long)
+    meta.addTableData(new StaticMetaData.TableInfo("tpch", "orders"),
+        Arrays.asList(new ImmutablePair<>("o_orderkey", StaticMetaData.dataType.type_long),
+            new ImmutablePair<>("o_custkey", StaticMetaData.dataType.type_long),
+            new ImmutablePair<>("o_orderstatus", StaticMetaData.dataType.type_long),
+            new ImmutablePair<>("o_totalprice", StaticMetaData.dataType.type_long),
+            new ImmutablePair<>("o_orderdate", StaticMetaData.dataType.type_long),
+            new ImmutablePair<>("o_orderpriority", StaticMetaData.dataType.type_long),
+            new ImmutablePair<>("o_clerk", StaticMetaData.dataType.type_long),
+            new ImmutablePair<>("o_shippriority", StaticMetaData.dataType.type_long),
+            new ImmutablePair<>("o_comment", StaticMetaData.dataType.type_long)
             ));
-    meta.addTableData(new MetaData.TableInfo("tpch", "lineitem"),
-        Arrays.asList(new ImmutablePair<>("l_orderkey", MetaData.dataType.type_long),
-            new ImmutablePair<>("l_partkey", MetaData.dataType.type_long),
-            new ImmutablePair<>("l_suppkey", MetaData.dataType.type_long),
-            new ImmutablePair<>("l_linenumber", MetaData.dataType.type_long),
-            new ImmutablePair<>("l_quantity", MetaData.dataType.type_long),
-            new ImmutablePair<>("l_extendedprice", MetaData.dataType.type_long),
-            new ImmutablePair<>("l_discount", MetaData.dataType.type_long),
-            new ImmutablePair<>("l_tax", MetaData.dataType.type_long),
-            new ImmutablePair<>("l_returnflag", MetaData.dataType.type_long),
-            new ImmutablePair<>("l_linestatus", MetaData.dataType.type_long),
-            new ImmutablePair<>("l_shipdate", MetaData.dataType.type_long),
-            new ImmutablePair<>("l_commitdate", MetaData.dataType.type_long),
-            new ImmutablePair<>("l_receiptdate", MetaData.dataType.type_long),
-            new ImmutablePair<>("l_shipinstruct", MetaData.dataType.type_long),
-            new ImmutablePair<>("l_shipmode", MetaData.dataType.type_long),
-            new ImmutablePair<>("l_comment", MetaData.dataType.type_long)
+    meta.addTableData(new StaticMetaData.TableInfo("tpch", "lineitem"),
+        Arrays.asList(new ImmutablePair<>("l_orderkey", StaticMetaData.dataType.type_long),
+            new ImmutablePair<>("l_partkey", StaticMetaData.dataType.type_long),
+            new ImmutablePair<>("l_suppkey", StaticMetaData.dataType.type_long),
+            new ImmutablePair<>("l_linenumber", StaticMetaData.dataType.type_long),
+            new ImmutablePair<>("l_quantity", StaticMetaData.dataType.type_long),
+            new ImmutablePair<>("l_extendedprice", StaticMetaData.dataType.type_long),
+            new ImmutablePair<>("l_discount", StaticMetaData.dataType.type_long),
+            new ImmutablePair<>("l_tax", StaticMetaData.dataType.type_long),
+            new ImmutablePair<>("l_returnflag", StaticMetaData.dataType.type_long),
+            new ImmutablePair<>("l_linestatus", StaticMetaData.dataType.type_long),
+            new ImmutablePair<>("l_shipdate", StaticMetaData.dataType.type_long),
+            new ImmutablePair<>("l_commitdate", StaticMetaData.dataType.type_long),
+            new ImmutablePair<>("l_receiptdate", StaticMetaData.dataType.type_long),
+            new ImmutablePair<>("l_shipinstruct", StaticMetaData.dataType.type_long),
+            new ImmutablePair<>("l_shipmode", StaticMetaData.dataType.type_long),
+            new ImmutablePair<>("l_comment", StaticMetaData.dataType.type_long)
             ));
 
   }

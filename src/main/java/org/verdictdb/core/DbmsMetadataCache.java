@@ -8,9 +8,10 @@ import java.util.List;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.connection.DbmsConnection;
+import org.verdictdb.connection.MetaDataProvider;
 import org.verdictdb.sql.syntax.SyntaxAbstract;
 
-public class DbmsMetadataCache {
+public class DbmsMetadataCache implements MetaDataProvider {
 
   private SyntaxAbstract syntax;
 
@@ -29,6 +30,7 @@ public class DbmsMetadataCache {
     this.connection = connection;
   }
 
+  @Override
   public List<String> getSchemas() throws SQLException {
     if (!schemaCache.isEmpty()) {
       return schemaCache;
@@ -37,6 +39,7 @@ public class DbmsMetadataCache {
     return schemaCache;
   }
 
+  @Override
   public List<String> getTables(String schema) throws SQLException {
     if (tablesCache.containsKey(schema)&&!tablesCache.get(schema).isEmpty()) {
       return tablesCache.get(schema);
@@ -45,6 +48,7 @@ public class DbmsMetadataCache {
     return tablesCache.get(schema);
   }
 
+  @Override
   public List<Pair<String, Integer>> getColumns(String schema, String table) throws SQLException {
     Pair<String, String> key = new ImmutablePair<>(schema,table);
     if (columnsCache.containsKey(key) && !columnsCache.get(key).isEmpty()) {
@@ -61,6 +65,7 @@ public class DbmsMetadataCache {
    * @param table
    * @return
    */
+  @Override
   public List<String> getPartitionColumns(String schema, String table) throws SQLException {
     if (!syntax.doesSupportTablePartitioning()) {
       throw new SQLException("Database does not support table partitioning");

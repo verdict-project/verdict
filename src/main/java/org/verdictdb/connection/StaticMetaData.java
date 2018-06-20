@@ -1,4 +1,4 @@
-package org.verdictdb.core.sql;
+package org.verdictdb.connection;
 
 import java.util.HashMap;
 import java.util.List;
@@ -8,7 +8,7 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 
-public class MetaData {
+public class StaticMetaData {
 
   public enum dataType{
     type_long
@@ -49,9 +49,9 @@ public class MetaData {
   //The value pair: left is column name and right is its type
   private HashMap<TableInfo, List<ImmutablePair<String, dataType>>> tablesData = new HashMap<>();
 
-  public MetaData() {}
+  public StaticMetaData() {}
 
-  public MetaData(HashMap<TableInfo, List<ImmutablePair<String, dataType>>> tablesData) {
+  public StaticMetaData(HashMap<TableInfo, List<ImmutablePair<String, dataType>>> tablesData) {
     this.tablesData = tablesData;
   }
 
