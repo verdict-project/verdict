@@ -75,7 +75,7 @@ public class JdbcConnection implements DbmsConnection {
     DbmsQueryResult queryResult = executeQuery(syntax.getSchemaCommand());
     JdbcResultSet jdbcQueryResult = new JdbcResultSet(queryResult);
     while (queryResult.next()) {
-      schemas.add(jdbcQueryResult.getString(syntax.getSchemaNameColumnIndex()));
+      schemas.add(jdbcQueryResult.getString(syntax.getSchemaNameColumnIndex()+1));
     }
     return schemas;
   }
@@ -86,7 +86,7 @@ public class JdbcConnection implements DbmsConnection {
     DbmsQueryResult queryResult = executeQuery(syntax.getTableCommand(schema));
     JdbcResultSet jdbcQueryResult = new JdbcResultSet(queryResult);
     while (queryResult.next()) {
-      tables.add(jdbcQueryResult.getString(syntax.getTableNameColumnIndex()));
+      tables.add(jdbcQueryResult.getString(syntax.getTableNameColumnIndex()+1));
     }
     return tables;
   }
@@ -97,10 +97,10 @@ public class JdbcConnection implements DbmsConnection {
     DbmsQueryResult queryResult = executeQuery(syntax.getColumnsCommand(schema, table));
     JdbcResultSet jdbcQueryResult = new JdbcResultSet(queryResult);
     while (queryResult.next()) {
-      String type = jdbcQueryResult.getString(syntax.getColumnTypeColumnIndex());
+      String type = jdbcQueryResult.getString(syntax.getColumnTypeColumnIndex()+1);
       // remove the size of type
       type = type.replaceAll("\\(.*\\)", "");
-      columns.add(new ImmutablePair<>(jdbcQueryResult.getString(syntax.getColumnNameColumnIndex()),
+      columns.add(new ImmutablePair<>(jdbcQueryResult.getString(syntax.getColumnNameColumnIndex()+1),
           DataTypeConverter.typeInt(type)));
     }
     return columns;
@@ -114,7 +114,7 @@ public class JdbcConnection implements DbmsConnection {
     // the result of postgresql is a vector of column index
     if (syntax instanceof PostgresqlSyntax) {
       queryResult.next();
-      Object o = jdbcQueryResult.getObject(0);
+      Object o = jdbcQueryResult.getObject(1);
       String[] arr = o.toString().split(" ");
       List<Pair<String, Integer>> columns = getColumns(schema, table);
       for (int i=0; i<arr.length; i++) {
@@ -123,7 +123,7 @@ public class JdbcConnection implements DbmsConnection {
     }
     else {
       while (queryResult.next()) {
-        partition.add(jdbcQueryResult.getString(0));
+        partition.add(jdbcQueryResult.getString(1));
       }
     }
     return partition;

@@ -90,17 +90,17 @@ public class JdbcResultSetMetaData implements ResultSetMetaData {
 
   @Override
   public int getColumnDisplaySize(int column) throws SQLException {
-    return Math.max(getPrecision(column-1), queryResult.getColumnName(column-1).length());
+    return Math.max(getPrecision(column), queryResult.getColumnName(column-1).length());
   }
 
   @Override
   public String getColumnLabel(int column) throws SQLException {
-    return getColumnName(column-1);
+    return queryResult.getColumnName(column-1);
   }
 
   @Override
   public String getColumnName(int column) throws SQLException {
-    return getColumnName(column-1);
+    return queryResult.getColumnName(column-1);
   }
 
   @Override

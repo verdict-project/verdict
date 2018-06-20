@@ -22,8 +22,6 @@ public class AggregateFrame {
   
   List<String> orderedColumnNames;
 
-  List<Integer> orderedColumnIndex = new ArrayList<>();
-
   List<Integer> columnTypes = new ArrayList<>();
   
   Map<AggregateGroup, AggregateMeasures> data = new HashMap<>();
@@ -38,7 +36,6 @@ public class AggregateFrame {
 
   public static AggregateFrame fromDmbsQueryResult(DbmsQueryResult result, List<String> nonaggColumnsName, List<Pair<String, String>> aggColumns) throws ValueException {
     List<String> colName = new ArrayList<>();
-    List<Integer> colIndex = new ArrayList<>();
     List<String> aggColumnsName = new ArrayList<>();
 
     for (Pair<String, String> pair:aggColumns) {
@@ -72,26 +69,6 @@ public class AggregateFrame {
     AggregateFrame aggregateFrame = new AggregateFrame(colName);
     aggregateFrame.setColumnTypes(columnTypes);
 
-    // Set up the ordered column index
-    for (String col : colName) {
-      boolean find = false;
-      for (int i=0;i<orderedNonaggColumnName.size();i++) {
-        if (col.equals(orderedNonaggColumnName.get(i))) {
-          colIndex.add(i);
-          find = true;
-          break;
-        }
-      }
-      if (find) continue;
-      for (int i=0;i<orderedAggColumnName.size();i++) {
-        if (col.equals(orderedAggColumnName.get(i))) {
-          colIndex.add(i+orderedNonaggColumnName.size());
-          break;
-        }
-      }
-    }
-    aggregateFrame.setOrderedColumnIndex(colIndex);
-
     while (result.next()) {
       List<Object> aggValue = new ArrayList<>();
       List<Object> nonaggValue = new ArrayList<>();
@@ -112,14 +89,6 @@ public class AggregateFrame {
 
   public void setColumnTypes(List<Integer> columnTypes) {
     this.columnTypes = columnTypes;
-  }
-
-  public void setOrderedColumnIndex(List<Integer> orderedColumnIndex) {
-    this.orderedColumnIndex = orderedColumnIndex;
-  }
-
-  public List<Integer> getOrderedColumnIndex() {
-    return orderedColumnIndex;
   }
 
   public List<Integer> getColumnTypes() {
