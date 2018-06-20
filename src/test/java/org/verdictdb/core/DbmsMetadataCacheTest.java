@@ -1,6 +1,13 @@
 package org.verdictdb.core;
 
-import static org.junit.Assert.assertEquals;
+import org.apache.commons.lang3.tuple.Pair;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.verdictdb.connection.DataTypeConverter;
+import org.verdictdb.connection.JdbcConnection;
+import org.verdictdb.sql.syntax.H2Syntax;
+import org.verdictdb.sql.syntax.MysqlSyntax;
+import org.verdictdb.sql.syntax.PostgresqlSyntax;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -10,13 +17,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.apache.commons.lang3.tuple.Pair;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.verdictdb.connection.DataTypeConverter;
-import org.verdictdb.connection.JdbcConnection;
-import org.verdictdb.sql.syntax.H2Syntax;
-import org.verdictdb.sql.syntax.PostgresqlSyntax;
+import static org.junit.Assert.assertEquals;
 
 public class DbmsMetadataCacheTest {
 
@@ -26,7 +27,7 @@ public class DbmsMetadataCacheTest {
 
   private static Statement stmt;
 
-  private static Connection postgresqlConn;
+  private static Connection postgresqlConn, mysqlConn;
 
   @BeforeClass
   public static void setupH2Database() throws SQLException {
@@ -59,6 +60,7 @@ public class DbmsMetadataCacheTest {
     }
 
     postgresqlConn = DriverManager.getConnection("jdbc:postgresql://localhost/test", "postgres", "");
+    mysqlConn = DriverManager.getConnection("jdbc:mysql://localhost/test?autoReconnect=true&useSSL=false", "root", "");
   }
 
   @Test
@@ -98,6 +100,7 @@ public class DbmsMetadataCacheTest {
 
   @Test
   public void getPartitionTest() throws SQLException {
+    //Test PostgreSQL
     Statement statement = postgresqlConn.createStatement();
     DbmsMetadataCache postgresMetadataCache = new DbmsMetadataCache(new JdbcConnection(postgresqlConn, new PostgresqlSyntax()));
     statement.execute("DROP TABLE IF EXISTS measurement");
@@ -109,5 +112,13 @@ public class DbmsMetadataCacheTest {
     assertEquals(2, partition.size());
     assertEquals("logdate", partition.get(0));
     assertEquals("city_id", partition.get(1));
+    //Test MySQL
+    statement = mysqlConn.createStatement();
+    DbmsMetadataCache mysqlMetadataCache = new DbmsMetadataCache(new JdbcConnection(mysqlConn, new MysqlSyntax()));
+    statement.execute("DROP TABLE IF EXISTS tp");
+    statement.execute("CREATE TABLE tp (c1 INT, c2 INT, c3 VARCHAR(25)) PARTITION BY HASH(c1 + c2) PARTITIONS 4;");
+    partition = mysqlMetadataCache.getPartitionColumns("test", "tp");
+    assertEquals(1, partition.size());
+    assertEquals(true, partition.get(0).equals("c1 + c2")||partition.get(0).equals("(`c1` + `c2`)"));
   }
 }

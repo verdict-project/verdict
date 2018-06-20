@@ -81,7 +81,7 @@ public class JdbcResultSetTest {
     List<String> actual = new ArrayList<>();
     List<String> expected = Arrays.asList("female", "male");
     while (jdbcResultSet.next()) {
-      actual.add(jdbcResultSet.getString(0));
+      actual.add(jdbcResultSet.getString(1));
     }
     assertEquals(expected, actual);
   }
@@ -120,9 +120,9 @@ public class JdbcResultSetTest {
     jdbcResultSet = new JdbcResultSet(aggregateFrameQueryResult);
 
     while (jdbcResultSet.next()) {
-      if (jdbcResultSet.getString(0).equals("female")) {
-        assertEquals(3, jdbcResultSet.getInt(1));
-      } else assertEquals(5, jdbcResultSet.getInt(1));
+      if (jdbcResultSet.getString(1).equals("female")) {
+        assertEquals(3, jdbcResultSet.getInt(2));
+      } else assertEquals(5, jdbcResultSet.getInt(2));
     }
   }
 
@@ -140,7 +140,7 @@ public class JdbcResultSetTest {
     jdbcResultSet = new JdbcResultSet(aggregateFrameQueryResult);
 
     while (jdbcResultSet.next()) {
-      if (jdbcResultSet.getString(0).equals("female")) {
+      if (jdbcResultSet.getString(1).equals("female")) {
         assertEquals(3, jdbcResultSet.getInt("CNT"));
       } else assertEquals(5, jdbcResultSet.getInt("CNT"));
     }
@@ -160,9 +160,9 @@ public class JdbcResultSetTest {
     jdbcResultSet = new JdbcResultSet(aggregateFrameQueryResult);
 
     while (jdbcResultSet.next()) {
-      if (jdbcResultSet.getString(0).equals("female")) {
-        assertEquals(3, jdbcResultSet.getLong(1));
-      } else assertEquals(5, jdbcResultSet.getLong(1));
+      if (jdbcResultSet.getString(1).equals("female")) {
+        assertEquals(3, jdbcResultSet.getLong(2));
+      } else assertEquals(5, jdbcResultSet.getLong(2));
     }
   }
 
@@ -180,7 +180,7 @@ public class JdbcResultSetTest {
     jdbcResultSet = new JdbcResultSet(aggregateFrameQueryResult);
 
     while (jdbcResultSet.next()) {
-      if (jdbcResultSet.getString(0).equals("female")) {
+      if (jdbcResultSet.getString(1).equals("female")) {
         assertEquals(3, jdbcResultSet.getLong("CNT"));
       } else assertEquals(5, jdbcResultSet.getLong("CNT"));
     }
@@ -200,12 +200,12 @@ public class JdbcResultSetTest {
     jdbcResultSet = new JdbcResultSet(aggregateFrameQueryResult);
 
     while (jdbcResultSet.next()) {
-      if (jdbcResultSet.getString(0).equals("female")) {
+      if (jdbcResultSet.getString(1).equals("female")) {
         double expected = (170.2 + 156.5 + 190.21) / 3;
-        assertEquals(expected, jdbcResultSet.getDouble(2), 0.0001);
-      } else if (jdbcResultSet.getString(0).equals("male")) {
+        assertEquals(expected, jdbcResultSet.getDouble(3), 0.0001);
+      } else if (jdbcResultSet.getString(1).equals("male")) {
         double expected = (168.1 + 178.6 + 190.7 + 190.0 + 190.3) / 5;
-        assertEquals(expected, jdbcResultSet.getDouble(2), 0.0001);
+        assertEquals(expected, jdbcResultSet.getDouble(3), 0.0001);
       }
     }
   }
@@ -224,10 +224,10 @@ public class JdbcResultSetTest {
     jdbcResultSet = new JdbcResultSet(aggregateFrameQueryResult);
 
     while (jdbcResultSet.next()) {
-      if (jdbcResultSet.getString(0).equals("female")) {
+      if (jdbcResultSet.getString(1).equals("female")) {
         double expected = (170.2 + 156.5 + 190.21) / 3;
         assertEquals(expected, jdbcResultSet.getDouble("A"), 0.0001);
-      } else if (jdbcResultSet.getString(0).equals("male")) {
+      } else if (jdbcResultSet.getString(1).equals("male")) {
         double expected = (168.1 + 178.6 + 190.7 + 190.0 + 190.3) / 5;
         assertEquals(expected, jdbcResultSet.getDouble("A"), 0.0001);
       }
@@ -248,12 +248,12 @@ public class JdbcResultSetTest {
     jdbcResultSet = new JdbcResultSet(aggregateFrameQueryResult);
 
     while (jdbcResultSet.next()) {
-      if (jdbcResultSet.getString(0).equals("female")) {
+      if (jdbcResultSet.getString(1).equals("female")) {
         double expected = (170.2 + 156.5 + 190.21) / 3;
-        assertEquals(expected, jdbcResultSet.getFloat(2), 0.0001);
-      } else if (jdbcResultSet.getString(0).equals("male")) {
+        assertEquals(expected, jdbcResultSet.getFloat(3), 0.0001);
+      } else if (jdbcResultSet.getString(1).equals("male")) {
         double expected = (168.1 + 178.6 + 190.7 + 190.0 + 190.3) / 5;
-        assertEquals(expected, jdbcResultSet.getFloat(2), 0.0001);
+        assertEquals(expected, jdbcResultSet.getFloat(3), 0.0001);
       }
     }
   }
@@ -272,10 +272,10 @@ public class JdbcResultSetTest {
     jdbcResultSet = new JdbcResultSet(aggregateFrameQueryResult);
 
     while (jdbcResultSet.next()) {
-      if (jdbcResultSet.getString(0).equals("female")) {
+      if (jdbcResultSet.getString(1).equals("female")) {
         double expected = (170.2 + 156.5 + 190.21) / 3;
         assertEquals(expected, jdbcResultSet.getFloat("A"), 0.0001);
-      } else if (jdbcResultSet.getString(0).equals("male")) {
+      } else if (jdbcResultSet.getString(1).equals("male")) {
         double expected = (168.1 + 178.6 + 190.7 + 190.0 + 190.3) / 5;
         assertEquals(expected, jdbcResultSet.getFloat("A"), 0.0001);
       }
@@ -296,13 +296,13 @@ public class JdbcResultSetTest {
     jdbcResultSet = new JdbcResultSet(aggregateFrameQueryResult);
 
     while (jdbcResultSet.next()) {
-      if (jdbcResultSet.getString(0).equals("female")) {
+      if (jdbcResultSet.getString(1).equals("female")) {
         double expected = (170.2 + 156.5 + 190.21) / 3;
         assertEquals((int)expected, jdbcResultSet.getInt("A"));
         assertEquals((long)expected, jdbcResultSet.getLong("A"));
         assertEquals((short)expected, jdbcResultSet.getShort("A"));
         assertEquals((long)expected, jdbcResultSet.getBigDecimal("A").longValue());
-      } else if (jdbcResultSet.getString(0).equals("male")) {
+      } else if (jdbcResultSet.getString(1).equals("male")) {
         double expected = (168.1 + 178.6 + 190.7 + 190.0 + 190.3) / 5;
         assertEquals((int)expected, jdbcResultSet.getInt("A"));
         assertEquals((long)expected, jdbcResultSet.getLong("A"));
@@ -326,16 +326,16 @@ public class JdbcResultSetTest {
     jdbcResultSet = new JdbcResultSet(aggregateFrameQueryResult);
 
     while (jdbcResultSet.next()) {
-      if (jdbcResultSet.getString(0).equals("female")) {
+      if (jdbcResultSet.getString(1).equals("female")) {
         int expected = 3;
-        assertEquals((float) expected, jdbcResultSet.getFloat(1), 0.0001);
-        assertEquals((double)expected, jdbcResultSet.getBigDecimal(1).doubleValue(), 0.0001);
-        assertEquals((double)expected, jdbcResultSet.getDouble(1), 0.0001);
-      } else if (jdbcResultSet.getString(0).equals("male")) {
+        assertEquals((float) expected, jdbcResultSet.getFloat(2), 0.0001);
+        assertEquals((double)expected, jdbcResultSet.getBigDecimal(2).doubleValue(), 0.0001);
+        assertEquals((double)expected, jdbcResultSet.getDouble(2), 0.0001);
+      } else if (jdbcResultSet.getString(1).equals("male")) {
         int expected = 5;
-        assertEquals((float) expected, jdbcResultSet.getFloat(1), 0.0001);
-        assertEquals((double)expected, jdbcResultSet.getBigDecimal(1).doubleValue(), 0.0001);
-        assertEquals((double)expected, jdbcResultSet.getDouble(1), 0.0001);
+        assertEquals((float) expected, jdbcResultSet.getFloat(2), 0.0001);
+        assertEquals((double)expected, jdbcResultSet.getBigDecimal(2).doubleValue(), 0.0001);
+        assertEquals((double)expected, jdbcResultSet.getDouble(2), 0.0001);
       }
     }
   }
@@ -355,10 +355,10 @@ public class JdbcResultSetTest {
 
     while (jdbcResultSet.next()) {
       Timestamp timestamp = Timestamp.valueOf("2017-10-12 21:22:23.0");
-      assertEquals(timestamp, jdbcResultSet.getTimestamp(0));
+      assertEquals(timestamp, jdbcResultSet.getTimestamp(1));
       assertEquals(timestamp, jdbcResultSet.getTimestamp("BIRTH"));
-      assertEquals(new Date(timestamp.getTime()), jdbcResultSet.getDate(0));
-      assertEquals(new Time(timestamp.getTime()), jdbcResultSet.getTime(0));
+      assertEquals(new Date(timestamp.getTime()), jdbcResultSet.getDate(1));
+      assertEquals(new Time(timestamp.getTime()), jdbcResultSet.getTime(1));
     }
   }
 
@@ -376,9 +376,9 @@ public class JdbcResultSetTest {
     jdbcResultSet = new JdbcResultSet(aggregateFrameQueryResult);
 
     while (jdbcResultSet.next()) {
-      byte[] bin = jdbcResultSet.getBytes(2);
+      byte[] bin = jdbcResultSet.getBytes(3);
       assertEquals(12, bin[3]);
-      InputStream binStream = jdbcResultSet.getBinaryStream(2);
+      InputStream binStream = jdbcResultSet.getBinaryStream(3);
       assertEquals(0, binStream.read());
       assertEquals(0, binStream.read());
       assertEquals(0, binStream.read());
@@ -400,9 +400,9 @@ public class JdbcResultSetTest {
     jdbcResultSet = new JdbcResultSet(aggregateFrameQueryResult);
 
     while (jdbcResultSet.next()) {
-      byte[] bin = jdbcResultSet.getBytes(2);
+      byte[] bin = jdbcResultSet.getBytes(3);
       assertEquals(12, bin[3]);
-      InputStream binStream = jdbcResultSet.getBinaryStream(2);
+      InputStream binStream = jdbcResultSet.getBinaryStream(3);
       assertEquals(0, binStream.read());
       assertEquals(0, binStream.read());
       assertEquals(0, binStream.read());
@@ -424,9 +424,9 @@ public class JdbcResultSetTest {
     jdbcResultSet = new JdbcResultSet(aggregateFrameQueryResult);
 
     while (jdbcResultSet.next()) {
-      byte[] bin = jdbcResultSet.getBytes(2);
+      byte[] bin = jdbcResultSet.getBytes(3);
       assertEquals(12, bin[3]);
-      InputStream binStream = jdbcResultSet.getBinaryStream(2);
+      InputStream binStream = jdbcResultSet.getBinaryStream(3);
       assertEquals(0, binStream.read());
       assertEquals(0, binStream.read());
       assertEquals(0, binStream.read());
@@ -448,11 +448,11 @@ public class JdbcResultSetTest {
     jdbcResultSet = new JdbcResultSet(aggregateFrameQueryResult);
 
     while (jdbcResultSet.next()) {
-      byte bin = jdbcResultSet.getByte(2);
+      byte bin = jdbcResultSet.getByte(3);
       assertEquals(0, bin);
-      boolean b = jdbcResultSet.getBoolean(2);
+      boolean b = jdbcResultSet.getBoolean(3);
       assertEquals(false, b);
-      int i = jdbcResultSet.getInt(2);
+      int i = jdbcResultSet.getInt(3);
       assertEquals(0, i);
     }
   }
@@ -471,7 +471,7 @@ public class JdbcResultSetTest {
     jdbcResultSet = new JdbcResultSet(aggregateFrameQueryResult);
 
     while (jdbcResultSet.next()) {
-      Blob bin = jdbcResultSet.getBlob(2);
+      Blob bin = jdbcResultSet.getBlob(3);
       byte[] b = bin.getBytes(0,4);
       assertEquals(25, b[0]);
       assertEquals(8, b[1]);
@@ -494,9 +494,9 @@ public class JdbcResultSetTest {
     jdbcResultSet = new JdbcResultSet(aggregateFrameQueryResult);
 
     while (jdbcResultSet.next()) {
-      Boolean b = jdbcResultSet.getBoolean(2);
+      Boolean b = jdbcResultSet.getBoolean(3);
       assertEquals(false, b);
-      int i = jdbcResultSet.getInt(2);
+      int i = jdbcResultSet.getInt(3);
       assertEquals(0, i);
     }
   }
@@ -515,7 +515,7 @@ public class JdbcResultSetTest {
     jdbcResultSet = new JdbcResultSet(aggregateFrameQueryResult);
 
     while (jdbcResultSet.next()) {
-      Clob bin = jdbcResultSet.getClob(2);
+      Clob bin = jdbcResultSet.getClob(3);
       assertEquals(8, bin.length());
     }
   }
@@ -534,7 +534,7 @@ public class JdbcResultSetTest {
     jdbcResultSet = new JdbcResultSet(aggregateFrameQueryResult);
 
     while (jdbcResultSet.next()) {
-      Array a = jdbcResultSet.getArray(2);
+      Array a = jdbcResultSet.getArray(3);
       Object[] arr = (Object[])a.getArray();
       assertEquals(3, arr.length);
       assertEquals(1, arr[0]);

@@ -1,6 +1,6 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.verdictdb</groupId>
     <artifactId>verdictdb</artifactId>
@@ -15,7 +15,7 @@
         <antlr4.version>4.5.3</antlr4.version>
         <apache.commons.version>3.5</apache.commons.version>
         <junit.version>4.12</junit.version>
-        <google.guava.version>19.0</google.guava.version>
+        <google.guava.version>11.0.2</google.guava.version>
         <maven.java.version>1.7</maven.java.version>
         <maven.source-plugin.version>3.0.1</maven.source-plugin.version>
         <maven.compiler-plugin.version>3.7.0</maven.compiler-plugin.version>
@@ -69,6 +69,37 @@
                 <configuration>
                     <source>1.7</source>
                     <target>1.7</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.17</version>
+                <configuration>
+                    <forkMode>always</forkMode>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.17</version>
+                <configuration>
+                    <systemProperties>
+                        <enableTimeout>true</enableTimeout>
+                        <timeoutSeconds>100</timeoutSeconds>
+                        <timeoutRetries>2</timeoutRetries>
+                    </systemProperties>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.17</version>
+                <configuration>
+                    <forkCount>1C</forkCount>
+                    <reuseForks>true</reuseForks>
+                    <argLine>-Xmx2048m -XX:MaxPermSize=512m</argLine>
                 </configuration>
             </plugin>
             <!--&lt;!&ndash; Spark test support &ndash;&gt; -->
@@ -126,10 +157,23 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>5.1.46</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.klarna</groupId>
+            <artifactId>hiverunner</artifactId>
+            <version>3.2.1</version>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 </project>

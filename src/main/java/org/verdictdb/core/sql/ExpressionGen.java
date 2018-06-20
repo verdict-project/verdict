@@ -15,11 +15,13 @@ import org.verdictdb.parser.VerdictSQLParser;
 
 public class ExpressionGen extends VerdictSQLBaseVisitor<UnnamedColumn> {
 
-    private MetaData meta;
+//    private MetaData meta;
 
-    public ExpressionGen(MetaData meta) {
-        this.meta = meta;
-    }
+//    public ExpressionGen(MetaData meta) {
+//        this.meta = meta;
+//    }
+    
+  public ExpressionGen() {}
 
     @Override
     public ColumnOp visitInterval(VerdictSQLParser.IntervalContext ctx) {
@@ -92,7 +94,7 @@ public class ExpressionGen extends VerdictSQLBaseVisitor<UnnamedColumn> {
                 String fname;
                 UnnamedColumn col = null;
                 if (ctx.all_distinct_expression() != null) {
-                    ExpressionGen g = new ExpressionGen(meta);
+                    ExpressionGen g = new ExpressionGen();
                     col = g.visit(ctx.all_distinct_expression());
                 }
 
@@ -155,7 +157,7 @@ public class ExpressionGen extends VerdictSQLBaseVisitor<UnnamedColumn> {
             public ColumnOp visitBinary_manipulation_function(
                     VerdictSQLParser.Binary_manipulation_functionContext ctx) {
                 String fname = ctx.function_name.getText().toLowerCase();
-                ExpressionGen g = new ExpressionGen(meta);
+                ExpressionGen g = new ExpressionGen();
                 return new ColumnOp(fname, Arrays.<UnnamedColumn>asList(
                         g.visit(ctx.expression(0)),
                         g.visit(ctx.expression(1))
@@ -166,7 +168,7 @@ public class ExpressionGen extends VerdictSQLBaseVisitor<UnnamedColumn> {
             public ColumnOp visitTernary_manipulation_function(
                     VerdictSQLParser.Ternary_manipulation_functionContext ctx) {
                 String fname = ctx.function_name.getText().toLowerCase();
-                ExpressionGen g = new ExpressionGen(meta);
+                ExpressionGen g = new ExpressionGen();
                 return new ColumnOp(fname, Arrays.<UnnamedColumn>asList(
                         g.visit(ctx.expression(0)),
                         g.visit(ctx.expression(1)),
@@ -233,12 +235,12 @@ public class ExpressionGen extends VerdictSQLBaseVisitor<UnnamedColumn> {
 
     @Override
     public SubqueryColumn visitSubquery_expression(VerdictSQLParser.Subquery_expressionContext ctx) {
-        RelationGen g = new RelationGen(meta);
+        RelationGen g = new RelationGen();
         return SubqueryColumn.getSubqueryColumn((SelectQueryOp) g.visit(ctx.subquery().select_statement()));
     }
 
     public UnnamedColumn getSearch_condition(List<VerdictSQLParser.Search_conditionContext> ctx) {
-        CondGen g = new CondGen(meta);
+        CondGen g = new CondGen();
         if (ctx.size()==1) {
             return g.visit(ctx.get(0));
         } else {

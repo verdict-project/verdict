@@ -22,13 +22,15 @@ import org.verdictdb.parser.VerdictSQLParser;
 
 public class RelationGen extends VerdictSQLBaseVisitor<AbstractRelation> {
 
-  private MetaData meta;
+//  private MetaData meta;
 
   private List<SelectItem> selectElems = new ArrayList<>();
 
-  public RelationGen(MetaData meta) {
-    this.meta = meta;
-  }
+//  public RelationGen(MetaData meta) {
+//    this.meta = meta;
+//  }
+  
+  public RelationGen() {}
 
   @Override
   public SelectQueryOp visitSelect_statement(VerdictSQLParser.Select_statementContext ctx) {
@@ -36,7 +38,7 @@ public class RelationGen extends VerdictSQLBaseVisitor<AbstractRelation> {
 
     if (ctx.order_by_clause() != null) {
       for (VerdictSQLParser.Order_by_expressionContext o : ctx.order_by_clause().order_by_expression()) {
-        ExpressionGen g = new ExpressionGen(meta);
+        ExpressionGen g = new ExpressionGen();
         UnnamedColumn c = g.visit(o.expression());
         OrderbyAttribute orderbyCol = null;
         if (c instanceof BaseColumn) {
@@ -106,7 +108,7 @@ public class RelationGen extends VerdictSQLBaseVisitor<AbstractRelation> {
                   elem = new AsteriskColumn(ctx.table_name().getText());
                 }
               } else {
-                ExpressionGen g = new ExpressionGen(meta);
+                ExpressionGen g = new ExpressionGen();
                 if (g.visit(ctx.expression()) instanceof BaseColumn) {
                   elem = g.visit(ctx.expression());
                   if (ctx.column_alias() != null) {
@@ -142,7 +144,7 @@ public class RelationGen extends VerdictSQLBaseVisitor<AbstractRelation> {
     // parse the where clause;
     UnnamedColumn where = null;
     if (ctx.WHERE() != null) {
-      CondGen g = new CondGen(meta);
+      CondGen g = new CondGen();
       where = g.visit(ctx.where);
     }
 
@@ -162,9 +164,13 @@ public class RelationGen extends VerdictSQLBaseVisitor<AbstractRelation> {
     if (ctx.GROUP() != null) {
       List<GroupingAttribute> groupby = new ArrayList<GroupingAttribute>();
       for (VerdictSQLParser.Group_by_itemContext g : ctx.group_by_item()) {
+        
         class GroupbyGen extends VerdictSQLBaseVisitor<GroupingAttribute> {
-          MetaData meta;
-          public GroupbyGen(MetaData meta) {this.meta = meta; }
+          
+//          MetaData meta;
+//          public GroupbyGen(MetaData meta) {this.meta = meta; }
+          public GroupbyGen() {}
+          
           @Override
           public GroupingAttribute visitColumn_ref_expression(VerdictSQLParser.Column_ref_expressionContext ctx) {
             String[] t = ctx.getText().split("\\.");
@@ -175,7 +181,7 @@ public class RelationGen extends VerdictSQLBaseVisitor<AbstractRelation> {
             }
           }
         }
-        GroupbyGen expg = new GroupbyGen(meta);
+        GroupbyGen expg = new GroupbyGen();
         GroupingAttribute gexpr = expg.visit(g);
         boolean aliasFound = false;
         if (!aliasFound) {
@@ -189,7 +195,7 @@ public class RelationGen extends VerdictSQLBaseVisitor<AbstractRelation> {
 
     UnnamedColumn having = null;
     if (ctx.HAVING() != null){
-      CondGen g = new CondGen(meta);
+      CondGen g = new CondGen();
       having = g.visit(ctx.having);
     }
     if (having != null){
@@ -226,7 +232,7 @@ public class RelationGen extends VerdictSQLBaseVisitor<AbstractRelation> {
   public AbstractRelation visitJoin_part(VerdictSQLParser.Join_partContext ctx) {
     if (ctx.INNER() != null) {
       AbstractRelation r = this.visit(ctx.table_source());
-      CondGen g = new CondGen(meta);
+      CondGen g = new CondGen();
       UnnamedColumn cond = g.visit(ctx.search_condition());
       joinType = JoinTable.JoinType.inner;
       joinCond = cond;
@@ -234,7 +240,7 @@ public class RelationGen extends VerdictSQLBaseVisitor<AbstractRelation> {
     }
     else if (ctx.LEFT() != null) {
       AbstractRelation r = this.visit(ctx.table_source());
-      CondGen g = new CondGen(meta);
+      CondGen g = new CondGen();
       UnnamedColumn cond = g.visit(ctx.search_condition());
       joinType = JoinTable.JoinType.leftouter;
       joinCond = cond;
@@ -242,7 +248,7 @@ public class RelationGen extends VerdictSQLBaseVisitor<AbstractRelation> {
     }
     else if (ctx.RIGHT() != null) {
       AbstractRelation r = this.visit(ctx.table_source());
-      CondGen g = new CondGen(meta);
+      CondGen g = new CondGen();
       UnnamedColumn cond = g.visit(ctx.search_condition());
       joinType = JoinTable.JoinType.rightouter;
       joinCond = cond;
@@ -250,7 +256,7 @@ public class RelationGen extends VerdictSQLBaseVisitor<AbstractRelation> {
     }
     else {
       AbstractRelation r = this.visit(ctx.table_source());
-      CondGen g = new CondGen(meta);
+      CondGen g = new CondGen();
       UnnamedColumn cond = g.visit(ctx.search_condition());
       joinType = JoinTable.JoinType.inner;
       joinCond = cond;
@@ -287,7 +293,7 @@ public class RelationGen extends VerdictSQLBaseVisitor<AbstractRelation> {
 
   @Override
   public AbstractRelation visitDerived_table_source_item(VerdictSQLParser.Derived_table_source_itemContext ctx) {
-    RelationGen gen = new RelationGen(meta);
+    RelationGen gen = new RelationGen();
     SelectQueryOp r = (SelectQueryOp) gen.visit(ctx.derived_table().subquery().select_statement());
     if (ctx.as_table_alias() != null) {
       r.setAliasName(ctx.as_table_alias().table_alias().getText());

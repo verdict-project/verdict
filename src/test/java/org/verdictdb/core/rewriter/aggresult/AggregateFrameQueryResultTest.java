@@ -1,0 +1,29 @@
+package org.verdictdb.core.rewriter.aggresult;
+
+import static org.junit.Assert.*;
+
+import java.util.Arrays;
+import java.util.List;
+
+import org.junit.Test;
+import org.verdictdb.connection.DbmsQueryResult;
+import org.verdictdb.core.aggresult.AggregateFrame;
+import org.verdictdb.core.aggresult.AggregateGroup;
+import org.verdictdb.core.aggresult.AggregateMeasures;
+import org.verdictdb.exception.ValueException;
+
+public class AggregateFrameQueryResultTest {
+
+  @Test
+  public void testToDbmsQueryResult() throws ValueException {
+    List<String> orderedColumnNames = Arrays.asList("col1", "col2");
+    AggregateFrame aggframe = new AggregateFrame(orderedColumnNames);
+    AggregateGroup group = new AggregateGroup(Arrays.asList("col2"), Arrays.asList((Object) "group1"));
+    AggregateMeasures measures = new AggregateMeasures(Arrays.asList("col1"), Arrays.asList((Object) "value1"));
+    aggframe.addRow(group, measures);
+    
+    DbmsQueryResult result = aggframe.toDbmsQueryResult();
+    result.printContent();
+  }
+
+}

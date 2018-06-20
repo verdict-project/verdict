@@ -63,8 +63,8 @@ public class JdbcResultSet implements ResultSet {
   }
 
   private boolean isValidType(String expected, int columnindex){
-    String actual = DataTypeConverter.typeName(queryResult.getColumnType(columnindex));
-    if (queryResult.getColumnType(columnindex) == DOUBLE) actual = "real";
+    String actual = DataTypeConverter.typeName(queryResult.getColumnType(columnindex-1));
+    if (queryResult.getColumnType(columnindex-1) == DOUBLE) actual = "real";
     if (expected.equals("boolean")) {
       return numericType.contains(actual) || actual.equals("boolean") || actual.equals("bit");
     }
@@ -154,14 +154,14 @@ public class JdbcResultSet implements ResultSet {
 
   @Override
   public String getString(int columnIndex) throws SQLException {
-    lastValue = String.valueOf(queryResult.getValue(columnIndex));
+    lastValue = String.valueOf(queryResult.getValue(columnIndex-1));
     return (String)lastValue;
   }
 
   @Override
   public boolean getBoolean(int columnIndex) throws SQLException {
     if (isValidType("boolean", columnIndex)) {
-      lastValue = queryResult.getValue(columnIndex);
+      lastValue = queryResult.getValue(columnIndex-1);
       return (boolean)lastValue;
     }
     else throw new SQLException("Not supported data type.");
@@ -171,11 +171,11 @@ public class JdbcResultSet implements ResultSet {
   public byte getByte(int columnIndex) throws SQLException {
     try {
       if (isValidType("byte", columnIndex)) {
-        lastValue = TypeCasting.toByte(queryResult.getValue(columnIndex));
+        lastValue = TypeCasting.toByte(queryResult.getValue(columnIndex-1));
         return (byte)lastValue;
       }
       else {
-        throw new UnexpectedTypeException(queryResult.getValue(columnIndex));
+        throw new UnexpectedTypeException(queryResult.getValue(columnIndex-1));
       }
     }
     catch (UnexpectedTypeException e) {
@@ -187,11 +187,11 @@ public class JdbcResultSet implements ResultSet {
   public short getShort(int columnIndex) throws SQLException {
     try {
       if (isValidType("short", columnIndex)) {
-        lastValue = TypeCasting.toShort(queryResult.getValue(columnIndex));
+        lastValue = TypeCasting.toShort(queryResult.getValue(columnIndex-1));
         return (short)lastValue;
       }
       else {
-        throw new UnexpectedTypeException(queryResult.getValue(columnIndex));
+        throw new UnexpectedTypeException(queryResult.getValue(columnIndex-1));
       }
     }
     catch (UnexpectedTypeException e) {
@@ -203,11 +203,11 @@ public class JdbcResultSet implements ResultSet {
   public int getInt(int columnIndex) throws SQLException {
     try {
       if (isValidType("int", columnIndex)) {
-        lastValue = TypeCasting.toInteger(queryResult.getValue(columnIndex));
+        lastValue = TypeCasting.toInteger(queryResult.getValue(columnIndex-1));
         return (int)lastValue;
       }
       else {
-        throw new UnexpectedTypeException(queryResult.getValue(columnIndex));
+        throw new UnexpectedTypeException(queryResult.getValue(columnIndex-1));
       }
     }
     catch (UnexpectedTypeException e) {
@@ -219,11 +219,11 @@ public class JdbcResultSet implements ResultSet {
   public long getLong(int columnIndex) throws SQLException {
     try {
       if (isValidType("long", columnIndex)) {
-        lastValue = TypeCasting.toLong(queryResult.getValue(columnIndex));
+        lastValue = TypeCasting.toLong(queryResult.getValue(columnIndex-1));
         return (long)lastValue;
       }
       else {
-        throw new UnexpectedTypeException(queryResult.getValue(columnIndex));
+        throw new UnexpectedTypeException(queryResult.getValue(columnIndex-1));
       }
     }
     catch (UnexpectedTypeException e) {
@@ -235,11 +235,11 @@ public class JdbcResultSet implements ResultSet {
   public float getFloat(int columnIndex) throws SQLException {
     try {
       if (isValidType("float", columnIndex)) {
-        lastValue = TypeCasting.toFloat(queryResult.getValue(columnIndex));
+        lastValue = TypeCasting.toFloat(queryResult.getValue(columnIndex-1));
         return (float)lastValue;
       }
       else {
-        throw new UnexpectedTypeException(queryResult.getValue(columnIndex));
+        throw new UnexpectedTypeException(queryResult.getValue(columnIndex-1));
       }
     }
     catch (UnexpectedTypeException e) {
@@ -251,11 +251,11 @@ public class JdbcResultSet implements ResultSet {
   public double getDouble(int columnIndex) throws SQLException {
     try {
       if (isValidType("double", columnIndex)) {
-        lastValue = TypeCasting.toDouble(queryResult.getValue(columnIndex));
+        lastValue = TypeCasting.toDouble(queryResult.getValue(columnIndex-1));
         return (double)lastValue;
       }
       else {
-        throw new UnexpectedTypeException(queryResult.getValue(columnIndex));
+        throw new UnexpectedTypeException(queryResult.getValue(columnIndex-1));
       }
     }
     catch (UnexpectedTypeException e) {
@@ -267,11 +267,11 @@ public class JdbcResultSet implements ResultSet {
   public BigDecimal getBigDecimal(int columnIndex, int scale) throws SQLException {
     try {
       if (isValidType("bigdecimal", columnIndex)) {
-        lastValue = TypeCasting.toBigDecimal(queryResult.getValue(columnIndex), scale);
+        lastValue = TypeCasting.toBigDecimal(queryResult.getValue(columnIndex-1), scale);
         return (BigDecimal) lastValue;
       }
       else {
-        throw new UnexpectedTypeException(queryResult.getValue(columnIndex));
+        throw new UnexpectedTypeException(queryResult.getValue(columnIndex-1));
       }
     }
     catch (UnexpectedTypeException e) {
@@ -282,7 +282,7 @@ public class JdbcResultSet implements ResultSet {
   @Override
   public byte[] getBytes(int columnIndex) throws SQLException {
    if (isValidType("bytes", columnIndex)) {
-      lastValue = queryResult.getValue(columnIndex);
+      lastValue = queryResult.getValue(columnIndex-1);
       return (byte[])lastValue;
     }
     else throw new SQLException("Not supported data type.");
@@ -291,14 +291,14 @@ public class JdbcResultSet implements ResultSet {
   @Override
   public Date getDate(int columnIndex) throws SQLException {
     if (isValidType("date", columnIndex)) {
-      if (queryResult.getValue(columnIndex) instanceof Date){
-        lastValue = queryResult.getValue(columnIndex);
+      if (queryResult.getValue(columnIndex-1) instanceof Date){
+        lastValue = queryResult.getValue(columnIndex-1);
       }
-      else if (queryResult.getValue(columnIndex) instanceof Timestamp) {
-        lastValue  = new Date(((Timestamp)(queryResult.getValue(columnIndex))).getTime());
+      else if (queryResult.getValue(columnIndex-1) instanceof Timestamp) {
+        lastValue  = new Date(((Timestamp)(queryResult.getValue(columnIndex-1))).getTime());
       }
-      else if (queryResult.getValue(columnIndex) instanceof Time) {
-        lastValue =  new Date(((Time)(queryResult.getValue(columnIndex))).getTime());
+      else if (queryResult.getValue(columnIndex-1) instanceof Time) {
+        lastValue =  new Date(((Time)(queryResult.getValue(columnIndex-1))).getTime());
       }
       return (Date) lastValue;
     }
@@ -308,14 +308,14 @@ public class JdbcResultSet implements ResultSet {
   @Override
   public Time getTime(int columnIndex) throws SQLException {
     if (isValidType("time", columnIndex)) {
-      if (queryResult.getValue(columnIndex) instanceof Date){
-        lastValue  = new Time(((Date)(queryResult.getValue(columnIndex))).getTime());
+      if (queryResult.getValue(columnIndex-1) instanceof Date){
+        lastValue  = new Time(((Date)(queryResult.getValue(columnIndex-1))).getTime());
       }
-      else if (queryResult.getValue(columnIndex) instanceof Timestamp) {
-        lastValue  = new Time(((Timestamp)(queryResult.getValue(columnIndex))).getTime());
+      else if (queryResult.getValue(columnIndex-1) instanceof Timestamp) {
+        lastValue  = new Time(((Timestamp)(queryResult.getValue(columnIndex-1))).getTime());
       }
-      else if (queryResult.getValue(columnIndex) instanceof Time) {
-        lastValue = queryResult.getValue(columnIndex);
+      else if (queryResult.getValue(columnIndex-1) instanceof Time) {
+        lastValue = queryResult.getValue(columnIndex-1);
       }
       return (Time)lastValue;
     }
@@ -325,14 +325,14 @@ public class JdbcResultSet implements ResultSet {
   @Override
   public Timestamp getTimestamp(int columnIndex) throws SQLException {
     if (isValidType("timestamp", columnIndex)) {
-      if (queryResult.getValue(columnIndex) instanceof Date){
-        lastValue  = new Timestamp(((Date)(queryResult.getValue(columnIndex))).getTime());
+      if (queryResult.getValue(columnIndex-1) instanceof Date){
+        lastValue  = new Timestamp(((Date)(queryResult.getValue(columnIndex-1))).getTime());
       }
-      else if (queryResult.getValue(columnIndex) instanceof Time) {
-        lastValue  = new Timestamp(((Time)(queryResult.getValue(columnIndex))).getTime());
+      else if (queryResult.getValue(columnIndex-1) instanceof Time) {
+        lastValue  = new Timestamp(((Time)(queryResult.getValue(columnIndex-1))).getTime());
       }
-      else if (queryResult.getValue(columnIndex) instanceof Timestamp) {
-        lastValue = queryResult.getValue(columnIndex);
+      else if (queryResult.getValue(columnIndex-1) instanceof Timestamp) {
+        lastValue = queryResult.getValue(columnIndex-1);
       }
       return (Timestamp) lastValue;
     }
@@ -342,7 +342,7 @@ public class JdbcResultSet implements ResultSet {
   @Override
   public InputStream getAsciiStream(int columnIndex) throws SQLException {
     if (isValidType("asciistream", columnIndex)) {
-      lastValue = queryResult.getValue(columnIndex);
+      lastValue = queryResult.getValue(columnIndex-1);
       return (InputStream) lastValue;
     }
     else throw new SQLException("Not supported data type.");
@@ -351,7 +351,7 @@ public class JdbcResultSet implements ResultSet {
   @Override
   public InputStream getUnicodeStream(int columnIndex) throws SQLException {
     if (isValidType("unicodestream", columnIndex)) {
-      lastValue = queryResult.getValue(columnIndex);
+      lastValue = queryResult.getValue(columnIndex-1);
       return (InputStream) lastValue;
     }
     else throw new SQLException("Not supported data type.");
@@ -360,7 +360,7 @@ public class JdbcResultSet implements ResultSet {
   @Override
   public InputStream getBinaryStream(int columnIndex) throws SQLException {
     if (isValidType("binarystream", columnIndex)) {
-      lastValue = queryResult.getValue(columnIndex);
+      lastValue = queryResult.getValue(columnIndex-1);
       if (lastValue instanceof byte[]){
         ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream((byte[]) lastValue);
         return byteArrayInputStream;
@@ -377,7 +377,7 @@ public class JdbcResultSet implements ResultSet {
   @Override
   public String getString(String columnLabel) throws SQLException {
     if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
-      return getString(colNameIdx.get(standardizedLabel(columnLabel.toLowerCase())));
+      return getString(colNameIdx.get(standardizedLabel(columnLabel.toLowerCase())) + 1);
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }
@@ -385,7 +385,7 @@ public class JdbcResultSet implements ResultSet {
   @Override
   public boolean getBoolean(String columnLabel) throws SQLException {
     if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
-      return getBoolean(colNameIdx.get(standardizedLabel(columnLabel)));
+      return getBoolean(colNameIdx.get(standardizedLabel(columnLabel.toLowerCase())) + 1);
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }
@@ -393,7 +393,7 @@ public class JdbcResultSet implements ResultSet {
   @Override
   public byte getByte(String columnLabel) throws SQLException {
     if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
-      return getByte(colNameIdx.get(standardizedLabel(columnLabel)));
+      return getByte(colNameIdx.get(standardizedLabel(columnLabel.toLowerCase())) + 1);
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }
@@ -401,7 +401,7 @@ public class JdbcResultSet implements ResultSet {
   @Override
   public short getShort(String columnLabel) throws SQLException {
     if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
-      return getShort(colNameIdx.get(standardizedLabel(columnLabel)));
+      return getShort(colNameIdx.get(standardizedLabel(columnLabel.toLowerCase())) + 1);
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }
@@ -409,7 +409,7 @@ public class JdbcResultSet implements ResultSet {
   @Override
   public int getInt(String columnLabel) throws SQLException {
    if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
-      return getInt(colNameIdx.get(standardizedLabel(columnLabel)));
+      return getInt(colNameIdx.get(standardizedLabel(columnLabel.toLowerCase())) + 1);
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }
@@ -417,7 +417,7 @@ public class JdbcResultSet implements ResultSet {
   @Override
   public long getLong(String columnLabel) throws SQLException {
     if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
-      return getLong(colNameIdx.get(standardizedLabel(columnLabel)));
+      return getLong(colNameIdx.get(standardizedLabel(columnLabel.toLowerCase())) + 1);
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }
@@ -425,7 +425,7 @@ public class JdbcResultSet implements ResultSet {
   @Override
   public float getFloat(String columnLabel) throws SQLException {
     if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
-      return getFloat(colNameIdx.get(standardizedLabel(columnLabel)));
+      return getFloat(colNameIdx.get(standardizedLabel(columnLabel.toLowerCase())) + 1);
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }
@@ -433,7 +433,7 @@ public class JdbcResultSet implements ResultSet {
   @Override
   public double getDouble(String columnLabel) throws SQLException {
     if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
-      return getDouble(colNameIdx.get(standardizedLabel(columnLabel)));
+      return getDouble(colNameIdx.get(standardizedLabel(columnLabel.toLowerCase())) + 1);
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }
@@ -441,7 +441,7 @@ public class JdbcResultSet implements ResultSet {
   @Override
   public BigDecimal getBigDecimal(String columnLabel, int scale) throws SQLException {
     if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
-      return getBigDecimal(colNameIdx.get(standardizedLabel(columnLabel)), scale);
+      return getBigDecimal(colNameIdx.get(standardizedLabel(columnLabel.toLowerCase())) + 1);
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }
@@ -449,7 +449,7 @@ public class JdbcResultSet implements ResultSet {
   @Override
   public byte[] getBytes(String columnLabel) throws SQLException {
     if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
-      return getBytes(colNameIdx.get(standardizedLabel(columnLabel)));
+      return getBytes(colNameIdx.get(standardizedLabel(columnLabel.toLowerCase())) + 1);
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }
@@ -457,7 +457,7 @@ public class JdbcResultSet implements ResultSet {
   @Override
   public Date getDate(String columnLabel) throws SQLException {
    if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
-      return getDate(colNameIdx.get(standardizedLabel(columnLabel)));
+      return getDate(colNameIdx.get(standardizedLabel(columnLabel.toLowerCase())) + 1);
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }
@@ -465,7 +465,7 @@ public class JdbcResultSet implements ResultSet {
   @Override
   public Time getTime(String columnLabel) throws SQLException {
     if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
-      return getTime(colNameIdx.get(standardizedLabel(columnLabel)));
+      return getTime(colNameIdx.get(standardizedLabel(columnLabel.toLowerCase())) + 1);
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }
@@ -473,7 +473,7 @@ public class JdbcResultSet implements ResultSet {
   @Override
   public Timestamp getTimestamp(String columnLabel) throws SQLException {
     if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
-      return getTimestamp(colNameIdx.get(standardizedLabel(columnLabel)));
+      return getTimestamp(colNameIdx.get(standardizedLabel(columnLabel.toLowerCase())) + 1);
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }
@@ -481,7 +481,7 @@ public class JdbcResultSet implements ResultSet {
   @Override
   public InputStream getAsciiStream(String columnLabel) throws SQLException {
     if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
-      return getAsciiStream(colNameIdx.get(standardizedLabel(columnLabel)));
+      return getAsciiStream(colNameIdx.get(standardizedLabel(columnLabel.toLowerCase())) + 1);
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }
@@ -489,7 +489,7 @@ public class JdbcResultSet implements ResultSet {
   @Override
   public InputStream getUnicodeStream(String columnLabel) throws SQLException {
     if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
-      return getUnicodeStream(colNameIdx.get(standardizedLabel(columnLabel)));
+      return getUnicodeStream(colNameIdx.get(standardizedLabel(columnLabel.toLowerCase())) + 1);
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }
@@ -497,7 +497,7 @@ public class JdbcResultSet implements ResultSet {
   @Override
   public InputStream getBinaryStream(String columnLabel) throws SQLException {
     if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
-      return getBinaryStream(colNameIdx.get(standardizedLabel(columnLabel)));
+      return getBinaryStream(colNameIdx.get(standardizedLabel(columnLabel.toLowerCase())) + 1);
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }
@@ -524,20 +524,20 @@ public class JdbcResultSet implements ResultSet {
 
   @Override
   public Object getObject(int columnIndex) throws SQLException {
-    return queryResult.getValue(columnIndex);
+    return queryResult.getValue(columnIndex-1);
   }
 
   @Override
   public Object getObject(String columnLabel) throws SQLException {
     if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
-      return getObject(colNameIdx.get(standardizedLabel(columnLabel)));
+      return getObject(colNameIdx.get(standardizedLabel(columnLabel.toLowerCase())) + 1);
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }
 
   @Override
   public int findColumn(String columnLabel) throws SQLException {
-    return colNameIdx.get(standardizedLabel(columnLabel));
+    return colNameIdx.get(colNameIdx.get(standardizedLabel(columnLabel.toLowerCase())) + 1);
   }
 
   @Override
@@ -554,11 +554,11 @@ public class JdbcResultSet implements ResultSet {
   public BigDecimal getBigDecimal(int columnIndex) throws SQLException {
     try {
       if (isValidType("bigdecimal", columnIndex)) {
-        lastValue = TypeCasting.toBigDecimal(queryResult.getValue(columnIndex));
+        lastValue = TypeCasting.toBigDecimal(queryResult.getValue(columnIndex-1));
         return (BigDecimal) lastValue;
       }
       else {
-        throw new UnexpectedTypeException(queryResult.getValue(columnIndex));
+        throw new UnexpectedTypeException(queryResult.getValue(columnIndex-1));
       }
     }
    catch (UnexpectedTypeException e) {
@@ -569,7 +569,7 @@ public class JdbcResultSet implements ResultSet {
   @Override
   public BigDecimal getBigDecimal(String columnLabel) throws SQLException {
     if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
-      return getBigDecimal(colNameIdx.get(standardizedLabel(columnLabel)));
+      return getBigDecimal(colNameIdx.get(standardizedLabel(columnLabel.toLowerCase())) + 1);
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }
@@ -917,7 +917,7 @@ public class JdbcResultSet implements ResultSet {
   @Override
   public Ref getRef(int columnIndex) throws SQLException {
     if (isValidType("ref", columnIndex)) {
-      lastValue = queryResult.getValue(columnIndex);
+      lastValue = queryResult.getValue(columnIndex-1);
       return (Ref)lastValue;
     }
     else throw new SQLException("Not supported data type.");
@@ -926,7 +926,7 @@ public class JdbcResultSet implements ResultSet {
   @Override
   public Blob getBlob(int columnIndex) throws SQLException {
     if (isValidType("blob", columnIndex)) {
-      lastValue = queryResult.getValue(columnIndex);
+      lastValue = queryResult.getValue(columnIndex-1);
       return (Blob)lastValue;
     }
     else throw new SQLException("Not supported data type.");
@@ -935,7 +935,7 @@ public class JdbcResultSet implements ResultSet {
   @Override
   public Clob getClob(int columnIndex) throws SQLException {
     if (isValidType("clob", columnIndex)) {
-      lastValue = queryResult.getValue(columnIndex);
+      lastValue = queryResult.getValue(columnIndex-1);
       return (Clob)lastValue;
     }
     else throw new SQLException("Not supported data type.");
@@ -944,7 +944,7 @@ public class JdbcResultSet implements ResultSet {
   @Override
   public Array getArray(int columnIndex) throws SQLException {
     if (isValidType("array", columnIndex)) {
-      lastValue = queryResult.getValue(columnIndex);
+      lastValue = queryResult.getValue(columnIndex-1);
       JdbcArray array = new JdbcArray((Object[]) lastValue);
       return array;
     }
@@ -959,7 +959,7 @@ public class JdbcResultSet implements ResultSet {
   @Override
   public Ref getRef(String columnLabel) throws SQLException {
     if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
-      return getRef(colNameIdx.get(standardizedLabel(columnLabel)));
+      return getRef(colNameIdx.get(standardizedLabel(columnLabel.toLowerCase())) + 1);
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }
@@ -967,7 +967,7 @@ public class JdbcResultSet implements ResultSet {
   @Override
   public Blob getBlob(String columnLabel) throws SQLException {
     if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
-      return getBlob(colNameIdx.get(standardizedLabel(columnLabel)));
+      return getBlob(colNameIdx.get(standardizedLabel(columnLabel.toLowerCase())) + 1);
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }
@@ -975,7 +975,7 @@ public class JdbcResultSet implements ResultSet {
   @Override
   public Clob getClob(String columnLabel) throws SQLException {
     if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
-      return getClob(colNameIdx.get(standardizedLabel(columnLabel)));
+      return getClob(colNameIdx.get(standardizedLabel(columnLabel.toLowerCase())) + 1);
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }
@@ -983,7 +983,7 @@ public class JdbcResultSet implements ResultSet {
   @Override
   public Array getArray(String columnLabel) throws SQLException {
     if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
-      return getArray(colNameIdx.get(standardizedLabel(columnLabel)));
+      return getArray(colNameIdx.get(standardizedLabel(columnLabel.toLowerCase())) + 1);
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }
@@ -1021,7 +1021,7 @@ public class JdbcResultSet implements ResultSet {
   @Override
   public URL getURL(int columnIndex) throws SQLException {
     if (isValidType("url", columnIndex)) {
-      lastValue = queryResult.getValue(columnIndex);
+      lastValue = queryResult.getValue(columnIndex-1);
       return (URL) lastValue;
     }
     else throw new SQLException("Not supported data type.");
@@ -1030,7 +1030,7 @@ public class JdbcResultSet implements ResultSet {
   @Override
   public URL getURL(String columnLabel) throws SQLException {
    if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
-      return getURL(colNameIdx.get(standardizedLabel(columnLabel)));
+      return getURL(colNameIdx.get(standardizedLabel(columnLabel.toLowerCase())) + 1);
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }
@@ -1078,7 +1078,7 @@ public class JdbcResultSet implements ResultSet {
   @Override
   public RowId getRowId(int columnIndex) throws SQLException {
     if (isValidType("rowid", columnIndex)) {
-      lastValue = queryResult.getValue(columnIndex);
+      lastValue = queryResult.getValue(columnIndex-1);
       return (RowId) lastValue;
     }
     else throw new SQLException("Not supported data type.");
@@ -1087,7 +1087,7 @@ public class JdbcResultSet implements ResultSet {
   @Override
   public RowId getRowId(String columnLabel) throws SQLException {
     if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
-      return getRowId(colNameIdx.get(standardizedLabel(columnLabel)));
+      return getRowId(colNameIdx.get(standardizedLabel(columnLabel.toLowerCase())) + 1);
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }
@@ -1135,7 +1135,7 @@ public class JdbcResultSet implements ResultSet {
   @Override
   public NClob getNClob(int columnIndex) throws SQLException {
     if (isValidType("nclob", columnIndex)) {
-      lastValue = queryResult.getValue(columnIndex);
+      lastValue = queryResult.getValue(columnIndex-1);
       return (NClob) lastValue;
     }
     else throw new SQLException("Not supported data type.");
@@ -1144,7 +1144,7 @@ public class JdbcResultSet implements ResultSet {
   @Override
   public NClob getNClob(String columnLabel) throws SQLException {
     if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
-      return getNClob(colNameIdx.get(standardizedLabel(columnLabel)));
+      return getNClob(colNameIdx.get(standardizedLabel(columnLabel.toLowerCase())) + 1);
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }
@@ -1152,7 +1152,7 @@ public class JdbcResultSet implements ResultSet {
   @Override
   public SQLXML getSQLXML(int columnIndex) throws SQLException {
     if (isValidType("sqlxml", columnIndex)) {
-      lastValue = queryResult.getValue(columnIndex);
+      lastValue = queryResult.getValue(columnIndex-1);
       return (SQLXML) lastValue;
     }
     else throw new SQLException("Not supported data type.");
@@ -1161,7 +1161,7 @@ public class JdbcResultSet implements ResultSet {
   @Override
   public SQLXML getSQLXML(String columnLabel) throws SQLException {
     if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
-      return getSQLXML(colNameIdx.get(standardizedLabel(columnLabel)));
+      return getSQLXML(colNameIdx.get(standardizedLabel(columnLabel.toLowerCase())) + 1);
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }

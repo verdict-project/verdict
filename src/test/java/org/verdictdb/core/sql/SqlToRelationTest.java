@@ -22,19 +22,19 @@ public class SqlToRelationTest {
   @Test
   public void testSelectAllBaseTable() throws VerdictDbException {
     String actual = "select * from myschema.mytable as t";
-    SqlToRelation sqlToRelation = new SqlToRelation(null);
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     SelectQueryOp expected = SelectQueryOp.getSelectQueryOp(Arrays.<SelectItem>asList(
         new AsteriskColumn()
     ), Arrays.<AbstractRelation>asList(new BaseTable("myschema", "mytable", "t")));
-    AbstractRelation sel = sqlToRelation.ToRelation(actual);
+    AbstractRelation sel = sqlToRelation.toRelation(actual);
     assertEquals(expected, sel);
   }
 
   @Test
   public void testSelectColumnsBaseTable() throws VerdictDbException {
     String actual = "select t.mycolumn1, t.mycolumn2 from myschema.mytable as t";
-    SqlToRelation sqlToRelation = new SqlToRelation(null);
-    AbstractRelation sel = sqlToRelation.ToRelation(actual);
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation sel = sqlToRelation.toRelation(actual);
     SelectQueryOp expected = SelectQueryOp.getSelectQueryOp(Arrays.<SelectItem>asList(
         new BaseColumn("t", "mycolumn1"),
         new BaseColumn("t", "mycolumn2")
@@ -45,8 +45,8 @@ public class SqlToRelationTest {
   @Test
   public void testSelectAvgBaseTable() throws VerdictDbException {
     String actual = "select avg(t.mycolumn1) from myschema.mytable as t";
-    SqlToRelation sqlToRelation = new SqlToRelation(null);
-    AbstractRelation sel = sqlToRelation.ToRelation(actual);
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation sel = sqlToRelation.toRelation(actual);
     SelectQueryOp expected = SelectQueryOp.getSelectQueryOp(Arrays.<SelectItem>asList(
         new ColumnOp("avg", new BaseColumn("t", "mycolumn1"))
     ), Arrays.<AbstractRelation>asList(new BaseTable("myschema", "mytable", "t")));
@@ -56,8 +56,8 @@ public class SqlToRelationTest {
   @Test
   public void testSelectSumBaseTable() throws VerdictDbException {
     String actual = "select sum(t.mycolumn1) from myschema.mytable as t";
-    SqlToRelation sqlToRelation = new SqlToRelation(null);
-    AbstractRelation sel = sqlToRelation.ToRelation(actual);
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation sel = sqlToRelation.toRelation(actual);
     SelectQueryOp expected = SelectQueryOp.getSelectQueryOp(Arrays.<SelectItem>asList(
         new ColumnOp("sum", new BaseColumn("t", "mycolumn1"))
     ), Arrays.<AbstractRelation>asList(new BaseTable("myschema", "mytable", "t")));
@@ -67,8 +67,8 @@ public class SqlToRelationTest {
   @Test
   public void testSelectCountBaseTable() throws VerdictDbException {
     String actual = "select count(*) from myschema.mytable as t";
-    SqlToRelation sqlToRelation = new SqlToRelation(null);
-    AbstractRelation sel = sqlToRelation.ToRelation(actual);
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation sel = sqlToRelation.toRelation(actual);
     SelectQueryOp expected = SelectQueryOp.getSelectQueryOp(Arrays.<SelectItem>asList(
         new ColumnOp("count", new AsteriskColumn())
     ), Arrays.<AbstractRelation>asList(new BaseTable("myschema", "mytable", "t")));
@@ -78,8 +78,8 @@ public class SqlToRelationTest {
   @Test
   public void testSelectAggregatesBaseTable() throws VerdictDbException {
     String actual = "select avg(t.mycolumn1), sum(t.mycolumn1), count(*) from myschema.mytable as t";
-    SqlToRelation sqlToRelation = new SqlToRelation(null);
-    AbstractRelation sel = sqlToRelation.ToRelation(actual);
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation sel = sqlToRelation.toRelation(actual);
     SelectQueryOp expected = SelectQueryOp.getSelectQueryOp(Arrays.<SelectItem>asList(
         new ColumnOp("avg", new BaseColumn("t", "mycolumn1")),
         new ColumnOp("sum", new BaseColumn("t", "mycolumn1")),
@@ -91,8 +91,8 @@ public class SqlToRelationTest {
   @Test
   public void testSelectAddBaseTable() throws VerdictDbException {
     String actual = "select t.mycolumn1 + t.mycolumn2 from myschema.mytable as t";
-    SqlToRelation sqlToRelation = new SqlToRelation(null);
-    AbstractRelation sel = sqlToRelation.ToRelation(actual);
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation sel = sqlToRelation.toRelation(actual);
     SelectQueryOp expected = SelectQueryOp.getSelectQueryOp(Arrays.<SelectItem>asList(
         new ColumnOp("add", Arrays.<UnnamedColumn>asList(
             new BaseColumn("t", "mycolumn1"),
@@ -105,8 +105,8 @@ public class SqlToRelationTest {
   @Test
   public void testSelectSubtractBaseTable() throws VerdictDbException {
     String actual = "select t.mycolumn1 - t.mycolumn2 from myschema.mytable as t";
-    SqlToRelation sqlToRelation = new SqlToRelation(null);
-    AbstractRelation sel = sqlToRelation.ToRelation(actual);
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation sel = sqlToRelation.toRelation(actual);
     SelectQueryOp expected = SelectQueryOp.getSelectQueryOp(Arrays.<SelectItem>asList(
         new ColumnOp("subtract", Arrays.<UnnamedColumn>asList(
             new BaseColumn("t", "mycolumn1"),
@@ -119,8 +119,8 @@ public class SqlToRelationTest {
   @Test
   public void testSelectMultiplyBaseTable() throws VerdictDbException {
     String actual = "select t.mycolumn1 * t.mycolumn2 from myschema.mytable as t";
-    SqlToRelation sqlToRelation = new SqlToRelation(null);
-    AbstractRelation sel = sqlToRelation.ToRelation(actual);
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation sel = sqlToRelation.toRelation(actual);
     SelectQueryOp expected = SelectQueryOp.getSelectQueryOp(Arrays.<SelectItem>asList(
         new ColumnOp("multiply", Arrays.<UnnamedColumn>asList(
             new BaseColumn("t", "mycolumn1"),
@@ -133,8 +133,8 @@ public class SqlToRelationTest {
   @Test
   public void testSelectDivideBaseTable() throws VerdictDbException {
     String actual = "select t.mycolumn1 / t.mycolumn2 from myschema.mytable as t";
-    SqlToRelation sqlToRelation = new SqlToRelation(null);
-    AbstractRelation sel = sqlToRelation.ToRelation(actual);
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation sel = sqlToRelation.toRelation(actual);
     SelectQueryOp expected = SelectQueryOp.getSelectQueryOp(Arrays.<SelectItem>asList(
         new ColumnOp("divide", Arrays.<UnnamedColumn>asList(
             new BaseColumn("t", "mycolumn1"),
@@ -147,8 +147,8 @@ public class SqlToRelationTest {
   @Test
   public void testSelectAvgGroupbyBaseTable() throws VerdictDbException {
     String actual = "select t.mygroup, avg(t.mycolumn1) as myavg from myschema.mytable as t group by mygroup";
-    SqlToRelation sqlToRelation = new SqlToRelation(null);
-    AbstractRelation sel = sqlToRelation.ToRelation(actual);
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation sel = sqlToRelation.toRelation(actual);
     SelectQueryOp expected = SelectQueryOp.getSelectQueryOp(Arrays.<SelectItem>asList(
         new BaseColumn("t", "mygroup"),
         new AliasedColumn(new ColumnOp("avg", new BaseColumn("t", "mycolumn1")), "myavg")
@@ -162,8 +162,8 @@ public class SqlToRelationTest {
     String actual = "select * from ("
         + "select t.mygroup, avg(t.mycolumn1) as myavg from myschema.mytable as t group by mygroup) as s "
         + "group by mygroup2";
-    SqlToRelation sqlToRelation = new SqlToRelation(null);
-    AbstractRelation sel = sqlToRelation.ToRelation(actual);
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation sel = sqlToRelation.toRelation(actual);
     SelectQueryOp subquery = SelectQueryOp.getSelectQueryOp(Arrays.<SelectItem>asList(
         new BaseColumn("t", "mygroup"),
         new AliasedColumn(new ColumnOp("avg", new BaseColumn("t", "mycolumn1")), "myavg")

@@ -111,7 +111,7 @@ public class TpchSqlToRelationAfterAliasTest {
 
   @Test
   public void Query1Test() throws VerdictDbException {
-    AliasGen.resetItemID();
+    RelationStandardizer.resetItemID();
     BaseTable base = new BaseTable("tpch", "lineitem", "vt1");
     List<UnnamedColumn> operand1 = Arrays.<UnnamedColumn>asList(
         ConstantColumn.valueOf(1),
@@ -173,16 +173,16 @@ public class TpchSqlToRelationAfterAliasTest {
         " l_returnflag, " +
         " l_linestatus " +
         "LIMIT 1 ";
-    SqlToRelation sqlToRelation = new SqlToRelation(null);
-    AbstractRelation relation = sqlToRelation.ToRelation(sql);
-    AliasGen gen = new AliasGen(meta);
-    relation = gen.replaceRelationAlias((SelectQueryOp) relation);
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
+    RelationStandardizer gen = new RelationStandardizer(meta);
+    relation = gen.standardize((SelectQueryOp) relation);
     assertEquals(expected, relation);
   }
 
   @Test
   public void Query2Test() throws VerdictDbException {
-    AliasGen.resetItemID();
+    RelationStandardizer.resetItemID();
     BaseTable part = new BaseTable("tpch", "part", "vt1");
     BaseTable supplier = new BaseTable("tpch", "supplier", "vt2");
     BaseTable partsupp = new BaseTable("tpch", "partsupp", "vt3");
@@ -313,16 +313,16 @@ public class TpchSqlToRelationAfterAliasTest {
         "s_name, " +
         "p_partkey " +
         "LIMIT 100";
-    SqlToRelation sqlToRelation = new SqlToRelation(meta);
-    AbstractRelation relation = sqlToRelation.ToRelation(sql);
-    AliasGen gen = new AliasGen(meta);
-    relation = gen.replaceRelationAlias((SelectQueryOp) relation);
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
+    RelationStandardizer gen = new RelationStandardizer(meta);
+    relation = gen.standardize((SelectQueryOp) relation);
     assertEquals(expected, relation);
   }
 
   @Test
   public void Query3Test() throws VerdictDbException {
-    AliasGen.resetItemID();
+    RelationStandardizer.resetItemID();
     String sql = "select " +
         "l_orderkey, " +
         "sum(l_extendedprice * (1 - l_discount)) as revenue, " +
@@ -394,16 +394,16 @@ public class TpchSqlToRelationAfterAliasTest {
         new OrderbyAttribute("vc5")
         ));
     expected.addLimit(ConstantColumn.valueOf(10));
-    SqlToRelation sqlToRelation = new SqlToRelation(meta);
-    AbstractRelation relation = sqlToRelation.ToRelation(sql);
-    AliasGen gen = new AliasGen(meta);
-    relation = gen.replaceRelationAlias((SelectQueryOp) relation);
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
+    RelationStandardizer gen = new RelationStandardizer(meta);
+    relation = gen.standardize((SelectQueryOp) relation);
     assertEquals(expected, relation);
   }
 
   @Test
   public void Query4Test() throws VerdictDbException {
-    AliasGen.resetItemID();
+    RelationStandardizer.resetItemID();
     AbstractRelation orders = new BaseTable("tpch", "orders", "vt1");
     SelectQueryOp expected = SelectQueryOp.getSelectQueryOp(
         Arrays.<SelectItem>asList(
@@ -459,16 +459,16 @@ public class TpchSqlToRelationAfterAliasTest {
         "order by " +
         "o_orderpriority " +
         "LIMIT 1";
-    SqlToRelation sqlToRelation = new SqlToRelation(meta);
-    AbstractRelation relation = sqlToRelation.ToRelation(sql);
-    AliasGen gen = new AliasGen(meta);
-    relation = gen.replaceRelationAlias((SelectQueryOp) relation);
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
+    RelationStandardizer gen = new RelationStandardizer(meta);
+    relation = gen.standardize((SelectQueryOp) relation);
     assertEquals(expected, relation);
   }
 
   @Test
   public void Query5Test() throws VerdictDbException {
-    AliasGen.resetItemID();
+    RelationStandardizer.resetItemID();
     AbstractRelation customer = new BaseTable("tpch", "customer", "vt1");
     AbstractRelation orders = new BaseTable("tpch", "orders", "vt2");
     AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "vt3");
@@ -556,16 +556,16 @@ public class TpchSqlToRelationAfterAliasTest {
         "order by " +
         "revenue desc " +
         "LIMIT 1; ";
-    SqlToRelation sqlToRelation = new SqlToRelation(meta);
-    AbstractRelation relation = sqlToRelation.ToRelation(sql);
-    AliasGen gen = new AliasGen(meta);
-    relation = gen.replaceRelationAlias((SelectQueryOp) relation);
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
+    RelationStandardizer gen = new RelationStandardizer(meta);
+    relation = gen.standardize((SelectQueryOp) relation);
     assertEquals(expected, relation);
   }
 
   @Test
   public void Query6Test() throws VerdictDbException {
-    AliasGen.resetItemID();
+    RelationStandardizer.resetItemID();
     AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "vt1");
     SelectQueryOp expected = SelectQueryOp.getSelectQueryOp(
         Arrays.<SelectItem>asList(
@@ -610,16 +610,16 @@ public class TpchSqlToRelationAfterAliasTest {
         "and l_discount between ':2' - 0.01 and ':2' + 0.01 " +
         "and l_quantity < ':3' " +
         "LIMIT 1; ";
-    SqlToRelation sqlToRelation = new SqlToRelation(meta);
-    AbstractRelation relation = sqlToRelation.ToRelation(sql);
-    AliasGen gen = new AliasGen(meta);
-    relation = gen.replaceRelationAlias((SelectQueryOp) relation);
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
+    RelationStandardizer gen = new RelationStandardizer(meta);
+    relation = gen.standardize((SelectQueryOp) relation);
     assertEquals(expected, relation);
   }
 
   @Test
   public void Query7Test() throws VerdictDbException {
-    AliasGen.resetItemID();
+    RelationStandardizer.resetItemID();
     AbstractRelation supplier = new BaseTable("tpch", "supplier", "vt1");
     AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "vt2");
     AbstractRelation orders = new BaseTable("tpch", "orders", "vt3");
@@ -746,16 +746,16 @@ public class TpchSqlToRelationAfterAliasTest {
         "cust_nation, " +
         "l_year " +
         "LIMIT 1;";
-    SqlToRelation sqlToRelation = new SqlToRelation(meta);
-    AbstractRelation relation = sqlToRelation.ToRelation(sql);
-    AliasGen gen = new AliasGen(meta);
-    relation = gen.replaceRelationAlias((SelectQueryOp) relation);
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
+    RelationStandardizer gen = new RelationStandardizer(meta);
+    relation = gen.standardize((SelectQueryOp) relation);
     assertEquals(expected, relation);
   }
 
   @Test
   public void Query8Test() throws VerdictDbException {
-    AliasGen.resetItemID();
+    RelationStandardizer.resetItemID();
     AbstractRelation part = new BaseTable("tpch", "part", "vt1");
     AbstractRelation supplier = new BaseTable("tpch", "supplier", "vt2");
     AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "vt3");
@@ -874,16 +874,16 @@ public class TpchSqlToRelationAfterAliasTest {
         "order by " +
         "o_year " +
         "LIMIT 1;";
-    SqlToRelation sqlToRelation = new SqlToRelation(meta);
-    AbstractRelation relation = sqlToRelation.ToRelation(sql);
-    AliasGen gen = new AliasGen(meta);
-    relation = gen.replaceRelationAlias((SelectQueryOp) relation);
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
+    RelationStandardizer gen = new RelationStandardizer(meta);
+    relation = gen.standardize((SelectQueryOp) relation);
     assertEquals(expected, relation);
   }
 
   @Test
   public void Query9Test() throws VerdictDbException {
-    AliasGen.resetItemID();
+    RelationStandardizer.resetItemID();
     AbstractRelation part = new BaseTable("tpch", "part", "vt1");
     AbstractRelation supplier = new BaseTable("tpch", "supplier", "vt2");
     AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "vt3");
@@ -982,16 +982,16 @@ public class TpchSqlToRelationAfterAliasTest {
         "nation, " +
         "o_year desc " +
         "LIMIT 1;";
-    SqlToRelation sqlToRelation = new SqlToRelation(meta);
-    AbstractRelation relation = sqlToRelation.ToRelation(sql);
-    AliasGen gen = new AliasGen(meta);
-    relation = gen.replaceRelationAlias((SelectQueryOp) relation);
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
+    RelationStandardizer gen = new RelationStandardizer(meta);
+    relation = gen.standardize((SelectQueryOp) relation);
     assertEquals(expected, relation);
   }
 
   @Test
   public void Query10Test() throws VerdictDbException {
-    AliasGen.resetItemID();
+    RelationStandardizer.resetItemID();
     AbstractRelation customer = new BaseTable("tpch", "customer", "vt1");
     AbstractRelation orders = new BaseTable("tpch", "orders", "vt2");
     AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "vt3");
@@ -1084,16 +1084,16 @@ public class TpchSqlToRelationAfterAliasTest {
         "order by " +
         "revenue desc " +
         "LIMIT 20;";
-    SqlToRelation sqlToRelation = new SqlToRelation(meta);
-    AbstractRelation relation = sqlToRelation.ToRelation(sql);
-    AliasGen gen = new AliasGen(meta);
-    relation = gen.replaceRelationAlias((SelectQueryOp) relation);
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
+    RelationStandardizer gen = new RelationStandardizer(meta);
+    relation = gen.standardize((SelectQueryOp) relation);
     assertEquals(expected, relation);
   }
 
   @Test
   public void Query11Test() throws VerdictDbException {
-    AliasGen.resetItemID();
+    RelationStandardizer.resetItemID();
     AbstractRelation partsupp = new BaseTable("tpch", "partsupp", "vt1");
     AbstractRelation supplier = new BaseTable("tpch", "supplier", "vt2");
     AbstractRelation nation = new BaseTable("tpch", "nation", "vt3");
@@ -1180,16 +1180,16 @@ public class TpchSqlToRelationAfterAliasTest {
         "order by " +
         "value desc " +
         "LIMIT 1;";
-    SqlToRelation sqlToRelation = new SqlToRelation(meta);
-    AbstractRelation relation = sqlToRelation.ToRelation(sql);
-    AliasGen gen = new AliasGen(meta);
-    relation = gen.replaceRelationAlias((SelectQueryOp) relation);
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
+    RelationStandardizer gen = new RelationStandardizer(meta);
+    relation = gen.standardize((SelectQueryOp) relation);
     assertEquals(expected, relation);
   }
 
   @Test
   public void Query12Test() throws VerdictDbException {
-    AliasGen.resetItemID();
+    RelationStandardizer.resetItemID();
     AbstractRelation orders = new BaseTable("tpch", "orders", "vt1");
     AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "vt2");
     SelectQueryOp expected = SelectQueryOp.getSelectQueryOp(
@@ -1284,16 +1284,16 @@ public class TpchSqlToRelationAfterAliasTest {
         "order by " +
         "l_shipmode " +
         "LIMIT 1;";
-    SqlToRelation sqlToRelation = new SqlToRelation(meta);
-    AbstractRelation relation = sqlToRelation.ToRelation(sql);
-    AliasGen gen = new AliasGen(meta);
-    relation = gen.replaceRelationAlias((SelectQueryOp) relation);
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
+    RelationStandardizer gen = new RelationStandardizer(meta);
+    relation = gen.standardize((SelectQueryOp) relation);
     assertEquals(expected, relation);
   }
 
   @Test
   public void Query13Test() throws VerdictDbException {
-    AliasGen.resetItemID();
+    RelationStandardizer.resetItemID();
     BaseTable customer = new BaseTable("tpch", "customer", "vt1");
     BaseTable orders = new BaseTable("tpch", "orders", "vt2");
     JoinTable join = JoinTable.getJoinTable(Arrays.<AbstractRelation>asList(customer, orders),
@@ -1349,16 +1349,16 @@ public class TpchSqlToRelationAfterAliasTest {
         "custdist desc, " +
         "c_count desc " +
         "LIMIT 1;";
-    SqlToRelation sqlToRelation = new SqlToRelation(meta);
-    AbstractRelation relation = sqlToRelation.ToRelation(sql);
-    AliasGen gen = new AliasGen(meta);
-    relation = gen.replaceRelationAlias((SelectQueryOp) relation);
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
+    RelationStandardizer gen = new RelationStandardizer(meta);
+    relation = gen.standardize((SelectQueryOp) relation);
     assertEquals(expected, relation);
   }
 
   @Test
   public void Query14Test() throws VerdictDbException {
-    AliasGen.resetItemID();
+    RelationStandardizer.resetItemID();
     AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "vt1");
     AbstractRelation part = new BaseTable("tpch", "part", "vt2");
     SelectQueryOp expected = SelectQueryOp.getSelectQueryOp(
@@ -1414,16 +1414,16 @@ public class TpchSqlToRelationAfterAliasTest {
         "and l_shipdate >= date ':1' " +
         "and l_shipdate < date ':1' + interval '1' month " +
         "LIMIT 1;";
-    SqlToRelation sqlToRelation = new SqlToRelation(meta);
-    AbstractRelation relation = sqlToRelation.ToRelation(sql);
-    AliasGen gen = new AliasGen(meta);
-    relation = gen.replaceRelationAlias((SelectQueryOp) relation);
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
+    RelationStandardizer gen = new RelationStandardizer(meta);
+    relation = gen.standardize((SelectQueryOp) relation);
     assertEquals(expected, relation);
   }
 
   @Test
   public void Query16Test() throws VerdictDbException {
-    AliasGen.resetItemID();
+    RelationStandardizer.resetItemID();
     AbstractRelation partsupp = new BaseTable("tpch", "partsupp", "vt1");
     AbstractRelation part = new BaseTable("tpch", "part", "vt2");
     SelectQueryOp expected = SelectQueryOp.getSelectQueryOp(
@@ -1505,16 +1505,16 @@ public class TpchSqlToRelationAfterAliasTest {
         "p_type, " +
         "p_size " +
         "LIMIT 1;";
-    SqlToRelation sqlToRelation = new SqlToRelation(meta);
-    AbstractRelation relation = sqlToRelation.ToRelation(sql);
-    AliasGen gen = new AliasGen(meta);
-    relation = gen.replaceRelationAlias((SelectQueryOp) relation);
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
+    RelationStandardizer gen = new RelationStandardizer(meta);
+    relation = gen.standardize((SelectQueryOp) relation);
     assertEquals(expected, relation);
   }
 
   @Test
   public void Query17Test() throws VerdictDbException {
-    AliasGen.resetItemID();
+    RelationStandardizer.resetItemID();
     AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "vt1");
     AbstractRelation part = new BaseTable("tpch", "part", "vt2");
     SelectQueryOp subquery = SelectQueryOp.getSelectQueryOp(
@@ -1570,16 +1570,16 @@ public class TpchSqlToRelationAfterAliasTest {
         "and p_container = ':2' " +
         "and l_quantity < avg_quantity " +
         "LIMIT 1; ";
-    SqlToRelation sqlToRelation = new SqlToRelation(meta);
-    AbstractRelation relation = sqlToRelation.ToRelation(sql);
-    AliasGen gen = new AliasGen(meta);
-    relation = gen.replaceRelationAlias((SelectQueryOp) relation);
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
+    RelationStandardizer gen = new RelationStandardizer(meta);
+    relation = gen.standardize((SelectQueryOp) relation);
     assertEquals(expected, relation);
   }
 
   @Test
   public void Query18Test() throws VerdictDbException {
-    AliasGen.resetItemID();
+    RelationStandardizer.resetItemID();
     AbstractRelation customer = new BaseTable("tpch", "customer", "vt1");
     AbstractRelation orders = new BaseTable("tpch", "orders", "vt2");
     AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "vt3");
@@ -1658,16 +1658,16 @@ public class TpchSqlToRelationAfterAliasTest {
         "o_totalprice desc, " +
         "o_orderdate " +
         "LIMIT 100;";
-    SqlToRelation sqlToRelation = new SqlToRelation(meta);
-    AbstractRelation relation = sqlToRelation.ToRelation(sql);
-    AliasGen gen = new AliasGen(meta);
-    relation = gen.replaceRelationAlias((SelectQueryOp) relation);
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
+    RelationStandardizer gen = new RelationStandardizer(meta);
+    relation = gen.standardize((SelectQueryOp) relation);
     assertEquals(expected, relation);
   }
 
   @Test
   public void Query19Test() throws VerdictDbException {
-    AliasGen.resetItemID();
+    RelationStandardizer.resetItemID();
     AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "vt1");
     AbstractRelation part = new BaseTable("tpch", "part", "vt2");
     SelectQueryOp expected = SelectQueryOp.getSelectQueryOp(
@@ -1877,16 +1877,16 @@ public class TpchSqlToRelationAfterAliasTest {
         "and l_shipinstruct = 'DELIVER IN PERSON' " +
         ") " +
         "LIMIT 1;";
-    SqlToRelation sqlToRelation = new SqlToRelation(meta);
-    AbstractRelation relation = sqlToRelation.ToRelation(sql);
-    AliasGen gen = new AliasGen(meta);
-    relation = gen.replaceRelationAlias((SelectQueryOp) relation);
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
+    RelationStandardizer gen = new RelationStandardizer(meta);
+    relation = gen.standardize((SelectQueryOp) relation);
     assertEquals(expected, relation);
   }
 
   @Test
   public void Query20Test() throws VerdictDbException {
-    AliasGen.resetItemID();
+    RelationStandardizer.resetItemID();
     AbstractRelation supplier = new BaseTable("tpch", "supplier", "vt1");
     AbstractRelation nation = new BaseTable("tpch", "nation", "vt2");
     SelectQueryOp expected = SelectQueryOp.getSelectQueryOp(
@@ -2004,16 +2004,16 @@ public class TpchSqlToRelationAfterAliasTest {
         "order by " +
         "s_name " +
         "LIMIT 1; ";
-    SqlToRelation sqlToRelation = new SqlToRelation(meta);
-    AbstractRelation relation = sqlToRelation.ToRelation(sql);
-    AliasGen gen = new AliasGen(meta);
-    relation = gen.replaceRelationAlias((SelectQueryOp) relation);
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
+    RelationStandardizer gen = new RelationStandardizer(meta);
+    relation = gen.standardize((SelectQueryOp) relation);
     assertEquals(expected, relation);
   }
 
   @Test
   public void Query21Test() throws VerdictDbException {
-    AliasGen.resetItemID();
+    RelationStandardizer.resetItemID();
     AbstractRelation supplier = new BaseTable("tpch", "supplier", "vt1");
     AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "l1");
     AbstractRelation orders = new BaseTable("tpch", "orders", "vt2");
@@ -2120,16 +2120,16 @@ public class TpchSqlToRelationAfterAliasTest {
         "numwait desc, " +
         "s_name " +
         "LIMIT 100;";
-    SqlToRelation sqlToRelation = new SqlToRelation(meta);
-    AbstractRelation relation = sqlToRelation.ToRelation(sql);
-    AliasGen gen = new AliasGen(meta);
-    relation = gen.replaceRelationAlias((SelectQueryOp) relation);
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
+    RelationStandardizer gen = new RelationStandardizer(meta);
+    relation = gen.standardize((SelectQueryOp) relation);
     assertEquals(expected, relation);
   }
 
   @Test
   public void Query22Test() throws VerdictDbException {
-    AliasGen.resetItemID();
+    RelationStandardizer.resetItemID();
     SelectQueryOp subquery = SelectQueryOp.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new ColumnOp("substr", Arrays.<UnnamedColumn>asList(
@@ -2221,10 +2221,10 @@ public class TpchSqlToRelationAfterAliasTest {
         "order by " +
         "cntrycode " +
         "LIMIT 1;";
-    SqlToRelation sqlToRelation = new SqlToRelation(meta);
-    AbstractRelation relation = sqlToRelation.ToRelation(sql);
-    AliasGen gen = new AliasGen(meta);
-    relation = gen.replaceRelationAlias((SelectQueryOp) relation);
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
+    RelationStandardizer gen = new RelationStandardizer(meta);
+    relation = gen.standardize((SelectQueryOp) relation);
     assertEquals(expected, relation);
   }
 }
