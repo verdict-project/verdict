@@ -45,7 +45,7 @@ public class UniformScrambler extends Scrambler {
         ColumnOp.cast(
             ColumnOp.floor(ColumnOp.multiply(
                 ColumnOp.rand(),
-                ConstantColumn.valueOf(100.0))),
+                ConstantColumn.valueOf(100))),
         ConstantColumn.valueOf("smallint")),
         subsampleColumn);
 //    AliasedColumn subsampleValue = new AliasedColumn(

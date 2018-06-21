@@ -48,8 +48,8 @@ public class AggQueryRewriterJdbcTest {
     final String DB_USER = "";
     final String DB_PASSWORD = "";
     conn = DriverManager.getConnection(DB_CONNECTION, DB_USER, DB_PASSWORD);
-    conn.createStatement().execute("CREATE SCHEMA " + originalSchema);
-    conn.createStatement().execute("CREATE SCHEMA " + newSchema);
+    conn.createStatement().execute(String.format("CREATE SCHEMA \"%s\"", originalSchema));
+    conn.createStatement().execute(String.format("CREATE SCHEMA \"%s\"", newSchema));
     populateData(conn, originalSchema, originalTable);
     
     UniformScrambler scrambler =
@@ -57,7 +57,7 @@ public class AggQueryRewriterJdbcTest {
     CreateTableAsSelect createQuery = scrambler.scrambledTableCreationQuery();
     CreateTableToSql createToSql = new CreateTableToSql(new H2Syntax());
     String scrambleSql = createToSql.toSql(createQuery);
-    conn.createStatement().execute(String.format("DROP TABLE IF EXISTS %s.%s", newSchema, newTable));
+    conn.createStatement().execute(String.format("DROP TABLE IF EXISTS \"%s\".\"%s\"", newSchema, newTable));
     conn.createStatement().execute(scrambleSql);
   }
 
@@ -88,10 +88,10 @@ public class AggQueryRewriterJdbcTest {
 
   static void populateData(Connection conn, String schemaName, String tableName) throws SQLException {
     Statement stmt = conn.createStatement();
-    stmt.execute(String.format("CREATE TABLE %s.%s(id int, value double)", schemaName, tableName));
+    stmt.execute(String.format("CREATE TABLE \"%s\".\"%s\"(\"id\" int, \"value\" double)", schemaName, tableName));
     Random r = new Random();
     for (int i = 0; i < 100; i++) {
-      stmt.execute(String.format("INSERT INTO %s.%s(id, value) VALUES(%s, %f)",
+      stmt.execute(String.format("INSERT INTO \"%s\".\"%s\"(\"id\", \"value\") VALUES(%s, %f)",
           schemaName, tableName, i, (double) i+1));
     }
     stmt.close();

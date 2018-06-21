@@ -66,20 +66,20 @@ public class TpchSelectQueryOpToSqlTest {
     relation.addOrderby(Arrays.<OrderbyAttribute>asList(new OrderbyAttribute("l_returnflag"),
         new OrderbyAttribute("l_linestatus")));
     relation.addLimit(ConstantColumn.valueOf(1));
-    String expected = "select `t`.`l_returnflag`, " +
-        "`t`.`l_linestatus`, " +
-        "sum(`t`.`l_quantity`) as `sum_qty`, " +
-        "sum(`t`.`l_extendedprice`) as `sum_base_price`, " +
-        "sum(`t`.`l_extendedprice` * (1 - `t`.`l_discount`)) as `sum_disc_price`, " +
-        "sum((`t`.`l_extendedprice` * (1 - `t`.`l_discount`)) * (1 + `t`.`l_tax`)) as `sum_charge`, " +
-        "avg(`t`.`l_quantity`) as `avg_qty`, " +
-        "avg(`t`.`l_extendedprice`) as `avg_price`, " +
-        "avg(`t`.`l_discount`) as `avg_disc`, " +
+    String expected = "select t.`l_returnflag`, " +
+        "t.`l_linestatus`, " +
+        "sum(t.`l_quantity`) as `sum_qty`, " +
+        "sum(t.`l_extendedprice`) as `sum_base_price`, " +
+        "sum(t.`l_extendedprice` * (1 - t.`l_discount`)) as `sum_disc_price`, " +
+        "sum((t.`l_extendedprice` * (1 - t.`l_discount`)) * (1 + t.`l_tax`)) as `sum_charge`, " +
+        "avg(t.`l_quantity`) as `avg_qty`, " +
+        "avg(t.`l_extendedprice`) as `avg_price`, " +
+        "avg(t.`l_discount`) as `avg_disc`, " +
         "count(*) as `count_order` " +
         "from " +
         "`tpch`.`lineitem` as t " +
         "where " +
-        "`t`.`l_shipdate` <= ((date '1998-12-01') - (interval ':1' day)) " +
+        "t.`l_shipdate` <= ((date '1998-12-01') - (interval ':1' day)) " +
         "group by " +
         "`l_returnflag`, " +
         "`l_linestatus` " +
@@ -175,14 +175,14 @@ public class TpchSelectQueryOpToSqlTest {
     ));
     relation.addLimit(ConstantColumn.valueOf(100));
     String expected = "select " +
-        "`s`.`s_acctbal`, " +
-        "`s`.`s_name`, " +
-        "`n`.`n_name`, " +
-        "`p`.`p_partkey`, " +
-        "`p`.`p_mfgr`, " +
-        "`s`.`s_address`, " +
-        "`s`.`s_phone`, " +
-        "`s`.`s_comment` " +
+        "s.`s_acctbal`, " +
+        "s.`s_name`, " +
+        "n.`n_name`, " +
+        "p.`p_partkey`, " +
+        "p.`p_mfgr`, " +
+        "s.`s_address`, " +
+        "s.`s_phone`, " +
+        "s.`s_comment` " +
         "from " +
         "`tpch`.`part` as p, " +
         "`tpch`.`supplier` as s, " +
@@ -190,27 +190,27 @@ public class TpchSelectQueryOpToSqlTest {
         "`tpch`.`nation` as n, " +
         "`tpch`.`region` as r " +
         "where " +
-        "(((((((`p`.`p_partkey` = `ps`.`ps_partkey`) " +
-        "and (`s`.`s_suppkey` = `ps`.`ps_suppkey`)) " +
-        "and (`p`.`p_size` = ':1')) " +
-        "and (`p`.`p_type` like '%:2')) " +
-        "and (`s`.`s_nationkey` = `n`.`n_nationkey`)) " +
-        "and (`n`.`n_regionkey` = `r`.`r_regionkey`)) " +
-        "and (`r`.`r_name` = ':3')) " +
-        "and (`ps`.`ps_supplycost` = (" +
+        "(((((((p.`p_partkey` = ps.`ps_partkey`) " +
+        "and (s.`s_suppkey` = ps.`ps_suppkey`)) " +
+        "and (p.`p_size` = ':1')) " +
+        "and (p.`p_type` like '%:2')) " +
+        "and (s.`s_nationkey` = n.`n_nationkey`)) " +
+        "and (n.`n_regionkey` = r.`r_regionkey`)) " +
+        "and (r.`r_name` = ':3')) " +
+        "and (ps.`ps_supplycost` = (" +
         "select " +
-        "min(`ps`.`ps_supplycost`) " +
+        "min(ps.`ps_supplycost`) " +
         "from " +
         "`tpch`.`partsupp` as ps, " +
         "`tpch`.`supplier` as s, " +
         "`tpch`.`nation` as n, " +
         "`tpch`.`region` as r " +
         "where " +
-        "((((`p`.`p_partkey` = `ps`.`ps_partkey`) " +
-        "and (`s`.`s_suppkey` = `ps`.`ps_suppkey`)) " +
-        "and (`s`.`s_nationkey` = `n`.`n_nationkey`)) " +
-        "and (`n`.`n_regionkey` = `r`.`r_regionkey`)) " +
-        "and (`r`.`r_name` = ':3'))) " +
+        "((((p.`p_partkey` = ps.`ps_partkey`) " +
+        "and (s.`s_suppkey` = ps.`ps_suppkey`)) " +
+        "and (s.`s_nationkey` = n.`n_nationkey`)) " +
+        "and (n.`n_regionkey` = r.`r_regionkey`)) " +
+        "and (r.`r_name` = ':3'))) " +
         "order by " +
         "`s_acctbal` desc, " +
         "`n_name` asc, " +
@@ -273,20 +273,20 @@ public class TpchSelectQueryOpToSqlTest {
     ));
     relation.addLimit(ConstantColumn.valueOf(10));
     String expected = "select " +
-        "`l`.`l_orderkey`, " +
-        "sum(`l`.`l_extendedprice` * (1 - `l`.`l_discount`)) as `revenue`, " +
-        "`o`.`o_orderdate`, " +
-        "`o`.`o_shippriority` " +
+        "l.`l_orderkey`, " +
+        "sum(l.`l_extendedprice` * (1 - l.`l_discount`)) as `revenue`, " +
+        "o.`o_orderdate`, " +
+        "o.`o_shippriority` " +
         "from " +
         "`tpch`.`customer` as c, " +
         "`tpch`.`orders` as o, " +
         "`tpch`.`lineitem` as l " +
         "where " +
-        "((((`c`.`c_mktsegment` = ':1') " +
-        "and (`c`.`c_custkey` = `o`.`o_custkey`)) " +
-        "and (`l`.`l_orderkey` = `o`.`o_orderkey`)) " +
-        "and (`o`.`o_orderdate` < (date ':2'))) " +
-        "and (`l`.`l_shipdate` > (date ':2')) " +
+        "((((c.`c_mktsegment` = ':1') " +
+        "and (c.`c_custkey` = o.`o_custkey`)) " +
+        "and (l.`l_orderkey` = o.`o_orderkey`)) " +
+        "and (o.`o_orderdate` < (date ':2'))) " +
+        "and (l.`l_shipdate` > (date ':2')) " +
         "group by " +
         "`l_orderkey`, " +
         "`o_orderdate`, " +
@@ -336,21 +336,21 @@ public class TpchSelectQueryOpToSqlTest {
     relation.addOrderby(new OrderbyAttribute("o_orderpriority"));
     relation.addLimit(ConstantColumn.valueOf(1));
     String expected = "select " +
-        "`o`.`o_orderpriority`, " +
+        "o.`o_orderpriority`, " +
         "count(*) as `order_count` " +
         "from " +
         "`tpch`.`orders` as o " +
         "where " +
-        "((`o`.`o_orderdate` >= (date ':1')) " +
-        "and (`o`.`o_orderdate` < ((date ':1') + (interval '3' month)))) " +
+        "((o.`o_orderdate` >= (date ':1')) " +
+        "and (o.`o_orderdate` < ((date ':1') + (interval '3' month)))) " +
         "and (exists (" +
         "select " +
         "* " +
         "from " +
         "`tpch`.`lineitem` as l " +
         "where " +
-        "(`l`.`l_orderkey` = `o`.`o_orderkey`) " +
-        "and (`l`.`l_commitdate` < `l`.`l_receiptdate`)" +
+        "(l.`l_orderkey` = o.`o_orderkey`) " +
+        "and (l.`l_commitdate` < l.`l_receiptdate`)" +
         ")) " +
         "group by " +
         "`o_orderpriority` " +
@@ -427,8 +427,8 @@ public class TpchSelectQueryOpToSqlTest {
     relation.addOrderby(new OrderbyAttribute("revenue", "desc"));
     relation.addLimit(ConstantColumn.valueOf(1));
     String expected = "select " +
-        "`n`.`n_name`, " +
-        "sum(`l`.`l_extendedprice` * (1 - `l`.`l_discount`)) as `revenue` " +
+        "n.`n_name`, " +
+        "sum(l.`l_extendedprice` * (1 - l.`l_discount`)) as `revenue` " +
         "from " +
         "`tpch`.`customer` as c, " +
         "`tpch`.`orders` as o, " +
@@ -437,15 +437,15 @@ public class TpchSelectQueryOpToSqlTest {
         "`tpch`.`nation` as n, " +
         "`tpch`.`region` as r " +
         "where " +
-        "((((((((`c`.`c_custkey` = `o`.`o_custkey`) " +
-        "and (`l`.`l_orderkey` = `o`.`o_orderkey`)) " +
-        "and (`l`.`l_suppkey` = `s`.`s_suppkey`)) " +
-        "and (`c`.`c_nationkey` = `s`.`s_nationkey`)) " +
-        "and (`s`.`s_nationkey` = `n`.`n_nationkey`)) " +
-        "and (`n`.`n_regionkey` = `r`.`r_regionkey`)) " +
-        "and (`r`.`r_name` = ':1')) " +
-        "and (`o`.`o_orderdate` >= (date ':2'))) " +
-        "and (`o`.`o_orderdate` < ((date ':2') + (interval '1' year))) " +
+        "((((((((c.`c_custkey` = o.`o_custkey`) " +
+        "and (l.`l_orderkey` = o.`o_orderkey`)) " +
+        "and (l.`l_suppkey` = s.`s_suppkey`)) " +
+        "and (c.`c_nationkey` = s.`s_nationkey`)) " +
+        "and (s.`s_nationkey` = n.`n_nationkey`)) " +
+        "and (n.`n_regionkey` = r.`r_regionkey`)) " +
+        "and (r.`r_name` = ':1')) " +
+        "and (o.`o_orderdate` >= (date ':2'))) " +
+        "and (o.`o_orderdate` < ((date ':2') + (interval '1' year))) " +
         "group by " +
         "`n_name` " +
         "order by " +
@@ -493,14 +493,14 @@ public class TpchSelectQueryOpToSqlTest {
     ));
     relation.addLimit(ConstantColumn.valueOf(1));
     String expected = "select " +
-        "sum(`l`.`l_extendedprice` * `l`.`l_discount`) as `revenue` " +
+        "sum(l.`l_extendedprice` * l.`l_discount`) as `revenue` " +
         "from " +
         "`tpch`.`lineitem` as l " +
         "where " +
-        "(((`l`.`l_shipdate` >= (date ':1')) " +
-        "and (`l`.`l_shipdate` < ((date ':1') + (interval '1' year)))) " +
-        "and (`l`.`l_discount` between (':2' - 0.01) and (':2' + 0.01))) " +
-        "and (`l`.`l_quantity` < ':3') " +
+        "(((l.`l_shipdate` >= (date ':1')) " +
+        "and (l.`l_shipdate` < ((date ':1') + (interval '1' year)))) " +
+        "and (l.`l_discount` between (':2' - 0.01) and (':2' + 0.01))) " +
+        "and (l.`l_quantity` < ':3') " +
         "limit 1";
     SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
     String actual = relToSql.toSql(relation);
@@ -596,17 +596,17 @@ public class TpchSelectQueryOpToSqlTest {
     ));
     relation.addLimit(ConstantColumn.valueOf(1));
     String expected = "select " +
-        "`shipping`.`supp_nation`, " +
-        "`shipping`.`cust_nation`, " +
-        "`shipping`.`l_year`, " +
-        "sum(`shipping`.`volume`) as `revenue` " +
+        "shipping.`supp_nation`, " +
+        "shipping.`cust_nation`, " +
+        "shipping.`l_year`, " +
+        "sum(shipping.`volume`) as `revenue` " +
         "from " +
         "(" +
         "select " +
-        "`n1`.`n_name` as `supp_nation`, " +
-        "`n2`.`n_name` as `cust_nation`, " +
-        "substr(`l`.`l_shipdate`, 0, 4) as `l_year`, " +
-        "`l`.`l_extendedprice` * (1 - `l`.`l_discount`) as `volume` " +
+        "n1.`n_name` as `supp_nation`, " +
+        "n2.`n_name` as `cust_nation`, " +
+        "substr(l.`l_shipdate`, 0, 4) as `l_year`, " +
+        "l.`l_extendedprice` * (1 - l.`l_discount`) as `volume` " +
         "from " +
         "`tpch`.`supplier` as s, " +
         "`tpch`.`lineitem` as l, " +
@@ -615,16 +615,16 @@ public class TpchSelectQueryOpToSqlTest {
         "`tpch`.`nation` as n1, " +
         "`tpch`.`nation` as n2 " +
         "where " +
-        "((((((`s`.`s_suppkey` = `l`.`l_suppkey`) " +
-        "and (`o`.`o_orderkey` = `l`.`l_orderkey`)) " +
-        "and (`c`.`c_custkey` = `o`.`o_custkey`)) " +
-        "and (`s`.`s_nationkey` = `n1`.`n_nationkey`)) " +
-        "and (`c`.`c_nationkey` = `n2`.`n_nationkey`)) " +
+        "((((((s.`s_suppkey` = l.`l_suppkey`) " +
+        "and (o.`o_orderkey` = l.`l_orderkey`)) " +
+        "and (c.`c_custkey` = o.`o_custkey`)) " +
+        "and (s.`s_nationkey` = n1.`n_nationkey`)) " +
+        "and (c.`c_nationkey` = n2.`n_nationkey`)) " +
         "and (((" +
-        "`n1`.`n_name` = ':1') and (`n2`.`n_name` = ':2')) " +
-        "or ((`n1`.`n_name` = ':2') and (`n2`.`n_name` = ':1')))" +
+        "n1.`n_name` = ':1') and (n2.`n_name` = ':2')) " +
+        "or ((n1.`n_name` = ':2') and (n2.`n_name` = ':1')))" +
         ") " +
-        "and (`l`.`l_shipdate` between (date '1995-01-01') and (date '1996-12-31'))" +
+        "and (l.`l_shipdate` between (date '1995-01-01') and (date '1996-12-31'))" +
         ") as shipping " +
         "group by " +
         "`supp_nation`, " +
@@ -721,17 +721,17 @@ public class TpchSelectQueryOpToSqlTest {
     relation.addOrderby(new OrderbyAttribute("o_year"));
     relation.addLimit(ConstantColumn.valueOf(1));
     String expected = "select " +
-        "`all_nations`.`o_year`, " +
+        "all_nations.`o_year`, " +
         "sum(case " +
-        "when (`all_nations`.`nation` = ':1') then `all_nations`.`volume` " +
+        "when (all_nations.`nation` = ':1') then all_nations.`volume` " +
         "else 0 " +
-        "end) / sum(`all_nations`.`volume`) as `mkt_share` " +
+        "end) / sum(all_nations.`volume`) as `mkt_share` " +
         "from " +
         "(" +
         "select " +
-        "substr(`o`.`o_orderdate`, 0, 4) as `o_year`, " +
-        "`l`.`l_extendedprice` * (1 - `l`.`l_discount`) as `volume`, " +
-        "`n2`.`n_name` as `nation` " +
+        "substr(o.`o_orderdate`, 0, 4) as `o_year`, " +
+        "l.`l_extendedprice` * (1 - l.`l_discount`) as `volume`, " +
+        "n2.`n_name` as `nation` " +
         "from " +
         "`tpch`.`part` as p, " +
         "`tpch`.`supplier` as s, " +
@@ -742,16 +742,16 @@ public class TpchSelectQueryOpToSqlTest {
         "`tpch`.`nation` as n2, " +
         "`tpch`.`region` as r " +
         "where " +
-        "(((((((((`p`.`p_partkey` = `l`.`l_partkey`) " +
-        "and (`s`.`s_suppkey` = `l`.`l_suppkey`)) " +
-        "and (`l`.`l_orderkey` = `o`.`o_orderkey`)) " +
-        "and (`o`.`o_custkey` = `c`.`c_custkey`)) " +
-        "and (`c`.`c_nationkey` = `n1`.`n_nationkey`)) " +
-        "and (`n1`.`n_regionkey` = `r`.`r_regionkey`)) " +
-        "and (`r`.`r_name` = ':2')) " +
-        "and (`s`.`s_nationkey` = `n2`.`n_nationkey`)) " +
-        "and (`o`.`o_orderdate` between (date '1995-01-01') and (date '1996-12-31'))) " +
-        "and (`p`.`p_type` = ':3')" +
+        "(((((((((p.`p_partkey` = l.`l_partkey`) " +
+        "and (s.`s_suppkey` = l.`l_suppkey`)) " +
+        "and (l.`l_orderkey` = o.`o_orderkey`)) " +
+        "and (o.`o_custkey` = c.`c_custkey`)) " +
+        "and (c.`c_nationkey` = n1.`n_nationkey`)) " +
+        "and (n1.`n_regionkey` = r.`r_regionkey`)) " +
+        "and (r.`r_name` = ':2')) " +
+        "and (s.`s_nationkey` = n2.`n_nationkey`)) " +
+        "and (o.`o_orderdate` between (date '1995-01-01') and (date '1996-12-31'))) " +
+        "and (p.`p_type` = ':3')" +
         ") as all_nations " +
         "group by " +
         "`o_year` " +
@@ -828,15 +828,15 @@ public class TpchSelectQueryOpToSqlTest {
         new OrderbyAttribute("o_year", "desc")));
     relation.addLimit(ConstantColumn.valueOf(1));
     String expected = "select " +
-        "`profit`.`nation`, " +
-        "`profit`.`o_year`, " +
-        "sum(`profit`.`amount`) as `sum_profit` " +
+        "profit.`nation`, " +
+        "profit.`o_year`, " +
+        "sum(profit.`amount`) as `sum_profit` " +
         "from " +
         "(" +
         "select " +
-        "`n`.`n_name` as `nation`, " +
-        "substr(`o`.`o_orderdate`, 0, 4) as `o_year`, " +
-        "(`l`.`l_extendedprice` * (1 - `l`.`l_discount`)) - (`ps`.`ps_supplycost` * `l`.`l_quantity`) as `amount` " +
+        "n.`n_name` as `nation`, " +
+        "substr(o.`o_orderdate`, 0, 4) as `o_year`, " +
+        "(l.`l_extendedprice` * (1 - l.`l_discount`)) - (ps.`ps_supplycost` * l.`l_quantity`) as `amount` " +
         "from " +
         "`tpch`.`part` as p, " +
         "`tpch`.`supplier` as s, " +
@@ -845,13 +845,13 @@ public class TpchSelectQueryOpToSqlTest {
         "`tpch`.`orders` as o, " +
         "`tpch`.`nation` as n " +
         "where " +
-        "((((((`s`.`s_suppkey` = `l`.`l_suppkey`) " +
-        "and (`ps`.`ps_suppkey` = `l`.`l_suppkey`)) " +
-        "and (`ps`.`ps_partkey` = `l`.`l_partkey`)) " +
-        "and (`p`.`p_partkey` = `l`.`l_partkey`)) " +
-        "and (`o`.`o_orderkey` = `l`.`l_orderkey`)) " +
-        "and (`s`.`s_nationkey` = `n`.`n_nationkey`)) " +
-        "and (`p`.`p_name` like '%:1%')" +
+        "((((((s.`s_suppkey` = l.`l_suppkey`) " +
+        "and (ps.`ps_suppkey` = l.`l_suppkey`)) " +
+        "and (ps.`ps_partkey` = l.`l_partkey`)) " +
+        "and (p.`p_partkey` = l.`l_partkey`)) " +
+        "and (o.`o_orderkey` = l.`l_orderkey`)) " +
+        "and (s.`s_nationkey` = n.`n_nationkey`)) " +
+        "and (p.`p_name` like '%:1%')" +
         ") as profit " +
         "group by " +
         "`nation`, " +
@@ -928,26 +928,26 @@ public class TpchSelectQueryOpToSqlTest {
     relation.addOrderby(new OrderbyAttribute("revenue", "desc"));
     relation.addLimit(ConstantColumn.valueOf(20));
     String expected = "select " +
-        "`c`.`c_custkey`, " +
-        "`c`.`c_name`, " +
-        "sum(`l`.`l_extendedprice` * (1 - `l`.`l_discount`)) as `revenue`, " +
-        "`c`.`c_acctbal`, " +
-        "`n`.`n_name`, " +
-        "`c`.`c_address`, " +
-        "`c`.`c_phone`, " +
-        "`c`.`c_comment` " +
+        "c.`c_custkey`, " +
+        "c.`c_name`, " +
+        "sum(l.`l_extendedprice` * (1 - l.`l_discount`)) as `revenue`, " +
+        "c.`c_acctbal`, " +
+        "n.`n_name`, " +
+        "c.`c_address`, " +
+        "c.`c_phone`, " +
+        "c.`c_comment` " +
         "from " +
         "`tpch`.`customer` as c, " +
         "`tpch`.`orders` as o, " +
         "`tpch`.`lineitem` as l, " +
         "`tpch`.`nation` as n " +
         "where " +
-        "(((((`c`.`c_custkey` = `o`.`o_custkey`) " +
-        "and (`l`.`l_orderkey` = `o`.`o_orderkey`)) " +
-        "and (`o`.`o_orderdate` >= (date ':1'))) " +
-        "and (`o`.`o_orderdate` < ((date ':1') + (interval '3' month)))) " +
-        "and (`l`.`l_returnflag` = 'R')) " +
-        "and (`c`.`c_nationkey` = `n`.`n_nationkey`) " +
+        "(((((c.`c_custkey` = o.`o_custkey`) " +
+        "and (l.`l_orderkey` = o.`o_orderkey`)) " +
+        "and (o.`o_orderdate` >= (date ':1'))) " +
+        "and (o.`o_orderdate` < ((date ':1') + (interval '3' month)))) " +
+        "and (l.`l_returnflag` = 'R')) " +
+        "and (c.`c_nationkey` = n.`n_nationkey`) " +
         "group by " +
         "`c_custkey`, " +
         "`c_name`, " +
@@ -1023,29 +1023,29 @@ public class TpchSelectQueryOpToSqlTest {
     relation.addOrderby(new OrderbyAttribute("value", "desc"));
     relation.addLimit(ConstantColumn.valueOf(1));
     String expected = "select " +
-        "`ps`.`ps_partkey`, " +
-        "sum(`ps`.`ps_supplycost` * `ps`.`ps_availqty`) as `value` " +
+        "ps.`ps_partkey`, " +
+        "sum(ps.`ps_supplycost` * ps.`ps_availqty`) as `value` " +
         "from " +
         "`tpch`.`partsupp` as ps, " +
         "`tpch`.`supplier` as s, " +
         "`tpch`.`nation` as n " +
         "where " +
-        "((`ps`.`ps_suppkey` = `s`.`s_suppkey`) " +
-        "and (`s`.`s_nationkey` = `n`.`n_nationkey`)) " +
-        "and (`n`.`n_name` = ':1') " +
+        "((ps.`ps_suppkey` = s.`s_suppkey`) " +
+        "and (s.`s_nationkey` = n.`n_nationkey`)) " +
+        "and (n.`n_name` = ':1') " +
         "group by " +
         "`ps_partkey` having " +
-        "sum(`ps`.`ps_supplycost` * `ps`.`ps_availqty`) > (" +
+        "sum(ps.`ps_supplycost` * ps.`ps_availqty`) > (" +
         "select " +
-        "sum(`ps`.`ps_supplycost` * `ps`.`ps_availqty`) * :2 " +
+        "sum(ps.`ps_supplycost` * ps.`ps_availqty`) * :2 " +
         "from " +
         "`tpch`.`partsupp` as ps, " +
         "`tpch`.`supplier` as s, " +
         "`tpch`.`nation` as n " +
         "where " +
-        "((`ps`.`ps_suppkey` = `s`.`s_suppkey`) " +
-        "and (`s`.`s_nationkey` = `n`.`n_nationkey`)) " +
-        "and (`n`.`n_name` = ':1')" +
+        "((ps.`ps_suppkey` = s.`s_suppkey`) " +
+        "and (s.`s_nationkey` = n.`n_nationkey`)) " +
+        "and (n.`n_name` = ':1')" +
         ") " +
         "order by " +
         "`value` desc " +
@@ -1123,16 +1123,16 @@ public class TpchSelectQueryOpToSqlTest {
     relation.addOrderby(new OrderbyAttribute("l_shipmode"));
     relation.addLimit(ConstantColumn.valueOf(1));
     String expected = "select " +
-        "`l`.`l_shipmode`, " +
+        "l.`l_shipmode`, " +
         "sum(case " +
-        "when ((`o`.`o_orderpriority` = '1-URGENT') " +
-        "or (`o`.`o_orderpriority` = '2-HIGH')) " +
+        "when ((o.`o_orderpriority` = '1-URGENT') " +
+        "or (o.`o_orderpriority` = '2-HIGH')) " +
         "then 1 " +
         "else 0 " +
         "end) as `high_line_count`, " +
         "sum(case " +
-        "when ((`o`.`o_orderpriority` <> '1-URGENT') " +
-        "and (`o`.`o_orderpriority` <> '2-HIGH')) " +
+        "when ((o.`o_orderpriority` <> '1-URGENT') " +
+        "and (o.`o_orderpriority` <> '2-HIGH')) " +
         "then 1 " +
         "else 0 " +
         "end) as `low_line_count` " +
@@ -1140,12 +1140,12 @@ public class TpchSelectQueryOpToSqlTest {
         "`tpch`.`orders` as o, " +
         "`tpch`.`lineitem` as l " +
         "where " +
-        "(((((`o`.`o_orderkey` = `l`.`l_orderkey`) " +
-        "and (`l`.`l_shipmode` in (':1', ':2'))) " +
-        "and (`l`.`l_commitdate` < `l`.`l_receiptdate`)) " +
-        "and (`l`.`l_shipdate` < `l`.`l_commitdate`)) " +
-        "and (`l`.`l_receiptdate` >= (date ':3'))) " +
-        "and (`l`.`l_receiptdate` < ((date ':3') + (interval '1' year))) " +
+        "(((((o.`o_orderkey` = l.`l_orderkey`) " +
+        "and (l.`l_shipmode` in (':1', ':2'))) " +
+        "and (l.`l_commitdate` < l.`l_receiptdate`)) " +
+        "and (l.`l_shipdate` < l.`l_commitdate`)) " +
+        "and (l.`l_receiptdate` >= (date ':3'))) " +
+        "and (l.`l_receiptdate` < ((date ':3') + (interval '1' year))) " +
         "group by " +
         "`l_shipmode` " +
         "order by " +
@@ -1192,17 +1192,17 @@ public class TpchSelectQueryOpToSqlTest {
         new OrderbyAttribute("c_count", "desc")));
     relation.addLimit(ConstantColumn.valueOf(1));
     String expected = "select " +
-        "`c_orders`.`c_count`, " +
+        "c_orders.`c_count`, " +
         "count(*) as `custdist` " +
         "from " +
         "(" +
         "select " +
-        "`c`.`c_custkey`, " +
+        "c.`c_custkey`, " +
         "count(*) " +
         "from " +
         "`tpch`.`customer` as c left outer join `tpch`.`orders` as o on " +
-        "((`c`.`c_custkey` = `o`.`o_custkey`) " +
-        "and (`o`.`o_comment` not like '%:1%:2%')) " +
+        "((c.`c_custkey` = o.`o_custkey`) " +
+        "and (o.`o_comment` not like '%:1%:2%')) " +
         "group by " +
         "`c_custkey`" +
         ") as c_orders (c_custkey, c_count) " +
@@ -1262,17 +1262,17 @@ public class TpchSelectQueryOpToSqlTest {
     relation.addLimit(ConstantColumn.valueOf(1));
     String expected = "select " +
         "(100.00 * sum(case " +
-        "when (`p`.`p_type` like 'PROMO%') " +
-        "then (`l`.`l_extendedprice` * (1 - `l`.`l_discount`)) " +
+        "when (p.`p_type` like 'PROMO%') " +
+        "then (l.`l_extendedprice` * (1 - l.`l_discount`)) " +
         "else 0 " +
-        "end)) / sum(`l`.`l_extendedprice` * (1 - `l`.`l_discount`)) as `promo_revenue` " +
+        "end)) / sum(l.`l_extendedprice` * (1 - l.`l_discount`)) as `promo_revenue` " +
         "from " +
         "`tpch`.`lineitem` as l, " +
         "`tpch`.`part` as p " +
         "where " +
-        "((`l`.`l_partkey` = `p`.`p_partkey`) " +
-        "and (`l`.`l_shipdate` >= (date ':1'))) " +
-        "and (`l`.`l_shipdate` < ((date ':1') + (interval '1' month))) " +
+        "((l.`l_partkey` = p.`p_partkey`) " +
+        "and (l.`l_shipdate` >= (date ':1'))) " +
+        "and (l.`l_shipdate` < ((date ':1') + (interval '1' month))) " +
         "limit 1";
     SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
     String actual = relToSql.toSql(relation);
@@ -1306,19 +1306,19 @@ public class TpchSelectQueryOpToSqlTest {
     relation.addOrderby(new OrderbyAttribute("s_suppkey"));
     relation.addLimit(ConstantColumn.valueOf(1));
     String expected = "select " +
-        "`s`.`s_suppkey`, " +
-        "`s`.`s_name`, " +
-        "`s`.`s_address`, " +
-        "`s`.`s_phone`, " +
-        "`r`.`total_revenue` " +
+        "s.`s_suppkey`, " +
+        "s.`s_name`, " +
+        "s.`s_address`, " +
+        "s.`s_phone`, " +
+        "r.`total_revenue` " +
         "from " +
         "`tpch`.`supplier` as s, " +
         "`tpch`.`revenue` as r " +
         "where " +
-        "(`s`.`s_suppkey` = `r`.`supplier_no`) " +
-        "and (`r`.`total_revenue` = (" +
+        "(s.`s_suppkey` = r.`supplier_no`) " +
+        "and (r.`total_revenue` = (" +
         "select " +
-        "max(`r`.`total_revenue`) " +
+        "max(r.`total_revenue`) " +
         "from " +
         "`tpch`.`revenue` as r" +
         ")) " +
@@ -1383,25 +1383,25 @@ public class TpchSelectQueryOpToSqlTest {
     ));
     relation.addLimit(ConstantColumn.valueOf(1));
     String expected = "select " +
-        "`p`.`p_brand`, " +
-        "`p`.`p_type`, " +
-        "`p`.`p_size`, " +
-        "count(distinct `ps`.`ps_suppkey`) as `supplier_cnt` " +
+        "p.`p_brand`, " +
+        "p.`p_type`, " +
+        "p.`p_size`, " +
+        "count(distinct ps.`ps_suppkey`) as `supplier_cnt` " +
         "from " +
         "`tpch`.`partsupp` as ps, " +
         "`tpch`.`part` as p " +
         "where " +
-        "((((`p`.`p_partkey` = `ps`.`ps_partkey`) " +
-        "and (`p`.`p_brand` <> ':1')) " +
-        "and (`p`.`p_type` not like ':2%')) " +
-        "and (`p`.`p_size` in (:3, :4, :5, :6, :7, :8, :9, :10))) " +
-        "and (`ps`.`ps_suppkey` not in (" +
+        "((((p.`p_partkey` = ps.`ps_partkey`) " +
+        "and (p.`p_brand` <> ':1')) " +
+        "and (p.`p_type` not like ':2%')) " +
+        "and (p.`p_size` in (:3, :4, :5, :6, :7, :8, :9, :10))) " +
+        "and (ps.`ps_suppkey` not in (" +
         "select " +
-        "`s`.`s_suppkey` " +
+        "s.`s_suppkey` " +
         "from " +
         "`tpch`.`supplier` as s " +
         "where " +
-        "`s`.`s_comment` like '%Customer%Complaints%'" +
+        "s.`s_comment` like '%Customer%Complaints%'" +
         ")) " +
         "group by " +
         "`p_brand`, " +
@@ -1463,17 +1463,17 @@ public class TpchSelectQueryOpToSqlTest {
     )));
     relation.addLimit(ConstantColumn.valueOf(1));
     String expected = "select " +
-        "sum(`l`.`l_extendedprice`) / 7.0 as `avg_yearly` " +
+        "sum(l.`l_extendedprice`) / 7.0 as `avg_yearly` " +
         "from " +
         "`tpch`.`lineitem` as l, " +
         "`tpch`.`part` as p, " +
-        "(select `l`.`l_partkey` as `agg_partkey`, 0.2 * avg(`l`.`l_quantity`) as `avg_quantity` from `tpch`.`lineitem` as l group by `l_partkey`) as part_agg " +
+        "(select l.`l_partkey` as `agg_partkey`, 0.2 * avg(l.`l_quantity`) as `avg_quantity` from `tpch`.`lineitem` as l group by `l_partkey`) as part_agg " +
         "where " +
-        "((((`p`.`p_partkey` = `l`.`l_partkey`) " +
-        "and (`part_agg`.`agg_partkey` = `l`.`l_partkey`)) " +
-        "and (`p`.`p_brand` = ':1')) " +
-        "and (`p`.`p_container` = ':2')) " +
-        "and (`l`.`l_quantity` < `part_agg`.`avg_quantity`) " +
+        "((((p.`p_partkey` = l.`l_partkey`) " +
+        "and (part_agg.`agg_partkey` = l.`l_partkey`)) " +
+        "and (p.`p_brand` = ':1')) " +
+        "and (p.`p_container` = ':2')) " +
+        "and (l.`l_quantity` < part_agg.`avg_quantity`) " +
         "limit 1";
     SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
     String actual = relToSql.toSql(relation);
@@ -1528,28 +1528,28 @@ public class TpchSelectQueryOpToSqlTest {
     ));
     relation.addLimit(ConstantColumn.valueOf(100));
     String expected = "select " +
-        "`c`.`c_name`, " +
-        "`c`.`c_custkey`, " +
-        "`o`.`o_orderkey`, " +
-        "`o`.`o_orderdate`, " +
-        "`o`.`o_totalprice`, " +
-        "sum(`l`.`l_quantity`) " +
+        "c.`c_name`, " +
+        "c.`c_custkey`, " +
+        "o.`o_orderkey`, " +
+        "o.`o_orderdate`, " +
+        "o.`o_totalprice`, " +
+        "sum(l.`l_quantity`) " +
         "from " +
         "`tpch`.`customer` as c, " +
         "`tpch`.`orders` as o, " +
         "`tpch`.`lineitem` as l " +
         "where " +
-        "((`o`.`o_orderkey` in (" +
+        "((o.`o_orderkey` in (" +
         "select " +
-        "`l`.`l_orderkey` " +
+        "l.`l_orderkey` " +
         "from " +
         "`tpch`.`lineitem` as l " +
         "group by " +
         "`l_orderkey` having " +
-        "sum(`l`.`l_quantity`) > ':1'" +
+        "sum(l.`l_quantity`) > ':1'" +
         ")) " +
-        "and (`c`.`c_custkey` = `o`.`o_custkey`)) " +
-        "and (`o`.`o_orderkey` = `l`.`l_orderkey`) " +
+        "and (c.`c_custkey` = o.`o_custkey`)) " +
+        "and (o.`o_orderkey` = l.`l_orderkey`) " +
         "group by " +
         "`c_name`, " +
         "`c_custkey`, " +
@@ -1741,36 +1741,36 @@ public class TpchSelectQueryOpToSqlTest {
     )));
     relation.addLimit(ConstantColumn.valueOf(1));
     String expected = "select " +
-        "sum(`l`.`l_extendedprice` * (1 - `l`.`l_discount`)) as `revenue` " +
+        "sum(l.`l_extendedprice` * (1 - l.`l_discount`)) as `revenue` " +
         "from " +
         "`tpch`.`lineitem` as l, " +
         "`tpch`.`part` as p " +
         "where " +
         "(((((((((" +
-        "`p`.`p_partkey` = `l`.`l_partkey`) " +
-        "and (`p`.`p_brand` = ':1')) " +
-        "and (`p`.`p_container` in ('SM CASE', 'SM BOX', 'SM PACK', 'SM PKG'))) " +
-        "and (`l`.`l_quantity` >= ':4')) and (`l`.`l_quantity` <= (':4' + 10))) " +
-        "and (`p`.`p_size` between 1 and 5)) " +
-        "and (`l`.`l_shipmode` in ('AIR', 'AIR REG'))) " +
-        "and (`l`.`l_shipinstruct` = 'DELIVER IN PERSON')) " +
+        "p.`p_partkey` = l.`l_partkey`) " +
+        "and (p.`p_brand` = ':1')) " +
+        "and (p.`p_container` in ('SM CASE', 'SM BOX', 'SM PACK', 'SM PKG'))) " +
+        "and (l.`l_quantity` >= ':4')) and (l.`l_quantity` <= (':4' + 10))) " +
+        "and (p.`p_size` between 1 and 5)) " +
+        "and (l.`l_shipmode` in ('AIR', 'AIR REG'))) " +
+        "and (l.`l_shipinstruct` = 'DELIVER IN PERSON')) " +
         "or " +
-        "((((((((`p`.`p_partkey` = `l`.`l_partkey`) " +
-        "and (`p`.`p_brand` = ':2')) " +
-        "and (`p`.`p_container` in ('MED BAG', 'MED BOX', 'MED PKG', 'MED PACK'))) " +
-        "and (`l`.`l_quantity` >= ':5')) and (`l`.`l_quantity` <= (':5' + 10))) " +
-        "and (`p`.`p_size` between 1 and 10)) " +
-        "and (`l`.`l_shipmode` in ('AIR', 'AIR REG'))) " +
-        "and (`l`.`l_shipinstruct` = 'DELIVER IN PERSON'))" +
+        "((((((((p.`p_partkey` = l.`l_partkey`) " +
+        "and (p.`p_brand` = ':2')) " +
+        "and (p.`p_container` in ('MED BAG', 'MED BOX', 'MED PKG', 'MED PACK'))) " +
+        "and (l.`l_quantity` >= ':5')) and (l.`l_quantity` <= (':5' + 10))) " +
+        "and (p.`p_size` between 1 and 10)) " +
+        "and (l.`l_shipmode` in ('AIR', 'AIR REG'))) " +
+        "and (l.`l_shipinstruct` = 'DELIVER IN PERSON'))" +
         ") " +
         "or " +
-        "((((((((`p`.`p_partkey` = `l`.`l_partkey`) " +
-        "and (`p`.`p_brand` = ':3')) " +
-        "and (`p`.`p_container` in ('LG CASE', 'LG BOX', 'LG PACK', 'LG PKG'))) " +
-        "and (`l`.`l_quantity` >= ':6')) and (`l`.`l_quantity` <= (':6' + 10))) " +
-        "and (`p`.`p_size` between 1 and 15)) " +
-        "and (`l`.`l_shipmode` in ('AIR', 'AIR REG'))) " +
-        "and (`l`.`l_shipinstruct` = 'DELIVER IN PERSON')" +
+        "((((((((p.`p_partkey` = l.`l_partkey`) " +
+        "and (p.`p_brand` = ':3')) " +
+        "and (p.`p_container` in ('LG CASE', 'LG BOX', 'LG PACK', 'LG PKG'))) " +
+        "and (l.`l_quantity` >= ':6')) and (l.`l_quantity` <= (':6' + 10))) " +
+        "and (p.`p_size` between 1 and 15)) " +
+        "and (l.`l_shipmode` in ('AIR', 'AIR REG'))) " +
+        "and (l.`l_shipinstruct` = 'DELIVER IN PERSON')" +
         ") " +
         "limit 1";
     SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
@@ -1854,46 +1854,46 @@ public class TpchSelectQueryOpToSqlTest {
     relation.addOrderby(new OrderbyAttribute("s_name"));
     relation.addLimit(ConstantColumn.valueOf(1));
     String expected = "select " +
-        "`s`.`s_name`, " +
-        "`s`.`s_address` " +
+        "s.`s_name`, " +
+        "s.`s_address` " +
         "from " +
         "`tpch`.`supplier` as s, " +
         "`tpch`.`nation` as n " +
         "where " +
-        "((`s`.`s_suppkey` in (" +
+        "((s.`s_suppkey` in (" +
         "select " +
-        "`ps`.`ps_suppkey` " +
+        "ps.`ps_suppkey` " +
         "from " +
         "`tpch`.`partsupp` as ps, " +
         "(" +
         "select " +
-        "`l`.`l_partkey` as `agg_partkey`, " +
-        "`l`.`l_suppkey` as `agg_suppkey`, " +
-        "0.5 * sum(`l`.`l_quantity`) as `agg_quantity` " +
+        "l.`l_partkey` as `agg_partkey`, " +
+        "l.`l_suppkey` as `agg_suppkey`, " +
+        "0.5 * sum(l.`l_quantity`) as `agg_quantity` " +
         "from " +
         "`tpch`.`lineitem` as l " +
         "where " +
-        "(`l`.`l_shipdate` >= (date ':2')) " +
-        "and (`l`.`l_shipdate` < ((date ':2') + (interval '1' year))) " +
+        "(l.`l_shipdate` >= (date ':2')) " +
+        "and (l.`l_shipdate` < ((date ':2') + (interval '1' year))) " +
         "group by " +
         "`l_partkey`, " +
         "`l_suppkey`" +
         ") as agg_lineitem " +
         "where " +
-        "(((`agg_lineitem`.`agg_partkey` = `ps`.`ps_partkey`) " +
-        "and (`agg_lineitem`.`agg_suppkey` = `ps`.`ps_suppkey`)) " +
-        "and (`ps`.`ps_partkey` in (" +
+        "(((agg_lineitem.`agg_partkey` = ps.`ps_partkey`) " +
+        "and (agg_lineitem.`agg_suppkey` = ps.`ps_suppkey`)) " +
+        "and (ps.`ps_partkey` in (" +
         "select " +
-        "`p`.`p_partkey` " +
+        "p.`p_partkey` " +
         "from " +
         "`tpch`.`part` as p " +
         "where " +
-        "`p`.`p_name` like ':1%'" +
+        "p.`p_name` like ':1%'" +
         "))) " +
-        "and (`ps`.`ps_availqty` > `agg_lineitem`.`agg_quantity`" +
+        "and (ps.`ps_availqty` > agg_lineitem.`agg_quantity`" +
         "))) " +
-        "and (`s`.`s_nationkey` = `n`.`n_nationkey`)) " +
-        "and (`n`.`n_name` = ':3') " +
+        "and (s.`s_nationkey` = n.`n_nationkey`)) " +
+        "and (n.`n_name` = ':3') " +
         "order by " +
         "`s_name` asc " +
         "limit 1";
@@ -1971,7 +1971,7 @@ public class TpchSelectQueryOpToSqlTest {
     relation.addOrderby(new OrderbyAttribute("s_name"));
     relation.addLimit(ConstantColumn.valueOf(100));
     String expected = "select " +
-        "`s`.`s_name`, " +
+        "s.`s_name`, " +
         "count(*) as `numwait` " +
         "from " +
         "`tpch`.`supplier` as s, " +
@@ -1979,18 +1979,18 @@ public class TpchSelectQueryOpToSqlTest {
         "`tpch`.`orders` as o, " +
         "`tpch`.`nation` as n " +
         "where " +
-        "(((((((`s`.`s_suppkey` = `l1`.`l_suppkey`) " +
-        "and (`o`.`o_orderkey` = `l1`.`l_orderkey`)) " +
-        "and (`o`.`o_orderstatus` = 'F')) " +
-        "and (`l1`.`l_receiptdate` > `l1`.`l_commitdate`)) " +
+        "(((((((s.`s_suppkey` = l1.`l_suppkey`) " +
+        "and (o.`o_orderkey` = l1.`l_orderkey`)) " +
+        "and (o.`o_orderstatus` = 'F')) " +
+        "and (l1.`l_receiptdate` > l1.`l_commitdate`)) " +
         "and (exists (" +
         "select " +
         "* " +
         "from " +
         "`tpch`.`lineitem` as l2 " +
         "where " +
-        "(`l2`.`l_orderkey` = `l1`.`l_orderkey`) " +
-        "and (`l2`.`l_suppkey` <> `l1`.`l_suppkey`)" +
+        "(l2.`l_orderkey` = l1.`l_orderkey`) " +
+        "and (l2.`l_suppkey` <> l1.`l_suppkey`)" +
         "))) " +
         "and (not exists (" +
         "select " +
@@ -1998,12 +1998,12 @@ public class TpchSelectQueryOpToSqlTest {
         "from " +
         "`tpch`.`lineitem` as l3 " +
         "where " +
-        "((`l3`.`l_orderkey` = `l1`.`l_orderkey`) " +
-        "and (`l3`.`l_suppkey` <> `l1`.`l_suppkey`)) " +
-        "and (`l3`.`l_receiptdate` > `l3`.`l_commitdate`)" +
+        "((l3.`l_orderkey` = l1.`l_orderkey`) " +
+        "and (l3.`l_suppkey` <> l1.`l_suppkey`)) " +
+        "and (l3.`l_receiptdate` > l3.`l_commitdate`)" +
         "))) " +
-        "and (`s`.`s_nationkey` = `n`.`n_nationkey`)) " +
-        "and (`n`.`n_name` = ':1') " +
+        "and (s.`s_nationkey` = n.`n_nationkey`)) " +
+        "and (n.`n_name` = ':1') " +
         "group by " +
         "`s_name` " +
         "order by " +
@@ -2071,27 +2071,27 @@ public class TpchSelectQueryOpToSqlTest {
     relation.addOrderby(new OrderbyAttribute("cntrycode"));
     relation.addLimit(ConstantColumn.valueOf(1));
     String expected = "select " +
-        "`custsale`.`cntrycode`, " +
+        "custsale.`cntrycode`, " +
         "count(*) as `numcust`, " +
-        "sum(`custsale`.`c_acctbal`) as `totacctbal` " +
+        "sum(custsale.`c_acctbal`) as `totacctbal` " +
         "from " +
         "(" +
         "select " +
-        "substr(`c`.`c_phone`, 1, 2) as `cntrycode`, " +
-        "`c`.`c_acctbal` " +
+        "substr(c.`c_phone`, 1, 2) as `cntrycode`, " +
+        "c.`c_acctbal` " +
         "from " +
         "`tpch`.`customer` as c " +
         "where " +
-        "(((substr(`c`.`c_phone`, 1, 2)) in " +
+        "(((substr(c.`c_phone`, 1, 2)) in " +
         "(':1', ':2', ':3', ':4', ':5', ':6', ':7')) " +
-        "and (`c`.`c_acctbal` > (" +
+        "and (c.`c_acctbal` > (" +
         "select " +
-        "avg(`c`.`c_acctbal`) " +
+        "avg(c.`c_acctbal`) " +
         "from " +
         "`tpch`.`customer` as c " +
         "where " +
-        "(`c`.`c_acctbal` > 0.00) " +
-        "and ((substr(`c`.`c_phone`, 1, 2)) in " +
+        "(c.`c_acctbal` > 0.00) " +
+        "and ((substr(c.`c_phone`, 1, 2)) in " +
         "(':1', ':2', ':3', ':4', ':5', ':6', ':7'))" +
         "))) " +
         "and (not exists (" +
@@ -2100,7 +2100,7 @@ public class TpchSelectQueryOpToSqlTest {
         "from " +
         "`tpch`.`orders` as o " +
         "where " +
-        "`o`.`o_custkey` = `c`.`c_custkey`" +
+        "o.`o_custkey` = c.`c_custkey`" +
         ")" +
         ")) as custsale " +
         "group by " +

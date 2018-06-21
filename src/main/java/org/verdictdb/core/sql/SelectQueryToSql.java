@@ -73,7 +73,7 @@ public class SelectQueryToSql {
   String unnamedColumnToSqlPart(UnnamedColumn column) throws VerdictDbException {
     if (column instanceof BaseColumn) {
       BaseColumn base = (BaseColumn) column;
-      return quoteName(base.getTableSourceAlias()) + "." + quoteName(base.getColumnName());
+      return base.getTableSourceAlias() + "." + quoteName(base.getColumnName());
     } else if (column instanceof ConstantColumn) {
       return ((ConstantColumn) column).getValue().toString();
     } else if (column instanceof AsteriskColumn) {

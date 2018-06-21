@@ -39,8 +39,8 @@ public class UniformScramblerTest {
     final String DB_USER = "";
     final String DB_PASSWORD = "";
     conn = DriverManager.getConnection(DB_CONNECTION, DB_USER, DB_PASSWORD);
-    conn.createStatement().execute("CREATE SCHEMA " + originalSchema);
-    conn.createStatement().execute("CREATE SCHEMA " + newSchema);
+    conn.createStatement().execute(String.format("CREATE SCHEMA \"%s\"", originalSchema));
+    conn.createStatement().execute(String.format("CREATE SCHEMA \"%s\"", newSchema));
     populateRandomData(conn, originalSchema, originalTable);
   }
 
@@ -60,9 +60,9 @@ public class UniformScramblerTest {
     meta.getAggregationBlockColumn();
 
     String expected = "select *"
-        + String.format(", floor(rand() * %d) as %s", aggBlockCount, meta.getAggregationBlockColumn())
-        + String.format(", floor(rand() * 100) as %s, ", meta.getSubsampleColumn())
-        + String.format("1 as %s ", meta.getTierColumn())
+        + String.format(", cast(floor(rand() * %d) as smallint) as `%s`", aggBlockCount, meta.getAggregationBlockColumn())
+        + String.format(", cast(floor(rand() * 100) as smallint) as `%s`, ", meta.getSubsampleColumn())
+        + String.format("1 as `%s` ", meta.getTierColumn())
         + String.format("from `%s`.`%s`", originalSchema, originalTable);
     SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
     String actual = relToSql.toSql(scramblingQuery);
@@ -82,9 +82,9 @@ public class UniformScramblerTest {
     String expected = String.format("create table `%s`.`%s` ", newSchema, newTable)
         + String.format("partitioned by (`%s`) ", meta.getAggregationBlockColumn())
         + "as select *"
-        + String.format(", cast(floor(rand() * %d) as smallint) as %s", aggBlockCount, meta.getAggregationBlockColumn())
-        + String.format(", cast(floor(rand() * 100) as smallint) as %s, ", meta.getSubsampleColumn())
-        + String.format("1 as %s ", meta.getTierColumn())
+        + String.format(", cast(floor(rand() * %d) as smallint) as `%s`", aggBlockCount, meta.getAggregationBlockColumn())
+        + String.format(", cast(floor(rand() * 100) as smallint) as `%s`, ", meta.getSubsampleColumn())
+        + String.format("1 as `%s` ", meta.getTierColumn())
         + String.format("from `%s`.`%s`", originalSchema, originalTable);
     CreateTableToSql createToSql = new CreateTableToSql(new HiveSyntax());
     String actual = createToSql.toSql(createQuery);
@@ -99,7 +99,7 @@ public class UniformScramblerTest {
     CreateTableAsSelect createQuery = scrambler.scrambledTableCreationQuery();
     CreateTableToSql createToSql = new CreateTableToSql(new H2Syntax());
     String scrambleSql = createToSql.toSql(createQuery);
-    conn.createStatement().execute(String.format("DROP TABLE IF EXISTS %s.%s", newSchema, newTable));
+    conn.createStatement().execute(String.format("DROP TABLE IF EXISTS \"%s\".\"%s\"", newSchema, newTable));
     conn.createStatement().execute(scrambleSql);
     
     System.out.println(scrambleSql);
@@ -119,12 +119,12 @@ public class UniformScramblerTest {
     CreateTableAsSelect createQuery = scrambler.scrambledTableCreationQuery();
     CreateTableToSql createToSql = new CreateTableToSql(new H2Syntax());
     String scrambleSql = createToSql.toSql(createQuery);
-    conn.createStatement().execute(String.format("DROP TABLE IF EXISTS %s.%s", newSchema, newTable));
+    conn.createStatement().execute(String.format("DROP TABLE IF EXISTS \"%s\".\"%s\"", newSchema, newTable));
     conn.createStatement().execute(scrambleSql);
 
     ResultSet rs = conn.createStatement().executeQuery(
-        String.format("select min(verdictAggBlock), max(verdictAggBlock) "
-            + "from %s.%s", newSchema, newTable));
+        String.format("select min(\"verdictdbaggblock\"), max(\"verdictdbaggblock\") "
+            + "from \"%s\".\"%s\"", newSchema, newTable));
     rs.next();
     assertEquals(0, rs.getInt(1));
     assertEquals(aggBlockCount - 1, rs.getInt(2));
@@ -132,17 +132,17 @@ public class UniformScramblerTest {
 
   static void populateRandomData(Connection conn, String schemaName, String tableName) throws SQLException {
     Statement stmt = conn.createStatement();
-    stmt.execute(String.format("CREATE TABLE %s.%s(id int, value double)", schemaName, tableName));
+    stmt.execute(String.format("CREATE TABLE \"%s\".\"%s\"(\"id\" int, \"value\" double)", schemaName, tableName));
     Random r = new Random();
     for (int i = 0; i < 100; i++) {
-      stmt.execute(String.format("INSERT INTO %s.%s(id, value) VALUES(%s, %f)",
+      stmt.execute(String.format("INSERT INTO \"%s\".\"%s\"(\"id\", \"value\") VALUES(%s, %f)",
           schemaName, tableName, i, r.nextDouble()));
     }
     stmt.close();
   }
 
   void printTableContent(Connection conn, String schemaName, String tableName) throws SQLException {
-    ResultSet rs = conn.createStatement().executeQuery(String.format("SELECT * FROM %s.%s", schemaName, tableName));
+    ResultSet rs = conn.createStatement().executeQuery(String.format("SELECT * FROM \"%s\".\"%s\"", schemaName, tableName));
     System.out.println(schemaName + "." + tableName);
 
     boolean isFirst = true;

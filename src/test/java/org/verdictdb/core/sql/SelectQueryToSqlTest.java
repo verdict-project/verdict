@@ -39,7 +39,7 @@ public class SelectQueryToSqlTest {
         Arrays.<SelectItem>asList(new AsteriskColumn()),
         base);
     relation.addFilterByAnd(ColumnOp.less(new BaseColumn("t", "mycolumn"), ColumnOp.rand()));
-    String expected = "select * from `myschema`.`mytable` as t where `t`.`mycolumn` < rand()";
+    String expected = "select * from `myschema`.`mytable` as t where t.`mycolumn` < rand()";
     SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
     String actual = relToSql.toSql(relation);
     assertEquals(expected, actual);
@@ -53,7 +53,7 @@ public class SelectQueryToSqlTest {
             new BaseColumn("t", "mycolumn1"),
             new BaseColumn("t", "mycolumn2")),
         base);
-    String expected = "select `t`.`mycolumn1`, `t`.`mycolumn2` from `myschema`.`mytable` as t";
+    String expected = "select t.`mycolumn1`, t.`mycolumn2` from `myschema`.`mytable` as t";
     SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
     String actual = relToSql.toSql(relation);
     assertEquals(expected, actual);
@@ -66,7 +66,7 @@ public class SelectQueryToSqlTest {
         Arrays.<SelectItem>asList(
             new ColumnOp("avg", new BaseColumn("t", "mycolumn1"))),
         base);
-    String expected = "select avg(`t`.`mycolumn1`) from `myschema`.`mytable` as t";
+    String expected = "select avg(t.`mycolumn1`) from `myschema`.`mytable` as t";
     SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
     String actual = relToSql.toSql(relation);
     assertEquals(expected, actual);
@@ -79,7 +79,7 @@ public class SelectQueryToSqlTest {
         Arrays.<SelectItem>asList(
             new ColumnOp("sum", new BaseColumn("t", "mycolumn1"))),
         base);
-    String expected = "select sum(`t`.`mycolumn1`) from `myschema`.`mytable` as t";
+    String expected = "select sum(t.`mycolumn1`) from `myschema`.`mytable` as t";
     SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
     String actual = relToSql.toSql(relation);
     assertEquals(expected, actual);
@@ -120,7 +120,7 @@ public class SelectQueryToSqlTest {
             new ColumnOp("sum", new BaseColumn("t", "mycolumn1")),
             new ColumnOp("count", new AsteriskColumn())),
         base);
-    String expected = "select avg(`t`.`mycolumn1`), sum(`t`.`mycolumn1`), count(*) from `myschema`.`mytable` as t";
+    String expected = "select avg(t.`mycolumn1`), sum(t.`mycolumn1`), count(*) from `myschema`.`mytable` as t";
     SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
     String actual = relToSql.toSql(relation);
     assertEquals(expected, actual);
@@ -135,7 +135,7 @@ public class SelectQueryToSqlTest {
     SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
         Arrays.<SelectItem>asList(new ColumnOp("add", operands)),
         base);
-    String expected = "select `t`.`mycolumn1` + `t`.`mycolumn2` from `myschema`.`mytable` as t";
+    String expected = "select t.`mycolumn1` + t.`mycolumn2` from `myschema`.`mytable` as t";
     SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
     String actual = relToSql.toSql(relation);
     assertEquals(expected, actual);
@@ -150,7 +150,7 @@ public class SelectQueryToSqlTest {
     SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
         Arrays.<SelectItem>asList(new ColumnOp("subtract", operands)),
         base);
-    String expected = "select `t`.`mycolumn1` - `t`.`mycolumn2` from `myschema`.`mytable` as t";
+    String expected = "select t.`mycolumn1` - t.`mycolumn2` from `myschema`.`mytable` as t";
     SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
     String actual = relToSql.toSql(relation);
     assertEquals(expected, actual);
@@ -165,7 +165,7 @@ public class SelectQueryToSqlTest {
     SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
         Arrays.<SelectItem>asList(new ColumnOp("multiply", operands)),
         base);
-    String expected = "select `t`.`mycolumn1` * `t`.`mycolumn2` from `myschema`.`mytable` as t";
+    String expected = "select t.`mycolumn1` * t.`mycolumn2` from `myschema`.`mytable` as t";
     SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
     String actual = relToSql.toSql(relation);
     assertEquals(expected, actual);
@@ -180,7 +180,7 @@ public class SelectQueryToSqlTest {
     SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
         Arrays.<SelectItem>asList(new ColumnOp("divide", operands)),
         base);
-    String expected = "select `t`.`mycolumn1` / `t`.`mycolumn2` from `myschema`.`mytable` as t";
+    String expected = "select t.`mycolumn1` / t.`mycolumn2` from `myschema`.`mytable` as t";
     SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
     String actual = relToSql.toSql(relation);
     assertEquals(expected, actual);
@@ -195,7 +195,7 @@ public class SelectQueryToSqlTest {
             new AliasedColumn(new ColumnOp("avg", new BaseColumn("t", "mycolumn1")), "myavg")),
         base);
     relation.addGroupby(new AliasReference("mygroup"));
-    String expected = "select `t`.`mygroup`, avg(`t`.`mycolumn1`) as `myavg` from `myschema`.`mytable` as t group by `mygroup`";
+    String expected = "select t.`mygroup`, avg(t.`mycolumn1`) as `myavg` from `myschema`.`mytable` as t group by `mygroup`";
     SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
     String actual = relToSql.toSql(relation);
     assertEquals(expected, actual);
@@ -217,7 +217,7 @@ public class SelectQueryToSqlTest {
     outerRelation.addGroupby(new AliasReference("mygroup2"));
 
     String expected = "select * from ("
-        + "select `t`.`mygroup`, avg(`t`.`mycolumn1`) as `myavg` from `myschema`.`mytable` as t group by `mygroup`) as s "
+        + "select t.`mygroup`, avg(t.`mycolumn1`) as `myavg` from `myschema`.`mytable` as t group by `mygroup`) as s "
         + "group by `mygroup2`";
     SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
     String actual = relToSql.toSql(outerRelation);

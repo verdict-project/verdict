@@ -147,7 +147,7 @@ public class AggExecutionNode {
     
     // rewrite the query
     AbstractRelation q = aggWithErrorQueries.get(0);
-    SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
+    SelectQueryToSql relToSql = new SelectQueryToSql(conn.getSyntax());
     String query_string = relToSql.toSql(q);
     
     // extract column types from the rewritten
