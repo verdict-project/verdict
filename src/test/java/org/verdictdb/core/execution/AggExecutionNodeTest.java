@@ -24,7 +24,10 @@ import org.verdictdb.core.rewriter.ScrambleMeta;
 import org.verdictdb.core.rewriter.ScrambleMetaForTable;
 import org.verdictdb.core.scramble.UniformScrambler;
 import org.verdictdb.core.sql.CreateTableToSql;
+import org.verdictdb.exception.UnexpectedTypeException;
+import org.verdictdb.exception.ValueException;
 import org.verdictdb.exception.VerdictDbException;
+import org.verdictdb.resulthandler.AsyncHandler;
 import org.verdictdb.sql.syntax.H2Syntax;
 import org.verdictdb.sql.syntax.HiveSyntax;
 
@@ -57,14 +60,14 @@ public class AggExecutionNodeTest {
     contents.add(Arrays.<Object>asList(7, "Alice", 18));
     contents.add(Arrays.<Object>asList(8, "Bob", 18));
     stmt = conn.createStatement();
-    stmt.execute("CREATE SCHEMA IF NOT EXISTS DEFAULT");
-    stmt.execute("DROP TABLE DEFAULT.PEOPLE IF EXISTS");
-    stmt.execute("CREATE TABLE DEFAULT.PEOPLE(id smallint, name varchar(255), age int)");
+    stmt.execute("CREATE SCHEMA IF NOT EXISTS \"default\"");
+    stmt.execute("DROP TABLE \"default\".\"people\" IF EXISTS");
+    stmt.execute("CREATE TABLE \"default\".\"people\" (\"id\" smallint, \"name\" varchar(255), \"age\" int)");
     for (List<Object> row : contents) {
       String id = row.get(0).toString();
       String name = row.get(1).toString();
       String age = row.get(2).toString();
-      stmt.execute(String.format("INSERT INTO DEFAULT.PEOPLE(id, name, age) VALUES(%s, '%s', %s)", id, name, age));
+      stmt.execute(String.format("INSERT INTO \"default\".\"people\" (\"id\", \"name\", \"age\") VALUES(%s, '%s', %s)", id, name, age));
     }
     
     // create a scrambled table
@@ -77,7 +80,7 @@ public class AggExecutionNodeTest {
     CreateTableAsSelect createQuery = scrambler.scrambledTableCreationQuery();
     CreateTableToSql createToSql = new CreateTableToSql(new H2Syntax());
     String scrambleSql = createToSql.toSql(createQuery);
-    conn.createStatement().execute(String.format("DROP TABLE IF EXISTS %s.%s", "default", "scrambled_people"));
+    conn.createStatement().execute(String.format("DROP TABLE IF EXISTS \"%s\".\"%s\"", "default", "scrambled_people"));
     conn.createStatement().execute(scrambleSql);
   }
 
@@ -89,10 +92,33 @@ public class AggExecutionNodeTest {
         Arrays.<SelectItem>asList(
             new AliasedColumn(new ColumnOp("sum", new BaseColumn("t", "age")), aliasName)),
         base);
-    DbmsConnection dbmsConn = new JdbcConnection(conn, new HiveSyntax());
+    DbmsConnection dbmsConn = new JdbcConnection(conn, new H2Syntax());
     AggExecutionNode node = new AggExecutionNode(dbmsConn, meta, relation);
     DbmsQueryResult rs = node.singleExecute();
     rs.printContent();
+  }
+  
+  @Test
+  public void asyncExecute() throws VerdictDbException {
+    BaseTable base = new BaseTable("default", scrambledTable, "t");
+    String aliasName = "a";
+    SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
+        Arrays.<SelectItem>asList(
+            new AliasedColumn(new ColumnOp("sum", new BaseColumn("t", "age")), aliasName)),
+        base);
+    DbmsConnection dbmsConn = new JdbcConnection(conn, new H2Syntax());
+    AggExecutionNode node = new AggExecutionNode(dbmsConn, meta, relation);
+    AsyncHandler handler = new AsyncHandler() {
+
+      @Override
+      public boolean handle(DbmsQueryResult result) {
+        result.printContent();
+        return true;
+      }
+      
+    };
+    
+    node.asyncExecute(handler);
   }
 
 }

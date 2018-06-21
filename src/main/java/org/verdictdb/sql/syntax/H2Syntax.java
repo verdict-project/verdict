@@ -26,7 +26,7 @@ public class H2Syntax implements SyntaxAbstract {
 
   @Override
   public String getQuoteString() {
-    return "";
+    return "\"";
   }
 
   @Override

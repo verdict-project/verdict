@@ -37,6 +37,7 @@ public class JdbcConnection implements DbmsConnection {
 
   @Override
   public DbmsQueryResult executeQuery(String query) {
+    System.out.println("About to issue this query: " + query);
     try {
       Statement stmt = conn.createStatement();
       ResultSet rs = stmt.executeQuery(query);
@@ -52,6 +53,7 @@ public class JdbcConnection implements DbmsConnection {
 
   @Override
   public int executeUpdate(String query) {
+    System.out.println("About to issue this query: " + query);
     try {
       Statement stmt = conn.createStatement();
       int r = stmt.executeUpdate(query);

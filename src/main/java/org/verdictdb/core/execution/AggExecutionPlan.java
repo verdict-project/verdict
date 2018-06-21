@@ -1,9 +1,15 @@
+/*
+ * Copyright 2018 University of Michigan
+ * 
+ * You must contact Barzan Mozafari (mozafari@umich.edu) or Yongjoo Park (pyongjoo@umich.edu) to discuss
+ * how you could use, modify, or distribute this code. By default, this code is not open-sourced and we do
+ * not license this code.
+ */
+
 package org.verdictdb.core.execution;
 
 import org.verdictdb.connection.DbmsConnection;
-import org.verdictdb.connection.StaticMetaData;
 import org.verdictdb.core.DbmsMetaDataCache;
-import org.verdictdb.core.query.AbstractRelation;
 import org.verdictdb.core.query.SelectQueryOp;
 import org.verdictdb.core.rewriter.ScrambleMeta;
 import org.verdictdb.core.sql.NonValidatingSQLParser;
@@ -11,8 +17,6 @@ import org.verdictdb.exception.UnexpectedTypeException;
 import org.verdictdb.exception.ValueException;
 import org.verdictdb.exception.VerdictDbException;
 import org.verdictdb.sql.syntax.SyntaxAbstract;
-
-import com.google.common.base.Optional;
 
 public class AggExecutionPlan {
   

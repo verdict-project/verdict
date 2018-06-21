@@ -30,38 +30,35 @@ public class UniformScrambler extends Scrambler {
   }
 
   SelectQueryOp scramblingQuery() {
-    // block agg index = floor(rand() * aggBlockCount)
+    // block agg index = cast(floor(rand() * aggBlockCount) as smallint)
     AliasedColumn aggBlockValue = new AliasedColumn(
-        ColumnOp.floor(ColumnOp.multiply(
-            ColumnOp.rand(),
-            ConstantColumn.valueOf(aggregationBlockCount))),
+        ColumnOp.cast(
+          ColumnOp.floor(ColumnOp.multiply(
+              ColumnOp.rand(),
+              ConstantColumn.valueOf(aggregationBlockCount))),
+          ConstantColumn.valueOf("smallint")),
         aggregationBlockColumn);
 
-    // inclusion probability = 1 / (aggblock count)
-//    AliasedColumn incProbValue = new AliasedColumn(
-//        ConstantColumn.valueOf(1.0 / aggregationBlockCount),
-//        inclusionProbabilityColumn);
-
-    // inclusion block difference = 1 / (aggblock count)
-//    AliasedColumn incProbBlockDiffValue = new AliasedColumn(
-//        ConstantColumn.valueOf(1.0 / aggregationBlockCount),
-//        inclusionProbabilityBlockDifferenceColumn);
-
     // subsample value: random integer between 0 and 99 (inclusive)
-    // = floor(rand() * 100)
+    // = cast(floor(rand() * 100) as smallint)
     AliasedColumn subsampleValue = new AliasedColumn(
-        ColumnOp.floor(ColumnOp.multiply(
-            ColumnOp.rand(),
-            ConstantColumn.valueOf(100))),
+        ColumnOp.cast(
+            ColumnOp.floor(ColumnOp.multiply(
+                ColumnOp.rand(),
+                ConstantColumn.valueOf(100))),
+        ConstantColumn.valueOf("smallint")),
         subsampleColumn);
+//    AliasedColumn subsampleValue = new AliasedColumn(
+//            ColumnOp.floor(ColumnOp.multiply(
+//                ColumnOp.rand(),
+//                ConstantColumn.valueOf(100.0))),
+//        subsampleColumn);
 
     AliasedColumn tierValue = new AliasedColumn(ConstantColumn.valueOf(1), tierColumn);
 
     List<SelectItem> newSelectList = new ArrayList<>();
     newSelectList.add(new AsteriskColumn());
     newSelectList.add(aggBlockValue);
-//    newSelectList.add(incProbValue);
-//    newSelectList.add(incProbBlockDiffValue);
     newSelectList.add(subsampleValue);
     newSelectList.add(tierValue);
 

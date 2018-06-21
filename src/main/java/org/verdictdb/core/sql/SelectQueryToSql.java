@@ -56,7 +56,7 @@ public class SelectQueryToSql {
 
   String aliasedColumnToSqlPart(AliasedColumn acolumn) throws VerdictDbException {
     String aliasName = acolumn.getAliasName();
-    return unnamedColumnToSqlPart(acolumn.getColumn()) + " as " + aliasName;
+    return unnamedColumnToSqlPart(acolumn.getColumn()) + " as " + quoteName(aliasName);
   }
 
   String groupingAttributeToSqlPart(GroupingAttribute column) throws VerdictDbException {
@@ -73,7 +73,7 @@ public class SelectQueryToSql {
   String unnamedColumnToSqlPart(UnnamedColumn column) throws VerdictDbException {
     if (column instanceof BaseColumn) {
       BaseColumn base = (BaseColumn) column;
-      return quoteName(base.getTableSourceAlias()) + "." + quoteName(base.getColumnName());
+      return base.getTableSourceAlias() + "." + quoteName(base.getColumnName());
     } else if (column instanceof ConstantColumn) {
       return ((ConstantColumn) column).getValue().toString();
     } else if (column instanceof AsteriskColumn) {
@@ -191,6 +191,8 @@ public class SelectQueryToSql {
             withParentheses(columnOp.getOperand(1)) + ", " + withParentheses(columnOp.getOperand(2)) + ")";
       } else if (columnOp.getOpType().equals("rand")) {
         return syntax.randFunction();
+      } else if (columnOp.getOpType().equals("cast")) {
+        return "cast(" + withParentheses(columnOp.getOperand(0)) + " as " + withParentheses(columnOp.getOperand(1)) + ")";
       } else {
         throw new UnexpectedTypeException("Unexpceted opType of column: " + columnOp.getOpType().toString());
       }

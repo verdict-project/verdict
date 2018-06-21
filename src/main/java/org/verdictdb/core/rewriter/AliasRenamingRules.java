@@ -1,4 +1,4 @@
-package org.verdictdb.core.rewriter.query;
+package org.verdictdb.core.rewriter;
 
 public class AliasRenamingRules {
   
@@ -7,44 +7,44 @@ public class AliasRenamingRules {
   }
   
   public static String expectedErrorAliasName(String aliasName) {
-    return aliasName + "_err";
+    return aliasName + ":verdictdb:err";
   }
 
   // internal aliases
   public static String sumEstimateAliasName(String aliasName) {
-    return "sum_" + aliasName;
+    return aliasName + ":verdictdb:sum";
   }
   
   public static String countEstimateAliasName(String aliasName) {
-    return "count_" + aliasName;
+    return aliasName + ":verdictdb:count";
   }
   
   public static String sumScaledSumAliasName(String aliasName) {
-    return "sum_scaled_sum_" + aliasName;
+    return aliasName + ":verdictdb:sum_scaled_su,";
   }
   
   public static String sumSquaredScaledSumAliasName(String aliasName) {
-    return "sum_squared_scaled_sum_" + aliasName;
+    return aliasName + ":verdictdb:sum_squared_scaled_sum";
   }
   
   public static String sumScaledCountAliasName(String aliasName) {
-    return "sum_scaled_count_" + aliasName;
+    return aliasName + ":verdictdb:sum_scaled_count";
   }
   
   public static String sumSquaredScaledCountAliasName(String aliasName) {
-    return "sum_squared_scaled_count_" + aliasName;
+    return aliasName + ":sum_squared_scaled_count";
   }
   
   public static String countSubsampleAliasName() {
-    return "count_subsample";
+    return "verdictdb:count_subsample";
   }
   
   public static String sumSubsampleSizeAliasName() {
-    return "sum_subsample_size";
+    return "verdictdb:sum_subsample_size";
   }
   
   public static String tierAliasName() {
-    return "verdicttier";
+    return "verdictdb:tier";
   }
 
 }

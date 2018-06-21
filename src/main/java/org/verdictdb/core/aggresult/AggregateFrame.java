@@ -35,6 +35,10 @@ public class AggregateFrame {
       throw new ValueException("The column names seem to include duplicates.");
     }
   }
+  
+  public static AggregateFrame empty() throws ValueException {
+    return new AggregateFrame(new ArrayList<String>());
+  }
 
   public static AggregateFrame fromDmbsQueryResult(
       DbmsQueryResult result, 
