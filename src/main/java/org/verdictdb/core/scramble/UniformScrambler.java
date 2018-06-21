@@ -8,9 +8,9 @@ import org.verdictdb.core.query.AsteriskColumn;
 import org.verdictdb.core.query.BaseTable;
 import org.verdictdb.core.query.ColumnOp;
 import org.verdictdb.core.query.ConstantColumn;
-import org.verdictdb.core.query.CreateTableAsSelect;
+import org.verdictdb.core.query.CreateTableAsSelectQuery;
 import org.verdictdb.core.query.SelectItem;
-import org.verdictdb.core.query.SelectQueryOp;
+import org.verdictdb.core.query.SelectQuery;
 
 public class UniformScrambler extends Scrambler {
 
@@ -21,15 +21,15 @@ public class UniformScrambler extends Scrambler {
     super(originalSchemaName, originalTableName, scrambledSchemaName, scrambledTableName, aggregationBlockCount);
   }
 
-  public CreateTableAsSelect scrambledTableCreationQuery() {
-    SelectQueryOp selectQuery = scramblingQuery();
-    CreateTableAsSelect createQuery =
-        new CreateTableAsSelect(scrambledSchemaName, scrambledTableName, selectQuery);
+  public CreateTableAsSelectQuery scrambledTableCreationQuery() {
+    SelectQuery selectQuery = scramblingQuery();
+    CreateTableAsSelectQuery createQuery =
+        new CreateTableAsSelectQuery(scrambledSchemaName, scrambledTableName, selectQuery);
     createQuery.addPartitionColumn(aggregationBlockColumn);
     return createQuery;
   }
 
-  SelectQueryOp scramblingQuery() {
+  SelectQuery scramblingQuery() {
     // block agg index = cast(floor(rand() * aggBlockCount) as smallint)
     AliasedColumn aggBlockValue = new AliasedColumn(
         ColumnOp.cast(
@@ -62,7 +62,7 @@ public class UniformScrambler extends Scrambler {
     newSelectList.add(subsampleValue);
     newSelectList.add(tierValue);
 
-    SelectQueryOp augmentedRelation = SelectQueryOp.getSelectQueryOp(
+    SelectQuery augmentedRelation = SelectQuery.getSelectQueryOp(
         newSelectList,
         new BaseTable(originalSchemaName, originalTableName));
     return augmentedRelation;

@@ -1,10 +1,12 @@
 package org.verdictdb.core.execution;
 
 import java.util.List;
-import java.util.concurrent.BlockingDeque;
 
 import org.verdictdb.connection.DbmsConnection;
-import org.verdictdb.core.query.SelectQueryOp;
+import org.verdictdb.core.query.CreateTableAsSelectQuery;
+import org.verdictdb.core.query.SelectQuery;
+import org.verdictdb.core.sql.CreateTableToSql;
+import org.verdictdb.exception.VerdictDbException;
 
 public class CreateAsSelectExecutionNode extends QueryExecutionNode {
   
@@ -12,9 +14,9 @@ public class CreateAsSelectExecutionNode extends QueryExecutionNode {
   
   String tableName;
   
-  SelectQueryOp query;
+  SelectQuery query;
   
-  public CreateAsSelectExecutionNode(DbmsConnection conn, String schemaName, String tableName, SelectQueryOp query) {
+  public CreateAsSelectExecutionNode(DbmsConnection conn, String schemaName, String tableName, SelectQuery query) {
     super(conn);
     this.schemaName = schemaName;
     this.tableName = tableName;
@@ -22,9 +24,16 @@ public class CreateAsSelectExecutionNode extends QueryExecutionNode {
   }
 
   @Override
-  public ExecutionResult executeInternally(List<ExecutionResult> resultFromChildren) {
-    // TODO Auto-generated method stub
-    return null;
+  public ExecutionResult executeNode(List<ExecutionResult> resultFromChildren) {
+    CreateTableAsSelectQuery createQuery = new CreateTableAsSelectQuery(schemaName, tableName, query);
+    CreateTableToSql toSql = new CreateTableToSql(conn.getSyntax());
+    try {
+      String sql = toSql.toSql(createQuery);
+      conn.executeUpdate(sql);
+    } catch (VerdictDbException e) {
+      e.printStackTrace();
+    }
+    return ExecutionResult.completeResult();
   }
 
 }

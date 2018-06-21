@@ -74,7 +74,7 @@ public abstract class QueryExecutionNode {
         executor.submit(new Runnable() {
           @Override
           public void run() {
-            ExecutionResult thisResult = executeInternally(results);
+            ExecutionResult thisResult = executeNode(results);
             resultQueue.add(thisResult);
           }
         });
@@ -102,6 +102,6 @@ public abstract class QueryExecutionNode {
     resultQueue.add(ExecutionResult.completeResult());
   }
   
-  public abstract ExecutionResult executeInternally(List<ExecutionResult> resultFromChildren);
+  public abstract ExecutionResult executeNode(List<ExecutionResult> resultFromChildren);
 
 }

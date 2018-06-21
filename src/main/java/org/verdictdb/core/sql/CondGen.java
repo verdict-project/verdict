@@ -6,7 +6,7 @@ import java.util.List;
 
 import org.verdictdb.core.query.ColumnOp;
 import org.verdictdb.core.query.ConstantColumn;
-import org.verdictdb.core.query.SelectQueryOp;
+import org.verdictdb.core.query.SelectQuery;
 import org.verdictdb.core.query.SubqueryColumn;
 import org.verdictdb.core.query.UnnamedColumn;
 import org.verdictdb.parser.VerdictSQLBaseVisitor;
@@ -118,7 +118,7 @@ public class CondGen extends VerdictSQLBaseVisitor<UnnamedColumn> {
             UnnamedColumn left = g1.visit(ctx.expression());
             boolean not = (ctx.NOT() != null) ? true : false;
             RelationGen g2 = new RelationGen();
-            UnnamedColumn subquery = SubqueryColumn.getSubqueryColumn((SelectQueryOp) g2.visit(ctx.subquery()));
+            UnnamedColumn subquery = SubqueryColumn.getSubqueryColumn((SelectQuery) g2.visit(ctx.subquery()));
             return not ? new ColumnOp("notin", Arrays.asList(left, subquery)) :
                     new ColumnOp("in", Arrays.asList(left, subquery));
         } else {
@@ -141,7 +141,7 @@ public class CondGen extends VerdictSQLBaseVisitor<UnnamedColumn> {
             return null;
         }
         RelationGen g = new RelationGen();
-        UnnamedColumn subquery = SubqueryColumn.getSubqueryColumn((SelectQueryOp) g.visit(ctx.subquery()));
+        UnnamedColumn subquery = SubqueryColumn.getSubqueryColumn((SelectQuery) g.visit(ctx.subquery()));
         return new ColumnOp("exists", subquery);
     }
 

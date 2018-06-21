@@ -21,7 +21,7 @@ import org.verdictdb.core.query.GroupingAttribute;
 import org.verdictdb.core.query.JoinTable;
 import org.verdictdb.core.query.OrderbyAttribute;
 import org.verdictdb.core.query.SelectItem;
-import org.verdictdb.core.query.SelectQueryOp;
+import org.verdictdb.core.query.SelectQuery;
 import org.verdictdb.core.query.SubqueryColumn;
 import org.verdictdb.core.query.UnnamedColumn;
 
@@ -112,7 +112,7 @@ public class RelationStandardizer {
         g.setColNameAndColAlias(colNameAndColAlias);
         g.setColNameAndTableAlias(colNameAndTableAlias);
         g.setTableInfoAndAlias(tableInfoAndAlias);
-        SelectQueryOp newSubquery = g.standardize(((SubqueryColumn) cond).getSubquery());
+        SelectQuery newSubquery = g.standardize(((SubqueryColumn) cond).getSubquery());
         ((SubqueryColumn) cond).setSubquery(newSubquery);
       }
     }
@@ -168,17 +168,17 @@ public class RelationStandardizer {
         }
       }
       return new ImmutablePair<>(joinColName, table);
-    } else if (table instanceof SelectQueryOp) {
+    } else if (table instanceof SelectQuery) {
       List<String> colName = new ArrayList<>();
       RelationStandardizer g = new RelationStandardizer(meta);
       g.setTableInfoAndAlias(tableInfoAndAlias);
       g.setColNameAndTableAlias(colNameAndTableAlias);
       g.setColNameAndColAlias(colNameAndColAlias);
       String aliasName = table.getAliasName().get();
-      table = g.standardize((SelectQueryOp) table);
+      table = g.standardize((SelectQuery) table);
       table.setAliasName(aliasName);
       // Invariant: Only Aliased Column or Asterisk Column should appear in the subquery
-      for (SelectItem sel : ((SelectQueryOp) table).getSelectList()) {
+      for (SelectItem sel : ((SelectQuery) table).getSelectList()) {
         if (sel instanceof AliasedColumn) {
           //If the aliased name of the column is replaced by ourselves, we should remember the column name
           if (((AliasedColumn) sel).getColumn() instanceof BaseColumn && ((AliasedColumn) sel).getAliasName().matches("^vc[0-9]+$")) {
@@ -203,7 +203,7 @@ public class RelationStandardizer {
   /*
    * Figure out the table alias and the columns the table have
    */
-  private List<AbstractRelation> setupTableSources(SelectQueryOp relationToAlias) throws SQLException {
+  private List<AbstractRelation> setupTableSources(SelectQuery relationToAlias) throws SQLException {
     List<AbstractRelation> fromList = relationToAlias.getFromList();
     for (int i = 0; i < fromList.size(); i++) {
       fromList.set(i, setupTableSource(fromList.get(i)).getValue());
@@ -211,10 +211,10 @@ public class RelationStandardizer {
     return fromList;
   }
 
-  public SelectQueryOp standardize(SelectQueryOp relationToAlias) throws SQLException {
+  public SelectQuery standardize(SelectQuery relationToAlias) throws SQLException {
     List<AbstractRelation> fromList = setupTableSources(relationToAlias);
     List<SelectItem> selectItemList = replaceSelectList(relationToAlias.getSelectList());
-    SelectQueryOp AliasedRelation = SelectQueryOp.getSelectQueryOp(selectItemList, fromList);
+    SelectQuery AliasedRelation = SelectQuery.getSelectQueryOp(selectItemList, fromList);
 
     //Filter
     UnnamedColumn where;

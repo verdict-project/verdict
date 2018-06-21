@@ -11,26 +11,21 @@ import java.util.List;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.connection.DbmsConnection;
-import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.core.aggresult.AggregateFrame;
 import org.verdictdb.core.query.AliasedColumn;
 import org.verdictdb.core.query.BaseColumn;
 import org.verdictdb.core.query.BaseTable;
 import org.verdictdb.core.query.ColumnOp;
-import org.verdictdb.core.query.CreateTableAsSelect;
+import org.verdictdb.core.query.CreateTableAsSelectQuery;
 import org.verdictdb.core.query.SelectItem;
-import org.verdictdb.core.query.SelectQueryOp;
+import org.verdictdb.core.query.SelectQuery;
 import org.verdictdb.core.rewriter.ScrambleMeta;
 import org.verdictdb.core.rewriter.ScrambleMetaForTable;
 import org.verdictdb.core.scramble.UniformScrambler;
 import org.verdictdb.core.sql.CreateTableToSql;
-import org.verdictdb.exception.UnexpectedTypeException;
-import org.verdictdb.exception.ValueException;
 import org.verdictdb.exception.VerdictDbException;
-import org.verdictdb.resulthandler.AsyncHandler;
 import org.verdictdb.sql.syntax.H2Syntax;
-import org.verdictdb.sql.syntax.HiveSyntax;
 
 public class ExecutionNodeTest {
   
@@ -78,7 +73,7 @@ public class ExecutionNodeTest {
     ScrambleMetaForTable tablemeta = scrambler.generateMeta();
     scrambledTable = tablemeta.getTableName();
     meta.insertScrambleMetaEntry(tablemeta);
-    CreateTableAsSelect createQuery = scrambler.scrambledTableCreationQuery();
+    CreateTableAsSelectQuery createQuery = scrambler.scrambledTableCreationQuery();
     CreateTableToSql createToSql = new CreateTableToSql(new H2Syntax());
     String scrambleSql = createToSql.toSql(createQuery);
     conn.createStatement().execute(String.format("DROP TABLE IF EXISTS \"%s\".\"%s\"", "default", "scrambled_people"));
@@ -89,7 +84,7 @@ public class ExecutionNodeTest {
   public void testSingleExecute() throws VerdictDbException {
     BaseTable base = new BaseTable("default", scrambledTable, "t");
     String aliasName = "a";
-    SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
+    SelectQuery relation = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new ColumnOp("sum", new BaseColumn("t", "age")), aliasName)),
         base);
@@ -103,7 +98,7 @@ public class ExecutionNodeTest {
   public void asyncExecute() throws VerdictDbException {
     BaseTable base = new BaseTable("default", scrambledTable, "t");
     String aliasName = "a";
-    SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
+    SelectQuery relation = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new ColumnOp("sum", new BaseColumn("t", "age")), aliasName)),
         base);

@@ -17,9 +17,9 @@ import org.verdictdb.core.query.AliasedColumn;
 import org.verdictdb.core.query.BaseColumn;
 import org.verdictdb.core.query.BaseTable;
 import org.verdictdb.core.query.ColumnOp;
-import org.verdictdb.core.query.CreateTableAsSelect;
+import org.verdictdb.core.query.CreateTableAsSelectQuery;
 import org.verdictdb.core.query.SelectItem;
-import org.verdictdb.core.query.SelectQueryOp;
+import org.verdictdb.core.query.SelectQuery;
 import org.verdictdb.core.rewriter.ScrambleMeta;
 import org.verdictdb.core.scramble.Scrambler;
 import org.verdictdb.core.scramble.UniformScrambler;
@@ -54,7 +54,7 @@ public class AggQueryRewriterJdbcTest {
     
     UniformScrambler scrambler =
         new UniformScrambler(originalSchema, originalTable, newSchema, newTable, aggblockCount);
-    CreateTableAsSelect createQuery = scrambler.scrambledTableCreationQuery();
+    CreateTableAsSelectQuery createQuery = scrambler.scrambledTableCreationQuery();
     CreateTableToSql createToSql = new CreateTableToSql(new H2Syntax());
     String scrambleSql = createToSql.toSql(createQuery);
     conn.createStatement().execute(String.format("DROP TABLE IF EXISTS \"%s\".\"%s\"", newSchema, newTable));
@@ -65,7 +65,7 @@ public class AggQueryRewriterJdbcTest {
   public void testSelectSumBaseTable() throws VerdictDbException {
     BaseTable base = new BaseTable(newSchema, newTable, "t");
     String aliasName = "sum1";
-    SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
+    SelectQuery relation = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new ColumnOp("sum", new BaseColumn("t", "value")), aliasName)),
         base);

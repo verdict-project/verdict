@@ -2,8 +2,8 @@ package org.verdictdb.core.sql;
 
 import java.util.List;
 
-import org.verdictdb.core.query.CreateTableAsSelect;
-import org.verdictdb.core.query.SelectQueryOp;
+import org.verdictdb.core.query.CreateTableAsSelectQuery;
+import org.verdictdb.core.query.SelectQuery;
 import org.verdictdb.exception.VerdictDbException;
 import org.verdictdb.sql.syntax.SyntaxAbstract;
 
@@ -15,12 +15,12 @@ public class CreateTableToSql {
     this.syntax = syntax;
   }
 
-  public String toSql(CreateTableAsSelect query) throws VerdictDbException {
+  public String toSql(CreateTableAsSelectQuery query) throws VerdictDbException {
     StringBuilder sql = new StringBuilder();
 
     String schemaName = query.getSchemaName();
     String tableName = query.getTableName();
-    SelectQueryOp select = query.getSelect();
+    SelectQuery select = query.getSelect();
 
     // table
     sql.append("create table ");

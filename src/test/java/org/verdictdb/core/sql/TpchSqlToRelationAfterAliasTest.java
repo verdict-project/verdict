@@ -26,7 +26,7 @@ import org.verdictdb.core.query.GroupingAttribute;
 import org.verdictdb.core.query.JoinTable;
 import org.verdictdb.core.query.OrderbyAttribute;
 import org.verdictdb.core.query.SelectItem;
-import org.verdictdb.core.query.SelectQueryOp;
+import org.verdictdb.core.query.SelectQuery;
 import org.verdictdb.core.query.SubqueryColumn;
 import org.verdictdb.core.query.UnnamedColumn;
 import org.verdictdb.exception.VerdictDbException;
@@ -145,7 +145,7 @@ public class TpchSqlToRelationAfterAliasTest {
             new ColumnOp("date", ConstantColumn.valueOf("'1998-12-01'")),
             new ColumnOp("interval", Arrays.<UnnamedColumn>asList(ConstantColumn.valueOf("':1'"), ConstantColumn.valueOf("day")))
             )));
-    SelectQueryOp expected = SelectQueryOp.getSelectQueryOp(
+    SelectQuery expected = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("vt1", "l_returnflag"), "vc2"),
             new AliasedColumn(new BaseColumn("vt1", "l_linestatus"), "vc3"),
@@ -190,7 +190,7 @@ public class TpchSqlToRelationAfterAliasTest {
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
     RelationStandardizer gen = new RelationStandardizer(meta);
-    relation = gen.standardize((SelectQueryOp) relation);
+    relation = gen.standardize((SelectQuery) relation);
     assertEquals(expected, relation);
   }
 
@@ -203,7 +203,7 @@ public class TpchSqlToRelationAfterAliasTest {
     BaseTable nation = new BaseTable("tpch", "nation", "vt4");
     BaseTable region = new BaseTable("tpch", "region", "vt5");
     List<AbstractRelation> from = Arrays.<AbstractRelation>asList(part, supplier, partsupp, nation, region);
-    SelectQueryOp expected = SelectQueryOp.getSelectQueryOp(
+    SelectQuery expected = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("vt2", "s_acctbal"), "vc6"),
             new AliasedColumn(new BaseColumn("vt2", "s_name"), "vc7"),
@@ -247,7 +247,7 @@ public class TpchSqlToRelationAfterAliasTest {
         new BaseTable("tpch", "supplier", "vt15"),
         new BaseTable("tpch", "nation", "vt16"),
         new BaseTable("tpch", "region", "vt17"));
-    SelectQueryOp subquery = SelectQueryOp.getSelectQueryOp(
+    SelectQuery subquery = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new ColumnOp("min", new BaseColumn("vt14", "ps_supplycost"))
                 , "vc18")),
@@ -330,7 +330,7 @@ public class TpchSqlToRelationAfterAliasTest {
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
     RelationStandardizer gen = new RelationStandardizer(meta);
-    relation = gen.standardize((SelectQueryOp) relation);
+    relation = gen.standardize((SelectQuery) relation);
     assertEquals(expected, relation);
   }
 
@@ -370,7 +370,7 @@ public class TpchSqlToRelationAfterAliasTest {
             new BaseColumn("vt3", "l_discount")
             ))
         ));
-    SelectQueryOp expected = SelectQueryOp.getSelectQueryOp(
+    SelectQuery expected = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("vt3", "l_orderkey"), "vc4"),
             new AliasedColumn(new ColumnOp("sum", op1), "revenue"),
@@ -411,7 +411,7 @@ public class TpchSqlToRelationAfterAliasTest {
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
     RelationStandardizer gen = new RelationStandardizer(meta);
-    relation = gen.standardize((SelectQueryOp) relation);
+    relation = gen.standardize((SelectQuery) relation);
     assertEquals(expected, relation);
   }
 
@@ -419,7 +419,7 @@ public class TpchSqlToRelationAfterAliasTest {
   public void Query4Test() throws VerdictDbException, SQLException {
     RelationStandardizer.resetItemID();
     AbstractRelation orders = new BaseTable("tpch", "orders", "vt1");
-    SelectQueryOp expected = SelectQueryOp.getSelectQueryOp(
+    SelectQuery expected = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("vt1", "o_orderpriority"), "vc2"),
             new AliasedColumn(new ColumnOp("count", new AsteriskColumn()), "order_count")
@@ -436,7 +436,7 @@ public class TpchSqlToRelationAfterAliasTest {
             new ColumnOp("interval", Arrays.<UnnamedColumn>asList(ConstantColumn.valueOf("'3'"), ConstantColumn.valueOf("month")))
             ))
         )));
-    SelectQueryOp subquery = SelectQueryOp.getSelectQueryOp(
+    SelectQuery subquery = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(new AsteriskColumn()),
         new BaseTable("tpch", "lineitem", "vt3"));
     subquery.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
@@ -476,7 +476,7 @@ public class TpchSqlToRelationAfterAliasTest {
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
     RelationStandardizer gen = new RelationStandardizer(meta);
-    relation = gen.standardize((SelectQueryOp) relation);
+    relation = gen.standardize((SelectQuery) relation);
     assertEquals(expected, relation);
   }
 
@@ -489,7 +489,7 @@ public class TpchSqlToRelationAfterAliasTest {
     AbstractRelation supplier = new BaseTable("tpch", "supplier", "vt4");
     AbstractRelation nation = new BaseTable("tpch", "nation", "vt5");
     AbstractRelation region = new BaseTable("tpch", "region", "vt6");
-    SelectQueryOp expected = SelectQueryOp.getSelectQueryOp(
+    SelectQuery expected = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("vt5", "n_name"), "vc7"),
             new AliasedColumn(new ColumnOp("sum", Arrays.<UnnamedColumn>asList(
@@ -573,7 +573,7 @@ public class TpchSqlToRelationAfterAliasTest {
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
     RelationStandardizer gen = new RelationStandardizer(meta);
-    relation = gen.standardize((SelectQueryOp) relation);
+    relation = gen.standardize((SelectQuery) relation);
     assertEquals(expected, relation);
   }
 
@@ -581,7 +581,7 @@ public class TpchSqlToRelationAfterAliasTest {
   public void Query6Test() throws VerdictDbException, SQLException {
     RelationStandardizer.resetItemID();
     AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "vt1");
-    SelectQueryOp expected = SelectQueryOp.getSelectQueryOp(
+    SelectQuery expected = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new ColumnOp("sum", new ColumnOp("multiply",
                 Arrays.<UnnamedColumn>asList(
@@ -627,7 +627,7 @@ public class TpchSqlToRelationAfterAliasTest {
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
     RelationStandardizer gen = new RelationStandardizer(meta);
-    relation = gen.standardize((SelectQueryOp) relation);
+    relation = gen.standardize((SelectQuery) relation);
     assertEquals(expected, relation);
   }
 
@@ -640,7 +640,7 @@ public class TpchSqlToRelationAfterAliasTest {
     AbstractRelation customer = new BaseTable("tpch", "customer", "vt4");
     AbstractRelation nation1 = new BaseTable("tpch", "nation", "n1");
     AbstractRelation nation2 = new BaseTable("tpch", "nation", "n2");
-    SelectQueryOp subquery = SelectQueryOp.getSelectQueryOp(
+    SelectQuery subquery = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("n1", "n_name"), "supp_nation"),
             new AliasedColumn(new BaseColumn("n2", "n_name"), "cust_nation"),
@@ -701,7 +701,7 @@ public class TpchSqlToRelationAfterAliasTest {
         new ColumnOp("date", ConstantColumn.valueOf("'1996-12-31'")))
         ));
     subquery.setAliasName("shipping");
-    SelectQueryOp expected = SelectQueryOp.getSelectQueryOp(
+    SelectQuery expected = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("shipping", "supp_nation"), "vc5"),
             new AliasedColumn(new BaseColumn("shipping", "cust_nation"), "vc6"),
@@ -763,7 +763,7 @@ public class TpchSqlToRelationAfterAliasTest {
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
     RelationStandardizer gen = new RelationStandardizer(meta);
-    relation = gen.standardize((SelectQueryOp) relation);
+    relation = gen.standardize((SelectQuery) relation);
     assertEquals(expected, relation);
   }
 
@@ -778,7 +778,7 @@ public class TpchSqlToRelationAfterAliasTest {
     AbstractRelation nation1 = new BaseTable("tpch", "nation", "n1");
     AbstractRelation nation2 = new BaseTable("tpch", "nation", "n2");
     AbstractRelation region = new BaseTable("tpch", "region", "vt6");
-    SelectQueryOp subquery = SelectQueryOp.getSelectQueryOp(
+    SelectQuery subquery = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new ColumnOp("substr", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("vt4", "o_orderdate"),
@@ -832,7 +832,7 @@ public class TpchSqlToRelationAfterAliasTest {
         ConstantColumn.valueOf("':3'")
         )));
     subquery.setAliasName("all_nations");
-    SelectQueryOp expected = SelectQueryOp.getSelectQueryOp(
+    SelectQuery expected = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("all_nations", "o_year"), "vc7"),
             new AliasedColumn(
@@ -891,7 +891,7 @@ public class TpchSqlToRelationAfterAliasTest {
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
     RelationStandardizer gen = new RelationStandardizer(meta);
-    relation = gen.standardize((SelectQueryOp) relation);
+    relation = gen.standardize((SelectQuery) relation);
     assertEquals(expected, relation);
   }
 
@@ -904,7 +904,7 @@ public class TpchSqlToRelationAfterAliasTest {
     AbstractRelation partsupp = new BaseTable("tpch", "partsupp", "vt4");
     AbstractRelation orders = new BaseTable("tpch", "orders", "vt5");
     AbstractRelation nation = new BaseTable("tpch", "nation", "vt6");
-    SelectQueryOp subquery = SelectQueryOp.getSelectQueryOp(
+    SelectQuery subquery = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("vt6", "n_name"), "nation"),
             new AliasedColumn(new ColumnOp("substr", Arrays.<UnnamedColumn>asList(
@@ -952,7 +952,7 @@ public class TpchSqlToRelationAfterAliasTest {
         ConstantColumn.valueOf("'%:1%'")
         )));
     subquery.setAliasName("profit");
-    SelectQueryOp expected = SelectQueryOp.getSelectQueryOp(
+    SelectQuery expected = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("profit", "nation"), "vc7"),
             new AliasedColumn(new BaseColumn("profit", "o_year"), "vc8"),
@@ -999,7 +999,7 @@ public class TpchSqlToRelationAfterAliasTest {
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
     RelationStandardizer gen = new RelationStandardizer(meta);
-    relation = gen.standardize((SelectQueryOp) relation);
+    relation = gen.standardize((SelectQuery) relation);
     assertEquals(expected, relation);
   }
 
@@ -1010,7 +1010,7 @@ public class TpchSqlToRelationAfterAliasTest {
     AbstractRelation orders = new BaseTable("tpch", "orders", "vt2");
     AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "vt3");
     AbstractRelation nation = new BaseTable("tpch", "nation", "vt4");
-    SelectQueryOp expected = SelectQueryOp.getSelectQueryOp(
+    SelectQuery expected = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("vt1", "c_custkey"), "vc5"),
             new AliasedColumn(new BaseColumn("vt1", "c_name"), "vc6"),
@@ -1101,7 +1101,7 @@ public class TpchSqlToRelationAfterAliasTest {
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
     RelationStandardizer gen = new RelationStandardizer(meta);
-    relation = gen.standardize((SelectQueryOp) relation);
+    relation = gen.standardize((SelectQuery) relation);
     assertEquals(expected, relation);
   }
 
@@ -1111,7 +1111,7 @@ public class TpchSqlToRelationAfterAliasTest {
     AbstractRelation partsupp = new BaseTable("tpch", "partsupp", "vt1");
     AbstractRelation supplier = new BaseTable("tpch", "supplier", "vt2");
     AbstractRelation nation = new BaseTable("tpch", "nation", "vt3");
-    SelectQueryOp expected = SelectQueryOp.getSelectQueryOp(
+    SelectQuery expected = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("vt1", "ps_partkey"), "vc4"),
             new AliasedColumn(new ColumnOp("sum", new ColumnOp("multiply", Arrays.<UnnamedColumn>asList(
@@ -1133,7 +1133,7 @@ public class TpchSqlToRelationAfterAliasTest {
         ConstantColumn.valueOf("':1'")
         )));
     expected.addGroupby(new AliasReference("vc4"));
-    SelectQueryOp subquery = SelectQueryOp.getSelectQueryOp(
+    SelectQuery subquery = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new ColumnOp("multiply", Arrays.<UnnamedColumn>asList(
                 new ColumnOp("sum", new ColumnOp("multiply", Arrays.<UnnamedColumn>asList(
@@ -1197,7 +1197,7 @@ public class TpchSqlToRelationAfterAliasTest {
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
     RelationStandardizer gen = new RelationStandardizer(meta);
-    relation = gen.standardize((SelectQueryOp) relation);
+    relation = gen.standardize((SelectQuery) relation);
     assertEquals(expected, relation);
   }
 
@@ -1206,7 +1206,7 @@ public class TpchSqlToRelationAfterAliasTest {
     RelationStandardizer.resetItemID();
     AbstractRelation orders = new BaseTable("tpch", "orders", "vt1");
     AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "vt2");
-    SelectQueryOp expected = SelectQueryOp.getSelectQueryOp(
+    SelectQuery expected = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("vt2", "l_shipmode"), "vc3"),
             new AliasedColumn(new ColumnOp("sum", new ColumnOp("whenthenelse", Arrays.<UnnamedColumn>asList(
@@ -1301,7 +1301,7 @@ public class TpchSqlToRelationAfterAliasTest {
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
     RelationStandardizer gen = new RelationStandardizer(meta);
-    relation = gen.standardize((SelectQueryOp) relation);
+    relation = gen.standardize((SelectQuery) relation);
     assertEquals(expected, relation);
   }
 
@@ -1322,7 +1322,7 @@ public class TpchSqlToRelationAfterAliasTest {
                 ConstantColumn.valueOf("'%:1%:2%'")
                 ))
             ))));
-    SelectQueryOp subqery = SelectQueryOp.getSelectQueryOp(
+    SelectQuery subqery = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("vt1", "c_custkey"), "c_custkey"),
             new AliasedColumn(new ColumnOp("count", new AsteriskColumn()), "c_count")
@@ -1330,7 +1330,7 @@ public class TpchSqlToRelationAfterAliasTest {
         join);
     subqery.addGroupby(new AliasReference("c_custkey"));
     subqery.setAliasName("c_orders");
-    SelectQueryOp expected = SelectQueryOp.getSelectQueryOp(
+    SelectQuery expected = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("c_orders", "c_count"), "vc3"),
             new AliasedColumn(new ColumnOp("count", new AsteriskColumn()), "custdist")
@@ -1366,7 +1366,7 @@ public class TpchSqlToRelationAfterAliasTest {
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
     RelationStandardizer gen = new RelationStandardizer(meta);
-    relation = gen.standardize((SelectQueryOp) relation);
+    relation = gen.standardize((SelectQuery) relation);
     assertEquals(expected, relation);
   }
 
@@ -1375,7 +1375,7 @@ public class TpchSqlToRelationAfterAliasTest {
     RelationStandardizer.resetItemID();
     AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "vt1");
     AbstractRelation part = new BaseTable("tpch", "part", "vt2");
-    SelectQueryOp expected = SelectQueryOp.getSelectQueryOp(
+    SelectQuery expected = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new ColumnOp("divide", Arrays.<UnnamedColumn>asList(
                 new ColumnOp("multiply", Arrays.<UnnamedColumn>asList(
@@ -1431,7 +1431,7 @@ public class TpchSqlToRelationAfterAliasTest {
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
     RelationStandardizer gen = new RelationStandardizer(meta);
-    relation = gen.standardize((SelectQueryOp) relation);
+    relation = gen.standardize((SelectQuery) relation);
     assertEquals(expected, relation);
   }
 
@@ -1440,7 +1440,7 @@ public class TpchSqlToRelationAfterAliasTest {
     RelationStandardizer.resetItemID();
     AbstractRelation partsupp = new BaseTable("tpch", "partsupp", "vt1");
     AbstractRelation part = new BaseTable("tpch", "part", "vt2");
-    SelectQueryOp expected = SelectQueryOp.getSelectQueryOp(
+    SelectQuery expected = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("vt2", "p_brand"), "vc3"),
             new AliasedColumn(new BaseColumn("vt2", "p_type"), "vc4"),
@@ -1465,7 +1465,7 @@ public class TpchSqlToRelationAfterAliasTest {
         ConstantColumn.valueOf("':3'"), ConstantColumn.valueOf("':4'"), ConstantColumn.valueOf("':5'"), ConstantColumn.valueOf("':6'"),
         ConstantColumn.valueOf("':7'"), ConstantColumn.valueOf("':8'"), ConstantColumn.valueOf("':9'"), ConstantColumn.valueOf("':10'")
         )));
-    SelectQueryOp subquery = SelectQueryOp.getSelectQueryOp(
+    SelectQuery subquery = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(new AliasedColumn(new BaseColumn("vt6", "s_suppkey"), "vc7")),
         Arrays.<AbstractRelation>asList(new BaseTable("tpch", "supplier", "vt6")));
     subquery.addFilterByAnd(new ColumnOp("like", Arrays.<UnnamedColumn>asList(
@@ -1522,7 +1522,7 @@ public class TpchSqlToRelationAfterAliasTest {
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
     RelationStandardizer gen = new RelationStandardizer(meta);
-    relation = gen.standardize((SelectQueryOp) relation);
+    relation = gen.standardize((SelectQuery) relation);
     assertEquals(expected, relation);
   }
 
@@ -1531,7 +1531,7 @@ public class TpchSqlToRelationAfterAliasTest {
     RelationStandardizer.resetItemID();
     AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "vt1");
     AbstractRelation part = new BaseTable("tpch", "part", "vt2");
-    SelectQueryOp subquery = SelectQueryOp.getSelectQueryOp(
+    SelectQuery subquery = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("vt3", "l_partkey"), "agg_partkey"),
             new AliasedColumn(new ColumnOp("multiply", Arrays.<UnnamedColumn>asList(
@@ -1542,7 +1542,7 @@ public class TpchSqlToRelationAfterAliasTest {
         new BaseTable("tpch", "lineitem", "vt3"));
     subquery.addGroupby(new AliasReference("agg_partkey"));
     subquery.setAliasName("part_agg");
-    SelectQueryOp expected = SelectQueryOp.getSelectQueryOp(
+    SelectQuery expected = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new ColumnOp("divide", Arrays.<UnnamedColumn>asList(
                 new ColumnOp("sum", new BaseColumn("vt1", "l_extendedprice")),
@@ -1587,7 +1587,7 @@ public class TpchSqlToRelationAfterAliasTest {
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
     RelationStandardizer gen = new RelationStandardizer(meta);
-    relation = gen.standardize((SelectQueryOp) relation);
+    relation = gen.standardize((SelectQuery) relation);
     assertEquals(expected, relation);
   }
 
@@ -1597,7 +1597,7 @@ public class TpchSqlToRelationAfterAliasTest {
     AbstractRelation customer = new BaseTable("tpch", "customer", "vt1");
     AbstractRelation orders = new BaseTable("tpch", "orders", "vt2");
     AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "vt3");
-    SelectQueryOp expected = SelectQueryOp.getSelectQueryOp(
+    SelectQuery expected = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("vt1", "c_name"), "vc4"),
             new AliasedColumn(new BaseColumn("vt1", "c_custkey"), "vc5"),
@@ -1607,7 +1607,7 @@ public class TpchSqlToRelationAfterAliasTest {
             new AliasedColumn(new ColumnOp("sum", new BaseColumn("vt3", "l_quantity")), "s9")
             ),
         Arrays.asList(customer, orders, lineitem));
-    SelectQueryOp subquery = SelectQueryOp.getSelectQueryOp(
+    SelectQuery subquery = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(new AliasedColumn(new BaseColumn("vt10", "l_orderkey"), "vc11")),
         new BaseTable("tpch", "lineitem", "vt10"));
     subquery.addGroupby(new AliasReference("vc11"));
@@ -1675,7 +1675,7 @@ public class TpchSqlToRelationAfterAliasTest {
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
     RelationStandardizer gen = new RelationStandardizer(meta);
-    relation = gen.standardize((SelectQueryOp) relation);
+    relation = gen.standardize((SelectQuery) relation);
     assertEquals(expected, relation);
   }
 
@@ -1684,7 +1684,7 @@ public class TpchSqlToRelationAfterAliasTest {
     RelationStandardizer.resetItemID();
     AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "vt1");
     AbstractRelation part = new BaseTable("tpch", "part", "vt2");
-    SelectQueryOp expected = SelectQueryOp.getSelectQueryOp(
+    SelectQuery expected = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new ColumnOp("sum", new ColumnOp("multiply", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("vt1", "l_extendedprice"),
@@ -1894,7 +1894,7 @@ public class TpchSqlToRelationAfterAliasTest {
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
     RelationStandardizer gen = new RelationStandardizer(meta);
-    relation = gen.standardize((SelectQueryOp) relation);
+    relation = gen.standardize((SelectQuery) relation);
     assertEquals(expected, relation);
   }
 
@@ -1903,13 +1903,13 @@ public class TpchSqlToRelationAfterAliasTest {
     RelationStandardizer.resetItemID();
     AbstractRelation supplier = new BaseTable("tpch", "supplier", "vt1");
     AbstractRelation nation = new BaseTable("tpch", "nation", "vt2");
-    SelectQueryOp expected = SelectQueryOp.getSelectQueryOp(
+    SelectQuery expected = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("vt1", "s_name"), "vc3"),
             new AliasedColumn(new BaseColumn("vt1", "s_address"), "vc4")
             ),
         Arrays.asList(supplier, nation));
-    SelectQueryOp subsubquery = SelectQueryOp.getSelectQueryOp(
+    SelectQuery subsubquery = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("vt6", "l_partkey"), "agg_partkey"),
             new AliasedColumn(new BaseColumn("vt6", "l_suppkey"), "agg_suppkey"),
@@ -1933,7 +1933,7 @@ public class TpchSqlToRelationAfterAliasTest {
         new AliasReference("agg_suppkey")
         ));
     subsubquery.setAliasName("agg_lineitem");
-    SelectQueryOp subquery = SelectQueryOp.getSelectQueryOp(
+    SelectQuery subquery = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("vt5", "ps_suppkey"), "vc7")
             ),
@@ -1946,7 +1946,7 @@ public class TpchSqlToRelationAfterAliasTest {
         new BaseColumn("agg_lineitem", "agg_suppkey"),
         new BaseColumn("vt5", "ps_suppkey")
         )));
-    SelectQueryOp subsubquery2 = SelectQueryOp.getSelectQueryOp(
+    SelectQuery subsubquery2 = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(new AliasedColumn(new BaseColumn("vt8", "p_partkey"), "vc9")),
         new BaseTable("tpch", "part", "vt8"));
     subsubquery2.addFilterByAnd(new ColumnOp("like", Arrays.<UnnamedColumn>asList(
@@ -2021,7 +2021,7 @@ public class TpchSqlToRelationAfterAliasTest {
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
     RelationStandardizer gen = new RelationStandardizer(meta);
-    relation = gen.standardize((SelectQueryOp) relation);
+    relation = gen.standardize((SelectQuery) relation);
     assertEquals(expected, relation);
   }
 
@@ -2032,7 +2032,7 @@ public class TpchSqlToRelationAfterAliasTest {
     AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "l1");
     AbstractRelation orders = new BaseTable("tpch", "orders", "vt2");
     AbstractRelation nation = new BaseTable("tpch", "nation", "vt3");
-    SelectQueryOp expected = SelectQueryOp.getSelectQueryOp(
+    SelectQuery expected = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("vt1", "s_name"), "vc4"),
             new AliasedColumn(new ColumnOp("count", new AsteriskColumn()), "numwait")
@@ -2054,7 +2054,7 @@ public class TpchSqlToRelationAfterAliasTest {
         new BaseColumn("l1", "l_receiptdate"),
         new BaseColumn("l1", "l_commitdate")
         )));
-    SelectQueryOp subquery1 = SelectQueryOp.getSelectQueryOp(Arrays.<SelectItem>asList(
+    SelectQuery subquery1 = SelectQuery.getSelectQueryOp(Arrays.<SelectItem>asList(
         new AsteriskColumn()
         ), new BaseTable("tpch", "lineitem", "l2"));
     subquery1.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
@@ -2066,7 +2066,7 @@ public class TpchSqlToRelationAfterAliasTest {
         new BaseColumn("l1", "l_suppkey")
         )));
     expected.addFilterByAnd(new ColumnOp("exists", SubqueryColumn.getSubqueryColumn(subquery1)));
-    SelectQueryOp subquery2 = SelectQueryOp.getSelectQueryOp(Arrays.<SelectItem>asList(
+    SelectQuery subquery2 = SelectQuery.getSelectQueryOp(Arrays.<SelectItem>asList(
         new AsteriskColumn()
         ), new BaseTable("tpch", "lineitem", "l3"));
     subquery2.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
@@ -2137,14 +2137,14 @@ public class TpchSqlToRelationAfterAliasTest {
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
     RelationStandardizer gen = new RelationStandardizer(meta);
-    relation = gen.standardize((SelectQueryOp) relation);
+    relation = gen.standardize((SelectQuery) relation);
     assertEquals(expected, relation);
   }
 
   @Test
   public void Query22Test() throws VerdictDbException, SQLException {
     RelationStandardizer.resetItemID();
-    SelectQueryOp subquery = SelectQueryOp.getSelectQueryOp(
+    SelectQuery subquery = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new ColumnOp("substr", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("vt1", "c_phone"),
@@ -2160,7 +2160,7 @@ public class TpchSqlToRelationAfterAliasTest {
         ConstantColumn.valueOf("':4'"), ConstantColumn.valueOf("':5'"), ConstantColumn.valueOf("':6'"),
         ConstantColumn.valueOf("':7'")
         )));
-    SelectQueryOp subsubquery1 = SelectQueryOp.getSelectQueryOp(
+    SelectQuery subsubquery1 = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(new AliasedColumn(new ColumnOp("avg", new BaseColumn("vt4", "c_acctbal")), "a5")),
         new BaseTable("tpch", "customer", "vt4"));
     subsubquery1.addFilterByAnd(new ColumnOp("greater", Arrays.<UnnamedColumn>asList(
@@ -2178,7 +2178,7 @@ public class TpchSqlToRelationAfterAliasTest {
     subquery.addFilterByAnd(new ColumnOp("greater", Arrays.asList(
         new BaseColumn("vt1", "c_acctbal"), SubqueryColumn.getSubqueryColumn(subsubquery1)
         )));
-    SelectQueryOp subsubquery2 = SelectQueryOp.getSelectQueryOp(
+    SelectQuery subsubquery2 = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(new AsteriskColumn()),
         new BaseTable("tpch", "orders", "vt3"));
     subsubquery2.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
@@ -2187,7 +2187,7 @@ public class TpchSqlToRelationAfterAliasTest {
         )));
     subquery.addFilterByAnd(new ColumnOp("notexists", SubqueryColumn.getSubqueryColumn(subsubquery2)));
     subquery.setAliasName("custsale");
-    SelectQueryOp expected = SelectQueryOp.getSelectQueryOp(
+    SelectQuery expected = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("custsale", "cntrycode"), "vc6"),
             new AliasedColumn(new ColumnOp("count", new AsteriskColumn()), "numcust"),
@@ -2238,7 +2238,7 @@ public class TpchSqlToRelationAfterAliasTest {
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
     RelationStandardizer gen = new RelationStandardizer(meta);
-    relation = gen.standardize((SelectQueryOp) relation);
+    relation = gen.standardize((SelectQuery) relation);
     assertEquals(expected, relation);
   }
 }

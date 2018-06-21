@@ -13,7 +13,7 @@ import org.verdictdb.core.query.BaseColumn;
 import org.verdictdb.core.query.BaseTable;
 import org.verdictdb.core.query.ColumnOp;
 import org.verdictdb.core.query.SelectItem;
-import org.verdictdb.core.query.SelectQueryOp;
+import org.verdictdb.core.query.SelectQuery;
 import org.verdictdb.core.rewriter.AliasRenamingRules;
 import org.verdictdb.core.rewriter.ScrambleMeta;
 import org.verdictdb.core.scramble.Scrambler;
@@ -43,7 +43,7 @@ public class AggQueryRewriterTest {
   public void testSelectSumBaseTable() throws VerdictDbException {
     BaseTable base = new BaseTable("myschema", "mytable", "t");
     String aliasName = "a";
-    SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
+    SelectQuery relation = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new ColumnOp("sum", new BaseColumn("t", "mycolumn1")), aliasName)),
         base);
@@ -87,7 +87,7 @@ public class AggQueryRewriterTest {
   public void testSelectCountBaseTable() throws VerdictDbException {
     BaseTable base = new BaseTable("myschema", "mytable", "t");
     String aliasName = "a";
-    SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
+    SelectQuery relation = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(new AliasedColumn(new ColumnOp("count"), aliasName)), base);
     ScrambleMeta meta = generateTestScrambleMeta();
     AggQueryRewriter rewriter = new AggQueryRewriter(meta);
@@ -98,7 +98,6 @@ public class AggQueryRewriterTest {
     String aliasForSumSquaredScaledSubcount = AliasRenamingRules.sumSquaredScaledCountAliasName(aliasName);
     String aliasForCountSubsample = AliasRenamingRules.countSubsampleAliasName();
     String aliasForSumSubsampleSize = AliasRenamingRules.sumSubsampleSizeAliasName();
-    String aliasForTier = AliasRenamingRules.tierAliasName();
 
     for (int k = 0; k < aggblockCount; k++) {
       String expected = "select verdictdbalias4.`verdictdbalias5` as `verdictdb:tier`, "
@@ -128,7 +127,7 @@ public class AggQueryRewriterTest {
   public void testSelectAvgBaseTable() throws VerdictDbException {
     BaseTable base = new BaseTable("myschema", "mytable", "t");
     String aliasName = "a";
-    SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
+    SelectQuery relation = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(new AliasedColumn(new ColumnOp("avg", new BaseColumn("t", "mycolumn1")), aliasName)),
         base);
     ScrambleMeta meta = generateTestScrambleMeta();
@@ -178,7 +177,7 @@ public class AggQueryRewriterTest {
   public void testSelectSumGroupbyBaseTable() throws VerdictDbException {
     BaseTable base = new BaseTable("myschema", "mytable", "t");
     String aliasName = "a";
-    SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
+    SelectQuery relation = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("t", "mygroup"), "mygroup"),
             new AliasedColumn(new ColumnOp("sum", new BaseColumn("t", "mycolumn1")), aliasName)),
@@ -226,7 +225,7 @@ public class AggQueryRewriterTest {
   public void testSelectSumGroupby2BaseTable() throws VerdictDbException {
     BaseTable base = new BaseTable("myschema", "mytable", "t");
     String aliasName = "a";
-    SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
+    SelectQuery relation = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("t", "mygroup"), "myalias"),
             new AliasedColumn(new ColumnOp("sum", new BaseColumn("t", "mycolumn1")), aliasName)),
@@ -274,7 +273,7 @@ public class AggQueryRewriterTest {
   public void testSelectCountGroupbyBaseTable() throws VerdictDbException {
     BaseTable base = new BaseTable("myschema", "mytable", "t");
     String aliasName = "a";
-    SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
+    SelectQuery relation = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("t", "mygroup"), "mygroup"),
             new AliasedColumn(new ColumnOp("count"), aliasName)), base);
@@ -319,7 +318,7 @@ public class AggQueryRewriterTest {
   public void testSelectAvgGroupbyBaseTable() throws VerdictDbException {
     BaseTable base = new BaseTable("myschema", "mytable", "t");
     String aliasName = "a";
-    SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
+    SelectQuery relation = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("t", "mygroup"), "mygroup"),
             new AliasedColumn(new ColumnOp("avg", new BaseColumn("t", "mycolumn1")), aliasName)),
@@ -374,14 +373,14 @@ public class AggQueryRewriterTest {
   public void testSelectSumNestedTable() throws VerdictDbException {
     BaseTable base = new BaseTable("myschema", "mytable", "t");
     String aliasName = "a";
-    SelectQueryOp nestedSource = SelectQueryOp.getSelectQueryOp(
+    SelectQuery nestedSource = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new AliasedColumn(
                 ColumnOp.multiply(new BaseColumn("t", "price"), new BaseColumn("t", "discount")),
                 "discounted_price")),
         base);
     nestedSource.setAliasName("s");
-    SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
+    SelectQuery relation = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new ColumnOp("sum", new BaseColumn("s", "discounted_price")), aliasName)),
         nestedSource);

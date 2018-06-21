@@ -21,7 +21,7 @@ import org.verdictdb.core.query.AbstractRelation;
 import org.verdictdb.core.query.AliasedColumn;
 import org.verdictdb.core.query.ColumnOp;
 import org.verdictdb.core.query.SelectItem;
-import org.verdictdb.core.query.SelectQueryOp;
+import org.verdictdb.core.query.SelectQuery;
 import org.verdictdb.core.query.UnnamedColumn;
 import org.verdictdb.core.rewriter.ScrambleMeta;
 import org.verdictdb.core.rewriter.aggresult.AggNameAndType;
@@ -58,11 +58,20 @@ public class AsyncAggExecutionNode extends QueryExecutionNode {
   // agg columns. pairs of their column names and their types (i.e., sum, avg, count)
   List<AggNameAndType> aggColumns;
   
-  SelectQueryOp originalQuery;
+  SelectQuery originalQuery;
   
   List<AsyncAggExecutionNode> children = new ArrayList<>();
   
-  public AsyncAggExecutionNode(DbmsConnection conn, ScrambleMeta scrambleMeta, SelectQueryOp query) 
+  /**
+   * Progressively aggregates the query, and feed the available results to the upstream.
+   * 
+   * @param conn
+   * @param scrambleMeta
+   * @param query
+   * @throws UnexpectedTypeException
+   * @throws ValueException
+   */
+  public AsyncAggExecutionNode(DbmsConnection conn, ScrambleMeta scrambleMeta, SelectQuery query) 
       throws UnexpectedTypeException, ValueException {
     super(conn);
     this.scrambleMeta = scrambleMeta;
@@ -152,7 +161,7 @@ public class AsyncAggExecutionNode extends QueryExecutionNode {
     
     // extract column types from the rewritten
     Pair<List<String>, List<AggNameAndType>> rewrittenNonaggAndAgg =
-        identifyAggColumns(((SelectQueryOp) q).getSelectList());
+        identifyAggColumns(((SelectQuery) q).getSelectList());
     List<String> rewrittenNonaggColumns = rewrittenNonaggAndAgg.getLeft();
     List<AggNameAndType> rewrittenAggColumns = rewrittenNonaggAndAgg.getRight();
     
@@ -181,7 +190,7 @@ public class AsyncAggExecutionNode extends QueryExecutionNode {
       
       // extract column types from the rewritten
       Pair<List<String>, List<AggNameAndType>> rewrittenNonaggAndAgg =
-          identifyAggColumns(((SelectQueryOp) q).getSelectList());
+          identifyAggColumns(((SelectQuery) q).getSelectList());
       List<String> rewrittenNonaggColumns = rewrittenNonaggAndAgg.getLeft();
       List<AggNameAndType> rewrittenAggColumns = rewrittenNonaggAndAgg.getRight();
       
@@ -205,7 +214,7 @@ public class AsyncAggExecutionNode extends QueryExecutionNode {
   }
 
   @Override
-  public ExecutionResult executeInternally(List<ExecutionResult> resultFromChildren) {
+  public ExecutionResult executeNode(List<ExecutionResult> resultFromChildren) {
     // TODO Auto-generated method stub
     return null;
   }

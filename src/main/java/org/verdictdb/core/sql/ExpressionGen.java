@@ -7,7 +7,7 @@ import org.verdictdb.core.query.AsteriskColumn;
 import org.verdictdb.core.query.BaseColumn;
 import org.verdictdb.core.query.ColumnOp;
 import org.verdictdb.core.query.ConstantColumn;
-import org.verdictdb.core.query.SelectQueryOp;
+import org.verdictdb.core.query.SelectQuery;
 import org.verdictdb.core.query.SubqueryColumn;
 import org.verdictdb.core.query.UnnamedColumn;
 import org.verdictdb.parser.VerdictSQLBaseVisitor;
@@ -236,7 +236,7 @@ public class ExpressionGen extends VerdictSQLBaseVisitor<UnnamedColumn> {
     @Override
     public SubqueryColumn visitSubquery_expression(VerdictSQLParser.Subquery_expressionContext ctx) {
         RelationGen g = new RelationGen();
-        return SubqueryColumn.getSubqueryColumn((SelectQueryOp) g.visit(ctx.subquery().select_statement()));
+        return SubqueryColumn.getSubqueryColumn((SelectQuery) g.visit(ctx.subquery().select_statement()));
     }
 
     public UnnamedColumn getSearch_condition(List<VerdictSQLParser.Search_conditionContext> ctx) {

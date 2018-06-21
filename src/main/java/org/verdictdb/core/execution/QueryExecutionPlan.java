@@ -19,7 +19,7 @@ import org.verdictdb.core.DbmsMetaDataCache;
 import org.verdictdb.core.query.AbstractRelation;
 import org.verdictdb.core.query.BaseTable;
 import org.verdictdb.core.query.JoinTable;
-import org.verdictdb.core.query.SelectQueryOp;
+import org.verdictdb.core.query.SelectQuery;
 import org.verdictdb.core.rewriter.ScrambleMeta;
 import org.verdictdb.core.sql.NonValidatingSQLParser;
 import org.verdictdb.exception.UnexpectedTypeException;
@@ -29,7 +29,7 @@ import org.verdictdb.sql.syntax.SyntaxAbstract;
 
 public class QueryExecutionPlan {
   
-  SelectQueryOp query;
+  SelectQuery query;
   
   ScrambleMeta scrambleMeta;
   
@@ -56,7 +56,7 @@ public class QueryExecutionPlan {
       DbmsConnection conn, 
       SyntaxAbstract syntax, 
       ScrambleMeta scrambleMeta, 
-      SelectQueryOp query) throws VerdictDbException {
+      SelectQuery query) throws VerdictDbException {
     this.scrambleMeta = scrambleMeta;
     if (!query.isAggregateQuery()) {
       throw new UnexpectedTypeException(query);
@@ -101,31 +101,31 @@ public class QueryExecutionPlan {
   }
 
   // TODO
-  QueryExecutionNode makePlan(DbmsConnection conn, SyntaxAbstract syntax, SelectQueryOp query) 
+  QueryExecutionNode makePlan(DbmsConnection conn, SyntaxAbstract syntax, SelectQuery query) 
       throws VerdictDbException {
     // check whether outer query has scramble table stored in scrambleMeta
     boolean scrambleTableinOuterQuery = checkScrambleTable(query.getFromList());
 
     // identify aggregate subqueries and create separate nodes for them
     List<AbstractRelation> subqueryToReplace = new ArrayList<>();
-    List<SelectQueryOp> rootToReplace = new ArrayList<>();
+    List<SelectQuery> rootToReplace = new ArrayList<>();
     for (AbstractRelation table:query.getFromList()) {
-      if (table instanceof SelectQueryOp) {
+      if (table instanceof SelectQuery) {
         if (table.isAggregateQuery()) {
           subqueryToReplace.add(table);
         }
-        else if (!scrambleTableinOuterQuery && checkScrambleTable(((SelectQueryOp) table).getFromList())) { // use inner query as root
-          rootToReplace.add((SelectQueryOp) table);
+        else if (!scrambleTableinOuterQuery && checkScrambleTable(((SelectQuery) table).getFromList())) { // use inner query as root
+          rootToReplace.add((SelectQuery) table);
         }
       }
       else if (table instanceof JoinTable) {
         for (AbstractRelation jointTable:((JoinTable) table).getJoinList()) {
-          if (jointTable instanceof SelectQueryOp) {
+          if (jointTable instanceof SelectQuery) {
             if (jointTable.isAggregateQuery()) {
               subqueryToReplace.add(jointTable);
             }
-            else if (!scrambleTableinOuterQuery && checkScrambleTable(((SelectQueryOp) jointTable).getFromList())) { // use inner query as root
-              rootToReplace.add((SelectQueryOp) jointTable);
+            else if (!scrambleTableinOuterQuery && checkScrambleTable(((SelectQuery) jointTable).getFromList())) { // use inner query as root
+              rootToReplace.add((SelectQuery) jointTable);
             }
           }
         }
