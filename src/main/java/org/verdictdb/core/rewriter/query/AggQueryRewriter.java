@@ -83,19 +83,19 @@ public class AggQueryRewriter {
   }
 
   public List<AbstractRelation> rewriteAggregateQuery(AbstractRelation relation) throws VerdictDbException {
-    // propagate subsample ID, and inclusion probability columns up toward the top sources.
-    List<AbstractRelation> selectAllScrambledBases = new ArrayList<>();
+    // propagate subsample ID and tier columns up toward the top sources.
+    List<AbstractRelation> selectAllScrambledBases = new ArrayList<>();    // used for ingesting block agg predicate
     SelectQueryOp sel = (SelectQueryOp) relation;
     List<AbstractRelation> sourceList = sel.getFromList();
     sel.clearFromList();
-    List<AbstractRelation> scrambledDirectSources = new ArrayList<>();
+    List<AbstractRelation> immediateScrambledSources = new ArrayList<>();
     Map<String, String> aliasUpdateMap = new HashMap<>();
     
     for (AbstractRelation source : sourceList) {
       AbstractRelation rewrittenSource = rewriteQueryRecursively(source, selectAllScrambledBases);
       sel.addTableSource(rewrittenSource);
       if (scrambleMeta.isScrambled(rewrittenSource.getAliasName().get())) {
-        scrambledDirectSources.add(rewrittenSource);
+        immediateScrambledSources.add(rewrittenSource);
       }
       aliasUpdateMap.put(source.getAliasName().get(), rewrittenSource.getAliasName().get());
     }
@@ -115,18 +115,17 @@ public class AggQueryRewriter {
     }
 
     List<AbstractRelation> rewrittenQueries = new ArrayList<>();
-    if (scrambledDirectSources.size() == 0) {
+    if (immediateScrambledSources.size() == 0) {
       // no scrambled source exists
       rewrittenQueries.add(sel);
     }
     else {
       List<BaseColumn> baseColumns = new ArrayList<>();
       List<List<Pair<Integer, Integer>>> blockingIndices = new ArrayList<>();
-//      List<UnnamedColumn> inclusionProbColumns = new ArrayList<>();
       Pair<UnnamedColumn, UnnamedColumn> subsampleAndTierColumns = 
           planBlockAggregation(
               selectAllScrambledBases,
-              scrambledDirectSources,
+              immediateScrambledSources,
               baseColumns,
               blockingIndices);
       UnnamedColumn subsampleColumn = subsampleAndTierColumns.getLeft();
@@ -135,12 +134,10 @@ public class AggQueryRewriter {
       
       // rewrite aggregate functions with error estimation logic
       int savedNextAliasNumber = nextAliasNumber;
-//      for (int k = 0; k < inclusionProbColumns.size(); k++) {
         for (int k = 0; k < blockingIndices.get(0).size(); k++) {
         nextAliasNumber = savedNextAliasNumber;
         AbstractRelation rewrittenQuery = 
             rewriteSelectListForErrorEstimation(sel, subsampleColumn, tierColumn);
-//        , inclusionProbColumns.get(k));
         
         for (int m = 0; m < baseColumns.size(); m++) {
           BaseColumn blockaggBaseColumn = baseColumns.get(m);
@@ -216,17 +213,19 @@ public class AggQueryRewriter {
  * @param selectAllScrambledBase    A list of select queries that include scrambled base tables (suppose length-m).
  * @param blockAggregateColumns    The columns of the scrambled tables that include the integers for block aggregates (length-m).
  * @param blockingIndices    The values to use for block aggregation (length-m).
+ * @return A pair of sid column alias and tier column alias.
  * @throws ValueException
  */
   Pair<UnnamedColumn, UnnamedColumn> planBlockAggregation(
       List<AbstractRelation> selectAllScrambledBase,
-      List<AbstractRelation> scrambledDirectSources,
+      List<AbstractRelation> immediateScrambledSources,
       List<BaseColumn> blockAggregateColumns,
       List<List<Pair<Integer, Integer>>> blockingIndices)
 //      List<UnnamedColumn> inclusionProbColumns)
           throws ValueException {
     
     if (selectAllScrambledBase.size() > 1) {
+      // TODO: should support at least two in the future
       throw new ValueException("Only one scrambled table is expected.");
     }
     
@@ -239,25 +238,16 @@ public class AggQueryRewriter {
     String aggBlockColumn = scrambleMeta.getAggregationBlockColumn(baseSchemaName, baseTableName);
     blockAggregateColumns.add(new BaseColumn(scrambledBase.getAliasName().get(), aggBlockColumn));
     
+    // for now, simply, a single fact table case.
+    // TODO: we should support at least two fact tables.
     List<Pair<Integer, Integer>> blockingIndex = new ArrayList<>();
     for (int k = 0; k < aggBlockCount; k++) {
       blockingIndex.add(Pair.of(k,k));
     }
     blockingIndices.add(blockingIndex);
     
-    // inclusion probability column
-    AbstractRelation scrambledDirectSource = scrambledDirectSources.get(0);
+    AbstractRelation scrambledDirectSource = immediateScrambledSources.get(0);
     String scrambledSourceAliasName = scrambledDirectSource.getAliasName().get();
-//    String incProbCol = scrambleMeta.getInclusionProbabilityColumn(scrambledSourceAliasName);
-//    String incProbBlockDiffCol = scrambleMeta.getInclusionProbabilityBlockDifferenceColumn(scrambledSourceAliasName);
-//    for (int k = 0; k < aggBlockCount; k++) {
-//      ColumnOp col = ColumnOp.add(
-//          new BaseColumn(scrambledSourceAliasName, incProbCol),
-//          ColumnOp.multiply(
-//              new BaseColumn(scrambledSourceAliasName, incProbBlockDiffCol),
-//              ConstantColumn.valueOf(k)));
-//      inclusionProbColumns.add(col);
-//    }
     
     // subsample column
     String subsampleColumnName = scrambleMeta.getSubsampleColumn(scrambledSourceAliasName);
@@ -277,15 +267,13 @@ public class AggQueryRewriter {
    *    a. converts it into a select-star query (with a certain alias name).
    *    b. register the select-start query into the 'selectAllScrambled' list.
    *    c. register the information of the select-star query into 'scrambleMeta':
-   *       (1) inclusionProbabilityColumn
-   *       (2) inclusionProbBlockDiffColumn
-   *       (3) subsampleColumn
+   *       (1) sid column
+   *       (2) tier column
    * 4. If a select query is not a scrambled table, it returns the same select query.
    * 5. If a select query is a scrambled table, it performs:
-   *    a. adds the following three columns to the select list and to 'scrambleMeta':
-   *       (1) inclusionProbabilityColumn
-   *       (2) inclusionProbBlockDiffColumn
-   *       (3) subsampleColumn
+   *    a. adds the following two columns to the select list and to 'scrambleMeta':
+   *       (1) sid column
+   *       (2) tier column
    *       
    * @param relation
    * @return

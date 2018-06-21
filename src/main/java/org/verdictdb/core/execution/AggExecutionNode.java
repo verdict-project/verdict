@@ -175,16 +175,18 @@ public class AggExecutionNode {
     // execute the rewritten queries one by one
     for (int i = 0; i < aggWithErrorQueries.size(); i++) {
       AbstractRelation q = aggWithErrorQueries.get(i);
-      SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
+      SelectQueryToSql relToSql = new SelectQueryToSql(conn.getSyntax());
       String query_string = relToSql.toSql(q);
       
+   // extract column types from the rewritten
       Pair<List<String>, List<AggNameAndType>> rewrittenNonaggAndAgg =
           identifyAggColumns(((SelectQueryOp) q).getSelectList());
       List<String> rewrittenNonaggColumns = rewrittenNonaggAndAgg.getLeft();
       List<AggNameAndType> rewrittenAggColumns = rewrittenNonaggAndAgg.getRight();
       
       DbmsQueryResult rawResult = conn.executeQuery(query_string);
-      AggregateFrame newAggResult = AggregateFrame.fromDmbsQueryResult(rawResult, rewrittenNonaggColumns, rewrittenAggColumns);
+      AggregateFrame newAggResult = 
+          AggregateFrame.fromDmbsQueryResult(rawResult, rewrittenNonaggColumns, rewrittenAggColumns);
       
       // combine with previous answers
       if (i == 0) {
@@ -196,7 +198,7 @@ public class AggExecutionNode {
       
       // convert to a user-friendly answer
       SingleAggResultRewriter aggResultRewriter = new SingleAggResultRewriter(combinedAggResult);
-      AggregateFrame rewritten = aggResultRewriter.rewrite(rewrittenNonaggColumns, rewrittenAggColumns);
+      AggregateFrame rewritten = aggResultRewriter.rewrite(nonaggColumns, aggColumns);
       DbmsQueryResult resultToUser = rewritten.toDbmsQueryResult();
       handler.handle(resultToUser);
     }

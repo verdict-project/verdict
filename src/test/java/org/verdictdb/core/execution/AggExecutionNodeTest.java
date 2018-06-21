@@ -24,7 +24,10 @@ import org.verdictdb.core.rewriter.ScrambleMeta;
 import org.verdictdb.core.rewriter.ScrambleMetaForTable;
 import org.verdictdb.core.scramble.UniformScrambler;
 import org.verdictdb.core.sql.CreateTableToSql;
+import org.verdictdb.exception.UnexpectedTypeException;
+import org.verdictdb.exception.ValueException;
 import org.verdictdb.exception.VerdictDbException;
+import org.verdictdb.resulthandler.AsyncHandler;
 import org.verdictdb.sql.syntax.H2Syntax;
 import org.verdictdb.sql.syntax.HiveSyntax;
 
@@ -93,6 +96,29 @@ public class AggExecutionNodeTest {
     AggExecutionNode node = new AggExecutionNode(dbmsConn, meta, relation);
     DbmsQueryResult rs = node.singleExecute();
     rs.printContent();
+  }
+  
+  @Test
+  public void asyncExecute() throws VerdictDbException {
+    BaseTable base = new BaseTable("default", scrambledTable, "t");
+    String aliasName = "a";
+    SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
+        Arrays.<SelectItem>asList(
+            new AliasedColumn(new ColumnOp("sum", new BaseColumn("t", "age")), aliasName)),
+        base);
+    DbmsConnection dbmsConn = new JdbcConnection(conn, new H2Syntax());
+    AggExecutionNode node = new AggExecutionNode(dbmsConn, meta, relation);
+    AsyncHandler handler = new AsyncHandler() {
+
+      @Override
+      public boolean handle(DbmsQueryResult result) {
+        result.printContent();
+        return true;
+      }
+      
+    };
+    
+    node.asyncExecute(handler);
   }
 
 }
