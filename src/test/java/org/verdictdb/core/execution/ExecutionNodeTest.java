@@ -94,7 +94,7 @@ public class ExecutionNodeTest {
             new AliasedColumn(new ColumnOp("sum", new BaseColumn("t", "age")), aliasName)),
         base);
     DbmsConnection dbmsConn = new JdbcConnection(conn, new H2Syntax());
-    QueryExecutionNode node = new QueryExecutionNode(dbmsConn, meta, relation);
+    AsyncAggExecutionNode node = new AsyncAggExecutionNode(dbmsConn, meta, relation);
     AggregateFrame af = node.singleExecute();
 //    af.printContent();
   }
@@ -108,7 +108,7 @@ public class ExecutionNodeTest {
             new AliasedColumn(new ColumnOp("sum", new BaseColumn("t", "age")), aliasName)),
         base);
     DbmsConnection dbmsConn = new JdbcConnection(conn, new H2Syntax());
-    QueryExecutionNode node = new QueryExecutionNode(dbmsConn, meta, relation);
+    AsyncAggExecutionNode node = new AsyncAggExecutionNode(dbmsConn, meta, relation);
 //    AsyncHandler handler = new AsyncHandler() {
 //
 //      @Override

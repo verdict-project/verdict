@@ -28,9 +28,9 @@ public class QueryExecutionPlan {
   
   ScrambleMeta scrambleMeta;
   
-  List<QueryExecutionNode> roots;
+  QueryExecutionNode root;
   
-  PostProcessor postProcessor;
+//  PostProcessor postProcessor;
   
 //  /**
 //   * 
@@ -57,9 +57,8 @@ public class QueryExecutionPlan {
       throw new UnexpectedTypeException(query);
     }
     this.query = query;
-    Pair<List<QueryExecutionNode>, PostProcessor> plan = makePlan(conn, syntax, query);
-    this.roots = plan.getLeft();
-    this.postProcessor = plan.getRight();
+    this.root = makePlan(conn, syntax, query);
+//    this.postProcessor = plan.getRight();
   }
   
   /** 
@@ -80,14 +79,14 @@ public class QueryExecutionPlan {
    * @throws UnexpectedTypeException 
    */
   // TODO
-  Pair<List<QueryExecutionNode>, PostProcessor> makePlan(DbmsConnection conn, SyntaxAbstract syntax, SelectQueryOp query) 
+  QueryExecutionNode makePlan(DbmsConnection conn, SyntaxAbstract syntax, SelectQueryOp query) 
       throws VerdictDbException {
     
     // identify aggregate subqueries and create seprate nodes for them
     
     // generate temp table names for those aggregate subqueries and use them in their ancestors.
     
-    return Pair.of(Arrays.asList(new QueryExecutionNode(conn, scrambleMeta, query)), null);
+    return new AsyncAggExecutionNode(conn, scrambleMeta, query);
   }
   
   public void execute(DbmsConnection conn) {
