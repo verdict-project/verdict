@@ -8,12 +8,17 @@
 
 package org.verdictdb.core.execution;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.BlockingDeque;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.core.DbmsMetaDataCache;
+import org.verdictdb.core.query.AbstractRelation;
+import org.verdictdb.core.query.BaseTable;
+import org.verdictdb.core.query.JoinTable;
 import org.verdictdb.core.query.SelectQueryOp;
 import org.verdictdb.core.rewriter.ScrambleMeta;
 import org.verdictdb.core.sql.NonValidatingSQLParser;
@@ -78,12 +83,54 @@ public class QueryExecutionPlan {
    * @throws ValueException 
    * @throws UnexpectedTypeException 
    */
+  // check whether query contains scramble table in its from list
+  Boolean checkScrambleTable(List<AbstractRelation> fromlist) {
+    for (AbstractRelation table:fromlist) {
+      if (table instanceof BaseTable) {
+        if (scrambleMeta.isScrambled(((BaseTable) table).getSchemaName(), ((BaseTable) table).getTableName())) {
+          return true;
+        }
+      }
+      else if (table instanceof JoinTable) {
+        if (checkScrambleTable(((JoinTable) table).getJoinList())) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
   // TODO
   QueryExecutionNode makePlan(DbmsConnection conn, SyntaxAbstract syntax, SelectQueryOp query) 
       throws VerdictDbException {
-    
-    // identify aggregate subqueries and create seprate nodes for them
-    
+    // check whether outer query has scramble table stored in scrambleMeta
+    boolean scrambleTableinOuterQuery = checkScrambleTable(query.getFromList());
+
+    // identify aggregate subqueries and create separate nodes for them
+    List<AbstractRelation> subqueryToReplace = new ArrayList<>();
+    List<SelectQueryOp> rootToReplace = new ArrayList<>();
+    for (AbstractRelation table:query.getFromList()) {
+      if (table instanceof SelectQueryOp) {
+        if (table.isAggregateQuery()) {
+          subqueryToReplace.add(table);
+        }
+        else if (!scrambleTableinOuterQuery && checkScrambleTable(((SelectQueryOp) table).getFromList())) { // use inner query as root
+          rootToReplace.add((SelectQueryOp) table);
+        }
+      }
+      else if (table instanceof JoinTable) {
+        for (AbstractRelation jointTable:((JoinTable) table).getJoinList()) {
+          if (jointTable instanceof SelectQueryOp) {
+            if (jointTable.isAggregateQuery()) {
+              subqueryToReplace.add(jointTable);
+            }
+            else if (!scrambleTableinOuterQuery && checkScrambleTable(((SelectQueryOp) jointTable).getFromList())) { // use inner query as root
+              rootToReplace.add((SelectQueryOp) jointTable);
+            }
+          }
+        }
+      }
+    }
     // generate temp table names for those aggregate subqueries and use them in their ancestors.
     
     return new AsyncAggExecutionNode(conn, scrambleMeta, query);
