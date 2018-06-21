@@ -203,18 +203,11 @@ public class AsyncAggExecutionNode extends QueryExecutionNode {
       DbmsQueryResult resultToUser = rewritten.toDbmsQueryResult();
     }
   }
-  
-  public DbmsQueryResult execute() {
-    for (AsyncAggExecutionNode child : children) {
-      child.execute();
-    }
-    return null;
-  }
 
   @Override
-  public void execute(BlockingDeque<ExecutionResult> resultQueue) {
+  public ExecutionResult executeInternally(List<ExecutionResult> resultFromChildren) {
     // TODO Auto-generated method stub
-    
+    return null;
   }
   
 }

@@ -1,5 +1,6 @@
 package org.verdictdb.core.execution;
 
+import java.util.List;
 import java.util.concurrent.BlockingDeque;
 
 import org.verdictdb.connection.DbmsConnection;
@@ -21,10 +22,9 @@ public class CreateAsSelectExecutionNode extends QueryExecutionNode {
   }
 
   @Override
-  public void execute(BlockingDeque<ExecutionResult> resultQueue) {
-    // run query
-    
-    resultQueue.addLast(ExecutionResult.completeResult());
+  public ExecutionResult executeInternally(List<ExecutionResult> resultFromChildren) {
+    // TODO Auto-generated method stub
+    return null;
   }
 
 }

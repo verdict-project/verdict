@@ -4,14 +4,14 @@ import org.verdictdb.core.aggresult.AggregateFrame;
 
 public class ExecutionResult {
   
-  // either initialized, intermediateresult, complete, failed
+  // either initialized, intermediateresult, finished, failed
   String status = "initialized";
   
   AggregateFrame af;
   
   public static ExecutionResult completeResult() {
     ExecutionResult r = new ExecutionResult();
-    r.setStatus("complete");
+    r.setStatus("finished");
     return r;
   }
 
@@ -19,16 +19,19 @@ public class ExecutionResult {
     return status;
   }
   
-  public boolean isComplete() {
-    return status.equals("complete");
+  public boolean isFinished() {
+    return status.equals("finished");
   }
   
-  public boolean isIntermediateResultAvailable() {
-    return status.equals("intermediateresult");
+  public boolean isResultAvailable() {
+    if (status.equals("intermediateresult") || isFinished()) {
+      return true;
+    }
+    return false;
   }
 
   public AggregateFrame getAggregateFrame() {
-    if (!isIntermediateResultAvailable()) {
+    if (!isResultAvailable()) {
       return null;
     }
     return af;
