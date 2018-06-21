@@ -22,6 +22,8 @@ import org.verdictdb.exception.ValueException;
  */
 public class AggregateFrame {
   
+  String aggFrameType = "raw";
+  
   List<String> orderedColumnNames;
 
   List<Integer> columnTypes = new ArrayList<>();

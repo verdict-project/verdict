@@ -10,6 +10,7 @@ package org.verdictdb.core.execution;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.LinkedBlockingDeque;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.connection.DbmsConnection;
@@ -46,7 +47,7 @@ import org.verdictdb.sql.syntax.HiveSyntax;
  * @author Yongjoo Park
  *
  */
-public class AggExecutionNode {
+public class QueryExecutionNode {
   
   DbmsConnection conn;
   
@@ -60,9 +61,9 @@ public class AggExecutionNode {
   
   SelectQueryOp originalQuery;
   
-  List<AggExecutionNode> dependencies = new ArrayList<>();
+  List<QueryExecutionNode> children = new ArrayList<>();
   
-  public AggExecutionNode(DbmsConnection conn, ScrambleMeta scrambleMeta, SelectQueryOp query) 
+  public QueryExecutionNode(DbmsConnection conn, ScrambleMeta scrambleMeta, SelectQueryOp query) 
       throws UnexpectedTypeException, ValueException {
     this.conn = conn;
     this.scrambleMeta = scrambleMeta;
@@ -141,7 +142,7 @@ public class AggExecutionNode {
    * @return
    * @throws VerdictDbException
    */
-  public DbmsQueryResult singleExecute() throws VerdictDbException {
+  public AggregateFrame singleExecute() throws VerdictDbException {
     AggQueryRewriter aggQueryRewriter = new AggQueryRewriter(scrambleMeta);
     List<AbstractRelation> aggWithErrorQueries = aggQueryRewriter.rewrite(originalQuery);
     
@@ -157,17 +158,18 @@ public class AggExecutionNode {
     List<AggNameAndType> rewrittenAggColumns = rewrittenNonaggAndAgg.getRight();
     
     DbmsQueryResult rawResult = conn.executeQuery(query_string);
+    // this should generate the values with expected errors (it will contain raw statistics, e.g., sum of squares, for every tier)
     AggregateFrame newAggResult = 
         AggregateFrame.fromDmbsQueryResult(rawResult, rewrittenNonaggColumns, rewrittenAggColumns);
     
     // changes the intermediate aggregates to the final aggregates
     SingleAggResultRewriter aggResultRewriter = new SingleAggResultRewriter(newAggResult);
     AggregateFrame rewritten = aggResultRewriter.rewrite(nonaggColumns, aggColumns);
-    DbmsQueryResult resultToUser = rewritten.toDbmsQueryResult();
-    return resultToUser;
+//    DbmsQueryResult resultToUser = rewritten.toDbmsQueryResult();
+    return rewritten;
   }
   
-  public void asyncExecute(AsyncHandler handler) throws VerdictDbException {
+  public void asyncExecute(LinkedBlockingDeque<AggregateFrame> resultQueue) throws VerdictDbException {
     AggQueryRewriter aggQueryRewriter = new AggQueryRewriter(scrambleMeta);
     List<AbstractRelation> aggWithErrorQueries = aggQueryRewriter.rewrite(originalQuery);
     AggregateFrame combinedAggResult = null;
@@ -178,7 +180,7 @@ public class AggExecutionNode {
       SelectQueryToSql relToSql = new SelectQueryToSql(conn.getSyntax());
       String query_string = relToSql.toSql(q);
       
-   // extract column types from the rewritten
+      // extract column types from the rewritten
       Pair<List<String>, List<AggNameAndType>> rewrittenNonaggAndAgg =
           identifyAggColumns(((SelectQueryOp) q).getSelectList());
       List<String> rewrittenNonaggColumns = rewrittenNonaggAndAgg.getLeft();
@@ -200,11 +202,13 @@ public class AggExecutionNode {
       SingleAggResultRewriter aggResultRewriter = new SingleAggResultRewriter(combinedAggResult);
       AggregateFrame rewritten = aggResultRewriter.rewrite(nonaggColumns, aggColumns);
       DbmsQueryResult resultToUser = rewritten.toDbmsQueryResult();
-      handler.handle(resultToUser);
     }
   }
   
   public DbmsQueryResult execute() {
+    for (QueryExecutionNode child : children) {
+      child.execute();
+    }
     return null;
   }
   
