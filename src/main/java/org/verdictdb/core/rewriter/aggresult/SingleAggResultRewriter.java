@@ -8,6 +8,8 @@
 
 package org.verdictdb.core.rewriter.aggresult;
 
+import static org.verdictdb.core.rewriter.AliasRenamingRules.*;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -18,13 +20,11 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.core.aggresult.AggregateFrame;
 import org.verdictdb.core.aggresult.AggregateGroup;
 import org.verdictdb.core.aggresult.AggregateMeasures;
-import org.verdictdb.core.rewriter.query.AliasRenamingRules;
+import org.verdictdb.core.rewriter.AliasRenamingRules;
 import org.verdictdb.exception.UnexpectedTypeException;
 import org.verdictdb.exception.ValueException;
 import org.verdictdb.exception.VerdictDbException;
 import org.verdictdb.jdbc.TypeCasting;
-
-import static org.verdictdb.core.rewriter.query.AliasRenamingRules.*;
 
 /**
  * Given intermediate aggregate form (either the result of a single query execution or the result of the
@@ -40,8 +40,6 @@ public class SingleAggResultRewriter {
   List<String> columnNames;
   
   Map<String, Integer> indexCache = new HashMap<>();
-
-  public SingleAggResultRewriter() {}
 
   public SingleAggResultRewriter(AggregateFrame rawResultSet) {
     this.rawResultSet = rawResultSet;

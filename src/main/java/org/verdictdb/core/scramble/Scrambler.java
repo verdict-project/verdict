@@ -15,15 +15,15 @@ public class Scrambler {
   int aggregationBlockCount;
   
   // Configuration parameters
-  static String aggregationBlockColumn = "verdictAggBlock";
+  static String aggregationBlockColumn = "verdictdbaggblock";
   
 //  static String inclusionProbabilityColumn = "verdictIncProb";
 //  
 //  static String inclusionProbabilityBlockDifferenceColumn = "verdictIncProbBlockDiff";
   
-  static String subsampleColumn = "verdictSubsampleId";
+  static String subsampleColumn = "verdictdbsid";
   
-  static String tierColumn = "verdicttier";
+  static String tierColumn = "verdictdbtier";
   
   public Scrambler(
       String originalSchemaName, String originalTableName,

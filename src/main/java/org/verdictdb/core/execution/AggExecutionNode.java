@@ -50,7 +50,7 @@ public class AggExecutionNode {
   
   DbmsConnection conn;
   
-  ScrambleMeta meta;
+  ScrambleMeta scrambleMeta;
   
   // group-by columns
   List<String> nonaggColumns;
@@ -62,10 +62,10 @@ public class AggExecutionNode {
   
   List<AggExecutionNode> dependencies = new ArrayList<>();
   
-  public AggExecutionNode(DbmsConnection conn, ScrambleMeta meta, SelectQueryOp query) 
+  public AggExecutionNode(DbmsConnection conn, ScrambleMeta scrambleMeta, SelectQueryOp query) 
       throws UnexpectedTypeException, ValueException {
     this.conn = conn;
-    this.meta = meta;
+    this.scrambleMeta = scrambleMeta;
     this.originalQuery = query;
     Pair<List<String>, List<AggNameAndType>> cols = identifyAggColumns(originalQuery.getSelectList());
     nonaggColumns = cols.getLeft();
@@ -142,7 +142,7 @@ public class AggExecutionNode {
    * @throws VerdictDbException
    */
   public DbmsQueryResult singleExecute() throws VerdictDbException {
-    AggQueryRewriter aggQueryRewriter = new AggQueryRewriter(meta);
+    AggQueryRewriter aggQueryRewriter = new AggQueryRewriter(scrambleMeta);
     List<AbstractRelation> aggWithErrorQueries = aggQueryRewriter.rewrite(originalQuery);
     
     // rewrite the query
@@ -168,7 +168,7 @@ public class AggExecutionNode {
   }
   
   public void asyncExecute(AsyncHandler handler) throws VerdictDbException {
-    AggQueryRewriter aggQueryRewriter = new AggQueryRewriter(meta);
+    AggQueryRewriter aggQueryRewriter = new AggQueryRewriter(scrambleMeta);
     List<AbstractRelation> aggWithErrorQueries = aggQueryRewriter.rewrite(originalQuery);
     AggregateFrame combinedAggResult = null;
     

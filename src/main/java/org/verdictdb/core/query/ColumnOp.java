@@ -31,6 +31,7 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
    * <li>substring</li>
    * <li>rand</li>
    * <li>floor</li>
+   * <li>cast</li>
    * </ol>
    * <p>
    * Comparison:
@@ -246,6 +247,10 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
 
   public static ColumnOp floor(UnnamedColumn column) {
     return new ColumnOp("floor", column);
+  }
+  
+  public static ColumnOp cast(UnnamedColumn column, UnnamedColumn dataType) {
+    return new ColumnOp("cast", Arrays.asList(column, dataType));
   }
 
   @Override

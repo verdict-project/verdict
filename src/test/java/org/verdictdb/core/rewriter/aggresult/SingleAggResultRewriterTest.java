@@ -2,7 +2,7 @@ package org.verdictdb.core.rewriter.aggresult;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.verdictdb.core.rewriter.query.AliasRenamingRules.*;
+import static org.verdictdb.core.rewriter.AliasRenamingRules.*;
 
 import java.util.Arrays;
 import java.util.List;
@@ -64,7 +64,7 @@ public class SingleAggResultRewriterTest {
         sumSubsampleSizeAliasName());
     List<Object> attrValues = Arrays.<Object>asList(1.0, 2.0, 3.0, 4, 5);
     AggregateMeasures measures = new AggregateMeasures(attrNames, attrValues);
-    SingleAggResultRewriter rewriter = new SingleAggResultRewriter();
+    SingleAggResultRewriter rewriter = new SingleAggResultRewriter(AggregateFrame.empty());
     AggregateMeasures rewrittenMeasures =
         rewriter.rewriteMeasures(
             Arrays.asList(Pair.of(1, measures)), 
@@ -87,7 +87,7 @@ public class SingleAggResultRewriterTest {
         sumSubsampleSizeAliasName());
     List<Object> attrValues = Arrays.<Object>asList(1.0, 2.0, 3.0, 4, 5);
     AggregateMeasures measures = new AggregateMeasures(attrNames, attrValues);
-    SingleAggResultRewriter rewriter = new SingleAggResultRewriter();
+    SingleAggResultRewriter rewriter = new SingleAggResultRewriter(AggregateFrame.empty());
     AggregateMeasures rewrittenMeasures =
         rewriter.rewriteMeasures(
             Arrays.asList(Pair.of(1, measures)),
@@ -113,7 +113,7 @@ public class SingleAggResultRewriterTest {
         sumSubsampleSizeAliasName());
     List<Object> attrValues = Arrays.<Object>asList(7.0, 8.0, 9.0, 1.0, 2.0, 3.0, 4, 5);
     AggregateMeasures measures = new AggregateMeasures(attrNames, attrValues);
-    SingleAggResultRewriter rewriter = new SingleAggResultRewriter();
+    SingleAggResultRewriter rewriter = new SingleAggResultRewriter(AggregateFrame.empty());
     AggregateMeasures rewrittenMeasures =
         rewriter.rewriteMeasures(
             Arrays.asList(Pair.of(1, measures)),

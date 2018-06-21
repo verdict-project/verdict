@@ -195,7 +195,7 @@ public class SelectQueryToSqlTest {
             new AliasedColumn(new ColumnOp("avg", new BaseColumn("t", "mycolumn1")), "myavg")),
         base);
     relation.addGroupby(new AliasReference("mygroup"));
-    String expected = "select `t`.`mygroup`, avg(`t`.`mycolumn1`) as myavg from `myschema`.`mytable` as t group by `mygroup`";
+    String expected = "select `t`.`mygroup`, avg(`t`.`mycolumn1`) as `myavg` from `myschema`.`mytable` as t group by `mygroup`";
     SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
     String actual = relToSql.toSql(relation);
     assertEquals(expected, actual);
@@ -217,7 +217,7 @@ public class SelectQueryToSqlTest {
     outerRelation.addGroupby(new AliasReference("mygroup2"));
 
     String expected = "select * from ("
-        + "select `t`.`mygroup`, avg(`t`.`mycolumn1`) as myavg from `myschema`.`mytable` as t group by `mygroup`) as s "
+        + "select `t`.`mygroup`, avg(`t`.`mycolumn1`) as `myavg` from `myschema`.`mytable` as t group by `mygroup`) as s "
         + "group by `mygroup2`";
     SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
     String actual = relToSql.toSql(outerRelation);

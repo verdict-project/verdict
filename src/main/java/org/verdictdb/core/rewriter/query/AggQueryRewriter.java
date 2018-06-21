@@ -27,6 +27,7 @@ import org.verdictdb.core.query.GroupingAttribute;
 import org.verdictdb.core.query.SelectItem;
 import org.verdictdb.core.query.SelectQueryOp;
 import org.verdictdb.core.query.UnnamedColumn;
+import org.verdictdb.core.rewriter.AliasRenamingRules;
 import org.verdictdb.core.rewriter.ScrambleMeta;
 import org.verdictdb.core.scramble.Scrambler;
 import org.verdictdb.exception.UnexpectedTypeException;
@@ -50,7 +51,7 @@ public class AggQueryRewriter {
   }
 
   String generateNextAliasName() {
-    String aliasName = "verdictalias" + nextAliasNumber;
+    String aliasName = "verdictdbalias" + nextAliasNumber;
     nextAliasNumber += 1;
     return aliasName;
   }
@@ -457,14 +458,14 @@ public class AggQueryRewriter {
    * Rewrite a given query into AQP-enabled form. The rewritten queries do not include any "create table ..."
    * parts.
    * 
-   * "select tier, other_groups, sum(price) as alias from ... group by other_groups;" is converted to
-   * "select other_groups,
+   * "select other_groups, sum(price) as alias from ... group by other_groups;" is converted to
+   * "select tier, other_groups,
    *         sum(sub_sum_est) as sum_alias,
    *         sum(sub_sum_est * subsample_size) as sum_scaled_sum_alias,
    *         sum(sub_sum_est * sub_sum_est * subsample_size) as sum_square_scaled_sum_alias,
    *         count(*) as count_subsample,
    *         sum(subsample_size) as sum_subsample_size
-   *  from (select other_groups,
+   *  from (select tier, other_groups,
    *               sum(price) as sub_sum_est,
    *               sum(case 1 when price is not null else 0 end) as subsample_size
    *        from ...
@@ -479,7 +480,7 @@ public class AggQueryRewriter {
    *         sum(pow(subsample_size,3)) as sum_square_scaled_count_alias,
    *         count(*) as count_subsample,
    *         sum(subsample_size) as sum_subsample_size
-   *  from (select other_groups,
+   *  from (select tier, other_groups,
    *               count(*) as subsample_size
    *        from ...
    *        group by sid, tier, other_groups) as sub_table
@@ -496,7 +497,7 @@ public class AggQueryRewriter {
    *         sum(pow(subsample_size,3)) as sum_square_scaled_count_alias,
    *         count(*) as count_subsample,
    *         sum(subsample_size) as sum_subsample_size
-   *  from (select other_groups,
+   *  from (select tier, other_groups,
    *               sum(price) as sub_sum_est,
    *               sum(case 1 when price is not null else 0 end) as subsample_size
    *        from ...
@@ -522,7 +523,7 @@ public class AggQueryRewriter {
     SelectQueryOp rewrittenInner = new SelectQueryOp();
     String innerTableAliasName = generateNextAliasName();
     String innerTierColumnAliasName = generateNextAliasName();
-    String outerTierColumnAliasName = Scrambler.getTierColumn();
+    String outerTierColumnAliasName = AliasRenamingRules.tierAliasName();
     rewrittenInner.setAliasName(innerTableAliasName);
     SelectQueryOp sel = (SelectQueryOp) relation;
     List<SelectItem> selectList = sel.getSelectList();

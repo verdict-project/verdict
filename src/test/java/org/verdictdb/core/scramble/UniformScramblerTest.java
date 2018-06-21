@@ -82,8 +82,8 @@ public class UniformScramblerTest {
     String expected = String.format("create table `%s`.`%s` ", newSchema, newTable)
         + String.format("partitioned by (`%s`) ", meta.getAggregationBlockColumn())
         + "as select *"
-        + String.format(", floor(rand() * %d) as %s", aggBlockCount, meta.getAggregationBlockColumn())
-        + String.format(", floor(rand() * 100) as %s, ", meta.getSubsampleColumn())
+        + String.format(", cast(floor(rand() * %d) as smallint) as %s", aggBlockCount, meta.getAggregationBlockColumn())
+        + String.format(", cast(floor(rand() * 100) as smallint) as %s, ", meta.getSubsampleColumn())
         + String.format("1 as %s ", meta.getTierColumn())
         + String.format("from `%s`.`%s`", originalSchema, originalTable);
     CreateTableToSql createToSql = new CreateTableToSql(new HiveSyntax());
@@ -101,11 +101,13 @@ public class UniformScramblerTest {
     String scrambleSql = createToSql.toSql(createQuery);
     conn.createStatement().execute(String.format("DROP TABLE IF EXISTS %s.%s", newSchema, newTable));
     conn.createStatement().execute(scrambleSql);
+    
+    System.out.println(scrambleSql);
 
     // retrieve all values
-//    printTableContent(conn, originalSchema, originalTable);
-//    
-//    printTableContent(conn, newSchema, newTable);
+    printTableContent(conn, originalSchema, originalTable);
+    
+    printTableContent(conn, newSchema, newTable);
   }
 
   @Test

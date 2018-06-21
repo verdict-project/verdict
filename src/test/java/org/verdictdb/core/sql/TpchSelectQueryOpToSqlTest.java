@@ -68,14 +68,14 @@ public class TpchSelectQueryOpToSqlTest {
     relation.addLimit(ConstantColumn.valueOf(1));
     String expected = "select `t`.`l_returnflag`, " +
         "`t`.`l_linestatus`, " +
-        "sum(`t`.`l_quantity`) as sum_qty, " +
-        "sum(`t`.`l_extendedprice`) as sum_base_price, " +
-        "sum(`t`.`l_extendedprice` * (1 - `t`.`l_discount`)) as sum_disc_price, " +
-        "sum((`t`.`l_extendedprice` * (1 - `t`.`l_discount`)) * (1 + `t`.`l_tax`)) as sum_charge, " +
-        "avg(`t`.`l_quantity`) as avg_qty, " +
-        "avg(`t`.`l_extendedprice`) as avg_price, " +
-        "avg(`t`.`l_discount`) as avg_disc, " +
-        "count(*) as count_order " +
+        "sum(`t`.`l_quantity`) as `sum_qty`, " +
+        "sum(`t`.`l_extendedprice`) as `sum_base_price`, " +
+        "sum(`t`.`l_extendedprice` * (1 - `t`.`l_discount`)) as `sum_disc_price`, " +
+        "sum((`t`.`l_extendedprice` * (1 - `t`.`l_discount`)) * (1 + `t`.`l_tax`)) as `sum_charge`, " +
+        "avg(`t`.`l_quantity`) as `avg_qty`, " +
+        "avg(`t`.`l_extendedprice`) as `avg_price`, " +
+        "avg(`t`.`l_discount`) as `avg_disc`, " +
+        "count(*) as `count_order` " +
         "from " +
         "`tpch`.`lineitem` as t " +
         "where " +
@@ -274,7 +274,7 @@ public class TpchSelectQueryOpToSqlTest {
     relation.addLimit(ConstantColumn.valueOf(10));
     String expected = "select " +
         "`l`.`l_orderkey`, " +
-        "sum(`l`.`l_extendedprice` * (1 - `l`.`l_discount`)) as revenue, " +
+        "sum(`l`.`l_extendedprice` * (1 - `l`.`l_discount`)) as `revenue`, " +
         "`o`.`o_orderdate`, " +
         "`o`.`o_shippriority` " +
         "from " +
@@ -337,7 +337,7 @@ public class TpchSelectQueryOpToSqlTest {
     relation.addLimit(ConstantColumn.valueOf(1));
     String expected = "select " +
         "`o`.`o_orderpriority`, " +
-        "count(*) as order_count " +
+        "count(*) as `order_count` " +
         "from " +
         "`tpch`.`orders` as o " +
         "where " +
@@ -428,7 +428,7 @@ public class TpchSelectQueryOpToSqlTest {
     relation.addLimit(ConstantColumn.valueOf(1));
     String expected = "select " +
         "`n`.`n_name`, " +
-        "sum(`l`.`l_extendedprice` * (1 - `l`.`l_discount`)) as revenue " +
+        "sum(`l`.`l_extendedprice` * (1 - `l`.`l_discount`)) as `revenue` " +
         "from " +
         "`tpch`.`customer` as c, " +
         "`tpch`.`orders` as o, " +
@@ -493,7 +493,7 @@ public class TpchSelectQueryOpToSqlTest {
     ));
     relation.addLimit(ConstantColumn.valueOf(1));
     String expected = "select " +
-        "sum(`l`.`l_extendedprice` * `l`.`l_discount`) as revenue " +
+        "sum(`l`.`l_extendedprice` * `l`.`l_discount`) as `revenue` " +
         "from " +
         "`tpch`.`lineitem` as l " +
         "where " +
@@ -599,14 +599,14 @@ public class TpchSelectQueryOpToSqlTest {
         "`shipping`.`supp_nation`, " +
         "`shipping`.`cust_nation`, " +
         "`shipping`.`l_year`, " +
-        "sum(`shipping`.`volume`) as revenue " +
+        "sum(`shipping`.`volume`) as `revenue` " +
         "from " +
         "(" +
         "select " +
-        "`n1`.`n_name` as supp_nation, " +
-        "`n2`.`n_name` as cust_nation, " +
-        "substr(`l`.`l_shipdate`, 0, 4) as l_year, " +
-        "`l`.`l_extendedprice` * (1 - `l`.`l_discount`) as volume " +
+        "`n1`.`n_name` as `supp_nation`, " +
+        "`n2`.`n_name` as `cust_nation`, " +
+        "substr(`l`.`l_shipdate`, 0, 4) as `l_year`, " +
+        "`l`.`l_extendedprice` * (1 - `l`.`l_discount`) as `volume` " +
         "from " +
         "`tpch`.`supplier` as s, " +
         "`tpch`.`lineitem` as l, " +
@@ -725,13 +725,13 @@ public class TpchSelectQueryOpToSqlTest {
         "sum(case " +
         "when (`all_nations`.`nation` = ':1') then `all_nations`.`volume` " +
         "else 0 " +
-        "end) / sum(`all_nations`.`volume`) as mkt_share " +
+        "end) / sum(`all_nations`.`volume`) as `mkt_share` " +
         "from " +
         "(" +
         "select " +
-        "substr(`o`.`o_orderdate`, 0, 4) as o_year, " +
-        "`l`.`l_extendedprice` * (1 - `l`.`l_discount`) as volume, " +
-        "`n2`.`n_name` as nation " +
+        "substr(`o`.`o_orderdate`, 0, 4) as `o_year`, " +
+        "`l`.`l_extendedprice` * (1 - `l`.`l_discount`) as `volume`, " +
+        "`n2`.`n_name` as `nation` " +
         "from " +
         "`tpch`.`part` as p, " +
         "`tpch`.`supplier` as s, " +
@@ -830,13 +830,13 @@ public class TpchSelectQueryOpToSqlTest {
     String expected = "select " +
         "`profit`.`nation`, " +
         "`profit`.`o_year`, " +
-        "sum(`profit`.`amount`) as sum_profit " +
+        "sum(`profit`.`amount`) as `sum_profit` " +
         "from " +
         "(" +
         "select " +
-        "`n`.`n_name` as nation, " +
-        "substr(`o`.`o_orderdate`, 0, 4) as o_year, " +
-        "(`l`.`l_extendedprice` * (1 - `l`.`l_discount`)) - (`ps`.`ps_supplycost` * `l`.`l_quantity`) as amount " +
+        "`n`.`n_name` as `nation`, " +
+        "substr(`o`.`o_orderdate`, 0, 4) as `o_year`, " +
+        "(`l`.`l_extendedprice` * (1 - `l`.`l_discount`)) - (`ps`.`ps_supplycost` * `l`.`l_quantity`) as `amount` " +
         "from " +
         "`tpch`.`part` as p, " +
         "`tpch`.`supplier` as s, " +
@@ -930,7 +930,7 @@ public class TpchSelectQueryOpToSqlTest {
     String expected = "select " +
         "`c`.`c_custkey`, " +
         "`c`.`c_name`, " +
-        "sum(`l`.`l_extendedprice` * (1 - `l`.`l_discount`)) as revenue, " +
+        "sum(`l`.`l_extendedprice` * (1 - `l`.`l_discount`)) as `revenue`, " +
         "`c`.`c_acctbal`, " +
         "`n`.`n_name`, " +
         "`c`.`c_address`, " +
@@ -1024,7 +1024,7 @@ public class TpchSelectQueryOpToSqlTest {
     relation.addLimit(ConstantColumn.valueOf(1));
     String expected = "select " +
         "`ps`.`ps_partkey`, " +
-        "sum(`ps`.`ps_supplycost` * `ps`.`ps_availqty`) as value " +
+        "sum(`ps`.`ps_supplycost` * `ps`.`ps_availqty`) as `value` " +
         "from " +
         "`tpch`.`partsupp` as ps, " +
         "`tpch`.`supplier` as s, " +
@@ -1129,13 +1129,13 @@ public class TpchSelectQueryOpToSqlTest {
         "or (`o`.`o_orderpriority` = '2-HIGH')) " +
         "then 1 " +
         "else 0 " +
-        "end) as high_line_count, " +
+        "end) as `high_line_count`, " +
         "sum(case " +
         "when ((`o`.`o_orderpriority` <> '1-URGENT') " +
         "and (`o`.`o_orderpriority` <> '2-HIGH')) " +
         "then 1 " +
         "else 0 " +
-        "end) as low_line_count " +
+        "end) as `low_line_count` " +
         "from " +
         "`tpch`.`orders` as o, " +
         "`tpch`.`lineitem` as l " +
@@ -1193,7 +1193,7 @@ public class TpchSelectQueryOpToSqlTest {
     relation.addLimit(ConstantColumn.valueOf(1));
     String expected = "select " +
         "`c_orders`.`c_count`, " +
-        "count(*) as custdist " +
+        "count(*) as `custdist` " +
         "from " +
         "(" +
         "select " +
@@ -1265,7 +1265,7 @@ public class TpchSelectQueryOpToSqlTest {
         "when (`p`.`p_type` like 'PROMO%') " +
         "then (`l`.`l_extendedprice` * (1 - `l`.`l_discount`)) " +
         "else 0 " +
-        "end)) / sum(`l`.`l_extendedprice` * (1 - `l`.`l_discount`)) as promo_revenue " +
+        "end)) / sum(`l`.`l_extendedprice` * (1 - `l`.`l_discount`)) as `promo_revenue` " +
         "from " +
         "`tpch`.`lineitem` as l, " +
         "`tpch`.`part` as p " +
@@ -1386,7 +1386,7 @@ public class TpchSelectQueryOpToSqlTest {
         "`p`.`p_brand`, " +
         "`p`.`p_type`, " +
         "`p`.`p_size`, " +
-        "count(distinct `ps`.`ps_suppkey`) as supplier_cnt " +
+        "count(distinct `ps`.`ps_suppkey`) as `supplier_cnt` " +
         "from " +
         "`tpch`.`partsupp` as ps, " +
         "`tpch`.`part` as p " +
@@ -1463,11 +1463,11 @@ public class TpchSelectQueryOpToSqlTest {
     )));
     relation.addLimit(ConstantColumn.valueOf(1));
     String expected = "select " +
-        "sum(`l`.`l_extendedprice`) / 7.0 as avg_yearly " +
+        "sum(`l`.`l_extendedprice`) / 7.0 as `avg_yearly` " +
         "from " +
         "`tpch`.`lineitem` as l, " +
         "`tpch`.`part` as p, " +
-        "(select `l`.`l_partkey` as agg_partkey, 0.2 * avg(`l`.`l_quantity`) as avg_quantity from `tpch`.`lineitem` as l group by `l_partkey`) as part_agg " +
+        "(select `l`.`l_partkey` as `agg_partkey`, 0.2 * avg(`l`.`l_quantity`) as `avg_quantity` from `tpch`.`lineitem` as l group by `l_partkey`) as part_agg " +
         "where " +
         "((((`p`.`p_partkey` = `l`.`l_partkey`) " +
         "and (`part_agg`.`agg_partkey` = `l`.`l_partkey`)) " +
@@ -1741,7 +1741,7 @@ public class TpchSelectQueryOpToSqlTest {
     )));
     relation.addLimit(ConstantColumn.valueOf(1));
     String expected = "select " +
-        "sum(`l`.`l_extendedprice` * (1 - `l`.`l_discount`)) as revenue " +
+        "sum(`l`.`l_extendedprice` * (1 - `l`.`l_discount`)) as `revenue` " +
         "from " +
         "`tpch`.`lineitem` as l, " +
         "`tpch`.`part` as p " +
@@ -1867,9 +1867,9 @@ public class TpchSelectQueryOpToSqlTest {
         "`tpch`.`partsupp` as ps, " +
         "(" +
         "select " +
-        "`l`.`l_partkey` as agg_partkey, " +
-        "`l`.`l_suppkey` as agg_suppkey, " +
-        "0.5 * sum(`l`.`l_quantity`) as agg_quantity " +
+        "`l`.`l_partkey` as `agg_partkey`, " +
+        "`l`.`l_suppkey` as `agg_suppkey`, " +
+        "0.5 * sum(`l`.`l_quantity`) as `agg_quantity` " +
         "from " +
         "`tpch`.`lineitem` as l " +
         "where " +
@@ -1972,7 +1972,7 @@ public class TpchSelectQueryOpToSqlTest {
     relation.addLimit(ConstantColumn.valueOf(100));
     String expected = "select " +
         "`s`.`s_name`, " +
-        "count(*) as numwait " +
+        "count(*) as `numwait` " +
         "from " +
         "`tpch`.`supplier` as s, " +
         "`tpch`.`lineitem` as l1, " +
@@ -2072,12 +2072,12 @@ public class TpchSelectQueryOpToSqlTest {
     relation.addLimit(ConstantColumn.valueOf(1));
     String expected = "select " +
         "`custsale`.`cntrycode`, " +
-        "count(*) as numcust, " +
-        "sum(`custsale`.`c_acctbal`) as totacctbal " +
+        "count(*) as `numcust`, " +
+        "sum(`custsale`.`c_acctbal`) as `totacctbal` " +
         "from " +
         "(" +
         "select " +
-        "substr(`c`.`c_phone`, 1, 2) as cntrycode, " +
+        "substr(`c`.`c_phone`, 1, 2) as `cntrycode`, " +
         "`c`.`c_acctbal` " +
         "from " +
         "`tpch`.`customer` as c " +
