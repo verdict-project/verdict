@@ -1,7 +1,6 @@
 package org.verdictdb.core.execution;
 
 import java.util.List;
-import java.util.concurrent.BlockingDeque;
 
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.core.query.CreateTableAsSelectQuery;
@@ -9,7 +8,7 @@ import org.verdictdb.core.query.SelectQuery;
 import org.verdictdb.core.sql.CreateTableToSql;
 import org.verdictdb.exception.VerdictDbException;
 
-public class CreateAsSelectExecutionNode extends QueryExecutionNode {
+public class CreateTableAsSelectExecutionNode extends QueryExecutionNode {
   
   String schemaName;
   
@@ -17,7 +16,11 @@ public class CreateAsSelectExecutionNode extends QueryExecutionNode {
   
   SelectQuery query;
   
-  public CreateAsSelectExecutionNode(DbmsConnection conn, String schemaName, String tableName, SelectQuery query) {
+  public CreateTableAsSelectExecutionNode(
+      DbmsConnection conn,
+      String schemaName, 
+      String tableName, 
+      SelectQuery query) {
     super(conn);
     this.schemaName = schemaName;
     this.tableName = tableName;
@@ -25,9 +28,7 @@ public class CreateAsSelectExecutionNode extends QueryExecutionNode {
   }
 
   @Override
-  public void executeNode(
-      List<ExecutionResult> resultFromChildren, 
-      BlockingDeque<ExecutionResult> resultQueue) {
+  public ExecutionResult executeNode(List<ExecutionResult> downstreamResults) {
     CreateTableAsSelectQuery createQuery = new CreateTableAsSelectQuery(schemaName, tableName, query);
     CreateTableToSql toSql = new CreateTableToSql(conn.getSyntax());
     try {
@@ -36,7 +37,12 @@ public class CreateAsSelectExecutionNode extends QueryExecutionNode {
     } catch (VerdictDbException e) {
       e.printStackTrace();
     }
-    resultQueue.add(ExecutionResult.completeResult());
+    
+    // write the result
+    ExecutionResult result = new ExecutionResult();
+    result.setKeyValue("schemaName", schemaName);
+    result.setKeyValue("tableName", tableName);
+    return result;
   }
 
 }

@@ -31,9 +31,9 @@ public class DropTableExecutionNodeTest {
 
   @Test
   public void testExecuteNode() {
-    LinkedBlockingDeque<ExecutionResult> resultQueue = new LinkedBlockingDeque<>();
+//    LinkedBlockingDeque<ExecutionResult> resultQueue = new LinkedBlockingDeque<>();
     QueryExecutionNode root = new DropTableExecutionNode(conn, originalSchema, originalTable);
-    root.execute(resultQueue);
+    root.execute();
   }
 
   static void populateData(DbmsConnection conn, String schemaName, String tableName) throws SQLException {

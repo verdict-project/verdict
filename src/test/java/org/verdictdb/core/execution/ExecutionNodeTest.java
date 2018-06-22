@@ -103,7 +103,7 @@ public class ExecutionNodeTest {
             new AliasedColumn(new ColumnOp("sum", new BaseColumn("t", "age")), aliasName)),
         base);
     DbmsConnection dbmsConn = new JdbcConnection(conn, new H2Syntax());
-    AsyncAggExecutionNode node = new AsyncAggExecutionNode(dbmsConn, meta, relation);
+    AsyncAggExecutionNode node = new AsyncAggExecutionNode(dbmsConn, meta, "default", "aggtable", relation);
 //    AsyncHandler handler = new AsyncHandler() {
 //
 //      @Override

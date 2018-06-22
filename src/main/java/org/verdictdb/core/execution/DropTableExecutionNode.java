@@ -1,7 +1,6 @@
 package org.verdictdb.core.execution;
 
 import java.util.List;
-import java.util.concurrent.BlockingDeque;
 
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.core.query.DropTableQuery;
@@ -14,16 +13,17 @@ public class DropTableExecutionNode extends QueryExecutionNode {
   
   String tableName;
   
-  public DropTableExecutionNode(DbmsConnection conn, String schemaName, String tableName) {
+  public DropTableExecutionNode(
+      DbmsConnection conn, 
+      String schemaName, 
+      String tableName) {
     super(conn);
     this.schemaName = schemaName;
     this.tableName = tableName;
   }
 
   @Override
-  public void executeNode(
-      List<ExecutionResult> resultFromChildren, 
-      BlockingDeque<ExecutionResult> resultQueue) {
+  public ExecutionResult executeNode(List<ExecutionResult> downstreamResults) {
     DropTableQuery dropQuery = new DropTableQuery(schemaName, tableName);
     DropTableToSql toSql = new DropTableToSql(conn.getSyntax());
     try {
@@ -32,7 +32,7 @@ public class DropTableExecutionNode extends QueryExecutionNode {
     } catch (VerdictDbException e) {
       e.printStackTrace();
     }
-    resultQueue.add(ExecutionResult.completeResult());
+    return ExecutionResult.empty();
   }
 
 }

@@ -16,7 +16,7 @@ import org.verdictdb.core.query.SelectQuery;
 import org.verdictdb.exception.VerdictDbException;
 import org.verdictdb.sql.syntax.H2Syntax;
 
-public class CreateAsSelectExecutionNodeTest {
+public class CreateTableAsSelectExecutionNodeTest {
   
   static String originalSchema = "originalschema";
 
@@ -45,9 +45,9 @@ public class CreateAsSelectExecutionNodeTest {
   public void testExecuteNode() {
     BaseTable base = new BaseTable(originalSchema, originalTable, "t");
     SelectQuery query = SelectQuery.getSelectQueryOp(Arrays.<SelectItem>asList(new AsteriskColumn()), base);
-    QueryExecutionNode root = new CreateAsSelectExecutionNode(conn, newSchema, newTable, query);
-    LinkedBlockingDeque<ExecutionResult> resultQueue = new LinkedBlockingDeque<>();
-    root.execute(resultQueue);
+    QueryExecutionNode root = new CreateTableAsSelectExecutionNode(conn, newSchema, newTable, query);
+//    LinkedBlockingDeque<ExecutionResult> resultQueue = new LinkedBlockingDeque<>();
+    root.execute();
     conn.executeUpdate(String.format("DROP TABLE \"%s\".\"%s\"", newSchema, newTable));
   }
 

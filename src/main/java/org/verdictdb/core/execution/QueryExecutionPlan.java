@@ -9,19 +9,15 @@
 package org.verdictdb.core.execution;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.BlockingDeque;
+import java.util.concurrent.ThreadLocalRandom;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.connection.DbmsConnection;
-import org.verdictdb.core.DbmsMetaDataCache;
 import org.verdictdb.core.query.AbstractRelation;
 import org.verdictdb.core.query.BaseTable;
 import org.verdictdb.core.query.JoinTable;
 import org.verdictdb.core.query.SelectQuery;
 import org.verdictdb.core.rewriter.ScrambleMeta;
-import org.verdictdb.core.sql.NonValidatingSQLParser;
 import org.verdictdb.exception.UnexpectedTypeException;
 import org.verdictdb.exception.ValueException;
 import org.verdictdb.exception.VerdictDbException;
@@ -35,6 +31,8 @@ public class QueryExecutionPlan {
   
   QueryExecutionNode root;
   
+  String scratchpadSchemaName;
+  
 //  PostProcessor postProcessor;
   
 //  /**
@@ -46,6 +44,14 @@ public class QueryExecutionPlan {
 //    this(conn, syntax, (SelectQueryOp) new NonValidatingSQLParser().toRelation(queryString));
 //  }
   
+  static final int serialNum = ThreadLocalRandom.current().nextInt(0, 1000000);
+  
+  static int identifierNum = 0;
+  
+  public static String generateUniqueIdentifier() {
+    return String.format("verdictdbtemptable_%d_%d", serialNum, identifierNum++);
+  }
+  
   /**
    * 
    * @param query  A well-formed select query object
@@ -56,14 +62,19 @@ public class QueryExecutionPlan {
       DbmsConnection conn, 
       SyntaxAbstract syntax, 
       ScrambleMeta scrambleMeta, 
-      SelectQuery query) throws VerdictDbException {
+      SelectQuery query,
+      String scratchpadSchemaName) throws VerdictDbException {
     this.scrambleMeta = scrambleMeta;
     if (!query.isAggregateQuery()) {
       throw new UnexpectedTypeException(query);
     }
     this.query = query;
     this.root = makePlan(conn, syntax, query);
-//    this.postProcessor = plan.getRight();
+    this.scratchpadSchemaName = scratchpadSchemaName;
+  }
+  
+  public String getScratchpadSchemaName() {
+    return scratchpadSchemaName;
   }
   
   /** 
@@ -133,7 +144,7 @@ public class QueryExecutionPlan {
     }
     // generate temp table names for those aggregate subqueries and use them in their ancestors.
     
-    return new AsyncAggExecutionNode(conn, scrambleMeta, query);
+    return new AsyncAggExecutionNode(conn, scrambleMeta, scratchpadSchemaName, generateUniqueIdentifier(), query);
   }
   
   public void execute(DbmsConnection conn) {
