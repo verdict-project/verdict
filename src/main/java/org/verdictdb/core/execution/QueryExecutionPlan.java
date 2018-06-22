@@ -124,6 +124,9 @@ public class QueryExecutionPlan {
           // use inner query as root
           if (!scrambleTableinOuterQuery && checkScrambleTable(((SelectQueryOp) table).getFromList())) {
             rootToReplace.add((SelectQueryOp) table);
+            QueryExecutionNode child = makePlan(conn, syntax, (SelectQueryOp) table);
+            // since postprocessing will be the root, the children of this table, will be the children of root
+            children.addAll(child.children);
             table = replaceAggregateSubquery(conn, syntax, (SelectQueryOp) table);
           } else {
             // If aggregate, first recursive build the tree of the node, then replace the query in its original plan
@@ -146,6 +149,9 @@ public class QueryExecutionPlan {
               // use inner query as root
               if (!scrambleTableinOuterQuery && checkScrambleTable(((SelectQueryOp) jointTable).getFromList())) {
                 rootToReplace.add((SelectQueryOp) jointTable);
+                QueryExecutionNode child = makePlan(conn, syntax, (SelectQueryOp) jointTable);
+                // since postprocessing will be the root, the children of this table, will be the children of root
+                children.addAll(child.children);
                 jointTable = replaceAggregateSubquery(conn, syntax, (SelectQueryOp) jointTable);
               } else {
                 // If aggregate, first recursive build the tree of the node, then replace the query in its original plan
@@ -186,6 +192,9 @@ public class QueryExecutionPlan {
             // use inner query as root
             if (!scrambleTableinOuterQuery && checkScrambleTable(subquery.getFromList())) {
               rootToReplace.add(subquery);
+              QueryExecutionNode child = makePlan(conn, syntax, subquery);
+              // since postprocessing will be the root, the children of this table, will be the children of root
+              children.addAll(child.children);
               ((SubqueryColumn) filter).setSubquery(replaceAggregateSubquery(conn, syntax, subquery));
             } else {
               // If aggregate, first recursive build the tree of the node, then replace the query in its original plan
