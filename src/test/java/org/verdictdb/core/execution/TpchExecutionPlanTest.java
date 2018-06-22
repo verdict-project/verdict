@@ -2007,5 +2007,28 @@ public class TpchExecutionPlanTest {
     rewritten.setAliasName("ct1");
     assertEquals(rewritten,((JoinTable)(((SelectQueryOp) ((AsyncAggExecutionNode)queryExecutionPlan.root).originalQuery.getFromList().get(0)).getFromList().get(0))).getJoinList().get(0));
   }
+
+  @Test
+  public void SubqueryInFilterTest() throws VerdictDbException, SQLException {
+    RelationStandardizer.resetItemID();
+    String sql = "select avg(l_quantity) from lineitem where l_quantity > (select avg(l_quantity) as quantity_avg from lineitem);";
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
+    RelationStandardizer gen = new RelationStandardizer(staticMetaData);
+    relation = gen.standardize((SelectQueryOp) relation);
+    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(new JdbcConnection(conn, new H2Syntax()),
+        new H2Syntax(), meta, (SelectQueryOp) relation);
+    queryExecutionPlan.cleanUp(new JdbcConnection(conn, new H2Syntax()), new H2Syntax());
+    SelectQueryOp rewritten = SelectQueryOp.getSelectQueryOp(
+        Arrays.<SelectItem>asList(new AliasedColumn(new BaseColumn("verdictdb_temp", "tmptable1", "quantity_avg"), "quantity_avg")),
+    new BaseTable("verdictdb_temp", "tmptable1"));
+    assertEquals(rewritten, ((SubqueryColumn)((ColumnOp)((AsyncAggExecutionNode)(queryExecutionPlan.root)).originalQuery.getFilter().get()).getOperand(1)).getSubquery());
+
+    SelectQueryOp expected = SelectQueryOp.getSelectQueryOp(
+        Arrays.<SelectItem>asList(new AliasedColumn(new ColumnOp("avg", new BaseColumn("vt3", "l_quantity")), "quantity_avg")),
+        new BaseTable("tpch", "lineitem", "vt3")
+    );
+    assertEquals(expected, ((AsyncAggExecutionNode)queryExecutionPlan.root.children.get(0)).originalQuery);
+  }
 }
 

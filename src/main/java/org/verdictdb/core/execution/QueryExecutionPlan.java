@@ -99,9 +99,10 @@ public class QueryExecutionPlan {
     syntax.getQuoteString() + "."  + syntax.getQuoteString() + "tmptable" + tempTableIndex + syntax.getQuoteString()
         + " as " + relToSql.toSql(subquery);
     conn.executeUpdate(createTable);
-    String aliasName = subquery.getAliasName().get();
+    String aliasName = null;
+    if (subquery.getAliasName().isPresent()) aliasName = subquery.getAliasName().get();
     subquery = SelectQueryOp.getSelectQueryOp(newSelectList, new BaseTable("verdictdb_temp", "tmptable" + tempTableIndex++));
-    subquery.setAliasName(aliasName);
+    if (aliasName!=null) subquery.setAliasName(aliasName);
     return subquery;
   }
 
@@ -185,13 +186,13 @@ public class QueryExecutionPlan {
             // use inner query as root
             if (!scrambleTableinOuterQuery && checkScrambleTable(subquery.getFromList())) {
               rootToReplace.add(subquery);
-              subquery = replaceAggregateSubquery(conn, syntax, subquery);
+              ((SubqueryColumn) filter).setSubquery(replaceAggregateSubquery(conn, syntax, subquery));
             } else {
               // If aggregate, first recursive build the tree of the node, then replace the query in its original plan
               QueryExecutionNode child = makePlan(conn, syntax, subquery);
               children.add(child);
               // rewrite the inner aggregate query
-              subquery = replaceAggregateSubquery(conn, syntax, subquery);
+              ((SubqueryColumn) filter).setSubquery(replaceAggregateSubquery(conn, syntax, subquery));
             }
           }
           else { // If non-aggregate, recursive use replaceAggregateSubquery find all subquries
