@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.connection.DbmsQueryResult;
@@ -71,12 +72,12 @@ public class AggQueryRewriterJdbcTest {
         base);
     ScrambleMeta meta = generateTestScrambleMeta();
     AggQueryRewriter rewriter = new AggQueryRewriter(meta);
-    List<AbstractRelation> rewritten = rewriter.rewrite(relation);
+    List<Pair<AbstractRelation, AggblockMeta>> rewritten = rewriter.rewrite(relation);
     
     SelectQueryToSql relToSql = new SelectQueryToSql(new H2Syntax());
     
     for (int i = 0; i < rewritten.size(); i++) {
-      String query_string = relToSql.toSql(rewritten.get(i));
+      String query_string = relToSql.toSql(rewritten.get(i).getLeft());
       System.out.println(query_string);
       
       JdbcConnection jdbcConn = new JdbcConnection(conn, new H2Syntax());

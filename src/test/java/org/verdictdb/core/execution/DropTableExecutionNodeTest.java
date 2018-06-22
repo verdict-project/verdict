@@ -1,20 +1,13 @@
 package org.verdictdb.core.execution;
 
-import static org.junit.Assert.*;
-
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.Arrays;
 import java.util.concurrent.LinkedBlockingDeque;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.JdbcConnection;
-import org.verdictdb.core.query.AsteriskColumn;
-import org.verdictdb.core.query.BaseTable;
-import org.verdictdb.core.query.SelectItem;
-import org.verdictdb.core.query.SelectQuery;
 import org.verdictdb.exception.VerdictDbException;
 import org.verdictdb.sql.syntax.H2Syntax;
 

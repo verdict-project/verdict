@@ -74,8 +74,7 @@ public abstract class QueryExecutionNode {
         executor.submit(new Runnable() {
           @Override
           public void run() {
-            ExecutionResult thisResult = executeNode(results);
-            resultQueue.add(thisResult);
+            executeNode(results, resultQueue);
           }
         });
         
@@ -102,6 +101,8 @@ public abstract class QueryExecutionNode {
     resultQueue.add(ExecutionResult.completeResult());
   }
   
-  public abstract ExecutionResult executeNode(List<ExecutionResult> resultFromChildren);
+  public abstract void executeNode(
+      List<ExecutionResult> resultFromChildren, 
+      BlockingDeque<ExecutionResult> resultQueue);
 
 }

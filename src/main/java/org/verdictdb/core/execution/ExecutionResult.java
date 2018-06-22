@@ -15,6 +15,12 @@ public class ExecutionResult {
     return r;
   }
 
+  public static ExecutionResult failedResult() {
+    ExecutionResult r = new ExecutionResult();
+    r.setStatus("failed");
+    return r;
+  }
+
   public String getStatus() {
     return status;
   }

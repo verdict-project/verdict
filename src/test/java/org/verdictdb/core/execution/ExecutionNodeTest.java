@@ -80,19 +80,19 @@ public class ExecutionNodeTest {
     conn.createStatement().execute(scrambleSql);
   }
 
-  @Test
-  public void testSingleExecute() throws VerdictDbException {
-    BaseTable base = new BaseTable("default", scrambledTable, "t");
-    String aliasName = "a";
-    SelectQuery relation = SelectQuery.getSelectQueryOp(
-        Arrays.<SelectItem>asList(
-            new AliasedColumn(new ColumnOp("sum", new BaseColumn("t", "age")), aliasName)),
-        base);
-    DbmsConnection dbmsConn = new JdbcConnection(conn, new H2Syntax());
-    AsyncAggExecutionNode node = new AsyncAggExecutionNode(dbmsConn, meta, relation);
-    AggregateFrame af = node.singleExecute();
-//    af.printContent();
-  }
+//  @Test
+//  public void testSingleExecute() throws VerdictDbException {
+//    BaseTable base = new BaseTable("default", scrambledTable, "t");
+//    String aliasName = "a";
+//    SelectQuery relation = SelectQuery.getSelectQueryOp(
+//        Arrays.<SelectItem>asList(
+//            new AliasedColumn(new ColumnOp("sum", new BaseColumn("t", "age")), aliasName)),
+//        base);
+//    DbmsConnection dbmsConn = new JdbcConnection(conn, new H2Syntax());
+//    AsyncAggExecutionNode node = new AsyncAggExecutionNode(dbmsConn, meta, relation);
+//    AggregateFrame af = node.singleExecute();
+////    af.printContent();
+//  }
   
   @Test
   public void asyncExecute() throws VerdictDbException {

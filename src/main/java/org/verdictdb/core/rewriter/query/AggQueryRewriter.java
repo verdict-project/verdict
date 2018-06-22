@@ -70,7 +70,7 @@ public class AggQueryRewriter {
    * @return
    * @throws VerdictDbException 
    */
-  public List<AbstractRelation> rewrite(AbstractRelation relation) throws VerdictDbException {
+  public List<Pair<AbstractRelation, AggblockMeta>> rewrite(AbstractRelation relation) throws VerdictDbException {
     if (!(relation instanceof SelectQuery)) {
       throw new UnexpectedTypeException(relation);
     }
@@ -78,11 +78,11 @@ public class AggQueryRewriter {
       throw new ValueException("The provided relation is not an aggregate relation.");
     }
 
-    List<AbstractRelation> rewrittenQueries = rewriteAggregateQuery(relation);
+    List<Pair<AbstractRelation, AggblockMeta>> rewrittenQueries = rewriteAggregateQuery(relation);
     return rewrittenQueries;
   }
 
-  public List<AbstractRelation> rewriteAggregateQuery(AbstractRelation relation) throws VerdictDbException {
+  public List<Pair<AbstractRelation, AggblockMeta>> rewriteAggregateQuery(AbstractRelation relation) throws VerdictDbException {
     // propagate subsample ID and tier columns up toward the top sources.
     List<AbstractRelation> selectAllScrambledBases = new ArrayList<>();    // used for ingesting block agg predicate
     SelectQuery sel = (SelectQuery) relation;
@@ -100,26 +100,26 @@ public class AggQueryRewriter {
       aliasUpdateMap.put(source.getAliasName().get(), rewrittenSource.getAliasName().get());
     }
     
-    // update aliases in the select list
-    List<SelectItem> selectList = sel.getSelectList();
-    sel.clearSelectList();
-    for (SelectItem item : selectList) {
-      sel.addSelectItem(replaceTableReferenceInSelectItem(item, aliasUpdateMap));
-    }
-    
-    // update aliases in the groupby list
-    List<GroupingAttribute> groupbyList = sel.getGroupby();
-    sel.clearGroupby();
-    for (GroupingAttribute group : groupbyList) {
-      sel.addGroupby(replaceTableReferenceInGroupby(group, aliasUpdateMap));
-    }
-
-    List<AbstractRelation> rewrittenQueries = new ArrayList<>();
+    List<Pair<AbstractRelation, AggblockMeta>> rewrittenQueries = new ArrayList<>();
     if (immediateScrambledSources.size() == 0) {
       // no scrambled source exists
-      rewrittenQueries.add(sel);
+      rewrittenQueries.add(Pair.of((AbstractRelation) sel, AggblockMeta.empty()));
     }
     else {
+      // update aliases in the select list
+      List<SelectItem> selectList = sel.getSelectList();
+      sel.clearSelectList();
+      for (SelectItem item : selectList) {
+        sel.addSelectItem(replaceTableReferenceInSelectItem(item, aliasUpdateMap));
+      }
+
+      // update aliases in the groupby list
+      List<GroupingAttribute> groupbyList = sel.getGroupby();
+      sel.clearGroupby();
+      for (GroupingAttribute group : groupbyList) {
+        sel.addGroupby(replaceTableReferenceInGroupby(group, aliasUpdateMap));
+      }
+    
       List<BaseColumn> baseColumns = new ArrayList<>();
       List<List<Pair<Integer, Integer>>> blockingIndices = new ArrayList<>();
       Pair<UnnamedColumn, UnnamedColumn> subsampleAndTierColumns = 
@@ -130,7 +130,6 @@ public class AggQueryRewriter {
               blockingIndices);
       UnnamedColumn subsampleColumn = subsampleAndTierColumns.getLeft();
       UnnamedColumn tierColumn = subsampleAndTierColumns.getRight();
-//              inclusionProbColumns);
       
       // rewrite aggregate functions with error estimation logic
       int savedNextAliasNumber = nextAliasNumber;
@@ -138,6 +137,7 @@ public class AggQueryRewriter {
         nextAliasNumber = savedNextAliasNumber;
         AbstractRelation rewrittenQuery = 
             rewriteSelectListForErrorEstimation(sel, subsampleColumn, tierColumn);
+        AggblockMeta aggblockMeta = new AggblockMeta();
         
         for (int m = 0; m < baseColumns.size(); m++) {
           BaseColumn blockaggBaseColumn = baseColumns.get(m);
@@ -146,9 +146,12 @@ public class AggQueryRewriter {
           selectAllScramledBase.clearFilters();
           selectAllScramledBase.addFilterByAnd(
               ColumnOp.equal(blockaggBaseColumn, ConstantColumn.valueOf(blockingIndex.getLeft())));
+          aggblockMeta.addMeta(blockaggBaseColumn.getSchemaName(), blockaggBaseColumn.getTableName(), blockingIndex);
         }
         
-        rewrittenQueries.add(deepcopySelectQuery((SelectQuery) rewrittenQuery));
+        rewrittenQueries.add(Pair.of(
+            (AbstractRelation) deepcopySelectQuery((SelectQuery) rewrittenQuery),
+            aggblockMeta));
       }
     }
 

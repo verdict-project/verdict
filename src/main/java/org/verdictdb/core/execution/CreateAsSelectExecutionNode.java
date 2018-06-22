@@ -1,6 +1,7 @@
 package org.verdictdb.core.execution;
 
 import java.util.List;
+import java.util.concurrent.BlockingDeque;
 
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.core.query.CreateTableAsSelectQuery;
@@ -24,7 +25,9 @@ public class CreateAsSelectExecutionNode extends QueryExecutionNode {
   }
 
   @Override
-  public ExecutionResult executeNode(List<ExecutionResult> resultFromChildren) {
+  public void executeNode(
+      List<ExecutionResult> resultFromChildren, 
+      BlockingDeque<ExecutionResult> resultQueue) {
     CreateTableAsSelectQuery createQuery = new CreateTableAsSelectQuery(schemaName, tableName, query);
     CreateTableToSql toSql = new CreateTableToSql(conn.getSyntax());
     try {
@@ -33,7 +36,7 @@ public class CreateAsSelectExecutionNode extends QueryExecutionNode {
     } catch (VerdictDbException e) {
       e.printStackTrace();
     }
-    return ExecutionResult.completeResult();
+    resultQueue.add(ExecutionResult.completeResult());
   }
 
 }

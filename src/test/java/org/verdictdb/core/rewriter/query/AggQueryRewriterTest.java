@@ -5,6 +5,7 @@ import static org.junit.Assert.assertEquals;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
 import org.verdictdb.core.query.AbstractRelation;
 import org.verdictdb.core.query.AliasReference;
@@ -49,7 +50,7 @@ public class AggQueryRewriterTest {
         base);
     ScrambleMeta meta = generateTestScrambleMeta();
     AggQueryRewriter rewriter = new AggQueryRewriter(meta);
-    List<AbstractRelation> rewritten = rewriter.rewrite(relation);
+    List<Pair<AbstractRelation, AggblockMeta>> rewritten = rewriter.rewrite(relation);
     
     String aliasForSumEstimate = AliasRenamingRules.sumEstimateAliasName(aliasName);
     String aliasForSumScaledSubsum = AliasRenamingRules.sumScaledSumAliasName(aliasName);
@@ -78,7 +79,7 @@ public class AggQueryRewriterTest {
           + "group by verdictdbalias1.`verdictdbalias2`, `verdictdbalias5`) as verdictdbalias4 "
           + "group by `verdictdb:tier`";
       SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
-      String actual = relToSql.toSql(rewritten.get(k));
+      String actual = relToSql.toSql(rewritten.get(k).getLeft());
       assertEquals(expected, actual);
     }
   }
@@ -91,7 +92,7 @@ public class AggQueryRewriterTest {
         Arrays.<SelectItem>asList(new AliasedColumn(new ColumnOp("count"), aliasName)), base);
     ScrambleMeta meta = generateTestScrambleMeta();
     AggQueryRewriter rewriter = new AggQueryRewriter(meta);
-    List<AbstractRelation> rewritten = rewriter.rewrite(relation);
+    List<Pair<AbstractRelation, AggblockMeta>> rewritten = rewriter.rewrite(relation);
     
     String aliasForCountEstimate = AliasRenamingRules.countEstimateAliasName(aliasName);
     String aliasForSumScaledSubcount = AliasRenamingRules.sumScaledCountAliasName(aliasName);
@@ -118,7 +119,7 @@ public class AggQueryRewriterTest {
           + "group by verdictdbalias1.`verdictdbalias2`, `verdictdbalias5`) as verdictdbalias4 "
           + "group by `verdictdb:tier`";
       SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
-      String actual = relToSql.toSql(rewritten.get(k));
+      String actual = relToSql.toSql(rewritten.get(k).getLeft());
       assertEquals(expected, actual);
     }
   }
@@ -132,7 +133,7 @@ public class AggQueryRewriterTest {
         base);
     ScrambleMeta meta = generateTestScrambleMeta();
     AggQueryRewriter rewriter = new AggQueryRewriter(meta);
-    List<AbstractRelation> rewritten = rewriter.rewrite(relation);
+    List<Pair<AbstractRelation, AggblockMeta>> rewritten = rewriter.rewrite(relation);
     
     String aliasForSumEstimate = AliasRenamingRules.sumEstimateAliasName(aliasName);
     String aliasForSumScaledSubsum = AliasRenamingRules.sumScaledSumAliasName(aliasName);
@@ -168,7 +169,7 @@ public class AggQueryRewriterTest {
           + "group by verdictdbalias1.`verdictdbalias2`, `verdictdbalias5`) as verdictdbalias4 "
           + "group by `verdictdb:tier`";
       SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
-      String actual = relToSql.toSql(rewritten.get(k));
+      String actual = relToSql.toSql(rewritten.get(k).getLeft());
       assertEquals(expected, actual);
     }
   }
@@ -185,7 +186,7 @@ public class AggQueryRewriterTest {
     relation.addGroupby(new BaseColumn("t", "mygroup"));
     ScrambleMeta meta = generateTestScrambleMeta();
     AggQueryRewriter rewriter = new AggQueryRewriter(meta);
-    List<AbstractRelation> rewritten = rewriter.rewrite(relation);
+    List<Pair<AbstractRelation, AggblockMeta>> rewritten = rewriter.rewrite(relation);
     
     String aliasForSumEstimate = AliasRenamingRules.sumEstimateAliasName(aliasName);
     String aliasForSumScaledSubsum = AliasRenamingRules.sumScaledSumAliasName(aliasName);
@@ -216,7 +217,7 @@ public class AggQueryRewriterTest {
           + "group by verdictdbalias1.`verdictdbalias2`, `verdictdbalias5`, `verdictdbalias6`) as verdictdbalias4 "
           + "group by `verdictdb:tier`, `mygroup`";
       SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
-      String actual = relToSql.toSql(rewritten.get(k));
+      String actual = relToSql.toSql(rewritten.get(k).getLeft());
       assertEquals(expected, actual);
     }
   }
@@ -233,7 +234,7 @@ public class AggQueryRewriterTest {
     relation.addGroupby(new AliasReference("myalias"));
     ScrambleMeta meta = generateTestScrambleMeta();
     AggQueryRewriter rewriter = new AggQueryRewriter(meta);
-    List<AbstractRelation> rewritten = rewriter.rewrite(relation);
+    List<Pair<AbstractRelation, AggblockMeta>> rewritten = rewriter.rewrite(relation);
     
     String aliasForSumEstimate = AliasRenamingRules.sumEstimateAliasName(aliasName);
     String aliasForSumScaledSubsum = AliasRenamingRules.sumScaledSumAliasName(aliasName);
@@ -264,7 +265,7 @@ public class AggQueryRewriterTest {
           + "group by verdictdbalias1.`verdictdbalias2`, `verdictdbalias5`, `verdictdbalias6`) as verdictdbalias4 "
           + "group by `verdictdb:tier`, `myalias`";
       SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
-      String actual = relToSql.toSql(rewritten.get(k));
+      String actual = relToSql.toSql(rewritten.get(k).getLeft());
       assertEquals(expected, actual);
     }
   }
@@ -280,7 +281,7 @@ public class AggQueryRewriterTest {
     relation.addGroupby(new BaseColumn("t", "mygroup"));
     ScrambleMeta meta = generateTestScrambleMeta();
     AggQueryRewriter rewriter = new AggQueryRewriter(meta);
-    List<AbstractRelation> rewritten = rewriter.rewrite(relation);
+    List<Pair<AbstractRelation, AggblockMeta>> rewritten = rewriter.rewrite(relation);
     
     String aliasForCountEstimate = AliasRenamingRules.countEstimateAliasName(aliasName);
     String aliasForSumScaledSubcount = AliasRenamingRules.sumScaledCountAliasName(aliasName);
@@ -309,7 +310,7 @@ public class AggQueryRewriterTest {
           + "group by verdictdbalias1.`verdictdbalias2`, `verdictdbalias5`, `verdictdbalias6`) as verdictdbalias4 "
           + "group by `verdictdb:tier`, `mygroup`";
       SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
-      String actual = relToSql.toSql(rewritten.get(k));
+      String actual = relToSql.toSql(rewritten.get(k).getLeft());
       assertEquals(expected, actual);
     }
   }
@@ -326,7 +327,7 @@ public class AggQueryRewriterTest {
     relation.addGroupby(new BaseColumn("t", "mygroup"));
     ScrambleMeta meta = generateTestScrambleMeta();
     AggQueryRewriter rewriter = new AggQueryRewriter(meta);
-    List<AbstractRelation> rewritten = rewriter.rewrite(relation);
+    List<Pair<AbstractRelation, AggblockMeta>> rewritten = rewriter.rewrite(relation);
     
     String aliasForSumEstimate = AliasRenamingRules.sumEstimateAliasName(aliasName);
     String aliasForSumScaledSubsum = AliasRenamingRules.sumScaledSumAliasName(aliasName);
@@ -364,7 +365,7 @@ public class AggQueryRewriterTest {
           + "group by verdictdbalias1.`verdictdbalias2`, `verdictdbalias5`, `verdictdbalias6`) as verdictdbalias4 "
           + "group by `verdictdb:tier`, `mygroup`";
       SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
-      String actual = relToSql.toSql(rewritten.get(k));
+      String actual = relToSql.toSql(rewritten.get(k).getLeft());
       assertEquals(expected, actual);
     }
   }
@@ -386,7 +387,7 @@ public class AggQueryRewriterTest {
         nestedSource);
     ScrambleMeta meta = generateTestScrambleMeta();
     AggQueryRewriter rewriter = new AggQueryRewriter(meta);
-    List<AbstractRelation> rewritten = rewriter.rewrite(relation);
+    List<Pair<AbstractRelation, AggblockMeta>> rewritten = rewriter.rewrite(relation);
     
     String aliasForSumEstimate = AliasRenamingRules.sumEstimateAliasName(aliasName);
     String aliasForSumScaledSubsum = AliasRenamingRules.sumScaledSumAliasName(aliasName);
@@ -418,7 +419,7 @@ public class AggQueryRewriterTest {
           + "group by s.`verdictdbalias4`, `verdictdbalias7`) as verdictdbalias6 "
           + "group by `verdictdb:tier`";
       SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
-      String actual = relToSql.toSql(rewritten.get(k));
+      String actual = relToSql.toSql(rewritten.get(k).getLeft());
       assertEquals(expected, actual);
     }
   }

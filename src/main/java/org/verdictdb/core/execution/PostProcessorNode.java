@@ -18,8 +18,9 @@ public class PostProcessorNode extends QueryExecutionNode {
   }
 
   @Override
-  public ExecutionResult executeNode(List<ExecutionResult> resultFromChildren) {
+  public void executeNode(
+      List<ExecutionResult> resultFromChildren, 
+      BlockingDeque<ExecutionResult> resultQueue) {
     // TODO Auto-generated method stub
-    return null;
   }
 }
