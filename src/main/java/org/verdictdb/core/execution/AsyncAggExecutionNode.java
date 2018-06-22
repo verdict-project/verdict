@@ -98,7 +98,7 @@ public class AsyncAggExecutionNode extends QueryExecutionNode {
     for (int i = 0; i < stepCount; i++) {
       SelectQuery aggquery = (SelectQuery) aggblockQueriesWithMeta.get(i).getLeft();
       AggblockMeta aggmeta = aggblockQueriesWithMeta.get(i).getRight();
-      aggNodes.add(new SingleAggExecutionNode(conn, aggquery, aggmeta, resultSchemaName, getNextTempTableName(resultTableName)));
+      aggNodes.add(new SingleAggExecutionNode(conn, aggmeta, resultSchemaName, getNextTempTableName(resultTableName), aggquery));
     }
     aggNodes.get(0).addBroadcastingQueue(aggResultsQueue);
     addDependent(aggNodes.get(0));

@@ -15,15 +15,18 @@ import org.verdictdb.core.rewriter.query.AggblockMeta;
 public class SingleAggExecutionNode extends QueryExecutionNode {
   
   SelectQuery query;
+  
+  AggblockMeta aggmeta;
 
   public SingleAggExecutionNode(
       DbmsConnection conn, 
-      SelectQuery query, 
-      AggblockMeta aggmeta, 
+      AggblockMeta aggmeta,
       String resultSchemaName,
-      String resultTableName) {
+      String resultTableName,
+      SelectQuery query) {
     super(conn);
     this.query = query;
+    this.aggmeta = aggmeta;
     
     // generate a subnode
     CreateTableAsSelectExecutionNode node = 
@@ -38,7 +41,11 @@ public class SingleAggExecutionNode extends QueryExecutionNode {
    */
   @Override
   public ExecutionResult executeNode(List<ExecutionResult> downstreamResults) {
-    ExecutionResult result = downstreamResults.get(0);
+    ExecutionResult downstream = downstreamResults.get(0);
+    ExecutionResult result = new ExecutionResult();
+    result.setKeyValue("schemaName", downstream.getValue("schemaName"));
+    result.setKeyValue("tableName", downstream.getValue("tableName"));
+    result.setKeyValue("aggmeta", aggmeta);
     return result;
   }
 
