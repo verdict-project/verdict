@@ -59,8 +59,8 @@ public class AsyncAggExecutionNode extends QueryExecutionNode {
   List<AggNameAndType> aggColumns;
   
   SelectQueryOp originalQuery;
-  
-  List<AsyncAggExecutionNode> children = new ArrayList<>();
+
+  //List<AsyncAggExecutionNode> children = new ArrayList<>();
   
   public AsyncAggExecutionNode(DbmsConnection conn, ScrambleMeta scrambleMeta, SelectQueryOp query) 
       throws UnexpectedTypeException, ValueException {
@@ -119,7 +119,8 @@ public class AsyncAggExecutionNode extends QueryExecutionNode {
           String type = inferAggType(col);
           if (foundType.equals("none")) {
             foundType = type;
-          } else {
+          }
+          else if (!type.equals("none")) { //If type is none, it's okay to have foundType not none.
             throw new ValueException("more than one aggregate function found in a single select item.");
           }
         }
@@ -205,8 +206,8 @@ public class AsyncAggExecutionNode extends QueryExecutionNode {
   }
   
   public DbmsQueryResult execute() {
-    for (AsyncAggExecutionNode child : children) {
-      child.execute();
+    for (QueryExecutionNode child : children) {
+      ((AsyncAggExecutionNode)child).execute();
     }
     return null;
   }

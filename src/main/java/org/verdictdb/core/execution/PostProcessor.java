@@ -10,7 +10,7 @@ import org.verdictdb.core.query.SelectQueryOp;
 
 public class PostProcessor extends QueryExecutionNode {
 
-  List<SelectQueryOp> queries = new ArrayList<>();
+  public List<SelectQueryOp> queries = new ArrayList<>();
 
   public PostProcessor(DbmsConnection conn, List<SelectQueryOp> queries) {
     super(conn);

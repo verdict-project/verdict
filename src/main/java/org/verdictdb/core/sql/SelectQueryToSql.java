@@ -193,6 +193,8 @@ public class SelectQueryToSql {
         return syntax.randFunction();
       } else if (columnOp.getOpType().equals("cast")) {
         return "cast(" + withParentheses(columnOp.getOperand(0)) + " as " + withParentheses(columnOp.getOperand(1)) + ")";
+      } else if (columnOp.getOpType().equals("year")) {
+        return "year(" + withParentheses(columnOp.getOperand(0)) + ")";
       } else {
         throw new UnexpectedTypeException("Unexpceted opType of column: " + columnOp.getOpType().toString());
       }

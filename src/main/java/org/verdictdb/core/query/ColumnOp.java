@@ -59,6 +59,7 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
    * <li>in</li>
    * <li>notin</li>
    * <li>notlike</li>
+   * <li>year</li>
    * </ol>
    */
   String opType;
@@ -236,6 +237,11 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
   public static ColumnOp countdistinct(UnnamedColumn column) {
     return new ColumnOp("countdistinct", column);
   }
+
+  public static ColumnOp year(UnnamedColumn column) {
+    return new ColumnOp("year", column);
+  }
+
 
   public static ColumnOp substr(UnnamedColumn column, UnnamedColumn from, UnnamedColumn to) {
     return new ColumnOp("substr", Arrays.asList(column, from, to));

@@ -2191,7 +2191,7 @@ public class TpchSqlToRelationAfterAliasTest {
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("custsale", "cntrycode"), "vc6"),
             new AliasedColumn(new ColumnOp("count", new AsteriskColumn()), "numcust"),
-            new AliasedColumn(new ColumnOp("sum", new BaseColumn("custsale", "c_acctbal")), "totacctbal")
+            new AliasedColumn(new ColumnOp("sum", new BaseColumn("custsale", "vc2")), "totacctbal")
             ),
         subquery);
     expected.addGroupby(new AliasReference("vc6"));

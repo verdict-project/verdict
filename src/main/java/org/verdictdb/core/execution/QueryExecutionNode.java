@@ -1,5 +1,6 @@
 package org.verdictdb.core.execution;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingDeque;
 
@@ -9,7 +10,7 @@ public abstract class QueryExecutionNode {
   
   DbmsConnection conn;
   
-  List<QueryExecutionNode> children;
+  List<QueryExecutionNode> children = new ArrayList<>();
   
   public QueryExecutionNode(DbmsConnection conn) {
     this.conn = conn;
