@@ -7,6 +7,18 @@ import java.util.Map.Entry;
 
 import org.apache.commons.lang3.tuple.Pair;
 
+/**
+ * 
+ * 
+ * This class effectively has the following information.
+ * [ { "tier": number,
+ *     "total": 
+ *   } ...
+ * ]
+ * 
+ * @author Yongjoo Park
+ *
+ */
 public class AggblockMeta implements Iterable<Entry<Pair<String, String>, Pair<Integer, Integer>>> {
   
   Map<Pair<String, String>, Pair<Integer, Integer>> data = new HashMap<>();

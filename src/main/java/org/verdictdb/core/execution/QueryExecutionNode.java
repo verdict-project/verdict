@@ -13,79 +13,79 @@ import org.verdictdb.connection.DbmsConnection;
 import com.google.common.base.Optional;
 
 public abstract class QueryExecutionNode {
-  
+
   DbmsConnection conn;
-  
-//  QueryExecutionPlan plan;
-  
+
+  //  QueryExecutionPlan plan;
+
   // running or complete
   String status = "running";
-  
+
   List<QueryExecutionNode> dependents = new ArrayList<>();
-  
+
   // these are the queues to which this node will broadcast its results (to upstream nodes).
   List<BlockingDeque<ExecutionResult>> broadcastQueues = new ArrayList<>();
-  
+
   // these are the results coming from the producers (downstream operations).
   // multiple producers may share a single result queue.
   List<BlockingDeque<ExecutionResult>> listeningQueues = new ArrayList<>();
-  
+
   // latest results from listening queues
   List<Optional<ExecutionResult>> latestResults = new ArrayList<>();
-  
+
   public QueryExecutionNode(DbmsConnection conn) {
     this.conn = conn;
-//    this.plan = plan;
+    //    this.plan = plan;
   }
 
   public List<QueryExecutionNode> getDependents() {
     return dependents;
   }
-  
+
   /**
-     * For multi-threading, the parent of this node is responsible for running this method as a separate thread.
-     * @param resultQueue
-     */
-    public void execute() {
-      // Start the execution of all children
-      for (QueryExecutionNode child : dependents) {
-        child.execute();
-      }
-      
-      // Execute this node if there are some results available
-      ExecutorService executor = Executors.newSingleThreadExecutor();
-      while (true) {
-        readLatestResultsFromDependents();
-        
-        final List<ExecutionResult> latestResults = getLatestResultsIfAvailable();
-              
-        // Only when all results are available, the internal operations of this node are performed.
-        if (latestResults != null || areDependentsAllComplete()) {
-          // run this on a separate thread
-          executor.submit(new Runnable() {
-            @Override
-            public void run() {
-              ExecutionResult rs = executeNode(latestResults);
-              broadcast(rs);
-  //            resultQueue.add(rs);
-            }
-          });
-        }
-        
-        if (areDependentsAllComplete()) {
-          break;
-        }
-      }
-      
-      // finishes only when no threads are running for this node.
-      try {
-        executor.shutdown();
-        executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);  // convention for waiting forever
-      } catch (InterruptedException e) {
-        executor.shutdownNow();
-      }
-      setComplete();
+   * For multi-threading, the parent of this node is responsible for running this method as a separate thread.
+   * @param resultQueue
+   */
+  public void execute() {
+    // Start the execution of all children
+    for (QueryExecutionNode child : dependents) {
+      child.execute();
     }
+
+    // Execute this node if there are some results available
+    ExecutorService executor = Executors.newSingleThreadExecutor();
+    while (true) {
+      readLatestResultsFromDependents();
+
+      final List<ExecutionResult> latestResults = getLatestResultsIfAvailable();
+
+      // Only when all results are available, the internal operations of this node are performed.
+      if (latestResults != null || areDependentsAllComplete()) {
+        // run this on a separate thread
+        executor.submit(new Runnable() {
+          @Override
+          public void run() {
+            ExecutionResult rs = executeNode(latestResults);
+            broadcast(rs);
+            //            resultQueue.add(rs);
+          }
+        });
+      }
+
+      if (areDependentsAllComplete()) {
+        break;
+      }
+    }
+
+    // finishes only when no threads are running for this node.
+    try {
+      executor.shutdown();
+      executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);  // convention for waiting forever
+    } catch (InterruptedException e) {
+      executor.shutdownNow();
+    }
+    setComplete();
+  }
 
   public abstract ExecutionResult executeNode(List<ExecutionResult> downstreamResults);
 
@@ -110,7 +110,7 @@ public abstract class QueryExecutionNode {
   public boolean isComplete() {
     return status.equals("complete");
   }
-  
+
   void setComplete() {
     status = "complete";
   }
@@ -120,7 +120,7 @@ public abstract class QueryExecutionNode {
       listener.add(result);
     }
   }
-  
+
   void readLatestResultsFromDependents() {
     for (int i = 0; i < listeningQueues.size(); i++) {
       ExecutionResult rs = listeningQueues.get(i).poll();
@@ -131,7 +131,7 @@ public abstract class QueryExecutionNode {
       }
     }
   }
-  
+
   List<ExecutionResult> getLatestResultsIfAvailable() {
     boolean allResultsAvailable = true;
     List<ExecutionResult> results = new ArrayList<>();
@@ -148,7 +148,7 @@ public abstract class QueryExecutionNode {
       return null;
     }
   }
-  
+
   boolean areDependentsAllComplete() {
     for (QueryExecutionNode node : dependents) {
       if (node.isComplete()) {

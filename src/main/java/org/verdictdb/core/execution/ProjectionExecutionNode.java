@@ -6,11 +6,11 @@ import java.util.List;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.core.query.SelectQuery;
 
-public class PostProcessingExecutionNode extends QueryExecutionNode {
+public class ProjectionExecutionNode extends QueryExecutionNode {
 
   List<SelectQuery> queries = new ArrayList<>();
 
-  public PostProcessingExecutionNode(
+  public ProjectionExecutionNode(
       DbmsConnection conn,
       List<SelectQuery> queries) {
     super(conn);
