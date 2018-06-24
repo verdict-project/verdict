@@ -27,7 +27,25 @@ public class DbmsMetadataCacheTest {
 
   private static Statement stmt;
 
-  private static Connection postgresqlConn, mysqlConn;
+  private static Connection postgresqlConn;
+  
+  private static Connection mysqlConn;
+  
+  private static final String MYSQL_HOST = "mysql";
+  
+  private static final String MYSQL_DATABASE = "test";
+  
+  private static final String MYSQL_UESR = "root";
+  
+  private static final String MYSQL_PASSWORD = "";
+  
+  private static final String POSTGRES_HOST = "postgres";
+  
+  private static final String POSTGRES_DATABASE = "test";
+  
+  private static final String POSTGRES_USER = "postgres";
+  
+  private static final String POSTGRES_PASSWORD = "";
 
   @BeforeClass
   public static void setupDatabases() throws SQLException {
@@ -59,8 +77,13 @@ public class DbmsMetadataCacheTest {
       stmt.execute(String.format("INSERT INTO PEOPLE(id, name, gender, age, height, nation, birth) VALUES(%s, '%s', '%s', %s, %s, '%s', '%s')", id, name, gender, age, height, nation, birth));
     }
 
-    postgresqlConn = DriverManager.getConnection("jdbc:postgresql://localhost/test", "postgres", "");
-    mysqlConn = DriverManager.getConnection("jdbc:mysql://localhost/test?autoReconnect=true&useSSL=false", "root", "");
+    String postgresConnectionString =
+        String.format("jdbc:postgresql://%s/%s", POSTGRES_HOST, POSTGRES_DATABASE);
+    postgresqlConn = DriverManager.getConnection(postgresConnectionString, POSTGRES_USER, POSTGRES_PASSWORD);
+    
+    String mysqlConnectionString =
+        String.format("jdbc:mysql://%s/%s?autoReconnect=true&useSSL=false", MYSQL_HOST, MYSQL_DATABASE);
+    mysqlConn = DriverManager.getConnection(mysqlConnectionString, MYSQL_UESR, MYSQL_PASSWORD);
 //    mysqlConn = DriverManager.getConnection("jdbc:mysql://localhost/test", "root", "");
   }
 
@@ -100,8 +123,7 @@ public class DbmsMetadataCacheTest {
   }
 
   @Test
-  public void getPartitionTest() throws SQLException {
-    //Test PostgreSQL
+  public void getPartitionTestPostgres() throws SQLException {
     Statement statement = postgresqlConn.createStatement();
     DbmsMetaDataCache postgresMetadataCache = new DbmsMetaDataCache(new JdbcConnection(postgresqlConn, new PostgresqlSyntax()));
     statement.execute("DROP TABLE IF EXISTS measurement");
@@ -113,12 +135,15 @@ public class DbmsMetadataCacheTest {
     assertEquals(2, partition.size());
     assertEquals("logdate", partition.get(0));
     assertEquals("city_id", partition.get(1));
-    //Test MySQL
-    statement = mysqlConn.createStatement();
+  }
+  
+  @Test
+  public void getPartitionTestMySQL() throws SQLException {
+    Statement statement = mysqlConn.createStatement();
     DbmsMetaDataCache mysqlMetadataCache = new DbmsMetaDataCache(new JdbcConnection(mysqlConn, new MysqlSyntax()));
     statement.execute("DROP TABLE IF EXISTS tp");
     statement.execute("CREATE TABLE tp (c1 INT, c2 INT, c3 VARCHAR(25)) PARTITION BY HASH(c1 + c2) PARTITIONS 4;");
-    partition = mysqlMetadataCache.getPartitionColumns("test", "tp");
+    List<String> partition = mysqlMetadataCache.getPartitionColumns("test", "tp");
     assertEquals(1, partition.size());
     assertEquals(true, partition.get(0).equals("c1 + c2")||partition.get(0).equals("(`c1` + `c2`)"));
   }
