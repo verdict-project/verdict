@@ -13,16 +13,12 @@ public class AggExecutionNode extends CreateTableAsSelectExecutionNode {
   
   String resultTableName;
 
-  SelectQuery query;
-
   public AggExecutionNode(
       DbmsConnection conn,
       String resultSchemaName, 
       String resultTableName,
       SelectQuery query) {
     super(conn, resultSchemaName, resultTableName, query);
-    this.resultSchemaName = resultSchemaName;
-    this.resultTableName = resultTableName;
     try {
       generateDependency();
     } catch (VerdictDbException e){
@@ -52,8 +48,7 @@ public class AggExecutionNode extends CreateTableAsSelectExecutionNode {
   @Override
   public ExecutionResult executeNode(List<ExecutionResult> downstreamResults) {
     // TODO Auto-generated method stub
-    return null;
+    return super.executeNode(downstreamResults);
   }
-
 
 }

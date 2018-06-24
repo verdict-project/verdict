@@ -150,4 +150,5 @@ public class QueryExecutionPlan {
     tempTableNameNum = 0;
   }
 
+  static void resetTempTableNameNum() {tempTableNameNum = 0;}
 }

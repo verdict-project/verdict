@@ -56,7 +56,7 @@ public class CreateTableAsSelectExecutionNode extends QueryExecutionNode {
         }
         if (table.getAliasName().isPresent()) {
           query.getFromList().set(index, new BaseTable(schemaName, temptableName, table.getAliasName().get()));
-        } else query.getFromList().set(index, new BaseTable(schemaName, temptableName));
+        } else query.getFromList().set(index, new BaseTable(schemaName, temptableName, temptableName));
       } else if (table instanceof JoinTable) {
         for (AbstractRelation jointable : ((JoinTable) table).getJoinList()) {
           int joinindex = ((JoinTable) table).getJoinList().indexOf(jointable);
@@ -69,7 +69,7 @@ public class CreateTableAsSelectExecutionNode extends QueryExecutionNode {
             }
             if (jointable.getAliasName().isPresent()) {
               ((JoinTable) table).getJoinList().set(joinindex, new BaseTable(schemaName, temptableName, jointable.getAliasName().get()));
-            } else ((JoinTable) table).getJoinList().set(joinindex, new BaseTable(schemaName, temptableName));
+            } else ((JoinTable) table).getJoinList().set(joinindex, new BaseTable(schemaName, temptableName, temptableName));
           }
         }
       }
@@ -101,7 +101,7 @@ public class CreateTableAsSelectExecutionNode extends QueryExecutionNode {
               newSelectItem.add(new AsteriskColumn());
             } else throw new VerdictDbException("Select list contains SelectItem type that is not AliasedColumn or AsteriskColumn");
           }
-          SelectQuery newSubquery = SelectQuery.getSelectQueryOp(newSelectItem, new BaseTable(schemaName, temptableName));
+          SelectQuery newSubquery = SelectQuery.getSelectQueryOp(newSelectItem, new BaseTable(schemaName, temptableName, temptableName));
           if (((SubqueryColumn) filter).getSubquery().getAliasName().isPresent()) {
             newSubquery.setAliasName(((SubqueryColumn) filter).getSubquery().getAliasName().get());
           }

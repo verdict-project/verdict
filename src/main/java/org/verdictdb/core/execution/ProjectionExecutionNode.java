@@ -20,6 +20,6 @@ public class ProjectionExecutionNode extends CreateTableAsSelectExecutionNode {
 
   @Override
   public ExecutionResult executeNode(List<ExecutionResult> downstreamResults) {
-    return null;
+    return super.executeNode(downstreamResults);
   }
 }
