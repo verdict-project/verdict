@@ -77,14 +77,15 @@ public class AsyncAggExecutionNode extends QueryExecutionNode {
       String resultTableName,
       SelectQuery query) 
       throws VerdictDbException {
-    super(conn);
+    super(conn, query);
     this.scrambleMeta = scrambleMeta;
     this.originalQuery = query;
-    Pair<List<String>, List<AggNameAndType>> cols = identifyAggColumns(originalQuery.getSelectList());
-    nonaggColumns = cols.getLeft();
-    aggColumns = cols.getRight();
+//    Pair<List<String>, List<AggNameAndType>> cols = identifyAggColumns(originalQuery.getSelectList());
+//    nonaggColumns = cols.getLeft();
+//    aggColumns = cols.getRight();
     
     // query rewriting into block-aggregate queries.
+    // TODO
     AggQueryRewriter aggQueryRewriter = new AggQueryRewriter(scrambleMeta);
     List<Pair<AbstractRelation, AggblockMeta>> aggblockQueriesWithMeta = aggQueryRewriter.rewrite(originalQuery);
     int stepCount = aggblockQueriesWithMeta.size();
@@ -101,7 +102,7 @@ public class AsyncAggExecutionNode extends QueryExecutionNode {
       aggNodes.add(new SingleAggExecutionNode(conn, aggmeta, resultSchemaName, getNextTempTableName(resultTableName), aggquery));
     }
     aggNodes.get(0).addBroadcastingQueue(aggResultsQueue);
-    addDependent(aggNodes.get(0));
+    addDependency(aggNodes.get(0));
     
     // generate combiner nodes
     List<AggCombinerExecutionNode> combinerNodes = new ArrayList<>();
@@ -118,72 +119,72 @@ public class AsyncAggExecutionNode extends QueryExecutionNode {
         aggNodes.get(i+1).addBroadcastingQueue(queueToCombiner2);
       }
       combiner.addBroadcastingQueue(aggResultsQueue);
-      addDependent(combiner);
+      addDependency(combiner);
       combinerNodes.add(combiner);
     }
   }
 
-  Pair<List<String>, List<AggNameAndType>> identifyAggColumns(List<SelectItem> items) 
-      throws UnexpectedTypeException, ValueException {
-    List<String> nonagg = new ArrayList<>();
-    List<AggNameAndType> aggcols = new ArrayList<>();
+//  Pair<List<String>, List<AggNameAndType>> identifyAggColumns(List<SelectItem> items) 
+//      throws UnexpectedTypeException, ValueException {
+//    List<String> nonagg = new ArrayList<>();
+//    List<AggNameAndType> aggcols = new ArrayList<>();
+//
+//    for (SelectItem item : items) {
+//      if (item.isAggregateColumn()) {
+//        aggcols.add(new AggNameAndType(getAliasName(item), inferAggType(item)));
+//      }
+//      else {
+//        nonagg.add(getAliasName(item));
+//      }
+//    }
+//
+//    return Pair.of(nonagg, aggcols);
+//  }
 
-    for (SelectItem item : items) {
-      if (item.isAggregateColumn()) {
-        aggcols.add(new AggNameAndType(getAliasName(item), inferAggType(item)));
-      }
-      else {
-        nonagg.add(getAliasName(item));
-      }
-    }
+//  String getAliasName(SelectItem item) throws UnexpectedTypeException {
+//    if (item instanceof AliasedColumn) {
+//      return ((AliasedColumn) item).getAliasName();
+//    } else {
+//      throw new UnexpectedTypeException("select items must have been aliased.");
+//    }
+//  }
 
-    return Pair.of(nonagg, aggcols);
-  }
-
-  String getAliasName(SelectItem item) throws UnexpectedTypeException {
-    if (item instanceof AliasedColumn) {
-      return ((AliasedColumn) item).getAliasName();
-    } else {
-      throw new UnexpectedTypeException("select items must have been aliased.");
-    }
-  }
-
-  String inferAggType(SelectItem item) throws ValueException {
-    if (item instanceof AliasedColumn) {
-      return inferAggType(((AliasedColumn) item).getColumn());
-    }
-
-    if (item instanceof UnnamedColumn) {
-      if (item instanceof ColumnOp) {
-        String opType = ((ColumnOp) item).getOpType();
-        if (opType.equals("sum")) {
-          return "sum";
-        } else if (opType.equals("avg")) {
-          return "avg";
-        } else if (opType.equals("count")) {
-          return "count";
-        }
-
-        String foundType = "none";
-        List<UnnamedColumn> cols = ((ColumnOp) item).getOperands();
-        for (UnnamedColumn col : cols) {
-          String type = inferAggType(col);
-          if (foundType.equals("none")) {
-            foundType = type;
-          } else {
-            throw new ValueException("more than one aggregate function found in a single select item.");
-          }
-        }
-        return foundType;
-      }
-      else {
-        return "none";
-      }
-    }
-    else {
-      return "none";
-    }
-  }
+//  String inferAggType(SelectItem item) throws ValueException {
+//    if (item instanceof AliasedColumn) {
+//      return inferAggType(((AliasedColumn) item).getColumn());
+//    }
+//
+//    if (item instanceof UnnamedColumn) {
+//      if (item instanceof ColumnOp) {
+//        String opType = ((ColumnOp) item).getOpType();
+//        if (opType.equals("sum")) {
+//          return "sum";
+//        } else if (opType.equals("avg")) {
+//          return "avg";
+//        } else if (opType.equals("count")) {
+//          return "count";
+//        }
+//
+//        String foundType = "none";
+//        List<UnnamedColumn> cols = ((ColumnOp) item).getOperands();
+//        for (UnnamedColumn col : cols) {
+//          String type = inferAggType(col);
+//          if (foundType.equals("none")) {
+//            foundType = type;
+//          } else {
+//            throw new ValueException("more than one aggregate function found in a single select item.");
+//          }
+//        }
+//        return foundType;
+//      }
+//      else {
+//        return "none";
+//      }
+//    }
+//    else {
+//      return "none";
+//    }
+//  }
 
   @Override
   public ExecutionResult executeNode(List<ExecutionResult> downstreamResults) {

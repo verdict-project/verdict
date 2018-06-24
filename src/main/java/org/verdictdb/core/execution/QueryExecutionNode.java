@@ -9,18 +9,28 @@ import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 
 import org.verdictdb.connection.DbmsConnection;
+import org.verdictdb.core.query.AbstractRelation;
+import org.verdictdb.core.query.BaseTable;
+import org.verdictdb.core.query.SelectQuery;
+import org.verdictdb.core.rewriter.ScrambleMeta;
 
 import com.google.common.base.Optional;
 
 public abstract class QueryExecutionNode {
 
   DbmsConnection conn;
+  
+  SelectQuery query;
 
   //  QueryExecutionPlan plan;
 
   // running or complete
   String status = "running";
+  
+  // these are assumed to be not order-sensitive
+  List<QueryExecutionNode> parents = new ArrayList<>();
 
+  // these are assumed to be not order-sensitive
   List<QueryExecutionNode> dependents = new ArrayList<>();
 
   // these are the queues to which this node will broadcast its results (to upstream nodes).
@@ -28,14 +38,24 @@ public abstract class QueryExecutionNode {
 
   // these are the results coming from the producers (downstream operations).
   // multiple producers may share a single result queue.
+  // these queues are assumed to be order-sensitive
   List<BlockingDeque<ExecutionResult>> listeningQueues = new ArrayList<>();
 
   // latest results from listening queues
   List<Optional<ExecutionResult>> latestResults = new ArrayList<>();
 
-  public QueryExecutionNode(DbmsConnection conn) {
+  public QueryExecutionNode(DbmsConnection conn, SelectQuery query) {
     this.conn = conn;
+    this.query = query;
     //    this.plan = plan;
+  }
+  
+  public SelectQuery getQuery() {
+    return query;
+  }
+  
+  public List<QueryExecutionNode> getParents() {
+    return parents;
   }
 
   public List<QueryExecutionNode> getDependents() {
@@ -88,10 +108,15 @@ public abstract class QueryExecutionNode {
   }
 
   public abstract ExecutionResult executeNode(List<ExecutionResult> downstreamResults);
+  
+  void addParent(QueryExecutionNode parent) {
+    parents.add(parent);
+  }
 
   // setup method
-  public void addDependent(QueryExecutionNode dep) {
+  public void addDependency(QueryExecutionNode dep) {
     dependents.add(dep);
+    dep.addParent(this);
   }
 
   // setup method
@@ -158,6 +183,70 @@ public abstract class QueryExecutionNode {
       }
     }
     return true;
+  }
+  
+
+  // identify nodes that are (1) aggregates and (2) are not descendants of any other aggregates.
+  void identifyTopAggNodes(List<QueryExecutionNode> topAggNodes) {
+    if (this instanceof AggExecutionNode) {
+      topAggNodes.add(this);
+      return;
+    }
+    for (QueryExecutionNode dep : getDependents()) {
+      dep.identifyTopAggNodes(topAggNodes);
+    }
+  }
+  
+
+  /**
+   * 
+   * @param scrambleMeta
+   * @return True if there exists scrambledTable in the from list or in the non-aggregate subqueries.
+   */
+  boolean doesContainScrambledTablesInDescendants(ScrambleMeta scrambleMeta) {
+    if (!(this instanceof AggExecutionNode) && !(this instanceof ProjectionExecutionNode)) {
+      return false;
+    }
+    
+    SelectQuery query = getQuery();
+    if (query == null) {
+      return false;
+    }
+    List<AbstractRelation> sources = query.getFromList();
+    for (AbstractRelation s : sources) {
+      if (s instanceof BaseTable) {
+        String schemaName = ((BaseTable) s).getSchemaName();
+        String tableName = ((BaseTable) s).getTableName();
+        if (scrambleMeta.isScrambled(schemaName, tableName)) {
+          return true;
+        }
+      }
+      // TODO: should handle joined tables as well.
+    }
+    
+    for (QueryExecutionNode dep : getDependents()) {
+      if (dep instanceof AggExecutionNode) {
+        // ignore agg node since it will be a blocking operation.
+      } else {
+        if (dep.doesContainScrambledTablesInDescendants(scrambleMeta)) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+  
+  List<QueryExecutionNode> getLeafNodes() {
+    List<QueryExecutionNode> leaves = new ArrayList<>();
+    if (getDependents().size() == 0) {
+      leaves.add(this);
+      return leaves;
+    }
+    
+    for (QueryExecutionNode dep : getDependents()) {
+      leaves.addAll(dep.getLeafNodes());
+    }
+    return leaves;
   }
 
 }

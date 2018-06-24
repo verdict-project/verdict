@@ -14,17 +14,14 @@ public class CreateTableAsSelectExecutionNode extends QueryExecutionNode {
   
   String tableName;
   
-  SelectQuery query;
-  
   public CreateTableAsSelectExecutionNode(
       DbmsConnection conn,
       String schemaName, 
       String tableName, 
       SelectQuery query) {
-    super(conn);
+    super(conn, query);
     this.schemaName = schemaName;
     this.tableName = tableName;
-    this.query = query;
   }
 
   @Override

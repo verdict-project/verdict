@@ -17,7 +17,7 @@ public class DropTableExecutionNode extends QueryExecutionNode {
       DbmsConnection conn, 
       String schemaName, 
       String tableName) {
-    super(conn);
+    super(conn, null);
     this.schemaName = schemaName;
     this.tableName = tableName;
   }
