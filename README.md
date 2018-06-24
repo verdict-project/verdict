@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.com/pyongjoo/verdictdb-private.svg?token=ZZ3Q2KaUkfAREhZnVscr&branch=master)](https://travis-ci.com/pyongjoo/verdictdb-private)
+[![Build Status](https://gitlab.com/pyongjoo/verdictdb-core/badges/master/build.svg)](https://gitlab.com/pyongjoo/verdictdb-core/pipelines)
 
 # Same SQL, Same DB, 100x-200x Faster Analytics
 
