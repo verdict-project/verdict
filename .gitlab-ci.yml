@@ -3,7 +3,7 @@ stages:
 
 services:
   - mysql:5.5
-  - postgres:9.6
+  - postgres:10
 
 variables:
   BUILD_ENV: "GitLab"
