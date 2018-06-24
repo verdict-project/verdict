@@ -147,30 +147,37 @@ public class QueryExecutionPlan {
     return new AsyncAggExecutionNode(conn, scrambleMeta, scratchpadSchemaName, generateUniqueIdentifier(), query);
   }
   
+  /**
+   * 
+   * @param root The root execution node of ALL nodes (i.e., not just the top agg node)
+   * @return
+   * @throws VerdictDbException
+   */
   QueryExecutionNode makeAsyncronousAggIfAvailable(QueryExecutionNode root) throws VerdictDbException {
-    List<QueryExecutionNode> topAggNodes = new ArrayList<>();
-    root.identifyTopAggNodes(topAggNodes);
+    List<AggExecutionNodeBlock> topAggNodeBlocks = new ArrayList<>();
+    root.identifyTopAggBlocks(topAggNodeBlocks);
     
-    List<QueryExecutionNode> newNodes = new ArrayList<>();
-    for (QueryExecutionNode node : topAggNodes) {
-      QueryExecutionNode newNode = null;
-      if (((AggExecutionNode) node).doesContainScrambledTablesInDescendants(scrambleMeta)) {
-        newNode = ((AggExecutionNode) node).toAsyncAgg(scrambleMeta);
-      } else {
-        newNode = node;
-      }
-      newNodes.add(newNode);
-    }
+//    List<QueryExecutionNode> newNodes = new ArrayList<>();
+//    for (QueryExecutionNode node : topAggNodes) {
+//      QueryExecutionNode newNode = null;
+//      if (((AggExecutionNode) node).doesContainScrambledTablesInDescendants(scrambleMeta)) {
+//        newNode = ((AggExecutionNode) node).toAsyncAgg(scrambleMeta);
+//      } else {
+//        newNode = node;
+//      }
+//      newNodes.add(newNode);
+//    }
     
     // converted nodes should be used in place of the original nodes.
-    for (int i = 0; i < topAggNodes.size(); i++) {
-      QueryExecutionNode node = topAggNodes.get(i);
-      QueryExecutionNode newNode = newNodes.get(i);
+    for (int i = 0; i < topAggNodeBlocks.size(); i++) {
+      AggExecutionNodeBlock nodeBlock = topAggNodeBlocks.get(i);
+      QueryExecutionNode oldNode = nodeBlock.getRoot();
+      QueryExecutionNode newNode = nodeBlock.constructProgressiveAggNodes();
       
-      List<QueryExecutionNode> parents = node.getParents();
+      List<QueryExecutionNode> parents = oldNode.getParents();
       for (QueryExecutionNode parent : parents) {
         List<QueryExecutionNode> parentDependants = parent.getDependents();
-        int idx = parentDependants.indexOf(node);
+        int idx = parentDependants.indexOf(oldNode);
         parentDependants.remove(idx);
         parentDependants.add(idx, newNode);
       }
