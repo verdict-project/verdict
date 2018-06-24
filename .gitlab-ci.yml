@@ -5,9 +5,10 @@ stages:
 
 services:
   - mysql:5.5
-  - postgres:latest
+  - postgres:9.3
 
 variables:
+  BUILD_ENV: "GitLab"
   MYSQL_DATABASE: test
   MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
   POSTGRES_DB: test

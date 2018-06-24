@@ -31,7 +31,16 @@ public class DbmsMetadataCacheTest {
   
   private static Connection mysqlConn;
   
-  private static final String MYSQL_HOST = "mysql";
+  private static final String MYSQL_HOST;
+  
+  static {
+    String env = System.getenv("BUILD_ENV");
+    if (env != null && env.equals("GitLab")) {
+      MYSQL_HOST = "mysql";
+    } else {
+      MYSQL_HOST = "localhost";
+    }
+  }
   
   private static final String MYSQL_DATABASE = "test";
   
@@ -39,7 +48,16 @@ public class DbmsMetadataCacheTest {
   
   private static final String MYSQL_PASSWORD = "";
   
-  private static final String POSTGRES_HOST = "postgres";
+  private static final String POSTGRES_HOST;
+  
+  static {
+    String env = System.getenv("BUILD_ENV");
+    if (env != null && env.equals("GitLab")) {
+      POSTGRES_HOST = "postgres";
+    } else {
+      POSTGRES_HOST = "localhost";
+    }
+  }
   
   private static final String POSTGRES_DATABASE = "test";
   
