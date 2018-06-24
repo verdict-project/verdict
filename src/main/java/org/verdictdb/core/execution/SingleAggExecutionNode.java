@@ -24,7 +24,7 @@ public class SingleAggExecutionNode extends QueryExecutionNode {
       String resultSchemaName,
       String resultTableName,
       SelectQuery query) {
-    super(conn);
+    super(conn, query);
     this.query = query;
     this.aggmeta = aggmeta;
     
@@ -33,7 +33,7 @@ public class SingleAggExecutionNode extends QueryExecutionNode {
         new CreateTableAsSelectExecutionNode(conn, resultSchemaName, resultTableName, query);
     BlockingDeque<ExecutionResult> listeningQueue = generateListeningQueue();
     node.addBroadcastingQueue(listeningQueue);
-    addDependent(node);
+    addDependency(node);
   }
 
   /**

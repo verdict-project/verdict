@@ -147,6 +147,38 @@ public class QueryExecutionPlan {
     return new AsyncAggExecutionNode(conn, scrambleMeta, scratchpadSchemaName, generateUniqueIdentifier(), query);
   }
   
+  QueryExecutionNode makeAsyncronousAggIfAvailable(QueryExecutionNode root) throws VerdictDbException {
+    List<QueryExecutionNode> topAggNodes = new ArrayList<>();
+    root.identifyTopAggNodes(topAggNodes);
+    
+    List<QueryExecutionNode> newNodes = new ArrayList<>();
+    for (QueryExecutionNode node : topAggNodes) {
+      QueryExecutionNode newNode = null;
+      if (((AggExecutionNode) node).doesContainScrambledTablesInDescendants(scrambleMeta)) {
+        newNode = ((AggExecutionNode) node).toAsyncAgg(scrambleMeta);
+      } else {
+        newNode = node;
+      }
+      newNodes.add(newNode);
+    }
+    
+    // converted nodes should be used in place of the original nodes.
+    for (int i = 0; i < topAggNodes.size(); i++) {
+      QueryExecutionNode node = topAggNodes.get(i);
+      QueryExecutionNode newNode = newNodes.get(i);
+      
+      List<QueryExecutionNode> parents = node.getParents();
+      for (QueryExecutionNode parent : parents) {
+        List<QueryExecutionNode> parentDependants = parent.getDependents();
+        int idx = parentDependants.indexOf(node);
+        parentDependants.remove(idx);
+        parentDependants.add(idx, newNode);
+      }
+    }
+    
+    return root;
+  }
+  
   public void execute(DbmsConnection conn) {
     // execute roots
     

@@ -7,7 +7,7 @@ import org.verdictdb.connection.DbmsConnection;
 public class AggCombinerExecutionNode extends QueryExecutionNode {
 
   public AggCombinerExecutionNode(DbmsConnection conn) {
-    super(conn);
+    super(conn, null);
   }
 
   @Override
