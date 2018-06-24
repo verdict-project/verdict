@@ -444,7 +444,7 @@ public class TpchExecutionPlanTest {
         new BaseColumn("vt3", "l_receiptdate")
     )));
     SelectQuery rewritten = SelectQuery.getSelectQueryOp(
-        Arrays.<SelectItem>asList(new AsteriskColumn()), new BaseTable("verdictdb_temp", "verdictdbtemptable_1"));
+        Arrays.<SelectItem>asList(new AsteriskColumn()), new BaseTable("verdictdb_temp", "verdictdbtemptable_1", "verdictdbtemptable_1"));
     expected.addFilterByAnd(new ColumnOp("exists", SubqueryColumn.getSubqueryColumn(rewritten)));
     expected.addGroupby(new AliasReference("vc2"));
     expected.addOrderby(new OrderbyAttribute("vc2"));
@@ -2094,7 +2094,7 @@ public class TpchExecutionPlanTest {
     queryExecutionPlan.cleanUp();
     SelectQuery rewritten = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(new AliasedColumn(new BaseColumn("verdictdb_temp", "verdictdbtemptable_1", "quantity_avg"), "quantity_avg")),
-        new BaseTable("verdictdb_temp", "verdictdbtemptable_1"));
+        new BaseTable("verdictdb_temp", "verdictdbtemptable_1", "verdictdbtemptable_1"));
     assertEquals(rewritten,
         ((SubqueryColumn)((ColumnOp)((CreateTableAsSelectExecutionNode)(queryExecutionPlan.root.dependents.get(0))).query.getFilter().get()).getOperand(1)).getSubquery());
 
