@@ -8,6 +8,7 @@ import java.util.List;
 
 import org.junit.Test;
 import org.verdictdb.connection.DbmsConnection;
+import org.verdictdb.core.execution.ola.AggExecutionNodeBlock;
 import org.verdictdb.core.query.AliasReference;
 import org.verdictdb.core.query.AliasedColumn;
 import org.verdictdb.core.query.AsteriskColumn;
@@ -90,7 +91,7 @@ public class QueryExecutionNodeTest {
     QueryExecutionNode root = new ProjectionExecutionNode(conn, projectionQuery);
     root.addDependency(dep);
     
-    List<QueryExecutionNode> topAggNodes = new ArrayList<>();
+    List<AggExecutionNodeBlock> topAggNodes = new ArrayList<>();
     root.identifyTopAggBlocks(topAggNodes);
     
     assertEquals(dep, topAggNodes.get(0));

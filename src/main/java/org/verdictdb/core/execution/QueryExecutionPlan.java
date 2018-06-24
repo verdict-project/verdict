@@ -10,9 +10,12 @@ package org.verdictdb.core.execution;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.ThreadLocalRandom;
 
 import org.verdictdb.connection.DbmsConnection;
+import org.verdictdb.core.execution.ola.AggExecutionNodeBlock;
+import org.verdictdb.core.execution.ola.AsyncAggExecutionNode;
 import org.verdictdb.core.query.AbstractRelation;
 import org.verdictdb.core.query.BaseTable;
 import org.verdictdb.core.query.JoinTable;
@@ -73,7 +76,7 @@ public class QueryExecutionPlan {
     this.scratchpadSchemaName = scratchpadSchemaName;
   }
   
-  public String getScratchpadSchemaName() {
+  String getScratchpadSchemaName() {
     return scratchpadSchemaName;
   }
   
@@ -111,7 +114,7 @@ public class QueryExecutionPlan {
     return false;
   }
 
-  // TODO
+  // TODO: Shucheng should be working on this
   QueryExecutionNode makePlan(DbmsConnection conn, SyntaxAbstract syntax, SelectQuery query) 
       throws VerdictDbException {
     // check whether outer query has scramble table stored in scrambleMeta
@@ -144,7 +147,8 @@ public class QueryExecutionPlan {
     }
     // generate temp table names for those aggregate subqueries and use them in their ancestors.
     
-    return new AsyncAggExecutionNode(conn, scrambleMeta, scratchpadSchemaName, generateUniqueIdentifier(), query);
+//    return new AsyncAggExecutionNode(conn, scrambleMeta, scratchpadSchemaName, generateUniqueIdentifier(), query);
+    return null;
   }
   
   /**
@@ -172,7 +176,7 @@ public class QueryExecutionPlan {
     for (int i = 0; i < topAggNodeBlocks.size(); i++) {
       AggExecutionNodeBlock nodeBlock = topAggNodeBlocks.get(i);
       QueryExecutionNode oldNode = nodeBlock.getRoot();
-      QueryExecutionNode newNode = nodeBlock.constructProgressiveAggNodes();
+      QueryExecutionNode newNode = nodeBlock.constructProgressiveAggNodes(scrambleMeta);
       
       List<QueryExecutionNode> parents = oldNode.getParents();
       for (QueryExecutionNode parent : parents) {
@@ -188,6 +192,7 @@ public class QueryExecutionPlan {
   
   public void execute(DbmsConnection conn) {
     // execute roots
+    
     
     // after executions are all finished.
     cleanUp();

@@ -9,6 +9,7 @@ import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 
 import org.verdictdb.connection.DbmsConnection;
+import org.verdictdb.core.execution.ola.AggExecutionNodeBlock;
 import org.verdictdb.core.query.AbstractRelation;
 import org.verdictdb.core.query.BaseTable;
 import org.verdictdb.core.query.SelectQuery;
@@ -135,6 +136,10 @@ public abstract class QueryExecutionNode {
   // setup method
   public void addBroadcastingQueue(BlockingDeque<ExecutionResult> queue) {
     broadcastQueues.add(queue);
+  }
+  
+  public List<BlockingDeque<ExecutionResult>> getBroadcastQueues() {
+    return broadcastQueues;
   }
 
   public boolean isComplete() {
