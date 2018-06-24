@@ -3,7 +3,7 @@
 # Same SQL, Same DB, 100x-200x Faster Analytics
 
 <p align="center">
-<img src="http://verdictdb.org/image/verdict-for-impala-speedup.png" width="600px" />
+<img src="https://gitlab.com/pyongjoo/verdictdb-core/badges/master/build.svg" />
 </p>
 
 Verdict brings you Interactive-speed, resource-efficient data analytics.
