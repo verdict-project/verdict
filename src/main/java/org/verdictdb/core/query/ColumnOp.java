@@ -157,6 +157,10 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
     return new ColumnOp("sqrt", Arrays.asList(column1));
   }
 
+  public static ColumnOp avg(UnnamedColumn column1) {
+    return new ColumnOp("avg", Arrays.asList(column1));
+  }
+  
   public static ColumnOp sum(UnnamedColumn column1) {
     return new ColumnOp("sum", Arrays.asList(column1));
   }

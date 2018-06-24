@@ -1,42 +1,65 @@
 package org.verdictdb.core.execution;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.verdictdb.core.aggresult.AggregateFrame;
 
 public class ExecutionResult {
   
-  // either initialized, intermediateresult, complete, failed
-  String status = "initialized";
+  // either initialized, intermediateresult, finished, failed
+//  String status = "initialized";
   
-  AggregateFrame af;
+  Map<String, Object> data = new HashMap<>();
   
-  public static ExecutionResult completeResult() {
-    ExecutionResult r = new ExecutionResult();
-    r.setStatus("complete");
-    return r;
+  AggregateFrame af = null;
+  
+  public static ExecutionResult empty() {
+    return new ExecutionResult();
   }
+  
+  public Object getValue(String key) {
+    return data.get(key);
+  }
+  
+  public void setKeyValue(String key, Object value) {
+    data.put(key, value);
+  }
+  
+//  public static ExecutionResult completeResult() {
+//    ExecutionResult r = new ExecutionResult();
+//    r.setStatus("finished");
+//    return r;
+//  }
+//
+//  public static ExecutionResult failedResult() {
+//    ExecutionResult r = new ExecutionResult();
+//    r.setStatus("failed");
+//    return r;
+//  }
 
-  public String getStatus() {
-    return status;
-  }
+//  public String getStatus() {
+//    return status;
+//  }
+//  
+//  public boolean isFinished() {
+//    return status.equals("finished");
+//  }
   
-  public boolean isComplete() {
-    return status.equals("complete");
-  }
-  
-  public boolean isIntermediateResultAvailable() {
-    return status.equals("intermediateresult");
-  }
+//  public boolean isResultAvailable() {
+//    if (status.equals("intermediateresult") || isFinished()) {
+//      return true;
+//    }
+//    return false;
+//  }
 
   public AggregateFrame getAggregateFrame() {
-    if (!isIntermediateResultAvailable()) {
-      return null;
-    }
     return af;
   }
 
-  public void setStatus(String status) {
-    this.status = status;
-  }
+//  public void setStatus(String status) {
+//    this.status = status;
+//  }
 
   public void setAggregateFrame(AggregateFrame af) {
     this.af = af;

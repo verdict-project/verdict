@@ -11,10 +11,10 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 import com.google.common.base.Optional;
 
 
-public class SelectQueryOp extends AbstractRelation {
+public class SelectQuery extends AbstractRelation {
 
-  public static SelectQueryOp getSelectQueryOp(List<SelectItem> columns, AbstractRelation relation) {
-    SelectQueryOp sel = new SelectQueryOp();
+  public static SelectQuery getSelectQueryOp(List<SelectItem> columns, AbstractRelation relation) {
+    SelectQuery sel = new SelectQuery();
     for (SelectItem c : columns) {
       sel.addSelectItem(c);
     }
@@ -22,8 +22,8 @@ public class SelectQueryOp extends AbstractRelation {
     return sel;
   }
 
-  public static SelectQueryOp getSelectQueryOp(List<SelectItem> columns, AbstractRelation relation, UnnamedColumn predicate) {
-    SelectQueryOp sel = new SelectQueryOp();
+  public static SelectQuery getSelectQueryOp(List<SelectItem> columns, AbstractRelation relation, UnnamedColumn predicate) {
+    SelectQuery sel = new SelectQuery();
     for (SelectItem c : columns) {
       sel.addSelectItem(c);
     }
@@ -32,8 +32,8 @@ public class SelectQueryOp extends AbstractRelation {
     return sel;
   }
 
-  public static SelectQueryOp getSelectQueryOp(List<SelectItem> columns, List<AbstractRelation> relation) {
-    SelectQueryOp sel = new SelectQueryOp();
+  public static SelectQuery getSelectQueryOp(List<SelectItem> columns, List<AbstractRelation> relation) {
+    SelectQuery sel = new SelectQuery();
     for (SelectItem c : columns) {
       sel.addSelectItem(c);
     }
@@ -59,7 +59,7 @@ public class SelectQueryOp extends AbstractRelation {
 
   Optional<String> aliasName = Optional.absent();
 
-  public SelectQueryOp() {
+  public SelectQuery() {
   }
 
   public void addSelectItem(SelectItem column) {

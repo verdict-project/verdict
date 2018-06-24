@@ -25,7 +25,7 @@ import org.verdictdb.core.query.ColumnOp;
 import org.verdictdb.core.query.ConstantColumn;
 import org.verdictdb.core.query.GroupingAttribute;
 import org.verdictdb.core.query.SelectItem;
-import org.verdictdb.core.query.SelectQueryOp;
+import org.verdictdb.core.query.SelectQuery;
 import org.verdictdb.core.query.UnnamedColumn;
 import org.verdictdb.core.rewriter.AliasRenamingRules;
 import org.verdictdb.core.rewriter.ScrambleMeta;
@@ -70,22 +70,22 @@ public class AggQueryRewriter {
    * @return
    * @throws VerdictDbException 
    */
-  public List<AbstractRelation> rewrite(AbstractRelation relation) throws VerdictDbException {
-    if (!(relation instanceof SelectQueryOp)) {
+  public List<Pair<AbstractRelation, AggblockMeta>> rewrite(AbstractRelation relation) throws VerdictDbException {
+    if (!(relation instanceof SelectQuery)) {
       throw new UnexpectedTypeException(relation);
     }
     else if (!relation.isAggregateQuery()) {
       throw new ValueException("The provided relation is not an aggregate relation.");
     }
 
-    List<AbstractRelation> rewrittenQueries = rewriteAggregateQuery(relation);
+    List<Pair<AbstractRelation, AggblockMeta>> rewrittenQueries = rewriteAggregateQuery(relation);
     return rewrittenQueries;
   }
 
-  public List<AbstractRelation> rewriteAggregateQuery(AbstractRelation relation) throws VerdictDbException {
+  public List<Pair<AbstractRelation, AggblockMeta>> rewriteAggregateQuery(AbstractRelation relation) throws VerdictDbException {
     // propagate subsample ID and tier columns up toward the top sources.
     List<AbstractRelation> selectAllScrambledBases = new ArrayList<>();    // used for ingesting block agg predicate
-    SelectQueryOp sel = (SelectQueryOp) relation;
+    SelectQuery sel = (SelectQuery) relation;
     List<AbstractRelation> sourceList = sel.getFromList();
     sel.clearFromList();
     List<AbstractRelation> immediateScrambledSources = new ArrayList<>();
@@ -100,26 +100,26 @@ public class AggQueryRewriter {
       aliasUpdateMap.put(source.getAliasName().get(), rewrittenSource.getAliasName().get());
     }
     
-    // update aliases in the select list
-    List<SelectItem> selectList = sel.getSelectList();
-    sel.clearSelectList();
-    for (SelectItem item : selectList) {
-      sel.addSelectItem(replaceTableReferenceInSelectItem(item, aliasUpdateMap));
-    }
-    
-    // update aliases in the groupby list
-    List<GroupingAttribute> groupbyList = sel.getGroupby();
-    sel.clearGroupby();
-    for (GroupingAttribute group : groupbyList) {
-      sel.addGroupby(replaceTableReferenceInGroupby(group, aliasUpdateMap));
-    }
-
-    List<AbstractRelation> rewrittenQueries = new ArrayList<>();
+    List<Pair<AbstractRelation, AggblockMeta>> rewrittenQueries = new ArrayList<>();
     if (immediateScrambledSources.size() == 0) {
       // no scrambled source exists
-      rewrittenQueries.add(sel);
+      rewrittenQueries.add(Pair.of((AbstractRelation) sel, AggblockMeta.empty()));
     }
     else {
+      // update aliases in the select list
+      List<SelectItem> selectList = sel.getSelectList();
+      sel.clearSelectList();
+      for (SelectItem item : selectList) {
+        sel.addSelectItem(replaceTableReferenceInSelectItem(item, aliasUpdateMap));
+      }
+
+      // update aliases in the groupby list
+      List<GroupingAttribute> groupbyList = sel.getGroupby();
+      sel.clearGroupby();
+      for (GroupingAttribute group : groupbyList) {
+        sel.addGroupby(replaceTableReferenceInGroupby(group, aliasUpdateMap));
+      }
+    
       List<BaseColumn> baseColumns = new ArrayList<>();
       List<List<Pair<Integer, Integer>>> blockingIndices = new ArrayList<>();
       Pair<UnnamedColumn, UnnamedColumn> subsampleAndTierColumns = 
@@ -130,7 +130,6 @@ public class AggQueryRewriter {
               blockingIndices);
       UnnamedColumn subsampleColumn = subsampleAndTierColumns.getLeft();
       UnnamedColumn tierColumn = subsampleAndTierColumns.getRight();
-//              inclusionProbColumns);
       
       // rewrite aggregate functions with error estimation logic
       int savedNextAliasNumber = nextAliasNumber;
@@ -138,17 +137,21 @@ public class AggQueryRewriter {
         nextAliasNumber = savedNextAliasNumber;
         AbstractRelation rewrittenQuery = 
             rewriteSelectListForErrorEstimation(sel, subsampleColumn, tierColumn);
+        AggblockMeta aggblockMeta = new AggblockMeta();
         
         for (int m = 0; m < baseColumns.size(); m++) {
           BaseColumn blockaggBaseColumn = baseColumns.get(m);
           Pair<Integer, Integer> blockingIndex = blockingIndices.get(m).get(k);
-          SelectQueryOp selectAllScramledBase = (SelectQueryOp) selectAllScrambledBases.get(m);
+          SelectQuery selectAllScramledBase = (SelectQuery) selectAllScrambledBases.get(m);
           selectAllScramledBase.clearFilters();
           selectAllScramledBase.addFilterByAnd(
               ColumnOp.equal(blockaggBaseColumn, ConstantColumn.valueOf(blockingIndex.getLeft())));
+          aggblockMeta.addMeta(blockaggBaseColumn.getSchemaName(), blockaggBaseColumn.getTableName(), blockingIndex);
         }
         
-        rewrittenQueries.add(deepcopySelectQuery((SelectQueryOp) rewrittenQuery));
+        rewrittenQueries.add(Pair.of(
+            (AbstractRelation) deepcopySelectQuery((SelectQuery) rewrittenQuery),
+            aggblockMeta));
       }
     }
 
@@ -230,7 +233,7 @@ public class AggQueryRewriter {
     }
     
     // block aggregation column and attribute values
-    SelectQueryOp selectAllBase = (SelectQueryOp) selectAllScrambledBase.get(0);
+    SelectQuery selectAllBase = (SelectQuery) selectAllScrambledBase.get(0);
     BaseTable scrambledBase = (BaseTable) selectAllBase.getFromList().get(0);
     String baseSchemaName = scrambledBase.getSchemaName();
     String baseTableName = scrambledBase.getTableName();
@@ -295,7 +298,7 @@ public class AggQueryRewriter {
       }
       else {
         String newRelationAliasName = generateNextAliasName();
-        SelectQueryOp sel = SelectQueryOp.getSelectQueryOp(Arrays.<SelectItem>asList(new AsteriskColumn()), base);
+        SelectQuery sel = SelectQuery.getSelectQueryOp(Arrays.<SelectItem>asList(new AsteriskColumn()), base);
         sel.setAliasName(newRelationAliasName);
 
 //        String inclusionProbabilityColumn =
@@ -334,13 +337,13 @@ public class AggQueryRewriter {
         return sel;
       }
     }
-    else if (relation instanceof SelectQueryOp) {
+    else if (relation instanceof SelectQuery) {
       // call this method to every source relation (i.e., depth-first)
-      SelectQueryOp sel = (SelectQueryOp) relation;
+      SelectQuery sel = (SelectQuery) relation;
       List<AbstractRelation> oldSources = sel.getFromList();
       sel.clearFromList();
       boolean doesScrambledSourceExist = false;
-      SelectQueryOp scrambledSource = null;      // assumes at most one table is a scrambled table.
+      SelectQuery scrambledSource = null;      // assumes at most one table is a scrambled table.
       Map<String, String> aliasUpdateMap = new HashMap<>();
       
       for (AbstractRelation source : oldSources) {
@@ -348,7 +351,7 @@ public class AggQueryRewriter {
         sel.addTableSource(rewrittenSource);
         if (scrambleMeta.isScrambled(rewrittenSource.getAliasName().get())) {
           doesScrambledSourceExist = true;
-          scrambledSource = (SelectQueryOp) rewrittenSource;
+          scrambledSource = (SelectQuery) rewrittenSource;
         }
         aliasUpdateMap.put(source.getAliasName().get(), rewrittenSource.getAliasName().get());
       }
@@ -417,15 +420,15 @@ public class AggQueryRewriter {
     }
   }
 
-  SelectQueryOp deepcopySelectQuery(SelectQueryOp relation) {
-    SelectQueryOp sel = new SelectQueryOp();
+  SelectQuery deepcopySelectQuery(SelectQuery relation) {
+    SelectQuery sel = new SelectQuery();
     for (SelectItem c : relation.getSelectList()) {
       sel.addSelectItem(c);
     }
     
     for (AbstractRelation r : relation.getFromList()) {
-      if (r instanceof SelectQueryOp) {
-        sel.addTableSource(deepcopySelectQuery((SelectQueryOp) r));
+      if (r instanceof SelectQuery) {
+        sel.addTableSource(deepcopySelectQuery((SelectQuery) r));
       } else {
         sel.addTableSource(r);
       }
@@ -507,13 +510,13 @@ public class AggQueryRewriter {
 //      UnnamedColumn inclusionProbabilityColumn)
           throws VerdictDbException {
     
-    SelectQueryOp rewrittenOuter = new SelectQueryOp();
-    SelectQueryOp rewrittenInner = new SelectQueryOp();
+    SelectQuery rewrittenOuter = new SelectQuery();
+    SelectQuery rewrittenInner = new SelectQuery();
     String innerTableAliasName = generateNextAliasName();
     String innerTierColumnAliasName = generateNextAliasName();
     String outerTierColumnAliasName = AliasRenamingRules.tierAliasName();
     rewrittenInner.setAliasName(innerTableAliasName);
-    SelectQueryOp sel = (SelectQueryOp) relation;
+    SelectQuery sel = (SelectQuery) relation;
     List<SelectItem> selectList = sel.getSelectList();
     List<SelectItem> newInnerSelectList = new ArrayList<>();
     List<SelectItem> newOuterSelectList = new ArrayList<>();

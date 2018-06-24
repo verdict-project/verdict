@@ -5,6 +5,7 @@ import static org.junit.Assert.assertEquals;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
 import org.verdictdb.core.query.AbstractRelation;
 import org.verdictdb.core.query.AliasReference;
@@ -13,7 +14,7 @@ import org.verdictdb.core.query.BaseColumn;
 import org.verdictdb.core.query.BaseTable;
 import org.verdictdb.core.query.ColumnOp;
 import org.verdictdb.core.query.SelectItem;
-import org.verdictdb.core.query.SelectQueryOp;
+import org.verdictdb.core.query.SelectQuery;
 import org.verdictdb.core.rewriter.AliasRenamingRules;
 import org.verdictdb.core.rewriter.ScrambleMeta;
 import org.verdictdb.core.scramble.Scrambler;
@@ -43,13 +44,13 @@ public class AggQueryRewriterTest {
   public void testSelectSumBaseTable() throws VerdictDbException {
     BaseTable base = new BaseTable("myschema", "mytable", "t");
     String aliasName = "a";
-    SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
+    SelectQuery relation = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new ColumnOp("sum", new BaseColumn("t", "mycolumn1")), aliasName)),
         base);
     ScrambleMeta meta = generateTestScrambleMeta();
     AggQueryRewriter rewriter = new AggQueryRewriter(meta);
-    List<AbstractRelation> rewritten = rewriter.rewrite(relation);
+    List<Pair<AbstractRelation, AggblockMeta>> rewritten = rewriter.rewrite(relation);
     
     String aliasForSumEstimate = AliasRenamingRules.sumEstimateAliasName(aliasName);
     String aliasForSumScaledSubsum = AliasRenamingRules.sumScaledSumAliasName(aliasName);
@@ -78,7 +79,7 @@ public class AggQueryRewriterTest {
           + "group by verdictdbalias1.`verdictdbalias2`, `verdictdbalias5`) as verdictdbalias4 "
           + "group by `verdictdb:tier`";
       SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
-      String actual = relToSql.toSql(rewritten.get(k));
+      String actual = relToSql.toSql(rewritten.get(k).getLeft());
       assertEquals(expected, actual);
     }
   }
@@ -87,18 +88,17 @@ public class AggQueryRewriterTest {
   public void testSelectCountBaseTable() throws VerdictDbException {
     BaseTable base = new BaseTable("myschema", "mytable", "t");
     String aliasName = "a";
-    SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
+    SelectQuery relation = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(new AliasedColumn(new ColumnOp("count"), aliasName)), base);
     ScrambleMeta meta = generateTestScrambleMeta();
     AggQueryRewriter rewriter = new AggQueryRewriter(meta);
-    List<AbstractRelation> rewritten = rewriter.rewrite(relation);
+    List<Pair<AbstractRelation, AggblockMeta>> rewritten = rewriter.rewrite(relation);
     
     String aliasForCountEstimate = AliasRenamingRules.countEstimateAliasName(aliasName);
     String aliasForSumScaledSubcount = AliasRenamingRules.sumScaledCountAliasName(aliasName);
     String aliasForSumSquaredScaledSubcount = AliasRenamingRules.sumSquaredScaledCountAliasName(aliasName);
     String aliasForCountSubsample = AliasRenamingRules.countSubsampleAliasName();
     String aliasForSumSubsampleSize = AliasRenamingRules.sumSubsampleSizeAliasName();
-    String aliasForTier = AliasRenamingRules.tierAliasName();
 
     for (int k = 0; k < aggblockCount; k++) {
       String expected = "select verdictdbalias4.`verdictdbalias5` as `verdictdb:tier`, "
@@ -119,7 +119,7 @@ public class AggQueryRewriterTest {
           + "group by verdictdbalias1.`verdictdbalias2`, `verdictdbalias5`) as verdictdbalias4 "
           + "group by `verdictdb:tier`";
       SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
-      String actual = relToSql.toSql(rewritten.get(k));
+      String actual = relToSql.toSql(rewritten.get(k).getLeft());
       assertEquals(expected, actual);
     }
   }
@@ -128,12 +128,12 @@ public class AggQueryRewriterTest {
   public void testSelectAvgBaseTable() throws VerdictDbException {
     BaseTable base = new BaseTable("myschema", "mytable", "t");
     String aliasName = "a";
-    SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
+    SelectQuery relation = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(new AliasedColumn(new ColumnOp("avg", new BaseColumn("t", "mycolumn1")), aliasName)),
         base);
     ScrambleMeta meta = generateTestScrambleMeta();
     AggQueryRewriter rewriter = new AggQueryRewriter(meta);
-    List<AbstractRelation> rewritten = rewriter.rewrite(relation);
+    List<Pair<AbstractRelation, AggblockMeta>> rewritten = rewriter.rewrite(relation);
     
     String aliasForSumEstimate = AliasRenamingRules.sumEstimateAliasName(aliasName);
     String aliasForSumScaledSubsum = AliasRenamingRules.sumScaledSumAliasName(aliasName);
@@ -169,7 +169,7 @@ public class AggQueryRewriterTest {
           + "group by verdictdbalias1.`verdictdbalias2`, `verdictdbalias5`) as verdictdbalias4 "
           + "group by `verdictdb:tier`";
       SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
-      String actual = relToSql.toSql(rewritten.get(k));
+      String actual = relToSql.toSql(rewritten.get(k).getLeft());
       assertEquals(expected, actual);
     }
   }
@@ -178,7 +178,7 @@ public class AggQueryRewriterTest {
   public void testSelectSumGroupbyBaseTable() throws VerdictDbException {
     BaseTable base = new BaseTable("myschema", "mytable", "t");
     String aliasName = "a";
-    SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
+    SelectQuery relation = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("t", "mygroup"), "mygroup"),
             new AliasedColumn(new ColumnOp("sum", new BaseColumn("t", "mycolumn1")), aliasName)),
@@ -186,7 +186,7 @@ public class AggQueryRewriterTest {
     relation.addGroupby(new BaseColumn("t", "mygroup"));
     ScrambleMeta meta = generateTestScrambleMeta();
     AggQueryRewriter rewriter = new AggQueryRewriter(meta);
-    List<AbstractRelation> rewritten = rewriter.rewrite(relation);
+    List<Pair<AbstractRelation, AggblockMeta>> rewritten = rewriter.rewrite(relation);
     
     String aliasForSumEstimate = AliasRenamingRules.sumEstimateAliasName(aliasName);
     String aliasForSumScaledSubsum = AliasRenamingRules.sumScaledSumAliasName(aliasName);
@@ -217,7 +217,7 @@ public class AggQueryRewriterTest {
           + "group by verdictdbalias1.`verdictdbalias2`, `verdictdbalias5`, `verdictdbalias6`) as verdictdbalias4 "
           + "group by `verdictdb:tier`, `mygroup`";
       SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
-      String actual = relToSql.toSql(rewritten.get(k));
+      String actual = relToSql.toSql(rewritten.get(k).getLeft());
       assertEquals(expected, actual);
     }
   }
@@ -226,7 +226,7 @@ public class AggQueryRewriterTest {
   public void testSelectSumGroupby2BaseTable() throws VerdictDbException {
     BaseTable base = new BaseTable("myschema", "mytable", "t");
     String aliasName = "a";
-    SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
+    SelectQuery relation = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("t", "mygroup"), "myalias"),
             new AliasedColumn(new ColumnOp("sum", new BaseColumn("t", "mycolumn1")), aliasName)),
@@ -234,7 +234,7 @@ public class AggQueryRewriterTest {
     relation.addGroupby(new AliasReference("myalias"));
     ScrambleMeta meta = generateTestScrambleMeta();
     AggQueryRewriter rewriter = new AggQueryRewriter(meta);
-    List<AbstractRelation> rewritten = rewriter.rewrite(relation);
+    List<Pair<AbstractRelation, AggblockMeta>> rewritten = rewriter.rewrite(relation);
     
     String aliasForSumEstimate = AliasRenamingRules.sumEstimateAliasName(aliasName);
     String aliasForSumScaledSubsum = AliasRenamingRules.sumScaledSumAliasName(aliasName);
@@ -265,7 +265,7 @@ public class AggQueryRewriterTest {
           + "group by verdictdbalias1.`verdictdbalias2`, `verdictdbalias5`, `verdictdbalias6`) as verdictdbalias4 "
           + "group by `verdictdb:tier`, `myalias`";
       SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
-      String actual = relToSql.toSql(rewritten.get(k));
+      String actual = relToSql.toSql(rewritten.get(k).getLeft());
       assertEquals(expected, actual);
     }
   }
@@ -274,14 +274,14 @@ public class AggQueryRewriterTest {
   public void testSelectCountGroupbyBaseTable() throws VerdictDbException {
     BaseTable base = new BaseTable("myschema", "mytable", "t");
     String aliasName = "a";
-    SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
+    SelectQuery relation = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("t", "mygroup"), "mygroup"),
             new AliasedColumn(new ColumnOp("count"), aliasName)), base);
     relation.addGroupby(new BaseColumn("t", "mygroup"));
     ScrambleMeta meta = generateTestScrambleMeta();
     AggQueryRewriter rewriter = new AggQueryRewriter(meta);
-    List<AbstractRelation> rewritten = rewriter.rewrite(relation);
+    List<Pair<AbstractRelation, AggblockMeta>> rewritten = rewriter.rewrite(relation);
     
     String aliasForCountEstimate = AliasRenamingRules.countEstimateAliasName(aliasName);
     String aliasForSumScaledSubcount = AliasRenamingRules.sumScaledCountAliasName(aliasName);
@@ -310,7 +310,7 @@ public class AggQueryRewriterTest {
           + "group by verdictdbalias1.`verdictdbalias2`, `verdictdbalias5`, `verdictdbalias6`) as verdictdbalias4 "
           + "group by `verdictdb:tier`, `mygroup`";
       SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
-      String actual = relToSql.toSql(rewritten.get(k));
+      String actual = relToSql.toSql(rewritten.get(k).getLeft());
       assertEquals(expected, actual);
     }
   }
@@ -319,7 +319,7 @@ public class AggQueryRewriterTest {
   public void testSelectAvgGroupbyBaseTable() throws VerdictDbException {
     BaseTable base = new BaseTable("myschema", "mytable", "t");
     String aliasName = "a";
-    SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
+    SelectQuery relation = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("t", "mygroup"), "mygroup"),
             new AliasedColumn(new ColumnOp("avg", new BaseColumn("t", "mycolumn1")), aliasName)),
@@ -327,7 +327,7 @@ public class AggQueryRewriterTest {
     relation.addGroupby(new BaseColumn("t", "mygroup"));
     ScrambleMeta meta = generateTestScrambleMeta();
     AggQueryRewriter rewriter = new AggQueryRewriter(meta);
-    List<AbstractRelation> rewritten = rewriter.rewrite(relation);
+    List<Pair<AbstractRelation, AggblockMeta>> rewritten = rewriter.rewrite(relation);
     
     String aliasForSumEstimate = AliasRenamingRules.sumEstimateAliasName(aliasName);
     String aliasForSumScaledSubsum = AliasRenamingRules.sumScaledSumAliasName(aliasName);
@@ -365,7 +365,7 @@ public class AggQueryRewriterTest {
           + "group by verdictdbalias1.`verdictdbalias2`, `verdictdbalias5`, `verdictdbalias6`) as verdictdbalias4 "
           + "group by `verdictdb:tier`, `mygroup`";
       SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
-      String actual = relToSql.toSql(rewritten.get(k));
+      String actual = relToSql.toSql(rewritten.get(k).getLeft());
       assertEquals(expected, actual);
     }
   }
@@ -374,20 +374,20 @@ public class AggQueryRewriterTest {
   public void testSelectSumNestedTable() throws VerdictDbException {
     BaseTable base = new BaseTable("myschema", "mytable", "t");
     String aliasName = "a";
-    SelectQueryOp nestedSource = SelectQueryOp.getSelectQueryOp(
+    SelectQuery nestedSource = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new AliasedColumn(
                 ColumnOp.multiply(new BaseColumn("t", "price"), new BaseColumn("t", "discount")),
                 "discounted_price")),
         base);
     nestedSource.setAliasName("s");
-    SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
+    SelectQuery relation = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new ColumnOp("sum", new BaseColumn("s", "discounted_price")), aliasName)),
         nestedSource);
     ScrambleMeta meta = generateTestScrambleMeta();
     AggQueryRewriter rewriter = new AggQueryRewriter(meta);
-    List<AbstractRelation> rewritten = rewriter.rewrite(relation);
+    List<Pair<AbstractRelation, AggblockMeta>> rewritten = rewriter.rewrite(relation);
     
     String aliasForSumEstimate = AliasRenamingRules.sumEstimateAliasName(aliasName);
     String aliasForSumScaledSubsum = AliasRenamingRules.sumScaledSumAliasName(aliasName);
@@ -419,7 +419,7 @@ public class AggQueryRewriterTest {
           + "group by s.`verdictdbalias4`, `verdictdbalias7`) as verdictdbalias6 "
           + "group by `verdictdb:tier`";
       SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
-      String actual = relToSql.toSql(rewritten.get(k));
+      String actual = relToSql.toSql(rewritten.get(k).getLeft());
       assertEquals(expected, actual);
     }
   }

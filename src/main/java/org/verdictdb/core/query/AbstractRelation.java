@@ -41,10 +41,10 @@ public abstract class AbstractRelation {
   }
 
   public boolean isAggregateQuery() {
-    if (!(this instanceof SelectQueryOp)) {
+    if (!(this instanceof SelectQuery)) {
       return false;
     }
-    SelectQueryOp sel = (SelectQueryOp) this;
+    SelectQuery sel = (SelectQuery) this;
     List<SelectItem> selectList = sel.getSelectList();
     for (SelectItem item : selectList) {
       if (item instanceof AliasedColumn) {

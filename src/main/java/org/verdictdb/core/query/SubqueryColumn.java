@@ -9,24 +9,24 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  */
 public class SubqueryColumn implements UnnamedColumn {
   
-  SelectQueryOp subquery = new SelectQueryOp();
+  SelectQuery subquery = new SelectQuery();
 
   public SubqueryColumn() {
   }
 
-  public SubqueryColumn(SelectQueryOp relation) {
+  public SubqueryColumn(SelectQuery relation) {
     subquery = relation;
   }
 
-  public void setSubquery(SelectQueryOp relation) {
+  public void setSubquery(SelectQuery relation) {
     subquery = relation;
   }
 
-  public static SubqueryColumn getSubqueryColumn(SelectQueryOp relation) {
+  public static SubqueryColumn getSubqueryColumn(SelectQuery relation) {
     return new SubqueryColumn(relation);
   }
 
-  public SelectQueryOp getSubquery() {
+  public SelectQuery getSubquery() {
     return subquery;
   }
 

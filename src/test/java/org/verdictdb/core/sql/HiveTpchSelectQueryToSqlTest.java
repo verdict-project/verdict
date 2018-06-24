@@ -58,7 +58,7 @@ public class HiveTpchSelectQueryToSqlTest {
                         new ColumnOp("date", ConstantColumn.valueOf("'1998-09-16'")),
                         new ColumnOp("interval", Arrays.<UnnamedColumn>asList(ConstantColumn.valueOf("'5'"), ConstantColumn.valueOf("day")))
                 )));
-        SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
+        SelectQuery relation = SelectQuery.getSelectQueryOp(
                 Arrays.<SelectItem>asList(
                         new BaseColumn("t", "l_returnflag"),
                         new BaseColumn("t", "l_linestatus"),
@@ -91,7 +91,7 @@ public class HiveTpchSelectQueryToSqlTest {
         BaseTable nation = new BaseTable("tpch", "nation", "n");
         BaseTable region = new BaseTable("tpch", "region", "r");
         List<AbstractRelation> from = Arrays.<AbstractRelation>asList(part, supplier, partsupp, nation, region);
-        SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
+        SelectQuery relation = SelectQuery.getSelectQueryOp(
                 Arrays.<SelectItem>asList(
                         new BaseColumn("s", "s_acctbal"),
                         new BaseColumn("s", "s_name"),
@@ -131,7 +131,7 @@ public class HiveTpchSelectQueryToSqlTest {
                 ConstantColumn.valueOf("'abc'")
         )));
         List<AbstractRelation> subqueryFrom = Arrays.<AbstractRelation>asList(partsupp, supplier, nation, region);
-        SelectQueryOp subquery = SelectQueryOp.getSelectQueryOp(
+        SelectQuery subquery = SelectQuery.getSelectQueryOp(
                 Arrays.<SelectItem>asList(new ColumnOp("min", new BaseColumn("ps", "ps_supplycost"))),
                 subqueryFrom);
         subquery.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
@@ -183,7 +183,7 @@ public class HiveTpchSelectQueryToSqlTest {
                         new BaseColumn("l", "l_discount")
                 ))
         ));
-        SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
+        SelectQuery relation = SelectQuery.getSelectQueryOp(
                 Arrays.asList(
                         new BaseColumn("l", "l_orderkey"),
                         new AliasedColumn(new ColumnOp("sum", op1), "revenue"),
@@ -230,7 +230,7 @@ public class HiveTpchSelectQueryToSqlTest {
     @Test
     public void Query4Test() throws VerdictDbException {
         AbstractRelation orders = new BaseTable("tpch", "orders", "o");
-        SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
+        SelectQuery relation = SelectQuery.getSelectQueryOp(
                 Arrays.asList(
                         new BaseColumn("o", "o_orderpriority"),
                         new AliasedColumn(new ColumnOp("count", new AsteriskColumn()), "order_count")
@@ -247,7 +247,7 @@ public class HiveTpchSelectQueryToSqlTest {
                         new ColumnOp("interval", Arrays.<UnnamedColumn>asList(ConstantColumn.valueOf("'1'"), ConstantColumn.valueOf("month")))
                 ))
         )));
-        SelectQueryOp subquery = SelectQueryOp.getSelectQueryOp(
+        SelectQuery subquery = SelectQuery.getSelectQueryOp(
                 Arrays.<SelectItem>asList(new AsteriskColumn()),
                 new BaseTable("tpch", "lineitem", "l"));
         subquery.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
@@ -276,7 +276,7 @@ public class HiveTpchSelectQueryToSqlTest {
         AbstractRelation supplier = new BaseTable("tpch", "supplier", "s");
         AbstractRelation nation = new BaseTable("tpch", "nation", "n");
         AbstractRelation region = new BaseTable("tpch", "region", "r");
-        SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
+        SelectQuery relation = SelectQuery.getSelectQueryOp(
                 Arrays.asList(
                         new BaseColumn("n", "n_name"),
                         new AliasedColumn(new ColumnOp("sum", Arrays.<UnnamedColumn>asList(
@@ -341,7 +341,7 @@ public class HiveTpchSelectQueryToSqlTest {
     @Test
     public void Query6Test() throws VerdictDbException {
         AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "l");
-        SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
+        SelectQuery relation = SelectQuery.getSelectQueryOp(
                 Arrays.<SelectItem>asList(
                         new AliasedColumn(new ColumnOp("sum", new ColumnOp("multiply",
                                 Arrays.<UnnamedColumn>asList(
@@ -388,7 +388,7 @@ public class HiveTpchSelectQueryToSqlTest {
         AbstractRelation customer = new BaseTable("tpch", "customer", "c");
         AbstractRelation nation1 = new BaseTable("tpch", "nation", "n1");
         AbstractRelation nation2 = new BaseTable("tpch", "nation", "n2");
-        SelectQueryOp subquery = SelectQueryOp.getSelectQueryOp(
+        SelectQuery subquery = SelectQuery.getSelectQueryOp(
                 Arrays.<SelectItem>asList(
                         new AliasedColumn(new BaseColumn("n1", "n_name"), "supp_nation"),
                         new AliasedColumn(new BaseColumn("n2", "n_name"), "cust_nation"),
@@ -449,7 +449,7 @@ public class HiveTpchSelectQueryToSqlTest {
                 new ColumnOp("date", ConstantColumn.valueOf("'1996-12-31'")))
         ));
         subquery.setAliasName("shipping");
-        SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
+        SelectQuery relation = SelectQuery.getSelectQueryOp(
                 Arrays.asList(
                         new BaseColumn("shipping", "supp_nation"),
                         new BaseColumn("shipping", "cust_nation"),
@@ -484,7 +484,7 @@ public class HiveTpchSelectQueryToSqlTest {
         AbstractRelation nation1 = new BaseTable("tpch", "nation", "n1");
         AbstractRelation nation2 = new BaseTable("tpch", "nation", "n2");
         AbstractRelation region = new BaseTable("tpch", "region", "r");
-        SelectQueryOp subquery = SelectQueryOp.getSelectQueryOp(
+        SelectQuery subquery = SelectQuery.getSelectQueryOp(
                 Arrays.<SelectItem>asList(
                         new AliasedColumn(new ColumnOp("substr", Arrays.<UnnamedColumn>asList(new BaseColumn("o", "o_orderdate"), ConstantColumn.valueOf(0), ConstantColumn.valueOf(4))), "o_year"),
                         new AliasedColumn(new ColumnOp("multiply", Arrays.<UnnamedColumn>asList(
@@ -536,7 +536,7 @@ public class HiveTpchSelectQueryToSqlTest {
                 ConstantColumn.valueOf("'ECONOMY BURNISHED NICKEL'")
         )));
         subquery.setAliasName("all_nations");
-        SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
+        SelectQuery relation = SelectQuery.getSelectQueryOp(
                 Arrays.asList(
                         new BaseColumn("all_nations", "o_year"),
                         new AliasedColumn(
@@ -568,7 +568,7 @@ public class HiveTpchSelectQueryToSqlTest {
         AbstractRelation partsupp = new BaseTable("tpch", "partsupp", "ps");
         AbstractRelation orders = new BaseTable("tpch", "orders", "o");
         AbstractRelation nation = new BaseTable("tpch", "nation", "n");
-        SelectQueryOp subquery = SelectQueryOp.getSelectQueryOp(
+        SelectQuery subquery = SelectQuery.getSelectQueryOp(
                 Arrays.<SelectItem>asList(
                         new AliasedColumn(new BaseColumn("n", "n_name"), "nation"),
                         new AliasedColumn(new ColumnOp("substr", Arrays.<UnnamedColumn>asList(new BaseColumn("o", "o_orderdate"), ConstantColumn.valueOf(0), ConstantColumn.valueOf(4))), "o_year"),
@@ -613,7 +613,7 @@ public class HiveTpchSelectQueryToSqlTest {
                 ConstantColumn.valueOf("'%plum%'")
         )));
         subquery.setAliasName("profit");
-        SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
+        SelectQuery relation = SelectQuery.getSelectQueryOp(
                 Arrays.asList(
                         new BaseColumn("profit", "nation"),
                         new BaseColumn("profit", "o_year"),
@@ -636,7 +636,7 @@ public class HiveTpchSelectQueryToSqlTest {
         AbstractRelation orders = new BaseTable("tpch", "orders", "o");
         AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "l");
         AbstractRelation nation = new BaseTable("tpch", "nation", "n");
-        SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
+        SelectQuery relation = SelectQuery.getSelectQueryOp(
                 Arrays.<SelectItem>asList(
                         new BaseColumn("c", "c_custkey"),
                         new BaseColumn("c", "c_name"),
@@ -703,7 +703,7 @@ public class HiveTpchSelectQueryToSqlTest {
         AbstractRelation partsupp = new BaseTable("tpch", "partsupp", "ps");
         AbstractRelation supplier = new BaseTable("tpch", "supplier", "s");
         AbstractRelation nation = new BaseTable("tpch", "nation", "n");
-        SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
+        SelectQuery relation = SelectQuery.getSelectQueryOp(
                 Arrays.<SelectItem>asList(
                         new BaseColumn("ps", "ps_partkey"),
                         new AliasedColumn(new ColumnOp("sum", new ColumnOp("multiply", Arrays.<UnnamedColumn>asList(
@@ -725,7 +725,7 @@ public class HiveTpchSelectQueryToSqlTest {
                 ConstantColumn.valueOf("'GERMANY'")
         )));
         relation.addGroupby(new AliasReference("ps_partkey"));
-        SelectQueryOp subquery = SelectQueryOp.getSelectQueryOp(
+        SelectQuery subquery = SelectQuery.getSelectQueryOp(
                 Arrays.<SelectItem>asList(
                         new ColumnOp("multiply", Arrays.<UnnamedColumn>asList(
                                 new ColumnOp("sum", new ColumnOp("multiply", Arrays.<UnnamedColumn>asList(
@@ -768,7 +768,7 @@ public class HiveTpchSelectQueryToSqlTest {
     public void Query12Test() throws VerdictDbException {
         AbstractRelation orders = new BaseTable("tpch", "orders", "o");
         AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "l");
-        SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
+        SelectQuery relation = SelectQuery.getSelectQueryOp(
                 Arrays.<SelectItem>asList(
                         new BaseColumn("l", "l_shipmode"),
                         new AliasedColumn(new ColumnOp("sum", new ColumnOp("whenthenelse", Arrays.<UnnamedColumn>asList(
@@ -853,7 +853,7 @@ public class HiveTpchSelectQueryToSqlTest {
                                 ConstantColumn.valueOf("'%unusual%accounts%'")
                         ))
                 ))));
-        SelectQueryOp subqery = SelectQueryOp.getSelectQueryOp(
+        SelectQuery subqery = SelectQuery.getSelectQueryOp(
                 Arrays.<SelectItem>asList(
                         new BaseColumn("c", "c_custkey"),
                         new AliasedColumn(new ColumnOp("count", new BaseColumn("o", "o_orderkey")),"c_count")
@@ -861,7 +861,7 @@ public class HiveTpchSelectQueryToSqlTest {
                 join);
         subqery.addGroupby(new AliasReference("c_custkey"));
         subqery.setAliasName("c_orders");
-        SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
+        SelectQuery relation = SelectQuery.getSelectQueryOp(
                 Arrays.asList(
                         new BaseColumn("c_orders", "c_count"),
                         new AliasedColumn(new ColumnOp("count", new AsteriskColumn()), "custdist")
@@ -882,7 +882,7 @@ public class HiveTpchSelectQueryToSqlTest {
     public void Query14Test() throws VerdictDbException {
         AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "l");
         AbstractRelation part = new BaseTable("tpch", "part", "p");
-        SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
+        SelectQuery relation = SelectQuery.getSelectQueryOp(
                 Arrays.<SelectItem>asList(
                         new AliasedColumn(new ColumnOp("divide", Arrays.<UnnamedColumn>asList(
                                 new ColumnOp("multiply", Arrays.<UnnamedColumn>asList(
@@ -934,7 +934,7 @@ public class HiveTpchSelectQueryToSqlTest {
         //SelectQueryOp subquery = SelectQueryOp.getSelectQueryOp(
         //        Arrays.<SelectItem>asList(new ColumnOp("max", new BaseColumn("r", "total_revenue"))),
         //        revenue);
-        SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
+        SelectQuery relation = SelectQuery.getSelectQueryOp(
                 Arrays.<SelectItem>asList(
                         new BaseColumn("s", "s_suppkey"),
                         new BaseColumn("s", "s_name"),
@@ -963,7 +963,7 @@ public class HiveTpchSelectQueryToSqlTest {
     public void Query16Test() throws VerdictDbException {
         AbstractRelation partsupp = new BaseTable("tpch", "partsupp", "ps");
         AbstractRelation part = new BaseTable("tpch", "part", "p");
-        SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
+        SelectQuery relation = SelectQuery.getSelectQueryOp(
                 Arrays.asList(
                         new BaseColumn("p", "p_brand"),
                         new BaseColumn("p", "p_type"),
@@ -988,7 +988,7 @@ public class HiveTpchSelectQueryToSqlTest {
                 ConstantColumn.valueOf("22"), ConstantColumn.valueOf("14"), ConstantColumn.valueOf("27"), ConstantColumn.valueOf("49"),
                 ConstantColumn.valueOf("31"), ConstantColumn.valueOf("33"), ConstantColumn.valueOf("35"), ConstantColumn.valueOf("28")
         )));
-        SelectQueryOp subquery = SelectQueryOp.getSelectQueryOp(
+        SelectQuery subquery = SelectQuery.getSelectQueryOp(
                 Arrays.<SelectItem>asList(new BaseColumn("s", "s_suppkey")),
                 Arrays.<AbstractRelation>asList(new BaseTable("tpch", "supplier", "s")));
         subquery.addFilterByAnd(new ColumnOp("like", Arrays.<UnnamedColumn>asList(
@@ -1021,7 +1021,7 @@ public class HiveTpchSelectQueryToSqlTest {
     public void Query17Test() throws VerdictDbException {
         AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "l");
         AbstractRelation part = new BaseTable("tpch", "part", "p");
-        SelectQueryOp subquery = SelectQueryOp.getSelectQueryOp(
+        SelectQuery subquery = SelectQuery.getSelectQueryOp(
                 Arrays.<SelectItem>asList(
                         new AliasedColumn(new BaseColumn("l", "l_partkey"), "agg_partkey"),
                         new AliasedColumn(new ColumnOp("multiply", Arrays.<UnnamedColumn>asList(
@@ -1032,7 +1032,7 @@ public class HiveTpchSelectQueryToSqlTest {
                 lineitem);
         subquery.addGroupby(new AliasReference("l_partkey"));
         subquery.setAliasName("part_agg");
-        SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
+        SelectQuery relation = SelectQuery.getSelectQueryOp(
                 Arrays.<SelectItem>asList(
                         new AliasedColumn(new ColumnOp("divide", Arrays.<UnnamedColumn>asList(
                                 new ColumnOp("sum", new BaseColumn("l", "l_extendedprice")),
@@ -1072,7 +1072,7 @@ public class HiveTpchSelectQueryToSqlTest {
         AbstractRelation customer = new BaseTable("tpch", "customer", "c");
         AbstractRelation orders = new BaseTable("tpch", "orders", "o");
         AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "l");
-        SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
+        SelectQuery relation = SelectQuery.getSelectQueryOp(
                 Arrays.<SelectItem>asList(
                         new BaseColumn("c", "c_name"),
                         new BaseColumn("c", "c_custkey"),
@@ -1082,7 +1082,7 @@ public class HiveTpchSelectQueryToSqlTest {
                         new ColumnOp("sum", new BaseColumn("l", "l_quantity"))
                 ),
                 Arrays.asList(customer, orders, lineitem));
-        SelectQueryOp subquery = SelectQueryOp.getSelectQueryOp(
+        SelectQuery subquery = SelectQuery.getSelectQueryOp(
                 Arrays.<SelectItem>asList(new BaseColumn("l", "l_orderkey")),
                 lineitem);
         subquery.addGroupby(new AliasReference("l_orderkey"));
@@ -1124,7 +1124,7 @@ public class HiveTpchSelectQueryToSqlTest {
     public void Query19Test() throws VerdictDbException {
         AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "l");
         AbstractRelation part = new BaseTable("tpch", "part", "p");
-        SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
+        SelectQuery relation = SelectQuery.getSelectQueryOp(
                 Arrays.<SelectItem>asList(
                         new AliasedColumn(new ColumnOp("sum", new ColumnOp("multiply", Arrays.<UnnamedColumn>asList(
                                 new BaseColumn("l", "l_extendedprice"),
@@ -1305,13 +1305,13 @@ public class HiveTpchSelectQueryToSqlTest {
     public void Query20Test() throws VerdictDbException {
         AbstractRelation supplier = new BaseTable("tpch", "supplier", "s");
         AbstractRelation nation = new BaseTable("tpch", "nation", "n");
-        SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
+        SelectQuery relation = SelectQuery.getSelectQueryOp(
                 Arrays.<SelectItem>asList(
                         new BaseColumn("s", "s_name"),
                         new BaseColumn("s", "s_address")
                 ),
                 Arrays.asList(supplier, nation));
-        SelectQueryOp subsubquery = SelectQueryOp.getSelectQueryOp(
+        SelectQuery subsubquery = SelectQuery.getSelectQueryOp(
                 Arrays.<SelectItem>asList(
                         new AliasedColumn(new BaseColumn("l", "l_partkey"), "agg_partkey"),
                         new AliasedColumn(new BaseColumn("l", "l_suppkey"), "agg_suppkey"),
@@ -1335,7 +1335,7 @@ public class HiveTpchSelectQueryToSqlTest {
                 new AliasReference("l_suppkey")
         ));
         subsubquery.setAliasName("agg_lineitem");
-        SelectQueryOp subquery = SelectQueryOp.getSelectQueryOp(
+        SelectQuery subquery = SelectQuery.getSelectQueryOp(
                 Arrays.<SelectItem>asList(
                         new BaseColumn("ps", "ps_suppkey")
                 ),
@@ -1348,7 +1348,7 @@ public class HiveTpchSelectQueryToSqlTest {
                 new BaseColumn("agg_lineitem", "agg_suppkey"),
                 new BaseColumn("ps", "ps_suppkey")
         )));
-        SelectQueryOp subsubquery2 = SelectQueryOp.getSelectQueryOp(
+        SelectQuery subsubquery2 = SelectQuery.getSelectQueryOp(
                 Arrays.<SelectItem>asList(new BaseColumn("p", "p_partkey")),
                 new BaseTable("tpch", "part", "p"));
         subsubquery2.addFilterByAnd(new ColumnOp("like", Arrays.<UnnamedColumn>asList(
@@ -1388,7 +1388,7 @@ public class HiveTpchSelectQueryToSqlTest {
         AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "l1");
         AbstractRelation orders = new BaseTable("tpch", "orders", "o");
         AbstractRelation nation = new BaseTable("tpch", "nation", "n");
-        SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
+        SelectQuery relation = SelectQuery.getSelectQueryOp(
                 Arrays.asList(
                         new BaseColumn("s", "s_name"),
                         new AliasedColumn(new ColumnOp("count"), "numwait")
@@ -1410,7 +1410,7 @@ public class HiveTpchSelectQueryToSqlTest {
                 new BaseColumn("l1", "l_receiptdate"),
                 new BaseColumn("l1", "l_commitdate")
         )));
-        SelectQueryOp subquery1 = SelectQueryOp.getSelectQueryOp(Arrays.<SelectItem>asList(
+        SelectQuery subquery1 = SelectQuery.getSelectQueryOp(Arrays.<SelectItem>asList(
                 new AsteriskColumn()
         ), new BaseTable("tpch", "lineitem", "l2"));
         subquery1.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
@@ -1422,7 +1422,7 @@ public class HiveTpchSelectQueryToSqlTest {
                 new BaseColumn("l1", "l_suppkey")
         )));
         //relation.addFilterByAnd(new ColumnOp("exists", SubqueryColumn.getSubqueryColumn(subquery1)));
-        SelectQueryOp subquery2 = SelectQueryOp.getSelectQueryOp(Arrays.<SelectItem>asList(
+        SelectQuery subquery2 = SelectQuery.getSelectQueryOp(Arrays.<SelectItem>asList(
                 new AsteriskColumn()
         ), new BaseTable("tpch", "lineitem", "l3"));
         subquery2.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
@@ -1458,7 +1458,7 @@ public class HiveTpchSelectQueryToSqlTest {
 
     @Test
     public void Query22Test() throws VerdictDbException {
-        SelectQueryOp subquery = SelectQueryOp.getSelectQueryOp(
+        SelectQuery subquery = SelectQuery.getSelectQueryOp(
                 Arrays.<SelectItem>asList(
                         new AliasedColumn(new ColumnOp("substr", Arrays.<UnnamedColumn>asList(
                                 new BaseColumn("c", "c_phone"),
@@ -1474,7 +1474,7 @@ public class HiveTpchSelectQueryToSqlTest {
                 ConstantColumn.valueOf("'29'"), ConstantColumn.valueOf("'30'"), ConstantColumn.valueOf("'18'"),
                 ConstantColumn.valueOf("'17'")
         )));
-        SelectQueryOp subsubquery1 = SelectQueryOp.getSelectQueryOp(
+        SelectQuery subsubquery1 = SelectQuery.getSelectQueryOp(
                 Arrays.<SelectItem>asList(new ColumnOp("avg", new BaseColumn("c", "c_acctbal"))),
                 new BaseTable("tpch", "customer", "c"));
         subsubquery1.addFilterByAnd(new ColumnOp("greater", Arrays.<UnnamedColumn>asList(
@@ -1492,7 +1492,7 @@ public class HiveTpchSelectQueryToSqlTest {
        // subquery.addFilterByAnd(new ColumnOp("greater", Arrays.asList(
        //         new BaseColumn("c", "c_acctbal"), SubqueryColumn.getSubqueryColumn(subsubquery1)
        // )));
-        SelectQueryOp subsubquery2 = SelectQueryOp.getSelectQueryOp(
+        SelectQuery subsubquery2 = SelectQuery.getSelectQueryOp(
                 Arrays.<SelectItem>asList(new AsteriskColumn()),
                 new BaseTable("tpch", "orders", "o"));
         subsubquery2.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
@@ -1501,7 +1501,7 @@ public class HiveTpchSelectQueryToSqlTest {
         )));
         //subquery.addFilterByAnd(new ColumnOp("notexists", SubqueryColumn.getSubqueryColumn(subsubquery2)));
         subquery.setAliasName("custsale");
-        SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
+        SelectQuery relation = SelectQuery.getSelectQueryOp(
                 Arrays.asList(
                         new BaseColumn("custsale", "cntrycode"),
                         new AliasedColumn(new ColumnOp("count"), "numcust"),

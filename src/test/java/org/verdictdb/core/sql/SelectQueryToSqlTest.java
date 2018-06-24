@@ -13,7 +13,7 @@ import org.verdictdb.core.query.BaseColumn;
 import org.verdictdb.core.query.BaseTable;
 import org.verdictdb.core.query.ColumnOp;
 import org.verdictdb.core.query.SelectItem;
-import org.verdictdb.core.query.SelectQueryOp;
+import org.verdictdb.core.query.SelectQuery;
 import org.verdictdb.core.query.UnnamedColumn;
 import org.verdictdb.exception.VerdictDbException;
 import org.verdictdb.sql.syntax.HiveSyntax;
@@ -23,7 +23,7 @@ public class SelectQueryToSqlTest {
   @Test
   public void testSelectAllBaseTable() throws VerdictDbException {
     BaseTable base = new BaseTable("myschema", "mytable", "t");
-    SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
+    SelectQuery relation = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(new AsteriskColumn()),
         base);
     String expected = "select * from `myschema`.`mytable` as t";
@@ -35,7 +35,7 @@ public class SelectQueryToSqlTest {
   @Test
   public void testSelectAllFilterBaseTable() throws VerdictDbException {
     BaseTable base = new BaseTable("myschema", "mytable", "t");
-    SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
+    SelectQuery relation = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(new AsteriskColumn()),
         base);
     relation.addFilterByAnd(ColumnOp.less(new BaseColumn("t", "mycolumn"), ColumnOp.rand()));
@@ -48,7 +48,7 @@ public class SelectQueryToSqlTest {
   @Test
   public void testSelectColumnsBaseTable() throws VerdictDbException {
     BaseTable base = new BaseTable("myschema", "mytable", "t");
-    SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
+    SelectQuery relation = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new BaseColumn("t", "mycolumn1"),
             new BaseColumn("t", "mycolumn2")),
@@ -62,7 +62,7 @@ public class SelectQueryToSqlTest {
   @Test
   public void testSelectAvgBaseTable() throws VerdictDbException {
     BaseTable base = new BaseTable("myschema", "mytable", "t");
-    SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
+    SelectQuery relation = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new ColumnOp("avg", new BaseColumn("t", "mycolumn1"))),
         base);
@@ -75,7 +75,7 @@ public class SelectQueryToSqlTest {
   @Test
   public void testSelectSumBaseTable() throws VerdictDbException {
     BaseTable base = new BaseTable("myschema", "mytable", "t");
-    SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
+    SelectQuery relation = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new ColumnOp("sum", new BaseColumn("t", "mycolumn1"))),
         base);
@@ -88,7 +88,7 @@ public class SelectQueryToSqlTest {
   @Test
   public void testSelectCountBaseTable() throws VerdictDbException {
     BaseTable base = new BaseTable("myschema", "mytable", "t");
-    SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
+    SelectQuery relation = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new ColumnOp("count", new BaseColumn("t", "mycolumn1"))),
         base);
@@ -101,7 +101,7 @@ public class SelectQueryToSqlTest {
   @Test
   public void testSelectCountStarBaseTable() throws VerdictDbException {
     BaseTable base = new BaseTable("myschema", "mytable", "t");
-    SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
+    SelectQuery relation = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new ColumnOp("count", new AsteriskColumn())),
         base);
@@ -114,7 +114,7 @@ public class SelectQueryToSqlTest {
   @Test
   public void testSelectAggregatesBaseTable() throws VerdictDbException {
     BaseTable base = new BaseTable("myschema", "mytable", "t");
-    SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
+    SelectQuery relation = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new ColumnOp("avg", new BaseColumn("t", "mycolumn1")),
             new ColumnOp("sum", new BaseColumn("t", "mycolumn1")),
@@ -132,7 +132,7 @@ public class SelectQueryToSqlTest {
     List<UnnamedColumn> operands = Arrays.<UnnamedColumn>asList(
         new BaseColumn("t", "mycolumn1"),
         new BaseColumn("t", "mycolumn2"));
-    SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
+    SelectQuery relation = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(new ColumnOp("add", operands)),
         base);
     String expected = "select t.`mycolumn1` + t.`mycolumn2` from `myschema`.`mytable` as t";
@@ -147,7 +147,7 @@ public class SelectQueryToSqlTest {
     List<UnnamedColumn> operands = Arrays.<UnnamedColumn>asList(
         new BaseColumn("t", "mycolumn1"),
         new BaseColumn("t", "mycolumn2"));
-    SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
+    SelectQuery relation = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(new ColumnOp("subtract", operands)),
         base);
     String expected = "select t.`mycolumn1` - t.`mycolumn2` from `myschema`.`mytable` as t";
@@ -162,7 +162,7 @@ public class SelectQueryToSqlTest {
     List<UnnamedColumn> operands = Arrays.<UnnamedColumn>asList(
         new BaseColumn("t", "mycolumn1"),
         new BaseColumn("t", "mycolumn2"));
-    SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
+    SelectQuery relation = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(new ColumnOp("multiply", operands)),
         base);
     String expected = "select t.`mycolumn1` * t.`mycolumn2` from `myschema`.`mytable` as t";
@@ -177,7 +177,7 @@ public class SelectQueryToSqlTest {
     List<UnnamedColumn> operands = Arrays.<UnnamedColumn>asList(
         new BaseColumn("t", "mycolumn1"),
         new BaseColumn("t", "mycolumn2"));
-    SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
+    SelectQuery relation = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(new ColumnOp("divide", operands)),
         base);
     String expected = "select t.`mycolumn1` / t.`mycolumn2` from `myschema`.`mytable` as t";
@@ -189,7 +189,7 @@ public class SelectQueryToSqlTest {
   @Test
   public void testSelectAvgGroupbyBaseTable() throws VerdictDbException {
     BaseTable base = new BaseTable("myschema", "mytable", "t");
-    SelectQueryOp relation = SelectQueryOp.getSelectQueryOp(
+    SelectQuery relation = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new BaseColumn("t", "mygroup"),
             new AliasedColumn(new ColumnOp("avg", new BaseColumn("t", "mycolumn1")), "myavg")),
@@ -204,14 +204,14 @@ public class SelectQueryToSqlTest {
   @Test
   public void testSelectNestedGroupby() throws VerdictDbException {
     BaseTable base = new BaseTable("myschema", "mytable", "t");
-    SelectQueryOp innerRelation = SelectQueryOp.getSelectQueryOp(
+    SelectQuery innerRelation = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new BaseColumn("t", "mygroup"),
             new AliasedColumn(new ColumnOp("avg", new BaseColumn("t", "mycolumn1")), "myavg")),
         base);
     innerRelation.addGroupby(new AliasReference("mygroup"));
     innerRelation.setAliasName("s");
-    SelectQueryOp outerRelation = SelectQueryOp.getSelectQueryOp(
+    SelectQuery outerRelation = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(new AsteriskColumn()),
         innerRelation);
     outerRelation.addGroupby(new AliasReference("mygroup2"));

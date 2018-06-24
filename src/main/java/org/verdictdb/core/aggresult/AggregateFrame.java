@@ -38,8 +38,12 @@ public class AggregateFrame {
     }
   }
   
-  public static AggregateFrame empty() throws ValueException {
-    return new AggregateFrame(new ArrayList<String>());
+  public static AggregateFrame empty() {
+    try {
+      return new AggregateFrame(new ArrayList<String>());
+    } catch (ValueException e) {
+      return null;
+    }
   }
 
   public static AggregateFrame fromDmbsQueryResult(

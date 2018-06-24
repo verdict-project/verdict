@@ -11,17 +11,17 @@ import java.util.List;
  * @author Yongjoo Park
  *
  */
-public class CreateTableAsSelect {
+public class CreateTableAsSelectQuery {
   
   String schemaName;
   
   String tableName;
   
-  SelectQueryOp select;
+  SelectQuery select;
   
   List<String> partitionColumns = new ArrayList<>();
   
-  public CreateTableAsSelect(String schemaName, String tableName, SelectQueryOp select) {
+  public CreateTableAsSelectQuery(String schemaName, String tableName, SelectQuery select) {
     this.schemaName = schemaName;
     this.tableName = tableName;
     this.select = select;
@@ -35,7 +35,7 @@ public class CreateTableAsSelect {
     return tableName;
   }
 
-  public SelectQueryOp getSelect() {
+  public SelectQuery getSelect() {
     return select;
   }
   

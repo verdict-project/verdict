@@ -15,7 +15,7 @@ import org.verdictdb.core.query.GroupingAttribute;
 import org.verdictdb.core.query.JoinTable;
 import org.verdictdb.core.query.OrderbyAttribute;
 import org.verdictdb.core.query.SelectItem;
-import org.verdictdb.core.query.SelectQueryOp;
+import org.verdictdb.core.query.SelectQuery;
 import org.verdictdb.core.query.SubqueryColumn;
 import org.verdictdb.core.query.UnnamedColumn;
 import org.verdictdb.exception.UnexpectedTypeException;
@@ -38,10 +38,10 @@ public class SelectQueryToSql {
   }
 
   public String toSql(AbstractRelation relation) throws VerdictDbException {
-    if (!(relation instanceof SelectQueryOp)) {
+    if (!(relation instanceof SelectQuery)) {
       throw new UnexpectedTypeException("Unexpected type: " + relation.getClass().toString());
     }
-    return selectQueryToSql((SelectQueryOp) relation);
+    return selectQueryToSql((SelectQuery) relation);
   }
 
   String selectItemToSqlPart(SelectItem item) throws VerdictDbException {
@@ -213,7 +213,7 @@ public class SelectQueryToSql {
     return sql;
   }
 
-  String selectQueryToSql(SelectQueryOp sel) throws VerdictDbException {
+  String selectQueryToSql(SelectQuery sel) throws VerdictDbException {
     StringBuilder sql = new StringBuilder();
 
     // select
@@ -332,11 +332,11 @@ public class SelectQueryToSql {
       return sql.toString();
     }
 
-    if (!(relation instanceof SelectQueryOp)) {
+    if (!(relation instanceof SelectQuery)) {
       throw new UnexpectedTypeException("Unexpected relation type: " + relation.getClass().toString());
     }
 
-    SelectQueryOp sel = (SelectQueryOp) relation;
+    SelectQuery sel = (SelectQuery) relation;
     Optional<String> aliasName = sel.getAliasName();
     if (!aliasName.isPresent()) {
       throw new ValueException("An inner select query must be aliased.");

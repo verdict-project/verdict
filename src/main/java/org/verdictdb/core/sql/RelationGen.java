@@ -15,7 +15,7 @@ import org.verdictdb.core.query.GroupingAttribute;
 import org.verdictdb.core.query.JoinTable;
 import org.verdictdb.core.query.OrderbyAttribute;
 import org.verdictdb.core.query.SelectItem;
-import org.verdictdb.core.query.SelectQueryOp;
+import org.verdictdb.core.query.SelectQuery;
 import org.verdictdb.core.query.UnnamedColumn;
 import org.verdictdb.parser.VerdictSQLBaseVisitor;
 import org.verdictdb.parser.VerdictSQLParser;
@@ -33,8 +33,8 @@ public class RelationGen extends VerdictSQLBaseVisitor<AbstractRelation> {
   public RelationGen() {}
 
   @Override
-  public SelectQueryOp visitSelect_statement(VerdictSQLParser.Select_statementContext ctx) {
-    SelectQueryOp sel = (SelectQueryOp) visit(ctx.query_expression());
+  public SelectQuery visitSelect_statement(VerdictSQLParser.Select_statementContext ctx) {
+    SelectQuery sel = (SelectQuery) visit(ctx.query_expression());
 
     if (ctx.order_by_clause() != null) {
       for (VerdictSQLParser.Order_by_expressionContext o : ctx.order_by_clause().order_by_expression()) {
@@ -154,7 +154,7 @@ public class RelationGen extends VerdictSQLBaseVisitor<AbstractRelation> {
 
     selectElems = elems; // used in visitSelect_statement()
 
-    SelectQueryOp sel = SelectQueryOp.getSelectQueryOp(
+    SelectQuery sel = SelectQuery.getSelectQueryOp(
         selectElems,
         tableSources);
     if (where != null) {
@@ -294,7 +294,7 @@ public class RelationGen extends VerdictSQLBaseVisitor<AbstractRelation> {
   @Override
   public AbstractRelation visitDerived_table_source_item(VerdictSQLParser.Derived_table_source_itemContext ctx) {
     RelationGen gen = new RelationGen();
-    SelectQueryOp r = (SelectQueryOp) gen.visit(ctx.derived_table().subquery().select_statement());
+    SelectQuery r = (SelectQuery) gen.visit(ctx.derived_table().subquery().select_statement());
     if (ctx.as_table_alias() != null) {
       r.setAliasName(ctx.as_table_alias().table_alias().getText());
     }
