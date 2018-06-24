@@ -7,7 +7,7 @@ import org.verdictdb.core.query.SelectQuery;
 import org.verdictdb.core.rewriter.ScrambleMeta;
 import org.verdictdb.exception.VerdictDbException;
 
-public class AggExecutionNode extends QueryExecutionNode {
+public class AggExecutionNode extends CreateTableAsSelectExecutionNode {
   
   String resultSchemaName;
   
@@ -20,9 +20,14 @@ public class AggExecutionNode extends QueryExecutionNode {
       String resultSchemaName, 
       String resultTableName,
       SelectQuery query) {
-    super(conn, query);
+    super(conn, resultSchemaName, resultTableName, query);
     this.resultSchemaName = resultSchemaName;
     this.resultTableName = resultTableName;
+    try {
+      generateDependency();
+    } catch (VerdictDbException e){
+      e.printStackTrace();
+    }
   }
 
   /**
@@ -49,5 +54,6 @@ public class AggExecutionNode extends QueryExecutionNode {
     // TODO Auto-generated method stub
     return null;
   }
+
 
 }

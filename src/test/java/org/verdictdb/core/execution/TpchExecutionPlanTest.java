@@ -243,11 +243,13 @@ public class TpchExecutionPlanTest {
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
     RelationStandardizer gen = new RelationStandardizer(staticMetaData);
-    relation = gen.standardize((SelectQueryOp) relation);
+    relation = gen.standardize((SelectQuery) relation);
 
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(new JdbcConnection(conn, new H2Syntax()),
-        new H2Syntax(), meta, (SelectQueryOp) relation);
-    assertEquals(0, queryExecutionPlan.root.children.size());
+        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
+    queryExecutionPlan.cleanUp();
+    assertEquals(1, queryExecutionPlan.root.dependents.size());
+    assertEquals(0, queryExecutionPlan.root.getDependents().get(0).dependents.size());
 
     BaseTable base = new BaseTable("tpch", "lineitem", "vt1");
     List<UnnamedColumn> operand1 = Arrays.<UnnamedColumn>asList(
@@ -268,7 +270,7 @@ public class TpchExecutionPlanTest {
             new ColumnOp("date", ConstantColumn.valueOf("'1998-12-01'")),
             new ColumnOp("interval", Arrays.<UnnamedColumn>asList(ConstantColumn.valueOf("':1'"), ConstantColumn.valueOf("day")))
         )));
-    SelectQueryOp expected = SelectQueryOp.getSelectQueryOp(
+    SelectQuery expected = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("vt1", "l_returnflag"), "vc2"),
             new AliasedColumn(new BaseColumn("vt1", "l_linestatus"), "vc3"),
@@ -287,7 +289,7 @@ public class TpchExecutionPlanTest {
     expected.addOrderby(Arrays.<OrderbyAttribute>asList(new OrderbyAttribute("vc2"),
         new OrderbyAttribute("vc3")));
     expected.addLimit(ConstantColumn.valueOf(1));
-    assertEquals(expected, ((AsyncAggExecutionNode)queryExecutionPlan.root).originalQuery);
+    assertEquals(expected, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.getDependents().get(0)).query);
   }
 
   @Test
@@ -319,11 +321,12 @@ public class TpchExecutionPlanTest {
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
     RelationStandardizer gen = new RelationStandardizer(staticMetaData);
-    relation = gen.standardize((SelectQueryOp) relation);
+    relation = gen.standardize((SelectQuery) relation);
 
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(new JdbcConnection(conn, new H2Syntax()),
-        new H2Syntax(), meta, (SelectQueryOp) relation);
-    assertEquals(0, queryExecutionPlan.root.children.size());
+        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
+    queryExecutionPlan.cleanUp();
+    assertEquals(0, queryExecutionPlan.root.dependents.get(0).dependents.size());
 
     AbstractRelation customer = new BaseTable("tpch", "customer", "vt1");
     AbstractRelation orders = new BaseTable("tpch", "orders", "vt2");
@@ -335,7 +338,7 @@ public class TpchExecutionPlanTest {
             new BaseColumn("vt3", "l_discount")
         ))
     ));
-    SelectQueryOp expected = SelectQueryOp.getSelectQueryOp(
+    SelectQuery expected = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("vt3", "l_orderkey"), "vc4"),
             new AliasedColumn(new ColumnOp("sum", op1), "revenue"),
@@ -373,7 +376,7 @@ public class TpchExecutionPlanTest {
         new OrderbyAttribute("vc5")
     ));
     expected.addLimit(ConstantColumn.valueOf(10));
-    assertEquals(expected, ((AsyncAggExecutionNode)queryExecutionPlan.root).originalQuery);
+    assertEquals(expected, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).query);
   }
 
   @Test
@@ -404,14 +407,15 @@ public class TpchExecutionPlanTest {
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
     RelationStandardizer gen = new RelationStandardizer(staticMetaData);
-    relation = gen.standardize((SelectQueryOp) relation);
+    relation = gen.standardize((SelectQuery) relation);
 
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(new JdbcConnection(conn, new H2Syntax()),
-        new H2Syntax(), meta, (SelectQueryOp) relation);
-    assertEquals(0, queryExecutionPlan.root.children.size());
+        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
+    queryExecutionPlan.cleanUp();
+    assertEquals(1, queryExecutionPlan.root.dependents.get(0).dependents.size());
 
     AbstractRelation orders = new BaseTable("tpch", "orders", "vt1");
-    SelectQueryOp expected = SelectQueryOp.getSelectQueryOp(
+    SelectQuery expected = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("vt1", "o_orderpriority"), "vc2"),
             new AliasedColumn(new ColumnOp("count", new AsteriskColumn()), "order_count")
@@ -428,7 +432,7 @@ public class TpchExecutionPlanTest {
             new ColumnOp("interval", Arrays.<UnnamedColumn>asList(ConstantColumn.valueOf("'3'"), ConstantColumn.valueOf("month")))
         ))
     )));
-    SelectQueryOp subquery = SelectQueryOp.getSelectQueryOp(
+    SelectQuery subquery = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(new AsteriskColumn()),
         new BaseTable("tpch", "lineitem", "vt3"));
     subquery.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
@@ -439,11 +443,14 @@ public class TpchExecutionPlanTest {
         new BaseColumn("vt3", "l_commitdate"),
         new BaseColumn("vt3", "l_receiptdate")
     )));
-    expected.addFilterByAnd(new ColumnOp("exists", SubqueryColumn.getSubqueryColumn(subquery)));
+    SelectQuery rewritten = SelectQuery.getSelectQueryOp(
+        Arrays.<SelectItem>asList(new AsteriskColumn()), new BaseTable("verdictdb_temp", "verdictdbtemptable_1"));
+    expected.addFilterByAnd(new ColumnOp("exists", SubqueryColumn.getSubqueryColumn(rewritten)));
     expected.addGroupby(new AliasReference("vc2"));
     expected.addOrderby(new OrderbyAttribute("vc2"));
     expected.addLimit(ConstantColumn.valueOf(1));
-    assertEquals(expected, ((AsyncAggExecutionNode)queryExecutionPlan.root).originalQuery);
+    assertEquals(expected, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.getDependents().get(0)).query);
+    assertEquals(subquery, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0)).query);
   }
 
   @Test
@@ -477,11 +484,12 @@ public class TpchExecutionPlanTest {
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
     RelationStandardizer gen = new RelationStandardizer(staticMetaData);
-    relation = gen.standardize((SelectQueryOp) relation);
+    relation = gen.standardize((SelectQuery) relation);
 
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(new JdbcConnection(conn, new H2Syntax()),
-        new H2Syntax(), meta, (SelectQueryOp) relation);
-    assertEquals(0, queryExecutionPlan.root.children.size());
+        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
+    queryExecutionPlan.cleanUp();
+    assertEquals(0, queryExecutionPlan.root.dependents.get(0).dependents.size());
 
     AbstractRelation customer = new BaseTable("tpch", "customer", "vt1");
     AbstractRelation orders = new BaseTable("tpch", "orders", "vt2");
@@ -489,7 +497,7 @@ public class TpchExecutionPlanTest {
     AbstractRelation supplier = new BaseTable("tpch", "supplier", "vt4");
     AbstractRelation nation = new BaseTable("tpch", "nation", "vt5");
     AbstractRelation region = new BaseTable("tpch", "region", "vt6");
-    SelectQueryOp expected = SelectQueryOp.getSelectQueryOp(
+    SelectQuery expected = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("vt5", "n_name"), "vc7"),
             new AliasedColumn(new ColumnOp("sum", Arrays.<UnnamedColumn>asList(
@@ -545,7 +553,7 @@ public class TpchExecutionPlanTest {
     expected.addGroupby(new AliasReference("vc7"));
     expected.addOrderby(new OrderbyAttribute("revenue", "desc"));
     expected.addLimit(ConstantColumn.valueOf(1));
-    assertEquals(expected, ((AsyncAggExecutionNode)queryExecutionPlan.root).originalQuery);
+    assertEquals(expected, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).query);
   }
 
   @Test
@@ -564,14 +572,15 @@ public class TpchExecutionPlanTest {
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
     RelationStandardizer gen = new RelationStandardizer(staticMetaData);
-    relation = gen.standardize((SelectQueryOp) relation);
+    relation = gen.standardize((SelectQuery) relation);
 
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(new JdbcConnection(conn, new H2Syntax()),
-        new H2Syntax(), meta, (SelectQueryOp) relation);
-    assertEquals(0, queryExecutionPlan.root.children.size());
+        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
+    queryExecutionPlan.cleanUp();
+    assertEquals(0, queryExecutionPlan.root.dependents.get(0).dependents.size());
 
     AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "vt1");
-    SelectQueryOp expected = SelectQueryOp.getSelectQueryOp(
+    SelectQuery expected = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new ColumnOp("sum", new ColumnOp("multiply",
                 Arrays.<UnnamedColumn>asList(
@@ -604,7 +613,7 @@ public class TpchExecutionPlanTest {
         ConstantColumn.valueOf("':3'"))
     ));
     expected.addLimit(ConstantColumn.valueOf(1));
-    assertEquals(expected, ((AsyncAggExecutionNode)queryExecutionPlan.root).originalQuery);
+    assertEquals(expected, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).query);
   }
 
   @Test
@@ -653,19 +662,20 @@ public class TpchExecutionPlanTest {
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
     RelationStandardizer gen = new RelationStandardizer(staticMetaData);
-    relation = gen.standardize((SelectQueryOp) relation);
+    relation = gen.standardize((SelectQuery) relation);
 
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(new JdbcConnection(conn, new H2Syntax()),
-        new H2Syntax(), meta, (SelectQueryOp) relation);
-    assertEquals(0, queryExecutionPlan.root.children.size());
-
+        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
+    queryExecutionPlan.cleanUp();
+    assertEquals(1, queryExecutionPlan.root.dependents.get(0).dependents.size());
+    assertEquals(0, queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.size());
     AbstractRelation supplier = new BaseTable("tpch", "supplier", "vt1");
     AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "vt2");
     AbstractRelation orders = new BaseTable("tpch", "orders", "vt3");
     AbstractRelation customer = new BaseTable("tpch", "customer", "vt4");
     AbstractRelation nation1 = new BaseTable("tpch", "nation", "n1");
     AbstractRelation nation2 = new BaseTable("tpch", "nation", "n2");
-    SelectQueryOp subquery = SelectQueryOp.getSelectQueryOp(
+    SelectQuery subquery = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("n1", "n_name"), "supp_nation"),
             new AliasedColumn(new BaseColumn("n2", "n_name"), "cust_nation"),
@@ -726,14 +736,14 @@ public class TpchExecutionPlanTest {
         new ColumnOp("date", ConstantColumn.valueOf("'1996-12-31'")))
     ));
     subquery.setAliasName("shipping");
-    SelectQueryOp expected = SelectQueryOp.getSelectQueryOp(
+    SelectQuery expected = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("shipping", "supp_nation"), "vc5"),
             new AliasedColumn(new BaseColumn("shipping", "cust_nation"), "vc6"),
             new AliasedColumn(new BaseColumn("shipping", "l_year"), "vc7"),
             new AliasedColumn(new ColumnOp("sum", new BaseColumn("shipping", "volume")), "revenue")
         ),
-        subquery);
+        new BaseTable("verdictdb_temp", "verdictdbtemptable_1", "shipping"));
     expected.addGroupby(Arrays.<GroupingAttribute>asList(
         new AliasReference("vc5"),
         new AliasReference("vc6"),
@@ -745,7 +755,8 @@ public class TpchExecutionPlanTest {
         new OrderbyAttribute("vc7")
     ));
     expected.addLimit(ConstantColumn.valueOf(1));
-    assertEquals(expected, ((AsyncAggExecutionNode)queryExecutionPlan.root).originalQuery);
+    assertEquals(expected, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).query);
+    assertEquals(subquery, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0)).query);
   }
 
   @Test
@@ -792,11 +803,12 @@ public class TpchExecutionPlanTest {
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
     RelationStandardizer gen = new RelationStandardizer(staticMetaData);
-    relation = gen.standardize((SelectQueryOp) relation);
+    relation = gen.standardize((SelectQuery) relation);
 
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(new JdbcConnection(conn, new H2Syntax()),
-        new H2Syntax(), meta, (SelectQueryOp) relation);
-    assertEquals(0, queryExecutionPlan.root.children.size());
+        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
+    queryExecutionPlan.cleanUp();
+    assertEquals(1, queryExecutionPlan.root.dependents.get(0).dependents.size());
 
     AbstractRelation part = new BaseTable("tpch", "part", "vt1");
     AbstractRelation supplier = new BaseTable("tpch", "supplier", "vt2");
@@ -806,10 +818,10 @@ public class TpchExecutionPlanTest {
     AbstractRelation nation1 = new BaseTable("tpch", "nation", "n1");
     AbstractRelation nation2 = new BaseTable("tpch", "nation", "n2");
     AbstractRelation region = new BaseTable("tpch", "region", "vt6");
-    SelectQueryOp subquery = SelectQueryOp.getSelectQueryOp(
+    SelectQuery subquery = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new ColumnOp("year", new BaseColumn("vt4", "o_orderdate")
-                ), "o_year"),
+            ), "o_year"),
             new AliasedColumn(new ColumnOp("multiply", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("vt3", "l_extendedprice"),
                 new ColumnOp("subtract", Arrays.<UnnamedColumn>asList(ConstantColumn.valueOf(1), new BaseColumn("vt3", "l_discount")))
@@ -859,25 +871,26 @@ public class TpchExecutionPlanTest {
         ConstantColumn.valueOf("'ECONOMY BURNISHED NICKEL'")
     )));
     subquery.setAliasName("all_nations");
-    SelectQueryOp expected = SelectQueryOp.getSelectQueryOp(
+    SelectQuery expected = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("all_nations", "o_year"), "vc7"),
             new AliasedColumn(
-                    new ColumnOp("sum", new ColumnOp("whenthenelse", Arrays.<UnnamedColumn>asList(
-                        new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-                            new BaseColumn("all_nations", "nation"),
-                            ConstantColumn.valueOf("'PERU'")
-                        )), new BaseColumn("all_nations", "volume"),
-                        ConstantColumn.valueOf(0)))), "numerator"),
+                new ColumnOp("sum", new ColumnOp("whenthenelse", Arrays.<UnnamedColumn>asList(
+                    new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
+                        new BaseColumn("all_nations", "nation"),
+                        ConstantColumn.valueOf("'PERU'")
+                    )), new BaseColumn("all_nations", "volume"),
+                    ConstantColumn.valueOf(0)))), "numerator"),
 
-                    new AliasedColumn(new ColumnOp("sum", new BaseColumn("all_nations", "volume")),"denominator")
+            new AliasedColumn(new ColumnOp("sum", new BaseColumn("all_nations", "volume")),"denominator")
 
-            ),
-        subquery);
+        ),
+        new BaseTable("verdictdb_temp", "verdictdbtemptable_1", "all_nations"));
     expected.addGroupby(new AliasReference("vc7"));
     expected.addOrderby(new OrderbyAttribute("vc7"));
     expected.addLimit(ConstantColumn.valueOf(1));
-    assertEquals(expected, ((AsyncAggExecutionNode)queryExecutionPlan.root).originalQuery);
+    assertEquals(expected, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).query);
+    assertEquals(subquery, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0)).query);
   }
 
   @Test
@@ -919,11 +932,12 @@ public class TpchExecutionPlanTest {
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
     RelationStandardizer gen = new RelationStandardizer(staticMetaData);
-    relation = gen.standardize((SelectQueryOp) relation);
+    relation = gen.standardize((SelectQuery) relation);
 
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(new JdbcConnection(conn, new H2Syntax()),
-        new H2Syntax(), meta, (SelectQueryOp) relation);
-    assertEquals(0, queryExecutionPlan.root.children.size());
+        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
+    queryExecutionPlan.cleanUp();
+    assertEquals(1, queryExecutionPlan.root.dependents.get(0).dependents.size());
 
     AbstractRelation part = new BaseTable("tpch", "part", "vt1");
     AbstractRelation supplier = new BaseTable("tpch", "supplier", "vt2");
@@ -931,7 +945,7 @@ public class TpchExecutionPlanTest {
     AbstractRelation partsupp = new BaseTable("tpch", "partsupp", "vt4");
     AbstractRelation orders = new BaseTable("tpch", "orders", "vt5");
     AbstractRelation nation = new BaseTable("tpch", "nation", "vt6");
-    SelectQueryOp subquery = SelectQueryOp.getSelectQueryOp(
+    SelectQuery subquery = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("vt6", "n_name"), "nation"),
             new AliasedColumn(new ColumnOp("substr", Arrays.<UnnamedColumn>asList(
@@ -979,18 +993,19 @@ public class TpchExecutionPlanTest {
         ConstantColumn.valueOf("'%:1%'")
     )));
     subquery.setAliasName("profit");
-    SelectQueryOp expected = SelectQueryOp.getSelectQueryOp(
+    SelectQuery expected = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("profit", "nation"), "vc7"),
             new AliasedColumn(new BaseColumn("profit", "o_year"), "vc8"),
             new AliasedColumn(new ColumnOp("sum", new BaseColumn("profit", "amount")), "sum_profit")
         ),
-        subquery);
+        new BaseTable("verdictdb_temp", "verdictdbtemptable_1", "profit"));
     expected.addGroupby(Arrays.<GroupingAttribute>asList(new AliasReference("vc7"), new AliasReference("vc8")));
     expected.addOrderby(Arrays.<OrderbyAttribute>asList(new OrderbyAttribute("vc7"),
         new OrderbyAttribute("vc8", "desc")));
     expected.addLimit(ConstantColumn.valueOf(1));
-    assertEquals(expected, ((AsyncAggExecutionNode)queryExecutionPlan.root).originalQuery);
+    assertEquals(expected, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).query);
+    assertEquals(subquery, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0)).query);
   }
 
   @Test
@@ -1031,17 +1046,18 @@ public class TpchExecutionPlanTest {
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
     RelationStandardizer gen = new RelationStandardizer(staticMetaData);
-    relation = gen.standardize((SelectQueryOp) relation);
+    relation = gen.standardize((SelectQuery) relation);
 
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(new JdbcConnection(conn, new H2Syntax()),
-        new H2Syntax(), meta, (SelectQueryOp) relation);
-    assertEquals(0, queryExecutionPlan.root.children.size());
+        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
+    queryExecutionPlan.cleanUp();
+    assertEquals(0, queryExecutionPlan.root.dependents.get(0).dependents.size());
 
     AbstractRelation customer = new BaseTable("tpch", "customer", "vt1");
     AbstractRelation orders = new BaseTable("tpch", "orders", "vt2");
     AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "vt3");
     AbstractRelation nation = new BaseTable("tpch", "nation", "vt4");
-    SelectQueryOp expected = SelectQueryOp.getSelectQueryOp(
+    SelectQuery expected = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("vt1", "c_custkey"), "vc5"),
             new AliasedColumn(new BaseColumn("vt1", "c_name"), "vc6"),
@@ -1097,7 +1113,7 @@ public class TpchExecutionPlanTest {
     ));
     expected.addOrderby(new OrderbyAttribute("revenue", "desc"));
     expected.addLimit(ConstantColumn.valueOf(20));
-    assertEquals(expected, ((AsyncAggExecutionNode)queryExecutionPlan.root).originalQuery);
+    assertEquals(expected, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).query);
   }
 
   @Test
@@ -1135,15 +1151,16 @@ public class TpchExecutionPlanTest {
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
     RelationStandardizer gen = new RelationStandardizer(staticMetaData);
-    relation = gen.standardize((SelectQueryOp) relation);
+    relation = gen.standardize((SelectQuery) relation);
 
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(new JdbcConnection(conn, new H2Syntax()),
-        new H2Syntax(), meta, (SelectQueryOp) relation);
-    assertEquals(0, queryExecutionPlan.root.children.size());
+        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
+    queryExecutionPlan.cleanUp();
+    assertEquals(0, queryExecutionPlan.root.dependents.get(0).dependents.size());
 
     AbstractRelation orders = new BaseTable("tpch", "orders", "vt1");
     AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "vt2");
-    SelectQueryOp expected = SelectQueryOp.getSelectQueryOp(
+    SelectQuery expected = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("vt2", "l_shipmode"), "vc3"),
             new AliasedColumn(new ColumnOp("sum", new ColumnOp("whenthenelse", Arrays.<UnnamedColumn>asList(
@@ -1206,7 +1223,7 @@ public class TpchExecutionPlanTest {
     expected.addGroupby(new AliasReference("vc3"));
     expected.addOrderby(new OrderbyAttribute("vc3"));
     expected.addLimit(ConstantColumn.valueOf(1));
-    assertEquals(relation, ((AsyncAggExecutionNode)queryExecutionPlan.root).originalQuery);
+    assertEquals(relation, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).query);
   }
 
   @Test
@@ -1224,11 +1241,12 @@ public class TpchExecutionPlanTest {
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
     RelationStandardizer gen = new RelationStandardizer(staticMetaData);
-    relation = gen.standardize((SelectQueryOp) relation);
+    relation = gen.standardize((SelectQuery) relation);
 
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(new JdbcConnection(conn, new H2Syntax()),
-        new H2Syntax(), meta, (SelectQueryOp) relation);
-    assertEquals(0, queryExecutionPlan.root.children.size());
+        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
+    queryExecutionPlan.cleanUp();
+    assertEquals(0, queryExecutionPlan.root.dependents.get(0).dependents.size());
 
     BaseTable customer = new BaseTable("tpch", "customer", "vt1");
     BaseTable orders = new BaseTable("tpch", "orders", "vt2");
@@ -1244,14 +1262,14 @@ public class TpchExecutionPlanTest {
                 ConstantColumn.valueOf("'%unusual%accounts%'")
             ))
         ))));
-    SelectQueryOp expected = SelectQueryOp.getSelectQueryOp(
+    SelectQuery expected = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("vt1","c_custkey"), "vc3"),
             new AliasedColumn(new ColumnOp("count", new AsteriskColumn()), "c_count")
         ), join
     );
     expected.addGroupby(new AliasReference("vc3"));
-    assertEquals(expected, ((AsyncAggExecutionNode)queryExecutionPlan.root).originalQuery);
+    assertEquals(expected, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).query);
   }
 
   @Test
@@ -1274,15 +1292,16 @@ public class TpchExecutionPlanTest {
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
     RelationStandardizer gen = new RelationStandardizer(staticMetaData);
-    relation = gen.standardize((SelectQueryOp) relation);
+    relation = gen.standardize((SelectQuery) relation);
 
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(new JdbcConnection(conn, new H2Syntax()),
-        new H2Syntax(), meta, (SelectQueryOp) relation);
-    assertEquals(0, queryExecutionPlan.root.children.size());
+        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
+    queryExecutionPlan.cleanUp();
+    assertEquals(0, queryExecutionPlan.root.dependents.get(0).dependents.size());
 
     AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "vt1");
     AbstractRelation part = new BaseTable("tpch", "part", "vt2");
-    SelectQueryOp expected = SelectQueryOp.getSelectQueryOp(
+    SelectQuery expected = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new AliasedColumn(
                 new ColumnOp("multiply", Arrays.<UnnamedColumn>asList(
@@ -1298,11 +1317,11 @@ public class TpchExecutionPlanTest {
                         ConstantColumn.valueOf(0)
                     )))
                 )), "numerator"),
-                new AliasedColumn(new ColumnOp("sum", new ColumnOp("multiply", Arrays.<UnnamedColumn>asList(
-                    new BaseColumn("vt1", "l_extendedprice"),
-                    new ColumnOp("subtract", Arrays.<UnnamedColumn>asList(ConstantColumn.valueOf(1), new BaseColumn("vt1", "l_discount")))
-                ))), "denominator")
-            ),
+            new AliasedColumn(new ColumnOp("sum", new ColumnOp("multiply", Arrays.<UnnamedColumn>asList(
+                new BaseColumn("vt1", "l_extendedprice"),
+                new ColumnOp("subtract", Arrays.<UnnamedColumn>asList(ConstantColumn.valueOf(1), new BaseColumn("vt1", "l_discount")))
+            ))), "denominator")
+        ),
         Arrays.asList(lineitem, part));
     expected.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
         new BaseColumn("vt1", "l_partkey"),
@@ -1320,7 +1339,7 @@ public class TpchExecutionPlanTest {
         ))
     )));
     expected.addLimit(ConstantColumn.valueOf(1));
-    assertEquals(relation, ((AsyncAggExecutionNode)queryExecutionPlan.root).originalQuery);
+    assertEquals(relation, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).query);
   }
 
   // Query 15 is a non aggregate query, add avg(s_suppkey) to be an aggregate one
@@ -1363,36 +1382,55 @@ public class TpchExecutionPlanTest {
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
     RelationStandardizer gen = new RelationStandardizer(staticMetaData);
-    relation = gen.standardize((SelectQueryOp) relation);
+    relation = gen.standardize((SelectQuery) relation);
 
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(new JdbcConnection(conn, new H2Syntax()),
-        new H2Syntax(), meta, (SelectQueryOp) relation);
-    queryExecutionPlan.cleanUp(new JdbcConnection(conn, new H2Syntax()), new H2Syntax());
-    assertEquals(true, queryExecutionPlan.root instanceof PostProcessor);
-    SelectQueryOp expected = SelectQueryOp.getSelectQueryOp(
+        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
+    queryExecutionPlan.cleanUp();
+    assertEquals(2, queryExecutionPlan.root.dependents.get(0).dependents.size());
+
+    SelectQuery expected = SelectQuery.getSelectQueryOp(
+        Arrays.<SelectItem>asList(
+            new AliasedColumn(new ColumnOp("avg", new BaseColumn("vt1", "s_suppkey")), "a5"),
+            new AliasedColumn(new BaseColumn("vt1", "s_name"), "vc6"),
+            new AliasedColumn(new BaseColumn("vt1", "s_address"), "vc7"),
+            new AliasedColumn(new BaseColumn("vt1", "s_phone"), "vc8"),
+            new AliasedColumn(new BaseColumn("revenue_cached", "total_revenue"), "vc9")
+        ), Arrays.<AbstractRelation>asList(
+            new BaseTable("tpch", "supplier", "vt1"),
+            new BaseTable("verdictdb_temp", "verdictdbtemptable_1", "revenue_cached"),
+            new BaseTable("verdictdb_temp", "verdictdbtemptable_2", "max_revenue_cached")
+        ));
+    assertEquals(expected.getFromList(), ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).query.getFromList());
+
+    SelectQuery revenue_cached = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("vt2", "l_suppkey"), "supplier_no"),
-            new AliasedColumn(new ColumnOp("sum", new ColumnOp("multiply", Arrays.<UnnamedColumn>asList(
+            new AliasedColumn(new ColumnOp("sum", new ColumnOp("multiply", Arrays.asList(
                 new BaseColumn("vt2", "l_extendedprice"),
-                new ColumnOp("subtract", Arrays.<UnnamedColumn>asList(
-                    ConstantColumn.valueOf(1),
-                    new BaseColumn("vt2", "l_discount")
-                ))
+                new ColumnOp("subtract", Arrays.asList(ConstantColumn.valueOf(1), new BaseColumn("vt2", "l_discount")))
             ))), "total_revenue")
-        ),
-        new BaseTable("tpch", "lineitem", "vt2"));
-    expected.addFilterByAnd(new ColumnOp("greaterequal", Arrays.<UnnamedColumn>asList(
+        ), new BaseTable("tpch", "lineitem", "vt2")
+    );
+    revenue_cached.addFilterByAnd(new ColumnOp("greaterequal", Arrays.asList(
         new BaseColumn("vt2", "l_shipdate"),
         ConstantColumn.valueOf("'1996-01-01'")
     )));
-    expected.addFilterByAnd(new ColumnOp("less", Arrays.<UnnamedColumn>asList(
+    revenue_cached.addFilterByAnd(new ColumnOp("less", Arrays.asList(
         new BaseColumn("vt2", "l_shipdate"),
         ConstantColumn.valueOf("'1996-04-01'")
     )));
-    expected.addGroupby(new AliasReference("supplier_no"));
-    expected.setAliasName("revenue_cached");
-    assertEquals(2, ((PostProcessor)queryExecutionPlan.root).queries.size());
-    assertEquals(expected, ((PostProcessor)queryExecutionPlan.root).queries.get(0));
+    revenue_cached.addGroupby(new AliasReference("supplier_no"));
+    revenue_cached.setAliasName("revenue_cached");
+    assertEquals(revenue_cached, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0)).query);
+
+    SelectQuery max_revenue_cached = SelectQuery.getSelectQueryOp(
+        Arrays.<SelectItem>asList(
+            new AliasedColumn(new ColumnOp("max", new BaseColumn("vt3", "total_revenue")), "max_revenue")
+        ), new BaseTable("verdictdb_temp", "verdictdbtemptable_3", "vt3")
+    );
+    max_revenue_cached.setAliasName("max_revenue_cached");
+    assertEquals(max_revenue_cached, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(1)).query);
   }
 
   @Test
@@ -1429,13 +1467,29 @@ public class TpchExecutionPlanTest {
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
     RelationStandardizer gen = new RelationStandardizer(staticMetaData);
-    relation = gen.standardize((SelectQueryOp) relation);
+    relation = gen.standardize((SelectQuery) relation);
 
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(new JdbcConnection(conn, new H2Syntax()),
-        new H2Syntax(), meta, (SelectQueryOp) relation);
-    queryExecutionPlan.cleanUp(new JdbcConnection(conn, new H2Syntax()), new H2Syntax());
-    assertEquals(1, ((PostProcessor)queryExecutionPlan.root).queries.size());
-    SelectQueryOp expected = SelectQueryOp.getSelectQueryOp(
+        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
+    queryExecutionPlan.cleanUp();
+
+    assertEquals(1, queryExecutionPlan.root.dependents.get(0).dependents.size());
+    assertEquals(2, queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.size());
+
+    assertEquals(new BaseTable("verdictdb_temp", "verdictdbtemptable_1", "a"),
+        ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).query.getFromList().get(0));
+    JoinTable join = JoinTable.getJoinTable(Arrays.<AbstractRelation>asList(
+        new BaseTable("verdictdb_temp", "verdictdbtemptable_2", "q17_lineitem_tmp_cached"),
+        new BaseTable("verdictdb_temp", "verdictdbtemptable_3", "l1")),
+        Arrays.<JoinTable.JoinType>asList(JoinTable.JoinType.inner),
+        Arrays.<UnnamedColumn>asList(
+            new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
+                new BaseColumn("l1", "vc5"),
+                new BaseColumn("q17_lineitem_tmp_cached", "t_partkey")
+            ))
+        ));
+    assertEquals(join, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0)).query.getFromList().get(0));
+    SelectQuery expected = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("vt1", "l_partkey"), "t_partkey"),
             new AliasedColumn(new ColumnOp("multiply", Arrays.asList(
@@ -1446,7 +1500,7 @@ public class TpchExecutionPlanTest {
         new BaseTable("tpch", "lineitem", "vt1"));
     expected.addGroupby(new AliasReference("t_partkey"));
     expected.setAliasName("q17_lineitem_tmp_cached");
-    assertEquals(expected, ((PostProcessor)queryExecutionPlan.root).queries.get(0));
+    assertEquals(expected, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.get(0)).query);
   }
 
   @Test
@@ -1492,31 +1546,27 @@ public class TpchExecutionPlanTest {
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
     RelationStandardizer gen = new RelationStandardizer(staticMetaData);
-    relation = gen.standardize((SelectQueryOp) relation);
+    relation = gen.standardize((SelectQuery) relation);
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(new JdbcConnection(conn, new H2Syntax()),
-        new H2Syntax(), meta, (SelectQueryOp) relation);
-    queryExecutionPlan.cleanUp(new JdbcConnection(conn, new H2Syntax()), new H2Syntax());
-    assertEquals(1, queryExecutionPlan.root.children.size());
-    SelectQueryOp expected = SelectQueryOp.getSelectQueryOp(
+        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
+    queryExecutionPlan.cleanUp();
+    assertEquals(1, queryExecutionPlan.root.dependents.get(0).dependents.size());
+
+    SelectQuery expected = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("vt3", "l_orderkey"), "vc4"),
             new AliasedColumn(new ColumnOp("sum", new BaseColumn("vt3", "l_quantity")), "t_sum_quantity")
-    ), new BaseTable("tpch", "lineitem", "vt3"));
+        ), new BaseTable("tpch", "lineitem", "vt3"));
     expected.addGroupby(new AliasReference("vc4"));
     expected.setAliasName("t");
     expected.addFilterByAnd(new ColumnOp("is", Arrays.asList(
         new BaseColumn("vt3", "l_orderkey"),
         ConstantColumn.valueOf("NOT NULL")
     )));
-    assertEquals(expected, ((AsyncAggExecutionNode)queryExecutionPlan.root.children.get(0)).originalQuery);
-    SelectQueryOp rewritten = SelectQueryOp.getSelectQueryOp(
-        Arrays.<SelectItem>asList(
-            new AliasedColumn(new BaseColumn("verdictdb_temp", "tmptable1", "vc4"), "vc4"),
-            new AliasedColumn(new BaseColumn("verdictdb_temp", "tmptable1", "t_sum_quantity"), "t_sum_quantity")
-        ), new BaseTable("verdictdb_temp", "tmptable1")
-    );
-    rewritten.setAliasName("t");
-    assertEquals(rewritten, ((AsyncAggExecutionNode)queryExecutionPlan.root).originalQuery.getFromList().get(2));
+
+    assertEquals(expected, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0)).query);
+    assertEquals(new BaseTable("verdictdb_temp", "verdictdbtemptable_1", "t"),
+        ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).query.getFromList().get(2));
   }
 
   @Test
@@ -1561,13 +1611,13 @@ public class TpchExecutionPlanTest {
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
     RelationStandardizer gen = new RelationStandardizer(staticMetaData);
-    relation = gen.standardize((SelectQueryOp) relation);
+    relation = gen.standardize((SelectQuery) relation);
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(new JdbcConnection(conn, new H2Syntax()),
-        new H2Syntax(), meta, (SelectQueryOp) relation);
-
+        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
+    queryExecutionPlan.cleanUp();
     AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "vt1");
     AbstractRelation part = new BaseTable("tpch", "part", "vt2");
-    SelectQueryOp expected = SelectQueryOp.getSelectQueryOp(
+    SelectQuery expected = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new ColumnOp("sum", new ColumnOp("multiply", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("vt1", "l_extendedprice"),
@@ -1738,7 +1788,7 @@ public class TpchExecutionPlanTest {
         columnOp3
     )));
     expected.addLimit(ConstantColumn.valueOf(1));
-    assertEquals(expected, ((AsyncAggExecutionNode)queryExecutionPlan.root).originalQuery);
+    assertEquals(expected, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).query);
   }
 
   // Query 20 is not a aggregated function. Change to count(s_address)
@@ -1769,12 +1819,12 @@ public class TpchExecutionPlanTest {
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
     RelationStandardizer gen = new RelationStandardizer(staticMetaData);
-    relation = gen.standardize((SelectQueryOp) relation);
+    relation = gen.standardize((SelectQuery) relation);
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(new JdbcConnection(conn, new H2Syntax()),
-        new H2Syntax(), meta, (SelectQueryOp) relation);
-    queryExecutionPlan.cleanUp(new JdbcConnection(conn, new H2Syntax()), new H2Syntax());
-    assertEquals(true, queryExecutionPlan.root instanceof PostProcessor);
-    SelectQueryOp expected = SelectQueryOp.getSelectQueryOp(
+        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
+    queryExecutionPlan.cleanUp();
+    assertEquals(1, queryExecutionPlan.root.dependents.get(0).dependents.size());
+    SelectQuery expected = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("vt3","l_partkey"), "vc4"),
             new AliasedColumn(new BaseColumn("vt3", "l_suppkey"), "vc5"),
@@ -1795,7 +1845,9 @@ public class TpchExecutionPlanTest {
     expected.addGroupby(new AliasReference("vc4"));
     expected.addGroupby(new AliasReference("vc5"));
     expected.setAliasName("q20_tmp2_cached");
-    assertEquals(expected, ((PostProcessor)queryExecutionPlan.root).queries.get(0));
+    assertEquals(expected, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0)).query);
+    assertEquals(new BaseTable("verdictdb_temp", "verdictdbtemptable_1", "q20_tmp2_cached"),
+        ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).query.getFromList().get(2));
   }
 
   @Test
@@ -1889,32 +1941,35 @@ public class TpchExecutionPlanTest {
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
     RelationStandardizer gen = new RelationStandardizer(staticMetaData);
-    relation = gen.standardize((SelectQueryOp) relation);
+    relation = gen.standardize((SelectQuery) relation);
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(new JdbcConnection(conn, new H2Syntax()),
-        new H2Syntax(), meta, (SelectQueryOp) relation);
-    queryExecutionPlan.cleanUp(new JdbcConnection(conn, new H2Syntax()), new H2Syntax());
-    assertEquals(true, queryExecutionPlan.root instanceof PostProcessor);
-    assertEquals(2, ((PostProcessor)queryExecutionPlan.root).queries.size());
-    SelectQueryOp expected = SelectQueryOp.getSelectQueryOp(
-        Arrays.<SelectItem>asList(
-            new AliasedColumn(new BaseColumn("vt1", "l_orderkey"), "vc2"),
-            new AliasedColumn(new ColumnOp("count", new AsteriskColumn()), "count_suppkey"),
-            new AliasedColumn(new ColumnOp("max", new BaseColumn("vt1", "l_suppkey")), "max_suppkey")
-        ), new BaseTable("tpch", "lineitem", "vt1")
-    );
-    expected.addFilterByAnd(new ColumnOp("greater", Arrays.<UnnamedColumn>asList(
-        new BaseColumn("vt1", "l_receiptdate"),
-        new BaseColumn("vt1", "l_commitdate")
-    )));
-    expected.addFilterByAnd(new ColumnOp("is", Arrays.asList(
-        new BaseColumn("vt1", "l_orderkey"),
-        ConstantColumn.valueOf("NOT NULL")
-    )));
-    expected.addGroupby(new AliasReference("vc2"));
-    expected.setAliasName("t2");
-    assertEquals(expected, ((PostProcessor) queryExecutionPlan.root).queries.get(0));
-  }
+        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
+    queryExecutionPlan.cleanUp();
 
+    assertEquals(1, queryExecutionPlan.root.dependents.get(0).dependents.size());
+    assertEquals(1, queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.size());
+    assertEquals(2, queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.get(0).dependents.size());
+    assertEquals(0, queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.get(0).dependents.get(0).dependents.size());
+    assertEquals(1, queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.get(0).dependents.get(1).dependents.size());
+
+    assertEquals(new BaseTable("verdictdb_temp", "verdictdbtemptable_1", "c"),
+        ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).query.getFromList().get(0));
+    assertEquals(new BaseTable("verdictdb_temp", "verdictdbtemptable_2", "b"),
+        ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0)).query.getFromList().get(0));
+    JoinTable join = JoinTable.getJoinTable(Arrays.<AbstractRelation>asList(
+        new BaseTable("verdictdb_temp", "verdictdbtemptable_3", "t2"),
+        new BaseTable("verdictdb_temp", "verdictdbtemptable_4", "l3")),
+        Arrays.<JoinTable.JoinType>asList(JoinTable.JoinType.rightouter),
+        Arrays.<UnnamedColumn>asList(
+            new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
+                new BaseColumn("l3", "vc17"),
+                new BaseColumn("t2", "vc17")
+            ))
+        ));
+    assertEquals(join,
+        ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.get(0)).query.getFromList().get(0));
+
+  }
 
   @Test
   public void Query22Test() throws VerdictDbException, SQLException {
@@ -1986,26 +2041,44 @@ public class TpchExecutionPlanTest {
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
     RelationStandardizer gen = new RelationStandardizer(staticMetaData);
-    relation = gen.standardize((SelectQueryOp) relation);
+    relation = gen.standardize((SelectQuery) relation);
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(new JdbcConnection(conn, new H2Syntax()),
-        new H2Syntax(), meta, (SelectQueryOp) relation);
-    queryExecutionPlan.cleanUp(new JdbcConnection(conn, new H2Syntax()), new H2Syntax());
-    assertEquals(1, queryExecutionPlan.root.children.size());
+        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
+    queryExecutionPlan.cleanUp();
 
-    SelectQueryOp expected = SelectQueryOp.getSelectQueryOp(
-        Arrays.<SelectItem>asList(
-            new AliasedColumn(new ColumnOp("avg", new BaseColumn("vt1", "vc3")), "avg_acctbal")
-        ), new ArrayList<AbstractRelation>()
-    );
-    assertEquals(expected.getSelectList(), ((AsyncAggExecutionNode)queryExecutionPlan.root.children.get(0)).originalQuery.getSelectList());
+    assertEquals(1, queryExecutionPlan.root.dependents.get(0).dependents.size());
+    assertEquals(2, queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.size());
+    assertEquals(1, queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.get(0).dependents.size());
+    assertEquals(2, queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.get(1).dependents.size());
 
-    SelectQueryOp rewritten = SelectQueryOp.getSelectQueryOp(
-        Arrays.<SelectItem>asList(
-            new AliasedColumn(new BaseColumn("verdictdb_temp", "tmptable1", "avg_acctbal"), "avg_acctbal")
-        ), new BaseTable("verdictdb_temp", "tmptable1")
-    );
-    rewritten.setAliasName("ct1");
-    assertEquals(rewritten,((JoinTable)(((SelectQueryOp) ((AsyncAggExecutionNode)queryExecutionPlan.root).originalQuery.getFromList().get(0)).getFromList().get(0))).getJoinList().get(0));
+    assertEquals(new BaseTable("verdictdb_temp", "verdictdbtemptable_1", "a"),
+        ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).query.getFromList().get(0));
+    JoinTable join = JoinTable.getJoinTable(Arrays.<AbstractRelation>asList(
+        new BaseTable("verdictdb_temp", "verdictdbtemptable_2", "ct1"),
+        new BaseTable("verdictdb_temp", "verdictdbtemptable_4", "ct2")),
+        Arrays.<JoinTable.JoinType>asList(JoinTable.JoinType.inner),
+        Arrays.<UnnamedColumn>asList(
+            new ColumnOp("is", Arrays.<UnnamedColumn>asList(
+                new BaseColumn("ct2", "o_custkey"),
+                ConstantColumn.valueOf("NULL")
+            ))
+        ));
+    assertEquals(join, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0)).query.getFromList().get(0));
+    assertEquals(new BaseTable("verdictdb_temp", "verdictdbtemptable_3", "vt1"),
+        ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.get(0)).query.getFromList().get(0));
+    JoinTable join1 = JoinTable.getJoinTable(Arrays.<AbstractRelation>asList(
+        new BaseTable("verdictdb_temp", "verdictdbtemptable_5", "ot"),
+        new BaseTable("verdictdb_temp", "verdictdbtemptable_6", "ct")),
+        Arrays.<JoinTable.JoinType>asList(JoinTable.JoinType.rightouter),
+        Arrays.<UnnamedColumn>asList(
+            new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
+                new BaseColumn("ct", "vc9"),
+                new BaseColumn("ot", "vc6")
+            ))
+        ));
+    assertEquals(join1,
+        ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.get(1)).query.getFromList().get(0));
+
   }
 
   @Test
@@ -2015,20 +2088,21 @@ public class TpchExecutionPlanTest {
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
     RelationStandardizer gen = new RelationStandardizer(staticMetaData);
-    relation = gen.standardize((SelectQueryOp) relation);
+    relation = gen.standardize((SelectQuery) relation);
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(new JdbcConnection(conn, new H2Syntax()),
-        new H2Syntax(), meta, (SelectQueryOp) relation);
-    queryExecutionPlan.cleanUp(new JdbcConnection(conn, new H2Syntax()), new H2Syntax());
-    SelectQueryOp rewritten = SelectQueryOp.getSelectQueryOp(
-        Arrays.<SelectItem>asList(new AliasedColumn(new BaseColumn("verdictdb_temp", "tmptable1", "quantity_avg"), "quantity_avg")),
-    new BaseTable("verdictdb_temp", "tmptable1"));
-    assertEquals(rewritten, ((SubqueryColumn)((ColumnOp)((AsyncAggExecutionNode)(queryExecutionPlan.root)).originalQuery.getFilter().get()).getOperand(1)).getSubquery());
+        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
+    queryExecutionPlan.cleanUp();
+    SelectQuery rewritten = SelectQuery.getSelectQueryOp(
+        Arrays.<SelectItem>asList(new AliasedColumn(new BaseColumn("verdictdb_temp", "verdictdbtemptable_1", "quantity_avg"), "quantity_avg")),
+        new BaseTable("verdictdb_temp", "verdictdbtemptable_1"));
+    assertEquals(rewritten,
+        ((SubqueryColumn)((ColumnOp)((CreateTableAsSelectExecutionNode)(queryExecutionPlan.root.dependents.get(0))).query.getFilter().get()).getOperand(1)).getSubquery());
 
-    SelectQueryOp expected = SelectQueryOp.getSelectQueryOp(
+    SelectQuery expected = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(new AliasedColumn(new ColumnOp("avg", new BaseColumn("vt3", "l_quantity")), "quantity_avg")),
         new BaseTable("tpch", "lineitem", "vt3")
     );
-    assertEquals(expected, ((AsyncAggExecutionNode)queryExecutionPlan.root.children.get(0)).originalQuery);
+    assertEquals(expected, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0)).query);
   }
 }
 

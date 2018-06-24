@@ -47,11 +47,17 @@ public class QueryExecutionPlan {
   static final int serialNum = ThreadLocalRandom.current().nextInt(0, 1000000);
   
   static int identifierNum = 0;
+
+  static int tempTableNameNum = 0;
   
   public static String generateUniqueIdentifier() {
     return String.format("verdictdbtemptable_%d_%d", serialNum, identifierNum++);
   }
-  
+
+  public static String generateTempTableName() {
+    return String.format("verdictdbtemptable_%d", tempTableNameNum++);
+  }
+
   /**
    * 
    * @param query  A well-formed select query object
@@ -69,8 +75,8 @@ public class QueryExecutionPlan {
       throw new UnexpectedTypeException(query);
     }
     this.query = query;
-    this.root = makePlan(conn, syntax, query);
     this.scratchpadSchemaName = scratchpadSchemaName;
+    this.root = makePlan(conn, syntax, query);
   }
   
   public String getScratchpadSchemaName() {
@@ -94,57 +100,10 @@ public class QueryExecutionPlan {
    * @throws ValueException 
    * @throws UnexpectedTypeException 
    */
-  // check whether query contains scramble table in its from list
-  Boolean checkScrambleTable(List<AbstractRelation> fromlist) {
-    for (AbstractRelation table:fromlist) {
-      if (table instanceof BaseTable) {
-        if (scrambleMeta.isScrambled(((BaseTable) table).getSchemaName(), ((BaseTable) table).getTableName())) {
-          return true;
-        }
-      }
-      else if (table instanceof JoinTable) {
-        if (checkScrambleTable(((JoinTable) table).getJoinList())) {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
 
-  // TODO
-  QueryExecutionNode makePlan(DbmsConnection conn, SyntaxAbstract syntax, SelectQuery query) 
+  QueryExecutionNode makePlan(DbmsConnection conn, SyntaxAbstract syntax, SelectQuery query)
       throws VerdictDbException {
-    // check whether outer query has scramble table stored in scrambleMeta
-    boolean scrambleTableinOuterQuery = checkScrambleTable(query.getFromList());
-
-    // identify aggregate subqueries and create separate nodes for them
-    List<AbstractRelation> subqueryToReplace = new ArrayList<>();
-    List<SelectQuery> rootToReplace = new ArrayList<>();
-    for (AbstractRelation table:query.getFromList()) {
-      if (table instanceof SelectQuery) {
-        if (table.isAggregateQuery()) {
-          subqueryToReplace.add(table);
-        }
-        else if (!scrambleTableinOuterQuery && checkScrambleTable(((SelectQuery) table).getFromList())) { // use inner query as root
-          rootToReplace.add((SelectQuery) table);
-        }
-      }
-      else if (table instanceof JoinTable) {
-        for (AbstractRelation jointTable:((JoinTable) table).getJoinList()) {
-          if (jointTable instanceof SelectQuery) {
-            if (jointTable.isAggregateQuery()) {
-              subqueryToReplace.add(jointTable);
-            }
-            else if (!scrambleTableinOuterQuery && checkScrambleTable(((SelectQuery) jointTable).getFromList())) { // use inner query as root
-              rootToReplace.add((SelectQuery) jointTable);
-            }
-          }
-        }
-      }
-    }
-    // generate temp table names for those aggregate subqueries and use them in their ancestors.
-    
-    return new AsyncAggExecutionNode(conn, scrambleMeta, scratchpadSchemaName, generateUniqueIdentifier(), query);
+    return new SelectAllExecutionNode(conn, syntax, query, this.scratchpadSchemaName);
   }
   
   QueryExecutionNode makeAsyncronousAggIfAvailable(QueryExecutionNode root) throws VerdictDbException {
@@ -188,7 +147,7 @@ public class QueryExecutionPlan {
   
   // clean up any intermediate materialized tables
   void cleanUp() {
-    
+    tempTableNameNum = 0;
   }
 
 }

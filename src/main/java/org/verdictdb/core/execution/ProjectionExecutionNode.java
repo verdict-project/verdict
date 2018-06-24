@@ -4,13 +4,18 @@ import java.util.List;
 
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.core.query.SelectQuery;
+import org.verdictdb.exception.VerdictDbException;
 
-public class ProjectionExecutionNode extends QueryExecutionNode {
+public class ProjectionExecutionNode extends CreateTableAsSelectExecutionNode {
 
-  public ProjectionExecutionNode(
-      DbmsConnection conn,
-      SelectQuery query) {
-    super(conn, query);
+
+  public ProjectionExecutionNode(DbmsConnection conn, String schemaName, String tableName, SelectQuery query) {
+    super(conn, schemaName, tableName, query);
+    try {
+      generateDependency();
+    } catch (VerdictDbException e){
+      e.printStackTrace();
+    }
   }
 
   @Override
