@@ -35,6 +35,15 @@ public class SelectAllExecutionNode extends QueryExecutionNode {
         tempTableName + syntax.getQuoteString());
   }
 
+  public List<String> getTempTableNames() {
+    return tempTableNames;
+  }
+
+  public void addQuery(SelectQuery query) {
+    this.query = query;
+    generateDependency();
+  }
+
   @Override
   public ExecutionResult executeNode(List<ExecutionResult> downstreamResults) {
     // TODO: how to write this?
