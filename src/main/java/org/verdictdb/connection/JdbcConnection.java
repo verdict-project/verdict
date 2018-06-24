@@ -130,6 +130,7 @@ public class JdbcConnection implements DbmsConnection {
         partition.add(jdbcQueryResult.getString(1));
       }
     }
+    jdbcQueryResult.close();
     return partition;
   }
 

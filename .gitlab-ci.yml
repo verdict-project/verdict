@@ -5,7 +5,7 @@ stages:
 
 services:
   - mysql:5.5
-  - postgres:9.3
+  - postgres:9.6
 
 variables:
   BUILD_ENV: "GitLab"
