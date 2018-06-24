@@ -2,6 +2,8 @@ package org.verdictdb.core.execution;
 
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.DbmsQueryResult;
+import org.verdictdb.core.aggresult.AggregateFrame;
+import org.verdictdb.core.aggresult.AggregateFrameQueryResult;
 import org.verdictdb.core.query.AbstractRelation;
 import org.verdictdb.core.query.CreateTableAsSelectQuery;
 import org.verdictdb.core.query.SelectQuery;
@@ -46,14 +48,14 @@ public class SelectAllExecutionNode extends QueryExecutionNode {
 
   @Override
   public ExecutionResult executeNode(List<ExecutionResult> downstreamResults) {
-    // TODO: how to write this?
     // write the result
     ExecutionResult result = new ExecutionResult();
     for (String t:tempTableNames){
       String sql = "select * from " + t;
       DbmsQueryResult queryResult = conn.executeQuery(sql);
     }
-    return result;
+
+    return new ExecutionResult();
   }
 
   private void generateDependency() {
