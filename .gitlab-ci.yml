@@ -9,7 +9,7 @@ services:
 
 variables:
   MYSQL_DATABASE: test
-  MYSQL_ROOT_PASSWORD: ""
+  MYSQL_ALLOW_EMPTY_PASSWORD: yes
   POSTGRES_DB: test
   POSTGRES_USER: postgres
   POSTGRES_PASSWORD: ""
