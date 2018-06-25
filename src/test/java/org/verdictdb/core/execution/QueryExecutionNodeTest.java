@@ -94,7 +94,7 @@ public class QueryExecutionNodeTest {
     List<AggExecutionNodeBlock> topAggNodes = new ArrayList<>();
     root.identifyTopAggBlocks(topAggNodes);
     
-    assertEquals(dep, topAggNodes.get(0));
+    assertEquals(dep, topAggNodes.get(0).getRoot());
   }
 
 }
