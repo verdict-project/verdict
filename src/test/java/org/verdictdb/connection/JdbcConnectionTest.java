@@ -9,6 +9,7 @@ import java.util.List;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.sql.syntax.HiveSyntax;
 
 public class JdbcConnectionTest {
@@ -24,7 +25,7 @@ static Connection conn;
   }
 
   @Test
-  public void testJdbcConnection() throws SQLException {
+  public void testJdbcConnection() throws VerdictDBDbmsException {
     List<List<Object>> contents = new ArrayList<>();
     contents.add(Arrays.<Object>asList(1, "Anju"));
     contents.add(Arrays.<Object>asList(2, "Sonia"));

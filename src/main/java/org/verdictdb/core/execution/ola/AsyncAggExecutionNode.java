@@ -77,7 +77,7 @@ public class AsyncAggExecutionNode extends QueryExecutionNode {
   }
 
   @Override
-  public ExecutionResult executeNode(List<ExecutionResult> downstreamResults) {
+  public ExecutionResult executeNode(DbmsConnection conn, List<ExecutionResult> downstreamResults) {
     return null;
   }
 

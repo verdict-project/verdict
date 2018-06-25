@@ -2,10 +2,8 @@ package org.verdictdb.core.execution;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 
 import org.verdictdb.connection.DbmsConnection;
@@ -20,7 +18,7 @@ import com.google.common.base.Optional;
 
 public abstract class QueryExecutionNode {
 
-  DbmsConnection conn;
+//  DbmsConnection conn;
   
   SqlConvertable query;
 
@@ -60,7 +58,7 @@ public abstract class QueryExecutionNode {
     return query;
   }
   
-  public void setQuery(SelectQuery query) {
+  public void setQuery(SqlConvertable query) {
     this.query = query;
   }
   
@@ -76,10 +74,10 @@ public abstract class QueryExecutionNode {
    * For multi-threading, the parent of this node is responsible for running this method as a separate thread.
    * @param resultQueue
    */
-  public void execute() {
+  public void execute(final DbmsConnection conn) {
     // Start the execution of all children
     for (QueryExecutionNode child : dependents) {
-      child.execute();
+      child.execute(conn);
     }
 
     // Execute this node if there are some results available
@@ -95,7 +93,7 @@ public abstract class QueryExecutionNode {
         executor.submit(new Runnable() {
           @Override
           public void run() {
-            ExecutionResult rs = executeNode(latestResults);
+            ExecutionResult rs = executeNode(conn, latestResults);
             broadcast(rs);
             //            resultQueue.add(rs);
           }
@@ -122,7 +120,7 @@ public abstract class QueryExecutionNode {
    * @param downstreamResults
    * @return
    */
-  public abstract ExecutionResult executeNode(List<ExecutionResult> downstreamResults);
+  public abstract ExecutionResult executeNode(DbmsConnection conn, List<ExecutionResult> downstreamResults);
   
   void addParent(QueryExecutionNode parent) {
     parents.add(parent);

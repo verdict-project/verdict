@@ -1,19 +1,11 @@
 package org.verdictdb.core.execution;
 
-import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.connection.DbmsConnection;
-import org.verdictdb.core.query.*;
-import org.verdictdb.core.rewriter.ScrambleMeta;
-import org.verdictdb.exception.VerdictDbException;
+import org.verdictdb.core.query.SelectQuery;
 
-public class AggExecutionNode extends QueryExecutionNodeWithDependencies {
-  
-  String resultSchemaName;
-  
-  String resultTableName;
+public class AggExecutionNode extends CreateTableAsSelectExecutionNode {
 
   protected AggExecutionNode(String scratchpadSchemaName) {
     super(scratchpadSchemaName);
@@ -21,7 +13,9 @@ public class AggExecutionNode extends QueryExecutionNodeWithDependencies {
   
   public static AggExecutionNode create(SelectQuery query, String scratchpadSchemaName) {
     AggExecutionNode node = new AggExecutionNode(scratchpadSchemaName);
-    convertSubqueriesIntoDependentNodes(query, node);
+    SubqueriesToDependentNodes.convertSubqueriesIntoDependentNodes(query, node);
+    node.setQuery(query);
+    
     return node;
   }
   
@@ -49,9 +43,8 @@ public class AggExecutionNode extends QueryExecutionNodeWithDependencies {
 //  }
 
   @Override
-  public ExecutionResult executeNode(List<ExecutionResult> downstreamResults) {
-    // TODO Auto-generated method stub
-    return super.executeNode(downstreamResults);
+  public ExecutionResult executeNode(DbmsConnection conn, List<ExecutionResult> downstreamResults) {
+    return super.executeNode(conn, downstreamResults);
   }
 
 //  void generateDependency() throws VerdictDbException {

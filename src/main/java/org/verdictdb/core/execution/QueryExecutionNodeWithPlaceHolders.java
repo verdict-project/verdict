@@ -3,10 +3,11 @@ package org.verdictdb.core.execution;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.core.query.BaseTable;
 import org.verdictdb.core.query.SelectQuery;
 
-public class QueryExecutionNodeWithPlaceHolders extends QueryExecutionNode {
+public abstract class QueryExecutionNodeWithPlaceHolders extends QueryExecutionNode {
   
   List<BaseTable> placeholderTables = new ArrayList<>();
   
@@ -25,7 +26,7 @@ public class QueryExecutionNodeWithPlaceHolders extends QueryExecutionNode {
   }
 
   @Override
-  public ExecutionResult executeNode(List<ExecutionResult> downstreamResults) {
+  public ExecutionResult executeNode(DbmsConnection conn, List<ExecutionResult> downstreamResults) {
     for (int i = 0; i < placeholderTables.size(); i++) {
       BaseTable t = placeholderTables.get(i);
       ExecutionResult r = downstreamResults.get(i);

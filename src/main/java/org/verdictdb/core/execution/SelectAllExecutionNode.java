@@ -1,19 +1,13 @@
 package org.verdictdb.core.execution;
 
-import org.apache.commons.lang3.tuple.Pair;
+import java.util.List;
+
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.core.query.AsteriskColumn;
 import org.verdictdb.core.query.SelectQuery;
 import org.verdictdb.core.sql.QueryToSql;
-import org.verdictdb.core.sql.SelectQueryToSql;
 import org.verdictdb.exception.VerdictDbException;
-import org.verdictdb.sql.syntax.SyntaxAbstract;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.BlockingDeque;
-import java.util.concurrent.LinkedBlockingDeque;
 
 /**
  * 
@@ -57,8 +51,8 @@ public class SelectAllExecutionNode extends QueryExecutionNodeWithPlaceHolders {
   }
 
   @Override
-  public ExecutionResult executeNode(List<ExecutionResult> downstreamResults) {
-    super.executeNode(downstreamResults);
+  public ExecutionResult executeNode(DbmsConnection conn, List<ExecutionResult> downstreamResults) {
+    super.executeNode(conn, downstreamResults);
     try {
       String sql = QueryToSql.convert(conn.getSyntax(), query);
       DbmsQueryResult queryResult = conn.executeQuery(sql);

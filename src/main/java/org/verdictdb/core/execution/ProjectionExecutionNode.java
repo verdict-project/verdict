@@ -1,13 +1,11 @@
 package org.verdictdb.core.execution;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.verdictdb.connection.DbmsConnection;
-import org.verdictdb.core.query.*;
-import org.verdictdb.exception.VerdictDbException;
+import org.verdictdb.core.query.SelectQuery;
 
-public class ProjectionExecutionNode extends QueryExecutionNodeWithDependencies {
+public class ProjectionExecutionNode extends CreateTableAsSelectExecutionNode {
 
   protected ProjectionExecutionNode(String scratchpadSchemaName) {
     super(scratchpadSchemaName);
@@ -15,7 +13,7 @@ public class ProjectionExecutionNode extends QueryExecutionNodeWithDependencies 
   
   public static ProjectionExecutionNode create(SelectQuery query, String scratchpadSchemaName) {
     ProjectionExecutionNode node = new ProjectionExecutionNode(scratchpadSchemaName);
-    convertSubqueriesIntoDependentNodes(query, node);
+    SubqueriesToDependentNodes.convertSubqueriesIntoDependentNodes(query, node);
     return node;
   }
   
@@ -24,8 +22,8 @@ public class ProjectionExecutionNode extends QueryExecutionNodeWithDependencies 
   }
 
   @Override
-  public ExecutionResult executeNode(List<ExecutionResult> downstreamResults) {
-    return super.executeNode(downstreamResults);
+  public ExecutionResult executeNode(DbmsConnection conn, List<ExecutionResult> downstreamResults) {
+    return super.executeNode(conn, downstreamResults);
   }
 
 //  void generateDependency() throws VerdictDbException {

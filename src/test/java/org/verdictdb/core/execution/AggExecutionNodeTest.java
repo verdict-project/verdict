@@ -5,6 +5,7 @@ import org.junit.Test;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.core.query.*;
+import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.exception.VerdictDbException;
 import org.verdictdb.sql.syntax.H2Syntax;
 
@@ -38,7 +39,7 @@ public class AggExecutionNodeTest {
     populateData(conn, originalSchema, originalTable);
   }
 
-  static void populateData(DbmsConnection conn, String schemaName, String tableName) throws SQLException {
+  static void populateData(DbmsConnection conn, String schemaName, String tableName) throws VerdictDBDbmsException {
     conn.executeUpdate(String.format("CREATE TABLE \"%s\".\"%s\"(\"id\" int, \"value\" double)", schemaName, tableName));
     for (int i = 0; i < 2; i++) {
       conn.executeUpdate(String.format("INSERT INTO \"%s\".\"%s\"(\"id\", \"value\") VALUES(%s, %f)",
@@ -83,10 +84,13 @@ public class AggExecutionNodeTest {
     )));
 //    AggExecutionNode node = new AggExecutionNode(conn, newSchema, newTable, query);
     AggExecutionNode node = AggExecutionNode.create(query, "newschema");
-    QueryExecutionPlan.resetTempTableNameNum();
-    node.execute();
-    conn.executeUpdate(String.format("DROP TABLE \"%s\".\"%s\"", newSchema, newTable));
-    conn.executeUpdate(String.format("DROP TABLE \"%s\".\"%s\"", newSchema, "verdictdbtemptable_0"));
+//    QueryExecutionPlan.resetTempTableNameNum();
+    ExecutionResult newTableToken = node.executeNode(conn, null);
+//    conn.executeUpdate(String.format("DROP TABLE \"%s\".\"%s\"", newSchema, newTable));
+    
+    String newSchemaName = (String) newTableToken.getValue("schemaName");
+    String newTableName = (String) newTableToken.getValue("tableName");
+    conn.executeUpdate(String.format("DROP TABLE \"%s\".\"%s\"", newSchemaName, newTableName));
   }
   
 }

@@ -4,8 +4,8 @@ import java.util.List;
 
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.core.query.DropTableQuery;
-import org.verdictdb.core.sql.DropTableToSql;
 import org.verdictdb.core.sql.QueryToSql;
+import org.verdictdb.exception.ValueException;
 import org.verdictdb.exception.VerdictDbException;
 
 public class DropTableExecutionNode extends QueryExecutionNode {
@@ -20,7 +20,15 @@ public class DropTableExecutionNode extends QueryExecutionNode {
   }
 
   @Override
-  public ExecutionResult executeNode(List<ExecutionResult> downstreamResults) {
+  public ExecutionResult executeNode(DbmsConnection conn, List<ExecutionResult> downstreamResults) {
+    try {
+      if (downstreamResults.size() == 0) {
+        throw new ValueException("No table to drop!");
+      }
+    } catch (VerdictDbException e) {
+      e.printStackTrace();
+    }
+    
     ExecutionResult result = downstreamResults.get(0);
     String schemaName = (String) result.getValue("schemaName");
     String tableName = (String) result.getValue("tableName");
