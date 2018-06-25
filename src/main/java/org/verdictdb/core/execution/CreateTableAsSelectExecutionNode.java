@@ -3,8 +3,7 @@ package org.verdictdb.core.execution;
 import java.util.List;
 
 import org.verdictdb.connection.DbmsConnection;
-import org.verdictdb.core.query.CreateTableAsSelectQuery;
-import org.verdictdb.core.query.SelectQuery;
+import org.verdictdb.core.query.*;
 import org.verdictdb.core.sql.CreateTableToSql;
 import org.verdictdb.exception.VerdictDbException;
 

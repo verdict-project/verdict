@@ -13,6 +13,7 @@ import org.junit.Test;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.core.aggresult.AggregateFrame;
+import org.verdictdb.core.execution.ola.AsyncAggExecutionNode;
 import org.verdictdb.core.query.AliasedColumn;
 import org.verdictdb.core.query.BaseColumn;
 import org.verdictdb.core.query.BaseTable;
@@ -103,7 +104,7 @@ public class ExecutionNodeTest {
             new AliasedColumn(new ColumnOp("sum", new BaseColumn("t", "age")), aliasName)),
         base);
     DbmsConnection dbmsConn = new JdbcConnection(conn, new H2Syntax());
-    AsyncAggExecutionNode node = new AsyncAggExecutionNode(dbmsConn, meta, "default", "aggtable", relation);
+//    AsyncAggExecutionNode node = new AsyncAggExecutionNode(dbmsConn, meta, "default", "aggtable", relation);
 //    AsyncHandler handler = new AsyncHandler() {
 //
 //      @Override

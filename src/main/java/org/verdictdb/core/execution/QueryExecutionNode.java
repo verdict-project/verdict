@@ -9,6 +9,7 @@ import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 
 import org.verdictdb.connection.DbmsConnection;
+import org.verdictdb.core.execution.ola.AggExecutionNodeBlock;
 import org.verdictdb.core.query.AbstractRelation;
 import org.verdictdb.core.query.BaseTable;
 import org.verdictdb.core.query.SelectQuery;
@@ -107,6 +108,11 @@ public abstract class QueryExecutionNode {
     setComplete();
   }
 
+  /**
+   * This function must not make a call to the conn field.
+   * @param downstreamResults
+   * @return
+   */
   public abstract ExecutionResult executeNode(List<ExecutionResult> downstreamResults);
   
   void addParent(QueryExecutionNode parent) {
@@ -130,6 +136,10 @@ public abstract class QueryExecutionNode {
   // setup method
   public void addBroadcastingQueue(BlockingDeque<ExecutionResult> queue) {
     broadcastQueues.add(queue);
+  }
+  
+  public List<BlockingDeque<ExecutionResult>> getBroadcastQueues() {
+    return broadcastQueues;
   }
 
   public boolean isComplete() {
@@ -187,13 +197,13 @@ public abstract class QueryExecutionNode {
   
 
   // identify nodes that are (1) aggregates and (2) are not descendants of any other aggregates.
-  void identifyTopAggNodes(List<QueryExecutionNode> topAggNodes) {
+  void identifyTopAggBlocks(List<AggExecutionNodeBlock> topAggNodes) {
     if (this instanceof AggExecutionNode) {
-      topAggNodes.add(this);
+      topAggNodes.add(new AggExecutionNodeBlock(conn, this));
       return;
     }
     for (QueryExecutionNode dep : getDependents()) {
-      dep.identifyTopAggNodes(topAggNodes);
+      dep.identifyTopAggBlocks(topAggNodes);
     }
   }
   

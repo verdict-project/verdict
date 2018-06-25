@@ -106,6 +106,8 @@ public class SelectQuery extends AbstractRelation {
     orderby.add(column);
   }
 
+  public void setFromList(List<AbstractRelation> fromList) { this.fromList = fromList; }
+
   public void clearFilters() {
     this.filter = Optional.absent();
   }

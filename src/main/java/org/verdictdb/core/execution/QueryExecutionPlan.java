@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
 import org.verdictdb.connection.DbmsConnection;
+import org.verdictdb.core.execution.ola.AggExecutionNodeBlock;
 import org.verdictdb.core.query.AbstractRelation;
 import org.verdictdb.core.query.BaseTable;
 import org.verdictdb.core.query.JoinTable;
@@ -47,11 +48,17 @@ public class QueryExecutionPlan {
   static final int serialNum = ThreadLocalRandom.current().nextInt(0, 1000000);
   
   static int identifierNum = 0;
+
+  static int tempTableNameNum = 0;
   
   public static String generateUniqueIdentifier() {
     return String.format("verdictdbtemptable_%d_%d", serialNum, identifierNum++);
   }
-  
+
+  public static String generateTempTableName() {
+    return String.format("verdictdbtemptable_%d", tempTableNameNum++);
+  }
+
   /**
    * 
    * @param query  A well-formed select query object
@@ -69,8 +76,8 @@ public class QueryExecutionPlan {
       throw new UnexpectedTypeException(query);
     }
     this.query = query;
-    this.root = makePlan(conn, syntax, query);
     this.scratchpadSchemaName = scratchpadSchemaName;
+    this.root = makePlan(conn, syntax, query);
   }
   
   public String getScratchpadSchemaName() {
@@ -94,88 +101,48 @@ public class QueryExecutionPlan {
    * @throws ValueException 
    * @throws UnexpectedTypeException 
    */
-  // check whether query contains scramble table in its from list
-  Boolean checkScrambleTable(List<AbstractRelation> fromlist) {
-    for (AbstractRelation table:fromlist) {
-      if (table instanceof BaseTable) {
-        if (scrambleMeta.isScrambled(((BaseTable) table).getSchemaName(), ((BaseTable) table).getTableName())) {
-          return true;
-        }
-      }
-      else if (table instanceof JoinTable) {
-        if (checkScrambleTable(((JoinTable) table).getJoinList())) {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
 
-  // TODO
-  QueryExecutionNode makePlan(DbmsConnection conn, SyntaxAbstract syntax, SelectQuery query) 
+  QueryExecutionNode makePlan(DbmsConnection conn, SyntaxAbstract syntax, SelectQuery query)
       throws VerdictDbException {
-    // check whether outer query has scramble table stored in scrambleMeta
-    boolean scrambleTableinOuterQuery = checkScrambleTable(query.getFromList());
-
-    // identify aggregate subqueries and create separate nodes for them
-    List<AbstractRelation> subqueryToReplace = new ArrayList<>();
-    List<SelectQuery> rootToReplace = new ArrayList<>();
-    for (AbstractRelation table:query.getFromList()) {
-      if (table instanceof SelectQuery) {
-        if (table.isAggregateQuery()) {
-          subqueryToReplace.add(table);
-        }
-        else if (!scrambleTableinOuterQuery && checkScrambleTable(((SelectQuery) table).getFromList())) { // use inner query as root
-          rootToReplace.add((SelectQuery) table);
-        }
-      }
-      else if (table instanceof JoinTable) {
-        for (AbstractRelation jointTable:((JoinTable) table).getJoinList()) {
-          if (jointTable instanceof SelectQuery) {
-            if (jointTable.isAggregateQuery()) {
-              subqueryToReplace.add(jointTable);
-            }
-            else if (!scrambleTableinOuterQuery && checkScrambleTable(((SelectQuery) jointTable).getFromList())) { // use inner query as root
-              rootToReplace.add((SelectQuery) jointTable);
-            }
-          }
-        }
-      }
-    }
-    // generate temp table names for those aggregate subqueries and use them in their ancestors.
-    
-    return new AsyncAggExecutionNode(conn, scrambleMeta, scratchpadSchemaName, generateUniqueIdentifier(), query);
+    return new SelectAllExecutionNode(conn, syntax, query, this.scratchpadSchemaName);
   }
-  
+
+  /**
+   *
+   * @param root The root execution node of ALL nodes (i.e., not just the top agg node)
+   * @return
+   * @throws VerdictDbException
+   */
   QueryExecutionNode makeAsyncronousAggIfAvailable(QueryExecutionNode root) throws VerdictDbException {
-    List<QueryExecutionNode> topAggNodes = new ArrayList<>();
-    root.identifyTopAggNodes(topAggNodes);
-    
-    List<QueryExecutionNode> newNodes = new ArrayList<>();
-    for (QueryExecutionNode node : topAggNodes) {
-      QueryExecutionNode newNode = null;
-      if (((AggExecutionNode) node).doesContainScrambledTablesInDescendants(scrambleMeta)) {
-        newNode = ((AggExecutionNode) node).toAsyncAgg(scrambleMeta);
-      } else {
-        newNode = node;
-      }
-      newNodes.add(newNode);
-    }
-    
+    List<AggExecutionNodeBlock> topAggNodeBlocks = new ArrayList<>();
+    root.identifyTopAggBlocks(topAggNodeBlocks);
+
+//    List<QueryExecutionNode> newNodes = new ArrayList<>();
+//    for (QueryExecutionNode node : topAggNodes) {
+//      QueryExecutionNode newNode = null;
+//      if (((AggExecutionNode) node).doesContainScrambledTablesInDescendants(scrambleMeta)) {
+//        newNode = ((AggExecutionNode) node).toAsyncAgg(scrambleMeta);
+//      } else {
+//        newNode = node;
+//      }
+//      newNodes.add(newNode);
+//    }
+
     // converted nodes should be used in place of the original nodes.
-    for (int i = 0; i < topAggNodes.size(); i++) {
-      QueryExecutionNode node = topAggNodes.get(i);
-      QueryExecutionNode newNode = newNodes.get(i);
-      
-      List<QueryExecutionNode> parents = node.getParents();
+    for (int i = 0; i < topAggNodeBlocks.size(); i++) {
+      AggExecutionNodeBlock nodeBlock = topAggNodeBlocks.get(i);
+      QueryExecutionNode oldNode = nodeBlock.getRoot();
+      QueryExecutionNode newNode = nodeBlock.constructProgressiveAggNodes(scrambleMeta);
+
+      List<QueryExecutionNode> parents = oldNode.getParents();
       for (QueryExecutionNode parent : parents) {
         List<QueryExecutionNode> parentDependants = parent.getDependents();
-        int idx = parentDependants.indexOf(node);
+        int idx = parentDependants.indexOf(oldNode);
         parentDependants.remove(idx);
         parentDependants.add(idx, newNode);
       }
     }
-    
+
     return root;
   }
   
@@ -188,7 +155,8 @@ public class QueryExecutionPlan {
   
   // clean up any intermediate materialized tables
   void cleanUp() {
-    
+    tempTableNameNum = 0;
   }
+  static void resetTempTableNameNum() {tempTableNameNum = 0;}
 
 }
