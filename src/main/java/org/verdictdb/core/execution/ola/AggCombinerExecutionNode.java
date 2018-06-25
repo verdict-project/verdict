@@ -3,14 +3,15 @@ package org.verdictdb.core.execution.ola;
 import java.util.List;
 
 import org.verdictdb.connection.DbmsConnection;
-import org.verdictdb.core.execution.ExecutionResult;
+import org.verdictdb.core.execution.CreateTableAsSelectExecutionNode;
+import org.verdictdb.core.execution.ExecutionInfoToken;
 import org.verdictdb.core.execution.QueryExecutionNode;
 import org.verdictdb.core.query.SelectQuery;
 
-public class AggCombinerExecutionNode extends QueryExecutionNode {
+public class AggCombinerExecutionNode extends CreateTableAsSelectExecutionNode {
 
-  private AggCombinerExecutionNode(SelectQuery query) {
-    super(query);
+  private AggCombinerExecutionNode(String scratchpadSchemaName) {
+    super(scratchpadSchemaName);
   }
   
   public static AggCombinerExecutionNode create(
@@ -21,8 +22,8 @@ public class AggCombinerExecutionNode extends QueryExecutionNode {
   }
 
   @Override
-  public ExecutionResult executeNode(DbmsConnection conn, List<ExecutionResult> downstreamResults) {
-    return ExecutionResult.empty();
+  public ExecutionInfoToken executeNode(DbmsConnection conn, List<ExecutionInfoToken> downstreamResults) {
+    return ExecutionInfoToken.empty();
   }
 
 }

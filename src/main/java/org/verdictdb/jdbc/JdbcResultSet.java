@@ -31,7 +31,7 @@ import java.util.Map;
 
 import org.verdictdb.connection.DataTypeConverter;
 import org.verdictdb.connection.DbmsQueryResult;
-import org.verdictdb.exception.UnexpectedTypeException;
+import org.verdictdb.exception.VerdictDBTypeException;
 
 public class JdbcResultSet implements ResultSet {
 
@@ -175,10 +175,10 @@ public class JdbcResultSet implements ResultSet {
         return (byte)lastValue;
       }
       else {
-        throw new UnexpectedTypeException(queryResult.getValue(columnIndex-1));
+        throw new VerdictDBTypeException(queryResult.getValue(columnIndex-1));
       }
     }
-    catch (UnexpectedTypeException e) {
+    catch (VerdictDBTypeException e) {
       throw new SQLException(e.getMessage());
     }
   }
@@ -191,10 +191,10 @@ public class JdbcResultSet implements ResultSet {
         return (short)lastValue;
       }
       else {
-        throw new UnexpectedTypeException(queryResult.getValue(columnIndex-1));
+        throw new VerdictDBTypeException(queryResult.getValue(columnIndex-1));
       }
     }
-    catch (UnexpectedTypeException e) {
+    catch (VerdictDBTypeException e) {
       throw new SQLException(e.getMessage());
     }
   }
@@ -207,10 +207,10 @@ public class JdbcResultSet implements ResultSet {
         return (int)lastValue;
       }
       else {
-        throw new UnexpectedTypeException(queryResult.getValue(columnIndex-1));
+        throw new VerdictDBTypeException(queryResult.getValue(columnIndex-1));
       }
     }
-    catch (UnexpectedTypeException e) {
+    catch (VerdictDBTypeException e) {
       throw new SQLException(e.getMessage());
     }
   }
@@ -223,10 +223,10 @@ public class JdbcResultSet implements ResultSet {
         return (long)lastValue;
       }
       else {
-        throw new UnexpectedTypeException(queryResult.getValue(columnIndex-1));
+        throw new VerdictDBTypeException(queryResult.getValue(columnIndex-1));
       }
     }
-    catch (UnexpectedTypeException e) {
+    catch (VerdictDBTypeException e) {
       throw new SQLException(e.getMessage());
     }
   }
@@ -239,10 +239,10 @@ public class JdbcResultSet implements ResultSet {
         return (float)lastValue;
       }
       else {
-        throw new UnexpectedTypeException(queryResult.getValue(columnIndex-1));
+        throw new VerdictDBTypeException(queryResult.getValue(columnIndex-1));
       }
     }
-    catch (UnexpectedTypeException e) {
+    catch (VerdictDBTypeException e) {
       throw new SQLException(e.getMessage());
     }
   }
@@ -255,10 +255,10 @@ public class JdbcResultSet implements ResultSet {
         return (double)lastValue;
       }
       else {
-        throw new UnexpectedTypeException(queryResult.getValue(columnIndex-1));
+        throw new VerdictDBTypeException(queryResult.getValue(columnIndex-1));
       }
     }
-    catch (UnexpectedTypeException e) {
+    catch (VerdictDBTypeException e) {
       throw new SQLException(e.getMessage());
     }
   }
@@ -271,10 +271,10 @@ public class JdbcResultSet implements ResultSet {
         return (BigDecimal) lastValue;
       }
       else {
-        throw new UnexpectedTypeException(queryResult.getValue(columnIndex-1));
+        throw new VerdictDBTypeException(queryResult.getValue(columnIndex-1));
       }
     }
-    catch (UnexpectedTypeException e) {
+    catch (VerdictDBTypeException e) {
       throw new SQLException(e.getMessage());
     }
   }
@@ -558,10 +558,10 @@ public class JdbcResultSet implements ResultSet {
         return (BigDecimal) lastValue;
       }
       else {
-        throw new UnexpectedTypeException(queryResult.getValue(columnIndex-1));
+        throw new VerdictDBTypeException(queryResult.getValue(columnIndex-1));
       }
     }
-   catch (UnexpectedTypeException e) {
+   catch (VerdictDBTypeException e) {
      throw new SQLException(e.getMessage());
    }
   }

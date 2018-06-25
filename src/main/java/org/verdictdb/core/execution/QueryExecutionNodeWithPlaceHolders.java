@@ -26,10 +26,10 @@ public abstract class QueryExecutionNodeWithPlaceHolders extends QueryExecutionN
   }
 
   @Override
-  public ExecutionResult executeNode(DbmsConnection conn, List<ExecutionResult> downstreamResults) {
+  public ExecutionInfoToken executeNode(DbmsConnection conn, List<ExecutionInfoToken> downstreamResults) {
     for (int i = 0; i < placeholderTables.size(); i++) {
       BaseTable t = placeholderTables.get(i);
-      ExecutionResult r = downstreamResults.get(i);
+      ExecutionInfoToken r = downstreamResults.get(i);
       String schemaName = (String) r.getValue("schemaName");
       String tableName = (String) r.getValue("tableName");
       t.setSchemaName(schemaName);

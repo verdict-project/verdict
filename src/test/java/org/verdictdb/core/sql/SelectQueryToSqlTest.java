@@ -15,13 +15,13 @@ import org.verdictdb.core.query.ColumnOp;
 import org.verdictdb.core.query.SelectItem;
 import org.verdictdb.core.query.SelectQuery;
 import org.verdictdb.core.query.UnnamedColumn;
-import org.verdictdb.exception.VerdictDbException;
+import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sql.syntax.HiveSyntax;
 
 public class SelectQueryToSqlTest {
 
   @Test
-  public void testSelectAllBaseTable() throws VerdictDbException {
+  public void testSelectAllBaseTable() throws VerdictDBException {
     BaseTable base = new BaseTable("myschema", "mytable", "t");
     SelectQuery relation = SelectQuery.create(
         Arrays.<SelectItem>asList(new AsteriskColumn()),
@@ -33,7 +33,7 @@ public class SelectQueryToSqlTest {
   }
 
   @Test
-  public void testSelectAllFilterBaseTable() throws VerdictDbException {
+  public void testSelectAllFilterBaseTable() throws VerdictDBException {
     BaseTable base = new BaseTable("myschema", "mytable", "t");
     SelectQuery relation = SelectQuery.create(
         Arrays.<SelectItem>asList(new AsteriskColumn()),
@@ -46,7 +46,7 @@ public class SelectQueryToSqlTest {
   }
 
   @Test
-  public void testSelectColumnsBaseTable() throws VerdictDbException {
+  public void testSelectColumnsBaseTable() throws VerdictDBException {
     BaseTable base = new BaseTable("myschema", "mytable", "t");
     SelectQuery relation = SelectQuery.create(
         Arrays.<SelectItem>asList(
@@ -60,7 +60,7 @@ public class SelectQueryToSqlTest {
   }
 
   @Test
-  public void testSelectAvgBaseTable() throws VerdictDbException {
+  public void testSelectAvgBaseTable() throws VerdictDBException {
     BaseTable base = new BaseTable("myschema", "mytable", "t");
     SelectQuery relation = SelectQuery.create(
         Arrays.<SelectItem>asList(
@@ -73,7 +73,7 @@ public class SelectQueryToSqlTest {
   }
 
   @Test
-  public void testSelectSumBaseTable() throws VerdictDbException {
+  public void testSelectSumBaseTable() throws VerdictDBException {
     BaseTable base = new BaseTable("myschema", "mytable", "t");
     SelectQuery relation = SelectQuery.create(
         Arrays.<SelectItem>asList(
@@ -86,7 +86,7 @@ public class SelectQueryToSqlTest {
   }
 
   @Test
-  public void testSelectCountBaseTable() throws VerdictDbException {
+  public void testSelectCountBaseTable() throws VerdictDBException {
     BaseTable base = new BaseTable("myschema", "mytable", "t");
     SelectQuery relation = SelectQuery.create(
         Arrays.<SelectItem>asList(
@@ -99,7 +99,7 @@ public class SelectQueryToSqlTest {
   }
 
   @Test
-  public void testSelectCountStarBaseTable() throws VerdictDbException {
+  public void testSelectCountStarBaseTable() throws VerdictDBException {
     BaseTable base = new BaseTable("myschema", "mytable", "t");
     SelectQuery relation = SelectQuery.create(
         Arrays.<SelectItem>asList(
@@ -112,7 +112,7 @@ public class SelectQueryToSqlTest {
   }
 
   @Test
-  public void testSelectAggregatesBaseTable() throws VerdictDbException {
+  public void testSelectAggregatesBaseTable() throws VerdictDBException {
     BaseTable base = new BaseTable("myschema", "mytable", "t");
     SelectQuery relation = SelectQuery.create(
         Arrays.<SelectItem>asList(
@@ -127,7 +127,7 @@ public class SelectQueryToSqlTest {
   }
 
   @Test
-  public void testSelectAddBaseTable() throws VerdictDbException {
+  public void testSelectAddBaseTable() throws VerdictDBException {
     BaseTable base = new BaseTable("myschema", "mytable", "t");
     List<UnnamedColumn> operands = Arrays.<UnnamedColumn>asList(
         new BaseColumn("t", "mycolumn1"),
@@ -142,7 +142,7 @@ public class SelectQueryToSqlTest {
   }
 
   @Test
-  public void testSelectSubtractBaseTable() throws VerdictDbException {
+  public void testSelectSubtractBaseTable() throws VerdictDBException {
     BaseTable base = new BaseTable("myschema", "mytable", "t");
     List<UnnamedColumn> operands = Arrays.<UnnamedColumn>asList(
         new BaseColumn("t", "mycolumn1"),
@@ -157,7 +157,7 @@ public class SelectQueryToSqlTest {
   }
 
   @Test
-  public void testSelectMultiplyBaseTable() throws VerdictDbException {
+  public void testSelectMultiplyBaseTable() throws VerdictDBException {
     BaseTable base = new BaseTable("myschema", "mytable", "t");
     List<UnnamedColumn> operands = Arrays.<UnnamedColumn>asList(
         new BaseColumn("t", "mycolumn1"),
@@ -172,7 +172,7 @@ public class SelectQueryToSqlTest {
   }
 
   @Test
-  public void testSelectDivideBaseTable() throws VerdictDbException {
+  public void testSelectDivideBaseTable() throws VerdictDBException {
     BaseTable base = new BaseTable("myschema", "mytable", "t");
     List<UnnamedColumn> operands = Arrays.<UnnamedColumn>asList(
         new BaseColumn("t", "mycolumn1"),
@@ -187,7 +187,7 @@ public class SelectQueryToSqlTest {
   }
 
   @Test
-  public void testSelectAvgGroupbyBaseTable() throws VerdictDbException {
+  public void testSelectAvgGroupbyBaseTable() throws VerdictDBException {
     BaseTable base = new BaseTable("myschema", "mytable", "t");
     SelectQuery relation = SelectQuery.create(
         Arrays.<SelectItem>asList(
@@ -202,7 +202,7 @@ public class SelectQueryToSqlTest {
   }
 
   @Test
-  public void testSelectNestedGroupby() throws VerdictDbException {
+  public void testSelectNestedGroupby() throws VerdictDBException {
     BaseTable base = new BaseTable("myschema", "mytable", "t");
     SelectQuery innerRelation = SelectQuery.create(
         Arrays.<SelectItem>asList(

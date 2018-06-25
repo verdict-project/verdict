@@ -3,15 +3,15 @@ package org.verdictdb.core.execution;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingDeque;
 
-public class ExecutionResultQueue {
+public class ExecutionTokenQueue {
   
-  BlockingDeque<ExecutionResult> internalQueue = new LinkedBlockingDeque<>();
+  BlockingDeque<ExecutionInfoToken> internalQueue = new LinkedBlockingDeque<>();
 
-  public void add(ExecutionResult e) {
+  public void add(ExecutionInfoToken e) {
     internalQueue.add(e);
   }
 
-  public ExecutionResult poll() {
+  public ExecutionInfoToken poll() {
     return internalQueue.poll();
   }
   

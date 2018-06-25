@@ -5,13 +5,13 @@ import java.util.List;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.core.query.DropTableQuery;
 import org.verdictdb.core.sql.QueryToSql;
-import org.verdictdb.exception.ValueException;
-import org.verdictdb.exception.VerdictDbException;
+import org.verdictdb.exception.VerdictDBValueException;
+import org.verdictdb.exception.VerdictDBException;
 
 public class DropTableExecutionNode extends QueryExecutionNode {
   
   public DropTableExecutionNode() {
-    super(null);
+    super();
   }
   
   public static DropTableExecutionNode create() {
@@ -20,16 +20,16 @@ public class DropTableExecutionNode extends QueryExecutionNode {
   }
 
   @Override
-  public ExecutionResult executeNode(DbmsConnection conn, List<ExecutionResult> downstreamResults) {
+  public ExecutionInfoToken executeNode(DbmsConnection conn, List<ExecutionInfoToken> downstreamResults) {
     try {
       if (downstreamResults.size() == 0) {
-        throw new ValueException("No table to drop!");
+        throw new VerdictDBValueException("No table to drop!");
       }
-    } catch (VerdictDbException e) {
+    } catch (VerdictDBException e) {
       e.printStackTrace();
     }
     
-    ExecutionResult result = downstreamResults.get(0);
+    ExecutionInfoToken result = downstreamResults.get(0);
     String schemaName = (String) result.getValue("schemaName");
     String tableName = (String) result.getValue("tableName");
     
@@ -37,10 +37,21 @@ public class DropTableExecutionNode extends QueryExecutionNode {
     try {
       String sql = QueryToSql.convert(conn.getSyntax(), dropQuery);
       conn.executeUpdate(sql);
-    } catch (VerdictDbException e) {
+    } catch (VerdictDBException e) {
       e.printStackTrace();
     }
-    return ExecutionResult.empty();
+    return ExecutionInfoToken.empty();
+  }
+
+  @Override
+  public QueryExecutionNode deepcopy() {
+    DropTableExecutionNode node = new DropTableExecutionNode();
+    copyFields(this, node);
+    return node;
+  }
+  
+  void copyFields(DropTableExecutionNode from, DropTableExecutionNode to) {
+    super.copyFields(from, to);
   }
 
 }

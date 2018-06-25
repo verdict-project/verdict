@@ -18,9 +18,9 @@ import org.verdictdb.core.query.SelectItem;
 import org.verdictdb.core.query.SelectQuery;
 import org.verdictdb.core.query.SubqueryColumn;
 import org.verdictdb.core.query.UnnamedColumn;
-import org.verdictdb.exception.UnexpectedTypeException;
-import org.verdictdb.exception.ValueException;
-import org.verdictdb.exception.VerdictDbException;
+import org.verdictdb.exception.VerdictDBTypeException;
+import org.verdictdb.exception.VerdictDBValueException;
+import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sql.syntax.SyntaxAbstract;
 
 import com.google.common.base.Optional;
@@ -37,31 +37,31 @@ public class SelectQueryToSql {
     this.syntax = syntax;
   }
 
-  public String toSql(AbstractRelation relation) throws VerdictDbException {
+  public String toSql(AbstractRelation relation) throws VerdictDBException {
     if (!(relation instanceof SelectQuery)) {
-      throw new UnexpectedTypeException("Unexpected type: " + relation.getClass().toString());
+      throw new VerdictDBTypeException("Unexpected type: " + relation.getClass().toString());
     }
     return selectQueryToSql((SelectQuery) relation);
   }
 
-  String selectItemToSqlPart(SelectItem item) throws VerdictDbException {
+  String selectItemToSqlPart(SelectItem item) throws VerdictDBException {
     if (item instanceof AliasedColumn) {
       return aliasedColumnToSqlPart((AliasedColumn) item);
     } else if (item instanceof UnnamedColumn) {
       return unnamedColumnToSqlPart((UnnamedColumn) item);
     } else {
-      throw new UnexpectedTypeException("Unexpceted argument type: " + item.getClass().toString());
+      throw new VerdictDBTypeException("Unexpceted argument type: " + item.getClass().toString());
     }
   }
 
-  String aliasedColumnToSqlPart(AliasedColumn acolumn) throws VerdictDbException {
+  String aliasedColumnToSqlPart(AliasedColumn acolumn) throws VerdictDBException {
     String aliasName = acolumn.getAliasName();
     return unnamedColumnToSqlPart(acolumn.getColumn()) + " as " + quoteName(aliasName);
   }
 
-  String groupingAttributeToSqlPart(GroupingAttribute column) throws VerdictDbException {
+  String groupingAttributeToSqlPart(GroupingAttribute column) throws VerdictDBException {
     if (column instanceof AsteriskColumn) {
-      throw new UnexpectedTypeException("asterisk is not expected in the groupby clause.");
+      throw new VerdictDBTypeException("asterisk is not expected in the groupby clause.");
     }
     if (column instanceof AliasReference) {
       return quoteName(((AliasReference) column).getAliasName());
@@ -70,7 +70,7 @@ public class SelectQueryToSql {
     }
   }
 
-  String unnamedColumnToSqlPart(UnnamedColumn column) throws VerdictDbException {
+  String unnamedColumnToSqlPart(UnnamedColumn column) throws VerdictDBException {
     if (column instanceof BaseColumn) {
       BaseColumn base = (BaseColumn) column;
       return base.getTableSourceAlias() + "." + quoteName(base.getColumnName());
@@ -196,16 +196,16 @@ public class SelectQueryToSql {
       } else if (columnOp.getOpType().equals("year")) {
         return "year(" + withParentheses(columnOp.getOperand(0)) + ")";
       } else {
-        throw new UnexpectedTypeException("Unexpceted opType of column: " + columnOp.getOpType().toString());
+        throw new VerdictDBTypeException("Unexpceted opType of column: " + columnOp.getOpType().toString());
       }
     } else if (column instanceof SubqueryColumn) {
       return "(" + selectQueryToSql(((SubqueryColumn) column).getSubquery()) + ")";
     }
-    throw new UnexpectedTypeException("Unexpceted argument type: " + column.getClass().toString());
+    throw new VerdictDBTypeException("Unexpceted argument type: " + column.getClass().toString());
   }
 
 
-  String withParentheses(UnnamedColumn column) throws VerdictDbException {
+  String withParentheses(UnnamedColumn column) throws VerdictDBException {
     String sql = unnamedColumnToSqlPart(column);
     if (column instanceof ColumnOp && !opTypeNotRequiringParentheses.contains(((ColumnOp) column).getOpType())) {
       sql = "(" + sql + ")";
@@ -213,7 +213,7 @@ public class SelectQueryToSql {
     return sql;
   }
 
-  String selectQueryToSql(SelectQuery sel) throws VerdictDbException {
+  String selectQueryToSql(SelectQuery sel) throws VerdictDBException {
     StringBuilder sql = new StringBuilder();
 
     // select
@@ -293,7 +293,7 @@ public class SelectQueryToSql {
     return sql.toString();
   }
 
-  String relationToSqlPart(AbstractRelation relation) throws VerdictDbException {
+  String relationToSqlPart(AbstractRelation relation) throws VerdictDBException {
     StringBuilder sql = new StringBuilder();
 
     if (relation instanceof BaseTable) {
@@ -333,13 +333,13 @@ public class SelectQueryToSql {
     }
 
     if (!(relation instanceof SelectQuery)) {
-      throw new UnexpectedTypeException("Unexpected relation type: " + relation.getClass().toString());
+      throw new VerdictDBTypeException("Unexpected relation type: " + relation.getClass().toString());
     }
 
     SelectQuery sel = (SelectQuery) relation;
     Optional<String> aliasName = sel.getAliasName();
     if (!aliasName.isPresent()) {
-      throw new ValueException("An inner select query must be aliased.");
+      throw new VerdictDBValueException("An inner select query must be aliased.");
     }
 
     return "(" + selectQueryToSql(sel) + ") as " + aliasName.get();

@@ -21,12 +21,12 @@ import org.verdictdb.core.query.SelectItem;
 import org.verdictdb.core.query.SelectQuery;
 import org.verdictdb.core.query.SubqueryColumn;
 import org.verdictdb.core.query.UnnamedColumn;
-import org.verdictdb.exception.VerdictDbException;
+import org.verdictdb.exception.VerdictDBException;
 
 public class TpchSqlToRelationBeforeAliasTest {
 
   @Test
-  public void Query1Test() throws VerdictDbException {
+  public void Query1Test() throws VerdictDBException {
     BaseTable base = new BaseTable("tpch", "lineitem", "t");
     List<UnnamedColumn> operand1 = Arrays.<UnnamedColumn>asList(
         ConstantColumn.valueOf(1),
@@ -92,7 +92,7 @@ public class TpchSqlToRelationBeforeAliasTest {
   }
 
   @Test
-  public void Query2Test() throws VerdictDbException {
+  public void Query2Test() throws VerdictDBException {
     BaseTable part = new BaseTable("tpch", "part", "p");
     BaseTable supplier = new BaseTable("tpch", "supplier", "s");
     BaseTable partsupp = new BaseTable("tpch", "partsupp", "ps");
@@ -222,7 +222,7 @@ public class TpchSqlToRelationBeforeAliasTest {
   }
 
   @Test
-  public void Query3Test() throws VerdictDbException {
+  public void Query3Test() throws VerdictDBException {
     String sql = "select " +
         "l.l_orderkey, " +
         "sum(l.l_extendedprice * (1 - l.l_discount)) as revenue, " +
@@ -300,7 +300,7 @@ public class TpchSqlToRelationBeforeAliasTest {
   }
 
   @Test
-  public void Query4Test() throws VerdictDbException {
+  public void Query4Test() throws VerdictDBException {
     AbstractRelation orders = new BaseTable("tpch", "orders", "o");
     SelectQuery expected = SelectQuery.create(
         Arrays.asList(
@@ -362,7 +362,7 @@ public class TpchSqlToRelationBeforeAliasTest {
   }
 
   @Test
-  public void Query5Test() throws VerdictDbException {
+  public void Query5Test() throws VerdictDBException {
     AbstractRelation customer = new BaseTable("tpch", "customer", "c");
     AbstractRelation orders = new BaseTable("tpch", "orders", "o");
     AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "l");
@@ -456,7 +456,7 @@ public class TpchSqlToRelationBeforeAliasTest {
   }
 
   @Test
-  public void Query6Test() throws VerdictDbException {
+  public void Query6Test() throws VerdictDBException {
     AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "l");
     SelectQuery expected = SelectQuery.create(
         Arrays.<SelectItem>asList(
@@ -507,7 +507,7 @@ public class TpchSqlToRelationBeforeAliasTest {
   }
 
   @Test
-  public void Query7Test() throws VerdictDbException {
+  public void Query7Test() throws VerdictDBException {
     AbstractRelation supplier = new BaseTable("tpch", "supplier", "s");
     AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "l");
     AbstractRelation orders = new BaseTable("tpch", "orders", "o");
@@ -640,7 +640,7 @@ public class TpchSqlToRelationBeforeAliasTest {
   }
 
   @Test
-  public void Query8Test() throws VerdictDbException {
+  public void Query8Test() throws VerdictDBException {
     AbstractRelation part = new BaseTable("tpch", "part", "p");
     AbstractRelation supplier = new BaseTable("tpch", "supplier", "s");
     AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "l");
@@ -763,7 +763,7 @@ public class TpchSqlToRelationBeforeAliasTest {
   }
 
   @Test
-  public void Query9Test() throws VerdictDbException {
+  public void Query9Test() throws VerdictDBException {
     AbstractRelation part = new BaseTable("tpch", "part", "p");
     AbstractRelation supplier = new BaseTable("tpch", "supplier", "s");
     AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "l");
@@ -865,7 +865,7 @@ public class TpchSqlToRelationBeforeAliasTest {
   }
 
   @Test
-  public void Query10Test() throws VerdictDbException {
+  public void Query10Test() throws VerdictDBException {
     AbstractRelation customer = new BaseTable("tpch", "customer", "c");
     AbstractRelation orders = new BaseTable("tpch", "orders", "o");
     AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "l");
@@ -964,7 +964,7 @@ public class TpchSqlToRelationBeforeAliasTest {
   }
 
   @Test
-  public void Query11Test() throws VerdictDbException {
+  public void Query11Test() throws VerdictDBException {
     AbstractRelation partsupp = new BaseTable("tpch", "partsupp", "ps");
     AbstractRelation supplier = new BaseTable("tpch", "supplier", "s");
     AbstractRelation nation = new BaseTable("tpch", "nation", "n");
@@ -1055,7 +1055,7 @@ public class TpchSqlToRelationBeforeAliasTest {
   }
 
   @Test
-  public void Query12Test() throws VerdictDbException {
+  public void Query12Test() throws VerdictDBException {
     AbstractRelation orders = new BaseTable("tpch", "orders", "o");
     AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "l");
     SelectQuery expected = SelectQuery.create(
@@ -1156,7 +1156,7 @@ public class TpchSqlToRelationBeforeAliasTest {
   }
 
   @Test
-  public void Query13Test() throws VerdictDbException {
+  public void Query13Test() throws VerdictDBException {
     BaseTable customer = new BaseTable("tpch", "customer", "c");
     BaseTable orders = new BaseTable("tpch", "orders", "o");
     JoinTable join = JoinTable.getJoinTable(Arrays.<AbstractRelation>asList(customer, orders),
@@ -1217,7 +1217,7 @@ public class TpchSqlToRelationBeforeAliasTest {
   }
 
   @Test
-  public void Query14Test() throws VerdictDbException {
+  public void Query14Test() throws VerdictDBException {
     AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "l");
     AbstractRelation part = new BaseTable("tpch", "part", "p");
     SelectQuery expected = SelectQuery.create(
@@ -1279,7 +1279,7 @@ public class TpchSqlToRelationBeforeAliasTest {
   }
 
   @Test
-  public void Query15Test() throws VerdictDbException {
+  public void Query15Test() throws VerdictDBException {
     AbstractRelation supplier = new BaseTable("tpch", "supplier", "s");
     AbstractRelation revenue = new BaseTable("tpch", "revenue", "r");
     SelectQuery subquery = SelectQuery.create(
@@ -1330,7 +1330,7 @@ public class TpchSqlToRelationBeforeAliasTest {
   }
 
   @Test
-  public void Query16Test() throws VerdictDbException {
+  public void Query16Test() throws VerdictDBException {
     AbstractRelation partsupp = new BaseTable("tpch", "partsupp", "ps");
     AbstractRelation part = new BaseTable("tpch", "part", "p");
     SelectQuery expected = SelectQuery.create(
@@ -1418,7 +1418,7 @@ public class TpchSqlToRelationBeforeAliasTest {
   }
 
   @Test
-  public void Query17Test() throws VerdictDbException {
+  public void Query17Test() throws VerdictDBException {
     AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "l");
     AbstractRelation part = new BaseTable("tpch", "part", "p");
     SelectQuery subquery = SelectQuery.create(
@@ -1480,7 +1480,7 @@ public class TpchSqlToRelationBeforeAliasTest {
   }
 
   @Test
-  public void Query18Test() throws VerdictDbException {
+  public void Query18Test() throws VerdictDBException {
     AbstractRelation customer = new BaseTable("tpch", "customer", "c");
     AbstractRelation orders = new BaseTable("tpch", "orders", "o");
     AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "l");
@@ -1565,7 +1565,7 @@ public class TpchSqlToRelationBeforeAliasTest {
   }
 
   @Test
-  public void Query19Test() throws VerdictDbException {
+  public void Query19Test() throws VerdictDBException {
     AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "l");
     AbstractRelation part = new BaseTable("tpch", "part", "p");
     SelectQuery expected = SelectQuery.create(
@@ -1778,7 +1778,7 @@ public class TpchSqlToRelationBeforeAliasTest {
   }
 
   @Test
-  public void Query20Test() throws VerdictDbException {
+  public void Query20Test() throws VerdictDBException {
     AbstractRelation supplier = new BaseTable("tpch", "supplier", "s");
     AbstractRelation nation = new BaseTable("tpch", "nation", "n");
     SelectQuery expected = SelectQuery.create(
@@ -1902,7 +1902,7 @@ public class TpchSqlToRelationBeforeAliasTest {
   }
 
   @Test
-  public void Query21Test() throws VerdictDbException {
+  public void Query21Test() throws VerdictDBException {
     AbstractRelation supplier = new BaseTable("tpch", "supplier", "s");
     AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "l1");
     AbstractRelation orders = new BaseTable("tpch", "orders", "o");
@@ -2015,7 +2015,7 @@ public class TpchSqlToRelationBeforeAliasTest {
   }
 
   @Test
-  public void Query22Test() throws VerdictDbException {
+  public void Query22Test() throws VerdictDBException {
     SelectQuery subquery = SelectQuery.create(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new ColumnOp("substr", Arrays.<UnnamedColumn>asList(

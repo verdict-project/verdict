@@ -6,7 +6,7 @@ import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.core.query.*;
 import org.verdictdb.exception.VerdictDBDbmsException;
-import org.verdictdb.exception.VerdictDbException;
+import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sql.syntax.H2Syntax;
 
 import java.sql.DriverManager;
@@ -29,7 +29,7 @@ public class AggExecutionNodeTest {
   static DbmsConnection conn;
 
   @BeforeClass
-  public static void setupDbConnAndScrambledTable() throws SQLException, VerdictDbException {
+  public static void setupDbConnAndScrambledTable() throws SQLException, VerdictDBException {
     final String DB_CONNECTION = "jdbc:h2:mem:createasselecttest;DB_CLOSE_DELAY=-1";
     final String DB_USER = "";
     final String DB_PASSWORD = "";
@@ -48,7 +48,7 @@ public class AggExecutionNodeTest {
   }
 
   @Test
-  public void testGenerateDependency()  throws VerdictDbException {
+  public void testGenerateDependency()  throws VerdictDBException {
     SelectQuery subquery = SelectQuery.create(
         Arrays.<SelectItem>asList(new AliasedColumn(new ColumnOp("avg", new BaseColumn("t1", "value")), "a")),
         new BaseTable(originalSchema, originalTable, "t1"));
@@ -67,11 +67,11 @@ public class AggExecutionNodeTest {
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("newschema", "verdictdbtemptable_0", "a"), "a"))
         , new BaseTable("newschema", "verdictdbtemptable_0", "verdictdbtemptable_0"));
-    assertEquals(rewritten, ((SubqueryColumn)((ColumnOp) node.getQuery().getFilter().get()).getOperand(1)).getSubquery());
+    assertEquals(rewritten, ((SubqueryColumn)((ColumnOp) node.getSelectQuery().getFilter().get()).getOperand(1)).getSubquery());
   }
 
   @Test
-  public void testExecuteNode() throws VerdictDbException {
+  public void testExecuteNode() throws VerdictDBException {
     SelectQuery subquery = SelectQuery.create(
         Arrays.<SelectItem>asList(new AliasedColumn(new ColumnOp("avg", new BaseColumn("t1", "value")), "a")),
         new BaseTable(originalSchema, originalTable, "t1"));
@@ -85,7 +85,7 @@ public class AggExecutionNodeTest {
 //    AggExecutionNode node = new AggExecutionNode(conn, newSchema, newTable, query);
     AggExecutionNode node = AggExecutionNode.create(query, "newschema");
 //    QueryExecutionPlan.resetTempTableNameNum();
-    ExecutionResult newTableToken = node.executeNode(conn, null);
+    ExecutionInfoToken newTableToken = node.executeNode(conn, null);
 //    conn.executeUpdate(String.format("DROP TABLE \"%s\".\"%s\"", newSchema, newTable));
     
     String newSchemaName = (String) newTableToken.getValue("schemaName");

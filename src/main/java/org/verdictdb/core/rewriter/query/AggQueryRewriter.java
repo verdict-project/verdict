@@ -30,9 +30,9 @@ import org.verdictdb.core.query.UnnamedColumn;
 import org.verdictdb.core.rewriter.AliasRenamingRules;
 import org.verdictdb.core.rewriter.ScrambleMeta;
 import org.verdictdb.core.scramble.Scrambler;
-import org.verdictdb.exception.UnexpectedTypeException;
-import org.verdictdb.exception.ValueException;
-import org.verdictdb.exception.VerdictDbException;
+import org.verdictdb.exception.VerdictDBTypeException;
+import org.verdictdb.exception.VerdictDBValueException;
+import org.verdictdb.exception.VerdictDBException;
 
 /**
  * AQP rewriter for partitioned tables. A sampling probability column must exist.
@@ -68,21 +68,21 @@ public class AggQueryRewriter {
    * 
    * @param relation
    * @return
-   * @throws VerdictDbException 
+   * @throws VerdictDBException 
    */
-  public List<Pair<AbstractRelation, AggblockMeta>> rewrite(AbstractRelation relation) throws VerdictDbException {
+  public List<Pair<AbstractRelation, AggblockMeta>> rewrite(AbstractRelation relation) throws VerdictDBException {
     if (!(relation instanceof SelectQuery)) {
-      throw new UnexpectedTypeException(relation);
+      throw new VerdictDBTypeException(relation);
     }
     else if (!relation.isAggregateQuery()) {
-      throw new ValueException("The provided relation is not an aggregate relation.");
+      throw new VerdictDBValueException("The provided relation is not an aggregate relation.");
     }
 
     List<Pair<AbstractRelation, AggblockMeta>> rewrittenQueries = rewriteAggregateQuery(relation);
     return rewrittenQueries;
   }
 
-  public List<Pair<AbstractRelation, AggblockMeta>> rewriteAggregateQuery(AbstractRelation relation) throws VerdictDbException {
+  public List<Pair<AbstractRelation, AggblockMeta>> rewriteAggregateQuery(AbstractRelation relation) throws VerdictDBException {
     // propagate subsample ID and tier columns up toward the top sources.
     List<AbstractRelation> selectAllScrambledBases = new ArrayList<>();    // used for ingesting block agg predicate
     SelectQuery sel = (SelectQuery) relation;
@@ -160,7 +160,7 @@ public class AggQueryRewriter {
   
   SelectItem replaceTableReferenceInSelectItem(
       SelectItem oldColumn, Map<String, String> aliasUpdateMap)
-          throws UnexpectedTypeException {
+          throws VerdictDBTypeException {
     if (oldColumn instanceof UnnamedColumn) {
       return replaceTableReferenceInUnnamedColumn((UnnamedColumn) oldColumn, aliasUpdateMap);
     }
@@ -171,13 +171,13 @@ public class AggQueryRewriter {
         col.getAliasName());
     }
     else {
-      throw new UnexpectedTypeException("Unexpected argument type: " + oldColumn.getClass().toString());
+      throw new VerdictDBTypeException("Unexpected argument type: " + oldColumn.getClass().toString());
     }
   }
   
   UnnamedColumn replaceTableReferenceInUnnamedColumn(
       UnnamedColumn oldColumn, Map<String, String> aliasUpdateMap)
-          throws UnexpectedTypeException {
+          throws VerdictDBTypeException {
     if (oldColumn instanceof BaseColumn) {
       BaseColumn col = (BaseColumn) oldColumn;
       BaseColumn newCol = new BaseColumn(aliasUpdateMap.get(
@@ -193,12 +193,12 @@ public class AggQueryRewriter {
         return new ColumnOp(col.getOpType(), newOperands);
     }
     else {
-      throw new UnexpectedTypeException("Unexpected argument type: " + oldColumn.getClass().toString());
+      throw new VerdictDBTypeException("Unexpected argument type: " + oldColumn.getClass().toString());
     }
   }
   
   GroupingAttribute replaceTableReferenceInGroupby(
-      GroupingAttribute oldGroup, Map<String, String> aliasUpdateMap) throws UnexpectedTypeException {
+      GroupingAttribute oldGroup, Map<String, String> aliasUpdateMap) throws VerdictDBTypeException {
     if (oldGroup instanceof AliasReference) {
       return oldGroup;
     }
@@ -206,7 +206,7 @@ public class AggQueryRewriter {
       return replaceTableReferenceInUnnamedColumn((UnnamedColumn) oldGroup, aliasUpdateMap);
     }
     else {
-      throw new UnexpectedTypeException("Unexpected argument type: " + oldGroup.getClass().toString());
+      throw new VerdictDBTypeException("Unexpected argument type: " + oldGroup.getClass().toString());
     }
   }
   
@@ -217,7 +217,7 @@ public class AggQueryRewriter {
  * @param blockAggregateColumns    The columns of the scrambled tables that include the integers for block aggregates (length-m).
  * @param blockingIndices    The values to use for block aggregation (length-m).
  * @return A pair of sid column alias and tier column alias.
- * @throws ValueException
+ * @throws VerdictDBValueException
  */
   Pair<UnnamedColumn, UnnamedColumn> planBlockAggregation(
       List<AbstractRelation> selectAllScrambledBase,
@@ -225,11 +225,11 @@ public class AggQueryRewriter {
       List<BaseColumn> blockAggregateColumns,
       List<List<Pair<Integer, Integer>>> blockingIndices)
 //      List<UnnamedColumn> inclusionProbColumns)
-          throws ValueException {
+          throws VerdictDBValueException {
     
     if (selectAllScrambledBase.size() > 1) {
       // TODO: should support at least two in the future
-      throw new ValueException("Only one scrambled table is expected.");
+      throw new VerdictDBValueException("Only one scrambled table is expected.");
     }
     
     // block aggregation column and attribute values
@@ -280,12 +280,12 @@ public class AggQueryRewriter {
    *       
    * @param relation
    * @return
-   * @throws VerdictDbException
+   * @throws VerdictDBException
    */
   public AbstractRelation rewriteQueryRecursively(
       AbstractRelation relation,
       List<AbstractRelation> selectAllScrambled)
-          throws VerdictDbException {
+          throws VerdictDBException {
 
     if (relation instanceof BaseTable) {
       BaseTable base = (BaseTable) relation;
@@ -416,7 +416,7 @@ public class AggQueryRewriter {
       }
     }
     else {
-      throw new UnexpectedTypeException("An unexpected relation type: " + relation.getClass().toString());
+      throw new VerdictDBTypeException("An unexpected relation type: " + relation.getClass().toString());
     }
   }
 
@@ -501,14 +501,14 @@ public class AggQueryRewriter {
    * @param relation
    * @param partitionNumber
    * @return
-   * @throws VerdictDbException 
+   * @throws VerdictDBException 
    */
   AbstractRelation rewriteSelectListForErrorEstimation(
       AbstractRelation relation,
       UnnamedColumn subsampleColumnOfSource,
       UnnamedColumn tierColumnOfSource)
 //      UnnamedColumn inclusionProbabilityColumn)
-          throws VerdictDbException {
+          throws VerdictDBException {
     
     SelectQuery rewrittenOuter = new SelectQuery();
     SelectQuery rewrittenInner = new SelectQuery();
@@ -534,7 +534,7 @@ public class AggQueryRewriter {
     
     for (SelectItem item : selectList) {
       if (!(item instanceof AliasedColumn)) {
-        throw new UnexpectedTypeException("The following select item is not aliased: " + item.toString());
+        throw new VerdictDBTypeException("The following select item is not aliased: " + item.toString());
       }
 
       UnnamedColumn c = ((AliasedColumn) item).getColumn();
@@ -719,11 +719,11 @@ public class AggQueryRewriter {
                   aliasForSumSubsampleSize));
         }
         else {
-          throw new UnexpectedTypeException("Not implemented yet.");
+          throw new VerdictDBTypeException("Not implemented yet.");
         }
       }
       else {
-        throw new UnexpectedTypeException("Unexpected column type: " + c.getClass().toString());
+        throw new VerdictDBTypeException("Unexpected column type: " + c.getClass().toString());
       }
     }
 

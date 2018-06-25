@@ -14,13 +14,13 @@ public class AggExecutionNode extends CreateTableAsSelectExecutionNode {
   public static AggExecutionNode create(SelectQuery query, String scratchpadSchemaName) {
     AggExecutionNode node = new AggExecutionNode(scratchpadSchemaName);
     SubqueriesToDependentNodes.convertSubqueriesIntoDependentNodes(query, node);
-    node.setQuery(query);
+    node.setSelectQuery(query);
     
     return node;
   }
   
-  public SelectQuery getQuery() {
-    return (SelectQuery) query;
+  public SelectQuery getSelectQuery() {
+    return (SelectQuery) selectQuery;
   }
 
 //  /**
@@ -43,7 +43,7 @@ public class AggExecutionNode extends CreateTableAsSelectExecutionNode {
 //  }
 
   @Override
-  public ExecutionResult executeNode(DbmsConnection conn, List<ExecutionResult> downstreamResults) {
+  public ExecutionInfoToken executeNode(DbmsConnection conn, List<ExecutionInfoToken> downstreamResults) {
     return super.executeNode(conn, downstreamResults);
   }
 

@@ -29,7 +29,7 @@ import org.verdictdb.core.query.SelectItem;
 import org.verdictdb.core.query.SelectQuery;
 import org.verdictdb.core.query.SubqueryColumn;
 import org.verdictdb.core.query.UnnamedColumn;
-import org.verdictdb.exception.VerdictDbException;
+import org.verdictdb.exception.VerdictDBException;
 
 public class TpchSqlToRelationAfterAliasTest {
 
@@ -124,7 +124,7 @@ public class TpchSqlToRelationAfterAliasTest {
   }
 
   @Test
-  public void Query1Test() throws VerdictDbException, SQLException,SQLException {
+  public void Query1Test() throws VerdictDBException, SQLException,SQLException {
     RelationStandardizer.resetItemID();
     BaseTable base = new BaseTable("tpch", "lineitem", "vt1");
     List<UnnamedColumn> operand1 = Arrays.<UnnamedColumn>asList(
@@ -195,7 +195,7 @@ public class TpchSqlToRelationAfterAliasTest {
   }
 
   @Test
-  public void Query2Test() throws VerdictDbException, SQLException {
+  public void Query2Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     BaseTable part = new BaseTable("tpch", "part", "vt1");
     BaseTable supplier = new BaseTable("tpch", "supplier", "vt2");
@@ -335,7 +335,7 @@ public class TpchSqlToRelationAfterAliasTest {
   }
 
   @Test
-  public void Query3Test() throws VerdictDbException, SQLException {
+  public void Query3Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select " +
         "l_orderkey, " +
@@ -416,7 +416,7 @@ public class TpchSqlToRelationAfterAliasTest {
   }
 
   @Test
-  public void Query4Test() throws VerdictDbException, SQLException {
+  public void Query4Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     AbstractRelation orders = new BaseTable("tpch", "orders", "vt1");
     SelectQuery expected = SelectQuery.create(
@@ -481,7 +481,7 @@ public class TpchSqlToRelationAfterAliasTest {
   }
 
   @Test
-  public void Query5Test() throws VerdictDbException, SQLException {
+  public void Query5Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     AbstractRelation customer = new BaseTable("tpch", "customer", "vt1");
     AbstractRelation orders = new BaseTable("tpch", "orders", "vt2");
@@ -578,7 +578,7 @@ public class TpchSqlToRelationAfterAliasTest {
   }
 
   @Test
-  public void Query6Test() throws VerdictDbException, SQLException {
+  public void Query6Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "vt1");
     SelectQuery expected = SelectQuery.create(
@@ -632,7 +632,7 @@ public class TpchSqlToRelationAfterAliasTest {
   }
 
   @Test
-  public void Query7Test() throws VerdictDbException, SQLException {
+  public void Query7Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     AbstractRelation supplier = new BaseTable("tpch", "supplier", "vt1");
     AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "vt2");
@@ -768,7 +768,7 @@ public class TpchSqlToRelationAfterAliasTest {
   }
 
   @Test
-  public void Query8Test() throws VerdictDbException, SQLException {
+  public void Query8Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     AbstractRelation part = new BaseTable("tpch", "part", "vt1");
     AbstractRelation supplier = new BaseTable("tpch", "supplier", "vt2");
@@ -896,7 +896,7 @@ public class TpchSqlToRelationAfterAliasTest {
   }
 
   @Test
-  public void Query9Test() throws VerdictDbException, SQLException {
+  public void Query9Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     AbstractRelation part = new BaseTable("tpch", "part", "vt1");
     AbstractRelation supplier = new BaseTable("tpch", "supplier", "vt2");
@@ -1004,7 +1004,7 @@ public class TpchSqlToRelationAfterAliasTest {
   }
 
   @Test
-  public void Query10Test() throws VerdictDbException, SQLException {
+  public void Query10Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     AbstractRelation customer = new BaseTable("tpch", "customer", "vt1");
     AbstractRelation orders = new BaseTable("tpch", "orders", "vt2");
@@ -1106,7 +1106,7 @@ public class TpchSqlToRelationAfterAliasTest {
   }
 
   @Test
-  public void Query11Test() throws VerdictDbException, SQLException {
+  public void Query11Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     AbstractRelation partsupp = new BaseTable("tpch", "partsupp", "vt1");
     AbstractRelation supplier = new BaseTable("tpch", "supplier", "vt2");
@@ -1202,7 +1202,7 @@ public class TpchSqlToRelationAfterAliasTest {
   }
 
   @Test
-  public void Query12Test() throws VerdictDbException, SQLException {
+  public void Query12Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     AbstractRelation orders = new BaseTable("tpch", "orders", "vt1");
     AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "vt2");
@@ -1306,7 +1306,7 @@ public class TpchSqlToRelationAfterAliasTest {
   }
 
   @Test
-  public void Query13Test() throws VerdictDbException, SQLException {
+  public void Query13Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     BaseTable customer = new BaseTable("tpch", "customer", "vt1");
     BaseTable orders = new BaseTable("tpch", "orders", "vt2");
@@ -1371,7 +1371,7 @@ public class TpchSqlToRelationAfterAliasTest {
   }
 
   @Test
-  public void Query14Test() throws VerdictDbException, SQLException {
+  public void Query14Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "vt1");
     AbstractRelation part = new BaseTable("tpch", "part", "vt2");
@@ -1436,7 +1436,7 @@ public class TpchSqlToRelationAfterAliasTest {
   }
 
   @Test
-  public void Query16Test() throws VerdictDbException, SQLException {
+  public void Query16Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     AbstractRelation partsupp = new BaseTable("tpch", "partsupp", "vt1");
     AbstractRelation part = new BaseTable("tpch", "part", "vt2");
@@ -1527,7 +1527,7 @@ public class TpchSqlToRelationAfterAliasTest {
   }
 
   @Test
-  public void Query17Test() throws VerdictDbException, SQLException {
+  public void Query17Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "vt1");
     AbstractRelation part = new BaseTable("tpch", "part", "vt2");
@@ -1592,7 +1592,7 @@ public class TpchSqlToRelationAfterAliasTest {
   }
 
   @Test
-  public void Query18Test() throws VerdictDbException, SQLException {
+  public void Query18Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     AbstractRelation customer = new BaseTable("tpch", "customer", "vt1");
     AbstractRelation orders = new BaseTable("tpch", "orders", "vt2");
@@ -1680,7 +1680,7 @@ public class TpchSqlToRelationAfterAliasTest {
   }
 
   @Test
-  public void Query19Test() throws VerdictDbException, SQLException {
+  public void Query19Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "vt1");
     AbstractRelation part = new BaseTable("tpch", "part", "vt2");
@@ -1899,7 +1899,7 @@ public class TpchSqlToRelationAfterAliasTest {
   }
 
   @Test
-  public void Query20Test() throws VerdictDbException, SQLException {
+  public void Query20Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     AbstractRelation supplier = new BaseTable("tpch", "supplier", "vt1");
     AbstractRelation nation = new BaseTable("tpch", "nation", "vt2");
@@ -2026,7 +2026,7 @@ public class TpchSqlToRelationAfterAliasTest {
   }
 
   @Test
-  public void Query21Test() throws VerdictDbException, SQLException {
+  public void Query21Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     AbstractRelation supplier = new BaseTable("tpch", "supplier", "vt1");
     AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "l1");
@@ -2142,7 +2142,7 @@ public class TpchSqlToRelationAfterAliasTest {
   }
 
   @Test
-  public void Query22Test() throws VerdictDbException, SQLException {
+  public void Query22Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     SelectQuery subquery = SelectQuery.create(
         Arrays.<SelectItem>asList(
