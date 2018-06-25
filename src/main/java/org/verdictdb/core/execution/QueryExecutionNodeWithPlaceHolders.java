@@ -9,6 +9,10 @@ import org.verdictdb.core.query.SelectQuery;
 public class QueryExecutionNodeWithPlaceHolders extends QueryExecutionNode {
   
   List<BaseTable> placeholderTables = new ArrayList<>();
+  
+  public QueryExecutionNodeWithPlaceHolders() {
+    super();
+  }
 
   public QueryExecutionNodeWithPlaceHolders(SelectQuery query) {
     super(query);

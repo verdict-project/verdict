@@ -9,12 +9,11 @@ import org.verdictdb.core.query.SelectQuery;
 
 public class AggCombinerExecutionNode extends QueryExecutionNode {
 
-  private AggCombinerExecutionNode(DbmsConnection conn, SelectQuery query) {
-    super(conn, query);
+  private AggCombinerExecutionNode(SelectQuery query) {
+    super(query);
   }
   
   public static AggCombinerExecutionNode create(
-      DbmsConnection conn,
       QueryExecutionNode queryExecutionNode,
       QueryExecutionNode queryExecutionNode2) {
     // TODO: combiner

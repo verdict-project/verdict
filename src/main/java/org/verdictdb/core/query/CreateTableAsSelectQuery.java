@@ -11,7 +11,7 @@ import java.util.List;
  * @author Yongjoo Park
  *
  */
-public class CreateTableAsSelectQuery {
+public class CreateTableAsSelectQuery implements SqlConvertable {
   
   String schemaName;
   

@@ -289,7 +289,7 @@ public class TpchExecutionPlanTest {
     expected.addOrderby(Arrays.<OrderbyAttribute>asList(new OrderbyAttribute("vc2"),
         new OrderbyAttribute("vc3")));
     expected.addLimit(ConstantColumn.valueOf(1));
-    assertEquals(expected, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.getDependents().get(0)).query);
+    assertEquals(expected, ((CreateTableAsSelectTrait)queryExecutionPlan.root.getDependents().get(0)).query);
   }
 
   @Test
@@ -376,7 +376,7 @@ public class TpchExecutionPlanTest {
         new OrderbyAttribute("vc5")
     ));
     expected.addLimit(ConstantColumn.valueOf(10));
-    assertEquals(expected, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).query);
+    assertEquals(expected, ((CreateTableAsSelectTrait)queryExecutionPlan.root.dependents.get(0)).query);
   }
 
   @Test
@@ -449,8 +449,8 @@ public class TpchExecutionPlanTest {
     expected.addGroupby(new AliasReference("vc2"));
     expected.addOrderby(new OrderbyAttribute("vc2"));
     expected.addLimit(ConstantColumn.valueOf(1));
-    assertEquals(expected, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.getDependents().get(0)).query);
-    assertEquals(subquery, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0)).query);
+    assertEquals(expected, ((CreateTableAsSelectTrait)queryExecutionPlan.root.getDependents().get(0)).query);
+    assertEquals(subquery, ((CreateTableAsSelectTrait)queryExecutionPlan.root.dependents.get(0).dependents.get(0)).query);
   }
 
   @Test
@@ -553,7 +553,7 @@ public class TpchExecutionPlanTest {
     expected.addGroupby(new AliasReference("vc7"));
     expected.addOrderby(new OrderbyAttribute("revenue", "desc"));
     expected.addLimit(ConstantColumn.valueOf(1));
-    assertEquals(expected, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).query);
+    assertEquals(expected, ((CreateTableAsSelectTrait)queryExecutionPlan.root.dependents.get(0)).query);
   }
 
   @Test
@@ -613,7 +613,7 @@ public class TpchExecutionPlanTest {
         ConstantColumn.valueOf("':3'"))
     ));
     expected.addLimit(ConstantColumn.valueOf(1));
-    assertEquals(expected, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).query);
+    assertEquals(expected, ((CreateTableAsSelectTrait)queryExecutionPlan.root.dependents.get(0)).query);
   }
 
   @Test
@@ -755,8 +755,8 @@ public class TpchExecutionPlanTest {
         new OrderbyAttribute("vc7")
     ));
     expected.addLimit(ConstantColumn.valueOf(1));
-    assertEquals(expected, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).query);
-    assertEquals(subquery, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0)).query);
+    assertEquals(expected, ((CreateTableAsSelectTrait)queryExecutionPlan.root.dependents.get(0)).query);
+    assertEquals(subquery, ((CreateTableAsSelectTrait)queryExecutionPlan.root.dependents.get(0).dependents.get(0)).query);
   }
 
   @Test
@@ -889,8 +889,8 @@ public class TpchExecutionPlanTest {
     expected.addGroupby(new AliasReference("vc7"));
     expected.addOrderby(new OrderbyAttribute("vc7"));
     expected.addLimit(ConstantColumn.valueOf(1));
-    assertEquals(expected, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).query);
-    assertEquals(subquery, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0)).query);
+    assertEquals(expected, ((CreateTableAsSelectTrait)queryExecutionPlan.root.dependents.get(0)).query);
+    assertEquals(subquery, ((CreateTableAsSelectTrait)queryExecutionPlan.root.dependents.get(0).dependents.get(0)).query);
   }
 
   @Test
@@ -1004,8 +1004,8 @@ public class TpchExecutionPlanTest {
     expected.addOrderby(Arrays.<OrderbyAttribute>asList(new OrderbyAttribute("vc7"),
         new OrderbyAttribute("vc8", "desc")));
     expected.addLimit(ConstantColumn.valueOf(1));
-    assertEquals(expected, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).query);
-    assertEquals(subquery, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0)).query);
+    assertEquals(expected, ((CreateTableAsSelectTrait)queryExecutionPlan.root.dependents.get(0)).query);
+    assertEquals(subquery, ((CreateTableAsSelectTrait)queryExecutionPlan.root.dependents.get(0).dependents.get(0)).query);
   }
 
   @Test
@@ -1113,7 +1113,7 @@ public class TpchExecutionPlanTest {
     ));
     expected.addOrderby(new OrderbyAttribute("revenue", "desc"));
     expected.addLimit(ConstantColumn.valueOf(20));
-    assertEquals(expected, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).query);
+    assertEquals(expected, ((CreateTableAsSelectTrait)queryExecutionPlan.root.dependents.get(0)).query);
   }
 
   @Test
@@ -1223,7 +1223,7 @@ public class TpchExecutionPlanTest {
     expected.addGroupby(new AliasReference("vc3"));
     expected.addOrderby(new OrderbyAttribute("vc3"));
     expected.addLimit(ConstantColumn.valueOf(1));
-    assertEquals(relation, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).query);
+    assertEquals(relation, ((CreateTableAsSelectTrait)queryExecutionPlan.root.dependents.get(0)).query);
   }
 
   @Test
@@ -1269,7 +1269,7 @@ public class TpchExecutionPlanTest {
         ), join
     );
     expected.addGroupby(new AliasReference("vc3"));
-    assertEquals(expected, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).query);
+    assertEquals(expected, ((CreateTableAsSelectTrait)queryExecutionPlan.root.dependents.get(0)).query);
   }
 
   @Test
@@ -1339,7 +1339,7 @@ public class TpchExecutionPlanTest {
         ))
     )));
     expected.addLimit(ConstantColumn.valueOf(1));
-    assertEquals(relation, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).query);
+    assertEquals(relation, ((CreateTableAsSelectTrait)queryExecutionPlan.root.dependents.get(0)).query);
   }
 
   // Query 15 is a non aggregate query, add avg(s_suppkey) to be an aggregate one
@@ -1401,7 +1401,7 @@ public class TpchExecutionPlanTest {
             new BaseTable("verdictdb_temp", "verdictdbtemptable_1", "revenue_cached"),
             new BaseTable("verdictdb_temp", "verdictdbtemptable_2", "max_revenue_cached")
         ));
-    assertEquals(expected.getFromList(), ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).query.getFromList());
+    assertEquals(expected.getFromList(), ((CreateTableAsSelectTrait)queryExecutionPlan.root.dependents.get(0)).query.getFromList());
 
     SelectQuery revenue_cached = SelectQuery.create(
         Arrays.<SelectItem>asList(
@@ -1422,7 +1422,7 @@ public class TpchExecutionPlanTest {
     )));
     revenue_cached.addGroupby(new AliasReference("supplier_no"));
     revenue_cached.setAliasName("revenue_cached");
-    assertEquals(revenue_cached, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0)).query);
+    assertEquals(revenue_cached, ((CreateTableAsSelectTrait)queryExecutionPlan.root.dependents.get(0).dependents.get(0)).query);
 
     SelectQuery max_revenue_cached = SelectQuery.create(
         Arrays.<SelectItem>asList(
@@ -1430,7 +1430,7 @@ public class TpchExecutionPlanTest {
         ), new BaseTable("verdictdb_temp", "verdictdbtemptable_3", "vt3")
     );
     max_revenue_cached.setAliasName("max_revenue_cached");
-    assertEquals(max_revenue_cached, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(1)).query);
+    assertEquals(max_revenue_cached, ((CreateTableAsSelectTrait)queryExecutionPlan.root.dependents.get(0).dependents.get(1)).query);
   }
 
   @Test
@@ -1477,7 +1477,7 @@ public class TpchExecutionPlanTest {
     assertEquals(2, queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.size());
 
     assertEquals(new BaseTable("verdictdb_temp", "verdictdbtemptable_1", "a"),
-        ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).query.getFromList().get(0));
+        ((CreateTableAsSelectTrait)queryExecutionPlan.root.dependents.get(0)).query.getFromList().get(0));
     JoinTable join = JoinTable.getJoinTable(Arrays.<AbstractRelation>asList(
         new BaseTable("verdictdb_temp", "verdictdbtemptable_2", "q17_lineitem_tmp_cached"),
         new BaseTable("verdictdb_temp", "verdictdbtemptable_3", "l1")),
@@ -1488,7 +1488,7 @@ public class TpchExecutionPlanTest {
                 new BaseColumn("q17_lineitem_tmp_cached", "t_partkey")
             ))
         ));
-    assertEquals(join, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0)).query.getFromList().get(0));
+    assertEquals(join, ((CreateTableAsSelectTrait)queryExecutionPlan.root.dependents.get(0).dependents.get(0)).query.getFromList().get(0));
     SelectQuery expected = SelectQuery.create(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("vt1", "l_partkey"), "t_partkey"),
@@ -1500,7 +1500,7 @@ public class TpchExecutionPlanTest {
         new BaseTable("tpch", "lineitem", "vt1"));
     expected.addGroupby(new AliasReference("t_partkey"));
     expected.setAliasName("q17_lineitem_tmp_cached");
-    assertEquals(expected, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.get(0)).query);
+    assertEquals(expected, ((CreateTableAsSelectTrait)queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.get(0)).query);
   }
 
   @Test
@@ -1564,9 +1564,9 @@ public class TpchExecutionPlanTest {
         ConstantColumn.valueOf("NOT NULL")
     )));
 
-    assertEquals(expected, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0)).query);
+    assertEquals(expected, ((CreateTableAsSelectTrait)queryExecutionPlan.root.dependents.get(0).dependents.get(0)).query);
     assertEquals(new BaseTable("verdictdb_temp", "verdictdbtemptable_1", "t"),
-        ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).query.getFromList().get(2));
+        ((CreateTableAsSelectTrait)queryExecutionPlan.root.dependents.get(0)).query.getFromList().get(2));
   }
 
   @Test
@@ -1788,7 +1788,7 @@ public class TpchExecutionPlanTest {
         columnOp3
     )));
     expected.addLimit(ConstantColumn.valueOf(1));
-    assertEquals(expected, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).query);
+    assertEquals(expected, ((CreateTableAsSelectTrait)queryExecutionPlan.root.dependents.get(0)).query);
   }
 
   // Query 20 is not a aggregated function. Change to count(s_address)
@@ -1845,9 +1845,9 @@ public class TpchExecutionPlanTest {
     expected.addGroupby(new AliasReference("vc4"));
     expected.addGroupby(new AliasReference("vc5"));
     expected.setAliasName("q20_tmp2_cached");
-    assertEquals(expected, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0)).query);
+    assertEquals(expected, ((CreateTableAsSelectTrait)queryExecutionPlan.root.dependents.get(0).dependents.get(0)).query);
     assertEquals(new BaseTable("verdictdb_temp", "verdictdbtemptable_1", "q20_tmp2_cached"),
-        ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).query.getFromList().get(2));
+        ((CreateTableAsSelectTrait)queryExecutionPlan.root.dependents.get(0)).query.getFromList().get(2));
   }
 
   @Test
@@ -1953,9 +1953,9 @@ public class TpchExecutionPlanTest {
     assertEquals(1, queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.get(0).dependents.get(1).dependents.size());
 
     assertEquals(new BaseTable("verdictdb_temp", "verdictdbtemptable_1", "c"),
-        ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).query.getFromList().get(0));
+        ((CreateTableAsSelectTrait)queryExecutionPlan.root.dependents.get(0)).query.getFromList().get(0));
     assertEquals(new BaseTable("verdictdb_temp", "verdictdbtemptable_2", "b"),
-        ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0)).query.getFromList().get(0));
+        ((CreateTableAsSelectTrait)queryExecutionPlan.root.dependents.get(0).dependents.get(0)).query.getFromList().get(0));
     JoinTable join = JoinTable.getJoinTable(Arrays.<AbstractRelation>asList(
         new BaseTable("verdictdb_temp", "verdictdbtemptable_3", "t2"),
         new BaseTable("verdictdb_temp", "verdictdbtemptable_4", "l3")),
@@ -1967,7 +1967,7 @@ public class TpchExecutionPlanTest {
             ))
         ));
     assertEquals(join,
-        ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.get(0)).query.getFromList().get(0));
+        ((CreateTableAsSelectTrait)queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.get(0)).query.getFromList().get(0));
 
   }
 
@@ -2052,7 +2052,7 @@ public class TpchExecutionPlanTest {
     assertEquals(2, queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.get(1).dependents.size());
 
     assertEquals(new BaseTable("verdictdb_temp", "verdictdbtemptable_1", "a"),
-        ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).query.getFromList().get(0));
+        ((CreateTableAsSelectTrait)queryExecutionPlan.root.dependents.get(0)).query.getFromList().get(0));
     JoinTable join = JoinTable.getJoinTable(Arrays.<AbstractRelation>asList(
         new BaseTable("verdictdb_temp", "verdictdbtemptable_2", "ct1"),
         new BaseTable("verdictdb_temp", "verdictdbtemptable_4", "ct2")),
@@ -2063,9 +2063,9 @@ public class TpchExecutionPlanTest {
                 ConstantColumn.valueOf("NULL")
             ))
         ));
-    assertEquals(join, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0)).query.getFromList().get(0));
+    assertEquals(join, ((CreateTableAsSelectTrait)queryExecutionPlan.root.dependents.get(0).dependents.get(0)).query.getFromList().get(0));
     assertEquals(new BaseTable("verdictdb_temp", "verdictdbtemptable_3", "vt1"),
-        ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.get(0)).query.getFromList().get(0));
+        ((CreateTableAsSelectTrait)queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.get(0)).query.getFromList().get(0));
     JoinTable join1 = JoinTable.getJoinTable(Arrays.<AbstractRelation>asList(
         new BaseTable("verdictdb_temp", "verdictdbtemptable_5", "ot"),
         new BaseTable("verdictdb_temp", "verdictdbtemptable_6", "ct")),
@@ -2077,7 +2077,7 @@ public class TpchExecutionPlanTest {
             ))
         ));
     assertEquals(join1,
-        ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.get(1)).query.getFromList().get(0));
+        ((CreateTableAsSelectTrait)queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.get(1)).query.getFromList().get(0));
 
   }
 
@@ -2096,13 +2096,13 @@ public class TpchExecutionPlanTest {
         Arrays.<SelectItem>asList(new AliasedColumn(new BaseColumn("verdictdb_temp", "verdictdbtemptable_1", "quantity_avg"), "quantity_avg")),
         new BaseTable("verdictdb_temp", "verdictdbtemptable_1", "verdictdbtemptable_1"));
     assertEquals(rewritten,
-        ((SubqueryColumn)((ColumnOp)((CreateTableAsSelectExecutionNode)(queryExecutionPlan.root.dependents.get(0))).query.getFilter().get()).getOperand(1)).getSubquery());
+        ((SubqueryColumn)((ColumnOp)((CreateTableAsSelectTrait)(queryExecutionPlan.root.dependents.get(0))).query.getFilter().get()).getOperand(1)).getSubquery());
 
     SelectQuery expected = SelectQuery.create(
         Arrays.<SelectItem>asList(new AliasedColumn(new ColumnOp("avg", new BaseColumn("vt3", "l_quantity")), "quantity_avg")),
         new BaseTable("tpch", "lineitem", "vt3")
     );
-    assertEquals(expected, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0)).query);
+    assertEquals(expected, ((CreateTableAsSelectTrait)queryExecutionPlan.root.dependents.get(0).dependents.get(0)).query);
   }
 }
 

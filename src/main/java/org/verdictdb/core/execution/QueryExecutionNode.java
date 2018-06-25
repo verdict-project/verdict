@@ -13,6 +13,7 @@ import org.verdictdb.core.execution.ola.AggExecutionNodeBlock;
 import org.verdictdb.core.query.AbstractRelation;
 import org.verdictdb.core.query.BaseTable;
 import org.verdictdb.core.query.SelectQuery;
+import org.verdictdb.core.query.SqlConvertable;
 import org.verdictdb.core.rewriter.ScrambleMeta;
 
 import com.google.common.base.Optional;
@@ -21,7 +22,7 @@ public abstract class QueryExecutionNode {
 
   DbmsConnection conn;
   
-  SelectQuery query;
+  SqlConvertable query;
 
   //  QueryExecutionPlan plan;
 
@@ -35,23 +36,27 @@ public abstract class QueryExecutionNode {
   List<QueryExecutionNode> dependents = new ArrayList<>();
 
   // these are the queues to which this node will broadcast its results (to upstream nodes).
-  List<ResultQueue> broadcastQueues = new ArrayList<>();
+  List<ExecutionResultQueue> broadcastQueues = new ArrayList<>();
 
   // these are the results coming from the producers (downstream operations).
   // multiple producers may share a single result queue.
   // these queues are assumed to be order-sensitive
-  List<ResultQueue> listeningQueues = new ArrayList<>();
+  List<ExecutionResultQueue> listeningQueues = new ArrayList<>();
 
   // latest results from listening queues
   List<Optional<ExecutionResult>> latestResults = new ArrayList<>();
+  
+  public QueryExecutionNode() {
+    
+  }
 
-  public QueryExecutionNode(SelectQuery query) {
+  public QueryExecutionNode(SqlConvertable query) {
 //    this.conn = conn;
     this.query = query;
     //    this.plan = plan;
   }
   
-  public SelectQuery getQuery() {
+  public SqlConvertable getQuery() {
     return query;
   }
   
@@ -130,19 +135,19 @@ public abstract class QueryExecutionNode {
   }
 
   // setup method
-  public ResultQueue generateListeningQueue() {
-    ResultQueue queue = new ResultQueue();
+  public ExecutionResultQueue generateListeningQueue() {
+    ExecutionResultQueue queue = new ExecutionResultQueue();
     listeningQueues.add(queue);
     latestResults.add(Optional.<ExecutionResult>absent());
     return queue;
   }
 
   // setup method
-  public void addBroadcastingQueue(ResultQueue queue) {
+  public void addBroadcastingQueue(ExecutionResultQueue queue) {
     broadcastQueues.add(queue);
   }
   
-  public List<ResultQueue> getBroadcastQueues() {
+  public List<ExecutionResultQueue> getBroadcastQueues() {
     return broadcastQueues;
   }
 
@@ -155,7 +160,7 @@ public abstract class QueryExecutionNode {
   }
 
   void broadcast(ExecutionResult result) {
-    for (ResultQueue listener : broadcastQueues) {
+    for (ExecutionResultQueue listener : broadcastQueues) {
       listener.add(result);
     }
   }
@@ -222,7 +227,7 @@ public abstract class QueryExecutionNode {
       return false;
     }
     
-    SelectQuery query = getQuery();
+    SelectQuery query = (SelectQuery) getQuery();
     if (query == null) {
       return false;
     }

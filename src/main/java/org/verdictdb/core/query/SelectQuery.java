@@ -11,7 +11,7 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 import com.google.common.base.Optional;
 
 
-public class SelectQuery extends AbstractRelation {
+public class SelectQuery extends AbstractRelation implements SqlConvertable {
 
   public static SelectQuery create(AsteriskColumn asteriskColumn,
       BaseTable createPlaceHolderTable) {

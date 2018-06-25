@@ -8,6 +8,8 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.core.execution.ExecutionResult;
 import org.verdictdb.core.execution.QueryExecutionNode;
+import org.verdictdb.core.execution.QueryExecutionPlan;
+import org.verdictdb.core.execution.ExecutionResultQueue;
 import org.verdictdb.core.query.AbstractRelation;
 import org.verdictdb.core.query.BaseColumn;
 import org.verdictdb.core.query.ColumnOp;
@@ -44,7 +46,9 @@ public class AggExecutionNodeBlock {
    * of partitions)
    * @throws ValueException 
    */
-  public QueryExecutionNode constructProgressiveAggNodes(ScrambleMeta scrambleMeta) throws ValueException {
+  public QueryExecutionNode convertToProgressiveAggNodes (
+      QueryExecutionPlan plan, 
+      ScrambleMeta scrambleMeta) throws ValueException {
     List<QueryExecutionNode> individualAggNodes = new ArrayList<>();
     List<QueryExecutionNode> combiners = new ArrayList<>();
     
@@ -68,7 +72,7 @@ public class AggExecutionNodeBlock {
         String tableName = a.getRight().getRight();
         Pair<Integer, Integer> span = aggMeta.getAggBlockSpanForTable(schemaName, tableName, i);
         String aggblockColumn = scrambleMeta.getAggregationBlockColumn(schemaName, tableName);
-        SelectQuery q = scrambledNode.getQuery();
+        SelectQuery q = (SelectQuery) scrambledNode.getQuery();
         String aliasName = findAliasFor(schemaName, tableName, q.getFromList());
         
         int left = span.getLeft();
@@ -91,7 +95,6 @@ public class AggExecutionNodeBlock {
     // third, stack combiners
     for (int i = 0; i < aggMeta.totalBlockAggCount()-1; i++) {
       AggCombinerExecutionNode combiner = AggCombinerExecutionNode.create(
-          conn,
           individualAggNodes.get(0), 
           individualAggNodes.get(1));
       combiners.add(combiner);
@@ -99,8 +102,8 @@ public class AggExecutionNodeBlock {
     
     // fourth, re-link the listening queue for the new AsyncAggNode
     QueryExecutionNode newRoot = AsyncAggExecutionNode.create(plan, individualAggNodes, combiners);
-    List<BlockingDeque<ExecutionResult>> broadcastingQueue = root.getBroadcastQueues();
-    for (BlockingDeque<ExecutionResult> queue : broadcastingQueue) {
+    List<ExecutionResultQueue> broadcastingQueue = root.getBroadcastQueues();
+    for (ExecutionResultQueue queue : broadcastingQueue) {
       newRoot.addBroadcastingQueue(queue);
     }
     

@@ -3,7 +3,7 @@ package org.verdictdb.core.execution;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingDeque;
 
-public class ResultQueue {
+public class ExecutionResultQueue {
   
   BlockingDeque<ExecutionResult> internalQueue = new LinkedBlockingDeque<>();
 

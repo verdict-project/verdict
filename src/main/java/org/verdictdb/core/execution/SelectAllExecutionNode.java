@@ -5,6 +5,7 @@ import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.core.query.AsteriskColumn;
 import org.verdictdb.core.query.SelectQuery;
+import org.verdictdb.core.sql.QueryToSql;
 import org.verdictdb.core.sql.SelectQueryToSql;
 import org.verdictdb.exception.VerdictDbException;
 import org.verdictdb.sql.syntax.SyntaxAbstract;
@@ -27,23 +28,27 @@ public class SelectAllExecutionNode extends QueryExecutionNodeWithPlaceHolders {
 
 //  BlockingDeque<ExecutionResult> queue = new LinkedBlockingDeque<>();
   
+  private SelectAllExecutionNode(){
+    super(null);
+  }
+
   public static QueryExecutionNode create(QueryExecutionPlan plan, SelectQuery query) {
     SelectAllExecutionNode selectAll = new SelectAllExecutionNode();
     SelectQuery selectQuery = SelectQuery.create(new AsteriskColumn(), selectAll.createPlaceHolderTable("t"));
     selectAll.setQuery(selectQuery);
-    ResultQueue queue = selectAll.generateListeningQueue();
+    ExecutionResultQueue queue = selectAll.generateListeningQueue();
     
 //    Pair<String, String> tempTableFullName = plan.generateTempTableName();
 //    String schemaName = tempTableFullName.getLeft();
 //    String tableName = tempTableFullName.getRight();
     
     if (query.isAggregateQuery()) {
-      AggExecutionNode dependent = AggExecutionNode.create(query);
+      AggExecutionNode dependent = AggExecutionNode.create(plan, query);
       dependent.addBroadcastingQueue(queue);
       selectAll.addDependency(dependent);
     }
     else {
-      ProjectionExecutionNode dependent = ProjectionExecutionNode.create(query);
+      ProjectionExecutionNode dependent = ProjectionExecutionNode.create(plan, query);
       dependent.addBroadcastingQueue(queue);
       selectAll.addDependency(dependent);
     }
@@ -51,25 +56,12 @@ public class SelectAllExecutionNode extends QueryExecutionNodeWithPlaceHolders {
     return selectAll;
   }
 
-  private SelectAllExecutionNode(){
-    super(null);
-  };
-
-//  public void addtempTableName(String schema, String tempTableName) {
-//    tempTableNames.add( syntax.getQuoteString() + schema + syntax.getQuoteString() + "." + syntax.getQuoteString() +
-//        tempTableName + syntax.getQuoteString());
-//  }
-//
-//  public List<String> getTempTableNames() {
-//    return tempTableNames;
-//  }
-
   @Override
   public ExecutionResult executeNode(List<ExecutionResult> downstreamResults) {
     super.executeNode(downstreamResults);
-    SelectQueryToSql toSql = new SelectQueryToSql(conn.getSyntax());
     try {
-      DbmsQueryResult queryResult = conn.executeQuery(toSql.toSql(query));
+      String sql = QueryToSql.convert(conn.getSyntax(), query);
+      DbmsQueryResult queryResult = conn.executeQuery(sql);
       ExecutionResult result = new ExecutionResult();
       result.setKeyValue("queryResult", queryResult);
       return result;

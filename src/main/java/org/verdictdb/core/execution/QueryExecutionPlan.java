@@ -132,7 +132,7 @@ public class QueryExecutionPlan {
     for (int i = 0; i < topAggNodeBlocks.size(); i++) {
       AggExecutionNodeBlock nodeBlock = topAggNodeBlocks.get(i);
       QueryExecutionNode oldNode = nodeBlock.getRoot();
-      QueryExecutionNode newNode = nodeBlock.constructProgressiveAggNodes(scrambleMeta);
+      QueryExecutionNode newNode = nodeBlock.convertToProgressiveAggNodes(this, scrambleMeta);
 
       List<QueryExecutionNode> parents = oldNode.getParents();
       for (QueryExecutionNode parent : parents) {
