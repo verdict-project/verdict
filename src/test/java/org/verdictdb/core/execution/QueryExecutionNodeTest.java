@@ -36,7 +36,7 @@ public class QueryExecutionNodeTest {
   @Test
   public void testDoesContainScrambledTableFlatQuery() {
     BaseTable base = new BaseTable("myschema", "mytable", "t");
-    SelectQuery query = SelectQuery.getSelectQueryOp(
+    SelectQuery query = SelectQuery.create(
         Arrays.<SelectItem>asList(
             new ColumnOp("count", new BaseColumn("t", "mycolumn1"))),
         base);
@@ -52,14 +52,14 @@ public class QueryExecutionNodeTest {
   @Test
   public void testDoesContainScrambledTableNestedQuery() {
     BaseTable base = new BaseTable("myschema", "mytable", "t");
-    SelectQuery innerRelation = SelectQuery.getSelectQueryOp(
+    SelectQuery innerRelation = SelectQuery.create(
         Arrays.<SelectItem>asList(
             new BaseColumn("t", "mygroup"),
             new AliasedColumn(new ColumnOp("avg", new BaseColumn("t", "mycolumn1")), "myavg")),
         base);
     innerRelation.addGroupby(new AliasReference("mygroup"));
     innerRelation.setAliasName("s");
-    SelectQuery query = SelectQuery.getSelectQueryOp(
+    SelectQuery query = SelectQuery.create(
         Arrays.<SelectItem>asList(new AsteriskColumn()),
         innerRelation);
     
@@ -76,14 +76,14 @@ public class QueryExecutionNodeTest {
     DbmsConnection conn = null;
     
     BaseTable base = new BaseTable("myschema", "temptable", "t");
-    SelectQuery aggQuery = SelectQuery.getSelectQueryOp(
+    SelectQuery aggQuery = SelectQuery.create(
         Arrays.<SelectItem>asList(
             new BaseColumn("t", "mygroup"),
             new AliasedColumn(new ColumnOp("avg", new BaseColumn("t", "mycolumn1")), "myavg")),
         base);
     aggQuery.addGroupby(new AliasReference("mygroup"));
     aggQuery.setAliasName("s");
-    SelectQuery projectionQuery = SelectQuery.getSelectQueryOp(
+    SelectQuery projectionQuery = SelectQuery.create(
         Arrays.<SelectItem>asList(new AsteriskColumn()),
         new BaseTable("myschema", "temptable2", "t"));
     

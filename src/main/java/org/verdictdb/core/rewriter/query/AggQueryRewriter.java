@@ -298,7 +298,7 @@ public class AggQueryRewriter {
       }
       else {
         String newRelationAliasName = generateNextAliasName();
-        SelectQuery sel = SelectQuery.getSelectQueryOp(Arrays.<SelectItem>asList(new AsteriskColumn()), base);
+        SelectQuery sel = SelectQuery.create(Arrays.<SelectItem>asList(new AsteriskColumn()), base);
         sel.setAliasName(newRelationAliasName);
 
 //        String inclusionProbabilityColumn =

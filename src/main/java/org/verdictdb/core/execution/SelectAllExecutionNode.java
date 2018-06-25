@@ -1,8 +1,12 @@
 package org.verdictdb.core.execution;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.DbmsQueryResult;
+import org.verdictdb.core.query.AsteriskColumn;
 import org.verdictdb.core.query.SelectQuery;
+import org.verdictdb.core.sql.SelectQueryToSql;
+import org.verdictdb.exception.VerdictDbException;
 import org.verdictdb.sql.syntax.SyntaxAbstract;
 
 import java.util.ArrayList;
@@ -10,67 +14,74 @@ import java.util.List;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingDeque;
 
-public class SelectAllExecutionNode extends QueryExecutionNode {
+/**
+ * 
+ * @author Yongjoo Park
+ * TODO: we need to also include order-by and limit
+ */
+public class SelectAllExecutionNode extends QueryExecutionNodeWithPlaceHolders {
 
-  private List<String> tempTableNames = new ArrayList<>();
+//  private List<String> tempTableNames = new ArrayList<>();
+//
+//  private List<DbmsQueryResult> dbmsQueryResults = new ArrayList<>();
 
-  private SyntaxAbstract syntax;
+//  BlockingDeque<ExecutionResult> queue = new LinkedBlockingDeque<>();
+  
+  public static QueryExecutionNode create(QueryExecutionPlan plan, SelectQuery query) {
+    SelectAllExecutionNode selectAll = new SelectAllExecutionNode();
+    SelectQuery selectQuery = SelectQuery.create(new AsteriskColumn(), selectAll.createPlaceHolderTable("t"));
+    selectAll.setQuery(selectQuery);
+    ResultQueue queue = selectAll.generateListeningQueue();
+    
+//    Pair<String, String> tempTableFullName = plan.generateTempTableName();
+//    String schemaName = tempTableFullName.getLeft();
+//    String tableName = tempTableFullName.getRight();
+    
+    if (query.isAggregateQuery()) {
+      AggExecutionNode dependent = AggExecutionNode.create(query);
+      dependent.addBroadcastingQueue(queue);
+      selectAll.addDependency(dependent);
+    }
+    else {
+      ProjectionExecutionNode dependent = ProjectionExecutionNode.create(query);
+      dependent.addBroadcastingQueue(queue);
+      selectAll.addDependency(dependent);
+    }
+    
+    return selectAll;
+  }
 
-  private SelectQuery query;
-
-  private List<DbmsQueryResult> dbmsQueryResults = new ArrayList<>();
-
-  BlockingDeque<ExecutionResult> queue = new LinkedBlockingDeque<>();
-
-  private String scratchpadSchemaName;
-
-  public SelectAllExecutionNode(DbmsConnection conn, SyntaxAbstract syntax, SelectQuery query, String scratchpadSchemaName){
-    super(conn, query);
-    this.syntax = syntax;
-    this.query = query;
-    this.scratchpadSchemaName = scratchpadSchemaName;
-    generateDependency();
+  private SelectAllExecutionNode(){
+    super(null);
   };
 
-  public void addtempTableName(String schema, String tempTableName) {
-    tempTableNames.add( syntax.getQuoteString() + schema + syntax.getQuoteString() + "." + syntax.getQuoteString() +
-        tempTableName + syntax.getQuoteString());
-  }
-
-  public List<String> getTempTableNames() {
-    return tempTableNames;
-  }
+//  public void addtempTableName(String schema, String tempTableName) {
+//    tempTableNames.add( syntax.getQuoteString() + schema + syntax.getQuoteString() + "." + syntax.getQuoteString() +
+//        tempTableName + syntax.getQuoteString());
+//  }
+//
+//  public List<String> getTempTableNames() {
+//    return tempTableNames;
+//  }
 
   @Override
   public ExecutionResult executeNode(List<ExecutionResult> downstreamResults) {
-    for (ExecutionResult result:queue) {
-      addtempTableName((String)result.getValue("schemaName"), (String) result.getValue("tableName"));
+    super.executeNode(downstreamResults);
+    SelectQueryToSql toSql = new SelectQueryToSql(conn.getSyntax());
+    try {
+      DbmsQueryResult queryResult = conn.executeQuery(toSql.toSql(query));
+      ExecutionResult result = new ExecutionResult();
+      result.setKeyValue("queryResult", queryResult);
+      return result;
+      
+    } catch (VerdictDbException e) {
+      e.printStackTrace();
     }
-    for (String t:tempTableNames){
-      String sql = "select * from " + t;
-      DbmsQueryResult queryResult = conn.executeQuery(sql);
-      dbmsQueryResults.add(queryResult);
-    }
-
-    return new ExecutionResult();
+    return ExecutionResult.empty();
   }
 
-  public List<DbmsQueryResult> getDbmsQueryResults() {
-    return dbmsQueryResults;
-  }
-
-  private void generateDependency() {
-    String temptableName = QueryExecutionPlan.generateTempTableName();
-    if (query.isAggregateQuery()) {
-      AggExecutionNode dependent = new AggExecutionNode(conn, scratchpadSchemaName, temptableName, query);
-      dependent.addBroadcastingQueue(queue);
-      addDependency(dependent);
-    }
-    else {
-      ProjectionExecutionNode dependent = new ProjectionExecutionNode(conn, scratchpadSchemaName, temptableName, query);
-      dependent.addBroadcastingQueue(queue);
-      addDependency(dependent);
-    }
-  }
+//  public List<DbmsQueryResult> getDbmsQueryResults() {
+//    return dbmsQueryResults;
+//  }
 
 }

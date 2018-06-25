@@ -99,7 +99,7 @@ public class ExecutionNodeTest {
   public void asyncExecute() throws VerdictDbException {
     BaseTable base = new BaseTable("default", scrambledTable, "t");
     String aliasName = "a";
-    SelectQuery relation = SelectQuery.getSelectQueryOp(
+    SelectQuery relation = SelectQuery.create(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new ColumnOp("sum", new BaseColumn("t", "age")), aliasName)),
         base);

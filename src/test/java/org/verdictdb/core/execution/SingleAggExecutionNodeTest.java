@@ -48,7 +48,7 @@ public class SingleAggExecutionNodeTest {
   @Test
   public void testExecuteNode() {
     BaseTable base = new BaseTable(originalSchema, originalTable, "t");
-    SelectQuery query = SelectQuery.getSelectQueryOp(
+    SelectQuery query = SelectQuery.create(
         Arrays.<SelectItem>asList(
             new AliasedColumn(
                 ColumnOp.sum(new BaseColumn("t", "value")), "a")), 

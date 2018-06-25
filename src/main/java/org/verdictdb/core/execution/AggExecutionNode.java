@@ -15,11 +15,9 @@ public class AggExecutionNode extends CreateTableAsSelectExecutionNode {
   String resultTableName;
 
   public AggExecutionNode(
-      DbmsConnection conn,
-      String resultSchemaName, 
-      String resultTableName,
+      QueryExecutionPlan plan,
       SelectQuery query) {
-    super(conn, resultSchemaName, resultTableName, query);
+    super(query);
     try {
       generateDependency();
     } catch (VerdictDbException e){
@@ -111,7 +109,7 @@ public class AggExecutionNode extends CreateTableAsSelectExecutionNode {
               newSelectItem.add(new AsteriskColumn());
             } else throw new VerdictDbException("Select list contains SelectItem type that is not AliasedColumn or AsteriskColumn");
           }
-          SelectQuery newSubquery = SelectQuery.getSelectQueryOp(newSelectItem, new BaseTable(schemaName, temptableName, temptableName));
+          SelectQuery newSubquery = SelectQuery.create(newSelectItem, new BaseTable(schemaName, temptableName, temptableName));
           if (((SubqueryColumn) filter).getSubquery().getAliasName().isPresent()) {
             newSubquery.setAliasName(((SubqueryColumn) filter).getSubquery().getAliasName().get());
           }
@@ -121,5 +119,10 @@ public class AggExecutionNode extends CreateTableAsSelectExecutionNode {
         }
       }
     }
+  }
+
+  public static AggExecutionNode create(SelectQuery query) {
+    // TODO Auto-generated method stub
+    return null;
   }
 }

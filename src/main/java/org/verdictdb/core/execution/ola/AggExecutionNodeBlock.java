@@ -25,12 +25,11 @@ import org.verdictdb.exception.ValueException;
  */
 public class AggExecutionNodeBlock {
   
-  DbmsConnection conn;
+//  DbmsConnection conn;
   
   QueryExecutionNode root;
 
-  public AggExecutionNodeBlock(DbmsConnection conn, QueryExecutionNode root) {
-    this.conn = conn;
+  public AggExecutionNodeBlock(QueryExecutionNode root) {
     this.root = root;
   }
   
@@ -99,7 +98,7 @@ public class AggExecutionNodeBlock {
     }
     
     // fourth, re-link the listening queue for the new AsyncAggNode
-    QueryExecutionNode newRoot = AsyncAggExecutionNode.create(conn, individualAggNodes, combiners);
+    QueryExecutionNode newRoot = AsyncAggExecutionNode.create(plan, individualAggNodes, combiners);
     List<BlockingDeque<ExecutionResult>> broadcastingQueue = root.getBroadcastQueues();
     for (BlockingDeque<ExecutionResult> queue : broadcastingQueue) {
       newRoot.addBroadcastingQueue(queue);

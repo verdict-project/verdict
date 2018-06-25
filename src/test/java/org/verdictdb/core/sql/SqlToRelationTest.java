@@ -23,7 +23,7 @@ public class SqlToRelationTest {
   public void testSelectAllBaseTable() throws VerdictDbException {
     String actual = "select * from myschema.mytable as t";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
-    SelectQuery expected = SelectQuery.getSelectQueryOp(Arrays.<SelectItem>asList(
+    SelectQuery expected = SelectQuery.create(Arrays.<SelectItem>asList(
         new AsteriskColumn()
     ), Arrays.<AbstractRelation>asList(new BaseTable("myschema", "mytable", "t")));
     AbstractRelation sel = sqlToRelation.toRelation(actual);
@@ -35,7 +35,7 @@ public class SqlToRelationTest {
     String actual = "select t.mycolumn1, t.mycolumn2 from myschema.mytable as t";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation sel = sqlToRelation.toRelation(actual);
-    SelectQuery expected = SelectQuery.getSelectQueryOp(Arrays.<SelectItem>asList(
+    SelectQuery expected = SelectQuery.create(Arrays.<SelectItem>asList(
         new BaseColumn("t", "mycolumn1"),
         new BaseColumn("t", "mycolumn2")
     ), Arrays.<AbstractRelation>asList(new BaseTable("myschema", "mytable", "t")));
@@ -47,7 +47,7 @@ public class SqlToRelationTest {
     String actual = "select avg(t.mycolumn1) from myschema.mytable as t";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation sel = sqlToRelation.toRelation(actual);
-    SelectQuery expected = SelectQuery.getSelectQueryOp(Arrays.<SelectItem>asList(
+    SelectQuery expected = SelectQuery.create(Arrays.<SelectItem>asList(
         new ColumnOp("avg", new BaseColumn("t", "mycolumn1"))
     ), Arrays.<AbstractRelation>asList(new BaseTable("myschema", "mytable", "t")));
     assertEquals(expected, sel);
@@ -58,7 +58,7 @@ public class SqlToRelationTest {
     String actual = "select sum(t.mycolumn1) from myschema.mytable as t";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation sel = sqlToRelation.toRelation(actual);
-    SelectQuery expected = SelectQuery.getSelectQueryOp(Arrays.<SelectItem>asList(
+    SelectQuery expected = SelectQuery.create(Arrays.<SelectItem>asList(
         new ColumnOp("sum", new BaseColumn("t", "mycolumn1"))
     ), Arrays.<AbstractRelation>asList(new BaseTable("myschema", "mytable", "t")));
     assertEquals(expected, sel);
@@ -69,7 +69,7 @@ public class SqlToRelationTest {
     String actual = "select count(*) from myschema.mytable as t";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation sel = sqlToRelation.toRelation(actual);
-    SelectQuery expected = SelectQuery.getSelectQueryOp(Arrays.<SelectItem>asList(
+    SelectQuery expected = SelectQuery.create(Arrays.<SelectItem>asList(
         new ColumnOp("count", new AsteriskColumn())
     ), Arrays.<AbstractRelation>asList(new BaseTable("myschema", "mytable", "t")));
     assertEquals(expected, sel);
@@ -80,7 +80,7 @@ public class SqlToRelationTest {
     String actual = "select avg(t.mycolumn1), sum(t.mycolumn1), count(*) from myschema.mytable as t";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation sel = sqlToRelation.toRelation(actual);
-    SelectQuery expected = SelectQuery.getSelectQueryOp(Arrays.<SelectItem>asList(
+    SelectQuery expected = SelectQuery.create(Arrays.<SelectItem>asList(
         new ColumnOp("avg", new BaseColumn("t", "mycolumn1")),
         new ColumnOp("sum", new BaseColumn("t", "mycolumn1")),
         new ColumnOp("count", new AsteriskColumn())
@@ -93,7 +93,7 @@ public class SqlToRelationTest {
     String actual = "select t.mycolumn1 + t.mycolumn2 from myschema.mytable as t";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation sel = sqlToRelation.toRelation(actual);
-    SelectQuery expected = SelectQuery.getSelectQueryOp(Arrays.<SelectItem>asList(
+    SelectQuery expected = SelectQuery.create(Arrays.<SelectItem>asList(
         new ColumnOp("add", Arrays.<UnnamedColumn>asList(
             new BaseColumn("t", "mycolumn1"),
             new BaseColumn("t", "mycolumn2")
@@ -107,7 +107,7 @@ public class SqlToRelationTest {
     String actual = "select t.mycolumn1 - t.mycolumn2 from myschema.mytable as t";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation sel = sqlToRelation.toRelation(actual);
-    SelectQuery expected = SelectQuery.getSelectQueryOp(Arrays.<SelectItem>asList(
+    SelectQuery expected = SelectQuery.create(Arrays.<SelectItem>asList(
         new ColumnOp("subtract", Arrays.<UnnamedColumn>asList(
             new BaseColumn("t", "mycolumn1"),
             new BaseColumn("t", "mycolumn2")
@@ -121,7 +121,7 @@ public class SqlToRelationTest {
     String actual = "select t.mycolumn1 * t.mycolumn2 from myschema.mytable as t";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation sel = sqlToRelation.toRelation(actual);
-    SelectQuery expected = SelectQuery.getSelectQueryOp(Arrays.<SelectItem>asList(
+    SelectQuery expected = SelectQuery.create(Arrays.<SelectItem>asList(
         new ColumnOp("multiply", Arrays.<UnnamedColumn>asList(
             new BaseColumn("t", "mycolumn1"),
             new BaseColumn("t", "mycolumn2")
@@ -135,7 +135,7 @@ public class SqlToRelationTest {
     String actual = "select t.mycolumn1 / t.mycolumn2 from myschema.mytable as t";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation sel = sqlToRelation.toRelation(actual);
-    SelectQuery expected = SelectQuery.getSelectQueryOp(Arrays.<SelectItem>asList(
+    SelectQuery expected = SelectQuery.create(Arrays.<SelectItem>asList(
         new ColumnOp("divide", Arrays.<UnnamedColumn>asList(
             new BaseColumn("t", "mycolumn1"),
             new BaseColumn("t", "mycolumn2")
@@ -149,7 +149,7 @@ public class SqlToRelationTest {
     String actual = "select t.mygroup, avg(t.mycolumn1) as myavg from myschema.mytable as t group by mygroup";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation sel = sqlToRelation.toRelation(actual);
-    SelectQuery expected = SelectQuery.getSelectQueryOp(Arrays.<SelectItem>asList(
+    SelectQuery expected = SelectQuery.create(Arrays.<SelectItem>asList(
         new BaseColumn("t", "mygroup"),
         new AliasedColumn(new ColumnOp("avg", new BaseColumn("t", "mycolumn1")), "myavg")
     ), Arrays.<AbstractRelation>asList(new BaseTable("myschema", "mytable", "t")));
@@ -164,13 +164,13 @@ public class SqlToRelationTest {
         + "group by mygroup2";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation sel = sqlToRelation.toRelation(actual);
-    SelectQuery subquery = SelectQuery.getSelectQueryOp(Arrays.<SelectItem>asList(
+    SelectQuery subquery = SelectQuery.create(Arrays.<SelectItem>asList(
         new BaseColumn("t", "mygroup"),
         new AliasedColumn(new ColumnOp("avg", new BaseColumn("t", "mycolumn1")), "myavg")
     ), Arrays.<AbstractRelation>asList(new BaseTable("myschema", "mytable", "t")));
     subquery.addGroupby(new AliasReference("mygroup"));
     subquery.setAliasName("s");
-    SelectQuery expected = SelectQuery.getSelectQueryOp(Arrays.<SelectItem>asList(new AsteriskColumn()),
+    SelectQuery expected = SelectQuery.create(Arrays.<SelectItem>asList(new AsteriskColumn()),
         Arrays.<AbstractRelation>asList(subquery));
     expected.addGroupby(new AliasReference("mygroup2"));
     assertEquals(expected, sel);

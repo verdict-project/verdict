@@ -35,24 +35,28 @@ public abstract class QueryExecutionNode {
   List<QueryExecutionNode> dependents = new ArrayList<>();
 
   // these are the queues to which this node will broadcast its results (to upstream nodes).
-  List<BlockingDeque<ExecutionResult>> broadcastQueues = new ArrayList<>();
+  List<ResultQueue> broadcastQueues = new ArrayList<>();
 
   // these are the results coming from the producers (downstream operations).
   // multiple producers may share a single result queue.
   // these queues are assumed to be order-sensitive
-  List<BlockingDeque<ExecutionResult>> listeningQueues = new ArrayList<>();
+  List<ResultQueue> listeningQueues = new ArrayList<>();
 
   // latest results from listening queues
   List<Optional<ExecutionResult>> latestResults = new ArrayList<>();
 
-  public QueryExecutionNode(DbmsConnection conn, SelectQuery query) {
-    this.conn = conn;
+  public QueryExecutionNode(SelectQuery query) {
+//    this.conn = conn;
     this.query = query;
     //    this.plan = plan;
   }
   
   public SelectQuery getQuery() {
     return query;
+  }
+  
+  public void setQuery(SelectQuery query) {
+    this.query = query;
   }
   
   public List<QueryExecutionNode> getParents() {
@@ -126,19 +130,19 @@ public abstract class QueryExecutionNode {
   }
 
   // setup method
-  public BlockingDeque<ExecutionResult> generateListeningQueue() {
-    BlockingDeque<ExecutionResult> queue = new LinkedBlockingDeque<>();
+  public ResultQueue generateListeningQueue() {
+    ResultQueue queue = new ResultQueue();
     listeningQueues.add(queue);
     latestResults.add(Optional.<ExecutionResult>absent());
     return queue;
   }
 
   // setup method
-  public void addBroadcastingQueue(BlockingDeque<ExecutionResult> queue) {
+  public void addBroadcastingQueue(ResultQueue queue) {
     broadcastQueues.add(queue);
   }
   
-  public List<BlockingDeque<ExecutionResult>> getBroadcastQueues() {
+  public List<ResultQueue> getBroadcastQueues() {
     return broadcastQueues;
   }
 
@@ -151,7 +155,7 @@ public abstract class QueryExecutionNode {
   }
 
   void broadcast(ExecutionResult result) {
-    for (BlockingDeque<ExecutionResult> listener : broadcastQueues) {
+    for (ResultQueue listener : broadcastQueues) {
       listener.add(result);
     }
   }
@@ -199,7 +203,7 @@ public abstract class QueryExecutionNode {
   // identify nodes that are (1) aggregates and (2) are not descendants of any other aggregates.
   void identifyTopAggBlocks(List<AggExecutionNodeBlock> topAggNodes) {
     if (this instanceof AggExecutionNode) {
-      topAggNodes.add(new AggExecutionNodeBlock(conn, this));
+      topAggNodes.add(new AggExecutionNodeBlock(this));
       return;
     }
     for (QueryExecutionNode dep : getDependents()) {

@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.core.execution.ola.AggExecutionNodeBlock;
 import org.verdictdb.core.query.AbstractRelation;
@@ -55,8 +56,8 @@ public class QueryExecutionPlan {
     return String.format("verdictdbtemptable_%d_%d", serialNum, identifierNum++);
   }
 
-  public static String generateTempTableName() {
-    return String.format("verdictdbtemptable_%d", tempTableNameNum++);
+  public Pair<String, String> generateTempTableName() {
+    return Pair.of(scratchpadSchemaName, String.format("verdictdbtemptable_%d", tempTableNameNum++));
   }
 
   /**
@@ -77,7 +78,7 @@ public class QueryExecutionPlan {
     }
     this.query = query;
     this.scratchpadSchemaName = scratchpadSchemaName;
-    this.root = makePlan(conn, syntax, query);
+    this.root = makePlan(query);
   }
   
   public String getScratchpadSchemaName() {
@@ -102,9 +103,8 @@ public class QueryExecutionPlan {
    * @throws UnexpectedTypeException 
    */
 
-  QueryExecutionNode makePlan(DbmsConnection conn, SyntaxAbstract syntax, SelectQuery query)
-      throws VerdictDbException {
-    return new SelectAllExecutionNode(conn, syntax, query, this.scratchpadSchemaName);
+  QueryExecutionNode makePlan(SelectQuery query) throws VerdictDbException {
+    return SelectAllExecutionNode.create(this, query);
   }
 
   /**

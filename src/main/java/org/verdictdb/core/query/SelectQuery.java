@@ -13,7 +13,13 @@ import com.google.common.base.Optional;
 
 public class SelectQuery extends AbstractRelation {
 
-  public static SelectQuery getSelectQueryOp(List<SelectItem> columns, AbstractRelation relation) {
+  public static SelectQuery create(AsteriskColumn asteriskColumn,
+      BaseTable createPlaceHolderTable) {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  public static SelectQuery create(List<SelectItem> columns, AbstractRelation relation) {
     SelectQuery sel = new SelectQuery();
     for (SelectItem c : columns) {
       sel.addSelectItem(c);
@@ -22,7 +28,7 @@ public class SelectQuery extends AbstractRelation {
     return sel;
   }
 
-  public static SelectQuery getSelectQueryOp(List<SelectItem> columns, AbstractRelation relation, UnnamedColumn predicate) {
+  public static SelectQuery create(List<SelectItem> columns, AbstractRelation relation, UnnamedColumn predicate) {
     SelectQuery sel = new SelectQuery();
     for (SelectItem c : columns) {
       sel.addSelectItem(c);
@@ -32,7 +38,7 @@ public class SelectQuery extends AbstractRelation {
     return sel;
   }
 
-  public static SelectQuery getSelectQueryOp(List<SelectItem> columns, List<AbstractRelation> relation) {
+  public static SelectQuery create(List<SelectItem> columns, List<AbstractRelation> relation) {
     SelectQuery sel = new SelectQuery();
     for (SelectItem c : columns) {
       sel.addSelectItem(c);

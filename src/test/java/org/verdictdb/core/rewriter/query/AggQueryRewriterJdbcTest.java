@@ -66,7 +66,7 @@ public class AggQueryRewriterJdbcTest {
   public void testSelectSumBaseTable() throws VerdictDbException {
     BaseTable base = new BaseTable(newSchema, newTable, "t");
     String aliasName = "sum1";
-    SelectQuery relation = SelectQuery.getSelectQueryOp(
+    SelectQuery relation = SelectQuery.create(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new ColumnOp("sum", new BaseColumn("t", "value")), aliasName)),
         base);

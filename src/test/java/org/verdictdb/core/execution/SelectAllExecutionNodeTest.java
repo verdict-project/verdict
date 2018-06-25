@@ -49,10 +49,10 @@ public class SelectAllExecutionNodeTest {
 
   @Test
   public void testGenerateDependency()  throws VerdictDbException {
-    SelectQuery subquery = SelectQuery.getSelectQueryOp(
+    SelectQuery subquery = SelectQuery.create(
         Arrays.<SelectItem>asList(new AliasedColumn(new ColumnOp("avg", new BaseColumn("t1", "value")), "a")),
         new BaseTable(originalSchema, originalTable, "t1"));
-    SelectQuery query = SelectQuery.getSelectQueryOp(
+    SelectQuery query = SelectQuery.create(
         Arrays.<SelectItem>asList(new AliasedColumn(new BaseColumn("t", "value"), "average")),
         new BaseTable(originalSchema, originalTable, "t"));
     query.addFilterByAnd(new ColumnOp("greater", Arrays.asList(
@@ -64,7 +64,7 @@ public class SelectAllExecutionNodeTest {
 
     assertEquals(1, node.dependents.size());
     assertEquals(1, node.dependents.get(0).dependents.size());
-    SelectQuery rewritten = SelectQuery.getSelectQueryOp(
+    SelectQuery rewritten = SelectQuery.create(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn(newSchema,"verdictdbtemptable_1", "a"), "a"))
         , new BaseTable("newschema", "verdictdbtemptable_1", "verdictdbtemptable_1"));
@@ -73,10 +73,10 @@ public class SelectAllExecutionNodeTest {
 
   @Test
   public void testExecuteNode() throws VerdictDbException {
-    SelectQuery subquery = SelectQuery.getSelectQueryOp(
+    SelectQuery subquery = SelectQuery.create(
         Arrays.<SelectItem>asList(new AliasedColumn(new ColumnOp("avg", new BaseColumn("t1", "value")), "a")),
         new BaseTable(originalSchema, originalTable, "t1"));
-    SelectQuery query = SelectQuery.getSelectQueryOp(
+    SelectQuery query = SelectQuery.create(
         Arrays.<SelectItem>asList(new AliasedColumn(new BaseColumn("t", "value"), "average")),
         new BaseTable(originalSchema, originalTable, "t"));
     query.addFilterByAnd(new ColumnOp("greater", Arrays.asList(

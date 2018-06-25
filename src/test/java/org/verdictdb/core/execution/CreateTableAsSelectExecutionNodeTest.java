@@ -44,7 +44,7 @@ public class CreateTableAsSelectExecutionNodeTest {
   @Test
   public void testExecuteNode() {
     BaseTable base = new BaseTable(originalSchema, originalTable, "t");
-    SelectQuery query = SelectQuery.getSelectQueryOp(Arrays.<SelectItem>asList(new AsteriskColumn()), base);
+    SelectQuery query = SelectQuery.create(Arrays.<SelectItem>asList(new AsteriskColumn()), base);
     QueryExecutionNode root = new CreateTableAsSelectExecutionNode(conn, newSchema, newTable, query);
 //    LinkedBlockingDeque<ExecutionResult> resultQueue = new LinkedBlockingDeque<>();
     root.execute();

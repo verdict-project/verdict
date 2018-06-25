@@ -48,10 +48,10 @@ public class AggExecutionNodeTest {
 
   @Test
   public void testGenerateDependency()  throws VerdictDbException {
-    SelectQuery subquery = SelectQuery.getSelectQueryOp(
+    SelectQuery subquery = SelectQuery.create(
         Arrays.<SelectItem>asList(new AliasedColumn(new ColumnOp("avg", new BaseColumn("t1", "value")), "a")),
         new BaseTable(originalSchema, originalTable, "t1"));
-    SelectQuery query = SelectQuery.getSelectQueryOp(
+    SelectQuery query = SelectQuery.create(
         Arrays.<SelectItem>asList(new AliasedColumn(new ColumnOp("avg", new BaseColumn("t", "value")), "average")),
         new BaseTable(originalSchema, originalTable, "t"));
     query.addFilterByAnd(new ColumnOp("greater", Arrays.asList(
@@ -61,7 +61,7 @@ public class AggExecutionNodeTest {
     AggExecutionNode node = new AggExecutionNode(conn, newSchema, newTable, query);
     QueryExecutionPlan.resetTempTableNameNum();
     assertEquals(1, node.dependents.size());
-    SelectQuery rewritten = SelectQuery.getSelectQueryOp(
+    SelectQuery rewritten = SelectQuery.create(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("newschema", "verdictdbtemptable_0", "a"), "a"))
         , new BaseTable("newschema", "verdictdbtemptable_0", "verdictdbtemptable_0"));
@@ -70,10 +70,10 @@ public class AggExecutionNodeTest {
 
   @Test
   public void testExecuteNode() throws VerdictDbException {
-    SelectQuery subquery = SelectQuery.getSelectQueryOp(
+    SelectQuery subquery = SelectQuery.create(
         Arrays.<SelectItem>asList(new AliasedColumn(new ColumnOp("avg", new BaseColumn("t1", "value")), "a")),
         new BaseTable(originalSchema, originalTable, "t1"));
-    SelectQuery query = SelectQuery.getSelectQueryOp(
+    SelectQuery query = SelectQuery.create(
         Arrays.<SelectItem>asList(new AliasedColumn(new ColumnOp("avg", new BaseColumn("t", "value")), "average")),
         new BaseTable(originalSchema, originalTable, "t"));
     query.addFilterByAnd(new ColumnOp("greater", Arrays.asList(

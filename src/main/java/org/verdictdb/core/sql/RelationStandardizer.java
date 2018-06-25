@@ -228,7 +228,7 @@ public class RelationStandardizer {
   public SelectQuery standardize(SelectQuery relationToAlias) throws SQLException {
     List<AbstractRelation> fromList = setupTableSources(relationToAlias);
     List<SelectItem> selectItemList = replaceSelectList(relationToAlias.getSelectList());
-    SelectQuery AliasedRelation = SelectQuery.getSelectQueryOp(selectItemList, fromList);
+    SelectQuery AliasedRelation = SelectQuery.create(selectItemList, fromList);
 
     //Filter
     UnnamedColumn where;

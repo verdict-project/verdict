@@ -44,7 +44,7 @@ public class AggQueryRewriterTest {
   public void testSelectSumBaseTable() throws VerdictDbException {
     BaseTable base = new BaseTable("myschema", "mytable", "t");
     String aliasName = "a";
-    SelectQuery relation = SelectQuery.getSelectQueryOp(
+    SelectQuery relation = SelectQuery.create(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new ColumnOp("sum", new BaseColumn("t", "mycolumn1")), aliasName)),
         base);
@@ -88,7 +88,7 @@ public class AggQueryRewriterTest {
   public void testSelectCountBaseTable() throws VerdictDbException {
     BaseTable base = new BaseTable("myschema", "mytable", "t");
     String aliasName = "a";
-    SelectQuery relation = SelectQuery.getSelectQueryOp(
+    SelectQuery relation = SelectQuery.create(
         Arrays.<SelectItem>asList(new AliasedColumn(new ColumnOp("count"), aliasName)), base);
     ScrambleMeta meta = generateTestScrambleMeta();
     AggQueryRewriter rewriter = new AggQueryRewriter(meta);
@@ -128,7 +128,7 @@ public class AggQueryRewriterTest {
   public void testSelectAvgBaseTable() throws VerdictDbException {
     BaseTable base = new BaseTable("myschema", "mytable", "t");
     String aliasName = "a";
-    SelectQuery relation = SelectQuery.getSelectQueryOp(
+    SelectQuery relation = SelectQuery.create(
         Arrays.<SelectItem>asList(new AliasedColumn(new ColumnOp("avg", new BaseColumn("t", "mycolumn1")), aliasName)),
         base);
     ScrambleMeta meta = generateTestScrambleMeta();
@@ -178,7 +178,7 @@ public class AggQueryRewriterTest {
   public void testSelectSumGroupbyBaseTable() throws VerdictDbException {
     BaseTable base = new BaseTable("myschema", "mytable", "t");
     String aliasName = "a";
-    SelectQuery relation = SelectQuery.getSelectQueryOp(
+    SelectQuery relation = SelectQuery.create(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("t", "mygroup"), "mygroup"),
             new AliasedColumn(new ColumnOp("sum", new BaseColumn("t", "mycolumn1")), aliasName)),
@@ -226,7 +226,7 @@ public class AggQueryRewriterTest {
   public void testSelectSumGroupby2BaseTable() throws VerdictDbException {
     BaseTable base = new BaseTable("myschema", "mytable", "t");
     String aliasName = "a";
-    SelectQuery relation = SelectQuery.getSelectQueryOp(
+    SelectQuery relation = SelectQuery.create(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("t", "mygroup"), "myalias"),
             new AliasedColumn(new ColumnOp("sum", new BaseColumn("t", "mycolumn1")), aliasName)),
@@ -274,7 +274,7 @@ public class AggQueryRewriterTest {
   public void testSelectCountGroupbyBaseTable() throws VerdictDbException {
     BaseTable base = new BaseTable("myschema", "mytable", "t");
     String aliasName = "a";
-    SelectQuery relation = SelectQuery.getSelectQueryOp(
+    SelectQuery relation = SelectQuery.create(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("t", "mygroup"), "mygroup"),
             new AliasedColumn(new ColumnOp("count"), aliasName)), base);
@@ -319,7 +319,7 @@ public class AggQueryRewriterTest {
   public void testSelectAvgGroupbyBaseTable() throws VerdictDbException {
     BaseTable base = new BaseTable("myschema", "mytable", "t");
     String aliasName = "a";
-    SelectQuery relation = SelectQuery.getSelectQueryOp(
+    SelectQuery relation = SelectQuery.create(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("t", "mygroup"), "mygroup"),
             new AliasedColumn(new ColumnOp("avg", new BaseColumn("t", "mycolumn1")), aliasName)),
@@ -374,14 +374,14 @@ public class AggQueryRewriterTest {
   public void testSelectSumNestedTable() throws VerdictDbException {
     BaseTable base = new BaseTable("myschema", "mytable", "t");
     String aliasName = "a";
-    SelectQuery nestedSource = SelectQuery.getSelectQueryOp(
+    SelectQuery nestedSource = SelectQuery.create(
         Arrays.<SelectItem>asList(
             new AliasedColumn(
                 ColumnOp.multiply(new BaseColumn("t", "price"), new BaseColumn("t", "discount")),
                 "discounted_price")),
         base);
     nestedSource.setAliasName("s");
-    SelectQuery relation = SelectQuery.getSelectQueryOp(
+    SelectQuery relation = SelectQuery.create(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new ColumnOp("sum", new BaseColumn("s", "discounted_price")), aliasName)),
         nestedSource);

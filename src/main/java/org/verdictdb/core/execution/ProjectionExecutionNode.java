@@ -83,7 +83,7 @@ public class ProjectionExecutionNode extends CreateTableAsSelectExecutionNode {
               newSelectItem.add(new AsteriskColumn());
             } else throw new VerdictDbException("Select list contains SelectItem type that is not AliasedColumn or AsteriskColumn");
           }
-          SelectQuery newSubquery = SelectQuery.getSelectQueryOp(newSelectItem, new BaseTable(schemaName, temptableName, temptableName));
+          SelectQuery newSubquery = SelectQuery.create(newSelectItem, new BaseTable(schemaName, temptableName, temptableName));
           if (((SubqueryColumn) filter).getSubquery().getAliasName().isPresent()) {
             newSubquery.setAliasName(((SubqueryColumn) filter).getSubquery().getAliasName().get());
           }
@@ -93,5 +93,10 @@ public class ProjectionExecutionNode extends CreateTableAsSelectExecutionNode {
         }
       }
     }
+  }
+
+  public static ProjectionExecutionNode create(SelectQuery query) {
+    // TODO Auto-generated method stub
+    return null;
   }
 }

@@ -270,7 +270,7 @@ public class TpchExecutionPlanTest {
             new ColumnOp("date", ConstantColumn.valueOf("'1998-12-01'")),
             new ColumnOp("interval", Arrays.<UnnamedColumn>asList(ConstantColumn.valueOf("':1'"), ConstantColumn.valueOf("day")))
         )));
-    SelectQuery expected = SelectQuery.getSelectQueryOp(
+    SelectQuery expected = SelectQuery.create(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("vt1", "l_returnflag"), "vc2"),
             new AliasedColumn(new BaseColumn("vt1", "l_linestatus"), "vc3"),
@@ -338,7 +338,7 @@ public class TpchExecutionPlanTest {
             new BaseColumn("vt3", "l_discount")
         ))
     ));
-    SelectQuery expected = SelectQuery.getSelectQueryOp(
+    SelectQuery expected = SelectQuery.create(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("vt3", "l_orderkey"), "vc4"),
             new AliasedColumn(new ColumnOp("sum", op1), "revenue"),
@@ -415,7 +415,7 @@ public class TpchExecutionPlanTest {
     assertEquals(1, queryExecutionPlan.root.dependents.get(0).dependents.size());
 
     AbstractRelation orders = new BaseTable("tpch", "orders", "vt1");
-    SelectQuery expected = SelectQuery.getSelectQueryOp(
+    SelectQuery expected = SelectQuery.create(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("vt1", "o_orderpriority"), "vc2"),
             new AliasedColumn(new ColumnOp("count", new AsteriskColumn()), "order_count")
@@ -432,7 +432,7 @@ public class TpchExecutionPlanTest {
             new ColumnOp("interval", Arrays.<UnnamedColumn>asList(ConstantColumn.valueOf("'3'"), ConstantColumn.valueOf("month")))
         ))
     )));
-    SelectQuery subquery = SelectQuery.getSelectQueryOp(
+    SelectQuery subquery = SelectQuery.create(
         Arrays.<SelectItem>asList(new AsteriskColumn()),
         new BaseTable("tpch", "lineitem", "vt3"));
     subquery.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
@@ -443,7 +443,7 @@ public class TpchExecutionPlanTest {
         new BaseColumn("vt3", "l_commitdate"),
         new BaseColumn("vt3", "l_receiptdate")
     )));
-    SelectQuery rewritten = SelectQuery.getSelectQueryOp(
+    SelectQuery rewritten = SelectQuery.create(
         Arrays.<SelectItem>asList(new AsteriskColumn()), new BaseTable("verdictdb_temp", "verdictdbtemptable_1", "verdictdbtemptable_1"));
     expected.addFilterByAnd(new ColumnOp("exists", SubqueryColumn.getSubqueryColumn(rewritten)));
     expected.addGroupby(new AliasReference("vc2"));
@@ -497,7 +497,7 @@ public class TpchExecutionPlanTest {
     AbstractRelation supplier = new BaseTable("tpch", "supplier", "vt4");
     AbstractRelation nation = new BaseTable("tpch", "nation", "vt5");
     AbstractRelation region = new BaseTable("tpch", "region", "vt6");
-    SelectQuery expected = SelectQuery.getSelectQueryOp(
+    SelectQuery expected = SelectQuery.create(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("vt5", "n_name"), "vc7"),
             new AliasedColumn(new ColumnOp("sum", Arrays.<UnnamedColumn>asList(
@@ -580,7 +580,7 @@ public class TpchExecutionPlanTest {
     assertEquals(0, queryExecutionPlan.root.dependents.get(0).dependents.size());
 
     AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "vt1");
-    SelectQuery expected = SelectQuery.getSelectQueryOp(
+    SelectQuery expected = SelectQuery.create(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new ColumnOp("sum", new ColumnOp("multiply",
                 Arrays.<UnnamedColumn>asList(
@@ -675,7 +675,7 @@ public class TpchExecutionPlanTest {
     AbstractRelation customer = new BaseTable("tpch", "customer", "vt4");
     AbstractRelation nation1 = new BaseTable("tpch", "nation", "n1");
     AbstractRelation nation2 = new BaseTable("tpch", "nation", "n2");
-    SelectQuery subquery = SelectQuery.getSelectQueryOp(
+    SelectQuery subquery = SelectQuery.create(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("n1", "n_name"), "supp_nation"),
             new AliasedColumn(new BaseColumn("n2", "n_name"), "cust_nation"),
@@ -736,7 +736,7 @@ public class TpchExecutionPlanTest {
         new ColumnOp("date", ConstantColumn.valueOf("'1996-12-31'")))
     ));
     subquery.setAliasName("shipping");
-    SelectQuery expected = SelectQuery.getSelectQueryOp(
+    SelectQuery expected = SelectQuery.create(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("shipping", "supp_nation"), "vc5"),
             new AliasedColumn(new BaseColumn("shipping", "cust_nation"), "vc6"),
@@ -818,7 +818,7 @@ public class TpchExecutionPlanTest {
     AbstractRelation nation1 = new BaseTable("tpch", "nation", "n1");
     AbstractRelation nation2 = new BaseTable("tpch", "nation", "n2");
     AbstractRelation region = new BaseTable("tpch", "region", "vt6");
-    SelectQuery subquery = SelectQuery.getSelectQueryOp(
+    SelectQuery subquery = SelectQuery.create(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new ColumnOp("year", new BaseColumn("vt4", "o_orderdate")
             ), "o_year"),
@@ -871,7 +871,7 @@ public class TpchExecutionPlanTest {
         ConstantColumn.valueOf("'ECONOMY BURNISHED NICKEL'")
     )));
     subquery.setAliasName("all_nations");
-    SelectQuery expected = SelectQuery.getSelectQueryOp(
+    SelectQuery expected = SelectQuery.create(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("all_nations", "o_year"), "vc7"),
             new AliasedColumn(
@@ -945,7 +945,7 @@ public class TpchExecutionPlanTest {
     AbstractRelation partsupp = new BaseTable("tpch", "partsupp", "vt4");
     AbstractRelation orders = new BaseTable("tpch", "orders", "vt5");
     AbstractRelation nation = new BaseTable("tpch", "nation", "vt6");
-    SelectQuery subquery = SelectQuery.getSelectQueryOp(
+    SelectQuery subquery = SelectQuery.create(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("vt6", "n_name"), "nation"),
             new AliasedColumn(new ColumnOp("substr", Arrays.<UnnamedColumn>asList(
@@ -993,7 +993,7 @@ public class TpchExecutionPlanTest {
         ConstantColumn.valueOf("'%:1%'")
     )));
     subquery.setAliasName("profit");
-    SelectQuery expected = SelectQuery.getSelectQueryOp(
+    SelectQuery expected = SelectQuery.create(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("profit", "nation"), "vc7"),
             new AliasedColumn(new BaseColumn("profit", "o_year"), "vc8"),
@@ -1057,7 +1057,7 @@ public class TpchExecutionPlanTest {
     AbstractRelation orders = new BaseTable("tpch", "orders", "vt2");
     AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "vt3");
     AbstractRelation nation = new BaseTable("tpch", "nation", "vt4");
-    SelectQuery expected = SelectQuery.getSelectQueryOp(
+    SelectQuery expected = SelectQuery.create(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("vt1", "c_custkey"), "vc5"),
             new AliasedColumn(new BaseColumn("vt1", "c_name"), "vc6"),
@@ -1160,7 +1160,7 @@ public class TpchExecutionPlanTest {
 
     AbstractRelation orders = new BaseTable("tpch", "orders", "vt1");
     AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "vt2");
-    SelectQuery expected = SelectQuery.getSelectQueryOp(
+    SelectQuery expected = SelectQuery.create(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("vt2", "l_shipmode"), "vc3"),
             new AliasedColumn(new ColumnOp("sum", new ColumnOp("whenthenelse", Arrays.<UnnamedColumn>asList(
@@ -1262,7 +1262,7 @@ public class TpchExecutionPlanTest {
                 ConstantColumn.valueOf("'%unusual%accounts%'")
             ))
         ))));
-    SelectQuery expected = SelectQuery.getSelectQueryOp(
+    SelectQuery expected = SelectQuery.create(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("vt1","c_custkey"), "vc3"),
             new AliasedColumn(new ColumnOp("count", new AsteriskColumn()), "c_count")
@@ -1301,7 +1301,7 @@ public class TpchExecutionPlanTest {
 
     AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "vt1");
     AbstractRelation part = new BaseTable("tpch", "part", "vt2");
-    SelectQuery expected = SelectQuery.getSelectQueryOp(
+    SelectQuery expected = SelectQuery.create(
         Arrays.<SelectItem>asList(
             new AliasedColumn(
                 new ColumnOp("multiply", Arrays.<UnnamedColumn>asList(
@@ -1389,7 +1389,7 @@ public class TpchExecutionPlanTest {
     queryExecutionPlan.cleanUp();
     assertEquals(2, queryExecutionPlan.root.dependents.get(0).dependents.size());
 
-    SelectQuery expected = SelectQuery.getSelectQueryOp(
+    SelectQuery expected = SelectQuery.create(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new ColumnOp("avg", new BaseColumn("vt1", "s_suppkey")), "a5"),
             new AliasedColumn(new BaseColumn("vt1", "s_name"), "vc6"),
@@ -1403,7 +1403,7 @@ public class TpchExecutionPlanTest {
         ));
     assertEquals(expected.getFromList(), ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).query.getFromList());
 
-    SelectQuery revenue_cached = SelectQuery.getSelectQueryOp(
+    SelectQuery revenue_cached = SelectQuery.create(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("vt2", "l_suppkey"), "supplier_no"),
             new AliasedColumn(new ColumnOp("sum", new ColumnOp("multiply", Arrays.asList(
@@ -1424,7 +1424,7 @@ public class TpchExecutionPlanTest {
     revenue_cached.setAliasName("revenue_cached");
     assertEquals(revenue_cached, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0)).query);
 
-    SelectQuery max_revenue_cached = SelectQuery.getSelectQueryOp(
+    SelectQuery max_revenue_cached = SelectQuery.create(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new ColumnOp("max", new BaseColumn("vt3", "total_revenue")), "max_revenue")
         ), new BaseTable("verdictdb_temp", "verdictdbtemptable_3", "vt3")
@@ -1489,7 +1489,7 @@ public class TpchExecutionPlanTest {
             ))
         ));
     assertEquals(join, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0)).query.getFromList().get(0));
-    SelectQuery expected = SelectQuery.getSelectQueryOp(
+    SelectQuery expected = SelectQuery.create(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("vt1", "l_partkey"), "t_partkey"),
             new AliasedColumn(new ColumnOp("multiply", Arrays.asList(
@@ -1552,7 +1552,7 @@ public class TpchExecutionPlanTest {
     queryExecutionPlan.cleanUp();
     assertEquals(1, queryExecutionPlan.root.dependents.get(0).dependents.size());
 
-    SelectQuery expected = SelectQuery.getSelectQueryOp(
+    SelectQuery expected = SelectQuery.create(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("vt3", "l_orderkey"), "vc4"),
             new AliasedColumn(new ColumnOp("sum", new BaseColumn("vt3", "l_quantity")), "t_sum_quantity")
@@ -1617,7 +1617,7 @@ public class TpchExecutionPlanTest {
     queryExecutionPlan.cleanUp();
     AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "vt1");
     AbstractRelation part = new BaseTable("tpch", "part", "vt2");
-    SelectQuery expected = SelectQuery.getSelectQueryOp(
+    SelectQuery expected = SelectQuery.create(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new ColumnOp("sum", new ColumnOp("multiply", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("vt1", "l_extendedprice"),
@@ -1824,7 +1824,7 @@ public class TpchExecutionPlanTest {
         new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
     queryExecutionPlan.cleanUp();
     assertEquals(1, queryExecutionPlan.root.dependents.get(0).dependents.size());
-    SelectQuery expected = SelectQuery.getSelectQueryOp(
+    SelectQuery expected = SelectQuery.create(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("vt3","l_partkey"), "vc4"),
             new AliasedColumn(new BaseColumn("vt3", "l_suppkey"), "vc5"),
@@ -2092,13 +2092,13 @@ public class TpchExecutionPlanTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(new JdbcConnection(conn, new H2Syntax()),
         new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
     queryExecutionPlan.cleanUp();
-    SelectQuery rewritten = SelectQuery.getSelectQueryOp(
+    SelectQuery rewritten = SelectQuery.create(
         Arrays.<SelectItem>asList(new AliasedColumn(new BaseColumn("verdictdb_temp", "verdictdbtemptable_1", "quantity_avg"), "quantity_avg")),
         new BaseTable("verdictdb_temp", "verdictdbtemptable_1", "verdictdbtemptable_1"));
     assertEquals(rewritten,
         ((SubqueryColumn)((ColumnOp)((CreateTableAsSelectExecutionNode)(queryExecutionPlan.root.dependents.get(0))).query.getFilter().get()).getOperand(1)).getSubquery());
 
-    SelectQuery expected = SelectQuery.getSelectQueryOp(
+    SelectQuery expected = SelectQuery.create(
         Arrays.<SelectItem>asList(new AliasedColumn(new ColumnOp("avg", new BaseColumn("vt3", "l_quantity")), "quantity_avg")),
         new BaseTable("tpch", "lineitem", "vt3")
     );

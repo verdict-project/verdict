@@ -16,7 +16,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.core.execution.ExecutionResult;
 import org.verdictdb.core.execution.QueryExecutionNode;
-import org.verdictdb.core.execution.SingleAggExecutionNode;
+import org.verdictdb.core.execution.QueryExecutionPlan;
 import org.verdictdb.core.query.AbstractRelation;
 import org.verdictdb.core.query.AliasedColumn;
 import org.verdictdb.core.query.ColumnOp;
@@ -64,13 +64,13 @@ public class AsyncAggExecutionNode extends QueryExecutionNode {
     return tableNamePrefix + tableNum++;
   }
 
-  private AsyncAggExecutionNode(DbmsConnection conn) {
-    super(conn, null);
+  private AsyncAggExecutionNode() {
+    super(null);
     // TODO Auto-generated constructor stub
   }
   
   public static AsyncAggExecutionNode create(
-      DbmsConnection conn,
+      QueryExecutionPlan plan,
       List<QueryExecutionNode> individualAggs,
       List<QueryExecutionNode> combiners) {
     return null;
