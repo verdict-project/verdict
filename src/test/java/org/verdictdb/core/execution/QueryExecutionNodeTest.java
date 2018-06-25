@@ -88,7 +88,7 @@ public class QueryExecutionNodeTest {
         new BaseTable("myschema", "temptable2", "t"));
     
     QueryExecutionNode dep = new AggExecutionNode(conn, "myschema", "temptable2", aggQuery);
-    QueryExecutionNode root = new ProjectionExecutionNode(conn, projectionQuery);
+    QueryExecutionNode root = new ProjectionExecutionNode(conn, "myschema", "temptable", projectionQuery);
     root.addDependency(dep);
     
     List<AggExecutionNodeBlock> topAggNodes = new ArrayList<>();

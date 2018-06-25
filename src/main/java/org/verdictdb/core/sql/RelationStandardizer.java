@@ -40,6 +40,13 @@ public class RelationStandardizer {
   //key is the select column name, value is their alias
   private HashMap<String, String> colNameAndColAlias = new HashMap<>();
 
+  /***
+   * If From list is a subquery, we need to record the column alias name in colNameAndTempColAlias
+   * so that we can replace the select item with the column alias name we generate.
+   */
+  private HashMap<String, String> colNameAndTempColAlias = new HashMap<>();
+
+
   public RelationStandardizer(MetaDataProvider meta) {
     this.meta = meta;
   }
@@ -52,6 +59,9 @@ public class RelationStandardizer {
       } else {
         col.setTableSourceAlias(colNameAndTableAlias.get(col.getColumnName()));
       }
+    }
+    if (colNameAndTempColAlias.containsKey(col.getColumnName())) {
+      col.setColumnName(colNameAndTempColAlias.get(col.getColumnName()));
     }
     return col;
   }
@@ -162,7 +172,9 @@ public class RelationStandardizer {
     } else if (table instanceof JoinTable) {
       List<String> joinColName = new ArrayList<>();
       for (int i = 0; i < ((JoinTable) table).getJoinList().size(); i++) {
-        joinColName.addAll(setupTableSource(((JoinTable) table).getJoinList().get(i)).getKey());
+        Pair<List<String>, AbstractRelation> result = setupTableSource(((JoinTable) table).getJoinList().get(i));
+        ((JoinTable) table).getJoinList().set(i, result.getValue());
+        joinColName.addAll(result.getKey());
         if (i != 0) {
           ((JoinTable) table).getCondition().set(i - 1, replaceFilter(((JoinTable) table).getCondition().get(i - 1)));
         }
@@ -184,7 +196,9 @@ public class RelationStandardizer {
           if (((AliasedColumn) sel).getColumn() instanceof BaseColumn && ((AliasedColumn) sel).getAliasName().matches("^vc[0-9]+$")) {
             colNameAndTableAlias.put(((BaseColumn) ((AliasedColumn) sel).getColumn()).getColumnName(),
                 table.getAliasName().get());
-          } else colNameAndTableAlias.put(((AliasedColumn) sel).getAliasName(), table.getAliasName().get());
+            colNameAndTempColAlias.put(((BaseColumn) ((AliasedColumn) sel).getColumn()).getColumnName(), ((AliasedColumn) sel).getAliasName());
+          }
+          else colNameAndTableAlias.put(((AliasedColumn) sel).getAliasName(), table.getAliasName().get());
           colName.add(((AliasedColumn) sel).getAliasName());
         } else if (sel instanceof AsteriskColumn) {
           //put all the columns in the fromlist of subquery to the colNameAndTableAlias
