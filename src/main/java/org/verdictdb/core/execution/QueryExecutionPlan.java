@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
 import org.verdictdb.connection.DbmsConnection;
+import org.verdictdb.core.execution.ola.AggExecutionNodeBlock;
 import org.verdictdb.core.query.AbstractRelation;
 import org.verdictdb.core.query.BaseTable;
 import org.verdictdb.core.query.JoinTable;
@@ -105,36 +106,43 @@ public class QueryExecutionPlan {
       throws VerdictDbException {
     return new SelectAllExecutionNode(conn, syntax, query, this.scratchpadSchemaName);
   }
-  
+
+  /**
+   *
+   * @param root The root execution node of ALL nodes (i.e., not just the top agg node)
+   * @return
+   * @throws VerdictDbException
+   */
   QueryExecutionNode makeAsyncronousAggIfAvailable(QueryExecutionNode root) throws VerdictDbException {
-    List<QueryExecutionNode> topAggNodes = new ArrayList<>();
-    root.identifyTopAggNodes(topAggNodes);
-    
-    List<QueryExecutionNode> newNodes = new ArrayList<>();
-    for (QueryExecutionNode node : topAggNodes) {
-      QueryExecutionNode newNode = null;
-      if (((AggExecutionNode) node).doesContainScrambledTablesInDescendants(scrambleMeta)) {
-        newNode = ((AggExecutionNode) node).toAsyncAgg(scrambleMeta);
-      } else {
-        newNode = node;
-      }
-      newNodes.add(newNode);
-    }
-    
+    List<AggExecutionNodeBlock> topAggNodeBlocks = new ArrayList<>();
+    root.identifyTopAggBlocks(topAggNodeBlocks);
+
+//    List<QueryExecutionNode> newNodes = new ArrayList<>();
+//    for (QueryExecutionNode node : topAggNodes) {
+//      QueryExecutionNode newNode = null;
+//      if (((AggExecutionNode) node).doesContainScrambledTablesInDescendants(scrambleMeta)) {
+//        newNode = ((AggExecutionNode) node).toAsyncAgg(scrambleMeta);
+//      } else {
+//        newNode = node;
+//      }
+//      newNodes.add(newNode);
+//    }
+
     // converted nodes should be used in place of the original nodes.
-    for (int i = 0; i < topAggNodes.size(); i++) {
-      QueryExecutionNode node = topAggNodes.get(i);
-      QueryExecutionNode newNode = newNodes.get(i);
-      
-      List<QueryExecutionNode> parents = node.getParents();
+    for (int i = 0; i < topAggNodeBlocks.size(); i++) {
+      AggExecutionNodeBlock nodeBlock = topAggNodeBlocks.get(i);
+      QueryExecutionNode oldNode = nodeBlock.getRoot();
+      QueryExecutionNode newNode = nodeBlock.constructProgressiveAggNodes(scrambleMeta);
+
+      List<QueryExecutionNode> parents = oldNode.getParents();
       for (QueryExecutionNode parent : parents) {
         List<QueryExecutionNode> parentDependants = parent.getDependents();
-        int idx = parentDependants.indexOf(node);
+        int idx = parentDependants.indexOf(oldNode);
         parentDependants.remove(idx);
         parentDependants.add(idx, newNode);
       }
     }
-    
+
     return root;
   }
   
@@ -149,6 +157,6 @@ public class QueryExecutionPlan {
   void cleanUp() {
     tempTableNameNum = 0;
   }
-
   static void resetTempTableNameNum() {tempTableNameNum = 0;}
+
 }

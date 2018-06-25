@@ -27,24 +27,24 @@ public class AggExecutionNode extends CreateTableAsSelectExecutionNode {
     }
   }
 
-  /**
-   * Make this agg execution node perform progressive aggregation.
-   * 
-   * @param scrambleMeta
-   * @throws VerdictDbException 
-   */
-  public QueryExecutionNode toAsyncAgg(ScrambleMeta scrambleMeta) throws VerdictDbException {
-    QueryExecutionNode newNode = new AsyncAggExecutionNode(conn, scrambleMeta, resultSchemaName, resultTableName, query);
-    
-    // make that newNode runs only after the dependencies of this current node complete.
-    List<QueryExecutionNode> leaves = newNode.getLeafNodes();
-    for (QueryExecutionNode leaf : leaves) {
-      for (QueryExecutionNode dep : getDependents()) {
-        leaf.addDependency(dep);
-      }
-    }
-    return newNode;
-  }
+//  /**
+//   * Make this agg execution node perform progressive aggregation.
+//   * 
+//   * @param scrambleMeta
+//   * @throws VerdictDbException 
+//   */
+//  public QueryExecutionNode toAsyncAgg(ScrambleMeta scrambleMeta) throws VerdictDbException {
+//    QueryExecutionNode newNode = new AsyncAggExecutionNode(conn, scrambleMeta, resultSchemaName, resultTableName, query);
+//    
+//    // make that newNode runs only after the dependencies of this current node complete.
+//    List<QueryExecutionNode> leaves = newNode.getLeafNodes();
+//    for (QueryExecutionNode leaf : leaves) {
+//      for (QueryExecutionNode dep : getDependents()) {
+//        leaf.addDependency(dep);
+//      }
+//    }
+//    return newNode;
+//  }
 
   @Override
   public ExecutionResult executeNode(List<ExecutionResult> downstreamResults) {
