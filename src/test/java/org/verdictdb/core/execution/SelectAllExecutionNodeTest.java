@@ -14,7 +14,7 @@ import java.util.Arrays;
 
 import static org.junit.Assert.assertEquals;
 
-public class ProjectionExecutionNodeTest {
+public class SelectAllExecutionNodeTest {
 
   static String originalSchema = "originalschema";
 
@@ -59,15 +59,16 @@ public class ProjectionExecutionNodeTest {
         new BaseColumn("t", "value"),
         new SubqueryColumn(subquery)
     )));
-    ProjectionExecutionNode node = new ProjectionExecutionNode(conn, newSchema, newTable, query);
+    SelectAllExecutionNode node = new SelectAllExecutionNode(conn, new H2Syntax(), query, newSchema);
     QueryExecutionPlan.resetTempTableNameNum();
 
     assertEquals(1, node.dependents.size());
+    assertEquals(1, node.dependents.get(0).dependents.size());
     SelectQuery rewritten = SelectQuery.getSelectQueryOp(
         Arrays.<SelectItem>asList(
-            new AliasedColumn(new BaseColumn(newSchema,"verdictdbtemptable_0", "a"), "a"))
-        , new BaseTable("newschema", "verdictdbtemptable_0", "verdictdbtemptable_0"));
-    assertEquals(rewritten, ((SubqueryColumn)((ColumnOp)node.query.getFilter().get()).getOperand(1)).getSubquery());
+            new AliasedColumn(new BaseColumn(newSchema,"verdictdbtemptable_1", "a"), "a"))
+        , new BaseTable("newschema", "verdictdbtemptable_1", "verdictdbtemptable_1"));
+    assertEquals(rewritten, ((SubqueryColumn)((ColumnOp)node.dependents.get(0).query.getFilter().get()).getOperand(1)).getSubquery());
   }
 
   @Test
@@ -82,11 +83,11 @@ public class ProjectionExecutionNodeTest {
         new BaseColumn("t", "value"),
         new SubqueryColumn(subquery)
     )));
-    ProjectionExecutionNode node = new ProjectionExecutionNode(conn, newSchema, newTable, query);
+    SelectAllExecutionNode node = new SelectAllExecutionNode(conn, new H2Syntax(), query, newSchema);
     QueryExecutionPlan.resetTempTableNameNum();
 
     node.execute();
-    conn.executeUpdate(String.format("DROP TABLE \"%s\".\"%s\"", newSchema, newTable));
+    conn.executeUpdate(String.format("DROP TABLE \"%s\".\"%s\"", newSchema, "verdictdbtemptable_1"));
     conn.executeUpdate(String.format("DROP TABLE \"%s\".\"%s\"", newSchema, "verdictdbtemptable_0"));
   }
 }

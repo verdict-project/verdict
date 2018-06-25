@@ -2,17 +2,13 @@ package org.verdictdb.core.execution;
 
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.DbmsQueryResult;
-import org.verdictdb.core.aggresult.AggregateFrame;
-import org.verdictdb.core.aggresult.AggregateFrameQueryResult;
-import org.verdictdb.core.query.AbstractRelation;
-import org.verdictdb.core.query.CreateTableAsSelectQuery;
 import org.verdictdb.core.query.SelectQuery;
-import org.verdictdb.core.sql.CreateTableToSql;
-import org.verdictdb.exception.VerdictDbException;
 import org.verdictdb.sql.syntax.SyntaxAbstract;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.BlockingDeque;
+import java.util.concurrent.LinkedBlockingDeque;
 
 public class SelectAllExecutionNode extends QueryExecutionNode {
 
@@ -21,6 +17,10 @@ public class SelectAllExecutionNode extends QueryExecutionNode {
   private SyntaxAbstract syntax;
 
   private SelectQuery query;
+
+  private List<DbmsQueryResult> dbmsQueryResults = new ArrayList<>();
+
+  BlockingDeque<ExecutionResult> queue = new LinkedBlockingDeque<>();
 
   private String scratchpadSchemaName;
 
@@ -41,32 +41,36 @@ public class SelectAllExecutionNode extends QueryExecutionNode {
     return tempTableNames;
   }
 
-  public void addQuery(SelectQuery query) {
-    this.query = query;
-    generateDependency();
-  }
-
   @Override
   public ExecutionResult executeNode(List<ExecutionResult> downstreamResults) {
-    // write the result
-    ExecutionResult result = new ExecutionResult();
+    for (ExecutionResult result:queue) {
+      addtempTableName((String)result.getValue("schemaName"), (String) result.getValue("tableName"));
+    }
     for (String t:tempTableNames){
       String sql = "select * from " + t;
       DbmsQueryResult queryResult = conn.executeQuery(sql);
+      dbmsQueryResults.add(queryResult);
     }
 
     return new ExecutionResult();
   }
 
+  public List<DbmsQueryResult> getDbmsQueryResults() {
+    return dbmsQueryResults;
+  }
+
   private void generateDependency() {
     String temptableName = QueryExecutionPlan.generateTempTableName();
     if (query.isAggregateQuery()) {
-      addDependency(new AggExecutionNode(conn, scratchpadSchemaName, temptableName, query));
+      AggExecutionNode dependent = new AggExecutionNode(conn, scratchpadSchemaName, temptableName, query);
+      dependent.addBroadcastingQueue(queue);
+      addDependency(dependent);
     }
     else {
-      addDependency(new ProjectionExecutionNode(conn, scratchpadSchemaName, temptableName, query));
+      ProjectionExecutionNode dependent = new ProjectionExecutionNode(conn, scratchpadSchemaName, temptableName, query);
+      dependent.addBroadcastingQueue(queue);
+      addDependency(dependent);
     }
-    tempTableNames.add(temptableName);
   }
 
 }
