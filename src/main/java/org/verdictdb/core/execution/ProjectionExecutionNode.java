@@ -9,14 +9,18 @@ import org.verdictdb.exception.VerdictDbException;
 
 public class ProjectionExecutionNode extends QueryExecutionNodeWithDependencies {
 
-  protected ProjectionExecutionNode() {
-    super();
+  protected ProjectionExecutionNode(String scratchpadSchemaName) {
+    super(scratchpadSchemaName);
   }
   
-  public static ProjectionExecutionNode create(QueryExecutionPlan plan, SelectQuery query) {
-    ProjectionExecutionNode node = new ProjectionExecutionNode();
-    convertSubqueriesIntoDependentNodes(plan, query, node);
+  public static ProjectionExecutionNode create(SelectQuery query, String scratchpadSchemaName) {
+    ProjectionExecutionNode node = new ProjectionExecutionNode(scratchpadSchemaName);
+    convertSubqueriesIntoDependentNodes(query, node);
     return node;
+  }
+  
+  public SelectQuery getQuery() {
+    return (SelectQuery) query;
   }
 
   @Override

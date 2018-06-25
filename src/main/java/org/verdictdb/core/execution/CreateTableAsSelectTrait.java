@@ -15,8 +15,13 @@ public class CreateTableAsSelectTrait extends QueryExecutionNodeWithPlaceHolders
   
   String tableName;
   
-  protected CreateTableAsSelectTrait() {
+  String scratchpadSchemaName;
+  
+  static int tempTableNameNum = 0;
+  
+  protected CreateTableAsSelectTrait(String scratchpadSchemaName) {
     super();
+    this.scratchpadSchemaName = scratchpadSchemaName;
   }
   
   public void setSchemaName(String schemaName) {
@@ -27,14 +32,18 @@ public class CreateTableAsSelectTrait extends QueryExecutionNodeWithPlaceHolders
     this.tableName = tableName;
   }
   
-  public static CreateTableAsSelectTrait create(QueryExecutionPlan plan, SelectQuery query) {
-    CreateTableAsSelectTrait node = new CreateTableAsSelectTrait();
+  public static CreateTableAsSelectTrait create(SelectQuery query, String scratchpadSchemaName) {
+    CreateTableAsSelectTrait node = new CreateTableAsSelectTrait(scratchpadSchemaName);
     
-    Pair<String, String> tempTableFullName = plan.generateTempTableName();
+    Pair<String, String> tempTableFullName = node.generateTempTableName();
     node.setSchemaName(tempTableFullName.getLeft());
     node.setTableName(tempTableFullName.getRight());
     
     return node;
+  }
+  
+  public SelectQuery getQuery() {
+    return (SelectQuery) query;
   }
 
   @Override
@@ -55,6 +64,10 @@ public class CreateTableAsSelectTrait extends QueryExecutionNodeWithPlaceHolders
     result.setKeyValue("schemaName", schemaName);
     result.setKeyValue("tableName", tableName);
     return result;
+  }
+  
+  Pair<String, String> generateTempTableName() {
+    return Pair.of(scratchpadSchemaName, String.format("verdictdbtemptable_%d", tempTableNameNum++));
   }
 
 }

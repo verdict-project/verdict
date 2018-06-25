@@ -59,7 +59,7 @@ public class SelectAllExecutionNodeTest {
         new BaseColumn("t", "value"),
         new SubqueryColumn(subquery)
     )));
-    SelectAllExecutionNode node = new SelectAllExecutionNode(conn, new H2Syntax(), query, newSchema);
+    SelectAllExecutionNode node = SelectAllExecutionNode.create(query, newSchema);
     QueryExecutionPlan.resetTempTableNameNum();
 
     assertEquals(1, node.dependents.size());
@@ -68,7 +68,9 @@ public class SelectAllExecutionNodeTest {
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn(newSchema,"verdictdbtemptable_1", "a"), "a"))
         , new BaseTable("newschema", "verdictdbtemptable_1", "verdictdbtemptable_1"));
-    assertEquals(rewritten, ((SubqueryColumn)((ColumnOp)node.dependents.get(0).query.getFilter().get()).getOperand(1)).getSubquery());
+    assertEquals(
+        rewritten, 
+        ((SubqueryColumn)((ColumnOp) ((SelectQuery) node.dependents.get(0).getQuery()).getFilter().get()).getOperand(1)).getSubquery());
   }
 
   @Test
@@ -83,7 +85,7 @@ public class SelectAllExecutionNodeTest {
         new BaseColumn("t", "value"),
         new SubqueryColumn(subquery)
     )));
-    SelectAllExecutionNode node = new SelectAllExecutionNode(conn, new H2Syntax(), query, newSchema);
+    SelectAllExecutionNode node = SelectAllExecutionNode.create(query, newSchema);
     QueryExecutionPlan.resetTempTableNameNum();
 
     node.execute();

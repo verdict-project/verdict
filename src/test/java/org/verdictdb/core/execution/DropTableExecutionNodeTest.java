@@ -32,7 +32,7 @@ public class DropTableExecutionNodeTest {
   @Test
   public void testExecuteNode() {
 //    LinkedBlockingDeque<ExecutionResult> resultQueue = new LinkedBlockingDeque<>();
-    QueryExecutionNode root = new DropTableExecutionNode(conn, originalSchema, originalTable);
+    QueryExecutionNode root = DropTableExecutionNode.create();
     root.execute();
   }
 

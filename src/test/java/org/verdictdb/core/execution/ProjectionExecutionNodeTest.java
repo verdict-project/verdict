@@ -59,7 +59,7 @@ public class ProjectionExecutionNodeTest {
         new BaseColumn("t", "value"),
         new SubqueryColumn(subquery)
     )));
-    ProjectionExecutionNode node = new ProjectionExecutionNode(conn, newSchema, newTable, query);
+    ProjectionExecutionNode node = ProjectionExecutionNode.create(query, "newschema");
     QueryExecutionPlan.resetTempTableNameNum();
 
     assertEquals(1, node.dependents.size());
@@ -67,7 +67,7 @@ public class ProjectionExecutionNodeTest {
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn(newSchema,"verdictdbtemptable_0", "a"), "a"))
         , new BaseTable("newschema", "verdictdbtemptable_0", "verdictdbtemptable_0"));
-    assertEquals(rewritten, ((SubqueryColumn)((ColumnOp)node.query.getFilter().get()).getOperand(1)).getSubquery());
+    assertEquals(rewritten, ((SubqueryColumn)((ColumnOp) node.getQuery().getFilter().get()).getOperand(1)).getSubquery());
   }
 
   @Test
@@ -82,7 +82,7 @@ public class ProjectionExecutionNodeTest {
         new BaseColumn("t", "value"),
         new SubqueryColumn(subquery)
     )));
-    ProjectionExecutionNode node = new ProjectionExecutionNode(conn, newSchema, newTable, query);
+    ProjectionExecutionNode node = ProjectionExecutionNode.create(query, "newschema");
     QueryExecutionPlan.resetTempTableNameNum();
 
     node.execute();

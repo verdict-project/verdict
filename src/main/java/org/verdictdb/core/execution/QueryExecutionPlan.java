@@ -104,7 +104,7 @@ public class QueryExecutionPlan {
    */
 
   QueryExecutionNode makePlan(SelectQuery query) throws VerdictDbException {
-    return SelectAllExecutionNode.create(this, query);
+    return SelectAllExecutionNode.create(query, this.scratchpadSchemaName);
   }
 
   /**

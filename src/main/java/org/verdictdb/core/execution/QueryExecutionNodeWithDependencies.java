@@ -7,10 +7,13 @@ import org.verdictdb.core.query.SelectQuery;
 
 public class QueryExecutionNodeWithDependencies extends CreateTableAsSelectTrait {
 
+  protected QueryExecutionNodeWithDependencies(String scratchpadSchemaName) {
+    super(scratchpadSchemaName);
+  }
+
   static void convertSubqueriesIntoDependentNodes (
-      QueryExecutionPlan plan, 
       SelectQuery query, 
-      QueryExecutionNodeWithPlaceHolders node) {
+      CreateTableAsSelectTrait node) {
     
     // from list
     for (AbstractRelation source : query.getFromList()) {
@@ -19,10 +22,10 @@ public class QueryExecutionNodeWithDependencies extends CreateTableAsSelectTrait
       // If the table is subquery, we need to add it to dependency
       if (source instanceof SelectQuery) {
         if (source.isAggregateQuery()) {
-          AggExecutionNode dep = AggExecutionNode.create(plan, (SelectQuery) source);
+          AggExecutionNode dep = AggExecutionNode.create((SelectQuery) source, node.scratchpadSchemaName);
           node.addDependency(dep);
         } else {
-          ProjectionExecutionNode dep = ProjectionExecutionNode.create(plan, (SelectQuery) source);
+          ProjectionExecutionNode dep = ProjectionExecutionNode.create((SelectQuery) source, node.scratchpadSchemaName);
           node.addDependency(dep);
         }
         
@@ -42,10 +45,10 @@ public class QueryExecutionNodeWithDependencies extends CreateTableAsSelectTrait
           // If the table is subquery, we need to add it to dependency
           if (s instanceof SelectQuery) {
             if (s.isAggregateQuery()) {
-              AggExecutionNode dep = AggExecutionNode.create(plan, (SelectQuery) s);
+              AggExecutionNode dep = AggExecutionNode.create((SelectQuery) s, node.scratchpadSchemaName);
               node.addDependency(dep);
             } else {
-              ProjectionExecutionNode dep = ProjectionExecutionNode.create(plan, (SelectQuery) s);
+              ProjectionExecutionNode dep = ProjectionExecutionNode.create((SelectQuery) s, node.scratchpadSchemaName);
               node.addDependency(dep);
             }
             

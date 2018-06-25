@@ -32,7 +32,7 @@ public class SelectAllExecutionNode extends QueryExecutionNodeWithPlaceHolders {
     super(null);
   }
 
-  public static QueryExecutionNode create(QueryExecutionPlan plan, SelectQuery query) {
+  public static SelectAllExecutionNode create(SelectQuery query, String scratchpadSchemaName) {
     SelectAllExecutionNode selectAll = new SelectAllExecutionNode();
     SelectQuery selectQuery = SelectQuery.create(new AsteriskColumn(), selectAll.createPlaceHolderTable("t"));
     selectAll.setQuery(selectQuery);
@@ -43,12 +43,12 @@ public class SelectAllExecutionNode extends QueryExecutionNodeWithPlaceHolders {
 //    String tableName = tempTableFullName.getRight();
     
     if (query.isAggregateQuery()) {
-      AggExecutionNode dependent = AggExecutionNode.create(plan, query);
+      AggExecutionNode dependent = AggExecutionNode.create(query, scratchpadSchemaName);
       dependent.addBroadcastingQueue(queue);
       selectAll.addDependency(dependent);
     }
     else {
-      ProjectionExecutionNode dependent = ProjectionExecutionNode.create(plan, query);
+      ProjectionExecutionNode dependent = ProjectionExecutionNode.create(query, scratchpadSchemaName);
       dependent.addBroadcastingQueue(queue);
       selectAll.addDependency(dependent);
     }

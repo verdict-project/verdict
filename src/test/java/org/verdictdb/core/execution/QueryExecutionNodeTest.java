@@ -45,7 +45,7 @@ public class QueryExecutionNodeTest {
     String schemaName = "newschema";
     String tableName = "newtable";
     ScrambleMeta scrambleMeta = generateTestScrambleMeta();
-    QueryExecutionNode node = new AggExecutionNode(conn, schemaName, tableName, query);
+    QueryExecutionNode node = AggExecutionNode.create(query, "newschema");
     assertTrue(node.doesContainScrambledTablesInDescendants(scrambleMeta));
   }
   
@@ -67,7 +67,7 @@ public class QueryExecutionNodeTest {
     String schemaName = "newschema";
     String tableName = "newtable";
     ScrambleMeta scrambleMeta = generateTestScrambleMeta();
-    QueryExecutionNode node = new AggExecutionNode(conn, schemaName, tableName, query);
+    QueryExecutionNode node = AggExecutionNode.create(query, "newschema");
     assertFalse(node.doesContainScrambledTablesInDescendants(scrambleMeta));
   }
   
@@ -87,8 +87,8 @@ public class QueryExecutionNodeTest {
         Arrays.<SelectItem>asList(new AsteriskColumn()),
         new BaseTable("myschema", "temptable2", "t"));
     
-    QueryExecutionNode dep = new AggExecutionNode(conn, "myschema", "temptable2", aggQuery);
-    QueryExecutionNode root = new ProjectionExecutionNode(conn, "myschema", "temptable", projectionQuery);
+    QueryExecutionNode dep = AggExecutionNode.create(aggQuery, "newschema");
+    QueryExecutionNode root = ProjectionExecutionNode.create(projectionQuery, "newschema");
     root.addDependency(dep);
     
     List<AggExecutionNodeBlock> topAggNodes = new ArrayList<>();

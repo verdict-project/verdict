@@ -45,7 +45,7 @@ public class CreateTableAsSelectExecutionNodeTest {
   public void testExecuteNode() {
     BaseTable base = new BaseTable(originalSchema, originalTable, "t");
     SelectQuery query = SelectQuery.create(Arrays.<SelectItem>asList(new AsteriskColumn()), base);
-    QueryExecutionNode root = new CreateTableAsSelectTrait(conn, newSchema, newTable, query);
+    QueryExecutionNode root = CreateTableAsSelectTrait.create(query, "newschema");
 //    LinkedBlockingDeque<ExecutionResult> resultQueue = new LinkedBlockingDeque<>();
     root.execute();
     conn.executeUpdate(String.format("DROP TABLE \"%s\".\"%s\"", newSchema, newTable));

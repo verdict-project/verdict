@@ -15,14 +15,18 @@ public class AggExecutionNode extends QueryExecutionNodeWithDependencies {
   
   String resultTableName;
 
-  protected AggExecutionNode() {
-    super();
+  protected AggExecutionNode(String scratchpadSchemaName) {
+    super(scratchpadSchemaName);
   }
   
-  public static AggExecutionNode create(QueryExecutionPlan plan, SelectQuery query) {
-    AggExecutionNode node = new AggExecutionNode();
-    convertSubqueriesIntoDependentNodes(plan, query, node);
+  public static AggExecutionNode create(SelectQuery query, String scratchpadSchemaName) {
+    AggExecutionNode node = new AggExecutionNode(scratchpadSchemaName);
+    convertSubqueriesIntoDependentNodes(query, node);
     return node;
+  }
+  
+  public SelectQuery getQuery() {
+    return (SelectQuery) query;
   }
 
 //  /**
