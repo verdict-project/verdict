@@ -19,7 +19,7 @@ public abstract class QueryExecutionNodeWithPlaceHolders extends QueryExecutionN
     super(query);
   }
   
-  BaseTable createPlaceHolderTable(String aliasName) {
+  public BaseTable createPlaceHolderTable(String aliasName) {
     BaseTable table = new BaseTable("placeholderSchemaName", "placeholderTableName", aliasName);
     placeholderTables.add(table);
     return table;

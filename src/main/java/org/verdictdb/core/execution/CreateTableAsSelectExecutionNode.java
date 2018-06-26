@@ -11,11 +11,11 @@ import org.verdictdb.exception.VerdictDBException;
 
 public class CreateTableAsSelectExecutionNode extends QueryExecutionNodeWithPlaceHolders {
   
-  CreateTableAsSelectQuery createQuery;
+//  CreateTableAsSelectQuery createQuery;
   
-  String newTableSchemaName;
-  
-  String newTableName;
+//  String newTableSchemaName;
+//  
+//  String newTableName;
   
   String scratchpadSchemaName;
   
@@ -24,10 +24,6 @@ public class CreateTableAsSelectExecutionNode extends QueryExecutionNodeWithPlac
   protected CreateTableAsSelectExecutionNode(String scratchpadSchemaName) {
     super();
     this.scratchpadSchemaName = scratchpadSchemaName;
-    
-    Pair<String, String> tempTableFullName = generateTempTableName();
-    this.newTableSchemaName = tempTableFullName.getLeft();
-    this.newTableName = tempTableFullName.getRight();
   }
   
 //  public void setNewTableSchemaName(String schemaName) {
@@ -46,8 +42,6 @@ public class CreateTableAsSelectExecutionNode extends QueryExecutionNodeWithPlac
   
   public void setSelectQuery(SelectQuery query) {
     this.selectQuery = query;
-    CreateTableAsSelectQuery createQuery = new CreateTableAsSelectQuery(newTableSchemaName, newTableName, query);
-    this.createQuery = createQuery;
   }
   
   public SelectQuery getSelectQuery() {
@@ -57,9 +51,12 @@ public class CreateTableAsSelectExecutionNode extends QueryExecutionNodeWithPlac
   @Override
   public ExecutionInfoToken executeNode(DbmsConnection conn, List<ExecutionInfoToken> downstreamResults) {
     super.executeNode(conn, downstreamResults);
+
+    Pair<String, String> tempTableFullName = generateTempTableName();
+    String newTableSchemaName = tempTableFullName.getLeft();
+    String newTableName = tempTableFullName.getRight();
+    CreateTableAsSelectQuery createQuery = new CreateTableAsSelectQuery(newTableSchemaName, newTableName, selectQuery);
     
-//    CreateTableAsSelectQuery createQuery = new CreateTableAsSelectQuery(schemaName, tableName, query);
-//    CreateTableToSql toSql = new CreateTableToSql(conn.getSyntax());
     try {
       String sql = QueryToSql.convert(conn.getSyntax(), createQuery);
       conn.executeUpdate(sql);
@@ -74,8 +71,12 @@ public class CreateTableAsSelectExecutionNode extends QueryExecutionNodeWithPlac
     return result;
   }
   
-  Pair<String, String> generateTempTableName() {
-    return Pair.of(scratchpadSchemaName, String.format("verdictdbtemptable_%d", tempTableNameNum++));
+  protected String generateUniqueName() {
+    return String.format("verdictdbtemptable_%d", tempTableNameNum++);
+  }
+  
+  protected Pair<String, String> generateTempTableName() {
+    return Pair.of(scratchpadSchemaName, generateUniqueName());
   }
 
   @Override
@@ -87,10 +88,10 @@ public class CreateTableAsSelectExecutionNode extends QueryExecutionNodeWithPlac
   
   void copyFields(CreateTableAsSelectExecutionNode from, CreateTableAsSelectExecutionNode to) {
     super.copyFields(from, to);
-    to.newTableSchemaName = from.newTableSchemaName;
-    to.newTableName = from.newTableName;
+//    to.newTableSchemaName = from.newTableSchemaName;
+//    to.newTableName = from.newTableName;
     to.scratchpadSchemaName = from.scratchpadSchemaName;
-    to.createQuery = new CreateTableAsSelectQuery(newTableSchemaName, newTableName, to.getSelectQuery());
+//    to.createQuery = new CreateTableAsSelectQuery(newTableSchemaName, newTableName, to.getSelectQuery());
   }
 
 }

@@ -128,7 +128,7 @@ public class QueryExecutionPlan {
     for (int i = 0; i < aggBlocks.size(); i++) {
       AggExecutionNodeBlock nodeBlock = aggBlocks.get(i);
       QueryExecutionNode oldNode = nodeBlock.getBlockRootNode();
-      QueryExecutionNode newNode = nodeBlock.convertToProgressiveAgg(scrambleMeta);
+      QueryExecutionNode newNode = nodeBlock.convertToProgressiveAgg(scratchpadSchemaName, scrambleMeta);
 
       List<QueryExecutionNode> parents = oldNode.getParents();
       for (QueryExecutionNode parent : parents) {

@@ -97,7 +97,7 @@ public class AggExecutionNodeBlock {
    * of partitions)
    * @throws VerdictDBValueException 
    */
-  public QueryExecutionNode convertToProgressiveAgg (ScrambleMeta scrambleMeta) throws VerdictDBValueException {
+  public QueryExecutionNode convertToProgressiveAgg (String scratchpadSchemaName, ScrambleMeta scrambleMeta) throws VerdictDBValueException {
     List<QueryExecutionNode> individualAggNodes = new ArrayList<>();
     List<QueryExecutionNode> combiners = new ArrayList<>();
     
@@ -147,13 +147,14 @@ public class AggExecutionNodeBlock {
     // third, stack combiners
     for (int i = 0; i < aggMeta.totalBlockAggCount()-1; i++) {
       AggCombinerExecutionNode combiner = AggCombinerExecutionNode.create(
+          scratchpadSchemaName,
           individualAggNodes.get(0), 
           individualAggNodes.get(1));
       combiners.add(combiner);
     }
     
     // fourth, re-link the listening queue for the new AsyncAggNode
-    QueryExecutionNode newRoot = AsyncAggExecutionNode.create(individualAggNodes, combiners);
+    QueryExecutionNode newRoot = AsyncAggExecutionNode.create(scratchpadSchemaName, individualAggNodes, combiners);
     List<ExecutionTokenQueue> broadcastingQueue = blockRoot.getBroadcastingQueues();
     for (ExecutionTokenQueue queue : broadcastingQueue) {
       newRoot.addBroadcastingQueue(queue);

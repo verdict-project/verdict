@@ -29,7 +29,7 @@ public class UniformScramblerTest {
 
   static String newSchema = "newschema";
 
-  String newTable = "newtable";
+  static String newTable = "newtable";
 
   static Connection conn;
 
@@ -134,7 +134,7 @@ public class UniformScramblerTest {
     Statement stmt = conn.createStatement();
     stmt.execute(String.format("CREATE TABLE \"%s\".\"%s\"(\"id\" int, \"value\" double)", schemaName, tableName));
     Random r = new Random();
-    for (int i = 0; i < 100; i++) {
+    for (int i = 0; i < 10; i++) {
       stmt.execute(String.format("INSERT INTO \"%s\".\"%s\"(\"id\", \"value\") VALUES(%s, %f)",
           schemaName, tableName, i, r.nextDouble()));
     }

@@ -6,6 +6,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.core.execution.ola.AggExecutionNodeBlock;
 import org.verdictdb.core.query.AbstractRelation;
@@ -303,12 +304,17 @@ public abstract class QueryExecutionNode {
     for (int i = 0; i < indentSpace; i++) {
       builder.append(" ");
     }
-    builder.append(selectQuery.toString());
+    builder.append(this.toString());
     System.out.println(builder.toString());
     
     for (QueryExecutionNode dep : dependents) {
       dep.print(indentSpace + 2);
     }
+  }
+  
+  @Override
+  public String toString() {
+    return ToStringBuilder.reflectionToString(this);
   }
 
 }
