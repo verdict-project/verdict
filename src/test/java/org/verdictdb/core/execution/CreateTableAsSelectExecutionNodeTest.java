@@ -47,9 +47,12 @@ public class CreateTableAsSelectExecutionNodeTest {
     BaseTable base = new BaseTable(originalSchema, originalTable, "t");
     SelectQuery query = SelectQuery.create(Arrays.<SelectItem>asList(new AsteriskColumn()), base);
     QueryExecutionNode root = CreateTableAsSelectExecutionNode.create(query, "newschema");
-//    LinkedBlockingDeque<ExecutionResult> resultQueue = new LinkedBlockingDeque<>();
-    root.executeNode(conn, null);     // no information to pass
-    conn.executeUpdate(String.format("DROP TABLE \"%s\".\"%s\"", newSchema, "verdictdbtemptable_0"));
+//    ExecutionInfoToken token = new ExecutionInfoToken();
+    ExecutionInfoToken newTableName = root.executeNode(conn, Arrays.<ExecutionInfoToken>asList());     // no information to pass
+    
+    String schemaName = (String) newTableName.getValue("schemaName");
+    String tableName = (String) newTableName.getValue("tableName");
+    conn.executeUpdate(String.format("DROP TABLE \"%s\".\"%s\"", schemaName, tableName));
   }
 
   static void populateData(DbmsConnection conn, String schemaName, String tableName) throws VerdictDBDbmsException {

@@ -96,12 +96,8 @@ public class AggExecutionNodeTest {
     ExecutionInfoToken subqueryToken = new ExecutionInfoToken();
     subqueryToken.setKeyValue("schemaName", "newschema");
     subqueryToken.setKeyValue("tableName", "temptable");
-    ExecutionInfoToken downstreamResult = node.dependents.get(0).executeNode(conn, null);
+    ExecutionInfoToken downstreamResult = node.dependents.get(0).executeNode(conn, Arrays.<ExecutionInfoToken>asList());
     ExecutionInfoToken newTableToken = node.executeNode(conn, Arrays.asList(downstreamResult));
-
-//    QueryExecutionPlan.resetTempTableNameNum();
-
-//    conn.executeUpdate(String.format("DROP TABLE \"%s\".\"%s\"", newSchema, newTable));
     
     String newSchemaName = (String) newTableToken.getValue("schemaName");
     String newTableName = (String) newTableToken.getValue("tableName");
