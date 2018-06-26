@@ -20,7 +20,7 @@ public class AggExecutionNode extends CreateTableAsSelectExecutionNode {
   }
   
   public SelectQuery getSelectQuery() {
-    return (SelectQuery) selectQuery;
+    return selectQuery;
   }
 
 //  /**
