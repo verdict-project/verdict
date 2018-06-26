@@ -1,7 +1,6 @@
 package org.verdictdb.core.execution;
 
 import org.verdictdb.core.query.*;
-import org.verdictdb.exception.VerdictDbException;
 
 import java.util.ArrayList;
 import java.util.List;

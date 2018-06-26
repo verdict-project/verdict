@@ -14,6 +14,7 @@ public class ProjectionExecutionNode extends CreateTableAsSelectExecutionNode {
   public static ProjectionExecutionNode create(SelectQuery query, String scratchpadSchemaName) {
     ProjectionExecutionNode node = new ProjectionExecutionNode(scratchpadSchemaName);
     SubqueriesToDependentNodes.convertSubqueriesIntoDependentNodes(query, node);
+    node.setSelectQuery(query);
     return node;
   }
   

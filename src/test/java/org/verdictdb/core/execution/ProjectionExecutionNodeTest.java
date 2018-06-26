@@ -1,5 +1,6 @@
 package org.verdictdb.core.execution;
 
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.connection.DbmsConnection;
@@ -35,8 +36,8 @@ public class ProjectionExecutionNodeTest {
     final String DB_USER = "";
     final String DB_PASSWORD = "";
     conn = new JdbcConnection(DriverManager.getConnection(DB_CONNECTION, DB_USER, DB_PASSWORD), new H2Syntax());
-    conn.executeUpdate(String.format("CREATE SCHEMA \"%s\"", originalSchema));
-    conn.executeUpdate(String.format("CREATE SCHEMA \"%s\"", newSchema));
+    conn.executeUpdate(String.format("CREATE SCHEMA IF NOT EXISTS\"%s\"", originalSchema));
+    conn.executeUpdate(String.format("CREATE SCHEMA IF NOT EXISTS\"%s\"", newSchema));
     populateData(conn, originalSchema, originalTable);
   }
 
@@ -61,13 +62,12 @@ public class ProjectionExecutionNodeTest {
         new SubqueryColumn(subquery)
     )));
     ProjectionExecutionNode node = ProjectionExecutionNode.create(query, "newschema");
-    QueryExecutionPlan.resetTempTableNameNum();
 
     assertEquals(1, node.dependents.size());
     SelectQuery rewritten = SelectQuery.create(
         Arrays.<SelectItem>asList(
-            new AliasedColumn(new BaseColumn(newSchema,"verdictdbtemptable_0", "a"), "a"))
-        , new BaseTable("newschema", "verdictdbtemptable_0", "verdictdbtemptable_0"));
+            new AliasedColumn(new BaseColumn("placeholderSchemaName", "filterPlaceholder0", "a"), "a"))
+        , new BaseTable("placeholderSchemaName", "placeholderTableName", "filterPlaceholder0"));
     assertEquals(rewritten, ((SubqueryColumn)((ColumnOp) node.getSelectQuery().getFilter().get()).getOperand(1)).getSubquery());
   }
 
@@ -84,10 +84,24 @@ public class ProjectionExecutionNodeTest {
         new SubqueryColumn(subquery)
     )));
     ProjectionExecutionNode node = ProjectionExecutionNode.create(query, "newschema");
-    QueryExecutionPlan.resetTempTableNameNum();
 
-    node.executeNode(conn, null);
-    conn.executeUpdate(String.format("DROP TABLE \"%s\".\"%s\"", newSchema, newTable));
-    conn.executeUpdate(String.format("DROP TABLE \"%s\".\"%s\"", newSchema, "verdictdbtemptable_0"));
+    ExecutionInfoToken subqueryToken = new ExecutionInfoToken();
+    subqueryToken.setKeyValue("schemaName", ((AggExecutionNode)node.dependents.get(0)).newTableSchemaName);
+    subqueryToken.setKeyValue("tableName", ((AggExecutionNode)node.dependents.get(0)).newTableName);
+    ExecutionInfoToken downstreamResult = node.dependents.get(0).executeNode(conn, null);
+    ExecutionInfoToken newTableToken = node.executeNode(conn, Arrays.asList(downstreamResult));
+
+//    QueryExecutionPlan.resetTempTableNameNum();
+
+//    conn.executeUpdate(String.format("DROP TABLE \"%s\".\"%s\"", newSchema, newTable));
+
+    String newSchemaName = (String) newTableToken.getValue("schemaName");
+    String newTableName = (String) newTableToken.getValue("tableName");
+    conn.executeUpdate(String.format("DROP TABLE \"%s\".\"%s\"", newSchemaName, newTableName));
+  }
+
+  @AfterClass
+  static public void clean() throws VerdictDBDbmsException {
+    conn.executeUpdate(String.format("Drop TABLE \"%s\".\"%s\"", originalSchema, originalTable));
   }
 }
