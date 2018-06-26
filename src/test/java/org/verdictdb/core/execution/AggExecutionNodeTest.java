@@ -65,8 +65,8 @@ public class AggExecutionNodeTest {
     assertEquals(1, node.dependents.size());
     SelectQuery rewritten = SelectQuery.create(
         Arrays.<SelectItem>asList(
-            new AliasedColumn(new BaseColumn("newschema", "verdictdbtemptable_0", "a"), "a"))
-        , new BaseTable("newschema", "verdictdbtemptable_0", "verdictdbtemptable_0"));
+            new AliasedColumn(new BaseColumn("placeholderSchemaName", "filterPlaceholder0", "a"), "a"))
+        , new BaseTable("placeholderSchemaName", "placeholderTableName", "filterPlaceholder0"));
     assertEquals(rewritten, ((SubqueryColumn)((ColumnOp) node.getQuery().getFilter().get()).getOperand(1)).getSubquery());
   }
 
@@ -84,8 +84,12 @@ public class AggExecutionNodeTest {
     )));
 //    AggExecutionNode node = new AggExecutionNode(conn, newSchema, newTable, query);
     AggExecutionNode node = AggExecutionNode.create(query, "newschema");
-//    QueryExecutionPlan.resetTempTableNameNum();
-    ExecutionResult newTableToken = node.executeNode(conn, null);
+    QueryExecutionPlan.resetTempTableNameNum();
+    ExecutionResult subqueryToken = new ExecutionResult();
+    subqueryToken.setKeyValue("schemaName", ((AggExecutionNode)node.dependents.get(0)).newTableSchemaName);
+    subqueryToken.setKeyValue("tableName", ((AggExecutionNode)node.dependents.get(0)).newTableName);
+    ExecutionResult downstreamResult = node.dependents.get(0).executeNode(conn, null);
+    ExecutionResult newTableToken = node.executeNode(conn, Arrays.asList(downstreamResult));
 //    conn.executeUpdate(String.format("DROP TABLE \"%s\".\"%s\"", newSchema, newTable));
     
     String newSchemaName = (String) newTableToken.getValue("schemaName");
