@@ -197,5 +197,4 @@ public class SelectQuery extends AbstractRelation implements SqlConvertable {
     return ToStringBuilder.reflectionToString(this, ToStringStyle.SHORT_PREFIX_STYLE);
   }
 
-
 }

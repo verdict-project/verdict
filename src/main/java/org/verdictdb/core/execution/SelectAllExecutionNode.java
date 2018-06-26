@@ -51,7 +51,8 @@ public class SelectAllExecutionNode extends QueryExecutionNodeWithPlaceHolders {
   }
 
   @Override
-  public ExecutionInfoToken executeNode(DbmsConnection conn, List<ExecutionInfoToken> downstreamResults) {
+  public ExecutionInfoToken executeNode(DbmsConnection conn, List<ExecutionInfoToken> downstreamResults) 
+      throws VerdictDBException {
     super.executeNode(conn, downstreamResults);
     try {
       String sql = QueryToSql.convert(conn.getSyntax(), selectQuery);

@@ -7,6 +7,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.core.execution.ola.AggExecutionNodeBlock;
 import org.verdictdb.core.query.AbstractRelation;
@@ -16,6 +17,7 @@ import org.verdictdb.core.query.SelectItem;
 import org.verdictdb.core.query.SelectQuery;
 import org.verdictdb.core.query.SqlConvertable;
 import org.verdictdb.core.rewriter.ScrambleMeta;
+import org.verdictdb.exception.VerdictDBException;
 
 import com.google.common.base.Optional;
 
@@ -27,8 +29,8 @@ public abstract class QueryExecutionNode {
 
   //  QueryExecutionPlan plan;
 
-  // running or complete
-  String status = "running";
+  // initialized, running, or complete
+  String status = "initialized";
   
   // these are assumed to be not order-sensitive
   List<QueryExecutionNode> parents = new ArrayList<>();
@@ -72,6 +74,18 @@ public abstract class QueryExecutionNode {
   public List<QueryExecutionNode> getDependents() {
     return dependents;
   }
+  
+  public QueryExecutionNode getDependent(int index) {
+    return dependents.get(index);
+  }
+  
+  public String getStatus() {
+    return status;
+  }
+  
+  public void setStatus(String status) {
+    this.status = status;
+  }
 
   /**
    * For multi-threading, the parent of this node is responsible for running this method as a separate thread.
@@ -80,6 +94,10 @@ public abstract class QueryExecutionNode {
   public void execute(final DbmsConnection conn) {
     // Start the execution of all children
     for (QueryExecutionNode child : dependents) {
+      if (!child.getStatus().equals("initialized")) {
+        continue;
+      }
+      child.setStatus("running"); 
       child.execute(conn);
     }
 
@@ -96,8 +114,13 @@ public abstract class QueryExecutionNode {
         executor.submit(new Runnable() {
           @Override
           public void run() {
-            ExecutionInfoToken rs = executeNode(conn, latestResults);
-            broadcast(rs);
+            try {
+              ExecutionInfoToken rs = executeNode(conn, latestResults);
+              broadcast(rs);
+            } catch (VerdictDBException e) {
+              e.printStackTrace();
+              setStatus("failed");
+            }
             //            resultQueue.add(rs);
           }
         });
@@ -115,15 +138,21 @@ public abstract class QueryExecutionNode {
     } catch (InterruptedException e) {
       executor.shutdownNow();
     }
-    setComplete();
+    if (!isFailed()) {
+      setSuccess();
+    }
   }
 
   /**
    * This function must not make a call to the conn field.
    * @param downstreamResults
    * @return
+   * @throws VerdictDBException 
    */
-  public abstract ExecutionInfoToken executeNode(DbmsConnection conn, List<ExecutionInfoToken> downstreamResults);
+  public abstract ExecutionInfoToken executeNode(
+      DbmsConnection conn, 
+      List<ExecutionInfoToken> downstreamResults)
+      throws VerdictDBException;
   
   void addParent(QueryExecutionNode parent) {
     parents.add(parent);
@@ -160,12 +189,16 @@ public abstract class QueryExecutionNode {
     return listeningQueues;
   }
 
-  public boolean isComplete() {
-    return status.equals("complete");
+  public boolean isSuccess() {
+    return status.equals("success");
+  }
+  
+  public boolean isFailed() {
+    return status.equals("failed");
   }
 
-  void setComplete() {
-    status = "complete";
+  void setSuccess() {
+    status = "success";
   }
 
   void broadcast(ExecutionInfoToken result) {
@@ -181,6 +214,7 @@ public abstract class QueryExecutionNode {
         // do nothing
       } else {
         latestResults.set(i, Optional.of(rs));
+        System.out.println("Received: " + rs.toString());
       }
     }
   }
@@ -204,7 +238,7 @@ public abstract class QueryExecutionNode {
 
   boolean areDependentsAllComplete() {
     for (QueryExecutionNode node : dependents) {
-      if (node.isComplete()) {
+      if (node.isSuccess() || node.isFailed()) {
         // do nothing
       } else {
         return false;
@@ -314,7 +348,12 @@ public abstract class QueryExecutionNode {
   
   @Override
   public String toString() {
-    return ToStringBuilder.reflectionToString(this);
+    return new ToStringBuilder(this, ToStringStyle.DEFAULT_STYLE)
+        .append("status", status)
+        .append("listeningQueues", listeningQueues)
+        .append("broadcastingQueues", broadcastingQueues)
+        .append("selectQuery", selectQuery)
+        .toString();
   }
 
 }

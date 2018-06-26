@@ -15,6 +15,7 @@ import org.verdictdb.core.query.BaseTable;
 import org.verdictdb.core.query.ColumnOp;
 import org.verdictdb.core.query.SelectItem;
 import org.verdictdb.core.query.SelectQuery;
+import org.verdictdb.exception.VerdictDBException;
 
 public class AggCombinerExecutionNode extends CreateTableAsSelectExecutionNode {
 
@@ -69,11 +70,16 @@ public class AggCombinerExecutionNode extends CreateTableAsSelectExecutionNode {
     }
     
     node.setSelectQuery(joinQuery);
+    leftQueryExecutionNode.addBroadcastingQueue(node.generateListeningQueue());
+    rightQueryExecutionNode.addBroadcastingQueue(node.generateListeningQueue());
+    node.addDependency(leftQueryExecutionNode);
+    node.addDependency(rightQueryExecutionNode);
     return node;
   }
 
   @Override
-  public ExecutionInfoToken executeNode(DbmsConnection conn, List<ExecutionInfoToken> downstreamResults) {
+  public ExecutionInfoToken executeNode(DbmsConnection conn, List<ExecutionInfoToken> downstreamResults) 
+      throws VerdictDBException {
     ExecutionInfoToken token = super.executeNode(conn, downstreamResults);
     return token;
   }

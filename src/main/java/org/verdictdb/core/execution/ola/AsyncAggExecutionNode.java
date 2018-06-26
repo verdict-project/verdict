@@ -86,7 +86,8 @@ public class AsyncAggExecutionNode extends CreateTableAsSelectExecutionNode {
   }
 
   @Override
-  public ExecutionInfoToken executeNode(DbmsConnection conn, List<ExecutionInfoToken> downstreamResults) {
+  public ExecutionInfoToken executeNode(DbmsConnection conn, List<ExecutionInfoToken> downstreamResults) 
+      throws VerdictDBException {
     ExecutionInfoToken token = super.executeNode(conn, downstreamResults);
     return token;
   }

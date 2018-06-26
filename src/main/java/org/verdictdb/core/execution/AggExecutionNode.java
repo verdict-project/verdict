@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.core.query.SelectQuery;
+import org.verdictdb.exception.VerdictDBException;
 
 public class AggExecutionNode extends CreateTableAsSelectExecutionNode {
 
@@ -23,32 +24,17 @@ public class AggExecutionNode extends CreateTableAsSelectExecutionNode {
     return (SelectQuery) selectQuery;
   }
 
-//  /**
-//   * Make this agg execution node perform progressive aggregation.
-//   * 
-//   * @param scrambleMeta
-//   * @throws VerdictDbException 
-//   */
-//  public QueryExecutionNode toAsyncAgg(ScrambleMeta scrambleMeta) throws VerdictDbException {
-//    QueryExecutionNode newNode = new AsyncAggExecutionNode(conn, scrambleMeta, resultSchemaName, resultTableName, query);
-//    
-//    // make that newNode runs only after the dependencies of this current node complete.
-//    List<QueryExecutionNode> leaves = newNode.getLeafNodes();
-//    for (QueryExecutionNode leaf : leaves) {
-//      for (QueryExecutionNode dep : getDependents()) {
-//        leaf.addDependency(dep);
-//      }
-//    }
-//    return newNode;
-//  }
-
   @Override
-  public ExecutionInfoToken executeNode(DbmsConnection conn, List<ExecutionInfoToken> downstreamResults) {
+  public ExecutionInfoToken executeNode(DbmsConnection conn, List<ExecutionInfoToken> downstreamResults) 
+      throws VerdictDBException {
     return super.executeNode(conn, downstreamResults);
   }
 
-//  void generateDependency() throws VerdictDbException {
-//    
-//  }
-
+  @Override
+  public QueryExecutionNode deepcopy() {
+    AggExecutionNode node = new AggExecutionNode(scratchpadSchemaName);
+    copyFields(this, node);
+    return node;
+  }
+  
 }

@@ -46,17 +46,6 @@ public class AggExecutionNodeBlockTest {
   
   static ScrambleMeta scrambleMeta = new ScrambleMeta();
   
-//  ScrambleMeta generateTestScrambleMeta() {
-//    int aggblockCount = 2;
-//    ScrambleMeta meta = new ScrambleMeta();
-//    meta.insertScrambleMetaEntry("default", "people",
-//        Scrambler.getAggregationBlockColumn(),
-//        Scrambler.getSubsampleColumn(),
-//        Scrambler.getTierColumn(),
-//        aggblockCount);
-//    return meta;
-//  }
-  
   @BeforeClass
   public static void setupH2Database() throws SQLException, VerdictDBException {
     final String DB_CONNECTION = "jdbc:h2:mem:aggexecnodeblocktest;DB_CLOSE_DELAY=-1";
@@ -67,6 +56,7 @@ public class AggExecutionNodeBlockTest {
     conn.createStatement().execute(String.format("CREATE SCHEMA \"%s\"", newSchema));
     populateRandomData(conn, originalSchema, originalTable);
     
+    // create scrambled table
     int aggBlockCount = 2;
     UniformScrambler scrambler =
         new UniformScrambler(originalSchema, originalTable, newSchema, newTable, aggBlockCount);
@@ -84,6 +74,7 @@ public class AggExecutionNodeBlockTest {
 
   @Test
   public void testConvertFlatToProgressiveAgg() throws VerdictDBValueException {
+//    System.out.println("test case starts");
     SelectQuery aggQuery = SelectQuery.create(
         new AliasedColumn(ColumnOp.count(), "agg"),
         new BaseTable(newSchema, newTable, "t"));
@@ -91,7 +82,30 @@ public class AggExecutionNodeBlockTest {
     AggExecutionNodeBlock block = new AggExecutionNodeBlock(aggnode);
     QueryExecutionNode converted = block.convertToProgressiveAgg(newSchema, scrambleMeta);
     converted.print();
+    assertTrue(converted instanceof AsyncAggExecutionNode);
+    assertTrue(converted.getDependent(0) instanceof AggExecutionNode);
+    assertTrue(converted.getDependent(1) instanceof AggCombinerExecutionNode);
+    assertTrue(converted.getDependent(1).getDependent(0) instanceof AggExecutionNode);
+    assertTrue(converted.getDependent(1).getDependent(1) instanceof AggExecutionNode);
+    assertEquals("initialized", converted.getStatus());
+    assertEquals("initialized", converted.getDependent(0).getStatus());
+    assertEquals("initialized", converted.getDependent(1).getStatus());
+    assertEquals("initialized", converted.getDependent(1).getDependent(0).getStatus());
+    assertEquals("initialized", converted.getDependent(1).getDependent(1).getStatus());
     converted.execute(new JdbcConnection(conn, new H2Syntax()));
+    assertEquals("success", converted.getStatus());
+    assertEquals("success", converted.getDependent(0).getStatus());
+    assertEquals("success", converted.getDependent(1).getStatus());
+    assertEquals("success", converted.getDependent(1).getDependent(0).getStatus());
+    assertEquals("success", converted.getDependent(1).getDependent(1).getStatus());
+    converted.print();
+  }
+  
+  // the origiinal query does not include any scrambled tables; thus, it must not be converted to any other
+  // form.
+  @Test
+  public void testConvertNonBigFlatToProgressiveAgg() throws VerdictDBValueException {
+    
   }
   
   static void populateRandomData(Connection conn, String schemaName, String tableName) throws SQLException {

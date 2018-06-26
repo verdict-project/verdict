@@ -49,7 +49,8 @@ public class CreateTableAsSelectExecutionNode extends QueryExecutionNodeWithPlac
   }
 
   @Override
-  public ExecutionInfoToken executeNode(DbmsConnection conn, List<ExecutionInfoToken> downstreamResults) {
+  public ExecutionInfoToken executeNode(DbmsConnection conn, List<ExecutionInfoToken> downstreamResults) 
+      throws VerdictDBException {
     super.executeNode(conn, downstreamResults);
 
     Pair<String, String> tempTableFullName = generateTempTableName();
@@ -88,10 +89,7 @@ public class CreateTableAsSelectExecutionNode extends QueryExecutionNodeWithPlac
   
   void copyFields(CreateTableAsSelectExecutionNode from, CreateTableAsSelectExecutionNode to) {
     super.copyFields(from, to);
-//    to.newTableSchemaName = from.newTableSchemaName;
-//    to.newTableName = from.newTableName;
     to.scratchpadSchemaName = from.scratchpadSchemaName;
-//    to.createQuery = new CreateTableAsSelectQuery(newTableSchemaName, newTableName, to.getSelectQuery());
   }
 
 }

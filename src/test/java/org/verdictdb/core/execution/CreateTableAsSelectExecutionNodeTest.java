@@ -43,7 +43,7 @@ public class CreateTableAsSelectExecutionNodeTest {
   }
 
   @Test
-  public void testExecuteNode() throws VerdictDBDbmsException {
+  public void testExecuteNode() throws VerdictDBException {
     BaseTable base = new BaseTable(originalSchema, originalTable, "t");
     SelectQuery query = SelectQuery.create(Arrays.<SelectItem>asList(new AsteriskColumn()), base);
     QueryExecutionNode root = CreateTableAsSelectExecutionNode.create(query, "newschema");
