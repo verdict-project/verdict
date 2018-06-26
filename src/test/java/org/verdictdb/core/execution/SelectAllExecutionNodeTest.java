@@ -75,6 +75,8 @@ public class SelectAllExecutionNodeTest {
         ((SubqueryColumn)((ColumnOp) ((SelectQuery) node.dependents.get(0).getSelectQuery()).getFilter().get()).getOperand(1)).getSubquery());
   }
 
+  //
+  // select 
   @Test
   public void testExecuteNode() throws VerdictDBException {
     SelectQuery subquery = SelectQuery.create(
@@ -89,12 +91,15 @@ public class SelectAllExecutionNodeTest {
     )));
 
     SelectAllExecutionNode node = SelectAllExecutionNode.create(query, newSchema);
-    conn.executeUpdate(String.format("create table \"%s\".\"%s\"", newSchema, ((ProjectionExecutionNode)node.dependents.get(0)).newTableName));
-    ExecutionInfoToken subqueryToken = new ExecutionInfoToken();
-    subqueryToken.setKeyValue("schemaName", ((ProjectionExecutionNode)node.dependents.get(0)).newTableSchemaName);
-    subqueryToken.setKeyValue("tableName", ((ProjectionExecutionNode)node.dependents.get(0)).newTableName);
-    node.executeNode(conn, Arrays.asList(subqueryToken));
-    conn.executeUpdate(String.format("drop table \"%s\".\"%s\"", newSchema, ((ProjectionExecutionNode)node.dependents.get(0)).newTableName));
+//    conn.executeUpdate(String.format("create table \"%s\".\"%s\"", newSchema, ((ProjectionExecutionNode)node.dependents.get(0)).newTableName));
+//    ExecutionInfoToken subqueryToken = new ExecutionInfoToken();
+//    subqueryToken.setKeyValue("schemaName", ((ProjectionExecutionNode)node.dependents.get(0)).newTableSchemaName);
+//    subqueryToken.setKeyValue("tableName", ((ProjectionExecutionNode)node.dependents.get(0)).newTableName);
+//    node.executeNode(conn, Arrays.asList(subqueryToken));
+//    conn.executeUpdate(String.format("drop table \"%s\".\"%s\"", newSchema, ((ProjectionExecutionNode)node.dependents.get(0)).newTableName));
+    ExecutionTokenQueue queue = new ExecutionTokenQueue();
+    node.addBroadcastingQueue(queue);
+    node.execute(conn);
   }
 
   @AfterClass

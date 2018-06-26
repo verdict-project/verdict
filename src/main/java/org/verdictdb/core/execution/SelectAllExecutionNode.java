@@ -2,9 +2,11 @@ package org.verdictdb.core.execution;
 
 import java.util.List;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.core.query.AsteriskColumn;
+import org.verdictdb.core.query.BaseTable;
 import org.verdictdb.core.query.SelectQuery;
 import org.verdictdb.core.sql.QueryToSql;
 import org.verdictdb.exception.VerdictDBException;
@@ -28,9 +30,9 @@ public class SelectAllExecutionNode extends QueryExecutionNodeWithPlaceHolders {
 
   public static SelectAllExecutionNode create(SelectQuery query, String scratchpadSchemaName) {
     SelectAllExecutionNode selectAll = new SelectAllExecutionNode();
-    SelectQuery selectQuery = SelectQuery.create(new AsteriskColumn(), selectAll.createPlaceHolderTable("t"));
+    Pair<BaseTable, ExecutionTokenQueue> baseAndQueue = selectAll.createPlaceHolderTable("t");
+    SelectQuery selectQuery = SelectQuery.create(new AsteriskColumn(), baseAndQueue.getLeft());
     selectAll.setSelectQuery(selectQuery);
-    ExecutionTokenQueue queue = selectAll.generateListeningQueue();
     
 //    Pair<String, String> tempTableFullName = plan.generateTempTableName();
 //    String schemaName = tempTableFullName.getLeft();
@@ -38,12 +40,12 @@ public class SelectAllExecutionNode extends QueryExecutionNodeWithPlaceHolders {
     
     if (query.isAggregateQuery()) {
       AggExecutionNode dependent = AggExecutionNode.create(query, scratchpadSchemaName);
-      dependent.addBroadcastingQueue(queue);
+      dependent.addBroadcastingQueue(baseAndQueue.getRight());
       selectAll.addDependency(dependent);
     }
     else {
       ProjectionExecutionNode dependent = ProjectionExecutionNode.create(query, scratchpadSchemaName);
-      dependent.addBroadcastingQueue(queue);
+      dependent.addBroadcastingQueue(baseAndQueue.getRight());
       selectAll.addDependency(dependent);
     }
     

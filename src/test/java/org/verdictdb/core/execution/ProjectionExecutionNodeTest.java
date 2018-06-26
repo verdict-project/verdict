@@ -71,6 +71,11 @@ public class ProjectionExecutionNodeTest {
     assertEquals(rewritten, ((SubqueryColumn)((ColumnOp) node.getSelectQuery().getFilter().get()).getOperand(1)).getSubquery());
   }
 
+  //
+  // select t.value as average
+  // from originalSchema.originalTable t
+  // where t.value > (select avg(t1.value) a from originalSchema.originalTable t1);
+  //
   @Test
   public void testExecuteNode() throws VerdictDBException {
     SelectQuery subquery = SelectQuery.create(
@@ -84,24 +89,26 @@ public class ProjectionExecutionNodeTest {
         new SubqueryColumn(subquery)
     )));
     ProjectionExecutionNode node = ProjectionExecutionNode.create(query, "newschema");
+    node.print();
 
-    ExecutionInfoToken subqueryToken = new ExecutionInfoToken();
-    subqueryToken.setKeyValue("schemaName", ((AggExecutionNode)node.dependents.get(0)).newTableSchemaName);
-    subqueryToken.setKeyValue("tableName", ((AggExecutionNode)node.dependents.get(0)).newTableName);
-    ExecutionInfoToken downstreamResult = node.dependents.get(0).executeNode(conn, null);
-    ExecutionInfoToken newTableToken = node.executeNode(conn, Arrays.asList(downstreamResult));
-
-//    QueryExecutionPlan.resetTempTableNameNum();
-
-//    conn.executeUpdate(String.format("DROP TABLE \"%s\".\"%s\"", newSchema, newTable));
-
-    String newSchemaName = (String) newTableToken.getValue("schemaName");
-    String newTableName = (String) newTableToken.getValue("tableName");
+//    ExecutionInfoToken subqueryToken = new ExecutionInfoToken();
+//    subqueryToken.setKeyValue("schemaName", ((AggExecutionNode)node.dependents.get(0)).newTableSchemaName);
+//    subqueryToken.setKeyValue("tableName", ((AggExecutionNode)node.dependents.get(0)).newTableName);
+//    ExecutionInfoToken downstreamResult = node.dependents.get(0).executeNode(conn, null);
+//    ExecutionInfoToken newTableToken = node.executeNode(conn, Arrays.asList(downstreamResult));
+    
+    ExecutionTokenQueue queue = new ExecutionTokenQueue();
+    node.addBroadcastingQueue(queue);
+    node.execute(conn);
+    
+    ExecutionInfoToken token = queue.take();
+    String newSchemaName = (String) token.getValue("schemaName");
+    String newTableName = (String) token.getValue("tableName");
     conn.executeUpdate(String.format("DROP TABLE \"%s\".\"%s\"", newSchemaName, newTableName));
   }
 
   @AfterClass
   static public void clean() throws VerdictDBDbmsException {
-    conn.executeUpdate(String.format("Drop TABLE \"%s\".\"%s\"", originalSchema, originalTable));
+    conn.executeUpdate(String.format("DROP TABLE \"%s\".\"%s\"", originalSchema, originalTable));
   }
 }

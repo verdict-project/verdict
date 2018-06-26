@@ -3,6 +3,7 @@ package org.verdictdb.core.execution;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.core.query.BaseTable;
 import org.verdictdb.core.query.SelectQuery;
@@ -21,10 +22,11 @@ public abstract class QueryExecutionNodeWithPlaceHolders extends QueryExecutionN
     super(query);
   }
   
-  public BaseTable createPlaceHolderTable(String aliasName) {
+  public Pair<BaseTable, ExecutionTokenQueue> createPlaceHolderTable(String aliasName) {
     BaseTable table = new BaseTable("placeholderSchemaName", "placeholderTableName", aliasName);
     placeholderTables.add(table);
-    return table;
+    ExecutionTokenQueue listeningQueue = generateListeningQueue();
+    return Pair.of(table, listeningQueue);
   }
 
   @Override

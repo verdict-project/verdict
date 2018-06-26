@@ -4,9 +4,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.core.execution.CreateTableAsSelectExecutionNode;
 import org.verdictdb.core.execution.ExecutionInfoToken;
+import org.verdictdb.core.execution.ExecutionTokenQueue;
 import org.verdictdb.core.execution.QueryExecutionNode;
 import org.verdictdb.core.query.AbstractRelation;
 import org.verdictdb.core.query.AliasedColumn;
@@ -59,19 +61,19 @@ public class AggCombinerExecutionNode extends CreateTableAsSelectExecutionNode {
     allItems.addAll(groupItems);
     allItems.addAll(measureItems);
     
-    BaseTable leftBase = node.createPlaceHolderTable(leftAliasName);
-    BaseTable rightBase = node.createPlaceHolderTable(rightAliasName);
+    Pair<BaseTable, ExecutionTokenQueue> leftBaseAndQueue = node.createPlaceHolderTable(leftAliasName);
+    Pair<BaseTable, ExecutionTokenQueue> rightBaseAndQueue = node.createPlaceHolderTable(rightAliasName);
     SelectQuery joinQuery = SelectQuery.create(
         allItems, 
-        Arrays.<AbstractRelation>asList(leftBase, rightBase));
+        Arrays.<AbstractRelation>asList(leftBaseAndQueue.getLeft(), rightBaseAndQueue.getLeft()));
     for (String a : groupAliasNames) {
       joinQuery.addFilterByAnd(
           ColumnOp.equal(new BaseColumn(leftAliasName, a), new BaseColumn(rightAliasName, a)));
     }
+    leftQueryExecutionNode.addBroadcastingQueue(leftBaseAndQueue.getRight());
+    rightQueryExecutionNode.addBroadcastingQueue(rightBaseAndQueue.getRight());
     
     node.setSelectQuery(joinQuery);
-    leftQueryExecutionNode.addBroadcastingQueue(node.generateListeningQueue());
-    rightQueryExecutionNode.addBroadcastingQueue(node.generateListeningQueue());
     node.addDependency(leftQueryExecutionNode);
     node.addDependency(rightQueryExecutionNode);
     return node;

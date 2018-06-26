@@ -14,7 +14,7 @@ public class AggExecutionNode extends CreateTableAsSelectExecutionNode {
   
   public static AggExecutionNode create(SelectQuery query, String scratchpadSchemaName) {
     AggExecutionNode node = new AggExecutionNode(scratchpadSchemaName);
-    SubqueriesToDependentNodes.convertSubqueriesIntoDependentNodes(query, node);
+    SubqueriesToDependentNodes.convertSubqueriesToDependentNodes(query, node);
     node.setSelectQuery(query);
     
     return node;

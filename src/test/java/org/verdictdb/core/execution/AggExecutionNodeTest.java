@@ -17,6 +17,7 @@ import java.util.Arrays;
 import static org.junit.Assert.assertEquals;
 
 public class AggExecutionNodeTest {
+  
   static String originalSchema = "originalschema";
 
   static String originalTable = "originaltable";
@@ -72,6 +73,11 @@ public class AggExecutionNodeTest {
 
   }
 
+  //
+  // select avg(t.value) as average
+  // from originalSchema.originalTable t
+  // where t.value > (select avg(t1.value) a from originalSchema.originalTable t1);
+  //
   @Test
   public void testExecuteNode() throws VerdictDBException {
     SelectQuery subquery = SelectQuery.create(
@@ -88,8 +94,8 @@ public class AggExecutionNodeTest {
     AggExecutionNode node = AggExecutionNode.create(query, "newschema");
 
     ExecutionInfoToken subqueryToken = new ExecutionInfoToken();
-    subqueryToken.setKeyValue("schemaName", ((AggExecutionNode)node.dependents.get(0)).newTableSchemaName);
-    subqueryToken.setKeyValue("tableName", ((AggExecutionNode)node.dependents.get(0)).newTableName);
+    subqueryToken.setKeyValue("schemaName", "newschema");
+    subqueryToken.setKeyValue("tableName", "temptable");
     ExecutionInfoToken downstreamResult = node.dependents.get(0).executeNode(conn, null);
     ExecutionInfoToken newTableToken = node.executeNode(conn, Arrays.asList(downstreamResult));
 

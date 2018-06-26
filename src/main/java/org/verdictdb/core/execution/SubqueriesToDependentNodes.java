@@ -1,5 +1,6 @@
 package org.verdictdb.core.execution;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.core.query.*;
 
 import java.util.ArrayList;
@@ -7,60 +8,59 @@ import java.util.List;
 
 public class SubqueriesToDependentNodes {
 
-  public static void convertSubqueriesIntoDependentNodes(
-      SelectQuery query,
+  /**
+   * 
+   * @param query A query that may include subqueries. The subqueries of this query will be replaced by
+   * placeholders.
+   * @param node
+   */
+  public static void convertSubqueriesToDependentNodes(
+      SelectQuery query, 
       CreateTableAsSelectExecutionNode node) {
-
+    
     // from list
     for (AbstractRelation source : query.getFromList()) {
       int index = query.getFromList().indexOf(source);
 
       // If the table is subquery, we need to add it to dependency
       if (source instanceof SelectQuery) {
+        CreateTableAsSelectExecutionNode dep;
         if (source.isAggregateQuery()) {
-          AggExecutionNode dep = AggExecutionNode.create((SelectQuery) source, node.scratchpadSchemaName);
-          node.addDependency(dep);
+          dep = AggExecutionNode.create((SelectQuery) source, node.scratchpadSchemaName);
         } else {
-          ProjectionExecutionNode dep = ProjectionExecutionNode.create((SelectQuery) source, node.scratchpadSchemaName);
-          node.addDependency(dep);
+          dep = ProjectionExecutionNode.create((SelectQuery) source, node.scratchpadSchemaName);
         }
+        node.addDependency(dep);
 
         // use placeholders to mark the locations whose names will be updated in the future
-        BaseTable base = node.createPlaceHolderTable(source.getAliasName().get());
-        query.getFromList().set(index, base);
-
-//        if (source.getAliasName().isPresent()) {
-//          
-//        } else 
-//          query.getFromList().set(index, new BaseTable(schemaName, temptableName, temptableName));
-      } else if (source instanceof JoinTable) {
+        Pair<BaseTable, ExecutionTokenQueue> baseAndQueue = node.createPlaceHolderTable(source.getAliasName().get());
+        query.getFromList().set(index, baseAndQueue.getLeft());
+        dep.addBroadcastingQueue(baseAndQueue.getRight());
+      } 
+      else if (source instanceof JoinTable) {
         for (AbstractRelation s : ((JoinTable) source).getJoinList()) {
           int joinindex = ((JoinTable) source).getJoinList().indexOf(s);
 
           // If the table is subquery, we need to add it to dependency
           if (s instanceof SelectQuery) {
+            CreateTableAsSelectExecutionNode dep;
             if (s.isAggregateQuery()) {
-              AggExecutionNode dep = AggExecutionNode.create((SelectQuery) s, node.scratchpadSchemaName);
-              node.addDependency(dep);
+              dep = AggExecutionNode.create((SelectQuery) s, node.scratchpadSchemaName);
             } else {
-              ProjectionExecutionNode dep = ProjectionExecutionNode.create((SelectQuery) s, node.scratchpadSchemaName);
-              node.addDependency(dep);
+              dep = ProjectionExecutionNode.create((SelectQuery) s, node.scratchpadSchemaName);
             }
+            node.addDependency(dep);
 
             // use placeholders to mark the locations whose names will be updated in the future
-            BaseTable base = node.createPlaceHolderTable(s.getAliasName().get());
-            ((JoinTable) source).getJoinList().set(joinindex, base);
-
-//            if (source.getAliasName().isPresent()) {
-//              ((JoinTable) source).getJoinList().set(joinindex, new BaseTable(schemaName, temptableName, source.getAliasName().get()));
-//            } else ((JoinTable) source).getJoinList().set(joinindex, new BaseTable(schemaName, temptableName, temptableName));
+            Pair<BaseTable, ExecutionTokenQueue> baseAndQueue = node.createPlaceHolderTable(s.getAliasName().get());
+            ((JoinTable) source).getJoinList().set(joinindex, baseAndQueue.getLeft());
+            dep.addBroadcastingQueue(baseAndQueue.getRight());
           }
         }
       }
     }
 
-    int filterPlaceholderNum = 0;
-
+//    int filterPlaceholderNum = 0;
     // Filter
     if (query.getFilter().isPresent()) {
       UnnamedColumn where = query.getFilter().get();
@@ -69,28 +69,38 @@ public class SubqueriesToDependentNodes {
       while (!filters.isEmpty()) {
         UnnamedColumn filter = filters.get(0);
         filters.remove(0);
+        
         // If filter is a subquery, we need to add it to dependency
         if (filter instanceof SubqueryColumn) {
-          BaseTable base;
+          Pair<BaseTable, ExecutionTokenQueue> baseAndQueue;
           if (((SubqueryColumn) filter).getSubquery().getAliasName().isPresent()){
-            base = node.createPlaceHolderTable(((SubqueryColumn) filter).getSubquery().getAliasName().get());
+            baseAndQueue = node.createPlaceHolderTable(((SubqueryColumn) filter).getSubquery().getAliasName().get());
           } else {
-            base = node.createPlaceHolderTable("filterPlaceholder"+filterPlaceholderNum++);
+//            baseAndQueue = node.createPlaceHolderTable("filterPlaceholder"+filterPlaceholderNum++);
+            baseAndQueue = node.createPlaceHolderTable(node.generateUniqueName());
           }
+          BaseTable base = baseAndQueue.getLeft();
 
-          if (((SubqueryColumn) filter).getSubquery().isAggregateQuery()) {
-            AggExecutionNode dep = AggExecutionNode.create(((SubqueryColumn) filter).getSubquery(), node.scratchpadSchemaName);
+          CreateTableAsSelectExecutionNode dep;
+          SelectQuery subquery = ((SubqueryColumn) filter).getSubquery();
+          if (subquery.isAggregateQuery()) {
+            dep = AggExecutionNode.create(subquery, node.scratchpadSchemaName);
             node.addDependency(dep);
           } else {
-            ProjectionExecutionNode dep = ProjectionExecutionNode.create(((SubqueryColumn) filter).getSubquery(), node.scratchpadSchemaName);
+            dep = ProjectionExecutionNode.create(subquery, node.scratchpadSchemaName);
             node.addDependency(dep);
           }
+          dep.addBroadcastingQueue(baseAndQueue.getRight());
+          
           // To replace the subquery, we use the selectlist of the subquery and tempTable to create a new non-aggregate subquery
           List<SelectItem> newSelectItem = new ArrayList<>();
-          for (SelectItem item : ((SubqueryColumn) filter).getSubquery().getSelectList()) {
+          for (SelectItem item : subquery.getSelectList()) {
             if (item instanceof AliasedColumn) {
-              newSelectItem.add(new AliasedColumn(new BaseColumn(base.getSchemaName(), base.getAliasName().get(),
-                  ((AliasedColumn) item).getAliasName()), ((AliasedColumn) item).getAliasName()));
+              newSelectItem.add(new AliasedColumn(
+                  new BaseColumn(
+                      base.getSchemaName(), base.getAliasName().get(), 
+                      ((AliasedColumn) item).getAliasName()), 
+                  ((AliasedColumn) item).getAliasName()));
             } else if (item instanceof AsteriskColumn) {
               newSelectItem.add(new AsteriskColumn());
             }
@@ -100,11 +110,13 @@ public class SubqueriesToDependentNodes {
             newSubquery.setAliasName(((SubqueryColumn) filter).getSubquery().getAliasName().get());
           }
           ((SubqueryColumn) filter).setSubquery(newSubquery);
-        } else if (filter instanceof ColumnOp) {
+        }
+        else if (filter instanceof ColumnOp) {
           filters.addAll(((ColumnOp) filter).getOperands());
         }
       }
     }
+    
   }
 }
 

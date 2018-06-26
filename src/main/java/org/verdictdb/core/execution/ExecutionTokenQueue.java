@@ -18,6 +18,15 @@ public class ExecutionTokenQueue {
     return internalQueue.poll();
   }
   
+  public ExecutionInfoToken take() {
+    try {
+      return internalQueue.take();
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
+    return null;
+  }
+  
   @Override
   public String toString() {
     return new ToStringBuilder(this, ToStringStyle.DEFAULT_STYLE)
