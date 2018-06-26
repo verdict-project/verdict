@@ -10,13 +10,13 @@ import org.verdictdb.core.query.BaseTable;
 import org.verdictdb.core.query.CreateTableAsSelectQuery;
 import org.verdictdb.core.query.SelectItem;
 import org.verdictdb.core.query.SelectQuery;
-import org.verdictdb.exception.VerdictDbException;
+import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sql.syntax.HiveSyntax;
 
 public class CreateTableToSqlTest {
 
   @Test
-  public void selectAllTest() throws VerdictDbException {
+  public void selectAllTest() throws VerdictDBException {
     BaseTable base = new BaseTable("myschema", "mytable", "t");
     SelectQuery relation = SelectQuery.create(
         Arrays.<SelectItem>asList(new AsteriskColumn()),
@@ -29,7 +29,7 @@ public class CreateTableToSqlTest {
   }
 
   @Test
-  public void selectAllWithPartition1Test() throws VerdictDbException {
+  public void selectAllWithPartition1Test() throws VerdictDBException {
     BaseTable base = new BaseTable("myschema", "mytable", "t");
     SelectQuery relation = SelectQuery.create(
         Arrays.<SelectItem>asList(new AsteriskColumn()),
@@ -43,7 +43,7 @@ public class CreateTableToSqlTest {
   }
 
   @Test
-  public void selectAllWithPartition2Test() throws VerdictDbException {
+  public void selectAllWithPartition2Test() throws VerdictDBException {
     BaseTable base = new BaseTable("myschema", "mytable", "t");
     SelectQuery relation = SelectQuery.create(
         Arrays.<SelectItem>asList(new AsteriskColumn()),

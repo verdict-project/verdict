@@ -25,7 +25,7 @@ import org.verdictdb.connection.JdbcQueryResult;
 import org.verdictdb.core.aggresult.AggregateFrame;
 import org.verdictdb.core.aggresult.AggregateFrameQueryResult;
 import org.verdictdb.core.rewriter.aggresult.AggNameAndType;
-import org.verdictdb.exception.ValueException;
+import org.verdictdb.exception.VerdictDBValueException;
 
 public class JdbcResultSetTest {
 
@@ -67,7 +67,7 @@ public class JdbcResultSetTest {
   }
 
   @Test
-  public void getStringIndexTest() throws SQLException, ValueException {
+  public void getStringIndexTest() throws SQLException, VerdictDBValueException {
     ResultSet rs = stmt.executeQuery("SELECT gender, count(*) as cnt, sum(age) as agesum FROM PEOPLE GROUP BY gender");
     JdbcQueryResult queryResult = new JdbcQueryResult(rs);
     List<String> nonAgg = new ArrayList<>();
@@ -86,7 +86,7 @@ public class JdbcResultSetTest {
   }
 
   @Test
-  public void getStringLabelTest() throws SQLException, ValueException {
+  public void getStringLabelTest() throws SQLException, VerdictDBValueException {
     ResultSet rs = stmt.executeQuery("SELECT gender, count(*) as cnt, sum(age) as agesum FROM PEOPLE GROUP BY gender");
     JdbcQueryResult queryResult = new JdbcQueryResult(rs);
     List<String> nonAgg = new ArrayList<>();
@@ -105,7 +105,7 @@ public class JdbcResultSetTest {
   }
 
   @Test
-  public void getIntegerIndexTest() throws SQLException, ValueException {
+  public void getIntegerIndexTest() throws SQLException, VerdictDBValueException {
     ResultSet rs = stmt.executeQuery("SELECT gender, count(*) as cnt, sum(age) as agesum FROM PEOPLE GROUP BY gender");
     JdbcQueryResult queryResult = new JdbcQueryResult(rs);
     List<String> nonAgg = new ArrayList<>();
@@ -125,7 +125,7 @@ public class JdbcResultSetTest {
   }
 
   @Test
-  public void getIntegerLabelTest() throws SQLException, ValueException {
+  public void getIntegerLabelTest() throws SQLException, VerdictDBValueException {
     ResultSet rs = stmt.executeQuery("SELECT gender, count(*) as cnt, sum(age) as agesum FROM PEOPLE GROUP BY gender");
     JdbcQueryResult queryResult = new JdbcQueryResult(rs);
     List<String> nonAgg = new ArrayList<>();
@@ -145,7 +145,7 @@ public class JdbcResultSetTest {
   }
 
   @Test
-  public void getLongIndexTest() throws SQLException, ValueException {
+  public void getLongIndexTest() throws SQLException, VerdictDBValueException {
     ResultSet rs = stmt.executeQuery("SELECT gender, count(*) as cnt, sum(age) as agesum FROM PEOPLE GROUP BY gender");
     JdbcQueryResult queryResult = new JdbcQueryResult(rs);
     List<String> nonAgg = new ArrayList<>();
@@ -165,7 +165,7 @@ public class JdbcResultSetTest {
   }
 
   @Test
-  public void getLongLabelTest() throws SQLException, ValueException {
+  public void getLongLabelTest() throws SQLException, VerdictDBValueException {
     ResultSet rs = stmt.executeQuery("SELECT gender, count(*) as cnt, sum(age) as agesum FROM PEOPLE GROUP BY gender");
     JdbcQueryResult queryResult = new JdbcQueryResult(rs);
     List<String> nonAgg = new ArrayList<>();
@@ -185,7 +185,7 @@ public class JdbcResultSetTest {
   }
 
   @Test
-  public void getDoubleIndexTest() throws SQLException, ValueException {
+  public void getDoubleIndexTest() throws SQLException, VerdictDBValueException {
     ResultSet rs = stmt.executeQuery("SELECT gender, count(*) as cnt, avg(height) as a FROM PEOPLE GROUP BY gender");
     JdbcQueryResult queryResult = new JdbcQueryResult(rs);
     List<String> nonAgg = new ArrayList<>();
@@ -209,7 +209,7 @@ public class JdbcResultSetTest {
   }
 
   @Test
-  public void getDoubleLabelTest() throws SQLException, ValueException {
+  public void getDoubleLabelTest() throws SQLException, VerdictDBValueException {
     ResultSet rs = stmt.executeQuery("SELECT gender, count(*) as cnt, avg(height) as a FROM PEOPLE GROUP BY gender");
     JdbcQueryResult queryResult = new JdbcQueryResult(rs);
     List<String> nonAgg = new ArrayList<>();
@@ -233,7 +233,7 @@ public class JdbcResultSetTest {
   }
 
   @Test
-  public void getFloatIndexTest() throws SQLException, ValueException {
+  public void getFloatIndexTest() throws SQLException, VerdictDBValueException {
     ResultSet rs = stmt.executeQuery("SELECT gender, count(*) as cnt, avg(height) as a FROM PEOPLE GROUP BY gender");
     JdbcQueryResult queryResult = new JdbcQueryResult(rs);
     List<String> nonAgg = new ArrayList<>();
@@ -257,7 +257,7 @@ public class JdbcResultSetTest {
   }
 
   @Test
-  public void getFloatLabelTest() throws SQLException, ValueException {
+  public void getFloatLabelTest() throws SQLException, VerdictDBValueException {
     ResultSet rs = stmt.executeQuery("SELECT gender, count(*) as cnt, avg(height) as a FROM PEOPLE GROUP BY gender");
     JdbcQueryResult queryResult = new JdbcQueryResult(rs);
     List<String> nonAgg = new ArrayList<>();
@@ -281,7 +281,7 @@ public class JdbcResultSetTest {
   }
 
   @Test
-  public void DoubleToIntegerTest() throws SQLException, ValueException {
+  public void DoubleToIntegerTest() throws SQLException, VerdictDBValueException {
     ResultSet rs = stmt.executeQuery("SELECT gender, count(*) as cnt, avg(height) as a FROM PEOPLE GROUP BY gender");
     JdbcQueryResult queryResult = new JdbcQueryResult(rs);
     List<String> nonAgg = new ArrayList<>();
@@ -311,7 +311,7 @@ public class JdbcResultSetTest {
   }
 
   @Test
-  public void IntegerToDoubleTest() throws SQLException, ValueException {
+  public void IntegerToDoubleTest() throws SQLException, VerdictDBValueException {
     ResultSet rs = stmt.executeQuery("SELECT gender, count(*) as cnt, avg(height) as a FROM PEOPLE GROUP BY gender");
     JdbcQueryResult queryResult = new JdbcQueryResult(rs);
     List<String> nonAgg = new ArrayList<>();
@@ -339,7 +339,7 @@ public class JdbcResultSetTest {
   }
 
   @Test
-  public void getTimestampTest() throws SQLException, ValueException {
+  public void getTimestampTest() throws SQLException, VerdictDBValueException {
     ResultSet rs = stmt.executeQuery("SELECT birth, count(*) as cnt, avg(height) as a FROM PEOPLE GROUP BY birth");
     JdbcQueryResult queryResult = new JdbcQueryResult(rs);
     List<String> nonAgg = new ArrayList<>();
@@ -361,7 +361,7 @@ public class JdbcResultSetTest {
   }
 
   @Test
-  public void getBinaryTest() throws SQLException, ValueException, IOException {
+  public void getBinaryTest() throws SQLException, VerdictDBValueException, IOException {
     ResultSet rs = stmt.executeQuery("SELECT gender, count(*) as cnt, cast(12 as Binary) as bin FROM PEOPLE GROUP BY gender");
     JdbcQueryResult queryResult = new JdbcQueryResult(rs);
     List<String> nonAgg = new ArrayList<>();
@@ -385,7 +385,7 @@ public class JdbcResultSetTest {
   }
 
   @Test
-  public void getVarbinaryTest() throws SQLException, ValueException, IOException {
+  public void getVarbinaryTest() throws SQLException, VerdictDBValueException, IOException {
     ResultSet rs = stmt.executeQuery("SELECT gender, count(*) as cnt, cast(12 as varbinary(max)) as bin FROM PEOPLE GROUP BY gender");
     JdbcQueryResult queryResult = new JdbcQueryResult(rs);
     List<String> nonAgg = new ArrayList<>();
@@ -409,7 +409,7 @@ public class JdbcResultSetTest {
   }
 
   @Test
-  public void getLongvarbinaryTest() throws SQLException, ValueException, IOException {
+  public void getLongvarbinaryTest() throws SQLException, VerdictDBValueException, IOException {
     ResultSet rs = stmt.executeQuery("SELECT gender, count(*) as cnt, cast(12 as longvarbinary(max)) as bin FROM PEOPLE GROUP BY gender");
     JdbcQueryResult queryResult = new JdbcQueryResult(rs);
     List<String> nonAgg = new ArrayList<>();
@@ -433,7 +433,7 @@ public class JdbcResultSetTest {
   }
 
   @Test
-  public void getBitTest() throws SQLException, ValueException, IOException {
+  public void getBitTest() throws SQLException, VerdictDBValueException, IOException {
     ResultSet rs = stmt.executeQuery("SELECT gender, count(*) as cnt, cast(0 as bit) as bool FROM PEOPLE GROUP BY gender");
     JdbcQueryResult queryResult = new JdbcQueryResult(rs);
     List<String> nonAgg = new ArrayList<>();
@@ -456,7 +456,7 @@ public class JdbcResultSetTest {
   }
 
   @Test
-  public void getBlobTest() throws SQLException, ValueException {
+  public void getBlobTest() throws SQLException, VerdictDBValueException {
     ResultSet rs = stmt.executeQuery("SELECT gender, count(*) as cnt, cast(0x1234567 as blob) as b FROM PEOPLE GROUP BY gender");
     JdbcQueryResult queryResult = new JdbcQueryResult(rs);
     List<String> nonAgg = new ArrayList<>();
@@ -479,7 +479,7 @@ public class JdbcResultSetTest {
   }
 
   @Test
-  public void getBoolean() throws SQLException, ValueException {
+  public void getBoolean() throws SQLException, VerdictDBValueException {
     ResultSet rs = stmt.executeQuery("SELECT gender, count(*) as cnt, cast(0 as boolean) as b FROM PEOPLE GROUP BY gender");
     JdbcQueryResult queryResult = new JdbcQueryResult(rs);
     List<String> nonAgg = new ArrayList<>();
@@ -500,7 +500,7 @@ public class JdbcResultSetTest {
   }
 
   @Test
-  public void getClob() throws SQLException, ValueException {
+  public void getClob() throws SQLException, VerdictDBValueException {
     ResultSet rs = stmt.executeQuery("SELECT gender, count(*) as cnt, cast(0x1234567 as clob) as b FROM PEOPLE GROUP BY gender");
     JdbcQueryResult queryResult = new JdbcQueryResult(rs);
     List<String> nonAgg = new ArrayList<>();
@@ -519,7 +519,7 @@ public class JdbcResultSetTest {
   }
 
   @Test
-  public void getArray() throws SQLException, ValueException {
+  public void getArray() throws SQLException, VerdictDBValueException {
     ResultSet rs = stmt.executeQuery("SELECT gender, count(*) as cnt, cast((1, 2, 3) as array) as b FROM PEOPLE GROUP BY gender");
     JdbcQueryResult queryResult = new JdbcQueryResult(rs);
     List<String> nonAgg = new ArrayList<>();

@@ -14,7 +14,7 @@ import org.verdictdb.connection.JdbcQueryResult;
 import org.verdictdb.core.aggresult.AggregateFrame;
 import org.verdictdb.core.aggresult.AggregateFrameQueryResult;
 import org.verdictdb.core.rewriter.aggresult.AggNameAndType;
-import org.verdictdb.exception.ValueException;
+import org.verdictdb.exception.VerdictDBValueException;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -61,7 +61,7 @@ public class JdbcResultSetMetaDataTest {
   }
 
   @Before
-  public void createJdbcResultSetMetaData() throws SQLException, ValueException {
+  public void createJdbcResultSetMetaData() throws SQLException, VerdictDBValueException {
     ResultSet rs = stmt.executeQuery("SELECT gender, count(*) as cnt, avg(age) as ageavg FROM PEOPLE GROUP BY gender");
     JdbcQueryResult queryResult = new JdbcQueryResult(rs);
     List<String> nonAgg = new ArrayList<>();

@@ -21,9 +21,9 @@ import org.verdictdb.core.aggresult.AggregateFrame;
 import org.verdictdb.core.aggresult.AggregateGroup;
 import org.verdictdb.core.aggresult.AggregateMeasures;
 import org.verdictdb.core.rewriter.AliasRenamingRules;
-import org.verdictdb.exception.UnexpectedTypeException;
-import org.verdictdb.exception.ValueException;
-import org.verdictdb.exception.VerdictDbException;
+import org.verdictdb.exception.VerdictDBTypeException;
+import org.verdictdb.exception.VerdictDBValueException;
+import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.jdbc.TypeCasting;
 
 /**
@@ -56,10 +56,10 @@ public class SingleAggResultRewriter {
    * @param rawResultSet
    * @param aggColumns Each pair is (original agg alias, type of agg)
    * @return
-   * @throws VerdictDbException
+   * @throws VerdictDBException
    */
   public AggregateFrame rewrite(List<String> nonaggColumns, List<AggNameAndType> aggColumns) 
-      throws VerdictDbException {
+      throws VerdictDBException {
     ensureColumnNamesValidity(nonaggColumns, aggColumns);
     AggregateFrame converted = new AggregateFrame(getNewColumnNames(nonaggColumns, aggColumns));
     
@@ -109,7 +109,7 @@ public class SingleAggResultRewriter {
   AggregateMeasures rewriteMeasures(
       List<Pair<Integer, AggregateMeasures>> tierAndMeasures, 
       List<AggNameAndType> aggColumns)
-          throws ValueException, UnexpectedTypeException {
+          throws VerdictDBValueException, VerdictDBTypeException {
     AggregateMeasures rewrittenMeasures = new AggregateMeasures();
     for (AggNameAndType agg : aggColumns) {
       String aggname = agg.getName();
@@ -166,7 +166,7 @@ public class SingleAggResultRewriter {
 
   List<Pair<String, Object>> rewriteSumMeasure(String aggname, Object sumEstimate, Object sumScaledSum,
       Object sumSquaredScaledSum, Object countSubsamples, Object sumSubsampleSizes) 
-          throws UnexpectedTypeException {
+          throws VerdictDBTypeException {
     List<Pair<String, Object>> rewrittenMeasures = new ArrayList<>();
     
     double mu = TypeCasting.toDouble(sumEstimate);
@@ -183,7 +183,7 @@ public class SingleAggResultRewriter {
 
   List<Pair<String, Object>> rewriteCountMeasure(String aggname, Object countEstimate, Object sumScaledCount,
       Object sumSquaredScaledCount, Object countSubsamples, Object sumSubsampleSizes) 
-          throws UnexpectedTypeException {
+          throws VerdictDBTypeException {
     List<Pair<String, Object>> rewrittenMeasures = new ArrayList<>();
     
     double mu = TypeCasting.toDouble(countEstimate);
@@ -201,7 +201,7 @@ public class SingleAggResultRewriter {
   List<Pair<String, Object>> rewriteAvgMeasure(String aggname,
       Object sumEstimate, Object sumScaledSum, Object sumSquaredScaledSum,
       Object countEstimate, Object sumScaledCount, Object sumSquaredScaledCount,
-      Object countSubsamples, Object sumSubsampleSizes) throws UnexpectedTypeException {
+      Object countSubsamples, Object sumSubsampleSizes) throws VerdictDBTypeException {
     List<Pair<String, Object>> rewrittenMeasures = new ArrayList<>();
     
     double mu_s = TypeCasting.toDouble(sumEstimate);
@@ -227,7 +227,7 @@ public class SingleAggResultRewriter {
     return rewrittenMeasures;
   }
 
-  void ensureColumnNamesValidity(List<String> nonaggColumns, List<AggNameAndType> aggColumns) throws ValueException {
+  void ensureColumnNamesValidity(List<String> nonaggColumns, List<AggNameAndType> aggColumns) throws VerdictDBValueException {
     for (String nonagg: nonaggColumns) {
       mustContain(nonagg);
     }
@@ -276,7 +276,7 @@ public class SingleAggResultRewriter {
     return newColumnNames;
   }
 
-  Object getMeasureValue(AggregateMeasures measures, String aliasName) throws ValueException {
+  Object getMeasureValue(AggregateMeasures measures, String aliasName) throws VerdictDBValueException {
     if (indexCache.containsKey(aliasName)) {
       return measures.getAttributeValueAt(indexCache.get(aliasName));
     }
@@ -287,9 +287,9 @@ public class SingleAggResultRewriter {
     }
   }
 
-  void mustContain(String colName) throws ValueException {
+  void mustContain(String colName) throws VerdictDBValueException {
     if (!columnNames.contains(colName)) {
-      throw new ValueException("The expected column name does not exist: " + colName);
+      throw new VerdictDBValueException("The expected column name does not exist: " + colName);
     }
   }
 

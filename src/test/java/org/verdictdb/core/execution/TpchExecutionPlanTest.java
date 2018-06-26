@@ -12,7 +12,7 @@ import org.verdictdb.core.rewriter.ScrambleMetaForTable;
 import org.verdictdb.core.scramble.UniformScrambler;
 import org.verdictdb.core.sql.NonValidatingSQLParser;
 import org.verdictdb.core.sql.RelationStandardizer;
-import org.verdictdb.exception.VerdictDbException;
+import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sql.syntax.H2Syntax;
 
 import java.sql.Connection;
@@ -40,7 +40,7 @@ public class TpchExecutionPlanTest {
   static String scrambledTable;
 
   @BeforeClass
-  public static void setupH2Database() throws SQLException, VerdictDbException {
+  public static void setupH2Database() throws SQLException, VerdictDBException {
     final String DB_CONNECTION = "jdbc:h2:mem:aggexecnodetest;DB_CLOSE_DELAY=-1";
     final String DB_USER = "";
     final String DB_PASSWORD = "";
@@ -216,7 +216,7 @@ public class TpchExecutionPlanTest {
   }
 
   @Test
-  public void Query1Test() throws VerdictDbException, SQLException {
+  public void Query1Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select " +
         " l_returnflag, " +
@@ -289,11 +289,11 @@ public class TpchExecutionPlanTest {
     expected.addOrderby(Arrays.<OrderbyAttribute>asList(new OrderbyAttribute("vc2"),
         new OrderbyAttribute("vc3")));
     expected.addLimit(ConstantColumn.valueOf(1));
-    assertEquals(expected, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.getDependents().get(0)).query);
+    assertEquals(expected, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.getDependents().get(0)).selectQuery);
   }
 
   @Test
-  public void Query3Test() throws VerdictDbException, SQLException {
+  public void Query3Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select " +
         "l_orderkey, " +
@@ -376,11 +376,11 @@ public class TpchExecutionPlanTest {
         new OrderbyAttribute("vc5")
     ));
     expected.addLimit(ConstantColumn.valueOf(10));
-    assertEquals(expected, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).query);
+    assertEquals(expected, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).selectQuery);
   }
 
   @Test
-  public void Query4Test() throws VerdictDbException, SQLException {
+  public void Query4Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select " +
         "o_orderpriority, " +
@@ -449,12 +449,12 @@ public class TpchExecutionPlanTest {
     expected.addGroupby(new AliasReference("vc2"));
     expected.addOrderby(new OrderbyAttribute("vc2"));
     expected.addLimit(ConstantColumn.valueOf(1));
-    assertEquals(expected, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.getDependents().get(0)).query);
-    assertEquals(subquery, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0)).query);
+    assertEquals(expected, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.getDependents().get(0)).selectQuery);
+    assertEquals(subquery, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0)).selectQuery);
   }
 
   @Test
-  public void Query5Test() throws VerdictDbException, SQLException {
+  public void Query5Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select " +
         "n_name, " +
@@ -553,11 +553,11 @@ public class TpchExecutionPlanTest {
     expected.addGroupby(new AliasReference("vc7"));
     expected.addOrderby(new OrderbyAttribute("revenue", "desc"));
     expected.addLimit(ConstantColumn.valueOf(1));
-    assertEquals(expected, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).query);
+    assertEquals(expected, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).selectQuery);
   }
 
   @Test
-  public void Query6Test() throws VerdictDbException, SQLException {
+  public void Query6Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select " +
         "sum(l_extendedprice * l_discount) as revenue " +
@@ -613,11 +613,11 @@ public class TpchExecutionPlanTest {
         ConstantColumn.valueOf("':3'"))
     ));
     expected.addLimit(ConstantColumn.valueOf(1));
-    assertEquals(expected, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).query);
+    assertEquals(expected, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).selectQuery);
   }
 
   @Test
-  public void Query7Test() throws VerdictDbException, SQLException {
+  public void Query7Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select " +
         "supp_nation, " +
@@ -755,12 +755,12 @@ public class TpchExecutionPlanTest {
         new OrderbyAttribute("vc7")
     ));
     expected.addLimit(ConstantColumn.valueOf(1));
-    assertEquals(expected, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).query);
-    assertEquals(subquery, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0)).query);
+    assertEquals(expected, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).selectQuery);
+    assertEquals(subquery, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0)).selectQuery);
   }
 
   @Test
-  public void Query8Test() throws VerdictDbException, SQLException {
+  public void Query8Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select " +
         "o_year, " +
@@ -889,12 +889,12 @@ public class TpchExecutionPlanTest {
     expected.addGroupby(new AliasReference("vc7"));
     expected.addOrderby(new OrderbyAttribute("vc7"));
     expected.addLimit(ConstantColumn.valueOf(1));
-    assertEquals(expected, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).query);
-    assertEquals(subquery, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0)).query);
+    assertEquals(expected, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).selectQuery);
+    assertEquals(subquery, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0)).selectQuery);
   }
 
   @Test
-  public void Query9Test() throws VerdictDbException, SQLException {
+  public void Query9Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select " +
         "nation, " +
@@ -1004,12 +1004,12 @@ public class TpchExecutionPlanTest {
     expected.addOrderby(Arrays.<OrderbyAttribute>asList(new OrderbyAttribute("vc7"),
         new OrderbyAttribute("vc8", "desc")));
     expected.addLimit(ConstantColumn.valueOf(1));
-    assertEquals(expected, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).query);
-    assertEquals(subquery, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0)).query);
+    assertEquals(expected, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).selectQuery);
+    assertEquals(subquery, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0)).selectQuery);
   }
 
   @Test
-  public void Query10Test() throws VerdictDbException, SQLException {
+  public void Query10Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select " +
         "c_custkey, " +
@@ -1113,11 +1113,11 @@ public class TpchExecutionPlanTest {
     ));
     expected.addOrderby(new OrderbyAttribute("revenue", "desc"));
     expected.addLimit(ConstantColumn.valueOf(20));
-    assertEquals(expected, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).query);
+    assertEquals(expected, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).selectQuery);
   }
 
   @Test
-  public void Query12Test() throws VerdictDbException, SQLException {
+  public void Query12Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select " +
         "l_shipmode, " +
@@ -1223,11 +1223,11 @@ public class TpchExecutionPlanTest {
     expected.addGroupby(new AliasReference("vc3"));
     expected.addOrderby(new OrderbyAttribute("vc3"));
     expected.addLimit(ConstantColumn.valueOf(1));
-    assertEquals(relation, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).query);
+    assertEquals(relation, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).selectQuery);
   }
 
   @Test
-  public void SimplifiedQuery13Test() throws VerdictDbException, SQLException {
+  public void SimplifiedQuery13Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select " +
         "c_custkey, " +
@@ -1269,11 +1269,11 @@ public class TpchExecutionPlanTest {
         ), join
     );
     expected.addGroupby(new AliasReference("vc3"));
-    assertEquals(expected, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).query);
+    assertEquals(expected, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).selectQuery);
   }
 
   @Test
-  public void Query14Test() throws VerdictDbException, SQLException {
+  public void Query14Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select " +
         "100.00 * sum(case " +
@@ -1339,12 +1339,12 @@ public class TpchExecutionPlanTest {
         ))
     )));
     expected.addLimit(ConstantColumn.valueOf(1));
-    assertEquals(relation, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).query);
+    assertEquals(relation, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).selectQuery);
   }
 
   // Query 15 is a non aggregate query, add avg(s_suppkey) to be an aggregate one
   @Test
-  public void IncompleteQuery15Test() throws VerdictDbException, SQLException {
+  public void IncompleteQuery15Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select " +
         "avg(s_suppkey), " +
@@ -1403,7 +1403,7 @@ public class TpchExecutionPlanTest {
         ));
     assertEquals(
         expected.getFromList(), 
-        ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.dependents.get(0)).getQuery().getFromList());
+        ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.dependents.get(0)).getSelectQuery().getFromList());
 
     SelectQuery revenue_cached = SelectQuery.create(
         Arrays.<SelectItem>asList(
@@ -1424,7 +1424,7 @@ public class TpchExecutionPlanTest {
     )));
     revenue_cached.addGroupby(new AliasReference("supplier_no"));
     revenue_cached.setAliasName("revenue_cached");
-    assertEquals(revenue_cached, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0)).query);
+    assertEquals(revenue_cached, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0)).selectQuery);
 
     SelectQuery max_revenue_cached = SelectQuery.create(
         Arrays.<SelectItem>asList(
@@ -1432,11 +1432,11 @@ public class TpchExecutionPlanTest {
         ), new BaseTable("verdictdb_temp", "verdictdbtemptable_3", "vt3")
     );
     max_revenue_cached.setAliasName("max_revenue_cached");
-    assertEquals(max_revenue_cached, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(1)).query);
+    assertEquals(max_revenue_cached, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(1)).selectQuery);
   }
 
   @Test
-  public void Query17Test() throws VerdictDbException, SQLException {
+  public void Query17Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select\n" +
         "\tsum(l_extendedprice) / 7.0 as avg_yearly\n" +
@@ -1479,7 +1479,7 @@ public class TpchExecutionPlanTest {
     assertEquals(2, queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.size());
 
     assertEquals(new BaseTable("verdictdb_temp", "verdictdbtemptable_1", "a"),
-        ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).getQuery().getFromList().get(0));
+        ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).getSelectQuery().getFromList().get(0));
     JoinTable join = JoinTable.getJoinTable(Arrays.<AbstractRelation>asList(
         new BaseTable("verdictdb_temp", "verdictdbtemptable_2", "q17_lineitem_tmp_cached"),
         new BaseTable("verdictdb_temp", "verdictdbtemptable_3", "l1")),
@@ -1491,7 +1491,7 @@ public class TpchExecutionPlanTest {
             ))
         ));
     assertEquals(join, 
-        ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0)).getQuery().getFromList().get(0));
+        ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0)).getSelectQuery().getFromList().get(0));
     SelectQuery expected = SelectQuery.create(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("vt1", "l_partkey"), "t_partkey"),
@@ -1503,11 +1503,11 @@ public class TpchExecutionPlanTest {
         new BaseTable("tpch", "lineitem", "vt1"));
     expected.addGroupby(new AliasReference("t_partkey"));
     expected.setAliasName("q17_lineitem_tmp_cached");
-    assertEquals(expected, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.get(0)).query);
+    assertEquals(expected, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.get(0)).selectQuery);
   }
 
   @Test
-  public void Query18Test() throws VerdictDbException, SQLException {
+  public void Query18Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select\n" +
         "\tc_name,\n" +
@@ -1567,13 +1567,13 @@ public class TpchExecutionPlanTest {
         ConstantColumn.valueOf("NOT NULL")
     )));
 
-    assertEquals(expected, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0)).query);
+    assertEquals(expected, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0)).selectQuery);
     assertEquals(new BaseTable("verdictdb_temp", "verdictdbtemptable_1", "t"),
-        ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).getQuery().getFromList().get(2));
+        ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).getSelectQuery().getFromList().get(2));
   }
 
   @Test
-  public void Query19Test() throws VerdictDbException, SQLException {
+  public void Query19Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select " +
         "sum(l_extendedprice* (1 - l_discount)) as revenue " +
@@ -1791,12 +1791,12 @@ public class TpchExecutionPlanTest {
         columnOp3
     )));
     expected.addLimit(ConstantColumn.valueOf(1));
-    assertEquals(expected, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).query);
+    assertEquals(expected, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).selectQuery);
   }
 
   // Query 20 is not a aggregated function. Change to count(s_address)
   @Test
-  public void Query20Test() throws VerdictDbException, SQLException {
+  public void Query20Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select\n" +
         "\ts_name,\n" +
@@ -1848,13 +1848,13 @@ public class TpchExecutionPlanTest {
     expected.addGroupby(new AliasReference("vc4"));
     expected.addGroupby(new AliasReference("vc5"));
     expected.setAliasName("q20_tmp2_cached");
-    assertEquals(expected, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0)).query);
+    assertEquals(expected, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0)).selectQuery);
     assertEquals(new BaseTable("verdictdb_temp", "verdictdbtemptable_1", "q20_tmp2_cached"),
-        ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).getQuery().getFromList().get(2));
+        ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).getSelectQuery().getFromList().get(2));
   }
 
   @Test
-  public void Query21Test() throws VerdictDbException, SQLException {
+  public void Query21Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select\n" +
         "\ts_name,\n" +
@@ -1956,9 +1956,9 @@ public class TpchExecutionPlanTest {
     assertEquals(1, queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.get(0).dependents.get(1).dependents.size());
 
     assertEquals(new BaseTable("verdictdb_temp", "verdictdbtemptable_1", "c"),
-        ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).getQuery().getFromList().get(0));
+        ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).getSelectQuery().getFromList().get(0));
     assertEquals(new BaseTable("verdictdb_temp", "verdictdbtemptable_2", "b"),
-        ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0)).getQuery().getFromList().get(0));
+        ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0)).getSelectQuery().getFromList().get(0));
     JoinTable join = JoinTable.getJoinTable(Arrays.<AbstractRelation>asList(
         new BaseTable("verdictdb_temp", "verdictdbtemptable_3", "t2"),
         new BaseTable("verdictdb_temp", "verdictdbtemptable_4", "l3")),
@@ -1970,12 +1970,12 @@ public class TpchExecutionPlanTest {
             ))
         ));
     assertEquals(join,
-        ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.get(0)).getQuery().getFromList().get(0));
+        ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.get(0)).getSelectQuery().getFromList().get(0));
 
   }
 
   @Test
-  public void Query22Test() throws VerdictDbException, SQLException {
+  public void Query22Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select\n" +
         "\tcntrycode,\n" +
@@ -2055,7 +2055,7 @@ public class TpchExecutionPlanTest {
     assertEquals(2, queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.get(1).dependents.size());
 
     assertEquals(new BaseTable("verdictdb_temp", "verdictdbtemptable_1", "a"),
-        ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).getQuery().getFromList().get(0));
+        ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).getSelectQuery().getFromList().get(0));
     JoinTable join = JoinTable.getJoinTable(Arrays.<AbstractRelation>asList(
         new BaseTable("verdictdb_temp", "verdictdbtemptable_2", "ct1"),
         new BaseTable("verdictdb_temp", "verdictdbtemptable_4", "ct2")),
@@ -2066,9 +2066,9 @@ public class TpchExecutionPlanTest {
                 ConstantColumn.valueOf("NULL")
             ))
         ));
-    assertEquals(join, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0)).getQuery().getFromList().get(0));
+    assertEquals(join, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0)).getSelectQuery().getFromList().get(0));
     assertEquals(new BaseTable("verdictdb_temp", "verdictdbtemptable_3", "vt1"),
-        ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.get(0)).getQuery().getFromList().get(0));
+        ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.get(0)).getSelectQuery().getFromList().get(0));
     JoinTable join1 = JoinTable.getJoinTable(Arrays.<AbstractRelation>asList(
         new BaseTable("verdictdb_temp", "verdictdbtemptable_5", "ot"),
         new BaseTable("verdictdb_temp", "verdictdbtemptable_6", "ct")),
@@ -2080,12 +2080,12 @@ public class TpchExecutionPlanTest {
             ))
         ));
     assertEquals(join1,
-        ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.get(1)).getQuery().getFromList().get(0));
+        ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.get(1)).getSelectQuery().getFromList().get(0));
 
   }
 
   @Test
-  public void SubqueryInFilterTest() throws VerdictDbException, SQLException {
+  public void SubqueryInFilterTest() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select avg(l_quantity) from lineitem where l_quantity > (select avg(l_quantity) as quantity_avg from lineitem);";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
@@ -2099,13 +2099,13 @@ public class TpchExecutionPlanTest {
         Arrays.<SelectItem>asList(new AliasedColumn(new BaseColumn("verdictdb_temp", "verdictdbtemptable_1", "quantity_avg"), "quantity_avg")),
         new BaseTable("verdictdb_temp", "verdictdbtemptable_1", "verdictdbtemptable_1"));
     assertEquals(rewritten,
-        ((SubqueryColumn)((ColumnOp)((CreateTableAsSelectExecutionNode)(queryExecutionPlan.root.dependents.get(0))).getQuery().getFilter().get()).getOperand(1)).getSubquery());
+        ((SubqueryColumn)((ColumnOp)((CreateTableAsSelectExecutionNode)(queryExecutionPlan.root.dependents.get(0))).getSelectQuery().getFilter().get()).getOperand(1)).getSubquery());
 
     SelectQuery expected = SelectQuery.create(
         Arrays.<SelectItem>asList(new AliasedColumn(new ColumnOp("avg", new BaseColumn("vt3", "l_quantity")), "quantity_avg")),
         new BaseTable("tpch", "lineitem", "vt3")
     );
-    assertEquals(expected, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0)).query);
+    assertEquals(expected, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0)).selectQuery);
   }
 }
 

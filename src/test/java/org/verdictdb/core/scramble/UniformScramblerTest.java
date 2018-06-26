@@ -17,7 +17,7 @@ import org.verdictdb.core.query.SelectQuery;
 import org.verdictdb.core.rewriter.ScrambleMetaForTable;
 import org.verdictdb.core.sql.CreateTableToSql;
 import org.verdictdb.core.sql.SelectQueryToSql;
-import org.verdictdb.exception.VerdictDbException;
+import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sql.syntax.H2Syntax;
 import org.verdictdb.sql.syntax.HiveSyntax;
 
@@ -50,7 +50,7 @@ public class UniformScramblerTest {
   }
 
   @Test
-  public void testSelectQuery() throws VerdictDbException {
+  public void testSelectQuery() throws VerdictDBException {
     int aggBlockCount = 10;
     UniformScrambler scrambler =
         new UniformScrambler(originalSchema, originalTable, newSchema, newTable, aggBlockCount);
@@ -70,7 +70,7 @@ public class UniformScramblerTest {
   }
 
   @Test
-  public void testCreateTableQuery() throws VerdictDbException {
+  public void testCreateTableQuery() throws VerdictDBException {
     int aggBlockCount = 10;
     UniformScrambler scrambler =
         new UniformScrambler(originalSchema, originalTable, newSchema, newTable, aggBlockCount);
@@ -92,7 +92,7 @@ public class UniformScramblerTest {
   }
 
   @Test
-  public void testCreateTableQueryWithH2() throws SQLException, VerdictDbException {
+  public void testCreateTableQueryWithH2() throws SQLException, VerdictDBException {
     int aggBlockCount = 1;
     UniformScrambler scrambler =
         new UniformScrambler(originalSchema, originalTable, newSchema, newTable, aggBlockCount);
@@ -111,7 +111,7 @@ public class UniformScramblerTest {
   }
 
   @Test
-  public void testCreateTableQueryCorrectnessWithH2() throws SQLException, VerdictDbException {
+  public void testCreateTableQueryCorrectnessWithH2() throws SQLException, VerdictDBException {
 
     int aggBlockCount = 5;
     UniformScrambler scrambler =

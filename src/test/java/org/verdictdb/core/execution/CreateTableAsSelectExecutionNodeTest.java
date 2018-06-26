@@ -14,7 +14,7 @@ import org.verdictdb.core.query.BaseTable;
 import org.verdictdb.core.query.SelectItem;
 import org.verdictdb.core.query.SelectQuery;
 import org.verdictdb.exception.VerdictDBDbmsException;
-import org.verdictdb.exception.VerdictDbException;
+import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sql.syntax.H2Syntax;
 
 public class CreateTableAsSelectExecutionNodeTest {
@@ -32,7 +32,7 @@ public class CreateTableAsSelectExecutionNodeTest {
   static DbmsConnection conn;
 
   @BeforeClass
-  public static void setupDbConnAndScrambledTable() throws SQLException, VerdictDbException {
+  public static void setupDbConnAndScrambledTable() throws SQLException, VerdictDBException {
     final String DB_CONNECTION = "jdbc:h2:mem:createasselecttest;DB_CLOSE_DELAY=-1";
     final String DB_USER = "";
     final String DB_PASSWORD = "";

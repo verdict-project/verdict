@@ -15,12 +15,12 @@ import org.verdictdb.core.query.ColumnOp;
 import org.verdictdb.core.query.SelectItem;
 import org.verdictdb.core.query.SelectQuery;
 import org.verdictdb.core.query.UnnamedColumn;
-import org.verdictdb.exception.VerdictDbException;
+import org.verdictdb.exception.VerdictDBException;
 
 public class SqlToRelationTest {
 
   @Test
-  public void testSelectAllBaseTable() throws VerdictDbException {
+  public void testSelectAllBaseTable() throws VerdictDBException {
     String actual = "select * from myschema.mytable as t";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     SelectQuery expected = SelectQuery.create(Arrays.<SelectItem>asList(
@@ -31,7 +31,7 @@ public class SqlToRelationTest {
   }
 
   @Test
-  public void testSelectColumnsBaseTable() throws VerdictDbException {
+  public void testSelectColumnsBaseTable() throws VerdictDBException {
     String actual = "select t.mycolumn1, t.mycolumn2 from myschema.mytable as t";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation sel = sqlToRelation.toRelation(actual);
@@ -43,7 +43,7 @@ public class SqlToRelationTest {
   }
 
   @Test
-  public void testSelectAvgBaseTable() throws VerdictDbException {
+  public void testSelectAvgBaseTable() throws VerdictDBException {
     String actual = "select avg(t.mycolumn1) from myschema.mytable as t";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation sel = sqlToRelation.toRelation(actual);
@@ -54,7 +54,7 @@ public class SqlToRelationTest {
   }
 
   @Test
-  public void testSelectSumBaseTable() throws VerdictDbException {
+  public void testSelectSumBaseTable() throws VerdictDBException {
     String actual = "select sum(t.mycolumn1) from myschema.mytable as t";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation sel = sqlToRelation.toRelation(actual);
@@ -65,7 +65,7 @@ public class SqlToRelationTest {
   }
 
   @Test
-  public void testSelectCountBaseTable() throws VerdictDbException {
+  public void testSelectCountBaseTable() throws VerdictDBException {
     String actual = "select count(*) from myschema.mytable as t";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation sel = sqlToRelation.toRelation(actual);
@@ -76,7 +76,7 @@ public class SqlToRelationTest {
   }
 
   @Test
-  public void testSelectAggregatesBaseTable() throws VerdictDbException {
+  public void testSelectAggregatesBaseTable() throws VerdictDBException {
     String actual = "select avg(t.mycolumn1), sum(t.mycolumn1), count(*) from myschema.mytable as t";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation sel = sqlToRelation.toRelation(actual);
@@ -89,7 +89,7 @@ public class SqlToRelationTest {
   }
 
   @Test
-  public void testSelectAddBaseTable() throws VerdictDbException {
+  public void testSelectAddBaseTable() throws VerdictDBException {
     String actual = "select t.mycolumn1 + t.mycolumn2 from myschema.mytable as t";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation sel = sqlToRelation.toRelation(actual);
@@ -103,7 +103,7 @@ public class SqlToRelationTest {
   }
 
   @Test
-  public void testSelectSubtractBaseTable() throws VerdictDbException {
+  public void testSelectSubtractBaseTable() throws VerdictDBException {
     String actual = "select t.mycolumn1 - t.mycolumn2 from myschema.mytable as t";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation sel = sqlToRelation.toRelation(actual);
@@ -117,7 +117,7 @@ public class SqlToRelationTest {
   }
 
   @Test
-  public void testSelectMultiplyBaseTable() throws VerdictDbException {
+  public void testSelectMultiplyBaseTable() throws VerdictDBException {
     String actual = "select t.mycolumn1 * t.mycolumn2 from myschema.mytable as t";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation sel = sqlToRelation.toRelation(actual);
@@ -131,7 +131,7 @@ public class SqlToRelationTest {
   }
 
   @Test
-  public void testSelectDivideBaseTable() throws VerdictDbException {
+  public void testSelectDivideBaseTable() throws VerdictDBException {
     String actual = "select t.mycolumn1 / t.mycolumn2 from myschema.mytable as t";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation sel = sqlToRelation.toRelation(actual);
@@ -145,7 +145,7 @@ public class SqlToRelationTest {
   }
 
   @Test
-  public void testSelectAvgGroupbyBaseTable() throws VerdictDbException {
+  public void testSelectAvgGroupbyBaseTable() throws VerdictDBException {
     String actual = "select t.mygroup, avg(t.mycolumn1) as myavg from myschema.mytable as t group by mygroup";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation sel = sqlToRelation.toRelation(actual);
@@ -158,7 +158,7 @@ public class SqlToRelationTest {
   }
 
   @Test
-  public void testSelectNestedGroupby() throws VerdictDbException {
+  public void testSelectNestedGroupby() throws VerdictDBException {
     String actual = "select * from ("
         + "select t.mygroup, avg(t.mycolumn1) as myavg from myschema.mytable as t group by mygroup) as s "
         + "group by mygroup2";

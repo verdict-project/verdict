@@ -17,12 +17,12 @@ public class ProjectionExecutionNode extends CreateTableAsSelectExecutionNode {
     return node;
   }
   
-  public SelectQuery getQuery() {
-    return (SelectQuery) query;
+  public SelectQuery getSelectQuery() {
+    return (SelectQuery) selectQuery;
   }
 
   @Override
-  public ExecutionResult executeNode(DbmsConnection conn, List<ExecutionResult> downstreamResults) {
+  public ExecutionInfoToken executeNode(DbmsConnection conn, List<ExecutionInfoToken> downstreamResults) {
     return super.executeNode(conn, downstreamResults);
   }
 

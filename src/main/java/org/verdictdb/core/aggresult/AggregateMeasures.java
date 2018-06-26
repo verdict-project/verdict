@@ -5,7 +5,7 @@ import java.util.List;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
-import org.verdictdb.exception.ValueException;
+import org.verdictdb.exception.VerdictDBValueException;
 
 public class AggregateMeasures {
 
@@ -28,10 +28,10 @@ public class AggregateMeasures {
     attributeValues.add(attributeValue);
   }
   
-  public int getIndexOfAttributeName(String attributeName) throws ValueException {
+  public int getIndexOfAttributeName(String attributeName) throws VerdictDBValueException {
     int index = attributeNames.indexOf(attributeName);
     if (index == -1) {
-      throw new ValueException(attributeName + " does not appear in " + attributeNames);
+      throw new VerdictDBValueException(attributeName + " does not appear in " + attributeNames);
     }
     return index;
   }
@@ -40,7 +40,7 @@ public class AggregateMeasures {
     return attributeValues.get(index);
   }
   
-  public Object getAttributeValue(String attributeName) throws ValueException {
+  public Object getAttributeValue(String attributeName) throws VerdictDBValueException {
     return attributeValues.get(getIndexOfAttributeName(attributeName));
   }
 

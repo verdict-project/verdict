@@ -10,7 +10,7 @@ import org.junit.Test;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.exception.VerdictDBDbmsException;
-import org.verdictdb.exception.VerdictDbException;
+import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sql.syntax.H2Syntax;
 
 public class DropTableExecutionNodeTest {
@@ -22,7 +22,7 @@ public class DropTableExecutionNodeTest {
   static DbmsConnection conn;
 
   @BeforeClass
-  public static void setupDbConnAndScrambledTable() throws SQLException, VerdictDbException {
+  public static void setupDbConnAndScrambledTable() throws SQLException, VerdictDBException {
     final String DB_CONNECTION = "jdbc:h2:mem:droptablenodetest;DB_CLOSE_DELAY=-1";
     final String DB_USER = "";
     final String DB_PASSWORD = "";
@@ -35,7 +35,7 @@ public class DropTableExecutionNodeTest {
   public void testExecuteNode() {
 //    LinkedBlockingDeque<ExecutionResult> resultQueue = new LinkedBlockingDeque<>();
     QueryExecutionNode root = DropTableExecutionNode.create();
-    ExecutionResult token = new ExecutionResult();
+    ExecutionInfoToken token = new ExecutionInfoToken();
     token.setKeyValue("schemaName", originalSchema);
     token.setKeyValue("tableName", originalTable);
     root.executeNode(conn, Arrays.asList(token));

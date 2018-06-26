@@ -5,7 +5,7 @@ import java.util.Map;
 
 import org.verdictdb.core.aggresult.AggregateFrame;
 
-public class ExecutionResult {
+public class ExecutionInfoToken {
   
   // either initialized, intermediateresult, finished, failed
 //  String status = "initialized";
@@ -14,8 +14,8 @@ public class ExecutionResult {
   
   AggregateFrame af = null;
   
-  public static ExecutionResult empty() {
-    return new ExecutionResult();
+  public static ExecutionInfoToken empty() {
+    return new ExecutionInfoToken();
   }
   
   public Object getValue(String key) {

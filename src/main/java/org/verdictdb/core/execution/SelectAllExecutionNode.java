@@ -7,7 +7,7 @@ import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.core.query.AsteriskColumn;
 import org.verdictdb.core.query.SelectQuery;
 import org.verdictdb.core.sql.QueryToSql;
-import org.verdictdb.exception.VerdictDbException;
+import org.verdictdb.exception.VerdictDBException;
 
 /**
  * 
@@ -29,8 +29,8 @@ public class SelectAllExecutionNode extends QueryExecutionNodeWithPlaceHolders {
   public static SelectAllExecutionNode create(SelectQuery query, String scratchpadSchemaName) {
     SelectAllExecutionNode selectAll = new SelectAllExecutionNode();
     SelectQuery selectQuery = SelectQuery.create(new AsteriskColumn(), selectAll.createPlaceHolderTable("t"));
-    selectAll.setQuery(selectQuery);
-    ExecutionResultQueue queue = selectAll.generateListeningQueue();
+    selectAll.setSelectQuery(selectQuery);
+    ExecutionTokenQueue queue = selectAll.generateListeningQueue();
     
 //    Pair<String, String> tempTableFullName = plan.generateTempTableName();
 //    String schemaName = tempTableFullName.getLeft();
@@ -51,23 +51,30 @@ public class SelectAllExecutionNode extends QueryExecutionNodeWithPlaceHolders {
   }
 
   @Override
-  public ExecutionResult executeNode(DbmsConnection conn, List<ExecutionResult> downstreamResults) {
+  public ExecutionInfoToken executeNode(DbmsConnection conn, List<ExecutionInfoToken> downstreamResults) {
     super.executeNode(conn, downstreamResults);
     try {
-      String sql = QueryToSql.convert(conn.getSyntax(), query);
+      String sql = QueryToSql.convert(conn.getSyntax(), selectQuery);
       DbmsQueryResult queryResult = conn.executeQuery(sql);
-      ExecutionResult result = new ExecutionResult();
+      ExecutionInfoToken result = new ExecutionInfoToken();
       result.setKeyValue("queryResult", queryResult);
       return result;
       
-    } catch (VerdictDbException e) {
+    } catch (VerdictDBException e) {
       e.printStackTrace();
     }
-    return ExecutionResult.empty();
+    return ExecutionInfoToken.empty();
   }
 
-//  public List<DbmsQueryResult> getDbmsQueryResults() {
-//    return dbmsQueryResults;
-//  }
+  @Override
+  public QueryExecutionNode deepcopy() {
+    SelectAllExecutionNode node = new SelectAllExecutionNode();
+    copyFields(this, node);
+    return node;
+  }
+
+  void copyFields(CreateTableAsSelectExecutionNode from, CreateTableAsSelectExecutionNode to) {
+    super.copyFields(from, to);
+  }
 
 }

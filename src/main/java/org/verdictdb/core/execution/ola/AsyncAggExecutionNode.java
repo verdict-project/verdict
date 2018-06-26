@@ -14,7 +14,8 @@ import java.util.concurrent.BlockingDeque;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.connection.DbmsConnection;
-import org.verdictdb.core.execution.ExecutionResult;
+import org.verdictdb.core.execution.CreateTableAsSelectExecutionNode;
+import org.verdictdb.core.execution.ExecutionInfoToken;
 import org.verdictdb.core.execution.QueryExecutionNode;
 import org.verdictdb.core.execution.QueryExecutionPlan;
 import org.verdictdb.core.query.AbstractRelation;
@@ -27,9 +28,9 @@ import org.verdictdb.core.rewriter.ScrambleMeta;
 import org.verdictdb.core.rewriter.aggresult.AggNameAndType;
 import org.verdictdb.core.rewriter.query.AggQueryRewriter;
 import org.verdictdb.core.rewriter.query.AggblockMeta;
-import org.verdictdb.exception.UnexpectedTypeException;
-import org.verdictdb.exception.ValueException;
-import org.verdictdb.exception.VerdictDbException;
+import org.verdictdb.exception.VerdictDBTypeException;
+import org.verdictdb.exception.VerdictDBValueException;
+import org.verdictdb.exception.VerdictDBException;
 
 /**
  * Represents an execution of a single aggregate query (without nested components).
@@ -44,7 +45,7 @@ import org.verdictdb.exception.VerdictDbException;
  * @author Yongjoo Park
  *
  */
-public class AsyncAggExecutionNode extends QueryExecutionNode {
+public class AsyncAggExecutionNode extends CreateTableAsSelectExecutionNode {
 
   ScrambleMeta scrambleMeta;
 
@@ -70,14 +71,13 @@ public class AsyncAggExecutionNode extends QueryExecutionNode {
   }
   
   public static AsyncAggExecutionNode create(
-      QueryExecutionPlan plan,
       List<QueryExecutionNode> individualAggs,
       List<QueryExecutionNode> combiners) {
     return null;
   }
 
   @Override
-  public ExecutionResult executeNode(DbmsConnection conn, List<ExecutionResult> downstreamResults) {
+  public ExecutionInfoToken executeNode(DbmsConnection conn, List<ExecutionInfoToken> downstreamResults) {
     return null;
   }
 

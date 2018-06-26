@@ -17,9 +17,9 @@ import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.core.execution.ola.AggExecutionNodeBlock;
 import org.verdictdb.core.query.SelectQuery;
 import org.verdictdb.core.rewriter.ScrambleMeta;
-import org.verdictdb.exception.UnexpectedTypeException;
-import org.verdictdb.exception.ValueException;
-import org.verdictdb.exception.VerdictDbException;
+import org.verdictdb.exception.VerdictDBTypeException;
+import org.verdictdb.exception.VerdictDBValueException;
+import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sql.syntax.SyntaxAbstract;
 
 public class QueryExecutionPlan {
@@ -60,18 +60,18 @@ public class QueryExecutionPlan {
   /**
    * 
    * @param query  A well-formed select query object
-   * @throws ValueException 
-   * @throws VerdictDbException 
+   * @throws VerdictDBValueException 
+   * @throws VerdictDBException 
    */
   public QueryExecutionPlan(
       DbmsConnection conn, 
       SyntaxAbstract syntax, 
       ScrambleMeta scrambleMeta, 
       SelectQuery query,
-      String scratchpadSchemaName) throws VerdictDbException {
+      String scratchpadSchemaName) throws VerdictDBException {
     this.scrambleMeta = scrambleMeta;
     if (!query.isAggregateQuery()) {
-      throw new UnexpectedTypeException(query);
+      throw new VerdictDBTypeException(query);
     }
     this.query = query;
     this.scratchpadSchemaName = scratchpadSchemaName;
@@ -96,11 +96,11 @@ public class QueryExecutionPlan {
    * @param conn
    * @param query
    * @return Pair of roots of the tree and post-processing interface.
-   * @throws ValueException 
-   * @throws UnexpectedTypeException 
+   * @throws VerdictDBValueException 
+   * @throws VerdictDBTypeException 
    */
 
-  QueryExecutionNode makePlan(SelectQuery query) throws VerdictDbException {
+  QueryExecutionNode makePlan(SelectQuery query) throws VerdictDBException {
     return SelectAllExecutionNode.create(query, this.scratchpadSchemaName);
   }
 
@@ -108,11 +108,10 @@ public class QueryExecutionPlan {
    *
    * @param root The root execution node of ALL nodes (i.e., not just the top agg node)
    * @return
-   * @throws VerdictDbException
+   * @throws VerdictDBException
    */
-  QueryExecutionNode makeAsyncronousAggIfAvailable(QueryExecutionNode root) throws VerdictDbException {
-    List<AggExecutionNodeBlock> topAggNodeBlocks = new ArrayList<>();
-    root.identifyTopAggBlocks(topAggNodeBlocks);
+  QueryExecutionNode makeAsyncronousAggIfAvailable(QueryExecutionNode root) throws VerdictDBException {
+    List<AggExecutionNodeBlock> aggBlocks = root.identifyTopAggBlocks();
 
 //    List<QueryExecutionNode> newNodes = new ArrayList<>();
 //    for (QueryExecutionNode node : topAggNodes) {
@@ -126,10 +125,10 @@ public class QueryExecutionPlan {
 //    }
 
     // converted nodes should be used in place of the original nodes.
-    for (int i = 0; i < topAggNodeBlocks.size(); i++) {
-      AggExecutionNodeBlock nodeBlock = topAggNodeBlocks.get(i);
-      QueryExecutionNode oldNode = nodeBlock.getRoot();
-      QueryExecutionNode newNode = nodeBlock.convertToProgressiveAggNodes(this, scrambleMeta);
+    for (int i = 0; i < aggBlocks.size(); i++) {
+      AggExecutionNodeBlock nodeBlock = aggBlocks.get(i);
+      QueryExecutionNode oldNode = nodeBlock.getBlockRootNode();
+      QueryExecutionNode newNode = nodeBlock.convertToProgressiveAgg(scrambleMeta);
 
       List<QueryExecutionNode> parents = oldNode.getParents();
       for (QueryExecutionNode parent : parents) {
