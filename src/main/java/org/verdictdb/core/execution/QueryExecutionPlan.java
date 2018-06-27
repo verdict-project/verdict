@@ -132,7 +132,9 @@ public class QueryExecutionPlan {
    */
   QueryExecutionNode makePlan(SelectQuery query) throws VerdictDBException {
     // TODO: compress this plan
-    return SelectAllExecutionNode.create(this, query);
+    QueryExecutionNode root = SelectAllExecutionNode.create(this, query);
+//    root = makeAsyncronousAggIfAvailable(root);
+    return root;
   }
 
   /**
@@ -173,7 +175,7 @@ public class QueryExecutionPlan {
     return root;
   }
   
-  public void execute(DbmsConnection conn) {
+  public void execute(DbmsConnection conn, ExecutionTokenQueue queue) {
     // execute roots
 
     // after executions are all finished.
