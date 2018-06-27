@@ -66,15 +66,15 @@ public class AsyncAggExecutionNode extends CreateTableAsSelectExecutionNode {
     return tableNamePrefix + tableNum++;
   }
 
-  private AsyncAggExecutionNode(String scratchpadSchema) {
-    super(scratchpadSchema);
+  private AsyncAggExecutionNode(QueryExecutionPlan plan) {
+    super(plan);
   }
   
   public static AsyncAggExecutionNode create(
-      String scratchpadScheman,
+      QueryExecutionPlan plan,
       List<QueryExecutionNode> individualAggs,
       List<QueryExecutionNode> combiners) {
-    AsyncAggExecutionNode node = new AsyncAggExecutionNode(scratchpadScheman);
+    AsyncAggExecutionNode node = new AsyncAggExecutionNode(plan);
     ExecutionTokenQueue queue = node.generateListeningQueue();
     individualAggs.get(0).addBroadcastingQueue(queue);
     node.addDependency(individualAggs.get(0));

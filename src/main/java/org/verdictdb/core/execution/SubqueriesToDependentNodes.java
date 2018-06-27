@@ -17,6 +17,7 @@ public class SubqueriesToDependentNodes {
   public static void convertSubqueriesToDependentNodes(
       SelectQuery query, 
       CreateTableAsSelectExecutionNode node) {
+    QueryExecutionPlan plan = node.getPlan();
     
     // from list
     for (AbstractRelation source : query.getFromList()) {
@@ -26,9 +27,9 @@ public class SubqueriesToDependentNodes {
       if (source instanceof SelectQuery) {
         CreateTableAsSelectExecutionNode dep;
         if (source.isAggregateQuery()) {
-          dep = AggExecutionNode.create((SelectQuery) source, node.scratchpadSchemaName);
+          dep = AggExecutionNode.create(plan, (SelectQuery) source);
         } else {
-          dep = ProjectionExecutionNode.create((SelectQuery) source, node.scratchpadSchemaName);
+          dep = ProjectionExecutionNode.create(plan, (SelectQuery) source);
         }
         node.addDependency(dep);
 
@@ -45,9 +46,9 @@ public class SubqueriesToDependentNodes {
           if (s instanceof SelectQuery) {
             CreateTableAsSelectExecutionNode dep;
             if (s.isAggregateQuery()) {
-              dep = AggExecutionNode.create((SelectQuery) s, node.scratchpadSchemaName);
+              dep = AggExecutionNode.create(plan, (SelectQuery) s);
             } else {
-              dep = ProjectionExecutionNode.create((SelectQuery) s, node.scratchpadSchemaName);
+              dep = ProjectionExecutionNode.create(plan, (SelectQuery) s);
             }
             node.addDependency(dep);
 
@@ -77,17 +78,17 @@ public class SubqueriesToDependentNodes {
             baseAndQueue = node.createPlaceHolderTable(((SubqueryColumn) filter).getSubquery().getAliasName().get());
           } else {
 //            baseAndQueue = node.createPlaceHolderTable("filterPlaceholder"+filterPlaceholderNum++);
-            baseAndQueue = node.createPlaceHolderTable(node.generateUniqueName());
+            baseAndQueue = node.createPlaceHolderTable(plan.generateAliasName());
           }
           BaseTable base = baseAndQueue.getLeft();
 
           CreateTableAsSelectExecutionNode dep;
           SelectQuery subquery = ((SubqueryColumn) filter).getSubquery();
           if (subquery.isAggregateQuery()) {
-            dep = AggExecutionNode.create(subquery, node.scratchpadSchemaName);
+            dep = AggExecutionNode.create(plan, subquery);
             node.addDependency(dep);
           } else {
-            dep = ProjectionExecutionNode.create(subquery, node.scratchpadSchemaName);
+            dep = ProjectionExecutionNode.create(plan, subquery);
             node.addDependency(dep);
           }
           dep.addBroadcastingQueue(baseAndQueue.getRight());

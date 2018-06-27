@@ -17,6 +17,7 @@ import org.junit.Test;
 import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.core.execution.AggExecutionNode;
 import org.verdictdb.core.execution.QueryExecutionNode;
+import org.verdictdb.core.execution.QueryExecutionPlan;
 import org.verdictdb.core.query.AliasedColumn;
 import org.verdictdb.core.query.BaseTable;
 import org.verdictdb.core.query.ColumnOp;
@@ -78,9 +79,12 @@ public class AggExecutionNodeBlockTest {
     SelectQuery aggQuery = SelectQuery.create(
         new AliasedColumn(ColumnOp.count(), "agg"),
         new BaseTable(newSchema, newTable, "t"));
-    AggExecutionNode aggnode = AggExecutionNode.create(aggQuery, newSchema);
-    AggExecutionNodeBlock block = new AggExecutionNodeBlock(aggnode);
-    QueryExecutionNode converted = block.convertToProgressiveAgg(newSchema, scrambleMeta);
+    QueryExecutionPlan plan = new QueryExecutionPlan(newSchema);
+    plan.setScrambleMeta(scrambleMeta);
+    
+    AggExecutionNode aggnode = AggExecutionNode.create(plan, aggQuery);
+    AggExecutionNodeBlock block = new AggExecutionNodeBlock(plan, aggnode);
+    QueryExecutionNode converted = block.convertToProgressiveAgg();
     converted.print();
     assertTrue(converted instanceof AsyncAggExecutionNode);
     assertTrue(converted.getDependent(0) instanceof AggExecutionNode);

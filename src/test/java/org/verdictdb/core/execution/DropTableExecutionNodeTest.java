@@ -34,7 +34,7 @@ public class DropTableExecutionNodeTest {
   @Test
   public void testExecuteNode() throws VerdictDBException {
 //    LinkedBlockingDeque<ExecutionResult> resultQueue = new LinkedBlockingDeque<>();
-    QueryExecutionNode root = DropTableExecutionNode.create();
+    QueryExecutionNode root = DropTableExecutionNode.create(new QueryExecutionPlan("newschema"));
     ExecutionInfoToken token = new ExecutionInfoToken();
     token.setKeyValue("schemaName", originalSchema);
     token.setKeyValue("tableName", originalTable);

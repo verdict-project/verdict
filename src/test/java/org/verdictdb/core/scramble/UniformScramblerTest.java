@@ -113,7 +113,7 @@ public class UniformScramblerTest {
   @Test
   public void testCreateTableQueryCorrectnessWithH2() throws SQLException, VerdictDBException {
 
-    int aggBlockCount = 5;
+    int aggBlockCount = 2;
     UniformScrambler scrambler =
         new UniformScrambler(originalSchema, originalTable, newSchema, newTable, aggBlockCount);
     CreateTableAsSelectQuery createQuery = scrambler.scrambledTableCreationQuery();
@@ -134,7 +134,7 @@ public class UniformScramblerTest {
     Statement stmt = conn.createStatement();
     stmt.execute(String.format("CREATE TABLE \"%s\".\"%s\"(\"id\" int, \"value\" double)", schemaName, tableName));
     Random r = new Random();
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < 20; i++) {
       stmt.execute(String.format("INSERT INTO \"%s\".\"%s\"(\"id\", \"value\") VALUES(%s, %f)",
           schemaName, tableName, i, r.nextDouble()));
     }

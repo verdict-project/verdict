@@ -62,16 +62,16 @@ public class SelectAllExecutionNodeTest {
         new BaseColumn("t", "value"),
         new SubqueryColumn(subquery)
     )));
-    SelectAllExecutionNode node = SelectAllExecutionNode.create(query, newSchema);
+    QueryExecutionPlan plan = new QueryExecutionPlan(newSchema);
+    SelectAllExecutionNode node = SelectAllExecutionNode.create(plan, query);
+    String aliasName = String.format("verdictdbalias_%d_0", plan.getSerialNumber());
 
     assertEquals(1, node.dependents.size());
     assertEquals(1, node.dependents.get(0).dependents.size());
-
-   String alias = ((SubqueryColumn)((ColumnOp) ((SelectQuery) node.dependents.get(0).getSelectQuery()).getFilter().get()).getOperand(1)).getSubquery().getFromList().get(0).getAliasName().get();
     SelectQuery rewritten = SelectQuery.create(
         Arrays.<SelectItem>asList(
-            new AliasedColumn(new BaseColumn("placeholderSchemaName",alias, "a"), "a"))
-        , new BaseTable("placeholderSchemaName", "placeholderTableName", alias));
+            new AliasedColumn(new BaseColumn("placeholderSchemaName", aliasName, "a"), "a"))
+        , new BaseTable("placeholderSchemaName", "placeholderTableName", aliasName));
     assertEquals(
         rewritten, 
         ((SubqueryColumn)((ColumnOp) ((SelectQuery) node.dependents.get(0).getSelectQuery()).getFilter().get()).getOperand(1)).getSubquery());
@@ -92,7 +92,8 @@ public class SelectAllExecutionNodeTest {
         new SubqueryColumn(subquery)
     )));
 
-    SelectAllExecutionNode node = SelectAllExecutionNode.create(query, newSchema);
+    QueryExecutionPlan plan = new QueryExecutionPlan(newSchema);
+    SelectAllExecutionNode node = SelectAllExecutionNode.create(plan, query);
 //    conn.executeUpdate(String.format("create table \"%s\".\"%s\"", newSchema, ((ProjectionExecutionNode)node.dependents.get(0)).newTableName));
 //    ExecutionInfoToken subqueryToken = new ExecutionInfoToken();
 //    subqueryToken.setKeyValue("schemaName", ((ProjectionExecutionNode)node.dependents.get(0)).newTableSchemaName);

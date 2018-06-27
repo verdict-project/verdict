@@ -10,12 +10,12 @@ import org.verdictdb.exception.VerdictDBException;
 
 public class DropTableExecutionNode extends QueryExecutionNode {
   
-  public DropTableExecutionNode() {
-    super();
+  public DropTableExecutionNode(QueryExecutionPlan plan) {
+    super(plan);
   }
   
-  public static DropTableExecutionNode create() {
-    DropTableExecutionNode node = new DropTableExecutionNode();
+  public static DropTableExecutionNode create(QueryExecutionPlan plan) {
+    DropTableExecutionNode node = new DropTableExecutionNode(plan);
     return node;
   }
 
@@ -45,7 +45,7 @@ public class DropTableExecutionNode extends QueryExecutionNode {
 
   @Override
   public QueryExecutionNode deepcopy() {
-    DropTableExecutionNode node = new DropTableExecutionNode();
+    DropTableExecutionNode node = new DropTableExecutionNode(plan);
     copyFields(this, node);
     return node;
   }

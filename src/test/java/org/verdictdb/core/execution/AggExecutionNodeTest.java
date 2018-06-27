@@ -62,14 +62,15 @@ public class AggExecutionNodeTest {
         new SubqueryColumn(subquery)
     )));
 //    AggExecutionNode node = new AggExecutionNode(conn, newSchema, newTable, query);
-    AggExecutionNode node = AggExecutionNode.create(query, "newschema");
+    QueryExecutionPlan plan = new QueryExecutionPlan("newschema");
+    AggExecutionNode node = AggExecutionNode.create(plan, query);
+    String aliasName = String.format("verdictdbalias_%d_0", plan.getSerialNumber());
 
     assertEquals(1, node.dependents.size());
-    String alias = ((SubqueryColumn)((ColumnOp) node.getSelectQuery().getFilter().get()).getOperand(1)).getSubquery().getFromList().get(0).getAliasName().get();
     SelectQuery rewritten = SelectQuery.create(
         Arrays.<SelectItem>asList(
-            new AliasedColumn(new BaseColumn("placeholderSchemaName", alias, "a"), "a"))
-        , new BaseTable("placeholderSchemaName", "placeholderTableName", alias));
+            new AliasedColumn(new BaseColumn("placeholderSchemaName", aliasName, "a"), "a"))
+        , new BaseTable("placeholderSchemaName", "placeholderTableName", aliasName));
     assertEquals(rewritten, ((SubqueryColumn)((ColumnOp) node.getSelectQuery().getFilter().get()).getOperand(1)).getSubquery());
 
   }
@@ -92,7 +93,7 @@ public class AggExecutionNodeTest {
         new SubqueryColumn(subquery)
     )));
 //    AggExecutionNode node = new AggExecutionNode(conn, newSchema, newTable, query);
-    AggExecutionNode node = AggExecutionNode.create(query, "newschema");
+    AggExecutionNode node = AggExecutionNode.create(new QueryExecutionPlan("newschema"), query);
 
     ExecutionInfoToken subqueryToken = new ExecutionInfoToken();
     subqueryToken.setKeyValue("schemaName", "newschema");

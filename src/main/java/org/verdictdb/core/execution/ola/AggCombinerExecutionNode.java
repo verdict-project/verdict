@@ -10,6 +10,7 @@ import org.verdictdb.core.execution.CreateTableAsSelectExecutionNode;
 import org.verdictdb.core.execution.ExecutionInfoToken;
 import org.verdictdb.core.execution.ExecutionTokenQueue;
 import org.verdictdb.core.execution.QueryExecutionNode;
+import org.verdictdb.core.execution.QueryExecutionPlan;
 import org.verdictdb.core.query.AbstractRelation;
 import org.verdictdb.core.query.AliasedColumn;
 import org.verdictdb.core.query.BaseColumn;
@@ -21,20 +22,20 @@ import org.verdictdb.exception.VerdictDBException;
 
 public class AggCombinerExecutionNode extends CreateTableAsSelectExecutionNode {
 
-  private AggCombinerExecutionNode(String scratchpadSchemaName) {
-    super(scratchpadSchemaName);
+  private AggCombinerExecutionNode(QueryExecutionPlan plan) {
+    super(plan);
   }
   
   public static AggCombinerExecutionNode create(
-      String scratchpadSchemaName,
+      QueryExecutionPlan plan,
       QueryExecutionNode leftQueryExecutionNode,
       QueryExecutionNode rightQueryExecutionNode) {
-    AggCombinerExecutionNode node = new AggCombinerExecutionNode(scratchpadSchemaName);
+    AggCombinerExecutionNode node = new AggCombinerExecutionNode(plan);
     
 //    SelectQuery leftQuery = queryExecutionNode.getSelectQuery();
     SelectQuery rightQuery = rightQueryExecutionNode.getSelectQuery();   // the right one is the aggregate query
-    String leftAliasName = node.generateUniqueName();
-    String rightAliasName = node.generateUniqueName();
+    String leftAliasName = plan.generateAliasName();
+    String rightAliasName = plan.generateAliasName();
     
     List<String> groupAliasNames = new ArrayList<>();
     List<String> measureAliasNames = new ArrayList<>();

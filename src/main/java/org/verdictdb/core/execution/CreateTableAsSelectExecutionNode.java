@@ -17,13 +17,15 @@ public class CreateTableAsSelectExecutionNode extends QueryExecutionNodeWithPlac
 //  
 //  String newTableName;
   
-  String scratchpadSchemaName;
+//  String scratchpadSchemaName;
   
-  static int tempTableNameNum = 0;
+//  String newTableSchemaName;
   
-  protected CreateTableAsSelectExecutionNode(String scratchpadSchemaName) {
-    super();
-    this.scratchpadSchemaName = scratchpadSchemaName;
+//  String newTableName;
+  
+  protected CreateTableAsSelectExecutionNode(QueryExecutionPlan plan) {
+    super(plan);
+    
   }
   
 //  public void setNewTableSchemaName(String schemaName) {
@@ -34,8 +36,8 @@ public class CreateTableAsSelectExecutionNode extends QueryExecutionNodeWithPlac
 //    this.newTableName = tableName;
 //  }
   
-  public static CreateTableAsSelectExecutionNode create(SelectQuery query, String scratchpadSchemaName) {
-    CreateTableAsSelectExecutionNode node = new CreateTableAsSelectExecutionNode(scratchpadSchemaName);
+  public static CreateTableAsSelectExecutionNode create(QueryExecutionPlan plan, SelectQuery query) {
+    CreateTableAsSelectExecutionNode node = new CreateTableAsSelectExecutionNode(plan);
     node.setSelectQuery(query);
     return node;
   }
@@ -53,7 +55,7 @@ public class CreateTableAsSelectExecutionNode extends QueryExecutionNodeWithPlac
       throws VerdictDBException {
     super.executeNode(conn, downstreamResults);
 
-    Pair<String, String> tempTableFullName = generateTempTableName();
+    Pair<String, String> tempTableFullName = plan.generateTempTableName();
     String newTableSchemaName = tempTableFullName.getLeft();
     String newTableName = tempTableFullName.getRight();
     CreateTableAsSelectQuery createQuery = new CreateTableAsSelectQuery(newTableSchemaName, newTableName, selectQuery);
@@ -72,24 +74,24 @@ public class CreateTableAsSelectExecutionNode extends QueryExecutionNodeWithPlac
     return result;
   }
   
-  protected String generateUniqueName() {
-    return String.format("verdictdbtemptable_%d", tempTableNameNum++);
-  }
-  
-  protected Pair<String, String> generateTempTableName() {
-    return Pair.of(scratchpadSchemaName, generateUniqueName());
-  }
+//  protected String generateUniqueName() {
+//    return String.format("verdictdbtemptable_%d", tempTableNameNum++);
+//  }
+//  
+//  protected Pair<String, String> generateTempTableName() {
+//    return Pair.of(scratchpadSchemaName, generateUniqueName());
+//  }
 
   @Override
   public QueryExecutionNode deepcopy() {
-    CreateTableAsSelectExecutionNode node = new CreateTableAsSelectExecutionNode(scratchpadSchemaName);
+    CreateTableAsSelectExecutionNode node = new CreateTableAsSelectExecutionNode(plan);
     copyFields(this, node);
     return node;
   }
   
   void copyFields(CreateTableAsSelectExecutionNode from, CreateTableAsSelectExecutionNode to) {
     super.copyFields(from, to);
-    to.scratchpadSchemaName = from.scratchpadSchemaName;
+    to.plan = from.plan;
   }
 
 }

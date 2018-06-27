@@ -24,7 +24,7 @@ import org.verdictdb.sql.syntax.SyntaxAbstract;
 
 public class QueryExecutionPlan {
   
-  SelectQuery query;
+//  SelectQuery query;
   
   ScrambleMeta scrambleMeta;
   
@@ -43,18 +43,20 @@ public class QueryExecutionPlan {
 //    this(conn, syntax, (SelectQueryOp) new NonValidatingSQLParser().toRelation(queryString));
 //  }
   
-  static final int serialNum = ThreadLocalRandom.current().nextInt(0, 1000000);
+  final int serialNum = ThreadLocalRandom.current().nextInt(0, 1000000);
   
-  static int identifierNum = 0;
+  int identifierNum = 0;
 
-  static int tempTableNameNum = 0;
+  int tempTableNameNum = 0;
   
-  public static String generateUniqueIdentifier() {
-    return String.format("verdictdbtemptable_%d_%d", serialNum, identifierNum++);
+  public QueryExecutionPlan(String scratchpadSchemaName) {
+    this.scratchpadSchemaName = scratchpadSchemaName;
+    this.scrambleMeta = new ScrambleMeta();
   }
-
-  public Pair<String, String> generateTempTableName() {
-    return Pair.of(scratchpadSchemaName, String.format("verdictdbtemptable_%d", tempTableNameNum++));
+  
+  public QueryExecutionPlan(String scratchpadSchemaName, ScrambleMeta scrambleMeta) {
+    this.scratchpadSchemaName = scratchpadSchemaName;
+    this.scrambleMeta = scrambleMeta;
   }
 
   /**
@@ -64,17 +66,30 @@ public class QueryExecutionPlan {
    * @throws VerdictDBException 
    */
   public QueryExecutionPlan(
-      DbmsConnection conn, 
-      SyntaxAbstract syntax, 
-      ScrambleMeta scrambleMeta, 
-      SelectQuery query,
-      String scratchpadSchemaName) throws VerdictDBException {
+      String scratchpadSchemaName,
+      ScrambleMeta scrambleMeta,
+      SelectQuery query) throws VerdictDBException {
+    this(scratchpadSchemaName);
+    setScrambleMeta(scrambleMeta);
+    setSelectQuery(query);
+  }
+  
+  public int getSerialNumber() {
+    return serialNum;
+  }
+  
+  public ScrambleMeta getScrambleMeta() {
+    return scrambleMeta;
+  }
+  
+  public void setScrambleMeta(ScrambleMeta scrambleMeta) {
     this.scrambleMeta = scrambleMeta;
+  }
+  
+  public void setSelectQuery(SelectQuery query) throws VerdictDBException {
     if (!query.isAggregateQuery()) {
       throw new VerdictDBTypeException(query);
     }
-    this.query = query;
-    this.scratchpadSchemaName = scratchpadSchemaName;
     this.root = makePlan(query);
   }
   
@@ -82,6 +97,19 @@ public class QueryExecutionPlan {
     return scratchpadSchemaName;
   }
   
+  String generateUniqueIdentifier() {
+    return String.format("%d_%d", serialNum, identifierNum++);
+  }
+
+  public String generateAliasName() {
+    return String.format("verdictdbalias_%s", generateUniqueIdentifier());
+  }
+
+  public Pair<String, String> generateTempTableName() {
+  //    return Pair.of(scratchpadSchemaName, String.format("verdictdbtemptable_%d", tempTableNameNum++));
+      return Pair.of(scratchpadSchemaName, String.format("verdictdbtemptable_%s", generateUniqueIdentifier()));
+    }
+
   /** 
    * Creates a tree in which each node is AggQueryExecutionNode. Each AggQueryExecutionNode corresponds to
    * an aggregate query, whether it is the main query or a subquery.
@@ -101,7 +129,7 @@ public class QueryExecutionPlan {
    */
 
   QueryExecutionNode makePlan(SelectQuery query) throws VerdictDBException {
-    return SelectAllExecutionNode.create(query, this.scratchpadSchemaName);
+    return SelectAllExecutionNode.create(this, query);
   }
 
   /**
@@ -128,7 +156,7 @@ public class QueryExecutionPlan {
     for (int i = 0; i < aggBlocks.size(); i++) {
       AggExecutionNodeBlock nodeBlock = aggBlocks.get(i);
       QueryExecutionNode oldNode = nodeBlock.getBlockRootNode();
-      QueryExecutionNode newNode = nodeBlock.convertToProgressiveAgg(scratchpadSchemaName, scrambleMeta);
+      QueryExecutionNode newNode = nodeBlock.convertToProgressiveAgg();
 
       List<QueryExecutionNode> parents = oldNode.getParents();
       for (QueryExecutionNode parent : parents) {
@@ -153,6 +181,6 @@ public class QueryExecutionPlan {
   void cleanUp() {
     tempTableNameNum = 0;
   }
-  static void resetTempTableNameNum() {tempTableNameNum = 0;}
+//  static void resetTempTableNameNum() {tempTableNameNum = 0;}
 
 }

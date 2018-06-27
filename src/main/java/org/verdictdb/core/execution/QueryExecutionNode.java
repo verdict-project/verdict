@@ -27,7 +27,7 @@ public abstract class QueryExecutionNode {
   
   SelectQuery selectQuery;
 
-  //  QueryExecutionPlan plan;
+  QueryExecutionPlan plan;
 
   // initialized, running, or complete
   String status = "initialized";
@@ -49,14 +49,13 @@ public abstract class QueryExecutionNode {
   // latest results from listening queues
   List<Optional<ExecutionInfoToken>> latestResults = new ArrayList<>();
   
-  public QueryExecutionNode() {
-    
+  public QueryExecutionNode(QueryExecutionPlan plan) {
+    this.plan = plan;
   }
 
-  public QueryExecutionNode(SelectQuery query) {
-//    this.conn = conn;
+  public QueryExecutionNode(QueryExecutionPlan plan, SelectQuery query) {
+    this(plan);
     this.selectQuery = query;
-    //    this.plan = plan;
   }
   
   public SelectQuery getSelectQuery() {
@@ -85,6 +84,10 @@ public abstract class QueryExecutionNode {
   
   public void setStatus(String status) {
     this.status = status;
+  }
+  
+  public QueryExecutionPlan getPlan() {
+    return plan;
   }
 
   /**
@@ -252,7 +255,7 @@ public abstract class QueryExecutionNode {
     List<AggExecutionNodeBlock> aggblocks = new ArrayList<>();
     
     if (this instanceof AggExecutionNode) {
-      AggExecutionNodeBlock block = new AggExecutionNodeBlock(this);
+      AggExecutionNodeBlock block = new AggExecutionNodeBlock(plan, this);
       aggblocks.add(block);
       return aggblocks;
     }

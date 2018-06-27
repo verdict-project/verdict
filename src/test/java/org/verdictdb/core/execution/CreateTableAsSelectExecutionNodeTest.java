@@ -46,7 +46,7 @@ public class CreateTableAsSelectExecutionNodeTest {
   public void testExecuteNode() throws VerdictDBException {
     BaseTable base = new BaseTable(originalSchema, originalTable, "t");
     SelectQuery query = SelectQuery.create(Arrays.<SelectItem>asList(new AsteriskColumn()), base);
-    QueryExecutionNode root = CreateTableAsSelectExecutionNode.create(query, "newschema");
+    QueryExecutionNode root = CreateTableAsSelectExecutionNode.create(new QueryExecutionPlan("newschema"), query);
 //    ExecutionInfoToken token = new ExecutionInfoToken();
     ExecutionInfoToken newTableName = root.executeNode(conn, Arrays.<ExecutionInfoToken>asList());     // no information to pass
     
