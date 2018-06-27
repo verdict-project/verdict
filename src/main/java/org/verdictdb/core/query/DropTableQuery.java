@@ -10,6 +10,10 @@ public class DropTableQuery implements SqlConvertable {
     this.schemaName = schemaName;
     this.tableName = tableName;
   }
+  
+  public static DropTableQuery create(String schemaName, String tableName) {
+    return new DropTableQuery(schemaName, tableName);
+  }
 
   public String getSchemaName() {
     return schemaName;

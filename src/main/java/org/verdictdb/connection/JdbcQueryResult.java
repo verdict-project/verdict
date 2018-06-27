@@ -12,14 +12,14 @@ public class JdbcQueryResult implements DbmsQueryResult {
 
   List<Integer> columnTypes = new ArrayList<>();
 
-  ResultSet resultSet;
+//  ResultSet resultSet;
 
   List<List<Object>> result = new ArrayList<>();
 
   int cursor = -1;
 
   public JdbcQueryResult(ResultSet resultSet) throws SQLException {
-    this.resultSet = resultSet;
+//    this.resultSet = resultSet;
     ResultSetMetaData meta = resultSet.getMetaData();
     int columnCount = meta.getColumnCount();
     for (int i = 0; i < columnCount; i++) {

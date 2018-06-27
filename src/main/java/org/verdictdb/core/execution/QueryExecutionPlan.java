@@ -111,15 +111,17 @@ public class QueryExecutionPlan {
     }
 
   /** 
-   * Creates a tree in which each node is AggQueryExecutionNode. Each AggQueryExecutionNode corresponds to
+   * Creates a tree in which each node is QueryExecutionNode. Each AggQueryExecutionNode corresponds to
    * an aggregate query, whether it is the main query or a subquery.
    * 
-   * 1. Restrict the aggregate subqueries to appear only in the where clause.
-   * 2. If an aggregate subquery appears in the where clause, the subquery itself should be a single
-   *    AggQueryExecutionNode even if it contains another aggregate subqueries within it.
-   * 3. Except for the root nodes, all other nodes are not approximated.
-   * 4. AggQueryExecutionNode must not include any correlated predicates.
-   * 5. The results of intermediate AggQueryExecutionNode should be stored as a materialized view.
+   * 1. Each QueryExecutionNode is supposed to run on a separate thread.
+   * 2. Restrict the aggregate subqueries to appear in the where clause or in the from clause 
+   *    (i.e., not in the select list, not in having or group-by)
+   * 3. Each node cannot include any correlated predicate (i.e., the column that appears in outer queries).
+   *   (1) In the future, we should convert a correlated subquery into a joined subquery (if possible).
+   *   (2) Otherwise, the entire query including a correlated subquery must be the query of a single node.
+   * 4. The results of AggNode and ProjectionNode are stored as a materialized view; the names of those
+   *    materialized views are passed to their parents for potential additional processing or reporting.
    * 
    * @param conn
    * @param query
@@ -127,8 +129,8 @@ public class QueryExecutionPlan {
    * @throws VerdictDBValueException 
    * @throws VerdictDBTypeException 
    */
-
   QueryExecutionNode makePlan(SelectQuery query) throws VerdictDBException {
+    // TODO: compress this plan
     return SelectAllExecutionNode.create(this, query);
   }
 

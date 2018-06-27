@@ -188,8 +188,16 @@ public abstract class QueryExecutionNode {
     return broadcastingQueues;
   }
   
+  public ExecutionTokenQueue getBroadcastingQueue(int index) {
+    return broadcastingQueues.get(index);
+  }
+  
   public List<ExecutionTokenQueue> getListeningQueues() {
     return listeningQueues;
+  }
+  
+  public ExecutionTokenQueue getListeningQueue(int index) {
+    return listeningQueues.get(index);
   }
 
   public boolean isSuccess() {

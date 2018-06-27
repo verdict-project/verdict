@@ -8,8 +8,11 @@ public class AsteriskColumn implements UnnamedColumn, SelectItem {
 
   String tablename = null;
 
-  public AsteriskColumn() {
-  };
+  public AsteriskColumn() {};
+  
+  public static AsteriskColumn create() {
+    return new AsteriskColumn();
+  }
 
   public AsteriskColumn(String tablename) {
     this.tablename = tablename;
