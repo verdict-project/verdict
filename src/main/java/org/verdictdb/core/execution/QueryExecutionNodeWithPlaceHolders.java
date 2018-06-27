@@ -47,4 +47,7 @@ public abstract class QueryExecutionNodeWithPlaceHolders extends QueryExecutionN
     return null;
   }
 
+  public List<BaseTable> getPlaceholderTables() {
+    return placeholderTables;
+  }
 }

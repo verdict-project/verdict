@@ -115,3 +115,4 @@ CREATE TABLE  IF NOT EXISTS tpch.lineitem ( l_orderkey    INT ,
                              STORED AS TEXTFILE;
 
 LOAD DATA local inpath 'src/test/resources/lineitem.tbl' overwrite into table tpch.lineitem;
+
