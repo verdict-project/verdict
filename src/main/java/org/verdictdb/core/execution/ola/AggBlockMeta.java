@@ -1,20 +1,21 @@
 package org.verdictdb.core.execution.ola;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.core.rewriter.ScrambleMeta;
-import org.verdictdb.exception.ValueException;
+import org.verdictdb.exception.VerdictDBValueException;
 
 public class AggBlockMeta {
   
   int totalSequenceCount;
   
-  List<BlockSpans> blockaggSpans;
+  List<BlockSpans> blockaggSpans = new ArrayList<>();
   
-  public AggBlockMeta(ScrambleMeta scrambleMeta, List<Pair<String, String>> scrambles) throws ValueException {
+  public AggBlockMeta(ScrambleMeta scrambleMeta, List<Pair<String, String>> scrambles) throws VerdictDBValueException {
     if (scrambles.size() == 0) {
       // do nothing
     } else if (scrambles.size() == 1) {
@@ -29,9 +30,9 @@ public class AggBlockMeta {
       }
       
     } else if (scrambles.size() == 2) {
-      throw new ValueException("Not implemented yet.");
+      throw new VerdictDBValueException("Not implemented yet.");
     } else {
-      throw new ValueException("The number of scrambled tables cannot be larger than two.");
+      throw new VerdictDBValueException("The number of scrambled tables cannot be larger than two.");
     }
   }
 
@@ -48,6 +49,7 @@ public class AggBlockMeta {
 
 class BlockSpans {
   
+  // pairs of (schemaName, tableName) and (blockStart, blockEnd)
   Map<Pair<String, String>, Pair<Integer, Integer>> tablesToSpan = new HashMap<>();
   
   public void addEntry(String schemaName, String tableName, int beginBlock, int endBlock) {

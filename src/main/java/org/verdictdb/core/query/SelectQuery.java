@@ -1,6 +1,7 @@
 package org.verdictdb.core.query;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
@@ -11,9 +12,13 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 import com.google.common.base.Optional;
 
 
-public class SelectQuery extends AbstractRelation {
+public class SelectQuery extends AbstractRelation implements SqlConvertable {
 
-  public static SelectQuery getSelectQueryOp(List<SelectItem> columns, AbstractRelation relation) {
+  public static SelectQuery create(SelectItem column, AbstractRelation relation) {
+    return create(Arrays.asList(column), relation);
+  }
+
+  public static SelectQuery create(List<SelectItem> columns, AbstractRelation relation) {
     SelectQuery sel = new SelectQuery();
     for (SelectItem c : columns) {
       sel.addSelectItem(c);
@@ -22,7 +27,7 @@ public class SelectQuery extends AbstractRelation {
     return sel;
   }
 
-  public static SelectQuery getSelectQueryOp(List<SelectItem> columns, AbstractRelation relation, UnnamedColumn predicate) {
+  public static SelectQuery create(List<SelectItem> columns, AbstractRelation relation, UnnamedColumn predicate) {
     SelectQuery sel = new SelectQuery();
     for (SelectItem c : columns) {
       sel.addSelectItem(c);
@@ -32,7 +37,7 @@ public class SelectQuery extends AbstractRelation {
     return sel;
   }
 
-  public static SelectQuery getSelectQueryOp(List<SelectItem> columns, List<AbstractRelation> relation) {
+  public static SelectQuery create(List<SelectItem> columns, List<AbstractRelation> relation) {
     SelectQuery sel = new SelectQuery();
     for (SelectItem c : columns) {
       sel.addSelectItem(c);
@@ -58,6 +63,31 @@ public class SelectQuery extends AbstractRelation {
   Optional<UnnamedColumn> limit = Optional.absent();
 
   Optional<String> aliasName = Optional.absent();
+  
+  public SelectQuery deepcopy() {
+    SelectQuery sel = new SelectQuery();
+    for (SelectItem c : getSelectList()) {
+      sel.addSelectItem(c);
+    }
+    
+    for (AbstractRelation r : getFromList()) {
+      if (r instanceof SelectQuery) {
+        sel.addTableSource(((SelectQuery) r).deepcopy());
+      } else {
+        sel.addTableSource(r);
+      }
+    }
+    if (getFilter().isPresent()) {
+      sel.addFilterByAnd(getFilter().get());
+    }
+    for (GroupingAttribute a : getGroupby()) {
+      sel.addGroupby(a);
+    }
+    if (getAliasName().isPresent()) {
+      sel.setAliasName(getAliasName().get());
+    }
+    return sel;
+  }
 
   public SelectQuery() {
   }
@@ -166,6 +196,5 @@ public class SelectQuery extends AbstractRelation {
   public String toString() {
     return ToStringBuilder.reflectionToString(this, ToStringStyle.SHORT_PREFIX_STYLE);
   }
-
 
 }

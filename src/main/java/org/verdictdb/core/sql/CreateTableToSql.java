@@ -4,7 +4,7 @@ import java.util.List;
 
 import org.verdictdb.core.query.CreateTableAsSelectQuery;
 import org.verdictdb.core.query.SelectQuery;
-import org.verdictdb.exception.VerdictDbException;
+import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sql.syntax.SyntaxAbstract;
 
 public class CreateTableToSql {
@@ -15,7 +15,7 @@ public class CreateTableToSql {
     this.syntax = syntax;
   }
 
-  public String toSql(CreateTableAsSelectQuery query) throws VerdictDbException {
+  public String toSql(CreateTableAsSelectQuery query) throws VerdictDBException {
     StringBuilder sql = new StringBuilder();
 
     String schemaName = query.getSchemaName();

@@ -62,7 +62,7 @@ public class UniformScrambler extends Scrambler {
     newSelectList.add(subsampleValue);
     newSelectList.add(tierValue);
 
-    SelectQuery augmentedRelation = SelectQuery.getSelectQueryOp(
+    SelectQuery augmentedRelation = SelectQuery.create(
         newSelectList,
         new BaseTable(originalSchemaName, originalTableName));
     return augmentedRelation;

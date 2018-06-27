@@ -5,6 +5,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.connection.DataTypeConverter;
 import org.verdictdb.connection.JdbcConnection;
+import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.sql.syntax.H2Syntax;
 import org.verdictdb.sql.syntax.MysqlSyntax;
 import org.verdictdb.sql.syntax.PostgresqlSyntax;
@@ -106,7 +107,7 @@ public class DbmsMetadataCacheTest {
   }
 
   @Test
-  public void getSchemaTest() throws SQLException {
+  public void getSchemaTest() throws VerdictDBDbmsException {
     List<String> schemas = metadataCache.getSchemas();
     assertEquals(2, schemas.size());
     assertEquals(true, schemas.get(0).equals("PUBLIC")||schemas.get(1).equals("PUBLIC"));
@@ -114,14 +115,14 @@ public class DbmsMetadataCacheTest {
   }
 
   @Test
-  public void getTableTest() throws SQLException {
+  public void getTableTest() throws VerdictDBDbmsException {
     List<String> tables = metadataCache.getTables("PUBLIC");
     assertEquals(1, tables.size());
     assertEquals("PEOPLE", tables.get(0));
   }
 
   @Test
-  public void getColumnsTest() throws SQLException {
+  public void getColumnsTest() throws VerdictDBDbmsException {
     List<Pair<String, Integer>> columns = metadataCache.getColumns("PUBLIC", "PEOPLE");
     assertEquals(7, columns.size());
     assertEquals("ID", columns.get(0).getKey());
@@ -141,7 +142,7 @@ public class DbmsMetadataCacheTest {
   }
 
   @Test
-  public void getPartitionTestPostgres() throws SQLException {
+  public void getPartitionTestPostgres() throws SQLException, VerdictDBDbmsException {
     Statement statement = postgresqlConn.createStatement();
     DbmsMetaDataCache postgresMetadataCache = new DbmsMetaDataCache(new JdbcConnection(postgresqlConn, new PostgresqlSyntax()));
     statement.execute("DROP TABLE IF EXISTS measurement");
@@ -156,7 +157,7 @@ public class DbmsMetadataCacheTest {
   }
   
   @Test
-  public void getPartitionTestMySQL() throws SQLException {
+  public void getPartitionTestMySQL() throws SQLException, VerdictDBDbmsException {
     Statement statement = mysqlConn.createStatement();
     DbmsMetaDataCache mysqlMetadataCache = new DbmsMetaDataCache(new JdbcConnection(mysqlConn, new MysqlSyntax()));
     statement.execute("DROP TABLE IF EXISTS tp");

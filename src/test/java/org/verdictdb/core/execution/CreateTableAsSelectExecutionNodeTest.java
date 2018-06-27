@@ -13,7 +13,8 @@ import org.verdictdb.core.query.AsteriskColumn;
 import org.verdictdb.core.query.BaseTable;
 import org.verdictdb.core.query.SelectItem;
 import org.verdictdb.core.query.SelectQuery;
-import org.verdictdb.exception.VerdictDbException;
+import org.verdictdb.exception.VerdictDBDbmsException;
+import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sql.syntax.H2Syntax;
 
 public class CreateTableAsSelectExecutionNodeTest {
@@ -31,7 +32,7 @@ public class CreateTableAsSelectExecutionNodeTest {
   static DbmsConnection conn;
 
   @BeforeClass
-  public static void setupDbConnAndScrambledTable() throws SQLException, VerdictDbException {
+  public static void setupDbConnAndScrambledTable() throws SQLException, VerdictDBException {
     final String DB_CONNECTION = "jdbc:h2:mem:createasselecttest;DB_CLOSE_DELAY=-1";
     final String DB_USER = "";
     final String DB_PASSWORD = "";
@@ -42,16 +43,19 @@ public class CreateTableAsSelectExecutionNodeTest {
   }
 
   @Test
-  public void testExecuteNode() {
+  public void testExecuteNode() throws VerdictDBException {
     BaseTable base = new BaseTable(originalSchema, originalTable, "t");
-    SelectQuery query = SelectQuery.getSelectQueryOp(Arrays.<SelectItem>asList(new AsteriskColumn()), base);
-    QueryExecutionNode root = new CreateTableAsSelectExecutionNode(conn, newSchema, newTable, query);
-//    LinkedBlockingDeque<ExecutionResult> resultQueue = new LinkedBlockingDeque<>();
-    root.execute();
-    conn.executeUpdate(String.format("DROP TABLE \"%s\".\"%s\"", newSchema, newTable));
+    SelectQuery query = SelectQuery.create(Arrays.<SelectItem>asList(new AsteriskColumn()), base);
+    QueryExecutionNode root = CreateTableAsSelectExecutionNode.create(new QueryExecutionPlan("newschema"), query);
+//    ExecutionInfoToken token = new ExecutionInfoToken();
+    ExecutionInfoToken newTableName = root.executeNode(conn, Arrays.<ExecutionInfoToken>asList());     // no information to pass
+    
+    String schemaName = (String) newTableName.getValue("schemaName");
+    String tableName = (String) newTableName.getValue("tableName");
+    conn.executeUpdate(String.format("DROP TABLE \"%s\".\"%s\"", schemaName, tableName));
   }
 
-  static void populateData(DbmsConnection conn, String schemaName, String tableName) throws SQLException {
+  static void populateData(DbmsConnection conn, String schemaName, String tableName) throws VerdictDBDbmsException {
     conn.executeUpdate(String.format("CREATE TABLE \"%s\".\"%s\"(\"id\" int, \"value\" double)", schemaName, tableName));
     for (int i = 0; i < 2; i++) {
       conn.executeUpdate(String.format("INSERT INTO \"%s\".\"%s\"(\"id\", \"value\") VALUES(%s, %f)",

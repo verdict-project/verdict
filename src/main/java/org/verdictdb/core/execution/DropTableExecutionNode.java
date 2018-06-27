@@ -4,35 +4,54 @@ import java.util.List;
 
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.core.query.DropTableQuery;
-import org.verdictdb.core.sql.DropTableToSql;
-import org.verdictdb.exception.VerdictDbException;
+import org.verdictdb.core.sql.QueryToSql;
+import org.verdictdb.exception.VerdictDBValueException;
+import org.verdictdb.exception.VerdictDBException;
 
 public class DropTableExecutionNode extends QueryExecutionNode {
   
-  String schemaName;
+  public DropTableExecutionNode(QueryExecutionPlan plan) {
+    super(plan);
+  }
   
-  String tableName;
-  
-  public DropTableExecutionNode(
-      DbmsConnection conn, 
-      String schemaName, 
-      String tableName) {
-    super(conn, null);
-    this.schemaName = schemaName;
-    this.tableName = tableName;
+  public static DropTableExecutionNode create(QueryExecutionPlan plan) {
+    DropTableExecutionNode node = new DropTableExecutionNode(plan);
+    return node;
   }
 
   @Override
-  public ExecutionResult executeNode(List<ExecutionResult> downstreamResults) {
-    DropTableQuery dropQuery = new DropTableQuery(schemaName, tableName);
-    DropTableToSql toSql = new DropTableToSql(conn.getSyntax());
+  public ExecutionInfoToken executeNode(DbmsConnection conn, List<ExecutionInfoToken> downstreamResults) {
     try {
-      String sql = toSql.toSql(dropQuery);
-      conn.executeUpdate(sql);
-    } catch (VerdictDbException e) {
+      if (downstreamResults.size() == 0) {
+        throw new VerdictDBValueException("No table to drop!");
+      }
+    } catch (VerdictDBException e) {
       e.printStackTrace();
     }
-    return ExecutionResult.empty();
+    
+    ExecutionInfoToken result = downstreamResults.get(0);
+    String schemaName = (String) result.getValue("schemaName");
+    String tableName = (String) result.getValue("tableName");
+    
+    DropTableQuery dropQuery = new DropTableQuery(schemaName, tableName);
+    try {
+      String sql = QueryToSql.convert(conn.getSyntax(), dropQuery);
+      conn.executeUpdate(sql);
+    } catch (VerdictDBException e) {
+      e.printStackTrace();
+    }
+    return ExecutionInfoToken.empty();
+  }
+
+  @Override
+  public QueryExecutionNode deepcopy() {
+    DropTableExecutionNode node = new DropTableExecutionNode(plan);
+    copyFields(this, node);
+    return node;
+  }
+  
+  void copyFields(DropTableExecutionNode from, DropTableExecutionNode to) {
+    super.copyFields(from, to);
   }
 
 }

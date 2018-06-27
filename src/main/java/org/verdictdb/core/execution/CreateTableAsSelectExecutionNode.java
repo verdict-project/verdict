@@ -2,43 +2,96 @@ package org.verdictdb.core.execution;
 
 import java.util.List;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.connection.DbmsConnection;
-import org.verdictdb.core.query.*;
-import org.verdictdb.core.sql.CreateTableToSql;
-import org.verdictdb.exception.VerdictDbException;
+import org.verdictdb.core.query.CreateTableAsSelectQuery;
+import org.verdictdb.core.query.SelectQuery;
+import org.verdictdb.core.sql.QueryToSql;
+import org.verdictdb.exception.VerdictDBException;
 
-public class CreateTableAsSelectExecutionNode extends QueryExecutionNode {
+public class CreateTableAsSelectExecutionNode extends QueryExecutionNodeWithPlaceHolders {
   
-  String schemaName;
+//  CreateTableAsSelectQuery createQuery;
   
-  String tableName;
+//  String newTableSchemaName;
+//  
+//  String newTableName;
   
-  public CreateTableAsSelectExecutionNode(
-      DbmsConnection conn,
-      String schemaName, 
-      String tableName, 
-      SelectQuery query) {
-    super(conn, query);
-    this.schemaName = schemaName;
-    this.tableName = tableName;
+//  String scratchpadSchemaName;
+  
+//  String newTableSchemaName;
+  
+//  String newTableName;
+  
+  protected CreateTableAsSelectExecutionNode(QueryExecutionPlan plan) {
+    super(plan);
+    
+  }
+  
+//  public void setNewTableSchemaName(String schemaName) {
+//    this.newTableSchemaName = schemaName;
+//  }
+//  
+//  public void setNewTableName(String tableName) {
+//    this.newTableName = tableName;
+//  }
+  
+  public static CreateTableAsSelectExecutionNode create(QueryExecutionPlan plan, SelectQuery query) {
+    CreateTableAsSelectExecutionNode node = new CreateTableAsSelectExecutionNode(plan);
+    node.setSelectQuery(query);
+    return node;
+  }
+  
+  public void setSelectQuery(SelectQuery query) {
+    this.selectQuery = query;
+  }
+  
+  public SelectQuery getSelectQuery() {
+    return (SelectQuery) selectQuery;
   }
 
   @Override
-  public ExecutionResult executeNode(List<ExecutionResult> downstreamResults) {
-    CreateTableAsSelectQuery createQuery = new CreateTableAsSelectQuery(schemaName, tableName, query);
-    CreateTableToSql toSql = new CreateTableToSql(conn.getSyntax());
+  public ExecutionInfoToken executeNode(DbmsConnection conn, List<ExecutionInfoToken> downstreamResults) 
+      throws VerdictDBException {
+    super.executeNode(conn, downstreamResults);
+
+    Pair<String, String> tempTableFullName = plan.generateTempTableName();
+    String newTableSchemaName = tempTableFullName.getLeft();
+    String newTableName = tempTableFullName.getRight();
+    CreateTableAsSelectQuery createQuery = new CreateTableAsSelectQuery(newTableSchemaName, newTableName, selectQuery);
+    
     try {
-      String sql = toSql.toSql(createQuery);
+      String sql = QueryToSql.convert(conn.getSyntax(), createQuery);
       conn.executeUpdate(sql);
-    } catch (VerdictDbException e) {
+    } catch (VerdictDBException e) {
       e.printStackTrace();
     }
     
     // write the result
-    ExecutionResult result = new ExecutionResult();
-    result.setKeyValue("schemaName", schemaName);
-    result.setKeyValue("tableName", tableName);
+    ExecutionInfoToken result = new ExecutionInfoToken();
+    result.setKeyValue("schemaName", newTableSchemaName);
+    result.setKeyValue("tableName", newTableName);
     return result;
+  }
+  
+//  protected String generateUniqueName() {
+//    return String.format("verdictdbtemptable_%d", tempTableNameNum++);
+//  }
+//  
+//  protected Pair<String, String> generateTempTableName() {
+//    return Pair.of(scratchpadSchemaName, generateUniqueName());
+//  }
+
+  @Override
+  public QueryExecutionNode deepcopy() {
+    CreateTableAsSelectExecutionNode node = new CreateTableAsSelectExecutionNode(plan);
+    copyFields(this, node);
+    return node;
+  }
+  
+  void copyFields(CreateTableAsSelectExecutionNode from, CreateTableAsSelectExecutionNode to) {
+    super.copyFields(from, to);
+    to.plan = from.plan;
   }
 
 }

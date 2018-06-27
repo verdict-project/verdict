@@ -26,7 +26,7 @@ import org.verdictdb.core.scramble.Scrambler;
 import org.verdictdb.core.scramble.UniformScrambler;
 import org.verdictdb.core.sql.CreateTableToSql;
 import org.verdictdb.core.sql.SelectQueryToSql;
-import org.verdictdb.exception.VerdictDbException;
+import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sql.syntax.H2Syntax;
 
 public class AggQueryRewriterJdbcTest {
@@ -44,7 +44,7 @@ public class AggQueryRewriterJdbcTest {
   static Connection conn;
 
   @BeforeClass
-  public static void setupDbConnAndScrambledTable() throws SQLException, VerdictDbException {
+  public static void setupDbConnAndScrambledTable() throws SQLException, VerdictDBException {
     final String DB_CONNECTION = "jdbc:h2:mem:aggrewriter;DB_CLOSE_DELAY=-1";
     final String DB_USER = "";
     final String DB_PASSWORD = "";
@@ -63,10 +63,10 @@ public class AggQueryRewriterJdbcTest {
   }
 
   @Test
-  public void testSelectSumBaseTable() throws VerdictDbException {
+  public void testSelectSumBaseTable() throws VerdictDBException {
     BaseTable base = new BaseTable(newSchema, newTable, "t");
     String aliasName = "sum1";
-    SelectQuery relation = SelectQuery.getSelectQueryOp(
+    SelectQuery relation = SelectQuery.create(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new ColumnOp("sum", new BaseColumn("t", "value")), aliasName)),
         base);

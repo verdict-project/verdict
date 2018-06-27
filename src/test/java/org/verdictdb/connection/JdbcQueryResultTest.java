@@ -12,6 +12,7 @@ import java.util.List;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.sql.syntax.HiveSyntax;
 
 public class JdbcQueryResultTest {
@@ -23,7 +24,7 @@ public class JdbcQueryResultTest {
   static List<List<Object>> contents;
   
   @BeforeClass
-  public static void setupH2Database() throws SQLException {
+  public static void setupH2Database() throws VerdictDBDbmsException, SQLException {
     final String DB_CONNECTION = "jdbc:h2:mem:testqueryresult;DB_CLOSE_DELAY=-1";
     final String DB_USER = "";
     final String DB_PASSWORD = "";
@@ -45,7 +46,7 @@ public class JdbcQueryResultTest {
   }
 
   @Test
-  public void testJdbcQueryResultValues() throws SQLException {
+  public void testJdbcQueryResultValues() throws SQLException, VerdictDBDbmsException {
     DbmsQueryResult rs = jdbc.executeQuery("SELECT * FROM PERSON");
     int index = 0;
     while (rs.next()) {
@@ -60,7 +61,7 @@ public class JdbcQueryResultTest {
   }
   
   @Test
-  public void testJdbcQueryColumnName() throws SQLException {
+  public void testJdbcQueryColumnName() throws VerdictDBDbmsException {
     DbmsQueryResult rs = jdbc.executeQuery("SELECT name as alias1 FROM PERSON");
     assertTrue("alias1".equalsIgnoreCase(rs.getColumnName(0)));
   }

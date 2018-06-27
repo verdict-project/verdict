@@ -85,22 +85,22 @@ public class StaticMetaData implements MetaDataProvider{
   public void setDefaultSchema(String schema) { defaultSchema = schema; }
 
   @Override
-  public List<String> getSchemas() throws SQLException {
+  public List<String> getSchemas() {
     return schemas;
   }
 
   @Override
-  public List<String> getTables(String schema) throws SQLException {
+  public List<String> getTables(String schema) {
     return tables.get(schema);
   }
 
   @Override
-  public List<Pair<String, Integer>> getColumns(String schema, String table) throws SQLException {
+  public List<Pair<String, Integer>> getColumns(String schema, String table) {
     return columns.get(new ImmutablePair<>(schema, table));
   }
 
   @Override
-  public List<String> getPartitionColumns(String schema, String table) throws SQLException {
+  public List<String> getPartitionColumns(String schema, String table) {
     return partitions.get(new ImmutablePair<>(schema, table));
   }
 

@@ -24,6 +24,7 @@ import org.verdictdb.core.query.SelectItem;
 import org.verdictdb.core.query.SelectQuery;
 import org.verdictdb.core.query.SubqueryColumn;
 import org.verdictdb.core.query.UnnamedColumn;
+import org.verdictdb.exception.VerdictDBDbmsException;
 
 public class RelationStandardizer {
 
@@ -66,7 +67,7 @@ public class RelationStandardizer {
     return col;
   }
 
-  private List<SelectItem> replaceSelectList(List<SelectItem> selectItemList) throws SQLException {
+  private List<SelectItem> replaceSelectList(List<SelectItem> selectItemList) throws VerdictDBDbmsException {
     List<SelectItem> newSelectItemList = new ArrayList<>();
     for (SelectItem sel : selectItemList) {
       if (!(sel instanceof AliasedColumn) && !(sel instanceof AsteriskColumn)) {
@@ -105,7 +106,7 @@ public class RelationStandardizer {
   }
 
   //Use BFS to search all the condition.
-  private UnnamedColumn replaceFilter(UnnamedColumn condition) throws SQLException {
+  private UnnamedColumn replaceFilter(UnnamedColumn condition) throws VerdictDBDbmsException {
     List<UnnamedColumn> searchList = new Vector<>();
     searchList.add(condition);
     while (!searchList.isEmpty()) {
@@ -152,7 +153,7 @@ public class RelationStandardizer {
   /*
    * return the ColName contained by the table
    */
-  private Pair<List<String>, AbstractRelation> setupTableSource(AbstractRelation table) throws SQLException {
+  private Pair<List<String>, AbstractRelation> setupTableSource(AbstractRelation table) throws VerdictDBDbmsException {
     if (!table.getAliasName().isPresent() && !(table instanceof JoinTable)) {
       table.setAliasName("vt" + itemID++);
     }
@@ -217,7 +218,7 @@ public class RelationStandardizer {
   /*
    * Figure out the table alias and the columns the table have
    */
-  private List<AbstractRelation> setupTableSources(SelectQuery relationToAlias) throws SQLException {
+  private List<AbstractRelation> setupTableSources(SelectQuery relationToAlias) throws VerdictDBDbmsException {
     List<AbstractRelation> fromList = relationToAlias.getFromList();
     for (int i = 0; i < fromList.size(); i++) {
       fromList.set(i, setupTableSource(fromList.get(i)).getValue());
@@ -225,10 +226,10 @@ public class RelationStandardizer {
     return fromList;
   }
 
-  public SelectQuery standardize(SelectQuery relationToAlias) throws SQLException {
+  public SelectQuery standardize(SelectQuery relationToAlias) throws VerdictDBDbmsException {
     List<AbstractRelation> fromList = setupTableSources(relationToAlias);
     List<SelectItem> selectItemList = replaceSelectList(relationToAlias.getSelectList());
-    SelectQuery AliasedRelation = SelectQuery.getSelectQueryOp(selectItemList, fromList);
+    SelectQuery AliasedRelation = SelectQuery.create(selectItemList, fromList);
 
     //Filter
     UnnamedColumn where;

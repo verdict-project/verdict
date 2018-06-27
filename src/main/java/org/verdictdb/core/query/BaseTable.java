@@ -4,7 +4,7 @@ import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
-import org.verdictdb.exception.UnexpectedTypeException;
+import org.verdictdb.exception.VerdictDBTypeException;
 import org.verdictdb.sql.syntax.SyntaxAbstract;
 
 
@@ -60,8 +60,8 @@ public class BaseTable extends AbstractRelation {
 //        this.tableSourceAlias = tableSourceAlias;
 //    }
 
-  public String toSql(SyntaxAbstract syntax) throws UnexpectedTypeException {
-    throw new UnexpectedTypeException("A base table itself cannot be converted to a sql.");
+  public String toSql(SyntaxAbstract syntax) throws VerdictDBTypeException {
+    throw new VerdictDBTypeException("A base table itself cannot be converted to a sql.");
   }
 
   @Override

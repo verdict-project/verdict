@@ -10,12 +10,12 @@ import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.core.aggresult.AggregateFrame;
 import org.verdictdb.core.aggresult.AggregateGroup;
 import org.verdictdb.core.aggresult.AggregateMeasures;
-import org.verdictdb.exception.ValueException;
+import org.verdictdb.exception.VerdictDBValueException;
 
 public class AggregateFrameQueryResultTest {
 
   @Test
-  public void testToDbmsQueryResult() throws ValueException {
+  public void testToDbmsQueryResult() throws VerdictDBValueException {
     List<String> orderedColumnNames = Arrays.asList("col1", "col2");
     AggregateFrame aggframe = new AggregateFrame(orderedColumnNames);
     AggregateGroup group = new AggregateGroup(Arrays.asList("col2"), Arrays.asList((Object) "group1"));

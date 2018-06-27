@@ -2,31 +2,35 @@ package org.verdictdb.core.execution;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.core.execution.ola.AggExecutionNodeBlock;
 import org.verdictdb.core.query.AbstractRelation;
 import org.verdictdb.core.query.BaseTable;
+import org.verdictdb.core.query.GroupingAttribute;
+import org.verdictdb.core.query.SelectItem;
 import org.verdictdb.core.query.SelectQuery;
+import org.verdictdb.core.query.SqlConvertable;
 import org.verdictdb.core.rewriter.ScrambleMeta;
+import org.verdictdb.exception.VerdictDBException;
 
 import com.google.common.base.Optional;
 
 public abstract class QueryExecutionNode {
 
-  DbmsConnection conn;
+//  DbmsConnection conn;
   
-  SelectQuery query;
+  SelectQuery selectQuery;
 
-  //  QueryExecutionPlan plan;
+  QueryExecutionPlan plan;
 
-  // running or complete
-  String status = "running";
+  // initialized, running, or complete
+  String status = "initialized";
   
   // these are assumed to be not order-sensitive
   List<QueryExecutionNode> parents = new ArrayList<>();
@@ -35,24 +39,31 @@ public abstract class QueryExecutionNode {
   List<QueryExecutionNode> dependents = new ArrayList<>();
 
   // these are the queues to which this node will broadcast its results (to upstream nodes).
-  List<BlockingDeque<ExecutionResult>> broadcastQueues = new ArrayList<>();
+  List<ExecutionTokenQueue> broadcastingQueues = new ArrayList<>();
 
   // these are the results coming from the producers (downstream operations).
   // multiple producers may share a single result queue.
   // these queues are assumed to be order-sensitive
-  List<BlockingDeque<ExecutionResult>> listeningQueues = new ArrayList<>();
+  List<ExecutionTokenQueue> listeningQueues = new ArrayList<>();
 
   // latest results from listening queues
-  List<Optional<ExecutionResult>> latestResults = new ArrayList<>();
+  List<Optional<ExecutionInfoToken>> latestResults = new ArrayList<>();
+  
+  public QueryExecutionNode(QueryExecutionPlan plan) {
+    this.plan = plan;
+  }
 
-  public QueryExecutionNode(DbmsConnection conn, SelectQuery query) {
-    this.conn = conn;
-    this.query = query;
-    //    this.plan = plan;
+  public QueryExecutionNode(QueryExecutionPlan plan, SelectQuery query) {
+    this(plan);
+    this.selectQuery = query;
   }
   
-  public SelectQuery getQuery() {
-    return query;
+  public SelectQuery getSelectQuery() {
+    return selectQuery;
+  }
+  
+  public void setSelectQuery(SelectQuery query) {
+    this.selectQuery = query;
   }
   
   public List<QueryExecutionNode> getParents() {
@@ -62,15 +73,35 @@ public abstract class QueryExecutionNode {
   public List<QueryExecutionNode> getDependents() {
     return dependents;
   }
+  
+  public QueryExecutionNode getDependent(int index) {
+    return dependents.get(index);
+  }
+  
+  public String getStatus() {
+    return status;
+  }
+  
+  public void setStatus(String status) {
+    this.status = status;
+  }
+  
+  public QueryExecutionPlan getPlan() {
+    return plan;
+  }
 
   /**
    * For multi-threading, the parent of this node is responsible for running this method as a separate thread.
    * @param resultQueue
    */
-  public void execute() {
+  public void execute(final DbmsConnection conn) {
     // Start the execution of all children
     for (QueryExecutionNode child : dependents) {
-      child.execute();
+      if (!child.getStatus().equals("initialized")) {
+        continue;
+      }
+      child.setStatus("running"); 
+      child.execute(conn);
     }
 
     // Execute this node if there are some results available
@@ -78,7 +109,7 @@ public abstract class QueryExecutionNode {
     while (true) {
       readLatestResultsFromDependents();
 
-      final List<ExecutionResult> latestResults = getLatestResultsIfAvailable();
+      final List<ExecutionInfoToken> latestResults = getLatestResultsIfAvailable();
 
       // Only when all results are available, the internal operations of this node are performed.
       if (latestResults != null || areDependentsAllComplete()) {
@@ -86,8 +117,13 @@ public abstract class QueryExecutionNode {
         executor.submit(new Runnable() {
           @Override
           public void run() {
-            ExecutionResult rs = executeNode(latestResults);
-            broadcast(rs);
+            try {
+              ExecutionInfoToken rs = executeNode(conn, latestResults);
+              broadcast(rs);
+            } catch (VerdictDBException e) {
+              e.printStackTrace();
+              setStatus("failed");
+            }
             //            resultQueue.add(rs);
           }
         });
@@ -105,15 +141,21 @@ public abstract class QueryExecutionNode {
     } catch (InterruptedException e) {
       executor.shutdownNow();
     }
-    setComplete();
+    if (!isFailed()) {
+      setSuccess();
+    }
   }
 
   /**
    * This function must not make a call to the conn field.
    * @param downstreamResults
    * @return
+   * @throws VerdictDBException 
    */
-  public abstract ExecutionResult executeNode(List<ExecutionResult> downstreamResults);
+  public abstract ExecutionInfoToken executeNode(
+      DbmsConnection conn, 
+      List<ExecutionInfoToken> downstreamResults)
+      throws VerdictDBException;
   
   void addParent(QueryExecutionNode parent) {
     parents.add(parent);
@@ -126,51 +168,64 @@ public abstract class QueryExecutionNode {
   }
 
   // setup method
-  public BlockingDeque<ExecutionResult> generateListeningQueue() {
-    BlockingDeque<ExecutionResult> queue = new LinkedBlockingDeque<>();
+  public ExecutionTokenQueue generateListeningQueue() {
+    ExecutionTokenQueue queue = new ExecutionTokenQueue();
     listeningQueues.add(queue);
-    latestResults.add(Optional.<ExecutionResult>absent());
+    latestResults.add(Optional.<ExecutionInfoToken>absent());
     return queue;
   }
 
   // setup method
-  public void addBroadcastingQueue(BlockingDeque<ExecutionResult> queue) {
-    broadcastQueues.add(queue);
+  public void addBroadcastingQueue(ExecutionTokenQueue queue) {
+    broadcastingQueues.add(queue);
   }
   
-  public List<BlockingDeque<ExecutionResult>> getBroadcastQueues() {
-    return broadcastQueues;
+  public void clearBroadcastingQueues() {
+    broadcastingQueues.clear();
+  }
+  
+  public List<ExecutionTokenQueue> getBroadcastingQueues() {
+    return broadcastingQueues;
+  }
+  
+  public List<ExecutionTokenQueue> getListeningQueues() {
+    return listeningQueues;
   }
 
-  public boolean isComplete() {
-    return status.equals("complete");
+  public boolean isSuccess() {
+    return status.equals("success");
+  }
+  
+  public boolean isFailed() {
+    return status.equals("failed");
   }
 
-  void setComplete() {
-    status = "complete";
+  void setSuccess() {
+    status = "success";
   }
 
-  void broadcast(ExecutionResult result) {
-    for (BlockingDeque<ExecutionResult> listener : broadcastQueues) {
+  void broadcast(ExecutionInfoToken result) {
+    for (ExecutionTokenQueue listener : broadcastingQueues) {
       listener.add(result);
     }
   }
 
   void readLatestResultsFromDependents() {
     for (int i = 0; i < listeningQueues.size(); i++) {
-      ExecutionResult rs = listeningQueues.get(i).poll();
+      ExecutionInfoToken rs = listeningQueues.get(i).poll();
       if (rs == null) {
         // do nothing
       } else {
         latestResults.set(i, Optional.of(rs));
+        System.out.println("Received: " + rs.toString());
       }
     }
   }
 
-  List<ExecutionResult> getLatestResultsIfAvailable() {
+  List<ExecutionInfoToken> getLatestResultsIfAvailable() {
     boolean allResultsAvailable = true;
-    List<ExecutionResult> results = new ArrayList<>();
-    for (Optional<ExecutionResult> r : latestResults) {
+    List<ExecutionInfoToken> results = new ArrayList<>();
+    for (Optional<ExecutionInfoToken> r : latestResults) {
       if (!r.isPresent()) {
         allResultsAvailable = false;
         break;
@@ -186,7 +241,7 @@ public abstract class QueryExecutionNode {
 
   boolean areDependentsAllComplete() {
     for (QueryExecutionNode node : dependents) {
-      if (node.isComplete()) {
+      if (node.isSuccess() || node.isFailed()) {
         // do nothing
       } else {
         return false;
@@ -194,18 +249,24 @@ public abstract class QueryExecutionNode {
     }
     return true;
   }
-  
 
   // identify nodes that are (1) aggregates and (2) are not descendants of any other aggregates.
-  void identifyTopAggBlocks(List<AggExecutionNodeBlock> topAggNodes) {
+  List<AggExecutionNodeBlock> identifyTopAggBlocks() {
+    List<AggExecutionNodeBlock> aggblocks = new ArrayList<>();
+    
     if (this instanceof AggExecutionNode) {
-      topAggNodes.add(new AggExecutionNodeBlock(conn, this));
-      return;
+      AggExecutionNodeBlock block = new AggExecutionNodeBlock(plan, this);
+      aggblocks.add(block);
+      return aggblocks;
     }
     for (QueryExecutionNode dep : getDependents()) {
-      dep.identifyTopAggBlocks(topAggNodes);
+      List<AggExecutionNodeBlock> depAggBlocks = dep.identifyTopAggBlocks();
+      aggblocks.addAll(depAggBlocks);
     }
+    
+    return aggblocks;
   }
+  
   
 
   /**
@@ -218,7 +279,7 @@ public abstract class QueryExecutionNode {
       return false;
     }
     
-    SelectQuery query = getQuery();
+    SelectQuery query = (SelectQuery) getSelectQuery();
     if (query == null) {
       return false;
     }
@@ -257,6 +318,45 @@ public abstract class QueryExecutionNode {
       leaves.addAll(dep.getLeafNodes());
     }
     return leaves;
+  }
+
+  public abstract QueryExecutionNode deepcopy();
+  
+  void copyFields(QueryExecutionNode from, QueryExecutionNode to) {
+    to.selectQuery = from.selectQuery.deepcopy();
+    to.status = from.status;
+    to.parents.addAll(from.parents);
+    to.dependents.addAll(from.dependents);
+    to.broadcastingQueues.addAll(from.broadcastingQueues);
+    to.listeningQueues.addAll(from.listeningQueues);
+    to.latestResults.addAll(from.latestResults);
+  }
+  
+  public void print() {
+    print(0);
+  }
+  
+  void print(int indentSpace) {
+    StringBuilder builder = new StringBuilder();
+    for (int i = 0; i < indentSpace; i++) {
+      builder.append(" ");
+    }
+    builder.append(this.toString());
+    System.out.println(builder.toString());
+    
+    for (QueryExecutionNode dep : dependents) {
+      dep.print(indentSpace + 2);
+    }
+  }
+  
+  @Override
+  public String toString() {
+    return new ToStringBuilder(this, ToStringStyle.DEFAULT_STYLE)
+        .append("status", status)
+        .append("listeningQueues", listeningQueues)
+        .append("broadcastingQueues", broadcastingQueues)
+        .append("selectQuery", selectQuery)
+        .toString();
   }
 
 }

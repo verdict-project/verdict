@@ -9,6 +9,7 @@ import java.util.List;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
+import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.jdbc.JdbcResultSet;
 import org.verdictdb.sql.syntax.PostgresqlSyntax;
 import org.verdictdb.sql.syntax.SyntaxAbstract;
@@ -36,7 +37,7 @@ public class JdbcConnection implements DbmsConnection {
   }
 
   @Override
-  public DbmsQueryResult executeQuery(String query) {
+  public DbmsQueryResult executeQuery(String query) throws VerdictDBDbmsException {
     System.out.println("About to issue this query: " + query);
     try {
       Statement stmt = conn.createStatement();
@@ -46,13 +47,12 @@ public class JdbcConnection implements DbmsConnection {
       stmt.close();
       return jrs;
     } catch (SQLException e) {
-      e.printStackTrace();
-      return null;
+      throw new VerdictDBDbmsException(e.getMessage());
     }
   }
 
   @Override
-  public int executeUpdate(String query) {
+  public int executeUpdate(String query) throws VerdictDBDbmsException {
     System.out.println("About to issue this query: " + query);
     try {
       Statement stmt = conn.createStatement();
@@ -60,8 +60,9 @@ public class JdbcConnection implements DbmsConnection {
       stmt.close();
       return r;
     } catch (SQLException e) {
-      e.printStackTrace();
-      return 0;
+      throw new VerdictDBDbmsException(e);
+//      e.printStackTrace();
+//      return 0;
     }
   }
 
@@ -74,61 +75,86 @@ public class JdbcConnection implements DbmsConnection {
   public Connection getConnection() {return conn;}
 
   @Override
-  public List<String> getSchemas() throws SQLException{
+  public List<String> getSchemas() throws VerdictDBDbmsException{
     List<String> schemas = new ArrayList<>();
     DbmsQueryResult queryResult = executeQuery(syntax.getSchemaCommand());
     JdbcResultSet jdbcQueryResult = new JdbcResultSet(queryResult);
-    while (queryResult.next()) {
-      schemas.add(jdbcQueryResult.getString(syntax.getSchemaNameColumnIndex()+1));
+    try {
+      while (queryResult.next()) {
+        schemas.add(jdbcQueryResult.getString(syntax.getSchemaNameColumnIndex()+1));
+      }
+    } catch (SQLException e) {
+      throw new VerdictDBDbmsException(e);
+    } finally {
+      jdbcQueryResult.close();
     }
     return schemas;
   }
 
   @Override
-  public List<String> getTables(String schema) throws SQLException{
+  public List<String> getTables(String schema) throws VerdictDBDbmsException {
     List<String> tables = new ArrayList<>();
     DbmsQueryResult queryResult = executeQuery(syntax.getTableCommand(schema));
     JdbcResultSet jdbcQueryResult = new JdbcResultSet(queryResult);
-    while (queryResult.next()) {
-      tables.add(jdbcQueryResult.getString(syntax.getTableNameColumnIndex()+1));
+    try {
+      while (queryResult.next()) {
+        tables.add(jdbcQueryResult.getString(syntax.getTableNameColumnIndex()+1));
+      }
+    } catch (SQLException e) {
+      throw new VerdictDBDbmsException(e);
+    } finally {
+      jdbcQueryResult.close();
     }
     return tables;
   }
 
   @Override
-  public List<Pair<String, Integer>> getColumns(String schema, String table) throws SQLException{
+  public List<Pair<String, Integer>> getColumns(String schema, String table) throws VerdictDBDbmsException{
     List<Pair<String, Integer>> columns = new ArrayList<>();
     DbmsQueryResult queryResult = executeQuery(syntax.getColumnsCommand(schema, table));
     JdbcResultSet jdbcQueryResult = new JdbcResultSet(queryResult);
-    while (queryResult.next()) {
-      String type = jdbcQueryResult.getString(syntax.getColumnTypeColumnIndex()+1);
-      // remove the size of type
-      type = type.replaceAll("\\(.*\\)", "");
-      columns.add(new ImmutablePair<>(jdbcQueryResult.getString(syntax.getColumnNameColumnIndex()+1),
-          DataTypeConverter.typeInt(type)));
+    try {
+      while (queryResult.next()) {
+        String type = jdbcQueryResult.getString(syntax.getColumnTypeColumnIndex()+1);
+        // remove the size of type
+        type = type.replaceAll("\\(.*\\)", "");
+        columns.add(new ImmutablePair<>(jdbcQueryResult.getString(syntax.getColumnNameColumnIndex()+1),
+            DataTypeConverter.typeInt(type)));
+      }
+    } catch (SQLException e) {
+      throw new VerdictDBDbmsException(e);
+    } finally {
+      jdbcQueryResult.close();
     }
     return columns;
   }
 
   @Override
-  public List<String> getPartitionColumns(String schema, String table) throws SQLException{
+  public List<String> getPartitionColumns(String schema, String table) throws VerdictDBDbmsException{
     List<String> partition = new ArrayList<>();
     DbmsQueryResult queryResult = executeQuery(syntax.getPartitionCommand(schema, table));
     JdbcResultSet jdbcQueryResult = new JdbcResultSet(queryResult);
     // the result of postgresql is a vector of column index
-    if (syntax instanceof PostgresqlSyntax) {
-      queryResult.next();
-      Object o = jdbcQueryResult.getObject(1);
-      String[] arr = o.toString().split(" ");
-      List<Pair<String, Integer>> columns = getColumns(schema, table);
-      for (int i=0; i<arr.length; i++) {
-        partition.add(columns.get(Integer.valueOf(arr[i])-1).getKey());
+    
+    try {
+      if (syntax instanceof PostgresqlSyntax) {
+        queryResult.next();
+        Object o = jdbcQueryResult.getObject(1);
+        String[] arr = o.toString().split(" ");
+        List<Pair<String, Integer>> columns = getColumns(schema, table);
+        for (int i=0; i<arr.length; i++) {
+          partition.add(columns.get(Integer.valueOf(arr[i])-1).getKey());
+        }
       }
-    }
-    else {
-      while (queryResult.next()) {
-        partition.add(jdbcQueryResult.getString(1));
+      else {
+        while (queryResult.next()) {
+          partition.add(jdbcQueryResult.getString(1));
+        }
       }
+    } catch (SQLException e) {
+      throw new VerdictDBDbmsException(e);
+    } finally {
+      jdbcQueryResult.close();
     }
     jdbcQueryResult.close();
     return partition;

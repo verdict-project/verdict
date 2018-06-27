@@ -4,16 +4,17 @@ import java.sql.SQLException;
 import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.verdictdb.exception.VerdictDBDbmsException;
 
 public interface MetaDataProvider {
   
-  public List<String> getSchemas() throws SQLException;
+  public List<String> getSchemas() throws VerdictDBDbmsException;
 
-  List<String> getTables(String schema) throws SQLException;
+  List<String> getTables(String schema) throws VerdictDBDbmsException;
 
-  public List<Pair<String, Integer>> getColumns(String schema, String table) throws SQLException;
+  public List<Pair<String, Integer>> getColumns(String schema, String table) throws VerdictDBDbmsException;
 
-  public List<String> getPartitionColumns(String schema, String table) throws SQLException;
+  public List<String> getPartitionColumns(String schema, String table) throws VerdictDBDbmsException;
   
   public String getDefaultSchema();
 

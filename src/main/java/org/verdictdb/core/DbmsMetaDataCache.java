@@ -9,6 +9,7 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.MetaDataProvider;
+import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.sql.syntax.SyntaxAbstract;
 
 public class DbmsMetaDataCache implements MetaDataProvider {
@@ -31,7 +32,7 @@ public class DbmsMetaDataCache implements MetaDataProvider {
   }
 
   @Override
-  public List<String> getSchemas() throws SQLException {
+  public List<String> getSchemas() throws VerdictDBDbmsException {
     if (!schemaCache.isEmpty()) {
       return schemaCache;
     }
@@ -40,7 +41,7 @@ public class DbmsMetaDataCache implements MetaDataProvider {
   }
 
   @Override
-  public List<String> getTables(String schema) throws SQLException {
+  public List<String> getTables(String schema) throws VerdictDBDbmsException {
     if (tablesCache.containsKey(schema)&&!tablesCache.get(schema).isEmpty()) {
       return tablesCache.get(schema);
     }
@@ -49,7 +50,7 @@ public class DbmsMetaDataCache implements MetaDataProvider {
   }
 
   @Override
-  public List<Pair<String, Integer>> getColumns(String schema, String table) throws SQLException {
+  public List<Pair<String, Integer>> getColumns(String schema, String table) throws VerdictDBDbmsException {
     Pair<String, String> key = new ImmutablePair<>(schema,table);
     if (columnsCache.containsKey(key) && !columnsCache.get(key).isEmpty()) {
       return columnsCache.get(key);
@@ -64,11 +65,12 @@ public class DbmsMetaDataCache implements MetaDataProvider {
    * @param schema
    * @param table
    * @return
+   * @throws VerdictDBDbmsException 
    */
   @Override
-  public List<String> getPartitionColumns(String schema, String table) throws SQLException {
+  public List<String> getPartitionColumns(String schema, String table) throws VerdictDBDbmsException {
     if (!syntax.doesSupportTablePartitioning()) {
-      throw new SQLException("Database does not support table partitioning");
+      throw new VerdictDBDbmsException("Database does not support table partitioning");
     }
     Pair<String, String> key = new ImmutablePair<>(schema,table);
     if (columnsCache.containsKey(key) && !partitionCache.isEmpty()) {

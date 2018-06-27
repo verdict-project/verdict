@@ -1,7 +1,7 @@
 package org.verdictdb.core.sql;
 
 import org.verdictdb.core.query.DropTableQuery;
-import org.verdictdb.exception.VerdictDbException;
+import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sql.syntax.SyntaxAbstract;
 
 public class DropTableToSql {
@@ -12,7 +12,7 @@ public class DropTableToSql {
     this.syntax = syntax;
   }
 
-  public String toSql(DropTableQuery query) throws VerdictDbException {
+  public String toSql(DropTableQuery query) throws VerdictDBException {
     StringBuilder sql = new StringBuilder();
 
     String schemaName = query.getSchemaName();

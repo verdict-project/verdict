@@ -17,7 +17,7 @@ import org.junit.Test;
 import org.verdictdb.connection.JdbcQueryResult;
 import org.verdictdb.core.aggresult.AggregateFrame;
 import org.verdictdb.core.aggresult.AggregateGroup;
-import org.verdictdb.exception.ValueException;
+import org.verdictdb.exception.VerdictDBValueException;
 
 public class QueryResultToAggregateFrameTest {
 
@@ -64,7 +64,7 @@ public class QueryResultToAggregateFrameTest {
   }
 
   @Test
-  public void testCountQueryToAggregateFrame() throws SQLException, ValueException {
+  public void testCountQueryToAggregateFrame() throws SQLException, VerdictDBValueException {
     List<List<Object>> contents = new ArrayList<>();
     contents.add(Arrays.<Object>asList(1, "Anju", "female"));
     contents.add(Arrays.<Object>asList(2, "Sonia", "female"));
@@ -96,7 +96,7 @@ public class QueryResultToAggregateFrameTest {
   }
 
   @Test
-  public void testSumQueryToAggregateFrame() throws SQLException, ValueException {
+  public void testSumQueryToAggregateFrame() throws SQLException, VerdictDBValueException {
     List<List<Object>> contents = new ArrayList<>();
     contents.add(Arrays.<Object>asList(1, "Anju", "female"));
     contents.add(Arrays.<Object>asList(2, "Sonia", "female"));
@@ -128,7 +128,7 @@ public class QueryResultToAggregateFrameTest {
   }
 
   @Test
-  public void testCountQueryToAggregateFrame2() throws SQLException, ValueException {
+  public void testCountQueryToAggregateFrame2() throws SQLException, VerdictDBValueException {
     List<List<Object>> contents = new ArrayList<>();
     contents.add(Arrays.<Object>asList(1, "Anju", "female", 15, 170, "USA"));
     contents.add(Arrays.<Object>asList(2, "Sonia", "female", 17, 156, "USA"));
@@ -168,7 +168,7 @@ public class QueryResultToAggregateFrameTest {
   }
 
   @Test
-  public void testCountQueryToAggregateFrame3() throws SQLException, ValueException {
+  public void testCountQueryToAggregateFrame3() throws SQLException, VerdictDBValueException {
     List<List<Object>> contents = new ArrayList<>();
     contents.add(Arrays.<Object>asList(1, "Anju", "female", 15, 170, "USA"));
     contents.add(Arrays.<Object>asList(2, "Sonia", "female", 17, 156, "USA"));

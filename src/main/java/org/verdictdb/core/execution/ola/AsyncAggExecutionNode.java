@@ -14,9 +14,11 @@ import java.util.concurrent.BlockingDeque;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.connection.DbmsConnection;
-import org.verdictdb.core.execution.ExecutionResult;
+import org.verdictdb.core.execution.CreateTableAsSelectExecutionNode;
+import org.verdictdb.core.execution.ExecutionInfoToken;
+import org.verdictdb.core.execution.ExecutionTokenQueue;
 import org.verdictdb.core.execution.QueryExecutionNode;
-import org.verdictdb.core.execution.SingleAggExecutionNode;
+import org.verdictdb.core.execution.QueryExecutionPlan;
 import org.verdictdb.core.query.AbstractRelation;
 import org.verdictdb.core.query.AliasedColumn;
 import org.verdictdb.core.query.ColumnOp;
@@ -27,9 +29,9 @@ import org.verdictdb.core.rewriter.ScrambleMeta;
 import org.verdictdb.core.rewriter.aggresult.AggNameAndType;
 import org.verdictdb.core.rewriter.query.AggQueryRewriter;
 import org.verdictdb.core.rewriter.query.AggblockMeta;
-import org.verdictdb.exception.UnexpectedTypeException;
-import org.verdictdb.exception.ValueException;
-import org.verdictdb.exception.VerdictDbException;
+import org.verdictdb.exception.VerdictDBTypeException;
+import org.verdictdb.exception.VerdictDBValueException;
+import org.verdictdb.exception.VerdictDBException;
 
 /**
  * Represents an execution of a single aggregate query (without nested components).
@@ -44,7 +46,7 @@ import org.verdictdb.exception.VerdictDbException;
  * @author Yongjoo Park
  *
  */
-public class AsyncAggExecutionNode extends QueryExecutionNode {
+public class AsyncAggExecutionNode extends CreateTableAsSelectExecutionNode {
 
   ScrambleMeta scrambleMeta;
 
@@ -64,149 +66,30 @@ public class AsyncAggExecutionNode extends QueryExecutionNode {
     return tableNamePrefix + tableNum++;
   }
 
-  private AsyncAggExecutionNode(DbmsConnection conn) {
-    super(conn, null);
-    // TODO Auto-generated constructor stub
+  private AsyncAggExecutionNode(QueryExecutionPlan plan) {
+    super(plan);
   }
   
   public static AsyncAggExecutionNode create(
-      DbmsConnection conn,
+      QueryExecutionPlan plan,
       List<QueryExecutionNode> individualAggs,
       List<QueryExecutionNode> combiners) {
-    return null;
+    AsyncAggExecutionNode node = new AsyncAggExecutionNode(plan);
+    ExecutionTokenQueue queue = node.generateListeningQueue();
+    individualAggs.get(0).addBroadcastingQueue(queue);
+    node.addDependency(individualAggs.get(0));
+    for (QueryExecutionNode c : combiners) {
+      c.addBroadcastingQueue(queue);
+      node.addDependency(c);
+    }
+    return node;
   }
 
   @Override
-  public ExecutionResult executeNode(List<ExecutionResult> downstreamResults) {
-    return null;
+  public ExecutionInfoToken executeNode(DbmsConnection conn, List<ExecutionInfoToken> downstreamResults) 
+      throws VerdictDBException {
+    ExecutionInfoToken token = super.executeNode(conn, downstreamResults);
+    return token;
   }
 
-  //  /**
-  //   * Progressively aggregates the query, and feed the available results to the upstream.
-  //   * 
-  //   * @param conn
-  //   * @param scrambleMeta
-  //   * @param query
-  //   * @throws UnexpectedTypeException
-  //   * @throws ValueException
-  //   */
-  //  public AsyncAggExecutionNode(
-  //      DbmsConnection conn, 
-  //      ScrambleMeta scrambleMeta, 
-  //      String resultSchemaName, 
-  //      String resultTableName,
-  //      SelectQuery query) 
-  //      throws VerdictDbException {
-  //    super(conn, query);
-  //    this.scrambleMeta = scrambleMeta;
-  //    this.originalQuery = query;
-  ////    Pair<List<String>, List<AggNameAndType>> cols = identifyAggColumns(originalQuery.getSelectList());
-  ////    nonaggColumns = cols.getLeft();
-  ////    aggColumns = cols.getRight();
-  //    
-  //    // query rewriting into block-aggregate queries.
-  //    // TODO
-  //    AggQueryRewriter aggQueryRewriter = new AggQueryRewriter(scrambleMeta);
-  //    List<Pair<AbstractRelation, AggblockMeta>> aggblockQueriesWithMeta = aggQueryRewriter.rewrite(originalQuery);
-  //    int stepCount = aggblockQueriesWithMeta.size();
-  //    
-  //    // Generate agg nodes and combiner nodes
-  //    // Only a single listener is generated and shared for them. But, combiners will have their own listeners.
-  //    BlockingDeque<ExecutionResult> aggResultsQueue = generateListeningQueue();
-  //    
-  //    // generate agg nodes
-  //    List<SingleAggExecutionNode> aggNodes = new ArrayList<>();
-  //    for (int i = 0; i < stepCount; i++) {
-  //      SelectQuery aggquery = (SelectQuery) aggblockQueriesWithMeta.get(i).getLeft();
-  //      AggblockMeta aggmeta = aggblockQueriesWithMeta.get(i).getRight();
-  //      aggNodes.add(new SingleAggExecutionNode(conn, aggmeta, resultSchemaName, getNextTempTableName(resultTableName), aggquery));
-  //    }
-  //    aggNodes.get(0).addBroadcastingQueue(aggResultsQueue);
-  //    addDependency(aggNodes.get(0));
-  //    
-  //    // generate combiner nodes
-  //    List<AggCombinerExecutionNode> combinerNodes = new ArrayList<>();
-  //    for (int i = 0; i < stepCount-1; i++) {
-  //      AggCombinerExecutionNode combiner = new AggCombinerExecutionNode(conn);
-  //      BlockingDeque<ExecutionResult> queueToCombiner1= combiner.generateListeningQueue();
-  //      BlockingDeque<ExecutionResult> queueToCombiner2= combiner.generateListeningQueue();
-  //      if (i == 0) {
-  //        aggNodes.get(i).addBroadcastingQueue(queueToCombiner1);
-  //        aggNodes.get(i+1).addBroadcastingQueue(queueToCombiner2);
-  //      }
-  //      else {
-  //        combinerNodes.get(i-1).addBroadcastingQueue(queueToCombiner1);
-  //        aggNodes.get(i+1).addBroadcastingQueue(queueToCombiner2);
-  //      }
-  //      combiner.addBroadcastingQueue(aggResultsQueue);
-  //      addDependency(combiner);
-  //      combinerNodes.add(combiner);
-  //    }
-  //  }
-
-  //  Pair<List<String>, List<AggNameAndType>> identifyAggColumns(List<SelectItem> items) 
-  //      throws UnexpectedTypeException, ValueException {
-  //    List<String> nonagg = new ArrayList<>();
-  //    List<AggNameAndType> aggcols = new ArrayList<>();
-  //
-  //    for (SelectItem item : items) {
-  //      if (item.isAggregateColumn()) {
-  //        aggcols.add(new AggNameAndType(getAliasName(item), inferAggType(item)));
-  //      }
-  //      else {
-  //        nonagg.add(getAliasName(item));
-  //      }
-  //    }
-  //
-  //    return Pair.of(nonagg, aggcols);
-  //  }
-
-  //  String getAliasName(SelectItem item) throws UnexpectedTypeException {
-  //    if (item instanceof AliasedColumn) {
-  //      return ((AliasedColumn) item).getAliasName();
-  //    } else {
-  //      throw new UnexpectedTypeException("select items must have been aliased.");
-  //    }
-  //  }
-
-  //  String inferAggType(SelectItem item) throws ValueException {
-  //    if (item instanceof AliasedColumn) {
-  //      return inferAggType(((AliasedColumn) item).getColumn());
-  //    }
-  //
-  //    if (item instanceof UnnamedColumn) {
-  //      if (item instanceof ColumnOp) {
-  //        String opType = ((ColumnOp) item).getOpType();
-  //        if (opType.equals("sum")) {
-  //          return "sum";
-  //        } else if (opType.equals("avg")) {
-  //          return "avg";
-  //        } else if (opType.equals("count")) {
-  //          return "count";
-  //        }
-  //
-  //        String foundType = "none";
-  //        List<UnnamedColumn> cols = ((ColumnOp) item).getOperands();
-  //        for (UnnamedColumn col : cols) {
-  //          String type = inferAggType(col);
-  //          if (foundType.equals("none")) {
-  //            foundType = type;
-  //          } else {
-  //            throw new ValueException("more than one aggregate function found in a single select item.");
-  //          }
-  //        }
-  //        return foundType;
-  //      }
-  //      else {
-  //        return "none";
-  //      }
-  //    }
-  //    else {
-  //      return "none";
-  //    }
-  //  }
-
-
 }
-
-

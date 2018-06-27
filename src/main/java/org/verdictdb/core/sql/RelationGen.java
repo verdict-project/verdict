@@ -154,7 +154,7 @@ public class RelationGen extends VerdictSQLBaseVisitor<AbstractRelation> {
 
     selectElems = elems; // used in visitSelect_statement()
 
-    SelectQuery sel = SelectQuery.getSelectQueryOp(
+    SelectQuery sel = SelectQuery.create(
         selectElems,
         tableSources);
     if (where != null) {

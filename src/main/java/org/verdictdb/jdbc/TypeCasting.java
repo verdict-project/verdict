@@ -3,12 +3,12 @@ package org.verdictdb.jdbc;
 import java.math.BigDecimal;
 import java.sql.SQLException;
 
-import org.verdictdb.exception.UnexpectedTypeException;
-import org.verdictdb.exception.ValueException;
+import org.verdictdb.exception.VerdictDBTypeException;
+import org.verdictdb.exception.VerdictDBValueException;
 
 public class TypeCasting {
 
-  public static Double toDouble(Object obj) throws UnexpectedTypeException {
+  public static Double toDouble(Object obj) throws VerdictDBTypeException {
     if (obj instanceof Double)
       return (Double) obj;
     else if (obj instanceof Float)
@@ -24,11 +24,11 @@ public class TypeCasting {
     else if (obj instanceof Byte)
       return ((Byte) obj).doubleValue();
     else {
-     throw new UnexpectedTypeException(obj);
+     throw new VerdictDBTypeException(obj);
     }
   }
 
-  public static Float toFloat(Object obj) throws UnexpectedTypeException {
+  public static Float toFloat(Object obj) throws VerdictDBTypeException {
     if (obj instanceof Double)
       return ((Double) obj).floatValue();
     else if (obj instanceof Float)
@@ -44,11 +44,11 @@ public class TypeCasting {
     else if (obj instanceof Byte)
       return ((Byte) obj).floatValue();
     else {
-      throw new UnexpectedTypeException(obj);
+      throw new VerdictDBTypeException(obj);
     }
   }
 
-  public static BigDecimal toBigDecimal(Object obj) throws UnexpectedTypeException {
+  public static BigDecimal toBigDecimal(Object obj) throws VerdictDBTypeException {
     if (obj instanceof Double)
       return new BigDecimal((Double) obj);
     else if (obj instanceof Float)
@@ -64,11 +64,11 @@ public class TypeCasting {
     else if (obj instanceof Byte)
       return new BigDecimal((Byte) obj);
     else {
-      throw new UnexpectedTypeException(obj);
+      throw new VerdictDBTypeException(obj);
     }
   }
 
-  public static BigDecimal toBigDecimal(Object obj, int scale) throws UnexpectedTypeException {
+  public static BigDecimal toBigDecimal(Object obj, int scale) throws VerdictDBTypeException {
     if (obj instanceof Double)
       return new BigDecimal((Double) obj).setScale(scale);
     else if (obj instanceof Float)
@@ -84,12 +84,12 @@ public class TypeCasting {
     else if (obj instanceof Byte)
       return new BigDecimal((Byte) obj).setScale(scale);
     else {
-      throw new UnexpectedTypeException(obj);
+      throw new VerdictDBTypeException(obj);
     }
   }
 
 
-  public static long toLong(Object obj) throws UnexpectedTypeException {
+  public static long toLong(Object obj) throws VerdictDBTypeException {
     if (obj instanceof Double)
       return ((Double) obj).intValue();
     else if (obj instanceof Float)
@@ -107,11 +107,11 @@ public class TypeCasting {
     else if (obj instanceof Boolean)
       return ((Boolean)obj)?(long) 1:(long)0;
     else {
-      throw new UnexpectedTypeException(obj);
+      throw new VerdictDBTypeException(obj);
     }
   }
 
-  public static Integer toInteger(Object obj) throws UnexpectedTypeException {
+  public static Integer toInteger(Object obj) throws VerdictDBTypeException {
     if (obj instanceof Double)
       return ((Double) obj).intValue();
     else if (obj instanceof Float)
@@ -129,11 +129,11 @@ public class TypeCasting {
     else if (obj instanceof Boolean)
       return ((Boolean)obj)?1:0;
     else {
-      throw new UnexpectedTypeException(obj);
+      throw new VerdictDBTypeException(obj);
     }
   }
 
-  public static Short toShort(Object obj) throws UnexpectedTypeException {
+  public static Short toShort(Object obj) throws VerdictDBTypeException {
     if (obj instanceof Double)
       return ((Double) obj).shortValue();
     else if (obj instanceof Float)
@@ -151,11 +151,11 @@ public class TypeCasting {
     else if (obj instanceof Boolean)
       return ((Boolean)obj)?(short)1:(short)0;
     else {
-      throw new UnexpectedTypeException(obj);
+      throw new VerdictDBTypeException(obj);
     }
   }
 
-  public static Byte toByte(Object obj) throws UnexpectedTypeException {
+  public static Byte toByte(Object obj) throws VerdictDBTypeException {
     if (obj instanceof Double)
       return ((Double) obj).byteValue();
     else if (obj instanceof Float)
@@ -173,7 +173,7 @@ public class TypeCasting {
     else if (obj instanceof Boolean)
       return ((Boolean)obj)?(byte)1:(byte)0;
     else {
-      throw new UnexpectedTypeException(obj);
+      throw new VerdictDBTypeException(obj);
     }
   }
 

@@ -25,7 +25,7 @@ import org.verdictdb.core.rewriter.ScrambleMeta;
 import org.verdictdb.core.rewriter.ScrambleMetaForTable;
 import org.verdictdb.core.scramble.UniformScrambler;
 import org.verdictdb.core.sql.CreateTableToSql;
-import org.verdictdb.exception.VerdictDbException;
+import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sql.syntax.H2Syntax;
 
 public class ExecutionNodeTest {
@@ -41,7 +41,7 @@ public class ExecutionNodeTest {
   static String scrambledTable;
   
   @BeforeClass
-  public static void setupH2Database() throws SQLException, VerdictDbException {
+  public static void setupH2Database() throws SQLException, VerdictDBException {
     final String DB_CONNECTION = "jdbc:h2:mem:aggexecnodetest;DB_CLOSE_DELAY=-1";
     final String DB_USER = "";
     final String DB_PASSWORD = "";
@@ -96,10 +96,10 @@ public class ExecutionNodeTest {
 //  }
   
   @Test
-  public void asyncExecute() throws VerdictDbException {
+  public void asyncExecute() throws VerdictDBException {
     BaseTable base = new BaseTable("default", scrambledTable, "t");
     String aliasName = "a";
-    SelectQuery relation = SelectQuery.getSelectQueryOp(
+    SelectQuery relation = SelectQuery.create(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new ColumnOp("sum", new BaseColumn("t", "age")), aliasName)),
         base);
