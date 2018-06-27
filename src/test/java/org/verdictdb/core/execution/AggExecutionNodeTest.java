@@ -65,10 +65,11 @@ public class AggExecutionNodeTest {
     AggExecutionNode node = AggExecutionNode.create(query, "newschema");
 
     assertEquals(1, node.dependents.size());
+    String alias = ((SubqueryColumn)((ColumnOp) node.getSelectQuery().getFilter().get()).getOperand(1)).getSubquery().getFromList().get(0).getAliasName().get();
     SelectQuery rewritten = SelectQuery.create(
         Arrays.<SelectItem>asList(
-            new AliasedColumn(new BaseColumn("placeholderSchemaName", "filterPlaceholder0", "a"), "a"))
-        , new BaseTable("placeholderSchemaName", "placeholderTableName", "filterPlaceholder0"));
+            new AliasedColumn(new BaseColumn("placeholderSchemaName", alias, "a"), "a"))
+        , new BaseTable("placeholderSchemaName", "placeholderTableName", alias));
     assertEquals(rewritten, ((SubqueryColumn)((ColumnOp) node.getSelectQuery().getFilter().get()).getOperand(1)).getSubquery());
 
   }
