@@ -27,6 +27,7 @@ import static java.sql.Types.BIGINT;
 import static org.junit.Assert.assertEquals;
 
 public class TpchExecutionPlanTest {
+  
   static Connection conn;
 
   static Statement stmt;
@@ -249,8 +250,9 @@ public class TpchExecutionPlanTest {
     RelationStandardizer gen = new RelationStandardizer(staticMetaData);
     relation = gen.standardize((SelectQuery) relation);
 
-    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(new JdbcConnection(conn, new H2Syntax()),
-        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
+//    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(new JdbcConnection(conn, new H2Syntax()),
+//        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
+    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(meta, (SelectQuery) relation, "verdictdb_temp");
     queryExecutionPlan.cleanUp();
     assertEquals(1, queryExecutionPlan.root.dependents.size());
     assertEquals(0, queryExecutionPlan.root.getDependents().get(0).dependents.size());
@@ -327,8 +329,9 @@ public class TpchExecutionPlanTest {
     RelationStandardizer gen = new RelationStandardizer(staticMetaData);
     relation = gen.standardize((SelectQuery) relation);
 
-    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(new JdbcConnection(conn, new H2Syntax()),
-        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
+//    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(new JdbcConnection(conn, new H2Syntax()),
+//        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
+    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(meta, (SelectQuery) relation, "verdictdb_temp");
     queryExecutionPlan.cleanUp();
     assertEquals(0, queryExecutionPlan.root.dependents.get(0).dependents.size());
 
@@ -413,8 +416,9 @@ public class TpchExecutionPlanTest {
     RelationStandardizer gen = new RelationStandardizer(staticMetaData);
     relation = gen.standardize((SelectQuery) relation);
 
-    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(new JdbcConnection(conn, new H2Syntax()),
-        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
+//    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(new JdbcConnection(conn, new H2Syntax()),
+//        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
+    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(meta, (SelectQuery) relation, "verdictdb_temp");
     queryExecutionPlan.cleanUp();
     assertEquals(1, queryExecutionPlan.root.dependents.get(0).dependents.size());
 
@@ -448,13 +452,13 @@ public class TpchExecutionPlanTest {
         new BaseColumn("vt3", "l_receiptdate")
     )));
     SelectQuery rewritten = SelectQuery.create(
-        Arrays.<SelectItem>asList(new AsteriskColumn()), new BaseTable("placeholderSchemaName", "placeholderTableName", "filterPlaceholder0"));
+        Arrays.<SelectItem>asList(new AsteriskColumn()), new BaseTable("placeholderSchemaName", "placeholderTableName", "verdictdbtemptable_0"));
     expected.addFilterByAnd(new ColumnOp("exists", SubqueryColumn.getSubqueryColumn(rewritten)));
     expected.addGroupby(new AliasReference("vc2"));
     expected.addOrderby(new OrderbyAttribute("vc2"));
     expected.addLimit(ConstantColumn.valueOf(1));
-    assertEquals(expected, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.getDependents().get(0)).selectQuery);
-    assertEquals(subquery, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0)).selectQuery);
+    assertEquals(expected, ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.getDependent(0)).getSelectQuery());
+    assertEquals(subquery, ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.getDependent(0).getDependent(0)).getSelectQuery());
   }
 
   @Test
@@ -490,8 +494,9 @@ public class TpchExecutionPlanTest {
     RelationStandardizer gen = new RelationStandardizer(staticMetaData);
     relation = gen.standardize((SelectQuery) relation);
 
-    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(new JdbcConnection(conn, new H2Syntax()),
-        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
+//    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(new JdbcConnection(conn, new H2Syntax()),
+//        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
+    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(meta, (SelectQuery) relation, "verdictdb_temp");
     queryExecutionPlan.cleanUp();
     assertEquals(0, queryExecutionPlan.root.dependents.get(0).dependents.size());
 
@@ -578,8 +583,9 @@ public class TpchExecutionPlanTest {
     RelationStandardizer gen = new RelationStandardizer(staticMetaData);
     relation = gen.standardize((SelectQuery) relation);
 
-    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(new JdbcConnection(conn, new H2Syntax()),
-        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
+//    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(new JdbcConnection(conn, new H2Syntax()),
+//        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
+    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(meta, (SelectQuery) relation, "verdictdb_temp");
     queryExecutionPlan.cleanUp();
     assertEquals(0, queryExecutionPlan.root.dependents.get(0).dependents.size());
 
@@ -668,8 +674,9 @@ public class TpchExecutionPlanTest {
     RelationStandardizer gen = new RelationStandardizer(staticMetaData);
     relation = gen.standardize((SelectQuery) relation);
 
-    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(new JdbcConnection(conn, new H2Syntax()),
-        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
+//    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(new JdbcConnection(conn, new H2Syntax()),
+//        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
+    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(meta, (SelectQuery) relation, "verdictdb_temp");
     queryExecutionPlan.cleanUp();
     assertEquals(1, queryExecutionPlan.root.dependents.get(0).dependents.size());
     assertEquals(0, queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.size());
@@ -809,8 +816,9 @@ public class TpchExecutionPlanTest {
     RelationStandardizer gen = new RelationStandardizer(staticMetaData);
     relation = gen.standardize((SelectQuery) relation);
 
-    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(new JdbcConnection(conn, new H2Syntax()),
-        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
+//    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(new JdbcConnection(conn, new H2Syntax()),
+//        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
+    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(meta, (SelectQuery) relation, "verdictdb_temp");
     queryExecutionPlan.cleanUp();
     assertEquals(1, queryExecutionPlan.root.dependents.get(0).dependents.size());
 
@@ -938,8 +946,9 @@ public class TpchExecutionPlanTest {
     RelationStandardizer gen = new RelationStandardizer(staticMetaData);
     relation = gen.standardize((SelectQuery) relation);
 
-    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(new JdbcConnection(conn, new H2Syntax()),
-        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
+//    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(new JdbcConnection(conn, new H2Syntax()),
+//        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
+    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(meta, (SelectQuery) relation, "verdictdb_temp");
     queryExecutionPlan.cleanUp();
     assertEquals(1, queryExecutionPlan.root.dependents.get(0).dependents.size());
 
@@ -1052,8 +1061,9 @@ public class TpchExecutionPlanTest {
     RelationStandardizer gen = new RelationStandardizer(staticMetaData);
     relation = gen.standardize((SelectQuery) relation);
 
-    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(new JdbcConnection(conn, new H2Syntax()),
-        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
+//    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(new JdbcConnection(conn, new H2Syntax()),
+//        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
+    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(meta, (SelectQuery) relation, "verdictdb_temp");
     queryExecutionPlan.cleanUp();
     assertEquals(0, queryExecutionPlan.root.dependents.get(0).dependents.size());
 
@@ -1157,8 +1167,9 @@ public class TpchExecutionPlanTest {
     RelationStandardizer gen = new RelationStandardizer(staticMetaData);
     relation = gen.standardize((SelectQuery) relation);
 
-    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(new JdbcConnection(conn, new H2Syntax()),
-        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
+//    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(new JdbcConnection(conn, new H2Syntax()),
+//        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
+    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(meta, (SelectQuery) relation, "verdictdb_temp");
     queryExecutionPlan.cleanUp();
     assertEquals(0, queryExecutionPlan.root.dependents.get(0).dependents.size());
 
@@ -1247,8 +1258,9 @@ public class TpchExecutionPlanTest {
     RelationStandardizer gen = new RelationStandardizer(staticMetaData);
     relation = gen.standardize((SelectQuery) relation);
 
-    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(new JdbcConnection(conn, new H2Syntax()),
-        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
+//    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(new JdbcConnection(conn, new H2Syntax()),
+//        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
+    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(meta, (SelectQuery) relation, "verdictdb_temp");
     queryExecutionPlan.cleanUp();
     assertEquals(0, queryExecutionPlan.root.dependents.get(0).dependents.size());
 
@@ -1298,8 +1310,9 @@ public class TpchExecutionPlanTest {
     RelationStandardizer gen = new RelationStandardizer(staticMetaData);
     relation = gen.standardize((SelectQuery) relation);
 
-    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(new JdbcConnection(conn, new H2Syntax()),
-        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
+//    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(new JdbcConnection(conn, new H2Syntax()),
+//        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
+    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(meta, (SelectQuery) relation, "verdictdb_temp");
     queryExecutionPlan.cleanUp();
     assertEquals(0, queryExecutionPlan.root.dependents.get(0).dependents.size());
 
@@ -1388,8 +1401,9 @@ public class TpchExecutionPlanTest {
     RelationStandardizer gen = new RelationStandardizer(staticMetaData);
     relation = gen.standardize((SelectQuery) relation);
 
-    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(new JdbcConnection(conn, new H2Syntax()),
-        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
+//    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(new JdbcConnection(conn, new H2Syntax()),
+//        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
+    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(meta, (SelectQuery) relation, "verdictdb_temp");
     queryExecutionPlan.cleanUp();
     assertEquals(2, queryExecutionPlan.root.dependents.get(0).dependents.size());
 
@@ -1475,8 +1489,9 @@ public class TpchExecutionPlanTest {
     RelationStandardizer gen = new RelationStandardizer(staticMetaData);
     relation = gen.standardize((SelectQuery) relation);
 
-    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(new JdbcConnection(conn, new H2Syntax()),
-        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
+//    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(new JdbcConnection(conn, new H2Syntax()),
+//        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
+    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(meta, (SelectQuery) relation, "verdictdb_temp");
     queryExecutionPlan.cleanUp();
 
     assertEquals(1, queryExecutionPlan.root.dependents.get(0).dependents.size());
@@ -1554,8 +1569,9 @@ public class TpchExecutionPlanTest {
     AbstractRelation relation = sqlToRelation.toRelation(sql);
     RelationStandardizer gen = new RelationStandardizer(staticMetaData);
     relation = gen.standardize((SelectQuery) relation);
-    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(new JdbcConnection(conn, new H2Syntax()),
-        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
+//    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(new JdbcConnection(conn, new H2Syntax()),
+//        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
+    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(meta, (SelectQuery) relation, "verdictdb_temp");
     queryExecutionPlan.cleanUp();
     assertEquals(1, queryExecutionPlan.root.dependents.get(0).dependents.size());
 
@@ -1619,8 +1635,9 @@ public class TpchExecutionPlanTest {
     AbstractRelation relation = sqlToRelation.toRelation(sql);
     RelationStandardizer gen = new RelationStandardizer(staticMetaData);
     relation = gen.standardize((SelectQuery) relation);
-    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(new JdbcConnection(conn, new H2Syntax()),
-        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
+//    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(new JdbcConnection(conn, new H2Syntax()),
+//        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
+    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(meta, (SelectQuery) relation, "verdictdb_temp");
     queryExecutionPlan.cleanUp();
     AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "vt1");
     AbstractRelation part = new BaseTable("tpch", "part", "vt2");
@@ -1827,8 +1844,9 @@ public class TpchExecutionPlanTest {
     AbstractRelation relation = sqlToRelation.toRelation(sql);
     RelationStandardizer gen = new RelationStandardizer(staticMetaData);
     relation = gen.standardize((SelectQuery) relation);
-    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(new JdbcConnection(conn, new H2Syntax()),
-        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
+//    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(new JdbcConnection(conn, new H2Syntax()),
+//        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
+    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(meta, (SelectQuery) relation, "verdictdb_temp");
     queryExecutionPlan.cleanUp();
     assertEquals(1, queryExecutionPlan.root.dependents.get(0).dependents.size());
     SelectQuery expected = SelectQuery.create(
@@ -1949,8 +1967,9 @@ public class TpchExecutionPlanTest {
     AbstractRelation relation = sqlToRelation.toRelation(sql);
     RelationStandardizer gen = new RelationStandardizer(staticMetaData);
     relation = gen.standardize((SelectQuery) relation);
-    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(new JdbcConnection(conn, new H2Syntax()),
-        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
+//    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(new JdbcConnection(conn, new H2Syntax()),
+//        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
+    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(meta, (SelectQuery) relation, "verdictdb_temp");
     queryExecutionPlan.cleanUp();
 
     assertEquals(1, queryExecutionPlan.root.dependents.get(0).dependents.size());
@@ -2049,8 +2068,9 @@ public class TpchExecutionPlanTest {
     AbstractRelation relation = sqlToRelation.toRelation(sql);
     RelationStandardizer gen = new RelationStandardizer(staticMetaData);
     relation = gen.standardize((SelectQuery) relation);
-    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(new JdbcConnection(conn, new H2Syntax()),
-        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
+//    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(new JdbcConnection(conn, new H2Syntax()),
+//        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
+    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(meta, (SelectQuery) relation, "verdictdb_temp");
     queryExecutionPlan.cleanUp();
 
     assertEquals(1, queryExecutionPlan.root.dependents.get(0).dependents.size());
@@ -2096,8 +2116,9 @@ public class TpchExecutionPlanTest {
     AbstractRelation relation = sqlToRelation.toRelation(sql);
     RelationStandardizer gen = new RelationStandardizer(staticMetaData);
     relation = gen.standardize((SelectQuery) relation);
-    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(new JdbcConnection(conn, new H2Syntax()),
-        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
+//    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(new JdbcConnection(conn, new H2Syntax()),
+//        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
+    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(meta, (SelectQuery) relation, "verdictdb_temp");
     queryExecutionPlan.cleanUp();
     SelectQuery rewritten = SelectQuery.create(
         Arrays.<SelectItem>asList(new AliasedColumn(new BaseColumn(placeholderSchemaName, "filterPlaceholder0", "quantity_avg"), "quantity_avg")),

@@ -61,7 +61,7 @@ public class ProjectionExecutionNodeTest {
         new BaseColumn("t", "value"),
         new SubqueryColumn(subquery)
     )));
-    ProjectionExecutionNode node = ProjectionExecutionNode.create(query, "newschema");
+    ProjectionExecutionNode node = ProjectionExecutionNode.create(new QueryExecutionPlan("newschema"), query);
 
     assertEquals(1, node.dependents.size());
     SelectQuery rewritten = SelectQuery.create(
@@ -88,7 +88,7 @@ public class ProjectionExecutionNodeTest {
         new BaseColumn("t", "value"),
         new SubqueryColumn(subquery)
     )));
-    ProjectionExecutionNode node = ProjectionExecutionNode.create(query, "newschema");
+    ProjectionExecutionNode node = ProjectionExecutionNode.create(new QueryExecutionPlan("newschema"), query);
     node.print();
 
 //    ExecutionInfoToken subqueryToken = new ExecutionInfoToken();

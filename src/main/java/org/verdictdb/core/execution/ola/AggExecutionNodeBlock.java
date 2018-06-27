@@ -30,13 +30,16 @@ import org.verdictdb.exception.VerdictDBValueException;
  */
 public class AggExecutionNodeBlock {
   
+  QueryExecutionPlan plan;
+  
   QueryExecutionNode blockRoot;
   
   List<QueryExecutionNode> blockNodes;
   
 //  List<QueryExecutionNode> scrambledNodes;    // nodes including scrambled tables
 
-  public AggExecutionNodeBlock(QueryExecutionNode blockRoot) {
+  public AggExecutionNodeBlock(QueryExecutionPlan plan, QueryExecutionNode blockRoot) {
+    this.plan = plan;
     this.blockRoot = blockRoot;
     this.blockNodes = getNodesInBlock(blockRoot);
 //    this.scrambledNodes = identifyScrambledNodes(blockNodes);
@@ -97,9 +100,10 @@ public class AggExecutionNodeBlock {
    * of partitions)
    * @throws VerdictDBValueException 
    */
-  public QueryExecutionNode convertToProgressiveAgg (String scratchpadSchemaName, ScrambleMeta scrambleMeta) throws VerdictDBValueException {
+  public QueryExecutionNode convertToProgressiveAgg () throws VerdictDBValueException {
     List<QueryExecutionNode> individualAggNodes = new ArrayList<>();
     List<QueryExecutionNode> combiners = new ArrayList<>();
+    ScrambleMeta scrambleMeta = plan.getScrambleMeta();
     
     // first, plan how to perform block aggregation
     // filtering predicates inserted into different scrambled tables are identified.
@@ -147,14 +151,14 @@ public class AggExecutionNodeBlock {
     // third, stack combiners
     for (int i = 0; i < aggMeta.totalBlockAggCount()-1; i++) {
       AggCombinerExecutionNode combiner = AggCombinerExecutionNode.create(
-          scratchpadSchemaName,
+          plan,
           individualAggNodes.get(0), 
           individualAggNodes.get(1));
       combiners.add(combiner);
     }
     
     // fourth, re-link the listening queue for the new AsyncAggNode
-    QueryExecutionNode newRoot = AsyncAggExecutionNode.create(scratchpadSchemaName, individualAggNodes, combiners);
+    QueryExecutionNode newRoot = AsyncAggExecutionNode.create(plan, individualAggNodes, combiners);
     List<ExecutionTokenQueue> broadcastingQueue = blockRoot.getBroadcastingQueues();
     for (ExecutionTokenQueue queue : broadcastingQueue) {
       newRoot.addBroadcastingQueue(queue);
@@ -267,7 +271,7 @@ public class AggExecutionNodeBlock {
     
     // compose the return value
     int rootIdx = blockNodes.indexOf(blockRoot);
-    return new AggExecutionNodeBlock(newNodes.get(rootIdx));
+    return new AggExecutionNodeBlock(plan, newNodes.get(rootIdx));
   }
 
 }

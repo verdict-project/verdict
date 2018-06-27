@@ -62,7 +62,8 @@ public class SelectAllExecutionNodeTest {
         new BaseColumn("t", "value"),
         new SubqueryColumn(subquery)
     )));
-    SelectAllExecutionNode node = SelectAllExecutionNode.create(query, newSchema);
+    QueryExecutionPlan plan = new QueryExecutionPlan(newSchema);
+    SelectAllExecutionNode node = SelectAllExecutionNode.create(plan, query);
 
     assertEquals(1, node.dependents.size());
     assertEquals(1, node.dependents.get(0).dependents.size());
@@ -90,7 +91,8 @@ public class SelectAllExecutionNodeTest {
         new SubqueryColumn(subquery)
     )));
 
-    SelectAllExecutionNode node = SelectAllExecutionNode.create(query, newSchema);
+    QueryExecutionPlan plan = new QueryExecutionPlan(newSchema);
+    SelectAllExecutionNode node = SelectAllExecutionNode.create(plan, query);
 //    conn.executeUpdate(String.format("create table \"%s\".\"%s\"", newSchema, ((ProjectionExecutionNode)node.dependents.get(0)).newTableName));
 //    ExecutionInfoToken subqueryToken = new ExecutionInfoToken();
 //    subqueryToken.setKeyValue("schemaName", ((ProjectionExecutionNode)node.dependents.get(0)).newTableSchemaName);

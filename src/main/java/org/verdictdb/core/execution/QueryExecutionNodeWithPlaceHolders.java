@@ -14,12 +14,12 @@ public abstract class QueryExecutionNodeWithPlaceHolders extends QueryExecutionN
   
   List<BaseTable> placeholderTables = new ArrayList<>();
   
-  public QueryExecutionNodeWithPlaceHolders() {
-    super();
+  public QueryExecutionNodeWithPlaceHolders(QueryExecutionPlan plan) {
+    super(plan);
   }
 
-  public QueryExecutionNodeWithPlaceHolders(SelectQuery query) {
-    super(query);
+  public QueryExecutionNodeWithPlaceHolders(QueryExecutionPlan plan, SelectQuery query) {
+    super(plan, query);
   }
   
   public Pair<BaseTable, ExecutionTokenQueue> createPlaceHolderTable(String aliasName) {

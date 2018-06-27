@@ -8,12 +8,12 @@ import org.verdictdb.exception.VerdictDBException;
 
 public class AggExecutionNode extends CreateTableAsSelectExecutionNode {
 
-  protected AggExecutionNode(String scratchpadSchemaName) {
-    super(scratchpadSchemaName);
+  protected AggExecutionNode(QueryExecutionPlan plan) {
+    super(plan);
   }
   
-  public static AggExecutionNode create(SelectQuery query, String scratchpadSchemaName) {
-    AggExecutionNode node = new AggExecutionNode(scratchpadSchemaName);
+  public static AggExecutionNode create(QueryExecutionPlan plan, SelectQuery query) {
+    AggExecutionNode node = new AggExecutionNode(plan);
     SubqueriesToDependentNodes.convertSubqueriesToDependentNodes(query, node);
     node.setSelectQuery(query);
     
@@ -32,7 +32,7 @@ public class AggExecutionNode extends CreateTableAsSelectExecutionNode {
 
   @Override
   public QueryExecutionNode deepcopy() {
-    AggExecutionNode node = new AggExecutionNode(scratchpadSchemaName);
+    AggExecutionNode node = new AggExecutionNode(plan);
     copyFields(this, node);
     return node;
   }

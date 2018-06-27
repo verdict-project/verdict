@@ -19,6 +19,7 @@ import org.verdictdb.core.query.SelectItem;
 import org.verdictdb.core.query.SelectQuery;
 import org.verdictdb.core.rewriter.ScrambleMeta;
 import org.verdictdb.core.scramble.Scrambler;
+import org.verdictdb.exception.VerdictDBException;
 
 public class QueryExecutionNodeTest {
   
@@ -45,7 +46,7 @@ public class QueryExecutionNodeTest {
     String schemaName = "newschema";
     String tableName = "newtable";
     ScrambleMeta scrambleMeta = generateTestScrambleMeta();
-    QueryExecutionNode node = AggExecutionNode.create(query, "newschema");
+    QueryExecutionNode node = AggExecutionNode.create(new QueryExecutionPlan("newschema"), query);
     assertTrue(node.doesContainScrambledTablesInDescendants(scrambleMeta));
   }
   
@@ -67,7 +68,7 @@ public class QueryExecutionNodeTest {
     String schemaName = "newschema";
     String tableName = "newtable";
     ScrambleMeta scrambleMeta = generateTestScrambleMeta();
-    QueryExecutionNode node = AggExecutionNode.create(query, "newschema");
+    QueryExecutionNode node = AggExecutionNode.create(new QueryExecutionPlan("newschema"), query);
     assertFalse(node.doesContainScrambledTablesInDescendants(scrambleMeta));
   }
   
