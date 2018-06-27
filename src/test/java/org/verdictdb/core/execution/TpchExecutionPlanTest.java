@@ -2012,11 +2012,11 @@ public class TpchExecutionPlanTest {
     String sql = "select\n" +
         "\tcntrycode,\n" +
         "\tcount(1) as numcust,\n" +
-        "\tsum(c_acctbal) as totacctbal\n" +
+        "\tsum(acctbal) as totacctbal\n" +
         "from (\n" +
         "\tselect\n" +
         "\t\tcntrycode,\n" +
-        "\t\tc_acctbal,\n" +
+        "\t\tacctbal,\n" +
         "\t\tavg_acctbal\n" +
         "\tfrom\n" +
         "\t\t(select\n" +
@@ -2040,7 +2040,7 @@ public class TpchExecutionPlanTest {
         "\tc_acctbal > 0.00) as ct1 join (\n" +
         "\t\t\tselect\n" +
         "\t\t\t\tcntrycode,\n" +
-        "\t\t\t\tc_acctbal\n" +
+        "\t\t\t\tc_acctbal as acctbal\n" +
         "\t\t\tfrom\n" +
         "\t\t\t\t(select\n" +
         "\to_custkey\n" +
@@ -2065,7 +2065,7 @@ public class TpchExecutionPlanTest {
         "\t\t\t\ton ct.c_custkey = ot.o_custkey\n" +
         "\t\t\twhere\n" +
         "\t\t\t\to_custkey is null\n" +
-        "\t\t) as ct2 on ct2.o_custkey is null\n" +
+        "\t\t) as ct2 on ct1.avg_acctbal > 0\n" +
         ") a\n" +
         "where\n" +
         "\tc_acctbal > avg_acctbal\n" +
@@ -2094,9 +2094,9 @@ public class TpchExecutionPlanTest {
         new BaseTable(placeholderSchemaName, placeholderTableName, "ct2")),
         Arrays.<JoinTable.JoinType>asList(JoinTable.JoinType.inner),
         Arrays.<UnnamedColumn>asList(
-            new ColumnOp("is", Arrays.<UnnamedColumn>asList(
-                new BaseColumn("ct2", "o_custkey"),
-                ConstantColumn.valueOf("NULL")
+            new ColumnOp("greater", Arrays.<UnnamedColumn>asList(
+                new BaseColumn("ct1", "avg_acctbal"),
+                ConstantColumn.valueOf(0)
             ))
         ));
     assertEquals(join, ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.dependents.get(0).dependents.get(0)).getSelectQuery().getFromList().get(0));
@@ -2160,8 +2160,8 @@ public class TpchExecutionPlanTest {
     AbstractRelation relation = sqlToRelation.toRelation(sql);
     RelationStandardizer gen = new RelationStandardizer(staticMetaData);
     relation = gen.standardize((SelectQuery) relation);
-    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(new JdbcConnection(conn, new H2Syntax()),
-        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
+    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
+    queryExecutionPlan.cleanUp();
 
     String alias = ((CreateTableAsSelectExecutionNode) (queryExecutionPlan.root.dependents.get(0))).getPlaceholderTables().get(0).getAliasName().get();
     SelectQuery rewritten = SelectQuery.create(
@@ -2188,8 +2188,8 @@ public class TpchExecutionPlanTest {
     AbstractRelation relation = sqlToRelation.toRelation(sql);
     RelationStandardizer gen = new RelationStandardizer(staticMetaData);
     relation = gen.standardize((SelectQuery) relation);
-    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(new JdbcConnection(conn, new H2Syntax()),
-        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
+    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
+    queryExecutionPlan.cleanUp();
 
     String alias = ((CreateTableAsSelectExecutionNode) (queryExecutionPlan.root.dependents.get(0))).getPlaceholderTables().get(0).getAliasName().get();
     SelectQuery rewritten = SelectQuery.create(
@@ -2216,8 +2216,8 @@ public class TpchExecutionPlanTest {
     AbstractRelation relation = sqlToRelation.toRelation(sql);
     RelationStandardizer gen = new RelationStandardizer(staticMetaData);
     relation = gen.standardize((SelectQuery) relation);
-    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(new JdbcConnection(conn, new H2Syntax()),
-        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
+    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
+    queryExecutionPlan.cleanUp();
 
     String alias = ((CreateTableAsSelectExecutionNode) (queryExecutionPlan.root.dependents.get(0))).getPlaceholderTables().get(0).getAliasName().get();
     SelectQuery rewritten1 = SelectQuery.create(
