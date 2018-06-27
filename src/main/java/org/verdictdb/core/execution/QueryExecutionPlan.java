@@ -43,14 +43,20 @@ public class QueryExecutionPlan {
 //    this(conn, syntax, (SelectQueryOp) new NonValidatingSQLParser().toRelation(queryString));
 //  }
   
-  static final int serialNum = ThreadLocalRandom.current().nextInt(0, 1000000);
+  final int serialNum = ThreadLocalRandom.current().nextInt(0, 1000000);
   
-  static int identifierNum = 0;
+  int identifierNum = 0;
 
-  static int tempTableNameNum = 0;
+  int tempTableNameNum = 0;
   
   public QueryExecutionPlan(String scratchpadSchemaName) {
     this.scratchpadSchemaName = scratchpadSchemaName;
+    this.scrambleMeta = new ScrambleMeta();
+  }
+  
+  public QueryExecutionPlan(String scratchpadSchemaName, ScrambleMeta scrambleMeta) {
+    this.scratchpadSchemaName = scratchpadSchemaName;
+    this.scrambleMeta = scrambleMeta;
   }
 
   /**
@@ -60,9 +66,9 @@ public class QueryExecutionPlan {
    * @throws VerdictDBException 
    */
   public QueryExecutionPlan(
+      String scratchpadSchemaName,
       ScrambleMeta scrambleMeta,
-      SelectQuery query,
-      String scratchpadSchemaName) throws VerdictDBException {
+      SelectQuery query) throws VerdictDBException {
     this(scratchpadSchemaName);
     setScrambleMeta(scrambleMeta);
     setSelectQuery(query);
@@ -175,6 +181,6 @@ public class QueryExecutionPlan {
   void cleanUp() {
     tempTableNameNum = 0;
   }
-  static void resetTempTableNameNum() {tempTableNameNum = 0;}
+//  static void resetTempTableNameNum() {tempTableNameNum = 0;}
 
 }
