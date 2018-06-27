@@ -65,7 +65,7 @@ public class AggExecutionNodeTest {
     QueryExecutionPlan plan = new QueryExecutionPlan("newschema");
     AggExecutionNode node = AggExecutionNode.create(plan, query);
     String aliasName = String.format("verdictdbalias_%d_0", plan.getSerialNumber());
-    
+
     assertEquals(1, node.dependents.size());
     SelectQuery rewritten = SelectQuery.create(
         Arrays.<SelectItem>asList(

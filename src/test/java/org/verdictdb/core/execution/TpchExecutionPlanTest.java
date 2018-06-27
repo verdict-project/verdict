@@ -27,7 +27,7 @@ import static java.sql.Types.BIGINT;
 import static org.junit.Assert.assertEquals;
 
 public class TpchExecutionPlanTest {
-  
+
   static Connection conn;
 
   static Statement stmt;
@@ -63,7 +63,7 @@ public class TpchExecutionPlanTest {
         "                            \"r_comment\"    VARCHAR(152), " +
         "                            \"r_dummy\" varchar(10))");
     stmt.execute("CREATE TABLE  IF NOT EXISTS \"tpch\".\"part\"  ( \"p_partkey\"     INT, " +
-        "                          \"p_name \"       VARCHAR(55), " +
+        "                          \"p_name\"       VARCHAR(55), " +
         "                          \"p_mfgr\"        CHAR(25), " +
         "                          \"p_brand\"       CHAR(10), " +
         "                          \"p_type\"        VARCHAR(25), " +
@@ -99,7 +99,7 @@ public class TpchExecutionPlanTest {
         "                           \"o_custkey\"        INT , " +
         "                           \"o_orderstatus\"    CHAR(1) , " +
         "                           \"o_totalprice\"     DECIMAL(15,2) , " +
-        "                           \"o_orderDATE\"      DATE , " +
+        "                           \"o_orderdate\"      DATE , " +
         "                           \"o_orderpriority\"  CHAR(15) , " +
         "                           \"o_clerk\"          CHAR(15) , " +
         "                           \"o_shippriority\"   INT , " +
@@ -188,7 +188,7 @@ public class TpchExecutionPlanTest {
     ));
     staticMetaData.addTableData(new StaticMetaData.TableInfo("tpch", "customer"), arr);
     arr = new ArrayList<>();
-    arr.addAll( Arrays.asList(new ImmutablePair<>("o_orderkey", BIGINT),
+    arr.addAll(Arrays.asList(new ImmutablePair<>("o_orderkey", BIGINT),
         new ImmutablePair<>("o_custkey", BIGINT),
         new ImmutablePair<>("o_orderstatus", BIGINT),
         new ImmutablePair<>("o_totalprice", BIGINT),
@@ -200,7 +200,7 @@ public class TpchExecutionPlanTest {
     ));
     staticMetaData.addTableData(new StaticMetaData.TableInfo("tpch", "orders"), arr);
     arr = new ArrayList<>();
-    arr.addAll( Arrays.asList(new ImmutablePair<>("l_orderkey", BIGINT),
+    arr.addAll(Arrays.asList(new ImmutablePair<>("l_orderkey", BIGINT),
         new ImmutablePair<>("l_partkey", BIGINT),
         new ImmutablePair<>("l_suppkey", BIGINT),
         new ImmutablePair<>("l_linenumber", BIGINT),
@@ -237,7 +237,7 @@ public class TpchExecutionPlanTest {
         "from " +
         " lineitem " +
         "where " +
-        " l_shipdate <= date '1998-12-01' - interval ':1' day " +
+        " l_shipdate <= date '1998-12-01'" +
         "group by " +
         " l_returnflag, " +
         " l_linestatus " +
@@ -272,10 +272,7 @@ public class TpchExecutionPlanTest {
         new ColumnOp("add", operand3));
     List<UnnamedColumn> operand5 = Arrays.<UnnamedColumn>asList(
         new BaseColumn("vt1", "l_shipdate"),
-        new ColumnOp("subtract", Arrays.<UnnamedColumn>asList(
-            new ColumnOp("date", ConstantColumn.valueOf("'1998-12-01'")),
-            new ColumnOp("interval", Arrays.<UnnamedColumn>asList(ConstantColumn.valueOf("':1'"), ConstantColumn.valueOf("day")))
-        )));
+        new ColumnOp("date", ConstantColumn.valueOf("'1998-12-01'")));
     SelectQuery expected = SelectQuery.create(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("vt1", "l_returnflag"), "vc2"),
@@ -295,7 +292,11 @@ public class TpchExecutionPlanTest {
     expected.addOrderby(Arrays.<OrderbyAttribute>asList(new OrderbyAttribute("vc2"),
         new OrderbyAttribute("vc3")));
     expected.addLimit(ConstantColumn.valueOf(1));
-    assertEquals(expected, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.getDependents().get(0)).selectQuery);
+    assertEquals(expected, ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.getDependents().get(0)).selectQuery);
+
+    stmt.execute("create schema if not exists \"verdictdb_temp\";");
+    queryExecutionPlan.root.execute(new JdbcConnection(conn, new H2Syntax()));
+    stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
   @Test
@@ -311,11 +312,11 @@ public class TpchExecutionPlanTest {
         "orders, " +
         "lineitem " +
         "where " +
-        "c_mktsegment = ':1' " +
+        "c_mktsegment = '123' " +
         "and c_custkey = o_custkey " +
         "and l_orderkey = o_orderkey " +
-        "and o_orderdate < date ':2' " +
-        "and l_shipdate > date ':2' " +
+        "and o_orderdate < date '1998-12-01' " +
+        "and l_shipdate > date '1998-12-01' " +
         "group by " +
         "l_orderkey, " +
         "o_orderdate, " +
@@ -355,7 +356,7 @@ public class TpchExecutionPlanTest {
         Arrays.asList(customer, orders, lineitem));
     expected.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
         new BaseColumn("vt1", "c_mktsegment"),
-        ConstantColumn.valueOf("':1'")
+        ConstantColumn.valueOf("'123'")
     )));
     expected.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
         new BaseColumn("vt1", "c_custkey"),
@@ -367,11 +368,11 @@ public class TpchExecutionPlanTest {
     )));
     expected.addFilterByAnd(new ColumnOp("less", Arrays.<UnnamedColumn>asList(
         new BaseColumn("vt2", "o_orderdate"),
-        new ColumnOp("date", ConstantColumn.valueOf("':2'"))
+        new ColumnOp("date", ConstantColumn.valueOf("'1998-12-01'"))
     )));
     expected.addFilterByAnd(new ColumnOp("greater", Arrays.<UnnamedColumn>asList(
         new BaseColumn("vt3", "l_shipdate"),
-        new ColumnOp("date", ConstantColumn.valueOf("':2'"))
+        new ColumnOp("date", ConstantColumn.valueOf("'1998-12-01'"))
     )));
     expected.addGroupby(Arrays.<GroupingAttribute>asList(
         new AliasReference("vc4"),
@@ -383,7 +384,11 @@ public class TpchExecutionPlanTest {
         new OrderbyAttribute("vc5")
     ));
     expected.addLimit(ConstantColumn.valueOf(10));
-    assertEquals(expected, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).selectQuery);
+    assertEquals(expected, ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.dependents.get(0)).selectQuery);
+
+    stmt.execute("create schema if not exists \"verdictdb_temp\";");
+    queryExecutionPlan.root.execute(new JdbcConnection(conn, new H2Syntax()));
+    stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
   @Test
@@ -393,19 +398,11 @@ public class TpchExecutionPlanTest {
         "o_orderpriority, " +
         "count(*) as order_count " +
         "from " +
-        "orders " +
+        "orders join lineitem on l_orderkey = o_orderkey " +
         "where " +
-        "o_orderdate >= date ':1' " +
-        "and o_orderdate < date ':1' + interval '3' month " +
-        "and exists ( " +
-        "select " +
-        "* " +
-        "from " +
-        "lineitem " +
-        "where " +
-        "l_orderkey = o_orderkey " +
+        "o_orderdate >= date '1998-12-01' " +
+        "and o_orderdate < date '1998-12-01'" +
         "and l_commitdate < l_receiptdate " +
-        ") " +
         "group by " +
         "o_orderpriority " +
         "order by " +
@@ -420,50 +417,21 @@ public class TpchExecutionPlanTest {
 //        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
-    assertEquals(1, queryExecutionPlan.root.dependents.get(0).dependents.size());
+    assertEquals(0, queryExecutionPlan.root.dependents.get(0).dependents.size());
 
     AbstractRelation orders = new BaseTable("tpch", "orders", "vt1");
     SelectQuery expected = SelectQuery.create(
         Arrays.<SelectItem>asList(
-            new AliasedColumn(new BaseColumn("vt1", "o_orderpriority"), "vc2"),
+            new AliasedColumn(new BaseColumn("vt1", "o_orderpriority"), "vc3"),
             new AliasedColumn(new ColumnOp("count", new AsteriskColumn()), "order_count")
         ),
         orders);
-    expected.addFilterByAnd(new ColumnOp("greaterequal", Arrays.<UnnamedColumn>asList(
-        new BaseColumn("vt1", "o_orderdate"),
-        new ColumnOp("date", ConstantColumn.valueOf("':1'"))
-    )));
-    expected.addFilterByAnd(new ColumnOp("less", Arrays.<UnnamedColumn>asList(
-        new BaseColumn("vt1", "o_orderdate"),
-        new ColumnOp("add", Arrays.<UnnamedColumn>asList(
-            new ColumnOp("date", ConstantColumn.valueOf("':1'")),
-            new ColumnOp("interval", Arrays.<UnnamedColumn>asList(ConstantColumn.valueOf("'3'"), ConstantColumn.valueOf("month")))
-        ))
-    )));
-    SelectQuery subquery = SelectQuery.create(
-        Arrays.<SelectItem>asList(new AsteriskColumn()),
-        new BaseTable("tpch", "lineitem", "vt3"));
-    subquery.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-        new BaseColumn("vt3", "l_orderkey"),
-        new BaseColumn("vt1", "o_orderkey")
-    )));
-    subquery.addFilterByAnd(new ColumnOp("less", Arrays.<UnnamedColumn>asList(
-        new BaseColumn("vt3", "l_commitdate"),
-        new BaseColumn("vt3", "l_receiptdate")
-    )));
-    
-    String aliasName = String.format("verdictdbalias_%d_0", queryExecutionPlan.getSerialNumber());
-    SelectQuery rewritten = SelectQuery.create(
-        Arrays.<SelectItem>asList(
-            new AsteriskColumn()), 
-        new BaseTable("placeholderSchemaName", "placeholderTableName", aliasName));
-    expected.addFilterByAnd(new ColumnOp("exists", SubqueryColumn.getSubqueryColumn(rewritten)));
-    expected.addGroupby(new AliasReference("vc2"));
-    expected.addOrderby(new OrderbyAttribute("vc2"));
-    expected.addLimit(ConstantColumn.valueOf(1));
-    
-    assertEquals(expected, ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.getDependent(0)).getSelectQuery());
-    assertEquals(subquery, ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.getDependent(0).getDependent(0)).getSelectQuery());
+
+    assertEquals(expected.getSelectList(), ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.getDependents().get(0)).selectQuery.getSelectList());
+
+    stmt.execute("create schema if not exists \"verdictdb_temp\";");
+    queryExecutionPlan.root.execute(new JdbcConnection(conn, new H2Syntax()));
+    stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
   @Test
@@ -486,9 +454,9 @@ public class TpchExecutionPlanTest {
         "and c_nationkey = s_nationkey " +
         "and s_nationkey = n_nationkey " +
         "and n_regionkey = r_regionkey " +
-        "and r_name = ':1' " +
-        "and o_orderdate >= date ':2' " +
-        "and o_orderdate < date ':2' + interval '1' year " +
+        "and r_name = '123' " +
+        "and o_orderdate >= date '1998-12-01' " +
+        "and o_orderdate < date '1998-12-01' " +
         "group by " +
         "n_name " +
         "order by " +
@@ -551,23 +519,24 @@ public class TpchExecutionPlanTest {
     )));
     expected.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
         new BaseColumn("vt6", "r_name"),
-        ConstantColumn.valueOf("':1'")
+        ConstantColumn.valueOf("'123'")
     )));
     expected.addFilterByAnd(new ColumnOp("greaterequal", Arrays.<UnnamedColumn>asList(
         new BaseColumn("vt2", "o_orderdate"),
-        new ColumnOp("date", ConstantColumn.valueOf("':2'"))
+        new ColumnOp("date", ConstantColumn.valueOf("'1998-12-01'"))
     )));
     expected.addFilterByAnd(new ColumnOp("less", Arrays.<UnnamedColumn>asList(
         new BaseColumn("vt2", "o_orderdate"),
-        new ColumnOp("add", Arrays.<UnnamedColumn>asList(
-            new ColumnOp("date", ConstantColumn.valueOf("':2'")),
-            new ColumnOp("interval", Arrays.<UnnamedColumn>asList(ConstantColumn.valueOf("'1'"), ConstantColumn.valueOf("year")))
-        ))
+        new ColumnOp("date", ConstantColumn.valueOf("'1998-12-01'"))
     )));
     expected.addGroupby(new AliasReference("vc7"));
     expected.addOrderby(new OrderbyAttribute("revenue", "desc"));
     expected.addLimit(ConstantColumn.valueOf(1));
-    assertEquals(expected, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).selectQuery);
+    assertEquals(expected, ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.dependents.get(0)).selectQuery);
+
+    stmt.execute("create schema if not exists \"verdictdb_temp\";");
+    queryExecutionPlan.root.execute(new JdbcConnection(conn, new H2Syntax()));
+    stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
   @Test
@@ -578,10 +547,10 @@ public class TpchExecutionPlanTest {
         "from " +
         "lineitem " +
         "where " +
-        "l_shipdate >= date ':1' " +
-        "and l_shipdate < date ':1' + interval '1' year " +
-        "and l_discount between ':2' - 0.01 and ':2' + 0.01 " +
-        "and l_quantity < ':3' " +
+        "l_shipdate >= date '1998-12-01' " +
+        "and l_shipdate < date '1998-12-01' " +
+        "and l_discount between 0.04 - 0.01 and 0.04 + 0.01 " +
+        "and l_quantity < 15 " +
         "LIMIT 1; ";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
@@ -606,29 +575,27 @@ public class TpchExecutionPlanTest {
         lineitem);
     expected.addFilterByAnd(new ColumnOp("greaterequal", Arrays.<UnnamedColumn>asList(
         new BaseColumn("vt1", "l_shipdate"),
-        new ColumnOp("date", ConstantColumn.valueOf("':1'"))
+        new ColumnOp("date", ConstantColumn.valueOf("'1998-12-01'"))
     )));
     expected.addFilterByAnd(new ColumnOp("less", Arrays.<UnnamedColumn>asList(
         new BaseColumn("vt1", "l_shipdate"),
-        new ColumnOp("add", Arrays.<UnnamedColumn>asList(
-            new ColumnOp("date", ConstantColumn.valueOf("':1'")),
-            new ColumnOp("interval", Arrays.<UnnamedColumn>asList(
-                ConstantColumn.valueOf("'1'"),
-                ConstantColumn.valueOf("year")
-            ))
-        ))
+        new ColumnOp("date", ConstantColumn.valueOf("'1998-12-01'"))
     )));
     expected.addFilterByAnd(new ColumnOp("between", Arrays.<UnnamedColumn>asList(
         new BaseColumn("vt1", "l_discount"),
-        new ColumnOp("subtract", Arrays.<UnnamedColumn>asList(ConstantColumn.valueOf("':2'"), ConstantColumn.valueOf("0.01"))),
-        new ColumnOp("add", Arrays.<UnnamedColumn>asList(ConstantColumn.valueOf("':2'"), ConstantColumn.valueOf("0.01")))
+        new ColumnOp("subtract", Arrays.<UnnamedColumn>asList(ConstantColumn.valueOf("0.04"), ConstantColumn.valueOf("0.01"))),
+        new ColumnOp("add", Arrays.<UnnamedColumn>asList(ConstantColumn.valueOf("0.04"), ConstantColumn.valueOf("0.01")))
     )));
     expected.addFilterByAnd(new ColumnOp("less", Arrays.<UnnamedColumn>asList(
         new BaseColumn("vt1", "l_quantity"),
-        ConstantColumn.valueOf("':3'"))
+        ConstantColumn.valueOf("15"))
     ));
     expected.addLimit(ConstantColumn.valueOf(1));
-    assertEquals(expected, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).selectQuery);
+    assertEquals(expected, ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.dependents.get(0)).selectQuery);
+
+    stmt.execute("create schema if not exists \"verdictdb_temp\";");
+    queryExecutionPlan.root.execute(new JdbcConnection(conn, new H2Syntax()));
+    stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
   @Test
@@ -771,8 +738,12 @@ public class TpchExecutionPlanTest {
         new OrderbyAttribute("vc7")
     ));
     expected.addLimit(ConstantColumn.valueOf(1));
-    assertEquals(expected, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).selectQuery);
-    assertEquals(subquery, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0)).selectQuery);
+    assertEquals(expected, ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.dependents.get(0)).selectQuery);
+    assertEquals(subquery, ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.dependents.get(0).dependents.get(0)).selectQuery);
+
+    stmt.execute("create schema if not exists \"verdictdb_temp\";");
+    queryExecutionPlan.root.execute(new JdbcConnection(conn, new H2Syntax()));
+    stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
   @Test
@@ -899,15 +870,19 @@ public class TpchExecutionPlanTest {
                     )), new BaseColumn("all_nations", "volume"),
                     ConstantColumn.valueOf(0)))), "numerator"),
 
-            new AliasedColumn(new ColumnOp("sum", new BaseColumn("all_nations", "volume")),"denominator")
+            new AliasedColumn(new ColumnOp("sum", new BaseColumn("all_nations", "volume")), "denominator")
 
         ),
         new BaseTable(placeholderSchemaName, placeholderTableName, "all_nations"));
     expected.addGroupby(new AliasReference("vc7"));
     expected.addOrderby(new OrderbyAttribute("vc7"));
     expected.addLimit(ConstantColumn.valueOf(1));
-    assertEquals(expected, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).selectQuery);
-    assertEquals(subquery, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0)).selectQuery);
+    assertEquals(expected, ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.dependents.get(0)).selectQuery);
+    assertEquals(subquery, ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.dependents.get(0).dependents.get(0)).selectQuery);
+
+    stmt.execute("create schema if not exists \"verdictdb_temp\";");
+    queryExecutionPlan.root.execute(new JdbcConnection(conn, new H2Syntax()));
+    stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
   @Test
@@ -1022,8 +997,12 @@ public class TpchExecutionPlanTest {
     expected.addOrderby(Arrays.<OrderbyAttribute>asList(new OrderbyAttribute("vc7"),
         new OrderbyAttribute("vc8", "desc")));
     expected.addLimit(ConstantColumn.valueOf(1));
-    assertEquals(expected, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).selectQuery);
-    assertEquals(subquery, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0)).selectQuery);
+    assertEquals(expected, ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.dependents.get(0)).selectQuery);
+    assertEquals(subquery, ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.dependents.get(0).dependents.get(0)).selectQuery);
+
+    stmt.execute("create schema if not exists \"verdictdb_temp\";");
+    queryExecutionPlan.root.execute(new JdbcConnection(conn, new H2Syntax()));
+    stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
   @Test
@@ -1046,8 +1025,8 @@ public class TpchExecutionPlanTest {
         "where " +
         "c_custkey = o_custkey " +
         "and l_orderkey = o_orderkey " +
-        "and o_orderdate >= date ':1' " +
-        "and o_orderdate < date ':1' + interval '3' month " +
+        "and o_orderdate >= date '2018-01-01' " +
+        "and o_orderdate < date '2018-01-01' " +
         "and l_returnflag = 'R' " +
         "and c_nationkey = n_nationkey " +
         "group by " +
@@ -1104,15 +1083,13 @@ public class TpchExecutionPlanTest {
     )));
     expected.addFilterByAnd(new ColumnOp("greaterequal", Arrays.<UnnamedColumn>asList(
         new BaseColumn("vt2", "o_orderdate"),
-        new ColumnOp("date", ConstantColumn.valueOf("':1'"))
+        new ColumnOp("date", ConstantColumn.valueOf("'2018-01-01'"))
     )));
     expected.addFilterByAnd(new ColumnOp("less", Arrays.<UnnamedColumn>asList(
         new BaseColumn("vt2", "o_orderdate"),
-        new ColumnOp("add", Arrays.<UnnamedColumn>asList(
-            new ColumnOp("date", ConstantColumn.valueOf("':1'")),
-            new ColumnOp("interval", Arrays.<UnnamedColumn>asList(ConstantColumn.valueOf("'3'"), ConstantColumn.valueOf("month")))
-        )
-        ))));
+        new ColumnOp("date", ConstantColumn.valueOf("'2018-01-01'"))
+
+        )));
     expected.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
         new BaseColumn("vt3", "l_returnflag"),
         ConstantColumn.valueOf("'R'")
@@ -1132,7 +1109,11 @@ public class TpchExecutionPlanTest {
     ));
     expected.addOrderby(new OrderbyAttribute("revenue", "desc"));
     expected.addLimit(ConstantColumn.valueOf(20));
-    assertEquals(expected, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).selectQuery);
+    assertEquals(expected, ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.dependents.get(0)).selectQuery);
+
+    stmt.execute("create schema if not exists \"verdictdb_temp\";");
+    queryExecutionPlan.root.execute(new JdbcConnection(conn, new H2Syntax()));
+    stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
   @Test
@@ -1160,8 +1141,8 @@ public class TpchExecutionPlanTest {
         "and l_shipmode in (':1', ':2') " +
         "and l_commitdate < l_receiptdate " +
         "and l_shipdate < l_commitdate " +
-        "and l_receiptdate >= date ':3' " +
-        "and l_receiptdate < date ':3' + interval '1' year " +
+        "and l_receiptdate >= date '2018-01-01' " +
+        "and l_receiptdate < date '2018-01-01' " +
         "group by " +
         "l_shipmode " +
         "order by " +
@@ -1231,19 +1212,20 @@ public class TpchExecutionPlanTest {
     )));
     expected.addFilterByAnd(new ColumnOp("greaterequal", Arrays.<UnnamedColumn>asList(
         new BaseColumn("vt2", "l_receiptdate"),
-        new ColumnOp("date", ConstantColumn.valueOf("':3'"))
+        new ColumnOp("date", ConstantColumn.valueOf("'2018-01-01'"))
     )));
     expected.addFilterByAnd(new ColumnOp("less", Arrays.<UnnamedColumn>asList(
         new BaseColumn("vt2", "l_receiptdate"),
-        new ColumnOp("add", Arrays.<UnnamedColumn>asList(
-            new ColumnOp("date", ConstantColumn.valueOf("':3'")),
-            new ColumnOp("interval", Arrays.<UnnamedColumn>asList(ConstantColumn.valueOf("'1'"), ConstantColumn.valueOf("year")))
-        ))
+        new ColumnOp("date", ConstantColumn.valueOf("'2018-01-01'"))
     )));
     expected.addGroupby(new AliasReference("vc3"));
     expected.addOrderby(new OrderbyAttribute("vc3"));
     expected.addLimit(ConstantColumn.valueOf(1));
-    assertEquals(relation, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).selectQuery);
+    assertEquals(relation, ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.dependents.get(0)).selectQuery);
+
+    stmt.execute("create schema if not exists \"verdictdb_temp\";");
+    queryExecutionPlan.root.execute(new JdbcConnection(conn, new H2Syntax()));
+    stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
   @Test
@@ -1285,12 +1267,16 @@ public class TpchExecutionPlanTest {
         ))));
     SelectQuery expected = SelectQuery.create(
         Arrays.<SelectItem>asList(
-            new AliasedColumn(new BaseColumn("vt1","c_custkey"), "vc3"),
+            new AliasedColumn(new BaseColumn("vt1", "c_custkey"), "vc3"),
             new AliasedColumn(new ColumnOp("count", new AsteriskColumn()), "c_count")
         ), join
     );
     expected.addGroupby(new AliasReference("vc3"));
-    assertEquals(expected, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).selectQuery);
+    assertEquals(expected, ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.dependents.get(0)).selectQuery);
+
+    stmt.execute("create schema if not exists \"verdictdb_temp\";");
+    queryExecutionPlan.root.execute(new JdbcConnection(conn, new H2Syntax()));
+    stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
   @Test
@@ -1307,8 +1293,8 @@ public class TpchExecutionPlanTest {
         "part " +
         "where " +
         "l_partkey = p_partkey " +
-        "and l_shipdate >= date ':1' " +
-        "and l_shipdate < date ':1' + interval '1' month " +
+        "and l_shipdate >= date '2018-01-01' " +
+        "and l_shipdate < date '2018-01-01' " +
         "LIMIT 1;";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
@@ -1351,17 +1337,18 @@ public class TpchExecutionPlanTest {
     )));
     expected.addFilterByAnd(new ColumnOp("greaterequal", Arrays.<UnnamedColumn>asList(
         new BaseColumn("vt1", "l_shipdate"),
-        new ColumnOp("date", ConstantColumn.valueOf("':1'"))
+        new ColumnOp("date", ConstantColumn.valueOf("'2018-01-01'"))
     )));
     expected.addFilterByAnd(new ColumnOp("less", Arrays.<UnnamedColumn>asList(
         new BaseColumn("vt1", "l_shipdate"),
-        new ColumnOp("add", Arrays.<UnnamedColumn>asList(
-            new ColumnOp("date", ConstantColumn.valueOf("':1'")),
-            new ColumnOp("interval", Arrays.<UnnamedColumn>asList(ConstantColumn.valueOf("'1'"), ConstantColumn.valueOf("month")))
-        ))
+        new ColumnOp("date", ConstantColumn.valueOf("'2018-01-01'"))
     )));
     expected.addLimit(ConstantColumn.valueOf(1));
-    assertEquals(relation, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).selectQuery);
+    assertEquals(relation, ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.dependents.get(0)).selectQuery);
+
+    stmt.execute("create schema if not exists \"verdictdb_temp\";");
+    queryExecutionPlan.root.execute(new JdbcConnection(conn, new H2Syntax()));
+    stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
   // Query 15 is a non aggregate query, add avg(s_suppkey) to be an aggregate one
@@ -1370,9 +1357,6 @@ public class TpchExecutionPlanTest {
     RelationStandardizer.resetItemID();
     String sql = "select " +
         "avg(s_suppkey), " +
-        "s_name, " +
-        "s_address, " +
-        "s_phone, " +
         "total_revenue " +
         "from " +
         "supplier, " +
@@ -1400,6 +1384,7 @@ public class TpchExecutionPlanTest {
         "where " +
         "s_suppkey = supplier_no " +
         "and total_revenue = max_revenue  " +
+        "group by total_revenue " +
         "order by s_suppkey";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
@@ -1415,17 +1400,14 @@ public class TpchExecutionPlanTest {
     SelectQuery expected = SelectQuery.create(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new ColumnOp("avg", new BaseColumn("vt1", "s_suppkey")), "a5"),
-            new AliasedColumn(new BaseColumn("vt1", "s_name"), "vc6"),
-            new AliasedColumn(new BaseColumn("vt1", "s_address"), "vc7"),
-            new AliasedColumn(new BaseColumn("vt1", "s_phone"), "vc8"),
-            new AliasedColumn(new BaseColumn("revenue_cached", "total_revenue"), "vc9")
+            new AliasedColumn(new BaseColumn("revenue_cached", "total_revenue"), "vc6")
         ), Arrays.<AbstractRelation>asList(
             new BaseTable("tpch", "supplier", "vt1"),
             new BaseTable(placeholderSchemaName, placeholderTableName, "revenue_cached"),
             new BaseTable(placeholderSchemaName, placeholderTableName, "max_revenue_cached")
         ));
     assertEquals(
-        expected.getFromList(), 
+        expected.getFromList(),
         ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.dependents.get(0)).getSelectQuery().getFromList());
 
     SelectQuery revenue_cached = SelectQuery.create(
@@ -1447,7 +1429,7 @@ public class TpchExecutionPlanTest {
     )));
     revenue_cached.addGroupby(new AliasReference("supplier_no"));
     revenue_cached.setAliasName("revenue_cached");
-    assertEquals(revenue_cached, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0)).selectQuery);
+    assertEquals(revenue_cached, ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.dependents.get(0).dependents.get(0)).selectQuery);
 
     SelectQuery max_revenue_cached = SelectQuery.create(
         Arrays.<SelectItem>asList(
@@ -1455,18 +1437,22 @@ public class TpchExecutionPlanTest {
         ), new BaseTable(placeholderSchemaName, placeholderTableName, "vt3")
     );
     max_revenue_cached.setAliasName("max_revenue_cached");
-    assertEquals(max_revenue_cached, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(1)).selectQuery);
+    assertEquals(max_revenue_cached, ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.dependents.get(0).dependents.get(1)).selectQuery);
+
+    stmt.execute("create schema if not exists \"verdictdb_temp\";");
+    queryExecutionPlan.root.execute(new JdbcConnection(conn, new H2Syntax()));
+    stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
   @Test
   public void Query17Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select\n" +
-        "\tsum(l_extendedprice) / 7.0 as avg_yearly\n" +
+        "\tsum(extendedprice) / 7.0 as avg_yearly\n" +
         "from (\n" +
         "\tselect\n" +
-        "\t\tl_quantity,\n" +
-        "\t\tl_extendedprice,\n" +
+        "\t\tl_quantity as quantity,\n" +
+        "\t\tl_extendedprice as extendedprice,\n" +
         "\t\tt_avg_quantity\n" +
         "\tfrom\n" +
         "\t\t(select\n" +
@@ -1488,7 +1474,7 @@ public class TpchExecutionPlanTest {
         "\t\t\tand p_container = 'MED BOX'\n" +
         "\t\t) as l1 on l1.l_partkey = t_partkey\n" +
         ") a \n" +
-        "where l_quantity < t_avg_quantity";
+        "where quantity < t_avg_quantity";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
     RelationStandardizer gen = new RelationStandardizer(staticMetaData);
@@ -1503,7 +1489,7 @@ public class TpchExecutionPlanTest {
     assertEquals(2, queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.size());
 
     assertEquals(new BaseTable(placeholderSchemaName, placeholderTableName, "a"),
-        ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).getSelectQuery().getFromList().get(0));
+        ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.dependents.get(0)).getSelectQuery().getFromList().get(0));
     JoinTable join = JoinTable.getJoinTable(Arrays.<AbstractRelation>asList(
         new BaseTable(placeholderSchemaName, placeholderTableName, "q17_lineitem_tmp_cached"),
         new BaseTable(placeholderSchemaName, placeholderTableName, "l1")),
@@ -1514,8 +1500,8 @@ public class TpchExecutionPlanTest {
                 new BaseColumn("q17_lineitem_tmp_cached", "t_partkey")
             ))
         ));
-    assertEquals(join, 
-        ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0)).getSelectQuery().getFromList().get(0));
+    assertEquals(join,
+        ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.dependents.get(0).dependents.get(0)).getSelectQuery().getFromList().get(0));
     SelectQuery expected = SelectQuery.create(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("vt1", "l_partkey"), "t_partkey"),
@@ -1527,7 +1513,11 @@ public class TpchExecutionPlanTest {
         new BaseTable("tpch", "lineitem", "vt1"));
     expected.addGroupby(new AliasReference("t_partkey"));
     expected.setAliasName("q17_lineitem_tmp_cached");
-    assertEquals(expected, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.get(0)).selectQuery);
+    assertEquals(expected, ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.get(0)).selectQuery);
+
+    stmt.execute("create schema if not exists \"verdictdb_temp\";");
+    queryExecutionPlan.root.execute(new JdbcConnection(conn, new H2Syntax()));
+    stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
   @Test
@@ -1558,8 +1548,6 @@ public class TpchExecutionPlanTest {
         "\tand o_orderkey = t.l_orderkey\n" +
         "\tand o_orderkey is not null\n" +
         "\tand t.t_sum_quantity > 300\n" +
-        "\tand o_orderkey = l.l_orderkey\n" +
-        "\tand l.l_orderkey is not null\n" +
         "group by\n" +
         "\tc_name,\n" +
         "\tc_custkey,\n" +
@@ -1592,9 +1580,13 @@ public class TpchExecutionPlanTest {
         ConstantColumn.valueOf("NOT NULL")
     )));
 
-    assertEquals(expected, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0)).selectQuery);
+    assertEquals(expected, ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.dependents.get(0).dependents.get(0)).selectQuery);
     assertEquals(new BaseTable(placeholderSchemaName, placeholderTableName, "t"),
-        ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).getSelectQuery().getFromList().get(2));
+        ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.dependents.get(0)).getSelectQuery().getFromList().get(2));
+
+    stmt.execute("create schema if not exists \"verdictdb_temp\";");
+    queryExecutionPlan.root.execute(new JdbcConnection(conn, new H2Syntax()));
+    stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
   @Test
@@ -1610,7 +1602,7 @@ public class TpchExecutionPlanTest {
         "p_partkey = l_partkey " +
         "and p_brand = ':1' " +
         "and p_container in ('SM CASE', 'SM BOX', 'SM PACK', 'SM PKG') " +
-        "and l_quantity >= ':4' and l_quantity <= ':4' + 10 " +
+        "and l_quantity >= 4 and l_quantity <= 4 + 10 " +
         "and p_size between 1 and 5 " +
         "and l_shipmode in ('AIR', 'AIR REG') " +
         "and l_shipinstruct = 'DELIVER IN PERSON' " +
@@ -1620,7 +1612,7 @@ public class TpchExecutionPlanTest {
         "p_partkey = l_partkey " +
         "and p_brand = ':2' " +
         "and p_container in ('MED BAG', 'MED BOX', 'MED PKG', 'MED PACK') " +
-        "and l_quantity >= ':5' and l_quantity <= ':5' + 10 " +
+        "and l_quantity >= 5 and l_quantity <= 5 + 10 " +
         "and p_size between 1 and 10 " +
         "and l_shipmode in ('AIR', 'AIR REG') " +
         "and l_shipinstruct = 'DELIVER IN PERSON' " +
@@ -1630,7 +1622,7 @@ public class TpchExecutionPlanTest {
         "p_partkey = l_partkey " +
         "and p_brand = ':3' " +
         "and p_container in ('LG CASE', 'LG BOX', 'LG PACK', 'LG PKG') " +
-        "and l_quantity >= ':6' and l_quantity <= ':6' + 10 " +
+        "and l_quantity >= 6 and l_quantity <= 6 + 10 " +
         "and p_size between 1 and 15 " +
         "and l_shipmode in ('AIR', 'AIR REG') " +
         "and l_shipinstruct = 'DELIVER IN PERSON' " +
@@ -1683,12 +1675,12 @@ public class TpchExecutionPlanTest {
                         )),
                         new ColumnOp("greaterequal", Arrays.<UnnamedColumn>asList(
                             new BaseColumn("vt1", "l_quantity"),
-                            ConstantColumn.valueOf("':4'")
+                            ConstantColumn.valueOf(4)
                         ))
                     )),
                     new ColumnOp("lessequal", Arrays.<UnnamedColumn>asList(
                         new BaseColumn("vt1", "l_quantity"),
-                        new ColumnOp("add", Arrays.<UnnamedColumn>asList(ConstantColumn.valueOf("':4'"), ConstantColumn.valueOf(10)))
+                        new ColumnOp("add", Arrays.<UnnamedColumn>asList(ConstantColumn.valueOf(4), ConstantColumn.valueOf(10)))
                     ))
                 )),
                 new ColumnOp("between", Arrays.<UnnamedColumn>asList(
@@ -1734,12 +1726,12 @@ public class TpchExecutionPlanTest {
                         )),
                         new ColumnOp("greaterequal", Arrays.<UnnamedColumn>asList(
                             new BaseColumn("vt1", "l_quantity"),
-                            ConstantColumn.valueOf("':5'")
+                            ConstantColumn.valueOf(5)
                         ))
                     )),
                     new ColumnOp("lessequal", Arrays.<UnnamedColumn>asList(
                         new BaseColumn("vt1", "l_quantity"),
-                        new ColumnOp("add", Arrays.<UnnamedColumn>asList(ConstantColumn.valueOf("':5'"), ConstantColumn.valueOf(10)))
+                        new ColumnOp("add", Arrays.<UnnamedColumn>asList(ConstantColumn.valueOf(5), ConstantColumn.valueOf(10)))
                     ))
                 )),
                 new ColumnOp("between", Arrays.<UnnamedColumn>asList(
@@ -1785,12 +1777,12 @@ public class TpchExecutionPlanTest {
                         )),
                         new ColumnOp("greaterequal", Arrays.<UnnamedColumn>asList(
                             new BaseColumn("vt1", "l_quantity"),
-                            ConstantColumn.valueOf("':6'")
+                            ConstantColumn.valueOf(6)
                         ))
                     )),
                     new ColumnOp("lessequal", Arrays.<UnnamedColumn>asList(
                         new BaseColumn("vt1", "l_quantity"),
-                        new ColumnOp("add", Arrays.<UnnamedColumn>asList(ConstantColumn.valueOf("':6'"), ConstantColumn.valueOf(10)))
+                        new ColumnOp("add", Arrays.<UnnamedColumn>asList(ConstantColumn.valueOf(6), ConstantColumn.valueOf(10)))
                     ))
                 )),
                 new ColumnOp("between", Arrays.<UnnamedColumn>asList(
@@ -1817,7 +1809,10 @@ public class TpchExecutionPlanTest {
         columnOp3
     )));
     expected.addLimit(ConstantColumn.valueOf(1));
-    assertEquals(expected, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).selectQuery);
+    assertEquals(expected, ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.dependents.get(0)).selectQuery);
+    stmt.execute("create schema if not exists \"verdictdb_temp\";");
+    queryExecutionPlan.root.execute(new JdbcConnection(conn, new H2Syntax()));
+    stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
   // Query 20 is not a aggregated function. Change to count(s_address)
@@ -1830,6 +1825,7 @@ public class TpchExecutionPlanTest {
         "from\n" +
         "\tsupplier,\n" +
         "\tnation,\n" +
+        "\tpartsupp,\n" +
         "\t(select\n" +
         "\tl_partkey,\n" +
         "\tl_suppkey,\n" +
@@ -1844,6 +1840,7 @@ public class TpchExecutionPlanTest {
         "\ts_nationkey = n_nationkey\n" +
         "\tand n_name = 'CANADA'\n" +
         "\tand s_suppkey = ps_suppkey\n" +
+        "\tgroup by s_name\n" +
         "order by s_name";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
@@ -1856,38 +1853,41 @@ public class TpchExecutionPlanTest {
     assertEquals(1, queryExecutionPlan.root.dependents.get(0).dependents.size());
     SelectQuery expected = SelectQuery.create(
         Arrays.<SelectItem>asList(
-            new AliasedColumn(new BaseColumn("vt3","l_partkey"), "vc4"),
-            new AliasedColumn(new BaseColumn("vt3", "l_suppkey"), "vc5"),
+            new AliasedColumn(new BaseColumn("vt4", "l_partkey"), "vc5"),
+            new AliasedColumn(new BaseColumn("vt4", "l_suppkey"), "vc6"),
             new AliasedColumn(new ColumnOp("multiply", Arrays.<UnnamedColumn>asList(
                 ConstantColumn.valueOf(0.5),
-                new ColumnOp("sum", new BaseColumn("vt3", "l_quantity"))
+                new ColumnOp("sum", new BaseColumn("vt4", "l_quantity"))
             )), "sum_quantity")
-        ), new BaseTable("tpch", "lineitem", "vt3")
+        ), new BaseTable("tpch", "lineitem", "vt4")
     );
     expected.addFilterByAnd(new ColumnOp("greaterequal", Arrays.asList(
-        new BaseColumn("vt3", "l_shipdate"),
+        new BaseColumn("vt4", "l_shipdate"),
         ConstantColumn.valueOf("'1994-01-01'")
     )));
     expected.addFilterByAnd(new ColumnOp("less", Arrays.asList(
-        new BaseColumn("vt3", "l_shipdate"),
+        new BaseColumn("vt4", "l_shipdate"),
         ConstantColumn.valueOf("'1995-01-01'")
     )));
-    expected.addGroupby(new AliasReference("vc4"));
     expected.addGroupby(new AliasReference("vc5"));
+    expected.addGroupby(new AliasReference("vc6"));
     expected.setAliasName("q20_tmp2_cached");
-    assertEquals(expected, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0)).selectQuery);
+    assertEquals(expected, ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.dependents.get(0).dependents.get(0)).selectQuery);
     assertEquals(new BaseTable(placeholderSchemaName, placeholderTableName, "q20_tmp2_cached"),
-        ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).getSelectQuery().getFromList().get(2));
+        ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.dependents.get(0)).getSelectQuery().getFromList().get(3));
+    stmt.execute("create schema if not exists \"verdictdb_temp\";");
+    queryExecutionPlan.root.execute(new JdbcConnection(conn, new H2Syntax()));
+    stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
   @Test
   public void Query21Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select\n" +
-        "\ts_name,\n" +
+        "\tname,\n" +
         "\tcount(1) as numwait\n" +
         "from (\n" +
-        "\tselect s_name from (\n" +
+        "\tselect name from (\n" +
         "\t\tselect\n" +
         "\t\t\ts_name,\n" +
         "\t\t\tt2.l_orderkey,\n" +
@@ -1907,7 +1907,7 @@ public class TpchExecutionPlanTest {
         "group by\n" +
         "\tl_orderkey) as t2 right outer join (\n" +
         "\t\t\tselect\n" +
-        "\t\t\t\ts_name,\n" +
+        "\t\t\t\ts_name as name,\n" +
         "\t\t\t\tl_orderkey,\n" +
         "\t\t\t\tl_suppkey from (\n" +
         "\t\t\t\tselect\n" +
@@ -1984,21 +1984,25 @@ public class TpchExecutionPlanTest {
     assertEquals(1, queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.get(0).dependents.get(1).dependents.size());
 
     assertEquals(new BaseTable(placeholderSchemaName, placeholderTableName, "c"),
-        ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).getSelectQuery().getFromList().get(0));
+        ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.dependents.get(0)).getSelectQuery().getFromList().get(0));
     assertEquals(new BaseTable(placeholderSchemaName, placeholderTableName, "b"),
-        ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0)).getSelectQuery().getFromList().get(0));
+        ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.dependents.get(0).dependents.get(0)).getSelectQuery().getFromList().get(0));
     JoinTable join = JoinTable.getJoinTable(Arrays.<AbstractRelation>asList(
         new BaseTable(placeholderSchemaName, placeholderTableName, "t2"),
         new BaseTable(placeholderSchemaName, placeholderTableName, "l3")),
         Arrays.<JoinTable.JoinType>asList(JoinTable.JoinType.rightouter),
         Arrays.<UnnamedColumn>asList(
             new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-                new BaseColumn("l3", "vc17"),
-                new BaseColumn("t2", "vc17")
+                new BaseColumn("l3", "vc16"),
+                new BaseColumn("t2", "vc16")
             ))
         ));
     assertEquals(join,
-        ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.get(0)).getSelectQuery().getFromList().get(0));
+        ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.get(0)).getSelectQuery().getFromList().get(0));
+
+    stmt.execute("create schema if not exists \"verdictdb_temp\";");
+    queryExecutionPlan.root.execute(new JdbcConnection(conn, new H2Syntax()));
+    stmt.execute("drop schema \"verdictdb_temp\" cascade;");
 
   }
 
@@ -2008,11 +2012,11 @@ public class TpchExecutionPlanTest {
     String sql = "select\n" +
         "\tcntrycode,\n" +
         "\tcount(1) as numcust,\n" +
-        "\tsum(c_acctbal) as totacctbal\n" +
+        "\tsum(acctbal) as totacctbal\n" +
         "from (\n" +
         "\tselect\n" +
         "\t\tcntrycode,\n" +
-        "\t\tc_acctbal,\n" +
+        "\t\tacctbal,\n" +
         "\t\tavg_acctbal\n" +
         "\tfrom\n" +
         "\t\t(select\n" +
@@ -2036,7 +2040,7 @@ public class TpchExecutionPlanTest {
         "\tc_acctbal > 0.00) as ct1 join (\n" +
         "\t\t\tselect\n" +
         "\t\t\t\tcntrycode,\n" +
-        "\t\t\t\tc_acctbal\n" +
+        "\t\t\t\tc_acctbal as acctbal\n" +
         "\t\t\tfrom\n" +
         "\t\t\t\t(select\n" +
         "\to_custkey\n" +
@@ -2061,7 +2065,7 @@ public class TpchExecutionPlanTest {
         "\t\t\t\ton ct.c_custkey = ot.o_custkey\n" +
         "\t\t\twhere\n" +
         "\t\t\t\to_custkey is null\n" +
-        "\t\t) as ct2 on ct2.o_custkey is null\n" +
+        "\t\t) as ct2 on ct1.avg_acctbal > 0\n" +
         ") a\n" +
         "where\n" +
         "\tc_acctbal > avg_acctbal\n" +
@@ -2084,20 +2088,20 @@ public class TpchExecutionPlanTest {
     assertEquals(2, queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.get(1).dependents.size());
 
     assertEquals(new BaseTable(placeholderSchemaName, placeholderTableName, "a"),
-        ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0)).getSelectQuery().getFromList().get(0));
+        ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.dependents.get(0)).getSelectQuery().getFromList().get(0));
     JoinTable join = JoinTable.getJoinTable(Arrays.<AbstractRelation>asList(
         new BaseTable(placeholderSchemaName, placeholderTableName, "ct1"),
         new BaseTable(placeholderSchemaName, placeholderTableName, "ct2")),
         Arrays.<JoinTable.JoinType>asList(JoinTable.JoinType.inner),
         Arrays.<UnnamedColumn>asList(
-            new ColumnOp("is", Arrays.<UnnamedColumn>asList(
-                new BaseColumn("ct2", "o_custkey"),
-                ConstantColumn.valueOf("NULL")
+            new ColumnOp("greater", Arrays.<UnnamedColumn>asList(
+                new BaseColumn("ct1", "avg_acctbal"),
+                ConstantColumn.valueOf(0)
             ))
         ));
-    assertEquals(join, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0)).getSelectQuery().getFromList().get(0));
+    assertEquals(join, ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.dependents.get(0).dependents.get(0)).getSelectQuery().getFromList().get(0));
     assertEquals(new BaseTable(placeholderSchemaName, placeholderTableName, "vt1"),
-        ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.get(0)).getSelectQuery().getFromList().get(0));
+        ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.get(0)).getSelectQuery().getFromList().get(0));
     JoinTable join1 = JoinTable.getJoinTable(Arrays.<AbstractRelation>asList(
         new BaseTable(placeholderSchemaName, placeholderTableName, "ot"),
         new BaseTable(placeholderSchemaName, placeholderTableName, "ct")),
@@ -2109,7 +2113,11 @@ public class TpchExecutionPlanTest {
             ))
         ));
     assertEquals(join1,
-        ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.get(1)).getSelectQuery().getFromList().get(0));
+        ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.get(1)).getSelectQuery().getFromList().get(0));
+
+    stmt.execute("create schema if not exists \"verdictdb_temp\";");
+    queryExecutionPlan.root.execute(new JdbcConnection(conn, new H2Syntax()));
+    stmt.execute("drop schema \"verdictdb_temp\" cascade;");
 
   }
 
@@ -2125,7 +2133,7 @@ public class TpchExecutionPlanTest {
 //        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
-    
+
     String aliasName = String.format("verdictdbalias_%d_0", queryExecutionPlan.getSerialNumber());
     SelectQuery rewritten = SelectQuery.create(
         Arrays.<SelectItem>asList(
@@ -2138,7 +2146,98 @@ public class TpchExecutionPlanTest {
         Arrays.<SelectItem>asList(new AliasedColumn(new ColumnOp("avg", new BaseColumn("vt3", "l_quantity")), "quantity_avg")),
         new BaseTable("tpch", "lineitem", "vt3")
     );
-    assertEquals(expected, ((CreateTableAsSelectExecutionNode)queryExecutionPlan.root.dependents.get(0).dependents.get(0)).selectQuery);
+    assertEquals(expected, ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.dependents.get(0).dependents.get(0)).selectQuery);
+    stmt.execute("create schema if not exists \"verdictdb_temp\";");
+    queryExecutionPlan.root.execute(new JdbcConnection(conn, new H2Syntax()));
+    stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
+
+  @Test
+  public void SubqueryInFilterTestExists() throws VerdictDBException, SQLException {
+    RelationStandardizer.resetItemID();
+    String sql = "select avg(l_quantity) from lineitem where exists(select * from lineitem);";
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
+    RelationStandardizer gen = new RelationStandardizer(staticMetaData);
+    relation = gen.standardize((SelectQuery) relation);
+    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
+    queryExecutionPlan.cleanUp();
+
+    String alias = ((CreateTableAsSelectExecutionNode) (queryExecutionPlan.root.dependents.get(0))).getPlaceholderTables().get(0).getAliasName().get();
+    SelectQuery rewritten = SelectQuery.create(
+        Arrays.<SelectItem>asList(new AsteriskColumn()),
+        new BaseTable(placeholderSchemaName, placeholderTableName, alias));
+    assertEquals(rewritten,
+        ((SubqueryColumn) ((ColumnOp) ((CreateTableAsSelectExecutionNode) (queryExecutionPlan.root.dependents.get(0))).getSelectQuery().getFilter().get()).getOperand(0)).getSubquery());
+
+    SelectQuery expected = SelectQuery.create(
+        Arrays.<SelectItem>asList(new AsteriskColumn()),
+        new BaseTable("tpch", "lineitem", "vt3")
+    );
+    assertEquals(expected, ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.dependents.get(0).dependents.get(0)).selectQuery);
+    stmt.execute("create schema if not exists \"verdictdb_temp\";");
+    queryExecutionPlan.root.execute(new JdbcConnection(conn, new H2Syntax()));
+    stmt.execute("drop schema \"verdictdb_temp\" cascade;");
+  }
+
+  @Test
+  public void SubqueryInFilterTestIn() throws VerdictDBException, SQLException {
+    RelationStandardizer.resetItemID();
+    String sql = "select avg(l_quantity) from lineitem where l_quantity in (select distinct l_quantity from lineitem);";
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
+    RelationStandardizer gen = new RelationStandardizer(staticMetaData);
+    relation = gen.standardize((SelectQuery) relation);
+    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
+    queryExecutionPlan.cleanUp();
+
+    String alias = ((CreateTableAsSelectExecutionNode) (queryExecutionPlan.root.dependents.get(0))).getPlaceholderTables().get(0).getAliasName().get();
+    SelectQuery rewritten = SelectQuery.create(
+        Arrays.<SelectItem>asList(new AliasedColumn(new BaseColumn(placeholderSchemaName, alias, "vc4"), "vc4")),
+        new BaseTable(placeholderSchemaName, placeholderTableName, alias));
+    assertEquals(rewritten,
+        ((SubqueryColumn) ((ColumnOp) ((CreateTableAsSelectExecutionNode) (queryExecutionPlan.root.dependents.get(0))).getSelectQuery().getFilter().get()).getOperand(1)).getSubquery());
+
+    SelectQuery expected = SelectQuery.create(
+        Arrays.<SelectItem>asList(new AliasedColumn(new BaseColumn("vt3", "l_quantity"), "vc4")),
+        new BaseTable("tpch", "lineitem", "vt3")
+    );
+    assertEquals(expected, ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.dependents.get(0).dependents.get(0)).selectQuery);
+    stmt.execute("create schema if not exists \"verdictdb_temp\";");
+    queryExecutionPlan.root.execute(new JdbcConnection(conn, new H2Syntax()));
+    stmt.execute("drop schema \"verdictdb_temp\" cascade;");
+  }
+
+  @Test
+  public void SubqueryInFilterMultiplePredicateTest() throws VerdictDBException, SQLException {
+    RelationStandardizer.resetItemID();
+    String sql = "select avg(l_quantity) from lineitem where l_quantity > (select avg(l_quantity) as quantity_avg from lineitem) and l_quantity in (select distinct l_quantity from lineitem)";
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
+    RelationStandardizer gen = new RelationStandardizer(staticMetaData);
+    relation = gen.standardize((SelectQuery) relation);
+    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
+    queryExecutionPlan.cleanUp();
+
+    String alias = ((CreateTableAsSelectExecutionNode) (queryExecutionPlan.root.dependents.get(0))).getPlaceholderTables().get(0).getAliasName().get();
+    SelectQuery rewritten1 = SelectQuery.create(
+        Arrays.<SelectItem>asList(new AliasedColumn(new BaseColumn(placeholderSchemaName, alias, "quantity_avg"), "quantity_avg")),
+        new BaseTable(placeholderSchemaName, placeholderTableName, alias));
+    assertEquals(rewritten1,
+        ((SubqueryColumn)((ColumnOp)((ColumnOp)queryExecutionPlan.root.dependents.get(0).selectQuery.getFilter().get()).getOperand(0)).getOperand(1)).getSubquery());
+
+    alias = ((CreateTableAsSelectExecutionNode) (queryExecutionPlan.root.dependents.get(0))).getPlaceholderTables().get(1).getAliasName().get();
+    SelectQuery rewritten2 = SelectQuery.create(
+        Arrays.<SelectItem>asList(new AliasedColumn(new BaseColumn(placeholderSchemaName, alias, "vc5"), "vc5")),
+        new BaseTable(placeholderSchemaName, placeholderTableName, alias));
+    assertEquals(rewritten2,
+        ((SubqueryColumn)((ColumnOp)((ColumnOp)queryExecutionPlan.root.dependents.get(0).selectQuery.getFilter().get()).getOperand(1)).getOperand(1)).getSubquery());
+
+    stmt.execute("create schema if not exists \"verdictdb_temp\";");
+    queryExecutionPlan.root.execute(new JdbcConnection(conn, new H2Syntax()));
+    stmt.execute("drop schema \"verdictdb_temp\" cascade;");
+  }
+
+
 }
 
