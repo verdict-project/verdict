@@ -149,11 +149,19 @@ public class AggExecutionNodeBlock {
     }
     
     // third, stack combiners
-    for (int i = 0; i < aggMeta.totalBlockAggCount()-1; i++) {
-      AggCombinerExecutionNode combiner = AggCombinerExecutionNode.create(
-          plan,
-          individualAggNodes.get(0), 
-          individualAggNodes.get(1));
+    for (int i = 1; i < aggMeta.totalBlockAggCount(); i++) {
+      AggCombinerExecutionNode combiner;
+      if (i == 1) {
+        combiner = AggCombinerExecutionNode.create(
+            plan,
+            individualAggNodes.get(0), 
+            individualAggNodes.get(1));
+      } else {
+        combiner = AggCombinerExecutionNode.create(
+            plan,
+            combiners.get(i-2), 
+            individualAggNodes.get(i));
+      }
       combiners.add(combiner);
     }
     

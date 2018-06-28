@@ -89,61 +89,80 @@ public abstract class QueryExecutionNode {
   public QueryExecutionPlan getPlan() {
     return plan;
   }
-
-  /**
-   * For multi-threading, the parent of this node is responsible for running this method as a separate thread.
-   * @param resultQueue
-   */
-  public void execute(final DbmsConnection conn) {
-    // Start the execution of all children
-    for (QueryExecutionNode child : dependents) {
-      if (!child.getStatus().equals("initialized")) {
-        continue;
-      }
-      child.setStatus("running"); 
-      child.execute(conn);
-    }
-
-    // Execute this node if there are some results available
-    ExecutorService executor = Executors.newSingleThreadExecutor();
-    while (true) {
-      readLatestResultsFromDependents();
-
-      final List<ExecutionInfoToken> latestResults = getLatestResultsIfAvailable();
-
-      // Only when all results are available, the internal operations of this node are performed.
-      if (latestResults != null || areDependentsAllComplete()) {
-        // run this on a separate thread
-        executor.submit(new Runnable() {
-          @Override
-          public void run() {
-            try {
-              ExecutionInfoToken rs = executeNode(conn, latestResults);
-              broadcast(rs);
-            } catch (VerdictDBException e) {
-              e.printStackTrace();
-              setStatus("failed");
-            }
-            //            resultQueue.add(rs);
-          }
-        });
-      }
-
-      if (areDependentsAllComplete()) {
-        break;
-      }
-    }
-
-    // finishes only when no threads are running for this node.
+  
+  public void executeAndWaitForTermination(DbmsConnection conn) {
     try {
+      ExecutorService executor = Executors.newFixedThreadPool(plan.getMaxNumberOfThreads());
+      execute(conn, executor);
       executor.shutdown();
       executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);  // convention for waiting forever
     } catch (InterruptedException e) {
-      executor.shutdownNow();
+      e.printStackTrace();
     }
-    if (!isFailed()) {
-      setSuccess();
+  }
+
+  /**
+   * For multi-threading, run executeNode() on a separate thread.
+   * 
+   * @param resultQueue
+   */
+  public void execute(final DbmsConnection conn, ExecutorService executor) {
+    if (!getStatus().equals("initialized")) {
+      return;
     }
+    setStatus("running");
+    System.out.println("Starts the exec of " + this);
+    
+    executor.submit(new Runnable() {
+      void process(DbmsConnection conn, List<ExecutionInfoToken> tokens) {
+        try {
+          ExecutionInfoToken rs = executeNode(conn, tokens);
+          broadcast(rs);
+        } catch (VerdictDBException e) {
+          e.printStackTrace();
+          setStatus("failed");
+        }
+      }
+      
+      @Override
+      public void run() {
+        while (true) {
+          readLatestResultsFromDependents();
+          List<ExecutionInfoToken> latestResults = getLatestResultsIfAvailable();
+          
+          if (areDependentsAllComplete()) {
+            if (latestResults != null) {
+              process(conn, latestResults);
+            }
+            
+            if (!isFailed()) {
+              setSuccess();
+            }
+            break;
+          } else if (latestResults != null) {
+            process(conn, latestResults);
+          }
+          
+//          // Only when all results are available, the internal operations of this node are performed.
+//          if (latestResults != null || areDependentsAllComplete()) {
+//            // run this on a separate thread
+//            
+//          }
+//          if (areDependentsAllComplete()) {
+//            break;
+//          }
+        } // end of while loop
+        
+//        System.out.println("Status of " + this + " at the end of execution: " + getStatus());
+      }
+    });
+    
+    // Start the execution of all children
+    for (QueryExecutionNode child : dependents) { 
+      child.execute(conn, executor);
+    }
+    
+    // should immediately return without waiting for the termination of jobs
   }
 
   /**
@@ -225,7 +244,7 @@ public abstract class QueryExecutionNode {
         // do nothing
       } else {
         latestResults.set(i, Optional.of(rs));
-        System.out.println("Received: " + rs.toString());
+        System.out.println(new ToStringBuilder(this) + " Received: " + rs.toString());
       }
     }
   }
@@ -241,9 +260,17 @@ public abstract class QueryExecutionNode {
       results.add(r.get());
     }
     if (allResultsAvailable) {
+      clearCachedLatestResults();
       return results;
     } else {
       return null;
+    }
+  }
+  
+  void clearCachedLatestResults() {
+    int size = latestResults.size();
+    for (int i = 0; i < size; i++) {
+      latestResults.set(i, Optional.<ExecutionInfoToken>absent());
     }
   }
 

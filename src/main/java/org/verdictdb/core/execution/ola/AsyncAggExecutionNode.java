@@ -11,6 +11,7 @@ package org.verdictdb.core.execution.ola;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingDeque;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.connection.DbmsConnection;
@@ -46,7 +47,7 @@ import org.verdictdb.exception.VerdictDBException;
  * @author Yongjoo Park
  *
  */
-public class AsyncAggExecutionNode extends CreateTableAsSelectExecutionNode {
+public class AsyncAggExecutionNode extends QueryExecutionNode {
 
   ScrambleMeta scrambleMeta;
 
@@ -56,15 +57,15 @@ public class AsyncAggExecutionNode extends CreateTableAsSelectExecutionNode {
   // agg columns. pairs of their column names and their types (i.e., sum, avg, count)
   List<AggNameAndType> aggColumns;
 
-  SelectQuery originalQuery;
+//  SelectQuery originalQuery;
 
-  List<AsyncAggExecutionNode> children = new ArrayList<>();
+//  List<AsyncAggExecutionNode> children = new ArrayList<>();
 
-  int tableNum = 1;
+//  int tableNum = 1;
 
-  String getNextTempTableName(String tableNamePrefix) {
-    return tableNamePrefix + tableNum++;
-  }
+//  String getNextTempTableName(String tableNamePrefix) {
+//    return tableNamePrefix + tableNum++;
+//  }
 
   private AsyncAggExecutionNode(QueryExecutionPlan plan) {
     super(plan);
@@ -74,6 +75,7 @@ public class AsyncAggExecutionNode extends CreateTableAsSelectExecutionNode {
       QueryExecutionPlan plan,
       List<QueryExecutionNode> individualAggs,
       List<QueryExecutionNode> combiners) {
+    
     AsyncAggExecutionNode node = new AsyncAggExecutionNode(plan);
     ExecutionTokenQueue queue = node.generateListeningQueue();
     individualAggs.get(0).addBroadcastingQueue(queue);
@@ -88,8 +90,32 @@ public class AsyncAggExecutionNode extends CreateTableAsSelectExecutionNode {
   @Override
   public ExecutionInfoToken executeNode(DbmsConnection conn, List<ExecutionInfoToken> downstreamResults) 
       throws VerdictDBException {
-    ExecutionInfoToken token = super.executeNode(conn, downstreamResults);
-    return token;
+//    ExecutionInfoToken token = super.executeNode(conn, downstreamResults);
+//    System.out.println("AsyncNode execution " + getSelectQuery());
+//    try {
+//      TimeUnit.SECONDS.sleep(1);
+//      this.print();
+////      for (QueryExecutionNode n : getDependents()) {
+////        System.out.println(n + " " + n.getStatus());
+////      }
+//    } catch (InterruptedException e) {
+//      // TODO Auto-generated catch block
+//      e.printStackTrace();
+//    }
+    return downstreamResults.get(0);
+  }
+
+  @Override
+  public QueryExecutionNode deepcopy() {
+    AsyncAggExecutionNode copy = new AsyncAggExecutionNode(getPlan());
+    copyFields(this, copy);
+    return copy;
+  }
+  
+  void copyFields(AsyncAggExecutionNode from, AsyncAggExecutionNode to) {
+    to.scrambleMeta = from.scrambleMeta;
+    to.nonaggColumns = from.nonaggColumns;
+    to.aggColumns = from.aggColumns;
   }
 
 }

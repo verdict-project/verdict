@@ -101,7 +101,7 @@ public class ProjectionExecutionNodeTest {
     
     ExecutionTokenQueue queue = new ExecutionTokenQueue();
     node.addBroadcastingQueue(queue);
-    node.execute(conn);
+    node.executeAndWaitForTermination(conn);
     
     ExecutionInfoToken token = queue.take();
     String newSchemaName = (String) token.getValue("schemaName");

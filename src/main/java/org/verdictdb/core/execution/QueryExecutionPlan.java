@@ -32,6 +32,8 @@ public class QueryExecutionPlan {
   
   String scratchpadSchemaName;
   
+  final int N_THREADS = 10;
+  
 //  PostProcessor postProcessor;
   
 //  /**
@@ -57,6 +59,10 @@ public class QueryExecutionPlan {
   public QueryExecutionPlan(String scratchpadSchemaName, ScrambleMeta scrambleMeta) {
     this.scratchpadSchemaName = scratchpadSchemaName;
     this.scrambleMeta = scrambleMeta;
+  }
+  
+  public int getMaxNumberOfThreads() {
+    return N_THREADS;
   }
 
   /**

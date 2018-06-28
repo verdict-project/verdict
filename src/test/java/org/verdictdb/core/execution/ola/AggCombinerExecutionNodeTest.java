@@ -69,6 +69,7 @@ public class AggCombinerExecutionNodeTest {
     assertEquals(combiner.getListeningQueue(1), rightNode.getBroadcastingQueue(0));
   }
   
+  // Test if the combined answer is identical to the original answer
   @Test
   public void testSingleAggCombiningWithH2() throws VerdictDBDbmsException, VerdictDBException {
     QueryExecutionPlan plan = new QueryExecutionPlan("newschema");
@@ -85,7 +86,7 @@ public class AggCombinerExecutionNodeTest {
     ExecutionTokenQueue queue = new ExecutionTokenQueue();
     AggCombinerExecutionNode combiner = AggCombinerExecutionNode.create(plan, leftNode, rightNode);
     combiner.addBroadcastingQueue(queue);
-    combiner.execute(conn);
+    combiner.executeAndWaitForTermination(conn);
     
     ExecutionInfoToken token = queue.take();
     String schemaName = (String) token.getValue("schemaName");

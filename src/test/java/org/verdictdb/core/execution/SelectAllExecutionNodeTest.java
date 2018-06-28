@@ -102,7 +102,7 @@ public class SelectAllExecutionNodeTest {
 //    conn.executeUpdate(String.format("drop table \"%s\".\"%s\"", newSchema, ((ProjectionExecutionNode)node.dependents.get(0)).newTableName));
     ExecutionTokenQueue queue = new ExecutionTokenQueue();
     node.addBroadcastingQueue(queue);
-    node.execute(conn);
+    node.executeAndWaitForTermination(conn);
   }
 
   @AfterClass
