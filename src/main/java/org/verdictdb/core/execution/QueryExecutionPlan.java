@@ -198,23 +198,33 @@ public class QueryExecutionPlan {
     while (!traverse.isEmpty()) {
       QueryExecutionNode node = traverse.get(0);
       traverse.remove(0);
-      if (node.dependents.isEmpty()) {
+      if (node.dependents.isEmpty() && !nodesToCompress.contains(node)) {
         nodesToCompress.add(node);
       }
       else traverse.addAll(node.dependents);
     }
 
+    List<QueryExecutionNode> history = new ArrayList<>();
     while (!nodesToCompress.isEmpty()) {
       QueryExecutionNode node = nodesToCompress.get(0);
       nodesToCompress.remove(0);
       // Exception 1: has no parent(root), or has multiple parent
       // Exception 2: its parents has multiple dependents and this node share same queue with other dependents
+      // Exception 3: two nodes are not SelectAllNode, ProjectionNode or AggregateNode
       boolean compressable = node.parents.size()==1 && !isSharingQueue(node);
       if (compressable) {
         QueryExecutionNode parent = node.parents.get(0);
-        compressTwoNode(node, parent);
+        if (((parent instanceof AggExecutionNode)||(parent instanceof SelectAllExecutionNode)||(parent instanceof ProjectionExecutionNode))
+            && ((node instanceof AggExecutionNode)||(node instanceof SelectAllExecutionNode)||(node instanceof ProjectionExecutionNode)) ) {
+          compressTwoNode(node, parent);
+        }
       }
-      nodesToCompress.addAll(node.parents);
+      history.add(node);
+      for (QueryExecutionNode parent:node.parents) {
+        if (!history.contains(parent) && !nodesToCompress.contains(parent)) {
+          nodesToCompress.add(parent);
+        }
+      }
     }
   }
 
