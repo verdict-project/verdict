@@ -276,4 +276,8 @@ public class QueryExecutionPlan {
       return false;
     }
   }
+
+  public QueryExecutionNode getRoot() {
+    return root;
+  }
 }
