@@ -208,9 +208,8 @@ public class QueryExecutionPlan {
       QueryExecutionNode node = nodesToCompress.get(0);
       nodesToCompress.remove(0);
       // Exception 1: has no parent(root), or has multiple parent
-      // Exception 2: has multiple dependents and dependents share same queue
-      boolean compressable = node.parents.size()==1 && !(node.dependents.size()>1 &&
-          node.dependents.get(0).broadcastingQueues.equals(node.dependents.get(1).broadcastingQueues));
+      // Exception 2: its parents has multiple dependents and this node share same queue with other dependents
+      boolean compressable = node.parents.size()==1 && !isSharingQueue(node);
       if (compressable) {
         QueryExecutionNode parent = node.parents.get(0);
         compressTwoNode(node, parent);
@@ -249,6 +248,22 @@ public class QueryExecutionPlan {
     for (QueryExecutionNode dependent:node.dependents) {
       dependent.parents.remove(node);
       dependent.parents.add(parent);
+    }
+  }
+
+  // Return true if this node share queue with other dependant of its parent
+  boolean isSharingQueue(QueryExecutionNode node) {
+    // must have one parent and this parent must have multiple dependents
+    if (node.parents.size()!=1 || node.parents.get(0).dependents.size()<=1) {
+      return false;
+    }
+    else {
+      for (QueryExecutionNode dependent:node.parents.get(0).dependents) {
+        if (!dependent.equals(node) && node.getBroadcastingQueues().equals(dependent.getBroadcastingQueues())) {
+          return true;
+        }
+      }
+      return false;
     }
   }
 }
