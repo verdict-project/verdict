@@ -49,7 +49,7 @@ public class QueryExecutionPlanCompressTest {
     }
   }
 
-  //@Test
+  @Test
   public void simpleAggregateTest() throws VerdictDBException {
     String sql = "select avg(t.value) as a from originalschema.originaltable as t;";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
@@ -59,7 +59,7 @@ public class QueryExecutionPlanCompressTest {
     assertEquals(0, queryExecutionPlan.root.dependents.size());
     assertEquals(selectQuery, queryExecutionPlan.root.selectQuery.getFromList().get(0));
 
-    //queryExecutionPlan.root.execute(conn);
+    // queryExecutionPlan.root.execute(conn);
   }
 
   @Test
@@ -72,6 +72,20 @@ public class QueryExecutionPlanCompressTest {
     assertEquals(0, queryExecutionPlan.root.dependents.size());
     assertEquals(selectQuery, queryExecutionPlan.root.selectQuery.getFromList().get(0));
 
-    queryExecutionPlan.root.execute(conn);
+    // queryExecutionPlan.root.execute(conn);
+  }
+
+  @Test
+  public void NestedAggregateFilterTest() throws VerdictDBException {
+    String sql = "select avg(t.value) as a from originalschema.originaltable as t where t.value > " +
+        "(select avg(o.value) as avg_value from originalschema.originaltable as o);";
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    SelectQuery selectQuery = (SelectQuery) sqlToRelation.toRelation(sql);
+    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(newSchema, null, selectQuery);
+    queryExecutionPlan.compress();
+    assertEquals(0, queryExecutionPlan.root.dependents.size());
+    assertEquals(selectQuery, queryExecutionPlan.root.selectQuery.getFromList().get(0));
+
+    // queryExecutionPlan.root.execute(conn);
   }
 }
