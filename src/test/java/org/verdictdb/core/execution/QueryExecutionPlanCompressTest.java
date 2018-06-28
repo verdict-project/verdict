@@ -58,9 +58,11 @@ public class QueryExecutionPlanCompressTest {
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     SelectQuery selectQuery = (SelectQuery) sqlToRelation.toRelation(sql);
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(newSchema, null, selectQuery);
+    QueryExecutionNode copy = queryExecutionPlan.root.deepcopy();
     queryExecutionPlan.compress();
     assertEquals(0, queryExecutionPlan.root.dependents.size());
     assertEquals(selectQuery, queryExecutionPlan.root.selectQuery.getFromList().get(0));
+    assertEquals(copy.dependents.get(0).selectQuery, queryExecutionPlan.root.selectQuery.getFromList().get(0));
 
     // queryExecutionPlan.root.execute(conn);
   }
@@ -71,10 +73,12 @@ public class QueryExecutionPlanCompressTest {
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     SelectQuery selectQuery = (SelectQuery) sqlToRelation.toRelation(sql);
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(newSchema, null, selectQuery);
+    QueryExecutionNode copy = queryExecutionPlan.root.dependents.get(0).dependents.get(0).deepcopy();
     queryExecutionPlan.compress();
     assertEquals(0, queryExecutionPlan.root.dependents.size());
     assertEquals(selectQuery, queryExecutionPlan.root.selectQuery.getFromList().get(0));
 
+    assertEquals(copy.selectQuery,  ((SelectQuery)queryExecutionPlan.root.selectQuery.getFromList().get(0)).getFromList().get(0));
     // queryExecutionPlan.root.execute(conn);
   }
 
@@ -85,10 +89,13 @@ public class QueryExecutionPlanCompressTest {
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     SelectQuery selectQuery = (SelectQuery) sqlToRelation.toRelation(sql);
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(newSchema, null, selectQuery);
+    QueryExecutionNode copy = queryExecutionPlan.root.dependents.get(0).dependents.get(0).deepcopy();
     queryExecutionPlan.compress();
     assertEquals(0, queryExecutionPlan.root.dependents.size());
     assertEquals(selectQuery, queryExecutionPlan.root.selectQuery.getFromList().get(0));
 
+    assertEquals(copy.selectQuery,
+        ((SubqueryColumn)((ColumnOp)((SelectQuery)queryExecutionPlan.root.selectQuery.getFromList().get(0)).getFilter().get()).getOperand(1)).getSubquery());
     // queryExecutionPlan.root.execute(conn);
   }
 
@@ -110,15 +117,18 @@ public class QueryExecutionPlanCompressTest {
     AggCombinerExecutionNode combiner = AggCombinerExecutionNode.create(queryExecutionPlan, leftNode, rightNode);
     combiner.addBroadcastingQueue(queue);
     AsyncAggExecutionNode asyncAggExecutionNode =
-        AsyncAggExecutionNode.create(null, Arrays.<QueryExecutionNode>asList(leftNode, rightNode),
+        AsyncAggExecutionNode.create(queryExecutionPlan, Arrays.<QueryExecutionNode>asList(leftNode, rightNode),
             Arrays.<QueryExecutionNode>asList(combiner));
     queryExecutionPlan.root.getDependents().remove(0);
     queryExecutionPlan.root.getListeningQueues().remove(0);
     asyncAggExecutionNode.addBroadcastingQueue(queryExecutionPlan.root.generateListeningQueue());
     queryExecutionPlan.root.addDependency(asyncAggExecutionNode);
+
+    QueryExecutionNode copy = queryExecutionPlan.root.deepcopy();
     queryExecutionPlan.compress();
 
     assertEquals(asyncAggExecutionNode, queryExecutionPlan.root.dependents.get(0));
+    assertEquals(copy.selectQuery, queryExecutionPlan.root.selectQuery);
   }
 
   @Test
@@ -144,6 +154,7 @@ public class QueryExecutionPlanCompressTest {
     queryExecutionPlan.root.dependents.get(0).getListeningQueues().remove(0);
     asyncAggExecutionNode.addBroadcastingQueue(queryExecutionPlan.root.dependents.get(0).generateListeningQueue());
     queryExecutionPlan.root.dependents.get(0).addDependency(asyncAggExecutionNode);
+    QueryExecutionNode copy = queryExecutionPlan.root.getDependent(0).deepcopy();
     queryExecutionPlan.compress();
 
     SelectQuery compressed = SelectQuery.create(
@@ -153,6 +164,8 @@ public class QueryExecutionPlanCompressTest {
     compressed.setAliasName("t");
     assertEquals(queryExecutionPlan.root.selectQuery.getFromList().get(0), compressed);
     assertEquals(queryExecutionPlan.root.dependents.get(0), asyncAggExecutionNode);
+
+    assertEquals(copy.dependents.get(0), queryExecutionPlan.root.dependents.get(0));
   }
 
   @Test
@@ -187,7 +200,7 @@ public class QueryExecutionPlanCompressTest {
     common.addBroadcastingQueue(leftNode.generateListeningQueue());
     rightNode.addDependency(common);
     common.addBroadcastingQueue(rightNode.generateListeningQueue());
-
+    QueryExecutionNode copy = queryExecutionPlan.root.getDependent(0).deepcopy();
     queryExecutionPlan.compress();
 
     SelectQuery compressed = SelectQuery.create(
@@ -197,6 +210,8 @@ public class QueryExecutionPlanCompressTest {
     compressed.setAliasName("t");
     assertEquals(queryExecutionPlan.root.selectQuery.getFromList().get(0), compressed);
     assertEquals(queryExecutionPlan.root.dependents.get(0), asyncAggExecutionNode);
+
+    assertEquals(copy.dependents.get(0), queryExecutionPlan.root.dependents.get(0));
   }
 
 }
