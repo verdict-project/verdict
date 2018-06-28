@@ -1,6 +1,5 @@
 package org.verdictdb.core.execution;
 
-import org.apache.calcite.sql2rel.SqlToRelConverter;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.connection.DbmsConnection;
@@ -9,13 +8,14 @@ import org.verdictdb.core.query.SelectQuery;
 import org.verdictdb.core.sql.NonValidatingSQLParser;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.resulthandler.TokenQueueToAyncHandler;
 import org.verdictdb.resulthandler.StandardOutputHandler;
 import org.verdictdb.sql.syntax.H2Syntax;
 
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
-public class QueryReportNodeTest {
+public class TokenQueueToAyncHandlerTest {
 
   static String originalSchema = "originalschema";
 
@@ -54,9 +54,10 @@ public class QueryReportNodeTest {
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     SelectQuery selectQuery = (SelectQuery) sqlToRelation.toRelation(sql);
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(newSchema, null, selectQuery);
-    QueryReportNode queryReportNode = new QueryReportNode(queryExecutionPlan);
-    queryReportNode.setHandler(new StandardOutputHandler());
-    queryReportNode.execute(conn);
+    TokenQueueToAyncHandler tokenQueueToAyncHandler = new TokenQueueToAyncHandler(queryExecutionPlan, new ExecutionTokenQueue());
+    tokenQueueToAyncHandler.setHandler(new StandardOutputHandler());
+    queryExecutionPlan.root.execute(conn);
+    tokenQueueToAyncHandler.execute();
   }
 
   @Test
@@ -65,9 +66,10 @@ public class QueryReportNodeTest {
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     SelectQuery selectQuery = (SelectQuery) sqlToRelation.toRelation(sql);
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(newSchema, null, selectQuery);
-    QueryReportNode queryReportNode = new QueryReportNode(queryExecutionPlan);
-    queryReportNode.setHandler(new StandardOutputHandler());
-    queryReportNode.execute(conn);
+    TokenQueueToAyncHandler tokenQueueToAyncHandler = new TokenQueueToAyncHandler(queryExecutionPlan, new ExecutionTokenQueue());
+    tokenQueueToAyncHandler.setHandler(new StandardOutputHandler());
+    queryExecutionPlan.root.execute(conn);
+    tokenQueueToAyncHandler.execute();
   }
 
   @Test
@@ -77,9 +79,10 @@ public class QueryReportNodeTest {
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     SelectQuery selectQuery = (SelectQuery) sqlToRelation.toRelation(sql);
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(newSchema, null, selectQuery);
-    QueryReportNode queryReportNode = new QueryReportNode(queryExecutionPlan);
-    queryReportNode.setHandler(new StandardOutputHandler());
-    queryReportNode.execute(conn);
+    TokenQueueToAyncHandler tokenQueueToAyncHandler = new TokenQueueToAyncHandler(queryExecutionPlan, new ExecutionTokenQueue());
+    tokenQueueToAyncHandler.setHandler(new StandardOutputHandler());
+    queryExecutionPlan.root.execute(conn);
+    tokenQueueToAyncHandler.execute();
   }
 
   @Test
@@ -88,9 +91,10 @@ public class QueryReportNodeTest {
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     SelectQuery selectQuery = (SelectQuery) sqlToRelation.toRelation(sql);
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(newSchema, null, selectQuery);
-    QueryReportNode queryReportNode = new QueryReportNode(queryExecutionPlan);
-    queryReportNode.setHandler(new StandardOutputHandler());
-    queryReportNode.execute(conn);
+    TokenQueueToAyncHandler tokenQueueToAyncHandler = new TokenQueueToAyncHandler(queryExecutionPlan, new ExecutionTokenQueue());
+    tokenQueueToAyncHandler.setHandler(new StandardOutputHandler());
+    queryExecutionPlan.root.execute(conn);
+    tokenQueueToAyncHandler.execute();
   }
 
   @Test
@@ -99,8 +103,10 @@ public class QueryReportNodeTest {
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     SelectQuery selectQuery = (SelectQuery) sqlToRelation.toRelation(sql);
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(newSchema, null, selectQuery);
-    QueryReportNode queryReportNode = new QueryReportNode(queryExecutionPlan);
-    queryReportNode.setHandler(new StandardOutputHandler());
-    queryReportNode.execute(conn);
+    TokenQueueToAyncHandler tokenQueueToAyncHandler = new TokenQueueToAyncHandler(queryExecutionPlan, new ExecutionTokenQueue());
+    tokenQueueToAyncHandler.setHandler(new StandardOutputHandler());
+    queryExecutionPlan.root.execute(conn);
+    tokenQueueToAyncHandler.execute();
   }
+
 }

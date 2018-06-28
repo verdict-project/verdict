@@ -188,4 +188,8 @@ public class QueryExecutionPlan {
   }
 //  static void resetTempTableNameNum() {tempTableNameNum = 0;}
 
+
+  public QueryExecutionNode getRoot() {
+    return root;
+  }
 }
