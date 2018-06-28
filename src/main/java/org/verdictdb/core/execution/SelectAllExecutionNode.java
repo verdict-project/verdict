@@ -24,12 +24,12 @@ public class SelectAllExecutionNode extends QueryExecutionNodeWithPlaceHolders {
 
 //  BlockingDeque<ExecutionResult> queue = new LinkedBlockingDeque<>();
   
-  private SelectAllExecutionNode(){
-    super(null);
+  private SelectAllExecutionNode(QueryExecutionPlan plan){
+    super(plan);
   }
 
   public static SelectAllExecutionNode create(QueryExecutionPlan plan, SelectQuery query) {
-    SelectAllExecutionNode selectAll = new SelectAllExecutionNode();
+    SelectAllExecutionNode selectAll = new SelectAllExecutionNode(plan);
     Pair<BaseTable, ExecutionTokenQueue> baseAndQueue = selectAll.createPlaceHolderTable("t");
     SelectQuery selectQuery = SelectQuery.create(new AsteriskColumn(), baseAndQueue.getLeft());
     selectAll.setSelectQuery(selectQuery);
@@ -71,7 +71,7 @@ public class SelectAllExecutionNode extends QueryExecutionNodeWithPlaceHolders {
 
   @Override
   public QueryExecutionNode deepcopy() {
-    SelectAllExecutionNode node = new SelectAllExecutionNode();
+    SelectAllExecutionNode node = new SelectAllExecutionNode(plan);
     copyFields(this, node);
     return node;
   }
