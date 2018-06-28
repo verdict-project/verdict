@@ -6,8 +6,7 @@ public class StandardOutputHandler extends AsyncHandler {
 
   @Override
   public void handle(DbmsQueryResult result) {
-    // TODO Auto-generated method stub
-
+    result.printContent();
   }
 
 }
