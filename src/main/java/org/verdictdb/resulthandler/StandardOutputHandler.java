@@ -5,9 +5,8 @@ import org.verdictdb.connection.DbmsQueryResult;
 public class StandardOutputHandler extends AsyncHandler {
 
   @Override
-  public boolean handle(DbmsQueryResult result) {
+  public void handle(DbmsQueryResult result) {
     result.printContent();
-    return true;
   }
 
 }
