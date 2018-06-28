@@ -111,6 +111,7 @@ public class SubqueriesToDependentNodes {
             newSubquery.setAliasName(((SubqueryColumn) filter).getSubquery().getAliasName().get());
           }
           ((SubqueryColumn) filter).setSubquery(newSubquery);
+          node.getPlaceholderTablesinFilter().add((SubqueryColumn) filter);
         }
         else if (filter instanceof ColumnOp) {
           filters.addAll(((ColumnOp) filter).getOperands());

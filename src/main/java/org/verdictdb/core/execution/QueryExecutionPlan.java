@@ -15,7 +15,10 @@ import java.util.concurrent.ThreadLocalRandom;
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.core.execution.ola.AggExecutionNodeBlock;
+import org.verdictdb.core.query.BaseTable;
 import org.verdictdb.core.query.SelectQuery;
+import org.verdictdb.core.query.SubqueryColumn;
+import org.verdictdb.core.query.UnnamedColumn;
 import org.verdictdb.core.rewriter.ScrambleMeta;
 import org.verdictdb.exception.VerdictDBTypeException;
 import org.verdictdb.exception.VerdictDBValueException;
@@ -124,14 +127,13 @@ public class QueryExecutionPlan {
    * 4. The results of AggNode and ProjectionNode are stored as a materialized view; the names of those
    *    materialized views are passed to their parents for potential additional processing or reporting.
    * 
-   * @param conn
+   * //@param conn
    * @param query
    * @return Pair of roots of the tree and post-processing interface.
    * @throws VerdictDBValueException 
    * @throws VerdictDBTypeException 
    */
   QueryExecutionNode makePlan(SelectQuery query) throws VerdictDBException {
-    // TODO: compress this plan
     QueryExecutionNode root = SelectAllExecutionNode.create(this, query);
 //    root = makeAsyncronousAggIfAvailable(root);
     return root;
@@ -188,4 +190,65 @@ public class QueryExecutionPlan {
   }
 //  static void resetTempTableNameNum() {tempTableNameNum = 0;}
 
+  public void compress() {
+    List<QueryExecutionNode> nodesToCompress = new ArrayList<>();
+    // compress the node from bottom to up in order to replace the select query conveniently
+    List<QueryExecutionNode> traverse = new ArrayList<>();
+    traverse.add(root);
+    while (!traverse.isEmpty()) {
+      QueryExecutionNode node = traverse.get(0);
+      traverse.remove(0);
+      if (node.dependents.isEmpty()) {
+        nodesToCompress.add(node);
+      }
+      else traverse.addAll(node.dependents);
+    }
+
+    while (!nodesToCompress.isEmpty()) {
+      QueryExecutionNode node = nodesToCompress.get(0);
+      nodesToCompress.remove(0);
+      // Exception 1: has no parent(root), or has multiple parent
+      // Exception 2: has multiple dependents and dependents share same queue
+      boolean compressable = node.parents.size()==1 && !(node.dependents.size()>1 &&
+          node.dependents.get(0).broadcastingQueues.equals(node.dependents.get(1).broadcastingQueues));
+      if (compressable) {
+        QueryExecutionNode parent = node.parents.get(0);
+        compressTwoNode(node, parent);
+      }
+      nodesToCompress.addAll(node.parents);
+    }
+  }
+
+  // Compress node and parent into parent, node will be useless
+  void compressTwoNode(QueryExecutionNode node, QueryExecutionNode parent) {
+
+    // Change the query of parents
+    BaseTable placeholderTableinParent = ((QueryExecutionNodeWithPlaceHolders)parent).getPlaceholderTables().get(parent.dependents.indexOf(node));
+
+    // If temp table is in from list of parent, just direct replace with the select query of node
+    if (parent.selectQuery.getFromList().contains(placeholderTableinParent)) {
+      int index = parent.selectQuery.getFromList().indexOf(placeholderTableinParent);
+      node.selectQuery.setAliasName(parent.selectQuery.getFromList().get(index).getAliasName().get());
+      parent.selectQuery.getFromList().set(index, node.selectQuery);
+    }
+    // Otherwise, it need to search filter to find the temp table
+    else {
+      List<SubqueryColumn> placeholderTablesinFilter = ((QueryExecutionNodeWithPlaceHolders)parent).getPlaceholderTablesinFilter();
+      for (SubqueryColumn filter:placeholderTablesinFilter) {
+        if (filter.getSubquery().getFromList().size()==1 && filter.getSubquery().getFromList().get(0).equals(placeholderTableinParent)) {
+          filter.setSubquery(node.selectQuery);
+        }
+      }
+    }
+
+    // Compress the node tree
+    parent.listeningQueues.removeAll(node.broadcastingQueues);
+    parent.listeningQueues.addAll(node.listeningQueues);
+    parent.dependents.remove(node);
+    parent.dependents.addAll(node.dependents);
+    for (QueryExecutionNode dependent:node.dependents) {
+      dependent.parents.remove(node);
+      dependent.parents.add(parent);
+    }
+  }
 }
