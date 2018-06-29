@@ -294,23 +294,43 @@ public class AggExecutionNodeBlock {
     }
     
     // reconstruct listening and broadcasting queues
-    // the existing broadcasting nodes are all replaced with new ones. the listening nodes are updated
-    // appropriately.
+    // the existing broadcasting nodes are all replaced with new ones. 
+    // the listening nodes of leaves are duplicated.
+    List<QueryExecutionNode> outsideDependents = new ArrayList<>();
+    for (QueryExecutionNode node : blockNodes) {
+      for (QueryExecutionNode dep : node.getDependents()) {
+        if (!blockNodes.contains(dep)) {
+          outsideDependents.add(dep);
+        }
+      }
+    }
+    
     for (int i = 0; i < newNodes.size(); i++) {
       QueryExecutionNode newNode = newNodes.get(i);
       QueryExecutionNode oldNode = blockNodes.get(i);
       List<ExecutionTokenQueue> listeningQueues = oldNode.getListeningQueues();
+      
+      // for each listening queue of an existing node
       for (int listeningQueueIdx = 0;  listeningQueueIdx < listeningQueues.size(); listeningQueueIdx++) {
         ExecutionTokenQueue listeningQueue = listeningQueues.get(listeningQueueIdx);
         
+        // find the nodes that broadcast to this listening queue within this block (intra-block broadcasting)
         for (int nodeIdx = 0; nodeIdx < blockNodes.size(); nodeIdx++) {
           QueryExecutionNode node = blockNodes.get(nodeIdx);
           int broadcastQueueIdx = node.getBroadcastingQueues().indexOf(listeningQueue);
+          
           if (broadcastQueueIdx >= 0) {
             ExecutionTokenQueue newQueue = newNode.generateReplacementListeningQueue(listeningQueueIdx);
-//            newNode.getListeningQueues().set(listeningQueueIdx, newQueue);       // insert in the middle
-//            newNode.getListeningQueues().remove(newNode.getListeningQueues().size()-1);   // remove last
             newNodes.get(nodeIdx).getBroadcastingQueues().set(broadcastQueueIdx, newQueue);
+          }
+        }
+        
+        // find the dependents that broadcast to this listening queue outside this block
+        for (int nodeIdx = 0; nodeIdx < outsideDependents.size(); nodeIdx++) {
+          QueryExecutionNode dep = outsideDependents.get(nodeIdx);
+          if (dep.getBroadcastingQueues().contains(listeningQueue)) {
+            ExecutionTokenQueue newQueue = newNode.generateReplacementListeningQueue(listeningQueueIdx);
+            dep.addBroadcastingQueue(newQueue);
           }
         }
       }

@@ -6,6 +6,10 @@ import java.util.List;
 import org.verdictdb.core.execution.AggExecutionNode;
 import org.verdictdb.core.execution.QueryExecutionNode;
 import org.verdictdb.core.execution.QueryExecutionPlan;
+import org.verdictdb.core.query.AbstractRelation;
+import org.verdictdb.core.query.BaseTable;
+import org.verdictdb.core.query.JoinTable;
+import org.verdictdb.core.query.SelectQuery;
 import org.verdictdb.core.rewriter.ScrambleMeta;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBTypeException;
@@ -56,21 +60,53 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
     return root;
   }
 
-  //identify nodes that are (1) aggregates and (2) are not descendants of any other aggregates.
+  // identify the nodes that are 
+  // (1) aggregates with scrambled tables and 
+  // (2) are not descendants of any other top aggregates.
   static List<AggExecutionNodeBlock> identifyTopAggBlocks(QueryExecutionNode root) {
     List<AggExecutionNodeBlock> aggblocks = new ArrayList<>();
+    ScrambleMeta scrambleMeta = root.getPlan().getScrambleMeta();
 
     if (root instanceof AggExecutionNode) {
-      AggExecutionNodeBlock block = new AggExecutionNodeBlock(root.getPlan(), root);
-      aggblocks.add(block);
-      return aggblocks;
+      // check if it contains at least one scrambled table.
+      if (doesContainScramble(root.getSelectQuery(), scrambleMeta)) {
+        AggExecutionNodeBlock block = new AggExecutionNodeBlock(root.getPlan(), root);
+        aggblocks.add(block);
+        return aggblocks;
+      }
     }
+    
     for (QueryExecutionNode dep : root.getDependents()) {
       List<AggExecutionNodeBlock> depAggBlocks = identifyTopAggBlocks(dep);
       aggblocks.addAll(depAggBlocks);
     }
 
     return aggblocks;
+  }
+  
+  static boolean doesContainScramble(SelectQuery query, ScrambleMeta scrambleMeta) {
+    for (AbstractRelation rel : query.getFromList()) {
+      if (rel instanceof BaseTable) {
+        BaseTable base = (BaseTable) rel;
+        String schemaName = base.getSchemaName();
+        String tableName = base.getTableName();
+        if (scrambleMeta.isScrambled(schemaName, tableName)) {
+          return true;
+        }
+      } else if (rel instanceof JoinTable) {
+        for (AbstractRelation r : ((JoinTable) rel).getJoinList()) {
+          if (r instanceof BaseTable) {
+            BaseTable base = (BaseTable) r;
+            String schemaName = base.getSchemaName();
+            String tableName = base.getTableName();
+            if (scrambleMeta.isScrambled(schemaName, tableName)) {
+              return true;
+            }
+          }
+        }
+      }
+    }
+    return false;
   }
 
 }

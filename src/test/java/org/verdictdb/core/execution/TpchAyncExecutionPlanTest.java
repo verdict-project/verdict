@@ -1506,39 +1506,17 @@ public class TpchAyncExecutionPlanTest {
 
   // Query 15 is a non aggregate query, add avg(s_suppkey) to be an aggregate one
   @Test
-  public void IncompleteQuery15Test() throws VerdictDBException, SQLException {
+  public void SimplifiedQuery15Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select " +
-        "avg(s_suppkey), " +
-        "total_revenue " +
-        "from " +
-        "supplier, " +
-        "(select " +
         "l_suppkey as supplier_no, " +
         "sum(l_extendedprice * (1 - l_discount)) as total_revenue " +
         "from " +
-        "lineitem " +
+        "lineitem_scrambled " +
         "where " +
         "l_shipdate >= '1996-01-01' " +
         "and l_shipdate < '1996-04-01' " +
-        "group by l_suppkey) as revenue_cached, " +
-        "(select " +
-        "max(total_revenue) as max_revenue " +
-        "from " +
-        "(select " +
-        "l_suppkey as supplier_no, " +
-        "sum(l_extendedprice * (1 - l_discount)) as total_revenue " +
-        "from " +
-        "lineitem " +
-        "where " +
-        "l_shipdate >= '1996-01-01' " +
-        "and l_shipdate < '1996-04-01' " +
-        "group by l_suppkey)) as max_revenue_cached " +
-        "where " +
-        "s_suppkey = supplier_no " +
-        "and total_revenue = max_revenue  " +
-        "group by total_revenue " +
-        "order by s_suppkey";
+        "group by l_suppkey";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
     RelationStandardizer gen = new RelationStandardizer(staticMetaData);
@@ -1548,49 +1526,30 @@ public class TpchAyncExecutionPlanTest {
 //        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
-    assertEquals(2, queryExecutionPlan.root.dependents.get(0).dependents.size());
+    queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
+    queryExecutionPlan.getRootNode().print();
+    assertEquals(3, queryExecutionPlan.root.getDependent(0).dependents.size());
 
     SelectQuery expected = SelectQuery.create(
         Arrays.<SelectItem>asList(
-            new AliasedColumn(new ColumnOp("avg", new BaseColumn("vt1", "s_suppkey")), "a5"),
-            new AliasedColumn(new BaseColumn("revenue_cached", "total_revenue"), "vc6")
-        ), Arrays.<AbstractRelation>asList(
-            new BaseTable("tpch", "supplier", "vt1"),
-            new BaseTable(placeholderSchemaName, placeholderTableName, "revenue_cached"),
-            new BaseTable(placeholderSchemaName, placeholderTableName, "max_revenue_cached")
-        ));
+            new AliasedColumn(new BaseColumn("vt1", "l_suppkey"), "supplier_no"),
+            new AliasedColumn(new ColumnOp("sum", 
+                ColumnOp.multiply(
+                    new BaseColumn("vt1", "l_extendedprice"),
+                    ColumnOp.subtract(ConstantColumn.valueOf(1), new BaseColumn("vt1", "l_discount")))), "total_revenue")),
+        new BaseTable("tpch", "lineitem_scrambled", "vt1"));
+    expected.addFilterByAnd(ColumnOp.greaterequal(BaseColumn.create("vt1", "l_shipdate"), ConstantColumn.valueOf("'1996-01-01'")));
+    expected.addFilterByAnd(ColumnOp.less(BaseColumn.create("vt1", "l_shipdate"), ConstantColumn.valueOf("'1996-04-01'")));
+
+    // aggblock
+    expected.addFilterByAnd(
+        ColumnOp.equal(new BaseColumn("vt1", "verdictdbaggblock"), ConstantColumn.valueOf(0)));
+    
+    expected.addGroupby(new AliasReference("supplier_no"));
+    
     assertEquals(
-        expected.getFromList(),
-        ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.dependents.get(0)).getSelectQuery().getFromList());
-
-    SelectQuery revenue_cached = SelectQuery.create(
-        Arrays.<SelectItem>asList(
-            new AliasedColumn(new BaseColumn("vt2", "l_suppkey"), "supplier_no"),
-            new AliasedColumn(new ColumnOp("sum", new ColumnOp("multiply", Arrays.asList(
-                new BaseColumn("vt2", "l_extendedprice"),
-                new ColumnOp("subtract", Arrays.asList(ConstantColumn.valueOf(1), new BaseColumn("vt2", "l_discount")))
-            ))), "total_revenue")
-        ), new BaseTable("tpch", "lineitem", "vt2")
-    );
-    revenue_cached.addFilterByAnd(new ColumnOp("greaterequal", Arrays.asList(
-        new BaseColumn("vt2", "l_shipdate"),
-        ConstantColumn.valueOf("'1996-01-01'")
-    )));
-    revenue_cached.addFilterByAnd(new ColumnOp("less", Arrays.asList(
-        new BaseColumn("vt2", "l_shipdate"),
-        ConstantColumn.valueOf("'1996-04-01'")
-    )));
-    revenue_cached.addGroupby(new AliasReference("supplier_no"));
-    revenue_cached.setAliasName("revenue_cached");
-    assertEquals(revenue_cached, ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.dependents.get(0).dependents.get(0)).selectQuery);
-
-    SelectQuery max_revenue_cached = SelectQuery.create(
-        Arrays.<SelectItem>asList(
-            new AliasedColumn(new ColumnOp("max", new BaseColumn("vt3", "total_revenue")), "max_revenue")
-        ), new BaseTable(placeholderSchemaName, placeholderTableName, "vt3")
-    );
-    max_revenue_cached.setAliasName("max_revenue_cached");
-    assertEquals(max_revenue_cached, ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.dependents.get(0).dependents.get(1)).selectQuery);
+        expected, 
+        ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.dependents.get(0).dependents.get(0)).selectQuery);
 
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
     queryExecutionPlan.root.executeAndWaitForTermination(new JdbcConnection(conn, new H2Syntax()));
@@ -1601,31 +1560,31 @@ public class TpchAyncExecutionPlanTest {
   public void Query17Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select\n" +
-        "\tsum(extendedprice) / 7.0 as avg_yearly\n" +
+        "  sum(extendedprice) / 7.0 as avg_yearly\n" +
         "from (\n" +
-        "\tselect\n" +
-        "\t\tl_quantity as quantity,\n" +
-        "\t\tl_extendedprice as extendedprice,\n" +
-        "\t\tt_avg_quantity\n" +
-        "\tfrom\n" +
-        "\t\t(select\n" +
-        "\tl_partkey as t_partkey,\n" +
-        "\t0.2 * avg(l_quantity) as t_avg_quantity\n" +
+        "  select\n" +
+        "    l_quantity as quantity,\n" +
+        "    l_extendedprice as extendedprice,\n" +
+        "    t_avg_quantity\n" +
+        "  from\n" +
+        "    (select\n" +
+        "  l_partkey as t_partkey,\n" +
+        "  0.2 * avg(l_quantity) as t_avg_quantity\n" +
         "from\n" +
-        "\tlineitem\n" +
+        "  lineitem_scrambled\n" +
         "group by l_partkey) as q17_lineitem_tmp_cached Inner Join\n" +
-        "\t\t(select\n" +
-        "\t\t\tl_quantity,\n" +
-        "\t\t\tl_partkey,\n" +
-        "\t\t\tl_extendedprice\n" +
-        "\t\tfrom\n" +
-        "\t\t\tpart,\n" +
-        "\t\t\tlineitem\n" +
-        "\t\twhere\n" +
-        "\t\t\tp_partkey = l_partkey\n" +
-        "\t\t\tand p_brand = 'Brand#23'\n" +
-        "\t\t\tand p_container = 'MED BOX'\n" +
-        "\t\t) as l1 on l1.l_partkey = t_partkey\n" +
+        "    (select\n" +
+        "      l_quantity,\n" +
+        "      l_partkey,\n" +
+        "      l_extendedprice\n" +
+        "    from\n" +
+        "      part,\n" +
+        "      lineitem_scrambled\n" +
+        "    where\n" +
+        "      p_partkey = l_partkey\n" +
+        "      and p_brand = 'Brand#23'\n" +
+        "      and p_container = 'MED BOX'\n" +
+        "    ) as l1 on l1.l_partkey = t_partkey\n" +
         ") a \n" +
         "where quantity < t_avg_quantity";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
@@ -1637,12 +1596,16 @@ public class TpchAyncExecutionPlanTest {
 //        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
+    queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
+    queryExecutionPlan.getRootNode().print();
 
-    assertEquals(1, queryExecutionPlan.root.dependents.get(0).dependents.size());
-    assertEquals(2, queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.size());
+    assertEquals(3, queryExecutionPlan.root.dependents.get(0).dependents.size());
+//    assertEquals(1, queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.size());
 
-    assertEquals(new BaseTable(placeholderSchemaName, placeholderTableName, "a"),
-        ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.dependents.get(0)).getSelectQuery().getFromList().get(0));
+    assertEquals(
+        new BaseTable(placeholderSchemaName, placeholderTableName, "a"),
+        ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.getDependent(0).getDependent(0)).getSelectQuery().getFromList().get(0));
+    
     JoinTable join = JoinTable.create(Arrays.<AbstractRelation>asList(
         new BaseTable(placeholderSchemaName, placeholderTableName, "q17_lineitem_tmp_cached"),
         new BaseTable(placeholderSchemaName, placeholderTableName, "l1")),
@@ -1653,8 +1616,11 @@ public class TpchAyncExecutionPlanTest {
                 new BaseColumn("q17_lineitem_tmp_cached", "t_partkey")
             ))
         ));
-    assertEquals(join,
-        ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.dependents.get(0).dependents.get(0)).getSelectQuery().getFromList().get(0));
+    assertEquals(
+        join,
+        ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.getDependent(0).getDependent(0)
+            .getDependent(0)).getSelectQuery().getFromList().get(0));
+    
     SelectQuery expected = SelectQuery.create(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("vt1", "l_partkey"), "t_partkey"),
@@ -1663,10 +1629,13 @@ public class TpchAyncExecutionPlanTest {
                 new ColumnOp("avg", new BaseColumn("vt1", "l_quantity"))
             )), "t_avg_quantity")
         ),
-        new BaseTable("tpch", "lineitem", "vt1"));
+        new BaseTable("tpch", "lineitem_scrambled", "vt1"));
     expected.addGroupby(new AliasReference("t_partkey"));
     expected.setAliasName("q17_lineitem_tmp_cached");
-    assertEquals(expected, ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.get(0)).selectQuery);
+    assertEquals(
+        expected, 
+        ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.getDependent(0).getDependent(0)
+            .getDependent(0).getDependent(0)).selectQuery);
 
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
     queryExecutionPlan.root.executeAndWaitForTermination(new JdbcConnection(conn, new H2Syntax()));
@@ -1677,39 +1646,39 @@ public class TpchAyncExecutionPlanTest {
   public void Query18Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select\n" +
-        "\tc_name,\n" +
-        "\tc_custkey,\n" +
-        "\to_orderkey,\n" +
-        "\to_orderdate,\n" +
-        "\to_totalprice,\n" +
-        "\tsum(l_quantity)\n" +
+        "  c_name,\n" +
+        "  c_custkey,\n" +
+        "  o_orderkey,\n" +
+        "  o_orderdate,\n" +
+        "  o_totalprice,\n" +
+        "  sum(l_quantity)\n" +
         "from\n" +
-        "\tcustomer,\n" +
-        "\torders,\n" +
-        "\t(select\n" +
-        "\tl_orderkey,\n" +
-        "\tsum(l_quantity) as t_sum_quantity\n" +
-        "from\n" +
-        "\tlineitem\n" +
+        "  customer,\n" +
+        "  orders_scrambled,\n" +
+        "  (select\n" +
+        "  l_orderkey,\n" +
+        "  sum(l_quantity) as t_sum_quantity\n" +
+        "  from\n" +
+        "    lineitem_scrambled\n" +
+        "  where\n" +
+        "    l_orderkey is not null\n" +
+        "  group by\n" +
+        "    l_orderkey) as t,\n" +
+        "  lineitem_scrambled l\n" +
         "where\n" +
-        "\tl_orderkey is not null\n" +
+        "  c_custkey = o_custkey\n" +
+        "  and o_orderkey = t.l_orderkey\n" +
+        "  and o_orderkey is not null\n" +
+        "  and t.t_sum_quantity > 300\n" +
         "group by\n" +
-        "\tl_orderkey) as t,\n" +
-        "\tlineitem l\n" +
-        "where\n" +
-        "\tc_custkey = o_custkey\n" +
-        "\tand o_orderkey = t.l_orderkey\n" +
-        "\tand o_orderkey is not null\n" +
-        "\tand t.t_sum_quantity > 300\n" +
-        "group by\n" +
-        "\tc_name,\n" +
-        "\tc_custkey,\n" +
-        "\to_orderkey,\n" +
-        "\to_orderdate,\n" +
-        "\to_totalprice\n" +
+        "  c_name,\n" +
+        "  c_custkey,\n" +
+        "  o_orderkey,\n" +
+        "  o_orderdate,\n" +
+        "  o_totalprice\n" +
         "order by\n" +
-        "\to_totalprice desc,\n" +
-        "\to_orderdate \n" +
+        "  o_totalprice desc,\n" +
+        "  o_orderdate \n" +
         "limit 100;";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
@@ -1719,13 +1688,15 @@ public class TpchAyncExecutionPlanTest {
 //        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
-    assertEquals(1, queryExecutionPlan.root.dependents.get(0).dependents.size());
+    queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
+    queryExecutionPlan.getRootNode().print();
+    assertEquals(5, queryExecutionPlan.root.getDependent(0).dependents.size());
 
     SelectQuery expected = SelectQuery.create(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("vt3", "l_orderkey"), "vc4"),
             new AliasedColumn(new ColumnOp("sum", new BaseColumn("vt3", "l_quantity")), "t_sum_quantity")
-        ), new BaseTable("tpch", "lineitem", "vt3"));
+        ), new BaseTable("tpch", "lineitem_scrambled", "vt3"));
     expected.addGroupby(new AliasReference("vc4"));
     expected.setAliasName("t");
     expected.addFilterByAnd(new ColumnOp("is", Arrays.asList(
@@ -1733,9 +1704,9 @@ public class TpchAyncExecutionPlanTest {
         ConstantColumn.valueOf("NOT NULL")
     )));
 
-    assertEquals(expected, ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.dependents.get(0).dependents.get(0)).selectQuery);
+    assertEquals(expected, ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.getDependent(0).getDependent(0).getDependent(0)).selectQuery);
     assertEquals(new BaseTable(placeholderSchemaName, placeholderTableName, "t"),
-        ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.dependents.get(0)).getSelectQuery().getFromList().get(2));
+        ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.getDependent(0).getDependent(0)).getSelectQuery().getFromList().get(2));
 
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
     queryExecutionPlan.root.executeAndWaitForTermination(new JdbcConnection(conn, new H2Syntax()));
@@ -1748,7 +1719,7 @@ public class TpchAyncExecutionPlanTest {
     String sql = "select " +
         "sum(l_extendedprice* (1 - l_discount)) as revenue " +
         "from " +
-        "lineitem, " +
+        "lineitem_scrambled, " +
         "part " +
         "where " +
         "( " +
@@ -1789,7 +1760,10 @@ public class TpchAyncExecutionPlanTest {
 //        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
-    AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "vt1");
+    queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
+    queryExecutionPlan.getRootNode().print();
+    
+    AbstractRelation lineitem = new BaseTable("tpch", "lineitem_scrambled", "vt1");
     AbstractRelation part = new BaseTable("tpch", "part", "vt2");
     SelectQuery expected = SelectQuery.create(
         Arrays.<SelectItem>asList(
@@ -1961,8 +1935,13 @@ public class TpchAyncExecutionPlanTest {
         )),
         columnOp3
     )));
-    expected.addLimit(ConstantColumn.valueOf(1));
-    assertEquals(expected, ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.dependents.get(0)).selectQuery);
+    
+    // agg block
+    expected.addFilterByAnd(
+        ColumnOp.equal(new BaseColumn("vt1", "verdictdbaggblock"), ConstantColumn.valueOf(0)));
+    
+//    expected.addLimit(ConstantColumn.valueOf(1));
+    assertEquals(expected, ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.getDependent(0).getDependent(0)).selectQuery);
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
     queryExecutionPlan.root.executeAndWaitForTermination(new JdbcConnection(conn, new H2Syntax()));
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
@@ -1973,27 +1952,27 @@ public class TpchAyncExecutionPlanTest {
   public void Query20Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select\n" +
-        "\ts_name,\n" +
-        "\tcount(s_address)\n" +
+        "  s_name,\n" +
+        "  count(s_address)\n" +
         "from\n" +
-        "\tsupplier,\n" +
-        "\tnation,\n" +
-        "\tpartsupp,\n" +
-        "\t(select\n" +
-        "\tl_partkey,\n" +
-        "\tl_suppkey,\n" +
-        "\t0.5 * sum(l_quantity) as sum_quantity\n" +
-        "from\n" +
-        "\tlineitem\n" +
+        "  supplier,\n" +
+        "  nation,\n" +
+        "  partsupp,\n" +
+        "  (select\n" +
+        "    l_partkey,\n" +
+        "    l_suppkey,\n" +
+        "    0.5 * sum(l_quantity) as sum_quantity\n" +
+        "  from\n" +
+        "    lineitem_scrambled\n" +
         "where\n" +
-        "\tl_shipdate >= '1994-01-01'\n" +
-        "\tand l_shipdate < '1995-01-01'\n" +
+        "  l_shipdate >= '1994-01-01'\n" +
+        "  and l_shipdate < '1995-01-01'\n" +
         "group by l_partkey, l_suppkey) as q20_tmp2_cached\n" +
         "where\n" +
-        "\ts_nationkey = n_nationkey\n" +
-        "\tand n_name = 'CANADA'\n" +
-        "\tand s_suppkey = ps_suppkey\n" +
-        "\tgroup by s_name\n" +
+        "  s_nationkey = n_nationkey\n" +
+        "  and n_name = 'CANADA'\n" +
+        "  and s_suppkey = ps_suppkey\n" +
+        "  group by s_name\n" +
         "order by s_name";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
@@ -2003,7 +1982,10 @@ public class TpchAyncExecutionPlanTest {
 //        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
-    assertEquals(1, queryExecutionPlan.root.dependents.get(0).dependents.size());
+    queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
+    queryExecutionPlan.getRootNode().print();
+
+    assertEquals(3, queryExecutionPlan.root.getDependent(0).getDependent(0).dependents.size());
     SelectQuery expected = SelectQuery.create(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("vt4", "l_partkey"), "vc5"),
@@ -2012,7 +1994,7 @@ public class TpchAyncExecutionPlanTest {
                 ConstantColumn.valueOf(0.5),
                 new ColumnOp("sum", new BaseColumn("vt4", "l_quantity"))
             )), "sum_quantity")
-        ), new BaseTable("tpch", "lineitem", "vt4")
+        ), new BaseTable("tpch", "lineitem_scrambled", "vt4")
     );
     expected.addFilterByAnd(new ColumnOp("greaterequal", Arrays.asList(
         new BaseColumn("vt4", "l_shipdate"),
@@ -2022,12 +2004,23 @@ public class TpchAyncExecutionPlanTest {
         new BaseColumn("vt4", "l_shipdate"),
         ConstantColumn.valueOf("'1995-01-01'")
     )));
+    
+    // aggblock
+    expected.addFilterByAnd(
+        ColumnOp.equal(new BaseColumn("vt4", "verdictdbaggblock"), ConstantColumn.valueOf(0)));
+    
     expected.addGroupby(new AliasReference("vc5"));
     expected.addGroupby(new AliasReference("vc6"));
     expected.setAliasName("q20_tmp2_cached");
-    assertEquals(expected, ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.dependents.get(0).dependents.get(0)).selectQuery);
-    assertEquals(new BaseTable(placeholderSchemaName, placeholderTableName, "q20_tmp2_cached"),
+    
+    assertEquals(
+        expected, 
+        ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.getDependent(0).getDependent(0).getDependent(0)).selectQuery);
+    
+    assertEquals(
+        new BaseTable(placeholderSchemaName, placeholderTableName, "q20_tmp2_cached"),
         ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.dependents.get(0)).getSelectQuery().getFromList().get(3));
+    
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
     queryExecutionPlan.root.executeAndWaitForTermination(new JdbcConnection(conn, new H2Syntax()));
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
@@ -2037,89 +2030,87 @@ public class TpchAyncExecutionPlanTest {
   public void Query21Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select\n" +
-        "\tname,\n" +
-        "\tcount(1) as numwait\n" +
+        "  name,\n" +
+        "  count(1) as numwait\n" +
         "from (\n" +
-        "\tselect name from (\n" +
-        "\t\tselect\n" +
-        "\t\t\ts_name,\n" +
-        "\t\t\tt2.l_orderkey,\n" +
-        "\t\t\tl_suppkey,\n" +
-        "\t\t\tcount_suppkey,\n" +
-        "\t\t\tmax_suppkey\n" +
-        "\t\tfrom\n" +
-        "\t\t\t(select\n" +
-        "\tl_orderkey,\n" +
-        "\tcount(l_suppkey) count_suppkey,\n" +
-        "\tmax(l_suppkey) as max_suppkey\n" +
+        "  select name from (\n" +
+        "    select\n" +
+        "      s_name,\n" +
+        "      t2.l_orderkey,\n" +
+        "      l_suppkey,\n" +
+        "      count_suppkey,\n" +
+        "      max_suppkey\n" +
+        "    from\n" +
+        "      (select\n" +
+        "  l_orderkey,\n" +
+        "  count(l_suppkey) count_suppkey,\n" +
+        "  max(l_suppkey) as max_suppkey\n" +
         "from\n" +
-        "\tlineitem\n" +
+        "  lineitem_scrambled\n" +
         "where\n" +
-        "\tl_receiptdate > l_commitdate\n" +
-        "\tand l_orderkey is not null\n" +
+        "  l_receiptdate > l_commitdate\n" +
+        "  and l_orderkey is not null\n" +
         "group by\n" +
-        "\tl_orderkey) as t2 right outer join (\n" +
-        "\t\t\tselect\n" +
-        "\t\t\t\ts_name as name,\n" +
-        "\t\t\t\tl_orderkey,\n" +
-        "\t\t\t\tl_suppkey from (\n" +
-        "\t\t\t\tselect\n" +
-        "\t\t\t\t\ts_name,\n" +
-        "\t\t\t\t\tt1.l_orderkey,\n" +
-        "\t\t\t\t\tl_suppkey,\n" +
-        "\t\t\t\t\tcount_suppkey,\n" +
-        "\t\t\t\t\tmax_suppkey\n" +
-        "\t\t\t\tfrom\n" +
-        "\t\t\t\t\t(select\n" +
-        "\tl_orderkey,\n" +
-        "\tcount(l_suppkey) as count_suppkey,\n" +
-        "\tmax(l_suppkey) as max_suppkey\n" +
-        "from\n" +
-        "\tlineitem\n" +
-        "where\n" +
-        "\tl_orderkey is not null\n" +
-        "group by\n" +
-        "\tl_orderkey) as t1 join (\n" +
-        "\t\t\t\t\t\tselect\n" +
-        "\t\t\t\t\t\t\ts_name,\n" +
-        "\t\t\t\t\t\t\tl_orderkey,\n" +
-        "\t\t\t\t\t\t\tl_suppkey\n" +
-        "\t\t\t\t\t\tfrom\n" +
-        "\t\t\t\t\t\t\torders o join (\n" +
-        "\t\t\t\t\t\t\tselect\n" +
-        "\t\t\t\t\t\t\t\ts_name,\n" +
-        "\t\t\t\t\t\t\t\tl_orderkey,\n" +
-        "\t\t\t\t\t\t\t\tl_suppkey\n" +
-        "\t\t\t\t\t\t\tfrom\n" +
-        "\t\t\t\t\t\t\t\tnation n join supplier s\n" +
-        "\t\t\t\t\t\t\ton\n" +
-        "\t\t\t\t\t\t\t\ts.s_nationkey = n.n_nationkey\n" +
-        "\t\t\t\t\t\t\t\tand n.n_name = 'SAUDI ARABIA'\n" +
-        "\t\t\t\t\t\t\t\tjoin lineitem l\n" +
-        "\t\t\t\t\t\t\ton\n" +
-        "\t\t\t\t\t\t\t\ts.s_suppkey = l.l_suppkey\n" +
-        "\t\t\t\t\t\t\twhere\n" +
-        "\t\t\t\t\t\t\t\tl.l_receiptdate > l.l_commitdate\n" +
-        "\t\t\t\t\t\t\t\tand l.l_orderkey is not null\n" +
-        "\t\t\t\t\t\t) l1 on o.o_orderkey = l1.l_orderkey and o.o_orderstatus = 'F'\n" +
-        "\t\t\t\t\t) l2 on l2.l_orderkey = t1.l_orderkey\n" +
-        "\t\t\t\t) a\n" +
-        "\t\t\twhere\n" +
-        "\t\t\t\t(count_suppkey > 1)\n" +
-        "\t\t\t\tor ((count_suppkey=1)\n" +
-        "\t\t\t\tand (l_suppkey <> max_suppkey))\n" +
-        "\t\t) l3 on l3.l_orderkey = t2.l_orderkey\n" +
-        "\t) b\n" +
-        "\twhere\n" +
-        "\t\t(count_suppkey is null)\n" +
-        "\t\tor ((count_suppkey=1)\n" +
-        "\t\tand (l_suppkey = max_suppkey))\n" +
+        "  l_orderkey) as t2 right outer join (\n" +
+        "      select\n" +
+        "        s_name as name,\n" +
+        "        l_orderkey,\n" +
+        "        l_suppkey from (\n" +
+        "        select\n" +
+        "          s_name,\n" +
+        "          t1.l_orderkey,\n" +
+        "          l_suppkey,\n" +
+        "          count_suppkey,\n" +
+        "          max_suppkey\n" +
+        "        from\n" +
+        "          (select\n" +
+        "             l_orderkey,\n" +
+        "             count(l_suppkey) as count_suppkey,\n" +
+        "             max(l_suppkey) as max_suppkey\n" +
+        "           from\n" +
+        "             lineitem_scrambled\n" +
+        "           where\n" +
+        "             l_orderkey is not null\n" +
+        "           group by\n" +
+        "             l_orderkey) as t1 join "
+        + "        (select\n" +
+        "             s_name,\n" +
+        "             l_orderkey,\n" +
+        "             l_suppkey\n" +
+        "           from\n" +
+        "             orders_scrambled o join "
+        + "        (select\n" +
+        "             s_name,\n" +
+        "             l_orderkey,\n" +
+        "             l_suppkey\n" +
+        "           from\n" +
+        "             nation n join supplier s\n" +
+        "             on s.s_nationkey = n.n_nationkey\n" +
+        "                and n.n_name = 'SAUDI ARABIA'\n" +
+        "             join lineitem_scrambled l\n" +
+        "             on s.s_suppkey = l.l_suppkey\n" +
+        "           where\n" +
+        "             l.l_receiptdate > l.l_commitdate\n" +
+        "             and l.l_orderkey is not null\n" +
+        "            ) l1 on o.o_orderkey = l1.l_orderkey and o.o_orderstatus = 'F'\n" +
+        "          ) l2 on l2.l_orderkey = t1.l_orderkey\n" +
+        "        ) a\n" +
+        "      where\n" +
+        "        (count_suppkey > 1)\n" +
+        "        or ((count_suppkey=1)\n" +
+        "        and (l_suppkey <> max_suppkey))\n" +
+        "    ) l3 on l3.l_orderkey = t2.l_orderkey\n" +
+        "  ) b\n" +
+        "  where\n" +
+        "    (count_suppkey is null)\n" +
+        "    or ((count_suppkey=1)\n" +
+        "    and (l_suppkey = max_suppkey))\n" +
         ") c\n" +
         "group by\n" +
-        "\ts_name\n" +
+        "  s_name\n" +
         "order by\n" +
-        "\tnumwait desc,\n" +
-        "\ts_name \n" +
+        "  numwait desc,\n" +
+        "  s_name \n" +
         "limit 100;";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
@@ -2129,11 +2120,13 @@ public class TpchAyncExecutionPlanTest {
 //        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
+    queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
+    queryExecutionPlan.getRootNode().print();
 
-    assertEquals(1, queryExecutionPlan.root.dependents.get(0).dependents.size());
-    assertEquals(1, queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.size());
-    assertEquals(2, queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.get(0).dependents.size());
-    assertEquals(0, queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.get(0).dependents.get(0).dependents.size());
+    assertEquals(1, queryExecutionPlan.root.getDependent(0).dependents.size());
+    assertEquals(1, queryExecutionPlan.root.getDependent(0).getDependent(0).dependents.size());
+    assertEquals(2, queryExecutionPlan.root.getDependent(0).getDependent(0).getDependent(0).dependents.size());
+    assertEquals(3, queryExecutionPlan.root.getDependent(0).getDependent(0).getDependent(0).getDependent(0).dependents.size());
     assertEquals(1, queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.get(0).dependents.get(1).dependents.size());
 
     assertEquals(new BaseTable(placeholderSchemaName, placeholderTableName, "c"),
@@ -2163,69 +2156,69 @@ public class TpchAyncExecutionPlanTest {
   public void Query22Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select\n" +
-        "\tcntrycode,\n" +
-        "\tcount(1) as numcust,\n" +
-        "\tsum(acctbal) as totacctbal\n" +
+        "  cntrycode,\n" +
+        "  count(1) as numcust,\n" +
+        "  sum(acctbal) as totacctbal\n" +
         "from (\n" +
-        "\tselect\n" +
-        "\t\tcntrycode,\n" +
-        "\t\tacctbal,\n" +
-        "\t\tavg_acctbal\n" +
-        "\tfrom\n" +
-        "\t\t(select\n" +
-        "\tavg(c_acctbal) as avg_acctbal\n" +
+        "  select\n" +
+        "    cntrycode,\n" +
+        "    acctbal,\n" +
+        "    avg_acctbal\n" +
+        "  from\n" +
+        "    (select\n" +
+        "  avg(c_acctbal) as avg_acctbal\n" +
         "from\n" +
-        "\t(select\n" +
-        "\tc_acctbal,\n" +
-        "\tc_custkey,\n" +
-        "\tsubstr(c_phone, 1, 2) as cntrycode\n" +
+        "  (select\n" +
+        "  c_acctbal,\n" +
+        "  c_custkey,\n" +
+        "  substr(c_phone, 1, 2) as cntrycode\n" +
         "from\n" +
-        "\tcustomer\n" +
+        "  customer\n" +
         "where\n" +
-        "\tsubstr(c_phone, 1, 2) = '13' or\n" +
-        "\tsubstr(c_phone, 1, 2) = '31' or\n" +
-        "\tsubstr(c_phone, 1, 2) = '23' or\n" +
-        "\tsubstr(c_phone, 1, 2) = '29' or\n" +
-        "\tsubstr(c_phone, 1, 2) = '30' or\n" +
-        "\tsubstr(c_phone, 1, 2) = '18' or\n" +
-        "\tsubstr(c_phone, 1, 2) = '17')\n" +
+        "  substr(c_phone, 1, 2) = '13' or\n" +
+        "  substr(c_phone, 1, 2) = '31' or\n" +
+        "  substr(c_phone, 1, 2) = '23' or\n" +
+        "  substr(c_phone, 1, 2) = '29' or\n" +
+        "  substr(c_phone, 1, 2) = '30' or\n" +
+        "  substr(c_phone, 1, 2) = '18' or\n" +
+        "  substr(c_phone, 1, 2) = '17')\n" +
         "where\n" +
-        "\tc_acctbal > 0.00) as ct1 join (\n" +
-        "\t\t\tselect\n" +
-        "\t\t\t\tcntrycode,\n" +
-        "\t\t\t\tc_acctbal as acctbal\n" +
-        "\t\t\tfrom\n" +
-        "\t\t\t\t(select\n" +
-        "\to_custkey\n" +
+        "  c_acctbal > 0.00) as ct1 join (\n" +
+        "      select\n" +
+        "        cntrycode,\n" +
+        "        c_acctbal as acctbal\n" +
+        "      from\n" +
+        "        (select\n" +
+        "  o_custkey\n" +
         "from\n" +
-        "\torders\n" +
+        "  orders\n" +
         "group by\n" +
-        "\to_custkey) ot\n" +
-        "\t\t\t\tright outer join (select\n" +
-        "\tc_acctbal,\n" +
-        "\tc_custkey,\n" +
-        "\tsubstr(c_phone, 1, 2) as cntrycode\n" +
+        "  o_custkey) ot\n" +
+        "        right outer join (select\n" +
+        "  c_acctbal,\n" +
+        "  c_custkey,\n" +
+        "  substr(c_phone, 1, 2) as cntrycode\n" +
         "from\n" +
-        "\tcustomer\n" +
+        "  customer\n" +
         "where\n" +
-        "\tsubstr(c_phone, 1, 2) = '13' or\n" +
-        "\tsubstr(c_phone, 1, 2) = '31' or\n" +
-        "\tsubstr(c_phone, 1, 2) = '23' or\n" +
-        "\tsubstr(c_phone, 1, 2) = '29' or\n" +
-        "\tsubstr(c_phone, 1, 2) = '30' or\n" +
-        "\tsubstr(c_phone, 1, 2) = '18' or\n" +
-        "\tsubstr(c_phone, 1, 2) = '17') ct\n" +
-        "\t\t\t\ton ct.c_custkey = ot.o_custkey\n" +
-        "\t\t\twhere\n" +
-        "\t\t\t\to_custkey is null\n" +
-        "\t\t) as ct2 on ct1.avg_acctbal > 0\n" +
+        "  substr(c_phone, 1, 2) = '13' or\n" +
+        "  substr(c_phone, 1, 2) = '31' or\n" +
+        "  substr(c_phone, 1, 2) = '23' or\n" +
+        "  substr(c_phone, 1, 2) = '29' or\n" +
+        "  substr(c_phone, 1, 2) = '30' or\n" +
+        "  substr(c_phone, 1, 2) = '18' or\n" +
+        "  substr(c_phone, 1, 2) = '17') ct\n" +
+        "        on ct.c_custkey = ot.o_custkey\n" +
+        "      where\n" +
+        "        o_custkey is null\n" +
+        "    ) as ct2 on ct1.avg_acctbal > 0\n" +
         ") a\n" +
         "where\n" +
-        "\tc_acctbal > avg_acctbal\n" +
+        "  c_acctbal > avg_acctbal\n" +
         "group by\n" +
-        "\tcntrycode\n" +
+        "  cntrycode\n" +
         "order by\n" +
-        "\tcntrycode";
+        "  cntrycode";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
     RelationStandardizer gen = new RelationStandardizer(staticMetaData);

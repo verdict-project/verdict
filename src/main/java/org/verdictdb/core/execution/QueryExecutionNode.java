@@ -253,6 +253,10 @@ public abstract class QueryExecutionNode {
     }
     return queue;
   }
+  
+  public void removeListeningQueue(int index) {
+    listeningQueues.remove(index);
+  }
 
   // setup method
   public void addBroadcastingQueue(ExecutionTokenQueue queue) {
