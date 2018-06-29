@@ -109,7 +109,7 @@ public class QueryExecutionPlan {
     this.root = root;
   }
   
-  String generateUniqueIdentifier() {
+  synchronized String generateUniqueIdentifier() {
     return String.format("%d_%d", serialNum, identifierNum++);
   }
 

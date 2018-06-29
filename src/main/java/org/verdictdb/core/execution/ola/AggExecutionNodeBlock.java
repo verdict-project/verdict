@@ -307,9 +307,9 @@ public class AggExecutionNodeBlock {
           QueryExecutionNode node = blockNodes.get(nodeIdx);
           int broadcastQueueIdx = node.getBroadcastingQueues().indexOf(listeningQueue);
           if (broadcastQueueIdx >= 0) {
-            ExecutionTokenQueue newQueue = newNode.generateListeningQueue();
-            newNode.getListeningQueues().set(listeningQueueIdx, newQueue);       // insert in the middle
-            newNode.getListeningQueues().remove(newNode.getListeningQueues().size()-1);   // remove last
+            ExecutionTokenQueue newQueue = newNode.generateReplacementListeningQueue(listeningQueueIdx);
+//            newNode.getListeningQueues().set(listeningQueueIdx, newQueue);       // insert in the middle
+//            newNode.getListeningQueues().remove(newNode.getListeningQueues().size()-1);   // remove last
             newNodes.get(nodeIdx).getBroadcastingQueues().set(broadcastQueueIdx, newQueue);
           }
         }

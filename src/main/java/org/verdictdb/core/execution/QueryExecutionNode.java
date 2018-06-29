@@ -81,11 +81,11 @@ public abstract class QueryExecutionNode {
     return dependents.get(index);
   }
   
-  public synchronized String getStatus() {
+  public String getStatus() {
     return status;
   }
   
-  public synchronized void setStatus(String status) {
+  public void setStatus(String status) {
     this.status = status;
   }
   
@@ -131,7 +131,7 @@ public abstract class QueryExecutionNode {
     // Now we start the execution of this current node.
     // Set the status of this node
     setStatus("running");
-    System.out.println("Starts the exec of " + this);
+//    System.out.println("Starts the exec of " + this);
     
     executor.submit(new Runnable() {
       int process(DbmsConnection conn, List<ExecutionInfoToken> tokens) {
@@ -164,16 +164,16 @@ public abstract class QueryExecutionNode {
           // dependency exists
           readLatestResultsFromDependents();    // update both (1) status and (2) latestQueue
           
-          try {
-            TimeUnit.SECONDS.sleep(1);
-            System.out.println(QueryExecutionNode.this);
-            System.out.println(successDependentCount);
-            System.out.println(failedDependentCount);
-//            System.out.println();
-          } catch (InterruptedException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-          }
+//          try {
+//            TimeUnit.SECONDS.sleep(1);
+//            System.out.println(QueryExecutionNode.this);
+//            System.out.println(successDependentCount);
+//            System.out.println(failedDependentCount);
+////            System.out.println();
+//          } catch (InterruptedException e) {
+//            // TODO Auto-generated catch block
+//            e.printStackTrace();
+//          }
           
           // base conditions
           if (doesFailedDependentExist()) {
@@ -190,8 +190,8 @@ public abstract class QueryExecutionNode {
           // see if a complete set of results are available
           List<ExecutionInfoToken> latestResults = getLatestResultsIfAvailable();
 //          System.out.println(QueryExecutionNode.this);
-          System.out.println(QueryExecutionNode.this.latestResults);
-          System.out.println(latestResults);
+//          System.out.println(QueryExecutionNode.this.latestResults);
+//          System.out.println(latestResults);
           if (latestResults == null) {
             continue;
           }
@@ -239,6 +239,15 @@ public abstract class QueryExecutionNode {
     ExecutionTokenQueue queue = new ExecutionTokenQueue();
     listeningQueues.add(queue);
     latestResults.add(Optional.<ExecutionInfoToken>absent());
+    if (listeningQueues.size() != latestResults.size()) {
+      throw new VerdictDBValueException("Invalid field constraint.");
+    }
+    return queue;
+  }
+  
+  public ExecutionTokenQueue generateReplacementListeningQueue(int index) throws VerdictDBValueException {
+    ExecutionTokenQueue queue = new ExecutionTokenQueue();
+    listeningQueues.set(index, queue);
     if (listeningQueues.size() != latestResults.size()) {
       throw new VerdictDBValueException("Invalid field constraint.");
     }

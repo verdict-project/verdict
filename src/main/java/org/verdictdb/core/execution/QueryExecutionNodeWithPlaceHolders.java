@@ -50,4 +50,9 @@ public abstract class QueryExecutionNodeWithPlaceHolders extends QueryExecutionN
   public List<BaseTable> getPlaceholderTables() {
     return placeholderTables;
   }
+  
+  void copyFields(QueryExecutionNodeWithPlaceHolders from, QueryExecutionNodeWithPlaceHolders to) {
+    super.copyFields(from, to);
+    to.placeholderTables = from.placeholderTables;
+  }
 }

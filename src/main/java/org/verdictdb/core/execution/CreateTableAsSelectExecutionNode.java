@@ -61,12 +61,8 @@ public class CreateTableAsSelectExecutionNode extends QueryExecutionNodeWithPlac
     String newTableName = tempTableFullName.getRight();
     CreateTableAsSelectQuery createQuery = new CreateTableAsSelectQuery(newTableSchemaName, newTableName, selectQuery);
     
-    try {
-      String sql = QueryToSql.convert(conn.getSyntax(), createQuery);
-      conn.executeUpdate(sql);
-    } catch (VerdictDBException e) {
-      e.printStackTrace();
-    }
+    String sql = QueryToSql.convert(conn.getSyntax(), createQuery);
+    conn.executeUpdate(sql);
     
     // write the result
     ExecutionInfoToken result = new ExecutionInfoToken();
