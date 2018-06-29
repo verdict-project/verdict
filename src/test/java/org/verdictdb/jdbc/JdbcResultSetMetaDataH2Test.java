@@ -1,12 +1,5 @@
 package org.verdictdb.jdbc;
 
-import static java.sql.Types.BIGINT;
-import static java.sql.Types.DOUBLE;
-import static java.sql.Types.VARCHAR;
-import static org.junit.Assert.assertEquals;
-
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -21,13 +14,20 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class JdbcResultSetMetaDataTest {
+import static java.sql.Types.BIGINT;
+import static java.sql.Types.DOUBLE;
+import static java.sql.Types.VARCHAR;
+import static org.junit.Assert.assertEquals;
+
+public class JdbcResultSetMetaDataH2Test {
 
   static Connection conn;
 
   private static Statement stmt;
 
   private JdbcResultSetMetaData jdbcResultSetMetaData1, jdbcResultSetMetaData2;
+
+  private ResultSet rs;
 
   @BeforeClass
   public static void setupH2Database() throws SQLException {
@@ -62,7 +62,7 @@ public class JdbcResultSetMetaDataTest {
 
   @Before
   public void createJdbcResultSetMetaData() throws SQLException, VerdictDBValueException {
-    ResultSet rs = stmt.executeQuery("SELECT gender, count(*) as cnt, avg(age) as ageavg FROM PEOPLE GROUP BY gender");
+    rs = stmt.executeQuery("SELECT gender, count(*) as cnt, avg(age) as ageavg FROM PEOPLE GROUP BY gender");
     JdbcQueryResult queryResult = new JdbcQueryResult(rs);
     List<String> nonAgg = new ArrayList<>();
     List<AggNameAndType> agg = new ArrayList<>();
@@ -103,10 +103,10 @@ public class JdbcResultSetMetaDataTest {
 
   @Test
   public void getColumnDisplaySizeTest() throws SQLException {
-    assertEquals(19, jdbcResultSetMetaData1.getColumnDisplaySize(2));
-    assertEquals(64, jdbcResultSetMetaData1.getColumnDisplaySize(3));
-    assertEquals(19, jdbcResultSetMetaData2.getColumnDisplaySize(2));
-    assertEquals(64, jdbcResultSetMetaData2.getColumnDisplaySize(3));
+    assertEquals(rs.getMetaData().getColumnDisplaySize(2), jdbcResultSetMetaData1.getColumnDisplaySize(2));
+    assertEquals(rs.getMetaData().getColumnDisplaySize(3), jdbcResultSetMetaData1.getColumnDisplaySize(3));
+    assertEquals(rs.getMetaData().getColumnDisplaySize(2), jdbcResultSetMetaData2.getColumnDisplaySize(2));
+    assertEquals(rs.getMetaData().getColumnDisplaySize(3), jdbcResultSetMetaData2.getColumnDisplaySize(3));
   }
 
   @Test
@@ -131,20 +131,20 @@ public class JdbcResultSetMetaDataTest {
 
   @Test
   public void getPrecisionTest() throws SQLException {
-    assertEquals(0, jdbcResultSetMetaData1.getPrecision(1));
-    assertEquals(19, jdbcResultSetMetaData1.getPrecision(2));
-    assertEquals(64, jdbcResultSetMetaData1.getPrecision(3));
-    assertEquals(0, jdbcResultSetMetaData2.getPrecision(1));
-    assertEquals(19, jdbcResultSetMetaData2.getPrecision(2));
-    assertEquals(64, jdbcResultSetMetaData2.getPrecision(3));
+    assertEquals(rs.getMetaData().getPrecision(1), jdbcResultSetMetaData1.getPrecision(1));
+    assertEquals(rs.getMetaData().getPrecision(2), jdbcResultSetMetaData1.getPrecision(2));
+    assertEquals(rs.getMetaData().getPrecision(3), jdbcResultSetMetaData1.getPrecision(3));
+    assertEquals(rs.getMetaData().getPrecision(1), jdbcResultSetMetaData2.getPrecision(1));
+    assertEquals(rs.getMetaData().getPrecision(2), jdbcResultSetMetaData2.getPrecision(2));
+    assertEquals(rs.getMetaData().getPrecision(3), jdbcResultSetMetaData2.getPrecision(3));
   }
 
   @Test
   public void getScaleTest() throws SQLException {
-    assertEquals(0, jdbcResultSetMetaData1.getScale(1));
-    assertEquals(10, jdbcResultSetMetaData1.getScale(3));
-    assertEquals(0, jdbcResultSetMetaData2.getScale(1));
-    assertEquals(10, jdbcResultSetMetaData1.getScale(3));
+    assertEquals(rs.getMetaData().getScale(1), jdbcResultSetMetaData1.getScale(1));
+    assertEquals(rs.getMetaData().getScale(3), jdbcResultSetMetaData1.getScale(3));
+    assertEquals(rs.getMetaData().getScale(1), jdbcResultSetMetaData2.getScale(1));
+    assertEquals(rs.getMetaData().getScale(3), jdbcResultSetMetaData1.getScale(3));
   }
 
   @Test
@@ -175,5 +175,25 @@ public class JdbcResultSetMetaDataTest {
     assertEquals("varchar", jdbcResultSetMetaData2.getColumnClassName(1));
     assertEquals("bigint", jdbcResultSetMetaData2.getColumnClassName(2));
     assertEquals("double", jdbcResultSetMetaData2.getColumnClassName(3));
+  }
+
+  @Test
+  public void isCurrencyTest() throws SQLException {
+    assertEquals(rs.getMetaData().isCurrency(1), jdbcResultSetMetaData1.isCurrency(1));
+    assertEquals(rs.getMetaData().isCurrency(2), jdbcResultSetMetaData1.isCurrency(2));
+    assertEquals(rs.getMetaData().isCurrency(3), jdbcResultSetMetaData1.isCurrency(3));
+    assertEquals(rs.getMetaData().isCurrency(1), jdbcResultSetMetaData2.isCurrency(1));
+    assertEquals(rs.getMetaData().isCurrency(2), jdbcResultSetMetaData2.isCurrency(2));
+    assertEquals(rs.getMetaData().isCurrency(3), jdbcResultSetMetaData2.isCurrency(3));
+  }
+
+  @Test
+  public void isNullableTest() throws SQLException {
+    assertEquals(rs.getMetaData().isNullable(1), jdbcResultSetMetaData1.isNullable(1));
+    assertEquals(rs.getMetaData().isNullable(2), jdbcResultSetMetaData1.isNullable(2));
+    assertEquals(rs.getMetaData().isNullable(3), jdbcResultSetMetaData1.isNullable(3));
+    assertEquals(rs.getMetaData().isNullable(1), jdbcResultSetMetaData2.isNullable(1));
+    assertEquals(rs.getMetaData().isNullable(2), jdbcResultSetMetaData2.isNullable(2));
+    assertEquals(rs.getMetaData().isNullable(3), jdbcResultSetMetaData2.isNullable(3));
   }
 }

@@ -18,14 +18,36 @@ public class JdbcQueryResult implements DbmsQueryResult {
 
   int cursor = -1;
 
+  DbmsQueryResultMetaData dbmsQueryResultMetaData = new DbmsQueryResultMetaData();
+
   public JdbcQueryResult(ResultSet resultSet) throws SQLException {
-//    this.resultSet = resultSet;
+
+    List<Boolean> isCurrency = new ArrayList<>();
+    List<Integer> isNullable = new ArrayList<>();
+    List<Integer> precision = new ArrayList<>();
+    List<Integer> scale = new ArrayList<>();
+    List<Integer> columnDisplaySize = new ArrayList<>();
+    List<Boolean> isAutoIncrement = new ArrayList<>();
+
     ResultSetMetaData meta = resultSet.getMetaData();
     int columnCount = meta.getColumnCount();
     for (int i = 0; i < columnCount; i++) {
       columnNames.add(meta.getColumnLabel(i+1).toLowerCase());
       columnTypes.add(meta.getColumnType(i+1));
+      precision.add(meta.getPrecision(i+1));
+      scale.add(meta.getScale(i+1));
+      columnDisplaySize.add(meta.getColumnDisplaySize(i+1));
+      isNullable.add(meta.isNullable(i+1));
+      isCurrency.add(meta.isCurrency(i+1));
+      isAutoIncrement.add(meta.isAutoIncrement(i+1));
     }
+    dbmsQueryResultMetaData.columnDisplaySize = columnDisplaySize;
+    dbmsQueryResultMetaData.isAutoIncrement = isAutoIncrement;
+    dbmsQueryResultMetaData.isCurrency = isCurrency;
+    dbmsQueryResultMetaData.isNullable = isNullable;
+    dbmsQueryResultMetaData.precision = precision;
+    dbmsQueryResultMetaData.scale = scale;
+
     while (resultSet.next()) {
       List<Object> row = new ArrayList<>();
       for (int i=0; i< columnCount; i++) {
@@ -33,6 +55,11 @@ public class JdbcQueryResult implements DbmsQueryResult {
       }
       result.add(row);
     }
+  }
+
+  @Override
+  public DbmsQueryResultMetaData getMetaData() {
+    return dbmsQueryResultMetaData;
   }
 
   @Override
@@ -113,7 +140,6 @@ public class JdbcQueryResult implements DbmsQueryResult {
       }
       System.out.println(row.toString());
     }
-    
   }
 
   public List<List<Object>> getResult() {

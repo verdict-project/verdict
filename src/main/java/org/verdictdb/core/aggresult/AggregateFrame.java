@@ -11,6 +11,8 @@ import java.util.Set;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import org.verdictdb.connection.DbmsQueryResult;
+import org.verdictdb.connection.DbmsQueryResultMetaData;
+import org.verdictdb.connection.JdbcQueryResult;
 import org.verdictdb.core.rewriter.aggresult.AggNameAndType;
 import org.verdictdb.exception.VerdictDBValueException;
 
@@ -27,6 +29,8 @@ public class AggregateFrame {
   List<String> orderedColumnNames;
 
   List<Integer> columnTypes = new ArrayList<>();
+
+  DbmsQueryResultMetaData dbmsQueryResultMetaData = new DbmsQueryResultMetaData();
   
   Map<AggregateGroup, AggregateMeasures> data = new HashMap<>();
   
@@ -89,6 +93,7 @@ public class AggregateFrame {
 
     AggregateFrame aggregateFrame = new AggregateFrame(colName);
     aggregateFrame.setColumnTypes(columnTypes);
+    aggregateFrame.dbmsQueryResultMetaData = result.getMetaData();
 
     while (result.next()) {
       List<Object> aggValue = new ArrayList<>();

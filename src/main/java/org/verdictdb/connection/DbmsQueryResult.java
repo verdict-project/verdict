@@ -1,7 +1,16 @@
 package org.verdictdb.connection;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public interface DbmsQueryResult {
-  
+
+  /**
+   *
+   * @return Meta Data from ResultSet
+   */
+  public DbmsQueryResultMetaData getMetaData();
+
   public int getColumnCount();
   
   /**

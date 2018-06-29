@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.verdictdb.connection.DbmsQueryResult;
+import org.verdictdb.connection.DbmsQueryResultMetaData;
 
 public class AggregateFrameQueryResult implements DbmsQueryResult {
 
@@ -39,6 +40,11 @@ public class AggregateFrameQueryResult implements DbmsQueryResult {
 
   public AggregateFrame getAggregateFrame() {
     return aggregateFrame;
+  }
+
+  @Override
+  public DbmsQueryResultMetaData getMetaData() {
+    return aggregateFrame.dbmsQueryResultMetaData;
   }
 
   @Override
