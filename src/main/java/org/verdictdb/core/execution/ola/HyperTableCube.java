@@ -23,6 +23,15 @@ class HyperTableCube {
     return dimensions.get(index);
   }
   
+  public Pair<Integer, Integer> getSpanOf(String schemaName, String tableName) {
+    for (Dimension d : dimensions) {
+      if (d.schemaName.equals(schemaName) && d.tableName.equals(tableName)) {
+        return Pair.of(d.begin, d.end);
+      }
+    }
+    return null;
+  }
+  
   public List<HyperTableCube> roundRobinSlice() throws VerdictDBValueException {
     List<HyperTableCube> cubes = new ArrayList<>();
     HyperTableCube remaining = this;
