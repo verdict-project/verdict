@@ -44,7 +44,7 @@ class HyperTableCube {
           numberOfDimensionsLongerThanOne++;
         }
       }
-      if (numberOfDimensionsLongerThanOne < 2) {
+      if (numberOfDimensionsLongerThanOne < 1) {
         cubes.add(remaining);
         break;
       }
@@ -58,7 +58,7 @@ class HyperTableCube {
       cubes.add(slice);
       
       // search for the index at which the length of dimension is longer than 1.
-      while(true) {
+      for(int i = 0; i < dimensions.size(); i++) {
         tableIndex--;
         if (tableIndex < 0) {
           tableIndex = dimensions.size() - 1;

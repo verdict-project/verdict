@@ -26,6 +26,20 @@ public class HyperTableCubeTest {
     System.out.println("left: " + sliceAndLeft.getRight());
     assertEquals(2, sliceAndLeft.getRight().getDimension(1).begin);
   }
+  
+  @Test
+  public void testSlicingOneDim() throws VerdictDBValueException {
+    Dimension d1 = new Dimension("myschema", "mytable", 1, 4);
+    HyperTableCube cube = new HyperTableCube(Arrays.asList(d1));
+    
+    List<HyperTableCube> slices = cube.roundRobinSlice();
+    System.out.println(slices);
+    assertEquals(4, slices.size());
+    assertEquals(1, slices.get(0).getDimension(0).begin);
+    assertEquals(1, slices.get(0).getDimension(0).end);
+    assertEquals(4, slices.get(3).getDimension(0).begin);
+    assertEquals(4, slices.get(3).getDimension(0).end);
+  }
 
   @Test
   public void testSlicingTwoDim() throws VerdictDBValueException {
@@ -35,15 +49,21 @@ public class HyperTableCubeTest {
     
     List<HyperTableCube> slices = cube.roundRobinSlice();
     System.out.println(slices);
-    assertEquals(4, slices.size());
+    assertEquals(6, slices.size());
     assertEquals(1, slices.get(0).getDimension(0).begin);
     assertEquals(4, slices.get(0).getDimension(0).end);
     assertEquals(1, slices.get(0).getDimension(1).begin);
     assertEquals(1, slices.get(0).getDimension(1).end);
+    
     assertEquals(2, slices.get(3).getDimension(0).begin);
-    assertEquals(4, slices.get(3).getDimension(0).end);
+    assertEquals(2, slices.get(3).getDimension(0).end);
     assertEquals(3, slices.get(3).getDimension(1).begin);
     assertEquals(3, slices.get(3).getDimension(1).end);
+    
+    assertEquals(4, slices.get(5).getDimension(0).begin);
+    assertEquals(4, slices.get(5).getDimension(0).end);
+    assertEquals(3, slices.get(5).getDimension(1).begin);
+    assertEquals(3, slices.get(5).getDimension(1).end);
   }
   
   @Test
@@ -55,7 +75,7 @@ public class HyperTableCubeTest {
     
     List<HyperTableCube> slices = cube.roundRobinSlice();
     System.out.println(slices);
-    assertEquals(5, slices.size());
+    assertEquals(7, slices.size());
     assertEquals(1, slices.get(0).getDimension(0).begin);
     assertEquals(4, slices.get(0).getDimension(0).end);
     assertEquals(1, slices.get(0).getDimension(1).begin);
@@ -64,11 +84,18 @@ public class HyperTableCubeTest {
     assertEquals(1, slices.get(0).getDimension(2).end);
     
     assertEquals(2, slices.get(4).getDimension(0).begin);
-    assertEquals(4, slices.get(4).getDimension(0).end);
+    assertEquals(2, slices.get(4).getDimension(0).end);
     assertEquals(3, slices.get(4).getDimension(1).begin);
     assertEquals(3, slices.get(4).getDimension(1).end);
     assertEquals(2, slices.get(4).getDimension(2).begin);
     assertEquals(2, slices.get(4).getDimension(2).end);
+    
+    assertEquals(4, slices.get(6).getDimension(0).begin);
+    assertEquals(4, slices.get(6).getDimension(0).end);
+    assertEquals(3, slices.get(6).getDimension(1).begin);
+    assertEquals(3, slices.get(6).getDimension(1).end);
+    assertEquals(2, slices.get(6).getDimension(2).begin);
+    assertEquals(2, slices.get(6).getDimension(2).end);
   }
 
 }
