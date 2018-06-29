@@ -146,7 +146,7 @@ public class JdbcResultSetMetaData implements ResultSetMetaData {
       return 10;
     }
     else if (coltype == TIME) {
-      return 11;
+      return 8;
     }
     else if (coltype == TIMESTAMP) {
       return 26;
