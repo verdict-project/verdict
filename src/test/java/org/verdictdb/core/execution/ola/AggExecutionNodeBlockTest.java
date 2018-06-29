@@ -1,14 +1,12 @@
 package org.verdictdb.core.execution.ola;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Random;
 
 import org.junit.AfterClass;
@@ -25,10 +23,8 @@ import org.verdictdb.core.query.CreateTableAsSelectQuery;
 import org.verdictdb.core.query.SelectQuery;
 import org.verdictdb.core.rewriter.ScrambleMeta;
 import org.verdictdb.core.rewriter.ScrambleMetaForTable;
-import org.verdictdb.core.scramble.Scrambler;
 import org.verdictdb.core.scramble.UniformScrambler;
 import org.verdictdb.core.sql.QueryToSql;
-import org.verdictdb.core.sql.SelectQueryToSql;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBValueException;
 import org.verdictdb.sql.syntax.H2Syntax;

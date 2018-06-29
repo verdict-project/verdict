@@ -1,20 +1,7 @@
 package org.verdictdb.core.execution;
 
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.verdictdb.connection.JdbcConnection;
-import org.verdictdb.connection.StaticMetaData;
-import org.verdictdb.core.query.*;
-import org.verdictdb.core.rewriter.ScrambleMeta;
-import org.verdictdb.core.rewriter.ScrambleMetaForTable;
-import org.verdictdb.core.scramble.UniformScrambler;
-import org.verdictdb.core.sql.NonValidatingSQLParser;
-import org.verdictdb.core.sql.QueryToSql;
-import org.verdictdb.core.sql.RelationStandardizer;
-import org.verdictdb.exception.VerdictDBException;
-import org.verdictdb.sql.syntax.H2Syntax;
+import static java.sql.Types.BIGINT;
+import static org.junit.Assert.assertEquals;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -24,8 +11,37 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static java.sql.Types.BIGINT;
-import static org.junit.Assert.assertEquals;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.verdictdb.connection.JdbcConnection;
+import org.verdictdb.connection.StaticMetaData;
+import org.verdictdb.core.execution.ola.AsyncQueryExecutionPlan;
+import org.verdictdb.core.query.AbstractRelation;
+import org.verdictdb.core.query.AliasReference;
+import org.verdictdb.core.query.AliasedColumn;
+import org.verdictdb.core.query.AsteriskColumn;
+import org.verdictdb.core.query.BaseColumn;
+import org.verdictdb.core.query.BaseTable;
+import org.verdictdb.core.query.ColumnOp;
+import org.verdictdb.core.query.ConstantColumn;
+import org.verdictdb.core.query.CreateTableAsSelectQuery;
+import org.verdictdb.core.query.GroupingAttribute;
+import org.verdictdb.core.query.JoinTable;
+import org.verdictdb.core.query.OrderbyAttribute;
+import org.verdictdb.core.query.SelectItem;
+import org.verdictdb.core.query.SelectQuery;
+import org.verdictdb.core.query.SubqueryColumn;
+import org.verdictdb.core.query.UnnamedColumn;
+import org.verdictdb.core.rewriter.ScrambleMeta;
+import org.verdictdb.core.rewriter.ScrambleMetaForTable;
+import org.verdictdb.core.scramble.UniformScrambler;
+import org.verdictdb.core.sql.NonValidatingSQLParser;
+import org.verdictdb.core.sql.QueryToSql;
+import org.verdictdb.core.sql.RelationStandardizer;
+import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.sql.syntax.H2Syntax;
 
 public class TpchAyncExecutionPlanTest {
 
@@ -348,11 +364,11 @@ public class TpchAyncExecutionPlanTest {
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
     queryExecutionPlan.getRootNode().print();
-    assertEquals(0, queryExecutionPlan.root.dependents.get(0).dependents.size());
+    assertEquals(5, queryExecutionPlan.root.getDependent(0).getDependents().size());
 
     AbstractRelation customer = new BaseTable("tpch", "customer", "vt1");
-    AbstractRelation orders = new BaseTable("tpch", "orders", "vt2");
-    AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "vt3");
+    AbstractRelation orders = new BaseTable("tpch", "orders_scrambled", "vt2");
+    AbstractRelation lineitem = new BaseTable("tpch", "lineitem_scrambled", "vt3");
     ColumnOp op1 = new ColumnOp("multiply", Arrays.<UnnamedColumn>asList(
         new BaseColumn("vt3", "l_extendedprice"),
         new ColumnOp("subtract", Arrays.<UnnamedColumn>asList(
@@ -388,17 +404,25 @@ public class TpchAyncExecutionPlanTest {
         new BaseColumn("vt3", "l_shipdate"),
         new ColumnOp("date", ConstantColumn.valueOf("'1998-12-01'"))
     )));
+    expected.addFilterByAnd(
+        ColumnOp.greaterequal(new BaseColumn("vt2", "verdictdbaggblock"), ConstantColumn.valueOf(0)));
+    expected.addFilterByAnd(
+        ColumnOp.lessequal(new BaseColumn("vt2", "verdictdbaggblock"), ConstantColumn.valueOf(2)));
+    expected.addFilterByAnd(
+        ColumnOp.equal(new BaseColumn("vt3", "verdictdbaggblock"), ConstantColumn.valueOf(0)));
     expected.addGroupby(Arrays.<GroupingAttribute>asList(
         new AliasReference("vc4"),
         new AliasReference("vc5"),
         new AliasReference("vc6")
     ));
-    expected.addOrderby(Arrays.<OrderbyAttribute>asList(
-        new OrderbyAttribute("revenue", "desc"),
-        new OrderbyAttribute("vc5")
-    ));
-    expected.addLimit(ConstantColumn.valueOf(10));
-    assertEquals(expected, ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.dependents.get(0)).selectQuery);
+//    expected.addOrderby(Arrays.<OrderbyAttribute>asList(
+//        new OrderbyAttribute("revenue", "desc"),
+//        new OrderbyAttribute("vc5")
+//    ));
+//    expected.addLimit(ConstantColumn.valueOf(10));
+    assertEquals(
+        expected, 
+        ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.getDependent(0).getDependent(0)).selectQuery);
 
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
     queryExecutionPlan.root.executeAndWaitForTermination(new JdbcConnection(conn, new H2Syntax()));
@@ -412,7 +436,7 @@ public class TpchAyncExecutionPlanTest {
         "o_orderpriority, " +
         "count(*) as order_count " +
         "from " +
-        "orders join lineitem on l_orderkey = o_orderkey " +
+        "orders_scrambled join lineitem_scrambled on l_orderkey = o_orderkey " +
         "where " +
         "o_orderdate >= date '1998-12-01' " +
         "and o_orderdate < date '1998-12-01'" +
@@ -431,7 +455,9 @@ public class TpchAyncExecutionPlanTest {
 //        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
-    assertEquals(0, queryExecutionPlan.root.dependents.get(0).dependents.size());
+    queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
+    queryExecutionPlan.getRootNode().print();
+    assertEquals(5, queryExecutionPlan.root.getDependent(0).getDependents().size());
 
     AbstractRelation orders = new BaseTable("tpch", "orders", "vt1");
     SelectQuery expected = SelectQuery.create(
@@ -441,11 +467,15 @@ public class TpchAyncExecutionPlanTest {
         ),
         orders);
 
-    assertEquals(expected.getSelectList(), ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.getDependents().get(0)).selectQuery.getSelectList());
+    assertEquals(
+        expected.getSelectList(), 
+        ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.getDependent(0).getDependent(0))
+        .selectQuery.getSelectList());
 
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
     queryExecutionPlan.root.executeAndWaitForTermination(new JdbcConnection(conn, new H2Syntax()));
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
+    queryExecutionPlan.getRootNode().print();
   }
 
   @Test
@@ -1267,7 +1297,7 @@ public class TpchAyncExecutionPlanTest {
 
     BaseTable customer = new BaseTable("tpch", "customer", "vt1");
     BaseTable orders = new BaseTable("tpch", "orders", "vt2");
-    JoinTable join = JoinTable.getJoinTable(Arrays.<AbstractRelation>asList(customer, orders),
+    JoinTable join = JoinTable.create(Arrays.<AbstractRelation>asList(customer, orders),
         Arrays.<JoinTable.JoinType>asList(JoinTable.JoinType.leftouter),
         Arrays.<UnnamedColumn>asList(new ColumnOp("and", Arrays.<UnnamedColumn>asList(
             new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
@@ -1504,7 +1534,7 @@ public class TpchAyncExecutionPlanTest {
 
     assertEquals(new BaseTable(placeholderSchemaName, placeholderTableName, "a"),
         ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.dependents.get(0)).getSelectQuery().getFromList().get(0));
-    JoinTable join = JoinTable.getJoinTable(Arrays.<AbstractRelation>asList(
+    JoinTable join = JoinTable.create(Arrays.<AbstractRelation>asList(
         new BaseTable(placeholderSchemaName, placeholderTableName, "q17_lineitem_tmp_cached"),
         new BaseTable(placeholderSchemaName, placeholderTableName, "l1")),
         Arrays.<JoinTable.JoinType>asList(JoinTable.JoinType.inner),
@@ -2001,7 +2031,7 @@ public class TpchAyncExecutionPlanTest {
         ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.dependents.get(0)).getSelectQuery().getFromList().get(0));
     assertEquals(new BaseTable(placeholderSchemaName, placeholderTableName, "b"),
         ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.dependents.get(0).dependents.get(0)).getSelectQuery().getFromList().get(0));
-    JoinTable join = JoinTable.getJoinTable(Arrays.<AbstractRelation>asList(
+    JoinTable join = JoinTable.create(Arrays.<AbstractRelation>asList(
         new BaseTable(placeholderSchemaName, placeholderTableName, "t2"),
         new BaseTable(placeholderSchemaName, placeholderTableName, "l3")),
         Arrays.<JoinTable.JoinType>asList(JoinTable.JoinType.rightouter),
@@ -2103,7 +2133,7 @@ public class TpchAyncExecutionPlanTest {
 
     assertEquals(new BaseTable(placeholderSchemaName, placeholderTableName, "a"),
         ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.dependents.get(0)).getSelectQuery().getFromList().get(0));
-    JoinTable join = JoinTable.getJoinTable(Arrays.<AbstractRelation>asList(
+    JoinTable join = JoinTable.create(Arrays.<AbstractRelation>asList(
         new BaseTable(placeholderSchemaName, placeholderTableName, "ct1"),
         new BaseTable(placeholderSchemaName, placeholderTableName, "ct2")),
         Arrays.<JoinTable.JoinType>asList(JoinTable.JoinType.inner),
@@ -2116,7 +2146,7 @@ public class TpchAyncExecutionPlanTest {
     assertEquals(join, ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.dependents.get(0).dependents.get(0)).getSelectQuery().getFromList().get(0));
     assertEquals(new BaseTable(placeholderSchemaName, placeholderTableName, "vt1"),
         ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.get(0)).getSelectQuery().getFromList().get(0));
-    JoinTable join1 = JoinTable.getJoinTable(Arrays.<AbstractRelation>asList(
+    JoinTable join1 = JoinTable.create(Arrays.<AbstractRelation>asList(
         new BaseTable(placeholderSchemaName, placeholderTableName, "ot"),
         new BaseTable(placeholderSchemaName, placeholderTableName, "ct")),
         Arrays.<JoinTable.JoinType>asList(JoinTable.JoinType.rightouter),

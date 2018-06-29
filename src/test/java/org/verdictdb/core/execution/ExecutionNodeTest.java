@@ -12,8 +12,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.JdbcConnection;
-import org.verdictdb.core.aggresult.AggregateFrame;
-import org.verdictdb.core.execution.ola.AsyncAggExecutionNode;
 import org.verdictdb.core.query.AliasedColumn;
 import org.verdictdb.core.query.BaseColumn;
 import org.verdictdb.core.query.BaseTable;

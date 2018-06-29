@@ -1159,7 +1159,7 @@ public class TpchSqlToRelationBeforeAliasTest {
   public void Query13Test() throws VerdictDBException {
     BaseTable customer = new BaseTable("tpch", "customer", "c");
     BaseTable orders = new BaseTable("tpch", "orders", "o");
-    JoinTable join = JoinTable.getJoinTable(Arrays.<AbstractRelation>asList(customer, orders),
+    JoinTable join = JoinTable.create(Arrays.<AbstractRelation>asList(customer, orders),
         Arrays.<JoinTable.JoinType>asList(JoinTable.JoinType.leftouter),
         Arrays.<UnnamedColumn>asList(new ColumnOp("and", Arrays.<UnnamedColumn>asList(
             new ColumnOp("equal", Arrays.<UnnamedColumn>asList(

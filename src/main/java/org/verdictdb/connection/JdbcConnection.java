@@ -14,8 +14,6 @@ import org.verdictdb.jdbc.JdbcResultSet;
 import org.verdictdb.sql.syntax.PostgresqlSyntax;
 import org.verdictdb.sql.syntax.SyntaxAbstract;
 
-import com.google.common.base.Optional;
-
 public class JdbcConnection implements DbmsConnection {
   
   Connection conn;

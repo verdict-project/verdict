@@ -8,30 +8,15 @@
 
 package org.verdictdb.core.execution.ola;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.BlockingDeque;
-import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.connection.DbmsConnection;
-import org.verdictdb.core.execution.CreateTableAsSelectExecutionNode;
 import org.verdictdb.core.execution.ExecutionInfoToken;
 import org.verdictdb.core.execution.ExecutionTokenQueue;
 import org.verdictdb.core.execution.QueryExecutionNode;
 import org.verdictdb.core.execution.QueryExecutionPlan;
-import org.verdictdb.core.query.AbstractRelation;
-import org.verdictdb.core.query.AliasedColumn;
-import org.verdictdb.core.query.ColumnOp;
-import org.verdictdb.core.query.SelectItem;
-import org.verdictdb.core.query.SelectQuery;
-import org.verdictdb.core.query.UnnamedColumn;
 import org.verdictdb.core.rewriter.ScrambleMeta;
 import org.verdictdb.core.rewriter.aggresult.AggNameAndType;
-import org.verdictdb.core.rewriter.query.AggQueryRewriter;
-import org.verdictdb.core.rewriter.query.AggblockMeta;
-import org.verdictdb.exception.VerdictDBTypeException;
-import org.verdictdb.exception.VerdictDBValueException;
 import org.verdictdb.exception.VerdictDBException;
 
 /**
@@ -77,13 +62,47 @@ public class AsyncAggExecutionNode extends QueryExecutionNode {
       List<QueryExecutionNode> combiners) {
     
     AsyncAggExecutionNode node = new AsyncAggExecutionNode(plan);
-    ExecutionTokenQueue queue = node.generateListeningQueue();
-    individualAggs.get(0).addBroadcastingQueue(queue);
+    ExecutionTokenQueue rootQueue = node.generateListeningQueue();
+    
+    // set new broadcasting nodes
+    
+    // first agg -> root
+    individualAggs.get(0).addBroadcastingQueue(rootQueue);
     node.addDependency(individualAggs.get(0));
+    
+//    // first agg -> first combiner
+//    ExecutionTokenQueue firstCombinerQueue = combiners.get(0).generateListeningQueue();
+//    individualAggs.get(0).addBroadcastingQueue(firstCombinerQueue);
+//    combiners.get(0).addDependency(individualAggs.get(0));
+//    
+//    // combiners -> next combiners
+//    for (int i = 1; i < combiners.size(); i++) {
+//      ExecutionTokenQueue combinerQueue = combiners.get(i).generateListeningQueue();
+//      combiners.get(i-1).addBroadcastingQueue(combinerQueue);
+//      combiners.get(i).addDependency(combiners.get(i-1));
+//    }
+    
+//    // individual aggs (except for the first one) -> combiners
+//    for (int i = 0; i < combiners.size(); i++) {
+//      ExecutionTokenQueue combinerQueue = combiners.get(i).generateListeningQueue();
+//      individualAggs.get(i+1).addBroadcastingQueue(combinerQueue);
+//      combiners.get(i).addDependency(individualAggs.get(i+1));
+//    }
+    
+    // combiners -> root
     for (QueryExecutionNode c : combiners) {
-      c.addBroadcastingQueue(queue);
+      c.addBroadcastingQueue(rootQueue);
       node.addDependency(c);
     }
+    
+//    for (int i = 1; i < individualAggs.size(); i++) {
+//      ExecutionTokenQueue q = combiners.get(i-1).generateListeningQueue();
+//      individualAggs.get(i).addBroadcastingQueue(q);
+//    }
+//    for (QueryExecutionNode c : combiners) {
+//      c.addBroadcastingQueue(queue);
+//      node.addDependency(c);
+//    }
     return node;
   }
 

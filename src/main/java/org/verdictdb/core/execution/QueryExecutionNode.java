@@ -1,6 +1,7 @@
 package org.verdictdb.core.execution;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -12,10 +13,7 @@ import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.core.execution.ola.AggExecutionNodeBlock;
 import org.verdictdb.core.query.AbstractRelation;
 import org.verdictdb.core.query.BaseTable;
-import org.verdictdb.core.query.GroupingAttribute;
-import org.verdictdb.core.query.SelectItem;
 import org.verdictdb.core.query.SelectQuery;
-import org.verdictdb.core.query.SqlConvertable;
 import org.verdictdb.core.rewriter.ScrambleMeta;
 import org.verdictdb.exception.VerdictDBException;
 
@@ -37,6 +35,10 @@ public abstract class QueryExecutionNode {
 
   // these are assumed to be not order-sensitive
   List<QueryExecutionNode> dependents = new ArrayList<>();
+  
+  int successDependentCount = 0;
+  
+  int failedDependentCount = 0;
 
   // these are the queues to which this node will broadcast its results (to upstream nodes).
   List<ExecutionTokenQueue> broadcastingQueues = new ArrayList<>();
@@ -78,11 +80,11 @@ public abstract class QueryExecutionNode {
     return dependents.get(index);
   }
   
-  public String getStatus() {
+  public synchronized String getStatus() {
     return status;
   }
   
-  public void setStatus(String status) {
+  public synchronized void setStatus(String status) {
     this.status = status;
   }
   
@@ -107,41 +109,111 @@ public abstract class QueryExecutionNode {
    * @param resultQueue
    */
   public void execute(final DbmsConnection conn, ExecutorService executor) {
+    // The fact that it is not in "initialized" means this node already have been into "running" status before.
+    // Also, the children of this node have already been called execute() method.
     if (!getStatus().equals("initialized")) {
       return;
     }
+    
+    // Start the execution of all children
+    // Some of those children may have already started by its another parent; then, calling execute()
+    // will have no effect.
+    for (QueryExecutionNode child : dependents) { 
+      child.execute(conn, executor);
+    }
+    
+    // Now we start the execution of this current node.
+    // Set the status of this node
     setStatus("running");
     System.out.println("Starts the exec of " + this);
     
     executor.submit(new Runnable() {
-      void process(DbmsConnection conn, List<ExecutionInfoToken> tokens) {
+      int process(DbmsConnection conn, List<ExecutionInfoToken> tokens) {
         try {
           ExecutionInfoToken rs = executeNode(conn, tokens);
           broadcast(rs);
+          return 0;
         } catch (VerdictDBException e) {
           e.printStackTrace();
-          setStatus("failed");
         }
+        return -1;
       }
       
       @Override
       public void run() {
         while (true) {
-          readLatestResultsFromDependents();
-          List<ExecutionInfoToken> latestResults = getLatestResultsIfAvailable();
+//          System.out.println(dependents);
+//          System.out.println(QueryExecutionNode.this.getClass().getSimpleName() + " starts inner process4");
           
-          if (areDependentsAllComplete()) {
-            if (latestResults != null) {
-              process(conn, latestResults);
-            }
-            
-            if (!isFailed()) {
-              setSuccess();
+          // no dependency
+          if (listeningQueues.size() == 0) {
+            int ret = process(conn, Arrays.<ExecutionInfoToken>asList());
+            if (ret == 0) {
+              broadcast(ExecutionInfoToken.successToken());
+              setSuccess();   // only for printing purpose
+            } else {
+              broadcast(ExecutionInfoToken.failureToken());
+              setFailure();   // only for printing purpose
             }
             break;
-          } else if (latestResults != null) {
-            process(conn, latestResults);
           }
+          
+          // dependency exists
+          readLatestResultsFromDependents();
+          
+          if (areDependentsAllComplete()) {
+            if (areDependentsAllSuccess()) {
+              broadcast(ExecutionInfoToken.successToken());
+              setSuccess();    // only for printing purpose
+            } else {
+              broadcast(ExecutionInfoToken.failureToken());
+              setFailure();    // only for printing purpose
+            }
+            break;
+          }
+          
+          List<ExecutionInfoToken> latestResults = getLatestResultsIfAvailable();
+          if (latestResults == null) {
+            continue;
+          }
+          
+//            System.out.println(QueryExecutionNode.this.getClass().getSimpleName() + " starts inner process0");
+            
+//            if (latestResults != null) {
+//              process(conn, latestResults);
+//            }
+//            if (!isFailed()) {
+//              setSuccess();
+//            }
+//            break;
+//          }
+          int ret = process(conn, latestResults);
+          if (ret != 0) {
+            broadcast(ExecutionInfoToken.failureToken());
+            setFailure();   // only for printing purpose
+            break;
+          }
+          
+//          if (latestResults != null) {
+//            
+//          }
+
+//          if (areDependentsAllComplete()) {
+//            System.out.println(QueryExecutionNode.this.getClass().getSimpleName() + " starts inner process");
+//            if (latestResults != null) {
+//              process(conn, latestResults);
+//            }
+//            
+//            if (!isFailed()) {
+//              setSuccess();
+//            }
+//            break;
+//          } 
+//          
+//          if (latestResults != null) {
+//            System.out.println(QueryExecutionNode.this.getClass().getSimpleName() + " starts inner process2");
+//            process(conn, latestResults);
+//          }
           
 //          // Only when all results are available, the internal operations of this node are performed.
 //          if (latestResults != null || areDependentsAllComplete()) {
@@ -151,16 +223,21 @@ public abstract class QueryExecutionNode {
 //          if (areDependentsAllComplete()) {
 //            break;
 //          }
+//          try {
+//            TimeUnit.MICROSECONDS.sleep(1);
+//            System.out.println(dependents);
+//          } catch (InterruptedException e) {
+//            // TODO Auto-generated catch block
+//            e.printStackTrace();
+//          }
+
         } // end of while loop
         
 //        System.out.println("Status of " + this + " at the end of execution: " + getStatus());
       }
     });
     
-    // Start the execution of all children
-    for (QueryExecutionNode child : dependents) { 
-      child.execute(conn, executor);
-    }
+   
     
     // should immediately return without waiting for the termination of jobs
   }
@@ -220,28 +297,43 @@ public abstract class QueryExecutionNode {
   }
 
   public boolean isSuccess() {
-    return status.equals("success");
+    return getStatus().equals("success");
   }
   
   public boolean isFailed() {
-    return status.equals("failed");
+    return getStatus().equals("failed");
   }
 
   void setSuccess() {
-    status = "success";
+    setStatus("success");
+  }
+  
+  void setFailure() {
+    setStatus("failure");
   }
 
   void broadcast(ExecutionInfoToken result) {
     for (ExecutionTokenQueue listener : broadcastingQueues) {
       listener.add(result);
+//      System.out.println(new ToStringBuilder(this) + " sent: " + result);
     }
   }
 
   void readLatestResultsFromDependents() {
     for (int i = 0; i < listeningQueues.size(); i++) {
+      if (latestResults.get(i).isPresent()) {
+        continue;
+      }
+      
       ExecutionInfoToken rs = listeningQueues.get(i).poll();
       if (rs == null) {
         // do nothing
+      } else if (rs.isStatusToken()) {
+        if (rs.isSuccessToken()) {
+          successDependentCount++;
+        } else if (rs.isFailureToken()) {
+          failedDependentCount++;
+        }
       } else {
         latestResults.set(i, Optional.of(rs));
         System.out.println(new ToStringBuilder(this) + " Received: " + rs.toString());
@@ -275,32 +367,68 @@ public abstract class QueryExecutionNode {
   }
 
   boolean areDependentsAllComplete() {
-    for (QueryExecutionNode node : dependents) {
-      if (node.isSuccess() || node.isFailed()) {
-        // do nothing
-      } else {
-        return false;
-      }
+    if (successDependentCount + failedDependentCount >= dependents.size()) {
+      return true;
+    } else {
+      return false;
     }
-    return true;
+    
+//    boolean allComplete = true;
+//    for (ExecutionInfoToken t : tokens) {
+//      if (t.isSuccessToken() || t.isFailureToken()) {
+//        // do nothing
+//      } else {
+//        allComplete = false;
+//        break;
+//      }
+//    }
+//    return allComplete;
+    
+//    for (QueryExecutionNode node : dependents) {
+//      System.out.println(node.getStatus());
+//      if (node.isSuccess() || node.isFailed()) {
+//        // do nothing
+//      } else {
+//        return false;
+//      }
+//    }
+//    return true;
+  }
+  
+  boolean areDependentsAllSuccess() {
+    if (successDependentCount >= dependents.size()) {
+      return true;
+    } else {
+      return false;
+    }
+//    boolean allSuccess = true;
+//    for (ExecutionInfoToken t : tokens) {
+//      if (t.isSuccessToken()) {
+//        // do nothing
+//      } else {
+//        allSuccess = false;
+//        break;
+//      }
+//    }
+//    return allSuccess;
   }
 
-  // identify nodes that are (1) aggregates and (2) are not descendants of any other aggregates.
-  List<AggExecutionNodeBlock> identifyTopAggBlocks() {
-    List<AggExecutionNodeBlock> aggblocks = new ArrayList<>();
-    
-    if (this instanceof AggExecutionNode) {
-      AggExecutionNodeBlock block = new AggExecutionNodeBlock(plan, this);
-      aggblocks.add(block);
-      return aggblocks;
-    }
-    for (QueryExecutionNode dep : getDependents()) {
-      List<AggExecutionNodeBlock> depAggBlocks = dep.identifyTopAggBlocks();
-      aggblocks.addAll(depAggBlocks);
-    }
-    
-    return aggblocks;
-  }
+//  // identify nodes that are (1) aggregates and (2) are not descendants of any other aggregates.
+//  List<AggExecutionNodeBlock> identifyTopAggBlocks() {
+//    List<AggExecutionNodeBlock> aggblocks = new ArrayList<>();
+//    
+//    if (this instanceof AggExecutionNode) {
+//      AggExecutionNodeBlock block = new AggExecutionNodeBlock(plan, this);
+//      aggblocks.add(block);
+//      return aggblocks;
+//    }
+//    for (QueryExecutionNode dep : getDependents()) {
+//      List<AggExecutionNodeBlock> depAggBlocks = dep.identifyTopAggBlocks();
+//      aggblocks.addAll(depAggBlocks);
+//    }
+//    
+//    return aggblocks;
+//  }
   
   
 

@@ -1,6 +1,5 @@
 package org.verdictdb.connection;
 
-import java.sql.SQLException;
 import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;

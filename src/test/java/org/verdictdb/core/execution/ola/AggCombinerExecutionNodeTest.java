@@ -1,12 +1,9 @@
 package org.verdictdb.core.execution.ola;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
-import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.Random;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
