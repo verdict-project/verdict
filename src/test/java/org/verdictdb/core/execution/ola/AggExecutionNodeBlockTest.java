@@ -62,7 +62,7 @@ public class AggExecutionNodeBlockTest {
     // create scrambled table
     UniformScrambler scrambler =
         new UniformScrambler(originalSchema, originalTable, newSchema, newTable, aggBlockCount);
-    CreateTableAsSelectQuery createQuery = scrambler.scrambledTableCreationQuery();
+    CreateTableAsSelectQuery createQuery = scrambler.createQuery();
     String scrambleSql = QueryToSql.convert(new H2Syntax(), createQuery);
     conn.createStatement().execute(scrambleSql);
     ScrambleMetaForTable metaEntry = scrambler.generateMeta();

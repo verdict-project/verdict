@@ -55,7 +55,7 @@ public class AggQueryRewriterJdbcTest {
     
     UniformScrambler scrambler =
         new UniformScrambler(originalSchema, originalTable, newSchema, newTable, aggblockCount);
-    CreateTableAsSelectQuery createQuery = scrambler.scrambledTableCreationQuery();
+    CreateTableAsSelectQuery createQuery = scrambler.createQuery();
     CreateTableToSql createToSql = new CreateTableToSql(new H2Syntax());
     String scrambleSql = createToSql.toSql(createQuery);
     conn.createStatement().execute(String.format("DROP TABLE IF EXISTS \"%s\".\"%s\"", newSchema, newTable));
