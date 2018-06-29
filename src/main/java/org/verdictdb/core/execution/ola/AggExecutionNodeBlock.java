@@ -270,8 +270,9 @@ public class AggExecutionNodeBlock {
    * 
    * @param root
    * @return
+   * @throws VerdictDBValueException 
    */
-  public AggExecutionNodeBlock deepcopyExcludingDependentAggregates() {
+  public AggExecutionNodeBlock deepcopyExcludingDependentAggregates() throws VerdictDBValueException {
     List<QueryExecutionNode> newNodes = new ArrayList<>();
     for (QueryExecutionNode node : blockNodes) {
       newNodes.add(node.deepcopy());
@@ -283,10 +284,11 @@ public class AggExecutionNodeBlock {
     for (int i = 0; i < newNodes.size(); i++) {
       QueryExecutionNode newNode = newNodes.get(i);
       QueryExecutionNode oldNode = blockNodes.get(i);
-      for (QueryExecutionNode dep : oldNode.getDependents()) {
+      for (int j = 0; j < oldNode.getDependents().size(); j++) {
+        QueryExecutionNode dep = oldNode.getDependent(j);
         int idx = blockNodes.indexOf(dep);
         if (idx >= 0) {
-          newNode.getDependents().set(idx, newNodes.get(idx));
+          newNode.getDependents().set(j, newNodes.get(idx));
         }
       }
     }

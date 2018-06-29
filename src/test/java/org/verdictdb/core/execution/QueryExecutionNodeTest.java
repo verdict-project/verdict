@@ -17,6 +17,7 @@ import org.verdictdb.core.query.SelectItem;
 import org.verdictdb.core.query.SelectQuery;
 import org.verdictdb.core.rewriter.ScrambleMeta;
 import org.verdictdb.core.scramble.Scrambler;
+import org.verdictdb.exception.VerdictDBValueException;
 
 public class QueryExecutionNodeTest {
   
@@ -32,7 +33,7 @@ public class QueryExecutionNodeTest {
   }
 
   @Test
-  public void testDoesContainScrambledTableFlatQuery() {
+  public void testDoesContainScrambledTableFlatQuery() throws VerdictDBValueException {
     BaseTable base = new BaseTable("myschema", "mytable", "t");
     SelectQuery query = SelectQuery.create(
         Arrays.<SelectItem>asList(
@@ -48,7 +49,7 @@ public class QueryExecutionNodeTest {
   }
   
   @Test
-  public void testDoesContainScrambledTableNestedQuery() {
+  public void testDoesContainScrambledTableNestedQuery() throws VerdictDBValueException {
     BaseTable base = new BaseTable("myschema", "mytable", "t");
     SelectQuery innerRelation = SelectQuery.create(
         Arrays.<SelectItem>asList(

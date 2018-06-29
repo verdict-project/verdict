@@ -18,6 +18,7 @@ import org.verdictdb.core.execution.QueryExecutionPlan;
 import org.verdictdb.core.rewriter.ScrambleMeta;
 import org.verdictdb.core.rewriter.aggresult.AggNameAndType;
 import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.exception.VerdictDBValueException;
 
 /**
  * Represents an execution of a single aggregate query (without nested components).
@@ -59,7 +60,7 @@ public class AsyncAggExecutionNode extends QueryExecutionNode {
   public static AsyncAggExecutionNode create(
       QueryExecutionPlan plan,
       List<QueryExecutionNode> individualAggs,
-      List<QueryExecutionNode> combiners) {
+      List<QueryExecutionNode> combiners) throws VerdictDBValueException {
     
     AsyncAggExecutionNode node = new AsyncAggExecutionNode(plan);
     ExecutionTokenQueue rootQueue = node.generateListeningQueue();

@@ -15,6 +15,7 @@ import org.verdictdb.core.query.SelectItem;
 import org.verdictdb.core.query.SelectQuery;
 import org.verdictdb.core.query.SubqueryColumn;
 import org.verdictdb.core.query.UnnamedColumn;
+import org.verdictdb.exception.VerdictDBValueException;
 
 public class SubqueriesToDependentNodes {
 
@@ -23,10 +24,11 @@ public class SubqueriesToDependentNodes {
    * @param query A query that may include subqueries. The subqueries of this query will be replaced by
    * placeholders.
    * @param node
+   * @throws VerdictDBValueException 
    */
   public static void convertSubqueriesToDependentNodes(
       SelectQuery query, 
-      CreateTableAsSelectExecutionNode node) {
+      CreateTableAsSelectExecutionNode node) throws VerdictDBValueException {
     QueryExecutionPlan plan = node.getPlan();
     
     // from list

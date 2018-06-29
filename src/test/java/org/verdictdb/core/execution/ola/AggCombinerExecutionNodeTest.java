@@ -25,6 +25,7 @@ import org.verdictdb.core.query.SelectQuery;
 import org.verdictdb.core.sql.QueryToSql;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.exception.VerdictDBValueException;
 import org.verdictdb.sql.syntax.H2Syntax;
 
 public class AggCombinerExecutionNodeTest {
@@ -49,7 +50,7 @@ public class AggCombinerExecutionNodeTest {
   }
 
   @Test
-  public void testSingleAggCombining() {
+  public void testSingleAggCombining() throws VerdictDBValueException {
     QueryExecutionPlan plan = new QueryExecutionPlan("newschema");
     
     BaseTable base = new BaseTable("myschema", "mytable", "t");

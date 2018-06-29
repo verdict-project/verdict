@@ -10,6 +10,7 @@ import org.verdictdb.core.query.BaseTable;
 import org.verdictdb.core.query.SelectQuery;
 import org.verdictdb.core.sql.QueryToSql;
 import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.exception.VerdictDBValueException;
 
 /**
  * 
@@ -28,7 +29,7 @@ public class SelectAllExecutionNode extends QueryExecutionNodeWithPlaceHolders {
     super(plan);
   }
 
-  public static SelectAllExecutionNode create(QueryExecutionPlan plan, SelectQuery query) {
+  public static SelectAllExecutionNode create(QueryExecutionPlan plan, SelectQuery query) throws VerdictDBValueException {
     SelectAllExecutionNode selectAll = new SelectAllExecutionNode(plan);
     Pair<BaseTable, ExecutionTokenQueue> baseAndQueue = selectAll.createPlaceHolderTable("t");
     SelectQuery selectQuery = SelectQuery.create(new AsteriskColumn(), baseAndQueue.getLeft());

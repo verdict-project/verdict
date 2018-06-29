@@ -16,6 +16,7 @@ import org.verdictdb.core.query.BaseTable;
 import org.verdictdb.core.query.SelectQuery;
 import org.verdictdb.core.rewriter.ScrambleMeta;
 import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.exception.VerdictDBValueException;
 
 import com.google.common.base.Optional;
 
@@ -46,10 +47,10 @@ public abstract class QueryExecutionNode {
   // these are the results coming from the producers (downstream operations).
   // multiple producers may share a single result queue.
   // these queues are assumed to be order-sensitive
-  List<ExecutionTokenQueue> listeningQueues = new ArrayList<>();
+  private List<ExecutionTokenQueue> listeningQueues = new ArrayList<>();
 
   // latest results from listening queues
-  List<Optional<ExecutionInfoToken>> latestResults = new ArrayList<>();
+  private List<Optional<ExecutionInfoToken>> latestResults = new ArrayList<>();
   
   public QueryExecutionNode(QueryExecutionPlan plan) {
     this.plan = plan;
@@ -92,7 +93,7 @@ public abstract class QueryExecutionNode {
     return plan;
   }
   
-  public void executeAndWaitForTermination(DbmsConnection conn) {
+  public void executeAndWaitForTermination(DbmsConnection conn) throws VerdictDBValueException {
     try {
       ExecutorService executor = Executors.newFixedThreadPool(plan.getMaxNumberOfThreads());
       execute(conn, executor);
@@ -107,8 +108,13 @@ public abstract class QueryExecutionNode {
    * For multi-threading, run executeNode() on a separate thread.
    * 
    * @param resultQueue
+   * @throws VerdictDBValueException 
    */
-  public void execute(final DbmsConnection conn, ExecutorService executor) {
+  public void execute(final DbmsConnection conn, ExecutorService executor) throws VerdictDBValueException {
+    if (listeningQueues.size() != latestResults.size()) {
+      throw new VerdictDBValueException("Field constraint mismatch.");
+    }
+    
     // The fact that it is not in "initialized" means this node already have been into "running" status before.
     // Also, the children of this node have already been called execute() method.
     if (!getStatus().equals("initialized")) {
@@ -142,9 +148,6 @@ public abstract class QueryExecutionNode {
       @Override
       public void run() {
         while (true) {
-//          System.out.println(dependents);
-//          System.out.println(QueryExecutionNode.this.getClass().getSimpleName() + " starts inner process4");
-          
           // no dependency
           if (listeningQueues.size() == 0) {
             int ret = process(conn, Arrays.<ExecutionInfoToken>asList());
@@ -159,34 +162,40 @@ public abstract class QueryExecutionNode {
           }
           
           // dependency exists
-          readLatestResultsFromDependents();
+          readLatestResultsFromDependents();    // update both (1) status and (2) latestQueue
           
-          if (areDependentsAllComplete()) {
-            if (areDependentsAllSuccess()) {
-              broadcast(ExecutionInfoToken.successToken());
-              setSuccess();    // only for printing purpose
-            } else {
-              broadcast(ExecutionInfoToken.failureToken());
-              setFailure();    // only for printing purpose
-            }
+          try {
+            TimeUnit.SECONDS.sleep(1);
+            System.out.println(QueryExecutionNode.this);
+            System.out.println(successDependentCount);
+            System.out.println(failedDependentCount);
+//            System.out.println();
+          } catch (InterruptedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+          }
+          
+          // base conditions
+          if (doesFailedDependentExist()) {
+            broadcast(ExecutionInfoToken.failureToken());
+            setFailure();    // only for printing purpose
+            break;
+          }
+          if (areDependentsAllSuccess()) {
+            broadcast(ExecutionInfoToken.successToken());
+            setSuccess();    // only for printing purpose
             break;
           }
           
+          // see if a complete set of results are available
           List<ExecutionInfoToken> latestResults = getLatestResultsIfAvailable();
+//          System.out.println(QueryExecutionNode.this);
+          System.out.println(QueryExecutionNode.this.latestResults);
+          System.out.println(latestResults);
           if (latestResults == null) {
             continue;
           }
           
-//            System.out.println(QueryExecutionNode.this.getClass().getSimpleName() + " starts inner process0");
-            
-//            if (latestResults != null) {
-//              process(conn, latestResults);
-//            }
-//            if (!isFailed()) {
-//              setSuccess();
-//            }
-//            break;
-//          }
           int ret = process(conn, latestResults);
           if (ret != 0) {
             broadcast(ExecutionInfoToken.failureToken());
@@ -194,46 +203,8 @@ public abstract class QueryExecutionNode {
             break;
           }
           
-//          if (latestResults != null) {
-//            
-//          }
-
-//          if (areDependentsAllComplete()) {
-//            System.out.println(QueryExecutionNode.this.getClass().getSimpleName() + " starts inner process");
-//            if (latestResults != null) {
-//              process(conn, latestResults);
-//            }
-//            
-//            if (!isFailed()) {
-//              setSuccess();
-//            }
-//            break;
-//          } 
-//          
-//          if (latestResults != null) {
-//            System.out.println(QueryExecutionNode.this.getClass().getSimpleName() + " starts inner process2");
-//            process(conn, latestResults);
-//          }
-          
-//          // Only when all results are available, the internal operations of this node are performed.
-//          if (latestResults != null || areDependentsAllComplete()) {
-//            // run this on a separate thread
-//            
-//          }
-//          if (areDependentsAllComplete()) {
-//            break;
-//          }
-//          try {
-//            TimeUnit.MICROSECONDS.sleep(1);
-//            System.out.println(dependents);
-//          } catch (InterruptedException e) {
-//            // TODO Auto-generated catch block
-//            e.printStackTrace();
-//          }
-
         } // end of while loop
         
-//        System.out.println("Status of " + this + " at the end of execution: " + getStatus());
       }
     });
     
@@ -264,10 +235,13 @@ public abstract class QueryExecutionNode {
   }
 
   // setup method
-  public ExecutionTokenQueue generateListeningQueue() {
+  public ExecutionTokenQueue generateListeningQueue() throws VerdictDBValueException {
     ExecutionTokenQueue queue = new ExecutionTokenQueue();
     listeningQueues.add(queue);
     latestResults.add(Optional.<ExecutionInfoToken>absent());
+    if (listeningQueues.size() != latestResults.size()) {
+      throw new VerdictDBValueException("Invalid field constraint.");
+    }
     return queue;
   }
 
@@ -412,6 +386,10 @@ public abstract class QueryExecutionNode {
 //    }
 //    return allSuccess;
   }
+  
+  boolean doesFailedDependentExist() {
+    return failedDependentCount > 0;
+  }
 
 //  // identify nodes that are (1) aggregates and (2) are not descendants of any other aggregates.
 //  List<AggExecutionNodeBlock> identifyTopAggBlocks() {
@@ -518,6 +496,7 @@ public abstract class QueryExecutionNode {
         .append("status", status)
         .append("listeningQueues", listeningQueues)
         .append("broadcastingQueues", broadcastingQueues)
+        .append("latestResults", latestResults)
         .append("selectQuery", selectQuery)
         .toString();
   }
