@@ -103,8 +103,8 @@ public class JdbcResultSetMetaDataTest {
 
   @Test
   public void getColumnDisplaySizeTest() throws SQLException {
-    assertEquals(19, jdbcResultSetMetaData1.getColumnDisplaySize(2));
-    assertEquals(64, jdbcResultSetMetaData1.getColumnDisplaySize(3));
+    assertEquals(20, jdbcResultSetMetaData1.getColumnDisplaySize(2));
+    assertEquals(24, jdbcResultSetMetaData1.getColumnDisplaySize(3));
     assertEquals(19, jdbcResultSetMetaData2.getColumnDisplaySize(2));
     assertEquals(64, jdbcResultSetMetaData2.getColumnDisplaySize(3));
   }
@@ -131,9 +131,9 @@ public class JdbcResultSetMetaDataTest {
 
   @Test
   public void getPrecisionTest() throws SQLException {
-    assertEquals(0, jdbcResultSetMetaData1.getPrecision(1));
+    assertEquals(8, jdbcResultSetMetaData1.getPrecision(1));
     assertEquals(19, jdbcResultSetMetaData1.getPrecision(2));
-    assertEquals(64, jdbcResultSetMetaData1.getPrecision(3));
+    assertEquals(17, jdbcResultSetMetaData1.getPrecision(3));
     assertEquals(0, jdbcResultSetMetaData2.getPrecision(1));
     assertEquals(19, jdbcResultSetMetaData2.getPrecision(2));
     assertEquals(64, jdbcResultSetMetaData2.getPrecision(3));
@@ -142,9 +142,9 @@ public class JdbcResultSetMetaDataTest {
   @Test
   public void getScaleTest() throws SQLException {
     assertEquals(0, jdbcResultSetMetaData1.getScale(1));
-    assertEquals(10, jdbcResultSetMetaData1.getScale(3));
+    assertEquals(0, jdbcResultSetMetaData1.getScale(3));
     assertEquals(0, jdbcResultSetMetaData2.getScale(1));
-    assertEquals(10, jdbcResultSetMetaData1.getScale(3));
+    assertEquals(0, jdbcResultSetMetaData1.getScale(3));
   }
 
   @Test

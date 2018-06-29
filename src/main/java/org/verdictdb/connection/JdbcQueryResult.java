@@ -38,6 +38,7 @@ public class JdbcQueryResult implements DbmsQueryResult {
       isCurrency.add(meta.isCurrency(i+1));
       isNullable.add(meta.isNullable(i+1));
       precision.add(meta.getPrecision(i+1));
+      columnDisplaySize.add(meta.getColumnDisplaySize(i+1));
       scale.add(meta.getScale(i+1));
     }
     while (resultSet.next()) {
