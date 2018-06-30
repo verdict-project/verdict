@@ -97,11 +97,19 @@ public class AggExecutionNodeBlock {
     
     // second, according to the plan, create individual nodes that perform aggregations.
     for (int i = 0; i < aggMeta.totalBlockAggCount(); i++) {
+      // copy and remove the dependency to its parents
       AggExecutionNodeBlock copy = deepcopyExcludingDependentAggregates();
+      QueryExecutionNode aggroot = copy.getBlockRootNode();
+      for (QueryExecutionNode parent : aggroot.getParents()) {
+        parent.getDependents().remove(aggroot);
+      }
+      aggroot.getParents().clear();
+      
       List<Pair<QueryExecutionNode, Triple<String, String, String>>> scrambledNodeAndTableName = 
           identifyScrambledNodes(scrambleMeta, copy.getNodesInBlock());
       
       // add extra predicates to restrain each aggregation to particular parts of base tables.
+      // TODO: this information should be specified within each individual agg node using HyperCube.
       for (Pair<QueryExecutionNode, Triple<String, String, String>> a : scrambledNodeAndTableName) {
         QueryExecutionNode scrambledNode = a.getLeft();
         String schemaName = a.getRight().getLeft();
@@ -129,7 +137,7 @@ public class AggExecutionNodeBlock {
         }
       }
       
-      individualAggNodes.add(copy.getBlockRootNode());
+      individualAggNodes.add(aggroot);
     }
     
     // third, stack combiners

@@ -68,31 +68,10 @@ public class AsyncAggExecutionNode extends QueryExecutionNode {
 
     AsyncAggExecutionNode node = new AsyncAggExecutionNode(plan);
     ExecutionTokenQueue rootQueue = node.generateListeningQueue();
-
-    // set new broadcasting nodes
-
+    
     // first agg -> root
     individualAggs.get(0).addBroadcastingQueue(rootQueue);
     node.addDependency(individualAggs.get(0));
-
-//    // first agg -> first combiner
-//    ExecutionTokenQueue firstCombinerQueue = combiners.get(0).generateListeningQueue();
-//    individualAggs.get(0).addBroadcastingQueue(firstCombinerQueue);
-//    combiners.get(0).addDependency(individualAggs.get(0));
-//
-//    // combiners -> next combiners
-//    for (int i = 1; i < combiners.size(); i++) {
-//      ExecutionTokenQueue combinerQueue = combiners.get(i).generateListeningQueue();
-//      combiners.get(i-1).addBroadcastingQueue(combinerQueue);
-//      combiners.get(i).addDependency(combiners.get(i-1));
-//    }
-
-//    // individual aggs (except for the first one) -> combiners
-//    for (int i = 0; i < combiners.size(); i++) {
-//      ExecutionTokenQueue combinerQueue = combiners.get(i).generateListeningQueue();
-//      individualAggs.get(i+1).addBroadcastingQueue(combinerQueue);
-//      combiners.get(i).addDependency(individualAggs.get(i+1));
-//    }
 
     // combiners -> root
     for (QueryExecutionNode c : combiners) {
@@ -100,14 +79,6 @@ public class AsyncAggExecutionNode extends QueryExecutionNode {
       node.addDependency(c);
     }
 
-//    for (int i = 1; i < individualAggs.size(); i++) {
-//      ExecutionTokenQueue q = combiners.get(i-1).generateListeningQueue();
-//      individualAggs.get(i).addBroadcastingQueue(q);
-//    }
-//    for (QueryExecutionNode c : combiners) {
-//      c.addBroadcastingQueue(queue);
-//      node.addDependency(c);
-//    }
     return node;
   }
 

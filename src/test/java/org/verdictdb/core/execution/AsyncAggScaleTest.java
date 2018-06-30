@@ -124,6 +124,11 @@ public class AsyncAggScaleTest {
     //String before = queryExecutionPlan.getRootNode().toString();
     //queryExecutionPlan.setScalingNode();
     //String after = queryExecutionPlan.getRootNode().toString();
-    assertEquals(2, queryExecutionPlan.getRootNode().dependents.get(0).dependents.get(0).getParents().size());
+    queryExecutionPlan.getRoot().print();
+    QueryExecutionNode firstAggLet = queryExecutionPlan.getRootNode().getDependent(0).getDependent(0);
+    assertEquals(2, firstAggLet.getParents().size());
+    assertEquals(queryExecutionPlan.getRootNode().getDependent(0), firstAggLet.getParents().get(1));
+    assertEquals(queryExecutionPlan.getRootNode().getDependent(0).getDependent(1), firstAggLet.getParents().get(0));
+    
   }
 }
