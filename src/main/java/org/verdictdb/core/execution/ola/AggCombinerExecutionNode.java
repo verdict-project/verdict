@@ -19,6 +19,7 @@ import org.verdictdb.core.query.ColumnOp;
 import org.verdictdb.core.query.SelectItem;
 import org.verdictdb.core.query.SelectQuery;
 import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.exception.VerdictDBValueException;
 
 public class AggCombinerExecutionNode extends CreateTableAsSelectExecutionNode {
 
@@ -29,7 +30,7 @@ public class AggCombinerExecutionNode extends CreateTableAsSelectExecutionNode {
   public static AggCombinerExecutionNode create(
       QueryExecutionPlan plan,
       QueryExecutionNode leftQueryExecutionNode,
-      QueryExecutionNode rightQueryExecutionNode) {
+      QueryExecutionNode rightQueryExecutionNode) throws VerdictDBValueException {
     AggCombinerExecutionNode node = new AggCombinerExecutionNode(plan);
     
 //    SelectQuery leftQuery = queryExecutionNode.getSelectQuery();

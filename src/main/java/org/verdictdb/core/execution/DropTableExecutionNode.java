@@ -5,8 +5,8 @@ import java.util.List;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.core.query.DropTableQuery;
 import org.verdictdb.core.sql.QueryToSql;
-import org.verdictdb.exception.VerdictDBValueException;
 import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.exception.VerdictDBValueException;
 
 public class DropTableExecutionNode extends QueryExecutionNode {
   

@@ -219,7 +219,7 @@ public class RelationGen extends VerdictSQLBaseVisitor<AbstractRelation> {
     if (ctx.join_part().isEmpty()){
       return r;
     }
-    JoinTable jr = JoinTable.getBaseJoinTable(r, new ArrayList<JoinTable.JoinType>(), new ArrayList<UnnamedColumn>());
+    JoinTable jr = JoinTable.createBase(r, new ArrayList<JoinTable.JoinType>(), new ArrayList<UnnamedColumn>());
     //join error location: r2 is null
     for (VerdictSQLParser.Join_partContext j : ctx.join_part()) {
       AbstractRelation r2 = visit(j);

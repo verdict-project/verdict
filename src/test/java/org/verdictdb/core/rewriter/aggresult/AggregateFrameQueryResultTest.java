@@ -1,7 +1,5 @@
 package org.verdictdb.core.rewriter.aggresult;
 
-import static org.junit.Assert.*;
-
 import java.util.Arrays;
 import java.util.List;
 

@@ -1,5 +1,8 @@
 package org.verdictdb.core.execution;
 
+import java.sql.DriverManager;
+import java.sql.SQLException;
+
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.connection.DbmsConnection;
@@ -8,12 +11,9 @@ import org.verdictdb.core.query.SelectQuery;
 import org.verdictdb.core.sql.NonValidatingSQLParser;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.exception.VerdictDBException;
-import org.verdictdb.resulthandler.TokenQueueToAyncHandler;
 import org.verdictdb.resulthandler.StandardOutputHandler;
+import org.verdictdb.resulthandler.TokenQueueToAyncHandler;
 import org.verdictdb.sql.syntax.H2Syntax;
-
-import java.sql.DriverManager;
-import java.sql.SQLException;
 
 public class TokenQueueToAyncHandlerTest {
 
@@ -56,7 +56,7 @@ public class TokenQueueToAyncHandlerTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(newSchema, null, selectQuery);
     TokenQueueToAyncHandler tokenQueueToAyncHandler = new TokenQueueToAyncHandler(queryExecutionPlan, new ExecutionTokenQueue());
     tokenQueueToAyncHandler.setHandler(new StandardOutputHandler());
-    queryExecutionPlan.root.execute(conn);
+    queryExecutionPlan.root.executeAndWaitForTermination(conn);
     tokenQueueToAyncHandler.execute();
   }
 
@@ -68,7 +68,7 @@ public class TokenQueueToAyncHandlerTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(newSchema, null, selectQuery);
     TokenQueueToAyncHandler tokenQueueToAyncHandler = new TokenQueueToAyncHandler(queryExecutionPlan, new ExecutionTokenQueue());
     tokenQueueToAyncHandler.setHandler(new StandardOutputHandler());
-    queryExecutionPlan.root.execute(conn);
+    queryExecutionPlan.root.executeAndWaitForTermination(conn);
     tokenQueueToAyncHandler.execute();
   }
 
@@ -81,7 +81,7 @@ public class TokenQueueToAyncHandlerTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(newSchema, null, selectQuery);
     TokenQueueToAyncHandler tokenQueueToAyncHandler = new TokenQueueToAyncHandler(queryExecutionPlan, new ExecutionTokenQueue());
     tokenQueueToAyncHandler.setHandler(new StandardOutputHandler());
-    queryExecutionPlan.root.execute(conn);
+    queryExecutionPlan.root.executeAndWaitForTermination(conn);
     tokenQueueToAyncHandler.execute();
   }
 
@@ -93,7 +93,7 @@ public class TokenQueueToAyncHandlerTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(newSchema, null, selectQuery);
     TokenQueueToAyncHandler tokenQueueToAyncHandler = new TokenQueueToAyncHandler(queryExecutionPlan, new ExecutionTokenQueue());
     tokenQueueToAyncHandler.setHandler(new StandardOutputHandler());
-    queryExecutionPlan.root.execute(conn);
+    queryExecutionPlan.root.executeAndWaitForTermination(conn);
     tokenQueueToAyncHandler.execute();
   }
 
@@ -105,7 +105,7 @@ public class TokenQueueToAyncHandlerTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(newSchema, null, selectQuery);
     TokenQueueToAyncHandler tokenQueueToAyncHandler = new TokenQueueToAyncHandler(queryExecutionPlan, new ExecutionTokenQueue());
     tokenQueueToAyncHandler.setHandler(new StandardOutputHandler());
-    queryExecutionPlan.root.execute(conn);
+    queryExecutionPlan.root.executeAndWaitForTermination(conn);
     tokenQueueToAyncHandler.execute();
   }
 

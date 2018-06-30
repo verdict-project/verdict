@@ -5,7 +5,6 @@ import java.util.Map;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
-import org.verdictdb.core.aggresult.AggregateFrame;
 
 public class ExecutionInfoToken {
   
@@ -13,6 +12,38 @@ public class ExecutionInfoToken {
   
   public static ExecutionInfoToken empty() {
     return new ExecutionInfoToken();
+  }
+  
+  public boolean isStatusToken() {
+    return data.containsKey("status");
+  }
+  
+  public static ExecutionInfoToken successToken() {
+    ExecutionInfoToken token = new ExecutionInfoToken();
+    token.setKeyValue("status", "success");
+    return token;
+  }
+  
+  public static ExecutionInfoToken failureToken() {
+    ExecutionInfoToken token = new ExecutionInfoToken();
+    token.setKeyValue("status", "failed");
+    return token;
+  }
+  
+  public boolean isSuccessToken() {
+    if (data.containsKey("status") && data.get("status").equals("success")) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+  
+  public boolean isFailureToken() {
+    if (data.containsKey("status") && data.get("status").equals("failed")) {
+      return true;
+    } else {
+      return false;
+    }
   }
   
   public Object getValue(String key) {
