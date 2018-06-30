@@ -2032,19 +2032,19 @@ public class TpchAyncExecutionPlanTest {
   public void Query21Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select\n" +
-        "  name,\n" +
+        "  s_name,\n" +
         "  count(1) as numwait\n" +
         "from (\n" +
-        "  select name from (\n" +
+        "  select s_name as s_name from (\n" +
         "    select\n" +
-        "      s_name,\n" +
-        "      t2.l_orderkey,\n" +
-        "      l_suppkey,\n" +
+        "      s_name as s_name,\n" +
+        "      t2.l_orderkey as l_orderkey,\n" +
+        "      l_suppkey as l_suppkey,\n" +
         "      count_suppkey,\n" +
         "      max_suppkey\n" +
         "    from\n" +
         "      (select\n" +
-        "  l_orderkey,\n" +
+        "  l_orderkey as l_orderkey,\n" +
         "  count(l_suppkey) count_suppkey,\n" +
         "  max(l_suppkey) as max_suppkey\n" +
         "from\n" +
@@ -2055,18 +2055,18 @@ public class TpchAyncExecutionPlanTest {
         "group by\n" +
         "  l_orderkey) as t2 right outer join (\n" +
         "      select\n" +
-        "        s_name as name,\n" +
-        "        l_orderkey,\n" +
-        "        l_suppkey from (\n" +
+        "        s_name as s_name,\n" +
+        "        l_orderkey as l_orderkey,\n" +
+        "        l_suppkey as l_suppkey from (\n" +
         "        select\n" +
-        "          s_name,\n" +
-        "          t1.l_orderkey,\n" +
+        "          s_name as s_name,\n" +
+        "          t1.l_orderkey as l_orderkey,\n" +
         "          l_suppkey,\n" +
         "          count_suppkey,\n" +
         "          max_suppkey\n" +
         "        from\n" +
         "          (select\n" +
-        "             l_orderkey,\n" +
+        "             l_orderkey as l_orderkey,\n" +
         "             count(l_suppkey) as count_suppkey,\n" +
         "             max(l_suppkey) as max_suppkey\n" +
         "           from\n" +
@@ -2076,15 +2076,15 @@ public class TpchAyncExecutionPlanTest {
         "           group by\n" +
         "             l_orderkey) as t1 join "
         + "        (select\n" +
-        "             s_name,\n" +
-        "             l_orderkey,\n" +
-        "             l_suppkey\n" +
+        "             s_name as s_name,\n" +
+        "             l_orderkey as l_orderkey,\n" +
+        "             l_suppkey as l_suppkey\n" +
         "           from\n" +
         "             orders_scrambled o join "
         + "        (select\n" +
-        "             s_name,\n" +
-        "             l_orderkey,\n" +
-        "             l_suppkey\n" +
+        "             s_name as s_name,\n" +
+        "             l_orderkey as l_orderkey,\n" +
+        "             l_suppkey as l_suppkey\n" +
         "           from\n" +
         "             nation n join supplier s\n" +
         "             on s.s_nationkey = n.n_nationkey\n" +
@@ -2128,12 +2128,11 @@ public class TpchAyncExecutionPlanTest {
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
     queryExecutionPlan.getRootNode().print();
 
-    assertEquals(1, queryExecutionPlan.root.getDependent(0).dependents.size());
+    assertEquals(5, queryExecutionPlan.root.getDependent(0).dependents.size());
     assertEquals(1, queryExecutionPlan.root.getDependent(0).getDependent(0).dependents.size());
-    assertEquals(2, queryExecutionPlan.root.getDependent(0).getDependent(0).getDependent(0).dependents.size());
-    assertEquals(3, queryExecutionPlan.root.getDependent(0).getDependent(0).getDependent(0).getDependent(0).dependents.size());
-    assertEquals(1, queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.get(0).dependents.get(1).dependents.size());
-
+    assertEquals(1, queryExecutionPlan.root.getDependent(0).getDependent(0).getDependent(0).dependents.size());
+    assertEquals(2, queryExecutionPlan.root.getDependent(0).getDependent(0).getDependent(0).getDependent(0).dependents.size());
+/*
     assertEquals(new BaseTable(placeholderSchemaName, placeholderTableName, "c"),
         ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.dependents.get(0)).getSelectQuery().getFromList().get(0));
     assertEquals(new BaseTable(placeholderSchemaName, placeholderTableName, "b"),
@@ -2150,7 +2149,7 @@ public class TpchAyncExecutionPlanTest {
         ));
     assertEquals(join,
         ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.get(0)).getSelectQuery().getFromList().get(0));
-
+*/
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
     queryExecutionPlan.root.executeAndWaitForTermination(new JdbcConnection(conn, new H2Syntax()));
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
@@ -2163,18 +2162,18 @@ public class TpchAyncExecutionPlanTest {
     String sql = "select\n" +
         "  cntrycode,\n" +
         "  count(1) as numcust,\n" +
-        "  sum(acctbal) as totacctbal\n" +
+        "  sum(c_acctbal) as totacctbal\n" +
         "from (\n" +
         "  select\n" +
-        "    cntrycode,\n" +
-        "    acctbal,\n" +
+        "    cntrycode as cntrycode,\n" +
+        "    c_acctbal as c_acctbal,\n" +
         "    avg_acctbal\n" +
         "  from\n" +
         "    (select\n" +
         "  avg(c_acctbal) as avg_acctbal\n" +
         "from\n" +
         "  (select\n" +
-        "  c_acctbal,\n" +
+        "  c_acctbal as c_acctbal,\n" +
         "  c_custkey,\n" +
         "  substr(c_phone, 1, 2) as cntrycode\n" +
         "from\n" +
@@ -2191,7 +2190,7 @@ public class TpchAyncExecutionPlanTest {
         "  c_acctbal > 0.00) as ct1 join (\n" +
         "      select\n" +
         "        cntrycode,\n" +
-        "        c_acctbal as acctbal\n" +
+        "        c_acctbal as c_acctbal\n" +
         "      from\n" +
         "        (select\n" +
         "  o_custkey\n" +
@@ -2200,7 +2199,7 @@ public class TpchAyncExecutionPlanTest {
         "group by\n" +
         "  o_custkey) ot\n" +
         "        right outer join (select\n" +
-        "  c_acctbal,\n" +
+        "  c_acctbal as c_acctbal,\n" +
         "  c_custkey,\n" +
         "  substr(c_phone, 1, 2) as cntrycode\n" +
         "from\n" +
@@ -2261,8 +2260,8 @@ public class TpchAyncExecutionPlanTest {
         Arrays.<JoinTable.JoinType>asList(JoinTable.JoinType.rightouter),
         Arrays.<UnnamedColumn>asList(
             new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-                new BaseColumn("ct", "vc9"),
-                new BaseColumn("ot", "vc6")
+                new BaseColumn("ct", "vc7"),
+                new BaseColumn("ot", "vc5")
             ))
         ));
     assertEquals(join1,
