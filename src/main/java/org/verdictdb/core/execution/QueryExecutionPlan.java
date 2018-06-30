@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
+import com.google.common.base.Optional;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import org.apache.commons.lang3.tuple.Pair;
@@ -245,6 +246,7 @@ public class QueryExecutionPlan {
 
     // Change the query of parents
     BaseTable placeholderTableinParent = ((QueryExecutionNodeWithPlaceHolders)parent).getPlaceholderTables().get(parent.dependents.indexOf(node));
+    ((QueryExecutionNodeWithPlaceHolders)parent).getPlaceholderTables().remove(placeholderTableinParent);
 
     // If temp table is in from list of parent, just direct replace with the select query of node
     if (parent.selectQuery.getFromList().contains(placeholderTableinParent)) {
