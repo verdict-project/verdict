@@ -83,6 +83,7 @@ public class AggCombinerExecutionNodeTest {
     
     ExecutionTokenQueue queue = new ExecutionTokenQueue();
     AggCombinerExecutionNode combiner = AggCombinerExecutionNode.create(plan, leftNode, rightNode);
+    combiner.print();
     combiner.addBroadcastingQueue(queue);
     combiner.executeAndWaitForTermination(conn);
     

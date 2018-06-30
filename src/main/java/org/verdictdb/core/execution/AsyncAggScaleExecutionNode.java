@@ -109,7 +109,7 @@ public class AsyncAggScaleExecutionNode extends ProjectionExecutionNode {
         // Calculate the scale factor
         scaleFactor = calculateScaleFactor(cubes);
         // Substitute the scale factor
-        for (ColumnOp col:aggColumnlist) {
+        for (ColumnOp col : aggColumnlist) {
           col.setOperand(0, ConstantColumn.valueOf(scaleFactor));
         }
       }

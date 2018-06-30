@@ -49,7 +49,7 @@ public abstract class QueryExecutionNode {
   private List<ExecutionTokenQueue> listeningQueues = new ArrayList<>();
 
   // latest results from listening queues
-  private List<Optional<ExecutionInfoToken>> latestResults = new ArrayList<>();
+//  private List<Optional<ExecutionInfoToken>> latestResults = new ArrayList<>();
   
   public QueryExecutionNode(QueryExecutionPlan plan) {
     this.plan = plan;
@@ -110,9 +110,9 @@ public abstract class QueryExecutionNode {
    * @throws VerdictDBValueException 
    */
   public void execute(final DbmsConnection conn, ExecutorService executor) throws VerdictDBValueException {
-    if (listeningQueues.size() != latestResults.size()) {
-      throw new VerdictDBValueException("Field constraint mismatch.");
-    }
+//    if (listeningQueues.size() != latestResults.size()) {
+//      throw new VerdictDBValueException("Field constraint mismatch.");
+//    }
     
     // The fact that it is not in "initialized" means this node already have been into "running" status before.
     // Also, the children of this node have already been called execute() method.
@@ -130,7 +130,7 @@ public abstract class QueryExecutionNode {
     // Now we start the execution of this current node.
     // Set the status of this node
     setStatus("running");
-//    System.out.println("Starts the exec of " + this);
+    System.out.println("Starts the exec of " + this);
     
     executor.submit(new Runnable() {
       int process(DbmsConnection conn, List<ExecutionInfoToken> tokens) {
@@ -146,59 +146,46 @@ public abstract class QueryExecutionNode {
       
       @Override
       public void run() {
+        
         while (true) {
           // no dependency
           if (listeningQueues.size() == 0) {
             int ret = process(conn, Arrays.<ExecutionInfoToken>asList());
             if (ret == 0) {
-              broadcast(ExecutionInfoToken.successToken());
               setSuccess();   // only for printing purpose
+              broadcast(ExecutionInfoToken.successToken());
             } else {
-              broadcast(ExecutionInfoToken.failureToken());
               setFailure();   // only for printing purpose
+              broadcast(ExecutionInfoToken.failureToken());
             }
             break;
           }
           
           // dependency exists
-          readLatestResultsFromDependents();    // update both (1) status and (2) latestQueue
-          
-//          try {
-//            TimeUnit.SECONDS.sleep(1);
-//            System.out.println(QueryExecutionNode.this);
-//            System.out.println(successDependentCount);
-//            System.out.println(failedDependentCount);
-////            System.out.println();
-//          } catch (InterruptedException e) {
-//            // TODO Auto-generated catch block
-//            e.printStackTrace();
-//          }
-          
-          // base conditions
-          if (doesFailedDependentExist()) {
-            broadcast(ExecutionInfoToken.failureToken());
-            setFailure();    // only for printing purpose
-            break;
-          }
-          if (areDependentsAllSuccess()) {
-            broadcast(ExecutionInfoToken.successToken());
-            setSuccess();    // only for printing purpose
-            break;
-          }
           
           // see if a complete set of results are available
-          List<ExecutionInfoToken> latestResults = getLatestResultsIfAvailable();
-//          System.out.println(QueryExecutionNode.this);
-//          System.out.println(QueryExecutionNode.this.latestResults);
-//          System.out.println(latestResults);
+          List<ExecutionInfoToken> latestResults = getResultsFromQueues();
+          
+          // base condition
           if (latestResults == null) {
             continue;
           }
+          if (doesIncludeFailure(latestResults)) {
+            setFailure();   // only for printing purpose
+            broadcast(ExecutionInfoToken.failureToken());
+            break;
+          }
+          if (areAllSuccess(latestResults)) {
+            setSuccess();
+            broadcast(ExecutionInfoToken.successToken());
+            break;
+          }
           
+          // actual processing
           int ret = process(conn, latestResults);
           if (ret != 0) {
-            broadcast(ExecutionInfoToken.failureToken());
             setFailure();   // only for printing purpose
+            broadcast(ExecutionInfoToken.failureToken());
             break;
           }
           
@@ -237,19 +224,19 @@ public abstract class QueryExecutionNode {
   public ExecutionTokenQueue generateListeningQueue() throws VerdictDBValueException {
     ExecutionTokenQueue queue = new ExecutionTokenQueue();
     listeningQueues.add(queue);
-    latestResults.add(Optional.<ExecutionInfoToken>absent());
-    if (listeningQueues.size() != latestResults.size()) {
-      throw new VerdictDBValueException("Invalid field constraint.");
-    }
+//    latestResults.add(Optional.<ExecutionInfoToken>absent());
+//    if (listeningQueues.size() != latestResults.size()) {
+//      throw new VerdictDBValueException("Invalid field constraint.");
+//    }
     return queue;
   }
   
   public ExecutionTokenQueue generateReplacementListeningQueue(int index) throws VerdictDBValueException {
     ExecutionTokenQueue queue = new ExecutionTokenQueue();
     listeningQueues.set(index, queue);
-    if (listeningQueues.size() != latestResults.size()) {
-      throw new VerdictDBValueException("Invalid field constraint.");
-    }
+//    if (listeningQueues.size() != latestResults.size()) {
+//      throw new VerdictDBValueException("Invalid field constraint.");
+//    }
     return queue;
   }
   
@@ -305,52 +292,65 @@ public abstract class QueryExecutionNode {
     }
   }
 
-  void readLatestResultsFromDependents() {
-    for (int i = 0; i < listeningQueues.size(); i++) {
-      if (latestResults.get(i).isPresent()) {
-        continue;
-      }
-      
-      ExecutionInfoToken rs = listeningQueues.get(i).poll();
-      if (rs == null) {
-        // do nothing
-      } else if (rs.isStatusToken()) {
-        if (rs.isSuccessToken()) {
-          successDependentCount++;
-        } else if (rs.isFailureToken()) {
-          failedDependentCount++;
-        }
-      } else {
-        latestResults.set(i, Optional.of(rs));
-        System.out.println(new ToStringBuilder(this) + " Received: " + rs.toString());
-      }
-    }
-  }
+//  void readLatestResultsFromDependents() {
+//    for (int i = 0; i < listeningQueues.size(); i++) {
+//      if (latestResults.get(i).isPresent()) {
+//        continue;
+//      }
+//      
+//      ExecutionInfoToken rs = listeningQueues.get(i).poll();
+//      if (rs == null) {
+//        // do nothing
+//      } else if (rs.isStatusToken()) {
+//        if (rs.isSuccessToken()) {
+//          successDependentCount++;
+//        } else if (rs.isFailureToken()) {
+//          failedDependentCount++;
+//        }
+//      } else {
+//        latestResults.set(i, Optional.of(rs));
+//        System.out.println(new ToStringBuilder(this) + " Received: " + rs.toString());
+//      }
+//    }
+//  }
 
-  List<ExecutionInfoToken> getLatestResultsIfAvailable() {
-    boolean allResultsAvailable = true;
-    List<ExecutionInfoToken> results = new ArrayList<>();
-    for (Optional<ExecutionInfoToken> r : latestResults) {
-      if (!r.isPresent()) {
-        allResultsAvailable = false;
-        break;
+  List<ExecutionInfoToken> getResultsFromQueues() {
+    for (int i = 0; i < listeningQueues.size(); i++) {
+      ExecutionInfoToken rs = listeningQueues.get(i).peek();
+      if (rs == null) {
+        return null;
       }
-      results.add(r.get());
     }
-    if (allResultsAvailable) {
-      clearCachedLatestResults();
-      return results;
-    } else {
-      return null;
+    
+    // all results available now
+    List<ExecutionInfoToken> results = new ArrayList<>();
+    for (int i = 0; i < listeningQueues.size(); i++) {
+      ExecutionInfoToken rs = listeningQueues.get(i).take();
+      results.add(rs);
     }
+    return results;
+    
+//    for (Optional<ExecutionInfoToken> r : latestResults) {
+//      if (!r.isPresent()) {
+//        allResultsAvailable = false;
+//        break;
+//      }
+//      results.add(r.get());
+//    }
+//    if (allResultsAvailable) {
+//      clearCachedLatestResults();
+//      return results;
+//    } else {
+//      return null;
+//    }
   }
   
-  void clearCachedLatestResults() {
-    int size = latestResults.size();
-    for (int i = 0; i < size; i++) {
-      latestResults.set(i, Optional.<ExecutionInfoToken>absent());
-    }
-  }
+//  void clearCachedLatestResults() {
+//    int size = latestResults.size();
+//    for (int i = 0; i < size; i++) {
+//      latestResults.set(i, Optional.<ExecutionInfoToken>absent());
+//    }
+//  }
 
   boolean areDependentsAllComplete() {
     if (successDependentCount + failedDependentCount >= dependents.size()) {
@@ -399,6 +399,26 @@ public abstract class QueryExecutionNode {
 //    return allSuccess;
   }
   
+  private boolean areAllSuccess(List<ExecutionInfoToken> latestResults) {
+    for (ExecutionInfoToken t : latestResults) {
+      if (t.isStatusToken()) {
+        // do nothing
+      } else {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  private boolean doesIncludeFailure(List<ExecutionInfoToken> latestResults) {
+    for (ExecutionInfoToken t : latestResults) {
+      if (t.isFailureToken()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   boolean doesFailedDependentExist() {
     return failedDependentCount > 0;
   }
@@ -482,7 +502,7 @@ public abstract class QueryExecutionNode {
     to.dependents.addAll(from.dependents);
     to.broadcastingQueues.addAll(from.broadcastingQueues);
     to.listeningQueues.addAll(from.listeningQueues);
-    to.latestResults.addAll(from.latestResults);
+//    to.latestResults.addAll(from.latestResults);
   }
   
   public void print() {
@@ -508,7 +528,7 @@ public abstract class QueryExecutionNode {
         .append("status", status)
         .append("listeningQueues", listeningQueues)
         .append("broadcastingQueues", broadcastingQueues)
-        .append("latestResults", latestResults)
+//        .append("latestResults", latestResults)
         .append("selectQuery", selectQuery)
         .toString();
   }
