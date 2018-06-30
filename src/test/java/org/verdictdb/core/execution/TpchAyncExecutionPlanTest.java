@@ -17,6 +17,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.connection.StaticMetaData;
+import org.verdictdb.core.execution.CreateTableAsSelectExecutionNode;
+import org.verdictdb.core.execution.QueryExecutionPlan;
 import org.verdictdb.core.execution.ola.AsyncQueryExecutionPlan;
 import org.verdictdb.core.query.AbstractRelation;
 import org.verdictdb.core.query.AliasReference;
