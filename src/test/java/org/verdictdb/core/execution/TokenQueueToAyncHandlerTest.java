@@ -1,5 +1,8 @@
 package org.verdictdb.core.execution;
 
+import java.sql.DriverManager;
+import java.sql.SQLException;
+
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.connection.DbmsConnection;
@@ -8,12 +11,9 @@ import org.verdictdb.core.query.SelectQuery;
 import org.verdictdb.core.sql.NonValidatingSQLParser;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.exception.VerdictDBException;
-import org.verdictdb.resulthandler.TokenQueueToAyncHandler;
 import org.verdictdb.resulthandler.StandardOutputHandler;
+import org.verdictdb.resulthandler.TokenQueueToAyncHandler;
 import org.verdictdb.sql.syntax.H2Syntax;
-
-import java.sql.DriverManager;
-import java.sql.SQLException;
 
 public class TokenQueueToAyncHandlerTest {
 

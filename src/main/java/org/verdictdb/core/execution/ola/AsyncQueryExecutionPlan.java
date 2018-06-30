@@ -3,6 +3,7 @@ package org.verdictdb.core.execution.ola;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.verdictdb.core.ScrambleMeta;
 import org.verdictdb.core.execution.AggExecutionNode;
 import org.verdictdb.core.execution.QueryExecutionNode;
 import org.verdictdb.core.execution.QueryExecutionPlan;
@@ -10,7 +11,6 @@ import org.verdictdb.core.query.AbstractRelation;
 import org.verdictdb.core.query.BaseTable;
 import org.verdictdb.core.query.JoinTable;
 import org.verdictdb.core.query.SelectQuery;
-import org.verdictdb.core.rewriter.ScrambleMeta;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBTypeException;
 
