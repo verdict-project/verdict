@@ -69,7 +69,7 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
 
     if (root instanceof AggExecutionNode) {
       // check if it contains at least one scrambled table.
-      if (doesContainScramble(root.getSelectQuery(), scrambleMeta)) {
+      if (doesContainScramble(root, scrambleMeta)) {
         AggExecutionNodeBlock block = new AggExecutionNodeBlock(root.getPlan(), root);
         aggblocks.add(block);
         return aggblocks;
@@ -84,7 +84,10 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
     return aggblocks;
   }
   
-  static boolean doesContainScramble(SelectQuery query, ScrambleMeta scrambleMeta) {
+  static boolean doesContainScramble(QueryExecutionNode node, ScrambleMeta scrambleMeta) {
+    SelectQuery query = node.getSelectQuery();
+    
+    // check within the query
     for (AbstractRelation rel : query.getFromList()) {
       if (rel instanceof BaseTable) {
         BaseTable base = (BaseTable) rel;
@@ -104,6 +107,16 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
             }
           }
         }
+      }
+      // SelectQuery is not supposed to be passed.
+    }
+    
+    for (QueryExecutionNode dep : node.getDependents()) {
+      if (dep instanceof AggExecutionNode) {
+        continue;
+      }
+      if (doesContainScramble(dep, scrambleMeta)) {
+        return true;
       }
     }
     return false;

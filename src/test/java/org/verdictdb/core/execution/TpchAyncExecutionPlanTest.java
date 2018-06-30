@@ -2116,6 +2116,9 @@ public class TpchAyncExecutionPlanTest {
     AbstractRelation relation = sqlToRelation.toRelation(sql);
     RelationStandardizer gen = new RelationStandardizer(staticMetaData);
     relation = gen.standardize((SelectQuery) relation);
+    String standardSql = QueryToSql.convert(new H2Syntax(), (SelectQuery) relation);
+    System.out.println(standardSql);
+    
 //    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(new JdbcConnection(conn, new H2Syntax()),
 //        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
@@ -2191,7 +2194,7 @@ public class TpchAyncExecutionPlanTest {
         "        (select\n" +
         "  o_custkey\n" +
         "from\n" +
-        "  orders\n" +
+        "  orders_scrambled\n" +
         "group by\n" +
         "  o_custkey) ot\n" +
         "        right outer join (select\n" +
@@ -2227,6 +2230,8 @@ public class TpchAyncExecutionPlanTest {
 //        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
+    String standardSql = QueryToSql.convert(new H2Syntax(), (SelectQuery) relation);
+    System.out.println(standardSql);
 
     assertEquals(1, queryExecutionPlan.root.dependents.get(0).dependents.size());
     assertEquals(2, queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.size());
@@ -2270,7 +2275,7 @@ public class TpchAyncExecutionPlanTest {
   @Test
   public void SubqueryInFilterTest() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
-    String sql = "select avg(l_quantity) from lineitem where l_quantity > (select avg(l_quantity) as quantity_avg from lineitem);";
+    String sql = "select avg(l_quantity) from lineitem_scrambled where l_quantity > (select avg(l_quantity) as quantity_avg from lineitem_scrambled);";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
     RelationStandardizer gen = new RelationStandardizer(staticMetaData);
@@ -2278,107 +2283,35 @@ public class TpchAyncExecutionPlanTest {
 //    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(new JdbcConnection(conn, new H2Syntax()),
 //        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
-    queryExecutionPlan.cleanUp();
-
     String aliasName = String.format("verdictdbalias_%d_0", queryExecutionPlan.getSerialNumber());
+    queryExecutionPlan.cleanUp();
+    queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
+    queryExecutionPlan.getRootNode().print();
+    
     SelectQuery rewritten = SelectQuery.create(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn(placeholderSchemaName, aliasName, "quantity_avg"), "quantity_avg")),
         new BaseTable(placeholderSchemaName, placeholderTableName, aliasName));
-    assertEquals(rewritten,
-        ((SubqueryColumn)((ColumnOp)((CreateTableAsSelectExecutionNode)(queryExecutionPlan.root.dependents.get(0))).getSelectQuery().getFilter().get()).getOperand(1)).getSubquery());
+    assertEquals(
+        rewritten,
+        ((SubqueryColumn)
+            ((ColumnOp) 
+            ((ColumnOp)
+                ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root
+                    .getDependent(0).getDependent(0))
+                .getSelectQuery().getFilter().get())
+            .getOperand(0)).getOperand(1)).getSubquery());
 
     SelectQuery expected = SelectQuery.create(
-        Arrays.<SelectItem>asList(new AliasedColumn(new ColumnOp("avg", new BaseColumn("vt3", "l_quantity")), "quantity_avg")),
-        new BaseTable("tpch", "lineitem", "vt3")
+        Arrays.<SelectItem>asList(
+            new AliasedColumn(
+                new ColumnOp("avg", new BaseColumn("vt3", "l_quantity")), 
+                "quantity_avg")),
+        new BaseTable("tpch", "lineitem_scrambled", "vt3")
     );
-    assertEquals(expected, ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.dependents.get(0).dependents.get(0)).selectQuery);
-    stmt.execute("create schema if not exists \"verdictdb_temp\";");
-    queryExecutionPlan.root.executeAndWaitForTermination(new JdbcConnection(conn, new H2Syntax()));
-    stmt.execute("drop schema \"verdictdb_temp\" cascade;");
-  }
-
-  @Test
-  public void SubqueryInFilterTestExists() throws VerdictDBException, SQLException {
-    RelationStandardizer.resetItemID();
-    String sql = "select avg(l_quantity) from lineitem where exists(select * from lineitem);";
-    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
-    AbstractRelation relation = sqlToRelation.toRelation(sql);
-    RelationStandardizer gen = new RelationStandardizer(staticMetaData);
-    relation = gen.standardize((SelectQuery) relation);
-    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
-    queryExecutionPlan.cleanUp();
-
-    String alias = ((CreateTableAsSelectExecutionNode) (queryExecutionPlan.root.dependents.get(0))).getPlaceholderTables().get(0).getAliasName().get();
-    SelectQuery rewritten = SelectQuery.create(
-        Arrays.<SelectItem>asList(new AsteriskColumn()),
-        new BaseTable(placeholderSchemaName, placeholderTableName, alias));
-    assertEquals(rewritten,
-        ((SubqueryColumn) ((ColumnOp) ((CreateTableAsSelectExecutionNode) (queryExecutionPlan.root.dependents.get(0))).getSelectQuery().getFilter().get()).getOperand(0)).getSubquery());
-
-    SelectQuery expected = SelectQuery.create(
-        Arrays.<SelectItem>asList(new AsteriskColumn()),
-        new BaseTable("tpch", "lineitem", "vt3")
-    );
-    assertEquals(expected, ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.dependents.get(0).dependents.get(0)).selectQuery);
-    stmt.execute("create schema if not exists \"verdictdb_temp\";");
-    queryExecutionPlan.root.executeAndWaitForTermination(new JdbcConnection(conn, new H2Syntax()));
-    stmt.execute("drop schema \"verdictdb_temp\" cascade;");
-  }
-
-  @Test
-  public void SubqueryInFilterTestIn() throws VerdictDBException, SQLException {
-    RelationStandardizer.resetItemID();
-    String sql = "select avg(l_quantity) from lineitem where l_quantity in (select distinct l_quantity from lineitem);";
-    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
-    AbstractRelation relation = sqlToRelation.toRelation(sql);
-    RelationStandardizer gen = new RelationStandardizer(staticMetaData);
-    relation = gen.standardize((SelectQuery) relation);
-    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
-    queryExecutionPlan.cleanUp();
-
-    String alias = ((CreateTableAsSelectExecutionNode) (queryExecutionPlan.root.dependents.get(0))).getPlaceholderTables().get(0).getAliasName().get();
-    SelectQuery rewritten = SelectQuery.create(
-        Arrays.<SelectItem>asList(new AliasedColumn(new BaseColumn(placeholderSchemaName, alias, "vc4"), "vc4")),
-        new BaseTable(placeholderSchemaName, placeholderTableName, alias));
-    assertEquals(rewritten,
-        ((SubqueryColumn) ((ColumnOp) ((CreateTableAsSelectExecutionNode) (queryExecutionPlan.root.dependents.get(0))).getSelectQuery().getFilter().get()).getOperand(1)).getSubquery());
-
-    SelectQuery expected = SelectQuery.create(
-        Arrays.<SelectItem>asList(new AliasedColumn(new BaseColumn("vt3", "l_quantity"), "vc4")),
-        new BaseTable("tpch", "lineitem", "vt3")
-    );
-    assertEquals(expected, ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.dependents.get(0).dependents.get(0)).selectQuery);
-    stmt.execute("create schema if not exists \"verdictdb_temp\";");
-    queryExecutionPlan.root.executeAndWaitForTermination(new JdbcConnection(conn, new H2Syntax()));
-    stmt.execute("drop schema \"verdictdb_temp\" cascade;");
-  }
-
-  @Test
-  public void SubqueryInFilterMultiplePredicateTest() throws VerdictDBException, SQLException {
-    RelationStandardizer.resetItemID();
-    String sql = "select avg(l_quantity) from lineitem where l_quantity > (select avg(l_quantity) as quantity_avg from lineitem) and l_quantity in (select distinct l_quantity from lineitem)";
-    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
-    AbstractRelation relation = sqlToRelation.toRelation(sql);
-    RelationStandardizer gen = new RelationStandardizer(staticMetaData);
-    relation = gen.standardize((SelectQuery) relation);
-    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
-    queryExecutionPlan.cleanUp();
-
-    String alias = ((CreateTableAsSelectExecutionNode) (queryExecutionPlan.root.dependents.get(0))).getPlaceholderTables().get(0).getAliasName().get();
-    SelectQuery rewritten1 = SelectQuery.create(
-        Arrays.<SelectItem>asList(new AliasedColumn(new BaseColumn(placeholderSchemaName, alias, "quantity_avg"), "quantity_avg")),
-        new BaseTable(placeholderSchemaName, placeholderTableName, alias));
-    assertEquals(rewritten1,
-        ((SubqueryColumn)((ColumnOp)((ColumnOp)queryExecutionPlan.root.dependents.get(0).selectQuery.getFilter().get()).getOperand(0)).getOperand(1)).getSubquery());
-
-    alias = ((CreateTableAsSelectExecutionNode) (queryExecutionPlan.root.dependents.get(0))).getPlaceholderTables().get(1).getAliasName().get();
-    SelectQuery rewritten2 = SelectQuery.create(
-        Arrays.<SelectItem>asList(new AliasedColumn(new BaseColumn(placeholderSchemaName, alias, "vc5"), "vc5")),
-        new BaseTable(placeholderSchemaName, placeholderTableName, alias));
-    assertEquals(rewritten2,
-        ((SubqueryColumn)((ColumnOp)((ColumnOp)queryExecutionPlan.root.dependents.get(0).selectQuery.getFilter().get()).getOperand(1)).getOperand(1)).getSubquery());
-
+    assertEquals(
+        expected, 
+        ((CreateTableAsSelectExecutionNode) queryExecutionPlan.root.getDependent(0).getDependent(0).getDependent(0)).selectQuery);
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
     queryExecutionPlan.root.executeAndWaitForTermination(new JdbcConnection(conn, new H2Syntax()));
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
