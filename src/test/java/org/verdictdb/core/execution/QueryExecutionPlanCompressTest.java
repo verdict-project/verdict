@@ -1,23 +1,29 @@
 package org.verdictdb.core.execution;
 
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.verdictdb.connection.DbmsConnection;
-import org.verdictdb.connection.JdbcConnection;
-import org.verdictdb.core.execution.ola.AggCombinerExecutionNode;
-import org.verdictdb.core.execution.ola.AsyncAggExecutionNode;
-import org.verdictdb.core.query.*;
-import org.verdictdb.core.sql.NonValidatingSQLParser;
-import org.verdictdb.exception.VerdictDBDbmsException;
-import org.verdictdb.exception.VerdictDBException;
-import org.verdictdb.sql.syntax.H2Syntax;
+import static org.junit.Assert.assertEquals;
 
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Arrays;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.verdictdb.DbmsConnection;
+import org.verdictdb.core.connection.JdbcConnection;
+import org.verdictdb.core.execution.ola.AggCombinerExecutionNode;
+import org.verdictdb.core.execution.ola.AsyncAggExecutionNode;
+import org.verdictdb.core.query.AliasedColumn;
+import org.verdictdb.core.query.BaseColumn;
+import org.verdictdb.core.query.BaseTable;
+import org.verdictdb.core.query.ColumnOp;
+import org.verdictdb.core.query.ConstantColumn;
+import org.verdictdb.core.query.SelectItem;
+import org.verdictdb.core.query.SelectQuery;
+import org.verdictdb.core.query.SubqueryColumn;
+import org.verdictdb.exception.VerdictDBDbmsException;
+import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.sql.NonValidatingSQLParser;
+import org.verdictdb.sql.syntax.H2Syntax;
 
 public class QueryExecutionPlanCompressTest {
 

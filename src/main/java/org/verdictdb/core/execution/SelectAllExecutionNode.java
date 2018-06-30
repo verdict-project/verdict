@@ -3,14 +3,14 @@ package org.verdictdb.core.execution;
 import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.verdictdb.connection.DbmsConnection;
-import org.verdictdb.connection.DbmsQueryResult;
+import org.verdictdb.DbmsConnection;
+import org.verdictdb.DbmsQueryResult;
 import org.verdictdb.core.query.AsteriskColumn;
 import org.verdictdb.core.query.BaseTable;
 import org.verdictdb.core.query.SelectQuery;
-import org.verdictdb.core.sql.QueryToSql;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBValueException;
+import org.verdictdb.sql.QueryToSql;
 
 /**
  * 

@@ -22,6 +22,7 @@ import org.verdictdb.core.query.SelectQuery;
 import org.verdictdb.core.query.SubqueryColumn;
 import org.verdictdb.core.query.UnnamedColumn;
 import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.sql.NonValidatingSQLParser;
 
 public class TpchSqlToRelationBeforeAliasTest {
 

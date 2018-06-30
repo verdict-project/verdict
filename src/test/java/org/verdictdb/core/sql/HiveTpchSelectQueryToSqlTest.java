@@ -25,6 +25,7 @@ import org.verdictdb.core.query.SelectQuery;
 import org.verdictdb.core.query.SubqueryColumn;
 import org.verdictdb.core.query.UnnamedColumn;
 import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.sql.SelectQueryToSql;
 import org.verdictdb.sql.syntax.HiveSyntax;
 
 import com.google.common.base.Charsets;

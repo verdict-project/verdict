@@ -1,4 +1,4 @@
-package org.verdictdb.core.sql;
+package org.verdictdb.sql;
 
 import java.util.List;
 import java.util.Set;
@@ -21,19 +21,19 @@ import org.verdictdb.core.query.UnnamedColumn;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBTypeException;
 import org.verdictdb.exception.VerdictDBValueException;
-import org.verdictdb.sql.syntax.SyntaxAbstract;
+import org.verdictdb.sql.syntax.SqlSyntax;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.Sets;
 
 public class SelectQueryToSql {
 
-  SyntaxAbstract syntax;
+  SqlSyntax syntax;
 
   Set<String> opTypeNotRequiringParentheses = Sets.newHashSet(
       "sum", "avg", "count", "std", "sqrt", "notnull", "whenthenelse", "rand", "floor");
 
-  public SelectQueryToSql(SyntaxAbstract syntax) {
+  public SelectQueryToSql(SqlSyntax syntax) {
     this.syntax = syntax;
   }
 

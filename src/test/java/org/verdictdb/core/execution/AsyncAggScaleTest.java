@@ -1,27 +1,8 @@
 package org.verdictdb.core.execution;
 
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.verdictdb.connection.JdbcConnection;
-import org.verdictdb.connection.StaticMetaData;
-import org.verdictdb.core.ScrambleMeta;
-import org.verdictdb.core.ScrambleMetaForTable;
-import org.verdictdb.core.execution.ola.AsyncAggExecutionNode;
-import org.verdictdb.core.execution.ola.AsyncQueryExecutionPlan;
-import org.verdictdb.core.execution.ola.Dimension;
-import org.verdictdb.core.execution.ola.HyperTableCube;
-import org.verdictdb.core.query.AbstractRelation;
-import org.verdictdb.core.query.BaseTable;
-import org.verdictdb.core.query.CreateTableAsSelectQuery;
-import org.verdictdb.core.query.SelectQuery;
-import org.verdictdb.core.scramble.UniformScrambler;
-import org.verdictdb.core.sql.NonValidatingSQLParser;
-import org.verdictdb.core.sql.QueryToSql;
-import org.verdictdb.core.sql.RelationStandardizer;
-import org.verdictdb.exception.VerdictDBException;
-import org.verdictdb.sql.syntax.H2Syntax;
+import static java.sql.Types.BIGINT;
+import static java.sql.Types.DOUBLE;
+import static org.junit.Assert.assertEquals;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -31,9 +12,27 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static java.sql.Types.BIGINT;
-import static java.sql.Types.DOUBLE;
-import static org.junit.Assert.assertEquals;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.verdictdb.core.connection.JdbcConnection;
+import org.verdictdb.core.connection.StaticMetaData;
+import org.verdictdb.core.execution.ola.AsyncAggExecutionNode;
+import org.verdictdb.core.execution.ola.AsyncQueryExecutionPlan;
+import org.verdictdb.core.execution.ola.Dimension;
+import org.verdictdb.core.execution.ola.HyperTableCube;
+import org.verdictdb.core.query.AbstractRelation;
+import org.verdictdb.core.query.CreateTableAsSelectQuery;
+import org.verdictdb.core.query.SelectQuery;
+import org.verdictdb.core.scramble.ScrambleMeta;
+import org.verdictdb.core.scramble.ScrambleMetaForTable;
+import org.verdictdb.core.scramble.UniformScrambler;
+import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.sql.NonValidatingSQLParser;
+import org.verdictdb.sql.QueryToSql;
+import org.verdictdb.sql.RelationStandardizer;
+import org.verdictdb.sql.syntax.H2Syntax;
 
 public class AsyncAggScaleTest {
 

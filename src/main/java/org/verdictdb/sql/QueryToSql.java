@@ -1,4 +1,4 @@
-package org.verdictdb.core.sql;
+package org.verdictdb.sql;
 
 import org.verdictdb.core.query.CreateTableAsSelectQuery;
 import org.verdictdb.core.query.DropTableQuery;
@@ -6,11 +6,11 @@ import org.verdictdb.core.query.SelectQuery;
 import org.verdictdb.core.query.SqlConvertable;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBTypeException;
-import org.verdictdb.sql.syntax.SyntaxAbstract;
+import org.verdictdb.sql.syntax.SqlSyntax;
 
 public class QueryToSql {
   
-  public static String convert(SyntaxAbstract syntax, SqlConvertable query) throws VerdictDBException {
+  public static String convert(SqlSyntax syntax, SqlConvertable query) throws VerdictDBException {
     if (query instanceof SelectQuery) {
       SelectQueryToSql tosql = new SelectQueryToSql(syntax);
       return tosql.toSql((SelectQuery) query);

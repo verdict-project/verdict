@@ -12,12 +12,11 @@ import java.util.Random;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.verdictdb.core.ScrambleMetaForTable;
 import org.verdictdb.core.query.CreateTableAsSelectQuery;
 import org.verdictdb.core.query.SelectQuery;
-import org.verdictdb.core.sql.CreateTableToSql;
-import org.verdictdb.core.sql.SelectQueryToSql;
 import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.sql.CreateTableToSql;
+import org.verdictdb.sql.SelectQueryToSql;
 import org.verdictdb.sql.syntax.H2Syntax;
 import org.verdictdb.sql.syntax.HiveSyntax;
 

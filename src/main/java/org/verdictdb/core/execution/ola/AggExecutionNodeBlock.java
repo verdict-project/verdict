@@ -6,8 +6,10 @@ import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
-import org.verdictdb.core.ScrambleMeta;
-import org.verdictdb.core.execution.*;
+import org.verdictdb.core.execution.AggExecutionNode;
+import org.verdictdb.core.execution.ExecutionTokenQueue;
+import org.verdictdb.core.execution.QueryExecutionNode;
+import org.verdictdb.core.execution.QueryExecutionPlan;
 import org.verdictdb.core.query.AbstractRelation;
 import org.verdictdb.core.query.BaseColumn;
 import org.verdictdb.core.query.BaseTable;
@@ -15,6 +17,7 @@ import org.verdictdb.core.query.ColumnOp;
 import org.verdictdb.core.query.ConstantColumn;
 import org.verdictdb.core.query.JoinTable;
 import org.verdictdb.core.query.SelectQuery;
+import org.verdictdb.core.scramble.ScrambleMeta;
 import org.verdictdb.exception.VerdictDBValueException;
 
 /**

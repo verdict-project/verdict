@@ -1,4 +1,4 @@
-package org.verdictdb.core;
+package org.verdictdb.core.scramble;
 
 import java.util.HashMap;
 import java.util.List;

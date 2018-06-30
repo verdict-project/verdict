@@ -12,9 +12,7 @@ import java.util.Random;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.verdictdb.connection.JdbcConnection;
-import org.verdictdb.core.ScrambleMeta;
-import org.verdictdb.core.ScrambleMetaForTable;
+import org.verdictdb.core.connection.JdbcConnection;
 import org.verdictdb.core.execution.AggExecutionNode;
 import org.verdictdb.core.execution.QueryExecutionNode;
 import org.verdictdb.core.execution.QueryExecutionPlan;
@@ -23,10 +21,12 @@ import org.verdictdb.core.query.BaseTable;
 import org.verdictdb.core.query.ColumnOp;
 import org.verdictdb.core.query.CreateTableAsSelectQuery;
 import org.verdictdb.core.query.SelectQuery;
+import org.verdictdb.core.scramble.ScrambleMeta;
+import org.verdictdb.core.scramble.ScrambleMetaForTable;
 import org.verdictdb.core.scramble.UniformScrambler;
-import org.verdictdb.core.sql.QueryToSql;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBValueException;
+import org.verdictdb.sql.QueryToSql;
 import org.verdictdb.sql.syntax.H2Syntax;
 
 public class AggExecutionNodeBlockTest {

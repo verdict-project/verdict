@@ -1,9 +1,9 @@
-package org.verdictdb.connection;
+package org.verdictdb;
 
 import java.sql.Connection;
 
 import org.verdictdb.exception.VerdictDBDbmsException;
-import org.verdictdb.sql.syntax.SyntaxAbstract;
+import org.verdictdb.sql.syntax.SqlSyntax;
 
 public interface DbmsConnection extends MetaDataProvider {
   
@@ -17,7 +17,7 @@ public interface DbmsConnection extends MetaDataProvider {
    */
   public int executeUpdate(String query) throws VerdictDBDbmsException;
   
-  public SyntaxAbstract getSyntax();
+  public SqlSyntax getSyntax();
 
   public Connection getConnection();
 

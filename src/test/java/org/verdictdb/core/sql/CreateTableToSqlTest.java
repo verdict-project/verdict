@@ -11,6 +11,7 @@ import org.verdictdb.core.query.CreateTableAsSelectQuery;
 import org.verdictdb.core.query.SelectItem;
 import org.verdictdb.core.query.SelectQuery;
 import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.sql.CreateTableToSql;
 import org.verdictdb.sql.syntax.HiveSyntax;
 
 public class CreateTableToSqlTest {

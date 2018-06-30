@@ -1,6 +1,6 @@
 package org.verdictdb.resulthandler;
 
-import org.verdictdb.connection.DbmsQueryResult;
+import org.verdictdb.DbmsQueryResult;
 import org.verdictdb.core.execution.ExecutionInfoToken;
 import org.verdictdb.core.execution.ExecutionTokenQueue;
 import org.verdictdb.core.execution.QueryExecutionPlan;

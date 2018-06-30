@@ -5,14 +5,14 @@ import java.sql.SQLException;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.verdictdb.connection.DbmsConnection;
-import org.verdictdb.connection.JdbcConnection;
+import org.verdictdb.DbmsConnection;
+import org.verdictdb.core.connection.JdbcConnection;
 import org.verdictdb.core.query.SelectQuery;
-import org.verdictdb.core.sql.NonValidatingSQLParser;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.resulthandler.StandardOutputHandler;
 import org.verdictdb.resulthandler.TokenQueueToAyncHandler;
+import org.verdictdb.sql.NonValidatingSQLParser;
 import org.verdictdb.sql.syntax.H2Syntax;
 
 public class TokenQueueToAyncHandlerTest {

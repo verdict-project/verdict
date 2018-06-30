@@ -1,16 +1,10 @@
 package org.verdictdb.core.execution;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
-import org.verdictdb.connection.DbmsConnection;
-import org.verdictdb.core.execution.ola.AggCombinerExecutionNode;
-import org.verdictdb.core.execution.ola.AsyncAggExecutionNode;
-import org.verdictdb.core.execution.ola.Dimension;
+import org.verdictdb.DbmsConnection;
 import org.verdictdb.core.execution.ola.HyperTableCube;
-import org.verdictdb.core.query.AbstractRelation;
-import org.verdictdb.core.query.BaseTable;
 import org.verdictdb.core.query.SelectQuery;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBValueException;

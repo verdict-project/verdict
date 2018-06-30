@@ -33,7 +33,7 @@ import org.verdictdb.core.rewriter.AliasRenamingRules;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBTypeException;
 import org.verdictdb.exception.VerdictDBValueException;
-import org.verdictdb.jdbc.TypeCasting;
+import org.verdictdb.jdbc41.TypeCasting;
 
 /**
  * Given intermediate aggregate form (either the result of a single query execution or the result of the

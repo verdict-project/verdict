@@ -5,7 +5,7 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import org.verdictdb.exception.VerdictDBTypeException;
-import org.verdictdb.sql.syntax.SyntaxAbstract;
+import org.verdictdb.sql.syntax.SqlSyntax;
 
 
 public class BaseTable extends AbstractRelation {
@@ -60,7 +60,7 @@ public class BaseTable extends AbstractRelation {
 //        this.tableSourceAlias = tableSourceAlias;
 //    }
 
-  public String toSql(SyntaxAbstract syntax) throws VerdictDBTypeException {
+  public String toSql(SqlSyntax syntax) throws VerdictDBTypeException {
     throw new VerdictDBTypeException("A base table itself cannot be converted to a sql.");
   }
 

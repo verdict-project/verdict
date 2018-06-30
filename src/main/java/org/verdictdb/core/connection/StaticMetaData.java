@@ -1,4 +1,4 @@
-package org.verdictdb.connection;
+package org.verdictdb.core.connection;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -10,6 +10,7 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
+import org.verdictdb.MetaDataProvider;
 
 public class StaticMetaData implements MetaDataProvider{
 

@@ -1,6 +1,6 @@
 package org.verdictdb.sql.syntax;
 
-public class MysqlSyntax implements SyntaxAbstract {
+public class MysqlSyntax implements SqlSyntax {
   @Override
   public String getQuoteString() {
     return "'";

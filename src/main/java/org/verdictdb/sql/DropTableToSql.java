@@ -1,14 +1,14 @@
-package org.verdictdb.core.sql;
+package org.verdictdb.sql;
 
 import org.verdictdb.core.query.DropTableQuery;
 import org.verdictdb.exception.VerdictDBException;
-import org.verdictdb.sql.syntax.SyntaxAbstract;
+import org.verdictdb.sql.syntax.SqlSyntax;
 
 public class DropTableToSql {
   
-  SyntaxAbstract syntax;
+  SqlSyntax syntax;
 
-  public DropTableToSql(SyntaxAbstract syntax) {
+  public DropTableToSql(SqlSyntax syntax) {
     this.syntax = syntax;
   }
 
