@@ -4,13 +4,13 @@ import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.resulthandler.AsyncHandler;
 
-public class VerdictContext {
+public class VerdictDBContext {
   
   DbmsConnection conn;
   
 //  DbmsMetadataCache meta = new DbmsMetadataCache();
   
-  public VerdictContext(DbmsConnection conn) {
+  public VerdictDBContext(DbmsConnection conn) {
     this.conn = conn;
   }
   
