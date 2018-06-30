@@ -10,11 +10,10 @@ import java.util.concurrent.TimeUnit;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import org.verdictdb.connection.DbmsConnection;
-import org.verdictdb.core.execution.ola.AggExecutionNodeBlock;
+import org.verdictdb.core.ScrambleMeta;
 import org.verdictdb.core.query.AbstractRelation;
 import org.verdictdb.core.query.BaseTable;
 import org.verdictdb.core.query.SelectQuery;
-import org.verdictdb.core.rewriter.ScrambleMeta;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBValueException;
 

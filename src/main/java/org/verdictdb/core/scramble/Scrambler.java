@@ -1,6 +1,6 @@
 package org.verdictdb.core.scramble;
 
-import org.verdictdb.core.rewriter.ScrambleMetaForTable;
+import org.verdictdb.core.ScrambleMetaForTable;
 
 public class Scrambler {
   

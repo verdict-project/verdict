@@ -7,6 +7,7 @@ import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
+import org.verdictdb.core.ScrambleMeta;
 import org.verdictdb.core.query.AbstractRelation;
 import org.verdictdb.core.query.AliasReference;
 import org.verdictdb.core.query.AliasedColumn;
@@ -16,7 +17,6 @@ import org.verdictdb.core.query.ColumnOp;
 import org.verdictdb.core.query.SelectItem;
 import org.verdictdb.core.query.SelectQuery;
 import org.verdictdb.core.rewriter.AliasRenamingRules;
-import org.verdictdb.core.rewriter.ScrambleMeta;
 import org.verdictdb.core.scramble.Scrambler;
 import org.verdictdb.core.sql.SelectQueryToSql;
 import org.verdictdb.exception.VerdictDBException;

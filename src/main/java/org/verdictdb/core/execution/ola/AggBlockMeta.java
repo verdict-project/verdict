@@ -5,7 +5,7 @@ import java.util.HashSet;
 import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.verdictdb.core.rewriter.ScrambleMeta;
+import org.verdictdb.core.ScrambleMeta;
 import org.verdictdb.exception.VerdictDBValueException;
 
 /**

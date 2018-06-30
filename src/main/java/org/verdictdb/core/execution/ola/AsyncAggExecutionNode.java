@@ -11,11 +11,11 @@ package org.verdictdb.core.execution.ola;
 import java.util.List;
 
 import org.verdictdb.connection.DbmsConnection;
+import org.verdictdb.core.ScrambleMeta;
 import org.verdictdb.core.execution.ExecutionInfoToken;
 import org.verdictdb.core.execution.ExecutionTokenQueue;
 import org.verdictdb.core.execution.QueryExecutionNode;
 import org.verdictdb.core.execution.QueryExecutionPlan;
-import org.verdictdb.core.rewriter.ScrambleMeta;
 import org.verdictdb.core.rewriter.aggresult.AggNameAndType;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBValueException;

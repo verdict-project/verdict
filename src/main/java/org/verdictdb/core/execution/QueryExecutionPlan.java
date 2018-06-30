@@ -8,22 +8,17 @@
 
 package org.verdictdb.core.execution;
 
-import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.connection.DbmsConnection;
-import org.verdictdb.core.execution.ola.AggExecutionNodeBlock;
+import org.verdictdb.core.ScrambleMeta;
 import org.verdictdb.core.query.SelectQuery;
-import org.verdictdb.core.rewriter.ScrambleMeta;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBTypeException;
 import org.verdictdb.exception.VerdictDBValueException;
-import org.verdictdb.exception.VerdictDBException;
-import org.verdictdb.resulthandler.StandardOutputHandler;
-import org.verdictdb.sql.syntax.SyntaxAbstract;
 
 public class QueryExecutionPlan {
   
