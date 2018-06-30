@@ -17,8 +17,6 @@ import org.verdictdb.core.scramble.ScrambleMeta;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBValueException;
 
-import com.google.common.base.Optional;
-
 public abstract class QueryExecutionNode {
 
 //  DbmsConnection conn;

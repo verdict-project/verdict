@@ -1,23 +1,29 @@
 package org.verdictdb.core.execution;
 
+import static org.junit.Assert.assertEquals;
+
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.util.Arrays;
+
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.DbmsConnection;
 import org.verdictdb.core.connection.JdbcConnection;
 import org.verdictdb.core.execution.ola.AggCombinerExecutionNode;
 import org.verdictdb.core.execution.ola.AsyncAggExecutionNode;
-import org.verdictdb.core.query.*;
+import org.verdictdb.core.query.AliasedColumn;
+import org.verdictdb.core.query.BaseColumn;
+import org.verdictdb.core.query.BaseTable;
+import org.verdictdb.core.query.ColumnOp;
+import org.verdictdb.core.query.ConstantColumn;
+import org.verdictdb.core.query.SelectItem;
+import org.verdictdb.core.query.SelectQuery;
+import org.verdictdb.core.query.SubqueryColumn;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sql.NonValidatingSQLParser;
 import org.verdictdb.sql.syntax.H2Syntax;
-
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.util.Arrays;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 public class QueryExecutionPlanCompressTest {
 
@@ -121,7 +127,9 @@ public class QueryExecutionPlanCompressTest {
             Arrays.<QueryExecutionNode>asList(combiner));
     queryExecutionPlan.root.getDependents().remove(0);
     queryExecutionPlan.root.getListeningQueues().remove(0);
-    asyncAggExecutionNode.addBroadcastingQueue(queryExecutionPlan.root.generateListeningQueue());
+    ExecutionTokenQueue q = new ExecutionTokenQueue();
+    queryExecutionPlan.root.getListeningQueues().add(q);
+    asyncAggExecutionNode.addBroadcastingQueue(q);
     queryExecutionPlan.root.addDependency(asyncAggExecutionNode);
 
     QueryExecutionNode copy = queryExecutionPlan.root.deepcopy();
@@ -152,7 +160,9 @@ public class QueryExecutionPlanCompressTest {
             Arrays.<QueryExecutionNode>asList(combiner));
     queryExecutionPlan.root.dependents.get(0).getDependents().remove(0);
     queryExecutionPlan.root.dependents.get(0).getListeningQueues().remove(0);
-    asyncAggExecutionNode.addBroadcastingQueue(queryExecutionPlan.root.dependents.get(0).generateListeningQueue());
+    ExecutionTokenQueue q = new ExecutionTokenQueue();
+    queryExecutionPlan.root.dependents.get(0).getListeningQueues().add(q);
+    asyncAggExecutionNode.addBroadcastingQueue(q);
     queryExecutionPlan.root.dependents.get(0).addDependency(asyncAggExecutionNode);
     QueryExecutionNode copy = queryExecutionPlan.root.getDependent(0).deepcopy();
     queryExecutionPlan.compress();
@@ -189,7 +199,9 @@ public class QueryExecutionPlanCompressTest {
             Arrays.<QueryExecutionNode>asList(combiner));
     queryExecutionPlan.root.dependents.get(0).getDependents().remove(0);
     queryExecutionPlan.root.dependents.get(0).getListeningQueues().remove(0);
-    asyncAggExecutionNode.addBroadcastingQueue(queryExecutionPlan.root.dependents.get(0).generateListeningQueue());
+    ExecutionTokenQueue q = new ExecutionTokenQueue();
+    queryExecutionPlan.root.dependents.get(0).getListeningQueues().add(q);
+    asyncAggExecutionNode.addBroadcastingQueue(q);
     queryExecutionPlan.root.dependents.get(0).addDependency(asyncAggExecutionNode);
 
     SelectQuery commonQuery = SelectQuery.create(new AliasedColumn(ColumnOp.count(), "mycount"), base);

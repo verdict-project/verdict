@@ -15,7 +15,7 @@ import org.verdictdb.core.execution.ExecutionInfoToken;
 import org.verdictdb.core.execution.ExecutionTokenQueue;
 import org.verdictdb.core.execution.QueryExecutionNode;
 import org.verdictdb.core.execution.QueryExecutionPlan;
-import org.verdictdb.core.query.*;
+import org.verdictdb.core.query.SelectQuery;
 import org.verdictdb.core.rewriter.aggresult.AggNameAndType;
 import org.verdictdb.core.scramble.ScrambleMeta;
 import org.verdictdb.exception.VerdictDBException;
@@ -47,9 +47,6 @@ public class AsyncAggExecutionNode extends QueryExecutionNode {
   SelectQuery originalQuery;
 
 //  List<AsyncAggExecutionNode> children = new ArrayList<>();
-
-//  int tableNum = 1;
-  List<BaseTable> scrambleTables;
 
   int tableNum = 1;
 
@@ -119,28 +116,7 @@ public class AsyncAggExecutionNode extends QueryExecutionNode {
     return scrambleMeta;
   }
 
-  public List<BaseTable> getScrambleTables() {
-    return scrambleTables;
-  }
-
-  // Find out scramble tables in from list.
-  public void setScrambleTables()  {
-    List<AbstractRelation> fromlist = originalQuery.getFromList();
-    for (AbstractRelation table:fromlist) {
-      if (table instanceof BaseTable) {
-        if (scrambleMeta.isScrambled(((BaseTable) table).getSchemaName(), ((BaseTable) table).getTableName())) {
-          scrambleTables.add((BaseTable) table);
-        }
-      }
-      else if (table instanceof JoinTable) {
-        for (AbstractRelation joinTable:((JoinTable) table).getJoinList()) {
-          if (joinTable instanceof BaseTable) {
-            if (scrambleMeta.isScrambled(((BaseTable) joinTable).getSchemaName(), ((BaseTable) joinTable).getTableName())) {
-              scrambleTables.add((BaseTable) table);
-            }
-          }
-        }
-      }
-    }
+  public void setScrambleMeta(ScrambleMeta meta) {
+    this.scrambleMeta = meta;
   }
 }

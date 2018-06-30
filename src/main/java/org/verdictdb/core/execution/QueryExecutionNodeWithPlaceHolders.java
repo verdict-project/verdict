@@ -5,7 +5,6 @@ import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.DbmsConnection;
-import org.verdictdb.core.query.AbstractRelation;
 import org.verdictdb.core.query.BaseTable;
 import org.verdictdb.core.query.SelectQuery;
 import org.verdictdb.core.query.SubqueryColumn;

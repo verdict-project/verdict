@@ -1,6 +1,7 @@
 package org.verdictdb.core.execution.ola;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -109,7 +110,13 @@ public class AggExecutionNodeBlock {
           identifyScrambledNodes(scrambleMeta, copy.getNodesInBlock());
       
       // add extra predicates to restrain each aggregation to particular parts of base tables.
-      // TODO: this information should be specified within each individual agg node using HyperCube.
+      // Move original AggExecutionNode.executeNode() method here
+      // Assume only one scramble table in the query
+      Dimension dimension = new Dimension(scrambles.get(0).getLeft(), scrambles.get(0).getRight(), i, i);
+      ((AggExecutionNode)aggroot).getCubes().addAll(Arrays.asList(new HyperTableCube(Arrays.asList(dimension))));
+
+
+
       for (Pair<QueryExecutionNode, Triple<String, String, String>> a : scrambledNodeAndTableName) {
         QueryExecutionNode scrambledNode = a.getLeft();
         String schemaName = a.getRight().getLeft();
@@ -143,6 +150,7 @@ public class AggExecutionNodeBlock {
     // third, stack combiners
     // clear existing broadcasting queues of individual agg nodes
     for (QueryExecutionNode n : individualAggNodes) {
+      n.getParents().clear();
       n.clearBroadcastingQueues();
     }
     for (int i = 1; i < aggMeta.totalBlockAggCount(); i++) {

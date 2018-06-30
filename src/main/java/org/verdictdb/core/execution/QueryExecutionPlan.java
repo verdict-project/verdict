@@ -15,15 +15,12 @@ import java.util.concurrent.ThreadLocalRandom;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import org.apache.commons.lang3.tuple.Pair;
-import org.verdictdb.core.execution.ola.AggCombinerExecutionNode;
-import org.verdictdb.core.execution.ola.AggExecutionNodeBlock;
+import org.verdictdb.DbmsConnection;
 import org.verdictdb.core.execution.ola.AsyncAggExecutionNode;
 import org.verdictdb.core.query.BaseTable;
 import org.verdictdb.core.query.SelectQuery;
 import org.verdictdb.core.query.SubqueryColumn;
-import org.verdictdb.core.query.UnnamedColumn;
 import org.verdictdb.core.scramble.ScrambleMeta;
-import org.verdictdb.DbmsConnection;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBTypeException;
 import org.verdictdb.exception.VerdictDBValueException;
@@ -245,6 +242,7 @@ public class QueryExecutionPlan {
 
     // Change the query of parents
     BaseTable placeholderTableinParent = ((QueryExecutionNodeWithPlaceHolders)parent).getPlaceholderTables().get(parent.dependents.indexOf(node));
+    ((QueryExecutionNodeWithPlaceHolders)parent).getPlaceholderTables().remove(placeholderTableinParent);
 
     // If temp table is in from list of parent, just direct replace with the select query of node
     if (parent.selectQuery.getFromList().contains(placeholderTableinParent)) {
