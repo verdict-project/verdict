@@ -4,8 +4,8 @@ import org.verdictdb.core.query.CreateTableAsSelectQuery;
 import org.verdictdb.core.query.DropTableQuery;
 import org.verdictdb.core.query.SelectQuery;
 import org.verdictdb.core.query.SqlConvertable;
-import org.verdictdb.exception.VerdictDBTypeException;
 import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.exception.VerdictDBTypeException;
 import org.verdictdb.sql.syntax.SyntaxAbstract;
 
 public class QueryToSql {

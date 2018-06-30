@@ -1,7 +1,6 @@
 package org.verdictdb.core.sql;
 
 import static java.sql.Types.BIGINT;
-
 import static org.junit.Assert.assertEquals;
 
 import java.sql.SQLException;
@@ -1310,7 +1309,7 @@ public class TpchSqlToRelationAfterAliasTest {
     RelationStandardizer.resetItemID();
     BaseTable customer = new BaseTable("tpch", "customer", "vt1");
     BaseTable orders = new BaseTable("tpch", "orders", "vt2");
-    JoinTable join = JoinTable.getJoinTable(Arrays.<AbstractRelation>asList(customer, orders),
+    JoinTable join = JoinTable.create(Arrays.<AbstractRelation>asList(customer, orders),
         Arrays.<JoinTable.JoinType>asList(JoinTable.JoinType.leftouter),
         Arrays.<UnnamedColumn>asList(new ColumnOp("and", Arrays.<UnnamedColumn>asList(
             new ColumnOp("equal", Arrays.<UnnamedColumn>asList(

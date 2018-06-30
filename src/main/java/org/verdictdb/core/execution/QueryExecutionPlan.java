@@ -8,15 +8,17 @@
 
 package org.verdictdb.core.execution;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.core.execution.ola.AggExecutionNodeBlock;
 import org.verdictdb.core.query.SelectQuery;
 import org.verdictdb.core.rewriter.ScrambleMeta;
+import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBTypeException;
 import org.verdictdb.exception.VerdictDBValueException;
 import org.verdictdb.exception.VerdictDBException;
@@ -32,6 +34,8 @@ public class QueryExecutionPlan {
   QueryExecutionNode root;
   
   String scratchpadSchemaName;
+  
+  final int N_THREADS = 10;
   
 //  PostProcessor postProcessor;
   
@@ -58,6 +62,10 @@ public class QueryExecutionPlan {
   public QueryExecutionPlan(String scratchpadSchemaName, ScrambleMeta scrambleMeta) {
     this.scratchpadSchemaName = scratchpadSchemaName;
     this.scrambleMeta = scrambleMeta;
+  }
+  
+  public int getMaxNumberOfThreads() {
+    return N_THREADS;
   }
 
   /**
@@ -98,7 +106,15 @@ public class QueryExecutionPlan {
     return scratchpadSchemaName;
   }
   
-  String generateUniqueIdentifier() {
+  public QueryExecutionNode getRootNode() {
+    return root;
+  }
+  
+  public void setRootNode(QueryExecutionNode root) {
+    this.root = root;
+  }
+  
+  synchronized String generateUniqueIdentifier() {
     return String.format("%d_%d", serialNum, identifierNum++);
   }
 
@@ -131,38 +147,37 @@ public class QueryExecutionPlan {
    * @throws VerdictDBTypeException 
    */
   QueryExecutionNode makePlan(SelectQuery query) throws VerdictDBException {
-    // TODO: compress this plan
     QueryExecutionNode root = SelectAllExecutionNode.create(this, query);
 //    root = makeAsyncronousAggIfAvailable(root);
     return root;
   }
 
-  /**
-   *
-   * @param root The root execution node of ALL nodes (i.e., not just the top agg node)
-   * @return
-   * @throws VerdictDBException
-   */
-  QueryExecutionNode makeAsyncronousAggIfAvailable(QueryExecutionNode root) throws VerdictDBException {
-    List<AggExecutionNodeBlock> aggBlocks = root.identifyTopAggBlocks();
-
-    // converted nodes should be used in place of the original nodes.
-    for (int i = 0; i < aggBlocks.size(); i++) {
-      AggExecutionNodeBlock nodeBlock = aggBlocks.get(i);
-      QueryExecutionNode oldNode = nodeBlock.getBlockRootNode();
-      QueryExecutionNode newNode = nodeBlock.convertToProgressiveAgg();
-
-      List<QueryExecutionNode> parents = oldNode.getParents();
-      for (QueryExecutionNode parent : parents) {
-        List<QueryExecutionNode> parentDependants = parent.getDependents();
-        int idx = parentDependants.indexOf(oldNode);
-        parentDependants.remove(idx);
-        parentDependants.add(idx, newNode);
-      }
-    }
-
-    return root;
-  }
+//  /**
+//   *
+//   * @param root The root execution node of ALL nodes (i.e., not just the top agg node)
+//   * @return
+//   * @throws VerdictDBException
+//   */
+//  QueryExecutionNode makeAsyncronousAggIfAvailable(QueryExecutionNode root) throws VerdictDBException {
+//    List<AggExecutionNodeBlock> aggBlocks = root.identifyTopAggBlocks();
+//
+//    // converted nodes should be used in place of the original nodes.
+//    for (int i = 0; i < aggBlocks.size(); i++) {
+//      AggExecutionNodeBlock nodeBlock = aggBlocks.get(i);
+//      QueryExecutionNode oldNode = nodeBlock.getBlockRootNode();
+//      QueryExecutionNode newNode = nodeBlock.convertToProgressiveAgg();
+//
+//      List<QueryExecutionNode> parents = oldNode.getParents();
+//      for (QueryExecutionNode parent : parents) {
+//        List<QueryExecutionNode> parentDependants = parent.getDependents();
+//        int idx = parentDependants.indexOf(oldNode);
+//        parentDependants.remove(idx);
+//        parentDependants.add(idx, newNode);
+//      }
+//    }
+//
+//    return root;
+//  }
   
   public void execute(DbmsConnection conn, ExecutionTokenQueue queue) {
     // execute roots
@@ -175,7 +190,14 @@ public class QueryExecutionPlan {
   void cleanUp() {
     tempTableNameNum = 0;
   }
-//  static void resetTempTableNameNum() {tempTableNameNum = 0;}
+  
+  @Override
+  public String toString() {
+    return new ToStringBuilder(this, ToStringStyle.DEFAULT_STYLE)
+        .append("root", root)
+        .append("scrambleMeta", scrambleMeta)
+        .toString();
+  }
 
 
   public QueryExecutionNode getRoot() {

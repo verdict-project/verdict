@@ -1,6 +1,5 @@
 package org.verdictdb.core.sql;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -9,7 +8,6 @@ import java.util.Vector;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.connection.MetaDataProvider;
-import org.verdictdb.connection.StaticMetaData;
 import org.verdictdb.core.query.AbstractRelation;
 import org.verdictdb.core.query.AliasReference;
 import org.verdictdb.core.query.AliasedColumn;

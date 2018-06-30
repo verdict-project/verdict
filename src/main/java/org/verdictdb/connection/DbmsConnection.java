@@ -1,14 +1,9 @@
 package org.verdictdb.connection;
 
 import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.List;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.sql.syntax.SyntaxAbstract;
-
-import com.google.common.base.Optional;
 
 public interface DbmsConnection extends MetaDataProvider {
   

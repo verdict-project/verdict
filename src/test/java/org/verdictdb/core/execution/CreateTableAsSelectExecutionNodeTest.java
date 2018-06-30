@@ -3,7 +3,6 @@ package org.verdictdb.core.execution;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Arrays;
-import java.util.concurrent.LinkedBlockingDeque;
 
 import org.junit.BeforeClass;
 import org.junit.Test;

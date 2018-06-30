@@ -64,6 +64,10 @@ public class SelectQuery extends AbstractRelation implements SqlConvertable {
 
   Optional<String> aliasName = Optional.absent();
   
+  /**
+   * Copies query specification, i.e., everything except for orderby, having, and limit
+   * @return
+   */
   public SelectQuery deepcopy() {
     SelectQuery sel = new SelectQuery();
     for (SelectItem c : getSelectList()) {
