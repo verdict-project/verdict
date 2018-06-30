@@ -29,10 +29,9 @@ import org.verdictdb.core.query.SelectQuery;
 import org.verdictdb.core.query.UnnamedColumn;
 import org.verdictdb.core.rewriter.AliasRenamingRules;
 import org.verdictdb.core.rewriter.ScrambleMeta;
-import org.verdictdb.core.scramble.Scrambler;
+import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBTypeException;
 import org.verdictdb.exception.VerdictDBValueException;
-import org.verdictdb.exception.VerdictDBException;
 
 /**
  * AQP rewriter for partitioned tables. A sampling probability column must exist.

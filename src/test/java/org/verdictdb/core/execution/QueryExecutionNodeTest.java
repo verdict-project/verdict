@@ -1,14 +1,12 @@
 package org.verdictdb.core.execution;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 import org.junit.Test;
 import org.verdictdb.connection.DbmsConnection;
-import org.verdictdb.core.execution.ola.AggExecutionNodeBlock;
 import org.verdictdb.core.query.AliasReference;
 import org.verdictdb.core.query.AliasedColumn;
 import org.verdictdb.core.query.AsteriskColumn;
@@ -19,7 +17,7 @@ import org.verdictdb.core.query.SelectItem;
 import org.verdictdb.core.query.SelectQuery;
 import org.verdictdb.core.rewriter.ScrambleMeta;
 import org.verdictdb.core.scramble.Scrambler;
-import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.exception.VerdictDBValueException;
 
 public class QueryExecutionNodeTest {
   
@@ -35,7 +33,7 @@ public class QueryExecutionNodeTest {
   }
 
   @Test
-  public void testDoesContainScrambledTableFlatQuery() {
+  public void testDoesContainScrambledTableFlatQuery() throws VerdictDBValueException {
     BaseTable base = new BaseTable("myschema", "mytable", "t");
     SelectQuery query = SelectQuery.create(
         Arrays.<SelectItem>asList(
@@ -51,7 +49,7 @@ public class QueryExecutionNodeTest {
   }
   
   @Test
-  public void testDoesContainScrambledTableNestedQuery() {
+  public void testDoesContainScrambledTableNestedQuery() throws VerdictDBValueException {
     BaseTable base = new BaseTable("myschema", "mytable", "t");
     SelectQuery innerRelation = SelectQuery.create(
         Arrays.<SelectItem>asList(

@@ -33,7 +33,10 @@ public class TokenQueueToAyncHandler {
       handler.handle(queryResult);
     }
     result = listeningQueue.poll();
-    while (result!=null) {
+    while (result != null) {
+      if (result.isFailureToken() || result.isSuccessToken()) {
+        break;
+      }
       DbmsQueryResult queryResult = (DbmsQueryResult) result.getValue("queryResult");
       handler.handle(queryResult);
       result = listeningQueue.poll();

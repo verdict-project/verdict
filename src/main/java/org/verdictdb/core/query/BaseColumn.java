@@ -61,6 +61,10 @@ public class BaseColumn implements UnnamedColumn, SelectItem, GroupingAttribute 
     this.tableSourceAlias = tableSourceAlias;
     this.columnName = columnName;
   }
+  
+  public static BaseColumn create(String tableSourceAlias, String columnName) {
+    return new BaseColumn(tableSourceAlias, columnName);
+  }
 
   @Override
   public int hashCode() {

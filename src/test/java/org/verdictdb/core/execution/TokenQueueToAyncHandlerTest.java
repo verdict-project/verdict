@@ -56,7 +56,7 @@ public class TokenQueueToAyncHandlerTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(newSchema, null, selectQuery);
     TokenQueueToAyncHandler tokenQueueToAyncHandler = new TokenQueueToAyncHandler(queryExecutionPlan, new ExecutionTokenQueue());
     tokenQueueToAyncHandler.setHandler(new StandardOutputHandler());
-    queryExecutionPlan.root.execute(conn);
+    queryExecutionPlan.root.executeAndWaitForTermination(conn);
     tokenQueueToAyncHandler.execute();
   }
 
@@ -68,7 +68,7 @@ public class TokenQueueToAyncHandlerTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(newSchema, null, selectQuery);
     TokenQueueToAyncHandler tokenQueueToAyncHandler = new TokenQueueToAyncHandler(queryExecutionPlan, new ExecutionTokenQueue());
     tokenQueueToAyncHandler.setHandler(new StandardOutputHandler());
-    queryExecutionPlan.root.execute(conn);
+    queryExecutionPlan.root.executeAndWaitForTermination(conn);
     tokenQueueToAyncHandler.execute();
   }
 
@@ -81,7 +81,7 @@ public class TokenQueueToAyncHandlerTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(newSchema, null, selectQuery);
     TokenQueueToAyncHandler tokenQueueToAyncHandler = new TokenQueueToAyncHandler(queryExecutionPlan, new ExecutionTokenQueue());
     tokenQueueToAyncHandler.setHandler(new StandardOutputHandler());
-    queryExecutionPlan.root.execute(conn);
+    queryExecutionPlan.root.executeAndWaitForTermination(conn);
     tokenQueueToAyncHandler.execute();
   }
 
@@ -93,7 +93,7 @@ public class TokenQueueToAyncHandlerTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(newSchema, null, selectQuery);
     TokenQueueToAyncHandler tokenQueueToAyncHandler = new TokenQueueToAyncHandler(queryExecutionPlan, new ExecutionTokenQueue());
     tokenQueueToAyncHandler.setHandler(new StandardOutputHandler());
-    queryExecutionPlan.root.execute(conn);
+    queryExecutionPlan.root.executeAndWaitForTermination(conn);
     tokenQueueToAyncHandler.execute();
   }
 
@@ -105,7 +105,7 @@ public class TokenQueueToAyncHandlerTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(newSchema, null, selectQuery);
     TokenQueueToAyncHandler tokenQueueToAyncHandler = new TokenQueueToAyncHandler(queryExecutionPlan, new ExecutionTokenQueue());
     tokenQueueToAyncHandler.setHandler(new StandardOutputHandler());
-    queryExecutionPlan.root.execute(conn);
+    queryExecutionPlan.root.executeAndWaitForTermination(conn);
     tokenQueueToAyncHandler.execute();
   }
 

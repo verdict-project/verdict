@@ -27,7 +27,7 @@ public abstract class QueryExecutionNodeWithPlaceHolders extends QueryExecutionN
     super(plan, query);
   }
   
-  public Pair<BaseTable, ExecutionTokenQueue> createPlaceHolderTable(String aliasName) {
+  public Pair<BaseTable, ExecutionTokenQueue> createPlaceHolderTable(String aliasName) throws VerdictDBValueException {
     BaseTable table = new BaseTable("placeholderSchemaName", "placeholderTableName", aliasName);
     placeholderTables.add(table);
     ExecutionTokenQueue listeningQueue = generateListeningQueue();
@@ -59,5 +59,10 @@ public abstract class QueryExecutionNodeWithPlaceHolders extends QueryExecutionN
 
   public List<SubqueryColumn> getPlaceholderTablesinFilter() {
     return placeholderTablesinFilter;
+  }
+  
+  void copyFields(QueryExecutionNodeWithPlaceHolders from, QueryExecutionNodeWithPlaceHolders to) {
+    super.copyFields(from, to);
+    to.placeholderTables = from.placeholderTables;
   }
 }

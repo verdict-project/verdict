@@ -20,7 +20,7 @@ public class JoinTable extends AbstractRelation {
 
   List<UnnamedColumn> condition = new ArrayList<>();
 
-  public static JoinTable getJoinTable(List<AbstractRelation> joinList, List<JoinType> joinTypeList, List<UnnamedColumn> condition) {
+  public static JoinTable create(List<AbstractRelation> joinList, List<JoinType> joinTypeList, List<UnnamedColumn> condition) {
     JoinTable join = new JoinTable();
     join.joinList = joinList;
     join.joinTypeList = joinTypeList;
@@ -28,7 +28,7 @@ public class JoinTable extends AbstractRelation {
     return join;
   }
 
-  public static JoinTable getBaseJoinTable(AbstractRelation joinBaseTable, List<JoinType> joinTypeList, List<UnnamedColumn> condition) {
+  public static JoinTable createBase(AbstractRelation joinBaseTable, List<JoinType> joinTypeList, List<UnnamedColumn> condition) {
     JoinTable join = new JoinTable();
     join.joinList.add(joinBaseTable);
     join.joinTypeList = joinTypeList;

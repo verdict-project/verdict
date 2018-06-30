@@ -21,7 +21,7 @@ public class UniformScrambler extends Scrambler {
     super(originalSchemaName, originalTableName, scrambledSchemaName, scrambledTableName, aggregationBlockCount);
   }
 
-  public CreateTableAsSelectQuery scrambledTableCreationQuery() {
+  public CreateTableAsSelectQuery createQuery() {
     SelectQuery selectQuery = scramblingQuery();
     CreateTableAsSelectQuery createQuery =
         new CreateTableAsSelectQuery(scrambledSchemaName, scrambledTableName, selectQuery);

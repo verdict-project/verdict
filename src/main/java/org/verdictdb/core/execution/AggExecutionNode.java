@@ -5,6 +5,7 @@ import java.util.List;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.core.query.SelectQuery;
 import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.exception.VerdictDBValueException;
 
 public class AggExecutionNode extends CreateTableAsSelectExecutionNode {
 
@@ -12,7 +13,7 @@ public class AggExecutionNode extends CreateTableAsSelectExecutionNode {
     super(plan);
   }
   
-  public static AggExecutionNode create(QueryExecutionPlan plan, SelectQuery query) {
+  public static AggExecutionNode create(QueryExecutionPlan plan, SelectQuery query) throws VerdictDBValueException {
     AggExecutionNode node = new AggExecutionNode(plan);
     SubqueriesToDependentNodes.convertSubqueriesToDependentNodes(query, node);
     node.setSelectQuery(query);

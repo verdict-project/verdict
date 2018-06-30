@@ -1,10 +1,8 @@
 package org.verdictdb.jdbc;
 
 import java.math.BigDecimal;
-import java.sql.SQLException;
 
 import org.verdictdb.exception.VerdictDBTypeException;
-import org.verdictdb.exception.VerdictDBValueException;
 
 public class TypeCasting {
 
