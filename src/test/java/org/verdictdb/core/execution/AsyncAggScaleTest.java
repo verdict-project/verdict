@@ -10,6 +10,8 @@ import org.verdictdb.core.ScrambleMeta;
 import org.verdictdb.core.ScrambleMetaForTable;
 import org.verdictdb.core.execution.ola.AsyncAggExecutionNode;
 import org.verdictdb.core.execution.ola.AsyncQueryExecutionPlan;
+import org.verdictdb.core.execution.ola.Dimension;
+import org.verdictdb.core.execution.ola.HyperTableCube;
 import org.verdictdb.core.query.AbstractRelation;
 import org.verdictdb.core.query.BaseTable;
 import org.verdictdb.core.query.CreateTableAsSelectQuery;
@@ -39,7 +41,7 @@ public class AsyncAggScaleTest {
 
   static Statement stmt;
 
-  static int aggBlockCount = 2;
+  static int aggBlockCount = 3;
 
   static ScrambleMeta meta = new ScrambleMeta();
 
@@ -111,7 +113,8 @@ public class AsyncAggScaleTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().dependents.get(0)).addScrambleTable(new BaseTable(originalSchema, "originalTable_scrambled"));
+    Dimension d1 = new Dimension("originalSchema", "originalTable_scrambled", 0, 0);
+    assertEquals(new HyperTableCube(Arrays.asList(d1)), ((AggExecutionNode)queryExecutionPlan.getRootNode().dependents.get(0).getDependents().get(0)).getCubes().get(0));
     ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().dependents.get(0)).setScrambleMeta(meta);
     queryExecutionPlan.setScalingNode();
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
@@ -131,7 +134,6 @@ public class AsyncAggScaleTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().dependents.get(0)).addScrambleTable(new BaseTable(originalSchema, "originalTable_scrambled"));
     ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().dependents.get(0)).setScrambleMeta(meta);
     queryExecutionPlan.setScalingNode();
     queryExecutionPlan.compress();

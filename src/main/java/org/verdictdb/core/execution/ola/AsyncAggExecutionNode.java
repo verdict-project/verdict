@@ -49,9 +49,6 @@ public class AsyncAggExecutionNode extends QueryExecutionNode {
 
 //  List<AsyncAggExecutionNode> children = new ArrayList<>();
 
-//  int tableNum = 1;
-  List<BaseTable> scrambleTables = new ArrayList<>();
-
   int tableNum = 1;
 
 //  String getNextTempTableName(String tableNamePrefix) {
@@ -118,35 +115,6 @@ public class AsyncAggExecutionNode extends QueryExecutionNode {
 
   public ScrambleMeta getScrambleMeta() {
     return scrambleMeta;
-  }
-
-  public List<BaseTable> getScrambleTables() {
-    return scrambleTables;
-  }
-
-  // Find out scramble tables in from list.
-  public void setScrambleTables()  {
-    List<AbstractRelation> fromlist = originalQuery.getFromList();
-    for (AbstractRelation table:fromlist) {
-      if (table instanceof BaseTable) {
-        if (scrambleMeta.isScrambled(((BaseTable) table).getSchemaName(), ((BaseTable) table).getTableName())) {
-          scrambleTables.add((BaseTable) table);
-        }
-      }
-      else if (table instanceof JoinTable) {
-        for (AbstractRelation joinTable:((JoinTable) table).getJoinList()) {
-          if (joinTable instanceof BaseTable) {
-            if (scrambleMeta.isScrambled(((BaseTable) joinTable).getSchemaName(), ((BaseTable) joinTable).getTableName())) {
-              scrambleTables.add((BaseTable) table);
-            }
-          }
-        }
-      }
-    }
-  }
-
-  public void addScrambleTable(BaseTable t) {
-    scrambleTables.add(t);
   }
 
   public void setScrambleMeta(ScrambleMeta meta) {

@@ -533,7 +533,4 @@ public abstract class QueryExecutionNode {
         .toString();
   }
 
-  public List<Optional<ExecutionInfoToken>> getLatestResults() {
-    return latestResults;
-  }
 }

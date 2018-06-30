@@ -267,10 +267,6 @@ public class QueryExecutionPlan {
     // Compress the node tree
     parent.getListeningQueues().removeAll(node.broadcastingQueues);
     parent.getListeningQueues().addAll(node.getListeningQueues());
-    parent.getLatestResults().clear();
-    for (int i=0;i<parent.getLatestResults().size();i++) {
-      parent.getLatestResults().add(Optional.<ExecutionInfoToken>absent());
-    }
     parent.dependents.remove(node);
     parent.dependents.addAll(node.dependents);
     for (QueryExecutionNode dependent:node.dependents) {
