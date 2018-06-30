@@ -19,12 +19,7 @@ import org.verdictdb.core.execution.ExecutionInfoToken;
 import org.verdictdb.core.execution.ExecutionTokenQueue;
 import org.verdictdb.core.execution.QueryExecutionNode;
 import org.verdictdb.core.execution.QueryExecutionPlan;
-import org.verdictdb.core.query.AbstractRelation;
-import org.verdictdb.core.query.AliasedColumn;
-import org.verdictdb.core.query.ColumnOp;
-import org.verdictdb.core.query.SelectItem;
-import org.verdictdb.core.query.SelectQuery;
-import org.verdictdb.core.query.UnnamedColumn;
+import org.verdictdb.core.query.*;
 import org.verdictdb.core.rewriter.ScrambleMeta;
 import org.verdictdb.core.rewriter.aggresult.AggNameAndType;
 import org.verdictdb.core.rewriter.query.AggQueryRewriter;
@@ -60,6 +55,8 @@ public class AsyncAggExecutionNode extends CreateTableAsSelectExecutionNode {
 
   List<AsyncAggExecutionNode> children = new ArrayList<>();
 
+  List<BaseTable> scrambleTables;
+
   int tableNum = 1;
 
   String getNextTempTableName(String tableNamePrefix) {
@@ -89,7 +86,40 @@ public class AsyncAggExecutionNode extends CreateTableAsSelectExecutionNode {
   public ExecutionInfoToken executeNode(DbmsConnection conn, List<ExecutionInfoToken> downstreamResults) 
       throws VerdictDBException {
     ExecutionInfoToken token = super.executeNode(conn, downstreamResults);
+
+    // That indicates how many blocks have been executed
+    if (downstreamResults.size()!=0){
+      token.setKeyValue("hyperTableCube", downstreamResults.get(downstreamResults.size()-1).getValue("hyperTableCube"));
+    }
     return token;
   }
 
+  public ScrambleMeta getScrambleMeta() {
+    return scrambleMeta;
+  }
+
+  public List<BaseTable> getScrambleTables() {
+    return scrambleTables;
+  }
+
+  // Find out scramble tables in from list.
+  public void setScrambleTables()  {
+    List<AbstractRelation> fromlist = originalQuery.getFromList();
+    for (AbstractRelation table:fromlist) {
+      if (table instanceof BaseTable) {
+        if (scrambleMeta.isScrambled(((BaseTable) table).getSchemaName(), ((BaseTable) table).getTableName())) {
+          scrambleTables.add((BaseTable) table);
+        }
+      }
+      else if (table instanceof JoinTable) {
+        for (AbstractRelation joinTable:((JoinTable) table).getJoinList()) {
+          if (joinTable instanceof BaseTable) {
+            if (scrambleMeta.isScrambled(((BaseTable) joinTable).getSchemaName(), ((BaseTable) joinTable).getTableName())) {
+              scrambleTables.add((BaseTable) table);
+            }
+          }
+        }
+      }
+    }
+  }
 }

@@ -15,6 +15,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.core.execution.ola.AggExecutionNodeBlock;
+import org.verdictdb.core.execution.ola.AsyncAggExecutionNode;
 import org.verdictdb.core.query.SelectQuery;
 import org.verdictdb.core.rewriter.ScrambleMeta;
 import org.verdictdb.exception.VerdictDBTypeException;
@@ -124,7 +125,7 @@ public class QueryExecutionPlan {
    * 4. The results of AggNode and ProjectionNode are stored as a materialized view; the names of those
    *    materialized views are passed to their parents for potential additional processing or reporting.
    * 
-   * @param conn
+   * //@param conn
    * @param query
    * @return Pair of roots of the tree and post-processing interface.
    * @throws VerdictDBValueException 
@@ -191,5 +192,24 @@ public class QueryExecutionPlan {
 
   public QueryExecutionNode getRoot() {
     return root;
+  }
+
+
+  public void setScalingNode() {
+    // Check from top to bottom to find AsyncAggExecutionNode
+    List<QueryExecutionNode> checkList = new ArrayList<>();
+    List<AsyncAggExecutionNode> toScaleList = new ArrayList<>();
+    checkList.add(root);
+    while (!checkList.isEmpty()) {
+      QueryExecutionNode node = checkList.get(0);
+      checkList.remove(0);
+      if (node instanceof AsyncAggExecutionNode && !toScaleList.contains(node)) {
+        toScaleList.add((AsyncAggExecutionNode) node);
+      }
+      checkList.addAll(node.dependents);
+    }
+    for (AsyncAggExecutionNode asyncNode:toScaleList) {
+      AsyncAggScaleExecutionNode.create(this, asyncNode);
+    }
   }
 }

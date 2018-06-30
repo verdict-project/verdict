@@ -1,8 +1,15 @@
 package org.verdictdb.core.execution;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.verdictdb.connection.DbmsConnection;
+import org.verdictdb.core.execution.ola.AggCombinerExecutionNode;
+import org.verdictdb.core.execution.ola.AsyncAggExecutionNode;
+import org.verdictdb.core.execution.ola.Dimension;
+import org.verdictdb.core.execution.ola.HyperTableCube;
+import org.verdictdb.core.query.AbstractRelation;
+import org.verdictdb.core.query.BaseTable;
 import org.verdictdb.core.query.SelectQuery;
 import org.verdictdb.exception.VerdictDBException;
 
@@ -27,7 +34,22 @@ public class AggExecutionNode extends CreateTableAsSelectExecutionNode {
   @Override
   public ExecutionInfoToken executeNode(DbmsConnection conn, List<ExecutionInfoToken> downstreamResults) 
       throws VerdictDBException {
-    return super.executeNode(conn, downstreamResults);
+    ExecutionInfoToken result = super.executeNode(conn, downstreamResults);
+
+    // This node is one of the individual aggregate nodes inside an AsyncAggExecutionNode
+    if (parents.size()==1 && (parents.get(0) instanceof AsyncAggExecutionNode || parents.get(0) instanceof AggCombinerExecutionNode)) {
+      QueryExecutionNode asyncNode = parents.get(0);
+      int index = 0;
+      while (!(asyncNode instanceof AsyncAggExecutionNode)) {
+        asyncNode = asyncNode.parents.get(0);
+        index++;
+      }
+      // Assume only one scramble table in the query
+      BaseTable scrambleTable = ((AsyncAggExecutionNode)asyncNode).getScrambleTables().get(0);
+      Dimension dimension = new Dimension(scrambleTable.getSchemaName(), scrambleTable.getTableName(), index, index);
+      result.setKeyValue("hyperTableCube", Arrays.asList(new HyperTableCube(Arrays.asList(dimension))));
+    }
+    return result;
   }
 
   @Override
