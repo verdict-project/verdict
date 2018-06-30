@@ -121,9 +121,9 @@ public class AsyncAggScaleTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    String before = queryExecutionPlan.getRootNode().toString();
-    queryExecutionPlan.setScalingNode();
-    String after = queryExecutionPlan.getRootNode().toString();
-    assertEquals(before, after);
+    //String before = queryExecutionPlan.getRootNode().toString();
+    //queryExecutionPlan.setScalingNode();
+    //String after = queryExecutionPlan.getRootNode().toString();
+    assertEquals(2, queryExecutionPlan.getRootNode().dependents.get(0).dependents.get(0).getParents().size());
   }
 }
