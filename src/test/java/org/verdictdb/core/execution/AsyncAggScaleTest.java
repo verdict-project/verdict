@@ -4,11 +4,14 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.connection.StaticMetaData;
 import org.verdictdb.core.ScrambleMeta;
 import org.verdictdb.core.ScrambleMetaForTable;
+import org.verdictdb.core.execution.ola.AsyncAggExecutionNode;
 import org.verdictdb.core.execution.ola.AsyncQueryExecutionPlan;
 import org.verdictdb.core.query.AbstractRelation;
+import org.verdictdb.core.query.BaseTable;
 import org.verdictdb.core.query.CreateTableAsSelectQuery;
 import org.verdictdb.core.query.SelectQuery;
 import org.verdictdb.core.scramble.UniformScrambler;
@@ -36,7 +39,7 @@ public class AsyncAggScaleTest {
 
   static Statement stmt;
 
-  static int aggBlockCount = 3;
+  static int aggBlockCount = 2;
 
   static ScrambleMeta meta = new ScrambleMeta();
 
@@ -69,6 +72,10 @@ public class AsyncAggScaleTest {
           originalSchema, originalTable, i, (double) i+1));
     }
     stmt.executeUpdate(String.format("CREATE TABLE \"%s\".\"%s\"(\"s_id\" int, \"s_value\" double)", originalSchema, smallTable));
+    for (int i = 0; i < 10; i++) {
+      stmt.executeUpdate(String.format("INSERT INTO \"%s\".\"%s\"(\"s_id\", \"s_value\") VALUES(%s, %f)",
+          originalSchema, smallTable, i, (double) i+1));
+    }
 
     UniformScrambler scrambler =
         new UniformScrambler(originalSchema, originalTable, originalSchema, "originalTable_scrambled", aggBlockCount);
@@ -91,26 +98,9 @@ public class AsyncAggScaleTest {
     staticMetaData.addTableData(new StaticMetaData.TableInfo(originalSchema, smallTable), arr);
   }
 
-  @Test
-  public void nonScrambleTableTest() throws VerdictDBException {
-    RelationStandardizer.resetItemID();
-    String sql = "select sum(s_value) from smallTable";
-    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
-    AbstractRelation relation = sqlToRelation.toRelation(sql);
-    RelationStandardizer gen = new RelationStandardizer(staticMetaData);
-    relation = gen.standardize((SelectQuery) relation);
-
-    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
-    queryExecutionPlan.cleanUp();
-    queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    String before = queryExecutionPlan.getRootNode().toString();
-    queryExecutionPlan.setScalingNode();
-    String after = queryExecutionPlan.getRootNode().toString();
-    assertEquals(before, after);
-  }
 
   @Test
-  public void ScrambleTableTest() throws VerdictDBException {
+  public void ScrambleTableTest() throws VerdictDBException,SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select sum(value) from originalTable_scrambled";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
@@ -121,9 +111,32 @@ public class AsyncAggScaleTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    //String before = queryExecutionPlan.getRootNode().toString();
-    //queryExecutionPlan.setScalingNode();
-    //String after = queryExecutionPlan.getRootNode().toString();
-    assertEquals(2, queryExecutionPlan.getRootNode().dependents.get(0).dependents.get(0).getParents().size());
+    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().dependents.get(0)).addScrambleTable(new BaseTable(originalSchema, "originalTable_scrambled"));
+    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().dependents.get(0)).setScrambleMeta(meta);
+    queryExecutionPlan.setScalingNode();
+    stmt.execute("create schema if not exists \"verdictdb_temp\";");
+    queryExecutionPlan.root.executeAndWaitForTermination(new JdbcConnection(conn, new H2Syntax()));
+    stmt.execute("drop schema \"verdictdb_temp\" cascade;");
+  }
+
+  @Test
+  public void ScrambleTableCompressTest() throws VerdictDBException,SQLException {
+    RelationStandardizer.resetItemID();
+    String sql = "select sum(value) from originalTable_scrambled";
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
+    RelationStandardizer gen = new RelationStandardizer(staticMetaData);
+    relation = gen.standardize((SelectQuery) relation);
+
+    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
+    queryExecutionPlan.cleanUp();
+    queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
+    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().dependents.get(0)).addScrambleTable(new BaseTable(originalSchema, "originalTable_scrambled"));
+    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().dependents.get(0)).setScrambleMeta(meta);
+    queryExecutionPlan.setScalingNode();
+    queryExecutionPlan.compress();
+    stmt.execute("create schema if not exists \"verdictdb_temp\";");
+    queryExecutionPlan.root.executeAndWaitForTermination(new JdbcConnection(conn, new H2Syntax()));
+    stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 }

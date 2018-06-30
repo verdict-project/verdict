@@ -38,12 +38,18 @@ public class AggExecutionNode extends CreateTableAsSelectExecutionNode {
     ExecutionInfoToken result = super.executeNode(conn, downstreamResults);
 
     // This node is one of the individual aggregate nodes inside an AsyncAggExecutionNode
-    if (parents.size()==1 && (parents.get(0) instanceof AsyncAggExecutionNode || parents.get(0) instanceof AggCombinerExecutionNode)) {
+    if (parents.get(0) instanceof AsyncAggScaleExecutionNode) {
       QueryExecutionNode asyncNode = parents.get(0);
-      int index = 0;
-      while (!(asyncNode instanceof AsyncAggExecutionNode)) {
-        asyncNode = asyncNode.parents.get(0);
-        index++;
+      int index = -1;
+      if (asyncNode.getParents().size()==2) {
+        index = 0;
+        asyncNode = asyncNode.getParents().get(1);
+      }
+      else {
+        AsyncAggExecutionNode asyncRoot = asyncNode.getParents().get(0).getParents().size()==2?
+            (AsyncAggExecutionNode) asyncNode.getParents().get(0).getParents().get(1):(AsyncAggExecutionNode) asyncNode.getParents().get(0).getParents().get(0);
+        index = asyncRoot.getDependents().indexOf(asyncNode.getParents().get(0));
+        asyncNode = asyncRoot;
       }
       // Assume only one scramble table in the query
       BaseTable scrambleTable = ((AsyncAggExecutionNode)asyncNode).getScrambleTables().get(0);

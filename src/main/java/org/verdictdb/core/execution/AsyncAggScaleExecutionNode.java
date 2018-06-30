@@ -27,6 +27,7 @@ public class AsyncAggScaleExecutionNode extends ProjectionExecutionNode {
     AsyncAggScaleExecutionNode node = new AsyncAggScaleExecutionNode(plan);
 
     // Setup select list
+    Pair<BaseTable, ExecutionTokenQueue> baseAndQueue = node.createPlaceHolderTable("to_scale_query");
     List<SelectItem> newSelectList = aggNode.getSelectQuery().deepcopy().getSelectList();
     for (SelectItem selectItem:newSelectList) {
       // invariant: the agg column must be aliased column
@@ -35,16 +36,20 @@ public class AsyncAggScaleExecutionNode extends ProjectionExecutionNode {
         UnnamedColumn col = ((AliasedColumn) selectItem).getColumn();
         if (AsyncAggScaleExecutionNode.isAggregateColumn(col)) {
           ColumnOp aggColumn = new ColumnOp("multiply", Arrays.<UnnamedColumn>asList(
-              ConstantColumn.valueOf(node.scaleFactor), col
+              ConstantColumn.valueOf(node.scaleFactor), new BaseColumn("to_scale_query" ,((AliasedColumn) selectItem).getAliasName())
           ));
           node.aggColumnlist.add(aggColumn);
           newSelectList.set(index, new AliasedColumn(aggColumn, ((AliasedColumn) selectItem).getAliasName()));
+        }
+        else {
+          newSelectList.set(index, new AliasedColumn(new BaseColumn("to_scale_query" ,((AliasedColumn) selectItem).getAliasName()),
+              ((AliasedColumn) selectItem).getAliasName()));
         }
       }
     }
     // Setup from table
 
-    Pair<BaseTable, ExecutionTokenQueue> baseAndQueue = node.createPlaceHolderTable("to_scale_query");
+
     SelectQuery query = SelectQuery.create(newSelectList, baseAndQueue.getLeft());
     node.setSelectQuery(query);
 
@@ -53,9 +58,16 @@ public class AsyncAggScaleExecutionNode extends ProjectionExecutionNode {
     for (QueryExecutionNode parent:aggNode.getParents()) {
       int index = parent.dependents.indexOf(aggNode);
       ExecutionTokenQueue queue = new ExecutionTokenQueue();
-      parent.getListeningQueues().set(index, queue);
-      node.addBroadcastingQueue(queue);
+      // If parent is AsyncAggExecution, all dependents share a listening queue
+      if (parent instanceof AsyncAggExecutionNode) {
+        node.addBroadcastingQueue(parent.getListeningQueue(0));
+      }
+      else {
+        parent.getListeningQueues().set(index, queue);
+        node.addBroadcastingQueue(queue);
+      }
       parent.dependents.set(index, node);
+      node.addParent(parent);
     }
 
     // Set the asyncNode only to broadcast to this node
@@ -63,12 +75,13 @@ public class AsyncAggScaleExecutionNode extends ProjectionExecutionNode {
     aggNode.getBroadcastingQueues().clear();
     aggNode.addBroadcastingQueue(baseAndQueue.getRight());
     aggNode.getParents().clear();
-    aggNode.getParents().add(node);
+    node.addDependency(aggNode);
 
     return node;
   }
 
   // Currently, only need to judge whether it is sum or count
+  // Also replace alias name
   public static boolean isAggregateColumn(UnnamedColumn sel) {
     List<SelectItem> itemToCheck = new ArrayList<>();
     itemToCheck.add(sel);
@@ -116,8 +129,15 @@ public class AsyncAggScaleExecutionNode extends ProjectionExecutionNode {
 
   // Currently, assume block size is uniform
   public double calculateScaleFactor(List<HyperTableCube> cubes) {
-    double executedRatio = 0;
-    ScrambleMeta scrambleMeta = ((AsyncAggExecutionNode)(this.dependents.get(0))).getScrambleMeta();
+    AsyncAggExecutionNode asyncNode;
+    if (this.getParents().size()==2) {
+      asyncNode = (AsyncAggExecutionNode)this.getParents().get(1);
+    }
+    else {
+      asyncNode = this.getParents().get(0).getParents().size() == 2?
+          (AsyncAggExecutionNode) this.getParents().get(0).getParents().get(1):(AsyncAggExecutionNode) this.getParents().get(0).getParents().get(0);
+    }
+    ScrambleMeta scrambleMeta = asyncNode.getScrambleMeta();
     int totalSize = 1;
     for (Dimension d:cubes.get(0).getDimensions()) {
       int blockCount = scrambleMeta.getAggregationBlockCount(d.getSchemaName(), d.getTableName());

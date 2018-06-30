@@ -135,6 +135,7 @@ public class AggExecutionNodeBlock {
     // third, stack combiners
     // clear existing broadcasting queues of individual agg nodes
     for (QueryExecutionNode n : individualAggNodes) {
+      n.getParents().clear();
       n.clearBroadcastingQueues();
     }
     for (int i = 1; i < aggMeta.totalBlockAggCount(); i++) {

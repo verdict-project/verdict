@@ -8,6 +8,7 @@
 
 package org.verdictdb.core.execution.ola;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.verdictdb.connection.DbmsConnection;
@@ -49,7 +50,7 @@ public class AsyncAggExecutionNode extends QueryExecutionNode {
 //  List<AsyncAggExecutionNode> children = new ArrayList<>();
 
 //  int tableNum = 1;
-  List<BaseTable> scrambleTables;
+  List<BaseTable> scrambleTables = new ArrayList<>();
 
   int tableNum = 1;
 
@@ -171,5 +172,13 @@ public class AsyncAggExecutionNode extends QueryExecutionNode {
         }
       }
     }
+  }
+
+  public void addScrambleTable(BaseTable t) {
+    scrambleTables.add(t);
+  }
+
+  public void setScrambleMeta(ScrambleMeta meta) {
+    this.scrambleMeta = meta;
   }
 }
