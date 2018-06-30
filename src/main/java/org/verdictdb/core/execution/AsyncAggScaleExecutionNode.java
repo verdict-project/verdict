@@ -1,13 +1,12 @@
 package org.verdictdb.core.execution;
 
-import jdk.vm.ci.meta.Constant;
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.core.execution.ola.AsyncAggExecutionNode;
 import org.verdictdb.core.execution.ola.Dimension;
 import org.verdictdb.core.execution.ola.HyperTableCube;
 import org.verdictdb.core.query.*;
-import org.verdictdb.core.rewriter.ScrambleMeta;
+import org.verdictdb.core.ScrambleMeta;
 import org.verdictdb.exception.VerdictDBException;
 
 import java.util.ArrayList;
@@ -24,11 +23,11 @@ public class AsyncAggScaleExecutionNode extends ProjectionExecutionNode {
     super(plan);
   }
 
-  public static AsyncAggScaleExecutionNode create(QueryExecutionPlan plan, AsyncAggExecutionNode asyncNode) {
+  public static AsyncAggScaleExecutionNode create(QueryExecutionPlan plan, AggExecutionNode aggNode) throws VerdictDBException {
     AsyncAggScaleExecutionNode node = new AsyncAggScaleExecutionNode(plan);
 
     // Setup select list
-    List<SelectItem> newSelectList = asyncNode.getSelectQuery().deepcopy().getSelectList();
+    List<SelectItem> newSelectList = aggNode.getSelectQuery().deepcopy().getSelectList();
     for (SelectItem selectItem:newSelectList) {
       // invariant: the agg column must be aliased column
       if (selectItem instanceof AliasedColumn) {
@@ -44,14 +43,15 @@ public class AsyncAggScaleExecutionNode extends ProjectionExecutionNode {
       }
     }
     // Setup from table
+
     Pair<BaseTable, ExecutionTokenQueue> baseAndQueue = node.createPlaceHolderTable("to_scale_query");
     SelectQuery query = SelectQuery.create(newSelectList, baseAndQueue.getLeft());
     node.setSelectQuery(query);
 
     // Set this node to broadcast to the parents of asyncNode
     // Also remove the dependency
-    for (QueryExecutionNode parent:asyncNode.getParents()) {
-      int index = parent.dependents.indexOf(asyncNode);
+    for (QueryExecutionNode parent:aggNode.getParents()) {
+      int index = parent.dependents.indexOf(aggNode);
       ExecutionTokenQueue queue = new ExecutionTokenQueue();
       parent.getListeningQueues().set(index, queue);
       node.addBroadcastingQueue(queue);
@@ -60,10 +60,10 @@ public class AsyncAggScaleExecutionNode extends ProjectionExecutionNode {
 
     // Set the asyncNode only to broadcast to this node
     // Also set parent
-    asyncNode.getBroadcastingQueues().clear();
-    asyncNode.addBroadcastingQueue(baseAndQueue.getRight());
-    asyncNode.getParents().clear();
-    asyncNode.getParents().add(node);
+    aggNode.getBroadcastingQueues().clear();
+    aggNode.addBroadcastingQueue(baseAndQueue.getRight());
+    aggNode.getParents().clear();
+    aggNode.getParents().add(node);
 
     return node;
   }

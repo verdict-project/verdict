@@ -17,7 +17,6 @@ import org.verdictdb.core.execution.ExecutionTokenQueue;
 import org.verdictdb.core.execution.QueryExecutionNode;
 import org.verdictdb.core.execution.QueryExecutionPlan;
 import org.verdictdb.core.query.*;
-import org.verdictdb.core.rewriter.ScrambleMeta;
 import org.verdictdb.core.rewriter.aggresult.AggNameAndType;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBValueException;
@@ -45,7 +44,7 @@ public class AsyncAggExecutionNode extends QueryExecutionNode {
   // agg columns. pairs of their column names and their types (i.e., sum, avg, count)
   List<AggNameAndType> aggColumns;
 
-//  SelectQuery originalQuery;
+  SelectQuery originalQuery;
 
 //  List<AsyncAggExecutionNode> children = new ArrayList<>();
 

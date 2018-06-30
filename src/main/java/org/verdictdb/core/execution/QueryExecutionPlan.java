@@ -16,6 +16,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.connection.DbmsConnection;
+import org.verdictdb.core.execution.ola.AggCombinerExecutionNode;
 import org.verdictdb.core.execution.ola.AggExecutionNodeBlock;
 import org.verdictdb.core.execution.ola.AsyncAggExecutionNode;
 import org.verdictdb.core.query.BaseTable;
@@ -293,21 +294,34 @@ public class QueryExecutionPlan {
   }
 
 
-  public void setScalingNode() {
+  public void setScalingNode() throws VerdictDBException{
     // Check from top to bottom to find AsyncAggExecutionNode
     List<QueryExecutionNode> checkList = new ArrayList<>();
     List<AsyncAggExecutionNode> toScaleList = new ArrayList<>();
     checkList.add(root);
+    List<QueryExecutionNode> traversed = new ArrayList<>();
     while (!checkList.isEmpty()) {
       QueryExecutionNode node = checkList.get(0);
       checkList.remove(0);
+      traversed.add(node);
       if (node instanceof AsyncAggExecutionNode && !toScaleList.contains(node)) {
         toScaleList.add((AsyncAggExecutionNode) node);
       }
-      checkList.addAll(node.dependents);
+      for (QueryExecutionNode dependent:node.dependents) {
+        if (!traversed.contains(dependent)) {
+          checkList.add(dependent);
+        }
+      }
     }
     for (AsyncAggExecutionNode asyncNode:toScaleList) {
-      AsyncAggScaleExecutionNode.create(this, asyncNode);
+      List<AggExecutionNode> aggNodeList = new ArrayList<>();
+      aggNodeList.add((AggExecutionNode) asyncNode.getDependent(0));
+      for (int i=1; i<asyncNode.getDependents().size(); i++) {
+        aggNodeList.add((AggExecutionNode) asyncNode.getDependent(i).getDependent(1));
+      }
+      for (AggExecutionNode aggExecutionNode:aggNodeList) {
+        AsyncAggScaleExecutionNode.create(this, aggExecutionNode);
+      }
     }
   }
 }
