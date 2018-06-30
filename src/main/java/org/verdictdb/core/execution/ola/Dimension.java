@@ -24,6 +24,14 @@ public class Dimension {
     return end - begin + 1;
   }
 
+  public String getSchemaName() {
+    return schemaName;
+  }
+
+  public String getTableName() {
+    return tableName;
+  }
+
   @Override
   public String toString() {
     return ToStringBuilder.reflectionToString(this, ToStringStyle.SHORT_PREFIX_STYLE);

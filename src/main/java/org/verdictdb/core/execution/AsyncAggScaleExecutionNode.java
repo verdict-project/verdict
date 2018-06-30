@@ -4,6 +4,7 @@ import jdk.vm.ci.meta.Constant;
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.core.execution.ola.AsyncAggExecutionNode;
+import org.verdictdb.core.execution.ola.Dimension;
 import org.verdictdb.core.execution.ola.HyperTableCube;
 import org.verdictdb.core.query.*;
 import org.verdictdb.core.rewriter.ScrambleMeta;
@@ -17,7 +18,7 @@ public class AsyncAggScaleExecutionNode extends ProjectionExecutionNode {
 
   // Default value. Will be modified when executeNode() is called.
   double scaleFactor = 1.0;
-  List<UnnamedColumn> aggColumnlist = new ArrayList<>();
+  List<ColumnOp> aggColumnlist = new ArrayList<>();
 
   protected AsyncAggScaleExecutionNode(QueryExecutionPlan plan) {
     super(plan);
@@ -34,7 +35,7 @@ public class AsyncAggScaleExecutionNode extends ProjectionExecutionNode {
         int index = newSelectList.indexOf(selectItem);
         UnnamedColumn col = ((AliasedColumn) selectItem).getColumn();
         if (AsyncAggScaleExecutionNode.isAggregateColumn(col)) {
-          UnnamedColumn aggColumn = new ColumnOp("multiply", Arrays.<UnnamedColumn>asList(
+          ColumnOp aggColumn = new ColumnOp("multiply", Arrays.<UnnamedColumn>asList(
               ConstantColumn.valueOf(node.scaleFactor), col
           ));
           node.aggColumnlist.add(aggColumn);
@@ -87,15 +88,20 @@ public class AsyncAggScaleExecutionNode extends ProjectionExecutionNode {
   @Override
   public ExecutionInfoToken executeNode(DbmsConnection conn, List<ExecutionInfoToken> downstreamResults)
       throws VerdictDBException {
-    ExecutionInfoToken token = super.executeNode(conn, downstreamResults);
-    // Calculate the scale factor
+
+
     for (ExecutionInfoToken downstreamResult:downstreamResults) {
       List<HyperTableCube> cubes = (List<HyperTableCube>) downstreamResult.getValue("hyperTableCube");
       if (cubes != null) {
-
+        // Calculate the scale factor
+        scaleFactor = calculateScaleFactor(cubes);
+        // Substitute the scale factor
+        for (ColumnOp col:aggColumnlist) {
+          col.setOperand(0, ConstantColumn.valueOf(scaleFactor));
+        }
       }
     }
-    // Substitute the scale factor
+    ExecutionInfoToken token = super.executeNode(conn, downstreamResults);
     return token;
   }
 
@@ -108,12 +114,23 @@ public class AsyncAggScaleExecutionNode extends ProjectionExecutionNode {
     return node;
   }
 
+  // Currently, assume block size is uniform
   public double calculateScaleFactor(List<HyperTableCube> cubes) {
     double executedRatio = 0;
     ScrambleMeta scrambleMeta = ((AsyncAggExecutionNode)(this.dependents.get(0))).getScrambleMeta();
-    scrambleMeta.
-    for (HyperTableCube cube:cubes) {
-
+    int totalSize = 1;
+    for (Dimension d:cubes.get(0).getDimensions()) {
+      int blockCount = scrambleMeta.getAggregationBlockCount(d.getSchemaName(), d.getTableName());
+      totalSize = totalSize * blockCount;
     }
+    int count = 0;
+    for (HyperTableCube cube:cubes) {
+      int volume = 1;
+      for (Dimension d:cube.getDimensions()) {
+        volume = volume * d.length();
+      }
+      count += volume;
+    }
+    return totalSize/count;
   }
 }

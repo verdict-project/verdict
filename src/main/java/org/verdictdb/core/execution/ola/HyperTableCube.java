@@ -22,6 +22,10 @@ public class HyperTableCube {
     return dimensions.get(index);
   }
 
+  public List<Dimension> getDimensions() {
+    return dimensions;
+  }
+
   public Pair<Integer, Integer> getSpanOf(String schemaName, String tableName) {
     for (Dimension d : dimensions) {
       if (d.schemaName.equals(schemaName) && d.tableName.equals(tableName)) {
