@@ -6,8 +6,8 @@ import java.util.Arrays;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.verdictdb.connection.DbmsConnection;
-import org.verdictdb.connection.JdbcConnection;
+import org.verdictdb.DbmsConnection;
+import org.verdictdb.core.connection.JdbcConnection;
 import org.verdictdb.core.query.AsteriskColumn;
 import org.verdictdb.core.query.BaseTable;
 import org.verdictdb.core.query.SelectItem;

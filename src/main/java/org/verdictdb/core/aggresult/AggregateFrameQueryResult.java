@@ -5,7 +5,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.verdictdb.connection.DbmsQueryResult;
+import org.verdictdb.DbmsQueryResult;
 
 public class AggregateFrameQueryResult implements DbmsQueryResult {
 

@@ -1,4 +1,4 @@
-package org.verdictdb.jdbc;
+package org.verdictdb.jdbc41;
 
 import static java.sql.Types.BIGINT;
 import static java.sql.Types.DATE;
@@ -16,8 +16,8 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
 
-import org.verdictdb.connection.DataTypeConverter;
-import org.verdictdb.connection.DbmsQueryResult;
+import org.verdictdb.DbmsQueryResult;
+import org.verdictdb.core.connection.DataTypeConverter;
 
 public class JdbcResultSetMetaData implements ResultSetMetaData {
   

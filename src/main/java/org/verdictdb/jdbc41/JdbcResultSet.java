@@ -1,4 +1,4 @@
-package org.verdictdb.jdbc;
+package org.verdictdb.jdbc41;
 
 
 import static java.sql.Types.DOUBLE;
@@ -29,8 +29,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
-import org.verdictdb.connection.DataTypeConverter;
-import org.verdictdb.connection.DbmsQueryResult;
+import org.verdictdb.DbmsQueryResult;
+import org.verdictdb.core.connection.DataTypeConverter;
 import org.verdictdb.exception.VerdictDBTypeException;
 
 public class JdbcResultSet implements ResultSet {

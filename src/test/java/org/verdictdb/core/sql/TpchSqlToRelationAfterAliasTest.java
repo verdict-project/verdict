@@ -12,7 +12,7 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Before;
 import org.junit.Test;
-import org.verdictdb.connection.StaticMetaData;
+import org.verdictdb.core.connection.StaticMetaData;
 import org.verdictdb.core.query.AbstractRelation;
 import org.verdictdb.core.query.AliasReference;
 import org.verdictdb.core.query.AliasedColumn;
@@ -29,6 +29,8 @@ import org.verdictdb.core.query.SelectQuery;
 import org.verdictdb.core.query.SubqueryColumn;
 import org.verdictdb.core.query.UnnamedColumn;
 import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.sql.NonValidatingSQLParser;
+import org.verdictdb.sql.RelationStandardizer;
 
 public class TpchSqlToRelationAfterAliasTest {
 

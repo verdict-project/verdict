@@ -1,4 +1,4 @@
-package org.verdictdb.jdbc;
+package org.verdictdb.jdbc41;
 
 import java.math.BigDecimal;
 

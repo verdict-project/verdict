@@ -1,6 +1,6 @@
 package org.verdictdb.sql.syntax;
 
-public class PostgresqlSyntax implements SyntaxAbstract {
+public class PostgresqlSyntax implements SqlSyntax {
 
   // The column index that stored meta information in the original database
 

@@ -1,4 +1,4 @@
-package org.verdictdb.core.sql;
+package org.verdictdb.sql;
 
 import java.util.ArrayList;
 import java.util.List;

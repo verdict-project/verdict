@@ -1,4 +1,4 @@
-package org.verdictdb.connection;
+package org.verdictdb.core.connection;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -9,18 +9,20 @@ import java.util.List;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
+import org.verdictdb.DbmsConnection;
+import org.verdictdb.DbmsQueryResult;
 import org.verdictdb.exception.VerdictDBDbmsException;
-import org.verdictdb.jdbc.JdbcResultSet;
+import org.verdictdb.jdbc41.JdbcResultSet;
 import org.verdictdb.sql.syntax.PostgresqlSyntax;
-import org.verdictdb.sql.syntax.SyntaxAbstract;
+import org.verdictdb.sql.syntax.SqlSyntax;
 
 public class JdbcConnection implements DbmsConnection {
   
   Connection conn;
   
-  SyntaxAbstract syntax;
+  SqlSyntax syntax;
   
-  public JdbcConnection(Connection conn, SyntaxAbstract syntax) {
+  public JdbcConnection(Connection conn, SqlSyntax syntax) {
     this.conn = conn;
     this.syntax = syntax;
   }
@@ -65,7 +67,7 @@ public class JdbcConnection implements DbmsConnection {
   }
 
   @Override
-  public SyntaxAbstract getSyntax() {
+  public SqlSyntax getSyntax() {
     return syntax;
   }
 

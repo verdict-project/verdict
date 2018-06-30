@@ -1,8 +1,9 @@
 package org.verdictdb;
 
-import org.verdictdb.connection.DbmsConnection;
-import org.verdictdb.connection.DbmsQueryResult;
+import org.verdictdb.core.connection.JdbcConnection;
 import org.verdictdb.resulthandler.AsyncHandler;
+import org.verdictdb.sql.syntax.SqlSyntax;
+import org.verdictdb.sql.syntax.SyntaxReader;
 
 public class VerdictDBContext {
   
@@ -14,7 +15,13 @@ public class VerdictDBContext {
     this.conn = conn;
   }
   
-  public DbmsQueryResult executeQuery(String query) {
+  public static VerdictDBContext create(java.sql.Connection jdbcConn) {
+    SqlSyntax syntax = SyntaxReader.infer(jdbcConn);
+    VerdictDBContext vc = new VerdictDBContext(new JdbcConnection(jdbcConn, syntax));
+    return vc;
+  }
+  
+  public DbmsQueryResult sql(String query) {
     return null;
   }
   

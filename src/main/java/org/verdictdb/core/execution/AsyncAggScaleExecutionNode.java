@@ -1,12 +1,12 @@
 package org.verdictdb.core.execution;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.core.execution.ola.AsyncAggExecutionNode;
 import org.verdictdb.core.execution.ola.Dimension;
 import org.verdictdb.core.execution.ola.HyperTableCube;
 import org.verdictdb.core.query.*;
-import org.verdictdb.core.ScrambleMeta;
+import org.verdictdb.core.scramble.ScrambleMeta;
+import org.verdictdb.DbmsConnection;
 import org.verdictdb.exception.VerdictDBException;
 
 import java.util.ArrayList;

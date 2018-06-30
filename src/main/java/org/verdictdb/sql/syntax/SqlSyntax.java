@@ -1,6 +1,6 @@
 package org.verdictdb.sql.syntax;
 
-public interface SyntaxAbstract {
+public interface SqlSyntax {
 
   public String getQuoteString();
 

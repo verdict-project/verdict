@@ -1,4 +1,4 @@
-package org.verdictdb.connection;
+package org.verdictdb;
 
 public interface DbmsQueryResult {
   

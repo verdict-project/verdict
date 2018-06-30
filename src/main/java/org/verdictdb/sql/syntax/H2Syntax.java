@@ -1,6 +1,6 @@
 package org.verdictdb.sql.syntax;
 
-public class H2Syntax implements SyntaxAbstract {
+public class H2Syntax implements SqlSyntax {
 
   // The column index that stored meta information in the original database
 
