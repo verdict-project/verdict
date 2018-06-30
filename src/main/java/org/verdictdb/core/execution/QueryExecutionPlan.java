@@ -20,6 +20,7 @@ import org.verdictdb.core.rewriter.ScrambleMeta;
 import org.verdictdb.exception.VerdictDBTypeException;
 import org.verdictdb.exception.VerdictDBValueException;
 import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.resulthandler.StandardOutputHandler;
 import org.verdictdb.sql.syntax.SyntaxAbstract;
 
 public class QueryExecutionPlan {
@@ -165,7 +166,7 @@ public class QueryExecutionPlan {
   
   public void execute(DbmsConnection conn, ExecutionTokenQueue queue) {
     // execute roots
-    
+
     // after executions are all finished.
     cleanUp();
   }
@@ -176,4 +177,8 @@ public class QueryExecutionPlan {
   }
 //  static void resetTempTableNameNum() {tempTableNameNum = 0;}
 
+
+  public QueryExecutionNode getRoot() {
+    return root;
+  }
 }
