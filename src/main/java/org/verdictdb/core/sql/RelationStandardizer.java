@@ -71,8 +71,8 @@ public class RelationStandardizer {
       if (!(sel instanceof AliasedColumn) && !(sel instanceof AsteriskColumn)) {
         if (sel instanceof BaseColumn) {
           sel = replaceBaseColumn((BaseColumn) sel);
-          colNameAndColAlias.put(((BaseColumn) sel).getColumnName(), "vc" + itemID);
-          newSelectItemList.add(new AliasedColumn((BaseColumn) sel, "vc" + itemID++));
+          colNameAndColAlias.put(((BaseColumn) sel).getColumnName(), ((BaseColumn) sel).getColumnName());
+          newSelectItemList.add(new AliasedColumn((BaseColumn) sel, ((BaseColumn) sel).getColumnName()));
         } else if (sel instanceof ColumnOp) {
           //First replace the possible base column inside the columnop using the same way we did on Where clause
           sel = replaceFilter((ColumnOp) sel);
