@@ -16,6 +16,7 @@ import org.verdictdb.core.execution.ExecutionInfoToken;
 import org.verdictdb.core.execution.ExecutionTokenQueue;
 import org.verdictdb.core.execution.QueryExecutionNode;
 import org.verdictdb.core.execution.QueryExecutionPlan;
+import org.verdictdb.core.query.*;
 import org.verdictdb.core.rewriter.aggresult.AggNameAndType;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBValueException;
@@ -43,11 +44,14 @@ public class AsyncAggExecutionNode extends QueryExecutionNode {
   // agg columns. pairs of their column names and their types (i.e., sum, avg, count)
   List<AggNameAndType> aggColumns;
 
-//  SelectQuery originalQuery;
+  SelectQuery originalQuery;
 
 //  List<AsyncAggExecutionNode> children = new ArrayList<>();
 
 //  int tableNum = 1;
+  List<BaseTable> scrambleTables;
+
+  int tableNum = 1;
 
 //  String getNextTempTableName(String tableNamePrefix) {
 //    return tableNamePrefix + tableNum++;
@@ -61,41 +65,41 @@ public class AsyncAggExecutionNode extends QueryExecutionNode {
       QueryExecutionPlan plan,
       List<QueryExecutionNode> individualAggs,
       List<QueryExecutionNode> combiners) throws VerdictDBValueException {
-    
+
     AsyncAggExecutionNode node = new AsyncAggExecutionNode(plan);
     ExecutionTokenQueue rootQueue = node.generateListeningQueue();
-    
+
     // set new broadcasting nodes
-    
+
     // first agg -> root
     individualAggs.get(0).addBroadcastingQueue(rootQueue);
     node.addDependency(individualAggs.get(0));
-    
+
 //    // first agg -> first combiner
 //    ExecutionTokenQueue firstCombinerQueue = combiners.get(0).generateListeningQueue();
 //    individualAggs.get(0).addBroadcastingQueue(firstCombinerQueue);
 //    combiners.get(0).addDependency(individualAggs.get(0));
-//    
+//
 //    // combiners -> next combiners
 //    for (int i = 1; i < combiners.size(); i++) {
 //      ExecutionTokenQueue combinerQueue = combiners.get(i).generateListeningQueue();
 //      combiners.get(i-1).addBroadcastingQueue(combinerQueue);
 //      combiners.get(i).addDependency(combiners.get(i-1));
 //    }
-    
+
 //    // individual aggs (except for the first one) -> combiners
 //    for (int i = 0; i < combiners.size(); i++) {
 //      ExecutionTokenQueue combinerQueue = combiners.get(i).generateListeningQueue();
 //      individualAggs.get(i+1).addBroadcastingQueue(combinerQueue);
 //      combiners.get(i).addDependency(individualAggs.get(i+1));
 //    }
-    
+
     // combiners -> root
     for (QueryExecutionNode c : combiners) {
       c.addBroadcastingQueue(rootQueue);
       node.addDependency(c);
     }
-    
+
 //    for (int i = 1; i < individualAggs.size(); i++) {
 //      ExecutionTokenQueue q = combiners.get(i-1).generateListeningQueue();
 //      individualAggs.get(i).addBroadcastingQueue(q);
@@ -122,6 +126,8 @@ public class AsyncAggExecutionNode extends QueryExecutionNode {
 //      // TODO Auto-generated catch block
 //      e.printStackTrace();
 //    }
+
+
     return downstreamResults.get(0);
   }
 
@@ -131,11 +137,39 @@ public class AsyncAggExecutionNode extends QueryExecutionNode {
     copyFields(this, copy);
     return copy;
   }
-  
+
   void copyFields(AsyncAggExecutionNode from, AsyncAggExecutionNode to) {
     to.scrambleMeta = from.scrambleMeta;
     to.nonaggColumns = from.nonaggColumns;
     to.aggColumns = from.aggColumns;
   }
 
+  public ScrambleMeta getScrambleMeta() {
+    return scrambleMeta;
+  }
+
+  public List<BaseTable> getScrambleTables() {
+    return scrambleTables;
+  }
+
+  // Find out scramble tables in from list.
+  public void setScrambleTables()  {
+    List<AbstractRelation> fromlist = originalQuery.getFromList();
+    for (AbstractRelation table:fromlist) {
+      if (table instanceof BaseTable) {
+        if (scrambleMeta.isScrambled(((BaseTable) table).getSchemaName(), ((BaseTable) table).getTableName())) {
+          scrambleTables.add((BaseTable) table);
+        }
+      }
+      else if (table instanceof JoinTable) {
+        for (AbstractRelation joinTable:((JoinTable) table).getJoinList()) {
+          if (joinTable instanceof BaseTable) {
+            if (scrambleMeta.isScrambled(((BaseTable) joinTable).getSchemaName(), ((BaseTable) joinTable).getTableName())) {
+              scrambleTables.add((BaseTable) table);
+            }
+          }
+        }
+      }
+    }
+  }
 }

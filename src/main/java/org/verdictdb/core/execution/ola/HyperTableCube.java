@@ -8,20 +8,24 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.exception.VerdictDBValueException;
 
-class HyperTableCube {
-  
+public class HyperTableCube {
+
   List<Dimension> dimensions = new ArrayList<>();   // serves as dimension constraints
-  
+
   public HyperTableCube() {}
-  
+
   public HyperTableCube(List<Dimension> dimensions) {
     this.dimensions = dimensions;
   }
-  
+
   Dimension getDimension(int index) {
     return dimensions.get(index);
   }
-  
+
+  public List<Dimension> getDimensions() {
+    return dimensions;
+  }
+
   public Pair<Integer, Integer> getSpanOf(String schemaName, String tableName) {
     for (Dimension d : dimensions) {
       if (d.schemaName.equals(schemaName) && d.tableName.equals(tableName)) {
@@ -30,11 +34,11 @@ class HyperTableCube {
     }
     return null;
   }
-  
+
   public List<HyperTableCube> roundRobinSlice() throws VerdictDBValueException {
     List<HyperTableCube> cubes = new ArrayList<>();
     HyperTableCube remaining = this;
-    
+
     int tableIndex = dimensions.size() - 1;
     while (true) {
       int numberOfDimensionsLongerThanOne = 0;
@@ -47,7 +51,7 @@ class HyperTableCube {
         cubes.add(remaining);
         break;
       }
-      
+
       Pair<HyperTableCube, HyperTableCube> sliceAndLeft = remaining.sliceAlong(tableIndex);
       if (sliceAndLeft == null) {
         throw new VerdictDBValueException("Incorrect indexing.");
@@ -55,7 +59,7 @@ class HyperTableCube {
       HyperTableCube slice = sliceAndLeft.getLeft();
       remaining = sliceAndLeft.getRight();
       cubes.add(slice);
-      
+
       // search for the index at which the length of dimension is longer than 1.
       for(int i = 0; i < dimensions.size(); i++) {
         tableIndex--;
@@ -66,7 +70,7 @@ class HyperTableCube {
           break;
         }
       }
-      
+
 //      try {
 //        System.out.println("cube " + cubes);
 //        TimeUnit.SECONDS.sleep(1);
@@ -75,15 +79,15 @@ class HyperTableCube {
 //        e.printStackTrace();
 //      }
     }
-    
+
     return cubes;
   }
-  
+
   /**
-   * 
+   *
    * This class should be used only when there exists at least two dimensions whose lengths are longer than
    * one.
-   * 
+   *
    * @param dimIndex  a slice dimension
    * @return (SlidedCube, RemainingCube)
    */
@@ -95,7 +99,7 @@ class HyperTableCube {
     if (dimensions.get(dimIndex).length() <= 1) {
       return null;
     }
-    
+
     // regular slicing
     List<Dimension> slice = new ArrayList<>();
     List<Dimension> remaining = new ArrayList<>();
@@ -109,41 +113,14 @@ class HyperTableCube {
         remaining.add(new Dimension(d.schemaName, d.tableName, d.begin+1, d.end));
       }
     }
-    
+
     return Pair.of(new HyperTableCube(slice), new HyperTableCube(remaining));
   }
-  
+
   public boolean isEmpty() {
     return dimensions.isEmpty();
   }
-  
-  @Override
-  public String toString() {
-    return ToStringBuilder.reflectionToString(this, ToStringStyle.SHORT_PREFIX_STYLE);
-  }
-}
 
-class Dimension {
-  
-  String schemaName;
-  
-  String tableName;
-  
-  int begin;
-  
-  int end;
-  
-  public Dimension(String schemaName, String tableName, int begin, int end) {
-    this.schemaName = schemaName;
-    this.tableName = tableName;
-    this.begin = begin;
-    this.end = end;
-  }
-  
-  public int length() {
-    return end - begin + 1;
-  }
-  
   @Override
   public String toString() {
     return ToStringBuilder.reflectionToString(this, ToStringStyle.SHORT_PREFIX_STYLE);

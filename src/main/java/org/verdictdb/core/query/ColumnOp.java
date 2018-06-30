@@ -97,6 +97,10 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
     this.operands = operands;
   }
 
+  public void setOperand(Integer index, UnnamedColumn operand) {
+    this.operands.set(index, operand);
+  }
+
   public String getOpType() {
     return opType;
   }

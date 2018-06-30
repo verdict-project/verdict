@@ -16,7 +16,9 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.connection.DbmsConnection;
+import org.verdictdb.core.execution.ola.AggCombinerExecutionNode;
 import org.verdictdb.core.execution.ola.AggExecutionNodeBlock;
+import org.verdictdb.core.execution.ola.AsyncAggExecutionNode;
 import org.verdictdb.core.query.BaseTable;
 import org.verdictdb.core.query.SelectQuery;
 import org.verdictdb.core.query.SubqueryColumn;
@@ -37,7 +39,7 @@ public class QueryExecutionPlan {
   String scratchpadSchemaName;
   
   final int N_THREADS = 10;
-  
+
 //  PostProcessor postProcessor;
   
 //  /**
@@ -64,7 +66,7 @@ public class QueryExecutionPlan {
     this.scratchpadSchemaName = scratchpadSchemaName;
     this.scrambleMeta = scrambleMeta;
   }
-  
+
   public int getMaxNumberOfThreads() {
     return N_THREADS;
   }
@@ -110,11 +112,11 @@ public class QueryExecutionPlan {
   public QueryExecutionNode getRootNode() {
     return root;
   }
-  
+
   public void setRootNode(QueryExecutionNode root) {
     this.root = root;
   }
-  
+
   synchronized String generateUniqueIdentifier() {
     return String.format("%d_%d", serialNum, identifierNum++);
   }
@@ -191,7 +193,7 @@ public class QueryExecutionPlan {
   void cleanUp() {
     tempTableNameNum = 0;
   }
-  
+
   @Override
   public String toString() {
     return new ToStringBuilder(this, ToStringStyle.DEFAULT_STYLE)
@@ -289,5 +291,37 @@ public class QueryExecutionPlan {
 
   public QueryExecutionNode getRoot() {
     return root;
+  }
+
+
+  public void setScalingNode() throws VerdictDBException{
+    // Check from top to bottom to find AsyncAggExecutionNode
+    List<QueryExecutionNode> checkList = new ArrayList<>();
+    List<AsyncAggExecutionNode> toScaleList = new ArrayList<>();
+    checkList.add(root);
+    List<QueryExecutionNode> traversed = new ArrayList<>();
+    while (!checkList.isEmpty()) {
+      QueryExecutionNode node = checkList.get(0);
+      checkList.remove(0);
+      traversed.add(node);
+      if (node instanceof AsyncAggExecutionNode && !toScaleList.contains(node)) {
+        toScaleList.add((AsyncAggExecutionNode) node);
+      }
+      for (QueryExecutionNode dependent:node.dependents) {
+        if (!traversed.contains(dependent)) {
+          checkList.add(dependent);
+        }
+      }
+    }
+    for (AsyncAggExecutionNode asyncNode:toScaleList) {
+      List<AggExecutionNode> aggNodeList = new ArrayList<>();
+      aggNodeList.add((AggExecutionNode) asyncNode.getDependent(0));
+      for (int i=1; i<asyncNode.getDependents().size(); i++) {
+        aggNodeList.add((AggExecutionNode) asyncNode.getDependent(i).getDependent(1));
+      }
+      for (AggExecutionNode aggExecutionNode:aggNodeList) {
+        AsyncAggScaleExecutionNode.create(this, aggExecutionNode);
+      }
+    }
   }
 }
