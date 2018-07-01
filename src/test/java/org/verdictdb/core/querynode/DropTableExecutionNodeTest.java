@@ -10,7 +10,7 @@ import org.verdictdb.core.connection.DbmsConnection;
 import org.verdictdb.core.connection.JdbcConnection;
 import org.verdictdb.core.execution.ExecutionInfoToken;
 import org.verdictdb.core.querynode.DropTableExecutionNode;
-import org.verdictdb.core.querynode.QueryExecutionNode;
+import org.verdictdb.core.querynode.BaseQueryNode;
 import org.verdictdb.core.querynode.QueryExecutionPlan;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.exception.VerdictDBException;
@@ -37,7 +37,7 @@ public class DropTableExecutionNodeTest {
   @Test
   public void testExecuteNode() throws VerdictDBException {
 //    LinkedBlockingDeque<ExecutionResult> resultQueue = new LinkedBlockingDeque<>();
-    QueryExecutionNode root = DropTableExecutionNode.create(new QueryExecutionPlan("newschema"));
+    BaseQueryNode root = DropTableExecutionNode.create(new QueryExecutionPlan("newschema"));
     ExecutionInfoToken token = new ExecutionInfoToken();
     token.setKeyValue("schemaName", originalSchema);
     token.setKeyValue("tableName", originalTable);

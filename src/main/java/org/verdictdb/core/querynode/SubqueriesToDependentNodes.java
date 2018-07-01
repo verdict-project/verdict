@@ -29,8 +29,8 @@ public class SubqueriesToDependentNodes {
    */
   public static void convertSubqueriesToDependentNodes(
       SelectQuery query, 
-      CreateTableAsSelectExecutionNode node) throws VerdictDBValueException {
-    QueryExecutionPlan plan = node.getPlan();
+      CreateTableAsSelectNode node) throws VerdictDBValueException {
+    TempIdCreator namer = node.getNamer();
     
     // from list
     for (AbstractRelation source : query.getFromList()) {
@@ -38,11 +38,11 @@ public class SubqueriesToDependentNodes {
 
       // If the table is subquery, we need to add it to dependency
       if (source instanceof SelectQuery) {
-        CreateTableAsSelectExecutionNode dep;
+        CreateTableAsSelectNode dep;
         if (source.isAggregateQuery()) {
-          dep = AggExecutionNode.create(plan, (SelectQuery) source);
+          dep = AggExecutionNode.create(namer, (SelectQuery) source);
         } else {
-          dep = ProjectionExecutionNode.create(plan, (SelectQuery) source);
+          dep = ProjectionNode.create(namer, (SelectQuery) source);
         }
         node.addDependency(dep);
 
@@ -57,11 +57,11 @@ public class SubqueriesToDependentNodes {
 
           // If the table is subquery, we need to add it to dependency
           if (s instanceof SelectQuery) {
-            CreateTableAsSelectExecutionNode dep;
+            CreateTableAsSelectNode dep;
             if (s.isAggregateQuery()) {
-              dep = AggExecutionNode.create(plan, (SelectQuery) s);
+              dep = AggExecutionNode.create(namer, (SelectQuery) s);
             } else {
-              dep = ProjectionExecutionNode.create(plan, (SelectQuery) s);
+              dep = ProjectionNode.create(namer, (SelectQuery) s);
             }
             node.addDependency(dep);
 
@@ -91,17 +91,17 @@ public class SubqueriesToDependentNodes {
             baseAndQueue = node.createPlaceHolderTable(((SubqueryColumn) filter).getSubquery().getAliasName().get());
           } else {
 //            baseAndQueue = node.createPlaceHolderTable("filterPlaceholder"+filterPlaceholderNum++);
-            baseAndQueue = node.createPlaceHolderTable(plan.generateAliasName());
+            baseAndQueue = node.createPlaceHolderTable(namer.generateAliasName());
           }
           BaseTable base = baseAndQueue.getLeft();
 
-          CreateTableAsSelectExecutionNode dep;
+          CreateTableAsSelectNode dep;
           SelectQuery subquery = ((SubqueryColumn) filter).getSubquery();
           if (subquery.isAggregateQuery()) {
-            dep = AggExecutionNode.create(plan, subquery);
+            dep = AggExecutionNode.create(namer, subquery);
             node.addDependency(dep);
           } else {
-            dep = ProjectionExecutionNode.create(plan, subquery);
+            dep = ProjectionNode.create(namer, subquery);
             node.addDependency(dep);
           }
           dep.addBroadcastingQueue(baseAndQueue.getRight());

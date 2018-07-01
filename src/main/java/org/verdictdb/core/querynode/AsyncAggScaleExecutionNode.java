@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.core.connection.DbmsConnection;
+import org.verdictdb.core.connection.DbmsQueryResult;
 import org.verdictdb.core.execution.ExecutionInfoToken;
 import org.verdictdb.core.execution.ExecutionTokenQueue;
 import org.verdictdb.core.querynode.ola.AsyncAggExecutionNode;
@@ -19,21 +20,23 @@ import org.verdictdb.core.sqlobject.ColumnOp;
 import org.verdictdb.core.sqlobject.ConstantColumn;
 import org.verdictdb.core.sqlobject.SelectItem;
 import org.verdictdb.core.sqlobject.SelectQuery;
+import org.verdictdb.core.sqlobject.SqlConvertable;
 import org.verdictdb.core.sqlobject.UnnamedColumn;
 import org.verdictdb.exception.VerdictDBException;
 
-public class AsyncAggScaleExecutionNode extends ProjectionExecutionNode {
+public class AsyncAggScaleExecutionNode extends ProjectionNode {
 
   // Default value. Will be modified when executeNode() is called.
   double scaleFactor = 1.0;
   List<ColumnOp> aggColumnlist = new ArrayList<>();
 
-  protected AsyncAggScaleExecutionNode(QueryExecutionPlan plan) {
-    super(plan);
+  protected AsyncAggScaleExecutionNode(TempIdCreator namer) {
+    super(namer, null);
   }
 
-  public static AsyncAggScaleExecutionNode create(QueryExecutionPlan plan, AggExecutionNode aggNode) throws VerdictDBException {
-    AsyncAggScaleExecutionNode node = new AsyncAggScaleExecutionNode(plan);
+  public static AsyncAggScaleExecutionNode create(TempIdCreator namer, AggExecutionNode aggNode) 
+      throws VerdictDBException {
+    AsyncAggScaleExecutionNode node = new AsyncAggScaleExecutionNode(namer);
 
     // Setup select list
     Pair<BaseTable, ExecutionTokenQueue> baseAndQueue = node.createPlaceHolderTable("to_scale_query");
@@ -64,7 +67,7 @@ public class AsyncAggScaleExecutionNode extends ProjectionExecutionNode {
 
     // Set this node to broadcast to the parents of asyncNode
     // Also remove the dependency
-    for (QueryExecutionNode parent:aggNode.getParents()) {
+    for (BaseQueryNode parent:aggNode.getParents()) {
       int index = parent.dependents.indexOf(aggNode);
       ExecutionTokenQueue queue = new ExecutionTokenQueue();
       // If parent is AsyncAggExecution, all dependents share a listening queue
@@ -106,14 +109,11 @@ public class AsyncAggScaleExecutionNode extends ProjectionExecutionNode {
     }
     return false;
   }
-
+  
   @Override
-  public ExecutionInfoToken executeNode(DbmsConnection conn, List<ExecutionInfoToken> downstreamResults)
-      throws VerdictDBException {
-
-
-    for (ExecutionInfoToken downstreamResult:downstreamResults) {
-      List<HyperTableCube> cubes = (List<HyperTableCube>) downstreamResult.getValue("hyperTableCube");
+  public SqlConvertable createQuery(List<ExecutionInfoToken> tokens) throws VerdictDBException {
+    for (ExecutionInfoToken token : tokens) {
+      List<HyperTableCube> cubes = (List<HyperTableCube>) token.getValue("hyperTableCube");
       if (cubes != null) {
         // Calculate the scale factor
         scaleFactor = calculateScaleFactor(cubes);
@@ -123,13 +123,36 @@ public class AsyncAggScaleExecutionNode extends ProjectionExecutionNode {
         }
       }
     }
-    ExecutionInfoToken token = super.executeNode(conn, downstreamResults);
-    return token;
+    return super.createQuery(tokens);
+  }
+  
+  @Override
+  public ExecutionInfoToken createToken(DbmsQueryResult result) {
+    return super.createToken(result);
   }
 
+//  @Override
+//  public ExecutionInfoToken executeNode(DbmsConnection conn, List<ExecutionInfoToken> downstreamResults)
+//      throws VerdictDBException {
+//
+//    for (ExecutionInfoToken downstreamResult : downstreamResults) {
+//      List<HyperTableCube> cubes = (List<HyperTableCube>) downstreamResult.getValue("hyperTableCube");
+//      if (cubes != null) {
+//        // Calculate the scale factor
+//        scaleFactor = calculateScaleFactor(cubes);
+//        // Substitute the scale factor
+//        for (ColumnOp col : aggColumnlist) {
+//          col.setOperand(0, ConstantColumn.valueOf(scaleFactor));
+//        }
+//      }
+//    }
+//    ExecutionInfoToken token = super.executeNode(conn, downstreamResults);
+//    return token;
+//  }
+
   @Override
-  public QueryExecutionNode deepcopy() {
-    AsyncAggScaleExecutionNode node = new AsyncAggScaleExecutionNode(plan);
+  public BaseQueryNode deepcopy() {
+    AsyncAggScaleExecutionNode node = new AsyncAggScaleExecutionNode(namer);
     copyFields(this, node);
     node.scaleFactor = scaleFactor;
     node.aggColumnlist = aggColumnlist;

@@ -10,6 +10,7 @@ import org.verdictdb.core.execution.ExecutionTokenQueue;
 import org.verdictdb.core.sqlobject.AsteriskColumn;
 import org.verdictdb.core.sqlobject.BaseTable;
 import org.verdictdb.core.sqlobject.SelectQuery;
+import org.verdictdb.core.sqlobject.SqlConvertable;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBValueException;
 import org.verdictdb.sqlreader.QueryToSql;
@@ -19,20 +20,14 @@ import org.verdictdb.sqlreader.QueryToSql;
  * @author Yongjoo Park
  * TODO: we need to also include order-by and limit
  */
-public class SelectAllExecutionNode extends QueryExecutionNodeWithPlaceHolders {
-
-//  private List<String> tempTableNames = new ArrayList<>();
-//
-//  private List<DbmsQueryResult> dbmsQueryResults = new ArrayList<>();
-
-//  BlockingDeque<ExecutionResult> queue = new LinkedBlockingDeque<>();
+public class SelectAllExecutionNode extends QueryNodeWithPlaceHolders {
   
-  private SelectAllExecutionNode(QueryExecutionPlan plan){
-    super(plan);
+  private SelectAllExecutionNode(SelectQuery query){
+    super(query);
   }
 
-  public static SelectAllExecutionNode create(QueryExecutionPlan plan, SelectQuery query) throws VerdictDBValueException {
-    SelectAllExecutionNode selectAll = new SelectAllExecutionNode(plan);
+  public static SelectAllExecutionNode create(TempIdCreator namer, SelectQuery query) throws VerdictDBValueException {
+    SelectAllExecutionNode selectAll = new SelectAllExecutionNode(null);
     Pair<BaseTable, ExecutionTokenQueue> baseAndQueue = selectAll.createPlaceHolderTable("t");
     SelectQuery selectQuery = SelectQuery.create(new AsteriskColumn(), baseAndQueue.getLeft());
     selectAll.setSelectQuery(selectQuery);
@@ -42,44 +37,56 @@ public class SelectAllExecutionNode extends QueryExecutionNodeWithPlaceHolders {
 //    String tableName = tempTableFullName.getRight();
     
     if (query.isAggregateQuery()) {
-      AggExecutionNode dependent = AggExecutionNode.create(plan, query);
+      AggExecutionNode dependent = AggExecutionNode.create(namer, query);
       dependent.addBroadcastingQueue(baseAndQueue.getRight());
       selectAll.addDependency(dependent);
     }
     else {
-      ProjectionExecutionNode dependent = ProjectionExecutionNode.create(plan, query);
+      ProjectionNode dependent = ProjectionNode.create(namer, query);
       dependent.addBroadcastingQueue(baseAndQueue.getRight());
       selectAll.addDependency(dependent);
     }
     
     return selectAll;
   }
-
+  
   @Override
-  public ExecutionInfoToken executeNode(DbmsConnection conn, List<ExecutionInfoToken> downstreamResults) 
-      throws VerdictDBException {
-    super.executeNode(conn, downstreamResults);
-    try {
-      String sql = QueryToSql.convert(conn.getSyntax(), selectQuery);
-      DbmsQueryResult queryResult = conn.executeQuery(sql);
-      ExecutionInfoToken result = new ExecutionInfoToken();
-      result.setKeyValue("queryResult", queryResult);
-      return result;
-      
-    } catch (VerdictDBException e) {
-      e.printStackTrace();
-    }
-    return ExecutionInfoToken.empty();
+  public SqlConvertable createQuery(List<ExecutionInfoToken> tokens) throws VerdictDBException {
+    return super.createQuery(tokens);
+  }
+  
+  @Override
+  public ExecutionInfoToken createToken(DbmsQueryResult result) {
+    ExecutionInfoToken token = new ExecutionInfoToken();
+    token.setKeyValue("queryResult", result);
+    return token;
   }
 
+//  @Override
+//  public ExecutionInfoToken executeNode(DbmsConnection conn, List<ExecutionInfoToken> downstreamResults) 
+//      throws VerdictDBException {
+//    super.executeNode(conn, downstreamResults);
+//    try {
+//      String sql = QueryToSql.convert(conn.getSyntax(), selectQuery);
+//      DbmsQueryResult queryResult = conn.executeQuery(sql);
+//      ExecutionInfoToken result = new ExecutionInfoToken();
+//      result.setKeyValue("queryResult", queryResult);
+//      return result;
+//      
+//    } catch (VerdictDBException e) {
+//      e.printStackTrace();
+//    }
+//    return ExecutionInfoToken.empty();
+//  }
+
   @Override
-  public QueryExecutionNode deepcopy() {
-    SelectAllExecutionNode node = new SelectAllExecutionNode(plan);
+  public BaseQueryNode deepcopy() {
+    SelectAllExecutionNode node = new SelectAllExecutionNode(selectQuery);
     copyFields(this, node);
     return node;
   }
 
-  void copyFields(CreateTableAsSelectExecutionNode from, CreateTableAsSelectExecutionNode to) {
+  void copyFields(CreateTableAsSelectNode from, CreateTableAsSelectNode to) {
     super.copyFields(from, to);
   }
 

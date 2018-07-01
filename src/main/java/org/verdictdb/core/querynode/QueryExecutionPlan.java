@@ -27,46 +27,36 @@ import org.verdictdb.exception.VerdictDBTypeException;
 import org.verdictdb.exception.VerdictDBValueException;
 
 public class QueryExecutionPlan {
-  
-//  SelectQuery query;
-  
-  ScrambleMeta scrambleMeta;
-  
-  QueryExecutionNode root;
-  
-  String scratchpadSchemaName;
-  
-  final int N_THREADS = 10;
 
-//  PostProcessor postProcessor;
-  
-//  /**
-//   * 
-//   * @param queryString A select query
-//   * @throws UnexpectedTypeException 
-//   */
-//  public AggQueryExecutionPlan(DbmsConnection conn, SyntaxAbstract syntax, String queryString) throws VerdictDbException {
-//    this(conn, syntax, (SelectQueryOp) new NonValidatingSQLParser().toRelation(queryString));
-//  }
-  
-  final int serialNum = ThreadLocalRandom.current().nextInt(0, 1000000);
-  
-  int identifierNum = 0;
+  //  SelectQuery query;
 
-  int tempTableNameNum = 0;
-  
+  protected ScrambleMeta scrambleMeta;
+
+  protected BaseQueryNode root;
+
+  protected TempIdCreator idCreator;
+
+  //  final int N_THREADS = 10;
+
+  //  PostProcessor postProcessor;
+
+  //  /**
+  //   * 
+  //   * @param queryString A select query
+  //   * @throws UnexpectedTypeException 
+  //   */
+  //  public AggQueryExecutionPlan(DbmsConnection conn, SyntaxAbstract syntax, String queryString) throws VerdictDbException {
+  //    this(conn, syntax, (SelectQueryOp) new NonValidatingSQLParser().toRelation(queryString));
+  //  }
+
   public QueryExecutionPlan(String scratchpadSchemaName) {
-    this.scratchpadSchemaName = scratchpadSchemaName;
+    this.idCreator = new TempIdCreator(scratchpadSchemaName);
     this.scrambleMeta = new ScrambleMeta();
   }
-  
-  public QueryExecutionPlan(String scratchpadSchemaName, ScrambleMeta scrambleMeta) {
-    this.scratchpadSchemaName = scratchpadSchemaName;
-    this.scrambleMeta = scrambleMeta;
-  }
 
-  public int getMaxNumberOfThreads() {
-    return N_THREADS;
+  public QueryExecutionPlan(String scratchpadSchemaName, ScrambleMeta scrambleMeta) {
+    this(scratchpadSchemaName);
+    this.scrambleMeta = scrambleMeta;
   }
 
   /**
@@ -83,50 +73,37 @@ public class QueryExecutionPlan {
     setScrambleMeta(scrambleMeta);
     setSelectQuery(query);
   }
-  
+
   public int getSerialNumber() {
-    return serialNum;
+    return idCreator.getSerialNumber();
   }
-  
+
   public ScrambleMeta getScrambleMeta() {
     return scrambleMeta;
   }
-  
+
   public void setScrambleMeta(ScrambleMeta scrambleMeta) {
     this.scrambleMeta = scrambleMeta;
   }
-  
+
   public void setSelectQuery(SelectQuery query) throws VerdictDBException {
     if (!query.isAggregateQuery()) {
       throw new VerdictDBTypeException(query);
     }
     this.root = makePlan(query);
   }
-  
+
   public String getScratchpadSchemaName() {
-    return scratchpadSchemaName;
+    return idCreator.getScratchpadSchemaName();
   }
-  
-  public QueryExecutionNode getRootNode() {
+
+  public BaseQueryNode getRootNode() {
     return root;
   }
 
-  public void setRootNode(QueryExecutionNode root) {
+  public void setRootNode(BaseQueryNode root) {
     this.root = root;
   }
-
-  synchronized String generateUniqueIdentifier() {
-    return String.format("%d_%d", serialNum, identifierNum++);
-  }
-
-  public String generateAliasName() {
-    return String.format("verdictdbalias_%s", generateUniqueIdentifier());
-  }
-
-  public Pair<String, String> generateTempTableName() {
-  //    return Pair.of(scratchpadSchemaName, String.format("verdictdbtemptable_%d", tempTableNameNum++));
-      return Pair.of(scratchpadSchemaName, String.format("verdictdbtemptable_%s", generateUniqueIdentifier()));
-    }
 
   /** 
    * Creates a tree in which each node is QueryExecutionNode. Each AggQueryExecutionNode corresponds to
@@ -147,49 +124,14 @@ public class QueryExecutionPlan {
    * @throws VerdictDBValueException 
    * @throws VerdictDBTypeException 
    */
-  QueryExecutionNode makePlan(SelectQuery query) throws VerdictDBException {
-    QueryExecutionNode root = SelectAllExecutionNode.create(this, query);
-//    root = makeAsyncronousAggIfAvailable(root);
+  BaseQueryNode makePlan(SelectQuery query) throws VerdictDBException {
+    BaseQueryNode root = SelectAllExecutionNode.create(idCreator, query);
     return root;
   }
 
-//  /**
-//   *
-//   * @param root The root execution node of ALL nodes (i.e., not just the top agg node)
-//   * @return
-//   * @throws VerdictDBException
-//   */
-//  QueryExecutionNode makeAsyncronousAggIfAvailable(QueryExecutionNode root) throws VerdictDBException {
-//    List<AggExecutionNodeBlock> aggBlocks = root.identifyTopAggBlocks();
-//
-//    // converted nodes should be used in place of the original nodes.
-//    for (int i = 0; i < aggBlocks.size(); i++) {
-//      AggExecutionNodeBlock nodeBlock = aggBlocks.get(i);
-//      QueryExecutionNode oldNode = nodeBlock.getBlockRootNode();
-//      QueryExecutionNode newNode = nodeBlock.convertToProgressiveAgg();
-//
-//      List<QueryExecutionNode> parents = oldNode.getParents();
-//      for (QueryExecutionNode parent : parents) {
-//        List<QueryExecutionNode> parentDependants = parent.getDependents();
-//        int idx = parentDependants.indexOf(oldNode);
-//        parentDependants.remove(idx);
-//        parentDependants.add(idx, newNode);
-//      }
-//    }
-//
-//    return root;
-//  }
-  
-  public void execute(DbmsConnection conn, ExecutionTokenQueue queue) {
-    // execute roots
-
-    // after executions are all finished.
-    cleanUp();
-  }
-  
   // clean up any intermediate materialized tables
   void cleanUp() {
-    tempTableNameNum = 0;
+    idCreator.reset();
   }
 
   @Override
@@ -201,12 +143,12 @@ public class QueryExecutionPlan {
   }
 
   public void compress() {
-    List<QueryExecutionNode> nodesToCompress = new ArrayList<>();
+    List<BaseQueryNode> nodesToCompress = new ArrayList<>();
     // compress the node from bottom to up in order to replace the select query conveniently
-    List<QueryExecutionNode> traverse = new ArrayList<>();
+    List<BaseQueryNode> traverse = new ArrayList<>();
     traverse.add(root);
     while (!traverse.isEmpty()) {
-      QueryExecutionNode node = traverse.get(0);
+      BaseQueryNode node = traverse.get(0);
       traverse.remove(0);
       if (node.dependents.isEmpty() && !nodesToCompress.contains(node)) {
         nodesToCompress.add(node);
@@ -214,23 +156,23 @@ public class QueryExecutionPlan {
       else traverse.addAll(node.dependents);
     }
 
-    List<QueryExecutionNode> history = new ArrayList<>();
+    List<BaseQueryNode> history = new ArrayList<>();
     while (!nodesToCompress.isEmpty()) {
-      QueryExecutionNode node = nodesToCompress.get(0);
+      BaseQueryNode node = nodesToCompress.get(0);
       nodesToCompress.remove(0);
       // Exception 1: has no parent(root), or has multiple parent
       // Exception 2: its parents has multiple dependents and this node share same queue with other dependents
       // Exception 3: two nodes are not SelectAllNode, ProjectionNode or AggregateNode
       boolean compressable = node.parents.size()==1 && !isSharingQueue(node);
       if (compressable) {
-        QueryExecutionNode parent = node.parents.get(0);
-        if (((parent instanceof AggExecutionNode)||(parent instanceof SelectAllExecutionNode)||(parent instanceof ProjectionExecutionNode))
-            && ((node instanceof AggExecutionNode)||(node instanceof SelectAllExecutionNode)||(node instanceof ProjectionExecutionNode)) ) {
+        BaseQueryNode parent = node.parents.get(0);
+        if (((parent instanceof AggExecutionNode)||(parent instanceof SelectAllExecutionNode)||(parent instanceof ProjectionNode))
+            && ((node instanceof AggExecutionNode)||(node instanceof SelectAllExecutionNode)||(node instanceof ProjectionNode)) ) {
           compressTwoNode(node, parent);
         }
       }
       history.add(node);
-      for (QueryExecutionNode parent:node.parents) {
+      for (BaseQueryNode parent:node.parents) {
         if (!history.contains(parent) && !nodesToCompress.contains(parent)) {
           nodesToCompress.add(parent);
         }
@@ -239,11 +181,11 @@ public class QueryExecutionPlan {
   }
 
   // Compress node and parent into parent, node will be useless
-  void compressTwoNode(QueryExecutionNode node, QueryExecutionNode parent) {
+  void compressTwoNode(BaseQueryNode node, BaseQueryNode parent) {
 
     // Change the query of parents
-    BaseTable placeholderTableinParent = ((QueryExecutionNodeWithPlaceHolders)parent).getPlaceholderTables().get(parent.dependents.indexOf(node));
-    ((QueryExecutionNodeWithPlaceHolders)parent).getPlaceholderTables().remove(placeholderTableinParent);
+    BaseTable placeholderTableinParent = ((QueryNodeWithPlaceHolders)parent).getPlaceholderTables().get(parent.dependents.indexOf(node));
+    ((QueryNodeWithPlaceHolders)parent).getPlaceholderTables().remove(placeholderTableinParent);
 
     // If temp table is in from list of parent, just direct replace with the select query of node
     if (parent.selectQuery.getFromList().contains(placeholderTableinParent)) {
@@ -253,7 +195,7 @@ public class QueryExecutionPlan {
     }
     // Otherwise, it need to search filter to find the temp table
     else {
-      List<SubqueryColumn> placeholderTablesinFilter = ((QueryExecutionNodeWithPlaceHolders)parent).getPlaceholderTablesinFilter();
+      List<SubqueryColumn> placeholderTablesinFilter = ((QueryNodeWithPlaceHolders)parent).getPlaceholderTablesinFilter();
       for (SubqueryColumn filter:placeholderTablesinFilter) {
         if (filter.getSubquery().getFromList().size()==1 && filter.getSubquery().getFromList().get(0).equals(placeholderTableinParent)) {
           filter.setSubquery(node.selectQuery);
@@ -266,20 +208,20 @@ public class QueryExecutionPlan {
     parent.getListeningQueues().addAll(node.getListeningQueues());
     parent.dependents.remove(node);
     parent.dependents.addAll(node.dependents);
-    for (QueryExecutionNode dependent:node.dependents) {
+    for (BaseQueryNode dependent:node.dependents) {
       dependent.parents.remove(node);
       dependent.parents.add(parent);
     }
   }
 
   // Return true if this node share queue with other dependant of its parent
-  boolean isSharingQueue(QueryExecutionNode node) {
+  boolean isSharingQueue(BaseQueryNode node) {
     // must have one parent and this parent must have multiple dependents
     if (node.parents.size()!=1 || node.parents.get(0).dependents.size()<=1) {
       return false;
     }
     else {
-      for (QueryExecutionNode dependent:node.parents.get(0).dependents) {
+      for (BaseQueryNode dependent:node.parents.get(0).dependents) {
         if (!dependent.equals(node) && node.getBroadcastingQueues().equals(dependent.getBroadcastingQueues())) {
           return true;
         }
@@ -288,25 +230,25 @@ public class QueryExecutionPlan {
     }
   }
 
-  public QueryExecutionNode getRoot() {
+  public BaseQueryNode getRoot() {
     return root;
   }
 
 
   public void setScalingNode() throws VerdictDBException{
     // Check from top to bottom to find AsyncAggExecutionNode
-    List<QueryExecutionNode> checkList = new ArrayList<>();
+    List<BaseQueryNode> checkList = new ArrayList<>();
     List<AsyncAggExecutionNode> toScaleList = new ArrayList<>();
     checkList.add(root);
-    List<QueryExecutionNode> traversed = new ArrayList<>();
+    List<BaseQueryNode> traversed = new ArrayList<>();
     while (!checkList.isEmpty()) {
-      QueryExecutionNode node = checkList.get(0);
+      BaseQueryNode node = checkList.get(0);
       checkList.remove(0);
       traversed.add(node);
       if (node instanceof AsyncAggExecutionNode && !toScaleList.contains(node)) {
         toScaleList.add((AsyncAggExecutionNode) node);
       }
-      for (QueryExecutionNode dependent:node.dependents) {
+      for (BaseQueryNode dependent:node.dependents) {
         if (!traversed.contains(dependent)) {
           checkList.add(dependent);
         }
@@ -319,7 +261,7 @@ public class QueryExecutionPlan {
         aggNodeList.add((AggExecutionNode) asyncNode.getDependent(i).getDependent(1));
       }
       for (AggExecutionNode aggExecutionNode:aggNodeList) {
-        AsyncAggScaleExecutionNode.create(this, aggExecutionNode);
+        AsyncAggScaleExecutionNode.create(idCreator, aggExecutionNode);
       }
     }
   }

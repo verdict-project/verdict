@@ -11,13 +11,16 @@ package org.verdictdb.core.querynode.ola;
 import java.util.List;
 
 import org.verdictdb.core.connection.DbmsConnection;
+import org.verdictdb.core.connection.DbmsQueryResult;
 import org.verdictdb.core.execution.ExecutionInfoToken;
 import org.verdictdb.core.execution.ExecutionTokenQueue;
-import org.verdictdb.core.querynode.QueryExecutionNode;
+import org.verdictdb.core.querynode.BaseQueryNode;
 import org.verdictdb.core.querynode.QueryExecutionPlan;
+import org.verdictdb.core.querynode.TempIdCreator;
 import org.verdictdb.core.rewriter.aggresult.AggNameAndType;
 import org.verdictdb.core.scramble.ScrambleMeta;
 import org.verdictdb.core.sqlobject.SelectQuery;
+import org.verdictdb.core.sqlobject.SqlConvertable;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBValueException;
 
@@ -34,7 +37,7 @@ import org.verdictdb.exception.VerdictDBValueException;
  * @author Yongjoo Park
  *
  */
-public class AsyncAggExecutionNode extends QueryExecutionNode {
+public class AsyncAggExecutionNode extends BaseQueryNode {
 
   ScrambleMeta scrambleMeta;
 
@@ -49,21 +52,23 @@ public class AsyncAggExecutionNode extends QueryExecutionNode {
 //  List<AsyncAggExecutionNode> children = new ArrayList<>();
 
   int tableNum = 1;
+  
+  ExecutionInfoToken savedToken = null;
 
 //  String getNextTempTableName(String tableNamePrefix) {
 //    return tableNamePrefix + tableNum++;
 //  }
 
-  private AsyncAggExecutionNode(QueryExecutionPlan plan) {
-    super(plan);
+  private AsyncAggExecutionNode() {
+    super();
   }
   
   public static AsyncAggExecutionNode create(
-      QueryExecutionPlan plan,
-      List<QueryExecutionNode> individualAggs,
-      List<QueryExecutionNode> combiners) throws VerdictDBValueException {
+      TempIdCreator idCreator,
+      List<BaseQueryNode> individualAggs,
+      List<BaseQueryNode> combiners) throws VerdictDBValueException {
 
-    AsyncAggExecutionNode node = new AsyncAggExecutionNode(plan);
+    AsyncAggExecutionNode node = new AsyncAggExecutionNode();
     ExecutionTokenQueue rootQueue = node.generateListeningQueue();
     
     // first agg -> root
@@ -71,17 +76,28 @@ public class AsyncAggExecutionNode extends QueryExecutionNode {
     node.addDependency(individualAggs.get(0));
 
     // combiners -> root
-    for (QueryExecutionNode c : combiners) {
+    for (BaseQueryNode c : combiners) {
       c.addBroadcastingQueue(rootQueue);
       node.addDependency(c);
     }
 
     return node;
   }
-
+  
   @Override
-  public ExecutionInfoToken executeNode(DbmsConnection conn, List<ExecutionInfoToken> downstreamResults) 
-      throws VerdictDBException {
+  public SqlConvertable createQuery(List<ExecutionInfoToken> tokens) throws VerdictDBException {
+    savedToken = tokens.get(0);
+    return null;
+  }
+  
+  @Override
+  public ExecutionInfoToken createToken(DbmsQueryResult result) {
+    return savedToken;
+  }
+
+//  @Override
+//  public ExecutionInfoToken executeNode(DbmsConnection conn, List<ExecutionInfoToken> downstreamResults) 
+//      throws VerdictDBException {
 //    ExecutionInfoToken token = super.executeNode(conn, downstreamResults);
 //    System.out.println("AsyncNode execution " + getSelectQuery());
 //    try {
@@ -94,14 +110,12 @@ public class AsyncAggExecutionNode extends QueryExecutionNode {
 //      // TODO Auto-generated catch block
 //      e.printStackTrace();
 //    }
-
-
-    return downstreamResults.get(0);
-  }
+//    return downstreamResults.get(0);
+//  }
 
   @Override
-  public QueryExecutionNode deepcopy() {
-    AsyncAggExecutionNode copy = new AsyncAggExecutionNode(getPlan());
+  public BaseQueryNode deepcopy() {
+    AsyncAggExecutionNode copy = new AsyncAggExecutionNode();
     copyFields(this, copy);
     return copy;
   }

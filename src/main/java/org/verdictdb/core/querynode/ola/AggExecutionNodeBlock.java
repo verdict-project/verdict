@@ -8,8 +8,9 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.verdictdb.core.execution.ExecutionTokenQueue;
 import org.verdictdb.core.querynode.AggExecutionNode;
-import org.verdictdb.core.querynode.QueryExecutionNode;
+import org.verdictdb.core.querynode.BaseQueryNode;
 import org.verdictdb.core.querynode.QueryExecutionPlan;
+import org.verdictdb.core.querynode.TempIdCreator;
 import org.verdictdb.core.scramble.ScrambleMeta;
 import org.verdictdb.core.sqlobject.AbstractRelation;
 import org.verdictdb.core.sqlobject.BaseColumn;
@@ -29,38 +30,38 @@ import org.verdictdb.exception.VerdictDBValueException;
  */
 public class AggExecutionNodeBlock {
   
-  QueryExecutionPlan plan;
+  TempIdCreator idCreator;
   
-  QueryExecutionNode blockRoot;
+  BaseQueryNode blockRoot;
   
-  List<QueryExecutionNode> blockNodes;
+  List<BaseQueryNode> blockNodes;
   
 //  List<QueryExecutionNode> scrambledNodes;    // nodes including scrambled tables
 
-  public AggExecutionNodeBlock(QueryExecutionPlan plan, QueryExecutionNode blockRoot) {
-    this.plan = plan;
+  public AggExecutionNodeBlock(TempIdCreator idCreator, BaseQueryNode blockRoot) {
+    this.idCreator = idCreator;
     this.blockRoot = blockRoot;
     this.blockNodes = getNodesInBlock(blockRoot);
 //    this.scrambledNodes = identifyScrambledNodes(blockNodes);
   }
   
-  public QueryExecutionNode getBlockRootNode() {
+  public BaseQueryNode getBlockRootNode() {
     return blockRoot;
   }
   
-  public List<QueryExecutionNode> getNodesInBlock() {
+  public List<BaseQueryNode> getNodesInBlock() {
     return blockNodes;
   }
   
-  List<QueryExecutionNode> getNodesInBlock(QueryExecutionNode root) {
-    List<QueryExecutionNode> nodes = new ArrayList<>();
+  List<BaseQueryNode> getNodesInBlock(BaseQueryNode root) {
+    List<BaseQueryNode> nodes = new ArrayList<>();
     nodes.add(root);
     
-    for (QueryExecutionNode dep : root.getDependents()) {
+    for (BaseQueryNode dep : root.getDependents()) {
       if (dep instanceof AggExecutionNode) {
         continue;
       } else {
-        List<QueryExecutionNode> depNodes = getNodesInBlock(dep);
+        List<BaseQueryNode> depNodes = getNodesInBlock(dep);
         nodes.addAll(depNodes);
       }
     }
@@ -79,17 +80,18 @@ public class AggExecutionNodeBlock {
    * of partitions)
    * @throws VerdictDBValueException 
    */
-  public QueryExecutionNode convertToProgressiveAgg () throws VerdictDBValueException {
-    List<QueryExecutionNode> individualAggNodes = new ArrayList<>();
-    List<QueryExecutionNode> combiners = new ArrayList<>();
-    ScrambleMeta scrambleMeta = plan.getScrambleMeta();
+  public BaseQueryNode convertToProgressiveAgg (ScrambleMeta scrambleMeta) 
+      throws VerdictDBValueException {
+    List<BaseQueryNode> individualAggNodes = new ArrayList<>();
+    List<BaseQueryNode> combiners = new ArrayList<>();
+//    ScrambleMeta scrambleMeta = idCreator.getScrambleMeta();
     
     // first, plan how to perform block aggregation
     // filtering predicates inserted into different scrambled tables are identified.
-    List<Pair<QueryExecutionNode, Triple<String, String, String>>> scrambledNodes = 
+    List<Pair<BaseQueryNode, Triple<String, String, String>>> scrambledNodes = 
         identifyScrambledNodes(scrambleMeta, blockNodes);
     List<Pair<String, String>> scrambles = new ArrayList<>();
-    for (Pair<QueryExecutionNode, Triple<String, String, String>> a : scrambledNodes) {
+    for (Pair<BaseQueryNode, Triple<String, String, String>> a : scrambledNodes) {
       String schemaName = a.getRight().getLeft();
       String tableName = a.getRight().getMiddle();
       scrambles.add(Pair.of(schemaName, tableName));
@@ -100,13 +102,13 @@ public class AggExecutionNodeBlock {
     for (int i = 0; i < aggMeta.totalBlockAggCount(); i++) {
       // copy and remove the dependency to its parents
       AggExecutionNodeBlock copy = deepcopyExcludingDependentAggregates();
-      QueryExecutionNode aggroot = copy.getBlockRootNode();
-      for (QueryExecutionNode parent : aggroot.getParents()) {
+      BaseQueryNode aggroot = copy.getBlockRootNode();
+      for (BaseQueryNode parent : aggroot.getParents()) {
         parent.getDependents().remove(aggroot);
       }
       aggroot.getParents().clear();
       
-      List<Pair<QueryExecutionNode, Triple<String, String, String>>> scrambledNodeAndTableName = 
+      List<Pair<BaseQueryNode, Triple<String, String, String>>> scrambledNodeAndTableName = 
           identifyScrambledNodes(scrambleMeta, copy.getNodesInBlock());
       
       // add extra predicates to restrain each aggregation to particular parts of base tables.
@@ -117,8 +119,8 @@ public class AggExecutionNodeBlock {
 
 
 
-      for (Pair<QueryExecutionNode, Triple<String, String, String>> a : scrambledNodeAndTableName) {
-        QueryExecutionNode scrambledNode = a.getLeft();
+      for (Pair<BaseQueryNode, Triple<String, String, String>> a : scrambledNodeAndTableName) {
+        BaseQueryNode scrambledNode = a.getLeft();
         String schemaName = a.getRight().getLeft();
         String tableName = a.getRight().getMiddle();
         String aliasName = a.getRight().getRight();
@@ -149,7 +151,7 @@ public class AggExecutionNodeBlock {
     
     // third, stack combiners
     // clear existing broadcasting queues of individual agg nodes
-    for (QueryExecutionNode n : individualAggNodes) {
+    for (BaseQueryNode n : individualAggNodes) {
       n.getParents().clear();
       n.clearBroadcastingQueues();
     }
@@ -157,12 +159,12 @@ public class AggExecutionNodeBlock {
       AggCombinerExecutionNode combiner;
       if (i == 1) {
         combiner = AggCombinerExecutionNode.create(
-            plan,
+            idCreator,
             individualAggNodes.get(0), 
             individualAggNodes.get(1));
       } else {
         combiner = AggCombinerExecutionNode.create(
-            plan,
+            idCreator,
             combiners.get(i-2), 
             individualAggNodes.get(i));
       }
@@ -170,7 +172,7 @@ public class AggExecutionNodeBlock {
     }
     
     // fourth, re-link the listening queue for the new AsyncAggNode
-    QueryExecutionNode newRoot = AsyncAggExecutionNode.create(plan, individualAggNodes, combiners);
+    BaseQueryNode newRoot = AsyncAggExecutionNode.create(idCreator, individualAggNodes, combiners);
     
     // root to upstream
     List<ExecutionTokenQueue> broadcastingQueue = blockRoot.getBroadcastingQueues();
@@ -181,11 +183,11 @@ public class AggExecutionNodeBlock {
     return newRoot;
   }
   
-  List<Pair<QueryExecutionNode, Triple<String, String, String>>> 
-  identifyScrambledNodes(ScrambleMeta scrambleMeta, List<QueryExecutionNode> blockNodes) {
-    List<Pair<QueryExecutionNode, Triple<String, String, String>>> identified = new ArrayList<>();
+  List<Pair<BaseQueryNode, Triple<String, String, String>>> 
+  identifyScrambledNodes(ScrambleMeta scrambleMeta, List<BaseQueryNode> blockNodes) {
+    List<Pair<BaseQueryNode, Triple<String, String, String>>> identified = new ArrayList<>();
     
-    for (QueryExecutionNode node : blockNodes) {
+    for (BaseQueryNode node : blockNodes) {
       for (AbstractRelation rel : node.getSelectQuery().getFromList()) {
         if (rel instanceof BaseTable) {
           BaseTable base = (BaseTable) rel;
@@ -289,8 +291,8 @@ public class AggExecutionNodeBlock {
    * @throws VerdictDBValueException 
    */
   public AggExecutionNodeBlock deepcopyExcludingDependentAggregates() throws VerdictDBValueException {
-    List<QueryExecutionNode> newNodes = new ArrayList<>();
-    for (QueryExecutionNode node : blockNodes) {
+    List<BaseQueryNode> newNodes = new ArrayList<>();
+    for (BaseQueryNode node : blockNodes) {
       newNodes.add(node.deepcopy());
     }
     
@@ -298,10 +300,10 @@ public class AggExecutionNodeBlock {
     // if there are nodes (in this block) on which other nodes depend on, we restore that dependency
     // relationship.
     for (int i = 0; i < newNodes.size(); i++) {
-      QueryExecutionNode newNode = newNodes.get(i);
-      QueryExecutionNode oldNode = blockNodes.get(i);
+      BaseQueryNode newNode = newNodes.get(i);
+      BaseQueryNode oldNode = blockNodes.get(i);
       for (int j = 0; j < oldNode.getDependents().size(); j++) {
-        QueryExecutionNode dep = oldNode.getDependent(j);
+        BaseQueryNode dep = oldNode.getDependent(j);
         int idx = blockNodes.indexOf(dep);
         if (idx >= 0) {
           newNode.getDependents().set(j, newNodes.get(idx));
@@ -312,9 +314,9 @@ public class AggExecutionNodeBlock {
     // reconstruct listening and broadcasting queues
     // the existing broadcasting nodes are all replaced with new ones. 
     // the listening nodes of leaves are duplicated.
-    List<QueryExecutionNode> outsideDependents = new ArrayList<>();
-    for (QueryExecutionNode node : blockNodes) {
-      for (QueryExecutionNode dep : node.getDependents()) {
+    List<BaseQueryNode> outsideDependents = new ArrayList<>();
+    for (BaseQueryNode node : blockNodes) {
+      for (BaseQueryNode dep : node.getDependents()) {
         if (!blockNodes.contains(dep)) {
           outsideDependents.add(dep);
         }
@@ -322,8 +324,8 @@ public class AggExecutionNodeBlock {
     }
     
     for (int i = 0; i < newNodes.size(); i++) {
-      QueryExecutionNode newNode = newNodes.get(i);
-      QueryExecutionNode oldNode = blockNodes.get(i);
+      BaseQueryNode newNode = newNodes.get(i);
+      BaseQueryNode oldNode = blockNodes.get(i);
       List<ExecutionTokenQueue> listeningQueues = oldNode.getListeningQueues();
       
       // for each listening queue of an existing node
@@ -332,7 +334,7 @@ public class AggExecutionNodeBlock {
         
         // find the nodes that broadcast to this listening queue within this block (intra-block broadcasting)
         for (int nodeIdx = 0; nodeIdx < blockNodes.size(); nodeIdx++) {
-          QueryExecutionNode node = blockNodes.get(nodeIdx);
+          BaseQueryNode node = blockNodes.get(nodeIdx);
           int broadcastQueueIdx = node.getBroadcastingQueues().indexOf(listeningQueue);
           
           if (broadcastQueueIdx >= 0) {
@@ -343,7 +345,7 @@ public class AggExecutionNodeBlock {
         
         // find the dependents that broadcast to this listening queue outside this block
         for (int nodeIdx = 0; nodeIdx < outsideDependents.size(); nodeIdx++) {
-          QueryExecutionNode dep = outsideDependents.get(nodeIdx);
+          BaseQueryNode dep = outsideDependents.get(nodeIdx);
           if (dep.getBroadcastingQueues().contains(listeningQueue)) {
             ExecutionTokenQueue newQueue = newNode.generateReplacementListeningQueue(listeningQueueIdx);
             dep.addBroadcastingQueue(newQueue);
@@ -354,7 +356,7 @@ public class AggExecutionNodeBlock {
     
     // compose the return value
     int rootIdx = blockNodes.indexOf(blockRoot);
-    return new AggExecutionNodeBlock(plan, newNodes.get(rootIdx));
+    return new AggExecutionNodeBlock(idCreator, newNodes.get(rootIdx));
   }
 
 }

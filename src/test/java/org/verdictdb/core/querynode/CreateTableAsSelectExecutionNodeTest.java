@@ -9,8 +9,8 @@ import org.junit.Test;
 import org.verdictdb.core.connection.DbmsConnection;
 import org.verdictdb.core.connection.JdbcConnection;
 import org.verdictdb.core.execution.ExecutionInfoToken;
-import org.verdictdb.core.querynode.CreateTableAsSelectExecutionNode;
-import org.verdictdb.core.querynode.QueryExecutionNode;
+import org.verdictdb.core.querynode.CreateTableAsSelectNode;
+import org.verdictdb.core.querynode.BaseQueryNode;
 import org.verdictdb.core.querynode.QueryExecutionPlan;
 import org.verdictdb.core.sqlobject.AsteriskColumn;
 import org.verdictdb.core.sqlobject.BaseTable;
@@ -49,7 +49,7 @@ public class CreateTableAsSelectExecutionNodeTest {
   public void testExecuteNode() throws VerdictDBException {
     BaseTable base = new BaseTable(originalSchema, originalTable, "t");
     SelectQuery query = SelectQuery.create(Arrays.<SelectItem>asList(new AsteriskColumn()), base);
-    QueryExecutionNode root = CreateTableAsSelectExecutionNode.create(new QueryExecutionPlan("newschema"), query);
+    BaseQueryNode root = CreateTableAsSelectNode.create(new QueryExecutionPlan("newschema"), query);
 //    ExecutionInfoToken token = new ExecutionInfoToken();
     ExecutionInfoToken newTableName = root.executeNode(conn, Arrays.<ExecutionInfoToken>asList());     // no information to pass
     

@@ -8,7 +8,7 @@ import java.util.Arrays;
 import org.junit.Test;
 import org.verdictdb.core.connection.DbmsConnection;
 import org.verdictdb.core.querynode.AggExecutionNode;
-import org.verdictdb.core.querynode.QueryExecutionNode;
+import org.verdictdb.core.querynode.BaseQueryNode;
 import org.verdictdb.core.querynode.QueryExecutionPlan;
 import org.verdictdb.core.scramble.ScrambleMeta;
 import org.verdictdb.core.scramble.Scrambler;
@@ -47,7 +47,7 @@ public class QueryExecutionNodeTest {
     String schemaName = "newschema";
     String tableName = "newtable";
     ScrambleMeta scrambleMeta = generateTestScrambleMeta();
-    QueryExecutionNode node = AggExecutionNode.create(new QueryExecutionPlan("newschema"), query);
+    BaseQueryNode node = AggExecutionNode.create(new QueryExecutionPlan("newschema"), query);
     assertTrue(node.doesContainScrambledTablesInDescendants(scrambleMeta));
   }
   
@@ -69,7 +69,7 @@ public class QueryExecutionNodeTest {
     String schemaName = "newschema";
     String tableName = "newtable";
     ScrambleMeta scrambleMeta = generateTestScrambleMeta();
-    QueryExecutionNode node = AggExecutionNode.create(new QueryExecutionPlan("newschema"), query);
+    BaseQueryNode node = AggExecutionNode.create(new QueryExecutionPlan("newschema"), query);
     assertFalse(node.doesContainScrambledTablesInDescendants(scrambleMeta));
   }
   

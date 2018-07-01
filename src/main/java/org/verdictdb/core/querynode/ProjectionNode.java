@@ -1,30 +1,25 @@
 package org.verdictdb.core.querynode;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.verdictdb.core.connection.DbmsConnection;
 import org.verdictdb.core.connection.DbmsQueryResult;
 import org.verdictdb.core.execution.ExecutionInfoToken;
-import org.verdictdb.core.querynode.ola.HyperTableCube;
 import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.core.sqlobject.SqlConvertable;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBValueException;
 
-public class AggExecutionNode extends CreateTableAsSelectNode {
-
-  List<HyperTableCube> cubes = new ArrayList<>();
-
-  protected AggExecutionNode(TempIdCreator namer, SelectQuery query) {
+public class ProjectionNode extends CreateTableAsSelectNode {
+  
+  public ProjectionNode(TempIdCreator namer, SelectQuery query) {
     super(namer, query);
   }
-  
-  public static AggExecutionNode create(TempIdCreator namer, SelectQuery query) throws VerdictDBValueException {
-    AggExecutionNode node = new AggExecutionNode(namer, null);
+
+  public static ProjectionNode create(TempIdCreator namer, SelectQuery query) throws VerdictDBValueException {
+    ProjectionNode node = new ProjectionNode(namer, null);
     SubqueriesToDependentNodes.convertSubqueriesToDependentNodes(query, node);
     node.setSelectQuery(query);
-    
     return node;
   }
   
@@ -35,21 +30,13 @@ public class AggExecutionNode extends CreateTableAsSelectNode {
   
   @Override
   public ExecutionInfoToken createToken(DbmsQueryResult result) {
-    ExecutionInfoToken token = super.createToken(result);
-    if (!cubes.isEmpty()) {
-      token.setKeyValue("hyperTableCube", cubes);
-    }
-    return token;
+    return super.createToken(result);
   }
 
   @Override
   public BaseQueryNode deepcopy() {
-    AggExecutionNode node = new AggExecutionNode(namer, selectQuery);
+    ProjectionNode node = new ProjectionNode(namer, selectQuery);
     copyFields(this, node);
     return node;
-  }
-
-  public List<HyperTableCube> getCubes() {
-    return cubes;
   }
 }

@@ -13,7 +13,7 @@ import org.verdictdb.core.connection.DbmsConnection;
 import org.verdictdb.core.connection.JdbcConnection;
 import org.verdictdb.core.execution.ExecutionInfoToken;
 import org.verdictdb.core.execution.ExecutionTokenQueue;
-import org.verdictdb.core.querynode.ProjectionExecutionNode;
+import org.verdictdb.core.querynode.ProjectionNode;
 import org.verdictdb.core.querynode.QueryExecutionPlan;
 import org.verdictdb.core.sqlobject.AliasedColumn;
 import org.verdictdb.core.sqlobject.BaseColumn;
@@ -72,7 +72,7 @@ public class ProjectionExecutionNodeTest {
         new SubqueryColumn(subquery)
     )));
     QueryExecutionPlan plan = new QueryExecutionPlan("newschema");
-    ProjectionExecutionNode node = ProjectionExecutionNode.create(plan, query);
+    ProjectionNode node = ProjectionNode.create(plan, query);
     String aliasName = String.format("verdictdbalias_%d_0", plan.getSerialNumber());
 
     assertEquals(1, node.dependents.size());
@@ -100,7 +100,7 @@ public class ProjectionExecutionNodeTest {
         new BaseColumn("t", "value"),
         new SubqueryColumn(subquery)
     )));
-    ProjectionExecutionNode node = ProjectionExecutionNode.create(new QueryExecutionPlan("newschema"), query);
+    ProjectionNode node = ProjectionNode.create(new QueryExecutionPlan("newschema"), query);
     node.print();
 
 //    ExecutionInfoToken subqueryToken = new ExecutionInfoToken();

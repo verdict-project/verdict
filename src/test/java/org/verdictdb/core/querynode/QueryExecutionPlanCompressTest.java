@@ -12,7 +12,7 @@ import org.verdictdb.core.connection.DbmsConnection;
 import org.verdictdb.core.connection.JdbcConnection;
 import org.verdictdb.core.execution.ExecutionTokenQueue;
 import org.verdictdb.core.querynode.AggExecutionNode;
-import org.verdictdb.core.querynode.QueryExecutionNode;
+import org.verdictdb.core.querynode.BaseQueryNode;
 import org.verdictdb.core.querynode.QueryExecutionPlan;
 import org.verdictdb.core.querynode.ola.AggCombinerExecutionNode;
 import org.verdictdb.core.querynode.ola.AsyncAggExecutionNode;
@@ -68,7 +68,7 @@ public class QueryExecutionPlanCompressTest {
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     SelectQuery selectQuery = (SelectQuery) sqlToRelation.toRelation(sql);
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(newSchema, null, selectQuery);
-    QueryExecutionNode copy = queryExecutionPlan.root.deepcopy();
+    BaseQueryNode copy = queryExecutionPlan.root.deepcopy();
     queryExecutionPlan.compress();
     assertEquals(0, queryExecutionPlan.root.dependents.size());
     assertEquals(selectQuery, queryExecutionPlan.root.selectQuery.getFromList().get(0));
@@ -83,7 +83,7 @@ public class QueryExecutionPlanCompressTest {
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     SelectQuery selectQuery = (SelectQuery) sqlToRelation.toRelation(sql);
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(newSchema, null, selectQuery);
-    QueryExecutionNode copy = queryExecutionPlan.root.dependents.get(0).dependents.get(0).deepcopy();
+    BaseQueryNode copy = queryExecutionPlan.root.dependents.get(0).dependents.get(0).deepcopy();
     queryExecutionPlan.compress();
     assertEquals(0, queryExecutionPlan.root.dependents.size());
     assertEquals(selectQuery, queryExecutionPlan.root.selectQuery.getFromList().get(0));
@@ -99,7 +99,7 @@ public class QueryExecutionPlanCompressTest {
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     SelectQuery selectQuery = (SelectQuery) sqlToRelation.toRelation(sql);
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(newSchema, null, selectQuery);
-    QueryExecutionNode copy = queryExecutionPlan.root.dependents.get(0).dependents.get(0).deepcopy();
+    BaseQueryNode copy = queryExecutionPlan.root.dependents.get(0).dependents.get(0).deepcopy();
     queryExecutionPlan.compress();
     assertEquals(0, queryExecutionPlan.root.dependents.size());
     assertEquals(selectQuery, queryExecutionPlan.root.selectQuery.getFromList().get(0));
@@ -127,8 +127,8 @@ public class QueryExecutionPlanCompressTest {
     AggCombinerExecutionNode combiner = AggCombinerExecutionNode.create(queryExecutionPlan, leftNode, rightNode);
     combiner.addBroadcastingQueue(queue);
     AsyncAggExecutionNode asyncAggExecutionNode =
-        AsyncAggExecutionNode.create(queryExecutionPlan, Arrays.<QueryExecutionNode>asList(leftNode, rightNode),
-            Arrays.<QueryExecutionNode>asList(combiner));
+        AsyncAggExecutionNode.create(queryExecutionPlan, Arrays.<BaseQueryNode>asList(leftNode, rightNode),
+            Arrays.<BaseQueryNode>asList(combiner));
     queryExecutionPlan.root.getDependents().remove(0);
     queryExecutionPlan.root.getListeningQueues().remove(0);
     ExecutionTokenQueue q = new ExecutionTokenQueue();
@@ -136,7 +136,7 @@ public class QueryExecutionPlanCompressTest {
     asyncAggExecutionNode.addBroadcastingQueue(q);
     queryExecutionPlan.root.addDependency(asyncAggExecutionNode);
 
-    QueryExecutionNode copy = queryExecutionPlan.root.deepcopy();
+    BaseQueryNode copy = queryExecutionPlan.root.deepcopy();
     queryExecutionPlan.compress();
 
     assertEquals(asyncAggExecutionNode, queryExecutionPlan.root.dependents.get(0));
@@ -160,15 +160,15 @@ public class QueryExecutionPlanCompressTest {
     AggCombinerExecutionNode combiner = AggCombinerExecutionNode.create(queryExecutionPlan, leftNode, rightNode);
     combiner.addBroadcastingQueue(queue);
     AsyncAggExecutionNode asyncAggExecutionNode =
-        AsyncAggExecutionNode.create(null, Arrays.<QueryExecutionNode>asList(leftNode, rightNode),
-            Arrays.<QueryExecutionNode>asList(combiner));
+        AsyncAggExecutionNode.create(null, Arrays.<BaseQueryNode>asList(leftNode, rightNode),
+            Arrays.<BaseQueryNode>asList(combiner));
     queryExecutionPlan.root.dependents.get(0).getDependents().remove(0);
     queryExecutionPlan.root.dependents.get(0).getListeningQueues().remove(0);
     ExecutionTokenQueue q = new ExecutionTokenQueue();
     queryExecutionPlan.root.dependents.get(0).getListeningQueues().add(q);
     asyncAggExecutionNode.addBroadcastingQueue(q);
     queryExecutionPlan.root.dependents.get(0).addDependency(asyncAggExecutionNode);
-    QueryExecutionNode copy = queryExecutionPlan.root.getDependent(0).deepcopy();
+    BaseQueryNode copy = queryExecutionPlan.root.getDependent(0).deepcopy();
     queryExecutionPlan.compress();
 
     SelectQuery compressed = SelectQuery.create(
@@ -199,8 +199,8 @@ public class QueryExecutionPlanCompressTest {
     AggCombinerExecutionNode combiner = AggCombinerExecutionNode.create(queryExecutionPlan, leftNode, rightNode);
     combiner.addBroadcastingQueue(queue);
     AsyncAggExecutionNode asyncAggExecutionNode =
-        AsyncAggExecutionNode.create(null, Arrays.<QueryExecutionNode>asList(leftNode, rightNode),
-            Arrays.<QueryExecutionNode>asList(combiner));
+        AsyncAggExecutionNode.create(null, Arrays.<BaseQueryNode>asList(leftNode, rightNode),
+            Arrays.<BaseQueryNode>asList(combiner));
     queryExecutionPlan.root.dependents.get(0).getDependents().remove(0);
     queryExecutionPlan.root.dependents.get(0).getListeningQueues().remove(0);
     ExecutionTokenQueue q = new ExecutionTokenQueue();
@@ -216,7 +216,7 @@ public class QueryExecutionPlanCompressTest {
     common.addBroadcastingQueue(leftNode.generateListeningQueue());
     rightNode.addDependency(common);
     common.addBroadcastingQueue(rightNode.generateListeningQueue());
-    QueryExecutionNode copy = queryExecutionPlan.root.getDependent(0).deepcopy();
+    BaseQueryNode copy = queryExecutionPlan.root.getDependent(0).deepcopy();
     queryExecutionPlan.compress();
 
     SelectQuery compressed = SelectQuery.create(
