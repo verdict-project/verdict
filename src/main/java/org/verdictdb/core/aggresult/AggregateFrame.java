@@ -10,7 +10,7 @@ import java.util.Set;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
-import org.verdictdb.DbmsQueryResult;
+import org.verdictdb.core.connection.DbmsQueryResult;
 import org.verdictdb.core.rewriter.aggresult.AggNameAndType;
 import org.verdictdb.exception.VerdictDBValueException;
 

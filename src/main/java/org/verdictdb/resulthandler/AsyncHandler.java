@@ -1,6 +1,6 @@
 package org.verdictdb.resulthandler;
 
-import org.verdictdb.DbmsQueryResult;
+import org.verdictdb.core.connection.DbmsQueryResult;
 
 public abstract class AsyncHandler implements Runnable {
 

@@ -6,8 +6,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.verdictdb.DbmsQueryResult;
-
 public class JdbcQueryResult implements DbmsQueryResult {
   
   List<String> columnNames = new ArrayList<>();

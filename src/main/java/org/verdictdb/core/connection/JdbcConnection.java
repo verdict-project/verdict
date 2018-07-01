@@ -9,12 +9,10 @@ import java.util.List;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
-import org.verdictdb.DbmsConnection;
-import org.verdictdb.DbmsQueryResult;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.jdbc41.JdbcResultSet;
-import org.verdictdb.sql.syntax.PostgresqlSyntax;
-import org.verdictdb.sql.syntax.SqlSyntax;
+import org.verdictdb.sqlsyntax.PostgresqlSyntax;
+import org.verdictdb.sqlsyntax.SqlSyntax;
 
 public class JdbcConnection implements DbmsConnection {
   

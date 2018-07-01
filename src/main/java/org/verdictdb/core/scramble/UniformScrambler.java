@@ -3,14 +3,14 @@ package org.verdictdb.core.scramble;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.verdictdb.core.query.AliasedColumn;
-import org.verdictdb.core.query.AsteriskColumn;
-import org.verdictdb.core.query.BaseTable;
-import org.verdictdb.core.query.ColumnOp;
-import org.verdictdb.core.query.ConstantColumn;
-import org.verdictdb.core.query.CreateTableAsSelectQuery;
-import org.verdictdb.core.query.SelectItem;
-import org.verdictdb.core.query.SelectQuery;
+import org.verdictdb.core.sqlobject.AliasedColumn;
+import org.verdictdb.core.sqlobject.AsteriskColumn;
+import org.verdictdb.core.sqlobject.BaseTable;
+import org.verdictdb.core.sqlobject.ColumnOp;
+import org.verdictdb.core.sqlobject.ConstantColumn;
+import org.verdictdb.core.sqlobject.CreateTableAsSelectQuery;
+import org.verdictdb.core.sqlobject.SelectItem;
+import org.verdictdb.core.sqlobject.SelectQuery;
 
 public class UniformScrambler extends Scrambler {
 

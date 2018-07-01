@@ -12,13 +12,13 @@ import java.util.Random;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.verdictdb.core.query.CreateTableAsSelectQuery;
-import org.verdictdb.core.query.SelectQuery;
+import org.verdictdb.core.sqlobject.CreateTableAsSelectQuery;
+import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.exception.VerdictDBException;
-import org.verdictdb.sql.CreateTableToSql;
-import org.verdictdb.sql.SelectQueryToSql;
-import org.verdictdb.sql.syntax.H2Syntax;
-import org.verdictdb.sql.syntax.HiveSyntax;
+import org.verdictdb.sqlreader.CreateTableToSql;
+import org.verdictdb.sqlreader.SelectQueryToSql;
+import org.verdictdb.sqlsyntax.H2Syntax;
+import org.verdictdb.sqlsyntax.HiveSyntax;
 
 public class UniformScramblerTest {
 
