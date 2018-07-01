@@ -2,6 +2,7 @@ package org.verdictdb.core.execution;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.core.connection.JdbcConnection;
@@ -175,6 +176,9 @@ public class AsyncAggAsyncHandlerTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
+    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().dependents.get(0).dependents.get(0)).setScrambleMeta(meta);
+    queryExecutionPlan.setScalingNode();
+
 
     TokenQueueToAyncHandler tokenQueueToAyncHandler = new TokenQueueToAyncHandler(queryExecutionPlan, new ExecutionTokenQueue());
     tokenQueueToAyncHandler.setHandler(new StandardOutputHandler());
