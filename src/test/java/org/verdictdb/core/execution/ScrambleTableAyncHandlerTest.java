@@ -102,9 +102,30 @@ public class ScrambleTableAyncHandlerTest {
   }
 
   @Test
-  public void ScrambleTableTest() throws VerdictDBException,SQLException {
+  public void ScrambleTableTest1() throws VerdictDBException,SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select sum(value) from originalTable_scrambled";
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
+    RelationStandardizer gen = new RelationStandardizer(staticMetaData);
+    relation = gen.standardize((SelectQuery) relation);
+
+    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
+    queryExecutionPlan.cleanUp();
+    queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
+
+    TokenQueueToAyncHandler tokenQueueToAyncHandler = new TokenQueueToAyncHandler(queryExecutionPlan, new ExecutionTokenQueue());
+    tokenQueueToAyncHandler.setHandler(new StandardOutputHandler());
+    stmt.execute("create schema if not exists \"verdictdb_temp\";");
+    queryExecutionPlan.root.executeAndWaitForTermination(new JdbcConnection(conn, new H2Syntax()));
+    tokenQueueToAyncHandler.execute();
+    stmt.execute("drop schema \"verdictdb_temp\" cascade;");
+  }
+
+  @Test
+  public void ScrambleTableTest2() throws VerdictDBException,SQLException {
+    RelationStandardizer.resetItemID();
+    String sql = "select count(s_value) from smallTable where s_value > (select avg(value) from originalTable_scrambled)";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
     RelationStandardizer gen = new RelationStandardizer(staticMetaData);
