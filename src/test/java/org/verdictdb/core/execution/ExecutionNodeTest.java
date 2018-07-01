@@ -10,10 +10,8 @@ import java.util.List;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.verdictdb.connection.DbmsConnection;
-import org.verdictdb.connection.JdbcConnection;
-import org.verdictdb.core.aggresult.AggregateFrame;
-import org.verdictdb.core.execution.ola.AsyncAggExecutionNode;
+import org.verdictdb.DbmsConnection;
+import org.verdictdb.core.connection.JdbcConnection;
 import org.verdictdb.core.query.AliasedColumn;
 import org.verdictdb.core.query.BaseColumn;
 import org.verdictdb.core.query.BaseTable;
@@ -21,11 +19,11 @@ import org.verdictdb.core.query.ColumnOp;
 import org.verdictdb.core.query.CreateTableAsSelectQuery;
 import org.verdictdb.core.query.SelectItem;
 import org.verdictdb.core.query.SelectQuery;
-import org.verdictdb.core.rewriter.ScrambleMeta;
-import org.verdictdb.core.rewriter.ScrambleMetaForTable;
+import org.verdictdb.core.scramble.ScrambleMeta;
+import org.verdictdb.core.scramble.ScrambleMetaForTable;
 import org.verdictdb.core.scramble.UniformScrambler;
-import org.verdictdb.core.sql.CreateTableToSql;
 import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.sql.CreateTableToSql;
 import org.verdictdb.sql.syntax.H2Syntax;
 
 public class ExecutionNodeTest {
@@ -74,7 +72,7 @@ public class ExecutionNodeTest {
     ScrambleMetaForTable tablemeta = scrambler.generateMeta();
     scrambledTable = tablemeta.getTableName();
     meta.insertScrambleMetaEntry(tablemeta);
-    CreateTableAsSelectQuery createQuery = scrambler.scrambledTableCreationQuery();
+    CreateTableAsSelectQuery createQuery = scrambler.createQuery();
     CreateTableToSql createToSql = new CreateTableToSql(new H2Syntax());
     String scrambleSql = createToSql.toSql(createQuery);
     conn.createStatement().execute(String.format("DROP TABLE IF EXISTS \"%s\".\"%s\"", "default", "scrambled_people"));

@@ -20,7 +20,7 @@ public class ExecutionTokenQueue {
   
   public ExecutionInfoToken take() {
     try {
-      return internalQueue.take();
+      return internalQueue.takeFirst();
     } catch (InterruptedException e) {
       e.printStackTrace();
     }
@@ -31,6 +31,10 @@ public class ExecutionTokenQueue {
   public String toString() {
     return new ToStringBuilder(this, ToStringStyle.DEFAULT_STYLE)
         .toString();
+  }
+
+  public ExecutionInfoToken peek() {
+    return internalQueue.peekFirst();
   }
 
 }

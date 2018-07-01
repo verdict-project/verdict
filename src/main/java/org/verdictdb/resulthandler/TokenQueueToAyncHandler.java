@@ -1,15 +1,9 @@
 package org.verdictdb.resulthandler;
 
-import org.verdictdb.connection.DbmsConnection;
-import org.verdictdb.connection.DbmsQueryResult;
+import org.verdictdb.DbmsQueryResult;
 import org.verdictdb.core.execution.ExecutionInfoToken;
 import org.verdictdb.core.execution.ExecutionTokenQueue;
-import org.verdictdb.core.execution.QueryExecutionNode;
 import org.verdictdb.core.execution.QueryExecutionPlan;
-import org.verdictdb.exception.VerdictDBException;
-import org.verdictdb.resulthandler.AsyncHandler;
-
-import java.util.List;
 
 public class TokenQueueToAyncHandler {
 
@@ -33,7 +27,10 @@ public class TokenQueueToAyncHandler {
       handler.handle(queryResult);
     }
     result = listeningQueue.poll();
-    while (result!=null) {
+    while (result != null) {
+      if (result.isFailureToken() || result.isSuccessToken()) {
+        break;
+      }
       DbmsQueryResult queryResult = (DbmsQueryResult) result.getValue("queryResult");
       handler.handle(queryResult);
       result = listeningQueue.poll();

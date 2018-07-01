@@ -3,12 +3,11 @@ package org.verdictdb.core.execution;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Arrays;
-import java.util.concurrent.LinkedBlockingDeque;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.verdictdb.connection.DbmsConnection;
-import org.verdictdb.connection.JdbcConnection;
+import org.verdictdb.DbmsConnection;
+import org.verdictdb.core.connection.JdbcConnection;
 import org.verdictdb.core.query.AsteriskColumn;
 import org.verdictdb.core.query.BaseTable;
 import org.verdictdb.core.query.SelectItem;

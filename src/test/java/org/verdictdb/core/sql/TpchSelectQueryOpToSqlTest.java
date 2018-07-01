@@ -22,6 +22,7 @@ import org.verdictdb.core.query.SelectQuery;
 import org.verdictdb.core.query.SubqueryColumn;
 import org.verdictdb.core.query.UnnamedColumn;
 import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.sql.SelectQueryToSql;
 import org.verdictdb.sql.syntax.HiveSyntax;
 
 public class TpchSelectQueryOpToSqlTest {
@@ -1160,7 +1161,7 @@ public class TpchSelectQueryOpToSqlTest {
   public void Query13Test() throws VerdictDBException {
     BaseTable customer = new BaseTable("tpch", "customer", "c");
     BaseTable orders = new BaseTable("tpch", "orders", "o");
-    JoinTable join = JoinTable.getJoinTable(Arrays.<AbstractRelation>asList(customer, orders),
+    JoinTable join = JoinTable.create(Arrays.<AbstractRelation>asList(customer, orders),
         Arrays.<JoinTable.JoinType>asList(JoinTable.JoinType.leftouter),
         Arrays.<UnnamedColumn>asList(new ColumnOp("and", Arrays.<UnnamedColumn>asList(
             new ColumnOp("equal", Arrays.<UnnamedColumn>asList(

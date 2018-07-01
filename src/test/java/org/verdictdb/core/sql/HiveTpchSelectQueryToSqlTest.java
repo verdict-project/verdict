@@ -1,22 +1,38 @@
 package org.verdictdb.core.sql;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
-import com.klarna.hiverunner.HiveShell;
-import com.klarna.hiverunner.StandaloneHiveRunner;
-import com.klarna.hiverunner.annotations.HiveSQL;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.verdictdb.core.query.*;
-import org.verdictdb.exception.VerdictDBException;
-import org.verdictdb.sql.syntax.HiveSyntax;
+import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.verdictdb.core.query.AbstractRelation;
+import org.verdictdb.core.query.AliasReference;
+import org.verdictdb.core.query.AliasedColumn;
+import org.verdictdb.core.query.AsteriskColumn;
+import org.verdictdb.core.query.BaseColumn;
+import org.verdictdb.core.query.BaseTable;
+import org.verdictdb.core.query.ColumnOp;
+import org.verdictdb.core.query.ConstantColumn;
+import org.verdictdb.core.query.GroupingAttribute;
+import org.verdictdb.core.query.JoinTable;
+import org.verdictdb.core.query.OrderbyAttribute;
+import org.verdictdb.core.query.SelectItem;
+import org.verdictdb.core.query.SelectQuery;
+import org.verdictdb.core.query.SubqueryColumn;
+import org.verdictdb.core.query.UnnamedColumn;
+import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.sql.SelectQueryToSql;
+import org.verdictdb.sql.syntax.HiveSyntax;
+
+import com.google.common.base.Charsets;
+import com.google.common.io.Files;
+import com.klarna.hiverunner.HiveShell;
+import com.klarna.hiverunner.StandaloneHiveRunner;
+import com.klarna.hiverunner.annotations.HiveSQL;
 
 @RunWith(StandaloneHiveRunner.class)
 public class HiveTpchSelectQueryToSqlTest {
@@ -841,7 +857,7 @@ public class HiveTpchSelectQueryToSqlTest {
     public void Query13Test() throws VerdictDBException {
         BaseTable customer = new BaseTable("tpch", "customer", "c");
         BaseTable orders = new BaseTable("tpch", "orders", "o");
-        JoinTable join = JoinTable.getJoinTable(Arrays.<AbstractRelation>asList(customer, orders),
+        JoinTable join = JoinTable.create(Arrays.<AbstractRelation>asList(customer, orders),
                 Arrays.<JoinTable.JoinType>asList(JoinTable.JoinType.leftouter),
                 Arrays.<UnnamedColumn>asList(new ColumnOp("and", Arrays.<UnnamedColumn>asList(
                         new ColumnOp("equal", Arrays.<UnnamedColumn>asList(

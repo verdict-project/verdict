@@ -2,9 +2,10 @@ package org.verdictdb.core.execution;
 
 import java.util.List;
 
-import org.verdictdb.connection.DbmsConnection;
+import org.verdictdb.DbmsConnection;
 import org.verdictdb.core.query.SelectQuery;
 import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.exception.VerdictDBValueException;
 
 public class ProjectionExecutionNode extends CreateTableAsSelectExecutionNode {
 
@@ -12,7 +13,7 @@ public class ProjectionExecutionNode extends CreateTableAsSelectExecutionNode {
     super(plan);
   }
   
-  public static ProjectionExecutionNode create(QueryExecutionPlan plan, SelectQuery query) {
+  public static ProjectionExecutionNode create(QueryExecutionPlan plan, SelectQuery query) throws VerdictDBValueException {
     ProjectionExecutionNode node = new ProjectionExecutionNode(plan);
     SubqueriesToDependentNodes.convertSubqueriesToDependentNodes(query, node);
     node.setSelectQuery(query);

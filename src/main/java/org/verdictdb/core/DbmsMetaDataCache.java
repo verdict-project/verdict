@@ -1,20 +1,19 @@
 package org.verdictdb.core;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
-import org.verdictdb.connection.DbmsConnection;
-import org.verdictdb.connection.MetaDataProvider;
+import org.verdictdb.DbmsConnection;
+import org.verdictdb.MetaDataProvider;
 import org.verdictdb.exception.VerdictDBDbmsException;
-import org.verdictdb.sql.syntax.SyntaxAbstract;
+import org.verdictdb.sql.syntax.SqlSyntax;
 
 public class DbmsMetaDataCache implements MetaDataProvider {
 
-  private SyntaxAbstract syntax;
+  private SqlSyntax syntax;
 
   private DbmsConnection connection;
 

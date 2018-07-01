@@ -1,7 +1,5 @@
 package org.verdictdb.core.scramble;
 
-import org.verdictdb.core.rewriter.ScrambleMetaForTable;
-
 public class Scrambler {
   
   String originalSchemaName;

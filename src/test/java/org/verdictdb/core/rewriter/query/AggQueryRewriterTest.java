@@ -16,10 +16,10 @@ import org.verdictdb.core.query.ColumnOp;
 import org.verdictdb.core.query.SelectItem;
 import org.verdictdb.core.query.SelectQuery;
 import org.verdictdb.core.rewriter.AliasRenamingRules;
-import org.verdictdb.core.rewriter.ScrambleMeta;
+import org.verdictdb.core.scramble.ScrambleMeta;
 import org.verdictdb.core.scramble.Scrambler;
-import org.verdictdb.core.sql.SelectQueryToSql;
 import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.sql.SelectQueryToSql;
 import org.verdictdb.sql.syntax.HiveSyntax;
 
 public class AggQueryRewriterTest {

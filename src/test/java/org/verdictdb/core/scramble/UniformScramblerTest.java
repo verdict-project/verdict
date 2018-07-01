@@ -14,10 +14,9 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.core.query.CreateTableAsSelectQuery;
 import org.verdictdb.core.query.SelectQuery;
-import org.verdictdb.core.rewriter.ScrambleMetaForTable;
-import org.verdictdb.core.sql.CreateTableToSql;
-import org.verdictdb.core.sql.SelectQueryToSql;
 import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.sql.CreateTableToSql;
+import org.verdictdb.sql.SelectQueryToSql;
 import org.verdictdb.sql.syntax.H2Syntax;
 import org.verdictdb.sql.syntax.HiveSyntax;
 
@@ -74,7 +73,7 @@ public class UniformScramblerTest {
     int aggBlockCount = 10;
     UniformScrambler scrambler =
         new UniformScrambler(originalSchema, originalTable, newSchema, newTable, aggBlockCount);
-    CreateTableAsSelectQuery createQuery = scrambler.scrambledTableCreationQuery();
+    CreateTableAsSelectQuery createQuery = scrambler.createQuery();
 
     ScrambleMetaForTable meta = scrambler.generateMeta();
     meta.getAggregationBlockColumn();
@@ -96,7 +95,7 @@ public class UniformScramblerTest {
     int aggBlockCount = 1;
     UniformScrambler scrambler =
         new UniformScrambler(originalSchema, originalTable, newSchema, newTable, aggBlockCount);
-    CreateTableAsSelectQuery createQuery = scrambler.scrambledTableCreationQuery();
+    CreateTableAsSelectQuery createQuery = scrambler.createQuery();
     CreateTableToSql createToSql = new CreateTableToSql(new H2Syntax());
     String scrambleSql = createToSql.toSql(createQuery);
     conn.createStatement().execute(String.format("DROP TABLE IF EXISTS \"%s\".\"%s\"", newSchema, newTable));
@@ -116,7 +115,7 @@ public class UniformScramblerTest {
     int aggBlockCount = 2;
     UniformScrambler scrambler =
         new UniformScrambler(originalSchema, originalTable, newSchema, newTable, aggBlockCount);
-    CreateTableAsSelectQuery createQuery = scrambler.scrambledTableCreationQuery();
+    CreateTableAsSelectQuery createQuery = scrambler.createQuery();
     CreateTableToSql createToSql = new CreateTableToSql(new H2Syntax());
     String scrambleSql = createToSql.toSql(createQuery);
     conn.createStatement().execute(String.format("DROP TABLE IF EXISTS \"%s\".\"%s\"", newSchema, newTable));

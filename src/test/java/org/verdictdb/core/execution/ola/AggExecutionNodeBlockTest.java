@@ -1,20 +1,18 @@
 package org.verdictdb.core.execution.ola;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Random;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.verdictdb.connection.JdbcConnection;
+import org.verdictdb.core.connection.JdbcConnection;
 import org.verdictdb.core.execution.AggExecutionNode;
 import org.verdictdb.core.execution.QueryExecutionNode;
 import org.verdictdb.core.execution.QueryExecutionPlan;
@@ -23,14 +21,12 @@ import org.verdictdb.core.query.BaseTable;
 import org.verdictdb.core.query.ColumnOp;
 import org.verdictdb.core.query.CreateTableAsSelectQuery;
 import org.verdictdb.core.query.SelectQuery;
-import org.verdictdb.core.rewriter.ScrambleMeta;
-import org.verdictdb.core.rewriter.ScrambleMetaForTable;
-import org.verdictdb.core.scramble.Scrambler;
+import org.verdictdb.core.scramble.ScrambleMeta;
+import org.verdictdb.core.scramble.ScrambleMetaForTable;
 import org.verdictdb.core.scramble.UniformScrambler;
-import org.verdictdb.core.sql.QueryToSql;
-import org.verdictdb.core.sql.SelectQueryToSql;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBValueException;
+import org.verdictdb.sql.QueryToSql;
 import org.verdictdb.sql.syntax.H2Syntax;
 
 public class AggExecutionNodeBlockTest {
@@ -47,6 +43,8 @@ public class AggExecutionNodeBlockTest {
   
   static ScrambleMeta scrambleMeta = new ScrambleMeta();
   
+  static int aggBlockCount = 3;
+  
   @BeforeClass
   public static void setupH2Database() throws SQLException, VerdictDBException {
     final String DB_CONNECTION = "jdbc:h2:mem:aggexecnodeblocktest;DB_CLOSE_DELAY=-1";
@@ -58,10 +56,9 @@ public class AggExecutionNodeBlockTest {
     populateRandomData(conn, originalSchema, originalTable);
     
     // create scrambled table
-    int aggBlockCount = 2;
     UniformScrambler scrambler =
         new UniformScrambler(originalSchema, originalTable, newSchema, newTable, aggBlockCount);
-    CreateTableAsSelectQuery createQuery = scrambler.scrambledTableCreationQuery();
+    CreateTableAsSelectQuery createQuery = scrambler.createQuery();
     String scrambleSql = QueryToSql.convert(new H2Syntax(), createQuery);
     conn.createStatement().execute(scrambleSql);
     ScrambleMetaForTable metaEntry = scrambler.generateMeta();
@@ -84,25 +81,38 @@ public class AggExecutionNodeBlockTest {
     
     AggExecutionNode aggnode = AggExecutionNode.create(plan, aggQuery);
     AggExecutionNodeBlock block = new AggExecutionNodeBlock(plan, aggnode);
-    QueryExecutionNode converted = block.convertToProgressiveAgg();
+    QueryExecutionNode converted = block.convertToProgressiveAgg();   // AsyncAggregation
     converted.print();
     assertTrue(converted instanceof AsyncAggExecutionNode);
+    
     assertTrue(converted.getDependent(0) instanceof AggExecutionNode);
-    assertTrue(converted.getDependent(1) instanceof AggCombinerExecutionNode);
-    assertTrue(converted.getDependent(1).getDependent(0) instanceof AggExecutionNode);
-    assertTrue(converted.getDependent(1).getDependent(1) instanceof AggExecutionNode);
+    for (int i = 1; i < aggBlockCount; i++) {
+      assertTrue(converted.getDependent(i) instanceof AggCombinerExecutionNode);
+      if (i == 1) {
+        assertTrue(converted.getDependent(i).getDependent(0) instanceof AggExecutionNode);
+        assertTrue(converted.getDependent(i).getDependent(1) instanceof AggExecutionNode);
+      } else {
+        assertTrue(converted.getDependent(i).getDependent(0) instanceof AggCombinerExecutionNode);
+        assertTrue(converted.getDependent(i).getDependent(1) instanceof AggExecutionNode);
+      }
+    }
     assertEquals("initialized", converted.getStatus());
     assertEquals("initialized", converted.getDependent(0).getStatus());
-    assertEquals("initialized", converted.getDependent(1).getStatus());
-    assertEquals("initialized", converted.getDependent(1).getDependent(0).getStatus());
-    assertEquals("initialized", converted.getDependent(1).getDependent(1).getStatus());
-    converted.execute(new JdbcConnection(conn, new H2Syntax()));
+    for (int i = 1; i < aggBlockCount; i++) {
+      assertEquals("initialized", converted.getDependent(i).getStatus());
+      assertEquals("initialized", converted.getDependent(i).getDependent(0).getStatus());
+      assertEquals("initialized", converted.getDependent(i).getDependent(1).getStatus());
+    }
+    converted.executeAndWaitForTermination(new JdbcConnection(conn, new H2Syntax()));
+    converted.print();
+    
     assertEquals("success", converted.getStatus());
     assertEquals("success", converted.getDependent(0).getStatus());
-    assertEquals("success", converted.getDependent(1).getStatus());
-    assertEquals("success", converted.getDependent(1).getDependent(0).getStatus());
-    assertEquals("success", converted.getDependent(1).getDependent(1).getStatus());
-    converted.print();
+    for (int i = 1; i < aggBlockCount; i++) {
+      assertEquals("success", converted.getDependent(i).getStatus());
+      assertEquals("success", converted.getDependent(i).getDependent(0).getStatus());
+      assertEquals("success", converted.getDependent(i).getDependent(1).getStatus());
+    }
   }
   
   // the origiinal query does not include any scrambled tables; thus, it must not be converted to any other

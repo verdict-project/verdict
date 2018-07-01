@@ -97,6 +97,10 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
     this.operands = operands;
   }
 
+  public void setOperand(Integer index, UnnamedColumn operand) {
+    this.operands.set(index, operand);
+  }
+
   public String getOpType() {
     return opType;
   }
@@ -132,6 +136,10 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
 
   public static ColumnOp add(UnnamedColumn column1, UnnamedColumn column2) {
     return new ColumnOp("add", Arrays.asList(column1, column2));
+  }
+  
+  public static ColumnOp subtract(UnnamedColumn column1, UnnamedColumn column2) {
+    return new ColumnOp("subtract", Arrays.asList(column1, column2));
   }
 
   public static ColumnOp multiply(UnnamedColumn column1, UnnamedColumn column2) {

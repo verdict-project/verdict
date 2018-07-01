@@ -5,7 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.verdictdb.connection.DbmsConnection;
+import org.verdictdb.DbmsConnection;
 import org.verdictdb.core.execution.CreateTableAsSelectExecutionNode;
 import org.verdictdb.core.execution.ExecutionInfoToken;
 import org.verdictdb.core.execution.ExecutionTokenQueue;
@@ -19,6 +19,7 @@ import org.verdictdb.core.query.ColumnOp;
 import org.verdictdb.core.query.SelectItem;
 import org.verdictdb.core.query.SelectQuery;
 import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.exception.VerdictDBValueException;
 
 public class AggCombinerExecutionNode extends CreateTableAsSelectExecutionNode {
 
@@ -29,7 +30,7 @@ public class AggCombinerExecutionNode extends CreateTableAsSelectExecutionNode {
   public static AggCombinerExecutionNode create(
       QueryExecutionPlan plan,
       QueryExecutionNode leftQueryExecutionNode,
-      QueryExecutionNode rightQueryExecutionNode) {
+      QueryExecutionNode rightQueryExecutionNode) throws VerdictDBValueException {
     AggCombinerExecutionNode node = new AggCombinerExecutionNode(plan);
     
 //    SelectQuery leftQuery = queryExecutionNode.getSelectQuery();
@@ -84,6 +85,13 @@ public class AggCombinerExecutionNode extends CreateTableAsSelectExecutionNode {
   public ExecutionInfoToken executeNode(DbmsConnection conn, List<ExecutionInfoToken> downstreamResults) 
       throws VerdictDBException {
     ExecutionInfoToken token = super.executeNode(conn, downstreamResults);
+    /*
+    List<HyperTableCube> cubes = new ArrayList<>();
+    for (ExecutionInfoToken downstreamResult:downstreamResults) {
+      cubes.addAll((List<HyperTableCube>) downstreamResult.getValue("hyperTableCube"));
+    }
+    token.setKeyValue("hyperTableCube", cubes);
+    */
     return token;
   }
 

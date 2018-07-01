@@ -11,8 +11,8 @@ import java.util.Random;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.verdictdb.connection.DbmsQueryResult;
-import org.verdictdb.connection.JdbcConnection;
+import org.verdictdb.DbmsQueryResult;
+import org.verdictdb.core.connection.JdbcConnection;
 import org.verdictdb.core.query.AbstractRelation;
 import org.verdictdb.core.query.AliasedColumn;
 import org.verdictdb.core.query.BaseColumn;
@@ -21,12 +21,12 @@ import org.verdictdb.core.query.ColumnOp;
 import org.verdictdb.core.query.CreateTableAsSelectQuery;
 import org.verdictdb.core.query.SelectItem;
 import org.verdictdb.core.query.SelectQuery;
-import org.verdictdb.core.rewriter.ScrambleMeta;
+import org.verdictdb.core.scramble.ScrambleMeta;
 import org.verdictdb.core.scramble.Scrambler;
 import org.verdictdb.core.scramble.UniformScrambler;
-import org.verdictdb.core.sql.CreateTableToSql;
-import org.verdictdb.core.sql.SelectQueryToSql;
 import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.sql.CreateTableToSql;
+import org.verdictdb.sql.SelectQueryToSql;
 import org.verdictdb.sql.syntax.H2Syntax;
 
 public class AggQueryRewriterJdbcTest {
@@ -55,7 +55,7 @@ public class AggQueryRewriterJdbcTest {
     
     UniformScrambler scrambler =
         new UniformScrambler(originalSchema, originalTable, newSchema, newTable, aggblockCount);
-    CreateTableAsSelectQuery createQuery = scrambler.scrambledTableCreationQuery();
+    CreateTableAsSelectQuery createQuery = scrambler.createQuery();
     CreateTableToSql createToSql = new CreateTableToSql(new H2Syntax());
     String scrambleSql = createToSql.toSql(createQuery);
     conn.createStatement().execute(String.format("DROP TABLE IF EXISTS \"%s\".\"%s\"", newSchema, newTable));

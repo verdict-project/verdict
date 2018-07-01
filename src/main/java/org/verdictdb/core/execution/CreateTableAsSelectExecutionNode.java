@@ -3,11 +3,12 @@ package org.verdictdb.core.execution;
 import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.verdictdb.connection.DbmsConnection;
+import org.verdictdb.DbmsConnection;
 import org.verdictdb.core.query.CreateTableAsSelectQuery;
 import org.verdictdb.core.query.SelectQuery;
-import org.verdictdb.core.sql.QueryToSql;
 import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.exception.VerdictDBValueException;
+import org.verdictdb.sql.QueryToSql;
 
 public class CreateTableAsSelectExecutionNode extends QueryExecutionNodeWithPlaceHolders {
   
@@ -36,7 +37,7 @@ public class CreateTableAsSelectExecutionNode extends QueryExecutionNodeWithPlac
 //    this.newTableName = tableName;
 //  }
   
-  public static CreateTableAsSelectExecutionNode create(QueryExecutionPlan plan, SelectQuery query) {
+  public static CreateTableAsSelectExecutionNode create(QueryExecutionPlan plan, SelectQuery query) throws VerdictDBValueException {
     CreateTableAsSelectExecutionNode node = new CreateTableAsSelectExecutionNode(plan);
     node.setSelectQuery(query);
     return node;
@@ -60,12 +61,8 @@ public class CreateTableAsSelectExecutionNode extends QueryExecutionNodeWithPlac
     String newTableName = tempTableFullName.getRight();
     CreateTableAsSelectQuery createQuery = new CreateTableAsSelectQuery(newTableSchemaName, newTableName, selectQuery);
     
-    try {
-      String sql = QueryToSql.convert(conn.getSyntax(), createQuery);
-      conn.executeUpdate(sql);
-    } catch (VerdictDBException e) {
-      e.printStackTrace();
-    }
+    String sql = QueryToSql.convert(conn.getSyntax(), createQuery);
+    conn.executeUpdate(sql);
     
     // write the result
     ExecutionInfoToken result = new ExecutionInfoToken();

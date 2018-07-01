@@ -4,8 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.verdictdb.connection.DbmsConnection;
-import org.verdictdb.core.query.AbstractRelation;
+import org.verdictdb.DbmsConnection;
 import org.verdictdb.core.query.BaseTable;
 import org.verdictdb.core.query.SelectQuery;
 import org.verdictdb.core.query.SubqueryColumn;
@@ -27,7 +26,7 @@ public abstract class QueryExecutionNodeWithPlaceHolders extends QueryExecutionN
     super(plan, query);
   }
   
-  public Pair<BaseTable, ExecutionTokenQueue> createPlaceHolderTable(String aliasName) {
+  public Pair<BaseTable, ExecutionTokenQueue> createPlaceHolderTable(String aliasName) throws VerdictDBValueException {
     BaseTable table = new BaseTable("placeholderSchemaName", "placeholderTableName", aliasName);
     placeholderTables.add(table);
     ExecutionTokenQueue listeningQueue = generateListeningQueue();
@@ -59,5 +58,10 @@ public abstract class QueryExecutionNodeWithPlaceHolders extends QueryExecutionN
 
   public List<SubqueryColumn> getPlaceholderTablesinFilter() {
     return placeholderTablesinFilter;
+  }
+  
+  void copyFields(QueryExecutionNodeWithPlaceHolders from, QueryExecutionNodeWithPlaceHolders to) {
+    super.copyFields(from, to);
+    to.placeholderTables = from.placeholderTables;
   }
 }

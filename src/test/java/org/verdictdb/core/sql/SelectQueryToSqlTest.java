@@ -16,6 +16,7 @@ import org.verdictdb.core.query.SelectItem;
 import org.verdictdb.core.query.SelectQuery;
 import org.verdictdb.core.query.UnnamedColumn;
 import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.sql.SelectQueryToSql;
 import org.verdictdb.sql.syntax.HiveSyntax;
 
 public class SelectQueryToSqlTest {

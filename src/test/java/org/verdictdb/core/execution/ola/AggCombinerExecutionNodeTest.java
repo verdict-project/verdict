@@ -1,18 +1,15 @@
 package org.verdictdb.core.execution.ola;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
-import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.Random;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.verdictdb.connection.DbmsConnection;
-import org.verdictdb.connection.DbmsQueryResult;
-import org.verdictdb.connection.JdbcConnection;
+import org.verdictdb.DbmsConnection;
+import org.verdictdb.DbmsQueryResult;
+import org.verdictdb.core.connection.JdbcConnection;
 import org.verdictdb.core.execution.AggExecutionNode;
 import org.verdictdb.core.execution.ExecutionInfoToken;
 import org.verdictdb.core.execution.ExecutionTokenQueue;
@@ -25,9 +22,10 @@ import org.verdictdb.core.query.ColumnOp;
 import org.verdictdb.core.query.ConstantColumn;
 import org.verdictdb.core.query.DropTableQuery;
 import org.verdictdb.core.query.SelectQuery;
-import org.verdictdb.core.sql.QueryToSql;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.exception.VerdictDBValueException;
+import org.verdictdb.sql.QueryToSql;
 import org.verdictdb.sql.syntax.H2Syntax;
 
 public class AggCombinerExecutionNodeTest {
@@ -52,7 +50,7 @@ public class AggCombinerExecutionNodeTest {
   }
 
   @Test
-  public void testSingleAggCombining() {
+  public void testSingleAggCombining() throws VerdictDBValueException {
     QueryExecutionPlan plan = new QueryExecutionPlan("newschema");
     
     BaseTable base = new BaseTable("myschema", "mytable", "t");
@@ -69,6 +67,7 @@ public class AggCombinerExecutionNodeTest {
     assertEquals(combiner.getListeningQueue(1), rightNode.getBroadcastingQueue(0));
   }
   
+  // Test if the combined answer is identical to the original answer
   @Test
   public void testSingleAggCombiningWithH2() throws VerdictDBDbmsException, VerdictDBException {
     QueryExecutionPlan plan = new QueryExecutionPlan("newschema");
@@ -84,8 +83,9 @@ public class AggCombinerExecutionNodeTest {
     
     ExecutionTokenQueue queue = new ExecutionTokenQueue();
     AggCombinerExecutionNode combiner = AggCombinerExecutionNode.create(plan, leftNode, rightNode);
+    combiner.print();
     combiner.addBroadcastingQueue(queue);
-    combiner.execute(conn);
+    combiner.executeAndWaitForTermination(conn);
     
     ExecutionInfoToken token = queue.take();
     String schemaName = (String) token.getValue("schemaName");

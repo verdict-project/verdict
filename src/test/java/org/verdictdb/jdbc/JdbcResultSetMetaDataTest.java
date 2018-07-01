@@ -5,21 +5,24 @@ import static java.sql.Types.DOUBLE;
 import static java.sql.Types.VARCHAR;
 import static org.junit.Assert.assertEquals;
 
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.verdictdb.connection.JdbcQueryResult;
-import org.verdictdb.core.aggresult.AggregateFrame;
-import org.verdictdb.core.aggresult.AggregateFrameQueryResult;
-import org.verdictdb.core.rewriter.aggresult.AggNameAndType;
-import org.verdictdb.exception.VerdictDBValueException;
-
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.verdictdb.core.aggresult.AggregateFrame;
+import org.verdictdb.core.aggresult.AggregateFrameQueryResult;
+import org.verdictdb.core.connection.JdbcQueryResult;
+import org.verdictdb.core.rewriter.aggresult.AggNameAndType;
+import org.verdictdb.exception.VerdictDBValueException;
+import org.verdictdb.jdbc41.JdbcResultSetMetaData;
 
 public class JdbcResultSetMetaDataTest {
 
