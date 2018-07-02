@@ -7,9 +7,6 @@ import java.util.Arrays;
 
 import org.junit.Test;
 import org.verdictdb.core.connection.DbmsConnection;
-import org.verdictdb.core.querying.AggExecutionNode;
-import org.verdictdb.core.querying.BaseQueryNode;
-import org.verdictdb.core.querying.QueryExecutionPlan;
 import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.core.scrambling.Scrambler;
 import org.verdictdb.core.sqlobject.AliasReference;

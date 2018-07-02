@@ -3,7 +3,6 @@ package org.verdictdb.core.querying;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.verdictdb.core.connection.DbmsConnection;
 import org.verdictdb.core.connection.DbmsQueryResult;
 import org.verdictdb.core.execution.ExecutionInfoToken;
 import org.verdictdb.core.querying.ola.HyperTableCube;

@@ -3,7 +3,6 @@ package org.verdictdb.core.querying;
 import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.verdictdb.core.connection.DbmsConnection;
 import org.verdictdb.core.connection.DbmsQueryResult;
 import org.verdictdb.core.execution.ExecutionInfoToken;
 import org.verdictdb.core.execution.ExecutionTokenQueue;
@@ -13,7 +12,6 @@ import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.core.sqlobject.SqlConvertable;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBValueException;
-import org.verdictdb.sqlreader.QueryToSql;
 
 /**
  * 

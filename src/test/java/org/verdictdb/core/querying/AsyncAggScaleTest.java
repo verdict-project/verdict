@@ -19,8 +19,6 @@ import org.junit.Test;
 import org.verdictdb.core.connection.JdbcConnection;
 import org.verdictdb.core.connection.StaticMetaData;
 import org.verdictdb.core.execution.ExecutablePlanRunner;
-import org.verdictdb.core.querying.AggExecutionNode;
-import org.verdictdb.core.querying.QueryExecutionPlan;
 import org.verdictdb.core.querying.ola.AsyncAggExecutionNode;
 import org.verdictdb.core.querying.ola.AsyncQueryExecutionPlan;
 import org.verdictdb.core.querying.ola.Dimension;

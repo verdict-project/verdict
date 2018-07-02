@@ -2,7 +2,6 @@ package org.verdictdb.core.connection;
 
 import java.sql.Connection;
 
-import org.verdictdb.core.sqlobject.SqlConvertable;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.sqlsyntax.SqlSyntax;
 

@@ -9,7 +9,6 @@ import org.apache.commons.lang3.tuple.Triple;
 import org.verdictdb.core.execution.ExecutionTokenQueue;
 import org.verdictdb.core.querying.AggExecutionNode;
 import org.verdictdb.core.querying.BaseQueryNode;
-import org.verdictdb.core.querying.QueryExecutionPlan;
 import org.verdictdb.core.querying.TempIdCreator;
 import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.core.sqlobject.AbstractRelation;

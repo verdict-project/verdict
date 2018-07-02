@@ -8,8 +8,6 @@ import org.junit.Test;
 import org.verdictdb.core.connection.DbmsConnection;
 import org.verdictdb.core.connection.JdbcConnection;
 import org.verdictdb.core.execution.ExecutablePlanRunner;
-import org.verdictdb.core.execution.ExecutionTokenQueue;
-import org.verdictdb.core.querying.QueryExecutionPlan;
 import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.exception.VerdictDBException;

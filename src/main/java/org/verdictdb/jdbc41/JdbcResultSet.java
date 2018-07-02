@@ -32,7 +32,6 @@ import java.util.Map;
 import org.verdictdb.core.connection.DataTypeConverter;
 import org.verdictdb.core.connection.DbmsQueryResult;
 import org.verdictdb.exception.VerdictDBTypeException;
-import org.verdictdb.jdbc41.JdbcResultSetMetaData;
 
 public class JdbcResultSet implements ResultSet {
 

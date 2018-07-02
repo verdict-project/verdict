@@ -1,6 +1,5 @@
 package org.verdictdb.core.querying.ola;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.sql.Connection;
@@ -18,9 +17,6 @@ import org.verdictdb.core.querying.AggExecutionNode;
 import org.verdictdb.core.querying.BaseQueryNode;
 import org.verdictdb.core.querying.QueryExecutionPlan;
 import org.verdictdb.core.querying.SimpleTreePlan;
-import org.verdictdb.core.querying.ola.AggCombinerExecutionNode;
-import org.verdictdb.core.querying.ola.AggExecutionNodeBlock;
-import org.verdictdb.core.querying.ola.AsyncAggExecutionNode;
 import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.core.scrambling.ScrambleMetaForTable;
 import org.verdictdb.core.scrambling.UniformScrambler;

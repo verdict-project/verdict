@@ -7,8 +7,6 @@ import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
-import org.verdictdb.core.querying.ola.Dimension;
-import org.verdictdb.core.querying.ola.HyperTableCube;
 import org.verdictdb.exception.VerdictDBValueException;
 
 public class HyperTableCubeTest {

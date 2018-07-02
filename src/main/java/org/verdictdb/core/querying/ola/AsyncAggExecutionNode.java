@@ -10,12 +10,10 @@ package org.verdictdb.core.querying.ola;
 
 import java.util.List;
 
-import org.verdictdb.core.connection.DbmsConnection;
 import org.verdictdb.core.connection.DbmsQueryResult;
 import org.verdictdb.core.execution.ExecutionInfoToken;
 import org.verdictdb.core.execution.ExecutionTokenQueue;
 import org.verdictdb.core.querying.BaseQueryNode;
-import org.verdictdb.core.querying.QueryExecutionPlan;
 import org.verdictdb.core.querying.TempIdCreator;
 import org.verdictdb.core.rewriter.aggresult.AggNameAndType;
 import org.verdictdb.core.scrambling.ScrambleMeta;

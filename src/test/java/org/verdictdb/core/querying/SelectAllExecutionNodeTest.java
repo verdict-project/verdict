@@ -11,14 +11,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.core.connection.DbmsConnection;
 import org.verdictdb.core.connection.JdbcConnection;
-import org.verdictdb.core.execution.ExecutableNodeRunner;
 import org.verdictdb.core.execution.ExecutablePlanRunner;
-import org.verdictdb.core.execution.ExecutionInfoToken;
-import org.verdictdb.core.execution.ExecutionTokenQueue;
-import org.verdictdb.core.querying.QueryExecutionPlan;
-import org.verdictdb.core.querying.SelectAllExecutionNode;
-import org.verdictdb.core.querying.SimpleTreePlan;
-import org.verdictdb.core.querying.TempIdCreatorInScratchPadSchema;
 import org.verdictdb.core.sqlobject.AliasedColumn;
 import org.verdictdb.core.sqlobject.BaseColumn;
 import org.verdictdb.core.sqlobject.BaseTable;
@@ -28,7 +21,6 @@ import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.core.sqlobject.SubqueryColumn;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.exception.VerdictDBException;
-import org.verdictdb.resulthandler.StandardOutputPrinter;
 import org.verdictdb.sqlsyntax.H2Syntax;
 
 public class SelectAllExecutionNodeTest {

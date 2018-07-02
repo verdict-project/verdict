@@ -26,7 +26,6 @@ import org.verdictdb.core.aggresult.AggregateFrameQueryResult;
 import org.verdictdb.core.connection.JdbcQueryResult;
 import org.verdictdb.core.rewriter.aggresult.AggNameAndType;
 import org.verdictdb.exception.VerdictDBValueException;
-import org.verdictdb.jdbc41.JdbcResultSet;
 
 public class JdbcResultSetTest {
 

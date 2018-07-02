@@ -1,6 +1,6 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.verdictdb</groupId>
     <artifactId>verdictdb</artifactId>
@@ -102,20 +102,6 @@
                     <argLine>-Xmx2048m -XX:MaxPermSize=512m</argLine>
                 </configuration>
             </plugin>
-            <!--&lt;!&ndash; Spark test support &ndash;&gt; -->
-            <!--<plugin> -->
-            <!--<groupId>org.apache.maven.plugins</groupId> -->
-            <!--<artifactId>maven-jar-plugin</artifactId> -->
-            <!--<version>3.0.2</version> -->
-            <!--<executions> -->
-            <!--<execution> -->
-            <!--<phase>package</phase> -->
-            <!--<goals> -->
-            <!--<goal>test-jar</goal> -->
-            <!--</goals> -->
-            <!--</execution> -->
-            <!--</executions> -->
-            <!--</plugin> -->
         </plugins>
     </build>
 
@@ -134,6 +120,12 @@
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
             <version>${google.guava.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-core_2.11</artifactId>
+            <version>2.1.0</version>
+            <scope>provided</scope>
         </dependency>
 
 

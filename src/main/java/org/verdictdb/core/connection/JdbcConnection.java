@@ -9,11 +9,8 @@ import java.util.List;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
-import org.verdictdb.core.sqlobject.SqlConvertable;
 import org.verdictdb.exception.VerdictDBDbmsException;
-import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.jdbc41.JdbcResultSet;
-import org.verdictdb.sqlreader.QueryToSql;
 import org.verdictdb.sqlsyntax.PostgresqlSyntax;
 import org.verdictdb.sqlsyntax.SqlSyntax;
 
