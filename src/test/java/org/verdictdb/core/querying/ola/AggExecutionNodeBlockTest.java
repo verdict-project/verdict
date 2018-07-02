@@ -83,7 +83,7 @@ public class AggExecutionNodeBlockTest {
     AggExecutionNode aggnode = AggExecutionNode.create(plan, aggQuery);
     AggExecutionNodeBlock block = new AggExecutionNodeBlock(plan, aggnode);
     BaseQueryNode converted = block.convertToProgressiveAgg(plan.getScrambleMeta());   // AsyncAggregation
-    converted.print();
+//    converted.print();
     assertTrue(converted instanceof AsyncAggExecutionNode);
     
     assertTrue(converted.getDependent(0) instanceof AggExecutionNode);
