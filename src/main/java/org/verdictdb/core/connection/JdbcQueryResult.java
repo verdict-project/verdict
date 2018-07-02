@@ -12,19 +12,34 @@ public class JdbcQueryResult implements DbmsQueryResult {
 
   List<Integer> columnTypes = new ArrayList<>();
 
-//  ResultSet resultSet;
+  List<Boolean> isCurrency = new ArrayList<>();
+
+  List<Integer> isNullable = new ArrayList<>();
+
+  List<Integer> precision = new ArrayList<>();
+
+  List<Integer> scale = new ArrayList<>();
+
+  List<Integer> columnDisplaySize = new ArrayList<>();
+
+  //ResultSet resultSet;
 
   List<List<Object>> result = new ArrayList<>();
 
   int cursor = -1;
 
   public JdbcQueryResult(ResultSet resultSet) throws SQLException {
-//    this.resultSet = resultSet;
+    //this.resultSet = resultSet;
     ResultSetMetaData meta = resultSet.getMetaData();
     int columnCount = meta.getColumnCount();
     for (int i = 0; i < columnCount; i++) {
       columnNames.add(meta.getColumnLabel(i+1).toLowerCase());
       columnTypes.add(meta.getColumnType(i+1));
+      isCurrency.add(meta.isCurrency(i+1));
+      isNullable.add(meta.isNullable(i+1));
+      precision.add(meta.getPrecision(i+1));
+      columnDisplaySize.add(meta.getColumnDisplaySize(i+1));
+      scale.add(meta.getScale(i+1));
     }
     while (resultSet.next()) {
       List<Object> row = new ArrayList<>();
@@ -118,5 +133,25 @@ public class JdbcQueryResult implements DbmsQueryResult {
 
   public List<List<Object>> getResult() {
     return result;
+  }
+
+  public List<Boolean> getIsCurrency() {
+    return isCurrency;
+  }
+
+  public List<Integer> getIsNullable() {
+    return isNullable;
+  }
+
+  public List<Integer> getPrecision() {
+    return precision;
+  }
+
+  public List<Integer> getScale() {
+    return scale;
+  }
+
+  public List<Integer> getColumnDisplaySize() {
+    return columnDisplaySize;
   }
 }

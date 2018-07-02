@@ -22,7 +22,6 @@ import org.verdictdb.core.aggresult.AggregateFrameQueryResult;
 import org.verdictdb.core.connection.JdbcQueryResult;
 import org.verdictdb.core.rewriter.aggresult.AggNameAndType;
 import org.verdictdb.exception.VerdictDBValueException;
-import org.verdictdb.jdbc41.JdbcResultSetMetaData;
 
 public class JdbcResultSetMetaDataTest {
 
@@ -30,7 +29,7 @@ public class JdbcResultSetMetaDataTest {
 
   private static Statement stmt;
 
-  private JdbcResultSetMetaData jdbcResultSetMetaData1, jdbcResultSetMetaData2;
+  private org.verdictdb.jdbc.JdbcResultSetMetaData jdbcResultSetMetaData1, jdbcResultSetMetaData2;
 
   @BeforeClass
   public static void setupH2Database() throws SQLException {
@@ -74,8 +73,8 @@ public class JdbcResultSetMetaDataTest {
     agg.add(new AggNameAndType("AGEAVG", "SUM"));
     AggregateFrame aggregateFrame = AggregateFrame.fromDmbsQueryResult(queryResult, nonAgg, agg);
     AggregateFrameQueryResult aggregateFrameQueryResult = (AggregateFrameQueryResult) aggregateFrame.toDbmsQueryResult();
-    jdbcResultSetMetaData1 = new JdbcResultSetMetaData(queryResult);
-    jdbcResultSetMetaData2 = new JdbcResultSetMetaData(aggregateFrameQueryResult);
+    jdbcResultSetMetaData1 = new org.verdictdb.jdbc.JdbcResultSetMetaData(queryResult);
+    jdbcResultSetMetaData2 = new org.verdictdb.jdbc.JdbcResultSetMetaData(aggregateFrameQueryResult);
   }
 
   @Test
@@ -106,8 +105,8 @@ public class JdbcResultSetMetaDataTest {
 
   @Test
   public void getColumnDisplaySizeTest() throws SQLException {
-    assertEquals(19, jdbcResultSetMetaData1.getColumnDisplaySize(2));
-    assertEquals(64, jdbcResultSetMetaData1.getColumnDisplaySize(3));
+    assertEquals(20, jdbcResultSetMetaData1.getColumnDisplaySize(2));
+    assertEquals(24, jdbcResultSetMetaData1.getColumnDisplaySize(3));
     assertEquals(19, jdbcResultSetMetaData2.getColumnDisplaySize(2));
     assertEquals(64, jdbcResultSetMetaData2.getColumnDisplaySize(3));
   }
@@ -134,9 +133,9 @@ public class JdbcResultSetMetaDataTest {
 
   @Test
   public void getPrecisionTest() throws SQLException {
-    assertEquals(0, jdbcResultSetMetaData1.getPrecision(1));
+    assertEquals(8, jdbcResultSetMetaData1.getPrecision(1));
     assertEquals(19, jdbcResultSetMetaData1.getPrecision(2));
-    assertEquals(64, jdbcResultSetMetaData1.getPrecision(3));
+    assertEquals(17, jdbcResultSetMetaData1.getPrecision(3));
     assertEquals(0, jdbcResultSetMetaData2.getPrecision(1));
     assertEquals(19, jdbcResultSetMetaData2.getPrecision(2));
     assertEquals(64, jdbcResultSetMetaData2.getPrecision(3));
@@ -145,9 +144,9 @@ public class JdbcResultSetMetaDataTest {
   @Test
   public void getScaleTest() throws SQLException {
     assertEquals(0, jdbcResultSetMetaData1.getScale(1));
-    assertEquals(10, jdbcResultSetMetaData1.getScale(3));
+    assertEquals(0, jdbcResultSetMetaData1.getScale(3));
     assertEquals(0, jdbcResultSetMetaData2.getScale(1));
-    assertEquals(10, jdbcResultSetMetaData1.getScale(3));
+    assertEquals(0, jdbcResultSetMetaData1.getScale(3));
   }
 
   @Test

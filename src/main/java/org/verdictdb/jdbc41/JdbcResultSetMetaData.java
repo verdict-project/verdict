@@ -18,6 +18,7 @@ import java.util.List;
 
 import org.verdictdb.core.connection.DataTypeConverter;
 import org.verdictdb.core.connection.DbmsQueryResult;
+import org.verdictdb.core.connection.JdbcQueryResult;
 
 public class JdbcResultSetMetaData implements ResultSetMetaData {
   
@@ -48,7 +49,7 @@ public class JdbcResultSetMetaData implements ResultSetMetaData {
 
   @Override
   public boolean isAutoIncrement(int column) throws SQLException {
-    throw new SQLException("Not supported function.");
+    return false;
   }
 
   @Override
@@ -69,12 +70,18 @@ public class JdbcResultSetMetaData implements ResultSetMetaData {
 
   @Override
   public boolean isCurrency(int column) throws SQLException {
-    throw new SQLException("Not supported function.");
+    if (queryResult instanceof JdbcQueryResult) {
+      return ((JdbcQueryResult) queryResult).getIsCurrency().get(column-1);
+    }
+    else return false;
   }
 
   @Override
   public int isNullable(int column) throws SQLException {
-    return java.sql.ResultSetMetaData.columnNullableUnknown;
+    if (queryResult instanceof JdbcQueryResult) {
+      return ((JdbcQueryResult) queryResult).getIsNullable().get(column-1);
+    }
+    else return ResultSetMetaData.columnNullable;
   }
 
   @Override
@@ -90,6 +97,9 @@ public class JdbcResultSetMetaData implements ResultSetMetaData {
 
   @Override
   public int getColumnDisplaySize(int column) throws SQLException {
+    if (queryResult instanceof JdbcQueryResult) {
+      return ((JdbcQueryResult) queryResult).getColumnDisplaySize().get(column-1);
+    }
     return Math.max(getPrecision(column), queryResult.getColumnName(column-1).length());
   }
 
@@ -110,6 +120,9 @@ public class JdbcResultSetMetaData implements ResultSetMetaData {
 
   @Override
   public int getPrecision(int column) throws SQLException {
+    if (queryResult instanceof JdbcQueryResult) {
+      return ((JdbcQueryResult) queryResult).getPrecision().get(column-1);
+    }
     int coltype = queryResult.getColumnType(column-1);
     if (coltype == BIGINT) {
       return 19;
@@ -127,16 +140,16 @@ public class JdbcResultSetMetaData implements ResultSetMetaData {
       return 64;
     }
     else if (coltype == FLOAT) {
-      return 32;
+      return 17;
     }
     else if (coltype == DATE) {
       return 10;
     }
     else if (coltype == TIME) {
-      return 11;
+      return 8;
     }
     else if (coltype == TIMESTAMP) {
-      return 22;
+      return 26;
     }
     else {
       return 0;
@@ -145,6 +158,9 @@ public class JdbcResultSetMetaData implements ResultSetMetaData {
 
   @Override
   public int getScale(int column) throws SQLException {
+    if (queryResult instanceof JdbcQueryResult) {
+      return ((JdbcQueryResult) queryResult).getScale().get(column-1);
+    }
     String typeName = DataTypeConverter.typeName(queryResult.getColumnType(column-1));
     if (typeName.contains("double") || typeName.contains("float")) {
       return 10;
