@@ -43,5 +43,10 @@ public class ExecutionResultReader implements Iterable<DbmsQueryResult>, Iterato
   public DbmsQueryResult next() {
     return (DbmsQueryResult) reader.next().getValue("queryResult");
   }
+  
+  @Override
+  public void remove() {
+    throw new UnsupportedOperationException();
+  }
 
 }

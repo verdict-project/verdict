@@ -63,5 +63,10 @@ public class ExecutionTokenReader implements Iterable<ExecutionInfoToken>, Itera
       return result;
     }
   }
+  
+  @Override
+  public void remove() {
+    throw new UnsupportedOperationException();
+  }
 
 }
