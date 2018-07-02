@@ -60,7 +60,7 @@ public class ExecutablePlanRunner {
         List<ExecutableNode> nodes = nodeGroups.get(i);
         if (!nodes.isEmpty()) {
           ExecutableNode node = nodes.remove(0);
-          System.out.println("Submitting: " + node);
+//          System.out.println("Submitting: " + node);
           executor.submit(new ExecutableNodeRunner(conn, node));
           submittedAtLeastOne = true;
         }
