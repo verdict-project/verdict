@@ -38,6 +38,7 @@ import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.core.sqlobject.SubqueryColumn;
 import org.verdictdb.core.sqlobject.UnnamedColumn;
 import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.resulthandler.ResultStandardOutputPrinter;
 import org.verdictdb.sqlreader.NonValidatingSQLParser;
 import org.verdictdb.sqlreader.QueryToSql;
 import org.verdictdb.sqlreader.RelationStandardizer;
@@ -276,8 +277,8 @@ public class TpchAyncExecutionPlanTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    queryExecutionPlan.getRootNode().print();
-    
+//    queryExecutionPlan.getRootNode().print();
+
     assertEquals(1, queryExecutionPlan.root.getDependents().size());
     assertEquals(aggBlockCount, queryExecutionPlan.root.getDependent(0).getDependents().size());
 
@@ -310,7 +311,7 @@ public class TpchAyncExecutionPlanTest {
             new AliasedColumn(new ColumnOp("avg", new BaseColumn("vt1", "l_discount")), "avg_disc"),
             new AliasedColumn(new ColumnOp("count", new AsteriskColumn()), "count_order")
         ),
-        base, 
+        base,
         ColumnOp.and(
             new ColumnOp("lessequal", operand5),
             ColumnOp.equal(new BaseColumn("vt1", "verdictdbaggblock"), ConstantColumn.valueOf(0))
@@ -364,7 +365,7 @@ public class TpchAyncExecutionPlanTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    queryExecutionPlan.getRootNode().print();
+//    queryExecutionPlan.getRootNode().print();
     assertEquals(5, queryExecutionPlan.root.getDependent(0).getDependents().size());
 
     AbstractRelation customer = new BaseTable("tpch", "customer", "vt1");
@@ -422,10 +423,11 @@ public class TpchAyncExecutionPlanTest {
 //    ));
 //    expected.addLimit(ConstantColumn.valueOf(10));
     assertEquals(
-        expected, 
+        expected,
         ((CreateTableAsSelectNode) queryExecutionPlan.root.getDependent(0).getDependent(0)).selectQuery);
 
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
+//    ResultStandardOutputPrinter.run(ExecutablePlanRunner.getResultReader(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan));
     ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
 //    queryExecutionPlan.root.executeAndWaitForTermination(new JdbcConnection(conn, new H2Syntax()));
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
@@ -458,7 +460,7 @@ public class TpchAyncExecutionPlanTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    queryExecutionPlan.getRootNode().print();
+//    queryExecutionPlan.getRootNode().print();
     assertEquals(5, queryExecutionPlan.root.getDependent(0).getDependents().size());
 
     AbstractRelation orders = new BaseTable("tpch", "orders", "vt1");
@@ -470,7 +472,7 @@ public class TpchAyncExecutionPlanTest {
         orders);
 
     assertEquals(
-        expected.getSelectList(), 
+        expected.getSelectList(),
         ((CreateTableAsSelectNode) queryExecutionPlan.root.getDependent(0).getDependent(0))
         .selectQuery.getSelectList());
 
@@ -478,7 +480,7 @@ public class TpchAyncExecutionPlanTest {
     ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
 //    queryExecutionPlan.root.executeAndWaitForTermination(new JdbcConnection(conn, new H2Syntax()));
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
-    queryExecutionPlan.getRootNode().print();
+//    queryExecutionPlan.getRootNode().print();
   }
 
   @Test
@@ -519,7 +521,7 @@ public class TpchAyncExecutionPlanTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    queryExecutionPlan.getRootNode().print();
+//    queryExecutionPlan.getRootNode().print();
     assertEquals(5, queryExecutionPlan.root.dependents.get(0).dependents.size());
 
     AbstractRelation customer = new BaseTable("tpch", "customer", "vt1");
@@ -578,7 +580,7 @@ public class TpchAyncExecutionPlanTest {
         new BaseColumn("vt2", "o_orderdate"),
         new ColumnOp("date", ConstantColumn.valueOf("'1998-12-01'"))
     )));
-    
+
     // aggblock
     expected.addFilterByAnd(
         ColumnOp.greaterequal(new BaseColumn("vt2", "verdictdbaggblock"), ConstantColumn.valueOf(0)));
@@ -586,12 +588,12 @@ public class TpchAyncExecutionPlanTest {
         ColumnOp.lessequal(new BaseColumn("vt2", "verdictdbaggblock"), ConstantColumn.valueOf(2)));
     expected.addFilterByAnd(
         ColumnOp.equal(new BaseColumn("vt3", "verdictdbaggblock"), ConstantColumn.valueOf(0)));
-    
+
     expected.addGroupby(new AliasReference("n_name"));
 //    expected.addOrderby(new OrderbyAttribute("revenue", "desc"));
 //    expected.addLimit(ConstantColumn.valueOf(1));
     assertEquals(
-        expected, 
+        expected,
         ((CreateTableAsSelectNode) queryExecutionPlan.root.getDependent(0).getDependent(0)).selectQuery);
 
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
@@ -623,7 +625,7 @@ public class TpchAyncExecutionPlanTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    queryExecutionPlan.getRootNode().print();
+//    queryExecutionPlan.getRootNode().print();
     assertEquals(3, queryExecutionPlan.root.dependents.get(0).dependents.size());
 
     AbstractRelation lineitem = new BaseTable("tpch", "lineitem_scrambled", "vt1");
@@ -653,13 +655,13 @@ public class TpchAyncExecutionPlanTest {
         new BaseColumn("vt1", "l_quantity"),
         ConstantColumn.valueOf("15"))
     ));
-    
+
     expected.addFilterByAnd(
         ColumnOp.equal(new BaseColumn("vt1", "verdictdbaggblock"), ConstantColumn.valueOf(0)));
-    
+
 //    expected.addLimit(ConstantColumn.valueOf(1));
     assertEquals(
-        expected, 
+        expected,
         ((CreateTableAsSelectNode) queryExecutionPlan.root.getDependent(0).getDependent(0)).selectQuery);
 
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
@@ -721,8 +723,8 @@ public class TpchAyncExecutionPlanTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    queryExecutionPlan.getRootNode().print();
-    
+//    queryExecutionPlan.getRootNode().print();
+
     assertEquals(5, queryExecutionPlan.root.dependents.get(0).dependents.size());
     assertEquals(1, queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.size());
     AbstractRelation supplier = new BaseTable("tpch", "supplier", "vt1");
@@ -791,7 +793,7 @@ public class TpchAyncExecutionPlanTest {
         new ColumnOp("date", ConstantColumn.valueOf("'1995-01-01'")),
         new ColumnOp("date", ConstantColumn.valueOf("'1996-12-31'")))
     ));
-    
+
     // aggblock
     subquery.addFilterByAnd(
         ColumnOp.greaterequal(new BaseColumn("vt2", "verdictdbaggblock"), ConstantColumn.valueOf(0)));
@@ -799,9 +801,9 @@ public class TpchAyncExecutionPlanTest {
         ColumnOp.lessequal(new BaseColumn("vt2", "verdictdbaggblock"), ConstantColumn.valueOf(2)));
     subquery.addFilterByAnd(
         ColumnOp.equal(new BaseColumn("vt3", "verdictdbaggblock"), ConstantColumn.valueOf(0)));
-    
+
     subquery.setAliasName("shipping");
-    
+
     SelectQuery expected = SelectQuery.create(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("shipping", "supp_nation"), "supp_nation"),
@@ -821,12 +823,12 @@ public class TpchAyncExecutionPlanTest {
 //        new OrderbyAttribute("vc7")
 //    ));
 //    expected.addLimit(ConstantColumn.valueOf(1));
-    
+
     assertEquals(
-        expected, 
+        expected,
         ((CreateTableAsSelectNode) queryExecutionPlan.root.getDependent(0).getDependent(0)).selectQuery);
     assertEquals(
-        subquery, 
+        subquery,
         ((CreateTableAsSelectNode) queryExecutionPlan.root.getDependent(0).getDependent(0).getDependent(0)).selectQuery);
 
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
@@ -886,8 +888,8 @@ public class TpchAyncExecutionPlanTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    queryExecutionPlan.getRootNode().print();
-    
+//    queryExecutionPlan.getRootNode().print();
+
     assertEquals(5, queryExecutionPlan.root.dependents.get(0).dependents.size());
 
     AbstractRelation part = new BaseTable("tpch", "part", "vt1");
@@ -966,7 +968,7 @@ public class TpchAyncExecutionPlanTest {
 
         ),
         new BaseTable(placeholderSchemaName, placeholderTableName, "all_nations"));
-    
+
     // aggblock
     subquery.addFilterByAnd(
         ColumnOp.greaterequal(new BaseColumn("vt3", "verdictdbaggblock"), ConstantColumn.valueOf(0)));
@@ -974,7 +976,7 @@ public class TpchAyncExecutionPlanTest {
         ColumnOp.lessequal(new BaseColumn("vt3", "verdictdbaggblock"), ConstantColumn.valueOf(2)));
     subquery.addFilterByAnd(
         ColumnOp.equal(new BaseColumn("vt4", "verdictdbaggblock"), ConstantColumn.valueOf(0)));
-    
+
     expected.addGroupby(new AliasReference("o_year"));
 //    expected.addOrderby(new OrderbyAttribute("vc7"));
 //    expected.addLimit(ConstantColumn.valueOf(1));
@@ -1033,8 +1035,8 @@ public class TpchAyncExecutionPlanTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    queryExecutionPlan.getRootNode().print();
-    
+//    queryExecutionPlan.getRootNode().print();
+
     assertEquals(5, queryExecutionPlan.root.dependents.get(0).dependents.size());
 
     AbstractRelation part = new BaseTable("tpch", "part", "vt1");
@@ -1098,7 +1100,7 @@ public class TpchAyncExecutionPlanTest {
             new AliasedColumn(new ColumnOp("sum", new BaseColumn("profit", "amount")), "sum_profit")
         ),
         new BaseTable(placeholderSchemaName, placeholderTableName, "profit"));
-    
+
     // aggblock
     subquery.addFilterByAnd(
         ColumnOp.greaterequal(new BaseColumn("vt3", "verdictdbaggblock"), ConstantColumn.valueOf(0)));
@@ -1106,9 +1108,9 @@ public class TpchAyncExecutionPlanTest {
         ColumnOp.lessequal(new BaseColumn("vt3", "verdictdbaggblock"), ConstantColumn.valueOf(2)));
     subquery.addFilterByAnd(
         ColumnOp.equal(new BaseColumn("vt5", "verdictdbaggblock"), ConstantColumn.valueOf(0)));
-    
+
     expected.addGroupby(Arrays.<GroupingAttribute>asList(new AliasReference("nation"), new AliasReference("o_year")));
-    
+
 //    expected.addOrderby(Arrays.<OrderbyAttribute>asList(new OrderbyAttribute("vc7"),
 //        new OrderbyAttribute("vc8", "desc")));
 //    expected.addLimit(ConstantColumn.valueOf(1));
@@ -1166,8 +1168,8 @@ public class TpchAyncExecutionPlanTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    queryExecutionPlan.getRootNode().print();
-    
+//    queryExecutionPlan.getRootNode().print();
+
     assertEquals(5, queryExecutionPlan.root.dependents.get(0).dependents.size());
 
     AbstractRelation customer = new BaseTable("tpch", "customer", "vt1");
@@ -1226,7 +1228,7 @@ public class TpchAyncExecutionPlanTest {
         new AliasReference("c_address"),
         new AliasReference("c_comment")
     ));
-    
+
     // aggblock
     expected.addFilterByAnd(
         ColumnOp.greaterequal(new BaseColumn("vt2", "verdictdbaggblock"), ConstantColumn.valueOf(0)));
@@ -1234,11 +1236,11 @@ public class TpchAyncExecutionPlanTest {
         ColumnOp.lessequal(new BaseColumn("vt2", "verdictdbaggblock"), ConstantColumn.valueOf(2)));
     expected.addFilterByAnd(
         ColumnOp.equal(new BaseColumn("vt3", "verdictdbaggblock"), ConstantColumn.valueOf(0)));
-    
+
 //    expected.addOrderby(new OrderbyAttribute("revenue", "desc"));
 //    expected.addLimit(ConstantColumn.valueOf(20));
     assertEquals(
-        expected, 
+        expected,
         ((CreateTableAsSelectNode) queryExecutionPlan.root.getDependent(0).getDependent(0)).selectQuery);
 
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
@@ -1289,7 +1291,7 @@ public class TpchAyncExecutionPlanTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    queryExecutionPlan.getRootNode().print();
+//    queryExecutionPlan.getRootNode().print();
     assertEquals(5, queryExecutionPlan.root.getDependent(0).getDependents().size());
 
     AbstractRelation orders = new BaseTable("tpch", "orders_scrambled", "vt1");
@@ -1352,7 +1354,7 @@ public class TpchAyncExecutionPlanTest {
         new ColumnOp("date", ConstantColumn.valueOf("'2018-01-01'"))
     )));
     expected.addGroupby(new AliasReference("l_shipmode"));
-    
+
     // aggblock
     expected.addFilterByAnd(
         ColumnOp.greaterequal(new BaseColumn("vt1", "verdictdbaggblock"), ConstantColumn.valueOf(0)));
@@ -1360,11 +1362,11 @@ public class TpchAyncExecutionPlanTest {
         ColumnOp.lessequal(new BaseColumn("vt1", "verdictdbaggblock"), ConstantColumn.valueOf(2)));
     expected.addFilterByAnd(
         ColumnOp.equal(new BaseColumn("vt2", "verdictdbaggblock"), ConstantColumn.valueOf(0)));
-    
+
 //    expected.addOrderby(new OrderbyAttribute("vc3"));
 //    expected.addLimit(ConstantColumn.valueOf(1));
     assertEquals(
-        expected, 
+        expected,
         ((CreateTableAsSelectNode) queryExecutionPlan.root.getDependent(0).getDependent(0)).selectQuery);
 
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
@@ -1395,7 +1397,7 @@ public class TpchAyncExecutionPlanTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    queryExecutionPlan.getRootNode().print();
+//    queryExecutionPlan.getRootNode().print();
     assertEquals(3, queryExecutionPlan.root.getDependent(0).dependents.size());
 
     BaseTable customer = new BaseTable("tpch", "customer", "vt1");
@@ -1416,17 +1418,17 @@ public class TpchAyncExecutionPlanTest {
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("vt1", "c_custkey"), "c_custkey"),
             new AliasedColumn(new ColumnOp("count", new AsteriskColumn()), "c_count")
-        ), 
+        ),
         join
     );
-    
+
     // aggblock
     expected.addFilterByAnd(
         ColumnOp.equal(new BaseColumn("vt2", "verdictdbaggblock"), ConstantColumn.valueOf(0)));
 
     expected.addGroupby(new AliasReference("c_custkey"));
     assertEquals(
-        expected, 
+        expected,
         ((CreateTableAsSelectNode) queryExecutionPlan.root.getDependent(0).getDependent(0)).selectQuery);
 
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
@@ -1462,7 +1464,7 @@ public class TpchAyncExecutionPlanTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    queryExecutionPlan.getRootNode().print();
+//    queryExecutionPlan.getRootNode().print();
 
     assertEquals(3, queryExecutionPlan.root.dependents.get(0).dependents.size());
 
@@ -1502,11 +1504,11 @@ public class TpchAyncExecutionPlanTest {
         new BaseColumn("vt1", "l_shipdate"),
         new ColumnOp("date", ConstantColumn.valueOf("'2018-01-01'"))
     )));
-    
+
     // aggblock
     expected.addFilterByAnd(
         ColumnOp.equal(new BaseColumn("vt1", "verdictdbaggblock"), ConstantColumn.valueOf(0)));
-    
+
 //    expected.addLimit(ConstantColumn.valueOf(1));
     assertEquals(expected, ((CreateTableAsSelectNode) queryExecutionPlan.root.getDependent(0).getDependent(0)).selectQuery);
 
@@ -1539,13 +1541,13 @@ public class TpchAyncExecutionPlanTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    queryExecutionPlan.getRootNode().print();
+//    queryExecutionPlan.getRootNode().print();
     assertEquals(3, queryExecutionPlan.root.getDependent(0).dependents.size());
 
     SelectQuery expected = SelectQuery.create(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("vt1", "l_suppkey"), "supplier_no"),
-            new AliasedColumn(new ColumnOp("sum", 
+            new AliasedColumn(new ColumnOp("sum",
                 ColumnOp.multiply(
                     new BaseColumn("vt1", "l_extendedprice"),
                     ColumnOp.subtract(ConstantColumn.valueOf(1), new BaseColumn("vt1", "l_discount")))), "total_revenue")),
@@ -1556,11 +1558,11 @@ public class TpchAyncExecutionPlanTest {
     // aggblock
     expected.addFilterByAnd(
         ColumnOp.equal(new BaseColumn("vt1", "verdictdbaggblock"), ConstantColumn.valueOf(0)));
-    
+
     expected.addGroupby(new AliasReference("supplier_no"));
-    
+
     assertEquals(
-        expected, 
+        expected,
         ((CreateTableAsSelectNode) queryExecutionPlan.root.dependents.get(0).dependents.get(0)).selectQuery);
 
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
@@ -1610,7 +1612,7 @@ public class TpchAyncExecutionPlanTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    queryExecutionPlan.getRootNode().print();
+//    queryExecutionPlan.getRootNode().print();
 
     assertEquals(3, queryExecutionPlan.root.dependents.get(0).dependents.size());
 //    assertEquals(1, queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.size());
@@ -1618,7 +1620,7 @@ public class TpchAyncExecutionPlanTest {
     assertEquals(
         new BaseTable(placeholderSchemaName, placeholderTableName, "a"),
         ((CreateTableAsSelectNode) queryExecutionPlan.root.getDependent(0).getDependent(0)).getSelectQuery().getFromList().get(0));
-    
+
     JoinTable join = JoinTable.create(Arrays.<AbstractRelation>asList(
         new BaseTable(placeholderSchemaName, placeholderTableName, "q17_lineitem_tmp_cached"),
         new BaseTable(placeholderSchemaName, placeholderTableName, "l1")),
@@ -1633,7 +1635,7 @@ public class TpchAyncExecutionPlanTest {
         join,
         ((CreateTableAsSelectNode) queryExecutionPlan.root.getDependent(0).getDependent(0)
             .getDependent(0)).getSelectQuery().getFromList().get(0));
-    
+
     SelectQuery expected = SelectQuery.create(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("vt1", "l_partkey"), "t_partkey"),
@@ -1646,7 +1648,7 @@ public class TpchAyncExecutionPlanTest {
     expected.addGroupby(new AliasReference("t_partkey"));
     expected.setAliasName("q17_lineitem_tmp_cached");
     assertEquals(
-        expected, 
+        expected,
         ((CreateTableAsSelectNode) queryExecutionPlan.root.getDependent(0).getDependent(0)
             .getDependent(0).getDependent(0)).selectQuery);
 
@@ -1703,7 +1705,7 @@ public class TpchAyncExecutionPlanTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    queryExecutionPlan.getRootNode().print();
+//    queryExecutionPlan.getRootNode().print();
     assertEquals(5, queryExecutionPlan.root.getDependent(0).dependents.size());
 
     SelectQuery expected = SelectQuery.create(
@@ -1776,8 +1778,8 @@ public class TpchAyncExecutionPlanTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    queryExecutionPlan.getRootNode().print();
-    
+//    queryExecutionPlan.getRootNode().print();
+
     AbstractRelation lineitem = new BaseTable("tpch", "lineitem_scrambled", "vt1");
     AbstractRelation part = new BaseTable("tpch", "part", "vt2");
     SelectQuery expected = SelectQuery.create(
@@ -1950,11 +1952,11 @@ public class TpchAyncExecutionPlanTest {
         )),
         columnOp3
     )));
-    
+
     // agg block
     expected.addFilterByAnd(
         ColumnOp.equal(new BaseColumn("vt1", "verdictdbaggblock"), ConstantColumn.valueOf(0)));
-    
+
 //    expected.addLimit(ConstantColumn.valueOf(1));
     assertEquals(expected, ((CreateTableAsSelectNode) queryExecutionPlan.root.getDependent(0).getDependent(0)).selectQuery);
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
@@ -1999,7 +2001,7 @@ public class TpchAyncExecutionPlanTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    queryExecutionPlan.getRootNode().print();
+//    queryExecutionPlan.getRootNode().print();
 
     assertEquals(3, queryExecutionPlan.root.getDependent(0).getDependent(0).dependents.size());
     SelectQuery expected = SelectQuery.create(
@@ -2020,23 +2022,23 @@ public class TpchAyncExecutionPlanTest {
         new BaseColumn("vt4", "l_shipdate"),
         ConstantColumn.valueOf("'1995-01-01'")
     )));
-    
+
     // aggblock
     expected.addFilterByAnd(
         ColumnOp.equal(new BaseColumn("vt4", "verdictdbaggblock"), ConstantColumn.valueOf(0)));
-    
+
     expected.addGroupby(new AliasReference("l_partkey"));
     expected.addGroupby(new AliasReference("l_suppkey"));
     expected.setAliasName("q20_tmp2_cached");
-    
+
     assertEquals(
-        expected, 
+        expected,
         ((CreateTableAsSelectNode) queryExecutionPlan.root.getDependent(0).getDependent(0).getDependent(0)).selectQuery);
-    
+
     assertEquals(
         new BaseTable(placeholderSchemaName, placeholderTableName, "q20_tmp2_cached"),
         ((CreateTableAsSelectNode) queryExecutionPlan.root.dependents.get(0)).getSelectQuery().getFromList().get(3));
-    
+
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
     ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
 //    queryExecutionPlan.root.executeAndWaitForTermination(new JdbcConnection(conn, new H2Syntax()));
@@ -2134,14 +2136,14 @@ public class TpchAyncExecutionPlanTest {
     RelationStandardizer gen = new RelationStandardizer(staticMetaData);
     relation = gen.standardize((SelectQuery) relation);
     String standardSql = QueryToSql.convert(new H2Syntax(), (SelectQuery) relation);
-    System.out.println(standardSql);
-    
+    // System.out.println(standardSql);
+
 //    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(new JdbcConnection(conn, new H2Syntax()),
 //        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    queryExecutionPlan.getRootNode().print();
+//    queryExecutionPlan.getRootNode().print();
 
     assertEquals(5, queryExecutionPlan.root.getDependent(0).dependents.size());
     assertEquals(1, queryExecutionPlan.root.getDependent(0).getDependent(0).dependents.size());
@@ -2248,7 +2250,7 @@ public class TpchAyncExecutionPlanTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
     String standardSql = QueryToSql.convert(new H2Syntax(), (SelectQuery) relation);
-    System.out.println(standardSql);
+    // System.out.println(standardSql);
 
     assertEquals(1, queryExecutionPlan.root.dependents.get(0).dependents.size());
     assertEquals(2, queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.size());
@@ -2304,8 +2306,8 @@ public class TpchAyncExecutionPlanTest {
     String aliasName = String.format("verdictdbalias_%d_0", queryExecutionPlan.getSerialNumber());
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    queryExecutionPlan.getRootNode().print();
-    
+//    queryExecutionPlan.getRootNode().print();
+
     SelectQuery rewritten = SelectQuery.create(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn(placeholderSchemaName, aliasName, "quantity_avg"), "quantity_avg")),
@@ -2313,7 +2315,7 @@ public class TpchAyncExecutionPlanTest {
     assertEquals(
         rewritten,
         ((SubqueryColumn)
-            ((ColumnOp) 
+            ((ColumnOp)
             ((ColumnOp)
                 ((CreateTableAsSelectNode) queryExecutionPlan.root
                     .getDependent(0).getDependent(0))
@@ -2323,12 +2325,12 @@ public class TpchAyncExecutionPlanTest {
     SelectQuery expected = SelectQuery.create(
         Arrays.<SelectItem>asList(
             new AliasedColumn(
-                new ColumnOp("avg", new BaseColumn("vt3", "l_quantity")), 
+                new ColumnOp("avg", new BaseColumn("vt3", "l_quantity")),
                 "quantity_avg")),
         new BaseTable("tpch", "lineitem_scrambled", "vt3")
     );
     assertEquals(
-        expected, 
+        expected,
         ((CreateTableAsSelectNode) queryExecutionPlan.root.getDependent(0).getDependent(0).getDependent(0)).selectQuery);
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
     ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);

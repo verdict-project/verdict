@@ -7,11 +7,11 @@ import org.verdictdb.sqlsyntax.SqlSyntax;
 
 public interface DbmsConnection extends MetaDataProvider {
   
-  public boolean execute(String query) throws VerdictDBDbmsException;
+  public DbmsQueryResult execute(String query) throws VerdictDBDbmsException;
   
 //  public boolean execute(SqlConvertable query) throws VerdictDBDbmsException;
   
-  public DbmsQueryResult getResult();
+//  public DbmsQueryResult getResult();
   
 //  public DbmsQueryResult executeQuery(String query) throws VerdictDBDbmsException;
   

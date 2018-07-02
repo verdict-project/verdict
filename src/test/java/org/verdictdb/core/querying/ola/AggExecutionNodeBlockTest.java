@@ -72,7 +72,7 @@ public class AggExecutionNodeBlockTest {
   }
 
   @Test
-  public void testConvertFlatToProgressiveAgg() throws VerdictDBValueException {
+  public void testConvertFlatToProgressiveAgg() throws VerdictDBException {
 //    System.out.println("test case starts");
     SelectQuery aggQuery = SelectQuery.create(
         new AliasedColumn(ColumnOp.count(), "agg"),

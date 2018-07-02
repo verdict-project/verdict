@@ -100,12 +100,12 @@ public class UniformScramblerTest {
     String scrambleSql = createToSql.toSql(createQuery);
     conn.createStatement().execute(String.format("DROP TABLE IF EXISTS \"%s\".\"%s\"", newSchema, newTable));
     conn.createStatement().execute(scrambleSql);
-    
-    System.out.println(scrambleSql);
+
+    // System.out.println(scrambleSql);
 
     // retrieve all values
     printTableContent(conn, originalSchema, originalTable);
-    
+
     printTableContent(conn, newSchema, newTable);
   }
 

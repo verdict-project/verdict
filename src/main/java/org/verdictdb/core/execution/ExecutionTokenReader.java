@@ -2,6 +2,8 @@ package org.verdictdb.core.execution;
 
 import java.util.Iterator;
 
+import org.verdictdb.exception.VerdictDBException;
+
 public class ExecutionTokenReader implements Iterable<ExecutionInfoToken>, Iterator<ExecutionInfoToken> {
 
   ExecutionTokenQueue queue;
@@ -24,6 +26,13 @@ public class ExecutionTokenReader implements Iterable<ExecutionInfoToken>, Itera
 
   void takeOne() {
     queueBuffer = queue.take();
+    
+    if (queueBuffer.isFailureToken()) {
+      VerdictDBException e = (VerdictDBException) queueBuffer.getValue("errorMessage");
+      if (e != null) {
+        throw new RuntimeException(e);
+      }
+    }
   }
 
   @Override

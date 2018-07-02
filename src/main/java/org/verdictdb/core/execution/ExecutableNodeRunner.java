@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 import org.verdictdb.core.connection.DbmsConnection;
 import org.verdictdb.core.connection.DbmsQueryResult;
 import org.verdictdb.core.sqlobject.SqlConvertable;
@@ -15,10 +17,15 @@ public class ExecutableNodeRunner implements Runnable {
   DbmsConnection conn;
 
   ExecutableNode node;
+  
+  int successSourceCount = 0;
+  
+  int dependentCount;
 
   public ExecutableNodeRunner(DbmsConnection conn, ExecutableNode node) {
     this.conn = conn;
     this.node = node;
+    this.dependentCount = node.getDependentNodeCount();
   }
   
   public static ExecutionInfoToken execute(DbmsConnection conn, ExecutableNode node) 
@@ -43,7 +50,7 @@ public class ExecutableNodeRunner implements Runnable {
         return;
       } catch (VerdictDBException e) {
         e.printStackTrace();
-        broadcast(ExecutionInfoToken.failureToken());
+        broadcast(ExecutionInfoToken.failureToken(e));
       }
     }
   
@@ -53,8 +60,10 @@ public class ExecutableNodeRunner implements Runnable {
       if (tokens == null) {
         continue;
       }
-      if (doesIncludeFailure(tokens)) {
-        broadcast(ExecutionInfoToken.failureToken());
+//      System.out.println(node.getClass().toString() + " " + tokens);
+      ExecutionInfoToken failureToken = getFailureTokenIfExists(tokens);
+      if (failureToken != null) {
+        broadcast(failureToken);
         break;
       }
       if (areAllSuccess(tokens)) {
@@ -67,7 +76,7 @@ public class ExecutableNodeRunner implements Runnable {
         executeAndBroadcast(tokens);
       } catch (VerdictDBException e) {
         e.printStackTrace();
-        broadcast(ExecutionInfoToken.failureToken());
+        broadcast(ExecutionInfoToken.failureToken(e));
         break;
       }
     }
@@ -93,7 +102,7 @@ public class ExecutableNodeRunner implements Runnable {
   }
 
   void broadcast(ExecutionInfoToken token) {
-//    System.out.println("broadcasting: " + token);
+    System.out.println(new ToStringBuilder(node, ToStringStyle.DEFAULT_STYLE) + " broadcasts: " + token);
     for (ExecutionTokenQueue dest : node.getDestinationQueues()) {
       dest.add(token);
     }
@@ -101,43 +110,50 @@ public class ExecutableNodeRunner implements Runnable {
   
   void executeAndBroadcast(List<ExecutionInfoToken> tokens) throws VerdictDBException {
     ExecutionInfoToken resultToken = execute(tokens);
-    broadcast(resultToken);
+    if (resultToken != null) {
+      broadcast(resultToken);
+    }
   }
 
   public ExecutionInfoToken execute(List<ExecutionInfoToken> tokens) throws VerdictDBException {
-//    System.out.println("execute: " + node);
-    SqlConvertable sqlObj = node.createQuery(tokens);
-    boolean doesResultExist = false;
-    if (sqlObj != null) {
-      String sql = QueryToSql.convert(conn.getSyntax(), sqlObj);
-      doesResultExist = conn.execute(sql);
+    if (tokens.size() > 0 && tokens.get(0).isStatusToken()) {
+      return null;
     }
     
+    SqlConvertable sqlObj = node.createQuery(tokens);
     DbmsQueryResult intermediate = null;
-    if (doesResultExist) {
-      intermediate = conn.getResult();
+    if (sqlObj != null) {
+      String sql = QueryToSql.convert(conn.getSyntax(), sqlObj);
+      intermediate = conn.execute(sql);
     }
     return node.createToken(intermediate);
   }
 
-  boolean doesIncludeFailure(List<ExecutionInfoToken> tokens) {
+  ExecutionInfoToken getFailureTokenIfExists(List<ExecutionInfoToken> tokens) {
     for (ExecutionInfoToken t : tokens) {
+      System.out.println(t);
       if (t.isFailureToken()) {
-        return true;
+        System.out.println("yes");
+        return t;
       }
     }
-    return false;
+    return null;
   }
 
   boolean areAllSuccess(List<ExecutionInfoToken> latestResults) {
     for (ExecutionInfoToken t : latestResults) {
-      if (t.isStatusToken()) {
-        // do nothing
+      if (t.isSuccessToken()) {
+        successSourceCount++;
       } else {
         return false;
       }
     }
-    return true;
+    
+    if (successSourceCount == dependentCount) {
+      return true;
+    } else {
+      return false;
+    }
   }
 
 }

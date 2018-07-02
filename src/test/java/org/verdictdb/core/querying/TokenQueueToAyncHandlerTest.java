@@ -11,7 +11,7 @@ import org.verdictdb.core.execution.ExecutablePlanRunner;
 import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.exception.VerdictDBException;
-import org.verdictdb.resulthandler.StandardOutputPrinter;
+import org.verdictdb.resulthandler.ResultStandardOutputPrinter;
 import org.verdictdb.sqlreader.NonValidatingSQLParser;
 import org.verdictdb.sqlsyntax.H2Syntax;
 
@@ -55,7 +55,7 @@ public class TokenQueueToAyncHandlerTest {
     SelectQuery selectQuery = (SelectQuery) sqlToRelation.toRelation(sql);
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(newSchema, null, selectQuery);
     queryExecutionPlan.getRoot().print();
-    StandardOutputPrinter.run(ExecutablePlanRunner.getResultReader(conn, queryExecutionPlan));
+    ResultStandardOutputPrinter.run(ExecutablePlanRunner.getResultReader(conn, queryExecutionPlan));
 //    TokenQueueToAyncHandler tokenQueueToAyncHandler = new TokenQueueToAyncHandler(queryExecutionPlan, new ExecutionTokenQueue());
 //    tokenQueueToAyncHandler.setHandler(new StandardOutputHandler());
 //    queryExecutionPlan.root.executeAndWaitForTermination(conn);
@@ -70,7 +70,7 @@ public class TokenQueueToAyncHandlerTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(newSchema, null, selectQuery);
     
     queryExecutionPlan.getRoot().print();
-    StandardOutputPrinter.run(ExecutablePlanRunner.getResultReader(conn, queryExecutionPlan));
+    ResultStandardOutputPrinter.run(ExecutablePlanRunner.getResultReader(conn, queryExecutionPlan));
 //    TokenQueueToAyncHandler tokenQueueToAyncHandler = new TokenQueueToAyncHandler(queryExecutionPlan, new ExecutionTokenQueue());
 //    tokenQueueToAyncHandler.setHandler(new StandardOutputHandler());
 //    queryExecutionPlan.root.executeAndWaitForTermination(conn);
@@ -86,7 +86,7 @@ public class TokenQueueToAyncHandlerTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(newSchema, null, selectQuery);
     
     queryExecutionPlan.getRoot().print();
-    StandardOutputPrinter.run(ExecutablePlanRunner.getResultReader(conn, queryExecutionPlan));
+    ResultStandardOutputPrinter.run(ExecutablePlanRunner.getResultReader(conn, queryExecutionPlan));
 //    TokenQueueToAyncHandler tokenQueueToAyncHandler = new TokenQueueToAyncHandler(queryExecutionPlan, new ExecutionTokenQueue());
 //    tokenQueueToAyncHandler.setHandler(new StandardOutputHandler());
 //    queryExecutionPlan.root.executeAndWaitForTermination(conn);
@@ -101,7 +101,7 @@ public class TokenQueueToAyncHandlerTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(newSchema, null, selectQuery);
     
     queryExecutionPlan.getRoot().print();
-    StandardOutputPrinter.run(ExecutablePlanRunner.getResultReader(conn, queryExecutionPlan));
+    ResultStandardOutputPrinter.run(ExecutablePlanRunner.getResultReader(conn, queryExecutionPlan));
 //    TokenQueueToAyncHandler tokenQueueToAyncHandler = new TokenQueueToAyncHandler(queryExecutionPlan, new ExecutionTokenQueue());
 //    tokenQueueToAyncHandler.setHandler(new StandardOutputHandler());
 //    queryExecutionPlan.root.executeAndWaitForTermination(conn);
@@ -116,7 +116,7 @@ public class TokenQueueToAyncHandlerTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(newSchema, null, selectQuery);
     
     queryExecutionPlan.getRoot().print();
-    StandardOutputPrinter.run(ExecutablePlanRunner.getResultReader(conn, queryExecutionPlan));
+    ResultStandardOutputPrinter.run(ExecutablePlanRunner.getResultReader(conn, queryExecutionPlan));
 //    TokenQueueToAyncHandler tokenQueueToAyncHandler = new TokenQueueToAyncHandler(queryExecutionPlan, new ExecutionTokenQueue());
 //    tokenQueueToAyncHandler.setHandler(new StandardOutputHandler());
 //    queryExecutionPlan.root.executeAndWaitForTermination(conn);
