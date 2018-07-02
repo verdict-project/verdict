@@ -63,7 +63,7 @@ public class AggCombinerExecutionNodeTest {
     AggExecutionNode rightNode = AggExecutionNode.create(plan, rightQuery);
     
     AggCombinerExecutionNode combiner = AggCombinerExecutionNode.create(plan, leftNode, rightNode);
-    combiner.print();
+//    combiner.print();
     
     assertEquals(combiner.getListeningQueue(0), leftNode.getBroadcastingQueue(0));
     assertEquals(combiner.getListeningQueue(1), rightNode.getBroadcastingQueue(0));
@@ -85,7 +85,7 @@ public class AggCombinerExecutionNodeTest {
     
 //    ExecutionTokenQueue queue = new ExecutionTokenQueue();
     AggCombinerExecutionNode combiner = AggCombinerExecutionNode.create(plan, leftNode, rightNode);
-    combiner.print();
+//    combiner.print();
     ExecutionTokenReader reader = ExecutablePlanRunner.getTokenReader(
         conn, 
         new SimpleTreePlan(combiner));

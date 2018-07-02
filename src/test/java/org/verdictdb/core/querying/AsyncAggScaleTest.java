@@ -118,7 +118,7 @@ public class AsyncAggScaleTest {
     ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().dependents.get(0)).setScrambleMeta(meta);
     queryExecutionPlan.setScalingNode();
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
-    queryExecutionPlan.getRoot().print();
+//    queryExecutionPlan.getRoot().print();
     
     ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
 //    queryExecutionPlan.root.executeAndWaitForTermination();
