@@ -131,7 +131,7 @@ public class ExecutableNodeRunner implements Runnable {
 
   ExecutionInfoToken getFailureTokenIfExists(List<ExecutionInfoToken> tokens) {
     for (ExecutionInfoToken t : tokens) {
-      System.out.println(t);
+//      System.out.println(t);
       if (t.isFailureToken()) {
         System.out.println("yes");
         return t;
