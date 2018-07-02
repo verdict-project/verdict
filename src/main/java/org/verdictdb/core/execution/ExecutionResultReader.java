@@ -4,17 +4,25 @@ import java.util.Iterator;
 
 import org.verdictdb.core.connection.DbmsQueryResult;
 
-class ExecutionResultReader implements Iterable<DbmsQueryResult>, Iterator<DbmsQueryResult> {
+public class ExecutionResultReader implements Iterable<DbmsQueryResult>, Iterator<DbmsQueryResult> {
 
-  ExecutionTokenQueue queue;
-
-  // set to true if the status token has been taken from "queue".
-  boolean hasEndOfQueueReached = false;
-
-  ExecutionInfoToken queueBuffer = null;
+//  ExecutionTokenQueue queue;
+//
+//  // set to true if the status token has been taken from "queue".
+//  boolean hasEndOfQueueReached = false;
+//
+//  ExecutionInfoToken queueBuffer = null;
+  
+  ExecutionTokenReader reader;
+  
+  public ExecutionResultReader() {}
+  
+  public ExecutionResultReader(ExecutionTokenReader reader) {
+    this.reader = reader;
+  }
 
   public ExecutionResultReader(ExecutionTokenQueue queue) {
-    this.queue = queue;
+    this(new ExecutionTokenReader(queue));
   }
 
   @Override
@@ -23,37 +31,17 @@ class ExecutionResultReader implements Iterable<DbmsQueryResult>, Iterator<DbmsQ
   }
 
   void takeOne() {
-    queueBuffer = queue.take();
+    reader.takeOne();
   }
 
   @Override
   public boolean hasNext() {
-    if (queueBuffer == null) {
-      takeOne();
-      return hasNext();
-    }
-
-    if (queueBuffer.isStatusToken()) {
-      return false;
-    } else {
-      return true;
-    }
+    return reader.hasNext();
   }
 
   @Override
   public DbmsQueryResult next() {
-    if (queueBuffer == null) {
-      takeOne();
-      return next();
-    }
-
-    if (queueBuffer.isStatusToken()) {
-      return null;
-    } else {
-      DbmsQueryResult result = (DbmsQueryResult) queueBuffer.getValue("queryResult");
-      queueBuffer = null;
-      return result;
-    }
+    return (DbmsQueryResult) reader.next().getValue("queryResult");
   }
 
 }

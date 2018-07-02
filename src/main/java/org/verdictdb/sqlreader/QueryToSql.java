@@ -6,11 +6,16 @@ import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.core.sqlobject.SqlConvertable;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBTypeException;
+import org.verdictdb.exception.VerdictDBValueException;
 import org.verdictdb.sqlsyntax.SqlSyntax;
 
 public class QueryToSql {
   
   public static String convert(SqlSyntax syntax, SqlConvertable query) throws VerdictDBException {
+    if (query == null) {
+      throw new VerdictDBValueException("null value passed");
+    }
+    
     if (query instanceof SelectQuery) {
       SelectQueryToSql tosql = new SelectQueryToSql(syntax);
       return tosql.toSql((SelectQuery) query);
