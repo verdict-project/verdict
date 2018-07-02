@@ -136,7 +136,7 @@ public class QueryExecutionPlan implements ExecutablePlan, TempIdCreator {
   }
 
   // clean up any intermediate materialized tables
-  void cleanUp() {
+  public void cleanUp() {
     ((TempIdCreatorInScratchPadSchema) idCreator).reset();
   }
 

@@ -102,7 +102,7 @@ public class ExecutableNodeRunner implements Runnable {
   }
 
   void broadcast(ExecutionInfoToken token) {
-    System.out.println(new ToStringBuilder(node, ToStringStyle.DEFAULT_STYLE) + " broadcasts: " + token);
+//    System.out.println(new ToStringBuilder(node, ToStringStyle.DEFAULT_STYLE) + " broadcasts: " + token);
     for (ExecutionTokenQueue dest : node.getDestinationQueues()) {
       dest.add(token);
     }
