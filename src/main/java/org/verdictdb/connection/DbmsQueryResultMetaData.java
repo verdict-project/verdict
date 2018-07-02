@@ -17,5 +17,7 @@ public class DbmsQueryResultMetaData {
 
   public List<Boolean> isAutoIncrement = new ArrayList<>();
 
+  public List<String> columnClassName = new ArrayList<>();
+
   public DbmsQueryResultMetaData(){}
 }

@@ -28,6 +28,7 @@ public class JdbcQueryResult implements DbmsQueryResult {
     List<Integer> scale = new ArrayList<>();
     List<Integer> columnDisplaySize = new ArrayList<>();
     List<Boolean> isAutoIncrement = new ArrayList<>();
+    List<String> columnClassName = new ArrayList<>();
 
     ResultSetMetaData meta = resultSet.getMetaData();
     int columnCount = meta.getColumnCount();
@@ -40,6 +41,7 @@ public class JdbcQueryResult implements DbmsQueryResult {
       isNullable.add(meta.isNullable(i+1));
       isCurrency.add(meta.isCurrency(i+1));
       isAutoIncrement.add(meta.isAutoIncrement(i+1));
+      columnClassName.add(meta.getColumnClassName(i+1));
     }
     dbmsQueryResultMetaData.columnDisplaySize = columnDisplaySize;
     dbmsQueryResultMetaData.isAutoIncrement = isAutoIncrement;
@@ -47,6 +49,8 @@ public class JdbcQueryResult implements DbmsQueryResult {
     dbmsQueryResultMetaData.isNullable = isNullable;
     dbmsQueryResultMetaData.precision = precision;
     dbmsQueryResultMetaData.scale = scale;
+    dbmsQueryResultMetaData.columnClassName = columnClassName;
+
 
     while (resultSet.next()) {
       List<Object> row = new ArrayList<>();

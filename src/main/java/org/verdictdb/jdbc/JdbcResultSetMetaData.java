@@ -199,7 +199,8 @@ public class JdbcResultSetMetaData implements ResultSetMetaData {
 
   @Override
   public String getColumnClassName(int column) throws SQLException {
-    return DataTypeConverter.typeName(queryResult.getColumnType(column-1));
+    return queryResult.getMetaData().columnClassName.get(column-1);
+    //return DataTypeConverter.typeName(queryResult.getColumnType(column-1));
   }
 
 }

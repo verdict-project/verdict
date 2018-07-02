@@ -185,12 +185,12 @@ public class JdbcResultSetMetaDataMysqlTest {
 
   @Test
   public void getColumnClassNameTest() throws SQLException {
-    assertEquals("varchar", jdbcResultSetMetaData1.getColumnClassName(1));
-    assertEquals("bigint", jdbcResultSetMetaData1.getColumnClassName(2));
-    assertEquals("double", jdbcResultSetMetaData1.getColumnClassName(3));
-    assertEquals("varchar", jdbcResultSetMetaData2.getColumnClassName(1));
-    assertEquals("bigint", jdbcResultSetMetaData2.getColumnClassName(2));
-    assertEquals("double", jdbcResultSetMetaData2.getColumnClassName(3));
+    assertEquals("java.lang.String", jdbcResultSetMetaData1.getColumnClassName(1));
+    assertEquals("java.lang.Long", jdbcResultSetMetaData1.getColumnClassName(2));
+    assertEquals("java.lang.Double", jdbcResultSetMetaData1.getColumnClassName(3));
+    assertEquals("java.lang.String", jdbcResultSetMetaData2.getColumnClassName(1));
+    assertEquals("java.lang.Long", jdbcResultSetMetaData2.getColumnClassName(2));
+    assertEquals("java.lang.Double", jdbcResultSetMetaData2.getColumnClassName(3));
   }
 
   @Test
