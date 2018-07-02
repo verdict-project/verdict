@@ -34,11 +34,11 @@ static Connection conn;
     
     JdbcConnection jdbc = new JdbcConnection(conn, new HiveSyntax());
     
-    jdbc.executeUpdate("CREATE TABLE PERSON(id int, name varchar(255))");
+    jdbc.execute("CREATE TABLE PERSON(id int, name varchar(255))");
     for (List<Object> row : contents) {
       String id = row.get(0).toString();
       String name = row.get(1).toString();
-      jdbc.executeUpdate(String.format("INSERT INTO PERSON(id, name) VALUES(%s, '%s')", id, name));
+      jdbc.execute(String.format("INSERT INTO PERSON(id, name) VALUES(%s, '%s')", id, name));
     }
   }
 

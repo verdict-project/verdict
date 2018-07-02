@@ -16,7 +16,7 @@ import java.util.Map;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.core.rewriter.AliasRenamingRules;
-import org.verdictdb.core.scramble.ScrambleMeta;
+import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.core.sqlobject.AbstractRelation;
 import org.verdictdb.core.sqlobject.AliasReference;
 import org.verdictdb.core.sqlobject.AliasedColumn;
