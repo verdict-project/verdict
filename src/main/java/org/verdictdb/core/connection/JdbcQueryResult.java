@@ -1,5 +1,7 @@
 package org.verdictdb.core.connection;
 
+import org.verdictdb.connection.DbmsQueryResultMetaData;
+
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;

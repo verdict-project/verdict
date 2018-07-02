@@ -1,4 +1,4 @@
-package org.verdictdb.jdbc;
+package org.verdictdb.jdbc41;
 
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -11,6 +11,8 @@ import org.verdictdb.exception.VerdictDBValueException;
 import org.verdictdb.jdbc41.JdbcResultSetMetaData;
 
 import java.sql.*;
+import java.sql.Connection;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;

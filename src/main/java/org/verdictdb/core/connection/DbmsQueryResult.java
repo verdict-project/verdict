@@ -1,5 +1,7 @@
 package org.verdictdb.core.connection;
 
+import org.verdictdb.connection.DbmsQueryResultMetaData;
+
 import java.util.ArrayList;
 import java.util.List;
 

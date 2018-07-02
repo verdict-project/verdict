@@ -10,9 +10,8 @@ import java.util.Set;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
-import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.connection.DbmsQueryResultMetaData;
-import org.verdictdb.connection.JdbcQueryResult;
+import org.verdictdb.core.connection.DbmsQueryResult;
 import org.verdictdb.core.rewriter.aggresult.AggNameAndType;
 import org.verdictdb.exception.VerdictDBValueException;
 
@@ -51,7 +50,7 @@ public class AggregateFrame {
   }
 
   public static AggregateFrame fromDmbsQueryResult(
-      DbmsQueryResult result, 
+      DbmsQueryResult result,
       List<String> nonaggColumns, 
       List<AggNameAndType> aggColumns) throws VerdictDBValueException {
     
