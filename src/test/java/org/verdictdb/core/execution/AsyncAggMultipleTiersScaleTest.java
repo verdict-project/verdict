@@ -1,18 +1,5 @@
 package org.verdictdb.core.execution;
 
-import static java.sql.Types.BIGINT;
-import static java.sql.Types.DOUBLE;
-import static org.junit.Assert.assertEquals;
-
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.BeforeClass;
@@ -35,7 +22,20 @@ import org.verdictdb.sql.QueryToSql;
 import org.verdictdb.sql.RelationStandardizer;
 import org.verdictdb.sql.syntax.H2Syntax;
 
-public class AsyncAggScaleTest {
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+
+import static java.sql.Types.BIGINT;
+import static java.sql.Types.DOUBLE;
+import static org.junit.Assert.assertEquals;
+
+public class AsyncAggMultipleTiersScaleTest {
 
   static Connection conn;
 
@@ -84,9 +84,10 @@ public class AsyncAggScaleTest {
     CreateTableAsSelectQuery scramblingQuery = scrambler.createQuery();
     stmt.executeUpdate(QueryToSql.convert(new H2Syntax(), scramblingQuery));
     ScrambleMetaForTable tablemeta = scrambler.generateMeta();
-    tablemeta.setNumberOfTiers(1);
+    tablemeta.setNumberOfTiers(2);
     HashMap<Integer, List<Double>> distribution = new HashMap<>();
     distribution.put(0, Arrays.asList(0.5, 1.0));
+    distribution.put(1, Arrays.asList(0.2, 1.0));
     tablemeta.setCumulativeMassDistributionPerTier(distribution);
     scrambledTable = tablemeta.getTableName();
     meta.insertScrambleMetaEntry(tablemeta);
@@ -94,7 +95,8 @@ public class AsyncAggScaleTest {
     staticMetaData.setDefaultSchema(originalSchema);
     List<Pair<String, Integer>> arr = new ArrayList<>();
     arr.addAll(Arrays.asList(new ImmutablePair<>("id", BIGINT),
-        new ImmutablePair<>("value", DOUBLE)
+        new ImmutablePair<>("value", DOUBLE),
+        new ImmutablePair<>("verdictdbtier", BIGINT)
     ));
     staticMetaData.addTableData(new StaticMetaData.TableInfo(originalSchema, "originalTable_scrambled"), arr);
     arr = new ArrayList<>();
@@ -108,7 +110,7 @@ public class AsyncAggScaleTest {
   @Test
   public void ScrambleTableTest() throws VerdictDBException,SQLException {
     RelationStandardizer.resetItemID();
-    String sql = "select sum(value) from originalTable_scrambled";
+    String sql = "select verdictdbtier, sum(value) from originalTable_scrambled group by verdictdbtier";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
     RelationStandardizer gen = new RelationStandardizer(staticMetaData);
@@ -119,6 +121,7 @@ public class AsyncAggScaleTest {
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
     Dimension d1 = new Dimension("originalSchema", "originalTable_scrambled", 0, 0);
     assertEquals(new HyperTableCube(Arrays.asList(d1)), ((AggExecutionNode)queryExecutionPlan.getRootNode().dependents.get(0).getDependents().get(0)).getCubes().get(0));
+
     ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().dependents.get(0)).setScrambleMeta(meta);
     queryExecutionPlan.setScalingNode();
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
@@ -126,23 +129,4 @@ public class AsyncAggScaleTest {
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
-  //@Test
-  public void ScrambleTableCompressTest() throws VerdictDBException,SQLException {
-    RelationStandardizer.resetItemID();
-    String sql = "select sum(value) from originalTable_scrambled";
-    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
-    AbstractRelation relation = sqlToRelation.toRelation(sql);
-    RelationStandardizer gen = new RelationStandardizer(staticMetaData);
-    relation = gen.standardize((SelectQuery) relation);
-
-    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
-    queryExecutionPlan.cleanUp();
-    queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().dependents.get(0)).setScrambleMeta(meta);
-    queryExecutionPlan.setScalingNode();
-    queryExecutionPlan.compress();
-    stmt.execute("create schema if not exists \"verdictdb_temp\";");
-    queryExecutionPlan.root.executeAndWaitForTermination(new JdbcConnection(conn, new H2Syntax()));
-    stmt.execute("drop schema \"verdictdb_temp\" cascade;");
-  }
 }

@@ -311,14 +311,10 @@ public class QueryExecutionPlan {
         }
       }
     }
+
     for (AsyncAggExecutionNode asyncNode:toScaleList) {
-      List<AggExecutionNode> aggNodeList = new ArrayList<>();
-      aggNodeList.add((AggExecutionNode) asyncNode.getDependent(0));
-      for (int i=1; i<asyncNode.getDependents().size(); i++) {
-        aggNodeList.add((AggExecutionNode) asyncNode.getDependent(i).getDependent(1));
-      }
-      for (AggExecutionNode aggExecutionNode:aggNodeList) {
-        AsyncAggScaleExecutionNode.create(this, aggExecutionNode);
+      for (QueryExecutionNode dependent:asyncNode.getDependents()) {
+        AsyncAggScaleExecutionNode.create(this, dependent);
       }
     }
   }

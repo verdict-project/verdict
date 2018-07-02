@@ -85,13 +85,8 @@ public class AggCombinerExecutionNode extends CreateTableAsSelectExecutionNode {
   public ExecutionInfoToken executeNode(DbmsConnection conn, List<ExecutionInfoToken> downstreamResults) 
       throws VerdictDBException {
     ExecutionInfoToken token = super.executeNode(conn, downstreamResults);
-    /*
-    List<HyperTableCube> cubes = new ArrayList<>();
-    for (ExecutionInfoToken downstreamResult:downstreamResults) {
-      cubes.addAll((List<HyperTableCube>) downstreamResult.getValue("hyperTableCube"));
-    }
+    List<HyperTableCube> cubes = (List<HyperTableCube>) downstreamResults.get(downstreamResults.size()-1).getValue("hyperTableCube");
     token.setKeyValue("hyperTableCube", cubes);
-    */
     return token;
   }
 
