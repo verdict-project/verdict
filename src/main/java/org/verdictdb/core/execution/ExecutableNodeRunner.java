@@ -60,8 +60,10 @@ public class ExecutableNodeRunner implements Runnable {
       if (tokens == null) {
         continue;
       }
-      if (doesIncludeFailure(tokens)) {
-        broadcast(ExecutionInfoToken.failureToken());
+//      System.out.println(node.getClass().toString() + " " + tokens);
+      ExecutionInfoToken failureToken = getFailureTokenIfExists(tokens);
+      if (failureToken != null) {
+        broadcast(failureToken);
         break;
       }
       if (areAllSuccess(tokens)) {
@@ -100,7 +102,7 @@ public class ExecutableNodeRunner implements Runnable {
   }
 
   void broadcast(ExecutionInfoToken token) {
-//    System.out.println(new ToStringBuilder(node, ToStringStyle.DEFAULT_STYLE) + " broadcasts: " + token);
+    System.out.println(new ToStringBuilder(node, ToStringStyle.DEFAULT_STYLE) + " broadcasts: " + token);
     for (ExecutionTokenQueue dest : node.getDestinationQueues()) {
       dest.add(token);
     }
@@ -127,13 +129,15 @@ public class ExecutableNodeRunner implements Runnable {
     return node.createToken(intermediate);
   }
 
-  boolean doesIncludeFailure(List<ExecutionInfoToken> tokens) {
+  ExecutionInfoToken getFailureTokenIfExists(List<ExecutionInfoToken> tokens) {
     for (ExecutionInfoToken t : tokens) {
+      System.out.println(t);
       if (t.isFailureToken()) {
-        return true;
+        System.out.println("yes");
+        return t;
       }
     }
-    return false;
+    return null;
   }
 
   boolean areAllSuccess(List<ExecutionInfoToken> latestResults) {

@@ -52,7 +52,6 @@ public class JdbcConnection implements DbmsConnection {
       }
       stmt.close();
       return jrs;
-     
     } catch (SQLException e) {
       throw new VerdictDBDbmsException(e.getMessage());
     }
