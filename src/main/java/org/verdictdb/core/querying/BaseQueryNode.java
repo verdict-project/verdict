@@ -134,6 +134,11 @@ public abstract class BaseQueryNode implements ExecutableNode {
   public ExecutionTokenQueue getListeningQueue(int index) {
     return listeningQueues.get(index);
   }
+  
+  @Override
+  public int getDependentNodeCount() {
+    return dependents.size();
+  }
 
   /**
    * 

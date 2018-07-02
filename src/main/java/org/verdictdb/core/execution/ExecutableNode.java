@@ -29,5 +29,7 @@ public interface ExecutableNode {
   public SqlConvertable createQuery(List<ExecutionInfoToken> tokens) throws VerdictDBException;
   
   public ExecutionInfoToken createToken(DbmsQueryResult result);
+  
+  public int getDependentNodeCount();
 
 }

@@ -28,8 +28,13 @@ public class ExecutablePlanRunner {
   
   public static void runTillEnd(DbmsConnection conn, ExecutablePlan plan) {
     ExecutionTokenReader reader = (new ExecutablePlanRunner(conn, plan)).getTokenReader();
-    while (reader.next() != null) {
-      // do nothing
+    while (true) {
+      ExecutionInfoToken token = reader.next();
+      if (token == null) {
+        break;
+      } else {
+//        System.out.println(token);
+      }
     }
   }
   

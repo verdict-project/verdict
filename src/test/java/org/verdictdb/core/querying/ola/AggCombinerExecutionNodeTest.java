@@ -97,17 +97,15 @@ public class AggCombinerExecutionNodeTest {
     String schemaName = (String) token.getValue("schemaName");
     String tableName = (String) token.getValue("tableName");
     
-    conn.execute(QueryToSql.convert(
+    DbmsQueryResult result = conn.execute(QueryToSql.convert(
         new H2Syntax(),
         SelectQuery.create(ColumnOp.count(), base)));
-    DbmsQueryResult result = conn.getResult();
     result.next();
     int expectedCount = Integer.valueOf(result.getValue(0).toString());
     
-    conn.execute(QueryToSql.convert(
+    DbmsQueryResult result2 = conn.execute(QueryToSql.convert(
         new H2Syntax(),
         SelectQuery.create(new AsteriskColumn(), new BaseTable(schemaName, tableName, "t"))));
-    DbmsQueryResult result2 = conn.getResult();
     result2.next();
     int actualCount = Integer.valueOf(result2.getValue(0).toString());
     assertEquals(expectedCount, actualCount);

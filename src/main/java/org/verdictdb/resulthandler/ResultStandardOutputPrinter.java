@@ -3,16 +3,16 @@ package org.verdictdb.resulthandler;
 import org.verdictdb.core.connection.DbmsQueryResult;
 import org.verdictdb.core.execution.ExecutionResultReader;
 
-public class StandardOutputPrinter {
+public class ResultStandardOutputPrinter {
   
   ExecutionResultReader reader;
   
-  public StandardOutputPrinter(ExecutionResultReader reader) {
+  public ResultStandardOutputPrinter(ExecutionResultReader reader) {
     this.reader = reader;
   }
   
   public static void run(ExecutionResultReader reader) {
-    (new StandardOutputPrinter(reader)).run();
+    (new ResultStandardOutputPrinter(reader)).run();
   }
   
   public void run() {

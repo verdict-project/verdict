@@ -38,6 +38,7 @@ import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.core.sqlobject.SubqueryColumn;
 import org.verdictdb.core.sqlobject.UnnamedColumn;
 import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.resulthandler.ResultStandardOutputPrinter;
 import org.verdictdb.sqlreader.NonValidatingSQLParser;
 import org.verdictdb.sqlreader.QueryToSql;
 import org.verdictdb.sqlreader.RelationStandardizer;
@@ -276,7 +277,7 @@ public class TpchAyncExecutionPlanTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    queryExecutionPlan.getRootNode().print();
+//    queryExecutionPlan.getRootNode().print();
     
     assertEquals(1, queryExecutionPlan.root.getDependents().size());
     assertEquals(aggBlockCount, queryExecutionPlan.root.getDependent(0).getDependents().size());
@@ -426,6 +427,7 @@ public class TpchAyncExecutionPlanTest {
         ((CreateTableAsSelectNode) queryExecutionPlan.root.getDependent(0).getDependent(0)).selectQuery);
 
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
+//    ResultStandardOutputPrinter.run(ExecutablePlanRunner.getResultReader(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan));
     ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
 //    queryExecutionPlan.root.executeAndWaitForTermination(new JdbcConnection(conn, new H2Syntax()));
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
@@ -458,7 +460,7 @@ public class TpchAyncExecutionPlanTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    queryExecutionPlan.getRootNode().print();
+//    queryExecutionPlan.getRootNode().print();
     assertEquals(5, queryExecutionPlan.root.getDependent(0).getDependents().size());
 
     AbstractRelation orders = new BaseTable("tpch", "orders", "vt1");
@@ -478,7 +480,7 @@ public class TpchAyncExecutionPlanTest {
     ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
 //    queryExecutionPlan.root.executeAndWaitForTermination(new JdbcConnection(conn, new H2Syntax()));
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
-    queryExecutionPlan.getRootNode().print();
+//    queryExecutionPlan.getRootNode().print();
   }
 
   @Test
@@ -519,7 +521,7 @@ public class TpchAyncExecutionPlanTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    queryExecutionPlan.getRootNode().print();
+//    queryExecutionPlan.getRootNode().print();
     assertEquals(5, queryExecutionPlan.root.dependents.get(0).dependents.size());
 
     AbstractRelation customer = new BaseTable("tpch", "customer", "vt1");
@@ -623,7 +625,7 @@ public class TpchAyncExecutionPlanTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    queryExecutionPlan.getRootNode().print();
+//    queryExecutionPlan.getRootNode().print();
     assertEquals(3, queryExecutionPlan.root.dependents.get(0).dependents.size());
 
     AbstractRelation lineitem = new BaseTable("tpch", "lineitem_scrambled", "vt1");
@@ -721,7 +723,7 @@ public class TpchAyncExecutionPlanTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    queryExecutionPlan.getRootNode().print();
+//    queryExecutionPlan.getRootNode().print();
     
     assertEquals(5, queryExecutionPlan.root.dependents.get(0).dependents.size());
     assertEquals(1, queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.size());
@@ -886,7 +888,7 @@ public class TpchAyncExecutionPlanTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    queryExecutionPlan.getRootNode().print();
+//    queryExecutionPlan.getRootNode().print();
     
     assertEquals(5, queryExecutionPlan.root.dependents.get(0).dependents.size());
 
@@ -1033,7 +1035,7 @@ public class TpchAyncExecutionPlanTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    queryExecutionPlan.getRootNode().print();
+//    queryExecutionPlan.getRootNode().print();
     
     assertEquals(5, queryExecutionPlan.root.dependents.get(0).dependents.size());
 
@@ -1166,7 +1168,7 @@ public class TpchAyncExecutionPlanTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    queryExecutionPlan.getRootNode().print();
+//    queryExecutionPlan.getRootNode().print();
     
     assertEquals(5, queryExecutionPlan.root.dependents.get(0).dependents.size());
 
@@ -1289,7 +1291,7 @@ public class TpchAyncExecutionPlanTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    queryExecutionPlan.getRootNode().print();
+//    queryExecutionPlan.getRootNode().print();
     assertEquals(5, queryExecutionPlan.root.getDependent(0).getDependents().size());
 
     AbstractRelation orders = new BaseTable("tpch", "orders_scrambled", "vt1");
@@ -1395,7 +1397,7 @@ public class TpchAyncExecutionPlanTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    queryExecutionPlan.getRootNode().print();
+//    queryExecutionPlan.getRootNode().print();
     assertEquals(3, queryExecutionPlan.root.getDependent(0).dependents.size());
 
     BaseTable customer = new BaseTable("tpch", "customer", "vt1");
@@ -1462,7 +1464,7 @@ public class TpchAyncExecutionPlanTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    queryExecutionPlan.getRootNode().print();
+//    queryExecutionPlan.getRootNode().print();
 
     assertEquals(3, queryExecutionPlan.root.dependents.get(0).dependents.size());
 
@@ -1539,7 +1541,7 @@ public class TpchAyncExecutionPlanTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    queryExecutionPlan.getRootNode().print();
+//    queryExecutionPlan.getRootNode().print();
     assertEquals(3, queryExecutionPlan.root.getDependent(0).dependents.size());
 
     SelectQuery expected = SelectQuery.create(
@@ -1610,7 +1612,7 @@ public class TpchAyncExecutionPlanTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    queryExecutionPlan.getRootNode().print();
+//    queryExecutionPlan.getRootNode().print();
 
     assertEquals(3, queryExecutionPlan.root.dependents.get(0).dependents.size());
 //    assertEquals(1, queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.size());
@@ -1703,7 +1705,7 @@ public class TpchAyncExecutionPlanTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    queryExecutionPlan.getRootNode().print();
+//    queryExecutionPlan.getRootNode().print();
     assertEquals(5, queryExecutionPlan.root.getDependent(0).dependents.size());
 
     SelectQuery expected = SelectQuery.create(
@@ -1776,7 +1778,7 @@ public class TpchAyncExecutionPlanTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    queryExecutionPlan.getRootNode().print();
+//    queryExecutionPlan.getRootNode().print();
     
     AbstractRelation lineitem = new BaseTable("tpch", "lineitem_scrambled", "vt1");
     AbstractRelation part = new BaseTable("tpch", "part", "vt2");
@@ -1999,7 +2001,7 @@ public class TpchAyncExecutionPlanTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    queryExecutionPlan.getRootNode().print();
+//    queryExecutionPlan.getRootNode().print();
 
     assertEquals(3, queryExecutionPlan.root.getDependent(0).getDependent(0).dependents.size());
     SelectQuery expected = SelectQuery.create(
@@ -2141,7 +2143,7 @@ public class TpchAyncExecutionPlanTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    queryExecutionPlan.getRootNode().print();
+//    queryExecutionPlan.getRootNode().print();
 
     assertEquals(5, queryExecutionPlan.root.getDependent(0).dependents.size());
     assertEquals(1, queryExecutionPlan.root.getDependent(0).getDependent(0).dependents.size());
@@ -2304,7 +2306,7 @@ public class TpchAyncExecutionPlanTest {
     String aliasName = String.format("verdictdbalias_%d_0", queryExecutionPlan.getSerialNumber());
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    queryExecutionPlan.getRootNode().print();
+//    queryExecutionPlan.getRootNode().print();
     
     SelectQuery rewritten = SelectQuery.create(
         Arrays.<SelectItem>asList(

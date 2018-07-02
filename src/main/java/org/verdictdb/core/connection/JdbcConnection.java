@@ -20,7 +20,7 @@ public class JdbcConnection implements DbmsConnection {
   
   SqlSyntax syntax;
   
-  JdbcQueryResult jrs = null;
+//  JdbcQueryResult jrs = null;
   
   public JdbcConnection(Connection conn, SqlSyntax syntax) {
     this.conn = conn;
@@ -37,10 +37,11 @@ public class JdbcConnection implements DbmsConnection {
   }
   
   @Override
-  public boolean execute(String sql) throws VerdictDBDbmsException {
-    System.out.println("About to issue this query: " + sql);
+  public DbmsQueryResult execute(String sql) throws VerdictDBDbmsException {
+//    System.out.println("About to issue this query: " + sql);
     try {
       Statement stmt = conn.createStatement();
+      JdbcQueryResult jrs = null;
       boolean doesResultExist = stmt.execute(sql);
       if (doesResultExist) {
         ResultSet rs = stmt.getResultSet();
@@ -50,21 +51,20 @@ public class JdbcConnection implements DbmsConnection {
         jrs = null;
       }
       stmt.close();
-      return doesResultExist;
+      return jrs;
      
     } catch (SQLException e) {
       throw new VerdictDBDbmsException(e.getMessage());
     }
   }
 
-  @Override
-  public DbmsQueryResult getResult() {
-    return jrs;
-  }
+//  @Override
+//  public DbmsQueryResult getResult() {
+//    return jrs;
+//  }
   
   public DbmsQueryResult executeQuery(String sql) throws VerdictDBDbmsException {
-    execute(sql);
-    return getResult();
+    return execute(sql);
   }
 
 //  @Override

@@ -46,13 +46,7 @@ public class SparkConnection implements DbmsConnection {
   }
 
   @Override
-  public boolean execute(String query) throws VerdictDBDbmsException {
-    // TODO Auto-generated method stub
-    return false;
-  }
-
-  @Override
-  public DbmsQueryResult getResult() {
+  public DbmsQueryResult execute(String query) throws VerdictDBDbmsException {
     // TODO Auto-generated method stub
     return null;
   }

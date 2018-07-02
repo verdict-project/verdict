@@ -101,6 +101,7 @@ public class JdbcResultSetTest {
     List<String> expected = Arrays.asList("female", "male");
     while (jdbcResultSet.next()) {
       assertEquals(true, expected.contains(jdbcResultSet.getString("GENDER")));
+      assertEquals(true, expected.contains(jdbcResultSet.getString("gender")));
     }
   }
 
@@ -120,7 +121,9 @@ public class JdbcResultSetTest {
     while (jdbcResultSet.next()) {
       if (jdbcResultSet.getString(1).equals("female")) {
         assertEquals(3, jdbcResultSet.getInt(2));
-      } else assertEquals(5, jdbcResultSet.getInt(2));
+      } else {
+        assertEquals(5, jdbcResultSet.getInt(2));
+      }
     }
   }
 
@@ -140,7 +143,13 @@ public class JdbcResultSetTest {
     while (jdbcResultSet.next()) {
       if (jdbcResultSet.getString(1).equals("female")) {
         assertEquals(3, jdbcResultSet.getInt("CNT"));
-      } else assertEquals(5, jdbcResultSet.getInt("CNT"));
+        assertEquals(3, jdbcResultSet.getInt("cnt"));
+        assertEquals(3, jdbcResultSet.getInt("cNT"));
+      } else {
+        assertEquals(5, jdbcResultSet.getInt("CNT"));
+        assertEquals(5, jdbcResultSet.getInt("cnt"));
+        assertEquals(5, jdbcResultSet.getInt("cNT"));
+      }
     }
   }
 
@@ -180,7 +189,13 @@ public class JdbcResultSetTest {
     while (jdbcResultSet.next()) {
       if (jdbcResultSet.getString(1).equals("female")) {
         assertEquals(3, jdbcResultSet.getLong("CNT"));
-      } else assertEquals(5, jdbcResultSet.getLong("CNT"));
+        assertEquals(3, jdbcResultSet.getLong("cnt"));
+        assertEquals(3, jdbcResultSet.getLong("cNT"));
+      } else {
+        assertEquals(5, jdbcResultSet.getLong("CNT"));
+        assertEquals(5, jdbcResultSet.getLong("cnt"));
+        assertEquals(5, jdbcResultSet.getLong("cNT"));
+      }
     }
   }
 
