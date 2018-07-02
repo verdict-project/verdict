@@ -7,20 +7,20 @@ import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
-import org.verdictdb.core.query.AbstractRelation;
-import org.verdictdb.core.query.AliasReference;
-import org.verdictdb.core.query.AliasedColumn;
-import org.verdictdb.core.query.BaseColumn;
-import org.verdictdb.core.query.BaseTable;
-import org.verdictdb.core.query.ColumnOp;
-import org.verdictdb.core.query.SelectItem;
-import org.verdictdb.core.query.SelectQuery;
 import org.verdictdb.core.rewriter.AliasRenamingRules;
-import org.verdictdb.core.rewriter.ScrambleMeta;
-import org.verdictdb.core.scramble.Scrambler;
-import org.verdictdb.core.sql.SelectQueryToSql;
+import org.verdictdb.core.scrambling.ScrambleMeta;
+import org.verdictdb.core.scrambling.Scrambler;
+import org.verdictdb.core.sqlobject.AbstractRelation;
+import org.verdictdb.core.sqlobject.AliasReference;
+import org.verdictdb.core.sqlobject.AliasedColumn;
+import org.verdictdb.core.sqlobject.BaseColumn;
+import org.verdictdb.core.sqlobject.BaseTable;
+import org.verdictdb.core.sqlobject.ColumnOp;
+import org.verdictdb.core.sqlobject.SelectItem;
+import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.exception.VerdictDBException;
-import org.verdictdb.sql.syntax.HiveSyntax;
+import org.verdictdb.sqlreader.SelectQueryToSql;
+import org.verdictdb.sqlsyntax.HiveSyntax;
 
 public class AggQueryRewriterTest {
 

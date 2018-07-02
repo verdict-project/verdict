@@ -31,7 +31,7 @@ public class AggregateFrame {
   List<Integer> columnTypes = new ArrayList<>();
 
   DbmsQueryResultMetaData dbmsQueryResultMetaData = new DbmsQueryResultMetaData();
-  
+
   Map<AggregateGroup, AggregateMeasures> data = new HashMap<>();
   
   public AggregateFrame(List<String> orderedColumnNames) throws VerdictDBValueException {

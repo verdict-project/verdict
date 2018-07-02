@@ -1,15 +1,13 @@
 package org.verdictdb.core.rewriter.aggresult;
 
-import static org.junit.Assert.*;
-
 import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
-import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.core.aggresult.AggregateFrame;
 import org.verdictdb.core.aggresult.AggregateGroup;
 import org.verdictdb.core.aggresult.AggregateMeasures;
+import org.verdictdb.core.connection.DbmsQueryResult;
 import org.verdictdb.exception.VerdictDBValueException;
 
 public class AggregateFrameQueryResultTest {
