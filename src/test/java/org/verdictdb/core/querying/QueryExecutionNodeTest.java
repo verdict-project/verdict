@@ -8,7 +8,7 @@ import java.util.Arrays;
 import org.junit.Test;
 import org.verdictdb.core.connection.DbmsConnection;
 import org.verdictdb.core.scrambling.ScrambleMeta;
-import org.verdictdb.core.scrambling.Scrambler;
+import org.verdictdb.core.scrambling.BaseScrambler;
 import org.verdictdb.core.sqlobject.AliasReference;
 import org.verdictdb.core.sqlobject.AliasedColumn;
 import org.verdictdb.core.sqlobject.AsteriskColumn;
@@ -25,9 +25,9 @@ public class QueryExecutionNodeTest {
     int aggblockCount = 2;
     ScrambleMeta meta = new ScrambleMeta();
     meta.insertScrambleMetaEntry("myschema", "mytable",
-        Scrambler.getAggregationBlockColumn(),
-        Scrambler.getSubsampleColumn(),
-        Scrambler.getTierColumn(),
+        BaseScrambler.getAggregationBlockColumn(),
+        BaseScrambler.getSubsampleColumn(),
+        BaseScrambler.getTierColumn(),
         aggblockCount);
     return meta;
   }

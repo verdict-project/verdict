@@ -12,7 +12,7 @@ import org.verdictdb.core.sqlobject.CreateTableAsSelectQuery;
 import org.verdictdb.core.sqlobject.SelectItem;
 import org.verdictdb.core.sqlobject.SelectQuery;
 
-public class UniformScrambler extends Scrambler {
+public class UniformScrambler extends BaseScrambler {
 
   public UniformScrambler(
       String originalSchemaName, String originalTableName,

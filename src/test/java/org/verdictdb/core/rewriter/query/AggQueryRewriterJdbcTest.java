@@ -14,7 +14,7 @@ import org.junit.Test;
 import org.verdictdb.core.connection.DbmsQueryResult;
 import org.verdictdb.core.connection.JdbcConnection;
 import org.verdictdb.core.scrambling.ScrambleMeta;
-import org.verdictdb.core.scrambling.Scrambler;
+import org.verdictdb.core.scrambling.BaseScrambler;
 import org.verdictdb.core.scrambling.UniformScrambler;
 import org.verdictdb.core.sqlobject.AbstractRelation;
 import org.verdictdb.core.sqlobject.AliasedColumn;
@@ -101,11 +101,11 @@ public class AggQueryRewriterJdbcTest {
   ScrambleMeta generateTestScrambleMeta() {
     ScrambleMeta meta = new ScrambleMeta();
     meta.insertScrambleMetaEntry(newSchema, newTable,
-        Scrambler.getAggregationBlockColumn(),
+        BaseScrambler.getAggregationBlockColumn(),
 //        Scrambler.getInclusionProbabilityColumn(),
 //        Scrambler.getInclusionProbabilityBlockDifferenceColumn(),
-        Scrambler.getSubsampleColumn(),
-        Scrambler.getTierColumn(),
+        BaseScrambler.getSubsampleColumn(),
+        BaseScrambler.getTierColumn(),
         aggblockCount);
     return meta;
   }

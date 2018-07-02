@@ -1,6 +1,6 @@
 package org.verdictdb.core.scrambling;
 
-public class Scrambler {
+public class BaseScrambler {
   
   String originalSchemaName;
   
@@ -23,7 +23,7 @@ public class Scrambler {
   
   static String tierColumn = "verdictdbtier";
   
-  public Scrambler(
+  public BaseScrambler(
       String originalSchemaName, String originalTableName,
       String scrambledSchemaName, String scrambledTableName,
       int aggregationBlockCount) {

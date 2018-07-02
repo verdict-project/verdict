@@ -9,7 +9,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
 import org.verdictdb.core.rewriter.AliasRenamingRules;
 import org.verdictdb.core.scrambling.ScrambleMeta;
-import org.verdictdb.core.scrambling.Scrambler;
+import org.verdictdb.core.scrambling.BaseScrambler;
 import org.verdictdb.core.sqlobject.AbstractRelation;
 import org.verdictdb.core.sqlobject.AliasReference;
 import org.verdictdb.core.sqlobject.AliasedColumn;
@@ -29,9 +29,9 @@ public class AggQueryRewriterTest {
   ScrambleMeta generateTestScrambleMeta() {
     ScrambleMeta meta = new ScrambleMeta();
     meta.insertScrambleMetaEntry("myschema", "mytable",
-        Scrambler.getAggregationBlockColumn(),
-        Scrambler.getSubsampleColumn(),
-        Scrambler.getTierColumn(),
+        BaseScrambler.getAggregationBlockColumn(),
+        BaseScrambler.getSubsampleColumn(),
+        BaseScrambler.getTierColumn(),
         aggblockCount);
     return meta;
   }

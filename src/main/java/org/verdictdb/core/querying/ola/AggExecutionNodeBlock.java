@@ -116,8 +116,6 @@ public class AggExecutionNodeBlock {
       Dimension dimension = new Dimension(scrambles.get(0).getLeft(), scrambles.get(0).getRight(), i, i);
       ((AggExecutionNode)aggroot).getCubes().addAll(Arrays.asList(new HyperTableCube(Arrays.asList(dimension))));
 
-
-
       for (Pair<BaseQueryNode, Triple<String, String, String>> a : scrambledNodeAndTableName) {
         BaseQueryNode scrambledNode = a.getLeft();
         String schemaName = a.getRight().getLeft();
