@@ -29,7 +29,7 @@ public class JdbcResultSetMetaDataTest {
 
   private static Statement stmt;
 
-  private org.verdictdb.jdbc.JdbcResultSetMetaData jdbcResultSetMetaData1, jdbcResultSetMetaData2;
+  private org.verdictdb.jdbc41.JdbcResultSetMetaData jdbcResultSetMetaData1, jdbcResultSetMetaData2;
 
   @BeforeClass
   public static void setupH2Database() throws SQLException {
@@ -73,8 +73,8 @@ public class JdbcResultSetMetaDataTest {
     agg.add(new AggNameAndType("AGEAVG", "SUM"));
     AggregateFrame aggregateFrame = AggregateFrame.fromDmbsQueryResult(queryResult, nonAgg, agg);
     AggregateFrameQueryResult aggregateFrameQueryResult = (AggregateFrameQueryResult) aggregateFrame.toDbmsQueryResult();
-    jdbcResultSetMetaData1 = new org.verdictdb.jdbc.JdbcResultSetMetaData(queryResult);
-    jdbcResultSetMetaData2 = new org.verdictdb.jdbc.JdbcResultSetMetaData(aggregateFrameQueryResult);
+    jdbcResultSetMetaData1 = new org.verdictdb.jdbc41.JdbcResultSetMetaData(queryResult);
+    jdbcResultSetMetaData2 = new org.verdictdb.jdbc41.JdbcResultSetMetaData(aggregateFrameQueryResult);
   }
 
   @Test
