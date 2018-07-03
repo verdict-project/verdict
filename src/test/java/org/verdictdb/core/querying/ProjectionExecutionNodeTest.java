@@ -74,7 +74,7 @@ public class ProjectionExecutionNodeTest {
     ProjectionNode node = ProjectionNode.create(plan, query);
     String aliasName = String.format("verdictdbalias_%d_0", plan.getSerialNumber());
 
-    assertEquals(1, node.dependents.size());
+    assertEquals(1, node.getExecutableNodeBaseDependents().size());
     SelectQuery rewritten = SelectQuery.create(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("placeholderSchemaName", aliasName, "a"), "a"))

@@ -12,6 +12,7 @@ import org.junit.Test;
 import org.verdictdb.core.connection.DbmsConnection;
 import org.verdictdb.core.connection.JdbcConnection;
 import org.verdictdb.core.execution.ExecutableNodeRunner;
+import org.verdictdb.core.execution.ExecutablePlan;
 import org.verdictdb.core.execution.ExecutablePlanRunner;
 import org.verdictdb.core.execution.ExecutionInfoToken;
 import org.verdictdb.core.execution.ExecutionTokenReader;
@@ -76,7 +77,7 @@ public class AggExecutionNodeTest {
     AggExecutionNode node = AggExecutionNode.create(plan, query);
     String aliasName = String.format("verdictdbalias_%d_0", plan.getSerialNumber());
 
-    assertEquals(1, node.dependents.size());
+    assertEquals(1, node.getExecutableNodeBaseDependents().size());
     SelectQuery rewritten = SelectQuery.create(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("placeholderSchemaName", aliasName, "a"), "a"))
@@ -109,15 +110,17 @@ public class AggExecutionNodeTest {
     subqueryToken.setKeyValue("schemaName", "newschema");
     subqueryToken.setKeyValue("tableName", "temptable");
     
-    ExecutionTokenReader reader = 
-        ExecutablePlanRunner.getTokenReader(conn, (new SimpleTreePlan(node.dependents.get(0))));
-    ExecutionInfoToken downstreamResult = reader.next();
+    SimpleTreePlan plan = new SimpleTreePlan(node);
+    plan.root.print();
+    
+    ExecutionTokenReader reader = ExecutablePlanRunner.getTokenReader(conn, plan);
+    ExecutionInfoToken outputToken = reader.next();
 //    ExecutionInfoToken downstreamResult = node.dependents.get(0).executeNode(conn, Arrays.<ExecutionInfoToken>asList());
-    ExecutionInfoToken newTableToken = ExecutableNodeRunner.execute(conn, node, Arrays.asList(downstreamResult));
+//    ExecutionInfoToken newTableToken = ExecutableNodeRunner.execute(conn, node, Arrays.asList(downstreamResult));
 //     = node.executeNode(conn, );
     
-    String newSchemaName = (String) newTableToken.getValue("schemaName");
-    String newTableName = (String) newTableToken.getValue("tableName");
+    String newSchemaName = (String) outputToken.getValue("schemaName");
+    String newTableName = (String) outputToken.getValue("tableName");
     conn.execute(String.format("DROP TABLE \"%s\".\"%s\"", newSchemaName, newTableName));
   }
 

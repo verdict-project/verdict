@@ -4,8 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.verdictdb.core.querying.AggExecutionNode;
-import org.verdictdb.core.querying.BaseQueryNode;
+import org.verdictdb.core.querying.ExecutableNodeBase;
 import org.verdictdb.core.querying.QueryExecutionPlan;
+import org.verdictdb.core.querying.QueryNodeBase;
 import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.core.sqlobject.AbstractRelation;
 import org.verdictdb.core.sqlobject.BaseTable;
@@ -29,7 +30,7 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
 
     AsyncQueryExecutionPlan asyncPlan = 
         new AsyncQueryExecutionPlan(plan.getScratchpadSchemaName(), plan.getScrambleMeta());
-    BaseQueryNode newRoot = makeAsyncronousAggIfAvailable(plan.getScrambleMeta(), plan.getRootNode());
+    ExecutableNodeBase newRoot = makeAsyncronousAggIfAvailable(plan.getScrambleMeta(), plan.getRootNode());
     asyncPlan.setRootNode(newRoot);
     return asyncPlan;
   }
@@ -40,23 +41,31 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
    * @return
    * @throws VerdictDBException
    */
-  static BaseQueryNode makeAsyncronousAggIfAvailable(ScrambleMeta scrambleMeta, BaseQueryNode root) 
+  static ExecutableNodeBase makeAsyncronousAggIfAvailable(ScrambleMeta scrambleMeta, ExecutableNodeBase root) 
       throws VerdictDBException {
     List<AggExecutionNodeBlock> aggBlocks = identifyTopAggBlocks(scrambleMeta, root);
 
     // converted nodes should be used in place of the original nodes.
     for (int i = 0; i < aggBlocks.size(); i++) {
       AggExecutionNodeBlock nodeBlock = aggBlocks.get(i);
-      BaseQueryNode oldNode = nodeBlock.getBlockRootNode();
-      BaseQueryNode newNode = nodeBlock.convertToProgressiveAgg(scrambleMeta);
+      ExecutableNodeBase oldNode = nodeBlock.getBlockRootNode();
+      ExecutableNodeBase newNode = nodeBlock.convertToProgressiveAgg(scrambleMeta);
 
-      List<BaseQueryNode> parents = oldNode.getParents();
-      for (BaseQueryNode parent : parents) {
-        List<BaseQueryNode> parentDependants = parent.getDependents();
-        int idx = parentDependants.indexOf(oldNode);
-        parentDependants.remove(idx);
-        parentDependants.add(idx, newNode);
+      List<ExecutableNodeBase> parents = oldNode.getExecutableNodeBaseParents();
+      for (ExecutableNodeBase parent : parents) {
+        Integer channel = parent.getChannelForSource(oldNode);
+        if (channel == null) {
+          // do nothing
+        } else {
+          parent.cancelSubscriptionTo(oldNode);
+          parent.subscribeTo(newNode, channel);
+        }
+//        List<ExecutableNodeBase> parentDependants = parent.getExecutableNodeBaseDependents();
+//        int idx = parentDependants.indexOf(oldNode);
+//        parentDependants.remove(idx);
+//        parentDependants.add(idx, newNode);
       }
+//      root.cancelSubscriptionTo(oldNode);
     }
 
     return root;
@@ -65,7 +74,7 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
   // identify the nodes that are 
   // (1) aggregates with scrambled tables and 
   // (2) are not descendants of any other top aggregates.
-  static List<AggExecutionNodeBlock> identifyTopAggBlocks(ScrambleMeta scrambleMeta, BaseQueryNode root) {
+  static List<AggExecutionNodeBlock> identifyTopAggBlocks(ScrambleMeta scrambleMeta, ExecutableNodeBase root) {
     List<AggExecutionNodeBlock> aggblocks = new ArrayList<>();
 //    ScrambleMeta scrambleMeta = root.getPlan().getScrambleMeta();
 
@@ -78,7 +87,7 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
       }
     }
     
-    for (BaseQueryNode dep : root.getDependents()) {
+    for (ExecutableNodeBase dep : root.getExecutableNodeBaseDependents()) {
       List<AggExecutionNodeBlock> depAggBlocks = identifyTopAggBlocks(scrambleMeta, dep);
       aggblocks.addAll(depAggBlocks);
     }
@@ -86,8 +95,8 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
     return aggblocks;
   }
   
-  static boolean doesContainScramble(BaseQueryNode node, ScrambleMeta scrambleMeta) {
-    SelectQuery query = node.getSelectQuery();
+  static boolean doesContainScramble(ExecutableNodeBase node, ScrambleMeta scrambleMeta) {
+    SelectQuery query = ((QueryNodeBase) node).getSelectQuery();
     
     // check within the query
     for (AbstractRelation rel : query.getFromList()) {
@@ -113,7 +122,7 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
       // SelectQuery is not supposed to be passed.
     }
     
-    for (BaseQueryNode dep : node.getDependents()) {
+    for (ExecutableNodeBase dep : node.getExecutableNodeBaseDependents()) {
       if (dep instanceof AggExecutionNode) {
         continue;
       }

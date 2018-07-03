@@ -13,7 +13,7 @@ import org.verdictdb.core.sqlobject.SubqueryColumn;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBValueException;
 
-public abstract class QueryNodeWithPlaceHolders extends BaseQueryNode {
+public abstract class QueryNodeWithPlaceHolders extends QueryNodeBase {
   
   List<BaseTable> placeholderTables = new ArrayList<>();
 
@@ -24,12 +24,13 @@ public abstract class QueryNodeWithPlaceHolders extends BaseQueryNode {
     super(query);
   }
   
-  public Pair<BaseTable, ExecutionTokenQueue> createPlaceHolderTable(String aliasName) 
-      throws VerdictDBValueException {
+  public Pair<BaseTable, SubscriptionTicket> createPlaceHolderTable(String aliasName) {
+//      throws VerdictDBValueException {
     BaseTable table = new BaseTable("placeholderSchemaName", "placeholderTableName", aliasName);
     placeholderTables.add(table);
-    ExecutionTokenQueue listeningQueue = generateListeningQueue();
-    return Pair.of(table, listeningQueue);
+//    ExecutionTokenQueue listeningQueue = generateListeningQueue();
+    SubscriptionTicket ticket = createSubscriptionTicket();
+    return Pair.of(table, ticket);
   }
   
   @Override
@@ -80,7 +81,7 @@ public abstract class QueryNodeWithPlaceHolders extends BaseQueryNode {
     return placeholderTablesinFilter;
   }
   
-  void copyFields(QueryNodeWithPlaceHolders from, QueryNodeWithPlaceHolders to) {
+  protected void copyFields(QueryNodeWithPlaceHolders from, QueryNodeWithPlaceHolders to) {
     super.copyFields(from, to);
     to.placeholderTables = from.placeholderTables;
   }

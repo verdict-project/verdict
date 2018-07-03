@@ -8,12 +8,14 @@
 
 package org.verdictdb.core.querying.ola;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.verdictdb.core.connection.DbmsQueryResult;
 import org.verdictdb.core.execution.ExecutionInfoToken;
 import org.verdictdb.core.execution.ExecutionTokenQueue;
-import org.verdictdb.core.querying.BaseQueryNode;
+import org.verdictdb.core.querying.ExecutableNodeBase;
+import org.verdictdb.core.querying.QueryNodeBase;
 import org.verdictdb.core.querying.TempIdCreator;
 import org.verdictdb.core.rewriter.aggresult.AggNameAndType;
 import org.verdictdb.core.scrambling.ScrambleMeta;
@@ -35,7 +37,7 @@ import org.verdictdb.exception.VerdictDBValueException;
  * @author Yongjoo Park
  *
  */
-public class AsyncAggExecutionNode extends BaseQueryNode {
+public class AsyncAggExecutionNode extends ExecutableNodeBase {
 
   ScrambleMeta scrambleMeta;
 
@@ -61,22 +63,39 @@ public class AsyncAggExecutionNode extends BaseQueryNode {
     super();
   }
   
+//  public static AsyncAggExecutionNode castAndCreate(TempIdCreator idCreator,
+//      List<QueryNodeBase> individualAggs,
+//      List<QueryNodeBase> combiners) throws VerdictDBValueException {
+//    
+//    List<ExecutableNodeBase> ind = new ArrayList<>();
+//    List<ExecutableNodeBase> com = new ArrayList<>();
+//    for (QueryNodeBase n : individualAggs) {
+//      ind.add(n);
+//    }
+//    for (QueryNodeBase c : combiners) {
+//      com.add(c);
+//    }
+//    return create(idCreator, ind, com);
+//  }
+  
   public static AsyncAggExecutionNode create(
       TempIdCreator idCreator,
-      List<BaseQueryNode> individualAggs,
-      List<BaseQueryNode> combiners) throws VerdictDBValueException {
+      List<ExecutableNodeBase> individualAggs,
+      List<ExecutableNodeBase> combiners) throws VerdictDBValueException {
 
     AsyncAggExecutionNode node = new AsyncAggExecutionNode();
-    ExecutionTokenQueue rootQueue = node.generateListeningQueue();
+//    ExecutionTokenQueue rootQueue = node.generateListeningQueue();
     
     // first agg -> root
-    individualAggs.get(0).addBroadcastingQueue(rootQueue);
-    node.addDependency(individualAggs.get(0));
+    node.subscribeTo(individualAggs.get(0), 0);
+//    individualAggs.get(0).addBroadcastingQueue(rootQueue);
+//    node.addDependency(individualAggs.get(0));
 
     // combiners -> root
-    for (BaseQueryNode c : combiners) {
-      c.addBroadcastingQueue(rootQueue);
-      node.addDependency(c);
+    for (ExecutableNodeBase c : combiners) {
+      node.subscribeTo(c, 0);
+//      c.addBroadcastingQueue(rootQueue);
+//      node.addDependency(c);
     }
 
     return node;
@@ -112,7 +131,7 @@ public class AsyncAggExecutionNode extends BaseQueryNode {
 //  }
 
   @Override
-  public BaseQueryNode deepcopy() {
+  public ExecutableNodeBase deepcopy() {
     AsyncAggExecutionNode copy = new AsyncAggExecutionNode();
     copyFields(this, copy);
     return copy;

@@ -10,9 +10,9 @@ import org.verdictdb.core.execution.ExecutablePlan;
 
 public class SimpleTreePlan implements ExecutablePlan {
   
-  BaseQueryNode root;
+  ExecutableNodeBase root;
   
-  public SimpleTreePlan(BaseQueryNode root) {
+  public SimpleTreePlan(ExecutableNodeBase root) {
     this.root = root;
   }
 
@@ -24,15 +24,15 @@ public class SimpleTreePlan implements ExecutablePlan {
   @Override
   public List<ExecutableNode> getNodesInGroup(int groupId) {
     List<ExecutableNode> nodes = new ArrayList<>();
-    List<BaseQueryNode> pool = new LinkedList<>();
+    List<ExecutableNodeBase> pool = new LinkedList<>();
     pool.add(root);
     while (!pool.isEmpty()) {
-      BaseQueryNode n = pool.remove(0);
+      ExecutableNodeBase n = pool.remove(0);
       if (nodes.contains(n)) {
         continue;
       }
       nodes.add(n);
-      pool.addAll(n.getDependents());
+      pool.addAll(n.getExecutableNodeBaseDependents());
     }
     return nodes;
   }

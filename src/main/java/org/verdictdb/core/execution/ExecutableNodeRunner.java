@@ -3,6 +3,7 @@ package org.verdictdb.core.execution;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
@@ -44,6 +45,8 @@ public class ExecutableNodeRunner implements Runnable {
   public void run() {
     // no dependency exists
     if (node.getSourceQueues().size() == 0) {
+//      System.out.println("No loop: " + new ToStringBuilder(node, ToStringStyle.DEFAULT_STYLE));
+      
       try {
         executeAndBroadcast(Arrays.<ExecutionInfoToken>asList());
         broadcast(ExecutionInfoToken.successToken());
@@ -56,11 +59,20 @@ public class ExecutableNodeRunner implements Runnable {
   
     // dependency exists
     while (true) {
+//      try {
+//        TimeUnit.SECONDS.sleep(1);
+//      } catch (InterruptedException e1) {
+//        // TODO Auto-generated catch block
+//        e1.printStackTrace();
+//      }
+//      System.out.println("In the loop: " + new ToStringBuilder(node, ToStringStyle.DEFAULT_STYLE));
+//      System.out.println(successSourceCount);
+      
       List<ExecutionInfoToken> tokens = retrieve();
       if (tokens == null) {
         continue;
       }
-//      System.out.println(node.getClass().toString() + " " + tokens);
+      
       ExecutionInfoToken failureToken = getFailureTokenIfExists(tokens);
       if (failureToken != null) {
         broadcast(failureToken);
@@ -84,6 +96,7 @@ public class ExecutableNodeRunner implements Runnable {
 
   List<ExecutionInfoToken> retrieve() {
     List<ExecutionTokenQueue> sourceQueues = node.getSourceQueues();
+//    System.out.println(new ToStringBuilder(node, ToStringStyle.DEFAULT_STYLE) + " " + sourceQueues);
 
     for (int i = 0; i < sourceQueues.size(); i++) {
       ExecutionInfoToken rs = sourceQueues.get(i).peek();
@@ -102,9 +115,11 @@ public class ExecutableNodeRunner implements Runnable {
   }
 
   void broadcast(ExecutionInfoToken token) {
-//    System.out.println(new ToStringBuilder(node, ToStringStyle.DEFAULT_STYLE) + " broadcasts: " + token);
-    for (ExecutionTokenQueue dest : node.getDestinationQueues()) {
-      dest.add(token);
+    System.out.println(new ToStringBuilder(node, ToStringStyle.DEFAULT_STYLE) + " broadcasts: " + token);
+    for (ExecutableNode dest : node.getSubscribers()) {
+//      System.out.println("to: " + dest);
+      dest.getNotified(node, token);
+//      dest.add(token);
     }
   }
   
@@ -133,7 +148,7 @@ public class ExecutableNodeRunner implements Runnable {
     for (ExecutionInfoToken t : tokens) {
 //      System.out.println(t);
       if (t.isFailureToken()) {
-        System.out.println("yes");
+//        System.out.println("yes");
         return t;
       }
     }

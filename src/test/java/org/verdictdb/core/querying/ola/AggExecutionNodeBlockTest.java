@@ -14,7 +14,7 @@ import org.junit.Test;
 import org.verdictdb.core.connection.JdbcConnection;
 import org.verdictdb.core.execution.ExecutablePlanRunner;
 import org.verdictdb.core.querying.AggExecutionNode;
-import org.verdictdb.core.querying.BaseQueryNode;
+import org.verdictdb.core.querying.ExecutableNodeBase;
 import org.verdictdb.core.querying.QueryExecutionPlan;
 import org.verdictdb.core.querying.SimpleTreePlan;
 import org.verdictdb.core.scrambling.ScrambleMeta;
@@ -82,19 +82,19 @@ public class AggExecutionNodeBlockTest {
     
     AggExecutionNode aggnode = AggExecutionNode.create(plan, aggQuery);
     AggExecutionNodeBlock block = new AggExecutionNodeBlock(plan, aggnode);
-    BaseQueryNode converted = block.convertToProgressiveAgg(plan.getScrambleMeta());   // AsyncAggregation
+    ExecutableNodeBase converted = block.convertToProgressiveAgg(plan.getScrambleMeta());   // AsyncAggregation
 //    converted.print();
     assertTrue(converted instanceof AsyncAggExecutionNode);
     
-    assertTrue(converted.getDependent(0) instanceof AggExecutionNode);
+    assertTrue(converted.getExecutableNodeBaseDependent(0) instanceof AggExecutionNode);
     for (int i = 1; i < aggBlockCount; i++) {
-      assertTrue(converted.getDependent(i) instanceof AggCombinerExecutionNode);
+      assertTrue(converted.getExecutableNodeBaseDependent(i) instanceof AggCombinerExecutionNode);
       if (i == 1) {
-        assertTrue(converted.getDependent(i).getDependent(0) instanceof AggExecutionNode);
-        assertTrue(converted.getDependent(i).getDependent(1) instanceof AggExecutionNode);
+        assertTrue(converted.getExecutableNodeBaseDependent(i).getExecutableNodeBaseDependent(0) instanceof AggExecutionNode);
+        assertTrue(converted.getExecutableNodeBaseDependent(i).getExecutableNodeBaseDependent(1) instanceof AggExecutionNode);
       } else {
-        assertTrue(converted.getDependent(i).getDependent(0) instanceof AggCombinerExecutionNode);
-        assertTrue(converted.getDependent(i).getDependent(1) instanceof AggExecutionNode);
+        assertTrue(converted.getExecutableNodeBaseDependent(i).getExecutableNodeBaseDependent(0) instanceof AggCombinerExecutionNode);
+        assertTrue(converted.getExecutableNodeBaseDependent(i).getExecutableNodeBaseDependent(1) instanceof AggExecutionNode);
       }
     }
 //    assertEquals("initialized", converted.getStatus());

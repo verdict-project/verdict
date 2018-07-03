@@ -8,7 +8,7 @@ import org.verdictdb.core.execution.ExecutableNode;
 import org.verdictdb.core.execution.ExecutablePlan;
 import org.verdictdb.core.execution.ExecutionInfoToken;
 import org.verdictdb.core.execution.ExecutionTokenQueue;
-import org.verdictdb.core.querying.BaseQueryNode;
+import org.verdictdb.core.querying.ExecutableNodeBase;
 import org.verdictdb.core.sqlobject.SqlConvertible;
 import org.verdictdb.exception.VerdictDBException;
 
@@ -18,7 +18,7 @@ public class ScramblingPlan implements ExecutablePlan {
   
   DbmsQueryResult statistics;
   
-  private ScramblingPlan(BaseQueryNode scrambler, BaseQueryNode statRetreival) {
+  private ScramblingPlan(ExecutableNodeBase scrambler, ExecutableNodeBase statRetreival) {
     
     this.method = method;
   }

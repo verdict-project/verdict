@@ -33,7 +33,7 @@ public class QueryExecutionPlan implements ExecutablePlan, TempIdCreator {
 
   protected ScrambleMeta scrambleMeta;
 
-  protected BaseQueryNode root;
+  protected ExecutableNodeBase root;
 
   protected TempIdCreator idCreator;
 
@@ -75,7 +75,7 @@ public class QueryExecutionPlan implements ExecutablePlan, TempIdCreator {
     setSelectQuery(query);
   }
   
-  public QueryExecutionPlan(String scratchpadSchemaName, BaseQueryNode root) {
+  public QueryExecutionPlan(String scratchpadSchemaName, ExecutableNodeBase root) {
     this(scratchpadSchemaName);
     this.root = root;
   }
@@ -103,11 +103,11 @@ public class QueryExecutionPlan implements ExecutablePlan, TempIdCreator {
     return ((TempIdCreatorInScratchPadSchema) idCreator).getScratchpadSchemaName();
   }
 
-  public BaseQueryNode getRootNode() {
+  public ExecutableNodeBase getRootNode() {
     return root;
   }
 
-  public void setRootNode(BaseQueryNode root) {
+  public void setRootNode(ExecutableNodeBase root) {
     this.root = root;
   }
 
@@ -130,8 +130,8 @@ public class QueryExecutionPlan implements ExecutablePlan, TempIdCreator {
    * @throws VerdictDBValueException 
    * @throws VerdictDBTypeException 
    */
-  BaseQueryNode makePlan(SelectQuery query) throws VerdictDBException {
-    BaseQueryNode root = SelectAllExecutionNode.create(idCreator, query);
+  ExecutableNodeBase makePlan(SelectQuery query) throws VerdictDBException {
+    ExecutableNodeBase root = SelectAllExecutionNode.create(idCreator, query);
     return root;
   }
 
@@ -149,36 +149,36 @@ public class QueryExecutionPlan implements ExecutablePlan, TempIdCreator {
   }
 
   public void compress() {
-    List<BaseQueryNode> nodesToCompress = new ArrayList<>();
+    List<ExecutableNodeBase> nodesToCompress = new ArrayList<>();
     // compress the node from bottom to up in order to replace the select query conveniently
-    List<BaseQueryNode> traverse = new ArrayList<>();
+    List<ExecutableNodeBase> traverse = new ArrayList<>();
     traverse.add(root);
     while (!traverse.isEmpty()) {
-      BaseQueryNode node = traverse.get(0);
+      ExecutableNodeBase node = traverse.get(0);
       traverse.remove(0);
-      if (node.dependents.isEmpty() && !nodesToCompress.contains(node)) {
+      if (node.getDependentNodeCount() == 0 && !nodesToCompress.contains(node)) {
         nodesToCompress.add(node);
       }
-      else traverse.addAll(node.dependents);
+      else traverse.addAll(node.getExecutableNodeBaseDependents());
     }
 
-    List<BaseQueryNode> history = new ArrayList<>();
+    List<ExecutableNodeBase> history = new ArrayList<>();
     while (!nodesToCompress.isEmpty()) {
-      BaseQueryNode node = nodesToCompress.get(0);
+      ExecutableNodeBase node = nodesToCompress.get(0);
       nodesToCompress.remove(0);
       // Exception 1: has no parent(root), or has multiple parent
       // Exception 2: its parents has multiple dependents and this node share same queue with other dependents
       // Exception 3: two nodes are not SelectAllNode, ProjectionNode or AggregateNode
-      boolean compressable = node.parents.size()==1 && !isSharingQueue(node);
+      boolean compressable = node.getExecutableNodeBaseParents().size() == 1 && !isSharingQueue(node);
       if (compressable) {
-        BaseQueryNode parent = node.parents.get(0);
+        ExecutableNodeBase parent = node.getExecutableNodeBaseParents().get(0);
         if (((parent instanceof AggExecutionNode)||(parent instanceof SelectAllExecutionNode)||(parent instanceof ProjectionNode))
             && ((node instanceof AggExecutionNode)||(node instanceof SelectAllExecutionNode)||(node instanceof ProjectionNode)) ) {
           compressTwoNode(node, parent);
         }
       }
       history.add(node);
-      for (BaseQueryNode parent:node.parents) {
+      for (ExecutableNodeBase parent : node.getExecutableNodeBaseParents()) {
         if (!history.contains(parent) && !nodesToCompress.contains(parent)) {
           nodesToCompress.add(parent);
         }
@@ -187,90 +187,110 @@ public class QueryExecutionPlan implements ExecutablePlan, TempIdCreator {
   }
 
   // Compress node and parent into parent, node will be useless
-  void compressTwoNode(BaseQueryNode node, BaseQueryNode parent) {
+  void compressTwoNode(ExecutableNodeBase node, ExecutableNodeBase parent) {
+    if (!(node instanceof QueryNodeBase) || !(parent instanceof QueryNodeBase)) {
+      return;
+    }
+    QueryNodeBase parentQuery = (QueryNodeBase) parent;
+    QueryNodeBase nodeQuery = (QueryNodeBase) node;
 
     // Change the query of parents
-    BaseTable placeholderTableinParent = ((QueryNodeWithPlaceHolders)parent).getPlaceholderTables().get(parent.dependents.indexOf(node));
+    BaseTable placeholderTableinParent = ((QueryNodeWithPlaceHolders)parent).getPlaceholderTables().get(parent.getExecutableNodeBaseDependents().indexOf(node));
     ((QueryNodeWithPlaceHolders)parent).getPlaceholderTables().remove(placeholderTableinParent);
 
     // If temp table is in from list of parent, just direct replace with the select query of node
-    if (parent.selectQuery.getFromList().contains(placeholderTableinParent)) {
-      int index = parent.selectQuery.getFromList().indexOf(placeholderTableinParent);
-      node.selectQuery.setAliasName(parent.selectQuery.getFromList().get(index).getAliasName().get());
-      parent.selectQuery.getFromList().set(index, node.selectQuery);
+    if (parentQuery.getSelectQuery().getFromList().contains(placeholderTableinParent)) {
+      int index = parentQuery.getSelectQuery().getFromList().indexOf(placeholderTableinParent);
+      nodeQuery.getSelectQuery().setAliasName(
+          parentQuery.getSelectQuery().getFromList().get(index).getAliasName().get());
+      parentQuery.getSelectQuery().getFromList().set(index, nodeQuery.getSelectQuery());
     }
     // Otherwise, it need to search filter to find the temp table
     else {
       List<SubqueryColumn> placeholderTablesinFilter = ((QueryNodeWithPlaceHolders)parent).getPlaceholderTablesinFilter();
       for (SubqueryColumn filter:placeholderTablesinFilter) {
         if (filter.getSubquery().getFromList().size()==1 && filter.getSubquery().getFromList().get(0).equals(placeholderTableinParent)) {
-          filter.setSubquery(node.selectQuery);
+          filter.setSubquery(nodeQuery.getSelectQuery());
         }
       }
     }
 
     // Compress the node tree
-    parent.getListeningQueues().removeAll(node.broadcastingQueues);
-    parent.getListeningQueues().addAll(node.getListeningQueues());
-    parent.dependents.remove(node);
-    parent.dependents.addAll(node.dependents);
-    for (BaseQueryNode dependent:node.dependents) {
-      dependent.parents.remove(node);
-      dependent.parents.add(parent);
+    parentQuery.cancelSubscriptionTo(nodeQuery);
+    for (Pair<ExecutableNodeBase, Integer> s : nodeQuery.getSourcesAndChannels()) {
+      parentQuery.subscribeTo(s.getLeft(), s.getRight());
     }
+//    parent.getListeningQueues().removeAll(node.broadcastingQueues);
+//    parent.getListeningQueues().addAll(node.getListeningQueues());
+//    parent.dependents.remove(node);
+//    parent.dependents.addAll(node.dependents);
+//    for (BaseQueryNode dependent:node.dependents) {
+//      dependent.parents.remove(node);
+//      dependent.parents.add(parent);
+//    }
   }
 
   // Return true if this node share queue with other dependant of its parent
-  boolean isSharingQueue(BaseQueryNode node) {
+  boolean isSharingQueue(ExecutableNodeBase node) {
     // must have one parent and this parent must have multiple dependents
-    if (node.parents.size()!=1 || node.parents.get(0).dependents.size()<=1) {
+    if (node.getExecutableNodeBaseParents().size() != 1 || 
+        node.getExecutableNodeBaseParents().get(0).getDependentNodeCount() <= 1) {
       return false;
     }
     else {
-      for (BaseQueryNode dependent:node.parents.get(0).dependents) {
-        if (!dependent.equals(node) && node.getBroadcastingQueues().equals(dependent.getBroadcastingQueues())) {
-          return true;
+      for (ExecutableNodeBase dependent : node.getExecutableNodeBaseParents().get(0).getExecutableNodeBaseDependents()) {
+        if (!dependent.equals(node)) {
+          for (ExecutableNode s1 : node.getSubscribers()) {
+            for (ExecutableNode s2 : dependent.getSubscribers()) {
+              if (s1.equals(s2)) {
+                return true;
+              }
+            }
+          }
+//          && node.getBroadcastingQueues().equals(dependent.getBroadcastingQueues())) {
+//        }
+//          return true;
         }
       }
       return false;
     }
   }
 
-  public BaseQueryNode getRoot() {
+  public ExecutableNodeBase getRoot() {
     return root;
   }
 
 
-  public void setScalingNode() throws VerdictDBException{
-    // Check from top to bottom to find AsyncAggExecutionNode
-    List<BaseQueryNode> checkList = new ArrayList<>();
-    List<AsyncAggExecutionNode> toScaleList = new ArrayList<>();
-    checkList.add(root);
-    List<BaseQueryNode> traversed = new ArrayList<>();
-    while (!checkList.isEmpty()) {
-      BaseQueryNode node = checkList.get(0);
-      checkList.remove(0);
-      traversed.add(node);
-      if (node instanceof AsyncAggExecutionNode && !toScaleList.contains(node)) {
-        toScaleList.add((AsyncAggExecutionNode) node);
-      }
-      for (BaseQueryNode dependent:node.dependents) {
-        if (!traversed.contains(dependent)) {
-          checkList.add(dependent);
-        }
-      }
-    }
-    for (AsyncAggExecutionNode asyncNode:toScaleList) {
-      List<AggExecutionNode> aggNodeList = new ArrayList<>();
-      aggNodeList.add((AggExecutionNode) asyncNode.getDependent(0));
-      for (int i=1; i<asyncNode.getDependents().size(); i++) {
-        aggNodeList.add((AggExecutionNode) asyncNode.getDependent(i).getDependent(1));
-      }
-      for (AggExecutionNode aggExecutionNode:aggNodeList) {
-        AsyncAggScaleExecutionNode.create(idCreator, aggExecutionNode);
-      }
-    }
-  }
+//  public void setScalingNode() throws VerdictDBException{
+//    // Check from top to bottom to find AsyncAggExecutionNode
+//    List<BaseQueryNode> checkList = new ArrayList<>();
+//    List<AsyncAggExecutionNode> toScaleList = new ArrayList<>();
+//    checkList.add(root);
+//    List<BaseQueryNode> traversed = new ArrayList<>();
+//    while (!checkList.isEmpty()) {
+//      BaseQueryNode node = checkList.get(0);
+//      checkList.remove(0);
+//      traversed.add(node);
+//      if (node instanceof AsyncAggExecutionNode && !toScaleList.contains(node)) {
+//        toScaleList.add((AsyncAggExecutionNode) node);
+//      }
+//      for (BaseQueryNode dependent:node.dependents) {
+//        if (!traversed.contains(dependent)) {
+//          checkList.add(dependent);
+//        }
+//      }
+//    }
+//    for (AsyncAggExecutionNode asyncNode:toScaleList) {
+//      List<AggExecutionNode> aggNodeList = new ArrayList<>();
+//      aggNodeList.add((AggExecutionNode) asyncNode.getDependent(0));
+//      for (int i=1; i<asyncNode.getDependents().size(); i++) {
+//        aggNodeList.add((AggExecutionNode) asyncNode.getDependent(i).getDependent(1));
+//      }
+//      for (AggExecutionNode aggExecutionNode:aggNodeList) {
+//        AsyncAggScaleExecutionNode.create(idCreator, aggExecutionNode);
+//      }
+//    }
+//  }
 
   @Override
   public List<Integer> getNodeGroupIDs() {
@@ -280,15 +300,15 @@ public class QueryExecutionPlan implements ExecutablePlan, TempIdCreator {
   @Override
   public List<ExecutableNode> getNodesInGroup(int groupId) {
     List<ExecutableNode> nodes = new ArrayList<>();
-    List<BaseQueryNode> pool = new LinkedList<>();
+    List<ExecutableNodeBase> pool = new LinkedList<>();
     pool.add(root);
     while (!pool.isEmpty()) {
-      BaseQueryNode n = pool.remove(0);
+      ExecutableNodeBase n = pool.remove(0);
       if (nodes.contains(n)) {
         continue;
       }
       nodes.add(n);
-      pool.addAll(n.getDependents());
+      pool.addAll(n.getExecutableNodeBaseDependents());
     }
     return nodes;
   }

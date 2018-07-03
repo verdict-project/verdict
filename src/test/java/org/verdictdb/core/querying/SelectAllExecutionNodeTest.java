@@ -72,15 +72,20 @@ public class SelectAllExecutionNodeTest {
     SelectAllExecutionNode node = SelectAllExecutionNode.create(plan, query);
     String aliasName = String.format("verdictdbalias_%d_0", plan.getSerialNumber());
 
-    assertEquals(1, node.dependents.size());
-    assertEquals(1, node.dependents.get(0).dependents.size());
+    assertEquals(1, node.getDependentNodeCount()
+);
+    assertEquals(1, node.getExecutableNodeBaseDependent(0).getDependentNodeCount()
+);
     SelectQuery rewritten = SelectQuery.create(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("placeholderSchemaName", aliasName, "a"), "a"))
         , new BaseTable("placeholderSchemaName", "placeholderTableName", aliasName));
     assertEquals(
         rewritten, 
-        ((SubqueryColumn)((ColumnOp) ((SelectQuery) node.dependents.get(0).getSelectQuery()).getFilter().get()).getOperand(1)).getSubquery());
+        ((SubqueryColumn)
+            ((ColumnOp) 
+                ((QueryNodeBase) node.getExecutableNodeBaseDependent(0)).getSelectQuery()
+                .getFilter().get()).getOperand(1)).getSubquery());
   }
 
   //
@@ -101,12 +106,12 @@ public class SelectAllExecutionNodeTest {
 //    QueryExecutionPlan plan = new QueryExecutionPlan(newSchema);
     SelectAllExecutionNode node = SelectAllExecutionNode.create(
         new TempIdCreatorInScratchPadSchema(newSchema), query);
-//    conn.executeUpdate(String.format("create table \"%s\".\"%s\"", newSchema, ((ProjectionExecutionNode)node.dependents.get(0)).newTableName));
+//    conn.executeUpdate(String.format("create table \"%s\".\"%s\"", newSchema, ((ProjectionExecutionNode)node.getExecutableNodeBaseDependent(0)).newTableName));
 //    ExecutionInfoToken subqueryToken = new ExecutionInfoToken();
-//    subqueryToken.setKeyValue("schemaName", ((ProjectionExecutionNode)node.dependents.get(0)).newTableSchemaName);
-//    subqueryToken.setKeyValue("tableName", ((ProjectionExecutionNode)node.dependents.get(0)).newTableName);
+//    subqueryToken.setKeyValue("schemaName", ((ProjectionExecutionNode)node.getExecutableNodeBaseDependent(0)).newTableSchemaName);
+//    subqueryToken.setKeyValue("tableName", ((ProjectionExecutionNode)node.getExecutableNodeBaseDependent(0)).newTableName);
 //    node.executeNode(conn, Arrays.asList(subqueryToken));
-//    conn.executeUpdate(String.format("drop table \"%s\".\"%s\"", newSchema, ((ProjectionExecutionNode)node.dependents.get(0)).newTableName));
+//    conn.executeUpdate(String.format("drop table \"%s\".\"%s\"", newSchema, ((ProjectionExecutionNode)node.getExecutableNodeBaseDependent(0)).newTableName));
 //    ExecutionTokenQueue queue = new ExecutionTokenQueue();
 //    node.addBroadcastingQueue(queue);
 //    node.executeAndWaitForTermination(conn);

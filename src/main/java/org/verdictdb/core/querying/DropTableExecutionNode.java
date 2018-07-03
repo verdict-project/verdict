@@ -2,14 +2,16 @@ package org.verdictdb.core.querying;
 
 import java.util.List;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.core.connection.DbmsQueryResult;
 import org.verdictdb.core.execution.ExecutionInfoToken;
+import org.verdictdb.core.sqlobject.BaseTable;
 import org.verdictdb.core.sqlobject.DropTableQuery;
 import org.verdictdb.core.sqlobject.SqlConvertible;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBValueException;
 
-public class DropTableExecutionNode extends BaseQueryNode {
+public class DropTableExecutionNode extends ExecutableNodeBase {
   
   public DropTableExecutionNode() {
     super();
@@ -43,7 +45,7 @@ public class DropTableExecutionNode extends BaseQueryNode {
   }
 
   @Override
-  public BaseQueryNode deepcopy() {
+  public ExecutableNodeBase deepcopy() {
     DropTableExecutionNode node = new DropTableExecutionNode();
     copyFields(this, node);
     return node;

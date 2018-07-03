@@ -26,8 +26,8 @@ public class SelectAllExecutionNode extends QueryNodeWithPlaceHolders {
 
   public static SelectAllExecutionNode create(TempIdCreator namer, SelectQuery query) throws VerdictDBValueException {
     SelectAllExecutionNode selectAll = new SelectAllExecutionNode(null);
-    Pair<BaseTable, ExecutionTokenQueue> baseAndQueue = selectAll.createPlaceHolderTable("t");
-    SelectQuery selectQuery = SelectQuery.create(new AsteriskColumn(), baseAndQueue.getLeft());
+    Pair<BaseTable, SubscriptionTicket> baseAndSubscriptionTicket = selectAll.createPlaceHolderTable("t");
+    SelectQuery selectQuery = SelectQuery.create(new AsteriskColumn(), baseAndSubscriptionTicket.getLeft());
     selectAll.setSelectQuery(selectQuery);
     
 //    Pair<String, String> tempTableFullName = plan.generateTempTableName();
@@ -36,13 +36,13 @@ public class SelectAllExecutionNode extends QueryNodeWithPlaceHolders {
     
     if (query.isAggregateQuery()) {
       AggExecutionNode dependent = AggExecutionNode.create(namer, query);
-      dependent.addBroadcastingQueue(baseAndQueue.getRight());
-      selectAll.addDependency(dependent);
+      dependent.registerSubscriber(baseAndSubscriptionTicket.getRight());
+//      selectAll.addDependency(dependent);
     }
     else {
       ProjectionNode dependent = ProjectionNode.create(namer, query);
-      dependent.addBroadcastingQueue(baseAndQueue.getRight());
-      selectAll.addDependency(dependent);
+      dependent.registerSubscriber(baseAndSubscriptionTicket.getRight());
+//      selectAll.addDependency(dependent);
     }
     
     return selectAll;
@@ -78,7 +78,7 @@ public class SelectAllExecutionNode extends QueryNodeWithPlaceHolders {
 //  }
 
   @Override
-  public BaseQueryNode deepcopy() {
+  public ExecutableNodeBase deepcopy() {
     SelectAllExecutionNode node = new SelectAllExecutionNode(selectQuery);
     copyFields(this, node);
     return node;

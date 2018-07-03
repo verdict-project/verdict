@@ -32,8 +32,9 @@ import java.util.List;
 
 import static java.sql.Types.BIGINT;
 import static java.sql.Types.DOUBLE;
+import static org.junit.Assert.assertEquals;
 
-public class AsyncAggAsyncHandlerTest {
+public class AsyncAggExecutionPlanTest {
 
   static Connection conn;
 
@@ -59,7 +60,7 @@ public class AsyncAggAsyncHandlerTest {
 
   @BeforeClass
   public static void setupH2Database() throws SQLException, VerdictDBException {
-    final String DB_CONNECTION = "jdbc:h2:mem:aggexecnodetest;DB_CLOSE_DELAY=-1";
+    final String DB_CONNECTION = "jdbc:h2:mem:asyncaggexecnodetest;DB_CLOSE_DELAY=-1";
     final String DB_USER = "";
     final String DB_PASSWORD = "";
     conn = DriverManager.getConnection(DB_CONNECTION, DB_USER, DB_PASSWORD);
@@ -110,7 +111,9 @@ public class AsyncAggAsyncHandlerTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
+    queryExecutionPlan.getRoot().print();
 
+    assertEquals(1, queryExecutionPlan.getRoot().getDependentNodeCount());
 //    TokenQueueToAyncHandler tokenQueueToAyncHandler = new TokenQueueToAyncHandler(queryExecutionPlan, new ExecutionTokenQueue());
 //    tokenQueueToAyncHandler.setHandler(new StandardOutputHandler());
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
@@ -154,8 +157,8 @@ public class AsyncAggAsyncHandlerTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getDependent(0)).setScrambleMeta(meta);
-    queryExecutionPlan.setScalingNode();
+    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependent(0)).setScrambleMeta(meta);
+//    queryExecutionPlan.setScalingNode();
 
 //    TokenQueueToAyncHandler tokenQueueToAyncHandler = new TokenQueueToAyncHandler(queryExecutionPlan, new ExecutionTokenQueue());
 //    tokenQueueToAyncHandler.setHandler(new StandardOutputHandler());
@@ -178,8 +181,8 @@ public class AsyncAggAsyncHandlerTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getDependent(0).getDependent(0)).setScrambleMeta(meta);
-    queryExecutionPlan.setScalingNode();
+    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependent(0).getExecutableNodeBaseDependent(0)).setScrambleMeta(meta);
+//    queryExecutionPlan.setScalingNode();
 
 //    TokenQueueToAyncHandler tokenQueueToAyncHandler = new TokenQueueToAyncHandler(queryExecutionPlan, new ExecutionTokenQueue());
 //    tokenQueueToAyncHandler.setHandler(new StandardOutputHandler());

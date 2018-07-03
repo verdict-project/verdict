@@ -42,7 +42,7 @@ public class AggExecutionNode extends CreateTableAsSelectNode {
   }
 
   @Override
-  public BaseQueryNode deepcopy() {
+  public ExecutableNodeBase deepcopy() {
     AggExecutionNode node = new AggExecutionNode(namer, selectQuery);
     copyFields(this, node);
     return node;

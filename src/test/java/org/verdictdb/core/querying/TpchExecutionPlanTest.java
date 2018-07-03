@@ -269,8 +269,8 @@ public class TpchExecutionPlanTest {
 //        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
-    assertEquals(1, queryExecutionPlan.root.dependents.size());
-    assertEquals(0, queryExecutionPlan.root.getDependents().get(0).dependents.size());
+    assertEquals(1, queryExecutionPlan.root.getExecutableNodeBaseDependents().size());
+    assertEquals(0, queryExecutionPlan.root.getExecutableNodeBaseDependent(0).getExecutableNodeBaseDependents().size());
 
     BaseTable base = new BaseTable("tpch", "lineitem", "vt1");
     List<UnnamedColumn> operand1 = Arrays.<UnnamedColumn>asList(
@@ -307,7 +307,7 @@ public class TpchExecutionPlanTest {
     expected.addOrderby(Arrays.<OrderbyAttribute>asList(new OrderbyAttribute("l_returnflag"),
         new OrderbyAttribute("l_linestatus")));
     expected.addLimit(ConstantColumn.valueOf(1));
-    assertEquals(expected, ((CreateTableAsSelectNode) queryExecutionPlan.root.getDependents().get(0)).selectQuery);
+    assertEquals(expected, ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0)).selectQuery);
 
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
     ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
@@ -350,7 +350,7 @@ public class TpchExecutionPlanTest {
 //        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
-    assertEquals(0, queryExecutionPlan.root.dependents.get(0).dependents.size());
+    assertEquals(0, queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().size());
 
     AbstractRelation customer = new BaseTable("tpch", "customer", "vt1");
     AbstractRelation orders = new BaseTable("tpch", "orders", "vt2");
@@ -400,7 +400,7 @@ public class TpchExecutionPlanTest {
         new OrderbyAttribute("o_orderdate")
     ));
     expected.addLimit(ConstantColumn.valueOf(10));
-    assertEquals(expected, ((CreateTableAsSelectNode) queryExecutionPlan.root.dependents.get(0)).selectQuery);
+    assertEquals(expected, ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0)).selectQuery);
 
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
     ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
@@ -434,7 +434,7 @@ public class TpchExecutionPlanTest {
 //        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
-    assertEquals(0, queryExecutionPlan.root.dependents.get(0).dependents.size());
+    assertEquals(0, queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().size());
 
     AbstractRelation orders = new BaseTable("tpch", "orders", "vt1");
     SelectQuery expected = SelectQuery.create(
@@ -444,7 +444,7 @@ public class TpchExecutionPlanTest {
         ),
         orders);
 
-    assertEquals(expected.getSelectList(), ((CreateTableAsSelectNode) queryExecutionPlan.root.getDependents().get(0)).selectQuery.getSelectList());
+    assertEquals(expected.getSelectList(), ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0)).selectQuery.getSelectList());
 
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
     ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
@@ -489,7 +489,7 @@ public class TpchExecutionPlanTest {
 //        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
-    assertEquals(0, queryExecutionPlan.root.dependents.get(0).dependents.size());
+    assertEquals(0, queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().size());
 
     AbstractRelation customer = new BaseTable("tpch", "customer", "vt1");
     AbstractRelation orders = new BaseTable("tpch", "orders", "vt2");
@@ -550,7 +550,7 @@ public class TpchExecutionPlanTest {
     expected.addGroupby(new AliasReference("n_name"));
     expected.addOrderby(new OrderbyAttribute("revenue", "desc"));
     expected.addLimit(ConstantColumn.valueOf(1));
-    assertEquals(expected, ((CreateTableAsSelectNode) queryExecutionPlan.root.dependents.get(0)).selectQuery);
+    assertEquals(expected, ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0)).selectQuery);
 
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
     ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
@@ -580,7 +580,7 @@ public class TpchExecutionPlanTest {
 //        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
-    assertEquals(0, queryExecutionPlan.root.dependents.get(0).dependents.size());
+    assertEquals(0, queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().size());
 
     AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "vt1");
     SelectQuery expected = SelectQuery.create(
@@ -610,7 +610,7 @@ public class TpchExecutionPlanTest {
         ConstantColumn.valueOf("15"))
     ));
     expected.addLimit(ConstantColumn.valueOf(1));
-    assertEquals(expected, ((CreateTableAsSelectNode) queryExecutionPlan.root.dependents.get(0)).selectQuery);
+    assertEquals(expected, ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0)).selectQuery);
 
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
     ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
@@ -670,8 +670,8 @@ public class TpchExecutionPlanTest {
 //        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
-    assertEquals(1, queryExecutionPlan.root.dependents.get(0).dependents.size());
-    assertEquals(0, queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.size());
+    assertEquals(1, queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().size());
+    assertEquals(0, queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().size());
     AbstractRelation supplier = new BaseTable("tpch", "supplier", "vt1");
     AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "vt2");
     AbstractRelation orders = new BaseTable("tpch", "orders", "vt3");
@@ -758,8 +758,8 @@ public class TpchExecutionPlanTest {
         new OrderbyAttribute("l_year")
     ));
     expected.addLimit(ConstantColumn.valueOf(1));
-    assertEquals(expected, ((CreateTableAsSelectNode) queryExecutionPlan.root.dependents.get(0)).selectQuery);
-    assertEquals(subquery, ((CreateTableAsSelectNode) queryExecutionPlan.root.dependents.get(0).dependents.get(0)).selectQuery);
+    assertEquals(expected, ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0)).selectQuery);
+    assertEquals(subquery, ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).selectQuery);
 
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
     ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
@@ -817,7 +817,7 @@ public class TpchExecutionPlanTest {
 //        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
-    assertEquals(1, queryExecutionPlan.root.dependents.get(0).dependents.size());
+    assertEquals(1, queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().size());
 
     AbstractRelation part = new BaseTable("tpch", "part", "vt1");
     AbstractRelation supplier = new BaseTable("tpch", "supplier", "vt2");
@@ -898,8 +898,8 @@ public class TpchExecutionPlanTest {
     expected.addGroupby(new AliasReference("o_year"));
     expected.addOrderby(new OrderbyAttribute("o_year"));
     expected.addLimit(ConstantColumn.valueOf(1));
-    assertEquals(expected, ((CreateTableAsSelectNode) queryExecutionPlan.root.dependents.get(0)).selectQuery);
-    assertEquals(subquery, ((CreateTableAsSelectNode) queryExecutionPlan.root.dependents.get(0).dependents.get(0)).selectQuery);
+    assertEquals(expected, ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0)).selectQuery);
+    assertEquals(subquery, ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).selectQuery);
 
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
     ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
@@ -952,7 +952,7 @@ public class TpchExecutionPlanTest {
 //        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
-    assertEquals(1, queryExecutionPlan.root.dependents.get(0).dependents.size());
+    assertEquals(1, queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().size());
 
     AbstractRelation part = new BaseTable("tpch", "part", "vt1");
     AbstractRelation supplier = new BaseTable("tpch", "supplier", "vt2");
@@ -1019,8 +1019,8 @@ public class TpchExecutionPlanTest {
     expected.addOrderby(Arrays.<OrderbyAttribute>asList(new OrderbyAttribute("nation"),
         new OrderbyAttribute("o_year", "desc")));
     expected.addLimit(ConstantColumn.valueOf(1));
-    assertEquals(expected, ((CreateTableAsSelectNode) queryExecutionPlan.root.dependents.get(0)).selectQuery);
-    assertEquals(subquery, ((CreateTableAsSelectNode) queryExecutionPlan.root.dependents.get(0).dependents.get(0)).selectQuery);
+    assertEquals(expected, ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0)).selectQuery);
+    assertEquals(subquery, ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).selectQuery);
 
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
     ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
@@ -1072,7 +1072,7 @@ public class TpchExecutionPlanTest {
 //        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
-    assertEquals(0, queryExecutionPlan.root.dependents.get(0).dependents.size());
+    assertEquals(0, queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().size());
 
     AbstractRelation customer = new BaseTable("tpch", "customer", "vt1");
     AbstractRelation orders = new BaseTable("tpch", "orders", "vt2");
@@ -1132,7 +1132,7 @@ public class TpchExecutionPlanTest {
     ));
     expected.addOrderby(new OrderbyAttribute("revenue", "desc"));
     expected.addLimit(ConstantColumn.valueOf(20));
-    assertEquals(expected, ((CreateTableAsSelectNode) queryExecutionPlan.root.dependents.get(0)).selectQuery);
+    assertEquals(expected, ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0)).selectQuery);
 
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
     ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
@@ -1181,7 +1181,7 @@ public class TpchExecutionPlanTest {
 //        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
-    assertEquals(0, queryExecutionPlan.root.dependents.get(0).dependents.size());
+    assertEquals(0, queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().size());
 
     AbstractRelation orders = new BaseTable("tpch", "orders", "vt1");
     AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "vt2");
@@ -1245,7 +1245,7 @@ public class TpchExecutionPlanTest {
     expected.addGroupby(new AliasReference("vc3"));
     expected.addOrderby(new OrderbyAttribute("vc3"));
     expected.addLimit(ConstantColumn.valueOf(1));
-    assertEquals(relation, ((CreateTableAsSelectNode) queryExecutionPlan.root.dependents.get(0)).selectQuery);
+    assertEquals(relation, ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0)).selectQuery);
 
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
     ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
@@ -1274,7 +1274,7 @@ public class TpchExecutionPlanTest {
 //        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
-    assertEquals(0, queryExecutionPlan.root.dependents.get(0).dependents.size());
+    assertEquals(0, queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().size());
 
     BaseTable customer = new BaseTable("tpch", "customer", "vt1");
     BaseTable orders = new BaseTable("tpch", "orders", "vt2");
@@ -1297,7 +1297,7 @@ public class TpchExecutionPlanTest {
         ), join
     );
     expected.addGroupby(new AliasReference("c_custkey"));
-    assertEquals(expected, ((CreateTableAsSelectNode) queryExecutionPlan.root.dependents.get(0)).selectQuery);
+    assertEquals(expected, ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0)).selectQuery);
 
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
     ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
@@ -1331,7 +1331,7 @@ public class TpchExecutionPlanTest {
 //        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
-    assertEquals(0, queryExecutionPlan.root.dependents.get(0).dependents.size());
+    assertEquals(0, queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().size());
 
     AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "vt1");
     AbstractRelation part = new BaseTable("tpch", "part", "vt2");
@@ -1370,7 +1370,7 @@ public class TpchExecutionPlanTest {
         new ColumnOp("date", ConstantColumn.valueOf("'2018-01-01'"))
     )));
     expected.addLimit(ConstantColumn.valueOf(1));
-    assertEquals(relation, ((CreateTableAsSelectNode) queryExecutionPlan.root.dependents.get(0)).selectQuery);
+    assertEquals(relation, ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0)).selectQuery);
 
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
     ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
@@ -1422,7 +1422,7 @@ public class TpchExecutionPlanTest {
 //        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
-    assertEquals(2, queryExecutionPlan.root.dependents.get(0).dependents.size());
+    assertEquals(2, queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().size());
 
     SelectQuery expected = SelectQuery.create(
         Arrays.<SelectItem>asList(
@@ -1435,7 +1435,7 @@ public class TpchExecutionPlanTest {
         ));
     assertEquals(
         expected.getFromList(),
-        ((CreateTableAsSelectNode) queryExecutionPlan.root.dependents.get(0)).getSelectQuery().getFromList());
+        ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0)).getSelectQuery().getFromList());
 
     SelectQuery revenue_cached = SelectQuery.create(
         Arrays.<SelectItem>asList(
@@ -1456,7 +1456,7 @@ public class TpchExecutionPlanTest {
     )));
     revenue_cached.addGroupby(new AliasReference("supplier_no"));
     revenue_cached.setAliasName("revenue_cached");
-    assertEquals(revenue_cached, ((CreateTableAsSelectNode) queryExecutionPlan.root.dependents.get(0).dependents.get(0)).selectQuery);
+    assertEquals(revenue_cached, ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).selectQuery);
 
     SelectQuery max_revenue_cached = SelectQuery.create(
         Arrays.<SelectItem>asList(
@@ -1464,7 +1464,7 @@ public class TpchExecutionPlanTest {
         ), new BaseTable(placeholderSchemaName, placeholderTableName, "vt3")
     );
     max_revenue_cached.setAliasName("max_revenue_cached");
-    assertEquals(max_revenue_cached, ((CreateTableAsSelectNode) queryExecutionPlan.root.dependents.get(0).dependents.get(1)).selectQuery);
+    assertEquals(max_revenue_cached, ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(1)).selectQuery);
 
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
     ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
@@ -1513,11 +1513,11 @@ public class TpchExecutionPlanTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
 
-    assertEquals(1, queryExecutionPlan.root.dependents.get(0).dependents.size());
-    assertEquals(2, queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.size());
+    assertEquals(1, queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().size());
+    assertEquals(2, queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().size());
 
     assertEquals(new BaseTable(placeholderSchemaName, placeholderTableName, "a"),
-        ((CreateTableAsSelectNode) queryExecutionPlan.root.dependents.get(0)).getSelectQuery().getFromList().get(0));
+        ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0)).getSelectQuery().getFromList().get(0));
     JoinTable join = JoinTable.create(Arrays.<AbstractRelation>asList(
         new BaseTable(placeholderSchemaName, placeholderTableName, "q17_lineitem_tmp_cached"),
         new BaseTable(placeholderSchemaName, placeholderTableName, "l1")),
@@ -1529,7 +1529,7 @@ public class TpchExecutionPlanTest {
             ))
         ));
     assertEquals(join,
-        ((CreateTableAsSelectNode) queryExecutionPlan.root.dependents.get(0).dependents.get(0)).getSelectQuery().getFromList().get(0));
+        ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getSelectQuery().getFromList().get(0));
     SelectQuery expected = SelectQuery.create(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("vt1", "l_partkey"), "t_partkey"),
@@ -1541,7 +1541,7 @@ public class TpchExecutionPlanTest {
         new BaseTable("tpch", "lineitem", "vt1"));
     expected.addGroupby(new AliasReference("t_partkey"));
     expected.setAliasName("q17_lineitem_tmp_cached");
-    assertEquals(expected, ((CreateTableAsSelectNode) queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.get(0)).selectQuery);
+    assertEquals(expected, ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).selectQuery);
 
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
     ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
@@ -1595,7 +1595,7 @@ public class TpchExecutionPlanTest {
 //        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
-    assertEquals(1, queryExecutionPlan.root.dependents.get(0).dependents.size());
+    assertEquals(1, queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().size());
 
     SelectQuery expected = SelectQuery.create(
         Arrays.<SelectItem>asList(
@@ -1609,9 +1609,9 @@ public class TpchExecutionPlanTest {
         ConstantColumn.valueOf("NOT NULL")
     )));
 
-    assertEquals(expected, ((CreateTableAsSelectNode) queryExecutionPlan.root.dependents.get(0).dependents.get(0)).selectQuery);
+    assertEquals(expected, ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).selectQuery);
     assertEquals(new BaseTable(placeholderSchemaName, placeholderTableName, "t"),
-        ((CreateTableAsSelectNode) queryExecutionPlan.root.dependents.get(0)).getSelectQuery().getFromList().get(2));
+        ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0)).getSelectQuery().getFromList().get(2));
 
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
     ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
@@ -1839,7 +1839,7 @@ public class TpchExecutionPlanTest {
         columnOp3
     )));
     expected.addLimit(ConstantColumn.valueOf(1));
-    assertEquals(expected, ((CreateTableAsSelectNode) queryExecutionPlan.root.dependents.get(0)).selectQuery);
+    assertEquals(expected, ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0)).selectQuery);
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
     ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
 //    queryExecutionPlan.root.executeAndWaitForTermination(new JdbcConnection(conn, new H2Syntax()));
@@ -1881,7 +1881,7 @@ public class TpchExecutionPlanTest {
 //        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
-    assertEquals(1, queryExecutionPlan.root.dependents.get(0).dependents.size());
+    assertEquals(1, queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().size());
     SelectQuery expected = SelectQuery.create(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("vt4", "l_partkey"), "l_partkey"),
@@ -1903,9 +1903,9 @@ public class TpchExecutionPlanTest {
     expected.addGroupby(new AliasReference("l_partkey"));
     expected.addGroupby(new AliasReference("l_suppkey"));
     expected.setAliasName("q20_tmp2_cached");
-    assertEquals(expected, ((CreateTableAsSelectNode) queryExecutionPlan.root.dependents.get(0).dependents.get(0)).selectQuery);
+    assertEquals(expected, ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).selectQuery);
     assertEquals(new BaseTable(placeholderSchemaName, placeholderTableName, "q20_tmp2_cached"),
-        ((CreateTableAsSelectNode) queryExecutionPlan.root.dependents.get(0)).getSelectQuery().getFromList().get(3));
+        ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0)).getSelectQuery().getFromList().get(3));
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
     ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
 //    queryExecutionPlan.root.executeAndWaitForTermination(new JdbcConnection(conn, new H2Syntax()));
@@ -2009,16 +2009,16 @@ public class TpchExecutionPlanTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
 
-    assertEquals(1, queryExecutionPlan.root.dependents.get(0).dependents.size());
-    assertEquals(1, queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.size());
-    assertEquals(2, queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.get(0).dependents.size());
-    assertEquals(0, queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.get(0).dependents.get(0).dependents.size());
-    assertEquals(1, queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.get(0).dependents.get(1).dependents.size());
+    assertEquals(1, queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().size());
+    assertEquals(1, queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().size());
+    assertEquals(2, queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().size());
+    assertEquals(0, queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().size());
+    assertEquals(1, queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(1).getExecutableNodeBaseDependents().size());
 
     assertEquals(new BaseTable(placeholderSchemaName, placeholderTableName, "c"),
-        ((CreateTableAsSelectNode) queryExecutionPlan.root.dependents.get(0)).getSelectQuery().getFromList().get(0));
+        ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0)).getSelectQuery().getFromList().get(0));
     assertEquals(new BaseTable(placeholderSchemaName, placeholderTableName, "b"),
-        ((CreateTableAsSelectNode) queryExecutionPlan.root.dependents.get(0).dependents.get(0)).getSelectQuery().getFromList().get(0));
+        ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getSelectQuery().getFromList().get(0));
     JoinTable join = JoinTable.create(Arrays.<AbstractRelation>asList(
         new BaseTable(placeholderSchemaName, placeholderTableName, "t2"),
         new BaseTable(placeholderSchemaName, placeholderTableName, "l3")),
@@ -2030,7 +2030,7 @@ public class TpchExecutionPlanTest {
             ))
         ));
     assertEquals(join,
-        ((CreateTableAsSelectNode) queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.get(0)).getSelectQuery().getFromList().get(0));
+        ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getSelectQuery().getFromList().get(0));
 
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
     ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
@@ -2115,13 +2115,13 @@ public class TpchExecutionPlanTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
 
-    assertEquals(1, queryExecutionPlan.root.dependents.get(0).dependents.size());
-    assertEquals(2, queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.size());
-    assertEquals(1, queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.get(0).dependents.size());
-    assertEquals(2, queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.get(1).dependents.size());
+    assertEquals(1, queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().size());
+    assertEquals(2, queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().size());
+    assertEquals(1, queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().size());
+    assertEquals(2, queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(1).getExecutableNodeBaseDependents().size());
 
     assertEquals(new BaseTable(placeholderSchemaName, placeholderTableName, "a"),
-        ((CreateTableAsSelectNode) queryExecutionPlan.root.dependents.get(0)).getSelectQuery().getFromList().get(0));
+        ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0)).getSelectQuery().getFromList().get(0));
     JoinTable join = JoinTable.create(Arrays.<AbstractRelation>asList(
         new BaseTable(placeholderSchemaName, placeholderTableName, "ct1"),
         new BaseTable(placeholderSchemaName, placeholderTableName, "ct2")),
@@ -2132,9 +2132,9 @@ public class TpchExecutionPlanTest {
                 ConstantColumn.valueOf(0)
             ))
         ));
-    assertEquals(join, ((CreateTableAsSelectNode) queryExecutionPlan.root.dependents.get(0).dependents.get(0)).getSelectQuery().getFromList().get(0));
+    assertEquals(join, ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getSelectQuery().getFromList().get(0));
     assertEquals(new BaseTable(placeholderSchemaName, placeholderTableName, "vt1"),
-        ((CreateTableAsSelectNode) queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.get(0)).getSelectQuery().getFromList().get(0));
+        ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getSelectQuery().getFromList().get(0));
     JoinTable join1 = JoinTable.create(Arrays.<AbstractRelation>asList(
         new BaseTable(placeholderSchemaName, placeholderTableName, "ot"),
         new BaseTable(placeholderSchemaName, placeholderTableName, "ct")),
@@ -2146,7 +2146,7 @@ public class TpchExecutionPlanTest {
             ))
         ));
     assertEquals(join1,
-        ((CreateTableAsSelectNode) queryExecutionPlan.root.dependents.get(0).dependents.get(0).dependents.get(1)).getSelectQuery().getFromList().get(0));
+        ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(1)).getSelectQuery().getFromList().get(0));
 
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
     ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
@@ -2174,13 +2174,13 @@ public class TpchExecutionPlanTest {
             new AliasedColumn(new BaseColumn(placeholderSchemaName, aliasName, "quantity_avg"), "quantity_avg")),
         new BaseTable(placeholderSchemaName, placeholderTableName, aliasName));
     assertEquals(rewritten,
-        ((SubqueryColumn)((ColumnOp)((CreateTableAsSelectNode)(queryExecutionPlan.root.dependents.get(0))).getSelectQuery().getFilter().get()).getOperand(1)).getSubquery());
+        ((SubqueryColumn)((ColumnOp)((CreateTableAsSelectNode)(queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0))).getSelectQuery().getFilter().get()).getOperand(1)).getSubquery());
 
     SelectQuery expected = SelectQuery.create(
         Arrays.<SelectItem>asList(new AliasedColumn(new ColumnOp("avg", new BaseColumn("vt3", "l_quantity")), "quantity_avg")),
         new BaseTable("tpch", "lineitem", "vt3")
     );
-    assertEquals(expected, ((CreateTableAsSelectNode) queryExecutionPlan.root.dependents.get(0).dependents.get(0)).selectQuery);
+    assertEquals(expected, ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).selectQuery);
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
     ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
 //    queryExecutionPlan.root.executeAndWaitForTermination(new JdbcConnection(conn, new H2Syntax()));
@@ -2198,18 +2198,18 @@ public class TpchExecutionPlanTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
 
-    String alias = ((CreateTableAsSelectNode) (queryExecutionPlan.root.dependents.get(0))).getPlaceholderTables().get(0).getAliasName().get();
+    String alias = ((CreateTableAsSelectNode) (queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0))).getPlaceholderTables().get(0).getAliasName().get();
     SelectQuery rewritten = SelectQuery.create(
         Arrays.<SelectItem>asList(new AsteriskColumn()),
         new BaseTable(placeholderSchemaName, placeholderTableName, alias));
     assertEquals(rewritten,
-        ((SubqueryColumn) ((ColumnOp) ((CreateTableAsSelectNode) (queryExecutionPlan.root.dependents.get(0))).getSelectQuery().getFilter().get()).getOperand(0)).getSubquery());
+        ((SubqueryColumn) ((ColumnOp) ((CreateTableAsSelectNode) (queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0))).getSelectQuery().getFilter().get()).getOperand(0)).getSubquery());
 
     SelectQuery expected = SelectQuery.create(
         Arrays.<SelectItem>asList(new AsteriskColumn()),
         new BaseTable("tpch", "lineitem", "vt3")
     );
-    assertEquals(expected, ((CreateTableAsSelectNode) queryExecutionPlan.root.dependents.get(0).dependents.get(0)).selectQuery);
+    assertEquals(expected, ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).selectQuery);
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
     ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
 //    queryExecutionPlan.root.executeAndWaitForTermination(new JdbcConnection(conn, new H2Syntax()));
@@ -2227,18 +2227,18 @@ public class TpchExecutionPlanTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
 
-    String alias = ((CreateTableAsSelectNode) (queryExecutionPlan.root.dependents.get(0))).getPlaceholderTables().get(0).getAliasName().get();
+    String alias = ((CreateTableAsSelectNode) (queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0))).getPlaceholderTables().get(0).getAliasName().get();
     SelectQuery rewritten = SelectQuery.create(
         Arrays.<SelectItem>asList(new AliasedColumn(new BaseColumn(placeholderSchemaName, alias, "l_quantity"), "l_quantity")),
         new BaseTable(placeholderSchemaName, placeholderTableName, alias));
     assertEquals(rewritten,
-        ((SubqueryColumn) ((ColumnOp) ((CreateTableAsSelectNode) (queryExecutionPlan.root.dependents.get(0))).getSelectQuery().getFilter().get()).getOperand(1)).getSubquery());
+        ((SubqueryColumn) ((ColumnOp) ((CreateTableAsSelectNode) (queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0))).getSelectQuery().getFilter().get()).getOperand(1)).getSubquery());
 
     SelectQuery expected = SelectQuery.create(
         Arrays.<SelectItem>asList(new AliasedColumn(new BaseColumn("vt3", "l_quantity"), "l_quantity")),
         new BaseTable("tpch", "lineitem", "vt3")
     );
-    assertEquals(expected, ((CreateTableAsSelectNode) queryExecutionPlan.root.dependents.get(0).dependents.get(0)).selectQuery);
+    assertEquals(expected, ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).selectQuery);
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
     ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
 //    queryExecutionPlan.root.executeAndWaitForTermination(new JdbcConnection(conn, new H2Syntax()));
@@ -2256,19 +2256,27 @@ public class TpchExecutionPlanTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
 
-    String alias = ((CreateTableAsSelectNode) (queryExecutionPlan.root.dependents.get(0))).getPlaceholderTables().get(0).getAliasName().get();
+    String alias = ((CreateTableAsSelectNode) (queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0))).getPlaceholderTables().get(0).getAliasName().get();
     SelectQuery rewritten1 = SelectQuery.create(
         Arrays.<SelectItem>asList(new AliasedColumn(new BaseColumn(placeholderSchemaName, alias, "quantity_avg"), "quantity_avg")),
         new BaseTable(placeholderSchemaName, placeholderTableName, alias));
     assertEquals(rewritten1,
-        ((SubqueryColumn)((ColumnOp)((ColumnOp)queryExecutionPlan.root.dependents.get(0).selectQuery.getFilter().get()).getOperand(0)).getOperand(1)).getSubquery());
+        ((SubqueryColumn) 
+            ((ColumnOp) 
+                ((ColumnOp) 
+                    ((QueryNodeBase) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0)).getSelectQuery()
+                    .getFilter().get()).getOperand(0)).getOperand(1)).getSubquery());
 
-    alias = ((CreateTableAsSelectNode) (queryExecutionPlan.root.dependents.get(0))).getPlaceholderTables().get(1).getAliasName().get();
+    alias = ((CreateTableAsSelectNode) (queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0))).getPlaceholderTables().get(1).getAliasName().get();
     SelectQuery rewritten2 = SelectQuery.create(
         Arrays.<SelectItem>asList(new AliasedColumn(new BaseColumn(placeholderSchemaName, alias, "l_quantity"), "l_quantity")),
         new BaseTable(placeholderSchemaName, placeholderTableName, alias));
     assertEquals(rewritten2,
-        ((SubqueryColumn)((ColumnOp)((ColumnOp)queryExecutionPlan.root.dependents.get(0).selectQuery.getFilter().get()).getOperand(1)).getOperand(1)).getSubquery());
+        ((SubqueryColumn) 
+            ((ColumnOp) 
+                ((ColumnOp) 
+                    ((QueryNodeBase) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0)).getSelectQuery()
+                    .getFilter().get()).getOperand(1)).getOperand(1)).getSubquery());
 
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
     ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);

@@ -33,7 +33,7 @@ public class ProjectionNode extends CreateTableAsSelectNode {
   }
 
   @Override
-  public BaseQueryNode deepcopy() {
+  public ExecutableNodeBase deepcopy() {
     ProjectionNode node = new ProjectionNode(namer, selectQuery);
     copyFields(this, node);
     return node;

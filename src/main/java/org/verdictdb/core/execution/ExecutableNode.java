@@ -3,23 +3,19 @@ package org.verdictdb.core.execution;
 import java.util.List;
 
 import org.verdictdb.core.connection.DbmsQueryResult;
+import org.verdictdb.core.querying.ExecutableNodeBase;
 import org.verdictdb.core.sqlobject.SqlConvertible;
 import org.verdictdb.exception.VerdictDBException;
 
 public interface ExecutableNode {
+
+//  // Setup methods
+//  public void subscribeTo(ExecutableNode node);
+//
+//  public void subscribeTo(ExecutableNode node, int channel);
+
   
-  /**
-   * The tokens are retrieved from these queues.
-   * @return
-   */
-  public List<ExecutionTokenQueue> getSourceQueues();
-  
-  /**
-   * The result of createToken() is broadcasted to these queues.
-   * @return
-   */
-  public List<ExecutionTokenQueue> getDestinationQueues();
-  
+  // Execution methods
   /**
    * Creates a query that should be run. Its result will be handed to createToken().
    * @param tokens
@@ -27,9 +23,23 @@ public interface ExecutableNode {
    * @throws VerdictDBException 
    */
   public SqlConvertible createQuery(List<ExecutionInfoToken> tokens) throws VerdictDBException;
-  
+
   public ExecutionInfoToken createToken(DbmsQueryResult result);
-  
+
+  /**
+   * The tokens are retrieved from these queues.
+   * @return
+   */
+  public List<ExecutionTokenQueue> getSourceQueues();
+
+  /**
+   * The result of createToken() is broadcasted to these queues.
+   * @return
+   */
+  public List<ExecutableNode> getSubscribers();
+
+  public void getNotified(ExecutableNode source, ExecutionInfoToken token);
+
   public int getDependentNodeCount();
 
 }

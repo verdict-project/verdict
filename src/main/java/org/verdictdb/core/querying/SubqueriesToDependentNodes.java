@@ -44,12 +44,13 @@ public class SubqueriesToDependentNodes {
         } else {
           dep = ProjectionNode.create(namer, (SelectQuery) source);
         }
-        node.addDependency(dep);
+//        node.addDependency(dep);
 
         // use placeholders to mark the locations whose names will be updated in the future
-        Pair<BaseTable, ExecutionTokenQueue> baseAndQueue = node.createPlaceHolderTable(source.getAliasName().get());
-        query.getFromList().set(index, baseAndQueue.getLeft());
-        dep.addBroadcastingQueue(baseAndQueue.getRight());
+        Pair<BaseTable, SubscriptionTicket> baseAndSubscriptionTicket = node.createPlaceHolderTable(source.getAliasName().get());
+        query.getFromList().set(index, baseAndSubscriptionTicket.getLeft());
+        dep.registerSubscriber(baseAndSubscriptionTicket.getRight());
+//        dep.addBroadcastingQueue(baseAndQueue.getRight());
       } 
       else if (source instanceof JoinTable) {
         for (AbstractRelation s : ((JoinTable) source).getJoinList()) {
@@ -63,12 +64,13 @@ public class SubqueriesToDependentNodes {
             } else {
               dep = ProjectionNode.create(namer, (SelectQuery) s);
             }
-            node.addDependency(dep);
+//            node.addDependency(dep);
 
             // use placeholders to mark the locations whose names will be updated in the future
-            Pair<BaseTable, ExecutionTokenQueue> baseAndQueue = node.createPlaceHolderTable(s.getAliasName().get());
-            ((JoinTable) source).getJoinList().set(joinindex, baseAndQueue.getLeft());
-            dep.addBroadcastingQueue(baseAndQueue.getRight());
+            Pair<BaseTable, SubscriptionTicket> baseAndSubscriptionTicket = node.createPlaceHolderTable(s.getAliasName().get());
+            ((JoinTable) source).getJoinList().set(joinindex, baseAndSubscriptionTicket.getLeft());
+            dep.registerSubscriber(baseAndSubscriptionTicket.getRight());
+//            dep.addBroadcastingQueue(baseAndQueue.getRight());
           }
         }
       }
@@ -86,25 +88,26 @@ public class SubqueriesToDependentNodes {
         
         // If filter is a subquery, we need to add it to dependency
         if (filter instanceof SubqueryColumn) {
-          Pair<BaseTable, ExecutionTokenQueue> baseAndQueue;
+          Pair<BaseTable, SubscriptionTicket> baseAndSubscriptionTicket;
           if (((SubqueryColumn) filter).getSubquery().getAliasName().isPresent()){
-            baseAndQueue = node.createPlaceHolderTable(((SubqueryColumn) filter).getSubquery().getAliasName().get());
+            baseAndSubscriptionTicket = node.createPlaceHolderTable(((SubqueryColumn) filter).getSubquery().getAliasName().get());
           } else {
 //            baseAndQueue = node.createPlaceHolderTable("filterPlaceholder"+filterPlaceholderNum++);
-            baseAndQueue = node.createPlaceHolderTable(namer.generateAliasName());
+            baseAndSubscriptionTicket = node.createPlaceHolderTable(namer.generateAliasName());
           }
-          BaseTable base = baseAndQueue.getLeft();
+          BaseTable base = baseAndSubscriptionTicket.getLeft();
 
           CreateTableAsSelectNode dep;
           SelectQuery subquery = ((SubqueryColumn) filter).getSubquery();
           if (subquery.isAggregateQuery()) {
             dep = AggExecutionNode.create(namer, subquery);
-            node.addDependency(dep);
+//            node.addDependency(dep);
           } else {
             dep = ProjectionNode.create(namer, subquery);
-            node.addDependency(dep);
+//            node.addDependency(dep);
           }
-          dep.addBroadcastingQueue(baseAndQueue.getRight());
+          dep.registerSubscriber(baseAndSubscriptionTicket.getRight());
+//          dep.addBroadcastingQueue(baseAndQueue.getRight());
           
           // To replace the subquery, we use the selectlist of the subquery and tempTable to create a new non-aggregate subquery
           List<SelectItem> newSelectItem = new ArrayList<>();

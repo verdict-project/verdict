@@ -53,7 +53,7 @@ public class CreateTableAsSelectNode extends QueryNodeWithPlaceHolders {
   }
 
   @Override
-  public BaseQueryNode deepcopy() {
+  public ExecutableNodeBase deepcopy() {
     CreateTableAsSelectNode node = new CreateTableAsSelectNode(namer, selectQuery);
     copyFields(this, node);
     return node;

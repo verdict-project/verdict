@@ -6,6 +6,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import org.verdictdb.core.connection.DbmsConnection;
+import org.verdictdb.core.querying.ExecutableNodeBase;
 import org.verdictdb.exception.VerdictDBException;
 
 public class ExecutablePlanRunner {
@@ -42,9 +43,11 @@ public class ExecutablePlanRunner {
     // set up to get the results
     ExecutionTokenReader reader;
     if (plan.getReportingNode() != null) {
-      ExecutionTokenQueue outputQueue = new ExecutionTokenQueue();
-      plan.getReportingNode().getDestinationQueues().add(outputQueue);
-      reader = new ExecutionTokenReader(outputQueue);
+      ExecutableNodeBase node = ExecutableNodeBase.create();
+//      ExecutionTokenQueue outputQueue = new ExecutionTokenQueue();
+      node.subscribeTo((ExecutableNodeBase) plan.getReportingNode());
+//      plan.getReportingNode().getDestinationQueues().add(outputQueue);
+      reader = new ExecutionTokenReader(node.getSourceQueues().get(0));
     } else {
       reader = new ExecutionTokenReader();
     }
@@ -65,7 +68,7 @@ public class ExecutablePlanRunner {
         List<ExecutableNode> nodes = nodeGroups.get(i);
         if (!nodes.isEmpty()) {
           ExecutableNode node = nodes.remove(0);
-          //          System.out.println("Submitting: " + node);
+          System.out.println("Submitting: " + node);
           executor.submit(new ExecutableNodeRunner(conn, node));
           submittedAtLeastOne = true;
         }

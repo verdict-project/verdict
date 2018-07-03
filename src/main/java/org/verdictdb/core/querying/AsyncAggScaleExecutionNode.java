@@ -38,7 +38,7 @@ public class AsyncAggScaleExecutionNode extends ProjectionNode {
     AsyncAggScaleExecutionNode node = new AsyncAggScaleExecutionNode(namer);
 
     // Setup select list
-    Pair<BaseTable, ExecutionTokenQueue> baseAndQueue = node.createPlaceHolderTable("to_scale_query");
+    Pair<BaseTable, SubscriptionTicket> baseAndSubscriptionTickeet = node.createPlaceHolderTable("to_scale_query");
     List<SelectItem> newSelectList = aggNode.getSelectQuery().deepcopy().getSelectList();
     for (SelectItem selectItem:newSelectList) {
       // invariant: the agg column must be aliased column
@@ -61,32 +61,33 @@ public class AsyncAggScaleExecutionNode extends ProjectionNode {
     // Setup from table
 
 
-    SelectQuery query = SelectQuery.create(newSelectList, baseAndQueue.getLeft());
-    node.setSelectQuery(query);
-
-    // Set this node to broadcast to the parents of asyncNode
-    // Also remove the dependency
-    for (BaseQueryNode parent:aggNode.getParents()) {
-      int index = parent.dependents.indexOf(aggNode);
-      ExecutionTokenQueue queue = new ExecutionTokenQueue();
-      // If parent is AsyncAggExecution, all dependents share a listening queue
-      if (parent instanceof AsyncAggExecutionNode) {
-        node.addBroadcastingQueue(parent.getListeningQueue(0));
-      }
-      else {
-        parent.getListeningQueues().set(index, queue);
-        node.addBroadcastingQueue(queue);
-      }
-      parent.dependents.set(index, node);
-      node.addParent(parent);
-    }
-
-    // Set the asyncNode only to broadcast to this node
-    // Also set parent
-    aggNode.getBroadcastingQueues().clear();
-    aggNode.addBroadcastingQueue(baseAndQueue.getRight());
-    aggNode.getParents().clear();
-    node.addDependency(aggNode);
+//    SelectQuery query = SelectQuery.create(newSelectList, baseAndSubscriptionTickeet.getLeft());
+//    node.setSelectQuery(query);
+//
+//    // Set this node to broadcast to the parents of asyncNode
+//    // Also remove the dependency
+//    for (ExecutableNodeBase parent : aggNode.getExecutableNodeBaseParents()) {
+//      int index = parent.getExecutableNodeBaseDependents().indexOf(aggNode);
+//      ExecutionTokenQueue queue = new ExecutionTokenQueue();
+//      // If parent is AsyncAggExecution, all dependents share a listening queue
+//      if (parent instanceof AsyncAggExecutionNode) {
+//        parent.subscribeTo(node);
+////        node.addBroadcastingQueue(parent.getListeningQueue(0));
+//      }
+//      else {
+//        parent.getListeningQueues().set(index, queue);
+//        node.addBroadcastingQueue(queue);
+//      }
+//      parent.dependents.set(index, node);
+//      node.addParent(parent);
+//    }
+//
+//    // Set the asyncNode only to broadcast to this node
+//    // Also set parent
+//    aggNode.getBroadcastingQueues().clear();
+//    aggNode.addBroadcastingQueue(baseAndQueue.getRight());
+//    aggNode.getParents().clear();
+//    node.addDependency(aggNode);
 
     return node;
   }
@@ -150,38 +151,43 @@ public class AsyncAggScaleExecutionNode extends ProjectionNode {
 //  }
 
   @Override
-  public BaseQueryNode deepcopy() {
+  public ExecutableNodeBase deepcopy() {
     AsyncAggScaleExecutionNode node = new AsyncAggScaleExecutionNode(namer);
     copyFields(this, node);
-    node.scaleFactor = scaleFactor;
-    node.aggColumnlist = aggColumnlist;
     return node;
+  }
+  
+  void copyFields(AsyncAggScaleExecutionNode from, AsyncAggScaleExecutionNode to) {
+    super.copyFields(from, to);
+    to.scaleFactor = from.scaleFactor;
+    to.aggColumnlist = from.aggColumnlist;
   }
 
   // Currently, assume block size is uniform
   public double calculateScaleFactor(List<HyperTableCube> cubes) {
-    AsyncAggExecutionNode asyncNode;
-    if (this.getParents().size()==2) {
-      asyncNode = (AsyncAggExecutionNode)this.getParents().get(1);
-    }
-    else {
-      asyncNode = this.getParents().get(0).getParents().size() == 2?
-          (AsyncAggExecutionNode) this.getParents().get(0).getParents().get(1):(AsyncAggExecutionNode) this.getParents().get(0).getParents().get(0);
-    }
-    ScrambleMeta scrambleMeta = asyncNode.getScrambleMeta();
-    int totalSize = 1;
-    for (Dimension d:cubes.get(0).getDimensions()) {
-      int blockCount = scrambleMeta.getAggregationBlockCount(d.getSchemaName(), d.getTableName());
-      totalSize = totalSize * blockCount;
-    }
-    int count = 0;
-    for (HyperTableCube cube:cubes) {
-      int volume = 1;
-      for (Dimension d:cube.getDimensions()) {
-        volume = volume * d.length();
-      }
-      count += volume;
-    }
-    return totalSize/count;
+    return 1.0;
+//    AsyncAggExecutionNode asyncNode;
+//    if (this.getParents().size()==2) {
+//      asyncNode = (AsyncAggExecutionNode)this.getParents().get(1);
+//    }
+//    else {
+//      asyncNode = this.getParents().get(0).getParents().size() == 2?
+//          (AsyncAggExecutionNode) this.getParents().get(0).getParents().get(1):(AsyncAggExecutionNode) this.getParents().get(0).getParents().get(0);
+//    }
+//    ScrambleMeta scrambleMeta = asyncNode.getScrambleMeta();
+//    int totalSize = 1;
+//    for (Dimension d:cubes.get(0).getDimensions()) {
+//      int blockCount = scrambleMeta.getAggregationBlockCount(d.getSchemaName(), d.getTableName());
+//      totalSize = totalSize * blockCount;
+//    }
+//    int count = 0;
+//    for (HyperTableCube cube:cubes) {
+//      int volume = 1;
+//      for (Dimension d:cube.getDimensions()) {
+//        volume = volume * d.length();
+//      }
+//      count += volume;
+//    }
+//    return totalSize/count;
   }
 }

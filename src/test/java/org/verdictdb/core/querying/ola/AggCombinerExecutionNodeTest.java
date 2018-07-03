@@ -65,8 +65,8 @@ public class AggCombinerExecutionNodeTest {
     AggCombinerExecutionNode combiner = AggCombinerExecutionNode.create(plan, leftNode, rightNode);
 //    combiner.print();
     
-    assertEquals(combiner.getListeningQueue(0), leftNode.getBroadcastingQueue(0));
-    assertEquals(combiner.getListeningQueue(1), rightNode.getBroadcastingQueue(0));
+    assertEquals(combiner.getSources().get(0), leftNode);
+    assertEquals(combiner.getSources().get(1), rightNode);
   }
   
   // Test if the combined answer is identical to the original answer

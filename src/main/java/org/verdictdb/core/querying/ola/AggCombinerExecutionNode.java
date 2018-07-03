@@ -8,8 +8,10 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.core.connection.DbmsQueryResult;
 import org.verdictdb.core.execution.ExecutionInfoToken;
 import org.verdictdb.core.execution.ExecutionTokenQueue;
-import org.verdictdb.core.querying.BaseQueryNode;
 import org.verdictdb.core.querying.CreateTableAsSelectNode;
+import org.verdictdb.core.querying.ExecutableNodeBase;
+import org.verdictdb.core.querying.QueryNodeBase;
+import org.verdictdb.core.querying.SubscriptionTicket;
 import org.verdictdb.core.querying.TempIdCreator;
 import org.verdictdb.core.sqlobject.AbstractRelation;
 import org.verdictdb.core.sqlobject.AliasedColumn;
@@ -30,12 +32,12 @@ public class AggCombinerExecutionNode extends CreateTableAsSelectNode {
   
   public static AggCombinerExecutionNode create(
       TempIdCreator namer,
-      BaseQueryNode leftQueryExecutionNode,
-      BaseQueryNode rightQueryExecutionNode) throws VerdictDBValueException {
+      ExecutableNodeBase leftQueryExecutionNode,
+      ExecutableNodeBase rightQueryExecutionNode) throws VerdictDBValueException {
     AggCombinerExecutionNode node = new AggCombinerExecutionNode(namer);
     
 //    SelectQuery leftQuery = queryExecutionNode.getSelectQuery();
-    SelectQuery rightQuery = rightQueryExecutionNode.getSelectQuery();   // the right one is the aggregate query
+    SelectQuery rightQuery = ((QueryNodeBase) rightQueryExecutionNode).getSelectQuery();   // the right one is the aggregate query
     String leftAliasName = namer.generateAliasName();
     String rightAliasName = namer.generateAliasName();
     
@@ -64,21 +66,21 @@ public class AggCombinerExecutionNode extends CreateTableAsSelectNode {
     allItems.addAll(groupItems);
     allItems.addAll(measureItems);
     
-    Pair<BaseTable, ExecutionTokenQueue> leftBaseAndQueue = node.createPlaceHolderTable(leftAliasName);
-    Pair<BaseTable, ExecutionTokenQueue> rightBaseAndQueue = node.createPlaceHolderTable(rightAliasName);
+    Pair<BaseTable, SubscriptionTicket> leftBaseAndTicket = node.createPlaceHolderTable(leftAliasName);
+    Pair<BaseTable, SubscriptionTicket> rightBaseAndTicket = node.createPlaceHolderTable(rightAliasName);
     SelectQuery joinQuery = SelectQuery.create(
         allItems, 
-        Arrays.<AbstractRelation>asList(leftBaseAndQueue.getLeft(), rightBaseAndQueue.getLeft()));
+        Arrays.<AbstractRelation>asList(leftBaseAndTicket.getLeft(), rightBaseAndTicket.getLeft()));
     for (String a : groupAliasNames) {
       joinQuery.addFilterByAnd(
           ColumnOp.equal(new BaseColumn(leftAliasName, a), new BaseColumn(rightAliasName, a)));
     }
-    leftQueryExecutionNode.addBroadcastingQueue(leftBaseAndQueue.getRight());
-    rightQueryExecutionNode.addBroadcastingQueue(rightBaseAndQueue.getRight());
+    leftQueryExecutionNode.registerSubscriber(leftBaseAndTicket.getRight());
+    rightQueryExecutionNode.registerSubscriber(rightBaseAndTicket.getRight());
     
     node.setSelectQuery(joinQuery);
-    node.addDependency(leftQueryExecutionNode);
-    node.addDependency(rightQueryExecutionNode);
+//    node.addDependency(leftQueryExecutionNode);
+//    node.addDependency(rightQueryExecutionNode);
     return node;
   }
   
