@@ -22,14 +22,14 @@ import org.verdictdb.parser.VerdictSQLParser;
 
 public class RelationGen extends VerdictSQLBaseVisitor<AbstractRelation> {
 
-//  private MetaData meta;
+  //  private MetaData meta;
 
   private List<SelectItem> selectElems = new ArrayList<>();
 
-//  public RelationGen(MetaData meta) {
-//    this.meta = meta;
-//  }
-  
+  //  public RelationGen(MetaData meta) {
+  //    this.meta = meta;
+  //  }
+
   public RelationGen() {}
 
   @Override
@@ -105,7 +105,7 @@ public class RelationGen extends VerdictSQLBaseVisitor<AbstractRelation> {
                 if (ctx.table_name() == null) {
                   elem = new AsteriskColumn();
                 } else {
-                  elem = new AsteriskColumn(ctx.table_name().getText());
+                  elem = new AsteriskColumn(stripQuote(ctx.table_name().getText()));
                 }
               } else {
                 ExpressionGen g = new ExpressionGen();
@@ -164,13 +164,13 @@ public class RelationGen extends VerdictSQLBaseVisitor<AbstractRelation> {
     if (ctx.GROUP() != null) {
       List<GroupingAttribute> groupby = new ArrayList<GroupingAttribute>();
       for (VerdictSQLParser.Group_by_itemContext g : ctx.group_by_item()) {
-        
+
         class GroupbyGen extends VerdictSQLBaseVisitor<GroupingAttribute> {
-          
-//          MetaData meta;
-//          public GroupbyGen(MetaData meta) {this.meta = meta; }
+
+          //          MetaData meta;
+          //          public GroupbyGen(MetaData meta) {this.meta = meta; }
           public GroupbyGen() {}
-          
+
           @Override
           public GroupingAttribute visitColumn_ref_expression(VerdictSQLParser.Column_ref_expressionContext ctx) {
             String[] t = ctx.getText().split("\\.");
@@ -263,29 +263,36 @@ public class RelationGen extends VerdictSQLBaseVisitor<AbstractRelation> {
       return r;
     }
   }
+  
+  private String stripQuote(String expr) {
+    return expr.replace("\"", "").replace("`", "");
+  }
 
   @Override
   public AbstractRelation visitHinted_table_name_item(VerdictSQLParser.Hinted_table_name_itemContext ctx) {
     AbstractRelation r = null;
-    if (ctx.as_table_alias()!=null) {
-      if (ctx.table_name_with_hint().table_name().schema!=null) {
-        r = new BaseTable(ctx.table_name_with_hint().table_name().schema.getText(),
-            ctx.table_name_with_hint().table_name().table.getText(),
-            ctx.as_table_alias().table_alias().getText());
+    if (ctx.as_table_alias() != null) {
+      if (ctx.table_name_with_hint().table_name().schema != null) {
+        r = new BaseTable(
+            stripQuote(ctx.table_name_with_hint().table_name().schema.getText()),
+            stripQuote(ctx.table_name_with_hint().table_name().table.getText()),
+                stripQuote(ctx.as_table_alias().table_alias().getText()));
       }
       else {
-        r = BaseTable.getBaseTableWithoutSchema(ctx.table_name_with_hint().table_name().table.getText(),
-            ctx.as_table_alias().table_alias().getText());
-
+        r = BaseTable.getBaseTableWithoutSchema(
+            stripQuote(ctx.table_name_with_hint().table_name().table.getText()),
+            stripQuote(ctx.as_table_alias().table_alias().getText()));
       }
     }
     else {
       if (ctx.table_name_with_hint().table_name().schema!=null) {
-        r = new BaseTable(ctx.table_name_with_hint().table_name().schema.getText(),
-            ctx.table_name_with_hint().table_name().table.getText());
+        r = new BaseTable(
+            stripQuote(ctx.table_name_with_hint().table_name().schema.getText()),
+            stripQuote(ctx.table_name_with_hint().table_name().table.getText()));
       }
       else {
-        r = new BaseTable(ctx.table_name_with_hint().table_name().table.getText());
+        r = new BaseTable(
+            stripQuote(ctx.table_name_with_hint().table_name().table.getText()));
       }
     }
     return r;

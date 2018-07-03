@@ -1,7 +1,5 @@
 package org.verdictdb.core.connection;
 
-import org.verdictdb.connection.DbmsQueryResultMetaData;
-
 public class SparkQueryResult implements DbmsQueryResult {
 
   @Override

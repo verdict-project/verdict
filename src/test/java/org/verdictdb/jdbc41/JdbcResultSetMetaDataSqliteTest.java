@@ -1,39 +1,37 @@
 package org.verdictdb.jdbc41;
 
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.verdictdb.core.aggresult.AggregateFrame;
-import org.verdictdb.core.aggresult.AggregateFrameQueryResult;
-import org.verdictdb.core.connection.JdbcQueryResult;
-import org.verdictdb.core.rewriter.aggresult.AggNameAndType;
-import org.verdictdb.exception.VerdictDBValueException;
-
-import java.sql.*;
-import java.sql.Connection;
-import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 import static java.sql.Types.BIGINT;
 import static java.sql.Types.DOUBLE;
 import static java.sql.Types.VARCHAR;
 import static org.junit.Assert.assertEquals;
 
-public class JdbcResultSetMetaDataH2Test {
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
+import org.junit.BeforeClass;
+import org.junit.Test;
+
+public class JdbcResultSetMetaDataSqliteTest {
+  
   static Connection conn;
 
   private static Statement stmt;
 
-  private java.sql.ResultSetMetaData jdbcResultSetMetaData1, jdbcResultSetMetaData2;
+  private java.sql.ResultSetMetaData jdbcResultSetMetaData1; 
+  
+  private java.sql.ResultSetMetaData jdbcResultSetMetaData2;
 
   private ResultSet rs;
 
   @BeforeClass
   public static void setupH2Database() throws SQLException {
-    final String DB_CONNECTION = "jdbc:h2:mem:jdbcmetatest;DB_CLOSE_DELAY=-1";
+    final String DB_CONNECTION = "jdbc:sqlite:";
     final String DB_USER = "";
     final String DB_PASSWORD = "";
     conn = DriverManager.getConnection(DB_CONNECTION, DB_USER, DB_PASSWORD);
@@ -48,7 +46,7 @@ public class JdbcResultSetMetaDataH2Test {
     contents.add(Arrays.<Object>asList(3, "Alice", "female", 18, 190.21, "CHN", "2017-10-12 21:22:23"));
     contents.add(Arrays.<Object>asList(3, "Bob", "male", 18, 190.3, "CHN", "2017-10-12 21:22:23"));
     stmt = conn.createStatement();
-    stmt.execute("DROP TABLE PEOPLE IF EXISTS");
+    stmt.execute("DROP TABLE IF EXISTS PEOPLE");
     stmt.execute("CREATE TABLE PEOPLE(id smallint, name varchar(255), gender varchar(8), age float, height float, nation varchar(8), birth timestamp)");
     for (List<Object> row : contents) {
       String id = row.get(0).toString();
@@ -62,26 +60,9 @@ public class JdbcResultSetMetaDataH2Test {
     }
   }
 
-  @Before
-  public void createJdbcResultSetMetaData() throws SQLException, VerdictDBValueException {
-    rs = stmt.executeQuery("SELECT gender, count(*) as cnt, avg(age) as ageavg FROM PEOPLE GROUP BY gender");
-    JdbcQueryResult queryResult = new JdbcQueryResult(rs);
-    List<String> nonAgg = new ArrayList<>();
-    List<AggNameAndType> agg = new ArrayList<>();
-    nonAgg.add("GENDER");
-    agg.add(new AggNameAndType("CNT", "COUNT"));
-    agg.add(new AggNameAndType("AGEAVG", "SUM"));
-    AggregateFrame aggregateFrame = AggregateFrame.fromDmbsQueryResult(queryResult, nonAgg, agg);
-    AggregateFrameQueryResult aggregateFrameQueryResult = (AggregateFrameQueryResult) aggregateFrame.toDbmsQueryResult();
-    jdbcResultSetMetaData1 = new JdbcResultSet(queryResult).getMetaData();
-//    jdbcResultSetMetaData1 = new JdbcResultSetMetaData(queryResult);
-    jdbcResultSetMetaData2 = new JdbcResultSet(aggregateFrameQueryResult).getMetaData();
-//    jdbcResultSetMetaData2 = new JdbcResultSetMetaData(aggregateFrameQueryResult);
-  }
-  
   @Test
-  public void testQuotedAliasTable() throws SQLException {
-    stmt.execute("select name from people as \"PEOPLE\"");
+  public void quotedAliasTableTest() throws SQLException {
+    stmt.execute("select \"PEOPLE\".name from people as \"PEOPLE\"");
   }
 
   @Test
@@ -205,4 +186,5 @@ public class JdbcResultSetMetaDataH2Test {
     assertEquals(rs.getMetaData().isNullable(2), jdbcResultSetMetaData2.isNullable(2));
     assertEquals(rs.getMetaData().isNullable(3), jdbcResultSetMetaData2.isNullable(3));
   }
+  
 }

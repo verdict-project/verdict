@@ -30,7 +30,7 @@ public class JdbcResultSetMetaDataPostgresTest {
 
   private static Statement stmt;
 
-  private JdbcResultSetMetaData jdbcResultSetMetaData1, jdbcResultSetMetaData2;
+  private ResultSetMetaData jdbcResultSetMetaData1, jdbcResultSetMetaData2;
 
   private ResultSet rs;
 
@@ -92,8 +92,15 @@ public class JdbcResultSetMetaDataPostgresTest {
     agg.add(new AggNameAndType("AGEAVG", "SUM"));
     AggregateFrame aggregateFrame = AggregateFrame.fromDmbsQueryResult(queryResult, nonAgg, agg);
     AggregateFrameQueryResult aggregateFrameQueryResult = (AggregateFrameQueryResult) aggregateFrame.toDbmsQueryResult();
-    jdbcResultSetMetaData1 = new JdbcResultSetMetaData(queryResult);
-    jdbcResultSetMetaData2 = new JdbcResultSetMetaData(aggregateFrameQueryResult);
+//    jdbcResultSetMetaData1 = new JdbcResultSetMetaData(queryResult);
+    jdbcResultSetMetaData1 = new JdbcResultSet(queryResult).getMetaData();
+//    jdbcResultSetMetaData2 = new JdbcResultSetMetaData(aggregateFrameQueryResult);
+    jdbcResultSetMetaData2 = new JdbcResultSet(aggregateFrameQueryResult).getMetaData();
+  }
+  
+  @Test
+  public void quotedAliasTableTest() throws SQLException {
+    stmt.execute("select \"PEOPLE\".name from people as \"PEOPLE\"");
   }
 
   @Test
@@ -217,6 +224,5 @@ public class JdbcResultSetMetaDataPostgresTest {
     assertEquals(rs.getMetaData().isNullable(2), jdbcResultSetMetaData2.isNullable(2));
     assertEquals(rs.getMetaData().isNullable(3), jdbcResultSetMetaData2.isNullable(3));
   }
-
 
 }

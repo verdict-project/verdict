@@ -1,4 +1,4 @@
-CREATE TABLE  IF NOT EXISTS nation  (n_nationkey  INT,
+CREATE TABLE  IF NOT EXISTS tpch.nation  (n_nationkey  INT,
                             n_name       CHAR(25),
                             n_regionkey  INT,
                             n_comment    VARCHAR(152),
@@ -7,7 +7,9 @@ CREATE TABLE  IF NOT EXISTS nation  (n_nationkey  INT,
                             FIELDS TERMINATED BY '|'
                             STORED AS TEXTFILE;
 
-CREATE TABLE  IF NOT EXISTS region  (r_regionkey  INT,
+LOAD DATA local inpath 'src/test/resources/nation.tbl' overwrite into table tpch.nation;
+
+CREATE TABLE  IF NOT EXISTS tpch.region  (r_regionkey  INT,
                             r_name       CHAR(25),
                             r_comment    VARCHAR(152),
                             r_dummy varchar(10))
@@ -15,8 +17,9 @@ CREATE TABLE  IF NOT EXISTS region  (r_regionkey  INT,
                             FIELDS TERMINATED BY '|'
                             STORED AS TEXTFILE;
 
+LOAD DATA local inpath 'src/test/resources/region.tbl' overwrite into table tpch.region;
 
-CREATE TABLE  IF NOT EXISTS part  ( p_partkey     INT,
+CREATE TABLE  IF NOT EXISTS tpch.part  ( p_partkey     INT,
                           p_name        VARCHAR(55),
                           p_mfgr        CHAR(25),
                           p_brand       CHAR(10),
@@ -30,8 +33,10 @@ CREATE TABLE  IF NOT EXISTS part  ( p_partkey     INT,
                           FIELDS TERMINATED BY '|'
                           STORED AS TEXTFILE;
 
+LOAD DATA local inpath 'src/test/resources/part.tbl' overwrite into table tpch.part;
 
-CREATE TABLE  IF NOT EXISTS supplier ( s_suppkey     INT ,
+
+CREATE TABLE  IF NOT EXISTS tpch.supplier ( s_suppkey     INT ,
                              s_name        CHAR(25) ,
                              s_address     VARCHAR(40) ,
                              s_nationkey   INT ,
@@ -43,7 +48,9 @@ CREATE TABLE  IF NOT EXISTS supplier ( s_suppkey     INT ,
                              FIELDS TERMINATED BY '|'
                              STORED AS TEXTFILE;
 
-CREATE TABLE  IF NOT EXISTS partsupp ( ps_partkey     INT ,
+LOAD DATA local inpath 'src/test/resources/supplier.tbl' overwrite into table tpch.supplier;
+
+CREATE TABLE  IF NOT EXISTS tpch.partsupp ( ps_partkey     INT ,
                              ps_suppkey     INT ,
                              ps_availqty    INT ,
                              ps_supplycost  DECIMAL(15,2)  ,
@@ -53,7 +60,9 @@ CREATE TABLE  IF NOT EXISTS partsupp ( ps_partkey     INT ,
                              FIELDS TERMINATED BY '|'
                              STORED AS TEXTFILE;
 
-CREATE TABLE  IF NOT EXISTS customer ( c_custkey     INT ,
+LOAD DATA local inpath 'src/test/resources/partsupp.tbl' overwrite into table tpch.partsupp;
+
+CREATE TABLE  IF NOT EXISTS tpch.customer ( c_custkey     INT ,
                              c_name        VARCHAR(25) ,
                              c_address     VARCHAR(40) ,
                              c_nationkey   INT ,
@@ -66,7 +75,9 @@ CREATE TABLE  IF NOT EXISTS customer ( c_custkey     INT ,
                              FIELDS TERMINATED BY '|'
                              STORED AS TEXTFILE;
 
-CREATE TABLE IF NOT EXISTS  orders  ( o_orderkey       INT ,
+LOAD DATA local inpath 'src/test/resources/customer.tbl' overwrite into table tpch.customer;
+
+CREATE TABLE IF NOT EXISTS  tpch.orders  ( o_orderkey       INT ,
                            o_custkey        INT ,
                            o_orderstatus    CHAR(1) ,
                            o_totalprice     DECIMAL(15,2) ,
@@ -80,7 +91,9 @@ CREATE TABLE IF NOT EXISTS  orders  ( o_orderkey       INT ,
                            FIELDS TERMINATED BY '|'
                            STORED AS TEXTFILE;
 
-CREATE TABLE  IF NOT EXISTS lineitem ( l_orderkey    INT ,
+LOAD DATA local inpath 'src/test/resources/orders.tbl' overwrite into table tpch.orders;
+
+CREATE TABLE  IF NOT EXISTS tpch.lineitem ( l_orderkey    INT ,
                              l_partkey     INT ,
                              l_suppkey     INT ,
                              l_linenumber  INT ,
@@ -100,3 +113,6 @@ CREATE TABLE  IF NOT EXISTS lineitem ( l_orderkey    INT ,
                              ROW FORMAT DELIMITED
                              FIELDS TERMINATED BY '|'
                              STORED AS TEXTFILE;
+
+LOAD DATA local inpath 'src/test/resources/lineitem.tbl' overwrite into table tpch.lineitem;
+
