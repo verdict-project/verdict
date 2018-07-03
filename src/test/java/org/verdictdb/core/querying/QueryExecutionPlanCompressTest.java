@@ -125,7 +125,7 @@ public class QueryExecutionPlanCompressTest {
     combiner.addBroadcastingQueue(queue);
     AsyncAggExecutionNode asyncAggExecutionNode =
         AsyncAggExecutionNode.create(queryExecutionPlan, Arrays.<BaseQueryNode>asList(leftNode, rightNode),
-            Arrays.<BaseQueryNode>asList(combiner));
+            Arrays.<BaseQueryNode>asList(combiner), null);
     queryExecutionPlan.root.getDependents().remove(0);
     queryExecutionPlan.root.getListeningQueues().remove(0);
     ExecutionTokenQueue q = new ExecutionTokenQueue();
@@ -158,7 +158,7 @@ public class QueryExecutionPlanCompressTest {
     combiner.addBroadcastingQueue(queue);
     AsyncAggExecutionNode asyncAggExecutionNode =
         AsyncAggExecutionNode.create(null, Arrays.<BaseQueryNode>asList(leftNode, rightNode),
-            Arrays.<BaseQueryNode>asList(combiner));
+            Arrays.<BaseQueryNode>asList(combiner), null);
     queryExecutionPlan.root.dependents.get(0).getDependents().remove(0);
     queryExecutionPlan.root.dependents.get(0).getListeningQueues().remove(0);
     ExecutionTokenQueue q = new ExecutionTokenQueue();
@@ -197,7 +197,7 @@ public class QueryExecutionPlanCompressTest {
     combiner.addBroadcastingQueue(queue);
     AsyncAggExecutionNode asyncAggExecutionNode =
         AsyncAggExecutionNode.create(null, Arrays.<BaseQueryNode>asList(leftNode, rightNode),
-            Arrays.<BaseQueryNode>asList(combiner));
+            Arrays.<BaseQueryNode>asList(combiner), null);
     queryExecutionPlan.root.dependents.get(0).getDependents().remove(0);
     queryExecutionPlan.root.dependents.get(0).getListeningQueues().remove(0);
     ExecutionTokenQueue q = new ExecutionTokenQueue();

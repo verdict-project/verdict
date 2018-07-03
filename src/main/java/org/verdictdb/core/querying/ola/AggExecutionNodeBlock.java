@@ -169,7 +169,7 @@ public class AggExecutionNodeBlock {
     }
     
     // fourth, re-link the listening queue for the new AsyncAggNode
-    BaseQueryNode newRoot = AsyncAggExecutionNode.create(idCreator, individualAggNodes, combiners);
+    BaseQueryNode newRoot = AsyncAggExecutionNode.create(idCreator, individualAggNodes, combiners, scrambleMeta);
     
     // root to upstream
     List<ExecutionTokenQueue> broadcastingQueue = blockRoot.getBroadcastingQueues();

@@ -87,7 +87,9 @@ public class AggCombinerExecutionNode extends CreateTableAsSelectNode {
   @Override
   public SqlConvertable createQuery(List<ExecutionInfoToken> tokens) throws VerdictDBException {
     for (ExecutionInfoToken token:tokens) {
-      cubes.addAll((List<HyperTableCube>) token.getValue("hyperTableCube"));
+      if (token.getValue("hyperTableCube")!=null) {
+        cubes.addAll((List<HyperTableCube>) token.getValue("hyperTableCube"));
+      }
     }
     return super.createQuery(tokens);
   }
@@ -95,7 +97,9 @@ public class AggCombinerExecutionNode extends CreateTableAsSelectNode {
   @Override
   public ExecutionInfoToken createToken(DbmsQueryResult result) {
     ExecutionInfoToken token = super.createToken(result);
-    token.setKeyValue("hyperTableCube", cubes);
+    if (cubes!=null) {
+      token.setKeyValue("hyperTableCube", cubes);
+    }
     token.setKeyValue("dependent", this);
     return token;
   }

@@ -104,6 +104,7 @@ public class AggExecutionNodeBlockTest {
 //      assertEquals("initialized", converted.getDependent(i).getDependent(0).getStatus());
 //      assertEquals("initialized", converted.getDependent(i).getDependent(1).getStatus());
 //    }
+    ((AsyncAggExecutionNode)converted).setScrambleMeta(scrambleMeta);
     ExecutablePlanRunner.runTillEnd(
         new JdbcConnection(conn, new H2Syntax()), 
         new SimpleTreePlan(converted));

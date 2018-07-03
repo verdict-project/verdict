@@ -69,7 +69,7 @@ public class AsyncAggExecutionNode extends ProjectionNode {
   public static AsyncAggExecutionNode create(
       TempIdCreator idCreator,
       List<BaseQueryNode> individualAggs,
-      List<BaseQueryNode> combiners) throws VerdictDBValueException {
+      List<BaseQueryNode> combiners, ScrambleMeta meta) throws VerdictDBValueException {
 
     AsyncAggExecutionNode node = new AsyncAggExecutionNode();
     ExecutionTokenQueue rootQueue = node.generateListeningQueue();
@@ -83,7 +83,7 @@ public class AsyncAggExecutionNode extends ProjectionNode {
       c.addBroadcastingQueue(rootQueue);
       node.addDependency(c);
     }
-
+    node.setScrambleMeta(meta);
     return node;
   }
 
