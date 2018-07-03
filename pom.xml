@@ -6,7 +6,7 @@
     <artifactId>core</artifactId>
     <packaging>jar</packaging>
     <version>0.5.0</version>
-    <name>VerdictDB</name>
+    <name>VerdictDB Core</name>
     <url>http://verdictdb.org</url>
 
     <properties>
@@ -155,6 +155,17 @@
             <version>2.1.0</version>
             <scope>provided</scope>
         </dependency>
-
     </dependencies>
+    
+    <scm>
+        <url>git@gitlab.com:pyongjoo/verdictdb-core.git</url>
+        <connection>git</connection>
+        <developerConnection>The University of Michigan, Ann Arbor</developerConnection>
+    </scm>
+    <ciManagement>
+        <url>https://gitlab.com/pyongjoo/verdictdb-core/pipelines</url>
+    </ciManagement>
+    <issueManagement>
+        <url>https://gitlab.com/pyongjoo/verdictdb-core/issues</url>
+    </issueManagement>
 </project>
