@@ -7,7 +7,7 @@ import org.verdictdb.core.connection.DbmsQueryResult;
 import org.verdictdb.core.execution.ExecutionInfoToken;
 import org.verdictdb.core.sqlobject.CreateTableAsSelectQuery;
 import org.verdictdb.core.sqlobject.SelectQuery;
-import org.verdictdb.core.sqlobject.SqlConvertable;
+import org.verdictdb.core.sqlobject.SqlConvertible;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBValueException;
 
@@ -35,7 +35,7 @@ public class CreateTableAsSelectNode extends QueryNodeWithPlaceHolders {
   }
   
   @Override
-  public SqlConvertable createQuery(List<ExecutionInfoToken> tokens) throws VerdictDBException {
+  public SqlConvertible createQuery(List<ExecutionInfoToken> tokens) throws VerdictDBException {
     super.createQuery(tokens);
     Pair<String, String> tempTableFullName = namer.generateTempTableName();
     newTableSchemaName = tempTableFullName.getLeft();

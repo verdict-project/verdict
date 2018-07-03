@@ -4,26 +4,36 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.verdictdb.core.connection.DbmsQueryResult;
+import org.verdictdb.core.sqlobject.SelectQuery;
+
 public class UniformScramblingMethod implements ScramblingMethod {
 
   @Override
-  public int getTileCount() {
-    return 1;
+  public SelectQuery getStatisticsQuery() {
+    // TODO Auto-generated method stub
+    return null;
   }
 
   @Override
-  public List<String> getTierExpression(List<String> columnNames) {
-    return Arrays.asList();
+  public int getTileCount(DbmsQueryResult statistics) {
+    // TODO Auto-generated method stub
+    return 0;
   }
 
   @Override
-  public List<Double> getCumulativeSizes(int tile, int length) {
-    List<Double> cumul = new ArrayList<>();
-    double c = 1.0 / length;
-    for (int i = 0; i < length; i++) {
-      cumul.add(c * (i+1));
-    }
-    return cumul;
+  public List<String> getTileExpressions(DbmsQueryResult statistics) {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  @Override
+  public List<Double> getCumulativeProbabilityDistributionForTile(
+      DbmsQueryResult statistics, 
+      int tile, 
+      int length) {
+    // TODO Auto-generated method stub
+    return null;
   }
 
 }

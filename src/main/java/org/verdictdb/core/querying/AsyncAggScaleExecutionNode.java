@@ -19,7 +19,7 @@ import org.verdictdb.core.sqlobject.ColumnOp;
 import org.verdictdb.core.sqlobject.ConstantColumn;
 import org.verdictdb.core.sqlobject.SelectItem;
 import org.verdictdb.core.sqlobject.SelectQuery;
-import org.verdictdb.core.sqlobject.SqlConvertable;
+import org.verdictdb.core.sqlobject.SqlConvertible;
 import org.verdictdb.core.sqlobject.UnnamedColumn;
 import org.verdictdb.exception.VerdictDBException;
 
@@ -110,7 +110,7 @@ public class AsyncAggScaleExecutionNode extends ProjectionNode {
   }
   
   @Override
-  public SqlConvertable createQuery(List<ExecutionInfoToken> tokens) throws VerdictDBException {
+  public SqlConvertible createQuery(List<ExecutionInfoToken> tokens) throws VerdictDBException {
     for (ExecutionInfoToken token : tokens) {
       List<HyperTableCube> cubes = (List<HyperTableCube>) token.getValue("hyperTableCube");
       if (cubes != null) {

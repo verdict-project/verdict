@@ -8,7 +8,7 @@ import org.verdictdb.core.execution.ExecutionInfoToken;
 import org.verdictdb.core.execution.ExecutionTokenQueue;
 import org.verdictdb.core.sqlobject.BaseTable;
 import org.verdictdb.core.sqlobject.SelectQuery;
-import org.verdictdb.core.sqlobject.SqlConvertable;
+import org.verdictdb.core.sqlobject.SqlConvertible;
 import org.verdictdb.core.sqlobject.SubqueryColumn;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBValueException;
@@ -33,7 +33,7 @@ public abstract class QueryNodeWithPlaceHolders extends BaseQueryNode {
   }
   
   @Override
-  public SqlConvertable createQuery(List<ExecutionInfoToken> tokens) throws VerdictDBException {
+  public SqlConvertible createQuery(List<ExecutionInfoToken> tokens) throws VerdictDBException {
     if (tokens == null) {
       return null;
     }

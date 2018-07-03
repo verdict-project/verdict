@@ -5,7 +5,7 @@ import java.util.List;
 import org.verdictdb.core.connection.DbmsQueryResult;
 import org.verdictdb.core.execution.ExecutionInfoToken;
 import org.verdictdb.core.sqlobject.DropTableQuery;
-import org.verdictdb.core.sqlobject.SqlConvertable;
+import org.verdictdb.core.sqlobject.SqlConvertible;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBValueException;
 
@@ -21,7 +21,7 @@ public class DropTableExecutionNode extends BaseQueryNode {
   }
   
   @Override
-  public SqlConvertable createQuery(List<ExecutionInfoToken> tokens) throws VerdictDBException {
+  public SqlConvertible createQuery(List<ExecutionInfoToken> tokens) throws VerdictDBException {
     try {
       if (tokens.size() == 0) {
         throw new VerdictDBValueException("No table to drop!");

@@ -83,6 +83,7 @@
                         <!-- This seems to be slower. <hiveconf_hive.execution.engine>tez</hiveconf_hive.execution.engine> 
                             <hiveconf_hive.exec.counters.pull.interval>1000</hiveconf_hive.exec.counters.pull.interval> -->
                     </systemProperties>
+                    <!-- This fork mode seems to be only working configuration for JDK7 -->
                     <!-- <forkMode>always</forkMode> -->
                     <forkCount>1</forkCount>
                     <reuseForks>false</reuseForks>

@@ -9,7 +9,7 @@ import org.verdictdb.core.execution.ExecutionTokenQueue;
 import org.verdictdb.core.sqlobject.AsteriskColumn;
 import org.verdictdb.core.sqlobject.BaseTable;
 import org.verdictdb.core.sqlobject.SelectQuery;
-import org.verdictdb.core.sqlobject.SqlConvertable;
+import org.verdictdb.core.sqlobject.SqlConvertible;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBValueException;
 
@@ -49,7 +49,7 @@ public class SelectAllExecutionNode extends QueryNodeWithPlaceHolders {
   }
   
   @Override
-  public SqlConvertable createQuery(List<ExecutionInfoToken> tokens) throws VerdictDBException {
+  public SqlConvertible createQuery(List<ExecutionInfoToken> tokens) throws VerdictDBException {
     return super.createQuery(tokens);
   }
   

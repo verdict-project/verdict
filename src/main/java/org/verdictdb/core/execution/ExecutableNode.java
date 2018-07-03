@@ -3,7 +3,7 @@ package org.verdictdb.core.execution;
 import java.util.List;
 
 import org.verdictdb.core.connection.DbmsQueryResult;
-import org.verdictdb.core.sqlobject.SqlConvertable;
+import org.verdictdb.core.sqlobject.SqlConvertible;
 import org.verdictdb.exception.VerdictDBException;
 
 public interface ExecutableNode {
@@ -26,7 +26,7 @@ public interface ExecutableNode {
    * @return
    * @throws VerdictDBException 
    */
-  public SqlConvertable createQuery(List<ExecutionInfoToken> tokens) throws VerdictDBException;
+  public SqlConvertible createQuery(List<ExecutionInfoToken> tokens) throws VerdictDBException;
   
   public ExecutionInfoToken createToken(DbmsQueryResult result);
   

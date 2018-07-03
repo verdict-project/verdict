@@ -2,9 +2,14 @@ package org.verdictdb.core.scrambling;
 
 import java.util.List;
 
+import org.verdictdb.core.connection.DbmsQueryResult;
+import org.verdictdb.core.sqlobject.SelectQuery;
+
 public interface ScramblingMethod {
   
-  public int getTileCount();
+  SelectQuery getStatisticsQuery();
+  
+  public int getTileCount(DbmsQueryResult statistics);
   
   /**
    * 
@@ -12,7 +17,7 @@ public interface ScramblingMethod {
    * @return A list of sql expressions (boolean predicates) that must be evaluated true at the step
    * indicating a particular tier 
    */
-  public List<String> getTierExpression(List<String> columnNames);
+  public List<String> getTileExpressions(DbmsQueryResult statistics);
 
   /**
    * 
@@ -21,6 +26,9 @@ public interface ScramblingMethod {
    * @return A list of doubles. The values should be increasing; the last value must be 1.0; and the size of 
    * the list must be length.
    */
-  public List<Double> getCumulativeSizes(int tile, int length);
+  public List<Double> getCumulativeProbabilityDistributionForTile(
+      DbmsQueryResult statistics, 
+      int tile, 
+      int length);
 
 }

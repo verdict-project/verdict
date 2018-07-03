@@ -1,6 +1,6 @@
 package org.verdictdb.core.sqlobject;
 
-public class DropTableQuery implements SqlConvertable {
+public class DropTableQuery implements SqlConvertible {
   
   String schemaName;
   

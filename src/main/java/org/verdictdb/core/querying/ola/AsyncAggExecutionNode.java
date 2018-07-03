@@ -18,7 +18,7 @@ import org.verdictdb.core.querying.TempIdCreator;
 import org.verdictdb.core.rewriter.aggresult.AggNameAndType;
 import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.core.sqlobject.SelectQuery;
-import org.verdictdb.core.sqlobject.SqlConvertable;
+import org.verdictdb.core.sqlobject.SqlConvertible;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBValueException;
 
@@ -83,7 +83,7 @@ public class AsyncAggExecutionNode extends BaseQueryNode {
   }
   
   @Override
-  public SqlConvertable createQuery(List<ExecutionInfoToken> tokens) throws VerdictDBException {
+  public SqlConvertible createQuery(List<ExecutionInfoToken> tokens) throws VerdictDBException {
     savedToken = tokens.get(0);
     return null;
   }

@@ -8,7 +8,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import org.verdictdb.core.connection.DbmsConnection;
 import org.verdictdb.core.connection.DbmsQueryResult;
-import org.verdictdb.core.sqlobject.SqlConvertable;
+import org.verdictdb.core.sqlobject.SqlConvertible;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sqlreader.QueryToSql;
 
@@ -120,7 +120,7 @@ public class ExecutableNodeRunner implements Runnable {
       return null;
     }
     
-    SqlConvertable sqlObj = node.createQuery(tokens);
+    SqlConvertible sqlObj = node.createQuery(tokens);
     DbmsQueryResult intermediate = null;
     if (sqlObj != null) {
       String sql = QueryToSql.convert(conn.getSyntax(), sqlObj);
