@@ -235,8 +235,8 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
   }
 
 
-  public static ColumnOp whenthenelse(UnnamedColumn when, UnnamedColumn then, UnnamedColumn elseColumn) {
-    return new ColumnOp("whenthenelse", Arrays.asList(when, then, elseColumn));
+  public static ColumnOp whenthenelse(List<UnnamedColumn> cols) {
+    return new ColumnOp("whenthenelse", cols);
   }
 
   public static ColumnOp in(List<UnnamedColumn> columns) {

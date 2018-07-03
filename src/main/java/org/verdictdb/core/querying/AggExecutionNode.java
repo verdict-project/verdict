@@ -37,6 +37,7 @@ public class AggExecutionNode extends CreateTableAsSelectNode {
     ExecutionInfoToken token = super.createToken(result);
     if (!cubes.isEmpty()) {
       token.setKeyValue("hyperTableCube", cubes);
+      token.setKeyValue("dependent", this);
     }
     return token;
   }

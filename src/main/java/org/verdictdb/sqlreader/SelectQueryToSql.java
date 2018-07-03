@@ -115,11 +115,12 @@ public class SelectQueryToSql {
 //        + " end";
 //      }
       else if (columnOp.getOpType().equals("whenthenelse")) {
-        return "case "
-            + "when " + withParentheses(columnOp.getOperand(0))
-            + " then " + withParentheses(columnOp.getOperand(1))
-            + " else " + withParentheses(columnOp.getOperand(2))
-            + " end";
+        String sql = "case ";
+        for (int i=0; i<columnOp.getOperands().size()-1;i=i+2) {
+          sql = sql + "when " + withParentheses(columnOp.getOperand(0)) + " then " + withParentheses(columnOp.getOperand(1));
+        }
+        sql = sql + " else " + withParentheses(columnOp.getOperand(columnOp.getOperands().size()-1)) + " end";
+        return sql;
       } else if (columnOp.getOpType().equals("notequal")) {
         return withParentheses(columnOp.getOperand(0)) + " <> " + withParentheses(columnOp.getOperand(1));
       } else if (columnOp.getOpType().equals("notnull")) {

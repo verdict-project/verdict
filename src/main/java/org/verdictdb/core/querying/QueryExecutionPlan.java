@@ -241,33 +241,6 @@ public class QueryExecutionPlan implements ExecutablePlan, TempIdCreator {
   }
 
 
-  public void setScalingNode() throws VerdictDBException{
-    // Check from top to bottom to find AsyncAggExecutionNode
-    List<BaseQueryNode> checkList = new ArrayList<>();
-    List<AsyncAggExecutionNode> toScaleList = new ArrayList<>();
-    checkList.add(root);
-    List<BaseQueryNode> traversed = new ArrayList<>();
-    while (!checkList.isEmpty()) {
-      BaseQueryNode node = checkList.get(0);
-      checkList.remove(0);
-      traversed.add(node);
-      if (node instanceof AsyncAggExecutionNode && !toScaleList.contains(node)) {
-        toScaleList.add((AsyncAggExecutionNode) node);
-      }
-      for (BaseQueryNode dependent:node.dependents) {
-        if (!traversed.contains(dependent)) {
-          checkList.add(dependent);
-        }
-      }
-    }
-
-    for (AsyncAggExecutionNode asyncNode:toScaleList) {
-      for (QueryExecutionNode dependent:asyncNode.getDependents()) {
-        AsyncAggScaleExecutionNode.create(idCreator, dependent);
-      }
-    }
-  }
-
   @Override
   public List<Integer> getNodeGroupIDs() {
     return Arrays.asList(0);

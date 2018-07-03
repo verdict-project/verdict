@@ -6,21 +6,24 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.core.connection.JdbcConnection;
 import org.verdictdb.core.connection.StaticMetaData;
-import org.verdictdb.core.execution.ola.AsyncAggExecutionNode;
-import org.verdictdb.core.execution.ola.AsyncQueryExecutionPlan;
-import org.verdictdb.core.execution.ola.Dimension;
-import org.verdictdb.core.execution.ola.HyperTableCube;
-import org.verdictdb.core.query.AbstractRelation;
-import org.verdictdb.core.query.CreateTableAsSelectQuery;
-import org.verdictdb.core.query.SelectQuery;
-import org.verdictdb.core.scramble.ScrambleMeta;
-import org.verdictdb.core.scramble.ScrambleMetaForTable;
-import org.verdictdb.core.scramble.UniformScrambler;
+import org.verdictdb.core.querying.AggExecutionNode;
+import org.verdictdb.core.querying.QueryExecutionPlan;
+import org.verdictdb.core.querying.ola.AsyncAggExecutionNode;
+import org.verdictdb.core.querying.ola.AsyncQueryExecutionPlan;
+import org.verdictdb.core.querying.ola.Dimension;
+import org.verdictdb.core.querying.ola.HyperTableCube;
+import org.verdictdb.core.scrambling.ScrambleMeta;
+import org.verdictdb.core.scrambling.ScrambleMetaForTable;
+import org.verdictdb.core.scrambling.UniformScrambler;
+import org.verdictdb.core.sqlobject.AbstractRelation;
+import org.verdictdb.core.sqlobject.CreateTableAsSelectQuery;
+import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.exception.VerdictDBException;
-import org.verdictdb.sql.NonValidatingSQLParser;
-import org.verdictdb.sql.QueryToSql;
-import org.verdictdb.sql.RelationStandardizer;
-import org.verdictdb.sql.syntax.H2Syntax;
+import org.verdictdb.sqlreader.NonValidatingSQLParser;
+import org.verdictdb.sqlreader.QueryToSql;
+import org.verdictdb.sqlreader.RelationStandardizer;
+import org.verdictdb.sqlsyntax.H2Syntax;
+
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -120,12 +123,12 @@ public class AsyncAggMultipleTiersScaleTest {
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
     Dimension d1 = new Dimension("originalSchema", "originalTable_scrambled", 0, 0);
-    assertEquals(new HyperTableCube(Arrays.asList(d1)), ((AggExecutionNode)queryExecutionPlan.getRootNode().dependents.get(0).getDependents().get(0)).getCubes().get(0));
+    assertEquals(new HyperTableCube(Arrays.asList(d1)), ((AggExecutionNode)queryExecutionPlan.getRootNode().getDependents().get(0).getDependents().get(0)).getCubes().get(0));
 
-    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().dependents.get(0)).setScrambleMeta(meta);
-    queryExecutionPlan.setScalingNode();
+    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getDependents().get(0)).setScrambleMeta(meta);
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
-    queryExecutionPlan.root.executeAndWaitForTermination(new JdbcConnection(conn, new H2Syntax()));
+    ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
+    //queryExecutionPlan.getRoot().executeAndWaitForTermination(new JdbcConnection(conn, new H2Syntax()));
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 

@@ -1,6 +1,6 @@
 /*
  * Copyright 2018 University of Michigan
- * 
+ *
  * You must contact Barzan Mozafari (mozafari@umich.edu) or Yongjoo Park (pyongjoo@umich.edu) to discuss
  * how you could use, modify, or distribute this code. By default, this code is not open-sourced and we do
  * not license this code.
@@ -8,34 +8,35 @@
 
 package org.verdictdb.core.querying.ola;
 
-import java.util.List;
+import java.util.*;
 
+import com.google.common.base.Optional;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.core.connection.DbmsQueryResult;
 import org.verdictdb.core.execution.ExecutionInfoToken;
 import org.verdictdb.core.execution.ExecutionTokenQueue;
-import org.verdictdb.core.querying.BaseQueryNode;
-import org.verdictdb.core.querying.TempIdCreator;
+import org.verdictdb.core.querying.*;
 import org.verdictdb.core.rewriter.aggresult.AggNameAndType;
 import org.verdictdb.core.scrambling.ScrambleMeta;
-import org.verdictdb.core.sqlobject.SelectQuery;
-import org.verdictdb.core.sqlobject.SqlConvertable;
+import org.verdictdb.core.scrambling.ScrambleMetaForTable;
+import org.verdictdb.core.sqlobject.*;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBValueException;
 
 /**
  * Represents an execution of a single aggregate query (without nested components).
- * 
+ * <p>
  * Steps:
  * 1. identify agg and nonagg columns of a given select agg query.
  * 2. convert the query into multiple block-agg queries.
  * 3. issue those block-agg queries one by one.
  * 4. combine the results of those block-agg queries as the answers to those queries arrive.
  * 5. depending on the interface, call an appropriate result handler.
- * 
- * @author Yongjoo Park
  *
+ * @author Yongjoo Park
  */
-public class AsyncAggExecutionNode extends BaseQueryNode {
+public class AsyncAggExecutionNode extends ProjectionNode {
 
   ScrambleMeta scrambleMeta;
 
@@ -50,17 +51,21 @@ public class AsyncAggExecutionNode extends BaseQueryNode {
 //  List<AsyncAggExecutionNode> children = new ArrayList<>();
 
   int tableNum = 1;
-  
+
   ExecutionInfoToken savedToken = null;
+
+  // Key is the index of scramble table in Dimension, value is the tier column name
+  // Only record tables have multiple tiers
+  List<Pair<Integer, String>> multipleTierTableTierInfo = new ArrayList<>();
 
 //  String getNextTempTableName(String tableNamePrefix) {
 //    return tableNamePrefix + tableNum++;
 //  }
 
   private AsyncAggExecutionNode() {
-    super();
+    super(null, null);
   }
-  
+
   public static AsyncAggExecutionNode create(
       TempIdCreator idCreator,
       List<BaseQueryNode> individualAggs,
@@ -68,7 +73,7 @@ public class AsyncAggExecutionNode extends BaseQueryNode {
 
     AsyncAggExecutionNode node = new AsyncAggExecutionNode();
     ExecutionTokenQueue rootQueue = node.generateListeningQueue();
-    
+
     // first agg -> root
     individualAggs.get(0).addBroadcastingQueue(rootQueue);
     node.addDependency(individualAggs.get(0));
@@ -81,13 +86,48 @@ public class AsyncAggExecutionNode extends BaseQueryNode {
 
     return node;
   }
-  
+
   @Override
   public SqlConvertable createQuery(List<ExecutionInfoToken> tokens) throws VerdictDBException {
     savedToken = tokens.get(0);
-    return null;
+
+    // First, create the base select query for replacement
+    Pair<List<ColumnOp>, SqlConvertable> aggColumnsAndQuery = createBaseQueryForReplacement();
+
+    // Next, calculate the scale factor
+    HashMap<List<Integer>, Double> scaleFactor = new HashMap<>();
+    List<HyperTableCube> cubes = (List<HyperTableCube>) savedToken.getValue("hyperTableCube");
+    scaleFactor = calculateScaleFactor(cubes);
+    // no multiple tier
+    if (scaleFactor.size()==1) {
+      // Substitute the scale factor
+      Double s = (Double) (scaleFactor.values().toArray())[0];
+      for (ColumnOp col : aggColumnsAndQuery.getLeft()) {
+        col.setOperand(0, ConstantColumn.valueOf(s));
+      }
+    }
+    else {
+      // If it has multiple tiers, we need to rewrite the multiply column into when then else column
+      for (ColumnOp col : aggColumnsAndQuery.getLeft()) {
+        col.setOpType("whenthenelse");
+        List<UnnamedColumn> operands = new ArrayList<>();
+        for (Map.Entry<List<Integer>, Double> entry:scaleFactor.entrySet()) {
+          UnnamedColumn condition = generateCaseCondition(entry.getKey());
+          operands.add(condition);
+          ColumnOp multiply = new ColumnOp("multiply", Arrays.asList(
+              ConstantColumn.valueOf(entry.getValue()),
+              col.getOperand(1)
+          ));
+          operands.add(multiply);
+        }
+        operands.add(ConstantColumn.valueOf(0));
+        col.setOperand(operands);
+      }
+    }
+
+    return aggColumnsAndQuery.getRight();
   }
-  
+
   @Override
   public ExecutionInfoToken createToken(DbmsQueryResult result) {
     return savedToken;
@@ -130,5 +170,145 @@ public class AsyncAggExecutionNode extends BaseQueryNode {
 
   public void setScrambleMeta(ScrambleMeta meta) {
     this.scrambleMeta = meta;
+  }
+
+  Pair<List<ColumnOp>, SqlConvertable> createBaseQueryForReplacement() {
+    List<ColumnOp> aggColumnlist = new ArrayList<>();
+    BaseQueryNode dependent = (BaseQueryNode) savedToken.getValue("dependent");
+    List<SelectItem> newSelectList = dependent.getSelectQuery().deepcopy().getSelectList();
+    if (dependent instanceof AggExecutionNode) {
+      for (SelectItem selectItem : newSelectList) {
+        // invariant: the agg column must be aliased column
+        if (selectItem instanceof AliasedColumn) {
+          int index = newSelectList.indexOf(selectItem);
+          UnnamedColumn col = ((AliasedColumn) selectItem).getColumn();
+          if (AsyncAggExecutionNode.isAggregateColumn(col)) {
+            ColumnOp aggColumn = new ColumnOp("multiply", Arrays.<UnnamedColumn>asList(
+                ConstantColumn.valueOf(1.0), new BaseColumn("to_scale_query", ((AliasedColumn) selectItem).getAliasName())
+            ));
+            aggColumnlist.add(aggColumn);
+            newSelectList.set(index, new AliasedColumn(aggColumn, ((AliasedColumn) selectItem).getAliasName()));
+          } else {
+            newSelectList.set(index, new AliasedColumn(new BaseColumn("to_scale_query", ((AliasedColumn) selectItem).getAliasName()),
+                ((AliasedColumn) selectItem).getAliasName()));
+          }
+        }
+      }
+    } else if (dependent instanceof AggCombinerExecutionNode) {
+      for (SelectItem selectItem : newSelectList) {
+        if (selectItem instanceof AliasedColumn) {
+          int index = newSelectList.indexOf(selectItem);
+          if (((AliasedColumn) selectItem).getAliasName().matches("s[0-9]+") || ((AliasedColumn) selectItem).getAliasName().matches("c[0-9]+")) {
+            ColumnOp aggColumn = new ColumnOp("multiply", Arrays.<UnnamedColumn>asList(
+                ConstantColumn.valueOf(1.0), new BaseColumn("to_scale_query", ((AliasedColumn) selectItem).getAliasName())
+            ));
+            aggColumnlist.add(aggColumn);
+            newSelectList.set(index, new AliasedColumn(aggColumn, ((AliasedColumn) selectItem).getAliasName()));
+          } else {
+            newSelectList.set(index, new AliasedColumn(new BaseColumn("to_scale_query", ((AliasedColumn) selectItem).getAliasName()),
+                ((AliasedColumn) selectItem).getAliasName()));
+          }
+        }
+      }
+    }
+    // Setup from table
+    SelectQuery query = SelectQuery.create(newSelectList,
+        new BaseTable((String) savedToken.getValue("schemaName"), (String) savedToken.getValue("tableName"), "to_scale_query"));
+    return new ImmutablePair<>(aggColumnlist, (SqlConvertable) query);
+  }
+
+  // Currently, assume block size is uniform
+  // Return tier permutation list and its scale factor
+  public HashMap<List<Integer>, Double> calculateScaleFactor(List<HyperTableCube> cubes) {
+    ScrambleMeta scrambleMeta = this.getScrambleMeta();
+    List<ScrambleMetaForTable> metaForTablesList = new ArrayList<>();
+    List<Integer> blockCountList = new ArrayList<>();
+    List<Pair<Integer, Integer>> scrambleTableTierInfo = new ArrayList<>();
+    for (Dimension d : cubes.get(0).getDimensions()) {
+      blockCountList.add(scrambleMeta.getAggregationBlockCount(d.getSchemaName(), d.getTableName()));
+      metaForTablesList.add(scrambleMeta.getMetaForTable(d.getSchemaName(), d.getTableName()));
+      scrambleTableTierInfo.add(new ImmutablePair<>(cubes.get(0).getDimensions().indexOf(d),
+          scrambleMeta.getMetaForTable(d.getSchemaName(), d.getTableName()).getNumberOfTiers()));
+      if (scrambleMeta.getMetaForTable(d.getSchemaName(), d.getTableName()).getNumberOfTiers() > 1) {
+        multipleTierTableTierInfo.add(new ImmutablePair<>(cubes.get(0).getDimensions().indexOf(d),
+            scrambleMeta.getMetaForTable(d.getSchemaName(), d.getTableName()).getTierColumn()));
+      }
+    }
+
+    List<List<Integer>> tierPermuation = generateTierPermuation(scrambleTableTierInfo);
+    HashMap<List<Integer>, Double> scaleFactor = new HashMap<>();
+    for (List<Integer> tierlist : tierPermuation) {
+      double total = 0;
+      for (HyperTableCube cube : cubes) {
+        double scale = 1;
+        for (int i = 0; i < tierlist.size(); i++) {
+          int tier = tierlist.get(i);
+          Dimension d = cube.getDimensions().get(i);
+          int blockIndex = d.getEnd();
+          double prob = d.getBegin() == 0 ? metaForTablesList.get(i).getCumulativeProbabilityDistribution(tier).get(d.getEnd())
+              : metaForTablesList.get(i).getCumulativeProbabilityDistribution(tier).get(d.getEnd()) -
+              metaForTablesList.get(i).getCumulativeProbabilityDistribution(tier).get(d.getBegin() - 1);
+          scale = scale * prob;
+        }
+        total += scale;
+      }
+      if (total == 0) scaleFactor.put(tierlist, 0.0);
+      else scaleFactor.put(tierlist, 1 / total);
+    }
+    return scaleFactor;
+  }
+
+  // Generate the permuation of multiple tiers
+  List<List<Integer>> generateTierPermuation(List<Pair<Integer, Integer>> scrambleTableTierInfo) {
+    if (scrambleTableTierInfo.size() == 1) {
+      List<List<Integer>> res = new ArrayList<>();
+      for (int tier = 0; tier < scrambleTableTierInfo.get(0).getRight(); tier++) {
+        res.add(Arrays.asList(tier));
+      }
+      return res;
+    } else {
+      List<Pair<Integer, Integer>> next = scrambleTableTierInfo.subList(1, scrambleTableTierInfo.size());
+      List<List<Integer>> subres = generateTierPermuation(next);
+      List<List<Integer>> res = new ArrayList<>();
+      for (int tier = 0; tier < scrambleTableTierInfo.get(0).getRight(); tier++) {
+        for (List<Integer> tierlist : subres) {
+          List<Integer> newTierlist = tierlist;
+          newTierlist.add(0, tier);
+          res.add(newTierlist);
+        }
+      }
+      return res;
+    }
+  }
+
+  UnnamedColumn generateCaseCondition(List<Integer> tierlist) {
+    Optional<ColumnOp> col = Optional.absent();
+    for (int i=0;i<multipleTierTableTierInfo.size();i++) {
+      BaseColumn tierColumn = new BaseColumn("to_scale_query", multipleTierTableTierInfo.get(i).getRight());
+      ColumnOp equation = new ColumnOp("equal", Arrays.asList(tierColumn,
+          ConstantColumn.valueOf(tierlist.get(multipleTierTableTierInfo.get(i).getLeft()))));
+      if (col.isPresent()) {
+        col = Optional.of(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(equation, col.get())));
+      }
+      else col = Optional.of(equation);
+    }
+    return col.get();
+  }
+
+  // Currently, only need to judge whether it is sum or count
+  public static boolean isAggregateColumn(UnnamedColumn sel) {
+    List<SelectItem> itemToCheck = new ArrayList<>();
+    itemToCheck.add(sel);
+    while (!itemToCheck.isEmpty()) {
+      SelectItem s = itemToCheck.get(0);
+      itemToCheck.remove(0);
+      if (s instanceof ColumnOp) {
+        if (((ColumnOp) s).getOpType().equals("count") || ((ColumnOp) s).getOpType().equals("sum")) {
+          return true;
+        }
+        else itemToCheck.addAll(((ColumnOp) s).getOperands());
+      }
+    }
+    return false;
   }
 }

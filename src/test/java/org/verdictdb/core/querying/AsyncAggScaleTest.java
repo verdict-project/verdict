@@ -121,7 +121,6 @@ public class AsyncAggScaleTest {
     Dimension d1 = new Dimension("originalSchema", "originalTable_scrambled", 0, 0);
     assertEquals(new HyperTableCube(Arrays.asList(d1)), ((AggExecutionNode)queryExecutionPlan.getRootNode().dependents.get(0).getDependents().get(0)).getCubes().get(0));
     ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().dependents.get(0)).setScrambleMeta(meta);
-    queryExecutionPlan.setScalingNode();
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
 //    queryExecutionPlan.getRoot().print();
     
@@ -130,24 +129,4 @@ public class AsyncAggScaleTest {
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
-  //@Test
-  public void ScrambleTableCompressTest() throws VerdictDBException,SQLException {
-    RelationStandardizer.resetItemID();
-    String sql = "select sum(value) from originalTable_scrambled";
-    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
-    AbstractRelation relation = sqlToRelation.toRelation(sql);
-    RelationStandardizer gen = new RelationStandardizer(staticMetaData);
-    relation = gen.standardize((SelectQuery) relation);
-
-    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
-    queryExecutionPlan.cleanUp();
-    queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().dependents.get(0)).setScrambleMeta(meta);
-    queryExecutionPlan.setScalingNode();
-    queryExecutionPlan.compress();
-    stmt.execute("create schema if not exists \"verdictdb_temp\";");
-    ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
-//    queryExecutionPlan.root.executeAndWaitForTermination(new JdbcConnection(conn, new H2Syntax()));
-    stmt.execute("drop schema \"verdictdb_temp\" cascade;");
-  }
 }
