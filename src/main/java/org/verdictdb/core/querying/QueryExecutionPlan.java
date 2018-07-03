@@ -172,8 +172,8 @@ public class QueryExecutionPlan implements ExecutablePlan, TempIdCreator {
       boolean compressable = node.parents.size()==1 && !isSharingQueue(node);
       if (compressable) {
         BaseQueryNode parent = node.parents.get(0);
-        if (((parent instanceof AggExecutionNode)||(parent instanceof SelectAllExecutionNode)||(parent instanceof ProjectionNode))
-            && ((node instanceof AggExecutionNode)||(node instanceof SelectAllExecutionNode)||(node instanceof ProjectionNode)) ) {
+        if (((parent instanceof AggExecutionNode)||(parent instanceof SelectAllExecutionNode)||(parent instanceof ProjectionNode && !(parent instanceof AsyncAggExecutionNode)))
+            && ((node instanceof AggExecutionNode)||(node instanceof SelectAllExecutionNode)||(node instanceof ProjectionNode && !(node instanceof AsyncAggExecutionNode))) ) {
           compressTwoNode(node, parent);
         }
       }
