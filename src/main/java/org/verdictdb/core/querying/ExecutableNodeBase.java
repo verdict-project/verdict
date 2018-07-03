@@ -102,6 +102,7 @@ public class ExecutableNodeBase implements ExecutableNode {
     for (ExecutableNodeBase s : subscribers) {
       s.cancelSubscriptionTo(this);
     }
+    subscribers = new ArrayList<>();
   }
 
   // runner methods
@@ -243,9 +244,9 @@ public class ExecutableNodeBase implements ExecutableNode {
   @Override
   public String toString() {
     return new ToStringBuilder(this, ToStringStyle.DEFAULT_STYLE)
+        .append("subscriberCount", subscribers.size())
         .append("sources", sources)
-        .append("channels", channels)
-//        .append("subscribers", subscribers)
+//        .append("channels", channels)
 //        .append("channels", channels)
         .toString();
   }

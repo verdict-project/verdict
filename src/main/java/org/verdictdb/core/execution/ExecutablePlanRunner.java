@@ -32,7 +32,7 @@ public class ExecutablePlanRunner {
     ExecutionTokenReader reader = (new ExecutablePlanRunner(conn, plan)).getTokenReader();
     while (true) {
       ExecutionInfoToken token = reader.next();
-//      System.out.println("runTillEnd: " + token);
+      System.out.println("runTillEnd: " + token);
       if (token == null) {
         break;
       }

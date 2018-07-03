@@ -81,7 +81,7 @@ public class AggExecutionNodeBlock {
    * of partitions)
    * @throws VerdictDBValueException 
    */
-  public ExecutableNodeBase convertToProgressiveAgg (ScrambleMeta scrambleMeta) 
+  public ExecutableNodeBase convertToProgressiveAgg(ScrambleMeta scrambleMeta) 
       throws VerdictDBValueException {
     List<ExecutableNodeBase> individualAggNodes = new ArrayList<>();
     List<ExecutableNodeBase> combiners = new ArrayList<>();
