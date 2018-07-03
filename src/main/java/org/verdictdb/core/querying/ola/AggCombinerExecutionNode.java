@@ -97,7 +97,7 @@ public class AggCombinerExecutionNode extends CreateTableAsSelectNode {
   @Override
   public ExecutionInfoToken createToken(DbmsQueryResult result) {
     ExecutionInfoToken token = super.createToken(result);
-    if (cubes!=null) {
+    if (!cubes.isEmpty()) {
       token.setKeyValue("hyperTableCube", cubes);
     }
     token.setKeyValue("dependent", this);

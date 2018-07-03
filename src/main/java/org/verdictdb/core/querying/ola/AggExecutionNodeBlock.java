@@ -111,10 +111,33 @@ public class AggExecutionNodeBlock {
           identifyScrambledNodes(scrambleMeta, copy.getNodesInBlock());
       
       // add extra predicates to restrain each aggregation to particular parts of base tables.
-      // Move original AggExecutionNode.executeNode() method here
-      // Assume only one scramble table in the query
-      Dimension dimension = new Dimension(scrambles.get(0).getLeft(), scrambles.get(0).getRight(), i, i);
-      ((AggExecutionNode)aggroot).getCubes().addAll(Arrays.asList(new HyperTableCube(Arrays.asList(dimension))));
+      if (scrambles.size()==1) {
+        Dimension dimension = new Dimension(scrambles.get(0).getLeft(), scrambles.get(0).getRight(), i, i);
+        ((AggExecutionNode)aggroot).getCubes().addAll(Arrays.asList(new HyperTableCube(Arrays.asList(dimension))));
+      }
+      else {
+        int turn = i % scrambles.size();
+        int round = i / scrambles.size() + 1;
+        List<Dimension> dimensionList = new ArrayList<>();
+        for (int j = 0; j<scrambles.size(); j++) {
+          int blockCount = scrambleMeta.getAggregationBlockCount(scrambles.get(j).getLeft(), scrambles.get(j).getRight());
+          if (turn==j) {
+            Dimension d = new Dimension(scrambles.get(j).getLeft(), scrambles.get(j).getRight(),round-1, round-1);
+            dimensionList.add(d);
+          }
+          else {
+            Dimension d;
+            if (j<turn) {
+              d = new Dimension(scrambles.get(j).getLeft(), scrambles.get(j).getRight(), round, blockCount-1);
+            }
+            else {
+              d = new Dimension(scrambles.get(j).getLeft(), scrambles.get(j).getRight(), round - 1, blockCount-1);
+            }
+            dimensionList.add(d);
+          }
+        }
+        ((AggExecutionNode)aggroot).getCubes().addAll(Arrays.asList(new HyperTableCube(dimensionList)));
+      }
 
       for (Pair<BaseQueryNode, Triple<String, String, String>> a : scrambledNodeAndTableName) {
         BaseQueryNode scrambledNode = a.getLeft();

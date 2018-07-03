@@ -53,7 +53,6 @@ public class UniformScrambler extends BaseScrambler {
 //                ColumnOp.rand(),
 //                ConstantColumn.valueOf(100.0))),
 //        subsampleColumn);
-
     AliasedColumn tierValue = new AliasedColumn(ConstantColumn.valueOf(1), tierColumn);
 
     List<SelectItem> newSelectList = new ArrayList<>();

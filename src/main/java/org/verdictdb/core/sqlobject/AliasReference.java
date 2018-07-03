@@ -15,12 +15,23 @@ public class AliasReference implements GroupingAttribute {
 
   String aliasName;
 
+  String tableAlias;
+
   public AliasReference(String aliasName) {
+    this.aliasName = aliasName;
+  }
+
+  public AliasReference(String tableAlias, String aliasName) {
+    this.tableAlias = tableAlias;
     this.aliasName = aliasName;
   }
 
   public String getAliasName() {
     return aliasName;
+  }
+
+  public String getTableAlias() {
+    return tableAlias;
   }
 
   @Override

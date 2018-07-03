@@ -38,6 +38,8 @@ import org.verdictdb.exception.VerdictDBValueException;
  */
 public class AsyncAggExecutionNode extends ProjectionNode {
 
+  String tierColumn = "verdictdbtier";
+
   ScrambleMeta scrambleMeta;
 
   // group-by columns
@@ -54,9 +56,11 @@ public class AsyncAggExecutionNode extends ProjectionNode {
 
   ExecutionInfoToken savedToken = null;
 
-  // Key is the index of scramble table in Dimension, value is the tier column name
+  // Key is the index of scramble table in Dimension, value is the tier column alias name
   // Only record tables have multiple tiers
-  List<Pair<Integer, String>> multipleTierTableTierInfo = new ArrayList<>();
+  HashMap<Integer, String> multipleTierTableTierInfo = new HashMap<>();
+
+  Boolean tierInfoInitiated = false;
 
 //  String getNextTempTableName(String tableNamePrefix) {
 //    return tableNamePrefix + tableNum++;
@@ -91,13 +95,14 @@ public class AsyncAggExecutionNode extends ProjectionNode {
   public SqlConvertable createQuery(List<ExecutionInfoToken> tokens) throws VerdictDBException {
     savedToken = tokens.get(0);
 
-    // First, create the base select query for replacement
-    Pair<List<ColumnOp>, SqlConvertable> aggColumnsAndQuery = createBaseQueryForReplacement();
-
-    // Next, calculate the scale factor
+    // First, calculate the scale factor
     HashMap<List<Integer>, Double> scaleFactor = new HashMap<>();
     List<HyperTableCube> cubes = (List<HyperTableCube>) savedToken.getValue("hyperTableCube");
     scaleFactor = calculateScaleFactor(cubes);
+
+    // Next, create the base select query for replacement
+    Pair<List<ColumnOp>, SqlConvertable> aggColumnsAndQuery = createBaseQueryForReplacement(cubes);
+
     // no multiple tier
     if (scaleFactor.size()==1) {
       // Substitute the scale factor
@@ -172,7 +177,7 @@ public class AsyncAggExecutionNode extends ProjectionNode {
     this.scrambleMeta = meta;
   }
 
-  Pair<List<ColumnOp>, SqlConvertable> createBaseQueryForReplacement() {
+  Pair<List<ColumnOp>, SqlConvertable> createBaseQueryForReplacement(List<HyperTableCube> cubes) {
     List<ColumnOp> aggColumnlist = new ArrayList<>();
     BaseQueryNode dependent = (BaseQueryNode) savedToken.getValue("dependent");
     List<SelectItem> newSelectList = dependent.getSelectQuery().deepcopy().getSelectList();
@@ -189,11 +194,23 @@ public class AsyncAggExecutionNode extends ProjectionNode {
             aggColumnlist.add(aggColumn);
             newSelectList.set(index, new AliasedColumn(aggColumn, ((AliasedColumn) selectItem).getAliasName()));
           } else {
+            // Looking for tier column
+            if (col instanceof BaseColumn && ((BaseColumn) col).getColumnName().equals(tierColumn)) {
+              String schemaName = ((BaseColumn) col).getSchemaName();
+              String tableName = ((BaseColumn) col).getTableName();
+              for (Dimension d:cubes.get(0).getDimensions()) {
+                if (d.getTableName().equals(tableName)&&d.getSchemaName().equals(schemaName)) {
+                  multipleTierTableTierInfo.put(cubes.get(0).getDimensions().indexOf(d), ((AliasedColumn) selectItem).getAliasName());
+                  break;
+                }
+              }
+            }
             newSelectList.set(index, new AliasedColumn(new BaseColumn("to_scale_query", ((AliasedColumn) selectItem).getAliasName()),
                 ((AliasedColumn) selectItem).getAliasName()));
           }
         }
       }
+      tierInfoInitiated = true;
     } else if (dependent instanceof AggCombinerExecutionNode) {
       for (SelectItem selectItem : newSelectList) {
         if (selectItem instanceof AliasedColumn) {
@@ -229,9 +246,9 @@ public class AsyncAggExecutionNode extends ProjectionNode {
       metaForTablesList.add(scrambleMeta.getMetaForTable(d.getSchemaName(), d.getTableName()));
       scrambleTableTierInfo.add(new ImmutablePair<>(cubes.get(0).getDimensions().indexOf(d),
           scrambleMeta.getMetaForTable(d.getSchemaName(), d.getTableName()).getNumberOfTiers()));
-      if (scrambleMeta.getMetaForTable(d.getSchemaName(), d.getTableName()).getNumberOfTiers() > 1) {
-        multipleTierTableTierInfo.add(new ImmutablePair<>(cubes.get(0).getDimensions().indexOf(d),
-            scrambleMeta.getMetaForTable(d.getSchemaName(), d.getTableName()).getTierColumn()));
+      if (scrambleMeta.getMetaForTable(d.getSchemaName(), d.getTableName()).getNumberOfTiers() > 1 && !tierInfoInitiated) {
+        multipleTierTableTierInfo.put(cubes.get(0).getDimensions().indexOf(d),
+            scrambleMeta.getMetaForTable(d.getSchemaName(), d.getTableName()).getTierColumn());
       }
     }
 
@@ -244,7 +261,6 @@ public class AsyncAggExecutionNode extends ProjectionNode {
         for (int i = 0; i < tierlist.size(); i++) {
           int tier = tierlist.get(i);
           Dimension d = cube.getDimensions().get(i);
-          int blockIndex = d.getEnd();
           double prob = d.getBegin() == 0 ? metaForTablesList.get(i).getCumulativeProbabilityDistribution(tier).get(d.getEnd())
               : metaForTablesList.get(i).getCumulativeProbabilityDistribution(tier).get(d.getEnd()) -
               metaForTablesList.get(i).getCumulativeProbabilityDistribution(tier).get(d.getBegin() - 1);
@@ -272,7 +288,10 @@ public class AsyncAggExecutionNode extends ProjectionNode {
       List<List<Integer>> res = new ArrayList<>();
       for (int tier = 0; tier < scrambleTableTierInfo.get(0).getRight(); tier++) {
         for (List<Integer> tierlist : subres) {
-          List<Integer> newTierlist = tierlist;
+          List<Integer> newTierlist = new ArrayList<>();
+          for (int i:tierlist) {
+            newTierlist.add(Integer.valueOf(i));
+          }
           newTierlist.add(0, tier);
           res.add(newTierlist);
         }
@@ -283,10 +302,10 @@ public class AsyncAggExecutionNode extends ProjectionNode {
 
   UnnamedColumn generateCaseCondition(List<Integer> tierlist) {
     Optional<ColumnOp> col = Optional.absent();
-    for (int i=0;i<multipleTierTableTierInfo.size();i++) {
-      BaseColumn tierColumn = new BaseColumn("to_scale_query", multipleTierTableTierInfo.get(i).getRight());
+    for (Map.Entry<Integer, String> entry:multipleTierTableTierInfo.entrySet()) {
+      BaseColumn tierColumn = new BaseColumn("to_scale_query", entry.getValue());
       ColumnOp equation = new ColumnOp("equal", Arrays.asList(tierColumn,
-          ConstantColumn.valueOf(tierlist.get(multipleTierTableTierInfo.get(i).getLeft()))));
+          ConstantColumn.valueOf(tierlist.get(entry.getKey()))));
       if (col.isPresent()) {
         col = Optional.of(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(equation, col.get())));
       }
