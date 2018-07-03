@@ -1,8 +1,6 @@
 package org.verdictdb.jdbc41;
 
-import static java.sql.Types.BIGINT;
-import static java.sql.Types.DOUBLE;
-import static java.sql.Types.VARCHAR;
+import static java.sql.Types.*;
 import static org.junit.Assert.assertEquals;
 
 import java.sql.Connection;
@@ -14,8 +12,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.verdictdb.core.aggresult.AggregateFrame;
+import org.verdictdb.core.aggresult.AggregateFrameQueryResult;
+import org.verdictdb.core.connection.JdbcQueryResult;
+import org.verdictdb.core.rewriter.aggresult.AggNameAndType;
+import org.verdictdb.exception.VerdictDBValueException;
 
 public class JdbcResultSetMetaDataSqliteTest {
   
@@ -23,14 +27,14 @@ public class JdbcResultSetMetaDataSqliteTest {
 
   private static Statement stmt;
 
-  private java.sql.ResultSetMetaData jdbcResultSetMetaData1; 
+  private static java.sql.ResultSetMetaData jdbcResultSetMetaData1; 
   
-  private java.sql.ResultSetMetaData jdbcResultSetMetaData2;
+  private static java.sql.ResultSetMetaData jdbcResultSetMetaData2;
 
-  private ResultSet rs;
+  private static ResultSet rs;
 
   @BeforeClass
-  public static void setupH2Database() throws SQLException {
+  public static void setupDatabase() throws SQLException, VerdictDBValueException {
     final String DB_CONNECTION = "jdbc:sqlite:";
     final String DB_USER = "";
     final String DB_PASSWORD = "";
@@ -58,11 +62,30 @@ public class JdbcResultSetMetaDataSqliteTest {
       String birth = row.get(6).toString();
       stmt.execute(String.format("INSERT INTO PEOPLE(id, name, gender, age, height, nation, birth) VALUES(%s, '%s', '%s', %s, %s, '%s', '%s')", id, name, gender, age, height, nation, birth));
     }
+    
+    rs = stmt.executeQuery("SELECT gender, count(*) as cnt, avg(age) as ageavg FROM PEOPLE GROUP BY gender");
+    JdbcQueryResult queryResult = new JdbcQueryResult(rs);
+    List<String> nonAgg = new ArrayList<>();
+    List<AggNameAndType> agg = new ArrayList<>();
+    nonAgg.add("GENDER");
+    agg.add(new AggNameAndType("CNT", "COUNT"));
+    agg.add(new AggNameAndType("AGEAVG", "SUM"));
+    AggregateFrame aggregateFrame = AggregateFrame.fromDmbsQueryResult(queryResult, nonAgg, agg);
+    AggregateFrameQueryResult aggregateFrameQueryResult = (AggregateFrameQueryResult) aggregateFrame.toDbmsQueryResult();
+//    jdbcResultSetMetaData1 = new JdbcResultSetMetaData(queryResult);
+    jdbcResultSetMetaData1 = new JdbcResultSet(queryResult).getMetaData();
+//    jdbcResultSetMetaData2 = new JdbcResultSetMetaData(aggregateFrameQueryResult);
+    jdbcResultSetMetaData2 = new JdbcResultSet(aggregateFrameQueryResult).getMetaData();
+  }
+  
+  @Before
+  public void createJdbcResultSetMetaData() throws SQLException, VerdictDBValueException {
+    rs = stmt.executeQuery("SELECT gender, count(*) as cnt, avg(age) as ageavg FROM PEOPLE GROUP BY gender");
   }
 
   @Test
   public void quotedAliasTableTest() throws SQLException {
-    stmt.execute("select \"PEOPLE\".name from people as \"PEOPLE\"");
+    conn.createStatement().execute("select \"PEOPLE\".name from people as \"PEOPLE\"");
   }
 
   @Test
@@ -85,10 +108,10 @@ public class JdbcResultSetMetaDataSqliteTest {
   public void isSignedTest() throws SQLException {
     assertEquals(false, jdbcResultSetMetaData1.isSigned(1));
     assertEquals(true, jdbcResultSetMetaData1.isSigned(2));
-    assertEquals(true, jdbcResultSetMetaData1.isSigned(3));
+    assertEquals(false, jdbcResultSetMetaData1.isSigned(3));
     assertEquals(false, jdbcResultSetMetaData2.isSigned(1));
     assertEquals(true, jdbcResultSetMetaData2.isSigned(2));
-    assertEquals(true, jdbcResultSetMetaData2.isSigned(3));
+    assertEquals(false, jdbcResultSetMetaData2.isSigned(3));
   }
 
   @Test
@@ -131,40 +154,43 @@ public class JdbcResultSetMetaDataSqliteTest {
 
   @Test
   public void getScaleTest() throws SQLException {
+    System.out.println(rs.isClosed());
+//    System.out.println(rs.getMetaData());
+//    System.out.println(rs.getMetaData().getScale(3));
     assertEquals(rs.getMetaData().getScale(1), jdbcResultSetMetaData1.getScale(1));
     assertEquals(rs.getMetaData().getScale(3), jdbcResultSetMetaData1.getScale(3));
     assertEquals(rs.getMetaData().getScale(1), jdbcResultSetMetaData2.getScale(1));
-    assertEquals(rs.getMetaData().getScale(3), jdbcResultSetMetaData1.getScale(3));
+    assertEquals(rs.getMetaData().getScale(3), jdbcResultSetMetaData2.getScale(3));
   }
 
   @Test
   public void getColumnTypeTest() throws SQLException {
     assertEquals(VARCHAR, jdbcResultSetMetaData1.getColumnType(1));
-    assertEquals(BIGINT, jdbcResultSetMetaData1.getColumnType(2));
-    assertEquals(DOUBLE, jdbcResultSetMetaData1.getColumnType(3));
+    assertEquals(INTEGER, jdbcResultSetMetaData1.getColumnType(2));
+    assertEquals(FLOAT, jdbcResultSetMetaData1.getColumnType(3));
     assertEquals(VARCHAR, jdbcResultSetMetaData2.getColumnType(1));
-    assertEquals(BIGINT, jdbcResultSetMetaData2.getColumnType(2));
-    assertEquals(DOUBLE, jdbcResultSetMetaData2.getColumnType(3));
+    assertEquals(INTEGER, jdbcResultSetMetaData2.getColumnType(2));
+    assertEquals(FLOAT, jdbcResultSetMetaData2.getColumnType(3));
   }
 
   @Test
   public void getColumnTypeNameTest() throws SQLException {
     assertEquals("varchar", jdbcResultSetMetaData1.getColumnTypeName(1));
-    assertEquals("bigint", jdbcResultSetMetaData1.getColumnTypeName(2));
-    assertEquals("double", jdbcResultSetMetaData1.getColumnTypeName(3));
+    assertEquals("integer", jdbcResultSetMetaData1.getColumnTypeName(2));
+    assertEquals("float", jdbcResultSetMetaData1.getColumnTypeName(3));
     assertEquals("varchar", jdbcResultSetMetaData2.getColumnTypeName(1));
-    assertEquals("bigint", jdbcResultSetMetaData2.getColumnTypeName(2));
-    assertEquals("double", jdbcResultSetMetaData2.getColumnTypeName(3));
+    assertEquals("integer", jdbcResultSetMetaData2.getColumnTypeName(2));
+    assertEquals("float", jdbcResultSetMetaData2.getColumnTypeName(3));
   }
 
   @Test
   public void getColumnClassNameTest() throws SQLException {
-    assertEquals("java.lang.String", jdbcResultSetMetaData1.getColumnClassName(1));
-    assertEquals("java.lang.Long", jdbcResultSetMetaData1.getColumnClassName(2));
-    assertEquals("java.lang.Double", jdbcResultSetMetaData1.getColumnClassName(3));
-    assertEquals("java.lang.String", jdbcResultSetMetaData2.getColumnClassName(1));
-    assertEquals("java.lang.Long", jdbcResultSetMetaData2.getColumnClassName(2));
-    assertEquals("java.lang.Double", jdbcResultSetMetaData2.getColumnClassName(3));
+    assertEquals("java.lang.Object", jdbcResultSetMetaData1.getColumnClassName(1));
+    assertEquals("java.lang.Object", jdbcResultSetMetaData1.getColumnClassName(2));
+    assertEquals("java.lang.Object", jdbcResultSetMetaData1.getColumnClassName(3));
+    assertEquals("java.lang.Object", jdbcResultSetMetaData2.getColumnClassName(1));
+    assertEquals("java.lang.Object", jdbcResultSetMetaData2.getColumnClassName(2));
+    assertEquals("java.lang.Object", jdbcResultSetMetaData2.getColumnClassName(3));
   }
 
   @Test
