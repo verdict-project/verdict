@@ -1,7 +1,5 @@
 package org.verdictdb.core.connection;
 
-import org.verdictdb.connection.DbmsQueryResultMetaData;
-
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -23,7 +21,6 @@ public class JdbcQueryResult implements DbmsQueryResult {
   DbmsQueryResultMetaData dbmsQueryResultMetaData = new DbmsQueryResultMetaData();
 
   public JdbcQueryResult(ResultSet resultSet) throws SQLException {
-
     List<Boolean> isCurrency = new ArrayList<>();
     List<Integer> isNullable = new ArrayList<>();
     List<Integer> precision = new ArrayList<>();
@@ -52,7 +49,6 @@ public class JdbcQueryResult implements DbmsQueryResult {
     dbmsQueryResultMetaData.precision = precision;
     dbmsQueryResultMetaData.scale = scale;
     dbmsQueryResultMetaData.columnClassName = columnClassName;
-
 
     while (resultSet.next()) {
       List<Object> row = new ArrayList<>();
@@ -85,20 +81,13 @@ public class JdbcQueryResult implements DbmsQueryResult {
 
   @Override
   public boolean next() {
-    if (cursor<result.size()-1) {
+    if (cursor < result.size()-1) {
       cursor++;
       return true;
     }
-    else return false;
-    /*
-    boolean nextExists = false;
-    try {
-      nextExists = resultSet.next();
-    } catch (SQLException e) {
-      e.printStackTrace();
+    else {
+      return false;
     }
-    return nextExists;
-    */
   }
 
   @Override

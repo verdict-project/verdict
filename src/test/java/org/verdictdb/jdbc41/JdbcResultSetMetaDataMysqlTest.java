@@ -28,7 +28,9 @@ public class JdbcResultSetMetaDataMysqlTest {
 
   private static Statement stmt;
 
-  private JdbcResultSetMetaData jdbcResultSetMetaData1, jdbcResultSetMetaData2;
+  private ResultSetMetaData jdbcResultSetMetaData1;
+
+  private ResultSetMetaData jdbcResultSetMetaData2;
 
   private static final String MYSQL_HOST;
 
@@ -90,8 +92,15 @@ public class JdbcResultSetMetaDataMysqlTest {
     agg.add(new AggNameAndType("AGEAVG", "SUM"));
     AggregateFrame aggregateFrame = AggregateFrame.fromDmbsQueryResult(queryResult, nonAgg, agg);
     AggregateFrameQueryResult aggregateFrameQueryResult = (AggregateFrameQueryResult) aggregateFrame.toDbmsQueryResult();
-    jdbcResultSetMetaData1 = new JdbcResultSetMetaData(queryResult);
-    jdbcResultSetMetaData2 = new JdbcResultSetMetaData(aggregateFrameQueryResult);
+//    jdbcResultSetMetaData1 = new JdbcResultSetMetaData(queryResult);
+    jdbcResultSetMetaData1 = new JdbcResultSet(queryResult).getMetaData();
+//    jdbcResultSetMetaData2 = new JdbcResultSetMetaData(aggregateFrameQueryResult);
+    jdbcResultSetMetaData2 = new JdbcResultSet(aggregateFrameQueryResult).getMetaData();
+  }
+  
+  @Test(expected=SQLException.class)
+  public void quotedAliasTableTest() throws SQLException {
+    stmt.execute("select name from people as \"PEOPLE\"");
   }
 
   @Test

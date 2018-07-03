@@ -39,7 +39,7 @@ public class SelectAllExecutionNodeTest {
 
   @BeforeClass
   public static void setupDbConnAndScrambledTable() throws SQLException, VerdictDBException {
-    final String DB_CONNECTION = "jdbc:h2:mem:createasselecttest;DB_CLOSE_DELAY=-1";
+    final String DB_CONNECTION = "jdbc:h2:mem:selectalltest;DB_CLOSE_DELAY=-1";
     final String DB_USER = "";
     final String DB_PASSWORD = "";
     conn = new JdbcConnection(DriverManager.getConnection(DB_CONNECTION, DB_USER, DB_PASSWORD), new H2Syntax());

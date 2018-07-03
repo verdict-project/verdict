@@ -6,7 +6,7 @@
     <artifactId>core</artifactId>
     <packaging>jar</packaging>
     <version>0.5.0</version>
-    <name>VerdictDB</name>
+    <name>VerdictDB Core</name>
     <url>http://verdictdb.org</url>
 
     <properties>
@@ -80,13 +80,12 @@
                         <enableTimeout>true</enableTimeout>
                         <timeoutSeconds>100</timeoutSeconds>
                         <timeoutRetries>2</timeoutRetries>
-                        <!-- This seems to be slower. 
-                        <hiveconf_hive.execution.engine>tez</hiveconf_hive.execution.engine>
-                        <hiveconf_hive.exec.counters.pull.interval>1000</hiveconf_hive.exec.counters.pull.interval> -->
+                        <!-- This seems to be slower. <hiveconf_hive.execution.engine>tez</hiveconf_hive.execution.engine> 
+                            <hiveconf_hive.exec.counters.pull.interval>1000</hiveconf_hive.exec.counters.pull.interval> -->
                     </systemProperties>
                     <!-- <forkMode>always</forkMode> -->
-                    <forkCount>1C</forkCount>
-                    <reuseForks>true</reuseForks>
+                    <forkCount>1</forkCount>
+                    <reuseForks>false</reuseForks>
                     <argLine>-Xmx2048m -XX:MaxPermSize=512m</argLine>
                 </configuration>
             </plugin>
@@ -117,12 +116,8 @@
             <version>1.4.197</version>
             <scope>test</scope>
         </dependency>
-        <!-- <dependency>
-            <groupId>org.postgresql</groupId>
-            <artifactId>postgresql</artifactId>
-            <version>42.2.2</version>
-            <scope>test</scope>
-        </dependency> -->
+        <!-- <dependency> <groupId>org.postgresql</groupId> <artifactId>postgresql</artifactId> 
+            <version>42.2.2</version> <scope>test</scope> </dependency> -->
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
@@ -134,6 +129,11 @@
             <artifactId>mysql-connector-java</artifactId>
             <version>5.1.46</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.xerial</groupId>
+            <artifactId>sqlite-jdbc</artifactId>
+            <version>3.8.11.2</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
@@ -155,6 +155,17 @@
             <version>2.1.0</version>
             <scope>provided</scope>
         </dependency>
-
     </dependencies>
+    
+    <scm>
+        <url>git@gitlab.com:pyongjoo/verdictdb-core.git</url>
+        <connection>git</connection>
+        <developerConnection>The University of Michigan, Ann Arbor</developerConnection>
+    </scm>
+    <ciManagement>
+        <url>https://gitlab.com/pyongjoo/verdictdb-core/pipelines</url>
+    </ciManagement>
+    <issueManagement>
+        <url>https://gitlab.com/pyongjoo/verdictdb-core/issues</url>
+    </issueManagement>
 </project>

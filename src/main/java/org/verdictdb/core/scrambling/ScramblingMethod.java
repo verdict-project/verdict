@@ -4,7 +4,7 @@ import java.util.List;
 
 public interface ScramblingMethod {
   
-  public int getTierCount();
+  public int getTileCount();
   
   /**
    * 
@@ -17,8 +17,10 @@ public interface ScramblingMethod {
   /**
    * 
    * @param tier 0, 1, ..., getTierCount()-1
-   * @return
+   * @param length The length of the distribution
+   * @return A list of doubles. The values should be increasing; the last value must be 1.0; and the size of 
+   * the list must be length.
    */
-  public List<Double> getCumulativeBlockSizeDistribution(int tier);
+  public List<Double> getCumulativeSizes(int tile, int length);
 
 }

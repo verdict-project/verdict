@@ -30,6 +30,33 @@ public class SqlToRelationTest {
     AbstractRelation sel = sqlToRelation.toRelation(actual);
     assertEquals(expected, sel);
   }
+  
+  @Test
+  public void testQuotedQuery() throws VerdictDBException {
+    String actual = "select \"t\".* from \"myschema\".\"mytable\" as \"t\"";
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    SelectQuery expected = SelectQuery.create(Arrays.<SelectItem>asList(
+        new AsteriskColumn("t")
+    ), Arrays.<AbstractRelation>asList(new BaseTable("myschema", "mytable", "t")));
+    AbstractRelation sel = sqlToRelation.toRelation(actual);
+    assertEquals(expected, sel);
+  }
+  
+  @Test
+  public void testQuotedQuery2() throws VerdictDBException {
+    String actual = "select \"t\".*, \"a.b\".\"AbC\" "
+        + "from \"myschema\".\"mytable\" as \"t\", \"Mytable\" \"s.S\"";
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    SelectQuery expected = SelectQuery.create(
+        Arrays.<SelectItem>asList(
+            new AsteriskColumn("t"),
+            new BaseColumn("a.b", "AbC")), 
+        Arrays.<AbstractRelation>asList(
+            new BaseTable("myschema", "mytable", "t"),
+            BaseTable.getBaseTableWithoutSchema("Mytable", "s.S")));
+    AbstractRelation sel = sqlToRelation.toRelation(actual);
+    assertEquals(expected, sel);
+  }
 
   @Test
   public void testSelectColumnsBaseTable() throws VerdictDBException {
