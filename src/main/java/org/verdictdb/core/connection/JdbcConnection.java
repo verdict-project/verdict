@@ -9,18 +9,18 @@ import java.util.List;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
-import org.verdictdb.DbmsConnection;
-import org.verdictdb.DbmsQueryResult;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.jdbc41.JdbcResultSet;
-import org.verdictdb.sql.syntax.PostgresqlSyntax;
-import org.verdictdb.sql.syntax.SqlSyntax;
+import org.verdictdb.sqlsyntax.PostgresqlSyntax;
+import org.verdictdb.sqlsyntax.SqlSyntax;
 
 public class JdbcConnection implements DbmsConnection {
   
   Connection conn;
   
   SqlSyntax syntax;
+  
+//  JdbcQueryResult jrs = null;
   
   public JdbcConnection(Connection conn, SqlSyntax syntax) {
     this.conn = conn;
@@ -35,15 +35,21 @@ public class JdbcConnection implements DbmsConnection {
       e.printStackTrace();
     }
   }
-
+  
   @Override
-  public DbmsQueryResult executeQuery(String query) throws VerdictDBDbmsException {
-    System.out.println("About to issue this query: " + query);
+  public DbmsQueryResult execute(String sql) throws VerdictDBDbmsException {
+//    System.out.println("About to issue this query: " + sql);
     try {
       Statement stmt = conn.createStatement();
-      ResultSet rs = stmt.executeQuery(query);
-      JdbcQueryResult jrs = new JdbcQueryResult(rs);
-      rs.close();
+      JdbcQueryResult jrs = null;
+      boolean doesResultExist = stmt.execute(sql);
+      if (doesResultExist) {
+        ResultSet rs = stmt.getResultSet();
+        jrs = new JdbcQueryResult(rs);
+        rs.close();
+      } else {
+        jrs = null;
+      }
       stmt.close();
       return jrs;
     } catch (SQLException e) {
@@ -51,20 +57,44 @@ public class JdbcConnection implements DbmsConnection {
     }
   }
 
-  @Override
-  public int executeUpdate(String query) throws VerdictDBDbmsException {
-    System.out.println("About to issue this query: " + query);
-    try {
-      Statement stmt = conn.createStatement();
-      int r = stmt.executeUpdate(query);
-      stmt.close();
-      return r;
-    } catch (SQLException e) {
-      throw new VerdictDBDbmsException(e);
-//      e.printStackTrace();
-//      return 0;
-    }
+//  @Override
+//  public DbmsQueryResult getResult() {
+//    return jrs;
+//  }
+  
+  public DbmsQueryResult executeQuery(String sql) throws VerdictDBDbmsException {
+    return execute(sql);
   }
+
+//  @Override
+//  public DbmsQueryResult executeQuery(String query) throws VerdictDBDbmsException {
+//    System.out.println("About to issue this query: " + query);
+//    try {
+//      Statement stmt = conn.createStatement();
+//      ResultSet rs = stmt.executeQuery(query);
+//      JdbcQueryResult jrs = new JdbcQueryResult(rs);
+//      rs.close();
+//      stmt.close();
+//      return jrs;
+//    } catch (SQLException e) {
+//      throw new VerdictDBDbmsException(e.getMessage());
+//    }
+//  }
+//
+//  @Override
+//  public int executeUpdate(String query) throws VerdictDBDbmsException {
+//    System.out.println("About to issue this query: " + query);
+//    try {
+//      Statement stmt = conn.createStatement();
+//      int r = stmt.executeUpdate(query);
+//      stmt.close();
+//      return r;
+//    } catch (SQLException e) {
+//      throw new VerdictDBDbmsException(e);
+////      e.printStackTrace();
+////      return 0;
+//    }
+//  }
 
   @Override
   public SqlSyntax getSyntax() {

@@ -1,9 +1,10 @@
 package org.verdictdb;
 
+import org.verdictdb.core.connection.DbmsConnection;
+import org.verdictdb.core.connection.DbmsQueryResult;
 import org.verdictdb.core.connection.JdbcConnection;
-import org.verdictdb.resulthandler.AsyncHandler;
-import org.verdictdb.sql.syntax.SqlSyntax;
-import org.verdictdb.sql.syntax.SyntaxReader;
+import org.verdictdb.sqlsyntax.SqlSyntax;
+import org.verdictdb.sqlsyntax.SyntaxReader;
 
 public class VerdictDBContext {
   
@@ -23,10 +24,6 @@ public class VerdictDBContext {
   
   public DbmsQueryResult sql(String query) {
     return null;
-  }
-  
-  public void asyncExecuteQuery(String query, AsyncHandler handler) {
-    
   }
 
 }

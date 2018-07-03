@@ -16,8 +16,9 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
 
-import org.verdictdb.DbmsQueryResult;
 import org.verdictdb.core.connection.DataTypeConverter;
+import org.verdictdb.core.connection.DbmsQueryResult;
+import org.verdictdb.core.connection.JdbcQueryResult;
 
 public class JdbcResultSetMetaData implements ResultSetMetaData {
   
@@ -48,7 +49,8 @@ public class JdbcResultSetMetaData implements ResultSetMetaData {
 
   @Override
   public boolean isAutoIncrement(int column) throws SQLException {
-    throw new SQLException("Not supported function.");
+    return queryResult.getMetaData().isAutoIncrement.get(column-1);
+    // throw new SQLException("Not supported function.");
   }
 
   @Override
@@ -69,12 +71,14 @@ public class JdbcResultSetMetaData implements ResultSetMetaData {
 
   @Override
   public boolean isCurrency(int column) throws SQLException {
-    throw new SQLException("Not supported function.");
+    return queryResult.getMetaData().isCurrency.get(column-1);
+    //throw new SQLException("Not supported function.");
   }
 
   @Override
   public int isNullable(int column) throws SQLException {
-    return java.sql.ResultSetMetaData.columnNullableUnknown;
+    return queryResult.getMetaData().isNullable.get(column-1);
+    //return java.sql.ResultSetMetaData.columnNullableUnknown;
   }
 
   @Override
@@ -90,7 +94,8 @@ public class JdbcResultSetMetaData implements ResultSetMetaData {
 
   @Override
   public int getColumnDisplaySize(int column) throws SQLException {
-    return Math.max(getPrecision(column), queryResult.getColumnName(column-1).length());
+    return queryResult.getMetaData().columnDisplaySize.get(column-1);
+    //return Math.max(getPrecision(column), queryResult.getColumnName(column-1).length());
   }
 
   @Override
@@ -110,6 +115,8 @@ public class JdbcResultSetMetaData implements ResultSetMetaData {
 
   @Override
   public int getPrecision(int column) throws SQLException {
+    return queryResult.getMetaData().precision.get(column-1);
+    /*
     int coltype = queryResult.getColumnType(column-1);
     if (coltype == BIGINT) {
       return 19;
@@ -127,29 +134,33 @@ public class JdbcResultSetMetaData implements ResultSetMetaData {
       return 64;
     }
     else if (coltype == FLOAT) {
-      return 32;
+      return 17;
     }
     else if (coltype == DATE) {
       return 10;
     }
     else if (coltype == TIME) {
-      return 11;
+      return 8;
     }
     else if (coltype == TIMESTAMP) {
-      return 22;
+      return 26;
     }
     else {
       return 0;
     }
+    */
   }
 
   @Override
   public int getScale(int column) throws SQLException {
+    return queryResult.getMetaData().scale.get(column-1);
+    /*
     String typeName = DataTypeConverter.typeName(queryResult.getColumnType(column-1));
     if (typeName.contains("double") || typeName.contains("float")) {
       return 10;
     }
     return 0;
+    */
   }
 
   @Override
@@ -189,7 +200,8 @@ public class JdbcResultSetMetaData implements ResultSetMetaData {
 
   @Override
   public String getColumnClassName(int column) throws SQLException {
-    return DataTypeConverter.typeName(queryResult.getColumnType(column-1));
+    return queryResult.getMetaData().columnClassName.get(column-1);
+    //return DataTypeConverter.typeName(queryResult.getColumnType(column-1));
   }
 
 }

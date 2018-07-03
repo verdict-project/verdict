@@ -30,6 +30,13 @@ public class ExecutionInfoToken {
     return token;
   }
   
+  public static ExecutionInfoToken failureToken(Exception e) {
+    ExecutionInfoToken token = new ExecutionInfoToken();
+    token.setKeyValue("status", "failed");
+    token.setKeyValue("errorMessage", e);
+    return token;
+  }
+  
   public boolean isSuccessToken() {
     if (data.containsKey("status") && data.get("status").equals("success")) {
       return true;

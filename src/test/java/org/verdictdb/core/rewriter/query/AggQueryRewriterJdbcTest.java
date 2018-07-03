@@ -11,23 +11,23 @@ import java.util.Random;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.verdictdb.DbmsQueryResult;
+import org.verdictdb.core.connection.DbmsQueryResult;
 import org.verdictdb.core.connection.JdbcConnection;
-import org.verdictdb.core.query.AbstractRelation;
-import org.verdictdb.core.query.AliasedColumn;
-import org.verdictdb.core.query.BaseColumn;
-import org.verdictdb.core.query.BaseTable;
-import org.verdictdb.core.query.ColumnOp;
-import org.verdictdb.core.query.CreateTableAsSelectQuery;
-import org.verdictdb.core.query.SelectItem;
-import org.verdictdb.core.query.SelectQuery;
-import org.verdictdb.core.scramble.ScrambleMeta;
-import org.verdictdb.core.scramble.Scrambler;
-import org.verdictdb.core.scramble.UniformScrambler;
+import org.verdictdb.core.scrambling.ScrambleMeta;
+import org.verdictdb.core.scrambling.BaseScrambler;
+import org.verdictdb.core.scrambling.UniformScrambler;
+import org.verdictdb.core.sqlobject.AbstractRelation;
+import org.verdictdb.core.sqlobject.AliasedColumn;
+import org.verdictdb.core.sqlobject.BaseColumn;
+import org.verdictdb.core.sqlobject.BaseTable;
+import org.verdictdb.core.sqlobject.ColumnOp;
+import org.verdictdb.core.sqlobject.CreateTableAsSelectQuery;
+import org.verdictdb.core.sqlobject.SelectItem;
+import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.exception.VerdictDBException;
-import org.verdictdb.sql.CreateTableToSql;
-import org.verdictdb.sql.SelectQueryToSql;
-import org.verdictdb.sql.syntax.H2Syntax;
+import org.verdictdb.sqlreader.CreateTableToSql;
+import org.verdictdb.sqlreader.SelectQueryToSql;
+import org.verdictdb.sqlsyntax.H2Syntax;
 
 public class AggQueryRewriterJdbcTest {
 
@@ -101,11 +101,11 @@ public class AggQueryRewriterJdbcTest {
   ScrambleMeta generateTestScrambleMeta() {
     ScrambleMeta meta = new ScrambleMeta();
     meta.insertScrambleMetaEntry(newSchema, newTable,
-        Scrambler.getAggregationBlockColumn(),
+        BaseScrambler.getAggregationBlockColumn(),
 //        Scrambler.getInclusionProbabilityColumn(),
 //        Scrambler.getInclusionProbabilityBlockDifferenceColumn(),
-        Scrambler.getSubsampleColumn(),
-        Scrambler.getTierColumn(),
+        BaseScrambler.getSubsampleColumn(),
+        BaseScrambler.getTierColumn(),
         aggblockCount);
     return meta;
   }

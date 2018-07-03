@@ -29,8 +29,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
-import org.verdictdb.DbmsQueryResult;
 import org.verdictdb.core.connection.DataTypeConverter;
+import org.verdictdb.core.connection.DbmsQueryResult;
 import org.verdictdb.exception.VerdictDBTypeException;
 
 public class JdbcResultSet implements ResultSet {
