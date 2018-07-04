@@ -6,8 +6,6 @@ import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
-import org.verdictdb.core.execution.ExecutableNode;
-import org.verdictdb.core.execution.ExecutionTokenQueue;
 import org.verdictdb.core.querying.AggExecutionNode;
 import org.verdictdb.core.querying.ExecutableNodeBase;
 import org.verdictdb.core.querying.QueryNodeBase;

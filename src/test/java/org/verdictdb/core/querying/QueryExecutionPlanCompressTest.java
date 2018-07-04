@@ -4,21 +4,12 @@ import static org.junit.Assert.assertEquals;
 
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.Arrays;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.core.connection.DbmsConnection;
 import org.verdictdb.core.connection.JdbcConnection;
-import org.verdictdb.core.execution.ExecutionTokenQueue;
-import org.verdictdb.core.querying.ola.AggCombinerExecutionNode;
-import org.verdictdb.core.querying.ola.AsyncAggExecutionNode;
-import org.verdictdb.core.sqlobject.AliasedColumn;
-import org.verdictdb.core.sqlobject.BaseColumn;
-import org.verdictdb.core.sqlobject.BaseTable;
 import org.verdictdb.core.sqlobject.ColumnOp;
-import org.verdictdb.core.sqlobject.ConstantColumn;
-import org.verdictdb.core.sqlobject.SelectItem;
 import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.core.sqlobject.SubqueryColumn;
 import org.verdictdb.exception.VerdictDBDbmsException;

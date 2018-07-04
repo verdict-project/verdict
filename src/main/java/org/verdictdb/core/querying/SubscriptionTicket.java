@@ -1,7 +1,5 @@
 package org.verdictdb.core.querying;
 
-import org.verdictdb.core.execution.ExecutableNode;
-
 import com.google.common.base.Optional;
 
 public class SubscriptionTicket {

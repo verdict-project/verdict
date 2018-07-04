@@ -105,7 +105,7 @@ public class SelectAllExecutionNodeTest {
 
 //    QueryExecutionPlan plan = new QueryExecutionPlan(newSchema);
     SelectAllExecutionNode node = SelectAllExecutionNode.create(
-        new TempIdCreatorInScratchPadSchema(newSchema), query);
+        new TempIdCreatorInScratchpadSchema(newSchema), query);
 //    conn.executeUpdate(String.format("create table \"%s\".\"%s\"", newSchema, ((ProjectionExecutionNode)node.getExecutableNodeBaseDependent(0)).newTableName));
 //    ExecutionInfoToken subqueryToken = new ExecutionInfoToken();
 //    subqueryToken.setKeyValue("schemaName", ((ProjectionExecutionNode)node.getExecutableNodeBaseDependent(0)).newTableSchemaName);

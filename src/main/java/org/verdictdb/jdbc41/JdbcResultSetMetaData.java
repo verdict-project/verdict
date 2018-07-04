@@ -1,16 +1,5 @@
 package org.verdictdb.jdbc41;
 
-import static java.sql.Types.BIGINT;
-import static java.sql.Types.DATE;
-import static java.sql.Types.DOUBLE;
-import static java.sql.Types.FLOAT;
-import static java.sql.Types.INTEGER;
-import static java.sql.Types.NUMERIC;
-import static java.sql.Types.SMALLINT;
-import static java.sql.Types.TIME;
-import static java.sql.Types.TIMESTAMP;
-import static java.sql.Types.TINYINT;
-
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.Arrays;
@@ -18,7 +7,6 @@ import java.util.List;
 
 import org.verdictdb.core.connection.DataTypeConverter;
 import org.verdictdb.core.connection.DbmsQueryResult;
-import org.verdictdb.core.connection.JdbcQueryResult;
 
 public class JdbcResultSetMetaData implements ResultSetMetaData {
   

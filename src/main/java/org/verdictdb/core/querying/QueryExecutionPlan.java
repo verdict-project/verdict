@@ -51,7 +51,7 @@ public class QueryExecutionPlan implements ExecutablePlan, TempIdCreator {
   //  }
 
   public QueryExecutionPlan(String scratchpadSchemaName) {
-    this.idCreator = new TempIdCreatorInScratchPadSchema(scratchpadSchemaName);
+    this.idCreator = new TempIdCreatorInScratchpadSchema(scratchpadSchemaName);
     this.scrambleMeta = new ScrambleMeta();
   }
 
@@ -81,7 +81,7 @@ public class QueryExecutionPlan implements ExecutablePlan, TempIdCreator {
   }
 
   public int getSerialNumber() {
-    return ((TempIdCreatorInScratchPadSchema) idCreator).getSerialNumber();
+    return ((TempIdCreatorInScratchpadSchema) idCreator).getSerialNumber();
   }
 
   public ScrambleMeta getScrambleMeta() {
@@ -100,7 +100,7 @@ public class QueryExecutionPlan implements ExecutablePlan, TempIdCreator {
   }
 
   public String getScratchpadSchemaName() {
-    return ((TempIdCreatorInScratchPadSchema) idCreator).getScratchpadSchemaName();
+    return ((TempIdCreatorInScratchpadSchema) idCreator).getScratchpadSchemaName();
   }
 
   public ExecutableNodeBase getRootNode() {
@@ -137,7 +137,7 @@ public class QueryExecutionPlan implements ExecutablePlan, TempIdCreator {
 
   // clean up any intermediate materialized tables
   public void cleanUp() {
-    ((TempIdCreatorInScratchPadSchema) idCreator).reset();
+    ((TempIdCreatorInScratchpadSchema) idCreator).reset();
   }
 
   @Override

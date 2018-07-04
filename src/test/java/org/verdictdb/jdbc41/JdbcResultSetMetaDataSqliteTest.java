@@ -1,6 +1,8 @@
 package org.verdictdb.jdbc41;
 
-import static java.sql.Types.*;
+import static java.sql.Types.FLOAT;
+import static java.sql.Types.INTEGER;
+import static java.sql.Types.VARCHAR;
 import static org.junit.Assert.assertEquals;
 
 import java.sql.Connection;

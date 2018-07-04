@@ -14,7 +14,6 @@ import org.verdictdb.parser.VerdictSQLBaseVisitor;
 import org.verdictdb.parser.VerdictSQLParser;
 import org.verdictdb.parser.VerdictSQLParser.Column_nameContext;
 import org.verdictdb.parser.VerdictSQLParser.Full_column_nameContext;
-import org.verdictdb.parser.VerdictSQLParser.Table_nameContext;
 
 public class ExpressionGen extends VerdictSQLBaseVisitor<UnnamedColumn> {
 

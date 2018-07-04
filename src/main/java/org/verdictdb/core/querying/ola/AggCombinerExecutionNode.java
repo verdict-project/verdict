@@ -7,7 +7,6 @@ import java.util.List;
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.core.connection.DbmsQueryResult;
 import org.verdictdb.core.execution.ExecutionInfoToken;
-import org.verdictdb.core.execution.ExecutionTokenQueue;
 import org.verdictdb.core.querying.CreateTableAsSelectNode;
 import org.verdictdb.core.querying.ExecutableNodeBase;
 import org.verdictdb.core.querying.QueryNodeBase;
@@ -38,11 +37,38 @@ public class AggCombinerExecutionNode extends CreateTableAsSelectNode {
       ExecutableNodeBase rightQueryExecutionNode) throws VerdictDBValueException {
     AggCombinerExecutionNode node = new AggCombinerExecutionNode(namer);
     
-//    SelectQuery leftQuery = queryExecutionNode.getSelectQuery();
     SelectQuery rightQuery = ((QueryNodeBase) rightQueryExecutionNode).getSelectQuery();   // the right one is the aggregate query
     String leftAliasName = namer.generateAliasName();
     String rightAliasName = namer.generateAliasName();
     
+    // create placeholders to use
+    Pair<BaseTable, SubscriptionTicket> leftBaseAndTicket = node.createPlaceHolderTable(leftAliasName);
+    Pair<BaseTable, SubscriptionTicket> rightBaseAndTicket = node.createPlaceHolderTable(rightAliasName);
+    
+    // compose a join query
+    SelectQuery joinQuery = composeJoinQuery(rightQuery, leftBaseAndTicket.getLeft(), rightBaseAndTicket.getLeft());
+    
+    leftQueryExecutionNode.registerSubscriber(leftBaseAndTicket.getRight());
+    rightQueryExecutionNode.registerSubscriber(rightBaseAndTicket.getRight());
+    
+    node.setSelectQuery(joinQuery);
+    return node;
+  }
+  
+  /**
+   * Composes a query that joins two tables. The select list is inferred from a given query.
+   * 
+   * @param rightQuery The query from which to infer a select list
+   * @param leftBase
+   * @param rightBase
+   * @return
+   */
+  static SelectQuery composeJoinQuery(
+      SelectQuery rightQuery,
+      BaseTable leftBase,
+      BaseTable rightBase) {
+    
+    // retrieves the select list
     List<String> groupAliasNames = new ArrayList<>();
     List<String> measureAliasNames = new ArrayList<>();
     for (SelectItem item : rightQuery.getSelectList()) {
@@ -53,7 +79,10 @@ public class AggCombinerExecutionNode extends CreateTableAsSelectNode {
       }
     }
     
-    // compose a join query
+    // replace the alias names of those select items
+    String leftAliasName = leftBase.getAliasName().get();
+    String rightAliasName = rightBase.getAliasName().get();
+    
     List<SelectItem> groupItems = new ArrayList<>();
     List<SelectItem> measureItems = new ArrayList<>();
     for (String a : groupAliasNames) {
@@ -68,35 +97,25 @@ public class AggCombinerExecutionNode extends CreateTableAsSelectNode {
     allItems.addAll(groupItems);
     allItems.addAll(measureItems);
     
-    Pair<BaseTable, SubscriptionTicket> leftBaseAndTicket = node.createPlaceHolderTable(leftAliasName);
-    Pair<BaseTable, SubscriptionTicket> rightBaseAndTicket = node.createPlaceHolderTable(rightAliasName);
+    // finally, creates a join query
     SelectQuery joinQuery = SelectQuery.create(
         allItems, 
-        Arrays.<AbstractRelation>asList(leftBaseAndTicket.getLeft(), rightBaseAndTicket.getLeft()));
+        Arrays.<AbstractRelation>asList(leftBase, rightBase));
     for (String a : groupAliasNames) {
       joinQuery.addFilterByAnd(
           ColumnOp.equal(new BaseColumn(leftAliasName, a), new BaseColumn(rightAliasName, a)));
     }
-    leftQueryExecutionNode.registerSubscriber(leftBaseAndTicket.getRight());
-    rightQueryExecutionNode.registerSubscriber(rightBaseAndTicket.getRight());
     
-    node.setSelectQuery(joinQuery);
-//    node.addDependency(leftQueryExecutionNode);
-//    node.addDependency(rightQueryExecutionNode);
-    return node;
+    return joinQuery;
   }
 
   @Override
-//<<<<<<< HEAD
-//  public SqlConvertible createQuery(List<ExecutionInfoToken> tokens) throws VerdictDBException {
-//=======
   public SqlConvertible createQuery(List<ExecutionInfoToken> tokens) throws VerdictDBException {
     for (ExecutionInfoToken token:tokens) {
-      if (token.getValue("hyperTableCube")!=null) {
+      if (token.getValue("hyperTableCube") != null) {
         cubes.addAll((List<HyperTableCube>) token.getValue("hyperTableCube"));
       }
     }
-//>>>>>>> origin/joezhong-scale
     return super.createQuery(tokens);
   }
 

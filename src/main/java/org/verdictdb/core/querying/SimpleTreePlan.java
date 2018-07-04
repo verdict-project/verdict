@@ -8,6 +8,14 @@ import java.util.List;
 import org.verdictdb.core.execution.ExecutableNode;
 import org.verdictdb.core.execution.ExecutablePlan;
 
+/**
+ * Easily creates a plan given a root node.
+ * <p>
+ * This is only for test purposes.
+ * 
+ * @author Yongjoo Park
+ *
+ */
 public class SimpleTreePlan implements ExecutablePlan {
   
   ExecutableNodeBase root;

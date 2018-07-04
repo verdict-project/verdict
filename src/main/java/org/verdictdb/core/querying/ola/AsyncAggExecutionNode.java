@@ -9,32 +9,39 @@
 package org.verdictdb.core.querying.ola;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
-import java.util.*;
+import java.util.Map;
 
-import com.google.common.base.Optional;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.core.connection.DbmsQueryResult;
 import org.verdictdb.core.execution.ExecutionInfoToken;
-import org.verdictdb.core.execution.ExecutionTokenQueue;
+import org.verdictdb.core.querying.AggExecutionNode;
 import org.verdictdb.core.querying.ExecutableNodeBase;
+import org.verdictdb.core.querying.ProjectionNode;
 import org.verdictdb.core.querying.QueryNodeBase;
 import org.verdictdb.core.querying.TempIdCreator;
 import org.verdictdb.core.rewriter.aggresult.AggNameAndType;
 import org.verdictdb.core.scrambling.ScrambleMeta;
+import org.verdictdb.core.scrambling.ScrambleMetaForTable;
+import org.verdictdb.core.sqlobject.AliasedColumn;
+import org.verdictdb.core.sqlobject.BaseColumn;
+import org.verdictdb.core.sqlobject.BaseTable;
+import org.verdictdb.core.sqlobject.ColumnOp;
+import org.verdictdb.core.sqlobject.ConstantColumn;
+import org.verdictdb.core.sqlobject.SelectItem;
 import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.core.sqlobject.SqlConvertible;
-import org.verdictdb.core.querying.*;
-import org.verdictdb.core.rewriter.aggresult.AggNameAndType;
-import org.verdictdb.core.scrambling.ScrambleMeta;
-import org.verdictdb.core.scrambling.ScrambleMetaForTable;
-import org.verdictdb.core.sqlobject.*;
+import org.verdictdb.core.sqlobject.UnnamedColumn;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBValueException;
 
+import com.google.common.base.Optional;
+
 /**
- * Represents an execution of a single aggregate query (without nested components).
+ * Represents an "progressive" execution of a single aggregate query (without nested components).
  * <p>
  * Steps:
  * 1. identify agg and nonagg columns of a given select agg query.
@@ -71,60 +78,26 @@ public class AsyncAggExecutionNode extends ProjectionNode {
 
   Boolean tierInfoInitiated = false;
 
-//  String getNextTempTableName(String tableNamePrefix) {
-//    return tableNamePrefix + tableNum++;
-//  }
-
   private AsyncAggExecutionNode() {
     super(null, null);
   }
-  
-//  public static AsyncAggExecutionNode castAndCreate(TempIdCreator idCreator,
-//      List<QueryNodeBase> individualAggs,
-//      List<QueryNodeBase> combiners) throws VerdictDBValueException {
-//    
-//    List<ExecutableNodeBase> ind = new ArrayList<>();
-//    List<ExecutableNodeBase> com = new ArrayList<>();
-//    for (QueryNodeBase n : individualAggs) {
-//      ind.add(n);
-//    }
-//    for (QueryNodeBase c : combiners) {
-//      com.add(c);
-//    }
-//    return create(idCreator, ind, com);
-//  }
-  
-//  public static AsyncAggExecutionNode create(
-//      TempIdCreator idCreator,
-//      List<ExecutableNodeBase> individualAggs,
-//      List<ExecutableNodeBase> combiners) throws VerdictDBValueException {
-//
-//    AsyncAggExecutionNode node = new AsyncAggExecutionNode();
-////    ExecutionTokenQueue rootQueue = node.generateListeningQueue();
-//    
-//=======
 
   public static AsyncAggExecutionNode create(
       TempIdCreator idCreator,
       List<ExecutableNodeBase> individualAggs,
       List<ExecutableNodeBase> combiners, 
       ScrambleMeta meta) throws VerdictDBValueException {
-
+    
     AsyncAggExecutionNode node = new AsyncAggExecutionNode();
-//    ExecutionTokenQueue rootQueue = node.generateListeningQueue();
 
-//>>>>>>> origin/joezhong-scale
     // first agg -> root
     node.subscribeTo(individualAggs.get(0), 0);
-//    individualAggs.get(0).addBroadcastingQueue(rootQueue);
-//    node.addDependency(individualAggs.get(0));
 
     // combiners -> root
     for (ExecutableNodeBase c : combiners) {
       node.subscribeTo(c, 0);
-//      c.addBroadcastingQueue(rootQueue);
-//      node.addDependency(c);
     }
+    
     node.setScrambleMeta(meta);
     return node;
   }
@@ -134,9 +107,8 @@ public class AsyncAggExecutionNode extends ProjectionNode {
     savedToken = tokens.get(0);
 
     // First, calculate the scale factor
-    HashMap<List<Integer>, Double> scaleFactor = new HashMap<>();
     List<HyperTableCube> cubes = (List<HyperTableCube>) savedToken.getValue("hyperTableCube");
-    scaleFactor = calculateScaleFactor(cubes);
+    HashMap<List<Integer>, Double> scaleFactor = calculateScaleFactor(cubes);
 
     // Next, create the base select query for replacement
     Pair<List<ColumnOp>, SqlConvertible> aggColumnsAndQuery = createBaseQueryForReplacement(cubes);
@@ -173,26 +145,9 @@ public class AsyncAggExecutionNode extends ProjectionNode {
 
   @Override
   public ExecutionInfoToken createToken(DbmsQueryResult result) {
+    // TODO: where is the name of the table?
     return savedToken;
   }
-
-//  @Override
-//  public ExecutionInfoToken executeNode(DbmsConnection conn, List<ExecutionInfoToken> downstreamResults) 
-//      throws VerdictDBException {
-//    ExecutionInfoToken token = super.executeNode(conn, downstreamResults);
-//    System.out.println("AsyncNode execution " + getSelectQuery());
-//    try {
-//      TimeUnit.SECONDS.sleep(1);
-//      this.print();
-////      for (QueryExecutionNode n : getDependents()) {
-////        System.out.println(n + " " + n.getStatus());
-////      }
-//    } catch (InterruptedException e) {
-//      // TODO Auto-generated catch block
-//      e.printStackTrace();
-//    }
-//    return downstreamResults.get(0);
-//  }
 
   @Override
   public ExecutableNodeBase deepcopy() {
@@ -215,6 +170,11 @@ public class AsyncAggExecutionNode extends ProjectionNode {
     this.scrambleMeta = meta;
   }
 
+  /**
+   * 
+   * @param cubes
+   * @return Key: aggregate column list
+   */
   Pair<List<ColumnOp>, SqlConvertible> createBaseQueryForReplacement(List<HyperTableCube> cubes) {
     List<ColumnOp> aggColumnlist = new ArrayList<>();
     QueryNodeBase dependent = (QueryNodeBase) savedToken.getValue("dependent");
@@ -250,10 +210,12 @@ public class AsyncAggExecutionNode extends ProjectionNode {
         }
       }
       tierInfoInitiated = true;
-    } else if (dependent instanceof AggCombinerExecutionNode) {
+    } 
+    else if (dependent instanceof AggCombinerExecutionNode) {
       for (SelectItem selectItem : newSelectList) {
         if (selectItem instanceof AliasedColumn) {
           int index = newSelectList.indexOf(selectItem);
+          // TODO: what is this?
           if (((AliasedColumn) selectItem).getAliasName().matches("s[0-9]+") || ((AliasedColumn) selectItem).getAliasName().matches("c[0-9]+")) {
             ColumnOp aggColumn = new ColumnOp("multiply", Arrays.<UnnamedColumn>asList(
                 ConstantColumn.valueOf(1.0), new BaseColumn("to_scale_query", ((AliasedColumn) selectItem).getAliasName())
@@ -273,8 +235,10 @@ public class AsyncAggExecutionNode extends ProjectionNode {
     return new ImmutablePair<>(aggColumnlist, (SqlConvertible) query);
   }
 
-  // Currently, assume block size is uniform
-  // Return tier permutation list and its scale factor
+  /**
+   *  Currently, assume block size is uniform
+   *  @return Return tier permutation list and its scale factor
+   */
   public HashMap<List<Integer>, Double> calculateScaleFactor(List<HyperTableCube> cubes) {
     ScrambleMeta scrambleMeta = this.getScrambleMeta();
     List<ScrambleMetaForTable> metaForTablesList = new ArrayList<>();
@@ -313,7 +277,11 @@ public class AsyncAggExecutionNode extends ProjectionNode {
     return scaleFactor;
   }
 
-  // Generate the permuation of multiple tiers
+  /** 
+   * Generate the permuation of multiple tiers
+   * @param scrambleTableTierInfo
+   * @return
+   */
   List<List<Integer>> generateTierPermuation(List<Pair<Integer, Integer>> scrambleTableTierInfo) {
     if (scrambleTableTierInfo.size() == 1) {
       List<List<Integer>> res = new ArrayList<>();

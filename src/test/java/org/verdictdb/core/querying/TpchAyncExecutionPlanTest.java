@@ -38,7 +38,6 @@ import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.core.sqlobject.SubqueryColumn;
 import org.verdictdb.core.sqlobject.UnnamedColumn;
 import org.verdictdb.exception.VerdictDBException;
-import org.verdictdb.resulthandler.ResultStandardOutputPrinter;
 import org.verdictdb.sqlreader.NonValidatingSQLParser;
 import org.verdictdb.sqlreader.QueryToSql;
 import org.verdictdb.sqlreader.RelationStandardizer;

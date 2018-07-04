@@ -11,8 +11,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.core.connection.DbmsConnection;
 import org.verdictdb.core.connection.JdbcConnection;
-import org.verdictdb.core.execution.ExecutableNodeRunner;
-import org.verdictdb.core.execution.ExecutablePlan;
 import org.verdictdb.core.execution.ExecutablePlanRunner;
 import org.verdictdb.core.execution.ExecutionInfoToken;
 import org.verdictdb.core.execution.ExecutionTokenReader;

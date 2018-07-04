@@ -15,7 +15,6 @@ import java.util.List;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
-import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.core.connection.JdbcConnection;
@@ -23,10 +22,6 @@ import org.verdictdb.core.connection.StaticMetaData;
 import org.verdictdb.core.execution.ExecutablePlanRunner;
 import org.verdictdb.core.querying.AggExecutionNode;
 import org.verdictdb.core.querying.QueryExecutionPlan;
-import org.verdictdb.core.querying.ola.AsyncAggExecutionNode;
-import org.verdictdb.core.querying.ola.AsyncQueryExecutionPlan;
-import org.verdictdb.core.querying.ola.Dimension;
-import org.verdictdb.core.querying.ola.HyperTableCube;
 import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.core.scrambling.ScrambleMetaForTable;
 import org.verdictdb.core.scrambling.UniformScrambler;

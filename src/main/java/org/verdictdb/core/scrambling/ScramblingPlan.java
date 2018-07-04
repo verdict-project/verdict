@@ -1,16 +1,12 @@
 package org.verdictdb.core.scrambling;
 
-import java.util.Arrays;
 import java.util.List;
 
 import org.verdictdb.core.connection.DbmsQueryResult;
 import org.verdictdb.core.execution.ExecutableNode;
 import org.verdictdb.core.execution.ExecutablePlan;
-import org.verdictdb.core.execution.ExecutionInfoToken;
-import org.verdictdb.core.execution.ExecutionTokenQueue;
 import org.verdictdb.core.querying.ExecutableNodeBase;
 import org.verdictdb.core.sqlobject.SqlConvertible;
-import org.verdictdb.exception.VerdictDBException;
 
 public class ScramblingPlan implements ExecutablePlan {
   

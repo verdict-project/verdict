@@ -1,8 +1,5 @@
 package org.verdictdb.core.connection;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public interface DbmsQueryResult {
 
   /**

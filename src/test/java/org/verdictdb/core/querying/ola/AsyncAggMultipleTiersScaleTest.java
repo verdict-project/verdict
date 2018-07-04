@@ -1,5 +1,18 @@
 package org.verdictdb.core.querying.ola;
 
+import static java.sql.Types.BIGINT;
+import static java.sql.Types.DOUBLE;
+import static org.junit.Assert.assertEquals;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.BeforeClass;
@@ -9,10 +22,6 @@ import org.verdictdb.core.connection.StaticMetaData;
 import org.verdictdb.core.execution.ExecutablePlanRunner;
 import org.verdictdb.core.querying.AggExecutionNode;
 import org.verdictdb.core.querying.QueryExecutionPlan;
-import org.verdictdb.core.querying.ola.AsyncAggExecutionNode;
-import org.verdictdb.core.querying.ola.AsyncQueryExecutionPlan;
-import org.verdictdb.core.querying.ola.Dimension;
-import org.verdictdb.core.querying.ola.HyperTableCube;
 import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.core.scrambling.ScrambleMetaForTable;
 import org.verdictdb.core.scrambling.UniformScrambler;
@@ -24,20 +33,6 @@ import org.verdictdb.sqlreader.NonValidatingSQLParser;
 import org.verdictdb.sqlreader.QueryToSql;
 import org.verdictdb.sqlreader.RelationStandardizer;
 import org.verdictdb.sqlsyntax.H2Syntax;
-
-
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-
-import static java.sql.Types.BIGINT;
-import static java.sql.Types.DOUBLE;
-import static org.junit.Assert.assertEquals;
 
 public class AsyncAggMultipleTiersScaleTest {
 
