@@ -32,7 +32,7 @@ public class ExecutablePlanRunner {
     ExecutionTokenReader reader = (new ExecutablePlanRunner(conn, plan)).getTokenReader();
     while (true) {
       ExecutionInfoToken token = reader.next();
-      System.out.println("runTillEnd: " + token);
+//      System.out.println("runTillEnd: " + token);
       if (token == null) {
         break;
       }
@@ -68,7 +68,7 @@ public class ExecutablePlanRunner {
         List<ExecutableNode> nodes = nodeGroups.get(i);
         if (!nodes.isEmpty()) {
           ExecutableNode node = nodes.remove(0);
-          System.out.println("Submitting: " + node);
+//          System.out.println("Submitting: " + node);
           executor.submit(new ExecutableNodeRunner(conn, node));
           submittedAtLeastOne = true;
         }

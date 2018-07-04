@@ -3,6 +3,8 @@ package org.verdictdb.core.querying;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.core.execution.ExecutionInfoToken;
 import org.verdictdb.core.execution.ExecutionTokenQueue;
@@ -49,6 +51,9 @@ public abstract class QueryNodeWithPlaceHolders extends QueryNodeBase {
       String tableName = (String) r.getValue("tableName");
       t.setSchemaName(schemaName);
       t.setTableName(tableName);
+//      System.out.println("!!placeholder replacement!!  \n" + 
+//                         new ToStringBuilder(this, ToStringStyle.DEFAULT_STYLE) + "\n" +
+//                         schemaName + " " + tableName);
     }
     
     return selectQuery;

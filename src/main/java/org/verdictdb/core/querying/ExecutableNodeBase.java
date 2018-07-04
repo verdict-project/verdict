@@ -2,6 +2,8 @@ package org.verdictdb.core.querying;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -31,9 +33,9 @@ public class ExecutableNodeBase implements ExecutableNode {
   List<Pair<ExecutableNodeBase, Integer>> sources = new ArrayList<>();
 
   Map<Integer, ExecutionTokenQueue> channels = new TreeMap<>();
-  
+
   final private String uniqueId;
-  
+
   public ExecutableNodeBase() {
     uniqueId = UUID.randomUUID().toString();
   }
@@ -65,20 +67,20 @@ public class ExecutableNodeBase implements ExecutableNode {
   }
 
   public void subscribeTo(ExecutableNodeBase node, int channel) {
-//    node.getSubscribers().add(this);
+    //    node.getSubscribers().add(this);
     node.addSubscriber(this);
     sources.add(Pair.of(node, channel));
     if (!channels.containsKey(channel)) {
       channels.put(channel, new ExecutionTokenQueue());
     }
   }
-  
+
   void addSubscriber(ExecutableNodeBase node) {
     subscribers.add(node);
   }
 
   public void cancelSubscriptionTo(ExecutableNodeBase node) {
-//    node.subscribers.remove(node);
+    //    node.subscribers.remove(node);
     List<Pair<ExecutableNodeBase, Integer>> newSources = new ArrayList<>();
     Set<Integer> leftChannels = new HashSet<>();
     for (Pair<ExecutableNodeBase, Integer> s : sources) {
@@ -89,7 +91,7 @@ public class ExecutableNodeBase implements ExecutableNode {
       }
     }
     sources = newSources;
-    
+
     // if there are no other nodes broadcasting to this channel, remove the queue
     for (Integer c : leftChannels) {
       if (!channels.containsKey(c)) {
@@ -108,12 +110,14 @@ public class ExecutableNodeBase implements ExecutableNode {
   // runner methods
   @Override
   public void getNotified(ExecutableNode source, ExecutionInfoToken token) {
-//    System.out.println("get notified: " + source + " " + token);
+    //    System.out.println("get notified: " + source + " " + token);
     for (Pair<ExecutableNodeBase, Integer> a : sources) {
-      int channel = a.getRight();
-  //    System.out.println("channel: " + channel);
-      channels.get(channel).add(token);
-  //    System.out.println("get notified: " + token);
+      if (source.equals(a.getLeft())) {
+        int channel = a.getRight();
+        channels.get(channel).add(token);
+        //    System.out.println("channel: " + channel);
+        //    System.out.println("get notified: " + token);
+      }
     }
   }
 
@@ -148,13 +152,22 @@ public class ExecutableNodeBase implements ExecutableNode {
 
   // Helpers
   public List<ExecutableNodeBase> getSources() {
+    List<Pair<ExecutableNodeBase, Integer>> temp = getSourcesAndChannels();
+    Collections.sort(temp, new Comparator<Pair<ExecutableNodeBase, Integer>>() {
+      @Override
+      public int compare(Pair<ExecutableNodeBase, Integer> o1, Pair<ExecutableNodeBase, Integer> o2) {
+        return o1.getRight() - o2.getRight();
+      }
+    });
+
     List<ExecutableNodeBase> ss = new ArrayList<>();
-    for (Pair<ExecutableNodeBase, Integer> s : sources) {
+    for (Pair<ExecutableNodeBase, Integer> s : temp) {
       ss.add(s.getKey());
     }
+
     return ss;
   }
-  
+
   public Integer getChannelForSource(ExecutableNodeBase node) {
     for (Pair<ExecutableNodeBase, Integer> s : sources) {
       if (s.getLeft().equals(node)) {
@@ -163,7 +176,7 @@ public class ExecutableNodeBase implements ExecutableNode {
     }
     return null;
   }
-  
+
   public List<Pair<ExecutableNodeBase, Integer>> getSourcesAndChannels() {
     List<Pair<ExecutableNodeBase, Integer>> sourceAndChannel = new ArrayList<>();
     for (Pair<ExecutableNodeBase, Integer> s : sources) {
@@ -182,11 +195,11 @@ public class ExecutableNodeBase implements ExecutableNode {
 
   public List<ExecutableNodeBase> getExecutableNodeBaseDependents() {
     return getSources();
-//    List<ExecutableNodeBase> deps = new ArrayList<>();
-//    for (ExecutableNode node : sources.keySet()) {
-//      deps.add((ExecutableNodeBase) node);
-//    }
-//    return deps;
+    //    List<ExecutableNodeBase> deps = new ArrayList<>();
+    //    for (ExecutableNode node : sources.keySet()) {
+    //      deps.add((ExecutableNodeBase) node);
+    //    }
+    //    return deps;
   }
 
   public ExecutableNodeBase getExecutableNodeBaseDependent(int idx) {
@@ -202,7 +215,11 @@ public class ExecutableNodeBase implements ExecutableNode {
   protected void copyFields(ExecutableNodeBase from, ExecutableNodeBase to) {
     to.subscribers = new ArrayList<>(from.subscribers);
     to.sources = new ArrayList<>(from.sources);
-    to.channels = new TreeMap<>(from.channels);
+    to.channels = new TreeMap<>();
+    for (Entry<Integer, ExecutionTokenQueue> a : from.channels.entrySet()) {
+      to.channels.put(a.getKey(), new ExecutionTokenQueue());
+    }
+//    to.channels = new TreeMap<>(from.channels);
   }
 
   public void print() {
@@ -221,7 +238,7 @@ public class ExecutableNodeBase implements ExecutableNode {
       dep.print(indentSpace + 2);
     }
   }
-  
+
   @Override
   public int hashCode() {
     return new HashCodeBuilder(17, 37).append(uniqueId).toHashCode();
@@ -236,9 +253,9 @@ public class ExecutableNodeBase implements ExecutableNode {
     }
     ExecutableNodeBase rhs = (ExecutableNodeBase) obj;
     return new EqualsBuilder()
-                  .appendSuper(super.equals(obj))
-                  .append(uniqueId, rhs.uniqueId)
-                  .isEquals();
+        .appendSuper(super.equals(obj))
+        .append(uniqueId, rhs.uniqueId)
+        .isEquals();
   }
 
   @Override
@@ -246,8 +263,8 @@ public class ExecutableNodeBase implements ExecutableNode {
     return new ToStringBuilder(this, ToStringStyle.DEFAULT_STYLE)
         .append("subscriberCount", subscribers.size())
         .append("sources", sources)
-//        .append("channels", channels)
-//        .append("channels", channels)
+        //        .append("channels", channels)
+        //        .append("channels", channels)
         .toString();
   }
 

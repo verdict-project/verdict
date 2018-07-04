@@ -723,7 +723,7 @@ public class TpchAyncExecutionPlanTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-//    queryExecutionPlan.getRootNode().print();
+    queryExecutionPlan.getRootNode().print();
 
     assertEquals(5, queryExecutionPlan.root.getExecutableNodeBaseDependent(0).getDependentNodeCount());
     assertEquals(1, queryExecutionPlan.root.getExecutableNodeBaseDependent(0).getExecutableNodeBaseDependent(0).getDependentNodeCount());
@@ -1429,7 +1429,10 @@ public class TpchAyncExecutionPlanTest {
     expected.addGroupby(new AliasReference("c_custkey"));
     assertEquals(
         expected,
-        ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependent(0).getExecutableNodeBaseDependent(0)).selectQuery);
+        ((CreateTableAsSelectNode) queryExecutionPlan.root
+            .getExecutableNodeBaseDependent(0)
+            .getExecutableNodeBaseDependent(0))
+        .getSelectQuery());
 
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
     ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
@@ -2048,88 +2051,44 @@ public class TpchAyncExecutionPlanTest {
   @Test
   public void Query21Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
-    String sql = "select\n" +
-        "  s_name,\n" +
-        "  count(1) as numwait\n" +
-        "from (\n" +
-        "  select s_name from (\n" +
-        "    select\n" +
-        "      s_name,\n" +
-        "      t2.l_orderkey,\n" +
-        "      l_suppkey,\n" +
-        "      count_suppkey,\n" +
-        "      max_suppkey\n" +
-        "    from\n" +
-        "      (select\n" +
-        "  l_orderkey,\n" +
-        "  count(l_suppkey) count_suppkey,\n" +
-        "  max(l_suppkey) as max_suppkey\n" +
-        "from\n" +
-        "  lineitem_scrambled\n" +
-        "where\n" +
-        "  l_receiptdate > l_commitdate\n" +
-        "  and l_orderkey is not null\n" +
-        "group by\n" +
-        "  l_orderkey) as t2 right outer join (\n" +
-        "      select\n" +
-        "        s_name as s_name,\n" +
-        "        l_orderkey,\n" +
-        "        l_suppkey from (\n" +
-        "        select\n" +
-        "          s_name as s_name,\n" +
-        "          t1.l_orderkey,\n" +
-        "          l_suppkey,\n" +
-        "          count_suppkey,\n" +
-        "          max_suppkey\n" +
-        "        from\n" +
-        "          (select\n" +
-        "             l_orderkey,\n" +
-        "             count(l_suppkey) as count_suppkey,\n" +
-        "             max(l_suppkey) as max_suppkey\n" +
-        "           from\n" +
-        "             lineitem_scrambled\n" +
-        "           where\n" +
-        "             l_orderkey is not null\n" +
-        "           group by\n" +
-        "             l_orderkey) as t1 join "
-        + "        (select\n" +
-        "             s_name,\n" +
-        "             l_orderkey,\n" +
-        "             l_suppkey\n" +
-        "           from\n" +
-        "             orders_scrambled o join "
-        + "        (select\n" +
-        "             s_name,\n" +
-        "             l_orderkey,\n" +
-        "             l_suppkey\n" +
-        "           from\n" +
-        "             nation n join supplier s\n" +
-        "             on s.s_nationkey = n.n_nationkey\n" +
-        "                and n.n_name = 'SAUDI ARABIA'\n" +
-        "             join lineitem_scrambled l\n" +
-        "             on s.s_suppkey = l.l_suppkey\n" +
-        "           where\n" +
-        "             l.l_receiptdate > l.l_commitdate\n" +
-        "             and l.l_orderkey is not null\n" +
-        "            ) l1 on o.o_orderkey = l1.l_orderkey and o.o_orderstatus = 'F'\n" +
+    String sql = "select s_name, count(1) as numwait\n" +
+        "from (" +
+        "  select s_name " +
+        "  from (" +
+        "    select s_name, t2.l_orderkey, l_suppkey, count_suppkey, max_suppkey\n" +
+        "    from (" +
+        "      select l_orderkey, count(l_suppkey) count_suppkey, max(l_suppkey) as max_suppkey\n" +
+        "      from lineitem_scrambled\n" +
+        "      where l_receiptdate > l_commitdate and l_orderkey is not null\n" +
+        "      group by l_orderkey) as t2" +
+        "    right outer join (" +
+        "      select s_name as s_name, l_orderkey, l_suppkey " +
+        "      from (" +
+        "        select s_name as s_name, t1.l_orderkey, l_suppkey, count_suppkey, max_suppkey\n" +
+        "        from (" +
+        "          select l_orderkey, count(l_suppkey) as count_suppkey, max(l_suppkey) as max_suppkey\n" +
+        "          from lineitem_scrambled\n" +
+        "          where l_orderkey is not null\n" +
+        "          group by l_orderkey) as t1 " +
+        "          join (" +
+        "          select s_name, l_orderkey, l_suppkey\n" +
+        "          from orders_scrambled o join (" +
+        "            select s_name, l_orderkey, l_suppkey\n" +
+        "            from nation n join supplier s\n" +
+        "              on s.s_nationkey = n.n_nationkey and n.n_name = 'SAUDI ARABIA'\n" +
+        "            join lineitem_scrambled l on s.s_suppkey = l.l_suppkey\n" +
+        "          where l.l_receiptdate > l.l_commitdate\n" +
+        "            and l.l_orderkey is not null) l1 "
+        + "        on o.o_orderkey = l1.l_orderkey and o.o_orderstatus = 'F'\n" +
         "          ) l2 on l2.l_orderkey = t1.l_orderkey\n" +
         "        ) a\n" +
-        "      where\n" +
-        "        (count_suppkey > 1)\n" +
-        "        or ((count_suppkey=1)\n" +
-        "        and (l_suppkey <> max_suppkey))\n" +
+        "      where (count_suppkey > 1) or ((count_suppkey=1) and (l_suppkey <> max_suppkey))\n" +
         "    ) l3 on l3.l_orderkey = t2.l_orderkey\n" +
         "  ) b\n" +
-        "  where\n" +
-        "    (count_suppkey is null)\n" +
-        "    or ((count_suppkey=1)\n" +
-        "    and (l_suppkey = max_suppkey))\n" +
-        ") c\n" +
-        "group by\n" +
-        "  s_name\n" +
-        "order by\n" +
-        "  numwait desc,\n" +
-        "  s_name \n" +
+        "  where (count_suppkey is null) or ((count_suppkey=1) and (l_suppkey = max_suppkey))\n" +
+        ") c " +
+        "group by s_name " +
+        "order by numwait desc, s_name " +
         "limit 100;";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
@@ -2143,7 +2102,7 @@ public class TpchAyncExecutionPlanTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-//    queryExecutionPlan.getRootNode().print();
+    queryExecutionPlan.getRootNode().print();
 
     assertEquals(5, queryExecutionPlan.root.getExecutableNodeBaseDependent(0).getDependentNodeCount());
     assertEquals(1, queryExecutionPlan.root.getExecutableNodeBaseDependent(0).getExecutableNodeBaseDependent(0).getDependentNodeCount());

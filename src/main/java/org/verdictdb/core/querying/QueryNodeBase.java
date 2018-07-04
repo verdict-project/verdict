@@ -35,7 +35,7 @@ public class QueryNodeBase extends ExecutableNodeBase {
   
   protected void copyFields(QueryNodeBase from, QueryNodeBase to) {
     super.copyFields(from, to);
-    to.selectQuery = from.selectQuery;
+    to.selectQuery = from.selectQuery.deepcopy();
   }
   
   @Override

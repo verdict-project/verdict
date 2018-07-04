@@ -309,7 +309,10 @@ public class AggExecutionNodeBlock {
       for (int j = 0; j < oldNode.getSources().size(); j++) {
         Pair<ExecutableNodeBase, Integer> source = oldNode.getSourcesAndChannels().get(j);
         int idx = blockNodes.indexOf(source.getLeft());
-
+        
+        // at this moment, newNode still has old source information, so we remove it.
+        newNode.cancelSubscriptionTo(source.getLeft());
+        
         if (idx >= 0) {
           // internal dependency relationships
           newNode.subscribeTo(newNodes.get(idx), source.getRight());

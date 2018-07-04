@@ -74,13 +74,15 @@ public class ExecutableNodeRunner implements Runnable {
         continue;
       }
       
+      System.out.println(new ToStringBuilder(node, ToStringStyle.DEFAULT_STYLE) + " tokens: " + tokens);
+      
       ExecutionInfoToken failureToken = getFailureTokenIfExists(tokens);
       if (failureToken != null) {
         broadcast(failureToken);
         break;
       }
       if (areAllSuccess(tokens)) {
-        System.out.println(new ToStringBuilder(node, ToStringStyle.DEFAULT_STYLE) + "sucess count: " + successSourceCount);
+//        System.out.println(new ToStringBuilder(node, ToStringStyle.DEFAULT_STYLE) + "sucess count: " + successSourceCount);
         broadcast(ExecutionInfoToken.successToken());
         break;
       }
@@ -98,7 +100,7 @@ public class ExecutableNodeRunner implements Runnable {
 
   List<ExecutionInfoToken> retrieve() {
     List<ExecutionTokenQueue> sourceQueues = node.getSourceQueues();
-//    System.out.println(new ToStringBuilder(node, ToStringStyle.DEFAULT_STYLE) + " " + sourceQueues);
+//    System.out.println("Source queues:\n" + new ToStringBuilder(node, ToStringStyle.DEFAULT_STYLE) + " " + sourceQueues);
 
     for (int i = 0; i < sourceQueues.size(); i++) {
       ExecutionInfoToken rs = sourceQueues.get(i).peek();
