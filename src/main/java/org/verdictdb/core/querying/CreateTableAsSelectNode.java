@@ -13,24 +13,23 @@ import org.verdictdb.exception.VerdictDBValueException;
 
 public class CreateTableAsSelectNode extends QueryNodeWithPlaceHolders {
   
-  TempIdCreator namer;
+  IdCreator namer;
   
   String newTableSchemaName;
   
   String newTableName;
   
-  public CreateTableAsSelectNode(TempIdCreator namer, SelectQuery query) {
+  public CreateTableAsSelectNode(IdCreator namer, SelectQuery query) {
     super(query);
     this.namer = namer;
   }
 
-  public static CreateTableAsSelectNode create(TempIdCreator namer, SelectQuery query) 
-      throws VerdictDBValueException {
+  public static CreateTableAsSelectNode create(IdCreator namer, SelectQuery query) {
     CreateTableAsSelectNode node = new CreateTableAsSelectNode(namer, query);
     return node;
   }
   
-  public TempIdCreator getNamer() {
+  public IdCreator getNamer() {
     return namer;
   }
   

@@ -1,4 +1,4 @@
-package org.verdictdb.sqlreader;
+package org.verdictdb.sqlwriter;
 
 import java.util.List;
 

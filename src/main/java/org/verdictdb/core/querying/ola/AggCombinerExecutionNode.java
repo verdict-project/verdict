@@ -11,7 +11,7 @@ import org.verdictdb.core.querying.CreateTableAsSelectNode;
 import org.verdictdb.core.querying.ExecutableNodeBase;
 import org.verdictdb.core.querying.QueryNodeBase;
 import org.verdictdb.core.querying.SubscriptionTicket;
-import org.verdictdb.core.querying.TempIdCreator;
+import org.verdictdb.core.querying.IdCreator;
 import org.verdictdb.core.sqlobject.AbstractRelation;
 import org.verdictdb.core.sqlobject.AliasedColumn;
 import org.verdictdb.core.sqlobject.BaseColumn;
@@ -27,12 +27,12 @@ public class AggCombinerExecutionNode extends CreateTableAsSelectNode {
 
   List<HyperTableCube> cubes = new ArrayList<>();
 
-  private AggCombinerExecutionNode(TempIdCreator namer) {
+  private AggCombinerExecutionNode(IdCreator namer) {
     super(namer, null);
   }
   
   public static AggCombinerExecutionNode create(
-      TempIdCreator namer,
+      IdCreator namer,
       ExecutableNodeBase leftQueryExecutionNode,
       ExecutableNodeBase rightQueryExecutionNode) throws VerdictDBValueException {
     AggCombinerExecutionNode node = new AggCombinerExecutionNode(namer);

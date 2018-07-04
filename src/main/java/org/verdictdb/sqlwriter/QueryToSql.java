@@ -1,4 +1,4 @@
-package org.verdictdb.sqlreader;
+package org.verdictdb.sqlwriter;
 
 import org.verdictdb.core.sqlobject.CreateTableAsSelectQuery;
 import org.verdictdb.core.sqlobject.DropTableQuery;

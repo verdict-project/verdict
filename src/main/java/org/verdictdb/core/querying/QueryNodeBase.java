@@ -3,8 +3,12 @@ package org.verdictdb.core.querying;
 import java.util.List;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.verdictdb.core.connection.DbmsQueryResult;
 import org.verdictdb.core.execution.ExecutableNode;
+import org.verdictdb.core.execution.ExecutionInfoToken;
 import org.verdictdb.core.sqlobject.SelectQuery;
+import org.verdictdb.core.sqlobject.SqlConvertible;
+import org.verdictdb.exception.VerdictDBException;
 
 public class QueryNodeBase extends ExecutableNodeBase {
   
@@ -24,6 +28,18 @@ public class QueryNodeBase extends ExecutableNodeBase {
   
   public void setSelectQuery(SelectQuery query) {
     this.selectQuery = query;
+  }
+  
+  @Override
+  public SqlConvertible createQuery(List<ExecutionInfoToken> tokens) throws VerdictDBException {
+    return selectQuery;
+  }
+
+  @Override
+  public ExecutionInfoToken createToken(DbmsQueryResult result) {
+    ExecutionInfoToken token = new ExecutionInfoToken();
+    token.setKeyValue("queryResult", result);
+    return token;
   }
   
   @Override

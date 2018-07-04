@@ -1,4 +1,4 @@
-package org.verdictdb.sqlreader;
+package org.verdictdb.sqlwriter;
 
 import java.util.List;
 import java.util.Set;
@@ -107,17 +107,10 @@ public class SelectQueryToSql {
         return withParentheses(columnOp.getOperand(0)) + " and " + withParentheses(columnOp.getOperand(1));
       } else if (columnOp.getOpType().equals("or")) {
         return withParentheses(columnOp.getOperand(0)) + " or " + withParentheses(columnOp.getOperand(1));
-      }
-//      else if (columnOp.getOpType().equals("casewhenelse")) {
-//        return "case " + withParentheses(columnOp.getOperand(0))
-//        + " when " + withParentheses(columnOp.getOperand(1))
-//        + " else " + withParentheses(columnOp.getOperand(2))
-//        + " end";
-//      }
-      else if (columnOp.getOpType().equals("whenthenelse")) {
+      } else if (columnOp.getOpType().equals("whenthenelse")) {
         String sql = "case ";
-        for (int i=0; i<columnOp.getOperands().size()-1;i=i+2) {
-          sql = sql + "when " + withParentheses(columnOp.getOperand(0)) + " then " + withParentheses(columnOp.getOperand(1));
+        for (int i = 0; i < columnOp.getOperands().size() - 1; i = i + 2) {
+          sql = sql + "when " + withParentheses(columnOp.getOperand(i)) + " then " + withParentheses(columnOp.getOperand(i+1));
         }
         sql = sql + " else " + withParentheses(columnOp.getOperand(columnOp.getOperands().size()-1)) + " end";
         return sql;

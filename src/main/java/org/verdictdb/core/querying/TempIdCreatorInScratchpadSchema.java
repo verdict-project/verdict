@@ -4,7 +4,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import org.apache.commons.lang3.tuple.Pair;
 
-public class TempIdCreatorInScratchpadSchema implements TempIdCreator {
+public class TempIdCreatorInScratchpadSchema implements IdCreator {
   
   String scratchpadSchemaName;
 

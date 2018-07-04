@@ -15,11 +15,11 @@ public class AggExecutionNode extends CreateTableAsSelectNode {
 
   List<HyperTableCube> cubes = new ArrayList<>();
 
-  protected AggExecutionNode(TempIdCreator namer, SelectQuery query) {
+  protected AggExecutionNode(IdCreator namer, SelectQuery query) {
     super(namer, query);
   }
   
-  public static AggExecutionNode create(TempIdCreator namer, SelectQuery query) throws VerdictDBValueException {
+  public static AggExecutionNode create(IdCreator namer, SelectQuery query) {
     AggExecutionNode node = new AggExecutionNode(namer, null);
     SubqueriesToDependentNodes.convertSubqueriesToDependentNodes(query, node);
     node.setSelectQuery(query);

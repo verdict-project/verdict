@@ -11,8 +11,8 @@ import org.verdictdb.core.connection.JdbcConnection;
 import org.verdictdb.core.execution.ExecutionInfoToken;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.exception.VerdictDBException;
-import org.verdictdb.sqlreader.QueryToSql;
 import org.verdictdb.sqlsyntax.H2Syntax;
+import org.verdictdb.sqlwriter.QueryToSql;
 
 public class DropTableExecutionNodeTest {
   

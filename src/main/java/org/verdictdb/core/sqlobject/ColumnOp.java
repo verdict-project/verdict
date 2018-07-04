@@ -234,7 +234,6 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
     return new ColumnOp("between", Arrays.asList(column1, column2, column3));
   }
 
-
   public static ColumnOp whenthenelse(List<UnnamedColumn> cols) {
     return new ColumnOp("whenthenelse", cols);
   }

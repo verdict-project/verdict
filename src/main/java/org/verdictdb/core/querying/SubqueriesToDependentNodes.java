@@ -28,8 +28,8 @@ public class SubqueriesToDependentNodes {
    */
   public static void convertSubqueriesToDependentNodes(
       SelectQuery query, 
-      CreateTableAsSelectNode node) throws VerdictDBValueException {
-    TempIdCreator namer = node.getNamer();
+      CreateTableAsSelectNode node) {
+    IdCreator namer = node.getNamer();
     
     // from list
     for (AbstractRelation source : query.getFromList()) {

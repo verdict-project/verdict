@@ -22,7 +22,7 @@ import org.verdictdb.core.querying.AggExecutionNode;
 import org.verdictdb.core.querying.ExecutableNodeBase;
 import org.verdictdb.core.querying.ProjectionNode;
 import org.verdictdb.core.querying.QueryNodeBase;
-import org.verdictdb.core.querying.TempIdCreator;
+import org.verdictdb.core.querying.IdCreator;
 import org.verdictdb.core.rewriter.aggresult.AggNameAndType;
 import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.core.scrambling.ScrambleMetaForTable;
@@ -84,7 +84,7 @@ public class AsyncAggExecutionNode extends ProjectionNode {
   }
 
   public static AsyncAggExecutionNode create(
-      TempIdCreator idCreator,
+      IdCreator idCreator,
       List<ExecutableNodeBase> individualAggs,
       List<ExecutableNodeBase> combiners, 
       ScrambleMeta meta) throws VerdictDBValueException {

@@ -27,7 +27,7 @@ import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBTypeException;
 import org.verdictdb.exception.VerdictDBValueException;
 
-public class QueryExecutionPlan implements ExecutablePlan, TempIdCreator {
+public class QueryExecutionPlan implements ExecutablePlan, IdCreator {
 
   //  SelectQuery query;
 
@@ -35,7 +35,7 @@ public class QueryExecutionPlan implements ExecutablePlan, TempIdCreator {
 
   protected ExecutableNodeBase root;
 
-  protected TempIdCreator idCreator;
+  protected IdCreator idCreator;
 
   //  final int N_THREADS = 10;
 

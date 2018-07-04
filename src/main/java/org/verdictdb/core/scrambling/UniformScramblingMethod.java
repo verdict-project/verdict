@@ -5,23 +5,18 @@ import java.util.List;
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.core.connection.DbmsQueryResult;
 import org.verdictdb.core.sqlobject.SelectQuery;
+import org.verdictdb.core.sqlobject.UnnamedColumn;
 
 public class UniformScramblingMethod implements ScramblingMethod {
 
   @Override
-  public SelectQuery getStatisticsQuery(List<Pair<String, Integer>> columnNamesAndTypes) {
+  public StatiticsQueryGenerator getStatisticsQueryGenerator() {
     // TODO Auto-generated method stub
     return null;
   }
 
   @Override
-  public int getTierCount(DbmsQueryResult statistics) {
-    // TODO Auto-generated method stub
-    return 0;
-  }
-
-  @Override
-  public List<String> getTierExpressions(DbmsQueryResult statistics) {
+  public List<UnnamedColumn> getTierExpressions(DbmsQueryResult statistics) {
     // TODO Auto-generated method stub
     return null;
   }
@@ -33,6 +28,12 @@ public class UniformScramblingMethod implements ScramblingMethod {
       int length) {
     // TODO Auto-generated method stub
     return null;
+  }
+
+  @Override
+  public int getBlockCount(DbmsQueryResult statistics) {
+    // TODO Auto-generated method stub
+    return 0;
   }
 
 }

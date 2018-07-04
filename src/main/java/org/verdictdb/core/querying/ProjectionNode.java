@@ -11,11 +11,11 @@ import org.verdictdb.exception.VerdictDBValueException;
 
 public class ProjectionNode extends CreateTableAsSelectNode {
   
-  public ProjectionNode(TempIdCreator namer, SelectQuery query) {
+  public ProjectionNode(IdCreator namer, SelectQuery query) {
     super(namer, query);
   }
 
-  public static ProjectionNode create(TempIdCreator namer, SelectQuery query) throws VerdictDBValueException {
+  public static ProjectionNode create(IdCreator namer, SelectQuery query) {
     ProjectionNode node = new ProjectionNode(namer, null);
     SubqueriesToDependentNodes.convertSubqueriesToDependentNodes(query, node);
     node.setSelectQuery(query);
