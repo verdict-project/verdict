@@ -9,12 +9,6 @@ public interface DbmsConnection extends MetaDataProvider {
   
   public DbmsQueryResult execute(String query) throws VerdictDBDbmsException;
   
-//  public boolean execute(SqlConvertable query) throws VerdictDBDbmsException;
-  
-//  public DbmsQueryResult getResult();
-  
-//  public DbmsQueryResult executeQuery(String query) throws VerdictDBDbmsException;
-  
 //  /**
 //   * 
 //   * @param sql

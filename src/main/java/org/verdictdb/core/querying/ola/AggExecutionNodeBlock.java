@@ -92,7 +92,7 @@ public class AggExecutionNodeBlock {
       String tableName = a.getRight().getMiddle();
       scrambles.add(Pair.of(schemaName, tableName));
     }
-    OlaAggregationMetaData aggMeta = new OlaAggregationMetaData(scrambleMeta, scrambles);
+    OlaAggregationPlan aggMeta = new OlaAggregationPlan(scrambleMeta, scrambles);
 
     // second, according to the plan, create individual nodes that perform aggregations.
     for (int i = 0; i < aggMeta.totalBlockAggCount(); i++) {

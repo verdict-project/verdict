@@ -1,3 +1,11 @@
+/*
+ * Copyright 2018 University of Michigan
+ *
+ * You must contact Barzan Mozafari (mozafari@umich.edu) or Yongjoo Park (pyongjoo@umich.edu) to discuss
+ * how you could use, modify, or distribute this code. By default, this code is not open-sourced and we do
+ * not license this code.
+ */
+
 package org.verdictdb.core.scrambling;
 
 import java.util.List;
@@ -8,6 +16,21 @@ import org.verdictdb.core.execution.ExecutablePlan;
 import org.verdictdb.core.querying.ExecutableNodeBase;
 import org.verdictdb.core.sqlobject.SqlConvertible;
 
+/**
+ * Execution plan for scrambling.
+ * 
+ * This plan consists of three nodes:
+ * <ol>
+ * <li>metadata retrieval node</li>
+ * <li>statistics computation node</li>
+ * <li>actual scramble table creation node</li>
+ * </ol>
+ * 
+ * Those nodes should be provided by the ScramblingMethod instance
+ * 
+ * @author Yongjoo Park
+ *
+ */
 public class ScramblingPlan implements ExecutablePlan {
   
   ScramblingMethod method;
@@ -24,8 +47,8 @@ public class ScramblingPlan implements ExecutablePlan {
   }
   
   SqlConvertible composeQuery() {
-    int tileCount = method.getTileCount(statistics);
-    List<String> tileExpressions = method.getTileExpressions(statistics);
+    int tileCount = method.getTierCount(statistics);
+    List<String> tileExpressions = method.getTierExpressions(statistics);
     
     
     return null;

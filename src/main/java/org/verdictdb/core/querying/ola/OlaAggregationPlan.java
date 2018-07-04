@@ -14,9 +14,11 @@ import org.verdictdb.exception.VerdictDBValueException;
  * @author Yongjoo Park
  *
  */
-public class OlaAggregationMetaData {
+public class OlaAggregationPlan {
   
   List<HyperTableCube> cubes = new ArrayList<>();
+  
+  // alias name for aggregate item and their aggregate type
   
   /**
    * 
@@ -24,7 +26,7 @@ public class OlaAggregationMetaData {
    * @param scrambles   The scrambled tables that appear in a query.
    * @throws VerdictDBValueException
    */
-  public OlaAggregationMetaData(ScrambleMeta scrambleMeta, List<Pair<String, String>> scrambles) 
+  public OlaAggregationPlan(ScrambleMeta scrambleMeta, List<Pair<String, String>> scrambles) 
       throws VerdictDBValueException {
     
     // exception checks
@@ -52,9 +54,9 @@ public class OlaAggregationMetaData {
   
   // TODO: use this method to create a merged metadata
   // this method is supposed to rely on HyperTableCube's merge method.
-  public static OlaAggregationMetaData createMergedOlaAggMeta(
-      OlaAggregationMetaData meta1, 
-      OlaAggregationMetaData meta2) {
+  public static OlaAggregationPlan createMergedOlaAggMeta(
+      OlaAggregationPlan meta1, 
+      OlaAggregationPlan meta2) {
     
     return null;
   }
