@@ -54,6 +54,7 @@ import com.google.common.base.Optional;
  */
 public class AsyncAggExecutionNode extends ProjectionNode {
 
+  // TODO: should be removed
   String tierColumn = "verdictdbtier";
 
   ScrambleMeta scrambleMeta;
@@ -113,26 +114,26 @@ public class AsyncAggExecutionNode extends ProjectionNode {
     // Next, create the base select query for replacement
     Pair<List<ColumnOp>, SqlConvertible> aggColumnsAndQuery = createBaseQueryForReplacement(cubes);
 
-    // no multiple tier
-    if (scaleFactor.size()==1) {
+    // single tier case multiple tier
+    if (scaleFactor.size() == 1) {
       // Substitute the scale factor
       Double s = (Double) (scaleFactor.values().toArray())[0];
       for (ColumnOp col : aggColumnsAndQuery.getLeft()) {
         col.setOperand(0, ConstantColumn.valueOf(s));
       }
     }
+    // multiple tiers case
     else {
-      // If it has multiple tiers, we need to rewrite the multiply column into when then else column
+      // If it has multiple tiers, we need to rewrite the multiply column into when-then-else column
       for (ColumnOp col : aggColumnsAndQuery.getLeft()) {
         col.setOpType("whenthenelse");
         List<UnnamedColumn> operands = new ArrayList<>();
-        for (Map.Entry<List<Integer>, Double> entry:scaleFactor.entrySet()) {
+        for (Map.Entry<List<Integer>, Double> entry : scaleFactor.entrySet()) {
           UnnamedColumn condition = generateCaseCondition(entry.getKey());
           operands.add(condition);
-          ColumnOp multiply = new ColumnOp("multiply", Arrays.asList(
-              ConstantColumn.valueOf(entry.getValue()),
-              col.getOperand(1)
-          ));
+          ColumnOp multiply = new ColumnOp("multiply", 
+              Arrays.asList(ConstantColumn.valueOf(entry.getValue()),
+              col.getOperand(1)));
           operands.add(multiply);
         }
         operands.add(ConstantColumn.valueOf(0));
@@ -215,7 +216,11 @@ public class AsyncAggExecutionNode extends ProjectionNode {
       for (SelectItem selectItem : newSelectList) {
         if (selectItem instanceof AliasedColumn) {
           int index = newSelectList.indexOf(selectItem);
+          
           // TODO: what is this?
+          // Let's do this:
+          // 1. extend AggExecutionNode to create the "OlaIndividualAggNode" class
+          // 2. Let it create/stores/propagates "cubes" and "(alias name, agg type)"
           if (((AliasedColumn) selectItem).getAliasName().matches("s[0-9]+") || ((AliasedColumn) selectItem).getAliasName().matches("c[0-9]+")) {
             ColumnOp aggColumn = new ColumnOp("multiply", Arrays.<UnnamedColumn>asList(
                 ConstantColumn.valueOf(1.0), new BaseColumn("to_scale_query", ((AliasedColumn) selectItem).getAliasName())
@@ -239,15 +244,19 @@ public class AsyncAggExecutionNode extends ProjectionNode {
    *  Currently, assume block size is uniform
    *  @return Return tier permutation list and its scale factor
    */
+  // TODO: could we distinguish different tier column names of different tables?
   public HashMap<List<Integer>, Double> calculateScaleFactor(List<HyperTableCube> cubes) {
+    
     ScrambleMeta scrambleMeta = this.getScrambleMeta();
     List<ScrambleMetaForTable> metaForTablesList = new ArrayList<>();
     List<Integer> blockCountList = new ArrayList<>();
     List<Pair<Integer, Integer>> scrambleTableTierInfo = new ArrayList<>();
+    
     for (Dimension d : cubes.get(0).getDimensions()) {
       blockCountList.add(scrambleMeta.getAggregationBlockCount(d.getSchemaName(), d.getTableName()));
       metaForTablesList.add(scrambleMeta.getMetaForTable(d.getSchemaName(), d.getTableName()));
-      scrambleTableTierInfo.add(new ImmutablePair<>(cubes.get(0).getDimensions().indexOf(d),
+      scrambleTableTierInfo.add(
+          new ImmutablePair<>(cubes.get(0).getDimensions().indexOf(d),
           scrambleMeta.getMetaForTable(d.getSchemaName(), d.getTableName()).getNumberOfTiers()));
       if (scrambleMeta.getMetaForTable(d.getSchemaName(), d.getTableName()).getNumberOfTiers() > 1 && !tierInfoInitiated) {
         multipleTierTableTierInfo.put(cubes.get(0).getDimensions().indexOf(d),
@@ -264,9 +273,17 @@ public class AsyncAggExecutionNode extends ProjectionNode {
         for (int i = 0; i < tierlist.size(); i++) {
           int tier = tierlist.get(i);
           Dimension d = cube.getDimensions().get(i);
-          double prob = d.getBegin() == 0 ? metaForTablesList.get(i).getCumulativeProbabilityDistribution(tier).get(d.getEnd())
-              : metaForTablesList.get(i).getCumulativeProbabilityDistribution(tier).get(d.getEnd()) -
-              metaForTablesList.get(i).getCumulativeProbabilityDistribution(tier).get(d.getBegin() - 1);
+//          double prob = d.getBegin() == 0 ? metaForTablesList.get(i).getCumulativeProbabilityDistribution(tier).get(d.getEnd())
+//              : metaForTablesList.get(i).getCumulativeProbabilityDistribution(tier).get(d.getEnd()) -
+//              metaForTablesList.get(i).getCumulativeProbabilityDistribution(tier).get(d.getBegin() - 1);
+          double prob = 0;
+          if (d.getBegin() == 0) {
+            prob = metaForTablesList.get(i).getCumulativeProbabilityDistribution(tier).get(d.getEnd());
+          } else {
+            prob = metaForTablesList.get(i).getCumulativeProbabilityDistribution(tier).get(d.getEnd())
+                - metaForTablesList.get(i).getCumulativeProbabilityDistribution(tier).get(d.getBegin() - 1);
+          }
+          
           scale = scale * prob;
         }
         total += scale;

@@ -35,13 +35,10 @@ public class AggExecutionNodeBlock {
 
   List<ExecutableNodeBase> blockNodes;
 
-  //  List<QueryExecutionNode> scrambledNodes;    // nodes including scrambled tables
-
   public AggExecutionNodeBlock(TempIdCreator idCreator, ExecutableNodeBase blockRoot) {
     this.idCreator = idCreator;
     this.blockRoot = blockRoot;
     this.blockNodes = getNodesInBlock(blockRoot);
-    //    this.scrambledNodes = identifyScrambledNodes(blockNodes);
   }
 
   public ExecutableNodeBase getBlockRootNode() {
@@ -95,7 +92,7 @@ public class AggExecutionNodeBlock {
       String tableName = a.getRight().getMiddle();
       scrambles.add(Pair.of(schemaName, tableName));
     }
-    AggBlockMeta aggMeta = new AggBlockMeta(scrambleMeta, scrambles);
+    OlaAggregationMetaData aggMeta = new OlaAggregationMetaData(scrambleMeta, scrambles);
 
     // second, according to the plan, create individual nodes that perform aggregations.
     for (int i = 0; i < aggMeta.totalBlockAggCount(); i++) {
@@ -108,17 +105,14 @@ public class AggExecutionNodeBlock {
       aggroot.clearSubscribers();
 
       // add extra predicates to restrain each aggregation to particular parts of base tables.
-//<<<<<<< HEAD
-//      // Move original AggExecutionNode.executeNode() method here
       List<Pair<ExecutableNodeBase, Triple<String, String, String>>> scrambledNodeAndTableName = 
           identifyScrambledNodes(scrambleMeta, copy.getNodesInBlock());
-//      
-//      Dimension dimension = new Dimension(scrambles.get(0).getLeft(), scrambles.get(0).getRight(), i, i);
-//      ((AggExecutionNode)aggroot).getCubes().addAll(Arrays.asList(new HyperTableCube(Arrays.asList(dimension))));
-//=======
+
+      // TODO: dimension should not be created here
+      // simply use OlaAggregationMetaData
       if (scrambles.size()==1) {
         Dimension dimension = new Dimension(scrambles.get(0).getLeft(), scrambles.get(0).getRight(), i, i);
-        ((AggExecutionNode)aggroot).getCubes().addAll(Arrays.asList(new HyperTableCube(Arrays.asList(dimension))));
+        ((AggExecutionNode) aggroot).getCubes().addAll(Arrays.asList(new HyperTableCube(Arrays.asList(dimension))));
       }
       else {
         int turn = i % scrambles.size();
@@ -143,8 +137,8 @@ public class AggExecutionNodeBlock {
         }
         ((AggExecutionNode)aggroot).getCubes().addAll(Arrays.asList(new HyperTableCube(dimensionList)));
       }
-//>>>>>>> origin/joezhong-scale
 
+      // insert predicates
       for (Pair<ExecutableNodeBase, Triple<String, String, String>> a : scrambledNodeAndTableName) {
         ExecutableNodeBase scrambledNode = a.getLeft();
         String schemaName = a.getRight().getLeft();
@@ -178,9 +172,7 @@ public class AggExecutionNodeBlock {
     // third, stack combiners
     // clear existing broadcasting queues of individual agg nodes
     for (ExecutableNodeBase n : individualAggNodes) {
-//      n.getExecutableNodeBaseParents().clear();
       n.clearSubscribers();
-      //      n.clearBroadcastingQueues();
     }
     for (int i = 1; i < aggMeta.totalBlockAggCount(); i++) {
       AggCombinerExecutionNode combiner;
@@ -199,21 +191,7 @@ public class AggExecutionNodeBlock {
     }
 
     // fourth, re-link the listening queue for the new AsyncAggNode
-//<<<<<<< HEAD
-//    ExecutableNodeBase newRoot = AsyncAggExecutionNode.create(idCreator, individualAggNodes, combiners);
-//
-//=======
     ExecutableNodeBase newRoot = AsyncAggExecutionNode.create(idCreator, individualAggNodes, combiners, scrambleMeta);
-    
-//>>>>>>> origin/joezhong-scale
-    // root to upstream
-//    for (ExecutableNode n : blockRoot.getSubscribers()) {
-//      ((ExecutableNodeBase) n).subscribeTo(newRoot);
-//    }
-    //    List<ExecutionTokenQueue> broadcastingQueue = blockRoot.getBroadcastingQueues();
-    //    for (ExecutionTokenQueue queue : broadcastingQueue) {
-    //      newRoot.addBroadcastingQueue(queue);
-    //    }
 
     return newRoot;
   }
@@ -280,47 +258,10 @@ public class AggExecutionNodeBlock {
     return null;
   }
 
-  //  /**
-  //   * 
-  //   * @param root
-  //   * @return Pair of node and (schemaName, tableName) of the scrambled table. If there are multiple scrambled
-  //   * tables in a single query, return the same node with different schemaName.tableName.
-  //   */
-  //  List<Pair<QueryExecutionNode, Pair<String, String>>> identifyNodesWithScrambles(
-  //      ScrambleMeta scrambleMeta, 
-  //      QueryExecutionNode root) {
-  //    List<Pair<QueryExecutionNode, Pair<String, String>>> identified = new ArrayList<>();
-  //    if (root instanceof AggExecutionNode) {
-  //      for (AbstractRelation rel : root.getSelectQuery().getFromList()) {
-  //        if (!(rel instanceof BaseTable)) {
-  //          continue;
-  //        } else {
-  //          BaseTable base = (BaseTable) rel;
-  //          if (scrambleMeta.isScrambled(base.getSchemaName(), base.getTableName())) {
-  //            identified.add(Pair.of(root, Pair.of(base.getSchemaName(), base.getTableName())));
-  //          }
-  //        }
-  //      }
-  //    }
-  //    
-  //    // repeat the process for dependents
-  //    for (QueryExecutionNode dep : root.getDependents()) {
-  //      if (dep instanceof AggExecutionNode) {
-  //        continue;
-  //      } else {
-  //        List<Pair<QueryExecutionNode, Pair<String, String>>> identifiedDep = 
-  //            identifyNodesWithScrambles(scrambleMeta, dep);
-  //        identified.addAll(identifiedDep);
-  //      }
-  //    }
-  //    
-  //    return identified;
-  //  }
-
   /**
-   * Replicas of the group is made. The token queues among the group's nodes are replicated. The token queues
-   * outside the group's nodes are shared. This is for each replicated group to receive the same information
-   * from the downstream operations.
+   * Replicas of the group is made. The subscription relationships among the group's nodes are replicated. 
+   * The subscription relationships outside the group's nodes are shared. This is for each replicated group 
+   * to receive the same information from the downstream operations.
    * 
    * @param root
    * @return
@@ -330,7 +271,7 @@ public class AggExecutionNodeBlock {
     List<ExecutableNodeBase> newNodes = new ArrayList<>();
     for (ExecutableNodeBase node : blockNodes) {
       ExecutableNodeBase copied = node.deepcopy();
-      copied.clearSubscribers();
+      copied.clearSubscribers();    // this subscription information will be properly reconstructed below.
       newNodes.add(copied);
     }
 
@@ -338,13 +279,14 @@ public class AggExecutionNodeBlock {
     for (int i = 0; i < newNodes.size(); i++) {
       ExecutableNodeBase newNode = newNodes.get(i);
       ExecutableNodeBase oldNode = blockNodes.get(i);
+
       for (int j = 0; j < oldNode.getSources().size(); j++) {
         Pair<ExecutableNodeBase, Integer> source = oldNode.getSourcesAndChannels().get(j);
         int idx = blockNodes.indexOf(source.getLeft());
-        
+
         // at this moment, newNode still has old source information, so we remove it.
         newNode.cancelSubscriptionTo(source.getLeft());
-        
+
         if (idx >= 0) {
           // internal dependency relationships
           newNode.subscribeTo(newNodes.get(idx), source.getRight());
@@ -353,95 +295,12 @@ public class AggExecutionNodeBlock {
           newNode.subscribeTo(source.getLeft(), source.getRight());
         }
 
-        //        ExecutableNodeBase dep = oldNode.getExecutableNodeBaseDependents().get(j);
-        //        int idx = blockNodes.indexOf(dep);
-        //        if (idx >= 0) {
-        //          newNode.getExecutableNodeBaseDependents().set(j, newNodes.get(idx));
-        //        }
       }
     }
 
-    // compose the return value
+    // compose a return value
     int rootIdx = blockNodes.indexOf(blockRoot);
     return new AggExecutionNodeBlock(idCreator, newNodes.get(rootIdx)); 
   }
-
-  //  /**
-  //   * Replicas of the group is made. The token queues among the group's nodes are replicated. The token queues
-  //   * outside the group's nodes are shared. This is for each replicated group to receive the same information
-  //   * from the downstream operations.
-  //   * 
-  //   * @param root
-  //   * @return
-  //   * @throws VerdictDBValueException 
-  //   */
-  //  public AggExecutionNodeBlock deepcopyExcludingDependentAggregates() throws VerdictDBValueException {
-  //    List<ExecutableNodeBase> newNodes = new ArrayList<>();
-  //    for (ExecutableNodeBase node : blockNodes) {
-  //      newNodes.add(node.deepcopy());
-  //    }
-  //    
-  //    // reconstruct the dependency relationship
-  //    // if there are nodes (in this block) on which other nodes depend on, we restore that dependency
-  //    // relationship.
-  //    for (int i = 0; i < newNodes.size(); i++) {
-  //      ExecutableNodeBase newNode = newNodes.get(i);
-  //      ExecutableNodeBase oldNode = blockNodes.get(i);
-  //      for (int j = 0; j < oldNode.getExecutableNodeBaseDependents().size(); j++) {
-  //        ExecutableNodeBase dep = oldNode.getExecutableNodeBaseDependents().get(j);
-  //        int idx = blockNodes.indexOf(dep);
-  //        if (idx >= 0) {
-  //          newNode.getExecutableNodeBaseDependents().set(j, newNodes.get(idx));
-  //        }
-  //      }
-  //    }
-  //    
-  //    // reconstruct listening and broadcasting queues
-  //    // the existing broadcasting nodes are all replaced with new ones. 
-  //    // the listening nodes of leaves are duplicated.
-  //    List<ExecutableNodeBase> outsideDependents = new ArrayList<>();
-  //    for (ExecutableNodeBase node : blockNodes) {
-  //      for (ExecutableNodeBase dep : node.getDependents()) {
-  //        if (!blockNodes.contains(dep)) {
-  //          outsideDependents.add(dep);
-  //        }
-  //      }
-  //    }
-  //    
-  //    for (int i = 0; i < newNodes.size(); i++) {
-  //      ExecutableNodeBase newNode = newNodes.get(i);
-  //      ExecutableNodeBase oldNode = blockNodes.get(i);
-  //      List<ExecutionTokenQueue> listeningQueues = oldNode.getListeningQueues();
-  //      
-  //      // for each listening queue of an existing node
-  //      for (int listeningQueueIdx = 0;  listeningQueueIdx < listeningQueues.size(); listeningQueueIdx++) {
-  //        ExecutionTokenQueue listeningQueue = listeningQueues.get(listeningQueueIdx);
-  //        
-  //        // find the nodes that broadcast to this listening queue within this block (intra-block broadcasting)
-  //        for (int nodeIdx = 0; nodeIdx < blockNodes.size(); nodeIdx++) {
-  //          ExecutableNodeBase node = blockNodes.get(nodeIdx);
-  //          int broadcastQueueIdx = node.getBroadcastingQueues().indexOf(listeningQueue);
-  //          
-  //          if (broadcastQueueIdx >= 0) {
-  //            ExecutionTokenQueue newQueue = newNode.generateReplacementListeningQueue(listeningQueueIdx);
-  //            newNodes.get(nodeIdx).getBroadcastingQueues().set(broadcastQueueIdx, newQueue);
-  //          }
-  //        }
-  //        
-  //        // find the dependents that broadcast to this listening queue outside this block
-  //        for (int nodeIdx = 0; nodeIdx < outsideDependents.size(); nodeIdx++) {
-  //          ExecutableNodeBase dep = outsideDependents.get(nodeIdx);
-  //          if (dep.getBroadcastingQueues().contains(listeningQueue)) {
-  //            ExecutionTokenQueue newQueue = newNode.generateReplacementListeningQueue(listeningQueueIdx);
-  //            dep.addBroadcastingQueue(newQueue);
-  //          }
-  //        }
-  //      }
-  //    }
-  //    
-  //    // compose the return value
-  //    int rootIdx = blockNodes.indexOf(blockRoot);
-  //    return new AggExecutionNodeBlock(idCreator, newNodes.get(rootIdx));
-  //  }
 
 }

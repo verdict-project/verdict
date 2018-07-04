@@ -14,9 +14,7 @@ import org.verdictdb.exception.VerdictDBValueException;
  * @author Yongjoo Park
  *
  */
-public class AggBlockMeta {
-  
-//  int totalSequenceCount;
+public class OlaAggregationMetaData {
   
   List<HyperTableCube> cubes = new ArrayList<>();
   
@@ -26,8 +24,9 @@ public class AggBlockMeta {
    * @param scrambles   The scrambled tables that appear in a query.
    * @throws VerdictDBValueException
    */
-  public AggBlockMeta(ScrambleMeta scrambleMeta, List<Pair<String, String>> scrambles) 
+  public OlaAggregationMetaData(ScrambleMeta scrambleMeta, List<Pair<String, String>> scrambles) 
       throws VerdictDBValueException {
+    
     // exception checks
     if (scrambles.size() == 0) {
       return;
@@ -49,6 +48,15 @@ public class AggBlockMeta {
     // slice
     cubes = originalCube.roundRobinSlice();
     
+  }
+  
+  // TODO: use this method to create a merged metadata
+  // this method is supposed to rely on HyperTableCube's merge method.
+  public static OlaAggregationMetaData createMergedOlaAggMeta(
+      OlaAggregationMetaData meta1, 
+      OlaAggregationMetaData meta2) {
+    
+    return null;
   }
   
   public int totalBlockAggCount() {

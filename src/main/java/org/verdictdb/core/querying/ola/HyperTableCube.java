@@ -19,6 +19,11 @@ public class HyperTableCube {
   public HyperTableCube(List<Dimension> dimensions) {
     this.dimensions = dimensions;
   }
+  
+  // TODO: use this method for creating a merged cube
+  public static HyperTableCube createMergedCubes(HyperTableCube cube1, HyperTableCube cube2) {
+    return null;
+  }
 
   Dimension getDimension(int index) {
     return dimensions.get(index);
