@@ -42,9 +42,9 @@ public class QueryExecutionPlan implements ExecutablePlan, TempIdCreator {
   //  PostProcessor postProcessor;
 
   //  /**
-  //   * 
+  //   *
   //   * @param queryString A select query
-  //   * @throws UnexpectedTypeException 
+  //   * @throws UnexpectedTypeException
   //   */
   //  public AggQueryExecutionPlan(DbmsConnection conn, SyntaxAbstract syntax, String queryString) throws VerdictDbException {
   //    this(conn, syntax, (SelectQueryOp) new NonValidatingSQLParser().toRelation(queryString));
@@ -171,9 +171,17 @@ public class QueryExecutionPlan implements ExecutablePlan, TempIdCreator {
       // Exception 3: two nodes are not SelectAllNode, ProjectionNode or AggregateNode
       boolean compressable = node.getExecutableNodeBaseParents().size() == 1 && !isSharingQueue(node);
       if (compressable) {
+//<<<<<<< HEAD
+//        ExecutableNodeBase parent = node.getExecutableNodeBaseParents().get(0);
+//        if (((parent instanceof AggExecutionNode)||(parent instanceof SelectAllExecutionNode)||(parent instanceof ProjectionNode))
+//            && ((node instanceof AggExecutionNode)||(node instanceof SelectAllExecutionNode)||(node instanceof ProjectionNode)) ) {
+//=======
         ExecutableNodeBase parent = node.getExecutableNodeBaseParents().get(0);
-        if (((parent instanceof AggExecutionNode)||(parent instanceof SelectAllExecutionNode)||(parent instanceof ProjectionNode))
-            && ((node instanceof AggExecutionNode)||(node instanceof SelectAllExecutionNode)||(node instanceof ProjectionNode)) ) {
+        if (((parent instanceof AggExecutionNode) || (parent instanceof SelectAllExecutionNode) || 
+             (parent instanceof ProjectionNode && !(parent instanceof AsyncAggExecutionNode)))
+          && ((node instanceof AggExecutionNode) ||(node instanceof SelectAllExecutionNode) || 
+              (node instanceof ProjectionNode && !(node instanceof AsyncAggExecutionNode))) ) {
+//>>>>>>> origin/joezhong-scale
           compressTwoNode(node, parent);
         }
       }
@@ -261,6 +269,7 @@ public class QueryExecutionPlan implements ExecutablePlan, TempIdCreator {
   }
 
 
+//<<<<<<< HEAD
 //  public void setScalingNode() throws VerdictDBException{
 //    // Check from top to bottom to find AsyncAggExecutionNode
 //    List<BaseQueryNode> checkList = new ArrayList<>();
@@ -291,7 +300,9 @@ public class QueryExecutionPlan implements ExecutablePlan, TempIdCreator {
 //      }
 //    }
 //  }
-
+//=======
+//>>>>>>> origin/joezhong-scale
+  
   @Override
   public List<Integer> getNodeGroupIDs() {
     return Arrays.asList(0);

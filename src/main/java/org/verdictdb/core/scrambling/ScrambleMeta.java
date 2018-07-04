@@ -3,6 +3,7 @@ package org.verdictdb.core.scrambling;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
 public class ScrambleMeta {
@@ -21,6 +22,10 @@ public class ScrambleMeta {
    */
   public String getAggregationBlockColumn(String schemaName, String tableName) {
     return meta.get(metaKey(schemaName, tableName)).getAggregationBlockColumn();
+  }
+
+  public ScrambleMetaForTable getMetaForTable(String schemaName, String tableName) {
+    return meta.get(new ImmutablePair<String, String>(schemaName, tableName));
   }
 
   /**

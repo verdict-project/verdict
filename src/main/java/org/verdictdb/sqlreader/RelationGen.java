@@ -175,7 +175,7 @@ public class RelationGen extends VerdictSQLBaseVisitor<AbstractRelation> {
           public GroupingAttribute visitColumn_ref_expression(VerdictSQLParser.Column_ref_expressionContext ctx) {
             String[] t = ctx.getText().split("\\.");
             if (t.length >= 2) {
-              return new AliasReference(t[1]);
+              return new AliasReference(t[0], t[1]);
             } else {
               return new AliasReference(t[0]);
             }

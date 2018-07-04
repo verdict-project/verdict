@@ -1,9 +1,6 @@
 package org.verdictdb.sqlreader;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Vector;
+import java.util.*;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -30,6 +27,8 @@ public class RelationStandardizer {
 
   private static long itemID = 1;
 
+  private static long duplicateIdentifer = 1;
+
   //key is the column name and value is table alias name
   private HashMap<String, String> colNameAndTableAlias = new HashMap<>();
 
@@ -39,6 +38,9 @@ public class RelationStandardizer {
   //key is the select column name, value is their alias
   private HashMap<String, String> colNameAndColAlias = new HashMap<>();
 
+  //key is schema name, column name, value is alias
+  //only store value if there are duplicate column names
+  private HashMap<Pair<String, String>, String> duplicateColNameAndColAlias = new HashMap<>();
   /***
    * If From list is a subquery, we need to record the column alias name in colNameAndTempColAlias
    * so that we can replace the select item with the column alias name we generate.
@@ -62,6 +64,15 @@ public class RelationStandardizer {
     if (colNameAndTempColAlias.containsKey(col.getColumnName())) {
       col.setColumnName(colNameAndTempColAlias.get(col.getColumnName()));
     }
+    if (tableInfoAndAlias.containsValue(col.getTableSourceAlias())) {
+      for (Map.Entry<Pair<String, String>, String> entry:tableInfoAndAlias.entrySet()) {
+        if (entry.getValue().equals(col.getTableSourceAlias())) {
+          col.setSchemaName(entry.getKey().getLeft());
+          col.setTableName(entry.getKey().getRight());
+          break;
+        }
+      }
+    }
     return col;
   }
 
@@ -71,8 +82,14 @@ public class RelationStandardizer {
       if (!(sel instanceof AliasedColumn) && !(sel instanceof AsteriskColumn)) {
         if (sel instanceof BaseColumn) {
           sel = replaceBaseColumn((BaseColumn) sel);
-          colNameAndColAlias.put(((BaseColumn) sel).getColumnName(), ((BaseColumn) sel).getColumnName());
-          newSelectItemList.add(new AliasedColumn((BaseColumn) sel, ((BaseColumn) sel).getColumnName()));
+          if (!colNameAndColAlias.containsValue(((BaseColumn) sel).getColumnName())) {
+            colNameAndColAlias.put(((BaseColumn) sel).getColumnName(), ((BaseColumn) sel).getColumnName());
+            newSelectItemList.add(new AliasedColumn((BaseColumn) sel, ((BaseColumn) sel).getColumnName()));
+          } else {
+            duplicateColNameAndColAlias.put(new ImmutablePair<>(((BaseColumn) sel).getTableSourceAlias(), ((BaseColumn) sel).getColumnName()),
+                ((BaseColumn) sel).getColumnName()+duplicateIdentifer);
+            newSelectItemList.add(new AliasedColumn((BaseColumn) sel, ((BaseColumn) sel).getColumnName()+duplicateIdentifer++));
+          }
         } else if (sel instanceof ColumnOp) {
           //First replace the possible base column inside the columnop using the same way we did on Where clause
           sel = replaceFilter((ColumnOp) sel);
@@ -131,7 +148,17 @@ public class RelationStandardizer {
   private List<GroupingAttribute> replaceGroupby(List<GroupingAttribute> groupingAttributeList) {
     List<GroupingAttribute> newGroupby = new ArrayList<>();
     for (GroupingAttribute g : groupingAttributeList) {
-      if (colNameAndColAlias.containsKey(((AliasReference) g).getAliasName())) {
+      if (((AliasReference)g).getTableAlias()!=null) {
+        String tableSource = ((AliasReference)g).getTableAlias();
+        String alias = ((AliasReference)g).getAliasName();
+        if (duplicateColNameAndColAlias.containsKey(new ImmutablePair<>(tableSource, alias))) {
+          newGroupby.add(new AliasReference(tableSource, duplicateColNameAndColAlias.get(new ImmutablePair<>(tableSource, alias))));
+        }
+        else if (colNameAndColAlias.containsKey(((AliasReference) g).getAliasName())) {
+          newGroupby.add(new AliasReference(colNameAndColAlias.get(((AliasReference) g).getAliasName())));
+        } else newGroupby.add(g);
+      }
+      else if (colNameAndColAlias.containsKey(((AliasReference) g).getAliasName())) {
         newGroupby.add(new AliasReference(colNameAndColAlias.get(((AliasReference) g).getAliasName())));
       } else newGroupby.add(g);
     }
@@ -141,7 +168,17 @@ public class RelationStandardizer {
   private List<OrderbyAttribute> replaceOrderby(List<OrderbyAttribute> orderbyAttributesList) {
     List<OrderbyAttribute> newOrderby = new ArrayList<>();
     for (OrderbyAttribute o : orderbyAttributesList) {
-      if (colNameAndColAlias.containsKey(o.getAttributeName())) {
+      if (o.getAliasName().getTableAlias()!=null) {
+        String tableSource = o.getAliasName().getTableAlias();
+        String alias = o.getAliasName().getAliasName();
+        if (duplicateColNameAndColAlias.containsKey(new ImmutablePair<>(tableSource, alias))) {
+          newOrderby.add(new OrderbyAttribute(duplicateColNameAndColAlias.get(new ImmutablePair<>(tableSource, alias)), o.getOrder()));
+        }
+        else if (colNameAndColAlias.containsKey(o.getAttributeName())) {
+          newOrderby.add(new OrderbyAttribute(colNameAndColAlias.get(o.getAttributeName()), o.getOrder()));
+        } else newOrderby.add(o);
+      }
+      else if (colNameAndColAlias.containsKey(o.getAttributeName())) {
         newOrderby.add(new OrderbyAttribute(colNameAndColAlias.get(o.getAttributeName()), o.getOrder()));
       } else newOrderby.add(o);
     }

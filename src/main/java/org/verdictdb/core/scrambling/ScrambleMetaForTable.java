@@ -89,6 +89,17 @@ public class ScrambleMetaForTable {
   public void setSubsampleColumn(String subsampleColumn) {
     this.subsampleColumn = subsampleColumn;
   }
-  
+
+  public int getNumberOfTiers() {
+    return numberOfTiers;
+  }
+
+  public void setCumulativeMassDistributionPerTier(Map<Integer, List<Double>> cumulativeMassDistributionPerTier) {
+    this.cumulativeMassDistributionPerTier = cumulativeMassDistributionPerTier;
+  }
+
+  public void setNumberOfTiers(int numberOfTiers) {
+    this.numberOfTiers = numberOfTiers;
+  }
 }
 

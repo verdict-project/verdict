@@ -110,13 +110,42 @@ public class AggExecutionNodeBlock {
       aggroot.clearSubscribers();
 
       // add extra predicates to restrain each aggregation to particular parts of base tables.
-      // Move original AggExecutionNode.executeNode() method here
-      // Assume only one scramble table in the query
+//<<<<<<< HEAD
+//      // Move original AggExecutionNode.executeNode() method here
       List<Pair<ExecutableNodeBase, Triple<String, String, String>>> scrambledNodeAndTableName = 
           identifyScrambledNodes(scrambleMeta, copy.getNodesInBlock());
-      
-      Dimension dimension = new Dimension(scrambles.get(0).getLeft(), scrambles.get(0).getRight(), i, i);
-      ((AggExecutionNode)aggroot).getCubes().addAll(Arrays.asList(new HyperTableCube(Arrays.asList(dimension))));
+//      
+//      Dimension dimension = new Dimension(scrambles.get(0).getLeft(), scrambles.get(0).getRight(), i, i);
+//      ((AggExecutionNode)aggroot).getCubes().addAll(Arrays.asList(new HyperTableCube(Arrays.asList(dimension))));
+//=======
+      if (scrambles.size()==1) {
+        Dimension dimension = new Dimension(scrambles.get(0).getLeft(), scrambles.get(0).getRight(), i, i);
+        ((AggExecutionNode)aggroot).getCubes().addAll(Arrays.asList(new HyperTableCube(Arrays.asList(dimension))));
+      }
+      else {
+        int turn = i % scrambles.size();
+        int round = i / scrambles.size() + 1;
+        List<Dimension> dimensionList = new ArrayList<>();
+        for (int j = 0; j<scrambles.size(); j++) {
+          int blockCount = scrambleMeta.getAggregationBlockCount(scrambles.get(j).getLeft(), scrambles.get(j).getRight());
+          if (turn==j) {
+            Dimension d = new Dimension(scrambles.get(j).getLeft(), scrambles.get(j).getRight(),round-1, round-1);
+            dimensionList.add(d);
+          }
+          else {
+            Dimension d;
+            if (j<turn) {
+              d = new Dimension(scrambles.get(j).getLeft(), scrambles.get(j).getRight(), round, blockCount-1);
+            }
+            else {
+              d = new Dimension(scrambles.get(j).getLeft(), scrambles.get(j).getRight(), round - 1, blockCount-1);
+            }
+            dimensionList.add(d);
+          }
+        }
+        ((AggExecutionNode)aggroot).getCubes().addAll(Arrays.asList(new HyperTableCube(dimensionList)));
+      }
+//>>>>>>> origin/joezhong-scale
 
       for (Pair<ExecutableNodeBase, Triple<String, String, String>> a : scrambledNodeAndTableName) {
         ExecutableNodeBase scrambledNode = a.getLeft();
@@ -172,8 +201,13 @@ public class AggExecutionNodeBlock {
     }
 
     // fourth, re-link the listening queue for the new AsyncAggNode
-    ExecutableNodeBase newRoot = AsyncAggExecutionNode.create(idCreator, individualAggNodes, combiners);
-
+//<<<<<<< HEAD
+//    ExecutableNodeBase newRoot = AsyncAggExecutionNode.create(idCreator, individualAggNodes, combiners);
+//
+//=======
+    ExecutableNodeBase newRoot = AsyncAggExecutionNode.create(idCreator, individualAggNodes, combiners, scrambleMeta);
+    
+//>>>>>>> origin/joezhong-scale
     // root to upstream
 //    for (ExecutableNode n : blockRoot.getSubscribers()) {
 //      ((ExecutableNodeBase) n).subscribeTo(newRoot);

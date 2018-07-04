@@ -248,5 +248,128 @@ public class QueryExecutionPlanCompressTest {
 //
 //    assertEquals(copy.getExecutableNodeBaseDependent(0), queryExecutionPlan.root.getExecutableNodeBaseDependent(0));
 //  }
+  
+//=======
+//  @Test
+//  public void SimpleAggregateWithScrambleTableTest() throws VerdictDBException {
+//    String sql = "select avg(t.value) as a from originalschema.originaltable as t;";
+//    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+//    SelectQuery selectQuery = (SelectQuery) sqlToRelation.toRelation(sql);
+//    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(newSchema, null, selectQuery);
+//
+//    BaseTable base = new BaseTable(originalSchema, originalTable, "t");
+//    SelectQuery leftQuery = SelectQuery.create(new AliasedColumn(ColumnOp.count(), "mycount"), base);
+//    leftQuery.addFilterByAnd(ColumnOp.lessequal(new BaseColumn("t", "value"), ConstantColumn.valueOf(5.0)));
+//    SelectQuery rightQuery = SelectQuery.create(new AliasedColumn(ColumnOp.count(), "mycount"), base);
+//    rightQuery.addFilterByAnd(ColumnOp.greater(new BaseColumn("t", "value"), ConstantColumn.valueOf(5.0)));
+//    AggExecutionNode leftNode = AggExecutionNode.create(null, leftQuery);
+//    AggExecutionNode rightNode = AggExecutionNode.create(null, rightQuery);
+//    ExecutionTokenQueue queue = new ExecutionTokenQueue();
+//    AggCombinerExecutionNode combiner = AggCombinerExecutionNode.create(queryExecutionPlan, leftNode, rightNode);
+//    combiner.addBroadcastingQueue(queue);
+//    AsyncAggExecutionNode asyncAggExecutionNode =
+//        AsyncAggExecutionNode.create(queryExecutionPlan, Arrays.<BaseQueryNode>asList(leftNode, rightNode),
+//            Arrays.<BaseQueryNode>asList(combiner), null);
+//    queryExecutionPlan.root.getDependents().remove(0);
+//    queryExecutionPlan.root.getListeningQueues().remove(0);
+//    ExecutionTokenQueue q = new ExecutionTokenQueue();
+//    queryExecutionPlan.root.getListeningQueues().add(q);
+//    asyncAggExecutionNode.addBroadcastingQueue(q);
+//    queryExecutionPlan.root.addDependency(asyncAggExecutionNode);
+//
+//    BaseQueryNode copy = queryExecutionPlan.root.deepcopy();
+//    queryExecutionPlan.compress();
+//
+//    assertEquals(asyncAggExecutionNode, queryExecutionPlan.root.dependents.get(0));
+//    assertEquals(copy.selectQuery, queryExecutionPlan.root.selectQuery);
+//  }
+//
+//  @Test
+//  public void NestedAggregateWithScrambleTableTest() throws VerdictDBException {
+//    String sql = "select avg(t.value) as a from (select o.value from originalschema.originaltable as o where o.value>5) as t;";
+//    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+//    SelectQuery selectQuery = (SelectQuery) sqlToRelation.toRelation(sql);
+//    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(newSchema, null, selectQuery);
+//    BaseTable base = new BaseTable(originalSchema, originalTable, "t");
+//    SelectQuery leftQuery = SelectQuery.create(new AliasedColumn(ColumnOp.count(), "mycount"), base);
+//    leftQuery.addFilterByAnd(ColumnOp.lessequal(new BaseColumn("t", "value"), ConstantColumn.valueOf(5.0)));
+//    SelectQuery rightQuery = SelectQuery.create(new AliasedColumn(ColumnOp.count(), "mycount"), base);
+//    rightQuery.addFilterByAnd(ColumnOp.greater(new BaseColumn("t", "value"), ConstantColumn.valueOf(5.0)));
+//    AggExecutionNode leftNode = AggExecutionNode.create(null, leftQuery);
+//    AggExecutionNode rightNode = AggExecutionNode.create(null, rightQuery);
+//    ExecutionTokenQueue queue = new ExecutionTokenQueue();
+//    AggCombinerExecutionNode combiner = AggCombinerExecutionNode.create(queryExecutionPlan, leftNode, rightNode);
+//    combiner.addBroadcastingQueue(queue);
+//    AsyncAggExecutionNode asyncAggExecutionNode =
+//        AsyncAggExecutionNode.create(null, Arrays.<BaseQueryNode>asList(leftNode, rightNode),
+//            Arrays.<BaseQueryNode>asList(combiner), null);
+//    queryExecutionPlan.root.dependents.get(0).getDependents().remove(0);
+//    queryExecutionPlan.root.dependents.get(0).getListeningQueues().remove(0);
+//    ExecutionTokenQueue q = new ExecutionTokenQueue();
+//    queryExecutionPlan.root.dependents.get(0).getListeningQueues().add(q);
+//    asyncAggExecutionNode.addBroadcastingQueue(q);
+//    queryExecutionPlan.root.dependents.get(0).addDependency(asyncAggExecutionNode);
+//    BaseQueryNode copy = queryExecutionPlan.root.getDependent(0).deepcopy();
+//    queryExecutionPlan.compress();
+//
+//    SelectQuery compressed = SelectQuery.create(
+//        Arrays.<SelectItem>asList(
+//          new AliasedColumn(new ColumnOp("avg", new BaseColumn("t", "value")), "a")
+//        ), new BaseTable("placeholderSchemaName", "placeholderTableName", "t"));
+//    compressed.setAliasName("t");
+//    assertEquals(queryExecutionPlan.root.selectQuery.getFromList().get(0), compressed);
+//    assertEquals(queryExecutionPlan.root.dependents.get(0), asyncAggExecutionNode);
+//
+//    assertEquals(copy.dependents.get(0), queryExecutionPlan.root.dependents.get(0));
+//  }
+//
+//  @Test
+//  public void NestedAggregateWithScrambleTableHavingCommonChildrenTest() throws VerdictDBException {
+//    String sql = "select avg(t.value) as a from (select o.value from originalschema.originaltable as o where o.value>5) as t;";
+//    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+//    SelectQuery selectQuery = (SelectQuery) sqlToRelation.toRelation(sql);
+//    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(newSchema, null, selectQuery);
+//    BaseTable base = new BaseTable(originalSchema, originalTable, "t");
+//    SelectQuery leftQuery = SelectQuery.create(new AliasedColumn(ColumnOp.count(), "mycount"), base);
+//    leftQuery.addFilterByAnd(ColumnOp.lessequal(new BaseColumn("t", "value"), ConstantColumn.valueOf(5.0)));
+//    SelectQuery rightQuery = SelectQuery.create(new AliasedColumn(ColumnOp.count(), "mycount"), base);
+//    rightQuery.addFilterByAnd(ColumnOp.greater(new BaseColumn("t", "value"), ConstantColumn.valueOf(5.0)));
+//    AggExecutionNode leftNode = AggExecutionNode.create(null, leftQuery);
+//    AggExecutionNode rightNode = AggExecutionNode.create(null, rightQuery);
+//    ExecutionTokenQueue queue = new ExecutionTokenQueue();
+//    AggCombinerExecutionNode combiner = AggCombinerExecutionNode.create(queryExecutionPlan, leftNode, rightNode);
+//    combiner.addBroadcastingQueue(queue);
+//    AsyncAggExecutionNode asyncAggExecutionNode =
+//        AsyncAggExecutionNode.create(null, Arrays.<BaseQueryNode>asList(leftNode, rightNode),
+//            Arrays.<BaseQueryNode>asList(combiner), null);
+//    queryExecutionPlan.root.dependents.get(0).getDependents().remove(0);
+//    queryExecutionPlan.root.dependents.get(0).getListeningQueues().remove(0);
+//    ExecutionTokenQueue q = new ExecutionTokenQueue();
+//    queryExecutionPlan.root.dependents.get(0).getListeningQueues().add(q);
+//    asyncAggExecutionNode.addBroadcastingQueue(q);
+//    queryExecutionPlan.root.dependents.get(0).addDependency(asyncAggExecutionNode);
+//
+//    SelectQuery commonQuery = SelectQuery.create(new AliasedColumn(ColumnOp.count(), "mycount"), base);
+//    rightQuery.addFilterByAnd(ColumnOp.greater(new BaseColumn("t", "value"), ConstantColumn.valueOf(5.0)));
+//    AggExecutionNode common = AggExecutionNode.create(null, commonQuery);
+//    leftQuery.addFilterByAnd(ColumnOp.lessequal(new BaseColumn("t", "value"), ConstantColumn.valueOf(5.0)));
+//    leftNode.addDependency(common);
+//    common.addBroadcastingQueue(leftNode.generateListeningQueue());
+//    rightNode.addDependency(common);
+//    common.addBroadcastingQueue(rightNode.generateListeningQueue());
+//    BaseQueryNode copy = queryExecutionPlan.root.getDependent(0).deepcopy();
+//    queryExecutionPlan.compress();
+//
+//    SelectQuery compressed = SelectQuery.create(
+//        Arrays.<SelectItem>asList(
+//            new AliasedColumn(new ColumnOp("avg", new BaseColumn("t", "value")), "a")
+//        ), new BaseTable("placeholderSchemaName", "placeholderTableName", "t"));
+//    compressed.setAliasName("t");
+//    assertEquals(queryExecutionPlan.root.selectQuery.getFromList().get(0), compressed);
+//    assertEquals(queryExecutionPlan.root.dependents.get(0), asyncAggExecutionNode);
+//
+//    assertEquals(copy.dependents.get(0), queryExecutionPlan.root.dependents.get(0));
+//  }
+//>>>>>>> origin/joezhong-scale
 
 }

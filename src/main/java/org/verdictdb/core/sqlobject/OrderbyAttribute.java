@@ -27,6 +27,10 @@ public class OrderbyAttribute {
     return order;
   }
 
+  public AliasReference getAliasName() {
+    return aliasName;
+  }
+
   @Override
   public int hashCode() {
     return HashCodeBuilder.reflectionHashCode(this);

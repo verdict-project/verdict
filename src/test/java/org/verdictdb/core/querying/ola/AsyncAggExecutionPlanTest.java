@@ -101,6 +101,7 @@ public class AsyncAggExecutionPlanTest {
   }
 
   @Test
+//<<<<<<< HEAD:src/test/java/org/verdictdb/core/querying/ola/AsyncAggExecutionPlanTest.java
   public void ScrambleTableTest1() throws VerdictDBException,SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select sum(value) from originalTable_scrambled";
@@ -147,6 +148,8 @@ public class AsyncAggExecutionPlanTest {
   }
 
   @Test
+//=======
+//>>>>>>> origin/joezhong-scale:src/test/java/org/verdictdb/core/execution/AsyncAggAsyncHandlerTest.java
   public void ScrambleTableWithScalingTest() throws VerdictDBException,SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select sum(value) from originalTable_scrambled";
@@ -158,9 +161,13 @@ public class AsyncAggExecutionPlanTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp3", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
+//<<<<<<< HEAD:src/test/java/org/verdictdb/core/querying/ola/AsyncAggExecutionPlanTest.java
 //    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependent(0)).setScrambleMeta(meta);
 //    queryExecutionPlan.setScalingNode();
     // queryExecutionPlan.getRoot().print();
+//=======
+    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependent(0)).setScrambleMeta(meta);
+//>>>>>>> origin/joezhong-scale:src/test/java/org/verdictdb/core/execution/AsyncAggAsyncHandlerTest.java
 
 //    TokenQueueToAyncHandler tokenQueueToAyncHandler = new TokenQueueToAyncHandler(queryExecutionPlan, new ExecutionTokenQueue());
 //    tokenQueueToAyncHandler.setHandler(new StandardOutputHandler());
@@ -185,9 +192,13 @@ public class AsyncAggExecutionPlanTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp4", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
+//<<<<<<< HEAD:src/test/java/org/verdictdb/core/querying/ola/AsyncAggExecutionPlanTest.java
     ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependent(0).getExecutableNodeBaseDependent(0)).setScrambleMeta(meta);
 //    queryExecutionPlan.setScalingNode();
     // queryExecutionPlan.getRoot().print();
+//=======
+//    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getDependent(0).getDependent(0)).setScrambleMeta(meta);
+//>>>>>>> origin/joezhong-scale:src/test/java/org/verdictdb/core/execution/AsyncAggAsyncHandlerTest.java
 
 //    TokenQueueToAyncHandler tokenQueueToAyncHandler = new TokenQueueToAyncHandler(queryExecutionPlan, new ExecutionTokenQueue());
 //    tokenQueueToAyncHandler.setHandler(new StandardOutputHandler());

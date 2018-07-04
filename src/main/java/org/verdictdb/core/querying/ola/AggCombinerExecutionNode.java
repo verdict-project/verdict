@@ -26,6 +26,8 @@ import org.verdictdb.exception.VerdictDBValueException;
 
 public class AggCombinerExecutionNode extends CreateTableAsSelectNode {
 
+  List<HyperTableCube> cubes = new ArrayList<>();
+
   private AggCombinerExecutionNode(TempIdCreator namer) {
     super(namer, null);
   }
@@ -83,29 +85,29 @@ public class AggCombinerExecutionNode extends CreateTableAsSelectNode {
 //    node.addDependency(rightQueryExecutionNode);
     return node;
   }
-  
+
   @Override
+//<<<<<<< HEAD
+//  public SqlConvertible createQuery(List<ExecutionInfoToken> tokens) throws VerdictDBException {
+//=======
   public SqlConvertible createQuery(List<ExecutionInfoToken> tokens) throws VerdictDBException {
+    for (ExecutionInfoToken token:tokens) {
+      if (token.getValue("hyperTableCube")!=null) {
+        cubes.addAll((List<HyperTableCube>) token.getValue("hyperTableCube"));
+      }
+    }
+//>>>>>>> origin/joezhong-scale
     return super.createQuery(tokens);
   }
-  
+
   @Override
   public ExecutionInfoToken createToken(DbmsQueryResult result) {
-    return super.createToken(result);
+    ExecutionInfoToken token = super.createToken(result);
+    if (!cubes.isEmpty()) {
+      token.setKeyValue("hyperTableCube", cubes);
+    }
+    token.setKeyValue("dependent", this);
+    return token;
   }
-
-//  @Override
-//  public ExecutionInfoToken executeNode(DbmsConnection conn, List<ExecutionInfoToken> downstreamResults) 
-//      throws VerdictDBException {
-//    ExecutionInfoToken token = super.executeNode(conn, downstreamResults);
-//    /*
-//    List<HyperTableCube> cubes = new ArrayList<>();
-//    for (ExecutionInfoToken downstreamResult:downstreamResults) {
-//      cubes.addAll((List<HyperTableCube>) downstreamResult.getValue("hyperTableCube"));
-//    }
-//    token.setKeyValue("hyperTableCube", cubes);
-//    */
-//    return token;
-//  }
 
 }
