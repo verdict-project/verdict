@@ -2120,29 +2120,29 @@ public class TpchExecutionPlanTest {
     assertEquals(1, queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().size());
     assertEquals(2, queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(1).getExecutableNodeBaseDependents().size());
 
-    assertEquals(new BaseTable(placeholderSchemaName, placeholderTableName, "a"),
+    assertEquals(new BaseTable(placeholderSchemaName, placeholderTableName, "vt1"),
         ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0)).getSelectQuery().getFromList().get(0));
     JoinTable join = JoinTable.create(Arrays.<AbstractRelation>asList(
-        new BaseTable(placeholderSchemaName, placeholderTableName, "ct1"),
-        new BaseTable(placeholderSchemaName, placeholderTableName, "ct2")),
+        new BaseTable(placeholderSchemaName, placeholderTableName, "vt2"),
+        new BaseTable(placeholderSchemaName, placeholderTableName, "vt5")),
         Arrays.<JoinTable.JoinType>asList(JoinTable.JoinType.inner),
         Arrays.<UnnamedColumn>asList(
             new ColumnOp("greater", Arrays.<UnnamedColumn>asList(
-                new BaseColumn("ct1", "avg_acctbal"),
+                new BaseColumn("vt2", "avg_acctbal"),
                 ConstantColumn.valueOf(0)
             ))
         ));
     assertEquals(join, ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getSelectQuery().getFromList().get(0));
-    assertEquals(new BaseTable(placeholderSchemaName, placeholderTableName, "vt1"),
+    assertEquals(new BaseTable(placeholderSchemaName, placeholderTableName, "vt3"),
         ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getSelectQuery().getFromList().get(0));
     JoinTable join1 = JoinTable.create(Arrays.<AbstractRelation>asList(
-        new BaseTable(placeholderSchemaName, placeholderTableName, "ot"),
-        new BaseTable(placeholderSchemaName, placeholderTableName, "ct")),
+        new BaseTable(placeholderSchemaName, placeholderTableName, "vt6"),
+        new BaseTable(placeholderSchemaName, placeholderTableName, "vt8")),
         Arrays.<JoinTable.JoinType>asList(JoinTable.JoinType.rightouter),
         Arrays.<UnnamedColumn>asList(
             new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-                new BaseColumn("ct", "c_custkey"),
-                new BaseColumn("ot", "o_custkey")
+                new BaseColumn("vt8", "c_custkey"),
+                new BaseColumn("vt6", "o_custkey")
             ))
         ));
     assertEquals(join1,

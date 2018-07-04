@@ -52,6 +52,11 @@ public class RelationStandardizer {
   private HashMap<String, String> colNameAndTempColAlias = new HashMap<>();
 
 
+  // Since we replace all table alias using our generated alias name, this map will record the table alias name
+  // we replaced.
+  private HashMap<String, String> oldTableAliasMap = new HashMap<>();
+
+
   public RelationStandardizer(MetaDataProvider meta) {
     this.meta = meta;
   }
@@ -68,6 +73,9 @@ public class RelationStandardizer {
     if (colNameAndTempColAlias.containsKey(col.getColumnName())) {
       col.setColumnName(colNameAndTempColAlias.get(col.getColumnName()));
     }
+    if (oldTableAliasMap.containsKey(col.getTableSourceAlias())) {
+      col.setTableSourceAlias(oldTableAliasMap.get(col.getTableSourceAlias()));
+    }
     if (tableInfoAndAlias.containsValue(col.getTableSourceAlias())) {
       for (Map.Entry<Pair<String, String>, String> entry:tableInfoAndAlias.entrySet()) {
         if (entry.getValue().equals(col.getTableSourceAlias())) {
@@ -77,6 +85,8 @@ public class RelationStandardizer {
         }
       }
     }
+
+
     return col;
   }
 
@@ -139,6 +149,7 @@ public class RelationStandardizer {
         }
       } else if (cond instanceof SubqueryColumn) {
         RelationStandardizer g = new RelationStandardizer(meta);
+        g.oldTableAliasMap.putAll(oldTableAliasMap);
         g.setColNameAndColAlias(colNameAndColAlias);
         g.setColNameAndTableAlias(colNameAndTableAlias);
         g.setTableInfoAndAlias(tableInfoAndAlias);
@@ -193,9 +204,16 @@ public class RelationStandardizer {
    * return the ColName contained by the table
    */
   private Pair<List<String>, AbstractRelation> setupTableSource(AbstractRelation table) throws VerdictDBDbmsException {
-    if (!table.getAliasName().isPresent() && !(table instanceof JoinTable)) {
+    // in order to prevent informal table alias, we replace all table alias
+    if (!(table instanceof JoinTable)) {
+      if (table.getAliasName().isPresent()) {
+        oldTableAliasMap.put(table.getAliasName().get(), "vt"+itemID);
+      }
       table.setAliasName("vt" + itemID++);
     }
+    //if (!table.getAliasName().isPresent() && !(table instanceof JoinTable)) {
+    //  table.setAliasName("vt" + itemID++);
+    //}
     if (table instanceof BaseTable) {
       List<String> colName = new ArrayList<>();
       if (((BaseTable) table).getSchemaName() == null) {
@@ -223,6 +241,7 @@ public class RelationStandardizer {
     } else if (table instanceof SelectQuery) {
       List<String> colName = new ArrayList<>();
       RelationStandardizer g = new RelationStandardizer(meta);
+      g.oldTableAliasMap.putAll(oldTableAliasMap);
       g.setTableInfoAndAlias(tableInfoAndAlias);
       g.setColNameAndTableAlias(colNameAndTableAlias);
       g.setColNameAndColAlias(colNameAndColAlias);
