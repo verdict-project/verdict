@@ -28,7 +28,7 @@ import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sqlsyntax.H2Syntax;
 
 public class AggExecutionNodeTest {
-  
+
   static String originalSchema = "originalschema";
 
   static String originalTable = "originaltable";
@@ -109,16 +109,16 @@ public class AggExecutionNodeTest {
     ExecutionInfoToken subqueryToken = new ExecutionInfoToken();
     subqueryToken.setKeyValue("schemaName", "newschema");
     subqueryToken.setKeyValue("tableName", "temptable");
-    
+
     SimpleTreePlan plan = new SimpleTreePlan(node);
-    plan.root.print();
-    
+    // plan.root.print();
+
     ExecutionTokenReader reader = ExecutablePlanRunner.getTokenReader(conn, plan);
     ExecutionInfoToken outputToken = reader.next();
 //    ExecutionInfoToken downstreamResult = node.dependents.get(0).executeNode(conn, Arrays.<ExecutionInfoToken>asList());
 //    ExecutionInfoToken newTableToken = ExecutableNodeRunner.execute(conn, node, Arrays.asList(downstreamResult));
 //     = node.executeNode(conn, );
-    
+
     String newSchemaName = (String) outputToken.getValue("schemaName");
     String newTableName = (String) outputToken.getValue("tableName");
     conn.execute(String.format("DROP TABLE \"%s\".\"%s\"", newSchemaName, newTableName));

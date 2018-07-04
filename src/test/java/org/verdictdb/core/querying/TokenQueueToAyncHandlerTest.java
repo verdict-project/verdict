@@ -54,7 +54,7 @@ public class TokenQueueToAyncHandlerTest {
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     SelectQuery selectQuery = (SelectQuery) sqlToRelation.toRelation(sql);
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(newSchema, null, selectQuery);
-    queryExecutionPlan.getRoot().print();
+    // queryExecutionPlan.getRoot().print();
     ResultStandardOutputPrinter.run(ExecutablePlanRunner.getResultReader(conn, queryExecutionPlan));
 //    TokenQueueToAyncHandler tokenQueueToAyncHandler = new TokenQueueToAyncHandler(queryExecutionPlan, new ExecutionTokenQueue());
 //    tokenQueueToAyncHandler.setHandler(new StandardOutputHandler());
@@ -68,8 +68,8 @@ public class TokenQueueToAyncHandlerTest {
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     SelectQuery selectQuery = (SelectQuery) sqlToRelation.toRelation(sql);
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(newSchema, null, selectQuery);
-    
-    queryExecutionPlan.getRoot().print();
+
+    // queryExecutionPlan.getRoot().print();
     ResultStandardOutputPrinter.run(ExecutablePlanRunner.getResultReader(conn, queryExecutionPlan));
 //    TokenQueueToAyncHandler tokenQueueToAyncHandler = new TokenQueueToAyncHandler(queryExecutionPlan, new ExecutionTokenQueue());
 //    tokenQueueToAyncHandler.setHandler(new StandardOutputHandler());
@@ -84,8 +84,8 @@ public class TokenQueueToAyncHandlerTest {
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     SelectQuery selectQuery = (SelectQuery) sqlToRelation.toRelation(sql);
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(newSchema, null, selectQuery);
-    
-    queryExecutionPlan.getRoot().print();
+
+    // queryExecutionPlan.getRoot().print();
     ResultStandardOutputPrinter.run(ExecutablePlanRunner.getResultReader(conn, queryExecutionPlan));
 //    TokenQueueToAyncHandler tokenQueueToAyncHandler = new TokenQueueToAyncHandler(queryExecutionPlan, new ExecutionTokenQueue());
 //    tokenQueueToAyncHandler.setHandler(new StandardOutputHandler());
@@ -99,8 +99,8 @@ public class TokenQueueToAyncHandlerTest {
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     SelectQuery selectQuery = (SelectQuery) sqlToRelation.toRelation(sql);
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(newSchema, null, selectQuery);
-    
-    queryExecutionPlan.getRoot().print();
+
+    // queryExecutionPlan.getRoot().print();
     ResultStandardOutputPrinter.run(ExecutablePlanRunner.getResultReader(conn, queryExecutionPlan));
 //    TokenQueueToAyncHandler tokenQueueToAyncHandler = new TokenQueueToAyncHandler(queryExecutionPlan, new ExecutionTokenQueue());
 //    tokenQueueToAyncHandler.setHandler(new StandardOutputHandler());
@@ -114,8 +114,8 @@ public class TokenQueueToAyncHandlerTest {
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     SelectQuery selectQuery = (SelectQuery) sqlToRelation.toRelation(sql);
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(newSchema, null, selectQuery);
-    
-    queryExecutionPlan.getRoot().print();
+
+    // queryExecutionPlan.getRoot().print();
     ResultStandardOutputPrinter.run(ExecutablePlanRunner.getResultReader(conn, queryExecutionPlan));
 //    TokenQueueToAyncHandler tokenQueueToAyncHandler = new TokenQueueToAyncHandler(queryExecutionPlan, new ExecutionTokenQueue());
 //    tokenQueueToAyncHandler.setHandler(new StandardOutputHandler());

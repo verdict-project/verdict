@@ -100,20 +100,20 @@ public class ProjectionExecutionNodeTest {
         new SubqueryColumn(subquery)
     )));
     ProjectionNode node = ProjectionNode.create(new QueryExecutionPlan("newschema"), query);
-    node.print();
+    // node.print();
 
 //    ExecutionInfoToken subqueryToken = new ExecutionInfoToken();
 //    subqueryToken.setKeyValue("schemaName", ((AggExecutionNode)node.dependents.get(0)).newTableSchemaName);
 //    subqueryToken.setKeyValue("tableName", ((AggExecutionNode)node.dependents.get(0)).newTableName);
 //    ExecutionInfoToken downstreamResult = node.dependents.get(0).executeNode(conn, null);
 //    ExecutionInfoToken newTableToken = node.executeNode(conn, Arrays.asList(downstreamResult));
-    
+
 //    ExecutionTokenQueue queue = new ExecutionTokenQueue();
 //    node.addBroadcastingQueue(queue);
     ExecutionTokenReader reader = ExecutablePlanRunner.getTokenReader(conn, new SimpleTreePlan(node));
-    
+
 //    node.executeAndWaitForTermination(conn);
-    
+
     ExecutionInfoToken token = reader.next();
     String newSchemaName = (String) token.getValue("schemaName");
     String newTableName = (String) token.getValue("tableName");

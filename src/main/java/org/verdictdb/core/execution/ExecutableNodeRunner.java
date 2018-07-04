@@ -18,9 +18,9 @@ public class ExecutableNodeRunner implements Runnable {
   DbmsConnection conn;
 
   ExecutableNode node;
-  
+
   int successSourceCount = 0;
-  
+
   int dependentCount;
 
   public ExecutableNodeRunner(DbmsConnection conn, ExecutableNode node) {
@@ -28,15 +28,15 @@ public class ExecutableNodeRunner implements Runnable {
     this.node = node;
     this.dependentCount = node.getDependentNodeCount();
   }
-  
-  public static ExecutionInfoToken execute(DbmsConnection conn, ExecutableNode node) 
+
+  public static ExecutionInfoToken execute(DbmsConnection conn, ExecutableNode node)
       throws VerdictDBException {
     return execute(conn, node, Arrays.<ExecutionInfoToken>asList());
   }
-  
+
   public static ExecutionInfoToken execute(
-      DbmsConnection conn, 
-      ExecutableNode node, 
+      DbmsConnection conn,
+      ExecutableNode node,
       List<ExecutionInfoToken> tokens) throws VerdictDBException {
     return (new ExecutableNodeRunner(conn, node)).execute(tokens);
   }
@@ -46,7 +46,7 @@ public class ExecutableNodeRunner implements Runnable {
     // no dependency exists
     if (node.getSourceQueues().size() == 0) {
 //      System.out.println("No loop: " + new ToStringBuilder(node, ToStringStyle.DEFAULT_STYLE));
-      
+
       try {
         executeAndBroadcast(Arrays.<ExecutionInfoToken>asList());
         broadcast(ExecutionInfoToken.successToken());
@@ -56,7 +56,7 @@ public class ExecutableNodeRunner implements Runnable {
         broadcast(ExecutionInfoToken.failureToken(e));
       }
     }
-  
+
     // dependency exists
     while (true) {
 //      try {
@@ -68,14 +68,14 @@ public class ExecutableNodeRunner implements Runnable {
 //      System.out.println("In the loop: " + new ToStringBuilder(node, ToStringStyle.DEFAULT_STYLE));
 //      System.out.println(successSourceCount);
 //      System.out.println(dependentCount);
-      
+
       List<ExecutionInfoToken> tokens = retrieve();
       if (tokens == null) {
         continue;
       }
-      
-      System.out.println(new ToStringBuilder(node, ToStringStyle.DEFAULT_STYLE) + " tokens: " + tokens);
-      
+
+//      System.out.println(new ToStringBuilder(node, ToStringStyle.DEFAULT_STYLE) + " tokens: " + tokens);
+
       ExecutionInfoToken failureToken = getFailureTokenIfExists(tokens);
       if (failureToken != null) {
         broadcast(failureToken);
@@ -86,7 +86,7 @@ public class ExecutableNodeRunner implements Runnable {
         broadcast(ExecutionInfoToken.successToken());
         break;
       }
-      
+
       // actual processing
       try {
         executeAndBroadcast(tokens);
@@ -119,14 +119,14 @@ public class ExecutableNodeRunner implements Runnable {
   }
 
   void broadcast(ExecutionInfoToken token) {
-    System.out.println(new ToStringBuilder(node, ToStringStyle.DEFAULT_STYLE) + " broadcasts: " + token);
+    // System.out.println(new ToStringBuilder(node, ToStringStyle.DEFAULT_STYLE) + " broadcasts: " + token);
     for (ExecutableNode dest : node.getSubscribers()) {
 //      System.out.println("to: " + dest);
       dest.getNotified(node, token);
 //      dest.add(token);
     }
   }
-  
+
   void executeAndBroadcast(List<ExecutionInfoToken> tokens) throws VerdictDBException {
     ExecutionInfoToken resultToken = execute(tokens);
     if (resultToken != null) {
@@ -138,7 +138,7 @@ public class ExecutableNodeRunner implements Runnable {
     if (tokens.size() > 0 && tokens.get(0).isStatusToken()) {
       return null;
     }
-    
+
     SqlConvertible sqlObj = node.createQuery(tokens);
     DbmsQueryResult intermediate = null;
     if (sqlObj != null) {
@@ -167,7 +167,7 @@ public class ExecutableNodeRunner implements Runnable {
         return false;
       }
     }
-    
+
     if (successSourceCount == dependentCount) {
       return true;
     } else {

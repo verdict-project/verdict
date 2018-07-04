@@ -723,7 +723,7 @@ public class TpchAyncExecutionPlanTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    queryExecutionPlan.getRootNode().print();
+    // queryExecutionPlan.getRootNode().print();
 
     assertEquals(5, queryExecutionPlan.root.getExecutableNodeBaseDependent(0).getDependentNodeCount());
     assertEquals(1, queryExecutionPlan.root.getExecutableNodeBaseDependent(0).getExecutableNodeBaseDependent(0).getDependentNodeCount());
@@ -2102,7 +2102,7 @@ public class TpchAyncExecutionPlanTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    queryExecutionPlan.getRootNode().print();
+    // queryExecutionPlan.getRootNode().print();
 
     assertEquals(5, queryExecutionPlan.root.getExecutableNodeBaseDependent(0).getDependentNodeCount());
     assertEquals(1, queryExecutionPlan.root.getExecutableNodeBaseDependent(0).getExecutableNodeBaseDependent(0).getDependentNodeCount());

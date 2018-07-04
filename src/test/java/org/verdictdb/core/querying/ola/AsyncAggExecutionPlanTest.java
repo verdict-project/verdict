@@ -160,7 +160,7 @@ public class AsyncAggExecutionPlanTest {
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
 //    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependent(0)).setScrambleMeta(meta);
 //    queryExecutionPlan.setScalingNode();
-    queryExecutionPlan.getRoot().print();
+    // queryExecutionPlan.getRoot().print();
 
 //    TokenQueueToAyncHandler tokenQueueToAyncHandler = new TokenQueueToAyncHandler(queryExecutionPlan, new ExecutionTokenQueue());
 //    tokenQueueToAyncHandler.setHandler(new StandardOutputHandler());
@@ -187,7 +187,7 @@ public class AsyncAggExecutionPlanTest {
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
     ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependent(0).getExecutableNodeBaseDependent(0)).setScrambleMeta(meta);
 //    queryExecutionPlan.setScalingNode();
-    queryExecutionPlan.getRoot().print();
+    // queryExecutionPlan.getRoot().print();
 
 //    TokenQueueToAyncHandler tokenQueueToAyncHandler = new TokenQueueToAyncHandler(queryExecutionPlan, new ExecutionTokenQueue());
 //    tokenQueueToAyncHandler.setHandler(new StandardOutputHandler());
