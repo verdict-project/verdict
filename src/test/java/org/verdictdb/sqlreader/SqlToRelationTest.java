@@ -1,4 +1,4 @@
-package org.verdictdb.core.sqlreader;
+package org.verdictdb.sqlreader;
 
 import static org.junit.Assert.assertEquals;
 

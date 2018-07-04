@@ -78,7 +78,8 @@ public class ScramblingPlan extends SimpleTreePlan {
     statRetreival.subscribeTo(partitionMetaDataNode, 1);
     
     // create a node for step 3 - scrambling
-    ExecutableNodeBase scramblingNode = ScramblingNode.create(newSchemaName, newTableName, method, options);
+    ExecutableNodeBase scramblingNode = 
+        ScramblingNode.create(newSchemaName, newTableName, oldSchemaName, oldTableName, method, options);
     scramblingNode.subscribeTo(statRetreival, 0);
     
     ScramblingPlan scramblingPlan = new ScramblingPlan(scramblingNode);
