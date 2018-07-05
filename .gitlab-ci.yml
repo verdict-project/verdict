@@ -5,9 +5,11 @@ services:
   - mysql:5.5
   - postgres:10
 
+# https://github.com/docker-library/mysql/issues/27
 variables:
   BUILD_ENV: "GitLab"
   MYSQL_DATABASE: test
+  MYSQL_USER: mysql
   MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
   POSTGRES_DB: test
   POSTGRES_USER: postgres

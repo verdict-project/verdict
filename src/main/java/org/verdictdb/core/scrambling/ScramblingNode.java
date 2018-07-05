@@ -152,7 +152,16 @@ public class ScramblingNode extends CreateTableAsSelectNode {
   }
   
   List<Double> computeConditionalProbabilityDistribution(List<Double> cumulativeProbabilityDistribution) {
-    return null;
+    List<Double> cond = new ArrayList<>();
+    int length = cumulativeProbabilityDistribution.size();
+    for (int i = 0; i < length; i++) {
+      if (i == 0) {
+        cond.add(cumulativeProbabilityDistribution.get(i));
+      } else {
+        cond.add(cumulativeProbabilityDistribution.get(i) / (1.0 - cumulativeProbabilityDistribution.get(i-1)));
+      }
+    }
+    return cond;
   }
 
   @Override

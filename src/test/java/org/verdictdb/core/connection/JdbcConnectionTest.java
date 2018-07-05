@@ -35,20 +35,22 @@ public class JdbcConnectionTest {
 
   private static final String MYSQL_HOST;
 
+  private static final String MYSQL_DATABASE = "test";
+
+  private static final String MYSQL_UESR;
+
+  private static final String MYSQL_PASSWORD = "";
+  
   static {
     String env = System.getenv("BUILD_ENV");
     if (env != null && env.equals("GitLab")) {
       MYSQL_HOST = "mysql";
+      MYSQL_UESR = "mysql";
     } else {
       MYSQL_HOST = "localhost";
+      MYSQL_UESR = "root";
     }
   }
-
-  private static final String MYSQL_DATABASE = "test";
-
-  private static final String MYSQL_UESR = "root";
-
-  private static final String MYSQL_PASSWORD = "";
 
   private static final String POSTGRES_HOST;
 

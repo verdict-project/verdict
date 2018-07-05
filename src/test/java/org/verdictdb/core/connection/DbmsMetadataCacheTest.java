@@ -27,28 +27,30 @@ public class DbmsMetadataCacheTest {
   private static Statement stmt;
 
   private static Connection postgresqlConn;
-  
+
   private static Connection mysqlConn;
-  
+
   private static final String MYSQL_HOST;
-  
+
+  private static final String MYSQL_DATABASE = "test";
+
+  private static final String MYSQL_UESR;
+
+  private static final String MYSQL_PASSWORD = "";
+
   static {
     String env = System.getenv("BUILD_ENV");
     if (env != null && env.equals("GitLab")) {
       MYSQL_HOST = "mysql";
+      MYSQL_UESR = "mysql";
     } else {
       MYSQL_HOST = "localhost";
+      MYSQL_UESR = "root";
     }
   }
-  
-  private static final String MYSQL_DATABASE = "test";
-  
-  private static final String MYSQL_UESR = "root";
-  
-  private static final String MYSQL_PASSWORD = "";
-  
+
   private static final String POSTGRES_HOST;
-  
+
   static {
     String env = System.getenv("BUILD_ENV");
     if (env != null && env.equals("GitLab")) {
@@ -57,11 +59,11 @@ public class DbmsMetadataCacheTest {
       POSTGRES_HOST = "localhost";
     }
   }
-  
+
   private static final String POSTGRES_DATABASE = "test";
-  
+
   private static final String POSTGRES_USER = "postgres";
-  
+
   private static final String POSTGRES_PASSWORD = "";
 
   @BeforeClass
@@ -97,7 +99,7 @@ public class DbmsMetadataCacheTest {
     String postgresConnectionString =
         String.format("jdbc:postgresql://%s/%s", POSTGRES_HOST, POSTGRES_DATABASE);
     postgresqlConn = DriverManager.getConnection(postgresConnectionString, POSTGRES_USER, POSTGRES_PASSWORD);
-    
+
     String mysqlConnectionString =
         String.format("jdbc:mysql://%s/%s?autoReconnect=true&useSSL=false", MYSQL_HOST, MYSQL_DATABASE);
     mysqlConn = DriverManager.getConnection(mysqlConnectionString, MYSQL_UESR, MYSQL_PASSWORD);
@@ -153,7 +155,7 @@ public class DbmsMetadataCacheTest {
     assertEquals("logdate", partition.get(0));
     assertEquals("city_id", partition.get(1));
   }
-  
+
   @Test
   public void getPartitionTestMySQL() throws SQLException, VerdictDBDbmsException {
     Statement statement = mysqlConn.createStatement();
