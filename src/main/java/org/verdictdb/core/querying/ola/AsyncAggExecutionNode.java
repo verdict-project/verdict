@@ -343,7 +343,11 @@ public class AsyncAggExecutionNode extends ProjectionNode {
         for (ColumnOp col : columnOps) {
           // If it is count or sum, set col to be aggContents
           if (col.getOpType().equals("count") || col.getOpType().equals("sum")) {
-            String aliasName = aggMeta.getAggColumnAggAliasPair().get(new ImmutablePair<>(col.getOpType(), col.getOperand(0)));
+            String aliasName;
+            if (col.getOpType().equals("count")) {
+              aliasName = aggMeta.getAggColumnAggAliasPair().get(new ImmutablePair<>(col.getOpType(), (UnnamedColumn)new AsteriskColumn()));
+            }
+            else aliasName = aggMeta.getAggColumnAggAliasPair().get(new ImmutablePair<>(col.getOpType(), col.getOperand(0)));
             ColumnOp aggContent = aggContents.get(aliasName);
             col.setOpType(aggContent.getOpType());
             col.setOperand(aggContent.getOperands());

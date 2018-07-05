@@ -139,7 +139,15 @@ public class AggExecutionNodeBlock {
                   aggColumnAlias.add("agg"+aggColumnIdentiferNum++);
                 }
               } else {
-                if (!((AggExecutionNode)aggroot).getMeta().getAggColumnAggAliasPair().containsKey(
+                if (col.getOpType().equals("count") && !((AggExecutionNode)aggroot).getMeta().getAggColumnAggAliasPair().containsKey(
+                    new ImmutablePair<>("count", (UnnamedColumn)(new AsteriskColumn())))) {
+                  ColumnOp col1 = new ColumnOp(col.getOpType());
+                  newSelectlist.add(new AliasedColumn(col1, "agg"+aggColumnIdentiferNum));
+                  ((AggExecutionNode)aggroot).getMeta().getAggColumnAggAliasPair().put(
+                      new ImmutablePair<>(col.getOpType(), (UnnamedColumn)new AsteriskColumn()), "agg"+aggColumnIdentiferNum);
+                  aggColumnAlias.add("agg"+aggColumnIdentiferNum++);
+                }
+                else if (!((AggExecutionNode)aggroot).getMeta().getAggColumnAggAliasPair().containsKey(
                     new ImmutablePair<>(col.getOpType(), col.getOperand(0)))) {
                   ColumnOp col1 = new ColumnOp(col.getOpType(), col.getOperand(0));
                   newSelectlist.add(new AliasedColumn(col1, "agg"+aggColumnIdentiferNum));
