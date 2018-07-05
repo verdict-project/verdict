@@ -125,14 +125,14 @@ public class AsyncAggJoinScaleTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    Dimension d1 = new Dimension("originalSchema", "originalTable1_scrambled", 0, 0);
-    Dimension d2 = new Dimension("originalSchema", "originalTable2_scrambled", 0, 1);
+    Dimension d1 = new Dimension("originalSchema", "originalTable1_scrambled", 0, 1);
+    Dimension d2 = new Dimension("originalSchema", "originalTable2_scrambled", 0, 0);
     Assert.assertEquals(
         new HyperTableCube(Arrays.asList(d1, d2)), 
         ((AggExecutionNode) 
             queryExecutionPlan.getRootNode()
             .getExecutableNodeBaseDependent(0)
-            .getExecutableNodeBaseDependent(0)).getCubes().get(0));
+            .getExecutableNodeBaseDependent(0)).getMeta().getCubes().get(0));
     
     ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependent(0)).setScrambleMeta(meta);
     stmt.execute("create schema if not exists \"verdictdb_temp\";");

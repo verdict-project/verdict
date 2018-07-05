@@ -25,7 +25,7 @@ import org.verdictdb.exception.VerdictDBValueException;
 
 public class AggCombinerExecutionNode extends CreateTableAsSelectNode {
 
-  List<HyperTableCube> cubes = new ArrayList<>();
+  AggMeta aggMeta = new AggMeta();
 
   private AggCombinerExecutionNode(TempIdCreator namer) {
     super(namer, null);
@@ -112,9 +112,9 @@ public class AggCombinerExecutionNode extends CreateTableAsSelectNode {
   @Override
   public SqlConvertible createQuery(List<ExecutionInfoToken> tokens) throws VerdictDBException {
     for (ExecutionInfoToken token:tokens) {
-      if (token.getValue("hyperTableCube") != null) {
-        cubes.addAll((List<HyperTableCube>) token.getValue("hyperTableCube"));
-      }
+      AggMeta aggMeta = (AggMeta) token.getValue("aggMeta");
+      this.aggMeta.getCubes().addAll(aggMeta.getCubes());
+      this.aggMeta.setAggAlias(aggMeta.getAggAlias());
     }
     return super.createQuery(tokens);
   }
@@ -122,9 +122,7 @@ public class AggCombinerExecutionNode extends CreateTableAsSelectNode {
   @Override
   public ExecutionInfoToken createToken(DbmsQueryResult result) {
     ExecutionInfoToken token = super.createToken(result);
-    if (!cubes.isEmpty()) {
-      token.setKeyValue("hyperTableCube", cubes);
-    }
+    token.setKeyValue("aggMeta", aggMeta);
     token.setKeyValue("dependent", this);
     return token;
   }

@@ -11,13 +11,7 @@ import org.verdictdb.core.querying.ExecutableNodeBase;
 import org.verdictdb.core.querying.QueryNodeBase;
 import org.verdictdb.core.querying.TempIdCreator;
 import org.verdictdb.core.scrambling.ScrambleMeta;
-import org.verdictdb.core.sqlobject.AbstractRelation;
-import org.verdictdb.core.sqlobject.BaseColumn;
-import org.verdictdb.core.sqlobject.BaseTable;
-import org.verdictdb.core.sqlobject.ColumnOp;
-import org.verdictdb.core.sqlobject.ConstantColumn;
-import org.verdictdb.core.sqlobject.JoinTable;
-import org.verdictdb.core.sqlobject.SelectQuery;
+import org.verdictdb.core.sqlobject.*;
 import org.verdictdb.exception.VerdictDBValueException;
 
 /**
@@ -92,10 +86,10 @@ public class AggExecutionNodeBlock {
       String tableName = a.getRight().getMiddle();
       scrambles.add(Pair.of(schemaName, tableName));
     }
-    OlaAggregationPlan aggMeta = new OlaAggregationPlan(scrambleMeta, scrambles);
+    OlaAggregationPlan aggPlan = new OlaAggregationPlan(scrambleMeta, scrambles);
 
     // second, according to the plan, create individual nodes that perform aggregations.
-    for (int i = 0; i < aggMeta.totalBlockAggCount(); i++) {
+    for (int i = 0; i < aggPlan.totalBlockAggCount(); i++) {
       // copy and remove the dependency to its parents
       AggExecutionNodeBlock copy = deepcopyExcludingDependentAggregates();
       ExecutableNodeBase aggroot = copy.getBlockRootNode();
@@ -108,35 +102,21 @@ public class AggExecutionNodeBlock {
       List<Pair<ExecutableNodeBase, Triple<String, String, String>>> scrambledNodeAndTableName = 
           identifyScrambledNodes(scrambleMeta, copy.getNodesInBlock());
 
-      // TODO: dimension should not be created here
-      // simply use OlaAggregationMetaData
-      if (scrambles.size()==1) {
-        Dimension dimension = new Dimension(scrambles.get(0).getLeft(), scrambles.get(0).getRight(), i, i);
-        ((AggExecutionNode) aggroot).getCubes().addAll(Arrays.asList(new HyperTableCube(Arrays.asList(dimension))));
-      }
-      else {
-        int turn = i % scrambles.size();
-        int round = i / scrambles.size() + 1;
-        List<Dimension> dimensionList = new ArrayList<>();
-        for (int j = 0; j<scrambles.size(); j++) {
-          int blockCount = scrambleMeta.getAggregationBlockCount(scrambles.get(j).getLeft(), scrambles.get(j).getRight());
-          if (turn==j) {
-            Dimension d = new Dimension(scrambles.get(j).getLeft(), scrambles.get(j).getRight(),round-1, round-1);
-            dimensionList.add(d);
-          }
-          else {
-            Dimension d;
-            if (j<turn) {
-              d = new Dimension(scrambles.get(j).getLeft(), scrambles.get(j).getRight(), round, blockCount-1);
-            }
-            else {
-              d = new Dimension(scrambles.get(j).getLeft(), scrambles.get(j).getRight(), round - 1, blockCount-1);
-            }
-            dimensionList.add(d);
+      // assign hyper table cube to the block
+      ((AggExecutionNode)aggroot).getMeta().setCubes(Arrays.asList(aggPlan.cubes.get(i)));
+
+      // find agg column alias
+      List<SelectItem> selectList = ((AggExecutionNode)aggroot).getSelectQuery().getSelectList();
+      List<String> aggColumnAlias = new ArrayList<>();
+      for (SelectItem selectItem : selectList) {
+        // invariant: the agg column must be aliased column
+        if (selectItem instanceof AliasedColumn) {
+          if (isAggregateColumn(((AliasedColumn) selectItem).getColumn())) {
+            aggColumnAlias.add(((AliasedColumn) selectItem).getAliasName());
           }
         }
-        ((AggExecutionNode)aggroot).getCubes().addAll(Arrays.asList(new HyperTableCube(dimensionList)));
       }
+      ((AggExecutionNode)aggroot).getMeta().setAggAlias(aggColumnAlias);
 
       // insert predicates
       for (Pair<ExecutableNodeBase, Triple<String, String, String>> a : scrambledNodeAndTableName) {
@@ -144,7 +124,7 @@ public class AggExecutionNodeBlock {
         String schemaName = a.getRight().getLeft();
         String tableName = a.getRight().getMiddle();
         String aliasName = a.getRight().getRight();
-        Pair<Integer, Integer> span = aggMeta.getAggBlockSpanForTable(schemaName, tableName, i);
+        Pair<Integer, Integer> span = aggPlan.getAggBlockSpanForTable(schemaName, tableName, i);
         String aggblockColumn = scrambleMeta.getAggregationBlockColumn(schemaName, tableName);
         SelectQuery q = ((QueryNodeBase) scrambledNode).getSelectQuery();
         //        String aliasName = findAliasFor(schemaName, tableName, q.getFromList());
@@ -174,7 +154,7 @@ public class AggExecutionNodeBlock {
     for (ExecutableNodeBase n : individualAggNodes) {
       n.clearSubscribers();
     }
-    for (int i = 1; i < aggMeta.totalBlockAggCount(); i++) {
+    for (int i = 1; i < aggPlan.totalBlockAggCount(); i++) {
       AggCombinerExecutionNode combiner;
       if (i == 1) {
         combiner = AggCombinerExecutionNode.create(
@@ -303,4 +283,21 @@ public class AggExecutionNodeBlock {
     return new AggExecutionNodeBlock(idCreator, newNodes.get(rootIdx)); 
   }
 
+
+  // judge the aggregate column
+  public static boolean isAggregateColumn(UnnamedColumn sel) {
+    List<SelectItem> itemToCheck = new ArrayList<>();
+    itemToCheck.add(sel);
+    while (!itemToCheck.isEmpty()) {
+      SelectItem s = itemToCheck.get(0);
+      itemToCheck.remove(0);
+      if (s instanceof ColumnOp) {
+        if (((ColumnOp) s).getOpType().equals("count") || ((ColumnOp) s).getOpType().equals("sum")) {
+          return true;
+        }
+        else itemToCheck.addAll(((ColumnOp) s).getOperands());
+      }
+    }
+    return false;
+  }
 }
