@@ -27,13 +27,13 @@ import org.verdictdb.exception.VerdictDBException;
  *
  */
 public class ScramblingNode extends CreateTableAsSelectNode {
-  
+
   String oldSchemaName;
-  
+
   String oldTableName;
-  
+
   ScramblingMethod method;
-  
+
   Map<String, String> options;
 
   public ScramblingNode(
@@ -48,7 +48,7 @@ public class ScramblingNode extends CreateTableAsSelectNode {
     this.method = method;
     this.options = options;
   }
-  
+
   /**
    * 
    * @param newSchemaName
@@ -67,23 +67,23 @@ public class ScramblingNode extends CreateTableAsSelectNode {
       String oldTableName,
       ScramblingMethod method,
       Map<String, String> options) {
-    
+
     IdCreator idCreator = new IdCreator() {
-      
+
       @Override
       public String generateAliasName() {
         return null;    // we don't need this method
       }
-      
+
       @Override
       public Pair<String, String> generateTempTableName() {
         return Pair.of(newSchemaName, newTableName);
       }
     };
-    
+
     return new ScramblingNode(idCreator, oldSchemaName, oldTableName, method, options);
   }
-  
+
   @Override
   public SqlConvertible createQuery(List<ExecutionInfoToken> tokens) throws VerdictDBException {
     DbmsQueryResult statistics = null;
@@ -93,7 +93,7 @@ public class ScramblingNode extends CreateTableAsSelectNode {
     selectQuery = composeQuery(statistics);
     return super.createQuery(tokens);
   }
-  
+
   SelectQuery composeQuery(DbmsQueryResult statistics) {
     // read option values
     List<UnnamedColumn> tierPredicates = method.getTierExpressions(statistics);
@@ -106,11 +106,11 @@ public class ScramblingNode extends CreateTableAsSelectNode {
     }
     String tierColumnName = options.get("tierColumnName");
     String blockColumnName = options.get("blockColumnName");
-    
+
     // composed select item expressions will be added to this list
     List<SelectItem> selectItems = new ArrayList<>();
     selectItems.add(new AsteriskColumn());
-    
+
     // compose tier expression
     List<UnnamedColumn> tierOperands = new ArrayList<>();
     UnnamedColumn tierExpr = null;
@@ -126,20 +126,21 @@ public class ScramblingNode extends CreateTableAsSelectNode {
       tierExpr = ColumnOp.whenthenelse(tierOperands);
     }
     selectItems.add(new AliasedColumn(tierExpr, tierColumnName));
-    
+
     // compose block expression
+    UnnamedColumn blockExpr = null;
     List<UnnamedColumn> blockOperands = new ArrayList<>();
     for (int i = 0; i < tierCount; i++) {
       List<Double> cumulProb = method.getCumulativeProbabilityDistributionForTier(statistics, i, blockCount);
       List<Double> condProb = computeConditionalProbabilityDistribution(cumulProb);
-      
+
       List<UnnamedColumn> blockForTierOperands = new ArrayList<>();
       for (int j = 0; j < blockCount; j++) {
-        blockForTierOperands.add(ColumnOp.lessequal(ColumnOp.rand(), ConstantColumn.valueOf(j)));
-        blockForTierOperands.add(ConstantColumn.valueOf(condProb.get(j)));
+        blockForTierOperands.add(ColumnOp.lessequal(ColumnOp.rand(), ConstantColumn.valueOf(condProb.get(j))));
+        blockForTierOperands.add(ConstantColumn.valueOf(j));
       }
       UnnamedColumn blockForTierExpr = ColumnOp.whenthenelse(blockForTierOperands);
-      
+
       if (i < tierCount-1) {
         // "when" part in the case-when-else expression
         // for the last tier, we don't need this "when" part
@@ -147,16 +148,20 @@ public class ScramblingNode extends CreateTableAsSelectNode {
       }
       blockOperands.add(blockForTierExpr);
     }
-    UnnamedColumn blockExpr = ColumnOp.whenthenelse(blockOperands);
-    selectItems.add(new AliasedColumn(blockExpr, blockColumnName));
     
+    
+   
+
+    blockExpr = ColumnOp.whenthenelse(blockOperands);
+    selectItems.add(new AliasedColumn(blockExpr, blockColumnName));
+
     // compose the final query
     SelectQuery scramblingQuery = 
         SelectQuery.create(selectItems, new BaseTable(oldSchemaName, oldTableName));
-    
+
     return scramblingQuery;
   }
-  
+
   List<Double> computeConditionalProbabilityDistribution(List<Double> cumulativeProbabilityDistribution) {
     List<Double> cond = new ArrayList<>();
     int length = cumulativeProbabilityDistribution.size();
@@ -164,7 +169,9 @@ public class ScramblingNode extends CreateTableAsSelectNode {
       if (i == 0) {
         cond.add(cumulativeProbabilityDistribution.get(i));
       } else {
-        cond.add(cumulativeProbabilityDistribution.get(i) / (1.0 - cumulativeProbabilityDistribution.get(i-1)));
+        double numerator = cumulativeProbabilityDistribution.get(i) - cumulativeProbabilityDistribution.get(i-1);
+        double denominator = 1.0 - cumulativeProbabilityDistribution.get(i-1);
+        cond.add(numerator / denominator);
       }
     }
     return cond;

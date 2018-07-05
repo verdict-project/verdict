@@ -63,10 +63,10 @@ public class CreateTableToSqlMysqlTest {
     contents.add(Arrays.<Object>asList(3, "Alice", "female", 18, 190.21, "CHN", "2017-10-12 21:22:23"));
     contents.add(Arrays.<Object>asList(3, "Bob", "male", 18, 190.3, "CHN", "2017-10-12 21:22:23"));
     mysqlStmt = mysqlConn.createStatement();
-    mysqlStmt.execute("CREATE SCHEMA IF NOT EXISTS TEST");
-    mysqlStmt.execute("USE TEST");
-    mysqlStmt.execute("DROP TABLE IF EXISTS PEOPLE");
-    mysqlStmt.execute("CREATE TABLE PEOPLE(id smallint, name varchar(255), gender varchar(8), age float, height float, nation varchar(8), birth timestamp)");
+//    mysqlStmt.execute("CREATE SCHEMA IF NOT EXISTS TEST");
+//    mysqlStmt.execute("USE TEST");
+    mysqlStmt.execute("DROP TABLE IF EXISTS TEST.PEOPLE");
+    mysqlStmt.execute("CREATE TABLE TEST.PEOPLE(id smallint, name varchar(255), gender varchar(8), age float, height float, nation varchar(8), birth timestamp)");
     for (List<Object> row : contents) {
       String id = row.get(0).toString();
       String name = row.get(1).toString();
@@ -75,7 +75,7 @@ public class CreateTableToSqlMysqlTest {
       String height = row.get(4).toString();
       String nation = row.get(5).toString();
       String birth = row.get(6).toString();
-      mysqlStmt.execute(String.format("INSERT INTO PEOPLE(id, name, gender, age, height, nation, birth) VALUES(%s, '%s', '%s', %s, %s, '%s', '%s')", id, name, gender, age, height, nation, birth));
+      mysqlStmt.execute(String.format("INSERT INTO TEST.PEOPLE(id, name, gender, age, height, nation, birth) VALUES(%s, '%s', '%s', %s, %s, '%s', '%s')", id, name, gender, age, height, nation, birth));
     }
   }
 

@@ -37,8 +37,8 @@ public class ScramblingNodeTest {
     e.setKeyValue("tableName", newTableName);
     tokens.add(e);
     SqlConvertible query = node.createQuery(tokens);
-//    String sql = QueryToSql.convert(new MysqlSyntax(), query);
-//    System.out.println(sql);
+    String sql = QueryToSql.convert(new MysqlSyntax(), query);
+    System.out.println(sql);
   }
 
 }
