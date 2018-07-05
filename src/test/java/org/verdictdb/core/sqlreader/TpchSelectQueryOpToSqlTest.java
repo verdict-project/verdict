@@ -723,7 +723,7 @@ public class TpchSelectQueryOpToSqlTest {
     relation.addLimit(ConstantColumn.valueOf(1));
     String expected = "select " +
         "all_nations.`o_year`, " +
-        "sum(case " +
+        "sum(case  " +
         "when (all_nations.`nation` = ':1') then all_nations.`volume` " +
         "else 0 " +
         "end) / sum(all_nations.`volume`) as `mkt_share` " +
@@ -1125,13 +1125,13 @@ public class TpchSelectQueryOpToSqlTest {
     relation.addLimit(ConstantColumn.valueOf(1));
     String expected = "select " +
         "l.`l_shipmode`, " +
-        "sum(case " +
+        "sum(case  " +
         "when ((o.`o_orderpriority` = '1-URGENT') " +
         "or (o.`o_orderpriority` = '2-HIGH')) " +
         "then 1 " +
         "else 0 " +
         "end) as `high_line_count`, " +
-        "sum(case " +
+        "sum(case  " +
         "when ((o.`o_orderpriority` <> '1-URGENT') " +
         "and (o.`o_orderpriority` <> '2-HIGH')) " +
         "then 1 " +
@@ -1262,7 +1262,7 @@ public class TpchSelectQueryOpToSqlTest {
     )));
     relation.addLimit(ConstantColumn.valueOf(1));
     String expected = "select " +
-        "(100.00 * sum(case " +
+        "(100.00 * sum(case  " +
         "when (p.`p_type` like 'PROMO%') " +
         "then (l.`l_extendedprice` * (1 - l.`l_discount`)) " +
         "else 0 " +
