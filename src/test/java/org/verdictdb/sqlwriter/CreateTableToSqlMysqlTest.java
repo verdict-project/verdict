@@ -40,7 +40,7 @@ public class CreateTableToSqlMysqlTest {
     String env = System.getenv("BUILD_ENV");
     if (env != null && env.equals("GitLab")) {
       MYSQL_HOST = "mysql";
-      MYSQL_UESR = "mysql";
+      MYSQL_UESR = "root";
     } else {
       MYSQL_HOST = "localhost";
       MYSQL_UESR = "root";

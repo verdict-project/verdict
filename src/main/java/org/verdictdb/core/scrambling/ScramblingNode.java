@@ -113,12 +113,18 @@ public class ScramblingNode extends CreateTableAsSelectNode {
     
     // compose tier expression
     List<UnnamedColumn> tierOperands = new ArrayList<>();
-    for (int i = 0; i < tierPredicates.size(); i++) {
-      UnnamedColumn pred = tierPredicates.get(i);
-      tierOperands.add(pred);
-      tierOperands.add(ConstantColumn.valueOf(i));
+    UnnamedColumn tierExpr = null;
+    if (tierPredicates.size() == 0) {
+      tierExpr = ConstantColumn.valueOf(0);
+    } else if (tierPredicates.size() > 0) {
+      for (int i = 0; i < tierPredicates.size(); i++) {
+        UnnamedColumn pred = tierPredicates.get(i);
+        tierOperands.add(pred);
+        tierOperands.add(ConstantColumn.valueOf(i));
+      }
+      tierOperands.add(ConstantColumn.valueOf(tierPredicates.size()));
+      tierExpr = ColumnOp.whenthenelse(tierOperands);
     }
-    UnnamedColumn tierExpr = ColumnOp.whenthenelse(tierOperands);
     selectItems.add(new AliasedColumn(tierExpr, tierColumnName));
     
     // compose block expression
