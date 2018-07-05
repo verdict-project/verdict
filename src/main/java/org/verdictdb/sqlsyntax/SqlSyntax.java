@@ -2,27 +2,34 @@ package org.verdictdb.sqlsyntax;
 
 public interface SqlSyntax {
 
-  public String getQuoteString();
+  public boolean doesSupportTablePartitioning();
 
   public void dropTable(String schema, String tablename);
 
-  public boolean doesSupportTablePartitioning();
-
-  public String randFunction();
-
-  public String getSchemaCommand();
-
-  public String getTableCommand(String schema);
+  // The column index that stored meta information in the original database
+  public int getColumnNameColumnIndex();
 
   public String getColumnsCommand(String schema, String table);
 
-  public int getSchemaNameColumnIndex();
-
-  public int getTableNameColumnIndex();
-
-  public int getColumnNameColumnIndex();
-
+  // The column index that stored meta information in the original database
   public int getColumnTypeColumnIndex();
 
+  public String getPartitionByInCreateTable();
+
   public String getPartitionCommand(String schema, String table);
+
+  public String getQuoteString();
+
+  public String getSchemaCommand();
+
+  public int getSchemaNameColumnIndex();
+
+  public String getTableCommand(String schema);
+
+  // The column index that stored meta information in the original database
+  public int getTableNameColumnIndex();
+
+  public String randFunction();
+  
+  public boolean isAsRequiredBeforeSelectInCreateTable();
 }

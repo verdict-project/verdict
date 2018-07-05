@@ -23,7 +23,6 @@ import org.verdictdb.core.sqlobject.SubqueryColumn;
 import org.verdictdb.core.sqlobject.UnnamedColumn;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sqlsyntax.HiveSyntax;
-import org.verdictdb.sqlwriter.SelectQueryToSql;
 
 public class TpchSelectQueryToSqlTest {
 

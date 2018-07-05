@@ -30,7 +30,9 @@ public class CreateTableToSql {
 
     // partitions
     if (syntax.doesSupportTablePartitioning() && query.getPartitionColumns().size() > 0) {
-      sql.append(" partitioned by (");
+      sql.append(" ");
+      sql.append(syntax.getPartitionByInCreateTable());
+      sql.append(" (");
       List<String> partitionColumns = query.getPartitionColumns();
       boolean isFirstColumn = true;
       for (String col : partitionColumns) {
@@ -45,7 +47,11 @@ public class CreateTableToSql {
     }
 
     // select
-    sql.append(" as ");
+    if (syntax.isAsRequiredBeforeSelectInCreateTable()) {
+      sql.append(" as ");
+    } else {
+      sql.append(" ");
+    }
     SelectQueryToSql selectWriter = new SelectQueryToSql(syntax);
     String selectSql = selectWriter.toSql(select);
     sql.append(selectSql);

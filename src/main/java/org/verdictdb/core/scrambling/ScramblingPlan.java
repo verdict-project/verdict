@@ -8,22 +8,12 @@
 
 package org.verdictdb.core.scrambling;
 
-import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.core.connection.DbmsQueryResult;
-import org.verdictdb.core.execution.ExecutableNode;
-import org.verdictdb.core.execution.ExecutablePlan;
 import org.verdictdb.core.querying.ColumnMetadataRetrievalNode;
-import org.verdictdb.core.querying.CreateTableAsSelectNode;
 import org.verdictdb.core.querying.ExecutableNodeBase;
-import org.verdictdb.core.querying.IdCreator;
 import org.verdictdb.core.querying.PartitionMetadataRetrievalNode;
-import org.verdictdb.core.querying.QueryNodeBase;
-import org.verdictdb.core.sqlobject.SelectQuery;
-import org.verdictdb.core.sqlobject.SqlConvertible;
-import org.verdictdb.core.sqlobject.UnnamedColumn;
 
 /**
  * Execution plan for scrambling.
@@ -51,6 +41,11 @@ public class ScramblingPlan extends SimpleTreePlan {
   }
   
   /**
+   * 
+   * <p>
+   * Limitations: <br>
+   * Currently, this class only works for the databases that support "CREATE TABLE ... PARTITION BY () SELECT".
+   * Also, this class does not inherit all properties of the original tables.
    * 
    * @param newSchemaName
    * @param newTableName

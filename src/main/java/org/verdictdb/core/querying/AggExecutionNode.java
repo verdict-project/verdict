@@ -9,7 +9,6 @@ import org.verdictdb.core.querying.ola.HyperTableCube;
 import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.core.sqlobject.SqlConvertible;
 import org.verdictdb.exception.VerdictDBException;
-import org.verdictdb.exception.VerdictDBValueException;
 
 public class AggExecutionNode extends CreateTableAsSelectNode {
 

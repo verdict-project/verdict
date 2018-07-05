@@ -1,9 +1,7 @@
 package org.verdictdb.sqlsyntax;
 
 public class PostgresqlSyntax implements SqlSyntax {
-
-  // The column index that stored meta information in the original database
-
+  
   @Override
   public int getSchemaNameColumnIndex() {
     return 0;
@@ -27,7 +25,7 @@ public class PostgresqlSyntax implements SqlSyntax {
 
   @Override
   public String getQuoteString() {
-    return "`";
+    return "\"";
   }
 
   @Override
@@ -66,5 +64,17 @@ public class PostgresqlSyntax implements SqlSyntax {
     return "select partattrs from pg_partitioned_table join pg_class on pg_class.relname='" + table + "' " +
         "and pg_class.oid = pg_partitioned_table.partrelid join information_schema.tables " +
         "on table_schema='" + schema + "' and table_name = '" + table + "'";
+  }
+
+  @Override
+  public String getPartitionByInCreateTable() {
+    // not implemented yet
+    // postgres has some complication that sub-partition tables must be created individually.
+    return null;
+  }
+
+  @Override
+  public boolean isAsRequiredBeforeSelectInCreateTable() {
+    return true;
   }
 }

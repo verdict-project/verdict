@@ -57,9 +57,25 @@ public class H2Syntax implements SqlSyntax {
     return "show columns from " + table + " from " + schema;
   }
 
+  /**
+   * H2 does not support partitioning.
+   */
   @Override
   public String getPartitionCommand(String schema, String table) {
     return null;
+  }
+
+  /**
+   * H2 does not support partitioning.
+   */
+  @Override
+  public String getPartitionByInCreateTable() {
+    return null;
+  }
+  
+  @Override
+  public boolean isAsRequiredBeforeSelectInCreateTable() {
+    return true;
   }
 
 }

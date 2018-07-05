@@ -201,8 +201,8 @@ public class RelationStandardizer {
       if (((BaseTable) table).getSchemaName() == null) {
         ((BaseTable) table).setSchemaName(meta.getDefaultSchema());
       }
-      List<Pair<String, Integer>> cols = meta.getColumns(((BaseTable) table).getSchemaName(), ((BaseTable) table).getTableName());
-      for (Pair<String, Integer> c : cols) {
+      List<Pair<String, String>> cols = meta.getColumns(((BaseTable) table).getSchemaName(), ((BaseTable) table).getTableName());
+      for (Pair<String, String> c : cols) {
         colNameAndTableAlias.put(c.getKey(), table.getAliasName().get());
         colName.add(c.getKey());
       }

@@ -2,9 +2,7 @@ package org.verdictdb.core.scrambling;
 
 import java.util.List;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.core.connection.DbmsQueryResult;
-import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.core.sqlobject.UnnamedColumn;
 
 public class UniformScramblingMethod implements ScramblingMethod {

@@ -7,7 +7,6 @@ import org.verdictdb.core.execution.ExecutionInfoToken;
 import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.core.sqlobject.SqlConvertible;
 import org.verdictdb.exception.VerdictDBException;
-import org.verdictdb.exception.VerdictDBValueException;
 
 public class ProjectionNode extends CreateTableAsSelectNode {
   

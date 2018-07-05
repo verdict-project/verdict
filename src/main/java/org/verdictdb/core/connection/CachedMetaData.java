@@ -13,7 +13,9 @@ public class CachedMetaData implements MetaDataProvider {
 
   private SqlSyntax syntax;
 
-  private DbmsConnection connection;
+//  private DbmsConnection connection;
+  
+  MetaDataProvider metaProvider;
 
   private List<String> schemaCache = new ArrayList<>();
 
@@ -21,11 +23,12 @@ public class CachedMetaData implements MetaDataProvider {
 
   private HashMap<Pair<String, String>, List<String>> partitionCache = new HashMap<>();
 
-  private HashMap<Pair<String, String>, List<Pair<String,Integer>>> columnsCache = new HashMap<>();
+  private HashMap<Pair<String, String>, List<Pair<String,String>>> columnsCache = new HashMap<>();
 
-  public CachedMetaData(DbmsConnection connection) {
-    this.syntax = connection.getSyntax();
-    this.connection = connection;
+  public CachedMetaData(MetaDataProvider metaProvider) {
+//    this.syntax = connection.getSyntax();
+//    this.connection = connection;
+    this.metaProvider = metaProvider;
   }
 
   @Override
@@ -33,7 +36,7 @@ public class CachedMetaData implements MetaDataProvider {
     if (!schemaCache.isEmpty()) {
       return schemaCache;
     }
-    schemaCache.addAll(connection.getSchemas());
+    schemaCache.addAll(metaProvider.getSchemas());
     return schemaCache;
   }
 
@@ -42,17 +45,17 @@ public class CachedMetaData implements MetaDataProvider {
     if (tablesCache.containsKey(schema)&&!tablesCache.get(schema).isEmpty()) {
       return tablesCache.get(schema);
     }
-    tablesCache.put(schema, connection.getTables(schema));
+    tablesCache.put(schema, metaProvider.getTables(schema));
     return tablesCache.get(schema);
   }
 
   @Override
-  public List<Pair<String, Integer>> getColumns(String schema, String table) throws VerdictDBDbmsException {
+  public List<Pair<String, String>> getColumns(String schema, String table) throws VerdictDBDbmsException {
     Pair<String, String> key = new ImmutablePair<>(schema,table);
     if (columnsCache.containsKey(key) && !columnsCache.get(key).isEmpty()) {
       return columnsCache.get(key);
     }
-    columnsCache.put(key, connection.getColumns(schema, table));
+    columnsCache.put(key, metaProvider.getColumns(schema, table));
     return columnsCache.get(key);
   }
 
@@ -73,13 +76,13 @@ public class CachedMetaData implements MetaDataProvider {
     if (columnsCache.containsKey(key) && !partitionCache.isEmpty()) {
       return partitionCache.get(key);
     }
-    partitionCache.put(key, connection.getPartitionColumns(schema, table));
+    partitionCache.put(key, metaProvider.getPartitionColumns(schema, table));
     return partitionCache.get(key);
   }
 
   @Override
   public String getDefaultSchema() {
-    return connection.getDefaultSchema();
+    return metaProvider.getDefaultSchema();
   }
 
 }

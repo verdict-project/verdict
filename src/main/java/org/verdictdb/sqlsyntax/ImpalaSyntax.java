@@ -1,6 +1,6 @@
 package org.verdictdb.sqlsyntax;
 
-public class HiveSyntax implements SqlSyntax {
+public class ImpalaSyntax implements SqlSyntax {
 
   @Override
   public boolean doesSupportTablePartitioning() {

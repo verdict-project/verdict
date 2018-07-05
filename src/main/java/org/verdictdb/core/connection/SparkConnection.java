@@ -27,7 +27,7 @@ public class SparkConnection implements DbmsConnection {
   }
 
   @Override
-  public List<Pair<String, Integer>> getColumns(String schema, String table) throws VerdictDBDbmsException {
+  public List<Pair<String, String>> getColumns(String schema, String table) throws VerdictDBDbmsException {
     // TODO Auto-generated method stub
     return null;
   }

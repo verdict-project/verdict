@@ -121,22 +121,22 @@ public class DbmsMetadataCacheTest {
 
   @Test
   public void getColumnsTest() throws VerdictDBDbmsException {
-    List<Pair<String, Integer>> columns = metadataCache.getColumns("PUBLIC", "PEOPLE");
+    List<Pair<String, String>> columns = metadataCache.getColumns("PUBLIC", "PEOPLE");
     assertEquals(7, columns.size());
     assertEquals("ID", columns.get(0).getKey());
-    assertEquals(DataTypeConverter.typeInt("smallint"), (int)columns.get(0).getValue());
+    assertEquals("smallint(5)", columns.get(0).getValue());
     assertEquals("NAME", columns.get(1).getKey());
-    assertEquals(DataTypeConverter.typeInt("varchar"), (int)columns.get(1).getValue());
+    assertEquals("varchar(255)", columns.get(1).getValue());
     assertEquals("GENDER", columns.get(2).getKey());
-    assertEquals(DataTypeConverter.typeInt("varchar"), (int)columns.get(2).getValue());
+    assertEquals("varchar(8)", columns.get(2).getValue());
     assertEquals("AGE", columns.get(3).getKey());
-    assertEquals(DataTypeConverter.typeInt("integer"), (int)columns.get(3).getValue());
+    assertEquals("integer(10)", columns.get(3).getValue());
     assertEquals("HEIGHT", columns.get(4).getKey());
-    assertEquals(DataTypeConverter.typeInt("double"), (int)columns.get(4).getValue());
+    assertEquals("double(17)", columns.get(4).getValue());
     assertEquals("NATION", columns.get(5).getKey());
-    assertEquals(DataTypeConverter.typeInt("varchar"), (int)columns.get(5).getValue());
+    assertEquals("varchar(8)", columns.get(5).getValue());
     assertEquals("BIRTH", columns.get(6).getKey());
-    assertEquals(DataTypeConverter.typeInt("timestamp"), (int)columns.get(6).getValue());
+    assertEquals("timestamp(26)", columns.get(6).getValue());
   }
 
   @Test
