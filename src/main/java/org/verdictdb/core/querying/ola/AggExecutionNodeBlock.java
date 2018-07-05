@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.verdictdb.core.querying.AggExecutionNode;
@@ -28,6 +29,8 @@ public class AggExecutionNodeBlock {
   ExecutableNodeBase blockRoot;
 
   List<ExecutableNodeBase> blockNodes;
+
+  int aggColumnIdentiferNum = 0;
 
   public AggExecutionNodeBlock(TempIdCreator idCreator, ExecutableNodeBase blockRoot) {
     this.idCreator = idCreator;
@@ -105,18 +108,59 @@ public class AggExecutionNodeBlock {
       // assign hyper table cube to the block
       ((AggExecutionNode)aggroot).getMeta().setCubes(Arrays.asList(aggPlan.cubes.get(i)));
 
-      // find agg column alias
+      // Search for agg column
+      // rewrite individual aggregate node so that it only select basic aggregate column and non-aggregate column
       List<SelectItem> selectList = ((AggExecutionNode)aggroot).getSelectQuery().getSelectList();
       List<String> aggColumnAlias = new ArrayList<>();
+      List<SelectItem> newSelectlist = new ArrayList<>();
+      ((AggExecutionNode)aggroot).getMeta().setOriginalSelectList(selectList);
       for (SelectItem selectItem : selectList) {
-        // invariant: the agg column must be aliased column
         if (selectItem instanceof AliasedColumn) {
-          if (isAggregateColumn(((AliasedColumn) selectItem).getColumn())) {
-            aggColumnAlias.add(((AliasedColumn) selectItem).getAliasName());
+          List<ColumnOp> columnOps = getAggregateColumn(((AliasedColumn) selectItem).getColumn());
+          // If it contains agg columns
+          if (!columnOps.isEmpty()) {
+            ((AggExecutionNode)aggroot).getMeta().getAggColumn().put(selectItem, columnOps);
+            for (ColumnOp col:columnOps) {
+              if (col.getOpType().equals("avg")) {
+                if (!((AggExecutionNode)aggroot).getMeta().getAggColumnAggAliasPair().containsKey(
+                    new ImmutablePair<>("sum", col.getOperand(0)))) {
+                  ColumnOp col1 = new ColumnOp("sum", col.getOperand(0));
+                  newSelectlist.add(new AliasedColumn(col1, "agg"+aggColumnIdentiferNum));
+                  ((AggExecutionNode)aggroot).getMeta().getAggColumnAggAliasPair().put(
+                      new ImmutablePair<>("sum", col1.getOperand(0)), "agg"+aggColumnIdentiferNum);
+                  aggColumnAlias.add("agg"+aggColumnIdentiferNum++);
+                }
+                if (!((AggExecutionNode)aggroot).getMeta().getAggColumnAggAliasPair().containsKey(
+                    new ImmutablePair<>("count", (UnnamedColumn) new AsteriskColumn()))) {
+                  ColumnOp col2 = new ColumnOp("count", new AsteriskColumn());
+                  newSelectlist.add(new AliasedColumn(col2, "agg"+aggColumnIdentiferNum));
+                  ((AggExecutionNode)aggroot).getMeta().getAggColumnAggAliasPair().put(
+                      new ImmutablePair<>("count", (UnnamedColumn) new AsteriskColumn()), "agg"+aggColumnIdentiferNum);
+                  aggColumnAlias.add("agg"+aggColumnIdentiferNum++);
+                }
+              } else {
+                if (!((AggExecutionNode)aggroot).getMeta().getAggColumnAggAliasPair().containsKey(
+                    new ImmutablePair<>(col.getOpType(), col.getOperand(0)))) {
+                  ColumnOp col1 = new ColumnOp(col.getOpType(), col.getOperand(0));
+                  newSelectlist.add(new AliasedColumn(col1, "agg"+aggColumnIdentiferNum));
+                  ((AggExecutionNode)aggroot).getMeta().getAggColumnAggAliasPair().put(
+                      new ImmutablePair<>(col.getOpType(), col1.getOperand(0)), "agg"+aggColumnIdentiferNum);
+                  aggColumnAlias.add("agg"+aggColumnIdentiferNum++);
+                }
+              }
+            }
           }
+          else {
+            newSelectlist.add(selectItem);
+          }
+        } else {
+          newSelectlist.add(selectItem);
         }
       }
+      ((AggExecutionNode)aggroot).getSelectQuery().clearSelectList();
+      ((AggExecutionNode)aggroot).getSelectQuery().getSelectList().addAll(newSelectlist);
       ((AggExecutionNode)aggroot).getMeta().setAggAlias(aggColumnAlias);
+      aggColumnIdentiferNum = 0;
 
       // insert predicates
       for (Pair<ExecutableNodeBase, Triple<String, String, String>> a : scrambledNodeAndTableName) {
@@ -285,19 +329,20 @@ public class AggExecutionNodeBlock {
 
 
   // judge the aggregate column
-  public static boolean isAggregateColumn(UnnamedColumn sel) {
+  public static List<ColumnOp> getAggregateColumn(UnnamedColumn sel) {
     List<SelectItem> itemToCheck = new ArrayList<>();
     itemToCheck.add(sel);
+    List<ColumnOp> columnOps = new ArrayList<>();
     while (!itemToCheck.isEmpty()) {
       SelectItem s = itemToCheck.get(0);
       itemToCheck.remove(0);
       if (s instanceof ColumnOp) {
-        if (((ColumnOp) s).getOpType().equals("count") || ((ColumnOp) s).getOpType().equals("sum")) {
-          return true;
+        if (((ColumnOp) s).getOpType().equals("count") || ((ColumnOp) s).getOpType().equals("sum") || ((ColumnOp) s).getOpType().equals("avg")) {
+          columnOps.add((ColumnOp) s);
         }
         else itemToCheck.addAll(((ColumnOp) s).getOperands());
       }
     }
-    return false;
+    return columnOps;
   }
 }

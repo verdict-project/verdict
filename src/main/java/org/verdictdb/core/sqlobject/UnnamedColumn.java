@@ -8,4 +8,6 @@ package org.verdictdb.core.sqlobject;
  */
 public interface UnnamedColumn extends GroupingAttribute, SelectItem {
 
+  public UnnamedColumn deepcopy();
+
 }

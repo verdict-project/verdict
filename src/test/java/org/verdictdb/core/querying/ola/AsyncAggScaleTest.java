@@ -104,7 +104,7 @@ public class AsyncAggScaleTest {
   }
 
 
-  @Test
+  //@Test
   public void ScrambleTableTest() throws VerdictDBException,SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select sum(value) from originalTable_scrambled";
@@ -136,7 +136,7 @@ public class AsyncAggScaleTest {
   }
 
 //<<<<<<< HEAD:src/test/java/org/verdictdb/core/querying/AsyncAggScaleTest.java
-  @Test
+  //@Test
   public void ScrambleTableCompressTest() throws VerdictDBException,SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select sum(value) from originalTable_scrambled";
@@ -158,4 +158,27 @@ public class AsyncAggScaleTest {
   }
 //=======
 //>>>>>>> origin/joezhong-scale:src/test/java/org/verdictdb/core/querying/ola/AsyncAggScaleTest.java
+
+  @Test
+  public void ScrambleTableAvgTest() throws VerdictDBException,SQLException {
+    RelationStandardizer.resetItemID();
+    String sql = "select (1+avg(value))*sum(value) from originalTable_scrambled";
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
+    RelationStandardizer gen = new RelationStandardizer(staticMetaData);
+    relation = gen.standardize((SelectQuery) relation);
+
+    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
+    queryExecutionPlan.cleanUp();
+    queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
+    Dimension d1 = new Dimension("originalSchema", "originalTable_scrambled", 0, 0);
+    assertEquals(
+        new HyperTableCube(Arrays.asList(d1)),
+        ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getMeta().getCubes().get(0));
+    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
+
+    stmt.execute("create schema if not exists \"verdictdb_temp\";");
+    ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
+    stmt.execute("drop schema \"verdictdb_temp\" cascade;");
+  }
 }

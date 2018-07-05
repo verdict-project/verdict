@@ -115,6 +115,9 @@ public class AggCombinerExecutionNode extends CreateTableAsSelectNode {
       AggMeta aggMeta = (AggMeta) token.getValue("aggMeta");
       this.aggMeta.getCubes().addAll(aggMeta.getCubes());
       this.aggMeta.setAggAlias(aggMeta.getAggAlias());
+      this.aggMeta.setOriginalSelectList(aggMeta.getOriginalSelectList());
+      this.aggMeta.setAggColumn(aggMeta.getAggColumn());
+      this.aggMeta.setAggColumnAggAliasPair(aggMeta.getAggColumnAggAliasPair());
     }
     return super.createQuery(tokens);
   }

@@ -57,4 +57,9 @@ public class AliasedColumn implements SelectItem {
     return column.isAggregateColumn();
   }
 
+  @Override
+  public SelectItem deepcopy() {
+    return new AliasedColumn(column.deepcopy(), this.aliasName);
+  }
+
 }

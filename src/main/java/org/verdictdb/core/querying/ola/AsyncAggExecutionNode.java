@@ -62,9 +62,11 @@ public class AsyncAggExecutionNode extends ProjectionNode {
   // Only record tables have multiple tiers
   HashMap<Integer, String> multipleTierTableTierInfo = new HashMap<>();
 
-  Boolean tierInfoInitiated = false;
+  Boolean Initiated = false;
 
   String newTableSchemaName, newTableName;
+
+  HashMap<String, ColumnOp> aggColumnForReplacement = new HashMap<>();
 
   private AsyncAggExecutionNode() {
     super(null, null);
@@ -96,7 +98,7 @@ public class AsyncAggExecutionNode extends ProjectionNode {
     savedToken = tokens.get(0);
 
     // First, calculate the scale factor
-    List<HyperTableCube> cubes = ((AggMeta)savedToken.getValue("aggMeta")).getCubes();
+    List<HyperTableCube> cubes = ((AggMeta) savedToken.getValue("aggMeta")).getCubes();
     HashMap<List<Integer>, Double> scaleFactor = calculateScaleFactor(cubes);
 
     // Next, create the base select query for replacement
@@ -114,6 +116,7 @@ public class AsyncAggExecutionNode extends ProjectionNode {
     else {
       // If it has multiple tiers, we need to rewrite the multiply column into when-then-else column
       for (ColumnOp col : aggColumnsAndQuery.getLeft()) {
+        String alias = ((BaseColumn) col.getOperand(1)).getColumnName();
         col.setOpType("whenthenelse");
         List<UnnamedColumn> operands = new ArrayList<>();
         for (Map.Entry<List<Integer>, Double> entry : scaleFactor.entrySet()) {
@@ -126,12 +129,19 @@ public class AsyncAggExecutionNode extends ProjectionNode {
         }
         operands.add(ConstantColumn.valueOf(0));
         col.setOperand(operands);
+        if (Initiated) {
+          ColumnOp aggCol = aggColumnForReplacement.get(alias);
+          for (int i = 1; i < aggCol.getOperands().size(); i = i + 2) {
+            ((ColumnOp) aggCol.getOperand(i)).setOperand(0, ((ColumnOp) col.getOperand(i)).getOperand(0));
+          }
+        }
       }
     }
     Pair<String, String> tempTableFullName = getNamer().generateTempTableName();
     newTableSchemaName = tempTableFullName.getLeft();
     newTableName = tempTableFullName.getRight();
-    CreateTableAsSelectQuery createQuery = new CreateTableAsSelectQuery(newTableSchemaName, newTableName, (SelectQuery) aggColumnsAndQuery.getRight());
+    SelectQuery query = replaceWithOriginalSelectList((SelectQuery) aggColumnsAndQuery.getRight(), ((AggMeta) savedToken.getValue("aggMeta")));
+    CreateTableAsSelectQuery createQuery = new CreateTableAsSelectQuery(newTableSchemaName, newTableName, query);
     return createQuery;
   }
 
@@ -186,10 +196,11 @@ public class AsyncAggExecutionNode extends ProjectionNode {
           newSelectList.set(index, new AliasedColumn(aggColumn, ((AliasedColumn) selectItem).getAliasName()));
         } else {
           // Looking for tier column
-          if (!tierInfoInitiated && col instanceof BaseColumn) {
+          if (!Initiated && col instanceof BaseColumn) {
             String schemaName = ((BaseColumn) col).getSchemaName();
             String tableName = ((BaseColumn) col).getTableName();
-            if (((BaseColumn) col).getColumnName().equals(scrambleMeta.getTierColumn(schemaName, tableName))) {
+            if (scrambleMeta.isScrambled(schemaName, tableName) &&
+                ((BaseColumn) col).getColumnName().equals(scrambleMeta.getTierColumn(schemaName, tableName))) {
               for (Dimension d : cubes.get(0).getDimensions()) {
                 if (d.getTableName().equals(tableName) && d.getSchemaName().equals(schemaName)) {
                   multipleTierTableTierInfo.put(cubes.get(0).getDimensions().indexOf(d), ((AliasedColumn) selectItem).getAliasName());
@@ -203,7 +214,6 @@ public class AsyncAggExecutionNode extends ProjectionNode {
         }
       }
     }
-    tierInfoInitiated = true;
 
     // Setup from table
     SelectQuery query = SelectQuery.create(newSelectList,
@@ -229,7 +239,7 @@ public class AsyncAggExecutionNode extends ProjectionNode {
       scrambleTableTierInfo.add(
           new ImmutablePair<>(cubes.get(0).getDimensions().indexOf(d),
               scrambleMeta.getMetaForTable(d.getSchemaName(), d.getTableName()).getNumberOfTiers()));
-      if (scrambleMeta.getMetaForTable(d.getSchemaName(), d.getTableName()).getNumberOfTiers() > 1 && !tierInfoInitiated) {
+      if (scrambleMeta.getMetaForTable(d.getSchemaName(), d.getTableName()).getNumberOfTiers() > 1 && !Initiated) {
         multipleTierTableTierInfo.put(cubes.get(0).getDimensions().indexOf(d),
             scrambleMeta.getMetaForTable(d.getSchemaName(), d.getTableName()).getTierColumn());
       }
@@ -309,4 +319,55 @@ public class AsyncAggExecutionNode extends ProjectionNode {
     return col.get();
   }
 
+
+  /**
+   * Replace the scaled select list with original select list
+   *
+   * @param queryToReplace, aggMeta
+   * @return replaced original select list
+   */
+  SelectQuery replaceWithOriginalSelectList(SelectQuery queryToReplace, AggMeta aggMeta) {
+    List<SelectItem> originalSelectList = aggMeta.getOriginalSelectList();
+    HashMap<SelectItem, List<ColumnOp>> aggColumn = aggMeta.getAggColumn();
+    HashMap<String, ColumnOp> aggContents = new HashMap<>();
+    for (SelectItem sel : queryToReplace.getSelectList()) {
+      // this column is a basic aggregate column
+      if (sel instanceof AliasedColumn && aggMeta.getAggAlias().contains(((AliasedColumn) sel).getAliasName())) {
+        aggContents.put(((AliasedColumn) sel).getAliasName(), (ColumnOp) ((AliasedColumn) sel).getColumn());
+      }
+    }
+    for (SelectItem sel : originalSelectList) {
+      // select item that needs replacement
+      if (aggColumn.containsKey(sel)) {
+        List<ColumnOp> columnOps = aggColumn.get(sel);
+        for (ColumnOp col : columnOps) {
+          // If it is count or sum, set col to be aggContents
+          if (col.getOpType().equals("count") || col.getOpType().equals("sum")) {
+            String aliasName = aggMeta.getAggColumnAggAliasPair().get(new ImmutablePair<>(col.getOpType(), col.getOperand(0)));
+            ColumnOp aggContent = aggContents.get(aliasName);
+            col.setOpType(aggContent.getOpType());
+            col.setOperand(aggContent.getOperands());
+           // aggColumnForReplacement.put(aliasName, col);
+          }
+          // If it is avg, set col to be divide columnOp
+          else if (col.getOpType().equals("avg")) {
+            String aliasNameSum = aggMeta.getAggColumnAggAliasPair().get(new ImmutablePair<>("sum", col.getOperand(0)));
+            ColumnOp aggContentSum = aggContents.get(aliasNameSum);
+            String aliasNameCount = aggMeta.getAggColumnAggAliasPair().get(new ImmutablePair<>("count", (UnnamedColumn) new AsteriskColumn()));
+            ColumnOp aggContentCount = aggContents.get(aliasNameCount);
+            col.setOpType("divide");
+            col.setOperand(Arrays.<UnnamedColumn>asList(aggContentSum, aggContentCount));
+            //aggColumnForReplacement.put(aliasNameSum, aggContentSum);
+            //aggColumnForReplacement.put(aliasNameCount, aggContentCount);
+          }
+        }
+      } else if (sel instanceof AliasedColumn) {
+        ((AliasedColumn) sel).setColumn(new BaseColumn("to_scale_query", ((AliasedColumn) sel).getAliasName()));
+        ((AliasedColumn) sel).setAliasName(((AliasedColumn) sel).getAliasName());
+      }
+    }
+    queryToReplace.clearSelectList();
+    queryToReplace.getSelectList().addAll(originalSelectList);
+    return queryToReplace;
+  }
 }

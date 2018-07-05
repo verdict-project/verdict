@@ -7,8 +7,7 @@ import org.verdictdb.core.connection.DbmsQueryResult;
 import org.verdictdb.core.execution.ExecutionInfoToken;
 import org.verdictdb.core.querying.ola.AggMeta;
 import org.verdictdb.core.querying.ola.HyperTableCube;
-import org.verdictdb.core.sqlobject.SelectQuery;
-import org.verdictdb.core.sqlobject.SqlConvertible;
+import org.verdictdb.core.sqlobject.*;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBValueException;
 
@@ -46,6 +45,7 @@ public class AggExecutionNode extends CreateTableAsSelectNode {
   public ExecutableNodeBase deepcopy() {
     AggExecutionNode node = new AggExecutionNode(namer, selectQuery);
     copyFields(this, node);
+    selectQuery = selectQuery.selectListDeepCopy();
     return node;
   }
 

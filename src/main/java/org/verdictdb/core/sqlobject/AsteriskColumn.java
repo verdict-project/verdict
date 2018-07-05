@@ -45,5 +45,10 @@ public class AsteriskColumn implements UnnamedColumn, SelectItem {
   public boolean isAggregateColumn() {
     return false;
   }
+
+  @Override
+  public AsteriskColumn deepcopy() {
+    return new AsteriskColumn();
+  }
   
 }

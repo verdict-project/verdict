@@ -311,4 +311,13 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
     return isColumnOpAggregate();
   }
 
+  @Override
+  public ColumnOp deepcopy() {
+    List<UnnamedColumn> newOperands = new ArrayList<>();
+    for (UnnamedColumn operand:operands) {
+      newOperands.add(operand.deepcopy());
+    }
+    return new ColumnOp(opType, newOperands);
+  }
+
 }
