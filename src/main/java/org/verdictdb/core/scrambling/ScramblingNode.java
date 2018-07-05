@@ -149,10 +149,13 @@ public class ScramblingNode extends CreateTableAsSelectNode {
       blockOperands.add(blockForTierExpr);
     }
     
+    // use a simple (non-nested) case expression when there is only a single tier
+    if (tierCount == 1) {
+      blockExpr = blockOperands.get(0);
+    } else {
+      blockExpr = ColumnOp.whenthenelse(blockOperands);
+    }
     
-   
-
-    blockExpr = ColumnOp.whenthenelse(blockOperands);
     selectItems.add(new AliasedColumn(blockExpr, blockColumnName));
 
     // compose the final query
