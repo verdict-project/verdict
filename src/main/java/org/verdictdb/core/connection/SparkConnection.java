@@ -4,13 +4,13 @@ import java.sql.Connection;
 import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.spark.SparkContext;
+import org.apache.spark.sql.SparkSession;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.sqlsyntax.SqlSyntax;
 
 public class SparkConnection implements DbmsConnection {
   
-  public SparkConnection(SparkContext sc) {
+  public SparkConnection(SparkSession sc) {
     
   }
 

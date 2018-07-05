@@ -3,7 +3,7 @@
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.verdictdb</groupId>
-    <artifactId>core</artifactId>
+    <artifactId>verdictdb-core</artifactId>
     <packaging>jar</packaging>
     <version>0.5.0</version>
     <name>VerdictDB Core</name>
@@ -23,6 +23,7 @@
         <maven.failsafe.version>2.13</maven.failsafe.version>
         <maven.surefire.version>2.12.4</maven.surefire.version>
         <maven.javadoc.version>2.10.4</maven.javadoc.version>
+        <spark.version>2.1.0</spark.version>
         <skipTests>false</skipTests>
     </properties>
 
@@ -150,30 +151,68 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- Spark; this must come AFTER hiverunner -->
-        <dependency>
-            <groupId>org.apache.spark</groupId>
-            <artifactId>spark-core_2.11</artifactId>
-            <version>2.1.0</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.spark</groupId>
-            <artifactId>spark-sql_2.11</artifactId>
-            <version>2.1.0</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.spark</groupId>
-            <artifactId>spark-hive_2.11</artifactId>
-            <version>2.1.0</version>
-            <scope>test</scope>
-        </dependency>
-
-        <!-- Spark test support -->
-        <!-- <dependency> <groupId>com.holdenkarau</groupId> <artifactId>spark-testing-base_2.11</artifactId> 
-            <version>2.1.0_0.9.0</version> <scope>test</scope> </dependency> -->
     </dependencies>
+
+    <profiles>
+        <profile>
+            <id>testing-stage</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+                <property>
+                    <name>packaging</name>
+                    <value>!true</value>
+                </property>
+            </activation>
+            <dependencies>
+                <!-- Spark test support -->
+                <dependency>
+                    <groupId>org.apache.spark</groupId>
+                    <artifactId>spark-core_2.11</artifactId>
+                    <version>${spark.version}</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.spark</groupId>
+                    <artifactId>spark-sql_2.11</artifactId>
+                    <version>${spark.version}</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.spark</groupId>
+                    <artifactId>spark-hive_2.11</artifactId>
+                    <version>${spark.version}</version>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>packaging-stage</id>
+            <activation>
+                <property>
+                    <name>packaging</name>
+                    <value>true</value>
+                </property>
+            </activation>
+            <dependencies>
+                <!-- Spark test support -->
+                <dependency>
+                    <groupId>org.apache.spark</groupId>
+                    <artifactId>spark-core_2.11</artifactId>
+                    <version>${spark.version}</version>
+                    <scope>provided</scope>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.spark</groupId>
+                    <artifactId>spark-sql_2.11</artifactId>
+                    <version>${spark.version}</version>
+                    <scope>provided</scope>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.spark</groupId>
+                    <artifactId>spark-hive_2.11</artifactId>
+                    <version>${spark.version}</version>
+                    <scope>provided</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+    </profiles>
 
     <scm>
         <url>git@gitlab.com:pyongjoo/verdictdb-core.git</url>
