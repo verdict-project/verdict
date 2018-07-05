@@ -17,12 +17,12 @@ job:build:jdk7:
   image: maven:3-jdk-7
   stage: build
   script:
-    - mvn test
+    - mvn -B test
     - mvn package -DskipTests -Dpackaging=true
 
 job:build:jdk8:
   image: maven:3-jdk-8
   stage: build
   script:
-    - mvn test
+    - mvn -B test
     - mvn package -DskipTests -Dpackaging=true
