@@ -14,6 +14,7 @@ import org.verdictdb.core.connection.JdbcConnection;
 import org.verdictdb.core.execution.ExecutablePlanRunner;
 import org.verdictdb.core.execution.ExecutionInfoToken;
 import org.verdictdb.core.execution.ExecutionTokenReader;
+import org.verdictdb.core.scrambling.SimpleTreePlan;
 import org.verdictdb.core.sqlobject.AliasedColumn;
 import org.verdictdb.core.sqlobject.BaseColumn;
 import org.verdictdb.core.sqlobject.BaseTable;

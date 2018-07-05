@@ -45,6 +45,8 @@ public class DataTypeConverter {
   
   static final Map<String, Integer> stringToIntMap;
   
+//  static final Map<String, String> typeNameToStandardName;
+  
   static {
     intToStringMap = new HashMap<>();
     intToStringMap.put(ARRAY, "array");
@@ -83,9 +85,50 @@ public class DataTypeConverter {
     intToStringMap.put(DOUBLE, "double");   // h2 will convert float to double type
 
     stringToIntMap = new HashMap<>();
+//    stringToIntMap.put("array", ARRAY);
+//    stringToIntMap.put("bigint", BIGINT);
+//    stringToIntMap.put("binary", BINARY);
+//    stringToIntMap.put("bit", BIT);
+//    stringToIntMap.put("blob", BLOB);
+//    stringToIntMap.put("boolean", BOOLEAN);
+//    stringToIntMap.put("char", CHAR);
+//    stringToIntMap.put("clob", CLOB);
+//    stringToIntMap.put("datalink", DATALINK);
+//    stringToIntMap.put("date", DATE);
+//    stringToIntMap.put("decimal", DECIMAL);
+//    stringToIntMap.put("distinct", DISTINCT);
+//    stringToIntMap.put("double", DOUBLE);
+//    stringToIntMap.put("float", FLOAT);
+//    stringToIntMap.put("integer", INTEGER);
+//    stringToIntMap.put("longnvarchar", LONGNVARCHAR);
+//    stringToIntMap.put("longvarbinary", LONGVARBINARY);
+//    stringToIntMap.put("longvarJdchar", LONGVARCHAR);
+//    stringToIntMap.put("nchar", NCHAR);
+//    stringToIntMap.put("nclob", NCLOB);
+//    stringToIntMap.put("null", NULL);
+//    stringToIntMap.put("numeric", NUMERIC);
+//    stringToIntMap.put("nvarchar", NVARCHAR);
+//    stringToIntMap.put("real", REAL);
+//    stringToIntMap.put("ref", REF);
+//    stringToIntMap.put("rowid", ROWID);
+//    stringToIntMap.put("smallint", SMALLINT);
+//    stringToIntMap.put("xml", SQLXML);
+//    stringToIntMap.put("struct", STRUCT);
+//    stringToIntMap.put("time", TIME);
+//    stringToIntMap.put("timestamp", TIMESTAMP);
+//    stringToIntMap.put("tinyint", TINYINT);
+//    stringToIntMap.put("varbinary", VARBINARY);
+//    stringToIntMap.put("varchar", VARCHAR);
     for (Entry<Integer, String> pair : intToStringMap.entrySet()) {
       stringToIntMap.put(pair.getValue(), pair.getKey());
     }
+    stringToIntMap.put("character varying", VARCHAR);
+    stringToIntMap.put("character", CHAR);
+    stringToIntMap.put("text", LONGNVARCHAR);
+    stringToIntMap.put("double precision", DOUBLE);
+    stringToIntMap.put("smallserial", INTEGER);
+    stringToIntMap.put("serial", INTEGER);
+    stringToIntMap.put("bigserial", BIGINT);
   }
 
   public static String typeName(int inttype) {
@@ -93,6 +136,12 @@ public class DataTypeConverter {
   }
   
   public static int typeInt(String typename) {
-    return stringToIntMap.get(typename.toLowerCase());
+//    System.out.println(typename);
+    return stringToIntMap.get(typename.toLowerCase().replaceAll("\\(.*\\)", ""));
   }
+
+//  public static String standardize(String type) {
+//    // TODO Auto-generated method stub
+//    return null;
+//  }
 }

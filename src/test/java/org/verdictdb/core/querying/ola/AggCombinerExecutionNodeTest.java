@@ -15,7 +15,7 @@ import org.verdictdb.core.execution.ExecutionInfoToken;
 import org.verdictdb.core.execution.ExecutionTokenReader;
 import org.verdictdb.core.querying.AggExecutionNode;
 import org.verdictdb.core.querying.QueryExecutionPlan;
-import org.verdictdb.core.querying.SimpleTreePlan;
+import org.verdictdb.core.scrambling.SimpleTreePlan;
 import org.verdictdb.core.sqlobject.AliasedColumn;
 import org.verdictdb.core.sqlobject.AsteriskColumn;
 import org.verdictdb.core.sqlobject.BaseColumn;
@@ -27,8 +27,8 @@ import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBValueException;
-import org.verdictdb.sqlreader.QueryToSql;
 import org.verdictdb.sqlsyntax.H2Syntax;
+import org.verdictdb.sqlwriter.QueryToSql;
 
 public class AggCombinerExecutionNodeTest {
   

@@ -5,9 +5,11 @@ services:
   - mysql:5.5
   - postgres:10
 
+# https://github.com/docker-library/mysql/issues/27
 variables:
   BUILD_ENV: "GitLab"
   MYSQL_DATABASE: test
+  # MYSQL_USER: mysql
   MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
   POSTGRES_DB: test
   POSTGRES_USER: postgres
@@ -16,9 +18,13 @@ variables:
 job:build:jdk7:
   image: maven:3-jdk-7
   stage: build
-  script: mvn package
+  script:
+    - mvn -B test
+    - mvn package -DskipTests -Dpackaging=true
 
 job:build:jdk8:
   image: maven:3-jdk-8
   stage: build
-  script: mvn package
+  script:
+    - mvn -B test
+    - mvn package -DskipTests -Dpackaging=true

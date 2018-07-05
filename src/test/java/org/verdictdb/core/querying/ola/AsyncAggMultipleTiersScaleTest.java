@@ -30,9 +30,9 @@ import org.verdictdb.core.sqlobject.CreateTableAsSelectQuery;
 import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sqlreader.NonValidatingSQLParser;
-import org.verdictdb.sqlreader.QueryToSql;
 import org.verdictdb.sqlreader.RelationStandardizer;
 import org.verdictdb.sqlsyntax.H2Syntax;
+import org.verdictdb.sqlwriter.QueryToSql;
 
 public class AsyncAggMultipleTiersScaleTest {
 

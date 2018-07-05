@@ -9,8 +9,8 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.verdictdb.core.querying.AggExecutionNode;
 import org.verdictdb.core.querying.ExecutableNodeBase;
+import org.verdictdb.core.querying.IdCreator;
 import org.verdictdb.core.querying.QueryNodeBase;
-import org.verdictdb.core.querying.TempIdCreator;
 import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.core.sqlobject.*;
 import org.verdictdb.exception.VerdictDBValueException;
@@ -24,7 +24,7 @@ import org.verdictdb.exception.VerdictDBValueException;
  */
 public class AggExecutionNodeBlock {
 
-  TempIdCreator idCreator;
+  IdCreator idCreator;
 
   ExecutableNodeBase blockRoot;
 
@@ -35,6 +35,7 @@ public class AggExecutionNodeBlock {
   int verdictdbTierIndentiferNum = 0;
 
   public AggExecutionNodeBlock(TempIdCreator idCreator, ExecutableNodeBase blockRoot) {
+  public AggExecutionNodeBlock(IdCreator idCreator, ExecutableNodeBase blockRoot) {
     this.idCreator = idCreator;
     this.blockRoot = blockRoot;
     this.blockNodes = getNodesInBlock(blockRoot);

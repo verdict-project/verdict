@@ -1,4 +1,4 @@
-package org.verdictdb.core.sqlreader;
+package org.verdictdb.sqlwriter;
 
 import static org.junit.Assert.assertEquals;
 
@@ -16,7 +16,6 @@ import org.verdictdb.core.sqlobject.SelectItem;
 import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.core.sqlobject.UnnamedColumn;
 import org.verdictdb.exception.VerdictDBException;
-import org.verdictdb.sqlreader.SelectQueryToSql;
 import org.verdictdb.sqlsyntax.HiveSyntax;
 
 public class SelectQueryToSqlTest {

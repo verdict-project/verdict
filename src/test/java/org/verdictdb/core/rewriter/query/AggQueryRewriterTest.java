@@ -19,8 +19,8 @@ import org.verdictdb.core.sqlobject.ColumnOp;
 import org.verdictdb.core.sqlobject.SelectItem;
 import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.exception.VerdictDBException;
-import org.verdictdb.sqlreader.SelectQueryToSql;
 import org.verdictdb.sqlsyntax.HiveSyntax;
+import org.verdictdb.sqlwriter.SelectQueryToSql;
 
 public class AggQueryRewriterTest {
 

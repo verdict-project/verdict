@@ -40,9 +40,9 @@ import org.verdictdb.core.sqlobject.SubqueryColumn;
 import org.verdictdb.core.sqlobject.UnnamedColumn;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sqlreader.NonValidatingSQLParser;
-import org.verdictdb.sqlreader.QueryToSql;
 import org.verdictdb.sqlreader.RelationStandardizer;
 import org.verdictdb.sqlsyntax.H2Syntax;
+import org.verdictdb.sqlwriter.QueryToSql;
 
 public class TpchAyncExecutionPlanTest {
 

@@ -1,4 +1,4 @@
-package org.verdictdb.core.querying;
+package org.verdictdb.core.scrambling;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -7,11 +7,10 @@ import java.util.List;
 
 import org.verdictdb.core.execution.ExecutableNode;
 import org.verdictdb.core.execution.ExecutablePlan;
+import org.verdictdb.core.querying.ExecutableNodeBase;
 
 /**
  * Easily creates a plan given a root node.
- * <p>
- * This is only for test purposes.
  * 
  * @author Yongjoo Park
  *

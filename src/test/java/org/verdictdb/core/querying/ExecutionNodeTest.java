@@ -23,8 +23,8 @@ import org.verdictdb.core.sqlobject.CreateTableAsSelectQuery;
 import org.verdictdb.core.sqlobject.SelectItem;
 import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.exception.VerdictDBException;
-import org.verdictdb.sqlreader.CreateTableToSql;
 import org.verdictdb.sqlsyntax.H2Syntax;
+import org.verdictdb.sqlwriter.CreateTableToSql;
 
 public class ExecutionNodeTest {
   
