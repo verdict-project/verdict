@@ -109,7 +109,7 @@ public class AsyncAggMultipleTiersScaleTest {
   @Test
   public void ScrambleTableTest() throws VerdictDBException,SQLException {
     RelationStandardizer.resetItemID();
-    String sql = "select verdictdbtier, sum(value) from originalTable_scrambled group by verdictdbtier";
+    String sql = "select avg(value) from originalTable_scrambled";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
     RelationStandardizer gen = new RelationStandardizer(staticMetaData);

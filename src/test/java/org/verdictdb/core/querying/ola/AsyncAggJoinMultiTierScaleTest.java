@@ -119,8 +119,8 @@ public class AsyncAggJoinMultiTierScaleTest {
   @Test
   public void ScrambleTableTest() throws VerdictDBException,SQLException {
     RelationStandardizer.resetItemID();
-    String sql = "select a.verdictdbtier, b.verdictdbtier, " +
-        "sum(a_value+b_value) from originalTable1_scrambled as a inner join originalTable2_scrambled as b on a_id=b_id  group by  a.verdictdbtier, b.verdictdbtier";
+    String sql = "select " +
+        "sum(a_value+b_value) from originalTable1_scrambled as a inner join originalTable2_scrambled as b on a_id=b_id";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
     RelationStandardizer gen = new RelationStandardizer(staticMetaData);

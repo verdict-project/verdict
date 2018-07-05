@@ -32,6 +32,8 @@ public class AggExecutionNodeBlock {
 
   int aggColumnIdentiferNum = 0;
 
+  int verdictdbTierIndentiferNum = 0;
+
   public AggExecutionNodeBlock(TempIdCreator idCreator, ExecutableNodeBase blockRoot) {
     this.idCreator = idCreator;
     this.blockRoot = blockRoot;
@@ -110,64 +112,14 @@ public class AggExecutionNodeBlock {
 
       // Search for agg column
       // rewrite individual aggregate node so that it only select basic aggregate column and non-aggregate column
-      List<SelectItem> selectList = ((AggExecutionNode)aggroot).getSelectQuery().getSelectList();
-      List<String> aggColumnAlias = new ArrayList<>();
-      List<SelectItem> newSelectlist = new ArrayList<>();
-      ((AggExecutionNode)aggroot).getMeta().setOriginalSelectList(selectList);
-      for (SelectItem selectItem : selectList) {
-        if (selectItem instanceof AliasedColumn) {
-          List<ColumnOp> columnOps = getAggregateColumn(((AliasedColumn) selectItem).getColumn());
-          // If it contains agg columns
-          if (!columnOps.isEmpty()) {
-            ((AggExecutionNode)aggroot).getMeta().getAggColumn().put(selectItem, columnOps);
-            for (ColumnOp col:columnOps) {
-              if (col.getOpType().equals("avg")) {
-                if (!((AggExecutionNode)aggroot).getMeta().getAggColumnAggAliasPair().containsKey(
-                    new ImmutablePair<>("sum", col.getOperand(0)))) {
-                  ColumnOp col1 = new ColumnOp("sum", col.getOperand(0));
-                  newSelectlist.add(new AliasedColumn(col1, "agg"+aggColumnIdentiferNum));
-                  ((AggExecutionNode)aggroot).getMeta().getAggColumnAggAliasPair().put(
-                      new ImmutablePair<>("sum", col1.getOperand(0)), "agg"+aggColumnIdentiferNum);
-                  aggColumnAlias.add("agg"+aggColumnIdentiferNum++);
-                }
-                if (!((AggExecutionNode)aggroot).getMeta().getAggColumnAggAliasPair().containsKey(
-                    new ImmutablePair<>("count", (UnnamedColumn) new AsteriskColumn()))) {
-                  ColumnOp col2 = new ColumnOp("count", new AsteriskColumn());
-                  newSelectlist.add(new AliasedColumn(col2, "agg"+aggColumnIdentiferNum));
-                  ((AggExecutionNode)aggroot).getMeta().getAggColumnAggAliasPair().put(
-                      new ImmutablePair<>("count", (UnnamedColumn) new AsteriskColumn()), "agg"+aggColumnIdentiferNum);
-                  aggColumnAlias.add("agg"+aggColumnIdentiferNum++);
-                }
-              } else {
-                if (col.getOpType().equals("count") && !((AggExecutionNode)aggroot).getMeta().getAggColumnAggAliasPair().containsKey(
-                    new ImmutablePair<>("count", (UnnamedColumn)(new AsteriskColumn())))) {
-                  ColumnOp col1 = new ColumnOp(col.getOpType());
-                  newSelectlist.add(new AliasedColumn(col1, "agg"+aggColumnIdentiferNum));
-                  ((AggExecutionNode)aggroot).getMeta().getAggColumnAggAliasPair().put(
-                      new ImmutablePair<>(col.getOpType(), (UnnamedColumn)new AsteriskColumn()), "agg"+aggColumnIdentiferNum);
-                  aggColumnAlias.add("agg"+aggColumnIdentiferNum++);
-                }
-                else if (!((AggExecutionNode)aggroot).getMeta().getAggColumnAggAliasPair().containsKey(
-                    new ImmutablePair<>(col.getOpType(), col.getOperand(0)))) {
-                  ColumnOp col1 = new ColumnOp(col.getOpType(), col.getOperand(0));
-                  newSelectlist.add(new AliasedColumn(col1, "agg"+aggColumnIdentiferNum));
-                  ((AggExecutionNode)aggroot).getMeta().getAggColumnAggAliasPair().put(
-                      new ImmutablePair<>(col.getOpType(), col1.getOperand(0)), "agg"+aggColumnIdentiferNum);
-                  aggColumnAlias.add("agg"+aggColumnIdentiferNum++);
-                }
-              }
-            }
-          }
-          else {
-            newSelectlist.add(selectItem);
-          }
-        } else {
-          newSelectlist.add(selectItem);
-        }
-      }
+      List<SelectItem> newSelectlist = rewriteSelectlistWithBasicAgg(((AggExecutionNode)aggroot).getSelectQuery(),  ((AggExecutionNode)aggroot).getMeta());
+
+      // add tier column and group attribute if from list has multiple tier table
+      addTierColumn(((AggExecutionNode)aggroot).getSelectQuery(), newSelectlist, scrambleMeta);
+
       ((AggExecutionNode)aggroot).getSelectQuery().clearSelectList();
       ((AggExecutionNode)aggroot).getSelectQuery().getSelectList().addAll(newSelectlist);
-      ((AggExecutionNode)aggroot).getMeta().setAggAlias(aggColumnAlias);
+
       aggColumnIdentiferNum = 0;
 
       // insert predicates
@@ -353,4 +305,93 @@ public class AggExecutionNodeBlock {
     }
     return columnOps;
   }
+
+  List<SelectItem> rewriteSelectlistWithBasicAgg(SelectQuery query, AggMeta meta) {
+    List<SelectItem> selectList = query.getSelectList();
+    List<String> aggColumnAlias = new ArrayList<>();
+    List<SelectItem> newSelectlist = new ArrayList<>();
+    meta.setOriginalSelectList(selectList);
+    for (SelectItem selectItem : selectList) {
+      if (selectItem instanceof AliasedColumn) {
+        List<ColumnOp> columnOps = getAggregateColumn(((AliasedColumn) selectItem).getColumn());
+        // If it contains agg columns
+        if (!columnOps.isEmpty()) {
+          meta.getAggColumn().put(selectItem, columnOps);
+          for (ColumnOp col:columnOps) {
+            if (col.getOpType().equals("avg")) {
+              if (!meta.getAggColumnAggAliasPair().containsKey(
+                  new ImmutablePair<>("sum", col.getOperand(0)))) {
+                ColumnOp col1 = new ColumnOp("sum", col.getOperand(0));
+                newSelectlist.add(new AliasedColumn(col1, "agg"+aggColumnIdentiferNum));
+                meta.getAggColumnAggAliasPair().put(
+                    new ImmutablePair<>("sum", col1.getOperand(0)), "agg"+aggColumnIdentiferNum);
+                aggColumnAlias.add("agg"+aggColumnIdentiferNum++);
+              }
+              if (!meta.getAggColumnAggAliasPair().containsKey(
+                  new ImmutablePair<>("count", (UnnamedColumn) new AsteriskColumn()))) {
+                ColumnOp col2 = new ColumnOp("count", new AsteriskColumn());
+                newSelectlist.add(new AliasedColumn(col2, "agg"+aggColumnIdentiferNum));
+                meta.getAggColumnAggAliasPair().put(
+                    new ImmutablePair<>("count", (UnnamedColumn) new AsteriskColumn()), "agg"+aggColumnIdentiferNum);
+                aggColumnAlias.add("agg"+aggColumnIdentiferNum++);
+              }
+            } else {
+              if (col.getOpType().equals("count") && !meta.getAggColumnAggAliasPair().containsKey(
+                  new ImmutablePair<>("count", (UnnamedColumn)(new AsteriskColumn())))) {
+                ColumnOp col1 = new ColumnOp(col.getOpType());
+                newSelectlist.add(new AliasedColumn(col1, "agg"+aggColumnIdentiferNum));
+                meta.getAggColumnAggAliasPair().put(
+                    new ImmutablePair<>(col.getOpType(), (UnnamedColumn)new AsteriskColumn()), "agg"+aggColumnIdentiferNum);
+                aggColumnAlias.add("agg"+aggColumnIdentiferNum++);
+              }
+              else if (!meta.getAggColumnAggAliasPair().containsKey(
+                  new ImmutablePair<>(col.getOpType(), col.getOperand(0)))) {
+                ColumnOp col1 = new ColumnOp(col.getOpType(), col.getOperand(0));
+                newSelectlist.add(new AliasedColumn(col1, "agg"+aggColumnIdentiferNum));
+                meta.getAggColumnAggAliasPair().put(
+                    new ImmutablePair<>(col.getOpType(), col1.getOperand(0)), "agg"+aggColumnIdentiferNum);
+                aggColumnAlias.add("agg"+aggColumnIdentiferNum++);
+              }
+            }
+          }
+        }
+        else {
+          newSelectlist.add(selectItem);
+        }
+      } else {
+        newSelectlist.add(selectItem);
+      }
+    }
+    meta.setAggAlias(aggColumnAlias);
+    return newSelectlist;
+  }
+
+  void addTierColumn(SelectQuery query, List<SelectItem> newSelectList, ScrambleMeta scrambleMeta) {
+    for (AbstractRelation table:query.getFromList()) {
+      if (table instanceof BaseTable) {
+        String schemaName = ((BaseTable) table).getSchemaName();
+        String tableName = ((BaseTable) table).getTableName();
+        if (scrambleMeta.isScrambled(schemaName, tableName) && scrambleMeta.getMetaForTable(schemaName, tableName).getNumberOfTiers()>1) {
+          newSelectList.add(new AliasedColumn(new BaseColumn(schemaName, tableName, table.getAliasName().get(), scrambleMeta.getTierColumn(schemaName, tableName)),
+              "verdictdbtier"+verdictdbTierIndentiferNum));
+          query.addGroupby(new AliasReference("verdictdbtier"+verdictdbTierIndentiferNum++));
+        }
+      }
+      else if (table instanceof JoinTable) {
+        for (AbstractRelation jointable:((JoinTable) table).getJoinList()) {
+          if (jointable instanceof BaseTable) {
+            String schemaName = ((BaseTable) jointable).getSchemaName();
+            String tableName = ((BaseTable) jointable).getTableName();
+            if (scrambleMeta.isScrambled(schemaName, tableName) && scrambleMeta.getMetaForTable(schemaName, tableName).getNumberOfTiers()>1) {
+              newSelectList.add(new AliasedColumn(new BaseColumn(schemaName, tableName, jointable.getAliasName().get(), scrambleMeta.getTierColumn(schemaName, tableName)),
+                  "verdictdbtier"+verdictdbTierIndentiferNum));
+              query.addGroupby(new AliasReference("verdictdbtier"+verdictdbTierIndentiferNum++));
+            }
+          }
+        }
+      }
+    }
+    verdictdbTierIndentiferNum = 0;
+  }
+
 }

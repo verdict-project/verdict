@@ -66,8 +66,6 @@ public class AsyncAggExecutionNode extends ProjectionNode {
 
   String newTableSchemaName, newTableName;
 
-  HashMap<String, ColumnOp> aggColumnForReplacement = new HashMap<>();
-
   private AsyncAggExecutionNode() {
     super(null, null);
   }
@@ -129,19 +127,20 @@ public class AsyncAggExecutionNode extends ProjectionNode {
         }
         operands.add(ConstantColumn.valueOf(0));
         col.setOperand(operands);
-        if (Initiated) {
-          ColumnOp aggCol = aggColumnForReplacement.get(alias);
-          for (int i = 1; i < aggCol.getOperands().size(); i = i + 2) {
-            ((ColumnOp) aggCol.getOperand(i)).setOperand(0, ((ColumnOp) col.getOperand(i)).getOperand(0));
-          }
-        }
       }
     }
+    // If it has multiple tiers, we need to sum up the result
+    SelectQuery query;
+    if (multipleTierTableTierInfo.size()>0) {
+      query = sumUpTierGroup((SelectQuery) aggColumnsAndQuery.getRight(), ((AggMeta) savedToken.getValue("aggMeta")));
+    }
+    else query = (SelectQuery) aggColumnsAndQuery.getRight();
     Pair<String, String> tempTableFullName = getNamer().generateTempTableName();
     newTableSchemaName = tempTableFullName.getLeft();
     newTableName = tempTableFullName.getRight();
-    SelectQuery query = replaceWithOriginalSelectList((SelectQuery) aggColumnsAndQuery.getRight(), ((AggMeta) savedToken.getValue("aggMeta")));
-    CreateTableAsSelectQuery createQuery = new CreateTableAsSelectQuery(newTableSchemaName, newTableName, query);
+    SelectQuery createTableQuery = replaceWithOriginalSelectList(query, ((AggMeta) savedToken.getValue("aggMeta")));
+
+    CreateTableAsSelectQuery createQuery = new CreateTableAsSelectQuery(newTableSchemaName, newTableName, createTableQuery);
     return createQuery;
   }
 
@@ -214,7 +213,7 @@ public class AsyncAggExecutionNode extends ProjectionNode {
         }
       }
     }
-
+    Initiated = true;
     // Setup from table
     SelectQuery query = SelectQuery.create(newSelectList,
         new BaseTable((String) savedToken.getValue("schemaName"), (String) savedToken.getValue("tableName"), "to_scale_query"));
@@ -351,7 +350,6 @@ public class AsyncAggExecutionNode extends ProjectionNode {
             ColumnOp aggContent = aggContents.get(aliasName);
             col.setOpType(aggContent.getOpType());
             col.setOperand(aggContent.getOperands());
-           // aggColumnForReplacement.put(aliasName, col);
           }
           // If it is avg, set col to be divide columnOp
           else if (col.getOpType().equals("avg")) {
@@ -361,8 +359,6 @@ public class AsyncAggExecutionNode extends ProjectionNode {
             ColumnOp aggContentCount = aggContents.get(aliasNameCount);
             col.setOpType("divide");
             col.setOperand(Arrays.<UnnamedColumn>asList(aggContentSum, aggContentCount));
-            //aggColumnForReplacement.put(aliasNameSum, aggContentSum);
-            //aggColumnForReplacement.put(aliasNameCount, aggContentCount);
           }
         }
       } else if (sel instanceof AliasedColumn) {
@@ -373,5 +369,40 @@ public class AsyncAggExecutionNode extends ProjectionNode {
     queryToReplace.clearSelectList();
     queryToReplace.getSelectList().addAll(originalSelectList);
     return queryToReplace;
+  }
+
+  /**
+   * Create a sum-up query that sum the results from all tier permutations
+   *
+   * @param subquery
+   * @return select query that sum all the tier results
+   */
+  SelectQuery sumUpTierGroup(SelectQuery subquery, AggMeta aggMeta) {
+    List<String> aggAlias = aggMeta.getAggAlias();
+    List<String> groupby = new ArrayList<>();
+    List<SelectItem> newSelectlist = new ArrayList<>();
+    for (SelectItem sel:subquery.getSelectList()) {
+      if (sel instanceof AliasedColumn) {
+        // If this is a basic aggregation, we need to sum up
+        if (aggAlias.contains(((AliasedColumn) sel).getAliasName())) {
+          newSelectlist.add(new AliasedColumn(new ColumnOp("sum",
+              new BaseColumn("to_scale_query", ((AliasedColumn) sel).getAliasName())), ((AliasedColumn) sel).getAliasName()));
+        }
+        else {
+          // if it is not a tier column, we need to put it in the group by list
+          if (!multipleTierTableTierInfo.values().contains(((AliasedColumn) sel).getAliasName())) {
+            newSelectlist.add(new AliasedColumn(new BaseColumn("to_scale_query", ((AliasedColumn) sel).getAliasName()),
+                ((AliasedColumn) sel).getAliasName()));
+            groupby.add(((AliasedColumn) sel).getAliasName());
+          }
+        }
+      }
+    }
+    subquery.setAliasName("to_scale_query");
+    SelectQuery query = SelectQuery.create(newSelectlist, subquery);
+    for (String group:groupby) {
+      query.addGroupby(new AliasReference(group));
+    }
+    return query;
   }
 }
