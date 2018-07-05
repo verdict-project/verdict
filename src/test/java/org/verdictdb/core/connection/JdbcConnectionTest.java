@@ -14,6 +14,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.sqlsyntax.HiveSyntax;
+import org.verdictdb.sqlsyntax.MysqlSyntax;
 import org.verdictdb.sqlsyntax.PostgresqlSyntax;
 
 public class JdbcConnectionTest {
@@ -27,6 +28,27 @@ public class JdbcConnectionTest {
   private ResultSetMetaData jdbcResultSetMetaData1, jdbcResultSetMetaData2;
 
   private ResultSet rs;
+  
+  private static Connection mysqlConn;
+
+  private static Statement mysqlStmt;
+
+  private static final String MYSQL_HOST;
+
+  static {
+    String env = System.getenv("BUILD_ENV");
+    if (env != null && env.equals("GitLab")) {
+      MYSQL_HOST = "mysql";
+    } else {
+      MYSQL_HOST = "localhost";
+    }
+  }
+
+  private static final String MYSQL_DATABASE = "test";
+
+  private static final String MYSQL_UESR = "root";
+
+  private static final String MYSQL_PASSWORD = "";
 
   private static final String POSTGRES_HOST;
 
@@ -51,6 +73,13 @@ public class JdbcConnectionTest {
     final String DB_USER = "";
     final String DB_PASSWORD = "";
     h2Conn = DriverManager.getConnection(DB_CONNECTION, DB_USER, DB_PASSWORD);
+  }
+  
+  @BeforeClass
+  public static void setupMySqlDatabase() throws SQLException {
+    String mysqlConnectionString =
+        String.format("jdbc:mysql://%s/%s?autoReconnect=true&useSSL=false", MYSQL_HOST, MYSQL_DATABASE);
+    mysqlConn = DriverManager.getConnection(mysqlConnectionString, MYSQL_UESR, MYSQL_PASSWORD);
   }
   
   @BeforeClass
@@ -104,6 +133,12 @@ public class JdbcConnectionTest {
   public void testPostgresMetaData() throws VerdictDBDbmsException {
     JdbcConnection jdbc = new JdbcConnection(postgresConn, new PostgresqlSyntax());
     System.out.println(jdbc.getColumns("public", "people"));
+  }
+  
+  @Test
+  public void testMySqlShowSchemas() throws VerdictDBDbmsException {
+    JdbcConnection jdbc = new JdbcConnection(mysqlConn, new MysqlSyntax());
+    System.out.println(jdbc.getSchemas());
   }
 
 }

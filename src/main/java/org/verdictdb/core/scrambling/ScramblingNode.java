@@ -20,6 +20,12 @@ import org.verdictdb.core.sqlobject.SqlConvertible;
 import org.verdictdb.core.sqlobject.UnnamedColumn;
 import org.verdictdb.exception.VerdictDBException;
 
+/**
+ * The last stage of scramling process: creates a new table based on some statistics.
+ * 
+ * @author Yongjoo Park
+ *
+ */
 public class ScramblingNode extends CreateTableAsSelectNode {
   
   String oldSchemaName;
