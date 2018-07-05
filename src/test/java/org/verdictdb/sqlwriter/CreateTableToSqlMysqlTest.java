@@ -61,6 +61,7 @@ public class CreateTableToSqlMysqlTest {
     contents.add(Arrays.<Object>asList(3, "Alice", "female", 18, 190.21, "CHN", "2017-10-12 21:22:23"));
     contents.add(Arrays.<Object>asList(3, "Bob", "male", 18, 190.3, "CHN", "2017-10-12 21:22:23"));
     mysqlStmt = mysqlConn.createStatement();
+    mysqlStmt.execute("USE TEST");
     mysqlStmt.execute("DROP TABLE IF EXISTS PEOPLE");
     mysqlStmt.execute("CREATE TABLE PEOPLE(id smallint, name varchar(255), gender varchar(8), age float, height float, nation varchar(8), birth timestamp)");
     for (List<Object> row : contents) {

@@ -49,6 +49,17 @@ public class ScramblingNode extends CreateTableAsSelectNode {
     this.options = options;
   }
   
+  /**
+   * 
+   * @param newSchemaName
+   * @param newTableName
+   * @param oldSchemaName
+   * @param oldTableName
+   * @param method
+   * @param options Key-value map. It must contain the following keys:
+   *                "blockColumnName", "tierColumnName", "blockCount" (optional)
+   * @return
+   */
   public static ScramblingNode create(
       final String newSchemaName, 
       final String newTableName,
