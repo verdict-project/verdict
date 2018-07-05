@@ -10,7 +10,10 @@ import java.util.Map;
 import org.junit.Test;
 import org.verdictdb.core.execution.ExecutionInfoToken;
 import org.verdictdb.core.sqlobject.SelectQuery;
+import org.verdictdb.core.sqlobject.SqlConvertible;
 import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.sqlsyntax.MysqlSyntax;
+import org.verdictdb.sqlwriter.QueryToSql;
 
 public class ScramblingNodeTest {
 
@@ -33,8 +36,9 @@ public class ScramblingNodeTest {
     e.setKeyValue("schemaName", newSchemaName);
     e.setKeyValue("tableName", newTableName);
     tokens.add(e);
-//    SqlConvertible query = node.createQuery(tokens);
-//    QueryToSql.convert(query, new MysqlSyntax());)
+    SqlConvertible query = node.createQuery(tokens);
+//    String sql = QueryToSql.convert(new MysqlSyntax(), query);
+//    System.out.println(sql);
   }
 
 }

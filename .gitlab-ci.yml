@@ -9,7 +9,7 @@ services:
 variables:
   BUILD_ENV: "GitLab"
   MYSQL_DATABASE: test
-  MYSQL_USER: mysql
+  # MYSQL_USER: mysql
   MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
   POSTGRES_DB: test
   POSTGRES_USER: postgres
