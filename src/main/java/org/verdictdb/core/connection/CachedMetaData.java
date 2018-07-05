@@ -26,7 +26,7 @@ public class CachedMetaData implements MetaDataProvider {
   private HashMap<Pair<String, String>, List<Pair<String,String>>> columnsCache = new HashMap<>();
 
   public CachedMetaData(MetaDataProvider metaProvider) {
-//    this.syntax = connection.getSyntax();
+//    this.syntax = metaProvider.getSyntax();
 //    this.connection = connection;
     this.metaProvider = metaProvider;
   }
@@ -69,9 +69,9 @@ public class CachedMetaData implements MetaDataProvider {
    */
   @Override
   public List<String> getPartitionColumns(String schema, String table) throws VerdictDBDbmsException {
-    if (!syntax.doesSupportTablePartitioning()) {
-      throw new VerdictDBDbmsException("Database does not support table partitioning");
-    }
+//    if (!syntax.doesSupportTablePartitioning()) {
+//      throw new VerdictDBDbmsException("Database does not support table partitioning");
+//    }
     Pair<String, String> key = new ImmutablePair<>(schema,table);
     if (columnsCache.containsKey(key) && !partitionCache.isEmpty()) {
       return partitionCache.get(key);

@@ -1,30 +1,17 @@
 package org.verdictdb.sqlwriter;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
-import java.io.File;
 import java.util.Arrays;
 
-import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.verdictdb.core.connection.DbmsConnection;
-import org.verdictdb.core.connection.JdbcConnection;
 import org.verdictdb.core.sqlobject.AsteriskColumn;
 import org.verdictdb.core.sqlobject.BaseTable;
 import org.verdictdb.core.sqlobject.CreateTableAsSelectQuery;
 import org.verdictdb.core.sqlobject.SelectItem;
 import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.exception.VerdictDBException;
-import org.verdictdb.sqlsyntax.HiveSyntax;
 import org.verdictdb.sqlsyntax.ImpalaSyntax;
-import org.verdictdb.sqlsyntax.MysqlSyntax;
-
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
-import com.klarna.hiverunner.HiveShell;
-import com.klarna.hiverunner.StandaloneHiveRunner;
-import com.klarna.hiverunner.annotations.HiveSQL;
 
 
 public class CreateTableToSqlImpalaTest {
