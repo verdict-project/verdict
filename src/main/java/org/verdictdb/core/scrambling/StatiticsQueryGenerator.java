@@ -10,6 +10,7 @@ public interface StatiticsQueryGenerator {
   public SelectQuery create(
       String schemaName, 
       String tableName, 
-      List<Pair<String, Integer>> columnNamesAndTypes);
+      List<Pair<String, String>> columnNamesAndTypes, 
+      List<String> partitionColumnNames);
 
 }

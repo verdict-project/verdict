@@ -36,8 +36,9 @@ public class StatisticsRetrievalNode extends QueryNodeBase {
   @Override
   public SqlConvertible createQuery(List<ExecutionInfoToken> tokens) throws VerdictDBException {
     @SuppressWarnings("unchecked")
-    List<Pair<String, Integer>> columnNamesAndTypes = (List<Pair<String, Integer>>) tokens.get(0).getValue("columnMeta");
-    selectQuery = queryGenerator.create(schemaName, tableName, columnNamesAndTypes);
+    List<Pair<String, String>> columnNamesAndTypes = 
+        (List<Pair<String, String>>) tokens.get(0).getValue("columnMeta");
+    selectQuery = queryGenerator.create(schemaName, tableName, columnNamesAndTypes, null);
     return selectQuery;
   }
 
