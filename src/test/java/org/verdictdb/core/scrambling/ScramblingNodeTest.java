@@ -61,7 +61,8 @@ public class ScramblingNodeTest {
     String newTableName = "newtable";
     String oldSchemaName = "oldschema";
     String oldTableName = "oldtable";
-    ScramblingMethod method = new UniformScramblingMethod();
+    int blockCount = 10;
+    ScramblingMethod method = new UniformScramblingMethod(blockCount);
     Map<String, String> options = new HashMap<>();
     options.put("tierColumnName", "tiercolumn");
     options.put("blockColumnName", "blockcolumn");
