@@ -217,5 +217,12 @@ public class AsyncAggScaleTest {
     actual = actual.replaceAll("verdictdbalias_[0-9]*_[0-9]", "alias");
     expected = "select alias.\"agg0\" + alias.\"agg0\" as \"agg0\", alias.\"agg1\" + alias.\"agg1\" as \"agg1\" from \"verdict_temp\".\"table1\" as alias, \"verdict_temp\".\"table2\" as alias";
     assertEquals(expected, actual);
+
+    ExecutionInfoToken token3 = queryExecutionPlan.getRoot().getSources().get(0).getSources().get(0).createToken(null);
+    query = (CreateTableAsSelectQuery) queryExecutionPlan.getRoot().getSources().get(0).createQuery(Arrays.asList(token3));
+    actual = queryToSql.toSql(query.getSelect());
+    actual = actual.replaceAll("verdictdbtemptable_[0-9]*_[0-9]", "alias");
+    expected = "select (1 + ((2.0 * to_scale_query.\"agg0\") / (2.0 * to_scale_query.\"agg1\"))) * (2.0 * to_scale_query.\"agg0\") as \"vc6\" from \"verdictdb_temp\".\"alias\" as to_scale_query";
+    assertEquals(actual, expected);
   }
 }
