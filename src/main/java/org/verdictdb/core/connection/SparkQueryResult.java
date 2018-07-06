@@ -2,9 +2,15 @@ package org.verdictdb.core.connection;
 
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
+import org.apache.spark.sql.types.Decimal;
+import org.apache.spark.sql.types.StructField;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static java.sql.ResultSetMetaData.columnNoNulls;
+import static java.sql.ResultSetMetaData.columnNullable;
+import static java.sql.Types.*;
 
 public class SparkQueryResult implements DbmsQueryResult {
 
@@ -14,21 +20,33 @@ public class SparkQueryResult implements DbmsQueryResult {
 
   List<Row> result = new ArrayList<>();
 
+  DbmsQueryResultMetaData dbmsQueryResultMetaData = new DbmsQueryResultMetaData();
+
   int cursor = -1;
 
   public SparkQueryResult(Dataset<Row> dataset) {
-    scala.Tuple2<String,String>[] colNameAndColType = dataset.dtypes();
-    for (scala.Tuple2<String,String> pair:colNameAndColType) {
-      columnNames.add(pair._1);
-      columnTypes.add(SparkDataTypeConverter.typeInt(pair._2));
+    scala.Tuple2<String, String>[] colNameAndColType = dataset.dtypes();
+    List<Integer> nullable = new ArrayList<>();
+    List<String> columnClassName = new ArrayList<>();
+    for (StructField structField : dataset.schema().fields()) {
+      if (structField.nullable()) {
+        nullable.add(columnNullable);
+      } else {
+        nullable.add(columnNoNulls);
+      }
+      columnNames.add(structField.name());
+      int type = SparkDataTypeConverter.typeInt(structField.dataType().toString());
+      columnTypes.add(type);
+      columnClassName.add(SparkDataTypeConverter.typeClassName(type));
     }
+    dbmsQueryResultMetaData.isNullable = nullable;
+    dbmsQueryResultMetaData.columnClassName = columnClassName;
     result = dataset.collectAsList();
   }
 
   @Override
   public DbmsQueryResultMetaData getMetaData() {
-    // TODO Auto-generated method stub
-    return null;
+    return dbmsQueryResultMetaData;
   }
 
   @Override
@@ -48,11 +66,10 @@ public class SparkQueryResult implements DbmsQueryResult {
 
   @Override
   public boolean next() {
-    if (cursor < result.size()-1) {
+    if (cursor < result.size() - 1) {
       cursor++;
       return true;
-    }
-    else {
+    } else {
       return false;
     }
   }
@@ -80,8 +97,7 @@ public class SparkQueryResult implements DbmsQueryResult {
       if (isFirstCol) {
         row.append(col);
         isFirstCol = false;
-      }
-      else {
+      } else {
         row.append("\t" + col);
       }
     }
@@ -89,13 +105,12 @@ public class SparkQueryResult implements DbmsQueryResult {
 
     // print contents
     int colCount = getColumnCount();
-    while(this.next()) {
+    while (this.next()) {
       row = new StringBuilder();
       for (int i = 0; i < colCount; i++) {
         if (i == 0) {
           row.append(getValue(i).toString());
-        }
-        else {
+        } else {
           row.append("\t");
           row.append(getValue(i).toString());
         }
