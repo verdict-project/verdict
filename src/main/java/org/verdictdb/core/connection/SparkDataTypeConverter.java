@@ -32,7 +32,7 @@ public class SparkDataTypeConverter {
     } else if (type.equals("IntegerType")) {
       return INTEGER;
     } else if (type.equals("LongType")) {
-      return BIGINT;
+      return INTEGER;
     } else if (type.equals("ShortType")) {
       return SMALLINT;
     } else if (type.equals("ArrayType")) {
