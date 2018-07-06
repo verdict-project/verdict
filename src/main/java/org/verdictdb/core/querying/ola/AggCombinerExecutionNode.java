@@ -113,11 +113,13 @@ public class AggCombinerExecutionNode extends CreateTableAsSelectNode {
   public SqlConvertible createQuery(List<ExecutionInfoToken> tokens) throws VerdictDBException {
     for (ExecutionInfoToken token:tokens) {
       AggMeta aggMeta = (AggMeta) token.getValue("aggMeta");
-      this.aggMeta.getCubes().addAll(aggMeta.getCubes());
-      this.aggMeta.setAggAlias(aggMeta.getAggAlias());
-      this.aggMeta.setOriginalSelectList(aggMeta.getOriginalSelectList());
-      this.aggMeta.setAggColumn(aggMeta.getAggColumn());
-      this.aggMeta.setAggColumnAggAliasPair(aggMeta.getAggColumnAggAliasPair());
+      if (aggMeta!=null) {
+        this.aggMeta.getCubes().addAll(aggMeta.getCubes());
+        this.aggMeta.setAggAlias(aggMeta.getAggAlias());
+        this.aggMeta.setOriginalSelectList(aggMeta.getOriginalSelectList());
+        this.aggMeta.setAggColumn(aggMeta.getAggColumn());
+        this.aggMeta.setAggColumnAggAliasPair(aggMeta.getAggColumnAggAliasPair());
+      }
     }
     return super.createQuery(tokens);
   }

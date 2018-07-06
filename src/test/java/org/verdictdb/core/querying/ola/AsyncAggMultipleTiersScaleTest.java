@@ -20,6 +20,7 @@ import org.junit.Test;
 import org.verdictdb.core.connection.JdbcConnection;
 import org.verdictdb.core.connection.StaticMetaData;
 import org.verdictdb.core.execution.ExecutablePlanRunner;
+import org.verdictdb.core.execution.ExecutionInfoToken;
 import org.verdictdb.core.querying.AggExecutionNode;
 import org.verdictdb.core.querying.QueryExecutionPlan;
 import org.verdictdb.core.scrambling.ScrambleMeta;
@@ -33,6 +34,7 @@ import org.verdictdb.sqlreader.NonValidatingSQLParser;
 import org.verdictdb.sqlreader.RelationStandardizer;
 import org.verdictdb.sqlsyntax.H2Syntax;
 import org.verdictdb.sqlwriter.QueryToSql;
+import org.verdictdb.sqlwriter.SelectQueryToSql;
 
 public class AsyncAggMultipleTiersScaleTest {
 
@@ -128,6 +130,39 @@ public class AsyncAggMultipleTiersScaleTest {
     ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
     //queryExecutionPlan.getRoot().executeAndWaitForTermination(new JdbcConnection(conn, new H2Syntax()));
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
+  }
+
+  @Test
+  public void toSqlTest() throws VerdictDBException,SQLException {
+    String sql = "select (1+avg(value))*sum(value) from originalTable_scrambled";
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
+    RelationStandardizer gen = new RelationStandardizer(staticMetaData);
+    relation = gen.standardize((SelectQuery) relation);
+
+    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
+    queryExecutionPlan.cleanUp();
+    queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
+    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
+
+    ExecutionInfoToken token = new ExecutionInfoToken();
+    CreateTableAsSelectQuery query = (CreateTableAsSelectQuery) queryExecutionPlan.getRoot().getSources().get(0).getSources().get(0).createQuery(Arrays.asList(token));
+    SelectQueryToSql queryToSql = new SelectQueryToSql(new H2Syntax());
+    String actual = queryToSql.toSql(query.getSelect());
+    String expected = "select sum(vt3.\"value\") as \"agg0\", count(*) as \"agg1\", vt3.\"verdictdbtier\" as \"verdictdbtier0\" from \"originalSchema\".\"originalTable_scrambled\" as vt3 where vt3.\"verdictdbaggblock\" = 0 group by \"verdictdbtier0\"";
+    assertEquals(expected, actual);
+
+    ExecutionInfoToken token1 = new ExecutionInfoToken();
+    token1.setKeyValue("schemaName", "verdict_temp");
+    token1.setKeyValue("tableName", "table1");
+    ExecutionInfoToken token2 = new ExecutionInfoToken();
+    token2.setKeyValue("schemaName", "verdict_temp");
+    token2.setKeyValue("tableName", "table2");
+    query = (CreateTableAsSelectQuery) queryExecutionPlan.getRoot().getSources().get(0).getSources().get(1).createQuery(Arrays.asList(token1, token2));
+    actual = queryToSql.toSql(query.getSelect());
+    actual = actual.replaceAll("verdictdbalias_[0-9]*_[0-9]", "alias");
+    expected = "select alias.\"verdictdbtier0\" as \"verdictdbtier0\", alias.\"agg0\" + alias.\"agg0\" as \"agg0\", alias.\"agg1\" + alias.\"agg1\" as \"agg1\" from \"verdict_temp\".\"table1\" as alias, \"verdict_temp\".\"table2\" as alias where alias.\"verdictdbtier0\" = alias.\"verdictdbtier0\"";
+    assertEquals(expected, actual);
   }
 
 }
