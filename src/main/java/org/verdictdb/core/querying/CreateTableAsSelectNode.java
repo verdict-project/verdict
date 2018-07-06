@@ -32,7 +32,7 @@ public class CreateTableAsSelectNode extends QueryNodeWithPlaceHolders {
     return namer;
   }
 
-  public void setNamer(TempIdCreator namer) {
+  public void setNamer(IdCreator namer) {
     this.namer = namer;
   }
   

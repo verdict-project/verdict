@@ -34,7 +34,6 @@ public class AggExecutionNodeBlock {
 
   int verdictdbTierIndentiferNum = 0;
 
-  public AggExecutionNodeBlock(TempIdCreator idCreator, ExecutableNodeBase blockRoot) {
   public AggExecutionNodeBlock(IdCreator idCreator, ExecutableNodeBase blockRoot) {
     this.idCreator = idCreator;
     this.blockRoot = blockRoot;

@@ -17,7 +17,7 @@ import org.verdictdb.sqlsyntax.SqlSyntax;
 public class JdbcConnection implements DbmsConnection {
   
   Connection conn;
-  
+
   SqlSyntax syntax;
   
 //  JdbcQueryResult jrs = null;
@@ -38,7 +38,7 @@ public class JdbcConnection implements DbmsConnection {
   
   @Override
   public DbmsQueryResult execute(String sql) throws VerdictDBDbmsException {
-    System.out.println("About to issue this query: " + sql);
+    // System.out.println("About to issue this query: " + sql);
     try {
       Statement stmt = conn.createStatement();
       JdbcQueryResult jrs = null;
@@ -108,15 +108,15 @@ public class JdbcConnection implements DbmsConnection {
   public List<String> getSchemas() throws VerdictDBDbmsException{
     List<String> schemas = new ArrayList<>();
     DbmsQueryResult queryResult = executeQuery(syntax.getSchemaCommand());
-    JdbcResultSet jdbcQueryResult = new JdbcResultSet(queryResult);
+    JdbcResultSet jdbcResultSet = new JdbcResultSet(queryResult);
     try {
       while (queryResult.next()) {
-        schemas.add(jdbcQueryResult.getString(syntax.getSchemaNameColumnIndex()+1));
+        schemas.add(jdbcResultSet.getString(syntax.getSchemaNameColumnIndex()+1));
       }
     } catch (SQLException e) {
       throw new VerdictDBDbmsException(e);
     } finally {
-      jdbcQueryResult.close();
+      jdbcResultSet.close();
     }
     return schemas;
   }

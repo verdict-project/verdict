@@ -70,7 +70,7 @@ public class AggQueryRewriterTest {
           + "from ("
           + "select verdictdbalias1.`verdictdbalias3` as `verdictdbalias5`, "
           + "sum(verdictdbalias1.`mycolumn1`) as `verdictdbalias6`, "
-          + "sum(case  when verdictdbalias1.`mycolumn1` is not null then 1 else 0 end) as `verdictdbalias7` "
+          + "sum(case when verdictdbalias1.`mycolumn1` is not null then 1 else 0 end) as `verdictdbalias7` "
           + "from (select *, "
           + "t.`verdictdbsid` as `verdictdbalias2`, "
           + "t.`verdictdbtier` as `verdictdbalias3` "
@@ -160,7 +160,7 @@ public class AggQueryRewriterTest {
           + "from (select "
           + "verdictdbalias1.`verdictdbalias3` as `verdictdbalias5`, "
           + "sum(verdictdbalias1.`mycolumn1`) as `verdictdbalias6`, "    // subsum
-          + "sum(case  when verdictdbalias1.`mycolumn1` is not null then 1 else 0 end) as `verdictdbalias7` "    // subsample size
+          + "sum(case when verdictdbalias1.`mycolumn1` is not null then 1 else 0 end) as `verdictdbalias7` "    // subsample size
           + "from (select *, "
           + "t.`verdictdbsid` as `verdictdbalias2`, "
           + "t.`verdictdbtier` as `verdictdbalias3` "
@@ -208,7 +208,7 @@ public class AggQueryRewriterTest {
           + "select verdictdbalias1.`verdictdbalias3` as `verdictdbalias5`, "
           + "verdictdbalias1.`mygroup` as `verdictdbalias6`, "
           + "sum(verdictdbalias1.`mycolumn1`) as `verdictdbalias7`, "
-          + "sum(case  when verdictdbalias1.`mycolumn1` is not null then 1 else 0 end) as `verdictdbalias8` "
+          + "sum(case when verdictdbalias1.`mycolumn1` is not null then 1 else 0 end) as `verdictdbalias8` "
           + "from (select *, "
           + "t.`verdictdbsid` as `verdictdbalias2`, "
           + "t.`verdictdbtier` as `verdictdbalias3` "
@@ -256,7 +256,7 @@ public class AggQueryRewriterTest {
           + "select verdictdbalias1.`verdictdbalias3` as `verdictdbalias5`, "
           + "verdictdbalias1.`mygroup` as `verdictdbalias6`, "
           + "sum(verdictdbalias1.`mycolumn1`) as `verdictdbalias7`, "
-          + "sum(case  when verdictdbalias1.`mycolumn1` is not null then 1 else 0 end) as `verdictdbalias8` "
+          + "sum(case when verdictdbalias1.`mycolumn1` is not null then 1 else 0 end) as `verdictdbalias8` "
           + "from (select *, "
           + "t.`verdictdbsid` as `verdictdbalias2`, "
           + "t.`verdictdbtier` as `verdictdbalias3` "
@@ -356,7 +356,7 @@ public class AggQueryRewriterTest {
           + "verdictdbalias1.`verdictdbalias3` as `verdictdbalias5`, "
           + "verdictdbalias1.`mygroup` as `verdictdbalias6`, "
           + "sum(verdictdbalias1.`mycolumn1`) as `verdictdbalias7`, "    // subsum
-          + "sum(case  when verdictdbalias1.`mycolumn1` is not null then 1 else 0 end) as `verdictdbalias8` "    // subsample size
+          + "sum(case when verdictdbalias1.`mycolumn1` is not null then 1 else 0 end) as `verdictdbalias8` "    // subsample size
           + "from (select *, "
           + "t.`verdictdbsid` as `verdictdbalias2`, "
           + "t.`verdictdbtier` as `verdictdbalias3` "
@@ -407,7 +407,7 @@ public class AggQueryRewriterTest {
           + "from ("
           + "select s.`verdictdbalias5` as `verdictdbalias7`, "
           + "sum(s.`discounted_price`) as `verdictdbalias8`, "
-          + "sum(case  when s.`discounted_price` is not null then 1 else 0 end) as `verdictdbalias9` "
+          + "sum(case when s.`discounted_price` is not null then 1 else 0 end) as `verdictdbalias9` "
           + "from (select verdictdbalias1.`price` * verdictdbalias1.`discount` as `discounted_price`, "
           + "verdictdbalias1.`verdictdbalias2` as `verdictdbalias4`, "
           + "verdictdbalias1.`verdictdbalias3` as `verdictdbalias5` "
