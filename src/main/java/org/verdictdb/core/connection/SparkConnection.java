@@ -23,7 +23,7 @@ public class SparkConnection implements DbmsConnection {
   SparkSession sc;
 
   SqlSyntax syntax;
-  
+
   public SparkConnection(SparkSession sc, SqlSyntax syntax) {
     this.sc = sc;
     this.syntax = syntax;
@@ -33,15 +33,8 @@ public class SparkConnection implements DbmsConnection {
   public List<String> getSchemas() throws VerdictDBDbmsException {
     List<String> schemas = new ArrayList<>();
     DbmsQueryResult queryResult = execute(syntax.getSchemaCommand());
-    JdbcResultSet jdbcResultSet = new JdbcResultSet(queryResult);
-    try {
-      while (queryResult.next()) {
-        schemas.add(jdbcResultSet.getString(syntax.getSchemaNameColumnIndex()+1));
-      }
-    } catch (SQLException e) {
-      throw new VerdictDBDbmsException(e);
-    } finally {
-      jdbcResultSet.close();
+    while (queryResult.next()) {
+      schemas.add((String) queryResult.getValue(syntax.getSchemaNameColumnIndex()));
     }
     return schemas;
   }
@@ -50,15 +43,8 @@ public class SparkConnection implements DbmsConnection {
   public List<String> getTables(String schema) throws VerdictDBDbmsException {
     List<String> tables = new ArrayList<>();
     DbmsQueryResult queryResult = execute(syntax.getTableCommand(schema));
-    JdbcResultSet jdbcResultSet = new JdbcResultSet(queryResult);
-    try {
-      while (queryResult.next()) {
-        tables.add(jdbcResultSet.getString(syntax.getTableNameColumnIndex()+1));
-      }
-    } catch (SQLException e) {
-      throw new VerdictDBDbmsException(e);
-    } finally {
-      jdbcResultSet.close();
+    while (queryResult.next()) {
+      tables.add((String) queryResult.getValue(syntax.getTableNameColumnIndex()));
     }
     return tables;
   }
@@ -67,23 +53,14 @@ public class SparkConnection implements DbmsConnection {
   public List<Pair<String, String>> getColumns(String schema, String table) throws VerdictDBDbmsException {
     List<Pair<String, String>> columns = new ArrayList<>();
     DbmsQueryResult queryResult = execute(syntax.getColumnsCommand(schema, table));
-    JdbcResultSet jdbcResultSet = new JdbcResultSet(queryResult);
-    try {
-      while (queryResult.next()) {
-        String type = jdbcResultSet.getString(syntax.getColumnTypeColumnIndex()+1);
-        type = type.toLowerCase();
+    while (queryResult.next()) {
+      String type = (String) queryResult.getValue(syntax.getColumnTypeColumnIndex());
+      type = type.toLowerCase();
 
-//        // remove the size of type
-//        type = type.replaceAll("\\(.*\\)", "");
-
-        columns.add(
-            new ImmutablePair<>(jdbcResultSet.getString(syntax.getColumnNameColumnIndex()+1), type));
-      }
-    } catch (SQLException e) {
-      throw new VerdictDBDbmsException(e);
-    } finally {
-      jdbcResultSet.close();
+      columns.add(
+          new ImmutablePair<>((String) queryResult.getValue(syntax.getColumnNameColumnIndex()), type));
     }
+
     return columns;
   }
 
@@ -91,30 +68,10 @@ public class SparkConnection implements DbmsConnection {
   public List<String> getPartitionColumns(String schema, String table) throws VerdictDBDbmsException {
     List<String> partition = new ArrayList<>();
     DbmsQueryResult queryResult = execute(syntax.getPartitionCommand(schema, table));
-    JdbcResultSet jdbcResultSet = new JdbcResultSet(queryResult);
-    // the result of postgresql is a vector of column index
-
-    try {
-      if (syntax instanceof PostgresqlSyntax) {
-        queryResult.next();
-        Object o = jdbcResultSet.getObject(1);
-        String[] arr = o.toString().split(" ");
-        List<Pair<String, String>> columns = getColumns(schema, table);
-        for (int i=0; i<arr.length; i++) {
-          partition.add(columns.get(Integer.valueOf(arr[i])-1).getKey());
-        }
-      }
-      else {
-        while (queryResult.next()) {
-          partition.add(jdbcResultSet.getString(1));
-        }
-      }
-    } catch (SQLException e) {
-      throw new VerdictDBDbmsException(e);
-    } finally {
-      jdbcResultSet.close();
+    while (queryResult.next()) {
+      partition.add((String) queryResult.getValue(0));
     }
-    jdbcResultSet.close();
+
     return partition;
   }
 
@@ -130,7 +87,7 @@ public class SparkConnection implements DbmsConnection {
     try {
       SparkQueryResult srs = null;
       Dataset<Row> result = sc.sql(query);
-      if (result!=null) {
+      if (result != null) {
         srs = new SparkQueryResult(result);
       }
       return srs;

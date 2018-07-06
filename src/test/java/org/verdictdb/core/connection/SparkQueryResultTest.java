@@ -65,8 +65,11 @@ public class SparkQueryResultTest {
   }
 
   @Test
-  public void testJdbcQueryColumnName() throws VerdictDBDbmsException {
+  public void testSparkQueryColumnName() throws VerdictDBDbmsException {
     DbmsQueryResult rs = sparkConnection.execute("SELECT name as alias1 FROM myschema.PERSON");
+    assertTrue("alias1".equalsIgnoreCase(rs.getColumnName(0)));
+
+    rs = sparkConnection.execute("SELECT `p`.name as `alias1` FROM myschema.PERSON `p`");
     assertTrue("alias1".equalsIgnoreCase(rs.getColumnName(0)));
   }
 }
