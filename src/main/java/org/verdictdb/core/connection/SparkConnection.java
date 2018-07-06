@@ -133,7 +133,6 @@ public class SparkConnection implements DbmsConnection {
       if (result!=null) {
         srs = new SparkQueryResult(result);
       }
-      sc.close();
       return srs;
     } catch (Exception e) {
       throw new VerdictDBDbmsException(e.getMessage());
