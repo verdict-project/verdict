@@ -184,8 +184,8 @@ public class AsyncAggExecutionNode extends ProjectionNode {
    */
   Pair<List<ColumnOp>, SqlConvertible> createBaseQueryForReplacement(List<HyperTableCube> cubes) {
     List<ColumnOp> aggColumnlist = new ArrayList<>();
-    QueryNodeBase dependent = (QueryNodeBase) savedToken.getValue("dependent");
-    List<SelectItem> newSelectList = dependent.getSelectQuery().deepcopy().getSelectList();
+    SelectQuery dependentQuery = (SelectQuery) savedToken.getValue("dependentQuery");
+    List<SelectItem> newSelectList = dependentQuery.deepcopy().getSelectList();
     AggMeta aggMeta = (AggMeta) savedToken.getValue("aggMeta");
 
     for (SelectItem selectItem : newSelectList) {

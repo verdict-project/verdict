@@ -103,8 +103,7 @@ public class AsyncAggScaleTest {
     staticMetaData.addTableData(new StaticMetaData.TableInfo(originalSchema, smallTable), arr);
   }
 
-
-  //@Test
+  @Test
   public void ScrambleTableTest() throws VerdictDBException,SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select sum(value) from originalTable_scrambled";
@@ -136,7 +135,7 @@ public class AsyncAggScaleTest {
   }
 
 //<<<<<<< HEAD:src/test/java/org/verdictdb/core/querying/AsyncAggScaleTest.java
-  //@Test
+  @Test
   public void ScrambleTableCompressTest() throws VerdictDBException,SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select sum(value) from originalTable_scrambled";
@@ -162,7 +161,7 @@ public class AsyncAggScaleTest {
   @Test
   public void ScrambleTableAvgTest() throws VerdictDBException,SQLException {
     RelationStandardizer.resetItemID();
-    String sql = "select (1+avg(value))*sum(value) from originalTable_scrambled";
+    String sql = "select (1+avg(value))*sum(value), count(*), count(value) from originalTable_scrambled";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
     RelationStandardizer gen = new RelationStandardizer(staticMetaData);

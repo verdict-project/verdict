@@ -36,7 +36,7 @@ public class AggExecutionNode extends CreateTableAsSelectNode {
   public ExecutionInfoToken createToken(DbmsQueryResult result) {
     ExecutionInfoToken token = super.createToken(result);
     token.setKeyValue("aggMeta", aggMeta);
-    token.setKeyValue("dependent", this);
+    token.setKeyValue("dependentQuery", this.selectQuery);
     return token;
   }
 
