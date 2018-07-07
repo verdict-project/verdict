@@ -18,8 +18,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Executor;
 
-import org.verdictdb.core.connection.DbmsConnection;
-
 public class Connection implements java.sql.Connection {
   
   public Connection() {

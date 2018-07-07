@@ -5,7 +5,6 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.fail;
 
 import java.sql.Connection;
-import java.sql.Date;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -13,18 +12,10 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Time;
 import java.sql.Timestamp;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.util.List;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.junit.BeforeClass;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import org.verdictdb.core.connection.DbmsConnection;
-import org.verdictdb.core.connection.DbmsQueryResult;
 import org.verdictdb.core.connection.JdbcConnection;
 import org.verdictdb.exception.VerdictDBDbmsException;
 
@@ -205,7 +196,7 @@ public class JdbcResultSetMetaDataTestForMySql {
     assertEquals(Timestamp.valueOf("2018-12-31"), ourResult.getTimestamp(14));  // date
     assertEquals(Timestamp.valueOf("2018-12-31 00:00:01"), ourResult.getTimestamp(15));  // datetime
     assertEquals(Timestamp.valueOf("2018-12-31 00:00:01"), ourResult.getTimestamp(16));  // timestamp
-    assertEquals(Time.valueOf(LocalTime.of(10, 59, 59)), ourResult.getTime(17));  // time
+    assertEquals(Time.valueOf("10:59:59"), ourResult.getTime(17));  // time
     assertEquals(Timestamp.valueOf("1970-01-01 10:59:59"), ourResult.getTimestamp(17));  // time
 
     ourResult.close();
