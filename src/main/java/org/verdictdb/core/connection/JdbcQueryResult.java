@@ -53,7 +53,8 @@ public class JdbcQueryResult implements DbmsQueryResult {
     while (resultSet.next()) {
       List<Object> row = new ArrayList<>();
       for (int i=0; i< columnCount; i++) {
-        row.add(resultSet.getObject(i+1));
+        Object value = resultSet.getObject(i+1);
+        row.add(value);
       }
       result.add(row);
     }
