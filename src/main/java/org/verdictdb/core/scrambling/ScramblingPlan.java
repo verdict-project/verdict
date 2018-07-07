@@ -8,9 +8,9 @@
 
 package org.verdictdb.core.scrambling;
 
+import java.util.List;
 import java.util.Map;
 
-import org.verdictdb.core.connection.DbmsQueryResult;
 import org.verdictdb.core.querying.ColumnMetadataRetrievalNode;
 import org.verdictdb.core.querying.ExecutableNodeBase;
 import org.verdictdb.core.querying.PartitionMetadataRetrievalNode;
@@ -34,7 +34,7 @@ public class ScramblingPlan extends SimpleTreePlan {
   
 //  ScramblingMethod method;
   
-  DbmsQueryResult statistics;
+//  DbmsQueryResult statistics;
   
   private ScramblingPlan(ExecutableNodeBase root) {
     super(root);
@@ -67,15 +67,19 @@ public class ScramblingPlan extends SimpleTreePlan {
     ExecutableNodeBase partitionMetaDataNode = new PartitionMetadataRetrievalNode(oldSchemaName, oldTableName);
     
     // create a node for step 2 - statistics retrieval
-    ExecutableNodeBase statRetreival = 
-        StatisticsRetrievalNode.create(method.getStatisticsQueryGenerator(), oldSchemaName, oldTableName);
-    statRetreival.subscribeTo(columnMetaDataNode, 0);
-    statRetreival.subscribeTo(partitionMetaDataNode, 1);
+    // since uniform scrambling does not return any nodes, the step 3 will be run immediately.
+    List<ExecutableNodeBase> statsNodes = method.getStatisticsNode(oldSchemaName, oldTableName);
+    for (ExecutableNodeBase n : statsNodes) {
+      n.subscribeTo(columnMetaDataNode, 0);
+      n.subscribeTo(partitionMetaDataNode, 1);
+    }
     
     // create a node for step 3 - scrambling
     ExecutableNodeBase scramblingNode = 
         ScramblingNode.create(newSchemaName, newTableName, oldSchemaName, oldTableName, method, options);
-    scramblingNode.subscribeTo(statRetreival, 0);
+    for (int i = 0; i < statsNodes.size(); i ++) {
+      scramblingNode.subscribeTo(statsNodes.get(i), i);
+    }
     
     ScramblingPlan scramblingPlan = new ScramblingPlan(scramblingNode);
     return scramblingPlan;

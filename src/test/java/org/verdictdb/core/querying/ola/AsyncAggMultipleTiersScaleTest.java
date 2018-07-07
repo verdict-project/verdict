@@ -117,7 +117,8 @@ public class AsyncAggMultipleTiersScaleTest {
     RelationStandardizer gen = new RelationStandardizer(staticMetaData);
     relation = gen.standardize((SelectQuery) relation);
 
-    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
+    QueryExecutionPlan queryExecutionPlan =
+        new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
     Dimension d1 = new Dimension("originalSchema", "originalTable_scrambled", 0, 0);
@@ -125,7 +126,8 @@ public class AsyncAggMultipleTiersScaleTest {
         new HyperTableCube(Arrays.asList(d1)), 
         ((AggExecutionNode)queryExecutionPlan.getRootNode().getExecutableNodeBaseDependent(0).getExecutableNodeBaseDependent(0)).getMeta().getCubes().get(0));
 
-    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependent(0)).setScrambleMeta(meta);
+    ((AsyncAggExecutionNode) queryExecutionPlan.getRoot().getExecutableNodeBaseDependent(0))
+    .setScrambleMeta(meta);
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
     ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
     //queryExecutionPlan.getRoot().executeAndWaitForTermination(new JdbcConnection(conn, new H2Syntax()));
@@ -149,7 +151,11 @@ public class AsyncAggMultipleTiersScaleTest {
     CreateTableAsSelectQuery query = (CreateTableAsSelectQuery) queryExecutionPlan.getRoot().getSources().get(0).getSources().get(0).createQuery(Arrays.asList(token));
     SelectQueryToSql queryToSql = new SelectQueryToSql(new H2Syntax());
     String actual = queryToSql.toSql(query.getSelect());
-    String expected = "select sum(vt3.\"value\") as \"agg0\", count(*) as \"agg1\", vt3.\"verdictdbtier\" as \"verdictdbtier0\" from \"originalSchema\".\"originalTable_scrambled\" as vt3 where vt3.\"verdictdbaggblock\" = 0 group by \"verdictdbtier0\"";
+    String expected = "select sum(vt3.\"value\") as \"agg0\", "
+        + "count(*) as \"agg1\", vt3.\"verdictdbtier\" as \"verdictdbtier0\" "
+        + "from \"originalSchema\".\"originalTable_scrambled\" as vt3 "
+        + "where vt3.\"verdictdbaggblock\" = 0 "
+        + "group by \"verdictdbtier0\"";
     assertEquals(expected, actual);
 
     ExecutionInfoToken token1 = new ExecutionInfoToken();

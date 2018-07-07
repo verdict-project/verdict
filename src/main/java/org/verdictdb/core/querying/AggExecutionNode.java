@@ -1,13 +1,12 @@
 package org.verdictdb.core.querying;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.verdictdb.core.connection.DbmsQueryResult;
 import org.verdictdb.core.execution.ExecutionInfoToken;
 import org.verdictdb.core.querying.ola.AggMeta;
-import org.verdictdb.core.querying.ola.HyperTableCube;
-import org.verdictdb.core.sqlobject.*;
+import org.verdictdb.core.sqlobject.SelectQuery;
+import org.verdictdb.core.sqlobject.SqlConvertible;
 import org.verdictdb.exception.VerdictDBException;
 
 public class AggExecutionNode extends CreateTableAsSelectNode {

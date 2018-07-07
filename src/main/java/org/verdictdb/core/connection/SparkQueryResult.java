@@ -1,16 +1,14 @@
 package org.verdictdb.core.connection;
 
-import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.Row;
-import org.apache.spark.sql.types.Decimal;
-import org.apache.spark.sql.types.StructField;
+import static java.sql.ResultSetMetaData.columnNoNulls;
+import static java.sql.ResultSetMetaData.columnNullable;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static java.sql.ResultSetMetaData.columnNoNulls;
-import static java.sql.ResultSetMetaData.columnNullable;
-import static java.sql.Types.*;
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Row;
+import org.apache.spark.sql.types.StructField;
 
 public class SparkQueryResult implements DbmsQueryResult {
 

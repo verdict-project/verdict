@@ -27,6 +27,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
+import javax.sql.rowset.serial.SerialBlob;
+
 import org.verdictdb.core.connection.DbmsQueryResult;
 import org.verdictdb.exception.VerdictDBTypeException;
 
@@ -134,12 +136,23 @@ public class JdbcResultSet implements ResultSet {
 
   @Override
   public boolean next() throws SQLException {
-    if (rowCount==1) isFirst = true;
-    else isFirst = false;
-    if (isBeforefirst) isBeforefirst = false;
+    if (rowCount == 1) {
+      isFirst = true;
+    }
+    else {
+      isFirst = false;
+    }
+    
+    if (isBeforefirst) {
+      isBeforefirst = false;
+    }
     boolean next = queryResult.next();
     rowCount++;
-    if (!next) isAfterLast = true;
+    
+    if (!next) {
+      isAfterLast = true;
+    }
+    
     return next;
   }
 
@@ -153,25 +166,57 @@ public class JdbcResultSet implements ResultSet {
 
   @Override
   public String getString(int columnIndex) throws SQLException {
-    lastValue = String.valueOf(queryResult.getValue(columnIndex-1));
-    return (String)lastValue;
+    lastValue = queryResult.getValue(columnIndex-1);
+    
+    if (lastValue == null) {
+      return null;
+    }
+    
+    return String.valueOf(lastValue);
   }
 
   @Override
   public boolean getBoolean(int columnIndex) throws SQLException {
     if (isValidType("boolean", columnIndex)) {
       lastValue = queryResult.getValue(columnIndex-1);
-      return (boolean)lastValue;
+      if (lastValue == null) {
+        return false;
+      }
+      
+      if (lastValue instanceof Boolean) {
+        return (boolean) lastValue;
+      }
+      if (lastValue instanceof Integer || lastValue instanceof Long) {
+        int value = Integer.valueOf(lastValue.toString());
+        if (value == 1) {
+          return true;
+        } else if (value == 0) {
+          return false;
+        }
+      } else if (lastValue instanceof String) {
+        String value = lastValue.toString();
+        if (value.equals("1")) {
+          return true;
+        } else if (value.equals("0")) {
+          return false;
+        }
+      }
+      throw new SQLException("Not a valid value for Boolean type: " + lastValue);
     }
-    else throw new SQLException("Not supported data type.");
+    throw new SQLException("Not a valid value for Boolean type: " + lastValue);
   }
 
   @Override
   public byte getByte(int columnIndex) throws SQLException {
     try {
       if (isValidType("byte", columnIndex)) {
-        lastValue = TypeCasting.toByte(queryResult.getValue(columnIndex-1));
-        return (byte)lastValue;
+        lastValue = queryResult.getValue(columnIndex-1);
+        
+        if (lastValue == null) {
+          return 0;
+        }
+        
+        return (byte) TypeCasting.toByte(lastValue);
       }
       else {
         throw new VerdictDBTypeException(queryResult.getValue(columnIndex-1));
@@ -202,8 +247,13 @@ public class JdbcResultSet implements ResultSet {
   public int getInt(int columnIndex) throws SQLException {
     try {
       if (isValidType("int", columnIndex)) {
-        lastValue = TypeCasting.toInteger(queryResult.getValue(columnIndex-1));
-        return (int)lastValue;
+        lastValue = queryResult.getValue(columnIndex-1);
+        
+        if (lastValue == null) {
+          return 0;
+        }
+        
+        return (int) TypeCasting.toInteger(lastValue);
       }
       else {
         throw new VerdictDBTypeException(queryResult.getValue(columnIndex-1));
@@ -218,8 +268,13 @@ public class JdbcResultSet implements ResultSet {
   public long getLong(int columnIndex) throws SQLException {
     try {
       if (isValidType("long", columnIndex)) {
-        lastValue = TypeCasting.toLong(queryResult.getValue(columnIndex-1));
-        return (long)lastValue;
+        lastValue = queryResult.getValue(columnIndex-1);
+        
+        if (lastValue == null) {
+          return 0;
+        }
+        
+        return (long) TypeCasting.toLong(lastValue);
       }
       else {
         throw new VerdictDBTypeException(queryResult.getValue(columnIndex-1));
@@ -234,8 +289,13 @@ public class JdbcResultSet implements ResultSet {
   public float getFloat(int columnIndex) throws SQLException {
     try {
       if (isValidType("float", columnIndex)) {
-        lastValue = TypeCasting.toFloat(queryResult.getValue(columnIndex-1));
-        return (float)lastValue;
+        lastValue = queryResult.getValue(columnIndex-1);
+        
+        if (lastValue == null) {
+          return 0;
+        }
+        
+        return (float) TypeCasting.toFloat(lastValue);
       }
       else {
         throw new VerdictDBTypeException(queryResult.getValue(columnIndex-1));
@@ -250,8 +310,13 @@ public class JdbcResultSet implements ResultSet {
   public double getDouble(int columnIndex) throws SQLException {
     try {
       if (isValidType("double", columnIndex)) {
-        lastValue = TypeCasting.toDouble(queryResult.getValue(columnIndex-1));
-        return (double)lastValue;
+        lastValue = queryResult.getValue(columnIndex-1);
+        
+        if (lastValue == null) {
+          return 0;
+        }
+        
+        return (double) TypeCasting.toDouble(lastValue);
       }
       else {
         throw new VerdictDBTypeException(queryResult.getValue(columnIndex-1));
@@ -282,7 +347,7 @@ public class JdbcResultSet implements ResultSet {
   public byte[] getBytes(int columnIndex) throws SQLException {
    if (isValidType("bytes", columnIndex)) {
       lastValue = queryResult.getValue(columnIndex-1);
-      return (byte[])lastValue;
+      return (byte[]) lastValue;
     }
     else throw new SQLException("Not supported data type.");
   }
@@ -307,16 +372,23 @@ public class JdbcResultSet implements ResultSet {
   @Override
   public Time getTime(int columnIndex) throws SQLException {
     if (isValidType("time", columnIndex)) {
-      if (queryResult.getValue(columnIndex-1) instanceof Date){
-        lastValue  = new Time(((Date)(queryResult.getValue(columnIndex-1))).getTime());
+      lastValue = queryResult.getValue(columnIndex-1);
+      
+      if (lastValue == null) {
+        return null;
       }
-      else if (queryResult.getValue(columnIndex-1) instanceof Timestamp) {
-        lastValue  = new Time(((Timestamp)(queryResult.getValue(columnIndex-1))).getTime());
+      
+      if (lastValue instanceof Date){
+        lastValue  = new Time(((Date) lastValue).getTime());
       }
-      else if (queryResult.getValue(columnIndex-1) instanceof Time) {
-        lastValue = queryResult.getValue(columnIndex-1);
+      else if (lastValue instanceof Timestamp) {
+        lastValue  = new Time(((Timestamp) lastValue).getTime());
       }
-      return (Time)lastValue;
+      else if (lastValue instanceof Time) {
+//        lastValue = queryResult.getValue(columnIndex-1);
+      }
+      
+      return (Time) lastValue;
     }
     else throw new SQLException("Not supported data type.");
   }
@@ -324,13 +396,18 @@ public class JdbcResultSet implements ResultSet {
   @Override
   public Timestamp getTimestamp(int columnIndex) throws SQLException {
     if (isValidType("timestamp", columnIndex)) {
-      if (queryResult.getValue(columnIndex-1) instanceof Date){
-        lastValue  = new Timestamp(((Date)(queryResult.getValue(columnIndex-1))).getTime());
+      lastValue = queryResult.getValue(columnIndex-1);
+      if (lastValue == null) {
+        return null;
       }
-      else if (queryResult.getValue(columnIndex-1) instanceof Time) {
-        lastValue  = new Timestamp(((Time)(queryResult.getValue(columnIndex-1))).getTime());
+      
+      if (lastValue instanceof Date){
+        lastValue  = new Timestamp(((Date) (queryResult.getValue(columnIndex-1))).getTime());
       }
-      else if (queryResult.getValue(columnIndex-1) instanceof Timestamp) {
+      else if (lastValue instanceof Time) {
+        lastValue  = new Timestamp(((Time) (queryResult.getValue(columnIndex-1))).getTime());
+      }
+      else if (lastValue instanceof Timestamp) {
         lastValue = queryResult.getValue(columnIndex-1);
       }
       return (Timestamp) lastValue;
@@ -360,6 +437,12 @@ public class JdbcResultSet implements ResultSet {
   public InputStream getBinaryStream(int columnIndex) throws SQLException {
     if (isValidType("binarystream", columnIndex)) {
       lastValue = queryResult.getValue(columnIndex-1);
+      
+      if (lastValue == null) {
+        byte[] a = {};
+        return new ByteArrayInputStream(a);
+      }
+      
       if (lastValue instanceof byte[]){
         ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream((byte[]) lastValue);
         return byteArrayInputStream;
@@ -926,7 +1009,15 @@ public class JdbcResultSet implements ResultSet {
   public Blob getBlob(int columnIndex) throws SQLException {
     if (isValidType("blob", columnIndex)) {
       lastValue = queryResult.getValue(columnIndex-1);
-      return (Blob)lastValue;
+      
+      if (lastValue == null) {
+        return null;
+      }
+      if (lastValue instanceof Blob) {
+        return (Blob) lastValue;
+      }
+      
+      return new SerialBlob((byte[]) lastValue);
     }
     else throw new SQLException("Not supported data type.");
   }

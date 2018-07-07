@@ -1,12 +1,12 @@
 package org.verdictdb.core.connection;
 
+import static java.sql.Types.BIT;
+
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-
-import static java.sql.Types.BIT;
 
 public class JdbcQueryResult implements DbmsQueryResult {
   
@@ -55,10 +55,12 @@ public class JdbcQueryResult implements DbmsQueryResult {
     while (resultSet.next()) {
       List<Object> row = new ArrayList<>();
       for (int i=0; i< columnCount; i++) {
-       // if (resultSet.getMetaData().getColumnType(i+1)==BIT) {
-       //   row.add(resultSet.getString(i+1));
-       // }
-        row.add(resultSet.getObject(i+1));
+        if (resultSet.getMetaData().getColumnType(i+1) == BIT) {
+          row.add(resultSet.getString(i+1));
+        } else {
+          Object value = resultSet.getObject(i+1);
+          row.add(value);
+        }
       }
       result.add(row);
     }
