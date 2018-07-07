@@ -31,6 +31,10 @@ public class CreateTableAsSelectNode extends QueryNodeWithPlaceHolders {
   public IdCreator getNamer() {
     return namer;
   }
+
+  public void setNamer(IdCreator namer) {
+    this.namer = namer;
+  }
   
   @Override
   public SqlConvertible createQuery(List<ExecutionInfoToken> tokens) throws VerdictDBException {

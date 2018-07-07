@@ -93,4 +93,9 @@ public class BaseColumn implements UnnamedColumn, SelectItem, GroupingAttribute 
     return false;
   }
 
+  @Override
+  public BaseColumn deepcopy() {
+    return new BaseColumn(schemaName, tableName, tableSourceAlias, columnName);
+  }
+
 }

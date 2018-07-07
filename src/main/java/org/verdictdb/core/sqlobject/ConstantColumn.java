@@ -53,5 +53,10 @@ public class ConstantColumn implements UnnamedColumn, SelectItem {
   public boolean isAggregateColumn() {
     return false;
   }
+
+  @Override
+  public ConstantColumn deepcopy() {
+    return ConstantColumn.valueOf((String)value);
+  }
   
 }

@@ -59,7 +59,7 @@ public class SparkSyntax implements SqlSyntax {
 
   @Override
   public int getTableNameColumnIndex() {
-    return 0;
+    return 1;
   }
 
   @Override

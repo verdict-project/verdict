@@ -136,12 +136,23 @@ public class JdbcResultSet implements ResultSet {
 
   @Override
   public boolean next() throws SQLException {
-    if (rowCount==1) isFirst = true;
-    else isFirst = false;
-    if (isBeforefirst) isBeforefirst = false;
+    if (rowCount == 1) {
+      isFirst = true;
+    }
+    else {
+      isFirst = false;
+    }
+    
+    if (isBeforefirst) {
+      isBeforefirst = false;
+    }
     boolean next = queryResult.next();
     rowCount++;
-    if (!next) isAfterLast = true;
+    
+    if (!next) {
+      isAfterLast = true;
+    }
+    
     return next;
   }
 

@@ -6,6 +6,9 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Random;
 
 import org.junit.AfterClass;
@@ -63,6 +66,10 @@ public class AggExecutionNodeBlockTest {
     String scrambleSql = QueryToSql.convert(new H2Syntax(), createQuery);
     conn.createStatement().execute(scrambleSql);
     ScrambleMetaForTable metaEntry = scrambler.generateMeta();
+    metaEntry.setNumberOfTiers(1);
+    HashMap<Integer, List<Double>> distribution1 = new HashMap<>();
+    distribution1.put(0, Arrays.asList(0.2, 0.5, 1.0));
+    metaEntry.setCumulativeMassDistributionPerTier(distribution1);
     scrambleMeta.insertScrambleMetaEntry(metaEntry);
   }
   
@@ -79,7 +86,7 @@ public class AggExecutionNodeBlockTest {
         new BaseTable(newSchema, newTable, "t"));
     QueryExecutionPlan plan = new QueryExecutionPlan(newSchema);
     plan.setScrambleMeta(scrambleMeta);
-    
+
     AggExecutionNode aggnode = AggExecutionNode.create(plan, aggQuery);
     AggExecutionNodeBlock block = new AggExecutionNodeBlock(plan, aggnode);
     ExecutableNodeBase converted = block.convertToProgressiveAgg(plan.getScrambleMeta());   // AsyncAggregation
