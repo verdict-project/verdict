@@ -17,7 +17,7 @@ import org.verdictdb.sqlsyntax.SqlSyntax;
 public class JdbcConnection implements DbmsConnection {
   
   Connection conn;
-  
+
   SqlSyntax syntax;
   
 //  JdbcQueryResult jrs = null;
@@ -38,7 +38,7 @@ public class JdbcConnection implements DbmsConnection {
   
   @Override
   public DbmsQueryResult execute(String sql) throws VerdictDBDbmsException {
-//    System.out.println("About to issue this query: " + sql);
+    // System.out.println("About to issue this query: " + sql);
     try {
       Statement stmt = conn.createStatement();
       JdbcQueryResult jrs = null;
@@ -108,15 +108,15 @@ public class JdbcConnection implements DbmsConnection {
   public List<String> getSchemas() throws VerdictDBDbmsException{
     List<String> schemas = new ArrayList<>();
     DbmsQueryResult queryResult = executeQuery(syntax.getSchemaCommand());
-    JdbcResultSet jdbcQueryResult = new JdbcResultSet(queryResult);
+    JdbcResultSet jdbcResultSet = new JdbcResultSet(queryResult);
     try {
       while (queryResult.next()) {
-        schemas.add(jdbcQueryResult.getString(syntax.getSchemaNameColumnIndex()+1));
+        schemas.add(jdbcResultSet.getString(syntax.getSchemaNameColumnIndex()+1));
       }
     } catch (SQLException e) {
       throw new VerdictDBDbmsException(e);
     } finally {
-      jdbcQueryResult.close();
+      jdbcResultSet.close();
     }
     return schemas;
   }
@@ -139,17 +139,20 @@ public class JdbcConnection implements DbmsConnection {
   }
 
   @Override
-  public List<Pair<String, Integer>> getColumns(String schema, String table) throws VerdictDBDbmsException{
-    List<Pair<String, Integer>> columns = new ArrayList<>();
+  public List<Pair<String, String>> getColumns(String schema, String table) throws VerdictDBDbmsException{
+    List<Pair<String, String>> columns = new ArrayList<>();
     DbmsQueryResult queryResult = executeQuery(syntax.getColumnsCommand(schema, table));
     JdbcResultSet jdbcQueryResult = new JdbcResultSet(queryResult);
     try {
       while (queryResult.next()) {
         String type = jdbcQueryResult.getString(syntax.getColumnTypeColumnIndex()+1);
-        // remove the size of type
-        type = type.replaceAll("\\(.*\\)", "");
-        columns.add(new ImmutablePair<>(jdbcQueryResult.getString(syntax.getColumnNameColumnIndex()+1),
-            DataTypeConverter.typeInt(type)));
+        type = type.toLowerCase();
+        
+//        // remove the size of type
+//        type = type.replaceAll("\\(.*\\)", "");
+        
+        columns.add(
+            new ImmutablePair<>(jdbcQueryResult.getString(syntax.getColumnNameColumnIndex()+1), type));
       }
     } catch (SQLException e) {
       throw new VerdictDBDbmsException(e);
@@ -171,7 +174,7 @@ public class JdbcConnection implements DbmsConnection {
         queryResult.next();
         Object o = jdbcQueryResult.getObject(1);
         String[] arr = o.toString().split(" ");
-        List<Pair<String, Integer>> columns = getColumns(schema, table);
+        List<Pair<String, String>> columns = getColumns(schema, table);
         for (int i=0; i<arr.length; i++) {
           partition.add(columns.get(Integer.valueOf(arr[i])-1).getKey());
         }

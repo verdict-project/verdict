@@ -15,10 +15,10 @@ import org.junit.Test;
 import org.verdictdb.core.sqlobject.CreateTableAsSelectQuery;
 import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.exception.VerdictDBException;
-import org.verdictdb.sqlreader.CreateTableToSql;
-import org.verdictdb.sqlreader.SelectQueryToSql;
 import org.verdictdb.sqlsyntax.H2Syntax;
 import org.verdictdb.sqlsyntax.HiveSyntax;
+import org.verdictdb.sqlwriter.CreateTableToSql;
+import org.verdictdb.sqlwriter.SelectQueryToSql;
 
 public class UniformScramblerTest {
 

@@ -52,6 +52,7 @@ public class StaticMetaData implements MetaDataProvider{
 
   private HashMap<String, List<String>> tables = new HashMap<>();
 
+  // TODO: what is the difference from tableData?
   private HashMap<Pair<String, String>, List<Pair<String, Integer>>> columns = new HashMap<>();
 
   private HashMap<Pair<String, String>, List<String>> partitions = new HashMap<>();
@@ -60,12 +61,13 @@ public class StaticMetaData implements MetaDataProvider{
 
   public StaticMetaData(HashMap<TableInfo, List<Pair<String, Integer>>> tablesData) {
     this.tablesData = tablesData;
-    for (Map.Entry<TableInfo, List<Pair<String, Integer>>> entry:tablesData.entrySet()) {
+    for (Map.Entry<TableInfo, List<Pair<String, Integer>>> entry : tablesData.entrySet()) {
       if (!schemas.contains(entry.getKey().schema)) {
         schemas.add(entry.getKey().schema);
       }
       tables.get(entry.getKey().schema).add(entry.getKey().tablename);
-      columns.put(new ImmutablePair<>(entry.getKey().schema, entry.getKey().tablename),
+      columns.put(
+          new ImmutablePair<>(entry.getKey().schema, entry.getKey().tablename), 
           entry.getValue());
     }
   }
@@ -97,8 +99,13 @@ public class StaticMetaData implements MetaDataProvider{
   }
 
   @Override
-  public List<Pair<String, Integer>> getColumns(String schema, String table) {
-    return columns.get(new ImmutablePair<>(schema, table));
+  public List<Pair<String, String>> getColumns(String schema, String table) {
+    List<Pair<String, String>> nameAndType = new ArrayList<>();
+    List<Pair<String, Integer>> nameAndIntType = columns.get(new ImmutablePair<>(schema, table));
+    for (Pair<String, Integer> a : nameAndIntType) {
+      nameAndType.add(Pair.of(a.getLeft(), DataTypeConverter.typeName(a.getRight())));
+    }
+    return nameAndType;
   }
 
   @Override

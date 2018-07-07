@@ -49,5 +49,11 @@ public class SubqueryColumn implements UnnamedColumn {
   public boolean isAggregateColumn() {
     return false;
   }
+
+  // not need this
+  @Override
+  public SubqueryColumn deepcopy() {
+    return this;
+  }
   
 }

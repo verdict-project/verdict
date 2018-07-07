@@ -62,7 +62,7 @@ public class SelectQuery extends AbstractRelation implements SqlConvertible {
 
   Optional<UnnamedColumn> limit = Optional.absent();
 
-  Optional<String> aliasName = Optional.absent();
+//  Optional<String> aliasName = Optional.absent();
   
   /**
    * Copies query specification, i.e., everything except for orderby, having, and limit
@@ -199,6 +199,23 @@ public class SelectQuery extends AbstractRelation implements SqlConvertible {
   @Override
   public String toString() {
     return ToStringBuilder.reflectionToString(this, ToStringStyle.SHORT_PREFIX_STYLE);
+  }
+
+  // deep copy the select list
+  public SelectQuery selectListDeepCopy() {
+    List<SelectItem> newSelectItemList = new ArrayList<>();
+    for (SelectItem sel:selectList) {
+      SelectItem newSel = sel.deepcopy();
+      newSelectItemList.add(newSel);
+    }
+    SelectQuery query = SelectQuery.create(newSelectItemList, fromList);
+    query.filter = filter;
+    query.groupby = groupby;
+    query.orderby = orderby;
+    query.having = having;
+    query.limit = limit;
+    query.aliasName = aliasName;
+    return query;
   }
 
 }

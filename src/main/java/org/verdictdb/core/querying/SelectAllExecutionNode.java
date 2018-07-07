@@ -23,7 +23,7 @@ public class SelectAllExecutionNode extends QueryNodeWithPlaceHolders {
     super(query);
   }
 
-  public static SelectAllExecutionNode create(TempIdCreator namer, SelectQuery query) throws VerdictDBValueException {
+  public static SelectAllExecutionNode create(IdCreator namer, SelectQuery query) throws VerdictDBValueException {
     SelectAllExecutionNode selectAll = new SelectAllExecutionNode(null);
     Pair<BaseTable, SubscriptionTicket> baseAndSubscriptionTicket = selectAll.createPlaceHolderTable("t");
     SelectQuery selectQuery = SelectQuery.create(new AsteriskColumn(), baseAndSubscriptionTicket.getLeft());

@@ -6,6 +6,9 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Random;
 
 import org.junit.AfterClass;
@@ -16,9 +19,9 @@ import org.verdictdb.core.execution.ExecutablePlanRunner;
 import org.verdictdb.core.querying.AggExecutionNode;
 import org.verdictdb.core.querying.ExecutableNodeBase;
 import org.verdictdb.core.querying.QueryExecutionPlan;
-import org.verdictdb.core.querying.SimpleTreePlan;
 import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.core.scrambling.ScrambleMetaForTable;
+import org.verdictdb.core.scrambling.SimpleTreePlan;
 import org.verdictdb.core.scrambling.UniformScrambler;
 import org.verdictdb.core.sqlobject.AliasedColumn;
 import org.verdictdb.core.sqlobject.BaseTable;
@@ -27,8 +30,8 @@ import org.verdictdb.core.sqlobject.CreateTableAsSelectQuery;
 import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBValueException;
-import org.verdictdb.sqlreader.QueryToSql;
 import org.verdictdb.sqlsyntax.H2Syntax;
+import org.verdictdb.sqlwriter.QueryToSql;
 
 public class AggExecutionNodeBlockTest {
   
@@ -63,6 +66,10 @@ public class AggExecutionNodeBlockTest {
     String scrambleSql = QueryToSql.convert(new H2Syntax(), createQuery);
     conn.createStatement().execute(scrambleSql);
     ScrambleMetaForTable metaEntry = scrambler.generateMeta();
+    metaEntry.setNumberOfTiers(1);
+    HashMap<Integer, List<Double>> distribution1 = new HashMap<>();
+    distribution1.put(0, Arrays.asList(0.2, 0.5, 1.0));
+    metaEntry.setCumulativeMassDistributionPerTier(distribution1);
     scrambleMeta.insertScrambleMetaEntry(metaEntry);
   }
   
@@ -79,7 +86,7 @@ public class AggExecutionNodeBlockTest {
         new BaseTable(newSchema, newTable, "t"));
     QueryExecutionPlan plan = new QueryExecutionPlan(newSchema);
     plan.setScrambleMeta(scrambleMeta);
-    
+
     AggExecutionNode aggnode = AggExecutionNode.create(plan, aggQuery);
     AggExecutionNodeBlock block = new AggExecutionNodeBlock(plan, aggnode);
     ExecutableNodeBase converted = block.convertToProgressiveAgg(plan.getScrambleMeta());   // AsyncAggregation

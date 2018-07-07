@@ -8,13 +8,12 @@
 
 package org.verdictdb.core.scrambling;
 
-import java.util.List;
+import java.util.Map;
 
 import org.verdictdb.core.connection.DbmsQueryResult;
-import org.verdictdb.core.execution.ExecutableNode;
-import org.verdictdb.core.execution.ExecutablePlan;
+import org.verdictdb.core.querying.ColumnMetadataRetrievalNode;
 import org.verdictdb.core.querying.ExecutableNodeBase;
-import org.verdictdb.core.sqlobject.SqlConvertible;
+import org.verdictdb.core.querying.PartitionMetadataRetrievalNode;
 
 /**
  * Execution plan for scrambling.
@@ -31,45 +30,55 @@ import org.verdictdb.core.sqlobject.SqlConvertible;
  * @author Yongjoo Park
  *
  */
-public class ScramblingPlan implements ExecutablePlan {
+public class ScramblingPlan extends SimpleTreePlan {
   
-  ScramblingMethod method;
+//  ScramblingMethod method;
   
   DbmsQueryResult statistics;
   
-  private ScramblingPlan(ExecutableNodeBase scrambler, ExecutableNodeBase statRetreival) {
-    
-    this.method = method;
+  private ScramblingPlan(ExecutableNodeBase root) {
+    super(root);
   }
   
-  public static ScramblingPlan create(ScramblingMethod method) {
-    return null;
-  }
-  
-  SqlConvertible composeQuery() {
-    int tileCount = method.getTierCount(statistics);
-    List<String> tileExpressions = method.getTierExpressions(statistics);
+  /**
+   * 
+   * <p>
+   * Limitations: <br>
+   * Currently, this class only works for the databases that support "CREATE TABLE ... PARTITION BY () SELECT".
+   * Also, this class does not inherit all properties of the original tables.
+   * 
+   * @param newSchemaName
+   * @param newTableName
+   * @param oldSchemaName
+   * @param oldTableName
+   * @param method
+   * @param options Key-value map. It must contain the following keys:
+   *                "blockColumnName", "tierColumnName", "blockCount" (optional)
+   * @return
+   */
+  public static ScramblingPlan create(
+      String newSchemaName, String newTableName,
+      String oldSchemaName, String oldTableName,
+      ScramblingMethod method,
+      Map<String, String> options) {
     
+    // create a node for step 1 - column meta data retrieval
+    ExecutableNodeBase columnMetaDataNode = new ColumnMetadataRetrievalNode(oldSchemaName, oldTableName);
+    ExecutableNodeBase partitionMetaDataNode = new PartitionMetadataRetrievalNode(oldSchemaName, oldTableName);
     
-    return null;
-  }
-
-  @Override
-  public List<Integer> getNodeGroupIDs() {
-    // TODO Auto-generated method stub
-    return null;
-  }
-
-  @Override
-  public List<ExecutableNode> getNodesInGroup(int groupId) {
-    // TODO Auto-generated method stub
-    return null;
-  }
-
-  @Override
-  public ExecutableNode getReportingNode() {
-    // TODO Auto-generated method stub
-    return null;
+    // create a node for step 2 - statistics retrieval
+    ExecutableNodeBase statRetreival = 
+        StatisticsRetrievalNode.create(method.getStatisticsQueryGenerator(), oldSchemaName, oldTableName);
+    statRetreival.subscribeTo(columnMetaDataNode, 0);
+    statRetreival.subscribeTo(partitionMetaDataNode, 1);
+    
+    // create a node for step 3 - scrambling
+    ExecutableNodeBase scramblingNode = 
+        ScramblingNode.create(newSchemaName, newTableName, oldSchemaName, oldTableName, method, options);
+    scramblingNode.subscribeTo(statRetreival, 0);
+    
+    ScramblingPlan scramblingPlan = new ScramblingPlan(scramblingNode);
+    return scramblingPlan;
   }
 
 }

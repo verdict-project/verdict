@@ -20,6 +20,7 @@ import org.junit.Test;
 import org.verdictdb.core.connection.JdbcConnection;
 import org.verdictdb.core.connection.StaticMetaData;
 import org.verdictdb.core.execution.ExecutablePlanRunner;
+import org.verdictdb.core.execution.ExecutionInfoToken;
 import org.verdictdb.core.querying.AggExecutionNode;
 import org.verdictdb.core.querying.QueryExecutionPlan;
 import org.verdictdb.core.scrambling.ScrambleMeta;
@@ -30,9 +31,10 @@ import org.verdictdb.core.sqlobject.CreateTableAsSelectQuery;
 import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sqlreader.NonValidatingSQLParser;
-import org.verdictdb.sqlreader.QueryToSql;
 import org.verdictdb.sqlreader.RelationStandardizer;
 import org.verdictdb.sqlsyntax.H2Syntax;
+import org.verdictdb.sqlwriter.QueryToSql;
+import org.verdictdb.sqlwriter.SelectQueryToSql;
 
 public class AsyncAggMultipleTiersScaleTest {
 
@@ -109,7 +111,7 @@ public class AsyncAggMultipleTiersScaleTest {
   @Test
   public void ScrambleTableTest() throws VerdictDBException,SQLException {
     RelationStandardizer.resetItemID();
-    String sql = "select verdictdbtier, sum(value) from originalTable_scrambled group by verdictdbtier";
+    String sql = "select avg(value) from originalTable_scrambled";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
     RelationStandardizer gen = new RelationStandardizer(staticMetaData);
@@ -121,13 +123,65 @@ public class AsyncAggMultipleTiersScaleTest {
     Dimension d1 = new Dimension("originalSchema", "originalTable_scrambled", 0, 0);
     assertEquals(
         new HyperTableCube(Arrays.asList(d1)), 
-        ((AggExecutionNode)queryExecutionPlan.getRootNode().getExecutableNodeBaseDependent(0).getExecutableNodeBaseDependent(0)).getCubes().get(0));
+        ((AggExecutionNode)queryExecutionPlan.getRootNode().getExecutableNodeBaseDependent(0).getExecutableNodeBaseDependent(0)).getMeta().getCubes().get(0));
 
     ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependent(0)).setScrambleMeta(meta);
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
     ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
     //queryExecutionPlan.getRoot().executeAndWaitForTermination(new JdbcConnection(conn, new H2Syntax()));
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
+  }
+
+  @Test
+  public void toSqlTest() throws VerdictDBException,SQLException {
+    String sql = "select (1+avg(value))*sum(value) from originalTable_scrambled";
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
+    RelationStandardizer gen = new RelationStandardizer(staticMetaData);
+    relation = gen.standardize((SelectQuery) relation);
+
+    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
+    queryExecutionPlan.cleanUp();
+    queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
+    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
+
+    ExecutionInfoToken token = new ExecutionInfoToken();
+    CreateTableAsSelectQuery query = (CreateTableAsSelectQuery) queryExecutionPlan.getRoot().getSources().get(0).getSources().get(0).createQuery(Arrays.asList(token));
+    SelectQueryToSql queryToSql = new SelectQueryToSql(new H2Syntax());
+    String actual = queryToSql.toSql(query.getSelect());
+    String expected = "select sum(vt3.\"value\") as \"agg0\", count(*) as \"agg1\", vt3.\"verdictdbtier\" as \"verdictdbtier0\" from \"originalSchema\".\"originalTable_scrambled\" as vt3 where vt3.\"verdictdbaggblock\" = 0 group by \"verdictdbtier0\"";
+    assertEquals(expected, actual);
+
+    ExecutionInfoToken token1 = new ExecutionInfoToken();
+    token1.setKeyValue("schemaName", "verdict_temp");
+    token1.setKeyValue("tableName", "table1");
+    ExecutionInfoToken token2 = new ExecutionInfoToken();
+    token2.setKeyValue("schemaName", "verdict_temp");
+    token2.setKeyValue("tableName", "table2");
+    query = (CreateTableAsSelectQuery) queryExecutionPlan.getRoot().getSources().get(0).getSources().get(1).createQuery(Arrays.asList(token1, token2));
+    actual = queryToSql.toSql(query.getSelect());
+    actual = actual.replaceAll("verdictdbalias_[0-9]*_[0-9]", "alias");
+    expected = "select alias.\"verdictdbtier0\" as \"verdictdbtier0\", alias.\"agg0\" + alias.\"agg0\" as \"agg0\", alias.\"agg1\" + alias.\"agg1\" as \"agg1\" from \"verdict_temp\".\"table1\" as alias, \"verdict_temp\".\"table2\" as alias where alias.\"verdictdbtier0\" = alias.\"verdictdbtier0\"";
+    assertEquals(expected, actual);
+
+    ExecutionInfoToken token3 = queryExecutionPlan.getRoot().getSources().get(0).getSources().get(0).createToken(null);
+    query = (CreateTableAsSelectQuery) queryExecutionPlan.getRoot().getSources().get(0).createQuery(Arrays.asList(token3));
+    actual = queryToSql.toSql(query.getSelect());
+    actual = actual.replaceAll("verdictdbtemptable_[0-9]*_[0-9]", "alias");
+    expected = "select (1 + (sum(to_scale_query.\"agg0\") / sum(to_scale_query.\"agg1\"))) * sum(to_scale_query.\"agg0\") as \"vc4\" " +
+        "from " +
+        "(select case " +
+        "when (to_scale_query.\"verdictdbtier0\" = 1) then (5.0 * to_scale_query.\"agg0\") " +
+        "when (to_scale_query.\"verdictdbtier0\" = 0) then (2.0 * to_scale_query.\"agg0\") " +
+        "else 0 end as \"agg0\", " +
+        "case " +
+        "when (to_scale_query.\"verdictdbtier0\" = 1) then (5.0 * to_scale_query.\"agg1\") " +
+        "when (to_scale_query.\"verdictdbtier0\" = 0) then (2.0 * to_scale_query.\"agg1\") " +
+        "else 0 end as \"agg1\", " +
+        "to_scale_query.\"verdictdbtier0\" as \"verdictdbtier0\" " +
+        "from \"verdictdb_temp\".\"alias\" as to_scale_query) " +
+        "as to_scale_query";
+    assertEquals(actual, expected);
   }
 
 }

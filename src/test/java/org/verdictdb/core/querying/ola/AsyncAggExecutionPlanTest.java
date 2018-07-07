@@ -10,6 +10,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -28,9 +29,9 @@ import org.verdictdb.core.sqlobject.CreateTableAsSelectQuery;
 import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sqlreader.NonValidatingSQLParser;
-import org.verdictdb.sqlreader.QueryToSql;
 import org.verdictdb.sqlreader.RelationStandardizer;
 import org.verdictdb.sqlsyntax.H2Syntax;
+import org.verdictdb.sqlwriter.QueryToSql;
 
 public class AsyncAggExecutionPlanTest {
 
@@ -82,6 +83,10 @@ public class AsyncAggExecutionPlanTest {
     stmt.executeUpdate(QueryToSql.convert(new H2Syntax(), scramblingQuery));
     ScrambleMetaForTable tablemeta = scrambler.generateMeta();
     scrambledTable = tablemeta.getTableName();
+    tablemeta.setNumberOfTiers(1);
+    HashMap<Integer, List<Double>> distribution1 = new HashMap<>();
+    distribution1.put(0, Arrays.asList(0.2, 0.5, 1.0));
+    tablemeta.setCumulativeMassDistributionPerTier(distribution1);
     meta.insertScrambleMetaEntry(tablemeta);
 
     staticMetaData.setDefaultSchema(originalSchema);

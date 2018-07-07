@@ -234,7 +234,6 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
     return new ColumnOp("between", Arrays.asList(column1, column2, column3));
   }
 
-
   public static ColumnOp whenthenelse(List<UnnamedColumn> cols) {
     return new ColumnOp("whenthenelse", cols);
   }
@@ -309,6 +308,15 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
   @Override
   public boolean isAggregateColumn() {
     return isColumnOpAggregate();
+  }
+
+  @Override
+  public ColumnOp deepcopy() {
+    List<UnnamedColumn> newOperands = new ArrayList<>();
+    for (UnnamedColumn operand:operands) {
+      newOperands.add(operand.deepcopy());
+    }
+    return new ColumnOp(opType, newOperands);
   }
 
 }

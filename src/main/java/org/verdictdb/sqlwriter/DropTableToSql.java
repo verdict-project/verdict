@@ -1,4 +1,4 @@
-package org.verdictdb.sqlreader;
+package org.verdictdb.sqlwriter;
 
 import org.verdictdb.core.sqlobject.DropTableQuery;
 import org.verdictdb.exception.VerdictDBException;

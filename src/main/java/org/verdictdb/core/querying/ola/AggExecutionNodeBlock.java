@@ -4,20 +4,15 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.verdictdb.core.querying.AggExecutionNode;
 import org.verdictdb.core.querying.ExecutableNodeBase;
+import org.verdictdb.core.querying.IdCreator;
 import org.verdictdb.core.querying.QueryNodeBase;
-import org.verdictdb.core.querying.TempIdCreator;
 import org.verdictdb.core.scrambling.ScrambleMeta;
-import org.verdictdb.core.sqlobject.AbstractRelation;
-import org.verdictdb.core.sqlobject.BaseColumn;
-import org.verdictdb.core.sqlobject.BaseTable;
-import org.verdictdb.core.sqlobject.ColumnOp;
-import org.verdictdb.core.sqlobject.ConstantColumn;
-import org.verdictdb.core.sqlobject.JoinTable;
-import org.verdictdb.core.sqlobject.SelectQuery;
+import org.verdictdb.core.sqlobject.*;
 import org.verdictdb.exception.VerdictDBValueException;
 
 /**
@@ -29,13 +24,17 @@ import org.verdictdb.exception.VerdictDBValueException;
  */
 public class AggExecutionNodeBlock {
 
-  TempIdCreator idCreator;
+  IdCreator idCreator;
 
   ExecutableNodeBase blockRoot;
 
   List<ExecutableNodeBase> blockNodes;
 
-  public AggExecutionNodeBlock(TempIdCreator idCreator, ExecutableNodeBase blockRoot) {
+  int aggColumnIdentiferNum = 0;
+
+  int verdictdbTierIndentiferNum = 0;
+
+  public AggExecutionNodeBlock(IdCreator idCreator, ExecutableNodeBase blockRoot) {
     this.idCreator = idCreator;
     this.blockRoot = blockRoot;
     this.blockNodes = getNodesInBlock(blockRoot);
@@ -92,10 +91,10 @@ public class AggExecutionNodeBlock {
       String tableName = a.getRight().getMiddle();
       scrambles.add(Pair.of(schemaName, tableName));
     }
-    OlaAggregationPlan aggMeta = new OlaAggregationPlan(scrambleMeta, scrambles);
+    OlaAggregationPlan aggPlan = new OlaAggregationPlan(scrambleMeta, scrambles);
 
     // second, according to the plan, create individual nodes that perform aggregations.
-    for (int i = 0; i < aggMeta.totalBlockAggCount(); i++) {
+    for (int i = 0; i < aggPlan.totalBlockAggCount(); i++) {
       // copy and remove the dependency to its parents
       AggExecutionNodeBlock copy = deepcopyExcludingDependentAggregates();
       ExecutableNodeBase aggroot = copy.getBlockRootNode();
@@ -108,35 +107,20 @@ public class AggExecutionNodeBlock {
       List<Pair<ExecutableNodeBase, Triple<String, String, String>>> scrambledNodeAndTableName = 
           identifyScrambledNodes(scrambleMeta, copy.getNodesInBlock());
 
-      // TODO: dimension should not be created here
-      // simply use OlaAggregationMetaData
-      if (scrambles.size()==1) {
-        Dimension dimension = new Dimension(scrambles.get(0).getLeft(), scrambles.get(0).getRight(), i, i);
-        ((AggExecutionNode) aggroot).getCubes().addAll(Arrays.asList(new HyperTableCube(Arrays.asList(dimension))));
-      }
-      else {
-        int turn = i % scrambles.size();
-        int round = i / scrambles.size() + 1;
-        List<Dimension> dimensionList = new ArrayList<>();
-        for (int j = 0; j<scrambles.size(); j++) {
-          int blockCount = scrambleMeta.getAggregationBlockCount(scrambles.get(j).getLeft(), scrambles.get(j).getRight());
-          if (turn==j) {
-            Dimension d = new Dimension(scrambles.get(j).getLeft(), scrambles.get(j).getRight(),round-1, round-1);
-            dimensionList.add(d);
-          }
-          else {
-            Dimension d;
-            if (j<turn) {
-              d = new Dimension(scrambles.get(j).getLeft(), scrambles.get(j).getRight(), round, blockCount-1);
-            }
-            else {
-              d = new Dimension(scrambles.get(j).getLeft(), scrambles.get(j).getRight(), round - 1, blockCount-1);
-            }
-            dimensionList.add(d);
-          }
-        }
-        ((AggExecutionNode)aggroot).getCubes().addAll(Arrays.asList(new HyperTableCube(dimensionList)));
-      }
+      // assign hyper table cube to the block
+      ((AggExecutionNode)aggroot).getMeta().setCubes(Arrays.asList(aggPlan.cubes.get(i)));
+
+      // Search for agg column
+      // rewrite individual aggregate node so that it only select basic aggregate column and non-aggregate column
+      List<SelectItem> newSelectlist = rewriteSelectlistWithBasicAgg(((AggExecutionNode)aggroot).getSelectQuery(),  ((AggExecutionNode)aggroot).getMeta());
+
+      // add tier column and group attribute if from list has multiple tier table
+      addTierColumn(((AggExecutionNode)aggroot).getSelectQuery(), newSelectlist, scrambleMeta);
+
+      ((AggExecutionNode)aggroot).getSelectQuery().clearSelectList();
+      ((AggExecutionNode)aggroot).getSelectQuery().getSelectList().addAll(newSelectlist);
+
+      aggColumnIdentiferNum = 0;
 
       // insert predicates
       for (Pair<ExecutableNodeBase, Triple<String, String, String>> a : scrambledNodeAndTableName) {
@@ -144,7 +128,7 @@ public class AggExecutionNodeBlock {
         String schemaName = a.getRight().getLeft();
         String tableName = a.getRight().getMiddle();
         String aliasName = a.getRight().getRight();
-        Pair<Integer, Integer> span = aggMeta.getAggBlockSpanForTable(schemaName, tableName, i);
+        Pair<Integer, Integer> span = aggPlan.getAggBlockSpanForTable(schemaName, tableName, i);
         String aggblockColumn = scrambleMeta.getAggregationBlockColumn(schemaName, tableName);
         SelectQuery q = ((QueryNodeBase) scrambledNode).getSelectQuery();
         //        String aliasName = findAliasFor(schemaName, tableName, q.getFromList());
@@ -174,7 +158,7 @@ public class AggExecutionNodeBlock {
     for (ExecutableNodeBase n : individualAggNodes) {
       n.clearSubscribers();
     }
-    for (int i = 1; i < aggMeta.totalBlockAggCount(); i++) {
+    for (int i = 1; i < aggPlan.totalBlockAggCount(); i++) {
       AggCombinerExecutionNode combiner;
       if (i == 1) {
         combiner = AggCombinerExecutionNode.create(
@@ -301,6 +285,113 @@ public class AggExecutionNodeBlock {
     // compose a return value
     int rootIdx = blockNodes.indexOf(blockRoot);
     return new AggExecutionNodeBlock(idCreator, newNodes.get(rootIdx)); 
+  }
+
+
+  // judge the aggregate column
+  public static List<ColumnOp> getAggregateColumn(UnnamedColumn sel) {
+    List<SelectItem> itemToCheck = new ArrayList<>();
+    itemToCheck.add(sel);
+    List<ColumnOp> columnOps = new ArrayList<>();
+    while (!itemToCheck.isEmpty()) {
+      SelectItem s = itemToCheck.get(0);
+      itemToCheck.remove(0);
+      if (s instanceof ColumnOp) {
+        if (((ColumnOp) s).getOpType().equals("count") || ((ColumnOp) s).getOpType().equals("sum") || ((ColumnOp) s).getOpType().equals("avg")) {
+          columnOps.add((ColumnOp) s);
+        }
+        else itemToCheck.addAll(((ColumnOp) s).getOperands());
+      }
+    }
+    return columnOps;
+  }
+
+  List<SelectItem> rewriteSelectlistWithBasicAgg(SelectQuery query, AggMeta meta) {
+    List<SelectItem> selectList = query.getSelectList();
+    List<String> aggColumnAlias = new ArrayList<>();
+    List<SelectItem> newSelectlist = new ArrayList<>();
+    meta.setOriginalSelectList(selectList);
+    for (SelectItem selectItem : selectList) {
+      if (selectItem instanceof AliasedColumn) {
+        List<ColumnOp> columnOps = getAggregateColumn(((AliasedColumn) selectItem).getColumn());
+        // If it contains agg columns
+        if (!columnOps.isEmpty()) {
+          meta.getAggColumn().put(selectItem, columnOps);
+          for (ColumnOp col:columnOps) {
+            if (col.getOpType().equals("avg")) {
+              if (!meta.getAggColumnAggAliasPair().containsKey(
+                  new ImmutablePair<>("sum", col.getOperand(0)))) {
+                ColumnOp col1 = new ColumnOp("sum", col.getOperand(0));
+                newSelectlist.add(new AliasedColumn(col1, "agg"+aggColumnIdentiferNum));
+                meta.getAggColumnAggAliasPair().put(
+                    new ImmutablePair<>("sum", col1.getOperand(0)), "agg"+aggColumnIdentiferNum);
+                aggColumnAlias.add("agg"+aggColumnIdentiferNum++);
+              }
+              if (!meta.getAggColumnAggAliasPair().containsKey(
+                  new ImmutablePair<>("count", (UnnamedColumn) new AsteriskColumn()))) {
+                ColumnOp col2 = new ColumnOp("count", new AsteriskColumn());
+                newSelectlist.add(new AliasedColumn(col2, "agg"+aggColumnIdentiferNum));
+                meta.getAggColumnAggAliasPair().put(
+                    new ImmutablePair<>("count", (UnnamedColumn) new AsteriskColumn()), "agg"+aggColumnIdentiferNum);
+                aggColumnAlias.add("agg"+aggColumnIdentiferNum++);
+              }
+            } else {
+              if (col.getOpType().equals("count") && !meta.getAggColumnAggAliasPair().containsKey(
+                  new ImmutablePair<>("count", (UnnamedColumn)(new AsteriskColumn())))) {
+                ColumnOp col1 = new ColumnOp(col.getOpType());
+                newSelectlist.add(new AliasedColumn(col1, "agg"+aggColumnIdentiferNum));
+                meta.getAggColumnAggAliasPair().put(
+                    new ImmutablePair<>(col.getOpType(), (UnnamedColumn)new AsteriskColumn()), "agg"+aggColumnIdentiferNum);
+                aggColumnAlias.add("agg"+aggColumnIdentiferNum++);
+              }
+              else if (!meta.getAggColumnAggAliasPair().containsKey(
+                  new ImmutablePair<>(col.getOpType(), col.getOperand(0)))) {
+                ColumnOp col1 = new ColumnOp(col.getOpType(), col.getOperand(0));
+                newSelectlist.add(new AliasedColumn(col1, "agg"+aggColumnIdentiferNum));
+                meta.getAggColumnAggAliasPair().put(
+                    new ImmutablePair<>(col.getOpType(), col1.getOperand(0)), "agg"+aggColumnIdentiferNum);
+                aggColumnAlias.add("agg"+aggColumnIdentiferNum++);
+              }
+            }
+          }
+        }
+        else {
+          newSelectlist.add(selectItem);
+        }
+      } else {
+        newSelectlist.add(selectItem);
+      }
+    }
+    meta.setAggAlias(aggColumnAlias);
+    return newSelectlist;
+  }
+
+  void addTierColumn(SelectQuery query, List<SelectItem> newSelectList, ScrambleMeta scrambleMeta) {
+    for (AbstractRelation table:query.getFromList()) {
+      if (table instanceof BaseTable) {
+        String schemaName = ((BaseTable) table).getSchemaName();
+        String tableName = ((BaseTable) table).getTableName();
+        if (scrambleMeta.isScrambled(schemaName, tableName) && scrambleMeta.getMetaForTable(schemaName, tableName).getNumberOfTiers()>1) {
+          newSelectList.add(new AliasedColumn(new BaseColumn(schemaName, tableName, table.getAliasName().get(), scrambleMeta.getTierColumn(schemaName, tableName)),
+              "verdictdbtier"+verdictdbTierIndentiferNum));
+          query.addGroupby(new AliasReference("verdictdbtier"+verdictdbTierIndentiferNum++));
+        }
+      }
+      else if (table instanceof JoinTable) {
+        for (AbstractRelation jointable:((JoinTable) table).getJoinList()) {
+          if (jointable instanceof BaseTable) {
+            String schemaName = ((BaseTable) jointable).getSchemaName();
+            String tableName = ((BaseTable) jointable).getTableName();
+            if (scrambleMeta.isScrambled(schemaName, tableName) && scrambleMeta.getMetaForTable(schemaName, tableName).getNumberOfTiers()>1) {
+              newSelectList.add(new AliasedColumn(new BaseColumn(schemaName, tableName, jointable.getAliasName().get(), scrambleMeta.getTierColumn(schemaName, tableName)),
+                  "verdictdbtier"+verdictdbTierIndentiferNum));
+              query.addGroupby(new AliasReference("verdictdbtier"+verdictdbTierIndentiferNum++));
+            }
+          }
+        }
+      }
+    }
+    verdictdbTierIndentiferNum = 0;
   }
 
 }

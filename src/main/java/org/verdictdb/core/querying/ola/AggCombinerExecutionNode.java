@@ -9,9 +9,9 @@ import org.verdictdb.core.connection.DbmsQueryResult;
 import org.verdictdb.core.execution.ExecutionInfoToken;
 import org.verdictdb.core.querying.CreateTableAsSelectNode;
 import org.verdictdb.core.querying.ExecutableNodeBase;
+import org.verdictdb.core.querying.IdCreator;
 import org.verdictdb.core.querying.QueryNodeBase;
 import org.verdictdb.core.querying.SubscriptionTicket;
-import org.verdictdb.core.querying.TempIdCreator;
 import org.verdictdb.core.sqlobject.AbstractRelation;
 import org.verdictdb.core.sqlobject.AliasedColumn;
 import org.verdictdb.core.sqlobject.BaseColumn;
@@ -25,14 +25,14 @@ import org.verdictdb.exception.VerdictDBValueException;
 
 public class AggCombinerExecutionNode extends CreateTableAsSelectNode {
 
-  List<HyperTableCube> cubes = new ArrayList<>();
+  AggMeta aggMeta = new AggMeta();
 
-  private AggCombinerExecutionNode(TempIdCreator namer) {
+  private AggCombinerExecutionNode(IdCreator namer) {
     super(namer, null);
   }
   
   public static AggCombinerExecutionNode create(
-      TempIdCreator namer,
+      IdCreator namer,
       ExecutableNodeBase leftQueryExecutionNode,
       ExecutableNodeBase rightQueryExecutionNode) throws VerdictDBValueException {
     AggCombinerExecutionNode node = new AggCombinerExecutionNode(namer);
@@ -112,8 +112,13 @@ public class AggCombinerExecutionNode extends CreateTableAsSelectNode {
   @Override
   public SqlConvertible createQuery(List<ExecutionInfoToken> tokens) throws VerdictDBException {
     for (ExecutionInfoToken token:tokens) {
-      if (token.getValue("hyperTableCube") != null) {
-        cubes.addAll((List<HyperTableCube>) token.getValue("hyperTableCube"));
+      AggMeta aggMeta = (AggMeta) token.getValue("aggMeta");
+      if (aggMeta!=null) {
+        this.aggMeta.getCubes().addAll(aggMeta.getCubes());
+        this.aggMeta.setAggAlias(aggMeta.getAggAlias());
+        this.aggMeta.setOriginalSelectList(aggMeta.getOriginalSelectList());
+        this.aggMeta.setAggColumn(aggMeta.getAggColumn());
+        this.aggMeta.setAggColumnAggAliasPair(aggMeta.getAggColumnAggAliasPair());
       }
     }
     return super.createQuery(tokens);
@@ -122,10 +127,8 @@ public class AggCombinerExecutionNode extends CreateTableAsSelectNode {
   @Override
   public ExecutionInfoToken createToken(DbmsQueryResult result) {
     ExecutionInfoToken token = super.createToken(result);
-    if (!cubes.isEmpty()) {
-      token.setKeyValue("hyperTableCube", cubes);
-    }
-    token.setKeyValue("dependent", this);
+    token.setKeyValue("aggMeta", aggMeta);
+    token.setKeyValue("dependentQuery", this.selectQuery);
     return token;
   }
 

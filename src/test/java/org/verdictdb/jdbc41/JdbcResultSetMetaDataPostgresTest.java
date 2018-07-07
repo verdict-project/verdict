@@ -26,7 +26,7 @@ import org.verdictdb.exception.VerdictDBValueException;
 
 public class JdbcResultSetMetaDataPostgresTest {
 
-  static Connection conn;
+  private static Connection conn;
 
   private static Statement stmt;
 

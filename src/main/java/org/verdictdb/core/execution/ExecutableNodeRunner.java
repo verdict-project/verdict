@@ -8,7 +8,7 @@ import org.verdictdb.core.connection.DbmsConnection;
 import org.verdictdb.core.connection.DbmsQueryResult;
 import org.verdictdb.core.sqlobject.SqlConvertible;
 import org.verdictdb.exception.VerdictDBException;
-import org.verdictdb.sqlreader.QueryToSql;
+import org.verdictdb.sqlwriter.QueryToSql;
 
 public class ExecutableNodeRunner implements Runnable {
 

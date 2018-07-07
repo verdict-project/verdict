@@ -1,4 +1,4 @@
-package org.verdictdb.sqlreader;
+package org.verdictdb.sqlwriter;
 
 import java.util.List;
 import java.util.Set;
@@ -31,7 +31,7 @@ public class SelectQueryToSql {
   SqlSyntax syntax;
 
   Set<String> opTypeNotRequiringParentheses = Sets.newHashSet(
-      "sum", "avg", "count", "std", "sqrt", "notnull", "whenthenelse", "rand", "floor");
+      "sum", "avg", "count", "std", "sqrt", "notnull", "rand", "floor");
 
   public SelectQueryToSql(SqlSyntax syntax) {
     this.syntax = syntax;
@@ -115,9 +115,9 @@ public class SelectQueryToSql {
 //        + " end";
 //      }
       else if (columnOp.getOpType().equals("whenthenelse")) {
-        String sql = "case ";
+        String sql = "case";
         for (int i=0; i<columnOp.getOperands().size()-1;i=i+2) {
-          sql = sql + "when " + withParentheses(columnOp.getOperand(0)) + " then " + withParentheses(columnOp.getOperand(1));
+          sql = sql + " when " + withParentheses(columnOp.getOperand(i)) + " then " + withParentheses(columnOp.getOperand(i+1));
         }
         sql = sql + " else " + withParentheses(columnOp.getOperand(columnOp.getOperands().size()-1)) + " end";
         return sql;
