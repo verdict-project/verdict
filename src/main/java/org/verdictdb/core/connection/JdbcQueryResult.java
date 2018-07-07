@@ -6,6 +6,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static java.sql.Types.BIT;
+
 public class JdbcQueryResult implements DbmsQueryResult {
   
   List<String> columnNames = new ArrayList<>();
@@ -53,6 +55,9 @@ public class JdbcQueryResult implements DbmsQueryResult {
     while (resultSet.next()) {
       List<Object> row = new ArrayList<>();
       for (int i=0; i< columnCount; i++) {
+       // if (resultSet.getMetaData().getColumnType(i+1)==BIT) {
+       //   row.add(resultSet.getString(i+1));
+       // }
         row.add(resultSet.getObject(i+1));
       }
       result.add(row);
