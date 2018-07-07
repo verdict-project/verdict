@@ -10,33 +10,35 @@ import static java.sql.Types.*;
 
 public class SparkDataTypeConverter {
 
-  public static int typeInt(String type) {
-    if (type.equals("BinaryType")) {
+  public static int typeInt(DataType type) {
+    if (type instanceof BinaryType) {
       return BIT;
-    } else if (type.equals("BooleanType")) {
+    } else if (type instanceof BooleanType) {
       return BOOLEAN;
-    } else if (type.equals("DateType")) {
+    } else if (type instanceof DateType) {
       return DATE;
-    } else if (type.equals("StringType")) {
+    } else if (type instanceof StringType) {
       return VARCHAR;
-    } else if (type.equals("TimestampType")) {
+    } else if (type instanceof TimestampType) {
       return TIMESTAMP;
-    } else if (type.equals("DecimalType")) {
+    } else if (type instanceof DecimalType) {
       return DECIMAL;
-    } else if (type.equals("DoubleType")) {
+    } else if (type instanceof DoubleType) {
       return DOUBLE;
-    } else if (type.equals("FloatType")) {
+    } else if (type instanceof FloatType) {
       return FLOAT;
-    } else if (type.equals("ByteType")) {
+    } else if (type instanceof ByteType) {
       return SMALLINT;
-    } else if (type.equals("IntegerType")) {
+    } else if (type instanceof IntegerType) {
       return INTEGER;
-    } else if (type.equals("LongType")) {
-      return INTEGER;
-    } else if (type.equals("ShortType")) {
+    } else if (type instanceof LongType) {
+      return BIGINT;
+    } else if (type instanceof ShortType) {
       return SMALLINT;
-    } else if (type.equals("ArrayType")) {
+    } else if (type instanceof ArrayType) {
       return ARRAY;
+    } else if (type instanceof StructType) {
+      return STRUCT;
     } else return OTHER;
   }
 

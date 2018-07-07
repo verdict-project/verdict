@@ -35,7 +35,7 @@ public class SparkQueryResult implements DbmsQueryResult {
         nullable.add(columnNoNulls);
       }
       columnNames.add(structField.name());
-      int type = SparkDataTypeConverter.typeInt(structField.dataType().toString());
+      int type = SparkDataTypeConverter.typeInt(structField.dataType());
       columnTypes.add(type);
       columnClassName.add(SparkDataTypeConverter.typeClassName(type));
     }
