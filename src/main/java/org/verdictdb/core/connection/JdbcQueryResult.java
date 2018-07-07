@@ -1,12 +1,12 @@
 package org.verdictdb.core.connection;
 
+import static java.sql.Types.BIT;
+
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-
-import static java.sql.Types.BIT;
 
 public class JdbcQueryResult implements DbmsQueryResult {
   

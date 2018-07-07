@@ -1,19 +1,19 @@
 package org.verdictdb.core.connection;
 
-import org.apache.spark.sql.SparkSession;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.verdictdb.exception.VerdictDBDbmsException;
-import org.verdictdb.sqlsyntax.SparkSyntax;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import org.apache.spark.sql.SparkSession;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.verdictdb.exception.VerdictDBDbmsException;
+import org.verdictdb.sqlsyntax.SparkSyntax;
 
 public class SparkQueryResultTest {
 
@@ -44,7 +44,7 @@ public class SparkQueryResultTest {
   }
 
   @AfterClass
-  public static void BreakDown() throws VerdictDBDbmsException {
+  public static void tearDown() throws VerdictDBDbmsException {
     sparkConnection.execute("DROP TABLE IF EXISTS myschema.PERSON");
     sparkConnection.execute("DROP SCHEMA IF EXISTS myschema");
   }

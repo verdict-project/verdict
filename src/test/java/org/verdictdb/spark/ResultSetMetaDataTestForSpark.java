@@ -1,23 +1,38 @@
-package org.verdictdb.jdbc41;
+package org.verdictdb.spark;
+
+import static java.sql.Types.ARRAY;
+import static java.sql.Types.BIGINT;
+import static java.sql.Types.BIT;
+import static java.sql.Types.BOOLEAN;
+import static java.sql.Types.DATE;
+import static java.sql.Types.DECIMAL;
+import static java.sql.Types.DOUBLE;
+import static java.sql.Types.FLOAT;
+import static java.sql.Types.INTEGER;
+import static java.sql.Types.OTHER;
+import static java.sql.Types.SMALLINT;
+import static java.sql.Types.STRUCT;
+import static java.sql.Types.TIMESTAMP;
+import static java.sql.Types.VARCHAR;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+
+import java.sql.Date;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.sql.Timestamp;
 
 import org.apache.spark.sql.SparkSession;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.verdictdb.core.connection.DbmsQueryResult;
 import org.verdictdb.core.connection.SparkConnection;
-import org.verdictdb.core.connection.SparkQueryResult;
 import org.verdictdb.exception.VerdictDBDbmsException;
+import org.verdictdb.jdbc41.JdbcResultSet;
 import org.verdictdb.sqlsyntax.SparkSyntax;
 
-import java.sql.*;
-
-import static java.sql.Types.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.fail;
-
-public class JdbcResultSetMetaDataTestForSpark {
+public class ResultSetMetaDataTestForSpark {
 
   private static SparkSession spark;
 

@@ -44,6 +44,7 @@ public class HiveTpchSelectQueryToSqlTest {
   public void setupSourceDatabase() throws Exception {
     shell.execute("CREATE DATABASE tpch");
     File schemaFile = new File("src/test/resources/tpch-schema-data.sql");
+//    File schemaFile = new File("src/test/resources/tpch-schema.sql");
     String schemas = Files.toString(schemaFile, Charsets.UTF_8);
     for (String schema : schemas.split(";")) {
       schema += ";"; // add semicolon at the end
@@ -486,7 +487,7 @@ public class HiveTpchSelectQueryToSqlTest {
     SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
     String actual = relToSql.toSql(relation);
     List<Object[]> result = shell.executeStatement(actual);
-    assertEquals(1, result.size());
+    assertEquals(0, result.size());
   }
 
   @Test
@@ -572,7 +573,7 @@ public class HiveTpchSelectQueryToSqlTest {
     SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
     String actual = relToSql.toSql(relation);
     List<Object[]> result = shell.executeStatement(actual);
-    assertEquals(1, result.size());
+    assertEquals(0, result.size());
   }
 
   @Test
@@ -642,7 +643,7 @@ public class HiveTpchSelectQueryToSqlTest {
     SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
     String actual = relToSql.toSql(relation);
     List<Object[]> result = shell.executeStatement(actual);
-    assertEquals(1, result.size());
+    assertEquals(0, result.size());
   }
 
   @Test
@@ -710,7 +711,7 @@ public class HiveTpchSelectQueryToSqlTest {
     SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
     String actual = relToSql.toSql(relation);
     List<Object[]> result = shell.executeStatement(actual);
-    assertEquals(20, result.size());
+    assertEquals(0, result.size());
   }
 
   @Test
@@ -776,7 +777,7 @@ public class HiveTpchSelectQueryToSqlTest {
     SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
     String actual = relToSql.toSql(relation);
     List<Object[]> result = shell.executeStatement(actual);
-    assertEquals(1, result.size());
+    assertEquals(0, result.size());
   }
 
   @Test
@@ -849,7 +850,7 @@ public class HiveTpchSelectQueryToSqlTest {
     SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
     String actual = relToSql.toSql(relation);
     List<Object[]> result = shell.executeStatement(actual);
-    assertEquals(1, result.size());
+    assertEquals(0, result.size());
   }
 
   @Test
@@ -1029,7 +1030,7 @@ public class HiveTpchSelectQueryToSqlTest {
     SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
     String actual = relToSql.toSql(relation);
     List<Object[]> result = shell.executeStatement(actual);
-    assertEquals(1, result.size());
+    assertEquals(0, result.size());
   }
 
   @Test
@@ -1132,7 +1133,7 @@ public class HiveTpchSelectQueryToSqlTest {
     SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
     String actual = relToSql.toSql(relation);
     List<Object[]> result = shell.executeStatement(actual);
-    assertEquals(1, result.size());
+    assertEquals(0, result.size());
   }
 
   @Test
@@ -1394,7 +1395,7 @@ public class HiveTpchSelectQueryToSqlTest {
     SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
     String actual = relToSql.toSql(relation);
     List<Object[]> result = shell.executeStatement(actual);
-    assertEquals(1, result.size());
+    assertEquals(0, result.size());
   }
 
   @Test
@@ -1468,7 +1469,7 @@ public class HiveTpchSelectQueryToSqlTest {
     SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
     String actual = relToSql.toSql(relation);
     List<Object[]> result = shell.executeStatement(actual);
-    assertEquals(19, result.size());
+    assertEquals(0, result.size());
   }
 
   @Test
@@ -1529,6 +1530,6 @@ public class HiveTpchSelectQueryToSqlTest {
     SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
     String actual = relToSql.toSql(relation);
     List<Object[]> result = shell.executeStatement(actual);
-    assertEquals(1, result.size());
+    assertEquals(0, result.size());
   }
 }
