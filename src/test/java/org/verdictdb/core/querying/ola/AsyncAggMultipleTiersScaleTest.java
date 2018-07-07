@@ -168,20 +168,157 @@ public class AsyncAggMultipleTiersScaleTest {
     query = (CreateTableAsSelectQuery) queryExecutionPlan.getRoot().getSources().get(0).createQuery(Arrays.asList(token3));
     actual = queryToSql.toSql(query.getSelect());
     actual = actual.replaceAll("verdictdbtemptable_[0-9]*_[0-9]", "alias");
-    expected = "select (1 + (sum(to_scale_query.\"agg0\") / sum(to_scale_query.\"agg1\"))) * sum(to_scale_query.\"agg0\") as \"vc4\" " +
+    expected = "select (1 + (sum(verdictdbafterscaling.\"agg0\") / sum(verdictdbafterscaling.\"agg1\"))) * sum(verdictdbafterscaling.\"agg0\") as \"vc4\" " +
         "from " +
         "(select case " +
-        "when (to_scale_query.\"verdictdbtier0\" = 1) then (5.0 * to_scale_query.\"agg0\") " +
-        "when (to_scale_query.\"verdictdbtier0\" = 0) then (2.0 * to_scale_query.\"agg0\") " +
+        "when (verdictdbbeforescaling.\"verdictdbtier0\" = 1) then (5.0 * verdictdbbeforescaling.\"agg0\") " +
+        "when (verdictdbbeforescaling.\"verdictdbtier0\" = 0) then (2.0 * verdictdbbeforescaling.\"agg0\") " +
         "else 0 end as \"agg0\", " +
         "case " +
-        "when (to_scale_query.\"verdictdbtier0\" = 1) then (5.0 * to_scale_query.\"agg1\") " +
-        "when (to_scale_query.\"verdictdbtier0\" = 0) then (2.0 * to_scale_query.\"agg1\") " +
+        "when (verdictdbbeforescaling.\"verdictdbtier0\" = 1) then (5.0 * verdictdbbeforescaling.\"agg1\") " +
+        "when (verdictdbbeforescaling.\"verdictdbtier0\" = 0) then (2.0 * verdictdbbeforescaling.\"agg1\") " +
         "else 0 end as \"agg1\", " +
-        "to_scale_query.\"verdictdbtier0\" as \"verdictdbtier0\" " +
-        "from \"verdictdb_temp\".\"alias\" as to_scale_query) " +
-        "as to_scale_query";
+        "verdictdbbeforescaling.\"verdictdbtier0\" as \"verdictdbtier0\" " +
+        "from \"verdictdb_temp\".\"alias\" as verdictdbbeforescaling) " +
+        "as verdictdbafterscaling";
     assertEquals(actual, expected);
   }
 
+  @Test
+  public void simpleAggTest1() throws VerdictDBException,SQLException {
+    RelationStandardizer.resetItemID();
+    String sql = "select avg(value) from originalTable_scrambled";
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
+    RelationStandardizer gen = new RelationStandardizer(staticMetaData);
+    relation = gen.standardize((SelectQuery) relation);
+
+    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
+    queryExecutionPlan.cleanUp();
+    queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
+    Dimension d1 = new Dimension("originalSchema", "originalTable_scrambled", 0, 0);
+    assertEquals(
+        new HyperTableCube(Arrays.asList(d1)),
+        ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getMeta().getCubes().get(0));
+    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
+
+    stmt.execute("create schema if not exists \"verdictdb_temp\";");
+    ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
+    stmt.execute("drop schema \"verdictdb_temp\" cascade;");
+  }
+
+  @Test
+  public void simpleAggTest2() throws VerdictDBException,SQLException {
+    RelationStandardizer.resetItemID();
+    String sql = "select sum(value) from originalTable_scrambled";
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
+    RelationStandardizer gen = new RelationStandardizer(staticMetaData);
+    relation = gen.standardize((SelectQuery) relation);
+
+    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
+    queryExecutionPlan.cleanUp();
+    queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
+    Dimension d1 = new Dimension("originalSchema", "originalTable_scrambled", 0, 0);
+    assertEquals(
+        new HyperTableCube(Arrays.asList(d1)),
+        ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getMeta().getCubes().get(0));
+    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
+
+    stmt.execute("create schema if not exists \"verdictdb_temp\";");
+    ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
+    stmt.execute("drop schema \"verdictdb_temp\" cascade;");
+  }
+
+  @Test
+  public void simpleAggTest3() throws VerdictDBException,SQLException {
+    RelationStandardizer.resetItemID();
+    String sql = "select count(value) from originalTable_scrambled";
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
+    RelationStandardizer gen = new RelationStandardizer(staticMetaData);
+    relation = gen.standardize((SelectQuery) relation);
+
+    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
+    queryExecutionPlan.cleanUp();
+    queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
+    Dimension d1 = new Dimension("originalSchema", "originalTable_scrambled", 0, 0);
+    assertEquals(
+        new HyperTableCube(Arrays.asList(d1)),
+        ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getMeta().getCubes().get(0));
+    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
+
+    stmt.execute("create schema if not exists \"verdictdb_temp\";");
+    ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
+    stmt.execute("drop schema \"verdictdb_temp\" cascade;");
+  }
+
+  @Test
+  public void simpleAggTest4() throws VerdictDBException,SQLException {
+    RelationStandardizer.resetItemID();
+    String sql = "select avg(value), sum(value) from originalTable_scrambled";
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
+    RelationStandardizer gen = new RelationStandardizer(staticMetaData);
+    relation = gen.standardize((SelectQuery) relation);
+
+    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
+    queryExecutionPlan.cleanUp();
+    queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
+    Dimension d1 = new Dimension("originalSchema", "originalTable_scrambled", 0, 0);
+    assertEquals(
+        new HyperTableCube(Arrays.asList(d1)),
+        ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getMeta().getCubes().get(0));
+    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
+
+    stmt.execute("create schema if not exists \"verdictdb_temp\";");
+    ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
+    stmt.execute("drop schema \"verdictdb_temp\" cascade;");
+  }
+
+  @Test
+  public void simpleAggTest5() throws VerdictDBException,SQLException {
+    RelationStandardizer.resetItemID();
+    String sql = "select avg(value), count(value) from originalTable_scrambled";
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
+    RelationStandardizer gen = new RelationStandardizer(staticMetaData);
+    relation = gen.standardize((SelectQuery) relation);
+
+    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
+    queryExecutionPlan.cleanUp();
+    queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
+    Dimension d1 = new Dimension("originalSchema", "originalTable_scrambled", 0, 0);
+    assertEquals(
+        new HyperTableCube(Arrays.asList(d1)),
+        ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getMeta().getCubes().get(0));
+    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
+
+    stmt.execute("create schema if not exists \"verdictdb_temp\";");
+    ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
+    stmt.execute("drop schema \"verdictdb_temp\" cascade;");
+  }
+
+  @Test
+  public void simpleAggTest6() throws VerdictDBException,SQLException {
+    RelationStandardizer.resetItemID();
+    String sql = "select count(value), sum(value) from originalTable_scrambled";
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
+    RelationStandardizer gen = new RelationStandardizer(staticMetaData);
+    relation = gen.standardize((SelectQuery) relation);
+
+    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
+    queryExecutionPlan.cleanUp();
+    queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
+    Dimension d1 = new Dimension("originalSchema", "originalTable_scrambled", 0, 0);
+    assertEquals(
+        new HyperTableCube(Arrays.asList(d1)),
+        ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getMeta().getCubes().get(0));
+    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
+
+    stmt.execute("create schema if not exists \"verdictdb_temp\";");
+    ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
+    stmt.execute("drop schema \"verdictdb_temp\" cascade;");
+  }
 }

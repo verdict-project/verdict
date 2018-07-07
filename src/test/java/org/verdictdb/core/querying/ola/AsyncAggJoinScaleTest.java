@@ -182,7 +182,7 @@ public class AsyncAggJoinScaleTest {
     query = (CreateTableAsSelectQuery) queryExecutionPlan.getRoot().getSources().get(0).createQuery(Arrays.asList(token3));
     actual = queryToSql.toSql(query.getSelect());
     actual = actual.replaceAll("verdictdbtemptable_[0-9]*_[0-9]", "alias");
-    expected = "select 2.0 * to_scale_query.\"agg0\" as \"s6\" from \"verdictdb_temp\".\"alias\" as to_scale_query";
+    expected = "select 2.0 * verdictdbbeforescaling.\"agg0\" as \"s6\" from \"verdictdb_temp\".\"alias\" as verdictdbbeforescaling";
     assertEquals(actual, expected);
   }
 }

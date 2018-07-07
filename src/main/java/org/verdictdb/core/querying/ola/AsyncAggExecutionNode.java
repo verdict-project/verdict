@@ -194,7 +194,7 @@ public class AsyncAggExecutionNode extends ProjectionNode {
         UnnamedColumn col = ((AliasedColumn) selectItem).getColumn();
         if (aggMeta.getAggAlias().contains(((AliasedColumn) selectItem).getAliasName())) {
           ColumnOp aggColumn = new ColumnOp("multiply", Arrays.<UnnamedColumn>asList(
-              ConstantColumn.valueOf(1.0), new BaseColumn("to_scale_query", ((AliasedColumn) selectItem).getAliasName())
+              ConstantColumn.valueOf(1.0), new BaseColumn("verdictdbbeforescaling", ((AliasedColumn) selectItem).getAliasName())
           ));
           aggColumnlist.add(aggColumn);
           newSelectList.set(index, new AliasedColumn(aggColumn, ((AliasedColumn) selectItem).getAliasName()));
@@ -213,7 +213,7 @@ public class AsyncAggExecutionNode extends ProjectionNode {
               }
             }
           }
-          newSelectList.set(index, new AliasedColumn(new BaseColumn("to_scale_query", ((AliasedColumn) selectItem).getAliasName()),
+          newSelectList.set(index, new AliasedColumn(new BaseColumn("verdictdbbeforescaling", ((AliasedColumn) selectItem).getAliasName()),
               ((AliasedColumn) selectItem).getAliasName()));
         }
       }
@@ -221,7 +221,7 @@ public class AsyncAggExecutionNode extends ProjectionNode {
     Initiated = true;
     // Setup from table
     SelectQuery query = SelectQuery.create(newSelectList,
-        new BaseTable((String) savedToken.getValue("schemaName"), (String) savedToken.getValue("tableName"), "to_scale_query"));
+        new BaseTable((String) savedToken.getValue("schemaName"), (String) savedToken.getValue("tableName"), "verdictdbbeforescaling"));
     return new ImmutablePair<>(aggColumnlist, (SqlConvertible) query);
   }
 
@@ -313,7 +313,7 @@ public class AsyncAggExecutionNode extends ProjectionNode {
   UnnamedColumn generateCaseCondition(List<Integer> tierlist) {
     Optional<ColumnOp> col = Optional.absent();
     for (Map.Entry<Integer, String> entry : multipleTierTableTierInfo.entrySet()) {
-      BaseColumn tierColumn = new BaseColumn("to_scale_query", entry.getValue());
+      BaseColumn tierColumn = new BaseColumn("verdictdbbeforescaling", entry.getValue());
       ColumnOp equation = new ColumnOp("equal", Arrays.asList(tierColumn,
           ConstantColumn.valueOf(tierlist.get(entry.getKey()))));
       if (col.isPresent()) {
@@ -367,7 +367,7 @@ public class AsyncAggExecutionNode extends ProjectionNode {
           }
         }
       } else if (sel instanceof AliasedColumn) {
-        ((AliasedColumn) sel).setColumn(new BaseColumn("to_scale_query", ((AliasedColumn) sel).getAliasName()));
+        ((AliasedColumn) sel).setColumn(new BaseColumn("verdictdbbeforescaling", ((AliasedColumn) sel).getAliasName()));
         ((AliasedColumn) sel).setAliasName(((AliasedColumn) sel).getAliasName());
       }
     }
@@ -391,19 +391,19 @@ public class AsyncAggExecutionNode extends ProjectionNode {
         // If this is a basic aggregation, we need to sum up
         if (aggAlias.contains(((AliasedColumn) sel).getAliasName())) {
           newSelectlist.add(new AliasedColumn(new ColumnOp("sum",
-              new BaseColumn("to_scale_query", ((AliasedColumn) sel).getAliasName())), ((AliasedColumn) sel).getAliasName()));
+              new BaseColumn("verdictdbafterscaling", ((AliasedColumn) sel).getAliasName())), ((AliasedColumn) sel).getAliasName()));
         }
         else {
           // if it is not a tier column, we need to put it in the group by list
           if (!multipleTierTableTierInfo.values().contains(((AliasedColumn) sel).getAliasName())) {
-            newSelectlist.add(new AliasedColumn(new BaseColumn("to_scale_query", ((AliasedColumn) sel).getAliasName()),
+            newSelectlist.add(new AliasedColumn(new BaseColumn("verdictdbafterscaling", ((AliasedColumn) sel).getAliasName()),
                 ((AliasedColumn) sel).getAliasName()));
             groupby.add(((AliasedColumn) sel).getAliasName());
           }
         }
       }
     }
-    subquery.setAliasName("to_scale_query");
+    subquery.setAliasName("verdictdbafterscaling");
     SelectQuery query = SelectQuery.create(newSelectlist, subquery);
     for (String group:groupby) {
       query.addGroupby(new AliasReference(group));
