@@ -197,11 +197,16 @@ public class JdbcResultSetMetaDataTestForMySql {
     assertEquals(1.0, ourResult.getInt(13), 1e-6);           // double precision
     assertEquals(1.0, ourResult.getLong(13), 1e-6);          // double precision
     
-    assertEquals(Timestamp.valueOf(LocalDateTime.of(2018, 12, 31, 0, 0, 0)), ourResult.getTimestamp(14));  // date
-    assertEquals(Timestamp.valueOf(LocalDateTime.of(2018, 12, 31, 1, 0, 0)), ourResult.getTimestamp(15));  // datetime
-    assertEquals(Timestamp.valueOf(LocalDateTime.of(2018, 12, 31, 0, 0, 1)), ourResult.getTimestamp(16));  // timestamp
+//    assertEquals(Timestamp.valueOf(LocalDateTime.of(2018, 12, 31, 0, 0, 0)), ourResult.getTimestamp(14));  // date
+//    assertEquals(Timestamp.valueOf(LocalDateTime.of(2018, 12, 31, 1, 0, 0)), ourResult.getTimestamp(15));  // datetime
+//    assertEquals(Timestamp.valueOf(LocalDateTime.of(2018, 12, 31, 0, 0, 1)), ourResult.getTimestamp(16));  // timestamp
+//    assertEquals(Time.valueOf(LocalTime.of(10, 59, 59)), ourResult.getTime(17));  // time
+//    assertEquals(Timestamp.valueOf(LocalDateTime.of(1970, 1, 1, 10, 59, 59)), ourResult.getTimestamp(17));  // time
+    assertEquals(Timestamp.valueOf("2018-12-31"), ourResult.getTimestamp(14));  // date
+    assertEquals(Timestamp.valueOf("2018-12-31 00:00:01"), ourResult.getTimestamp(15));  // datetime
+    assertEquals(Timestamp.valueOf("2018-12-31 00:00:01"), ourResult.getTimestamp(16));  // timestamp
     assertEquals(Time.valueOf(LocalTime.of(10, 59, 59)), ourResult.getTime(17));  // time
-    assertEquals(Timestamp.valueOf(LocalDateTime.of(1970, 1, 1, 10, 59, 59)), ourResult.getTimestamp(17));  // time
+    assertEquals(Timestamp.valueOf("1970-01-01 10:59:59"), ourResult.getTimestamp(17));  // time
 
     ourResult.close();
   }
