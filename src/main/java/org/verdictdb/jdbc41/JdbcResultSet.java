@@ -161,9 +161,27 @@ public class JdbcResultSet implements ResultSet {
   public boolean getBoolean(int columnIndex) throws SQLException {
     if (isValidType("boolean", columnIndex)) {
       lastValue = queryResult.getValue(columnIndex-1);
-      return (boolean)lastValue;
+      if (lastValue instanceof Boolean) {
+        return (boolean) lastValue;
+      }
+      if (lastValue instanceof Integer || lastValue instanceof Long) {
+        int value = Integer.valueOf(lastValue.toString());
+        if (value == 1) {
+          return true;
+        } else if (value == 0) {
+          return false;
+        }
+      } else if (lastValue instanceof String) {
+        String value = lastValue.toString();
+        if (value.equals("1")) {
+          return true;
+        } else if (value.equals("0")) {
+          return false;
+        }
+      }
+      throw new SQLException("Not a valid value for Boolean type: " + lastValue);
     }
-    else throw new SQLException("Not supported data type.");
+    throw new SQLException("Not a valid value for Boolean type: " + lastValue);
   }
 
   @Override
