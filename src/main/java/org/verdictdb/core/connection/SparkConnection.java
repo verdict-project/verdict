@@ -1,9 +1,6 @@
 package org.verdictdb.core.connection;
 
 import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,8 +10,6 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.verdictdb.exception.VerdictDBDbmsException;
-import org.verdictdb.jdbc41.JdbcResultSet;
-import org.verdictdb.sqlsyntax.PostgresqlSyntax;
 import org.verdictdb.sqlsyntax.SparkSyntax;
 import org.verdictdb.sqlsyntax.SqlSyntax;
 
@@ -23,6 +18,11 @@ public class SparkConnection implements DbmsConnection {
   SparkSession sc;
 
   SqlSyntax syntax;
+  
+  public SparkConnection(SparkSession sc) {
+    this.sc = sc;
+    this.syntax = new SparkSyntax();
+  }
 
   public SparkConnection(SparkSession sc, SqlSyntax syntax) {
     this.sc = sc;

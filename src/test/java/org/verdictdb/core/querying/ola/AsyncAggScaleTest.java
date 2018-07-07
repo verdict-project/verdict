@@ -15,7 +15,6 @@ import java.util.List;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.tools.ant.taskdefs.ExecuteWatchdog;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.core.connection.JdbcConnection;
@@ -30,12 +29,10 @@ import org.verdictdb.core.scrambling.UniformScrambler;
 import org.verdictdb.core.sqlobject.AbstractRelation;
 import org.verdictdb.core.sqlobject.CreateTableAsSelectQuery;
 import org.verdictdb.core.sqlobject.SelectQuery;
-import org.verdictdb.core.sqlobject.SqlConvertible;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sqlreader.NonValidatingSQLParser;
 import org.verdictdb.sqlreader.RelationStandardizer;
 import org.verdictdb.sqlsyntax.H2Syntax;
-import org.verdictdb.sqlwriter.CreateTableToSql;
 import org.verdictdb.sqlwriter.QueryToSql;
 import org.verdictdb.sqlwriter.SelectQueryToSql;
 
@@ -203,7 +200,10 @@ public class AsyncAggScaleTest {
     CreateTableAsSelectQuery query = (CreateTableAsSelectQuery) queryExecutionPlan.getRoot().getSources().get(0).getSources().get(0).createQuery(Arrays.asList(token));
     SelectQueryToSql queryToSql = new SelectQueryToSql(new H2Syntax());
     String actual = queryToSql.toSql(query.getSelect());
-    String expected = "select sum(vt5.\"value\") as \"agg0\", count(*) as \"agg1\" from \"originalSchema\".\"originalTable_scrambled\" as vt5 where vt5.\"verdictdbaggblock\" = 0";
+    String expected = "select sum(vt5.\"value\") as \"agg0\", "
+        + "count(*) as \"agg1\" "
+        + "from \"originalSchema\".\"originalTable_scrambled\" as vt5 "
+        + "where vt5.\"verdictdbaggblock\" = 0";
     assertEquals(expected, actual);
 
     ExecutionInfoToken token1 = new ExecutionInfoToken();

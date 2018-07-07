@@ -103,7 +103,6 @@ public class AsyncAggExecutionPlanTest {
   }
 
   @Test
-//<<<<<<< HEAD:src/test/java/org/verdictdb/core/querying/ola/AsyncAggExecutionPlanTest.java
   public void ScrambleTableTest1() throws VerdictDBException,SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select sum(value) from originalTable_scrambled";
@@ -118,12 +117,8 @@ public class AsyncAggExecutionPlanTest {
 //    queryExecutionPlan.getRoot().print();
 
     assertEquals(1, queryExecutionPlan.getRoot().getDependentNodeCount());
-//    TokenQueueToAyncHandler tokenQueueToAyncHandler = new TokenQueueToAyncHandler(queryExecutionPlan, new ExecutionTokenQueue());
-//    tokenQueueToAyncHandler.setHandler(new StandardOutputHandler());
     stmt.execute("create schema if not exists \"verdictdb_temp1\";");
     ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
-//    queryExecutionPlan.root.executeAndWaitForTermination(new JdbcConnection(conn, new H2Syntax()));
-//    tokenQueueToAyncHandler.execute();
     stmt.execute("drop schema \"verdictdb_temp1\" cascade;");
   }
 
@@ -140,18 +135,12 @@ public class AsyncAggExecutionPlanTest {
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
 
-//    TokenQueueToAyncHandler tokenQueueToAyncHandler = new TokenQueueToAyncHandler(queryExecutionPlan, new ExecutionTokenQueue());
-//    tokenQueueToAyncHandler.setHandler(new StandardOutputHandler());
     stmt.execute("create schema if not exists \"verdictdb_temp2\";");
     ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
-//    queryExecutionPlan.root.executeAndWaitForTermination(new JdbcConnection(conn, new H2Syntax()));
-//    tokenQueueToAyncHandler.execute();
     stmt.execute("drop schema \"verdictdb_temp2\" cascade;");
   }
 
   @Test
-//=======
-//>>>>>>> origin/joezhong-scale:src/test/java/org/verdictdb/core/execution/AsyncAggAsyncHandlerTest.java
   public void ScrambleTableWithScalingTest() throws VerdictDBException,SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select sum(value) from originalTable_scrambled";
@@ -163,13 +152,8 @@ public class AsyncAggExecutionPlanTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp3", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-//<<<<<<< HEAD:src/test/java/org/verdictdb/core/querying/ola/AsyncAggExecutionPlanTest.java
-//    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependent(0)).setScrambleMeta(meta);
-//    queryExecutionPlan.setScalingNode();
     // queryExecutionPlan.getRoot().print();
-//=======
     ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependent(0)).setScrambleMeta(meta);
-//>>>>>>> origin/joezhong-scale:src/test/java/org/verdictdb/core/execution/AsyncAggAsyncHandlerTest.java
 
 //    TokenQueueToAyncHandler tokenQueueToAyncHandler = new TokenQueueToAyncHandler(queryExecutionPlan, new ExecutionTokenQueue());
 //    tokenQueueToAyncHandler.setHandler(new StandardOutputHandler());

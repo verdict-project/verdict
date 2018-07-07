@@ -2,12 +2,10 @@ package org.verdictdb.jdbc41;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.Date;
@@ -18,8 +16,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Time;
 import java.sql.Timestamp;
-
-import javax.sql.rowset.serial.SerialBlob;
 
 import org.apache.commons.io.IOUtils;
 import org.junit.BeforeClass;
