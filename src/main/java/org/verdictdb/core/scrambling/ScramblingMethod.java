@@ -3,6 +3,7 @@ package org.verdictdb.core.scrambling;
 import java.util.List;
 
 import org.verdictdb.core.connection.DbmsQueryResult;
+import org.verdictdb.core.querying.ExecutableNodeBase;
 import org.verdictdb.core.sqlobject.UnnamedColumn;
 
 public interface ScramblingMethod {
@@ -10,7 +11,8 @@ public interface ScramblingMethod {
   // Stage 1 is automatically run by ScramblingPlan
   
   // Stage 2 methods
-  StatiticsQueryGenerator getStatisticsQueryGenerator();
+  List<ExecutableNodeBase> getStatisticsNode(String oldSchemaName, String oldTableName);
+//  StatiticsQueryGenerator getStatisticsQueryGenerator();
   
   
   // Stage 3 methods

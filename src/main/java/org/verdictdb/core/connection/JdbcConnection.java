@@ -13,6 +13,7 @@ import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.jdbc41.JdbcResultSet;
 import org.verdictdb.sqlsyntax.PostgresqlSyntax;
 import org.verdictdb.sqlsyntax.SqlSyntax;
+import org.verdictdb.sqlsyntax.SqlSyntaxList;
 
 public class JdbcConnection implements DbmsConnection {
   
@@ -21,6 +22,19 @@ public class JdbcConnection implements DbmsConnection {
   SqlSyntax syntax;
   
 //  JdbcQueryResult jrs = null;
+  
+  public JdbcConnection(Connection conn) throws VerdictDBDbmsException {
+    this.conn = conn;
+    String connectionString = null;
+    try {
+      connectionString = conn.getMetaData().getURL();
+    } catch (SQLException e) {
+      throw new VerdictDBDbmsException(e);
+    }
+    
+    String dbName = connectionString.split(":")[1];
+    syntax = SqlSyntaxList.getSyntaxFor(dbName);
+  }
   
   public JdbcConnection(Connection conn, SqlSyntax syntax) {
     this.conn = conn;
