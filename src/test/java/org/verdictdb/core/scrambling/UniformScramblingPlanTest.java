@@ -1,26 +1,25 @@
 package org.verdictdb.core.scrambling;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.verdictdb.core.execution.ExecutionInfoToken;
-import org.verdictdb.core.sqlobject.SqlConvertible;
+import org.verdictdb.core.connection.DbmsConnection;
+import org.verdictdb.core.connection.JdbcConnection;
+import org.verdictdb.core.execution.ExecutablePlanRunner;
+import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.exception.VerdictDBException;
-import org.verdictdb.sqlsyntax.MysqlSyntax;
-import org.verdictdb.sqlwriter.QueryToSql;
 
-public class ScramblingNodeTest {
-
+public class UniformScramblingPlanTest {
+  
   private static Connection mysqlConn;
 
   private static Statement mysqlStmt;
@@ -54,9 +53,17 @@ public class ScramblingNodeTest {
     mysqlConn.createStatement().execute("create schema if not exists newschema");
     mysqlConn.createStatement().execute("create table if not exists oldschema.oldtable (id smallint)");
   }
+  
+  @AfterClass
+  public static void tearDown() throws SQLException {
+    mysqlConn.createStatement().execute("drop table if exists oldschema.oldtable");
+    mysqlConn.createStatement().execute("drop schema if exists oldschema");
+    mysqlConn.createStatement().execute("drop table if exists newschema.newtable");
+    mysqlConn.createStatement().execute("drop schema if exists newschema");
+  }
 
   @Test
-  public void testScramblingNodeCreation() throws VerdictDBException, SQLException {
+  public void testUniformScramblingPlan() throws VerdictDBException, SQLException {
     String newSchemaName = "newschema";
     String newTableName = "newtable";
     String oldSchemaName = "oldschema";
@@ -67,28 +74,16 @@ public class ScramblingNodeTest {
     options.put("tierColumnName", "tiercolumn");
     options.put("blockColumnName", "blockcolumn");
     options.put("blockCount", "3");
-
-    ScramblingNode node = ScramblingNode.create(
-        newSchemaName, newTableName, 
-        oldSchemaName, oldTableName, 
+    
+    mysqlConn.createStatement().execute(
+        String.format("drop table if exists %s.%s", newSchemaName, newTableName));
+    ScramblingPlan plan = ScramblingPlan.create(
+        newSchemaName, newTableName,
+        oldSchemaName, oldTableName,
         method, options);
-
-    List<ExecutionInfoToken> tokens = new ArrayList<>();
-    ExecutionInfoToken e = new ExecutionInfoToken();
-    e.setKeyValue("schemaName", newSchemaName);
-    e.setKeyValue("tableName", newTableName);
-    tokens.add(e);
-    SqlConvertible query = node.createQuery(tokens);
-    String sql = QueryToSql.convert(new MysqlSyntax(), query);
-    String expected = "create table `newschema`.`newtable` "
-        + "select *, 0 as `tiercolumn`, "
-        + "case when (rand() <= 0.3333333333333333) then 0 "
-        + "when (rand() <= 0.49999999999999994) then 1 "
-        + "when (rand() <= 1.0) then 2 else 2 end as `blockcolumn` "
-        + "from `oldschema`.`oldtable`";
-    assertEquals(expected, sql);
-    mysqlConn.createStatement().execute("drop table if exists newschema.newtable");
-    mysqlConn.createStatement().execute(sql);
+    
+    DbmsConnection conn = new JdbcConnection(mysqlConn);
+    ExecutablePlanRunner.runTillEnd(conn, plan);
   }
 
 }

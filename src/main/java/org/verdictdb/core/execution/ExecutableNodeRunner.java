@@ -1,13 +1,18 @@
 package org.verdictdb.core.execution;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import org.verdictdb.core.connection.DbmsConnection;
 import org.verdictdb.core.connection.DbmsQueryResult;
 import org.verdictdb.core.sqlobject.SqlConvertible;
 import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.exception.VerdictDBValueException;
 import org.verdictdb.sqlwriter.QueryToSql;
 
 public class ExecutableNodeRunner implements Runnable {
@@ -42,7 +47,7 @@ public class ExecutableNodeRunner implements Runnable {
   public void run() {
     // no dependency exists
     if (node.getSourceQueues().size() == 0) {
-//      System.out.println("No loop: " + new ToStringBuilder(node, ToStringStyle.DEFAULT_STYLE));
+      //      System.out.println("No loop: " + new ToStringBuilder(node, ToStringStyle.DEFAULT_STYLE));
 
       try {
         executeAndBroadcast(Arrays.<ExecutionInfoToken>asList());
@@ -56,22 +61,22 @@ public class ExecutableNodeRunner implements Runnable {
 
     // dependency exists
     while (true) {
-//      try {
-//        TimeUnit.SECONDS.sleep(1);
-//      } catch (InterruptedException e1) {
-//        // TODO Auto-generated catch block
-//        e1.printStackTrace();
-//      }
-//      System.out.println("In the loop: " + new ToStringBuilder(node, ToStringStyle.DEFAULT_STYLE));
-//      System.out.println(successSourceCount);
-//      System.out.println(dependentCount);
+      //      try {
+      //        TimeUnit.SECONDS.sleep(1);
+      //      } catch (InterruptedException e1) {
+      //        // TODO Auto-generated catch block
+      //        e1.printStackTrace();
+      //      }
+      //      System.out.println("In the loop: " + new ToStringBuilder(node, ToStringStyle.DEFAULT_STYLE));
+      //      System.out.println(successSourceCount);
+      //      System.out.println(dependentCount);
 
       List<ExecutionInfoToken> tokens = retrieve();
       if (tokens == null) {
         continue;
       }
 
-//      System.out.println(new ToStringBuilder(node, ToStringStyle.DEFAULT_STYLE) + " tokens: " + tokens);
+      //      System.out.println(new ToStringBuilder(node, ToStringStyle.DEFAULT_STYLE) + " tokens: " + tokens);
 
       ExecutionInfoToken failureToken = getFailureTokenIfExists(tokens);
       if (failureToken != null) {
@@ -79,7 +84,7 @@ public class ExecutableNodeRunner implements Runnable {
         break;
       }
       if (areAllSuccess(tokens)) {
-//        System.out.println(new ToStringBuilder(node, ToStringStyle.DEFAULT_STYLE) + "sucess count: " + successSourceCount);
+        //        System.out.println(new ToStringBuilder(node, ToStringStyle.DEFAULT_STYLE) + "sucess count: " + successSourceCount);
         broadcast(ExecutionInfoToken.successToken());
         break;
       }
@@ -97,7 +102,7 @@ public class ExecutableNodeRunner implements Runnable {
 
   List<ExecutionInfoToken> retrieve() {
     List<ExecutionTokenQueue> sourceQueues = node.getSourceQueues();
-//    System.out.println("Source queues:\n" + new ToStringBuilder(node, ToStringStyle.DEFAULT_STYLE) + " " + sourceQueues);
+    //    System.out.println("Source queues:\n" + new ToStringBuilder(node, ToStringStyle.DEFAULT_STYLE) + " " + sourceQueues);
 
     for (int i = 0; i < sourceQueues.size(); i++) {
       ExecutionInfoToken rs = sourceQueues.get(i).peek();
@@ -118,9 +123,9 @@ public class ExecutableNodeRunner implements Runnable {
   void broadcast(ExecutionInfoToken token) {
     // System.out.println(new ToStringBuilder(node, ToStringStyle.DEFAULT_STYLE) + " broadcasts: " + token);
     for (ExecutableNode dest : node.getSubscribers()) {
-//      System.out.println("to: " + dest);
+      //      System.out.println("to: " + dest);
       dest.getNotified(node, token);
-//      dest.add(token);
+      //      dest.add(token);
     }
   }
 
@@ -136,20 +141,48 @@ public class ExecutableNodeRunner implements Runnable {
       return null;
     }
 
+    // basic operations: execute a query and creates a token based on that result.
     SqlConvertible sqlObj = node.createQuery(tokens);
     DbmsQueryResult intermediate = null;
     if (sqlObj != null) {
       String sql = QueryToSql.convert(conn.getSyntax(), sqlObj);
       intermediate = conn.execute(sql);
     }
-    return node.createToken(intermediate);
+    ExecutionInfoToken token = node.createToken(intermediate);
+
+    // extended operations: if the node has additional method invocation list, we perform the method calls
+    // on DbmsConnection and sets its results in the token.
+    if (token == null) {
+      token = new ExecutionInfoToken();
+    }
+    Map<String, MethodInvocationInformation> tokenKeysAndmethodsToInvoke = node.getMethodsToInvokeOnConnection();
+    for (Entry<String, MethodInvocationInformation> keyAndMethod : tokenKeysAndmethodsToInvoke.entrySet()) {
+      String tokenKey = keyAndMethod.getKey();
+      MethodInvocationInformation methodInfo = keyAndMethod.getValue();
+      String methodName = methodInfo.getMethodName();
+      Class<?>[] methodParameters = methodInfo.getMethodParameters();
+      Object[] methodArguments = methodInfo.getArguments();
+      
+      try {
+        Method method = conn.getClass().getMethod(methodName, methodParameters);
+        Object ret = method.invoke(conn, methodArguments);
+        token.setKeyValue(tokenKey, ret);
+        
+      } catch (NoSuchMethodException | IllegalAccessException | 
+          IllegalArgumentException | InvocationTargetException e) {
+        e.printStackTrace();
+        throw new VerdictDBValueException(e);
+      }
+    }
+
+    return token;
   }
 
   ExecutionInfoToken getFailureTokenIfExists(List<ExecutionInfoToken> tokens) {
     for (ExecutionInfoToken t : tokens) {
-//      System.out.println(t);
+      //      System.out.println(t);
       if (t.isFailureToken()) {
-//        System.out.println("yes");
+        //        System.out.println("yes");
         return t;
       }
     }

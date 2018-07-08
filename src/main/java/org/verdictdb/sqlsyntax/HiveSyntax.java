@@ -71,4 +71,14 @@ public class HiveSyntax implements SqlSyntax {
   public boolean isAsRequiredBeforeSelectInCreateTable() {
     return true;
   }
+  
+  @Override
+  public boolean equals(Object obj) {
+    if (obj == null) { return false; }
+    if (obj == this) { return true; }
+    if (obj.getClass() != getClass()) {
+      return false;
+    }
+    return true;
+  }
 }

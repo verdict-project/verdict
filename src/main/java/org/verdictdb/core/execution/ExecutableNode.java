@@ -1,6 +1,7 @@
 package org.verdictdb.core.execution;
 
 import java.util.List;
+import java.util.Map;
 
 import org.verdictdb.core.connection.DbmsQueryResult;
 import org.verdictdb.core.sqlobject.SqlConvertible;
@@ -40,5 +41,12 @@ public interface ExecutableNode {
   public void getNotified(ExecutableNode source, ExecutionInfoToken token);
 
   public int getDependentNodeCount();
+
+  /**
+   * The methods are invoked on DbmsConnection and its results are set to the ExecutionInfoToken.
+   * 
+   * @return Pairs of (token key, method name)
+   */
+  public Map<String, MethodInvocationInformation> getMethodsToInvokeOnConnection();
 
 }

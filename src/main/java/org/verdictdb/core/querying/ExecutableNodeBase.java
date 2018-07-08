@@ -3,6 +3,7 @@ package org.verdictdb.core.querying;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -20,6 +21,7 @@ import org.verdictdb.core.connection.DbmsQueryResult;
 import org.verdictdb.core.execution.ExecutableNode;
 import org.verdictdb.core.execution.ExecutionInfoToken;
 import org.verdictdb.core.execution.ExecutionTokenQueue;
+import org.verdictdb.core.execution.MethodInvocationInformation;
 import org.verdictdb.core.sqlobject.SqlConvertible;
 import org.verdictdb.exception.VerdictDBException;
 
@@ -145,6 +147,11 @@ public class ExecutableNodeBase implements ExecutableNode {
   @Override
   public int getDependentNodeCount() {
     return sources.size();
+  }
+  
+  @Override
+  public Map<String, MethodInvocationInformation> getMethodsToInvokeOnConnection() {
+    return new HashMap<>();
   }
 
   // Helpers
