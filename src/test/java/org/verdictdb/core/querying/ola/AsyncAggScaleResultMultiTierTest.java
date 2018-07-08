@@ -116,11 +116,14 @@ public class AsyncAggScaleResultMultiTierTest {
     //ExecutablePlanRunner.runTillEnd(jdbcConnection, queryExecutionPlan);
 
     ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(jdbcConnection, queryExecutionPlan);
+    int resultReturnedCnt = 0;
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
       dbmsQueryResult.next();
+      resultReturnedCnt++;
       assertEquals(1.0, (double)dbmsQueryResult.getValue(0), 1e-6);
     }
+    assertEquals(5, resultReturnedCnt);
   }
 
   @Test
@@ -146,11 +149,14 @@ public class AsyncAggScaleResultMultiTierTest {
     //ExecutablePlanRunner.runTillEnd(jdbcConnection, queryExecutionPlan);
 
     ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(jdbcConnection, queryExecutionPlan);
+    int resultReturnedCnt = 0;
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
       dbmsQueryResult.next();
+      resultReturnedCnt++;
       assertEquals(15, ((BigDecimal)dbmsQueryResult.getValue(0)).longValue());
     }
+    assertEquals(5, resultReturnedCnt);
   }
 
   @Test
@@ -176,11 +182,14 @@ public class AsyncAggScaleResultMultiTierTest {
     //ExecutablePlanRunner.runTillEnd(jdbcConnection, queryExecutionPlan);
 
     ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(jdbcConnection, queryExecutionPlan);
+    int resultReturnedCnt = 0;
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
       dbmsQueryResult.next();
+      resultReturnedCnt++;
       assertEquals(15, (double)dbmsQueryResult.getValue(0), 1e-6);
     }
+    assertEquals(5, resultReturnedCnt);
   }
 
   @Test
@@ -206,12 +215,15 @@ public class AsyncAggScaleResultMultiTierTest {
     //ExecutablePlanRunner.runTillEnd(jdbcConnection, queryExecutionPlan);
 
     ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(jdbcConnection, queryExecutionPlan);
+    int resultReturnedCnt = 0;
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
       dbmsQueryResult.next();
+      resultReturnedCnt++;
       assertEquals(15, ((BigDecimal)dbmsQueryResult.getValue(0)).longValue());
       assertEquals(15, (double)dbmsQueryResult.getValue(1), 1e-6);
     }
+    assertEquals(5, resultReturnedCnt);
   }
 
   @Test
@@ -237,12 +249,15 @@ public class AsyncAggScaleResultMultiTierTest {
     //ExecutablePlanRunner.runTillEnd(jdbcConnection, queryExecutionPlan);
 
     ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(jdbcConnection, queryExecutionPlan);
+    int resultReturnedCnt = 0;
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
       dbmsQueryResult.next();
+      resultReturnedCnt++;
       assertEquals(15, ((BigDecimal)dbmsQueryResult.getValue(0)).longValue());
       assertEquals(1.0, (double)dbmsQueryResult.getValue(1), 1e-6);
     }
+    assertEquals(5, resultReturnedCnt);
   }
 
   @Test
@@ -268,12 +283,15 @@ public class AsyncAggScaleResultMultiTierTest {
     //ExecutablePlanRunner.runTillEnd(jdbcConnection, queryExecutionPlan);
 
     ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(jdbcConnection, queryExecutionPlan);
+    int resultReturnedCnt = 0;
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
       dbmsQueryResult.next();
+      resultReturnedCnt++;
       assertEquals(15, (double)dbmsQueryResult.getValue(0), 1e-6);
       assertEquals(1.0, (double)dbmsQueryResult.getValue(1), 1e-6);
     }
+    assertEquals(5, resultReturnedCnt);
   }
 
   @AfterClass
