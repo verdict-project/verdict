@@ -289,7 +289,9 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
   public boolean isColumnOpAggregate() {
     if (this.getOpType().equals("avg") ||
         this.getOpType().equals("sum") ||
-        this.getOpType().equals("count")) {
+        this.getOpType().equals("count") ||
+        this.getOpType().equals("max") ||
+        this.getOpType().equals("min")) {
       return true;
     }
     boolean aggExists = false;

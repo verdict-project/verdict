@@ -115,7 +115,7 @@ public class AsyncAggExecutionNode extends ProjectionNode {
     // Next, create the base select query for replacement
     Pair<List<ColumnOp>, SqlConvertible> aggColumnsAndQuery = createBaseQueryForReplacement(cubes);
 
-    // single tier case multiple tier
+    // single tier case
     if (scaleFactor.size() == 1) {
       // Substitute the scale factor
       Double s = (Double) (scaleFactor.values().toArray())[0];
@@ -206,7 +206,12 @@ public class AsyncAggExecutionNode extends ProjectionNode {
           ));
           aggColumnlist.add(aggColumn);
           newSelectList.set(index, new AliasedColumn(aggColumn, ((AliasedColumn) selectItem).getAliasName()));
-        } else {
+        }
+        else if (aggMeta.getMaxminAggAlias().keySet().contains(((AliasedColumn) selectItem).getAliasName())) {
+          newSelectList.set(index, new AliasedColumn(new BaseColumn("verdictdbbeforescaling", ((AliasedColumn) selectItem).getAliasName()),
+              ((AliasedColumn) selectItem).getAliasName()));
+        }
+        else {
           // Looking for tier column
           if (!Initiated && col instanceof BaseColumn) {
             String schemaName = ((BaseColumn) col).getSchemaName();
@@ -341,11 +346,14 @@ public class AsyncAggExecutionNode extends ProjectionNode {
   SelectQuery replaceWithOriginalSelectList(SelectQuery queryToReplace, AggMeta aggMeta) {
     List<SelectItem> originalSelectList = aggMeta.getOriginalSelectList();
     HashMap<SelectItem, List<ColumnOp>> aggColumn = aggMeta.getAggColumn();
-    HashMap<String, ColumnOp> aggContents = new HashMap<>();
+    HashMap<String, UnnamedColumn> aggContents = new HashMap<>();
     for (SelectItem sel : queryToReplace.getSelectList()) {
       // this column is a basic aggregate column
       if (sel instanceof AliasedColumn && aggMeta.getAggAlias().contains(((AliasedColumn) sel).getAliasName())) {
-        aggContents.put(((AliasedColumn) sel).getAliasName(), (ColumnOp) ((AliasedColumn) sel).getColumn());
+        aggContents.put(((AliasedColumn) sel).getAliasName(), ((AliasedColumn) sel).getColumn());
+      }
+      else if (sel instanceof AliasedColumn && aggMeta.getMaxminAggAlias().keySet().contains(((AliasedColumn) sel).getAliasName())) {
+        aggContents.put(((AliasedColumn) sel).getAliasName(), ((AliasedColumn) sel).getColumn());
       }
     }
     for (SelectItem sel : originalSelectList) {
@@ -360,16 +368,28 @@ public class AsyncAggExecutionNode extends ProjectionNode {
               aliasName = aggMeta.getAggColumnAggAliasPair().get(new ImmutablePair<>(col.getOpType(), (UnnamedColumn)new AsteriskColumn()));
             }
             else aliasName = aggMeta.getAggColumnAggAliasPair().get(new ImmutablePair<>(col.getOpType(), col.getOperand(0)));
-            ColumnOp aggContent = aggContents.get(aliasName);
+            ColumnOp aggContent = (ColumnOp) aggContents.get(aliasName);
             col.setOpType(aggContent.getOpType());
             col.setOperand(aggContent.getOperands());
+          }
+          else if (col.getOpType().equals("max") || col.getOpType().equals("min")) {
+            String aliasName = aggMeta.getAggColumnAggAliasPairOfMaxMin().get(new ImmutablePair<>(col.getOpType(), col.getOperand(0)));
+            if (aggContents.get(aliasName) instanceof BaseColumn) {
+              BaseColumn aggContent = (BaseColumn) aggContents.get(aliasName);
+              col.setOpType("multiply");
+              col.setOperand(Arrays.asList(ConstantColumn.valueOf(1), aggContent));
+            } else {
+              ColumnOp aggContent = (ColumnOp) aggContents.get(aliasName);
+              col.setOpType(aggContent.getOpType());
+              col.setOperand(aggContent.getOperands());
+            }
           }
           // If it is avg, set col to be divide columnOp
           else if (col.getOpType().equals("avg")) {
             String aliasNameSum = aggMeta.getAggColumnAggAliasPair().get(new ImmutablePair<>("sum", col.getOperand(0)));
-            ColumnOp aggContentSum = aggContents.get(aliasNameSum);
+            ColumnOp aggContentSum = (ColumnOp) aggContents.get(aliasNameSum);
             String aliasNameCount = aggMeta.getAggColumnAggAliasPair().get(new ImmutablePair<>("count", (UnnamedColumn) new AsteriskColumn()));
-            ColumnOp aggContentCount = aggContents.get(aliasNameCount);
+            ColumnOp aggContentCount = (ColumnOp) aggContents.get(aliasNameCount);
             col.setOpType("divide");
             col.setOperand(Arrays.<UnnamedColumn>asList(aggContentSum, aggContentCount));
           }
@@ -399,6 +419,12 @@ public class AsyncAggExecutionNode extends ProjectionNode {
         // If this is a basic aggregation, we need to sum up
         if (aggAlias.contains(((AliasedColumn) sel).getAliasName())) {
           newSelectlist.add(new AliasedColumn(new ColumnOp("sum",
+              new BaseColumn("verdictdbafterscaling", ((AliasedColumn) sel).getAliasName())), ((AliasedColumn) sel).getAliasName()));
+        }
+        // If it is a max/min aggregation, we need to maximize/minimize
+        else if (aggMeta.getMaxminAggAlias().keySet().contains(((AliasedColumn) sel).getAliasName())) {
+          String opType = aggMeta.getMaxminAggAlias().get(((AliasedColumn) sel).getAliasName());
+          newSelectlist.add(new AliasedColumn(new ColumnOp(opType,
               new BaseColumn("verdictdbafterscaling", ((AliasedColumn) sel).getAliasName())), ((AliasedColumn) sel).getAliasName()));
         }
         else {

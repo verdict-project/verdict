@@ -278,6 +278,66 @@ public class AsyncAggScaleResultTest {
     }
   }
 
+  @Test
+  public void maxAggTest() throws VerdictDBException,SQLException {
+    RelationStandardizer.resetItemID();
+    String sql = "select max(value) from originalTable";
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
+    RelationStandardizer gen = new RelationStandardizer(staticMetaData);
+    relation = gen.standardize((SelectQuery) relation);
+
+    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
+    queryExecutionPlan.cleanUp();
+    queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
+    Dimension d1 = new Dimension("originalSchema", "originalTable", 0, 0);
+    assertEquals(
+        new HyperTableCube(Arrays.asList(d1)),
+        ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getMeta().getCubes().get(0));
+    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
+
+
+    JdbcConnection jdbcConnection = new JdbcConnection(conn, new H2Syntax());
+    //ExecutablePlanRunner.runTillEnd(jdbcConnection, queryExecutionPlan);
+
+    ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(jdbcConnection, queryExecutionPlan);
+    while (reader.hasNext()) {
+      DbmsQueryResult dbmsQueryResult = reader.next();
+      dbmsQueryResult.next();
+      assertEquals(1.0, (double)dbmsQueryResult.getValue(0), 1e-6);
+    }
+  }
+
+  @Test
+  public void minAggTest() throws VerdictDBException,SQLException {
+    RelationStandardizer.resetItemID();
+    String sql = "select min(value) from originalTable";
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
+    RelationStandardizer gen = new RelationStandardizer(staticMetaData);
+    relation = gen.standardize((SelectQuery) relation);
+
+    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
+    queryExecutionPlan.cleanUp();
+    queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
+    Dimension d1 = new Dimension("originalSchema", "originalTable", 0, 0);
+    assertEquals(
+        new HyperTableCube(Arrays.asList(d1)),
+        ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getMeta().getCubes().get(0));
+    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
+
+
+    JdbcConnection jdbcConnection = new JdbcConnection(conn, new H2Syntax());
+    //ExecutablePlanRunner.runTillEnd(jdbcConnection, queryExecutionPlan);
+
+    ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(jdbcConnection, queryExecutionPlan);
+    while (reader.hasNext()) {
+      DbmsQueryResult dbmsQueryResult = reader.next();
+      dbmsQueryResult.next();
+      assertEquals(1.0, (double)dbmsQueryResult.getValue(0), 1e-6);
+    }
+  }
+
 
   @AfterClass
   public static void tearDown() throws SQLException {

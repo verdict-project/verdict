@@ -2,6 +2,7 @@ package org.verdictdb.core.querying.ola;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -308,7 +309,8 @@ public class AggExecutionNodeBlock {
       SelectItem s = itemToCheck.get(0);
       itemToCheck.remove(0);
       if (s instanceof ColumnOp) {
-        if (((ColumnOp) s).getOpType().equals("count") || ((ColumnOp) s).getOpType().equals("sum") || ((ColumnOp) s).getOpType().equals("avg")) {
+        if (((ColumnOp) s).getOpType().equals("count") || ((ColumnOp) s).getOpType().equals("sum") || ((ColumnOp) s).getOpType().equals("avg")
+            ||((ColumnOp) s).getOpType().equals("max")||((ColumnOp) s).getOpType().equals("min")) {
           columnOps.add((ColumnOp) s);
         }
         else itemToCheck.addAll(((ColumnOp) s).getOperands());
@@ -320,6 +322,7 @@ public class AggExecutionNodeBlock {
   List<SelectItem> rewriteSelectlistWithBasicAgg(SelectQuery query, AggMeta meta) {
     List<SelectItem> selectList = query.getSelectList();
     List<String> aggColumnAlias = new ArrayList<>();
+    HashMap<String, String> maxminAlias = new HashMap<>();
     List<SelectItem> newSelectlist = new ArrayList<>();
     meta.setOriginalSelectList(selectList);
     for (SelectItem selectItem : selectList) {
@@ -346,7 +349,7 @@ public class AggExecutionNodeBlock {
                     new ImmutablePair<>("count", (UnnamedColumn) new AsteriskColumn()), "agg"+aggColumnIdentiferNum);
                 aggColumnAlias.add("agg"+aggColumnIdentiferNum++);
               }
-            } else {
+            } else if (col.getOpType().equals("count") || col.getOpType().equals("sum")){
               if (col.getOpType().equals("count") && !meta.getAggColumnAggAliasPair().containsKey(
                   new ImmutablePair<>("count", (UnnamedColumn)(new AsteriskColumn())))) {
                 ColumnOp col1 = new ColumnOp(col.getOpType());
@@ -363,6 +366,12 @@ public class AggExecutionNodeBlock {
                     new ImmutablePair<>(col.getOpType(), col1.getOperand(0)), "agg"+aggColumnIdentiferNum);
                 aggColumnAlias.add("agg"+aggColumnIdentiferNum++);
               }
+            } else if (col.getOpType().equals("max") || col.getOpType().equals("min")) {
+              ColumnOp col1 = new ColumnOp(col.getOpType(), col.getOperand(0));
+              newSelectlist.add(new AliasedColumn(col1, "agg"+aggColumnIdentiferNum));
+              meta.getAggColumnAggAliasPairOfMaxMin().put(
+                  new ImmutablePair<>(col.getOpType(), col1.getOperand(0)), "agg"+aggColumnIdentiferNum);
+              maxminAlias.put("agg"+aggColumnIdentiferNum++, col.getOpType());
             }
           }
         }
@@ -374,6 +383,7 @@ public class AggExecutionNodeBlock {
       }
     }
     meta.setAggAlias(aggColumnAlias);
+    meta.setMaxminAggAlias(maxminAlias);
     return newSelectlist;
   }
 

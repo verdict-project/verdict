@@ -73,7 +73,7 @@ public class AggQueryRewriter {
     if (!(relation instanceof SelectQuery)) {
       throw new VerdictDBTypeException(relation);
     }
-    else if (!relation.isAggregateQuery()) {
+    else if (!relation.isSupportedAggregate()) {
       throw new VerdictDBValueException("The provided relation is not an aggregate relation.");
     }
 
@@ -785,7 +785,7 @@ public class AggQueryRewriter {
     return rewrittenOuter;
   }
 
-//  boolean isAggregateQuery(AbstractRelation relation) {
+//  boolean isSupportedAggregate(AbstractRelation relation) {
 //    if (!(relation instanceof SelectQueryOp)) {
 //      return false;
 //    }

@@ -24,9 +24,13 @@ public class AggMeta {
 
   List<String> aggAlias = new ArrayList<>();
 
+  HashMap<String, String> maxminAggAlias = new HashMap<>();
+
   HashMap<SelectItem, List<ColumnOp>> aggColumn = new HashMap<>();
 
   HashMap<Pair<String, UnnamedColumn>, String> aggColumnAggAliasPair = new HashMap<>();
+
+  HashMap<Pair<String, UnnamedColumn>, String> aggColumnAggAliasPairOfMaxMin = new HashMap<>();
 
   public AggMeta() {}
 
@@ -54,6 +58,14 @@ public class AggMeta {
     return originalSelectList;
   }
 
+  public HashMap<String, String> getMaxminAggAlias() {
+    return maxminAggAlias;
+  }
+
+  public void setMaxminAggAlias(HashMap<String, String> maxminAggAlias) {
+    this.maxminAggAlias = maxminAggAlias;
+  }
+
   public void setOriginalSelectList(List<SelectItem> originalSelectList) {
     this.originalSelectList = originalSelectList;
   }
@@ -62,11 +74,19 @@ public class AggMeta {
     return aggColumnAggAliasPair;
   }
 
+  public HashMap<Pair<String, UnnamedColumn>, String> getAggColumnAggAliasPairOfMaxMin() {
+    return aggColumnAggAliasPairOfMaxMin;
+  }
+
   public void setAggColumn(HashMap<SelectItem, List<ColumnOp>> aggColumn) {
     this.aggColumn = aggColumn;
   }
 
   public void setAggColumnAggAliasPair(HashMap<Pair<String, UnnamedColumn>, String> aggColumnAggAliasPair) {
     this.aggColumnAggAliasPair = aggColumnAggAliasPair;
+  }
+
+  public void setAggColumnAggAliasPairOfMaxMin(HashMap<Pair<String, UnnamedColumn>, String> aggColumnAggAliasPairOfMaxMin) {
+    this.aggColumnAggAliasPairOfMaxMin = aggColumnAggAliasPairOfMaxMin;
   }
 }

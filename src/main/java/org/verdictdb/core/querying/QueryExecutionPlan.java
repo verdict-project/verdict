@@ -93,7 +93,7 @@ public class QueryExecutionPlan implements ExecutablePlan, IdCreator {
   }
 
   public void setSelectQuery(SelectQuery query) throws VerdictDBException {
-    if (!query.isAggregateQuery()) {
+    if (!query.isSupportedAggregate()) {
       throw new VerdictDBTypeException(query);
     }
     this.root = makePlan(query);
