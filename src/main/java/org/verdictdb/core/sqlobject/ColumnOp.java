@@ -24,6 +24,8 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
    * <li>multiply</li>
    * <li>subtract</li>
    * <li>divide</li>
+   * <li>stddev_pop</li>
+   * <li>stddev_samp</li>
    * <li>pow</li>
    * <li>sqrt</li>
    * <li>min</li>
@@ -33,6 +35,7 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
    * <li>rand</li>
    * <li>floor</li>
    * <li>cast</li>
+   * <li>percentile</li>
    * </ol>
    * <p>
    * Comparison:
@@ -159,7 +162,7 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
   }
 
   public static ColumnOp std(UnnamedColumn column1) {
-    return new ColumnOp("std", Arrays.asList(column1));
+    return new ColumnOp("stddev_pop", Arrays.asList(column1));
   }
 
   public static ColumnOp sqrt(UnnamedColumn column1) {
@@ -208,6 +211,10 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
 
   public static ColumnOp max(UnnamedColumn column1, UnnamedColumn column2) {
     return new ColumnOp("max", Arrays.asList(column1, column2));
+  }
+  
+  public static ColumnOp percentile(UnnamedColumn column1, UnnamedColumn column2) {
+    return new ColumnOp("percentile", Arrays.asList(column1, column2));
   }
 
   public static ColumnOp is(UnnamedColumn column1, UnnamedColumn column2) {

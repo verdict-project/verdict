@@ -15,7 +15,8 @@ public class UniformScramblingMethod extends ScramblingMethodBase {
   }
 
   @Override
-  public List<ExecutableNodeBase> getStatisticsNode(String oldSchemaName, String oldTableName) {
+  public List<ExecutableNodeBase> getStatisticsNode(
+      String oldSchemaName, String oldTableName, String columnMetaTokenKey, String partitionMetaTokenKey) {
     return Arrays.asList();
   }
 

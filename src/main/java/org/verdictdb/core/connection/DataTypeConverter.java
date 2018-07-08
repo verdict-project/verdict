@@ -35,7 +35,9 @@ import static java.sql.Types.TINYINT;
 import static java.sql.Types.VARBINARY;
 import static java.sql.Types.VARCHAR;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -138,6 +140,14 @@ public class DataTypeConverter {
   public static int typeInt(String typename) {
 //    System.out.println(typename);
     return stringToIntMap.get(typename.toLowerCase().replaceAll("\\(.*\\)", ""));
+  }
+  
+  private static HashSet<Integer> numericTypes = new HashSet<>(Arrays.asList(
+      DECIMAL, FLOAT, DOUBLE, REAL, NUMERIC, INTEGER, TINYINT, SMALLINT, BIGINT));
+
+  public static boolean isNumeric(String typename) {
+    int type = typeInt(typename);
+    return numericTypes.contains(type);
   }
 
 //  public static String standardize(String type) {

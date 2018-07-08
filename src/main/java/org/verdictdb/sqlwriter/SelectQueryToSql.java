@@ -86,8 +86,10 @@ public class SelectQueryToSql {
         return "sum(" + unnamedColumnToSqlPart(columnOp.getOperand()) + ")";
       } else if (columnOp.getOpType().equals("count")) {
         return "count(*)";
-      } else if (columnOp.getOpType().equals("std")) {
-        return "std(" + unnamedColumnToSqlPart(columnOp.getOperand()) + ")";
+      } else if (columnOp.getOpType().equals("stddev_pop")) {
+        String stddevPopulationFunctionName = syntax.getStddevPopulationFunctionName();
+        return String.format("%s(", stddevPopulationFunctionName)
+            + unnamedColumnToSqlPart(columnOp.getOperand()) + ")";
       } else if (columnOp.getOpType().equals("sqrt")) {
         return "sqrt(" + unnamedColumnToSqlPart(columnOp.getOperand()) + ")";
       } else if (columnOp.getOpType().equals("add")) {

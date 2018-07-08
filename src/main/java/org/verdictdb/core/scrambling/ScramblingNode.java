@@ -91,6 +91,11 @@ public class ScramblingNode extends CreateTableAsSelectNode {
       statistics = (DbmsQueryResult) tokens.get(0).getValue("queryResult");
     }
     selectQuery = composeQuery(statistics);
+    
+    // add partitioning for block agg column
+    String blockColumnName = options.get("blockColumnName");
+    addPartitionColumn(blockColumnName);
+    
     return super.createQuery(tokens);
   }
 

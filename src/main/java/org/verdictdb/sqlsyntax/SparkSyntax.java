@@ -1,6 +1,6 @@
 package org.verdictdb.sqlsyntax;
 
-public class SparkSyntax implements SqlSyntax {
+public class SparkSyntax extends SqlSyntax {
 
   @Override
   public boolean doesSupportTablePartitioning() {
@@ -19,7 +19,7 @@ public class SparkSyntax implements SqlSyntax {
 
   @Override
   public String getColumnsCommand(String schema, String table) {
-    return "DESCRIBE " + schema + "." + table;
+    return "DESCRIBE " + quoteName(schema) + "." + quoteName(table);
   }
 
   @Override
@@ -34,7 +34,7 @@ public class SparkSyntax implements SqlSyntax {
 
   @Override
   public String getPartitionCommand(String schema, String table) {
-    return "SHOW PARTITIONS " + schema + "." + table;
+    return "SHOW PARTITIONS " + quoteName(schema) + "." + quoteName(table);
   }
 
   @Override
@@ -54,7 +54,7 @@ public class SparkSyntax implements SqlSyntax {
 
   @Override
   public String getTableCommand(String schema) {
-    return "SHOW TABLES IN " + schema;
+    return "SHOW TABLES IN " + quoteName(schema);
   }
 
   @Override
@@ -81,4 +81,5 @@ public class SparkSyntax implements SqlSyntax {
     }
     return true;
   }
+  
 }

@@ -73,10 +73,11 @@ public class ScramblingPlan extends SimpleTreePlan {
     
     // create a node for step 2 - statistics retrieval
     // since uniform scrambling does not return any nodes, the step 3 will be run immediately.
-    List<ExecutableNodeBase> statsNodes = method.getStatisticsNode(oldSchemaName, oldTableName);
+    List<ExecutableNodeBase> statsNodes = method.getStatisticsNode(
+        oldSchemaName, oldTableName, COLUMN_METADATA_KEY, PARTITION_METADATA_KEY);
     for (ExecutableNodeBase n : statsNodes) {
-      n.subscribeTo(columnMetaDataNode, 0);
-      n.subscribeTo(partitionMetaDataNode, 1);
+      n.subscribeTo(columnMetaDataNode, 100);
+      n.subscribeTo(partitionMetaDataNode, 101);
     }
     
     // create a node for step 3 - scrambling

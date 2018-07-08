@@ -1,6 +1,6 @@
 package org.verdictdb.sqlsyntax;
 
-public class SqliteSyntax implements SqlSyntax {
+public class SqliteSyntax extends SqlSyntax {
 
   @Override
   public boolean doesSupportTablePartitioning() {

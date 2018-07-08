@@ -1,6 +1,6 @@
 package org.verdictdb.sqlsyntax;
 
-public class PostgresqlSyntax implements SqlSyntax {
+public class PostgresqlSyntax extends SqlSyntax {
   
   @Override
   public int getSchemaNameColumnIndex() {
@@ -87,4 +87,5 @@ public class PostgresqlSyntax implements SqlSyntax {
     }
     return true;
   }
+  
 }
