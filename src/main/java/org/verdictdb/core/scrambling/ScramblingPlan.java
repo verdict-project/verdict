@@ -11,9 +11,7 @@ package org.verdictdb.core.scrambling;
 import java.util.List;
 import java.util.Map;
 
-import org.verdictdb.core.querying.ColumnMetadataRetrievalNode;
 import org.verdictdb.core.querying.ExecutableNodeBase;
-import org.verdictdb.core.querying.PartitionMetadataRetrievalNode;
 
 /**
  * Execution plan for scrambling.
@@ -40,6 +38,10 @@ public class ScramblingPlan extends SimpleTreePlan {
     super(root);
   }
   
+  static final String COLUMN_METADATA_KEY = "scramblingPlan:columnMetaData";
+  
+  static final String PARTITION_METADATA_KEY = "scramblingPlan:partitionMetaData";
+  
   /**
    * 
    * <p>
@@ -63,15 +65,19 @@ public class ScramblingPlan extends SimpleTreePlan {
       Map<String, String> options) {
     
     // create a node for step 1 - column meta data retrieval
-    ExecutableNodeBase columnMetaDataNode = new ColumnMetadataRetrievalNode(oldSchemaName, oldTableName);
-    ExecutableNodeBase partitionMetaDataNode = new PartitionMetadataRetrievalNode(oldSchemaName, oldTableName);
+    // these nodes will set "scramblingPlan:columnMetaData" and "scramblingPlan:partitionMetaData" keys.
+    ExecutableNodeBase columnMetaDataNode = 
+        ColumnMetadataRetrievalNode.create(oldSchemaName, oldTableName, COLUMN_METADATA_KEY);
+    ExecutableNodeBase partitionMetaDataNode = 
+        PartitionMetadataRetrievalNode.create(oldSchemaName, oldTableName, PARTITION_METADATA_KEY);
     
     // create a node for step 2 - statistics retrieval
     // since uniform scrambling does not return any nodes, the step 3 will be run immediately.
-    List<ExecutableNodeBase> statsNodes = method.getStatisticsNode(oldSchemaName, oldTableName);
+    List<ExecutableNodeBase> statsNodes = method.getStatisticsNode(
+        oldSchemaName, oldTableName, COLUMN_METADATA_KEY, PARTITION_METADATA_KEY);
     for (ExecutableNodeBase n : statsNodes) {
-      n.subscribeTo(columnMetaDataNode, 0);
-      n.subscribeTo(partitionMetaDataNode, 1);
+      n.subscribeTo(columnMetaDataNode, 100);
+      n.subscribeTo(partitionMetaDataNode, 101);
     }
     
     // create a node for step 3 - scrambling

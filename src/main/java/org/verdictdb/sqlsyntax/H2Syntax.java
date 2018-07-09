@@ -1,6 +1,6 @@
 package org.verdictdb.sqlsyntax;
 
-public class H2Syntax implements SqlSyntax {
+public class H2Syntax extends SqlSyntax {
 
   // The column index that stored meta information in the original database
 
@@ -49,12 +49,12 @@ public class H2Syntax implements SqlSyntax {
 
   @Override
   public String getTableCommand(String schema) {
-    return "show tables from " + schema;
+    return "show tables from " + quoteName(schema);
   }
 
   @Override
   public String getColumnsCommand(String schema, String table) {
-    return "show columns from " + table + " from " + schema;
+    return "show columns from " + quoteName(table) + " from " + quoteName(schema);
   }
 
   /**
@@ -77,5 +77,16 @@ public class H2Syntax implements SqlSyntax {
   public boolean isAsRequiredBeforeSelectInCreateTable() {
     return true;
   }
+  
+  @Override
+  public boolean equals(Object obj) {
+    if (obj == null) { return false; }
+    if (obj == this) { return true; }
+    if (obj.getClass() != getClass()) {
+      return false;
+    }
+    return true;
+  }
+  
 
 }

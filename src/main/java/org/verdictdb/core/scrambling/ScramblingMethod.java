@@ -11,7 +11,8 @@ public interface ScramblingMethod {
   // Stage 1 is automatically run by ScramblingPlan
   
   // Stage 2 methods
-  List<ExecutableNodeBase> getStatisticsNode(String oldSchemaName, String oldTableName);
+  List<ExecutableNodeBase> getStatisticsNode(
+      String oldSchemaName, String oldTableName, String columnMetaTokenKey, String partitionMetaTokenKey);
 //  StatiticsQueryGenerator getStatisticsQueryGenerator();
   
   

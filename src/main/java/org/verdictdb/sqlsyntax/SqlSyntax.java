@@ -1,35 +1,44 @@
 package org.verdictdb.sqlsyntax;
 
-public interface SqlSyntax {
+public abstract class SqlSyntax {
 
-  public boolean doesSupportTablePartitioning();
+  public abstract boolean doesSupportTablePartitioning();
 
-  public void dropTable(String schema, String tablename);
-
-  // The column index that stored meta information in the original database
-  public int getColumnNameColumnIndex();
-
-  public String getColumnsCommand(String schema, String table);
+  public abstract void dropTable(String schema, String tablename);
 
   // The column index that stored meta information in the original database
-  public int getColumnTypeColumnIndex();
+  public abstract int getColumnNameColumnIndex();
 
-  public String getPartitionByInCreateTable();
-
-  public String getPartitionCommand(String schema, String table);
-
-  public String getQuoteString();
-
-  public String getSchemaCommand();
-
-  public int getSchemaNameColumnIndex();
-
-  public String getTableCommand(String schema);
+  public abstract String getColumnsCommand(String schema, String table);
 
   // The column index that stored meta information in the original database
-  public int getTableNameColumnIndex();
+  public abstract int getColumnTypeColumnIndex();
 
-  public String randFunction();
+  public abstract String getPartitionByInCreateTable();
+
+  public abstract String getPartitionCommand(String schema, String table);
+
+  public abstract String getQuoteString();
+
+  public abstract String getSchemaCommand();
+
+  public abstract int getSchemaNameColumnIndex();
+
+  public abstract String getTableCommand(String schema);
+
+  // The column index that stored meta information in the original database
+  public abstract int getTableNameColumnIndex();
+
+  public abstract String randFunction();
   
-  public boolean isAsRequiredBeforeSelectInCreateTable();
+  public abstract boolean isAsRequiredBeforeSelectInCreateTable();
+
+  public String getStddevPopulationFunctionName() {
+    return "stddev_pop";
+  }
+  
+  public String quoteName(String name) {
+    String quoteString = getQuoteString();
+    return quoteString + name + quoteString;
+  }
 }

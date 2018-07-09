@@ -1,6 +1,6 @@
 package org.verdictdb.sqlsyntax;
 
-public class MysqlSyntax implements SqlSyntax {
+public class MysqlSyntax extends SqlSyntax {
   
   @Override
   public boolean doesSupportTablePartitioning() {
@@ -19,7 +19,7 @@ public class MysqlSyntax implements SqlSyntax {
 
   @Override
   public String getColumnsCommand(String schema, String table) {
-    return "show columns in " + table + " in " + schema;
+    return "show columns in " + quoteName(table) + " in " + quoteName(schema);
   }
 
   @Override
@@ -56,7 +56,7 @@ public class MysqlSyntax implements SqlSyntax {
 
   @Override
   public String getTableCommand(String schema) {
-    return "show tables in " + schema;
+    return "show tables in " + quoteName(schema);
   }
 
   @Override
@@ -73,4 +73,15 @@ public class MysqlSyntax implements SqlSyntax {
   public boolean isAsRequiredBeforeSelectInCreateTable() {
     return false;
   }
+  
+  @Override
+  public boolean equals(Object obj) {
+    if (obj == null) { return false; }
+    if (obj == this) { return true; }
+    if (obj.getClass() != getClass()) {
+      return false;
+    }
+    return true;
+  }
+  
 }

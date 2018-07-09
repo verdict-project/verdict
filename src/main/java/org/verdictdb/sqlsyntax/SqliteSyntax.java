@@ -1,6 +1,6 @@
 package org.verdictdb.sqlsyntax;
 
-public class SqliteSyntax implements SqlSyntax {
+public class SqliteSyntax extends SqlSyntax {
 
   @Override
   public boolean doesSupportTablePartitioning() {
@@ -84,6 +84,16 @@ public class SqliteSyntax implements SqlSyntax {
   public boolean isAsRequiredBeforeSelectInCreateTable() {
     // TODO Auto-generated method stub
     return false;
+  }
+  
+  @Override
+  public boolean equals(Object obj) {
+    if (obj == null) { return false; }
+    if (obj == this) { return true; }
+    if (obj.getClass() != getClass()) {
+      return false;
+    }
+    return true;
   }
 
 }

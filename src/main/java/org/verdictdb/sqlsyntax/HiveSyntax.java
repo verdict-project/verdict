@@ -1,6 +1,6 @@
 package org.verdictdb.sqlsyntax;
 
-public class HiveSyntax implements SqlSyntax {
+public class HiveSyntax extends SqlSyntax {
 
   @Override
   public boolean doesSupportTablePartitioning() {
@@ -19,7 +19,7 @@ public class HiveSyntax implements SqlSyntax {
 
   @Override
   public String getColumnsCommand(String schema, String table) {
-    return "DESCRIBE " + schema + "." + table;
+    return "DESCRIBE " + quoteName(schema) + "." + quoteName(table);
   }
 
   @Override
@@ -34,7 +34,7 @@ public class HiveSyntax implements SqlSyntax {
 
   @Override
   public String getPartitionCommand(String schema, String table) {
-    return "SHOW PARTITIONS " + schema + "." + table;
+    return "SHOW PARTITIONS " + quoteName(schema) + "." + quoteName(table);
   }
 
   @Override
@@ -54,7 +54,7 @@ public class HiveSyntax implements SqlSyntax {
 
   @Override
   public String getTableCommand(String schema) {
-    return "SHOW TABLES IN " + schema;
+    return "SHOW TABLES IN " + quoteName(schema);
   }
 
   @Override
@@ -71,4 +71,15 @@ public class HiveSyntax implements SqlSyntax {
   public boolean isAsRequiredBeforeSelectInCreateTable() {
     return true;
   }
+  
+  @Override
+  public boolean equals(Object obj) {
+    if (obj == null) { return false; }
+    if (obj == this) { return true; }
+    if (obj.getClass() != getClass()) {
+      return false;
+    }
+    return true;
+  }
+  
 }
