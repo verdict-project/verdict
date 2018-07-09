@@ -21,6 +21,8 @@ public class AggCombinerExecutionNode extends CreateTableAsSelectNode {
 
   AggMeta aggMeta = new AggMeta();
 
+  static String unionTableAlias = "unionTable";
+
   private AggCombinerExecutionNode(IdCreator namer) {
     super(namer, null);
   }
@@ -40,7 +42,7 @@ public class AggCombinerExecutionNode extends CreateTableAsSelectNode {
     Pair<BaseTable, SubscriptionTicket> rightBaseAndTicket = node.createPlaceHolderTable(rightAliasName);
     
     // compose a join query
-    SelectQuery joinQuery = composeJoinQuery(rightQuery, leftBaseAndTicket.getLeft(), rightBaseAndTicket.getLeft());
+    SelectQuery joinQuery = composeUnionQuery(rightQuery, leftBaseAndTicket.getLeft(), rightBaseAndTicket.getLeft());
     
     leftQueryExecutionNode.registerSubscriber(leftBaseAndTicket.getRight());
     rightQueryExecutionNode.registerSubscriber(rightBaseAndTicket.getRight());
@@ -57,65 +59,43 @@ public class AggCombinerExecutionNode extends CreateTableAsSelectNode {
    * @param rightBase
    * @return
    */
-  static SelectQuery composeJoinQuery(
+  static SelectQuery composeUnionQuery(
       SelectQuery rightQuery,
       BaseTable leftBase,
       BaseTable rightBase) {
-    
-    // retrieves the select list
+
+    List<SelectItem> allItems = new ArrayList<>();
+    // replace the select list
     List<String> groupAliasNames = new ArrayList<>();
-    List<String> measureAliasNames = new ArrayList<>();
-    HashMap<String, String> maxminAliasNames = new HashMap<>();
     for (SelectItem item : rightQuery.getSelectList()) {
       if (item.isAggregateColumn()) {
         if (item instanceof AliasedColumn && ((AliasedColumn) item).getColumn() instanceof ColumnOp
             && (((ColumnOp) ((AliasedColumn) item).getColumn()).getOpType().equals("max")
             || ((ColumnOp) ((AliasedColumn) item).getColumn()).getOpType().equals("min"))) {
-          maxminAliasNames.put(((AliasedColumn) item).getAliasName(), ((ColumnOp) ((AliasedColumn) item).getColumn()).getOpType());
+          allItems.add(new AliasedColumn(
+              new ColumnOp(((ColumnOp) ((AliasedColumn) item).getColumn()).getOpType(),
+                  new BaseColumn(unionTableAlias,((AliasedColumn) item).getAliasName())), ((AliasedColumn) item).getAliasName()
+          ));
         }
-        measureAliasNames.add(((AliasedColumn) item).getAliasName());
+        else allItems.add(new AliasedColumn(
+            ColumnOp.sum(new BaseColumn(unionTableAlias, ((AliasedColumn) item).getAliasName())),
+            ((AliasedColumn) item).getAliasName()));
       } else {
+        allItems.add(new AliasedColumn(new BaseColumn(unionTableAlias, ((AliasedColumn) item).getAliasName()), ((AliasedColumn) item).getAliasName()));
         groupAliasNames.add(((AliasedColumn) item).getAliasName());
       }
     }
-    
-    // replace the alias names of those select items
-    String leftAliasName = leftBase.getAliasName().get();
-    String rightAliasName = rightBase.getAliasName().get();
-    
-    List<SelectItem> groupItems = new ArrayList<>();
-    List<SelectItem> measureItems = new ArrayList<>();
+
+
+    SelectQuery left = SelectQuery.create(new AsteriskColumn(), leftBase);
+    SelectQuery right = SelectQuery.create(new AsteriskColumn(), rightBase);
+    SetOperationRelation newBase = new SetOperationRelation(left, right, SetOperationRelation.SetOpType.unionAll);
+    newBase.setAliasName(unionTableAlias);
+    SelectQuery unionQuery = SelectQuery.create(allItems, newBase);
     for (String a : groupAliasNames) {
-      groupItems.add(new AliasedColumn(new BaseColumn(leftAliasName, a), a));
+      unionQuery.addGroupby(new AliasReference(a));
     }
-    for (String a : measureAliasNames) {
-      if (maxminAliasNames.keySet().contains(a)) {
-        if (maxminAliasNames.get(a).equals("max")) {
-          measureItems.add(new AliasedColumn(
-              new ColumnOp("whenthenelse", Arrays.asList(
-                  new ColumnOp("greater", Arrays.<UnnamedColumn>asList(new BaseColumn(leftAliasName, a), new BaseColumn(rightAliasName, a))),
-                  new BaseColumn(leftAliasName, a),
-                  new BaseColumn(rightAliasName, a)
-              )),
-              a));
-        } else {
-          measureItems.add(new AliasedColumn(
-              new ColumnOp("whenthenelse", Arrays.asList(
-                  new ColumnOp("less", Arrays.<UnnamedColumn>asList(new BaseColumn(leftAliasName, a), new BaseColumn(rightAliasName, a))),
-                  new BaseColumn(leftAliasName, a),
-                  new BaseColumn(rightAliasName, a)
-              )),
-              a));
-        }
-      }
-      else measureItems.add(new AliasedColumn(
-          ColumnOp.add(new BaseColumn(leftAliasName, a), new BaseColumn(rightAliasName, a)),
-          a));
-    }
-    List<SelectItem> allItems = new ArrayList<>();
-    allItems.addAll(groupItems);
-    allItems.addAll(measureItems);
-    
+    /*
     // finally, creates a join query
     SelectQuery joinQuery = SelectQuery.create(
         allItems, 
@@ -124,8 +104,9 @@ public class AggCombinerExecutionNode extends CreateTableAsSelectNode {
       joinQuery.addFilterByAnd(
           ColumnOp.equal(new BaseColumn(leftAliasName, a), new BaseColumn(rightAliasName, a)));
     }
-    
-    return joinQuery;
+    */
+
+    return unionQuery;
   }
 
   @Override
