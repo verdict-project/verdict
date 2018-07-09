@@ -1,6 +1,7 @@
 package org.verdictdb.core.scrambling;
 
 import java.util.List;
+import java.util.Map;
 
 import org.verdictdb.core.connection.DbmsQueryResult;
 import org.verdictdb.core.querying.ExecutableNodeBase;
@@ -17,7 +18,7 @@ public interface ScramblingMethod {
   
   
   // Stage 3 methods
-  public int getBlockCount(DbmsQueryResult statistics);
+  public int getBlockCount(Map<String, Object> metaData);
   
   /**
    * 
@@ -25,7 +26,7 @@ public interface ScramblingMethod {
    * @return A list of sql expressions (boolean predicates) that must be evaluated true at the step
    * indicating a particular tier 
    */
-  public List<UnnamedColumn> getTierExpressions(DbmsQueryResult statistics);
+  public List<UnnamedColumn> getTierExpressions(Map<String, Object> metaData);
 
   /**
    * 
@@ -35,6 +36,6 @@ public interface ScramblingMethod {
    * the list must be equal to "length".
    */
   public List<Double> getCumulativeProbabilityDistributionForTier(
-      DbmsQueryResult statistics, int tier, int length);
+      Map<String, Object> metaData, int tier, int length);
 
 }

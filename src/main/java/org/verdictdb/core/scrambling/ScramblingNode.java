@@ -1,8 +1,10 @@
 package org.verdictdb.core.scrambling;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.core.connection.DbmsQueryResult;
@@ -35,6 +37,8 @@ public class ScramblingNode extends CreateTableAsSelectNode {
   ScramblingMethod method;
 
   Map<String, String> options;
+  
+  public static final String RIGHT_TABLE_SOURCE_ALIAS_NAME = "t2";
 
   public ScramblingNode(
       IdCreator namer, 
@@ -86,11 +90,20 @@ public class ScramblingNode extends CreateTableAsSelectNode {
 
   @Override
   public SqlConvertible createQuery(List<ExecutionInfoToken> tokens) throws VerdictDBException {
-    DbmsQueryResult statistics = null;
-    if (tokens.size() > 0) {
-      statistics = (DbmsQueryResult) tokens.get(0).getValue("queryResult");
+    Map<String, Object> metaData = new HashMap<>();
+    int idx = 0;
+    for (ExecutionInfoToken token : tokens) {
+      for (Entry<String, Object> keyValue : token.entrySet()) {
+        String key = keyValue.getKey();
+        Object value = keyValue.getValue();
+        metaData.put(idx + key, value);
+      }
+      idx++;
     }
-    selectQuery = composeQuery(statistics);
+//    if (tokens.size() > 0) {
+//      statistics = (DbmsQueryResult) tokens.get(0).getValue("queryResult");
+//    }
+    selectQuery = composeQuery(metaData);
     
     // add partitioning for block agg column
     String blockColumnName = options.get("blockColumnName");
@@ -99,15 +112,15 @@ public class ScramblingNode extends CreateTableAsSelectNode {
     return super.createQuery(tokens);
   }
 
-  SelectQuery composeQuery(DbmsQueryResult statistics) {
+  SelectQuery composeQuery(Map<String, Object> metaData) {
     // read option values
-    List<UnnamedColumn> tierPredicates = method.getTierExpressions(statistics);
+    List<UnnamedColumn> tierPredicates = method.getTierExpressions(metaData);
     int tierCount = tierPredicates.size() + 1;
     int blockCount = 0;
     if (options.containsKey("blockCount")) {
       blockCount = Integer.valueOf(options.get("blockCount"));
     } else {
-      method.getBlockCount(statistics);
+      method.getBlockCount(metaData);
     }
     String tierColumnName = options.get("tierColumnName");
     String blockColumnName = options.get("blockColumnName");
@@ -136,7 +149,7 @@ public class ScramblingNode extends CreateTableAsSelectNode {
     UnnamedColumn blockExpr = null;
     List<UnnamedColumn> blockOperands = new ArrayList<>();
     for (int i = 0; i < tierCount; i++) {
-      List<Double> cumulProb = method.getCumulativeProbabilityDistributionForTier(statistics, i, blockCount);
+      List<Double> cumulProb = method.getCumulativeProbabilityDistributionForTier(metaData, i, blockCount);
       List<Double> condProb = computeConditionalProbabilityDistribution(cumulProb);
 
       List<UnnamedColumn> blockForTierOperands = new ArrayList<>();
@@ -170,6 +183,12 @@ public class ScramblingNode extends CreateTableAsSelectNode {
     return scramblingQuery;
   }
 
+  /**
+   * To use a series of rand() in a case clause, we instead need this conditional probability.
+   * 
+   * @param cumulativeProbabilityDistribution
+   * @return
+   */
   List<Double> computeConditionalProbabilityDistribution(List<Double> cumulativeProbabilityDistribution) {
     List<Double> cond = new ArrayList<>();
     int length = cumulativeProbabilityDistribution.size();

@@ -8,7 +8,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class JdbcQueryResult implements DbmsQueryResult {
+public class JdbcQueryResult extends DbmsQueryResultBase {
   
   List<String> columnNames = new ArrayList<>();
 
@@ -147,5 +147,10 @@ public class JdbcQueryResult implements DbmsQueryResult {
 
   public List<List<Object>> getResult() {
     return result;
+  }
+
+  @Override
+  public void rewind() {
+    cursor = -1;
   }
 }

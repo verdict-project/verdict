@@ -106,8 +106,14 @@ public class CondGen extends VerdictSQLBaseVisitor<UnnamedColumn> {
     public UnnamedColumn visitIs_predicate(VerdictSQLParser.Is_predicateContext ctx) {
         ExpressionGen g = new ExpressionGen();
         UnnamedColumn left = g.visit(ctx.expression());
-        UnnamedColumn right = visit(ctx.null_notnull());
-        return new ColumnOp("is", Arrays.asList(left, right));
+        
+        if (ctx.null_notnull().NOT() == null) {
+          return ColumnOp.isnull(left);
+        } else {
+          return ColumnOp.isnotnull(left);
+        }
+//        UnnamedColumn right = visit(ctx.null_notnull());
+//        return new ColumnOp("is", Arrays.asList(left, right));
     }
 
     @Override
@@ -119,8 +125,8 @@ public class CondGen extends VerdictSQLBaseVisitor<UnnamedColumn> {
             boolean not = (ctx.NOT() != null) ? true : false;
             RelationGen g2 = new RelationGen();
             UnnamedColumn subquery = SubqueryColumn.getSubqueryColumn((SelectQuery) g2.visit(ctx.subquery()));
-            return not ? new ColumnOp("notin", Arrays.asList(left, subquery)) :
-                    new ColumnOp("in", Arrays.asList(left, subquery));
+            return not ? ColumnOp.notin(Arrays.asList(left, subquery)) :
+                    ColumnOp.in(Arrays.asList(left, subquery));
         } else {
             UnnamedColumn left = g1.visit(ctx.expression());
             boolean not = (ctx.NOT() != null) ? true : false;
@@ -129,8 +135,8 @@ public class CondGen extends VerdictSQLBaseVisitor<UnnamedColumn> {
             for (VerdictSQLParser.ExpressionContext ectx : ctx.expression_list().expression()) {
                 expressionList.add(g1.visit(ectx));
             }
-            return not ? new ColumnOp("notin", expressionList) :
-                    new ColumnOp("in", expressionList);
+            return not ? ColumnOp.notin(expressionList) :
+                    ColumnOp.in(expressionList);
         }
     }
 
@@ -142,7 +148,7 @@ public class CondGen extends VerdictSQLBaseVisitor<UnnamedColumn> {
         }
         RelationGen g = new RelationGen();
         UnnamedColumn subquery = SubqueryColumn.getSubqueryColumn((SelectQuery) g.visit(ctx.subquery()));
-        return new ColumnOp("exists", subquery);
+        return ColumnOp.exists(subquery);
     }
 
     @Override
@@ -151,8 +157,8 @@ public class CondGen extends VerdictSQLBaseVisitor<UnnamedColumn> {
         UnnamedColumn left = g.visit(ctx.expression(0));
         UnnamedColumn right = g.visit(ctx.expression(1));
         boolean not = (ctx.NOT() != null) ? true : false;
-        return not ? new ColumnOp("notlike", Arrays.asList(left, right)) :
-                new ColumnOp("like", Arrays.asList(left, right));
+        return not ? ColumnOp.notlike(left, right) :
+                ColumnOp.like(left, right);
     }
 
     @Override
@@ -164,14 +170,14 @@ public class CondGen extends VerdictSQLBaseVisitor<UnnamedColumn> {
         return new ColumnOp("between", Arrays.asList(col, left, right));
     }
 
-    @Override
-    public UnnamedColumn visitNull_notnull(VerdictSQLParser.Null_notnullContext ctx) {
-        if (ctx.NOT() == null) {
-            return ConstantColumn.valueOf("NULL");
-        } else {
-            return ConstantColumn.valueOf("NOT NULL");
-        }
-    }
+//    @Override
+//    public UnnamedColumn visitNull_notnull(VerdictSQLParser.Null_notnullContext ctx) {
+//        if (ctx.NOT() == null) {
+//            return ConstantColumn.valueOf("NULL");
+//        } else {
+//            return ConstantColumn.valueOf("NOT NULL");
+//        }
+//    }
 
     @Override
     public UnnamedColumn visitTrue_orfalse(VerdictSQLParser.True_orfalseContext ctx) {

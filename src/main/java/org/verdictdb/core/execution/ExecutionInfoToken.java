@@ -1,7 +1,9 @@
 package org.verdictdb.core.execution;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
@@ -61,9 +63,17 @@ public class ExecutionInfoToken {
     data.put(key, value);
   }
   
+//  public Map<String, Object> getData() {
+//    return data;
+//  }
+  
   @Override
   public String toString() {
     return ToStringBuilder.reflectionToString(this, ToStringStyle.SHORT_PREFIX_STYLE);
+  }
+
+  public Iterable<Map.Entry<String, Object>> entrySet() {
+    return data.entrySet();
   }
 
 }

@@ -113,15 +113,16 @@ public class FastConvergeScramblingMethodTest {
     ExecutableNodeBase columnMetaDataNode = 
         ColumnMetadataRetrievalNode.create(oldSchemaName, oldTableName, columnMetaTokenKey);
     
-//    ExecutableNodeBase root = nodes.get(nodes.size()-1);
-    ExecutableNodeBase columnMetaRoot = nodes.get(0);
-    columnMetaRoot.subscribeTo(columnMetaDataNode, 100);
-    ExecutablePlan columnMetaPlan = new SimpleTreePlan(columnMetaRoot);
-    DbmsConnection conn = new JdbcConnection(h2conn);
-    ExecutablePlanRunner.runTillEnd(conn, columnMetaPlan);
+    ExecutableNodeBase tableStatisticsRoot = nodes.get(0);
+    tableStatisticsRoot.subscribeTo(columnMetaDataNode, 100);
+//    ExecutablePlan columnMetaPlan = new SimpleTreePlan(tableStatisticsRoot);
+//    DbmsConnection conn = new JdbcConnection(h2conn);
+//    ExecutablePlanRunner.runTillEnd(conn, columnMetaPlan);
     
     ExecutableNodeBase groupSizeRoot = nodes.get(2);
+    groupSizeRoot.subscribeTo(columnMetaDataNode, 100);
     ExecutablePlan groupSizePlan = new SimpleTreePlan(groupSizeRoot);
+    DbmsConnection conn = new JdbcConnection(h2conn);
     ExecutablePlanRunner.runTillEnd(conn, groupSizePlan);
   }
 

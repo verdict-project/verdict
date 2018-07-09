@@ -166,13 +166,14 @@ public class JdbcResultSet implements ResultSet {
 
   @Override
   public String getString(int columnIndex) throws SQLException {
-    lastValue = queryResult.getValue(columnIndex-1);
-    
-    if (lastValue == null) {
-      return null;
-    }
-    
-    return String.valueOf(lastValue);
+    return queryResult.getString(columnIndex-1);
+//    lastValue = queryResult.getValue(columnIndex-1);
+//    
+//    if (lastValue == null) {
+//      return null;
+//    }
+//    
+//    return String.valueOf(lastValue);
   }
 
   @Override
@@ -246,85 +247,108 @@ public class JdbcResultSet implements ResultSet {
   @Override
   public int getInt(int columnIndex) throws SQLException {
     try {
-      if (isValidType("int", columnIndex)) {
-        lastValue = queryResult.getValue(columnIndex-1);
-        
-        if (lastValue == null) {
-          return 0;
-        }
-        
-        return (int) TypeCasting.toInteger(lastValue);
-      }
-      else {
-        throw new VerdictDBTypeException(queryResult.getValue(columnIndex-1));
-      }
-    }
-    catch (VerdictDBTypeException e) {
+      return queryResult.getInt(columnIndex-1);
+    } catch (VerdictDBTypeException e) {
       throw new SQLException(e.getMessage());
     }
+//    try {
+//      if (isValidType("int", columnIndex)) {
+//        lastValue = queryResult.getValue(columnIndex-1);
+//        
+//        if (lastValue == null) {
+//          return 0;
+//        }
+//        
+//        return (int) TypeCasting.toInteger(lastValue);
+//      }
+//      else {
+//        throw new VerdictDBTypeException(queryResult.getValue(columnIndex-1));
+//      }
+//    }
+//    catch (VerdictDBTypeException e) {
+//      throw new SQLException(e.getMessage());
+//    }
   }
 
   @Override
   public long getLong(int columnIndex) throws SQLException {
     try {
-      if (isValidType("long", columnIndex)) {
-        lastValue = queryResult.getValue(columnIndex-1);
-        
-        if (lastValue == null) {
-          return 0;
-        }
-        
-        return (long) TypeCasting.toLong(lastValue);
-      }
-      else {
-        throw new VerdictDBTypeException(queryResult.getValue(columnIndex-1));
-      }
-    }
-    catch (VerdictDBTypeException e) {
+      return queryResult.getLong(columnIndex-1);
+    } catch (VerdictDBTypeException e) {
       throw new SQLException(e.getMessage());
     }
+    
+//    try {
+//      if (isValidType("long", columnIndex)) {
+//        lastValue = queryResult.getValue(columnIndex-1);
+//        
+//        if (lastValue == null) {
+//          return 0;
+//        }
+//        
+//        return (long) TypeCasting.toLong(lastValue);
+//      }
+//      else {
+//        throw new VerdictDBTypeException(queryResult.getValue(columnIndex-1));
+//      }
+//    }
+//    catch (VerdictDBTypeException e) {
+//      throw new SQLException(e.getMessage());
+//    }
   }
 
   @Override
   public float getFloat(int columnIndex) throws SQLException {
     try {
-      if (isValidType("float", columnIndex)) {
-        lastValue = queryResult.getValue(columnIndex-1);
-        
-        if (lastValue == null) {
-          return 0;
-        }
-        
-        return (float) TypeCasting.toFloat(lastValue);
-      }
-      else {
-        throw new VerdictDBTypeException(queryResult.getValue(columnIndex-1));
-      }
-    }
-    catch (VerdictDBTypeException e) {
+      return queryResult.getFloat(columnIndex-1);
+    } catch (VerdictDBTypeException e) {
       throw new SQLException(e.getMessage());
     }
+    
+//    try {
+//      if (isValidType("float", columnIndex)) {
+//        lastValue = queryResult.getValue(columnIndex-1);
+//        
+//        if (lastValue == null) {
+//          return 0;
+//        }
+//        
+//        return (float) TypeCasting.toFloat(lastValue);
+//      }
+//      else {
+//        throw new VerdictDBTypeException(queryResult.getValue(columnIndex-1));
+//      }
+//    }
+//    catch (VerdictDBTypeException e) {
+//      throw new SQLException(e.getMessage());
+//    }
   }
 
   @Override
   public double getDouble(int columnIndex) throws SQLException {
     try {
-      if (isValidType("double", columnIndex)) {
-        lastValue = queryResult.getValue(columnIndex-1);
-        
-        if (lastValue == null) {
-          return 0;
-        }
-        
-        return (double) TypeCasting.toDouble(lastValue);
-      }
-      else {
-        throw new VerdictDBTypeException(queryResult.getValue(columnIndex-1));
-      }
-    }
-    catch (VerdictDBTypeException e) {
+      return queryResult.getDouble(columnIndex-1);
+    } catch (VerdictDBTypeException e) {
       throw new SQLException(e.getMessage());
     }
+    
+//    try {
+//      if (isValidType("double", columnIndex)) {
+//        lastValue = queryResult.getValue(columnIndex-1);
+//        
+//        if (lastValue == null) {
+//          return 0;
+//        }
+//        
+//        return (double) TypeCasting.toDouble(lastValue);
+//      }
+//      else {
+//        throw new VerdictDBTypeException(queryResult.getValue(columnIndex-1));
+//      }
+//    }
+//    catch (VerdictDBTypeException e) {
+//      throw new SQLException(e.getMessage());
+//    }
   }
 
   @Override
@@ -354,19 +378,25 @@ public class JdbcResultSet implements ResultSet {
 
   @Override
   public Date getDate(int columnIndex) throws SQLException {
-    if (isValidType("date", columnIndex)) {
-      if (queryResult.getValue(columnIndex-1) instanceof Date){
-        lastValue = queryResult.getValue(columnIndex-1);
-      }
-      else if (queryResult.getValue(columnIndex-1) instanceof Timestamp) {
-        lastValue  = new Date(((Timestamp)(queryResult.getValue(columnIndex-1))).getTime());
-      }
-      else if (queryResult.getValue(columnIndex-1) instanceof Time) {
-        lastValue =  new Date(((Time)(queryResult.getValue(columnIndex-1))).getTime());
-      }
-      return (Date) lastValue;
+    try {
+      return queryResult.getDate(columnIndex-1);
+    } catch (VerdictDBTypeException e) {
+      throw new SQLException(e.getMessage());
     }
-    else throw new SQLException("Not supported data type.");
+    
+//    if (isValidType("date", columnIndex)) {
+//      if (queryResult.getValue(columnIndex-1) instanceof Date){
+//        lastValue = queryResult.getValue(columnIndex-1);
+//      }
+//      else if (queryResult.getValue(columnIndex-1) instanceof Timestamp) {
+//        lastValue  = new Date(((Timestamp)(queryResult.getValue(columnIndex-1))).getTime());
+//      }
+//      else if (queryResult.getValue(columnIndex-1) instanceof Time) {
+//        lastValue =  new Date(((Time)(queryResult.getValue(columnIndex-1))).getTime());
+//      }
+//      return (Date) lastValue;
+//    }
+//    else throw new SQLException("Not supported data type.");
   }
 
   @Override
@@ -395,24 +425,30 @@ public class JdbcResultSet implements ResultSet {
 
   @Override
   public Timestamp getTimestamp(int columnIndex) throws SQLException {
-    if (isValidType("timestamp", columnIndex)) {
-      lastValue = queryResult.getValue(columnIndex-1);
-      if (lastValue == null) {
-        return null;
-      }
-      
-      if (lastValue instanceof Date){
-        lastValue  = new Timestamp(((Date) (queryResult.getValue(columnIndex-1))).getTime());
-      }
-      else if (lastValue instanceof Time) {
-        lastValue  = new Timestamp(((Time) (queryResult.getValue(columnIndex-1))).getTime());
-      }
-      else if (lastValue instanceof Timestamp) {
-        lastValue = queryResult.getValue(columnIndex-1);
-      }
-      return (Timestamp) lastValue;
+    try {
+      return queryResult.getTimestamp(columnIndex-1);
+    } catch (VerdictDBTypeException e) {
+      throw new SQLException(e.getMessage());
     }
-    else throw new SQLException("Not supported data type.");
+    
+//    if (isValidType("timestamp", columnIndex)) {
+//      lastValue = queryResult.getValue(columnIndex-1);
+//      if (lastValue == null) {
+//        return null;
+//      }
+//      
+//      if (lastValue instanceof Date){
+//        lastValue  = new Timestamp(((Date) (queryResult.getValue(columnIndex-1))).getTime());
+//      }
+//      else if (lastValue instanceof Time) {
+//        lastValue  = new Timestamp(((Time) (queryResult.getValue(columnIndex-1))).getTime());
+//      }
+//      else if (lastValue instanceof Timestamp) {
+//        lastValue = queryResult.getValue(columnIndex-1);
+//      }
+//      return (Timestamp) lastValue;
+//    }
+//    else throw new SQLException("Not supported data type.");
   }
 
   @Override

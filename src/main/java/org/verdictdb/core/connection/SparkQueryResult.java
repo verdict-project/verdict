@@ -10,7 +10,9 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.types.StructField;
 
-public class SparkQueryResult implements DbmsQueryResult {
+import scala.Tuple2;
+
+public class SparkQueryResult extends DbmsQueryResultBase {
 
   List<String> columnNames = new ArrayList<>();
 
@@ -23,7 +25,7 @@ public class SparkQueryResult implements DbmsQueryResult {
   int cursor = -1;
 
   public SparkQueryResult(Dataset<Row> dataset) {
-    scala.Tuple2<String, String>[] colNameAndColType = dataset.dtypes();
+//    Tuple2<String, String>[] colNameAndColType = dataset.dtypes();
     List<Integer> nullable = new ArrayList<>();
     List<String> columnClassName = new ArrayList<>();
     for (StructField structField : dataset.schema().fields()) {
@@ -115,6 +117,11 @@ public class SparkQueryResult implements DbmsQueryResult {
       }
       System.out.println(row.toString());
     }
+  }
+
+  @Override
+  public void rewind() {
+    cursor = -1;
   }
 
 }

@@ -48,21 +48,21 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
    * <li>notlessthan</li>
    * <li>casewhenelse</li>
    * <li>whenthenelse</li>
-   * <li>not null</li>
+   * <li>is null</li>
+   * <li>is not null</li>
    * <li>interval</li>
    * <li>date</li>
    * <li>greater</li>
    * <li>less</li>
    * <li>greaterequal</li>
    * <li>lessequal</li>
-   * <li>is</li>
    * <li>like</li>
+   * <li>notlike</li>
    * <li>exists</li>
    * <li>notexists</li>
    * <li>between</li>
    * <li>in</li>
    * <li>notin</li>
-   * <li>notlike</li>
    * <li>year</li>
    * </ol>
    */
@@ -115,6 +115,10 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
   public static ColumnOp and(UnnamedColumn predicate1, UnnamedColumn predicate2) {
     return new ColumnOp("and", Arrays.asList(predicate1, predicate2));
   }
+  
+  public static ColumnOp or(UnnamedColumn predicate1, UnnamedColumn predicate2) {
+    return new ColumnOp("or", Arrays.asList(predicate1, predicate2));
+  }
 
   public static ColumnOp count() {
     return new ColumnOp("count");
@@ -157,9 +161,9 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
 //    return new ColumnOp("casewhenelse", Arrays.asList(columnIf, condition, columnElse));
 //  }
 
-  public static ColumnOp notnull(UnnamedColumn column1) {
-    return new ColumnOp("notnull", Arrays.asList(column1));
-  }
+//  public static ColumnOp notnull(UnnamedColumn column1) {
+//    return new ColumnOp("notnull", Arrays.asList(column1));
+//  }
 
   public static ColumnOp std(UnnamedColumn column1) {
     return new ColumnOp("stddev_pop", Arrays.asList(column1));
@@ -217,8 +221,12 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
     return new ColumnOp("percentile", Arrays.asList(column1, column2));
   }
 
-  public static ColumnOp is(UnnamedColumn column1, UnnamedColumn column2) {
-    return new ColumnOp("is", Arrays.asList(column1, column2));
+  public static ColumnOp isnull(UnnamedColumn column1) {
+    return new ColumnOp("isnull", Arrays.asList(column1));
+  }
+  
+  public static ColumnOp isnotnull(UnnamedColumn column1) {
+    return new ColumnOp("isnotnull", Arrays.asList(column1));
   }
 
   public static ColumnOp like(UnnamedColumn column1, UnnamedColumn column2) {

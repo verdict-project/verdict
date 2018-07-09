@@ -3,6 +3,7 @@ package org.verdictdb.core.scrambling;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.core.connection.DataTypeConverter;
@@ -26,6 +27,7 @@ import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.core.sqlobject.SqlConvertible;
 import org.verdictdb.core.sqlobject.UnnamedColumn;
 import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.exception.VerdictDBTypeException;
 import org.verdictdb.exception.VerdictDBValueException;
 
 import com.google.common.base.Optional;
@@ -58,6 +60,8 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
   final double p0 = 0.5;     // max portion for Tier 0; should be configured dynamically in the future
 
   final double p1 = 0.8;     // max portion for Tier 0 + Tier 1; should be configured dynamically in the future
+  
+  final double outlierStddevMultiplier = 3.09;
 
   Optional<String> primaryColumnName = Optional.absent();
   
@@ -82,8 +86,12 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
    * (2) the list of "large" groups, and 
    * (3) the sizes of "large" groups
    * 
-   * Recall that channels 0 and 1 are reserved for column meta and partition meta, respectively.
+   * Recall that channels 100 and 101 are reserved for column meta and partition meta, respectively.
    * 
+   * This method generates up to three nodes, and the token keys set up by those nodes are:
+   * 1. queryResult: this contains avg, std, and count
+   * 2. schemaName, tableName: this is the name of the temporary tables that contains a list of large groups.
+   * 3. queryResult: this contains the sum of the sizes of large groups.
    */
   @Override
   public List<ExecutableNodeBase> getStatisticsNode(
@@ -101,9 +109,10 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
       TempIdCreatorInScratchpadSchema idCreator = new TempIdCreatorInScratchpadSchema(scratchpadSchemaName);
       LargeGroupListNode ll = new LargeGroupListNode(
           idCreator, oldSchemaName, oldTableName, primaryColumnName.get());
+      ll.subscribeTo(pc, 0);
   
       LargeGroupSizeNode ls = new LargeGroupSizeNode(primaryColumnName.get());
-      ls.subscribeTo(ll, 2);
+      ls.subscribeTo(ll, 0);
       
       statisticsNodes.add(ll);
       statisticsNodes.add(ls);
@@ -113,20 +122,70 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
   }
 
   @Override
-  public int getBlockCount(DbmsQueryResult statistics) {
+  public int getBlockCount(Map<String, Object> metaData) {
     // TODO: will use the provided statistics
     return 10;
   }
 
   @Override
-  public List<UnnamedColumn> getTierExpressions(DbmsQueryResult statistics) {
-    // TODO Auto-generated method stub
-    return null;
+  public List<UnnamedColumn> getTierExpressions(Map<String, Object> metaData) {
+    DbmsQueryResult percentileAndCountResult = (DbmsQueryResult) metaData.get("0queryResult");
+//    String largeGroupListSchemaName = (String) metaData.get("1schemaName");
+//    String largeGroupListTableName = (String) metaData.get("1tableName");
+    
+    // Tier 0
+    UnnamedColumn tier0Predicate = null;
+    percentileAndCountResult.rewind();
+    percentileAndCountResult.next();    // assumes that the original table has at least one row.
+    
+    for (int i = 0; i < percentileAndCountResult.getColumnCount(); i++) {
+      String columnName = percentileAndCountResult.getColumnName(i);
+      if (columnName.startsWith(PercentilesAndCountNode.AVG_PREFIX)) {
+        String originalColumnName = columnName.substring(PercentilesAndCountNode.AVG_PREFIX.length());
+            
+        // this implementation assumes that corresponding stddev column comes right after
+        // the current column indexed by 'i'.
+        try {
+          double columnAverage = percentileAndCountResult.getDouble(i);
+          double columnStddev = percentileAndCountResult.getDouble(i+1);
+          double lowCriteria = columnAverage - columnStddev * outlierStddevMultiplier;
+          double highCriteria = columnAverage + columnStddev * outlierStddevMultiplier;
+
+          UnnamedColumn newOrPredicate = ColumnOp.or(
+              ColumnOp.less(new BaseColumn(originalColumnName), ConstantColumn.valueOf(lowCriteria)),
+              ColumnOp.greater(new BaseColumn(originalColumnName), ConstantColumn.valueOf(highCriteria)));
+
+          if (tier0Predicate == null) {
+            tier0Predicate = newOrPredicate;
+          } else {
+            tier0Predicate = ColumnOp.or(tier0Predicate, newOrPredicate);
+          }
+        } catch (VerdictDBTypeException e) {
+          System.err.println("Skipping the following column: " + columnName);
+          e.printStackTrace();
+        }
+      }
+      if (columnName.equals(PercentilesAndCountNode.TOTAL_COUNT_ALIAS_NAME)) {
+        // do nothing
+      }
+    }
+    
+    // Tier 1
+    // select (case ... when t2.groupSize is null then 1 else 2 end) as verdictdbtier
+    // from schemaName.tableName t1 left join largeGroupSchema.largeGroupTable t2
+    //   on t1.primaryGroup = t2.primaryGroup
+    String rightTableSourceAlias = ScramblingNode.RIGHT_TABLE_SOURCE_ALIAS_NAME;
+    UnnamedColumn tier1Predicate = ColumnOp.isnull(
+        new BaseColumn(rightTableSourceAlias, LargeGroupListNode.LARGE_GROUP_SIZE_COLUMN_ALIAS));
+    
+    // Tier 2: automatically handled by this function's caller
+    
+    return Arrays.asList(tier0Predicate, tier1Predicate);
   }
 
   @Override
   public List<Double> getCumulativeProbabilityDistributionForTier(
-      DbmsQueryResult statistics, 
+      Map<String, Object> metaData, 
       int tier, 
       int length) {
     // TODO Auto-generated method stub
@@ -144,6 +203,12 @@ class PercentilesAndCountNode extends QueryNodeBase {
   private String columnMetaTokenKey;
 
   private String partitionMetaTokenKey;
+  
+  public static final String AVG_PREFIX = "verdictdbavg";
+  
+  public static final String STDDEV_PREFIX = "verdictdbstddev";
+  
+  public static final String TOTAL_COUNT_ALIAS_NAME = "verdictdbtotalcount";
 
   public PercentilesAndCountNode(
       String schemaName, String tableName, String columnMetaTokenKey, String partitionMetaTokenKey) {
@@ -179,16 +244,16 @@ class PercentilesAndCountNode extends QueryNodeBase {
       SelectItem item;
       item = new AliasedColumn(
           ColumnOp.avg(new BaseColumn(tableSourceAlias, col)), 
-          col + "avg");
+          AVG_PREFIX + col);
       selectList.add(item);
 
       // standard deviation
       item = new AliasedColumn(
           ColumnOp.std(new BaseColumn(tableSourceAlias, col)), 
-          col + "std");
+          STDDEV_PREFIX + col);
       selectList.add(item);
     }
-    selectList.add(new AliasedColumn(ColumnOp.count(), "total"));
+    selectList.add(new AliasedColumn(ColumnOp.count(), TOTAL_COUNT_ALIAS_NAME));
 
     selectQuery = SelectQuery.create(
         selectList, 

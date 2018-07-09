@@ -3,6 +3,7 @@ package org.verdictdb.core.scrambling;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import org.verdictdb.core.connection.DbmsQueryResult;
 import org.verdictdb.core.querying.ExecutableNodeBase;
@@ -35,13 +36,13 @@ public class UniformScramblingMethod extends ScramblingMethodBase {
 //  }
 
   @Override
-  public List<UnnamedColumn> getTierExpressions(DbmsQueryResult statistics) {
+  public List<UnnamedColumn> getTierExpressions(Map<String, Object> metaData) {
     return Arrays.asList();
   }
 
   @Override
   public List<Double> getCumulativeProbabilityDistributionForTier(
-      DbmsQueryResult statistics, 
+      Map<String, Object> metaData, 
       int tier, 
       int length) {
     
@@ -54,7 +55,7 @@ public class UniformScramblingMethod extends ScramblingMethodBase {
   }
 
   @Override
-  public int getBlockCount(DbmsQueryResult statistics) {
+  public int getBlockCount(Map<String, Object> metaData) {
     // TODO: infer this
     return 100;
   }
