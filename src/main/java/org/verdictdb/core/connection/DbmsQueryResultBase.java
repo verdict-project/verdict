@@ -5,7 +5,6 @@ import java.sql.Time;
 import java.sql.Timestamp;
 
 import org.verdictdb.exception.VerdictDBTypeException;
-import org.verdictdb.jdbc41.TypeCasting;
 
 public abstract class DbmsQueryResultBase implements DbmsQueryResult {
 
@@ -19,7 +18,7 @@ public abstract class DbmsQueryResultBase implements DbmsQueryResult {
   }
 
   @Override
-  public int getInt(int index) throws VerdictDBTypeException {
+  public int getInt(int index) {
     Object value = getValue(index);
     if (value == null) {
       return 0;
@@ -28,7 +27,7 @@ public abstract class DbmsQueryResultBase implements DbmsQueryResult {
   }
 
   @Override
-  public long getLong(int index) throws VerdictDBTypeException {
+  public long getLong(int index) {
     Object value = getValue(index);
     if (value == null) {
       return 0;
@@ -37,7 +36,7 @@ public abstract class DbmsQueryResultBase implements DbmsQueryResult {
   }
 
   @Override
-  public double getDouble(int index) throws VerdictDBTypeException {
+  public double getDouble(int index) {
     Object value = getValue(index);
     if (value == null) {
       return 0;
@@ -46,7 +45,7 @@ public abstract class DbmsQueryResultBase implements DbmsQueryResult {
   }
 
   @Override
-  public float getFloat(int index) throws VerdictDBTypeException {
+  public float getFloat(int index) {
     Object value = getValue(index);
     if (value == null) {
       return 0;
@@ -55,7 +54,7 @@ public abstract class DbmsQueryResultBase implements DbmsQueryResult {
   }
 
   @Override
-  public Date getDate(int index) throws VerdictDBTypeException {
+  public Date getDate(int index) {
     Object value = getValue(index);
     
     if (value == null) {
@@ -72,12 +71,13 @@ public abstract class DbmsQueryResultBase implements DbmsQueryResult {
       return new Date(((Time) value).getTime());
     }
     else {
-      throw new VerdictDBTypeException("Could not obtain Date from: " + value);
+      return null;
+//      throw new VerdictDBTypeException("Could not obtain Date from: " + value);
     }
   }
 
   @Override
-  public Timestamp getTimestamp(int index) throws VerdictDBTypeException {
+  public Timestamp getTimestamp(int index) {
     Object value = getValue(index);
     
     if (value == null) {
@@ -94,7 +94,8 @@ public abstract class DbmsQueryResultBase implements DbmsQueryResult {
       return (Timestamp) value;
     }
     else {
-      throw new VerdictDBTypeException("Could not obtain Timestamp from: " + value);
+      return null;
+//      throw new VerdictDBTypeException("Could not obtain Timestamp from: " + value);
     }
   }
 

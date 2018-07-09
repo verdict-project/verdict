@@ -18,7 +18,7 @@ public interface ScramblingMethod {
   
   
   // Stage 3 methods
-  public int getBlockCount(Map<String, Object> metaData);
+//  public int getBlockCount(Map<String, Object> metaData);
   
   /**
    * 
@@ -36,6 +36,6 @@ public interface ScramblingMethod {
    * the list must be equal to "length".
    */
   public List<Double> getCumulativeProbabilityDistributionForTier(
-      Map<String, Object> metaData, int tier, int length);
+      Map<String, Object> metaData, int tier);
 
 }

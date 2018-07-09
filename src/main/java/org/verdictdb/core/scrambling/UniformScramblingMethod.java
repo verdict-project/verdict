@@ -43,21 +43,25 @@ public class UniformScramblingMethod extends ScramblingMethodBase {
   @Override
   public List<Double> getCumulativeProbabilityDistributionForTier(
       Map<String, Object> metaData, 
-      int tier, 
-      int length) {
+      int tier) {
+    
+    DbmsQueryResult tableSizeResult = (DbmsQueryResult) metaData.get("0queryResult");
+    tableSizeResult.next();
+    long tableSize = tableSizeResult.getLong(0);
+    long totalNumberOfblocks = (long) Math.ceil(tableSize / (float) blockSize);
     
     List<Double> prob = new ArrayList<>();
-    for (int i = 0; i < length; i++) {
-      prob.add((i+1) / (double) length);
+    for (int i = 0; i < totalNumberOfblocks; i++) {
+      prob.add((i+1) / (double) totalNumberOfblocks);
     }
     
     return prob;
   }
 
-  @Override
-  public int getBlockCount(Map<String, Object> metaData) {
-    // TODO: infer this
-    return 100;
-  }
+//  @Override
+//  public int getBlockCount(Map<String, Object> metaData) {
+//    // TODO: infer this
+//    return 100;
+//  }
 
 }

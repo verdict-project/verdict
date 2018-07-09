@@ -30,6 +30,7 @@ import java.util.Map;
 import javax.sql.rowset.serial.SerialBlob;
 
 import org.verdictdb.core.connection.DbmsQueryResult;
+import org.verdictdb.core.connection.TypeCasting;
 import org.verdictdb.exception.VerdictDBTypeException;
 
 public class JdbcResultSet implements ResultSet {
@@ -245,12 +246,8 @@ public class JdbcResultSet implements ResultSet {
   }
 
   @Override
-  public int getInt(int columnIndex) throws SQLException {
-    try {
-      return queryResult.getInt(columnIndex-1);
-    } catch (VerdictDBTypeException e) {
-      throw new SQLException(e.getMessage());
-    }
+  public int getInt(int columnIndex) {
+    return queryResult.getInt(columnIndex-1);
 //    try {
 //      if (isValidType("int", columnIndex)) {
 //        lastValue = queryResult.getValue(columnIndex-1);
@@ -271,12 +268,8 @@ public class JdbcResultSet implements ResultSet {
   }
 
   @Override
-  public long getLong(int columnIndex) throws SQLException {
-    try {
-      return queryResult.getLong(columnIndex-1);
-    } catch (VerdictDBTypeException e) {
-      throw new SQLException(e.getMessage());
-    }
+  public long getLong(int columnIndex) {
+    return queryResult.getLong(columnIndex-1);
     
 //    try {
 //      if (isValidType("long", columnIndex)) {
@@ -298,12 +291,8 @@ public class JdbcResultSet implements ResultSet {
   }
 
   @Override
-  public float getFloat(int columnIndex) throws SQLException {
-    try {
-      return queryResult.getFloat(columnIndex-1);
-    } catch (VerdictDBTypeException e) {
-      throw new SQLException(e.getMessage());
-    }
+  public float getFloat(int columnIndex) {
+    return queryResult.getFloat(columnIndex-1);
     
 //    try {
 //      if (isValidType("float", columnIndex)) {
@@ -325,12 +314,8 @@ public class JdbcResultSet implements ResultSet {
   }
 
   @Override
-  public double getDouble(int columnIndex) throws SQLException {
-    try {
-      return queryResult.getDouble(columnIndex-1);
-    } catch (VerdictDBTypeException e) {
-      throw new SQLException(e.getMessage());
-    }
+  public double getDouble(int columnIndex) {
+    return queryResult.getDouble(columnIndex-1);
     
 //    try {
 //      if (isValidType("double", columnIndex)) {
@@ -377,12 +362,8 @@ public class JdbcResultSet implements ResultSet {
   }
 
   @Override
-  public Date getDate(int columnIndex) throws SQLException {
-    try {
-      return queryResult.getDate(columnIndex-1);
-    } catch (VerdictDBTypeException e) {
-      throw new SQLException(e.getMessage());
-    }
+  public Date getDate(int columnIndex) {
+    return queryResult.getDate(columnIndex-1);
     
 //    if (isValidType("date", columnIndex)) {
 //      if (queryResult.getValue(columnIndex-1) instanceof Date){
@@ -424,12 +405,8 @@ public class JdbcResultSet implements ResultSet {
   }
 
   @Override
-  public Timestamp getTimestamp(int columnIndex) throws SQLException {
-    try {
-      return queryResult.getTimestamp(columnIndex-1);
-    } catch (VerdictDBTypeException e) {
-      throw new SQLException(e.getMessage());
-    }
+  public Timestamp getTimestamp(int columnIndex) {
+    return queryResult.getTimestamp(columnIndex-1);
     
 //    if (isValidType("timestamp", columnIndex)) {
 //      lastValue = queryResult.getValue(columnIndex-1);

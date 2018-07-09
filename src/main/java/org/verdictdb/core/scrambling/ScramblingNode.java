@@ -116,12 +116,13 @@ public class ScramblingNode extends CreateTableAsSelectNode {
     // read option values
     List<UnnamedColumn> tierPredicates = method.getTierExpressions(metaData);
     int tierCount = tierPredicates.size() + 1;
-    int blockCount = 0;
-    if (options.containsKey("blockCount")) {
-      blockCount = Integer.valueOf(options.get("blockCount"));
-    } else {
-      method.getBlockCount(metaData);
-    }
+//    int blockCount = 0;
+//    if (options.containsKey("blockCount")) {
+//      blockCount = Integer.valueOf(options.get("blockCount"));
+//    } 
+//    else {
+//      method.getBlockCount(metaData);
+//    }
     String tierColumnName = options.get("tierColumnName");
     String blockColumnName = options.get("blockColumnName");
 
@@ -149,8 +150,9 @@ public class ScramblingNode extends CreateTableAsSelectNode {
     UnnamedColumn blockExpr = null;
     List<UnnamedColumn> blockOperands = new ArrayList<>();
     for (int i = 0; i < tierCount; i++) {
-      List<Double> cumulProb = method.getCumulativeProbabilityDistributionForTier(metaData, i, blockCount);
+      List<Double> cumulProb = method.getCumulativeProbabilityDistributionForTier(metaData, i);
       List<Double> condProb = computeConditionalProbabilityDistribution(cumulProb);
+      int blockCount = cumulProb.size();
 
       List<UnnamedColumn> blockForTierOperands = new ArrayList<>();
       for (int j = 0; j < blockCount; j++) {

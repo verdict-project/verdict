@@ -29,11 +29,11 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.core.aggresult.AggregateFrame;
 import org.verdictdb.core.aggresult.AggregateGroup;
 import org.verdictdb.core.aggresult.AggregateMeasures;
+import org.verdictdb.core.connection.TypeCasting;
 import org.verdictdb.core.rewriter.AliasRenamingRules;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBTypeException;
 import org.verdictdb.exception.VerdictDBValueException;
-import org.verdictdb.jdbc41.TypeCasting;
 
 /**
  * Given intermediate aggregate form (either the result of a single query execution or the result of the

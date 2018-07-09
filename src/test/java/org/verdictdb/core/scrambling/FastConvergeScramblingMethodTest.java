@@ -9,18 +9,23 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.core.connection.DbmsConnection;
+import org.verdictdb.core.connection.DbmsQueryResult;
 import org.verdictdb.core.connection.JdbcConnection;
 import org.verdictdb.core.execution.ExecutablePlan;
 import org.verdictdb.core.execution.ExecutablePlanRunner;
 import org.verdictdb.core.execution.ExecutionInfoToken;
 import org.verdictdb.core.querying.ExecutableNodeBase;
 import org.verdictdb.core.querying.TempIdCreatorInScratchpadSchema;
+import org.verdictdb.core.sqlobject.ColumnOp;
 import org.verdictdb.core.sqlobject.SqlConvertible;
+import org.verdictdb.core.sqlobject.UnnamedColumn;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sqlsyntax.HiveSyntax;
@@ -124,6 +129,37 @@ public class FastConvergeScramblingMethodTest {
     ExecutablePlan groupSizePlan = new SimpleTreePlan(groupSizeRoot);
     DbmsConnection conn = new JdbcConnection(h2conn);
     ExecutablePlanRunner.runTillEnd(conn, groupSizePlan);
+  }
+  
+  @Test
+  public void testGetTierExpressions() throws VerdictDBDbmsException {
+    int blockSize = 10;
+    String scratchpadSchemaName = "test";
+    String primaryGroupColumnName = "NAME";
+    FastConvergeScramblingMethod method = 
+        new FastConvergeScramblingMethod(blockSize, scratchpadSchemaName, primaryGroupColumnName);
+    
+    // query result
+    String sql = "select avg(t.\"ID\") as \"verdictdbavgID\", "
+        + "stddev_pop(t.\"ID\") as \"verdictdbstddevID\", "
+        + "avg(t.\"AGE\") as \"verdictdbavgAGE\", "
+        + "stddev_pop(t.\"AGE\") as \"verdictdbstddevAGE\", "
+        + "avg(t.\"HEIGHT\") as \"verdictdbavgHEIGHT\", "
+        + "stddev_pop(t.\"HEIGHT\") as \"verdictdbstddevHEIGHT\", "
+        + "count(*) as \"verdictdbtotalcount\" "
+        + "from \"test\".\"people\" as t";
+    DbmsConnection conn = new JdbcConnection(h2conn);
+    DbmsQueryResult queryResult = conn.execute(sql);
+    
+    // test method
+    Map<String, Object> metaData = new HashMap<>();
+    metaData.put("0queryResult", queryResult);
+    List<UnnamedColumn> tiers = method.getTierExpressions(metaData);
+    
+    assertEquals("or", ((ColumnOp) tiers.get(0)).getOpType());
+    assertEquals("isnull", ((ColumnOp) tiers.get(1)).getOpType());
+    
+    System.out.println(tiers);
   }
 
 }

@@ -57,15 +57,25 @@ import com.google.common.base.Optional;
  */
 public class FastConvergeScramblingMethod extends ScramblingMethodBase {
 
-  final double p0 = 0.5;     // max portion for Tier 0; should be configured dynamically in the future
+  double p0 = 0.5;     // max portion for Tier 0; should be configured dynamically in the future
 
-  final double p1 = 0.8;     // max portion for Tier 0 + Tier 1; should be configured dynamically in the future
-  
-  final double outlierStddevMultiplier = 3.09;
+  double p1 = 0.8;     // max portion for Tier 0 + Tier 1; should be configured dynamically in the future
+
+  static final double OUTLIER_STDDEV_MULTIPLIER = 3.09;
 
   Optional<String> primaryColumnName = Optional.absent();
-  
+
   private String scratchpadSchemaName;
+
+  List<Double> tier0CumulProbDist = null;
+
+  List<Double> tier1CumulProbDist = null;
+
+  List<Double> tier2CumulProbDist = null;
+
+  private long outlierSize = 0;   // tier 0 size
+
+  private long smallGroupSizeSum = 0;
 
   public FastConvergeScramblingMethod(long blockSize, String scratchpadSchemaName) {
     super(blockSize);
@@ -96,7 +106,7 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
   @Override
   public List<ExecutableNodeBase> getStatisticsNode(
       String oldSchemaName, String oldTableName, String columnMetaTokenKey, String partitionMetaTokenKey) {
-    
+
     List<ExecutableNodeBase> statisticsNodes = new ArrayList<>();
 
     // outlier checking
@@ -104,16 +114,21 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
         oldSchemaName, oldTableName, columnMetaTokenKey, partitionMetaTokenKey);
     statisticsNodes.add(pc);
 
+    // outlier proportion computation
+    OutlierProportionNode op = new OutlierProportionNode(oldSchemaName, oldTableName);
+    op.subscribeTo(pc);
+    statisticsNodes.add(op);
+
     // primary group's distribution checking
     if (primaryColumnName.isPresent()) {
       TempIdCreatorInScratchpadSchema idCreator = new TempIdCreatorInScratchpadSchema(scratchpadSchemaName);
       LargeGroupListNode ll = new LargeGroupListNode(
           idCreator, oldSchemaName, oldTableName, primaryColumnName.get());
-      ll.subscribeTo(pc, 0);
-  
+      ll.subscribeTo(pc, 0);    // subscribed to 'pc' to obtain count(*) of the table, which is used to infer appropriate sampling ratio.
+
       LargeGroupSizeNode ls = new LargeGroupSizeNode(primaryColumnName.get());
       ls.subscribeTo(ll, 0);
-      
+
       statisticsNodes.add(ll);
       statisticsNodes.add(ls);
     }
@@ -121,55 +136,56 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
     return statisticsNodes;
   }
 
-  @Override
-  public int getBlockCount(Map<String, Object> metaData) {
-    // TODO: will use the provided statistics
-    return 10;
-  }
+  //  @Override
+  //  public int getBlockSize() {
+  //    return blockSize;
+  //  }
 
-  @Override
-  public List<UnnamedColumn> getTierExpressions(Map<String, Object> metaData) {
-    DbmsQueryResult percentileAndCountResult = (DbmsQueryResult) metaData.get("0queryResult");
-//    String largeGroupListSchemaName = (String) metaData.get("1schemaName");
-//    String largeGroupListTableName = (String) metaData.get("1tableName");
-    
-    // Tier 0
-    UnnamedColumn tier0Predicate = null;
+  static UnnamedColumn createOutlierTuplePredicate(DbmsQueryResult percentileAndCountResult) {
+    UnnamedColumn outlierPredicate = null;
+
     percentileAndCountResult.rewind();
     percentileAndCountResult.next();    // assumes that the original table has at least one row.
-    
+
     for (int i = 0; i < percentileAndCountResult.getColumnCount(); i++) {
       String columnName = percentileAndCountResult.getColumnName(i);
       if (columnName.startsWith(PercentilesAndCountNode.AVG_PREFIX)) {
         String originalColumnName = columnName.substring(PercentilesAndCountNode.AVG_PREFIX.length());
-            
+
         // this implementation assumes that corresponding stddev column comes right after
         // the current column indexed by 'i'.
-        try {
-          double columnAverage = percentileAndCountResult.getDouble(i);
-          double columnStddev = percentileAndCountResult.getDouble(i+1);
-          double lowCriteria = columnAverage - columnStddev * outlierStddevMultiplier;
-          double highCriteria = columnAverage + columnStddev * outlierStddevMultiplier;
+        double columnAverage = percentileAndCountResult.getDouble(i);
+        double columnStddev = percentileAndCountResult.getDouble(i+1);
+        double lowCriteria = columnAverage - columnStddev * OUTLIER_STDDEV_MULTIPLIER;
+        double highCriteria = columnAverage + columnStddev * OUTLIER_STDDEV_MULTIPLIER;
 
-          UnnamedColumn newOrPredicate = ColumnOp.or(
-              ColumnOp.less(new BaseColumn(originalColumnName), ConstantColumn.valueOf(lowCriteria)),
-              ColumnOp.greater(new BaseColumn(originalColumnName), ConstantColumn.valueOf(highCriteria)));
+        UnnamedColumn newOrPredicate = ColumnOp.or(
+            ColumnOp.less(new BaseColumn(originalColumnName), ConstantColumn.valueOf(lowCriteria)),
+            ColumnOp.greater(new BaseColumn(originalColumnName), ConstantColumn.valueOf(highCriteria)));
 
-          if (tier0Predicate == null) {
-            tier0Predicate = newOrPredicate;
-          } else {
-            tier0Predicate = ColumnOp.or(tier0Predicate, newOrPredicate);
-          }
-        } catch (VerdictDBTypeException e) {
-          System.err.println("Skipping the following column: " + columnName);
-          e.printStackTrace();
+        if (outlierPredicate == null) {
+          outlierPredicate = newOrPredicate;
+        } else {
+          outlierPredicate = ColumnOp.or(outlierPredicate, newOrPredicate);
         }
       }
       if (columnName.equals(PercentilesAndCountNode.TOTAL_COUNT_ALIAS_NAME)) {
         // do nothing
       }
     }
-    
+
+    return outlierPredicate;
+  }
+
+  @Override
+  public List<UnnamedColumn> getTierExpressions(Map<String, Object> metaData) {
+    DbmsQueryResult percentileAndCountResult = (DbmsQueryResult) metaData.get("0queryResult");
+    //    String largeGroupListSchemaName = (String) metaData.get("1schemaName");
+    //    String largeGroupListTableName = (String) metaData.get("1tableName");
+
+    // Tier 0
+    UnnamedColumn tier0Predicate = createOutlierTuplePredicate(percentileAndCountResult);
+
     // Tier 1
     // select (case ... when t2.groupSize is null then 1 else 2 end) as verdictdbtier
     // from schemaName.tableName t1 left join largeGroupSchema.largeGroupTable t2
@@ -177,19 +193,186 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
     String rightTableSourceAlias = ScramblingNode.RIGHT_TABLE_SOURCE_ALIAS_NAME;
     UnnamedColumn tier1Predicate = ColumnOp.isnull(
         new BaseColumn(rightTableSourceAlias, LargeGroupListNode.LARGE_GROUP_SIZE_COLUMN_ALIAS));
-    
+
     // Tier 2: automatically handled by this function's caller
-    
+
     return Arrays.asList(tier0Predicate, tier1Predicate);
   }
 
   @Override
-  public List<Double> getCumulativeProbabilityDistributionForTier(
-      Map<String, Object> metaData, 
-      int tier, 
-      int length) {
-    // TODO Auto-generated method stub
-    return null;
+  public List<Double> getCumulativeProbabilityDistributionForTier(Map<String, Object> metaData, int tier) {
+    // this cumulative prob is calculated at the first call of this method
+    if (tier0CumulProbDist == null) {
+      populateAllCumulativeProbabilityDistribution(metaData);
+    }
+
+    if (tier == 0) {
+      return tier0CumulProbDist;
+    } else if (tier == 1) {
+      return tier1CumulProbDist;
+    } else {
+      // expected tier == 2
+      return tier2CumulProbDist;
+    }
+  }
+
+  private void populateAllCumulativeProbabilityDistribution(Map<String, Object> metaData) {
+    populateTier0CumulProbDist(metaData);
+    populateTier1CumulProbDist(metaData);
+    populateTier2CumulProbDist(metaData);
+  }
+  
+  private void populateTier0CumulProbDist(Map<String, Object> metaData) {
+    List<Double> cumulProbDist = new ArrayList<>();
+
+    // calculate the number of blocks
+    Pair<Long, Long> tableSizeAndBlockNumber = retrieveTableSizeAndBlockNumber(metaData);
+    long tableSize = tableSizeAndBlockNumber.getLeft();
+    long totalNumberOfblocks = tableSizeAndBlockNumber.getRight();
+
+    DbmsQueryResult outlierProportion = (DbmsQueryResult) metaData.get("1resultSet");
+    outlierSize = outlierProportion.getLong(0);
+
+    if (outlierSize * 2 >= tableSize) {
+      // too large outlier -> no special treatment
+      for (int i = 0; i < totalNumberOfblocks; i++) {
+        cumulProbDist.add((i+1) / (double) totalNumberOfblocks);
+      }
+      
+    } else {
+      Long remainingSize = outlierSize;
+
+      while (remainingSize > 0) {  
+        // fill only p0 portion of each block at most
+        if (remainingSize <= p0 * blockSize) {
+          cumulProbDist.add(1.0);
+          break;
+        } else {
+          long thisBlockSize = (long) (blockSize * p0);
+          double ratio = thisBlockSize / outlierSize;
+          if (cumulProbDist.size() == 0) {
+            cumulProbDist.add(ratio);
+          } else {
+            cumulProbDist.add(cumulProbDist.get(cumulProbDist.size()-1) + ratio);
+          }
+          remainingSize -= thisBlockSize;
+        }
+      }
+
+      // in case where the length of the prob distribution is not equal to the total block number
+      while (cumulProbDist.size() < totalNumberOfblocks) {
+        cumulProbDist.add(1.0);
+      }
+    }
+
+    tier0CumulProbDist = cumulProbDist;
+  }
+
+  /**
+   * Probability distribution for Tier1: small-group tier
+   * @param metaData
+   */
+  private void populateTier1CumulProbDist(Map<String, Object> metaData) {
+    List<Double> cumulProbDist = new ArrayList<>();
+
+    // calculate the number of blocks
+    Pair<Long, Long> tableSizeAndBlockNumber = retrieveTableSizeAndBlockNumber(metaData);
+    long tableSize = tableSizeAndBlockNumber.getLeft();
+    long totalNumberOfblocks = tableSizeAndBlockNumber.getRight();
+    
+    // obtain total large group size
+    DbmsQueryResult largeGroupSizeResult = (DbmsQueryResult) metaData.get("3queryResult");
+    largeGroupSizeResult.rewind();
+    largeGroupSizeResult.next();
+    long largeGroupSizeSum = largeGroupSizeResult.getLong(0);
+    smallGroupSizeSum = tableSize - largeGroupSizeSum;
+    
+    // count the remaining size (after tier0)
+    long totalRemainingSizeUnderP1 = 0;
+    for (int i = 0; i < tier0CumulProbDist.size(); i++) {
+      if (i == 0) {
+        totalRemainingSizeUnderP1 += blockSize * p1 - outlierSize * tier0CumulProbDist.get(i);
+      } else {
+        totalRemainingSizeUnderP1 += blockSize * p1 - outlierSize * (tier0CumulProbDist.get(i+1) - tier0CumulProbDist.get(i));
+      }
+    }
+    
+    // In this extreme case (i.e., the sum of the sizes of small groups is too big),
+    // we simply uniformly distribute them.
+    if (smallGroupSizeSum >= totalRemainingSizeUnderP1) {
+      for (int i = 0; i < totalNumberOfblocks; i++) {
+        cumulProbDist.add((i+1) / (double) totalNumberOfblocks);
+      }
+    } 
+    // Otherwise, we fill up to (p1 - p0) portion within each block.
+    else {
+      long remainingSize = smallGroupSizeSum;
+      
+      while (remainingSize > 0) {
+        if (remainingSize <= (p1 - p0) * blockSize) {
+          cumulProbDist.add(1.0);
+          break;
+        } else {
+          long thisBlockSize = (long) (blockSize * (p1 - p0));
+          double ratio = thisBlockSize / smallGroupSizeSum;
+          if (cumulProbDist.size() == 0) {
+            cumulProbDist.add(ratio);
+          } else {
+            cumulProbDist.add(cumulProbDist.get(cumulProbDist.size()-1) + ratio);
+          }
+          remainingSize -= thisBlockSize;
+        }
+      }
+      
+      // in case where the length of the prob distribution is not equal to the total block number
+      while (cumulProbDist.size() < totalNumberOfblocks) {
+        cumulProbDist.add(1.0);
+      }
+    }
+
+    tier1CumulProbDist = cumulProbDist;
+  }
+  
+  /**
+   * Probability distribution for Tier2: the tuples that do not belong to tier0 or tier1.
+   * @param metaData
+   */
+  private void populateTier2CumulProbDist(Map<String, Object> metaData) {
+    List<Double> cumulProbDist = new ArrayList<>();
+    
+    // calculate the number of blocks
+    Pair<Long, Long> tableSizeAndBlockNumber = retrieveTableSizeAndBlockNumber(metaData);
+    long tableSize = tableSizeAndBlockNumber.getLeft();
+    long totalNumberOfblocks = tableSizeAndBlockNumber.getRight();
+    
+    long tier2Size = tableSize - outlierSize - smallGroupSizeSum;
+    
+    for (int i = 0; i < totalNumberOfblocks; i++) {
+      long thisTier0Size;
+      long thisTier1Size;
+      if (i == 0) {
+        thisTier0Size = (long) (outlierSize * tier0CumulProbDist.get(i));
+        thisTier1Size = (long) (smallGroupSizeSum * tier1CumulProbDist.get(i));
+      } else {
+        thisTier0Size = (long) (outlierSize * (tier0CumulProbDist.get(i) - tier0CumulProbDist.get(i-1)));
+        thisTier1Size = (long) (smallGroupSizeSum * (tier1CumulProbDist.get(i) - tier1CumulProbDist.get(i-1)));
+      }
+      long thisBlockSize = blockSize -  thisTier0Size - thisTier1Size;
+      double thisBlockRatio = thisBlockSize / tier2Size;
+      cumulProbDist.add(thisBlockRatio);
+    }
+    
+    tier2CumulProbDist = cumulProbDist;
+  }
+  
+  // Helper
+  private Pair<Long, Long> retrieveTableSizeAndBlockNumber(Map<String, Object> metaData) {
+    DbmsQueryResult tableSizeResult = (DbmsQueryResult) metaData.get("0queryResult");
+    tableSizeResult.rewind();
+    tableSizeResult.next();
+    long tableSize = tableSizeResult.getLong(0);
+    long totalNumberOfblocks = (long) Math.ceil(tableSize / (float) blockSize);
+    return Pair.of(tableSize, totalNumberOfblocks);
   }
 
 }
@@ -203,11 +386,11 @@ class PercentilesAndCountNode extends QueryNodeBase {
   private String columnMetaTokenKey;
 
   private String partitionMetaTokenKey;
-  
+
   public static final String AVG_PREFIX = "verdictdbavg";
-  
+
   public static final String STDDEV_PREFIX = "verdictdbstddev";
-  
+
   public static final String TOTAL_COUNT_ALIAS_NAME = "verdictdbtotalcount";
 
   public PercentilesAndCountNode(
@@ -225,15 +408,15 @@ class PercentilesAndCountNode extends QueryNodeBase {
       // no token information passed
       throw new VerdictDBValueException("No token is passed.");
     }
-    
+
     @SuppressWarnings("unchecked")
     List<Pair<String, String>> columnNameAndTypes = 
     (List<Pair<String, String>>) tokens.get(0).getValue(columnMetaTokenKey);
-    
+
     if (columnNameAndTypes == null) {
       throw new VerdictDBValueException("The passed token does not have the key: " + columnMetaTokenKey);
     }
-    
+
     List<String> numericColumns = getNumericColumns(columnNameAndTypes);
     String tableSourceAlias = "t";
 
@@ -276,8 +459,48 @@ class PercentilesAndCountNode extends QueryNodeBase {
 }
 
 
+/**
+ * select count(*)
+ * from originalSchema.originalTable
+ * where some-outlier-predicates
+ * 
+ * @author Yongjoo Park
+ *
+ */
+class OutlierProportionNode extends QueryNodeBase {
+
+  private String schemaName;
+
+  private String tableName;
+
+  public static String OUTLIER_SIZE_ALIAS = "verdictdbOutlierProportion";
+
+  public OutlierProportionNode(String schemaName, String tableName) {
+    super(null);
+    this.schemaName = schemaName;
+    this.tableName = tableName;
+  }
+
+  @Override
+  public SqlConvertible createQuery(List<ExecutionInfoToken> tokens) throws VerdictDBException {
+    DbmsQueryResult percentileAndCountResult = (DbmsQueryResult) tokens.get(0).getValue("queryResult");
+    UnnamedColumn outlierPrediacte = FastConvergeScramblingMethod.createOutlierTuplePredicate(percentileAndCountResult);
+    String tableSourceAliasName = "t";
+
+    selectQuery = SelectQuery.create(
+        new AliasedColumn(ColumnOp.count(), OUTLIER_SIZE_ALIAS),
+        new BaseTable(schemaName, tableName, tableSourceAliasName));
+    selectQuery.addFilterByAnd(outlierPrediacte);
+
+    return selectQuery;
+
+  }
+
+}
+
+
 class LargeGroupListNode extends CreateTableAsSelectNode {
-  
+
   // TODO: how to tweak this value?
   private final double p0 = 0.001;
 
@@ -286,7 +509,7 @@ class LargeGroupListNode extends CreateTableAsSelectNode {
   private String tableName;
 
   private String primaryColumnName;
-  
+
   public static final String LARGE_GROUP_SIZE_COLUMN_ALIAS = "groupSize";
 
   public LargeGroupListNode(
@@ -298,6 +521,7 @@ class LargeGroupListNode extends CreateTableAsSelectNode {
   }
 
   /**
+   * create table some-temp-table-name as
    * select primaryGroup, count(*) * (1/p0)
    * from schemaName.tableName
    * where rand() < p0
@@ -308,7 +532,7 @@ class LargeGroupListNode extends CreateTableAsSelectNode {
   @Override
   public SqlConvertible createQuery(List<ExecutionInfoToken> tokens) throws VerdictDBException {
     String tableSourceAlias = "t";
-    
+
     // select
     List<SelectItem> selectList = new ArrayList<>();
     selectList.add(new BaseColumn(tableSourceAlias, primaryColumnName));
@@ -317,36 +541,36 @@ class LargeGroupListNode extends CreateTableAsSelectNode {
             ColumnOp.count(), 
             ColumnOp.divide(ConstantColumn.valueOf(1.0), ConstantColumn.valueOf(p0))), 
         LARGE_GROUP_SIZE_COLUMN_ALIAS));
-    
+
     // from
     SelectQuery selectQuery = SelectQuery.create(
         selectList,
         new BaseTable(schemaName, tableName, tableSourceAlias));
-    
+
     // where
     selectQuery.addFilterByAnd(ColumnOp.less(ColumnOp.rand(), ConstantColumn.valueOf(p0)));
-    
+
     // group by
     selectQuery.addGroupby(new AliasReference(primaryColumnName));
-    
+
     this.selectQuery = selectQuery;
     return super.createQuery(tokens);
   }
-  
+
 }
 
 
 class LargeGroupSizeNode extends QueryNodeWithPlaceHolders {
 
   private String primaryColumnName;
-  
+
   public static final String LARGE_GROUP_SIZE_SUM_ALIAS = "largeGroupSizeSum";
 
   public LargeGroupSizeNode(String primaryColumnName) {
     super(null);
     this.primaryColumnName = primaryColumnName;
   }
-  
+
   /**
    * select count(*) as totalLargeGroupSize
    * from verdicttemptable;
@@ -360,7 +584,7 @@ class LargeGroupSizeNode extends QueryNodeWithPlaceHolders {
     String tableSourceAlias = "t";
     String aliasName = LARGE_GROUP_SIZE_SUM_ALIAS;
     String groupSizeAlias = LargeGroupListNode.LARGE_GROUP_SIZE_COLUMN_ALIAS;
-    
+
     // Note: this node already has been subscribed; thus, we don't need an explicit subscription.
     Pair<BaseTable, SubscriptionTicket> placeholder = createPlaceHolderTable(tableSourceAlias);
     BaseTable baseTable = placeholder.getLeft();
@@ -369,7 +593,7 @@ class LargeGroupSizeNode extends QueryNodeWithPlaceHolders {
             ColumnOp.sum(new BaseColumn(tableSourceAlias, groupSizeAlias)), 
             aliasName),
         baseTable);
-    
+
     super.createQuery(tokens);      // placeholder replacements performed here
     return selectQuery;
   }

@@ -43,24 +43,24 @@ public interface DbmsQueryResult {
   
   /**
    * 
-   * @param index zero-based index
+   * @param index This is a zero-based index.
    * @return
    */
   public Object getValue(int index);
   
   public String getString(int index);
   
-  public int getInt(int index) throws VerdictDBTypeException;
+  public int getInt(int index);
   
-  public long getLong(int index) throws VerdictDBTypeException;
+  public long getLong(int index);
   
-  public double getDouble(int index) throws VerdictDBTypeException;
+  public double getDouble(int index);
   
-  public float getFloat(int index) throws VerdictDBTypeException;
+  public float getFloat(int index);
   
-  public Date getDate(int index) throws VerdictDBTypeException;
+  public Date getDate(int index);
   
-  public Timestamp getTimestamp(int index) throws VerdictDBTypeException;
+  public Timestamp getTimestamp(int index);
   
   public void printContent();
 
