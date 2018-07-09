@@ -53,7 +53,7 @@ public class ExecutableNodeRunner implements Runnable {
         executeAndBroadcast(Arrays.<ExecutionInfoToken>asList());
         broadcast(ExecutionInfoToken.successToken());
         return;
-      } catch (VerdictDBException e) {
+      } catch (Exception e) {
         e.printStackTrace();
         broadcast(ExecutionInfoToken.failureToken(e));
       }

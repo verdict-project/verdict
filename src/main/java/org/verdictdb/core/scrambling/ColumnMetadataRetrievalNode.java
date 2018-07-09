@@ -1,6 +1,5 @@
 package org.verdictdb.core.scrambling;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 

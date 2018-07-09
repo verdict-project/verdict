@@ -1,8 +1,5 @@
 package org.verdictdb.core.execution;
 
-import java.util.Arrays;
-import java.util.List;
-
 public class MethodInvocationInformation {
   
   private String methodName;

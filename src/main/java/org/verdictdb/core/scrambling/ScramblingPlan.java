@@ -83,6 +83,7 @@ public class ScramblingPlan extends SimpleTreePlan {
     // create a node for step 3 - scrambling
     ExecutableNodeBase scramblingNode = 
         ScramblingNode.create(newSchemaName, newTableName, oldSchemaName, oldTableName, method, options);
+    scramblingNode.subscribeTo(columnMetaDataNode, 100);   // for total table size
     for (int i = 0; i < statsNodes.size(); i ++) {
       scramblingNode.subscribeTo(statsNodes.get(i), i);
     }

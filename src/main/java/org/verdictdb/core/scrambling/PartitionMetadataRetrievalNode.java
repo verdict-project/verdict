@@ -5,8 +5,6 @@ import java.util.Map;
 
 import org.verdictdb.core.execution.MethodInvocationInformation;
 import org.verdictdb.core.querying.ExecutableNodeBase;
-import org.verdictdb.core.querying.QueryNodeBase;
-import org.verdictdb.core.sqlobject.SelectQuery;
 
 public class PartitionMetadataRetrievalNode extends ExecutableNodeBase {
   

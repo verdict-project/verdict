@@ -4,8 +4,6 @@ import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
 
-import org.verdictdb.exception.VerdictDBTypeException;
-
 public abstract class DbmsQueryResultBase implements DbmsQueryResult {
 
   @Override

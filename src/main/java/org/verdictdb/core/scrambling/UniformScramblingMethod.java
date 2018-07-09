@@ -6,8 +6,18 @@ import java.util.List;
 import java.util.Map;
 
 import org.verdictdb.core.connection.DbmsQueryResult;
+import org.verdictdb.core.execution.ExecutionInfoToken;
 import org.verdictdb.core.querying.ExecutableNodeBase;
+import org.verdictdb.core.querying.QueryNodeBase;
+import org.verdictdb.core.sqlobject.AliasedColumn;
+import org.verdictdb.core.sqlobject.BaseTable;
+import org.verdictdb.core.sqlobject.ColumnOp;
+import org.verdictdb.core.sqlobject.SelectItem;
+import org.verdictdb.core.sqlobject.SelectQuery;
+import org.verdictdb.core.sqlobject.SqlConvertible;
 import org.verdictdb.core.sqlobject.UnnamedColumn;
+import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.exception.VerdictDBValueException;
 
 public class UniformScramblingMethod extends ScramblingMethodBase {
   
@@ -18,22 +28,9 @@ public class UniformScramblingMethod extends ScramblingMethodBase {
   @Override
   public List<ExecutableNodeBase> getStatisticsNode(
       String oldSchemaName, String oldTableName, String columnMetaTokenKey, String partitionMetaTokenKey) {
-    return Arrays.asList();
+    TableSizeCountNode countNode = new TableSizeCountNode(oldSchemaName, oldTableName);
+    return Arrays.<ExecutableNodeBase>asList(countNode);
   }
-
-//  @Override
-//  public StatiticsQueryGenerator getStatisticsQueryGenerator() {
-//    return new StatiticsQueryGenerator() {
-//      @Override
-//      public SelectQuery create(
-//          String schemaName, 
-//          String tableName, 
-//          List<Pair<String, String>> columnNamesAndTypes, List<String> partitionColumnNames) {
-//        // TODO Auto-generated method stub
-//        return null;
-//      }
-//    };
-//  }
 
   @Override
   public List<UnnamedColumn> getTierExpressions(Map<String, Object> metaData) {
@@ -41,9 +38,7 @@ public class UniformScramblingMethod extends ScramblingMethodBase {
   }
 
   @Override
-  public List<Double> getCumulativeProbabilityDistributionForTier(
-      Map<String, Object> metaData, 
-      int tier) {
+  public List<Double> getCumulativeProbabilityDistributionForTier(Map<String, Object> metaData, int tier) {
     
     DbmsQueryResult tableSizeResult = (DbmsQueryResult) metaData.get("0queryResult");
     tableSizeResult.next();
@@ -64,4 +59,40 @@ public class UniformScramblingMethod extends ScramblingMethodBase {
 //    return 100;
 //  }
 
+}
+
+
+class TableSizeCountNode extends QueryNodeBase {
+
+  private String schemaName;
+
+  private String tableName;
+
+  public static final String TOTAL_COUNT_ALIAS_NAME = "verdictdbtotalcount";
+
+  public TableSizeCountNode(String schemaName, String tableName) {
+    super(null);
+    this.schemaName = schemaName;
+    this.tableName = tableName;
+  }
+
+  @Override
+  public SqlConvertible createQuery(List<ExecutionInfoToken> tokens) throws VerdictDBException {
+    if (tokens.size() == 0) {
+      // no token information passed
+      throw new VerdictDBValueException("No token is passed.");
+    }
+
+    String tableSourceAlias = "t";
+
+    // compose a select list
+    List<SelectItem> selectList = new ArrayList<>();
+    selectList.add(new AliasedColumn(ColumnOp.count(), TOTAL_COUNT_ALIAS_NAME));
+
+    selectQuery = SelectQuery.create(
+        selectList, 
+        new BaseTable(schemaName, tableName, tableSourceAlias));
+    return selectQuery;
+  }
+  
 }

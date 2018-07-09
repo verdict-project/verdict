@@ -159,7 +159,12 @@ public class ScramblingNode extends CreateTableAsSelectNode {
         blockForTierOperands.add(ColumnOp.lessequal(ColumnOp.rand(), ConstantColumn.valueOf(condProb.get(j))));
         blockForTierOperands.add(ConstantColumn.valueOf(j));
       }
-      UnnamedColumn blockForTierExpr = ColumnOp.whenthenelse(blockForTierOperands);
+      UnnamedColumn blockForTierExpr;;
+      if (blockForTierOperands.size() <= 1) {
+        blockForTierExpr = ConstantColumn.valueOf(0);
+      } else {
+        blockForTierExpr = ColumnOp.whenthenelse(blockForTierOperands);
+      }
 
       if (i < tierCount-1) {
         // "when" part in the case-when-else expression

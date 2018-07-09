@@ -10,8 +10,6 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.types.StructField;
 
-import scala.Tuple2;
-
 public class SparkQueryResult extends DbmsQueryResultBase {
 
   List<String> columnNames = new ArrayList<>();

@@ -3,7 +3,6 @@ package org.verdictdb.core.scrambling;
 import java.util.List;
 import java.util.Map;
 
-import org.verdictdb.core.connection.DbmsQueryResult;
 import org.verdictdb.core.querying.ExecutableNodeBase;
 import org.verdictdb.core.sqlobject.UnnamedColumn;
 

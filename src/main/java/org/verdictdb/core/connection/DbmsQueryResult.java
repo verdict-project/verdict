@@ -1,10 +1,7 @@
 package org.verdictdb.core.connection;
 
-import java.sql.Timestamp;
-
-import org.verdictdb.exception.VerdictDBTypeException;
-
 import java.sql.Date;
+import java.sql.Timestamp;
 
 public interface DbmsQueryResult {
 

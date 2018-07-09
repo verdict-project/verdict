@@ -11,8 +11,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.verdictdb.core.connection.DbmsConnection;
+import org.verdictdb.core.connection.DbmsQueryResult;
+import org.verdictdb.core.connection.JdbcConnection;
 import org.verdictdb.core.execution.ExecutionInfoToken;
 import org.verdictdb.core.sqlobject.SqlConvertible;
 import org.verdictdb.exception.VerdictDBException;
@@ -52,7 +56,19 @@ public class UniformScramblingNodeTest {
     
     mysqlConn.createStatement().execute("create schema if not exists oldschema");
     mysqlConn.createStatement().execute("create schema if not exists newschema");
+    mysqlConn.createStatement().execute("drop table if exists oldschema.oldtable");
     mysqlConn.createStatement().execute("create table if not exists oldschema.oldtable (id smallint)");
+    for (int i = 0; i < 6; i++) {
+      mysqlConn.createStatement().execute(String.format("insert into oldschema.oldtable values (%d)", i));
+    }
+  }
+  
+  @AfterClass
+  public static void tearDown() throws SQLException {
+    mysqlConn.createStatement().execute("drop table if exists oldschema.oldtable");
+    mysqlConn.createStatement().execute("drop schema if exists oldschema");
+    mysqlConn.createStatement().execute("drop table if exists newschema.newtable");
+    mysqlConn.createStatement().execute("drop schema if exists newschema");
   }
 
   @Test
@@ -61,25 +77,36 @@ public class UniformScramblingNodeTest {
     String newTableName = "newtable";
     String oldSchemaName = "oldschema";
     String oldTableName = "oldtable";
-    int blockCount = 10;
-    ScramblingMethod method = new UniformScramblingMethod(blockCount);
+    int blockSize = 2;    // 3 blocks will be created
+    ScramblingMethod method = new UniformScramblingMethod(blockSize);
     Map<String, String> options = new HashMap<>();
     options.put("tierColumnName", "tiercolumn");
     options.put("blockColumnName", "blockcolumn");
-    options.put("blockCount", "3");
+//    options.put("blockCount", "3");
+    
+    // query result
+    String sql = "select count(*) as `verdictdbtotalcount` from `oldschema`.`oldtable` as t";
+    DbmsConnection conn = new JdbcConnection(mysqlConn);
+    DbmsQueryResult queryResult = conn.execute(sql);
 
     ScramblingNode node = ScramblingNode.create(
         newSchemaName, newTableName, 
         oldSchemaName, oldTableName, 
         method, options);
 
+    // set tokens
     List<ExecutionInfoToken> tokens = new ArrayList<>();
     ExecutionInfoToken e = new ExecutionInfoToken();
+    e.setKeyValue("queryResult", queryResult);
+    tokens.add(e);
+    
+    e = new ExecutionInfoToken();
     e.setKeyValue("schemaName", newSchemaName);
     e.setKeyValue("tableName", newTableName);
     tokens.add(e);
+    
     SqlConvertible query = node.createQuery(tokens);
-    String sql = QueryToSql.convert(new MysqlSyntax(), query);
+    sql = QueryToSql.convert(new MysqlSyntax(), query);
     String expected = "create table `newschema`.`newtable` "
         + "partition by key (`blockcolumn`) "
         + "select *, 0 as `tiercolumn`, "

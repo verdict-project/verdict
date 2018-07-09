@@ -2,8 +2,6 @@ package org.verdictdb.core.connection;
 
 import java.math.BigDecimal;
 
-import org.verdictdb.exception.VerdictDBTypeException;
-
 public class TypeCasting {
 
   public static Double toDouble(Object obj) {

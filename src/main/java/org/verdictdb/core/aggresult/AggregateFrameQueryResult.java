@@ -1,16 +1,12 @@
 package org.verdictdb.core.aggresult;
 
-import java.sql.Date;
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.verdictdb.core.connection.DbmsQueryResult;
 import org.verdictdb.core.connection.DbmsQueryResultBase;
 import org.verdictdb.core.connection.DbmsQueryResultMetaData;
-import org.verdictdb.exception.VerdictDBTypeException;
 
 public class AggregateFrameQueryResult extends DbmsQueryResultBase {
 
