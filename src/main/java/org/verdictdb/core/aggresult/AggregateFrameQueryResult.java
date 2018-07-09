@@ -8,10 +8,11 @@ import java.util.List;
 import java.util.Map;
 
 import org.verdictdb.core.connection.DbmsQueryResult;
+import org.verdictdb.core.connection.DbmsQueryResultBase;
 import org.verdictdb.core.connection.DbmsQueryResultMetaData;
 import org.verdictdb.exception.VerdictDBTypeException;
 
-public class AggregateFrameQueryResult implements DbmsQueryResult {
+public class AggregateFrameQueryResult extends DbmsQueryResultBase {
 
   private AggregateFrame aggregateFrame;
   private Iterator it;
@@ -126,48 +127,6 @@ public class AggregateFrameQueryResult implements DbmsQueryResult {
   public void rewind() {
     // TODO Auto-generated method stub
     
-  }
-
-  @Override
-  public String getString(int index) {
-    // TODO Auto-generated method stub
-    return null;
-  }
-
-  @Override
-  public int getInt(int index) throws VerdictDBTypeException {
-    // TODO Auto-generated method stub
-    return 0;
-  }
-
-  @Override
-  public long getLong(int index) throws VerdictDBTypeException {
-    // TODO Auto-generated method stub
-    return 0;
-  }
-
-  @Override
-  public double getDouble(int index) throws VerdictDBTypeException {
-    // TODO Auto-generated method stub
-    return 0;
-  }
-
-  @Override
-  public float getFloat(int index) throws VerdictDBTypeException {
-    // TODO Auto-generated method stub
-    return 0;
-  }
-
-  @Override
-  public Date getDate(int index) throws VerdictDBTypeException {
-    // TODO Auto-generated method stub
-    return null;
-  }
-
-  @Override
-  public Timestamp getTimestamp(int index) throws VerdictDBTypeException {
-    // TODO Auto-generated method stub
-    return null;
   }
 
 }

@@ -31,7 +31,7 @@ public class SelectQueryToSql {
   SqlSyntax syntax;
 
   Set<String> opTypeNotRequiringParentheses = Sets.newHashSet(
-      "sum", "avg", "count", "std", "sqrt", "notnull", "rand", "floor");
+      "sum", "avg", "count", "std", "sqrt", "isnotnull", "isnull", "rand", "floor");
 
   public SelectQueryToSql(SqlSyntax syntax) {
     this.syntax = syntax;
@@ -125,7 +125,9 @@ public class SelectQueryToSql {
         return sql;
       } else if (columnOp.getOpType().equals("notequal")) {
         return withParentheses(columnOp.getOperand(0)) + " <> " + withParentheses(columnOp.getOperand(1));
-      } else if (columnOp.getOpType().equals("notnull")) {
+      } else if (columnOp.getOpType().equals("isnull")) {
+        return withParentheses(columnOp.getOperand(0)) + " is null";
+      } else if (columnOp.getOpType().equals("isnotnull")) {
         return withParentheses(columnOp.getOperand(0)) + " is not null";
       } else if (columnOp.getOpType().equals("interval")) {
         return "interval " + withParentheses(columnOp.getOperand(0)) + " " + withParentheses(columnOp.getOperand(1));
@@ -147,8 +149,8 @@ public class SelectQueryToSql {
         return "max(" + selectItemToSqlPart(columnOp.getOperand()) + ")";
       } else if (columnOp.getOpType().equals("floor")) {
         return "floor(" + selectItemToSqlPart(columnOp.getOperand()) + ")";
-      } else if (columnOp.getOpType().equals("is")) {
-        return withParentheses(columnOp.getOperand(0)) + " is " + withParentheses(columnOp.getOperand(1));
+//      } else if (columnOp.getOpType().equals("is")) {
+//        return withParentheses(columnOp.getOperand(0)) + " is " + withParentheses(columnOp.getOperand(1));
       } else if (columnOp.getOpType().equals("like")) {
         return withParentheses(columnOp.getOperand(0)) + " like " + withParentheses(columnOp.getOperand(1));
       } else if (columnOp.getOpType().equals("notlike")) {
