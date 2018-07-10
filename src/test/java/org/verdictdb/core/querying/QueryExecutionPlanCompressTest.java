@@ -57,7 +57,7 @@ public class QueryExecutionPlanCompressTest {
     SelectQuery selectQuery = (SelectQuery) sqlToRelation.toRelation(sql);
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(newSchema, null, selectQuery);
     ExecutableNodeBase copy = queryExecutionPlan.root.deepcopy();
-    queryExecutionPlan.compress();
+    QueryExecutionPlanSimplifier.compress(queryExecutionPlan);
     assertEquals(0, queryExecutionPlan.root.getDependentNodeCount());
     assertEquals(selectQuery, ((QueryNodeBase) queryExecutionPlan.root).selectQuery.getFromList().get(0));
     assertEquals(
@@ -74,7 +74,7 @@ public class QueryExecutionPlanCompressTest {
     SelectQuery selectQuery = (SelectQuery) sqlToRelation.toRelation(sql);
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(newSchema, null, selectQuery);
     ExecutableNodeBase copy = queryExecutionPlan.root.getExecutableNodeBaseDependent(0).getExecutableNodeBaseDependent(0).deepcopy();
-    queryExecutionPlan.compress();
+    QueryExecutionPlanSimplifier.compress(queryExecutionPlan);
     assertEquals(0, queryExecutionPlan.root.getDependentNodeCount());
     assertEquals(
         selectQuery, 
@@ -96,7 +96,7 @@ public class QueryExecutionPlanCompressTest {
     SelectQuery selectQuery = (SelectQuery) sqlToRelation.toRelation(sql);
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(newSchema, null, selectQuery);
     ExecutableNodeBase copy = queryExecutionPlan.root.getExecutableNodeBaseDependent(0).getExecutableNodeBaseDependent(0).deepcopy();
-    queryExecutionPlan.compress();
+    QueryExecutionPlanSimplifier.compress(queryExecutionPlan);
     
     assertEquals(0, queryExecutionPlan.root.getDependentNodeCount());
     

@@ -23,6 +23,7 @@ import org.verdictdb.core.execution.ExecutablePlanRunner;
 import org.verdictdb.core.execution.ExecutionInfoToken;
 import org.verdictdb.core.querying.AggExecutionNode;
 import org.verdictdb.core.querying.QueryExecutionPlan;
+import org.verdictdb.core.querying.QueryExecutionPlanSimplifier;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
 import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.core.scrambling.UniformScrambler;
@@ -151,7 +152,7 @@ public class AsyncAggScaleTest {
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
     ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
 //    queryExecutionPlan.setScalingNode();
-    queryExecutionPlan.compress();
+    QueryExecutionPlanSimplifier.compress(queryExecutionPlan);
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
     ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
 //    queryExecutionPlan.root.executeAndWaitForTermination(new JdbcConnection(conn, new H2Syntax()));
