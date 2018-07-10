@@ -2,6 +2,7 @@ package org.verdictdb.jdbc41;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.fail;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -100,6 +101,13 @@ public class JdbcResultSetMetaDataTestForPostgreSQL {
             + "'((1,1))', 1.0, 1, 1, 1, '1110', '2018-12-31 00:00:01', '2018-12-31 00:00:01', "
             + "'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11','<foo>bar</foo>')",
         TABLE_NAME));
+    stmt.execute(String.format("INSERT INTO %s VALUES ( "
+            + "NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, "
+            + "NULL, NULL, NULL, NULL, NULL, "
+            + "NULL, NULL, NULL, NULL, "
+            + "NULL, NULL, NULL, NULL, NULL, NULL, "
+            + "NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL)",
+        TABLE_NAME));
 
   }
 
@@ -123,7 +131,7 @@ public class JdbcResultSetMetaDataTestForPostgreSQL {
     }
 
     ourResult.next();
-    //assertEquals(true, ourResult.getBoolean(1));  // bit
+    assertEquals(true, ourResult.getBoolean(1));  // bit
     assertEquals(1, ourResult.getByte(1));        // bit
     assertEquals(1, ourResult.getInt(27));         // smallint
     assertEquals(1, ourResult.getLong(27));        // smallint
@@ -131,23 +139,23 @@ public class JdbcResultSetMetaDataTestForPostgreSQL {
     assertNotEquals(2, ourResult.getInt(27));      // smallint
     assertNotEquals(2, ourResult.getLong(27));     // smallint
     assertNotEquals(2, ourResult.getByte(27));     // smallint
-    //assertEquals(true, ourResult.getBoolean(5));  // bool
+    assertEquals(true, ourResult.getBoolean(5));  // bool
     assertEquals(1, ourResult.getInt(5));         // bool
     assertEquals(1, ourResult.getLong(5));        // bool
     assertEquals(1, ourResult.getByte(5));        // bool
-    //assertEquals(true, ourResult.getBoolean(15));  // integer
+    assertEquals(true, ourResult.getBoolean(15));  // integer
     assertEquals(1, ourResult.getInt(15));         // integer
     assertEquals(1, ourResult.getLong(15));        // integer
     assertEquals(1, ourResult.getByte(15));        // integer
-    //assertEquals(true, ourResult.getBoolean(8));  // bigint
+    assertEquals(true, ourResult.getBoolean(8));  // bigint
     assertEquals(1, ourResult.getInt(1));         // bigint
     assertEquals(1, ourResult.getLong(1));        // bigint
     assertEquals(1, ourResult.getByte(1));        // bigint
 
-    //try {
-    //  assertEquals(true, ourResult.getBoolean(9));          // numeric
-    //  fail();
-    //} catch (java.sql.SQLException e) {}
+    try {
+      assertEquals(true, ourResult.getBoolean(9));          // numeric
+      fail();
+    } catch (java.sql.SQLException e) {}
     assertEquals(1.0, ourResult.getFloat(22), 1e-6);         // numeric
     assertEquals(1.0, ourResult.getDouble(22), 1e-6);        // numeric
     assertEquals(1.0, ourResult.getByte(22), 1e-6);          // numeric
@@ -163,7 +171,6 @@ public class JdbcResultSetMetaDataTestForPostgreSQL {
     assertEquals(1.0, ourResult.getByte(13), 1e-6);          // float8
     assertEquals(1.0, ourResult.getInt(13), 1e-6);           // float8
     assertEquals(1.0, ourResult.getLong(13), 1e-6);          // float8
-
   }
 
 
