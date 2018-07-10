@@ -2,13 +2,25 @@ package org.verdictdb.core.scramblingquerying;
 
 import static org.junit.Assert.*;
 
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class MySqlTpchUniformScramblingQueryingTest {
+  
+  final int blockSize = 100;
+  
+  @BeforeClass
+  public void setupMySqlDatabase() {
+    // create uniform scrambled table of lineitem and orders.
+    
+  }
 
   @Test
-  public void test() {
-    fail("Not yet implemented");
+  public void testTpch1() {
+    
+    // assert that the number of the returned result set is 10.
+    
+    // assert that the final answers are the same.
   }
 
 }

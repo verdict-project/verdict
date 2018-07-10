@@ -9,15 +9,20 @@ import org.verdictdb.core.sqlobject.SelectQuery;
 public class SelectQueryCoordinator {
 
   DbmsConnection conn;
-  
+
   public SelectQueryCoordinator(DbmsConnection conn) {
     this.conn = conn;
   }
 
+  public SelectQuery standardizeQuery(String query) {
+    // parse the query
+    SelectQuery selectQuery = null;
+    return selectQuery;
+  }
+
   public ExecutionResultReader process(String query) {
 
-    // parse the query
-    SelectQuery selectQuery;
+    SelectQuery selectQuery = standardizeQuery(query);
 
     // make plan
     // if the plan does not include any aggregates, it will simply be a parsed structure of the original query.
