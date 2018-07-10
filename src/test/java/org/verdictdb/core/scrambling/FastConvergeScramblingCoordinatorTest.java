@@ -21,9 +21,7 @@ import org.verdictdb.core.coordinator.ScramblingCoordinator;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.exception.VerdictDBException;
 
-
-public class UniformScramblingCoordinatorTest {
-
+public class FastConvergeScramblingCoordinatorTest {
   private static Connection mysqlConn;
 
   private static Statement mysqlStmt;
@@ -114,7 +112,7 @@ public class UniformScramblingCoordinatorTest {
     mysqlStmt.execute("drop table if exists tpch.orders");
     mysqlStmt.execute("drop schema if exists tpch");
   }
-
+  
   @Test
   public void sanityCheck() throws VerdictDBDbmsException {
     DbmsConnection conn = new JdbcConnection(mysqlConn);
@@ -149,7 +147,7 @@ public class UniformScramblingCoordinatorTest {
     String originalTable = tablename;
     String scrambledTable = tablename + "_scrambled";
     conn.execute(String.format("drop table if exists tpch.%s", scrambledTable));
-    ScrambleMeta meta = scrambler.scramble(originalSchema, originalTable, "uniform");
+    ScrambleMeta meta = scrambler.scramble(originalSchema, originalTable, "fastconverge");
 
     // tests
     List<Pair<String, String>> originalColumns = conn.getColumns("tpch", originalTable);
