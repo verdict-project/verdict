@@ -43,7 +43,7 @@ public class HiveTpchSelectQueryToSqlTest {
   @Before
   public void setupSourceDatabase() throws Exception {
     shell.execute("CREATE DATABASE tpch");
-    File schemaFile = new File("src/test/resources/tpch-schema-data.sql");
+    File schemaFile = new File("src/test/resources/tpch_old_test_data/tpch-schema-data.sql");
 //    File schemaFile = new File("src/test/resources/tpch-schema.sql");
     String schemas = Files.toString(schemaFile, Charsets.UTF_8);
     for (String schema : schemas.split(";")) {
