@@ -1,5 +1,19 @@
 package org.verdictdb.core.querying.ola;
 
+import static java.sql.Types.BIGINT;
+import static java.sql.Types.DOUBLE;
+import static org.junit.Assert.assertEquals;
+
+import java.math.BigDecimal;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.AfterClass;
@@ -16,28 +30,11 @@ import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.core.scrambling.ScrambleMetaForTable;
 import org.verdictdb.core.scrambling.UniformScrambler;
 import org.verdictdb.core.sqlobject.AbstractRelation;
-import org.verdictdb.core.sqlobject.CreateTableAsSelectQuery;
 import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sqlreader.NonValidatingSQLParser;
 import org.verdictdb.sqlreader.RelationStandardizer;
 import org.verdictdb.sqlsyntax.H2Syntax;
-import org.verdictdb.sqlwriter.QueryToSql;
-
-import java.math.BigDecimal;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-
-import static java.sql.Types.BIGINT;
-import static java.sql.Types.DOUBLE;
-import static java.sql.Types.INTEGER;
-import static org.junit.Assert.assertEquals;
 
 public class AsyncAggScaleResultTest {
 
