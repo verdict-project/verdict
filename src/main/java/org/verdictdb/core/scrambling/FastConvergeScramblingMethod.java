@@ -16,12 +16,14 @@ import org.verdictdb.core.querying.QueryNodeBase;
 import org.verdictdb.core.querying.QueryNodeWithPlaceHolders;
 import org.verdictdb.core.querying.SubscriptionTicket;
 import org.verdictdb.core.querying.TempIdCreatorInScratchpadSchema;
+import org.verdictdb.core.sqlobject.AbstractRelation;
 import org.verdictdb.core.sqlobject.AliasReference;
 import org.verdictdb.core.sqlobject.AliasedColumn;
 import org.verdictdb.core.sqlobject.BaseColumn;
 import org.verdictdb.core.sqlobject.BaseTable;
 import org.verdictdb.core.sqlobject.ColumnOp;
 import org.verdictdb.core.sqlobject.ConstantColumn;
+import org.verdictdb.core.sqlobject.JoinTable;
 import org.verdictdb.core.sqlobject.SelectItem;
 import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.core.sqlobject.SqlConvertible;
@@ -76,6 +78,11 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
 
   private long smallGroupSizeSum = 0;
 
+  public static final String MAIN_TABLE_SOURCE_ALIAS_NAME = "t1";
+  
+  public static final String RIGHT_TABLE_SOURCE_ALIAS_NAME = "t2";
+  
+
   public FastConvergeScramblingMethod(long blockSize, String scratchpadSchemaName) {
     super(blockSize);
     this.scratchpadSchemaName = scratchpadSchemaName;
@@ -110,7 +117,7 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
 
     // outlier checking
     PercentilesAndCountNode pc = new PercentilesAndCountNode(
-        oldSchemaName, oldTableName, columnMetaTokenKey, partitionMetaTokenKey);
+        oldSchemaName, oldTableName, columnMetaTokenKey, partitionMetaTokenKey, primaryColumnName);
     statisticsNodes.add(pc);
 
     // outlier proportion computation
@@ -140,7 +147,7 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
   //    return blockSize;
   //  }
 
-  static UnnamedColumn createOutlierTuplePredicate(DbmsQueryResult percentileAndCountResult) {
+  static UnnamedColumn createOutlierTuplePredicate(DbmsQueryResult percentileAndCountResult, String sourceTableAlias) {
     UnnamedColumn outlierPredicate = null;
 
     percentileAndCountResult.rewind();
@@ -159,8 +166,8 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
         double highCriteria = columnAverage + columnStddev * OUTLIER_STDDEV_MULTIPLIER;
 
         UnnamedColumn newOrPredicate = ColumnOp.or(
-            ColumnOp.less(new BaseColumn(originalColumnName), ConstantColumn.valueOf(lowCriteria)),
-            ColumnOp.greater(new BaseColumn(originalColumnName), ConstantColumn.valueOf(highCriteria)));
+            ColumnOp.less(new BaseColumn(sourceTableAlias, originalColumnName), ConstantColumn.valueOf(lowCriteria)),
+            ColumnOp.greater(new BaseColumn(sourceTableAlias, originalColumnName), ConstantColumn.valueOf(highCriteria)));
 
         if (outlierPredicate == null) {
           outlierPredicate = newOrPredicate;
@@ -183,15 +190,17 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
     //    String largeGroupListTableName = (String) metaData.get("1tableName");
 
     // Tier 0
-    UnnamedColumn tier0Predicate = createOutlierTuplePredicate(percentileAndCountResult);
+    UnnamedColumn tier0Predicate = createOutlierTuplePredicate(
+        percentileAndCountResult, 
+        FastConvergeScramblingMethod.MAIN_TABLE_SOURCE_ALIAS_NAME);
 
     // Tier 1
     // select (case ... when t2.groupSize is null then 1 else 2 end) as verdictdbtier
     // from schemaName.tableName t1 left join largeGroupSchema.largeGroupTable t2
     //   on t1.primaryGroup = t2.primaryGroup
-    String rightTableSourceAlias = ScramblingNode.RIGHT_TABLE_SOURCE_ALIAS_NAME;
+    String rightTableSourceAlias = FastConvergeScramblingMethod.RIGHT_TABLE_SOURCE_ALIAS_NAME;
     UnnamedColumn tier1Predicate = ColumnOp.isnull(
-        new BaseColumn(rightTableSourceAlias, LargeGroupListNode.LARGE_GROUP_SIZE_COLUMN_ALIAS));
+        new BaseColumn(rightTableSourceAlias, LargeGroupListNode.PRIMARY_GROUP_RENAME));
 
     // Tier 2: automatically handled by this function's caller
 
@@ -229,7 +238,9 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
     long tableSize = tableSizeAndBlockNumber.getLeft();
     long totalNumberOfblocks = tableSizeAndBlockNumber.getRight();
 
-    DbmsQueryResult outlierProportion = (DbmsQueryResult) metaData.get("1resultSet");
+    DbmsQueryResult outlierProportion = (DbmsQueryResult) metaData.get("1queryResult");
+    outlierProportion.rewind();
+    outlierProportion.next();
     outlierSize = outlierProportion.getLong(0);
 
     if (outlierSize * 2 >= tableSize) {
@@ -241,7 +252,7 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
     } else {
       Long remainingSize = outlierSize;
 
-      while (remainingSize > 0) {  
+      while (outlierSize > 0 && remainingSize > 0) {  
         // fill only p0 portion of each block at most
         if (remainingSize <= p0 * blockSize) {
           cumulProbDist.add(1.0);
@@ -292,7 +303,7 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
       if (i == 0) {
         totalRemainingSizeUnderP1 += blockSize * p1 - outlierSize * tier0CumulProbDist.get(i);
       } else {
-        totalRemainingSizeUnderP1 += blockSize * p1 - outlierSize * (tier0CumulProbDist.get(i+1) - tier0CumulProbDist.get(i));
+        totalRemainingSizeUnderP1 += blockSize * p1 - outlierSize * (tier0CumulProbDist.get(i) - tier0CumulProbDist.get(i-1));
       }
     }
     
@@ -344,6 +355,9 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
     long tableSize = tableSizeAndBlockNumber.getLeft();
     long totalNumberOfblocks = tableSizeAndBlockNumber.getRight();
     
+    System.out.println("table size: " + tableSize);
+    System.out.println("outlier size: " + outlierSize);
+    System.out.println("small group size: " + smallGroupSizeSum);
     long tier2Size = tableSize - outlierSize - smallGroupSizeSum;
     
     for (int i = 0; i < totalNumberOfblocks; i++) {
@@ -357,8 +371,12 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
         thisTier1Size = (long) (smallGroupSizeSum * (tier1CumulProbDist.get(i) - tier1CumulProbDist.get(i-1)));
       }
       long thisBlockSize = blockSize -  thisTier0Size - thisTier1Size;
-      double thisBlockRatio = thisBlockSize / tier2Size;
-      cumulProbDist.add(thisBlockRatio);
+      if (tier2Size == 0) {
+        cumulProbDist.add(1.0);
+      } else {
+        double thisBlockRatio = thisBlockSize / tier2Size;
+        cumulProbDist.add(thisBlockRatio);
+      }
     }
     
     tier2CumulProbDist = cumulProbDist;
@@ -369,9 +387,31 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
     DbmsQueryResult tableSizeResult = (DbmsQueryResult) metaData.get("0queryResult");
     tableSizeResult.rewind();
     tableSizeResult.next();
-    long tableSize = tableSizeResult.getLong(0);
+    long tableSize = tableSizeResult.getLong(PercentilesAndCountNode.TOTAL_COUNT_ALIAS_NAME);
     long totalNumberOfblocks = (long) Math.ceil(tableSize / (float) blockSize);
     return Pair.of(tableSize, totalNumberOfblocks);
+  }
+
+  @Override
+  public AbstractRelation getScramblingSource(String originalSchema, String originalTable, Map<String, Object> metaData) {
+    String largeGroupListSchemaName = (String) metaData.get("2schemaName");
+    String largeGroupListTableName = (String) metaData.get("2tableName");
+    
+    if (primaryColumnName.isPresent()) {
+      JoinTable source = JoinTable.create(
+          Arrays.<AbstractRelation>asList(
+              new BaseTable(originalSchema, originalTable, MAIN_TABLE_SOURCE_ALIAS_NAME),
+              new BaseTable(largeGroupListSchemaName, largeGroupListTableName, RIGHT_TABLE_SOURCE_ALIAS_NAME)),
+          Arrays.asList(JoinTable.JoinType.leftouter),
+          Arrays.<UnnamedColumn>asList(
+              ColumnOp.equal(
+                  new BaseColumn(MAIN_TABLE_SOURCE_ALIAS_NAME, primaryColumnName.get()),
+                  new BaseColumn(RIGHT_TABLE_SOURCE_ALIAS_NAME, LargeGroupListNode.PRIMARY_GROUP_RENAME))));
+      return source;
+    }
+    else {
+      return new BaseTable(originalSchema, originalTable, MAIN_TABLE_SOURCE_ALIAS_NAME);
+    }
   }
 
 }
@@ -385,6 +425,8 @@ class PercentilesAndCountNode extends QueryNodeBase {
   private String columnMetaTokenKey;
 
   private String partitionMetaTokenKey;
+  
+  private Optional<String> primaryColumnName;
 
   public static final String AVG_PREFIX = "verdictdbavg";
 
@@ -393,12 +435,15 @@ class PercentilesAndCountNode extends QueryNodeBase {
   public static final String TOTAL_COUNT_ALIAS_NAME = "verdictdbtotalcount";
 
   public PercentilesAndCountNode(
-      String schemaName, String tableName, String columnMetaTokenKey, String partitionMetaTokenKey) {
+      String schemaName, String tableName, 
+      String columnMetaTokenKey, String partitionMetaTokenKey,
+      Optional<String> primaryColumnName) {
     super(null);
     this.schemaName = schemaName;
     this.tableName = tableName;
     this.columnMetaTokenKey = columnMetaTokenKey;
     this.partitionMetaTokenKey = partitionMetaTokenKey;
+    this.primaryColumnName = primaryColumnName;
   }
 
   @Override
@@ -422,6 +467,10 @@ class PercentilesAndCountNode extends QueryNodeBase {
     // compose a select list
     List<SelectItem> selectList = new ArrayList<>();
     for (String col : numericColumns) {
+      if (primaryColumnName.isPresent() && col.equals(primaryColumnName.get())) {
+        continue;
+      }
+      
       // mean 
       SelectItem item;
       item = new AliasedColumn(
@@ -483,8 +532,9 @@ class OutlierProportionNode extends QueryNodeBase {
   @Override
   public SqlConvertible createQuery(List<ExecutionInfoToken> tokens) throws VerdictDBException {
     DbmsQueryResult percentileAndCountResult = (DbmsQueryResult) tokens.get(0).getValue("queryResult");
-    UnnamedColumn outlierPrediacte = FastConvergeScramblingMethod.createOutlierTuplePredicate(percentileAndCountResult);
-    String tableSourceAliasName = "t";
+    String tableSourceAliasName = FastConvergeScramblingMethod.MAIN_TABLE_SOURCE_ALIAS_NAME;
+    UnnamedColumn outlierPrediacte = 
+        FastConvergeScramblingMethod.createOutlierTuplePredicate(percentileAndCountResult, tableSourceAliasName);
 
     selectQuery = SelectQuery.create(
         new AliasedColumn(ColumnOp.count(), OUTLIER_SIZE_ALIAS),
@@ -492,7 +542,6 @@ class OutlierProportionNode extends QueryNodeBase {
     selectQuery.addFilterByAnd(outlierPrediacte);
 
     return selectQuery;
-
   }
 
 }
@@ -508,6 +557,8 @@ class LargeGroupListNode extends CreateTableAsSelectNode {
   private String tableName;
 
   private String primaryColumnName;
+  
+  public static final String PRIMARY_GROUP_RENAME = "verdictdbrenameprimarygroup";
 
   public static final String LARGE_GROUP_SIZE_COLUMN_ALIAS = "groupSize";
 
@@ -534,7 +585,7 @@ class LargeGroupListNode extends CreateTableAsSelectNode {
 
     // select
     List<SelectItem> selectList = new ArrayList<>();
-    selectList.add(new BaseColumn(tableSourceAlias, primaryColumnName));
+    selectList.add(new AliasedColumn(new BaseColumn(tableSourceAlias, primaryColumnName), PRIMARY_GROUP_RENAME));
     selectList.add(new AliasedColumn(
         ColumnOp.multiply(
             ColumnOp.count(), 

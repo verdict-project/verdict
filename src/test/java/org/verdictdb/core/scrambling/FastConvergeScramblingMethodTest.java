@@ -138,7 +138,7 @@ public class FastConvergeScramblingMethodTest {
     FastConvergeScramblingMethod method = 
         new FastConvergeScramblingMethod(blockSize, scratchpadSchemaName, primaryGroupColumnName);
     
-    // query result
+    // query result; preparation
     String sql = "select avg(t.\"ID\") as \"verdictdbavgID\", "
         + "stddev_pop(t.\"ID\") as \"verdictdbstddevID\", "
         + "avg(t.\"AGE\") as \"verdictdbavgAGE\", "
@@ -150,15 +150,13 @@ public class FastConvergeScramblingMethodTest {
     DbmsConnection conn = new JdbcConnection(h2conn);
     DbmsQueryResult queryResult = conn.execute(sql);
     
-    // test method
+    // tests
     Map<String, Object> metaData = new HashMap<>();
     metaData.put("0queryResult", queryResult);
     List<UnnamedColumn> tiers = method.getTierExpressions(metaData);
     
     assertEquals("or", ((ColumnOp) tiers.get(0)).getOpType());
     assertEquals("isnull", ((ColumnOp) tiers.get(1)).getOpType());
-    
-    System.out.println(tiers);
   }
 
 }

@@ -9,6 +9,7 @@ import org.verdictdb.core.connection.DbmsQueryResult;
 import org.verdictdb.core.execution.ExecutionInfoToken;
 import org.verdictdb.core.querying.ExecutableNodeBase;
 import org.verdictdb.core.querying.QueryNodeBase;
+import org.verdictdb.core.sqlobject.AbstractRelation;
 import org.verdictdb.core.sqlobject.AliasedColumn;
 import org.verdictdb.core.sqlobject.BaseTable;
 import org.verdictdb.core.sqlobject.ColumnOp;
@@ -51,6 +52,12 @@ public class UniformScramblingMethod extends ScramblingMethodBase {
     }
     
     return prob;
+  }
+
+  @Override
+  public AbstractRelation getScramblingSource(String originalSchema, String originalTable, Map<String, Object> metaData) {
+    String tableSourceAlias = "t";
+    return new BaseTable(originalSchema, originalTable, tableSourceAlias);
   }
 
 //  @Override

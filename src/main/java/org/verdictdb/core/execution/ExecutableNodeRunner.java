@@ -92,7 +92,7 @@ public class ExecutableNodeRunner implements Runnable {
       // actual processing
       try {
         executeAndBroadcast(tokens);
-      } catch (VerdictDBException e) {
+      } catch (Exception e) {
         e.printStackTrace();
         broadcast(ExecutionInfoToken.failureToken(e));
         break;

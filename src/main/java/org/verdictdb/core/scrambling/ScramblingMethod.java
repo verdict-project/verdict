@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.verdictdb.core.querying.ExecutableNodeBase;
+import org.verdictdb.core.sqlobject.AbstractRelation;
 import org.verdictdb.core.sqlobject.UnnamedColumn;
 
 public interface ScramblingMethod {
@@ -36,5 +37,15 @@ public interface ScramblingMethod {
    */
   public List<Double> getCumulativeProbabilityDistributionForTier(
       Map<String, Object> metaData, int tier);
+
+
+  /**
+   * Returns the table that should be used in the final scrambling stage. This can be a join of the main table
+   * and some auxiliary tables.
+   * @param metaData 
+   * 
+   * @return
+   */
+  public AbstractRelation getScramblingSource(String originalSchema, String originalTable, Map<String, Object> metaData);
 
 }

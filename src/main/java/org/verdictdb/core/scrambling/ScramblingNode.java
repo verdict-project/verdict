@@ -11,6 +11,7 @@ import org.verdictdb.core.connection.DbmsQueryResult;
 import org.verdictdb.core.execution.ExecutionInfoToken;
 import org.verdictdb.core.querying.CreateTableAsSelectNode;
 import org.verdictdb.core.querying.IdCreator;
+import org.verdictdb.core.sqlobject.AbstractRelation;
 import org.verdictdb.core.sqlobject.AliasedColumn;
 import org.verdictdb.core.sqlobject.AsteriskColumn;
 import org.verdictdb.core.sqlobject.BaseTable;
@@ -30,25 +31,23 @@ import org.verdictdb.exception.VerdictDBException;
  */
 public class ScramblingNode extends CreateTableAsSelectNode {
 
-  String oldSchemaName;
+  String originalSchemaName;
 
-  String oldTableName;
+  String originalTableName;
 
   ScramblingMethod method;
 
   Map<String, String> options;
-  
-  public static final String RIGHT_TABLE_SOURCE_ALIAS_NAME = "t2";
 
   public ScramblingNode(
       IdCreator namer, 
-      String oldSchemaName,
-      String oldTableName,
+      String originalSchemaName,
+      String originalTableName,
       ScramblingMethod method, 
       Map<String, String> options) {
     super(namer, null);
-    this.oldSchemaName = oldSchemaName;
-    this.oldTableName = oldTableName;
+    this.originalSchemaName = originalSchemaName;
+    this.originalTableName = originalTableName;
     this.method = method;
     this.options = options;
   }
@@ -184,8 +183,15 @@ public class ScramblingNode extends CreateTableAsSelectNode {
     selectItems.add(new AliasedColumn(blockExpr, blockColumnName));
 
     // compose the final query
+    AbstractRelation tableSource = method.getScramblingSource(originalSchemaName, originalTableName, metaData);
+//    SelectQuery scramblingQuery = 
+//        SelectQuery.create(
+//            selectItems, 
+//            new BaseTable(oldSchemaName, oldTableName, MAIN_TABLE_SOURCE_ALIAS_NAME));
     SelectQuery scramblingQuery = 
-        SelectQuery.create(selectItems, new BaseTable(oldSchemaName, oldTableName));
+        SelectQuery.create(
+            selectItems, 
+            tableSource);
 
     return scramblingQuery;
   }
@@ -205,7 +211,11 @@ public class ScramblingNode extends CreateTableAsSelectNode {
       } else {
         double numerator = cumulativeProbabilityDistribution.get(i) - cumulativeProbabilityDistribution.get(i-1);
         double denominator = 1.0 - cumulativeProbabilityDistribution.get(i-1);
-        cond.add(numerator / denominator);
+        double condProb = 0;
+        if (denominator != 0) {
+          condProb = numerator / denominator;
+        }
+        cond.add(condProb);
       }
     }
     return cond;

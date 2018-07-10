@@ -47,17 +47,31 @@ public interface DbmsQueryResult {
   
   public String getString(int index);
   
+  public String getString(String label);
+  
   public int getInt(int index);
+  
+  public int getInt(String label);
   
   public long getLong(int index);
   
+  public long getLong(String label);
+  
   public double getDouble(int index);
+  
+  public double getDouble(String label);
   
   public float getFloat(int index);
   
+  public float getFloat(String label);
+  
   public Date getDate(int index);
   
+  public Date getDate(String label);
+  
   public Timestamp getTimestamp(int index);
+  
+  public Timestamp getTimestamp(String label);
   
   public void printContent();
 

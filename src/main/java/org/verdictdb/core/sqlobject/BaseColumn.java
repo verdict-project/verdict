@@ -15,6 +15,28 @@ public class BaseColumn implements UnnamedColumn, SelectItem, GroupingAttribute 
 
   String columnName;
 
+  public BaseColumn(String columnName) {
+    this.columnName = columnName;
+  }
+
+  public BaseColumn(String tableSourceAlias, String columnName) {
+    this.tableSourceAlias = tableSourceAlias;
+    this.columnName = columnName;
+  }
+
+  public BaseColumn(String schemaName, String tableSourceAlias, String columnName) {
+    this.schemaName = schemaName;
+    this.tableSourceAlias = tableSourceAlias;
+    this.columnName = columnName;
+  }
+
+  public BaseColumn(String schemaName, String tableName, String tableSourceAlias, String columnName) {
+    this.schemaName = schemaName;
+    this.tableName = tableName;
+    this.tableSourceAlias = tableSourceAlias;
+    this.columnName = columnName;
+  }
+
   public String getTableSourceAlias() {
     return tableSourceAlias;
   }
@@ -47,28 +69,6 @@ public class BaseColumn implements UnnamedColumn, SelectItem, GroupingAttribute 
     this.tableName = tableName;
   }
 
-  public BaseColumn(String columnName) {
-    this.columnName = columnName;
-  }
-
-  public BaseColumn(String tableSourceAlias, String columnName) {
-    this.tableSourceAlias = tableSourceAlias;
-    this.columnName = columnName;
-  }
-
-  public BaseColumn(String schemaName, String tableSourceAlias, String columnName) {
-    this.schemaName = schemaName;
-    this.tableSourceAlias = tableSourceAlias;
-    this.columnName = columnName;
-  }
-
-  public BaseColumn(String schemaName, String tableName, String tableSourceAlias, String columnName) {
-    this.schemaName = schemaName;
-    this.tableName = tableName;
-    this.tableSourceAlias = tableSourceAlias;
-    this.columnName = columnName;
-  }
-  
   public static BaseColumn create(String tableSourceAlias, String columnName) {
     return new BaseColumn(tableSourceAlias, columnName);
   }
