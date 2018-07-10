@@ -18,8 +18,8 @@ import org.junit.Test;
 import org.verdictdb.core.connection.JdbcConnection;
 import org.verdictdb.core.connection.StaticMetaData;
 import org.verdictdb.core.execution.ExecutablePlanRunner;
+import org.verdictdb.core.scrambling.ScrambleMetaSet;
 import org.verdictdb.core.scrambling.ScrambleMeta;
-import org.verdictdb.core.scrambling.ScrambleMetaForTable;
 import org.verdictdb.core.scrambling.UniformScrambler;
 import org.verdictdb.core.sqlobject.AbstractRelation;
 import org.verdictdb.core.sqlobject.AliasReference;
@@ -49,7 +49,7 @@ public class TpchExecutionPlanTest {
 
   int aggblockCount = 2;
 
-  static ScrambleMeta meta = new ScrambleMeta();
+  static ScrambleMetaSet meta = new ScrambleMetaSet();
 
   static StaticMetaData staticMetaData = new StaticMetaData();
 
@@ -141,7 +141,7 @@ public class TpchExecutionPlanTest {
     int aggBlockCount = 2;
     UniformScrambler scrambler =
         new UniformScrambler("tpch", "lineitem", "tpch", "lineitem", aggBlockCount);
-    ScrambleMetaForTable tablemeta = scrambler.generateMeta();
+    ScrambleMeta tablemeta = scrambler.generateMeta();
     scrambledTable = tablemeta.getTableName();
     meta.insertScrambleMetaEntry(tablemeta);
     scrambler =

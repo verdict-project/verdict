@@ -19,8 +19,8 @@ import org.verdictdb.core.execution.ExecutablePlanRunner;
 import org.verdictdb.core.querying.AggExecutionNode;
 import org.verdictdb.core.querying.ExecutableNodeBase;
 import org.verdictdb.core.querying.QueryExecutionPlan;
+import org.verdictdb.core.scrambling.ScrambleMetaSet;
 import org.verdictdb.core.scrambling.ScrambleMeta;
-import org.verdictdb.core.scrambling.ScrambleMetaForTable;
 import org.verdictdb.core.scrambling.SimpleTreePlan;
 import org.verdictdb.core.scrambling.UniformScrambler;
 import org.verdictdb.core.sqlobject.AliasedColumn;
@@ -45,7 +45,7 @@ public class AggExecutionNodeBlockTest {
 
   static String newTable = "newtable";
   
-  static ScrambleMeta scrambleMeta = new ScrambleMeta();
+  static ScrambleMetaSet scrambleMeta = new ScrambleMetaSet();
   
   static int aggBlockCount = 3;
   
@@ -65,7 +65,7 @@ public class AggExecutionNodeBlockTest {
     CreateTableAsSelectQuery createQuery = scrambler.createQuery();
     String scrambleSql = QueryToSql.convert(new H2Syntax(), createQuery);
     conn.createStatement().execute(scrambleSql);
-    ScrambleMetaForTable metaEntry = scrambler.generateMeta();
+    ScrambleMeta metaEntry = scrambler.generateMeta();
     metaEntry.setNumberOfTiers(1);
     HashMap<Integer, List<Double>> distribution1 = new HashMap<>();
     distribution1.put(0, Arrays.asList(0.2, 0.5, 1.0));

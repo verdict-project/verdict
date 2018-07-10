@@ -7,7 +7,7 @@ import org.verdictdb.core.querying.AggExecutionNode;
 import org.verdictdb.core.querying.ExecutableNodeBase;
 import org.verdictdb.core.querying.QueryExecutionPlan;
 import org.verdictdb.core.querying.QueryNodeBase;
-import org.verdictdb.core.scrambling.ScrambleMeta;
+import org.verdictdb.core.scrambling.ScrambleMetaSet;
 import org.verdictdb.core.sqlobject.AbstractRelation;
 import org.verdictdb.core.sqlobject.BaseTable;
 import org.verdictdb.core.sqlobject.JoinTable;
@@ -17,7 +17,7 @@ import org.verdictdb.exception.VerdictDBTypeException;
 
 public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
 
-  private AsyncQueryExecutionPlan(String scratchpadSchemaName, ScrambleMeta scrambleMeta)
+  private AsyncQueryExecutionPlan(String scratchpadSchemaName, ScrambleMetaSet scrambleMeta)
       throws VerdictDBException {
     super(scratchpadSchemaName, scrambleMeta);
   }
@@ -41,7 +41,7 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
    * @return
    * @throws VerdictDBException
    */
-  static ExecutableNodeBase makeAsyncronousAggIfAvailable(ScrambleMeta scrambleMeta, ExecutableNodeBase root) 
+  static ExecutableNodeBase makeAsyncronousAggIfAvailable(ScrambleMetaSet scrambleMeta, ExecutableNodeBase root) 
       throws VerdictDBException {
     List<AggExecutionNodeBlock> aggBlocks = identifyTopAggBlocks(scrambleMeta, root);
 
@@ -74,7 +74,7 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
   // identify the nodes that are 
   // (1) aggregates with scrambled tables and 
   // (2) are not descendants of any other top aggregates.
-  static List<AggExecutionNodeBlock> identifyTopAggBlocks(ScrambleMeta scrambleMeta, ExecutableNodeBase root) {
+  static List<AggExecutionNodeBlock> identifyTopAggBlocks(ScrambleMetaSet scrambleMeta, ExecutableNodeBase root) {
     List<AggExecutionNodeBlock> aggblocks = new ArrayList<>();
 //    ScrambleMeta scrambleMeta = root.getPlan().getScrambleMeta();
 
@@ -95,7 +95,7 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
     return aggblocks;
   }
   
-  static boolean doesContainScramble(ExecutableNodeBase node, ScrambleMeta scrambleMeta) {
+  static boolean doesContainScramble(ExecutableNodeBase node, ScrambleMetaSet scrambleMeta) {
     SelectQuery query = ((QueryNodeBase) node).getSelectQuery();
     
     // check within the query

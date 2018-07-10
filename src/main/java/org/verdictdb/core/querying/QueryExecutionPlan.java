@@ -19,7 +19,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.core.execution.ExecutableNode;
 import org.verdictdb.core.execution.ExecutablePlan;
 import org.verdictdb.core.querying.ola.AsyncAggExecutionNode;
-import org.verdictdb.core.scrambling.ScrambleMeta;
+import org.verdictdb.core.scrambling.ScrambleMetaSet;
 import org.verdictdb.core.sqlobject.BaseTable;
 import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.core.sqlobject.SubqueryColumn;
@@ -29,18 +29,18 @@ import org.verdictdb.exception.VerdictDBValueException;
 
 public class QueryExecutionPlan implements ExecutablePlan, IdCreator {
   
-  protected ScrambleMeta scrambleMeta;
+  protected ScrambleMetaSet scrambleMeta;
 
   protected ExecutableNodeBase root;
 
   protected IdCreator idCreator;
 
   public QueryExecutionPlan(String scratchpadSchemaName) {
-    this.scrambleMeta = new ScrambleMeta();
+    this.scrambleMeta = new ScrambleMetaSet();
     this.idCreator = new TempIdCreatorInScratchpadSchema(scratchpadSchemaName);
   }
 
-  public QueryExecutionPlan(String scratchpadSchemaName, ScrambleMeta scrambleMeta) {
+  public QueryExecutionPlan(String scratchpadSchemaName, ScrambleMetaSet scrambleMeta) {
     this.idCreator = new TempIdCreatorInScratchpadSchema(scratchpadSchemaName);
     this.scrambleMeta = scrambleMeta;
   }
@@ -53,7 +53,7 @@ public class QueryExecutionPlan implements ExecutablePlan, IdCreator {
    */
   public QueryExecutionPlan(
       String scratchpadSchemaName,
-      ScrambleMeta scrambleMeta,
+      ScrambleMetaSet scrambleMeta,
       SelectQuery query) throws VerdictDBException {
     
     this(scratchpadSchemaName);
@@ -70,11 +70,11 @@ public class QueryExecutionPlan implements ExecutablePlan, IdCreator {
     return ((TempIdCreatorInScratchpadSchema) idCreator).getSerialNumber();
   }
 
-  public ScrambleMeta getScrambleMeta() {
+  public ScrambleMetaSet getScrambleMeta() {
     return scrambleMeta;
   }
 
-  public void setScrambleMeta(ScrambleMeta scrambleMeta) {
+  public void setScrambleMeta(ScrambleMetaSet scrambleMeta) {
     this.scrambleMeta = scrambleMeta;
   }
 

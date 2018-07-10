@@ -12,7 +12,7 @@ import org.verdictdb.core.querying.AggExecutionNode;
 import org.verdictdb.core.querying.ExecutableNodeBase;
 import org.verdictdb.core.querying.IdCreator;
 import org.verdictdb.core.querying.QueryNodeBase;
-import org.verdictdb.core.scrambling.ScrambleMeta;
+import org.verdictdb.core.scrambling.ScrambleMetaSet;
 import org.verdictdb.core.sqlobject.AbstractRelation;
 import org.verdictdb.core.sqlobject.AliasReference;
 import org.verdictdb.core.sqlobject.AliasedColumn;
@@ -87,7 +87,7 @@ public class AggExecutionNodeBlock {
    * of partitions)
    * @throws VerdictDBValueException 
    */
-  public ExecutableNodeBase convertToProgressiveAgg(ScrambleMeta scrambleMeta) 
+  public ExecutableNodeBase convertToProgressiveAgg(ScrambleMetaSet scrambleMeta) 
       throws VerdictDBValueException {
     List<ExecutableNodeBase> individualAggNodes = new ArrayList<>();
     List<ExecutableNodeBase> combiners = new ArrayList<>();
@@ -193,7 +193,7 @@ public class AggExecutionNodeBlock {
   }
 
   List<Pair<ExecutableNodeBase, Triple<String, String, String>>> 
-  identifyScrambledNodes(ScrambleMeta scrambleMeta, List<ExecutableNodeBase> blockNodes) {
+  identifyScrambledNodes(ScrambleMetaSet scrambleMeta, List<ExecutableNodeBase> blockNodes) {
 
     List<Pair<ExecutableNodeBase, Triple<String, String, String>>> identified = new ArrayList<>();
 
@@ -387,7 +387,7 @@ public class AggExecutionNodeBlock {
     return newSelectlist;
   }
 
-  void addTierColumn(SelectQuery query, List<SelectItem> newSelectList, ScrambleMeta scrambleMeta) {
+  void addTierColumn(SelectQuery query, List<SelectItem> newSelectList, ScrambleMetaSet scrambleMeta) {
     for (AbstractRelation table:query.getFromList()) {
       if (table instanceof BaseTable) {
         String schemaName = ((BaseTable) table).getSchemaName();

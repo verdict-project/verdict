@@ -12,8 +12,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.core.connection.DbmsConnection;
 import org.verdictdb.core.connection.JdbcConnection;
+import org.verdictdb.core.scrambling.ScrambleMetaSet;
 import org.verdictdb.core.scrambling.ScrambleMeta;
-import org.verdictdb.core.scrambling.ScrambleMetaForTable;
 import org.verdictdb.core.scrambling.UniformScrambler;
 import org.verdictdb.core.sqlobject.AliasedColumn;
 import org.verdictdb.core.sqlobject.BaseColumn;
@@ -34,7 +34,7 @@ public class ExecutionNodeTest {
   
   int aggblockCount = 2;
   
-  static ScrambleMeta meta = new ScrambleMeta();
+  static ScrambleMetaSet meta = new ScrambleMetaSet();
   
   static String scrambledTable;
   
@@ -69,7 +69,7 @@ public class ExecutionNodeTest {
     int aggBlockCount = 2;
     UniformScrambler scrambler =
         new UniformScrambler("default", "people", "default", "scrambled_people", aggBlockCount);
-    ScrambleMetaForTable tablemeta = scrambler.generateMeta();
+    ScrambleMeta tablemeta = scrambler.generateMeta();
     scrambledTable = tablemeta.getTableName();
     meta.insertScrambleMetaEntry(tablemeta);
     CreateTableAsSelectQuery createQuery = scrambler.createQuery();
