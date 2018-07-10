@@ -167,7 +167,15 @@ public class AsyncAggMultipleTiersScaleTest {
     query = (CreateTableAsSelectQuery) queryExecutionPlan.getRoot().getSources().get(0).getSources().get(1).createQuery(Arrays.asList(token1, token2));
     actual = queryToSql.toSql(query.getSelect());
     actual = actual.replaceAll("verdictdbalias_[0-9]*_[0-9]", "alias");
-    expected = "select alias.\"verdictdbtier0\" as \"verdictdbtier0\", alias.\"agg0\" + alias.\"agg0\" as \"agg0\", alias.\"agg1\" + alias.\"agg1\" as \"agg1\" from \"verdict_temp\".\"table1\" as alias, \"verdict_temp\".\"table2\" as alias where alias.\"verdictdbtier0\" = alias.\"verdictdbtier0\"";
+    expected = "select " +
+        "sum(unionTable.\"agg0\") as \"agg0\", " +
+        "sum(unionTable.\"agg1\") as \"agg1\", " +
+        "unionTable.\"verdictdbtier0\" as \"verdictdbtier0\" " +
+        "from (" +
+        "select * from \"verdict_temp\".\"table1\" as alias " +
+        "UNION ALL " +
+        "select * from \"verdict_temp\".\"table2\" as alias) " +
+        "as unionTable group by \"verdictdbtier0\"";
     assertEquals(expected, actual);
 
     ExecutionInfoToken token3 = queryExecutionPlan.getRoot().getSources().get(0).getSources().get(0).createToken(null);
@@ -233,14 +241,15 @@ public class AsyncAggMultipleTiersScaleTest {
     query = (CreateTableAsSelectQuery) queryExecutionPlan.getRoot().getSources().get(0).getSources().get(1).createQuery(Arrays.asList(token1, token2));
     actual = queryToSql.toSql(query.getSelect());
     actual = actual.replaceAll("verdictdbalias_[0-9]*_[0-9]", "alias");
-    expected = "select alias.\"verdictdbtier0\" as \"verdictdbtier0\", " +
-        "alias.\"agg0\" + alias.\"agg0\" as \"agg0\", " +
-        "alias.\"agg1\" + alias.\"agg1\" as \"agg1\" " +
-        "from " +
-        "\"verdict_temp\".\"table1\" as alias, " +
-        "\"verdict_temp\".\"table2\" as alias " +
-        "where " +
-        "alias.\"verdictdbtier0\" = alias.\"verdictdbtier0\"";
+    expected = "select " +
+        "sum(unionTable.\"agg0\") as \"agg0\", " +
+        "sum(unionTable.\"agg1\") as \"agg1\", " +
+        "unionTable.\"verdictdbtier0\" as \"verdictdbtier0\" " +
+        "from (" +
+        "select * from \"verdict_temp\".\"table1\" as alias " +
+        "UNION ALL " +
+        "select * from \"verdict_temp\".\"table2\" as alias) " +
+        "as unionTable group by \"verdictdbtier0\"";
     assertEquals(expected, actual);
 
     ExecutionInfoToken token3 = queryExecutionPlan.getRoot().getSources().get(0).getSources().get(0).createToken(null);
@@ -306,12 +315,14 @@ public class AsyncAggMultipleTiersScaleTest {
     query = (CreateTableAsSelectQuery) queryExecutionPlan.getRoot().getSources().get(0).getSources().get(1).createQuery(Arrays.asList(token1, token2));
     actual = queryToSql.toSql(query.getSelect());
     actual = actual.replaceAll("verdictdbalias_[0-9]*_[0-9]", "alias");
-    expected = "select alias.\"verdictdbtier0\" as \"verdictdbtier0\", " +
-        "alias.\"agg0\" + alias.\"agg0\" as \"agg0\" " +
-        "from " +
-        "\"verdict_temp\".\"table1\" as alias, " +
-        "\"verdict_temp\".\"table2\" as alias " +
-        "where alias.\"verdictdbtier0\" = alias.\"verdictdbtier0\"";
+    expected = "select " +
+        "sum(unionTable.\"agg0\") as \"agg0\", " +
+        "unionTable.\"verdictdbtier0\" as \"verdictdbtier0\" " +
+        "from (" +
+        "select * from \"verdict_temp\".\"table1\" as alias " +
+        "UNION ALL " +
+        "select * from \"verdict_temp\".\"table2\" as alias) " +
+        "as unionTable group by \"verdictdbtier0\"";
     assertEquals(expected, actual);
 
     ExecutionInfoToken token3 = queryExecutionPlan.getRoot().getSources().get(0).getSources().get(0).createToken(null);
@@ -376,12 +387,14 @@ public class AsyncAggMultipleTiersScaleTest {
     query = (CreateTableAsSelectQuery) queryExecutionPlan.getRoot().getSources().get(0).getSources().get(1).createQuery(Arrays.asList(token1, token2));
     actual = queryToSql.toSql(query.getSelect());
     actual = actual.replaceAll("verdictdbalias_[0-9]*_[0-9]", "alias");
-    expected = "select alias.\"verdictdbtier0\" as \"verdictdbtier0\", " +
-        "alias.\"agg0\" + alias.\"agg0\" as \"agg0\" " +
-        "from " +
-        "\"verdict_temp\".\"table1\" as alias, " +
-        "\"verdict_temp\".\"table2\" as alias " +
-        "where alias.\"verdictdbtier0\" = alias.\"verdictdbtier0\"";
+    expected = "select " +
+        "sum(unionTable.\"agg0\") as \"agg0\", " +
+        "unionTable.\"verdictdbtier0\" as \"verdictdbtier0\" " +
+        "from (" +
+        "select * from \"verdict_temp\".\"table1\" as alias " +
+        "UNION ALL " +
+        "select * from \"verdict_temp\".\"table2\" as alias) " +
+        "as unionTable group by \"verdictdbtier0\"";
     assertEquals(expected, actual);
 
     ExecutionInfoToken token3 = queryExecutionPlan.getRoot().getSources().get(0).getSources().get(0).createToken(null);
@@ -448,14 +461,14 @@ public class AsyncAggMultipleTiersScaleTest {
     actual = queryToSql.toSql(query.getSelect());
     actual = actual.replaceAll("verdictdbalias_[0-9]*_[0-9]", "alias");
     expected = "select " +
-        "alias.\"verdictdbtier0\" as \"verdictdbtier0\", " +
-        "alias.\"agg0\" + alias.\"agg0\" as \"agg0\", " +
-        "alias.\"agg1\" + alias.\"agg1\" as \"agg1\" " +
-        "from " +
-        "\"verdict_temp\".\"table1\" as alias, " +
-        "\"verdict_temp\".\"table2\" as alias " +
-        "where " +
-        "alias.\"verdictdbtier0\" = alias.\"verdictdbtier0\"";
+        "sum(unionTable.\"agg0\") as \"agg0\", " +
+        "sum(unionTable.\"agg1\") as \"agg1\", " +
+        "unionTable.\"verdictdbtier0\" as \"verdictdbtier0\" " +
+        "from (" +
+        "select * from \"verdict_temp\".\"table1\" as alias " +
+        "UNION ALL " +
+        "select * from \"verdict_temp\".\"table2\" as alias) " +
+        "as unionTable group by \"verdictdbtier0\"";
     assertEquals(expected, actual);
 
     ExecutionInfoToken token3 = queryExecutionPlan.getRoot().getSources().get(0).getSources().get(0).createToken(null);
@@ -527,14 +540,14 @@ public class AsyncAggMultipleTiersScaleTest {
     actual = queryToSql.toSql(query.getSelect());
     actual = actual.replaceAll("verdictdbalias_[0-9]*_[0-9]", "alias");
     expected = "select " +
-        "alias.\"verdictdbtier0\" as \"verdictdbtier0\", " +
-        "alias.\"agg0\" + alias.\"agg0\" as \"agg0\", " +
-        "alias.\"agg1\" + alias.\"agg1\" as \"agg1\" " +
-        "from " +
-        "\"verdict_temp\".\"table1\" as alias, " +
-        "\"verdict_temp\".\"table2\" as alias " +
-        "where " +
-        "alias.\"verdictdbtier0\" = alias.\"verdictdbtier0\"";
+        "sum(unionTable.\"agg0\") as \"agg0\", " +
+        "sum(unionTable.\"agg1\") as \"agg1\", " +
+        "unionTable.\"verdictdbtier0\" as \"verdictdbtier0\" " +
+        "from (" +
+        "select * from \"verdict_temp\".\"table1\" as alias " +
+        "UNION ALL " +
+        "select * from \"verdict_temp\".\"table2\" as alias) " +
+        "as unionTable group by \"verdictdbtier0\"";
     assertEquals(expected, actual);
 
     ExecutionInfoToken token3 = queryExecutionPlan.getRoot().getSources().get(0).getSources().get(0).createToken(null);
@@ -603,13 +616,14 @@ public class AsyncAggMultipleTiersScaleTest {
     actual = queryToSql.toSql(query.getSelect());
     actual = actual.replaceAll("verdictdbalias_[0-9]*_[0-9]", "alias");
     expected = "select " +
-        "alias.\"verdictdbtier0\" as \"verdictdbtier0\", " +
-        "alias.\"agg0\" + alias.\"agg0\" as \"agg0\", " +
-        "alias.\"agg1\" + alias.\"agg1\" as \"agg1\" " +
-        "from " +
-        "\"verdict_temp\".\"table1\" as alias, " +
-        "\"verdict_temp\".\"table2\" as alias " +
-        "where alias.\"verdictdbtier0\" = alias.\"verdictdbtier0\"";
+        "sum(unionTable.\"agg0\") as \"agg0\", " +
+        "sum(unionTable.\"agg1\") as \"agg1\", " +
+        "unionTable.\"verdictdbtier0\" as \"verdictdbtier0\" " +
+        "from (" +
+        "select * from \"verdict_temp\".\"table1\" as alias " +
+        "UNION ALL " +
+        "select * from \"verdict_temp\".\"table2\" as alias) " +
+        "as unionTable group by \"verdictdbtier0\"";
     assertEquals(expected, actual);
 
     ExecutionInfoToken token3 = queryExecutionPlan.getRoot().getSources().get(0).getSources().get(0).createToken(null);
@@ -680,14 +694,15 @@ public class AsyncAggMultipleTiersScaleTest {
     actual = queryToSql.toSql(query.getSelect());
     actual = actual.replaceAll("verdictdbalias_[0-9]*_[0-9]", "alias");
     expected = "select " +
-        "alias.\"verdictdbtier0\" as \"verdictdbtier0\", " +
-        "alias.\"agg0\" + alias.\"agg0\" as \"agg0\", " +
-        "alias.\"agg1\" + alias.\"agg1\" as \"agg1\", " +
-        "case when (alias.\"agg2\" > alias.\"agg2\") then alias.\"agg2\" " +
-        "else alias.\"agg2\" end as \"agg2\" " +
-        "from \"verdict_temp\".\"table1\" as alias, " +
-        "\"verdict_temp\".\"table2\" as alias " +
-        "where alias.\"verdictdbtier0\" = alias.\"verdictdbtier0\"";
+        "sum(unionTable.\"agg0\") as \"agg0\", " +
+        "sum(unionTable.\"agg1\") as \"agg1\", " +
+        "max(unionTable.\"agg2\") as \"agg2\", " +
+        "unionTable.\"verdictdbtier0\" as \"verdictdbtier0\" " +
+        "from (" +
+        "select * from \"verdict_temp\".\"table1\" as alias " +
+        "UNION ALL " +
+        "select * from \"verdict_temp\".\"table2\" as alias) " +
+        "as unionTable group by \"verdictdbtier0\"";
     assertEquals(expected, actual);
 
     ExecutionInfoToken token3 = queryExecutionPlan.getRoot().getSources().get(0).getSources().get(0).createToken(null);
@@ -758,14 +773,15 @@ public class AsyncAggMultipleTiersScaleTest {
     actual = queryToSql.toSql(query.getSelect());
     actual = actual.replaceAll("verdictdbalias_[0-9]*_[0-9]", "alias");
     expected = "select " +
-        "alias.\"verdictdbtier0\" as \"verdictdbtier0\", " +
-        "alias.\"agg0\" + alias.\"agg0\" as \"agg0\", " +
-        "alias.\"agg1\" + alias.\"agg1\" as \"agg1\", " +
-        "case when (alias.\"agg2\" < alias.\"agg2\") then alias.\"agg2\" " +
-        "else alias.\"agg2\" end as \"agg2\" " +
-        "from \"verdict_temp\".\"table1\" as alias, " +
-        "\"verdict_temp\".\"table2\" as alias " +
-        "where alias.\"verdictdbtier0\" = alias.\"verdictdbtier0\"";
+        "sum(unionTable.\"agg0\") as \"agg0\", " +
+        "sum(unionTable.\"agg1\") as \"agg1\", " +
+        "min(unionTable.\"agg2\") as \"agg2\", " +
+        "unionTable.\"verdictdbtier0\" as \"verdictdbtier0\" " +
+        "from (" +
+        "select * from \"verdict_temp\".\"table1\" as alias " +
+        "UNION ALL " +
+        "select * from \"verdict_temp\".\"table2\" as alias) " +
+        "as unionTable group by \"verdictdbtier0\"";
     assertEquals(expected, actual);
 
     ExecutionInfoToken token3 = queryExecutionPlan.getRoot().getSources().get(0).getSources().get(0).createToken(null);
