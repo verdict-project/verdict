@@ -68,12 +68,11 @@ public class UniformScramblingPlanTest {
     String newTableName = "newtable";
     String oldSchemaName = "oldschema";
     String oldTableName = "oldtable";
-    int blockCount = 10;
-    ScramblingMethod method = new UniformScramblingMethod(blockCount);
+    int blockSize = 3;
+    ScramblingMethod method = new UniformScramblingMethod(blockSize);
     Map<String, String> options = new HashMap<>();
     options.put("tierColumnName", "tiercolumn");
     options.put("blockColumnName", "blockcolumn");
-    options.put("blockCount", "3");
     
     mysqlConn.createStatement().execute(
         String.format("drop table if exists %s.%s", newSchemaName, newTableName));

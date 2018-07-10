@@ -41,9 +41,10 @@ public class UniformScramblingMethod extends ScramblingMethodBase {
   @Override
   public List<Double> getCumulativeProbabilityDistributionForTier(Map<String, Object> metaData, int tier) {
     
-    DbmsQueryResult tableSizeResult = (DbmsQueryResult) metaData.get("0queryResult");
+    DbmsQueryResult tableSizeResult = 
+        (DbmsQueryResult) metaData.get(TableSizeCountNode.class.getSimpleName());
     tableSizeResult.next();
-    long tableSize = tableSizeResult.getLong(0);
+    long tableSize = tableSizeResult.getLong(TableSizeCountNode.TOTAL_COUNT_ALIAS_NAME);
     long totalNumberOfblocks = (long) Math.ceil(tableSize / (float) blockSize);
     
     List<Double> prob = new ArrayList<>();
@@ -100,6 +101,13 @@ class TableSizeCountNode extends QueryNodeBase {
         selectList, 
         new BaseTable(schemaName, tableName, tableSourceAlias));
     return selectQuery;
+  }
+  
+  @Override
+  public ExecutionInfoToken createToken(DbmsQueryResult result) {
+    ExecutionInfoToken token = new ExecutionInfoToken();
+    token.setKeyValue(this.getClass().getSimpleName(), result);
+    return token;
   }
   
 }

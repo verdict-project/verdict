@@ -153,7 +153,7 @@ public class FastConvergeScramblingMethodTest {
     
     // tests
     Map<String, Object> metaData = new HashMap<>();
-    metaData.put("0queryResult", queryResult);
+    metaData.put(PercentilesAndCountNode.class.getSimpleName(), queryResult);
     List<UnnamedColumn> tiers = method.getTierExpressions(metaData);
     
     assertEquals("or", ((ColumnOp) tiers.get(0)).getOpType());
