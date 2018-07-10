@@ -1,3 +1,4 @@
+package org.verdictdb.core.resulthandler;
 //package org.verdictdb.resulthandler;
 //
 //import org.verdictdb.core.connection.DbmsQueryResult;

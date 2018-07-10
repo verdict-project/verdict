@@ -1,8 +1,9 @@
-package org.verdictdb.core.execution;
+package org.verdictdb.core.resulthandler;
 
 import java.util.Iterator;
 
 import org.verdictdb.core.connection.DbmsQueryResult;
+import org.verdictdb.core.execution.ExecutionTokenQueue;
 
 public class ExecutionResultReader implements Iterable<DbmsQueryResult>, Iterator<DbmsQueryResult> {
 

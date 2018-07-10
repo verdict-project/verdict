@@ -1,10 +1,18 @@
 package org.verdictdb;
 
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+
 import org.verdictdb.core.connection.DbmsConnection;
 import org.verdictdb.core.connection.DbmsQueryResult;
 import org.verdictdb.core.connection.JdbcConnection;
-import org.verdictdb.sqlsyntax.SqlSyntax;
-import org.verdictdb.sqlsyntax.SyntaxReader;
+import org.verdictdb.core.execution.ExecutablePlanRunner;
+import org.verdictdb.core.querying.QueryExecutionPlan;
+import org.verdictdb.core.resulthandler.ExecutionResultReader;
+import org.verdictdb.core.sqlobject.SelectQuery;
+import org.verdictdb.exception.VerdictDBDbmsException;
+
 
 public class VerdictDBContext {
   
@@ -16,14 +24,40 @@ public class VerdictDBContext {
     this.conn = conn;
   }
   
-  public static VerdictDBContext create(java.sql.Connection jdbcConn) {
-    SqlSyntax syntax = SyntaxReader.infer(jdbcConn);
-    VerdictDBContext vc = new VerdictDBContext(new JdbcConnection(jdbcConn, syntax));
-    return vc;
+  public VerdictDBContext fromJdbcConnection(Connection jdbcConn) throws VerdictDBDbmsException {
+    DbmsConnection conn = new JdbcConnection(jdbcConn);
+    return new VerdictDBContext(conn);
   }
   
-  public DbmsQueryResult sql(String query) {
-    return null;
+  public VerdictDBContext fromJdbcString(String jdbcConnectionString) throws SQLException, VerdictDBDbmsException {
+    Connection jdbcConn = DriverManager.getConnection(jdbcConnectionString);
+    return fromJdbcConnection(jdbcConn);
+  }
+  
+  public void scramble(String originalSchema, String originalTable, String newSchema, String newTable) {
+    
+  }
+  
+  public ExecutionResultReader sql(String query) {
+    
+    // parse the query
+    SelectQuery selectQuery;
+    
+    // make plan
+    // if the plan does not include any aggregates, it will simply be a parsed structure of the original query.
+    QueryExecutionPlan plan;
+    
+    // convert it to an asynchronous plan
+    // if the plan does not include any aggregates, this operation should not alter the original plan.
+    QueryExecutionPlan asyncPlan;
+    
+    // simplify the plan
+    QueryExecutionPlan simplifiedAsyncPlan = null;
+    
+    // execute the plan
+    ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(conn, simplifiedAsyncPlan);
+    
+    return reader;
   }
 
 }
