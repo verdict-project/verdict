@@ -82,6 +82,8 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
   
   public static final String RIGHT_TABLE_SOURCE_ALIAS_NAME = "t2";
   
+  private int totalNumberOfblocks = 0;
+  
 
   public FastConvergeScramblingMethod(long blockSize, String scratchpadSchemaName) {
     super(blockSize);
@@ -240,9 +242,9 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
     List<Double> cumulProbDist = new ArrayList<>();
 
     // calculate the number of blocks
-    Pair<Long, Long> tableSizeAndBlockNumber = retrieveTableSizeAndBlockNumber(metaData);
+    Pair<Long, Integer> tableSizeAndBlockNumber = retrieveTableSizeAndBlockNumber(metaData);
     long tableSize = tableSizeAndBlockNumber.getLeft();
-    long totalNumberOfblocks = tableSizeAndBlockNumber.getRight();
+    int totalNumberOfblocks = tableSizeAndBlockNumber.getRight();
 
     DbmsQueryResult outlierProportion = 
         (DbmsQueryResult) metaData.get(OutlierProportionNode.class.getSimpleName());
@@ -293,9 +295,9 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
     List<Double> cumulProbDist = new ArrayList<>();
     
     // calculate the number of blocks
-    Pair<Long, Long> tableSizeAndBlockNumber = retrieveTableSizeAndBlockNumber(metaData);
+    Pair<Long, Integer> tableSizeAndBlockNumber = retrieveTableSizeAndBlockNumber(metaData);
     long tableSize = tableSizeAndBlockNumber.getLeft();
-    long totalNumberOfblocks = tableSizeAndBlockNumber.getRight();
+    int totalNumberOfblocks = tableSizeAndBlockNumber.getRight();
     
     if (!primaryColumnName.isPresent()) {
       while (cumulProbDist.size() < totalNumberOfblocks) {
@@ -366,9 +368,9 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
     List<Double> cumulProbDist = new ArrayList<>();
     
     // calculate the number of blocks
-    Pair<Long, Long> tableSizeAndBlockNumber = retrieveTableSizeAndBlockNumber(metaData);
+    Pair<Long, Integer> tableSizeAndBlockNumber = retrieveTableSizeAndBlockNumber(metaData);
     long tableSize = tableSizeAndBlockNumber.getLeft();
-    long totalNumberOfblocks = tableSizeAndBlockNumber.getRight();
+    int totalNumberOfblocks = tableSizeAndBlockNumber.getRight();
     
 //    System.out.println("table size: " + tableSize);
 //    System.out.println("outlier size: " + outlierSize);
@@ -402,13 +404,13 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
   }
   
   // Helper
-  private Pair<Long, Long> retrieveTableSizeAndBlockNumber(Map<String, Object> metaData) {
+  private Pair<Long, Integer> retrieveTableSizeAndBlockNumber(Map<String, Object> metaData) {
     DbmsQueryResult tableSizeResult = 
         (DbmsQueryResult) metaData.get(PercentilesAndCountNode.class.getSimpleName());
     tableSizeResult.rewind();
     tableSizeResult.next();
     long tableSize = tableSizeResult.getLong(PercentilesAndCountNode.TOTAL_COUNT_ALIAS_NAME);
-    long totalNumberOfblocks = (long) Math.ceil(tableSize / (float) blockSize);
+    totalNumberOfblocks = (int) Math.ceil(tableSize / (float) blockSize);
     return Pair.of(tableSize, totalNumberOfblocks);
   }
 
@@ -440,6 +442,16 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
   @Override
   public String getMainTableAlias() {
     return MAIN_TABLE_SOURCE_ALIAS_NAME;
+  }
+
+  @Override
+  public int getBlockCount() {
+    return totalNumberOfblocks;
+  }
+
+  @Override
+  public int getTierCount() {
+    return 3;
   }
 
 }

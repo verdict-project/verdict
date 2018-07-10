@@ -23,6 +23,8 @@ import org.verdictdb.exception.VerdictDBValueException;
 public class UniformScramblingMethod extends ScramblingMethodBase {
   
   private final String MAIN_TABLE_SOURCE_ALIAS = "t";
+  
+  private int totalNumberOfblocks = 0;
 
   public UniformScramblingMethod(long blockSize) {
     super(blockSize);
@@ -47,7 +49,7 @@ public class UniformScramblingMethod extends ScramblingMethodBase {
         (DbmsQueryResult) metaData.get(TableSizeCountNode.class.getSimpleName());
     tableSizeResult.next();
     long tableSize = tableSizeResult.getLong(TableSizeCountNode.TOTAL_COUNT_ALIAS_NAME);
-    long totalNumberOfblocks = (long) Math.ceil(tableSize / (float) blockSize);
+    totalNumberOfblocks = (int) Math.ceil(tableSize / (float) blockSize);
     
     List<Double> prob = new ArrayList<>();
     for (int i = 0; i < totalNumberOfblocks; i++) {
@@ -68,11 +70,15 @@ public class UniformScramblingMethod extends ScramblingMethodBase {
     return MAIN_TABLE_SOURCE_ALIAS;
   }
 
-//  @Override
-//  public int getBlockCount(Map<String, Object> metaData) {
-//    // TODO: infer this
-//    return 100;
-//  }
+  @Override
+  public int getBlockCount() {
+    return totalNumberOfblocks;
+  }
+
+  @Override
+  public int getTierCount() {
+    return 1;
+  }
 
 }
 
