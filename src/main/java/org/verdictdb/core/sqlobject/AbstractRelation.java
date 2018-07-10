@@ -40,7 +40,7 @@ public abstract class AbstractRelation {
     return ToStringBuilder.reflectionToString(this);
   }
 
-  public boolean isAggregateQuery() {
+  public boolean isSupportedAggregate() {
     if (!(this instanceof SelectQuery)) {
       return false;
     }

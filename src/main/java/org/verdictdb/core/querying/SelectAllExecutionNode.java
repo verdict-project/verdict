@@ -33,7 +33,7 @@ public class SelectAllExecutionNode extends QueryNodeWithPlaceHolders {
 //    String schemaName = tempTableFullName.getLeft();
 //    String tableName = tempTableFullName.getRight();
     
-    if (query.isAggregateQuery()) {
+    if (query.isSupportedAggregate()) {
       AggExecutionNode dependent = AggExecutionNode.create(namer, query);
       dependent.registerSubscriber(baseAndSubscriptionTicket.getRight());
 //      selectAll.addDependency(dependent);

@@ -97,7 +97,7 @@ public class UniformScramblingNodeTest {
     // set tokens
     List<ExecutionInfoToken> tokens = new ArrayList<>();
     ExecutionInfoToken e = new ExecutionInfoToken();
-    e.setKeyValue("queryResult", queryResult);
+    e.setKeyValue(TableSizeCountNode.class.getSimpleName(), queryResult);
     tokens.add(e);
     
     e = new ExecutionInfoToken();

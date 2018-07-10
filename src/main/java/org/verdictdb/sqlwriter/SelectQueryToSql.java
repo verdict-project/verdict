@@ -16,6 +16,7 @@ import org.verdictdb.core.sqlobject.JoinTable;
 import org.verdictdb.core.sqlobject.OrderbyAttribute;
 import org.verdictdb.core.sqlobject.SelectItem;
 import org.verdictdb.core.sqlobject.SelectQuery;
+import org.verdictdb.core.sqlobject.SetOperationRelation;
 import org.verdictdb.core.sqlobject.SubqueryColumn;
 import org.verdictdb.core.sqlobject.UnnamedColumn;
 import org.verdictdb.exception.VerdictDBException;
@@ -333,6 +334,19 @@ public class SelectQueryToSql {
       //sql.append(")");
       if (((JoinTable) relation).getAliasName().isPresent()) {
         sql.append(" as " + ((JoinTable) relation).getAliasName().toString());
+      }
+      return sql.toString();
+    }
+    if (relation instanceof SetOperationRelation) {
+      sql.append("(");
+      sql.append(selectQueryToSql((SelectQuery) ((SetOperationRelation) relation).getLeft()));
+      sql.append(" ");
+      sql.append(((SetOperationRelation) relation).getSetOpType());
+      sql.append(" ");
+      sql.append(selectQueryToSql((SelectQuery) ((SetOperationRelation) relation).getRight()));
+      sql.append(")");
+      if (relation.getAliasName().isPresent()) {
+        sql.append(" as " + relation.getAliasName().get());
       }
       return sql.toString();
     }

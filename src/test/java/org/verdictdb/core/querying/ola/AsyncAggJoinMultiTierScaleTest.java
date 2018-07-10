@@ -185,13 +185,15 @@ public class AsyncAggJoinMultiTierScaleTest {
     query = (CreateTableAsSelectQuery) queryExecutionPlan.getRoot().getSources().get(0).getSources().get(1).createQuery(Arrays.asList(token1, token2));
     actual = queryToSql.toSql(query.getSelect());
     actual = actual.replaceAll("verdictdbalias_[0-9]*_[0-9]", "alias");
-    expected = "select alias.\"verdictdbtier0\" as \"verdictdbtier0\", alias.\"verdictdbtier1\" as \"verdictdbtier1\", " +
-        "alias.\"agg0\" + alias.\"agg0\" as \"agg0\" " +
-        "from \"verdict_temp\".\"table1\" as alias, " +
-        "\"verdict_temp\".\"table2\" as alias " +
-        "where " +
-        "(alias.\"verdictdbtier0\" = alias.\"verdictdbtier0\") " +
-        "and (alias.\"verdictdbtier1\" = alias.\"verdictdbtier1\")";
+    expected = "select " +
+        "sum(unionTable.\"agg0\") as \"agg0\", " +
+        "unionTable.\"verdictdbtier0\" as \"verdictdbtier0\", " +
+        "unionTable.\"verdictdbtier1\" as \"verdictdbtier1\" " +
+        "from (" +
+        "select * from \"verdict_temp\".\"table1\" as alias " +
+        "UNION ALL " +
+        "select * from \"verdict_temp\".\"table2\" as alias) " +
+        "as unionTable group by \"verdictdbtier0\", \"verdictdbtier1\"";
     assertEquals(expected, actual);
 
     ExecutionInfoToken token3 = queryExecutionPlan.getRoot().getSources().get(0).getSources().get(0).createToken(null);
@@ -199,18 +201,18 @@ public class AsyncAggJoinMultiTierScaleTest {
     actual = queryToSql.toSql(query.getSelect());
     actual = actual.replaceAll("verdictdbtemptable_[0-9]*_[0-9]", "alias");
    /*
-    expected = "select sum(to_scale_query.\"agg0\") as \"s6\" from " +
+    expected = "select sum(verdictdbbeforescaling.\"agg0\") as \"s6\" from " +
         "(select " +
         "case " +
-        "when ((to_scale_query.\"verdictdbtier1\" = 0) = (to_scale_query.\"verdictdbtier0\" = 1)) then (2.0 * to_scale_query.\"agg0\") " +
-        "when ((to_scale_query.\"verdictdbtier1\" = 0) = (to_scale_query.\"verdictdbtier0\" = 0)) then (2.0 * to_scale_query.\"agg0\") " +
-        "when ((to_scale_query.\"verdictdbtier1\" = 1) = (to_scale_query.\"verdictdbtier0\" = 1)) then (5.0 * to_scale_query.\"agg0\") " +
-        "when ((to_scale_query.\"verdictdbtier1\" = 1) = (to_scale_query.\"verdictdbtier0\" = 0)) then (5.0 * to_scale_query.\"agg0\") " +
+        "when ((verdictdbbeforescaling.\"verdictdbtier1\" = 0) = (verdictdbbeforescaling.\"verdictdbtier0\" = 1)) then (2.0 * verdictdbbeforescaling.\"agg0\") " +
+        "when ((verdictdbbeforescaling.\"verdictdbtier1\" = 0) = (verdictdbbeforescaling.\"verdictdbtier0\" = 0)) then (2.0 * verdictdbbeforescaling.\"agg0\") " +
+        "when ((verdictdbbeforescaling.\"verdictdbtier1\" = 1) = (verdictdbbeforescaling.\"verdictdbtier0\" = 1)) then (5.0 * verdictdbbeforescaling.\"agg0\") " +
+        "when ((verdictdbbeforescaling.\"verdictdbtier1\" = 1) = (verdictdbbeforescaling.\"verdictdbtier0\" = 0)) then (5.0 * verdictdbbeforescaling.\"agg0\") " +
         "else 0 end as \"agg0\", " +
-        "to_scale_query.\"verdictdbtier0\" as \"verdictdbtier0\", " +
-        "to_scale_query.\"verdictdbtier1\" as \"verdictdbtier1\" " +
-        "from \"verdictdb_temp\".\"alias\" as to_scale_query) " +
-        "as to_scale_query";
+        "verdictdbbeforescaling.\"verdictdbtier0\" as \"verdictdbtier0\", " +
+        "verdictdbbeforescaling.\"verdictdbtier1\" as \"verdictdbtier1\" " +
+        "from \"verdictdb_temp\".\"alias\" as verdictdbbeforescaling) " +
+        "as verdictdbbeforescaling";
     assertEquals(actual, expected);
     */
   }

@@ -175,14 +175,14 @@ public class AsyncAggJoinScaleTest {
     query = (CreateTableAsSelectQuery) queryExecutionPlan.getRoot().getSources().get(0).getSources().get(1).createQuery(Arrays.asList(token1, token2));
     actual = queryToSql.toSql(query.getSelect());
     actual = actual.replaceAll("verdictdbalias_[0-9]*_[0-9]", "alias");
-    expected = "select alias.\"agg0\" + alias.\"agg0\" as \"agg0\" from \"verdict_temp\".\"table1\" as alias, \"verdict_temp\".\"table2\" as alias";
+    expected = "select sum(unionTable.\"agg0\") as \"agg0\" from (select * from \"verdict_temp\".\"table1\" as alias UNION ALL select * from \"verdict_temp\".\"table2\" as alias) as unionTable";
     assertEquals(expected, actual);
 
     ExecutionInfoToken token3 = queryExecutionPlan.getRoot().getSources().get(0).getSources().get(0).createToken(null);
     query = (CreateTableAsSelectQuery) queryExecutionPlan.getRoot().getSources().get(0).createQuery(Arrays.asList(token3));
     actual = queryToSql.toSql(query.getSelect());
     actual = actual.replaceAll("verdictdbtemptable_[0-9]*_[0-9]", "alias");
-    expected = "select 2.0 * to_scale_query.\"agg0\" as \"s6\" from \"verdictdb_temp\".\"alias\" as to_scale_query";
+    expected = "select 2.0 * verdictdbbeforescaling.\"agg0\" as \"s6\" from \"verdictdb_temp\".\"alias\" as verdictdbbeforescaling";
     assertEquals(actual, expected);
   }
 }

@@ -3,6 +3,7 @@ package org.verdictdb.sqlwriter;
 import org.verdictdb.core.sqlobject.CreateTableAsSelectQuery;
 import org.verdictdb.core.sqlobject.DropTableQuery;
 import org.verdictdb.core.sqlobject.SelectQuery;
+import org.verdictdb.core.sqlobject.SetOperationRelation;
 import org.verdictdb.core.sqlobject.SqlConvertible;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBTypeException;
@@ -27,6 +28,10 @@ public class QueryToSql {
     else if (query instanceof DropTableQuery) {
       DropTableToSql tosql = new DropTableToSql(syntax);
       return tosql.toSql((DropTableQuery) query);
+    }
+    else if (query instanceof SetOperationRelation) {
+      SetOperationToSql tosql = new SetOperationToSql(syntax);
+      return tosql.toSql((SetOperationRelation) query);
     }
     else {
       throw new VerdictDBTypeException(query);

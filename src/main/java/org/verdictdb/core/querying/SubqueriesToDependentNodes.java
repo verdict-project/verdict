@@ -38,7 +38,7 @@ public class SubqueriesToDependentNodes {
       // If the table is subquery, we need to add it to dependency
       if (source instanceof SelectQuery) {
         CreateTableAsSelectNode dep;
-        if (source.isAggregateQuery()) {
+        if (source.isSupportedAggregate()) {
           dep = AggExecutionNode.create(namer, (SelectQuery) source);
         } else {
           dep = ProjectionNode.create(namer, (SelectQuery) source);
@@ -58,7 +58,7 @@ public class SubqueriesToDependentNodes {
           // If the table is subquery, we need to add it to dependency
           if (s instanceof SelectQuery) {
             CreateTableAsSelectNode dep;
-            if (s.isAggregateQuery()) {
+            if (s.isSupportedAggregate()) {
               dep = AggExecutionNode.create(namer, (SelectQuery) s);
             } else {
               dep = ProjectionNode.create(namer, (SelectQuery) s);
@@ -98,7 +98,7 @@ public class SubqueriesToDependentNodes {
 
           CreateTableAsSelectNode dep;
           SelectQuery subquery = ((SubqueryColumn) filter).getSubquery();
-          if (subquery.isAggregateQuery()) {
+          if (subquery.isSupportedAggregate()) {
             dep = AggExecutionNode.create(namer, subquery);
 //            node.addDependency(dep);
           } else {

@@ -185,7 +185,8 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
 
   @Override
   public List<UnnamedColumn> getTierExpressions(Map<String, Object> metaData) {
-    DbmsQueryResult percentileAndCountResult = (DbmsQueryResult) metaData.get("0queryResult");
+    DbmsQueryResult percentileAndCountResult = 
+        (DbmsQueryResult) metaData.get(PercentilesAndCountNode.class.getSimpleName());
     //    String largeGroupListSchemaName = (String) metaData.get("1schemaName");
     //    String largeGroupListTableName = (String) metaData.get("1tableName");
 
@@ -198,9 +199,14 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
     // select (case ... when t2.groupSize is null then 1 else 2 end) as verdictdbtier
     // from schemaName.tableName t1 left join largeGroupSchema.largeGroupTable t2
     //   on t1.primaryGroup = t2.primaryGroup
-    String rightTableSourceAlias = FastConvergeScramblingMethod.RIGHT_TABLE_SOURCE_ALIAS_NAME;
-    UnnamedColumn tier1Predicate = ColumnOp.isnull(
-        new BaseColumn(rightTableSourceAlias, LargeGroupListNode.PRIMARY_GROUP_RENAME));
+    UnnamedColumn tier1Predicate;
+    if (!primaryColumnName.isPresent()) {
+      tier1Predicate = ColumnOp.equal(ConstantColumn.valueOf(0), ConstantColumn.valueOf(1));
+    } else {
+      String rightTableSourceAlias = FastConvergeScramblingMethod.RIGHT_TABLE_SOURCE_ALIAS_NAME;
+      tier1Predicate = ColumnOp.isnull(
+          new BaseColumn(rightTableSourceAlias, LargeGroupListNode.PRIMARY_GROUP_RENAME));
+    }
 
     // Tier 2: automatically handled by this function's caller
 
@@ -238,7 +244,8 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
     long tableSize = tableSizeAndBlockNumber.getLeft();
     long totalNumberOfblocks = tableSizeAndBlockNumber.getRight();
 
-    DbmsQueryResult outlierProportion = (DbmsQueryResult) metaData.get("1queryResult");
+    DbmsQueryResult outlierProportion = 
+        (DbmsQueryResult) metaData.get(OutlierProportionNode.class.getSimpleName());
     outlierProportion.rewind();
     outlierProportion.next();
     outlierSize = outlierProportion.getLong(0);
@@ -284,59 +291,67 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
    */
   private void populateTier1CumulProbDist(Map<String, Object> metaData) {
     List<Double> cumulProbDist = new ArrayList<>();
-
+    
     // calculate the number of blocks
     Pair<Long, Long> tableSizeAndBlockNumber = retrieveTableSizeAndBlockNumber(metaData);
     long tableSize = tableSizeAndBlockNumber.getLeft();
     long totalNumberOfblocks = tableSizeAndBlockNumber.getRight();
     
-    // obtain total large group size
-    DbmsQueryResult largeGroupSizeResult = (DbmsQueryResult) metaData.get("3queryResult");
-    largeGroupSizeResult.rewind();
-    largeGroupSizeResult.next();
-    long largeGroupSizeSum = largeGroupSizeResult.getLong(0);
-    smallGroupSizeSum = tableSize - largeGroupSizeSum;
-    
-    // count the remaining size (after tier0)
-    long totalRemainingSizeUnderP1 = 0;
-    for (int i = 0; i < tier0CumulProbDist.size(); i++) {
-      if (i == 0) {
-        totalRemainingSizeUnderP1 += blockSize * p1 - outlierSize * tier0CumulProbDist.get(i);
-      } else {
-        totalRemainingSizeUnderP1 += blockSize * p1 - outlierSize * (tier0CumulProbDist.get(i) - tier0CumulProbDist.get(i-1));
-      }
-    }
-    
-    // In this extreme case (i.e., the sum of the sizes of small groups is too big),
-    // we simply uniformly distribute them.
-    if (smallGroupSizeSum >= totalRemainingSizeUnderP1) {
-      for (int i = 0; i < totalNumberOfblocks; i++) {
-        cumulProbDist.add((i+1) / (double) totalNumberOfblocks);
-      }
-    } 
-    // Otherwise, we fill up to (p1 - p0) portion within each block.
-    else {
-      long remainingSize = smallGroupSizeSum;
-      
-      while (remainingSize > 0) {
-        if (remainingSize <= (p1 - p0) * blockSize) {
-          cumulProbDist.add(1.0);
-          break;
-        } else {
-          long thisBlockSize = (long) (blockSize * (p1 - p0));
-          double ratio = thisBlockSize / smallGroupSizeSum;
-          if (cumulProbDist.size() == 0) {
-            cumulProbDist.add(ratio);
-          } else {
-            cumulProbDist.add(cumulProbDist.get(cumulProbDist.size()-1) + ratio);
-          }
-          remainingSize -= thisBlockSize;
-        }
-      }
-      
-      // in case where the length of the prob distribution is not equal to the total block number
+    if (!primaryColumnName.isPresent()) {
       while (cumulProbDist.size() < totalNumberOfblocks) {
         cumulProbDist.add(1.0);
+      }
+    }
+    else {
+      // obtain total large group size
+      DbmsQueryResult largeGroupSizeResult = 
+          (DbmsQueryResult) metaData.get(LargeGroupSizeNode.class.getSimpleName());
+      largeGroupSizeResult.rewind();
+      largeGroupSizeResult.next();
+      long largeGroupSizeSum = largeGroupSizeResult.getLong(0);
+      smallGroupSizeSum = tableSize - largeGroupSizeSum;
+
+      // count the remaining size (after tier0)
+      long totalRemainingSizeUnderP1 = 0;
+      for (int i = 0; i < tier0CumulProbDist.size(); i++) {
+        if (i == 0) {
+          totalRemainingSizeUnderP1 += blockSize * p1 - outlierSize * tier0CumulProbDist.get(i);
+        } else {
+          totalRemainingSizeUnderP1 += blockSize * p1 - outlierSize * (tier0CumulProbDist.get(i) - tier0CumulProbDist.get(i-1));
+        }
+      }
+
+      // In this extreme case (i.e., the sum of the sizes of small groups is too big),
+      // we simply uniformly distribute them.
+      if (smallGroupSizeSum >= totalRemainingSizeUnderP1) {
+        for (int i = 0; i < totalNumberOfblocks; i++) {
+          cumulProbDist.add((i+1) / (double) totalNumberOfblocks);
+        }
+      } 
+      // Otherwise, we fill up to (p1 - p0) portion within each block.
+      else {
+        long remainingSize = smallGroupSizeSum;
+
+        while (remainingSize > 0) {
+          if (remainingSize <= (p1 - p0) * blockSize) {
+            cumulProbDist.add(1.0);
+            break;
+          } else {
+            long thisBlockSize = (long) (blockSize * (p1 - p0));
+            double ratio = thisBlockSize / smallGroupSizeSum;
+            if (cumulProbDist.size() == 0) {
+              cumulProbDist.add(ratio);
+            } else {
+              cumulProbDist.add(cumulProbDist.get(cumulProbDist.size()-1) + ratio);
+            }
+            remainingSize -= thisBlockSize;
+          }
+        }
+
+        // in case where the length of the prob distribution is not equal to the total block number
+        while (cumulProbDist.size() < totalNumberOfblocks) {
+          cumulProbDist.add(1.0);
+        }
       }
     }
 
@@ -355,9 +370,9 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
     long tableSize = tableSizeAndBlockNumber.getLeft();
     long totalNumberOfblocks = tableSizeAndBlockNumber.getRight();
     
-    System.out.println("table size: " + tableSize);
-    System.out.println("outlier size: " + outlierSize);
-    System.out.println("small group size: " + smallGroupSizeSum);
+//    System.out.println("table size: " + tableSize);
+//    System.out.println("outlier size: " + outlierSize);
+//    System.out.println("small group size: " + smallGroupSizeSum);
     long tier2Size = tableSize - outlierSize - smallGroupSizeSum;
     
     for (int i = 0; i < totalNumberOfblocks; i++) {
@@ -384,7 +399,8 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
   
   // Helper
   private Pair<Long, Long> retrieveTableSizeAndBlockNumber(Map<String, Object> metaData) {
-    DbmsQueryResult tableSizeResult = (DbmsQueryResult) metaData.get("0queryResult");
+    DbmsQueryResult tableSizeResult = 
+        (DbmsQueryResult) metaData.get(PercentilesAndCountNode.class.getSimpleName());
     tableSizeResult.rewind();
     tableSizeResult.next();
     long tableSize = tableSizeResult.getLong(PercentilesAndCountNode.TOTAL_COUNT_ALIAS_NAME);
@@ -394,10 +410,12 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
 
   @Override
   public AbstractRelation getScramblingSource(String originalSchema, String originalTable, Map<String, Object> metaData) {
-    String largeGroupListSchemaName = (String) metaData.get("2schemaName");
-    String largeGroupListTableName = (String) metaData.get("2tableName");
-    
     if (primaryColumnName.isPresent()) {
+      Pair<String, String> fullTableName = 
+          (Pair<String, String>) metaData.get(LargeGroupListNode.class.getSimpleName());
+      String largeGroupListSchemaName = fullTableName.getLeft();
+      String largeGroupListTableName = fullTableName.getRight();
+      
       JoinTable source = JoinTable.create(
           Arrays.<AbstractRelation>asList(
               new BaseTable(originalSchema, originalTable, MAIN_TABLE_SOURCE_ALIAS_NAME),
@@ -503,6 +521,13 @@ class PercentilesAndCountNode extends QueryNodeBase {
     }
     return numericColumns;
   }
+  
+  @Override
+  public ExecutionInfoToken createToken(DbmsQueryResult result) {
+    ExecutionInfoToken token = new ExecutionInfoToken();
+    token.setKeyValue(this.getClass().getSimpleName(), result);
+    return token;
+  }
 
 }
 
@@ -531,7 +556,8 @@ class OutlierProportionNode extends QueryNodeBase {
 
   @Override
   public SqlConvertible createQuery(List<ExecutionInfoToken> tokens) throws VerdictDBException {
-    DbmsQueryResult percentileAndCountResult = (DbmsQueryResult) tokens.get(0).getValue("queryResult");
+    DbmsQueryResult percentileAndCountResult = 
+        (DbmsQueryResult) tokens.get(0).getValue(PercentilesAndCountNode.class.getSimpleName());
     String tableSourceAliasName = FastConvergeScramblingMethod.MAIN_TABLE_SOURCE_ALIAS_NAME;
     UnnamedColumn outlierPrediacte = 
         FastConvergeScramblingMethod.createOutlierTuplePredicate(percentileAndCountResult, tableSourceAliasName);
@@ -542,6 +568,13 @@ class OutlierProportionNode extends QueryNodeBase {
     selectQuery.addFilterByAnd(outlierPrediacte);
 
     return selectQuery;
+  }
+  
+  @Override
+  public ExecutionInfoToken createToken(DbmsQueryResult result) {
+    ExecutionInfoToken token = new ExecutionInfoToken();
+    token.setKeyValue(this.getClass().getSimpleName(), result);
+    return token;
   }
 
 }
@@ -606,6 +639,17 @@ class LargeGroupListNode extends CreateTableAsSelectNode {
     this.selectQuery = selectQuery;
     return super.createQuery(tokens);
   }
+  
+  @Override
+  public ExecutionInfoToken createToken(DbmsQueryResult result) {
+    ExecutionInfoToken token = super.createToken(result);
+    Pair<String, String> fullTableName = 
+        Pair.of((String) token.getValue("schemaName"), (String) token.getValue("tableName"));
+    
+    // set duplicate information for convenience
+    token.setKeyValue(this.getClass().getSimpleName(), fullTableName);
+    return token;
+  }
 
 }
 
@@ -643,9 +687,16 @@ class LargeGroupSizeNode extends QueryNodeWithPlaceHolders {
             ColumnOp.sum(new BaseColumn(tableSourceAlias, groupSizeAlias)), 
             aliasName),
         baseTable);
-
+    
     super.createQuery(tokens);      // placeholder replacements performed here
     return selectQuery;
+  }
+  
+  @Override
+  public ExecutionInfoToken createToken(DbmsQueryResult result) {
+    ExecutionInfoToken token = new ExecutionInfoToken();
+    token.setKeyValue(this.getClass().getSimpleName(), result);
+    return token;
   }
 
 }
