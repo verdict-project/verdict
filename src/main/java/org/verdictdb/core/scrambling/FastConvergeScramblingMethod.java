@@ -82,7 +82,7 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
   
   public static final String RIGHT_TABLE_SOURCE_ALIAS_NAME = "t2";
   
-  private int totalNumberOfblocks = 0;
+  private int totalNumberOfblocks = -1;
   
 
   public FastConvergeScramblingMethod(long blockSize, String scratchpadSchemaName) {

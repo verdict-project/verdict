@@ -24,7 +24,7 @@ public class UniformScramblingMethod extends ScramblingMethodBase {
   
   private final String MAIN_TABLE_SOURCE_ALIAS = "t";
   
-  private int totalNumberOfblocks = 0;
+  private int totalNumberOfblocks = -1;
 
   public UniformScramblingMethod(long blockSize) {
     super(blockSize);

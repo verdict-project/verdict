@@ -21,12 +21,15 @@ public class ScramblingCoordinator {
   // default options
   // some key names (tierColumnName, blockColumnName) are also used by ScramblingNode; thus, they cannot
   // be modified arbitrarily.
-  Map<String, String> options = ImmutableMap.<String, String>builder()
-      .put("tierColumnName", "verdictdbtier")
-      .put("blockColumnName", "verdictdbblock")
-      .put("scrambleTableSuffix", "_scrambled")
-      .put("scrambleTableBlockSize", "1e6")
-      .build();
+  @SuppressWarnings("serial")
+  Map<String, String> options = new HashMap<String, String>() {
+    {
+      put("tierColumnName", "verdictdbtier");
+      put("blockColumnName", "verdictdbblock");
+      put("scrambleTableSuffix", "_scrambled");
+      put("scrambleTableBlockSize", "1e6");
+    }
+  };
 
   DbmsConnection conn;
 
@@ -34,24 +37,25 @@ public class ScramblingCoordinator {
   
   Optional<String> scratchpadSchema;
   
-  public ScramblingCoordinator() {
-    scrambleSchema = Optional.absent();
+  public ScramblingCoordinator(DbmsConnection conn) {
+    this(conn, null);
   }
 
-  public ScramblingCoordinator(String scrambleSchema) {
-    this.scrambleSchema = Optional.of(scrambleSchema);
-    this.scratchpadSchema = Optional.of(scrambleSchema);    // uses the same schema
+  public ScramblingCoordinator(DbmsConnection conn, String scrambleSchema) {
+    this(conn, scrambleSchema, scrambleSchema);           // uses the same schema
   }
   
-  public ScramblingCoordinator(String scrambleSchema, String scratchpadSchema) {
-    this.scrambleSchema = Optional.of(scrambleSchema);
-    this.scratchpadSchema = Optional.of(scratchpadSchema);
+  public ScramblingCoordinator(DbmsConnection conn, String scrambleSchema, String scratchpadSchema) {
+    this(conn, scrambleSchema, scratchpadSchema, null);
   }
   
-  public ScramblingCoordinator(String scrambleSchema, String scratchpadSchema, long blockSize) {
-    this.scrambleSchema = Optional.of(scrambleSchema);
-    this.scratchpadSchema = Optional.of(scratchpadSchema);
-    options.put("scrambleTableBlockSize", String.valueOf(blockSize));
+  public ScramblingCoordinator(DbmsConnection conn, String scrambleSchema, String scratchpadSchema, Long blockSize) {
+    this.conn = conn;
+    this.scrambleSchema = Optional.fromNullable(scrambleSchema);
+    this.scratchpadSchema = Optional.fromNullable(scratchpadSchema);
+    if (blockSize != null) {
+      options.put("scrambleTableBlockSize", String.valueOf(blockSize));
+    }
   }
 
   /**
@@ -102,7 +106,7 @@ public class ScramblingCoordinator {
     }
     
     // perform scrambling
-    ScramblingPlan plan = ScramblingPlan.create(originalSchema, originalTable, newSchema, newTable, scramblingMethod, options);
+    ScramblingPlan plan = ScramblingPlan.create(newSchema, newTable, originalSchema, originalTable, scramblingMethod, options);
     ExecutablePlanRunner.runTillEnd(conn, plan);
     
     // compose scramble meta

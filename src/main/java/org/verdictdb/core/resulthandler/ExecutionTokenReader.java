@@ -30,7 +30,7 @@ public class ExecutionTokenReader implements Iterable<ExecutionInfoToken>, Itera
     queueBuffer = queue.take();
     
     if (queueBuffer.isFailureToken()) {
-      VerdictDBException e = (VerdictDBException) queueBuffer.getValue("errorMessage");
+      Exception e = (Exception) queueBuffer.getValue("errorMessage");
       if (e != null) {
         throw new RuntimeException(e);
       }
