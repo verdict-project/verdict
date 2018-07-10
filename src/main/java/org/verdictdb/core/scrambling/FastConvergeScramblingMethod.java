@@ -415,6 +415,7 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
   @Override
   public AbstractRelation getScramblingSource(String originalSchema, String originalTable, Map<String, Object> metaData) {
     if (primaryColumnName.isPresent()) {
+      @SuppressWarnings("unchecked")
       Pair<String, String> fullTableName = 
           (Pair<String, String>) metaData.get(LargeGroupListNode.class.getSimpleName());
       String largeGroupListSchemaName = fullTableName.getLeft();

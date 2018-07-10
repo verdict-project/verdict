@@ -11,6 +11,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.core.connection.DbmsConnection;
+import org.verdictdb.core.connection.DbmsQueryResult;
 import org.verdictdb.core.connection.JdbcConnection;
 import org.verdictdb.core.execution.ExecutablePlanRunner;
 import org.verdictdb.exception.VerdictDBException;
@@ -88,14 +89,16 @@ public class UniformScramblingPlanTest {
   
   @Test
   public void testUniformScramblingPlanNonEmptyTable() throws VerdictDBException, SQLException {
-    mysqlConn.createStatement().execute("insert into oldschema.oldtable values (1)");
+    for (int i = 0; i < 10; i++) {
+      mysqlConn.createStatement().execute(String.format("insert into oldschema.oldtable values (%d)", i));
+    }
     
     String newSchemaName = "newschema";
     String newTableName = "newtable";
     String oldSchemaName = "oldschema";
     String oldTableName = "oldtable";
-    int blockCount = 10;
-    ScramblingMethod method = new UniformScramblingMethod(blockCount);
+    int blockSize = 2;
+    ScramblingMethod method = new UniformScramblingMethod(blockSize);
     Map<String, String> options = new HashMap<>();
     options.put("tierColumnName", "tiercolumn");
     options.put("blockColumnName", "blockcolumn");
@@ -111,6 +114,9 @@ public class UniformScramblingPlanTest {
     
     DbmsConnection conn = new JdbcConnection(mysqlConn);
     ExecutablePlanRunner.runTillEnd(conn, plan);
+    
+    DbmsQueryResult result = conn.execute(String.format("select * from %s.%s", newSchemaName, newTableName));
+    result.printContent();
     
     mysqlConn.createStatement().execute("delete from oldschema.oldtable");
   }

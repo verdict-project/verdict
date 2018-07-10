@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -105,11 +106,17 @@ public class UniformScramblingNodeTest {
     e.setKeyValue("tableName", newTableName);
     tokens.add(e);
     
+    e = new ExecutionInfoToken();
+    List<Pair<String, String>> columnNamesAndTypes = new ArrayList<>();
+    columnNamesAndTypes.add(Pair.of("id", "smallint"));
+    e.setKeyValue(ScramblingPlan.COLUMN_METADATA_KEY, columnNamesAndTypes);
+    tokens.add(e);
+    
     SqlConvertible query = node.createQuery(tokens);
     sql = QueryToSql.convert(new MysqlSyntax(), query);
     String expected = "create table `newschema`.`newtable` "
         + "partition by key (`blockcolumn`) "
-        + "select *, 0 as `tiercolumn`, "
+        + "select t.`id`, 0 as `tiercolumn`, "
         + "case when (rand() <= 0.3333333333333333) then 0 "
         + "when (rand() <= 0.49999999999999994) then 1 "
         + "when (rand() <= 1.0) then 2 else 2 end as `blockcolumn` "
