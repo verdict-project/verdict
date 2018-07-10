@@ -1380,6 +1380,7 @@ public class TpchExecutionPlanTest {
 
   // Query 15 is a non aggregate query, add avg(s_suppkey) to be an aggregate one
   //@Test
+  // TODO: Just use view
   public void IncompleteQuery15Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select " +
@@ -1473,6 +1474,8 @@ public class TpchExecutionPlanTest {
   }
 
   //@Test
+  // TODO: check if the original (simpler) query works.
+  // TODO: check the converted structure.
   public void Query17Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select\n" +
@@ -2040,6 +2043,7 @@ public class TpchExecutionPlanTest {
   }
 
   @Test
+  // TODO: don't include this query in Async
   public void Query22Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select\n" +
