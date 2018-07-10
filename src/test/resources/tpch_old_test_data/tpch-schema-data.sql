@@ -7,7 +7,7 @@ CREATE TABLE  IF NOT EXISTS tpch.nation  (n_nationkey  INT,
                             FIELDS TERMINATED BY '|'
                             STORED AS TEXTFILE;
 
-LOAD DATA local inpath 'src/test/resources/nation.tbl' overwrite into table tpch.nation;
+LOAD DATA local inpath 'src/test/resources/tpch_old_test_data/nation.tbl' overwrite into table tpch.nation;
 
 CREATE TABLE  IF NOT EXISTS tpch.region  (r_regionkey  INT,
                             r_name       CHAR(25),
@@ -17,7 +17,7 @@ CREATE TABLE  IF NOT EXISTS tpch.region  (r_regionkey  INT,
                             FIELDS TERMINATED BY '|'
                             STORED AS TEXTFILE;
 
-LOAD DATA local inpath 'src/test/resources/region.tbl' overwrite into table tpch.region;
+LOAD DATA local inpath 'src/test/resources/tpch_old_test_data/region.tbl' overwrite into table tpch.region;
 
 CREATE TABLE  IF NOT EXISTS tpch.part  ( p_partkey     INT,
                           p_name        VARCHAR(55),
@@ -33,7 +33,7 @@ CREATE TABLE  IF NOT EXISTS tpch.part  ( p_partkey     INT,
                           FIELDS TERMINATED BY '|'
                           STORED AS TEXTFILE;
 
-LOAD DATA local inpath 'src/test/resources/part.tbl' overwrite into table tpch.part;
+LOAD DATA local inpath 'src/test/resources/tpch_old_test_data/part.tbl' overwrite into table tpch.part;
 
 
 CREATE TABLE  IF NOT EXISTS tpch.supplier ( s_suppkey     INT ,
@@ -48,7 +48,7 @@ CREATE TABLE  IF NOT EXISTS tpch.supplier ( s_suppkey     INT ,
                              FIELDS TERMINATED BY '|'
                              STORED AS TEXTFILE;
 
-LOAD DATA local inpath 'src/test/resources/supplier.tbl' overwrite into table tpch.supplier;
+LOAD DATA local inpath 'src/test/resources/tpch_old_test_data/supplier.tbl' overwrite into table tpch.supplier;
 
 CREATE TABLE  IF NOT EXISTS tpch.partsupp ( ps_partkey     INT ,
                              ps_suppkey     INT ,
@@ -60,7 +60,7 @@ CREATE TABLE  IF NOT EXISTS tpch.partsupp ( ps_partkey     INT ,
                              FIELDS TERMINATED BY '|'
                              STORED AS TEXTFILE;
 
-LOAD DATA local inpath 'src/test/resources/partsupp.tbl' overwrite into table tpch.partsupp;
+LOAD DATA local inpath 'src/test/resources/tpch_old_test_data/partsupp.tbl' overwrite into table tpch.partsupp;
 
 CREATE TABLE  IF NOT EXISTS tpch.customer ( c_custkey     INT ,
                              c_name        VARCHAR(25) ,
@@ -75,7 +75,7 @@ CREATE TABLE  IF NOT EXISTS tpch.customer ( c_custkey     INT ,
                              FIELDS TERMINATED BY '|'
                              STORED AS TEXTFILE;
 
-LOAD DATA local inpath 'src/test/resources/customer.tbl' overwrite into table tpch.customer;
+LOAD DATA local inpath 'src/test/resources/tpch_old_test_data/customer.tbl' overwrite into table tpch.customer;
 
 CREATE TABLE IF NOT EXISTS  tpch.orders  ( o_orderkey       INT ,
                            o_custkey        INT ,
@@ -91,7 +91,7 @@ CREATE TABLE IF NOT EXISTS  tpch.orders  ( o_orderkey       INT ,
                            FIELDS TERMINATED BY '|'
                            STORED AS TEXTFILE;
 
-LOAD DATA local inpath 'src/test/resources/orders.tbl' overwrite into table tpch.orders;
+LOAD DATA local inpath 'src/test/resources/tpch_old_test_data/orders.tbl' overwrite into table tpch.orders;
 
 CREATE TABLE  IF NOT EXISTS tpch.lineitem ( l_orderkey    INT ,
                              l_partkey     INT ,
@@ -114,5 +114,5 @@ CREATE TABLE  IF NOT EXISTS tpch.lineitem ( l_orderkey    INT ,
                              FIELDS TERMINATED BY '|'
                              STORED AS TEXTFILE;
 
-LOAD DATA local inpath 'src/test/resources/lineitem.tbl' overwrite into table tpch.lineitem;
+LOAD DATA local inpath 'src/test/resources/tpch_old_test_data/lineitem.tbl' overwrite into table tpch.lineitem;
 
