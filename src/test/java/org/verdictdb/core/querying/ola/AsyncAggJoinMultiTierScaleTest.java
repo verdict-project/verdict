@@ -199,18 +199,18 @@ public class AsyncAggJoinMultiTierScaleTest {
     actual = queryToSql.toSql(query.getSelect());
     actual = actual.replaceAll("verdictdbtemptable_[0-9]*_[0-9]", "alias");
    /*
-    expected = "select sum(to_scale_query.\"agg0\") as \"s6\" from " +
+    expected = "select sum(verdictdbbeforescaling.\"agg0\") as \"s6\" from " +
         "(select " +
         "case " +
-        "when ((to_scale_query.\"verdictdbtier1\" = 0) = (to_scale_query.\"verdictdbtier0\" = 1)) then (2.0 * to_scale_query.\"agg0\") " +
-        "when ((to_scale_query.\"verdictdbtier1\" = 0) = (to_scale_query.\"verdictdbtier0\" = 0)) then (2.0 * to_scale_query.\"agg0\") " +
-        "when ((to_scale_query.\"verdictdbtier1\" = 1) = (to_scale_query.\"verdictdbtier0\" = 1)) then (5.0 * to_scale_query.\"agg0\") " +
-        "when ((to_scale_query.\"verdictdbtier1\" = 1) = (to_scale_query.\"verdictdbtier0\" = 0)) then (5.0 * to_scale_query.\"agg0\") " +
+        "when ((verdictdbbeforescaling.\"verdictdbtier1\" = 0) = (verdictdbbeforescaling.\"verdictdbtier0\" = 1)) then (2.0 * verdictdbbeforescaling.\"agg0\") " +
+        "when ((verdictdbbeforescaling.\"verdictdbtier1\" = 0) = (verdictdbbeforescaling.\"verdictdbtier0\" = 0)) then (2.0 * verdictdbbeforescaling.\"agg0\") " +
+        "when ((verdictdbbeforescaling.\"verdictdbtier1\" = 1) = (verdictdbbeforescaling.\"verdictdbtier0\" = 1)) then (5.0 * verdictdbbeforescaling.\"agg0\") " +
+        "when ((verdictdbbeforescaling.\"verdictdbtier1\" = 1) = (verdictdbbeforescaling.\"verdictdbtier0\" = 0)) then (5.0 * verdictdbbeforescaling.\"agg0\") " +
         "else 0 end as \"agg0\", " +
-        "to_scale_query.\"verdictdbtier0\" as \"verdictdbtier0\", " +
-        "to_scale_query.\"verdictdbtier1\" as \"verdictdbtier1\" " +
-        "from \"verdictdb_temp\".\"alias\" as to_scale_query) " +
-        "as to_scale_query";
+        "verdictdbbeforescaling.\"verdictdbtier0\" as \"verdictdbtier0\", " +
+        "verdictdbbeforescaling.\"verdictdbtier1\" as \"verdictdbtier1\" " +
+        "from \"verdictdb_temp\".\"alias\" as verdictdbbeforescaling) " +
+        "as verdictdbbeforescaling";
     assertEquals(actual, expected);
     */
   }

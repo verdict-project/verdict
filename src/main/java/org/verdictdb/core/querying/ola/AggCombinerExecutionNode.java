@@ -2,6 +2,7 @@ package org.verdictdb.core.querying.ola;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -12,14 +13,7 @@ import org.verdictdb.core.querying.ExecutableNodeBase;
 import org.verdictdb.core.querying.IdCreator;
 import org.verdictdb.core.querying.QueryNodeBase;
 import org.verdictdb.core.querying.SubscriptionTicket;
-import org.verdictdb.core.sqlobject.AbstractRelation;
-import org.verdictdb.core.sqlobject.AliasedColumn;
-import org.verdictdb.core.sqlobject.BaseColumn;
-import org.verdictdb.core.sqlobject.BaseTable;
-import org.verdictdb.core.sqlobject.ColumnOp;
-import org.verdictdb.core.sqlobject.SelectItem;
-import org.verdictdb.core.sqlobject.SelectQuery;
-import org.verdictdb.core.sqlobject.SqlConvertible;
+import org.verdictdb.core.sqlobject.*;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBValueException;
 
@@ -71,8 +65,14 @@ public class AggCombinerExecutionNode extends CreateTableAsSelectNode {
     // retrieves the select list
     List<String> groupAliasNames = new ArrayList<>();
     List<String> measureAliasNames = new ArrayList<>();
+    HashMap<String, String> maxminAliasNames = new HashMap<>();
     for (SelectItem item : rightQuery.getSelectList()) {
       if (item.isAggregateColumn()) {
+        if (item instanceof AliasedColumn && ((AliasedColumn) item).getColumn() instanceof ColumnOp
+            && (((ColumnOp) ((AliasedColumn) item).getColumn()).getOpType().equals("max")
+            || ((ColumnOp) ((AliasedColumn) item).getColumn()).getOpType().equals("min"))) {
+          maxminAliasNames.put(((AliasedColumn) item).getAliasName(), ((ColumnOp) ((AliasedColumn) item).getColumn()).getOpType());
+        }
         measureAliasNames.add(((AliasedColumn) item).getAliasName());
       } else {
         groupAliasNames.add(((AliasedColumn) item).getAliasName());
@@ -89,7 +89,26 @@ public class AggCombinerExecutionNode extends CreateTableAsSelectNode {
       groupItems.add(new AliasedColumn(new BaseColumn(leftAliasName, a), a));
     }
     for (String a : measureAliasNames) {
-      measureItems.add(new AliasedColumn(
+      if (maxminAliasNames.keySet().contains(a)) {
+        if (maxminAliasNames.get(a).equals("max")) {
+          measureItems.add(new AliasedColumn(
+              new ColumnOp("whenthenelse", Arrays.asList(
+                  new ColumnOp("greater", Arrays.<UnnamedColumn>asList(new BaseColumn(leftAliasName, a), new BaseColumn(rightAliasName, a))),
+                  new BaseColumn(leftAliasName, a),
+                  new BaseColumn(rightAliasName, a)
+              )),
+              a));
+        } else {
+          measureItems.add(new AliasedColumn(
+              new ColumnOp("whenthenelse", Arrays.asList(
+                  new ColumnOp("less", Arrays.<UnnamedColumn>asList(new BaseColumn(leftAliasName, a), new BaseColumn(rightAliasName, a))),
+                  new BaseColumn(leftAliasName, a),
+                  new BaseColumn(rightAliasName, a)
+              )),
+              a));
+        }
+      }
+      else measureItems.add(new AliasedColumn(
           ColumnOp.add(new BaseColumn(leftAliasName, a), new BaseColumn(rightAliasName, a)),
           a));
     }
@@ -119,6 +138,8 @@ public class AggCombinerExecutionNode extends CreateTableAsSelectNode {
         this.aggMeta.setOriginalSelectList(aggMeta.getOriginalSelectList());
         this.aggMeta.setAggColumn(aggMeta.getAggColumn());
         this.aggMeta.setAggColumnAggAliasPair(aggMeta.getAggColumnAggAliasPair());
+        this.aggMeta.setAggColumnAggAliasPairOfMaxMin(aggMeta.getAggColumnAggAliasPairOfMaxMin());
+        this.aggMeta.setMaxminAggAlias(aggMeta.getMaxminAggAlias());
       }
     }
     return super.createQuery(tokens);
