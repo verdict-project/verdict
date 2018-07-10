@@ -91,7 +91,8 @@ public class FastConvergeScramblingMethodTest {
     String actual = sql.replaceAll("verdictdbtemptable_\\d+_\\d+", "verdictdbtemptable");
     
     String expected = "create table `verdictdbtempSchema`.`verdictdbtemptable` "
-        + "as select t.`pcolumn`, count(*) * (1.0 / 0.001) as `groupSize` "
+        + "as select t.`pcolumn` as `verdictdbrenameprimarygroup`, "
+        + "count(*) * (1.0 / 0.001) as `groupSize` "
         + "from `oldSchema`.`oldTable` as t "
         + "where rand() < 0.001 "
         + "group by `pcolumn`";

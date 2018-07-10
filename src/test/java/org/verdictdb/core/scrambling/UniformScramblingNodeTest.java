@@ -113,7 +113,7 @@ public class UniformScramblingNodeTest {
         + "case when (rand() <= 0.3333333333333333) then 0 "
         + "when (rand() <= 0.49999999999999994) then 1 "
         + "when (rand() <= 1.0) then 2 else 2 end as `blockcolumn` "
-        + "from `oldschema`.`oldtable`";
+        + "from `oldschema`.`oldtable` as t";
     assertEquals(expected, sql);
     mysqlConn.createStatement().execute("drop table if exists newschema.newtable");
     mysqlConn.createStatement().execute(sql);
