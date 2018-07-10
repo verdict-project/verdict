@@ -89,6 +89,34 @@ public class FastConvergeScramblingPlanTest {
     ExecutablePlanRunner.runTillEnd(conn, plan);
   }
   
+  @Test
+  public void testFastConvergeScramblingPlanEmptyTableNoPrimaryGroup() throws VerdictDBException, SQLException {
+    mysqlConn.createStatement().execute("delete from oldschema.oldtable");
+    
+    String newSchemaName = "newschema";
+    String newTableName = "newtable";
+    String oldSchemaName = "oldschema";
+    String oldTableName = "oldtable";
+    String scratchpadSchemaName = "oldschema";
+//    String primaryColumn = "orderdate";
+    int blockSize = 2;
+    ScramblingMethod method = new FastConvergeScramblingMethod(blockSize, scratchpadSchemaName);
+    Map<String, String> options = new HashMap<>();
+    options.put("tierColumnName", "tiercolumn");
+    options.put("blockColumnName", "blockcolumn");
+    options.put("blockCount", "3");
+    
+    mysqlConn.createStatement().execute(
+        String.format("drop table if exists %s.%s", newSchemaName, newTableName));
+    ScramblingPlan plan = ScramblingPlan.create(
+        newSchemaName, newTableName,
+        oldSchemaName, oldTableName,
+        method, options);
+//    System.out.println(plan.getReportingNode());
+    
+    DbmsConnection conn = new JdbcConnection(mysqlConn);
+    ExecutablePlanRunner.runTillEnd(conn, plan);
+  }
   
   @Test
   public void testFastConvergeScramblingPlanNonEmptyTable() throws VerdictDBException, SQLException {
@@ -123,4 +151,35 @@ public class FastConvergeScramblingPlanTest {
     ExecutablePlanRunner.runTillEnd(conn, plan);
   }
 
+  @Test
+  public void testFastConvergeScramblingPlanNonEmptyTableNoPrimaryGroup() throws VerdictDBException, SQLException {
+    mysqlConn.createStatement().execute("delete from oldschema.oldtable");
+    for (int i = 0; i < 10; i++) {
+      mysqlConn.createStatement().execute(
+          String.format("insert into oldschema.oldtable values (%d, %d)", i%2, i));
+    }
+    
+    String newSchemaName = "newschema";
+    String newTableName = "newtable";
+    String oldSchemaName = "oldschema";
+    String oldTableName = "oldtable";
+    String scratchpadSchemaName = "oldschema";
+//    String primaryColumn = "orderdate";
+    int blockSize = 2;
+    ScramblingMethod method = new FastConvergeScramblingMethod(blockSize, scratchpadSchemaName);
+    Map<String, String> options = new HashMap<>();
+    options.put("tierColumnName", "tiercolumn");
+    options.put("blockColumnName", "blockcolumn");
+    
+    mysqlConn.createStatement().execute(
+        String.format("drop table if exists %s.%s", newSchemaName, newTableName));
+    ScramblingPlan plan = ScramblingPlan.create(
+        newSchemaName, newTableName,
+        oldSchemaName, oldTableName,
+        method, options);
+//    System.out.println(plan.getReportingNode());
+    
+    DbmsConnection conn = new JdbcConnection(mysqlConn);
+    ExecutablePlanRunner.runTillEnd(conn, plan);
+  }
 }

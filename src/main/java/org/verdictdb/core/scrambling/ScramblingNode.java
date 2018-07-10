@@ -90,14 +90,12 @@ public class ScramblingNode extends CreateTableAsSelectNode {
   @Override
   public SqlConvertible createQuery(List<ExecutionInfoToken> tokens) throws VerdictDBException {
     Map<String, Object> metaData = new HashMap<>();
-    int idx = 0;
     for (ExecutionInfoToken token : tokens) {
       for (Entry<String, Object> keyValue : token.entrySet()) {
         String key = keyValue.getKey();
         Object value = keyValue.getValue();
-        metaData.put(idx + key, value);
+        metaData.put(key, value);
       }
-      idx++;
     }
 //    if (tokens.size() > 0) {
 //      statistics = (DbmsQueryResult) tokens.get(0).getValue("queryResult");
