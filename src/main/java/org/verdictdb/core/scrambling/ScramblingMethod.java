@@ -47,5 +47,7 @@ public interface ScramblingMethod {
    * @return
    */
   public AbstractRelation getScramblingSource(String originalSchema, String originalTable, Map<String, Object> metaData);
+  
+  public String getMainTableAlias();
 
 }

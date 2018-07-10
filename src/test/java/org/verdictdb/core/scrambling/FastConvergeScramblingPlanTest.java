@@ -10,6 +10,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.core.connection.DbmsConnection;
+import org.verdictdb.core.connection.DbmsQueryResult;
 import org.verdictdb.core.connection.JdbcConnection;
 import org.verdictdb.core.execution.ExecutablePlanRunner;
 import org.verdictdb.exception.VerdictDBException;
@@ -146,6 +147,9 @@ public class FastConvergeScramblingPlanTest {
     
     DbmsConnection conn = new JdbcConnection(mysqlConn);
     ExecutablePlanRunner.runTillEnd(conn, plan);
+    
+    DbmsQueryResult result = conn.execute(String.format("select * from %s.%s", newSchemaName, newTableName));
+    result.printContent();
   }
 
   @Test
@@ -178,5 +182,8 @@ public class FastConvergeScramblingPlanTest {
     
     DbmsConnection conn = new JdbcConnection(mysqlConn);
     ExecutablePlanRunner.runTillEnd(conn, plan);
+    
+    DbmsQueryResult result = conn.execute(String.format("select * from %s.%s", newSchemaName, newTableName));
+    result.printContent();
   }
 }

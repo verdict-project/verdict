@@ -22,6 +22,8 @@ import org.verdictdb.exception.VerdictDBValueException;
 
 public class UniformScramblingMethod extends ScramblingMethodBase {
   
+  private final String MAIN_TABLE_SOURCE_ALIAS = "t";
+
   public UniformScramblingMethod(long blockSize) {
     super(blockSize);
   }
@@ -54,11 +56,16 @@ public class UniformScramblingMethod extends ScramblingMethodBase {
     
     return prob;
   }
-
+  
   @Override
   public AbstractRelation getScramblingSource(String originalSchema, String originalTable, Map<String, Object> metaData) {
-    String tableSourceAlias = "t";
+    String tableSourceAlias = MAIN_TABLE_SOURCE_ALIAS;
     return new BaseTable(originalSchema, originalTable, tableSourceAlias);
+  }
+
+  @Override
+  public String getMainTableAlias() {
+    return MAIN_TABLE_SOURCE_ALIAS;
   }
 
 //  @Override

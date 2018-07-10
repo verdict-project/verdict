@@ -129,15 +129,15 @@ public class JdbcQueryResult extends DbmsQueryResultBase {
     
     // print contents
     int colCount = getColumnCount();
-    while(this.next()) {
+    while (next()) {
       row = new StringBuilder();
       for (int i = 0; i < colCount; i++) {
         if (i == 0) {
-          row.append(getValue(i).toString());
+          row.append(getString(i));
         }
         else {
           row.append("\t");
-          row.append(getValue(i).toString());
+          row.append(getString(i));
         }
       }
       System.out.println(row.toString());

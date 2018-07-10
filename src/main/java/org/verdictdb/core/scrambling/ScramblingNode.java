@@ -14,6 +14,7 @@ import org.verdictdb.core.querying.IdCreator;
 import org.verdictdb.core.sqlobject.AbstractRelation;
 import org.verdictdb.core.sqlobject.AliasedColumn;
 import org.verdictdb.core.sqlobject.AsteriskColumn;
+import org.verdictdb.core.sqlobject.BaseColumn;
 import org.verdictdb.core.sqlobject.ColumnOp;
 import org.verdictdb.core.sqlobject.ConstantColumn;
 import org.verdictdb.core.sqlobject.SelectItem;
@@ -124,7 +125,14 @@ public class ScramblingNode extends CreateTableAsSelectNode {
 
     // composed select item expressions will be added to this list
     List<SelectItem> selectItems = new ArrayList<>();
-    selectItems.add(new AsteriskColumn());
+    @SuppressWarnings("unchecked")
+    List<Pair<String, String>> columnNamesAndTypes = 
+        (List<Pair<String, String>>) metaData.get(ScramblingPlan.COLUMN_METADATA_KEY);
+    final String mainTableAlias = method.getMainTableAlias();
+    for (Pair<String, String> nameAndType : columnNamesAndTypes) {
+      String name = nameAndType.getLeft();
+      selectItems.add(new BaseColumn(mainTableAlias, name));
+    }
 
     // compose tier expression
     List<UnnamedColumn> tierOperands = new ArrayList<>();

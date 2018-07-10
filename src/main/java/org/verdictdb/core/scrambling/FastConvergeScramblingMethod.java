@@ -389,8 +389,12 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
       if (tier2Size == 0) {
         cumulProbDist.add(1.0);
       } else {
-        double thisBlockRatio = thisBlockSize / tier2Size;
-        cumulProbDist.add(thisBlockRatio);
+        double thisBlockRatio = thisBlockSize / (double) tier2Size;
+        if (i == 0) {
+          cumulProbDist.add(thisBlockRatio);
+        } else {
+          cumulProbDist.add(cumulProbDist.get(i-1) + thisBlockRatio);
+        }
       }
     }
     
@@ -430,6 +434,11 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
     else {
       return new BaseTable(originalSchema, originalTable, MAIN_TABLE_SOURCE_ALIAS_NAME);
     }
+  }
+
+  @Override
+  public String getMainTableAlias() {
+    return MAIN_TABLE_SOURCE_ALIAS_NAME;
   }
 
 }
