@@ -235,7 +235,7 @@ public class TpchExecutionPlanTest {
     staticMetaData.addTableData(new StaticMetaData.TableInfo("tpch", "lineitem"), arr);
   }
 
-  //@Test
+  @Test
   public void Query1Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select " +

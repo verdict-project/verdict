@@ -28,35 +28,20 @@ import org.verdictdb.exception.VerdictDBTypeException;
 import org.verdictdb.exception.VerdictDBValueException;
 
 public class QueryExecutionPlan implements ExecutablePlan, IdCreator {
-
-  //  SelectQuery query;
-
+  
   protected ScrambleMeta scrambleMeta;
 
   protected ExecutableNodeBase root;
 
   protected IdCreator idCreator;
 
-  //  final int N_THREADS = 10;
-
-  //  PostProcessor postProcessor;
-
-  //  /**
-  //   *
-  //   * @param queryString A select query
-  //   * @throws UnexpectedTypeException
-  //   */
-  //  public AggQueryExecutionPlan(DbmsConnection conn, SyntaxAbstract syntax, String queryString) throws VerdictDbException {
-  //    this(conn, syntax, (SelectQueryOp) new NonValidatingSQLParser().toRelation(queryString));
-  //  }
-
   public QueryExecutionPlan(String scratchpadSchemaName) {
-    this.idCreator = new TempIdCreatorInScratchpadSchema(scratchpadSchemaName);
     this.scrambleMeta = new ScrambleMeta();
+    this.idCreator = new TempIdCreatorInScratchpadSchema(scratchpadSchemaName);
   }
 
   public QueryExecutionPlan(String scratchpadSchemaName, ScrambleMeta scrambleMeta) {
-    this(scratchpadSchemaName);
+    this.idCreator = new TempIdCreatorInScratchpadSchema(scratchpadSchemaName);
     this.scrambleMeta = scrambleMeta;
   }
 
@@ -70,6 +55,7 @@ public class QueryExecutionPlan implements ExecutablePlan, IdCreator {
       String scratchpadSchemaName,
       ScrambleMeta scrambleMeta,
       SelectQuery query) throws VerdictDBException {
+    
     this(scratchpadSchemaName);
     setScrambleMeta(scrambleMeta);
     setSelectQuery(query);
@@ -93,6 +79,8 @@ public class QueryExecutionPlan implements ExecutablePlan, IdCreator {
   }
 
   public void setSelectQuery(SelectQuery query) throws VerdictDBException {
+    // TODO: this should also test if subqueries include aggregates
+    // Change this to something like 'doesContainSupportedAggregateInDescendents()'.
     if (!query.isSupportedAggregate()) {
       throw new VerdictDBTypeException(query);
     }
@@ -148,6 +136,7 @@ public class QueryExecutionPlan implements ExecutablePlan, IdCreator {
         .toString();
   }
 
+  // TODO: Move this to another class: QueryExecutionPlanSimplifier
   public void compress() {
     List<ExecutableNodeBase> nodesToCompress = new ArrayList<>();
     // compress the node from bottom to up in order to replace the select query conveniently
@@ -267,41 +256,6 @@ public class QueryExecutionPlan implements ExecutablePlan, IdCreator {
   public ExecutableNodeBase getRoot() {
     return root;
   }
-
-
-//<<<<<<< HEAD
-//  public void setScalingNode() throws VerdictDBException{
-//    // Check from top to bottom to find AsyncAggExecutionNode
-//    List<BaseQueryNode> checkList = new ArrayList<>();
-//    List<AsyncAggExecutionNode> toScaleList = new ArrayList<>();
-//    checkList.add(root);
-//    List<BaseQueryNode> traversed = new ArrayList<>();
-//    while (!checkList.isEmpty()) {
-//      BaseQueryNode node = checkList.get(0);
-//      checkList.remove(0);
-//      traversed.add(node);
-//      if (node instanceof AsyncAggExecutionNode && !toScaleList.contains(node)) {
-//        toScaleList.add((AsyncAggExecutionNode) node);
-//      }
-//      for (BaseQueryNode dependent:node.dependents) {
-//        if (!traversed.contains(dependent)) {
-//          checkList.add(dependent);
-//        }
-//      }
-//    }
-//    for (AsyncAggExecutionNode asyncNode:toScaleList) {
-//      List<AggExecutionNode> aggNodeList = new ArrayList<>();
-//      aggNodeList.add((AggExecutionNode) asyncNode.getDependent(0));
-//      for (int i=1; i<asyncNode.getDependents().size(); i++) {
-//        aggNodeList.add((AggExecutionNode) asyncNode.getDependent(i).getDependent(1));
-//      }
-//      for (AggExecutionNode aggExecutionNode:aggNodeList) {
-//        AsyncAggScaleExecutionNode.create(idCreator, aggExecutionNode);
-//      }
-//    }
-//  }
-//=======
-//>>>>>>> origin/joezhong-scale
   
   @Override
   public List<Integer> getNodeGroupIDs() {
