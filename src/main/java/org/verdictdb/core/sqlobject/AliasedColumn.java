@@ -1,5 +1,7 @@
 package org.verdictdb.core.sqlobject;
 
+import java.io.Serializable;
+
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -10,7 +12,9 @@ import org.apache.commons.lang3.builder.ToStringStyle;
  *
  * @author Yongjoo Park
  */
-public class AliasedColumn implements SelectItem {
+public class AliasedColumn implements SelectItem, Serializable {
+
+  private static final long serialVersionUID = 8840737358290041703L;
 
   UnnamedColumn column;
 

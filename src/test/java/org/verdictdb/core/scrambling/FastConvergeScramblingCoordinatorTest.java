@@ -109,7 +109,9 @@ public class FastConvergeScramblingCoordinatorTest {
   @AfterClass
   public static void tearDown() throws SQLException {
     mysqlStmt.execute("drop table if exists tpch.lineitem");
+    mysqlStmt.execute("drop table if exists tpch.lineitem_scrambled");
     mysqlStmt.execute("drop table if exists tpch.orders");
+    mysqlStmt.execute("drop table if exists tpch.orders_scrambled");
     mysqlStmt.execute("drop schema if exists tpch");
   }
   
