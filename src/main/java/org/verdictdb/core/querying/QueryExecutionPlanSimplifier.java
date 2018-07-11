@@ -1,25 +1,71 @@
 package org.verdictdb.core.querying;
 
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.core.execution.ExecutableNode;
+import org.verdictdb.core.execution.ExecutablePlan;
+import org.verdictdb.core.execution.ExecutionInfoToken;
+import org.verdictdb.core.execution.ExecutionTokenQueue;
 import org.verdictdb.core.querying.ola.AsyncAggExecutionNode;
 import org.verdictdb.core.sqlobject.BaseTable;
+import org.verdictdb.core.sqlobject.CreateTableAsSelectQuery;
 import org.verdictdb.core.sqlobject.SubqueryColumn;
+import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.exception.VerdictDBValueException;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class QueryExecutionPlanSimplifier {
-  
-  public static QueryExecutionPlan simplify(QueryExecutionPlan originalPlan) {
-    return null;
-  }
 
-  public static void compress(QueryExecutionPlan originalPlan) {
+  /**
+   *
+   * @param originalPlan
+   * @return a deepcopy of plan which is simplified
+   */
+  public static QueryExecutionPlan simplify(QueryExecutionPlan originalPlan) {
+    // Deep copy originalPlan
+    QueryExecutionPlan plan = new QueryExecutionPlan("");
+    plan.scrambleMeta = originalPlan.scrambleMeta;
+    plan.idCreator = originalPlan.idCreator;
+    HashMap<ExecutableNodeBase, ExecutableNodeBase> copyMap = new HashMap<>();
+    ExecutableNodeBase newRoot = originalPlan.getRoot().deepcopy();
+    plan.root = newRoot;
+    List<ExecutableNodeBase> nodeToCopy = new ArrayList<>();
+    List<ExecutableNodeBase> nodeCopied = new ArrayList<>();
+    nodeCopied.add(originalPlan.root);
+    nodeToCopy.addAll(newRoot.getSources());
+    copyMap.put(originalPlan.getRoot(), newRoot);
+    while (!nodeToCopy.isEmpty()) {
+      ExecutableNodeBase node = nodeToCopy.get(0);
+      nodeToCopy.remove(0);
+      if (!nodeCopied.contains(node)) {
+        ExecutableNodeBase copy = node.deepcopy();
+        nodeCopied.add(node);
+        nodeToCopy.addAll(node.getSources());
+        copyMap.put(node, copy);
+      }
+    }
+    for (Map.Entry<ExecutableNodeBase, ExecutableNodeBase> entry:copyMap.entrySet()) {
+      if (!entry.getKey().getSources().isEmpty()) {
+        entry.getValue().sources.clear();
+        entry.getValue().channels.clear();
+        for (Pair<ExecutableNodeBase, Integer> source:entry.getKey().sources) {
+          ExecutableNodeBase copy = copyMap.get(source.getLeft());
+          entry.getValue().sources.add(new ImmutablePair<>(copy, source.getRight()));
+          copy.subscribers.set(copy.subscribers.indexOf(entry.getKey()), entry.getValue());
+          if (!entry.getValue().channels.containsKey(source.getRight())) {
+            entry.getValue().channels.put(source.getRight(), new ExecutionTokenQueue());
+          }
+        }
+      }
+    }
+
+
+
     List<ExecutableNodeBase> nodesToCompress = new ArrayList<>();
     // compress the node from bottom to up in order to replace the select query conveniently
     List<ExecutableNodeBase> traverse = new ArrayList<>();
-    traverse.add(originalPlan.getRoot());
+    traverse.add(plan.getRoot());
     while (!traverse.isEmpty()) {
       ExecutableNodeBase node = traverse.get(0);
       traverse.remove(0);
@@ -53,6 +99,7 @@ public class QueryExecutionPlanSimplifier {
         }
       }
     }
+    return plan;
   }
 
   // Compress node and parent into parent, node will be useless

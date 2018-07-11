@@ -17,7 +17,7 @@ import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sqlreader.NonValidatingSQLParser;
 import org.verdictdb.sqlsyntax.H2Syntax;
 
-public class QueryExecutionPlanCompressTest {
+public class QueryExecutionPlanSimplifierTest {
 
   static String originalSchema = "originalschema";
 
@@ -57,12 +57,14 @@ public class QueryExecutionPlanCompressTest {
     SelectQuery selectQuery = (SelectQuery) sqlToRelation.toRelation(sql);
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(newSchema, null, selectQuery);
     ExecutableNodeBase copy = queryExecutionPlan.root.deepcopy();
-    QueryExecutionPlanSimplifier.compress(queryExecutionPlan);
-    assertEquals(0, queryExecutionPlan.root.getDependentNodeCount());
-    assertEquals(selectQuery, ((QueryNodeBase) queryExecutionPlan.root).selectQuery.getFromList().get(0));
+    QueryExecutionPlan plan = QueryExecutionPlanSimplifier.simplify(queryExecutionPlan);
+    assertEquals(0, plan.root.getDependentNodeCount());
+    selectQuery.setAliasName("t");
+    assertEquals(selectQuery, ((QueryNodeBase) plan.root).selectQuery.getFromList().get(0));
+    ((QueryNodeBase) copy.getExecutableNodeBaseDependent(0)).selectQuery.setAliasName("t");
     assertEquals(
         ((QueryNodeBase) copy.getExecutableNodeBaseDependent(0)).selectQuery, 
-        ((QueryNodeBase) queryExecutionPlan.root).selectQuery.getFromList().get(0));
+        ((QueryNodeBase) plan.root).selectQuery.getFromList().get(0));
 
     // queryExecutionPlan.root.execute(conn);
   }
@@ -74,16 +76,12 @@ public class QueryExecutionPlanCompressTest {
     SelectQuery selectQuery = (SelectQuery) sqlToRelation.toRelation(sql);
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(newSchema, null, selectQuery);
     ExecutableNodeBase copy = queryExecutionPlan.root.getExecutableNodeBaseDependent(0).getExecutableNodeBaseDependent(0).deepcopy();
-    QueryExecutionPlanSimplifier.compress(queryExecutionPlan);
-    assertEquals(0, queryExecutionPlan.root.getDependentNodeCount());
-    assertEquals(
-        selectQuery, 
-        ((QueryNodeBase) queryExecutionPlan.root).selectQuery.getFromList().get(0));
-
+    QueryExecutionPlan plan = QueryExecutionPlanSimplifier.simplify(queryExecutionPlan);
+    assertEquals(0, plan.root.getDependentNodeCount());
     assertEquals(
         ((QueryNodeBase) copy).selectQuery,
         ((SelectQuery)
-            ((QueryNodeBase) queryExecutionPlan.root).selectQuery.getFromList().get(0))
+            ((QueryNodeBase) plan.root).selectQuery.getFromList().get(0))
         .getFromList().get(0));
     // queryExecutionPlan.root.execute(conn);
   }
@@ -96,20 +94,16 @@ public class QueryExecutionPlanCompressTest {
     SelectQuery selectQuery = (SelectQuery) sqlToRelation.toRelation(sql);
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(newSchema, null, selectQuery);
     ExecutableNodeBase copy = queryExecutionPlan.root.getExecutableNodeBaseDependent(0).getExecutableNodeBaseDependent(0).deepcopy();
-    QueryExecutionPlanSimplifier.compress(queryExecutionPlan);
+    QueryExecutionPlan plan = QueryExecutionPlanSimplifier.simplify(queryExecutionPlan);
     
-    assertEquals(0, queryExecutionPlan.root.getDependentNodeCount());
-    
-    assertEquals(
-        selectQuery, 
-        ((QueryNodeBase) queryExecutionPlan.root).selectQuery.getFromList().get(0));
+    assertEquals(0, plan.root.getDependentNodeCount());
 
     assertEquals(
         ((QueryNodeBase) copy).selectQuery,
         ((SubqueryColumn)
             ((ColumnOp)
                 ((SelectQuery) 
-                    ((QueryNodeBase) queryExecutionPlan.root)
+                    ((QueryNodeBase) plan.root)
                     .selectQuery.getFromList().get(0)).getFilter().get()).getOperand(1)).getSubquery());
     // queryExecutionPlan.root.execute(conn);
   }

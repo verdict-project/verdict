@@ -138,7 +138,7 @@ public class AsyncAggScaleTest {
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
-//<<<<<<< HEAD:src/test/java/org/verdictdb/core/querying/AsyncAggScaleTest.java
+/*
   @Test
   public void ScrambleTableCompressTest() throws VerdictDBException,SQLException {
     RelationStandardizer.resetItemID();
@@ -153,14 +153,13 @@ public class AsyncAggScaleTest {
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
     ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
 //    queryExecutionPlan.setScalingNode();
-    QueryExecutionPlanSimplifier.compress(queryExecutionPlan);
+    QueryExecutionPlanSimplifier.simplify(queryExecutionPlan);
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
     ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
 //    queryExecutionPlan.root.executeAndWaitForTermination(new JdbcConnection(conn, new H2Syntax()));
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
-//=======
-//>>>>>>> origin/joezhong-scale:src/test/java/org/verdictdb/core/querying/ola/AsyncAggScaleTest.java
+*/
 
   @Test
   public void ScrambleTableAvgTest() throws VerdictDBException,SQLException {
