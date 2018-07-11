@@ -1,9 +1,10 @@
 package org.verdictdb.core.connection;
 
+import java.io.Serializable;
 import java.sql.Date;
 import java.sql.Timestamp;
 
-public interface DbmsQueryResult {
+public interface DbmsQueryResult extends Serializable {
 
   /**
    *

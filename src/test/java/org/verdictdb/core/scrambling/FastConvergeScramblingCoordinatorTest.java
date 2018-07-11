@@ -66,9 +66,9 @@ public class FastConvergeScramblingCoordinatorTest {
         "  l_tax            DECIMAL(15,2) ,\n" +
         "  l_returnflag     CHAR(1) ,\n" +
         "  l_linestatus     CHAR(1) ,\n" +
-        "  l_shipDATE       DATE ,\n" +
-        "  l_commitDATE     DATE ,\n" +
-        "  l_receiptDATE    DATE ,\n" +
+        "  l_shipdate       DATE ,\n" +
+        "  l_commitdate     DATE ,\n" +
+        "  l_receiptdate    DATE ,\n" +
         "  l_shipinstruct   CHAR(25) ,\n" +
         "  l_shipmode       CHAR(10) ,\n" +
         "  l_comment        VARCHAR(44),\n" +
@@ -81,7 +81,7 @@ public class FastConvergeScramblingCoordinatorTest {
         "  o_custkey        INT ,\n" +
         "  o_orderstatus    CHAR(1) ,\n" +
         "  o_totalprice     DECIMAL(15,2) ,\n" +
-        "  o_orderDATE      DATE ,\n" +
+        "  o_orderdate      DATE ,\n" +
         "  o_orderpriority  CHAR(15) ,\n" +
         "  o_clerk          CHAR(15) ,\n" +
         "  o_shippriority   INT ,\n" +
@@ -133,6 +133,16 @@ public class FastConvergeScramblingCoordinatorTest {
   public void testScramblingCoordinatorOrders() throws VerdictDBException {
     testScramblingCoordinator("orders");
   }
+  
+  @Test
+  public void testScramblingCoordinatorLineitemWithPrimaryColumn() throws VerdictDBException {
+    testScramblingCoordinatorWithPrimaryColumn("lineitem", "l_shipdate");
+  }
+
+  @Test
+  public void testScramblingCoordinatorOrdersWithPrimaryColumn() throws VerdictDBException {
+    testScramblingCoordinatorWithPrimaryColumn("orders", "o_orderdate");
+  }
 
   public void testScramblingCoordinator(String tablename) throws VerdictDBException {
     DbmsConnection conn = new JdbcConnection(mysqlConn);
@@ -140,7 +150,8 @@ public class FastConvergeScramblingCoordinatorTest {
     String scrambleSchema = "tpch";
     String scratchpadSchema = "tpch";
     long blockSize = 100;
-    ScramblingCoordinator scrambler = new ScramblingCoordinator(conn, scrambleSchema, scratchpadSchema, blockSize);
+    ScramblingCoordinator scrambler = 
+        new ScramblingCoordinator(conn, scrambleSchema, scratchpadSchema, blockSize);
 
     // perform scrambling
     String originalSchema = "tpch";
@@ -148,6 +159,48 @@ public class FastConvergeScramblingCoordinatorTest {
     String scrambledTable = tablename + "_scrambled";
     conn.execute(String.format("drop table if exists tpch.%s", scrambledTable));
     ScrambleMeta meta = scrambler.scramble(originalSchema, originalTable, "fastconverge");
+
+    // tests
+    List<Pair<String, String>> originalColumns = conn.getColumns("tpch", originalTable);
+    List<Pair<String, String>> columns = conn.getColumns("tpch", scrambledTable);
+    for (int i = 0; i < originalColumns.size(); i++) {
+      assertEquals(originalColumns.get(i).getLeft(), columns.get(i).getLeft());
+      assertEquals(originalColumns.get(i).getRight(), columns.get(i).getRight());
+    }
+    assertEquals(originalColumns.size()+2, columns.size());
+
+    List<String> partitions = conn.getPartitionColumns("tpch", scrambledTable);
+    assertEquals(Arrays.asList("verdictdbblock"), partitions);
+
+    DbmsQueryResult result1 = conn.execute(String.format("select count(*) from tpch.%s", originalTable));
+    DbmsQueryResult result2 = conn.execute(String.format("select count(*) from tpch.%s", scrambledTable));
+    result1.next();
+    result2.next();
+    assertEquals(result1.getInt(0), result2.getInt(0));
+
+    DbmsQueryResult result = conn.execute(String.format("select min(verdictdbblock), max(verdictdbblock) from tpch.%s", scrambledTable));
+    result.next();
+    assertEquals(0, result.getInt(0));
+    assertEquals((int) Math.ceil(result2.getInt(0) / (float) blockSize) - 1, result.getInt(1));
+  }
+  
+  public void testScramblingCoordinatorWithPrimaryColumn(
+      String tablename, String primaryColumn) 
+          throws VerdictDBException {
+    DbmsConnection conn = new JdbcConnection(mysqlConn);
+
+    String scrambleSchema = "tpch";
+    String scratchpadSchema = "tpch";
+    long blockSize = 100;
+    ScramblingCoordinator scrambler = 
+        new ScramblingCoordinator(conn, scrambleSchema, scratchpadSchema, blockSize);
+
+    // perform scrambling
+    String originalSchema = "tpch";
+    String originalTable = tablename;
+    String scrambledTable = tablename + "_scrambled";
+    conn.execute(String.format("drop table if exists tpch.%s", scrambledTable));
+    ScrambleMeta meta = scrambler.scramble(originalSchema, originalTable, "fastconverge", primaryColumn);
 
     // tests
     List<Pair<String, String>> originalColumns = conn.getColumns("tpch", originalTable);

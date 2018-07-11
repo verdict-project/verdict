@@ -17,7 +17,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
 public class ScramblingCoordinator {
-  
+
   // default options
   // some key names (tierColumnName, blockColumnName) are also used by ScramblingNode; thus, they cannot
   // be modified arbitrarily.
@@ -34,9 +34,9 @@ public class ScramblingCoordinator {
   DbmsConnection conn;
 
   Optional<String> scrambleSchema;
-  
+
   Optional<String> scratchpadSchema;
-  
+
   public ScramblingCoordinator(DbmsConnection conn) {
     this(conn, null);
   }
@@ -44,11 +44,11 @@ public class ScramblingCoordinator {
   public ScramblingCoordinator(DbmsConnection conn, String scrambleSchema) {
     this(conn, scrambleSchema, scrambleSchema);           // uses the same schema
   }
-  
+
   public ScramblingCoordinator(DbmsConnection conn, String scrambleSchema, String scratchpadSchema) {
     this(conn, scrambleSchema, scratchpadSchema, null);
   }
-  
+
   public ScramblingCoordinator(DbmsConnection conn, String scrambleSchema, String scratchpadSchema, Long blockSize) {
     this.conn = conn;
     this.scrambleSchema = Optional.fromNullable(scrambleSchema);
@@ -72,9 +72,14 @@ public class ScramblingCoordinator {
     return meta;
   }
 
-  public ScrambleMeta scramble(String originalSchema, String originalTable, String method) 
+  public ScrambleMeta scramble(String originalSchema, String originalTable, String methodName) 
       throws VerdictDBException {
-    
+    return scramble(originalSchema, originalTable, methodName, null);
+  }
+
+  public ScrambleMeta scramble(
+      String originalSchema, String originalTable, String methodName, String primaryColumn) 
+          throws VerdictDBException {
     // should get assigned a new scratchpad schema for new tables.
     String newSchema;
     if (scrambleSchema.isPresent()) {
@@ -82,33 +87,42 @@ public class ScramblingCoordinator {
     } else {
       newSchema = originalSchema;
     }
-    
     String newTable = originalTable + options.get("scrambleTableSuffix");
-    
-    ScrambleMeta meta = scramble(originalSchema, originalTable, newSchema, newTable, method);
+
+    ScrambleMeta meta = 
+        scramble(originalSchema, originalTable, methodName, primaryColumn, newSchema, newTable);
     return meta;
   }
 
+//  public ScrambleMeta scramble(
+//      String originalSchema, String originalTable, String methodName,
+//      String newSchema, String newTable) 
+//          throws VerdictDBException {
+//    return scramble(originalSchema, originalTable, methodName, null, newSchema, newTable);
+//  }
+
   public ScrambleMeta scramble(
-      String originalSchema, String originalTable, 
-      String newSchema, String newTable,
-      String methodName) throws VerdictDBException {
-    
+      String originalSchema, String originalTable,
+      String methodName, String primaryColumn,
+      String newSchema, String newTable) throws VerdictDBException {
+
     // determine scrambling method
     ScramblingMethod scramblingMethod;
     long blockSize = Double.valueOf(options.get("scrambleTableBlockSize")).longValue();
     if (methodName.equalsIgnoreCase("uniform")) {
       scramblingMethod = new UniformScramblingMethod(blockSize);
-    } else if (methodName.equalsIgnoreCase("FastConverge")) {
+    } else if (methodName.equalsIgnoreCase("FastConverge") && primaryColumn == null) {
       scramblingMethod = new FastConvergeScramblingMethod(blockSize, scratchpadSchema.get());
+    } else if (methodName.equalsIgnoreCase("FastConverge") && primaryColumn != null) {
+      scramblingMethod = new FastConvergeScramblingMethod(blockSize, scratchpadSchema.get(), primaryColumn);
     } else {
       throw new VerdictDBValueException("Invalid scrambling method: " + methodName);
     }
-    
+
     // perform scrambling
     ScramblingPlan plan = ScramblingPlan.create(newSchema, newTable, originalSchema, originalTable, scramblingMethod, options);
     ExecutablePlanRunner.runTillEnd(conn, plan);
-    
+
     // compose scramble meta
     String blockColumn = options.get("blockColumnName");
     int blockCount = scramblingMethod.getBlockCount();

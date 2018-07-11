@@ -1,5 +1,6 @@
 package org.verdictdb.core.scrambling;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -9,7 +10,9 @@ import java.util.Map;
  * @author Yongjoo Park
  *
  */
-public class ScrambleMeta {
+public class ScrambleMeta implements Serializable {
+
+  private static final long serialVersionUID = -8422601151874567149L;
 
   // key
   String schemaName;

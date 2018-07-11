@@ -9,7 +9,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class JdbcQueryResult extends DbmsQueryResultBase {
-  
+
+  private static final long serialVersionUID = 2576550992419489091L;
+
   List<String> columnNames = new ArrayList<>();
 
   List<Integer> columnTypes = new ArrayList<>();

@@ -1,13 +1,16 @@
 package org.verdictdb.core.scrambling;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
-public class ScrambleMetaSet {
+public class ScrambleMetaSet implements Serializable {
 
+  private static final long serialVersionUID = 5106301901144427405L;
+  
   Map<Pair<String, String>, ScrambleMeta> meta = new HashMap<>();
 
   public ScrambleMetaSet() {}

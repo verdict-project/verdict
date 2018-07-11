@@ -8,6 +8,8 @@ import java.util.Map;
 
 public abstract class DbmsQueryResultBase implements DbmsQueryResult {
   
+  private static final long serialVersionUID = 6800748700764224903L;
+  
   private Map<String, Integer> lazyLabel2IndexMap = null;
   
   protected Integer getIndexOf(String label) {
