@@ -91,11 +91,11 @@ public class FastConvergeScramblingCoordinatorTest {
     // import data
     File dataFile = new File("src/test/resources/tpch_test_data/lineitem.tbl");
     String dataFilePath = dataFile.getAbsolutePath();
-    mysqlStmt.execute(String.format("LOAD DATA INFILE '%s' INTO TABLE tpch.lineitem COLUMNS TERMINATED BY '|'", dataFilePath));
+    mysqlStmt.execute(String.format("LOAD DATA LOCAL INFILE '%s' INTO TABLE tpch.lineitem COLUMNS TERMINATED BY '|'", dataFilePath));
     
     dataFile = new File("src/test/resources/tpch_test_data/orders.tbl");
     dataFilePath = dataFile.getAbsolutePath();
-    mysqlStmt.execute(String.format("LOAD DATA INFILE '%s' INTO TABLE tpch.orders COLUMNS TERMINATED BY '|'", dataFilePath));
+    mysqlStmt.execute(String.format("LOAD DATA LOCAL INFILE '%s' INTO TABLE tpch.orders COLUMNS TERMINATED BY '|'", dataFilePath));
 
     //    File schemaFile = new File("src/test/resources/tpch_test_data/tpch-schema-data.sql");
     //  String schemas = Files.toString(schemaFile, Charsets.UTF_8);
