@@ -4,7 +4,6 @@ import java.util.Iterator;
 
 import org.verdictdb.core.execution.ExecutionInfoToken;
 import org.verdictdb.core.execution.ExecutionTokenQueue;
-import org.verdictdb.exception.VerdictDBException;
 
 public class ExecutionTokenReader implements Iterable<ExecutionInfoToken>, Iterator<ExecutionInfoToken> {
 

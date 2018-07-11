@@ -14,7 +14,6 @@ import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBValueException;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableMap;
 
 public class ScramblingCoordinator {
 

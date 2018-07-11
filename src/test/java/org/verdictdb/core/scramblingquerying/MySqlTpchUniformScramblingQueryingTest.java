@@ -1,7 +1,5 @@
 package org.verdictdb.core.scramblingquerying;
 
-import static org.junit.Assert.*;
-
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -10,7 +8,7 @@ public class MySqlTpchUniformScramblingQueryingTest {
   final int blockSize = 100;
   
   @BeforeClass
-  public void setupMySqlDatabase() {
+  public static void setupMySqlDatabase() {
     // create uniform scrambled table of lineitem and orders.
     
   }

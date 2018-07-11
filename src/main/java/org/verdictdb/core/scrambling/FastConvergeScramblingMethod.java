@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.core.connection.DataTypeConverter;
@@ -677,8 +676,10 @@ class LargeGroupListNode extends CreateTableAsSelectNode {
     }
     
     // set the value of p0
-    if (tableSize != -1) {
-      p0 = blockSize / (double) tableSize;
+    if (tableSize == 0) {
+      p0 = 1.0;
+    } else if (tableSize != -1) {
+      p0 = Math.min(1.0, blockSize / (double) tableSize);
     }
 
     // select
