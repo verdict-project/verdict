@@ -1,11 +1,15 @@
 package org.verdictdb.core.sqlobject;
 
+import java.io.Serializable;
+
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
-public class BaseColumn implements UnnamedColumn, SelectItem, GroupingAttribute {
+public class BaseColumn implements UnnamedColumn, SelectItem, GroupingAttribute, Serializable {
+
+  private static final long serialVersionUID = -7763524127341519557L;
 
   String schemaName = "";
 

@@ -78,13 +78,15 @@ public class FastConvergeScramblingMethodTest {
   }
 
   @Test
-  public void testLargeGroupListNode() throws VerdictDBException {
+  public void testLargeGroupListNodeWithoutTableSize() throws VerdictDBException {
     String scratchpadSchemaName = "verdictdbtempSchema";
     TempIdCreatorInScratchpadSchema idCreator = new TempIdCreatorInScratchpadSchema(scratchpadSchemaName);
     String schemaName = "oldSchema";
     String tableName = "oldTable";
     String primaryColumnName = "pcolumn";
-    LargeGroupListNode node = new LargeGroupListNode(idCreator, schemaName, tableName, primaryColumnName);
+    long blockSize = 10;
+    LargeGroupListNode node = 
+        new LargeGroupListNode(idCreator, schemaName, tableName, primaryColumnName, blockSize);
     
     SqlConvertible sqlobj = node.createQuery(Arrays.<ExecutionInfoToken>asList());
     String sql = QueryToSql.convert(new HiveSyntax(), sqlobj);
@@ -95,6 +97,40 @@ public class FastConvergeScramblingMethodTest {
         + "count(*) * (1.0 / 0.001) as `groupSize` "
         + "from `oldSchema`.`oldTable` as t "
         + "where rand() < 0.001 "
+        + "group by `pcolumn`";
+    assertEquals(expected, actual);
+  }
+  
+  @Test
+  public void testLargeGroupListNodeWithTableSize() throws VerdictDBException, SQLException {
+    String scratchpadSchemaName = "verdictdbtempSchema";
+    TempIdCreatorInScratchpadSchema idCreator = new TempIdCreatorInScratchpadSchema(scratchpadSchemaName);
+    String schemaName = "oldSchema";
+    String tableName = "oldTable";
+    String primaryColumnName = "pcolumn";
+    long blockSize = 10;
+    LargeGroupListNode node = 
+        new LargeGroupListNode(idCreator, schemaName, tableName, primaryColumnName, blockSize);
+    
+    // provision table size token
+    int tableSize = 100;
+    String aliasname = PercentilesAndCountNode.TOTAL_COUNT_ALIAS_NAME;
+    DbmsConnection conn = new JdbcConnection(h2conn);
+    DbmsQueryResult result = conn.execute(String.format("select %d as \"%s\"", tableSize, aliasname));
+    
+    ExecutionInfoToken e = new ExecutionInfoToken();
+    e.setKeyValue(PercentilesAndCountNode.class.getSimpleName(), result);
+    
+    // run the method to test
+    SqlConvertible sqlobj = node.createQuery(Arrays.<ExecutionInfoToken>asList(e));
+    String sql = QueryToSql.convert(new HiveSyntax(), sqlobj);
+    String actual = sql.replaceAll("verdictdbtemptable_\\d+_\\d+", "verdictdbtemptable");
+    
+    String expected = "create table `verdictdbtempSchema`.`verdictdbtemptable` "
+        + "as select t.`pcolumn` as `verdictdbrenameprimarygroup`, "
+        + "count(*) * (1.0 / 0.1) as `groupSize` "
+        + "from `oldSchema`.`oldTable` as t "
+        + "where rand() < 0.1 "
         + "group by `pcolumn`";
     assertEquals(expected, actual);
   }

@@ -34,25 +34,25 @@ import org.verdictdb.exception.VerdictDBValueException;
 import com.google.common.base.Optional;
 
 /**
- * 
+ *
  * Policy:
  * 1. Tier 0: tuples containing outlier values.
  * 2. Tier 1: tuples containing rare groups
  * 3. Tier 2: other tuples
- * 
+ *
  * Outlier values:
- * Bottom 0.1% and 99.9% percentile values for every numeric column. Suppose a table has 20 numeric columns; 
+ * Bottom 0.1% and 99.9% percentile values for every numeric column. Suppose a table has 20 numeric columns;
  * then, in the worst case, 20 * 0.2% = 4% of the tuples are the tuples containing outlier values.
- * 
+ *
  * Blocks for Tier 0:
  * Tier 0 takes up to 50% of each block.
- * 
+ *
  * Blocks for Tier 1:
  * Tier 0 + Tier 1 take up to 80% of each block.
- * 
+ *
  * Blocks for Tier 2:
  * Tier 2 takes the rest of the space in each block.
- * 
+ *
  * @author Yongjoo Park
  *
  */
@@ -79,9 +79,11 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
   private long smallGroupSizeSum = 0;
 
   public static final String MAIN_TABLE_SOURCE_ALIAS_NAME = "t1";
-  
+
   public static final String RIGHT_TABLE_SOURCE_ALIAS_NAME = "t2";
-  
+
+  private int totalNumberOfblocks = -1;
+
 
   public FastConvergeScramblingMethod(long blockSize, String scratchpadSchemaName) {
     super(blockSize);
@@ -94,16 +96,16 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
   }
 
   /**
-   * Computes three nodes. They compute: 
+   * Computes three nodes. They compute:
    * (1) 0.1% and 99.9% percentiles of numeric columns and the total count,
    *     (for this, we compute standard deviations and estimate those percentiles based on the standard
    *      deviations and normal distribution assumptions. \pm 3.09 * stddev is the 99.9 and 0.1 percentiles
    *      of the standard normal distribution.)
-   * (2) the list of "large" groups, and 
+   * (2) the list of "large" groups, and
    * (3) the sizes of "large" groups
-   * 
+   *
    * Recall that channels 100 and 101 are reserved for column meta and partition meta, respectively.
-   * 
+   *
    * This method generates up to three nodes, and the token keys set up by those nodes are:
    * 1. queryResult: this contains avg, std, and count
    * 2. schemaName, tableName: this is the name of the temporary tables that contains a list of large groups.
@@ -129,7 +131,7 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
     if (primaryColumnName.isPresent()) {
       TempIdCreatorInScratchpadSchema idCreator = new TempIdCreatorInScratchpadSchema(scratchpadSchemaName);
       LargeGroupListNode ll = new LargeGroupListNode(
-          idCreator, oldSchemaName, oldTableName, primaryColumnName.get());
+          idCreator, oldSchemaName, oldTableName, primaryColumnName.get(), blockSize);
       ll.subscribeTo(pc, 0);    // subscribed to 'pc' to obtain count(*) of the table, which is used to infer appropriate sampling ratio.
 
       LargeGroupSizeNode ls = new LargeGroupSizeNode(primaryColumnName.get());
@@ -185,14 +187,14 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
 
   @Override
   public List<UnnamedColumn> getTierExpressions(Map<String, Object> metaData) {
-    DbmsQueryResult percentileAndCountResult = 
+    DbmsQueryResult percentileAndCountResult =
         (DbmsQueryResult) metaData.get(PercentilesAndCountNode.class.getSimpleName());
     //    String largeGroupListSchemaName = (String) metaData.get("1schemaName");
     //    String largeGroupListTableName = (String) metaData.get("1tableName");
 
     // Tier 0
     UnnamedColumn tier0Predicate = createOutlierTuplePredicate(
-        percentileAndCountResult, 
+        percentileAndCountResult,
         FastConvergeScramblingMethod.MAIN_TABLE_SOURCE_ALIAS_NAME);
 
     // Tier 1
@@ -235,16 +237,16 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
     populateTier1CumulProbDist(metaData);
     populateTier2CumulProbDist(metaData);
   }
-  
+
   private void populateTier0CumulProbDist(Map<String, Object> metaData) {
     List<Double> cumulProbDist = new ArrayList<>();
 
     // calculate the number of blocks
-    Pair<Long, Long> tableSizeAndBlockNumber = retrieveTableSizeAndBlockNumber(metaData);
+    Pair<Long, Integer> tableSizeAndBlockNumber = retrieveTableSizeAndBlockNumber(metaData);
     long tableSize = tableSizeAndBlockNumber.getLeft();
-    long totalNumberOfblocks = tableSizeAndBlockNumber.getRight();
+    int totalNumberOfblocks = tableSizeAndBlockNumber.getRight();
 
-    DbmsQueryResult outlierProportion = 
+    DbmsQueryResult outlierProportion =
         (DbmsQueryResult) metaData.get(OutlierProportionNode.class.getSimpleName());
     outlierProportion.rewind();
     outlierProportion.next();
@@ -255,11 +257,11 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
       for (int i = 0; i < totalNumberOfblocks; i++) {
         cumulProbDist.add((i+1) / (double) totalNumberOfblocks);
       }
-      
+
     } else {
       Long remainingSize = outlierSize;
 
-      while (outlierSize > 0 && remainingSize > 0) {  
+      while (outlierSize > 0 && remainingSize > 0) {
         // fill only p0 portion of each block at most
         if (remainingSize <= p0 * blockSize) {
           cumulProbDist.add(1.0);
@@ -291,12 +293,12 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
    */
   private void populateTier1CumulProbDist(Map<String, Object> metaData) {
     List<Double> cumulProbDist = new ArrayList<>();
-    
+
     // calculate the number of blocks
-    Pair<Long, Long> tableSizeAndBlockNumber = retrieveTableSizeAndBlockNumber(metaData);
+    Pair<Long, Integer> tableSizeAndBlockNumber = retrieveTableSizeAndBlockNumber(metaData);
     long tableSize = tableSizeAndBlockNumber.getLeft();
-    long totalNumberOfblocks = tableSizeAndBlockNumber.getRight();
-    
+    int totalNumberOfblocks = tableSizeAndBlockNumber.getRight();
+
     if (!primaryColumnName.isPresent()) {
       while (cumulProbDist.size() < totalNumberOfblocks) {
         cumulProbDist.add(1.0);
@@ -304,7 +306,7 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
     }
     else {
       // obtain total large group size
-      DbmsQueryResult largeGroupSizeResult = 
+      DbmsQueryResult largeGroupSizeResult =
           (DbmsQueryResult) metaData.get(LargeGroupSizeNode.class.getSimpleName());
       largeGroupSizeResult.rewind();
       largeGroupSizeResult.next();
@@ -327,7 +329,7 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
         for (int i = 0; i < totalNumberOfblocks; i++) {
           cumulProbDist.add((i+1) / (double) totalNumberOfblocks);
         }
-      } 
+      }
       // Otherwise, we fill up to (p1 - p0) portion within each block.
       else {
         long remainingSize = smallGroupSizeSum;
@@ -357,24 +359,24 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
 
     tier1CumulProbDist = cumulProbDist;
   }
-  
+
   /**
    * Probability distribution for Tier2: the tuples that do not belong to tier0 or tier1.
    * @param metaData
    */
   private void populateTier2CumulProbDist(Map<String, Object> metaData) {
     List<Double> cumulProbDist = new ArrayList<>();
-    
+
     // calculate the number of blocks
-    Pair<Long, Long> tableSizeAndBlockNumber = retrieveTableSizeAndBlockNumber(metaData);
+    Pair<Long, Integer> tableSizeAndBlockNumber = retrieveTableSizeAndBlockNumber(metaData);
     long tableSize = tableSizeAndBlockNumber.getLeft();
-    long totalNumberOfblocks = tableSizeAndBlockNumber.getRight();
-    
+    int totalNumberOfblocks = tableSizeAndBlockNumber.getRight();
+
 //    System.out.println("table size: " + tableSize);
 //    System.out.println("outlier size: " + outlierSize);
 //    System.out.println("small group size: " + smallGroupSizeSum);
     long tier2Size = tableSize - outlierSize - smallGroupSizeSum;
-    
+
     for (int i = 0; i < totalNumberOfblocks; i++) {
       long thisTier0Size;
       long thisTier1Size;
@@ -397,18 +399,18 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
         }
       }
     }
-    
+
     tier2CumulProbDist = cumulProbDist;
   }
-  
+
   // Helper
-  private Pair<Long, Long> retrieveTableSizeAndBlockNumber(Map<String, Object> metaData) {
-    DbmsQueryResult tableSizeResult = 
+  private Pair<Long, Integer> retrieveTableSizeAndBlockNumber(Map<String, Object> metaData) {
+    DbmsQueryResult tableSizeResult =
         (DbmsQueryResult) metaData.get(PercentilesAndCountNode.class.getSimpleName());
     tableSizeResult.rewind();
     tableSizeResult.next();
     long tableSize = tableSizeResult.getLong(PercentilesAndCountNode.TOTAL_COUNT_ALIAS_NAME);
-    long totalNumberOfblocks = (long) Math.ceil(tableSize / (float) blockSize);
+    totalNumberOfblocks = (int) Math.ceil(tableSize / (float) blockSize);
     return Pair.of(tableSize, totalNumberOfblocks);
   }
 
@@ -416,11 +418,11 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
   public AbstractRelation getScramblingSource(String originalSchema, String originalTable, Map<String, Object> metaData) {
     if (primaryColumnName.isPresent()) {
       @SuppressWarnings("unchecked")
-      Pair<String, String> fullTableName = 
+      Pair<String, String> fullTableName =
           (Pair<String, String>) metaData.get(LargeGroupListNode.class.getSimpleName());
       String largeGroupListSchemaName = fullTableName.getLeft();
       String largeGroupListTableName = fullTableName.getRight();
-      
+
       JoinTable source = JoinTable.create(
           Arrays.<AbstractRelation>asList(
               new BaseTable(originalSchema, originalTable, MAIN_TABLE_SOURCE_ALIAS_NAME),
@@ -442,6 +444,16 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
     return MAIN_TABLE_SOURCE_ALIAS_NAME;
   }
 
+  @Override
+  public int getBlockCount() {
+    return totalNumberOfblocks;
+  }
+
+  @Override
+  public int getTierCount() {
+    return 3;
+  }
+
 }
 
 class PercentilesAndCountNode extends QueryNodeBase {
@@ -453,7 +465,7 @@ class PercentilesAndCountNode extends QueryNodeBase {
   private String columnMetaTokenKey;
 
   private String partitionMetaTokenKey;
-  
+
   private Optional<String> primaryColumnName;
 
   public static final String AVG_PREFIX = "verdictdbavg";
@@ -463,7 +475,7 @@ class PercentilesAndCountNode extends QueryNodeBase {
   public static final String TOTAL_COUNT_ALIAS_NAME = "verdictdbtotalcount";
 
   public PercentilesAndCountNode(
-      String schemaName, String tableName, 
+      String schemaName, String tableName,
       String columnMetaTokenKey, String partitionMetaTokenKey,
       Optional<String> primaryColumnName) {
     super(null);
@@ -480,9 +492,16 @@ class PercentilesAndCountNode extends QueryNodeBase {
       // no token information passed
       throw new VerdictDBValueException("No token is passed.");
     }
+    
+//    try {
+//      TimeUnit.SECONDS.sleep(1);
+//    } catch (InterruptedException e) {
+//      // TODO Auto-generated catch block
+//      e.printStackTrace();
+//    }
 
     @SuppressWarnings("unchecked")
-    List<Pair<String, String>> columnNameAndTypes = 
+    List<Pair<String, String>> columnNameAndTypes =
     (List<Pair<String, String>>) tokens.get(0).getValue(columnMetaTokenKey);
 
     if (columnNameAndTypes == null) {
@@ -498,24 +517,24 @@ class PercentilesAndCountNode extends QueryNodeBase {
       if (primaryColumnName.isPresent() && col.equals(primaryColumnName.get())) {
         continue;
       }
-      
-      // mean 
+
+      // mean
       SelectItem item;
       item = new AliasedColumn(
-          ColumnOp.avg(new BaseColumn(tableSourceAlias, col)), 
+          ColumnOp.avg(new BaseColumn(tableSourceAlias, col)),
           AVG_PREFIX + col);
       selectList.add(item);
 
       // standard deviation
       item = new AliasedColumn(
-          ColumnOp.std(new BaseColumn(tableSourceAlias, col)), 
+          ColumnOp.std(new BaseColumn(tableSourceAlias, col)),
           STDDEV_PREFIX + col);
       selectList.add(item);
     }
     selectList.add(new AliasedColumn(ColumnOp.count(), TOTAL_COUNT_ALIAS_NAME));
 
     selectQuery = SelectQuery.create(
-        selectList, 
+        selectList,
         new BaseTable(schemaName, tableName, tableSourceAlias));
     return selectQuery;
   }
@@ -531,7 +550,7 @@ class PercentilesAndCountNode extends QueryNodeBase {
     }
     return numericColumns;
   }
-  
+
   @Override
   public ExecutionInfoToken createToken(DbmsQueryResult result) {
     ExecutionInfoToken token = new ExecutionInfoToken();
@@ -546,7 +565,7 @@ class PercentilesAndCountNode extends QueryNodeBase {
  * select count(*)
  * from originalSchema.originalTable
  * where some-outlier-predicates
- * 
+ *
  * @author Yongjoo Park
  *
  */
@@ -566,10 +585,12 @@ class OutlierProportionNode extends QueryNodeBase {
 
   @Override
   public SqlConvertible createQuery(List<ExecutionInfoToken> tokens) throws VerdictDBException {
-    DbmsQueryResult percentileAndCountResult = 
+//    System.out.println(tokens);
+    
+    DbmsQueryResult percentileAndCountResult =
         (DbmsQueryResult) tokens.get(0).getValue(PercentilesAndCountNode.class.getSimpleName());
     String tableSourceAliasName = FastConvergeScramblingMethod.MAIN_TABLE_SOURCE_ALIAS_NAME;
-    UnnamedColumn outlierPrediacte = 
+    UnnamedColumn outlierPrediacte =
         FastConvergeScramblingMethod.createOutlierTuplePredicate(percentileAndCountResult, tableSourceAliasName);
 
     selectQuery = SelectQuery.create(
@@ -579,7 +600,7 @@ class OutlierProportionNode extends QueryNodeBase {
 
     return selectQuery;
   }
-  
+
   @Override
   public ExecutionInfoToken createToken(DbmsQueryResult result) {
     ExecutionInfoToken token = new ExecutionInfoToken();
@@ -592,8 +613,20 @@ class OutlierProportionNode extends QueryNodeBase {
 
 class LargeGroupListNode extends CreateTableAsSelectNode {
 
-  // TODO: how to tweak this value?
-  private final double p0 = 0.001;
+  // p0 is the sampling ratio used for obtaining the large group list.
+  // How to tweak this value?
+  //
+  // Our goal is to identify the groups that will appear anyway when sampled by simple random
+  // sampling. Suppose a block size is 10, and there are 100 tuples. This means the sampling ratio
+  // for a block is 0.01 (or 1%). We think if there are more than N tuples for a certain group,
+  // where (1-0.01)^N <= 0.01, then the group is highly likely to appear in the first block even
+  // when simple random sampled.
+  //     Formally, let pi = (block size) / (table size). Let N be the number of the tuples in a
+  // group. If (1 - pi)^N <= 0.01  =>  N <= log(0.01) / log(1 - pi).
+  //
+  //     Then, what is the good p0 for estimting N? A good rule of thumb would be to use a
+  // single-block-many tuples, i.e., (block size). Then, p0 = (block size) / (table size).
+  private double p0 = 0.001;
 
   private String schemaName;
 
@@ -601,16 +634,19 @@ class LargeGroupListNode extends CreateTableAsSelectNode {
 
   private String primaryColumnName;
   
+  private long blockSize;
+
   public static final String PRIMARY_GROUP_RENAME = "verdictdbrenameprimarygroup";
 
   public static final String LARGE_GROUP_SIZE_COLUMN_ALIAS = "groupSize";
 
   public LargeGroupListNode(
-      IdCreator idCreator, String schemaName, String tableName, String primaryColumnName) {
+      IdCreator idCreator, String schemaName, String tableName, String primaryColumnName, long blockSize) {
     super(idCreator, null);
     this.schemaName = schemaName;
     this.tableName = tableName;
     this.primaryColumnName = primaryColumnName;
+    this.blockSize = blockSize;
   }
 
   /**
@@ -619,20 +655,40 @@ class LargeGroupListNode extends CreateTableAsSelectNode {
    * from schemaName.tableName
    * where rand() < p0
    * group by primaryGroup;
-   * @throws VerdictDBException 
-   * 
+   * @throws VerdictDBException
+   *
    */
   @Override
   public SqlConvertible createQuery(List<ExecutionInfoToken> tokens) throws VerdictDBException {
     String tableSourceAlias = "t";
+    
+    // search for the token that contains the table size.
+    String countNodeKey = PercentilesAndCountNode.class.getSimpleName();
+    long tableSize = -1;
+    for (ExecutionInfoToken token : tokens) {
+      if (token.containsKey(countNodeKey)) {
+        DbmsQueryResult tableSizeResult = (DbmsQueryResult) token.getValue(countNodeKey);
+        tableSizeResult.rewind();
+        tableSizeResult.next();
+        tableSize = tableSizeResult.getLong(PercentilesAndCountNode.TOTAL_COUNT_ALIAS_NAME);
+        break;
+      }
+    }
+    
+    // set the value of p0
+    if (tableSize == 0) {
+      p0 = 1.0;
+    } else if (tableSize != -1) {
+      p0 = Math.min(1.0, blockSize / (double) tableSize);
+    }
 
     // select
     List<SelectItem> selectList = new ArrayList<>();
     selectList.add(new AliasedColumn(new BaseColumn(tableSourceAlias, primaryColumnName), PRIMARY_GROUP_RENAME));
     selectList.add(new AliasedColumn(
         ColumnOp.multiply(
-            ColumnOp.count(), 
-            ColumnOp.divide(ConstantColumn.valueOf(1.0), ConstantColumn.valueOf(p0))), 
+            ColumnOp.count(),
+            ColumnOp.divide(ConstantColumn.valueOf(1.0), ConstantColumn.valueOf(p0))),
         LARGE_GROUP_SIZE_COLUMN_ALIAS));
 
     // from
@@ -649,13 +705,13 @@ class LargeGroupListNode extends CreateTableAsSelectNode {
     this.selectQuery = selectQuery;
     return super.createQuery(tokens);
   }
-  
+
   @Override
   public ExecutionInfoToken createToken(DbmsQueryResult result) {
     ExecutionInfoToken token = super.createToken(result);
-    Pair<String, String> fullTableName = 
+    Pair<String, String> fullTableName =
         Pair.of((String) token.getValue("schemaName"), (String) token.getValue("tableName"));
-    
+
     // set duplicate information for convenience
     token.setKeyValue(this.getClass().getSimpleName(), fullTableName);
     return token;
@@ -678,7 +734,7 @@ class LargeGroupSizeNode extends QueryNodeWithPlaceHolders {
   /**
    * select count(*) as totalLargeGroupSize
    * from verdicttemptable;
-   * 
+   *
    * @param tokens
    * @return
    * @throws VerdictDBException
@@ -694,14 +750,14 @@ class LargeGroupSizeNode extends QueryNodeWithPlaceHolders {
     BaseTable baseTable = placeholder.getLeft();
     selectQuery = SelectQuery.create(
         new AliasedColumn(
-            ColumnOp.sum(new BaseColumn(tableSourceAlias, groupSizeAlias)), 
+            ColumnOp.sum(new BaseColumn(tableSourceAlias, groupSizeAlias)),
             aliasName),
         baseTable);
-    
+
     super.createQuery(tokens);      // placeholder replacements performed here
     return selectQuery;
   }
-  
+
   @Override
   public ExecutionInfoToken createToken(DbmsQueryResult result) {
     ExecutionInfoToken token = new ExecutionInfoToken();
@@ -714,10 +770,10 @@ class LargeGroupSizeNode extends QueryNodeWithPlaceHolders {
 
 /**
  * Retrieves the following information.
- * 
+ *
  * 1. Top and bottom 0.1% percentile values of every numeric column.
  * 2. Total count
- * 
+ *
  * @author Yongjoo Park
  *
  */
@@ -725,9 +781,9 @@ class FastConvergeStatisticsQueryGenerator implements StatiticsQueryGenerator {
 
   @Override
   public SelectQuery create(
-      String schemaName, 
-      String tableName, 
-      List<Pair<String, String>> columnNamesAndTypes, 
+      String schemaName,
+      String tableName,
+      List<Pair<String, String>> columnNamesAndTypes,
       List<String> partitionColumnNames) {
 
 

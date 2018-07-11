@@ -1,5 +1,6 @@
 package org.verdictdb.core.querying.ola;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -10,8 +11,10 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.exception.VerdictDBValueException;
 
-public class HyperTableCube {
+public class HyperTableCube implements Serializable {
 
+  private static final long serialVersionUID = -2326120491898400014L;
+  
   List<Dimension> dimensions = new ArrayList<>();   // serves as dimension constraints
 
   public HyperTableCube() {}

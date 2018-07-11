@@ -1,6 +1,7 @@
 package org.verdictdb.core.querying.ola;
 
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -16,7 +17,9 @@ import org.verdictdb.core.sqlobject.UnnamedColumn;
  *
  */
 
-public class AggMeta {
+public class AggMeta implements Serializable {
+
+  private static final long serialVersionUID = 3186577687141707687L;
 
   List<HyperTableCube> cubes = new ArrayList<>();
 

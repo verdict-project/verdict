@@ -1,9 +1,12 @@
 package org.verdictdb.core.connection;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class DbmsQueryResultMetaData {
+public class DbmsQueryResultMetaData implements Serializable {
+
+  private static final long serialVersionUID = 472824664812257672L;
 
   public List<Boolean> isCurrency = new ArrayList<>();
 

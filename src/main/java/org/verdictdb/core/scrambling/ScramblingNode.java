@@ -13,7 +13,6 @@ import org.verdictdb.core.querying.CreateTableAsSelectNode;
 import org.verdictdb.core.querying.IdCreator;
 import org.verdictdb.core.sqlobject.AbstractRelation;
 import org.verdictdb.core.sqlobject.AliasedColumn;
-import org.verdictdb.core.sqlobject.AsteriskColumn;
 import org.verdictdb.core.sqlobject.BaseColumn;
 import org.verdictdb.core.sqlobject.ColumnOp;
 import org.verdictdb.core.sqlobject.ConstantColumn;

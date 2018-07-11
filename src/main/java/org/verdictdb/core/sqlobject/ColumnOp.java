@@ -1,5 +1,6 @@
 package org.verdictdb.core.sqlobject;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -10,7 +11,9 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
 
-public class ColumnOp implements UnnamedColumn, SelectItem {
+public class ColumnOp implements UnnamedColumn, SelectItem, Serializable {
+
+  private static final long serialVersionUID = 4600444500423496880L;
 
   /**
    * opType must be one of the following.

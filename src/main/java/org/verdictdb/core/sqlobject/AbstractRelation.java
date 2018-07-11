@@ -1,5 +1,6 @@
 package org.verdictdb.core.sqlobject;
 
+import java.io.Serializable;
 import java.util.List;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
@@ -13,8 +14,10 @@ import com.google.common.base.Optional;
  *
  * @author Yongjoo Park
  */
-public abstract class AbstractRelation {
+public abstract class AbstractRelation implements Serializable {
 
+  private static final long serialVersionUID = 4819247286138983277L;
+  
   Optional<String> aliasName = Optional.absent();
 
   public void setAliasName(String aliasName) {

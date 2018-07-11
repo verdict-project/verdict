@@ -5,7 +5,6 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 import org.verdictdb.core.connection.DbmsConnection;
-import org.verdictdb.core.connection.DbmsQueryResult;
 import org.verdictdb.core.connection.JdbcConnection;
 import org.verdictdb.core.execution.ExecutablePlanRunner;
 import org.verdictdb.core.querying.QueryExecutionPlan;

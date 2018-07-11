@@ -1,5 +1,6 @@
 package org.verdictdb.core.scrambling;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -9,7 +10,9 @@ import java.util.Map;
  * @author Yongjoo Park
  *
  */
-public class ScrambleMeta {
+public class ScrambleMeta implements Serializable {
+
+  private static final long serialVersionUID = -8422601151874567149L;
 
   // key
   String schemaName;
@@ -26,6 +29,11 @@ public class ScrambleMeta {
   
   int numberOfTiers;
   
+  // reference to the original tables
+  String originalSchemaName;
+  
+  String originalTableName;
+  
   /**
    * The probability mass function of the sizes of the aggregation blocks for a tier.
    * The key is the id of a tier (e.g., 0, 1, ..., 3), and the list is the cumulative distribution.
@@ -33,10 +41,26 @@ public class ScrambleMeta {
    */
   Map<Integer, List<Double>> cumulativeMassDistributionPerTier = new HashMap<>();
   
-  // subsample column
+  // subsample column; not used currently
   String subsampleColumn;
 
   public ScrambleMeta() {}
+  
+  public ScrambleMeta(
+      String scrambleSchemaName, String scrambleTableName, 
+      String blockColumn, int blockCount,
+      String tierColumn, int tierCount,
+      String originalSchemaName, String originalTableName) {
+    
+    this.schemaName = scrambleSchemaName;
+    this.tableName = scrambleTableName;
+    this.aggregationBlockColumn = blockColumn;
+    this.aggregationBlockCount = blockCount;
+    this.tierColumn = tierColumn;
+    this.numberOfTiers = tierCount;
+    this.originalSchemaName = originalSchemaName;
+    this.originalTableName = originalTableName;
+  }
   
   public String getSchemaName() {
     return schemaName;

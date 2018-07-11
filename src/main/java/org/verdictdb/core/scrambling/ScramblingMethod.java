@@ -18,7 +18,9 @@ public interface ScramblingMethod {
   
   
   // Stage 3 methods
-//  public int getBlockCount(Map<String, Object> metaData);
+  public int getBlockCount();
+  
+  public int getTierCount();
   
   /**
    * 

@@ -18,8 +18,8 @@ import org.junit.Test;
 import org.verdictdb.core.connection.JdbcConnection;
 import org.verdictdb.core.connection.StaticMetaData;
 import org.verdictdb.core.execution.ExecutablePlanRunner;
-import org.verdictdb.core.scrambling.ScrambleMetaSet;
 import org.verdictdb.core.scrambling.ScrambleMeta;
+import org.verdictdb.core.scrambling.ScrambleMetaSet;
 import org.verdictdb.core.scrambling.UniformScrambler;
 import org.verdictdb.core.sqlobject.AbstractRelation;
 import org.verdictdb.core.sqlobject.AliasReference;
@@ -235,7 +235,7 @@ public class TpchExecutionPlanTest {
     staticMetaData.addTableData(new StaticMetaData.TableInfo("tpch", "lineitem"), arr);
   }
 
-  @Test
+//  @Test
   public void Query1Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select " +
