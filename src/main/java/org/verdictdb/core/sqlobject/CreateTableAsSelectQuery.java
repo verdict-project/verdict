@@ -18,6 +18,8 @@ import org.apache.commons.lang3.builder.ToStringStyle;
  */
 public class CreateTableAsSelectQuery implements SqlConvertible {
   
+  private static final long serialVersionUID = -4077488589201481833L;
+
   String schemaName;
   
   String tableName;

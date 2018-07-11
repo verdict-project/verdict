@@ -13,6 +13,8 @@ import org.apache.commons.lang3.builder.ToStringStyle;
  */
 public class AliasReference implements GroupingAttribute {
 
+  private static final long serialVersionUID = 6273526004275442693L;
+
   String aliasName;
 
   String tableAlias;

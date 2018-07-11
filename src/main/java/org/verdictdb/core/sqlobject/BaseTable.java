@@ -10,6 +10,8 @@ import org.verdictdb.sqlsyntax.SqlSyntax;
 
 public class BaseTable extends AbstractRelation {
 
+  private static final long serialVersionUID = 8758804572670242146L;
+
   String schemaName;
 
   String tableName;

@@ -1,5 +1,7 @@
 package org.verdictdb.core.sqlobject;
 
-public interface SqlConvertible {
+import java.io.Serializable;
+
+public interface SqlConvertible extends Serializable {
 
 }

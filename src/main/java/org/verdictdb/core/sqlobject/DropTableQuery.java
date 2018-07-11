@@ -2,6 +2,8 @@ package org.verdictdb.core.sqlobject;
 
 public class DropTableQuery implements SqlConvertible {
   
+  private static final long serialVersionUID = -3481351240470800158L;
+
   String schemaName;
   
   String tableName;

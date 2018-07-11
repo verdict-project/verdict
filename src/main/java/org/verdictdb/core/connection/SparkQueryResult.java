@@ -12,6 +12,8 @@ import org.apache.spark.sql.types.StructField;
 
 public class SparkQueryResult extends DbmsQueryResultBase {
 
+  private static final long serialVersionUID = 668595110560739261L;
+
   List<String> columnNames = new ArrayList<>();
 
   List<Integer> columnTypes = new ArrayList<>();
