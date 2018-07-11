@@ -2,6 +2,8 @@ package org.verdictdb.core.sqlobject;
 
 public class SetOperationRelation extends AbstractRelation  {
 
+  private static final long serialVersionUID = -1691931967730375434L;
+
   //May need to expand
   public enum SetOpType {
     union, unionAll, except, intersect

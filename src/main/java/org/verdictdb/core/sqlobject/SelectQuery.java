@@ -14,6 +14,8 @@ import com.google.common.base.Optional;
 
 public class SelectQuery extends AbstractRelation implements SqlConvertible {
 
+  private static final long serialVersionUID = -4830209213341883527L;
+
   public static SelectQuery create(SelectItem column, AbstractRelation relation) {
     return create(Arrays.asList(column), relation);
   }

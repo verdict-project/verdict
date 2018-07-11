@@ -9,6 +9,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 
 public class JoinTable extends AbstractRelation {
 
+  private static final long serialVersionUID = 4600469783922264549L;
+
   //May need to expand
   public enum JoinType {
     left, leftouter, right, rightouter, inner, outer
