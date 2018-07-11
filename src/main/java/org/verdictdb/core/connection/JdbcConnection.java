@@ -52,7 +52,7 @@ public class JdbcConnection implements DbmsConnection {
   
   @Override
   public DbmsQueryResult execute(String sql) throws VerdictDBDbmsException {
-    System.out.println("About to issue this query: " + sql);
+    //System.out.println("About to issue this query: " + sql);
     try {
       Statement stmt = conn.createStatement();
       JdbcQueryResult jrs = null;
