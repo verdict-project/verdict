@@ -278,6 +278,7 @@ public class ExecutableNodeBase implements ExecutableNode, Serializable {
     }
     ExecutableNodeBase rhs = (ExecutableNodeBase) obj;
     return new EqualsBuilder()
+        .appendSuper(super.equals(obj))
         .append(uniqueId, rhs.uniqueId)
         .isEquals();
   }
