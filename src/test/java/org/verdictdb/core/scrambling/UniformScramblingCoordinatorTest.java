@@ -117,7 +117,7 @@ public class UniformScramblingCoordinatorTest {
 
   @Test
   public void sanityCheck() throws VerdictDBDbmsException {
-    DbmsConnection conn = new JdbcConnection(mysqlConn);
+    DbmsConnection conn = JdbcConnection.create(mysqlConn);
     DbmsQueryResult result = conn.execute("select * from tpch.lineitem");
     int rowCount = 0;
     while (result.next()) {
@@ -137,7 +137,7 @@ public class UniformScramblingCoordinatorTest {
   }
 
   public void testScramblingCoordinator(String tablename) throws VerdictDBException {
-    DbmsConnection conn = new JdbcConnection(mysqlConn);
+    DbmsConnection conn = JdbcConnection.create(mysqlConn);
 
     String scrambleSchema = "tpch";
     String scratchpadSchema = "tpch";

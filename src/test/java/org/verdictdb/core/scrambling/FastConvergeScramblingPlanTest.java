@@ -83,7 +83,7 @@ public class FastConvergeScramblingPlanTest {
         method, options);
 //    System.out.println(plan.getReportingNode());
 
-    DbmsConnection conn = new JdbcConnection(mysqlConn);
+    DbmsConnection conn = JdbcConnection.create(mysqlConn);
     ExecutablePlanRunner.runTillEnd(conn, plan);
   }
 
@@ -112,7 +112,7 @@ public class FastConvergeScramblingPlanTest {
         method, options);
 //    System.out.println(plan.getReportingNode());
 
-    DbmsConnection conn = new JdbcConnection(mysqlConn);
+    DbmsConnection conn = JdbcConnection.create(mysqlConn);
     ExecutablePlanRunner.runTillEnd(conn, plan);
   }
 
@@ -145,7 +145,7 @@ public class FastConvergeScramblingPlanTest {
         method, options);
 //    System.out.println(plan.getReportingNode());
 
-    DbmsConnection conn = new JdbcConnection(mysqlConn);
+    DbmsConnection conn = JdbcConnection.create(mysqlConn);
     ExecutablePlanRunner.runTillEnd(conn, plan);
 
     DbmsQueryResult result = conn.execute(String.format("select * from %s.%s", newSchemaName, newTableName));
@@ -180,7 +180,7 @@ public class FastConvergeScramblingPlanTest {
         method, options);
 //    System.out.println(plan.getReportingNode());
 
-    DbmsConnection conn = new JdbcConnection(mysqlConn);
+    DbmsConnection conn = JdbcConnection.create(mysqlConn);
     ExecutablePlanRunner.runTillEnd(conn, plan);
 
     DbmsQueryResult result = conn.execute(String.format("select * from %s.%s", newSchemaName, newTableName));

@@ -59,7 +59,7 @@ public class ColumnMetadataRetrievalNodeTest {
         + "height float, "
         + "nation varchar(8), "
         + "birth timestamp)");
-    dbmsConn = new JdbcConnection(conn);
+    dbmsConn = JdbcConnection.create(conn);
   }
 
   @AfterClass

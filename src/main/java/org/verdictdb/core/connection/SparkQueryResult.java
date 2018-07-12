@@ -124,4 +124,9 @@ public class SparkQueryResult extends DbmsQueryResultBase {
     cursor = -1;
   }
 
+  @Override
+  public long getRowCount() {
+    return result.size();
+  }
+
 }

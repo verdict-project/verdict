@@ -125,4 +125,10 @@ public class AggregateFrameQueryResult extends DbmsQueryResultBase {
     
   }
 
+  @Override
+  public long getRowCount() {
+    // TODO Auto-generated method stub
+    return 0;
+  }
+
 }
