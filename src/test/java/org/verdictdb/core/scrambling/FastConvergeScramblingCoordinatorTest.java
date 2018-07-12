@@ -36,7 +36,7 @@ public class FastConvergeScramblingCoordinatorTest {
 
   static {
     String env = System.getenv("BUILD_ENV");
-    if (env != null && env.equals("GitLab")) {
+    if (env != null && (env.equals("GitLab") || env.equals("DockerCompose"))) {
       MYSQL_HOST = "mysql";
       MYSQL_UESR = "root";
     } else {
@@ -92,7 +92,7 @@ public class FastConvergeScramblingCoordinatorTest {
     File dataFile = new File("src/test/resources/tpch_test_data/lineitem.tbl");
     String dataFilePath = dataFile.getAbsolutePath();
     mysqlStmt.execute(String.format("LOAD DATA LOCAL INFILE '%s' INTO TABLE tpch.lineitem COLUMNS TERMINATED BY '|'", dataFilePath));
-    
+
     dataFile = new File("src/test/resources/tpch_test_data/orders.tbl");
     dataFilePath = dataFile.getAbsolutePath();
     mysqlStmt.execute(String.format("LOAD DATA LOCAL INFILE '%s' INTO TABLE tpch.orders COLUMNS TERMINATED BY '|'", dataFilePath));
@@ -114,7 +114,7 @@ public class FastConvergeScramblingCoordinatorTest {
     mysqlStmt.execute("drop table if exists tpch.orders_scrambled");
     mysqlStmt.execute("drop schema if exists tpch");
   }
-  
+
   @Test
   public void sanityCheck() throws VerdictDBDbmsException {
     DbmsConnection conn = new JdbcConnection(mysqlConn);
@@ -135,7 +135,7 @@ public class FastConvergeScramblingCoordinatorTest {
   public void testScramblingCoordinatorOrders() throws VerdictDBException {
     testScramblingCoordinator("orders");
   }
-  
+
   @Test
   public void testScramblingCoordinatorLineitemWithPrimaryColumn() throws VerdictDBException {
     testScramblingCoordinatorWithPrimaryColumn("lineitem", "l_shipdate");
@@ -152,7 +152,7 @@ public class FastConvergeScramblingCoordinatorTest {
     String scrambleSchema = "tpch";
     String scratchpadSchema = "tpch";
     long blockSize = 100;
-    ScramblingCoordinator scrambler = 
+    ScramblingCoordinator scrambler =
         new ScramblingCoordinator(conn, scrambleSchema, scratchpadSchema, blockSize);
 
     // perform scrambling
@@ -185,16 +185,16 @@ public class FastConvergeScramblingCoordinatorTest {
     assertEquals(0, result.getInt(0));
     assertEquals((int) Math.ceil(result2.getInt(0) / (float) blockSize) - 1, result.getInt(1));
   }
-  
+
   public void testScramblingCoordinatorWithPrimaryColumn(
-      String tablename, String primaryColumn) 
+      String tablename, String primaryColumn)
           throws VerdictDBException {
     DbmsConnection conn = new JdbcConnection(mysqlConn);
 
     String scrambleSchema = "tpch";
     String scratchpadSchema = "tpch";
     long blockSize = 100;
-    ScramblingCoordinator scrambler = 
+    ScramblingCoordinator scrambler =
         new ScramblingCoordinator(conn, scrambleSchema, scratchpadSchema, blockSize);
 
     // perform scrambling

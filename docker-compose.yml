@@ -1,23 +1,23 @@
-verdictdb:
-  build: .
-  dockerfile: Dockerfile
-  links:
-    - mysql
-    - postgres
-    - impala
-
-mysql:
-  image: mysql:5.5
-  environment:
-    MYSQL_DATABASE: test
-    MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
-
-postgres:
-  image: postgres:10
-  environment:
-    POSTGRES_DB: test
-    POSTGRES_USER: postgres
-    POSTGRES_PASSWORD: ""
-
-impala:
-  image: codingtony/impala
+version: '3'
+services:
+  test_runner:
+    build: .
+    environment:
+      BUILD_ENV: DockerCompose
+    depends_on:
+      - mysql
+      - postgres
+      - impala
+  mysql:
+    image: mysql:5.5
+    environment:
+      MYSQL_DATABASE: test
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+  postgres:
+    image: postgres:10
+    environment:
+      POSTGRES_DB: test
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ""
+  impala:
+    image: codingtony/impala

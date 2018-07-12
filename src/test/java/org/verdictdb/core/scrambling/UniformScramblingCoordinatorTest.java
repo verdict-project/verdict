@@ -38,7 +38,7 @@ public class UniformScramblingCoordinatorTest {
 
   static {
     String env = System.getenv("BUILD_ENV");
-    if (env != null && env.equals("GitLab")) {
+    if (env != null && (env.equals("GitLab") || env.equals("DockerCompose"))) {
       MYSQL_HOST = "mysql";
       MYSQL_UESR = "root";
     } else {
@@ -94,7 +94,7 @@ public class UniformScramblingCoordinatorTest {
     File dataFile = new File("src/test/resources/tpch_test_data/lineitem.tbl");
     String dataFilePath = dataFile.getAbsolutePath();
     mysqlStmt.execute(String.format("LOAD DATA LOCAL INFILE '%s' INTO TABLE tpch.lineitem COLUMNS TERMINATED BY '|'", dataFilePath));
-    
+
     dataFile = new File("src/test/resources/tpch_test_data/orders.tbl");
     dataFilePath = dataFile.getAbsolutePath();
     mysqlStmt.execute(String.format("LOAD DATA LOCAL INFILE '%s' INTO TABLE tpch.orders COLUMNS TERMINATED BY '|'", dataFilePath));
