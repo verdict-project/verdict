@@ -13,7 +13,14 @@ jobs:
       # CircleCI maintains a library of pre-built images
       # documented at https://circleci.com/docs/2.0/circleci-images/
       - image: mysql:5.5
+        environment:
+          MYSQL_DATABASE: test
+          MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
       - image: postgres:10
+        environment:
+          POSTGRES_DB: test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ""
       - image: codingtony/impala
 
     working_directory: ~/repo
