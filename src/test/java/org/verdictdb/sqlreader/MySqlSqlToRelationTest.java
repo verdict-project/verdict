@@ -38,7 +38,7 @@ public class MySqlSqlToRelationTest {
 
   private static final String MYSQL_UESR = "root";
 
-  private static final String MYSQL_PASSWORD = "zhongshucheng123";
+  private static final String MYSQL_PASSWORD = "";
 
   @BeforeClass
   public static void setupMySqlDatabase() throws SQLException {
