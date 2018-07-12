@@ -43,7 +43,9 @@ jobs:
       # run tests!
       - run: mvn test
       - store_test_results:
-          path: test-results
+          path: ~/junit
+      - store_artifacts:
+          path: ~/junit
 
   build-jdk8:
     docker:
@@ -84,7 +86,9 @@ jobs:
       # run tests!
       - run: mvn test
       - store_test_results:
-          path: test-results
+          path: ~/junit
+      - store_artifacts:
+          path: ~/junit
 
 workflows:
   version: 2
