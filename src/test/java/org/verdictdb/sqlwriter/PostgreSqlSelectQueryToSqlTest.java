@@ -7,6 +7,7 @@ import org.verdictdb.core.sqlobject.AbstractRelation;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sqlreader.NonValidatingSQLParser;
 import org.verdictdb.sqlsyntax.MysqlSyntax;
+import org.verdictdb.sqlsyntax.PostgresqlSyntax;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -78,51 +79,41 @@ public class PostgreSqlSelectQueryToSqlTest {
   }
 
   @Test
-  public void testSelectAllBaseTable() throws VerdictDBException {
-    String expected = "select * from `myschema`.`mytable` as t";
-    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
-    AbstractRelation sel = sqlToRelation.toRelation(expected);
-    SelectQueryToSql relToSql = new SelectQueryToSql(new MysqlSyntax());
-    String actual = relToSql.toSql(sel);
-    assertEquals(expected, actual);
-  }
-
-  @Test
-  public void testQuotedQuery() throws VerdictDBException {
-    String expected = "select * from `myschema`.`mytable` as t";
-    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
-    AbstractRelation sel = sqlToRelation.toRelation(expected);
-    SelectQueryToSql relToSql = new SelectQueryToSql(new MysqlSyntax());
-    String actual = relToSql.toSql(sel);
-    assertEquals(expected, actual);
-  }
-
-  @Test
   public void testConcat() throws VerdictDBException {
-    String expected = "select 'Post' || 'greSQL' from `myschema`.`mytable` as t";
+    String expected = "select 'Post' || 'greSQL' from \"myschema\".\"mytable\" as t";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation sel = sqlToRelation.toRelation(expected);
-    SelectQueryToSql relToSql = new SelectQueryToSql(new MysqlSyntax());
+    SelectQueryToSql relToSql = new SelectQueryToSql(new PostgresqlSyntax());
     String actual = relToSql.toSql(sel);
     assertEquals(expected, actual);
   }
 
   @Test
   public void testOverlay() throws VerdictDBException {
-    String expected = "select overlay('Txxxxas' placing 'hom' from 2) from `myschema`.`mytable` as t";
+    String expected = "select overlay('Txxxxas' placing 'hom' from 2) from \"myschema\".\"mytable\" as t";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation sel = sqlToRelation.toRelation(expected);
-    SelectQueryToSql relToSql = new SelectQueryToSql(new MysqlSyntax());
+    SelectQueryToSql relToSql = new SelectQueryToSql(new PostgresqlSyntax());
     String actual = relToSql.toSql(sel);
     assertEquals(expected, actual);
   }
 
   @Test
   public void testSubstring() throws VerdictDBException {
-    String expected = "select substring('Thomas' from '%#o_a#_' for '#') from `myschema`.`mytable` as t";
+    String expected = "select substring('Thomas' from '%#o_a#_' for '#') from \"myschema\".\"mytable\" as t";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation sel = sqlToRelation.toRelation(expected);
-    SelectQueryToSql relToSql = new SelectQueryToSql(new MysqlSyntax());
+    SelectQueryToSql relToSql = new SelectQueryToSql(new PostgresqlSyntax());
+    String actual = relToSql.toSql(sel);
+    assertEquals(expected, actual);
+  }
+
+  @Test
+  public void testExtract() throws VerdictDBException {
+    String expected = "select extract(hour from '2001-02-16 20:38:40') from \"myschema\".\"mytable\" as t";
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation sel = sqlToRelation.toRelation(expected);
+    SelectQueryToSql relToSql = new SelectQueryToSql(new PostgresqlSyntax());
     String actual = relToSql.toSql(sel);
     assertEquals(expected, actual);
   }

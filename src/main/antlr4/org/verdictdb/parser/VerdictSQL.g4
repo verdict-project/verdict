@@ -325,7 +325,7 @@ expression
     | '~' expression                                           #unary_operator_expression
     | expression op=('*' | '/' | '%') expression               #binary_operator_expression
     | op=('+' | '-') expression                                #unary_operator_expression
-    | expression op=('+' | '-' | '&' | '^' | '|' | '||') expression   #binary_operator_expression
+    | expression op=('+' | '-' | '&' | '^' | '|' | '||' | '#' | '<<' | '>>' | '~') expression   #binary_operator_expression
     | expression comparison_operator expression                #binary_operator_expression
     | interval                                                 #interval_expression
     | date                                                     #date_expression
@@ -608,7 +608,7 @@ value_manipulation_function
     | nary_manipulation_function
     | extract_time_function
     | overlay_string_function
-    | subtring_string_function
+    | substring_string_function
     ;
 
 extract_time_function
@@ -617,7 +617,7 @@ extract_time_function
     ;
 
 extract_unit
-    : YEAR | MONTH | DAY | expression
+    : YEAR | MONTH | DAY | HOUR | MINUTE | expression
     ;
 
 overlay_string_function
@@ -625,18 +625,21 @@ overlay_string_function
       '(' expression PLACING expression FROM expression (FOR expression)? ')'
     ;
 
-subtring_string_function
+substring_string_function
     : function_name=SUBSTRING
       '(' expression FROM expression (FOR expression)? ')'
     ;
 
 nary_manipulation_function
-	: function_name=(CONCAT | CONCAT_WS | COALESCE | FIELD | GREATEST | LEAST | WIDTH_BUCKET)
+	: function_name=(CONCAT | CONCAT_WS | COALESCE | FIELD | GREATEST | LEAST | WIDTH_BUCKET | BTRIM | FORMAT
+	| REGEXP_MATCHES | REGEXP_REPLACE | REGEXP_SPLIT_TO_ARRAY | REGEXP_SPLIT_TO_TABLE | LTRIM | RTRIM | TO_ASCII
+	| MAKE_TIMESTAMP | MAKE_TIMESTAMPTZ)
 		'(' expression (',' expression)* ')'
     ;
 
 ternary_manipulation_function
     : function_name=(CONV | SUBSTR | HASH | RPAD | SUBSTRING | LPAD | MID | REPLACE | SUBSTRING_INDEX | MAKETIME | IF
+    | CONVERT | SPLIT_PART | TRANSLATE | MAKE_DATE | MAKE_TIME
     )
       '(' expression ',' expression ',' expression ')'
     ;
@@ -646,7 +649,8 @@ binary_manipulation_function
     | SHIFTRIGHT | SHIFTRIGHTUNSIGNED | NVL | FIND_IN_SET | FORMAT_NUMBER | FORMAT | GET_JSON_OBJECT | IN_FILE
     | LOCATE | REPEAT | AES_ENCRYPT | AES_DECRYPT | POSITION | STRCMP | TRUNCATE | ADDDATE | ADDTIME | DATEDIFF | DATE_ADD
     | DATE_FORMAT | DATE_SUB | MAKEDATE | PERIOD_ADD | PERIOD_DIFF | SUBDATE | TIME_FORMAT | TIMEDIFF | CONVERT | IFNULL | NULLIF
-    | DIV | LOG | TRUNC)
+    | DIV | LOG | TRUNC | CONVERT_FROM | CONVERT_TO | LENGTH | STRPOS | GET_BIT | GET_BYTE | SET_BIT | SET_BYTE | TO_CHAR
+    | TO_NUMBER | TO_TIMESTAMP | AGE | DATE_PART | DATE_TRUNC)
       '(' expression ',' expression ')'
     ;
 
@@ -657,7 +661,8 @@ unary_manipulation_function
      | NEGATIVE | BROUND | BIN | HEX | UNHEX | FROM_UNIXTIME | TO_DATE | CHR | LTRIM | RTRIM| REVERSE | SPACE_FUNCTION | SHA1
      | SHA2 | SPACE | DATE | DAYNAME | DAYOFMONTH | DAYOFWEEK | DAYOFYEAR | FROM_DAYS | LAST_DAY | MICROSECOND | MONTHNAME | SEC_TO_TIME
      | STR_TO_DATE | TIME | TIME_TO_SEC | TIMESTAMP | TO_DAYS | WEEK | WEEKDAY | YEARWEEK | BINARY | ISNULL | SCALE | TRUNC
-     | SETSEED | BIT_LENGTH | OCTET_LENGTH)
+     | SETSEED | BIT_LENGTH | OCTET_LENGTH | CHR | INITCAP | QUOTE_IDENT | QUOTE_LITERAL | QUOTE_NULLABLE | TO_HEX | AGE
+     | ISFINITE | JUSTIFY_DAYS | JUSTIFY_HOURS | JUSTIFY_INTERVALS | TO_TIMESTAMP)
       '(' expression ')'
     | function_name=CAST '(' cast_as_expression ')'    
     ;
@@ -665,7 +670,8 @@ unary_manipulation_function
 noparam_manipulation_function
     : function_name=(UNIX_TIMESTAMP | CURRENT_TIMESTAMP | CURRENT_DATE | CURRENT_TIME | RANDOM | RAND | NATURAL_CONSTANT
     | PI | CURDATE | CURTIME | LOCALTIME | LOCALTIMESTAMP | NOW | SYSDATE | CURRENT_USER | DATABASE | LAST_INSERT_ID
-    | SESSION_USER | SYSTEM_USER | USER | VERSION)
+    | SESSION_USER | SYSTEM_USER | USER | VERSION | PG_CLIENT_ENCODING | CLOCK_TIMESTAMP | STATEMENT_TIMESTAMP
+    | TIMEOFDAY | TRANSACTION_TIMESTAMP)
       '(' ')'
     ;
     
@@ -1223,19 +1229,20 @@ ABS:                             A B S;
 ACOS:                            A C O S;
 ADDDATE:                         A D D D A T E;
 ADDTIME:                         A D D T I M E;
-
 AES_DECRYPT:                     A E S '_' D E C R Y P T;
 AES_ENCRYPT:                     A E S '_' E N C R Y P T;
+AGE:                             A G E;
 APPLY:                           A P P L Y;
 ASIN:                            A S I N;
 ATAN:                            A T A N;
-ATAN2:                            A T A N '2';
+ATAN2:                           A T A N '2';
 AUTO:                            A U T O;
 AVG:                             A V G;
 BASE64:                          B A S E '64';
 BIN:                             B I N;
 BINARY_CHECKSUM:                 B I N A R Y '_' C H E C K S U M;
 BIT_LENGTH:                      B I T '_' L E N G T H;
+BTRIM:                           B T R I M;
 BROUND:                          B R O U N D;
 CALLER:                          C A L L E R;
 CAST:                            C A S T;
@@ -1248,10 +1255,13 @@ CHARACTER_LENGTH:                C H A R A C T E R '_' L E N G T H;
 CHECKSUM:                        C H E C K S U M;
 CHECKSUM_AGG:                    C H E C K S U M '_' A G G;
 CHR:                             C H R;
+CLOCK_TIMESTAMP:                 C L O C K '_' T I M E S T A M P;
 COMMITTED:                       C O M M I T T E D;
 CONCAT:                          C O N C A T;
 CONCAT_WS:                       C O N C A T '_' W S;
 CONFIG:                          C O N F I G;
+CONVERT_FROM:                    C O N V E R T '_' F R O M;
+CONVERT_TO:                      C O N V E R T '_' T O;
 COOKIE:                          C O O K I E;
 COS:                             C O S;
 COT:                             C O T;
@@ -1264,7 +1274,9 @@ DATE:                            D A T E;
 DATEADD:                         D A T E A D D;
 DATE_ADD:                        D A T E '_' A D D;
 DATE_FORMAT:                     D A T E '_' F O R M A T;
+DATE_PART:                       D A T E '_' P A R T;
 DATE_SUB:                        D A T E '_' S U B;
+DATE_TRUNC:                      D A T E '_' T R U N C;
 DATEDIFF:                        D A T E D I F F;
 DATENAME:                        D A T E N A M E;
 DATEPART:                        D A T E P A R T;
@@ -1306,6 +1318,8 @@ FNV_HASH:                        F N V '_' H A S H;
 FROM_DAYS:                       F R O M '_' D A Y S;
 FROM_UNIXTIME:                   F R O M '_' U N I X T I M E;
 FULLSCAN:                        F U L L S C A N;
+GET_BIT:                         G E T '_' B I T;
+GET_BYTE:                        G E T '_' B Y T E;
 GET_JSON_OBJECT:                 G E T '_' J S O N '_' O B J E C T;
 GLOBAL:                          G L O B A L;
 GO:                              G O;
@@ -1315,13 +1329,18 @@ GROUPING_ID:                     G R O U P I N G '_' I D;
 HEX:                             H E X;
 HOUR:                            H O U R;
 IFNULL:                          I F N U L L;
+INITCAP:                         I N I T C A P;
 INSENSITIVE:                     I N S E N S I T I V E;
 INSERTED:                        I N S E R T E D;
 INSTR:                           I N S T R;
 INTERVAL:                        I N T E R V A L;
 IN_FILE:                         I N '_' F I L E;
+ISFINITE:                        I S F I N I T E;
 ISNULL:                          I S N U L L;
 ISOLATION:                       I S O L A T I O N;
+JUSTIFY_DAYS:                    J U S T I F Y '_' D A Y S;
+JUSTIFY_HOURS:                   J U S T I F Y '_' H O U R S;
+JUSTIFY_INTERVALS:               J U S T I F Y '_' I N T E R V A L;
 KEEPFIXED:                       K E E P F I X E D;
 KEYSET:                          K E Y S E T;
 LAST:                            L A S T;
@@ -1349,6 +1368,10 @@ LPAD:                            L P A D;
 LTRIM:                           L T R I M;
 MAKEDATE:                        M A K E D A T E;
 MAKETIME:                        M A K E T I M E;
+MAKE_DATE:                       M A K E '_' D A T E;
+MAKE_TIME:                       M A K E '_' T I M E;
+MAKE_TIMESTAMP:                  M A K E '_' T I M E S T A M P;
+MAKE_TIMESTAMPTZ:                M A K E '_' T I M E S T A M P T Z;
 MARK:                            M A R K;
 MAX:                             M A X;
 MD5:                             M D '5';
@@ -1386,6 +1409,7 @@ PATH:                            P A T H;
 PERCENTILE:                      P E R C E N T I L E;
 PERIOD_ADD:                      P E R I O D '_' A D D;
 PERIOD_DIFF:                     P E R I O D '_' D I F F;
+PG_CLIENT_ENCODING:              P G '_' C L I E N T '_' E N C O D I N G;
 PI:                              P I;
 PLACING:                         P L A C I N G;
 PMOD:                            P M O D;
@@ -1397,6 +1421,9 @@ PRECEDING:                       P R E C E D I N G;
 PRIOR:                           P R I O R;
 QUARTER:                         Q U A R T E R;
 QUOTED_BY:                       Q U O T E D ' ' B Y;
+QUOTE_IDENT:                     Q U O T E '_' I D E N T;
+QUOTE_LITERAL:                   Q U O T E '_' L I T E R A L;
+QUOTE_NULLABLE:                  Q U O T E '_' N U L L A B L E;
 RADIANS:                         R A D I A N S;
 RAND:                            R A N D;
 RANDOM:                          R A N D O M;
@@ -1408,6 +1435,10 @@ RECOMMENDED:                     R E C O M M E N D E D;
 RECOMPILE:                       R E C O M P I L E;
 REFRESH:                         R E F R E S H;
 RELATIVE:                        R E L A T I V E;
+REGEXP_MATCHES:                  R E G E X P '_' M A T C H E S;
+REGEXP_REPLACE:                  R E G E X P '_' R E P L A C E;
+REGEXP_SPLIT_TO_ARRAY:           R E G E X P '_' S P L I T '_' T O '_' A R R A Y;
+REGEXP_SPLIT_TO_TABLE:           R E G E X P '_' S P L I T '_' T O '_' T A B L E;
 REMOTE:                          R E M O T E;
 REPEAT:                          R E P E A T;
 REPEATABLE:                      R E P E A T A B L E;
@@ -1431,6 +1462,8 @@ SEC_TO_TIME:                     S E C '_' T O '_' T I M E;
 SELF:                            S E L F;
 SERIALIZABLE:                    S E R I A L I Z A B L E;
 SETSEED:                         S E T S E E D;
+SET_BIT:                         S E T '_' B I T;
+SET_BYTE:                        S E T '_' B Y T E;
 SHA1:                            S H A '1';
 SHA2:                            S H A '2';
 SHIFTLEFT:                       S H I F T L E F T;
@@ -1442,6 +1475,8 @@ SNAPSHOT:                        S N A P S H O T;
 SPACE_FUNCTION:                  S P A C E;
 SPATIAL_WINDOW_MAX_CELLS:        S P A T I A L '_' W I N D O W '_' M A X '_' C E L L S;
 SPLIT:                           S P L I T;
+SPLIT_PART:                      S P L I T '_' P A R T;
+STATEMENT_TIMESTAMP:             S T A T E M E N T '_' T I M E S T A M P;
 STATIC:                          S T A T I C;
 STATS_STREAM:                    S T A T S '_' S T R E A M;
 STDEV:                           S T D E V;
@@ -1450,6 +1485,7 @@ STDEVP:                          S T D E V P;
 STDDEV_SAMP:                     S T D D E V '_' S A M P;
 STORED_AS_PARQUET:               S T O R E D ' ' A S ' ' P A R Q U E T;
 STRCMP:                          S T R C M P;
+STRPOS:                          S T R P O S;
 STR_TO_DATE:                     S T R '_' T O '_' D A T E;
 SUBDATE:                         S U B D A T E;
 SUBSTRING_INDEX:                 S U B S T R I N G '_' I N D E X;
@@ -1462,11 +1498,19 @@ THROW:                           T H R O W;
 TIES:                            T I E S;
 TIME:                            T I M E;
 TIMEDIFF:                        T I M E D I F F;
+TIMEOFDAY:                       T I M E O F D A Y;
 TIMESTAMP:                       T I M E S T A M P;
 TIME_FORMAT:                     T I M E '_' F O R M A T E;
 TIME_TO_SEC:                     T I M E '_' T O '_' S E C;
+TO_ASCII:                        T O '_' A S C I I;
+TO_CHAR:                         T O '_' C H A R;
 TO_DATE:                         T O '_' D A T E;
 TO_DAYS:                         T O '_' D A Y S;
+TO_HEX:                          T O '_' H E X;
+TO_NUMBER:                       T O '_' N U M B E R;
+TO_TIMESTAMP:                    T O '_' T I M E S T A M P;
+TRANSACTION_TIMESTAMP:           T R A N S A N C A T I O N '_' T I M E S T A M P;
+TRANSLATE:                       T R A N S L A T E;
 TRIM:                            T R I M;
 TRUNC:                           T R U N C;
 TRY:                             T R Y;

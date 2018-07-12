@@ -202,8 +202,10 @@ public class SelectQueryToSql {
         return "cast(" + withParentheses(columnOp.getOperand(0)) + " as " + withParentheses(columnOp.getOperand(1)) + ")";
       } else if (columnOp.getOpType().equals("extract")) {
         return "extract(" + withParentheses(columnOp.getOperand(0)) + " from " + withParentheses(columnOp.getOperand(1)) + ")";
-      } else if (columnOp.getOpType().equals("||")) {
-        return  withParentheses(columnOp.getOperand(0)) + " || " + withParentheses(columnOp.getOperand(1));
+      } else if (columnOp.getOpType().equals("||") || columnOp.getOpType().equals("|")
+          || columnOp.getOpType().equals("&") || columnOp.getOpType().equals("#")
+          || columnOp.getOpType().equals(">>") || columnOp.getOpType().equals("<<")) {
+        return  withParentheses(columnOp.getOperand(0)) + " " + columnOp.getOpType() + " " + withParentheses(columnOp.getOperand(1));
       } else if (columnOp.getOpType().equals("overlay")) {
         return "overlay(" + withParentheses(columnOp.getOperand(0)) + " placing " + withParentheses(columnOp.getOperand(1))
             + " from " + withParentheses(columnOp.getOperand(2)) + ")";
