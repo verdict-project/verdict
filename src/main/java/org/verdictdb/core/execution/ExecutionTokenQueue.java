@@ -1,12 +1,13 @@
 package org.verdictdb.core.execution;
 
+import java.io.Serializable;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingDeque;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
-public class ExecutionTokenQueue {
+public class ExecutionTokenQueue implements Serializable {
   
   BlockingDeque<ExecutionInfoToken> internalQueue = new LinkedBlockingDeque<>();
 

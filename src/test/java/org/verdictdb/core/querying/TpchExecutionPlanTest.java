@@ -41,6 +41,9 @@ import org.verdictdb.sqlreader.NonValidatingSQLParser;
 import org.verdictdb.sqlreader.RelationStandardizer;
 import org.verdictdb.sqlsyntax.H2Syntax;
 
+/**
+ * Tests if a given query is properly converted into execution nodes.
+ */
 public class TpchExecutionPlanTest {
 
   static Connection conn;
@@ -275,30 +278,30 @@ public class TpchExecutionPlanTest {
     BaseTable base = new BaseTable("tpch", "lineitem", "vt1");
     List<UnnamedColumn> operand1 = Arrays.<UnnamedColumn>asList(
         ConstantColumn.valueOf(1),
-        new BaseColumn("vt1", "l_discount"));
+        new BaseColumn("tpch","lineitem","vt1", "l_discount"));
     List<UnnamedColumn> operand2 = Arrays.<UnnamedColumn>asList(
-        new BaseColumn("vt1", "l_extendedprice"),
+        new BaseColumn("tpch","lineitem","vt1", "l_extendedprice"),
         new ColumnOp("subtract", operand1));
     List<UnnamedColumn> operand3 = Arrays.<UnnamedColumn>asList(
         ConstantColumn.valueOf(1),
-        new BaseColumn("vt1", "l_tax"));
+        new BaseColumn("tpch","lineitem","vt1", "l_tax"));
     List<UnnamedColumn> operand4 = Arrays.<UnnamedColumn>asList(
         new ColumnOp("multiply", operand2),
         new ColumnOp("add", operand3));
     List<UnnamedColumn> operand5 = Arrays.<UnnamedColumn>asList(
-        new BaseColumn("vt1", "l_shipdate"),
+        new BaseColumn("tpch","lineitem","vt1", "l_shipdate"),
         new ColumnOp("date", ConstantColumn.valueOf("'1998-12-01'")));
     SelectQuery expected = SelectQuery.create(
         Arrays.<SelectItem>asList(
-            new AliasedColumn(new BaseColumn("vt1", "l_returnflag"), "l_returnflag"),
-            new AliasedColumn(new BaseColumn("vt1", "l_linestatus"), "l_linestatus"),
-            new AliasedColumn(new ColumnOp("sum", new BaseColumn("vt1", "l_quantity")), "sum_qty"),
-            new AliasedColumn(new ColumnOp("sum", new BaseColumn("vt1", "l_extendedprice")), "sum_base_price"),
+            new AliasedColumn(new BaseColumn("tpch", "lineitem","vt1", "l_returnflag"), "l_returnflag"),
+            new AliasedColumn(new BaseColumn("tpch", "lineitem","vt1", "l_linestatus"), "l_linestatus"),
+            new AliasedColumn(new ColumnOp("sum", new BaseColumn("tpch","lineitem","vt1", "l_quantity")), "sum_qty"),
+            new AliasedColumn(new ColumnOp("sum", new BaseColumn("tpch","lineitem","vt1", "l_extendedprice")), "sum_base_price"),
             new AliasedColumn(new ColumnOp("sum", new ColumnOp("multiply", operand2)), "sum_disc_price"),
             new AliasedColumn(new ColumnOp("sum", new ColumnOp("multiply", operand4)), "sum_charge"),
-            new AliasedColumn(new ColumnOp("avg", new BaseColumn("vt1", "l_quantity")), "avg_qty"),
-            new AliasedColumn(new ColumnOp("avg", new BaseColumn("vt1", "l_extendedprice")), "avg_price"),
-            new AliasedColumn(new ColumnOp("avg", new BaseColumn("vt1", "l_discount")), "avg_disc"),
+            new AliasedColumn(new ColumnOp("avg", new BaseColumn("tpch","lineitem","vt1", "l_quantity")), "avg_qty"),
+            new AliasedColumn(new ColumnOp("avg", new BaseColumn("tpch","lineitem","vt1", "l_extendedprice")), "avg_price"),
+            new AliasedColumn(new ColumnOp("avg", new BaseColumn("tpch","lineitem","vt1", "l_discount")), "avg_disc"),
             new AliasedColumn(new ColumnOp("count", new AsteriskColumn()), "count_order")
         ),
         base, new ColumnOp("lessequal", operand5));
@@ -311,11 +314,10 @@ public class TpchExecutionPlanTest {
 
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
     ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
-//    queryExecutionPlan.root.executeAndWaitForTermination(new JdbcConnection(conn, new H2Syntax()));
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
-  //@Test
+  @Test
   public void Query3Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select " +
@@ -356,38 +358,38 @@ public class TpchExecutionPlanTest {
     AbstractRelation orders = new BaseTable("tpch", "orders", "vt2");
     AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "vt3");
     ColumnOp op1 = new ColumnOp("multiply", Arrays.<UnnamedColumn>asList(
-        new BaseColumn("vt3", "l_extendedprice"),
+        new BaseColumn("tpch", "lineitem","vt3", "l_extendedprice"),
         new ColumnOp("subtract", Arrays.<UnnamedColumn>asList(
             ConstantColumn.valueOf(1),
-            new BaseColumn("vt3", "l_discount")
+            new BaseColumn("tpch", "lineitem","vt3", "l_discount")
         ))
     ));
     SelectQuery expected = SelectQuery.create(
         Arrays.<SelectItem>asList(
-            new AliasedColumn(new BaseColumn("vt3", "l_orderkey"), "l_orderkey"),
+            new AliasedColumn(new BaseColumn("tpch", "lineitem","vt3", "l_orderkey"), "l_orderkey"),
             new AliasedColumn(new ColumnOp("sum", op1), "revenue"),
-            new AliasedColumn(new BaseColumn("vt2", "o_orderdate"), "o_orderdate"),
-            new AliasedColumn(new BaseColumn("vt2", "o_shippriority"), "o_shippriority")
+            new AliasedColumn(new BaseColumn("tpch", "orders","vt2", "o_orderdate"), "o_orderdate"),
+            new AliasedColumn(new BaseColumn("tpch", "orders","vt2", "o_shippriority"), "o_shippriority")
         ),
         Arrays.asList(customer, orders, lineitem));
     expected.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-        new BaseColumn("vt1", "c_mktsegment"),
+        new BaseColumn("tpch", "customer","vt1", "c_mktsegment"),
         ConstantColumn.valueOf("'123'")
     )));
     expected.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-        new BaseColumn("vt1", "c_custkey"),
-        new BaseColumn("vt2", "o_custkey")
+        new BaseColumn("tpch", "customer","vt1", "c_custkey"),
+        new BaseColumn("tpch", "orders","vt2", "o_custkey")
     )));
     expected.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-        new BaseColumn("vt3", "l_orderkey"),
-        new BaseColumn("vt2", "o_orderkey")
+        new BaseColumn("tpch", "lineitem","vt3", "l_orderkey"),
+        new BaseColumn("tpch", "orders","vt2", "o_orderkey")
     )));
     expected.addFilterByAnd(new ColumnOp("less", Arrays.<UnnamedColumn>asList(
-        new BaseColumn("vt2", "o_orderdate"),
+        new BaseColumn("tpch", "orders","vt2", "o_orderdate"),
         new ColumnOp("date", ConstantColumn.valueOf("'1998-12-01'"))
     )));
     expected.addFilterByAnd(new ColumnOp("greater", Arrays.<UnnamedColumn>asList(
-        new BaseColumn("vt3", "l_shipdate"),
+        new BaseColumn("tpch", "lineitem","vt3", "l_shipdate"),
         new ColumnOp("date", ConstantColumn.valueOf("'1998-12-01'"))
     )));
     expected.addGroupby(Arrays.<GroupingAttribute>asList(
@@ -404,11 +406,10 @@ public class TpchExecutionPlanTest {
 
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
     ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
-//    queryExecutionPlan.root.executeAndWaitForTermination(new JdbcConnection(conn, new H2Syntax()));
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
-  //@Test
+  @Test
   public void Query4Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select " +
@@ -439,7 +440,7 @@ public class TpchExecutionPlanTest {
     AbstractRelation orders = new BaseTable("tpch", "orders", "vt1");
     SelectQuery expected = SelectQuery.create(
         Arrays.<SelectItem>asList(
-            new AliasedColumn(new BaseColumn("vt1", "o_orderpriority"), "o_orderpriority"),
+            new AliasedColumn(new BaseColumn("tpch", "orders","vt1", "o_orderpriority"), "o_orderpriority"),
             new AliasedColumn(new ColumnOp("count", new AsteriskColumn()), "order_count")
         ),
         orders);
@@ -448,11 +449,10 @@ public class TpchExecutionPlanTest {
 
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
     ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
-//    queryExecutionPlan.root.executeAndWaitForTermination(new JdbcConnection(conn, new H2Syntax()));
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
-  //@Test
+  @Test
   public void Query5Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select " +
@@ -499,52 +499,52 @@ public class TpchExecutionPlanTest {
     AbstractRelation region = new BaseTable("tpch", "region", "vt6");
     SelectQuery expected = SelectQuery.create(
         Arrays.<SelectItem>asList(
-            new AliasedColumn(new BaseColumn("vt5", "n_name"), "n_name"),
+            new AliasedColumn(new BaseColumn("tpch", "nation","vt5", "n_name"), "n_name"),
             new AliasedColumn(new ColumnOp("sum", Arrays.<UnnamedColumn>asList(
                 new ColumnOp("multiply", Arrays.<UnnamedColumn>asList(
-                    new BaseColumn("vt3", "l_extendedprice"),
+                    new BaseColumn("tpch", "lineitem","vt3", "l_extendedprice"),
                     new ColumnOp("subtract", Arrays.<UnnamedColumn>asList(
                         ConstantColumn.valueOf(1),
-                        new BaseColumn("vt3", "l_discount")
+                        new BaseColumn("tpch", "lineitem","vt3", "l_discount")
                     ))
                 ))
             )), "revenue")
         ),
         Arrays.asList(customer, orders, lineitem, supplier, nation, region));
     expected.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-        new BaseColumn("vt1", "c_custkey"),
-        new BaseColumn("vt2", "o_custkey")
+        new BaseColumn("tpch", "customer","vt1", "c_custkey"),
+        new BaseColumn("tpch", "orders","vt2", "o_custkey")
     )));
     expected.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-        new BaseColumn("vt3", "l_orderkey"),
-        new BaseColumn("vt2", "o_orderkey")
+        new BaseColumn("tpch", "lineitem","vt3", "l_orderkey"),
+        new BaseColumn("tpch", "orders","vt2", "o_orderkey")
     )));
     expected.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-        new BaseColumn("vt3", "l_suppkey"),
-        new BaseColumn("vt4", "s_suppkey")
+        new BaseColumn("tpch", "lineitem","vt3", "l_suppkey"),
+        new BaseColumn("tpch", "supplier","vt4", "s_suppkey")
     )));
     expected.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-        new BaseColumn("vt1", "c_nationkey"),
-        new BaseColumn("vt4", "s_nationkey")
+        new BaseColumn("tpch", "customer","vt1", "c_nationkey"),
+        new BaseColumn("tpch", "supplier","vt4", "s_nationkey")
     )));
     expected.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-        new BaseColumn("vt4", "s_nationkey"),
-        new BaseColumn("vt5", "n_nationkey")
+        new BaseColumn("tpch", "supplier","vt4", "s_nationkey"),
+        new BaseColumn("tpch", "nation","vt5", "n_nationkey")
     )));
     expected.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-        new BaseColumn("vt5", "n_regionkey"),
-        new BaseColumn("vt6", "r_regionkey")
+        new BaseColumn("tpch", "nation","vt5", "n_regionkey"),
+        new BaseColumn("tpch", "region","vt6", "r_regionkey")
     )));
     expected.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-        new BaseColumn("vt6", "r_name"),
+        new BaseColumn("tpch", "region","vt6", "r_name"),
         ConstantColumn.valueOf("'123'")
     )));
     expected.addFilterByAnd(new ColumnOp("greaterequal", Arrays.<UnnamedColumn>asList(
-        new BaseColumn("vt2", "o_orderdate"),
+        new BaseColumn("tpch", "orders","vt2", "o_orderdate"),
         new ColumnOp("date", ConstantColumn.valueOf("'1998-12-01'"))
     )));
     expected.addFilterByAnd(new ColumnOp("less", Arrays.<UnnamedColumn>asList(
-        new BaseColumn("vt2", "o_orderdate"),
+        new BaseColumn("tpch", "orders","vt2", "o_orderdate"),
         new ColumnOp("date", ConstantColumn.valueOf("'1998-12-01'"))
     )));
     expected.addGroupby(new AliasReference("n_name"));
@@ -554,11 +554,10 @@ public class TpchExecutionPlanTest {
 
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
     ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
-//    queryExecutionPlan.root.executeAndWaitForTermination(new JdbcConnection(conn, new H2Syntax()));
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
-  //@Test
+  @Test
   public void Query6Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select " +
@@ -587,26 +586,26 @@ public class TpchExecutionPlanTest {
         Arrays.<SelectItem>asList(
             new AliasedColumn(new ColumnOp("sum", new ColumnOp("multiply",
                 Arrays.<UnnamedColumn>asList(
-                    new BaseColumn("vt1", "l_extendedprice"),
-                    new BaseColumn("vt1", "l_discount")
+                    new BaseColumn("tpch", "lineitem","vt1", "l_extendedprice"),
+                    new BaseColumn("tpch", "lineitem","vt1", "l_discount")
                 ))), "revenue")
         ),
         lineitem);
     expected.addFilterByAnd(new ColumnOp("greaterequal", Arrays.<UnnamedColumn>asList(
-        new BaseColumn("vt1", "l_shipdate"),
+        new BaseColumn("tpch", "lineitem","vt1", "l_shipdate"),
         new ColumnOp("date", ConstantColumn.valueOf("'1998-12-01'"))
     )));
     expected.addFilterByAnd(new ColumnOp("less", Arrays.<UnnamedColumn>asList(
-        new BaseColumn("vt1", "l_shipdate"),
+        new BaseColumn("tpch", "lineitem","vt1", "l_shipdate"),
         new ColumnOp("date", ConstantColumn.valueOf("'1998-12-01'"))
     )));
     expected.addFilterByAnd(new ColumnOp("between", Arrays.<UnnamedColumn>asList(
-        new BaseColumn("vt1", "l_discount"),
+        new BaseColumn("tpch", "lineitem","vt1", "l_discount"),
         new ColumnOp("subtract", Arrays.<UnnamedColumn>asList(ConstantColumn.valueOf("0.04"), ConstantColumn.valueOf("0.01"))),
         new ColumnOp("add", Arrays.<UnnamedColumn>asList(ConstantColumn.valueOf("0.04"), ConstantColumn.valueOf("0.01")))
     )));
     expected.addFilterByAnd(new ColumnOp("less", Arrays.<UnnamedColumn>asList(
-        new BaseColumn("vt1", "l_quantity"),
+        new BaseColumn("tpch", "lineitem","vt1", "l_quantity"),
         ConstantColumn.valueOf("15"))
     ));
     expected.addLimit(ConstantColumn.valueOf(1));
@@ -614,11 +613,10 @@ public class TpchExecutionPlanTest {
 
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
     ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
-//    queryExecutionPlan.root.executeAndWaitForTermination(new JdbcConnection(conn, new H2Syntax()));
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
-  //@Test
+  @Test
   public void Query7Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select " +
@@ -672,81 +670,81 @@ public class TpchExecutionPlanTest {
     queryExecutionPlan.cleanUp();
     assertEquals(1, queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().size());
     assertEquals(0, queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().size());
-    AbstractRelation supplier = new BaseTable("tpch", "supplier", "vt1");
-    AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "vt2");
-    AbstractRelation orders = new BaseTable("tpch", "orders", "vt3");
-    AbstractRelation customer = new BaseTable("tpch", "customer", "vt4");
-    AbstractRelation nation1 = new BaseTable("tpch", "nation", "n1");
-    AbstractRelation nation2 = new BaseTable("tpch", "nation", "n2");
+    AbstractRelation supplier = new BaseTable("tpch", "supplier", "vt2");
+    AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "vt3");
+    AbstractRelation orders = new BaseTable("tpch", "orders", "vt4");
+    AbstractRelation customer = new BaseTable("tpch", "customer", "vt5");
+    AbstractRelation nation1 = new BaseTable("tpch", "nation", "vt6");
+    AbstractRelation nation2 = new BaseTable("tpch", "nation", "vt7");
     SelectQuery subquery = SelectQuery.create(
         Arrays.<SelectItem>asList(
-            new AliasedColumn(new BaseColumn("n1", "n_name"), "supp_nation"),
-            new AliasedColumn(new BaseColumn("n2", "n_name"), "cust_nation"),
+            new AliasedColumn(new BaseColumn("vt6", "n_name"), "supp_nation"),
+            new AliasedColumn(new BaseColumn("tpch", "nation","vt7", "n_name"), "cust_nation"),
             new AliasedColumn(new ColumnOp("substr", Arrays.<UnnamedColumn>asList(
-                new BaseColumn("vt2", "l_shipdate"), ConstantColumn.valueOf(0), ConstantColumn.valueOf(4))), "l_year"),
+                new BaseColumn("tpch", "lineitem","vt3", "l_shipdate"), ConstantColumn.valueOf(0), ConstantColumn.valueOf(4))), "l_year"),
             new AliasedColumn(new ColumnOp("multiply", Arrays.<UnnamedColumn>asList(
-                new BaseColumn("vt2", "l_extendedprice"),
+                new BaseColumn("tpch", "lineitem","vt3", "l_extendedprice"),
                 new ColumnOp("subtract", Arrays.<UnnamedColumn>asList(
-                    ConstantColumn.valueOf(1), new BaseColumn("vt2", "l_discount")))
+                    ConstantColumn.valueOf(1), new BaseColumn("tpch", "lineitem","vt3", "l_discount")))
             )), "volume")
         ),
         Arrays.asList(supplier, lineitem, orders, customer, nation1, nation2));
     subquery.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-        new BaseColumn("vt1", "s_suppkey"),
-        new BaseColumn("vt2", "l_suppkey")
+        new BaseColumn("tpch", "supplier","vt2", "s_suppkey"),
+        new BaseColumn("tpch", "lineitem","vt3", "l_suppkey")
     )));
     subquery.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-        new BaseColumn("vt3", "o_orderkey"),
-        new BaseColumn("vt2", "l_orderkey")
+        new BaseColumn("tpch", "orders","vt4", "o_orderkey"),
+        new BaseColumn("tpch", "lineitem","vt3", "l_orderkey")
     )));
     subquery.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-        new BaseColumn("vt4", "c_custkey"),
-        new BaseColumn("vt3", "o_custkey")
+        new BaseColumn("tpch", "customer","vt5", "c_custkey"),
+        new BaseColumn("tpch", "orders","vt4", "o_custkey")
     )));
     subquery.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-        new BaseColumn("vt1", "s_nationkey"),
-        new BaseColumn("n1", "n_nationkey")
+        new BaseColumn("tpch", "supplier","vt2", "s_nationkey"),
+        new BaseColumn("vt6", "n_nationkey")
     )));
     subquery.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-        new BaseColumn("vt4", "c_nationkey"),
-        new BaseColumn("n2", "n_nationkey")
+        new BaseColumn("tpch", "customer","vt5", "c_nationkey"),
+        new BaseColumn("tpch", "nation","vt7", "n_nationkey")
     )));
     subquery.addFilterByAnd(new ColumnOp("or", Arrays.<UnnamedColumn>asList(
         new ColumnOp("and", Arrays.<UnnamedColumn>asList(
             new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-                new BaseColumn("n1", "n_name"),
+                new BaseColumn("vt6", "n_name"),
                 ConstantColumn.valueOf("':1'")
             )),
             new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-                new BaseColumn("n2", "n_name"),
+                new BaseColumn("tpch", "nation","vt7", "n_name"),
                 ConstantColumn.valueOf("':2'")
             ))
         )),
         new ColumnOp("and", Arrays.<UnnamedColumn>asList(
             new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-                new BaseColumn("n1", "n_name"),
+                new BaseColumn("vt6", "n_name"),
                 ConstantColumn.valueOf("':2'")
             )),
             new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-                new BaseColumn("n2", "n_name"),
+                new BaseColumn("tpch", "nation","vt7", "n_name"),
                 ConstantColumn.valueOf("':1'")
             ))
         ))
     )));
     subquery.addFilterByAnd(new ColumnOp("between", Arrays.<UnnamedColumn>asList(
-        new BaseColumn("vt2", "l_shipdate"),
+        new BaseColumn("tpch", "lineitem","vt3", "l_shipdate"),
         new ColumnOp("date", ConstantColumn.valueOf("'1995-01-01'")),
         new ColumnOp("date", ConstantColumn.valueOf("'1996-12-31'")))
     ));
-    subquery.setAliasName("shipping");
+    subquery.setAliasName("vt1");
     SelectQuery expected = SelectQuery.create(
         Arrays.<SelectItem>asList(
-            new AliasedColumn(new BaseColumn("shipping", "supp_nation"), "supp_nation"),
-            new AliasedColumn(new BaseColumn("shipping", "cust_nation"), "cust_nation"),
-            new AliasedColumn(new BaseColumn("shipping", "l_year"), "l_year"),
-            new AliasedColumn(new ColumnOp("sum", new BaseColumn("shipping", "volume")), "revenue")
+            new AliasedColumn(new BaseColumn("vt1", "supp_nation"), "supp_nation"),
+            new AliasedColumn(new BaseColumn("vt1", "cust_nation"), "cust_nation"),
+            new AliasedColumn(new BaseColumn("vt1", "l_year"), "l_year"),
+            new AliasedColumn(new ColumnOp("sum", new BaseColumn("vt1", "volume")), "revenue")
         ),
-        new BaseTable("placeholderSchemaName", "placeholderTableName", "shipping"));
+        new BaseTable("placeholderSchemaName", "placeholderTableName", "vt1"));
     expected.addGroupby(Arrays.<GroupingAttribute>asList(
         new AliasReference("supp_nation"),
         new AliasReference("cust_nation"),
@@ -763,11 +761,10 @@ public class TpchExecutionPlanTest {
 
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
     ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
-//    queryExecutionPlan.root.executeAndWaitForTermination(new JdbcConnection(conn, new H2Syntax()));
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
-  //@Test
+  @Test
   public void Query8Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select " +
@@ -819,82 +816,82 @@ public class TpchExecutionPlanTest {
     queryExecutionPlan.cleanUp();
     assertEquals(1, queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().size());
 
-    AbstractRelation part = new BaseTable("tpch", "part", "vt1");
-    AbstractRelation supplier = new BaseTable("tpch", "supplier", "vt2");
-    AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "vt3");
-    AbstractRelation orders = new BaseTable("tpch", "orders", "vt4");
-    AbstractRelation customer = new BaseTable("tpch", "customer", "vt5");
-    AbstractRelation nation1 = new BaseTable("tpch", "nation", "n1");
-    AbstractRelation nation2 = new BaseTable("tpch", "nation", "n2");
-    AbstractRelation region = new BaseTable("tpch", "region", "vt6");
+    AbstractRelation part = new BaseTable("tpch", "part", "vt2");
+    AbstractRelation supplier = new BaseTable("tpch", "supplier", "vt3");
+    AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "vt4");
+    AbstractRelation orders = new BaseTable("tpch", "orders", "vt5");
+    AbstractRelation customer = new BaseTable("tpch", "customer", "vt6");
+    AbstractRelation nation1 = new BaseTable("tpch", "nation", "vt7");
+    AbstractRelation nation2 = new BaseTable("tpch", "nation", "vt8");
+    AbstractRelation region = new BaseTable("tpch", "region", "vt9");
     SelectQuery subquery = SelectQuery.create(
         Arrays.<SelectItem>asList(
-            new AliasedColumn(new ColumnOp("year", new BaseColumn("vt4", "o_orderdate")
+            new AliasedColumn(new ColumnOp("year", new BaseColumn("tpch", "orders","vt5", "o_orderdate")
             ), "o_year"),
             new AliasedColumn(new ColumnOp("multiply", Arrays.<UnnamedColumn>asList(
-                new BaseColumn("vt3", "l_extendedprice"),
-                new ColumnOp("subtract", Arrays.<UnnamedColumn>asList(ConstantColumn.valueOf(1), new BaseColumn("vt3", "l_discount")))
+                new BaseColumn("tpch", "lineitem", "vt4", "l_extendedprice"),
+                new ColumnOp("subtract", Arrays.<UnnamedColumn>asList(ConstantColumn.valueOf(1), new BaseColumn("tpch", "lineitem", "vt4", "l_discount")))
             )), "volume"),
-            new AliasedColumn(new BaseColumn("n2", "n_name"), "nation")
+            new AliasedColumn(new BaseColumn("tpch", "nation","vt8", "n_name"), "nation")
         ),
         Arrays.asList(part, supplier, lineitem, orders, customer, nation1, nation2, region));
     subquery.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-        new BaseColumn("vt1", "p_partkey"),
-        new BaseColumn("vt3", "l_partkey")
+        new BaseColumn("tpch", "part","vt2", "p_partkey"),
+        new BaseColumn("tpch", "lineitem", "vt4", "l_partkey")
     )));
     subquery.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-        new BaseColumn("vt2", "s_suppkey"),
-        new BaseColumn("vt3", "l_suppkey")
+        new BaseColumn("tpch", "supplier","vt3", "s_suppkey"),
+        new BaseColumn("tpch", "lineitem", "vt4", "l_suppkey")
     )));
     subquery.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-        new BaseColumn("vt3", "l_orderkey"),
-        new BaseColumn("vt4", "o_orderkey")
+        new BaseColumn("tpch", "lineitem", "vt4", "l_orderkey"),
+        new BaseColumn("tpch", "orders","vt5", "o_orderkey")
     )));
     subquery.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-        new BaseColumn("vt4", "o_custkey"),
-        new BaseColumn("vt5", "c_custkey")
+        new BaseColumn("tpch", "orders","vt5", "o_custkey"),
+        new BaseColumn("tpch", "customer","vt6", "c_custkey")
     )));
     subquery.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-        new BaseColumn("vt5", "c_nationkey"),
-        new BaseColumn("n1", "n_nationkey")
+        new BaseColumn("tpch", "customer","vt6", "c_nationkey"),
+        new BaseColumn("vt7", "n_nationkey")
     )));
     subquery.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-        new BaseColumn("n1", "n_regionkey"),
-        new BaseColumn("vt6", "r_regionkey")
+        new BaseColumn("vt7", "n_regionkey"),
+        new BaseColumn("tpch", "region","vt9", "r_regionkey")
     )));
     subquery.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-        new BaseColumn("vt6", "r_name"),
+        new BaseColumn("tpch", "region","vt9", "r_name"),
         ConstantColumn.valueOf("'AMERICA'")
     )));
     subquery.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-        new BaseColumn("vt2", "s_nationkey"),
-        new BaseColumn("n2", "n_nationkey")
+        new BaseColumn("tpch", "supplier","vt3", "s_nationkey"),
+        new BaseColumn("tpch", "nation","vt8", "n_nationkey")
     )));
     subquery.addFilterByAnd(new ColumnOp("between", Arrays.<UnnamedColumn>asList(
-        new BaseColumn("vt4", "o_orderdate"),
+        new BaseColumn("tpch", "orders","vt5", "o_orderdate"),
         ConstantColumn.valueOf("'1995-01-01'"),
         ConstantColumn.valueOf("'1996-12-31'")
     )));
     subquery.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-        new BaseColumn("vt1", "p_type"),
+        new BaseColumn("tpch", "part","vt2", "p_type"),
         ConstantColumn.valueOf("'ECONOMY BURNISHED NICKEL'")
     )));
-    subquery.setAliasName("all_nations");
+    subquery.setAliasName("vt1");
     SelectQuery expected = SelectQuery.create(
         Arrays.<SelectItem>asList(
-            new AliasedColumn(new BaseColumn("all_nations", "o_year"), "o_year"),
+            new AliasedColumn(new BaseColumn("vt1", "o_year"), "o_year"),
             new AliasedColumn(
                 new ColumnOp("sum", new ColumnOp("whenthenelse", Arrays.<UnnamedColumn>asList(
                     new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-                        new BaseColumn("all_nations", "nation"),
+                        new BaseColumn("vt1", "nation"),
                         ConstantColumn.valueOf("'PERU'")
-                    )), new BaseColumn("all_nations", "volume"),
+                    )), new BaseColumn("vt1", "volume"),
                     ConstantColumn.valueOf(0)))), "numerator"),
 
-            new AliasedColumn(new ColumnOp("sum", new BaseColumn("all_nations", "volume")), "denominator")
+            new AliasedColumn(new ColumnOp("sum", new BaseColumn("vt1", "volume")), "denominator")
 
         ),
-        new BaseTable(placeholderSchemaName, placeholderTableName, "all_nations"));
+        new BaseTable(placeholderSchemaName, placeholderTableName, "vt1"));
     expected.addGroupby(new AliasReference("o_year"));
     expected.addOrderby(new OrderbyAttribute("o_year"));
     expected.addLimit(ConstantColumn.valueOf(1));
@@ -903,11 +900,10 @@ public class TpchExecutionPlanTest {
 
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
     ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
-//    queryExecutionPlan.root.executeAndWaitForTermination(new JdbcConnection(conn, new H2Syntax()));
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
-  //@Test
+  @Test
   public void Query9Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select " +
@@ -954,67 +950,67 @@ public class TpchExecutionPlanTest {
     queryExecutionPlan.cleanUp();
     assertEquals(1, queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().size());
 
-    AbstractRelation part = new BaseTable("tpch", "part", "vt1");
-    AbstractRelation supplier = new BaseTable("tpch", "supplier", "vt2");
-    AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "vt3");
-    AbstractRelation partsupp = new BaseTable("tpch", "partsupp", "vt4");
-    AbstractRelation orders = new BaseTable("tpch", "orders", "vt5");
-    AbstractRelation nation = new BaseTable("tpch", "nation", "vt6");
+    AbstractRelation part = new BaseTable("tpch", "part", "vt2");
+    AbstractRelation supplier = new BaseTable("tpch", "supplier", "vt3");
+    AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "vt4");
+    AbstractRelation partsupp = new BaseTable("tpch", "partsupp", "vt5");
+    AbstractRelation orders = new BaseTable("tpch", "orders", "vt6");
+    AbstractRelation nation = new BaseTable("tpch", "nation", "vt7");
     SelectQuery subquery = SelectQuery.create(
         Arrays.<SelectItem>asList(
-            new AliasedColumn(new BaseColumn("vt6", "n_name"), "nation"),
+            new AliasedColumn(new BaseColumn("tpch", "nation","vt7", "n_name"), "nation"),
             new AliasedColumn(new ColumnOp("substr", Arrays.<UnnamedColumn>asList(
-                new BaseColumn("vt5", "o_orderdate"),
+                new BaseColumn("tpch", "orders","vt6", "o_orderdate"),
                 ConstantColumn.valueOf(0),
                 ConstantColumn.valueOf(4))), "o_year"),
             new AliasedColumn(new ColumnOp("subtract", Arrays.<UnnamedColumn>asList(
                 new ColumnOp("multiply", Arrays.<UnnamedColumn>asList(
-                    new BaseColumn("vt3", "l_extendedprice"),
-                    new ColumnOp("subtract", Arrays.<UnnamedColumn>asList(ConstantColumn.valueOf(1), new BaseColumn("vt3", "l_discount")))
+                    new BaseColumn("tpch", "lineitem","vt4", "l_extendedprice"),
+                    new ColumnOp("subtract", Arrays.<UnnamedColumn>asList(ConstantColumn.valueOf(1), new BaseColumn("tpch", "lineitem","vt4", "l_discount")))
                 )),
                 new ColumnOp("multiply", Arrays.<UnnamedColumn>asList(
-                    new BaseColumn("vt4", "ps_supplycost"),
-                    new BaseColumn("vt3", "l_quantity")
+                    new BaseColumn("tpch", "partsupp","vt5", "ps_supplycost"),
+                    new BaseColumn("tpch", "lineitem","vt4", "l_quantity")
                 ))
             )), "amount")
         ),
         Arrays.asList(part, supplier, lineitem, partsupp, orders, nation));
     subquery.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-        new BaseColumn("vt2", "s_suppkey"),
-        new BaseColumn("vt3", "l_suppkey")
+        new BaseColumn("tpch", "supplier","vt3", "s_suppkey"),
+        new BaseColumn("tpch", "lineitem","vt4", "l_suppkey")
     )));
     subquery.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-        new BaseColumn("vt4", "ps_suppkey"),
-        new BaseColumn("vt3", "l_suppkey")
+        new BaseColumn("tpch", "partsupp","vt5", "ps_suppkey"),
+        new BaseColumn("tpch", "lineitem","vt4", "l_suppkey")
     )));
     subquery.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-        new BaseColumn("vt4", "ps_partkey"),
-        new BaseColumn("vt3", "l_partkey")
+        new BaseColumn("tpch", "partsupp","vt5", "ps_partkey"),
+        new BaseColumn("tpch", "lineitem","vt4", "l_partkey")
     )));
     subquery.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-        new BaseColumn("vt1", "p_partkey"),
-        new BaseColumn("vt3", "l_partkey")
+        new BaseColumn("tpch", "part","vt2", "p_partkey"),
+        new BaseColumn("tpch", "lineitem","vt4", "l_partkey")
     )));
     subquery.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-        new BaseColumn("vt5", "o_orderkey"),
-        new BaseColumn("vt3", "l_orderkey")
+        new BaseColumn("tpch", "orders","vt6", "o_orderkey"),
+        new BaseColumn("tpch", "lineitem","vt4", "l_orderkey")
     )));
     subquery.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-        new BaseColumn("vt2", "s_nationkey"),
-        new BaseColumn("vt6", "n_nationkey")
+        new BaseColumn("tpch", "supplier","vt3", "s_nationkey"),
+        new BaseColumn("tpch", "nation","vt7", "n_nationkey")
     )));
     subquery.addFilterByAnd(new ColumnOp("like", Arrays.<UnnamedColumn>asList(
-        new BaseColumn("vt1", "p_name"),
+        new BaseColumn("tpch", "part","vt2", "p_name"),
         ConstantColumn.valueOf("'%:1%'")
     )));
-    subquery.setAliasName("profit");
+    subquery.setAliasName("vt1");
     SelectQuery expected = SelectQuery.create(
         Arrays.<SelectItem>asList(
-            new AliasedColumn(new BaseColumn("profit", "nation"), "nation"),
-            new AliasedColumn(new BaseColumn("profit", "o_year"), "o_year"),
-            new AliasedColumn(new ColumnOp("sum", new BaseColumn("profit", "amount")), "sum_profit")
+            new AliasedColumn(new BaseColumn("vt1", "nation"), "nation"),
+            new AliasedColumn(new BaseColumn("vt1", "o_year"), "o_year"),
+            new AliasedColumn(new ColumnOp("sum", new BaseColumn("vt1", "amount")), "sum_profit")
         ),
-        new BaseTable(placeholderSchemaName, placeholderTableName, "profit"));
+        new BaseTable(placeholderSchemaName, placeholderTableName, "vt1"));
     expected.addGroupby(Arrays.<GroupingAttribute>asList(new AliasReference("nation"), new AliasReference("o_year")));
     expected.addOrderby(Arrays.<OrderbyAttribute>asList(new OrderbyAttribute("nation"),
         new OrderbyAttribute("o_year", "desc")));
@@ -1028,7 +1024,7 @@ public class TpchExecutionPlanTest {
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
-  //@Test
+  @Test
   public void Query10Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select " +
@@ -1080,46 +1076,46 @@ public class TpchExecutionPlanTest {
     AbstractRelation nation = new BaseTable("tpch", "nation", "vt4");
     SelectQuery expected = SelectQuery.create(
         Arrays.<SelectItem>asList(
-            new AliasedColumn(new BaseColumn("vt1", "c_custkey"), "c_custkey"),
-            new AliasedColumn(new BaseColumn("vt1", "c_name"), "c_name"),
+            new AliasedColumn(new BaseColumn("tpch", "customer","vt1", "c_custkey"), "c_custkey"),
+            new AliasedColumn(new BaseColumn("tpch", "customer","vt1", "c_name"), "c_name"),
             new AliasedColumn(new ColumnOp("sum", new ColumnOp("multiply", Arrays.<UnnamedColumn>asList(
-                new BaseColumn("vt3", "l_extendedprice"),
+                new BaseColumn("tpch", "lineitem","vt3", "l_extendedprice"),
                 new ColumnOp("subtract", Arrays.<UnnamedColumn>asList(
                     ConstantColumn.valueOf(1),
-                    new BaseColumn("vt3", "l_discount")
+                    new BaseColumn("tpch", "lineitem","vt3", "l_discount")
                 ))
             ))), "revenue"),
-            new AliasedColumn(new BaseColumn("vt1", "c_acctbal"), "c_acctbal"),
-            new AliasedColumn(new BaseColumn("vt4", "n_name"), "n_name"),
-            new AliasedColumn(new BaseColumn("vt1", "c_address"), "c_address"),
-            new AliasedColumn(new BaseColumn("vt1", "c_phone"), "c_phone"),
-            new AliasedColumn(new BaseColumn("vt1", "c_comment"), "c_comment")
+            new AliasedColumn(new BaseColumn("tpch", "customer","vt1", "c_acctbal"), "c_acctbal"),
+            new AliasedColumn(new BaseColumn("tpch", "nation","vt4", "n_name"), "n_name"),
+            new AliasedColumn(new BaseColumn("tpch", "customer","vt1", "c_address"), "c_address"),
+            new AliasedColumn(new BaseColumn("tpch", "customer","vt1", "c_phone"), "c_phone"),
+            new AliasedColumn(new BaseColumn("tpch", "customer","vt1", "c_comment"), "c_comment")
         ),
         Arrays.asList(customer, orders, lineitem, nation));
     expected.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-        new BaseColumn("vt1", "c_custkey"),
-        new BaseColumn("vt2", "o_custkey")
+        new BaseColumn("tpch", "customer","vt1", "c_custkey"),
+        new BaseColumn("tpch", "orders","vt2", "o_custkey")
     )));
     expected.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-        new BaseColumn("vt3", "l_orderkey"),
-        new BaseColumn("vt2", "o_orderkey")
+        new BaseColumn("tpch", "lineitem","vt3", "l_orderkey"),
+        new BaseColumn("tpch", "orders","vt2", "o_orderkey")
     )));
     expected.addFilterByAnd(new ColumnOp("greaterequal", Arrays.<UnnamedColumn>asList(
-        new BaseColumn("vt2", "o_orderdate"),
+        new BaseColumn("tpch", "orders","vt2", "o_orderdate"),
         new ColumnOp("date", ConstantColumn.valueOf("'2018-01-01'"))
     )));
     expected.addFilterByAnd(new ColumnOp("less", Arrays.<UnnamedColumn>asList(
-        new BaseColumn("vt2", "o_orderdate"),
+        new BaseColumn("tpch", "orders","vt2", "o_orderdate"),
         new ColumnOp("date", ConstantColumn.valueOf("'2018-01-01'"))
 
         )));
     expected.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-        new BaseColumn("vt3", "l_returnflag"),
+        new BaseColumn("tpch", "lineitem","vt3", "l_returnflag"),
         ConstantColumn.valueOf("'R'")
     )));
     expected.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-        new BaseColumn("vt1", "c_nationkey"),
-        new BaseColumn("vt4", "n_nationkey")
+        new BaseColumn("tpch", "customer","vt1", "c_nationkey"),
+        new BaseColumn("tpch", "nation","vt4", "n_nationkey")
     )));
     expected.addGroupby(Arrays.<GroupingAttribute>asList(
         new AliasReference("c_custkey"),
@@ -1140,7 +1136,7 @@ public class TpchExecutionPlanTest {
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
-  //@Test
+  @Test
   public void Query12Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select " +
@@ -1187,14 +1183,14 @@ public class TpchExecutionPlanTest {
     AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "vt2");
     SelectQuery expected = SelectQuery.create(
         Arrays.<SelectItem>asList(
-            new AliasedColumn(new BaseColumn("vt2", "l_shipmode"), "vc3"),
+            new AliasedColumn(new BaseColumn("tpch", "lineitem","vt2", "l_shipmode"), "vc3"),
             new AliasedColumn(new ColumnOp("sum", new ColumnOp("whenthenelse", Arrays.<UnnamedColumn>asList(
                 new ColumnOp("or", Arrays.<UnnamedColumn>asList(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-                    new BaseColumn("vt1", "o_orderpriority"),
+                    new BaseColumn("tpch", "orders","vt1", "o_orderpriority"),
                     ConstantColumn.valueOf("'1-URGENT'")
                     )),
                     new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-                        new BaseColumn("vt1", "o_orderpriority"),
+                        new BaseColumn("tpch", "orders","vt1", "o_orderpriority"),
                         ConstantColumn.valueOf("'2-HIGH'")
                     ))
                 )),
@@ -1203,11 +1199,11 @@ public class TpchExecutionPlanTest {
             ))), "high_line_count"),
             new AliasedColumn(new ColumnOp("sum", new ColumnOp("whenthenelse", Arrays.<UnnamedColumn>asList(
                 new ColumnOp("and", Arrays.<UnnamedColumn>asList(new ColumnOp("notequal", Arrays.<UnnamedColumn>asList(
-                    new BaseColumn("vt1", "o_orderpriority"),
+                    new BaseColumn("tpch", "orders","vt1", "o_orderpriority"),
                     ConstantColumn.valueOf("'1-URGENT'")
                     )),
                     new ColumnOp("notequal", Arrays.<UnnamedColumn>asList(
-                        new BaseColumn("vt1", "o_orderpriority"),
+                        new BaseColumn("tpch", "orders","vt1", "o_orderpriority"),
                         ConstantColumn.valueOf("'2-HIGH'")
                     ))
                 )),
@@ -1217,29 +1213,29 @@ public class TpchExecutionPlanTest {
         ),
         Arrays.asList(orders, lineitem));
     expected.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-        new BaseColumn("vt1", "o_orderkey"),
-        new BaseColumn("vt2", "l_orderkey")
+        new BaseColumn("tpch", "orders","vt1", "o_orderkey"),
+        new BaseColumn("tpch", "lineitem","vt2", "l_orderkey")
     )));
     expected.addFilterByAnd(new ColumnOp("in", Arrays.<UnnamedColumn>asList(
-        new BaseColumn("vt2", "l_shipmode"),
+        new BaseColumn("tpch", "lineitem","vt2", "l_shipmode"),
         ConstantColumn.valueOf("':1'"),
         ConstantColumn.valueOf("':2'")
     )));
     expected.addFilterByAnd(new ColumnOp("less", Arrays.<UnnamedColumn>asList(
-        new BaseColumn("vt2", "l_commitdate"),
-        new BaseColumn("vt2", "l_receiptdate")
+        new BaseColumn("tpch", "lineitem","vt2", "l_commitdate"),
+        new BaseColumn("tpch", "lineitem","vt2", "l_receiptdate")
     )));
 
     expected.addFilterByAnd(new ColumnOp("less", Arrays.<UnnamedColumn>asList(
-        new BaseColumn("vt2", "l_shipdate"),
-        new BaseColumn("vt2", "l_commitdate")
+        new BaseColumn("tpch", "lineitem","vt2", "l_shipdate"),
+        new BaseColumn("tpch", "lineitem","vt2", "l_commitdate")
     )));
     expected.addFilterByAnd(new ColumnOp("greaterequal", Arrays.<UnnamedColumn>asList(
-        new BaseColumn("vt2", "l_receiptdate"),
+        new BaseColumn("tpch", "lineitem","vt2", "l_receiptdate"),
         new ColumnOp("date", ConstantColumn.valueOf("'2018-01-01'"))
     )));
     expected.addFilterByAnd(new ColumnOp("less", Arrays.<UnnamedColumn>asList(
-        new BaseColumn("vt2", "l_receiptdate"),
+        new BaseColumn("tpch", "lineitem","vt2", "l_receiptdate"),
         new ColumnOp("date", ConstantColumn.valueOf("'2018-01-01'"))
     )));
     expected.addGroupby(new AliasReference("vc3"));
@@ -1253,7 +1249,7 @@ public class TpchExecutionPlanTest {
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
-  //@Test
+  @Test
   public void SimplifiedQuery13Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select " +
@@ -1282,17 +1278,17 @@ public class TpchExecutionPlanTest {
         Arrays.<JoinTable.JoinType>asList(JoinTable.JoinType.leftouter),
         Arrays.<UnnamedColumn>asList(new ColumnOp("and", Arrays.<UnnamedColumn>asList(
             new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-                new BaseColumn("vt1", "c_custkey"),
-                new BaseColumn("vt2", "o_custkey")
+                new BaseColumn("tpch", "customer","vt1", "c_custkey"),
+                new BaseColumn("tpch", "orders","vt2", "o_custkey")
             )),
             new ColumnOp("notlike", Arrays.<UnnamedColumn>asList(
-                new BaseColumn("vt2", "o_comment"),
+                new BaseColumn("tpch", "orders","vt2", "o_comment"),
                 ConstantColumn.valueOf("'%unusual%accounts%'")
             ))
         ))));
     SelectQuery expected = SelectQuery.create(
         Arrays.<SelectItem>asList(
-            new AliasedColumn(new BaseColumn("vt1", "c_custkey"), "c_custkey"),
+            new AliasedColumn(new BaseColumn("tpch", "customer","vt1", "c_custkey"), "c_custkey"),
             new AliasedColumn(new ColumnOp("count", new AsteriskColumn()), "c_count")
         ), join
     );
@@ -1305,7 +1301,7 @@ public class TpchExecutionPlanTest {
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
-  //@Test
+  @Test
   public void Query14Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select " +
@@ -1342,31 +1338,31 @@ public class TpchExecutionPlanTest {
                     ConstantColumn.valueOf("100.00"),
                     new ColumnOp("sum", new ColumnOp("whenthenelse", Arrays.<UnnamedColumn>asList(
                         new ColumnOp("like", Arrays.<UnnamedColumn>asList(
-                            new BaseColumn("vt2", "p_type"),
+                            new BaseColumn("tpch", "part","vt2", "p_type"),
                             ConstantColumn.valueOf("'PROMO%'")
                         )),
                         new ColumnOp("multiply", Arrays.<UnnamedColumn>asList(
-                            new BaseColumn("vt1", "l_extendedprice"),
-                            new ColumnOp("subtract", Arrays.<UnnamedColumn>asList(ConstantColumn.valueOf(1), new BaseColumn("vt1", "l_discount"))))),
+                            new BaseColumn("tpch", "lineitem","vt1", "l_extendedprice"),
+                            new ColumnOp("subtract", Arrays.<UnnamedColumn>asList(ConstantColumn.valueOf(1), new BaseColumn("tpch", "lineitem","vt1", "l_discount"))))),
                         ConstantColumn.valueOf(0)
                     )))
                 )), "numerator"),
             new AliasedColumn(new ColumnOp("sum", new ColumnOp("multiply", Arrays.<UnnamedColumn>asList(
-                new BaseColumn("vt1", "l_extendedprice"),
-                new ColumnOp("subtract", Arrays.<UnnamedColumn>asList(ConstantColumn.valueOf(1), new BaseColumn("vt1", "l_discount")))
+                new BaseColumn("tpch", "lineitem","vt1", "l_extendedprice"),
+                new ColumnOp("subtract", Arrays.<UnnamedColumn>asList(ConstantColumn.valueOf(1), new BaseColumn("tpch", "lineitem","vt1", "l_discount")))
             ))), "denominator")
         ),
         Arrays.asList(lineitem, part));
     expected.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-        new BaseColumn("vt1", "l_partkey"),
-        new BaseColumn("vt2", "p_partkey")
+        new BaseColumn("tpch", "lineitem","vt1", "l_partkey"),
+        new BaseColumn("tpch", "part","vt2", "p_partkey")
     )));
     expected.addFilterByAnd(new ColumnOp("greaterequal", Arrays.<UnnamedColumn>asList(
-        new BaseColumn("vt1", "l_shipdate"),
+        new BaseColumn("tpch", "lineitem","vt1", "l_shipdate"),
         new ColumnOp("date", ConstantColumn.valueOf("'2018-01-01'"))
     )));
     expected.addFilterByAnd(new ColumnOp("less", Arrays.<UnnamedColumn>asList(
-        new BaseColumn("vt1", "l_shipdate"),
+        new BaseColumn("tpch", "lineitem","vt1", "l_shipdate"),
         new ColumnOp("date", ConstantColumn.valueOf("'2018-01-01'"))
     )));
     expected.addLimit(ConstantColumn.valueOf(1));
@@ -1378,94 +1374,51 @@ public class TpchExecutionPlanTest {
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
-  // Query 15 is a non aggregate query, add avg(s_suppkey) to be an aggregate one
-  //@Test
-  // TODO: Just use view
+  // Use the view
+  @Test
   public void IncompleteQuery15Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select " +
-        "avg(s_suppkey), " +
-        "total_revenue " +
-        "from " +
-        "supplier, " +
-        "(select " +
-        "l_suppkey as supplier_no, " +
-        "sum(l_extendedprice * (1 - l_discount)) as total_revenue " +
+        "l_suppkey, " +
+        "sum(l_extendedprice * (1 - l_discount)) " +
         "from " +
         "lineitem " +
         "where " +
-        "l_shipdate >= '1996-01-01' " +
-        "and l_shipdate < '1996-04-01' " +
-        "group by l_suppkey) as revenue_cached, " +
-        "(select " +
-        "max(total_revenue) as max_revenue " +
-        "from " +
-        "(select " +
-        "l_suppkey as supplier_no, " +
-        "sum(l_extendedprice * (1 - l_discount)) as total_revenue " +
-        "from " +
-        "lineitem " +
-        "where " +
-        "l_shipdate >= '1996-01-01' " +
-        "and l_shipdate < '1996-04-01' " +
-        "group by l_suppkey)) as max_revenue_cached " +
-        "where " +
-        "s_suppkey = supplier_no " +
-        "and total_revenue = max_revenue  " +
-        "group by total_revenue " +
-        "order by s_suppkey";
+        "l_shipdate >= date '1998-01-01' " +
+        "and l_shipdate < date '1999-01-01'" +
+        "group by " +
+        "l_suppkey";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
     RelationStandardizer gen = new RelationStandardizer(staticMetaData);
     relation = gen.standardize((SelectQuery) relation);
 
-//    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(new JdbcConnection(conn, new H2Syntax()),
-//        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
-    assertEquals(2, queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().size());
+    assertEquals(0, queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().size());
 
+    AbstractRelation lineitem = new BaseTable("tpch", "lineitem", "vt1");
     SelectQuery expected = SelectQuery.create(
         Arrays.<SelectItem>asList(
-            new AliasedColumn(new ColumnOp("avg", new BaseColumn("vt1", "s_suppkey")), "a5"),
-            new AliasedColumn(new BaseColumn("revenue_cached", "total_revenue"), "vc6")
-        ), Arrays.<AbstractRelation>asList(
-            new BaseTable("tpch", "supplier", "vt1"),
-            new BaseTable(placeholderSchemaName, placeholderTableName, "revenue_cached"),
-            new BaseTable(placeholderSchemaName, placeholderTableName, "max_revenue_cached")
-        ));
-    assertEquals(
-        expected.getFromList(),
-        ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0)).getSelectQuery().getFromList());
-
-    SelectQuery revenue_cached = SelectQuery.create(
-        Arrays.<SelectItem>asList(
-            new AliasedColumn(new BaseColumn("vt2", "l_suppkey"), "supplier_no"),
+            new AliasedColumn(new BaseColumn("tpch", "lineitem", "vt1", "l_suppkey"), "l_suppkey"),
             new AliasedColumn(new ColumnOp("sum", new ColumnOp("multiply", Arrays.asList(
-                new BaseColumn("vt2", "l_extendedprice"),
-                new ColumnOp("subtract", Arrays.asList(ConstantColumn.valueOf(1), new BaseColumn("vt2", "l_discount")))
-            ))), "total_revenue")
-        ), new BaseTable("tpch", "lineitem", "vt2")
-    );
-    revenue_cached.addFilterByAnd(new ColumnOp("greaterequal", Arrays.asList(
-        new BaseColumn("vt2", "l_shipdate"),
-        ConstantColumn.valueOf("'1996-01-01'")
+                new BaseColumn("tpch", "lineitem", "vt1","l_extendedprice"),
+                new ColumnOp("subtract", Arrays.asList(ConstantColumn.valueOf(1), new BaseColumn("tpch", "lineitem", "vt1","l_discount")))
+            ))), "s2")
+        )
+    , lineitem);
+    expected.addFilterByAnd(new ColumnOp("greaterequal", Arrays.asList(
+        new BaseColumn("tpch", "lineitem", "vt1","l_shipdate"),
+        new ColumnOp("date", ConstantColumn.valueOf("'1998-01-01'"))
     )));
-    revenue_cached.addFilterByAnd(new ColumnOp("less", Arrays.asList(
-        new BaseColumn("vt2", "l_shipdate"),
-        ConstantColumn.valueOf("'1996-04-01'")
+    expected.addFilterByAnd(new ColumnOp("less", Arrays.asList(
+        new BaseColumn("tpch", "lineitem", "vt1","l_shipdate"),
+        new ColumnOp("date", ConstantColumn.valueOf("'1999-01-01'"))
     )));
-    revenue_cached.addGroupby(new AliasReference("supplier_no"));
-    revenue_cached.setAliasName("revenue_cached");
-    assertEquals(revenue_cached, ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).selectQuery);
-
-    SelectQuery max_revenue_cached = SelectQuery.create(
-        Arrays.<SelectItem>asList(
-            new AliasedColumn(new ColumnOp("max", new BaseColumn("vt3", "total_revenue")), "max_revenue")
-        ), new BaseTable(placeholderSchemaName, placeholderTableName, "vt3")
-    );
-    max_revenue_cached.setAliasName("max_revenue_cached");
-    assertEquals(max_revenue_cached, ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(1)).selectQuery);
+    expected.addGroupby(new AliasReference("l_suppkey"));
+    assertEquals(
+        expected,
+        ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0)).getSelectQuery());
 
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
     ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
@@ -1473,11 +1426,11 @@ public class TpchExecutionPlanTest {
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
-  //@Test
-  // TODO: check if the original (simpler) query works.
+  @Test
   // TODO: check the converted structure.
   public void Query17Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
+
     String sql = "select\n" +
         "\tsum(extendedprice) / 7.0 as avg_yearly\n" +
         "from (\n" +
@@ -1506,44 +1459,43 @@ public class TpchExecutionPlanTest {
         "\t\t) as l1 on l1.l_partkey = t_partkey\n" +
         ") a \n" +
         "where quantity < t_avg_quantity";
+
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
     RelationStandardizer gen = new RelationStandardizer(staticMetaData);
     relation = gen.standardize((SelectQuery) relation);
 
-//    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(new JdbcConnection(conn, new H2Syntax()),
-//        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
 
     assertEquals(1, queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().size());
     assertEquals(2, queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().size());
 
-    assertEquals(new BaseTable(placeholderSchemaName, placeholderTableName, "a"),
+    assertEquals(new BaseTable(placeholderSchemaName, placeholderTableName, "vt1"),
         ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0)).getSelectQuery().getFromList().get(0));
     JoinTable join = JoinTable.create(Arrays.<AbstractRelation>asList(
-        new BaseTable(placeholderSchemaName, placeholderTableName, "q17_lineitem_tmp_cached"),
-        new BaseTable(placeholderSchemaName, placeholderTableName, "l1")),
+        new BaseTable(placeholderSchemaName, placeholderTableName, "vt2"),
+        new BaseTable(placeholderSchemaName, placeholderTableName, "vt4")),
         Arrays.<JoinTable.JoinType>asList(JoinTable.JoinType.inner),
         Arrays.<UnnamedColumn>asList(
             new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-                new BaseColumn("l1", "l_partkey"),
-                new BaseColumn("q17_lineitem_tmp_cached", "t_partkey")
+                new BaseColumn("vt4", "l_partkey"),
+                new BaseColumn("vt2", "t_partkey")
             ))
         ));
     assertEquals(join,
         ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getSelectQuery().getFromList().get(0));
     SelectQuery expected = SelectQuery.create(
         Arrays.<SelectItem>asList(
-            new AliasedColumn(new BaseColumn("vt1", "l_partkey"), "t_partkey"),
+            new AliasedColumn(new BaseColumn("tpch", "lineitem","vt3", "l_partkey"), "t_partkey"),
             new AliasedColumn(new ColumnOp("multiply", Arrays.asList(
                 ConstantColumn.valueOf(0.2),
-                new ColumnOp("avg", new BaseColumn("vt1", "l_quantity"))
+                new ColumnOp("avg", new BaseColumn("tpch", "lineitem","vt3", "l_quantity"))
             )), "t_avg_quantity")
         ),
-        new BaseTable("tpch", "lineitem", "vt1"));
+        new BaseTable("tpch", "lineitem", "vt3"));
     expected.addGroupby(new AliasReference("t_partkey"));
-    expected.setAliasName("q17_lineitem_tmp_cached");
+    expected.setAliasName("vt2");
     assertEquals(expected, ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).selectQuery);
 
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
@@ -1552,7 +1504,7 @@ public class TpchExecutionPlanTest {
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
-  //@Test
+  @Test
   public void Query18Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select\n" +
@@ -1602,18 +1554,17 @@ public class TpchExecutionPlanTest {
 
     SelectQuery expected = SelectQuery.create(
         Arrays.<SelectItem>asList(
-            new AliasedColumn(new BaseColumn("vt3", "l_orderkey"), "l_orderkey"),
-            new AliasedColumn(new ColumnOp("sum", new BaseColumn("vt3", "l_quantity")), "t_sum_quantity")
-        ), new BaseTable("tpch", "lineitem", "vt3"));
+            new AliasedColumn(new BaseColumn("tpch", "lineitem","vt4", "l_orderkey"), "l_orderkey"),
+            new AliasedColumn(new ColumnOp("sum", new BaseColumn("tpch", "lineitem","vt4", "l_quantity")), "t_sum_quantity")
+        ), new BaseTable("tpch", "lineitem", "vt4"));
     expected.addGroupby(new AliasReference("l_orderkey"));
-    expected.setAliasName("t");
-    expected.addFilterByAnd(new ColumnOp("is", Arrays.asList(
-        new BaseColumn("vt3", "l_orderkey"),
-        ConstantColumn.valueOf("NOT NULL")
-    )));
+    expected.setAliasName("vt3");
+    expected.addFilterByAnd(new ColumnOp("isnotnull",
+        new BaseColumn("tpch", "lineitem","vt4", "l_orderkey")
+    ));
 
     assertEquals(expected, ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).selectQuery);
-    assertEquals(new BaseTable(placeholderSchemaName, placeholderTableName, "t"),
+    assertEquals(new BaseTable(placeholderSchemaName, placeholderTableName, "vt3"),
         ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0)).getSelectQuery().getFromList().get(2));
 
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
@@ -1622,7 +1573,7 @@ public class TpchExecutionPlanTest {
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
-  //@Test
+  @Test
   public void Query19Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select " +
@@ -1674,10 +1625,10 @@ public class TpchExecutionPlanTest {
     SelectQuery expected = SelectQuery.create(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new ColumnOp("sum", new ColumnOp("multiply", Arrays.<UnnamedColumn>asList(
-                new BaseColumn("vt1", "l_extendedprice"),
+                new BaseColumn("tpch", "lineitem","vt1", "l_extendedprice"),
                 new ColumnOp("subtract", Arrays.<UnnamedColumn>asList(
                     ConstantColumn.valueOf(1),
-                    new BaseColumn("vt1", "l_discount")
+                    new BaseColumn("tpch", "lineitem","vt1", "l_discount")
                 ))
             ))), "revenue")
         ),
@@ -1690,16 +1641,16 @@ public class TpchExecutionPlanTest {
                         new ColumnOp("and", Arrays.<UnnamedColumn>asList(
                             new ColumnOp("and", Arrays.<UnnamedColumn>asList(
                                 new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-                                    new BaseColumn("vt2", "p_partkey"),
-                                    new BaseColumn("vt1", "l_partkey")
+                                    new BaseColumn("tpch", "part","vt2", "p_partkey"),
+                                    new BaseColumn("tpch", "lineitem","vt1", "l_partkey")
                                 )),
                                 new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-                                    new BaseColumn("vt2", "p_brand"),
+                                    new BaseColumn("tpch", "part","vt2", "p_brand"),
                                     ConstantColumn.valueOf("':1'")
                                 ))
                             )),
                             new ColumnOp("in", Arrays.<UnnamedColumn>asList(
-                                new BaseColumn("vt2", "p_container"),
+                                new BaseColumn("tpch", "part","vt2", "p_container"),
                                 ConstantColumn.valueOf("'SM CASE'"),
                                 ConstantColumn.valueOf("'SM BOX'"),
                                 ConstantColumn.valueOf("'SM PACK'"),
@@ -1707,29 +1658,29 @@ public class TpchExecutionPlanTest {
                             ))
                         )),
                         new ColumnOp("greaterequal", Arrays.<UnnamedColumn>asList(
-                            new BaseColumn("vt1", "l_quantity"),
+                            new BaseColumn("tpch", "lineitem","vt1", "l_quantity"),
                             ConstantColumn.valueOf(4)
                         ))
                     )),
                     new ColumnOp("lessequal", Arrays.<UnnamedColumn>asList(
-                        new BaseColumn("vt1", "l_quantity"),
+                        new BaseColumn("tpch", "lineitem","vt1", "l_quantity"),
                         new ColumnOp("add", Arrays.<UnnamedColumn>asList(ConstantColumn.valueOf(4), ConstantColumn.valueOf(10)))
                     ))
                 )),
                 new ColumnOp("between", Arrays.<UnnamedColumn>asList(
-                    new BaseColumn("vt2", "p_size"),
+                    new BaseColumn("tpch", "part","vt2", "p_size"),
                     ConstantColumn.valueOf(1),
                     ConstantColumn.valueOf(5)
                 ))
             )),
             new ColumnOp("in", Arrays.<UnnamedColumn>asList(
-                new BaseColumn("vt1", "l_shipmode"),
+                new BaseColumn("tpch", "lineitem","vt1", "l_shipmode"),
                 ConstantColumn.valueOf("'AIR'"),
                 ConstantColumn.valueOf("'AIR REG'")
             ))
         )),
         new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-            new BaseColumn("vt1", "l_shipinstruct"),
+            new BaseColumn("tpch", "lineitem","vt1", "l_shipinstruct"),
             ConstantColumn.valueOf("'DELIVER IN PERSON'")
         ))
     ));
@@ -1741,16 +1692,16 @@ public class TpchExecutionPlanTest {
                         new ColumnOp("and", Arrays.<UnnamedColumn>asList(
                             new ColumnOp("and", Arrays.<UnnamedColumn>asList(
                                 new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-                                    new BaseColumn("vt2", "p_partkey"),
-                                    new BaseColumn("vt1", "l_partkey")
+                                    new BaseColumn("tpch", "part","vt2", "p_partkey"),
+                                    new BaseColumn("tpch", "lineitem","vt1", "l_partkey")
                                 )),
                                 new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-                                    new BaseColumn("vt2", "p_brand"),
+                                    new BaseColumn("tpch", "part","vt2", "p_brand"),
                                     ConstantColumn.valueOf("':2'")
                                 ))
                             )),
                             new ColumnOp("in", Arrays.<UnnamedColumn>asList(
-                                new BaseColumn("vt2", "p_container"),
+                                new BaseColumn("tpch", "part","vt2", "p_container"),
                                 ConstantColumn.valueOf("'MED BAG'"),
                                 ConstantColumn.valueOf("'MED BOX'"),
                                 ConstantColumn.valueOf("'MED PKG'"),
@@ -1758,29 +1709,29 @@ public class TpchExecutionPlanTest {
                             ))
                         )),
                         new ColumnOp("greaterequal", Arrays.<UnnamedColumn>asList(
-                            new BaseColumn("vt1", "l_quantity"),
+                            new BaseColumn("tpch", "lineitem","vt1", "l_quantity"),
                             ConstantColumn.valueOf(5)
                         ))
                     )),
                     new ColumnOp("lessequal", Arrays.<UnnamedColumn>asList(
-                        new BaseColumn("vt1", "l_quantity"),
+                        new BaseColumn("tpch", "lineitem","vt1", "l_quantity"),
                         new ColumnOp("add", Arrays.<UnnamedColumn>asList(ConstantColumn.valueOf(5), ConstantColumn.valueOf(10)))
                     ))
                 )),
                 new ColumnOp("between", Arrays.<UnnamedColumn>asList(
-                    new BaseColumn("vt2", "p_size"),
+                    new BaseColumn("tpch", "part","vt2", "p_size"),
                     ConstantColumn.valueOf(1),
                     ConstantColumn.valueOf(10)
                 ))
             )),
             new ColumnOp("in", Arrays.<UnnamedColumn>asList(
-                new BaseColumn("vt1", "l_shipmode"),
+                new BaseColumn("tpch", "lineitem","vt1", "l_shipmode"),
                 ConstantColumn.valueOf("'AIR'"),
                 ConstantColumn.valueOf("'AIR REG'")
             ))
         )),
         new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-            new BaseColumn("vt1", "l_shipinstruct"),
+            new BaseColumn("tpch", "lineitem","vt1", "l_shipinstruct"),
             ConstantColumn.valueOf("'DELIVER IN PERSON'")
         ))
     ));
@@ -1792,16 +1743,16 @@ public class TpchExecutionPlanTest {
                         new ColumnOp("and", Arrays.<UnnamedColumn>asList(
                             new ColumnOp("and", Arrays.<UnnamedColumn>asList(
                                 new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-                                    new BaseColumn("vt2", "p_partkey"),
-                                    new BaseColumn("vt1", "l_partkey")
+                                    new BaseColumn("tpch", "part","vt2", "p_partkey"),
+                                    new BaseColumn("tpch", "lineitem","vt1", "l_partkey")
                                 )),
                                 new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-                                    new BaseColumn("vt2", "p_brand"),
+                                    new BaseColumn("tpch", "part","vt2", "p_brand"),
                                     ConstantColumn.valueOf("':3'")
                                 ))
                             )),
                             new ColumnOp("in", Arrays.<UnnamedColumn>asList(
-                                new BaseColumn("vt2", "p_container"),
+                                new BaseColumn("tpch", "part","vt2", "p_container"),
                                 ConstantColumn.valueOf("'LG CASE'"),
                                 ConstantColumn.valueOf("'LG BOX'"),
                                 ConstantColumn.valueOf("'LG PACK'"),
@@ -1809,29 +1760,29 @@ public class TpchExecutionPlanTest {
                             ))
                         )),
                         new ColumnOp("greaterequal", Arrays.<UnnamedColumn>asList(
-                            new BaseColumn("vt1", "l_quantity"),
+                            new BaseColumn("tpch", "lineitem","vt1", "l_quantity"),
                             ConstantColumn.valueOf(6)
                         ))
                     )),
                     new ColumnOp("lessequal", Arrays.<UnnamedColumn>asList(
-                        new BaseColumn("vt1", "l_quantity"),
+                        new BaseColumn("tpch", "lineitem","vt1", "l_quantity"),
                         new ColumnOp("add", Arrays.<UnnamedColumn>asList(ConstantColumn.valueOf(6), ConstantColumn.valueOf(10)))
                     ))
                 )),
                 new ColumnOp("between", Arrays.<UnnamedColumn>asList(
-                    new BaseColumn("vt2", "p_size"),
+                    new BaseColumn("tpch", "part","vt2", "p_size"),
                     ConstantColumn.valueOf(1),
                     ConstantColumn.valueOf(15)
                 ))
             )),
             new ColumnOp("in", Arrays.<UnnamedColumn>asList(
-                new BaseColumn("vt1", "l_shipmode"),
+                new BaseColumn("tpch", "lineitem","vt1", "l_shipmode"),
                 ConstantColumn.valueOf("'AIR'"),
                 ConstantColumn.valueOf("'AIR REG'")
             ))
         )),
         new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-            new BaseColumn("vt1", "l_shipinstruct"),
+            new BaseColumn("tpch", "lineitem","vt1", "l_shipinstruct"),
             ConstantColumn.valueOf("'DELIVER IN PERSON'")
         ))
     ));
@@ -1850,7 +1801,7 @@ public class TpchExecutionPlanTest {
   }
 
   // Query 20 is not a aggregated function. Change to count(s_address)
-  //@Test
+  @Test
   public void Query20Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select\n" +
@@ -1887,27 +1838,27 @@ public class TpchExecutionPlanTest {
     assertEquals(1, queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().size());
     SelectQuery expected = SelectQuery.create(
         Arrays.<SelectItem>asList(
-            new AliasedColumn(new BaseColumn("vt4", "l_partkey"), "l_partkey"),
-            new AliasedColumn(new BaseColumn("vt4", "l_suppkey"), "l_suppkey"),
+            new AliasedColumn(new BaseColumn("tpch", "lineitem","vt5", "l_partkey"), "l_partkey"),
+            new AliasedColumn(new BaseColumn("tpch", "lineitem","vt5", "l_suppkey"), "l_suppkey"),
             new AliasedColumn(new ColumnOp("multiply", Arrays.<UnnamedColumn>asList(
                 ConstantColumn.valueOf(0.5),
-                new ColumnOp("sum", new BaseColumn("vt4", "l_quantity"))
+                new ColumnOp("sum", new BaseColumn("tpch", "lineitem","vt5", "l_quantity"))
             )), "sum_quantity")
-        ), new BaseTable("tpch", "lineitem", "vt4")
+        ), new BaseTable("tpch", "lineitem", "vt5")
     );
     expected.addFilterByAnd(new ColumnOp("greaterequal", Arrays.asList(
-        new BaseColumn("vt4", "l_shipdate"),
+        new BaseColumn("tpch", "lineitem","vt5", "l_shipdate"),
         ConstantColumn.valueOf("'1994-01-01'")
     )));
     expected.addFilterByAnd(new ColumnOp("less", Arrays.asList(
-        new BaseColumn("vt4", "l_shipdate"),
+        new BaseColumn("tpch", "lineitem","vt5", "l_shipdate"),
         ConstantColumn.valueOf("'1995-01-01'")
     )));
     expected.addGroupby(new AliasReference("l_partkey"));
     expected.addGroupby(new AliasReference("l_suppkey"));
-    expected.setAliasName("q20_tmp2_cached");
+    expected.setAliasName("vt4");
     assertEquals(expected, ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).selectQuery);
-    assertEquals(new BaseTable(placeholderSchemaName, placeholderTableName, "q20_tmp2_cached"),
+    assertEquals(new BaseTable(placeholderSchemaName, placeholderTableName, "vt4"),
         ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0)).getSelectQuery().getFromList().get(3));
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
     ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
@@ -1915,7 +1866,7 @@ public class TpchExecutionPlanTest {
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
-  //@Test
+  @Test
   public void Query21Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select\n" +
@@ -2018,18 +1969,18 @@ public class TpchExecutionPlanTest {
     assertEquals(0, queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().size());
     assertEquals(1, queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(1).getExecutableNodeBaseDependents().size());
 
-    assertEquals(new BaseTable(placeholderSchemaName, placeholderTableName, "c"),
+    assertEquals(new BaseTable(placeholderSchemaName, placeholderTableName, "vt1"),
         ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0)).getSelectQuery().getFromList().get(0));
-    assertEquals(new BaseTable(placeholderSchemaName, placeholderTableName, "b"),
+    assertEquals(new BaseTable(placeholderSchemaName, placeholderTableName, "vt2"),
         ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getSelectQuery().getFromList().get(0));
     JoinTable join = JoinTable.create(Arrays.<AbstractRelation>asList(
-        new BaseTable(placeholderSchemaName, placeholderTableName, "t2"),
-        new BaseTable(placeholderSchemaName, placeholderTableName, "l3")),
+        new BaseTable(placeholderSchemaName, placeholderTableName, "vt3"),
+        new BaseTable(placeholderSchemaName, placeholderTableName, "vt5")),
         Arrays.<JoinTable.JoinType>asList(JoinTable.JoinType.rightouter),
         Arrays.<UnnamedColumn>asList(
             new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-                new BaseColumn("l3", "l_orderkey"),
-                new BaseColumn("t2", "l_orderkey")
+                new BaseColumn("vt5", "l_orderkey"),
+                new BaseColumn("vt3", "l_orderkey")
             ))
         ));
     assertEquals(join,
@@ -2037,13 +1988,11 @@ public class TpchExecutionPlanTest {
 
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
     ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
-//    queryExecutionPlan.root.executeAndWaitForTermination(new JdbcConnection(conn, new H2Syntax()));
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
 
   }
 
   @Test
-  // TODO: don't include this query in Async
   public void Query22Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select\n" +
@@ -2159,7 +2108,7 @@ public class TpchExecutionPlanTest {
 
   }
 
-  //@Test
+  @Test
   public void SubqueryInFilterTest() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select avg(l_quantity) from lineitem where l_quantity > (select avg(l_quantity) as quantity_avg from lineitem);";
@@ -2181,7 +2130,7 @@ public class TpchExecutionPlanTest {
         ((SubqueryColumn)((ColumnOp)((CreateTableAsSelectNode)(queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0))).getSelectQuery().getFilter().get()).getOperand(1)).getSubquery());
 
     SelectQuery expected = SelectQuery.create(
-        Arrays.<SelectItem>asList(new AliasedColumn(new ColumnOp("avg", new BaseColumn("vt3", "l_quantity")), "quantity_avg")),
+        Arrays.<SelectItem>asList(new AliasedColumn(new ColumnOp("avg", new BaseColumn("tpch", "lineitem", "vt3", "l_quantity")), "quantity_avg")),
         new BaseTable("tpch", "lineitem", "vt3")
     );
     assertEquals(expected, ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).selectQuery);
@@ -2191,7 +2140,7 @@ public class TpchExecutionPlanTest {
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
-  //@Test
+  @Test
   public void SubqueryInFilterTestExists() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select avg(l_quantity) from lineitem where exists(select * from lineitem);";
@@ -2220,7 +2169,7 @@ public class TpchExecutionPlanTest {
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
-  //@Test
+  @Test
   public void SubqueryInFilterTestIn() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select avg(l_quantity) from lineitem where l_quantity in (select distinct l_quantity from lineitem);";
@@ -2239,7 +2188,7 @@ public class TpchExecutionPlanTest {
         ((SubqueryColumn) ((ColumnOp) ((CreateTableAsSelectNode) (queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0))).getSelectQuery().getFilter().get()).getOperand(1)).getSubquery());
 
     SelectQuery expected = SelectQuery.create(
-        Arrays.<SelectItem>asList(new AliasedColumn(new BaseColumn("vt3", "l_quantity"), "l_quantity")),
+        Arrays.<SelectItem>asList(new AliasedColumn(new BaseColumn("tpch", "lineitem","vt3", "l_quantity"), "l_quantity")),
         new BaseTable("tpch", "lineitem", "vt3")
     );
     assertEquals(expected, ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).selectQuery);
@@ -2249,7 +2198,7 @@ public class TpchExecutionPlanTest {
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
-  //@Test
+  @Test
   public void SubqueryInFilterMultiplePredicateTest() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select avg(l_quantity) from lineitem where l_quantity > (select avg(l_quantity) as quantity_avg from lineitem) and l_quantity in (select distinct l_quantity from lineitem)";
