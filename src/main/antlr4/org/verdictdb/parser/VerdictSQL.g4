@@ -607,25 +607,37 @@ value_manipulation_function
     | ternary_manipulation_function
     | nary_manipulation_function
     | extract_time_function
+    | overlay_string_function
+    | subtring_string_function
     ;
 
 extract_time_function
     : function_name=EXTRACT
-      '(' extract_unit FROM (constant_expression|expression) ')'
+      '(' extract_unit FROM expression ')'
     ;
 
 extract_unit
     : YEAR | MONTH | DAY | expression
     ;
 
+overlay_string_function
+    : function_name=OVERLAY
+      '(' expression PLACING expression FROM expression (FOR expression)? ')'
+    ;
+
+subtring_string_function
+    : function_name=SUBSTRING
+      '(' expression FROM expression (FOR expression)? ')'
+    ;
 
 nary_manipulation_function
-	: function_name=(CONCAT | CONCAT_WS | COALESCE | FIELD | GREATEST | LEAST)
+	: function_name=(CONCAT | CONCAT_WS | COALESCE | FIELD | GREATEST | LEAST | WIDTH_BUCKET)
 		'(' expression (',' expression)* ')'
     ;
 
 ternary_manipulation_function
-    : function_name=(CONV | SUBSTR | HASH | RPAD | SUBSTRING | LPAD | MID | REPLACE | SUBSTRING_INDEX | MAKETIME | IF)
+    : function_name=(CONV | SUBSTR | HASH | RPAD | SUBSTRING | LPAD | MID | REPLACE | SUBSTRING_INDEX | MAKETIME | IF
+    )
       '(' expression ',' expression ',' expression ')'
     ;
 
@@ -633,7 +645,8 @@ binary_manipulation_function
     : function_name=(ROUND | MOD | PMOD | LEFT | RIGHT | STRTOL | POW | POWER | PERCENTILE | SPLIT | INSTR | ENCODE | DECODE | SHIFTLEFT
     | SHIFTRIGHT | SHIFTRIGHTUNSIGNED | NVL | FIND_IN_SET | FORMAT_NUMBER | FORMAT | GET_JSON_OBJECT | IN_FILE
     | LOCATE | REPEAT | AES_ENCRYPT | AES_DECRYPT | POSITION | STRCMP | TRUNCATE | ADDDATE | ADDTIME | DATEDIFF | DATE_ADD
-    | DATE_FORMAT | DATE_SUB | MAKEDATE | PERIOD_ADD | PERIOD_DIFF | SUBDATE | TIME_FORMAT | TIMEDIFF | CONVERT | IFNULL | NULLIF)
+    | DATE_FORMAT | DATE_SUB | MAKEDATE | PERIOD_ADD | PERIOD_DIFF | SUBDATE | TIME_FORMAT | TIMEDIFF | CONVERT | IFNULL | NULLIF
+    | DIV | LOG | TRUNC)
       '(' expression ',' expression ')'
     ;
 
@@ -643,7 +656,8 @@ unary_manipulation_function
      | UPPER | UCASE | ASCII | CHARACTER_LENGTH | FACTORIAL | CBRT | LENGTH | TRIM | ASIN | ACOS | ATAN | ATAN2 | DEGREES | RADIANS | POSITIVE
      | NEGATIVE | BROUND | BIN | HEX | UNHEX | FROM_UNIXTIME | TO_DATE | CHR | LTRIM | RTRIM| REVERSE | SPACE_FUNCTION | SHA1
      | SHA2 | SPACE | DATE | DAYNAME | DAYOFMONTH | DAYOFWEEK | DAYOFYEAR | FROM_DAYS | LAST_DAY | MICROSECOND | MONTHNAME | SEC_TO_TIME
-     | STR_TO_DATE | TIME | TIME_TO_SEC | TIMESTAMP | TO_DAYS | WEEK | WEEKDAY | YEARWEEK | BINARY | ISNULL )
+     | STR_TO_DATE | TIME | TIME_TO_SEC | TIMESTAMP | TO_DAYS | WEEK | WEEKDAY | YEARWEEK | BINARY | ISNULL | SCALE | TRUNC
+     | SETSEED | BIT_LENGTH | OCTET_LENGTH)
       '(' expression ')'
     | function_name=CAST '(' cast_as_expression ')'    
     ;
@@ -1221,6 +1235,7 @@ AVG:                             A V G;
 BASE64:                          B A S E '64';
 BIN:                             B I N;
 BINARY_CHECKSUM:                 B I N A R Y '_' C H E C K S U M;
+BIT_LENGTH:                      B I T '_' L E N G T H;
 BROUND:                          B R O U N D;
 CALLER:                          C A L L E R;
 CAST:                            C A S T;
@@ -1265,6 +1280,7 @@ DELAY:                           D E L A Y;
 DELETED:                         D E L E T E D;
 DENSE_RANK:                      D E N S E '_' R A N K;
 DISABLE:                         D I S A B L E;
+DIV:                             D I V;
 DYNAMIC:                         D Y N A M I C;
 NATURAL_CONSTANT:                E;
 ENCODE:                          E N C O D E;
@@ -1356,12 +1372,14 @@ NOW:                             N O W;
 NTILE:                           N T I L E;
 NUMBER:                          N U M B E R;
 NVL:                             N V L;
+OCTET_LENGTH:                    O C T E T '_' L E N G T H;
 OFFSET:                          O F F S E T;
 ONLY:                            O N L Y;
 OPTIMISTIC:                      O P T I M I S T I C;
 OPTIMIZE:                        O P T I M I Z E;
 OUT:                             O U T;
 OUTPUT:                          O U T P U T;
+OVERLAY:                         O V E R L A Y;
 OWNER:                           O W N E R;
 PARTITION:                       P A R T I T I O N;
 PATH:                            P A T H;
@@ -1369,6 +1387,7 @@ PERCENTILE:                      P E R C E N T I L E;
 PERIOD_ADD:                      P E R I O D '_' A D D;
 PERIOD_DIFF:                     P E R I O D '_' D I F F;
 PI:                              P I;
+PLACING:                         P L A C I N G;
 PMOD:                            P M O D;
 POSITION:                        P O S I T I O N;
 POSITIVE:                        P O S I T I V E;
@@ -1403,6 +1422,7 @@ ROWS:                            R O W S;
 ROW_NUMBER:                      R O W '_' N U M B E R;
 RTRIM:                           R T R I M;
 SAMPLE:                          S A M P L E;
+SCALE:                           S C A L E;
 SCHEMABINDING:                   S C H E M A B I N D I N G;
 SCROLL:                          S C R O L L;
 SCROLL_LOCKS:                    S C R O L L '_' L O C K S;
@@ -1410,6 +1430,7 @@ SECOND:                          S E C O N D;
 SEC_TO_TIME:                     S E C '_' T O '_' T I M E;
 SELF:                            S E L F;
 SERIALIZABLE:                    S E R I A L I Z A B L E;
+SETSEED:                         S E T S E E D;
 SHA1:                            S H A '1';
 SHA2:                            S H A '2';
 SHIFTLEFT:                       S H I F T L E F T;
@@ -1447,6 +1468,7 @@ TIME_TO_SEC:                     T I M E '_' T O '_' S E C;
 TO_DATE:                         T O '_' D A T E;
 TO_DAYS:                         T O '_' D A Y S;
 TRIM:                            T R I M;
+TRUNC:                           T R U N C;
 TRY:                             T R Y;
 TYPE:                            T Y P E;
 TYPE_WARNING:                    T Y P E '_' W A R N I N G;
@@ -1466,6 +1488,7 @@ VIEW_METADATA:                   V I E W '_' M E T A D A T A;
 WEEKOFYEAR:                      W E E K O F Y E A R;
 WEEK:                            W E E K;
 WEEKDAY:                         W E E K D A Y;
+WIDTH_BUCKET:                    W I D T H '_' B U C K E T;
 WORK:                            W O R K;
 XML:                             X M L;
 XMLNAMESPACES:                   X M L N A M E S P A C E S;

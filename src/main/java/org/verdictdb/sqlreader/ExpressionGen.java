@@ -94,6 +94,9 @@ public class ExpressionGen extends VerdictSQLBaseVisitor<UnnamedColumn> {
     else if (ctx.op.getText().equals("/")){
       opType = "divide";
     }
+    else if (ctx.op.getText().equals("||")) {
+      opType = "||";
+    }
     return new ColumnOp(opType, Arrays.asList(
         visit(ctx.expression(0)),
         visit(ctx.expression(1))
@@ -201,6 +204,21 @@ public class ExpressionGen extends VerdictSQLBaseVisitor<UnnamedColumn> {
             ConstantColumn.valueOf(ctx.extract_unit().getText()),
             g.visit(ctx.expression())
         ));
+      }
+
+      @Override
+      public ColumnOp visitOverlay_string_function(VerdictSQLParser.Overlay_string_functionContext ctx) {
+        String fname = "overlay";
+        ExpressionGen g = new ExpressionGen();
+        ColumnOp col = new ColumnOp(fname, Arrays.<UnnamedColumn>asList(
+            g.visit(ctx.expression(0)),
+            g.visit(ctx.expression(1)),
+            g.visit(ctx.expression(2))
+        ));
+        if (ctx.expression().size()==4) {
+          col.getOperands().add(g.visit(ctx.expression(3)));
+        }
+        return col;
       }
 
     };
