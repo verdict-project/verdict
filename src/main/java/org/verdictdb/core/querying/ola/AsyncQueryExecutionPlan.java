@@ -17,6 +17,8 @@ import org.verdictdb.exception.VerdictDBTypeException;
 
 public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
 
+  private static final long serialVersionUID = -1670795390245860583L;
+
   private AsyncQueryExecutionPlan(String scratchpadSchemaName, ScrambleMetaSet scrambleMeta)
       throws VerdictDBException {
     super(scratchpadSchemaName, scrambleMeta);
@@ -36,7 +38,8 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
   }
 
   /**
-   *
+   * Returns an asynchronous version of the given plan.
+   * 
    * @param root The root execution node of ALL nodes (i.e., not just the top agg node)
    * @return
    * @throws VerdictDBException
@@ -47,7 +50,9 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
 
     // converted nodes should be used in place of the original nodes.
     for (int i = 0; i < aggBlocks.size(); i++) {
+      // this node block contains the links to those nodes belonging to this block.
       AggExecutionNodeBlock nodeBlock = aggBlocks.get(i);
+      
       ExecutableNodeBase oldNode = nodeBlock.getBlockRootNode();
       ExecutableNodeBase newNode = nodeBlock.convertToProgressiveAgg(scrambleMeta);
 
@@ -60,12 +65,7 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
           parent.cancelSubscriptionTo(oldNode);
           parent.subscribeTo(newNode, channel);
         }
-//        List<ExecutableNodeBase> parentDependants = parent.getExecutableNodeBaseDependents();
-//        int idx = parentDependants.indexOf(oldNode);
-//        parentDependants.remove(idx);
-//        parentDependants.add(idx, newNode);
       }
-//      root.cancelSubscriptionTo(oldNode);
     }
 
     return root;

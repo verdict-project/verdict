@@ -12,6 +12,8 @@ import org.verdictdb.exception.VerdictDBException;
 
 public class QueryNodeBase extends ExecutableNodeBase {
   
+  private static final long serialVersionUID = 7263437396821994391L;
+  
   protected SelectQuery selectQuery;
   
   public QueryNodeBase(SelectQuery selectQuery) {

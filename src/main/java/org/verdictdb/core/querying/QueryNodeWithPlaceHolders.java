@@ -14,6 +14,8 @@ import org.verdictdb.exception.VerdictDBValueException;
 
 public abstract class QueryNodeWithPlaceHolders extends QueryNodeBase {
   
+  private static final long serialVersionUID = 5770210201301837177L;
+
   List<BaseTable> placeholderTables = new ArrayList<>();
 
   // use this to compress the placeholderTable in filter

@@ -13,6 +13,8 @@ import org.verdictdb.exception.VerdictDBException;
 
 public class CreateTableAsSelectNode extends QueryNodeWithPlaceHolders {
   
+  private static final long serialVersionUID = -8722221355083655181L;
+
   IdCreator namer;
   
   String newTableSchemaName;

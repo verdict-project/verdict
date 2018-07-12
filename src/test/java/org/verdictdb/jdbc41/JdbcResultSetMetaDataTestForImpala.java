@@ -21,6 +21,14 @@ import org.verdictdb.core.connection.DbmsQueryResult;
 import org.verdictdb.core.connection.JdbcConnection;
 import org.verdictdb.exception.VerdictDBDbmsException;
 
+/**
+ * Tests if our JDBC driver returns expected values when working with Impala JDBC41 driver.
+ * 
+ * Impala data types: https://www.cloudera.com/documentation/enterprise/5-9-x/topics/impala_datatypes.html
+ * 
+ * @author Yongjoo Park
+ *
+ */
 public class JdbcResultSetMetaDataTestForImpala {
   
   static Connection conn;
@@ -116,11 +124,6 @@ public class JdbcResultSetMetaDataTestForImpala {
   public static void tearDown() throws VerdictDBDbmsException {
     dbmsConn.execute(String.format("DROP TABLE IF EXISTS %s", TABLE_NAME));
     dbmsConn.close();
-  }
-
-  @Test
-  public void test() throws VerdictDBDbmsException {
-    List<Pair<String, String>> columns = dbmsConn.getColumns(IMPALA_DATABASE, TABLE_NAME);
   }
 
   @Test
