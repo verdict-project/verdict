@@ -1,5 +1,0 @@
-build:
-  box: maven:3.5.2-jdk-8
-  steps:
-    - wercker/maven:
-      goals: clean test
