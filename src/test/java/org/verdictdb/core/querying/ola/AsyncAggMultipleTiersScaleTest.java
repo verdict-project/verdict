@@ -62,7 +62,7 @@ public class AsyncAggMultipleTiersScaleTest {
 
   @BeforeClass
   public static void setupH2Database() throws SQLException, VerdictDBException {
-    final String DB_CONNECTION = "jdbc:h2:mem:aggexecnodetest;DB_CLOSE_DELAY=-1";
+    final String DB_CONNECTION = "jdbc:h2:mem:asyncaggmultipletiersscaletest;DB_CLOSE_DELAY=-1";
     final String DB_USER = "";
     final String DB_PASSWORD = "";
     conn = DriverManager.getConnection(DB_CONNECTION, DB_USER, DB_PASSWORD);

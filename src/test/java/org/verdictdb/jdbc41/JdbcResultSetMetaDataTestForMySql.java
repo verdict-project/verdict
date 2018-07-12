@@ -44,7 +44,7 @@ public class JdbcResultSetMetaDataTestForMySql {
 
   static {
     String env = System.getenv("BUILD_ENV");
-    if (env != null && env.equals("GitLab")) {
+    if (env != null && (env.equals("GitLab") || env.equals("DockerCompose"))) {
       MYSQL_HOST = "mysql";
     } else {
       MYSQL_HOST = "localhost";
@@ -104,7 +104,7 @@ public class JdbcResultSetMetaDataTestForMySql {
         + "18, 2018, 'abc', 'abc', '10', '10', "
         + "'10', 'a', '10', 'abc', '1110', 'abc', '1110', 'abc', '1', '2')",
         TABLE_NAME));
-    
+
     stmt.execute(String.format("INSERT INTO %s VALUES ( "
         + "NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, "
         + "NULL, NULL, NULL, NULL, NULL, "
@@ -234,10 +234,10 @@ public class JdbcResultSetMetaDataTestForMySql {
     assertTrue(IOUtils.contentEquals(
         expectedResult.getBlob(30).getBinaryStream(), ourResult.getBlob(30).getBinaryStream()));  // longblob
     assertEquals(expectedResult.getString(31), ourResult.getString(31));      // longtext
-    
+
     assertEquals(expectedResult.getString(32), ourResult.getString(32));      // enum
     assertEquals(expectedResult.getString(33), ourResult.getString(33));      // set
-    
+
     // null values
     expectedResult.next();
     ourResult.next();
@@ -301,7 +301,7 @@ public class JdbcResultSetMetaDataTestForMySql {
     assertEquals(0.0, ourResult.getByte(13), 1e-6);          // double precision
     assertEquals(0.0, ourResult.getInt(13), 1e-6);           // double precision
     assertEquals(0.0, ourResult.getLong(13), 1e-6);          // double precision
-    
+
     assertEquals(expectedResult.getTimestamp(14), ourResult.getTimestamp(14));  // date
     assertEquals(expectedResult.getTimestamp(15), ourResult.getTimestamp(15));  // datetime
     assertEquals(expectedResult.getTimestamp(16), ourResult.getTimestamp(16));  // timestamp
@@ -311,7 +311,7 @@ public class JdbcResultSetMetaDataTestForMySql {
     assertEquals(expectedResult.getTimestamp(18), ourResult.getTimestamp(18));  // year(2)
     assertEquals(expectedResult.getDate(19),      ourResult.getDate(19));       // year(4)
     assertEquals(expectedResult.getTimestamp(19), ourResult.getTimestamp(19));  // year(4)
-    
+
     assertEquals(expectedResult.getString(20), ourResult.getString(20));        // char
     assertEquals(expectedResult.getString(21), ourResult.getString(21));        // varchar
     assertArrayEquals(expectedResult.getBytes(22), ourResult.getBytes(22));     // binary
@@ -327,10 +327,10 @@ public class JdbcResultSetMetaDataTestForMySql {
     assertEquals(expectedResult.getString(29), ourResult.getString(29));        // mediumtext
     assertEquals(expectedResult.getBlob(30), ourResult.getBlob(30));            // longblob
     assertEquals(expectedResult.getString(31), ourResult.getString(31));        // longtext
-    
+
     assertEquals(expectedResult.getString(32), ourResult.getString(32));        // enum
     assertEquals(expectedResult.getString(33), ourResult.getString(33));        // set
-    
+
     ourResult.close();
   }
 

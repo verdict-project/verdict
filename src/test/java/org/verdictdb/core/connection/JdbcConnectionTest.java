@@ -20,7 +20,7 @@ import org.verdictdb.sqlsyntax.PostgresqlSyntax;
 public class JdbcConnectionTest {
 
   private static Connection h2Conn;
-  
+
   private static Connection postgresConn;
 
   private static Statement stmt;
@@ -28,7 +28,7 @@ public class JdbcConnectionTest {
   private ResultSetMetaData jdbcResultSetMetaData1, jdbcResultSetMetaData2;
 
   private ResultSet rs;
-  
+
   private static Connection mysqlConn;
 
   private static Statement mysqlStmt;
@@ -40,10 +40,10 @@ public class JdbcConnectionTest {
   private static final String MYSQL_UESR;
 
   private static final String MYSQL_PASSWORD = "";
-  
+
   static {
     String env = System.getenv("BUILD_ENV");
-    if (env != null && env.equals("GitLab")) {
+    if (env != null && (env.equals("GitLab") || env.equals("DockerCompose"))) {
       MYSQL_HOST = "mysql";
       MYSQL_UESR = "root";
     } else {
@@ -62,7 +62,7 @@ public class JdbcConnectionTest {
 
   static {
     String env = System.getenv("BUILD_ENV");
-    if (env != null && env.equals("GitLab")) {
+    if (env != null && (env.equals("GitLab") || env.equals("DockerCompose"))) {
       POSTGRES_HOST = "postgres";
     } else {
       POSTGRES_HOST = "localhost";
@@ -76,14 +76,14 @@ public class JdbcConnectionTest {
     final String DB_PASSWORD = "";
     h2Conn = DriverManager.getConnection(DB_CONNECTION, DB_USER, DB_PASSWORD);
   }
-  
+
   @BeforeClass
   public static void setupMySqlDatabase() throws SQLException {
     String mysqlConnectionString =
         String.format("jdbc:mysql://%s/%s?autoReconnect=true&useSSL=false", MYSQL_HOST, MYSQL_DATABASE);
     mysqlConn = DriverManager.getConnection(mysqlConnectionString, MYSQL_UESR, MYSQL_PASSWORD);
   }
-  
+
   @BeforeClass
   public static void setupPostgresqlDatabase() throws SQLException {
     String postgresConnectionString =
@@ -130,13 +130,13 @@ public class JdbcConnectionTest {
       jdbc.execute(String.format("INSERT INTO PERSON(id, name) VALUES(%s, '%s')", id, name));
     }
   }
-  
+
   @Test
   public void testPostgresMetaData() throws VerdictDBDbmsException {
     JdbcConnection jdbc = new JdbcConnection(postgresConn, new PostgresqlSyntax());
     System.out.println(jdbc.getColumns("public", "people"));
   }
-  
+
   @Test
   public void testMySqlShowSchemas() throws VerdictDBDbmsException {
     JdbcConnection jdbc = new JdbcConnection(mysqlConn, new MysqlSyntax());

@@ -20,7 +20,7 @@ import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.exception.VerdictDBException;
 
 public class PartitionMetadataRetrievalNodeTest {
-  
+
   static Connection conn;
 
   static DbmsConnection dbmsConn;
@@ -37,7 +37,7 @@ public class PartitionMetadataRetrievalNodeTest {
 
   static {
     String env = System.getenv("BUILD_ENV");
-    if (env != null && env.equals("GitLab")) {
+    if (env != null && (env.equals("GitLab") || env.equals("DockerCompose"))) {
       MYSQL_HOST = "mysql";
     } else {
       MYSQL_HOST = "localhost";
