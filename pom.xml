@@ -72,14 +72,14 @@
           <target>1.7</target>
         </configuration>
       </plugin>
-      <!-- Change JDK-specific settings in profiles tree below. <plugin> 
-        <groupId>org.apache.maven.plugins</groupId> <artifactId>maven-surefire-plugin</artifactId> 
-        <version>2.17</version> <configuration> <systemProperties> <enableTimeout>true</enableTimeout> 
-        <timeoutSeconds>100</timeoutSeconds> <timeoutRetries>2</timeoutRetries> This 
-        seems to be slower. <hiveconf_hive.execution.engine>tez</hiveconf_hive.execution.engine> 
-        <hiveconf_hive.exec.counters.pull.interval>1000</hiveconf_hive.exec.counters.pull.interval> 
-        </systemProperties> This fork mode seems to be only working configuration 
-        for JDK7 <forkMode>always</forkMode> <forkCount>1</forkCount> <reuseForks>false</reuseForks> 
+      <!-- Change JDK-specific settings in profiles tree below. <plugin>
+        <groupId>org.apache.maven.plugins</groupId> <artifactId>maven-surefire-plugin</artifactId>
+        <version>2.17</version> <configuration> <systemProperties> <enableTimeout>true</enableTimeout>
+        <timeoutSeconds>100</timeoutSeconds> <timeoutRetries>2</timeoutRetries> This
+        seems to be slower. <hiveconf_hive.execution.engine>tez</hiveconf_hive.execution.engine>
+        <hiveconf_hive.exec.counters.pull.interval>1000</hiveconf_hive.exec.counters.pull.interval>
+        </systemProperties> This fork mode seems to be only working configuration
+        for JDK7 <forkMode>always</forkMode> <forkCount>1</forkCount> <reuseForks>false</reuseForks>
         <argLine>-Xmx2048m -XX:MaxPermSize=512m</argLine> </configuration> </plugin> -->
     </plugins>
   </build>
@@ -100,6 +100,16 @@
       <artifactId>guava</artifactId>
       <version>${google.guava.version}</version>
     </dependency>
+    <dependency>
+      <groupId>log4j</groupId>
+      <artifactId>log4j</artifactId>
+      <version>1.2.17</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-api</artifactId>
+      <version>2.11.0</version>
+    </dependency>
 
     <!-- test supports -->
     <dependency>
@@ -108,7 +118,7 @@
       <version>1.4.197</version>
       <scope>test</scope>
     </dependency>
-    <!-- <dependency> <groupId>org.postgresql</groupId> <artifactId>postgresql</artifactId> 
+    <!-- <dependency> <groupId>org.postgresql</groupId> <artifactId>postgresql</artifactId>
       <version>42.2.2</version> <scope>test</scope> </dependency> -->
     <dependency>
       <groupId>org.postgresql</groupId>
@@ -126,6 +136,7 @@
       <groupId>org.xerial</groupId>
       <artifactId>sqlite-jdbc</artifactId>
       <version>3.8.11.2</version>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
@@ -133,13 +144,21 @@
       <version>${junit.version}</version>
       <scope>test</scope>
     </dependency>
+    <!-- This must have been downloaded separately and locally installed. -->
+    <dependency>
+      <groupId>com.cloudera</groupId>
+      <artifactId>impala-jdbc41</artifactId>
+      <version>2.6.3</version>
+      <scope>test</scope>
+    </dependency>
     <dependency>
       <groupId>com.klarna</groupId>
       <artifactId>hiverunner</artifactId>
       <version>3.2.1</version>
       <scope>test</scope>
+      <exclusions>
+      </exclusions>
     </dependency>
-
   </dependencies>
 
   <profiles>
@@ -159,10 +178,10 @@
                 <enableTimeout>true</enableTimeout>
                 <timeoutSeconds>100</timeoutSeconds>
                 <timeoutRetries>2</timeoutRetries>
-                <!-- This seems to be slower. <hiveconf_hive.execution.engine>tez</hiveconf_hive.execution.engine> 
+                <!-- This seems to be slower. <hiveconf_hive.execution.engine>tez</hiveconf_hive.execution.engine>
                   <hiveconf_hive.exec.counters.pull.interval>1000</hiveconf_hive.exec.counters.pull.interval> -->
               </systemProperties>
-              <!-- This fork mode seems to be only working configuration 
+              <!-- This fork mode seems to be only working configuration
                 for JDK7 -->
               <!-- <forkMode>always</forkMode> -->
               <forkCount>1</forkCount>
@@ -189,10 +208,10 @@
                 <enableTimeout>true</enableTimeout>
                 <timeoutSeconds>100</timeoutSeconds>
                 <timeoutRetries>2</timeoutRetries>
-                <!-- This seems to be slower. <hiveconf_hive.execution.engine>tez</hiveconf_hive.execution.engine> 
+                <!-- This seems to be slower. <hiveconf_hive.execution.engine>tez</hiveconf_hive.execution.engine>
                   <hiveconf_hive.exec.counters.pull.interval>1000</hiveconf_hive.exec.counters.pull.interval> -->
               </systemProperties>
-              <!-- This fork mode seems to be only working configuration 
+              <!-- This fork mode seems to be only working configuration
                 for JDK7 -->
               <!-- <forkMode>always</forkMode> -->
               <forkCount>1</forkCount>
