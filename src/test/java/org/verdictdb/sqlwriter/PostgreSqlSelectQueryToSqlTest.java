@@ -40,7 +40,7 @@ public class PostgreSqlSelectQueryToSqlTest {
 
   private static final String POSTGRES_USER = "postgres";
 
-  private static final String POSTGRES_PASSWORD = "zhongshucheng123";
+  private static final String POSTGRES_PASSWORD = "";
 
   @BeforeClass
   public static void setupMySqlDatabase() throws SQLException {
