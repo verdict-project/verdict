@@ -625,7 +625,7 @@ nary_manipulation_function
     ;
 
 ternary_manipulation_function
-    : function_name=(CONV | SUBSTR | HASH | RPAD | SUBSTRING | LPAD | MID | REPLACE | SUBSTRING_INDEX)
+    : function_name=(CONV | SUBSTR | HASH | RPAD | SUBSTRING | LPAD | MID | REPLACE | SUBSTRING_INDEX | MAKETIME | IF)
       '(' expression ',' expression ',' expression ')'
     ;
 
@@ -633,7 +633,7 @@ binary_manipulation_function
     : function_name=(ROUND | MOD | PMOD | LEFT | RIGHT | STRTOL | POW | POWER | PERCENTILE | SPLIT | INSTR | ENCODE | DECODE | SHIFTLEFT
     | SHIFTRIGHT | SHIFTRIGHTUNSIGNED | NVL | FIND_IN_SET | FORMAT_NUMBER | FORMAT | GET_JSON_OBJECT | IN_FILE
     | LOCATE | REPEAT | AES_ENCRYPT | AES_DECRYPT | POSITION | STRCMP | TRUNCATE | ADDDATE | ADDTIME | DATEDIFF | DATE_ADD
-    | DATE_FORMAT | DATE_SUB)
+    | DATE_FORMAT | DATE_SUB | MAKEDATE | PERIOD_ADD | PERIOD_DIFF | SUBDATE | TIME_FORMAT | TIMEDIFF | CONVERT | IFNULL | NULLIF)
       '(' expression ',' expression ')'
     ;
 
@@ -642,14 +642,16 @@ unary_manipulation_function
      | ABS | STDDEV | SQRT | LCASE | MD5 | CRC32 | YEAR | QUARTER | MONTH | DAY | HOUR | MINUTE | SECOND | WEEKOFYEAR | LOWER
      | UPPER | UCASE | ASCII | CHARACTER_LENGTH | FACTORIAL | CBRT | LENGTH | TRIM | ASIN | ACOS | ATAN | ATAN2 | DEGREES | RADIANS | POSITIVE
      | NEGATIVE | BROUND | BIN | HEX | UNHEX | FROM_UNIXTIME | TO_DATE | CHR | LTRIM | RTRIM| REVERSE | SPACE_FUNCTION | SHA1
-     | SHA2 | SPACE | DATE | DAYNAME | DAYOFMONTH | DAYOFWEEK | DAYOFYEAR)
+     | SHA2 | SPACE | DATE | DAYNAME | DAYOFMONTH | DAYOFWEEK | DAYOFYEAR | FROM_DAYS | LAST_DAY | MICROSECOND | MONTHNAME | SEC_TO_TIME
+     | STR_TO_DATE | TIME | TIME_TO_SEC | TIMESTAMP | TO_DAYS | WEEK | WEEKDAY | YEARWEEK | BINARY | ISNULL )
       '(' expression ')'
     | function_name=CAST '(' cast_as_expression ')'    
     ;
     
 noparam_manipulation_function
     : function_name=(UNIX_TIMESTAMP | CURRENT_TIMESTAMP | CURRENT_DATE | CURRENT_TIME | RANDOM | RAND | NATURAL_CONSTANT
-    | PI | CURDATE | CURTIME)
+    | PI | CURDATE | CURTIME | LOCALTIME | LOCALTIMESTAMP | NOW | SYSDATE | CURRENT_USER | DATABASE | LAST_INSERT_ID
+    | SESSION_USER | SYSTEM_USER | USER | VERSION)
       '(' ')'
     ;
     
@@ -1285,6 +1287,7 @@ FORMAT:                          F O R M A T;
 FORMAT_NUMBER:                   F O R M A T '_' N U M B E R;
 FORWARD_ONLY:                    F O R W A R D '_' O N L Y;
 FNV_HASH:                        F N V '_' H A S H;
+FROM_DAYS:                       F R O M '_' D A Y S;
 FROM_UNIXTIME:                   F R O M '_' U N I X T I M E;
 FULLSCAN:                        F U L L S C A N;
 GET_JSON_OBJECT:                 G E T '_' J S O N '_' O B J E C T;
@@ -1295,15 +1298,19 @@ GROUPING:                        G R O U P I N G;
 GROUPING_ID:                     G R O U P I N G '_' I D;
 HEX:                             H E X;
 HOUR:                            H O U R;
+IFNULL:                          I F N U L L;
 INSENSITIVE:                     I N S E N S I T I V E;
 INSERTED:                        I N S E R T E D;
 INSTR:                           I N S T R;
 INTERVAL:                        I N T E R V A L;
 IN_FILE:                         I N '_' F I L E;
+ISNULL:                          I S N U L L;
 ISOLATION:                       I S O L A T I O N;
 KEEPFIXED:                       K E E P F I X E D;
 KEYSET:                          K E Y S E T;
 LAST:                            L A S T;
+LAST_DAY:                        L A S T '_' D A Y;
+LAST_INSERT_ID:                  L A S T '_' I N S E R T '_' I D;
 LATERAL:                         L A T E R A L;
 LCASE:                           L C A S E;
 LEAST:                           L E A S T;
@@ -1311,6 +1318,8 @@ LENGTH:                          L E N G T H;
 LEVEL:                           L E V E L;
 LN:                              L N;
 LOCAL:                           L O C A L;
+LOCALTIME:                       L O C A L T I M E;
+LOCALTIMESTAMP:                  L O C A L T I M E S T A M P;
 LOCATE:                          L O C A T E;
 LOCATION:                        L O C A T I O N;
 LOCK_ESCALATION:                 L O C K '_' E S C A L A T I O N;
@@ -1322,15 +1331,19 @@ LOOP:                            L O O P;
 LOWER:                           L O W E R;
 LPAD:                            L P A D;
 LTRIM:                           L T R I M;
+MAKEDATE:                        M A K E D A T E;
+MAKETIME:                        M A K E T I M E;
 MARK:                            M A R K;
 MAX:                             M A X;
 MD5:                             M D '5';
+MICROSECOND:                     M I C R O S E C O N D;
 MIN:                             M I N;
 MIN_ACTIVE_ROWVERSION:           M I N '_' A C T I V E '_' R O W V E R S I O N;
 MINUTE:                          M I N U T E;
 MOD:                             M O D;
 MODIFY:                          M O D I F Y;
 MONTH:                           M O N T H;
+MONTHNAME:                       M O N T H N A M E;
 MONTHS:                          M O N T H S;
 NEGATIVE:                        N E G A T I V E;
 NEXT:                            N E X T;
@@ -1339,6 +1352,7 @@ NDV:                             N D V;
 NOCOUNT:                         N O C O U N T;
 NOEXPAND:                        N O E X P A N D;
 NORECOMPUTE:                     N O R E C O M P U T E;
+NOW:                             N O W;
 NTILE:                           N T I L E;
 NUMBER:                          N U M B E R;
 NVL:                             N V L;
@@ -1352,6 +1366,8 @@ OWNER:                           O W N E R;
 PARTITION:                       P A R T I T I O N;
 PATH:                            P A T H;
 PERCENTILE:                      P E R C E N T I L E;
+PERIOD_ADD:                      P E R I O D '_' A D D;
+PERIOD_DIFF:                     P E R I O D '_' D I F F;
 PI:                              P I;
 PMOD:                            P M O D;
 POSITION:                        P O S I T I O N;
@@ -1391,6 +1407,7 @@ SCHEMABINDING:                   S C H E M A B I N D I N G;
 SCROLL:                          S C R O L L;
 SCROLL_LOCKS:                    S C R O L L '_' L O C K S;
 SECOND:                          S E C O N D;
+SEC_TO_TIME:                     S E C '_' T O '_' T I M E;
 SELF:                            S E L F;
 SERIALIZABLE:                    S E R I A L I Z A B L E;
 SHA1:                            S H A '1';
@@ -1412,15 +1429,23 @@ STDEVP:                          S T D E V P;
 STDDEV_SAMP:                     S T D D E V '_' S A M P;
 STORED_AS_PARQUET:               S T O R E D ' ' A S ' ' P A R Q U E T;
 STRCMP:                          S T R C M P;
+STR_TO_DATE:                     S T R '_' T O '_' D A T E;
+SUBDATE:                         S U B D A T E;
 SUBSTRING_INDEX:                 S U B S T R I N G '_' I N D E X;
 SUM:                             S U M;
 SQRT:                            S Q R T;
 STRTOL:                          S T R T O L;
+SYSDATE:                         S Y S D A T E;
 TAN:                             T A N;
 THROW:                           T H R O W;
 TIES:                            T I E S;
 TIME:                            T I M E;
+TIMEDIFF:                        T I M E D I F F;
+TIMESTAMP:                       T I M E S T A M P;
+TIME_FORMAT:                     T I M E '_' F O R M A T E;
+TIME_TO_SEC:                     T I M E '_' T O '_' S E C;
 TO_DATE:                         T O '_' D A T E;
+TO_DAYS:                         T O '_' D A Y S;
 TRIM:                            T R I M;
 TRY:                             T R Y;
 TYPE:                            T Y P E;
@@ -1436,13 +1461,17 @@ UPPER:                           U P P E R;
 USING:                           U S I N G;
 VAR:                             V A R;
 VARP:                            V A R P;
+VERSION:                         V E R S I O N;
 VIEW_METADATA:                   V I E W '_' M E T A D A T A;
 WEEKOFYEAR:                      W E E K O F Y E A R;
+WEEK:                            W E E K;
+WEEKDAY:                         W E E K D A Y;
 WORK:                            W O R K;
 XML:                             X M L;
 XMLNAMESPACES:                   X M L N A M E S P A C E S;
 YEAR:                            Y E A R;
 YEARS:                           Y E A R S;
+YEARWEEK:                        Y E A R W E E K;
 
 DOLLAR_ACTION:                   '$' A C T I O N;
 
