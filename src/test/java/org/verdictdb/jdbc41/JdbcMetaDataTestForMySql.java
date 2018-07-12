@@ -99,7 +99,6 @@ public class JdbcMetaDataTestForMySql {
   public void testGetColumns() throws VerdictDBDbmsException, SQLException {
     List<Pair<String, String>> columns = dbmsConn.getColumns("test", TABLE_NAME);
     assertEquals(33, columns.size());
-    assertEquals(33, columns.size());
     ResultSet expected = stmt.executeQuery(String.format("describe %s", TABLE_NAME));
     int idx = 0;
     while (expected.next()) {
