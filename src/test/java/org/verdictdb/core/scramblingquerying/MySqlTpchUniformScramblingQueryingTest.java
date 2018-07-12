@@ -167,7 +167,7 @@ public class MySqlTpchUniformScramblingQueryingTest {
         "test", "lineitem_scrambled",
         "test", "lineitem",
         method, options);
-    DbmsConnection mysqlConn = new JdbcConnection(conn);
+    DbmsConnection mysqlConn = new JdbcConnection(conn, new MysqlSyntax());
     ExecutablePlanRunner.runTillEnd(mysqlConn, plan);
     ScramblingMethod method2 = new UniformScramblingMethod(blockSize);
     Map<String, String> options2 = new HashMap<>();
