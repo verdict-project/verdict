@@ -193,6 +193,16 @@ public class ExpressionGen extends VerdictSQLBaseVisitor<UnnamedColumn> {
         return new ColumnOp(fname, columns);
       }
 
+      @Override
+      public ColumnOp visitExtract_time_function(VerdictSQLParser.Extract_time_functionContext ctx) {
+        String fname = "extract";
+        ExpressionGen g = new ExpressionGen();
+        return new ColumnOp(fname, Arrays.<UnnamedColumn>asList(
+            ConstantColumn.valueOf(ctx.extract_unit().getText()),
+            g.visit(ctx.expression())
+        ));
+      }
+
     };
     return v.visit(ctx);
   }

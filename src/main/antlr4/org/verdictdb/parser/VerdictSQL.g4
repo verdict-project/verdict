@@ -606,10 +606,21 @@ value_manipulation_function
     | binary_manipulation_function
     | ternary_manipulation_function
     | nary_manipulation_function
+    | extract_time_function
     ;
 
+extract_time_function
+    : function_name=EXTRACT
+      '(' extract_unit FROM (constant_expression|expression) ')'
+    ;
+
+extract_unit
+    : YEAR | MONTH | DAY | expression
+    ;
+
+
 nary_manipulation_function
-	: function_name=(CONCAT | CONCAT_WS | COALESCE | FIELD)
+	: function_name=(CONCAT | CONCAT_WS | COALESCE | FIELD | GREATEST | LEAST)
 		'(' expression (',' expression)* ')'
     ;
 
@@ -619,24 +630,26 @@ ternary_manipulation_function
     ;
 
 binary_manipulation_function
-    : function_name=(ROUND | MOD | PMOD | LEFT | RIGHT | STRTOL | POW | PERCENTILE | SPLIT | INSTR | ENCODE | DECODE | SHIFTLEFT
+    : function_name=(ROUND | MOD | PMOD | LEFT | RIGHT | STRTOL | POW | POWER | PERCENTILE | SPLIT | INSTR | ENCODE | DECODE | SHIFTLEFT
     | SHIFTRIGHT | SHIFTRIGHTUNSIGNED | NVL | FIND_IN_SET | FORMAT_NUMBER | FORMAT | GET_JSON_OBJECT | IN_FILE
-    | LOCATE | REPEAT | AES_ENCRYPT | AES_DECRYPT | POSITION | STRCMP)
+    | LOCATE | REPEAT | AES_ENCRYPT | AES_DECRYPT | POSITION | STRCMP | TRUNCATE | ADDDATE | ADDTIME | DATEDIFF | DATE_ADD
+    | DATE_FORMAT | DATE_SUB)
       '(' expression ',' expression ')'
     ;
 
 unary_manipulation_function
-    : function_name=(ROUND | CHAR_LENGTH | FLOOR | CEIL | EXP | LN | LOG10 | LOG2 | SIN | COS | TAN | SIGN | RAND | FNV_HASH | RAWTOHEX
+    : function_name=(ROUND | CHAR_LENGTH | FLOOR | CEIL | CEILING | EXP | LN | LOG | LOG10 | LOG2 | SIN | COS | COT | TAN | SIGN | RAND | FNV_HASH | RAWTOHEX
      | ABS | STDDEV | SQRT | LCASE | MD5 | CRC32 | YEAR | QUARTER | MONTH | DAY | HOUR | MINUTE | SECOND | WEEKOFYEAR | LOWER
-     | UPPER | UCASE | ASCII | CHARACTER_LENGTH | FACTORIAL | CBRT | LENGTH | TRIM | ASIN | ACOS | ATAN | DEGREES | RADIANS | POSITIVE
+     | UPPER | UCASE | ASCII | CHARACTER_LENGTH | FACTORIAL | CBRT | LENGTH | TRIM | ASIN | ACOS | ATAN | ATAN2 | DEGREES | RADIANS | POSITIVE
      | NEGATIVE | BROUND | BIN | HEX | UNHEX | FROM_UNIXTIME | TO_DATE | CHR | LTRIM | RTRIM| REVERSE | SPACE_FUNCTION | SHA1
-     | SHA2 | SPACE )
+     | SHA2 | SPACE | DATE | DAYNAME | DAYOFMONTH | DAYOFWEEK | DAYOFYEAR)
       '(' expression ')'
     | function_name=CAST '(' cast_as_expression ')'    
     ;
     
 noparam_manipulation_function
-    : function_name=(UNIX_TIMESTAMP | CURRENT_TIMESTAMP | CURRENT_DATE | CURRENT_TIME | RANDOM | NATURAL_CONSTANT | PI)
+    : function_name=(UNIX_TIMESTAMP | CURRENT_TIMESTAMP | CURRENT_DATE | CURRENT_TIME | RANDOM | RAND | NATURAL_CONSTANT
+    | PI | CURDATE | CURTIME)
       '(' ')'
     ;
     
@@ -1192,11 +1205,15 @@ WRITETEXT:                       W R I T E T E X T;
 ABSOLUTE:                        A B S O L U T E;
 ABS:                             A B S;
 ACOS:                            A C O S;
+ADDDATE:                         A D D D A T E;
+ADDTIME:                         A D D T I M E;
+
 AES_DECRYPT:                     A E S '_' D E C R Y P T;
 AES_ENCRYPT:                     A E S '_' E N C R Y P T;
 APPLY:                           A P P L Y;
 ASIN:                            A S I N;
 ATAN:                            A T A N;
+ATAN2:                            A T A N '2';
 AUTO:                            A U T O;
 AVG:                             A V G;
 BASE64:                          B A S E '64';
@@ -1208,6 +1225,7 @@ CAST:                            C A S T;
 CATCH:                           C A T C H;
 CBRT:                            C B R T;
 CEIL:                            C E I L;
+CEILING:                         C E I L I N G;
 CHAR_LENGTH:                     C H A R '_' L E N G T H;
 CHARACTER_LENGTH:                C H A R A C T E R '_' L E N G T H;
 CHECKSUM:                        C H E C K S U M;
@@ -1219,15 +1237,25 @@ CONCAT_WS:                       C O N C A T '_' W S;
 CONFIG:                          C O N F I G;
 COOKIE:                          C O O K I E;
 COS:                             C O S;
+COT:                             C O T;
 COUNT:                           C O U N T;
 COUNT_BIG:                       C O U N T '_' B I G;
 CRC32:                           C R C '32';
+CURDATE:                         C U R D A T E;
+CURTIME:                         C U R T I M E;
 DATE:                            D A T E;
 DATEADD:                         D A T E A D D;
+DATE_ADD:                        D A T E '_' A D D;
+DATE_FORMAT:                     D A T E '_' F O R M A T;
+DATE_SUB:                        D A T E '_' S U B;
 DATEDIFF:                        D A T E D I F F;
 DATENAME:                        D A T E N A M E;
 DATEPART:                        D A T E P A R T;
 DAY:                             D A Y;
+DAYNAME:                         D A Y N A M E;
+DAYOFMONTH:                      D A Y O F M O N T H;
+DAYOFWEEK:                       D A Y O F W E E K;
+DAYOFYEAR:                       D A Y O F Y E A R;
 DAYS:                            D A Y S;
 DECODE:                          D E C O D E;
 DEGREES:                         D E G R E E S;
@@ -1262,6 +1290,7 @@ FULLSCAN:                        F U L L S C A N;
 GET_JSON_OBJECT:                 G E T '_' J S O N '_' O B J E C T;
 GLOBAL:                          G L O B A L;
 GO:                              G O;
+GREATEST:                        G R E A T E S T;
 GROUPING:                        G R O U P I N G;
 GROUPING_ID:                     G R O U P I N G '_' I D;
 HEX:                             H E X;
@@ -1277,6 +1306,7 @@ KEYSET:                          K E Y S E T;
 LAST:                            L A S T;
 LATERAL:                         L A T E R A L;
 LCASE:                           L C A S E;
+LEAST:                           L E A S T;
 LENGTH:                          L E N G T H;
 LEVEL:                           L E V E L;
 LN:                              L N;
@@ -1284,6 +1314,7 @@ LOCAL:                           L O C A L;
 LOCATE:                          L O C A T E;
 LOCATION:                        L O C A T I O N;
 LOCK_ESCALATION:                 L O C K '_' E S C A L A T I O N;
+LOG:                             L O G;
 LOG2:                            L O G '2';
 LOG10:                           L O G '10';
 LOGIN:                           L O G I N;
@@ -1326,6 +1357,7 @@ PMOD:                            P M O D;
 POSITION:                        P O S I T I O N;
 POSITIVE:                        P O S I T I V E;
 POW:                             P O W;
+POWER:                           P O W E R;
 PRECEDING:                       P R E C E D I N G;
 PRIOR:                           P R I O R;
 QUARTER:                         Q U A R T E R;

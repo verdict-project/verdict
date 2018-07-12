@@ -98,7 +98,7 @@ public class MySqlSelectQueryToSqlTest {
   }
 
   @Test
-  public void testTernaryFunc() throws VerdictDBException {
+  public void testTernaryFunc1() throws VerdictDBException {
     String expected = "select substring('abc', 1, 2) from `myschema`.`mytable` as t";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation sel = sqlToRelation.toRelation(expected);
@@ -108,7 +108,17 @@ public class MySqlSelectQueryToSqlTest {
   }
 
   @Test
-  public void testBinaryFunc() throws VerdictDBException {
+  public void testTernaryFunc2() throws VerdictDBException {
+    String expected = "select rpad('abc', 1, 2) from `myschema`.`mytable` as t";
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation sel = sqlToRelation.toRelation(expected);
+    SelectQueryToSql relToSql = new SelectQueryToSql(new MysqlSyntax());
+    String actual = relToSql.toSql(sel);
+    assertEquals(expected, actual);
+  }
+
+  @Test
+  public void testBinaryFunc1() throws VerdictDBException {
     String expected = "select mod(5, 2) from `myschema`.`mytable` as t";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation sel = sqlToRelation.toRelation(expected);
@@ -118,7 +128,17 @@ public class MySqlSelectQueryToSqlTest {
   }
 
   @Test
-  public void testUnaryFunc() throws VerdictDBException {
+  public void testBinaryFunc2() throws VerdictDBException {
+    String expected = "select left(5, 2) from `myschema`.`mytable` as t";
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation sel = sqlToRelation.toRelation(expected);
+    SelectQueryToSql relToSql = new SelectQueryToSql(new MysqlSyntax());
+    String actual = relToSql.toSql(sel);
+    assertEquals(expected, actual);
+  }
+
+  @Test
+  public void testUnaryFunc1() throws VerdictDBException {
     String expected = "select ascii('a') from `myschema`.`mytable` as t";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation sel = sqlToRelation.toRelation(expected);
@@ -128,7 +148,17 @@ public class MySqlSelectQueryToSqlTest {
   }
 
   @Test
-  public void testNaryFunc() throws VerdictDBException {
+  public void testUnaryFunc2() throws VerdictDBException {
+    String expected = "select lcase('a') from `myschema`.`mytable` as t";
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation sel = sqlToRelation.toRelation(expected);
+    SelectQueryToSql relToSql = new SelectQueryToSql(new MysqlSyntax());
+    String actual = relToSql.toSql(sel);
+    assertEquals(expected, actual);
+  }
+
+  @Test
+  public void testNaryFunc1() throws VerdictDBException {
     String expected = "select concat_ws('1', '2', '3', '4') from `myschema`.`mytable` as t";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation sel = sqlToRelation.toRelation(expected);
@@ -138,8 +168,38 @@ public class MySqlSelectQueryToSqlTest {
   }
 
   @Test
-  public void testNoparamFunc() throws VerdictDBException {
+  public void testNaryFunc2() throws VerdictDBException {
+    String expected = "select concat('1', '2', '3', '4') from `myschema`.`mytable` as t";
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation sel = sqlToRelation.toRelation(expected);
+    SelectQueryToSql relToSql = new SelectQueryToSql(new MysqlSyntax());
+    String actual = relToSql.toSql(sel);
+    assertEquals(expected, actual);
+  }
+
+  @Test
+  public void testNoparamFunc1() throws VerdictDBException {
     String expected = "select current_timestamp() from `myschema`.`mytable` as t";
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation sel = sqlToRelation.toRelation(expected);
+    SelectQueryToSql relToSql = new SelectQueryToSql(new MysqlSyntax());
+    String actual = relToSql.toSql(sel);
+    assertEquals(expected, actual);
+  }
+
+  @Test
+  public void testNoparamFunc2() throws VerdictDBException {
+    String expected = "select current_date() from `myschema`.`mytable` as t";
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation sel = sqlToRelation.toRelation(expected);
+    SelectQueryToSql relToSql = new SelectQueryToSql(new MysqlSyntax());
+    String actual = relToSql.toSql(sel);
+    assertEquals(expected, actual);
+  }
+
+  @Test
+  public void testExtract() throws VerdictDBException {
+    String expected = "select extract(month from \"2017-06-15\") from `myschema`.`mytable` as t";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation sel = sqlToRelation.toRelation(expected);
     SelectQueryToSql relToSql = new SelectQueryToSql(new MysqlSyntax());
