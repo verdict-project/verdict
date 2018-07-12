@@ -4,7 +4,7 @@
 #
 version: 2
 jobs:
-  buildjdk8:
+  build:
     docker:
       # specify the version you desire here
       - image: circleci/oraclejdk8
