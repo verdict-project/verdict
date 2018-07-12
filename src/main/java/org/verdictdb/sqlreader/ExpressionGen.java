@@ -1,5 +1,6 @@
 package org.verdictdb.sqlreader;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -151,14 +152,11 @@ public class ExpressionGen extends VerdictSQLBaseVisitor<UnnamedColumn> {
         return new ColumnOp(fname, g.visit(ctx.expression()));
       }
 
-      @Override //not support yet
+      @Override
       public ColumnOp visitNoparam_manipulation_function(
           VerdictSQLParser.Noparam_manipulation_functionContext ctx) {
-        String fname = ctx.function_name.getText().toUpperCase();
-        //FuncName funcName = string2FunctionType.containsKey(fname) ? string2FunctionType.get(fname)
-        //        : FuncName.UNKNOWN;
-        //return new FuncExpr(funcName, null);
-        return null;
+        String fname = ctx.function_name.getText().toLowerCase();
+        return new ColumnOp(fname);
       }
 
       @Override
@@ -184,17 +182,15 @@ public class ExpressionGen extends VerdictSQLBaseVisitor<UnnamedColumn> {
             ));
       }
 
-      @Override // not support yet
+      @Override
       public ColumnOp visitNary_manipulation_function(VerdictSQLParser.Nary_manipulation_functionContext ctx) {
-        String fname = ctx.function_name.getText().toUpperCase();
-        //FuncName funcName = string2FunctionType.containsKey(fname) ? string2FunctionType.get(fname)
-        //        : FuncName.UNKNOWN;
-        //List<Expr> exprList = new ArrayList<>();
-        //for (VerdictSQLParser.ExpressionContext context : ctx.expression()) {
-        //    exprList.add(Expr.from(vc, context));
-        //}
-        //return new FuncExpr(funcName, exprList, null);
-        return null;
+        String fname = ctx.function_name.getText().toLowerCase();
+        ExpressionGen g = new ExpressionGen();
+        List<UnnamedColumn> columns = new ArrayList<>();
+        for (VerdictSQLParser.ExpressionContext expressionContext:ctx.expression()) {
+          columns.add(g.visit(expressionContext));
+        }
+        return new ColumnOp(fname, columns);
       }
 
     };

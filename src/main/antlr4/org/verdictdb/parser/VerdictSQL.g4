@@ -609,29 +609,34 @@ value_manipulation_function
     ;
 
 nary_manipulation_function
-	: function_name=(CONCAT | CONCAT_WS | COALESCE)
+	: function_name=(CONCAT | CONCAT_WS | COALESCE | FIELD)
 		'(' expression (',' expression)* ')'
     ;
 
 ternary_manipulation_function
-    : function_name=(CONV | SUBSTR | HASH | RPAD | SUBSTRING)
+    : function_name=(CONV | SUBSTR | HASH | RPAD | SUBSTRING | LPAD | MID | REPLACE | SUBSTRING_INDEX)
       '(' expression ',' expression ',' expression ')'
     ;
 
 binary_manipulation_function
-    : function_name=(ROUND | MOD | PMOD | STRTOL | POW | PERCENTILE | SPLIT | INSTR | ENCODE | DECODE | SHIFTLEFT | SHIFTRIGHT | SHIFTRIGHTUNSIGNED | NVL | FIND_IN_SET | FORMAT_NUMBER | GET_JSON_OBJECT | IN_FILE | LOCATE | REPEAT | AES_ENCRYPT | AES_DECRYPT)
+    : function_name=(ROUND | MOD | PMOD | LEFT | RIGHT | STRTOL | POW | PERCENTILE | SPLIT | INSTR | ENCODE | DECODE | SHIFTLEFT
+    | SHIFTRIGHT | SHIFTRIGHTUNSIGNED | NVL | FIND_IN_SET | FORMAT_NUMBER | FORMAT | GET_JSON_OBJECT | IN_FILE
+    | LOCATE | REPEAT | AES_ENCRYPT | AES_DECRYPT | POSITION | STRCMP)
       '(' expression ',' expression ')'
     ;
 
 unary_manipulation_function
-    : function_name=(ROUND | FLOOR | CEIL | EXP | LN | LOG10 | LOG2 | SIN | COS | TAN | SIGN | RAND | FNV_HASH | RAWTOHEX
-     | ABS | STDDEV | SQRT | MD5 | CRC32 | YEAR | QUARTER | MONTH | DAY | HOUR | MINUTE | SECOND | WEEKOFYEAR | LOWER | UPPER | ASCII | CHARACTER_LENGTH | FACTORIAL | CBRT | LENGTH | TRIM | ASIN | ACOS | ATAN | DEGREES | RADIANS | POSITIVE | NEGATIVE | BROUND | BIN | HEX | UNHEX | FROM_UNIXTIME | TO_DATE | CHR | LTRIM | REVERSE | SPACE_FUNCTION | SHA1 | SHA2 )
+    : function_name=(ROUND | CHAR_LENGTH | FLOOR | CEIL | EXP | LN | LOG10 | LOG2 | SIN | COS | TAN | SIGN | RAND | FNV_HASH | RAWTOHEX
+     | ABS | STDDEV | SQRT | LCASE | MD5 | CRC32 | YEAR | QUARTER | MONTH | DAY | HOUR | MINUTE | SECOND | WEEKOFYEAR | LOWER
+     | UPPER | UCASE | ASCII | CHARACTER_LENGTH | FACTORIAL | CBRT | LENGTH | TRIM | ASIN | ACOS | ATAN | DEGREES | RADIANS | POSITIVE
+     | NEGATIVE | BROUND | BIN | HEX | UNHEX | FROM_UNIXTIME | TO_DATE | CHR | LTRIM | RTRIM| REVERSE | SPACE_FUNCTION | SHA1
+     | SHA2 | SPACE )
       '(' expression ')'
     | function_name=CAST '(' cast_as_expression ')'    
     ;
     
 noparam_manipulation_function
-    : function_name=(UNIX_TIMESTAMP | CURRENT_TIMESTAMP | RANDOM | NATURAL_CONSTANT | PI)
+    : function_name=(UNIX_TIMESTAMP | CURRENT_TIMESTAMP | CURRENT_DATE | CURRENT_TIME | RANDOM | NATURAL_CONSTANT | PI)
       '(' ')'
     ;
     
@@ -1086,6 +1091,7 @@ LIMIT:                           L I M I T;
 LINENO:                          L I N E N O;
 LOAD:                            L O A D;
 MERGE:                           M E R G E;
+MID:                             M I D;
 NATIONAL:                        N A T I O N A L;
 NOCHECK:                         N O C H E C K;
 NONCLUSTERED:                    N O N C L U S T E R E D;
@@ -1202,6 +1208,7 @@ CAST:                            C A S T;
 CATCH:                           C A T C H;
 CBRT:                            C B R T;
 CEIL:                            C E I L;
+CHAR_LENGTH:                     C H A R '_' L E N G T H;
 CHARACTER_LENGTH:                C H A R A C T E R '_' L E N G T H;
 CHECKSUM:                        C H E C K S U M;
 CHECKSUM_AGG:                    C H E C K S U M '_' A G G;
@@ -1240,11 +1247,13 @@ EXTRACT:                         E X T R A C T;
 FACTORIAL:                       F A C T O R I A L;
 FAST:                            F A S T;
 FAST_FORWARD:                    F A S T '_' F O R W A R D;
+FIELD:                           F I E L D;
 FIELDS_SEPARATED_BY:             F I E L D S ' ' S E P A R A T E D ' ' B Y;
 FIND_IN_SET:                     F I N D '_' I N '_' S E T;
 FIRST:                           F I R S T;
 FLOOR:                           F L O O R;
 FOLLOWING:                       F O L L O W I N G;
+FORMAT:                          F O R M A T;
 FORMAT_NUMBER:                   F O R M A T '_' N U M B E R;
 FORWARD_ONLY:                    F O R W A R D '_' O N L Y;
 FNV_HASH:                        F N V '_' H A S H;
@@ -1267,6 +1276,7 @@ KEEPFIXED:                       K E E P F I X E D;
 KEYSET:                          K E Y S E T;
 LAST:                            L A S T;
 LATERAL:                         L A T E R A L;
+LCASE:                           L C A S E;
 LENGTH:                          L E N G T H;
 LEVEL:                           L E V E L;
 LN:                              L N;
@@ -1279,6 +1289,7 @@ LOG10:                           L O G '10';
 LOGIN:                           L O G I N;
 LOOP:                            L O O P;
 LOWER:                           L O W E R;
+LPAD:                            L P A D;
 LTRIM:                           L T R I M;
 MARK:                            M A R K;
 MAX:                             M A X;
@@ -1312,6 +1323,7 @@ PATH:                            P A T H;
 PERCENTILE:                      P E R C E N T I L E;
 PI:                              P I;
 PMOD:                            P M O D;
+POSITION:                        P O S I T I O N;
 POSITIVE:                        P O S I T I V E;
 POW:                             P O W;
 PRECEDING:                       P R E C E D I N G;
@@ -1332,6 +1344,7 @@ RELATIVE:                        R E L A T I V E;
 REMOTE:                          R E M O T E;
 REPEAT:                          R E P E A T;
 REPEATABLE:                      R E P E A T A B L E;
+REPLACE:                         R E P L A C E;
 REVERSE:                         R E V E R S E;
 ROLLUP:                          R O L L U P;
 ROOT:                            R O O T;
@@ -1340,6 +1353,7 @@ ROW:                             R O W;
 ROWGUID:                         R O W G U I D;
 ROWS:                            R O W S;
 ROW_NUMBER:                      R O W '_' N U M B E R;
+RTRIM:                           R T R I M;
 SAMPLE:                          S A M P L E;
 SCHEMABINDING:                   S C H E M A B I N D I N G;
 SCROLL:                          S C R O L L;
@@ -1365,6 +1379,8 @@ STDDEV:                          S T D D E V;
 STDEVP:                          S T D E V P;
 STDDEV_SAMP:                     S T D D E V '_' S A M P;
 STORED_AS_PARQUET:               S T O R E D ' ' A S ' ' P A R Q U E T;
+STRCMP:                          S T R C M P;
+SUBSTRING_INDEX:                 S U B S T R I N G '_' I N D E X;
 SUM:                             S U M;
 SQRT:                            S Q R T;
 STRTOL:                          S T R T O L;
@@ -1377,6 +1393,7 @@ TRIM:                            T R I M;
 TRY:                             T R Y;
 TYPE:                            T Y P E;
 TYPE_WARNING:                    T Y P E '_' W A R N I N G;
+UCASE:                           U C A S E;
 UNBOUNDED:                       U N B O U N D E D;
 UNCOMMITTED:                     U N C O M M I T T E D;
 UNHEX:                           U N H E X;

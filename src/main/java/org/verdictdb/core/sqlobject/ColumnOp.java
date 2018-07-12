@@ -39,6 +39,7 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
    * <li>floor</li>
    * <li>cast</li>
    * <li>percentile</li>
+   * <li>mod</li>
    * </ol>
    * <p>
    * Comparison:
@@ -290,6 +291,10 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
   
   public static ColumnOp cast(UnnamedColumn column, UnnamedColumn dataType) {
     return new ColumnOp("cast", Arrays.asList(column, dataType));
+  }
+
+  public static ColumnOp mod(UnnamedColumn col1, UnnamedColumn col2) {
+    return new ColumnOp("mod", Arrays.asList(col1, col2));
   }
 
   @Override

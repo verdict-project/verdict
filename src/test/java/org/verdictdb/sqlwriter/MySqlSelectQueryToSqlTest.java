@@ -98,8 +98,48 @@ public class MySqlSelectQueryToSqlTest {
   }
 
   @Test
-  public void testSubstring() throws VerdictDBException {
+  public void testTernaryFunc() throws VerdictDBException {
     String expected = "select substring('abc', 1, 2) from `myschema`.`mytable` as t";
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation sel = sqlToRelation.toRelation(expected);
+    SelectQueryToSql relToSql = new SelectQueryToSql(new MysqlSyntax());
+    String actual = relToSql.toSql(sel);
+    assertEquals(expected, actual);
+  }
+
+  @Test
+  public void testBinaryFunc() throws VerdictDBException {
+    String expected = "select mod(5, 2) from `myschema`.`mytable` as t";
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation sel = sqlToRelation.toRelation(expected);
+    SelectQueryToSql relToSql = new SelectQueryToSql(new MysqlSyntax());
+    String actual = relToSql.toSql(sel);
+    assertEquals(expected, actual);
+  }
+
+  @Test
+  public void testUnaryFunc() throws VerdictDBException {
+    String expected = "select ascii('a') from `myschema`.`mytable` as t";
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation sel = sqlToRelation.toRelation(expected);
+    SelectQueryToSql relToSql = new SelectQueryToSql(new MysqlSyntax());
+    String actual = relToSql.toSql(sel);
+    assertEquals(expected, actual);
+  }
+
+  @Test
+  public void testNaryFunc() throws VerdictDBException {
+    String expected = "select concat_ws('1', '2', '3', '4') from `myschema`.`mytable` as t";
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation sel = sqlToRelation.toRelation(expected);
+    SelectQueryToSql relToSql = new SelectQueryToSql(new MysqlSyntax());
+    String actual = relToSql.toSql(sel);
+    assertEquals(expected, actual);
+  }
+
+  @Test
+  public void testNoparamFunc() throws VerdictDBException {
+    String expected = "select current_timestamp() from `myschema`.`mytable` as t";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation sel = sqlToRelation.toRelation(expected);
     SelectQueryToSql relToSql = new SelectQueryToSql(new MysqlSyntax());

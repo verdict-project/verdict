@@ -108,4 +108,15 @@ public class MySqlSqlToRelationTest {
     AbstractRelation sel = sqlToRelation.toRelation(actual);
     assertEquals(expected, sel);
   }
+
+  @Test
+  public void testMod() {
+    String actual = "select mod(5, 2) from `myschema`.`mytable` as t";
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    SelectQuery expected = SelectQuery.create(Arrays.<SelectItem>asList(
+        new ColumnOp("mod", Arrays.<UnnamedColumn>asList(ConstantColumn.valueOf(5), ConstantColumn.valueOf(2)))
+    ), Arrays.<AbstractRelation>asList(new BaseTable("myschema", "mytable", "t")));
+    AbstractRelation sel = sqlToRelation.toRelation(actual);
+    assertEquals(expected, sel);
+  }
 }
