@@ -707,8 +707,12 @@ full_table_name
     ;
 
 table_name
-    : (database=id '.' (schema=id)? '.' | schema=id '.')? table=id
+    : (schema=id '.')? table=id
     ;
+
+//table_name
+//    : (database=id '.' (schema=id)? '.' | schema=id '.')? table=id
+//    ;
 
 view_name
     : (schema=id '.')? view=id

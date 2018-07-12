@@ -10,9 +10,10 @@ import java.util.Set;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
-import org.verdictdb.connection.DbmsQueryResult;
+import org.verdictdb.core.connection.DbmsQueryResult;
+import org.verdictdb.core.connection.DbmsQueryResultMetaData;
 import org.verdictdb.core.rewriter.aggresult.AggNameAndType;
-import org.verdictdb.exception.ValueException;
+import org.verdictdb.exception.VerdictDBValueException;
 
 /**
  * Represents a data frame (after aggregation).
@@ -27,29 +28,31 @@ public class AggregateFrame {
   List<String> orderedColumnNames;
 
   List<Integer> columnTypes = new ArrayList<>();
-  
+
+  DbmsQueryResultMetaData dbmsQueryResultMetaData = new DbmsQueryResultMetaData();
+
   Map<AggregateGroup, AggregateMeasures> data = new HashMap<>();
   
-  public AggregateFrame(List<String> orderedColumnNames) throws ValueException {
+  public AggregateFrame(List<String> orderedColumnNames) throws VerdictDBValueException {
     this.orderedColumnNames = orderedColumnNames;
     Set<String> colNames = new HashSet<>(orderedColumnNames);
     if (colNames.size() != orderedColumnNames.size()) {
-      throw new ValueException("The column names seem to include duplicates.");
+      throw new VerdictDBValueException("The column names seem to include duplicates.");
     }
   }
   
   public static AggregateFrame empty() {
     try {
       return new AggregateFrame(new ArrayList<String>());
-    } catch (ValueException e) {
+    } catch (VerdictDBValueException e) {
       return null;
     }
   }
 
   public static AggregateFrame fromDmbsQueryResult(
-      DbmsQueryResult result, 
+      DbmsQueryResult result,
       List<String> nonaggColumns, 
-      List<AggNameAndType> aggColumns) throws ValueException {
+      List<AggNameAndType> aggColumns) throws VerdictDBValueException {
     
     List<String> colName = new ArrayList<>();
     List<String> nonaggColumnsName = new ArrayList<>();
@@ -83,12 +86,13 @@ public class AggregateFrame {
         nonaggColumnIndex.add(i);
       }
       else {
-        throw new ValueException(String.format("An existing column (%s) does not belong to any of specified columns.", col));
+        throw new VerdictDBValueException(String.format("An existing column (%s) does not belong to any of specified columns.", col));
       }
     }
 
     AggregateFrame aggregateFrame = new AggregateFrame(colName);
     aggregateFrame.setColumnTypes(columnTypes);
+    aggregateFrame.dbmsQueryResultMetaData = result.getMetaData();
 
     while (result.next()) {
       List<Object> aggValue = new ArrayList<>();
@@ -132,9 +136,9 @@ public class AggregateFrame {
     return data.get(group);
   }
   
-  public AggregateMeasures getMeasures() throws ValueException {
+  public AggregateMeasures getMeasures() throws VerdictDBValueException {
     if (data.size() > 1) {
-      throw new ValueException("The number of rows is larger than 1. A group must be specified.");
+      throw new VerdictDBValueException("The number of rows is larger than 1. A group must be specified.");
     }
     return data.get(AggregateGroup.empty());
   }

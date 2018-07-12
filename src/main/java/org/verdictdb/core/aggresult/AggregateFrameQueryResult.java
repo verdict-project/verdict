@@ -5,9 +5,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.verdictdb.connection.DbmsQueryResult;
+import org.verdictdb.core.connection.DbmsQueryResultBase;
+import org.verdictdb.core.connection.DbmsQueryResultMetaData;
 
-public class AggregateFrameQueryResult implements DbmsQueryResult {
+public class AggregateFrameQueryResult extends DbmsQueryResultBase {
 
   private AggregateFrame aggregateFrame;
   private Iterator it;
@@ -39,6 +40,11 @@ public class AggregateFrameQueryResult implements DbmsQueryResult {
 
   public AggregateFrame getAggregateFrame() {
     return aggregateFrame;
+  }
+
+  @Override
+  public DbmsQueryResultMetaData getMetaData() {
+    return aggregateFrame.dbmsQueryResultMetaData;
   }
 
   @Override
@@ -111,6 +117,12 @@ public class AggregateFrameQueryResult implements DbmsQueryResult {
       }
       System.out.println(row.toString());
     }
+  }
+
+  @Override
+  public void rewind() {
+    // TODO Auto-generated method stub
+    
   }
 
 }

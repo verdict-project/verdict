@@ -14,10 +14,10 @@ import java.util.List;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.verdictdb.connection.JdbcQueryResult;
 import org.verdictdb.core.aggresult.AggregateFrame;
 import org.verdictdb.core.aggresult.AggregateFrameQueryResult;
-import org.verdictdb.exception.ValueException;
+import org.verdictdb.core.connection.JdbcQueryResult;
+import org.verdictdb.exception.VerdictDBValueException;
 
 public class AggregateFrameToQueryResultTest {
   static Connection conn;
@@ -36,7 +36,7 @@ public class AggregateFrameToQueryResultTest {
   }
 
   @Test
-  public void testCountQueryToAggregateFrame() throws SQLException, ValueException {
+  public void testCountQueryToAggregateFrame() throws SQLException, VerdictDBValueException {
     List<List<Object>> contents = new ArrayList<>();
     contents.add(Arrays.<Object>asList(1, "Anju", "female"));
     contents.add(Arrays.<Object>asList(2, "Sonia", "female"));
@@ -73,7 +73,7 @@ public class AggregateFrameToQueryResultTest {
   }
 
   @Test
-  public void testSumQueryToAggregateFrame() throws SQLException, ValueException {
+  public void testSumQueryToAggregateFrame() throws SQLException, VerdictDBValueException {
     List<List<Object>> contents = new ArrayList<>();
     contents.add(Arrays.<Object>asList(1, "Anju", "female"));
     contents.add(Arrays.<Object>asList(2, "Sonia", "female"));
@@ -110,7 +110,7 @@ public class AggregateFrameToQueryResultTest {
   }
 
   @Test
-  public void testCountQueryToAggregateFrame2() throws SQLException, ValueException {
+  public void testCountQueryToAggregateFrame2() throws SQLException, VerdictDBValueException {
     List<List<Object>> contents = new ArrayList<>();
     contents.add(Arrays.<Object>asList(1, "Anju", "female", 15, 170, "USA"));
     contents.add(Arrays.<Object>asList(2, "Sonia", "female", 17, 156, "USA"));
@@ -159,7 +159,7 @@ public class AggregateFrameToQueryResultTest {
   }
 
   @Test
-  public void testCountQueryToAggregateFrame3() throws SQLException, ValueException {
+  public void testCountQueryToAggregateFrame3() throws SQLException, VerdictDBValueException {
     List<List<Object>> contents = new ArrayList<>();
     contents.add(Arrays.<Object>asList(1, "Anju", "female", 15, 170, "USA"));
     contents.add(Arrays.<Object>asList(2, "Sonia", "female", 17, 156, "USA"));

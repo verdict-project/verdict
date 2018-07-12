@@ -1,179 +1,277 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
-    <groupId>org.verdictdb</groupId>
-    <artifactId>verdictdb</artifactId>
-    <packaging>jar</packaging>
-    <version>0.5.0</version>
-    <name>VerdictDB</name>
-    <url>http://verdictdb.org</url>
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.verdictdb</groupId>
+  <artifactId>verdictdb-core</artifactId>
+  <packaging>jar</packaging>
+  <version>0.5.0</version>
+  <name>VerdictDB Core</name>
+  <url>http://verdictdb.org</url>
 
-    <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <antlr4.visitor>true</antlr4.visitor>
-        <antlr4.version>4.5.3</antlr4.version>
-        <apache.commons.version>3.5</apache.commons.version>
-        <junit.version>4.12</junit.version>
-        <google.guava.version>11.0.2</google.guava.version>
-        <maven.java.version>1.7</maven.java.version>
-        <maven.source-plugin.version>3.0.1</maven.source-plugin.version>
-        <maven.compiler-plugin.version>3.7.0</maven.compiler-plugin.version>
-        <maven.assembly-plugin.version>3.1.0</maven.assembly-plugin.version>
-        <maven.failsafe.version>2.13</maven.failsafe.version>
-        <maven.surefire.version>2.12.4</maven.surefire.version>
-        <maven.javadoc.version>2.10.4</maven.javadoc.version>
-        <skipTests>false</skipTests>
-    </properties>
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <antlr4.visitor>true</antlr4.visitor>
+    <antlr4.version>4.5.3</antlr4.version>
+    <apache.commons.version>3.5</apache.commons.version>
+    <junit.version>4.12</junit.version>
+    <google.guava.version>11.0.2</google.guava.version>
+    <maven.java.version>1.7</maven.java.version>
+    <maven.source-plugin.version>3.0.1</maven.source-plugin.version>
+    <maven.compiler-plugin.version>3.7.0</maven.compiler-plugin.version>
+    <maven.assembly-plugin.version>3.1.0</maven.assembly-plugin.version>
+    <maven.failsafe.version>2.13</maven.failsafe.version>
+    <maven.surefire.version>2.12.4</maven.surefire.version>
+    <maven.javadoc.version>2.10.4</maven.javadoc.version>
+    <spark.version>2.1.0</spark.version>
+    <skipTests>false</skipTests>
+  </properties>
 
-    <build>
-        <directory>target</directory>
-        <outputDirectory>target/classes</outputDirectory>
-        <finalName>${project.artifactId}-${project.version}</finalName>
-        <testOutputDirectory>target/test-classes</testOutputDirectory>
-        <sourceDirectory>src/main/java</sourceDirectory>
-        <scriptSourceDirectory>src/main/scripts</scriptSourceDirectory>
-        <testSourceDirectory>src/test/java</testSourceDirectory>
-        <resources>
-            <resource>
-                <directory>src/main/resources</directory>
-            </resource>
-        </resources>
-        <testResources>
-            <testResource>
-                <directory>src/test/resources</directory>
-            </testResource>
-        </testResources>
+  <build>
+    <directory>target</directory>
+    <outputDirectory>target/classes</outputDirectory>
+    <finalName>${project.artifactId}-${project.version}</finalName>
+    <testOutputDirectory>target/test-classes</testOutputDirectory>
+    <sourceDirectory>src/main/java</sourceDirectory>
+    <scriptSourceDirectory>src/main/scripts</scriptSourceDirectory>
+    <testSourceDirectory>src/test/java</testSourceDirectory>
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+      </resource>
+    </resources>
+    <testResources>
+      <testResource>
+        <directory>src/test/resources</directory>
+      </testResource>
+    </testResources>
 
+    <plugins>
+      <plugin>
+        <groupId>org.antlr</groupId>
+        <artifactId>antlr4-maven-plugin</artifactId>
+        <version>${antlr4.version}</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>antlr4</goal>
+            </goals>
+            <configuration>
+              <listener>false</listener>
+              <visitor>true</visitor>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>${maven.compiler-plugin.version}</version>
+        <configuration>
+          <source>1.7</source>
+          <target>1.7</target>
+        </configuration>
+      </plugin>
+      <!-- Change JDK-specific settings in profiles tree below. <plugin> 
+        <groupId>org.apache.maven.plugins</groupId> <artifactId>maven-surefire-plugin</artifactId> 
+        <version>2.17</version> <configuration> <systemProperties> <enableTimeout>true</enableTimeout> 
+        <timeoutSeconds>100</timeoutSeconds> <timeoutRetries>2</timeoutRetries> This 
+        seems to be slower. <hiveconf_hive.execution.engine>tez</hiveconf_hive.execution.engine> 
+        <hiveconf_hive.exec.counters.pull.interval>1000</hiveconf_hive.exec.counters.pull.interval> 
+        </systemProperties> This fork mode seems to be only working configuration 
+        for JDK7 <forkMode>always</forkMode> <forkCount>1</forkCount> <reuseForks>false</reuseForks> 
+        <argLine>-Xmx2048m -XX:MaxPermSize=512m</argLine> </configuration> </plugin> -->
+    </plugins>
+  </build>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.antlr</groupId>
+      <artifactId>antlr4-runtime</artifactId>
+      <version>${antlr4.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
+      <version>${apache.commons.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <version>${google.guava.version}</version>
+    </dependency>
+
+    <!-- test supports -->
+    <dependency>
+      <groupId>com.h2database</groupId>
+      <artifactId>h2</artifactId>
+      <version>1.4.197</version>
+      <scope>test</scope>
+    </dependency>
+    <!-- <dependency> <groupId>org.postgresql</groupId> <artifactId>postgresql</artifactId> 
+      <version>42.2.2</version> <scope>test</scope> </dependency> -->
+    <dependency>
+      <groupId>org.postgresql</groupId>
+      <artifactId>postgresql</artifactId>
+      <version>42.2.2.jre7</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>mysql</groupId>
+      <artifactId>mysql-connector-java</artifactId>
+      <version>5.1.46</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.xerial</groupId>
+      <artifactId>sqlite-jdbc</artifactId>
+      <version>3.8.11.2</version>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>${junit.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.klarna</groupId>
+      <artifactId>hiverunner</artifactId>
+      <version>3.2.1</version>
+      <scope>test</scope>
+    </dependency>
+
+  </dependencies>
+
+  <profiles>
+    <profile>
+      <id>JDK7-setting</id>
+      <activation>
+        <jdk>1.7</jdk>
+      </activation>
+      <build>
         <plugins>
-            <plugin>
-                <groupId>org.antlr</groupId>
-                <artifactId>antlr4-maven-plugin</artifactId>
-                <version>${antlr4.version}</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>antlr4</goal>
-                        </goals>
-                        <configuration>
-                            <listener>false</listener>
-                            <visitor>true</visitor>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>${maven.compiler-plugin.version}</version>
-                <configuration>
-                    <source>1.7</source>
-                    <target>1.7</target>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>2.17</version>
-                <configuration>
-                    <forkMode>always</forkMode>
-                </configuration>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>2.17</version>
-                <configuration>
-                    <systemProperties>
-                        <enableTimeout>true</enableTimeout>
-                        <timeoutSeconds>100</timeoutSeconds>
-                        <timeoutRetries>2</timeoutRetries>
-                    </systemProperties>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>2.17</version>
-                <configuration>
-                    <forkCount>1C</forkCount>
-                    <reuseForks>true</reuseForks>
-                    <argLine>-Xmx2048m -XX:MaxPermSize=512m</argLine>
-                </configuration>
-            </plugin>
-            <!--&lt;!&ndash; Spark test support &ndash;&gt; -->
-            <!--<plugin> -->
-            <!--<groupId>org.apache.maven.plugins</groupId> -->
-            <!--<artifactId>maven-jar-plugin</artifactId> -->
-            <!--<version>3.0.2</version> -->
-            <!--<executions> -->
-            <!--<execution> -->
-            <!--<phase>package</phase> -->
-            <!--<goals> -->
-            <!--<goal>test-jar</goal> -->
-            <!--</goals> -->
-            <!--</execution> -->
-            <!--</executions> -->
-            <!--</plugin> -->
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <version>2.17</version>
+            <configuration>
+              <systemProperties>
+                <enableTimeout>true</enableTimeout>
+                <timeoutSeconds>100</timeoutSeconds>
+                <timeoutRetries>2</timeoutRetries>
+                <!-- This seems to be slower. <hiveconf_hive.execution.engine>tez</hiveconf_hive.execution.engine> 
+                  <hiveconf_hive.exec.counters.pull.interval>1000</hiveconf_hive.exec.counters.pull.interval> -->
+              </systemProperties>
+              <!-- This fork mode seems to be only working configuration 
+                for JDK7 -->
+              <!-- <forkMode>always</forkMode> -->
+              <forkCount>1</forkCount>
+              <reuseForks>false</reuseForks>
+              <argLine>-Xmx2048m -XX:MaxPermSize=512m</argLine>
+            </configuration>
+          </plugin>
         </plugins>
-    </build>
+      </build>
+    </profile>
+    <profile>
+      <id>JDK8-setting</id>
+      <activation>
+        <jdk>1.8</jdk>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <version>2.17</version>
+            <configuration>
+              <systemProperties>
+                <enableTimeout>true</enableTimeout>
+                <timeoutSeconds>100</timeoutSeconds>
+                <timeoutRetries>2</timeoutRetries>
+                <!-- This seems to be slower. <hiveconf_hive.execution.engine>tez</hiveconf_hive.execution.engine> 
+                  <hiveconf_hive.exec.counters.pull.interval>1000</hiveconf_hive.exec.counters.pull.interval> -->
+              </systemProperties>
+              <!-- This fork mode seems to be only working configuration 
+                for JDK7 -->
+              <!-- <forkMode>always</forkMode> -->
+              <forkCount>1</forkCount>
+              <reuseForks>false</reuseForks>
+              <argLine>-Xmx2048m</argLine>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>testing-stage</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+        <property>
+          <name>packaging</name>
+          <value>!true</value>
+        </property>
+      </activation>
+      <dependencies>
+        <!-- Spark test support -->
+        <dependency>
+          <groupId>org.apache.spark</groupId>
+          <artifactId>spark-core_2.11</artifactId>
+          <version>${spark.version}</version>
+        </dependency>
+        <dependency>
+          <groupId>org.apache.spark</groupId>
+          <artifactId>spark-sql_2.11</artifactId>
+          <version>${spark.version}</version>
+        </dependency>
+        <dependency>
+          <groupId>org.apache.spark</groupId>
+          <artifactId>spark-hive_2.11</artifactId>
+          <version>${spark.version}</version>
+        </dependency>
+      </dependencies>
+    </profile>
+    <profile>
+      <id>packaging-stage</id>
+      <activation>
+        <property>
+          <name>packaging</name>
+          <value>true</value>
+        </property>
+      </activation>
+      <dependencies>
+        <!-- Spark test support -->
+        <dependency>
+          <groupId>org.apache.spark</groupId>
+          <artifactId>spark-core_2.11</artifactId>
+          <version>${spark.version}</version>
+          <scope>provided</scope>
+        </dependency>
+        <dependency>
+          <groupId>org.apache.spark</groupId>
+          <artifactId>spark-sql_2.11</artifactId>
+          <version>${spark.version}</version>
+          <scope>provided</scope>
+        </dependency>
+        <dependency>
+          <groupId>org.apache.spark</groupId>
+          <artifactId>spark-hive_2.11</artifactId>
+          <version>${spark.version}</version>
+          <scope>provided</scope>
+        </dependency>
+      </dependencies>
+    </profile>
+  </profiles>
 
-    <dependencies>
-        <dependency>
-            <groupId>org.antlr</groupId>
-            <artifactId>antlr4-runtime</artifactId>
-            <version>${antlr4.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-lang3</artifactId>
-            <version>${apache.commons.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <version>${google.guava.version}</version>
-        </dependency>
-
-
-        <!-- test supports -->
-        <dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
-            <version>1.4.197</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.postgresql</groupId>
-            <artifactId>postgresql</artifactId>
-            <version>42.2.2</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.postgresql</groupId>
-            <artifactId>postgresql</artifactId>
-            <version>42.2.2.jre7</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>mysql</groupId>
-            <artifactId>mysql-connector-java</artifactId>
-            <version>5.1.46</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>${junit.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.klarna</groupId>
-            <artifactId>hiverunner</artifactId>
-            <version>3.2.1</version>
-            <scope>test</scope>
-        </dependency>
-
-    </dependencies>
+  <scm>
+    <url>git@gitlab.com:pyongjoo/verdictdb-core.git</url>
+    <connection>git</connection>
+    <developerConnection>The University of Michigan, Ann Arbor</developerConnection>
+  </scm>
+  <ciManagement>
+    <url>https://gitlab.com/pyongjoo/verdictdb-core/pipelines</url>
+  </ciManagement>
+  <issueManagement>
+    <url>https://gitlab.com/pyongjoo/verdictdb-core/issues</url>
+  </issueManagement>
 </project>

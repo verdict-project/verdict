@@ -2,7 +2,16 @@ package org.verdictdb.core.rewriter.aggresult;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.verdictdb.core.rewriter.AliasRenamingRules.*;
+import static org.verdictdb.core.rewriter.AliasRenamingRules.countEstimateAliasName;
+import static org.verdictdb.core.rewriter.AliasRenamingRules.countSubsampleAliasName;
+import static org.verdictdb.core.rewriter.AliasRenamingRules.expectedErrorAliasName;
+import static org.verdictdb.core.rewriter.AliasRenamingRules.expectedValueAliasName;
+import static org.verdictdb.core.rewriter.AliasRenamingRules.sumEstimateAliasName;
+import static org.verdictdb.core.rewriter.AliasRenamingRules.sumScaledCountAliasName;
+import static org.verdictdb.core.rewriter.AliasRenamingRules.sumScaledSumAliasName;
+import static org.verdictdb.core.rewriter.AliasRenamingRules.sumSquaredScaledCountAliasName;
+import static org.verdictdb.core.rewriter.AliasRenamingRules.sumSquaredScaledSumAliasName;
+import static org.verdictdb.core.rewriter.AliasRenamingRules.sumSubsampleSizeAliasName;
 
 import java.util.Arrays;
 import java.util.List;
@@ -11,15 +20,15 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
 import org.verdictdb.core.aggresult.AggregateFrame;
 import org.verdictdb.core.aggresult.AggregateMeasures;
-import org.verdictdb.exception.UnexpectedTypeException;
-import org.verdictdb.exception.ValueException;
-import org.verdictdb.exception.VerdictDbException;
+import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.exception.VerdictDBTypeException;
+import org.verdictdb.exception.VerdictDBValueException;
 
 public class SingleAggResultRewriterTest {
 
   // make sure it runs without an error for the simplest case
   @Test
-  public void testSanityCheck() throws VerdictDbException {
+  public void testSanityCheck() throws VerdictDBException {
     String mysumAlias = "mysum";
     List<String> columnNames = Arrays.asList("group1", "group2",
         sumEstimateAliasName(mysumAlias),
@@ -36,8 +45,8 @@ public class SingleAggResultRewriterTest {
   }
 
   // alias names do not exist for count
-  @Test(expected = ValueException.class)
-  public void testSanityCheckFail() throws VerdictDbException {
+  @Test(expected = VerdictDBValueException.class)
+  public void testSanityCheckFail() throws VerdictDBException {
     String mysumAlias = "mysum";
     List<String> columnNames = Arrays.asList("group1", "group2",
         sumEstimateAliasName(mysumAlias),
@@ -54,7 +63,7 @@ public class SingleAggResultRewriterTest {
   }
 
   @Test
-  public void testSumRewriting() throws ValueException, UnexpectedTypeException {
+  public void testSumRewriting() throws VerdictDBValueException, VerdictDBTypeException {
     String mysumAlias = "mysum";
     List<String> attrNames = Arrays.asList(
         sumEstimateAliasName(mysumAlias),
@@ -77,7 +86,7 @@ public class SingleAggResultRewriterTest {
   }
 
   @Test
-  public void testCountRewriting() throws ValueException, UnexpectedTypeException {
+  public void testCountRewriting() throws VerdictDBValueException, VerdictDBTypeException {
     String mycountAlias = "mycount";
     List<String> attrNames = Arrays.asList(
         countEstimateAliasName(mycountAlias),
@@ -100,7 +109,7 @@ public class SingleAggResultRewriterTest {
   }
 
   @Test
-  public void testAvgRewriting() throws ValueException, UnexpectedTypeException {
+  public void testAvgRewriting() throws VerdictDBValueException, VerdictDBTypeException {
     String myavgAlias = "myavg";
     List<String> attrNames = Arrays.asList(
         sumEstimateAliasName(myavgAlias),
@@ -132,7 +141,7 @@ public class SingleAggResultRewriterTest {
   }
 
   @Test
-  public void testResultSetRewriting() throws VerdictDbException {
+  public void testResultSetRewriting() throws VerdictDBException {
     String mysumAlias = "mysum";
     List<String> columnNames = Arrays.asList(
         sumEstimateAliasName(mysumAlias),

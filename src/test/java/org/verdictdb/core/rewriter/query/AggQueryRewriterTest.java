@@ -7,31 +7,31 @@ import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
-import org.verdictdb.core.query.AbstractRelation;
-import org.verdictdb.core.query.AliasReference;
-import org.verdictdb.core.query.AliasedColumn;
-import org.verdictdb.core.query.BaseColumn;
-import org.verdictdb.core.query.BaseTable;
-import org.verdictdb.core.query.ColumnOp;
-import org.verdictdb.core.query.SelectItem;
-import org.verdictdb.core.query.SelectQuery;
 import org.verdictdb.core.rewriter.AliasRenamingRules;
-import org.verdictdb.core.rewriter.ScrambleMeta;
-import org.verdictdb.core.scramble.Scrambler;
-import org.verdictdb.core.sql.SelectQueryToSql;
-import org.verdictdb.exception.VerdictDbException;
-import org.verdictdb.sql.syntax.HiveSyntax;
+import org.verdictdb.core.scrambling.BaseScrambler;
+import org.verdictdb.core.scrambling.ScrambleMetaSet;
+import org.verdictdb.core.sqlobject.AbstractRelation;
+import org.verdictdb.core.sqlobject.AliasReference;
+import org.verdictdb.core.sqlobject.AliasedColumn;
+import org.verdictdb.core.sqlobject.BaseColumn;
+import org.verdictdb.core.sqlobject.BaseTable;
+import org.verdictdb.core.sqlobject.ColumnOp;
+import org.verdictdb.core.sqlobject.SelectItem;
+import org.verdictdb.core.sqlobject.SelectQuery;
+import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.sqlsyntax.HiveSyntax;
+import org.verdictdb.sqlwriter.SelectQueryToSql;
 
 public class AggQueryRewriterTest {
 
   int aggblockCount = 10;
 
-  ScrambleMeta generateTestScrambleMeta() {
-    ScrambleMeta meta = new ScrambleMeta();
+  ScrambleMetaSet generateTestScrambleMeta() {
+    ScrambleMetaSet meta = new ScrambleMetaSet();
     meta.insertScrambleMetaEntry("myschema", "mytable",
-        Scrambler.getAggregationBlockColumn(),
-        Scrambler.getSubsampleColumn(),
-        Scrambler.getTierColumn(),
+        BaseScrambler.getAggregationBlockColumn(),
+        BaseScrambler.getSubsampleColumn(),
+        BaseScrambler.getTierColumn(),
         aggblockCount);
     return meta;
   }
@@ -41,14 +41,14 @@ public class AggQueryRewriterTest {
   }
 
   @Test
-  public void testSelectSumBaseTable() throws VerdictDbException {
+  public void testSelectSumBaseTable() throws VerdictDBException {
     BaseTable base = new BaseTable("myschema", "mytable", "t");
     String aliasName = "a";
-    SelectQuery relation = SelectQuery.getSelectQueryOp(
+    SelectQuery relation = SelectQuery.create(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new ColumnOp("sum", new BaseColumn("t", "mycolumn1")), aliasName)),
         base);
-    ScrambleMeta meta = generateTestScrambleMeta();
+    ScrambleMetaSet meta = generateTestScrambleMeta();
     AggQueryRewriter rewriter = new AggQueryRewriter(meta);
     List<Pair<AbstractRelation, AggblockMeta>> rewritten = rewriter.rewrite(relation);
     
@@ -85,12 +85,12 @@ public class AggQueryRewriterTest {
   }
 
   @Test
-  public void testSelectCountBaseTable() throws VerdictDbException {
+  public void testSelectCountBaseTable() throws VerdictDBException {
     BaseTable base = new BaseTable("myschema", "mytable", "t");
     String aliasName = "a";
-    SelectQuery relation = SelectQuery.getSelectQueryOp(
+    SelectQuery relation = SelectQuery.create(
         Arrays.<SelectItem>asList(new AliasedColumn(new ColumnOp("count"), aliasName)), base);
-    ScrambleMeta meta = generateTestScrambleMeta();
+    ScrambleMetaSet meta = generateTestScrambleMeta();
     AggQueryRewriter rewriter = new AggQueryRewriter(meta);
     List<Pair<AbstractRelation, AggblockMeta>> rewritten = rewriter.rewrite(relation);
     
@@ -125,13 +125,13 @@ public class AggQueryRewriterTest {
   }
 
   @Test
-  public void testSelectAvgBaseTable() throws VerdictDbException {
+  public void testSelectAvgBaseTable() throws VerdictDBException {
     BaseTable base = new BaseTable("myschema", "mytable", "t");
     String aliasName = "a";
-    SelectQuery relation = SelectQuery.getSelectQueryOp(
+    SelectQuery relation = SelectQuery.create(
         Arrays.<SelectItem>asList(new AliasedColumn(new ColumnOp("avg", new BaseColumn("t", "mycolumn1")), aliasName)),
         base);
-    ScrambleMeta meta = generateTestScrambleMeta();
+    ScrambleMetaSet meta = generateTestScrambleMeta();
     AggQueryRewriter rewriter = new AggQueryRewriter(meta);
     List<Pair<AbstractRelation, AggblockMeta>> rewritten = rewriter.rewrite(relation);
     
@@ -175,16 +175,16 @@ public class AggQueryRewriterTest {
   }
 
   @Test
-  public void testSelectSumGroupbyBaseTable() throws VerdictDbException {
+  public void testSelectSumGroupbyBaseTable() throws VerdictDBException {
     BaseTable base = new BaseTable("myschema", "mytable", "t");
     String aliasName = "a";
-    SelectQuery relation = SelectQuery.getSelectQueryOp(
+    SelectQuery relation = SelectQuery.create(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("t", "mygroup"), "mygroup"),
             new AliasedColumn(new ColumnOp("sum", new BaseColumn("t", "mycolumn1")), aliasName)),
         base);
     relation.addGroupby(new BaseColumn("t", "mygroup"));
-    ScrambleMeta meta = generateTestScrambleMeta();
+    ScrambleMetaSet meta = generateTestScrambleMeta();
     AggQueryRewriter rewriter = new AggQueryRewriter(meta);
     List<Pair<AbstractRelation, AggblockMeta>> rewritten = rewriter.rewrite(relation);
     
@@ -223,16 +223,16 @@ public class AggQueryRewriterTest {
   }
 
   @Test
-  public void testSelectSumGroupby2BaseTable() throws VerdictDbException {
+  public void testSelectSumGroupby2BaseTable() throws VerdictDBException {
     BaseTable base = new BaseTable("myschema", "mytable", "t");
     String aliasName = "a";
-    SelectQuery relation = SelectQuery.getSelectQueryOp(
+    SelectQuery relation = SelectQuery.create(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("t", "mygroup"), "myalias"),
             new AliasedColumn(new ColumnOp("sum", new BaseColumn("t", "mycolumn1")), aliasName)),
         base);
     relation.addGroupby(new AliasReference("myalias"));
-    ScrambleMeta meta = generateTestScrambleMeta();
+    ScrambleMetaSet meta = generateTestScrambleMeta();
     AggQueryRewriter rewriter = new AggQueryRewriter(meta);
     List<Pair<AbstractRelation, AggblockMeta>> rewritten = rewriter.rewrite(relation);
     
@@ -271,15 +271,15 @@ public class AggQueryRewriterTest {
   }
 
   @Test
-  public void testSelectCountGroupbyBaseTable() throws VerdictDbException {
+  public void testSelectCountGroupbyBaseTable() throws VerdictDBException {
     BaseTable base = new BaseTable("myschema", "mytable", "t");
     String aliasName = "a";
-    SelectQuery relation = SelectQuery.getSelectQueryOp(
+    SelectQuery relation = SelectQuery.create(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("t", "mygroup"), "mygroup"),
             new AliasedColumn(new ColumnOp("count"), aliasName)), base);
     relation.addGroupby(new BaseColumn("t", "mygroup"));
-    ScrambleMeta meta = generateTestScrambleMeta();
+    ScrambleMetaSet meta = generateTestScrambleMeta();
     AggQueryRewriter rewriter = new AggQueryRewriter(meta);
     List<Pair<AbstractRelation, AggblockMeta>> rewritten = rewriter.rewrite(relation);
     
@@ -316,16 +316,16 @@ public class AggQueryRewriterTest {
   }
 
   @Test
-  public void testSelectAvgGroupbyBaseTable() throws VerdictDbException {
+  public void testSelectAvgGroupbyBaseTable() throws VerdictDBException {
     BaseTable base = new BaseTable("myschema", "mytable", "t");
     String aliasName = "a";
-    SelectQuery relation = SelectQuery.getSelectQueryOp(
+    SelectQuery relation = SelectQuery.create(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("t", "mygroup"), "mygroup"),
             new AliasedColumn(new ColumnOp("avg", new BaseColumn("t", "mycolumn1")), aliasName)),
         base);
     relation.addGroupby(new BaseColumn("t", "mygroup"));
-    ScrambleMeta meta = generateTestScrambleMeta();
+    ScrambleMetaSet meta = generateTestScrambleMeta();
     AggQueryRewriter rewriter = new AggQueryRewriter(meta);
     List<Pair<AbstractRelation, AggblockMeta>> rewritten = rewriter.rewrite(relation);
     
@@ -371,21 +371,21 @@ public class AggQueryRewriterTest {
   }
 
   @Test
-  public void testSelectSumNestedTable() throws VerdictDbException {
+  public void testSelectSumNestedTable() throws VerdictDBException {
     BaseTable base = new BaseTable("myschema", "mytable", "t");
     String aliasName = "a";
-    SelectQuery nestedSource = SelectQuery.getSelectQueryOp(
+    SelectQuery nestedSource = SelectQuery.create(
         Arrays.<SelectItem>asList(
             new AliasedColumn(
                 ColumnOp.multiply(new BaseColumn("t", "price"), new BaseColumn("t", "discount")),
                 "discounted_price")),
         base);
     nestedSource.setAliasName("s");
-    SelectQuery relation = SelectQuery.getSelectQueryOp(
+    SelectQuery relation = SelectQuery.create(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new ColumnOp("sum", new BaseColumn("s", "discounted_price")), aliasName)),
         nestedSource);
-    ScrambleMeta meta = generateTestScrambleMeta();
+    ScrambleMetaSet meta = generateTestScrambleMeta();
     AggQueryRewriter rewriter = new AggQueryRewriter(meta);
     List<Pair<AbstractRelation, AggblockMeta>> rewritten = rewriter.rewrite(relation);
     
