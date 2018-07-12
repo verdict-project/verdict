@@ -201,7 +201,18 @@ public class SelectQueryToSql {
         return "cast(" + withParentheses(columnOp.getOperand(0)) + " as " + withParentheses(columnOp.getOperand(1)) + ")";
       } else if (columnOp.getOpType().equals("year")) {
         return "year(" + withParentheses(columnOp.getOperand(0)) + ")";
-      } else {
+      }
+      else if (columnOp.getOperands().size()==1) {
+        return columnOp.getOpType() + "(" + withParentheses(columnOp.getOperand(0)) + ")";
+      }
+      else if (columnOp.getOperands().size()==2) {
+        return columnOp.getOpType() + "(" + withParentheses(columnOp.getOperand(0)) + ", " + withParentheses(columnOp.getOperand(1)) + ")";
+      }
+      else if (columnOp.getOperands().size()==3) {
+        return columnOp.getOpType() + "(" + withParentheses(columnOp.getOperand(0)) + ", " + withParentheses(columnOp.getOperand(1))  + ", " +
+            withParentheses(columnOp.getOperand(2)) + ")";
+      }
+      else {
         throw new VerdictDBTypeException("Unexpceted opType of column: " + columnOp.getOpType().toString());
       }
     } else if (column instanceof SubqueryColumn) {

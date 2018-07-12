@@ -614,7 +614,7 @@ nary_manipulation_function
     ;
 
 ternary_manipulation_function
-    : function_name=(CONV | SUBSTR | HASH | RPAD)
+    : function_name=(CONV | SUBSTR | HASH | RPAD | SUBSTRING)
       '(' expression ',' expression ',' expression ')'
     ;
 
@@ -1147,6 +1147,7 @@ SETUSER:                         S E T U S E R;
 SHUTDOWN:                        S H U T D O W N;
 SOME:                            S O M E;
 SUBSTR:                          S U B S T R;
+SUBSTRING:                       S U B S T R I N G;
 STATISTICS:                      S T A T I S T I C S;
 SYSTEM_USER:                     S Y S T E M '_' U S E R;
 TABLE:                           T A B L E;

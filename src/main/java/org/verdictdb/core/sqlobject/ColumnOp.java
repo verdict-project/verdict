@@ -33,6 +33,7 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
    * <li>min</li>
    * <li>max</li>
    * <li>countdistinct</li>
+   * <li>substr</li>
    * <li>substring</li>
    * <li>rand</li>
    * <li>floor</li>
@@ -271,9 +272,12 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
     return new ColumnOp("year", column);
   }
 
-
   public static ColumnOp substr(UnnamedColumn column, UnnamedColumn from, UnnamedColumn to) {
     return new ColumnOp("substr", Arrays.asList(column, from, to));
+  }
+
+  public static ColumnOp substring(UnnamedColumn column, UnnamedColumn from, UnnamedColumn to) {
+    return new ColumnOp("substring", Arrays.asList(column, from, to));
   }
 
   public static ColumnOp rand() {
