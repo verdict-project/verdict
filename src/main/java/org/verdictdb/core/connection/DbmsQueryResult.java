@@ -40,6 +40,12 @@ public interface DbmsQueryResult extends Serializable {
   public boolean next();
   
   /**
+   * Returns the total number of rows.
+   * @return
+   */
+  public long getRowCount();
+  
+  /**
    * 
    * @param index This is a zero-based index.
    * @return
@@ -69,6 +75,10 @@ public interface DbmsQueryResult extends Serializable {
   public Date getDate(int index);
   
   public Date getDate(String label);
+  
+  public byte getByte(int index);
+  
+  public byte getByte(String label);
   
   public Timestamp getTimestamp(int index);
   

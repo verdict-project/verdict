@@ -59,7 +59,7 @@ public class PartitionMetadataRetrievalNodeTest {
         + "nation varchar(8), "
         + "birth timestamp) "
         + "partition by key (nation, birth)");
-    dbmsConn = new JdbcConnection(conn);
+    dbmsConn = JdbcConnection.create(conn);
   }
 
   @AfterClass

@@ -117,7 +117,7 @@ public class FastConvergeScramblingCoordinatorTest {
 
   @Test
   public void sanityCheck() throws VerdictDBDbmsException {
-    DbmsConnection conn = new JdbcConnection(mysqlConn);
+    DbmsConnection conn = JdbcConnection.create(mysqlConn);
     DbmsQueryResult result = conn.execute("select * from tpch.lineitem");
     int rowCount = 0;
     while (result.next()) {
@@ -147,7 +147,7 @@ public class FastConvergeScramblingCoordinatorTest {
   }
 
   public void testScramblingCoordinator(String tablename) throws VerdictDBException {
-    DbmsConnection conn = new JdbcConnection(mysqlConn);
+    DbmsConnection conn = JdbcConnection.create(mysqlConn);
 
     String scrambleSchema = "tpch";
     String scratchpadSchema = "tpch";
@@ -189,7 +189,7 @@ public class FastConvergeScramblingCoordinatorTest {
   public void testScramblingCoordinatorWithPrimaryColumn(
       String tablename, String primaryColumn)
           throws VerdictDBException {
-    DbmsConnection conn = new JdbcConnection(mysqlConn);
+    DbmsConnection conn = JdbcConnection.create(mysqlConn);
 
     String scrambleSchema = "tpch";
     String scratchpadSchema = "tpch";

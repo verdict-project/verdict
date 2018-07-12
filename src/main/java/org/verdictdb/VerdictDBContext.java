@@ -24,7 +24,7 @@ public class VerdictDBContext {
   }
   
   public VerdictDBContext fromJdbcConnection(Connection jdbcConn) throws VerdictDBDbmsException {
-    DbmsConnection conn = new JdbcConnection(jdbcConn);
+    DbmsConnection conn = JdbcConnection.create(jdbcConn);
     return new VerdictDBContext(conn);
   }
   

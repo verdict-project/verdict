@@ -87,7 +87,7 @@ public class UniformScramblingNodeTest {
 
     // query result
     String sql = "select count(*) as `verdictdbtotalcount` from `oldschema`.`oldtable` as t";
-    DbmsConnection conn = new JdbcConnection(mysqlConn);
+    DbmsConnection conn = JdbcConnection.create(mysqlConn);
     DbmsQueryResult queryResult = conn.execute(sql);
 
     ScramblingNode node = ScramblingNode.create(

@@ -21,10 +21,11 @@ public class JdbcConnection implements DbmsConnection {
 
   SqlSyntax syntax;
   
+  String currentSchema = null;
+  
 //  JdbcQueryResult jrs = null;
   
-  public JdbcConnection(Connection conn) throws VerdictDBDbmsException {
-    this.conn = conn;
+  public static JdbcConnection create(Connection conn) throws VerdictDBDbmsException {
     String connectionString = null;
     try {
       connectionString = conn.getMetaData().getURL();
@@ -33,11 +34,19 @@ public class JdbcConnection implements DbmsConnection {
     }
     
     String dbName = connectionString.split(":")[1];
-    syntax = SqlSyntaxList.getSyntaxFor(dbName);
+    SqlSyntax syntax = SqlSyntaxList.getSyntaxFor(dbName);
+    
+    return new JdbcConnection(conn, syntax);
   }
   
   public JdbcConnection(Connection conn, SqlSyntax syntax) {
     this.conn = conn;
+    try {
+      this.currentSchema = conn.getCatalog();
+    } catch (SQLException e) {
+      e.printStackTrace();
+      // leave currentSchema as null
+    }
     this.syntax = syntax;
   }
   
