@@ -100,6 +100,16 @@
       <artifactId>guava</artifactId>
       <version>${google.guava.version}</version>
     </dependency>
+    <dependency>
+      <groupId>log4j</groupId>
+      <artifactId>log4j</artifactId>
+      <version>1.2.17</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-api</artifactId>
+      <version>2.11.0</version>
+    </dependency>
 
     <!-- test supports -->
     <dependency>
@@ -128,6 +138,12 @@
       <version>3.8.11.2</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>${junit.version}</version>
+      <scope>test</scope>
+    </dependency>
     <!-- This must have been downloaded separately and locally installed. -->
     <dependency>
       <groupId>com.cloudera</groupId>
@@ -136,18 +152,13 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>${junit.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
       <groupId>com.klarna</groupId>
       <artifactId>hiverunner</artifactId>
       <version>3.2.1</version>
       <scope>test</scope>
+      <exclusions>
+      </exclusions>
     </dependency>
-
   </dependencies>
 
   <profiles>
