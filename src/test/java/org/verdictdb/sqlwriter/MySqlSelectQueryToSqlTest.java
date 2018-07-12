@@ -39,7 +39,7 @@ public class MySqlSelectQueryToSqlTest {
 
   private static final String MYSQL_UESR = "root";
 
-  private static final String MYSQL_PASSWORD = "";
+  private static final String MYSQL_PASSWORD = "zhongshucheng123";
 
   @BeforeClass
   public static void setupMySqlDatabase() throws SQLException {
@@ -199,7 +199,7 @@ public class MySqlSelectQueryToSqlTest {
 
   @Test
   public void testExtract() throws VerdictDBException {
-    String expected = "select extract(month from \"2017-06-15\") from `myschema`.`mytable` as t";
+    String expected = "select extract(month from '2017-06-15') from `myschema`.`mytable` as t";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation sel = sqlToRelation.toRelation(expected);
     SelectQueryToSql relToSql = new SelectQueryToSql(new MysqlSyntax());
