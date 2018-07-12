@@ -41,6 +41,9 @@ import org.verdictdb.sqlreader.NonValidatingSQLParser;
 import org.verdictdb.sqlreader.RelationStandardizer;
 import org.verdictdb.sqlsyntax.H2Syntax;
 
+/**
+ * Tests if a given query is properly converted into execution nodes.
+ */
 public class TpchExecutionPlanTest {
 
   static Connection conn;
