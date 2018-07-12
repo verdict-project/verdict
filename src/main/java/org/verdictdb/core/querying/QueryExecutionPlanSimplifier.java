@@ -24,43 +24,7 @@ public class QueryExecutionPlanSimplifier {
    */
   public static QueryExecutionPlan simplify(QueryExecutionPlan originalPlan) {
     // Deep copy originalPlan
-    QueryExecutionPlan plan = new QueryExecutionPlan("");
-    plan.scrambleMeta = originalPlan.scrambleMeta;
-    plan.idCreator = originalPlan.idCreator;
-    HashMap<ExecutableNodeBase, ExecutableNodeBase> copyMap = new HashMap<>();
-    ExecutableNodeBase newRoot = originalPlan.getRoot().deepcopy();
-    plan.root = newRoot;
-    List<ExecutableNodeBase> nodeToCopy = new ArrayList<>();
-    List<ExecutableNodeBase> nodeCopied = new ArrayList<>();
-    nodeCopied.add(originalPlan.root);
-    nodeToCopy.addAll(newRoot.getSources());
-    copyMap.put(originalPlan.getRoot(), newRoot);
-    while (!nodeToCopy.isEmpty()) {
-      ExecutableNodeBase node = nodeToCopy.get(0);
-      nodeToCopy.remove(0);
-      if (!nodeCopied.contains(node)) {
-        ExecutableNodeBase copy = node.deepcopy();
-        nodeCopied.add(node);
-        nodeToCopy.addAll(node.getSources());
-        copyMap.put(node, copy);
-      }
-    }
-    for (Map.Entry<ExecutableNodeBase, ExecutableNodeBase> entry:copyMap.entrySet()) {
-      if (!entry.getKey().getSources().isEmpty()) {
-        entry.getValue().sources.clear();
-        entry.getValue().channels.clear();
-        for (Pair<ExecutableNodeBase, Integer> source:entry.getKey().sources) {
-          ExecutableNodeBase copy = copyMap.get(source.getLeft());
-          entry.getValue().sources.add(new ImmutablePair<>(copy, source.getRight()));
-          copy.subscribers.set(copy.subscribers.indexOf(entry.getKey()), entry.getValue());
-          if (!entry.getValue().channels.containsKey(source.getRight())) {
-            entry.getValue().channels.put(source.getRight(), new ExecutionTokenQueue());
-          }
-        }
-      }
-    }
-
-
+    QueryExecutionPlan plan = originalPlan.deepcopy();
 
     List<ExecutableNodeBase> nodesToCompress = new ArrayList<>();
     // compress the node from bottom to up in order to replace the select query conveniently

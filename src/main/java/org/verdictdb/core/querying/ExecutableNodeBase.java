@@ -1,5 +1,6 @@
 package org.verdictdb.core.querying;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -25,7 +26,7 @@ import org.verdictdb.core.execution.MethodInvocationInformation;
 import org.verdictdb.core.sqlobject.SqlConvertible;
 import org.verdictdb.exception.VerdictDBException;
 
-public class ExecutableNodeBase implements ExecutableNode {
+public class ExecutableNodeBase implements ExecutableNode, Serializable {
 
   List<ExecutableNodeBase> subscribers = new ArrayList<>();
 

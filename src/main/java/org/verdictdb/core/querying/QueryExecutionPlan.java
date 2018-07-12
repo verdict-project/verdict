@@ -8,7 +8,7 @@
 
 package org.verdictdb.core.querying;
 
-import java.io.Serializable;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -28,7 +28,7 @@ import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBTypeException;
 import org.verdictdb.exception.VerdictDBValueException;
 
-public class QueryExecutionPlan implements ExecutablePlan, IdCreator {
+public class QueryExecutionPlan implements ExecutablePlan, IdCreator, Serializable {
   
   protected ScrambleMetaSet scrambleMeta;
 
@@ -137,11 +137,6 @@ public class QueryExecutionPlan implements ExecutablePlan, IdCreator {
         .toString();
   }
 
-  // TODO: Move this to another class: QueryExecutionPlanSimplifier
-
-
-
-
   public ExecutableNodeBase getRoot() {
     return root;
   }
@@ -180,5 +175,22 @@ public class QueryExecutionPlan implements ExecutablePlan, IdCreator {
   @Override
   public Pair<String, String> generateTempTableName() {
     return idCreator.generateTempTableName();
+  }
+
+  public QueryExecutionPlan deepcopy() {
+    try {
+      ByteArrayOutputStream bos = new ByteArrayOutputStream();
+      ObjectOutputStream out = new ObjectOutputStream(bos);
+      out.writeObject(this);
+      out.flush();
+      out.close();
+
+      ObjectInputStream in = new ObjectInputStream(
+          new ByteArrayInputStream(bos.toByteArray()));
+      return (QueryExecutionPlan) in.readObject();
+    } catch (ClassNotFoundException | IOException e) {
+      e.printStackTrace();
+    }
+    return null;
   }
 }
