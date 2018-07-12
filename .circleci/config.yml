@@ -4,16 +4,17 @@
 #
 version: 2
 jobs:
-  buildjdk8:
+  build:
     docker:
       # specify the version you desire here
-      - image: circleci/oraclejdk8
+      - image: circleci/openjdk:8-jdk-browsers
 
       # Specify service dependencies here if necessary
       # CircleCI maintains a library of pre-built images
       # documented at https://circleci.com/docs/2.0/circleci-images/
-      - image: circleci/mysql:5.5
-      - image: circleci/postgres:10-alpine-postgis
+      - image: mysql:5.5
+      - image: postgres:10
+      - image: codingtony/impala
 
     working_directory: ~/repo
 
