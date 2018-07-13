@@ -9,9 +9,13 @@ import org.verdictdb.core.connection.JdbcConnection;
 import org.verdictdb.core.execution.ExecutablePlanRunner;
 import org.verdictdb.core.resulthandler.ExecutionResultReader;
 import org.verdictdb.core.scrambling.*;
+import org.verdictdb.core.sqlobject.AbstractRelation;
+import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.sqlreader.NonValidatingSQLParser;
 import org.verdictdb.sqlreader.RelationStandardizer;
 import org.verdictdb.sqlsyntax.MysqlSyntax;
+import org.verdictdb.sqlwriter.SelectQueryToSql;
 
 import java.sql.*;
 import java.util.Arrays;
@@ -20,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 public class TpchSelectQueryCoordinatorTest {
 
@@ -48,7 +53,7 @@ public class TpchSelectQueryCoordinatorTest {
 
   private static final String MYSQL_UESR = "root";
 
-  private static final String MYSQL_PASSWORD = "";
+  private static final String MYSQL_PASSWORD = "zhongshucheng123";
 
   @BeforeClass
   public static void setupMySqlDatabase() throws SQLException, VerdictDBException {
@@ -206,22 +211,39 @@ public class TpchSelectQueryCoordinatorTest {
         " l_linestatus " +
         "order by " +
         " l_returnflag, " +
-        " l_linestatus " +
-        "LIMIT 1 ";
+        " l_linestatus ";
     stmt.execute("create schema if not exists `verdictdb_temp`;");
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcConnection(conn, new MysqlSyntax()));
     coordinator.setScrambleMetaSet(meta);
     coordinator.setDefaultSchema("test");
     ExecutionResultReader reader = coordinator.process(sql);
 
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
+    RelationStandardizer gen = new RelationStandardizer(coordinator.getStaticMetaData());
+    relation = gen.standardize((SelectQuery) relation);
+
+    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
+    String stdQuery = selectQueryToSql.toSql(relation);
     int cnt = 0;
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
-      dbmsQueryResult.next();
       cnt++;
       if (cnt == 10) {
-        assertEquals(true, dbmsQueryResult.getLong(2)==12400 || dbmsQueryResult.getLong(2)==5972
-            || dbmsQueryResult.getLong(2)==6499 || dbmsQueryResult.getLong(2)==319);
+        ResultSet rs = stmt.executeQuery(stdQuery);
+        while (rs.next()) {
+          dbmsQueryResult.next();
+          assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
+          assertEquals(rs.getString(2), dbmsQueryResult.getString(1));
+          assertEquals(rs.getLong(3), dbmsQueryResult.getLong(2));
+          assertEquals(rs.getDouble(4), dbmsQueryResult.getDouble(3), 1e-5);
+          assertEquals(rs.getDouble(5), dbmsQueryResult.getDouble(4), 1e-5);
+          assertEquals(rs.getDouble(6), dbmsQueryResult.getDouble(5), 1e-5);
+          assertEquals(rs.getDouble(7), dbmsQueryResult.getDouble(6), 1e-5);
+          assertEquals(rs.getDouble(8), dbmsQueryResult.getDouble(7), 1e-5);
+          assertEquals(rs.getDouble(9), dbmsQueryResult.getDouble(8), 1e-5);
+          assertEquals(rs.getDouble(10), dbmsQueryResult.getDouble(9), 1e-5);
+        }
       }
     }
     assertEquals(10, cnt);
@@ -251,20 +273,34 @@ public class TpchSelectQueryCoordinatorTest {
         "o_shippriority " +
         "order by " +
         "revenue desc, " +
-        "o_orderdate ";
+        "o_orderdate " +
+        "limit 10";
     stmt.execute("create schema if not exists `verdictdb_temp`;");
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcConnection(conn, new MysqlSyntax()));
     coordinator.setScrambleMetaSet(meta);
     coordinator.setDefaultSchema("test");
     ExecutionResultReader reader = coordinator.process(sql);
 
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
+    RelationStandardizer gen = new RelationStandardizer(coordinator.getStaticMetaData());
+    relation = gen.standardize((SelectQuery) relation);
+
+    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
+    String stdQuery = selectQueryToSql.toSql(relation);
     int cnt = 0;
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
-      dbmsQueryResult.next();
       cnt++;
       if (cnt == 12) {
-        assertEquals(dbmsQueryResult.getRowCount(), 67);
+        ResultSet rs = stmt.executeQuery(stdQuery);
+        while (rs.next()) {
+          dbmsQueryResult.next();
+          assertEquals(rs.getDouble(1), dbmsQueryResult.getDouble(0), 1e-5);
+          assertEquals(rs.getDouble(2), dbmsQueryResult.getDouble(1), 1e-5);
+          assertEquals(rs.getString(3), dbmsQueryResult.getString(2));
+          assertEquals(rs.getString(4), dbmsQueryResult.getString(3));
+        }
       }
     }
     assertEquals(12, cnt);
@@ -292,13 +328,25 @@ public class TpchSelectQueryCoordinatorTest {
     coordinator.setScrambleMetaSet(meta);
     coordinator.setDefaultSchema("test");
     ExecutionResultReader reader = coordinator.process(sql);
+
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
+    RelationStandardizer gen = new RelationStandardizer(coordinator.getStaticMetaData());
+    relation = gen.standardize((SelectQuery) relation);
+
+    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
+    String stdQuery = selectQueryToSql.toSql(relation);
     int cnt = 0;
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
-      dbmsQueryResult.next();
       cnt++;
       if (cnt == 12) {
-        assertEquals(dbmsQueryResult.getRowCount(), 5);
+        ResultSet rs = stmt.executeQuery(stdQuery);
+        while (rs.next()) {
+          dbmsQueryResult.next();
+          assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
+          assertEquals(rs.getDouble(2), dbmsQueryResult.getDouble(1), 1e-5);
+        }
       }
     }
     assertEquals(12, cnt);
@@ -336,13 +384,25 @@ public class TpchSelectQueryCoordinatorTest {
     coordinator.setScrambleMetaSet(meta);
     coordinator.setDefaultSchema("test");
     ExecutionResultReader reader = coordinator.process(sql);
+
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
+    RelationStandardizer gen = new RelationStandardizer(coordinator.getStaticMetaData());
+    relation = gen.standardize((SelectQuery) relation);
+
+    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
+    String stdQuery = selectQueryToSql.toSql(relation);
     int cnt = 0;
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
-      dbmsQueryResult.next();
       cnt++;
       if (cnt == 12) {
-        assertEquals(dbmsQueryResult.getRowCount(), 21);
+        ResultSet rs = stmt.executeQuery(stdQuery);
+        while (rs.next()) {
+          dbmsQueryResult.next();
+          assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
+          assertEquals(rs.getDouble(2), dbmsQueryResult.getDouble(1), 1e-5);
+        }
       }
     }
     assertEquals(12, cnt);
@@ -366,13 +426,24 @@ public class TpchSelectQueryCoordinatorTest {
     coordinator.setScrambleMetaSet(meta);
     coordinator.setDefaultSchema("test");
     ExecutionResultReader reader = coordinator.process(sql);
+
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
+    RelationStandardizer gen = new RelationStandardizer(coordinator.getStaticMetaData());
+    relation = gen.standardize((SelectQuery) relation);
+
+    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
+    String stdQuery = selectQueryToSql.toSql(relation);
     int cnt = 0;
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
-      dbmsQueryResult.next();
       cnt++;
       if (cnt == 10) {
-        assertEquals(dbmsQueryResult.getRowCount(), 1);
+        ResultSet rs = stmt.executeQuery(stdQuery);
+        while (rs.next()) {
+          dbmsQueryResult.next();
+          assertEquals(rs.getDouble(1), dbmsQueryResult.getDouble(0), 1e-5);
+        }
       }
     }
     assertEquals(10, cnt);
@@ -426,13 +497,27 @@ public class TpchSelectQueryCoordinatorTest {
     coordinator.setScrambleMetaSet(meta);
     coordinator.setDefaultSchema("test");
     ExecutionResultReader reader = coordinator.process(sql);
+
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
+    RelationStandardizer gen = new RelationStandardizer(coordinator.getStaticMetaData());
+    relation = gen.standardize((SelectQuery) relation);
+
+    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
+    String stdQuery = selectQueryToSql.toSql(relation);
     int cnt = 0;
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
-      dbmsQueryResult.next();
       cnt++;
       if (cnt == 12) {
-        assertEquals(dbmsQueryResult.getRowCount(), 2);
+        ResultSet rs = stmt.executeQuery(stdQuery);
+        while (rs.next()) {
+          dbmsQueryResult.next();
+          assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
+          assertEquals(rs.getString(2), dbmsQueryResult.getString(1));
+          assertEquals(rs.getString(3), dbmsQueryResult.getString(2));
+          assertEquals(rs.getDouble(4), dbmsQueryResult.getDouble(3), 1e-5);
+        }
       }
     }
     assertEquals(12, cnt);
@@ -483,13 +568,26 @@ public class TpchSelectQueryCoordinatorTest {
     coordinator.setScrambleMetaSet(meta);
     coordinator.setDefaultSchema("test");
     ExecutionResultReader reader = coordinator.process(sql);
+
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
+    RelationStandardizer gen = new RelationStandardizer(coordinator.getStaticMetaData());
+    relation = gen.standardize((SelectQuery) relation);
+
+    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
+    String stdQuery = selectQueryToSql.toSql(relation);
     int cnt = 0;
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
-      dbmsQueryResult.next();
       cnt++;
       if (cnt == 12) {
-        assertEquals(dbmsQueryResult.getRowCount(), 5);
+        ResultSet rs = stmt.executeQuery(stdQuery);
+        while (rs.next()) {
+          dbmsQueryResult.next();
+          assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
+          assertEquals(rs.getDouble(2), dbmsQueryResult.getDouble(1), 1e-5);
+          assertEquals(rs.getDouble(3), dbmsQueryResult.getDouble(2), 1e-5);
+        }
       }
     }
     assertEquals(12, cnt);
@@ -535,13 +633,26 @@ public class TpchSelectQueryCoordinatorTest {
     coordinator.setScrambleMetaSet(meta);
     coordinator.setDefaultSchema("test");
     ExecutionResultReader reader = coordinator.process(sql);
+
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
+    RelationStandardizer gen = new RelationStandardizer(coordinator.getStaticMetaData());
+    relation = gen.standardize((SelectQuery) relation);
+
+    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
+    String stdQuery = selectQueryToSql.toSql(relation);
     int cnt = 0;
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
-      dbmsQueryResult.next();
       cnt++;
       if (cnt == 12) {
-        assertEquals(dbmsQueryResult.getRowCount(), 25);
+        ResultSet rs = stmt.executeQuery(stdQuery);
+        while (rs.next()) {
+          dbmsQueryResult.next();
+          assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
+          assertEquals(rs.getString(2), dbmsQueryResult.getString(1));
+          assertEquals(rs.getDouble(3), dbmsQueryResult.getDouble(2), 1e-5);
+        }
       }
     }
     assertEquals(12, cnt);
@@ -586,13 +697,26 @@ public class TpchSelectQueryCoordinatorTest {
     coordinator.setScrambleMetaSet(meta);
     coordinator.setDefaultSchema("test");
     ExecutionResultReader reader = coordinator.process(sql);
+
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
+    RelationStandardizer gen = new RelationStandardizer(coordinator.getStaticMetaData());
+    relation = gen.standardize((SelectQuery) relation);
+
+    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
+    String stdQuery = selectQueryToSql.toSql(relation);
     int cnt = 0;
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
-      dbmsQueryResult.next();
       cnt++;
       if (cnt == 12) {
-        assertEquals(dbmsQueryResult.getRowCount(), 112);
+        ResultSet rs = stmt.executeQuery(stdQuery);
+        while (rs.next()) {
+          dbmsQueryResult.next();
+          assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
+          assertEquals(rs.getString(2), dbmsQueryResult.getString(1));
+          assertEquals(rs.getDouble(3), dbmsQueryResult.getDouble(2), 1e-5);
+        }
       }
     }
     assertEquals(12, cnt);
@@ -633,13 +757,26 @@ public class TpchSelectQueryCoordinatorTest {
     coordinator.setScrambleMetaSet(meta);
     coordinator.setDefaultSchema("test");
     ExecutionResultReader reader = coordinator.process(sql);
+
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
+    RelationStandardizer gen = new RelationStandardizer(coordinator.getStaticMetaData());
+    relation = gen.standardize((SelectQuery) relation);
+
+    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
+    String stdQuery = selectQueryToSql.toSql(relation);
     int cnt = 0;
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
-      dbmsQueryResult.next();
       cnt++;
       if (cnt == 12) {
-        assertEquals(dbmsQueryResult.getRowCount(), 7);
+        ResultSet rs = stmt.executeQuery(stdQuery);
+        while (rs.next()) {
+          dbmsQueryResult.next();
+          assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
+          assertEquals(rs.getDouble(2), dbmsQueryResult.getDouble(1), 1e-5);
+          assertEquals(rs.getDouble(3), dbmsQueryResult.getDouble(2), 1e-5);
+        }
       }
     }
     assertEquals(12, cnt);
@@ -652,21 +789,37 @@ public class TpchSelectQueryCoordinatorTest {
         "c_custkey, " +
         "count(o_orderkey) as c_count " +
         "from " +
-        "customer left outer join orders_scrambled on " +
+        "customer inner join orders_scrambled on " +
         "c_custkey = o_custkey " +
         "and o_comment not like '%unusual%' " +
         "group by " +
-        "c_custkey";
+        "c_custkey " +
+        "order by c_custkey";
     stmt.execute("create schema if not exists `verdictdb_temp`;");
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcConnection(conn, new MysqlSyntax()));
     coordinator.setScrambleMetaSet(meta);
     coordinator.setDefaultSchema("test");
     ExecutionResultReader reader = coordinator.process(sql);
+
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
+    RelationStandardizer gen = new RelationStandardizer(coordinator.getStaticMetaData());
+    relation = gen.standardize((SelectQuery) relation);
+
+    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
+    String stdQuery = selectQueryToSql.toSql(relation);
     int cnt = 0;
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
-      dbmsQueryResult.next();
       cnt++;
+      if (cnt == 3) {
+        ResultSet rs = stmt.executeQuery(stdQuery);
+        while (rs.next()) {
+          dbmsQueryResult.next();
+          assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
+          assertEquals(rs.getDouble(2), dbmsQueryResult.getDouble(1), 1e-5);
+        }
+      }
     }
     assertEquals(3, cnt);
     stmt.execute("drop schema if exists `verdictdb_temp`;");
@@ -692,13 +845,25 @@ public class TpchSelectQueryCoordinatorTest {
     coordinator.setScrambleMetaSet(meta);
     coordinator.setDefaultSchema("test");
     ExecutionResultReader reader = coordinator.process(sql);
+
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
+    RelationStandardizer gen = new RelationStandardizer(coordinator.getStaticMetaData());
+    relation = gen.standardize((SelectQuery) relation);
+
+    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
+    String stdQuery = selectQueryToSql.toSql(relation);
     int cnt = 0;
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
-      dbmsQueryResult.next();
       cnt++;
       if (cnt == 10) {
-        assertEquals(dbmsQueryResult.getRowCount(), 1);
+        ResultSet rs = stmt.executeQuery(stdQuery);
+        while (rs.next()) {
+          dbmsQueryResult.next();
+          assertEquals(rs.getDouble(2), dbmsQueryResult.getDouble(1), 1e-5);
+          assertEquals(rs.getDouble(1), dbmsQueryResult.getDouble(0), 1e-5);
+        }
       }
     }
     assertEquals(10, cnt);
@@ -716,19 +881,33 @@ public class TpchSelectQueryCoordinatorTest {
         "l_shipdate >= date '1992-01-01' " +
         "and l_shipdate < date '1999-01-01'" +
         "group by " +
+        "l_suppkey " +
+        "order by " +
         "l_suppkey";
     stmt.execute("create schema if not exists `verdictdb_temp`;");
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcConnection(conn, new MysqlSyntax()));
     coordinator.setScrambleMetaSet(meta);
     coordinator.setDefaultSchema("test");
     ExecutionResultReader reader = coordinator.process(sql);
+
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
+    RelationStandardizer gen = new RelationStandardizer(coordinator.getStaticMetaData());
+    relation = gen.standardize((SelectQuery) relation);
+
+    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
+    String stdQuery = selectQueryToSql.toSql(relation);
     int cnt = 0;
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
-      dbmsQueryResult.next();
       cnt++;
       if (cnt == 10) {
-        assertEquals(dbmsQueryResult.getRowCount(), 954);
+        ResultSet rs = stmt.executeQuery(stdQuery);
+        while (rs.next()) {
+          dbmsQueryResult.next();
+          assertEquals(rs.getDouble(2), dbmsQueryResult.getDouble(1), 1e-5);
+          assertEquals(rs.getDouble(1), dbmsQueryResult.getDouble(0), 1e-5);
+        }
       }
     }
     assertEquals(10, cnt);
@@ -768,13 +947,24 @@ public class TpchSelectQueryCoordinatorTest {
     coordinator.setScrambleMetaSet(meta);
     coordinator.setDefaultSchema("test");
     ExecutionResultReader reader = coordinator.process(sql);
+
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
+    RelationStandardizer gen = new RelationStandardizer(coordinator.getStaticMetaData());
+    relation = gen.standardize((SelectQuery) relation);
+
+    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
+    String stdQuery = selectQueryToSql.toSql(relation);
     int cnt = 0;
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
-      dbmsQueryResult.next();
       cnt++;
       if (cnt == 10) {
-        assertEquals(dbmsQueryResult.getDouble(0), 5404766.6128571, 1e-5);
+        ResultSet rs = stmt.executeQuery(stdQuery);
+        while (rs.next()) {
+          dbmsQueryResult.next();
+          assertEquals(rs.getDouble(1), dbmsQueryResult.getDouble(0), 1e-5);
+        }
       }
     }
     assertEquals(10, cnt);
@@ -822,13 +1012,29 @@ public class TpchSelectQueryCoordinatorTest {
     coordinator.setScrambleMetaSet(meta);
     coordinator.setDefaultSchema("test");
     ExecutionResultReader reader = coordinator.process(sql);
+
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
+    RelationStandardizer gen = new RelationStandardizer(coordinator.getStaticMetaData());
+    relation = gen.standardize((SelectQuery) relation);
+
+    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
+    String stdQuery = selectQueryToSql.toSql(relation);
     int cnt = 0;
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
-      dbmsQueryResult.next();
       cnt++;
       if (cnt == 12) {
-        assertEquals(dbmsQueryResult.getRowCount(), 51);
+        ResultSet rs = stmt.executeQuery(stdQuery);
+        while (rs.next()) {
+          dbmsQueryResult.next();
+          assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
+          assertEquals(rs.getString(2), dbmsQueryResult.getString(1));
+          assertEquals(rs.getString(3), dbmsQueryResult.getString(2));
+          assertEquals(rs.getString(4), dbmsQueryResult.getString(3));
+          assertEquals(rs.getString(5), dbmsQueryResult.getString(4));
+          assertEquals(rs.getDouble(6), dbmsQueryResult.getDouble(5), 1e-5);
+        }
       }
     }
     assertEquals(12, cnt);
@@ -874,13 +1080,24 @@ public class TpchSelectQueryCoordinatorTest {
     coordinator.setScrambleMetaSet(meta);
     coordinator.setDefaultSchema("test");
     ExecutionResultReader reader = coordinator.process(sql);
+
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
+    RelationStandardizer gen = new RelationStandardizer(coordinator.getStaticMetaData());
+    relation = gen.standardize((SelectQuery) relation);
+
+    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
+    String stdQuery = selectQueryToSql.toSql(relation);
     int cnt = 0;
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
-      dbmsQueryResult.next();
       cnt++;
       if (cnt == 10) {
-        assertEquals(dbmsQueryResult.getDouble(0), 12494.85600, 1e-5);
+        ResultSet rs = stmt.executeQuery(stdQuery);
+        while (rs.next()) {
+          dbmsQueryResult.next();
+          assertEquals(rs.getDouble(1), dbmsQueryResult.getDouble(0), 1e-5);
+        }
       }
     }
     assertEquals(10, cnt);
@@ -917,13 +1134,25 @@ public class TpchSelectQueryCoordinatorTest {
     coordinator.setScrambleMetaSet(meta);
     coordinator.setDefaultSchema("test");
     ExecutionResultReader reader = coordinator.process(sql);
+
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
+    RelationStandardizer gen = new RelationStandardizer(coordinator.getStaticMetaData());
+    relation = gen.standardize((SelectQuery) relation);
+
+    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
+    String stdQuery = selectQueryToSql.toSql(relation);
     int cnt = 0;
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
-      dbmsQueryResult.next();
       cnt++;
       if (cnt == 10) {
-        assertEquals(dbmsQueryResult.getRowCount(), 40);
+        ResultSet rs = stmt.executeQuery(stdQuery);
+        while (rs.next()) {
+          dbmsQueryResult.next();
+          assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
+          assertEquals(rs.getDouble(2), dbmsQueryResult.getDouble(1), 1e-5);
+        }
       }
     }
     assertEquals(10, cnt);
@@ -975,13 +1204,25 @@ public class TpchSelectQueryCoordinatorTest {
     coordinator.setScrambleMetaSet(meta);
     coordinator.setDefaultSchema("test");
     ExecutionResultReader reader = coordinator.process(sql);
+
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
+    RelationStandardizer gen = new RelationStandardizer(coordinator.getStaticMetaData());
+    relation = gen.standardize((SelectQuery) relation);
+
+    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
+    String stdQuery = selectQueryToSql.toSql(relation);
     int cnt = 0;
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
-      dbmsQueryResult.next();
       cnt++;
       if (cnt == 12) {
-        //assertEquals(dbmsQueryResult.getRowCount(), 36);
+        ResultSet rs = stmt.executeQuery(stdQuery);
+        while (rs.next()) {
+          dbmsQueryResult.next();
+          assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
+          assertEquals(rs.getDouble(2), dbmsQueryResult.getDouble(1), 1e-5);
+        }
       }
     }
     assertEquals(12, cnt);
