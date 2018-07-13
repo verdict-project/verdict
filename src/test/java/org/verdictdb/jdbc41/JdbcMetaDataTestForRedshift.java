@@ -22,35 +22,35 @@ public class JdbcMetaDataTestForRedshift {
 
   private static Statement stmt;
 
-  private static final String IMPALA_HOST;
+  private static final String REDSHIFT_HOST;
 
-  private static final String IMPALA_DATABASE = "default";
+  private static final String REDSHIFT_DATABASE = "dev";
+  
+  private static final String REDSHIFT_SCHEMA = "public";
 
-  private static final String IMPALA_UESR = "";
+  private static final String REDSHIFT_USER;
 
-  private static final String IMPALA_PASSWORD = "";
+  private static final String REDSHIFT_PASSWORD;
 
   private static final String TABLE_NAME = "mytable";
 
   static {
-    String env = System.getenv("BUILD_ENV");
-    if (env != null && (env.equals("GitLab") || env.equals("DockerCompose"))) {
-      final String redshift_host = System.getenv("BUILD_ENV");
-      IMPALA_HOST = "impala";
-    } else {
-      IMPALA_HOST = "localhost";
-    }
+    REDSHIFT_HOST = System.getenv("VERDICTDB_TEST_REDSHIFT_HOST");
+    REDSHIFT_USER = System.getenv("VERDICTDB_TEST_REDSHIFT_USER");
+    REDSHIFT_PASSWORD = System.getenv("VERDICTDB_TEST_REDSHIFT_PASSWORD");
   }
 
   @BeforeClass
   public static void setupImpalaDatabase() throws SQLException, VerdictDBDbmsException {
     String connectionString =
-        String.format("jdbc:impala://%s:21050/%s", IMPALA_HOST, IMPALA_DATABASE);
-    conn = DriverManager.getConnection(connectionString, IMPALA_UESR, IMPALA_PASSWORD);
+        String.format("jdbc:redshift://%s/%s/%s", REDSHIFT_HOST, REDSHIFT_DATABASE, REDSHIFT_SCHEMA);
+    conn = DriverManager.getConnection(connectionString, REDSHIFT_USER, REDSHIFT_PASSWORD);
     dbmsConn = JdbcConnection.create(conn);
 
     stmt = conn.createStatement();
-    stmt.execute(String.format("DROP TABLE IF EXISTS `%s`", TABLE_NAME));
+    stmt.execute(String.format("DROP TABLE IF EXISTS \"%s\"", TABLE_NAME));
+    
+    // create a test table
     stmt.execute(String.format(
         "CREATE TABLE `%s` ("
             + "tinyintCol    TINYINT, "
@@ -63,13 +63,13 @@ public class JdbcMetaDataTestForRedshift {
             + "doubleCol     DOUBLE, "
             + "timestampCol  TIMESTAMP, "
             + "charCol       CHAR(4), "
-            + "stringCol     STRING)"
+            + "varcharCol     VARCHAR(10))"
         , TABLE_NAME));
   }
   
   @AfterClass
   public static void tearDown() throws VerdictDBDbmsException {
-    dbmsConn.execute(String.format("DROP TABLE IF EXISTS %s", TABLE_NAME));
+    dbmsConn.execute(String.format("DROP TABLE IF EXISTS \"%s\"", TABLE_NAME));
     dbmsConn.close();
   }
   

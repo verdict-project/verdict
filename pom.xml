@@ -27,6 +27,13 @@
     <skipTests>false</skipTests>
   </properties>
 
+  <repositories>
+    <repository>
+      <id>redshift</id>
+      <url>http://redshift-maven-repository.s3-website-us-east-1.amazonaws.com/release</url>
+    </repository>
+  </repositories>
+
   <build>
     <directory>target</directory>
     <outputDirectory>target/classes</outputDirectory>
@@ -72,15 +79,6 @@
           <target>1.7</target>
         </configuration>
       </plugin>
-      <!-- Change JDK-specific settings in profiles tree below. <plugin>
-        <groupId>org.apache.maven.plugins</groupId> <artifactId>maven-surefire-plugin</artifactId>
-        <version>2.17</version> <configuration> <systemProperties> <enableTimeout>true</enableTimeout>
-        <timeoutSeconds>100</timeoutSeconds> <timeoutRetries>2</timeoutRetries> This
-        seems to be slower. <hiveconf_hive.execution.engine>tez</hiveconf_hive.execution.engine>
-        <hiveconf_hive.exec.counters.pull.interval>1000</hiveconf_hive.exec.counters.pull.interval>
-        </systemProperties> This fork mode seems to be only working configuration
-        for JDK7 <forkMode>always</forkMode> <forkCount>1</forkCount> <reuseForks>false</reuseForks>
-        <argLine>-Xmx2048m -XX:MaxPermSize=512m</argLine> </configuration> </plugin> -->
     </plugins>
   </build>
 
@@ -129,7 +127,7 @@
       <version>1.4.197</version>
       <scope>test</scope>
     </dependency>
-    <!-- <dependency> <groupId>org.postgresql</groupId> <artifactId>postgresql</artifactId>
+    <!-- <dependency> <groupId>org.postgresql</groupId> <artifactId>postgresql</artifactId> 
       <version>42.2.2</version> <scope>test</scope> </dependency> -->
     <dependency>
       <groupId>org.postgresql</groupId>
@@ -155,8 +153,9 @@
       <version>${junit.version}</version>
       <scope>test</scope>
     </dependency>
-    <!-- Install this using the following command:
-    mvn install:install-file -Dfile=src/test/resources/jars/ImpalaJDBC41-2.6.3.jar -DgroupId=com.cloudera -DartifactId=impala-jdbc41 -Dversion=2.6.3 -Dpackaging=jar -->
+    <!-- Install this using the following command: mvn install:install-file 
+      -Dfile=src/test/resources/jars/ImpalaJDBC41-2.6.3.jar -DgroupId=com.cloudera 
+      -DartifactId=impala-jdbc41 -Dversion=2.6.3 -Dpackaging=jar -->
     <dependency>
       <groupId>com.cloudera</groupId>
       <artifactId>impala-jdbc41</artifactId>
@@ -173,13 +172,10 @@
         </exclusion>
       </exclusions>
     </dependency>
-    <!-- Install this using the following command:
-    mvn install:install-file -Dfile=src/test/resources/jars/RedshiftJDBC41-1.2.15.1025.jar -DgroupId=com.amazon -DartifactId=redshift-jdbc41 -Dversion=1.2.15.1025 -Dpackaging=jar -->
     <dependency>
-      <groupId>com.amazon</groupId>
+      <groupId>com.amazon.redshift</groupId>
       <artifactId>redshift-jdbc41</artifactId>
-      <version>1.2.15.1025</version>
-      <scope>test</scope>
+      <version>1.2.10.1009</version>
     </dependency>
     <dependency>
       <groupId>com.klarna</groupId>
@@ -216,11 +212,12 @@
                 <enableTimeout>true</enableTimeout>
                 <timeoutSeconds>100</timeoutSeconds>
                 <timeoutRetries>2</timeoutRetries>
-                <!-- This seems to be slower. <hiveconf_hive.execution.engine>tez</hiveconf_hive.execution.engine>
-                  <hiveconf_hive.exec.counters.pull.interval>1000</hiveconf_hive.exec.counters.pull.interval> -->
+                <!-- This seems to be slower. 
+                <hiveconf_hive.execution.engine>tez</hiveconf_hive.execution.engine> 
+                <hiveconf_hive.exec.counters.pull.interval>1000</hiveconf_hive.exec.counters.pull.interval> 
+                -->
               </systemProperties>
-              <!-- This fork mode seems to be only working configuration
-                for JDK7 -->
+              <!-- This option seems to be only working for JDK7 -->
               <!-- <forkMode>always</forkMode> -->
               <forkCount>1</forkCount>
               <reuseForks>false</reuseForks>
@@ -246,11 +243,11 @@
                 <enableTimeout>true</enableTimeout>
                 <timeoutSeconds>100</timeoutSeconds>
                 <timeoutRetries>2</timeoutRetries>
-                <!-- This seems to be slower. <hiveconf_hive.execution.engine>tez</hiveconf_hive.execution.engine>
-                  <hiveconf_hive.exec.counters.pull.interval>1000</hiveconf_hive.exec.counters.pull.interval> -->
+                <!-- This seems to be slower. 
+                <hiveconf_hive.execution.engine>tez</hiveconf_hive.execution.engine> 
+                <hiveconf_hive.exec.counters.pull.interval>1000</hiveconf_hive.exec.counters.pull.interval> -->
               </systemProperties>
-              <!-- This fork mode seems to be only working configuration
-                for JDK7 -->
+              <!-- This fork mode seems to be only working configuration for JDK7 -->
               <!-- <forkMode>always</forkMode> -->
               <forkCount>1</forkCount>
               <reuseForks>false</reuseForks>
@@ -305,8 +302,8 @@
           <groupId>org.apache.spark</groupId>
           <artifactId>spark-hive_2.11</artifactId>
           <version>${spark.version}</version>
-          <!-- <exclusions> <exclusion> <groupId>org.slf4j</groupId> <artifactId>slf4j-log4j12</artifactId>
-            </exclusion> <exclusion> <groupId>org.slf4j</groupId> <artifactId>slf4j-simple</artifactId>
+          <!-- <exclusions> <exclusion> <groupId>org.slf4j</groupId> <artifactId>slf4j-log4j12</artifactId> 
+            </exclusion> <exclusion> <groupId>org.slf4j</groupId> <artifactId>slf4j-simple</artifactId> 
             </exclusion> </exclusions> -->
         </dependency>
       </dependencies>
@@ -344,14 +341,14 @@
   </profiles>
 
   <scm>
-    <url>git@gitlab.com:pyongjoo/verdictdb-core.git</url>
+    <url>git@github.com:umich-dbgroup/verdictdb-core.git</url>
     <connection>git</connection>
     <developerConnection>The University of Michigan, Ann Arbor</developerConnection>
   </scm>
   <ciManagement>
-    <url>https://gitlab.com/pyongjoo/verdictdb-core/pipelines</url>
+    <url>https://github.com/umich-dbgroup/verdictdb-core</url>
   </ciManagement>
   <issueManagement>
-    <url>https://gitlab.com/pyongjoo/verdictdb-core/issues</url>
+    <url>https://github.com/umich-dbgroup/verdictdb-core/issues</url>
   </issueManagement>
 </project>
