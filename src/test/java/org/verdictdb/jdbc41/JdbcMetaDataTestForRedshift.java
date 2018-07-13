@@ -1,15 +1,12 @@
 package org.verdictdb.jdbc41;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.List;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -17,13 +14,8 @@ import org.verdictdb.core.connection.DbmsConnection;
 import org.verdictdb.core.connection.JdbcConnection;
 import org.verdictdb.exception.VerdictDBDbmsException;
 
-/**
- * 
- * @author Yongjoo Park
- *
- */
-public class JdbcMetaDataTestForImpala {
-  
+public class JdbcMetaDataTestForRedshift {
+
   static Connection conn;
 
   static DbmsConnection dbmsConn;
@@ -43,6 +35,7 @@ public class JdbcMetaDataTestForImpala {
   static {
     String env = System.getenv("BUILD_ENV");
     if (env != null && (env.equals("GitLab") || env.equals("DockerCompose"))) {
+      final String redshift_host = System.getenv("BUILD_ENV");
       IMPALA_HOST = "impala";
     } else {
       IMPALA_HOST = "localhost";
@@ -81,23 +74,8 @@ public class JdbcMetaDataTestForImpala {
   }
   
   @Test
-  public void testColumnTypes() throws VerdictDBDbmsException, SQLException {
-    List<Pair<String, String>> columns = dbmsConn.getColumns("default", TABLE_NAME);
-    assertEquals(11, columns.size());
-
-    ResultSet expected = stmt.executeQuery(String.format("describe %s", TABLE_NAME));
-    int idx = 0;
-    while (expected.next()) {
-      assertEquals(expected.getString(1), columns.get(idx).getLeft());
-      assertEquals(expected.getString(2), columns.get(idx).getRight());
-      idx++;
-    }
-
-    // column name is case-sensitive for mysql
-    assertEquals("tinyintcol", columns.get(0).getLeft());
-
-    // column type name is lower case and includes parentheses for mysql
-    assertEquals("char(4)", columns.get(9).getRight());
+  public void test() {
+    
   }
 
 }
