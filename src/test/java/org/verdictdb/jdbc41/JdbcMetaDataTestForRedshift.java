@@ -35,15 +35,18 @@ public class JdbcMetaDataTestForRedshift {
   private static final String TABLE_NAME = "mytable";
 
   static {
-    REDSHIFT_HOST = System.getenv("VERDICTDB_TEST_REDSHIFT_HOST");
+    REDSHIFT_HOST = System.getenv("VERDICTDB_TEST_REDSHIFT_ENDPOINT");
     REDSHIFT_USER = System.getenv("VERDICTDB_TEST_REDSHIFT_USER");
     REDSHIFT_PASSWORD = System.getenv("VERDICTDB_TEST_REDSHIFT_PASSWORD");
+//    System.out.println(REDSHIFT_HOST);
+//    System.out.println(REDSHIFT_USER);
+//    System.out.println(REDSHIFT_PASSWORD);
   }
 
   @BeforeClass
-  public static void setupImpalaDatabase() throws SQLException, VerdictDBDbmsException {
+  public static void setupRedshiftDatabase() throws SQLException, VerdictDBDbmsException {
     String connectionString =
-        String.format("jdbc:redshift://%s/%s/%s", REDSHIFT_HOST, REDSHIFT_DATABASE, REDSHIFT_SCHEMA);
+        String.format("jdbc:redshift://%s/%s", REDSHIFT_HOST, REDSHIFT_DATABASE);
     conn = DriverManager.getConnection(connectionString, REDSHIFT_USER, REDSHIFT_PASSWORD);
     dbmsConn = JdbcConnection.create(conn);
 
@@ -52,18 +55,19 @@ public class JdbcMetaDataTestForRedshift {
     
     // create a test table
     stmt.execute(String.format(
-        "CREATE TABLE `%s` ("
-            + "tinyintCol    TINYINT, "
-            + "boolCol       BOOLEAN, "
+        "CREATE TABLE \"%s\" ("
             + "smallintCol   SMALLINT, "
             + "intCol        INT, "
             + "bigintCol     BIGINT, "
             + "decimalCol    DECIMAL, "
-            + "floatCol      FLOAT, "
-            + "doubleCol     DOUBLE, "
-            + "timestampCol  TIMESTAMP, "
+            + "realCol       REAL, "
+            + "doubleCol     DOUBLE PRECISION, "
+            + "boolCol       BOOLEAN, "
             + "charCol       CHAR(4), "
-            + "varcharCol     VARCHAR(10))"
+            + "varcharCol    VARCHAR(10), "
+            + "dateCol       DATE, "
+            + "timestampCol  TIMESTAMP"
+            + ")"
         , TABLE_NAME));
   }
   
