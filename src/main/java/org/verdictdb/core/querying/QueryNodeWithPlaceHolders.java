@@ -87,7 +87,10 @@ public abstract class QueryNodeWithPlaceHolders extends QueryNodeBase {
   
   protected void copyFields(QueryNodeWithPlaceHolders from, QueryNodeWithPlaceHolders to) {
     super.copyFields(from, to);
-    to.placeholderTables = from.placeholderTables;
-    to.placeholderTablesinFilter = from.placeholderTablesinFilter;
+    to.placeholderTables = new ArrayList<>();
+    to.placeholderTables.addAll(from.placeholderTables);
+
+    to.placeholderTablesinFilter = new ArrayList<>();
+    to.placeholderTablesinFilter.addAll(from.placeholderTablesinFilter);
   }
 }
