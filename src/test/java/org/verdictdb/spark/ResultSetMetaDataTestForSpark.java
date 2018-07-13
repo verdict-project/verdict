@@ -42,7 +42,8 @@ public class ResultSetMetaDataTestForSpark {
   public static void setupSpark() throws VerdictDBDbmsException {
     spark = SparkSession.builder().appName("test")
         .master("local")
-        .config("spark.sql.catalogImplementation", "hive")
+        .enableHiveSupport()
+//        .config("spark.sql.catalogImplementation", "hive")
         .getOrCreate();
     sparkConnection = new SparkConnection(spark, new SparkSyntax());
     sparkConnection.execute(String.format(

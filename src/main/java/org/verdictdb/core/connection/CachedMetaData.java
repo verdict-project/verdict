@@ -11,11 +11,13 @@ import org.verdictdb.sqlsyntax.SqlSyntax;
 
 public class CachedMetaData implements MetaDataProvider {
 
-  private SqlSyntax syntax;
+//  private SqlSyntax syntax;
 
 //  private DbmsConnection connection;
   
   MetaDataProvider metaProvider;
+  
+  private String defaultSchema = null;
 
   private List<String> schemaCache = new ArrayList<>();
 
@@ -80,10 +82,18 @@ public class CachedMetaData implements MetaDataProvider {
     partitionCache.put(key, metaProvider.getPartitionColumns(schema, table));
     return partitionCache.get(key);
   }
-
-  @Override
+  
   public String getDefaultSchema() {
-    return metaProvider.getDefaultSchema();
+    if (defaultSchema == null) {
+      defaultSchema = metaProvider.getDefaultSchema();
+    }
+    return defaultSchema;
   }
+  
+  public void setDefaultSchema(String schema) {
+    metaProvider.setDefaultSchema(schema);
+    defaultSchema = schema;
+  }
+
 
 }

@@ -30,6 +30,8 @@ import org.verdictdb.exception.VerdictDBValueException;
 
 public class QueryExecutionPlan implements ExecutablePlan, IdCreator, Serializable {
   
+  private static final long serialVersionUID = 8377795890801468660L;
+
   protected ScrambleMetaSet scrambleMeta;
 
   protected ExecutableNodeBase root;

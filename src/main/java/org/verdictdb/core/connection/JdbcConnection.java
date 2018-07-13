@@ -222,5 +222,11 @@ public class JdbcConnection implements DbmsConnection {
     return null;
   }
 
+  @Override
+  public void setDefaultSchema(String schema) {
+    // TODO Auto-generated method stub
+
+  }
+
 
 }

@@ -27,7 +27,13 @@ import org.verdictdb.core.connection.JdbcQueryResult;
 import org.verdictdb.core.rewriter.aggresult.AggNameAndType;
 import org.verdictdb.exception.VerdictDBValueException;
 
-public class JdbcResultSetTest {
+/**
+ * Tests the correctness of result set object using H2 database.
+ * 
+ * @author Yongjoo Park
+ *
+ */
+public class JdbcResultSetBasicCorrectnessTest {
 
   static Connection conn;
 
@@ -37,7 +43,7 @@ public class JdbcResultSetTest {
 
   @BeforeClass
   public static void setupH2Database() throws SQLException {
-    final String DB_CONNECTION = "jdbc:h2:mem:testconn;DB_CLOSE_DELAY=-1";
+    final String DB_CONNECTION = "jdbc:h2:mem:resultsettest;DB_CLOSE_DELAY=-1";
     final String DB_USER = "";
     final String DB_PASSWORD = "";
     conn = DriverManager.getConnection(DB_CONNECTION, DB_USER, DB_PASSWORD);

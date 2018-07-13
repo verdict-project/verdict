@@ -24,6 +24,13 @@ import org.verdictdb.core.connection.DbmsConnection;
 import org.verdictdb.core.connection.JdbcConnection;
 import org.verdictdb.exception.VerdictDBDbmsException;
 
+/**
+ * This intends to test the correct operations of VerdictDB JDBC driver's get methods for every
+ * different data type supported by MySQL.
+ * 
+ * @author Yongjoo Park
+ *
+ */
 public class JdbcResultSetMetaDataTestForMySql {
 
   static Connection conn;

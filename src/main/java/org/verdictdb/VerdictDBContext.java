@@ -3,6 +3,7 @@ package org.verdictdb;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.Properties;
 
 import org.verdictdb.core.connection.DbmsConnection;
 import org.verdictdb.core.connection.JdbcConnection;
@@ -23,14 +24,24 @@ public class VerdictDBContext {
     this.conn = conn;
   }
   
-  public VerdictDBContext fromJdbcConnection(Connection jdbcConn) throws VerdictDBDbmsException {
+  static public VerdictDBContext fromJdbcConnection(Connection jdbcConn) throws VerdictDBDbmsException {
     DbmsConnection conn = JdbcConnection.create(jdbcConn);
     return new VerdictDBContext(conn);
   }
   
-  public VerdictDBContext fromJdbcString(String jdbcConnectionString) throws SQLException, VerdictDBDbmsException {
+  static public VerdictDBContext fromConnectionString(String jdbcConnectionString) throws SQLException, VerdictDBDbmsException {
     Connection jdbcConn = DriverManager.getConnection(jdbcConnectionString);
     return fromJdbcConnection(jdbcConn);
+  }
+  
+  static public VerdictDBContext fromConnectionString(String jdbcConnectionString, Properties info)
+      throws SQLException, VerdictDBDbmsException {
+    Connection jdbcConn = DriverManager.getConnection(jdbcConnectionString);
+    return fromJdbcConnection(jdbcConn);
+  }
+  
+  public DbmsConnection getConnection() {
+    return conn;
   }
   
   public void scramble(String originalSchema, String originalTable, String newSchema, String newTable) {
@@ -57,6 +68,11 @@ public class VerdictDBContext {
     ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(conn, simplifiedAsyncPlan);
     
     return reader;
+  }
+
+  public void abort() {
+    // TODO Auto-generated method stub
+    
   }
 
 }
