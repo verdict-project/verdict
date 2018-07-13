@@ -66,7 +66,8 @@ public class JdbcMetaDataTestForRedshift {
             + "charCol       CHAR(4), "
             + "varcharCol    VARCHAR(10), "
             + "dateCol       DATE, "
-            + "timestampCol  TIMESTAMP"
+            + "timestampCol  TIMESTAMP, "
+            + "timestamptzCol TIMESTAMPTZ"
             + ")"
         , TABLE_NAME));
   }
