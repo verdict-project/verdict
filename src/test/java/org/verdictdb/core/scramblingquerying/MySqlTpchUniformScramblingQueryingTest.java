@@ -14,6 +14,7 @@ import org.verdictdb.core.connection.JdbcConnection;
 import org.verdictdb.core.connection.StaticMetaData;
 import org.verdictdb.core.execution.ExecutablePlanRunner;
 import org.verdictdb.core.querying.QueryExecutionPlan;
+import org.verdictdb.core.querying.QueryExecutionPlanSimplifier;
 import org.verdictdb.core.querying.ola.AsyncQueryExecutionPlan;
 import org.verdictdb.core.resulthandler.ExecutionResultReader;
 import org.verdictdb.core.scrambling.*;
@@ -59,7 +60,7 @@ public class MySqlTpchUniformScramblingQueryingTest {
 
   private static final String MYSQL_UESR = "root";
 
-  private static final String MYSQL_PASSWORD = "";
+  private static final String MYSQL_PASSWORD = "zhongshucheng123";
 
   static StaticMetaData staticMetaData = new StaticMetaData();
 
@@ -297,7 +298,7 @@ public class MySqlTpchUniformScramblingQueryingTest {
     stmt.execute("DROP TABLE IF EXISTS `test`.`orders_scrambled`");
   }
 
- @Test
+  @Test
   public void testTpch1() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select " +
@@ -1258,7 +1259,7 @@ public class MySqlTpchUniformScramblingQueryingTest {
         "      from lineitem_scrambled\n" +
         "      where l_receiptdate > l_commitdate and l_orderkey is not null\n" +
         "      group by l_orderkey) as t2" +
-        "    right outer join (" +
+        "    inner join (" +
         "      select s_name as s_name, l_orderkey, l_suppkey " +
         "      from (" +
         "        select s_name as s_name, t1.l_orderkey, l_suppkey, count_suppkey, max_suppkey\n" +
@@ -1267,13 +1268,13 @@ public class MySqlTpchUniformScramblingQueryingTest {
         "          from lineitem_scrambled\n" +
         "          where l_orderkey is not null\n" +
         "          group by l_orderkey) as t1 " +
-        "          join (" +
+        "          inner join (" +
         "          select s_name, l_orderkey, l_suppkey\n" +
-        "          from orders_scrambled o join (" +
+        "          from orders_scrambled o inner join (" +
         "            select s_name, l_orderkey, l_suppkey\n" +
-        "            from nation n join supplier s\n" +
+        "            from nation n inner join supplier s\n" +
         "              on s.s_nationkey = n.n_nationkey\n" +
-        "            join lineitem_scrambled l on s.s_suppkey = l.l_suppkey\n" +
+        "            inner join lineitem_scrambled l on s.s_suppkey = l.l_suppkey\n" +
         "          where l.l_receiptdate > l.l_commitdate\n" +
         "            and l.l_orderkey is not null) l1 "
         + "        on o.o_orderkey = l1.l_orderkey\n" +

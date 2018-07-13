@@ -48,7 +48,7 @@ public class TpchSelectQueryCoordinatorTest {
 
   private static final String MYSQL_UESR = "root";
 
-  private static final String MYSQL_PASSWORD = "";
+  private static final String MYSQL_PASSWORD = "zhongshucheng123";
 
   @BeforeClass
   public static void setupMySqlDatabase() throws SQLException, VerdictDBException {
@@ -184,7 +184,7 @@ public class TpchSelectQueryCoordinatorTest {
     meta.insertScrambleMetaEntry(tablemeta);
   }
 
-  @Test
+  //@Test
   public void testTpch1() throws VerdictDBException, SQLException {
     String sql = "select " +
         " l_returnflag, " +
@@ -228,7 +228,7 @@ public class TpchSelectQueryCoordinatorTest {
     stmt.execute("drop schema if exists `verdictdb_temp`;");
   }
 
-  @Test
+  //@Test
   public void testTpch3() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select " +
@@ -271,7 +271,7 @@ public class TpchSelectQueryCoordinatorTest {
     stmt.execute("drop schema if exists `verdictdb_temp`;");
   }
 
-  @Test
+  //@Test
   public void test4Tpch() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select " +
@@ -305,7 +305,81 @@ public class TpchSelectQueryCoordinatorTest {
     stmt.execute("drop schema if exists `verdictdb_temp`;");
   }
 
-  @Test
+  //@Test
+  public void test5Tpch() throws VerdictDBException, SQLException {
+    RelationStandardizer.resetItemID();
+    String sql = "select " +
+        "n_name, " +
+        "sum(l_extendedprice * (1 - l_discount)) as revenue " +
+        "from " +
+        "customer, " +
+        "orders_scrambled, " +
+        "lineitem_scrambled, " +
+        "supplier, " +
+        "nation, " +
+        "region " +
+        "where " +
+        "c_custkey = o_custkey " +
+        "and l_orderkey = o_orderkey " +
+        "and l_suppkey = s_suppkey " +
+        "and c_nationkey = s_nationkey " +
+        "and s_nationkey = n_nationkey " +
+        "and n_regionkey = r_regionkey " +
+        "and o_orderdate >= date '1992-12-01' " +
+        "and o_orderdate < date '1998-12-01' " +
+        "group by " +
+        "n_name " +
+        "order by " +
+        "revenue desc ";
+    stmt.execute("create schema if not exists `verdictdb_temp`;");
+    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcConnection(conn, new MysqlSyntax()));
+    coordinator.setScrambleMetaSet(meta);
+    coordinator.setDefaultSchema("test");
+    ExecutionResultReader reader = coordinator.process(sql);
+    int cnt = 0;
+    while (reader.hasNext()) {
+      DbmsQueryResult dbmsQueryResult = reader.next();
+      dbmsQueryResult.next();
+      cnt++;
+      if (cnt == 12) {
+        assertEquals(dbmsQueryResult.getRowCount(), 21);
+      }
+    }
+    assertEquals(12, cnt);
+    stmt.execute("drop schema if exists `verdictdb_temp`;");
+  }
+
+  //@Test
+  public void test6Tpch() throws VerdictDBException, SQLException {
+    RelationStandardizer.resetItemID();
+    String sql = "select " +
+        "sum(l_extendedprice * l_discount) as revenue " +
+        "from " +
+        "lineitem_scrambled " +
+        "where " +
+        "l_shipdate >= date '1992-12-01' " +
+        "and l_shipdate < date '1998-12-01' " +
+        "and l_discount between 0.04 - 0.02 and 0.04 + 0.02 " +
+        "and l_quantity < 15 ";
+    stmt.execute("create schema if not exists `verdictdb_temp`;");
+    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcConnection(conn, new MysqlSyntax()));
+    coordinator.setScrambleMetaSet(meta);
+    coordinator.setDefaultSchema("test");
+    ExecutionResultReader reader = coordinator.process(sql);
+    int cnt = 0;
+    while (reader.hasNext()) {
+      DbmsQueryResult dbmsQueryResult = reader.next();
+      dbmsQueryResult.next();
+      cnt++;
+      if (cnt == 10) {
+        assertEquals(dbmsQueryResult.getRowCount(), 1);
+      }
+    }
+    assertEquals(10, cnt);
+    stmt.execute("drop schema if exists `verdictdb_temp`;");
+  }
+
+  //@Test
   public void test7Tpch() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select " +
@@ -359,6 +433,555 @@ public class TpchSelectQueryCoordinatorTest {
       cnt++;
       if (cnt == 12) {
         assertEquals(dbmsQueryResult.getRowCount(), 2);
+      }
+    }
+    assertEquals(12, cnt);
+    stmt.execute("drop schema if exists `verdictdb_temp`;");
+  }
+
+  //@Test
+  public void test8Tpch() throws VerdictDBException, SQLException {
+    RelationStandardizer.resetItemID();
+    String sql = "select " +
+        "o_year, " +
+        "sum(case " +
+        "when nation = 'PERU' then volume " +
+        "else 0 " +
+        "end) as numerator, sum(volume) as denominator " +
+        "from " +
+        "( " +
+        "select " +
+        "year(o_orderdate) as o_year, " +
+        "l_extendedprice * (1 - l_discount) as volume, " +
+        "n2.n_name as nation " +
+        "from " +
+        "part, " +
+        "supplier, " +
+        "lineitem_scrambled, " +
+        "orders_scrambled, " +
+        "customer, " +
+        "nation n1, " +
+        "nation n2, " +
+        "region " +
+        "where " +
+        "p_partkey = l_partkey " +
+        "and s_suppkey = l_suppkey " +
+        "and l_orderkey = o_orderkey " +
+        "and o_custkey = c_custkey " +
+        "and c_nationkey = n1.n_nationkey " +
+        "and n1.n_regionkey = r_regionkey " +
+        "and r_name = 'AMERICA' " +
+        "and s_nationkey = n2.n_nationkey " +
+        "and o_orderdate between '1991-01-01' and '1996-12-31' " +
+        ") as all_nations " +
+        "group by " +
+        "o_year " +
+        "order by " +
+        "o_year ";
+    stmt.execute("create schema if not exists `verdictdb_temp`;");
+    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcConnection(conn, new MysqlSyntax()));
+    coordinator.setScrambleMetaSet(meta);
+    coordinator.setDefaultSchema("test");
+    ExecutionResultReader reader = coordinator.process(sql);
+    int cnt = 0;
+    while (reader.hasNext()) {
+      DbmsQueryResult dbmsQueryResult = reader.next();
+      dbmsQueryResult.next();
+      cnt++;
+      if (cnt == 12) {
+        assertEquals(dbmsQueryResult.getRowCount(), 5);
+      }
+    }
+    assertEquals(12, cnt);
+    stmt.execute("drop schema if exists `verdictdb_temp`;");
+  }
+
+  //@Test
+  public void test9Tpch() throws VerdictDBException, SQLException {
+    RelationStandardizer.resetItemID();
+    String sql = "select " +
+        "nation, " +
+        "o_year, " +
+        "sum(amount) as sum_profit " +
+        "from " +
+        "( " +
+        "select " +
+        "n_name as nation, " +
+        "substr(o_orderdate,0,4) as o_year, " +
+        "l_extendedprice * (1 - l_discount) - ps_supplycost * l_quantity as amount " +
+        "from " +
+        "part, " +
+        "supplier, " +
+        "lineitem_scrambled, " +
+        "partsupp, " +
+        "orders_scrambled, " +
+        "nation " +
+        "where " +
+        "s_suppkey = l_suppkey " +
+        "and ps_suppkey = l_suppkey " +
+        "and ps_partkey = l_partkey " +
+        "and p_partkey = l_partkey " +
+        "and o_orderkey = l_orderkey " +
+        "and s_nationkey = n_nationkey " +
+        ") as profit " +
+        "group by " +
+        "nation, " +
+        "o_year " +
+        "order by " +
+        "nation, " +
+        "o_year desc ";
+    stmt.execute("create schema if not exists `verdictdb_temp`;");
+    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcConnection(conn, new MysqlSyntax()));
+    coordinator.setScrambleMetaSet(meta);
+    coordinator.setDefaultSchema("test");
+    ExecutionResultReader reader = coordinator.process(sql);
+    int cnt = 0;
+    while (reader.hasNext()) {
+      DbmsQueryResult dbmsQueryResult = reader.next();
+      dbmsQueryResult.next();
+      cnt++;
+      if (cnt == 12) {
+        assertEquals(dbmsQueryResult.getRowCount(), 25);
+      }
+    }
+    assertEquals(12, cnt);
+    stmt.execute("drop schema if exists `verdictdb_temp`;");
+  }
+
+  //@Test
+  public void test10Tpch() throws VerdictDBException, SQLException {
+    String sql = "select " +
+        "c_custkey, " +
+        "c_name, " +
+        "sum(l_extendedprice * (1 - l_discount)) as revenue, " +
+        "c_acctbal, " +
+        "n_name, " +
+        "c_address, " +
+        "c_phone, " +
+        "c_comment " +
+        "from " +
+        "customer, " +
+        "orders_scrambled, " +
+        "lineitem_scrambled, " +
+        "nation " +
+        "where " +
+        "c_custkey = o_custkey " +
+        "and l_orderkey = o_orderkey " +
+        "and o_orderdate >= date '1992-01-01' " +
+        "and o_orderdate < date '1998-01-01' " +
+        "and l_returnflag = 'R' " +
+        "and c_nationkey = n_nationkey " +
+        "group by " +
+        "c_custkey, " +
+        "c_name, " +
+        "c_acctbal, " +
+        "c_phone, " +
+        "n_name, " +
+        "c_address, " +
+        "c_comment " +
+        "order by " +
+        "revenue desc ";
+    stmt.execute("create schema if not exists `verdictdb_temp`;");
+    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcConnection(conn, new MysqlSyntax()));
+    coordinator.setScrambleMetaSet(meta);
+    coordinator.setDefaultSchema("test");
+    ExecutionResultReader reader = coordinator.process(sql);
+    int cnt = 0;
+    while (reader.hasNext()) {
+      DbmsQueryResult dbmsQueryResult = reader.next();
+      dbmsQueryResult.next();
+      cnt++;
+      if (cnt == 12) {
+        assertEquals(dbmsQueryResult.getRowCount(), 112);
+      }
+    }
+    assertEquals(12, cnt);
+    stmt.execute("drop schema if exists `verdictdb_temp`;");
+  }
+
+  //@Test
+  public void test12Tpch() throws VerdictDBException, SQLException {
+    String sql = "select " +
+        "l_shipmode, " +
+        "sum(case " +
+        "when o_orderpriority = '1-URGENT' " +
+        "or o_orderpriority = '2-HIGH' " +
+        "then 1 " +
+        "else 0 " +
+        "end) as high_line_count, " +
+        "sum(case " +
+        "when o_orderpriority <> '1-URGENT' " +
+        "and o_orderpriority <> '2-HIGH' " +
+        "then 1 " +
+        "else 0 " +
+        "end) as low_line_count " +
+        "from " +
+        "orders_scrambled, " +
+        "lineitem_scrambled " +
+        "where " +
+        "o_orderkey = l_orderkey " +
+        "and l_commitdate < l_receiptdate " +
+        "and l_shipdate < l_commitdate " +
+        "and l_receiptdate >= date '1992-01-01' " +
+        "and l_receiptdate < date '1998-01-01' " +
+        "group by " +
+        "l_shipmode " +
+        "order by " +
+        "l_shipmode ";
+    stmt.execute("create schema if not exists `verdictdb_temp`;");
+    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcConnection(conn, new MysqlSyntax()));
+    coordinator.setScrambleMetaSet(meta);
+    coordinator.setDefaultSchema("test");
+    ExecutionResultReader reader = coordinator.process(sql);
+    int cnt = 0;
+    while (reader.hasNext()) {
+      DbmsQueryResult dbmsQueryResult = reader.next();
+      dbmsQueryResult.next();
+      cnt++;
+      if (cnt == 12) {
+        assertEquals(dbmsQueryResult.getRowCount(), 7);
+      }
+    }
+    assertEquals(12, cnt);
+    stmt.execute("drop schema if exists `verdictdb_temp`;");
+  }
+
+  //@Test
+  public void test13Tpch() throws VerdictDBException, SQLException {
+    String sql = "select " +
+        "c_custkey, " +
+        "count(o_orderkey) as c_count " +
+        "from " +
+        "customer left outer join orders_scrambled on " +
+        "c_custkey = o_custkey " +
+        "and o_comment not like '%unusual%' " +
+        "group by " +
+        "c_custkey";
+    stmt.execute("create schema if not exists `verdictdb_temp`;");
+    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcConnection(conn, new MysqlSyntax()));
+    coordinator.setScrambleMetaSet(meta);
+    coordinator.setDefaultSchema("test");
+    ExecutionResultReader reader = coordinator.process(sql);
+    int cnt = 0;
+    while (reader.hasNext()) {
+      DbmsQueryResult dbmsQueryResult = reader.next();
+      dbmsQueryResult.next();
+      cnt++;
+    }
+    assertEquals(3, cnt);
+    stmt.execute("drop schema if exists `verdictdb_temp`;");
+  }
+
+  //@Test
+  public void test14Tpch() throws VerdictDBException, SQLException {
+    String sql = "select " +
+        "100.00 * sum(case " +
+        "when p_type like 'PROMO%' " +
+        "then l_extendedprice * (1 - l_discount) " +
+        "else 0 " +
+        "end) as numerator, sum(l_extendedprice * (1 - l_discount)) as denominator " +
+        "from " +
+        "lineitem_scrambled, " +
+        "part " +
+        "where " +
+        "l_partkey = p_partkey " +
+        "and l_shipdate >= date '1992-01-01' " +
+        "and l_shipdate < date '1998-01-01' ";
+    stmt.execute("create schema if not exists `verdictdb_temp`;");
+    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcConnection(conn, new MysqlSyntax()));
+    coordinator.setScrambleMetaSet(meta);
+    coordinator.setDefaultSchema("test");
+    ExecutionResultReader reader = coordinator.process(sql);
+    int cnt = 0;
+    while (reader.hasNext()) {
+      DbmsQueryResult dbmsQueryResult = reader.next();
+      dbmsQueryResult.next();
+      cnt++;
+      if (cnt == 10) {
+        assertEquals(dbmsQueryResult.getRowCount(), 1);
+      }
+    }
+    assertEquals(10, cnt);
+    stmt.execute("drop schema if exists `verdictdb_temp`;");
+  }
+
+  //@Test
+  public void test15Tpch() throws VerdictDBException, SQLException {
+    String sql = "select " +
+        "l_suppkey, " +
+        "sum(l_extendedprice * (1 - l_discount)) " +
+        "from " +
+        "lineitem_scrambled " +
+        "where " +
+        "l_shipdate >= date '1992-01-01' " +
+        "and l_shipdate < date '1999-01-01'" +
+        "group by " +
+        "l_suppkey";
+    stmt.execute("create schema if not exists `verdictdb_temp`;");
+    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcConnection(conn, new MysqlSyntax()));
+    coordinator.setScrambleMetaSet(meta);
+    coordinator.setDefaultSchema("test");
+    ExecutionResultReader reader = coordinator.process(sql);
+    int cnt = 0;
+    while (reader.hasNext()) {
+      DbmsQueryResult dbmsQueryResult = reader.next();
+      dbmsQueryResult.next();
+      cnt++;
+      if (cnt == 10) {
+        assertEquals(dbmsQueryResult.getRowCount(), 954);
+      }
+    }
+    assertEquals(10, cnt);
+    stmt.execute("drop schema if exists `verdictdb_temp`;");
+  }
+
+  //@Test
+  public void test17Tpch() throws VerdictDBException, SQLException {
+    String sql = "select\n" +
+        "  sum(extendedprice) / 7.0 as avg_yearly\n" +
+        "from (\n" +
+        "  select\n" +
+        "    l_quantity as quantity,\n" +
+        "    l_extendedprice as extendedprice,\n" +
+        "    t_avg_quantity\n" +
+        "  from\n" +
+        "    (select\n" +
+        "  l_partkey as t_partkey,\n" +
+        "  0.2 * avg(l_quantity) as t_avg_quantity\n" +
+        "from\n" +
+        "  lineitem_scrambled\n" +
+        "group by l_partkey) as q17_lineitem_tmp_cached Inner Join\n" +
+        "    (select\n" +
+        "      l_quantity,\n" +
+        "      l_partkey,\n" +
+        "      l_extendedprice\n" +
+        "    from\n" +
+        "      part,\n" +
+        "      lineitem_scrambled\n" +
+        "    where\n" +
+        "      p_partkey = l_partkey\n" +
+        "    ) as l1 on l1.l_partkey = t_partkey\n" +
+        ") a \n" +
+        "where quantity > t_avg_quantity";
+    stmt.execute("create schema if not exists `verdictdb_temp`;");
+    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcConnection(conn, new MysqlSyntax()));
+    coordinator.setScrambleMetaSet(meta);
+    coordinator.setDefaultSchema("test");
+    ExecutionResultReader reader = coordinator.process(sql);
+    int cnt = 0;
+    while (reader.hasNext()) {
+      DbmsQueryResult dbmsQueryResult = reader.next();
+      dbmsQueryResult.next();
+      cnt++;
+      if (cnt == 10) {
+        assertEquals(dbmsQueryResult.getDouble(0), 5404766.6128571, 1e-5);
+      }
+    }
+    assertEquals(10, cnt);
+    stmt.execute("drop schema if exists `verdictdb_temp`;");
+  }
+
+  //@Test
+  public void test18Tpch() throws VerdictDBException, SQLException {
+    String sql = "select\n" +
+        "  c_name,\n" +
+        "  c_custkey,\n" +
+        "  o_orderkey,\n" +
+        "  o_orderdate,\n" +
+        "  o_totalprice,\n" +
+        "  sum(l_quantity)\n" +
+        "from\n" +
+        "  customer,\n" +
+        "  orders_scrambled,\n" +
+        "  (select\n" +
+        "  l_orderkey,\n" +
+        "  sum(l_quantity) as t_sum_quantity\n" +
+        "  from\n" +
+        "    lineitem_scrambled\n" +
+        "  where\n" +
+        "    l_orderkey is not null\n" +
+        "  group by\n" +
+        "    l_orderkey) as t,\n" +
+        "  lineitem_scrambled l\n" +
+        "where\n" +
+        "  c_custkey = o_custkey\n" +
+        "  and o_orderkey = t.l_orderkey\n" +
+        "  and o_orderkey is not null\n" +
+        "  and t.t_sum_quantity > 150\n" +
+        "group by\n" +
+        "  c_name,\n" +
+        "  c_custkey,\n" +
+        "  o_orderkey,\n" +
+        "  o_orderdate,\n" +
+        "  o_totalprice\n" +
+        "order by\n" +
+        "  o_totalprice desc,\n" +
+        "  o_orderdate \n";
+    stmt.execute("create schema if not exists `verdictdb_temp`;");
+    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcConnection(conn, new MysqlSyntax()));
+    coordinator.setScrambleMetaSet(meta);
+    coordinator.setDefaultSchema("test");
+    ExecutionResultReader reader = coordinator.process(sql);
+    int cnt = 0;
+    while (reader.hasNext()) {
+      DbmsQueryResult dbmsQueryResult = reader.next();
+      dbmsQueryResult.next();
+      cnt++;
+      if (cnt == 12) {
+        assertEquals(dbmsQueryResult.getRowCount(), 51);
+      }
+    }
+    assertEquals(12, cnt);
+    stmt.execute("drop schema if exists `verdictdb_temp`;");
+  }
+
+  //@Test
+  public void test19Tpch() throws VerdictDBException, SQLException {
+    String sql = "select " +
+        "sum(l_extendedprice* (1 - l_discount)) as revenue " +
+        "from " +
+        "lineitem_scrambled, " +
+        "part " +
+        "where " +
+        "( " +
+        "p_partkey = l_partkey " +
+        "and p_container in ('SM CASE', 'SM BOX', 'SM PACK', 'SM PKG') " +
+        "and l_quantity >= 4 and l_quantity <= 4 + 10 " +
+        "and p_size between 1 and 5 " +
+        "and l_shipmode in ('AIR', 'AIR REG') " +
+        "and l_shipinstruct = 'DELIVER IN PERSON' " +
+        ") " +
+        "or " +
+        "( " +
+        "p_partkey = l_partkey " +
+        "and p_container in ('MED BAG', 'MED BOX', 'MED PKG', 'MED PACK') " +
+        "and l_quantity >= 5 and l_quantity <= 5 + 10 " +
+        "and p_size between 1 and 10 " +
+        "and l_shipmode in ('AIR', 'AIR REG') " +
+        "and l_shipinstruct = 'DELIVER IN PERSON' " +
+        ") " +
+        "or " +
+        "( " +
+        "p_partkey = l_partkey " +
+        "and p_container in ('LG CASE', 'LG BOX', 'LG PACK', 'LG PKG') " +
+        "and l_quantity >= 6 and l_quantity <= 6 + 10 " +
+        "and p_size between 1 and 15 " +
+        "and l_shipmode in ('AIR', 'AIR REG') " +
+        "and l_shipinstruct = 'DELIVER IN PERSON' " +
+        ") ";
+    stmt.execute("create schema if not exists `verdictdb_temp`;");
+    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcConnection(conn, new MysqlSyntax()));
+    coordinator.setScrambleMetaSet(meta);
+    coordinator.setDefaultSchema("test");
+    ExecutionResultReader reader = coordinator.process(sql);
+    int cnt = 0;
+    while (reader.hasNext()) {
+      DbmsQueryResult dbmsQueryResult = reader.next();
+      dbmsQueryResult.next();
+      cnt++;
+      if (cnt == 10) {
+        assertEquals(dbmsQueryResult.getDouble(0), 12494.85600, 1e-5);
+      }
+    }
+    assertEquals(10, cnt);
+    stmt.execute("drop schema if exists `verdictdb_temp`;");
+  }
+
+  //@Test
+  public void test20Tpch() throws VerdictDBException, SQLException {
+    String sql = "select\n" +
+        "  s_name,\n" +
+        "  count(s_address)\n" +
+        "from\n" +
+        "  supplier,\n" +
+        "  nation,\n" +
+        "  partsupp,\n" +
+        "  (select\n" +
+        "    l_partkey,\n" +
+        "    l_suppkey,\n" +
+        "    0.5 * sum(l_quantity) as sum_quantity\n" +
+        "  from\n" +
+        "    lineitem_scrambled\n" +
+        "where\n" +
+        "  l_shipdate >= '1994-01-01'\n" +
+        "  and l_shipdate < '1998-01-01'\n" +
+        "group by l_partkey, l_suppkey) as q20_tmp2_cached\n" +
+        "where\n" +
+        "  s_nationkey = n_nationkey\n" +
+        "  and n_name = 'CANADA'\n" +
+        "  and s_suppkey = ps_suppkey\n" +
+        "  group by s_name\n" +
+        "order by s_name";
+    stmt.execute("create schema if not exists `verdictdb_temp`;");
+    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcConnection(conn, new MysqlSyntax()));
+    coordinator.setScrambleMetaSet(meta);
+    coordinator.setDefaultSchema("test");
+    ExecutionResultReader reader = coordinator.process(sql);
+    int cnt = 0;
+    while (reader.hasNext()) {
+      DbmsQueryResult dbmsQueryResult = reader.next();
+      dbmsQueryResult.next();
+      cnt++;
+      if (cnt == 10) {
+        assertEquals(dbmsQueryResult.getRowCount(), 40);
+      }
+    }
+    assertEquals(10, cnt);
+    stmt.execute("drop schema if exists `verdictdb_temp`;");
+  }
+
+  @Test
+  public void test21Tpch() throws VerdictDBException, SQLException {
+    String sql = "select s_name, count(1) as numwait\n" +
+        "from (" +
+        "  select s_name " +
+        "  from (" +
+        "    select s_name, t2.l_orderkey, l_suppkey, count_suppkey, max_suppkey\n" +
+        "    from (" +
+        "      select l_orderkey, count(l_suppkey) count_suppkey, max(l_suppkey) as max_suppkey\n" +
+        "      from lineitem_scrambled\n" +
+        "      where l_receiptdate > l_commitdate and l_orderkey is not null\n" +
+        "      group by l_orderkey) as t2" +
+        "    right outer join (" +
+        "      select s_name as s_name, l_orderkey, l_suppkey " +
+        "      from (" +
+        "        select s_name as s_name, t1.l_orderkey, l_suppkey, count_suppkey, max_suppkey\n" +
+        "        from (" +
+        "          select l_orderkey, count(l_suppkey) as count_suppkey, max(l_suppkey) as max_suppkey\n" +
+        "          from lineitem_scrambled\n" +
+        "          where l_orderkey is not null\n" +
+        "          group by l_orderkey) as t1 " +
+        "          join (" +
+        "          select s_name, l_orderkey, l_suppkey\n" +
+        "          from orders_scrambled o join (" +
+        "            select s_name, l_orderkey, l_suppkey\n" +
+        "            from nation n join supplier s\n" +
+        "              on s.s_nationkey = n.n_nationkey\n" +
+        "            join lineitem_scrambled l on s.s_suppkey = l.l_suppkey\n" +
+        "          where l.l_receiptdate > l.l_commitdate\n" +
+        "            and l.l_orderkey is not null) l1 "
+        + "        on o.o_orderkey = l1.l_orderkey\n" +
+        "          ) l2 on l2.l_orderkey = t1.l_orderkey\n" +
+        "        ) a\n" +
+        "      where (count_suppkey > 1) or ((count_suppkey=1) and (l_suppkey <> max_suppkey))\n" +
+        "    ) l3 on l3.l_orderkey = t2.l_orderkey\n" +
+        "  ) b\n" +
+        "  where (count_suppkey is null) or ((count_suppkey=1) and (l_suppkey = max_suppkey))\n" +
+        ") c " +
+        "group by s_name " +
+        "order by numwait desc, s_name ";
+    stmt.execute("create schema if not exists `verdictdb_temp`;");
+    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcConnection(conn, new MysqlSyntax()));
+    coordinator.setScrambleMetaSet(meta);
+    coordinator.setDefaultSchema("test");
+    ExecutionResultReader reader = coordinator.process(sql);
+    int cnt = 0;
+    while (reader.hasNext()) {
+      DbmsQueryResult dbmsQueryResult = reader.next();
+      dbmsQueryResult.next();
+      cnt++;
+      if (cnt == 12) {
+        assertEquals(dbmsQueryResult.getRowCount(), 36);
       }
     }
     assertEquals(12, cnt);

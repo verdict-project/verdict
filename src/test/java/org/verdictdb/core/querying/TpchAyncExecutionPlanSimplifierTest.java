@@ -37,7 +37,7 @@ public class TpchAyncExecutionPlanSimplifierTest {
 
   static Statement stmt;
 
-  static int aggBlockCount = 3;
+  static int aggBlockCount = 5;
 
   static ScrambleMetaSet meta = new ScrambleMetaSet();
 

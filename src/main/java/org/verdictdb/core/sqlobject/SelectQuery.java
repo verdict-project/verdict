@@ -70,6 +70,7 @@ public class SelectQuery extends AbstractRelation implements SqlConvertible {
    * Copies query specification, i.e., everything except for orderby, having, and limit
    * @return
    */
+  @Override
   public SelectQuery deepcopy() {
     SelectQuery sel = new SelectQuery();
     for (SelectItem c : getSelectList()) {
@@ -77,14 +78,10 @@ public class SelectQuery extends AbstractRelation implements SqlConvertible {
     }
     
     for (AbstractRelation r : getFromList()) {
-      if (r instanceof SelectQuery) {
-        sel.addTableSource(((SelectQuery) r).deepcopy());
-      } else {
-        sel.addTableSource(r);
-      }
+      sel.addTableSource(r.deepcopy());
     }
     if (getFilter().isPresent()) {
-      sel.addFilterByAnd(getFilter().get());
+      sel.addFilterByAnd(getFilter().get().deepcopy());
     }
     for (GroupingAttribute a : getGroupby()) {
       sel.addGroupby(a);
