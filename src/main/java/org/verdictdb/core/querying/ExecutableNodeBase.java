@@ -99,10 +99,15 @@ public class ExecutableNodeBase implements ExecutableNode, Serializable {
     sources = newSources;
 
     // if there are no other nodes broadcasting to this channel, remove the queue
-    for (Integer c : leftChannels) {
-      if (!channels.containsKey(c)) {
-        channels.remove(c);
+    if (leftChannels.size()>0) {
+      for (Integer c : leftChannels) {
+        if (!channels.containsKey(c)) {
+          channels.remove(c);
+        }
       }
+    }
+    else {// the parent has only one child, so just remove the channel
+      channels.clear();
     }
     
     // inform the node
