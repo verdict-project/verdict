@@ -229,7 +229,7 @@ public class AsyncAggScaleTest {
     query = (CreateTableAsSelectQuery) queryExecutionPlan.getRoot().getSources().get(0).createQuery(Arrays.asList(token3));
     actual = queryToSql.toSql(query.getSelect());
     actual = actual.replaceAll("verdictdbtemptable_[0-9]*_[0-9]", "alias");
-    expected = "select (1 + ((2.0 * verdictdbbeforescaling.\"agg0\") / (2.0 * verdictdbbeforescaling.\"agg1\"))) * (2.0 * verdictdbbeforescaling.\"agg0\") as \"vc4\" from \"verdictdb_temp\".\"alias\" as verdictdbbeforescaling";
+    expected = "select (1 + ((2.0000000000000000 * verdictdbbeforescaling.\"agg0\") / (2.0000000000000000 * verdictdbbeforescaling.\"agg1\"))) * (2.0000000000000000 * verdictdbbeforescaling.\"agg0\") as \"vc4\" from \"verdictdb_temp\".\"alias\" as verdictdbbeforescaling";
     assertEquals(actual, expected);
   }
 
