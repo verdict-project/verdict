@@ -149,7 +149,7 @@ public class UniformScramblingCoordinatorTest {
     String originalTable = tablename;
     String scrambledTable = tablename + "_scrambled";
     conn.execute(String.format("drop table if exists tpch.%s", scrambledTable));
-    ScrambleMeta meta = scrambler.scramble(originalSchema, originalTable, "uniform");
+    ScrambleMeta meta = scrambler.scramble(originalSchema, originalTable, originalSchema, scrambledTable, "uniform");
 
     // tests
     List<Pair<String, String>> originalColumns = conn.getColumns("tpch", originalTable);

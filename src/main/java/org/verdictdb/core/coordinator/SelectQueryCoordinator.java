@@ -2,7 +2,7 @@ package org.verdictdb.core.coordinator;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
-import org.verdictdb.core.connection.CachedMetaData;
+import org.verdictdb.core.connection.CachedMetaDataProvider;
 import org.verdictdb.core.connection.DataTypeConverter;
 import org.verdictdb.core.connection.DbmsConnection;
 import org.verdictdb.core.connection.StaticMetaData;
@@ -31,7 +31,7 @@ public class SelectQueryCoordinator {
 
   StaticMetaData staticMetaData;
 
-  CachedMetaData cachedMetaData;
+  CachedMetaDataProvider cachedMetaData;
 
   public SelectQueryCoordinator(DbmsConnection conn) {
     this.conn = conn;

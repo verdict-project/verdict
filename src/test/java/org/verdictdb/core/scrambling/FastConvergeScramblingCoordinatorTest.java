@@ -160,7 +160,7 @@ public class FastConvergeScramblingCoordinatorTest {
     String originalTable = tablename;
     String scrambledTable = tablename + "_scrambled";
     conn.execute(String.format("drop table if exists tpch.%s", scrambledTable));
-    ScrambleMeta meta = scrambler.scramble(originalSchema, originalTable, "fastconverge");
+    ScrambleMeta meta = scrambler.scramble(originalSchema, originalTable, originalSchema, scrambledTable, "fastconverge");
 
     // tests
     List<Pair<String, String>> originalColumns = conn.getColumns("tpch", originalTable);
@@ -202,7 +202,7 @@ public class FastConvergeScramblingCoordinatorTest {
     String originalTable = tablename;
     String scrambledTable = tablename + "_scrambled";
     conn.execute(String.format("drop table if exists tpch.%s", scrambledTable));
-    ScrambleMeta meta = scrambler.scramble(originalSchema, originalTable, "fastconverge", primaryColumn);
+    ScrambleMeta meta = scrambler.scramble(originalSchema, originalTable, originalSchema, scrambledTable, "fastconverge", primaryColumn);
 
     // tests
     List<Pair<String, String>> originalColumns = conn.getColumns("tpch", originalTable);

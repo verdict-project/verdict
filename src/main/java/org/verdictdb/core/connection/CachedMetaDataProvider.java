@@ -9,7 +9,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.sqlsyntax.SqlSyntax;
 
-public class CachedMetaData implements MetaDataProvider {
+public class CachedMetaDataProvider implements MetaDataProvider {
 
 //  private SqlSyntax syntax;
 
@@ -28,7 +28,7 @@ public class CachedMetaData implements MetaDataProvider {
   // Get column name and type
   private HashMap<Pair<String, String>, List<Pair<String,String>>> columnsCache = new HashMap<>();
 
-  public CachedMetaData(MetaDataProvider metaProvider) {
+  public CachedMetaDataProvider(MetaDataProvider metaProvider) {
 //    this.syntax = metaProvider.getSyntax();
 //    this.connection = connection;
     this.metaProvider = metaProvider;
