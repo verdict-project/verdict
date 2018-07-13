@@ -59,6 +59,10 @@ public class SelectQueryCoordinator {
     return staticMetaData;
   }
 
+  public void setDefaultSchema(String defaultSchema) {
+    this.defaultSchema = defaultSchema;
+  }
+
   public void setStaticMetaData(SelectQuery relation) throws VerdictDBException {
     staticMetaData.setDefaultSchema(defaultSchema);
     // Extract all tables appeared in the query
