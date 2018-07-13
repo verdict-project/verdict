@@ -6,17 +6,12 @@ import org.junit.Test;
 import org.verdictdb.core.connection.DbmsConnection;
 import org.verdictdb.core.connection.DbmsQueryResult;
 import org.verdictdb.core.connection.JdbcConnection;
-import org.verdictdb.core.connection.StaticMetaData;
 import org.verdictdb.core.execution.ExecutablePlanRunner;
 import org.verdictdb.core.resulthandler.ExecutionResultReader;
 import org.verdictdb.core.scrambling.*;
-import org.verdictdb.core.sqlobject.AbstractRelation;
-import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.exception.VerdictDBException;
-import org.verdictdb.sqlreader.NonValidatingSQLParser;
 import org.verdictdb.sqlreader.RelationStandardizer;
 import org.verdictdb.sqlsyntax.MysqlSyntax;
-import org.verdictdb.sqlwriter.SelectQueryToSql;
 
 import java.sql.*;
 import java.util.Arrays;
@@ -38,10 +33,6 @@ public class TpchSelectQueryCoordinatorTest {
 
   private static Statement stmt;
 
-  private ResultSetMetaData jdbcResultSetMetaData1;
-
-  private ResultSetMetaData jdbcResultSetMetaData2;
-
   private static final String MYSQL_HOST;
 
   static {
@@ -57,9 +48,7 @@ public class TpchSelectQueryCoordinatorTest {
 
   private static final String MYSQL_UESR = "root";
 
-  private static final String MYSQL_PASSWORD = "zhongshucheng123";
-
-  static StaticMetaData staticMetaData = new StaticMetaData();
+  private static final String MYSQL_PASSWORD = "";
 
   @BeforeClass
   public static void setupMySqlDatabase() throws SQLException, VerdictDBException {
