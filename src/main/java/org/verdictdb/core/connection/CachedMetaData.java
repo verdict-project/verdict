@@ -25,6 +25,7 @@ public class CachedMetaData implements MetaDataProvider {
 
   private HashMap<Pair<String, String>, List<String>> partitionCache = new HashMap<>();
 
+  // Get column name and type
   private HashMap<Pair<String, String>, List<Pair<String,String>>> columnsCache = new HashMap<>();
 
   public CachedMetaData(MetaDataProvider metaProvider) {
