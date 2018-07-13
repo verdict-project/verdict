@@ -42,7 +42,7 @@ jobs:
             - ~/.m2
           key: v1-dependencies-{{ checksum "pom.xml" }}
       # run tests!
-      - run: mvn -B clean test
+      - run: mvn -B clean test 2> /dev/null
       - store_test_results:
           path: ~/junit
       - store_artifacts:
@@ -86,7 +86,7 @@ jobs:
             - ~/.m2
           key: v1-dependencies-{{ checksum "pom.xml" }}
       # run tests!
-      - run: mvn -B clean test
+      - run: mvn -B clean test 2> /dev/null
       - store_test_results:
           path: ~/junit
       - store_artifacts:
