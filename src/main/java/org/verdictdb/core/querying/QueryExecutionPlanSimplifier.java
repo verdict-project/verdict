@@ -39,8 +39,9 @@ public class QueryExecutionPlanSimplifier {
 
     List<ExecutableNodeBase> history = new ArrayList<>();
     while (!nodesToCompress.isEmpty()) {
-      ExecutableNodeBase node = nodesToCompress.get(0);
-      nodesToCompress.remove(0);
+      ExecutableNodeBase node = nodesToCompress.remove(0);
+      List<ExecutableNodeBase> nodeParentsSaved = new ArrayList<>(node.getExecutableNodeBaseParents());
+      
       // Exception 1: has no parent(root), or has multiple parent
       // Exception 2: its parents has multiple dependents and this node share same queue with other dependents
       // Exception 3: two nodes are not SelectAllNode, ProjectionNode or AggregateNode
@@ -55,7 +56,9 @@ public class QueryExecutionPlanSimplifier {
         }
       }
       history.add(node);
-      for (ExecutableNodeBase parent : node.getExecutableNodeBaseParents()) {
+      
+      // the parent information of the "node" has been removed
+      for (ExecutableNodeBase parent : nodeParentsSaved) {
         if (!history.contains(parent) && !nodesToCompress.contains(parent)) {
           nodesToCompress.add(parent);
         }
