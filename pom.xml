@@ -72,14 +72,14 @@
           <target>1.7</target>
         </configuration>
       </plugin>
-      <!-- Change JDK-specific settings in profiles tree below. <plugin>
-        <groupId>org.apache.maven.plugins</groupId> <artifactId>maven-surefire-plugin</artifactId>
-        <version>2.17</version> <configuration> <systemProperties> <enableTimeout>true</enableTimeout>
-        <timeoutSeconds>100</timeoutSeconds> <timeoutRetries>2</timeoutRetries> This
-        seems to be slower. <hiveconf_hive.execution.engine>tez</hiveconf_hive.execution.engine>
-        <hiveconf_hive.exec.counters.pull.interval>1000</hiveconf_hive.exec.counters.pull.interval>
-        </systemProperties> This fork mode seems to be only working configuration
-        for JDK7 <forkMode>always</forkMode> <forkCount>1</forkCount> <reuseForks>false</reuseForks>
+      <!-- Change JDK-specific settings in profiles tree below. <plugin> 
+        <groupId>org.apache.maven.plugins</groupId> <artifactId>maven-surefire-plugin</artifactId> 
+        <version>2.17</version> <configuration> <systemProperties> <enableTimeout>true</enableTimeout> 
+        <timeoutSeconds>100</timeoutSeconds> <timeoutRetries>2</timeoutRetries> This 
+        seems to be slower. <hiveconf_hive.execution.engine>tez</hiveconf_hive.execution.engine> 
+        <hiveconf_hive.exec.counters.pull.interval>1000</hiveconf_hive.exec.counters.pull.interval> 
+        </systemProperties> This fork mode seems to be only working configuration 
+        for JDK7 <forkMode>always</forkMode> <forkCount>1</forkCount> <reuseForks>false</reuseForks> 
         <argLine>-Xmx2048m -XX:MaxPermSize=512m</argLine> </configuration> </plugin> -->
     </plugins>
   </build>
@@ -101,25 +101,19 @@
       <version>${google.guava.version}</version>
     </dependency>
     <dependency>
-      <groupId>log4j</groupId>
-      <artifactId>log4j</artifactId>
-      <version>1.2.17</version>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>1.7.5</version>
     </dependency>
     <dependency>
-      <groupId>org.apache.logging.log4j</groupId>
-      <artifactId>log4j-api</artifactId>
-      <version>2.11.0</version>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-simple</artifactId>
+      <version>1.7.25</version>
     </dependency>
-    <dependency>
-       <groupId>org.slf4j</groupId>
-       <artifactId>slf4j-api</artifactId>
-       <version>1.7.5</version>
-   </dependency>
-   <dependency>
-       <groupId>org.slf4j</groupId>
-       <artifactId>slf4j-log4j12</artifactId>
-       <version>1.7.5</version>
-   </dependency>
+    <!-- <dependency> <groupId>log4j</groupId> <artifactId>log4j</artifactId> 
+      <version>1.2.17</version> </dependency> <dependency> <groupId>org.apache.logging.log4j</groupId> 
+      <artifactId>log4j-api</artifactId> <version>2.11.0</version> </dependency> -->
+
 
     <!-- test supports -->
     <dependency>
@@ -128,7 +122,7 @@
       <version>1.4.197</version>
       <scope>test</scope>
     </dependency>
-    <!-- <dependency> <groupId>org.postgresql</groupId> <artifactId>postgresql</artifactId>
+    <!-- <dependency> <groupId>org.postgresql</groupId> <artifactId>postgresql</artifactId> 
       <version>42.2.2</version> <scope>test</scope> </dependency> -->
     <dependency>
       <groupId>org.postgresql</groupId>
@@ -160,6 +154,16 @@
       <artifactId>impala-jdbc41</artifactId>
       <version>2.6.3</version>
       <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-log4j12</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-simple</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>com.klarna</groupId>
@@ -167,6 +171,14 @@
       <version>3.2.1</version>
       <scope>test</scope>
       <exclusions>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-log4j12</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-simple</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
   </dependencies>
@@ -188,10 +200,10 @@
                 <enableTimeout>true</enableTimeout>
                 <timeoutSeconds>100</timeoutSeconds>
                 <timeoutRetries>2</timeoutRetries>
-                <!-- This seems to be slower. <hiveconf_hive.execution.engine>tez</hiveconf_hive.execution.engine>
+                <!-- This seems to be slower. <hiveconf_hive.execution.engine>tez</hiveconf_hive.execution.engine> 
                   <hiveconf_hive.exec.counters.pull.interval>1000</hiveconf_hive.exec.counters.pull.interval> -->
               </systemProperties>
-              <!-- This fork mode seems to be only working configuration
+              <!-- This fork mode seems to be only working configuration 
                 for JDK7 -->
               <!-- <forkMode>always</forkMode> -->
               <forkCount>1</forkCount>
@@ -218,10 +230,10 @@
                 <enableTimeout>true</enableTimeout>
                 <timeoutSeconds>100</timeoutSeconds>
                 <timeoutRetries>2</timeoutRetries>
-                <!-- This seems to be slower. <hiveconf_hive.execution.engine>tez</hiveconf_hive.execution.engine>
+                <!-- This seems to be slower. <hiveconf_hive.execution.engine>tez</hiveconf_hive.execution.engine> 
                   <hiveconf_hive.exec.counters.pull.interval>1000</hiveconf_hive.exec.counters.pull.interval> -->
               </systemProperties>
-              <!-- This fork mode seems to be only working configuration
+              <!-- This fork mode seems to be only working configuration 
                 for JDK7 -->
               <!-- <forkMode>always</forkMode> -->
               <forkCount>1</forkCount>
@@ -247,16 +259,46 @@
           <groupId>org.apache.spark</groupId>
           <artifactId>spark-core_2.11</artifactId>
           <version>${spark.version}</version>
+          <exclusions>
+            <exclusion>
+              <groupId>org.slf4j</groupId>
+              <artifactId>slf4j-log4j12</artifactId>
+            </exclusion>
+            <exclusion>
+              <groupId>org.slf4j</groupId>
+              <artifactId>slf4j-simple</artifactId>
+            </exclusion>
+          </exclusions>
         </dependency>
         <dependency>
           <groupId>org.apache.spark</groupId>
           <artifactId>spark-sql_2.11</artifactId>
           <version>${spark.version}</version>
+          <exclusions>
+            <exclusion>
+              <groupId>org.slf4j</groupId>
+              <artifactId>slf4j-log4j12</artifactId>
+            </exclusion>
+            <exclusion>
+              <groupId>org.slf4j</groupId>
+              <artifactId>slf4j-simple</artifactId>
+            </exclusion>
+          </exclusions>
         </dependency>
         <dependency>
           <groupId>org.apache.spark</groupId>
           <artifactId>spark-hive_2.11</artifactId>
           <version>${spark.version}</version>
+          <!-- <exclusions>
+            <exclusion>
+              <groupId>org.slf4j</groupId>
+              <artifactId>slf4j-log4j12</artifactId>
+            </exclusion>
+            <exclusion>
+              <groupId>org.slf4j</groupId>
+              <artifactId>slf4j-simple</artifactId>
+            </exclusion>
+          </exclusions> -->
         </dependency>
       </dependencies>
     </profile>
