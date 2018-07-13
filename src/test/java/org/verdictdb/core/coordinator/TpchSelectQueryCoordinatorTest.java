@@ -26,6 +26,12 @@ import java.util.Map;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
+/**
+ *  Test cases are from
+ *  https://github.com/umich-dbgroup/verdictdb-core/wiki/TPCH-Query-Reference--(Experiment-Version)
+ *
+ *  Some test cases are slightly changed because size of test data are small.
+ */
 public class TpchSelectQueryCoordinatorTest {
 
   // lineitem has 10 blocks, orders has 3 blocks;
