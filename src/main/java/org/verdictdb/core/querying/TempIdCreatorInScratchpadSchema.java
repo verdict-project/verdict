@@ -7,6 +7,8 @@ import org.apache.commons.lang3.tuple.Pair;
 
 public class TempIdCreatorInScratchpadSchema implements IdCreator, Serializable {
   
+  private static final long serialVersionUID = -8241890224536966759L;
+
   String scratchpadSchemaName;
 
   final int serialNum = ThreadLocalRandom.current().nextInt(0, 1000000);
