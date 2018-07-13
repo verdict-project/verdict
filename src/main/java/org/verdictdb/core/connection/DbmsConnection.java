@@ -20,7 +20,7 @@ public interface DbmsConnection extends MetaDataProvider {
   public SqlSyntax getSyntax();
 
   public Connection getConnection();
-
+  
   public void close();
 
 }
