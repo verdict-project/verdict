@@ -7,7 +7,7 @@ jobs:
   build-jdk7:
     docker:
       # specify the version you desire here
-      - image: maven/3.5.4-jdk-7
+      - image: maven:3.5.4-jdk-7-slim
 
       # Specify service dependencies here if necessary
       # CircleCI maintains a library of pre-built images
@@ -51,7 +51,7 @@ jobs:
   build-jdk8:
     docker:
       # specify the version you desire here
-      - image: maven/3.5.4-jdk-8
+      - image: maven:3.5.4-jdk-8-slim
 
       # Specify service dependencies here if necessary
       # CircleCI maintains a library of pre-built images
