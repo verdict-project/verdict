@@ -53,7 +53,7 @@ public class TpchSelectQueryCoordinatorTest {
 
   private static final String MYSQL_UESR = "root";
 
-  private static final String MYSQL_PASSWORD = "zhongshucheng123";
+  private static final String MYSQL_PASSWORD = "";
 
   @BeforeClass
   public static void setupMySqlDatabase() throws SQLException, VerdictDBException {
@@ -189,7 +189,7 @@ public class TpchSelectQueryCoordinatorTest {
     meta.insertScrambleMetaEntry(tablemeta);
   }
 
-  //@Test
+  @Test
   public void testTpch1() throws VerdictDBException, SQLException {
     String sql = "select " +
         " l_returnflag, " +
@@ -250,7 +250,7 @@ public class TpchSelectQueryCoordinatorTest {
     stmt.execute("drop schema if exists `verdictdb_temp`;");
   }
 
-  //@Test
+  @Test
   public void testTpch3() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select " +
@@ -307,7 +307,7 @@ public class TpchSelectQueryCoordinatorTest {
     stmt.execute("drop schema if exists `verdictdb_temp`;");
   }
 
-  //@Test
+  @Test
   public void test4Tpch() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select " +
@@ -353,7 +353,7 @@ public class TpchSelectQueryCoordinatorTest {
     stmt.execute("drop schema if exists `verdictdb_temp`;");
   }
 
-  //@Test
+  @Test
   public void test5Tpch() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select " +
@@ -409,7 +409,7 @@ public class TpchSelectQueryCoordinatorTest {
     stmt.execute("drop schema if exists `verdictdb_temp`;");
   }
 
-  //@Test
+  @Test
   public void test6Tpch() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select " +
@@ -450,7 +450,7 @@ public class TpchSelectQueryCoordinatorTest {
     stmt.execute("drop schema if exists `verdictdb_temp`;");
   }
 
-  //@Test
+  @Test
   public void test7Tpch() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select " +
@@ -524,7 +524,7 @@ public class TpchSelectQueryCoordinatorTest {
     stmt.execute("drop schema if exists `verdictdb_temp`;");
   }
 
-  //@Test
+  @Test
   public void test8Tpch() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select " +
@@ -594,7 +594,7 @@ public class TpchSelectQueryCoordinatorTest {
     stmt.execute("drop schema if exists `verdictdb_temp`;");
   }
 
-  //@Test
+  @Test
   public void test9Tpch() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select " +
@@ -659,7 +659,7 @@ public class TpchSelectQueryCoordinatorTest {
     stmt.execute("drop schema if exists `verdictdb_temp`;");
   }
 
-  //@Test
+  @Test
   public void test10Tpch() throws VerdictDBException, SQLException {
     String sql = "select " +
         "c_custkey, " +
@@ -723,7 +723,7 @@ public class TpchSelectQueryCoordinatorTest {
     stmt.execute("drop schema if exists `verdictdb_temp`;");
   }
 
-  //@Test
+  @Test
   public void test12Tpch() throws VerdictDBException, SQLException {
     String sql = "select " +
         "l_shipmode, " +
@@ -783,7 +783,7 @@ public class TpchSelectQueryCoordinatorTest {
     stmt.execute("drop schema if exists `verdictdb_temp`;");
   }
 
-  //@Test
+  @Test
   public void test13Tpch() throws VerdictDBException, SQLException {
     String sql = "select " +
         "c_custkey, " +
@@ -825,7 +825,7 @@ public class TpchSelectQueryCoordinatorTest {
     stmt.execute("drop schema if exists `verdictdb_temp`;");
   }
 
-  //@Test
+  @Test
   public void test14Tpch() throws VerdictDBException, SQLException {
     String sql = "select " +
         "100.00 * sum(case " +
@@ -870,7 +870,7 @@ public class TpchSelectQueryCoordinatorTest {
     stmt.execute("drop schema if exists `verdictdb_temp`;");
   }
 
-  //@Test
+  @Test
   public void test15Tpch() throws VerdictDBException, SQLException {
     String sql = "select " +
         "l_suppkey, " +
@@ -914,7 +914,7 @@ public class TpchSelectQueryCoordinatorTest {
     stmt.execute("drop schema if exists `verdictdb_temp`;");
   }
 
-  //@Test
+  @Test
   public void test17Tpch() throws VerdictDBException, SQLException {
     String sql = "select\n" +
         "  sum(extendedprice) / 7.0 as avg_yearly\n" +
@@ -971,7 +971,7 @@ public class TpchSelectQueryCoordinatorTest {
     stmt.execute("drop schema if exists `verdictdb_temp`;");
   }
 
-  //@Test
+  @Test
   public void test18Tpch() throws VerdictDBException, SQLException {
     String sql = "select\n" +
         "  c_name,\n" +
@@ -1041,7 +1041,7 @@ public class TpchSelectQueryCoordinatorTest {
     stmt.execute("drop schema if exists `verdictdb_temp`;");
   }
 
-  //@Test
+  @Test
   public void test19Tpch() throws VerdictDBException, SQLException {
     String sql = "select " +
         "sum(l_extendedprice* (1 - l_discount)) as revenue " +
@@ -1104,7 +1104,7 @@ public class TpchSelectQueryCoordinatorTest {
     stmt.execute("drop schema if exists `verdictdb_temp`;");
   }
 
-  //@Test
+  @Test
   public void test20Tpch() throws VerdictDBException, SQLException {
     String sql = "select\n" +
         "  s_name,\n" +
