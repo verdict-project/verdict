@@ -39,6 +39,7 @@ public class SelectQueryCoordinator {
 
   public SelectQuery standardizeQuery(String query) throws VerdictDBException {
     // parse the query
+    RelationStandardizer.resetItemID();
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     SelectQuery relation = (SelectQuery) sqlToRelation.toRelation(query);
     setStaticMetaData(relation);
