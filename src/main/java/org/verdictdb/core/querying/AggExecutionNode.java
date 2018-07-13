@@ -11,7 +11,10 @@ import org.verdictdb.exception.VerdictDBException;
 
 public class AggExecutionNode extends CreateTableAsSelectNode {
 
+  private static final long serialVersionUID = 6222493718874657695L;
+  
   AggMeta aggMeta = new AggMeta();
+  
   //List<HyperTableCube> cubes = new ArrayList<>();
 
   protected AggExecutionNode(IdCreator namer, SelectQuery query) {

@@ -44,7 +44,7 @@ public class JdbcResultSetMetaDataPostgresTest {
 
   static {
     String env = System.getenv("BUILD_ENV");
-    if (env != null && env.equals("GitLab")) {
+    if (env != null && (env.equals("GitLab") || env.equals("DockerCompose"))) {
       POSTGRES_HOST = "postgres";
     } else {
       POSTGRES_HOST = "localhost";
@@ -97,7 +97,7 @@ public class JdbcResultSetMetaDataPostgresTest {
 //    jdbcResultSetMetaData2 = new JdbcResultSetMetaData(aggregateFrameQueryResult);
     jdbcResultSetMetaData2 = new JdbcResultSet(aggregateFrameQueryResult).getMetaData();
   }
-  
+
   @Test
   public void quotedAliasTableTest() throws SQLException {
     stmt.execute("select \"PEOPLE\".name from people as \"PEOPLE\"");

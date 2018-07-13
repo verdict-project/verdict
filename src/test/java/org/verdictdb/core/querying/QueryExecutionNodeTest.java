@@ -5,7 +5,7 @@ import java.util.Arrays;
 import org.junit.Test;
 import org.verdictdb.core.connection.DbmsConnection;
 import org.verdictdb.core.scrambling.BaseScrambler;
-import org.verdictdb.core.scrambling.ScrambleMeta;
+import org.verdictdb.core.scrambling.ScrambleMetaSet;
 import org.verdictdb.core.sqlobject.AliasReference;
 import org.verdictdb.core.sqlobject.AliasedColumn;
 import org.verdictdb.core.sqlobject.AsteriskColumn;
@@ -18,9 +18,9 @@ import org.verdictdb.exception.VerdictDBValueException;
 
 public class QueryExecutionNodeTest {
   
-  ScrambleMeta generateTestScrambleMeta() {
+  ScrambleMetaSet generateTestScrambleMeta() {
     int aggblockCount = 2;
-    ScrambleMeta meta = new ScrambleMeta();
+    ScrambleMetaSet meta = new ScrambleMetaSet();
     meta.insertScrambleMetaEntry("myschema", "mytable",
         BaseScrambler.getAggregationBlockColumn(),
         BaseScrambler.getSubsampleColumn(),
@@ -40,7 +40,7 @@ public class QueryExecutionNodeTest {
     DbmsConnection conn = null;
     String schemaName = "newschema";
     String tableName = "newtable";
-    ScrambleMeta scrambleMeta = generateTestScrambleMeta();
+    ScrambleMetaSet scrambleMeta = generateTestScrambleMeta();
     ExecutableNodeBase node = AggExecutionNode.create(new QueryExecutionPlan("newschema"), query);
 //    assertTrue(node.doesContainScrambledTablesInDescendants(scrambleMeta));
   }
@@ -62,7 +62,7 @@ public class QueryExecutionNodeTest {
     DbmsConnection conn = null;
     String schemaName = "newschema";
     String tableName = "newtable";
-    ScrambleMeta scrambleMeta = generateTestScrambleMeta();
+    ScrambleMetaSet scrambleMeta = generateTestScrambleMeta();
     ExecutableNodeBase node = AggExecutionNode.create(new QueryExecutionPlan("newschema"), query);
 //    assertFalse(node.doesContainScrambledTablesInDescendants(scrambleMeta));
   }

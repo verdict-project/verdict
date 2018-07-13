@@ -124,7 +124,10 @@ public class ExecutableNodeRunner implements Runnable {
     // System.out.println(new ToStringBuilder(node, ToStringStyle.DEFAULT_STYLE) + " broadcasts: " + token);
     for (ExecutableNode dest : node.getSubscribers()) {
       //      System.out.println("to: " + dest);
-      dest.getNotified(node, token);
+      
+      ExecutionInfoToken copiedToken = token.deepcopy();
+      
+      dest.getNotified(node, copiedToken);
       //      dest.add(token);
     }
   }

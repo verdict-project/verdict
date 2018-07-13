@@ -9,7 +9,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class JdbcQueryResult extends DbmsQueryResultBase {
-  
+
+  private static final long serialVersionUID = 2576550992419489091L;
+
   List<String> columnNames = new ArrayList<>();
 
   List<Integer> columnTypes = new ArrayList<>();
@@ -99,6 +101,7 @@ public class JdbcQueryResult extends DbmsQueryResultBase {
 
   @Override
   public Object getValue(int index) {
+    
     Object value = null;
     try {
       value = (Object) result.get(cursor).get(index);
@@ -111,6 +114,9 @@ public class JdbcQueryResult extends DbmsQueryResultBase {
 
   @Override
   public void printContent() {
+    int oldCursor = cursor;
+    rewind();
+    
     StringBuilder row;
     boolean isFirstCol = true;
     
@@ -143,6 +149,8 @@ public class JdbcQueryResult extends DbmsQueryResultBase {
       System.out.println(row.toString());
     }
     
+    // restore the cursor
+    cursor = oldCursor;
   }
 
   public List<List<Object>> getResult() {
@@ -153,4 +161,10 @@ public class JdbcQueryResult extends DbmsQueryResultBase {
   public void rewind() {
     cursor = -1;
   }
+
+  @Override
+  public long getRowCount() {
+    return result.size();
+  }
+  
 }

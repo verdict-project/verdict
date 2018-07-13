@@ -1,120 +1,129 @@
 package org.verdictdb.core.scrambling;
 
+import java.io.Serializable;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
+/**
+ * Table-specific information
+ * @author Yongjoo Park
+ *
+ */
+public class ScrambleMeta implements Serializable {
 
-public class ScrambleMeta {
+  private static final long serialVersionUID = -8422601151874567149L;
 
-  Map<Pair<String, String>, ScrambleMetaForTable> meta = new HashMap<>();
+  // key
+  String schemaName;
+
+  String tableName;
+
+  // aggregation block
+  String aggregationBlockColumn;        // agg block number (0 to count-1)
+
+  int aggregationBlockCount;            // agg block total count
+
+  // tier
+  String tierColumn;
+  
+  int numberOfTiers;
+  
+  // reference to the original tables
+  String originalSchemaName;
+  
+  String originalTableName;
+  
+  /**
+   * The probability mass function of the sizes of the aggregation blocks for a tier.
+   * The key is the id of a tier (e.g., 0, 1, ..., 3), and the list is the cumulative distribution.
+   * The length of the cumulative distribution must be equal to aggregationBlockCount.
+   */
+  Map<Integer, List<Double>> cumulativeMassDistributionPerTier = new HashMap<>();
+  
+  // subsample column; not used currently
+  String subsampleColumn;
 
   public ScrambleMeta() {}
-
-  /**
-   * Returns the column name used for indicating aggregation block. Typically, the underlying database
-   * is physically partitioned on this column to speed up accessing particular blocks.
-   * 
-   * @param schemaName
-   * @param tableName
-   * @return
-   */
-  public String getAggregationBlockColumn(String schemaName, String tableName) {
-    return meta.get(metaKey(schemaName, tableName)).getAggregationBlockColumn();
-  }
-
-  public ScrambleMetaForTable getMetaForTable(String schemaName, String tableName) {
-    return meta.get(new ImmutablePair<String, String>(schemaName, tableName));
-  }
-
-  /**
-   * Returns the number of the blocks for a specified scrambled table.
-   * 
-   * @param schemaName
-   * @param tableName
-   * @return
-   */
-  public int getAggregationBlockCount(String schemaName, String tableName) {
-    return meta.get(metaKey(schemaName, tableName)).getAggregationBlockCount();
-  }
-
-  @Deprecated
-  public String getSubsampleColumn(String aliasName) {
-    return meta.get(metaKey(aliasName)).getSubsampleColumn();
-  }
-
-  public String getSubsampleColumn(String schemaName, String tableName) {
-    return meta.get(metaKey(schemaName, tableName)).getSubsampleColumn();
-  }
-
-  @Deprecated
-  public String getTierColumn(String aliasName) {
-    return meta.get(metaKey(aliasName)).getTierColumn();
-  }
-
-  public String getTierColumn(String schemaName, String tableName) {
-    return meta.get(metaKey(schemaName, tableName)).getTierColumn();
+  
+  public ScrambleMeta(
+      String scrambleSchemaName, String scrambleTableName, 
+      String blockColumn, int blockCount,
+      String tierColumn, int tierCount,
+      String originalSchemaName, String originalTableName) {
+    
+    this.schemaName = scrambleSchemaName;
+    this.tableName = scrambleTableName;
+    this.aggregationBlockColumn = blockColumn;
+    this.aggregationBlockCount = blockCount;
+    this.tierColumn = tierColumn;
+    this.numberOfTiers = tierCount;
+    this.originalSchemaName = originalSchemaName;
+    this.originalTableName = originalTableName;
   }
   
-  public void insertScrambleMetaEntry(ScrambleMetaForTable tablemeta) {
-    String schema = tablemeta.getSchemaName();
-    String table = tablemeta.getTableName();
-    meta.put(metaKey(schema, table), tablemeta);
+  public String getSchemaName() {
+    return schemaName;
   }
 
-  @Deprecated
-  public void insertScrambleMetaEntry(
-      String aliasName,
-//      String inclusionProbabilityColumn,
-//      String inclusionProbBlockDiffColumn,
-      String subsampleColumn,
-      String tierColumn) {
-    ScrambleMetaForTable tableMeta = new ScrambleMetaForTable();
-//    tableMeta.setAliasName(aliasName);
-    //    tableMeta.setAggregationBlockColumn(aggregationBlockColumn);
-    tableMeta.setSubsampleColumn(subsampleColumn);
-    tableMeta.setTierColumn(tierColumn);
-    //    tableMeta.setInclusionProbabilityColumn(inclusionProbabilityColumn);
-    //    tableMeta.setInclusionProbabilityBlockDifferenceColumn(inclusionProbBlockDiffColumn);
-    //    tableMeta.setAggregationBlockCount(aggregationBlockCount);
-    meta.put(metaKey(aliasName), tableMeta);
+  public void setSchemaName(String schemaName) {
+    this.schemaName = schemaName;
   }
 
-  public void insertScrambleMetaEntry(
-      String schemaName,
-      String tableName,
-      String aggregationBlockColumn,
-      String subsampleColumn,
-      String tierColumn,
-      int aggregationBlockCount) {
-    ScrambleMetaForTable tableMeta = new ScrambleMetaForTable();
-    tableMeta.setSchemaName(schemaName);
-    tableMeta.setTableName(tableName);
-    tableMeta.setAggregationBlockColumn(aggregationBlockColumn);
-    tableMeta.setSubsampleColumn(subsampleColumn);
-    tableMeta.setTierColumn(tierColumn);
-    tableMeta.setAggregationBlockCount(aggregationBlockCount);
-    meta.put(metaKey(schemaName, tableName), tableMeta);
+  public String getTableName() {
+    return tableName;
   }
 
-  @Deprecated
-  public boolean isScrambled(String aliasName) {
-    return meta.containsKey(metaKey(aliasName));
+  public void setTableName(String tableName) {
+    this.tableName = tableName;
   }
 
-  public boolean isScrambled(String schemaName, String tableName) {
-    return meta.containsKey(metaKey(schemaName, tableName));
+  public String getAggregationBlockColumn() {
+    return aggregationBlockColumn;
   }
 
-  @Deprecated
-  private Pair<String, String> metaKey(String aliasName) {
-    return Pair.of("aliasName", aliasName);
+  public void setAggregationBlockColumn(String aggregationBlockColumn) {
+    this.aggregationBlockColumn = aggregationBlockColumn;
   }
 
-  private Pair<String, String> metaKey(String schemaName, String tableName) {
-    return Pair.of(schemaName, tableName);
+  public int getAggregationBlockCount() {
+    return aggregationBlockCount;
+  }
+
+  public void setAggregationBlockCount(int aggregationBlockCount) {
+    this.aggregationBlockCount = aggregationBlockCount;
+  }
+
+  public String getTierColumn() {
+    return tierColumn;
+  }
+
+  public void setTierColumn(String tierColumn) {
+    this.tierColumn = tierColumn;
+  }
+
+  public String getSubsampleColumn() {
+    return subsampleColumn;
+  }
+  
+  public List<Double> getCumulativeProbabilityDistribution(int tier) {
+    return cumulativeMassDistributionPerTier.get(tier);
+  }
+
+  public void setSubsampleColumn(String subsampleColumn) {
+    this.subsampleColumn = subsampleColumn;
+  }
+
+  public int getNumberOfTiers() {
+    return numberOfTiers;
+  }
+
+  public void setCumulativeMassDistributionPerTier(Map<Integer, List<Double>> cumulativeMassDistributionPerTier) {
+    this.cumulativeMassDistributionPerTier = cumulativeMassDistributionPerTier;
+  }
+
+  public void setNumberOfTiers(int numberOfTiers) {
+    this.numberOfTiers = numberOfTiers;
   }
 }
-
 

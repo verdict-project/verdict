@@ -13,6 +13,8 @@ import org.apache.commons.lang3.tuple.Pair;
  */
 public class CreateTableStatement implements SqlConvertible {
 
+  private static final long serialVersionUID = -3733162210722527846L;
+
   String schemaName;
 
   String tableName;

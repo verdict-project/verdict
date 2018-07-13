@@ -5,7 +5,9 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 public class AsteriskColumn implements UnnamedColumn, SelectItem {
-
+  
+  private static final long serialVersionUID = -930230895524125223L;
+  
   String tablename = null;
 
   public AsteriskColumn() {};

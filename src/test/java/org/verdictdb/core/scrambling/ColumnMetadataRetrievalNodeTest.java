@@ -16,7 +16,7 @@ import org.verdictdb.core.connection.JdbcConnection;
 import org.verdictdb.core.execution.ExecutablePlan;
 import org.verdictdb.core.execution.ExecutablePlanRunner;
 import org.verdictdb.core.execution.ExecutionInfoToken;
-import org.verdictdb.core.execution.ExecutionTokenReader;
+import org.verdictdb.core.resulthandler.ExecutionTokenReader;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.exception.VerdictDBException;
 
@@ -38,7 +38,7 @@ public class ColumnMetadataRetrievalNodeTest {
 
   static {
     String env = System.getenv("BUILD_ENV");
-    if (env != null && env.equals("GitLab")) {
+    if (env != null && (env.equals("GitLab") || env.equals("DockerCompose"))) {
       MYSQL_HOST = "mysql";
     } else {
       MYSQL_HOST = "localhost";
@@ -59,9 +59,9 @@ public class ColumnMetadataRetrievalNodeTest {
         + "height float, "
         + "nation varchar(8), "
         + "birth timestamp)");
-    dbmsConn = new JdbcConnection(conn);
+    dbmsConn = JdbcConnection.create(conn);
   }
-  
+
   @AfterClass
   public static void tearDown() throws SQLException {
     conn.createStatement().execute("DROP TABLE IF EXISTS people");
@@ -76,12 +76,12 @@ public class ColumnMetadataRetrievalNodeTest {
     ExecutablePlan plan = new SimpleTreePlan(node);
     ExecutionTokenReader reader = ExecutablePlanRunner.getTokenReader(dbmsConn, plan);
     ExecutionInfoToken outputToken = reader.next();
-    
+
     List<Pair<String, String>> expected = dbmsConn.getColumns(schemaName, tableName);
     @SuppressWarnings("unchecked")
     List<Pair<String, String>> actual = (List<Pair<String, String>>) outputToken.getValue("tokenKey");
     assertEquals(expected, actual);
-    
+
 //    ExecutablePlanRunner.runTillEnd(dbmsConn, plan);
   }
 

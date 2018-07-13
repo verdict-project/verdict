@@ -15,12 +15,12 @@ import org.verdictdb.core.connection.JdbcConnection;
 import org.verdictdb.core.execution.ExecutablePlan;
 import org.verdictdb.core.execution.ExecutablePlanRunner;
 import org.verdictdb.core.execution.ExecutionInfoToken;
-import org.verdictdb.core.execution.ExecutionTokenReader;
+import org.verdictdb.core.resulthandler.ExecutionTokenReader;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.exception.VerdictDBException;
 
 public class PartitionMetadataRetrievalNodeTest {
-  
+
   static Connection conn;
 
   static DbmsConnection dbmsConn;
@@ -37,7 +37,7 @@ public class PartitionMetadataRetrievalNodeTest {
 
   static {
     String env = System.getenv("BUILD_ENV");
-    if (env != null && env.equals("GitLab")) {
+    if (env != null && (env.equals("GitLab") || env.equals("DockerCompose"))) {
       MYSQL_HOST = "mysql";
     } else {
       MYSQL_HOST = "localhost";
@@ -59,7 +59,7 @@ public class PartitionMetadataRetrievalNodeTest {
         + "nation varchar(8), "
         + "birth timestamp) "
         + "partition by key (nation, birth)");
-    dbmsConn = new JdbcConnection(conn);
+    dbmsConn = JdbcConnection.create(conn);
   }
 
   @AfterClass

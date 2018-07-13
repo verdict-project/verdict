@@ -35,10 +35,10 @@ public class CreateTableToSqlMysqlTest {
   private static final String MYSQL_UESR;
 
   private static final String MYSQL_PASSWORD = "";
-  
+
   static {
     String env = System.getenv("BUILD_ENV");
-    if (env != null && env.equals("GitLab")) {
+    if (env != null && (env.equals("GitLab") || env.equals("DockerCompose"))) {
       MYSQL_HOST = "mysql";
       MYSQL_UESR = "root";
     } else {

@@ -5,7 +5,7 @@ import java.util.HashSet;
 import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.verdictdb.core.scrambling.ScrambleMeta;
+import org.verdictdb.core.scrambling.ScrambleMetaSet;
 import org.verdictdb.exception.VerdictDBValueException;
 
 /**
@@ -26,7 +26,7 @@ public class OlaAggregationPlan {
    * @param scrambles   The scrambled tables that appear in a query.
    * @throws VerdictDBValueException
    */
-  public OlaAggregationPlan(ScrambleMeta scrambleMeta, List<Pair<String, String>> scrambles) 
+  public OlaAggregationPlan(ScrambleMetaSet scrambleMeta, List<Pair<String, String>> scrambles) 
       throws VerdictDBValueException {
     
     // exception checks

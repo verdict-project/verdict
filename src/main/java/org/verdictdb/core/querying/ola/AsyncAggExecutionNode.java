@@ -23,7 +23,7 @@ import org.verdictdb.core.querying.IdCreator;
 import org.verdictdb.core.querying.ProjectionNode;
 import org.verdictdb.core.rewriter.aggresult.AggNameAndType;
 import org.verdictdb.core.scrambling.ScrambleMeta;
-import org.verdictdb.core.scrambling.ScrambleMetaForTable;
+import org.verdictdb.core.scrambling.ScrambleMetaSet;
 import org.verdictdb.core.sqlobject.AliasReference;
 import org.verdictdb.core.sqlobject.AliasedColumn;
 import org.verdictdb.core.sqlobject.AsteriskColumn;
@@ -55,7 +55,7 @@ import com.google.common.base.Optional;
  */
 public class AsyncAggExecutionNode extends ProjectionNode {
 
-  ScrambleMeta scrambleMeta;
+  ScrambleMetaSet scrambleMeta;
 
   // group-by columns
   List<String> nonaggColumns;
@@ -87,7 +87,7 @@ public class AsyncAggExecutionNode extends ProjectionNode {
       IdCreator idCreator,
       List<ExecutableNodeBase> individualAggs,
       List<ExecutableNodeBase> combiners,
-      ScrambleMeta meta) throws VerdictDBValueException {
+      ScrambleMetaSet meta) throws VerdictDBValueException {
 
     AsyncAggExecutionNode node = new AsyncAggExecutionNode();
 
@@ -178,11 +178,11 @@ public class AsyncAggExecutionNode extends ProjectionNode {
     to.aggColumns = from.aggColumns;
   }
 
-  public ScrambleMeta getScrambleMeta() {
+  public ScrambleMetaSet getScrambleMeta() {
     return scrambleMeta;
   }
 
-  public void setScrambleMeta(ScrambleMeta meta) {
+  public void setScrambleMeta(ScrambleMetaSet meta) {
     this.scrambleMeta = meta;
   }
 
@@ -245,8 +245,8 @@ public class AsyncAggExecutionNode extends ProjectionNode {
    */
   public HashMap<List<Integer>, Double> calculateScaleFactor(List<HyperTableCube> cubes) {
 
-    ScrambleMeta scrambleMeta = this.getScrambleMeta();
-    List<ScrambleMetaForTable> metaForTablesList = new ArrayList<>();
+    ScrambleMetaSet scrambleMeta = this.getScrambleMeta();
+    List<ScrambleMeta> metaForTablesList = new ArrayList<>();
     List<Integer> blockCountList = new ArrayList<>();
     List<Pair<Integer, Integer>> scrambleTableTierInfo = new ArrayList<>();
 

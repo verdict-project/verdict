@@ -9,7 +9,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
 import org.verdictdb.core.rewriter.AliasRenamingRules;
 import org.verdictdb.core.scrambling.BaseScrambler;
-import org.verdictdb.core.scrambling.ScrambleMeta;
+import org.verdictdb.core.scrambling.ScrambleMetaSet;
 import org.verdictdb.core.sqlobject.AbstractRelation;
 import org.verdictdb.core.sqlobject.AliasReference;
 import org.verdictdb.core.sqlobject.AliasedColumn;
@@ -26,8 +26,8 @@ public class AggQueryRewriterTest {
 
   int aggblockCount = 10;
 
-  ScrambleMeta generateTestScrambleMeta() {
-    ScrambleMeta meta = new ScrambleMeta();
+  ScrambleMetaSet generateTestScrambleMeta() {
+    ScrambleMetaSet meta = new ScrambleMetaSet();
     meta.insertScrambleMetaEntry("myschema", "mytable",
         BaseScrambler.getAggregationBlockColumn(),
         BaseScrambler.getSubsampleColumn(),
@@ -48,7 +48,7 @@ public class AggQueryRewriterTest {
         Arrays.<SelectItem>asList(
             new AliasedColumn(new ColumnOp("sum", new BaseColumn("t", "mycolumn1")), aliasName)),
         base);
-    ScrambleMeta meta = generateTestScrambleMeta();
+    ScrambleMetaSet meta = generateTestScrambleMeta();
     AggQueryRewriter rewriter = new AggQueryRewriter(meta);
     List<Pair<AbstractRelation, AggblockMeta>> rewritten = rewriter.rewrite(relation);
     
@@ -90,7 +90,7 @@ public class AggQueryRewriterTest {
     String aliasName = "a";
     SelectQuery relation = SelectQuery.create(
         Arrays.<SelectItem>asList(new AliasedColumn(new ColumnOp("count"), aliasName)), base);
-    ScrambleMeta meta = generateTestScrambleMeta();
+    ScrambleMetaSet meta = generateTestScrambleMeta();
     AggQueryRewriter rewriter = new AggQueryRewriter(meta);
     List<Pair<AbstractRelation, AggblockMeta>> rewritten = rewriter.rewrite(relation);
     
@@ -131,7 +131,7 @@ public class AggQueryRewriterTest {
     SelectQuery relation = SelectQuery.create(
         Arrays.<SelectItem>asList(new AliasedColumn(new ColumnOp("avg", new BaseColumn("t", "mycolumn1")), aliasName)),
         base);
-    ScrambleMeta meta = generateTestScrambleMeta();
+    ScrambleMetaSet meta = generateTestScrambleMeta();
     AggQueryRewriter rewriter = new AggQueryRewriter(meta);
     List<Pair<AbstractRelation, AggblockMeta>> rewritten = rewriter.rewrite(relation);
     
@@ -184,7 +184,7 @@ public class AggQueryRewriterTest {
             new AliasedColumn(new ColumnOp("sum", new BaseColumn("t", "mycolumn1")), aliasName)),
         base);
     relation.addGroupby(new BaseColumn("t", "mygroup"));
-    ScrambleMeta meta = generateTestScrambleMeta();
+    ScrambleMetaSet meta = generateTestScrambleMeta();
     AggQueryRewriter rewriter = new AggQueryRewriter(meta);
     List<Pair<AbstractRelation, AggblockMeta>> rewritten = rewriter.rewrite(relation);
     
@@ -232,7 +232,7 @@ public class AggQueryRewriterTest {
             new AliasedColumn(new ColumnOp("sum", new BaseColumn("t", "mycolumn1")), aliasName)),
         base);
     relation.addGroupby(new AliasReference("myalias"));
-    ScrambleMeta meta = generateTestScrambleMeta();
+    ScrambleMetaSet meta = generateTestScrambleMeta();
     AggQueryRewriter rewriter = new AggQueryRewriter(meta);
     List<Pair<AbstractRelation, AggblockMeta>> rewritten = rewriter.rewrite(relation);
     
@@ -279,7 +279,7 @@ public class AggQueryRewriterTest {
             new AliasedColumn(new BaseColumn("t", "mygroup"), "mygroup"),
             new AliasedColumn(new ColumnOp("count"), aliasName)), base);
     relation.addGroupby(new BaseColumn("t", "mygroup"));
-    ScrambleMeta meta = generateTestScrambleMeta();
+    ScrambleMetaSet meta = generateTestScrambleMeta();
     AggQueryRewriter rewriter = new AggQueryRewriter(meta);
     List<Pair<AbstractRelation, AggblockMeta>> rewritten = rewriter.rewrite(relation);
     
@@ -325,7 +325,7 @@ public class AggQueryRewriterTest {
             new AliasedColumn(new ColumnOp("avg", new BaseColumn("t", "mycolumn1")), aliasName)),
         base);
     relation.addGroupby(new BaseColumn("t", "mygroup"));
-    ScrambleMeta meta = generateTestScrambleMeta();
+    ScrambleMetaSet meta = generateTestScrambleMeta();
     AggQueryRewriter rewriter = new AggQueryRewriter(meta);
     List<Pair<AbstractRelation, AggblockMeta>> rewritten = rewriter.rewrite(relation);
     
@@ -385,7 +385,7 @@ public class AggQueryRewriterTest {
         Arrays.<SelectItem>asList(
             new AliasedColumn(new ColumnOp("sum", new BaseColumn("s", "discounted_price")), aliasName)),
         nestedSource);
-    ScrambleMeta meta = generateTestScrambleMeta();
+    ScrambleMetaSet meta = generateTestScrambleMeta();
     AggQueryRewriter rewriter = new AggQueryRewriter(meta);
     List<Pair<AbstractRelation, AggblockMeta>> rewritten = rewriter.rewrite(relation);
     

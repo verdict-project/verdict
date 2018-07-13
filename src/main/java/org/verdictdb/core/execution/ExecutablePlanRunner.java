@@ -7,6 +7,8 @@ import java.util.concurrent.Executors;
 
 import org.verdictdb.core.connection.DbmsConnection;
 import org.verdictdb.core.querying.ExecutableNodeBase;
+import org.verdictdb.core.resulthandler.ExecutionResultReader;
+import org.verdictdb.core.resulthandler.ExecutionTokenReader;
 import org.verdictdb.exception.VerdictDBException;
 
 public class ExecutablePlanRunner {

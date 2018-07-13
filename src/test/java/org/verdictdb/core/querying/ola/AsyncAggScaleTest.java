@@ -23,8 +23,10 @@ import org.verdictdb.core.execution.ExecutablePlanRunner;
 import org.verdictdb.core.execution.ExecutionInfoToken;
 import org.verdictdb.core.querying.AggExecutionNode;
 import org.verdictdb.core.querying.QueryExecutionPlan;
+import org.verdictdb.core.querying.QueryExecutionPlanSimplifier;
+import org.verdictdb.core.scrambling.ScrambleMetaSet;
 import org.verdictdb.core.scrambling.ScrambleMeta;
-import org.verdictdb.core.scrambling.ScrambleMetaForTable;
+import org.verdictdb.core.scrambling.ScrambleMetaSet;
 import org.verdictdb.core.scrambling.UniformScrambler;
 import org.verdictdb.core.sqlobject.AbstractRelation;
 import org.verdictdb.core.sqlobject.CreateTableAsSelectQuery;
@@ -44,7 +46,7 @@ public class AsyncAggScaleTest {
 
   static int aggBlockCount = 2;
 
-  static ScrambleMeta meta = new ScrambleMeta();
+  static ScrambleMetaSet meta = new ScrambleMetaSet();
 
   static StaticMetaData staticMetaData = new StaticMetaData();
 
@@ -84,7 +86,7 @@ public class AsyncAggScaleTest {
         new UniformScrambler(originalSchema, originalTable, originalSchema, "originalTable_scrambled", aggBlockCount);
     CreateTableAsSelectQuery scramblingQuery = scrambler.createQuery();
     stmt.executeUpdate(QueryToSql.convert(new H2Syntax(), scramblingQuery));
-    ScrambleMetaForTable tablemeta = scrambler.generateMeta();
+    ScrambleMeta tablemeta = scrambler.generateMeta();
     tablemeta.setNumberOfTiers(1);
     HashMap<Integer, List<Double>> distribution = new HashMap<>();
     distribution.put(0, Arrays.asList(0.5, 1.0));
@@ -136,7 +138,7 @@ public class AsyncAggScaleTest {
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
-//<<<<<<< HEAD:src/test/java/org/verdictdb/core/querying/AsyncAggScaleTest.java
+/*
   @Test
   public void ScrambleTableCompressTest() throws VerdictDBException,SQLException {
     RelationStandardizer.resetItemID();
@@ -151,14 +153,13 @@ public class AsyncAggScaleTest {
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
     ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
 //    queryExecutionPlan.setScalingNode();
-    queryExecutionPlan.compress();
+    QueryExecutionPlanSimplifier.simplify(queryExecutionPlan);
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
     ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
 //    queryExecutionPlan.root.executeAndWaitForTermination(new JdbcConnection(conn, new H2Syntax()));
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
-//=======
-//>>>>>>> origin/joezhong-scale:src/test/java/org/verdictdb/core/querying/ola/AsyncAggScaleTest.java
+*/
 
   @Test
   public void ScrambleTableAvgTest() throws VerdictDBException,SQLException {

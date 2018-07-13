@@ -34,7 +34,7 @@ public class MysqlSyntax extends SqlSyntax {
 
   @Override
   public String getPartitionCommand(String schema, String table) {
-    return "SELECT DISTINCT PARTITION_EXPRESSION FROM INFORMATION_SCHEMA.PARTITIONS " +
+    return "SELECT DISTINCT REPLACE(PARTITION_EXPRESSION, '`', '') FROM INFORMATION_SCHEMA.PARTITIONS " +
         "WHERE TABLE_NAME='" + table +"' AND TABLE_SCHEMA='" + schema + "'";
   }
 

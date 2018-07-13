@@ -7,6 +7,8 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 
 public class BaseColumn implements UnnamedColumn, SelectItem, GroupingAttribute {
 
+  private static final long serialVersionUID = -7763524127341519557L;
+
   String schemaName = "";
 
   String tableSourceAlias = "";

@@ -55,7 +55,7 @@ public class UniformScramblerTest {
         new UniformScrambler(originalSchema, originalTable, newSchema, newTable, aggBlockCount);
     SelectQuery scramblingQuery = scrambler.scramblingQuery();
 
-    ScrambleMetaForTable meta = scrambler.generateMeta();
+    ScrambleMeta meta = scrambler.generateMeta();
     meta.getAggregationBlockColumn();
 
     String expected = "select *"
@@ -75,7 +75,7 @@ public class UniformScramblerTest {
         new UniformScrambler(originalSchema, originalTable, newSchema, newTable, aggBlockCount);
     CreateTableAsSelectQuery createQuery = scrambler.createQuery();
 
-    ScrambleMetaForTable meta = scrambler.generateMeta();
+    ScrambleMeta meta = scrambler.generateMeta();
     meta.getAggregationBlockColumn();
 
     String expected = String.format("create table `%s`.`%s` ", newSchema, newTable)

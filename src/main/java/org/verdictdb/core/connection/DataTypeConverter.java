@@ -126,6 +126,7 @@ public class DataTypeConverter {
     }
     stringToIntMap.put("character varying", VARCHAR);
     stringToIntMap.put("character", CHAR);
+    stringToIntMap.put("int", INTEGER);
     stringToIntMap.put("text", LONGNVARCHAR);
     stringToIntMap.put("double precision", DOUBLE);
     stringToIntMap.put("smallserial", INTEGER);

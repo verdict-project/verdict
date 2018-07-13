@@ -25,7 +25,7 @@ import org.verdictdb.core.execution.ExecutionInfoToken;
 import org.verdictdb.core.querying.AggExecutionNode;
 import org.verdictdb.core.querying.QueryExecutionPlan;
 import org.verdictdb.core.scrambling.ScrambleMeta;
-import org.verdictdb.core.scrambling.ScrambleMetaForTable;
+import org.verdictdb.core.scrambling.ScrambleMetaSet;
 import org.verdictdb.core.scrambling.UniformScrambler;
 import org.verdictdb.core.sqlobject.AbstractRelation;
 import org.verdictdb.core.sqlobject.CreateTableAsSelectQuery;
@@ -46,7 +46,7 @@ public class AsyncAggJoinMultiTierScaleTest {
 
   static int aggBlockCount = 2;
 
-  static ScrambleMeta meta = new ScrambleMeta();
+  static ScrambleMetaSet meta = new ScrambleMetaSet();
 
   static StaticMetaData staticMetaData = new StaticMetaData();
 
@@ -81,7 +81,7 @@ public class AsyncAggJoinMultiTierScaleTest {
 
     UniformScrambler scrambler =
         new UniformScrambler(originalSchema, originalTable1, originalSchema, "originalTable1_scrambled", aggBlockCount);
-    ScrambleMetaForTable tablemeta = scrambler.generateMeta();
+    ScrambleMeta tablemeta = scrambler.generateMeta();
     CreateTableAsSelectQuery scramblingQuery = scrambler.createQuery();
     stmt.executeUpdate(QueryToSql.convert(new H2Syntax(), scramblingQuery));
     tablemeta.setNumberOfTiers(2);
@@ -93,7 +93,7 @@ public class AsyncAggJoinMultiTierScaleTest {
     meta.insertScrambleMetaEntry(tablemeta);
     UniformScrambler scrambler2 =
         new UniformScrambler(originalSchema, originalTable2, originalSchema, "originalTable2_scrambled", aggBlockCount);
-    ScrambleMetaForTable tablemeta2 = scrambler2.generateMeta();
+    ScrambleMeta tablemeta2 = scrambler2.generateMeta();
     CreateTableAsSelectQuery scramblingQuery2 = scrambler2.createQuery();
     stmt.executeUpdate(QueryToSql.convert(new H2Syntax(), scramblingQuery2));
     tablemeta2.setNumberOfTiers(2);

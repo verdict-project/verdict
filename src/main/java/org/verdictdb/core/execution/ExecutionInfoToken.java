@@ -1,7 +1,13 @@
 package org.verdictdb.core.execution;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
@@ -72,6 +78,37 @@ public class ExecutionInfoToken {
 
   public Iterable<Map.Entry<String, Object>> entrySet() {
     return data.entrySet();
+  }
+  
+  public boolean containsKey(String key) {
+    return data.containsKey(key);
+  }
+  
+  public ExecutionInfoToken deepcopy() {
+    ExecutionInfoToken newToken = new ExecutionInfoToken();
+    
+    for (Entry<String, Object> entry : data.entrySet()) {
+      String key = entry.getKey();
+      Object value = entry.getValue();
+      
+      try {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        ObjectOutputStream out = new ObjectOutputStream(bos);
+        out.writeObject(value);
+        out.flush();
+        out.close();
+        
+        ObjectInputStream in = new ObjectInputStream(
+            new ByteArrayInputStream(bos.toByteArray()));
+        Object copedValue = in.readObject();
+        newToken.setKeyValue(key, copedValue);
+        
+      } catch (ClassNotFoundException | IOException e) {
+        e.printStackTrace();
+      }
+    }
+    
+    return newToken;
   }
 
 }

@@ -16,7 +16,7 @@ import org.verdictdb.core.execution.ExecutablePlanRunner;
 import org.verdictdb.exception.VerdictDBException;
 
 public class FastConvergeScramblingPlanTest {
-  
+
   private static Connection mysqlConn;
 
   private static final String MYSQL_HOST;
@@ -26,10 +26,10 @@ public class FastConvergeScramblingPlanTest {
   private static final String MYSQL_UESR;
 
   private static final String MYSQL_PASSWORD = "";
-  
+
   static {
     String env = System.getenv("BUILD_ENV");
-    if (env != null && env.equals("GitLab")) {
+    if (env != null && (env.equals("GitLab") || env.equals("DockerCompose"))) {
       MYSQL_HOST = "mysql";
       MYSQL_UESR = "root";
     } else {
@@ -43,13 +43,13 @@ public class FastConvergeScramblingPlanTest {
     String mysqlConnectionString =
         String.format("jdbc:mysql://%s/%s?autoReconnect=true&useSSL=false", MYSQL_HOST, MYSQL_DATABASE);
     mysqlConn = DriverManager.getConnection(mysqlConnectionString, MYSQL_UESR, MYSQL_PASSWORD);
-    
+
     mysqlConn.createStatement().execute("create schema if not exists oldschema");
     mysqlConn.createStatement().execute("create schema if not exists newschema");
     mysqlConn.createStatement().execute("drop table if exists oldschema.oldtable");
     mysqlConn.createStatement().execute("create table if not exists oldschema.oldtable (orderdate smallint, id smallint)");
   }
-  
+
   @AfterClass
   public static void tearDown() throws SQLException {
     mysqlConn.createStatement().execute("drop table if exists oldschema.oldtable");
@@ -61,7 +61,7 @@ public class FastConvergeScramblingPlanTest {
   @Test
   public void testFastConvergeScramblingPlanEmptyTable() throws VerdictDBException, SQLException {
     mysqlConn.createStatement().execute("delete from oldschema.oldtable");
-    
+
     String newSchemaName = "newschema";
     String newTableName = "newtable";
     String oldSchemaName = "oldschema";
@@ -74,7 +74,7 @@ public class FastConvergeScramblingPlanTest {
     options.put("tierColumnName", "tiercolumn");
     options.put("blockColumnName", "blockcolumn");
     options.put("blockCount", "3");
-    
+
     mysqlConn.createStatement().execute(
         String.format("drop table if exists %s.%s", newSchemaName, newTableName));
     ScramblingPlan plan = ScramblingPlan.create(
@@ -82,15 +82,15 @@ public class FastConvergeScramblingPlanTest {
         oldSchemaName, oldTableName,
         method, options);
 //    System.out.println(plan.getReportingNode());
-    
-    DbmsConnection conn = new JdbcConnection(mysqlConn);
+
+    DbmsConnection conn = JdbcConnection.create(mysqlConn);
     ExecutablePlanRunner.runTillEnd(conn, plan);
   }
-  
+
   @Test
   public void testFastConvergeScramblingPlanEmptyTableNoPrimaryGroup() throws VerdictDBException, SQLException {
     mysqlConn.createStatement().execute("delete from oldschema.oldtable");
-    
+
     String newSchemaName = "newschema";
     String newTableName = "newtable";
     String oldSchemaName = "oldschema";
@@ -103,7 +103,7 @@ public class FastConvergeScramblingPlanTest {
     options.put("tierColumnName", "tiercolumn");
     options.put("blockColumnName", "blockcolumn");
     options.put("blockCount", "3");
-    
+
     mysqlConn.createStatement().execute(
         String.format("drop table if exists %s.%s", newSchemaName, newTableName));
     ScramblingPlan plan = ScramblingPlan.create(
@@ -111,11 +111,11 @@ public class FastConvergeScramblingPlanTest {
         oldSchemaName, oldTableName,
         method, options);
 //    System.out.println(plan.getReportingNode());
-    
-    DbmsConnection conn = new JdbcConnection(mysqlConn);
+
+    DbmsConnection conn = JdbcConnection.create(mysqlConn);
     ExecutablePlanRunner.runTillEnd(conn, plan);
   }
-  
+
   @Test
   public void testFastConvergeScramblingPlanNonEmptyTable() throws VerdictDBException, SQLException {
     mysqlConn.createStatement().execute("delete from oldschema.oldtable");
@@ -123,7 +123,7 @@ public class FastConvergeScramblingPlanTest {
       mysqlConn.createStatement().execute(
           String.format("insert into oldschema.oldtable values (%d, %d)", i%2, i));
     }
-    
+
     String newSchemaName = "newschema";
     String newTableName = "newtable";
     String oldSchemaName = "oldschema";
@@ -136,7 +136,7 @@ public class FastConvergeScramblingPlanTest {
     options.put("tierColumnName", "tiercolumn");
     options.put("blockColumnName", "blockcolumn");
     options.put("blockCount", "3");
-    
+
     mysqlConn.createStatement().execute(
         String.format("drop table if exists %s.%s", newSchemaName, newTableName));
     ScramblingPlan plan = ScramblingPlan.create(
@@ -144,10 +144,10 @@ public class FastConvergeScramblingPlanTest {
         oldSchemaName, oldTableName,
         method, options);
 //    System.out.println(plan.getReportingNode());
-    
-    DbmsConnection conn = new JdbcConnection(mysqlConn);
+
+    DbmsConnection conn = JdbcConnection.create(mysqlConn);
     ExecutablePlanRunner.runTillEnd(conn, plan);
-    
+
     DbmsQueryResult result = conn.execute(String.format("select * from %s.%s", newSchemaName, newTableName));
     result.printContent();
   }
@@ -159,7 +159,7 @@ public class FastConvergeScramblingPlanTest {
       mysqlConn.createStatement().execute(
           String.format("insert into oldschema.oldtable values (%d, %d)", i%2, i));
     }
-    
+
     String newSchemaName = "newschema";
     String newTableName = "newtable";
     String oldSchemaName = "oldschema";
@@ -171,7 +171,7 @@ public class FastConvergeScramblingPlanTest {
     Map<String, String> options = new HashMap<>();
     options.put("tierColumnName", "tiercolumn");
     options.put("blockColumnName", "blockcolumn");
-    
+
     mysqlConn.createStatement().execute(
         String.format("drop table if exists %s.%s", newSchemaName, newTableName));
     ScramblingPlan plan = ScramblingPlan.create(
@@ -179,10 +179,10 @@ public class FastConvergeScramblingPlanTest {
         oldSchemaName, oldTableName,
         method, options);
 //    System.out.println(plan.getReportingNode());
-    
-    DbmsConnection conn = new JdbcConnection(mysqlConn);
+
+    DbmsConnection conn = JdbcConnection.create(mysqlConn);
     ExecutablePlanRunner.runTillEnd(conn, plan);
-    
+
     DbmsQueryResult result = conn.execute(String.format("select * from %s.%s", newSchemaName, newTableName));
     result.printContent();
   }

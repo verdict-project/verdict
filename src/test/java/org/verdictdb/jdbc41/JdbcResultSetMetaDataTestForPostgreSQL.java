@@ -40,7 +40,7 @@ public class JdbcResultSetMetaDataTestForPostgreSQL {
 
   static {
     String env = System.getenv("BUILD_ENV");
-    if (env != null && env.equals("GitLab")) {
+    if (env != null && (env.equals("GitLab") || env.equals("DockerCompose"))) {
       POSTGRESQL_HOST = "postgres";
     } else {
       POSTGRESQL_HOST = "localhost";

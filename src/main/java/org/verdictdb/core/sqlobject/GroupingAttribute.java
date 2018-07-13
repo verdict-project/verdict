@@ -1,5 +1,7 @@
 package org.verdictdb.core.sqlobject;
 
-public interface GroupingAttribute {
+import java.io.Serializable;
+
+public interface GroupingAttribute extends Serializable {
 
 }

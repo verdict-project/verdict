@@ -34,8 +34,8 @@ public class BaseScrambler {
     this.aggregationBlockCount = aggregationBlockCount;
   }
   
-  public ScrambleMetaForTable generateMeta() {
-    ScrambleMetaForTable meta = new ScrambleMetaForTable();
+  public ScrambleMeta generateMeta() {
+    ScrambleMeta meta = new ScrambleMeta();
     meta.setSchemaName(scrambledSchemaName);
     meta.setTableName(scrambledTableName);
     meta.setAggregationBlockCount(aggregationBlockCount);

@@ -32,7 +32,7 @@ public class SelectQueryToSql {
   SqlSyntax syntax;
 
   Set<String> opTypeNotRequiringParentheses = Sets.newHashSet(
-      "sum", "avg", "count", "std", "sqrt", "isnotnull", "isnull", "rand", "floor");
+      "sum", "avg", "count", "max", "min", "std", "sqrt", "isnotnull", "isnull", "rand", "floor");
 
   public SelectQueryToSql(SqlSyntax syntax) {
     this.syntax = syntax;

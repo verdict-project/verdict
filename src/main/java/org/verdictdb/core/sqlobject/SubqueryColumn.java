@@ -9,6 +9,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  */
 public class SubqueryColumn implements UnnamedColumn {
   
+  private static final long serialVersionUID = 4046157399674779659L;
+  
   SelectQuery subquery = new SelectQuery();
 
   public SubqueryColumn() {

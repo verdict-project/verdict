@@ -12,6 +12,8 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 
 public class ColumnOp implements UnnamedColumn, SelectItem {
 
+  private static final long serialVersionUID = 4600444500423496880L;
+
   /**
    * opType must be one of the following.
    * <p>

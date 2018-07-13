@@ -37,10 +37,10 @@ public class UniformScramblingNodeTest {
   private static final String MYSQL_UESR;
 
   private static final String MYSQL_PASSWORD = "";
-  
+
   static {
     String env = System.getenv("BUILD_ENV");
-    if (env != null && env.equals("GitLab")) {
+    if (env != null && (env.equals("GitLab") || env.equals("DockerCompose"))) {
       MYSQL_HOST = "mysql";
       MYSQL_UESR = "root";
     } else {
@@ -54,7 +54,7 @@ public class UniformScramblingNodeTest {
     String mysqlConnectionString =
         String.format("jdbc:mysql://%s/%s?autoReconnect=true&useSSL=false", MYSQL_HOST, MYSQL_DATABASE);
     mysqlConn = DriverManager.getConnection(mysqlConnectionString, MYSQL_UESR, MYSQL_PASSWORD);
-    
+
     mysqlConn.createStatement().execute("create schema if not exists oldschema");
     mysqlConn.createStatement().execute("create schema if not exists newschema");
     mysqlConn.createStatement().execute("drop table if exists oldschema.oldtable");
@@ -63,7 +63,7 @@ public class UniformScramblingNodeTest {
       mysqlConn.createStatement().execute(String.format("insert into oldschema.oldtable values (%d)", i));
     }
   }
-  
+
   @AfterClass
   public static void tearDown() throws SQLException {
     mysqlConn.createStatement().execute("drop table if exists oldschema.oldtable");
@@ -84,15 +84,15 @@ public class UniformScramblingNodeTest {
     options.put("tierColumnName", "tiercolumn");
     options.put("blockColumnName", "blockcolumn");
 //    options.put("blockCount", "3");
-    
+
     // query result
     String sql = "select count(*) as `verdictdbtotalcount` from `oldschema`.`oldtable` as t";
-    DbmsConnection conn = new JdbcConnection(mysqlConn);
+    DbmsConnection conn = JdbcConnection.create(mysqlConn);
     DbmsQueryResult queryResult = conn.execute(sql);
 
     ScramblingNode node = ScramblingNode.create(
-        newSchemaName, newTableName, 
-        oldSchemaName, oldTableName, 
+        newSchemaName, newTableName,
+        oldSchemaName, oldTableName,
         method, options);
 
     // set tokens
@@ -100,18 +100,18 @@ public class UniformScramblingNodeTest {
     ExecutionInfoToken e = new ExecutionInfoToken();
     e.setKeyValue(TableSizeCountNode.class.getSimpleName(), queryResult);
     tokens.add(e);
-    
+
     e = new ExecutionInfoToken();
     e.setKeyValue("schemaName", newSchemaName);
     e.setKeyValue("tableName", newTableName);
     tokens.add(e);
-    
+
     e = new ExecutionInfoToken();
     List<Pair<String, String>> columnNamesAndTypes = new ArrayList<>();
     columnNamesAndTypes.add(Pair.of("id", "smallint"));
     e.setKeyValue(ScramblingPlan.COLUMN_METADATA_KEY, columnNamesAndTypes);
     tokens.add(e);
-    
+
     SqlConvertible query = node.createQuery(tokens);
     sql = QueryToSql.convert(new MysqlSyntax(), query);
     String expected = "create table `newschema`.`newtable` "

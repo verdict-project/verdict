@@ -24,7 +24,7 @@ import org.verdictdb.core.execution.ExecutionInfoToken;
 import org.verdictdb.core.querying.AggExecutionNode;
 import org.verdictdb.core.querying.QueryExecutionPlan;
 import org.verdictdb.core.scrambling.ScrambleMeta;
-import org.verdictdb.core.scrambling.ScrambleMetaForTable;
+import org.verdictdb.core.scrambling.ScrambleMetaSet;
 import org.verdictdb.core.scrambling.UniformScrambler;
 import org.verdictdb.core.sqlobject.AbstractRelation;
 import org.verdictdb.core.sqlobject.CreateTableAsSelectQuery;
@@ -44,7 +44,7 @@ public class AsyncAggMultipleTiersScaleTest {
 
   static int aggBlockCount = 2;
 
-  static ScrambleMeta meta = new ScrambleMeta();
+  static ScrambleMetaSet meta = new ScrambleMetaSet();
 
   static StaticMetaData staticMetaData = new StaticMetaData();
 
@@ -62,7 +62,7 @@ public class AsyncAggMultipleTiersScaleTest {
 
   @BeforeClass
   public static void setupH2Database() throws SQLException, VerdictDBException {
-    final String DB_CONNECTION = "jdbc:h2:mem:aggexecnodetest;DB_CLOSE_DELAY=-1";
+    final String DB_CONNECTION = "jdbc:h2:mem:asyncaggmultipletiersscaletest;DB_CLOSE_DELAY=-1";
     final String DB_USER = "";
     final String DB_PASSWORD = "";
     conn = DriverManager.getConnection(DB_CONNECTION, DB_USER, DB_PASSWORD);
@@ -84,7 +84,7 @@ public class AsyncAggMultipleTiersScaleTest {
         new UniformScrambler(originalSchema, originalTable, originalSchema, "originalTable_scrambled", aggBlockCount);
     CreateTableAsSelectQuery scramblingQuery = scrambler.createQuery();
     stmt.executeUpdate(QueryToSql.convert(new H2Syntax(), scramblingQuery));
-    ScrambleMetaForTable tablemeta = scrambler.generateMeta();
+    ScrambleMeta tablemeta = scrambler.generateMeta();
     tablemeta.setNumberOfTiers(2);
     HashMap<Integer, List<Double>> distribution = new HashMap<>();
     distribution.put(0, Arrays.asList(0.5, 1.0));
@@ -256,7 +256,7 @@ public class AsyncAggMultipleTiersScaleTest {
     query = (CreateTableAsSelectQuery) queryExecutionPlan.getRoot().getSources().get(0).createQuery(Arrays.asList(token3));
     actual = queryToSql.toSql(query.getSelect());
     actual = actual.replaceAll("verdictdbtemptable_[0-9]*_[0-9]", "alias");
-    expected = "select verdictdbbeforescaling.\"a2\" as \"a2\" " +
+    expected = "select sum(verdictdbafterscaling.\"agg0\") / sum(verdictdbafterscaling.\"agg1\") as \"a2\" " +
         "from (select " +
         "case " +
         "when (verdictdbbeforescaling.\"verdictdbtier0\" = 1) then (5.0 * verdictdbbeforescaling.\"agg0\") " +
@@ -269,7 +269,7 @@ public class AsyncAggMultipleTiersScaleTest {
         "verdictdbbeforescaling.\"verdictdbtier0\" as \"verdictdbtier0\" " +
         "from \"verdictdb_temp\".\"alias\" as verdictdbbeforescaling) " +
         "as verdictdbafterscaling";
-    assertEquals(actual, expected);
+    assertEquals(expected, actual);
   }
 
   @Test
@@ -330,7 +330,7 @@ public class AsyncAggMultipleTiersScaleTest {
     actual = queryToSql.toSql(query.getSelect());
     actual = actual.replaceAll("verdictdbtemptable_[0-9]*_[0-9]", "alias");
     expected = "select " +
-        "verdictdbbeforescaling.\"s2\" as \"s2\" " +
+        "sum(verdictdbafterscaling.\"agg0\") as \"s2\" " +
         "from (" +
         "select " +
         "case " +
@@ -340,7 +340,7 @@ public class AsyncAggMultipleTiersScaleTest {
         "verdictdbbeforescaling.\"verdictdbtier0\" as \"verdictdbtier0\" " +
         "from \"verdictdb_temp\".\"alias\" as verdictdbbeforescaling) " +
         "as verdictdbafterscaling";
-    assertEquals(actual, expected);
+    assertEquals(expected, actual);
   }
 
   @Test
@@ -402,7 +402,7 @@ public class AsyncAggMultipleTiersScaleTest {
     actual = queryToSql.toSql(query.getSelect());
     actual = actual.replaceAll("verdictdbtemptable_[0-9]*_[0-9]", "alias");
     expected = "select " +
-        "verdictdbbeforescaling.\"c2\" as \"c2\" " +
+        "sum(verdictdbafterscaling.\"agg0\") as \"c2\" " +
         "from (" +
         "select " +
         "case " +
@@ -412,7 +412,7 @@ public class AsyncAggMultipleTiersScaleTest {
         "verdictdbbeforescaling.\"verdictdbtier0\" as \"verdictdbtier0\" " +
         "from \"verdictdb_temp\".\"alias\" as verdictdbbeforescaling) " +
         "as verdictdbafterscaling";
-    assertEquals(actual, expected);
+    assertEquals(expected, actual);
   }
 
   @Test
@@ -476,8 +476,8 @@ public class AsyncAggMultipleTiersScaleTest {
     actual = queryToSql.toSql(query.getSelect());
     actual = actual.replaceAll("verdictdbtemptable_[0-9]*_[0-9]", "alias");
     expected = "select " +
-        "verdictdbbeforescaling.\"a2\" as \"a2\", " +
-        "verdictdbbeforescaling.\"s3\" as \"s3\" " +
+        "sum(verdictdbafterscaling.\"agg0\") / sum(verdictdbafterscaling.\"agg1\") as \"a2\", " +
+        "sum(verdictdbafterscaling.\"agg0\") as \"s3\" " +
         "from " +
         "(select " +
         "case " +
@@ -491,7 +491,7 @@ public class AsyncAggMultipleTiersScaleTest {
         "verdictdbbeforescaling.\"verdictdbtier0\" as \"verdictdbtier0\" " +
         "from \"verdictdb_temp\".\"alias\" as verdictdbbeforescaling) " +
         "as verdictdbafterscaling";
-    assertEquals(actual, expected);
+    assertEquals(expected, actual);
   }
 
   @Test
@@ -555,8 +555,8 @@ public class AsyncAggMultipleTiersScaleTest {
     actual = queryToSql.toSql(query.getSelect());
     actual = actual.replaceAll("verdictdbtemptable_[0-9]*_[0-9]", "alias");
     expected = "select " +
-        "verdictdbbeforescaling.\"a2\" as \"a2\", " +
-        "verdictdbbeforescaling.\"c3\" as \"c3\" " +
+        "sum(verdictdbafterscaling.\"agg0\") / sum(verdictdbafterscaling.\"agg1\") as \"a2\", " +
+        "sum(verdictdbafterscaling.\"agg1\") as \"c3\" " +
         "from " +
         "(select " +
         "case " +
@@ -570,7 +570,7 @@ public class AsyncAggMultipleTiersScaleTest {
         "verdictdbbeforescaling.\"verdictdbtier0\" as \"verdictdbtier0\" " +
         "from \"verdictdb_temp\".\"alias\" as verdictdbbeforescaling) " +
         "as verdictdbafterscaling";
-    assertEquals(actual, expected);
+    assertEquals(expected, actual);
   }
 
   @Test
@@ -631,8 +631,8 @@ public class AsyncAggMultipleTiersScaleTest {
     actual = queryToSql.toSql(query.getSelect());
     actual = actual.replaceAll("verdictdbtemptable_[0-9]*_[0-9]", "alias");
     expected = "select " +
-        "verdictdbbeforescaling.\"c2\" as \"c2\", " +
-        "verdictdbbeforescaling.\"s3\" as \"s3\" " +
+        "sum(verdictdbafterscaling.\"agg0\") as \"c2\", " +
+        "sum(verdictdbafterscaling.\"agg1\") as \"s3\" " +
         "from (" +
         "select " +
         "case " +
@@ -646,7 +646,7 @@ public class AsyncAggMultipleTiersScaleTest {
         "verdictdbbeforescaling.\"verdictdbtier0\" as \"verdictdbtier0\" " +
         "from \"verdictdb_temp\".\"alias\" as verdictdbbeforescaling) " +
         "as verdictdbafterscaling";
-    assertEquals(actual, expected);
+    assertEquals(expected, actual);
   }
 
   @Test
@@ -710,7 +710,8 @@ public class AsyncAggMultipleTiersScaleTest {
     actual = queryToSql.toSql(query.getSelect());
     actual = actual.replaceAll("verdictdbtemptable_[0-9]*_[0-9]", "alias");
     expected = "select " +
-        "verdictdbbeforescaling.\"vc2\" as \"vc2\" " +
+        "(1 + max(verdictdbafterscaling.\"agg2\")) * " + 
+        "(sum(verdictdbafterscaling.\"agg0\") / sum(verdictdbafterscaling.\"agg1\")) as \"vc2\" " +
         "from (" +
         "select " +
         "case " +
@@ -725,7 +726,7 @@ public class AsyncAggMultipleTiersScaleTest {
         "verdictdbbeforescaling.\"verdictdbtier0\" as \"verdictdbtier0\" " +
         "from \"verdictdb_temp\".\"alias\" as verdictdbbeforescaling) " +
         "as verdictdbafterscaling";
-    assertEquals(actual, expected);
+    assertEquals(expected, actual);
   }
 
   @Test
@@ -789,7 +790,8 @@ public class AsyncAggMultipleTiersScaleTest {
     actual = queryToSql.toSql(query.getSelect());
     actual = actual.replaceAll("verdictdbtemptable_[0-9]*_[0-9]", "alias");
     expected = "select " +
-        "verdictdbbeforescaling.\"vc2\" as \"vc2\" " +
+        "(1 + min(verdictdbafterscaling.\"agg2\")) * " +
+        "(sum(verdictdbafterscaling.\"agg0\") / sum(verdictdbafterscaling.\"agg1\")) as \"vc2\" " +
         "from (" +
         "select " +
         "case " +
@@ -804,6 +806,6 @@ public class AsyncAggMultipleTiersScaleTest {
         "verdictdbbeforescaling.\"verdictdbtier0\" as \"verdictdbtier0\" " +
         "from \"verdictdb_temp\".\"alias\" as verdictdbbeforescaling) " +
         "as verdictdbafterscaling";
-    assertEquals(actual, expected);
+    assertEquals(expected, actual);
   }
 }

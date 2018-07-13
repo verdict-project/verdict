@@ -14,7 +14,7 @@ import org.junit.Test;
 import org.verdictdb.core.connection.DbmsQueryResult;
 import org.verdictdb.core.connection.JdbcConnection;
 import org.verdictdb.core.scrambling.BaseScrambler;
-import org.verdictdb.core.scrambling.ScrambleMeta;
+import org.verdictdb.core.scrambling.ScrambleMetaSet;
 import org.verdictdb.core.scrambling.UniformScrambler;
 import org.verdictdb.core.sqlobject.AbstractRelation;
 import org.verdictdb.core.sqlobject.AliasedColumn;
@@ -70,7 +70,7 @@ public class AggQueryRewriterJdbcTest {
         Arrays.<SelectItem>asList(
             new AliasedColumn(new ColumnOp("sum", new BaseColumn("t", "value")), aliasName)),
         base);
-    ScrambleMeta meta = generateTestScrambleMeta();
+    ScrambleMetaSet meta = generateTestScrambleMeta();
     AggQueryRewriter rewriter = new AggQueryRewriter(meta);
     List<Pair<AbstractRelation, AggblockMeta>> rewritten = rewriter.rewrite(relation);
     
@@ -98,8 +98,8 @@ public class AggQueryRewriterJdbcTest {
     stmt.close();
   }
 
-  ScrambleMeta generateTestScrambleMeta() {
-    ScrambleMeta meta = new ScrambleMeta();
+  ScrambleMetaSet generateTestScrambleMeta() {
+    ScrambleMetaSet meta = new ScrambleMetaSet();
     meta.insertScrambleMetaEntry(newSchema, newTable,
         BaseScrambler.getAggregationBlockColumn(),
 //        Scrambler.getInclusionProbabilityColumn(),

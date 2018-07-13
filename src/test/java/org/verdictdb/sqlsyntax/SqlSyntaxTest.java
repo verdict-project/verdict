@@ -21,7 +21,7 @@ public class SqlSyntaxTest {
     Connection conn = DriverManager.getConnection(DB_CONNECTION, DB_USER, DB_PASSWORD);
 
     SqlSyntax expected = new H2Syntax();
-    SqlSyntax actual = new JdbcConnection(conn).getSyntax();
+    SqlSyntax actual = JdbcConnection.create(conn).getSyntax();
     assertEquals(expected, actual);
   }
 
@@ -32,7 +32,7 @@ public class SqlSyntaxTest {
     final String MYSQL_UESR = "root";
     final String MYSQL_PASSWORD = "";
     String env = System.getenv("BUILD_ENV");
-    if (env != null && env.equals("GitLab")) {
+    if (env != null && (env.equals("GitLab") || env.equals("DockerCompose"))) {
       MYSQL_HOST = "mysql";
     } else {
       MYSQL_HOST = "localhost";
@@ -43,7 +43,7 @@ public class SqlSyntaxTest {
     Connection conn = DriverManager.getConnection(mysqlConnectionString, MYSQL_UESR, MYSQL_PASSWORD);
 
     SqlSyntax expected = new MysqlSyntax();
-    SqlSyntax actual = new JdbcConnection(conn).getSyntax();
+    SqlSyntax actual = JdbcConnection.create(conn).getSyntax();
     assertEquals(expected, actual);
   }
 
@@ -55,7 +55,7 @@ public class SqlSyntaxTest {
     String POSTGRES_PASSWORD = "";
 
     String env = System.getenv("BUILD_ENV");
-    if (env != null && env.equals("GitLab")) {
+    if (env != null && (env.equals("GitLab") || env.equals("DockerCompose"))) {
       POSTGRES_HOST = "postgres";
     } else {
       POSTGRES_HOST = "localhost";
@@ -66,7 +66,7 @@ public class SqlSyntaxTest {
     Connection conn = DriverManager.getConnection(postgresConnectionString, POSTGRES_USER, POSTGRES_PASSWORD);
 
     SqlSyntax expected = new PostgresqlSyntax();
-    SqlSyntax actual = new JdbcConnection(conn).getSyntax();
+    SqlSyntax actual = JdbcConnection.create(conn).getSyntax();
     assertEquals(expected, actual);
   }
 
@@ -76,9 +76,9 @@ public class SqlSyntaxTest {
     final String DB_USER = "";
     final String DB_PASSWORD = "";
     Connection conn = DriverManager.getConnection(DB_CONNECTION, DB_USER, DB_PASSWORD);
-    
+
     SqlSyntax expected = new SqliteSyntax();
-    SqlSyntax actual = new JdbcConnection(conn).getSyntax();
+    SqlSyntax actual = JdbcConnection.create(conn).getSyntax();
     assertEquals(expected, actual);
   }
 
