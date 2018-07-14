@@ -7,7 +7,7 @@ jobs:
   build-jdk7:
     docker:
       # specify the version you desire here
-      - image: maven:3.5.4-jdk-7
+      - image: maven:3.5.4-jdk-7-slim
 
       # Specify service dependencies here if necessary
       # CircleCI maintains a library of pre-built images
@@ -42,7 +42,7 @@ jobs:
             - ~/.m2
           key: v1-dependencies-{{ checksum "pom.xml" }}
       # run tests!
-      - run: mvn -B clean test
+      - run: mvn -B clean test 2> /dev/null
       - store_test_results:
           path: ~/junit
       - store_artifacts:
@@ -51,7 +51,7 @@ jobs:
   build-jdk8:
     docker:
       # specify the version you desire here
-      - image: circleci/openjdk:8-jdk-browsers
+      - image: maven:3.5.4-jdk-8-slim
 
       # Specify service dependencies here if necessary
       # CircleCI maintains a library of pre-built images
@@ -86,7 +86,7 @@ jobs:
             - ~/.m2
           key: v1-dependencies-{{ checksum "pom.xml" }}
       # run tests!
-      - run: mvn -B clean test
+      - run: mvn -B clean test 2> /dev/null
       - store_test_results:
           path: ~/junit
       - store_artifacts:

@@ -1,7 +1,10 @@
 package org.verdictdb.core.coordinator;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.verdictdb.core.connection.DbmsConnection;
 import org.verdictdb.core.execution.ExecutablePlanRunner;
@@ -17,11 +20,11 @@ import com.google.common.base.Optional;
 
 public class ScramblingCoordinator {
 
+  private final Set<String> scramblingMethods = new HashSet<>(Arrays.asList("uniform", "fastconverge"));
+
   // default options
-  // some key names (tierColumnName, blockColumnName) are also used by ScramblingNode; thus, they cannot
-  // be modified arbitrarily.
-  @SuppressWarnings("serial")
-  Map<String, String> options = new HashMap<String, String>() {
+  private final Map<String, String> options = new HashMap<String, String>() {
+    private static final long serialVersionUID = -4491518418086939738L;
     {
       put("tierColumnName", "verdictdbtier");
       put("blockColumnName", "verdictdbblock");
@@ -30,9 +33,9 @@ public class ScramblingCoordinator {
     }
   };
 
-  DbmsConnection conn;
-
   Optional<String> scrambleSchema;
+
+  DbmsConnection conn;
 
   Optional<String> scratchpadSchema;
 
@@ -50,36 +53,14 @@ public class ScramblingCoordinator {
 
   public ScramblingCoordinator(DbmsConnection conn, String scrambleSchema, String scratchpadSchema, Long blockSize) {
     this.conn = conn;
-    this.scrambleSchema = Optional.fromNullable(scrambleSchema);
     this.scratchpadSchema = Optional.fromNullable(scratchpadSchema);
+    this.scrambleSchema = Optional.fromNullable(scrambleSchema);
     if (blockSize != null) {
       options.put("scrambleTableBlockSize", String.valueOf(blockSize));
     }
   }
 
-  /**
-   * Performs scrambling using a default method. Currently, the default method is 'uniform'.
-   * 
-   * @param originalSchema
-   * @param originalTable
-   * @return metadata information about scrambled table.
-   * @throws VerdictDBException 
-   */
   public ScrambleMeta scramble(String originalSchema, String originalTable) throws VerdictDBException {
-    String method = "uniform";
-    ScrambleMeta meta = scramble(originalSchema, originalTable, method);
-    return meta;
-  }
-
-  public ScrambleMeta scramble(String originalSchema, String originalTable, String methodName) 
-      throws VerdictDBException {
-    return scramble(originalSchema, originalTable, methodName, null);
-  }
-
-  public ScrambleMeta scramble(
-      String originalSchema, String originalTable, String methodName, String primaryColumn) 
-          throws VerdictDBException {
-    // should get assigned a new scratchpad schema for new tables.
     String newSchema;
     if (scrambleSchema.isPresent()) {
       newSchema = scrambleSchema.get();
@@ -87,27 +68,59 @@ public class ScramblingCoordinator {
       newSchema = originalSchema;
     }
     String newTable = originalTable + options.get("scrambleTableSuffix");
-
-    ScrambleMeta meta = 
-        scramble(originalSchema, originalTable, methodName, primaryColumn, newSchema, newTable);
+    ScrambleMeta meta = scramble(originalSchema, originalTable, newSchema, newTable);
     return meta;
   }
 
-//  public ScrambleMeta scramble(
-//      String originalSchema, String originalTable, String methodName,
-//      String newSchema, String newTable) 
-//          throws VerdictDBException {
-//    return scramble(originalSchema, originalTable, methodName, null, newSchema, newTable);
-//  }
+  public ScrambleMeta scramble(
+      String originalSchema, String originalTable, 
+      String newSchema, String newTable) throws VerdictDBException {
+
+    String methodName = "uniform";
+    String primaryColumn = null;
+    ScrambleMeta meta = 
+        scramble(originalSchema, originalTable, newSchema, newTable, methodName, primaryColumn);
+    return meta;
+  }
+
+  public ScrambleMeta scramble(
+      String originalSchema, String originalTable, 
+      String newSchema, String newTable,
+      String methodName) throws VerdictDBException {
+
+    String primaryColumn = null;
+    ScrambleMeta meta = 
+        scramble(originalSchema, originalTable, newSchema, newTable, methodName, primaryColumn);
+    return meta;
+  }
+
+  public ScrambleMeta scramble(
+      String originalSchema, String originalTable, 
+      String newSchema, String newTable,
+      String methodName, String primaryColumn) throws VerdictDBException {
+
+    // copied options
+    Map<String, String> customOptions = new HashMap<>(options);
+
+    ScrambleMeta meta = 
+        scramble(originalSchema, originalTable, newSchema, newTable, methodName, primaryColumn, customOptions);
+    return meta;
+
+  }
 
   public ScrambleMeta scramble(
       String originalSchema, String originalTable,
-      String methodName, String primaryColumn,
-      String newSchema, String newTable) throws VerdictDBException {
+      String newSchema, String newTable,
+      String methodName, String primaryColumn, Map<String, String> options) throws VerdictDBException {
+
+    // sanity check
+    if (!scramblingMethods.contains(methodName.toLowerCase())) {
+      throw new VerdictDBValueException("Not supported scrambling method: " + methodName);
+    }
 
     // determine scrambling method
-    ScramblingMethod scramblingMethod;
     long blockSize = Double.valueOf(options.get("scrambleTableBlockSize")).longValue();
+    ScramblingMethod scramblingMethod;
     if (methodName.equalsIgnoreCase("uniform")) {
       scramblingMethod = new UniformScramblingMethod(blockSize);
     } else if (methodName.equalsIgnoreCase("FastConverge") && primaryColumn == null) {

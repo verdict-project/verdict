@@ -40,14 +40,16 @@ public class JdbcResultSet implements ResultSet {
   private ResultSetMetaData metadata;
 
   private Object lastValue = null;
+  
+  private long rowIndex = 0;
 
-  private Boolean isBeforefirst = true;
-
-  private Boolean isAfterLast = false;
-
-  private Boolean isFirst = false;
-
-  private int rowCount = 0;
+//  private Boolean isBeforefirst = true;
+//
+//  private Boolean isAfterLast = false;
+//
+//  private Boolean isFirst = false;
+//
+//  private int rowCount = 0;
 
   private HashSet<String> numericType = new HashSet<>(Arrays.asList(
       "bigint", "decimal", "float", "integer", "real", "numeric", "tinyint", "smallint", "long", "double"));
@@ -137,24 +139,31 @@ public class JdbcResultSet implements ResultSet {
 
   @Override
   public boolean next() throws SQLException {
-    if (rowCount == 1) {
-      isFirst = true;
-    }
-    else {
-      isFirst = false;
-    }
-    
-    if (isBeforefirst) {
-      isBeforefirst = false;
-    }
-    boolean next = queryResult.next();
-    rowCount++;
-    
-    if (!next) {
-      isAfterLast = true;
+    boolean hasMore = queryResult.next();
+    if (hasMore) {
+      rowIndex++;
+      return true;
+    } else {
+      return false;
     }
     
-    return next;
+//    if (rowCount == 1) {
+//      isFirst = true;
+//    }
+//    else {
+//      isFirst = false;
+//    }
+//    
+//    if (isBeforefirst) {
+//      isBeforefirst = false;
+//    }
+//    boolean next = queryResult.next();
+//    rowCount++;
+//    
+//    if (!next) {
+//      isAfterLast = true;
+//    }
+//    return next;
   }
 
   @Override
@@ -176,9 +185,17 @@ public class JdbcResultSet implements ResultSet {
 //    
 //    return String.valueOf(lastValue);
   }
+  
+  private void checkIndex(int index) throws SQLException {
+    if (index < 1) {
+      throw new SQLException("Column index must be a positive integer.");
+    }
+  }
 
   @Override
   public boolean getBoolean(int columnIndex) throws SQLException {
+    checkIndex(columnIndex);
+    
     if (isValidType("boolean", columnIndex)) {
       lastValue = queryResult.getValue(columnIndex-1);
       if (lastValue == null) {
@@ -210,23 +227,27 @@ public class JdbcResultSet implements ResultSet {
 
   @Override
   public byte getByte(int columnIndex) throws SQLException {
-    try {
-      if (isValidType("byte", columnIndex)) {
-        lastValue = queryResult.getValue(columnIndex-1);
-        
-        if (lastValue == null) {
-          return 0;
-        }
-        
-        return (byte) TypeCasting.toByte(lastValue);
-      }
-      else {
-        throw new VerdictDBTypeException(queryResult.getValue(columnIndex-1));
-      }
-    }
-    catch (VerdictDBTypeException e) {
-      throw new SQLException(e.getMessage());
-    }
+    checkIndex(columnIndex);
+    
+    return queryResult.getByte(columnIndex-1);
+    
+//    try {
+//      if (isValidType("byte", columnIndex)) {
+//        lastValue = queryResult.getValue(columnIndex-1);
+//        
+//        if (lastValue == null) {
+//          return 0;
+//        }
+//        
+//        return (byte) TypeCasting.toByte(lastValue);
+//      }
+//      else {
+//        throw new VerdictDBTypeException(queryResult.getValue(columnIndex-1));
+//      }
+//    }
+//    catch (VerdictDBTypeException e) {
+//      throw new SQLException(e.getMessage());
+//    }
   }
 
   @Override
@@ -246,7 +267,8 @@ public class JdbcResultSet implements ResultSet {
   }
 
   @Override
-  public int getInt(int columnIndex) {
+  public int getInt(int columnIndex) throws SQLException {
+    checkIndex(columnIndex);
     return queryResult.getInt(columnIndex-1);
 //    try {
 //      if (isValidType("int", columnIndex)) {
@@ -268,7 +290,8 @@ public class JdbcResultSet implements ResultSet {
   }
 
   @Override
-  public long getLong(int columnIndex) {
+  public long getLong(int columnIndex) throws SQLException {
+    checkIndex(columnIndex);
     return queryResult.getLong(columnIndex-1);
     
 //    try {
@@ -291,7 +314,8 @@ public class JdbcResultSet implements ResultSet {
   }
 
   @Override
-  public float getFloat(int columnIndex) {
+  public float getFloat(int columnIndex) throws SQLException {
+    checkIndex(columnIndex);
     return queryResult.getFloat(columnIndex-1);
     
 //    try {
@@ -314,7 +338,8 @@ public class JdbcResultSet implements ResultSet {
   }
 
   @Override
-  public double getDouble(int columnIndex) {
+  public double getDouble(int columnIndex) throws SQLException {
+    checkIndex(columnIndex);
     return queryResult.getDouble(columnIndex-1);
     
 //    try {
@@ -338,6 +363,8 @@ public class JdbcResultSet implements ResultSet {
 
   @Override
   public BigDecimal getBigDecimal(int columnIndex, int scale) throws SQLException {
+    checkIndex(columnIndex);
+    
     try {
       if (isValidType("bigdecimal", columnIndex)) {
         lastValue = TypeCasting.toBigDecimal(queryResult.getValue(columnIndex-1), scale);
@@ -354,6 +381,8 @@ public class JdbcResultSet implements ResultSet {
 
   @Override
   public byte[] getBytes(int columnIndex) throws SQLException {
+    checkIndex(columnIndex);
+    
    if (isValidType("bytes", columnIndex)) {
       lastValue = queryResult.getValue(columnIndex-1);
       return (byte[]) lastValue;
@@ -362,7 +391,9 @@ public class JdbcResultSet implements ResultSet {
   }
 
   @Override
-  public Date getDate(int columnIndex) {
+  public Date getDate(int columnIndex) throws SQLException {
+    checkIndex(columnIndex);
+    
     return queryResult.getDate(columnIndex-1);
     
 //    if (isValidType("date", columnIndex)) {
@@ -382,6 +413,8 @@ public class JdbcResultSet implements ResultSet {
 
   @Override
   public Time getTime(int columnIndex) throws SQLException {
+    checkIndex(columnIndex);
+    
     if (isValidType("time", columnIndex)) {
       lastValue = queryResult.getValue(columnIndex-1);
       
@@ -430,6 +463,8 @@ public class JdbcResultSet implements ResultSet {
 
   @Override
   public InputStream getAsciiStream(int columnIndex) throws SQLException {
+    checkIndex(columnIndex);
+    
     if (isValidType("asciistream", columnIndex)) {
       lastValue = queryResult.getValue(columnIndex-1);
       return (InputStream) lastValue;
@@ -448,6 +483,8 @@ public class JdbcResultSet implements ResultSet {
 
   @Override
   public InputStream getBinaryStream(int columnIndex) throws SQLException {
+    checkIndex(columnIndex);
+    
     if (isValidType("binarystream", columnIndex)) {
       lastValue = queryResult.getValue(columnIndex-1);
       
@@ -619,6 +656,7 @@ public class JdbcResultSet implements ResultSet {
 
   @Override
   public Object getObject(int columnIndex) throws SQLException {
+    checkIndex(columnIndex);
     return queryResult.getValue(columnIndex-1);
   }
 
@@ -637,6 +675,8 @@ public class JdbcResultSet implements ResultSet {
 
   @Override
   public Reader getCharacterStream(int columnIndex) throws SQLException {
+    checkIndex(columnIndex);
+    
     throw new SQLException("Function is not supported yet.");
   }
 
@@ -647,6 +687,8 @@ public class JdbcResultSet implements ResultSet {
 
   @Override
   public BigDecimal getBigDecimal(int columnIndex) throws SQLException {
+    checkIndex(columnIndex);
+    
     try {
       if (isValidType("bigdecimal", columnIndex)) {
         lastValue = TypeCasting.toBigDecimal(queryResult.getValue(columnIndex-1));
@@ -671,37 +713,48 @@ public class JdbcResultSet implements ResultSet {
 
   @Override
   public boolean isBeforeFirst() throws SQLException {
-    return isBeforefirst;
+    return rowIndex == 0;
+//    return isBeforefirst;
   }
 
   @Override
   public boolean isAfterLast() throws SQLException {
-    return isAfterLast;
+    return rowIndex > queryResult.getRowCount();
   }
 
   @Override
   public boolean isFirst() throws SQLException {
-    return isFirst;
+    return rowIndex == 1;
+//    return isFirst;
   }
 
   @Override
   public boolean isLast() throws SQLException {
-    throw new SQLException("Function is not supported yet.");
+    return rowIndex == queryResult.getRowCount();
+//    throw new SQLException("Function is not supported yet.");
   }
 
   @Override
   public void beforeFirst() throws SQLException {
-    throw new SQLException("Function is not supported yet.");
+    rowIndex = 0;
+//    throw new SQLException("Function is not supported yet.");
   }
 
   @Override
   public void afterLast() throws SQLException {
-    throw new SQLException("Function is not supported yet.");
+    rowIndex = queryResult.getRowCount() + 1;
+//    throw new SQLException("Function is not supported yet.");
   }
 
   @Override
   public boolean first() throws SQLException {
-    throw new SQLException("Function is not supported yet.");
+    if (queryResult.getRowCount() == 0) {
+      return false;
+    } else {
+      rowIndex = 1;
+      return true;
+    }
+//    throw new SQLException("Function is not supported yet.");
   }
 
   @Override
@@ -711,7 +764,7 @@ public class JdbcResultSet implements ResultSet {
 
   @Override
   public int getRow() throws SQLException {
-    return rowCount;
+    return ((Long) rowIndex).intValue();
   }
 
   @Override
@@ -1020,6 +1073,8 @@ public class JdbcResultSet implements ResultSet {
 
   @Override
   public Blob getBlob(int columnIndex) throws SQLException {
+    checkIndex(columnIndex);
+    
     if (isValidType("blob", columnIndex)) {
       lastValue = queryResult.getValue(columnIndex-1);
       
@@ -1037,6 +1092,8 @@ public class JdbcResultSet implements ResultSet {
 
   @Override
   public Clob getClob(int columnIndex) throws SQLException {
+    checkIndex(columnIndex);
+    
     if (isValidType("clob", columnIndex)) {
       lastValue = queryResult.getValue(columnIndex-1);
       return (Clob) lastValue;
@@ -1046,6 +1103,8 @@ public class JdbcResultSet implements ResultSet {
 
   @Override
   public Array getArray(int columnIndex) throws SQLException {
+    checkIndex(columnIndex);
+    
     if (isValidType("array", columnIndex)) {
       lastValue = queryResult.getValue(columnIndex-1);
       JdbcArray array = new JdbcArray((Object[]) lastValue);
@@ -1093,6 +1152,8 @@ public class JdbcResultSet implements ResultSet {
 
   @Override
   public Date getDate(int columnIndex, Calendar cal) throws SQLException {
+    checkIndex(columnIndex);
+    
     throw new SQLException("Function is not supported yet.");
   }
 
@@ -1237,6 +1298,7 @@ public class JdbcResultSet implements ResultSet {
 
   @Override
   public NClob getNClob(int columnIndex) throws SQLException {
+    checkIndex(columnIndex);
     if (isValidType("nclob", columnIndex)) {
       lastValue = queryResult.getValue(columnIndex-1);
       return (NClob) lastValue;

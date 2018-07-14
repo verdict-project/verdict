@@ -24,6 +24,13 @@ import org.verdictdb.core.connection.DbmsConnection;
 import org.verdictdb.core.connection.JdbcConnection;
 import org.verdictdb.exception.VerdictDBDbmsException;
 
+/**
+ * This intends to test the correct operations of VerdictDB JDBC driver's get methods for every
+ * different data type supported by MySQL.
+ * 
+ * @author Yongjoo Park
+ *
+ */
 public class JdbcResultSetMetaDataTestForMySql {
 
   static Connection conn;
@@ -56,7 +63,7 @@ public class JdbcResultSetMetaDataTestForMySql {
     String mysqlConnectionString =
         String.format("jdbc:mysql://%s/%s?autoReconnect=true&useSSL=false", MYSQL_HOST, MYSQL_DATABASE);
     conn = DriverManager.getConnection(mysqlConnectionString, MYSQL_UESR, MYSQL_PASSWORD);
-    dbmsConn = new JdbcConnection(conn);
+    dbmsConn = JdbcConnection.create(conn);
 
     stmt = conn.createStatement();
     stmt.execute(String.format("DROP TABLE IF EXISTS %s", TABLE_NAME));

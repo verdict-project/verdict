@@ -48,7 +48,7 @@ public class JdbcMetaDataTestForMySql {
     String mysqlConnectionString =
         String.format("jdbc:mysql://%s/%s?autoReconnect=true&useSSL=false", MYSQL_HOST, MYSQL_DATABASE);
     conn = DriverManager.getConnection(mysqlConnectionString, MYSQL_UESR, MYSQL_PASSWORD);
-    dbmsConn = new JdbcConnection(conn);
+    dbmsConn = JdbcConnection.create(conn);
 
     stmt = conn.createStatement();
     stmt.execute(String.format("DROP TABLE IF EXISTS %s", TABLE_NAME));

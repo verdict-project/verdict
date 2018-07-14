@@ -9,13 +9,15 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.sqlsyntax.SqlSyntax;
 
-public class CachedMetaData implements MetaDataProvider {
+public class CachedMetaDataProvider implements MetaDataProvider {
 
-  private SqlSyntax syntax;
+//  private SqlSyntax syntax;
 
 //  private DbmsConnection connection;
   
   MetaDataProvider metaProvider;
+  
+  private String defaultSchema = null;
 
   private List<String> schemaCache = new ArrayList<>();
 
@@ -23,9 +25,10 @@ public class CachedMetaData implements MetaDataProvider {
 
   private HashMap<Pair<String, String>, List<String>> partitionCache = new HashMap<>();
 
+  // Get column name and type
   private HashMap<Pair<String, String>, List<Pair<String,String>>> columnsCache = new HashMap<>();
 
-  public CachedMetaData(MetaDataProvider metaProvider) {
+  public CachedMetaDataProvider(MetaDataProvider metaProvider) {
 //    this.syntax = metaProvider.getSyntax();
 //    this.connection = connection;
     this.metaProvider = metaProvider;
@@ -79,10 +82,18 @@ public class CachedMetaData implements MetaDataProvider {
     partitionCache.put(key, metaProvider.getPartitionColumns(schema, table));
     return partitionCache.get(key);
   }
-
-  @Override
+  
   public String getDefaultSchema() {
-    return metaProvider.getDefaultSchema();
+    if (defaultSchema == null) {
+      defaultSchema = metaProvider.getDefaultSchema();
+    }
+    return defaultSchema;
   }
+  
+  public void setDefaultSchema(String schema) {
+    metaProvider.setDefaultSchema(schema);
+    defaultSchema = schema;
+  }
+
 
 }

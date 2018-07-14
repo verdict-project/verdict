@@ -9,18 +9,26 @@ import java.util.List;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.spark.sql.SparkSession;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.sqlsyntax.SparkSyntax;
 
 public class SparkConnectionTest {
+  
+  static SparkSession spark; 
+
+  
+  @BeforeClass
+  static public void setupSparkSession() {
+    spark = SparkSession.builder().appName("SparkConnectionTest")
+    .master("local")
+    .config("spark.sql.catalogImplementation", "hive")
+    .getOrCreate();
+  }
 
   @Test
   public void testSparkConnectionExecute() throws VerdictDBDbmsException {
-    SparkSession spark = SparkSession.builder().appName("test")
-        .master("local")
-        .config("spark.sql.catalogImplementation", "hive")
-        .getOrCreate();
     SparkConnection sparkConnection = new SparkConnection(spark, new SparkSyntax());
     sparkConnection.execute("CREATE SCHEMA IF NOT EXISTS myschema");
     List<List<Object>> contents = new ArrayList<>();
@@ -42,11 +50,7 @@ public class SparkConnectionTest {
 
   @Test
   public void testSparkConnection() throws VerdictDBDbmsException {
-    SparkSession spark = SparkSession.builder().appName("test")
-        .master("local")
-        .config("spark.sql.catalogImplementation", "hive")
-        .getOrCreate();
-    spark.read().format("jdbc");
+//    spark.read().format("jdbc");
     SparkConnection sparkConnection = new SparkConnection(spark, new SparkSyntax());
     sparkConnection.execute("CREATE SCHEMA IF NOT EXISTS myschema");
     List<List<Object>> contents = new ArrayList<>();
@@ -70,10 +74,10 @@ public class SparkConnectionTest {
 
   @Test
   public void testPartitionColumn() throws VerdictDBDbmsException {
-    SparkSession spark = SparkSession.builder().appName("test")
-        .master("local")
-        .config("spark.sql.catalogImplementation", "hive")
-        .getOrCreate();
+//    SparkSession spark = SparkSession.builder().appName("test")
+//        .master("local")
+//        .config("spark.sql.catalogImplementation", "hive")
+//        .getOrCreate();
     SparkConnection sparkConnection = new SparkConnection(spark, new SparkSyntax());
     sparkConnection.execute("CREATE SCHEMA IF NOT EXISTS myschema");
     List<List<Object>> contents = new ArrayList<>();
@@ -100,10 +104,10 @@ public class SparkConnectionTest {
 
   @Test
   public void testVariousDataType() throws VerdictDBDbmsException {
-    SparkSession spark = SparkSession.builder().appName("test")
-        .master("local")
-        .config("spark.sql.catalogImplementation", "hive")
-        .getOrCreate();
+//    SparkSession spark = SparkSession.builder().appName("test")
+//        .master("local")
+//        .config("spark.sql.catalogImplementation", "hive")
+//        .getOrCreate();
     SparkConnection sparkConnection = new SparkConnection(spark, new SparkSyntax());
     sparkConnection.execute("CREATE SCHEMA IF NOT EXISTS myschema");
     sparkConnection.execute("CREATE TABLE IF NOT EXISTS myschema.PERSON(id int, name varchar(255), a bigint, b float, c date, d timestamp, e array<int>" +

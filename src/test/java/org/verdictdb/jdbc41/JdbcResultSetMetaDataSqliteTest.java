@@ -156,7 +156,7 @@ public class JdbcResultSetMetaDataSqliteTest {
 
   @Test
   public void getScaleTest() throws SQLException {
-    System.out.println(rs.isClosed());
+//    System.out.println(rs.isClosed());
 //    System.out.println(rs.getMetaData());
 //    System.out.println(rs.getMetaData().getScale(3));
     assertEquals(rs.getMetaData().getScale(1), jdbcResultSetMetaData1.getScale(1));

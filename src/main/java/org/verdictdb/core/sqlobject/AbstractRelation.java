@@ -63,4 +63,8 @@ public abstract class AbstractRelation implements Serializable {
     }
     return false;
   }
+
+  public AbstractRelation deepcopy() {
+    return null;
+  }
 }

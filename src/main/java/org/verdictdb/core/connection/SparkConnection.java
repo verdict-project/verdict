@@ -82,8 +82,13 @@ public class SparkConnection implements DbmsConnection {
   }
 
   @Override
-  public DbmsQueryResult execute(String query) throws VerdictDBDbmsException {
+  public void setDefaultSchema(String schema) {
+    // TODO Auto-generated method stub
+    
+  }
 
+  @Override
+  public DbmsQueryResult execute(String query) throws VerdictDBDbmsException {
     try {
       SparkQueryResult srs = null;
       Dataset<Row> result = sc.sql(query);

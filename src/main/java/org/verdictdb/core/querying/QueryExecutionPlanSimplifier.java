@@ -7,9 +7,7 @@ import org.verdictdb.core.execution.ExecutablePlan;
 import org.verdictdb.core.execution.ExecutionInfoToken;
 import org.verdictdb.core.execution.ExecutionTokenQueue;
 import org.verdictdb.core.querying.ola.AsyncAggExecutionNode;
-import org.verdictdb.core.sqlobject.BaseTable;
-import org.verdictdb.core.sqlobject.CreateTableAsSelectQuery;
-import org.verdictdb.core.sqlobject.SubqueryColumn;
+import org.verdictdb.core.sqlobject.*;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBValueException;
 
@@ -41,8 +39,9 @@ public class QueryExecutionPlanSimplifier {
 
     List<ExecutableNodeBase> history = new ArrayList<>();
     while (!nodesToCompress.isEmpty()) {
-      ExecutableNodeBase node = nodesToCompress.get(0);
-      nodesToCompress.remove(0);
+      ExecutableNodeBase node = nodesToCompress.remove(0);
+      List<ExecutableNodeBase> nodeParentsSaved = new ArrayList<>(node.getExecutableNodeBaseParents());
+      
       // Exception 1: has no parent(root), or has multiple parent
       // Exception 2: its parents has multiple dependents and this node share same queue with other dependents
       // Exception 3: two nodes are not SelectAllNode, ProjectionNode or AggregateNode
@@ -57,7 +56,9 @@ public class QueryExecutionPlanSimplifier {
         }
       }
       history.add(node);
-      for (ExecutableNodeBase parent : node.getExecutableNodeBaseParents()) {
+      
+      // the parent information of the "node" has been removed
+      for (ExecutableNodeBase parent : nodeParentsSaved) {
         if (!history.contains(parent) && !nodesToCompress.contains(parent)) {
           nodesToCompress.add(parent);
         }
@@ -79,14 +80,33 @@ public class QueryExecutionPlanSimplifier {
     ((QueryNodeWithPlaceHolders)parent).getPlaceholderTables().remove(placeholderTableinParent);
 
     // If temp table is in from list of parent, just direct replace with the select query of node
-    if (parentQuery.getSelectQuery().getFromList().contains(placeholderTableinParent)) {
-      int index = parentQuery.getSelectQuery().getFromList().indexOf(placeholderTableinParent);
-      nodeQuery.getSelectQuery().setAliasName(
-          parentQuery.getSelectQuery().getFromList().get(index).getAliasName().get());
-      parentQuery.getSelectQuery().getFromList().set(index, nodeQuery.getSelectQuery());
+    boolean find = false;
+    for (AbstractRelation table:parentQuery.getSelectQuery().getFromList()) {
+      if (table instanceof BaseTable && table.equals(placeholderTableinParent)) {
+        int index = parentQuery.getSelectQuery().getFromList().indexOf(table);
+        nodeQuery.getSelectQuery().setAliasName(
+            parentQuery.getSelectQuery().getFromList().get(index).getAliasName().get());
+        parentQuery.getSelectQuery().getFromList().set(index, nodeQuery.getSelectQuery());
+        find = true;
+        break;
+      }
+      else if (table instanceof JoinTable) {
+        for (AbstractRelation joinTable:((JoinTable) table).getJoinList()) {
+          if (joinTable instanceof BaseTable && joinTable.equals(placeholderTableinParent)) {
+            int index = ((JoinTable) table).getJoinList().indexOf(joinTable);
+            nodeQuery.getSelectQuery().setAliasName(
+                joinTable.getAliasName().get());
+            ((JoinTable) table).getJoinList().set(index, nodeQuery.getSelectQuery());
+            find = true;
+            break;
+          }
+        }
+        if (find) break;
+      }
     }
+
     // Otherwise, it need to search filter to find the temp table
-    else {
+    if (!find) {
       List<SubqueryColumn> placeholderTablesinFilter = ((QueryNodeWithPlaceHolders)parent).getPlaceholderTablesinFilter();
       for (SubqueryColumn filter:placeholderTablesinFilter) {
         if (filter.getSubquery().getFromList().size()==1 && filter.getSubquery().getFromList().get(0).equals(placeholderTableinParent)) {
@@ -94,6 +114,9 @@ public class QueryExecutionPlanSimplifier {
         }
       }
     }
+
+    //Move node's placeholderTable to parent's
+    ((QueryNodeWithPlaceHolders) parent).placeholderTables.addAll(((QueryNodeWithPlaceHolders) node).placeholderTables);
 
     // Compress the node tree
     parentQuery.cancelSubscriptionTo(nodeQuery);

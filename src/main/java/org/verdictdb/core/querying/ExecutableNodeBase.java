@@ -28,6 +28,8 @@ import org.verdictdb.exception.VerdictDBException;
 
 public class ExecutableNodeBase implements ExecutableNode, Serializable {
 
+  private static final long serialVersionUID = 1424215482199124961L;
+
   List<ExecutableNodeBase> subscribers = new ArrayList<>();
 
   List<Pair<ExecutableNodeBase, Integer>> sources = new ArrayList<>();
@@ -56,7 +58,7 @@ public class ExecutableNodeBase implements ExecutableNode, Serializable {
       ticket.getSubscriber().subscribeTo(this);
     }
   }
-
+  
   public void subscribeTo(ExecutableNodeBase node) {
     for (int channel = 0; ; channel++) {
       if (!channels.containsKey(channel)) {
@@ -75,12 +77,16 @@ public class ExecutableNodeBase implements ExecutableNode, Serializable {
     }
   }
 
-  void addSubscriber(ExecutableNodeBase node) {
+  private void addSubscriber(ExecutableNodeBase node) {
     subscribers.add(node);
   }
 
+  /**
+   * Removes node from the subscription list (i.e., sources).
+   * 
+   * @param node
+   */
   public void cancelSubscriptionTo(ExecutableNodeBase node) {
-    //    node.subscribers.remove(node);
     List<Pair<ExecutableNodeBase, Integer>> newSources = new ArrayList<>();
     Set<Integer> leftChannels = new HashSet<>();
     for (Pair<ExecutableNodeBase, Integer> s : sources) {
@@ -93,18 +99,37 @@ public class ExecutableNodeBase implements ExecutableNode, Serializable {
     sources = newSources;
 
     // if there are no other nodes broadcasting to this channel, remove the queue
-    for (Integer c : leftChannels) {
-      if (!channels.containsKey(c)) {
-        channels.remove(c);
+    if (leftChannels.size()>0) {
+      for (Integer c : leftChannels) {
+        if (!channels.containsKey(c)) {
+          channels.remove(c);
+        }
       }
     }
+    else {// the parent has only one child, so just remove the channel
+      channels.clear();
+    }
+    
+    // inform the node
+    node.removeSubscriber(this);
   }
 
-  public void clearSubscribers() {
+  private void removeSubscriber(ExecutableNodeBase node) {
+    subscribers.remove(node);
+  }
+
+  public void cancelSubscriptionsFromAllSubscribers() {
+    // make a copied list of subscribers (to avoid concurrent modifications
+    List<ExecutableNodeBase> copiedSubscribiers = new ArrayList<>();
     for (ExecutableNodeBase s : subscribers) {
+      copiedSubscribiers.add(s);
+    }
+    
+    // now cancel subscriptions
+    for (ExecutableNodeBase s : copiedSubscribiers) {
       s.cancelSubscriptionTo(this);
     }
-    subscribers = new ArrayList<>();
+//    subscribers = new ArrayList<>();
   }
 
   // runner methods

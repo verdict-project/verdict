@@ -129,6 +129,24 @@ public abstract class DbmsQueryResultBase implements DbmsQueryResult {
     int index = getIndexOf(label);
     return getDate(index);
   }
+  
+
+  @Override
+  public byte getByte(int index) {
+    Object value = getValue(index);
+    
+    if (value == null) {
+      return 0;
+    }
+    
+    return (byte) TypeCasting.toByte(value);
+  }
+
+  @Override
+  public byte getByte(String label) {
+    int index = getIndexOf(label);
+    return getByte(index);
+  }
 
   @Override
   public Timestamp getTimestamp(int index) {

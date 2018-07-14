@@ -18,8 +18,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
 import java.sql.Date;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 
@@ -27,9 +25,9 @@ import org.apache.spark.sql.SparkSession;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.verdictdb.core.connection.DbmsQueryResult;
 import org.verdictdb.core.connection.SparkConnection;
 import org.verdictdb.exception.VerdictDBDbmsException;
-import org.verdictdb.jdbc41.JdbcResultSet;
 import org.verdictdb.sqlsyntax.SparkSyntax;
 
 public class ResultSetMetaDataTestForSpark {
@@ -44,7 +42,8 @@ public class ResultSetMetaDataTestForSpark {
   public static void setupSpark() throws VerdictDBDbmsException {
     spark = SparkSession.builder().appName("test")
         .master("local")
-        .config("spark.sql.catalogImplementation", "hive")
+        .enableHiveSupport()
+//        .config("spark.sql.catalogImplementation", "hive")
         .getOrCreate();
     sparkConnection = new SparkConnection(spark, new SparkSyntax());
     sparkConnection.execute(String.format(
@@ -85,72 +84,69 @@ public class ResultSetMetaDataTestForSpark {
   @Test
   public void testColumnTypes() throws VerdictDBDbmsException, SQLException {
     String sql = String.format("select * from %s", TABLE_NAME);
-    ResultSet ourResult = new JdbcResultSet(sparkConnection.execute(sql));
-    ResultSetMetaData ourMetaData = ourResult.getMetaData();
-    assertEquals(17, ourMetaData.getColumnCount());
+    DbmsQueryResult ourResult = sparkConnection.execute(sql);
+//    ResultSetMetaData ourMetaData = ourResult.getMetaData();
+    assertEquals(17, ourResult.getColumnCount());
 
-    assertEquals(SMALLINT, ourMetaData.getColumnType(1));
-    assertEquals(BOOLEAN, ourMetaData.getColumnType(2));
-    assertEquals(SMALLINT, ourMetaData.getColumnType(3));
-    assertEquals(INTEGER, ourMetaData.getColumnType(4));
-    assertEquals(BIGINT, ourMetaData.getColumnType(5));
-    assertEquals(DECIMAL, ourMetaData.getColumnType(6));
-    assertEquals(FLOAT, ourMetaData.getColumnType(7));
-    assertEquals(DOUBLE, ourMetaData.getColumnType(8));
-    assertEquals(DATE, ourMetaData.getColumnType(9));
-    assertEquals(TIMESTAMP, ourMetaData.getColumnType(10));
-    assertEquals(VARCHAR, ourMetaData.getColumnType(11));
-    assertEquals(VARCHAR, ourMetaData.getColumnType(12));
-    assertEquals(VARCHAR, ourMetaData.getColumnType(13));
-    assertEquals(BIT, ourMetaData.getColumnType(14));
-    assertEquals(ARRAY, ourMetaData.getColumnType(15));
-    assertEquals(OTHER, ourMetaData.getColumnType(16));
-    assertEquals(STRUCT, ourMetaData.getColumnType(17));
+    assertEquals(SMALLINT, ourResult.getColumnType(0));
+    assertEquals(BOOLEAN, ourResult.getColumnType(1));
+    assertEquals(SMALLINT, ourResult.getColumnType(2));
+    assertEquals(INTEGER, ourResult.getColumnType(3));
+    assertEquals(BIGINT, ourResult.getColumnType(4));
+    assertEquals(DECIMAL, ourResult.getColumnType(5));
+    assertEquals(FLOAT, ourResult.getColumnType(6));
+    assertEquals(DOUBLE, ourResult.getColumnType(7));
+    assertEquals(DATE, ourResult.getColumnType(8));
+    assertEquals(TIMESTAMP, ourResult.getColumnType(9));
+    assertEquals(VARCHAR, ourResult.getColumnType(10));
+    assertEquals(VARCHAR, ourResult.getColumnType(11));
+    assertEquals(VARCHAR, ourResult.getColumnType(12));
+    assertEquals(BIT, ourResult.getColumnType(13));
+    assertEquals(ARRAY, ourResult.getColumnType(14));
+    assertEquals(OTHER, ourResult.getColumnType(15));
+    assertEquals(STRUCT, ourResult.getColumnType(16));
 
     ourResult.next();
-    assertEquals(1, ourResult.getInt(1));         // tinyint
-    assertEquals(1, ourResult.getLong(1));        // tinyint
-    assertEquals(1, ourResult.getByte(1));        // tinyint
-    assertNotEquals(2, ourResult.getInt(1));      // tinyint
-    assertNotEquals(2, ourResult.getLong(1));     // tinyint
-    assertNotEquals(2, ourResult.getByte(1));     // tinyint
+    assertEquals(1, ourResult.getInt(0));         // tinyint
+    assertEquals(1, ourResult.getLong(0));        // tinyint
+    assertEquals(1, ourResult.getByte(0));        // tinyint
+    assertNotEquals(2, ourResult.getInt(0));      // tinyint
+    assertNotEquals(2, ourResult.getLong(0));     // tinyint
+    assertNotEquals(2, ourResult.getByte(0));     // tinyint
     //assertEquals(true, ourResult.getBoolean(2));  // bool
-    assertEquals(1, ourResult.getInt(2));         // bool
-    assertEquals(1, ourResult.getLong(2));        // bool
-    assertEquals(1, ourResult.getByte(2));        // bool
+    assertEquals(1, ourResult.getInt(1));         // bool
+    assertEquals(1, ourResult.getLong(1));        // bool
+    assertEquals(1, ourResult.getByte(1));        // bool
     //assertEquals(true, ourResult.getBoolean(3));  // smallint
-    assertEquals(1, ourResult.getInt(3));         // smallint
-    assertEquals(1, ourResult.getLong(3));        // smallint
-    assertEquals(1, ourResult.getByte(3));        // smallint
+    assertEquals(1, ourResult.getInt(2));         // smallint
+    assertEquals(1, ourResult.getLong(2));        // smallint
+    assertEquals(1, ourResult.getByte(2));        // smallint
     //assertEquals(true, ourResult.getBoolean(4));  // int
-    assertEquals(1, ourResult.getInt(4));         // int
-    assertEquals(1, ourResult.getLong(4));        // int
-    assertEquals(1, ourResult.getByte(4));        // int
+    assertEquals(1, ourResult.getInt(3));         // int
+    assertEquals(1, ourResult.getLong(3));        // int
+    assertEquals(1, ourResult.getByte(3));        // int
     //assertEquals(true, ourResult.getBoolean(5));  // bigint
-    assertEquals(1, ourResult.getInt(5));         // bigint
-    assertEquals(1, ourResult.getLong(5));        // bigint
-    assertEquals(1, ourResult.getByte(5));        // bigint
+    assertEquals(1, ourResult.getInt(4));         // bigint
+    assertEquals(1, ourResult.getLong(4));        // bigint
+    assertEquals(1, ourResult.getByte(4));        // bigint
 
-    assertEquals(1.0, ourResult.getFloat(6), 1e-6);         // decimal
-    assertEquals(1.0, ourResult.getDouble(6), 1e-6);        // decimal
-    assertEquals(1.0, ourResult.getByte(6), 1e-6);          // decimal
-    assertEquals(1.0, ourResult.getInt(6), 1e-6);           // decimal
-    assertEquals(1.0, ourResult.getLong(6), 1e-6);          // decimal
-    assertEquals(1.0, ourResult.getFloat(7), 1e-6);         // float
-    assertEquals(1.0, ourResult.getDouble(7), 1e-6);        // float
-    assertEquals(1.0, ourResult.getByte(7), 1e-6);          // float
-    assertEquals(1.0, ourResult.getInt(7), 1e-6);           // float
-    assertEquals(1.0, ourResult.getLong(7), 1e-6);          // float
-    assertEquals(1.0, ourResult.getFloat(8), 1e-6);         // double
-    assertEquals(1.0, ourResult.getDouble(8), 1e-6);        // double
-    assertEquals(1.0, ourResult.getByte(8), 1e-6);          // double
-    assertEquals(1.0, ourResult.getInt(8), 1e-6);           // double
-    assertEquals(1.0, ourResult.getLong(8), 1e-6);          // double
+    assertEquals(1.0, ourResult.getFloat(5), 1e-6);         // decimal
+    assertEquals(1.0, ourResult.getDouble(5), 1e-6);        // decimal
+    assertEquals(1.0, ourResult.getByte(5), 1e-6);          // decimal
+    assertEquals(1.0, ourResult.getInt(5), 1e-6);           // decimal
+    assertEquals(1.0, ourResult.getLong(5), 1e-6);          // decimal
+    assertEquals(1.0, ourResult.getFloat(6), 1e-6);         // float
+    assertEquals(1.0, ourResult.getDouble(6), 1e-6);        // float
+    assertEquals(1.0, ourResult.getByte(6), 1e-6);          // float
+    assertEquals(1.0, ourResult.getInt(6), 1e-6);           // float
+    assertEquals(1.0, ourResult.getLong(6), 1e-6);          // float
+    assertEquals(1.0, ourResult.getFloat(7), 1e-6);         // double
+    assertEquals(1.0, ourResult.getDouble(7), 1e-6);        // double
+    assertEquals(1.0, ourResult.getByte(7), 1e-6);          // double
+    assertEquals(1.0, ourResult.getInt(7), 1e-6);           // double
+    assertEquals(1.0, ourResult.getLong(7), 1e-6);          // double
 
-    assertEquals(Date.valueOf("2018-12-31"), ourResult.getDate(9));  // date
-    assertEquals(Timestamp.valueOf("2018-12-31 01:00:00.0"), ourResult.getTimestamp(10));  // timestamp
-
-
-
+    assertEquals(Date.valueOf("2018-12-31"), ourResult.getDate(8));  // date
+    assertEquals(Timestamp.valueOf("2018-12-31 01:00:00.0"), ourResult.getTimestamp(9));  // timestamp
   }
 }
