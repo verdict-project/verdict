@@ -325,8 +325,7 @@ expression
     | '~' expression                                           #unary_operator_expression
     | expression op=('*' | '/' | '%') expression               #binary_operator_expression
     | op=('+' | '-') expression                                #unary_operator_expression
-    | expression op=('+' | '-' | '&' | '^' | '|' | '||' | '#'
-                         | '<<' | '>>' | ) expression   #binary_operator_expression
+    | expression op=('+' | '-' | '&' | '^' | '|' | '||' | '#' | '<<' | '>>' ) expression   #binary_operator_expression
     | expression comparison_operator expression                #binary_operator_expression
     | interval                                                 #interval_expression
     | date                                                     #date_expression
