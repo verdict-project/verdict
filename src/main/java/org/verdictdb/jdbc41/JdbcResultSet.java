@@ -214,9 +214,9 @@ public class JdbcResultSet implements ResultSet {
         }
       } else if (lastValue instanceof String) {
         String value = lastValue.toString();
-        if (value.equals("1")) {
+        if (value.equals("1")||value.equals("t")) {
           return true;
-        } else if (value.equals("0")) {
+        } else if (value.equals("0")||value.equals("f")) {
           return false;
         }
       }
@@ -228,7 +228,16 @@ public class JdbcResultSet implements ResultSet {
   @Override
   public byte getByte(int columnIndex) throws SQLException {
     checkIndex(columnIndex);
-    
+    lastValue = queryResult.getValue(columnIndex-1);
+    if (lastValue instanceof String) {
+      String value = lastValue.toString();
+      if (value.equals("1")||value.equals("t")) {
+        return 1;
+      } else if (value.equals("0")||value.equals("f")) {
+        return 0;
+      }
+      else throw new SQLException("Not a valid value for Boolean type: " + lastValue);
+    }
     return queryResult.getByte(columnIndex-1);
     
 //    try {
@@ -269,7 +278,17 @@ public class JdbcResultSet implements ResultSet {
   @Override
   public int getInt(int columnIndex) throws SQLException {
     checkIndex(columnIndex);
-    return queryResult.getInt(columnIndex-1);
+    lastValue = queryResult.getValue(columnIndex-1);
+    if (lastValue instanceof String) {
+      String value = lastValue.toString();
+      if (value.equals("1")||value.equals("t")) {
+        return 1;
+      } else if (value.equals("0")||value.equals("f")) {
+        return 0;
+      }
+      else throw new SQLException("Not a valid value for Boolean type: " + lastValue);
+    }
+    else return queryResult.getInt(columnIndex-1);
 //    try {
 //      if (isValidType("int", columnIndex)) {
 //        lastValue = queryResult.getValue(columnIndex-1);
@@ -292,6 +311,16 @@ public class JdbcResultSet implements ResultSet {
   @Override
   public long getLong(int columnIndex) throws SQLException {
     checkIndex(columnIndex);
+    lastValue = queryResult.getValue(columnIndex-1);
+    if (lastValue instanceof String) {
+      String value = lastValue.toString();
+      if (value.equals("1")||value.equals("t")) {
+        return 1;
+      } else if (value.equals("0")||value.equals("f")) {
+        return 0;
+      }
+      else throw new SQLException("Not a valid value for Boolean type: " + lastValue);
+    }
     return queryResult.getLong(columnIndex-1);
     
 //    try {

@@ -1,14 +1,7 @@
 package org.verdictdb.jdbc41;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.fail;
-
+import java.sql.*;
 import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
 import java.sql.Statement;
 
 import org.junit.BeforeClass;
@@ -18,6 +11,7 @@ import org.verdictdb.core.connection.JdbcConnection;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.sqlsyntax.PostgresqlSyntax;
 
+import static org.junit.Assert.*;
 
 
 public class JdbcResultSetMetaDataTestForPostgreSQL {
@@ -34,7 +28,7 @@ public class JdbcResultSetMetaDataTestForPostgreSQL {
 
   private static final String POSTGRESQL_USER = "postgres";
 
-  private static final String POSTGRESQL_PASSWORD = "";
+  private static final String POSTGRESQL_PASSWORD = "zhongshucheng123";
 
   private static final String TABLE_NAME = "mytable";
 
@@ -91,7 +85,23 @@ public class JdbcResultSetMetaDataTestForPostgreSQL {
             + "timeCol        time, "
             + "timestampCol   timestamp, "
             + "uuidCol        uuid, "
-            + "xmlCol         xml)"
+            + "xmlCol         xml,"
+            + "bitvaryCol     bit varying(1),"
+            + "int8Col        int8,"
+            + "boolCol        bool,"
+            + "characterCol   character(4),"
+            + "charactervCol  character varying(4),"
+            + "intCol         int,"
+            + "int4Col        int4,"
+            + "doublepCol     double precision,"
+            + "decimalCol     decimal(4,2),"
+            + "float4Col      float,"
+            + "int2Col        int2,"
+            + "serial2Col     serial2,"
+            + "serial4Col     serial4,"
+            + "timetzCol      timetz,"
+            + "timestamptzCol timestamptz,"
+            + "serial8Col     serial8)"
         , TABLE_NAME));
     stmt.execute(String.format("INSERT INTO %s VALUES ( "
             + "1, 1, '1', '1011', true, '((1,1), (2,2))', '1', '1234', '1234', "
@@ -99,14 +109,16 @@ public class JdbcResultSetMetaDataTestForPostgreSQL {
             + "'{\"2\":1}', '{1,2,3}', '((1,1),(2,2))', "
             + "'08002b:010203', '08002b:0102030405', '12.34', 1.0, '((1,1))', '(1,1)', "
             + "'((1,1))', 1.0, 1, 1, 1, '1110', '2018-12-31 00:00:01', '2018-12-31 00:00:01', "
-            + "'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11','<foo>bar</foo>')",
+            + "'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11','<foo>bar</foo>', '1', 1, true, '1234', '1234', 1, 1, 1.0, 1.0, 1.0"
+            + ", 1, 1, 1, '2018-12-31 00:00:01', '2018-12-31 00:00:01', 1)",
         TABLE_NAME));
     stmt.execute(String.format("INSERT INTO %s VALUES ( "
-            + "NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, "
+            + "NULL, 1, NULL, NULL, NULL, NULL, NULL, NULL, "
             + "NULL, NULL, NULL, NULL, NULL, "
             + "NULL, NULL, NULL, NULL, "
             + "NULL, NULL, NULL, NULL, NULL, NULL, "
-            + "NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL)",
+            + "NULL, NULL, NULL, NULL, 1, 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, "
+            + "NULL, NULL, NULL, NULL, NULL, 1, 1, NULL, NULL, 1)",
         TABLE_NAME));
 
   }
@@ -121,7 +133,7 @@ public class JdbcResultSetMetaDataTestForPostgreSQL {
     String sql = String.format("select * from %s", TABLE_NAME);
     ResultSet ourResult = new JdbcResultSet(dbmsConn.execute(sql));
     ResultSetMetaData ourMetaData = ourResult.getMetaData();
-    assertEquals(34, ourMetaData.getColumnCount());
+    assertEquals(50, ourMetaData.getColumnCount());
 
     ResultSetMetaData expected = stmt.executeQuery(sql).getMetaData();
     assertEquals(expected.getColumnCount(), ourMetaData.getColumnCount());
@@ -131,23 +143,42 @@ public class JdbcResultSetMetaDataTestForPostgreSQL {
     }
 
     ourResult.next();
-    assertEquals(true, ourResult.getBoolean(1));  // bit
-    assertEquals(1, ourResult.getByte(1));        // bit
+    assertEquals(1, ourResult.getInt(45));         // int2
+    assertEquals(1, ourResult.getLong(45));        // int2
+    assertEquals(1, ourResult.getByte(45));        // int2
+    assertEquals(true, ourResult.getBoolean(45));  // int2
+    assertNotEquals(2, ourResult.getInt(45));      // int2
+    assertNotEquals(2, ourResult.getLong(45));     // int2
+    assertNotEquals(2, ourResult.getByte(45));     // int2
+    assertEquals(true, ourResult.getBoolean(41));  // int4
+    assertEquals(1, ourResult.getInt(41));         // int4
+    assertEquals(1, ourResult.getLong(41));        // int4
+    assertEquals(1, ourResult.getByte(41));        // int4
+    assertEquals(true, ourResult.getBoolean(40));  // int
+    assertEquals(1, ourResult.getInt(40));         // int
+    assertEquals(1, ourResult.getLong(40));        // int
+    assertEquals(1, ourResult.getByte(40));        // int
+    assertEquals(true, ourResult.getBoolean(36));  // int8
+    assertEquals(1, ourResult.getInt(36));         // int8
+    assertEquals(1, ourResult.getLong(36));        // int8
+    assertEquals(1, ourResult.getByte(36));        // int8
+    assertEquals(true, ourResult.getBoolean(27));  // smallint
     assertEquals(1, ourResult.getInt(27));         // smallint
     assertEquals(1, ourResult.getLong(27));        // smallint
     assertEquals(1, ourResult.getByte(27));        // smallint
-    assertNotEquals(2, ourResult.getInt(27));      // smallint
-    assertNotEquals(2, ourResult.getLong(27));     // smallint
-    assertNotEquals(2, ourResult.getByte(27));     // smallint
-    assertEquals(true, ourResult.getBoolean(5));  // bool
-    assertEquals(1, ourResult.getInt(5));         // bool
-    assertEquals(1, ourResult.getLong(5));        // bool
-    assertEquals(1, ourResult.getByte(5));        // bool
+    assertEquals(true, ourResult.getBoolean(5));  // boolean
+    assertEquals(1, ourResult.getInt(5));         // boolean
+    assertEquals(1, ourResult.getLong(5));        // boolean
+    assertEquals(1, ourResult.getByte(5));        // boolean
+    assertEquals(true, ourResult.getBoolean(37));  // bool
+    assertEquals(1, ourResult.getInt(37));         // bool
+    assertEquals(1, ourResult.getLong(37));        // bool
+    assertEquals(1, ourResult.getByte(37));        // bool
     assertEquals(true, ourResult.getBoolean(15));  // integer
     assertEquals(1, ourResult.getInt(15));         // integer
     assertEquals(1, ourResult.getLong(15));        // integer
     assertEquals(1, ourResult.getByte(15));        // integer
-    assertEquals(true, ourResult.getBoolean(8));  // bigint
+    assertEquals(true, ourResult.getBoolean(1));  // bigint
     assertEquals(1, ourResult.getInt(1));         // bigint
     assertEquals(1, ourResult.getLong(1));        // bigint
     assertEquals(1, ourResult.getByte(1));        // bigint
@@ -171,6 +202,113 @@ public class JdbcResultSetMetaDataTestForPostgreSQL {
     assertEquals(1.0, ourResult.getByte(13), 1e-6);          // float8
     assertEquals(1.0, ourResult.getInt(13), 1e-6);           // float8
     assertEquals(1.0, ourResult.getLong(13), 1e-6);          // float8
+    assertEquals(1.0, ourResult.getFloat(42), 1e-6);         // double precision
+    assertEquals(1.0, ourResult.getDouble(42), 1e-6);        // double precision
+    assertEquals(1.0, ourResult.getByte(42), 1e-6);          // double precision
+    assertEquals(1.0, ourResult.getInt(42), 1e-6);           // double precision
+    assertEquals(1.0, ourResult.getLong(42), 1e-6);          // double precision
+    assertEquals(1.0, ourResult.getFloat(43), 1e-6);         // decimal
+    assertEquals(1.0, ourResult.getDouble(43), 1e-6);        // decimal
+    assertEquals(1.0, ourResult.getByte(43), 1e-6);          // decimal
+    assertEquals(1.0, ourResult.getInt(43), 1e-6);           // decimal
+    assertEquals(1.0, ourResult.getLong(43), 1e-6);          // decimal
+    assertEquals(1.0, ourResult.getFloat(44), 1e-6);         // float
+    assertEquals(1.0, ourResult.getDouble(44), 1e-6);        // float
+    assertEquals(1.0, ourResult.getByte(44), 1e-6);          // float
+    assertEquals(1.0, ourResult.getInt(44), 1e-6);           // float
+    assertEquals(1.0, ourResult.getLong(44), 1e-6);          // float
+    assertEquals(Timestamp.valueOf("2018-12-31 00:00:00"), ourResult.getTimestamp(12));  // date
+    assertEquals(Timestamp.valueOf("2018-12-31 00:00:01"), ourResult.getTimestamp(32));  // timestamp
+    assertEquals(Time.valueOf("00:00:01"), ourResult.getTime(31));                       // time
+    assertEquals(Timestamp.valueOf("1970-01-01 00:00:01"), ourResult.getTimestamp(31));  // time
+    assertEquals(Timestamp.valueOf("2018-12-31 00:00:01"), ourResult.getTimestamp(49));  // timestamptz
+    assertEquals(Time.valueOf("00:00:01"), ourResult.getTime(48));                       // timetz
+    assertEquals(Timestamp.valueOf("1970-01-01 00:00:01"), ourResult.getTimestamp(48));  // timetz
+    assertEquals("1234", ourResult.getString(8));             // char
+    assertEquals("1234", ourResult.getString(9));             // varchar
+    assertEquals("1234", ourResult.getString(38));             // character
+    assertEquals("1234", ourResult.getString(39));             // character varying
+
+    // NULL value
+    ourResult.next();
+    assertEquals(0, ourResult.getInt(45));         // int2
+    assertEquals(0, ourResult.getLong(45));        // int2
+    assertEquals(0, ourResult.getByte(45));        // int2
+    assertEquals(false, ourResult.getBoolean(45));  // int2
+    assertEquals(false, ourResult.getBoolean(41));  // int4
+    assertEquals(0, ourResult.getInt(41));         // int4
+    assertEquals(0, ourResult.getLong(41));        // int4
+    assertEquals(0, ourResult.getByte(41));        // int4
+    assertEquals(false, ourResult.getBoolean(40));  // int
+    assertEquals(0, ourResult.getInt(40));         // int
+    assertEquals(0, ourResult.getLong(40));        // int
+    assertEquals(0, ourResult.getByte(40));        // int
+    assertEquals(false, ourResult.getBoolean(36));  // int8
+    assertEquals(0, ourResult.getInt(36));         // int8
+    assertEquals(0, ourResult.getLong(36));        // int8
+    assertEquals(0, ourResult.getByte(36));        // int8
+    assertEquals(false, ourResult.getBoolean(27));  // smallint
+    assertEquals(0, ourResult.getInt(27));         // smallint
+    assertEquals(0, ourResult.getLong(27));        // smallint
+    assertEquals(0, ourResult.getByte(27));        // smallint
+    assertEquals(false, ourResult.getBoolean(5));  // boolean
+    assertEquals(0, ourResult.getInt(5));         // boolean
+    assertEquals(0, ourResult.getLong(5));        // boolean
+    assertEquals(0, ourResult.getByte(5));        // boolean
+    assertEquals(false, ourResult.getBoolean(37));  // bool
+    assertEquals(0, ourResult.getInt(37));         // bool
+    assertEquals(0, ourResult.getLong(37));        // bool
+    assertEquals(0, ourResult.getByte(37));        // bool
+    assertEquals(false, ourResult.getBoolean(15));  // integer
+    assertEquals(0, ourResult.getInt(15));         // integer
+    assertEquals(0, ourResult.getLong(15));        // integer
+    assertEquals(0, ourResult.getByte(15));        // integer
+    assertEquals(false, ourResult.getBoolean(1));  // bigint
+    assertEquals(0, ourResult.getInt(1));         // bigint
+    assertEquals(0, ourResult.getLong(1));        // bigint
+    assertEquals(0, ourResult.getByte(1));        // bigint
+
+    assertEquals(0, ourResult.getFloat(22), 1e-6);         // numeric
+    assertEquals(0, ourResult.getDouble(22), 1e-6);        // numeric
+    assertEquals(0, ourResult.getByte(22), 1e-6);          // numeric
+    assertEquals(0, ourResult.getInt(22), 1e-6);           // numeric
+    assertEquals(0, ourResult.getLong(22), 1e-6);          // numeric
+    assertEquals(0, ourResult.getFloat(26), 1e-6);         // real
+    assertEquals(0, ourResult.getDouble(26), 1e-6);        // real
+    assertEquals(0, ourResult.getByte(26), 1e-6);          // real
+    assertEquals(0, ourResult.getInt(26), 1e-6);           // real
+    assertEquals(0, ourResult.getLong(26), 1e-6);          // real
+    assertEquals(0, ourResult.getFloat(13), 1e-6);         // float8
+    assertEquals(0, ourResult.getDouble(13), 1e-6);        // float8
+    assertEquals(0, ourResult.getByte(13), 1e-6);          // float8
+    assertEquals(0, ourResult.getInt(13), 1e-6);           // float8
+    assertEquals(0, ourResult.getLong(13), 1e-6);          // float8
+    assertEquals(0, ourResult.getFloat(42), 1e-6);         // double precision
+    assertEquals(0, ourResult.getDouble(42), 1e-6);        // double precision
+    assertEquals(0, ourResult.getByte(42), 1e-6);          // double precision
+    assertEquals(0, ourResult.getInt(42), 1e-6);           // double precision
+    assertEquals(0, ourResult.getLong(42), 1e-6);          // double precision
+    assertEquals(0, ourResult.getFloat(43), 1e-6);         // decimal
+    assertEquals(0, ourResult.getDouble(43), 1e-6);        // decimal
+    assertEquals(0, ourResult.getByte(43), 1e-6);          // decimal
+    assertEquals(0, ourResult.getInt(43), 1e-6);           // decimal
+    assertEquals(0, ourResult.getLong(43), 1e-6);          // decimal
+    assertEquals(0, ourResult.getFloat(44), 1e-6);         // float
+    assertEquals(0, ourResult.getDouble(44), 1e-6);        // float
+    assertEquals(0, ourResult.getByte(44), 1e-6);          // float
+    assertEquals(0, ourResult.getInt(44), 1e-6);           // float
+    assertEquals(0, ourResult.getLong(44), 1e-6);          // float
+    assertNull(ourResult.getTimestamp(12));  // date
+    assertNull(ourResult.getTimestamp(32));  // timestamp
+    assertNull(ourResult.getTime(31));                       // time
+    assertNull(ourResult.getTimestamp(31));  // time
+    assertNull(ourResult.getTimestamp(49));  // timestamptz
+    assertNull(ourResult.getTime(48));                       // timetz
+    assertNull(ourResult.getTimestamp(48));  // timetz
+    assertNull(ourResult.getString(8));             // char
+    assertNull(ourResult.getString(9));             // varchar
+    assertNull(ourResult.getString(38));             // character
+    assertNull(ourResult.getString(39));             // character varying
   }
 
 
