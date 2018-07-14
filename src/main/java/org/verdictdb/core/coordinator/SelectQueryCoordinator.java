@@ -35,7 +35,6 @@ public class SelectQueryCoordinator {
 
 //  String defaultSchema;
 
-//  StaticMetaData staticMetaData;
 
 //  MetaDataProvider cachedMetaData;
 
@@ -46,6 +45,7 @@ public class SelectQueryCoordinator {
 
   public SelectQuery standardizeQuery(String query) throws VerdictDBException {
     // parse the query
+    RelationStandardizer.resetItemID();
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     SelectQuery relation = (SelectQuery) sqlToRelation.toRelation(query);
     MetaDataProvider metaData = createMetaDataFor(relation);
@@ -66,7 +66,7 @@ public class SelectQueryCoordinator {
     StaticMetaData meta = new StaticMetaData();
     String defaultSchema = conn.getDefaultSchema();
     meta.setDefaultSchema(defaultSchema);
-    
+
     // Extract all tables appeared in the query
     HashSet<BaseTable> tables = new HashSet<>();
     List<SelectQuery> queries = new ArrayList<>();

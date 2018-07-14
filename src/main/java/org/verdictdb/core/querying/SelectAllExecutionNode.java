@@ -15,7 +15,7 @@ import org.verdictdb.exception.VerdictDBValueException;
 /**
  * 
  * @author Yongjoo Park
- * TODO: we need to also include order-by and limit
+ * TODO: Add Have
  */
 public class SelectAllExecutionNode extends QueryNodeWithPlaceHolders {
   
@@ -27,6 +27,8 @@ public class SelectAllExecutionNode extends QueryNodeWithPlaceHolders {
     SelectAllExecutionNode selectAll = new SelectAllExecutionNode(null);
     Pair<BaseTable, SubscriptionTicket> baseAndSubscriptionTicket = selectAll.createPlaceHolderTable("t");
     SelectQuery selectQuery = SelectQuery.create(new AsteriskColumn(), baseAndSubscriptionTicket.getLeft());
+    selectQuery.addOrderby(query.getOrderby());
+    if (query.getLimit().isPresent()) selectQuery.addLimit(query.getLimit().get());
     selectAll.setSelectQuery(selectQuery);
     
 //    Pair<String, String> tempTableFullName = plan.generateTempTableName();

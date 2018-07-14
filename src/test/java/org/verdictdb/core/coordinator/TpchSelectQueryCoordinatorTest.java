@@ -1,40 +1,14 @@
-package org.verdictdb.core.scramblingquerying;
+package org.verdictdb.core.coordinator;
 
-import static java.sql.Types.BIGINT;
-import static org.junit.Assert.assertEquals;
-
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.connection.JdbcConnection;
-import org.verdictdb.connection.StaticMetaData;
 import org.verdictdb.core.execution.ExecutablePlanRunner;
-import org.verdictdb.core.querying.QueryExecutionPlan;
-import org.verdictdb.core.querying.QueryExecutionPlanSimplifier;
-import org.verdictdb.core.querying.ola.AsyncQueryExecutionPlan;
 import org.verdictdb.core.resulthandler.ExecutionResultReader;
-import org.verdictdb.core.scrambling.ScrambleMeta;
-import org.verdictdb.core.scrambling.ScrambleMetaSet;
-import org.verdictdb.core.scrambling.ScramblingMethod;
-import org.verdictdb.core.scrambling.ScramblingPlan;
-import org.verdictdb.core.scrambling.UniformScrambler;
-import org.verdictdb.core.scrambling.UniformScramblingMethod;
+import org.verdictdb.core.scrambling.*;
 import org.verdictdb.core.sqlobject.AbstractRelation;
 import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.exception.VerdictDBException;
@@ -43,7 +17,22 @@ import org.verdictdb.sqlreader.RelationStandardizer;
 import org.verdictdb.sqlsyntax.MysqlSyntax;
 import org.verdictdb.sqlwriter.SelectQueryToSql;
 
-public class MySqlTpchUniformScramblingQueryingTest {
+import java.sql.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+
+/**
+ *  Test cases are from
+ *  https://github.com/umich-dbgroup/verdictdb-core/wiki/TPCH-Query-Reference--(Experiment-Version)
+ *
+ *  Some test cases are slightly changed because size of test data are small.
+ */
+public class TpchSelectQueryCoordinatorTest {
 
   // lineitem has 10 blocks, orders has 3 blocks;
   // lineitem join orders has 12 blocks
@@ -54,10 +43,6 @@ public class MySqlTpchUniformScramblingQueryingTest {
   static Connection conn;
 
   private static Statement stmt;
-
-  private ResultSetMetaData jdbcResultSetMetaData1;
-
-  private ResultSetMetaData jdbcResultSetMetaData2;
 
   private static final String MYSQL_HOST;
 
@@ -75,9 +60,6 @@ public class MySqlTpchUniformScramblingQueryingTest {
   private static final String MYSQL_UESR = "root";
 
   private static final String MYSQL_PASSWORD = "";
-
-  static StaticMetaData staticMetaData = new StaticMetaData();
-
 
   @BeforeClass
   public static void setupMySqlDatabase() throws SQLException, VerdictDBException {
@@ -211,110 +193,10 @@ public class MySqlTpchUniformScramblingQueryingTest {
     distribution1.put(0, Arrays.asList(0.33, 0.66, 1.0));
     tablemeta.setCumulativeMassDistributionPerTier(distribution1);
     meta.insertScrambleMetaEntry(tablemeta);
-
-    // Configure static meta data
-    List<Pair<String, Integer>> arr = new ArrayList<>();
-    arr.addAll(Arrays.asList(new ImmutablePair<>("n_nationkey", BIGINT),
-        new ImmutablePair<>("n_name", BIGINT),
-        new ImmutablePair<>("n_regionkey", BIGINT),
-        new ImmutablePair<>("n_comment", BIGINT)));
-    staticMetaData.setDefaultSchema("test");
-    staticMetaData.addTableData(new StaticMetaData.TableInfo("test", "nation"), arr);
-    arr = new ArrayList<>();
-    arr.addAll(Arrays.asList(new ImmutablePair<>("r_regionkey", BIGINT),
-        new ImmutablePair<>("r_name", BIGINT),
-        new ImmutablePair<>("r_comment", BIGINT)));
-    staticMetaData.addTableData(new StaticMetaData.TableInfo("test", "region"), arr);
-    arr = new ArrayList<>();
-    arr.addAll(Arrays.asList(new ImmutablePair<>("p_partkey", BIGINT),
-        new ImmutablePair<>("p_name", BIGINT),
-        new ImmutablePair<>("p_brand", BIGINT),
-        new ImmutablePair<>("p_mfgr", BIGINT),
-        new ImmutablePair<>("p_type", BIGINT),
-        new ImmutablePair<>("p_size", BIGINT),
-        new ImmutablePair<>("p_container", BIGINT),
-        new ImmutablePair<>("p_retailprice", BIGINT),
-        new ImmutablePair<>("p_comment", BIGINT)
-    ));
-    staticMetaData.addTableData(new StaticMetaData.TableInfo("test", "part"), arr);
-    arr = new ArrayList<>();
-    arr.addAll(Arrays.asList(new ImmutablePair<>("s_suppkey", BIGINT),
-        new ImmutablePair<>("s_name", BIGINT),
-        new ImmutablePair<>("s_address", BIGINT),
-        new ImmutablePair<>("s_nationkey", BIGINT),
-        new ImmutablePair<>("s_phone", BIGINT),
-        new ImmutablePair<>("s_acctbal", BIGINT),
-        new ImmutablePair<>("s_comment", BIGINT)
-    ));
-    staticMetaData.addTableData(new StaticMetaData.TableInfo("test", "supplier"), arr);
-    arr = new ArrayList<>();
-    arr.addAll(Arrays.asList(new ImmutablePair<>("ps_partkey", BIGINT),
-        new ImmutablePair<>("ps_suppkey", BIGINT),
-        new ImmutablePair<>("ps_availqty", BIGINT),
-        new ImmutablePair<>("ps_supplycost", BIGINT),
-        new ImmutablePair<>("ps_comment", BIGINT)));
-    staticMetaData.addTableData(new StaticMetaData.TableInfo("test", "partsupp"), arr);
-    arr = new ArrayList<>();
-    arr.addAll(Arrays.asList(new ImmutablePair<>("c_custkey", BIGINT),
-        new ImmutablePair<>("c_name", BIGINT),
-        new ImmutablePair<>("c_address", BIGINT),
-        new ImmutablePair<>("c_nationkey", BIGINT),
-        new ImmutablePair<>("c_phone", BIGINT),
-        new ImmutablePair<>("c_acctbal", BIGINT),
-        new ImmutablePair<>("c_mktsegment", BIGINT),
-        new ImmutablePair<>("c_comment", BIGINT)
-    ));
-    staticMetaData.addTableData(new StaticMetaData.TableInfo("test", "customer"), arr);
-    arr = new ArrayList<>();
-    arr.addAll(Arrays.asList(new ImmutablePair<>("o_orderkey", BIGINT),
-        new ImmutablePair<>("o_custkey", BIGINT),
-        new ImmutablePair<>("o_orderstatus", BIGINT),
-        new ImmutablePair<>("o_totalprice", BIGINT),
-        new ImmutablePair<>("o_orderdate", BIGINT),
-        new ImmutablePair<>("o_orderpriority", BIGINT),
-        new ImmutablePair<>("o_clerk", BIGINT),
-        new ImmutablePair<>("o_shippriority", BIGINT),
-        new ImmutablePair<>("o_comment", BIGINT)
-    ));
-    staticMetaData.addTableData(new StaticMetaData.TableInfo("test", "orders_scrambled"), arr);
-    arr = new ArrayList<>();
-    arr.addAll(Arrays.asList(new ImmutablePair<>("l_orderkey", BIGINT),
-        new ImmutablePair<>("l_partkey", BIGINT),
-        new ImmutablePair<>("l_suppkey", BIGINT),
-        new ImmutablePair<>("l_linenumber", BIGINT),
-        new ImmutablePair<>("l_quantity", BIGINT),
-        new ImmutablePair<>("l_extendedprice", BIGINT),
-        new ImmutablePair<>("l_discount", BIGINT),
-        new ImmutablePair<>("l_tax", BIGINT),
-        new ImmutablePair<>("l_returnflag", BIGINT),
-        new ImmutablePair<>("l_linestatus", BIGINT),
-        new ImmutablePair<>("l_shipdate", BIGINT),
-        new ImmutablePair<>("l_commitdate", BIGINT),
-        new ImmutablePair<>("l_receiptdate", BIGINT),
-        new ImmutablePair<>("l_shipinstruct", BIGINT),
-        new ImmutablePair<>("l_shipmode", BIGINT),
-        new ImmutablePair<>("l_comment", BIGINT)
-    ));
-    staticMetaData.addTableData(new StaticMetaData.TableInfo("test", "lineitem_scrambled"), arr);
-  }
-
-  @AfterClass
-  public static void tearDown() throws SQLException {
-    stmt.execute("DROP TABLE IF EXISTS `test`.`region`");
-    stmt.execute("DROP TABLE IF EXISTS `test`.`nation`");
-    stmt.execute("DROP TABLE IF EXISTS `test`.`lineitem`");
-    stmt.execute("DROP TABLE IF EXISTS `test`.`customer`");
-    stmt.execute("DROP TABLE IF EXISTS `test`.`supplier`");
-    stmt.execute("DROP TABLE IF EXISTS `test`.`partsupp`");
-    stmt.execute("DROP TABLE IF EXISTS `test`.`part`");
-    stmt.execute("DROP TABLE IF EXISTS `test`.`orders`");
-    stmt.execute("DROP TABLE IF EXISTS `test`.`lineitem_scrambled`");
-    stmt.execute("DROP TABLE IF EXISTS `test`.`orders_scrambled`");
   }
 
   @Test
   public void testTpch1() throws VerdictDBException, SQLException {
-    RelationStandardizer.resetItemID();
     String sql = "select " +
         " l_returnflag, " +
         " l_linestatus, " +
@@ -335,36 +217,49 @@ public class MySqlTpchUniformScramblingQueryingTest {
         " l_linestatus " +
         "order by " +
         " l_returnflag, " +
-        " l_linestatus " +
-        "LIMIT 1 ";
+        " l_linestatus ";
+    stmt.execute("create schema if not exists `verdictdb_temp`;");
+    
+//    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcConnection(conn, new MysqlSyntax()));
+    DbmsConnection dbmsconn = new JdbcConnection(conn, new MysqlSyntax());
+    dbmsconn.setDefaultSchema("test");
+    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
+    
+    coordinator.setScrambleMetaSet(meta);
+//    coordinator.setDefaultSchema("test");
+    ExecutionResultReader reader = coordinator.process(sql);
+
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
-    RelationStandardizer gen = new RelationStandardizer(staticMetaData);
+    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
     relation = gen.standardize((SelectQuery) relation);
 
     SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
     String stdQuery = selectQueryToSql.toSql(relation);
-
-    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
-    queryExecutionPlan.cleanUp();
-    queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    stmt.execute("create schema if not exists `verdictdb_temp`;");
-    JdbcConnection jdbcConnection = new JdbcConnection(conn, new MysqlSyntax());
-    ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(jdbcConnection, queryExecutionPlan);
     int cnt = 0;
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
-      dbmsQueryResult.next();
       cnt++;
       if (cnt == 10) {
         ResultSet rs = stmt.executeQuery(stdQuery);
-        rs.next();
-        assertEquals(true, rs.getBigDecimal(3).longValue()==12400 || rs.getBigDecimal(3).longValue()==5972
-        || rs.getBigDecimal(3).longValue()==6499 || rs.getBigDecimal(3).longValue()==319);
+        while (rs.next()) {
+          dbmsQueryResult.next();
+          assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
+          assertEquals(rs.getString(2), dbmsQueryResult.getString(1));
+          assertEquals(rs.getLong(3), dbmsQueryResult.getLong(2));
+          assertEquals(rs.getDouble(4), dbmsQueryResult.getDouble(3), 1e-5);
+          assertEquals(rs.getDouble(5), dbmsQueryResult.getDouble(4), 1e-5);
+          assertEquals(rs.getDouble(6), dbmsQueryResult.getDouble(5), 1e-5);
+          assertEquals(rs.getDouble(7), dbmsQueryResult.getDouble(6), 1e-5);
+          assertEquals(rs.getDouble(8), dbmsQueryResult.getDouble(7), 1e-5);
+          assertEquals(rs.getDouble(9), dbmsQueryResult.getDouble(8), 1e-5);
+          assertEquals(rs.getDouble(10), dbmsQueryResult.getDouble(9), 1e-5);
+        }
       }
     }
     assertEquals(10, cnt);
-    stmt.execute("drop schema `verdictdb_temp`;");
+    stmt.execute("drop schema if exists `verdictdb_temp`;");
+    System.out.println("test case 1 finished");
   }
 
   //@Test
@@ -390,35 +285,43 @@ public class MySqlTpchUniformScramblingQueryingTest {
         "o_shippriority " +
         "order by " +
         "revenue desc, " +
-        "o_orderdate ";
+        "o_orderdate " +
+        "limit 10";
+    stmt.execute("create schema if not exists `verdictdb_temp`;");
+//    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcConnection(conn, new MysqlSyntax()));
+    DbmsConnection dbmsconn = new JdbcConnection(conn, new MysqlSyntax());
+    dbmsconn.setDefaultSchema("test");
+    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
+    
+    coordinator.setScrambleMetaSet(meta);
+//    coordinator.setDefaultSchema("test");
+    ExecutionResultReader reader = coordinator.process(sql);
+
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
-    RelationStandardizer gen = new RelationStandardizer(staticMetaData);
+    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
     relation = gen.standardize((SelectQuery) relation);
 
     SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
     String stdQuery = selectQueryToSql.toSql(relation);
-
-    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
-    queryExecutionPlan.cleanUp();
-    queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    stmt.execute("create schema if not exists `verdictdb_temp`;");
-    JdbcConnection jdbcConnection = new JdbcConnection(conn, new MysqlSyntax());
-    ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(jdbcConnection, queryExecutionPlan);
     int cnt = 0;
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
-      dbmsQueryResult.next();
       cnt++;
       if (cnt == 12) {
         ResultSet rs = stmt.executeQuery(stdQuery);
-        int expected = 0;
-        while (rs.next()) expected++;
-        assertEquals(expected, 67);
+        while (rs.next()) {
+          dbmsQueryResult.next();
+          assertEquals(rs.getDouble(1), dbmsQueryResult.getDouble(0), 1e-5);
+          assertEquals(rs.getDouble(2), dbmsQueryResult.getDouble(1), 1e-5);
+          assertEquals(rs.getString(3), dbmsQueryResult.getString(2));
+          assertEquals(rs.getString(4), dbmsQueryResult.getString(3));
+        }
       }
     }
     assertEquals(12, cnt);
-    stmt.execute("drop schema `verdictdb_temp`;");
+    stmt.execute("drop schema if exists `verdictdb_temp`;");
+    System.out.println("test case 3 finished");
   }
 
   //@Test
@@ -437,34 +340,39 @@ public class MySqlTpchUniformScramblingQueryingTest {
         "o_orderpriority " +
         "order by " +
         "o_orderpriority ";
+    stmt.execute("create schema if not exists `verdictdb_temp`;");
+//    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcConnection(conn, new MysqlSyntax()));
+    DbmsConnection dbmsconn = new JdbcConnection(conn, new MysqlSyntax());
+    dbmsconn.setDefaultSchema("test");
+    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
+    
+    coordinator.setScrambleMetaSet(meta);
+//    coordinator.setDefaultSchema("test");
+    ExecutionResultReader reader = coordinator.process(sql);
+
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
-    RelationStandardizer gen = new RelationStandardizer(staticMetaData);
+    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
     relation = gen.standardize((SelectQuery) relation);
 
     SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
     String stdQuery = selectQueryToSql.toSql(relation);
-
-    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
-    queryExecutionPlan.cleanUp();
-    queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    stmt.execute("create schema if not exists `verdictdb_temp`;");
-    JdbcConnection jdbcConnection = new JdbcConnection(conn, new MysqlSyntax());
-    ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(jdbcConnection, queryExecutionPlan);
     int cnt = 0;
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
-      dbmsQueryResult.next();
       cnt++;
       if (cnt == 12) {
         ResultSet rs = stmt.executeQuery(stdQuery);
-        int expected = 0;
-        while (rs.next()) expected++;
-        assertEquals(expected, 5);
+        while (rs.next()) {
+          dbmsQueryResult.next();
+          assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
+          assertEquals(rs.getDouble(2), dbmsQueryResult.getDouble(1), 1e-5);
+        }
       }
     }
     assertEquals(12, cnt);
-    stmt.execute("drop schema `verdictdb_temp`;");
+    stmt.execute("drop schema if exists `verdictdb_temp`;");
+    System.out.println("test case 4 finished");
   }
 
   //@Test
@@ -493,34 +401,39 @@ public class MySqlTpchUniformScramblingQueryingTest {
         "n_name " +
         "order by " +
         "revenue desc ";
+    stmt.execute("create schema if not exists `verdictdb_temp`;");
+//    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcConnection(conn, new MysqlSyntax()));
+    DbmsConnection dbmsconn = new JdbcConnection(conn, new MysqlSyntax());
+    dbmsconn.setDefaultSchema("test");
+    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
+    
+    coordinator.setScrambleMetaSet(meta);
+//    coordinator.setDefaultSchema("test");
+    ExecutionResultReader reader = coordinator.process(sql);
+
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
-    RelationStandardizer gen = new RelationStandardizer(staticMetaData);
+    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
     relation = gen.standardize((SelectQuery) relation);
 
     SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
     String stdQuery = selectQueryToSql.toSql(relation);
-
-    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
-    queryExecutionPlan.cleanUp();
-    queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    stmt.execute("create schema if not exists `verdictdb_temp`;");
-    JdbcConnection jdbcConnection = new JdbcConnection(conn, new MysqlSyntax());
-    ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(jdbcConnection, queryExecutionPlan);
     int cnt = 0;
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
-      dbmsQueryResult.next();
       cnt++;
       if (cnt == 12) {
         ResultSet rs = stmt.executeQuery(stdQuery);
-        int expected = 0;
-        while (rs.next()) expected++;
-        assertEquals(expected, 21);
+        while (rs.next()) {
+          dbmsQueryResult.next();
+          assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
+          assertEquals(rs.getDouble(2), dbmsQueryResult.getDouble(1), 1e-5);
+        }
       }
     }
     assertEquals(12, cnt);
-    stmt.execute("drop schema `verdictdb_temp`;");
+    stmt.execute("drop schema if exists `verdictdb_temp`;");
+    System.out.println("test case 5 finished");
   }
 
   //@Test
@@ -535,34 +448,37 @@ public class MySqlTpchUniformScramblingQueryingTest {
         "and l_shipdate < date '1998-12-01' " +
         "and l_discount between 0.04 - 0.02 and 0.04 + 0.02 " +
         "and l_quantity < 15 ";
+    stmt.execute("create schema if not exists `verdictdb_temp`;");
+//    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcConnection(conn, new MysqlSyntax()));
+    DbmsConnection dbmsconn = new JdbcConnection(conn, new MysqlSyntax());
+    dbmsconn.setDefaultSchema("test");
+    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
+    coordinator.setScrambleMetaSet(meta);
+//    coordinator.setDefaultSchema("test");
+    ExecutionResultReader reader = coordinator.process(sql);
+
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
-    RelationStandardizer gen = new RelationStandardizer(staticMetaData);
+    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
     relation = gen.standardize((SelectQuery) relation);
 
     SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
     String stdQuery = selectQueryToSql.toSql(relation);
-
-    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
-    queryExecutionPlan.cleanUp();
-    queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    stmt.execute("create schema if not exists `verdictdb_temp`;");
-    JdbcConnection jdbcConnection = new JdbcConnection(conn, new MysqlSyntax());
-    ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(jdbcConnection, queryExecutionPlan);
     int cnt = 0;
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
-      dbmsQueryResult.next();
       cnt++;
       if (cnt == 10) {
         ResultSet rs = stmt.executeQuery(stdQuery);
-        int expected = 0;
-        while (rs.next()) expected++;
-        assertEquals(expected, 1);
+        while (rs.next()) {
+          dbmsQueryResult.next();
+          assertEquals(rs.getDouble(1), dbmsQueryResult.getDouble(0), 1e-5);
+        }
       }
     }
     assertEquals(10, cnt);
-    stmt.execute("drop schema `verdictdb_temp`;");
+    stmt.execute("drop schema if exists `verdictdb_temp`;");
+    System.out.println("test case 6 finished");
   }
 
   //@Test
@@ -607,37 +523,43 @@ public class MySqlTpchUniformScramblingQueryingTest {
         "supp_nation, " +
         "cust_nation, " +
         "l_year ";
+    stmt.execute("create schema if not exists `verdictdb_temp`;");
+//    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcConnection(conn, new MysqlSyntax()));
+    DbmsConnection dbmsconn = new JdbcConnection(conn, new MysqlSyntax());
+    dbmsconn.setDefaultSchema("test");
+    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
+    coordinator.setScrambleMetaSet(meta);
+//    coordinator.setDefaultSchema("test");
+    ExecutionResultReader reader = coordinator.process(sql);
+
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
-    RelationStandardizer gen = new RelationStandardizer(staticMetaData);
+    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
     relation = gen.standardize((SelectQuery) relation);
 
     SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
     String stdQuery = selectQueryToSql.toSql(relation);
-
-    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
-    queryExecutionPlan.cleanUp();
-    queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    stmt.execute("create schema if not exists `verdictdb_temp`;");
-    JdbcConnection jdbcConnection = new JdbcConnection(conn, new MysqlSyntax());
-    ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(jdbcConnection, queryExecutionPlan);
     int cnt = 0;
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
-      dbmsQueryResult.next();
       cnt++;
       if (cnt == 12) {
         ResultSet rs = stmt.executeQuery(stdQuery);
-        int expected = 0;
-        while (rs.next()) expected++;
-        assertEquals(expected, 2);
+        while (rs.next()) {
+          dbmsQueryResult.next();
+          assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
+          assertEquals(rs.getString(2), dbmsQueryResult.getString(1));
+          assertEquals(rs.getString(3), dbmsQueryResult.getString(2));
+          assertEquals(rs.getDouble(4), dbmsQueryResult.getDouble(3), 1e-5);
+        }
       }
     }
     assertEquals(12, cnt);
-    stmt.execute("drop schema `verdictdb_temp`;");
+    stmt.execute("drop schema if exists `verdictdb_temp`;");
+    System.out.println("test case 7 finished");
   }
 
-  //@Test
+  ////@Test
   public void test8Tpch() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select " +
@@ -676,34 +598,39 @@ public class MySqlTpchUniformScramblingQueryingTest {
         "o_year " +
         "order by " +
         "o_year ";
+    stmt.execute("create schema if not exists `verdictdb_temp`;");
+//    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcConnection(conn, new MysqlSyntax()));
+    DbmsConnection dbmsconn = new JdbcConnection(conn, new MysqlSyntax());
+    dbmsconn.setDefaultSchema("test");
+    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
+    coordinator.setScrambleMetaSet(meta);
+//    coordinator.setDefaultSchema("test");
+    ExecutionResultReader reader = coordinator.process(sql);
+
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
-    RelationStandardizer gen = new RelationStandardizer(staticMetaData);
+    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
     relation = gen.standardize((SelectQuery) relation);
 
     SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
     String stdQuery = selectQueryToSql.toSql(relation);
-
-    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
-    queryExecutionPlan.cleanUp();
-    queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    stmt.execute("create schema if not exists `verdictdb_temp`;");
-    JdbcConnection jdbcConnection = new JdbcConnection(conn, new MysqlSyntax());
-    ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(jdbcConnection, queryExecutionPlan);
     int cnt = 0;
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
-      dbmsQueryResult.next();
       cnt++;
       if (cnt == 12) {
         ResultSet rs = stmt.executeQuery(stdQuery);
-        int expected = 0;
-        while (rs.next()) expected++;
-        assertEquals(expected, 5);
+        while (rs.next()) {
+          dbmsQueryResult.next();
+          assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
+          assertEquals(rs.getDouble(2), dbmsQueryResult.getDouble(1), 1e-5);
+          assertEquals(rs.getDouble(3), dbmsQueryResult.getDouble(2), 1e-5);
+        }
       }
     }
     assertEquals(12, cnt);
-    stmt.execute("drop schema `verdictdb_temp`;");
+    stmt.execute("drop schema if exists `verdictdb_temp`;");
+    System.out.println("test case 8 finished");
   }
 
   //@Test
@@ -740,34 +667,39 @@ public class MySqlTpchUniformScramblingQueryingTest {
         "order by " +
         "nation, " +
         "o_year desc ";
+    stmt.execute("create schema if not exists `verdictdb_temp`;");
+//    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcConnection(conn, new MysqlSyntax()));
+    DbmsConnection dbmsconn = new JdbcConnection(conn, new MysqlSyntax());
+    dbmsconn.setDefaultSchema("test");
+    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
+    coordinator.setScrambleMetaSet(meta);
+//    coordinator.setDefaultSchema("test");
+    ExecutionResultReader reader = coordinator.process(sql);
+
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
-    RelationStandardizer gen = new RelationStandardizer(staticMetaData);
+    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
     relation = gen.standardize((SelectQuery) relation);
 
     SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
     String stdQuery = selectQueryToSql.toSql(relation);
-
-    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
-    queryExecutionPlan.cleanUp();
-    queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    stmt.execute("create schema if not exists `verdictdb_temp`;");
-    JdbcConnection jdbcConnection = new JdbcConnection(conn, new MysqlSyntax());
-    ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(jdbcConnection, queryExecutionPlan);
     int cnt = 0;
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
-      dbmsQueryResult.next();
       cnt++;
       if (cnt == 12) {
         ResultSet rs = stmt.executeQuery(stdQuery);
-        int expected = 0;
-        while (rs.next()) expected++;
-        assertEquals(expected, 25);
+        while (rs.next()) {
+          dbmsQueryResult.next();
+          assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
+          assertEquals(rs.getString(2), dbmsQueryResult.getString(1));
+          assertEquals(rs.getDouble(3), dbmsQueryResult.getDouble(2), 1e-5);
+        }
       }
     }
     assertEquals(12, cnt);
-    stmt.execute("drop schema `verdictdb_temp`;");
+    stmt.execute("drop schema if exists `verdictdb_temp`;");
+    System.out.println("test case 9 finished");
   }
 
   //@Test
@@ -803,34 +735,39 @@ public class MySqlTpchUniformScramblingQueryingTest {
         "c_comment " +
         "order by " +
         "revenue desc ";
+    stmt.execute("create schema if not exists `verdictdb_temp`;");
+//    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcConnection(conn, new MysqlSyntax()));
+    DbmsConnection dbmsconn = new JdbcConnection(conn, new MysqlSyntax());
+    dbmsconn.setDefaultSchema("test");
+    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
+    coordinator.setScrambleMetaSet(meta);
+//    coordinator.setDefaultSchema("test");
+    ExecutionResultReader reader = coordinator.process(sql);
+
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
-    RelationStandardizer gen = new RelationStandardizer(staticMetaData);
+    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
     relation = gen.standardize((SelectQuery) relation);
 
     SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
     String stdQuery = selectQueryToSql.toSql(relation);
-
-    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
-    queryExecutionPlan.cleanUp();
-    queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    stmt.execute("create schema if not exists `verdictdb_temp`;");
-    JdbcConnection jdbcConnection = new JdbcConnection(conn, new MysqlSyntax());
-    ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(jdbcConnection, queryExecutionPlan);
     int cnt = 0;
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
-      dbmsQueryResult.next();
       cnt++;
       if (cnt == 12) {
         ResultSet rs = stmt.executeQuery(stdQuery);
-        int expected = 0;
-        while (rs.next()) expected++;
-        assertEquals(expected, 112);
+        while (rs.next()) {
+          dbmsQueryResult.next();
+          assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
+          assertEquals(rs.getString(2), dbmsQueryResult.getString(1));
+          assertEquals(rs.getDouble(3), dbmsQueryResult.getDouble(2), 1e-5);
+        }
       }
     }
     assertEquals(12, cnt);
-    stmt.execute("drop schema `verdictdb_temp`;");
+    stmt.execute("drop schema if exists `verdictdb_temp`;");
+    System.out.println("test case 10 finished");
   }
 
   //@Test
@@ -862,34 +799,39 @@ public class MySqlTpchUniformScramblingQueryingTest {
         "l_shipmode " +
         "order by " +
         "l_shipmode ";
+    stmt.execute("create schema if not exists `verdictdb_temp`;");
+//    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcConnection(conn, new MysqlSyntax()));
+    DbmsConnection dbmsconn = new JdbcConnection(conn, new MysqlSyntax());
+    dbmsconn.setDefaultSchema("test");
+    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
+    coordinator.setScrambleMetaSet(meta);
+//    coordinator.setDefaultSchema("test");
+    ExecutionResultReader reader = coordinator.process(sql);
+
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
-    RelationStandardizer gen = new RelationStandardizer(staticMetaData);
+    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
     relation = gen.standardize((SelectQuery) relation);
 
     SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
     String stdQuery = selectQueryToSql.toSql(relation);
-
-    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
-    queryExecutionPlan.cleanUp();
-    queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    stmt.execute("create schema if not exists `verdictdb_temp`;");
-    JdbcConnection jdbcConnection = new JdbcConnection(conn, new MysqlSyntax());
-    ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(jdbcConnection, queryExecutionPlan);
     int cnt = 0;
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
-      dbmsQueryResult.next();
       cnt++;
       if (cnt == 12) {
         ResultSet rs = stmt.executeQuery(stdQuery);
-        int expected = 0;
-        while (rs.next()) expected++;
-        assertEquals(expected, 7);
+        while (rs.next()) {
+          dbmsQueryResult.next();
+          assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
+          assertEquals(rs.getDouble(2), dbmsQueryResult.getDouble(1), 1e-5);
+          assertEquals(rs.getDouble(3), dbmsQueryResult.getDouble(2), 1e-5);
+        }
       }
     }
     assertEquals(12, cnt);
-    stmt.execute("drop schema `verdictdb_temp`;");
+    stmt.execute("drop schema if exists `verdictdb_temp`;");
+    System.out.println("test case 12 finished");
   }
 
   //@Test
@@ -898,39 +840,44 @@ public class MySqlTpchUniformScramblingQueryingTest {
         "c_custkey, " +
         "count(o_orderkey) as c_count " +
         "from " +
-        "customer left outer join orders_scrambled on " +
+        "customer inner join orders_scrambled on " +
         "c_custkey = o_custkey " +
         "and o_comment not like '%unusual%' " +
         "group by " +
-        "c_custkey";
+        "c_custkey " +
+        "order by c_custkey";
+    stmt.execute("create schema if not exists `verdictdb_temp`;");
+//    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcConnection(conn, new MysqlSyntax()));
+    DbmsConnection dbmsconn = new JdbcConnection(conn, new MysqlSyntax());
+    dbmsconn.setDefaultSchema("test");
+    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
+    coordinator.setScrambleMetaSet(meta);
+//    coordinator.setDefaultSchema("test");
+    ExecutionResultReader reader = coordinator.process(sql);
+
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
-    RelationStandardizer gen = new RelationStandardizer(staticMetaData);
+    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
     relation = gen.standardize((SelectQuery) relation);
 
     SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
     String stdQuery = selectQueryToSql.toSql(relation);
-
-    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
-    queryExecutionPlan.cleanUp();
-    queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    stmt.execute("create schema if not exists `verdictdb_temp`;");
-    JdbcConnection jdbcConnection = new JdbcConnection(conn, new MysqlSyntax());
-    ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(jdbcConnection, queryExecutionPlan);
     int cnt = 0;
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
-      dbmsQueryResult.next();
       cnt++;
       if (cnt == 3) {
         ResultSet rs = stmt.executeQuery(stdQuery);
-        int expected = 0;
-        while (rs.next()) expected++;
-        assertEquals(expected, 257);
+        while (rs.next()) {
+          dbmsQueryResult.next();
+          assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
+          assertEquals(rs.getDouble(2), dbmsQueryResult.getDouble(1), 1e-5);
+        }
       }
     }
     assertEquals(3, cnt);
-    stmt.execute("drop schema `verdictdb_temp`;");
+    stmt.execute("drop schema if exists `verdictdb_temp`;");
+    System.out.println("test case 13 finished");
   }
 
   //@Test
@@ -948,34 +895,38 @@ public class MySqlTpchUniformScramblingQueryingTest {
         "l_partkey = p_partkey " +
         "and l_shipdate >= date '1992-01-01' " +
         "and l_shipdate < date '1998-01-01' ";
+    stmt.execute("create schema if not exists `verdictdb_temp`;");
+//    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcConnection(conn, new MysqlSyntax()));
+    DbmsConnection dbmsconn = new JdbcConnection(conn, new MysqlSyntax());
+    dbmsconn.setDefaultSchema("test");
+    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
+    coordinator.setScrambleMetaSet(meta);
+//    coordinator.setDefaultSchema("test");
+    ExecutionResultReader reader = coordinator.process(sql);
+
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
-    RelationStandardizer gen = new RelationStandardizer(staticMetaData);
+    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
     relation = gen.standardize((SelectQuery) relation);
 
     SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
     String stdQuery = selectQueryToSql.toSql(relation);
-
-    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
-    queryExecutionPlan.cleanUp();
-    queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    stmt.execute("create schema if not exists `verdictdb_temp`;");
-    JdbcConnection jdbcConnection = new JdbcConnection(conn, new MysqlSyntax());
-    ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(jdbcConnection, queryExecutionPlan);
     int cnt = 0;
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
-      dbmsQueryResult.next();
       cnt++;
       if (cnt == 10) {
         ResultSet rs = stmt.executeQuery(stdQuery);
-        int expected = 0;
-        while (rs.next()) expected++;
-        assertEquals(expected, 1);
+        while (rs.next()) {
+          dbmsQueryResult.next();
+          assertEquals(rs.getDouble(2), dbmsQueryResult.getDouble(1), 1e-5);
+          assertEquals(rs.getDouble(1), dbmsQueryResult.getDouble(0), 1e-5);
+        }
       }
     }
     assertEquals(10, cnt);
-    stmt.execute("drop schema `verdictdb_temp`;");
+    stmt.execute("drop schema if exists `verdictdb_temp`;");
+    System.out.println("test case 14 finished");
   }
 
   //@Test
@@ -989,35 +940,41 @@ public class MySqlTpchUniformScramblingQueryingTest {
         "l_shipdate >= date '1992-01-01' " +
         "and l_shipdate < date '1999-01-01'" +
         "group by " +
+        "l_suppkey " +
+        "order by " +
         "l_suppkey";
+    stmt.execute("create schema if not exists `verdictdb_temp`;");
+//    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcConnection(conn, new MysqlSyntax()));
+    DbmsConnection dbmsconn = new JdbcConnection(conn, new MysqlSyntax());
+    dbmsconn.setDefaultSchema("test");
+    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
+    coordinator.setScrambleMetaSet(meta);
+//    coordinator.setDefaultSchema("test");
+    ExecutionResultReader reader = coordinator.process(sql);
+
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
-    RelationStandardizer gen = new RelationStandardizer(staticMetaData);
+    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
     relation = gen.standardize((SelectQuery) relation);
 
     SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
     String stdQuery = selectQueryToSql.toSql(relation);
-
-    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
-    queryExecutionPlan.cleanUp();
-    queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    stmt.execute("create schema if not exists `verdictdb_temp`;");
-    JdbcConnection jdbcConnection = new JdbcConnection(conn, new MysqlSyntax());
-    ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(jdbcConnection, queryExecutionPlan);
     int cnt = 0;
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
-      dbmsQueryResult.next();
       cnt++;
       if (cnt == 10) {
         ResultSet rs = stmt.executeQuery(stdQuery);
-        int expected = 0;
-        while (rs.next()) expected++;
-        assertEquals(expected, 954);
+        while (rs.next()) {
+          dbmsQueryResult.next();
+          assertEquals(rs.getDouble(2), dbmsQueryResult.getDouble(1), 1e-5);
+          assertEquals(rs.getDouble(1), dbmsQueryResult.getDouble(0), 1e-5);
+        }
       }
     }
     assertEquals(10, cnt);
-    stmt.execute("drop schema `verdictdb_temp`;");
+    stmt.execute("drop schema if exists `verdictdb_temp`;");
+    System.out.println("test case 15 finished");
   }
 
   //@Test
@@ -1048,33 +1005,37 @@ public class MySqlTpchUniformScramblingQueryingTest {
         "    ) as l1 on l1.l_partkey = t_partkey\n" +
         ") a \n" +
         "where quantity > t_avg_quantity";
+    stmt.execute("create schema if not exists `verdictdb_temp`;");
+//    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcConnection(conn, new MysqlSyntax()));
+    DbmsConnection dbmsconn = new JdbcConnection(conn, new MysqlSyntax());
+    dbmsconn.setDefaultSchema("test");
+    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
+    coordinator.setScrambleMetaSet(meta);
+//    coordinator.setDefaultSchema("test");
+    ExecutionResultReader reader = coordinator.process(sql);
+
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
-    RelationStandardizer gen = new RelationStandardizer(staticMetaData);
+    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
     relation = gen.standardize((SelectQuery) relation);
 
     SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
     String stdQuery = selectQueryToSql.toSql(relation);
-
-    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
-    queryExecutionPlan.cleanUp();
-    queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    stmt.execute("create schema if not exists `verdictdb_temp`;");
-    JdbcConnection jdbcConnection = new JdbcConnection(conn, new MysqlSyntax());
-    ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(jdbcConnection, queryExecutionPlan);
     int cnt = 0;
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
-      dbmsQueryResult.next();
       cnt++;
       if (cnt == 10) {
         ResultSet rs = stmt.executeQuery(stdQuery);
-        rs.next();
-        assertEquals(rs.getBigDecimal(1).doubleValue(), 5404766.6128571, 1e-5);
+        while (rs.next()) {
+          dbmsQueryResult.next();
+          assertEquals(rs.getDouble(1), dbmsQueryResult.getDouble(0), 1e-5);
+        }
       }
     }
     assertEquals(10, cnt);
-    stmt.execute("drop schema `verdictdb_temp`;");
+    stmt.execute("drop schema if exists `verdictdb_temp`;");
+    System.out.println("test case 17 finished");
   }
 
   //@Test
@@ -1113,34 +1074,42 @@ public class MySqlTpchUniformScramblingQueryingTest {
         "order by\n" +
         "  o_totalprice desc,\n" +
         "  o_orderdate \n";
+    stmt.execute("create schema if not exists `verdictdb_temp`;");
+//    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcConnection(conn, new MysqlSyntax()));
+    DbmsConnection dbmsconn = new JdbcConnection(conn, new MysqlSyntax());
+    dbmsconn.setDefaultSchema("test");
+    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
+    coordinator.setScrambleMetaSet(meta);
+//    coordinator.setDefaultSchema("test");
+    ExecutionResultReader reader = coordinator.process(sql);
+
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
-    RelationStandardizer gen = new RelationStandardizer(staticMetaData);
+    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
     relation = gen.standardize((SelectQuery) relation);
 
     SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
     String stdQuery = selectQueryToSql.toSql(relation);
-
-    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
-    queryExecutionPlan.cleanUp();
-    queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    stmt.execute("create schema if not exists `verdictdb_temp`;");
-    JdbcConnection jdbcConnection = new JdbcConnection(conn, new MysqlSyntax());
-    ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(jdbcConnection, queryExecutionPlan);
     int cnt = 0;
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
-      dbmsQueryResult.next();
       cnt++;
       if (cnt == 12) {
         ResultSet rs = stmt.executeQuery(stdQuery);
-        int expected = 0;
-        while (rs.next()) expected++;
-        assertEquals(expected, 51);
+        while (rs.next()) {
+          dbmsQueryResult.next();
+          assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
+          assertEquals(rs.getString(2), dbmsQueryResult.getString(1));
+          assertEquals(rs.getString(3), dbmsQueryResult.getString(2));
+          assertEquals(rs.getString(4), dbmsQueryResult.getString(3));
+          assertEquals(rs.getString(5), dbmsQueryResult.getString(4));
+          assertEquals(rs.getDouble(6), dbmsQueryResult.getDouble(5), 1e-5);
+        }
       }
     }
     assertEquals(12, cnt);
-    stmt.execute("drop schema `verdictdb_temp`;");
+    stmt.execute("drop schema if exists `verdictdb_temp`;");
+    System.out.println("test case 18 finished");
   }
 
   //@Test
@@ -1177,33 +1146,37 @@ public class MySqlTpchUniformScramblingQueryingTest {
         "and l_shipmode in ('AIR', 'AIR REG') " +
         "and l_shipinstruct = 'DELIVER IN PERSON' " +
         ") ";
+    stmt.execute("create schema if not exists `verdictdb_temp`;");
+//    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcConnection(conn, new MysqlSyntax()));
+    DbmsConnection dbmsconn = new JdbcConnection(conn, new MysqlSyntax());
+    dbmsconn.setDefaultSchema("test");
+    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
+    coordinator.setScrambleMetaSet(meta);
+//    coordinator.setDefaultSchema("test");
+    ExecutionResultReader reader = coordinator.process(sql);
+
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
-    RelationStandardizer gen = new RelationStandardizer(staticMetaData);
+    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
     relation = gen.standardize((SelectQuery) relation);
 
     SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
     String stdQuery = selectQueryToSql.toSql(relation);
-
-    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
-    queryExecutionPlan.cleanUp();
-    queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    stmt.execute("create schema if not exists `verdictdb_temp`;");
-    JdbcConnection jdbcConnection = new JdbcConnection(conn, new MysqlSyntax());
-    ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(jdbcConnection, queryExecutionPlan);
     int cnt = 0;
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
-      dbmsQueryResult.next();
       cnt++;
       if (cnt == 10) {
         ResultSet rs = stmt.executeQuery(stdQuery);
-        rs.next();
-        assertEquals(rs.getBigDecimal(1).doubleValue(), 12494.85600, 1e-5);
+        while (rs.next()) {
+          dbmsQueryResult.next();
+          assertEquals(rs.getDouble(1), dbmsQueryResult.getDouble(0), 1e-5);
+        }
       }
     }
     assertEquals(10, cnt);
-    stmt.execute("drop schema `verdictdb_temp`;");
+    stmt.execute("drop schema if exists `verdictdb_temp`;");
+    System.out.println("test case 19 finished");
   }
 
   //@Test
@@ -1231,35 +1204,40 @@ public class MySqlTpchUniformScramblingQueryingTest {
         "  and s_suppkey = ps_suppkey\n" +
         "  group by s_name\n" +
         "order by s_name";
+    stmt.execute("create schema if not exists `verdictdb_temp`;");
+//    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcConnection(conn, new MysqlSyntax()));
+    DbmsConnection dbmsconn = new JdbcConnection(conn, new MysqlSyntax());
+    dbmsconn.setDefaultSchema("test");
+    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
+    coordinator.setScrambleMetaSet(meta);
+//    coordinator.setDefaultSchema("test");
+    ExecutionResultReader reader = coordinator.process(sql);
+
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
-    RelationStandardizer gen = new RelationStandardizer(staticMetaData);
+    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
     relation = gen.standardize((SelectQuery) relation);
 
     SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
     String stdQuery = selectQueryToSql.toSql(relation);
-
-    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
-    queryExecutionPlan.cleanUp();
-    queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    stmt.execute("create schema if not exists `verdictdb_temp`;");
-    JdbcConnection jdbcConnection = new JdbcConnection(conn, new MysqlSyntax());
-    ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(jdbcConnection, queryExecutionPlan);
     int cnt = 0;
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
-      dbmsQueryResult.next();
       cnt++;
       if (cnt == 10) {
         ResultSet rs = stmt.executeQuery(stdQuery);
-        int expected = 0;
-        while (rs.next()) expected++;
-        assertEquals(expected, 40);
+        while (rs.next()) {
+          dbmsQueryResult.next();
+          assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
+          assertEquals(rs.getDouble(2), dbmsQueryResult.getDouble(1), 1e-5);
+        }
       }
     }
     assertEquals(10, cnt);
-    stmt.execute("drop schema `verdictdb_temp`;");
+    stmt.execute("drop schema if exists `verdictdb_temp`;");
+    System.out.println("test case 20 finished");
   }
+
 
   //@Test
   public void test21Tpch() throws VerdictDBException, SQLException {
@@ -1273,7 +1251,7 @@ public class MySqlTpchUniformScramblingQueryingTest {
         "      from lineitem_scrambled\n" +
         "      where l_receiptdate > l_commitdate and l_orderkey is not null\n" +
         "      group by l_orderkey) as t2" +
-        "    inner join (" +
+        "    right outer join (" +
         "      select s_name as s_name, l_orderkey, l_suppkey " +
         "      from (" +
         "        select s_name as s_name, t1.l_orderkey, l_suppkey, count_suppkey, max_suppkey\n" +
@@ -1282,13 +1260,13 @@ public class MySqlTpchUniformScramblingQueryingTest {
         "          from lineitem_scrambled\n" +
         "          where l_orderkey is not null\n" +
         "          group by l_orderkey) as t1 " +
-        "          inner join (" +
+        "          join (" +
         "          select s_name, l_orderkey, l_suppkey\n" +
-        "          from orders_scrambled o inner join (" +
+        "          from orders_scrambled o join (" +
         "            select s_name, l_orderkey, l_suppkey\n" +
-        "            from nation n inner join supplier s\n" +
+        "            from nation n join supplier s\n" +
         "              on s.s_nationkey = n.n_nationkey\n" +
-        "            inner join lineitem_scrambled l on s.s_suppkey = l.l_suppkey\n" +
+        "            join lineitem_scrambled l on s.s_suppkey = l.l_suppkey\n" +
         "          where l.l_receiptdate > l.l_commitdate\n" +
         "            and l.l_orderkey is not null) l1 "
         + "        on o.o_orderkey = l1.l_orderkey\n" +
@@ -1301,33 +1279,51 @@ public class MySqlTpchUniformScramblingQueryingTest {
         ") c " +
         "group by s_name " +
         "order by numwait desc, s_name ";
+    stmt.execute("create schema if not exists `verdictdb_temp`;");
+//    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcConnection(conn, new MysqlSyntax()));
+    DbmsConnection dbmsconn = new JdbcConnection(conn, new MysqlSyntax());
+    dbmsconn.setDefaultSchema("test");
+    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
+    coordinator.setScrambleMetaSet(meta);
+//    coordinator.setDefaultSchema("test");
+    ExecutionResultReader reader = coordinator.process(sql);
+
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
-    RelationStandardizer gen = new RelationStandardizer(staticMetaData);
+    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
     relation = gen.standardize((SelectQuery) relation);
 
     SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
     String stdQuery = selectQueryToSql.toSql(relation);
-
-    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
-    queryExecutionPlan.cleanUp();
-    queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    stmt.execute("create schema if not exists `verdictdb_temp`;");
-    JdbcConnection jdbcConnection = new JdbcConnection(conn, new MysqlSyntax());
-    ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(jdbcConnection, queryExecutionPlan);
     int cnt = 0;
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
-      dbmsQueryResult.next();
       cnt++;
       if (cnt == 12) {
         ResultSet rs = stmt.executeQuery(stdQuery);
-        int expected = 0;
-        while (rs.next()) expected++;
-        assertEquals(expected, 36);
+        while (rs.next()) {
+          dbmsQueryResult.next();
+          assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
+          assertEquals(rs.getDouble(2), dbmsQueryResult.getDouble(1), 1e-5);
+        }
       }
     }
     assertEquals(12, cnt);
-    stmt.execute("drop schema `verdictdb_temp`;");
+    stmt.execute("drop schema if exists `verdictdb_temp`;");
+    System.out.println("test case 21 finished");
+  }
+
+  @AfterClass
+  public static void tearDown() throws SQLException {
+    stmt.execute("DROP TABLE IF EXISTS `test`.`region`");
+    stmt.execute("DROP TABLE IF EXISTS `test`.`nation`");
+    stmt.execute("DROP TABLE IF EXISTS `test`.`lineitem`");
+    stmt.execute("DROP TABLE IF EXISTS `test`.`customer`");
+    stmt.execute("DROP TABLE IF EXISTS `test`.`supplier`");
+    stmt.execute("DROP TABLE IF EXISTS `test`.`partsupp`");
+    stmt.execute("DROP TABLE IF EXISTS `test`.`part`");
+    stmt.execute("DROP TABLE IF EXISTS `test`.`orders`");
+    stmt.execute("DROP TABLE IF EXISTS `test`.`lineitem_scrambled`");
+    stmt.execute("DROP TABLE IF EXISTS `test`.`orders_scrambled`");
   }
 }
