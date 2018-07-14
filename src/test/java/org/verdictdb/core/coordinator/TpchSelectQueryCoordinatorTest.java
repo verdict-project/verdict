@@ -257,7 +257,7 @@ public class TpchSelectQueryCoordinatorTest {
     System.out.println("test case 1 finished");
   }
 
-  @Test
+  //@Test
   public void testTpch3() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select " +
@@ -315,7 +315,7 @@ public class TpchSelectQueryCoordinatorTest {
     System.out.println("test case 3 finished");
   }
 
-  @Test
+  //@Test
   public void test4Tpch() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select " +
@@ -362,7 +362,7 @@ public class TpchSelectQueryCoordinatorTest {
     System.out.println("test case 4 finished");
   }
 
-  @Test
+  //@Test
   public void test5Tpch() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select " +
@@ -419,7 +419,7 @@ public class TpchSelectQueryCoordinatorTest {
     System.out.println("test case 5 finished");
   }
 
-  @Test
+  //@Test
   public void test6Tpch() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select " +
@@ -461,7 +461,7 @@ public class TpchSelectQueryCoordinatorTest {
     System.out.println("test case 6 finished");
   }
 
-  @Test
+  //@Test
   public void test7Tpch() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select " +
@@ -536,7 +536,7 @@ public class TpchSelectQueryCoordinatorTest {
     System.out.println("test case 7 finished");
   }
 
-  //@Test
+  ////@Test
   public void test8Tpch() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select " +
@@ -607,7 +607,7 @@ public class TpchSelectQueryCoordinatorTest {
     System.out.println("test case 8 finished");
   }
 
-  @Test
+  //@Test
   public void test9Tpch() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select " +
@@ -673,7 +673,7 @@ public class TpchSelectQueryCoordinatorTest {
     System.out.println("test case 9 finished");
   }
 
-  @Test
+  //@Test
   public void test10Tpch() throws VerdictDBException, SQLException {
     String sql = "select " +
         "c_custkey, " +
@@ -738,7 +738,7 @@ public class TpchSelectQueryCoordinatorTest {
     System.out.println("test case 10 finished");
   }
 
-  @Test
+  //@Test
   public void test12Tpch() throws VerdictDBException, SQLException {
     String sql = "select " +
         "l_shipmode, " +
@@ -799,7 +799,7 @@ public class TpchSelectQueryCoordinatorTest {
     System.out.println("test case 12 finished");
   }
 
-  @Test
+  //@Test
   public void test13Tpch() throws VerdictDBException, SQLException {
     String sql = "select " +
         "c_custkey, " +
@@ -842,7 +842,7 @@ public class TpchSelectQueryCoordinatorTest {
     System.out.println("test case 13 finished");
   }
 
-  @Test
+  //@Test
   public void test14Tpch() throws VerdictDBException, SQLException {
     String sql = "select " +
         "100.00 * sum(case " +
@@ -888,7 +888,7 @@ public class TpchSelectQueryCoordinatorTest {
     System.out.println("test case 14 finished");
   }
 
-  @Test
+  //@Test
   public void test15Tpch() throws VerdictDBException, SQLException {
     String sql = "select " +
         "l_suppkey, " +
@@ -933,7 +933,7 @@ public class TpchSelectQueryCoordinatorTest {
     System.out.println("test case 15 finished");
   }
 
-  @Test
+  //@Test
   public void test17Tpch() throws VerdictDBException, SQLException {
     String sql = "select\n" +
         "  sum(extendedprice) / 7.0 as avg_yearly\n" +
@@ -991,7 +991,7 @@ public class TpchSelectQueryCoordinatorTest {
     System.out.println("test case 17 finished");
   }
 
-  @Test
+  //@Test
   public void test18Tpch() throws VerdictDBException, SQLException {
     String sql = "select\n" +
         "  c_name,\n" +
@@ -1062,7 +1062,7 @@ public class TpchSelectQueryCoordinatorTest {
     System.out.println("test case 18 finished");
   }
 
-  @Test
+  //@Test
   public void test19Tpch() throws VerdictDBException, SQLException {
     String sql = "select " +
         "sum(l_extendedprice* (1 - l_discount)) as revenue " +
@@ -1126,7 +1126,7 @@ public class TpchSelectQueryCoordinatorTest {
     System.out.println("test case 19 finished");
   }
 
-  @Test
+  //@Test
   public void test20Tpch() throws VerdictDBException, SQLException {
     String sql = "select\n" +
         "  s_name,\n" +
@@ -1183,7 +1183,7 @@ public class TpchSelectQueryCoordinatorTest {
   }
 
 
-  @Test
+  //@Test
   public void test21Tpch() throws VerdictDBException, SQLException {
     String sql = "select s_name, count(1) as numwait\n" +
         "from (" +
