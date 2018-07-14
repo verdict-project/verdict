@@ -325,7 +325,8 @@ expression
     | '~' expression                                           #unary_operator_expression
     | expression op=('*' | '/' | '%') expression               #binary_operator_expression
     | op=('+' | '-') expression                                #unary_operator_expression
-    | expression op=('+' | '-' | '&' | '^' | '|' | '||' | '#' | '<<' | '>>' | '~') expression   #binary_operator_expression
+    | expression op=('+' | '-' | '&' | '^' | '|' | '||' | '#'
+                         | '<<' | '>>' | ) expression   #binary_operator_expression
     | expression comparison_operator expression                #binary_operator_expression
     | interval                                                 #interval_expression
     | date                                                     #date_expression
@@ -633,14 +634,15 @@ substring_string_function
 nary_manipulation_function
 	: function_name=(CONCAT | CONCAT_WS | COALESCE | FIELD | GREATEST | LEAST | WIDTH_BUCKET | BTRIM | FORMAT
 	| REGEXP_MATCHES | REGEXP_REPLACE | REGEXP_SPLIT_TO_ARRAY | REGEXP_SPLIT_TO_TABLE | LTRIM | RTRIM | TO_ASCII
-	| MAKE_TIMESTAMP | MAKE_TIMESTAMPTZ)
+	| MAKE_TIMESTAMP | MAKE_TIMESTAMPTZ | TS_HEADLINE | TS_RANK | TS_RANK_CD | UNNEST | XMLCONCAT | XMLELEMENT
+	| XMLFOREST | JSON_BUILD_ARRAY | JSON_BUILD_OBJECT | JSONB_SET | JSONB_INSERT | UNNEST)
 		'(' expression (',' expression)* ')'
     ;
 
 ternary_manipulation_function
     : function_name=(CONV | SUBSTR | HASH | RPAD | SUBSTRING | LPAD | MID | REPLACE | SUBSTRING_INDEX | MAKETIME | IF
-    | CONVERT | SPLIT_PART | TRANSLATE | MAKE_DATE | MAKE_TIME
-    )
+    | CONVERT | SPLIT_PART | TRANSLATE | MAKE_DATE | MAKE_TIME | SETWEIGHT | TS_REWRITE | TSQUERY_PHRASE | XMLROOT
+    | XPATH | XPATH_EXISTS | ARRAY_REPLACE | ARRAY_TO_STRING | STRING_TO_ARRAY)
       '(' expression ',' expression ',' expression ')'
     ;
 
@@ -650,7 +652,14 @@ binary_manipulation_function
     | LOCATE | REPEAT | AES_ENCRYPT | AES_DECRYPT | POSITION | STRCMP | TRUNCATE | ADDDATE | ADDTIME | DATEDIFF | DATE_ADD
     | DATE_FORMAT | DATE_SUB | MAKEDATE | PERIOD_ADD | PERIOD_DIFF | SUBDATE | TIME_FORMAT | TIMEDIFF | CONVERT | IFNULL | NULLIF
     | DIV | LOG | TRUNC | CONVERT_FROM | CONVERT_TO | LENGTH | STRPOS | GET_BIT | GET_BYTE | SET_BIT | SET_BYTE | TO_CHAR
-    | TO_NUMBER | TO_TIMESTAMP | AGE | DATE_PART | DATE_TRUNC)
+    | TO_NUMBER | TO_TIMESTAMP | AGE | DATE_PART | DATE_TRUNC | ENUM_RANGE | BOUND_BOX | CIRCLE | POINT | SET_MASKLEN
+    | INET_SAME_FAMILY | INET_MERGE | PLAINTO_TSQUERY | PHRASETO_TSQUERY | SETWEIGHT | TO_TSQUERY | TO_TSVECTOR | TS_DELETE
+    | TS_FILTER | TS_REWRITE | TSQUERY_PHRASE | XMLPI | XMLROOT | XPATH | XPATH_EXISTS | ARRAY_TO_JSON | ROW_TO_JSON
+    | JSON_OBJECT | JSON_EXTRACT_PATH | JSON_EXTRACT_PATH_TEXT | JSON_POPULATE_RECORDSET | JSON_POPULATE_RECORD | SETVAL
+    | ARRAY_APPEND | ARRAY_CAT | ARRAY_LENGTH | ARRAY_LOWER | ARRAY_POSITION | ARRAY_POSITIONS | ARRAY_PREPEND
+    | ARRAY_REMOVE | ARRAY_TO_STRING | ARRAY_UPPER | STRING_TO_ARRAY | RANGE_MERGE | CORR | COVAR_POP | COVAR_SAMP
+    | REGR_AVGX | REGR_AVGY | REGR_COUNT | REGR_INTERCEPT | REGR_R2 | REGR_SLOPE | REGR_SXX | REGR_SXY | REGR_SYY
+    | STDDEV_POP | VARIANCE | VAR_POP | VAR_SAMP)
       '(' expression ',' expression ')'
     ;
 
@@ -662,7 +671,16 @@ unary_manipulation_function
      | SHA2 | SPACE | DATE | DAYNAME | DAYOFMONTH | DAYOFWEEK | DAYOFYEAR | FROM_DAYS | LAST_DAY | MICROSECOND | MONTHNAME | SEC_TO_TIME
      | STR_TO_DATE | TIME | TIME_TO_SEC | TIMESTAMP | TO_DAYS | WEEK | WEEKDAY | YEARWEEK | BINARY | ISNULL | SCALE | TRUNC
      | SETSEED | BIT_LENGTH | OCTET_LENGTH | CHR | INITCAP | QUOTE_IDENT | QUOTE_LITERAL | QUOTE_NULLABLE | TO_HEX | AGE
-     | ISFINITE | JUSTIFY_DAYS | JUSTIFY_HOURS | JUSTIFY_INTERVALS | TO_TIMESTAMP)
+     | ISFINITE | JUSTIFY_DAYS | JUSTIFY_HOURS | JUSTIFY_INTERVALS | TO_TIMESTAMP | ENUM_RANGE | ENUM_FIRST | ENUM_LAST
+     | AREA | CENTER | DIAMETER | HEIGHT | ISCLOSED | ISOPEN | NPOINTS | PCLOSE | POPEN | RADIUS | WIDTH | BOX | CIRCLE
+     | LINE | LSEG | PATH | POINT | POLYGON | ABBREV | BROADCAST | FAMILY | HOST | HOSTMASK | MASKLEN | NETMASK | NETWORK
+     | TEXT | MACADDR8_SET7BIT | ARRAY_TO_TSVECTOR | NUMNODE | PLAINTO_TSQUERY | PHRASETO_TSQUERY | QUERYTREE | STRIP
+     | TO_TSQUERY | TO_TSVECTOR | TSVECTOR_TO_ARRAY | XMLCOMMENT | XMLPI | XMLAGG | XML_ISWELL_FORMAT | TO_JSON | TO_JSONB
+     | ARRAY_TO_JSON | ROW_TO_JSON | JSON_OBJECT | JSON_ARRAY_LENGTH | JSON_EACH | JSON_EACH_TEXT | JSON_OBJECT_KEYS
+     | JSON_ARRAY_ELEMENTS | JSON_ARRAY_ELEMENTS_TEXT | JSON_TYPEOF | JSON_TO_RECORD | JSON_TO_RECORDSET | JSON_STRIP_NULLS
+     | JSONB_PRETTY | CURRVAL | NEXTVAL | ARRAY_NDIMS | ARRAY_DIMS | CARDINALITY | ISEMPTY | LOWER_INC | UPPER_INC
+     | LOWER_INF | UPPER_INF | ARRAY_AGG | BIT_AND | BIT_OR | BOOL_AND | BOOL_OR | EVERY | JSON_AGG | JSONB_AGG
+     | JSON_OBJECT_AGG | JSONB_OBJECT_AGG | STRING_AGG)
       '(' expression ')'
     | function_name=CAST '(' cast_as_expression ')'    
     ;
@@ -671,7 +689,8 @@ noparam_manipulation_function
     : function_name=(UNIX_TIMESTAMP | CURRENT_TIMESTAMP | CURRENT_DATE | CURRENT_TIME | RANDOM | RAND | NATURAL_CONSTANT
     | PI | CURDATE | CURTIME | LOCALTIME | LOCALTIMESTAMP | NOW | SYSDATE | CURRENT_USER | DATABASE | LAST_INSERT_ID
     | SESSION_USER | SYSTEM_USER | USER | VERSION | PG_CLIENT_ENCODING | CLOCK_TIMESTAMP | STATEMENT_TIMESTAMP
-    | TIMEOFDAY | TRANSACTION_TIMESTAMP)
+    | TIMEOFDAY | TRANSACTION_TIMESTAMP | GET_CURRENT_TS_CONFIG | TSVECTOR_UPDATE_TRIGGER | TSVECTOR_UPDATE_TRIGGER_COLUMN
+    | LASTVAL)
       '(' ')'
     ;
     
@@ -1224,6 +1243,7 @@ WITHIN:                          W I T H I N;
 WRITETEXT:                       W R I T E T E X T;
 
 // Additional keywords (they can be id).
+ABBREV:                          A B B R E V;
 ABSOLUTE:                        A B S O L U T E;
 ABS:                             A B S;
 ACOS:                            A C O S;
@@ -1233,6 +1253,23 @@ AES_DECRYPT:                     A E S '_' D E C R Y P T;
 AES_ENCRYPT:                     A E S '_' E N C R Y P T;
 AGE:                             A G E;
 APPLY:                           A P P L Y;
+AREA:                            A R E A;
+ARRAY_AGG:                       A R R A Y '_' A G G;
+ARRAY_APPEND:                    A R R A Y '_' A P P E N D;
+ARRAY_CAT:                       A R R A Y '_' C A T;
+ARRAY_DIMS:                      A R R A Y '_' D I M S;
+ARRAY_LENGTH:                    A R R A Y '_' L E N G T H S;
+ARRAY_LOWER:                     A R R A Y '_' L O W E R;
+ARRAY_NDIMS:                     A R R A Y '_' N D I M S;
+ARRAY_POSITION:                  A R R A Y '_' P O S I T I O N;
+ARRAY_POSITIONS:                 A R R A Y '_' P O S I T I O N S;
+ARRAY_PREPEND:                   A R R A Y '_' P R E P E N D;
+ARRAY_REMOVE:                    A R R A Y '_' R E M O V E;
+ARRAY_REPLACE:                   A R R A Y '_' R E P L A C E;
+ARRAY_TO_JSON:                   A R R A Y '_' T O '_' J S O N;
+ARRAY_TO_STRING:                 A R R A Y '_' T O '_' S T R I N G;
+ARRAY_TO_TSVECTOR:               A R R A Y '_' T O '_' T S V E C T O R;
+ARRAY_UPPER:                     A R R A Y '_' U P P E R;
 ASIN:                            A S I N;
 ATAN:                            A T A N;
 ATAN2:                           A T A N '2';
@@ -1242,19 +1279,27 @@ BASE64:                          B A S E '64';
 BIN:                             B I N;
 BINARY_CHECKSUM:                 B I N A R Y '_' C H E C K S U M;
 BIT_LENGTH:                      B I T '_' L E N G T H;
+BOOL_AND:                        B O O L '_' A N D;
+BOOL_OR:                         B O O L '_' O R;
+BOX:                             B O X;
+BOUND_BOX:                       B O U N D '_' B O X;
+BROADCAST:                       B R O A D C A S T;
 BTRIM:                           B T R I M;
 BROUND:                          B R O U N D;
 CALLER:                          C A L L E R;
+CARDINALITY:                     C A R D I N A L I T Y;
 CAST:                            C A S T;
 CATCH:                           C A T C H;
 CBRT:                            C B R T;
 CEIL:                            C E I L;
 CEILING:                         C E I L I N G;
+CENTER:                          C E N T E R;
 CHAR_LENGTH:                     C H A R '_' L E N G T H;
 CHARACTER_LENGTH:                C H A R A C T E R '_' L E N G T H;
 CHECKSUM:                        C H E C K S U M;
 CHECKSUM_AGG:                    C H E C K S U M '_' A G G;
 CHR:                             C H R;
+CIRCLE:                          C I R C L E;
 CLOCK_TIMESTAMP:                 C L O C K '_' T I M E S T A M P;
 COMMITTED:                       C O M M I T T E D;
 CONCAT:                          C O N C A T;
@@ -1264,11 +1309,15 @@ CONVERT_FROM:                    C O N V E R T '_' F R O M;
 CONVERT_TO:                      C O N V E R T '_' T O;
 COOKIE:                          C O O K I E;
 COS:                             C O S;
+CORR:                            C O R R;
+COVAR_POP:                       C O V A R '_' P O P;
+COVAR_SAMP:                      C O V A R '_' S A M P;
 COT:                             C O T;
 COUNT:                           C O U N T;
 COUNT_BIG:                       C O U N T '_' B I G;
 CRC32:                           C R C '32';
 CURDATE:                         C U R D A T E;
+CURRVAL:                         C U R R V A L;
 CURTIME:                         C U R T I M E;
 DATE:                            D A T E;
 DATEADD:                         D A T E A D D;
@@ -1291,18 +1340,24 @@ DEGREES:                         D E G R E E S;
 DELAY:                           D E L A Y;
 DELETED:                         D E L E T E D;
 DENSE_RANK:                      D E N S E '_' R A N K;
+DIAMETER:                        D I A M E T E R;
 DISABLE:                         D I S A B L E;
 DIV:                             D I V;
 DYNAMIC:                         D Y N A M I C;
 NATURAL_CONSTANT:                E;
 ENCODE:                          E N C O D E;
 ENCRYPTION:                      E N C R Y P T I O N;
+ENUM_FIRST:                      E N U M '_' F I R S T;
+ENUM_LAST:                       E N U M '_' L A S T;
+ENUM_RANGE:                      E N U M '_' R A N G E;
 ESCAPED_BY:                      E S C A P E D ' ' B Y;
 EXACT:                           E X A C T;
 EXP:                             E X P;
 EXPLODE:                         E X P L O D E;
 EXTRACT:                         E X T R A C T;
+EVERY:                           E V E R Y;
 FACTORIAL:                       F A C T O R I A L;
+FAMILY:                          F A M I L Y;
 FAST:                            F A S T;
 FAST_FORWARD:                    F A S T '_' F O R W A R D;
 FIELD:                           F I E L D;
@@ -1320,13 +1375,17 @@ FROM_UNIXTIME:                   F R O M '_' U N I X T I M E;
 FULLSCAN:                        F U L L S C A N;
 GET_BIT:                         G E T '_' B I T;
 GET_BYTE:                        G E T '_' B Y T E;
+GET_CURRENT_TS_CONFIG:           G E T '_' C U R R E N T '_' T S '_' C O N F I G;
 GET_JSON_OBJECT:                 G E T '_' J S O N '_' O B J E C T;
 GLOBAL:                          G L O B A L;
 GO:                              G O;
 GREATEST:                        G R E A T E S T;
 GROUPING:                        G R O U P I N G;
 GROUPING_ID:                     G R O U P I N G '_' I D;
+HEIGHT:                          H E I G H T;
 HEX:                             H E X;
+HOST:                            H O S T;
+HOSTMASK:                        H O S T M A S K;
 HOUR:                            H O U R;
 IFNULL:                          I F N U L L;
 INITCAP:                         I N I T C A P;
@@ -1335,15 +1394,45 @@ INSERTED:                        I N S E R T E D;
 INSTR:                           I N S T R;
 INTERVAL:                        I N T E R V A L;
 IN_FILE:                         I N '_' F I L E;
+INET_SAME_FAMILY:                I N E T '_' S A M E '_' F A M I L Y;
+INET_MERGE:                      I N E T '_' M E R G E;
+ISCLOSED:                        I S C L O S E D;
+ISEMPTY:                         I S E M P T Y;
 ISFINITE:                        I S F I N I T E;
 ISNULL:                          I S N U L L;
 ISOLATION:                       I S O L A T I O N;
+ISOPEN:                          I S O P E N;
+JSON_AGG:                        J S O N '_' A G G;
+JSON_ARRAY_LENGTH:               J S O N '_' A R R A Y '_' L E N G T H;
+JSON_ARRAY_ELEMENTS:             J S O N '_' A R R A Y '_' E L E M E N T S;
+JSON_ARRAY_ELEMENTS_TEXT:        J S O N '_' A R R A Y '_' E L E M E N T S '_' T E X T;
+JSON_BUILD_ARRAY:                J S O N '_' B U I L D '_' A R R A Y;
+JSON_BUILD_OBJECT:               J S O N '_' B U I L D '_' O B J E C T;
+JSON_EACH:                       J S O N '_' E A C H;
+JSON_EACH_TEXT:                  J S O N '_' E A C H '_' T E X T;
+JSON_EXTRACT_PATH:               J S O N '_' E X T R A C T '_' P A T H;
+JSON_EXTRACT_PATH_TEXT:          J S O N '_' E X T R A C T '_' P A T H '_' T E X T;
+JSON_OBJECT:                     J S O N '_' O B J E C T;
+JSON_OBJECT_KEYS:                J S O N '_' O B J E C T '_' K E Y S;
+JSON_OBJECT_AGG:                 J S O N '_' O B J E C T '_' A G G;
+JSON_POPULATE_RECORD:            J S O N '_' P O P U L A T E '_' R E C O R D;
+JSON_POPULATE_RECORDSET:         J S O N '_' P O P U L A T E '_' R E C O R D S E T;
+JSON_STRIP_NULLS:                J S O N '_' S T R I P '_' N U L L S;
+JSON_TO_RECORD:                  J S O N '_' T O '_' R E C O R D;
+JSON_TO_RECORDSET:               J S O N '_' T O '_' R E C O R D S E T;
+JSON_TYPEOF:                     J S O N '_' T Y P E O F;
+JSONB_AGG:                       J S O N B '_' A G G;
+JSONB_OBJECT_AGG:                J S O N B '_' O B J E C T '_' A G G;
+JSONB_SET:                       J S O N B '_' S E T;
+JSONB_INSERT:                    J S O N B '_' I N S E R T;
+JSONB_PRETTY:                    J S O N B '_' P R E T T Y;
 JUSTIFY_DAYS:                    J U S T I F Y '_' D A Y S;
 JUSTIFY_HOURS:                   J U S T I F Y '_' H O U R S;
 JUSTIFY_INTERVALS:               J U S T I F Y '_' I N T E R V A L;
 KEEPFIXED:                       K E E P F I X E D;
 KEYSET:                          K E Y S E T;
 LAST:                            L A S T;
+LASTVAL:                         L A S T V A L;
 LAST_DAY:                        L A S T '_' D A Y;
 LAST_INSERT_ID:                  L A S T '_' I N S E R T '_' I D;
 LATERAL:                         L A T E R A L;
@@ -1351,6 +1440,7 @@ LCASE:                           L C A S E;
 LEAST:                           L E A S T;
 LENGTH:                          L E N G T H;
 LEVEL:                           L E V E L;
+LINE:                            L I N E;
 LN:                              L N;
 LOCAL:                           L O C A L;
 LOCALTIME:                       L O C A L T I M E;
@@ -1364,8 +1454,12 @@ LOG10:                           L O G '10';
 LOGIN:                           L O G I N;
 LOOP:                            L O O P;
 LOWER:                           L O W E R;
+LOWER_INC:                       L O W E R '_' I N C;
+LOWER_INF:                       L O W E R '_' I N F;
 LPAD:                            L P A D;
 LTRIM:                           L T R I M;
+LSEG:                            L S E G;
+MACADDR8_SET7BIT:                M A C A D D R '8' '_' S E T '7' B I T;
 MAKEDATE:                        M A K E D A T E;
 MAKETIME:                        M A K E T I M E;
 MAKE_DATE:                       M A K E '_' D A T E;
@@ -1373,6 +1467,7 @@ MAKE_TIME:                       M A K E '_' T I M E;
 MAKE_TIMESTAMP:                  M A K E '_' T I M E S T A M P;
 MAKE_TIMESTAMPTZ:                M A K E '_' T I M E S T A M P T Z;
 MARK:                            M A R K;
+MASKLEN:                         M A S K L E N;
 MAX:                             M A X;
 MD5:                             M D '5';
 MICROSECOND:                     M I C R O S E C O N D;
@@ -1386,14 +1481,19 @@ MONTHNAME:                       M O N T H N A M E;
 MONTHS:                          M O N T H S;
 NEGATIVE:                        N E G A T I V E;
 NEXT:                            N E X T;
+NETMASK:                         N E T M A S K;
+NETWORK:                         N E T W O R K;
 NAME:                            N A M E;
 NDV:                             N D V;
+NEXTVAL:                         N E X T V A L;
 NOCOUNT:                         N O C O U N T;
 NOEXPAND:                        N O E X P A N D;
 NORECOMPUTE:                     N O R E C O M P U T E;
 NOW:                             N O W;
+NPOINTS:                         N P O I N T S;
 NTILE:                           N T I L E;
 NUMBER:                          N U M B E R;
+NUMNODE:                         N U M N O D E;
 NVL:                             N V L;
 OCTET_LENGTH:                    O C T E T '_' L E N G T H;
 OFFSET:                          O F F S E T;
@@ -1406,13 +1506,19 @@ OVERLAY:                         O V E R L A Y;
 OWNER:                           O W N E R;
 PARTITION:                       P A R T I T I O N;
 PATH:                            P A T H;
+PCLOSE:                          P C L O S E;
 PERCENTILE:                      P E R C E N T I L E;
 PERIOD_ADD:                      P E R I O D '_' A D D;
 PERIOD_DIFF:                     P E R I O D '_' D I F F;
 PG_CLIENT_ENCODING:              P G '_' C L I E N T '_' E N C O D I N G;
+PLAINTO_TSQUERY:                 P L A I N T O '_' T S Q U E R Y;
+PHRASETO_TSQUERY:                P H R A S E T O '_' T S Q U E R Y;
 PI:                              P I;
 PLACING:                         P L A C I N G;
 PMOD:                            P M O D;
+POINT:                           P O I N T;
+POLYGON:                         P O L Y G O N;
+POPEN:                           P O P E N;
 POSITION:                        P O S I T I O N;
 POSITIVE:                        P O S I T I V E;
 POW:                             P O W;
@@ -1420,20 +1526,32 @@ POWER:                           P O W E R;
 PRECEDING:                       P R E C E D I N G;
 PRIOR:                           P R I O R;
 QUARTER:                         Q U A R T E R;
+QUERYTREE:                       Q U E R Y T R E E;
 QUOTED_BY:                       Q U O T E D ' ' B Y;
 QUOTE_IDENT:                     Q U O T E '_' I D E N T;
 QUOTE_LITERAL:                   Q U O T E '_' L I T E R A L;
 QUOTE_NULLABLE:                  Q U O T E '_' N U L L A B L E;
 RADIANS:                         R A D I A N S;
+RADIUS:                          R A D I U S;
 RAND:                            R A N D;
 RANDOM:                          R A N D O M;
 RANGE:                           R A N G E;
+RANGE_MERGE:                     R A N G E '_' M E R G E;
 RANK:                            R A N K;
 READONLY:                        R E A D O N L Y;
 READ_ONLY:                       R E A D '_' O N L Y;
 RECOMMENDED:                     R E C O M M E N D E D;
 RECOMPILE:                       R E C O M P I L E;
 REFRESH:                         R E F R E S H;
+REGR_AVGX:                       R E G R '_' A V G X;
+REGR_AVGY:                       R E G R '_' A V G Y;
+REGR_COUNT:                      R E G R '_' C O U N T;
+REGR_INTERCEPT:                  R E G R '_' I N T E R C E P T;
+REGR_R2:                         R E G R '_' R '2';
+REGR_SLOPE:                      R E G R '_' S L O P E;
+REGR_SXX:                        R E G R '_' S X X;
+REGR_SXY:                        R E G R '_' S X Y;
+REGR_SYY:                        R E G R '_' S Y Y;
 RELATIVE:                        R E L A T I V E;
 REGEXP_MATCHES:                  R E G E X P '_' M A T C H E S;
 REGEXP_REPLACE:                  R E G E X P '_' R E P L A C E;
@@ -1448,6 +1566,7 @@ ROLLUP:                          R O L L U P;
 ROOT:                            R O O T;
 ROUND:                           R O U N D;
 ROW:                             R O W;
+ROW_TO_JSON:                     R O W '_' T O '_' J S O N;
 ROWGUID:                         R O W G U I D;
 ROWS:                            R O W S;
 ROW_NUMBER:                      R O W '_' N U M B E R;
@@ -1462,8 +1581,11 @@ SEC_TO_TIME:                     S E C '_' T O '_' T I M E;
 SELF:                            S E L F;
 SERIALIZABLE:                    S E R I A L I Z A B L E;
 SETSEED:                         S E T S E E D;
+SETWEIGHT:                       S E T W E I G H T;
+SETVAL:                          S E T V A L;
 SET_BIT:                         S E T '_' B I T;
 SET_BYTE:                        S E T '_' B Y T E;
+SET_MASKLEN:                     S E T '_' M A S K L E N;
 SHA1:                            S H A '1';
 SHA2:                            S H A '2';
 SHIFTLEFT:                       S H I F T L E F T;
@@ -1485,15 +1607,20 @@ STDEVP:                          S T D E V P;
 STDDEV_SAMP:                     S T D D E V '_' S A M P;
 STORED_AS_PARQUET:               S T O R E D ' ' A S ' ' P A R Q U E T;
 STRCMP:                          S T R C M P;
+STRING_AGG:                      S T R I N G '_' A G G;
+STRING_TO_ARRAY:                 S T R I N G '_' T O '_' A R R A Y;
 STRPOS:                          S T R P O S;
 STR_TO_DATE:                     S T R '_' T O '_' D A T E;
 SUBDATE:                         S U B D A T E;
 SUBSTRING_INDEX:                 S U B S T R I N G '_' I N D E X;
 SUM:                             S U M;
 SQRT:                            S Q R T;
+STDDEV_POP:                      S T D D E V '_' P O P;
+STRIP:                           S T R I P;
 STRTOL:                          S T R T O L;
 SYSDATE:                         S Y S D A T E;
 TAN:                             T A N;
+TEXT:                            T E X T;
 THROW:                           T H R O W;
 TIES:                            T I E S;
 TIME:                            T I M E;
@@ -1507,13 +1634,27 @@ TO_CHAR:                         T O '_' C H A R;
 TO_DATE:                         T O '_' D A T E;
 TO_DAYS:                         T O '_' D A Y S;
 TO_HEX:                          T O '_' H E X;
+TO_JSON:                         T O '_' J S O N;
+TO_JSONB:                        T O '_' J S O N B;
 TO_NUMBER:                       T O '_' N U M B E R;
 TO_TIMESTAMP:                    T O '_' T I M E S T A M P;
+TO_TSQUERY:                      T O '_' T S Q U E R Y;
+TO_TSVECTOR:                     T O '_' T S V E C T O R;
 TRANSACTION_TIMESTAMP:           T R A N S A N C A T I O N '_' T I M E S T A M P;
 TRANSLATE:                       T R A N S L A T E;
 TRIM:                            T R I M;
 TRUNC:                           T R U N C;
 TRY:                             T R Y;
+TS_DELETE:                       T S '_' D E L E T E;
+TS_FILTER:                       T S '_' F I L T E R;
+TS_HEADLINE:                     T S '_' H E A D L I N E;
+TS_RANK:                         T S '_' R A N K;
+TS_RANK_CD:                      T S '_' R A N K '_' C D;
+TS_REWRITE:                      T S '_' R E W R I T E;
+TSQUERY_PHRASE:                  T S Q U E R Y '_' P H R A S E;
+TSVECTOR_TO_ARRAY:               T S V E C T O R '_' T O '_' A R R A Y;
+TSVECTOR_UPDATE_TRIGGER:         T S V E C T O R '_' U P D A T E '_' T R I G G E R;
+TSVECTOR_UPDATE_TRIGGER_COLUMN:  T S V E C T O R '_' U P D A T E '_' T R I G G E R '_' C O L U M N;
 TYPE:                            T Y P E;
 TYPE_WARNING:                    T Y P E '_' W A R N I N G;
 UCASE:                           U C A S E;
@@ -1523,19 +1664,36 @@ UNHEX:                           U N H E X;
 UNIVERSE:                        U N I V E R S E;
 UNIX_TIMESTAMP:                  U N I X '_' T I M E S T A M P;
 UNKNOWN:                         U N K N O W N;
+UNNEST:                          U N N E S T;
 UPPER:                           U P P E R;
+UPPER_INC:                       U P P E R '_' I N C;
+UPPER_INF:                       U P P E R '_' I N F;
 USING:                           U S I N G;
 VAR:                             V A R;
+VARIANCE:                        V A R I A N C E;
+VAR_POP:                         V A R '_' P O P;
+VAR_SAMP:                        V A R '_' S A M P;
 VARP:                            V A R P;
 VERSION:                         V E R S I O N;
 VIEW_METADATA:                   V I E W '_' M E T A D A T A;
 WEEKOFYEAR:                      W E E K O F Y E A R;
 WEEK:                            W E E K;
 WEEKDAY:                         W E E K D A Y;
+WIDTH:                           W I D T H;
 WIDTH_BUCKET:                    W I D T H '_' B U C K E T;
 WORK:                            W O R K;
 XML:                             X M L;
+XMLAGG:                          X M L A G G;
+XMLCOMMENT:                      X M L C O M M E N T;
+XMLCONCAT:                       X M L C O N C A T;
+XMLELEMENT:                      X M L E L E M E N T;
+XMLFOREST:                       X M L F O R E S T;
 XMLNAMESPACES:                   X M L N A M E S P A C E S;
+XMLPI:                           X M L P I;
+XMLROOT:                         X M L R O O T;
+XML_ISWELL_FORMAT:               X M L '_' I S '_' W E L L '_' F O R M A T;
+XPATH:                           X P A T H;
+XPATH_EXISTS:                    X P A T H '_' E X I S T S;
 YEAR:                            Y E A R;
 YEARS:                           Y E A R S;
 YEARWEEK:                        Y E A R W E E K;

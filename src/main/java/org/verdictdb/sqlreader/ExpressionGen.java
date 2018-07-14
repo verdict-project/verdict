@@ -90,8 +90,8 @@ public class ExpressionGen extends VerdictSQLBaseVisitor<UnnamedColumn> {
       opType = "multiply";
     } else if (ctx.op.getText().equals("/")) {
       opType = "divide";
-    } else if (ctx.op.getText().equals("||")) {
-      opType = "||";
+    } else  {
+      opType = ctx.op.getText();
     }
     return new ColumnOp(opType, Arrays.asList(
         visit(ctx.expression(0)),
