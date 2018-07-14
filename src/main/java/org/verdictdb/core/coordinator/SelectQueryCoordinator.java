@@ -29,7 +29,7 @@ public class SelectQueryCoordinator {
 
   String defaultSchema = "tpch";
 
-  StaticMetaData staticMetaData;
+  StaticMetaData staticMetaData = new StaticMetaData();
 
   CachedMetaDataProvider cachedMetaData;
 
@@ -39,6 +39,7 @@ public class SelectQueryCoordinator {
 
   public SelectQuery standardizeQuery(String query) throws VerdictDBException {
     // parse the query
+    RelationStandardizer.resetItemID();
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     SelectQuery relation = (SelectQuery) sqlToRelation.toRelation(query);
     setStaticMetaData(relation);
@@ -64,6 +65,7 @@ public class SelectQueryCoordinator {
   }
 
   public void setStaticMetaData(SelectQuery relation) throws VerdictDBException {
+    cachedMetaData = new CachedMetaData(conn);
     staticMetaData.setDefaultSchema(defaultSchema);
     // Extract all tables appeared in the query
     HashSet<BaseTable> tables = new HashSet<>();
