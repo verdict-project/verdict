@@ -254,6 +254,7 @@ public class TpchSelectQueryCoordinatorTest {
     }
     assertEquals(10, cnt);
     stmt.execute("drop schema if exists `verdictdb_temp`;");
+    System.out.println("test case 1 finished");
   }
 
   @Test
@@ -311,6 +312,7 @@ public class TpchSelectQueryCoordinatorTest {
     }
     assertEquals(12, cnt);
     stmt.execute("drop schema if exists `verdictdb_temp`;");
+    System.out.println("test case 3 finished");
   }
 
   @Test
@@ -357,6 +359,7 @@ public class TpchSelectQueryCoordinatorTest {
     }
     assertEquals(12, cnt);
     stmt.execute("drop schema if exists `verdictdb_temp`;");
+    System.out.println("test case 4 finished");
   }
 
   @Test
@@ -413,6 +416,7 @@ public class TpchSelectQueryCoordinatorTest {
     }
     assertEquals(12, cnt);
     stmt.execute("drop schema if exists `verdictdb_temp`;");
+    System.out.println("test case 5 finished");
   }
 
   @Test
@@ -454,6 +458,7 @@ public class TpchSelectQueryCoordinatorTest {
     }
     assertEquals(10, cnt);
     stmt.execute("drop schema if exists `verdictdb_temp`;");
+    System.out.println("test case 6 finished");
   }
 
   @Test
@@ -528,6 +533,7 @@ public class TpchSelectQueryCoordinatorTest {
     }
     assertEquals(12, cnt);
     stmt.execute("drop schema if exists `verdictdb_temp`;");
+    System.out.println("test case 7 finished");
   }
 
   @Test
@@ -598,6 +604,7 @@ public class TpchSelectQueryCoordinatorTest {
     }
     assertEquals(12, cnt);
     stmt.execute("drop schema if exists `verdictdb_temp`;");
+    System.out.println("test case 8 finished");
   }
 
   @Test
@@ -663,6 +670,7 @@ public class TpchSelectQueryCoordinatorTest {
     }
     assertEquals(12, cnt);
     stmt.execute("drop schema if exists `verdictdb_temp`;");
+    System.out.println("test case 9 finished");
   }
 
   @Test
@@ -727,6 +735,7 @@ public class TpchSelectQueryCoordinatorTest {
     }
     assertEquals(12, cnt);
     stmt.execute("drop schema if exists `verdictdb_temp`;");
+    System.out.println("test case 10 finished");
   }
 
   @Test
@@ -787,6 +796,7 @@ public class TpchSelectQueryCoordinatorTest {
     }
     assertEquals(12, cnt);
     stmt.execute("drop schema if exists `verdictdb_temp`;");
+    System.out.println("test case 12 finished");
   }
 
   @Test
@@ -829,6 +839,7 @@ public class TpchSelectQueryCoordinatorTest {
     }
     assertEquals(3, cnt);
     stmt.execute("drop schema if exists `verdictdb_temp`;");
+    System.out.println("test case 13 finished");
   }
 
   @Test
@@ -874,6 +885,7 @@ public class TpchSelectQueryCoordinatorTest {
     }
     assertEquals(10, cnt);
     stmt.execute("drop schema if exists `verdictdb_temp`;");
+    System.out.println("test case 14 finished");
   }
 
   @Test
@@ -918,6 +930,7 @@ public class TpchSelectQueryCoordinatorTest {
     }
     assertEquals(10, cnt);
     stmt.execute("drop schema if exists `verdictdb_temp`;");
+    System.out.println("test case 15 finished");
   }
 
   @Test
@@ -975,6 +988,7 @@ public class TpchSelectQueryCoordinatorTest {
     }
     assertEquals(10, cnt);
     stmt.execute("drop schema if exists `verdictdb_temp`;");
+    System.out.println("test case 17 finished");
   }
 
   @Test
@@ -1045,6 +1059,7 @@ public class TpchSelectQueryCoordinatorTest {
     }
     assertEquals(12, cnt);
     stmt.execute("drop schema if exists `verdictdb_temp`;");
+    System.out.println("test case 18 finished");
   }
 
   @Test
@@ -1108,6 +1123,7 @@ public class TpchSelectQueryCoordinatorTest {
     }
     assertEquals(10, cnt);
     stmt.execute("drop schema if exists `verdictdb_temp`;");
+    System.out.println("test case 19 finished");
   }
 
   @Test
@@ -1163,10 +1179,11 @@ public class TpchSelectQueryCoordinatorTest {
     }
     assertEquals(10, cnt);
     stmt.execute("drop schema if exists `verdictdb_temp`;");
+    System.out.println("test case 20 finished");
   }
 
-  // Non deterministic
-  // @Test
+
+  @Test
   public void test21Tpch() throws VerdictDBException, SQLException {
     String sql = "select s_name, count(1) as numwait\n" +
         "from (" +
@@ -1234,6 +1251,7 @@ public class TpchSelectQueryCoordinatorTest {
     }
     assertEquals(12, cnt);
     stmt.execute("drop schema if exists `verdictdb_temp`;");
+    System.out.println("test case 21 finished");
   }
 
   @AfterClass
