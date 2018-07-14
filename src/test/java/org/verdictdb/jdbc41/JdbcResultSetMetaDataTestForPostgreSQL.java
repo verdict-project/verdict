@@ -14,6 +14,10 @@ import org.verdictdb.sqlsyntax.PostgresqlSyntax;
 import static org.junit.Assert.*;
 
 
+/*
+ *  todo: 1. Add missing types in the tests. 2. Add value checks
+ *  complete 
+*/
 public class JdbcResultSetMetaDataTestForPostgreSQL {
 
   static Connection conn;
