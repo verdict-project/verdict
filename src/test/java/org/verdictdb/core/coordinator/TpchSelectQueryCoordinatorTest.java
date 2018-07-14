@@ -536,7 +536,7 @@ public class TpchSelectQueryCoordinatorTest {
     System.out.println("test case 7 finished");
   }
 
-  @Test
+  //@Test
   public void test8Tpch() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select " +
