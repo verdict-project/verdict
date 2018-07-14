@@ -1,4 +1,4 @@
-package org.verdictdb.core.connection;
+package org.verdictdb.connection;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;

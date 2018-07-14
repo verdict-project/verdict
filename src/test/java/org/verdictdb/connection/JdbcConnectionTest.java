@@ -1,4 +1,4 @@
-package org.verdictdb.core.connection;
+package org.verdictdb.connection;
 
 import java.sql.Connection;
 import java.sql.DriverManager;

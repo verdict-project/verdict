@@ -1,4 +1,4 @@
-package org.verdictdb.logging;
+package org.verdictdb.commons;
 
 public class VerdictDBLogger {
 

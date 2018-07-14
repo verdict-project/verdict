@@ -9,6 +9,12 @@ import org.verdictdb.exception.VerdictDBTypeException;
 import org.verdictdb.parser.VerdictSQLParser;
 import org.verdictdb.sqlreader.NonValidatingSQLParser;
 
+/**
+ * Stores the context for a single query execution. Includes both scrambling query and select query.
+ * 
+ * @author Yongjoo Park
+ *
+ */
 public class ExecutionContext {
   
   private VerdictContext context;
@@ -74,7 +80,13 @@ public class ExecutionContext {
   private QueryType identifyQueryType(String query) {
     VerdictSQLParser parser = NonValidatingSQLParser.parserOf(query);
     
-    return QueryType.select;
+    if (parser.select_statement() != null) {
+      return QueryType.select;
+    } else if (parser.create_scramble_statement() != null) {
+      return QueryType.scrambling;
+    } else {
+      return QueryType.unknown;
+    }
   }
 
 }
