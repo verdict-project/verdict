@@ -5,8 +5,8 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
 
-import org.verdictdb.core.connection.DataTypeConverter;
-import org.verdictdb.core.connection.DbmsQueryResult;
+import org.verdictdb.connection.DataTypeConverter;
+import org.verdictdb.connection.DbmsQueryResult;
 
 public class JdbcResultSetMetaData implements ResultSetMetaData {
   

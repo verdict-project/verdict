@@ -1,4 +1,4 @@
-package org.verdictdb.core.connection;
+package org.verdictdb.connection;
 
 import static java.sql.ResultSetMetaData.columnNoNulls;
 import static java.sql.ResultSetMetaData.columnNullable;

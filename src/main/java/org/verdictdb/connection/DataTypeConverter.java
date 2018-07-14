@@ -1,4 +1,4 @@
-package org.verdictdb.core.connection;
+package org.verdictdb.connection;
 
 import static java.sql.Types.ARRAY;
 import static java.sql.Types.BIGINT;

@@ -1,6 +1,5 @@
-package org.verdictdb.core.connection;
+package org.verdictdb.connection;
 
-import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -104,11 +103,6 @@ public class SparkConnection implements DbmsConnection {
   @Override
   public SqlSyntax getSyntax() {
     return syntax;
-  }
-
-  @Override
-  public Connection getConnection() {
-    return null;
   }
 
   @Override

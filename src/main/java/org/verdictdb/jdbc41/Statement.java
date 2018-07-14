@@ -5,21 +5,21 @@ import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.sql.SQLWarning;
 
-import org.verdictdb.VerdictDBContext;
-import org.verdictdb.VerdictDBExecutionContext;
+import org.verdictdb.VerdictContext;
+import org.verdictdb.execution.ExecutionContext;
 
 public class Statement implements java.sql.Statement {
   
   Connection jdbcConn;
   
-  VerdictDBContext context;
+  VerdictContext context;
   
-  VerdictDBExecutionContext executionContext;
+  ExecutionContext executionContext;
   
-  public Statement(Connection jdbcConn, VerdictDBContext context) {
+  public Statement(Connection jdbcConn, VerdictContext context) {
     this.jdbcConn = jdbcConn;
     this.context = context;
-    this.executionContext = new VerdictDBExecutionContext(context);
+    this.executionContext = new ExecutionContext(context);
   }
 
   @Override

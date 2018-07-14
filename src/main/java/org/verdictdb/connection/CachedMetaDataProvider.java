@@ -1,4 +1,4 @@
-package org.verdictdb.core.connection;
+package org.verdictdb.connection;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -7,13 +7,8 @@ import java.util.List;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.exception.VerdictDBDbmsException;
-import org.verdictdb.sqlsyntax.SqlSyntax;
 
 public class CachedMetaDataProvider implements MetaDataProvider {
-
-//  private SqlSyntax syntax;
-
-//  private DbmsConnection connection;
   
   MetaDataProvider metaProvider;
   
@@ -29,8 +24,6 @@ public class CachedMetaDataProvider implements MetaDataProvider {
   private HashMap<Pair<String, String>, List<Pair<String,String>>> columnsCache = new HashMap<>();
 
   public CachedMetaDataProvider(MetaDataProvider metaProvider) {
-//    this.syntax = metaProvider.getSyntax();
-//    this.connection = connection;
     this.metaProvider = metaProvider;
   }
 

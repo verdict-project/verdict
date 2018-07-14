@@ -1,25 +1,31 @@
 package org.verdictdb.core.coordinator;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
-import org.verdictdb.core.connection.CachedMetaDataProvider;
-import org.verdictdb.core.connection.DataTypeConverter;
-import org.verdictdb.core.connection.DbmsConnection;
-import org.verdictdb.core.connection.StaticMetaData;
+import org.verdictdb.connection.DataTypeConverter;
+import org.verdictdb.connection.DbmsConnection;
+import org.verdictdb.connection.MetaDataProvider;
+import org.verdictdb.connection.StaticMetaData;
 import org.verdictdb.core.execution.ExecutablePlanRunner;
 import org.verdictdb.core.querying.QueryExecutionPlan;
 import org.verdictdb.core.querying.QueryExecutionPlanSimplifier;
 import org.verdictdb.core.querying.ola.AsyncQueryExecutionPlan;
 import org.verdictdb.core.resulthandler.ExecutionResultReader;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
-import org.verdictdb.core.sqlobject.*;
+import org.verdictdb.core.sqlobject.AbstractRelation;
+import org.verdictdb.core.sqlobject.BaseTable;
+import org.verdictdb.core.sqlobject.ColumnOp;
+import org.verdictdb.core.sqlobject.JoinTable;
+import org.verdictdb.core.sqlobject.SelectQuery;
+import org.verdictdb.core.sqlobject.SubqueryColumn;
+import org.verdictdb.core.sqlobject.UnnamedColumn;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sqlreader.NonValidatingSQLParser;
 import org.verdictdb.sqlreader.RelationStandardizer;
-
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
 
 public class SelectQueryCoordinator {
 
@@ -27,22 +33,23 @@ public class SelectQueryCoordinator {
 
   ScrambleMetaSet scrambleMetaSet;
 
-  String defaultSchema = "tpch";
+//  String defaultSchema;
 
-  StaticMetaData staticMetaData;
+//  StaticMetaData staticMetaData;
 
-  CachedMetaDataProvider cachedMetaData;
+//  MetaDataProvider cachedMetaData;
 
   public SelectQueryCoordinator(DbmsConnection conn) {
     this.conn = conn;
+//    this.cachedMetaData = metaDataProvider;
   }
 
   public SelectQuery standardizeQuery(String query) throws VerdictDBException {
     // parse the query
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     SelectQuery relation = (SelectQuery) sqlToRelation.toRelation(query);
-    setStaticMetaData(relation);
-    RelationStandardizer gen = new RelationStandardizer(staticMetaData);
+    MetaDataProvider metaData = createMetaDataFor(relation);
+    RelationStandardizer gen = new RelationStandardizer(metaData);
     relation = gen.standardize(relation);
     return relation;
   }
@@ -55,16 +62,11 @@ public class SelectQueryCoordinator {
     this.scrambleMetaSet = scrambleMetaSet;
   }
 
-  public StaticMetaData getStaticMetaData() {
-    return staticMetaData;
-  }
-
-  public void setDefaultSchema(String defaultSchema) {
-    this.defaultSchema = defaultSchema;
-  }
-
-  public void setStaticMetaData(SelectQuery relation) throws VerdictDBException {
-    staticMetaData.setDefaultSchema(defaultSchema);
+  public MetaDataProvider createMetaDataFor(SelectQuery relation) throws VerdictDBException {
+    StaticMetaData meta = new StaticMetaData();
+    String defaultSchema = conn.getDefaultSchema();
+    meta.setDefaultSchema(defaultSchema);
+    
     // Extract all tables appeared in the query
     HashSet<BaseTable> tables = new HashSet<>();
     List<SelectQuery> queries = new ArrayList<>();
@@ -100,23 +102,26 @@ public class SelectQueryCoordinator {
     }
 
     // Get table info from cached meta
-    for (BaseTable t:tables) {
+    for (BaseTable t : tables) {
       List<Pair<String, String>> columns;
       StaticMetaData.TableInfo tableInfo;
-      if (t.getSchemaName()==null) {
-        columns = cachedMetaData.getColumns(defaultSchema, t.getTableName());
+      
+      if (t.getSchemaName() == null) {
+        columns = conn.getColumns(defaultSchema, t.getTableName());
         tableInfo = new StaticMetaData.TableInfo(defaultSchema, t.getTableName());
       }
       else {
-        columns = cachedMetaData.getColumns(t.getSchemaName(), t.getTableName());
+        columns = conn.getColumns(t.getSchemaName(), t.getTableName());
         tableInfo = new StaticMetaData.TableInfo(t.getSchemaName(), t.getTableName());
       }
       List<Pair<String, Integer>> colInfo = new ArrayList<>();
       for (Pair<String, String> col:columns) {
         colInfo.add(new ImmutablePair<>(col.getLeft(), DataTypeConverter.typeInt(col.getRight().toLowerCase())));
       }
-      staticMetaData.addTableData(tableInfo, colInfo);
+      meta.addTableData(tableInfo, colInfo);
     }
+    
+    return meta;
   }
 
   public ExecutionResultReader process(String query) throws VerdictDBException {

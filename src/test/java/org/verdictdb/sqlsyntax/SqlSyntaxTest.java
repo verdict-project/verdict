@@ -7,7 +7,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 import org.junit.Test;
-import org.verdictdb.core.connection.JdbcConnection;
+import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.exception.VerdictDBDbmsException;
 
 public class SqlSyntaxTest {

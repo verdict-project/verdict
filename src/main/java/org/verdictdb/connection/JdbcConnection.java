@@ -1,4 +1,4 @@
-package org.verdictdb.core.connection;
+package org.verdictdb.connection;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -124,7 +124,6 @@ public class JdbcConnection implements DbmsConnection {
     return syntax;
   }
 
-  @Override
   public Connection getConnection() {return conn;}
 
   @Override

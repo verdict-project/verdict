@@ -3,7 +3,7 @@ package org.verdictdb.core.querying;
 import java.util.Arrays;
 
 import org.junit.Test;
-import org.verdictdb.core.connection.DbmsConnection;
+import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.core.scrambling.BaseScrambler;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
 import org.verdictdb.core.sqlobject.AliasReference;

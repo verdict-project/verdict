@@ -17,17 +17,17 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Executor;
 
-import org.verdictdb.VerdictDBContext;
+import org.verdictdb.VerdictContext;
 import org.verdictdb.exception.VerdictDBDbmsException;
 
 public class Connection implements java.sql.Connection {
 
-  VerdictDBContext vc;
+  VerdictContext vc;
 
   boolean isOpen = false;
 
   public Connection(String url, Properties info) throws VerdictDBDbmsException, SQLException {
-    vc = VerdictDBContext.fromConnectionString(url, info);
+    vc = VerdictContext.fromConnectionString(url, info);
   }
 
   private java.sql.DatabaseMetaData getDatabaseMetaData() {

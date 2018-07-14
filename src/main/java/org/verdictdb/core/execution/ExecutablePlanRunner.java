@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import org.verdictdb.core.connection.DbmsConnection;
+import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.core.querying.ExecutableNodeBase;
 import org.verdictdb.core.resulthandler.ExecutionResultReader;
 import org.verdictdb.core.resulthandler.ExecutionTokenReader;

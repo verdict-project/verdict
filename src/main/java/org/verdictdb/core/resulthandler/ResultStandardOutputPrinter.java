@@ -1,6 +1,6 @@
 package org.verdictdb.core.resulthandler;
 
-import org.verdictdb.core.connection.DbmsQueryResult;
+import org.verdictdb.connection.DbmsQueryResult;
 
 public class ResultStandardOutputPrinter {
   

@@ -29,8 +29,8 @@ import java.util.Map;
 
 import javax.sql.rowset.serial.SerialBlob;
 
-import org.verdictdb.core.connection.DbmsQueryResult;
-import org.verdictdb.core.connection.TypeCasting;
+import org.verdictdb.connection.DbmsQueryResult;
+import org.verdictdb.connection.TypeCasting;
 import org.verdictdb.exception.VerdictDBTypeException;
 
 public class JdbcResultSet implements ResultSet {

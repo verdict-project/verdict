@@ -7,19 +7,17 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
 
-import org.verdictdb.core.connection.CachedMetaDataProvider;
-import org.verdictdb.core.connection.DbmsConnection;
-import org.verdictdb.core.connection.DbmsQueryResult;
-import org.verdictdb.core.connection.JdbcConnection;
-import org.verdictdb.core.connection.MetaDataProvider;
-import org.verdictdb.core.execution.ExecutablePlanRunner;
-import org.verdictdb.core.querying.QueryExecutionPlan;
+import org.verdictdb.connection.CachedMetaDataProvider;
+import org.verdictdb.connection.DbmsConnection;
+import org.verdictdb.connection.DbmsQueryResult;
+import org.verdictdb.connection.JdbcConnection;
+import org.verdictdb.connection.MetaDataProvider;
 import org.verdictdb.core.resulthandler.ExecutionResultReader;
-import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.exception.VerdictDBDbmsException;
+import org.verdictdb.execution.ExecutionContext;
 
 
-public class VerdictDBContext {
+public class VerdictContext {
 
   private DbmsConnection conn;
 
@@ -28,24 +26,24 @@ public class VerdictDBContext {
   /**
    * Maintains the list of open executions. Each query is processed on a separate execution context.
    */
-  private List<VerdictDBExecutionContext> executionContexts = new LinkedList<>();
+  private List<ExecutionContext> executionContexts = new LinkedList<>();
 
-  public VerdictDBContext(DbmsConnection conn) {
+  public VerdictContext(DbmsConnection conn) {
     this.conn = conn;
     this.metadataProvider = new CachedMetaDataProvider(conn);
   }
 
-  static public VerdictDBContext fromJdbcConnection(Connection jdbcConn) throws VerdictDBDbmsException {
+  static public VerdictContext fromJdbcConnection(Connection jdbcConn) throws VerdictDBDbmsException {
     DbmsConnection conn = JdbcConnection.create(jdbcConn);
-    return new VerdictDBContext(conn);
+    return new VerdictContext(conn);
   }
 
-  static public VerdictDBContext fromConnectionString(String jdbcConnectionString) throws SQLException, VerdictDBDbmsException {
+  static public VerdictContext fromConnectionString(String jdbcConnectionString) throws SQLException, VerdictDBDbmsException {
     Connection jdbcConn = DriverManager.getConnection(jdbcConnectionString);
     return fromJdbcConnection(jdbcConn);
   }
 
-  static public VerdictDBContext fromConnectionString(String jdbcConnectionString, Properties info)
+  static public VerdictContext fromConnectionString(String jdbcConnectionString, Properties info)
       throws SQLException, VerdictDBDbmsException {
     Connection jdbcConn = DriverManager.getConnection(jdbcConnectionString);
     return fromJdbcConnection(jdbcConn);
@@ -55,13 +53,13 @@ public class VerdictDBContext {
     return conn;
   }
 
-  private VerdictDBExecutionContext createNewExecutionContext() {
-    VerdictDBExecutionContext exec = new VerdictDBExecutionContext(this);
+  private ExecutionContext createNewExecutionContext() {
+    ExecutionContext exec = new ExecutionContext(this);
     executionContexts.add(exec);
     return exec;
   }
 
-  private void removeExecutionContext(VerdictDBExecutionContext exec) {
+  private void removeExecutionContext(ExecutionContext exec) {
     executionContexts.remove(exec);
   }
 
@@ -83,12 +81,17 @@ public class VerdictDBContext {
    * Returns a reliable result set as an answer. Right now, simply returns the first batch of
    * Continuous results.
    * 
+   * Automatically spawns an independent execution context, then runs a query using it.
+   * 
    * @param query Either a select query or a create-scramble query
    * @return A single query result is returned. If the query is a create-scramble query, the number
    * of inserted rows are returned.
    */
   public DbmsQueryResult sql(String query) {
-    return null;
+    ExecutionContext exec = createNewExecutionContext();
+    DbmsQueryResult result = exec.sql(query);
+    removeExecutionContext(exec);
+    return result;
   }
 
   /**

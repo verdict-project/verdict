@@ -6,7 +6,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.verdictdb.core.connection.DbmsConnection;
+import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.core.execution.ExecutablePlanRunner;
 import org.verdictdb.core.scrambling.FastConvergeScramblingMethod;
 import org.verdictdb.core.scrambling.ScrambleMeta;

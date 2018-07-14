@@ -12,6 +12,8 @@ import java.util.List;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.verdictdb.connection.DbmsQueryResult;
+import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.sqlsyntax.HiveSyntax;
 
