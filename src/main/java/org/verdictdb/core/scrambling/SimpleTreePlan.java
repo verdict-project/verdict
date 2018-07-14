@@ -5,8 +5,8 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.verdictdb.core.execution.ExecutableNode;
-import org.verdictdb.core.execution.ExecutablePlan;
+import org.verdictdb.core.execplan.ExecutableNode;
+import org.verdictdb.core.execplan.ExecutablePlan;
 import org.verdictdb.core.querying.ExecutableNodeBase;
 
 /**

@@ -4,7 +4,7 @@
  * Currently active subpackages:
  * <ol>
  * <li>connection</li>
- * <li>execution</li>
+ * <li>execplan</li>
  * <li>querying</li>
  * <li>scrambling</li>
  * <li>sqlobject</li>
@@ -12,7 +12,8 @@
  * <p>
  * Notes on partitioning:
  * <ol>
- * <li>When scrambling, we first create partitioned tables; then, insert values. This is the due to the
+ * <li>Not always true:
+ * When scrambling, we first create partitioned tables; then, insert values. This is the due to the
  * restrictions of existing DBMS (e.g., Hive, Postgres) which prohibits creating a partitioned table as a
  * result of a select query. For Hive, see
  * https://cwiki.apache.org/confluence/display/Hive/LanguageManual+DDL#LanguageManualDDL-CreateTableCreate/Drop/TruncateTable</li>

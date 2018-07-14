@@ -7,8 +7,8 @@ import java.util.Arrays;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.connection.DbmsConnection;
-import org.verdictdb.connection.JdbcConnection;
-import org.verdictdb.core.execution.ExecutionInfoToken;
+import org.verdictdb.connection.JdbcDbmsConnection;
+import org.verdictdb.core.execplan.ExecutionInfoToken;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sqlsyntax.H2Syntax;
@@ -27,7 +27,7 @@ public class DropTableExecutionNodeTest {
     final String DB_CONNECTION = "jdbc:h2:mem:droptablenodetest;DB_CLOSE_DELAY=-1";
     final String DB_USER = "";
     final String DB_PASSWORD = "";
-    conn = new JdbcConnection(DriverManager.getConnection(DB_CONNECTION, DB_USER, DB_PASSWORD), new H2Syntax());
+    conn = new JdbcDbmsConnection(DriverManager.getConnection(DB_CONNECTION, DB_USER, DB_PASSWORD), new H2Syntax());
     conn.execute(String.format("CREATE SCHEMA \"%s\"", originalSchema));
     populateData(conn, originalSchema, originalTable);
   }

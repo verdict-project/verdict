@@ -17,10 +17,10 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.verdictdb.connection.JdbcConnection;
+import org.verdictdb.connection.JdbcDbmsConnection;
 import org.verdictdb.connection.StaticMetaData;
-import org.verdictdb.core.execution.ExecutablePlanRunner;
-import org.verdictdb.core.execution.ExecutionInfoToken;
+import org.verdictdb.core.execplan.ExecutablePlanRunner;
+import org.verdictdb.core.execplan.ExecutionInfoToken;
 import org.verdictdb.core.querying.AggExecutionNode;
 import org.verdictdb.core.querying.QueryExecutionPlan;
 import org.verdictdb.core.scrambling.ScrambleMeta;
@@ -131,7 +131,7 @@ public class AsyncAggScaleTest {
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
 //    queryExecutionPlan.getRoot().print();
     
-    ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
+    ExecutablePlanRunner.runTillEnd(new JdbcDbmsConnection(conn, new H2Syntax()), queryExecutionPlan);
 //    queryExecutionPlan.root.executeAndWaitForTermination();
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
@@ -178,7 +178,7 @@ public class AsyncAggScaleTest {
     ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
 
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
-    ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
+    ExecutablePlanRunner.runTillEnd(new JdbcDbmsConnection(conn, new H2Syntax()), queryExecutionPlan);
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
@@ -250,7 +250,7 @@ public class AsyncAggScaleTest {
     ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
 
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
-    ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
+    ExecutablePlanRunner.runTillEnd(new JdbcDbmsConnection(conn, new H2Syntax()), queryExecutionPlan);
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
@@ -273,7 +273,7 @@ public class AsyncAggScaleTest {
     ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
 
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
-    ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
+    ExecutablePlanRunner.runTillEnd(new JdbcDbmsConnection(conn, new H2Syntax()), queryExecutionPlan);
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
@@ -296,7 +296,7 @@ public class AsyncAggScaleTest {
     ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
 
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
-    ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
+    ExecutablePlanRunner.runTillEnd(new JdbcDbmsConnection(conn, new H2Syntax()), queryExecutionPlan);
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
@@ -319,7 +319,7 @@ public class AsyncAggScaleTest {
     ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
 
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
-    ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
+    ExecutablePlanRunner.runTillEnd(new JdbcDbmsConnection(conn, new H2Syntax()), queryExecutionPlan);
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
@@ -342,7 +342,7 @@ public class AsyncAggScaleTest {
     ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
 
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
-    ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
+    ExecutablePlanRunner.runTillEnd(new JdbcDbmsConnection(conn, new H2Syntax()), queryExecutionPlan);
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
@@ -365,7 +365,7 @@ public class AsyncAggScaleTest {
     ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
 
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
-    ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
+    ExecutablePlanRunner.runTillEnd(new JdbcDbmsConnection(conn, new H2Syntax()), queryExecutionPlan);
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
@@ -388,7 +388,7 @@ public class AsyncAggScaleTest {
     ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
 
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
-    ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
+    ExecutablePlanRunner.runTillEnd(new JdbcDbmsConnection(conn, new H2Syntax()), queryExecutionPlan);
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
@@ -411,7 +411,7 @@ public class AsyncAggScaleTest {
     ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
 
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
-    ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
+    ExecutablePlanRunner.runTillEnd(new JdbcDbmsConnection(conn, new H2Syntax()), queryExecutionPlan);
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 

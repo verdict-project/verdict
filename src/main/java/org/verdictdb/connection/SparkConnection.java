@@ -18,6 +18,8 @@ public class SparkConnection implements DbmsConnection {
 
   SqlSyntax syntax;
   
+  String currentSchema;
+  
   public SparkConnection(SparkSession sc) {
     this.sc = sc;
     this.syntax = new SparkSyntax();
@@ -76,14 +78,12 @@ public class SparkConnection implements DbmsConnection {
 
   @Override
   public String getDefaultSchema() {
-    // TODO Auto-generated method stub
-    return null;
+    return currentSchema;
   }
 
   @Override
   public void setDefaultSchema(String schema) {
-    // TODO Auto-generated method stub
-    
+    currentSchema = schema;
   }
 
   @Override

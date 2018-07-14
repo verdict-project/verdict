@@ -19,10 +19,10 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.connection.DbmsQueryResult;
-import org.verdictdb.core.execution.ExecutableNode;
-import org.verdictdb.core.execution.ExecutionInfoToken;
-import org.verdictdb.core.execution.ExecutionTokenQueue;
-import org.verdictdb.core.execution.MethodInvocationInformation;
+import org.verdictdb.core.execplan.ExecutableNode;
+import org.verdictdb.core.execplan.ExecutionInfoToken;
+import org.verdictdb.core.execplan.ExecutionTokenQueue;
+import org.verdictdb.core.execplan.MethodInvocationInformation;
 import org.verdictdb.core.sqlobject.SqlConvertible;
 import org.verdictdb.exception.VerdictDBException;
 

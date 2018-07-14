@@ -9,7 +9,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.connection.DbmsConnection;
-import org.verdictdb.connection.JdbcConnection;
+import org.verdictdb.connection.JdbcDbmsConnection;
 import org.verdictdb.exception.VerdictDBDbmsException;
 
 public class JdbcMetaDataTestForRedshift {
@@ -46,7 +46,7 @@ public class JdbcMetaDataTestForRedshift {
     String connectionString =
         String.format("jdbc:redshift://%s/%s", REDSHIFT_HOST, REDSHIFT_DATABASE);
     conn = DriverManager.getConnection(connectionString, REDSHIFT_USER, REDSHIFT_PASSWORD);
-    dbmsConn = JdbcConnection.create(conn);
+    dbmsConn = JdbcDbmsConnection.create(conn);
 
     stmt = conn.createStatement();
     stmt.execute(String.format("DROP TABLE IF EXISTS \"%s\"", TABLE_NAME));

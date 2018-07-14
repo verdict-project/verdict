@@ -10,6 +10,13 @@ import java.util.logging.Logger;
 
 import org.verdictdb.exception.VerdictDBDbmsException;
 
+/**
+ * Importat: If the name of this class changes, the change must be reflected in the service file
+ * located at: src/main/resources/META-INF/services/java.sql.Driver
+ * 
+ * @author Yongjoo Park
+ *
+ */
 public class Driver implements java.sql.Driver {
 
   static {
@@ -25,7 +32,7 @@ public class Driver implements java.sql.Driver {
   public Connection connect(String url, Properties info) throws SQLException {
     if (acceptsURL(url)) {
       try {
-        return new org.verdictdb.jdbc41.Connection(url, info);
+        return new org.verdictdb.jdbc41.VerdictConnection(url, info);
       } catch (VerdictDBDbmsException e) {
         e.printStackTrace();
         throw new SQLException(e.getMessage());

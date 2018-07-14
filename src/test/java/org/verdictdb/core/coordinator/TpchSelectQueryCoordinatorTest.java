@@ -5,13 +5,15 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.DbmsQueryResult;
-import org.verdictdb.connection.JdbcConnection;
-import org.verdictdb.core.execution.ExecutablePlanRunner;
+import org.verdictdb.connection.JdbcDbmsConnection;
+import org.verdictdb.core.execplan.ExecutablePlanRunner;
 import org.verdictdb.core.resulthandler.ExecutionResultReader;
 import org.verdictdb.core.scrambling.*;
 import org.verdictdb.core.sqlobject.AbstractRelation;
 import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.execution.SelectQueryCoordinator;
+import org.verdictdb.jdbc41.VerdictConnection;
 import org.verdictdb.sqlreader.NonValidatingSQLParser;
 import org.verdictdb.sqlreader.RelationStandardizer;
 import org.verdictdb.sqlsyntax.MysqlSyntax;
@@ -156,6 +158,9 @@ public class TpchSelectQueryCoordinatorTest {
 
 
     // Create Scramble table
+    stmt.execute("DROP TABLE IF EXISTS `test`.`lineitem_scrambled`");
+    stmt.execute("DROP TABLE IF EXISTS `test`.`orders_scrambled`");
+    
     ScramblingMethod method = new UniformScramblingMethod(blockSize);
     Map<String, String> options = new HashMap<>();
     options.put("tierColumnName", "verdictdbtier");
@@ -164,7 +169,7 @@ public class TpchSelectQueryCoordinatorTest {
         "test", "lineitem_scrambled",
         "test", "lineitem",
         method, options);
-    DbmsConnection mysqlConn = new JdbcConnection(conn, new MysqlSyntax());
+    DbmsConnection mysqlConn = new JdbcDbmsConnection(conn, new MysqlSyntax());
     ExecutablePlanRunner.runTillEnd(mysqlConn, plan);
     ScramblingMethod method2 = new UniformScramblingMethod(blockSize);
     Map<String, String> options2 = new HashMap<>();
@@ -220,8 +225,8 @@ public class TpchSelectQueryCoordinatorTest {
         " l_linestatus ";
     stmt.execute("create schema if not exists `verdictdb_temp`;");
     
-//    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcConnection(conn, new MysqlSyntax()));
-    DbmsConnection dbmsconn = new JdbcConnection(conn, new MysqlSyntax());
+//    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcDbmsConnection(conn, new MysqlSyntax()));
+    DbmsConnection dbmsconn = new JdbcDbmsConnection(conn, new MysqlSyntax());
     dbmsconn.setDefaultSchema("test");
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     
@@ -262,7 +267,7 @@ public class TpchSelectQueryCoordinatorTest {
     System.out.println("test case 1 finished");
   }
 
-  //@Test
+  @Test
   public void testTpch3() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select " +
@@ -288,8 +293,8 @@ public class TpchSelectQueryCoordinatorTest {
         "o_orderdate " +
         "limit 10";
     stmt.execute("create schema if not exists `verdictdb_temp`;");
-//    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcConnection(conn, new MysqlSyntax()));
-    DbmsConnection dbmsconn = new JdbcConnection(conn, new MysqlSyntax());
+//    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcDbmsConnection(conn, new MysqlSyntax()));
+    DbmsConnection dbmsconn = new JdbcDbmsConnection(conn, new MysqlSyntax());
     dbmsconn.setDefaultSchema("test");
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     
@@ -324,7 +329,7 @@ public class TpchSelectQueryCoordinatorTest {
     System.out.println("test case 3 finished");
   }
 
-  //@Test
+  @Test
   public void test4Tpch() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select " +
@@ -341,8 +346,8 @@ public class TpchSelectQueryCoordinatorTest {
         "order by " +
         "o_orderpriority ";
     stmt.execute("create schema if not exists `verdictdb_temp`;");
-//    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcConnection(conn, new MysqlSyntax()));
-    DbmsConnection dbmsconn = new JdbcConnection(conn, new MysqlSyntax());
+//    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcDbmsConnection(conn, new MysqlSyntax()));
+    DbmsConnection dbmsconn = new JdbcDbmsConnection(conn, new MysqlSyntax());
     dbmsconn.setDefaultSchema("test");
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     
@@ -375,7 +380,7 @@ public class TpchSelectQueryCoordinatorTest {
     System.out.println("test case 4 finished");
   }
 
-  //@Test
+  @Test
   public void test5Tpch() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select " +
@@ -402,8 +407,8 @@ public class TpchSelectQueryCoordinatorTest {
         "order by " +
         "revenue desc ";
     stmt.execute("create schema if not exists `verdictdb_temp`;");
-//    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcConnection(conn, new MysqlSyntax()));
-    DbmsConnection dbmsconn = new JdbcConnection(conn, new MysqlSyntax());
+//    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcDbmsConnection(conn, new MysqlSyntax()));
+    DbmsConnection dbmsconn = new JdbcDbmsConnection(conn, new MysqlSyntax());
     dbmsconn.setDefaultSchema("test");
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     
@@ -436,7 +441,7 @@ public class TpchSelectQueryCoordinatorTest {
     System.out.println("test case 5 finished");
   }
 
-  //@Test
+  @Test
   public void test6Tpch() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select " +
@@ -449,8 +454,8 @@ public class TpchSelectQueryCoordinatorTest {
         "and l_discount between 0.04 - 0.02 and 0.04 + 0.02 " +
         "and l_quantity < 15 ";
     stmt.execute("create schema if not exists `verdictdb_temp`;");
-//    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcConnection(conn, new MysqlSyntax()));
-    DbmsConnection dbmsconn = new JdbcConnection(conn, new MysqlSyntax());
+//    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcDbmsConnection(conn, new MysqlSyntax()));
+    DbmsConnection dbmsconn = new JdbcDbmsConnection(conn, new MysqlSyntax());
     dbmsconn.setDefaultSchema("test");
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     coordinator.setScrambleMetaSet(meta);
@@ -481,7 +486,7 @@ public class TpchSelectQueryCoordinatorTest {
     System.out.println("test case 6 finished");
   }
 
-  //@Test
+  @Test
   public void test7Tpch() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select " +
@@ -524,8 +529,8 @@ public class TpchSelectQueryCoordinatorTest {
         "cust_nation, " +
         "l_year ";
     stmt.execute("create schema if not exists `verdictdb_temp`;");
-//    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcConnection(conn, new MysqlSyntax()));
-    DbmsConnection dbmsconn = new JdbcConnection(conn, new MysqlSyntax());
+//    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcDbmsConnection(conn, new MysqlSyntax()));
+    DbmsConnection dbmsconn = new JdbcDbmsConnection(conn, new MysqlSyntax());
     dbmsconn.setDefaultSchema("test");
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     coordinator.setScrambleMetaSet(meta);
@@ -559,7 +564,7 @@ public class TpchSelectQueryCoordinatorTest {
     System.out.println("test case 7 finished");
   }
 
-  ////@Test
+  @Test
   public void test8Tpch() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select " +
@@ -599,8 +604,8 @@ public class TpchSelectQueryCoordinatorTest {
         "order by " +
         "o_year ";
     stmt.execute("create schema if not exists `verdictdb_temp`;");
-//    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcConnection(conn, new MysqlSyntax()));
-    DbmsConnection dbmsconn = new JdbcConnection(conn, new MysqlSyntax());
+//    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcDbmsConnection(conn, new MysqlSyntax()));
+    DbmsConnection dbmsconn = new JdbcDbmsConnection(conn, new MysqlSyntax());
     dbmsconn.setDefaultSchema("test");
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     coordinator.setScrambleMetaSet(meta);
@@ -633,7 +638,7 @@ public class TpchSelectQueryCoordinatorTest {
     System.out.println("test case 8 finished");
   }
 
-  //@Test
+  @Test
   public void test9Tpch() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select " +
@@ -668,8 +673,8 @@ public class TpchSelectQueryCoordinatorTest {
         "nation, " +
         "o_year desc ";
     stmt.execute("create schema if not exists `verdictdb_temp`;");
-//    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcConnection(conn, new MysqlSyntax()));
-    DbmsConnection dbmsconn = new JdbcConnection(conn, new MysqlSyntax());
+//    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcDbmsConnection(conn, new MysqlSyntax()));
+    DbmsConnection dbmsconn = new JdbcDbmsConnection(conn, new MysqlSyntax());
     dbmsconn.setDefaultSchema("test");
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     coordinator.setScrambleMetaSet(meta);
@@ -702,7 +707,7 @@ public class TpchSelectQueryCoordinatorTest {
     System.out.println("test case 9 finished");
   }
 
-  //@Test
+  @Test
   public void test10Tpch() throws VerdictDBException, SQLException {
     String sql = "select " +
         "c_custkey, " +
@@ -736,8 +741,8 @@ public class TpchSelectQueryCoordinatorTest {
         "order by " +
         "revenue desc ";
     stmt.execute("create schema if not exists `verdictdb_temp`;");
-//    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcConnection(conn, new MysqlSyntax()));
-    DbmsConnection dbmsconn = new JdbcConnection(conn, new MysqlSyntax());
+//    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcDbmsConnection(conn, new MysqlSyntax()));
+    DbmsConnection dbmsconn = new JdbcDbmsConnection(conn, new MysqlSyntax());
     dbmsconn.setDefaultSchema("test");
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     coordinator.setScrambleMetaSet(meta);
@@ -770,7 +775,7 @@ public class TpchSelectQueryCoordinatorTest {
     System.out.println("test case 10 finished");
   }
 
-  //@Test
+  @Test
   public void test12Tpch() throws VerdictDBException, SQLException {
     String sql = "select " +
         "l_shipmode, " +
@@ -800,8 +805,8 @@ public class TpchSelectQueryCoordinatorTest {
         "order by " +
         "l_shipmode ";
     stmt.execute("create schema if not exists `verdictdb_temp`;");
-//    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcConnection(conn, new MysqlSyntax()));
-    DbmsConnection dbmsconn = new JdbcConnection(conn, new MysqlSyntax());
+//    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcDbmsConnection(conn, new MysqlSyntax()));
+    DbmsConnection dbmsconn = new JdbcDbmsConnection(conn, new MysqlSyntax());
     dbmsconn.setDefaultSchema("test");
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     coordinator.setScrambleMetaSet(meta);
@@ -834,7 +839,7 @@ public class TpchSelectQueryCoordinatorTest {
     System.out.println("test case 12 finished");
   }
 
-  //@Test
+  @Test
   public void test13Tpch() throws VerdictDBException, SQLException {
     String sql = "select " +
         "c_custkey, " +
@@ -847,8 +852,8 @@ public class TpchSelectQueryCoordinatorTest {
         "c_custkey " +
         "order by c_custkey";
     stmt.execute("create schema if not exists `verdictdb_temp`;");
-//    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcConnection(conn, new MysqlSyntax()));
-    DbmsConnection dbmsconn = new JdbcConnection(conn, new MysqlSyntax());
+//    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcDbmsConnection(conn, new MysqlSyntax()));
+    DbmsConnection dbmsconn = new JdbcDbmsConnection(conn, new MysqlSyntax());
     dbmsconn.setDefaultSchema("test");
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     coordinator.setScrambleMetaSet(meta);
@@ -880,7 +885,7 @@ public class TpchSelectQueryCoordinatorTest {
     System.out.println("test case 13 finished");
   }
 
-  //@Test
+  @Test
   public void test14Tpch() throws VerdictDBException, SQLException {
     String sql = "select " +
         "100.00 * sum(case " +
@@ -896,8 +901,8 @@ public class TpchSelectQueryCoordinatorTest {
         "and l_shipdate >= date '1992-01-01' " +
         "and l_shipdate < date '1998-01-01' ";
     stmt.execute("create schema if not exists `verdictdb_temp`;");
-//    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcConnection(conn, new MysqlSyntax()));
-    DbmsConnection dbmsconn = new JdbcConnection(conn, new MysqlSyntax());
+//    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcDbmsConnection(conn, new MysqlSyntax()));
+    DbmsConnection dbmsconn = new JdbcDbmsConnection(conn, new MysqlSyntax());
     dbmsconn.setDefaultSchema("test");
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     coordinator.setScrambleMetaSet(meta);
@@ -929,7 +934,7 @@ public class TpchSelectQueryCoordinatorTest {
     System.out.println("test case 14 finished");
   }
 
-  //@Test
+  @Test
   public void test15Tpch() throws VerdictDBException, SQLException {
     String sql = "select " +
         "l_suppkey, " +
@@ -944,8 +949,8 @@ public class TpchSelectQueryCoordinatorTest {
         "order by " +
         "l_suppkey";
     stmt.execute("create schema if not exists `verdictdb_temp`;");
-//    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcConnection(conn, new MysqlSyntax()));
-    DbmsConnection dbmsconn = new JdbcConnection(conn, new MysqlSyntax());
+//    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcDbmsConnection(conn, new MysqlSyntax()));
+    DbmsConnection dbmsconn = new JdbcDbmsConnection(conn, new MysqlSyntax());
     dbmsconn.setDefaultSchema("test");
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     coordinator.setScrambleMetaSet(meta);
@@ -977,7 +982,7 @@ public class TpchSelectQueryCoordinatorTest {
     System.out.println("test case 15 finished");
   }
 
-  //@Test
+  @Test
   public void test17Tpch() throws VerdictDBException, SQLException {
     String sql = "select\n" +
         "  sum(extendedprice) / 7.0 as avg_yearly\n" +
@@ -1006,8 +1011,8 @@ public class TpchSelectQueryCoordinatorTest {
         ") a \n" +
         "where quantity > t_avg_quantity";
     stmt.execute("create schema if not exists `verdictdb_temp`;");
-//    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcConnection(conn, new MysqlSyntax()));
-    DbmsConnection dbmsconn = new JdbcConnection(conn, new MysqlSyntax());
+//    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcDbmsConnection(conn, new MysqlSyntax()));
+    DbmsConnection dbmsconn = new JdbcDbmsConnection(conn, new MysqlSyntax());
     dbmsconn.setDefaultSchema("test");
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     coordinator.setScrambleMetaSet(meta);
@@ -1038,7 +1043,7 @@ public class TpchSelectQueryCoordinatorTest {
     System.out.println("test case 17 finished");
   }
 
-  //@Test
+  @Test
   public void test18Tpch() throws VerdictDBException, SQLException {
     String sql = "select\n" +
         "  c_name,\n" +
@@ -1075,8 +1080,8 @@ public class TpchSelectQueryCoordinatorTest {
         "  o_totalprice desc,\n" +
         "  o_orderdate \n";
     stmt.execute("create schema if not exists `verdictdb_temp`;");
-//    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcConnection(conn, new MysqlSyntax()));
-    DbmsConnection dbmsconn = new JdbcConnection(conn, new MysqlSyntax());
+//    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcDbmsConnection(conn, new MysqlSyntax()));
+    DbmsConnection dbmsconn = new JdbcDbmsConnection(conn, new MysqlSyntax());
     dbmsconn.setDefaultSchema("test");
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     coordinator.setScrambleMetaSet(meta);
@@ -1112,7 +1117,7 @@ public class TpchSelectQueryCoordinatorTest {
     System.out.println("test case 18 finished");
   }
 
-  //@Test
+  @Test
   public void test19Tpch() throws VerdictDBException, SQLException {
     String sql = "select " +
         "sum(l_extendedprice* (1 - l_discount)) as revenue " +
@@ -1147,8 +1152,8 @@ public class TpchSelectQueryCoordinatorTest {
         "and l_shipinstruct = 'DELIVER IN PERSON' " +
         ") ";
     stmt.execute("create schema if not exists `verdictdb_temp`;");
-//    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcConnection(conn, new MysqlSyntax()));
-    DbmsConnection dbmsconn = new JdbcConnection(conn, new MysqlSyntax());
+//    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcDbmsConnection(conn, new MysqlSyntax()));
+    DbmsConnection dbmsconn = new JdbcDbmsConnection(conn, new MysqlSyntax());
     dbmsconn.setDefaultSchema("test");
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     coordinator.setScrambleMetaSet(meta);
@@ -1179,7 +1184,7 @@ public class TpchSelectQueryCoordinatorTest {
     System.out.println("test case 19 finished");
   }
 
-  //@Test
+  @Test
   public void test20Tpch() throws VerdictDBException, SQLException {
     String sql = "select\n" +
         "  s_name,\n" +
@@ -1205,8 +1210,8 @@ public class TpchSelectQueryCoordinatorTest {
         "  group by s_name\n" +
         "order by s_name";
     stmt.execute("create schema if not exists `verdictdb_temp`;");
-//    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcConnection(conn, new MysqlSyntax()));
-    DbmsConnection dbmsconn = new JdbcConnection(conn, new MysqlSyntax());
+//    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcDbmsConnection(conn, new MysqlSyntax()));
+    DbmsConnection dbmsconn = new JdbcDbmsConnection(conn, new MysqlSyntax());
     dbmsconn.setDefaultSchema("test");
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     coordinator.setScrambleMetaSet(meta);
@@ -1239,7 +1244,7 @@ public class TpchSelectQueryCoordinatorTest {
   }
 
 
-  //@Test
+  @Test
   public void test21Tpch() throws VerdictDBException, SQLException {
     String sql = "select s_name, count(1) as numwait\n" +
         "from (" +
@@ -1280,8 +1285,8 @@ public class TpchSelectQueryCoordinatorTest {
         "group by s_name " +
         "order by numwait desc, s_name ";
     stmt.execute("create schema if not exists `verdictdb_temp`;");
-//    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcConnection(conn, new MysqlSyntax()));
-    DbmsConnection dbmsconn = new JdbcConnection(conn, new MysqlSyntax());
+//    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcDbmsConnection(conn, new MysqlSyntax()));
+    DbmsConnection dbmsconn = new JdbcDbmsConnection(conn, new MysqlSyntax());
     dbmsconn.setDefaultSchema("test");
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     coordinator.setScrambleMetaSet(meta);

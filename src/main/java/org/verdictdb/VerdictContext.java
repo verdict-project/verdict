@@ -7,10 +7,12 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
 
+import org.apache.commons.lang3.RandomStringUtils;
+import org.verdictdb.connection.CachedDbmsConnection;
 import org.verdictdb.connection.CachedMetaDataProvider;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.DbmsQueryResult;
-import org.verdictdb.connection.JdbcConnection;
+import org.verdictdb.connection.JdbcDbmsConnection;
 import org.verdictdb.connection.MetaDataProvider;
 import org.verdictdb.core.resulthandler.ExecutionResultReader;
 import org.verdictdb.exception.VerdictDBDbmsException;
@@ -21,7 +23,11 @@ public class VerdictContext {
 
   private DbmsConnection conn;
 
-  private MetaDataProvider metadataProvider;
+//  private MetaDataProvider metadataProvider;
+  
+  final private String contextId;
+  
+  private long executionSerialNumber = 0;
 
   /**
    * Maintains the list of open executions. Each query is processed on a separate execution context.
@@ -29,12 +35,13 @@ public class VerdictContext {
   private List<ExecutionContext> executionContexts = new LinkedList<>();
 
   public VerdictContext(DbmsConnection conn) {
-    this.conn = conn;
-    this.metadataProvider = new CachedMetaDataProvider(conn);
+    this.conn = new CachedDbmsConnection(conn);
+//    this.metadataProvider = new CachedMetaDataProvider(conn);
+    this.contextId = RandomStringUtils.randomAlphanumeric(5);
   }
 
   static public VerdictContext fromJdbcConnection(Connection jdbcConn) throws VerdictDBDbmsException {
-    DbmsConnection conn = JdbcConnection.create(jdbcConn);
+    DbmsConnection conn = JdbcDbmsConnection.create(jdbcConn);
     return new VerdictContext(conn);
   }
 
@@ -52,11 +59,21 @@ public class VerdictContext {
   public DbmsConnection getConnection() {
     return conn;
   }
+  
+  public String getContextId() {
+    return contextId;
+  }
 
   private ExecutionContext createNewExecutionContext() {
-    ExecutionContext exec = new ExecutionContext(this);
+    long execSerialNumber = getNextExecutionSerialNumber();
+    ExecutionContext exec = new ExecutionContext(this, execSerialNumber);
     executionContexts.add(exec);
     return exec;
+  }
+  
+  private synchronized long getNextExecutionSerialNumber() {
+    executionSerialNumber++;
+    return executionSerialNumber;
   }
 
   private void removeExecutionContext(ExecutionContext exec) {
