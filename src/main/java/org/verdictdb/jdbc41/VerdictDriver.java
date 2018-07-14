@@ -10,11 +10,11 @@ import java.util.logging.Logger;
 
 import org.verdictdb.exception.VerdictDBDbmsException;
 
-public class Driver implements java.sql.Driver {
+public class VerdictDriver implements java.sql.Driver {
 
   static {
     try {
-      DriverManager.registerDriver(new Driver());
+      DriverManager.registerDriver(new VerdictDriver());
     } catch (SQLException e) {
       System.err.println("Error occurred while registering VerdictDB driver:");
       System.err.println(e.getMessage());
@@ -25,7 +25,7 @@ public class Driver implements java.sql.Driver {
   public Connection connect(String url, Properties info) throws SQLException {
     if (acceptsURL(url)) {
       try {
-        return new org.verdictdb.jdbc41.Connection(url, info);
+        return new org.verdictdb.jdbc41.VerdictConnection(url, info);
       } catch (VerdictDBDbmsException e) {
         e.printStackTrace();
         throw new SQLException(e.getMessage());

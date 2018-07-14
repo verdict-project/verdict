@@ -8,11 +8,11 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Map;
 
-public class JdbcArray implements Array {
+public class VerdictJdbcArray implements Array {
 
   Object[] arr;
 
-  public JdbcArray(Object[] arr) { this.arr = arr; }
+  public VerdictJdbcArray(Object[] arr) { this.arr = arr; }
 
   @Override
   public String getBaseTypeName() throws SQLException {

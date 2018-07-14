@@ -8,7 +8,7 @@ import java.sql.SQLException;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.connection.DbmsConnection;
-import org.verdictdb.connection.JdbcConnection;
+import org.verdictdb.connection.JdbcDbmsConnection;
 import org.verdictdb.core.sqlobject.ColumnOp;
 import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.core.sqlobject.SubqueryColumn;
@@ -36,7 +36,7 @@ public class QueryExecutionPlanSimplifierTest {
     final String DB_CONNECTION = "jdbc:h2:mem:plancompresstest;DB_CLOSE_DELAY=-1";
     final String DB_USER = "";
     final String DB_PASSWORD = "";
-    conn = new JdbcConnection(DriverManager.getConnection(DB_CONNECTION, DB_USER, DB_PASSWORD), new H2Syntax());
+    conn = new JdbcDbmsConnection(DriverManager.getConnection(DB_CONNECTION, DB_USER, DB_PASSWORD), new H2Syntax());
     conn.execute(String.format("CREATE SCHEMA IF NOT EXISTS\"%s\"", originalSchema));
     conn.execute(String.format("CREATE SCHEMA IF NOT EXISTS\"%s\"", newSchema));
     populateData(conn, originalSchema, originalTable);

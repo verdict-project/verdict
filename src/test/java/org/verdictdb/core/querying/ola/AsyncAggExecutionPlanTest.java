@@ -17,7 +17,7 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.verdictdb.connection.JdbcConnection;
+import org.verdictdb.connection.JdbcDbmsConnection;
 import org.verdictdb.connection.StaticMetaData;
 import org.verdictdb.core.execution.ExecutablePlanRunner;
 import org.verdictdb.core.querying.QueryExecutionPlan;
@@ -118,7 +118,7 @@ public class AsyncAggExecutionPlanTest {
 
     assertEquals(1, queryExecutionPlan.getRoot().getDependentNodeCount());
     stmt.execute("create schema if not exists \"verdictdb_temp1\";");
-    ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
+    ExecutablePlanRunner.runTillEnd(new JdbcDbmsConnection(conn, new H2Syntax()), queryExecutionPlan);
     stmt.execute("drop schema \"verdictdb_temp1\" cascade;");
   }
 
@@ -136,7 +136,7 @@ public class AsyncAggExecutionPlanTest {
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
 
     stmt.execute("create schema if not exists \"verdictdb_temp2\";");
-    ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
+    ExecutablePlanRunner.runTillEnd(new JdbcDbmsConnection(conn, new H2Syntax()), queryExecutionPlan);
     stmt.execute("drop schema \"verdictdb_temp2\" cascade;");
   }
 
@@ -158,7 +158,7 @@ public class AsyncAggExecutionPlanTest {
 //    TokenQueueToAyncHandler tokenQueueToAyncHandler = new TokenQueueToAyncHandler(queryExecutionPlan, new ExecutionTokenQueue());
 //    tokenQueueToAyncHandler.setHandler(new StandardOutputHandler());
     stmt.execute("create schema if not exists \"verdictdb_temp3\";");
-    JdbcConnection jdbcconn = new JdbcConnection(conn, new H2Syntax());
+    JdbcDbmsConnection jdbcconn = new JdbcDbmsConnection(conn, new H2Syntax());
     ExecutablePlanRunner.runTillEnd(jdbcconn, queryExecutionPlan);
 //    queryExecutionPlan.root.executeAndWaitForTermination(new JdbcConnection(conn, new H2Syntax()));
 //    tokenQueueToAyncHandler.execute();
@@ -189,7 +189,7 @@ public class AsyncAggExecutionPlanTest {
 //    TokenQueueToAyncHandler tokenQueueToAyncHandler = new TokenQueueToAyncHandler(queryExecutionPlan, new ExecutionTokenQueue());
 //    tokenQueueToAyncHandler.setHandler(new StandardOutputHandler());
     stmt.execute("create schema if not exists \"verdictdb_temp4\";");
-    JdbcConnection jdbcconn = new JdbcConnection(conn, new H2Syntax());
+    JdbcDbmsConnection jdbcconn = new JdbcDbmsConnection(conn, new H2Syntax());
     ExecutablePlanRunner.runTillEnd(jdbcconn, queryExecutionPlan);
 //    queryExecutionPlan.root.executeAndWaitForTermination(new JdbcConnection(conn, new H2Syntax()));
 //    tokenQueueToAyncHandler.execute();

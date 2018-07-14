@@ -6,13 +6,6 @@ import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.core.execution.ExecutionTokenQueue;
 
 public class ExecutionResultReader implements Iterable<DbmsQueryResult>, Iterator<DbmsQueryResult> {
-
-//  ExecutionTokenQueue queue;
-//
-//  // set to true if the status token has been taken from "queue".
-//  boolean hasEndOfQueueReached = false;
-//
-//  ExecutionInfoToken queueBuffer = null;
   
   ExecutionTokenReader reader;
   
@@ -29,10 +22,6 @@ public class ExecutionResultReader implements Iterable<DbmsQueryResult>, Iterato
   @Override
   public Iterator<DbmsQueryResult> iterator() {
     return this;
-  }
-
-  void takeOne() {
-    reader.takeOne();
   }
 
   @Override

@@ -33,7 +33,7 @@ import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.connection.TypeCasting;
 import org.verdictdb.exception.VerdictDBTypeException;
 
-public class JdbcResultSet implements ResultSet {
+public class VerdictResultSet implements ResultSet {
 
   private DbmsQueryResult queryResult;
   
@@ -56,12 +56,12 @@ public class JdbcResultSet implements ResultSet {
 
   private HashMap<String, Integer> colNameIdx = new HashMap<>();
 
-  public JdbcResultSet(DbmsQueryResult queryResult) {
+  public VerdictResultSet(DbmsQueryResult queryResult) {
     this.queryResult = queryResult;
     for (int i = 0; i < queryResult.getColumnCount(); i++) {
       colNameIdx.put(queryResult.getColumnName(i), i);
     }
-    metadata = new JdbcResultSetMetaData(queryResult);
+    metadata = new VerdictResultSetMetaData(queryResult);
   }
 
   // TODO: what is the purpose of this function?
@@ -1107,7 +1107,7 @@ public class JdbcResultSet implements ResultSet {
     
     if (isValidType("array", columnIndex)) {
       lastValue = queryResult.getValue(columnIndex-1);
-      JdbcArray array = new JdbcArray((Object[]) lastValue);
+      VerdictJdbcArray array = new VerdictJdbcArray((Object[]) lastValue);
       return array;
     }
     else throw new SQLException("Not supported data type.");

@@ -13,7 +13,7 @@ import java.util.List;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.connection.DbmsConnection;
-import org.verdictdb.connection.JdbcConnection;
+import org.verdictdb.connection.JdbcDbmsConnection;
 import org.verdictdb.core.sqlobject.AsteriskColumn;
 import org.verdictdb.core.sqlobject.BaseTable;
 import org.verdictdb.core.sqlobject.CreateTableAsSelectQuery;
@@ -92,7 +92,7 @@ public class CreateTableToSqlMysqlTest {
     String actual = queryToSql.toSql(create);
     assertEquals(expected, actual);
 
-    DbmsConnection dbmsConn = new JdbcConnection(mysqlConn, new MysqlSyntax());
+    DbmsConnection dbmsConn = new JdbcDbmsConnection(mysqlConn, new MysqlSyntax());
     dbmsConn.execute("drop table if exists test.newtable");
     dbmsConn.execute(actual);
   }
@@ -112,7 +112,7 @@ public class CreateTableToSqlMysqlTest {
     String actual = queryToSql.toSql(create);
     assertEquals(expected, actual);
 
-    DbmsConnection dbmsConn = new JdbcConnection(mysqlConn, new MysqlSyntax());
+    DbmsConnection dbmsConn = new JdbcDbmsConnection(mysqlConn, new MysqlSyntax());
     dbmsConn.execute("drop table if exists test.newtable");
     dbmsConn.execute(actual);
   }

@@ -8,15 +8,15 @@ import java.sql.SQLWarning;
 import org.verdictdb.VerdictContext;
 import org.verdictdb.execution.ExecutionContext;
 
-public class Statement implements java.sql.Statement {
+public class VerdictStatement implements java.sql.Statement {
   
-  Connection jdbcConn;
+  VerdictConnection jdbcConn;
   
   VerdictContext context;
   
   ExecutionContext executionContext;
   
-  public Statement(Connection jdbcConn, VerdictContext context) {
+  public VerdictStatement(VerdictConnection jdbcConn, VerdictContext context) {
     this.jdbcConn = jdbcConn;
     this.context = context;
     this.executionContext = new ExecutionContext(context);
@@ -111,7 +111,7 @@ public class Statement implements java.sql.Statement {
 
   @Override
   public void cancel() throws SQLException {
-    executionContext.cancel();
+    executionContext.terminate();
   }
 
   @Override

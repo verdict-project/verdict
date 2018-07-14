@@ -11,7 +11,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.connection.DbmsConnection;
-import org.verdictdb.connection.JdbcConnection;
+import org.verdictdb.connection.JdbcDbmsConnection;
 import org.verdictdb.core.execution.ExecutablePlan;
 import org.verdictdb.core.execution.ExecutablePlanRunner;
 import org.verdictdb.core.execution.ExecutionInfoToken;
@@ -59,7 +59,7 @@ public class PartitionMetadataRetrievalNodeTest {
         + "nation varchar(8), "
         + "birth timestamp) "
         + "partition by key (nation, birth)");
-    dbmsConn = JdbcConnection.create(conn);
+    dbmsConn = JdbcDbmsConnection.create(conn);
   }
 
   @AfterClass

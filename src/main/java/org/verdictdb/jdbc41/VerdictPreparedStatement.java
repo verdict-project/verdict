@@ -22,11 +22,11 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Calendar;
 
-public class PreparedStatement implements java.sql.PreparedStatement {
+public class VerdictPreparedStatement implements java.sql.PreparedStatement {
   
   java.sql.Statement stmt;
   
-  public PreparedStatement(java.sql.Statement stmt) {
+  public VerdictPreparedStatement(java.sql.Statement stmt) {
     this.stmt = stmt;
   }
 

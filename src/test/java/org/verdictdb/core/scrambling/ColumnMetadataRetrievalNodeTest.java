@@ -12,7 +12,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.connection.DbmsConnection;
-import org.verdictdb.connection.JdbcConnection;
+import org.verdictdb.connection.JdbcDbmsConnection;
 import org.verdictdb.core.execution.ExecutablePlan;
 import org.verdictdb.core.execution.ExecutablePlanRunner;
 import org.verdictdb.core.execution.ExecutionInfoToken;
@@ -59,7 +59,7 @@ public class ColumnMetadataRetrievalNodeTest {
         + "height float, "
         + "nation varchar(8), "
         + "birth timestamp)");
-    dbmsConn = JdbcConnection.create(conn);
+    dbmsConn = JdbcDbmsConnection.create(conn);
   }
 
   @AfterClass

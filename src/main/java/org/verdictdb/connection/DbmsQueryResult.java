@@ -4,6 +4,12 @@ import java.io.Serializable;
 import java.sql.Date;
 import java.sql.Timestamp;
 
+/**
+ * Represents the results returned from the underlying database.
+ * 
+ * @author Yongjoo Park
+ *
+ */
 public interface DbmsQueryResult extends Serializable {
 
   /**
@@ -52,6 +58,7 @@ public interface DbmsQueryResult extends Serializable {
    */
   public Object getValue(int index);
   
+  // implemented in DbmsQueryResultBase
   public String getString(int index);
   
   public String getString(String label);

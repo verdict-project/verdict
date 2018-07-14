@@ -14,7 +14,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.connection.DbmsConnection;
-import org.verdictdb.connection.JdbcConnection;
+import org.verdictdb.connection.JdbcDbmsConnection;
 import org.verdictdb.exception.VerdictDBDbmsException;
 
 /**
@@ -54,7 +54,7 @@ public class JdbcMetaDataTestForImpala {
     String connectionString =
         String.format("jdbc:impala://%s:21050/%s", IMPALA_HOST, IMPALA_DATABASE);
     conn = DriverManager.getConnection(connectionString, IMPALA_UESR, IMPALA_PASSWORD);
-    dbmsConn = JdbcConnection.create(conn);
+    dbmsConn = JdbcDbmsConnection.create(conn);
 
     stmt = conn.createStatement();
     stmt.execute(String.format("DROP TABLE IF EXISTS `%s`", TABLE_NAME));

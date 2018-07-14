@@ -75,9 +75,9 @@ public class JdbcResultSetMetaDataSqliteTest {
     AggregateFrame aggregateFrame = AggregateFrame.fromDmbsQueryResult(queryResult, nonAgg, agg);
     AggregateFrameQueryResult aggregateFrameQueryResult = (AggregateFrameQueryResult) aggregateFrame.toDbmsQueryResult();
 //    jdbcResultSetMetaData1 = new JdbcResultSetMetaData(queryResult);
-    jdbcResultSetMetaData1 = new JdbcResultSet(queryResult).getMetaData();
+    jdbcResultSetMetaData1 = new VerdictResultSet(queryResult).getMetaData();
 //    jdbcResultSetMetaData2 = new JdbcResultSetMetaData(aggregateFrameQueryResult);
-    jdbcResultSetMetaData2 = new JdbcResultSet(aggregateFrameQueryResult).getMetaData();
+    jdbcResultSetMetaData2 = new VerdictResultSet(aggregateFrameQueryResult).getMetaData();
   }
   
   @Before

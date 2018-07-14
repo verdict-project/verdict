@@ -5,9 +5,9 @@ import java.sql.ResultSet;
 import java.sql.RowIdLifetime;
 import java.sql.SQLException;
 
-public class DatabaseMetaData implements java.sql.DatabaseMetaData {
+public class VerdictDatabaseMetaData implements java.sql.DatabaseMetaData {
   
-  public DatabaseMetaData(java.sql.DatabaseMetaData backend) {
+  public VerdictDatabaseMetaData(java.sql.DatabaseMetaData backend) {
     
   }
 

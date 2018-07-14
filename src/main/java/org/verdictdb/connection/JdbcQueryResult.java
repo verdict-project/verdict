@@ -8,7 +8,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class JdbcQueryResult extends DbmsQueryResultBase {
+public class JdbcQueryResult extends AttributeValueRetrievalHelper implements DbmsQueryResult{
 
   private static final long serialVersionUID = 2576550992419489091L;
 
@@ -139,11 +139,11 @@ public class JdbcQueryResult extends DbmsQueryResultBase {
       row = new StringBuilder();
       for (int i = 0; i < colCount; i++) {
         if (i == 0) {
-          row.append(getString(i));
+          row.append(getValue(i).toString());
         }
         else {
           row.append("\t");
-          row.append(getString(i));
+          row.append(getValue(i).toString());
         }
       }
       System.out.println(row.toString());

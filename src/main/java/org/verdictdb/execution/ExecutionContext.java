@@ -27,8 +27,9 @@ public class ExecutionContext {
   public ExecutionResultReader streamsql(String query) {
     return null;
   }
-  
-  public void cancel() {
+
+  public void terminate() {
+    // TODO Auto-generated method stub
     
   }
 

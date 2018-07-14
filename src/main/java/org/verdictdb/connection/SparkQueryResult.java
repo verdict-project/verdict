@@ -10,7 +10,7 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.types.StructField;
 
-public class SparkQueryResult extends DbmsQueryResultBase {
+public class SparkQueryResult extends AttributeValueRetrievalHelper implements DbmsQueryResult {
 
   private static final long serialVersionUID = 668595110560739261L;
 

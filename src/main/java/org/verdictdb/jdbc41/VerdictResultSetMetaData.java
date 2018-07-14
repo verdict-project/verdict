@@ -8,7 +8,7 @@ import java.util.List;
 import org.verdictdb.connection.DataTypeConverter;
 import org.verdictdb.connection.DbmsQueryResult;
 
-public class JdbcResultSetMetaData implements ResultSetMetaData {
+public class VerdictResultSetMetaData implements ResultSetMetaData {
   
   DbmsQueryResult queryResult;
   
@@ -16,7 +16,7 @@ public class JdbcResultSetMetaData implements ResultSetMetaData {
   
   List<String> signedColumnTypes = Arrays.asList("double", "int", "real");
   
-  public JdbcResultSetMetaData(DbmsQueryResult queryResult) {
+  public VerdictResultSetMetaData(DbmsQueryResult queryResult) {
     this.queryResult = queryResult;
   }
 

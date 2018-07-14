@@ -14,7 +14,7 @@ import java.util.Random;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.verdictdb.connection.JdbcConnection;
+import org.verdictdb.connection.JdbcDbmsConnection;
 import org.verdictdb.core.execution.ExecutablePlanRunner;
 import org.verdictdb.core.querying.AggExecutionNode;
 import org.verdictdb.core.querying.ExecutableNodeBase;
@@ -113,7 +113,7 @@ public class AggExecutionNodeBlockTest {
 //    }
     ((AsyncAggExecutionNode)converted).setScrambleMeta(scrambleMeta);
     ExecutablePlanRunner.runTillEnd(
-        new JdbcConnection(conn, new H2Syntax()), 
+        new JdbcDbmsConnection(conn, new H2Syntax()), 
         new SimpleTreePlan(converted));
 //    converted.executeAndWaitForTermination(new JdbcConnection(conn, new H2Syntax()));
     

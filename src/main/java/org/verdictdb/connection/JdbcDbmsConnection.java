@@ -10,12 +10,12 @@ import java.util.List;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.exception.VerdictDBDbmsException;
-import org.verdictdb.jdbc41.JdbcResultSet;
+import org.verdictdb.jdbc41.VerdictResultSet;
 import org.verdictdb.sqlsyntax.PostgresqlSyntax;
 import org.verdictdb.sqlsyntax.SqlSyntax;
 import org.verdictdb.sqlsyntax.SqlSyntaxList;
 
-public class JdbcConnection implements DbmsConnection {
+public class JdbcDbmsConnection implements DbmsConnection {
   
   Connection conn;
 
@@ -25,7 +25,7 @@ public class JdbcConnection implements DbmsConnection {
   
 //  JdbcQueryResult jrs = null;
   
-  public static JdbcConnection create(Connection conn) throws VerdictDBDbmsException {
+  public static JdbcDbmsConnection create(Connection conn) throws VerdictDBDbmsException {
     String connectionString = null;
     try {
       connectionString = conn.getMetaData().getURL();
@@ -36,10 +36,10 @@ public class JdbcConnection implements DbmsConnection {
     String dbName = connectionString.split(":")[1];
     SqlSyntax syntax = SqlSyntaxList.getSyntaxFor(dbName);
     
-    return new JdbcConnection(conn, syntax);
+    return new JdbcDbmsConnection(conn, syntax);
   }
   
-  public JdbcConnection(Connection conn, SqlSyntax syntax) {
+  public JdbcDbmsConnection(Connection conn, SqlSyntax syntax) {
     this.conn = conn;
     try {
       this.currentSchema = conn.getCatalog();
@@ -130,7 +130,7 @@ public class JdbcConnection implements DbmsConnection {
   public List<String> getSchemas() throws VerdictDBDbmsException{
     List<String> schemas = new ArrayList<>();
     DbmsQueryResult queryResult = executeQuery(syntax.getSchemaCommand());
-    JdbcResultSet jdbcResultSet = new JdbcResultSet(queryResult);
+    VerdictResultSet jdbcResultSet = new VerdictResultSet(queryResult);
     try {
       while (queryResult.next()) {
         schemas.add(jdbcResultSet.getString(syntax.getSchemaNameColumnIndex()+1));
@@ -147,7 +147,7 @@ public class JdbcConnection implements DbmsConnection {
   public List<String> getTables(String schema) throws VerdictDBDbmsException {
     List<String> tables = new ArrayList<>();
     DbmsQueryResult queryResult = executeQuery(syntax.getTableCommand(schema));
-    JdbcResultSet jdbcQueryResult = new JdbcResultSet(queryResult);
+    VerdictResultSet jdbcQueryResult = new VerdictResultSet(queryResult);
     try {
       while (queryResult.next()) {
         tables.add(jdbcQueryResult.getString(syntax.getTableNameColumnIndex()+1));
@@ -164,7 +164,7 @@ public class JdbcConnection implements DbmsConnection {
   public List<Pair<String, String>> getColumns(String schema, String table) throws VerdictDBDbmsException{
     List<Pair<String, String>> columns = new ArrayList<>();
     DbmsQueryResult queryResult = executeQuery(syntax.getColumnsCommand(schema, table));
-    JdbcResultSet jdbcQueryResult = new JdbcResultSet(queryResult);
+    VerdictResultSet jdbcQueryResult = new VerdictResultSet(queryResult);
     try {
       while (queryResult.next()) {
         String type = jdbcQueryResult.getString(syntax.getColumnTypeColumnIndex()+1);
@@ -188,7 +188,7 @@ public class JdbcConnection implements DbmsConnection {
   public List<String> getPartitionColumns(String schema, String table) throws VerdictDBDbmsException{
     List<String> partition = new ArrayList<>();
     DbmsQueryResult queryResult = executeQuery(syntax.getPartitionCommand(schema, table));
-    JdbcResultSet jdbcQueryResult = new JdbcResultSet(queryResult);
+    VerdictResultSet jdbcQueryResult = new VerdictResultSet(queryResult);
     // the result of postgresql is a vector of column index
     
     try {
