@@ -3,13 +3,34 @@ package org.verdictdb.execution;
 import org.verdictdb.VerdictContext;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.core.resulthandler.ExecutionResultReader;
+import org.verdictdb.core.resulthandler.ExecutionTokenReader;
+import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.exception.VerdictDBTypeException;
+import org.verdictdb.parser.VerdictSQLParser;
+import org.verdictdb.sqlreader.NonValidatingSQLParser;
 
 public class ExecutionContext {
   
-  VerdictContext context;
+  private VerdictContext context;
   
-  public ExecutionContext(VerdictContext context) {
+  private final long serialNumber;
+  
+  private enum QueryType {
+    select, scrambling, unknown
+  }
+  
+  /**
+   * 
+   * @param context Parent context
+   * @param contextId
+   */
+  public ExecutionContext(VerdictContext context, long serialNumber) {
     this.context = context;
+    this.serialNumber = serialNumber;
+  }
+  
+  public long getExecutionContextSerialNumber() {
+    return serialNumber;
   }
   
   public DbmsQueryResult sql(String query) {
@@ -24,13 +45,36 @@ public class ExecutionContext {
     return null;
   }
   
-  public ExecutionResultReader streamsql(String query) {
-    return null;
+  public VerdictResultStream streamsql(String query) throws VerdictDBException {
+    
+    QueryType queryType = identifyQueryType(query);
+    
+    if (queryType.equals(QueryType.select)) {
+      SelectQueryCoordinator coordinator = new SelectQueryCoordinator(context.getConnection());
+      ExecutionTokenReader reader = coordinator.process(query);
+      VerdictResultStream stream = new VerdictResultStream(reader, this);
+      return stream;
+    }
+    else if (queryType.equals(QueryType.scrambling)) {
+      return null;
+    }
+    else {
+      throw new VerdictDBTypeException("Unexpected type of query: " + query);
+    }
   }
 
+  /**
+   * Terminates existing threads. The created database tables may still exist for successive uses.
+   */
   public void terminate() {
     // TODO Auto-generated method stub
     
+  }
+  
+  private QueryType identifyQueryType(String query) {
+    VerdictSQLParser parser = NonValidatingSQLParser.parserOf(query);
+    
+    return QueryType.select;
   }
 
 }

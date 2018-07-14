@@ -1,4 +1,4 @@
-package org.verdictdb.core.coordinator;
+package org.verdictdb.execution;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.verdictdb.connection.DbmsConnection;
-import org.verdictdb.core.execution.ExecutablePlanRunner;
+import org.verdictdb.core.execplan.ExecutablePlanRunner;
 import org.verdictdb.core.scrambling.FastConvergeScramblingMethod;
 import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.core.scrambling.ScramblingMethod;

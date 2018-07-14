@@ -18,13 +18,12 @@ public class VerdictResultStream extends ExecutionResultReader {
     DbmsQueryResult result = super.next();
     
     // if there is no more result, we close the linked ExecutionContext
+    // the underlying table must be alive.
     if (hasNext() == false) {
       execContext.terminate();
     }
     
     return result;
   }
-  
-  
 
 }

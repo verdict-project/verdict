@@ -18,7 +18,7 @@ import org.junit.Test;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.connection.JdbcDbmsConnection;
-import org.verdictdb.core.execution.ExecutionInfoToken;
+import org.verdictdb.core.execplan.ExecutionInfoToken;
 import org.verdictdb.core.sqlobject.SqlConvertible;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sqlsyntax.MysqlSyntax;

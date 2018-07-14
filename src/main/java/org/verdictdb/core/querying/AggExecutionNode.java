@@ -3,7 +3,7 @@ package org.verdictdb.core.querying;
 import java.util.List;
 
 import org.verdictdb.connection.DbmsQueryResult;
-import org.verdictdb.core.execution.ExecutionInfoToken;
+import org.verdictdb.core.execplan.ExecutionInfoToken;
 import org.verdictdb.core.querying.ola.AggMeta;
 import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.core.sqlobject.SqlConvertible;

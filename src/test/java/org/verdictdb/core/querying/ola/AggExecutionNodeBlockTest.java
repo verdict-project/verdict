@@ -15,7 +15,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.connection.JdbcDbmsConnection;
-import org.verdictdb.core.execution.ExecutablePlanRunner;
+import org.verdictdb.core.execplan.ExecutablePlanRunner;
 import org.verdictdb.core.querying.AggExecutionNode;
 import org.verdictdb.core.querying.ExecutableNodeBase;
 import org.verdictdb.core.querying.QueryExecutionPlan;

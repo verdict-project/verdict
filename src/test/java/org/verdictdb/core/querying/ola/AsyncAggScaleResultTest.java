@@ -22,7 +22,7 @@ import org.junit.Test;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.connection.JdbcDbmsConnection;
 import org.verdictdb.connection.StaticMetaData;
-import org.verdictdb.core.execution.ExecutablePlanRunner;
+import org.verdictdb.core.execplan.ExecutablePlanRunner;
 import org.verdictdb.core.querying.AggExecutionNode;
 import org.verdictdb.core.querying.QueryExecutionPlan;
 import org.verdictdb.core.resulthandler.ExecutionResultReader;

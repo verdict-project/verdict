@@ -1,4 +1,4 @@
-package org.verdictdb.core.execution;
+package org.verdictdb.core.execplan;
 
 public class MethodInvocationInformation {
   

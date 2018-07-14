@@ -5,7 +5,7 @@ import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.connection.DbmsQueryResult;
-import org.verdictdb.core.execution.ExecutionInfoToken;
+import org.verdictdb.core.execplan.ExecutionInfoToken;
 import org.verdictdb.core.querying.CreateTableAsSelectNode;
 import org.verdictdb.core.querying.ExecutableNodeBase;
 import org.verdictdb.core.querying.IdCreator;

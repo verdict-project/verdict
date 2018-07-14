@@ -19,7 +19,7 @@ public class VerdictStatement implements java.sql.Statement {
   public VerdictStatement(VerdictConnection jdbcConn, VerdictContext context) {
     this.jdbcConn = jdbcConn;
     this.context = context;
-    this.executionContext = new ExecutionContext(context);
+//    this.executionContext = new ExecutionContext(context);
   }
 
   @Override

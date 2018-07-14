@@ -1,10 +1,12 @@
-package org.verdictdb.connection;
+package org.verdictdb.commons;
 
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.verdictdb.connection.TypeCasting;
 
 public abstract class AttributeValueRetrievalHelper {
   

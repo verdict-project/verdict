@@ -9,6 +9,7 @@ import java.util.List;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.types.StructField;
+import org.verdictdb.commons.AttributeValueRetrievalHelper;
 
 public class SparkQueryResult extends AttributeValueRetrievalHelper implements DbmsQueryResult {
 

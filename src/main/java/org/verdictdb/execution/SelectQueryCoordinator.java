@@ -1,4 +1,4 @@
-package org.verdictdb.core.coordinator;
+package org.verdictdb.execution;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -10,11 +10,12 @@ import org.verdictdb.connection.DataTypeConverter;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.MetaDataProvider;
 import org.verdictdb.connection.StaticMetaData;
-import org.verdictdb.core.execution.ExecutablePlanRunner;
+import org.verdictdb.core.execplan.ExecutablePlanRunner;
 import org.verdictdb.core.querying.QueryExecutionPlan;
 import org.verdictdb.core.querying.QueryExecutionPlanSimplifier;
 import org.verdictdb.core.querying.ola.AsyncQueryExecutionPlan;
 import org.verdictdb.core.resulthandler.ExecutionResultReader;
+import org.verdictdb.core.resulthandler.ExecutionTokenReader;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
 import org.verdictdb.core.sqlobject.AbstractRelation;
 import org.verdictdb.core.sqlobject.BaseTable;
@@ -44,7 +45,36 @@ public class SelectQueryCoordinator {
 //    this.cachedMetaData = metaDataProvider;
   }
 
-  public SelectQuery standardizeQuery(String query) throws VerdictDBException {
+  public ScrambleMetaSet getScrambleMetaSet() {
+    return scrambleMetaSet;
+  }
+
+  public void setScrambleMetaSet(ScrambleMetaSet scrambleMetaSet) {
+    this.scrambleMetaSet = scrambleMetaSet;
+  }
+
+  public ExecutionTokenReader process(String query) throws VerdictDBException {
+
+    SelectQuery selectQuery = standardizeQuery(query);
+
+    // make plan
+    // if the plan does not include any aggregates, it will simply be a parsed structure of the original query.
+    QueryExecutionPlan plan = new QueryExecutionPlan("verdictdb_temp", scrambleMetaSet, selectQuery);;
+
+    // convert it to an asynchronous plan
+    // if the plan does not include any aggregates, this operation should not alter the original plan.
+    QueryExecutionPlan asyncPlan = AsyncQueryExecutionPlan.create(plan);;
+
+    // simplify the plan
+    QueryExecutionPlan simplifiedAsyncPlan = QueryExecutionPlanSimplifier.simplify(asyncPlan);
+
+    // execute the plan
+    ExecutionTokenReader reader = ExecutablePlanRunner.getTokenReader(conn, simplifiedAsyncPlan);
+
+    return reader;
+  }
+
+  private SelectQuery standardizeQuery(String query) throws VerdictDBException {
     // parse the query
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     SelectQuery relation = (SelectQuery) sqlToRelation.toRelation(query);
@@ -54,15 +84,7 @@ public class SelectQueryCoordinator {
     return relation;
   }
 
-  public ScrambleMetaSet getScrambleMetaSet() {
-    return scrambleMetaSet;
-  }
-
-  public void setScrambleMetaSet(ScrambleMetaSet scrambleMetaSet) {
-    this.scrambleMetaSet = scrambleMetaSet;
-  }
-
-  public MetaDataProvider createMetaDataFor(SelectQuery relation) throws VerdictDBException {
+  private MetaDataProvider createMetaDataFor(SelectQuery relation) throws VerdictDBException {
     StaticMetaData meta = new StaticMetaData();
     String defaultSchema = conn.getDefaultSchema();
     meta.setDefaultSchema(defaultSchema);
@@ -100,7 +122,7 @@ public class SelectQueryCoordinator {
         }
       }
     }
-
+  
     // Get table info from cached meta
     for (BaseTable t : tables) {
       List<Pair<String, String>> columns;
@@ -122,27 +144,6 @@ public class SelectQueryCoordinator {
     }
     
     return meta;
-  }
-
-  public ExecutionResultReader process(String query) throws VerdictDBException {
-
-    SelectQuery selectQuery = standardizeQuery(query);
-
-    // make plan
-    // if the plan does not include any aggregates, it will simply be a parsed structure of the original query.
-    QueryExecutionPlan plan = new QueryExecutionPlan("verdictdb_temp", scrambleMetaSet, selectQuery);;
-
-    // convert it to an asynchronous plan
-    // if the plan does not include any aggregates, this operation should not alter the original plan.
-    QueryExecutionPlan asyncPlan = AsyncQueryExecutionPlan.create(plan);;
-
-    // simplify the plan
-    QueryExecutionPlan simplifiedAsyncPlan = QueryExecutionPlanSimplifier.simplify(asyncPlan);
-
-    // execute the plan
-    ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(conn, simplifiedAsyncPlan);
-
-    return reader;
   }
 
 }

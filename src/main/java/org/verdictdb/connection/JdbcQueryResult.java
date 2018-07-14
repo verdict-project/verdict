@@ -8,6 +8,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.verdictdb.commons.AttributeValueRetrievalHelper;
+
 public class JdbcQueryResult extends AttributeValueRetrievalHelper implements DbmsQueryResult{
 
   private static final long serialVersionUID = 2576550992419489091L;

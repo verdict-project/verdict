@@ -1,4 +1,4 @@
-package org.verdictdb.core.execution;
+package org.verdictdb.core.execplan;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

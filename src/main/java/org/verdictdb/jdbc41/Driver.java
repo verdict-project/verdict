@@ -10,11 +10,18 @@ import java.util.logging.Logger;
 
 import org.verdictdb.exception.VerdictDBDbmsException;
 
-public class VerdictDriver implements java.sql.Driver {
+/**
+ * Importat: If the name of this class changes, the change must be reflected in the service file
+ * located at: src/main/resources/META-INF/services/java.sql.Driver
+ * 
+ * @author Yongjoo Park
+ *
+ */
+public class Driver implements java.sql.Driver {
 
   static {
     try {
-      DriverManager.registerDriver(new VerdictDriver());
+      DriverManager.registerDriver(new Driver());
     } catch (SQLException e) {
       System.err.println("Error occurred while registering VerdictDB driver:");
       System.err.println(e.getMessage());

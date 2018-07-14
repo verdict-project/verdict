@@ -1,4 +1,4 @@
-package org.verdictdb.core.execution;
+package org.verdictdb.core.execplan;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
