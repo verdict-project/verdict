@@ -65,7 +65,7 @@ public class SelectQueryCoordinator {
   }
 
   public void setStaticMetaData(SelectQuery relation) throws VerdictDBException {
-    cachedMetaData = new CachedMetaData(conn);
+    cachedMetaData = new CachedMetaDataProvider(conn);
     staticMetaData.setDefaultSchema(defaultSchema);
     // Extract all tables appeared in the query
     HashSet<BaseTable> tables = new HashSet<>();
