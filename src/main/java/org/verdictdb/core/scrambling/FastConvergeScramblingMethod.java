@@ -221,15 +221,20 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
     if (tier0CumulProbDist == null) {
       populateAllCumulativeProbabilityDistribution(metaData);
     }
+    
+    List<Double> dist;
 
     if (tier == 0) {
-      return tier0CumulProbDist;
+      dist = tier0CumulProbDist;
     } else if (tier == 1) {
-      return tier1CumulProbDist;
+      dist = tier1CumulProbDist;
     } else {
       // expected tier == 2
-      return tier2CumulProbDist;
+      dist = tier2CumulProbDist;
     }
+    
+    storeCumulativeProbabilityDistribution(tier, dist);
+    return dist;
   }
 
   private void populateAllCumulativeProbabilityDistribution(Map<String, Object> metaData) {

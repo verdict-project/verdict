@@ -15,6 +15,7 @@ import java.util.Map;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.verdictdb.commons.DatabaseConnectionHelpers;
 import org.verdictdb.connection.CachedDbmsConnection;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.DbmsQueryResult;
@@ -30,6 +31,7 @@ import org.verdictdb.core.scrambling.UniformScramblingMethod;
 import org.verdictdb.core.sqlobject.AbstractRelation;
 import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.execution.ScramblingCoordinator;
 import org.verdictdb.execution.SelectQueryCoordinator;
 import org.verdictdb.sqlreader.NonValidatingSQLParser;
 import org.verdictdb.sqlreader.RelationStandardizer;
@@ -75,149 +77,24 @@ public class TpchSelectQueryCoordinatorTest {
   public static void setupMySqlDatabase() throws SQLException, VerdictDBException {
     String mysqlConnectionString =
         String.format("jdbc:mysql://%s?autoReconnect=true&useSSL=false", MYSQL_HOST);
-    conn = DriverManager.getConnection(mysqlConnectionString, MYSQL_UESR, MYSQL_PASSWORD);
-
+    conn = DatabaseConnectionHelpers.setupMySql(
+        mysqlConnectionString, MYSQL_UESR, MYSQL_PASSWORD, MYSQL_DATABASE);
     stmt = conn.createStatement();
-    stmt.execute(String.format("DROP SCHEMA IF EXISTS `%s`", MYSQL_DATABASE));
-    stmt.execute(String.format("CREATE SCHEMA IF NOT EXISTS `%s`", MYSQL_DATABASE));
-    
-    stmt.execute(String.format("CREATE TABLE  IF NOT EXISTS `%s`.`nation`  (`n_nationkey`  INT, " +
-        "                            `n_name`       CHAR(25), " +
-        "                            `n_regionkey`  INT, " +
-        "                            `n_comment`    VARCHAR(152), " +
-        "                            `n_dummy` varchar(10), PRIMARY KEY (`n_nationkey`))", MYSQL_DATABASE));
-    stmt.execute(String.format("CREATE TABLE  IF NOT EXISTS `%s`.`region`  (`r_regionkey`  INT, " +
-        "                            `r_name`       CHAR(25), " +
-        "                            `r_comment`    VARCHAR(152), " +
-        "                            `r_dummy` varchar(10), PRIMARY KEY (`r_regionkey`))", MYSQL_DATABASE));
-    stmt.execute(String.format("CREATE TABLE  IF NOT EXISTS `%s`.`part`  ( `p_partkey`     INT, " +
-        "                          `p_name`       VARCHAR(55), " +
-        "                          `p_mfgr`        CHAR(25), " +
-        "                          `p_brand`       CHAR(10), " +
-        "                          `p_type`        VARCHAR(25), " +
-        "                          `p_size`        INT, " +
-        "                          `p_container`   CHAR(10), " +
-        "                          `p_retailprice` DECIMAL(15,2) , " +
-        "                          `p_comment`     VARCHAR(23) , " +
-        "                          `p_dummy` varchar(10), PRIMARY KEY (`p_partkey`))", MYSQL_DATABASE));
-    stmt.execute(String.format("CREATE TABLE  IF NOT EXISTS `%s`.`supplier` ( `s_suppkey`     INT , " +
-        "                             `s_name`        CHAR(25) , " +
-        "                             `s_address`     VARCHAR(40) , " +
-        "                             `s_nationkey`   INT , " +
-        "                             `s_phone`       CHAR(15) , " +
-        "                             `s_acctbal`     DECIMAL(15,2) , " +
-        "                             `s_comment`     VARCHAR(101), " +
-        "                             `s_dummy` varchar(10), PRIMARY KEY (`s_suppkey`))", MYSQL_DATABASE));
-    stmt.execute(String.format("CREATE TABLE  IF NOT EXISTS `%s`.`partsupp` ( `ps_partkey`     INT , " +
-        "                             `ps_suppkey`     INT , " +
-        "                             `ps_availqty`    INT , " +
-        "                             `ps_supplycost`  DECIMAL(15,2)  , " +
-        "                             `ps_comment`     VARCHAR(199), " +
-        "                             `ps_dummy` varchar(10), PRIMARY KEY (`ps_partkey`))", MYSQL_DATABASE));
-    stmt.execute(String.format("CREATE TABLE  IF NOT EXISTS `%s`.`customer` ( `c_custkey`     INT , " +
-        "                             `c_name`        VARCHAR(25) , " +
-        "                             `c_address`     VARCHAR(40) , " +
-        "                             `c_nationkey`   INT , " +
-        "                             `c_phone`       CHAR(15) , " +
-        "                             `c_acctbal`     DECIMAL(15,2)   , " +
-        "                             `c_mktsegment`  CHAR(10) , " +
-        "                             `c_comment`     VARCHAR(117), " +
-        "                             `c_dummy` varchar(10), PRIMARY KEY (`c_custkey`))", MYSQL_DATABASE));
-    stmt.execute(String.format("CREATE TABLE IF NOT EXISTS  `%s`.`orders`  ( `o_orderkey`       INT , " +
-        "                           `o_custkey`        INT , " +
-        "                           `o_orderstatus`    CHAR(1) , " +
-        "                           `o_totalprice`     DECIMAL(15,2) , " +
-        "                           `o_orderdate`      DATE , " +
-        "                           `o_orderpriority`  CHAR(15) , " +
-        "                           `o_clerk`          CHAR(15) , " +
-        "                           `o_shippriority`   INT , " +
-        "                           `o_comment`        VARCHAR(79), " +
-        "                           `o_dummy` varchar(10), PRIMARY KEY (`o_orderkey`))", MYSQL_DATABASE));
-    stmt.execute(String.format("CREATE TABLE IF NOT EXISTS `%s`.`lineitem` ( `l_orderkey`    INT , " +
-        "                             `l_partkey`     INT , " +
-        "                             `l_suppkey`     INT , " +
-        "                             `l_linenumber`  INT , " +
-        "                             `l_quantity`    DECIMAL(15,2) , " +
-        "                             `l_extendedprice`  DECIMAL(15,2) , " +
-        "                             `l_discount`    DECIMAL(15,2) , " +
-        "                             `l_tax`         DECIMAL(15,2) , " +
-        "                             `l_returnflag`  CHAR(1) , " +
-        "                             `l_linestatus`  CHAR(1) , " +
-        "                             `l_shipdate`    DATE , " +
-        "                             `l_commitdate`  DATE , " +
-        "                             `l_receiptdate` DATE , " +
-        "                             `l_shipinstruct` CHAR(25) , " +
-        "                             `l_shipmode`     CHAR(10) , " +
-        "                             `l_comment`      VARCHAR(44), " +
-        "                             `l_dummy` varchar(10))", MYSQL_DATABASE));
-    stmt.execute(String.format("LOAD DATA LOCAL INFILE 'src/test/resources/tpch_test_data/region.tbl' " +
-        "INTO TABLE `%s`.`region` FIELDS TERMINATED BY '|'", MYSQL_DATABASE));
-    stmt.execute(String.format("LOAD DATA LOCAL INFILE 'src/test/resources/tpch_test_data/nation.tbl' " +
-        "INTO TABLE `%s`.`nation` FIELDS TERMINATED BY '|'", MYSQL_DATABASE));
-    stmt.execute(String.format("LOAD DATA LOCAL INFILE 'src/test/resources/tpch_test_data/supplier.tbl' " +
-        "INTO TABLE `%s`.`supplier` FIELDS TERMINATED BY '|'", MYSQL_DATABASE));
-    stmt.execute(String.format("LOAD DATA LOCAL INFILE 'src/test/resources/tpch_test_data/customer.tbl' " +
-        "INTO TABLE `%s`.`customer` FIELDS TERMINATED BY '|'", MYSQL_DATABASE));
-    stmt.execute(String.format("LOAD DATA LOCAL INFILE 'src/test/resources/tpch_test_data/part.tbl' " +
-        "INTO TABLE `%s`.`part` FIELDS TERMINATED BY '|'", MYSQL_DATABASE));
-    stmt.execute(String.format("LOAD DATA LOCAL INFILE 'src/test/resources/tpch_test_data/partsupp.tbl' " +
-        "INTO TABLE `%s`.`partsupp` FIELDS TERMINATED BY '|'", MYSQL_DATABASE));
-    stmt.execute(String.format("LOAD DATA LOCAL INFILE 'src/test/resources/tpch_test_data/lineitem.tbl' " +
-        "INTO TABLE `%s`.`lineitem` FIELDS TERMINATED BY '|'", MYSQL_DATABASE));
-    stmt.execute(String.format("LOAD DATA LOCAL INFILE 'src/test/resources/tpch_test_data/orders.tbl' " +
-        "INTO TABLE `%s`.`orders` FIELDS TERMINATED BY '|'", MYSQL_DATABASE));
-
+    DbmsConnection dbmsConn = JdbcConnection.create(conn);
 
     // Create Scramble table
-    stmt.execute(String.format("DROP TABLE IF EXISTS `%s`.`lineitem_scrambled`", MYSQL_DATABASE));
-    stmt.execute(String.format("DROP TABLE IF EXISTS `%s`.`orders_scrambled`", MYSQL_DATABASE));
+    dbmsConn.execute(String.format("DROP TABLE IF EXISTS `%s`.`lineitem_scrambled`", MYSQL_DATABASE));
+    dbmsConn.execute(String.format("DROP TABLE IF EXISTS `%s`.`orders_scrambled`", MYSQL_DATABASE));
     
-    ScramblingMethod method = new UniformScramblingMethod(blockSize);
-    Map<String, String> options = new HashMap<>();
-    options.put("tierColumnName", "verdictdbtier");
-    options.put("blockColumnName", "verdictdbaggblock");
-    ScramblingPlan plan = ScramblingPlan.create(
-        MYSQL_DATABASE, "lineitem_scrambled",
-        MYSQL_DATABASE, "lineitem",
-        method, options);
-    DbmsConnection mysqlConn = new JdbcConnection(conn, new MysqlSyntax());
-    ExecutablePlanRunner.runTillEnd(mysqlConn, plan);
-    ScramblingMethod method2 = new UniformScramblingMethod(blockSize);
-    Map<String, String> options2 = new HashMap<>();
-    options2.put("tierColumnName", "verdictdbtier");
-    options2.put("blockColumnName", "verdictdbaggblock");
-    ScramblingPlan plan2 = ScramblingPlan.create(
-        MYSQL_DATABASE, "orders_scrambled",
-        MYSQL_DATABASE, "orders",
-        method2, options2);
-    ExecutablePlanRunner.runTillEnd(mysqlConn, plan2);
-
-    // Configure Sramble meta
-    UniformScrambler scrambler =
-        new UniformScrambler(MYSQL_DATABASE, "lineitem", MYSQL_DATABASE, "lineitem_scrambled", 10);
-    ScrambleMeta tablemeta = scrambler.generateMeta();
-    tablemeta.setNumberOfTiers(1);
-    HashMap<Integer, List<Double>> distribution1 = new HashMap<>();
-    distribution1.put(0, Arrays.asList(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0));
-    tablemeta.setCumulativeMassDistributionPerTier(distribution1);
-    meta.insertScrambleMetaEntry(tablemeta);
-    scrambler =
-        new UniformScrambler(MYSQL_DATABASE, "orders", MYSQL_DATABASE, "orders_scrambled", 3);
-    tablemeta = scrambler.generateMeta();
-    tablemeta.setNumberOfTiers(1);
-    distribution1 = new HashMap<>();
-    distribution1.put(0, Arrays.asList(0.33, 0.66, 1.0));
-    tablemeta.setCumulativeMassDistributionPerTier(distribution1);
-    meta.insertScrambleMetaEntry(tablemeta);
-    
-    System.out.println("Setup done");
+    ScramblingCoordinator scrambler = 
+        new ScramblingCoordinator(dbmsConn, MYSQL_DATABASE, MYSQL_DATABASE, (long) 100);
+    ScrambleMeta meta1 = 
+        scrambler.scramble(MYSQL_DATABASE, "lineitem", MYSQL_DATABASE, "lineitem_scrambled", "uniform");
+    ScrambleMeta meta2 = 
+        scrambler.scramble(MYSQL_DATABASE, "orders", MYSQL_DATABASE, "orders_scrambled", "uniform");
+    meta.insertScrambleMetaEntry(meta1);
+    meta.insertScrambleMetaEntry(meta2);
   }
-  
-//  @Before
-//  public void refreshTempSchema() throws SQLException {
-//    stmt.execute("drop schema if exists `verdictdb_temp`");
-//    stmt.execute("create schema if not exists `verdictdb_temp`");
-//  }
 
   @Test
   public void testTpch1() throws VerdictDBException, SQLException {
@@ -1382,7 +1259,7 @@ public class TpchSelectQueryCoordinatorTest {
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
       cnt++;
-      System.out.println("test case 21 processing: " + cnt);
+//      System.out.println("test case 21 processing: " + cnt);
       if (cnt == 12) {
         ResultSet rs = stmt.executeQuery(stdQuery);
         while (rs.next()) {

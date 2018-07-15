@@ -1,11 +1,14 @@
 package org.verdictdb.execution;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.core.execplan.ExecutablePlanRunner;
 import org.verdictdb.core.scrambling.FastConvergeScramblingMethod;
@@ -140,7 +143,17 @@ public class ScramblingCoordinator {
     int blockCount = scramblingMethod.getBlockCount();
     String tierColumn = options.get("tierColumnName");
     int tierCount = scramblingMethod.getTierCount();
-    ScrambleMeta meta = new ScrambleMeta(newSchema, newTable, blockColumn, blockCount, tierColumn, tierCount, originalSchema, originalTable);
+    
+    Map<Integer, List<Double>> cumulativeDistribution = new HashMap<>();
+    for (int i = 0; i < tierCount; i++) {
+      List<Double> dist = scramblingMethod.getStoredCumulativeProbabilityDistributionForTier(i);
+      cumulativeDistribution.put(i, dist);
+    }
+    
+    ScrambleMeta meta = 
+        new ScrambleMeta(
+            newSchema, newTable, originalSchema, originalTable, 
+            blockColumn, blockCount, tierColumn, tierCount, cumulativeDistribution);
 
     return meta;
   }
