@@ -283,7 +283,7 @@ public class TpchSelectQueryCoordinatorTest {
       }
     }
     assertEquals(10, cnt);
-    System.out.println("test case 1 finished");
+//    System.out.println("test case 1 finished");
   }
 
   @Test
@@ -345,7 +345,7 @@ public class TpchSelectQueryCoordinatorTest {
       }
     }
     assertEquals(12, cnt);
-    System.out.println("test case 3 finished");
+//    System.out.println("test case 3 finished");
   }
 
   @Test
@@ -396,7 +396,7 @@ public class TpchSelectQueryCoordinatorTest {
       }
     }
     assertEquals(12, cnt);
-    System.out.println("test case 4 finished");
+//    System.out.println("test case 4 finished");
   }
 
   @Test
@@ -457,7 +457,7 @@ public class TpchSelectQueryCoordinatorTest {
       }
     }
     assertEquals(12, cnt);
-    System.out.println("test case 5 finished");
+//    System.out.println("test case 5 finished");
   }
 
   @Test
@@ -502,7 +502,7 @@ public class TpchSelectQueryCoordinatorTest {
       }
     }
     assertEquals(10, cnt);
-    System.out.println("test case 6 finished");
+//    System.out.println("test case 6 finished");
   }
 
   @Test
@@ -580,7 +580,7 @@ public class TpchSelectQueryCoordinatorTest {
       }
     }
     assertEquals(12, cnt);
-    System.out.println("test case 7 finished");
+//    System.out.println("test case 7 finished");
   }
 
   // Very slow for some reason
@@ -672,7 +672,7 @@ public class TpchSelectQueryCoordinatorTest {
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
       cnt++;
-      System.out.println("test case 8 processing: " + cnt);
+//      System.out.println("test case 8 processing: " + cnt);
       if (cnt == 12) {
         ResultSet rs = stmt.executeQuery(stdQuery);
         while (rs.next()) {
@@ -684,7 +684,7 @@ public class TpchSelectQueryCoordinatorTest {
       }
     }
     assertEquals(12, cnt);
-    System.out.println("test case 8 finished");
+//    System.out.println("test case 8 finished");
   }
 
   // Very slow as well
@@ -769,7 +769,7 @@ public class TpchSelectQueryCoordinatorTest {
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
       cnt++;
-      System.out.println("test case 9 processing: " + cnt);
+//      System.out.println("test case 9 processing: " + cnt);
       if (cnt == 12) {
         ResultSet rs = stmt.executeQuery(stdQuery);
         while (rs.next()) {
@@ -781,7 +781,7 @@ public class TpchSelectQueryCoordinatorTest {
       }
     }
     assertEquals(12, cnt);
-    System.out.println("test case 9 finished");
+//    System.out.println("test case 9 finished");
   }
 
   @Test
@@ -849,7 +849,7 @@ public class TpchSelectQueryCoordinatorTest {
       }
     }
     assertEquals(12, cnt);
-    System.out.println("test case 10 finished");
+//    System.out.println("test case 10 finished");
   }
 
   @Test
@@ -913,7 +913,7 @@ public class TpchSelectQueryCoordinatorTest {
       }
     }
     assertEquals(12, cnt);
-    System.out.println("test case 12 finished");
+//    System.out.println("test case 12 finished");
   }
 
   @Test
@@ -959,7 +959,7 @@ public class TpchSelectQueryCoordinatorTest {
       }
     }
     assertEquals(3, cnt);
-    System.out.println("test case 13 finished");
+//    System.out.println("test case 13 finished");
   }
 
   @Test
@@ -1008,7 +1008,7 @@ public class TpchSelectQueryCoordinatorTest {
       }
     }
     assertEquals(10, cnt);
-    System.out.println("test case 14 finished");
+//    System.out.println("test case 14 finished");
   }
 
   @Test
@@ -1056,7 +1056,7 @@ public class TpchSelectQueryCoordinatorTest {
       }
     }
     assertEquals(10, cnt);
-    System.out.println("test case 15 finished");
+//    System.out.println("test case 15 finished");
   }
 
   @Test
@@ -1117,7 +1117,7 @@ public class TpchSelectQueryCoordinatorTest {
       }
     }
     assertEquals(10, cnt);
-    System.out.println("test case 17 finished");
+//    System.out.println("test case 17 finished");
   }
 
   @Test
@@ -1191,7 +1191,7 @@ public class TpchSelectQueryCoordinatorTest {
       }
     }
     assertEquals(12, cnt);
-    System.out.println("test case 18 finished");
+//    System.out.println("test case 18 finished");
   }
 
   @Test
@@ -1258,7 +1258,7 @@ public class TpchSelectQueryCoordinatorTest {
       }
     }
     assertEquals(10, cnt);
-    System.out.println("test case 19 finished");
+//    System.out.println("test case 19 finished");
   }
 
   @Test
@@ -1317,7 +1317,7 @@ public class TpchSelectQueryCoordinatorTest {
       }
     }
     assertEquals(10, cnt);
-    System.out.println("test case 20 finished");
+//    System.out.println("test case 20 finished");
   }
 
 
@@ -1393,20 +1393,21 @@ public class TpchSelectQueryCoordinatorTest {
       }
     }
     assertEquals(12, cnt);
-    System.out.println("test case 21 finished");
+//    System.out.println("test case 21 finished");
   }
 
   @AfterClass
   public static void tearDown() throws SQLException {
-    stmt.execute("DROP TABLE IF EXISTS `test`.`region`");
-    stmt.execute("DROP TABLE IF EXISTS `test`.`nation`");
-    stmt.execute("DROP TABLE IF EXISTS `test`.`lineitem`");
-    stmt.execute("DROP TABLE IF EXISTS `test`.`customer`");
-    stmt.execute("DROP TABLE IF EXISTS `test`.`supplier`");
-    stmt.execute("DROP TABLE IF EXISTS `test`.`partsupp`");
-    stmt.execute("DROP TABLE IF EXISTS `test`.`part`");
-    stmt.execute("DROP TABLE IF EXISTS `test`.`orders`");
-    stmt.execute("DROP TABLE IF EXISTS `test`.`lineitem_scrambled`");
-    stmt.execute("DROP TABLE IF EXISTS `test`.`orders_scrambled`");
+    stmt.execute(String.format("DROP SCHEMA IF EXISTS `%s`", MYSQL_DATABASE));
+//    stmt.execute("DROP TABLE IF EXISTS `test`.`region`");
+//    stmt.execute("DROP TABLE IF EXISTS `test`.`nation`");
+//    stmt.execute("DROP TABLE IF EXISTS `test`.`lineitem`");
+//    stmt.execute("DROP TABLE IF EXISTS `test`.`customer`");
+//    stmt.execute("DROP TABLE IF EXISTS `test`.`supplier`");
+//    stmt.execute("DROP TABLE IF EXISTS `test`.`partsupp`");
+//    stmt.execute("DROP TABLE IF EXISTS `test`.`part`");
+//    stmt.execute("DROP TABLE IF EXISTS `test`.`orders`");
+//    stmt.execute("DROP TABLE IF EXISTS `test`.`lineitem_scrambled`");
+//    stmt.execute("DROP TABLE IF EXISTS `test`.`orders_scrambled`");
   }
 }
