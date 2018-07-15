@@ -6,6 +6,7 @@ import java.sql.Statement;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.verdictdb.commons.DatabaseConnectionHelpers;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.exception.VerdictDBDbmsException;
@@ -41,7 +42,7 @@ public class JdbcResultSetMetaDataTestForPostgreSQL {
   }
 
   @BeforeClass
-  public static void setupMySqlDatabase() throws SQLException {
+  public static void setupMySqlDatabase() throws SQLException, VerdictDBDbmsException {
     String mysqlConnectionString =
         String.format("jdbc:postgresql://%s/%s", POSTGRESQL_HOST, POSTGRESQL_DATABASE);
     conn = DriverManager.getConnection(mysqlConnectionString, POSTGRESQL_USER, POSTGRESQL_PASSWORD);
