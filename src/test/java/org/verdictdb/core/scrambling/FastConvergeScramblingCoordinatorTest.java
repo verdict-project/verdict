@@ -17,9 +17,9 @@ import org.junit.Test;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.connection.JdbcConnection;
+import org.verdictdb.coordinator.ScramblingCoordinator;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.exception.VerdictDBException;
-import org.verdictdb.execution.ScramblingCoordinator;
 
 public class FastConvergeScramblingCoordinatorTest {
   private static Connection mysqlConn;

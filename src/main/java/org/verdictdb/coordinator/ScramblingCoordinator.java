@@ -1,4 +1,4 @@
-package org.verdictdb.execution;
+package org.verdictdb.coordinator;
 
 import java.util.Arrays;
 import java.util.HashMap;

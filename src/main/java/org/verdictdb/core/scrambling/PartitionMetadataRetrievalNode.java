@@ -8,6 +8,8 @@ import org.verdictdb.core.querying.ExecutableNodeBase;
 
 public class PartitionMetadataRetrievalNode extends ExecutableNodeBase {
   
+  private static final long serialVersionUID = 3457736646345212051L;
+
   /**
    * for which to retrieve metadata
    */

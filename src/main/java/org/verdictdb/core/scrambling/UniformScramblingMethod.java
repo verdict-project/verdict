@@ -87,6 +87,8 @@ public class UniformScramblingMethod extends ScramblingMethodBase {
 
 class TableSizeCountNode extends QueryNodeBase {
 
+  private static final long serialVersionUID = 4363953197389542868L;
+
   private String schemaName;
 
   private String tableName;
