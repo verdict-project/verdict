@@ -30,7 +30,6 @@ public class DatabaseConnectionHelpers {
     
     // create tables
     String datafilePath = new File("src/test/resources/tpch_test_data/").getAbsolutePath();
-    System.out.println(datafilePath);
     spark.sql(String.format(
         "CREATE EXTERNAL TABLE IF NOT EXISTS `%s`.`nation` (" +
         "  `n_nationkey`  INT, " +
@@ -142,7 +141,8 @@ public class DatabaseConnectionHelpers {
         "  `l_receiptdate`    DATE , " +
         "  `l_shipinstruct`   CHAR(25) , " +
         "  `l_shipmode`       CHAR(10) , " +
-        "  `l_comment`        VARCHAR(44)) " +
+        "  `l_comment`        VARCHAR(44), " +
+        "  `l_dummy`          VARCHAR(10))" +
         "ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' " +
         "STORED AS textfile " +
         "LOCATION '%s/lineitem'",

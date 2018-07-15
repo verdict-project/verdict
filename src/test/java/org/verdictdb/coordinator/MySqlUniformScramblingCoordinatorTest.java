@@ -2,9 +2,7 @@ package org.verdictdb.coordinator;
 
 import static org.junit.Assert.assertEquals;
 
-import java.io.File;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Arrays;
@@ -19,7 +17,6 @@ import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.coordinator.ScramblingCoordinator;
-import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.exception.VerdictDBException;
 
