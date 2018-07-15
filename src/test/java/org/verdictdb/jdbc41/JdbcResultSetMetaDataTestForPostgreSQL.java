@@ -28,7 +28,7 @@ public class JdbcResultSetMetaDataTestForPostgreSQL {
 
   private static final String POSTGRESQL_USER = "postgres";
 
-  private static final String POSTGRESQL_PASSWORD = "zhongshucheng123";
+  private static final String POSTGRESQL_PASSWORD = "";
 
   private static final String TABLE_NAME = "mytable";
 

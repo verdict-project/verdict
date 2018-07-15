@@ -255,8 +255,6 @@ public class DatabaseConnectionHelpers {
         schema));
 
     // Load data
-    CopyManager copyManager = new CopyManager((BaseConnection) conn);
-    copyManager.copyIn(String.format("COPY \"%s\".\"region\" FROM 'src/test/resources/tpch_test_data/region.tbl' DELIMITER '|'", schema));
     dbmsConn.execute(String.format("COPY \"%s\".\"region\" FROM 'src/test/resources/tpch_test_data/region.tbl' DELIMITER '|'", schema));
     dbmsConn.execute(String.format("COPY \"%s\".\"nation\" FROM 'src/test/resources/tpch_test_data/nation.tbl' DELIMITER '|'", schema));
     dbmsConn.execute(String.format("COPY \"%s\".\"supplier\" FROM 'src/test/resources/tpch_test_data/supplier.tbl' DELIMITER '|'", schema));
