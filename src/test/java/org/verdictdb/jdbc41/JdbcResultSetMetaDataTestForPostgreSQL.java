@@ -1,5 +1,6 @@
 package org.verdictdb.jdbc41;
 
+import java.io.IOException;
 import java.sql.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
@@ -50,7 +51,7 @@ public class JdbcResultSetMetaDataTestForPostgreSQL {
   }
 
   @BeforeClass
-  public static void setupMySqlDatabase() throws SQLException, VerdictDBDbmsException, IOException {
+  public static void setupMySqlDatabase() throws SQLException {
     String mysqlConnectionString =
         String.format("jdbc:postgresql://%s/%s", POSTGRESQL_HOST, POSTGRESQL_DATABASE);
     conn = DriverManager.getConnection(mysqlConnectionString, POSTGRESQL_USER, POSTGRESQL_PASSWORD);
