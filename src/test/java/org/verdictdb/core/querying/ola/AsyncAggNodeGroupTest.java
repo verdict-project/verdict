@@ -1,6 +1,6 @@
 package org.verdictdb.core.querying.ola;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.util.Arrays;
 import java.util.HashMap;

@@ -12,7 +12,6 @@ import java.util.List;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.verdictdb.connection.JdbcDbmsConnection;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.sqlsyntax.HiveSyntax;
 import org.verdictdb.sqlsyntax.MysqlSyntax;

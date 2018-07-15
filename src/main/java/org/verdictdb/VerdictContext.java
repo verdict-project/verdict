@@ -9,11 +9,9 @@ import java.util.Properties;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.verdictdb.connection.CachedDbmsConnection;
-import org.verdictdb.connection.CachedMetaDataProvider;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.connection.JdbcDbmsConnection;
-import org.verdictdb.connection.MetaDataProvider;
 import org.verdictdb.core.resulthandler.ExecutionResultReader;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.execution.ExecutionContext;

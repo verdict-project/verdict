@@ -17,8 +17,8 @@ import org.verdictdb.core.sqlobject.OrderbyAttribute;
 import org.verdictdb.core.sqlobject.SelectItem;
 import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.core.sqlobject.UnnamedColumn;
-import org.verdictdb.parser.VerdictSQLParserBaseVisitor;
 import org.verdictdb.parser.VerdictSQLParser;
+import org.verdictdb.parser.VerdictSQLParserBaseVisitor;
 
 public class RelationGen extends VerdictSQLParserBaseVisitor<AbstractRelation> {
 

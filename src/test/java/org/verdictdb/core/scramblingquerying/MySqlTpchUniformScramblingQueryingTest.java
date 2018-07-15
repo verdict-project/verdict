@@ -26,7 +26,6 @@ import org.verdictdb.connection.JdbcDbmsConnection;
 import org.verdictdb.connection.StaticMetaData;
 import org.verdictdb.core.execplan.ExecutablePlanRunner;
 import org.verdictdb.core.querying.QueryExecutionPlan;
-import org.verdictdb.core.querying.QueryExecutionPlanSimplifier;
 import org.verdictdb.core.querying.ola.AsyncQueryExecutionPlan;
 import org.verdictdb.core.resulthandler.ExecutionResultReader;
 import org.verdictdb.core.scrambling.ScrambleMeta;

@@ -1,8 +1,6 @@
 package org.verdictdb.execution;
 
-import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.core.resulthandler.ExecutionResultReader;
-import org.verdictdb.core.resulthandler.ExecutionTokenReader;
 
 public class VerdictResultStream {
   
