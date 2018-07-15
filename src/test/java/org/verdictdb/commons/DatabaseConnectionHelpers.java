@@ -1,25 +1,18 @@
 package org.verdictdb.commons;
 
-<<<<<<< HEAD
 import java.io.File;
-=======
-import java.io.*;
->>>>>>> fc19543b6dbb2b9b91e4b5bccefd7901fb3a6c30
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.sql.Statement;
 
-<<<<<<< HEAD
 import org.apache.spark.sql.SparkSession;
-=======
 import org.postgresql.copy.CopyManager;
 import org.postgresql.core.BaseConnection;
->>>>>>> fc19543b6dbb2b9b91e4b5bccefd7901fb3a6c30
 import org.verdictdb.connection.DbmsConnection;
-import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.connection.JdbcConnection;
-import org.verdictdb.connection.JdbcQueryResult;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.sqlsyntax.PostgresqlSyntax;
 
