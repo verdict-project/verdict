@@ -105,9 +105,9 @@ public abstract class AttributeValueRetrievalHelper {
     }
     if (value instanceof String) {
       String v = value.toString();
-      if (v.equals("1")||v.equals("t")||v.equals("true")) {
+      if (v.equals("t")||v.equals("true")) {
         return 1;
-      } else if (v.equals("0")||v.equals("f")||v.equals("false")) {
+      } else if (v.equals("f")||v.equals("false")) {
         return 0;
       }
     }
@@ -126,9 +126,9 @@ public abstract class AttributeValueRetrievalHelper {
     }
     if (value instanceof String) {
       String v = value.toString();
-      if (v.equals("1") || v.equals("t") || v.equals("true")) {
+      if (v.equals("t") || v.equals("true")) {
         return 1;
-      } else if (v.equals("0") || v.equals("f") || v.equals("false")) {
+      } else if (v.equals("f") || v.equals("false")) {
         return 0;
       }
     }
@@ -202,9 +202,9 @@ public abstract class AttributeValueRetrievalHelper {
     }
     if (value instanceof String) {
       String v = value.toString();
-      if (v.equals("1") || v.equals("t")||v.equals("true")) {
+      if (v.equals("t")||v.equals("true")) {
         return 1;
-      } else if (v.equals("0") || v.equals("f")||v.equals("false")) {
+      } else if (v.equals("f")||v.equals("false")) {
         return 0;
       }
     }
@@ -249,9 +249,9 @@ public abstract class AttributeValueRetrievalHelper {
     }
     if (value instanceof String) {
       String v = value.toString();
-      if (v.equals("1") || v.equals("t")||v.equals("true")) {
+      if (v.equals("t")||v.equals("true")) {
         return 1;
-      } else if (v.equals("0") || v.equals("f")||v.equals("false")) {
+      } else if (v.equals("f")||v.equals("false")) {
         return 0;
       }
     }
