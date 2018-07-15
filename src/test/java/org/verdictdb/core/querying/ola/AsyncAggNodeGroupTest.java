@@ -21,14 +21,16 @@ public class AsyncAggNodeGroupTest {
   public void test() throws VerdictDBException {
     // set up scramble meta
     ScrambleMetaSet meta = new ScrambleMetaSet();
-    ScrambleMeta tablemeta = 
-        new ScrambleMeta("newSchema", "scrambledTable",
-            "blockColumn", 3,
-            "tierColumn", 1,
-            "originalSchema", "originalTable");
     HashMap<Integer, List<Double>> distribution = new HashMap<>();
     distribution.put(0, Arrays.asList(0.2, 0.5, 1.0));
-    tablemeta.setCumulativeMassDistributionPerTier(distribution);
+    ScrambleMeta tablemeta = 
+        new ScrambleMeta(
+            "newSchema", "scrambledTable",
+            "originalSchema", "originalTable",
+            "blockColumn", 3,
+            "tierColumn", 1,
+            distribution);
+//    tablemeta.setCumulativeMassDistributionPerTier(distribution);
     meta.insertScrambleMetaEntry(tablemeta);
     
     // compose a query

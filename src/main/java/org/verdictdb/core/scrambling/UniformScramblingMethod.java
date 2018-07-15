@@ -56,6 +56,8 @@ public class UniformScramblingMethod extends ScramblingMethodBase {
       prob.add((i+1) / (double) totalNumberOfblocks);
     }
     
+    storeCumulativeProbabilityDistribution(tier, prob);
+    
     return prob;
   }
   

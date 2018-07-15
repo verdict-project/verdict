@@ -99,9 +99,6 @@ public class ScramblingNode extends CreateTableAsSelectNode {
         metaData.put(key, value);
       }
     }
-    //    if (tokens.size() > 0) {
-    //      statistics = (DbmsQueryResult) tokens.get(0).getValue("queryResult");
-    //    }
     selectQuery = composeQuery(metaData);
 
     // add partitioning for block agg column
@@ -114,13 +111,6 @@ public class ScramblingNode extends CreateTableAsSelectNode {
     // read option values
     List<UnnamedColumn> tierPredicates = method.getTierExpressions(metaData);
     int tierCount = tierPredicates.size() + 1;
-    //    int blockCount = 0;
-    //    if (options.containsKey("blockCount")) {
-    //      blockCount = Integer.valueOf(options.get("blockCount"));
-    //    } 
-    //    else {
-    //      method.getBlockCount(metaData);
-    //    }
     
     // composed select item expressions will be added to this list
     List<SelectItem> selectItems = new ArrayList<>();
