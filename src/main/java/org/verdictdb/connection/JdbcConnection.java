@@ -11,7 +11,9 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.jdbc41.VerdictResultSet;
+import org.verdictdb.sqlsyntax.HiveSyntax;
 import org.verdictdb.sqlsyntax.PostgresqlSyntax;
+import org.verdictdb.sqlsyntax.SparkSyntax;
 import org.verdictdb.sqlsyntax.SqlSyntax;
 import org.verdictdb.sqlsyntax.SqlSyntaxList;
 
@@ -190,9 +192,9 @@ public class JdbcConnection implements DbmsConnection {
     List<String> partition = new ArrayList<>();
     DbmsQueryResult queryResult = executeQuery(syntax.getPartitionCommand(schema, table));
     VerdictResultSet jdbcQueryResult = new VerdictResultSet(queryResult);
-    // the result of postgresql is a vector of column index
     
     try {
+      // the result of postgresql is a vector of column index
       if (syntax instanceof PostgresqlSyntax) {
         queryResult.next();
         Object o = jdbcQueryResult.getObject(1);
@@ -200,6 +202,18 @@ public class JdbcConnection implements DbmsConnection {
         List<Pair<String, String>> columns = getColumns(schema, table);
         for (int i=0; i<arr.length; i++) {
           partition.add(columns.get(Integer.valueOf(arr[i])-1).getKey());
+        }
+      }
+      // Hive and Spark append partition information at the end of the "DESCRIBE TABLE" statement.
+      else if (syntax instanceof HiveSyntax || syntax instanceof SparkSyntax) {
+        boolean hasPartitionInfoStarted = false;
+        while (queryResult.next()) {
+          String name = queryResult.getString(0);
+          if (hasPartitionInfoStarted && (name.equalsIgnoreCase("# col_name") == false)) {
+            partition.add(name);
+          } else if (name.equalsIgnoreCase("# Partition Information")) {
+            hasPartitionInfoStarted = true;
+          }
         }
       }
       else {
