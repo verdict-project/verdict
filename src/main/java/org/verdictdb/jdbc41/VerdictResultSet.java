@@ -29,6 +29,7 @@ import java.util.Map;
 
 import javax.sql.rowset.serial.SerialBlob;
 
+import org.verdictdb.commons.AttributeValueRetrievalHelper;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.connection.TypeCasting;
 import org.verdictdb.exception.VerdictDBTypeException;
@@ -195,49 +196,12 @@ public class VerdictResultSet implements ResultSet {
   @Override
   public boolean getBoolean(int columnIndex) throws SQLException {
     checkIndex(columnIndex);
-    
-    if (isValidType("boolean", columnIndex)) {
-      lastValue = queryResult.getValue(columnIndex-1);
-      if (lastValue == null) {
-        return false;
-      }
-      
-      if (lastValue instanceof Boolean) {
-        return (boolean) lastValue;
-      }
-      if (lastValue instanceof Integer || lastValue instanceof Long) {
-        int value = Integer.valueOf(lastValue.toString());
-        if (value == 1) {
-          return true;
-        } else if (value == 0) {
-          return false;
-        }
-      } else if (lastValue instanceof String) {
-        String value = lastValue.toString();
-        if (value.equals("1")||value.equals("t")) {
-          return true;
-        } else if (value.equals("0")||value.equals("f")) {
-          return false;
-        }
-      }
-      throw new SQLException("Not a valid value for Boolean type: " + lastValue);
-    }
-    throw new SQLException("Not a valid value for Boolean type: " + lastValue);
+    return queryResult.getBoolean(columnIndex-1);
   }
 
   @Override
   public byte getByte(int columnIndex) throws SQLException {
     checkIndex(columnIndex);
-    lastValue = queryResult.getValue(columnIndex-1);
-    if (lastValue instanceof String) {
-      String value = lastValue.toString();
-      if (value.equals("1")||value.equals("t")) {
-        return 1;
-      } else if (value.equals("0")||value.equals("f")) {
-        return 0;
-      }
-      else throw new SQLException("Not a valid value for Boolean type: " + lastValue);
-    }
     return queryResult.getByte(columnIndex-1);
     
 //    try {
@@ -261,34 +225,14 @@ public class VerdictResultSet implements ResultSet {
 
   @Override
   public short getShort(int columnIndex) throws SQLException {
-    try {
-      if (isValidType("short", columnIndex)) {
-        lastValue = TypeCasting.toShort(queryResult.getValue(columnIndex-1));
-        return (short)lastValue;
-      }
-      else {
-        throw new VerdictDBTypeException(queryResult.getValue(columnIndex-1));
-      }
-    }
-    catch (VerdictDBTypeException e) {
-      throw new SQLException(e.getMessage());
-    }
+    checkIndex(columnIndex);
+    return queryResult.getShort(columnIndex-1);
   }
 
   @Override
   public int getInt(int columnIndex) throws SQLException {
     checkIndex(columnIndex);
-    lastValue = queryResult.getValue(columnIndex-1);
-    if (lastValue instanceof String) {
-      String value = lastValue.toString();
-      if (value.equals("1")||value.equals("t")) {
-        return 1;
-      } else if (value.equals("0")||value.equals("f")) {
-        return 0;
-      }
-      else throw new SQLException("Not a valid value for Boolean type: " + lastValue);
-    }
-    else return queryResult.getInt(columnIndex-1);
+    return queryResult.getInt(columnIndex-1);
 //    try {
 //      if (isValidType("int", columnIndex)) {
 //        lastValue = queryResult.getValue(columnIndex-1);
@@ -311,16 +255,6 @@ public class VerdictResultSet implements ResultSet {
   @Override
   public long getLong(int columnIndex) throws SQLException {
     checkIndex(columnIndex);
-    lastValue = queryResult.getValue(columnIndex-1);
-    if (lastValue instanceof String) {
-      String value = lastValue.toString();
-      if (value.equals("1")||value.equals("t")) {
-        return 1;
-      } else if (value.equals("0")||value.equals("f")) {
-        return 0;
-      }
-      else throw new SQLException("Not a valid value for Boolean type: " + lastValue);
-    }
     return queryResult.getLong(columnIndex-1);
     
 //    try {
@@ -394,29 +328,14 @@ public class VerdictResultSet implements ResultSet {
   public BigDecimal getBigDecimal(int columnIndex, int scale) throws SQLException {
     checkIndex(columnIndex);
     
-    try {
-      if (isValidType("bigdecimal", columnIndex)) {
-        lastValue = TypeCasting.toBigDecimal(queryResult.getValue(columnIndex-1), scale);
-        return (BigDecimal) lastValue;
-      }
-      else {
-        throw new VerdictDBTypeException(queryResult.getValue(columnIndex-1));
-      }
-    }
-    catch (VerdictDBTypeException e) {
-      throw new SQLException(e.getMessage());
-    }
+    return queryResult.getBigDecimal(columnIndex-1, scale);
   }
 
   @Override
   public byte[] getBytes(int columnIndex) throws SQLException {
     checkIndex(columnIndex);
     
-   if (isValidType("bytes", columnIndex)) {
-      lastValue = queryResult.getValue(columnIndex-1);
-      return (byte[]) lastValue;
-    }
-    else throw new SQLException("Not supported data type.");
+    return queryResult.getBytes(columnIndex-1);
   }
 
   @Override
@@ -444,26 +363,7 @@ public class VerdictResultSet implements ResultSet {
   public Time getTime(int columnIndex) throws SQLException {
     checkIndex(columnIndex);
     
-    if (isValidType("time", columnIndex)) {
-      lastValue = queryResult.getValue(columnIndex-1);
-      
-      if (lastValue == null) {
-        return null;
-      }
-      
-      if (lastValue instanceof Date){
-        lastValue  = new Time(((Date) lastValue).getTime());
-      }
-      else if (lastValue instanceof Timestamp) {
-        lastValue  = new Time(((Timestamp) lastValue).getTime());
-      }
-      else if (lastValue instanceof Time) {
-//        lastValue = queryResult.getValue(columnIndex-1);
-      }
-      
-      return (Time) lastValue;
-    }
-    else throw new SQLException("Not supported data type.");
+    return queryResult.getTime(columnIndex-1);
   }
 
   @Override
@@ -494,41 +394,21 @@ public class VerdictResultSet implements ResultSet {
   public InputStream getAsciiStream(int columnIndex) throws SQLException {
     checkIndex(columnIndex);
     
-    if (isValidType("asciistream", columnIndex)) {
-      lastValue = queryResult.getValue(columnIndex-1);
-      return (InputStream) lastValue;
-    }
-    else throw new SQLException("Not supported data type.");
+    return queryResult.getAsciiStream(columnIndex-1);
   }
 
   @Override
   public InputStream getUnicodeStream(int columnIndex) throws SQLException {
-    if (isValidType("unicodestream", columnIndex)) {
-      lastValue = queryResult.getValue(columnIndex-1);
-      return (InputStream) lastValue;
-    }
-    else throw new SQLException("Not supported data type.");
+    checkIndex(columnIndex);
+
+    return queryResult.getUnicodeStream(columnIndex-1);
   }
 
   @Override
   public InputStream getBinaryStream(int columnIndex) throws SQLException {
     checkIndex(columnIndex);
     
-    if (isValidType("binarystream", columnIndex)) {
-      lastValue = queryResult.getValue(columnIndex-1);
-      
-      if (lastValue == null) {
-        byte[] a = {};
-        return new ByteArrayInputStream(a);
-      }
-      
-      if (lastValue instanceof byte[]){
-        ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream((byte[]) lastValue);
-        return byteArrayInputStream;
-      }
-      return (InputStream) lastValue;
-    }
-    else throw new SQLException("Not supported data type.");
+    return getBinaryStream(columnIndex-1);
   }
   
   String standardizedLabel(String label) {
@@ -538,7 +418,7 @@ public class VerdictResultSet implements ResultSet {
   @Override
   public String getString(String columnLabel) throws SQLException {
     if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
-      return getString(colNameIdx.get(standardizedLabel(columnLabel.toLowerCase())) + 1);
+      return queryResult.getString(standardizedLabel(columnLabel.toLowerCase()));
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }
@@ -546,7 +426,7 @@ public class VerdictResultSet implements ResultSet {
   @Override
   public boolean getBoolean(String columnLabel) throws SQLException {
     if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
-      return getBoolean(colNameIdx.get(standardizedLabel(columnLabel.toLowerCase())) + 1);
+      return queryResult.getBoolean(standardizedLabel(columnLabel.toLowerCase()));
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }
@@ -554,7 +434,7 @@ public class VerdictResultSet implements ResultSet {
   @Override
   public byte getByte(String columnLabel) throws SQLException {
     if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
-      return getByte(colNameIdx.get(standardizedLabel(columnLabel.toLowerCase())) + 1);
+      return queryResult.getByte(standardizedLabel(columnLabel.toLowerCase()));
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }
@@ -562,7 +442,7 @@ public class VerdictResultSet implements ResultSet {
   @Override
   public short getShort(String columnLabel) throws SQLException {
     if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
-      return getShort(colNameIdx.get(standardizedLabel(columnLabel.toLowerCase())) + 1);
+      return queryResult.getShort(standardizedLabel(columnLabel.toLowerCase()));
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }
@@ -570,7 +450,7 @@ public class VerdictResultSet implements ResultSet {
   @Override
   public int getInt(String columnLabel) throws SQLException {
    if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
-      return getInt(colNameIdx.get(standardizedLabel(columnLabel.toLowerCase())) + 1);
+     return queryResult.getInt(standardizedLabel(columnLabel.toLowerCase()));
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }
@@ -578,7 +458,7 @@ public class VerdictResultSet implements ResultSet {
   @Override
   public long getLong(String columnLabel) throws SQLException {
     if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
-      return getLong(colNameIdx.get(standardizedLabel(columnLabel.toLowerCase())) + 1);
+      return queryResult.getLong(standardizedLabel(columnLabel.toLowerCase()));
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }
@@ -586,7 +466,7 @@ public class VerdictResultSet implements ResultSet {
   @Override
   public float getFloat(String columnLabel) throws SQLException {
     if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
-      return getFloat(colNameIdx.get(standardizedLabel(columnLabel.toLowerCase())) + 1);
+      return queryResult.getFloat(standardizedLabel(columnLabel.toLowerCase()));
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }
@@ -594,7 +474,7 @@ public class VerdictResultSet implements ResultSet {
   @Override
   public double getDouble(String columnLabel) throws SQLException {
     if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
-      return getDouble(colNameIdx.get(standardizedLabel(columnLabel.toLowerCase())) + 1);
+      return queryResult.getDouble(standardizedLabel(columnLabel.toLowerCase()));
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }
@@ -602,7 +482,7 @@ public class VerdictResultSet implements ResultSet {
   @Override
   public BigDecimal getBigDecimal(String columnLabel, int scale) throws SQLException {
     if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
-      return getBigDecimal(colNameIdx.get(standardizedLabel(columnLabel.toLowerCase())) + 1);
+      return queryResult.getBigDecimal(standardizedLabel(columnLabel.toLowerCase()), scale);
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }
@@ -610,7 +490,7 @@ public class VerdictResultSet implements ResultSet {
   @Override
   public byte[] getBytes(String columnLabel) throws SQLException {
     if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
-      return getBytes(colNameIdx.get(standardizedLabel(columnLabel.toLowerCase())) + 1);
+      return queryResult.getBytes(standardizedLabel(columnLabel.toLowerCase()));
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }
@@ -618,7 +498,7 @@ public class VerdictResultSet implements ResultSet {
   @Override
   public Date getDate(String columnLabel) throws SQLException {
    if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
-      return getDate(colNameIdx.get(standardizedLabel(columnLabel.toLowerCase())) + 1);
+     return queryResult.getDate(standardizedLabel(columnLabel.toLowerCase()));
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }
@@ -626,7 +506,7 @@ public class VerdictResultSet implements ResultSet {
   @Override
   public Time getTime(String columnLabel) throws SQLException {
     if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
-      return getTime(colNameIdx.get(standardizedLabel(columnLabel.toLowerCase())) + 1);
+      return queryResult.getTime(standardizedLabel(columnLabel.toLowerCase()));
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }
@@ -634,7 +514,7 @@ public class VerdictResultSet implements ResultSet {
   @Override
   public Timestamp getTimestamp(String columnLabel) throws SQLException {
     if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
-      return getTimestamp(colNameIdx.get(standardizedLabel(columnLabel.toLowerCase())) + 1);
+      return queryResult.getTimestamp(standardizedLabel(columnLabel.toLowerCase()));
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }
@@ -642,7 +522,7 @@ public class VerdictResultSet implements ResultSet {
   @Override
   public InputStream getAsciiStream(String columnLabel) throws SQLException {
     if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
-      return getAsciiStream(colNameIdx.get(standardizedLabel(columnLabel.toLowerCase())) + 1);
+      return queryResult.getAsciiStream(standardizedLabel(columnLabel.toLowerCase()));
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }
@@ -650,7 +530,7 @@ public class VerdictResultSet implements ResultSet {
   @Override
   public InputStream getUnicodeStream(String columnLabel) throws SQLException {
     if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
-      return getUnicodeStream(colNameIdx.get(standardizedLabel(columnLabel.toLowerCase())) + 1);
+      return queryResult.getUnicodeStream(standardizedLabel(columnLabel.toLowerCase()));
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }
@@ -658,7 +538,7 @@ public class VerdictResultSet implements ResultSet {
   @Override
   public InputStream getBinaryStream(String columnLabel) throws SQLException {
     if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
-      return getBinaryStream(colNameIdx.get(standardizedLabel(columnLabel.toLowerCase())) + 1);
+      return queryResult.getBinaryStream(standardizedLabel(columnLabel.toLowerCase()));
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }
@@ -718,24 +598,13 @@ public class VerdictResultSet implements ResultSet {
   public BigDecimal getBigDecimal(int columnIndex) throws SQLException {
     checkIndex(columnIndex);
     
-    try {
-      if (isValidType("bigdecimal", columnIndex)) {
-        lastValue = TypeCasting.toBigDecimal(queryResult.getValue(columnIndex-1));
-        return (BigDecimal) lastValue;
-      }
-      else {
-        throw new VerdictDBTypeException(queryResult.getValue(columnIndex-1));
-      }
-    }
-   catch (VerdictDBTypeException e) {
-     throw new SQLException(e.getMessage());
-   }
+    return queryResult.getBigDecimal(columnIndex-1);
   }
 
   @Override
   public BigDecimal getBigDecimal(String columnLabel) throws SQLException {
     if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
-      return getBigDecimal(colNameIdx.get(standardizedLabel(columnLabel.toLowerCase())) + 1);
+      return queryResult.getBigDecimal(standardizedLabel(columnLabel.toLowerCase()));
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }
@@ -1093,53 +962,28 @@ public class VerdictResultSet implements ResultSet {
 
   @Override
   public Ref getRef(int columnIndex) throws SQLException {
-    if (isValidType("ref", columnIndex)) {
-      lastValue = queryResult.getValue(columnIndex-1);
-      return (Ref)lastValue;
-    }
-    else throw new SQLException("Not supported data type.");
+    return queryResult.getRef(columnIndex-1);
   }
 
   @Override
   public Blob getBlob(int columnIndex) throws SQLException {
     checkIndex(columnIndex);
-    
-    if (isValidType("blob", columnIndex)) {
-      lastValue = queryResult.getValue(columnIndex-1);
-      
-      if (lastValue == null) {
-        return null;
-      }
-      if (lastValue instanceof Blob) {
-        return (Blob) lastValue;
-      }
-      
-      return new SerialBlob((byte[]) lastValue);
-    }
-    else throw new SQLException("Not supported data type.");
+
+    return queryResult.getBlob(columnIndex - 1);
   }
 
   @Override
   public Clob getClob(int columnIndex) throws SQLException {
     checkIndex(columnIndex);
     
-    if (isValidType("clob", columnIndex)) {
-      lastValue = queryResult.getValue(columnIndex-1);
-      return (Clob) lastValue;
-    }
-    else throw new SQLException("Not supported data type.");
+    return queryResult.getClob(columnIndex - 1);
   }
 
   @Override
   public Array getArray(int columnIndex) throws SQLException {
     checkIndex(columnIndex);
     
-    if (isValidType("array", columnIndex)) {
-      lastValue = queryResult.getValue(columnIndex-1);
-      VerdictJdbcArray array = new VerdictJdbcArray((Object[]) lastValue);
-      return array;
-    }
-    else throw new SQLException("Not supported data type.");
+    return queryResult.getArray(columnIndex - 1);
   }
 
   @Override
@@ -1150,7 +994,7 @@ public class VerdictResultSet implements ResultSet {
   @Override
   public Ref getRef(String columnLabel) throws SQLException {
     if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
-      return getRef(colNameIdx.get(standardizedLabel(columnLabel.toLowerCase())) + 1);
+      return queryResult.getRef(standardizedLabel(columnLabel.toLowerCase()));
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }
@@ -1158,7 +1002,7 @@ public class VerdictResultSet implements ResultSet {
   @Override
   public Blob getBlob(String columnLabel) throws SQLException {
     if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
-      return getBlob(colNameIdx.get(standardizedLabel(columnLabel.toLowerCase())) + 1);
+      return queryResult.getBlob(standardizedLabel(columnLabel.toLowerCase()));
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }
@@ -1166,7 +1010,7 @@ public class VerdictResultSet implements ResultSet {
   @Override
   public Clob getClob(String columnLabel) throws SQLException {
     if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
-      return getClob(colNameIdx.get(standardizedLabel(columnLabel.toLowerCase())) + 1);
+      return queryResult.getClob(standardizedLabel(columnLabel.toLowerCase()));
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }
@@ -1174,7 +1018,7 @@ public class VerdictResultSet implements ResultSet {
   @Override
   public Array getArray(String columnLabel) throws SQLException {
     if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
-      return getArray(colNameIdx.get(standardizedLabel(columnLabel.toLowerCase())) + 1);
+      return queryResult.getArray(standardizedLabel(columnLabel.toLowerCase()));
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }
@@ -1213,17 +1057,13 @@ public class VerdictResultSet implements ResultSet {
 
   @Override
   public URL getURL(int columnIndex) throws SQLException {
-    if (isValidType("url", columnIndex)) {
-      lastValue = queryResult.getValue(columnIndex-1);
-      return (URL) lastValue;
-    }
-    else throw new SQLException("Not supported data type.");
+    return queryResult.getURL(columnIndex - 1);
   }
 
   @Override
   public URL getURL(String columnLabel) throws SQLException {
    if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
-      return getURL(colNameIdx.get(standardizedLabel(columnLabel.toLowerCase())) + 1);
+      return queryResult.getURL(standardizedLabel(columnLabel.toLowerCase()));
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }
@@ -1270,17 +1110,13 @@ public class VerdictResultSet implements ResultSet {
 
   @Override
   public RowId getRowId(int columnIndex) throws SQLException {
-    if (isValidType("rowid", columnIndex)) {
-      lastValue = queryResult.getValue(columnIndex-1);
-      return (RowId) lastValue;
-    }
-    else throw new SQLException("Not supported data type.");
+    return queryResult.getRowId(columnIndex-1);
   }
 
   @Override
   public RowId getRowId(String columnLabel) throws SQLException {
     if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
-      return getRowId(colNameIdx.get(standardizedLabel(columnLabel.toLowerCase())) + 1);
+      return queryResult.getRowId(standardizedLabel(columnLabel.toLowerCase()));
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }
@@ -1328,34 +1164,26 @@ public class VerdictResultSet implements ResultSet {
   @Override
   public NClob getNClob(int columnIndex) throws SQLException {
     checkIndex(columnIndex);
-    if (isValidType("nclob", columnIndex)) {
-      lastValue = queryResult.getValue(columnIndex-1);
-      return (NClob) lastValue;
-    }
-    else throw new SQLException("Not supported data type.");
+    return queryResult.getNClob(columnIndex - 1);
   }
 
   @Override
   public NClob getNClob(String columnLabel) throws SQLException {
     if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
-      return getNClob(colNameIdx.get(standardizedLabel(columnLabel.toLowerCase())) + 1);
+      return queryResult.getNClob(standardizedLabel(columnLabel.toLowerCase()));
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }
 
   @Override
   public SQLXML getSQLXML(int columnIndex) throws SQLException {
-    if (isValidType("sqlxml", columnIndex)) {
-      lastValue = queryResult.getValue(columnIndex-1);
-      return (SQLXML) lastValue;
-    }
-    else throw new SQLException("Not supported data type.");
+    return queryResult.getSQLXML(columnIndex - 1);
   }
 
   @Override
   public SQLXML getSQLXML(String columnLabel) throws SQLException {
     if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
-      return getSQLXML(colNameIdx.get(standardizedLabel(columnLabel.toLowerCase())) + 1);
+      return queryResult.getSQLXML(standardizedLabel(columnLabel.toLowerCase()));
     }
     else throw new SQLException("ColumnLabel does not exist.");
   }

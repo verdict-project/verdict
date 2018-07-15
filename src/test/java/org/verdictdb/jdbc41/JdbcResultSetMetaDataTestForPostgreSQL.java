@@ -27,7 +27,7 @@ public class JdbcResultSetMetaDataTestForPostgreSQL {
 
   private static final String POSTGRESQL_USER = "postgres";
 
-  private static final String POSTGRESQL_PASSWORD = "";
+  private static final String POSTGRESQL_PASSWORD = "zhongshucheng123";
 
   private static final String TABLE_NAME = "mytable";
 
@@ -183,7 +183,7 @@ public class JdbcResultSetMetaDataTestForPostgreSQL {
     assertEquals(1, ourResult.getByte(1));        // bigint
 
     try {
-      assertEquals(true, ourResult.getBoolean(9));          // numeric
+      assertEquals(true, ourResult.getBoolean(22));          // numeric
       fail();
     } catch (java.sql.SQLException e) {}
     assertEquals(1.0, ourResult.getFloat(22), 1e-6);         // numeric
