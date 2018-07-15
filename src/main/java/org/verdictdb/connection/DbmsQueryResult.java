@@ -1,8 +1,10 @@
 package org.verdictdb.connection;
 
+import java.io.InputStream;
 import java.io.Serializable;
-import java.sql.Date;
-import java.sql.Timestamp;
+import java.math.BigDecimal;
+import java.net.URL;
+import java.sql.*;
 
 /**
  * Represents the results returned from the underlying database.
@@ -62,6 +64,10 @@ public interface DbmsQueryResult extends Serializable {
   public String getString(int index);
   
   public String getString(String label);
+
+  public Boolean getBoolean(int index) throws SQLException;
+
+  public Boolean getBoolean(String label) throws SQLException;
   
   public int getInt(int index);
   
@@ -70,6 +76,10 @@ public interface DbmsQueryResult extends Serializable {
   public long getLong(int index);
   
   public long getLong(String label);
+
+  public short getShort(int index);
+
+  public short getShort(String label);
   
   public double getDouble(int index);
   
@@ -90,6 +100,66 @@ public interface DbmsQueryResult extends Serializable {
   public Timestamp getTimestamp(int index);
   
   public Timestamp getTimestamp(String label);
+
+  public BigDecimal getBigDecimal(int index, int scale);
+
+  public BigDecimal getBigDecimal(String label, int scale);
+
+  public BigDecimal getBigDecimal(int index);
+
+  public BigDecimal getBigDecimal(String label);
+
+  public byte[] getBytes(int index);
+
+  public byte[] getBytes(String label);
+
+  public Time getTime(int index);
+
+  public Time getTime(String label);
+
+  public InputStream getAsciiStream(int index);
+
+  public InputStream getAsciiStream(String label);
+
+  public InputStream getUnicodeStream(int index);
+
+  public InputStream getUnicodeStream(String label);
+
+  public InputStream getBinaryStream(int index);
+
+  public InputStream getBinaryStream(String label);
+
+  public Ref getRef(int index);
+
+  public Ref getRef(String label);
+
+  public Blob getBlob(int index) throws SQLException;
+
+  public Blob getBlob(String label) throws SQLException;
+
+  public Clob getClob(int index);
+
+  public Clob getClob(String label);
+
+  public Array getArray(int index);
+
+  public Array getArray(String label);
+
+  public URL getURL(int index);
+
+  public URL getURL(String label);
+
+  public RowId getRowId(int index);
+
+  public RowId getRowId(String label);
+
+  public NClob getNClob(int index);
+
+  public NClob getNClob(String label);
+
+  public SQLXML getSQLXML(int index);
+
+  public SQLXML getSQLXML(String label);
   
   public void printContent();
 
