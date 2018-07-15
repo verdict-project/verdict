@@ -15,7 +15,7 @@ import org.verdictdb.sqlsyntax.PostgresqlSyntax;
 import org.verdictdb.sqlsyntax.SqlSyntax;
 import org.verdictdb.sqlsyntax.SqlSyntaxList;
 
-public class JdbcDbmsConnection implements DbmsConnection {
+public class JdbcConnection implements DbmsConnection {
   
   Connection conn;
 
@@ -25,7 +25,7 @@ public class JdbcDbmsConnection implements DbmsConnection {
   
 //  JdbcQueryResult jrs = null;
   
-  public static JdbcDbmsConnection create(Connection conn) throws VerdictDBDbmsException {
+  public static JdbcConnection create(Connection conn) throws VerdictDBDbmsException {
     String connectionString = null;
     try {
       connectionString = conn.getMetaData().getURL();
@@ -36,10 +36,10 @@ public class JdbcDbmsConnection implements DbmsConnection {
     String dbName = connectionString.split(":")[1];
     SqlSyntax syntax = SqlSyntaxList.getSyntaxFor(dbName);
     
-    return new JdbcDbmsConnection(conn, syntax);
+    return new JdbcConnection(conn, syntax);
   }
   
-  public JdbcDbmsConnection(Connection conn, SqlSyntax syntax) {
+  public JdbcConnection(Connection conn, SqlSyntax syntax) {
     this.conn = conn;
     try {
       this.currentSchema = conn.getCatalog();

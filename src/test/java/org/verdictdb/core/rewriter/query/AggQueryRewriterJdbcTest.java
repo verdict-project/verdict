@@ -12,7 +12,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.connection.DbmsQueryResult;
-import org.verdictdb.connection.JdbcDbmsConnection;
+import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.core.scrambling.BaseScrambler;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
 import org.verdictdb.core.scrambling.UniformScrambler;
@@ -80,7 +80,7 @@ public class AggQueryRewriterJdbcTest {
       String query_string = relToSql.toSql(rewritten.get(i).getLeft());
       System.out.println(query_string);
       
-      JdbcDbmsConnection jdbcConn = new JdbcDbmsConnection(conn, new H2Syntax());
+      JdbcConnection jdbcConn = new JdbcConnection(conn, new H2Syntax());
       DbmsQueryResult result = jdbcConn.executeQuery(query_string);
       
       result.printContent();

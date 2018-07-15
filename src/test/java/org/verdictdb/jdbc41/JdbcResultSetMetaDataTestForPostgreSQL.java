@@ -7,7 +7,7 @@ import java.sql.Statement;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.connection.DbmsConnection;
-import org.verdictdb.connection.JdbcDbmsConnection;
+import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.sqlsyntax.PostgresqlSyntax;
 
@@ -45,7 +45,7 @@ public class JdbcResultSetMetaDataTestForPostgreSQL {
     String mysqlConnectionString =
         String.format("jdbc:postgresql://%s/%s", POSTGRESQL_HOST, POSTGRESQL_DATABASE);
     conn = DriverManager.getConnection(mysqlConnectionString, POSTGRESQL_USER, POSTGRESQL_PASSWORD);
-    dbmsConn = new JdbcDbmsConnection(conn, new PostgresqlSyntax());
+    dbmsConn = new JdbcConnection(conn, new PostgresqlSyntax());
 
     stmt = conn.createStatement();
     stmt.execute(String.format("DROP TABLE IF EXISTS %s", TABLE_NAME));

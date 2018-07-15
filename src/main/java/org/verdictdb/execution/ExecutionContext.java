@@ -3,7 +3,6 @@ package org.verdictdb.execution;
 import org.verdictdb.VerdictContext;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.core.resulthandler.ExecutionResultReader;
-import org.verdictdb.core.resulthandler.ExecutionTokenReader;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBTypeException;
 import org.verdictdb.parser.VerdictSQLParser;

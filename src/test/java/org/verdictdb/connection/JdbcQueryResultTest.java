@@ -12,8 +12,6 @@ import java.util.List;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.verdictdb.connection.DbmsQueryResult;
-import org.verdictdb.connection.JdbcDbmsConnection;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.sqlsyntax.HiveSyntax;
 
@@ -21,7 +19,7 @@ public class JdbcQueryResultTest {
   
   static Connection conn;
   
-  static JdbcDbmsConnection jdbc;
+  static JdbcConnection jdbc;
   
   static List<List<Object>> contents;
   
@@ -37,7 +35,7 @@ public class JdbcQueryResultTest {
     contents.add(Arrays.<Object>asList(2, "Sonia"));
     contents.add(Arrays.<Object>asList(3, "Asha"));
     
-    jdbc = new JdbcDbmsConnection(conn, new HiveSyntax());
+    jdbc = new JdbcConnection(conn, new HiveSyntax());
     
     jdbc.execute("CREATE TABLE PERSON(id int, name varchar(255))");
     for (List<Object> row : contents) {

@@ -1,34 +1,40 @@
 package org.verdictdb.core.coordinator;
 
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.verdictdb.connection.CachedDbmsConnection;
-import org.verdictdb.connection.DbmsConnection;
-import org.verdictdb.connection.DbmsQueryResult;
-import org.verdictdb.connection.JdbcDbmsConnection;
-import org.verdictdb.core.execplan.ExecutablePlanRunner;
-import org.verdictdb.core.resulthandler.ExecutionResultReader;
-import org.verdictdb.core.scrambling.*;
-import org.verdictdb.core.sqlobject.AbstractRelation;
-import org.verdictdb.core.sqlobject.SelectQuery;
-import org.verdictdb.exception.VerdictDBException;
-import org.verdictdb.execution.SelectQueryCoordinator;
-import org.verdictdb.jdbc41.VerdictConnection;
-import org.verdictdb.sqlreader.NonValidatingSQLParser;
-import org.verdictdb.sqlreader.RelationStandardizer;
-import org.verdictdb.sqlsyntax.MysqlSyntax;
-import org.verdictdb.sqlwriter.SelectQueryToSql;
+import static org.junit.Assert.assertEquals;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.verdictdb.connection.CachedDbmsConnection;
+import org.verdictdb.connection.DbmsConnection;
+import org.verdictdb.connection.DbmsQueryResult;
+import org.verdictdb.connection.JdbcConnection;
+import org.verdictdb.core.execplan.ExecutablePlanRunner;
+import org.verdictdb.core.resulthandler.ExecutionResultReader;
+import org.verdictdb.core.scrambling.ScrambleMeta;
+import org.verdictdb.core.scrambling.ScrambleMetaSet;
+import org.verdictdb.core.scrambling.ScramblingMethod;
+import org.verdictdb.core.scrambling.ScramblingPlan;
+import org.verdictdb.core.scrambling.UniformScrambler;
+import org.verdictdb.core.scrambling.UniformScramblingMethod;
+import org.verdictdb.core.sqlobject.AbstractRelation;
+import org.verdictdb.core.sqlobject.SelectQuery;
+import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.execution.SelectQueryCoordinator;
+import org.verdictdb.sqlreader.NonValidatingSQLParser;
+import org.verdictdb.sqlreader.RelationStandardizer;
+import org.verdictdb.sqlsyntax.MysqlSyntax;
+import org.verdictdb.sqlwriter.SelectQueryToSql;
 
 /**
  *  Test cases are from
@@ -59,7 +65,7 @@ public class TpchSelectQueryCoordinatorTest {
     }
   }
 
-  private static final String MYSQL_DATABASE = "test";
+  private static final String MYSQL_DATABASE = "coordinator_test";
 
   private static final String MYSQL_UESR = "root";
 
@@ -68,23 +74,23 @@ public class TpchSelectQueryCoordinatorTest {
   @BeforeClass
   public static void setupMySqlDatabase() throws SQLException, VerdictDBException {
     String mysqlConnectionString =
-        String.format("jdbc:mysql://%s/%s?autoReconnect=true&useSSL=false", MYSQL_HOST, MYSQL_DATABASE);
+        String.format("jdbc:mysql://%s?autoReconnect=true&useSSL=false", MYSQL_HOST);
     conn = DriverManager.getConnection(mysqlConnectionString, MYSQL_UESR, MYSQL_PASSWORD);
 
     stmt = conn.createStatement();
-    stmt.execute("DROP SCHEMA IF EXISTS `test`");
-    stmt.execute("CREATE SCHEMA IF NOT EXISTS `test`");
+    stmt.execute(String.format("DROP SCHEMA IF EXISTS `%s`", MYSQL_DATABASE));
+    stmt.execute(String.format("CREATE SCHEMA IF NOT EXISTS `%s`", MYSQL_DATABASE));
     
-    stmt.execute("CREATE TABLE  IF NOT EXISTS `test`.`nation`  (`n_nationkey`  INT, " +
+    stmt.execute(String.format("CREATE TABLE  IF NOT EXISTS `%s`.`nation`  (`n_nationkey`  INT, " +
         "                            `n_name`       CHAR(25), " +
         "                            `n_regionkey`  INT, " +
         "                            `n_comment`    VARCHAR(152), " +
-        "                            `n_dummy` varchar(10))");
-    stmt.execute("CREATE TABLE  IF NOT EXISTS `test`.`region`  (`r_regionkey`  INT, " +
+        "                            `n_dummy` varchar(10), PRIMARY KEY (`n_nationkey`))", MYSQL_DATABASE));
+    stmt.execute(String.format("CREATE TABLE  IF NOT EXISTS `%s`.`region`  (`r_regionkey`  INT, " +
         "                            `r_name`       CHAR(25), " +
         "                            `r_comment`    VARCHAR(152), " +
-        "                            `r_dummy` varchar(10))");
-    stmt.execute("CREATE TABLE  IF NOT EXISTS `test`.`part`  ( `p_partkey`     INT, " +
+        "                            `r_dummy` varchar(10), PRIMARY KEY (`r_regionkey`))", MYSQL_DATABASE));
+    stmt.execute(String.format("CREATE TABLE  IF NOT EXISTS `%s`.`part`  ( `p_partkey`     INT, " +
         "                          `p_name`       VARCHAR(55), " +
         "                          `p_mfgr`        CHAR(25), " +
         "                          `p_brand`       CHAR(10), " +
@@ -93,22 +99,22 @@ public class TpchSelectQueryCoordinatorTest {
         "                          `p_container`   CHAR(10), " +
         "                          `p_retailprice` DECIMAL(15,2) , " +
         "                          `p_comment`     VARCHAR(23) , " +
-        "                          `p_dummy` varchar(10))");
-    stmt.execute("CREATE TABLE  IF NOT EXISTS `test`.`supplier` ( `s_suppkey`     INT , " +
+        "                          `p_dummy` varchar(10), PRIMARY KEY (`p_partkey`))", MYSQL_DATABASE));
+    stmt.execute(String.format("CREATE TABLE  IF NOT EXISTS `%s`.`supplier` ( `s_suppkey`     INT , " +
         "                             `s_name`        CHAR(25) , " +
         "                             `s_address`     VARCHAR(40) , " +
         "                             `s_nationkey`   INT , " +
         "                             `s_phone`       CHAR(15) , " +
         "                             `s_acctbal`     DECIMAL(15,2) , " +
         "                             `s_comment`     VARCHAR(101), " +
-        "                             `s_dummy` varchar(10))");
-    stmt.execute("CREATE TABLE  IF NOT EXISTS `test`.`partsupp` ( `ps_partkey`     INT , " +
+        "                             `s_dummy` varchar(10), PRIMARY KEY (`s_suppkey`))", MYSQL_DATABASE));
+    stmt.execute(String.format("CREATE TABLE  IF NOT EXISTS `%s`.`partsupp` ( `ps_partkey`     INT , " +
         "                             `ps_suppkey`     INT , " +
         "                             `ps_availqty`    INT , " +
         "                             `ps_supplycost`  DECIMAL(15,2)  , " +
         "                             `ps_comment`     VARCHAR(199), " +
-        "                             `ps_dummy` varchar(10))");
-    stmt.execute("CREATE TABLE  IF NOT EXISTS `test`.`customer` ( `c_custkey`     INT , " +
+        "                             `ps_dummy` varchar(10), PRIMARY KEY (`ps_partkey`))", MYSQL_DATABASE));
+    stmt.execute(String.format("CREATE TABLE  IF NOT EXISTS `%s`.`customer` ( `c_custkey`     INT , " +
         "                             `c_name`        VARCHAR(25) , " +
         "                             `c_address`     VARCHAR(40) , " +
         "                             `c_nationkey`   INT , " +
@@ -116,8 +122,8 @@ public class TpchSelectQueryCoordinatorTest {
         "                             `c_acctbal`     DECIMAL(15,2)   , " +
         "                             `c_mktsegment`  CHAR(10) , " +
         "                             `c_comment`     VARCHAR(117), " +
-        "                             `c_dummy` varchar(10))");
-    stmt.execute("CREATE TABLE IF NOT EXISTS  `test`.`orders`  ( `o_orderkey`       INT , " +
+        "                             `c_dummy` varchar(10), PRIMARY KEY (`c_custkey`))", MYSQL_DATABASE));
+    stmt.execute(String.format("CREATE TABLE IF NOT EXISTS  `%s`.`orders`  ( `o_orderkey`       INT , " +
         "                           `o_custkey`        INT , " +
         "                           `o_orderstatus`    CHAR(1) , " +
         "                           `o_totalprice`     DECIMAL(15,2) , " +
@@ -126,8 +132,8 @@ public class TpchSelectQueryCoordinatorTest {
         "                           `o_clerk`          CHAR(15) , " +
         "                           `o_shippriority`   INT , " +
         "                           `o_comment`        VARCHAR(79), " +
-        "                           `o_dummy` varchar(10))");
-    stmt.execute("CREATE TABLE  IF NOT EXISTS `test`.`lineitem` ( `l_orderkey`    INT , " +
+        "                           `o_dummy` varchar(10), PRIMARY KEY (`o_orderkey`))", MYSQL_DATABASE));
+    stmt.execute(String.format("CREATE TABLE IF NOT EXISTS `%s`.`lineitem` ( `l_orderkey`    INT , " +
         "                             `l_partkey`     INT , " +
         "                             `l_suppkey`     INT , " +
         "                             `l_linenumber`  INT , " +
@@ -143,52 +149,52 @@ public class TpchSelectQueryCoordinatorTest {
         "                             `l_shipinstruct` CHAR(25) , " +
         "                             `l_shipmode`     CHAR(10) , " +
         "                             `l_comment`      VARCHAR(44), " +
-        "                             `l_dummy` varchar(10))");
-    stmt.execute("LOAD DATA LOCAL INFILE 'src/test/resources/tpch_test_data/region.tbl' " +
-        "INTO TABLE `test`.`region` FIELDS TERMINATED BY '|'");
-    stmt.execute("LOAD DATA LOCAL INFILE 'src/test/resources/tpch_test_data/nation.tbl' " +
-        "INTO TABLE `test`.`nation` FIELDS TERMINATED BY '|'");
-    stmt.execute("LOAD DATA LOCAL INFILE 'src/test/resources/tpch_test_data/supplier.tbl' " +
-        "INTO TABLE `test`.`supplier` FIELDS TERMINATED BY '|'");
-    stmt.execute("LOAD DATA LOCAL INFILE 'src/test/resources/tpch_test_data/customer.tbl' " +
-        "INTO TABLE `test`.`customer` FIELDS TERMINATED BY '|'");
-    stmt.execute("LOAD DATA LOCAL INFILE 'src/test/resources/tpch_test_data/part.tbl' " +
-        "INTO TABLE `test`.`part` FIELDS TERMINATED BY '|'");
-    stmt.execute("LOAD DATA LOCAL INFILE 'src/test/resources/tpch_test_data/partsupp.tbl' " +
-        "INTO TABLE `test`.`partsupp` FIELDS TERMINATED BY '|'");
-    stmt.execute("LOAD DATA LOCAL INFILE 'src/test/resources/tpch_test_data/lineitem.tbl' " +
-        "INTO TABLE `test`.`lineitem` FIELDS TERMINATED BY '|'");
-    stmt.execute("LOAD DATA LOCAL INFILE 'src/test/resources/tpch_test_data/orders.tbl' " +
-        "INTO TABLE `test`.`orders` FIELDS TERMINATED BY '|'");
+        "                             `l_dummy` varchar(10))", MYSQL_DATABASE));
+    stmt.execute(String.format("LOAD DATA LOCAL INFILE 'src/test/resources/tpch_test_data/region.tbl' " +
+        "INTO TABLE `%s`.`region` FIELDS TERMINATED BY '|'", MYSQL_DATABASE));
+    stmt.execute(String.format("LOAD DATA LOCAL INFILE 'src/test/resources/tpch_test_data/nation.tbl' " +
+        "INTO TABLE `%s`.`nation` FIELDS TERMINATED BY '|'", MYSQL_DATABASE));
+    stmt.execute(String.format("LOAD DATA LOCAL INFILE 'src/test/resources/tpch_test_data/supplier.tbl' " +
+        "INTO TABLE `%s`.`supplier` FIELDS TERMINATED BY '|'", MYSQL_DATABASE));
+    stmt.execute(String.format("LOAD DATA LOCAL INFILE 'src/test/resources/tpch_test_data/customer.tbl' " +
+        "INTO TABLE `%s`.`customer` FIELDS TERMINATED BY '|'", MYSQL_DATABASE));
+    stmt.execute(String.format("LOAD DATA LOCAL INFILE 'src/test/resources/tpch_test_data/part.tbl' " +
+        "INTO TABLE `%s`.`part` FIELDS TERMINATED BY '|'", MYSQL_DATABASE));
+    stmt.execute(String.format("LOAD DATA LOCAL INFILE 'src/test/resources/tpch_test_data/partsupp.tbl' " +
+        "INTO TABLE `%s`.`partsupp` FIELDS TERMINATED BY '|'", MYSQL_DATABASE));
+    stmt.execute(String.format("LOAD DATA LOCAL INFILE 'src/test/resources/tpch_test_data/lineitem.tbl' " +
+        "INTO TABLE `%s`.`lineitem` FIELDS TERMINATED BY '|'", MYSQL_DATABASE));
+    stmt.execute(String.format("LOAD DATA LOCAL INFILE 'src/test/resources/tpch_test_data/orders.tbl' " +
+        "INTO TABLE `%s`.`orders` FIELDS TERMINATED BY '|'", MYSQL_DATABASE));
 
 
     // Create Scramble table
-    stmt.execute("DROP TABLE IF EXISTS `test`.`lineitem_scrambled`");
-    stmt.execute("DROP TABLE IF EXISTS `test`.`orders_scrambled`");
+    stmt.execute(String.format("DROP TABLE IF EXISTS `%s`.`lineitem_scrambled`", MYSQL_DATABASE));
+    stmt.execute(String.format("DROP TABLE IF EXISTS `%s`.`orders_scrambled`", MYSQL_DATABASE));
     
     ScramblingMethod method = new UniformScramblingMethod(blockSize);
     Map<String, String> options = new HashMap<>();
     options.put("tierColumnName", "verdictdbtier");
     options.put("blockColumnName", "verdictdbaggblock");
     ScramblingPlan plan = ScramblingPlan.create(
-        "test", "lineitem_scrambled",
-        "test", "lineitem",
+        MYSQL_DATABASE, "lineitem_scrambled",
+        MYSQL_DATABASE, "lineitem",
         method, options);
-    DbmsConnection mysqlConn = new JdbcDbmsConnection(conn, new MysqlSyntax());
+    DbmsConnection mysqlConn = new JdbcConnection(conn, new MysqlSyntax());
     ExecutablePlanRunner.runTillEnd(mysqlConn, plan);
     ScramblingMethod method2 = new UniformScramblingMethod(blockSize);
     Map<String, String> options2 = new HashMap<>();
     options2.put("tierColumnName", "verdictdbtier");
     options2.put("blockColumnName", "verdictdbaggblock");
     ScramblingPlan plan2 = ScramblingPlan.create(
-        "test", "orders_scrambled",
-        "test", "orders",
+        MYSQL_DATABASE, "orders_scrambled",
+        MYSQL_DATABASE, "orders",
         method2, options2);
     ExecutablePlanRunner.runTillEnd(mysqlConn, plan2);
 
     // Configure Sramble meta
     UniformScrambler scrambler =
-        new UniformScrambler("test", "lineitem", "test", "lineitem_scrambled", 10);
+        new UniformScrambler(MYSQL_DATABASE, "lineitem", MYSQL_DATABASE, "lineitem_scrambled", 10);
     ScrambleMeta tablemeta = scrambler.generateMeta();
     tablemeta.setNumberOfTiers(1);
     HashMap<Integer, List<Double>> distribution1 = new HashMap<>();
@@ -196,7 +202,7 @@ public class TpchSelectQueryCoordinatorTest {
     tablemeta.setCumulativeMassDistributionPerTier(distribution1);
     meta.insertScrambleMetaEntry(tablemeta);
     scrambler =
-        new UniformScrambler("test", "orders", "test", "orders_scrambled", 3);
+        new UniformScrambler(MYSQL_DATABASE, "orders", MYSQL_DATABASE, "orders_scrambled", 3);
     tablemeta = scrambler.generateMeta();
     tablemeta.setNumberOfTiers(1);
     distribution1 = new HashMap<>();
@@ -240,8 +246,8 @@ public class TpchSelectQueryCoordinatorTest {
 //    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcDbmsConnection(conn, new MysqlSyntax()));
     stmt.execute("create schema if not exists `verdictdb_temp`");
     DbmsConnection dbmsconn = new CachedDbmsConnection(
-        new JdbcDbmsConnection(conn, new MysqlSyntax()));
-    dbmsconn.setDefaultSchema("test");
+        new JdbcConnection(conn, new MysqlSyntax()));
+    dbmsconn.setDefaultSchema(MYSQL_DATABASE);
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     
     coordinator.setScrambleMetaSet(meta);
@@ -277,8 +283,7 @@ public class TpchSelectQueryCoordinatorTest {
       }
     }
     assertEquals(10, cnt);
-    stmt.execute("drop schema if exists `verdictdb_temp`;");
-    System.out.println("test case 1 finished");
+//    System.out.println("test case 1 finished");
   }
 
   @Test
@@ -309,8 +314,8 @@ public class TpchSelectQueryCoordinatorTest {
 //    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcDbmsConnection(conn, new MysqlSyntax()));
     stmt.execute("create schema if not exists `verdictdb_temp`");
     DbmsConnection dbmsconn = new CachedDbmsConnection(
-        new JdbcDbmsConnection(conn, new MysqlSyntax()));
-    dbmsconn.setDefaultSchema("test");
+        new JdbcConnection(conn, new MysqlSyntax()));
+    dbmsconn.setDefaultSchema(MYSQL_DATABASE);
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     
     coordinator.setScrambleMetaSet(meta);
@@ -340,8 +345,7 @@ public class TpchSelectQueryCoordinatorTest {
       }
     }
     assertEquals(12, cnt);
-    stmt.execute("drop schema if exists `verdictdb_temp`;");
-    System.out.println("test case 3 finished");
+//    System.out.println("test case 3 finished");
   }
 
   @Test
@@ -363,8 +367,8 @@ public class TpchSelectQueryCoordinatorTest {
     stmt.execute("create schema if not exists `verdictdb_temp`;");
 //    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcDbmsConnection(conn, new MysqlSyntax()));
     DbmsConnection dbmsconn = new CachedDbmsConnection(
-        new JdbcDbmsConnection(conn, new MysqlSyntax()));
-    dbmsconn.setDefaultSchema("test");
+        new JdbcConnection(conn, new MysqlSyntax()));
+    dbmsconn.setDefaultSchema(MYSQL_DATABASE);
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     
     coordinator.setScrambleMetaSet(meta);
@@ -392,8 +396,7 @@ public class TpchSelectQueryCoordinatorTest {
       }
     }
     assertEquals(12, cnt);
-    stmt.execute("drop schema if exists `verdictdb_temp`;");
-    System.out.println("test case 4 finished");
+//    System.out.println("test case 4 finished");
   }
 
   @Test
@@ -425,8 +428,8 @@ public class TpchSelectQueryCoordinatorTest {
     stmt.execute("create schema if not exists `verdictdb_temp`;");
 //    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcDbmsConnection(conn, new MysqlSyntax()));
     DbmsConnection dbmsconn = new CachedDbmsConnection(
-        new JdbcDbmsConnection(conn, new MysqlSyntax()));
-    dbmsconn.setDefaultSchema("test");
+        new JdbcConnection(conn, new MysqlSyntax()));
+    dbmsconn.setDefaultSchema(MYSQL_DATABASE);
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     
     coordinator.setScrambleMetaSet(meta);
@@ -454,8 +457,7 @@ public class TpchSelectQueryCoordinatorTest {
       }
     }
     assertEquals(12, cnt);
-    stmt.execute("drop schema if exists `verdictdb_temp`;");
-    System.out.println("test case 5 finished");
+//    System.out.println("test case 5 finished");
   }
 
   @Test
@@ -473,8 +475,8 @@ public class TpchSelectQueryCoordinatorTest {
     stmt.execute("create schema if not exists `verdictdb_temp`;");
 //    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcDbmsConnection(conn, new MysqlSyntax()));
     DbmsConnection dbmsconn = new CachedDbmsConnection(
-        new JdbcDbmsConnection(conn, new MysqlSyntax()));
-    dbmsconn.setDefaultSchema("test");
+        new JdbcConnection(conn, new MysqlSyntax()));
+    dbmsconn.setDefaultSchema(MYSQL_DATABASE);
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     coordinator.setScrambleMetaSet(meta);
 //    coordinator.setDefaultSchema("test");
@@ -500,8 +502,7 @@ public class TpchSelectQueryCoordinatorTest {
       }
     }
     assertEquals(10, cnt);
-    stmt.execute("drop schema if exists `verdictdb_temp`;");
-    System.out.println("test case 6 finished");
+//    System.out.println("test case 6 finished");
   }
 
   @Test
@@ -549,8 +550,8 @@ public class TpchSelectQueryCoordinatorTest {
     stmt.execute("create schema if not exists `verdictdb_temp`;");
 //    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcDbmsConnection(conn, new MysqlSyntax()));
     DbmsConnection dbmsconn = new CachedDbmsConnection(
-        new JdbcDbmsConnection(conn, new MysqlSyntax()));
-    dbmsconn.setDefaultSchema("test");
+        new JdbcConnection(conn, new MysqlSyntax()));
+    dbmsconn.setDefaultSchema(MYSQL_DATABASE);
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     coordinator.setScrambleMetaSet(meta);
 //    coordinator.setDefaultSchema("test");
@@ -579,8 +580,7 @@ public class TpchSelectQueryCoordinatorTest {
       }
     }
     assertEquals(12, cnt);
-    stmt.execute("drop schema if exists `verdictdb_temp`;");
-    System.out.println("test case 7 finished");
+//    System.out.println("test case 7 finished");
   }
 
   // Very slow for some reason
@@ -654,8 +654,8 @@ public class TpchSelectQueryCoordinatorTest {
     stmt.execute("create schema if not exists `verdictdb_temp`;");
 //    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcDbmsConnection(conn, new MysqlSyntax()));
     DbmsConnection dbmsconn = new CachedDbmsConnection(
-        new JdbcDbmsConnection(conn, new MysqlSyntax()));
-    dbmsconn.setDefaultSchema("test");
+        new JdbcConnection(conn, new MysqlSyntax()));
+    dbmsconn.setDefaultSchema(MYSQL_DATABASE);
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     coordinator.setScrambleMetaSet(meta);
 //    coordinator.setDefaultSchema("test");
@@ -672,6 +672,7 @@ public class TpchSelectQueryCoordinatorTest {
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
       cnt++;
+//      System.out.println("test case 8 processing: " + cnt);
       if (cnt == 12) {
         ResultSet rs = stmt.executeQuery(stdQuery);
         while (rs.next()) {
@@ -683,8 +684,7 @@ public class TpchSelectQueryCoordinatorTest {
       }
     }
     assertEquals(12, cnt);
-    stmt.execute("drop schema if exists `verdictdb_temp`;");
-    System.out.println("test case 8 finished");
+//    System.out.println("test case 8 finished");
   }
 
   // Very slow as well
@@ -751,8 +751,8 @@ public class TpchSelectQueryCoordinatorTest {
     stmt.execute("create schema if not exists `verdictdb_temp`;");
 //    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcDbmsConnection(conn, new MysqlSyntax()));
     DbmsConnection dbmsconn = new CachedDbmsConnection(
-        new JdbcDbmsConnection(conn, new MysqlSyntax()));
-    dbmsconn.setDefaultSchema("test");
+        new JdbcConnection(conn, new MysqlSyntax()));
+    dbmsconn.setDefaultSchema(MYSQL_DATABASE);
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     coordinator.setScrambleMetaSet(meta);
 //    coordinator.setDefaultSchema("test");
@@ -769,6 +769,7 @@ public class TpchSelectQueryCoordinatorTest {
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
       cnt++;
+//      System.out.println("test case 9 processing: " + cnt);
       if (cnt == 12) {
         ResultSet rs = stmt.executeQuery(stdQuery);
         while (rs.next()) {
@@ -780,8 +781,7 @@ public class TpchSelectQueryCoordinatorTest {
       }
     }
     assertEquals(12, cnt);
-    stmt.execute("drop schema if exists `verdictdb_temp`;");
-    System.out.println("test case 9 finished");
+//    System.out.println("test case 9 finished");
   }
 
   @Test
@@ -820,8 +820,8 @@ public class TpchSelectQueryCoordinatorTest {
     stmt.execute("create schema if not exists `verdictdb_temp`;");
 //    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcDbmsConnection(conn, new MysqlSyntax()));
     DbmsConnection dbmsconn = new CachedDbmsConnection(
-        new JdbcDbmsConnection(conn, new MysqlSyntax()));
-    dbmsconn.setDefaultSchema("test");
+        new JdbcConnection(conn, new MysqlSyntax()));
+    dbmsconn.setDefaultSchema(MYSQL_DATABASE);
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     coordinator.setScrambleMetaSet(meta);
 //    coordinator.setDefaultSchema("test");
@@ -849,8 +849,7 @@ public class TpchSelectQueryCoordinatorTest {
       }
     }
     assertEquals(12, cnt);
-    stmt.execute("drop schema if exists `verdictdb_temp`;");
-    System.out.println("test case 10 finished");
+//    System.out.println("test case 10 finished");
   }
 
   @Test
@@ -885,8 +884,8 @@ public class TpchSelectQueryCoordinatorTest {
     stmt.execute("create schema if not exists `verdictdb_temp`;");
 //    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcDbmsConnection(conn, new MysqlSyntax()));
     DbmsConnection dbmsconn = new CachedDbmsConnection(
-        new JdbcDbmsConnection(conn, new MysqlSyntax()));
-    dbmsconn.setDefaultSchema("test");
+        new JdbcConnection(conn, new MysqlSyntax()));
+    dbmsconn.setDefaultSchema(MYSQL_DATABASE);
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     coordinator.setScrambleMetaSet(meta);
 //    coordinator.setDefaultSchema("test");
@@ -914,8 +913,7 @@ public class TpchSelectQueryCoordinatorTest {
       }
     }
     assertEquals(12, cnt);
-    stmt.execute("drop schema if exists `verdictdb_temp`;");
-    System.out.println("test case 12 finished");
+//    System.out.println("test case 12 finished");
   }
 
   @Test
@@ -933,8 +931,8 @@ public class TpchSelectQueryCoordinatorTest {
     stmt.execute("create schema if not exists `verdictdb_temp`;");
 //    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcDbmsConnection(conn, new MysqlSyntax()));
     DbmsConnection dbmsconn = new CachedDbmsConnection(
-        new JdbcDbmsConnection(conn, new MysqlSyntax()));
-    dbmsconn.setDefaultSchema("test");
+        new JdbcConnection(conn, new MysqlSyntax()));
+    dbmsconn.setDefaultSchema(MYSQL_DATABASE);
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     coordinator.setScrambleMetaSet(meta);
 //    coordinator.setDefaultSchema("test");
@@ -961,8 +959,7 @@ public class TpchSelectQueryCoordinatorTest {
       }
     }
     assertEquals(3, cnt);
-    stmt.execute("drop schema if exists `verdictdb_temp`;");
-    System.out.println("test case 13 finished");
+//    System.out.println("test case 13 finished");
   }
 
   @Test
@@ -983,8 +980,8 @@ public class TpchSelectQueryCoordinatorTest {
     stmt.execute("create schema if not exists `verdictdb_temp`;");
 //    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcDbmsConnection(conn, new MysqlSyntax()));
     DbmsConnection dbmsconn = new CachedDbmsConnection(
-        new JdbcDbmsConnection(conn, new MysqlSyntax()));
-    dbmsconn.setDefaultSchema("test");
+        new JdbcConnection(conn, new MysqlSyntax()));
+    dbmsconn.setDefaultSchema(MYSQL_DATABASE);
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     coordinator.setScrambleMetaSet(meta);
 //    coordinator.setDefaultSchema("test");
@@ -1011,8 +1008,7 @@ public class TpchSelectQueryCoordinatorTest {
       }
     }
     assertEquals(10, cnt);
-    stmt.execute("drop schema if exists `verdictdb_temp`;");
-    System.out.println("test case 14 finished");
+//    System.out.println("test case 14 finished");
   }
 
   @Test
@@ -1032,8 +1028,8 @@ public class TpchSelectQueryCoordinatorTest {
     stmt.execute("create schema if not exists `verdictdb_temp`;");
 //    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcDbmsConnection(conn, new MysqlSyntax()));
     DbmsConnection dbmsconn = new CachedDbmsConnection(
-        new JdbcDbmsConnection(conn, new MysqlSyntax()));
-    dbmsconn.setDefaultSchema("test");
+        new JdbcConnection(conn, new MysqlSyntax()));
+    dbmsconn.setDefaultSchema(MYSQL_DATABASE);
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     coordinator.setScrambleMetaSet(meta);
 //    coordinator.setDefaultSchema("test");
@@ -1060,8 +1056,7 @@ public class TpchSelectQueryCoordinatorTest {
       }
     }
     assertEquals(10, cnt);
-    stmt.execute("drop schema if exists `verdictdb_temp`;");
-    System.out.println("test case 15 finished");
+//    System.out.println("test case 15 finished");
   }
 
   @Test
@@ -1095,8 +1090,8 @@ public class TpchSelectQueryCoordinatorTest {
     stmt.execute("create schema if not exists `verdictdb_temp`;");
 //    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcDbmsConnection(conn, new MysqlSyntax()));
     DbmsConnection dbmsconn = new CachedDbmsConnection(
-        new JdbcDbmsConnection(conn, new MysqlSyntax()));
-    dbmsconn.setDefaultSchema("test");
+        new JdbcConnection(conn, new MysqlSyntax()));
+    dbmsconn.setDefaultSchema(MYSQL_DATABASE);
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     coordinator.setScrambleMetaSet(meta);
 //    coordinator.setDefaultSchema("test");
@@ -1122,8 +1117,7 @@ public class TpchSelectQueryCoordinatorTest {
       }
     }
     assertEquals(10, cnt);
-    stmt.execute("drop schema if exists `verdictdb_temp`;");
-    System.out.println("test case 17 finished");
+//    System.out.println("test case 17 finished");
   }
 
   @Test
@@ -1165,8 +1159,8 @@ public class TpchSelectQueryCoordinatorTest {
     stmt.execute("create schema if not exists `verdictdb_temp`;");
 //    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcDbmsConnection(conn, new MysqlSyntax()));
     DbmsConnection dbmsconn = new CachedDbmsConnection(
-        new JdbcDbmsConnection(conn, new MysqlSyntax()));
-    dbmsconn.setDefaultSchema("test");
+        new JdbcConnection(conn, new MysqlSyntax()));
+    dbmsconn.setDefaultSchema(MYSQL_DATABASE);
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     coordinator.setScrambleMetaSet(meta);
 //    coordinator.setDefaultSchema("test");
@@ -1197,8 +1191,7 @@ public class TpchSelectQueryCoordinatorTest {
       }
     }
     assertEquals(12, cnt);
-    stmt.execute("drop schema if exists `verdictdb_temp`;");
-    System.out.println("test case 18 finished");
+//    System.out.println("test case 18 finished");
   }
 
   @Test
@@ -1238,8 +1231,8 @@ public class TpchSelectQueryCoordinatorTest {
     stmt.execute("create schema if not exists `verdictdb_temp`;");
 //    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcDbmsConnection(conn, new MysqlSyntax()));
     DbmsConnection dbmsconn = new CachedDbmsConnection(
-        new JdbcDbmsConnection(conn, new MysqlSyntax()));
-    dbmsconn.setDefaultSchema("test");
+        new JdbcConnection(conn, new MysqlSyntax()));
+    dbmsconn.setDefaultSchema(MYSQL_DATABASE);
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     coordinator.setScrambleMetaSet(meta);
 //    coordinator.setDefaultSchema("test");
@@ -1265,8 +1258,7 @@ public class TpchSelectQueryCoordinatorTest {
       }
     }
     assertEquals(10, cnt);
-    stmt.execute("drop schema if exists `verdictdb_temp`;");
-    System.out.println("test case 19 finished");
+//    System.out.println("test case 19 finished");
   }
 
   @Test
@@ -1297,8 +1289,8 @@ public class TpchSelectQueryCoordinatorTest {
     stmt.execute("create schema if not exists `verdictdb_temp`;");
 //    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcDbmsConnection(conn, new MysqlSyntax()));
     DbmsConnection dbmsconn = new CachedDbmsConnection(
-        new JdbcDbmsConnection(conn, new MysqlSyntax()));
-    dbmsconn.setDefaultSchema("test");
+        new JdbcConnection(conn, new MysqlSyntax()));
+    dbmsconn.setDefaultSchema(MYSQL_DATABASE);
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     coordinator.setScrambleMetaSet(meta);
 //    coordinator.setDefaultSchema("test");
@@ -1325,8 +1317,7 @@ public class TpchSelectQueryCoordinatorTest {
       }
     }
     assertEquals(10, cnt);
-    stmt.execute("drop schema if exists `verdictdb_temp`;");
-    System.out.println("test case 20 finished");
+//    System.out.println("test case 20 finished");
   }
 
 
@@ -1373,8 +1364,8 @@ public class TpchSelectQueryCoordinatorTest {
     stmt.execute("create schema if not exists `verdictdb_temp`;");
 //    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcDbmsConnection(conn, new MysqlSyntax()));
     DbmsConnection dbmsconn = new CachedDbmsConnection(
-        new JdbcDbmsConnection(conn, new MysqlSyntax()));
-    dbmsconn.setDefaultSchema("test");
+        new JdbcConnection(conn, new MysqlSyntax()));
+    dbmsconn.setDefaultSchema(MYSQL_DATABASE);
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     coordinator.setScrambleMetaSet(meta);
 //    coordinator.setDefaultSchema("test");
@@ -1391,6 +1382,7 @@ public class TpchSelectQueryCoordinatorTest {
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
       cnt++;
+      System.out.println("test case 21 processing: " + cnt);
       if (cnt == 12) {
         ResultSet rs = stmt.executeQuery(stdQuery);
         while (rs.next()) {
@@ -1401,21 +1393,21 @@ public class TpchSelectQueryCoordinatorTest {
       }
     }
     assertEquals(12, cnt);
-    stmt.execute("drop schema if exists `verdictdb_temp`;");
-    System.out.println("test case 21 finished");
+//    System.out.println("test case 21 finished");
   }
 
   @AfterClass
   public static void tearDown() throws SQLException {
-    stmt.execute("DROP TABLE IF EXISTS `test`.`region`");
-    stmt.execute("DROP TABLE IF EXISTS `test`.`nation`");
-    stmt.execute("DROP TABLE IF EXISTS `test`.`lineitem`");
-    stmt.execute("DROP TABLE IF EXISTS `test`.`customer`");
-    stmt.execute("DROP TABLE IF EXISTS `test`.`supplier`");
-    stmt.execute("DROP TABLE IF EXISTS `test`.`partsupp`");
-    stmt.execute("DROP TABLE IF EXISTS `test`.`part`");
-    stmt.execute("DROP TABLE IF EXISTS `test`.`orders`");
-    stmt.execute("DROP TABLE IF EXISTS `test`.`lineitem_scrambled`");
-    stmt.execute("DROP TABLE IF EXISTS `test`.`orders_scrambled`");
+    stmt.execute(String.format("DROP SCHEMA IF EXISTS `%s`", MYSQL_DATABASE));
+//    stmt.execute("DROP TABLE IF EXISTS `test`.`region`");
+//    stmt.execute("DROP TABLE IF EXISTS `test`.`nation`");
+//    stmt.execute("DROP TABLE IF EXISTS `test`.`lineitem`");
+//    stmt.execute("DROP TABLE IF EXISTS `test`.`customer`");
+//    stmt.execute("DROP TABLE IF EXISTS `test`.`supplier`");
+//    stmt.execute("DROP TABLE IF EXISTS `test`.`partsupp`");
+//    stmt.execute("DROP TABLE IF EXISTS `test`.`part`");
+//    stmt.execute("DROP TABLE IF EXISTS `test`.`orders`");
+//    stmt.execute("DROP TABLE IF EXISTS `test`.`lineitem_scrambled`");
+//    stmt.execute("DROP TABLE IF EXISTS `test`.`orders_scrambled`");
   }
 }
