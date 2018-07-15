@@ -1,13 +1,9 @@
 package org.verdictdb.commons;
 
-import java.io.FileReader;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.sql.Statement;
 
-import org.postgresql.copy.CopyManager;
-import org.postgresql.core.BaseConnection;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.exception.VerdictDBDbmsException;

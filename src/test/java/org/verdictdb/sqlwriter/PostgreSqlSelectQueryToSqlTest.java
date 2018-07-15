@@ -1,13 +1,6 @@
 package org.verdictdb.sqlwriter;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.verdictdb.core.sqlobject.AbstractRelation;
-import org.verdictdb.exception.VerdictDBException;
-import org.verdictdb.sqlreader.NonValidatingSQLParser;
-import org.verdictdb.sqlsyntax.MysqlSyntax;
-import org.verdictdb.sqlsyntax.PostgresqlSyntax;
+import static org.junit.Assert.assertEquals;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -17,7 +10,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.verdictdb.core.sqlobject.AbstractRelation;
+import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.sqlreader.NonValidatingSQLParser;
+import org.verdictdb.sqlsyntax.PostgresqlSyntax;
 
 public class PostgreSqlSelectQueryToSqlTest {
 
