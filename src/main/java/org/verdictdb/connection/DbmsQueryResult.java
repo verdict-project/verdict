@@ -1,7 +1,5 @@
 package org.verdictdb.connection;
 
-import com.cloudera.impala.streams.resultset.AsciiStream;
-
 import java.io.InputStream;
 import java.io.Serializable;
 import java.math.BigDecimal;
