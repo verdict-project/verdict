@@ -17,7 +17,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.DbmsQueryResult;
-import org.verdictdb.connection.JdbcDbmsConnection;
+import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.core.execplan.ExecutionInfoToken;
 import org.verdictdb.core.sqlobject.SqlConvertible;
 import org.verdictdb.exception.VerdictDBException;
@@ -87,7 +87,7 @@ public class UniformScramblingNodeTest {
 
     // query result
     String sql = "select count(*) as `verdictdbtotalcount` from `oldschema`.`oldtable` as t";
-    DbmsConnection conn = JdbcDbmsConnection.create(mysqlConn);
+    DbmsConnection conn = JdbcConnection.create(mysqlConn);
     DbmsQueryResult queryResult = conn.execute(sql);
 
     ScramblingNode node = ScramblingNode.create(

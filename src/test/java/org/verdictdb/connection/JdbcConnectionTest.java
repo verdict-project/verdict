@@ -121,7 +121,7 @@ public class JdbcConnectionTest {
     contents.add(Arrays.<Object>asList(2, "Sonia"));
     contents.add(Arrays.<Object>asList(3, "Asha"));
 
-    JdbcDbmsConnection jdbc = new JdbcDbmsConnection(h2Conn, new HiveSyntax());
+    JdbcConnection jdbc = new JdbcConnection(h2Conn, new HiveSyntax());
 
     jdbc.execute("CREATE TABLE PERSON(id int, name varchar(255))");
     for (List<Object> row : contents) {
@@ -133,13 +133,13 @@ public class JdbcConnectionTest {
 
   @Test
   public void testPostgresMetaData() throws VerdictDBDbmsException {
-    JdbcDbmsConnection jdbc = new JdbcDbmsConnection(postgresConn, new PostgresqlSyntax());
+    JdbcConnection jdbc = new JdbcConnection(postgresConn, new PostgresqlSyntax());
     System.out.println(jdbc.getColumns("public", "people"));
   }
 
   @Test
   public void testMySqlShowSchemas() throws VerdictDBDbmsException {
-    JdbcDbmsConnection jdbc = new JdbcDbmsConnection(mysqlConn, new MysqlSyntax());
+    JdbcConnection jdbc = new JdbcConnection(mysqlConn, new MysqlSyntax());
     System.out.println(jdbc.getSchemas());
   }
 

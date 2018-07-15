@@ -11,7 +11,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.verdictdb.connection.CachedDbmsConnection;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.DbmsQueryResult;
-import org.verdictdb.connection.JdbcDbmsConnection;
+import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.core.resulthandler.ExecutionResultReader;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.execution.ExecutionContext;
@@ -39,7 +39,7 @@ public class VerdictContext {
   }
 
   static public VerdictContext fromJdbcConnection(Connection jdbcConn) throws VerdictDBDbmsException {
-    DbmsConnection conn = JdbcDbmsConnection.create(jdbcConn);
+    DbmsConnection conn = JdbcConnection.create(jdbcConn);
     return new VerdictContext(conn);
   }
 
