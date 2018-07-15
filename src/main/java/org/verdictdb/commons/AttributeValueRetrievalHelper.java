@@ -10,6 +10,7 @@ import java.util.Map;
 
 import org.verdictdb.connection.TypeCasting;
 import org.verdictdb.exception.VerdictDBTypeException;
+import org.verdictdb.jdbc41.VerdictJdbcArray;
 
 import javax.sql.rowset.serial.SerialBlob;
 
@@ -384,7 +385,8 @@ public abstract class AttributeValueRetrievalHelper {
 
   public Array getArray(int index) {
     Object value = getValue(index);
-    return (Array) value;
+    VerdictJdbcArray array = new VerdictJdbcArray((Object[]) value);
+    return array;
   }
 
   public Array getArray(String label) {

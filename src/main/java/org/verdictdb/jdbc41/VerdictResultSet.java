@@ -408,7 +408,7 @@ public class VerdictResultSet implements ResultSet {
   public InputStream getBinaryStream(int columnIndex) throws SQLException {
     checkIndex(columnIndex);
     
-    return getBinaryStream(columnIndex-1);
+    return queryResult.getBinaryStream(columnIndex-1);
   }
   
   String standardizedLabel(String label) {
