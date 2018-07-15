@@ -16,8 +16,8 @@ import java.util.Map;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
-import org.verdictdb.core.connection.DbmsQueryResult;
-import org.verdictdb.core.execution.ExecutionInfoToken;
+import org.verdictdb.connection.DbmsQueryResult;
+import org.verdictdb.core.execplan.ExecutionInfoToken;
 import org.verdictdb.core.querying.ExecutableNodeBase;
 import org.verdictdb.core.querying.IdCreator;
 import org.verdictdb.core.querying.ProjectionNode;
@@ -120,7 +120,7 @@ public class AsyncAggExecutionNode extends ProjectionNode {
       // Substitute the scale factor
       Double s = (Double) (scaleFactor.values().toArray())[0];
       for (ColumnOp col : aggColumnsAndQuery.getLeft()) {
-        col.setOperand(0, ConstantColumn.valueOf(s));
+        col.setOperand(0, ConstantColumn.valueOf(String.format("%.16f",s)));
       }
     }
     // multiple tiers case
@@ -134,7 +134,7 @@ public class AsyncAggExecutionNode extends ProjectionNode {
           UnnamedColumn condition = generateCaseCondition(entry.getKey());
           operands.add(condition);
           ColumnOp multiply = new ColumnOp("multiply",
-              Arrays.asList(ConstantColumn.valueOf(entry.getValue()),
+              Arrays.asList(ConstantColumn.valueOf(String.format("%.16f",entry.getValue())),
                   col.getOperand(1)));
           operands.add(multiply);
         }

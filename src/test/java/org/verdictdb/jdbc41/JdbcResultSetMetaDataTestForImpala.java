@@ -10,15 +10,13 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
-import java.util.List;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.verdictdb.core.connection.DbmsConnection;
-import org.verdictdb.core.connection.DbmsQueryResult;
-import org.verdictdb.core.connection.JdbcConnection;
+import org.verdictdb.connection.DbmsConnection;
+import org.verdictdb.connection.DbmsQueryResult;
+import org.verdictdb.connection.JdbcDbmsConnection;
 import org.verdictdb.exception.VerdictDBDbmsException;
 
 /**
@@ -61,7 +59,7 @@ public class JdbcResultSetMetaDataTestForImpala {
     String connectionString =
         String.format("jdbc:impala://%s:21050/%s", IMPALA_HOST, IMPALA_DATABASE);
     conn = DriverManager.getConnection(connectionString, IMPALA_UESR, IMPALA_PASSWORD);
-    dbmsConn = JdbcConnection.create(conn);
+    dbmsConn = JdbcDbmsConnection.create(conn);
 
     stmt = conn.createStatement();
     stmt.execute(String.format("DROP TABLE IF EXISTS `%s`", TABLE_NAME));
@@ -134,7 +132,7 @@ public class JdbcResultSetMetaDataTestForImpala {
     ResultSetMetaData expectedMeta = expectedResult.getMetaData();
     
     DbmsQueryResult internalResult = dbmsConn.execute(sql);
-    ResultSet ourResult = new JdbcResultSet(internalResult);
+    ResultSet ourResult = new VerdictResultSet(internalResult);
     ResultSetMetaData ourMetaData = ourResult.getMetaData();
     
     assertEquals(expectedMeta.getColumnCount(), ourMetaData.getColumnCount());

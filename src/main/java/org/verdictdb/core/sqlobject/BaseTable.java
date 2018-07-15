@@ -80,4 +80,10 @@ public class BaseTable extends AbstractRelation {
   public String toString() {
     return ToStringBuilder.reflectionToString(this, ToStringStyle.SHORT_PREFIX_STYLE);
   }
+
+  // Do not deepcopy Basetable
+  @Override
+  public BaseTable deepcopy() {
+    return this;
+  }
 }

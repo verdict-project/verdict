@@ -3,7 +3,7 @@ package org.verdictdb.core.scrambling;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.verdictdb.core.execution.MethodInvocationInformation;
+import org.verdictdb.core.execplan.MethodInvocationInformation;
 import org.verdictdb.core.querying.ExecutableNodeBase;
 
 public class PartitionMetadataRetrievalNode extends ExecutableNodeBase {

@@ -1,22 +1,40 @@
 package org.verdictdb.core.scramblingquerying;
 
 import static java.sql.Types.BIGINT;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.verdictdb.core.connection.DbmsConnection;
-import org.verdictdb.core.connection.DbmsQueryResult;
-import org.verdictdb.core.connection.JdbcConnection;
-import org.verdictdb.core.connection.StaticMetaData;
-import org.verdictdb.core.execution.ExecutablePlanRunner;
+import org.verdictdb.connection.DbmsConnection;
+import org.verdictdb.connection.DbmsQueryResult;
+import org.verdictdb.connection.JdbcDbmsConnection;
+import org.verdictdb.connection.StaticMetaData;
+import org.verdictdb.core.execplan.ExecutablePlanRunner;
 import org.verdictdb.core.querying.QueryExecutionPlan;
+import org.verdictdb.core.querying.QueryExecutionPlanSimplifier;
 import org.verdictdb.core.querying.ola.AsyncQueryExecutionPlan;
 import org.verdictdb.core.resulthandler.ExecutionResultReader;
-import org.verdictdb.core.scrambling.*;
+import org.verdictdb.core.scrambling.ScrambleMeta;
+import org.verdictdb.core.scrambling.ScrambleMetaSet;
+import org.verdictdb.core.scrambling.ScramblingMethod;
+import org.verdictdb.core.scrambling.ScramblingPlan;
+import org.verdictdb.core.scrambling.UniformScrambler;
+import org.verdictdb.core.scrambling.UniformScramblingMethod;
 import org.verdictdb.core.sqlobject.AbstractRelation;
 import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.exception.VerdictDBException;
@@ -24,9 +42,6 @@ import org.verdictdb.sqlreader.NonValidatingSQLParser;
 import org.verdictdb.sqlreader.RelationStandardizer;
 import org.verdictdb.sqlsyntax.MysqlSyntax;
 import org.verdictdb.sqlwriter.SelectQueryToSql;
-
-import java.sql.*;
-import java.util.*;
 
 public class MySqlTpchUniformScramblingQueryingTest {
 
@@ -167,7 +182,7 @@ public class MySqlTpchUniformScramblingQueryingTest {
         "test", "lineitem_scrambled",
         "test", "lineitem",
         method, options);
-    DbmsConnection mysqlConn = new JdbcConnection(conn, new MysqlSyntax());
+    DbmsConnection mysqlConn = new JdbcDbmsConnection(conn, new MysqlSyntax());
     ExecutablePlanRunner.runTillEnd(mysqlConn, plan);
     ScramblingMethod method2 = new UniformScramblingMethod(blockSize);
     Map<String, String> options2 = new HashMap<>();
@@ -297,7 +312,7 @@ public class MySqlTpchUniformScramblingQueryingTest {
     stmt.execute("DROP TABLE IF EXISTS `test`.`orders_scrambled`");
   }
 
- @Test
+  @Test
   public void testTpch1() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select " +
@@ -334,7 +349,7 @@ public class MySqlTpchUniformScramblingQueryingTest {
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
     stmt.execute("create schema if not exists `verdictdb_temp`;");
-    JdbcConnection jdbcConnection = new JdbcConnection(conn, new MysqlSyntax());
+    JdbcDbmsConnection jdbcConnection = new JdbcDbmsConnection(conn, new MysqlSyntax());
     ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(jdbcConnection, queryExecutionPlan);
     int cnt = 0;
     while (reader.hasNext()) {
@@ -388,7 +403,7 @@ public class MySqlTpchUniformScramblingQueryingTest {
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
     stmt.execute("create schema if not exists `verdictdb_temp`;");
-    JdbcConnection jdbcConnection = new JdbcConnection(conn, new MysqlSyntax());
+    JdbcDbmsConnection jdbcConnection = new JdbcDbmsConnection(conn, new MysqlSyntax());
     ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(jdbcConnection, queryExecutionPlan);
     int cnt = 0;
     while (reader.hasNext()) {
@@ -434,7 +449,7 @@ public class MySqlTpchUniformScramblingQueryingTest {
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
     stmt.execute("create schema if not exists `verdictdb_temp`;");
-    JdbcConnection jdbcConnection = new JdbcConnection(conn, new MysqlSyntax());
+    JdbcDbmsConnection jdbcConnection = new JdbcDbmsConnection(conn, new MysqlSyntax());
     ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(jdbcConnection, queryExecutionPlan);
     int cnt = 0;
     while (reader.hasNext()) {
@@ -490,7 +505,7 @@ public class MySqlTpchUniformScramblingQueryingTest {
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
     stmt.execute("create schema if not exists `verdictdb_temp`;");
-    JdbcConnection jdbcConnection = new JdbcConnection(conn, new MysqlSyntax());
+    JdbcDbmsConnection jdbcConnection = new JdbcDbmsConnection(conn, new MysqlSyntax());
     ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(jdbcConnection, queryExecutionPlan);
     int cnt = 0;
     while (reader.hasNext()) {
@@ -532,7 +547,7 @@ public class MySqlTpchUniformScramblingQueryingTest {
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
     stmt.execute("create schema if not exists `verdictdb_temp`;");
-    JdbcConnection jdbcConnection = new JdbcConnection(conn, new MysqlSyntax());
+    JdbcDbmsConnection jdbcConnection = new JdbcDbmsConnection(conn, new MysqlSyntax());
     ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(jdbcConnection, queryExecutionPlan);
     int cnt = 0;
     while (reader.hasNext()) {
@@ -604,7 +619,7 @@ public class MySqlTpchUniformScramblingQueryingTest {
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
     stmt.execute("create schema if not exists `verdictdb_temp`;");
-    JdbcConnection jdbcConnection = new JdbcConnection(conn, new MysqlSyntax());
+    JdbcDbmsConnection jdbcConnection = new JdbcDbmsConnection(conn, new MysqlSyntax());
     ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(jdbcConnection, queryExecutionPlan);
     int cnt = 0;
     while (reader.hasNext()) {
@@ -673,7 +688,7 @@ public class MySqlTpchUniformScramblingQueryingTest {
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
     stmt.execute("create schema if not exists `verdictdb_temp`;");
-    JdbcConnection jdbcConnection = new JdbcConnection(conn, new MysqlSyntax());
+    JdbcDbmsConnection jdbcConnection = new JdbcDbmsConnection(conn, new MysqlSyntax());
     ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(jdbcConnection, queryExecutionPlan);
     int cnt = 0;
     while (reader.hasNext()) {
@@ -737,7 +752,7 @@ public class MySqlTpchUniformScramblingQueryingTest {
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
     stmt.execute("create schema if not exists `verdictdb_temp`;");
-    JdbcConnection jdbcConnection = new JdbcConnection(conn, new MysqlSyntax());
+    JdbcDbmsConnection jdbcConnection = new JdbcDbmsConnection(conn, new MysqlSyntax());
     ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(jdbcConnection, queryExecutionPlan);
     int cnt = 0;
     while (reader.hasNext()) {
@@ -800,7 +815,7 @@ public class MySqlTpchUniformScramblingQueryingTest {
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
     stmt.execute("create schema if not exists `verdictdb_temp`;");
-    JdbcConnection jdbcConnection = new JdbcConnection(conn, new MysqlSyntax());
+    JdbcDbmsConnection jdbcConnection = new JdbcDbmsConnection(conn, new MysqlSyntax());
     ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(jdbcConnection, queryExecutionPlan);
     int cnt = 0;
     while (reader.hasNext()) {
@@ -859,7 +874,7 @@ public class MySqlTpchUniformScramblingQueryingTest {
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
     stmt.execute("create schema if not exists `verdictdb_temp`;");
-    JdbcConnection jdbcConnection = new JdbcConnection(conn, new MysqlSyntax());
+    JdbcDbmsConnection jdbcConnection = new JdbcDbmsConnection(conn, new MysqlSyntax());
     ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(jdbcConnection, queryExecutionPlan);
     int cnt = 0;
     while (reader.hasNext()) {
@@ -900,7 +915,7 @@ public class MySqlTpchUniformScramblingQueryingTest {
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
     stmt.execute("create schema if not exists `verdictdb_temp`;");
-    JdbcConnection jdbcConnection = new JdbcConnection(conn, new MysqlSyntax());
+    JdbcDbmsConnection jdbcConnection = new JdbcDbmsConnection(conn, new MysqlSyntax());
     ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(jdbcConnection, queryExecutionPlan);
     int cnt = 0;
     while (reader.hasNext()) {
@@ -945,7 +960,7 @@ public class MySqlTpchUniformScramblingQueryingTest {
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
     stmt.execute("create schema if not exists `verdictdb_temp`;");
-    JdbcConnection jdbcConnection = new JdbcConnection(conn, new MysqlSyntax());
+    JdbcDbmsConnection jdbcConnection = new JdbcDbmsConnection(conn, new MysqlSyntax());
     ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(jdbcConnection, queryExecutionPlan);
     int cnt = 0;
     while (reader.hasNext()) {
@@ -987,7 +1002,7 @@ public class MySqlTpchUniformScramblingQueryingTest {
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
     stmt.execute("create schema if not exists `verdictdb_temp`;");
-    JdbcConnection jdbcConnection = new JdbcConnection(conn, new MysqlSyntax());
+    JdbcDbmsConnection jdbcConnection = new JdbcDbmsConnection(conn, new MysqlSyntax());
     ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(jdbcConnection, queryExecutionPlan);
     int cnt = 0;
     while (reader.hasNext()) {
@@ -1045,7 +1060,7 @@ public class MySqlTpchUniformScramblingQueryingTest {
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
     stmt.execute("create schema if not exists `verdictdb_temp`;");
-    JdbcConnection jdbcConnection = new JdbcConnection(conn, new MysqlSyntax());
+    JdbcDbmsConnection jdbcConnection = new JdbcDbmsConnection(conn, new MysqlSyntax());
     ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(jdbcConnection, queryExecutionPlan);
     int cnt = 0;
     while (reader.hasNext()) {
@@ -1110,7 +1125,7 @@ public class MySqlTpchUniformScramblingQueryingTest {
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
     stmt.execute("create schema if not exists `verdictdb_temp`;");
-    JdbcConnection jdbcConnection = new JdbcConnection(conn, new MysqlSyntax());
+    JdbcDbmsConnection jdbcConnection = new JdbcDbmsConnection(conn, new MysqlSyntax());
     ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(jdbcConnection, queryExecutionPlan);
     int cnt = 0;
     while (reader.hasNext()) {
@@ -1174,7 +1189,7 @@ public class MySqlTpchUniformScramblingQueryingTest {
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
     stmt.execute("create schema if not exists `verdictdb_temp`;");
-    JdbcConnection jdbcConnection = new JdbcConnection(conn, new MysqlSyntax());
+    JdbcDbmsConnection jdbcConnection = new JdbcDbmsConnection(conn, new MysqlSyntax());
     ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(jdbcConnection, queryExecutionPlan);
     int cnt = 0;
     while (reader.hasNext()) {
@@ -1228,7 +1243,7 @@ public class MySqlTpchUniformScramblingQueryingTest {
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
     stmt.execute("create schema if not exists `verdictdb_temp`;");
-    JdbcConnection jdbcConnection = new JdbcConnection(conn, new MysqlSyntax());
+    JdbcDbmsConnection jdbcConnection = new JdbcDbmsConnection(conn, new MysqlSyntax());
     ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(jdbcConnection, queryExecutionPlan);
     int cnt = 0;
     while (reader.hasNext()) {
@@ -1258,7 +1273,7 @@ public class MySqlTpchUniformScramblingQueryingTest {
         "      from lineitem_scrambled\n" +
         "      where l_receiptdate > l_commitdate and l_orderkey is not null\n" +
         "      group by l_orderkey) as t2" +
-        "    right outer join (" +
+        "    inner join (" +
         "      select s_name as s_name, l_orderkey, l_suppkey " +
         "      from (" +
         "        select s_name as s_name, t1.l_orderkey, l_suppkey, count_suppkey, max_suppkey\n" +
@@ -1267,13 +1282,13 @@ public class MySqlTpchUniformScramblingQueryingTest {
         "          from lineitem_scrambled\n" +
         "          where l_orderkey is not null\n" +
         "          group by l_orderkey) as t1 " +
-        "          join (" +
+        "          inner join (" +
         "          select s_name, l_orderkey, l_suppkey\n" +
-        "          from orders_scrambled o join (" +
+        "          from orders_scrambled o inner join (" +
         "            select s_name, l_orderkey, l_suppkey\n" +
-        "            from nation n join supplier s\n" +
+        "            from nation n inner join supplier s\n" +
         "              on s.s_nationkey = n.n_nationkey\n" +
-        "            join lineitem_scrambled l on s.s_suppkey = l.l_suppkey\n" +
+        "            inner join lineitem_scrambled l on s.s_suppkey = l.l_suppkey\n" +
         "          where l.l_receiptdate > l.l_commitdate\n" +
         "            and l.l_orderkey is not null) l1 "
         + "        on o.o_orderkey = l1.l_orderkey\n" +
@@ -1298,7 +1313,7 @@ public class MySqlTpchUniformScramblingQueryingTest {
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
     stmt.execute("create schema if not exists `verdictdb_temp`;");
-    JdbcConnection jdbcConnection = new JdbcConnection(conn, new MysqlSyntax());
+    JdbcDbmsConnection jdbcConnection = new JdbcDbmsConnection(conn, new MysqlSyntax());
     ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(jdbcConnection, queryExecutionPlan);
     int cnt = 0;
     while (reader.hasNext()) {

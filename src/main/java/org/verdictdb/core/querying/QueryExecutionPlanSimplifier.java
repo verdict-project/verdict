@@ -1,17 +1,15 @@
 package org.verdictdb.core.querying;
 
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
-import org.verdictdb.core.execution.ExecutableNode;
-import org.verdictdb.core.execution.ExecutablePlan;
-import org.verdictdb.core.execution.ExecutionInfoToken;
-import org.verdictdb.core.execution.ExecutionTokenQueue;
-import org.verdictdb.core.querying.ola.AsyncAggExecutionNode;
-import org.verdictdb.core.sqlobject.*;
-import org.verdictdb.exception.VerdictDBException;
-import org.verdictdb.exception.VerdictDBValueException;
+import java.util.ArrayList;
+import java.util.List;
 
-import java.util.*;
+import org.apache.commons.lang3.tuple.Pair;
+import org.verdictdb.core.execplan.ExecutableNode;
+import org.verdictdb.core.querying.ola.AsyncAggExecutionNode;
+import org.verdictdb.core.sqlobject.AbstractRelation;
+import org.verdictdb.core.sqlobject.BaseTable;
+import org.verdictdb.core.sqlobject.JoinTable;
+import org.verdictdb.core.sqlobject.SubqueryColumn;
 
 public class QueryExecutionPlanSimplifier {
 

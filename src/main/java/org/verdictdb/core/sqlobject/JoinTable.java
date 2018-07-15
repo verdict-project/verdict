@@ -70,4 +70,17 @@ public class JoinTable extends AbstractRelation {
   public String toString() {
     return ToStringBuilder.reflectionToString(this);
   }
+
+  @Override
+  public JoinTable deepcopy() {
+    List<AbstractRelation> newJoinlist = new ArrayList<>();
+    List<UnnamedColumn> newJoinCond = new ArrayList<>();
+    for (AbstractRelation j:joinList) {
+      newJoinlist.add(j.deepcopy());
+    }
+    for (UnnamedColumn c:condition) {
+      newJoinCond.add(c.deepcopy());
+    }
+    return JoinTable.create(newJoinlist, joinTypeList, newJoinCond);
+  }
 }

@@ -19,10 +19,10 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.verdictdb.core.connection.DbmsQueryResult;
-import org.verdictdb.core.connection.JdbcConnection;
-import org.verdictdb.core.connection.StaticMetaData;
-import org.verdictdb.core.execution.ExecutablePlanRunner;
+import org.verdictdb.connection.DbmsQueryResult;
+import org.verdictdb.connection.JdbcDbmsConnection;
+import org.verdictdb.connection.StaticMetaData;
+import org.verdictdb.core.execplan.ExecutablePlanRunner;
 import org.verdictdb.core.querying.AggExecutionNode;
 import org.verdictdb.core.querying.QueryExecutionPlan;
 import org.verdictdb.core.resulthandler.ExecutionResultReader;
@@ -111,7 +111,7 @@ public class AsyncAggScaleResultTest {
     ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
 
 
-    JdbcConnection jdbcConnection = new JdbcConnection(conn, new H2Syntax());
+    JdbcDbmsConnection jdbcConnection = new JdbcDbmsConnection(conn, new H2Syntax());
     //ExecutablePlanRunner.runTillEnd(jdbcConnection, queryExecutionPlan);
 
     ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(jdbcConnection, queryExecutionPlan);
@@ -141,7 +141,7 @@ public class AsyncAggScaleResultTest {
     ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
 
 
-    JdbcConnection jdbcConnection = new JdbcConnection(conn, new H2Syntax());
+    JdbcDbmsConnection jdbcConnection = new JdbcDbmsConnection(conn, new H2Syntax());
     //ExecutablePlanRunner.runTillEnd(jdbcConnection, queryExecutionPlan);
 
     ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(jdbcConnection, queryExecutionPlan);
@@ -171,7 +171,7 @@ public class AsyncAggScaleResultTest {
     ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
 
 
-    JdbcConnection jdbcConnection = new JdbcConnection(conn, new H2Syntax());
+    JdbcDbmsConnection jdbcConnection = new JdbcDbmsConnection(conn, new H2Syntax());
     //ExecutablePlanRunner.runTillEnd(jdbcConnection, queryExecutionPlan);
 
     ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(jdbcConnection, queryExecutionPlan);
@@ -201,7 +201,7 @@ public class AsyncAggScaleResultTest {
     ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
 
 
-    JdbcConnection jdbcConnection = new JdbcConnection(conn, new H2Syntax());
+    JdbcDbmsConnection jdbcConnection = new JdbcDbmsConnection(conn, new H2Syntax());
     //ExecutablePlanRunner.runTillEnd(jdbcConnection, queryExecutionPlan);
 
     ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(jdbcConnection, queryExecutionPlan);
@@ -232,7 +232,7 @@ public class AsyncAggScaleResultTest {
     ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
 
 
-    JdbcConnection jdbcConnection = new JdbcConnection(conn, new H2Syntax());
+    JdbcDbmsConnection jdbcConnection = new JdbcDbmsConnection(conn, new H2Syntax());
     //ExecutablePlanRunner.runTillEnd(jdbcConnection, queryExecutionPlan);
 
     ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(jdbcConnection, queryExecutionPlan);
@@ -263,7 +263,7 @@ public class AsyncAggScaleResultTest {
     ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
 
 
-    JdbcConnection jdbcConnection = new JdbcConnection(conn, new H2Syntax());
+    JdbcDbmsConnection jdbcConnection = new JdbcDbmsConnection(conn, new H2Syntax());
     //ExecutablePlanRunner.runTillEnd(jdbcConnection, queryExecutionPlan);
 
     ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(jdbcConnection, queryExecutionPlan);
@@ -294,7 +294,7 @@ public class AsyncAggScaleResultTest {
     ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
 
 
-    JdbcConnection jdbcConnection = new JdbcConnection(conn, new H2Syntax());
+    JdbcDbmsConnection jdbcConnection = new JdbcDbmsConnection(conn, new H2Syntax());
     //ExecutablePlanRunner.runTillEnd(jdbcConnection, queryExecutionPlan);
 
     ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(jdbcConnection, queryExecutionPlan);
@@ -324,7 +324,7 @@ public class AsyncAggScaleResultTest {
     ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
 
 
-    JdbcConnection jdbcConnection = new JdbcConnection(conn, new H2Syntax());
+    JdbcDbmsConnection jdbcConnection = new JdbcDbmsConnection(conn, new H2Syntax());
     //ExecutablePlanRunner.runTillEnd(jdbcConnection, queryExecutionPlan);
 
     ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(jdbcConnection, queryExecutionPlan);
