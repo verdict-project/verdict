@@ -20,11 +20,11 @@ public class JdbcResultSetMetaDataTestForRedshift {
 
   private static Statement stmt;
 
-  private static final String REDSHIFT_HOST;
-
   private static final String REDSHIFT_DATABASE = "dev";
 
   private static final String REDSHIFT_SCHEMA = "public";
+  
+  private static final String REDSHIFT_HOST;
 
   private static final String REDSHIFT_USER;
 
