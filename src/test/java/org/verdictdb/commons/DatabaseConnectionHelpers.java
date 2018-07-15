@@ -1,13 +1,25 @@
 package org.verdictdb.commons;
 
+<<<<<<< HEAD
 import java.io.File;
+=======
+import java.io.*;
+>>>>>>> fc19543b6dbb2b9b91e4b5bccefd7901fb3a6c30
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.sql.Statement;
 
+<<<<<<< HEAD
 import org.apache.spark.sql.SparkSession;
+=======
+import org.postgresql.copy.CopyManager;
+import org.postgresql.core.BaseConnection;
+>>>>>>> fc19543b6dbb2b9b91e4b5bccefd7901fb3a6c30
 import org.verdictdb.connection.DbmsConnection;
+import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.connection.JdbcConnection;
+import org.verdictdb.connection.JdbcQueryResult;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.sqlsyntax.PostgresqlSyntax;
 
@@ -278,7 +290,7 @@ public class DatabaseConnectionHelpers {
   }
 
   public static Connection setupPostgresql(String connectionString, String user, String password, String schema)
-      throws VerdictDBDbmsException, SQLException {
+      throws VerdictDBDbmsException, SQLException, IOException {
     Connection conn = DriverManager.getConnection(connectionString, user, password);
     DbmsConnection dbmsConn = new JdbcConnection(conn, new PostgresqlSyntax());
 
@@ -336,7 +348,7 @@ public class DatabaseConnectionHelpers {
             "  \"ps_supplycost\"  DECIMAL(15,2)  , " +
             "  \"ps_comment\"     VARCHAR(199), " +
             "  \"ps_dummy\"       VARCHAR(10), " +
-            "  PRIMARY KEY (\"ps_partkey\"))",
+            "  PRIMARY KEY (\"ps_partkey\", \"ps_suppkey\"))",
         schema));
     dbmsConn.execute(String.format(
         "CREATE TABLE  IF NOT EXISTS \"%s\".\"customer\" (" +
@@ -387,14 +399,32 @@ public class DatabaseConnectionHelpers {
         schema));
 
     // Load data
-    dbmsConn.execute(String.format("COPY \"%s\".\"region\" FROM 'src/test/resources/tpch_test_data/region/region.tbl' DELIMITER '|'", schema));
-    dbmsConn.execute(String.format("COPY \"%s\".\"nation\" FROM 'src/test/resources/tpch_test_data/nation/nation.tbl' DELIMITER '|'", schema));
-    dbmsConn.execute(String.format("COPY \"%s\".\"supplier\" FROM 'src/test/resources/tpch_test_data/supplier/supplier.tbl' DELIMITER '|'", schema));
-    dbmsConn.execute(String.format("COPY \"%s\".\"customer\" FROM 'src/test/resources/tpch_test_data/customer/customer.tbl' DELIMITER '|'", schema));
-    dbmsConn.execute(String.format("COPY \"%s\".\"part\" FROM 'src/test/resources/tpch_test_data/part/part.tbl' DELIMITER '|'", schema));
-    dbmsConn.execute(String.format("COPY \"%s\".\"partsupp\" FROM 'src/test/resources/tpch_test_data/partsupp/partsupp.tbl' DELIMITER '|'", schema));
-    dbmsConn.execute(String.format("COPY \"%s\".\"lineitem\" FROM 'src/test/resources/tpch_test_data/lineitem/lineitem.tbl' DELIMITER '|'", schema));
-    dbmsConn.execute(String.format("COPY \"%s\".\"orders\" FROM 'src/test/resources/tpch_test_data/orders/orders.tbl' DELIMITER '|'", schema));
+
+    CopyManager copy = new CopyManager((BaseConnection) conn);
+    File region = new File("src/test/resources/tpch_test_data/region/region.tbl");
+    InputStream in = new FileInputStream(region);
+    copy.copyIn(String.format("COPY \"%s\".\"region\" FROM STDOUT DELIMITER '|'", schema), in);
+    File nation = new File("src/test/resources/tpch_test_data/nation/nation.tbl");
+    in = new FileInputStream(nation);
+    copy.copyIn(String.format("COPY \"%s\".\"nation\" FROM STDOUT DELIMITER '|'", schema), in);
+    File supplier = new File("src/test/resources/tpch_test_data/supplier/supplier.tbl");
+    in = new FileInputStream(supplier);
+    copy.copyIn(String.format("COPY \"%s\".\"supplier\" FROM STDOUT DELIMITER '|'", schema), in);
+    File customer = new File("src/test/resources/tpch_test_data/customer/customer.tbl");
+    in = new FileInputStream(customer);
+    copy.copyIn(String.format("COPY \"%s\".\"customer\" FROM STDOUT DELIMITER '|'", schema), in);
+    File part = new File("src/test/resources/tpch_test_data/part/part.tbl");
+    in = new FileInputStream(part);
+    copy.copyIn(String.format("COPY \"%s\".\"part\" FROM STDOUT DELIMITER '|'", schema), in);
+    File partsupp = new File("src/test/resources/tpch_test_data/partsupp/partsupp.tbl");
+    in = new FileInputStream(partsupp);
+    copy.copyIn(String.format("COPY \"%s\".\"partsupp\" FROM STDOUT DELIMITER '|'", schema), in);
+    File lineitem = new File("src/test/resources/tpch_test_data/lineitem/lineitem.tbl");
+    in = new FileInputStream(lineitem);
+    copy.copyIn(String.format("COPY \"%s\".\"lineitem\" FROM STDOUT DELIMITER '|'", schema), in);
+    File orders = new File("src/test/resources/tpch_test_data/orders/orders.tbl");
+    in = new FileInputStream(orders);
+    copy.copyIn(String.format("COPY \"%s\".\"orders\" FROM STDOUT DELIMITER '|'", schema), in);
 
     return conn;
   }
