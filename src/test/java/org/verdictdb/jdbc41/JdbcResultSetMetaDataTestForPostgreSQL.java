@@ -13,8 +13,8 @@ import java.sql.Statement;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.verdictdb.core.connection.DbmsConnection;
-import org.verdictdb.core.connection.JdbcConnection;
+import org.verdictdb.connection.DbmsConnection;
+import org.verdictdb.connection.JdbcDbmsConnection;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.sqlsyntax.PostgresqlSyntax;
 
@@ -52,7 +52,7 @@ public class JdbcResultSetMetaDataTestForPostgreSQL {
     String mysqlConnectionString =
         String.format("jdbc:postgresql://%s/%s", POSTGRESQL_HOST, POSTGRESQL_DATABASE);
     conn = DriverManager.getConnection(mysqlConnectionString, POSTGRESQL_USER, POSTGRESQL_PASSWORD);
-    dbmsConn = new JdbcConnection(conn, new PostgresqlSyntax());
+    dbmsConn = new JdbcDbmsConnection(conn, new PostgresqlSyntax());
 
     stmt = conn.createStatement();
     stmt.execute(String.format("DROP TABLE IF EXISTS %s", TABLE_NAME));
@@ -119,7 +119,7 @@ public class JdbcResultSetMetaDataTestForPostgreSQL {
   @Test
   public void testColumnTypes() throws VerdictDBDbmsException, SQLException {
     String sql = String.format("select * from %s", TABLE_NAME);
-    ResultSet ourResult = new JdbcResultSet(dbmsConn.execute(sql));
+    ResultSet ourResult = new VerdictResultSet(dbmsConn.execute(sql));
     ResultSetMetaData ourMetaData = ourResult.getMetaData();
     assertEquals(34, ourMetaData.getColumnCount());
 

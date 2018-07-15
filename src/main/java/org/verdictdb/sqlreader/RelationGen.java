@@ -17,10 +17,10 @@ import org.verdictdb.core.sqlobject.OrderbyAttribute;
 import org.verdictdb.core.sqlobject.SelectItem;
 import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.core.sqlobject.UnnamedColumn;
-import org.verdictdb.parser.VerdictSQLBaseVisitor;
+import org.verdictdb.parser.VerdictSQLParserBaseVisitor;
 import org.verdictdb.parser.VerdictSQLParser;
 
-public class RelationGen extends VerdictSQLBaseVisitor<AbstractRelation> {
+public class RelationGen extends VerdictSQLParserBaseVisitor<AbstractRelation> {
 
   //  private MetaData meta;
 
@@ -91,13 +91,13 @@ public class RelationGen extends VerdictSQLBaseVisitor<AbstractRelation> {
   @Override
   public AbstractRelation visitQuery_specification(VerdictSQLParser.Query_specificationContext ctx) {
 
-    class SelectListExtractor extends VerdictSQLBaseVisitor<List<SelectItem>> {
+    class SelectListExtractor extends VerdictSQLParserBaseVisitor<List<SelectItem>> {
       @Override
       public List<SelectItem> visitSelect_list(
           VerdictSQLParser.Select_listContext ctx) {
         List<SelectItem> selectList = new ArrayList<>();
         for (VerdictSQLParser.Select_list_elemContext a : ctx.select_list_elem()) {
-          VerdictSQLBaseVisitor<SelectItem> v = new VerdictSQLBaseVisitor<SelectItem>() {
+          VerdictSQLParserBaseVisitor<SelectItem> v = new VerdictSQLParserBaseVisitor<SelectItem>() {
             @Override
             public SelectItem visitSelect_list_elem(VerdictSQLParser.Select_list_elemContext ctx) {
               SelectItem elem = null;
@@ -165,7 +165,7 @@ public class RelationGen extends VerdictSQLBaseVisitor<AbstractRelation> {
       List<GroupingAttribute> groupby = new ArrayList<GroupingAttribute>();
       for (VerdictSQLParser.Group_by_itemContext g : ctx.group_by_item()) {
 
-        class GroupbyGen extends VerdictSQLBaseVisitor<GroupingAttribute> {
+        class GroupbyGen extends VerdictSQLParserBaseVisitor<GroupingAttribute> {
 
           //          MetaData meta;
           //          public GroupbyGen(MetaData meta) {this.meta = meta; }

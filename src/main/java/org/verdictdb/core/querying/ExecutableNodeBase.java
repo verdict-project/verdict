@@ -13,16 +13,17 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
 
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import org.apache.commons.lang3.tuple.Pair;
-import org.verdictdb.core.connection.DbmsQueryResult;
-import org.verdictdb.core.execution.ExecutableNode;
-import org.verdictdb.core.execution.ExecutionInfoToken;
-import org.verdictdb.core.execution.ExecutionTokenQueue;
-import org.verdictdb.core.execution.MethodInvocationInformation;
+import org.verdictdb.connection.DbmsQueryResult;
+import org.verdictdb.core.execplan.ExecutableNode;
+import org.verdictdb.core.execplan.ExecutionInfoToken;
+import org.verdictdb.core.execplan.ExecutionTokenQueue;
+import org.verdictdb.core.execplan.MethodInvocationInformation;
 import org.verdictdb.core.sqlobject.SqlConvertible;
 import org.verdictdb.exception.VerdictDBException;
 
@@ -37,13 +38,20 @@ public class ExecutableNodeBase implements ExecutableNode, Serializable {
   Map<Integer, ExecutionTokenQueue> channels = new TreeMap<>();
 
   final private String uniqueId;
+  
+  private int groupId;    // copied when deepcopying; used by ExecutablePlanRunner
 
   public ExecutableNodeBase() {
-    uniqueId = UUID.randomUUID().toString();
+    uniqueId = RandomStringUtils.randomAlphanumeric(10);
+    groupId = Integer.valueOf(RandomStringUtils.randomNumeric(5));
   }
 
   public static ExecutableNodeBase create() {
     return new ExecutableNodeBase();
+  }
+  
+  public int getGroupId() {
+    return groupId;
   }
 
   // setup method
@@ -249,6 +257,7 @@ public class ExecutableNodeBase implements ExecutableNode, Serializable {
     for (Entry<Integer, ExecutionTokenQueue> a : from.channels.entrySet()) {
       to.channels.put(a.getKey(), new ExecutionTokenQueue());
     }
+    to.groupId = from.groupId;
 //    to.channels = new TreeMap<>(from.channels);
   }
 

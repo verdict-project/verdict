@@ -5,8 +5,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import org.verdictdb.core.connection.DbmsQueryResult;
-import org.verdictdb.core.execution.ExecutionInfoToken;
+import org.verdictdb.connection.DbmsQueryResult;
+import org.verdictdb.core.execplan.ExecutionInfoToken;
 import org.verdictdb.core.querying.ExecutableNodeBase;
 import org.verdictdb.core.querying.QueryNodeBase;
 import org.verdictdb.core.sqlobject.AbstractRelation;

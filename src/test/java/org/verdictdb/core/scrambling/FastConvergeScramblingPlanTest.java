@@ -9,10 +9,10 @@ import java.util.Map;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.verdictdb.core.connection.DbmsConnection;
-import org.verdictdb.core.connection.DbmsQueryResult;
-import org.verdictdb.core.connection.JdbcConnection;
-import org.verdictdb.core.execution.ExecutablePlanRunner;
+import org.verdictdb.connection.DbmsConnection;
+import org.verdictdb.connection.DbmsQueryResult;
+import org.verdictdb.connection.JdbcDbmsConnection;
+import org.verdictdb.core.execplan.ExecutablePlanRunner;
 import org.verdictdb.exception.VerdictDBException;
 
 public class FastConvergeScramblingPlanTest {
@@ -83,7 +83,7 @@ public class FastConvergeScramblingPlanTest {
         method, options);
 //    System.out.println(plan.getReportingNode());
 
-    DbmsConnection conn = JdbcConnection.create(mysqlConn);
+    DbmsConnection conn = JdbcDbmsConnection.create(mysqlConn);
     ExecutablePlanRunner.runTillEnd(conn, plan);
   }
 
@@ -112,7 +112,7 @@ public class FastConvergeScramblingPlanTest {
         method, options);
 //    System.out.println(plan.getReportingNode());
 
-    DbmsConnection conn = JdbcConnection.create(mysqlConn);
+    DbmsConnection conn = JdbcDbmsConnection.create(mysqlConn);
     ExecutablePlanRunner.runTillEnd(conn, plan);
   }
 
@@ -145,7 +145,7 @@ public class FastConvergeScramblingPlanTest {
         method, options);
 //    System.out.println(plan.getReportingNode());
 
-    DbmsConnection conn = JdbcConnection.create(mysqlConn);
+    DbmsConnection conn = JdbcDbmsConnection.create(mysqlConn);
     ExecutablePlanRunner.runTillEnd(conn, plan);
 
     DbmsQueryResult result = conn.execute(String.format("select * from %s.%s", newSchemaName, newTableName));
@@ -180,7 +180,7 @@ public class FastConvergeScramblingPlanTest {
         method, options);
 //    System.out.println(plan.getReportingNode());
 
-    DbmsConnection conn = JdbcConnection.create(mysqlConn);
+    DbmsConnection conn = JdbcDbmsConnection.create(mysqlConn);
     ExecutablePlanRunner.runTillEnd(conn, plan);
 
     DbmsQueryResult result = conn.execute(String.format("select * from %s.%s", newSchemaName, newTableName));

@@ -10,8 +10,8 @@ import java.util.List;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.verdictdb.core.connection.DbmsConnection;
-import org.verdictdb.core.connection.JdbcConnection;
+import org.verdictdb.connection.DbmsConnection;
+import org.verdictdb.connection.JdbcDbmsConnection;
 import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
 import org.verdictdb.core.scrambling.UniformScrambler;
@@ -101,7 +101,7 @@ public class ExecutionNodeTest {
         Arrays.<SelectItem>asList(
             new AliasedColumn(new ColumnOp("sum", new BaseColumn("t", "age")), aliasName)),
         base);
-    DbmsConnection dbmsConn = new JdbcConnection(conn, new H2Syntax());
+    DbmsConnection dbmsConn = new JdbcDbmsConnection(conn, new H2Syntax());
 //    AsyncAggExecutionNode node = new AsyncAggExecutionNode(dbmsConn, meta, "default", "aggtable", relation);
 //    AsyncHandler handler = new AsyncHandler() {
 //

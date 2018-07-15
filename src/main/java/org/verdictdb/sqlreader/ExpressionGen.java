@@ -11,12 +11,12 @@ import org.verdictdb.core.sqlobject.ConstantColumn;
 import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.core.sqlobject.SubqueryColumn;
 import org.verdictdb.core.sqlobject.UnnamedColumn;
-import org.verdictdb.parser.VerdictSQLBaseVisitor;
+import org.verdictdb.parser.VerdictSQLParserBaseVisitor;
 import org.verdictdb.parser.VerdictSQLParser;
 import org.verdictdb.parser.VerdictSQLParser.Column_nameContext;
 import org.verdictdb.parser.VerdictSQLParser.Full_column_nameContext;
 
-public class ExpressionGen extends VerdictSQLBaseVisitor<UnnamedColumn> {
+public class ExpressionGen extends VerdictSQLParserBaseVisitor<UnnamedColumn> {
 
   //    private MetaData meta;
 
@@ -101,7 +101,7 @@ public class ExpressionGen extends VerdictSQLBaseVisitor<UnnamedColumn> {
 
   @Override
   public ColumnOp visitFunction_call_expression(VerdictSQLParser.Function_call_expressionContext ctx) {
-    VerdictSQLBaseVisitor<ColumnOp> v = new VerdictSQLBaseVisitor<ColumnOp>() {
+    VerdictSQLParserBaseVisitor<ColumnOp> v = new VerdictSQLParserBaseVisitor<ColumnOp>() {
 
       @Override
       public ColumnOp visitAggregate_windowed_function(VerdictSQLParser.Aggregate_windowed_functionContext ctx) {

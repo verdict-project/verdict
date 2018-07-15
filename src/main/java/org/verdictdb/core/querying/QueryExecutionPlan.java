@@ -8,22 +8,26 @@
 
 package org.verdictdb.core.querying;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import org.apache.commons.lang3.tuple.Pair;
-import org.verdictdb.core.execution.ExecutableNode;
-import org.verdictdb.core.execution.ExecutablePlan;
-import org.verdictdb.core.querying.ola.AsyncAggExecutionNode;
+import org.verdictdb.core.execplan.ExecutableNode;
+import org.verdictdb.core.execplan.ExecutablePlan;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
-import org.verdictdb.core.sqlobject.BaseTable;
 import org.verdictdb.core.sqlobject.SelectQuery;
-import org.verdictdb.core.sqlobject.SubqueryColumn;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBTypeException;
 import org.verdictdb.exception.VerdictDBValueException;
@@ -143,14 +147,8 @@ public class QueryExecutionPlan implements ExecutablePlan, IdCreator, Serializab
     return root;
   }
   
-  @Override
-  public List<Integer> getNodeGroupIDs() {
-    return Arrays.asList(0);
-  }
-
-  @Override
-  public List<ExecutableNode> getNodesInGroup(int groupId) {
-    List<ExecutableNode> nodes = new ArrayList<>();
+  List<ExecutableNodeBase> retrieveAllDescendant(ExecutableNodeBase root) {
+    List<ExecutableNodeBase> nodes = new ArrayList<>();
     List<ExecutableNodeBase> pool = new LinkedList<>();
     pool.add(root);
     while (!pool.isEmpty()) {
@@ -162,6 +160,32 @@ public class QueryExecutionPlan implements ExecutablePlan, IdCreator, Serializab
       pool.addAll(n.getExecutableNodeBaseDependents());
     }
     return nodes;
+  }
+  
+  @Override
+  public Set<Integer> getNodeGroupIDs() {
+    Set<Integer> groupIDs = new HashSet<>();
+    List<ExecutableNodeBase> nodes = retrieveAllDescendant(root);
+    
+    for (ExecutableNodeBase n : nodes) {
+      groupIDs.add(n.getGroupId());
+    }
+    
+    return groupIDs;
+  }
+
+  @Override
+  public List<ExecutableNode> getNodesInGroup(int groupId) {
+    List<ExecutableNode> relevantNodes = new ArrayList<>();
+    List<ExecutableNodeBase> allNodes = retrieveAllDescendant(root);
+    
+    for (ExecutableNodeBase n : allNodes) {
+      if (n.getGroupId() == groupId) {
+        relevantNodes.add(n);
+      }
+    }
+    
+    return relevantNodes;
   }
 
   @Override

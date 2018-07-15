@@ -1,17 +1,21 @@
 package org.verdictdb.core.coordinator;
 
 import org.junit.AfterClass;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.verdictdb.core.connection.DbmsConnection;
-import org.verdictdb.core.connection.DbmsQueryResult;
-import org.verdictdb.core.connection.JdbcConnection;
-import org.verdictdb.core.execution.ExecutablePlanRunner;
+import org.verdictdb.connection.CachedDbmsConnection;
+import org.verdictdb.connection.DbmsConnection;
+import org.verdictdb.connection.DbmsQueryResult;
+import org.verdictdb.connection.JdbcDbmsConnection;
+import org.verdictdb.core.execplan.ExecutablePlanRunner;
 import org.verdictdb.core.resulthandler.ExecutionResultReader;
 import org.verdictdb.core.scrambling.*;
 import org.verdictdb.core.sqlobject.AbstractRelation;
 import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.execution.SelectQueryCoordinator;
+import org.verdictdb.jdbc41.VerdictConnection;
 import org.verdictdb.sqlreader.NonValidatingSQLParser;
 import org.verdictdb.sqlreader.RelationStandardizer;
 import org.verdictdb.sqlsyntax.MysqlSyntax;
@@ -68,6 +72,9 @@ public class TpchSelectQueryCoordinatorTest {
     conn = DriverManager.getConnection(mysqlConnectionString, MYSQL_UESR, MYSQL_PASSWORD);
 
     stmt = conn.createStatement();
+    stmt.execute("DROP SCHEMA IF EXISTS `test`");
+    stmt.execute("CREATE SCHEMA IF NOT EXISTS `test`");
+    
     stmt.execute("CREATE TABLE  IF NOT EXISTS `test`.`nation`  (`n_nationkey`  INT, " +
         "                            `n_name`       CHAR(25), " +
         "                            `n_regionkey`  INT, " +
@@ -156,6 +163,9 @@ public class TpchSelectQueryCoordinatorTest {
 
 
     // Create Scramble table
+    stmt.execute("DROP TABLE IF EXISTS `test`.`lineitem_scrambled`");
+    stmt.execute("DROP TABLE IF EXISTS `test`.`orders_scrambled`");
+    
     ScramblingMethod method = new UniformScramblingMethod(blockSize);
     Map<String, String> options = new HashMap<>();
     options.put("tierColumnName", "verdictdbtier");
@@ -164,7 +174,7 @@ public class TpchSelectQueryCoordinatorTest {
         "test", "lineitem_scrambled",
         "test", "lineitem",
         method, options);
-    DbmsConnection mysqlConn = new JdbcConnection(conn, new MysqlSyntax());
+    DbmsConnection mysqlConn = new JdbcDbmsConnection(conn, new MysqlSyntax());
     ExecutablePlanRunner.runTillEnd(mysqlConn, plan);
     ScramblingMethod method2 = new UniformScramblingMethod(blockSize);
     Map<String, String> options2 = new HashMap<>();
@@ -193,7 +203,15 @@ public class TpchSelectQueryCoordinatorTest {
     distribution1.put(0, Arrays.asList(0.33, 0.66, 1.0));
     tablemeta.setCumulativeMassDistributionPerTier(distribution1);
     meta.insertScrambleMetaEntry(tablemeta);
+    
+    System.out.println("Setup done");
   }
+  
+//  @Before
+//  public void refreshTempSchema() throws SQLException {
+//    stmt.execute("drop schema if exists `verdictdb_temp`");
+//    stmt.execute("create schema if not exists `verdictdb_temp`");
+//  }
 
   @Test
   public void testTpch1() throws VerdictDBException, SQLException {
@@ -218,15 +236,21 @@ public class TpchSelectQueryCoordinatorTest {
         "order by " +
         " l_returnflag, " +
         " l_linestatus ";
-    stmt.execute("create schema if not exists `verdictdb_temp`;");
-    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcConnection(conn, new MysqlSyntax()));
+    
+//    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcDbmsConnection(conn, new MysqlSyntax()));
+    stmt.execute("create schema if not exists `verdictdb_temp`");
+    DbmsConnection dbmsconn = new CachedDbmsConnection(
+        new JdbcDbmsConnection(conn, new MysqlSyntax()));
+    dbmsconn.setDefaultSchema("test");
+    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
+    
     coordinator.setScrambleMetaSet(meta);
-    coordinator.setDefaultSchema("test");
+//    coordinator.setDefaultSchema("test");
     ExecutionResultReader reader = coordinator.process(sql);
 
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
-    RelationStandardizer gen = new RelationStandardizer(coordinator.getStaticMetaData());
+    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
     relation = gen.standardize((SelectQuery) relation);
 
     SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
@@ -257,7 +281,7 @@ public class TpchSelectQueryCoordinatorTest {
     System.out.println("test case 1 finished");
   }
 
-  //@Test
+  @Test
   public void testTpch3() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select " +
@@ -282,15 +306,20 @@ public class TpchSelectQueryCoordinatorTest {
         "revenue desc, " +
         "o_orderdate " +
         "limit 10";
-    stmt.execute("create schema if not exists `verdictdb_temp`;");
-    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcConnection(conn, new MysqlSyntax()));
+//    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcDbmsConnection(conn, new MysqlSyntax()));
+    stmt.execute("create schema if not exists `verdictdb_temp`");
+    DbmsConnection dbmsconn = new CachedDbmsConnection(
+        new JdbcDbmsConnection(conn, new MysqlSyntax()));
+    dbmsconn.setDefaultSchema("test");
+    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
+    
     coordinator.setScrambleMetaSet(meta);
-    coordinator.setDefaultSchema("test");
+//    coordinator.setDefaultSchema("test");
     ExecutionResultReader reader = coordinator.process(sql);
 
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
-    RelationStandardizer gen = new RelationStandardizer(coordinator.getStaticMetaData());
+    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
     relation = gen.standardize((SelectQuery) relation);
 
     SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
@@ -315,7 +344,7 @@ public class TpchSelectQueryCoordinatorTest {
     System.out.println("test case 3 finished");
   }
 
-  //@Test
+  @Test
   public void test4Tpch() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select " +
@@ -332,14 +361,19 @@ public class TpchSelectQueryCoordinatorTest {
         "order by " +
         "o_orderpriority ";
     stmt.execute("create schema if not exists `verdictdb_temp`;");
-    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcConnection(conn, new MysqlSyntax()));
+//    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcDbmsConnection(conn, new MysqlSyntax()));
+    DbmsConnection dbmsconn = new CachedDbmsConnection(
+        new JdbcDbmsConnection(conn, new MysqlSyntax()));
+    dbmsconn.setDefaultSchema("test");
+    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
+    
     coordinator.setScrambleMetaSet(meta);
-    coordinator.setDefaultSchema("test");
+//    coordinator.setDefaultSchema("test");
     ExecutionResultReader reader = coordinator.process(sql);
 
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
-    RelationStandardizer gen = new RelationStandardizer(coordinator.getStaticMetaData());
+    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
     relation = gen.standardize((SelectQuery) relation);
 
     SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
@@ -362,7 +396,7 @@ public class TpchSelectQueryCoordinatorTest {
     System.out.println("test case 4 finished");
   }
 
-  //@Test
+  @Test
   public void test5Tpch() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select " +
@@ -389,14 +423,19 @@ public class TpchSelectQueryCoordinatorTest {
         "order by " +
         "revenue desc ";
     stmt.execute("create schema if not exists `verdictdb_temp`;");
-    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcConnection(conn, new MysqlSyntax()));
+//    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcDbmsConnection(conn, new MysqlSyntax()));
+    DbmsConnection dbmsconn = new CachedDbmsConnection(
+        new JdbcDbmsConnection(conn, new MysqlSyntax()));
+    dbmsconn.setDefaultSchema("test");
+    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
+    
     coordinator.setScrambleMetaSet(meta);
-    coordinator.setDefaultSchema("test");
+//    coordinator.setDefaultSchema("test");
     ExecutionResultReader reader = coordinator.process(sql);
 
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
-    RelationStandardizer gen = new RelationStandardizer(coordinator.getStaticMetaData());
+    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
     relation = gen.standardize((SelectQuery) relation);
 
     SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
@@ -419,7 +458,7 @@ public class TpchSelectQueryCoordinatorTest {
     System.out.println("test case 5 finished");
   }
 
-  //@Test
+  @Test
   public void test6Tpch() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select " +
@@ -432,14 +471,18 @@ public class TpchSelectQueryCoordinatorTest {
         "and l_discount between 0.04 - 0.02 and 0.04 + 0.02 " +
         "and l_quantity < 15 ";
     stmt.execute("create schema if not exists `verdictdb_temp`;");
-    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcConnection(conn, new MysqlSyntax()));
+//    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcDbmsConnection(conn, new MysqlSyntax()));
+    DbmsConnection dbmsconn = new CachedDbmsConnection(
+        new JdbcDbmsConnection(conn, new MysqlSyntax()));
+    dbmsconn.setDefaultSchema("test");
+    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     coordinator.setScrambleMetaSet(meta);
-    coordinator.setDefaultSchema("test");
+//    coordinator.setDefaultSchema("test");
     ExecutionResultReader reader = coordinator.process(sql);
 
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
-    RelationStandardizer gen = new RelationStandardizer(coordinator.getStaticMetaData());
+    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
     relation = gen.standardize((SelectQuery) relation);
 
     SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
@@ -461,7 +504,7 @@ public class TpchSelectQueryCoordinatorTest {
     System.out.println("test case 6 finished");
   }
 
-  //@Test
+  @Test
   public void test7Tpch() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select " +
@@ -504,14 +547,18 @@ public class TpchSelectQueryCoordinatorTest {
         "cust_nation, " +
         "l_year ";
     stmt.execute("create schema if not exists `verdictdb_temp`;");
-    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcConnection(conn, new MysqlSyntax()));
+//    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcDbmsConnection(conn, new MysqlSyntax()));
+    DbmsConnection dbmsconn = new CachedDbmsConnection(
+        new JdbcDbmsConnection(conn, new MysqlSyntax()));
+    dbmsconn.setDefaultSchema("test");
+    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     coordinator.setScrambleMetaSet(meta);
-    coordinator.setDefaultSchema("test");
+//    coordinator.setDefaultSchema("test");
     ExecutionResultReader reader = coordinator.process(sql);
 
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
-    RelationStandardizer gen = new RelationStandardizer(coordinator.getStaticMetaData());
+    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
     relation = gen.standardize((SelectQuery) relation);
 
     SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
@@ -536,54 +583,87 @@ public class TpchSelectQueryCoordinatorTest {
     System.out.println("test case 7 finished");
   }
 
-  ////@Test
+  // Very slow for some reason
+  @Test
   public void test8Tpch() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
-    String sql = "select " +
-        "o_year, " +
-        "sum(case " +
-        "when nation = 'PERU' then volume " +
-        "else 0 " +
-        "end) as numerator, sum(volume) as denominator " +
-        "from " +
-        "( " +
-        "select " +
-        "year(o_orderdate) as o_year, " +
-        "l_extendedprice * (1 - l_discount) as volume, " +
-        "n2.n_name as nation " +
-        "from " +
-        "part, " +
-        "supplier, " +
-        "lineitem_scrambled, " +
-        "orders_scrambled, " +
-        "customer, " +
-        "nation n1, " +
-        "nation n2, " +
-        "region " +
-        "where " +
-        "p_partkey = l_partkey " +
-        "and s_suppkey = l_suppkey " +
-        "and l_orderkey = o_orderkey " +
-        "and o_custkey = c_custkey " +
-        "and c_nationkey = n1.n_nationkey " +
-        "and n1.n_regionkey = r_regionkey " +
-        "and r_name = 'AMERICA' " +
-        "and s_nationkey = n2.n_nationkey " +
-        "and o_orderdate between '1991-01-01' and '1996-12-31' " +
-        ") as all_nations " +
-        "group by " +
-        "o_year " +
-        "order by " +
-        "o_year ";
+//    String sql = "select " +
+//        "o_year, " +
+//        "sum(case " +
+//        "when nation = 'PERU' then volume " +
+//        "else 0 " +
+//        "end) as numerator, sum(volume) as denominator " +
+//        "from " +
+//        "( " +
+//        "select " +
+//        "year(o_orderdate) as o_year, " +
+//        "l_extendedprice * (1 - l_discount) as volume, " +
+//        "n2.n_name as nation " +
+//        "from " +
+//        "part, " +
+//        "supplier, " +
+//        "lineitem_scrambled, " +
+//        "orders_scrambled, " +
+//        "customer, " +
+//        "nation n1, " +
+//        "nation n2, " +
+//        "region " +
+//        "where " +
+//        "p_partkey = l_partkey " +
+//        "and s_suppkey = l_suppkey " +
+//        "and l_orderkey = o_orderkey " +
+//        "and o_custkey = c_custkey " +
+//        "and c_nationkey = n1.n_nationkey " +
+//        "and n1.n_regionkey = r_regionkey " +
+//        "and r_name = 'AMERICA' " +
+//        "and s_nationkey = n2.n_nationkey " +
+//        "and o_orderdate between '1991-01-01' and '1996-12-31' " +
+//        ") as all_nations " +
+//        "group by " +
+//        "o_year " +
+//        "order by " +
+//        "o_year ";
+    String sql = "select\n" + 
+        "  o_year,\n" + 
+        "  sum(case\n" + 
+        "    when nation = 'PERU' then volume\n" + 
+        "    else 0\n" + 
+        "  end) as numerator, sum(volume) as demoninator\n" + 
+        "from\n" + 
+        "  (\n" + 
+        "    select\n" + 
+        "      year(o_orderdate) as o_year,\n" + 
+        "      l_extendedprice * (1 - l_discount) as volume,\n" + 
+        "      n2.n_name as nation\n" + 
+        "    from\n" + 
+        "      lineitem_scrambled join orders_scrambled on l_orderkey = o_orderkey\n" + 
+        "      join supplier on s_suppkey = l_suppkey\n" + 
+        "      join part on p_partkey = l_partkey\n" + 
+        "      join customer on o_custkey = c_custkey\n" + 
+        "      join nation n1 on c_nationkey = n1.n_nationkey\n" + 
+        "      join region on n1.n_regionkey = r_regionkey\n" + 
+        "      join nation n2 on s_nationkey = n2.n_nationkey\n" + 
+        "    where\n" + 
+        "      r_name = 'AMERICA'\n" + 
+        "      and o_orderdate between '1995-01-01' and '1996-12-31'\n" + 
+        "  ) as all_nations\n" + 
+        "group by\n" + 
+        "  o_year\n" + 
+        "order by\n" + 
+        "  o_year";
     stmt.execute("create schema if not exists `verdictdb_temp`;");
-    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcConnection(conn, new MysqlSyntax()));
+//    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcDbmsConnection(conn, new MysqlSyntax()));
+    DbmsConnection dbmsconn = new CachedDbmsConnection(
+        new JdbcDbmsConnection(conn, new MysqlSyntax()));
+    dbmsconn.setDefaultSchema("test");
+    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     coordinator.setScrambleMetaSet(meta);
-    coordinator.setDefaultSchema("test");
+//    coordinator.setDefaultSchema("test");
     ExecutionResultReader reader = coordinator.process(sql);
 
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
-    RelationStandardizer gen = new RelationStandardizer(coordinator.getStaticMetaData());
+    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
     relation = gen.standardize((SelectQuery) relation);
 
     SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
@@ -607,49 +687,80 @@ public class TpchSelectQueryCoordinatorTest {
     System.out.println("test case 8 finished");
   }
 
-  //@Test
+  // Very slow as well
+  @Test
   public void test9Tpch() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
-    String sql = "select " +
-        "nation, " +
-        "o_year, " +
-        "sum(amount) as sum_profit " +
-        "from " +
-        "( " +
-        "select " +
-        "n_name as nation, " +
-        "substr(o_orderdate,0,4) as o_year, " +
-        "l_extendedprice * (1 - l_discount) - ps_supplycost * l_quantity as amount " +
-        "from " +
-        "part, " +
-        "supplier, " +
-        "lineitem_scrambled, " +
-        "partsupp, " +
-        "orders_scrambled, " +
-        "nation " +
-        "where " +
-        "s_suppkey = l_suppkey " +
-        "and ps_suppkey = l_suppkey " +
-        "and ps_partkey = l_partkey " +
-        "and p_partkey = l_partkey " +
-        "and o_orderkey = l_orderkey " +
-        "and s_nationkey = n_nationkey " +
-        ") as profit " +
-        "group by " +
-        "nation, " +
-        "o_year " +
-        "order by " +
-        "nation, " +
-        "o_year desc ";
+//    String sql = "select " +
+//        "nation, " +
+//        "o_year, " +
+//        "sum(amount) as sum_profit " +
+//        "from " +
+//        "( " +
+//        "select " +
+//        "n_name as nation, " +
+//        "substr(o_orderdate,0,4) as o_year, " +
+//        "l_extendedprice * (1 - l_discount) - ps_supplycost * l_quantity as amount " +
+//        "from " +
+//        "part, " +
+//        "supplier, " +
+//        "lineitem_scrambled, " +
+//        "partsupp, " +
+//        "orders_scrambled, " +
+//        "nation " +
+//        "where " +
+//        "s_suppkey = l_suppkey " +
+//        "and ps_suppkey = l_suppkey " +
+//        "and ps_partkey = l_partkey " +
+//        "and p_partkey = l_partkey " +
+//        "and o_orderkey = l_orderkey " +
+//        "and s_nationkey = n_nationkey " +
+//        ") as profit " +
+//        "group by " +
+//        "nation, " +
+//        "o_year " +
+//        "order by " +
+//        "nation, " +
+//        "o_year desc ";
+    String sql = "select\n" + 
+        "  nation,\n" + 
+        "  o_year,\n" + 
+        "  sum(amount) as sum_profit\n" + 
+        "from\n" + 
+        "  (\n" + 
+        "    select\n" + 
+        "      n_name as nation,\n" + 
+        "      year(o_orderdate) as o_year,\n" + 
+        "      l_extendedprice * (1 - l_discount) - ps_supplycost * l_quantity as amount\n" + 
+        "    from\n" + 
+        "      lineitem_scrambled join orders_scrambled on o_orderkey = l_orderkey\n" + 
+        "      join partsupp on ps_suppkey = l_suppkey and ps_partkey = l_partkey\n" + 
+        "      join supplier on s_suppkey = l_suppkey\n" + 
+        "      join part on p_partkey = l_partkey\n" + 
+        "      join nation on s_nationkey = n_nationkey\n" + 
+        "    where\n" + 
+        "      p_name like '%:1%'\n" + 
+        "  ) as profit\n" + 
+        "group by\n" + 
+        "  nation,\n" + 
+        "  o_year\n" + 
+        "order by\n" + 
+        "  nation,\n" + 
+        "  o_year desc";
+    
     stmt.execute("create schema if not exists `verdictdb_temp`;");
-    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcConnection(conn, new MysqlSyntax()));
+//    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcDbmsConnection(conn, new MysqlSyntax()));
+    DbmsConnection dbmsconn = new CachedDbmsConnection(
+        new JdbcDbmsConnection(conn, new MysqlSyntax()));
+    dbmsconn.setDefaultSchema("test");
+    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     coordinator.setScrambleMetaSet(meta);
-    coordinator.setDefaultSchema("test");
+//    coordinator.setDefaultSchema("test");
     ExecutionResultReader reader = coordinator.process(sql);
 
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
-    RelationStandardizer gen = new RelationStandardizer(coordinator.getStaticMetaData());
+    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
     relation = gen.standardize((SelectQuery) relation);
 
     SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
@@ -673,7 +784,7 @@ public class TpchSelectQueryCoordinatorTest {
     System.out.println("test case 9 finished");
   }
 
-  //@Test
+  @Test
   public void test10Tpch() throws VerdictDBException, SQLException {
     String sql = "select " +
         "c_custkey, " +
@@ -707,14 +818,18 @@ public class TpchSelectQueryCoordinatorTest {
         "order by " +
         "revenue desc ";
     stmt.execute("create schema if not exists `verdictdb_temp`;");
-    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcConnection(conn, new MysqlSyntax()));
+//    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcDbmsConnection(conn, new MysqlSyntax()));
+    DbmsConnection dbmsconn = new CachedDbmsConnection(
+        new JdbcDbmsConnection(conn, new MysqlSyntax()));
+    dbmsconn.setDefaultSchema("test");
+    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     coordinator.setScrambleMetaSet(meta);
-    coordinator.setDefaultSchema("test");
+//    coordinator.setDefaultSchema("test");
     ExecutionResultReader reader = coordinator.process(sql);
 
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
-    RelationStandardizer gen = new RelationStandardizer(coordinator.getStaticMetaData());
+    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
     relation = gen.standardize((SelectQuery) relation);
 
     SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
@@ -738,7 +853,7 @@ public class TpchSelectQueryCoordinatorTest {
     System.out.println("test case 10 finished");
   }
 
-  //@Test
+  @Test
   public void test12Tpch() throws VerdictDBException, SQLException {
     String sql = "select " +
         "l_shipmode, " +
@@ -768,14 +883,18 @@ public class TpchSelectQueryCoordinatorTest {
         "order by " +
         "l_shipmode ";
     stmt.execute("create schema if not exists `verdictdb_temp`;");
-    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcConnection(conn, new MysqlSyntax()));
+//    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcDbmsConnection(conn, new MysqlSyntax()));
+    DbmsConnection dbmsconn = new CachedDbmsConnection(
+        new JdbcDbmsConnection(conn, new MysqlSyntax()));
+    dbmsconn.setDefaultSchema("test");
+    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     coordinator.setScrambleMetaSet(meta);
-    coordinator.setDefaultSchema("test");
+//    coordinator.setDefaultSchema("test");
     ExecutionResultReader reader = coordinator.process(sql);
 
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
-    RelationStandardizer gen = new RelationStandardizer(coordinator.getStaticMetaData());
+    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
     relation = gen.standardize((SelectQuery) relation);
 
     SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
@@ -799,7 +918,7 @@ public class TpchSelectQueryCoordinatorTest {
     System.out.println("test case 12 finished");
   }
 
-  //@Test
+  @Test
   public void test13Tpch() throws VerdictDBException, SQLException {
     String sql = "select " +
         "c_custkey, " +
@@ -812,14 +931,18 @@ public class TpchSelectQueryCoordinatorTest {
         "c_custkey " +
         "order by c_custkey";
     stmt.execute("create schema if not exists `verdictdb_temp`;");
-    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcConnection(conn, new MysqlSyntax()));
+//    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcDbmsConnection(conn, new MysqlSyntax()));
+    DbmsConnection dbmsconn = new CachedDbmsConnection(
+        new JdbcDbmsConnection(conn, new MysqlSyntax()));
+    dbmsconn.setDefaultSchema("test");
+    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     coordinator.setScrambleMetaSet(meta);
-    coordinator.setDefaultSchema("test");
+//    coordinator.setDefaultSchema("test");
     ExecutionResultReader reader = coordinator.process(sql);
 
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
-    RelationStandardizer gen = new RelationStandardizer(coordinator.getStaticMetaData());
+    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
     relation = gen.standardize((SelectQuery) relation);
 
     SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
@@ -842,7 +965,7 @@ public class TpchSelectQueryCoordinatorTest {
     System.out.println("test case 13 finished");
   }
 
-  //@Test
+  @Test
   public void test14Tpch() throws VerdictDBException, SQLException {
     String sql = "select " +
         "100.00 * sum(case " +
@@ -858,14 +981,18 @@ public class TpchSelectQueryCoordinatorTest {
         "and l_shipdate >= date '1992-01-01' " +
         "and l_shipdate < date '1998-01-01' ";
     stmt.execute("create schema if not exists `verdictdb_temp`;");
-    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcConnection(conn, new MysqlSyntax()));
+//    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcDbmsConnection(conn, new MysqlSyntax()));
+    DbmsConnection dbmsconn = new CachedDbmsConnection(
+        new JdbcDbmsConnection(conn, new MysqlSyntax()));
+    dbmsconn.setDefaultSchema("test");
+    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     coordinator.setScrambleMetaSet(meta);
-    coordinator.setDefaultSchema("test");
+//    coordinator.setDefaultSchema("test");
     ExecutionResultReader reader = coordinator.process(sql);
 
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
-    RelationStandardizer gen = new RelationStandardizer(coordinator.getStaticMetaData());
+    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
     relation = gen.standardize((SelectQuery) relation);
 
     SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
@@ -888,7 +1015,7 @@ public class TpchSelectQueryCoordinatorTest {
     System.out.println("test case 14 finished");
   }
 
-  //@Test
+  @Test
   public void test15Tpch() throws VerdictDBException, SQLException {
     String sql = "select " +
         "l_suppkey, " +
@@ -903,14 +1030,18 @@ public class TpchSelectQueryCoordinatorTest {
         "order by " +
         "l_suppkey";
     stmt.execute("create schema if not exists `verdictdb_temp`;");
-    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcConnection(conn, new MysqlSyntax()));
+//    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcDbmsConnection(conn, new MysqlSyntax()));
+    DbmsConnection dbmsconn = new CachedDbmsConnection(
+        new JdbcDbmsConnection(conn, new MysqlSyntax()));
+    dbmsconn.setDefaultSchema("test");
+    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     coordinator.setScrambleMetaSet(meta);
-    coordinator.setDefaultSchema("test");
+//    coordinator.setDefaultSchema("test");
     ExecutionResultReader reader = coordinator.process(sql);
 
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
-    RelationStandardizer gen = new RelationStandardizer(coordinator.getStaticMetaData());
+    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
     relation = gen.standardize((SelectQuery) relation);
 
     SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
@@ -933,7 +1064,7 @@ public class TpchSelectQueryCoordinatorTest {
     System.out.println("test case 15 finished");
   }
 
-  //@Test
+  @Test
   public void test17Tpch() throws VerdictDBException, SQLException {
     String sql = "select\n" +
         "  sum(extendedprice) / 7.0 as avg_yearly\n" +
@@ -962,14 +1093,18 @@ public class TpchSelectQueryCoordinatorTest {
         ") a \n" +
         "where quantity > t_avg_quantity";
     stmt.execute("create schema if not exists `verdictdb_temp`;");
-    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcConnection(conn, new MysqlSyntax()));
+//    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcDbmsConnection(conn, new MysqlSyntax()));
+    DbmsConnection dbmsconn = new CachedDbmsConnection(
+        new JdbcDbmsConnection(conn, new MysqlSyntax()));
+    dbmsconn.setDefaultSchema("test");
+    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     coordinator.setScrambleMetaSet(meta);
-    coordinator.setDefaultSchema("test");
+//    coordinator.setDefaultSchema("test");
     ExecutionResultReader reader = coordinator.process(sql);
 
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
-    RelationStandardizer gen = new RelationStandardizer(coordinator.getStaticMetaData());
+    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
     relation = gen.standardize((SelectQuery) relation);
 
     SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
@@ -991,7 +1126,7 @@ public class TpchSelectQueryCoordinatorTest {
     System.out.println("test case 17 finished");
   }
 
-  //@Test
+  @Test
   public void test18Tpch() throws VerdictDBException, SQLException {
     String sql = "select\n" +
         "  c_name,\n" +
@@ -1028,14 +1163,18 @@ public class TpchSelectQueryCoordinatorTest {
         "  o_totalprice desc,\n" +
         "  o_orderdate \n";
     stmt.execute("create schema if not exists `verdictdb_temp`;");
-    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcConnection(conn, new MysqlSyntax()));
+//    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcDbmsConnection(conn, new MysqlSyntax()));
+    DbmsConnection dbmsconn = new CachedDbmsConnection(
+        new JdbcDbmsConnection(conn, new MysqlSyntax()));
+    dbmsconn.setDefaultSchema("test");
+    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     coordinator.setScrambleMetaSet(meta);
-    coordinator.setDefaultSchema("test");
+//    coordinator.setDefaultSchema("test");
     ExecutionResultReader reader = coordinator.process(sql);
 
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
-    RelationStandardizer gen = new RelationStandardizer(coordinator.getStaticMetaData());
+    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
     relation = gen.standardize((SelectQuery) relation);
 
     SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
@@ -1062,7 +1201,7 @@ public class TpchSelectQueryCoordinatorTest {
     System.out.println("test case 18 finished");
   }
 
-  //@Test
+  @Test
   public void test19Tpch() throws VerdictDBException, SQLException {
     String sql = "select " +
         "sum(l_extendedprice* (1 - l_discount)) as revenue " +
@@ -1097,14 +1236,18 @@ public class TpchSelectQueryCoordinatorTest {
         "and l_shipinstruct = 'DELIVER IN PERSON' " +
         ") ";
     stmt.execute("create schema if not exists `verdictdb_temp`;");
-    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcConnection(conn, new MysqlSyntax()));
+//    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcDbmsConnection(conn, new MysqlSyntax()));
+    DbmsConnection dbmsconn = new CachedDbmsConnection(
+        new JdbcDbmsConnection(conn, new MysqlSyntax()));
+    dbmsconn.setDefaultSchema("test");
+    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     coordinator.setScrambleMetaSet(meta);
-    coordinator.setDefaultSchema("test");
+//    coordinator.setDefaultSchema("test");
     ExecutionResultReader reader = coordinator.process(sql);
 
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
-    RelationStandardizer gen = new RelationStandardizer(coordinator.getStaticMetaData());
+    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
     relation = gen.standardize((SelectQuery) relation);
 
     SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
@@ -1126,7 +1269,7 @@ public class TpchSelectQueryCoordinatorTest {
     System.out.println("test case 19 finished");
   }
 
-  //@Test
+  @Test
   public void test20Tpch() throws VerdictDBException, SQLException {
     String sql = "select\n" +
         "  s_name,\n" +
@@ -1152,14 +1295,18 @@ public class TpchSelectQueryCoordinatorTest {
         "  group by s_name\n" +
         "order by s_name";
     stmt.execute("create schema if not exists `verdictdb_temp`;");
-    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcConnection(conn, new MysqlSyntax()));
+//    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcDbmsConnection(conn, new MysqlSyntax()));
+    DbmsConnection dbmsconn = new CachedDbmsConnection(
+        new JdbcDbmsConnection(conn, new MysqlSyntax()));
+    dbmsconn.setDefaultSchema("test");
+    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     coordinator.setScrambleMetaSet(meta);
-    coordinator.setDefaultSchema("test");
+//    coordinator.setDefaultSchema("test");
     ExecutionResultReader reader = coordinator.process(sql);
 
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
-    RelationStandardizer gen = new RelationStandardizer(coordinator.getStaticMetaData());
+    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
     relation = gen.standardize((SelectQuery) relation);
 
     SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
@@ -1183,7 +1330,7 @@ public class TpchSelectQueryCoordinatorTest {
   }
 
 
-  //@Test
+  @Test
   public void test21Tpch() throws VerdictDBException, SQLException {
     String sql = "select s_name, count(1) as numwait\n" +
         "from (" +
@@ -1224,14 +1371,18 @@ public class TpchSelectQueryCoordinatorTest {
         "group by s_name " +
         "order by numwait desc, s_name ";
     stmt.execute("create schema if not exists `verdictdb_temp`;");
-    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcConnection(conn, new MysqlSyntax()));
+//    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcDbmsConnection(conn, new MysqlSyntax()));
+    DbmsConnection dbmsconn = new CachedDbmsConnection(
+        new JdbcDbmsConnection(conn, new MysqlSyntax()));
+    dbmsconn.setDefaultSchema("test");
+    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     coordinator.setScrambleMetaSet(meta);
-    coordinator.setDefaultSchema("test");
+//    coordinator.setDefaultSchema("test");
     ExecutionResultReader reader = coordinator.process(sql);
 
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
-    RelationStandardizer gen = new RelationStandardizer(coordinator.getStaticMetaData());
+    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
     relation = gen.standardize((SelectQuery) relation);
 
     SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());

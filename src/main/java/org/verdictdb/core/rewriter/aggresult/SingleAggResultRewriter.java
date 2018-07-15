@@ -26,10 +26,10 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.verdictdb.connection.TypeCasting;
 import org.verdictdb.core.aggresult.AggregateFrame;
 import org.verdictdb.core.aggresult.AggregateGroup;
 import org.verdictdb.core.aggresult.AggregateMeasures;
-import org.verdictdb.core.connection.TypeCasting;
 import org.verdictdb.core.rewriter.AliasRenamingRules;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBTypeException;

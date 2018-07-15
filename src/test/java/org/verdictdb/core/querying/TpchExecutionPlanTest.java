@@ -15,9 +15,9 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.verdictdb.core.connection.JdbcConnection;
-import org.verdictdb.core.connection.StaticMetaData;
-import org.verdictdb.core.execution.ExecutablePlanRunner;
+import org.verdictdb.connection.JdbcDbmsConnection;
+import org.verdictdb.connection.StaticMetaData;
+import org.verdictdb.core.execplan.ExecutablePlanRunner;
 import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
 import org.verdictdb.core.scrambling.UniformScrambler;
@@ -313,7 +313,7 @@ public class TpchExecutionPlanTest {
     assertEquals(expected, ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0)).selectQuery);
 
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
-    ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
+    ExecutablePlanRunner.runTillEnd(new JdbcDbmsConnection(conn, new H2Syntax()), queryExecutionPlan);
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
@@ -405,7 +405,7 @@ public class TpchExecutionPlanTest {
     assertEquals(expected, ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0)).selectQuery);
 
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
-    ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
+    ExecutablePlanRunner.runTillEnd(new JdbcDbmsConnection(conn, new H2Syntax()), queryExecutionPlan);
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
@@ -448,7 +448,7 @@ public class TpchExecutionPlanTest {
     assertEquals(expected.getSelectList(), ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0)).selectQuery.getSelectList());
 
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
-    ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
+    ExecutablePlanRunner.runTillEnd(new JdbcDbmsConnection(conn, new H2Syntax()), queryExecutionPlan);
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
@@ -553,7 +553,7 @@ public class TpchExecutionPlanTest {
     assertEquals(expected, ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0)).selectQuery);
 
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
-    ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
+    ExecutablePlanRunner.runTillEnd(new JdbcDbmsConnection(conn, new H2Syntax()), queryExecutionPlan);
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
@@ -612,7 +612,7 @@ public class TpchExecutionPlanTest {
     assertEquals(expected, ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0)).selectQuery);
 
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
-    ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
+    ExecutablePlanRunner.runTillEnd(new JdbcDbmsConnection(conn, new H2Syntax()), queryExecutionPlan);
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
@@ -760,7 +760,7 @@ public class TpchExecutionPlanTest {
     assertEquals(subquery, ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).selectQuery);
 
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
-    ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
+    ExecutablePlanRunner.runTillEnd(new JdbcDbmsConnection(conn, new H2Syntax()), queryExecutionPlan);
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
@@ -899,7 +899,7 @@ public class TpchExecutionPlanTest {
     assertEquals(subquery, ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).selectQuery);
 
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
-    ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
+    ExecutablePlanRunner.runTillEnd(new JdbcDbmsConnection(conn, new H2Syntax()), queryExecutionPlan);
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
@@ -1019,7 +1019,7 @@ public class TpchExecutionPlanTest {
     assertEquals(subquery, ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).selectQuery);
 
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
-    ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
+    ExecutablePlanRunner.runTillEnd(new JdbcDbmsConnection(conn, new H2Syntax()), queryExecutionPlan);
 //    queryExecutionPlan.root.executeAndWaitForTermination(new JdbcConnection(conn, new H2Syntax()));
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
@@ -1131,7 +1131,7 @@ public class TpchExecutionPlanTest {
     assertEquals(expected, ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0)).selectQuery);
 
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
-    ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
+    ExecutablePlanRunner.runTillEnd(new JdbcDbmsConnection(conn, new H2Syntax()), queryExecutionPlan);
 //    queryExecutionPlan.root.executeAndWaitForTermination(new JdbcConnection(conn, new H2Syntax()));
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
@@ -1244,7 +1244,7 @@ public class TpchExecutionPlanTest {
     assertEquals(relation, ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0)).selectQuery);
 
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
-    ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
+    ExecutablePlanRunner.runTillEnd(new JdbcDbmsConnection(conn, new H2Syntax()), queryExecutionPlan);
 //    queryExecutionPlan.root.executeAndWaitForTermination(new JdbcConnection(conn, new H2Syntax()));
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
@@ -1296,7 +1296,7 @@ public class TpchExecutionPlanTest {
     assertEquals(expected, ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0)).selectQuery);
 
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
-    ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
+    ExecutablePlanRunner.runTillEnd(new JdbcDbmsConnection(conn, new H2Syntax()), queryExecutionPlan);
 //    queryExecutionPlan.root.executeAndWaitForTermination(new JdbcConnection(conn, new H2Syntax()));
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
@@ -1369,7 +1369,7 @@ public class TpchExecutionPlanTest {
     assertEquals(relation, ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0)).selectQuery);
 
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
-    ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
+    ExecutablePlanRunner.runTillEnd(new JdbcDbmsConnection(conn, new H2Syntax()), queryExecutionPlan);
 //    queryExecutionPlan.root.executeAndWaitForTermination(new JdbcConnection(conn, new H2Syntax()));
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
@@ -1421,7 +1421,7 @@ public class TpchExecutionPlanTest {
         ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0)).getSelectQuery());
 
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
-    ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
+    ExecutablePlanRunner.runTillEnd(new JdbcDbmsConnection(conn, new H2Syntax()), queryExecutionPlan);
 //    queryExecutionPlan.root.executeAndWaitForTermination(new JdbcConnection(conn, new H2Syntax()));
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
@@ -1499,7 +1499,7 @@ public class TpchExecutionPlanTest {
     assertEquals(expected, ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).selectQuery);
 
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
-    ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
+    ExecutablePlanRunner.runTillEnd(new JdbcDbmsConnection(conn, new H2Syntax()), queryExecutionPlan);
 //    queryExecutionPlan.root.executeAndWaitForTermination(new JdbcConnection(conn, new H2Syntax()));
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
@@ -1568,7 +1568,7 @@ public class TpchExecutionPlanTest {
         ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0)).getSelectQuery().getFromList().get(2));
 
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
-    ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
+    ExecutablePlanRunner.runTillEnd(new JdbcDbmsConnection(conn, new H2Syntax()), queryExecutionPlan);
 //    queryExecutionPlan.root.executeAndWaitForTermination(new JdbcConnection(conn, new H2Syntax()));
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
@@ -1795,7 +1795,7 @@ public class TpchExecutionPlanTest {
     expected.addLimit(ConstantColumn.valueOf(1));
     assertEquals(expected, ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0)).selectQuery);
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
-    ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
+    ExecutablePlanRunner.runTillEnd(new JdbcDbmsConnection(conn, new H2Syntax()), queryExecutionPlan);
 //    queryExecutionPlan.root.executeAndWaitForTermination(new JdbcConnection(conn, new H2Syntax()));
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
@@ -1861,7 +1861,7 @@ public class TpchExecutionPlanTest {
     assertEquals(new BaseTable(placeholderSchemaName, placeholderTableName, "vt4"),
         ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0)).getSelectQuery().getFromList().get(3));
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
-    ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
+    ExecutablePlanRunner.runTillEnd(new JdbcDbmsConnection(conn, new H2Syntax()), queryExecutionPlan);
 //    queryExecutionPlan.root.executeAndWaitForTermination(new JdbcConnection(conn, new H2Syntax()));
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
@@ -1987,7 +1987,7 @@ public class TpchExecutionPlanTest {
         ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getSelectQuery().getFromList().get(0));
 
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
-    ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
+    ExecutablePlanRunner.runTillEnd(new JdbcDbmsConnection(conn, new H2Syntax()), queryExecutionPlan);
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
 
   }
@@ -2102,7 +2102,7 @@ public class TpchExecutionPlanTest {
         ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(1)).getSelectQuery().getFromList().get(0));
 
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
-    ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
+    ExecutablePlanRunner.runTillEnd(new JdbcDbmsConnection(conn, new H2Syntax()), queryExecutionPlan);
 //    queryExecutionPlan.root.executeAndWaitForTermination(new JdbcConnection(conn, new H2Syntax()));
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
 
@@ -2135,7 +2135,7 @@ public class TpchExecutionPlanTest {
     );
     assertEquals(expected, ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).selectQuery);
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
-    ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
+    ExecutablePlanRunner.runTillEnd(new JdbcDbmsConnection(conn, new H2Syntax()), queryExecutionPlan);
 //    queryExecutionPlan.root.executeAndWaitForTermination(new JdbcConnection(conn, new H2Syntax()));
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
@@ -2164,7 +2164,7 @@ public class TpchExecutionPlanTest {
     );
     assertEquals(expected, ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).selectQuery);
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
-    ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
+    ExecutablePlanRunner.runTillEnd(new JdbcDbmsConnection(conn, new H2Syntax()), queryExecutionPlan);
 //    queryExecutionPlan.root.executeAndWaitForTermination(new JdbcConnection(conn, new H2Syntax()));
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
@@ -2193,7 +2193,7 @@ public class TpchExecutionPlanTest {
     );
     assertEquals(expected, ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).selectQuery);
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
-    ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
+    ExecutablePlanRunner.runTillEnd(new JdbcDbmsConnection(conn, new H2Syntax()), queryExecutionPlan);
 //    queryExecutionPlan.root.executeAndWaitForTermination(new JdbcConnection(conn, new H2Syntax()));
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
@@ -2232,7 +2232,7 @@ public class TpchExecutionPlanTest {
                     .getFilter().get()).getOperand(1)).getOperand(1)).getSubquery());
 
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
-    ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
+    ExecutablePlanRunner.runTillEnd(new JdbcDbmsConnection(conn, new H2Syntax()), queryExecutionPlan);
 //    queryExecutionPlan.root.executeAndWaitForTermination(new JdbcConnection(conn, new H2Syntax()));
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }

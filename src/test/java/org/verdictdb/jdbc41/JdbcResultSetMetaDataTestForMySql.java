@@ -20,8 +20,8 @@ import java.sql.Timestamp;
 import org.apache.commons.io.IOUtils;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.verdictdb.core.connection.DbmsConnection;
-import org.verdictdb.core.connection.JdbcConnection;
+import org.verdictdb.connection.DbmsConnection;
+import org.verdictdb.connection.JdbcDbmsConnection;
 import org.verdictdb.exception.VerdictDBDbmsException;
 
 /**
@@ -63,7 +63,7 @@ public class JdbcResultSetMetaDataTestForMySql {
     String mysqlConnectionString =
         String.format("jdbc:mysql://%s/%s?autoReconnect=true&useSSL=false", MYSQL_HOST, MYSQL_DATABASE);
     conn = DriverManager.getConnection(mysqlConnectionString, MYSQL_UESR, MYSQL_PASSWORD);
-    dbmsConn = JdbcConnection.create(conn);
+    dbmsConn = JdbcDbmsConnection.create(conn);
 
     stmt = conn.createStatement();
     stmt.execute(String.format("DROP TABLE IF EXISTS %s", TABLE_NAME));
@@ -129,7 +129,7 @@ public class JdbcResultSetMetaDataTestForMySql {
   @Test
   public void testColumnTypes() throws VerdictDBDbmsException, SQLException, IOException {
     String sql = String.format("select * from %s", TABLE_NAME);
-    ResultSet ourResult = new JdbcResultSet(dbmsConn.execute(sql));
+    ResultSet ourResult = new VerdictResultSet(dbmsConn.execute(sql));
     ResultSetMetaData ourMetaData = ourResult.getMetaData();
     assertEquals(33, ourMetaData.getColumnCount());
 

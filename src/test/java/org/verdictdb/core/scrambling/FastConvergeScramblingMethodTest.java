@@ -14,12 +14,12 @@ import java.util.Map;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.verdictdb.core.connection.DbmsConnection;
-import org.verdictdb.core.connection.DbmsQueryResult;
-import org.verdictdb.core.connection.JdbcConnection;
-import org.verdictdb.core.execution.ExecutablePlan;
-import org.verdictdb.core.execution.ExecutablePlanRunner;
-import org.verdictdb.core.execution.ExecutionInfoToken;
+import org.verdictdb.connection.DbmsConnection;
+import org.verdictdb.connection.DbmsQueryResult;
+import org.verdictdb.connection.JdbcDbmsConnection;
+import org.verdictdb.core.execplan.ExecutablePlan;
+import org.verdictdb.core.execplan.ExecutablePlanRunner;
+import org.verdictdb.core.execplan.ExecutionInfoToken;
 import org.verdictdb.core.querying.ExecutableNodeBase;
 import org.verdictdb.core.querying.TempIdCreatorInScratchpadSchema;
 import org.verdictdb.core.sqlobject.ColumnOp;
@@ -115,7 +115,7 @@ public class FastConvergeScramblingMethodTest {
     // provision table size token
     int tableSize = 100;
     String aliasname = PercentilesAndCountNode.TOTAL_COUNT_ALIAS_NAME;
-    DbmsConnection conn = JdbcConnection.create(h2conn);
+    DbmsConnection conn = JdbcDbmsConnection.create(h2conn);
     DbmsQueryResult result = conn.execute(String.format("select %d as \"%s\"", tableSize, aliasname));
     
     ExecutionInfoToken e = new ExecutionInfoToken();
@@ -163,7 +163,7 @@ public class FastConvergeScramblingMethodTest {
     ExecutableNodeBase groupSizeRoot = nodes.get(2);
     groupSizeRoot.subscribeTo(columnMetaDataNode, 100);
     ExecutablePlan groupSizePlan = new SimpleTreePlan(groupSizeRoot);
-    DbmsConnection conn = JdbcConnection.create(h2conn);
+    DbmsConnection conn = JdbcDbmsConnection.create(h2conn);
     ExecutablePlanRunner.runTillEnd(conn, groupSizePlan);
   }
   
@@ -184,7 +184,7 @@ public class FastConvergeScramblingMethodTest {
         + "stddev_pop(t.\"HEIGHT\") as \"verdictdbstddevHEIGHT\", "
         + "count(*) as \"verdictdbtotalcount\" "
         + "from \"test\".\"people\" as t";
-    DbmsConnection conn = JdbcConnection.create(h2conn);
+    DbmsConnection conn = JdbcDbmsConnection.create(h2conn);
     DbmsQueryResult queryResult = conn.execute(sql);
     
     // tests
