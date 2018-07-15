@@ -69,6 +69,8 @@ public abstract class AttributeValueRetrievalHelper {
       }
     } else if (value instanceof String) {
       String v = value.toString();
+      // PostgreSql return t/f
+      // Redshift return true/false
       if (v.equals("1")||v.equals("t")||v.equals("true")) {
         return true;
       } else if (v.equals("0")||v.equals("f")||v.equals("false")) {
