@@ -300,8 +300,7 @@ expression
     | '~' expression                                           #unary_operator_expression
     | expression op=('*' | '/' | '%') expression               #binary_operator_expression
     | op=('+' | '-') expression                                #unary_operator_expression
-//    | expression op=('+' | '-' | '&' | '^' | '|' | '||') expression   #binary_operator_expression
-    | expression op=('+' | '-' | '&' | '^' | '|') expression   #binary_operator_expression
+    | expression op=('+' | '-' | '&' | '^' | '|' | '#' | '||' | '<<' | '>>'  ) expression   #binary_operator_expression
     | expression comparison_operator expression                #binary_operator_expression
     | interval                                                 #interval_expression
     | date                                                     #date_expression
@@ -581,32 +580,90 @@ value_manipulation_function
     | binary_manipulation_function
     | ternary_manipulation_function
     | nary_manipulation_function
+    | extract_time_function
+    | overlay_string_function
+    | substring_string_function
+    ;
+
+extract_time_function
+    : function_name=EXTRACT
+      '(' extract_unit FROM expression ')'
+    ;
+
+extract_unit
+    : YEAR | MONTH | DAY | HOUR | MINUTE | expression
+    ;
+
+overlay_string_function
+    : function_name=OVERLAY
+      '(' expression PLACING expression FROM expression (FOR expression)? ')'
+    ;
+
+substring_string_function
+    : function_name=SUBSTRING
+      '(' expression FROM expression (FOR expression)? ')'
     ;
 
 nary_manipulation_function
-	: function_name=(CONCAT | CONCAT_WS | COALESCE)
+	: function_name=(CONCAT | CONCAT_WS | COALESCE | FIELD | GREATEST | LEAST | WIDTH_BUCKET | BTRIM | FORMAT
+	| REGEXP_MATCHES | REGEXP_REPLACE | REGEXP_SPLIT_TO_ARRAY | REGEXP_SPLIT_TO_TABLE | LTRIM | RTRIM | TO_ASCII
+	| MAKE_TIMESTAMP | MAKE_TIMESTAMPTZ | TS_HEADLINE | TS_RANK | TS_RANK_CD | UNNEST | XMLCONCAT | XMLELEMENT
+	| XMLFOREST | JSON_BUILD_ARRAY | JSON_BUILD_OBJECT | JSONB_SET | JSONB_INSERT | UNNEST)
 		'(' expression (',' expression)* ')'
     ;
 
 ternary_manipulation_function
-    : function_name=(CONV | SUBSTR | HASH | RPAD)
+    : function_name=(CONV | SUBSTR | HASH | RPAD | SUBSTRING | LPAD | MID | REPLACE | SUBSTRING_INDEX | MAKETIME | IF
+    | CONVERT | SPLIT_PART | TRANSLATE | MAKE_DATE | MAKE_TIME | SETWEIGHT | TS_REWRITE | TSQUERY_PHRASE | XMLROOT
+    | XPATH | XPATH_EXISTS | ARRAY_REPLACE | ARRAY_TO_STRING | STRING_TO_ARRAY)
       '(' expression ',' expression ',' expression ')'
     ;
 
 binary_manipulation_function
-    : function_name=(ROUND | MOD | PMOD | STRTOL | POW | PERCENTILE | SPLIT | INSTR | ENCODE | DECODE | SHIFTLEFT | SHIFTRIGHT | SHIFTRIGHTUNSIGNED | NVL | FIND_IN_SET | FORMAT_NUMBER | GET_JSON_OBJECT | IN_FILE | LOCATE | REPEAT | AES_ENCRYPT | AES_DECRYPT)
+    : function_name=(ROUND | MOD | PMOD | LEFT | RIGHT | STRTOL | POW | POWER | PERCENTILE | SPLIT | INSTR | ENCODE | DECODE | SHIFTLEFT
+    | SHIFTRIGHT | SHIFTRIGHTUNSIGNED | NVL | FIND_IN_SET | FORMAT_NUMBER | FORMAT | GET_JSON_OBJECT | IN_FILE
+    | LOCATE | REPEAT | AES_ENCRYPT | AES_DECRYPT | POSITION | STRCMP | TRUNCATE | ADDDATE | ADDTIME | DATEDIFF | DATE_ADD
+    | DATE_FORMAT | DATE_SUB | MAKEDATE | PERIOD_ADD | PERIOD_DIFF | SUBDATE | TIME_FORMAT | TIMEDIFF | CONVERT | IFNULL | NULLIF
+    | DIV | LOG | TRUNC | CONVERT_FROM | CONVERT_TO | LENGTH | STRPOS | GET_BIT | GET_BYTE | SET_BIT | SET_BYTE | TO_CHAR
+    | TO_NUMBER | TO_TIMESTAMP | AGE | DATE_PART | DATE_TRUNC | ENUM_RANGE | BOUND_BOX | CIRCLE | POINT | SET_MASKLEN
+    | INET_SAME_FAMILY | INET_MERGE | PLAINTO_TSQUERY | PHRASETO_TSQUERY | SETWEIGHT | TO_TSQUERY | TO_TSVECTOR | TS_DELETE
+    | TS_FILTER | TS_REWRITE | TSQUERY_PHRASE | XMLPI | XMLROOT | XPATH | XPATH_EXISTS | ARRAY_TO_JSON | ROW_TO_JSON
+    | JSON_OBJECT | JSON_EXTRACT_PATH | JSON_EXTRACT_PATH_TEXT | JSON_POPULATE_RECORDSET | JSON_POPULATE_RECORD | SETVAL
+    | ARRAY_APPEND | ARRAY_CAT | ARRAY_LENGTH | ARRAY_LOWER | ARRAY_POSITION | ARRAY_POSITIONS | ARRAY_PREPEND
+    | ARRAY_REMOVE | ARRAY_TO_STRING | ARRAY_UPPER | STRING_TO_ARRAY | RANGE_MERGE | CORR | COVAR_POP | COVAR_SAMP
+    | REGR_AVGX | REGR_AVGY | REGR_COUNT | REGR_INTERCEPT | REGR_R2 | REGR_SLOPE | REGR_SXX | REGR_SXY | REGR_SYY
+    | STDDEV_POP | VARIANCE | VAR_POP | VAR_SAMP)
       '(' expression ',' expression ')'
     ;
 
 unary_manipulation_function
-    : function_name=(ROUND | FLOOR | CEIL | EXP | LN | LOG10 | LOG2 | SIN | COS | TAN | SIGN | RAND | FNV_HASH | RAWTOHEX
-     | ABS | STDDEV | SQRT | MD5 | CRC32 | YEAR | QUARTER | MONTH | DAY | HOUR | MINUTE | SECOND | WEEKOFYEAR | LOWER | UPPER | ASCII | CHARACTER_LENGTH | FACTORIAL | CBRT | LENGTH | TRIM | ASIN | ACOS | ATAN | DEGREES | RADIANS | POSITIVE | NEGATIVE | BROUND | BIN | HEX | UNHEX | FROM_UNIXTIME | TO_DATE | CHR | LTRIM | REVERSE | SPACE_FUNCTION | SHA1 | SHA2 )
+    : function_name=(ROUND | CHAR_LENGTH | FLOOR | CEIL | CEILING | EXP | LN | LOG | LOG10 | LOG2 | SIN | COS | COT | TAN | SIGN | RAND | FNV_HASH | RAWTOHEX
+     | ABS | STDDEV | SQRT | LCASE | MD5 | CRC32 | YEAR | QUARTER | MONTH | DAY | HOUR | MINUTE | SECOND | WEEKOFYEAR | LOWER
+     | UPPER | UCASE | ASCII | CHARACTER_LENGTH | FACTORIAL | CBRT | LENGTH | TRIM | ASIN | ACOS | ATAN | ATAN2 | DEGREES | RADIANS | POSITIVE
+     | NEGATIVE | BROUND | BIN | HEX | UNHEX | FROM_UNIXTIME | TO_DATE | CHR | LTRIM | RTRIM| REVERSE | SPACE_FUNCTION | SHA1
+     | SHA2 | SPACE | DATE | DAYNAME | DAYOFMONTH | DAYOFWEEK | DAYOFYEAR | FROM_DAYS | LAST_DAY | MICROSECOND | MONTHNAME | SEC_TO_TIME
+     | STR_TO_DATE | TIME | TIME_TO_SEC | TIMESTAMP | TO_DAYS | WEEK | WEEKDAY | YEARWEEK | BINARY | ISNULL | SCALE | TRUNC
+     | SETSEED | BIT_LENGTH | OCTET_LENGTH | CHR | INITCAP | QUOTE_IDENT | QUOTE_LITERAL | QUOTE_NULLABLE | TO_HEX | AGE
+     | ISFINITE | JUSTIFY_DAYS | JUSTIFY_HOURS | JUSTIFY_INTERVALS | TO_TIMESTAMP | ENUM_RANGE | ENUM_FIRST | ENUM_LAST
+     | AREA | CENTER | DIAMETER | HEIGHT | ISCLOSED | ISOPEN | NPOINTS | PCLOSE | POPEN | RADIUS | WIDTH | BOX | CIRCLE
+     | LINE | LSEG | PATH | POINT | POLYGON | ABBREV | BROADCAST | FAMILY | HOST | HOSTMASK | MASKLEN | NETMASK | NETWORK
+     | TEXT | MACADDR8_SET7BIT | ARRAY_TO_TSVECTOR | NUMNODE | PLAINTO_TSQUERY | PHRASETO_TSQUERY | QUERYTREE | STRIP
+     | TO_TSQUERY | TO_TSVECTOR | TSVECTOR_TO_ARRAY | XMLCOMMENT | XMLPI | XMLAGG | XML_ISWELL_FORMAT | TO_JSON | TO_JSONB
+     | ARRAY_TO_JSON | ROW_TO_JSON | JSON_OBJECT | JSON_ARRAY_LENGTH | JSON_EACH | JSON_EACH_TEXT | JSON_OBJECT_KEYS
+     | JSON_ARRAY_ELEMENTS | JSON_ARRAY_ELEMENTS_TEXT | JSON_TYPEOF | JSON_TO_RECORD | JSON_TO_RECORDSET | JSON_STRIP_NULLS
+     | JSONB_PRETTY | CURRVAL | NEXTVAL | ARRAY_NDIMS | ARRAY_DIMS | CARDINALITY | ISEMPTY | LOWER_INC | UPPER_INC
+     | LOWER_INF | UPPER_INF | ARRAY_AGG | BIT_AND | BIT_OR | BOOL_AND | BOOL_OR | EVERY | JSON_AGG | JSONB_AGG
+     | JSON_OBJECT_AGG | JSONB_OBJECT_AGG | STRING_AGG)
       '(' expression ')'
-    | function_name=CAST '(' cast_as_expression ')'    
+    | function_name=CAST '(' cast_as_expression ')'
     ;
-    
+
 noparam_manipulation_function
-    : function_name=(UNIX_TIMESTAMP | CURRENT_TIMESTAMP | RANDOM | NATURAL_CONSTANT | PI)
+    : function_name=(UNIX_TIMESTAMP | CURRENT_TIMESTAMP | CURRENT_DATE | CURRENT_TIME | RANDOM | RAND | NATURAL_CONSTANT
+    | PI | CURDATE | CURTIME | LOCALTIME | LOCALTIMESTAMP | NOW | SYSDATE | CURRENT_USER | DATABASE | LAST_INSERT_ID
+    | SESSION_USER | SYSTEM_USER | USER | VERSION | PG_CLIENT_ENCODING | CLOCK_TIMESTAMP | STATEMENT_TIMESTAMP
+    | TIMEOFDAY | TRANSACTION_TIMESTAMP | GET_CURRENT_TS_CONFIG | TSVECTOR_UPDATE_TRIGGER | TSVECTOR_UPDATE_TRIGGER_COLUMN
+    | LASTVAL)
       '(' ')'
     ;
     

@@ -645,7 +645,8 @@ public class TpchSelectQueryCoordinatorTest {
         "      join nation n2 on s_nationkey = n2.n_nationkey\n" + 
         "    where\n" + 
         "      r_name = 'AMERICA'\n" + 
-        "      and o_orderdate between '1995-01-01' and '1996-12-31'\n" + 
+        "      and o_orderdate between '1995-01-01' and '1996-12-31'\n" +
+        "      and p_type = 'ECONOMY ANODIZED STEEL'" +
         "  ) as all_nations\n" + 
         "group by\n" + 
         "  o_year\n" + 
@@ -739,7 +740,7 @@ public class TpchSelectQueryCoordinatorTest {
         "      join part on p_partkey = l_partkey\n" + 
         "      join nation on s_nationkey = n_nationkey\n" + 
         "    where\n" + 
-        "      p_name like '%:1%'\n" + 
+        "      p_name like '%green%'\n" +
         "  ) as profit\n" + 
         "group by\n" + 
         "  nation,\n" + 
