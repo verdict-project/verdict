@@ -1,6 +1,7 @@
 package org.verdictdb.coordinator;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -1262,6 +1263,45 @@ public class MySqlTpchSelectQueryCoordinatorTest {
     }
     assertEquals(12, cnt);
 //    System.out.println("test case 21 finished");
+  }
+
+  @Test
+  public void FailedParserTest() throws SQLException, VerdictDBException {
+    String errorSql = "select\n" +
+        "  s_name,\n" +
+        "  count(s_address)\n" +
+        "fromfrom\n" +
+        "  supplier,\n" +
+        "  nation,\n" +
+        "  partsupp,\n" +
+        "  (select\n" +
+        "    l_partkey,\n" +
+        "    l_suppkey,\n" +
+        "    0.5 * sum(l_quantity) as sum_quantity\n" +
+        "  from\n" +
+        "    lineitem_scrambled\n" +
+        "where\n" +
+        "  l_shipdate >= '1994-01-01'\n" +
+        "  and l_shipdate < '1998-01-01'\n" +
+        "group by l_partkey, l_suppkey) as q20_tmp2_cached\n" +
+        "where\n" +
+        "  s_nationkey = n_nationkey\n" +
+        "  and n_name = 'CANADA'\n" +
+        "  and s_suppkey = ps_suppkey\n" +
+        "  group by s_name\n" +
+        "order by s_name";
+    stmt.execute("create schema if not exists `verdictdb_temp`;");
+    DbmsConnection dbmsconn = new CachedDbmsConnection(
+        new JdbcConnection(conn, new MysqlSyntax()));
+    dbmsconn.setDefaultSchema(MYSQL_DATABASE);
+    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
+    coordinator.setScrambleMetaSet(meta);
+    try {
+      coordinator.process(errorSql);
+      fail();
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
   }
 
   @AfterClass
