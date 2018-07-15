@@ -18,7 +18,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.verdictdb.connection.JdbcDbmsConnection;
+import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.connection.StaticMetaData;
 import org.verdictdb.core.execplan.ExecutablePlanRunner;
 import org.verdictdb.core.execplan.ExecutionInfoToken;
@@ -141,7 +141,7 @@ public class AsyncAggJoinScaleTest {
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
 //    queryExecutionPlan.getRoot().print();
 
-    ExecutablePlanRunner.runTillEnd(new JdbcDbmsConnection(conn, new H2Syntax()), queryExecutionPlan);
+    ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
 //    queryExecutionPlan.root.executeAndWaitForTermination();
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }

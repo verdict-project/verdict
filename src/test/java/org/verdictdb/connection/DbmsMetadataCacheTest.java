@@ -13,8 +13,6 @@ import java.util.List;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.verdictdb.connection.CachedMetaDataProvider;
-import org.verdictdb.connection.JdbcDbmsConnection;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.sqlsyntax.H2Syntax;
 import org.verdictdb.sqlsyntax.MysqlSyntax;
@@ -24,7 +22,7 @@ public class DbmsMetadataCacheTest {
 
   static Connection conn;
 
-  private CachedMetaDataProvider metadataCache = new CachedMetaDataProvider(new JdbcDbmsConnection(conn, new H2Syntax()));
+  private CachedMetaDataProvider metadataCache = new CachedMetaDataProvider(new JdbcConnection(conn, new H2Syntax()));
 
   private static Statement stmt;
 
@@ -146,7 +144,7 @@ public class DbmsMetadataCacheTest {
   @Test
   public void getPartitionTestPostgres() throws SQLException, VerdictDBDbmsException {
     Statement statement = postgresqlConn.createStatement();
-    CachedMetaDataProvider postgresMetadataCache = new CachedMetaDataProvider(new JdbcDbmsConnection(postgresqlConn, new PostgresqlSyntax()));
+    CachedMetaDataProvider postgresMetadataCache = new CachedMetaDataProvider(new JdbcConnection(postgresqlConn, new PostgresqlSyntax()));
     statement.execute("DROP TABLE IF EXISTS measurement");
     statement.execute("DROP TABLE IF EXISTS measurement_y2006m02");
     statement.execute("DROP TABLE IF EXISTS measurement_y2006m03");
@@ -161,7 +159,7 @@ public class DbmsMetadataCacheTest {
   @Test
   public void getPartitionTestMySQL() throws SQLException, VerdictDBDbmsException {
     Statement statement = mysqlConn.createStatement();
-    CachedMetaDataProvider mysqlMetadataCache = new CachedMetaDataProvider(new JdbcDbmsConnection(mysqlConn, new MysqlSyntax()));
+    CachedMetaDataProvider mysqlMetadataCache = new CachedMetaDataProvider(new JdbcConnection(mysqlConn, new MysqlSyntax()));
     statement.execute("DROP TABLE IF EXISTS tp");
     statement.execute("CREATE TABLE tp (c1 INT, c2 INT, c3 VARCHAR(25)) PARTITION BY HASH(c1 + c2) PARTITIONS 4;");
     List<String> partition = mysqlMetadataCache.getPartitionColumns("test", "tp");
