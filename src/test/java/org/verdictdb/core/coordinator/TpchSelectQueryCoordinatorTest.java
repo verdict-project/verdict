@@ -1,8 +1,10 @@
 package org.verdictdb.core.coordinator;
 
 import org.junit.AfterClass;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.verdictdb.connection.CachedDbmsConnection;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.connection.JdbcDbmsConnection;
@@ -70,6 +72,9 @@ public class TpchSelectQueryCoordinatorTest {
     conn = DriverManager.getConnection(mysqlConnectionString, MYSQL_UESR, MYSQL_PASSWORD);
 
     stmt = conn.createStatement();
+    stmt.execute("DROP SCHEMA IF EXISTS `test`");
+    stmt.execute("CREATE SCHEMA IF NOT EXISTS `test`");
+    
     stmt.execute("CREATE TABLE  IF NOT EXISTS `test`.`nation`  (`n_nationkey`  INT, " +
         "                            `n_name`       CHAR(25), " +
         "                            `n_regionkey`  INT, " +
@@ -198,7 +203,15 @@ public class TpchSelectQueryCoordinatorTest {
     distribution1.put(0, Arrays.asList(0.33, 0.66, 1.0));
     tablemeta.setCumulativeMassDistributionPerTier(distribution1);
     meta.insertScrambleMetaEntry(tablemeta);
+    
+    System.out.println("Setup done");
   }
+  
+//  @Before
+//  public void refreshTempSchema() throws SQLException {
+//    stmt.execute("drop schema if exists `verdictdb_temp`");
+//    stmt.execute("create schema if not exists `verdictdb_temp`");
+//  }
 
   @Test
   public void testTpch1() throws VerdictDBException, SQLException {
@@ -223,10 +236,11 @@ public class TpchSelectQueryCoordinatorTest {
         "order by " +
         " l_returnflag, " +
         " l_linestatus ";
-    stmt.execute("create schema if not exists `verdictdb_temp`;");
     
 //    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcDbmsConnection(conn, new MysqlSyntax()));
-    DbmsConnection dbmsconn = new JdbcDbmsConnection(conn, new MysqlSyntax());
+    stmt.execute("create schema if not exists `verdictdb_temp`");
+    DbmsConnection dbmsconn = new CachedDbmsConnection(
+        new JdbcDbmsConnection(conn, new MysqlSyntax()));
     dbmsconn.setDefaultSchema("test");
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     
@@ -292,9 +306,10 @@ public class TpchSelectQueryCoordinatorTest {
         "revenue desc, " +
         "o_orderdate " +
         "limit 10";
-    stmt.execute("create schema if not exists `verdictdb_temp`;");
 //    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcDbmsConnection(conn, new MysqlSyntax()));
-    DbmsConnection dbmsconn = new JdbcDbmsConnection(conn, new MysqlSyntax());
+    stmt.execute("create schema if not exists `verdictdb_temp`");
+    DbmsConnection dbmsconn = new CachedDbmsConnection(
+        new JdbcDbmsConnection(conn, new MysqlSyntax()));
     dbmsconn.setDefaultSchema("test");
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     
@@ -347,7 +362,8 @@ public class TpchSelectQueryCoordinatorTest {
         "o_orderpriority ";
     stmt.execute("create schema if not exists `verdictdb_temp`;");
 //    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcDbmsConnection(conn, new MysqlSyntax()));
-    DbmsConnection dbmsconn = new JdbcDbmsConnection(conn, new MysqlSyntax());
+    DbmsConnection dbmsconn = new CachedDbmsConnection(
+        new JdbcDbmsConnection(conn, new MysqlSyntax()));
     dbmsconn.setDefaultSchema("test");
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     
@@ -408,7 +424,8 @@ public class TpchSelectQueryCoordinatorTest {
         "revenue desc ";
     stmt.execute("create schema if not exists `verdictdb_temp`;");
 //    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcDbmsConnection(conn, new MysqlSyntax()));
-    DbmsConnection dbmsconn = new JdbcDbmsConnection(conn, new MysqlSyntax());
+    DbmsConnection dbmsconn = new CachedDbmsConnection(
+        new JdbcDbmsConnection(conn, new MysqlSyntax()));
     dbmsconn.setDefaultSchema("test");
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     
@@ -455,7 +472,8 @@ public class TpchSelectQueryCoordinatorTest {
         "and l_quantity < 15 ";
     stmt.execute("create schema if not exists `verdictdb_temp`;");
 //    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcDbmsConnection(conn, new MysqlSyntax()));
-    DbmsConnection dbmsconn = new JdbcDbmsConnection(conn, new MysqlSyntax());
+    DbmsConnection dbmsconn = new CachedDbmsConnection(
+        new JdbcDbmsConnection(conn, new MysqlSyntax()));
     dbmsconn.setDefaultSchema("test");
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     coordinator.setScrambleMetaSet(meta);
@@ -530,7 +548,8 @@ public class TpchSelectQueryCoordinatorTest {
         "l_year ";
     stmt.execute("create schema if not exists `verdictdb_temp`;");
 //    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcDbmsConnection(conn, new MysqlSyntax()));
-    DbmsConnection dbmsconn = new JdbcDbmsConnection(conn, new MysqlSyntax());
+    DbmsConnection dbmsconn = new CachedDbmsConnection(
+        new JdbcDbmsConnection(conn, new MysqlSyntax()));
     dbmsconn.setDefaultSchema("test");
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     coordinator.setScrambleMetaSet(meta);
@@ -564,48 +583,78 @@ public class TpchSelectQueryCoordinatorTest {
     System.out.println("test case 7 finished");
   }
 
+  // Very slow for some reason
   @Test
   public void test8Tpch() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
-    String sql = "select " +
-        "o_year, " +
-        "sum(case " +
-        "when nation = 'PERU' then volume " +
-        "else 0 " +
-        "end) as numerator, sum(volume) as denominator " +
-        "from " +
-        "( " +
-        "select " +
-        "year(o_orderdate) as o_year, " +
-        "l_extendedprice * (1 - l_discount) as volume, " +
-        "n2.n_name as nation " +
-        "from " +
-        "part, " +
-        "supplier, " +
-        "lineitem_scrambled, " +
-        "orders_scrambled, " +
-        "customer, " +
-        "nation n1, " +
-        "nation n2, " +
-        "region " +
-        "where " +
-        "p_partkey = l_partkey " +
-        "and s_suppkey = l_suppkey " +
-        "and l_orderkey = o_orderkey " +
-        "and o_custkey = c_custkey " +
-        "and c_nationkey = n1.n_nationkey " +
-        "and n1.n_regionkey = r_regionkey " +
-        "and r_name = 'AMERICA' " +
-        "and s_nationkey = n2.n_nationkey " +
-        "and o_orderdate between '1991-01-01' and '1996-12-31' " +
-        ") as all_nations " +
-        "group by " +
-        "o_year " +
-        "order by " +
-        "o_year ";
+//    String sql = "select " +
+//        "o_year, " +
+//        "sum(case " +
+//        "when nation = 'PERU' then volume " +
+//        "else 0 " +
+//        "end) as numerator, sum(volume) as denominator " +
+//        "from " +
+//        "( " +
+//        "select " +
+//        "year(o_orderdate) as o_year, " +
+//        "l_extendedprice * (1 - l_discount) as volume, " +
+//        "n2.n_name as nation " +
+//        "from " +
+//        "part, " +
+//        "supplier, " +
+//        "lineitem_scrambled, " +
+//        "orders_scrambled, " +
+//        "customer, " +
+//        "nation n1, " +
+//        "nation n2, " +
+//        "region " +
+//        "where " +
+//        "p_partkey = l_partkey " +
+//        "and s_suppkey = l_suppkey " +
+//        "and l_orderkey = o_orderkey " +
+//        "and o_custkey = c_custkey " +
+//        "and c_nationkey = n1.n_nationkey " +
+//        "and n1.n_regionkey = r_regionkey " +
+//        "and r_name = 'AMERICA' " +
+//        "and s_nationkey = n2.n_nationkey " +
+//        "and o_orderdate between '1991-01-01' and '1996-12-31' " +
+//        ") as all_nations " +
+//        "group by " +
+//        "o_year " +
+//        "order by " +
+//        "o_year ";
+    String sql = "select\n" + 
+        "  o_year,\n" + 
+        "  sum(case\n" + 
+        "    when nation = 'PERU' then volume\n" + 
+        "    else 0\n" + 
+        "  end) as numerator, sum(volume) as demoninator\n" + 
+        "from\n" + 
+        "  (\n" + 
+        "    select\n" + 
+        "      year(o_orderdate) as o_year,\n" + 
+        "      l_extendedprice * (1 - l_discount) as volume,\n" + 
+        "      n2.n_name as nation\n" + 
+        "    from\n" + 
+        "      lineitem_scrambled join orders_scrambled on l_orderkey = o_orderkey\n" + 
+        "      join supplier on s_suppkey = l_suppkey\n" + 
+        "      join part on p_partkey = l_partkey\n" + 
+        "      join customer on o_custkey = c_custkey\n" + 
+        "      join nation n1 on c_nationkey = n1.n_nationkey\n" + 
+        "      join region on n1.n_regionkey = r_regionkey\n" + 
+        "      join nation n2 on s_nationkey = n2.n_nationkey\n" + 
+        "    where\n" + 
+        "      r_name = 'AMERICA'\n" + 
+        "      and o_orderdate between '1995-01-01' and '1996-12-31'\n" + 
+        "  ) as all_nations\n" + 
+        "group by\n" + 
+        "  o_year\n" + 
+        "order by\n" + 
+        "  o_year";
     stmt.execute("create schema if not exists `verdictdb_temp`;");
 //    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcDbmsConnection(conn, new MysqlSyntax()));
-    DbmsConnection dbmsconn = new JdbcDbmsConnection(conn, new MysqlSyntax());
+    DbmsConnection dbmsconn = new CachedDbmsConnection(
+        new JdbcDbmsConnection(conn, new MysqlSyntax()));
     dbmsconn.setDefaultSchema("test");
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     coordinator.setScrambleMetaSet(meta);
@@ -638,43 +687,71 @@ public class TpchSelectQueryCoordinatorTest {
     System.out.println("test case 8 finished");
   }
 
+  // Very slow as well
   @Test
   public void test9Tpch() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
-    String sql = "select " +
-        "nation, " +
-        "o_year, " +
-        "sum(amount) as sum_profit " +
-        "from " +
-        "( " +
-        "select " +
-        "n_name as nation, " +
-        "substr(o_orderdate,0,4) as o_year, " +
-        "l_extendedprice * (1 - l_discount) - ps_supplycost * l_quantity as amount " +
-        "from " +
-        "part, " +
-        "supplier, " +
-        "lineitem_scrambled, " +
-        "partsupp, " +
-        "orders_scrambled, " +
-        "nation " +
-        "where " +
-        "s_suppkey = l_suppkey " +
-        "and ps_suppkey = l_suppkey " +
-        "and ps_partkey = l_partkey " +
-        "and p_partkey = l_partkey " +
-        "and o_orderkey = l_orderkey " +
-        "and s_nationkey = n_nationkey " +
-        ") as profit " +
-        "group by " +
-        "nation, " +
-        "o_year " +
-        "order by " +
-        "nation, " +
-        "o_year desc ";
+//    String sql = "select " +
+//        "nation, " +
+//        "o_year, " +
+//        "sum(amount) as sum_profit " +
+//        "from " +
+//        "( " +
+//        "select " +
+//        "n_name as nation, " +
+//        "substr(o_orderdate,0,4) as o_year, " +
+//        "l_extendedprice * (1 - l_discount) - ps_supplycost * l_quantity as amount " +
+//        "from " +
+//        "part, " +
+//        "supplier, " +
+//        "lineitem_scrambled, " +
+//        "partsupp, " +
+//        "orders_scrambled, " +
+//        "nation " +
+//        "where " +
+//        "s_suppkey = l_suppkey " +
+//        "and ps_suppkey = l_suppkey " +
+//        "and ps_partkey = l_partkey " +
+//        "and p_partkey = l_partkey " +
+//        "and o_orderkey = l_orderkey " +
+//        "and s_nationkey = n_nationkey " +
+//        ") as profit " +
+//        "group by " +
+//        "nation, " +
+//        "o_year " +
+//        "order by " +
+//        "nation, " +
+//        "o_year desc ";
+    String sql = "select\n" + 
+        "  nation,\n" + 
+        "  o_year,\n" + 
+        "  sum(amount) as sum_profit\n" + 
+        "from\n" + 
+        "  (\n" + 
+        "    select\n" + 
+        "      n_name as nation,\n" + 
+        "      year(o_orderdate) as o_year,\n" + 
+        "      l_extendedprice * (1 - l_discount) - ps_supplycost * l_quantity as amount\n" + 
+        "    from\n" + 
+        "      lineitem_scrambled join orders_scrambled on o_orderkey = l_orderkey\n" + 
+        "      join partsupp on ps_suppkey = l_suppkey and ps_partkey = l_partkey\n" + 
+        "      join supplier on s_suppkey = l_suppkey\n" + 
+        "      join part on p_partkey = l_partkey\n" + 
+        "      join nation on s_nationkey = n_nationkey\n" + 
+        "    where\n" + 
+        "      p_name like '%:1%'\n" + 
+        "  ) as profit\n" + 
+        "group by\n" + 
+        "  nation,\n" + 
+        "  o_year\n" + 
+        "order by\n" + 
+        "  nation,\n" + 
+        "  o_year desc";
+    
     stmt.execute("create schema if not exists `verdictdb_temp`;");
 //    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcDbmsConnection(conn, new MysqlSyntax()));
-    DbmsConnection dbmsconn = new JdbcDbmsConnection(conn, new MysqlSyntax());
+    DbmsConnection dbmsconn = new CachedDbmsConnection(
+        new JdbcDbmsConnection(conn, new MysqlSyntax()));
     dbmsconn.setDefaultSchema("test");
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     coordinator.setScrambleMetaSet(meta);
@@ -742,7 +819,8 @@ public class TpchSelectQueryCoordinatorTest {
         "revenue desc ";
     stmt.execute("create schema if not exists `verdictdb_temp`;");
 //    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcDbmsConnection(conn, new MysqlSyntax()));
-    DbmsConnection dbmsconn = new JdbcDbmsConnection(conn, new MysqlSyntax());
+    DbmsConnection dbmsconn = new CachedDbmsConnection(
+        new JdbcDbmsConnection(conn, new MysqlSyntax()));
     dbmsconn.setDefaultSchema("test");
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     coordinator.setScrambleMetaSet(meta);
@@ -806,7 +884,8 @@ public class TpchSelectQueryCoordinatorTest {
         "l_shipmode ";
     stmt.execute("create schema if not exists `verdictdb_temp`;");
 //    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcDbmsConnection(conn, new MysqlSyntax()));
-    DbmsConnection dbmsconn = new JdbcDbmsConnection(conn, new MysqlSyntax());
+    DbmsConnection dbmsconn = new CachedDbmsConnection(
+        new JdbcDbmsConnection(conn, new MysqlSyntax()));
     dbmsconn.setDefaultSchema("test");
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     coordinator.setScrambleMetaSet(meta);
@@ -853,7 +932,8 @@ public class TpchSelectQueryCoordinatorTest {
         "order by c_custkey";
     stmt.execute("create schema if not exists `verdictdb_temp`;");
 //    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcDbmsConnection(conn, new MysqlSyntax()));
-    DbmsConnection dbmsconn = new JdbcDbmsConnection(conn, new MysqlSyntax());
+    DbmsConnection dbmsconn = new CachedDbmsConnection(
+        new JdbcDbmsConnection(conn, new MysqlSyntax()));
     dbmsconn.setDefaultSchema("test");
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     coordinator.setScrambleMetaSet(meta);
@@ -902,7 +982,8 @@ public class TpchSelectQueryCoordinatorTest {
         "and l_shipdate < date '1998-01-01' ";
     stmt.execute("create schema if not exists `verdictdb_temp`;");
 //    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcDbmsConnection(conn, new MysqlSyntax()));
-    DbmsConnection dbmsconn = new JdbcDbmsConnection(conn, new MysqlSyntax());
+    DbmsConnection dbmsconn = new CachedDbmsConnection(
+        new JdbcDbmsConnection(conn, new MysqlSyntax()));
     dbmsconn.setDefaultSchema("test");
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     coordinator.setScrambleMetaSet(meta);
@@ -950,7 +1031,8 @@ public class TpchSelectQueryCoordinatorTest {
         "l_suppkey";
     stmt.execute("create schema if not exists `verdictdb_temp`;");
 //    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcDbmsConnection(conn, new MysqlSyntax()));
-    DbmsConnection dbmsconn = new JdbcDbmsConnection(conn, new MysqlSyntax());
+    DbmsConnection dbmsconn = new CachedDbmsConnection(
+        new JdbcDbmsConnection(conn, new MysqlSyntax()));
     dbmsconn.setDefaultSchema("test");
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     coordinator.setScrambleMetaSet(meta);
@@ -1012,7 +1094,8 @@ public class TpchSelectQueryCoordinatorTest {
         "where quantity > t_avg_quantity";
     stmt.execute("create schema if not exists `verdictdb_temp`;");
 //    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcDbmsConnection(conn, new MysqlSyntax()));
-    DbmsConnection dbmsconn = new JdbcDbmsConnection(conn, new MysqlSyntax());
+    DbmsConnection dbmsconn = new CachedDbmsConnection(
+        new JdbcDbmsConnection(conn, new MysqlSyntax()));
     dbmsconn.setDefaultSchema("test");
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     coordinator.setScrambleMetaSet(meta);
@@ -1081,7 +1164,8 @@ public class TpchSelectQueryCoordinatorTest {
         "  o_orderdate \n";
     stmt.execute("create schema if not exists `verdictdb_temp`;");
 //    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcDbmsConnection(conn, new MysqlSyntax()));
-    DbmsConnection dbmsconn = new JdbcDbmsConnection(conn, new MysqlSyntax());
+    DbmsConnection dbmsconn = new CachedDbmsConnection(
+        new JdbcDbmsConnection(conn, new MysqlSyntax()));
     dbmsconn.setDefaultSchema("test");
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     coordinator.setScrambleMetaSet(meta);
@@ -1153,7 +1237,8 @@ public class TpchSelectQueryCoordinatorTest {
         ") ";
     stmt.execute("create schema if not exists `verdictdb_temp`;");
 //    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcDbmsConnection(conn, new MysqlSyntax()));
-    DbmsConnection dbmsconn = new JdbcDbmsConnection(conn, new MysqlSyntax());
+    DbmsConnection dbmsconn = new CachedDbmsConnection(
+        new JdbcDbmsConnection(conn, new MysqlSyntax()));
     dbmsconn.setDefaultSchema("test");
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     coordinator.setScrambleMetaSet(meta);
@@ -1211,7 +1296,8 @@ public class TpchSelectQueryCoordinatorTest {
         "order by s_name";
     stmt.execute("create schema if not exists `verdictdb_temp`;");
 //    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcDbmsConnection(conn, new MysqlSyntax()));
-    DbmsConnection dbmsconn = new JdbcDbmsConnection(conn, new MysqlSyntax());
+    DbmsConnection dbmsconn = new CachedDbmsConnection(
+        new JdbcDbmsConnection(conn, new MysqlSyntax()));
     dbmsconn.setDefaultSchema("test");
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     coordinator.setScrambleMetaSet(meta);
@@ -1286,7 +1372,8 @@ public class TpchSelectQueryCoordinatorTest {
         "order by numwait desc, s_name ";
     stmt.execute("create schema if not exists `verdictdb_temp`;");
 //    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcDbmsConnection(conn, new MysqlSyntax()));
-    DbmsConnection dbmsconn = new JdbcDbmsConnection(conn, new MysqlSyntax());
+    DbmsConnection dbmsconn = new CachedDbmsConnection(
+        new JdbcDbmsConnection(conn, new MysqlSyntax()));
     dbmsconn.setDefaultSchema("test");
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     coordinator.setScrambleMetaSet(meta);

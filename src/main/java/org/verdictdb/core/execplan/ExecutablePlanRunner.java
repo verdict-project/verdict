@@ -1,7 +1,10 @@
 package org.verdictdb.core.execplan;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -16,6 +19,8 @@ public class ExecutablePlanRunner {
   private DbmsConnection conn;
 
   private ExecutablePlan plan;
+  
+  private int nThreads = 2;
 
   public ExecutablePlanRunner(DbmsConnection conn, ExecutablePlan plan) {
     this.conn = conn;
@@ -55,32 +60,45 @@ public class ExecutablePlanRunner {
     }
 
     // executes the nodes in a round-robin manner
-    ExecutorService executor = Executors.newCachedThreadPool();
-
-    List<Integer> groupIds = plan.getNodeGroupIDs();
-    List<List<ExecutableNode>> nodeGroups = new ArrayList<>();
+//    ExecutorService executor = Executors.newCachedThreadPool();
+    
+    Map<Integer, ExecutorService> executorPool = new HashMap<>();
+    
+//    List<List<ExecutableNode>> nodeGroups = new ArrayList<>();
+//    for (int gid : groupIds) {
+//      List<ExecutableNode> nodes = plan.getNodesInGroup(gid);
+//      nodeGroups.add(nodes);
+//      executorPool.put(gid, Executors.newFixedThreadPool(nThreads));
+//    }
+    
+    Set<Integer> groupIds = plan.getNodeGroupIDs();
     for (int gid : groupIds) {
       List<ExecutableNode> nodes = plan.getNodesInGroup(gid);
-      nodeGroups.add(nodes);
+      ExecutorService executor = Executors.newFixedThreadPool(nThreads);
+      for (ExecutableNode n : nodes) {
+        executor.submit(new ExecutableNodeRunner(conn, n));
+      }
+      executorPool.put(gid, executor);
     }
 
-    while (true) {
-      boolean submittedAtLeastOne = false;
-      for (int i = 0; i < nodeGroups.size(); i++) {
-        List<ExecutableNode> nodes = nodeGroups.get(i);
-        if (!nodes.isEmpty()) {
-          ExecutableNode node = nodes.remove(0);
-//          System.out.println("Submitting: " + node);
-          executor.submit(new ExecutableNodeRunner(conn, node));
-          submittedAtLeastOne = true;
-        }
-      }
-      if (submittedAtLeastOne) {
-        continue;
-      } else {
-        break;
-      }
-    }
+//    while (true) {
+//      boolean submittedAtLeastOne = false;
+//      for (int i = 0; i < nodeGroups.size(); i++) {
+//        List<ExecutableNode> nodes = nodeGroups.get(i);
+//        if (!nodes.isEmpty()) {
+//          ExecutableNode node = nodes.remove(0);
+////          System.out.println("Submitting: " + node);
+//          ExecutorService executor = executorPool.get(key)
+//          executor.submit(new ExecutableNodeRunner(conn, node));
+//          submittedAtLeastOne = true;
+//        }
+//      }
+//      if (submittedAtLeastOne) {
+//        continue;
+//      } else {
+//        break;
+//      }
+//    }
 
     return reader;
   }

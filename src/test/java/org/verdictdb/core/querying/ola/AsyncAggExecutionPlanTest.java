@@ -111,7 +111,8 @@ public class AsyncAggExecutionPlanTest {
     RelationStandardizer gen = new RelationStandardizer(staticMetaData);
     relation = gen.standardize((SelectQuery) relation);
 
-    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp1", meta, (SelectQuery) relation);
+    QueryExecutionPlan queryExecutionPlan = 
+        new QueryExecutionPlan("verdictdb_temp1", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
 //    queryExecutionPlan.getRoot().print();

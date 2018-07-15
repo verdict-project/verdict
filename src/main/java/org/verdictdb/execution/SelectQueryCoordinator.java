@@ -58,11 +58,11 @@ public class SelectQueryCoordinator {
 
     // make plan
     // if the plan does not include any aggregates, it will simply be a parsed structure of the original query.
-    QueryExecutionPlan plan = new QueryExecutionPlan("verdictdb_temp", scrambleMetaSet, selectQuery);;
+    QueryExecutionPlan plan = new QueryExecutionPlan("verdictdb_temp", scrambleMetaSet, selectQuery);
 
     // convert it to an asynchronous plan
     // if the plan does not include any aggregates, this operation should not alter the original plan.
-    QueryExecutionPlan asyncPlan = AsyncQueryExecutionPlan.create(plan);;
+    QueryExecutionPlan asyncPlan = AsyncQueryExecutionPlan.create(plan);
 
     // simplify the plan
     QueryExecutionPlan simplifiedAsyncPlan = QueryExecutionPlanSimplifier.simplify(asyncPlan);
