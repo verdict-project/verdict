@@ -8,6 +8,8 @@ import java.util.Map.Entry;
 
 import org.verdictdb.exception.VerdictDBValueException;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 /**
  * Table-specific information
  * @author Yongjoo Park
@@ -42,6 +44,7 @@ public class ScrambleMeta implements Serializable {
    * The key is the id of a tier (e.g., 0, 1, ..., 3), and the list is the cumulative distribution.
    * The length of the cumulative distribution must be equal to aggregationBlockCount.
    */
+  @JsonProperty("cumulativeMassDistributionPerTier")
   Map<Integer, List<Double>> cumulativeMassDistributionPerTier = new HashMap<>();
   
   // subsample column; not used currently

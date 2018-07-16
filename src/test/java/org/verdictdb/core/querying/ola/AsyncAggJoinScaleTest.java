@@ -88,7 +88,7 @@ public class AsyncAggJoinScaleTest {
     distribution.put(0, Arrays.asList(0.5, 1.0));
     tablemeta.setCumulativeMassDistributionPerTier(distribution);
     scrambledTable = tablemeta.getTableName();
-    meta.insertScrambleMetaEntry(tablemeta);
+    meta.addScrambleMeta(tablemeta);
     UniformScrambler scrambler2 =
         new UniformScrambler(originalSchema, originalTable2, originalSchema, "originalTable2_scrambled", aggBlockCount);
     CreateTableAsSelectQuery scramblingQuery2 = scrambler2.createQuery();
@@ -99,7 +99,7 @@ public class AsyncAggJoinScaleTest {
     distribution2.put(0, Arrays.asList(0.5, 1.0));
     tablemeta2.setCumulativeMassDistributionPerTier(distribution2);
     scrambledTable = tablemeta2.getTableName();
-    meta.insertScrambleMetaEntry(tablemeta2);
+    meta.addScrambleMeta(tablemeta2);
 
 
     staticMetaData.setDefaultSchema(originalSchema);

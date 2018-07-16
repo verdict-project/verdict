@@ -31,7 +31,7 @@ public class AsyncAggNodeGroupTest {
             "tierColumn", 1,
             distribution);
 //    tablemeta.setCumulativeMassDistributionPerTier(distribution);
-    meta.insertScrambleMetaEntry(tablemeta);
+    meta.addScrambleMeta(tablemeta);
     
     // compose a query
     String sql = "select sum(price) as s from newSchema.scrambledTable as t";

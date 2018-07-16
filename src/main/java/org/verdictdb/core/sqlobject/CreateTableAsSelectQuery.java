@@ -28,6 +28,8 @@ public class CreateTableAsSelectQuery extends CreateTable {
   
   List<String> partitionColumns = new ArrayList<>();
   
+  boolean overwrite = false;
+  
   public CreateTableAsSelectQuery(String schemaName, String tableName, SelectQuery select) {
     this.schemaName = schemaName;
     this.tableName = tableName;
@@ -52,6 +54,14 @@ public class CreateTableAsSelectQuery extends CreateTable {
   
   public List<String> getPartitionColumns() {
     return partitionColumns;
+  }
+  
+  public boolean getOverwrite() {
+    return overwrite;
+  }
+  
+  public void setOverwrite(boolean overwrite) {
+    this.overwrite = overwrite;
   }
   
   @Override

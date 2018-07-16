@@ -36,7 +36,7 @@ public class ExecutionResultReader implements Iterable<DbmsQueryResult>, Iterato
     if (token == null) {
       return null;
     }
-    return (DbmsQueryResult) token;
+    return (DbmsQueryResult) token.getValue("queryResult");
   }
   
   @Override

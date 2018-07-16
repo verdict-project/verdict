@@ -12,6 +12,7 @@ import org.verdictdb.core.sqlobject.AsteriskColumn;
 import org.verdictdb.core.sqlobject.BaseColumn;
 import org.verdictdb.core.sqlobject.BaseTable;
 import org.verdictdb.core.sqlobject.ColumnOp;
+import org.verdictdb.core.sqlobject.ConstantColumn;
 import org.verdictdb.core.sqlobject.SelectItem;
 import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.core.sqlobject.UnnamedColumn;
@@ -223,4 +224,15 @@ public class SelectQueryToSqlTest {
     String actual = relToSql.toSql(outerRelation);
     assertEquals(expected, actual);
   }
+  
+  @Test
+  public void testEmptyFrom() throws VerdictDBException {
+    SelectQuery query = SelectQuery.create(ConstantColumn.valueOf("abc"));
+    SelectQueryToSql relToSql = new SelectQueryToSql(new HiveSyntax());
+    String actual = relToSql.toSql(query);
+    
+    String expected = "select abc";
+    assertEquals(expected, actual);
+  }
+  
 }

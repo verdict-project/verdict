@@ -146,12 +146,12 @@ public class TpchExecutionPlanTest {
         new UniformScrambler("tpch", "lineitem", "tpch", "lineitem", aggBlockCount);
     ScrambleMeta tablemeta = scrambler.generateMeta();
     scrambledTable = tablemeta.getTableName();
-    meta.insertScrambleMetaEntry(tablemeta);
+    meta.addScrambleMeta(tablemeta);
     scrambler =
         new UniformScrambler("tpch", "orders", "tpch", "orders", aggBlockCount);
     tablemeta = scrambler.generateMeta();
     scrambledTable = tablemeta.getTableName();
-    meta.insertScrambleMetaEntry(tablemeta);
+    meta.addScrambleMeta(tablemeta);
 
     List<Pair<String, Integer>> arr = new ArrayList<>();
     arr.addAll(Arrays.asList(new ImmutablePair<>("n_nationkey", BIGINT),

@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.VerdictContext;
@@ -60,8 +61,15 @@ public class ExecutionContextTest {
         scrambler.scramble(MYSQL_DATABASE, "lineitem", MYSQL_DATABASE, "lineitem_scrambled", "uniform");
     ScrambleMeta meta2 = 
         scrambler.scramble(MYSQL_DATABASE, "orders", MYSQL_DATABASE, "orders_scrambled", "uniform");
-    meta.insertScrambleMetaEntry(meta1);
-    meta.insertScrambleMetaEntry(meta2);
+    meta.addScrambleMeta(meta1);
+    meta.addScrambleMeta(meta2);
+  }
+  
+  @AfterClass
+  public static void tearDown() throws VerdictDBDbmsException {
+    DbmsConnection dbmsConn = JdbcConnection.create(conn);
+    dbmsConn.execute(String.format("DROP TABLE IF EXISTS `%s`.`lineitem_scrambled`", MYSQL_DATABASE));
+    dbmsConn.execute(String.format("DROP TABLE IF EXISTS `%s`.`orders_scrambled`", MYSQL_DATABASE));
   }
 
   @Test

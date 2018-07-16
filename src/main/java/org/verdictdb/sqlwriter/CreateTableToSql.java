@@ -38,7 +38,7 @@ public class CreateTableToSql {
     SelectQuery select = query.getSelect();
   
     // table
-    sql.append("CREATE TABLE ");
+    sql.append("create table ");
     sql.append(quoteName(schemaName));
     sql.append(".");
     sql.append(quoteName(tableName));
@@ -63,7 +63,7 @@ public class CreateTableToSql {
   
     // select
     if (syntax.isAsRequiredBeforeSelectInCreateTable()) {
-      sql.append(" AS ");
+      sql.append(" as ");
     } else {
       sql.append(" ");
     }
