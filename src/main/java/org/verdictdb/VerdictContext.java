@@ -13,15 +13,16 @@ import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.coordinator.ExecutionContext;
+import org.verdictdb.coordinator.VerdictResultStream;
+import org.verdictdb.coordinator.VerdictSingleResult;
 import org.verdictdb.core.resulthandler.ExecutionResultReader;
 import org.verdictdb.exception.VerdictDBDbmsException;
+import org.verdictdb.exception.VerdictDBException;
 
 
 public class VerdictContext {
 
   private DbmsConnection conn;
-
-//  private MetaDataProvider metadataProvider;
   
   final private String contextId;
   
@@ -78,7 +79,9 @@ public class VerdictContext {
     executionContexts.remove(exec);
   }
 
-
+  /**
+   * terminates all open execution context.
+   */
   public void abort() {
     // TODO Auto-generated method stub
 
@@ -101,10 +104,11 @@ public class VerdictContext {
    * @param query Either a select query or a create-scramble query
    * @return A single query result is returned. If the query is a create-scramble query, the number
    * of inserted rows are returned.
+   * @throws VerdictDBException 
    */
-  public DbmsQueryResult sql(String query) {
+  public VerdictSingleResult sql(String query) throws VerdictDBException {
     ExecutionContext exec = createNewExecutionContext();
-    DbmsQueryResult result = exec.sql(query);
+    VerdictSingleResult result = exec.sql(query);
     removeExecutionContext(exec);
     return result;
   }
@@ -114,9 +118,12 @@ public class VerdictContext {
    * @param query Either a select query or a create-scramble query.
    * @return Reader enables progressive query result consumption. If this is a create-scramble 
    * query, the number of inserted rows are returned.
+   * @throws VerdictDBException 
    */
-  public ExecutionResultReader contsql(String query) {
-    return null;
+  public VerdictResultStream streamsql(String query) throws VerdictDBException {
+    ExecutionContext exec = createNewExecutionContext();
+    VerdictResultStream stream = exec.streamsql(query);
+    return stream;
   }
 
 }

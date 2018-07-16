@@ -16,7 +16,7 @@ import org.apache.commons.lang3.builder.ToStringStyle;
  * @author Yongjoo Park
  *
  */
-public class CreateTableAsSelectQuery implements SqlConvertible {
+public class CreateTableAsSelectQuery extends CreateTable {
   
   private static final long serialVersionUID = -4077488589201481833L;
 

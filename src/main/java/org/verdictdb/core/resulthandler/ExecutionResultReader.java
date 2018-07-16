@@ -3,6 +3,7 @@ package org.verdictdb.core.resulthandler;
 import java.util.Iterator;
 
 import org.verdictdb.connection.DbmsQueryResult;
+import org.verdictdb.core.execplan.ExecutionInfoToken;
 import org.verdictdb.core.execplan.ExecutionTokenQueue;
 
 public class ExecutionResultReader implements Iterable<DbmsQueryResult>, Iterator<DbmsQueryResult> {
@@ -31,7 +32,11 @@ public class ExecutionResultReader implements Iterable<DbmsQueryResult>, Iterato
 
   @Override
   public DbmsQueryResult next() {
-    return (DbmsQueryResult) reader.next().getValue("queryResult");
+    ExecutionInfoToken token = reader.next();
+    if (token == null) {
+      return null;
+    }
+    return (DbmsQueryResult) token;
   }
   
   @Override

@@ -1,8 +1,11 @@
 package org.verdictdb.coordinator;
 
+import java.util.Iterator;
+
+import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.core.resulthandler.ExecutionResultReader;
 
-public class VerdictResultStream {
+public class VerdictResultStream implements Iterable<VerdictSingleResult>, Iterator<VerdictSingleResult> {
   
   ExecutionResultReader reader;
   
@@ -13,16 +16,25 @@ public class VerdictResultStream {
     this.execContext = execContext;
   }
 
-//  public DbmsQueryResult next() {
-//    DbmsQueryResult result = super.next();
-//    
-//    // if there is no more result, we close the linked ExecutionContext
-//    // the underlying table must be alive.
-//    if (hasNext() == false) {
-//      execContext.terminate();
-//    }
-//    
-//    return result;
-//  }
+  @Override
+  public boolean hasNext() {
+    return reader.hasNext();
+  }
 
+  @Override
+  public VerdictSingleResult next() {
+    DbmsQueryResult internalResult = reader.next();
+    VerdictSingleResult result = new VerdictSingleResult(internalResult);
+    return result;
+  }
+
+  @Override
+  public Iterator<VerdictSingleResult> iterator() {
+    return this;
+  }
+
+  public void close() {
+    
+  }
+  
 }

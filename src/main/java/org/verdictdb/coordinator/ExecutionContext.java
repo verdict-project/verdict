@@ -38,19 +38,15 @@ public class ExecutionContext {
     return serialNumber;
   }
   
-  public DbmsQueryResult sql(String query) {
-    // determines the type of the given query and forward it to an appropriate coordinator.
-    
-    // Case 1: scrambling
-    
-    // Case 2: select querying
-    
-    // Case 3: configuration (not provided yet)
-
-    return null;
+  public VerdictSingleResult sql(String query) throws VerdictDBException {
+    VerdictResultStream stream = streamsql(query);
+    VerdictSingleResult result = stream.next();
+    stream.close();
+    return result;
   }
   
   public VerdictResultStream streamsql(String query) throws VerdictDBException {
+    // determines the type of the given query and forward it to an appropriate coordinator.
     
     QueryType queryType = identifyQueryType(query);
     
