@@ -286,7 +286,7 @@ public class DatabaseConnectionHelpers {
         "STORED AS textfile " +
         "LOCATION '%s/lineitem'",
           schema, datafilePath));
-
+    
     return spark;
   }
 
