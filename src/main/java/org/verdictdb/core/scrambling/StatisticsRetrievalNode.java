@@ -12,6 +12,8 @@ import org.verdictdb.exception.VerdictDBException;
 
 public class StatisticsRetrievalNode extends QueryNodeBase {
   
+  private static final long serialVersionUID = -2135920046094297794L;
+
   String schemaName;
   
   String tableName;

@@ -52,6 +52,7 @@ public class SparkConnectionTest {
   public void testSparkConnection() throws VerdictDBDbmsException {
 //    spark.read().format("jdbc");
     SparkConnection sparkConnection = new SparkConnection(spark, new SparkSyntax());
+    sparkConnection.execute("DROP SCHEMA IF EXISTS myschema CASCADE");
     sparkConnection.execute("CREATE SCHEMA IF NOT EXISTS myschema");
     List<List<Object>> contents = new ArrayList<>();
     contents.add(Arrays.<Object>asList(1, "Anju"));
@@ -68,8 +69,10 @@ public class SparkConnectionTest {
     assertEquals(2, columns.size());
     assertEquals(new ImmutablePair<>("id", "int"), columns.get(0));
     assertEquals(new ImmutablePair<>("name", "string"), columns.get(1));
-    sparkConnection.execute("DROP TABLE IF EXISTS myschema.PERSON");
-    sparkConnection.execute("DROP SCHEMA IF EXISTS myschema");
+    
+//    sparkConnection.execute("DROP TABLE IF EXISTS myschema.PERSON");
+//    sparkConnection.execute("DROP SCHEMA IF EXISTS myschema");
+    sparkConnection.execute("DROP SCHEMA IF EXISTS myschema CASCADE");
   }
 
   @Test
@@ -79,6 +82,7 @@ public class SparkConnectionTest {
 //        .config("spark.sql.catalogImplementation", "hive")
 //        .getOrCreate();
     SparkConnection sparkConnection = new SparkConnection(spark, new SparkSyntax());
+    sparkConnection.execute("DROP SCHEMA IF EXISTS myschema CASCADE");
     sparkConnection.execute("CREATE SCHEMA IF NOT EXISTS myschema");
     List<List<Object>> contents = new ArrayList<>();
     contents.add(Arrays.<Object>asList(1, "Anju"));
@@ -91,15 +95,25 @@ public class SparkConnectionTest {
       String name = row.get(1).toString();
       sparkConnection.execute(String.format("INSERT INTO myschema.PERSON VALUES(%s, '%s')", id, name));
     }
-
     sparkConnection.execute("create table myschema.newtable using parquet partitioned by (id) as select * from myschema.person as t");
+    
+    // when there exists partitions
     List<String> partitions = sparkConnection.getPartitionColumns("myschema", "newtable");
-    assertEquals("id=1", partitions.get(0));
-    assertEquals("id=2", partitions.get(1));
-    assertEquals("id=3", partitions.get(2));
-    sparkConnection.execute("DROP TABLE IF EXISTS myschema.PERSON");
-    sparkConnection.execute("DROP TABLE IF EXISTS myschema.newtable");
-    sparkConnection.execute("DROP SCHEMA IF EXISTS myschema");
+    assertEquals(1, partitions.size());
+    assertEquals("id", partitions.get(0));
+//    assertEquals("id=1", partitions.get(0));
+//    assertEquals("id=2", partitions.get(1));
+//    assertEquals("id=3", partitions.get(2));
+    
+    // when there does not exist any partitions
+    partitions = sparkConnection.getPartitionColumns("myschema", "person");
+    assertEquals(0, partitions.size());
+    
+    // clean up
+//    sparkConnection.execute("DROP TABLE IF EXISTS myschema.PERSON");
+//    sparkConnection.execute("DROP TABLE IF EXISTS myschema.newtable");
+//    sparkConnection.execute("DROP SCHEMA IF EXISTS myschema");
+    sparkConnection.execute("DROP SCHEMA IF EXISTS myschema CASCADE");
   }
 
   @Test
@@ -109,6 +123,7 @@ public class SparkConnectionTest {
 //        .config("spark.sql.catalogImplementation", "hive")
 //        .getOrCreate();
     SparkConnection sparkConnection = new SparkConnection(spark, new SparkSyntax());
+    sparkConnection.execute("DROP SCHEMA IF EXISTS myschema CASCADE");
     sparkConnection.execute("CREATE SCHEMA IF NOT EXISTS myschema");
     sparkConnection.execute("CREATE TABLE IF NOT EXISTS myschema.PERSON(id int, name varchar(255), a bigint, b float, c date, d timestamp, e array<int>" +
         ", f decimal(5,2), g double, h char(5), i boolean)");
@@ -125,7 +140,8 @@ public class SparkConnectionTest {
     assertEquals(new ImmutablePair<>("g", "double"), columns.get(8));
     assertEquals(new ImmutablePair<>("h", "string"), columns.get(9));
     assertEquals(new ImmutablePair<>("i", "boolean"), columns.get(10));
-    sparkConnection.execute("DROP TABLE IF EXISTS myschema.PERSON");
-    sparkConnection.execute("DROP SCHEMA IF EXISTS myschema");
+//    sparkConnection.execute("DROP TABLE IF EXISTS myschema.PERSON");
+//    sparkConnection.execute("DROP SCHEMA IF EXISTS myschema");
+    sparkConnection.execute("DROP SCHEMA IF EXISTS myschema CASCADE");
   }
 }

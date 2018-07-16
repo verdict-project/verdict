@@ -24,6 +24,12 @@ import org.verdictdb.core.sqlobject.UnnamedColumn;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sqlsyntax.HiveSyntax;
 
+/**
+ * Tests HiveQL -> (our internal) SQL objects
+ * 
+ * @author Yongjoo Park
+ *
+ */
 public class TpchSelectQueryToSqlTest {
 
   @Test

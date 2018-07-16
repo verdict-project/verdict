@@ -55,11 +55,17 @@ public class SparkConnection implements DbmsConnection {
     List<Pair<String, String>> columns = new ArrayList<>();
     DbmsQueryResult queryResult = execute(syntax.getColumnsCommand(schema, table));
     while (queryResult.next()) {
-      String type = (String) queryResult.getValue(syntax.getColumnTypeColumnIndex());
+      String name = queryResult.getString(syntax.getColumnNameColumnIndex());
+      String type = queryResult.getString(syntax.getColumnTypeColumnIndex());
       type = type.toLowerCase();
-
-      columns.add(
-          new ImmutablePair<>((String) queryResult.getValue(syntax.getColumnNameColumnIndex()), type));
+      
+      // when there exists partitions in a table, this extra information will be returned.
+      // we should ignore this.
+      if (name.equalsIgnoreCase("# Partition Information")) {
+        break;
+      }
+      
+      columns.add(new ImmutablePair<>(name, type));
     }
 
     return columns;
@@ -68,11 +74,18 @@ public class SparkConnection implements DbmsConnection {
   @Override
   public List<String> getPartitionColumns(String schema, String table) throws VerdictDBDbmsException {
     List<String> partition = new ArrayList<>();
+    
     DbmsQueryResult queryResult = execute(syntax.getPartitionCommand(schema, table));
+    boolean hasPartitionInfoStarted = false;
     while (queryResult.next()) {
-      partition.add((String) queryResult.getValue(0));
+      String name = queryResult.getString(0);
+      if (hasPartitionInfoStarted && (name.equalsIgnoreCase("# col_name") == false)) {
+        partition.add(name);
+      } else if (name.equalsIgnoreCase("# Partition Information")) {
+        hasPartitionInfoStarted = true;
+      }
     }
-
+    
     return partition;
   }
 
@@ -96,6 +109,7 @@ public class SparkConnection implements DbmsConnection {
       }
       return srs;
     } catch (Exception e) {
+//      e.printStackTrace();
       throw new VerdictDBDbmsException(e.getMessage());
     }
   }

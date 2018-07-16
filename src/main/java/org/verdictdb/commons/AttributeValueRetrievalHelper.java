@@ -69,9 +69,11 @@ public abstract class AttributeValueRetrievalHelper {
       }
     } else if (value instanceof String) {
       String v = value.toString();
-      if (v.equals("1")||v.equals("t")) {
+      // PostgreSql return t/f
+      // Redshift return true/false
+      if (v.equals("1")||v.equals("t")||v.equals("true")) {
         return true;
-      } else if (v.equals("0")||v.equals("f")) {
+      } else if (v.equals("0")||v.equals("f")||v.equals("false")) {
         return false;
       }
     }
@@ -98,16 +100,16 @@ public abstract class AttributeValueRetrievalHelper {
 
   public int getInt(int index) {
     Object value = getValue(index);
-    if (value instanceof String) {
-      String v = value.toString();
-      if (v.equals("1")||v.equals("t")) {
-        return 1;
-      } else if (v.equals("0")||v.equals("f")) {
-        return 0;
-      }
-    }
     if (value == null) {
       return 0;
+    }
+    if (value instanceof String) {
+      String v = value.toString();
+      if (v.equals("t")||v.equals("true")) {
+        return 1;
+      } else if (v.equals("f")||v.equals("false")) {
+        return 0;
+      }
     }
     return TypeCasting.toInteger(value);
   }
@@ -119,16 +121,16 @@ public abstract class AttributeValueRetrievalHelper {
 
   public long getLong(int index) {
     Object value = getValue(index);
-    if (value instanceof String) {
-      String v = value.toString();
-      if (v.equals("1")||v.equals("t")) {
-        return 1;
-      } else if (v.equals("0")||v.equals("f")) {
-        return 0;
-      }
-    }
     if (value == null) {
       return 0;
+    }
+    if (value instanceof String) {
+      String v = value.toString();
+      if (v.equals("t") || v.equals("true")) {
+        return 1;
+      } else if (v.equals("f") || v.equals("false")) {
+        return 0;
+      }
     }
     return TypeCasting.toLong(value);
   }
@@ -200,9 +202,9 @@ public abstract class AttributeValueRetrievalHelper {
     }
     if (value instanceof String) {
       String v = value.toString();
-      if (v.equals("1") || v.equals("t")) {
+      if (v.equals("t")||v.equals("true")) {
         return 1;
-      } else if (v.equals("0") || v.equals("f")) {
+      } else if (v.equals("f")||v.equals("false")) {
         return 0;
       }
     }
@@ -242,16 +244,16 @@ public abstract class AttributeValueRetrievalHelper {
 
   public short getShort(int index) {
     Object value = getValue(index);
-    if (value instanceof String) {
-      String v = value.toString();
-      if (v.equals("1") || v.equals("t")) {
-        return 1;
-      } else if (v.equals("0") || v.equals("f")) {
-        return 0;
-      }
-    }
     if (value == null) {
       return 0;
+    }
+    if (value instanceof String) {
+      String v = value.toString();
+      if (v.equals("t")||v.equals("true")) {
+        return 1;
+      } else if (v.equals("f")||v.equals("false")) {
+        return 0;
+      }
     }
     return TypeCasting.toShort(value);
   }

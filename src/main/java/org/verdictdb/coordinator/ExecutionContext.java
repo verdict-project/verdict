@@ -1,4 +1,4 @@
-package org.verdictdb.execution;
+package org.verdictdb.coordinator;
 
 import org.verdictdb.VerdictContext;
 import org.verdictdb.connection.DbmsQueryResult;

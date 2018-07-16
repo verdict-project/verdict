@@ -463,6 +463,8 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
 
 class PercentilesAndCountNode extends QueryNodeBase {
 
+  private static final long serialVersionUID = -1745299539668490874L;
+
   private String schemaName;
 
   private String tableName;
@@ -576,6 +578,8 @@ class PercentilesAndCountNode extends QueryNodeBase {
  */
 class OutlierProportionNode extends QueryNodeBase {
 
+  private static final long serialVersionUID = 3650001574444658985L;
+
   private String schemaName;
 
   private String tableName;
@@ -617,6 +621,8 @@ class OutlierProportionNode extends QueryNodeBase {
 
 
 class LargeGroupListNode extends CreateTableAsSelectNode {
+
+  private static final long serialVersionUID = -2889642011123433574L;
 
   // p0 is the sampling ratio used for obtaining the large group list.
   // How to tweak this value?
@@ -726,6 +732,8 @@ class LargeGroupListNode extends CreateTableAsSelectNode {
 
 
 class LargeGroupSizeNode extends QueryNodeWithPlaceHolders {
+
+  private static final long serialVersionUID = -7863166573727173728L;
 
   private String primaryColumnName;
 
