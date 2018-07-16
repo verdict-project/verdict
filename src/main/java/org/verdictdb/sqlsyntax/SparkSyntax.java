@@ -27,6 +27,7 @@ public class SparkSyntax extends SqlSyntax {
     return 1;
   }
 
+  
   @Override
   public String getPartitionByInCreateTable() {
     return "using parquet partitioned by";
