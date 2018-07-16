@@ -9,10 +9,10 @@ import org.verdictdb.core.sqlobject.ConstantColumn;
 import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.core.sqlobject.SubqueryColumn;
 import org.verdictdb.core.sqlobject.UnnamedColumn;
-import org.verdictdb.parser.VerdictSQLBaseVisitor;
 import org.verdictdb.parser.VerdictSQLParser;
+import org.verdictdb.parser.VerdictSQLParserBaseVisitor;
 
-public class CondGen extends VerdictSQLBaseVisitor<UnnamedColumn> {
+public class CondGen extends VerdictSQLParserBaseVisitor<UnnamedColumn> {
 
 //    private MetaData meta;
 

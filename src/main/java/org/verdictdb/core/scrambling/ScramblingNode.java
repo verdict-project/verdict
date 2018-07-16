@@ -7,8 +7,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.verdictdb.core.connection.DbmsQueryResult;
-import org.verdictdb.core.execution.ExecutionInfoToken;
+import org.verdictdb.connection.DbmsQueryResult;
+import org.verdictdb.core.execplan.ExecutionInfoToken;
 import org.verdictdb.core.querying.CreateTableAsSelectNode;
 import org.verdictdb.core.querying.IdCreator;
 import org.verdictdb.core.sqlobject.AbstractRelation;
@@ -30,25 +30,31 @@ import org.verdictdb.exception.VerdictDBException;
  */
 public class ScramblingNode extends CreateTableAsSelectNode {
 
+  private static final long serialVersionUID = 3921018031181756963L;
+
   String originalSchemaName;
 
   String originalTableName;
 
   ScramblingMethod method;
 
-  Map<String, String> options;
+  String tierColumnName;
+
+  String blockColumnName;
+
+  //  Map<String, String> options;
 
   public ScramblingNode(
       IdCreator namer, 
-      String originalSchemaName,
-      String originalTableName,
-      ScramblingMethod method, 
-      Map<String, String> options) {
+      String originalSchemaName, String originalTableName,
+      ScramblingMethod method, String tierColumnName, String blockColumnName) {
+
     super(namer, null);
     this.originalSchemaName = originalSchemaName;
     this.originalTableName = originalTableName;
     this.method = method;
-    this.options = options;
+    this.tierColumnName = tierColumnName;
+    this.blockColumnName = blockColumnName;
   }
 
   /**
@@ -59,31 +65,28 @@ public class ScramblingNode extends CreateTableAsSelectNode {
    * @param oldTableName
    * @param method
    * @param options Key-value map. It must contain the following keys:
-   *                "blockColumnName", "tierColumnName", "blockCount" (optional)
+   *                "blockColumnName", "tierColumnName"
    * @return
    */
   public static ScramblingNode create(
-      final String newSchemaName, 
-      final String newTableName,
-      String oldSchemaName,
-      String oldTableName,
-      ScramblingMethod method,
-      Map<String, String> options) {
+      final String newSchemaName, final String newTableName,
+      String oldSchemaName, String oldTableName,
+      ScramblingMethod method, Map<String, String> options) {
 
     IdCreator idCreator = new IdCreator() {
-
       @Override
       public String generateAliasName() {
         return null;    // we don't need this method
       }
-
       @Override
       public Pair<String, String> generateTempTableName() {
         return Pair.of(newSchemaName, newTableName);
       }
     };
-
-    return new ScramblingNode(idCreator, oldSchemaName, oldTableName, method, options);
+    
+    String tierColumnName = options.get("tierColumnName");
+    String blockColumnName = options.get("blockColumnName");
+    return new ScramblingNode(idCreator, oldSchemaName, oldTableName, method, tierColumnName, blockColumnName);
   }
 
   @Override
@@ -96,15 +99,11 @@ public class ScramblingNode extends CreateTableAsSelectNode {
         metaData.put(key, value);
       }
     }
-//    if (tokens.size() > 0) {
-//      statistics = (DbmsQueryResult) tokens.get(0).getValue("queryResult");
-//    }
     selectQuery = composeQuery(metaData);
-    
+
     // add partitioning for block agg column
-    String blockColumnName = options.get("blockColumnName");
     addPartitionColumn(blockColumnName);
-    
+
     return super.createQuery(tokens);
   }
 
@@ -112,21 +111,12 @@ public class ScramblingNode extends CreateTableAsSelectNode {
     // read option values
     List<UnnamedColumn> tierPredicates = method.getTierExpressions(metaData);
     int tierCount = tierPredicates.size() + 1;
-//    int blockCount = 0;
-//    if (options.containsKey("blockCount")) {
-//      blockCount = Integer.valueOf(options.get("blockCount"));
-//    } 
-//    else {
-//      method.getBlockCount(metaData);
-//    }
-    String tierColumnName = options.get("tierColumnName");
-    String blockColumnName = options.get("blockColumnName");
-
+    
     // composed select item expressions will be added to this list
     List<SelectItem> selectItems = new ArrayList<>();
     @SuppressWarnings("unchecked")
     List<Pair<String, String>> columnNamesAndTypes = 
-        (List<Pair<String, String>>) metaData.get(ScramblingPlan.COLUMN_METADATA_KEY);
+    (List<Pair<String, String>>) metaData.get(ScramblingPlan.COLUMN_METADATA_KEY);
     final String mainTableAlias = method.getMainTableAlias();
     for (Pair<String, String> nameAndType : columnNamesAndTypes) {
       String name = nameAndType.getLeft();
@@ -176,22 +166,22 @@ public class ScramblingNode extends CreateTableAsSelectNode {
       }
       blockOperands.add(blockForTierExpr);
     }
-    
+
     // use a simple (non-nested) case expression when there is only a single tier
     if (tierCount == 1) {
       blockExpr = blockOperands.get(0);
     } else {
       blockExpr = ColumnOp.whenthenelse(blockOperands);
     }
-    
+
     selectItems.add(new AliasedColumn(blockExpr, blockColumnName));
 
     // compose the final query
     AbstractRelation tableSource = method.getScramblingSource(originalSchemaName, originalTableName, metaData);
-//    SelectQuery scramblingQuery = 
-//        SelectQuery.create(
-//            selectItems, 
-//            new BaseTable(oldSchemaName, oldTableName, MAIN_TABLE_SOURCE_ALIAS_NAME));
+    //    SelectQuery scramblingQuery = 
+    //        SelectQuery.create(
+    //            selectItems, 
+    //            new BaseTable(oldSchemaName, oldTableName, MAIN_TABLE_SOURCE_ALIAS_NAME));
     SelectQuery scramblingQuery = 
         SelectQuery.create(
             selectItems, 

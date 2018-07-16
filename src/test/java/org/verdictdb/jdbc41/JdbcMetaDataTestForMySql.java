@@ -12,8 +12,8 @@ import java.util.List;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.verdictdb.core.connection.DbmsConnection;
-import org.verdictdb.core.connection.JdbcConnection;
+import org.verdictdb.connection.DbmsConnection;
+import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.exception.VerdictDBDbmsException;
 
 public class JdbcMetaDataTestForMySql {
@@ -48,7 +48,7 @@ public class JdbcMetaDataTestForMySql {
     String mysqlConnectionString =
         String.format("jdbc:mysql://%s/%s?autoReconnect=true&useSSL=false", MYSQL_HOST, MYSQL_DATABASE);
     conn = DriverManager.getConnection(mysqlConnectionString, MYSQL_UESR, MYSQL_PASSWORD);
-    dbmsConn = new JdbcConnection(conn);
+    dbmsConn = JdbcConnection.create(conn);
 
     stmt = conn.createStatement();
     stmt.execute(String.format("DROP TABLE IF EXISTS %s", TABLE_NAME));
@@ -99,7 +99,6 @@ public class JdbcMetaDataTestForMySql {
   public void testGetColumns() throws VerdictDBDbmsException, SQLException {
     List<Pair<String, String>> columns = dbmsConn.getColumns("test", TABLE_NAME);
     assertEquals(33, columns.size());
-
     ResultSet expected = stmt.executeQuery(String.format("describe %s", TABLE_NAME));
     int idx = 0;
     while (expected.next()) {

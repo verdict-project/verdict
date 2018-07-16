@@ -6,9 +6,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.verdictdb.core.connection.DataTypeConverter;
-import org.verdictdb.core.connection.DbmsQueryResult;
-import org.verdictdb.core.execution.ExecutionInfoToken;
+import org.verdictdb.connection.DataTypeConverter;
+import org.verdictdb.connection.DbmsQueryResult;
+import org.verdictdb.core.execplan.ExecutionInfoToken;
 import org.verdictdb.core.querying.CreateTableAsSelectNode;
 import org.verdictdb.core.querying.ExecutableNodeBase;
 import org.verdictdb.core.querying.IdCreator;
@@ -221,15 +221,20 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
     if (tier0CumulProbDist == null) {
       populateAllCumulativeProbabilityDistribution(metaData);
     }
+    
+    List<Double> dist;
 
     if (tier == 0) {
-      return tier0CumulProbDist;
+      dist = tier0CumulProbDist;
     } else if (tier == 1) {
-      return tier1CumulProbDist;
+      dist = tier1CumulProbDist;
     } else {
       // expected tier == 2
-      return tier2CumulProbDist;
+      dist = tier2CumulProbDist;
     }
+    
+    storeCumulativeProbabilityDistribution(tier, dist);
+    return dist;
   }
 
   private void populateAllCumulativeProbabilityDistribution(Map<String, Object> metaData) {
@@ -458,6 +463,8 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
 
 class PercentilesAndCountNode extends QueryNodeBase {
 
+  private static final long serialVersionUID = -1745299539668490874L;
+
   private String schemaName;
 
   private String tableName;
@@ -571,6 +578,8 @@ class PercentilesAndCountNode extends QueryNodeBase {
  */
 class OutlierProportionNode extends QueryNodeBase {
 
+  private static final long serialVersionUID = 3650001574444658985L;
+
   private String schemaName;
 
   private String tableName;
@@ -612,6 +621,8 @@ class OutlierProportionNode extends QueryNodeBase {
 
 
 class LargeGroupListNode extends CreateTableAsSelectNode {
+
+  private static final long serialVersionUID = -2889642011123433574L;
 
   // p0 is the sampling ratio used for obtaining the large group list.
   // How to tweak this value?
@@ -721,6 +732,8 @@ class LargeGroupListNode extends CreateTableAsSelectNode {
 
 
 class LargeGroupSizeNode extends QueryNodeWithPlaceHolders {
+
+  private static final long serialVersionUID = -7863166573727173728L;
 
   private String primaryColumnName;
 

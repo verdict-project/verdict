@@ -12,6 +12,8 @@ import org.apache.commons.lang3.builder.ToStringStyle;
  */
 public class AliasedColumn implements SelectItem {
 
+  private static final long serialVersionUID = -8488130745600642428L;
+
   UnnamedColumn column;
 
   String aliasName;

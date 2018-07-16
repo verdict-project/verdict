@@ -3,11 +3,13 @@ package org.verdictdb.core.scrambling;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.verdictdb.core.execution.MethodInvocationInformation;
+import org.verdictdb.core.execplan.MethodInvocationInformation;
 import org.verdictdb.core.querying.ExecutableNodeBase;
 
 public class PartitionMetadataRetrievalNode extends ExecutableNodeBase {
   
+  private static final long serialVersionUID = 3457736646345212051L;
+
   /**
    * for which to retrieve metadata
    */

@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.verdictdb.core.connection.DbmsQueryResult;
-import org.verdictdb.core.execution.ExecutionInfoToken;
+import org.verdictdb.connection.DbmsQueryResult;
+import org.verdictdb.core.execplan.ExecutionInfoToken;
 import org.verdictdb.core.sqlobject.CreateTableAsSelectQuery;
 import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.core.sqlobject.SqlConvertible;
@@ -13,6 +13,8 @@ import org.verdictdb.exception.VerdictDBException;
 
 public class CreateTableAsSelectNode extends QueryNodeWithPlaceHolders {
   
+  private static final long serialVersionUID = -8722221355083655181L;
+
   IdCreator namer;
   
   String newTableSchemaName;

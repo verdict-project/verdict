@@ -22,6 +22,8 @@ public interface ScramblingMethod {
   
   public int getTierCount();
   
+  public List<Double> getStoredCumulativeProbabilityDistributionForTier(int tier);
+  
   /**
    * 
    * @param columnNames
@@ -33,7 +35,6 @@ public interface ScramblingMethod {
   /**
    * 
    * @param tier 0, 1, ..., getTierCount()-1
-   * @param length The length of the distribution
    * @return A list of doubles. The values should be increasing; the last value must be 1.0; and the size of 
    * the list must be equal to "length".
    */

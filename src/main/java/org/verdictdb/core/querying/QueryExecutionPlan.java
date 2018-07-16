@@ -8,27 +8,33 @@
 
 package org.verdictdb.core.querying;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import org.apache.commons.lang3.tuple.Pair;
-import org.verdictdb.core.execution.ExecutableNode;
-import org.verdictdb.core.execution.ExecutablePlan;
-import org.verdictdb.core.querying.ola.AsyncAggExecutionNode;
+import org.verdictdb.core.execplan.ExecutableNode;
+import org.verdictdb.core.execplan.ExecutablePlan;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
-import org.verdictdb.core.sqlobject.BaseTable;
 import org.verdictdb.core.sqlobject.SelectQuery;
-import org.verdictdb.core.sqlobject.SubqueryColumn;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBTypeException;
 import org.verdictdb.exception.VerdictDBValueException;
 
-public class QueryExecutionPlan implements ExecutablePlan, IdCreator {
+public class QueryExecutionPlan implements ExecutablePlan, IdCreator, Serializable {
   
+  private static final long serialVersionUID = 8377795890801468660L;
+
   protected ScrambleMetaSet scrambleMeta;
 
   protected ExecutableNodeBase root;
@@ -136,135 +142,12 @@ public class QueryExecutionPlan implements ExecutablePlan, IdCreator {
         .toString();
   }
 
-  // TODO: Move this to another class: QueryExecutionPlanSimplifier
-  public void compress() {
-    List<ExecutableNodeBase> nodesToCompress = new ArrayList<>();
-    // compress the node from bottom to up in order to replace the select query conveniently
-    List<ExecutableNodeBase> traverse = new ArrayList<>();
-    traverse.add(root);
-    while (!traverse.isEmpty()) {
-      ExecutableNodeBase node = traverse.get(0);
-      traverse.remove(0);
-      if (node.getDependentNodeCount() == 0 && !nodesToCompress.contains(node)) {
-        nodesToCompress.add(node);
-      }
-      else traverse.addAll(node.getExecutableNodeBaseDependents());
-    }
-
-    List<ExecutableNodeBase> history = new ArrayList<>();
-    while (!nodesToCompress.isEmpty()) {
-      ExecutableNodeBase node = nodesToCompress.get(0);
-      nodesToCompress.remove(0);
-      // Exception 1: has no parent(root), or has multiple parent
-      // Exception 2: its parents has multiple dependents and this node share same queue with other dependents
-      // Exception 3: two nodes are not SelectAllNode, ProjectionNode or AggregateNode
-      boolean compressable = node.getExecutableNodeBaseParents().size() == 1 && !isSharingQueue(node);
-      if (compressable) {
-//<<<<<<< HEAD
-//        ExecutableNodeBase parent = node.getExecutableNodeBaseParents().get(0);
-//        if (((parent instanceof AggExecutionNode)||(parent instanceof SelectAllExecutionNode)||(parent instanceof ProjectionNode))
-//            && ((node instanceof AggExecutionNode)||(node instanceof SelectAllExecutionNode)||(node instanceof ProjectionNode)) ) {
-//=======
-        ExecutableNodeBase parent = node.getExecutableNodeBaseParents().get(0);
-        if (((parent instanceof AggExecutionNode) || (parent instanceof SelectAllExecutionNode) || 
-             (parent instanceof ProjectionNode && !(parent instanceof AsyncAggExecutionNode)))
-          && ((node instanceof AggExecutionNode) ||(node instanceof SelectAllExecutionNode) || 
-              (node instanceof ProjectionNode && !(node instanceof AsyncAggExecutionNode))) ) {
-//>>>>>>> origin/joezhong-scale
-          compressTwoNode(node, parent);
-        }
-      }
-      history.add(node);
-      for (ExecutableNodeBase parent : node.getExecutableNodeBaseParents()) {
-        if (!history.contains(parent) && !nodesToCompress.contains(parent)) {
-          nodesToCompress.add(parent);
-        }
-      }
-    }
-  }
-
-  // Compress node and parent into parent, node will be useless
-  void compressTwoNode(ExecutableNodeBase node, ExecutableNodeBase parent) {
-    if (!(node instanceof QueryNodeBase) || !(parent instanceof QueryNodeBase)) {
-      return;
-    }
-    QueryNodeBase parentQuery = (QueryNodeBase) parent;
-    QueryNodeBase nodeQuery = (QueryNodeBase) node;
-
-    // Change the query of parents
-    BaseTable placeholderTableinParent = ((QueryNodeWithPlaceHolders)parent).getPlaceholderTables().get(parent.getExecutableNodeBaseDependents().indexOf(node));
-    ((QueryNodeWithPlaceHolders)parent).getPlaceholderTables().remove(placeholderTableinParent);
-
-    // If temp table is in from list of parent, just direct replace with the select query of node
-    if (parentQuery.getSelectQuery().getFromList().contains(placeholderTableinParent)) {
-      int index = parentQuery.getSelectQuery().getFromList().indexOf(placeholderTableinParent);
-      nodeQuery.getSelectQuery().setAliasName(
-          parentQuery.getSelectQuery().getFromList().get(index).getAliasName().get());
-      parentQuery.getSelectQuery().getFromList().set(index, nodeQuery.getSelectQuery());
-    }
-    // Otherwise, it need to search filter to find the temp table
-    else {
-      List<SubqueryColumn> placeholderTablesinFilter = ((QueryNodeWithPlaceHolders)parent).getPlaceholderTablesinFilter();
-      for (SubqueryColumn filter:placeholderTablesinFilter) {
-        if (filter.getSubquery().getFromList().size()==1 && filter.getSubquery().getFromList().get(0).equals(placeholderTableinParent)) {
-          filter.setSubquery(nodeQuery.getSelectQuery());
-        }
-      }
-    }
-
-    // Compress the node tree
-    parentQuery.cancelSubscriptionTo(nodeQuery);
-    for (Pair<ExecutableNodeBase, Integer> s : nodeQuery.getSourcesAndChannels()) {
-      parentQuery.subscribeTo(s.getLeft(), s.getRight());
-    }
-//    parent.getListeningQueues().removeAll(node.broadcastingQueues);
-//    parent.getListeningQueues().addAll(node.getListeningQueues());
-//    parent.dependents.remove(node);
-//    parent.dependents.addAll(node.dependents);
-//    for (BaseQueryNode dependent:node.dependents) {
-//      dependent.parents.remove(node);
-//      dependent.parents.add(parent);
-//    }
-  }
-
-  // Return true if this node share queue with other dependant of its parent
-  boolean isSharingQueue(ExecutableNodeBase node) {
-    // must have one parent and this parent must have multiple dependents
-    if (node.getExecutableNodeBaseParents().size() != 1 || 
-        node.getExecutableNodeBaseParents().get(0).getDependentNodeCount() <= 1) {
-      return false;
-    }
-    else {
-      for (ExecutableNodeBase dependent : node.getExecutableNodeBaseParents().get(0).getExecutableNodeBaseDependents()) {
-        if (!dependent.equals(node)) {
-          for (ExecutableNode s1 : node.getSubscribers()) {
-            for (ExecutableNode s2 : dependent.getSubscribers()) {
-              if (s1.equals(s2)) {
-                return true;
-              }
-            }
-          }
-//          && node.getBroadcastingQueues().equals(dependent.getBroadcastingQueues())) {
-//        }
-//          return true;
-        }
-      }
-      return false;
-    }
-  }
-
   public ExecutableNodeBase getRoot() {
     return root;
   }
   
-  @Override
-  public List<Integer> getNodeGroupIDs() {
-    return Arrays.asList(0);
-  }
-
-  @Override
-  public List<ExecutableNode> getNodesInGroup(int groupId) {
-    List<ExecutableNode> nodes = new ArrayList<>();
+  List<ExecutableNodeBase> retrieveAllDescendant(ExecutableNodeBase root) {
+    List<ExecutableNodeBase> nodes = new ArrayList<>();
     List<ExecutableNodeBase> pool = new LinkedList<>();
     pool.add(root);
     while (!pool.isEmpty()) {
@@ -276,6 +159,32 @@ public class QueryExecutionPlan implements ExecutablePlan, IdCreator {
       pool.addAll(n.getExecutableNodeBaseDependents());
     }
     return nodes;
+  }
+  
+  @Override
+  public Set<Integer> getNodeGroupIDs() {
+    Set<Integer> groupIDs = new HashSet<>();
+    List<ExecutableNodeBase> nodes = retrieveAllDescendant(root);
+    
+    for (ExecutableNodeBase n : nodes) {
+      groupIDs.add(n.getGroupId());
+    }
+    
+    return groupIDs;
+  }
+
+  @Override
+  public List<ExecutableNode> getNodesInGroup(int groupId) {
+    List<ExecutableNode> relevantNodes = new ArrayList<>();
+    List<ExecutableNodeBase> allNodes = retrieveAllDescendant(root);
+    
+    for (ExecutableNodeBase n : allNodes) {
+      if (n.getGroupId() == groupId) {
+        relevantNodes.add(n);
+      }
+    }
+    
+    return relevantNodes;
   }
 
   @Override
@@ -291,5 +200,22 @@ public class QueryExecutionPlan implements ExecutablePlan, IdCreator {
   @Override
   public Pair<String, String> generateTempTableName() {
     return idCreator.generateTempTableName();
+  }
+
+  public QueryExecutionPlan deepcopy() {
+    try {
+      ByteArrayOutputStream bos = new ByteArrayOutputStream();
+      ObjectOutputStream out = new ObjectOutputStream(bos);
+      out.writeObject(this);
+      out.flush();
+      out.close();
+
+      ObjectInputStream in = new ObjectInputStream(
+          new ByteArrayInputStream(bos.toByteArray()));
+      return (QueryExecutionPlan) in.readObject();
+    } catch (ClassNotFoundException | IOException e) {
+      e.printStackTrace();
+    }
+    return null;
   }
 }

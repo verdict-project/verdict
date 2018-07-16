@@ -3,14 +3,16 @@ package org.verdictdb.core.querying;
 import java.util.List;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.verdictdb.core.connection.DbmsQueryResult;
-import org.verdictdb.core.execution.ExecutableNode;
-import org.verdictdb.core.execution.ExecutionInfoToken;
+import org.verdictdb.connection.DbmsQueryResult;
+import org.verdictdb.core.execplan.ExecutableNode;
+import org.verdictdb.core.execplan.ExecutionInfoToken;
 import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.core.sqlobject.SqlConvertible;
 import org.verdictdb.exception.VerdictDBException;
 
 public class QueryNodeBase extends ExecutableNodeBase {
+  
+  private static final long serialVersionUID = 7263437396821994391L;
   
   protected SelectQuery selectQuery;
   

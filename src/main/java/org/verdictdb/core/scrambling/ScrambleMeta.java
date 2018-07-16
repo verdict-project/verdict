@@ -4,6 +4,9 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+
+import org.verdictdb.exception.VerdictDBValueException;
 
 /**
  * Table-specific information
@@ -47,10 +50,25 @@ public class ScrambleMeta implements Serializable {
   public ScrambleMeta() {}
   
   public ScrambleMeta(
-      String scrambleSchemaName, String scrambleTableName, 
+      String scrambleSchemaName, String scrambleTableName,
+      String originalSchemaName, String originalTableName,
       String blockColumn, int blockCount,
       String tierColumn, int tierCount,
-      String originalSchemaName, String originalTableName) {
+      Map<Integer, List<Double>> cumulativeMassDistributionPerTier) 
+          throws VerdictDBValueException {
+    
+    if (tierCount != cumulativeMassDistributionPerTier.size()) {
+      throw new VerdictDBValueException("The number of tiers don't match.");
+    }
+    for (Entry<Integer, List<Double>> p : cumulativeMassDistributionPerTier.entrySet()) {
+      List<Double> dist = p.getValue();
+      if (dist == null) {
+        throw new VerdictDBValueException("NULL is passed for a cumulative distribution.");
+      }
+      if (blockCount != dist.size()) {
+        throw new VerdictDBValueException("The number of blocks don't match.");
+      }
+    }
     
     this.schemaName = scrambleSchemaName;
     this.tableName = scrambleTableName;
@@ -60,6 +78,7 @@ public class ScrambleMeta implements Serializable {
     this.numberOfTiers = tierCount;
     this.originalSchemaName = originalSchemaName;
     this.originalTableName = originalTableName;
+    this.cumulativeMassDistributionPerTier = cumulativeMassDistributionPerTier;
   }
   
   public String getSchemaName() {

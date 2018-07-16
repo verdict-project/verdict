@@ -7,7 +7,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 import org.junit.Test;
-import org.verdictdb.core.connection.JdbcConnection;
+import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.exception.VerdictDBDbmsException;
 
 public class SqlSyntaxTest {
@@ -21,7 +21,7 @@ public class SqlSyntaxTest {
     Connection conn = DriverManager.getConnection(DB_CONNECTION, DB_USER, DB_PASSWORD);
 
     SqlSyntax expected = new H2Syntax();
-    SqlSyntax actual = new JdbcConnection(conn).getSyntax();
+    SqlSyntax actual = JdbcConnection.create(conn).getSyntax();
     assertEquals(expected, actual);
   }
 
@@ -43,7 +43,7 @@ public class SqlSyntaxTest {
     Connection conn = DriverManager.getConnection(mysqlConnectionString, MYSQL_UESR, MYSQL_PASSWORD);
 
     SqlSyntax expected = new MysqlSyntax();
-    SqlSyntax actual = new JdbcConnection(conn).getSyntax();
+    SqlSyntax actual = JdbcConnection.create(conn).getSyntax();
     assertEquals(expected, actual);
   }
 
@@ -66,7 +66,7 @@ public class SqlSyntaxTest {
     Connection conn = DriverManager.getConnection(postgresConnectionString, POSTGRES_USER, POSTGRES_PASSWORD);
 
     SqlSyntax expected = new PostgresqlSyntax();
-    SqlSyntax actual = new JdbcConnection(conn).getSyntax();
+    SqlSyntax actual = JdbcConnection.create(conn).getSyntax();
     assertEquals(expected, actual);
   }
 
@@ -78,7 +78,7 @@ public class SqlSyntaxTest {
     Connection conn = DriverManager.getConnection(DB_CONNECTION, DB_USER, DB_PASSWORD);
 
     SqlSyntax expected = new SqliteSyntax();
-    SqlSyntax actual = new JdbcConnection(conn).getSyntax();
+    SqlSyntax actual = JdbcConnection.create(conn).getSyntax();
     assertEquals(expected, actual);
   }
 

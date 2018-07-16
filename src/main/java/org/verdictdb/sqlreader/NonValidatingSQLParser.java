@@ -2,6 +2,7 @@ package org.verdictdb.sqlreader;
 
 import java.util.List;
 
+import antlr.ANTLRException;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.apache.commons.lang3.tuple.Pair;
@@ -18,8 +19,14 @@ public class NonValidatingSQLParser {
 //  }
 
   public static VerdictSQLParser parserOf(String text) {
+    VerdictDBErrorListener verdictDBErrorListener = new VerdictDBErrorListener();
     VerdictSQLLexer l = new VerdictSQLLexer(new ANTLRInputStream(text));
+    l.removeErrorListeners();
+    l.addErrorListener(verdictDBErrorListener);
+
     VerdictSQLParser p = new VerdictSQLParser(new CommonTokenStream(l));
+    p.removeErrorListeners();
+    p.addErrorListener(verdictDBErrorListener);
     return p;
   }
 

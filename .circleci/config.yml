@@ -7,12 +7,12 @@ jobs:
   build-jdk7:
     docker:
       # specify the version you desire here
-      - image: maven:3.5.4-jdk-7
+      - image: maven:3.5.4-jdk-7-slim
 
       # Specify service dependencies here if necessary
       # CircleCI maintains a library of pre-built images
       # documented at https://circleci.com/docs/2.0/circleci-images/
-      - image: mysql:5.5
+      - image: mariadb:10
         environment:
           MYSQL_DATABASE: test
           MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
@@ -35,20 +35,23 @@ jobs:
           - v1-dependencies-{{ checksum "pom.xml" }}
           # fallback to using the latest cache if no exact match is found
           - v1-dependencies-
+      - run: mvn install:install-file -Dfile=src/test/resources/jars/ImpalaJDBC41-2.6.3.jar -DgroupId=com.cloudera -DartifactId=impala-jdbc41 -Dversion=2.6.3 -Dpackaging=jar
       - run: mvn dependency:go-offline
       - save_cache:
           paths:
             - ~/.m2
           key: v1-dependencies-{{ checksum "pom.xml" }}
       # run tests!
-      - run: mvn test
+      - run: mvn -B clean test 2> /dev/null
       - store_test_results:
-          path: test-results
+          path: ~/junit
+      - store_artifacts:
+          path: ~/junit
 
   build-jdk8:
     docker:
       # specify the version you desire here
-      - image: circleci/openjdk:8-jdk-browsers
+      - image: maven:3.5.4-jdk-8-slim
 
       # Specify service dependencies here if necessary
       # CircleCI maintains a library of pre-built images
@@ -76,15 +79,18 @@ jobs:
           - v1-dependencies-{{ checksum "pom.xml" }}
           # fallback to using the latest cache if no exact match is found
           - v1-dependencies-
+      - run: mvn install:install-file -Dfile=src/test/resources/jars/ImpalaJDBC41-2.6.3.jar -DgroupId=com.cloudera -DartifactId=impala-jdbc41 -Dversion=2.6.3 -Dpackaging=jar
       - run: mvn dependency:go-offline
       - save_cache:
           paths:
             - ~/.m2
           key: v1-dependencies-{{ checksum "pom.xml" }}
       # run tests!
-      - run: mvn test
+      - run: mvn -B clean test 2> /dev/null
       - store_test_results:
-          path: test-results
+          path: ~/junit
+      - store_artifacts:
+          path: ~/junit
 
 workflows:
   version: 2

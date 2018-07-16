@@ -93,8 +93,8 @@ public class AggExecutionNodeBlock {
     List<ExecutableNodeBase> combiners = new ArrayList<>();
     //    ScrambleMeta scrambleMeta = idCreator.getScrambleMeta();
 
-    // first, plan how to perform block aggregation
-    // filtering predicates inserted into different scrambled tables are identified.
+    // First, plan how to perform block aggregation
+    // filtering predicates that must inserted into different scrambled tables are identified.
     List<Pair<ExecutableNodeBase, Triple<String, String, String>>> scrambledNodes = 
         identifyScrambledNodes(scrambleMeta, blockNodes);
     List<Pair<String, String>> scrambles = new ArrayList<>();
@@ -104,29 +104,33 @@ public class AggExecutionNodeBlock {
       scrambles.add(Pair.of(schemaName, tableName));
     }
     OlaAggregationPlan aggPlan = new OlaAggregationPlan(scrambleMeta, scrambles);
+    List<Pair<ExecutableNodeBase, ExecutableNodeBase>> oldSubscriptionInformation =
+        new ArrayList<>();
 
-    // second, according to the plan, create individual nodes that perform aggregations.
+    // Second, according to the plan, create individual nodes that perform aggregations.
     for (int i = 0; i < aggPlan.totalBlockAggCount(); i++) {
+      
       // copy and remove the dependency to its parents
-      AggExecutionNodeBlock copy = deepcopyExcludingDependentAggregates();
+      oldSubscriptionInformation.clear();
+      AggExecutionNodeBlock copy = deepcopyExcludingDependentAggregates(oldSubscriptionInformation);
       ExecutableNodeBase aggroot = copy.getBlockRootNode();
       for (ExecutableNodeBase parent : aggroot.getExecutableNodeBaseParents()) {
-        parent.cancelSubscriptionTo(aggroot);
+        parent.cancelSubscriptionTo(aggroot);   // not sure if this is required, but do anyway
       }
-      aggroot.clearSubscribers();
+      aggroot.cancelSubscriptionsFromAllSubscribers();   // subscription will be reconstructed later.
 
-      // add extra predicates to restrain each aggregation to particular parts of base tables.
+      // Add extra predicates to restrain each aggregation to particular parts of base tables.
       List<Pair<ExecutableNodeBase, Triple<String, String, String>>> scrambledNodeAndTableName = 
           identifyScrambledNodes(scrambleMeta, copy.getNodesInBlock());
 
-      // assign hyper table cube to the block
+      // Assign hyper table cube to the block
       ((AggExecutionNode)aggroot).getMeta().setCubes(Arrays.asList(aggPlan.cubes.get(i)));
 
       // Search for agg column
-      // rewrite individual aggregate node so that it only select basic aggregate column and non-aggregate column
+      // Rewrite individual aggregate node so that it only select basic aggregate column and non-aggregate column
       List<SelectItem> newSelectlist = rewriteSelectlistWithBasicAgg(((AggExecutionNode)aggroot).getSelectQuery(),  ((AggExecutionNode)aggroot).getMeta());
 
-      // add tier column and group attribute if from list has multiple tier table
+      // Add a tier column and a group attribute if the from list has multiple tier table
       addTierColumn(((AggExecutionNode)aggroot).getSelectQuery(), newSelectlist, scrambleMeta);
 
       ((AggExecutionNode)aggroot).getSelectQuery().clearSelectList();
@@ -134,7 +138,7 @@ public class AggExecutionNodeBlock {
 
       aggColumnIdentiferNum = 0;
 
-      // insert predicates
+      // Insert predicates into individual aggregation nodes
       for (Pair<ExecutableNodeBase, Triple<String, String, String>> a : scrambledNodeAndTableName) {
         ExecutableNodeBase scrambledNode = a.getLeft();
         String schemaName = a.getRight().getLeft();
@@ -165,10 +169,10 @@ public class AggExecutionNodeBlock {
       individualAggNodes.add(aggroot);
     }
 
-    // third, stack combiners
+    // Third, stack combiners
     // clear existing broadcasting queues of individual agg nodes
     for (ExecutableNodeBase n : individualAggNodes) {
-      n.clearSubscribers();
+      n.cancelSubscriptionsFromAllSubscribers();
     }
     for (int i = 1; i < aggPlan.totalBlockAggCount(); i++) {
       AggCombinerExecutionNode combiner;
@@ -186,8 +190,15 @@ public class AggExecutionNodeBlock {
       combiners.add(combiner);
     }
 
-    // fourth, re-link the listening queue for the new AsyncAggNode
+    // Fourth, re-link the subscription relationship for the new AsyncAggNode
     ExecutableNodeBase newRoot = AsyncAggExecutionNode.create(idCreator, individualAggNodes, combiners, scrambleMeta);
+    
+    // Finally remove the old subscription information: old copied node -> still used old node
+    for (Pair<ExecutableNodeBase, ExecutableNodeBase> parentToSource : oldSubscriptionInformation) {
+      ExecutableNodeBase subscriber = parentToSource.getLeft();
+      ExecutableNodeBase source = parentToSource.getRight();
+      subscriber.cancelSubscriptionTo(source);
+    }
 
     return newRoot;
   }
@@ -260,14 +271,17 @@ public class AggExecutionNodeBlock {
    * to receive the same information from the downstream operations.
    * 
    * @param root
+   * @param oldSubscriptionInformation  Pairs of (old parent, old source). After all deepcopying is
+   *        finished, this old subscription can be cancelled.
    * @return
    * @throws VerdictDBValueException 
    */
-  public AggExecutionNodeBlock deepcopyExcludingDependentAggregates() throws VerdictDBValueException {
+  public AggExecutionNodeBlock deepcopyExcludingDependentAggregates(
+      List<Pair<ExecutableNodeBase, ExecutableNodeBase>> oldSubscriptionInformation) throws VerdictDBValueException {
     List<ExecutableNodeBase> newNodes = new ArrayList<>();
     for (ExecutableNodeBase node : blockNodes) {
       ExecutableNodeBase copied = node.deepcopy();
-      copied.clearSubscribers();    // this subscription information will be properly reconstructed below.
+      copied.cancelSubscriptionsFromAllSubscribers();    // this subscription information will be properly reconstructed below.
       newNodes.add(copied);
     }
 
@@ -289,6 +303,9 @@ public class AggExecutionNodeBlock {
         } else {
           // external dependency relationships
           newNode.subscribeTo(source.getLeft(), source.getRight());
+          
+          // store old subscription information for reference
+          oldSubscriptionInformation.add(Pair.of(oldNode, source.getLeft()));
         }
 
       }

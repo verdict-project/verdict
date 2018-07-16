@@ -3,8 +3,8 @@ package org.verdictdb.core.querying;
 import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.verdictdb.core.connection.DbmsQueryResult;
-import org.verdictdb.core.execution.ExecutionInfoToken;
+import org.verdictdb.connection.DbmsQueryResult;
+import org.verdictdb.core.execplan.ExecutionInfoToken;
 import org.verdictdb.core.sqlobject.AsteriskColumn;
 import org.verdictdb.core.sqlobject.BaseTable;
 import org.verdictdb.core.sqlobject.SelectQuery;
@@ -15,7 +15,7 @@ import org.verdictdb.exception.VerdictDBValueException;
 /**
  * 
  * @author Yongjoo Park
- * TODO: we need to also include order-by and limit
+ * TODO: Add Have
  */
 public class SelectAllExecutionNode extends QueryNodeWithPlaceHolders {
   
@@ -27,6 +27,8 @@ public class SelectAllExecutionNode extends QueryNodeWithPlaceHolders {
     SelectAllExecutionNode selectAll = new SelectAllExecutionNode(null);
     Pair<BaseTable, SubscriptionTicket> baseAndSubscriptionTicket = selectAll.createPlaceHolderTable("t");
     SelectQuery selectQuery = SelectQuery.create(new AsteriskColumn(), baseAndSubscriptionTicket.getLeft());
+    selectQuery.addOrderby(query.getOrderby());
+    if (query.getLimit().isPresent()) selectQuery.addLimit(query.getLimit().get());
     selectAll.setSelectQuery(selectQuery);
     
 //    Pair<String, String> tempTableFullName = plan.generateTempTableName();

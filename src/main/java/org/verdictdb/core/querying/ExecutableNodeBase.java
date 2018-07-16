@@ -1,5 +1,6 @@
 package org.verdictdb.core.querying;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -10,22 +11,24 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.UUID;
 
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import org.apache.commons.lang3.tuple.Pair;
-import org.verdictdb.core.connection.DbmsQueryResult;
-import org.verdictdb.core.execution.ExecutableNode;
-import org.verdictdb.core.execution.ExecutionInfoToken;
-import org.verdictdb.core.execution.ExecutionTokenQueue;
-import org.verdictdb.core.execution.MethodInvocationInformation;
+import org.verdictdb.connection.DbmsQueryResult;
+import org.verdictdb.core.execplan.ExecutableNode;
+import org.verdictdb.core.execplan.ExecutionInfoToken;
+import org.verdictdb.core.execplan.ExecutionTokenQueue;
+import org.verdictdb.core.execplan.MethodInvocationInformation;
 import org.verdictdb.core.sqlobject.SqlConvertible;
 import org.verdictdb.exception.VerdictDBException;
 
-public class ExecutableNodeBase implements ExecutableNode {
+public class ExecutableNodeBase implements ExecutableNode, Serializable {
+
+  private static final long serialVersionUID = 1424215482199124961L;
 
   List<ExecutableNodeBase> subscribers = new ArrayList<>();
 
@@ -34,13 +37,20 @@ public class ExecutableNodeBase implements ExecutableNode {
   Map<Integer, ExecutionTokenQueue> channels = new TreeMap<>();
 
   final private String uniqueId;
+  
+  private int groupId;    // copied when deepcopying; used by ExecutablePlanRunner
 
   public ExecutableNodeBase() {
-    uniqueId = UUID.randomUUID().toString();
+    uniqueId = RandomStringUtils.randomAlphanumeric(10);
+    groupId = Integer.valueOf(RandomStringUtils.randomNumeric(5));
   }
 
   public static ExecutableNodeBase create() {
     return new ExecutableNodeBase();
+  }
+  
+  public int getGroupId() {
+    return groupId;
   }
 
   // setup method
@@ -55,7 +65,7 @@ public class ExecutableNodeBase implements ExecutableNode {
       ticket.getSubscriber().subscribeTo(this);
     }
   }
-
+  
   public void subscribeTo(ExecutableNodeBase node) {
     for (int channel = 0; ; channel++) {
       if (!channels.containsKey(channel)) {
@@ -74,12 +84,16 @@ public class ExecutableNodeBase implements ExecutableNode {
     }
   }
 
-  void addSubscriber(ExecutableNodeBase node) {
+  private void addSubscriber(ExecutableNodeBase node) {
     subscribers.add(node);
   }
 
+  /**
+   * Removes node from the subscription list (i.e., sources).
+   * 
+   * @param node
+   */
   public void cancelSubscriptionTo(ExecutableNodeBase node) {
-    //    node.subscribers.remove(node);
     List<Pair<ExecutableNodeBase, Integer>> newSources = new ArrayList<>();
     Set<Integer> leftChannels = new HashSet<>();
     for (Pair<ExecutableNodeBase, Integer> s : sources) {
@@ -92,18 +106,37 @@ public class ExecutableNodeBase implements ExecutableNode {
     sources = newSources;
 
     // if there are no other nodes broadcasting to this channel, remove the queue
-    for (Integer c : leftChannels) {
-      if (!channels.containsKey(c)) {
-        channels.remove(c);
+    if (leftChannels.size()>0) {
+      for (Integer c : leftChannels) {
+        if (!channels.containsKey(c)) {
+          channels.remove(c);
+        }
       }
     }
+    else {// the parent has only one child, so just remove the channel
+      channels.clear();
+    }
+    
+    // inform the node
+    node.removeSubscriber(this);
   }
 
-  public void clearSubscribers() {
+  private void removeSubscriber(ExecutableNodeBase node) {
+    subscribers.remove(node);
+  }
+
+  public void cancelSubscriptionsFromAllSubscribers() {
+    // make a copied list of subscribers (to avoid concurrent modifications
+    List<ExecutableNodeBase> copiedSubscribiers = new ArrayList<>();
     for (ExecutableNodeBase s : subscribers) {
+      copiedSubscribiers.add(s);
+    }
+    
+    // now cancel subscriptions
+    for (ExecutableNodeBase s : copiedSubscribiers) {
       s.cancelSubscriptionTo(this);
     }
-    subscribers = new ArrayList<>();
+//    subscribers = new ArrayList<>();
   }
 
   // runner methods
@@ -223,6 +256,7 @@ public class ExecutableNodeBase implements ExecutableNode {
     for (Entry<Integer, ExecutionTokenQueue> a : from.channels.entrySet()) {
       to.channels.put(a.getKey(), new ExecutionTokenQueue());
     }
+    to.groupId = from.groupId;
 //    to.channels = new TreeMap<>(from.channels);
   }
 

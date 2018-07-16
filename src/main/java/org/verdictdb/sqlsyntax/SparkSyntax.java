@@ -27,14 +27,19 @@ public class SparkSyntax extends SqlSyntax {
     return 1;
   }
 
+  
   @Override
   public String getPartitionByInCreateTable() {
     return "using parquet partitioned by";
   }
 
+  /**
+   * This command also returns partition information if exists.
+   */
   @Override
   public String getPartitionCommand(String schema, String table) {
-    return "SHOW PARTITIONS " + quoteName(schema) + "." + quoteName(table);
+    return "DESCRIBE " + quoteName(schema) + "." + quoteName(table);
+//    return "SHOW PARTITIONS " + quoteName(schema) + "." + quoteName(table);
   }
 
   @Override

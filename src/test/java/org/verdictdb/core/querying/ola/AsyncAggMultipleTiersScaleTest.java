@@ -17,10 +17,10 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.verdictdb.core.connection.JdbcConnection;
-import org.verdictdb.core.connection.StaticMetaData;
-import org.verdictdb.core.execution.ExecutablePlanRunner;
-import org.verdictdb.core.execution.ExecutionInfoToken;
+import org.verdictdb.connection.JdbcConnection;
+import org.verdictdb.connection.StaticMetaData;
+import org.verdictdb.core.execplan.ExecutablePlanRunner;
+import org.verdictdb.core.execplan.ExecutionInfoToken;
 import org.verdictdb.core.querying.AggExecutionNode;
 import org.verdictdb.core.querying.QueryExecutionPlan;
 import org.verdictdb.core.scrambling.ScrambleMeta;
@@ -185,12 +185,12 @@ public class AsyncAggMultipleTiersScaleTest {
     expected = "select (1 + (sum(verdictdbafterscaling.\"agg0\") / sum(verdictdbafterscaling.\"agg1\"))) * sum(verdictdbafterscaling.\"agg0\") as \"vc4\" " +
         "from " +
         "(select case " +
-        "when (verdictdbbeforescaling.\"verdictdbtier0\" = 1) then (5.0 * verdictdbbeforescaling.\"agg0\") " +
-        "when (verdictdbbeforescaling.\"verdictdbtier0\" = 0) then (2.0 * verdictdbbeforescaling.\"agg0\") " +
+        "when (verdictdbbeforescaling.\"verdictdbtier0\" = 1) then (5.0000000000000000 * verdictdbbeforescaling.\"agg0\") " +
+        "when (verdictdbbeforescaling.\"verdictdbtier0\" = 0) then (2.0000000000000000 * verdictdbbeforescaling.\"agg0\") " +
         "else 0 end as \"agg0\", " +
         "case " +
-        "when (verdictdbbeforescaling.\"verdictdbtier0\" = 1) then (5.0 * verdictdbbeforescaling.\"agg1\") " +
-        "when (verdictdbbeforescaling.\"verdictdbtier0\" = 0) then (2.0 * verdictdbbeforescaling.\"agg1\") " +
+        "when (verdictdbbeforescaling.\"verdictdbtier0\" = 1) then (5.0000000000000000 * verdictdbbeforescaling.\"agg1\") " +
+        "when (verdictdbbeforescaling.\"verdictdbtier0\" = 0) then (2.0000000000000000 * verdictdbbeforescaling.\"agg1\") " +
         "else 0 end as \"agg1\", " +
         "verdictdbbeforescaling.\"verdictdbtier0\" as \"verdictdbtier0\" " +
         "from \"verdictdb_temp\".\"alias\" as verdictdbbeforescaling) " +
@@ -259,12 +259,12 @@ public class AsyncAggMultipleTiersScaleTest {
     expected = "select sum(verdictdbafterscaling.\"agg0\") / sum(verdictdbafterscaling.\"agg1\") as \"a2\" " +
         "from (select " +
         "case " +
-        "when (verdictdbbeforescaling.\"verdictdbtier0\" = 1) then (5.0 * verdictdbbeforescaling.\"agg0\") " +
-        "when (verdictdbbeforescaling.\"verdictdbtier0\" = 0) then (2.0 * verdictdbbeforescaling.\"agg0\") " +
+        "when (verdictdbbeforescaling.\"verdictdbtier0\" = 1) then (5.0000000000000000 * verdictdbbeforescaling.\"agg0\") " +
+        "when (verdictdbbeforescaling.\"verdictdbtier0\" = 0) then (2.0000000000000000 * verdictdbbeforescaling.\"agg0\") " +
         "else 0 end as \"agg0\", " +
         "case " +
-        "when (verdictdbbeforescaling.\"verdictdbtier0\" = 1) then (5.0 * verdictdbbeforescaling.\"agg1\") " +
-        "when (verdictdbbeforescaling.\"verdictdbtier0\" = 0) then (2.0 * verdictdbbeforescaling.\"agg1\") " +
+        "when (verdictdbbeforescaling.\"verdictdbtier0\" = 1) then (5.0000000000000000 * verdictdbbeforescaling.\"agg1\") " +
+        "when (verdictdbbeforescaling.\"verdictdbtier0\" = 0) then (2.0000000000000000 * verdictdbbeforescaling.\"agg1\") " +
         "else 0 end as \"agg1\", " +
         "verdictdbbeforescaling.\"verdictdbtier0\" as \"verdictdbtier0\" " +
         "from \"verdictdb_temp\".\"alias\" as verdictdbbeforescaling) " +
@@ -334,8 +334,8 @@ public class AsyncAggMultipleTiersScaleTest {
         "from (" +
         "select " +
         "case " +
-        "when (verdictdbbeforescaling.\"verdictdbtier0\" = 1) then (5.0 * verdictdbbeforescaling.\"agg0\") " +
-        "when (verdictdbbeforescaling.\"verdictdbtier0\" = 0) then (2.0 * verdictdbbeforescaling.\"agg0\") " +
+        "when (verdictdbbeforescaling.\"verdictdbtier0\" = 1) then (5.0000000000000000 * verdictdbbeforescaling.\"agg0\") " +
+        "when (verdictdbbeforescaling.\"verdictdbtier0\" = 0) then (2.0000000000000000 * verdictdbbeforescaling.\"agg0\") " +
         "else 0 end as \"agg0\", " +
         "verdictdbbeforescaling.\"verdictdbtier0\" as \"verdictdbtier0\" " +
         "from \"verdictdb_temp\".\"alias\" as verdictdbbeforescaling) " +
@@ -406,8 +406,8 @@ public class AsyncAggMultipleTiersScaleTest {
         "from (" +
         "select " +
         "case " +
-        "when (verdictdbbeforescaling.\"verdictdbtier0\" = 1) then (5.0 * verdictdbbeforescaling.\"agg0\") " +
-        "when (verdictdbbeforescaling.\"verdictdbtier0\" = 0) then (2.0 * verdictdbbeforescaling.\"agg0\") " +
+        "when (verdictdbbeforescaling.\"verdictdbtier0\" = 1) then (5.0000000000000000 * verdictdbbeforescaling.\"agg0\") " +
+        "when (verdictdbbeforescaling.\"verdictdbtier0\" = 0) then (2.0000000000000000 * verdictdbbeforescaling.\"agg0\") " +
         "else 0 end as \"agg0\", " +
         "verdictdbbeforescaling.\"verdictdbtier0\" as \"verdictdbtier0\" " +
         "from \"verdictdb_temp\".\"alias\" as verdictdbbeforescaling) " +
@@ -481,12 +481,12 @@ public class AsyncAggMultipleTiersScaleTest {
         "from " +
         "(select " +
         "case " +
-        "when (verdictdbbeforescaling.\"verdictdbtier0\" = 1) then (5.0 * verdictdbbeforescaling.\"agg0\") " +
-        "when (verdictdbbeforescaling.\"verdictdbtier0\" = 0) then (2.0 * verdictdbbeforescaling.\"agg0\") " +
+        "when (verdictdbbeforescaling.\"verdictdbtier0\" = 1) then (5.0000000000000000 * verdictdbbeforescaling.\"agg0\") " +
+        "when (verdictdbbeforescaling.\"verdictdbtier0\" = 0) then (2.0000000000000000 * verdictdbbeforescaling.\"agg0\") " +
         "else 0 end as \"agg0\", " +
         "case " +
-        "when (verdictdbbeforescaling.\"verdictdbtier0\" = 1) then (5.0 * verdictdbbeforescaling.\"agg1\") " +
-        "when (verdictdbbeforescaling.\"verdictdbtier0\" = 0) then (2.0 * verdictdbbeforescaling.\"agg1\") " +
+        "when (verdictdbbeforescaling.\"verdictdbtier0\" = 1) then (5.0000000000000000 * verdictdbbeforescaling.\"agg1\") " +
+        "when (verdictdbbeforescaling.\"verdictdbtier0\" = 0) then (2.0000000000000000 * verdictdbbeforescaling.\"agg1\") " +
         "else 0 end as \"agg1\", " +
         "verdictdbbeforescaling.\"verdictdbtier0\" as \"verdictdbtier0\" " +
         "from \"verdictdb_temp\".\"alias\" as verdictdbbeforescaling) " +
@@ -560,12 +560,12 @@ public class AsyncAggMultipleTiersScaleTest {
         "from " +
         "(select " +
         "case " +
-        "when (verdictdbbeforescaling.\"verdictdbtier0\" = 1) then (5.0 * verdictdbbeforescaling.\"agg0\") " +
-        "when (verdictdbbeforescaling.\"verdictdbtier0\" = 0) then (2.0 * verdictdbbeforescaling.\"agg0\") " +
+        "when (verdictdbbeforescaling.\"verdictdbtier0\" = 1) then (5.0000000000000000 * verdictdbbeforescaling.\"agg0\") " +
+        "when (verdictdbbeforescaling.\"verdictdbtier0\" = 0) then (2.0000000000000000 * verdictdbbeforescaling.\"agg0\") " +
         "else 0 end as \"agg0\", " +
         "case " +
-        "when (verdictdbbeforescaling.\"verdictdbtier0\" = 1) then (5.0 * verdictdbbeforescaling.\"agg1\") " +
-        "when (verdictdbbeforescaling.\"verdictdbtier0\" = 0) then (2.0 * verdictdbbeforescaling.\"agg1\") " +
+        "when (verdictdbbeforescaling.\"verdictdbtier0\" = 1) then (5.0000000000000000 * verdictdbbeforescaling.\"agg1\") " +
+        "when (verdictdbbeforescaling.\"verdictdbtier0\" = 0) then (2.0000000000000000 * verdictdbbeforescaling.\"agg1\") " +
         "else 0 end as \"agg1\", " +
         "verdictdbbeforescaling.\"verdictdbtier0\" as \"verdictdbtier0\" " +
         "from \"verdictdb_temp\".\"alias\" as verdictdbbeforescaling) " +
@@ -636,12 +636,12 @@ public class AsyncAggMultipleTiersScaleTest {
         "from (" +
         "select " +
         "case " +
-        "when (verdictdbbeforescaling.\"verdictdbtier0\" = 1) then (5.0 * verdictdbbeforescaling.\"agg0\") " +
-        "when (verdictdbbeforescaling.\"verdictdbtier0\" = 0) then (2.0 * verdictdbbeforescaling.\"agg0\") " +
+        "when (verdictdbbeforescaling.\"verdictdbtier0\" = 1) then (5.0000000000000000 * verdictdbbeforescaling.\"agg0\") " +
+        "when (verdictdbbeforescaling.\"verdictdbtier0\" = 0) then (2.0000000000000000 * verdictdbbeforescaling.\"agg0\") " +
         "else 0 end as \"agg0\", " +
         "case " +
-        "when (verdictdbbeforescaling.\"verdictdbtier0\" = 1) then (5.0 * verdictdbbeforescaling.\"agg1\") " +
-        "when (verdictdbbeforescaling.\"verdictdbtier0\" = 0) then (2.0 * verdictdbbeforescaling.\"agg1\") " +
+        "when (verdictdbbeforescaling.\"verdictdbtier0\" = 1) then (5.0000000000000000 * verdictdbbeforescaling.\"agg1\") " +
+        "when (verdictdbbeforescaling.\"verdictdbtier0\" = 0) then (2.0000000000000000 * verdictdbbeforescaling.\"agg1\") " +
         "else 0 end as \"agg1\", " +
         "verdictdbbeforescaling.\"verdictdbtier0\" as \"verdictdbtier0\" " +
         "from \"verdictdb_temp\".\"alias\" as verdictdbbeforescaling) " +
@@ -715,12 +715,12 @@ public class AsyncAggMultipleTiersScaleTest {
         "from (" +
         "select " +
         "case " +
-        "when (verdictdbbeforescaling.\"verdictdbtier0\" = 1) then (5.0 * verdictdbbeforescaling.\"agg0\") " +
-        "when (verdictdbbeforescaling.\"verdictdbtier0\" = 0) then (2.0 * verdictdbbeforescaling.\"agg0\") " +
+        "when (verdictdbbeforescaling.\"verdictdbtier0\" = 1) then (5.0000000000000000 * verdictdbbeforescaling.\"agg0\") " +
+        "when (verdictdbbeforescaling.\"verdictdbtier0\" = 0) then (2.0000000000000000 * verdictdbbeforescaling.\"agg0\") " +
         "else 0 end as \"agg0\", " +
         "case " +
-        "when (verdictdbbeforescaling.\"verdictdbtier0\" = 1) then (5.0 * verdictdbbeforescaling.\"agg1\") " +
-        "when (verdictdbbeforescaling.\"verdictdbtier0\" = 0) then (2.0 * verdictdbbeforescaling.\"agg1\") " +
+        "when (verdictdbbeforescaling.\"verdictdbtier0\" = 1) then (5.0000000000000000 * verdictdbbeforescaling.\"agg1\") " +
+        "when (verdictdbbeforescaling.\"verdictdbtier0\" = 0) then (2.0000000000000000 * verdictdbbeforescaling.\"agg1\") " +
         "else 0 end as \"agg1\", " +
         "verdictdbbeforescaling.\"agg2\" as \"agg2\", " +
         "verdictdbbeforescaling.\"verdictdbtier0\" as \"verdictdbtier0\" " +
@@ -795,12 +795,12 @@ public class AsyncAggMultipleTiersScaleTest {
         "from (" +
         "select " +
         "case " +
-        "when (verdictdbbeforescaling.\"verdictdbtier0\" = 1) then (5.0 * verdictdbbeforescaling.\"agg0\") " +
-        "when (verdictdbbeforescaling.\"verdictdbtier0\" = 0) then (2.0 * verdictdbbeforescaling.\"agg0\") " +
+        "when (verdictdbbeforescaling.\"verdictdbtier0\" = 1) then (5.0000000000000000 * verdictdbbeforescaling.\"agg0\") " +
+        "when (verdictdbbeforescaling.\"verdictdbtier0\" = 0) then (2.0000000000000000 * verdictdbbeforescaling.\"agg0\") " +
         "else 0 end as \"agg0\", " +
         "case " +
-        "when (verdictdbbeforescaling.\"verdictdbtier0\" = 1) then (5.0 * verdictdbbeforescaling.\"agg1\") " +
-        "when (verdictdbbeforescaling.\"verdictdbtier0\" = 0) then (2.0 * verdictdbbeforescaling.\"agg1\") " +
+        "when (verdictdbbeforescaling.\"verdictdbtier0\" = 1) then (5.0000000000000000 * verdictdbbeforescaling.\"agg1\") " +
+        "when (verdictdbbeforescaling.\"verdictdbtier0\" = 0) then (2.0000000000000000 * verdictdbbeforescaling.\"agg1\") " +
         "else 0 end as \"agg1\", " +
         "verdictdbbeforescaling.\"agg2\" as \"agg2\", " +
         "verdictdbbeforescaling.\"verdictdbtier0\" as \"verdictdbtier0\" " +

@@ -20,10 +20,17 @@ import java.sql.Timestamp;
 import org.apache.commons.io.IOUtils;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.verdictdb.core.connection.DbmsConnection;
-import org.verdictdb.core.connection.JdbcConnection;
+import org.verdictdb.connection.DbmsConnection;
+import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.exception.VerdictDBDbmsException;
 
+/**
+ * This intends to test the correct operations of VerdictDB JDBC driver's get methods for every
+ * different data type supported by MySQL.
+ * 
+ * @author Yongjoo Park
+ *
+ */
 public class JdbcResultSetMetaDataTestForMySql {
 
   static Connection conn;
@@ -56,7 +63,7 @@ public class JdbcResultSetMetaDataTestForMySql {
     String mysqlConnectionString =
         String.format("jdbc:mysql://%s/%s?autoReconnect=true&useSSL=false", MYSQL_HOST, MYSQL_DATABASE);
     conn = DriverManager.getConnection(mysqlConnectionString, MYSQL_UESR, MYSQL_PASSWORD);
-    dbmsConn = new JdbcConnection(conn);
+    dbmsConn = JdbcConnection.create(conn);
 
     stmt = conn.createStatement();
     stmt.execute(String.format("DROP TABLE IF EXISTS %s", TABLE_NAME));
@@ -122,7 +129,7 @@ public class JdbcResultSetMetaDataTestForMySql {
   @Test
   public void testColumnTypes() throws VerdictDBDbmsException, SQLException, IOException {
     String sql = String.format("select * from %s", TABLE_NAME);
-    ResultSet ourResult = new JdbcResultSet(dbmsConn.execute(sql));
+    ResultSet ourResult = new VerdictResultSet(dbmsConn.execute(sql));
     ResultSetMetaData ourMetaData = ourResult.getMetaData();
     assertEquals(33, ourMetaData.getColumnCount());
 

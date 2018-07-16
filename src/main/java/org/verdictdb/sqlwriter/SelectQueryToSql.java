@@ -22,6 +22,7 @@ import org.verdictdb.core.sqlobject.UnnamedColumn;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBTypeException;
 import org.verdictdb.exception.VerdictDBValueException;
+import org.verdictdb.sqlsyntax.PostgresqlSyntax;
 import org.verdictdb.sqlsyntax.SqlSyntax;
 
 import com.google.common.base.Optional;
@@ -199,11 +200,35 @@ public class SelectQueryToSql {
         return syntax.randFunction();
       } else if (columnOp.getOpType().equals("cast")) {
         return "cast(" + withParentheses(columnOp.getOperand(0)) + " as " + withParentheses(columnOp.getOperand(1)) + ")";
-      } else if (columnOp.getOpType().equals("year")) {
-        return "year(" + withParentheses(columnOp.getOperand(0)) + ")";
-      } else {
-        throw new VerdictDBTypeException("Unexpceted opType of column: " + columnOp.getOpType().toString());
+      } else if (columnOp.getOpType().equals("extract")) {
+        return "extract(" + withParentheses(columnOp.getOperand(0)) + " from " + withParentheses(columnOp.getOperand(1)) + ")";
+      } else if (columnOp.getOpType().equals("||") || columnOp.getOpType().equals("|")
+          || columnOp.getOpType().equals("&") || columnOp.getOpType().equals("#")
+          || columnOp.getOpType().equals(">>") || columnOp.getOpType().equals("<<")) {
+        return  withParentheses(columnOp.getOperand(0)) + " " + columnOp.getOpType() + " " + withParentheses(columnOp.getOperand(1));
+      } else if (columnOp.getOpType().equals("overlay")) {
+        return "overlay(" + withParentheses(columnOp.getOperand(0)) + " placing " + withParentheses(columnOp.getOperand(1))
+            + " from " + withParentheses(columnOp.getOperand(2)) + ")";
+      } else if (columnOp.getOpType().equals("substring") && syntax instanceof PostgresqlSyntax) {
+        String temp = "substring(" + withParentheses(columnOp.getOperand(0)) + " from " + withParentheses(columnOp.getOperand(1));
+        if (columnOp.getOperands().size()==2) {
+          return temp + ")";
+        }
+        else return temp + " for " + withParentheses(columnOp.getOperand(2)) + ")";
       }
+      else {
+        List<UnnamedColumn> columns = columnOp.getOperands();
+        String temp = columnOp.getOpType() + "(";
+        for (int i = 0; i < columns.size(); i++) {
+          if (i != columns.size() - 1) {
+            temp = temp + withParentheses(columns.get(i)) + ", ";
+          } else temp = temp + withParentheses(columns.get(i));
+        }
+        return temp + ")";
+      }
+      //else {
+      //  throw new VerdictDBTypeException("Unexpceted opType of column: " + columnOp.getOpType().toString());
+      //}
     } else if (column instanceof SubqueryColumn) {
       return "(" + selectQueryToSql(((SubqueryColumn) column).getSubquery()) + ")";
     }
