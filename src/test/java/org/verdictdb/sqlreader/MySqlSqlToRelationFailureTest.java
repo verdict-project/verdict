@@ -6,11 +6,11 @@ import org.verdictdb.commons.DatabaseConnectionHelpers;
 import org.verdictdb.connection.CachedDbmsConnection;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.JdbcConnection;
+import org.verdictdb.coordinator.ScramblingCoordinator;
+import org.verdictdb.coordinator.SelectQueryCoordinator;
 import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
 import org.verdictdb.exception.VerdictDBException;
-import org.verdictdb.execution.ScramblingCoordinator;
-import org.verdictdb.execution.SelectQueryCoordinator;
 import org.verdictdb.sqlsyntax.MysqlSyntax;
 
 import java.sql.Connection;
@@ -48,7 +48,7 @@ public class MySqlSqlToRelationFailureTest {
 
   private static final String MYSQL_UESR = "root";
 
-  private static final String MYSQL_PASSWORD = "zhongshucheng123";
+  private static final String MYSQL_PASSWORD = "";
 
   @BeforeClass
   public static void setupMySqlDatabase() throws SQLException, VerdictDBException {
