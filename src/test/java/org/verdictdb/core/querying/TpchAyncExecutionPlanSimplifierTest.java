@@ -151,7 +151,7 @@ public class TpchAyncExecutionPlanSimplifierTest {
     tablemeta.setNumberOfTiers(1);
     HashMap<Integer, List<Double>> distribution1 = new HashMap<>();
     distribution1.put(0, Arrays.asList(0.2, 0.5, 1.0));
-    tablemeta.setCumulativeMassDistributionPerTier(distribution1);
+    tablemeta.setCumulativeDistributionForTier(distribution1);
     meta.addScrambleMeta(tablemeta);
     scrambler =
         new UniformScrambler("tpch", "orders", "tpch", "orders_scrambled", aggBlockCount);
@@ -161,7 +161,7 @@ public class TpchAyncExecutionPlanSimplifierTest {
     tablemeta.setNumberOfTiers(1);
     distribution1 = new HashMap<>();
     distribution1.put(0, Arrays.asList(0.2, 0.5, 1.0));
-    tablemeta.setCumulativeMassDistributionPerTier(distribution1);
+    tablemeta.setCumulativeDistributionForTier(distribution1);
     scrambledTable = tablemeta.getTableName();
     meta.addScrambleMeta(tablemeta);
 

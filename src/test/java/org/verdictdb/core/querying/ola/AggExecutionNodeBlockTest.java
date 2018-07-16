@@ -69,7 +69,7 @@ public class AggExecutionNodeBlockTest {
     metaEntry.setNumberOfTiers(1);
     HashMap<Integer, List<Double>> distribution1 = new HashMap<>();
     distribution1.put(0, Arrays.asList(0.2, 0.5, 1.0));
-    metaEntry.setCumulativeMassDistributionPerTier(distribution1);
+    metaEntry.setCumulativeDistributionForTier(distribution1);
     scrambleMeta.addScrambleMeta(metaEntry);
   }
   

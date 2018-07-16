@@ -77,7 +77,7 @@ public class AsyncAggScaleResultTest {
     tablemeta.setNumberOfTiers(1);
     HashMap<Integer, List<Double>> distribution = new HashMap<>();
     distribution.put(0, Arrays.asList(0.2, 0.4, 0.6, 0.8, 1.0));
-    tablemeta.setCumulativeMassDistributionPerTier(distribution);
+    tablemeta.setCumulativeDistributionForTier(distribution);
     scrambledTable = tablemeta.getTableName();
     meta.addScrambleMeta(tablemeta);
 

@@ -276,10 +276,10 @@ public class AsyncAggExecutionNode extends ProjectionNode {
 //              metaForTablesList.get(i).getCumulativeProbabilityDistribution(tier).get(d.getBegin() - 1);
           double prob = 0;
           if (d.getBegin() == 0) {
-            prob = metaForTablesList.get(i).getCumulativeProbabilityDistribution(tier).get(d.getEnd());
+            prob = metaForTablesList.get(i).getCumulativeDistributionForTier(tier).get(d.getEnd());
           } else {
-            prob = metaForTablesList.get(i).getCumulativeProbabilityDistribution(tier).get(d.getEnd())
-                - metaForTablesList.get(i).getCumulativeProbabilityDistribution(tier).get(d.getBegin() - 1);
+            prob = metaForTablesList.get(i).getCumulativeDistributionForTier(tier).get(d.getEnd())
+                - metaForTablesList.get(i).getCumulativeDistributionForTier(tier).get(d.getBegin() - 1);
           }
 
           scale = scale * prob;

@@ -1,20 +1,33 @@
 package org.verdictdb.core.scrambling;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.verdictdb.exception.VerdictDBValueException;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Table-specific information
  * @author Yongjoo Park
  *
  */
+@JsonPropertyOrder({ 
+  "schemaName", "tableName", 
+  "originalSchemaName", "originalTableName",
+  "aggregationBlockColumn", "aggregationBlockCount", 
+  "tierColumn", "numberOfTiers" })
 public class ScrambleMeta implements Serializable {
 
   private static final long serialVersionUID = -8422601151874567149L;
@@ -44,10 +57,11 @@ public class ScrambleMeta implements Serializable {
    * The key is the id of a tier (e.g., 0, 1, ..., 3), and the list is the cumulative distribution.
    * The length of the cumulative distribution must be equal to aggregationBlockCount.
    */
-  @JsonProperty("cumulativeMassDistributionPerTier")
-  Map<Integer, List<Double>> cumulativeMassDistributionPerTier = new HashMap<>();
+  @JsonProperty("cumulativeDistributions")
+  Map<Integer, List<Double>> cumulativeDistributionForTier = new HashMap<>();
   
   // subsample column; not used currently
+  @JsonIgnore
   String subsampleColumn;
 
   public ScrambleMeta() {}
@@ -81,71 +95,126 @@ public class ScrambleMeta implements Serializable {
     this.numberOfTiers = tierCount;
     this.originalSchemaName = originalSchemaName;
     this.originalTableName = originalTableName;
-    this.cumulativeMassDistributionPerTier = cumulativeMassDistributionPerTier;
+    this.cumulativeDistributionForTier = cumulativeMassDistributionPerTier;
   }
   
-  public String getSchemaName() {
-    return schemaName;
-  }
-
-  public void setSchemaName(String schemaName) {
-    this.schemaName = schemaName;
-  }
-
-  public String getTableName() {
-    return tableName;
-  }
-
-  public void setTableName(String tableName) {
-    this.tableName = tableName;
-  }
-
   public String getAggregationBlockColumn() {
     return aggregationBlockColumn;
-  }
-
-  public void setAggregationBlockColumn(String aggregationBlockColumn) {
-    this.aggregationBlockColumn = aggregationBlockColumn;
   }
 
   public int getAggregationBlockCount() {
     return aggregationBlockCount;
   }
 
-  public void setAggregationBlockCount(int aggregationBlockCount) {
-    this.aggregationBlockCount = aggregationBlockCount;
-  }
-
-  public String getTierColumn() {
-    return tierColumn;
-  }
-
-  public void setTierColumn(String tierColumn) {
-    this.tierColumn = tierColumn;
-  }
-
-  public String getSubsampleColumn() {
-    return subsampleColumn;
-  }
-  
-  public List<Double> getCumulativeProbabilityDistribution(int tier) {
-    return cumulativeMassDistributionPerTier.get(tier);
-  }
-
-  public void setSubsampleColumn(String subsampleColumn) {
-    this.subsampleColumn = subsampleColumn;
+  public List<Double> getCumulativeDistributionForTier(int tier) {
+    return cumulativeDistributionForTier.get(tier);
   }
 
   public int getNumberOfTiers() {
     return numberOfTiers;
   }
 
-  public void setCumulativeMassDistributionPerTier(Map<Integer, List<Double>> cumulativeMassDistributionPerTier) {
-    this.cumulativeMassDistributionPerTier = cumulativeMassDistributionPerTier;
+  public String getOriginalSchemaName() {
+    return originalSchemaName;
+  }
+
+  public String getOriginalTableName() {
+    return originalTableName;
+  }
+
+  public String getSchemaName() {
+    return schemaName;
+  }
+
+  public String getSubsampleColumn() {
+    return subsampleColumn;
+  }
+
+  public String getTableName() {
+    return tableName;
+  }
+
+  public String getTierColumn() {
+    return tierColumn;
+  }
+
+  public void setAggregationBlockColumn(String aggregationBlockColumn) {
+    this.aggregationBlockColumn = aggregationBlockColumn;
+  }
+
+  public void setAggregationBlockCount(int aggregationBlockCount) {
+    this.aggregationBlockCount = aggregationBlockCount;
+  }
+
+  public void setCumulativeDistributionForTier(Map<Integer, List<Double>> cumulativeDistributionForTier) {
+    this.cumulativeDistributionForTier = cumulativeDistributionForTier;
   }
 
   public void setNumberOfTiers(int numberOfTiers) {
     this.numberOfTiers = numberOfTiers;
   }
+
+  public void setOriginalSchemaName(String originalSchemaName) {
+    this.originalSchemaName = originalSchemaName;
+  }
+  
+  public void setOriginalTableName(String originalTableName) {
+    this.originalTableName = originalTableName;
+  }
+
+  public void setSchemaName(String schemaName) {
+    this.schemaName = schemaName;
+  }
+
+  public void setSubsampleColumn(String subsampleColumn) {
+    this.subsampleColumn = subsampleColumn;
+  }
+
+  public void setTableName(String tableName) {
+    this.tableName = tableName;
+  }
+
+  public void setTierColumn(String tierColumn) {
+    this.tierColumn = tierColumn;
+  }
+  
+  public String toJsonString() {
+    ObjectMapper objectMapper = new ObjectMapper();
+    String jsonString;
+    try {
+      jsonString = objectMapper.writeValueAsString(this);
+      return jsonString;
+    } catch (JsonProcessingException e) {
+      e.printStackTrace();
+      return null;
+    }
+  }
+  
+  public static ScrambleMeta fromJsonString(String jsonString) {
+    ObjectMapper objectMapper = new ObjectMapper();
+    try {
+      ScrambleMeta meta = objectMapper.readValue(jsonString, ScrambleMeta.class);
+      return meta;
+    } catch (IOException e) {
+      e.printStackTrace();
+      return null;
+    }
+  }
+  
+  @Override
+  public int hashCode() {
+    return HashCodeBuilder.reflectionHashCode(this);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    return EqualsBuilder.reflectionEquals(this, obj);
+  }
+
+  @Override
+  public String toString() {
+    return ToStringBuilder.reflectionToString(this);
+  }
+
 }
 

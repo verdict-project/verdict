@@ -86,7 +86,7 @@ public class AsyncAggJoinScaleTest {
     tablemeta.setNumberOfTiers(1);
     HashMap<Integer, List<Double>> distribution = new HashMap<>();
     distribution.put(0, Arrays.asList(0.5, 1.0));
-    tablemeta.setCumulativeMassDistributionPerTier(distribution);
+    tablemeta.setCumulativeDistributionForTier(distribution);
     scrambledTable = tablemeta.getTableName();
     meta.addScrambleMeta(tablemeta);
     UniformScrambler scrambler2 =
@@ -97,7 +97,7 @@ public class AsyncAggJoinScaleTest {
     tablemeta2.setNumberOfTiers(1);
     HashMap<Integer, List<Double>> distribution2 = new HashMap<>();
     distribution2.put(0, Arrays.asList(0.5, 1.0));
-    tablemeta2.setCumulativeMassDistributionPerTier(distribution2);
+    tablemeta2.setCumulativeDistributionForTier(distribution2);
     scrambledTable = tablemeta2.getTableName();
     meta.addScrambleMeta(tablemeta2);
 
