@@ -39,7 +39,7 @@ public class DatabaseConnectionHelpers {
         "ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' " +
         "STORED AS TEXTFILE ",
           schema));
-    spark.sql(String.format("LOAD DATA local inpath 'src/test/resources/tpch_old_test_data/nation.tbl' overwrite into table %s.nation", schema));
+    spark.sql(String.format("LOAD DATA local inpath 'src/test/resources/tpch_test_data/nation/nation.tbl' overwrite into table %s.nation", schema));
     spark.sql(String.format(
         "CREATE TABLE IF NOT EXISTS `%s`.`region` (" +
         "  `r_regionkey`  INT, " +
@@ -49,7 +49,7 @@ public class DatabaseConnectionHelpers {
         "ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' " +
         "STORED AS TEXTFILE ",
           schema));
-    spark.sql(String.format("LOAD DATA local inpath 'src/test/resources/tpch_old_test_data/region.tbl' overwrite into table %s.region", schema));
+    spark.sql(String.format("LOAD DATA local inpath 'src/test/resources/tpch_test_data/region/region.tbl' overwrite into table %s.region", schema));
     spark.sql(String.format(
         "CREATE TABLE IF NOT EXISTS `%s`.`part`  (" +
         "  `p_partkey`     INT, " +
@@ -65,7 +65,7 @@ public class DatabaseConnectionHelpers {
         "ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' " +
         "STORED AS textfile ",
           schema));
-    spark.sql(String.format("LOAD DATA local inpath 'src/test/resources/tpch_old_test_data/part.tbl' overwrite into table %s.part", schema));
+    spark.sql(String.format("LOAD DATA local inpath 'src/test/resources/tpch_test_data/part/part.tbl' overwrite into table %s.part", schema));
     spark.sql(String.format(
         "CREATE TABLE IF NOT EXISTS `%s`.`supplier` ( " +
         "  `s_suppkey`     INT , " +
@@ -79,7 +79,7 @@ public class DatabaseConnectionHelpers {
         "ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' " +
         "STORED AS textfile ",
           schema));
-    spark.sql(String.format("LOAD DATA local inpath 'src/test/resources/tpch_old_test_data/supplier.tbl' overwrite into table %s.supplier", schema));
+    spark.sql(String.format("LOAD DATA local inpath 'src/test/resources/tpch_test_data/supplier/supplier.tbl' overwrite into table %s.supplier", schema));
     spark.sql(String.format(
         "CREATE TABLE IF NOT EXISTS `%s`.`partsupp` ( " +
         "  `ps_partkey`     INT , " +
@@ -91,7 +91,7 @@ public class DatabaseConnectionHelpers {
         "ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' " +
         "STORED AS textfile ",
           schema));
-    spark.sql(String.format("LOAD DATA local inpath 'src/test/resources/tpch_old_test_data/partsupp.tbl' overwrite into table %s.partsupp", schema));
+    spark.sql(String.format("LOAD DATA local inpath 'src/test/resources/tpch_test_data/partsupp/partsupp.tbl' overwrite into table %s.partsupp", schema));
     spark.sql(String.format(
         "CREATE TABLE IF NOT EXISTS `%s`.`customer` (" +
         "  `c_custkey`     INT , " +
@@ -106,7 +106,7 @@ public class DatabaseConnectionHelpers {
         "ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' " +
         "STORED AS textfile ",
           schema));
-    spark.sql(String.format("LOAD DATA local inpath 'src/test/resources/tpch_old_test_data/customer.tbl' overwrite into table %s.customer", schema));
+    spark.sql(String.format("LOAD DATA local inpath 'src/test/resources/tpch_test_data/customer/customer.tbl' overwrite into table %s.customer", schema));
     spark.sql(String.format(
         "CREATE TABLE IF NOT EXISTS  `%s`.`orders`  ( " +
         "  `o_orderkey`       INT , " +
@@ -122,7 +122,7 @@ public class DatabaseConnectionHelpers {
         "ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' " +
         "STORED AS textfile ",
           schema));
-    spark.sql(String.format("LOAD DATA local inpath 'src/test/resources/tpch_old_test_data/orders.tbl' overwrite into table %s.orders", schema));
+    spark.sql(String.format("LOAD DATA local inpath 'src/test/resources/tpch_test_data/orders/orders.tbl' overwrite into table %s.orders", schema));
     spark.sql(String.format(
         "CREATE TABLE IF NOT EXISTS `%s`.`lineitem` (" +
         "  `l_orderkey`       INT , " +
@@ -145,7 +145,7 @@ public class DatabaseConnectionHelpers {
         "ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' " +
         "STORED AS textfile ",
           schema));
-    spark.sql(String.format("LOAD DATA local inpath 'src/test/resources/tpch_old_test_data/lineitem.tbl' overwrite into table %s.lineitem", schema));
+    spark.sql(String.format("LOAD DATA local inpath 'src/test/resources/tpch_test_data/lineitem/lineitem.tbl' overwrite into table %s.lineitem", schema));
 
 
     /*
