@@ -47,7 +47,7 @@ public class CreateTableToSql {
       }
       sql.append(")");
     } else if (syntax instanceof SparkSyntax || syntax instanceof HiveSyntax) {
-      sql.append(" using parquet ");
+      sql.append(" using parquet");
     }
 
     // select
