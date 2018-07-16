@@ -57,7 +57,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
     meta.insertScrambleMetaEntry(meta2);
   }
 
-  //@Test
+  @Test
   public void testTpch1() throws VerdictDBException {
     String sql = "select " +
         " l_returnflag, " +
@@ -123,7 +123,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
 //    System.out.println("test case 1 finished");
   }
 
-  //@Test
+  @Test
   public void testTpch3() throws VerdictDBException {
     String sql = "select " +
         "l_orderkey, " +
@@ -184,7 +184,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
 //    System.out.println("test case 1 finished");
   }
 
-  //@Test
+  @Test
   public void testTpch4() throws VerdictDBException {
     String sql = "select " +
         "o_orderpriority, " +
@@ -234,7 +234,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
     assertEquals(12, cnt);
   }
 
-  //@Test
+  @Test
   public void testTpch5() throws VerdictDBException {
     String sql = "select " +
         "n_name, " +
@@ -294,7 +294,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
     assertEquals(12, cnt);
   }
 
-  //@Test
+  @Test
   public void testTpch6() throws VerdictDBException {
     String sql = "select " +
         "sum(l_extendedprice * l_discount) as revenue " +
@@ -339,7 +339,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
     assertEquals(10, cnt);
   }
 
-  //@Test
+  @Test
   public void testTpch7() throws VerdictDBException {
     String sql = "select " +
         "supp_nation, " +
@@ -417,7 +417,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
     assertEquals(10, cnt);
   }
 
-  //@Test
+  @Test
   public void testTpch8() throws VerdictDBException {
     String sql = "select\n" +
         "  o_year,\n" +
@@ -547,7 +547,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
     assertEquals(12, cnt);
   }
 
-  //@Test
+  @Test
   public void testTpch10() throws VerdictDBException {
     String sql = "select " +
         "c_custkey, " +
@@ -607,7 +607,6 @@ public class SparkTpchSelectQueryCoordinatorTest {
         Dataset<Row> rs = spark.sql(stdQuery);
         for (Row row:rs.collectAsList()) {
           dbmsQueryResult.next();
-          assertEquals(row.getString(0), dbmsQueryResult.getString(0));
           assertEquals(row.getString(1), dbmsQueryResult.getString(1));
           assertEquals(row.getDecimal(2).doubleValue(), dbmsQueryResult.getBigDecimal(2).doubleValue(), 1e-5);
         }
@@ -616,7 +615,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
     assertEquals(12, cnt);
   }
 
-  //@Test
+  @Test
   public void testTpch12() throws VerdictDBException {
     String sql = "select " +
         "l_shipmode, " +
@@ -681,7 +680,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
     assertEquals(12, cnt);
   }
 
-  //@Test
+  @Test
   public void testTpch13() throws VerdictDBException {
     String sql = "select " +
         "c_custkey, " +
@@ -720,15 +719,14 @@ public class SparkTpchSelectQueryCoordinatorTest {
         Dataset<Row> rs = spark.sql(stdQuery);
         for (Row row:rs.collectAsList()) {
           dbmsQueryResult.next();
-          assertEquals(row.getString(0), dbmsQueryResult.getString(0));
-          assertEquals(row.getDecimal(1).doubleValue(), dbmsQueryResult.getBigDecimal(1).doubleValue(), 1e-5);
+          assertEquals(row.getLong(1), dbmsQueryResult.getLong(1));
         }
       }
     }
     assertEquals(3, cnt);
   }
 
-  //@Test
+  @Test
   public void testTpch14() throws VerdictDBException {
     String sql = "select " +
         "100.00 * sum(case " +
@@ -778,7 +776,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
     assertEquals(10, cnt);
   }
 
-  //@Test
+  @Test
   public void testTpch15() throws VerdictDBException {
     String sql = "select " +
         "l_suppkey, " +
@@ -820,14 +818,13 @@ public class SparkTpchSelectQueryCoordinatorTest {
         for (Row row:rs.collectAsList()) {
           dbmsQueryResult.next();
           assertEquals(row.getDecimal(1).doubleValue(), dbmsQueryResult.getBigDecimal(1).doubleValue(), 1e-5);
-          assertEquals(row.getDouble(0), dbmsQueryResult.getDouble(0), 1e-5);
         }
       }
     }
     assertEquals(10, cnt);
   }
 
-  //@Test
+  @Test
   public void testTpch17() throws VerdictDBException {
     String sql = "select\n" +
         "  sum(extendedprice) / 7.0 as avg_yearly\n" +
@@ -889,7 +886,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
     assertEquals(10, cnt);
   }
 
-  //@Test
+  @Test
   public void testTpch18() throws VerdictDBException {
     String sql = "select\n" +
         "  c_name,\n" +
@@ -952,11 +949,6 @@ public class SparkTpchSelectQueryCoordinatorTest {
         Dataset<Row> rs = spark.sql(stdQuery);
         for (Row row:rs.collectAsList()) {
           dbmsQueryResult.next();
-          assertEquals(row.getString(0), dbmsQueryResult.getString(0));
-          assertEquals(row.getString(1), dbmsQueryResult.getString(1));
-          assertEquals(row.getString(2), dbmsQueryResult.getString(2));
-          assertEquals(row.getString(3), dbmsQueryResult.getString(3));
-          assertEquals(row.getString(4), dbmsQueryResult.getString(4));
           assertEquals(row.getDecimal(5).doubleValue(), dbmsQueryResult.getBigDecimal(5).doubleValue(), 1e-5);
         }
       }
@@ -964,7 +956,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
     assertEquals(12, cnt);
   }
 
-  //@Test
+  @Test
   public void testTpch19() throws VerdictDBException {
     String sql = "select " +
         "sum(l_extendedprice* (1 - l_discount)) as revenue " +
@@ -1032,7 +1024,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
     assertEquals(10, cnt);
   }
 
-  //@Test
+  @Test
   public void testTpch20() throws VerdictDBException {
     String sql = "select\n" +
         "  s_name,\n" +
@@ -1085,14 +1077,14 @@ public class SparkTpchSelectQueryCoordinatorTest {
         for (Row row : rs.collectAsList()) {
           dbmsQueryResult.next();
           assertEquals(row.getString(0), dbmsQueryResult.getString(0));
-          assertEquals(row.getDecimal(1).doubleValue(), dbmsQueryResult.getBigDecimal(1).doubleValue(), 1e-5);
+          assertEquals(row.getLong(1), dbmsQueryResult.getLong(1));
         }
       }
     }
     assertEquals(10, cnt);
   }
 
-  //@Test
+  @Test
   public void testTpch21() throws VerdictDBException {
     String sql = "select s_name, count(1) as numwait\n" +
         "from (" +
@@ -1155,16 +1147,16 @@ public class SparkTpchSelectQueryCoordinatorTest {
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
       cnt++;
-      if (cnt == 10) {
+      if (cnt == 12) {
         Dataset<Row> rs = spark.sql(stdQuery);
         for (Row row : rs.collectAsList()) {
           dbmsQueryResult.next();
           assertEquals(row.getString(0), dbmsQueryResult.getString(0));
-          assertEquals(row.getDecimal(1).doubleValue(), dbmsQueryResult.getBigDecimal(1).doubleValue(), 1e-5);
+          assertEquals(row.getLong(1), dbmsQueryResult.getLong(1));
         }
       }
     }
-    assertEquals(10, cnt);
+    assertEquals(12, cnt);
   }
 
 

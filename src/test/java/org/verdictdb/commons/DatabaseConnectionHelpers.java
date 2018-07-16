@@ -27,7 +27,8 @@ public class DatabaseConnectionHelpers {
     // create schema
     spark.sql(String.format("DROP SCHEMA IF EXISTS `%s` CASCADE", schema));
     spark.sql(String.format("CREATE SCHEMA IF NOT EXISTS `%s`", schema));
-    
+
+    /*
     // create tables
     spark.sql(String.format(
         "CREATE TABLE IF NOT EXISTS `%s`.`nation` (" +
@@ -146,9 +147,9 @@ public class DatabaseConnectionHelpers {
         "STORED AS textfile ",
           schema));
     spark.sql(String.format("LOAD DATA local inpath 'src/test/resources/tpch_test_data/lineitem/lineitem.tbl' overwrite into table %s.lineitem", schema));
+    */
 
 
-    /*
     // create tables
     String datafilePath = new File("src/test/resources/tpch_test_data/").getAbsolutePath();
     spark.sql(String.format(
@@ -268,7 +269,7 @@ public class DatabaseConnectionHelpers {
         "STORED AS textfile " +
         "LOCATION '%s/lineitem'",
           schema, datafilePath));
-     */
+
     return spark;
   }
 
