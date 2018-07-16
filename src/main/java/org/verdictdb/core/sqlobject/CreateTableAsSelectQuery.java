@@ -16,54 +16,42 @@ import org.apache.commons.lang3.builder.ToStringStyle;
  * @author Yongjoo Park
  *
  */
-public class CreateTableAsSelectQuery extends CreateTable {
+public class CreateTableAsSelectQuery extends CreateTableQuery {
   
   private static final long serialVersionUID = -4077488589201481833L;
-
-  String schemaName;
   
-  String tableName;
+  protected SelectQuery select;
   
-  SelectQuery select;
+  protected List<String> partitionColumns = new ArrayList<>();
   
-  List<String> partitionColumns = new ArrayList<>();
-  
-  boolean overwrite = false;
+  protected boolean overwrite = false;
   
   public CreateTableAsSelectQuery(String schemaName, String tableName, SelectQuery select) {
     this.schemaName = schemaName;
     this.tableName = tableName;
     this.select = select;
   }
-  
-  public String getSchemaName() {
-    return schemaName;
+
+  public void addPartitionColumn(String column) {
+    partitionColumns.add(column);
   }
 
-  public String getTableName() {
-    return tableName;
+  public boolean getOverwrite() {
+    return overwrite;
+  }
+
+  public List<String> getPartitionColumns() {
+    return partitionColumns;
   }
 
   public SelectQuery getSelect() {
     return select;
   }
   
-  public void addPartitionColumn(String column) {
-    partitionColumns.add(column);
-  }
-  
-  public List<String> getPartitionColumns() {
-    return partitionColumns;
-  }
-  
-  public boolean getOverwrite() {
-    return overwrite;
-  }
-  
   public void setOverwrite(boolean overwrite) {
     this.overwrite = overwrite;
   }
-  
+
   @Override
   public boolean equals(Object obj) {
     return EqualsBuilder.reflectionEquals(this, obj);

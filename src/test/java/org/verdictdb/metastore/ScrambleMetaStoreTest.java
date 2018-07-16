@@ -1,0 +1,14 @@
+package org.verdictdb.metastore;
+
+import static org.junit.Assert.*;
+
+import org.junit.Test;
+
+public class ScrambleMetaStoreTest {
+
+  @Test
+  public void test() {
+    fail("Not yet implemented");
+  }
+
+}
