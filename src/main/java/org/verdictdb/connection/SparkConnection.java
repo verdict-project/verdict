@@ -102,13 +102,10 @@ public class SparkConnection implements DbmsConnection {
   @Override
   public DbmsQueryResult execute(String query) throws VerdictDBDbmsException {
     try {
-      System.out.println("query to issue " + query);
       SparkQueryResult srs = null;
       Dataset<Row> result = sc.sql(query);
       if (result != null) {
-        System.out.println("converting" + query);
         srs = new SparkQueryResult(result);
-        System.out.println("converting finish" + query);
       }
       return srs;
     } catch (Exception e) {

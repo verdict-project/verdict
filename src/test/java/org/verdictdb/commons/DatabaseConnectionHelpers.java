@@ -25,23 +25,11 @@ public class DatabaseConnectionHelpers {
         .master("local")
         .enableHiveSupport()
         .getOrCreate();
-    spark.conf().set("spark.cores.max", "24");
-    spark.conf().set("spark.serializer", "org.apache.spark.serializer.KryoSerializer");
-    spark.conf().set("spark.sql.tungsten.enabled", "true");
-    spark.conf().set("spark.eventLog.enabled", "true");
-    spark.conf().set("spark.app.id", "YourApp");
-    spark.conf().set("spark.io.compression.codec", "snappy");
-    spark.conf().set("spark.rdd.compress", "true");
-    spark.conf().set("spark.streaming.backpressure.enabled", "true");
-
-    spark.conf().set("spark.sql.parquet.compression.codec", "snappy");
-    spark.conf().set("spark.sql.parquet.mergeSchema", "true");
-    spark.conf().set("spark.sql.parquet.binaryAsString", "true");
     // create schema
     spark.sql(String.format("DROP SCHEMA IF EXISTS `%s` CASCADE", schema));
     spark.sql(String.format("CREATE SCHEMA IF NOT EXISTS `%s`", schema));
 
-/*
+    /*
     // create tables
     spark.sql(String.format(
         "CREATE TABLE IF NOT EXISTS `%s`.`nation` (" +
@@ -160,8 +148,8 @@ public class DatabaseConnectionHelpers {
         "STORED AS textfile ",
           schema));
     spark.sql(String.format("LOAD DATA local inpath 'src/test/resources/tpch_test_data/lineitem/lineitem.tbl' overwrite into table %s.lineitem", schema));
+    */
 
-*/
 
     // create tables
     String datafilePath = new File("src/test/resources/tpch_test_data/").getAbsolutePath();

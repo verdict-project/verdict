@@ -5,6 +5,7 @@ import java.util.List;
 import org.verdictdb.core.sqlobject.CreateTableAsSelectQuery;
 import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.sqlsyntax.SparkSyntax;
 import org.verdictdb.sqlsyntax.SqlSyntax;
 
 public class CreateTableToSql {
@@ -44,6 +45,8 @@ public class CreateTableToSql {
         }
       }
       sql.append(")");
+    } else if (syntax instanceof SparkSyntax) {
+      sql.append(" using parquet ");
     }
 
     // select
