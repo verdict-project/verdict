@@ -120,7 +120,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
       }
     }
     assertEquals(10, cnt);
-//    System.out.println("test case 1 finished");
+    System.out.println("test case 1 finished");
   }
 
   @Test
@@ -181,7 +181,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
       }
     }
     assertEquals(12, cnt);
-//    System.out.println("test case 1 finished");
+    System.out.println("test case 3 finished");
   }
 
   @Test
@@ -232,6 +232,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
       }
     }
     assertEquals(12, cnt);
+    System.out.println("test case 4 finished");
   }
 
   @Test
@@ -292,6 +293,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
       }
     }
     assertEquals(12, cnt);
+    System.out.println("test case 5 finished");
   }
 
   @Test
@@ -337,6 +339,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
       }
     }
     assertEquals(10, cnt);
+    System.out.println("test case 6 finished");
   }
 
   @Test
@@ -415,6 +418,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
       }
     }
     assertEquals(10, cnt);
+    System.out.println("test case 7 finished");
   }
 
   @Test
@@ -482,6 +486,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
       }
     }
     assertEquals(12, cnt);
+    System.out.println("test case 8 finished");
   }
 
   @Test
@@ -545,6 +550,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
       }
     }
     assertEquals(12, cnt);
+    System.out.println("test case 9 finished");
   }
 
   @Test
@@ -613,6 +619,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
       }
     }
     assertEquals(12, cnt);
+    System.out.println("test case 10 finished");
   }
 
   @Test
@@ -678,6 +685,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
       }
     }
     assertEquals(12, cnt);
+    System.out.println("test case 12 finished");
   }
 
   @Test
@@ -724,6 +732,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
       }
     }
     assertEquals(3, cnt);
+    System.out.println("test case 13 finished");
   }
 
   @Test
@@ -774,6 +783,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
       }
     }
     assertEquals(10, cnt);
+    System.out.println("test case 14 finished");
   }
 
   @Test
@@ -822,6 +832,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
       }
     }
     assertEquals(10, cnt);
+    System.out.println("test case 15 finished");
   }
 
   @Test
@@ -884,6 +895,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
       }
     }
     assertEquals(10, cnt);
+    System.out.println("test case 17 finished");
   }
 
   @Test
@@ -954,6 +966,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
       }
     }
     assertEquals(12, cnt);
+    System.out.println("test case 18 finished");
   }
 
   @Test
@@ -1022,6 +1035,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
       }
     }
     assertEquals(10, cnt);
+    System.out.println("test case 19 finished");
   }
 
   @Test
@@ -1082,6 +1096,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
       }
     }
     assertEquals(10, cnt);
+    System.out.println("test case 20 finished");
   }
 
   @Test
@@ -1157,6 +1172,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
       }
     }
     assertEquals(12, cnt);
+    System.out.println("test case 21 finished");
   }
 
 
