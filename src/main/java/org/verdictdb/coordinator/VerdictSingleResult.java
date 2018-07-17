@@ -1,10 +1,6 @@
 package org.verdictdb.coordinator;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 
 import org.verdictdb.commons.AttributeValueRetrievalHelper;
 import org.verdictdb.connection.DbmsQueryResult;
@@ -31,14 +27,6 @@ public class VerdictSingleResult extends AttributeValueRetrievalHelper {
       this.result = Optional.of(copied);
     }
   }
-  
-  public static VerdictSingleResult empty() {
-    return new VerdictSingleResult(null);
-  }
-  
-  public boolean isEmpty() {
-    return !result.isPresent();
-  }
 
   public VerdictSingleResult(DbmsQueryResult result, boolean asIs) {
     // If result contains objects that cannot be serialized (e.g., BLOB, CLOB in H2),
@@ -54,6 +42,15 @@ public class VerdictSingleResult extends AttributeValueRetrievalHelper {
         this.result = Optional.of(copied);
       }
     }
+  }
+
+
+  public static VerdictSingleResult empty() {
+    return new VerdictSingleResult(null);
+  }
+  
+  public boolean isEmpty() {
+    return !result.isPresent();
   }
 
   private DbmsQueryResult copyResult(DbmsQueryResult result) {
