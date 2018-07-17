@@ -40,13 +40,12 @@ public class CreateTableToSql {
   
     // table
     sql.append("create table ");
+    if (query.isIfNotExists()) {
+      sql.append("if not exists ");
+    }
     sql.append(quoteName(schemaName));
     sql.append(".");
     sql.append(quoteName(tableName));
-    
-    if (query.isIfNotExists()) {
-      sql.append(" if not exists");
-    }
     
     // partitions
     if (syntax.doesSupportTablePartitioning() && query.getPartitionColumns().size() > 0) {
@@ -88,13 +87,12 @@ public class CreateTableToSql {
   
     // table
     sql.append("create table ");
+    if (query.isIfNotExists()) {
+      sql.append("if not exists ");
+    }
     sql.append(quoteName(schemaName));
     sql.append(".");
     sql.append(quoteName(tableName));
-    
-    if (query.isIfNotExists()) {
-      sql.append(" if not exists");
-    }
     
     // column definitions
     sql.append(" (");

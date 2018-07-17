@@ -1,6 +1,7 @@
 package org.verdictdb.sqlwriter;
 
 import org.verdictdb.core.sqlobject.CreateTableQuery;
+import org.verdictdb.core.querying.CreateSchemaQuery;
 import org.verdictdb.core.sqlobject.CreateTableAsSelectQuery;
 import org.verdictdb.core.sqlobject.DropTableQuery;
 import org.verdictdb.core.sqlobject.InsertValuesQuery;
@@ -22,6 +23,10 @@ public class QueryToSql {
     if (query instanceof SelectQuery) {
       SelectQueryToSql tosql = new SelectQueryToSql(syntax);
       return tosql.toSql((SelectQuery) query);
+    }
+    else if (query instanceof CreateSchemaQuery) {
+      CreateSchemaToSql tosql = new CreateSchemaToSql(syntax);
+      return tosql.toSql((CreateSchemaQuery) query);
     }
     else if (query instanceof CreateTableQuery) {
       CreateTableToSql tosql = new CreateTableToSql(syntax);
