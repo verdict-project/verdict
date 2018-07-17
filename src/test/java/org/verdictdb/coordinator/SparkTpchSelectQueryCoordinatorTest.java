@@ -61,8 +61,8 @@ public class SparkTpchSelectQueryCoordinatorTest {
         scrambler.scramble(TEST_SCHEMA, "lineitem", TEST_SCHEMA, "lineitem_scrambled", "uniform");
     ScrambleMeta meta2 =
         scrambler.scramble(TEST_SCHEMA, "orders", TEST_SCHEMA, "orders_scrambled", "uniform");
-    meta.insertScrambleMetaEntry(meta1);
-    meta.insertScrambleMetaEntry(meta2);
+    meta.addScrambleMeta(meta1);
+    meta.addScrambleMeta(meta2);
   }
 
   @Test
@@ -731,7 +731,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
       cnt++;
-      if (cnt == 6) {
+      if (cnt == 2) {
         Dataset<Row> rs = spark.sql(stdQuery);
         for (Row row:rs.collectAsList()) {
           dbmsQueryResult.next();
@@ -739,7 +739,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
         }
       }
     }
-    assertEquals(6, cnt);
+    assertEquals(2, cnt);
     System.out.println("test case 13 finished");
   }
 
