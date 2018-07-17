@@ -124,7 +124,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
     System.out.println("test case 1 finished");
   }
 
-  //@Test
+  @Test
   public void testTpch3() throws VerdictDBException {
     String sql = "select " +
         "l_orderkey, " +
@@ -185,7 +185,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
     System.out.println("test case 3 finished");
   }
 
-  //@Test
+  @Test
   public void testTpch4() throws VerdictDBException {
     String sql = "select " +
         "o_orderpriority, " +
@@ -236,7 +236,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
     System.out.println("test case 4 finished");
   }
 
-  //@Test
+  @Test
   public void testTpch5() throws VerdictDBException {
     String sql = "select " +
         "n_name, " +
@@ -297,7 +297,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
     System.out.println("test case 5 finished");
   }
 
-  //@Test
+  @Test
   public void testTpch6() throws VerdictDBException {
     String sql = "select " +
         "sum(l_extendedprice * l_discount) as revenue " +
@@ -343,7 +343,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
     System.out.println("test case 6 finished");
   }
 
-  //@Test
+  @Test
   public void testTpch7() throws VerdictDBException {
     String sql = "select " +
         "supp_nation, " +
@@ -422,7 +422,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
     System.out.println("test case 7 finished");
   }
 
-  //@Test
+  @Test
   public void testTpch8() throws VerdictDBException {
     String sql = "select\n" +
         "  o_year,\n" +
@@ -490,7 +490,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
     System.out.println("test case 8 finished");
   }
 
-  //@Test
+  @Test
   public void testTpch9() throws VerdictDBException {
     String sql = "select\n" +
         "  nation,\n" +
@@ -554,7 +554,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
     System.out.println("test case 9 finished");
   }
 
-  //@Test
+  @Test
   public void testTpch10() throws VerdictDBException {
     String sql = "select " +
         "c_custkey, " +
@@ -623,7 +623,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
     System.out.println("test case 10 finished");
   }
 
-  //@Test
+  @Test
   public void testTpch12() throws VerdictDBException {
     String sql = "select " +
         "l_shipmode, " +
@@ -689,7 +689,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
     System.out.println("test case 12 finished");
   }
 
-  //@Test
+  @Test
   public void testTpch13() throws VerdictDBException {
     String sql = "select " +
         "c_custkey, " +
@@ -736,7 +736,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
     System.out.println("test case 13 finished");
   }
 
-  //@Test
+  @Test
   public void testTpch14() throws VerdictDBException {
     String sql = "select " +
         "100.00 * sum(case " +
@@ -787,7 +787,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
     System.out.println("test case 14 finished");
   }
 
-  //@Test
+  @Test
   public void testTpch15() throws VerdictDBException {
     String sql = "select " +
         "l_suppkey, " +
@@ -836,7 +836,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
     System.out.println("test case 15 finished");
   }
 
-  //@Test
+  @Test
   public void testTpch17() throws VerdictDBException {
     String sql = "select\n" +
         "  sum(extendedprice) / 7.0 as avg_yearly\n" +
@@ -899,7 +899,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
     System.out.println("test case 17 finished");
   }
 
-  //@Test
+  @Test
   public void testTpch18() throws VerdictDBException {
     String sql = "select\n" +
         "  c_name,\n" +
@@ -970,7 +970,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
     System.out.println("test case 18 finished");
   }
 
-  //@Test
+  @Test
   public void testTpch19() throws VerdictDBException {
     String sql = "select " +
         "sum(l_extendedprice* (1 - l_discount)) as revenue " +
@@ -1039,7 +1039,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
     System.out.println("test case 19 finished");
   }
 
-  //@Test
+  @Test
   public void testTpch20() throws VerdictDBException {
     String sql = "select\n" +
         "  s_name,\n" +
@@ -1100,7 +1100,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
     System.out.println("test case 20 finished");
   }
 
-  //@Test
+  @Test
   public void testTpch21() throws VerdictDBException {
     String sql = "select s_name, count(1) as numwait\n" +
         "from (" +
