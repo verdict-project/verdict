@@ -26,6 +26,13 @@ import java.sql.SQLException;
 
 import static org.junit.Assert.assertEquals;
 
+
+/**
+ *  Test cases are from
+ *  https://github.com/umich-dbgroup/verdictdb-core/wiki/TPCH-Query-Reference--(Experiment-Version)
+ *
+ *  Some test cases are slightly changed because size of test data are small.
+ */
 public class SparkTpchSelectQueryCoordinatorTest {
 
   final static int blockSize = 100;
@@ -49,7 +56,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
     conn.execute(String.format("DROP TABLE IF EXISTS `%s`.`orders_scrambled`", TEST_SCHEMA));
 
     ScramblingCoordinator scrambler =
-        new ScramblingCoordinator(conn, TEST_SCHEMA, TEST_SCHEMA, (long) 500);
+        new ScramblingCoordinator(conn, TEST_SCHEMA, TEST_SCHEMA, (long) 200);
     ScrambleMeta meta1 =
         scrambler.scramble(TEST_SCHEMA, "lineitem", TEST_SCHEMA, "lineitem_scrambled", "uniform");
     ScrambleMeta meta2 =
@@ -104,7 +111,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
       cnt++;
-      if (cnt == 2) {
+      if (cnt == 5) {
         Dataset<Row> rs = spark.sql(stdQuery);
         for (Row row:rs.collectAsList()) {
           dbmsQueryResult.next();
@@ -120,7 +127,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
         }
       }
     }
-    assertEquals(2, cnt);
+    assertEquals(5, cnt);
     System.out.println("test case 1 finished");
   }
 
@@ -171,7 +178,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
       cnt++;
-      if (cnt == 2) {
+      if (cnt == 6) {
         Dataset<Row> rs = spark.sql(stdQuery);
         for (Row row:rs.collectAsList()) {
           dbmsQueryResult.next();
@@ -181,7 +188,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
         }
       }
     }
-    assertEquals(2, cnt);
+    assertEquals(6, cnt);
     System.out.println("test case 3 finished");
   }
 
@@ -223,7 +230,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
       cnt++;
-      if (cnt == 2) {
+      if (cnt == 6) {
         Dataset<Row> rs = spark.sql(stdQuery);
         for (Row row:rs.collectAsList()) {
           dbmsQueryResult.next();
@@ -232,7 +239,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
         }
       }
     }
-    assertEquals(2, cnt);
+    assertEquals(6, cnt);
     System.out.println("test case 4 finished");
   }
 
@@ -284,7 +291,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
       cnt++;
-      if (cnt == 2) {
+      if (cnt == 6) {
         Dataset<Row> rs = spark.sql(stdQuery);
         for (Row row:rs.collectAsList()) {
           dbmsQueryResult.next();
@@ -293,7 +300,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
         }
       }
     }
-    assertEquals(2, cnt);
+    assertEquals(6, cnt);
     System.out.println("test case 5 finished");
   }
 
@@ -331,7 +338,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
       cnt++;
-      if (cnt == 2) {
+      if (cnt == 5) {
         Dataset<Row> rs = spark.sql(stdQuery);
         for (Row row:rs.collectAsList()) {
           dbmsQueryResult.next();
@@ -339,7 +346,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
         }
       }
     }
-    assertEquals(2, cnt);
+    assertEquals(5, cnt);
     System.out.println("test case 6 finished");
   }
 
@@ -407,7 +414,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
       cnt++;
-      if (cnt == 2) {
+      if (cnt == 6) {
         Dataset<Row> rs = spark.sql(stdQuery);
         for (Row row:rs.collectAsList()) {
           dbmsQueryResult.next();
@@ -418,7 +425,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
         }
       }
     }
-    assertEquals(2, cnt);
+    assertEquals(6, cnt);
     System.out.println("test case 7 finished");
   }
 
@@ -476,7 +483,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
       cnt++;
-      if (cnt == 2) {
+      if (cnt == 6) {
         Dataset<Row> rs = spark.sql(stdQuery);
         for (Row row:rs.collectAsList()) {
           dbmsQueryResult.next();
@@ -486,7 +493,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
         }
       }
     }
-    assertEquals(2, cnt);
+    assertEquals(6, cnt);
     System.out.println("test case 8 finished");
   }
 
@@ -540,7 +547,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
       cnt++;
-      if (cnt == 2) {
+      if (cnt == 6) {
         Dataset<Row> rs = spark.sql(stdQuery);
         for (Row row:rs.collectAsList()) {
           dbmsQueryResult.next();
@@ -550,7 +557,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
         }
       }
     }
-    assertEquals(2, cnt);
+    assertEquals(6, cnt);
     System.out.println("test case 9 finished");
   }
 
@@ -610,7 +617,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
       cnt++;
-      if (cnt == 2) {
+      if (cnt == 6) {
         Dataset<Row> rs = spark.sql(stdQuery);
         for (Row row:rs.collectAsList()) {
           dbmsQueryResult.next();
@@ -619,7 +626,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
         }
       }
     }
-    assertEquals(2, cnt);
+    assertEquals(6, cnt);
     System.out.println("test case 10 finished");
   }
 
@@ -675,17 +682,17 @@ public class SparkTpchSelectQueryCoordinatorTest {
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
       cnt++;
-      if (cnt == 2) {
+      if (cnt == 6) {
         Dataset<Row> rs = spark.sql(stdQuery);
         for (Row row:rs.collectAsList()) {
           dbmsQueryResult.next();
           assertEquals(row.getString(0), dbmsQueryResult.getString(0));
-          assertEquals(row.getDecimal(1).doubleValue(), dbmsQueryResult.getBigDecimal(1).doubleValue(), 1e-5);
-          assertEquals(row.getDecimal(2).doubleValue(), dbmsQueryResult.getBigDecimal(2).doubleValue(), 1e-5);
+          assertEquals(row.getLong(1), dbmsQueryResult.getLong(1));
+          assertEquals(row.getLong(2), dbmsQueryResult.getLong(2));
         }
       }
     }
-    assertEquals(2, cnt);
+    assertEquals(6, cnt);
     System.out.println("test case 12 finished");
   }
 
@@ -724,7 +731,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
       cnt++;
-      if (cnt == 1) {
+      if (cnt == 6) {
         Dataset<Row> rs = spark.sql(stdQuery);
         for (Row row:rs.collectAsList()) {
           dbmsQueryResult.next();
@@ -732,7 +739,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
         }
       }
     }
-    assertEquals(1, cnt);
+    assertEquals(6, cnt);
     System.out.println("test case 13 finished");
   }
 
@@ -774,7 +781,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
       cnt++;
-      if (cnt == 2) {
+      if (cnt == 5) {
         Dataset<Row> rs = spark.sql(stdQuery);
         for (Row row:rs.collectAsList()) {
           dbmsQueryResult.next();
@@ -783,7 +790,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
         }
       }
     }
-    assertEquals(2, cnt);
+    assertEquals(5, cnt);
     System.out.println("test case 14 finished");
   }
 
@@ -824,7 +831,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
       cnt++;
-      if (cnt == 2) {
+      if (cnt == 5) {
         Dataset<Row> rs = spark.sql(stdQuery);
         for (Row row:rs.collectAsList()) {
           dbmsQueryResult.next();
@@ -832,7 +839,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
         }
       }
     }
-    assertEquals(2, cnt);
+    assertEquals(5, cnt);
     System.out.println("test case 15 finished");
   }
 
@@ -847,7 +854,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
         "    t_avg_quantity\n" +
         "  from\n" +
         "    (select\n" +
-        "  l_partkey as t_partkey,\n" +
+        "  l_partkey,\n" +
         "  0.2 * avg(l_quantity) as t_avg_quantity\n" +
         "from\n" +
         "  lineitem_scrambled\n" +
@@ -861,7 +868,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
         "      lineitem_scrambled\n" +
         "    where\n" +
         "      p_partkey = l_partkey\n" +
-        "    ) as l1 on l1.l_partkey = t_partkey\n" +
+        "    ) as l1 on l1.l_partkey = q17_lineitem_tmp_cached.l_partkey\n" +
         ") a \n" +
         "where quantity > t_avg_quantity";
 
@@ -887,7 +894,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
       cnt++;
-      if (cnt == 2) {
+      if (cnt == 5) {
         Dataset<Row> rs = spark.sql(stdQuery);
         for (Row row:rs.collectAsList()) {
           dbmsQueryResult.next();
@@ -895,7 +902,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
         }
       }
     }
-    assertEquals(2, cnt);
+    assertEquals(5, cnt);
     System.out.println("test case 17 finished");
   }
 
@@ -958,7 +965,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
       cnt++;
-      if (cnt == 2) {
+      if (cnt == 6) {
         Dataset<Row> rs = spark.sql(stdQuery);
         for (Row row:rs.collectAsList()) {
           dbmsQueryResult.next();
@@ -966,7 +973,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
         }
       }
     }
-    assertEquals(2, cnt);
+    assertEquals(6, cnt);
     System.out.println("test case 18 finished");
   }
 
@@ -1027,15 +1034,15 @@ public class SparkTpchSelectQueryCoordinatorTest {
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
       cnt++;
-      if (cnt == 2) {
+      if (cnt == 5) {
         Dataset<Row> rs = spark.sql(stdQuery);
         for (Row row:rs.collectAsList()) {
           dbmsQueryResult.next();
-          assertEquals(row.getDecimal(0).doubleValue(), dbmsQueryResult.getBigDecimal(0).doubleValue(), 1e-5);
+          assertEquals(row.getDecimal(0), dbmsQueryResult.getValue(0));
         }
       }
     }
-    assertEquals(2, cnt);
+    assertEquals(5, cnt);
     System.out.println("test case 19 finished");
   }
 
@@ -1087,7 +1094,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
       cnt++;
-      if (cnt == 2) {
+      if (cnt == 5) {
         Dataset<Row> rs = spark.sql(stdQuery);
         for (Row row : rs.collectAsList()) {
           dbmsQueryResult.next();
@@ -1096,7 +1103,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
         }
       }
     }
-    assertEquals(2, cnt);
+    assertEquals(5, cnt);
     System.out.println("test case 20 finished");
   }
 
@@ -1163,7 +1170,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
       cnt++;
-      if (cnt == 2) {
+      if (cnt == 6) {
         Dataset<Row> rs = spark.sql(stdQuery);
         for (Row row : rs.collectAsList()) {
           dbmsQueryResult.next();
@@ -1172,7 +1179,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
         }
       }
     }
-    assertEquals(2, cnt);
+    assertEquals(6, cnt);
     System.out.println("test case 21 finished");
   }
 
