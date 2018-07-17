@@ -126,6 +126,7 @@ workflows:
   version: 2
   build_and_test:
     jobs:
+      - build-spark
       - build-jdk7
       - build-jdk8
-      - build-spark
+
