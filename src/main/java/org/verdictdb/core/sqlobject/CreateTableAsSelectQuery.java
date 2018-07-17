@@ -32,6 +32,15 @@ public class CreateTableAsSelectQuery extends CreateTableQuery {
     this.select = select;
   }
 
+  public CreateTableAsSelectQuery(CreateScrambledTableQuery query) {
+    this.schemaName = query.schemaName;
+    this.tableName = query.tableName;
+    this.partitionColumns.addAll(query.partitionColumns);
+    this.select = query.select;
+    this.overwrite = query.overwrite;
+    this.ifNotExists = query.ifNotExists;
+  }
+
   public void addPartitionColumn(String column) {
     partitionColumns.add(column);
   }

@@ -68,9 +68,7 @@ public class PostgresqlSyntax extends SqlSyntax {
 
   @Override
   public String getPartitionByInCreateTable() {
-    // not implemented yet
-    // postgres has some complication that sub-partition tables must be created individually.
-    return null;
+    return "partition by list";
   }
 
   @Override

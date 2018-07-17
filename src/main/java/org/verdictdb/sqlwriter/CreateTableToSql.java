@@ -1,15 +1,16 @@
 package org.verdictdb.sqlwriter;
 
+import java.util.ArrayList;
 import java.util.List;
 
+import com.google.common.base.Joiner;
+import org.apache.avro.generic.GenericData;
 import org.apache.commons.lang3.tuple.Pair;
-import org.verdictdb.core.sqlobject.CreateTableAsSelectQuery;
-import org.verdictdb.core.sqlobject.CreateTableDefinitionQuery;
-import org.verdictdb.core.sqlobject.CreateTableQuery;
-import org.verdictdb.core.sqlobject.SelectQuery;
+import org.verdictdb.core.sqlobject.*;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBTypeException;
 import org.verdictdb.sqlsyntax.HiveSyntax;
+import org.verdictdb.sqlsyntax.PostgresqlSyntax;
 import org.verdictdb.sqlsyntax.SparkSyntax;
 import org.verdictdb.sqlsyntax.SqlSyntax;
 
@@ -27,10 +28,97 @@ public class CreateTableToSql {
       sql = createAsSelectQueryToSql((CreateTableAsSelectQuery) query);
     } else if (query instanceof CreateTableDefinitionQuery) {
       sql = createTableToSql((CreateTableDefinitionQuery) query);
+    } else if (query instanceof CreateScrambledTableQuery) {
+      sql = (syntax instanceof PostgresqlSyntax) ? createPartitionTableToSql((CreateScrambledTableQuery) query) :
+        createAsSelectQueryToSql(new CreateTableAsSelectQuery((CreateScrambledTableQuery) query));
     } else {
       throw new VerdictDBTypeException(query);
     }
     return sql;
+  }
+
+  // Syntax must be postgres.
+  private String createPartitionTableToSql(CreateScrambledTableQuery query) throws VerdictDBException {
+    StringBuilder sql = new StringBuilder();
+
+    int blockCount = query.getBlockCount();
+    String schemaName = query.getSchemaName();
+    String tableName = query.getTableName();
+    SelectQuery select = query.getSelect();
+
+
+    // table
+    sql.append("create table ");
+    if (query.isIfNotExists()) {
+      sql.append("if not exists ");
+    }
+    sql.append(quoteName(schemaName));
+    sql.append(".");
+    sql.append(quoteName(tableName));
+    sql.append(" (");
+    List<String> columns = new ArrayList<>();
+    for (Pair<String, String> col : query.getColumnMeta()) {
+      columns.add(col.getLeft() + " " + col.getRight());
+    }
+    sql.append(Joiner.on(",").join(columns));
+    sql.append(String.format(",%s integer,%s integer", query.getTierColumnName(), query.getBlockColumnName()));
+    sql.append(")");
+
+    // partitions
+    if (syntax.doesSupportTablePartitioning() && query.getPartitionColumns().size() > 0) {
+      sql.append(" ");
+      sql.append(syntax.getPartitionByInCreateTable());
+      sql.append(" (");
+      List<String> partitionColumns = query.getPartitionColumns();
+      boolean isFirstColumn = true;
+      for (String col : partitionColumns) {
+        if (isFirstColumn) {
+          sql.append(quoteName(col));
+          isFirstColumn = false;
+        } else {
+          sql.append(", " + quoteName(col));
+        }
+      }
+      sql.append(")");
+      if (syntax instanceof PostgresqlSyntax) {
+        sql.append("; ");
+        // create child partition tables for postgres
+        for (int blockNum = 0; blockNum < blockCount; ++blockNum) {
+          sql.append("create table ");
+          if (query.isIfNotExists()) {
+            sql.append("if not exists ");
+          }
+          sql.append(quoteName(schemaName));
+          sql.append(".");
+          sql.append(quoteName(String.format("%s_vpart%05d", tableName, blockNum)));
+          sql.append(String.format(" partition of %s.%s for values in (%d); ",
+                  quoteName(schemaName), quoteName(tableName), blockNum));
+        }
+      }
+    } else if (syntax instanceof SparkSyntax || syntax instanceof HiveSyntax) {
+      sql.append(" using parquet");
+    }
+
+    if (syntax instanceof PostgresqlSyntax) {
+      sql.append("insert into ");
+      sql.append(quoteName(schemaName));
+      sql.append(".");
+      sql.append(quoteName(tableName));
+      sql.append(" ");
+    } else {
+      if (syntax.isAsRequiredBeforeSelectInCreateTable()) {
+        sql.append(" as ");
+      } else {
+        sql.append(" ");
+      }
+    }
+
+    // select
+    SelectQueryToSql selectWriter = new SelectQueryToSql(syntax);
+    String selectSql = selectWriter.toSql(select);
+    sql.append(selectSql);
+
+    return sql.toString();
   }
 
   String createAsSelectQueryToSql(CreateTableAsSelectQuery query) throws VerdictDBException {

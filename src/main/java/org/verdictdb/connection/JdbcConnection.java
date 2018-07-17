@@ -178,12 +178,13 @@ public class JdbcConnection implements DbmsConnection {
 
     // the result of postgresql is a vector of column index
     if (syntax instanceof PostgresqlSyntax) {
-      queryResult.next();
-      Object o = queryResult.getValue(0);
-      String[] arr = o.toString().split(" ");
-      List<Pair<String, String>> columns = getColumns(schema, table);
-      for (int i=0; i<arr.length; i++) {
-        partition.add(columns.get(Integer.valueOf(arr[i])-1).getKey());
+      if (queryResult.next()) {
+        Object o = queryResult.getValue(0);
+        String[] arr = o.toString().split(" ");
+        List<Pair<String, String>> columns = getColumns(schema, table);
+        for (int i=0; i<arr.length; i++) {
+          partition.add(columns.get(Integer.valueOf(arr[i])-1).getKey());
+        }
       }
     }
     // Hive and Spark append partition information at the end of the "DESCRIBE TABLE" statement.
