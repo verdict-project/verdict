@@ -43,12 +43,16 @@ public class VerdictSingleResult extends AttributeValueRetrievalHelper {
   public VerdictSingleResult(DbmsQueryResult result, boolean asIs) {
     // If result contains objects that cannot be serialized (e.g., BLOB, CLOB in H2),
     // it is just copied as-is (i.e., shallow copy) as opposed to deep copy.
-    if (asIs) {
-      this.result = Optional.of(result);
+    if (result == null) {
+      this.result = Optional.absent();
     } else {
-      DbmsQueryResult copied = copyResult(result);
-      copied.rewind();
-      this.result = Optional.of(copied);
+      if (asIs) {
+        this.result = Optional.of(result);
+      } else {
+        DbmsQueryResult copied = copyResult(result);
+        copied.rewind();
+        this.result = Optional.of(copied);
+      }
     }
   }
 
