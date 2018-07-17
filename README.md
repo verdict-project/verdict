@@ -1,4 +1,6 @@
 [![CircleCI](https://circleci.com/gh/umich-dbgroup/verdictdb-core/tree/master.svg?style=shield&circle-token=ef8e6fc7f668eceee0b2a2a10c1af3f05f667b6b)](https://circleci.com/gh/umich-dbgroup/verdictdb-core/tree/master)
+![GitHub package version](https://img.shields.io/github/package-json/v/badges/shields.svg)
+![Github commits (since latest release)](https://img.shields.io/github/commits-since/SubtitleEdit/subtitleedit/latest.svg)
 
 # Same SQL, Same DB, 100x-200x Faster Analytics
 
