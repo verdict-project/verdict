@@ -32,6 +32,11 @@ public class VerdictResultStream implements Iterable<VerdictSingleResult>, Itera
   public Iterator<VerdictSingleResult> iterator() {
     return this;
   }
+  
+  @Override
+  public void remove() {
+    
+  }
 
   public void close() {
     
