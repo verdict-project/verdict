@@ -172,7 +172,7 @@
           <artifactId>slf4j-simple</artifactId>
         </exclusion>
       </exclusions>
-    </dependency> 
+    </dependency>
     <dependency>
       <groupId>com.amazon.redshift</groupId>
       <artifactId>redshift-jdbc41</artifactId>

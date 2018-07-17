@@ -116,7 +116,7 @@ jobs:
               - ~/.m2
             key: v1-dependencies-{{ checksum "pom.xml" }}
         # run tests!
-        - run: mvn -Dtest = SparkTpchSelectQueryCoordinatorTest 2> /dev/null
+        - run: mvn -Dtest=SparkTpchSelectQueryCoordinatorTest 2> /dev/null
         - store_test_results:
             path: ~/junit
         - store_artifacts:
