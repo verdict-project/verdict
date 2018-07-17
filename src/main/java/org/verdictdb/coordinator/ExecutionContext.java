@@ -57,6 +57,8 @@ public class ExecutionContext {
       return stream;
     }
     else if (queryType.equals(QueryType.scrambling)) {
+      ScramblingCoordinator coordinator = new ScramblingCoordinator(context.getConnection());
+      
       return null;
     }
     else {
