@@ -18,6 +18,8 @@ import java.util.Properties;
 import java.util.concurrent.Executor;
 
 import org.verdictdb.VerdictContext;
+import org.verdictdb.connection.DbmsConnection;
+import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.exception.VerdictDBDbmsException;
 
 public class VerdictConnection implements java.sql.Connection {
@@ -31,6 +33,16 @@ public class VerdictConnection implements java.sql.Connection {
   }
 
   private java.sql.DatabaseMetaData getDatabaseMetaData() {
+    DbmsConnection conn = vc.getConnection();
+    // Return metadata from java.sql.Connection if it is a JDBC connection.
+    if (conn instanceof JdbcConnection) {
+      JdbcConnection jdbcConn = (JdbcConnection) conn;
+      try {
+        return jdbcConn.getMetadata();
+      } catch (VerdictDBDbmsException e) {
+        e.printStackTrace();
+      }
+    }
     return null;
   }
 
@@ -88,7 +100,7 @@ public class VerdictConnection implements java.sql.Connection {
 
   @Override
   public DatabaseMetaData getMetaData() throws SQLException {
-    return getDatabaseMetaData();
+      return getDatabaseMetaData();
   }
 
   @Override

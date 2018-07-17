@@ -1,13 +1,10 @@
 package org.verdictdb.coordinator;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 
 import org.verdictdb.commons.AttributeValueRetrievalHelper;
 import org.verdictdb.connection.DbmsQueryResult;
+import org.verdictdb.connection.DbmsQueryResultMetaData;
 
 import com.google.common.base.Optional;
 
@@ -19,7 +16,7 @@ import com.google.common.base.Optional;
  */
 public class VerdictSingleResult extends AttributeValueRetrievalHelper {
 
-  Optional<DbmsQueryResult> result;
+  private Optional<DbmsQueryResult> result;
 
   public VerdictSingleResult(DbmsQueryResult result) {
     if (result == null) {
@@ -30,7 +27,24 @@ public class VerdictSingleResult extends AttributeValueRetrievalHelper {
       this.result = Optional.of(copied);
     }
   }
-  
+
+  public VerdictSingleResult(DbmsQueryResult result, boolean asIs) {
+    // If result contains objects that cannot be serialized (e.g., BLOB, CLOB in H2),
+    // it is just copied as-is (i.e., shallow copy) as opposed to deep copy.
+    if (result == null) {
+      this.result = Optional.absent();
+    } else {
+      if (asIs) {
+        this.result = Optional.of(result);
+      } else {
+        DbmsQueryResult copied = copyResult(result);
+        copied.rewind();
+        this.result = Optional.of(copied);
+      }
+    }
+  }
+
+
   public static VerdictSingleResult empty() {
     return new VerdictSingleResult(null);
   }
@@ -38,7 +52,7 @@ public class VerdictSingleResult extends AttributeValueRetrievalHelper {
   public boolean isEmpty() {
     return !result.isPresent();
   }
-  
+
   private DbmsQueryResult copyResult(DbmsQueryResult result) {
     try {
       ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -56,6 +70,10 @@ public class VerdictSingleResult extends AttributeValueRetrievalHelper {
       e.printStackTrace();
     }
     return null;
+  }
+
+  public DbmsQueryResultMetaData getMetaData() {
+    return result.isPresent() ? result.get().getMetaData() : null;
   }
 
   @Override

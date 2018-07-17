@@ -1,5 +1,6 @@
 package org.verdictdb.core.aggresult;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -21,7 +22,7 @@ import org.verdictdb.exception.VerdictDBValueException;
  * @author Yongjoo Park
  *
  */
-public class AggregateFrame {
+public class AggregateFrame implements Serializable {
   
   String aggFrameType = "raw";
   

@@ -17,6 +17,7 @@ import org.junit.Test;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.connection.JdbcConnection;
+import org.verdictdb.coordinator.VerdictSingleResult;
 import org.verdictdb.exception.VerdictDBDbmsException;
 
 /**
@@ -132,7 +133,8 @@ public class JdbcResultSetMetaDataTestForImpala {
     ResultSetMetaData expectedMeta = expectedResult.getMetaData();
     
     DbmsQueryResult internalResult = dbmsConn.execute(sql);
-    ResultSet ourResult = new VerdictResultSet(internalResult);
+    VerdictSingleResult result = new VerdictSingleResult(internalResult);
+    ResultSet ourResult = new VerdictResultSet(result);
     ResultSetMetaData ourMetaData = ourResult.getMetaData();
     
     assertEquals(expectedMeta.getColumnCount(), ourMetaData.getColumnCount());

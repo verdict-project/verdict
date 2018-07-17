@@ -1,5 +1,7 @@
 package org.verdictdb.core.aggresult;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -12,7 +14,7 @@ import org.verdictdb.connection.DbmsQueryResultMetaData;
 public class AggregateFrameQueryResult extends AttributeValueRetrievalHelper implements DbmsQueryResult {
 
   private AggregateFrame aggregateFrame;
-  private Iterator it;
+  private transient Iterator it;
   private Map.Entry currentEntry;
   private List<Integer> orderedColumnIndex = new ArrayList<>();
 
@@ -31,8 +33,13 @@ public class AggregateFrameQueryResult extends AttributeValueRetrievalHelper imp
         orderedColumnIndex.add(orderedColumnName.indexOf(measures.attributeNames.get(i)));
       }
     }
-
   }
+
+  private void readObject(ObjectInputStream ois) throws ClassNotFoundException, IOException {
+    ois.defaultReadObject();
+    it = aggregateFrame.data.entrySet().iterator();
+  }
+
 
   public void setAggregateFrame(AggregateFrame aggregateFrame) {
     this.aggregateFrame = aggregateFrame;
