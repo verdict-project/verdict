@@ -261,15 +261,17 @@ public class SelectQueryToSql {
     }
 
     // from
-    sql.append(" from");
     List<AbstractRelation> rels = sel.getFromList();
-    boolean isFirstRel = true;
-    for (AbstractRelation r : rels) {
-      if (isFirstRel) {
-        sql.append(" " + relationToSqlPart(r));
-        isFirstRel = false;
-      } else {
-        sql.append(", " + relationToSqlPart(r));
+    if (rels.size() > 0) {
+      sql.append(" from");
+      boolean isFirstRel = true;
+      for (AbstractRelation r : rels) {
+        if (isFirstRel) {
+          sql.append(" " + relationToSqlPart(r));
+          isFirstRel = false;
+        } else {
+          sql.append(", " + relationToSqlPart(r));
+        }
       }
     }
 

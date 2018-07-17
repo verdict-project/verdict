@@ -2,7 +2,6 @@ package org.verdictdb.sqlreader;
 
 import java.util.List;
 
-import antlr.ANTLRException;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.apache.commons.lang3.tuple.Pair;

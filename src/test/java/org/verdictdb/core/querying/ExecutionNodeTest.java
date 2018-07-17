@@ -71,7 +71,7 @@ public class ExecutionNodeTest {
         new UniformScrambler("default", "people", "default", "scrambled_people", aggBlockCount);
     ScrambleMeta tablemeta = scrambler.generateMeta();
     scrambledTable = tablemeta.getTableName();
-    meta.insertScrambleMetaEntry(tablemeta);
+    meta.addScrambleMeta(tablemeta);
     CreateTableAsSelectQuery createQuery = scrambler.createQuery();
     CreateTableToSql createToSql = new CreateTableToSql(new H2Syntax());
     String scrambleSql = createToSql.toSql(createQuery);

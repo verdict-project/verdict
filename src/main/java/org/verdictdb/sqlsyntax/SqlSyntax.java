@@ -41,4 +41,8 @@ public abstract class SqlSyntax {
     String quoteString = getQuoteString();
     return quoteString + name + quoteString;
   }
+
+  public String substituteTypeName(String type) {
+    return type;
+  }
 }

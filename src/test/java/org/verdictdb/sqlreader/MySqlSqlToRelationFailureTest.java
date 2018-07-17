@@ -1,5 +1,13 @@
 package org.verdictdb.sqlreader;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.fail;
+
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
+
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.commons.DatabaseConnectionHelpers;
@@ -12,14 +20,6 @@ import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sqlsyntax.MysqlSyntax;
-
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.Statement;
-
-import static org.junit.Assert.fail;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
 
 public class MySqlSqlToRelationFailureTest {
 
@@ -69,8 +69,8 @@ public class MySqlSqlToRelationFailureTest {
         scrambler.scramble(MYSQL_DATABASE, "lineitem", MYSQL_DATABASE, "lineitem_scrambled", "uniform");
     ScrambleMeta meta2 =
         scrambler.scramble(MYSQL_DATABASE, "orders", MYSQL_DATABASE, "orders_scrambled", "uniform");
-    meta.insertScrambleMetaEntry(meta1);
-    meta.insertScrambleMetaEntry(meta2);
+    meta.addScrambleMeta(meta1);
+    meta.addScrambleMeta(meta2);
   }
 
   @Test
