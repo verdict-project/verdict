@@ -35,7 +35,7 @@ public class RedshiftSyntax extends SqlSyntax {
 
   @Override
   public boolean doesSupportTablePartitioning() {
-    return false;
+    return true;
   }
 
   @Override
@@ -61,9 +61,19 @@ public class RedshiftSyntax extends SqlSyntax {
 
   @Override
   public String getPartitionCommand(String schema, String table) {
-    return "select partattrs from pg_partitioned_table join pg_class on pg_class.relname='" + table + "' " +
-        "and pg_class.oid = pg_partitioned_table.partrelid join information_schema.tables " +
-        "on table_schema='" + schema + "' and table_name = '" + table + "'";
+    StringBuilder sql = new StringBuilder();
+    sql.append(String.format(
+        "SET search_path to '%s'; ", schema));
+    sql.append(String.format(
+        "SELECT \"column\", \"type\" FROM PG_TABLE_DEF " +
+        "WHERE \"schemaname\" = '%s' and \"tablename\" = '%s' " +
+          "and \"sortkey\" > 0 " +
+        "ORDER BY \"sortkey\";",
+        schema, table));
+    return sql.toString();
+//    return "select partattrs from pg_partitioned_table join pg_class on pg_class.relname='" + table + "' " +
+//        "and pg_class.oid = pg_partitioned_table.partrelid join information_schema.tables " +
+//        "on table_schema='" + schema + "' and table_name = '" + table + "'";
   }
 
   /**

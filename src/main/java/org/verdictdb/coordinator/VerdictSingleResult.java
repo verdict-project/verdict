@@ -10,6 +10,8 @@ import org.verdictdb.commons.AttributeValueRetrievalHelper;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.connection.DbmsQueryResultMetaData;
 
+import com.google.common.base.Optional;
+
 /**
  * Represents the result set returned from VerdictDB to the end user.
  * 
@@ -18,23 +20,35 @@ import org.verdictdb.connection.DbmsQueryResultMetaData;
  */
 public class VerdictSingleResult extends AttributeValueRetrievalHelper {
 
-  private DbmsQueryResult result;
+  private Optional<DbmsQueryResult> result;
 
   public VerdictSingleResult(DbmsQueryResult result) {
-    DbmsQueryResult copied = copyResult(result);
-    copied.rewind();
-    this.result = copied;
+    if (result == null) {
+      this.result = Optional.absent();
+    } else {
+      DbmsQueryResult copied = copyResult(result);
+      copied.rewind();
+      this.result = Optional.of(copied);
+    }
+  }
+  
+  public static VerdictSingleResult empty() {
+    return new VerdictSingleResult(null);
+  }
+  
+  public boolean isEmpty() {
+    return !result.isPresent();
   }
 
   public VerdictSingleResult(DbmsQueryResult result, boolean asIs) {
     // If result contains objects that cannot be serialized (e.g., BLOB, CLOB in H2),
     // it is just copied as-is (i.e., shallow copy) as opposed to deep copy.
     if (asIs) {
-      this.result = result;
+      this.result = Optional.of(result);
     } else {
       DbmsQueryResult copied = copyResult(result);
       copied.rewind();
-      this.result = copied;
+      this.result = Optional.of(copied);
     }
   }
 
@@ -58,38 +72,64 @@ public class VerdictSingleResult extends AttributeValueRetrievalHelper {
   }
 
   public DbmsQueryResultMetaData getMetaData() {
-    return result.getMetaData();
+    return result.isPresent() ? result.get().getMetaData() : null;
   }
 
   @Override
   public int getColumnCount() {
-    return result.getColumnCount();
+    if (result.isPresent() == false) {
+      return 0;
+    } else {
+      return result.get().getColumnCount();
+    }
   }
 
   @Override
   public String getColumnName(int index) {
-    return result.getColumnName(index);
+    if (result.isPresent() == false) {
+      throw new RuntimeException("An empty result is accessed.");
+    } else {
+      return result.get().getColumnName(index);
+    }
   }
 
   public int getColumnType(int index) {
-    return result.getColumnType(index);
+    if (result.isPresent() == false) {
+      throw new RuntimeException("An empty result is accessed.");
+    } else {
+      return result.get().getColumnType(index);
+    }
   }
 
   public long getRowCount() {
-    return result.getRowCount();
+    if (result.isPresent() == false) {
+      return 0;
+    } else {
+      return result.get().getRowCount();
+    }
   }
 
   @Override
   public Object getValue(int index) {
-    return result.getValue(index);
+    if (result.isPresent() == false) {
+      throw new RuntimeException("An empty result is accessed.");
+    } else {
+      return result.get().getValue(index);
+    }
   }
 
   public boolean next() {
-    return result.next();
+    if (result.isPresent() == false) {
+      return false;
+    } else {
+      return result.get().next();
+    }
   }
 
   public void rewind() {
-    result.rewind();
+    if (result.isPresent()) {
+      result.get().rewind();
+    }
   }
 
 }

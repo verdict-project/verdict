@@ -16,14 +16,13 @@ import org.verdictdb.sqlsyntax.SparkSyntax;
 
 public class SparkConnectionTest {
   
-  static SparkSession spark; 
-
+  static private SparkSession spark; 
   
   @BeforeClass
   static public void setupSparkSession() {
     spark = SparkSession.builder().appName("SparkConnectionTest")
     .master("local")
-    .config("spark.sql.catalogImplementation", "hive")
+    .enableHiveSupport()
     .getOrCreate();
   }
 
@@ -142,6 +141,27 @@ public class SparkConnectionTest {
     assertEquals(new ImmutablePair<>("i", "boolean"), columns.get(10));
 //    sparkConnection.execute("DROP TABLE IF EXISTS myschema.PERSON");
 //    sparkConnection.execute("DROP SCHEMA IF EXISTS myschema");
+    sparkConnection.execute("DROP SCHEMA IF EXISTS myschema CASCADE");
+  }
+  
+  @Test
+  public void testCreateView() throws VerdictDBDbmsException {
+    SparkConnection sparkConnection = new SparkConnection(spark, new SparkSyntax());
+    sparkConnection.execute("DROP SCHEMA IF EXISTS myschema CASCADE");
+    sparkConnection.execute("CREATE SCHEMA IF NOT EXISTS myschema");
+    sparkConnection.execute("CREATE TABLE IF NOT EXISTS myschema.PERSON(id int, name varchar(255), a bigint, b float, c date, d timestamp, e array<int>" +
+        ", f decimal(5,2), g double, h char(5), i boolean)");
+    
+    long start = System.currentTimeMillis();
+    String sql1 = "CREATE TABLE myschema.newtable AS select * FROM myschema.person";
+    sparkConnection.execute(sql1);
+//    System.out.println(System.currentTimeMillis() - start);
+    
+    start = System.currentTimeMillis();
+    String sql2 = "CREATE TEMPORARY VIEW newview AS select * FROM myschema.person";
+    sparkConnection.execute(sql2);
+//    System.out.println(System.currentTimeMillis() - start);
+    
     sparkConnection.execute("DROP SCHEMA IF EXISTS myschema CASCADE");
   }
 }

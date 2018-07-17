@@ -1,7 +1,6 @@
 package org.verdictdb.coordinator;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -16,8 +15,6 @@ import org.verdictdb.connection.CachedDbmsConnection;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.connection.JdbcConnection;
-import org.verdictdb.coordinator.ScramblingCoordinator;
-import org.verdictdb.coordinator.SelectQueryCoordinator;
 import org.verdictdb.core.resulthandler.ExecutionResultReader;
 import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
@@ -83,8 +80,8 @@ public class MySqlTpchSelectQueryCoordinatorTest {
         scrambler.scramble(MYSQL_DATABASE, "lineitem", MYSQL_DATABASE, "lineitem_scrambled", "uniform");
     ScrambleMeta meta2 = 
         scrambler.scramble(MYSQL_DATABASE, "orders", MYSQL_DATABASE, "orders_scrambled", "uniform");
-    meta.insertScrambleMetaEntry(meta1);
-    meta.insertScrambleMetaEntry(meta2);
+    meta.addScrambleMeta(meta1);
+    meta.addScrambleMeta(meta2);
   }
 
   @Test
@@ -1264,19 +1261,9 @@ public class MySqlTpchSelectQueryCoordinatorTest {
     assertEquals(12, cnt);
 //    System.out.println("test case 21 finished");
   }
-  
+
   @AfterClass
   public static void tearDown() throws SQLException {
     stmt.execute(String.format("DROP SCHEMA IF EXISTS `%s`", MYSQL_DATABASE));
-//    stmt.execute("DROP TABLE IF EXISTS `test`.`region`");
-//    stmt.execute("DROP TABLE IF EXISTS `test`.`nation`");
-//    stmt.execute("DROP TABLE IF EXISTS `test`.`lineitem`");
-//    stmt.execute("DROP TABLE IF EXISTS `test`.`customer`");
-//    stmt.execute("DROP TABLE IF EXISTS `test`.`supplier`");
-//    stmt.execute("DROP TABLE IF EXISTS `test`.`partsupp`");
-//    stmt.execute("DROP TABLE IF EXISTS `test`.`part`");
-//    stmt.execute("DROP TABLE IF EXISTS `test`.`orders`");
-//    stmt.execute("DROP TABLE IF EXISTS `test`.`lineitem_scrambled`");
-//    stmt.execute("DROP TABLE IF EXISTS `test`.`orders_scrambled`");
   }
 }
