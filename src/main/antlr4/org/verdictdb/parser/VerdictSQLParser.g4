@@ -64,16 +64,19 @@ verdict_statement
 
 //WITH SIZE size=(FLOAT | DECIMAL) '%' (STORE poission_cols=DECIMAL POISSON COLUMNS)? (STRATIFIED BY column_name (',' column_name)*)?
 create_scramble_statement
-    : CREATE SCRAMBLE FROM original_table=table_name
-    (scramble_type)? 
-    (on_columns)?
-    (size=(FLOAT | DECIMAL) '%')? 
+    : CREATE SCRAMBLE scrambled_table=table_name FROM original_table=table_name
+      (METHOD scrambling_method_name)? 
+      (SIZE percent=(FLOAT | DECIMAL) '%')? 
      
     ;
     
-scramble_type
-    : UNIFORM
-    | FASTCONVERGE
+//scramble_type
+//    : UNIFORM
+//    | FASTCONVERGE
+//    ;
+
+scrambling_method_name
+    : STRING
     ;
     
 on_columns
