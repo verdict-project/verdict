@@ -22,6 +22,7 @@ import java.util.List;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.connection.JdbcQueryResult;
+import org.verdictdb.coordinator.VerdictSingleResult;
 import org.verdictdb.core.aggresult.AggregateFrame;
 import org.verdictdb.core.aggresult.AggregateFrameQueryResult;
 import org.verdictdb.core.rewriter.aggresult.AggNameAndType;
@@ -83,7 +84,8 @@ public class JdbcResultSetBasicCorrectnessTest {
     agg.add(new AggNameAndType("AGESUM", "SUM"));
     AggregateFrame aggregateFrame = AggregateFrame.fromDmbsQueryResult(queryResult, nonAgg, agg);
     AggregateFrameQueryResult aggregateFrameQueryResult = (AggregateFrameQueryResult) aggregateFrame.toDbmsQueryResult();
-    jdbcResultSet = new VerdictResultSet(aggregateFrameQueryResult);
+    VerdictSingleResult result = new VerdictSingleResult(aggregateFrameQueryResult);
+    jdbcResultSet = new VerdictResultSet(result);
     List<String> actual = new ArrayList<>();
     List<String> expected = Arrays.asList("female", "male");
     while (jdbcResultSet.next()) {
@@ -102,7 +104,8 @@ public class JdbcResultSetBasicCorrectnessTest {
     agg.add(new AggNameAndType("AGESUM", "SUM"));
     AggregateFrame aggregateFrame = AggregateFrame.fromDmbsQueryResult(queryResult, nonAgg, agg);
     AggregateFrameQueryResult aggregateFrameQueryResult = (AggregateFrameQueryResult) aggregateFrame.toDbmsQueryResult();
-    jdbcResultSet = new VerdictResultSet(aggregateFrameQueryResult);
+    VerdictSingleResult result = new VerdictSingleResult(aggregateFrameQueryResult);
+    jdbcResultSet = new VerdictResultSet(result);
     List<String> actual = new ArrayList<>();
     List<String> expected = Arrays.asList("female", "male");
     while (jdbcResultSet.next()) {
@@ -122,7 +125,8 @@ public class JdbcResultSetBasicCorrectnessTest {
     agg.add(new AggNameAndType("AGESUM", "SUM"));
     AggregateFrame aggregateFrame = AggregateFrame.fromDmbsQueryResult(queryResult, nonAgg, agg);
     AggregateFrameQueryResult aggregateFrameQueryResult = (AggregateFrameQueryResult) aggregateFrame.toDbmsQueryResult();
-    jdbcResultSet = new VerdictResultSet(aggregateFrameQueryResult);
+    VerdictSingleResult result = new VerdictSingleResult(aggregateFrameQueryResult);
+    jdbcResultSet = new VerdictResultSet(result);
 
     while (jdbcResultSet.next()) {
       if (jdbcResultSet.getString(1).equals("female")) {
@@ -144,7 +148,8 @@ public class JdbcResultSetBasicCorrectnessTest {
     agg.add(new AggNameAndType("AGESUM", "SUM"));
     AggregateFrame aggregateFrame = AggregateFrame.fromDmbsQueryResult(queryResult, nonAgg, agg);
     AggregateFrameQueryResult aggregateFrameQueryResult = (AggregateFrameQueryResult) aggregateFrame.toDbmsQueryResult();
-    jdbcResultSet = new VerdictResultSet(aggregateFrameQueryResult);
+    VerdictSingleResult result = new VerdictSingleResult(aggregateFrameQueryResult);
+    jdbcResultSet = new VerdictResultSet(result);
 
     while (jdbcResultSet.next()) {
       if (jdbcResultSet.getString(1).equals("female")) {
@@ -170,7 +175,8 @@ public class JdbcResultSetBasicCorrectnessTest {
     agg.add(new AggNameAndType("AGESUM", "SUM"));
     AggregateFrame aggregateFrame = AggregateFrame.fromDmbsQueryResult(queryResult, nonAgg, agg);
     AggregateFrameQueryResult aggregateFrameQueryResult = (AggregateFrameQueryResult) aggregateFrame.toDbmsQueryResult();
-    jdbcResultSet = new VerdictResultSet(aggregateFrameQueryResult);
+    VerdictSingleResult result = new VerdictSingleResult(aggregateFrameQueryResult);
+    jdbcResultSet = new VerdictResultSet(result);
 
     while (jdbcResultSet.next()) {
       if (jdbcResultSet.getString(1).equals("female")) {
@@ -190,7 +196,8 @@ public class JdbcResultSetBasicCorrectnessTest {
     agg.add(new AggNameAndType("AGESUM", "SUM"));
     AggregateFrame aggregateFrame = AggregateFrame.fromDmbsQueryResult(queryResult, nonAgg, agg);
     AggregateFrameQueryResult aggregateFrameQueryResult = (AggregateFrameQueryResult) aggregateFrame.toDbmsQueryResult();
-    jdbcResultSet = new VerdictResultSet(aggregateFrameQueryResult);
+    VerdictSingleResult result = new VerdictSingleResult(aggregateFrameQueryResult);
+    jdbcResultSet = new VerdictResultSet(result);
 
     while (jdbcResultSet.next()) {
       if (jdbcResultSet.getString(1).equals("female")) {
@@ -216,7 +223,8 @@ public class JdbcResultSetBasicCorrectnessTest {
     agg.add(new AggNameAndType("A", "AVG"));
     AggregateFrame aggregateFrame = AggregateFrame.fromDmbsQueryResult(queryResult, nonAgg, agg);
     AggregateFrameQueryResult aggregateFrameQueryResult = (AggregateFrameQueryResult) aggregateFrame.toDbmsQueryResult();
-    jdbcResultSet = new VerdictResultSet(aggregateFrameQueryResult);
+    VerdictSingleResult result = new VerdictSingleResult(aggregateFrameQueryResult);
+    jdbcResultSet = new VerdictResultSet(result);
 
     while (jdbcResultSet.next()) {
       if (jdbcResultSet.getString(1).equals("female")) {
@@ -240,7 +248,8 @@ public class JdbcResultSetBasicCorrectnessTest {
     agg.add(new AggNameAndType("A", "AVG"));
     AggregateFrame aggregateFrame = AggregateFrame.fromDmbsQueryResult(queryResult, nonAgg, agg);
     AggregateFrameQueryResult aggregateFrameQueryResult = (AggregateFrameQueryResult) aggregateFrame.toDbmsQueryResult();
-    jdbcResultSet = new VerdictResultSet(aggregateFrameQueryResult);
+    VerdictSingleResult result = new VerdictSingleResult(aggregateFrameQueryResult);
+    jdbcResultSet = new VerdictResultSet(result);
 
     while (jdbcResultSet.next()) {
       if (jdbcResultSet.getString(1).equals("female")) {
@@ -264,7 +273,8 @@ public class JdbcResultSetBasicCorrectnessTest {
     agg.add(new AggNameAndType("A", "AVG"));
     AggregateFrame aggregateFrame = AggregateFrame.fromDmbsQueryResult(queryResult, nonAgg, agg);
     AggregateFrameQueryResult aggregateFrameQueryResult = (AggregateFrameQueryResult) aggregateFrame.toDbmsQueryResult();
-    jdbcResultSet = new VerdictResultSet(aggregateFrameQueryResult);
+    VerdictSingleResult result = new VerdictSingleResult(aggregateFrameQueryResult);
+    jdbcResultSet = new VerdictResultSet(result);
 
     while (jdbcResultSet.next()) {
       if (jdbcResultSet.getString(1).equals("female")) {
@@ -288,7 +298,8 @@ public class JdbcResultSetBasicCorrectnessTest {
     agg.add(new AggNameAndType("A", "AVG"));
     AggregateFrame aggregateFrame = AggregateFrame.fromDmbsQueryResult(queryResult, nonAgg, agg);
     AggregateFrameQueryResult aggregateFrameQueryResult = (AggregateFrameQueryResult) aggregateFrame.toDbmsQueryResult();
-    jdbcResultSet = new VerdictResultSet(aggregateFrameQueryResult);
+    VerdictSingleResult result = new VerdictSingleResult(aggregateFrameQueryResult);
+    jdbcResultSet = new VerdictResultSet(result);
 
     while (jdbcResultSet.next()) {
       if (jdbcResultSet.getString(1).equals("female")) {
@@ -312,7 +323,8 @@ public class JdbcResultSetBasicCorrectnessTest {
     agg.add(new AggNameAndType("A", "AVG"));
     AggregateFrame aggregateFrame = AggregateFrame.fromDmbsQueryResult(queryResult, nonAgg, agg);
     AggregateFrameQueryResult aggregateFrameQueryResult = (AggregateFrameQueryResult) aggregateFrame.toDbmsQueryResult();
-    jdbcResultSet = new VerdictResultSet(aggregateFrameQueryResult);
+    VerdictSingleResult result = new VerdictSingleResult(aggregateFrameQueryResult);
+    jdbcResultSet = new VerdictResultSet(result);
 
     while (jdbcResultSet.next()) {
       if (jdbcResultSet.getString(1).equals("female")) {
@@ -342,7 +354,8 @@ public class JdbcResultSetBasicCorrectnessTest {
     agg.add(new AggNameAndType("A", "AVG"));
     AggregateFrame aggregateFrame = AggregateFrame.fromDmbsQueryResult(queryResult, nonAgg, agg);
     AggregateFrameQueryResult aggregateFrameQueryResult = (AggregateFrameQueryResult) aggregateFrame.toDbmsQueryResult();
-    jdbcResultSet = new VerdictResultSet(aggregateFrameQueryResult);
+    VerdictSingleResult result = new VerdictSingleResult(aggregateFrameQueryResult);
+    jdbcResultSet = new VerdictResultSet(result);
 
     while (jdbcResultSet.next()) {
       if (jdbcResultSet.getString(1).equals("female")) {
@@ -370,7 +383,8 @@ public class JdbcResultSetBasicCorrectnessTest {
     agg.add(new AggNameAndType("A", "AVG"));
     AggregateFrame aggregateFrame = AggregateFrame.fromDmbsQueryResult(queryResult, nonAgg, agg);
     AggregateFrameQueryResult aggregateFrameQueryResult = (AggregateFrameQueryResult) aggregateFrame.toDbmsQueryResult();
-    jdbcResultSet = new VerdictResultSet(aggregateFrameQueryResult);
+    VerdictSingleResult result = new VerdictSingleResult(aggregateFrameQueryResult);
+    jdbcResultSet = new VerdictResultSet(result);
 
     while (jdbcResultSet.next()) {
       Timestamp timestamp = Timestamp.valueOf("2017-10-12 21:22:23.0");
@@ -392,7 +406,8 @@ public class JdbcResultSetBasicCorrectnessTest {
     agg.add(new AggNameAndType("CNT", "COUNT"));
     AggregateFrame aggregateFrame = AggregateFrame.fromDmbsQueryResult(queryResult, nonAgg, agg);
     AggregateFrameQueryResult aggregateFrameQueryResult = (AggregateFrameQueryResult) aggregateFrame.toDbmsQueryResult();
-    jdbcResultSet = new VerdictResultSet(aggregateFrameQueryResult);
+    VerdictSingleResult result = new VerdictSingleResult(aggregateFrameQueryResult);
+    jdbcResultSet = new VerdictResultSet(result);
 
     while (jdbcResultSet.next()) {
       byte[] bin = jdbcResultSet.getBytes(3);
@@ -416,7 +431,8 @@ public class JdbcResultSetBasicCorrectnessTest {
     agg.add(new AggNameAndType("CNT", "COUNT"));
     AggregateFrame aggregateFrame = AggregateFrame.fromDmbsQueryResult(queryResult, nonAgg, agg);
     AggregateFrameQueryResult aggregateFrameQueryResult = (AggregateFrameQueryResult) aggregateFrame.toDbmsQueryResult();
-    jdbcResultSet = new VerdictResultSet(aggregateFrameQueryResult);
+    VerdictSingleResult result = new VerdictSingleResult(aggregateFrameQueryResult);
+    jdbcResultSet = new VerdictResultSet(result);
 
     while (jdbcResultSet.next()) {
       byte[] bin = jdbcResultSet.getBytes(3);
@@ -440,7 +456,8 @@ public class JdbcResultSetBasicCorrectnessTest {
     agg.add(new AggNameAndType("CNT", "COUNT"));
     AggregateFrame aggregateFrame = AggregateFrame.fromDmbsQueryResult(queryResult, nonAgg, agg);
     AggregateFrameQueryResult aggregateFrameQueryResult = (AggregateFrameQueryResult) aggregateFrame.toDbmsQueryResult();
-    jdbcResultSet = new VerdictResultSet(aggregateFrameQueryResult);
+    VerdictSingleResult result = new VerdictSingleResult(aggregateFrameQueryResult);
+    jdbcResultSet = new VerdictResultSet(result);
 
     while (jdbcResultSet.next()) {
       byte[] bin = jdbcResultSet.getBytes(3);
@@ -464,7 +481,8 @@ public class JdbcResultSetBasicCorrectnessTest {
     agg.add(new AggNameAndType("CNT", "COUNT"));
     AggregateFrame aggregateFrame = AggregateFrame.fromDmbsQueryResult(queryResult, nonAgg, agg);
     AggregateFrameQueryResult aggregateFrameQueryResult = (AggregateFrameQueryResult) aggregateFrame.toDbmsQueryResult();
-    jdbcResultSet = new VerdictResultSet(aggregateFrameQueryResult);
+    VerdictSingleResult result = new VerdictSingleResult(aggregateFrameQueryResult);
+    jdbcResultSet = new VerdictResultSet(result);
 
     while (jdbcResultSet.next()) {
       byte bin = jdbcResultSet.getByte(3);
@@ -487,7 +505,8 @@ public class JdbcResultSetBasicCorrectnessTest {
     agg.add(new AggNameAndType("CNT", "COUNT"));
     AggregateFrame aggregateFrame = AggregateFrame.fromDmbsQueryResult(queryResult, nonAgg, agg);
     AggregateFrameQueryResult aggregateFrameQueryResult = (AggregateFrameQueryResult) aggregateFrame.toDbmsQueryResult();
-    jdbcResultSet = new VerdictResultSet(aggregateFrameQueryResult);
+    VerdictSingleResult result = new VerdictSingleResult(aggregateFrameQueryResult, true);
+    jdbcResultSet = new VerdictResultSet(result);
 
     while (jdbcResultSet.next()) {
       Blob bin = jdbcResultSet.getBlob(3);
@@ -510,7 +529,8 @@ public class JdbcResultSetBasicCorrectnessTest {
     agg.add(new AggNameAndType("CNT", "COUNT"));
     AggregateFrame aggregateFrame = AggregateFrame.fromDmbsQueryResult(queryResult, nonAgg, agg);
     AggregateFrameQueryResult aggregateFrameQueryResult = (AggregateFrameQueryResult) aggregateFrame.toDbmsQueryResult();
-    jdbcResultSet = new VerdictResultSet(aggregateFrameQueryResult);
+    VerdictSingleResult result = new VerdictSingleResult(aggregateFrameQueryResult);
+    jdbcResultSet = new VerdictResultSet(result);
 
     while (jdbcResultSet.next()) {
       Boolean b = jdbcResultSet.getBoolean(3);
@@ -531,7 +551,8 @@ public class JdbcResultSetBasicCorrectnessTest {
     agg.add(new AggNameAndType("CNT", "COUNT"));
     AggregateFrame aggregateFrame = AggregateFrame.fromDmbsQueryResult(queryResult, nonAgg, agg);
     AggregateFrameQueryResult aggregateFrameQueryResult = (AggregateFrameQueryResult) aggregateFrame.toDbmsQueryResult();
-    jdbcResultSet = new VerdictResultSet(aggregateFrameQueryResult);
+    VerdictSingleResult result = new VerdictSingleResult(aggregateFrameQueryResult, true);
+    jdbcResultSet = new VerdictResultSet(result);
 
     while (jdbcResultSet.next()) {
       Clob bin = jdbcResultSet.getClob(3);
@@ -550,7 +571,8 @@ public class JdbcResultSetBasicCorrectnessTest {
     agg.add(new AggNameAndType("CNT", "COUNT"));
     AggregateFrame aggregateFrame = AggregateFrame.fromDmbsQueryResult(queryResult, nonAgg, agg);
     AggregateFrameQueryResult aggregateFrameQueryResult = (AggregateFrameQueryResult) aggregateFrame.toDbmsQueryResult();
-    jdbcResultSet = new VerdictResultSet(aggregateFrameQueryResult);
+    VerdictSingleResult result = new VerdictSingleResult(aggregateFrameQueryResult);
+    jdbcResultSet = new VerdictResultSet(result);
 
     while (jdbcResultSet.next()) {
       Array a = jdbcResultSet.getArray(3);

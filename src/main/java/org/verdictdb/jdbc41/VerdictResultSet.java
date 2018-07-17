@@ -26,10 +26,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.verdictdb.connection.DbmsQueryResult;
+import org.verdictdb.coordinator.VerdictSingleResult;
 
 public class VerdictResultSet implements ResultSet {
 
-  private DbmsQueryResult queryResult;
+  private VerdictSingleResult queryResult;
   
   private ResultSetMetaData metadata;
 
@@ -50,7 +51,7 @@ public class VerdictResultSet implements ResultSet {
 
   private HashMap<String, Integer> colNameIdx = new HashMap<>();
 
-  public VerdictResultSet(DbmsQueryResult queryResult) {
+  public VerdictResultSet(VerdictSingleResult queryResult) {
     this.queryResult = queryResult;
     for (int i = 0; i < queryResult.getColumnCount(); i++) {
       colNameIdx.put(queryResult.getColumnName(i), i);

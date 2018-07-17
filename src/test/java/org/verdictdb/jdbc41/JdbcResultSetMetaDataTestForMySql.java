@@ -22,6 +22,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.JdbcConnection;
+import org.verdictdb.coordinator.VerdictSingleResult;
 import org.verdictdb.exception.VerdictDBDbmsException;
 
 /**
@@ -129,7 +130,8 @@ public class JdbcResultSetMetaDataTestForMySql {
   @Test
   public void testColumnTypes() throws VerdictDBDbmsException, SQLException, IOException {
     String sql = String.format("select * from %s", TABLE_NAME);
-    ResultSet ourResult = new VerdictResultSet(dbmsConn.execute(sql));
+    VerdictSingleResult result = new VerdictSingleResult(dbmsConn.execute(sql));
+    ResultSet ourResult = new VerdictResultSet(result);
     ResultSetMetaData ourMetaData = ourResult.getMetaData();
     assertEquals(33, ourMetaData.getColumnCount());
 

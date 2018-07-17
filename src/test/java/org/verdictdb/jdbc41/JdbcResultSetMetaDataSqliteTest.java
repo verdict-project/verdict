@@ -18,6 +18,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.connection.JdbcQueryResult;
+import org.verdictdb.coordinator.VerdictSingleResult;
 import org.verdictdb.core.aggresult.AggregateFrame;
 import org.verdictdb.core.aggresult.AggregateFrameQueryResult;
 import org.verdictdb.core.rewriter.aggresult.AggNameAndType;
@@ -74,10 +75,12 @@ public class JdbcResultSetMetaDataSqliteTest {
     agg.add(new AggNameAndType("AGEAVG", "SUM"));
     AggregateFrame aggregateFrame = AggregateFrame.fromDmbsQueryResult(queryResult, nonAgg, agg);
     AggregateFrameQueryResult aggregateFrameQueryResult = (AggregateFrameQueryResult) aggregateFrame.toDbmsQueryResult();
+    VerdictSingleResult result1 = new VerdictSingleResult(queryResult);
+    VerdictSingleResult result2 = new VerdictSingleResult(aggregateFrameQueryResult);
 //    jdbcResultSetMetaData1 = new JdbcResultSetMetaData(queryResult);
-    jdbcResultSetMetaData1 = new VerdictResultSet(queryResult).getMetaData();
+    jdbcResultSetMetaData1 = new VerdictResultSet(result1).getMetaData();
 //    jdbcResultSetMetaData2 = new JdbcResultSetMetaData(aggregateFrameQueryResult);
-    jdbcResultSetMetaData2 = new VerdictResultSet(aggregateFrameQueryResult).getMetaData();
+    jdbcResultSetMetaData2 = new VerdictResultSet(result2).getMetaData();
   }
   
   @Before
