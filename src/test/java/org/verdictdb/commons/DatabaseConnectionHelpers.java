@@ -8,6 +8,8 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
+import org.apache.hadoop.hive.ql.exec.spark.KryoSerializer;
+import org.apache.spark.SparkConf;
 import org.apache.spark.sql.SparkSession;
 import org.postgresql.copy.CopyManager;
 import org.postgresql.core.BaseConnection;
@@ -23,11 +25,27 @@ public class DatabaseConnectionHelpers {
         .master("local")
         .enableHiveSupport()
         .getOrCreate();
-    
+    spark.conf().set("spark.cores.max", "24");
+    spark.conf().set("spark.serializer", "org.apache.spark.serializer.KryoSerializer");
+    spark.conf().set("spark.sql.tungsten.enabled", "true");
+    spark.conf().set("spark.eventLog.enabled", "true");
+    spark.conf().set("spark.app.id", "YourApp");
+    spark.conf().set("spark.io.compression.codec", "snappy");
+    spark.conf().set("spark.rdd.compress", "true");
+    spark.conf().set("spark.streaming.backpressure.enabled", "true");
+    spark.conf().set("spark.kryoserializer.buffer.max", "1");
+    spark.conf().set("spark.default.parallelism", "1");
+    spark.conf().set("spark.executor.cores", "8");
+    spark.conf().set("spark.shuffle.sort.bypassMergeThreshold", "50");
+    spark.conf().set("spark.broadcast.blockSize", "1");
+    spark.conf().set("spark.sql.parquet.compression.codec", "snappy");
+    spark.conf().set("spark.sql.parquet.mergeSchema", "true");
+    spark.conf().set("spark.sql.parquet.binaryAsString", "true");
+    spark.conf().set("spark.sql.crossJoin.enabled", "true");
     // create schema
     spark.sql(String.format("DROP SCHEMA IF EXISTS `%s` CASCADE", schema));
     spark.sql(String.format("CREATE SCHEMA IF NOT EXISTS `%s`", schema));
-    
+
     // create tables
     String datafilePath = new File("src/test/resources/tpch_test_data/").getAbsolutePath();
     spark.sql(String.format(
@@ -125,7 +143,7 @@ public class DatabaseConnectionHelpers {
         "LOCATION '%s/orders'",
           schema, datafilePath));
     spark.sql(String.format(
-        "CREATE EXTERNAL TABLE IF NOT EXISTS `%s`.`lineitem` (" + 
+        "CREATE EXTERNAL TABLE IF NOT EXISTS `%s`.`lineitem` (" +
         "  `l_orderkey`       INT , " +
         "  `l_partkey`        INT , " +
         "  `l_suppkey`        INT , " +
@@ -147,7 +165,7 @@ public class DatabaseConnectionHelpers {
         "STORED AS textfile " +
         "LOCATION '%s/lineitem'",
           schema, datafilePath));
-    
+
     return spark;
   }
 

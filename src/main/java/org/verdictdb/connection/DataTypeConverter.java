@@ -132,6 +132,7 @@ public class DataTypeConverter {
     stringToIntMap.put("smallserial", INTEGER);
     stringToIntMap.put("serial", INTEGER);
     stringToIntMap.put("bigserial", BIGINT);
+    stringToIntMap.put("string", VARCHAR);
   }
 
   public static String typeName(int inttype) {

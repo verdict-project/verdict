@@ -9,16 +9,18 @@ import org.verdictdb.core.sqlobject.CreateTableQuery;
 import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBTypeException;
+import org.verdictdb.sqlsyntax.HiveSyntax;
+import org.verdictdb.sqlsyntax.SparkSyntax;
 import org.verdictdb.sqlsyntax.SqlSyntax;
 
 public class CreateTableToSql {
 
   protected SqlSyntax syntax;
-  
+
   public CreateTableToSql(SqlSyntax syntax) {
     this.syntax = syntax;
   }
-  
+
   public String toSql(CreateTableQuery query) throws VerdictDBException {
     String sql;
     if (query instanceof CreateTableAsSelectQuery) {
@@ -33,11 +35,11 @@ public class CreateTableToSql {
 
   String createAsSelectQueryToSql(CreateTableAsSelectQuery query) throws VerdictDBException {
     StringBuilder sql = new StringBuilder();
-  
+
     String schemaName = query.getSchemaName();
     String tableName = query.getTableName();
     SelectQuery select = query.getSelect();
-  
+
     // table
     sql.append("create table ");
     if (query.isIfNotExists()) {
@@ -46,7 +48,7 @@ public class CreateTableToSql {
     sql.append(quoteName(schemaName));
     sql.append(".");
     sql.append(quoteName(tableName));
-    
+
     // partitions
     if (syntax.doesSupportTablePartitioning() && query.getPartitionColumns().size() > 0) {
       sql.append(" ");
@@ -63,8 +65,10 @@ public class CreateTableToSql {
         }
       }
       sql.append(")");
+    } else if (syntax instanceof SparkSyntax || syntax instanceof HiveSyntax) {
+      sql.append(" using parquet");
     }
-  
+
     // select
     if (syntax.isAsRequiredBeforeSelectInCreateTable()) {
       sql.append(" as ");
@@ -74,17 +78,17 @@ public class CreateTableToSql {
     SelectQueryToSql selectWriter = new SelectQueryToSql(syntax);
     String selectSql = selectWriter.toSql(select);
     sql.append(selectSql);
-  
+
     return sql.toString();
   }
 
   String createTableToSql(CreateTableDefinitionQuery query) {
     StringBuilder sql = new StringBuilder();
-    
+
     String schemaName = query.getSchemaName();
     String tableName = query.getTableName();
     List<Pair<String, String>> columnAndTypes = query.getColumnNameAndTypes();
-  
+
     // table
     sql.append("create table ");
     if (query.isIfNotExists()) {
@@ -93,7 +97,7 @@ public class CreateTableToSql {
     sql.append(quoteName(schemaName));
     sql.append(".");
     sql.append(quoteName(tableName));
-    
+
     // column definitions
     sql.append(" (");
     boolean isFirst = true;
@@ -108,7 +112,7 @@ public class CreateTableToSql {
       isFirst = false;
     }
     sql.append(")");
-    
+
     return sql.toString();
   }
 
