@@ -92,9 +92,40 @@ jobs:
       - store_artifacts:
           path: ~/junit
 
+  build-spark:
+      docker:
+        # specify the version you desire here
+        - image: maven:3.5.4-jdk-8-slim
+
+      working_directory: ~/repo
+      environment:
+        # Customize the JVM maximum heap limit
+        MAVEN_OPTS: -Xmx3200m
+      steps:
+        - checkout
+        # Download and cache dependencies
+        - restore_cache:
+            keys:
+            - v1-dependencies-{{ checksum "pom.xml" }}
+            # fallback to using the latest cache if no exact match is found
+            - v1-dependencies-
+        - run: mvn install:install-file -Dfile=src/test/resources/jars/ImpalaJDBC41-2.6.3.jar -DgroupId=com.cloudera -DartifactId=impala-jdbc41 -Dversion=2.6.3 -Dpackaging=jar
+        - run: mvn dependency:go-offline
+        - save_cache:
+            paths:
+              - ~/.m2
+            key: v1-dependencies-{{ checksum "pom.xml" }}
+        # run tests!
+        - run: mvn -Dtest = SparkTpchSelectQueryCoordinatorTest 2> /dev/null
+        - store_test_results:
+            path: ~/junit
+        - store_artifacts:
+            path: ~/junit
+
 workflows:
   version: 2
   build_and_test:
     jobs:
       - build-jdk7
       - build-jdk8
+      - build-spark
