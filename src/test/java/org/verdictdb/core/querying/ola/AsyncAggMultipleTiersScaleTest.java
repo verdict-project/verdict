@@ -15,6 +15,7 @@ import java.util.List;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.connection.JdbcConnection;
@@ -105,8 +106,15 @@ public class AsyncAggMultipleTiersScaleTest {
         new ImmutablePair<>("s_value", DOUBLE)
     ));
     staticMetaData.addTableData(new StaticMetaData.TableInfo(originalSchema, smallTable), arr);
+    
+    // scratchpad schema
+    stmt.execute("create schema if not exists \"verdictdb_temp\";");
   }
 
+  @AfterClass
+  public static void tearDown() throws SQLException {
+    stmt.execute("drop schema if exists \"verdictdb_temp\" cascade;");
+  }
 
   @Test
   public void ScrambleTableTest() throws VerdictDBException,SQLException {
@@ -131,7 +139,7 @@ public class AsyncAggMultipleTiersScaleTest {
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
     ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
     //queryExecutionPlan.getRoot().executeAndWaitForTermination(new JdbcConnection(conn, new H2Syntax()));
-    stmt.execute("drop schema \"verdictdb_temp\" cascade;");
+//    stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
   @Test
@@ -216,9 +224,9 @@ public class AsyncAggMultipleTiersScaleTest {
         ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getMeta().getCubes().get(0));
     ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
 
-    stmt.execute("create schema if not exists \"verdictdb_temp\";");
+//    stmt.execute("create schema if not exists \"verdictdb_temp\";");
     ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
-    stmt.execute("drop schema \"verdictdb_temp\" cascade;");
+//    stmt.execute("drop schema \"verdictdb_temp\" cascade;");
 
     ExecutionInfoToken token = new ExecutionInfoToken();
     CreateTableAsSelectQuery query = (CreateTableAsSelectQuery) queryExecutionPlan.getRoot().getSources().get(0).getSources().get(0).createQuery(Arrays.asList(token));
@@ -290,9 +298,9 @@ public class AsyncAggMultipleTiersScaleTest {
         ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getMeta().getCubes().get(0));
     ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
 
-    stmt.execute("create schema if not exists \"verdictdb_temp\";");
+//    stmt.execute("create schema if not exists \"verdictdb_temp\";");
     ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
-    stmt.execute("drop schema \"verdictdb_temp\" cascade;");
+//    stmt.execute("drop schema \"verdictdb_temp\" cascade;");
 
     ExecutionInfoToken token = new ExecutionInfoToken();
     CreateTableAsSelectQuery query = (CreateTableAsSelectQuery) queryExecutionPlan.getRoot().getSources().get(0).getSources().get(0).createQuery(Arrays.asList(token));
@@ -361,9 +369,9 @@ public class AsyncAggMultipleTiersScaleTest {
         ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getMeta().getCubes().get(0));
     ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
 
-    stmt.execute("create schema if not exists \"verdictdb_temp\";");
+//    stmt.execute("create schema if not exists \"verdictdb_temp\";");
     ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
-    stmt.execute("drop schema \"verdictdb_temp\" cascade;");
+//    stmt.execute("drop schema \"verdictdb_temp\" cascade;");
 
 
     ExecutionInfoToken token = new ExecutionInfoToken();
@@ -433,9 +441,9 @@ public class AsyncAggMultipleTiersScaleTest {
         ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getMeta().getCubes().get(0));
     ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
 
-    stmt.execute("create schema if not exists \"verdictdb_temp\";");
+//    stmt.execute("create schema if not exists \"verdictdb_temp\";");
     ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
-    stmt.execute("drop schema \"verdictdb_temp\" cascade;");
+//    stmt.execute("drop schema \"verdictdb_temp\" cascade;");
 
     ExecutionInfoToken token = new ExecutionInfoToken();
     CreateTableAsSelectQuery query = (CreateTableAsSelectQuery) queryExecutionPlan.getRoot().getSources().get(0).getSources().get(0).createQuery(Arrays.asList(token));
@@ -512,9 +520,9 @@ public class AsyncAggMultipleTiersScaleTest {
         ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getMeta().getCubes().get(0));
     ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
 
-    stmt.execute("create schema if not exists \"verdictdb_temp\";");
+//    stmt.execute("create schema if not exists \"verdictdb_temp\";");
     ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
-    stmt.execute("drop schema \"verdictdb_temp\" cascade;");
+//    stmt.execute("drop schema \"verdictdb_temp\" cascade;");
 
     ExecutionInfoToken token = new ExecutionInfoToken();
     CreateTableAsSelectQuery query = (CreateTableAsSelectQuery) queryExecutionPlan.getRoot().getSources().get(0).getSources().get(0).createQuery(Arrays.asList(token));
@@ -591,9 +599,10 @@ public class AsyncAggMultipleTiersScaleTest {
         ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getMeta().getCubes().get(0));
     ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
 
-    stmt.execute("create schema if not exists \"verdictdb_temp\";");
+//    stmt.execute("create schema if not exists \"verdictdb_temp\";");
     ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
-    stmt.execute("drop schema \"verdictdb_temp\" cascade;");
+//    stmt.execute("drop schema \"verdictdb_temp\" cascade;");
+    
     ExecutionInfoToken token = new ExecutionInfoToken();
     CreateTableAsSelectQuery query = (CreateTableAsSelectQuery) queryExecutionPlan.getRoot().getSources().get(0).getSources().get(0).createQuery(Arrays.asList(token));
     SelectQueryToSql queryToSql = new SelectQueryToSql(new H2Syntax());
@@ -667,9 +676,9 @@ public class AsyncAggMultipleTiersScaleTest {
         ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getMeta().getCubes().get(0));
     ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
 
-    stmt.execute("create schema if not exists \"verdictdb_temp\";");
+//    stmt.execute("create schema if not exists \"verdictdb_temp\";");
     ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
-    stmt.execute("drop schema \"verdictdb_temp\" cascade;");
+//    stmt.execute("drop schema \"verdictdb_temp\" cascade;");
 
     ExecutionInfoToken token = new ExecutionInfoToken();
     CreateTableAsSelectQuery query = (CreateTableAsSelectQuery) queryExecutionPlan.getRoot().getSources().get(0).getSources().get(0).createQuery(Arrays.asList(token));
@@ -747,9 +756,9 @@ public class AsyncAggMultipleTiersScaleTest {
         ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getMeta().getCubes().get(0));
     ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
 
-    stmt.execute("create schema if not exists \"verdictdb_temp\";");
+//    stmt.execute("create schema if not exists \"verdictdb_temp\";");
     ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
-    stmt.execute("drop schema \"verdictdb_temp\" cascade;");
+//    stmt.execute("drop schema \"verdictdb_temp\" cascade;");
 
     ExecutionInfoToken token = new ExecutionInfoToken();
     CreateTableAsSelectQuery query = (CreateTableAsSelectQuery) queryExecutionPlan.getRoot().getSources().get(0).getSources().get(0).createQuery(Arrays.asList(token));
