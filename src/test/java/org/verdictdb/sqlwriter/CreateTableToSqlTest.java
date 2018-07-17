@@ -23,7 +23,7 @@ public class CreateTableToSqlTest {
         Arrays.<SelectItem>asList(new AsteriskColumn()),
         base);
     CreateTableAsSelectQuery create = new CreateTableAsSelectQuery("newschema", "newtable", relation);
-    String expected = "create table `newschema`.`newtable` as select * from `myschema`.`mytable` as t";
+    String expected = "create table `newschema`.`newtable` using parquet as select * from `myschema`.`mytable` as t";
     CreateTableToSql queryToSql = new CreateTableToSql(new HiveSyntax());
     String actual = queryToSql.toSql(create);
     assertEquals(expected, actual);
