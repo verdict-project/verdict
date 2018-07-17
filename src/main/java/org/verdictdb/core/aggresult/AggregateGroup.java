@@ -1,5 +1,6 @@
 package org.verdictdb.core.aggresult;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -7,7 +8,7 @@ import java.util.List;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
-public class AggregateGroup {
+public class AggregateGroup implements Serializable {
   
   List<String> attributeNames;
   

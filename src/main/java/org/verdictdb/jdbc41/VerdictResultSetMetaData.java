@@ -7,16 +7,17 @@ import java.util.List;
 
 import org.verdictdb.connection.DataTypeConverter;
 import org.verdictdb.connection.DbmsQueryResult;
+import org.verdictdb.coordinator.VerdictSingleResult;
 
 public class VerdictResultSetMetaData implements ResultSetMetaData {
   
-  DbmsQueryResult queryResult;
+  private VerdictSingleResult queryResult;
   
   List<String> caseSensitiveColumnTypes = Arrays.asList("char", "string", "text");
   
   List<String> signedColumnTypes = Arrays.asList("double", "int", "real");
   
-  public VerdictResultSetMetaData(DbmsQueryResult queryResult) {
+  public VerdictResultSetMetaData(VerdictSingleResult queryResult) {
     this.queryResult = queryResult;
   }
 

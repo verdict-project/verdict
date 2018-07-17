@@ -8,6 +8,7 @@ import java.io.ObjectOutputStream;
 
 import org.verdictdb.commons.AttributeValueRetrievalHelper;
 import org.verdictdb.connection.DbmsQueryResult;
+import org.verdictdb.connection.DbmsQueryResultMetaData;
 
 /**
  * Represents the result set returned from VerdictDB to the end user.
@@ -17,14 +18,26 @@ import org.verdictdb.connection.DbmsQueryResult;
  */
 public class VerdictSingleResult extends AttributeValueRetrievalHelper {
 
-  DbmsQueryResult result;
+  private DbmsQueryResult result;
 
   public VerdictSingleResult(DbmsQueryResult result) {
     DbmsQueryResult copied = copyResult(result);
     copied.rewind();
     this.result = copied;
   }
-  
+
+  public VerdictSingleResult(DbmsQueryResult result, boolean asIs) {
+    // If result contains objects that cannot be serialized (e.g., BLOB, CLOB in H2),
+    // it is just copied as-is (i.e., shallow copy) as opposed to deep copy.
+    if (asIs) {
+      this.result = result;
+    } else {
+      DbmsQueryResult copied = copyResult(result);
+      copied.rewind();
+      this.result = copied;
+    }
+  }
+
   private DbmsQueryResult copyResult(DbmsQueryResult result) {
     try {
       ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -42,6 +55,10 @@ public class VerdictSingleResult extends AttributeValueRetrievalHelper {
       e.printStackTrace();
     }
     return null;
+  }
+
+  public DbmsQueryResultMetaData getMetaData() {
+    return result.getMetaData();
   }
 
   @Override

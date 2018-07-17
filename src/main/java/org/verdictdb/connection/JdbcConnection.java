@@ -1,14 +1,12 @@
 package org.verdictdb.connection;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
+import org.verdictdb.coordinator.VerdictSingleResult;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.jdbc41.VerdictResultSet;
 import org.verdictdb.sqlsyntax.HiveSyntax;
@@ -133,9 +131,10 @@ public class JdbcConnection implements DbmsConnection {
   public List<String> getSchemas() throws VerdictDBDbmsException{
     List<String> schemas = new ArrayList<>();
     DbmsQueryResult queryResult = executeQuery(syntax.getSchemaCommand());
-    VerdictResultSet jdbcResultSet = new VerdictResultSet(queryResult);
+    VerdictSingleResult verdictResult = new VerdictSingleResult(queryResult);
+    VerdictResultSet jdbcResultSet = new VerdictResultSet(verdictResult);
     try {
-      while (queryResult.next()) {
+      while (jdbcResultSet.next()) {
         schemas.add(jdbcResultSet.getString(syntax.getSchemaNameColumnIndex()+1));
       }
     } catch (SQLException e) {
@@ -150,9 +149,10 @@ public class JdbcConnection implements DbmsConnection {
   public List<String> getTables(String schema) throws VerdictDBDbmsException {
     List<String> tables = new ArrayList<>();
     DbmsQueryResult queryResult = executeQuery(syntax.getTableCommand(schema));
-    VerdictResultSet jdbcQueryResult = new VerdictResultSet(queryResult);
+    VerdictSingleResult verdictResult = new VerdictSingleResult(queryResult);
+    VerdictResultSet jdbcQueryResult = new VerdictResultSet(verdictResult);
     try {
-      while (queryResult.next()) {
+      while (jdbcQueryResult.next()) {
         tables.add(jdbcQueryResult.getString(syntax.getTableNameColumnIndex()+1));
       }
     } catch (SQLException e) {
@@ -164,12 +164,13 @@ public class JdbcConnection implements DbmsConnection {
   }
 
   @Override
-  public List<Pair<String, String>> getColumns(String schema, String table) throws VerdictDBDbmsException{
+  public List<Pair<String, String>> getColumns(String schema, String table) throws VerdictDBDbmsException {
     List<Pair<String, String>> columns = new ArrayList<>();
     DbmsQueryResult queryResult = executeQuery(syntax.getColumnsCommand(schema, table));
-    VerdictResultSet jdbcQueryResult = new VerdictResultSet(queryResult);
+    VerdictSingleResult verdictResult = new VerdictSingleResult(queryResult);
+    VerdictResultSet jdbcQueryResult = new VerdictResultSet(verdictResult);
     try {
-      while (queryResult.next()) {
+      while (jdbcQueryResult.next()) {
         String type = jdbcQueryResult.getString(syntax.getColumnTypeColumnIndex()+1);
         type = type.toLowerCase();
         
@@ -188,15 +189,16 @@ public class JdbcConnection implements DbmsConnection {
   }
 
   @Override
-  public List<String> getPartitionColumns(String schema, String table) throws VerdictDBDbmsException{
+  public List<String> getPartitionColumns(String schema, String table) throws VerdictDBDbmsException {
     List<String> partition = new ArrayList<>();
     DbmsQueryResult queryResult = executeQuery(syntax.getPartitionCommand(schema, table));
-    VerdictResultSet jdbcQueryResult = new VerdictResultSet(queryResult);
+    VerdictSingleResult verdictResult = new VerdictSingleResult(queryResult);
+    VerdictResultSet jdbcQueryResult = new VerdictResultSet(verdictResult);
     
     try {
       // the result of postgresql is a vector of column index
       if (syntax instanceof PostgresqlSyntax) {
-        queryResult.next();
+        jdbcQueryResult.next();
         Object o = jdbcQueryResult.getObject(1);
         String[] arr = o.toString().split(" ");
         List<Pair<String, String>> columns = getColumns(schema, table);
@@ -207,7 +209,7 @@ public class JdbcConnection implements DbmsConnection {
       // Hive and Spark append partition information at the end of the "DESCRIBE TABLE" statement.
       else if (syntax instanceof HiveSyntax || syntax instanceof SparkSyntax) {
         boolean hasPartitionInfoStarted = false;
-        while (queryResult.next()) {
+        while (jdbcQueryResult.next()) {
           String name = queryResult.getString(0);
           if (hasPartitionInfoStarted && (name.equalsIgnoreCase("# col_name") == false)) {
             partition.add(name);
@@ -217,7 +219,7 @@ public class JdbcConnection implements DbmsConnection {
         }
       }
       else {
-        while (queryResult.next()) {
+        while (jdbcQueryResult.next()) {
           partition.add(jdbcQueryResult.getString(1));
         }
       }
@@ -240,5 +242,12 @@ public class JdbcConnection implements DbmsConnection {
     currentSchema = schema;
   }
 
+  public DatabaseMetaData getMetadata() throws VerdictDBDbmsException {
+    try {
+      return conn.getMetaData();
+    } catch (SQLException e) {
+      throw new VerdictDBDbmsException(e);
+    }
+  }
 
 }
