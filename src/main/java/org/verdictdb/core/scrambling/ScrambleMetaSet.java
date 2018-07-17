@@ -2,12 +2,13 @@ package org.verdictdb.core.scrambling;
 
 import java.io.Serializable;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
-public class ScrambleMetaSet implements Serializable {
+public class ScrambleMetaSet implements Serializable, Iterable<ScrambleMeta> {
 
   private static final long serialVersionUID = 5106301901144427405L;
   
@@ -60,7 +61,13 @@ public class ScrambleMetaSet implements Serializable {
     return meta.get(metaKey(schemaName, tableName)).getTierColumn();
   }
   
-  public void insertScrambleMetaEntry(ScrambleMeta tablemeta) {
+  /**
+   * Add a new scramble meta entry. If there exists an existing entry for the same scrambled table,
+   * the value is overwritten.
+   * 
+   * @param tablemeta
+   */
+  public void addScrambleMeta(ScrambleMeta tablemeta) {
     String schema = tablemeta.getSchemaName();
     String table = tablemeta.getTableName();
     meta.put(metaKey(schema, table), tablemeta);
@@ -118,6 +125,12 @@ public class ScrambleMetaSet implements Serializable {
   private Pair<String, String> metaKey(String schemaName, String tableName) {
     return Pair.of(schemaName, tableName);
   }
+
+  @Override
+  public Iterator<ScrambleMeta> iterator() {
+    return meta.values().iterator();
+  }
+  
 }
 
 

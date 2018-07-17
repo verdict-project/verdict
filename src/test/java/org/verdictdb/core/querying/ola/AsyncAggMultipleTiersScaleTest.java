@@ -89,9 +89,9 @@ public class AsyncAggMultipleTiersScaleTest {
     HashMap<Integer, List<Double>> distribution = new HashMap<>();
     distribution.put(0, Arrays.asList(0.5, 1.0));
     distribution.put(1, Arrays.asList(0.2, 1.0));
-    tablemeta.setCumulativeMassDistributionPerTier(distribution);
+    tablemeta.setCumulativeDistributionForTier(distribution);
     scrambledTable = tablemeta.getTableName();
-    meta.insertScrambleMetaEntry(tablemeta);
+    meta.addScrambleMeta(tablemeta);
 
     staticMetaData.setDefaultSchema(originalSchema);
     List<Pair<String, Integer>> arr = new ArrayList<>();

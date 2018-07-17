@@ -61,22 +61,10 @@ public class ExecutableNodeRunner implements Runnable {
 
     // dependency exists
     while (true) {
-      //      try {
-      //        TimeUnit.SECONDS.sleep(1);
-      //      } catch (InterruptedException e1) {
-      //        // TODO Auto-generated catch block
-      //        e1.printStackTrace();
-      //      }
-      //      System.out.println("In the loop: " + new ToStringBuilder(node, ToStringStyle.DEFAULT_STYLE));
-      //      System.out.println(successSourceCount);
-      //      System.out.println(dependentCount);
-
       List<ExecutionInfoToken> tokens = retrieve();
       if (tokens == null) {
         continue;
       }
-
-      //      System.out.println(new ToStringBuilder(node, ToStringStyle.DEFAULT_STYLE) + " tokens: " + tokens);
 
       ExecutionInfoToken failureToken = getFailureTokenIfExists(tokens);
       if (failureToken != null) {

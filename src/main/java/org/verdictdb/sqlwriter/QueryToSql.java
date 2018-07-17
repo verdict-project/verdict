@@ -1,7 +1,9 @@
 package org.verdictdb.sqlwriter;
 
-import org.verdictdb.core.sqlobject.CreateTableAsSelectQuery;
+import org.verdictdb.core.querying.CreateSchemaQuery;
+import org.verdictdb.core.sqlobject.CreateTableQuery;
 import org.verdictdb.core.sqlobject.DropTableQuery;
+import org.verdictdb.core.sqlobject.InsertValuesQuery;
 import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.core.sqlobject.SetOperationRelation;
 import org.verdictdb.core.sqlobject.SqlConvertible;
@@ -21,13 +23,21 @@ public class QueryToSql {
       SelectQueryToSql tosql = new SelectQueryToSql(syntax);
       return tosql.toSql((SelectQuery) query);
     }
-    else if (query instanceof CreateTableAsSelectQuery) {
+    else if (query instanceof CreateSchemaQuery) {
+      CreateSchemaToSql tosql = new CreateSchemaToSql(syntax);
+      return tosql.toSql((CreateSchemaQuery) query);
+    }
+    else if (query instanceof CreateTableQuery) {
       CreateTableToSql tosql = new CreateTableToSql(syntax);
-      return tosql.toSql((CreateTableAsSelectQuery) query);
+      return tosql.toSql((CreateTableQuery) query);
     }
     else if (query instanceof DropTableQuery) {
       DropTableToSql tosql = new DropTableToSql(syntax);
       return tosql.toSql((DropTableQuery) query);
+    }
+    else if (query instanceof InsertValuesQuery) {
+      InsertQueryToSql tosql = new InsertQueryToSql(syntax);
+      return tosql.toSql((InsertValuesQuery) query);
     }
     else if (query instanceof SetOperationRelation) {
       SetOperationToSql tosql = new SetOperationToSql(syntax);

@@ -10,7 +10,6 @@ import java.util.List;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.exception.VerdictDBDbmsException;
-import org.verdictdb.jdbc41.VerdictResultSet;
 import org.verdictdb.sqlsyntax.HiveSyntax;
 import org.verdictdb.sqlsyntax.PostgresqlSyntax;
 import org.verdictdb.sqlsyntax.SparkSyntax;
@@ -133,16 +132,12 @@ public class JdbcConnection implements DbmsConnection {
   public List<String> getSchemas() throws VerdictDBDbmsException{
     List<String> schemas = new ArrayList<>();
     DbmsQueryResult queryResult = executeQuery(syntax.getSchemaCommand());
-    VerdictResultSet jdbcResultSet = new VerdictResultSet(queryResult);
-    try {
-      while (queryResult.next()) {
-        schemas.add(jdbcResultSet.getString(syntax.getSchemaNameColumnIndex()+1));
-      }
-    } catch (SQLException e) {
-      throw new VerdictDBDbmsException(e);
-    } finally {
-      jdbcResultSet.close();
+//    VerdictResultSet jdbcResultSet = new VerdictResultSet(queryResult);
+
+    while (queryResult.next()) {
+      schemas.add(queryResult.getString(syntax.getSchemaNameColumnIndex()));
     }
+    
     return schemas;
   }
 
@@ -150,16 +145,12 @@ public class JdbcConnection implements DbmsConnection {
   public List<String> getTables(String schema) throws VerdictDBDbmsException {
     List<String> tables = new ArrayList<>();
     DbmsQueryResult queryResult = executeQuery(syntax.getTableCommand(schema));
-    VerdictResultSet jdbcQueryResult = new VerdictResultSet(queryResult);
-    try {
-      while (queryResult.next()) {
-        tables.add(jdbcQueryResult.getString(syntax.getTableNameColumnIndex()+1));
-      }
-    } catch (SQLException e) {
-      throw new VerdictDBDbmsException(e);
-    } finally {
-      jdbcQueryResult.close();
+//    VerdictResultSet jdbcQueryResult = new VerdictResultSet(queryResult);
+    
+    while (queryResult.next()) {
+      tables.add(queryResult.getString(syntax.getTableNameColumnIndex()));
     }
+      
     return tables;
   }
 
@@ -167,23 +158,19 @@ public class JdbcConnection implements DbmsConnection {
   public List<Pair<String, String>> getColumns(String schema, String table) throws VerdictDBDbmsException{
     List<Pair<String, String>> columns = new ArrayList<>();
     DbmsQueryResult queryResult = executeQuery(syntax.getColumnsCommand(schema, table));
-    VerdictResultSet jdbcQueryResult = new VerdictResultSet(queryResult);
-    try {
-      while (queryResult.next()) {
-        String type = jdbcQueryResult.getString(syntax.getColumnTypeColumnIndex()+1);
-        type = type.toLowerCase();
-        
-//        // remove the size of type
-//        type = type.replaceAll("\\(.*\\)", "");
-        
-        columns.add(
-            new ImmutablePair<>(jdbcQueryResult.getString(syntax.getColumnNameColumnIndex()+1), type));
-      }
-    } catch (SQLException e) {
-      throw new VerdictDBDbmsException(e);
-    } finally {
-      jdbcQueryResult.close();
+    //    VerdictResultSet jdbcQueryResult = new VerdictResultSet(queryResult);
+
+    while (queryResult.next()) {
+      String type = queryResult.getString(syntax.getColumnTypeColumnIndex());
+      type = type.toLowerCase();
+
+      //        // remove the size of type
+      //        type = type.replaceAll("\\(.*\\)", "");
+
+      columns.add(
+          new ImmutablePair<>(queryResult.getString(syntax.getColumnNameColumnIndex()), type));
     }
+    
     return columns;
   }
 
@@ -191,42 +178,36 @@ public class JdbcConnection implements DbmsConnection {
   public List<String> getPartitionColumns(String schema, String table) throws VerdictDBDbmsException{
     List<String> partition = new ArrayList<>();
     DbmsQueryResult queryResult = executeQuery(syntax.getPartitionCommand(schema, table));
-    VerdictResultSet jdbcQueryResult = new VerdictResultSet(queryResult);
-    
-    try {
-      // the result of postgresql is a vector of column index
-      if (syntax instanceof PostgresqlSyntax) {
-        queryResult.next();
-        Object o = jdbcQueryResult.getObject(1);
-        String[] arr = o.toString().split(" ");
-        List<Pair<String, String>> columns = getColumns(schema, table);
-        for (int i=0; i<arr.length; i++) {
-          partition.add(columns.get(Integer.valueOf(arr[i])-1).getKey());
-        }
+    //    VerdictResultSet jdbcQueryResult = new VerdictResultSet(queryResult);
+
+    // the result of postgresql is a vector of column index
+    if (syntax instanceof PostgresqlSyntax) {
+      queryResult.next();
+      Object o = queryResult.getValue(0);
+      String[] arr = o.toString().split(" ");
+      List<Pair<String, String>> columns = getColumns(schema, table);
+      for (int i=0; i<arr.length; i++) {
+        partition.add(columns.get(Integer.valueOf(arr[i])-1).getKey());
       }
-      // Hive and Spark append partition information at the end of the "DESCRIBE TABLE" statement.
-      else if (syntax instanceof HiveSyntax || syntax instanceof SparkSyntax) {
-        boolean hasPartitionInfoStarted = false;
-        while (queryResult.next()) {
-          String name = queryResult.getString(0);
-          if (hasPartitionInfoStarted && (name.equalsIgnoreCase("# col_name") == false)) {
-            partition.add(name);
-          } else if (name.equalsIgnoreCase("# Partition Information")) {
-            hasPartitionInfoStarted = true;
-          }
-        }
-      }
-      else {
-        while (queryResult.next()) {
-          partition.add(jdbcQueryResult.getString(1));
-        }
-      }
-    } catch (SQLException e) {
-      throw new VerdictDBDbmsException(e);
-    } finally {
-      jdbcQueryResult.close();
     }
-    jdbcQueryResult.close();
+    // Hive and Spark append partition information at the end of the "DESCRIBE TABLE" statement.
+    else if (syntax instanceof HiveSyntax || syntax instanceof SparkSyntax) {
+      boolean hasPartitionInfoStarted = false;
+      while (queryResult.next()) {
+        String name = queryResult.getString(0);
+        if (hasPartitionInfoStarted && (name.equalsIgnoreCase("# col_name") == false)) {
+          partition.add(name);
+        } else if (name.equalsIgnoreCase("# Partition Information")) {
+          hasPartitionInfoStarted = true;
+        }
+      }
+    }
+    else {
+      while (queryResult.next()) {
+        partition.add(queryResult.getString(0));
+      }
+    }
+
     return partition;
   }
 

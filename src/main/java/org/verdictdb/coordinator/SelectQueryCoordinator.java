@@ -33,14 +33,14 @@ public class SelectQueryCoordinator {
 
   ScrambleMetaSet scrambleMetaSet;
 
-//  String defaultSchema;
-
-
-//  MetaDataProvider cachedMetaData;
-
   public SelectQueryCoordinator(DbmsConnection conn) {
     this.conn = conn;
-//    this.cachedMetaData = metaDataProvider;
+    this.scrambleMetaSet = new ScrambleMetaSet();
+  }
+  
+  public SelectQueryCoordinator(DbmsConnection conn, ScrambleMetaSet scrambleMetaSet) {
+    this.conn = conn;
+    this.scrambleMetaSet = scrambleMetaSet;
   }
 
   public ScrambleMetaSet getScrambleMetaSet() {

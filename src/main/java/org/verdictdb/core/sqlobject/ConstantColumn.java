@@ -59,7 +59,9 @@ public class ConstantColumn implements UnnamedColumn, SelectItem {
 
   @Override
   public ConstantColumn deepcopy() {
-    return ConstantColumn.valueOf((String)value);
+    ConstantColumn c = new ConstantColumn();
+    c.setValue(value);
+    return c;
   }
   
 }

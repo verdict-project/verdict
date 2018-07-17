@@ -24,10 +24,10 @@ public class SparkQueryResultTest {
   static List<List<Object>> contents = new ArrayList<>();
 
   @BeforeClass
-  public static void testSparkConnectionExecute() throws VerdictDBDbmsException {
-    spark = SparkSession.builder().appName("test")
+  public static void setupSpark() throws VerdictDBDbmsException {
+    spark = SparkSession.builder().appName("SparkConnectionResultTest")
         .master("local")
-        .config("spark.sql.catalogImplementation", "hive")
+        .enableHiveSupport()
         .getOrCreate();
     sparkConnection = new SparkConnection(spark, new SparkSyntax());
     sparkConnection.execute("CREATE SCHEMA IF NOT EXISTS myschema");
