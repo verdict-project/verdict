@@ -2,7 +2,6 @@ package org.verdictdb.coordinator;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.sql.Statement;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;

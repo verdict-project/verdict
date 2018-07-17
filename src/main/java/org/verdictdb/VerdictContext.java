@@ -10,12 +10,10 @@ import java.util.Properties;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.verdictdb.connection.CachedDbmsConnection;
 import org.verdictdb.connection.DbmsConnection;
-import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.coordinator.ExecutionContext;
 import org.verdictdb.coordinator.VerdictResultStream;
 import org.verdictdb.coordinator.VerdictSingleResult;
-import org.verdictdb.core.resulthandler.ExecutionResultReader;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.exception.VerdictDBException;
 

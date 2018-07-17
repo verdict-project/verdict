@@ -1,7 +1,6 @@
 package org.verdictdb.coordinator;
 
 import org.verdictdb.VerdictContext;
-import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.core.resulthandler.ExecutionResultReader;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBTypeException;

@@ -3,9 +3,9 @@ package org.verdictdb.sqlwriter;
 import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.verdictdb.core.sqlobject.CreateTableQuery;
 import org.verdictdb.core.sqlobject.CreateTableAsSelectQuery;
 import org.verdictdb.core.sqlobject.CreateTableDefinitionQuery;
+import org.verdictdb.core.sqlobject.CreateTableQuery;
 import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBTypeException;

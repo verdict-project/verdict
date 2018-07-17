@@ -1,11 +1,7 @@
 package org.verdictdb.sqlwriter;
 
 import org.verdictdb.core.querying.CreateSchemaQuery;
-import org.verdictdb.core.sqlobject.CreateTableAsSelectQuery;
-import org.verdictdb.core.sqlobject.CreateTableDefinitionQuery;
-import org.verdictdb.core.sqlobject.CreateTableQuery;
 import org.verdictdb.exception.VerdictDBException;
-import org.verdictdb.exception.VerdictDBTypeException;
 import org.verdictdb.sqlsyntax.SqlSyntax;
 
 public class CreateSchemaToSql {
