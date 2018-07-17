@@ -1,4 +1,4 @@
-[![Build Status](https://gitlab.com/pyongjoo/verdictdb-core/badges/master/build.svg)](https://gitlab.com/pyongjoo/verdictdb-core/pipelines)
+[![CircleCI](https://circleci.com/gh/umich-dbgroup/verdictdb-core/tree/master.svg?style=svg&circle-token=ef8e6fc7f668eceee0b2a2a10c1af3f05f667b6b)](https://circleci.com/gh/umich-dbgroup/verdictdb-core/tree/master)
 
 # Same SQL, Same DB, 100x-200x Faster Analytics
 
