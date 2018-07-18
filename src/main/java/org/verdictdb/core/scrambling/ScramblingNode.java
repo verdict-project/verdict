@@ -135,7 +135,7 @@ public class ScramblingNode extends CreateTableAsSelectNode {
         tierOperands.add(ConstantColumn.valueOf(i));
       }
       tierOperands.add(ConstantColumn.valueOf(tierPredicates.size()));
-      tierExpr = ColumnOp.whenthenelse(tierOperands);
+      tierExpr = ColumnOp.casewhen(tierOperands);
     }
     selectItems.add(new AliasedColumn(tierExpr, tierColumnName));
 
@@ -156,7 +156,7 @@ public class ScramblingNode extends CreateTableAsSelectNode {
       if (blockForTierOperands.size() <= 1) {
         blockForTierExpr = ConstantColumn.valueOf(0);
       } else {
-        blockForTierExpr = ColumnOp.whenthenelse(blockForTierOperands);
+        blockForTierExpr = ColumnOp.casewhen(blockForTierOperands);
       }
 
       if (i < tierCount-1) {
@@ -171,7 +171,7 @@ public class ScramblingNode extends CreateTableAsSelectNode {
     if (tierCount == 1) {
       blockExpr = blockOperands.get(0);
     } else {
-      blockExpr = ColumnOp.whenthenelse(blockOperands);
+      blockExpr = ColumnOp.casewhen(blockOperands);
     }
 
     selectItems.add(new AliasedColumn(blockExpr, blockColumnName));
