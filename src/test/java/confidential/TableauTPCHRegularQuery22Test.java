@@ -23,7 +23,7 @@ import static org.junit.Assert.assertEquals;
 public class TableauTPCHRegularQuery22Test {
 
 
-  static final String TEST_SCHEMA = "scrambling_coordinator_test";
+  static final String TEST_SCHEMA = "tpch_flat_orc_2";
 
   static DbmsConnection conn;
 

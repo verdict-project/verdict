@@ -74,6 +74,7 @@ public class TableauTPCHRegularQueryTest {
         "WHERE (`lineitem`.`l_shipdate` <= TIMESTAMP('1998-09-02 00:00:00'))\n" +
         "GROUP BY 4,\n" +
         "  5;\n";
+    stmt.execute("create schema if not exists `verdictdb_temp`");
     VerdictContext verdictContext = new VerdictContext(dbmsConnection);
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
@@ -128,6 +129,7 @@ public class TableauTPCHRegularQueryTest {
         "  GROUP BY 1\n" +
         ") `t0` ON (`part`.`p_partkey` = `t0`.`p_partkey`)\n" +
         "WHERE ((`region`.`r_name` = 'EUROPE') AND ((`partsupp`.`ps_supplycost` = `t0`.`__measure__0`) AND (`part`.`p_size` = 15) AND (RIGHT(RTRIM(`part`.`p_type`), LENGTH('BRASS')) = 'BRASS')));\n";
+    stmt.execute("create schema if not exists `verdictdb_temp`");
     VerdictContext verdictContext = new VerdictContext(dbmsConnection);
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
@@ -178,6 +180,7 @@ public class TableauTPCHRegularQueryTest {
         "GROUP BY 1,\n" +
         "  2,\n" +
         "  3;\n";
+    stmt.execute("create schema if not exists `verdictdb_temp`");
     VerdictContext verdictContext = new VerdictContext(dbmsConnection);
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
@@ -207,6 +210,7 @@ public class TableauTPCHRegularQueryTest {
         "  INNER JOIN `orders` ON (`lineitem`.`l_orderkey` = `orders`.`o_orderkey`)\n" +
         "WHERE ((`lineitem`.`l_commitdate` < `lineitem`.`l_receiptdate`) AND (`orders`.`o_orderdate` >= TIMESTAMP('1993-07-01 00:00:00')) AND (`orders`.`o_orderdate` < TIMESTAMP('1993-10-01 00:00:00')))\n" +
         "GROUP BY 2;\n";
+    stmt.execute("create schema if not exists `verdictdb_temp`");
     VerdictContext verdictContext = new VerdictContext(dbmsConnection);
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
@@ -239,6 +243,7 @@ public class TableauTPCHRegularQueryTest {
         "  INNER JOIN `nation` `N2` ON (`supplier`.`s_nationkey` = `N2`.`n_nationkey`)\n" +
         "WHERE ((`customer`.`c_nationkey` = `supplier`.`s_nationkey`) AND (`orders`.`o_orderdate` >= TIMESTAMP('1994-01-01 00:00:00')) AND (`orders`.`o_orderdate` < TIMESTAMP('1995-01-01 00:00:00')) AND (`region`.`r_name` = 'ASIA'))\n" +
         "GROUP BY 1;\n";
+    stmt.execute("create schema if not exists `verdictdb_temp`");
     VerdictContext verdictContext = new VerdictContext(dbmsConnection);
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
@@ -264,6 +269,7 @@ public class TableauTPCHRegularQueryTest {
         "FROM `lineitem`\n" +
         "WHERE ((`lineitem`.`l_discount` >= 0.05) AND (`lineitem`.`l_discount` <= 0.07) AND (`lineitem`.`l_quantity` <= 23.00) AND (`lineitem`.`l_shipdate` >= TIMESTAMP('1994-01-01 00:00:00')) AND (`lineitem`.`l_shipdate` < TIMESTAMP('1995-01-01 00:00:00')))\n" +
         "HAVING (COUNT(1) > 0);";
+    stmt.execute("create schema if not exists `verdictdb_temp`");
     VerdictContext verdictContext = new VerdictContext(dbmsConnection);
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
@@ -298,6 +304,7 @@ public class TableauTPCHRegularQueryTest {
         "GROUP BY 1,\n" +
         "  2,\n" +
         "  4;\n";
+    stmt.execute("create schema if not exists `verdictdb_temp`");
     VerdictContext verdictContext = new VerdictContext(dbmsConnection);
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
@@ -335,6 +342,7 @@ public class TableauTPCHRegularQueryTest {
         "WHERE ((`orders`.`o_orderdate` >= DATE('1995-01-01')) AND (`orders`.`o_orderdate` <= DATE('1996-12-31')) AND (`part`.`p_type` = 'ECONOMY ANODIZED STEEL') AND (`region`.`r_name` = 'AMERICA'))\n" +
         "GROUP BY 1,\n" +
         "  3;\n";
+    stmt.execute("create schema if not exists `verdictdb_temp`");
     VerdictContext verdictContext = new VerdictContext(dbmsConnection);
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
@@ -369,6 +377,7 @@ public class TableauTPCHRegularQueryTest {
         "WHERE (LOCATE('green',`part`.`p_name`) > 0)\n" +
         "GROUP BY 1,\n" +
         "  3;\n";
+    stmt.execute("create schema if not exists `verdictdb_temp`");
     VerdictContext verdictContext = new VerdictContext(dbmsConnection);
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
@@ -421,6 +430,7 @@ public class TableauTPCHRegularQueryTest {
         "  5,\n" +
         "  6,\n" +
         "  7;\n";
+    stmt.execute("create schema if not exists `verdictdb_temp`");
     VerdictContext verdictContext = new VerdictContext(dbmsConnection);
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
@@ -455,6 +465,7 @@ public class TableauTPCHRegularQueryTest {
         "  INNER JOIN `nation` ON (`supplier`.`s_nationkey` = `nation`.`n_nationkey`)\n" +
         "WHERE (`nation`.`n_name` = 'GERMANY')\n" +
         "GROUP BY 1;\n";
+    stmt.execute("create schema if not exists `verdictdb_temp`");
     VerdictContext verdictContext = new VerdictContext(dbmsConnection);
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
@@ -484,6 +495,7 @@ public class TableauTPCHRegularQueryTest {
         "WHERE ((`lineitem`.`l_commitdate` < `lineitem`.`l_receiptdate`) AND (`lineitem`.`l_shipdate` < `lineitem`.`l_commitdate`) AND (`lineitem`.`l_receiptdate` >= TIMESTAMP('1994-01-01 00:00:00')) AND (`lineitem`.`l_receiptdate` < TIMESTAMP('1995-01-01 00:00:00')) AND (`lineitem`.`l_shipmode` IN ('MAIL', 'SHIP')))\n" +
         "GROUP BY 1,\n" +
         "  2;\n";
+    stmt.execute("create schema if not exists `verdictdb_temp`");
     VerdictContext verdictContext = new VerdictContext(dbmsConnection);
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
@@ -517,6 +529,7 @@ public class TableauTPCHRegularQueryTest {
         "  GROUP BY 1\n" +
         ") `t0` ON (`customer`.`c_custkey` = `t0`.`c_custkey`)\n" +
         "GROUP BY 1;\n";
+    stmt.execute("create schema if not exists `verdictdb_temp`");
     VerdictContext verdictContext = new VerdictContext(dbmsConnection);
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
@@ -552,6 +565,7 @@ public class TableauTPCHRegularQueryTest {
         ") `t0` ON (`part`.`p_type` = `t0`.`p_type`)\n" +
         "WHERE ((`lineitem`.`l_shipdate` >= TIMESTAMP('1995-09-01 00:00:00')) AND (`lineitem`.`l_shipdate` < TIMESTAMP('1995-10-01 00:00:00')))\n" +
         "GROUP BY 1;\n";
+    stmt.execute("create schema if not exists `verdictdb_temp`");
     VerdictContext verdictContext = new VerdictContext(dbmsConnection);
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
@@ -603,6 +617,7 @@ public class TableauTPCHRegularQueryTest {
         "  2,\n" +
         "  3,\n" +
         "  4;\n";
+    stmt.execute("create schema if not exists `verdictdb_temp`");
     VerdictContext verdictContext = new VerdictContext(dbmsConnection);
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
@@ -644,6 +659,7 @@ public class TableauTPCHRegularQueryTest {
         "GROUP BY 2,\n" +
         "  3,\n" +
         "  4;\n";
+    stmt.execute("create schema if not exists `verdictdb_temp`");
     VerdictContext verdictContext = new VerdictContext(dbmsConnection);
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
@@ -678,6 +694,7 @@ public class TableauTPCHRegularQueryTest {
         ") `t0` ON (`lineitem`.`l_partkey` = `t0`.`l_partkey`)\n" +
         "WHERE ((((0.20000000000000001 * `t0`.`__measure__0`) - `lineitem`.`l_quantity`) >= -1.0000000000000001E-17) AND (`part`.`p_brand` = 'Brand#23') AND (`part`.`p_container` = 'MED BOX'))\n" +
         "HAVING (COUNT(1) > 0);\n";
+    stmt.execute("create schema if not exists `verdictdb_temp`");
     VerdictContext verdictContext = new VerdictContext(dbmsConnection);
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
@@ -714,6 +731,7 @@ public class TableauTPCHRegularQueryTest {
         "  5,\n" +
         "  6\n" +
         "HAVING (SUM(`lineitem`.`l_quantity`) >= 300.99999999999699);\n";
+    stmt.execute("create schema if not exists `verdictdb_temp`");
     VerdictContext verdictContext = new VerdictContext(dbmsConnection);
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
@@ -769,6 +787,7 @@ public class TableauTPCHRegularQueryTest {
         ") `t2` ON (`part`.`p_container` = `t2`.`p_container`)\n" +
         "WHERE ((((NOT ISNULL(`t0`.`_Tableau_join_flag`)) AND (`part`.`p_brand` = 'Brand#12') AND (`lineitem`.`l_quantity` >= 1) AND (`lineitem`.`l_quantity` <= 11) AND (`part`.`p_size` >= 1) AND (`part`.`p_size` <= 5)) OR ((NOT ISNULL(`t1`.`_Tableau_join_flag`)) AND (`part`.`p_brand` = 'Brand#23') AND (`lineitem`.`l_quantity` >= 10) AND (`lineitem`.`l_quantity` <= 20) AND (`part`.`p_size` >= 1) AND (`part`.`p_size` <= 10)) OR ((NOT ISNULL(`t2`.`_Tableau_join_flag`)) AND (`part`.`p_brand` = 'Brand#34') AND (`lineitem`.`l_quantity` >= 20) AND (`lineitem`.`l_quantity` <= 30) AND (`part`.`p_size` >= 1) AND (`part`.`p_size` <= 15))) AND (`lineitem`.`l_shipinstruct` = 'DELIVER IN PERSON') AND (`lineitem`.`l_shipmode` = 'AIR'))\n" +
         "HAVING (COUNT(1) > 0);\n";
+    stmt.execute("create schema if not exists `verdictdb_temp`");
     VerdictContext verdictContext = new VerdictContext(dbmsConnection);
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
@@ -807,6 +826,7 @@ public class TableauTPCHRegularQueryTest {
         "WHERE ((`N2`.`n_name` = 'CANADA') AND (LEFT(`part`.`p_name`, LENGTH('forest')) = 'forest'))\n" +
         "GROUP BY 1,\n" +
         "  2;\n";
+    stmt.execute("create schema if not exists `verdictdb_temp`");
     VerdictContext verdictContext = new VerdictContext(dbmsConnection);
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
@@ -851,6 +871,7 @@ public class TableauTPCHRegularQueryTest {
         "GROUP BY 1\n" +
         "ORDER BY `$__alias__0` DESC\n" +
         "LIMIT 100;\n";
+    stmt.execute("create schema if not exists `verdictdb_temp`");
     VerdictContext verdictContext = new VerdictContext(dbmsConnection);
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
