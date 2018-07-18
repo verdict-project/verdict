@@ -66,7 +66,8 @@ public class SelectQueryToSql {
       throw new VerdictDBTypeException("asterisk is not expected in the groupby clause.");
     }
     if (column instanceof AliasReference) {
-      return quoteName(((AliasReference) column).getAliasName());
+      AliasReference aliasedColumn = (AliasReference) column;
+      return quoteName(aliasedColumn.getAliasName());
     } else {
       return unnamedColumnToSqlPart((UnnamedColumn) column);
     }
@@ -75,7 +76,10 @@ public class SelectQueryToSql {
   String unnamedColumnToSqlPart(UnnamedColumn column) throws VerdictDBException {
     if (column instanceof BaseColumn) {
       BaseColumn base = (BaseColumn) column;
-      return base.getTableSourceAlias() + "." + quoteName(base.getColumnName());
+      if (base.getTableSourceAlias().equals("")) {
+        return quoteName(base.getColumnName());
+      }
+      else return base.getTableSourceAlias() + "." + quoteName(base.getColumnName());
     } else if (column instanceof ConstantColumn) {
       return ((ConstantColumn) column).getValue().toString();
     } else if (column instanceof AsteriskColumn) {
@@ -118,7 +122,7 @@ public class SelectQueryToSql {
 //        + " else " + withParentheses(columnOp.getOperand(2))
 //        + " end";
 //      }
-      else if (columnOp.getOpType().equals("whenthenelse")) {
+      else if (columnOp.getOpType().equals("casewhen")) {
         String sql = "case";
         for (int i=0; i<columnOp.getOperands().size()-1;i=i+2) {
           sql = sql + " when " + withParentheses(columnOp.getOperand(i)) + " then " + withParentheses(columnOp.getOperand(i+1));
@@ -354,9 +358,12 @@ public class SelectQueryToSql {
           sql.append(" right join ");
         } else if (((JoinTable) relation).getJoinTypeList().get(i - 1).equals(JoinTable.JoinType.rightouter)) {
           sql.append(" right outer join ");
+        } else if (((JoinTable) relation).getJoinTypeList().get(i - 1).equals(JoinTable.JoinType.cross)) {
+          sql.append(" cross join ");
         }
-        sql.append(relationToSqlPart(((JoinTable) relation).getJoinList().get(i)) + " on " +
-            withParentheses(((JoinTable) relation).getCondition().get(i - 1)));
+        sql.append(relationToSqlPart(((JoinTable) relation).getJoinList().get(i)));
+        if (((JoinTable) relation).getCondition().get(i-1)!=null)
+          sql.append(" on " + withParentheses(((JoinTable) relation).getCondition().get(i - 1)));
       }
       //sql.append(")");
       if (((JoinTable) relation).getAliasName().isPresent()) {
@@ -393,6 +400,10 @@ public class SelectQueryToSql {
 
   String quoteName(String name) {
     String quoteString = syntax.getQuoteString();
-    return quoteString + name + quoteString;
+    // already quoted
+    if (name.startsWith(quoteString)&&name.endsWith(quoteString)) {
+      return name;
+    }
+    else return quoteString + name + quoteString;
   }
 }

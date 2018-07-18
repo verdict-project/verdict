@@ -164,25 +164,10 @@ public class RelationGen extends VerdictSQLParserBaseVisitor<AbstractRelation> {
     if (ctx.GROUP() != null) {
       List<GroupingAttribute> groupby = new ArrayList<GroupingAttribute>();
       for (VerdictSQLParser.Group_by_itemContext g : ctx.group_by_item()) {
-
-        class GroupbyGen extends VerdictSQLParserBaseVisitor<GroupingAttribute> {
-
-          //          MetaData meta;
-          //          public GroupbyGen(MetaData meta) {this.meta = meta; }
-          public GroupbyGen() {}
-
-          @Override
-          public GroupingAttribute visitColumn_ref_expression(VerdictSQLParser.Column_ref_expressionContext ctx) {
-            String[] t = ctx.getText().split("\\.");
-            if (t.length >= 2) {
-              return new AliasReference(t[0], t[1]);
-            } else {
-              return new AliasReference(t[0]);
-            }
-          }
-        }
-        GroupbyGen expg = new GroupbyGen();
-        GroupingAttribute gexpr = expg.visit(g);
+        GroupingAttribute gexpr = null;
+        ExpressionGen expressionGen = new ExpressionGen();
+        UnnamedColumn c = expressionGen.visit(g);
+        gexpr = c;
         boolean aliasFound = false;
         if (!aliasFound) {
           groupby.add(gexpr);
@@ -254,12 +239,24 @@ public class RelationGen extends VerdictSQLParserBaseVisitor<AbstractRelation> {
       joinCond = cond;
       return r;
     }
+    else if (ctx.CROSS() != null) {
+      AbstractRelation r = this.visit(ctx.table_source());
+      joinType = JoinTable.JoinType.cross;
+      joinCond = null;
+      return r;
+    }
     else {
       AbstractRelation r = this.visit(ctx.table_source());
       CondGen g = new CondGen();
-      UnnamedColumn cond = g.visit(ctx.search_condition());
-      joinType = JoinTable.JoinType.inner;
-      joinCond = cond;
+      if (ctx.search_condition()!=null) {
+        UnnamedColumn cond = g.visit(ctx.search_condition());
+        joinType = JoinTable.JoinType.inner;
+        joinCond = cond;
+      }
+      else {
+        joinType = JoinTable.JoinType.cross;
+        joinCond = null;
+      }
       return r;
     }
   }

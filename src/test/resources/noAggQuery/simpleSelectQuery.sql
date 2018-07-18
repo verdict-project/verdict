@@ -1,0 +1,1 @@
+select r_regionkey from test.region order by r_regionkey;

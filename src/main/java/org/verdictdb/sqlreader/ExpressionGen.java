@@ -146,9 +146,20 @@ public class ExpressionGen extends VerdictSQLParserBaseVisitor<UnnamedColumn> {
 
       @Override
       public ColumnOp visitUnary_manipulation_function(VerdictSQLParser.Unary_manipulation_functionContext ctx) {
-        String fname = ctx.function_name.getText().toLowerCase();
         ExpressionGen g = new ExpressionGen();
-        return new ColumnOp(fname, g.visit(ctx.expression()));
+        if (ctx.predicate_function()!=null) {
+          String fname = ctx.predicate_function().function_name.getText().toLowerCase();
+          if (ctx.NOT()!=null) {
+            return new ColumnOp("not " + fname, g.visit(ctx.predicate_function().expression()));
+          }
+          else return new ColumnOp(fname, g.visit(ctx.expression()));
+        }
+        String fname = ctx.function_name.getText().toLowerCase();
+        if (fname.equals("cast")) {
+          return new ColumnOp(fname, Arrays.asList(g.visit(ctx.cast_as_expression().expression()),
+              ConstantColumn.valueOf(ctx.cast_as_expression().data_type().getText())));
+        }
+        else return new ColumnOp(fname, g.visit(ctx.expression()));
       }
 
       @Override
@@ -236,35 +247,22 @@ public class ExpressionGen extends VerdictSQLParserBaseVisitor<UnnamedColumn> {
   @Override
   public ColumnOp visitCase_expr(VerdictSQLParser.Case_exprContext ctx) {
     if (ctx.search_condition() != null) {
-      if (ctx.expression(1) != null) {
-        return new ColumnOp("whenthenelse", Arrays.asList(
-            getSearch_condition(ctx.search_condition()),
-            visit(ctx.expression(0)),
-            visit(ctx.expression(1))
-        ));
-      } else {
-        return new ColumnOp("whenthenelse", Arrays.asList(
-            getSearch_condition(ctx.search_condition()),
-            visit(ctx.expression(0))
-        ));
+      List<UnnamedColumn> operands = new ArrayList<>();
+      CondGen gen = new CondGen();
+      for (VerdictSQLParser.ExpressionContext expressionContext:ctx.expression()) {
+        int index = ctx.expression().indexOf(expressionContext);
+        if (index!=ctx.expression().size()-1)
+          operands.add(gen.visit(ctx.search_condition(index)));
+        operands.add(visit(expressionContext));
       }
+      return new ColumnOp("casewhen", operands);
     } else {
-      if (ctx.expression(3) != null) {
-        return new ColumnOp("casethenelse", Arrays.asList(
-            getSearch_condition(ctx.search_condition()),
-            visit(ctx.expression(0)),
-            visit(ctx.expression(1)),
-            visit(ctx.expression(2)),
-            visit(ctx.expression(3))
-        ));
-      } else {
-        return new ColumnOp("casethenelse", Arrays.asList(
-            getSearch_condition(ctx.search_condition()),
-            visit(ctx.expression(0)),
-            visit(ctx.expression(1)),
-            visit(ctx.expression(2))
-        ));
+      List<UnnamedColumn> operands = new ArrayList<>();
+      ExpressionGen gen = new ExpressionGen();
+      for (VerdictSQLParser.ExpressionContext expressionContext:ctx.expression()) {
+        operands.add(gen.visit(expressionContext));
       }
+      return new ColumnOp("caseexprwhen", operands);
     }
   }
 
