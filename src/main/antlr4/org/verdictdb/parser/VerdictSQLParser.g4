@@ -375,7 +375,7 @@ predicate
     | expression NOT? LIKE expression (ESCAPE expression)?                  # like_predicate
     | expression IS null_notnull                                            # is_predicate
     | '(' search_condition ')'                                              # bracket_predicate
-    | expression                                                            # func_predicate
+    | predicate_function                                                    # func_predicate
     ;
 
 query_expression
@@ -656,10 +656,15 @@ unary_manipulation_function
      | ARRAY_TO_JSON | ROW_TO_JSON | JSON_OBJECT | JSON_ARRAY_LENGTH | JSON_EACH | JSON_EACH_TEXT | JSON_OBJECT_KEYS
      | JSON_ARRAY_ELEMENTS | JSON_ARRAY_ELEMENTS_TEXT | JSON_TYPEOF | JSON_TO_RECORD | JSON_TO_RECORDSET | JSON_STRIP_NULLS
      | JSONB_PRETTY | CURRVAL | NEXTVAL | ARRAY_NDIMS | ARRAY_DIMS | CARDINALITY | ISEMPTY | LOWER_INC | UPPER_INC
-     | LOWER_INF | UPPER_INF | ARRAY_AGG | BIT_AND | BIT_OR | BOOL_AND | BOOL_OR | EVERY | JSON_AGG | JSONB_AGG | NOT_ISNULL
+     | LOWER_INF | UPPER_INF | ARRAY_AGG | BIT_AND | BIT_OR | BOOL_AND | BOOL_OR | EVERY | JSON_AGG | JSONB_AGG
      | JSON_OBJECT_AGG | JSONB_OBJECT_AGG | STRING_AGG)
       '(' expression ')'
     | function_name=CAST '(' cast_as_expression ')'
+    | NOT? predicate_function
+    ;
+
+predicate_function
+    : function_name = ISNULL '(' expression ')'
     ;
 
 noparam_manipulation_function

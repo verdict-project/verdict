@@ -146,8 +146,15 @@ public class ExpressionGen extends VerdictSQLParserBaseVisitor<UnnamedColumn> {
 
       @Override
       public ColumnOp visitUnary_manipulation_function(VerdictSQLParser.Unary_manipulation_functionContext ctx) {
-        String fname = ctx.function_name.getText().toLowerCase();
         ExpressionGen g = new ExpressionGen();
+        if (ctx.predicate_function()!=null) {
+          String fname = ctx.predicate_function().function_name.getText().toLowerCase();
+          if (ctx.NOT()!=null) {
+            return new ColumnOp("not " + fname, g.visit(ctx.predicate_function().expression()));
+          }
+          else return new ColumnOp(fname, g.visit(ctx.expression()));
+        }
+        String fname = ctx.function_name.getText().toLowerCase();
         if (fname.equals("cast")) {
           return new ColumnOp(fname, Arrays.asList(g.visit(ctx.cast_as_expression().expression()),
               ConstantColumn.valueOf(ctx.cast_as_expression().data_type().getText())));

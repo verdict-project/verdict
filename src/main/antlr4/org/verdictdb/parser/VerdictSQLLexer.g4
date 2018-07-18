@@ -465,7 +465,6 @@ NEXTVAL:                         N E X T V A L;
 NOCOUNT:                         N O C O U N T;
 NOEXPAND:                        N O E X P A N D;
 NORECOMPUTE:                     N O R E C O M P U T E;
-NOT_ISNULL:                      N O T ' ' I S N U L L;
 NOW:                             N O W;
 NPOINTS:                         N P O I N T S;
 NTILE:                           N T I L E;
