@@ -20,14 +20,23 @@ import java.util.Map;
 public class CreateScrambledTableNode extends QueryNodeWithPlaceHolders {
 
   private static final long serialVersionUID = 1L;
+
   private IdCreator namer;
+
   protected String originalSchemaName;
+
   protected String originalTableName;
+
   protected String tierColumnName;
+
   protected String blockColumnName;
+
   private String newTableSchemaName;
+
   private String newTableName;
+
   private List<String> partitionColumns = new ArrayList<>();
+
   protected ScramblingMethod method;
 
 

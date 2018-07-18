@@ -17,14 +17,23 @@ import java.util.List;
 public class CreateScrambledTableQuery extends CreateTableQuery {
 
   private static final long serialVersionUID = 1L;
+
   protected String originalSchemaName;
+
   protected String originalTableName;
+
   protected String tierColumnName;
+
   protected String blockColumnName;
+
   protected SelectQuery select;
+
   protected List<Pair<String, String>> columnMeta;
+
   protected List<String> partitionColumns = new ArrayList<>();
+
   protected boolean overwrite = false;
+
   protected int blockCount = 1;
 
   public CreateScrambledTableQuery(String originalSchemaName, String originalTableName, String schemaName,
