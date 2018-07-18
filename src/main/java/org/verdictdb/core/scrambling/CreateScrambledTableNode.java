@@ -1,10 +1,11 @@
-package org.verdictdb.core.querying;
+package org.verdictdb.core.scrambling;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.core.execplan.ExecutionInfoToken;
-import org.verdictdb.core.scrambling.ScramblingMethod;
-import org.verdictdb.core.scrambling.ScramblingPlan;
+import org.verdictdb.core.querying.ExecutableNodeBase;
+import org.verdictdb.core.querying.IdCreator;
+import org.verdictdb.core.querying.QueryNodeWithPlaceHolders;
 import org.verdictdb.core.sqlobject.CreateScrambledTableQuery;
 import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.core.sqlobject.SqlConvertible;
@@ -12,7 +13,6 @@ import org.verdictdb.exception.VerdictDBException;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created by Dong Young Yoon on 7/17/18.

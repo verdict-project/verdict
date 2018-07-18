@@ -36,15 +36,22 @@ public class CreateTableToSql {
     return sql;
   }
 
-  // Syntax must be postgres.
   private String createPartitionTableToSql(CreateScrambledTableQuery query) throws VerdictDBException {
+
+    // 1. This method should only get called when the target DB is postgres.
+    // 2. Currently, partition tables in postgres must have a single partition column as we use 'partition by list'.
+    if (!(syntax instanceof PostgresqlSyntax)) {
+      throw new VerdictDBException("Target database must be Postgres.");
+    } else if (query.getPartitionColumns().size() != 1) {
+      throw new VerdictDBException("Scrambled tables must have a single partition column in Postgres.");
+    }
+
     StringBuilder sql = new StringBuilder();
 
     int blockCount = query.getBlockCount();
     String schemaName = query.getSchemaName();
     String tableName = query.getTableName();
     SelectQuery select = query.getSelect();
-
 
     // table
     sql.append("create table ");
@@ -64,54 +71,42 @@ public class CreateTableToSql {
     sql.append(")");
 
     // partitions
-    if (syntax.doesSupportTablePartitioning() && query.getPartitionColumns().size() > 0) {
-      sql.append(" ");
-      sql.append(syntax.getPartitionByInCreateTable());
-      sql.append(" (");
-      List<String> partitionColumns = query.getPartitionColumns();
-      boolean isFirstColumn = true;
-      for (String col : partitionColumns) {
-        if (isFirstColumn) {
-          sql.append(quoteName(col));
-          isFirstColumn = false;
-        } else {
-          sql.append(", " + quoteName(col));
-        }
+    sql.append(" ");
+    sql.append(syntax.getPartitionByInCreateTable());
+    sql.append(" (");
+    List<String> partitionColumns = query.getPartitionColumns();
+    boolean isFirstColumn = true;
+    for (String col : partitionColumns) {
+      if (isFirstColumn) {
+        sql.append(quoteName(col));
+        isFirstColumn = false;
+      } else {
+        sql.append(", " + quoteName(col));
       }
-      sql.append(")");
-      if (syntax instanceof PostgresqlSyntax) {
-        sql.append("; ");
-        // create child partition tables for postgres
-        for (int blockNum = 0; blockNum < blockCount; ++blockNum) {
-          sql.append("create table ");
-          if (query.isIfNotExists()) {
-            sql.append("if not exists ");
-          }
-          sql.append(quoteName(schemaName));
-          sql.append(".");
-          sql.append(quoteName(String.format("%s" + PostgresqlSyntax.CHILD_PARTITION_TABLE_SUFFIX,
-              tableName, blockNum)));
-          sql.append(String.format(" partition of %s.%s for values in (%d); ",
-                  quoteName(schemaName), quoteName(tableName), blockNum));
+    }
+    sql.append(")");
+    if (syntax instanceof PostgresqlSyntax) {
+      sql.append("; ");
+      // create child partition tables for postgres
+      for (int blockNum = 0; blockNum < blockCount; ++blockNum) {
+        sql.append("create table ");
+        if (query.isIfNotExists()) {
+          sql.append("if not exists ");
         }
+        sql.append(quoteName(schemaName));
+        sql.append(".");
+        sql.append(quoteName(String.format("%s" + PostgresqlSyntax.CHILD_PARTITION_TABLE_SUFFIX,
+            tableName, blockNum)));
+        sql.append(String.format(" partition of %s.%s for values in (%d); ",
+            quoteName(schemaName), quoteName(tableName), blockNum));
       }
-    } else if (syntax instanceof SparkSyntax || syntax instanceof HiveSyntax) {
-      sql.append(" using parquet");
     }
 
-    if (syntax instanceof PostgresqlSyntax) {
-      sql.append("insert into ");
-      sql.append(quoteName(schemaName));
-      sql.append(".");
-      sql.append(quoteName(tableName));
-      sql.append(" ");
-    } else {
-      if (syntax.isAsRequiredBeforeSelectInCreateTable()) {
-        sql.append(" as ");
-      } else {
-        sql.append(" ");
-      }
-    }
+    sql.append("insert into ");
+    sql.append(quoteName(schemaName));
+    sql.append(".");
+    sql.append(quoteName(tableName));
+    sql.append(" ");
 
     // select
     SelectQueryToSql selectWriter = new SelectQueryToSql(syntax);
