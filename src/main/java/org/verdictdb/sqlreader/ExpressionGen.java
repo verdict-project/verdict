@@ -248,24 +248,14 @@ public class ExpressionGen extends VerdictSQLParserBaseVisitor<UnnamedColumn> {
           operands.add(gen.visit(ctx.search_condition(index)));
         operands.add(visit(expressionContext));
       }
-      return new ColumnOp("whenthenelse", operands);
+      return new ColumnOp("casewhen", operands);
     } else {
-      if (ctx.expression(3) != null) {
-        return new ColumnOp("casethenelse", Arrays.asList(
-            getSearch_condition(ctx.search_condition()),
-            visit(ctx.expression(0)),
-            visit(ctx.expression(1)),
-            visit(ctx.expression(2)),
-            visit(ctx.expression(3))
-        ));
-      } else {
-        return new ColumnOp("casethenelse", Arrays.asList(
-            getSearch_condition(ctx.search_condition()),
-            visit(ctx.expression(0)),
-            visit(ctx.expression(1)),
-            visit(ctx.expression(2))
-        ));
+      List<UnnamedColumn> operands = new ArrayList<>();
+      ExpressionGen gen = new ExpressionGen();
+      for (VerdictSQLParser.ExpressionContext expressionContext:ctx.expression()) {
+        operands.add(gen.visit(expressionContext));
       }
+      return new ColumnOp("caseexprwhen", operands);
     }
   }
 
