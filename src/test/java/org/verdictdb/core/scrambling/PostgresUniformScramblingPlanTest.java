@@ -1,5 +1,7 @@
 package org.verdictdb.core.scrambling;
 
+import static org.junit.Assert.*;
+
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -9,6 +11,7 @@ import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.core.execplan.ExecutablePlanRunner;
 import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.sqlsyntax.PostgresqlSyntax;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -86,7 +89,8 @@ public class PostgresUniformScramblingPlanTest {
 
   @Test
   public void testUniformScramblingPlanNonEmptyTable() throws VerdictDBException, SQLException {
-    for (int i = 0; i < 10; i++) {
+    int numRow = 10;
+    for (int i = 0; i < numRow; i++) {
       conn.createStatement().execute(String.format("insert into oldschema.oldtable values (%d, '%s')",
               i, RandomStringUtils.randomAlphanumeric(4)));
     }
@@ -100,7 +104,7 @@ public class PostgresUniformScramblingPlanTest {
     Map<String, String> options = new HashMap<>();
     options.put("tierColumnName", "tiercolumn");
     options.put("blockColumnName", "blockcolumn");
-    options.put("blockCount", "3");
+    options.put("blockCount", "3"); // dongyoungy: This is currently not supported.
 
     conn.createStatement().execute(
         String.format("drop table if exists %s.%s", newSchemaName, newTableName));
@@ -113,8 +117,21 @@ public class PostgresUniformScramblingPlanTest {
     DbmsConnection dbmsConn = JdbcConnection.create(conn);
     ExecutablePlanRunner.runTillEnd(dbmsConn, plan);
 
+    int blockCount = method.getBlockCount();
+
     DbmsQueryResult result = dbmsConn.execute(String.format("select * from %s.%s", newSchemaName, newTableName));
     result.printContent();
+
+    int partitionRowTotal = 0;
+    for (int i = 0; i < blockCount; ++i) {
+      DbmsQueryResult r = dbmsConn.execute(String.format("select count(*) from %s.%s" + PostgresqlSyntax.CHILD_PARTITION_TABLE_SUFFIX,
+          newSchemaName, newTableName, i));
+      if (r.next()) {
+        partitionRowTotal += r.getInt(0);
+      }
+    }
+
+    assertEquals(numRow, partitionRowTotal);
 
     conn.createStatement().execute("delete from oldschema.oldtable");
   }

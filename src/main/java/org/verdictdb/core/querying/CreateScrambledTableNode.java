@@ -78,6 +78,9 @@ public class CreateScrambledTableNode extends QueryNodeWithPlaceHolders {
         break;
       }
     }
+    if (columnMeta == null) {
+      throw new VerdictDBException("Column meta is null.");
+    }
 
     CreateScrambledTableQuery createQuery =
         new CreateScrambledTableQuery(originalSchemaName, originalTableName, newTableSchemaName,

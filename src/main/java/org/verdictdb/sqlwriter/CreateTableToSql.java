@@ -90,7 +90,8 @@ public class CreateTableToSql {
           }
           sql.append(quoteName(schemaName));
           sql.append(".");
-          sql.append(quoteName(String.format("%s_vpart%05d", tableName, blockNum)));
+          sql.append(quoteName(String.format("%s" + PostgresqlSyntax.CHILD_PARTITION_TABLE_SUFFIX,
+              tableName, blockNum)));
           sql.append(String.format(" partition of %s.%s for values in (%d); ",
                   quoteName(schemaName), quoteName(tableName), blockNum));
         }
