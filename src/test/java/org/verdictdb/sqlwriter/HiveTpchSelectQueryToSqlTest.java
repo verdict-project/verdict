@@ -557,7 +557,7 @@ public class HiveTpchSelectQueryToSqlTest {
             new BaseColumn("all_nations", "o_year"),
             new AliasedColumn(
                 new ColumnOp("divide", Arrays.<UnnamedColumn>asList(
-                    new ColumnOp("sum", new ColumnOp("whenthenelse", Arrays.<UnnamedColumn>asList(
+                    new ColumnOp("sum", new ColumnOp("casewhen", Arrays.<UnnamedColumn>asList(
                         new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                             new BaseColumn("all_nations", "nation"),
                             ConstantColumn.valueOf("'PERU'")
@@ -787,7 +787,7 @@ public class HiveTpchSelectQueryToSqlTest {
     SelectQuery relation = SelectQuery.create(
         Arrays.<SelectItem>asList(
             new BaseColumn("l", "l_shipmode"),
-            new AliasedColumn(new ColumnOp("sum", new ColumnOp("whenthenelse", Arrays.<UnnamedColumn>asList(
+            new AliasedColumn(new ColumnOp("sum", new ColumnOp("casewhen", Arrays.<UnnamedColumn>asList(
                 new ColumnOp("or", Arrays.<UnnamedColumn>asList(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                     new BaseColumn("o", "o_orderpriority"),
                     ConstantColumn.valueOf("'1-URGENT'")
@@ -800,7 +800,7 @@ public class HiveTpchSelectQueryToSqlTest {
                 ConstantColumn.valueOf(1),
                 ConstantColumn.valueOf(0)
                 ))), "high_line_count"),
-            new AliasedColumn(new ColumnOp("sum", new ColumnOp("whenthenelse", Arrays.<UnnamedColumn>asList(
+            new AliasedColumn(new ColumnOp("sum", new ColumnOp("casewhen", Arrays.<UnnamedColumn>asList(
                 new ColumnOp("and", Arrays.<UnnamedColumn>asList(new ColumnOp("notequal", Arrays.<UnnamedColumn>asList(
                     new BaseColumn("o", "o_orderpriority"),
                     ConstantColumn.valueOf("'1-URGENT'")
@@ -903,7 +903,7 @@ public class HiveTpchSelectQueryToSqlTest {
             new AliasedColumn(new ColumnOp("divide", Arrays.<UnnamedColumn>asList(
                 new ColumnOp("multiply", Arrays.<UnnamedColumn>asList(
                     ConstantColumn.valueOf("100.00"),
-                    new ColumnOp("sum", new ColumnOp("whenthenelse", Arrays.<UnnamedColumn>asList(
+                    new ColumnOp("sum", new ColumnOp("casewhen", Arrays.<UnnamedColumn>asList(
                         new ColumnOp("like", Arrays.<UnnamedColumn>asList(
                             new BaseColumn("p", "p_type"),
                             ConstantColumn.valueOf("'PROMO%'")

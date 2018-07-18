@@ -180,7 +180,7 @@ public class SqlToRelationTest {
         new BaseColumn("t", "mygroup"),
         new AliasedColumn(new ColumnOp("avg", new BaseColumn("t", "mycolumn1")), "myavg")
     ), Arrays.<AbstractRelation>asList(new BaseTable("myschema", "mytable", "t")));
-    expected.addGroupby(new AliasReference("mygroup"));
+    expected.addGroupby(new BaseColumn("mygroup"));
     assertEquals(expected, sel);
   }
 
@@ -195,11 +195,11 @@ public class SqlToRelationTest {
         new BaseColumn("t", "mygroup"),
         new AliasedColumn(new ColumnOp("avg", new BaseColumn("t", "mycolumn1")), "myavg")
     ), Arrays.<AbstractRelation>asList(new BaseTable("myschema", "mytable", "t")));
-    subquery.addGroupby(new AliasReference("mygroup"));
+    subquery.addGroupby(new BaseColumn("mygroup"));
     subquery.setAliasName("s");
     SelectQuery expected = SelectQuery.create(Arrays.<SelectItem>asList(new AsteriskColumn()),
         Arrays.<AbstractRelation>asList(subquery));
-    expected.addGroupby(new AliasReference("mygroup2"));
+    expected.addGroupby(new BaseColumn("mygroup2"));
     assertEquals(expected, sel);
   }
 }
