@@ -43,7 +43,6 @@ jobs:
             - ~/.m2
           key: v1-dependencies-{{ checksum "pom.xml" }}
       # run tests!
-      - run: sudo apt-get update; sudo apt-get install git
       - run: git clone git@github.com:verdictdb/verdictdb-private-resources.git
       - run: mvn -B clean test 2> /dev/null
       - store_test_results:
