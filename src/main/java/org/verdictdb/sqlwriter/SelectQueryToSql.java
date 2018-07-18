@@ -66,6 +66,11 @@ public class SelectQueryToSql {
       throw new VerdictDBTypeException("asterisk is not expected in the groupby clause.");
     }
     if (column instanceof AliasReference) {
+      if (((AliasReference) column).getColumn() instanceof ConstantColumn) {
+        return ((ConstantColumn) ((AliasReference) column).getColumn()).getValue().toString();
+      } else if (((AliasReference) column).getColumn() instanceof ColumnOp) {
+        return unnamedColumnToSqlPart(((AliasReference) column).getColumn());
+      }
       return quoteName(((AliasReference) column).getAliasName());
     } else {
       return unnamedColumnToSqlPart((UnnamedColumn) column);
@@ -354,9 +359,12 @@ public class SelectQueryToSql {
           sql.append(" right join ");
         } else if (((JoinTable) relation).getJoinTypeList().get(i - 1).equals(JoinTable.JoinType.rightouter)) {
           sql.append(" right outer join ");
+        } else if (((JoinTable) relation).getJoinTypeList().get(i - 1).equals(JoinTable.JoinType.cross)) {
+          sql.append(" cross join ");
         }
-        sql.append(relationToSqlPart(((JoinTable) relation).getJoinList().get(i)) + " on " +
-            withParentheses(((JoinTable) relation).getCondition().get(i - 1)));
+        sql.append(relationToSqlPart(((JoinTable) relation).getJoinList().get(i)));
+        if (((JoinTable) relation).getCondition().get(i-1)!=null)
+          sql.append(" on " + withParentheses(((JoinTable) relation).getCondition().get(i - 1)));
       }
       //sql.append(")");
       if (((JoinTable) relation).getAliasName().isPresent()) {
@@ -393,6 +401,10 @@ public class SelectQueryToSql {
 
   String quoteName(String name) {
     String quoteString = syntax.getQuoteString();
-    return quoteString + name + quoteString;
+    // already quoted
+    if (name.startsWith(quoteString)&&name.endsWith(quoteString)) {
+      return name;
+    }
+    else return quoteString + name + quoteString;
   }
 }

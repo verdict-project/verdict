@@ -87,9 +87,11 @@ public class QueryExecutionPlan implements ExecutablePlan, IdCreator, Serializab
   public void setSelectQuery(SelectQuery query) throws VerdictDBException {
     // TODO: this should also test if subqueries include aggregates
     // Change this to something like 'doesContainSupportedAggregateInDescendents()'.
-    if (!query.isSupportedAggregate()) {
-      throw new VerdictDBTypeException(query);
-    }
+
+    // Accept all query
+    //if (!query.isSupportedAggregate()) {
+    //  throw new VerdictDBTypeException(query);
+    //}
     this.root = makePlan(query);
   }
 

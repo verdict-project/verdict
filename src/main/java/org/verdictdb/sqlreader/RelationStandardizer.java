@@ -85,6 +85,12 @@ public class RelationStandardizer {
         }
       }
     }
+    if (col.getSchemaName().equals("")) {
+      col.setSchemaName(meta.getDefaultSchema());
+      if (tableInfoAndAlias.containsKey(new ImmutablePair<>(col.getSchemaName(), col.getTableSourceAlias()))) {
+        col.setTableSourceAlias(tableInfoAndAlias.get(new ImmutablePair<>(col.getSchemaName(), col.getTableSourceAlias())));
+      }
+    }
 
 
     return col;
@@ -207,7 +213,11 @@ public class RelationStandardizer {
     // in order to prevent informal table alias, we replace all table alias
     if (!(table instanceof JoinTable)) {
       if (table.getAliasName().isPresent()) {
-        oldTableAliasMap.put(table.getAliasName().get(), "vt"+itemID);
+        if ((table.getAliasName().get().endsWith("`")||table.getAliasName().get().endsWith("\""))&&
+            (table.getAliasName().get().startsWith("`")||table.getAliasName().get().startsWith("\""))) {
+          oldTableAliasMap.put(table.getAliasName().get().substring(1, table.getAliasName().get().length()-1), "vt"+itemID);
+        }
+        else oldTableAliasMap.put(table.getAliasName().get(), "vt"+itemID);
       }
       table.setAliasName("vt" + itemID++);
     }
