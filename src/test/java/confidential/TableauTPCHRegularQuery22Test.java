@@ -56,7 +56,7 @@ public class TableauTPCHRegularQuery22Test {
         "      WHERE (CASE WHEN 2 >= 0 THEN SUBSTRING(`customer`.`c_phone`,1,CAST(2 AS INT)) ELSE NULL END = '13' OR CASE WHEN 2 >= 0 THEN SUBSTRING(`customer`.`c_phone`,1,CAST(2 AS INT)) ELSE NULL END = '17' OR CASE WHEN 2 >= 0 THEN SUBSTRING(`customer`.`c_phone`,1,CAST(2 AS INT)) ELSE NULL END = '18' OR CASE WHEN 2 >= 0 THEN SUBSTRING(`customer`.`c_phone`,1,CAST(2 AS INT)) ELSE NULL END = '23' OR CASE WHEN 2 >= 0 THEN SUBSTRING(`customer`.`c_phone`,1,CAST(2 AS INT)) ELSE NULL END = '29' OR CASE WHEN 2 >= 0 THEN SUBSTRING(`customer`.`c_phone`,1,CAST(2 AS INT)) ELSE NULL END = '30' OR CASE WHEN 2 >= 0 THEN SUBSTRING(`customer`.`c_phone`,1,CAST(2 AS INT)) ELSE NULL END = '31')\n" +
         "      GROUP BY `customer`.`c_custkey`\n" +
         "    ) `t0`\n" +
-        "    GROUP BY 1\n" +
+        "    GROUP BY `x_measure__1`\n" +
         "    HAVING (COUNT(1) > 0)\n" +
         "  ) `t1`\n" +
         "  WHERE ((CASE WHEN 2 >= 0 THEN SUBSTRING(`customer`.`c_phone`,1,CAST(2 AS INT)) ELSE NULL END = '13' OR CASE WHEN 2 >= 0 THEN SUBSTRING(`customer`.`c_phone`,1,CAST(2 AS INT)) ELSE NULL END = '17' OR CASE WHEN 2 >= 0 THEN SUBSTRING(`customer`.`c_phone`,1,CAST(2 AS INT)) ELSE NULL END = '18' OR CASE WHEN 2 >= 0 THEN SUBSTRING(`customer`.`c_phone`,1,CAST(2 AS INT)) ELSE NULL END = '23' OR CASE WHEN 2 >= 0 THEN SUBSTRING(`customer`.`c_phone`,1,CAST(2 AS INT)) ELSE NULL END = '29' OR CASE WHEN 2 >= 0 THEN SUBSTRING(`customer`.`c_phone`,1,CAST(2 AS INT)) ELSE NULL END = '30' OR CASE WHEN 2 >= 0 THEN SUBSTRING(`customer`.`c_phone`,1,CAST(2 AS INT)) ELSE NULL END = '31') AND ((`customer`.`c_acctbal` > `t1`.`x_measure__1`) AND (`orders`.`o_orderkey` IS NULL)))\n" +
@@ -79,7 +79,7 @@ public class TableauTPCHRegularQuery22Test {
         "        WHERE (CASE WHEN 2 >= 0 THEN SUBSTRING(`customer`.`c_phone`,1,CAST(2 AS INT)) ELSE NULL END = '13' OR CASE WHEN 2 >= 0 THEN SUBSTRING(`customer`.`c_phone`,1,CAST(2 AS INT)) ELSE NULL END = '17' OR CASE WHEN 2 >= 0 THEN SUBSTRING(`customer`.`c_phone`,1,CAST(2 AS INT)) ELSE NULL END = '18' OR CASE WHEN 2 >= 0 THEN SUBSTRING(`customer`.`c_phone`,1,CAST(2 AS INT)) ELSE NULL END = '23' OR CASE WHEN 2 >= 0 THEN SUBSTRING(`customer`.`c_phone`,1,CAST(2 AS INT)) ELSE NULL END = '29' OR CASE WHEN 2 >= 0 THEN SUBSTRING(`customer`.`c_phone`,1,CAST(2 AS INT)) ELSE NULL END = '30' OR CASE WHEN 2 >= 0 THEN SUBSTRING(`customer`.`c_phone`,1,CAST(2 AS INT)) ELSE NULL END = '31')\n" +
         "        GROUP BY `customer`.`c_custkey`\n" +
         "      ) `t3`\n" +
-        "      GROUP BY 1\n" +
+        "      GROUP BY `x_measure__1`\n" +
         "      HAVING (COUNT(1) > 0)\n" +
         "    ) `t4`\n" +
         "    WHERE ((CASE WHEN 2 >= 0 THEN SUBSTRING(`customer`.`c_phone`,1,CAST(2 AS INT)) ELSE NULL END = '13' OR CASE WHEN 2 >= 0 THEN SUBSTRING(`customer`.`c_phone`,1,CAST(2 AS INT)) ELSE NULL END = '17' OR CASE WHEN 2 >= 0 THEN SUBSTRING(`customer`.`c_phone`,1,CAST(2 AS INT)) ELSE NULL END = '18' OR CASE WHEN 2 >= 0 THEN SUBSTRING(`customer`.`c_phone`,1,CAST(2 AS INT)) ELSE NULL END = '23' OR CASE WHEN 2 >= 0 THEN SUBSTRING(`customer`.`c_phone`,1,CAST(2 AS INT)) ELSE NULL END = '29' OR CASE WHEN 2 >= 0 THEN SUBSTRING(`customer`.`c_phone`,1,CAST(2 AS INT)) ELSE NULL END = '30' OR CASE WHEN 2 >= 0 THEN SUBSTRING(`customer`.`c_phone`,1,CAST(2 AS INT)) ELSE NULL END = '31') AND ((`customer`.`c_acctbal` > `t4`.`x_measure__1`) AND (`orders`.`o_orderkey` IS NULL)))\n" +
