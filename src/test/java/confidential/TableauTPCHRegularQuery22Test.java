@@ -60,7 +60,7 @@ public class TableauTPCHRegularQuery22Test {
         "    HAVING (COUNT(1) > 0)\n" +
         "  ) `t1`\n" +
         "  WHERE ((CASE WHEN 2 >= 0 THEN SUBSTRING(`customer`.`c_phone`,1,CAST(2 AS INT)) ELSE NULL END = '13' OR CASE WHEN 2 >= 0 THEN SUBSTRING(`customer`.`c_phone`,1,CAST(2 AS INT)) ELSE NULL END = '17' OR CASE WHEN 2 >= 0 THEN SUBSTRING(`customer`.`c_phone`,1,CAST(2 AS INT)) ELSE NULL END = '18' OR CASE WHEN 2 >= 0 THEN SUBSTRING(`customer`.`c_phone`,1,CAST(2 AS INT)) ELSE NULL END = '23' OR CASE WHEN 2 >= 0 THEN SUBSTRING(`customer`.`c_phone`,1,CAST(2 AS INT)) ELSE NULL END = '29' OR CASE WHEN 2 >= 0 THEN SUBSTRING(`customer`.`c_phone`,1,CAST(2 AS INT)) ELSE NULL END = '30' OR CASE WHEN 2 >= 0 THEN SUBSTRING(`customer`.`c_phone`,1,CAST(2 AS INT)) ELSE NULL END = '31') AND ((`customer`.`c_acctbal` > `t1`.`x_measure__1`) AND (`orders`.`o_orderkey` IS NULL)))\n" +
-        "  GROUP BY CASE WHEN 2 >= 0 THEN SUBSTRING(`customer`.`c_phone`,1,CAST(2 AS INT)) ELSE NULL END\n" +
+        "  GROUP BY `calculation_5131031153053149`\n" +
         ") `t2`\n" +
         "  JOIN (\n" +
         "  SELECT `t5`.`calculation_5131031153053149` AS `calculation_5131031153053149`,\n" +
