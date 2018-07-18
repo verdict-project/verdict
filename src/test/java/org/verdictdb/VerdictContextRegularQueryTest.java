@@ -72,6 +72,7 @@ public class VerdictContextRegularQueryTest {
   @Test
   public void SimpleSelectTest() throws VerdictDBException, SQLException {
     String sql = "select r_regionkey from test.region order by r_regionkey";
+    stmt.execute("create schema if not exists `verdictdb_temp`");
     VerdictContext verdictContext = new VerdictContext(dbmsConnection);
     VerdictSingleResult result = verdictContext.sql(sql);
     ResultSet rs = stmt.executeQuery(sql);
@@ -84,6 +85,7 @@ public class VerdictContextRegularQueryTest {
   @Test
   public void SimpleAggTest() throws VerdictDBException, SQLException {
     String sql = "select count(*) from test.region";
+    stmt.execute("create schema if not exists `verdictdb_temp`");
     VerdictContext verdictContext = new VerdictContext(dbmsConnection);
     VerdictSingleResult result = verdictContext.sql(sql);
     ResultSet rs = stmt.executeQuery(sql);
@@ -139,6 +141,7 @@ public class VerdictContextRegularQueryTest {
         "  s_name,\n" +
         "  p_partkey\n" +
         "limit 100;";
+    stmt.execute("create schema if not exists `verdictdb_temp`");
     VerdictContext verdictContext = new VerdictContext(dbmsConnection);
     VerdictSingleResult result = verdictContext.sql(sql);
 
