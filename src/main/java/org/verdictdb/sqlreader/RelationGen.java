@@ -1,6 +1,5 @@
 package org.verdictdb.sqlreader;
 
-import java.beans.Expression;
 import java.util.ArrayList;
 import java.util.List;
 
