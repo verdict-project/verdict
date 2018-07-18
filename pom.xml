@@ -161,7 +161,7 @@
     <!-- Install this using the following command: mvn install:install-file 
       -Dfile=src/test/resources/jars/ImpalaJDBC41-2.6.3.jar -DgroupId=com.cloudera 
       -DartifactId=impala-jdbc41 -Dversion=2.6.3 -Dpackaging=jar -->
-    <!--<dependency>
+    <dependency>
       <groupId>com.cloudera</groupId>
       <artifactId>impala-jdbc41</artifactId>
       <version>2.6.3</version>
@@ -176,7 +176,7 @@
           <artifactId>slf4j-simple</artifactId>
         </exclusion>
       </exclusions>
-    </dependency>-->
+    </dependency>
     <dependency>
       <groupId>com.amazon.redshift</groupId>
       <artifactId>redshift-jdbc41</artifactId>
