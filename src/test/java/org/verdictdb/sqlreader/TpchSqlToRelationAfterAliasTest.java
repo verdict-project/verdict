@@ -1157,10 +1157,7 @@ public class TpchSqlToRelationAfterAliasTest {
         ConstantColumn.valueOf("':1'")
         )));
     expected.addHavingByAnd(new ColumnOp("greater", Arrays.<UnnamedColumn>asList(
-        new ColumnOp("sum", new ColumnOp("multiply", Arrays.<UnnamedColumn>asList(
-            new BaseColumn("tpch", "partsupp","vt1", "ps_supplycost"),
-            new BaseColumn("tpch", "partsupp","vt1", "ps_availqty")
-            ))),
+        new AliasReference("value"),
         SubqueryColumn.getSubqueryColumn(subquery)
         )));
     expected.addOrderby(new OrderbyAttribute("value", "desc"));

@@ -322,9 +322,9 @@ public class RelationStandardizer {
                 columnOp.setOperand(columnOp.getOperands().indexOf(operand), new AliasReference(columnOpAliasMap.get(operand)));
               } else checklist.add((ColumnOp) operand);
             }
-            if (operand instanceof SubqueryColumn) {
-              throw new VerdictDBDbmsException("Do not support subquery in Having clause.");
-            }
+            //if (operand instanceof SubqueryColumn) {
+            //  throw new VerdictDBDbmsException("Do not support subquery in Having clause.");
+            //}
           }
         }
       }
