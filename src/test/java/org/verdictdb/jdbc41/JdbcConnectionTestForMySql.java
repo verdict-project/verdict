@@ -2,7 +2,6 @@ package org.verdictdb.jdbc41;
 
 import static org.junit.Assert.*;
 
-import groovy.sql.Sql;
 import org.junit.Test;
 import org.verdictdb.exception.VerdictDBDbmsException;
 
