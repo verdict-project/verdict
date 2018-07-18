@@ -152,7 +152,7 @@ public class AsyncAggExecutionNode extends ProjectionNode {
     SelectQuery createTableQuery = replaceWithOriginalSelectList(query, ((AggMeta) savedToken.getValue("aggMeta")));
 
     if (selectQuery != null) {
-      if (!selectQuery.getGroupby().isEmpty()) {
+      if (!selectQuery.getGroupby().isEmpty() && selectQuery.getHaving().isPresent()) {
         createTableQuery.addGroupby(selectQuery.getGroupby());
       }
       if (!selectQuery.getOrderby().isEmpty()) {
