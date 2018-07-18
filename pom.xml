@@ -51,8 +51,11 @@
       <testResource>
         <directory>src/test/resources</directory>
       </testResource>
+      <testResource>
+        <directory>verdictdb-private-resources/test_resources</directory>
+      </testResource>
     </testResources>
-
+    
     <plugins>
       <plugin>
         <groupId>org.antlr</groupId>

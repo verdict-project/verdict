@@ -375,6 +375,7 @@ predicate
     | expression NOT? LIKE expression (ESCAPE expression)?                  # like_predicate
     | expression IS null_notnull                                            # is_predicate
     | '(' search_condition ')'                                              # bracket_predicate
+    | predicate_function                                                    # func_predicate
     ;
 
 query_expression
@@ -490,7 +491,7 @@ join_part
     // https://msdn.microsoft.com/en-us/library/ms173815(v=sql.120).aspx
     : (INNER? |
        join_type=(LEFT | RIGHT | FULL) OUTER?) (join_hint=(LOOP | HASH | MERGE | REMOTE | SEMI))?
-       JOIN table_source ON search_condition
+       JOIN table_source (ON search_condition)?
     | CROSS APPLY table_source
     | CROSS JOIN table_source
     | OUTER APPLY table_source
@@ -618,7 +619,7 @@ nary_manipulation_function
 ternary_manipulation_function
     : function_name=(CONV | SUBSTR | HASH | RPAD | SUBSTRING | LPAD | MID | REPLACE | SUBSTRING_INDEX | MAKETIME | IF
     | CONVERT | SPLIT_PART | TRANSLATE | MAKE_DATE | MAKE_TIME | SETWEIGHT | TS_REWRITE | TSQUERY_PHRASE | XMLROOT
-    | XPATH | XPATH_EXISTS | ARRAY_REPLACE | ARRAY_TO_STRING | STRING_TO_ARRAY)
+    | XPATH | XPATH_EXISTS | ARRAY_REPLACE | ARRAY_TO_STRING | STRING_TO_ARRAY | LOCATE)
       '(' expression ',' expression ',' expression ')'
     ;
 
@@ -634,7 +635,7 @@ binary_manipulation_function
     | JSON_OBJECT | JSON_EXTRACT_PATH | JSON_EXTRACT_PATH_TEXT | JSON_POPULATE_RECORDSET | JSON_POPULATE_RECORD | SETVAL
     | ARRAY_APPEND | ARRAY_CAT | ARRAY_LENGTH | ARRAY_LOWER | ARRAY_POSITION | ARRAY_POSITIONS | ARRAY_PREPEND
     | ARRAY_REMOVE | ARRAY_TO_STRING | ARRAY_UPPER | STRING_TO_ARRAY | RANGE_MERGE | CORR | COVAR_POP | COVAR_SAMP
-    | REGR_AVGX | REGR_AVGY | REGR_COUNT | REGR_INTERCEPT | REGR_R2 | REGR_SLOPE | REGR_SXX | REGR_SXY | REGR_SYY
+    | REGR_AVGX | REGR_AVGY | REGR_COUNT | REGR_INTERCEPT | REGR_R2 | REGR_SLOPE | REGR_SXX | REGR_SXY | REGR_SYY | SUBSTR
     | STDDEV_POP | VARIANCE | VAR_POP | VAR_SAMP)
       '(' expression ',' expression ')'
     ;
@@ -659,6 +660,11 @@ unary_manipulation_function
      | JSON_OBJECT_AGG | JSONB_OBJECT_AGG | STRING_AGG)
       '(' expression ')'
     | function_name=CAST '(' cast_as_expression ')'
+    | NOT? predicate_function
+    ;
+
+predicate_function
+    : function_name = ISNULL '(' expression ')'
     ;
 
 noparam_manipulation_function
@@ -808,7 +814,7 @@ scalar_function_name
 // https://msdn.microsoft.com/en-us/library/ms187752.aspx
 // TODO: implement runtime check or add new tokens.
 data_type
-/*    : BIGINT
+    : BIGINT
     | BINARY '(' DECIMAL ')'
     | BIT
     | CHAR '(' DECIMAL ')'
@@ -841,8 +847,8 @@ data_type
     | UNIQUEIDENTIFIER
     | VARBINARY '(' DECIMAL | MAX ')'
     | VARCHAR '(' DECIMAL | MAX ')'
-    | XML */
-    : id IDENTITY? ('(' (DECIMAL | MAX) (',' DECIMAL)? ')')?
+    | XML
+    | id IDENTITY? ('(' (DECIMAL | MAX) (',' DECIMAL)? ')')?
     ;
 
 default_value

@@ -678,7 +678,7 @@ public class TpchExecutionPlanTest {
     AbstractRelation nation2 = new BaseTable("tpch", "nation", "vt7");
     SelectQuery subquery = SelectQuery.create(
         Arrays.<SelectItem>asList(
-            new AliasedColumn(new BaseColumn("vt6", "n_name"), "supp_nation"),
+            new AliasedColumn(new BaseColumn("tpch","vt6", "n_name"), "supp_nation"),
             new AliasedColumn(new BaseColumn("tpch", "nation","vt7", "n_name"), "cust_nation"),
             new AliasedColumn(new ColumnOp("substr", Arrays.<UnnamedColumn>asList(
                 new BaseColumn("tpch", "lineitem","vt3", "l_shipdate"), ConstantColumn.valueOf(0), ConstantColumn.valueOf(4))), "l_year"),
@@ -703,7 +703,7 @@ public class TpchExecutionPlanTest {
     )));
     subquery.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
         new BaseColumn("tpch", "supplier","vt2", "s_nationkey"),
-        new BaseColumn("vt6", "n_nationkey")
+        new BaseColumn("tpch","vt6", "n_nationkey")
     )));
     subquery.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
         new BaseColumn("tpch", "customer","vt5", "c_nationkey"),
@@ -712,7 +712,7 @@ public class TpchExecutionPlanTest {
     subquery.addFilterByAnd(new ColumnOp("or", Arrays.<UnnamedColumn>asList(
         new ColumnOp("and", Arrays.<UnnamedColumn>asList(
             new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-                new BaseColumn("vt6", "n_name"),
+                new BaseColumn("tpch","vt6", "n_name"),
                 ConstantColumn.valueOf("':1'")
             )),
             new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
@@ -722,7 +722,7 @@ public class TpchExecutionPlanTest {
         )),
         new ColumnOp("and", Arrays.<UnnamedColumn>asList(
             new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-                new BaseColumn("vt6", "n_name"),
+                new BaseColumn("tpch","vt6", "n_name"),
                 ConstantColumn.valueOf("':2'")
             )),
             new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
@@ -739,10 +739,10 @@ public class TpchExecutionPlanTest {
     subquery.setAliasName("vt1");
     SelectQuery expected = SelectQuery.create(
         Arrays.<SelectItem>asList(
-            new AliasedColumn(new BaseColumn("vt1", "supp_nation"), "supp_nation"),
-            new AliasedColumn(new BaseColumn("vt1", "cust_nation"), "cust_nation"),
-            new AliasedColumn(new BaseColumn("vt1", "l_year"), "l_year"),
-            new AliasedColumn(new ColumnOp("sum", new BaseColumn("vt1", "volume")), "revenue")
+            new AliasedColumn(new BaseColumn("tpch","vt1", "supp_nation"), "supp_nation"),
+            new AliasedColumn(new BaseColumn("tpch","vt1", "cust_nation"), "cust_nation"),
+            new AliasedColumn(new BaseColumn("tpch","vt1", "l_year"), "l_year"),
+            new AliasedColumn(new ColumnOp("sum", new BaseColumn("tpch","vt1", "volume")), "revenue")
         ),
         new BaseTable("placeholderSchemaName", "placeholderTableName", "vt1"));
     expected.addGroupby(Arrays.<GroupingAttribute>asList(
@@ -853,10 +853,10 @@ public class TpchExecutionPlanTest {
     )));
     subquery.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
         new BaseColumn("tpch", "customer","vt6", "c_nationkey"),
-        new BaseColumn("vt7", "n_nationkey")
+        new BaseColumn("tpch","vt7", "n_nationkey")
     )));
     subquery.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-        new BaseColumn("vt7", "n_regionkey"),
+        new BaseColumn("tpch","vt7", "n_regionkey"),
         new BaseColumn("tpch", "region","vt9", "r_regionkey")
     )));
     subquery.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
@@ -879,16 +879,16 @@ public class TpchExecutionPlanTest {
     subquery.setAliasName("vt1");
     SelectQuery expected = SelectQuery.create(
         Arrays.<SelectItem>asList(
-            new AliasedColumn(new BaseColumn("vt1", "o_year"), "o_year"),
+            new AliasedColumn(new BaseColumn("tpch","vt1", "o_year"), "o_year"),
             new AliasedColumn(
-                new ColumnOp("sum", new ColumnOp("whenthenelse", Arrays.<UnnamedColumn>asList(
+                new ColumnOp("sum", new ColumnOp("casewhen", Arrays.<UnnamedColumn>asList(
                     new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-                        new BaseColumn("vt1", "nation"),
+                        new BaseColumn("tpch","vt1", "nation"),
                         ConstantColumn.valueOf("'PERU'")
-                    )), new BaseColumn("vt1", "volume"),
+                    )), new BaseColumn("tpch","vt1", "volume"),
                     ConstantColumn.valueOf(0)))), "numerator"),
 
-            new AliasedColumn(new ColumnOp("sum", new BaseColumn("vt1", "volume")), "denominator")
+            new AliasedColumn(new ColumnOp("sum", new BaseColumn("tpch","vt1", "volume")), "denominator")
 
         ),
         new BaseTable(placeholderSchemaName, placeholderTableName, "vt1"));
@@ -1006,9 +1006,9 @@ public class TpchExecutionPlanTest {
     subquery.setAliasName("vt1");
     SelectQuery expected = SelectQuery.create(
         Arrays.<SelectItem>asList(
-            new AliasedColumn(new BaseColumn("vt1", "nation"), "nation"),
-            new AliasedColumn(new BaseColumn("vt1", "o_year"), "o_year"),
-            new AliasedColumn(new ColumnOp("sum", new BaseColumn("vt1", "amount")), "sum_profit")
+            new AliasedColumn(new BaseColumn("tpch","vt1", "nation"), "nation"),
+            new AliasedColumn(new BaseColumn("tpch","vt1", "o_year"), "o_year"),
+            new AliasedColumn(new ColumnOp("sum", new BaseColumn("tpch","vt1", "amount")), "sum_profit")
         ),
         new BaseTable(placeholderSchemaName, placeholderTableName, "vt1"));
     expected.addGroupby(Arrays.<GroupingAttribute>asList(new AliasReference("nation"), new AliasReference("o_year")));
@@ -1184,7 +1184,7 @@ public class TpchExecutionPlanTest {
     SelectQuery expected = SelectQuery.create(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("tpch", "lineitem","vt2", "l_shipmode"), "vc3"),
-            new AliasedColumn(new ColumnOp("sum", new ColumnOp("whenthenelse", Arrays.<UnnamedColumn>asList(
+            new AliasedColumn(new ColumnOp("sum", new ColumnOp("casewhen", Arrays.<UnnamedColumn>asList(
                 new ColumnOp("or", Arrays.<UnnamedColumn>asList(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                     new BaseColumn("tpch", "orders","vt1", "o_orderpriority"),
                     ConstantColumn.valueOf("'1-URGENT'")
@@ -1197,7 +1197,7 @@ public class TpchExecutionPlanTest {
                 ConstantColumn.valueOf(1),
                 ConstantColumn.valueOf(0)
             ))), "high_line_count"),
-            new AliasedColumn(new ColumnOp("sum", new ColumnOp("whenthenelse", Arrays.<UnnamedColumn>asList(
+            new AliasedColumn(new ColumnOp("sum", new ColumnOp("casewhen", Arrays.<UnnamedColumn>asList(
                 new ColumnOp("and", Arrays.<UnnamedColumn>asList(new ColumnOp("notequal", Arrays.<UnnamedColumn>asList(
                     new BaseColumn("tpch", "orders","vt1", "o_orderpriority"),
                     ConstantColumn.valueOf("'1-URGENT'")
@@ -1336,7 +1336,7 @@ public class TpchExecutionPlanTest {
             new AliasedColumn(
                 new ColumnOp("multiply", Arrays.<UnnamedColumn>asList(
                     ConstantColumn.valueOf("100.00"),
-                    new ColumnOp("sum", new ColumnOp("whenthenelse", Arrays.<UnnamedColumn>asList(
+                    new ColumnOp("sum", new ColumnOp("casewhen", Arrays.<UnnamedColumn>asList(
                         new ColumnOp("like", Arrays.<UnnamedColumn>asList(
                             new BaseColumn("tpch", "part","vt2", "p_type"),
                             ConstantColumn.valueOf("'PROMO%'")
@@ -1479,8 +1479,8 @@ public class TpchExecutionPlanTest {
         Arrays.<JoinTable.JoinType>asList(JoinTable.JoinType.inner),
         Arrays.<UnnamedColumn>asList(
             new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-                new BaseColumn("vt4", "l_partkey"),
-                new BaseColumn("vt2", "t_partkey")
+                new BaseColumn("tpch","vt4", "l_partkey"),
+                new BaseColumn("tpch","vt2", "t_partkey")
             ))
         ));
     assertEquals(join,
@@ -1979,8 +1979,8 @@ public class TpchExecutionPlanTest {
         Arrays.<JoinTable.JoinType>asList(JoinTable.JoinType.rightouter),
         Arrays.<UnnamedColumn>asList(
             new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-                new BaseColumn("vt5", "l_orderkey"),
-                new BaseColumn("vt3", "l_orderkey")
+                new BaseColumn("tpch","vt5", "l_orderkey"),
+                new BaseColumn("tpch","vt3", "l_orderkey")
             ))
         ));
     assertEquals(join,
@@ -2081,7 +2081,7 @@ public class TpchExecutionPlanTest {
         Arrays.<JoinTable.JoinType>asList(JoinTable.JoinType.inner),
         Arrays.<UnnamedColumn>asList(
             new ColumnOp("greater", Arrays.<UnnamedColumn>asList(
-                new BaseColumn("vt2", "avg_acctbal"),
+                new BaseColumn("tpch","vt2", "avg_acctbal"),
                 ConstantColumn.valueOf(0)
             ))
         ));
@@ -2094,8 +2094,8 @@ public class TpchExecutionPlanTest {
         Arrays.<JoinTable.JoinType>asList(JoinTable.JoinType.rightouter),
         Arrays.<UnnamedColumn>asList(
             new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-                new BaseColumn("vt8", "c_custkey"),
-                new BaseColumn("vt6", "o_custkey")
+                new BaseColumn("tpch","vt8", "c_custkey"),
+                new BaseColumn("tpch","vt6", "o_custkey")
             ))
         ));
     assertEquals(join1,

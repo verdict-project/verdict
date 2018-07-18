@@ -128,7 +128,7 @@ public class AsyncAggExecutionNode extends ProjectionNode {
       // If it has multiple tiers, we need to rewrite the multiply column into when-then-else column
       for (ColumnOp col : aggColumnsAndQuery.getLeft()) {
         String alias = ((BaseColumn) col.getOperand(1)).getColumnName();
-        col.setOpType("whenthenelse");
+        col.setOpType("casewhen");
         List<UnnamedColumn> operands = new ArrayList<>();
         for (Map.Entry<List<Integer>, Double> entry : scaleFactor.entrySet()) {
           UnnamedColumn condition = generateCaseCondition(entry.getKey());

@@ -8,8 +8,6 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
-import org.apache.hadoop.hive.ql.exec.spark.KryoSerializer;
-import org.apache.spark.SparkConf;
 import org.apache.spark.sql.SparkSession;
 import org.postgresql.copy.CopyManager;
 import org.postgresql.core.BaseConnection;

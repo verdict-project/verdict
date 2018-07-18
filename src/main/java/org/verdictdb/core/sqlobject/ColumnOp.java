@@ -51,7 +51,7 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
    * <li>notgreaterthan</li>
    * <li>notlessthan</li>
    * <li>casewhenelse</li>
-   * <li>whenthenelse</li>
+   * <li>casewhen</li>
    * <li>is null</li>
    * <li>is not null</li>
    * <li>interval</li>
@@ -253,8 +253,8 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
     return new ColumnOp("between", Arrays.asList(column1, column2, column3));
   }
 
-  public static ColumnOp whenthenelse(List<UnnamedColumn> cols) {
-    return new ColumnOp("whenthenelse", cols);
+  public static ColumnOp casewhen(List<UnnamedColumn> cols) {
+    return new ColumnOp("casewhen", cols);
   }
 
   public static ColumnOp in(List<UnnamedColumn> columns) {
