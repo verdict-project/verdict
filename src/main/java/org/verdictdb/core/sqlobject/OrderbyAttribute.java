@@ -14,6 +14,16 @@ public class OrderbyAttribute implements Serializable {
 
   String order = "asc";
 
+  UnnamedColumn column;
+
+  public void setColumn(UnnamedColumn column) {
+    this.column = column;
+  }
+
+  public UnnamedColumn getColumn() {
+    return column;
+  }
+
   public OrderbyAttribute(String attributeName) {
     this.aliasName = new AliasReference(attributeName);
   }

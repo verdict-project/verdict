@@ -44,6 +44,9 @@ public class RelationGen extends VerdictSQLParserBaseVisitor<AbstractRelation> {
         OrderbyAttribute orderbyCol = null;
         if (c instanceof BaseColumn) {
           orderbyCol = new OrderbyAttribute(((BaseColumn) c).getColumnName(), (o.DESC() == null) ? "asc" : "desc");
+        } else if (c instanceof ConstantColumn || c instanceof ColumnOp) {
+          orderbyCol = new OrderbyAttribute("", (o.DESC() == null) ? "asc" : "desc");
+          orderbyCol.setColumn(c);
         }
         sel.addOrderby(orderbyCol);
       }

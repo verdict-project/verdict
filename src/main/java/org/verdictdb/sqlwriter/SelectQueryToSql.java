@@ -123,7 +123,7 @@ public class SelectQueryToSql {
 //        + " else " + withParentheses(columnOp.getOperand(2))
 //        + " end";
 //      }
-      else if (columnOp.getOpType().equals("whenthenelse")) {
+      else if (columnOp.getOpType().equals("casewhen")) {
         String sql = "case";
         for (int i=0; i<columnOp.getOperands().size()-1;i=i+2) {
           sql = sql + " when " + withParentheses(columnOp.getOperand(i)) + " then " + withParentheses(columnOp.getOperand(i+1));

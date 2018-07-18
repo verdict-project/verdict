@@ -42,6 +42,9 @@ public class RelationStandardizer {
   //key is the select column name, value is their alias
   private HashMap<String, String> colNameAndColAlias = new HashMap<>();
 
+  //key is columnOp, value is their alias name
+  private HashMap<ColumnOp, String> columnOpAliasMap = new HashMap<>();
+
   //key is schema name, column name, value is alias
   //only store value if there are duplicate column names
   private HashMap<Pair<String, String>, String> duplicateColNameAndColAlias = new HashMap<>();
@@ -115,14 +118,19 @@ public class RelationStandardizer {
           sel = replaceFilter((ColumnOp) sel);
 
           if (((ColumnOp) sel).getOpType().equals("count")) {
+            columnOpAliasMap.put((ColumnOp)sel, "c" + itemID);
             newSelectItemList.add(new AliasedColumn((ColumnOp) sel, "c" + itemID++));
           } else if (((ColumnOp) sel).getOpType().equals("sum")) {
+            columnOpAliasMap.put((ColumnOp)sel, "s" + itemID);
             newSelectItemList.add(new AliasedColumn((ColumnOp) sel, "s" + itemID++));
           } else if (((ColumnOp) sel).getOpType().equals("avg")) {
+            columnOpAliasMap.put((ColumnOp)sel, "a" + itemID);
             newSelectItemList.add(new AliasedColumn((ColumnOp) sel, "a" + itemID++));
           } else if (((ColumnOp) sel).getOpType().equals("countdistinct")) {
+            columnOpAliasMap.put((ColumnOp)sel, "cd" + itemID);
             newSelectItemList.add(new AliasedColumn((ColumnOp) sel, "cd" + itemID++));
           } else {
+            columnOpAliasMap.put((ColumnOp)sel, "vc" + itemID);
             newSelectItemList.add(new AliasedColumn((ColumnOp) sel, "vc" + itemID++));
           }
         }
@@ -133,6 +141,9 @@ public class RelationStandardizer {
         newSelectItemList.add(sel);
         if (sel instanceof AliasedColumn && ((AliasedColumn) sel).getColumn() instanceof BaseColumn) {
           colNameAndColAlias.put(((BaseColumn) ((AliasedColumn) sel).getColumn()).getColumnName(),
+              ((AliasedColumn) sel).getAliasName());
+        } else if (sel instanceof AliasedColumn && ((AliasedColumn) sel).getColumn() instanceof ColumnOp) {
+          columnOpAliasMap.put(((ColumnOp) ((AliasedColumn) sel).getColumn()),
               ((AliasedColumn) sel).getAliasName());
         }
       }
@@ -157,6 +168,7 @@ public class RelationStandardizer {
         RelationStandardizer g = new RelationStandardizer(meta);
         g.oldTableAliasMap.putAll(oldTableAliasMap);
         g.setColNameAndColAlias(colNameAndColAlias);
+        g.setColumnOpAliasMap(columnOpAliasMap);
         g.setColNameAndTableAlias(colNameAndTableAlias);
         g.setTableInfoAndAlias(tableInfoAndAlias);
         SelectQuery newSubquery = g.standardize(((SubqueryColumn) cond).getSubquery());
@@ -181,7 +193,12 @@ public class RelationStandardizer {
       }
       else if (colNameAndColAlias.containsKey(((AliasReference) g).getAliasName())) {
         newGroupby.add(new AliasReference(colNameAndColAlias.get(((AliasReference) g).getAliasName())));
-      } else newGroupby.add(g);
+      }
+      else if (((AliasReference) g).getAliasName().equals("") &&
+          ((AliasReference) g).getColumn() instanceof ColumnOp && columnOpAliasMap.containsKey((ColumnOp) ((AliasReference) g).getColumn())){
+        newGroupby.add(new AliasReference(columnOpAliasMap.get((ColumnOp) ((AliasReference) g).getColumn())));
+      }
+      else newGroupby.add(g);
     }
     return newGroupby;
   }
@@ -201,7 +218,11 @@ public class RelationStandardizer {
       }
       else if (colNameAndColAlias.containsKey(o.getAttributeName())) {
         newOrderby.add(new OrderbyAttribute(colNameAndColAlias.get(o.getAttributeName()), o.getOrder()));
-      } else newOrderby.add(o);
+      }
+      else if (colNameAndColAlias.containsKey(o.getAttributeName())) {
+        newOrderby.add(new OrderbyAttribute(colNameAndColAlias.get(o.getAttributeName()), o.getOrder()));
+      }
+      else newOrderby.add(o);
     }
     return newOrderby;
   }
@@ -361,6 +382,14 @@ public class RelationStandardizer {
     for (String key : colNameAndColAlias.keySet()) {
       this.colNameAndColAlias.put(key, colNameAndColAlias.get(key));
     }
+  }
+
+  public void setColumnOpAliasMap(HashMap<ColumnOp, String> columnOpAliasMap) {
+    this.columnOpAliasMap = columnOpAliasMap;
+  }
+
+  public HashMap<ColumnOp, String> getColumnOpAliasMap() {
+    return columnOpAliasMap;
   }
 
   public static void resetItemID() {
