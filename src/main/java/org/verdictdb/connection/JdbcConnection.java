@@ -1,14 +1,16 @@
 package org.verdictdb.connection;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
-import org.verdictdb.coordinator.VerdictSingleResult;
 import org.verdictdb.exception.VerdictDBDbmsException;
-import org.verdictdb.jdbc41.VerdictResultSet;
 import org.verdictdb.sqlsyntax.HiveSyntax;
 import org.verdictdb.sqlsyntax.PostgresqlSyntax;
 import org.verdictdb.sqlsyntax.SparkSyntax;
@@ -76,7 +78,7 @@ public class JdbcConnection implements DbmsConnection {
       stmt.close();
       return jrs;
     } catch (SQLException e) {
-      e.printStackTrace();
+//      e.printStackTrace();
       throw new VerdictDBDbmsException(e.getMessage());
     }
   }

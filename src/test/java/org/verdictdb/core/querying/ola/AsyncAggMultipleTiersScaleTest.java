@@ -29,16 +29,13 @@ import org.verdictdb.core.querying.AggExecutionNode;
 import org.verdictdb.core.querying.QueryExecutionPlan;
 import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
-import org.verdictdb.core.scrambling.UniformScrambler;
 import org.verdictdb.core.sqlobject.AbstractRelation;
 import org.verdictdb.core.sqlobject.CreateTableAsSelectQuery;
 import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sqlreader.NonValidatingSQLParser;
 import org.verdictdb.sqlreader.RelationStandardizer;
-import org.verdictdb.sqlsyntax.H2Syntax;
 import org.verdictdb.sqlsyntax.MysqlSyntax;
-import org.verdictdb.sqlwriter.QueryToSql;
 import org.verdictdb.sqlwriter.SelectQueryToSql;
 
 public class AsyncAggMultipleTiersScaleTest {

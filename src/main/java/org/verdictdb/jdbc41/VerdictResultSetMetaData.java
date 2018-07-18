@@ -6,7 +6,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.verdictdb.connection.DataTypeConverter;
-import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.coordinator.VerdictSingleResult;
 
 public class VerdictResultSetMetaData implements ResultSetMetaData {
