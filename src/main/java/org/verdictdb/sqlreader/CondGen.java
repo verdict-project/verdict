@@ -157,7 +157,7 @@ public class CondGen extends VerdictSQLParserBaseVisitor<UnnamedColumn> {
   }
 
   @Override
-  public UnnamedColumn visitFunc_predicate(VerdictSQLParser.Func_predicateContext ctx) {
+  public UnnamedColumn visitPredicate_function(VerdictSQLParser.Predicate_functionContext ctx) {
     ExpressionGen g = new ExpressionGen();
     UnnamedColumn col = g.visit(ctx.expression());
     return col;

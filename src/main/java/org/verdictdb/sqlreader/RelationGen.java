@@ -1,6 +1,5 @@
 package org.verdictdb.sqlreader;
 
-import java.beans.Expression;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -171,39 +170,7 @@ public class RelationGen extends VerdictSQLParserBaseVisitor<AbstractRelation> {
         GroupingAttribute gexpr = null;
         ExpressionGen expressionGen = new ExpressionGen();
         UnnamedColumn c = expressionGen.visit(g);
-        if (c instanceof BaseColumn) {
-          if (((BaseColumn) c).getTableSourceAlias().equals(""))
-            gexpr = new AliasReference(((BaseColumn) c).getColumnName());
-          else gexpr = new AliasReference(((BaseColumn) c).getTableSourceAlias(), ((BaseColumn) c).getColumnName());
-        }
-        else if (c instanceof ConstantColumn || c instanceof ColumnOp) {
-          gexpr = new AliasReference("");
-          ((AliasReference) gexpr).setColumn(c);
-        }
-        /*
-        class GroupbyGen extends VerdictSQLParserBaseVisitor<GroupingAttribute> {
-
-          //          MetaData meta;
-          //          public GroupbyGen(MetaData meta) {this.meta = meta; }
-          public GroupbyGen() {}
-
-          @Override
-          public GroupingAttribute visitColumn_ref_expression(VerdictSQLParser.Column_ref_expressionContext ctx) {
-            String[] t = ctx.getText().split("\\.");
-            if (t.length >= 2) {
-              return new AliasReference(t[0], t[1]);
-            } else {
-              return new AliasReference(t[0]);
-            }
-          }
-
-          @Override
-          public GroupingAttribute visitConstant(VerdictSQLParser.ConstantContext ctx) {
-            return new AliasReference(ctx.getText());
-          }
-        }
-        GroupbyGen expg = new GroupbyGen();
-        */
+        gexpr = c;
         boolean aliasFound = false;
         if (!aliasFound) {
           groupby.add(gexpr);

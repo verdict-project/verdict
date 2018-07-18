@@ -66,12 +66,8 @@ public class SelectQueryToSql {
       throw new VerdictDBTypeException("asterisk is not expected in the groupby clause.");
     }
     if (column instanceof AliasReference) {
-      if (((AliasReference) column).getColumn() instanceof ConstantColumn) {
-        return ((ConstantColumn) ((AliasReference) column).getColumn()).getValue().toString();
-      } else if (((AliasReference) column).getColumn() instanceof ColumnOp) {
-        return unnamedColumnToSqlPart(((AliasReference) column).getColumn());
-      }
-      return quoteName(((AliasReference) column).getAliasName());
+      AliasReference aliasedColumn = (AliasReference) column;
+      return quoteName(aliasedColumn.getAliasName());
     } else {
       return unnamedColumnToSqlPart((UnnamedColumn) column);
     }
@@ -80,7 +76,10 @@ public class SelectQueryToSql {
   String unnamedColumnToSqlPart(UnnamedColumn column) throws VerdictDBException {
     if (column instanceof BaseColumn) {
       BaseColumn base = (BaseColumn) column;
-      return base.getTableSourceAlias() + "." + quoteName(base.getColumnName());
+      if (base.getTableSourceAlias().equals("")) {
+        return quoteName(base.getColumnName());
+      }
+      else return base.getTableSourceAlias() + "." + quoteName(base.getColumnName());
     } else if (column instanceof ConstantColumn) {
       return ((ConstantColumn) column).getValue().toString();
     } else if (column instanceof AsteriskColumn) {

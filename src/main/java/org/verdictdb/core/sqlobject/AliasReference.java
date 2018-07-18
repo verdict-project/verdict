@@ -11,15 +11,13 @@ import org.apache.commons.lang3.builder.ToStringStyle;
  *
  * @author Yongjoo Park
  */
-public class AliasReference implements GroupingAttribute {
+public class AliasReference implements UnnamedColumn {
 
   private static final long serialVersionUID = 6273526004275442693L;
 
   String aliasName;
 
   String tableAlias;
-
-  UnnamedColumn column;
 
   public AliasReference(String aliasName) {
     this.aliasName = aliasName;
@@ -38,12 +36,6 @@ public class AliasReference implements GroupingAttribute {
     return tableAlias;
   }
 
-  public void setColumn(UnnamedColumn column) {this.column = column;}
-
-  public UnnamedColumn getColumn() {
-    return column;
-  }
-
   @Override
   public int hashCode() {
     return HashCodeBuilder.reflectionHashCode(this);
@@ -59,4 +51,13 @@ public class AliasReference implements GroupingAttribute {
     return ToStringBuilder.reflectionToString(this, ToStringStyle.SHORT_PREFIX_STYLE);
   }
 
+  @Override
+  public boolean isAggregateColumn() {
+    return false;
+  }
+
+  @Override
+  public UnnamedColumn deepcopy() {
+    return new AliasReference(tableAlias, aliasName);
+  }
 }
