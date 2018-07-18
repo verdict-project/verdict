@@ -7,6 +7,8 @@ import org.junit.Test;
 import org.verdictdb.connection.StaticMetaData;
 import org.verdictdb.core.sqlobject.*;
 import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.sqlsyntax.MysqlSyntax;
+import org.verdictdb.sqlwriter.SelectQueryToSql;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -109,7 +111,7 @@ public class HavingStandardizationTest {
   }
 
   @Test
-  public void HavingAndOrderbyTest() throws VerdictDBException, SQLException,SQLException {
+  public void HavingAndOrderbyTest() throws VerdictDBException {
     RelationStandardizer.resetItemID();
 
     String sql =
@@ -134,5 +136,22 @@ public class HavingStandardizationTest {
     RelationStandardizer gen = new RelationStandardizer(meta);
     relation = gen.standardize((SelectQuery) relation);
 
+    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
+    String actual = selectQueryToSql.toSql(relation);
+    String expected =
+        "select " +
+        "vt1.`ps_partkey` * 2 as `groupkey`, " +
+        "sum(vt1.`ps_supplycost` * vt1.`ps_availqty`) as `value` " +
+        "from " +
+        "`tpch`.`partsupp` as vt1, " +
+        "`tpch`.`supplier` as vt2, " +
+        "`tpch`.`nation` as vt3 " +
+        "where " +
+        "(vt1.`ps_suppkey` = vt2.`s_suppkey`) " +
+        "and (vt2.`s_nationkey` = vt3.`n_nationkey`) " +
+        "group by `groupkey` " +
+        "having `value` > 10 " +
+        "order by `value` desc";
+    assertEquals(expected, actual);
   }
 }

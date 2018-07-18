@@ -63,8 +63,6 @@ public class AsyncAggExecutionNode extends ProjectionNode {
   // agg columns. pairs of their column names and their types (i.e., sum, avg, count)
   List<AggNameAndType> aggColumns;
 
-  SelectQuery originalQuery;
-
 //  List<AsyncAggExecutionNode> children = new ArrayList<>();
 
   int tableNum = 1;
@@ -152,6 +150,19 @@ public class AsyncAggExecutionNode extends ProjectionNode {
     newTableSchemaName = tempTableFullName.getLeft();
     newTableName = tempTableFullName.getRight();
     SelectQuery createTableQuery = replaceWithOriginalSelectList(query, ((AggMeta) savedToken.getValue("aggMeta")));
+
+    if (!selectQuery.getGroupby().isEmpty()) {
+      createTableQuery.addGroupby(selectQuery.getGroupby());
+    }
+    if (!selectQuery.getOrderby().isEmpty()) {
+      createTableQuery.addOrderby(selectQuery.getOrderby());
+    }
+    if (selectQuery.getHaving().isPresent()) {
+      createTableQuery.addHavingByAnd(selectQuery.getHaving().get());
+    }
+    if (selectQuery.getLimit().isPresent()) {
+      createTableQuery.addLimit(selectQuery.getLimit().get());
+    }
 
     CreateTableAsSelectQuery createQuery = new CreateTableAsSelectQuery(newTableSchemaName, newTableName, createTableQuery);
     return createQuery;

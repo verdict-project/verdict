@@ -10,39 +10,34 @@ public class OrderbyAttribute implements Serializable {
 
   private static final long serialVersionUID = 735964470774655241L;
 
-  AliasReference aliasName;
+  GroupingAttribute attribute;
 
   String order = "asc";
 
-  UnnamedColumn column;
-
-  public void setColumn(UnnamedColumn column) {
-    this.column = column;
-  }
-
-  public UnnamedColumn getColumn() {
-    return column;
-  }
-
   public OrderbyAttribute(String attributeName) {
-    this.aliasName = new AliasReference(attributeName);
+    this.attribute = new AliasReference(attributeName);
+  }
+
+  public OrderbyAttribute(GroupingAttribute column) {
+    this.attribute = column;
   }
 
   public OrderbyAttribute(String attributeName, String order) {
-    this.aliasName = new AliasReference(attributeName);
+    this.attribute = new AliasReference(attributeName);
     this.order = order;
   }
 
-  public String getAttributeName() {
-    return aliasName.getAliasName();
+  public OrderbyAttribute(GroupingAttribute column, String order) {
+    this.attribute = column;
+    this.order = order;
   }
 
   public String getOrder() {
     return order;
   }
 
-  public AliasReference getAliasName() {
-    return aliasName;
+  public GroupingAttribute getAttribute() {
+    return attribute;
   }
 
   @Override

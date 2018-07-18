@@ -40,13 +40,7 @@ public class RelationGen extends VerdictSQLParserBaseVisitor<AbstractRelation> {
       for (VerdictSQLParser.Order_by_expressionContext o : ctx.order_by_clause().order_by_expression()) {
         ExpressionGen g = new ExpressionGen();
         UnnamedColumn c = g.visit(o.expression());
-        OrderbyAttribute orderbyCol = null;
-        if (c instanceof BaseColumn) {
-          orderbyCol = new OrderbyAttribute(((BaseColumn) c).getColumnName(), (o.DESC() == null) ? "asc" : "desc");
-        } else if (c instanceof ConstantColumn || c instanceof ColumnOp) {
-          orderbyCol = new OrderbyAttribute("", (o.DESC() == null) ? "asc" : "desc");
-          orderbyCol.setColumn(c);
-        }
+        OrderbyAttribute orderbyCol = new OrderbyAttribute(c, (o.DESC() == null) ? "asc" : "desc");
         sel.addOrderby(orderbyCol);
       }
     }
