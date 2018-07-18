@@ -13,7 +13,7 @@ public class JoinTable extends AbstractRelation {
 
   //May need to expand
   public enum JoinType {
-    left, leftouter, right, rightouter, inner, outer
+    left, leftouter, right, rightouter, inner, outer, cross
   }
 
   List<AbstractRelation> joinList = new ArrayList<>();
@@ -79,7 +79,8 @@ public class JoinTable extends AbstractRelation {
       newJoinlist.add(j.deepcopy());
     }
     for (UnnamedColumn c:condition) {
-      newJoinCond.add(c.deepcopy());
+      if (c!=null) newJoinCond.add(c.deepcopy());
+      else newJoinCond.add(null);
     }
     return JoinTable.create(newJoinlist, joinTypeList, newJoinCond);
   }

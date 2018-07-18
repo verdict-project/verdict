@@ -11,7 +11,7 @@ import org.apache.commons.lang3.builder.ToStringStyle;
  *
  * @author Yongjoo Park
  */
-public class AliasReference implements GroupingAttribute {
+public class AliasReference implements UnnamedColumn {
 
   private static final long serialVersionUID = 6273526004275442693L;
 
@@ -51,4 +51,13 @@ public class AliasReference implements GroupingAttribute {
     return ToStringBuilder.reflectionToString(this, ToStringStyle.SHORT_PREFIX_STYLE);
   }
 
+  @Override
+  public boolean isAggregateColumn() {
+    return false;
+  }
+
+  @Override
+  public UnnamedColumn deepcopy() {
+    return new AliasReference(tableAlias, aliasName);
+  }
 }
