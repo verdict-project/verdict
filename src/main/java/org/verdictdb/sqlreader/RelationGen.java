@@ -1,5 +1,6 @@
 package org.verdictdb.sqlreader;
 
+import java.beans.Expression;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -164,7 +165,19 @@ public class RelationGen extends VerdictSQLParserBaseVisitor<AbstractRelation> {
     if (ctx.GROUP() != null) {
       List<GroupingAttribute> groupby = new ArrayList<GroupingAttribute>();
       for (VerdictSQLParser.Group_by_itemContext g : ctx.group_by_item()) {
-
+        GroupingAttribute gexpr = null;
+        ExpressionGen expressionGen = new ExpressionGen();
+        UnnamedColumn c = expressionGen.visit(g);
+        if (c instanceof BaseColumn) {
+          if (((BaseColumn) c).getTableSourceAlias().equals(""))
+            gexpr = new AliasReference(((BaseColumn) c).getColumnName());
+          else gexpr = new AliasReference(((BaseColumn) c).getTableSourceAlias(), ((BaseColumn) c).getColumnName());
+        }
+        else if (c instanceof ConstantColumn || c instanceof ColumnOp) {
+          gexpr = new AliasReference("");
+          ((AliasReference) gexpr).setColumn(c);
+        }
+        /*
         class GroupbyGen extends VerdictSQLParserBaseVisitor<GroupingAttribute> {
 
           //          MetaData meta;
@@ -180,9 +193,14 @@ public class RelationGen extends VerdictSQLParserBaseVisitor<AbstractRelation> {
               return new AliasReference(t[0]);
             }
           }
+
+          @Override
+          public GroupingAttribute visitConstant(VerdictSQLParser.ConstantContext ctx) {
+            return new AliasReference(ctx.getText());
+          }
         }
         GroupbyGen expg = new GroupbyGen();
-        GroupingAttribute gexpr = expg.visit(g);
+        */
         boolean aliasFound = false;
         if (!aliasFound) {
           groupby.add(gexpr);
@@ -254,12 +272,24 @@ public class RelationGen extends VerdictSQLParserBaseVisitor<AbstractRelation> {
       joinCond = cond;
       return r;
     }
+    else if (ctx.CROSS() != null) {
+      AbstractRelation r = this.visit(ctx.table_source());
+      joinType = JoinTable.JoinType.cross;
+      joinCond = null;
+      return r;
+    }
     else {
       AbstractRelation r = this.visit(ctx.table_source());
       CondGen g = new CondGen();
-      UnnamedColumn cond = g.visit(ctx.search_condition());
-      joinType = JoinTable.JoinType.inner;
-      joinCond = cond;
+      if (ctx.search_condition()!=null) {
+        UnnamedColumn cond = g.visit(ctx.search_condition());
+        joinType = JoinTable.JoinType.inner;
+        joinCond = cond;
+      }
+      else {
+        joinType = JoinTable.JoinType.cross;
+        joinCond = null;
+      }
       return r;
     }
   }
