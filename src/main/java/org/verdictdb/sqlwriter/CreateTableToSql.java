@@ -74,16 +74,10 @@ public class CreateTableToSql {
     sql.append(" ");
     sql.append(syntax.getPartitionByInCreateTable());
     sql.append(" (");
-    List<String> partitionColumns = query.getPartitionColumns();
-    boolean isFirstColumn = true;
-    for (String col : partitionColumns) {
-      if (isFirstColumn) {
-        sql.append(quoteName(col));
-        isFirstColumn = false;
-      } else {
-        sql.append(", " + quoteName(col));
-      }
-    }
+
+    // only single column for partition
+    String partitionColumn = query.getPartitionColumns().get(0);
+    sql.append(quoteName(partitionColumn));
     sql.append(")");
     if (syntax instanceof PostgresqlSyntax) {
       sql.append("; ");
