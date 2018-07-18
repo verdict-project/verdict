@@ -101,12 +101,12 @@ public class CreateScrambledTableNode extends QueryNodeWithPlaceHolders {
 
   @Override
   public ExecutableNodeBase deepcopy() {
-    CreateTableAsSelectNode node = new CreateTableAsSelectNode(namer, selectQuery);
+    CreateScrambledTableNode node = new CreateScrambledTableNode(namer, selectQuery);
     copyFields(this, node);
     return node;
   }
 
-  void copyFields(CreateTableAsSelectNode from, CreateTableAsSelectNode to) {
+  void copyFields(CreateScrambledTableNode from, CreateScrambledTableNode to) {
     super.copyFields(from, to);
   }
 
