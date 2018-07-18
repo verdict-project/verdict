@@ -25,7 +25,6 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.coordinator.VerdictSingleResult;
 
 public class VerdictResultSet implements ResultSet {
