@@ -4,8 +4,6 @@
 #
 version: 2
 jobs:
-  install-git:
-    - run: sudo apt-get update; sudo apt-get install git
   build-jdk7:
     docker:
       # specify the version you desire here
@@ -31,6 +29,7 @@ jobs:
       MAVEN_OPTS: -Xmx3200m
     steps:
       - checkout
+      - run: sudo apt-get update; sudo apt-get install git
       # Download and cache dependencies
       - restore_cache:
           keys:
@@ -44,6 +43,7 @@ jobs:
             - ~/.m2
           key: v1-dependencies-{{ checksum "pom.xml" }}
       # run tests!
+      - run: sudo apt-get update; sudo apt-get install git
       - run: git clone git@github.com:verdictdb/verdictdb-private-resources.git
       - run: mvn -B clean test 2> /dev/null
       - store_test_results:
@@ -76,6 +76,7 @@ jobs:
       MAVEN_OPTS: -Xmx3200m
     steps:
       - checkout
+      - run: sudo apt-get update; sudo apt-get install git
       # Download and cache dependencies
       - restore_cache:
           keys:
@@ -107,6 +108,7 @@ jobs:
         MAVEN_OPTS: -Xmx3200m
       steps:
         - checkout
+        - run: sudo apt-get update; sudo apt-get install git
         # Download and cache dependencies
         - restore_cache:
             keys:
@@ -132,11 +134,5 @@ workflows:
   build_and_test:
     jobs:
       - build-spark
-          requires:
-            - install-git
       - build-jdk7
-          requires:
-            - install-git
       - build-jdk8
-          requires:
-            - install-git
