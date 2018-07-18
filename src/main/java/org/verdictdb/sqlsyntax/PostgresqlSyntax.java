@@ -1,6 +1,8 @@
 package org.verdictdb.sqlsyntax;
 
 public class PostgresqlSyntax extends SqlSyntax {
+
+  public static final String CHILD_PARTITION_TABLE_SUFFIX = "_vpart%05d";
   
   @Override
   public int getSchemaNameColumnIndex() {
@@ -68,9 +70,7 @@ public class PostgresqlSyntax extends SqlSyntax {
 
   @Override
   public String getPartitionByInCreateTable() {
-    // not implemented yet
-    // postgres has some complication that sub-partition tables must be created individually.
-    return null;
+    return "partition by list";
   }
 
   @Override

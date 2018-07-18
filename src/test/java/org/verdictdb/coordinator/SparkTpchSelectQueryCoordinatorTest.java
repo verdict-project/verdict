@@ -1,30 +1,27 @@
 package org.verdictdb.coordinator;
 
+import static org.junit.Assert.assertEquals;
+
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.verdictdb.commons.DatabaseConnectionHelpers;
-import org.verdictdb.connection.*;
+import org.verdictdb.connection.DbmsConnection;
+import org.verdictdb.connection.DbmsQueryResult;
+import org.verdictdb.connection.SparkConnection;
 import org.verdictdb.core.resulthandler.ExecutionResultReader;
 import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
 import org.verdictdb.core.sqlobject.AbstractRelation;
 import org.verdictdb.core.sqlobject.SelectQuery;
-import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sqlreader.NonValidatingSQLParser;
 import org.verdictdb.sqlreader.RelationStandardizer;
 import org.verdictdb.sqlsyntax.MysqlSyntax;
 import org.verdictdb.sqlwriter.SelectQueryToSql;
-
-import java.sql.ResultSet;
-import java.sql.SQLException;
-
-import static org.junit.Assert.assertEquals;
 
 
 /**

@@ -1,6 +1,10 @@
 package org.verdictdb.coordinator;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 
 import org.verdictdb.commons.AttributeValueRetrievalHelper;
 import org.verdictdb.connection.DbmsQueryResult;

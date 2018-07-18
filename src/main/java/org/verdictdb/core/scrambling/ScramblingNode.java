@@ -9,7 +9,6 @@ import java.util.Map.Entry;
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.core.execplan.ExecutionInfoToken;
-import org.verdictdb.core.querying.CreateTableAsSelectNode;
 import org.verdictdb.core.querying.IdCreator;
 import org.verdictdb.core.sqlobject.AbstractRelation;
 import org.verdictdb.core.sqlobject.AliasedColumn;
@@ -28,19 +27,9 @@ import org.verdictdb.exception.VerdictDBException;
  * @author Yongjoo Park
  *
  */
-public class ScramblingNode extends CreateTableAsSelectNode {
+public class ScramblingNode extends CreateScrambledTableNode {
 
   private static final long serialVersionUID = 3921018031181756963L;
-
-  String originalSchemaName;
-
-  String originalTableName;
-
-  ScramblingMethod method;
-
-  String tierColumnName;
-
-  String blockColumnName;
 
   //  Map<String, String> options;
 
@@ -49,12 +38,7 @@ public class ScramblingNode extends CreateTableAsSelectNode {
       String originalSchemaName, String originalTableName,
       ScramblingMethod method, String tierColumnName, String blockColumnName) {
 
-    super(namer, null);
-    this.originalSchemaName = originalSchemaName;
-    this.originalTableName = originalTableName;
-    this.method = method;
-    this.tierColumnName = tierColumnName;
-    this.blockColumnName = blockColumnName;
+    super(namer, null, originalSchemaName, originalTableName, method, tierColumnName, blockColumnName);
   }
 
   /**

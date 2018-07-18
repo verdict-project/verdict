@@ -6,7 +6,6 @@ import java.util.Arrays;
 
 import org.junit.Test;
 import org.verdictdb.core.sqlobject.AbstractRelation;
-import org.verdictdb.core.sqlobject.AliasReference;
 import org.verdictdb.core.sqlobject.AliasedColumn;
 import org.verdictdb.core.sqlobject.AsteriskColumn;
 import org.verdictdb.core.sqlobject.BaseColumn;

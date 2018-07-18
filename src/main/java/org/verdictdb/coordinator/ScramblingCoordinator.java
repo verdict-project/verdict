@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.verdictdb.connection.DbmsConnection;
@@ -112,15 +113,24 @@ public class ScramblingCoordinator {
   public ScrambleMeta scramble(
       String originalSchema, String originalTable,
       String newSchema, String newTable,
-      String methodName, String primaryColumn, Map<String, String> options) throws VerdictDBException {
+      String methodName, String primaryColumn, Map<String, String> customOptions) throws VerdictDBException {
 
     // sanity check
     if (!scramblingMethods.contains(methodName.toLowerCase())) {
       throw new VerdictDBValueException("Not supported scrambling method: " + methodName);
     }
+    
+    // overwrite options with custom options.
+    Map<String, String> effectiveOptions = new HashMap<String, String>();
+    for (Entry<String, String> o : options.entrySet()) {
+      effectiveOptions.put(o.getKey(), o.getValue());
+    }
+    for (Entry<String, String> o : customOptions.entrySet()) {
+      effectiveOptions.put(o.getKey(), o.getValue());
+    }
 
     // determine scrambling method
-    long blockSize = Double.valueOf(options.get("scrambleTableBlockSize")).longValue();
+    long blockSize = Double.valueOf(effectiveOptions.get("scrambleTableBlockSize")).longValue();
     ScramblingMethod scramblingMethod;
     if (methodName.equalsIgnoreCase("uniform")) {
       scramblingMethod = new UniformScramblingMethod(blockSize);
@@ -133,13 +143,13 @@ public class ScramblingCoordinator {
     }
 
     // perform scrambling
-    ScramblingPlan plan = ScramblingPlan.create(newSchema, newTable, originalSchema, originalTable, scramblingMethod, options);
+    ScramblingPlan plan = ScramblingPlan.create(newSchema, newTable, originalSchema, originalTable, scramblingMethod, effectiveOptions);
     ExecutablePlanRunner.runTillEnd(conn, plan);
 
     // compose scramble meta
-    String blockColumn = options.get("blockColumnName");
+    String blockColumn = effectiveOptions.get("blockColumnName");
     int blockCount = scramblingMethod.getBlockCount();
-    String tierColumn = options.get("tierColumnName");
+    String tierColumn = effectiveOptions.get("tierColumnName");
     int tierCount = scramblingMethod.getTierCount();
     
     Map<Integer, List<Double>> cumulativeDistribution = new HashMap<>();

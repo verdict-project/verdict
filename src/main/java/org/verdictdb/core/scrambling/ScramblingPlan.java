@@ -38,7 +38,7 @@ public class ScramblingPlan extends SimpleTreePlan {
     super(root);
   }
   
-  static final String COLUMN_METADATA_KEY = "scramblingPlan:columnMetaData";
+  public static final String COLUMN_METADATA_KEY = "scramblingPlan:columnMetaData";
   
   static final String PARTITION_METADATA_KEY = "scramblingPlan:partitionMetaData";
   

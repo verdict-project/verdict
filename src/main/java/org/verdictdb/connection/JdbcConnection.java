@@ -1,14 +1,16 @@
 package org.verdictdb.connection;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
-import org.verdictdb.coordinator.VerdictSingleResult;
 import org.verdictdb.exception.VerdictDBDbmsException;
-import org.verdictdb.jdbc41.VerdictResultSet;
 import org.verdictdb.sqlsyntax.HiveSyntax;
 import org.verdictdb.sqlsyntax.PostgresqlSyntax;
 import org.verdictdb.sqlsyntax.SparkSyntax;
@@ -76,7 +78,7 @@ public class JdbcConnection implements DbmsConnection {
       stmt.close();
       return jrs;
     } catch (SQLException e) {
-      e.printStackTrace();
+//      e.printStackTrace();
       throw new VerdictDBDbmsException(e.getMessage());
     }
   }
@@ -178,12 +180,13 @@ public class JdbcConnection implements DbmsConnection {
 
     // the result of postgresql is a vector of column index
     if (syntax instanceof PostgresqlSyntax) {
-      queryResult.next();
-      Object o = queryResult.getValue(0);
-      String[] arr = o.toString().split(" ");
-      List<Pair<String, String>> columns = getColumns(schema, table);
-      for (int i=0; i<arr.length; i++) {
-        partition.add(columns.get(Integer.valueOf(arr[i])-1).getKey());
+      if (queryResult.next()) {
+        Object o = queryResult.getValue(0);
+        String[] arr = o.toString().split(" ");
+        List<Pair<String, String>> columns = getColumns(schema, table);
+        for (int i=0; i<arr.length; i++) {
+          partition.add(columns.get(Integer.valueOf(arr[i])-1).getKey());
+        }
       }
     }
     // Hive and Spark append partition information at the end of the "DESCRIBE TABLE" statement.

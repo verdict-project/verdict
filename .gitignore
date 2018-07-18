@@ -26,6 +26,7 @@ jars/
 # Test configuration files
 nocommit/
 *NoCommit*
+verdictdb-private-resources/
 
 # config
 conf/verdict.properties
