@@ -151,17 +151,19 @@ public class AsyncAggExecutionNode extends ProjectionNode {
     newTableName = tempTableFullName.getRight();
     SelectQuery createTableQuery = replaceWithOriginalSelectList(query, ((AggMeta) savedToken.getValue("aggMeta")));
 
-    if (!selectQuery.getGroupby().isEmpty()) {
-      createTableQuery.addGroupby(selectQuery.getGroupby());
-    }
-    if (!selectQuery.getOrderby().isEmpty()) {
-      createTableQuery.addOrderby(selectQuery.getOrderby());
-    }
-    if (selectQuery.getHaving().isPresent()) {
-      createTableQuery.addHavingByAnd(selectQuery.getHaving().get());
-    }
-    if (selectQuery.getLimit().isPresent()) {
-      createTableQuery.addLimit(selectQuery.getLimit().get());
+    if (selectQuery != null) {
+      if (!selectQuery.getGroupby().isEmpty()) {
+        createTableQuery.addGroupby(selectQuery.getGroupby());
+      }
+      if (!selectQuery.getOrderby().isEmpty()) {
+        createTableQuery.addOrderby(selectQuery.getOrderby());
+      }
+      if (selectQuery.getHaving().isPresent()) {
+        createTableQuery.addHavingByAnd(selectQuery.getHaving().get());
+      }
+      if (selectQuery.getLimit().isPresent()) {
+        createTableQuery.addLimit(selectQuery.getLimit().get());
+      }
     }
 
     CreateTableAsSelectQuery createQuery = new CreateTableAsSelectQuery(newTableSchemaName, newTableName, createTableQuery);
