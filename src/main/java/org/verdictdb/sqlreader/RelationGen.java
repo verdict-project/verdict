@@ -167,13 +167,7 @@ public class RelationGen extends VerdictSQLParserBaseVisitor<AbstractRelation> {
         GroupingAttribute gexpr = null;
         ExpressionGen expressionGen = new ExpressionGen();
         UnnamedColumn c = expressionGen.visit(g);
-        if (c instanceof BaseColumn) {
-          if (((BaseColumn) c).getTableSourceAlias().equals("")) {
-            gexpr = new AliasReference(((BaseColumn) c).getColumnName());
-          }
-          else gexpr = new AliasReference(((BaseColumn) c).getTableSourceAlias(), ((BaseColumn) c).getColumnName());
-        }
-        else gexpr = c;
+        gexpr = c;
         boolean aliasFound = false;
         if (!aliasFound) {
           groupby.add(gexpr);

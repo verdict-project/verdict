@@ -171,18 +171,18 @@ public class RelationStandardizer {
   private List<GroupingAttribute> replaceGroupby(List<GroupingAttribute> groupingAttributeList) {
     List<GroupingAttribute> newGroupby = new ArrayList<>();
     for (GroupingAttribute g : groupingAttributeList) {
-      if (g instanceof AliasReference) {
-        if (((AliasReference) g).getTableAlias() != null) {
-          String tableSource = ((AliasReference) g).getTableAlias();
-          String alias = ((AliasReference) g).getAliasName();
-          if (duplicateColNameAndColAlias.containsKey(new ImmutablePair<>(tableSource, alias))) {
-            newGroupby.add(new AliasReference(tableSource, duplicateColNameAndColAlias.get(new ImmutablePair<>(tableSource, alias))));
-          } else if (colNameAndColAlias.containsKey(((AliasReference) g).getAliasName())) {
-            newGroupby.add(new AliasReference(colNameAndColAlias.get(((AliasReference) g).getAliasName())));
-          } else newGroupby.add(g);
-        } else if (colNameAndColAlias.containsKey(((AliasReference) g).getAliasName())) {
-          newGroupby.add(new AliasReference(colNameAndColAlias.get(((AliasReference) g).getAliasName())));
-        } else newGroupby.add(g);
+      if (g instanceof BaseColumn) {
+        if (((BaseColumn) g).getTableSourceAlias() != null) {
+          String tableSource = ((BaseColumn) g).getTableSourceAlias();
+          String columnName = ((BaseColumn) g).getColumnName();
+          if (duplicateColNameAndColAlias.containsKey(new ImmutablePair<>(tableSource, columnName))) {
+            newGroupby.add(new AliasReference(tableSource, duplicateColNameAndColAlias.get(new ImmutablePair<>(tableSource, columnName))));
+          } else if (colNameAndColAlias.containsKey(columnName)) {
+            newGroupby.add(new AliasReference(colNameAndColAlias.get(columnName)));
+          } else newGroupby.add(new AliasReference(((BaseColumn) g).getColumnName()));
+        } else if (colNameAndColAlias.containsKey(((BaseColumn) g).getColumnName())) {
+          newGroupby.add(new AliasReference(colNameAndColAlias.get(((BaseColumn) g).getColumnName())));
+        } else newGroupby.add(new AliasReference(((BaseColumn) g).getColumnName()));
       }
       else {
         newGroupby.add(g);

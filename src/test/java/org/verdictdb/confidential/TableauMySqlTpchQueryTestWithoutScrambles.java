@@ -93,16 +93,16 @@ public class TableauMySqlTpchQueryTestWithoutScrambles {
     VerdictSingleResult result = answerPair.getLeft();
     while (rs.next()) {
       result.next();
-      assertEquals(result.getDouble(0), rs.getDouble(1), 1e-5);
-      assertEquals(result.getDouble(1), rs.getDouble(2), 1e-5);
-      assertEquals(result.getDouble(2), rs.getDouble(3), 1e-5);
-      assertEquals(result.getString(3), rs.getString(4));
-      assertEquals(result.getString(4), rs.getString(5));
-      assertEquals(result.getDouble(5), rs.getDouble(6), 1e-5);
-      assertEquals(result.getDouble(6), rs.getDouble(7), 1e-5);
-      assertEquals(result.getDouble(7), rs.getDouble(8), 1e-5);
-      assertEquals(result.getDouble(8), rs.getDouble(9), 1e-5);
-      assertEquals(result.getDouble(9), rs.getDouble(10), 1e-5);
+      assertEquals(rs.getDouble(1), result.getDouble(0), 1e-5);
+      assertEquals(rs.getDouble(2), result.getDouble(1), 1e-5);
+      assertEquals(rs.getDouble(3), result.getDouble(2), 1e-5);
+      assertEquals(rs.getString(4), result.getString(3));
+      assertEquals(rs.getString(5), result.getString(4));
+      assertEquals(rs.getDouble(6), result.getDouble(5), 1e-5);
+      assertEquals(rs.getDouble(7), result.getDouble(6), 1e-5);
+      assertEquals(rs.getDouble(8), result.getDouble(7), 1e-5);
+      assertEquals(rs.getDouble(9), result.getDouble(8), 1e-5);
+      assertEquals(rs.getDouble(10), result.getDouble(9), 1e-5);
     }
   }
 
@@ -113,15 +113,15 @@ public class TableauMySqlTpchQueryTestWithoutScrambles {
     VerdictSingleResult result = answerPair.getLeft();
     while (rs.next()) {
       result.next();
-      assertEquals(result.getString(0), rs.getString(1));
-      assertEquals(result.getString(1), rs.getString(2));
-      assertEquals(result.getInt(2), rs.getInt(3));
-      assertEquals(result.getInt(3), rs.getInt(4));
-      assertEquals(result.getString(4), rs.getString(5));
-      assertEquals(result.getString(5), rs.getString(6));
-      assertEquals(result.getString(6), rs.getString(7));
-      assertEquals(result.getString(7), rs.getString(8));
-      assertEquals(result.getDouble(8), rs.getDouble(9), 1e-5);
+      assertEquals(rs.getString(1), result.getString(0));
+      assertEquals(rs.getString(2), result.getString(1));
+      assertEquals(rs.getInt(3), result.getInt(2));
+      assertEquals(rs.getInt(4), result.getInt(3));
+      assertEquals(rs.getString(5), result.getString(4));
+      assertEquals(rs.getString(6), result.getString(5));
+      assertEquals(rs.getString(7), result.getString(6));
+      assertEquals(rs.getString(8), result.getString(7));
+      assertEquals(rs.getDouble(9), result.getDouble(8), 1e-5);
     }
   }
 
@@ -132,10 +132,10 @@ public class TableauMySqlTpchQueryTestWithoutScrambles {
     VerdictSingleResult result = answerPair.getLeft();
     while (rs.next()) {
       result.next();
-      assertEquals(result.getDate(0), rs.getDate(1));
-      assertEquals(result.getInt(1), rs.getInt(2));
-      assertEquals(result.getInt(2), rs.getInt(3));
-      assertEquals(result.getDouble(3), rs.getDouble(4), 1e-5);
+      assertEquals(rs.getDate(1), result.getDate(0));
+      assertEquals(rs.getInt(2), result.getInt(1));
+      assertEquals(rs.getInt(3), result.getInt(2));
+      assertEquals(rs.getDouble(4), result.getDouble(3), 1e-5);
     }
   }
 
@@ -146,8 +146,8 @@ public class TableauMySqlTpchQueryTestWithoutScrambles {
     VerdictSingleResult result = answerPair.getLeft();
     while (rs.next()) {
       result.next();
-      assertEquals(result.getLong(0), rs.getLong(1));
-      assertEquals(result.getString(1), rs.getString(2));
+      assertEquals(rs.getLong(1), result.getLong(0));
+      assertEquals(rs.getString(2), result.getString(1));
     }
   }
 
@@ -158,8 +158,8 @@ public class TableauMySqlTpchQueryTestWithoutScrambles {
     VerdictSingleResult result = answerPair.getLeft();
     while (rs.next()) {
       result.next();
-      assertEquals(result.getString(0), rs.getString(1));
-      assertEquals(result.getDouble(1), rs.getDouble(2), 1e-5);
+      assertEquals(rs.getString(1), result.getString(0));
+      assertEquals(rs.getDouble(2), result.getDouble(1), 1e-5);
     }
   }
 
@@ -170,7 +170,7 @@ public class TableauMySqlTpchQueryTestWithoutScrambles {
     VerdictSingleResult result = answerPair.getLeft();
     while (rs.next()) {
       result.next();
-      assertEquals(result.getDouble(0), rs.getDouble(1), 1e-5);
+      assertEquals(rs.getDouble(1), result.getDouble(0), 1e-5);
     }
   }
 
@@ -181,10 +181,10 @@ public class TableauMySqlTpchQueryTestWithoutScrambles {
     VerdictSingleResult result = answerPair.getLeft();
     while (rs.next()) {
       result.next();
-      assertEquals(result.getString(0), rs.getString(1));
-      assertEquals(result.getString(1), rs.getString(2));
-      assertEquals(result.getDouble(2), rs.getDouble(3), 1e-5);
-      assertEquals(result.getDouble(3), rs.getDouble(4), 1e-5);
+      assertEquals(rs.getString(1), result.getString(0));
+      assertEquals(rs.getString(2), result.getString(1));
+      assertEquals(rs.getDouble(3), result.getDouble(2), 1e-5);
+      assertEquals(rs.getDouble(4), result.getDouble(3), 1e-5);
     }
   }
 
@@ -195,9 +195,9 @@ public class TableauMySqlTpchQueryTestWithoutScrambles {
     VerdictSingleResult result = answerPair.getLeft();
     while (rs.next()) {
       result.next();
-      assertEquals(result.getString(0), rs.getString(1));
-      assertEquals(result.getDouble(1), rs.getDouble(2), 1e-5);
-      assertEquals(result.getInt(2), rs.getInt(3));
+      assertEquals(rs.getString(1), result.getString(0));
+      assertEquals(rs.getDouble(2), result.getDouble(1), 1e-5);
+      assertEquals(rs.getInt(3), result.getInt(2));
     }
   }
 
@@ -208,9 +208,9 @@ public class TableauMySqlTpchQueryTestWithoutScrambles {
     VerdictSingleResult result = answerPair.getLeft();
     while (rs.next()) {
       result.next();
-      assertEquals(result.getString(0), rs.getString(1));
-      assertEquals(result.getDouble(1), rs.getDouble(2), 1e-5);
-      assertEquals(result.getInt(2), rs.getInt(3));
+      assertEquals(rs.getString(1), result.getString(0));
+      assertEquals(rs.getDouble(2), result.getDouble(1), 1e-5);
+      assertEquals(rs.getInt(3), result.getInt(2));
     }
   }
 
@@ -221,14 +221,14 @@ public class TableauMySqlTpchQueryTestWithoutScrambles {
     VerdictSingleResult result = answerPair.getLeft();
     while (rs.next()) {
       result.next();
-      assertEquals(result.getDouble(0), rs.getDouble(1), 1e-5);
-      assertEquals(result.getString(1), rs.getString(2));
-      assertEquals(result.getString(2), rs.getString(3));
-      assertEquals(result.getInt(3), rs.getInt(4));
-      assertEquals(result.getString(4), rs.getString(5));
-      assertEquals(result.getString(5), rs.getString(6));
-      assertEquals(result.getString(6), rs.getString(7));
-      assertEquals(result.getDouble(7), rs.getDouble(8), 1e-5);
+      assertEquals(rs.getDouble(1), result.getDouble(0), 1e-5);
+      assertEquals(rs.getString(2), result.getString(1));
+      assertEquals(rs.getString(3), result.getString(2));
+      assertEquals(rs.getInt(4), result.getInt(3));
+      assertEquals(rs.getString(5), result.getString(4));
+      assertEquals(rs.getString(6), result.getString(5));
+      assertEquals(rs.getString(7), result.getString(6));
+      assertEquals(rs.getDouble(8), result.getDouble(7), 1e-5);
     }
   }
 
@@ -239,8 +239,8 @@ public class TableauMySqlTpchQueryTestWithoutScrambles {
     VerdictSingleResult result = answerPair.getLeft();
     while (rs.next()) {
       result.next();
-      assertEquals(result.getInt(0), rs.getInt(1));
-      assertEquals(result.getDouble(1), rs.getDouble(2), 1e-5);
+      assertEquals(rs.getInt(1), result.getInt(0));
+      assertEquals(rs.getDouble(2), result.getDouble(1), 1e-5);
     }
   }
 
@@ -251,9 +251,9 @@ public class TableauMySqlTpchQueryTestWithoutScrambles {
     VerdictSingleResult result = answerPair.getLeft();
     while (rs.next()) {
       result.next();
-      assertEquals(result.getString(0), rs.getString(1));
-      assertEquals(result.getString(1), rs.getString(2));
-      assertEquals(result.getDouble(2), rs.getDouble(3), 1e-5);
+      assertEquals(rs.getString(1), result.getString(0));
+      assertEquals(rs.getString(2), result.getString(1));
+      assertEquals(rs.getDouble(3), result.getDouble(2), 1e-5);
     }
   }
 
@@ -264,8 +264,8 @@ public class TableauMySqlTpchQueryTestWithoutScrambles {
     VerdictSingleResult result = answerPair.getLeft();
     while (rs.next()) {
       result.next();
-      assertEquals(result.getInt(0), rs.getInt(1));
-      assertEquals(result.getInt(1), rs.getInt(2));
+      assertEquals(rs.getInt(1), result.getInt(0));
+      assertEquals(rs.getInt(2), result.getInt(1));
     }
   }
 
@@ -276,8 +276,8 @@ public class TableauMySqlTpchQueryTestWithoutScrambles {
     VerdictSingleResult result = answerPair.getLeft();
     while (rs.next()) {
       result.next();
-      assertEquals(result.getInt(0), rs.getInt(1));
-      assertEquals(result.getDouble(1), rs.getDouble(2), 1e-5);
+      assertEquals(rs.getInt(1), result.getInt(0));
+      assertEquals(rs.getDouble(2), result.getDouble(1), 1e-5);
     }
   }
 
@@ -288,11 +288,11 @@ public class TableauMySqlTpchQueryTestWithoutScrambles {
     VerdictSingleResult result = answerPair.getLeft();
     while (rs.next()) {
       result.next();
-      assertEquals(result.getInt(0), rs.getInt(1));
-      assertEquals(result.getString(1), rs.getString(2));
-      assertEquals(result.getString(2), rs.getString(3));
-      assertEquals(result.getString(3), rs.getString(4));
-      assertEquals(result.getDouble(4), rs.getDouble(5), 1e-5);
+      assertEquals(rs.getInt(1), result.getInt(0));
+      assertEquals(rs.getString(2), result.getString(1));
+      assertEquals(rs.getString(3), result.getString(2));
+      assertEquals(rs.getString(4), result.getString(3));
+      assertEquals(rs.getDouble(5), result.getDouble(4), 1e-5);
     }
   }
 
@@ -303,10 +303,10 @@ public class TableauMySqlTpchQueryTestWithoutScrambles {
     VerdictSingleResult result = answerPair.getLeft();
     while (rs.next()) {
       result.next();
-      assertEquals(result.getInt(0), rs.getInt(1));
-      assertEquals(result.getString(1), rs.getString(2));
-      assertEquals(result.getInt(2), rs.getInt(3));
-      assertEquals(result.getString(3), rs.getString(4));
+      assertEquals(rs.getInt(1), result.getInt(0));
+      assertEquals(rs.getString(2), result.getString(1));
+      assertEquals(rs.getInt(3), result.getInt(2));
+      assertEquals(rs.getString(4), result.getString(3));
     }
   }
 
@@ -317,7 +317,7 @@ public class TableauMySqlTpchQueryTestWithoutScrambles {
     VerdictSingleResult result = answerPair.getLeft();
     while (rs.next()) {
       result.next();
-      assertEquals(result.getDouble(0), rs.getDouble(1), 1e-5);
+      assertEquals(rs.getDouble(1), result.getDouble(0), 1e-5);
     }
   }
 
@@ -328,13 +328,13 @@ public class TableauMySqlTpchQueryTestWithoutScrambles {
     VerdictSingleResult result = answerPair.getLeft();
     while (rs.next()) {
       result.next();
-      assertEquals(result.getInt(0), rs.getInt(1));
-      assertEquals(result.getString(1), rs.getString(2));
-      assertEquals(result.getDouble(2), rs.getDouble(3),1e-5);
-      assertEquals(result.getString(3), rs.getString(4));
-      assertEquals(result.getInt(4), rs.getInt(5));
-      assertEquals(result.getDouble(5), rs.getDouble(6),1e-5);
-      assertEquals(result.getDouble(6), rs.getDouble(7),1e-5);
+      assertEquals(rs.getInt(1), result.getInt(0));
+      assertEquals(rs.getString(2), result.getString(1));
+      assertEquals(rs.getDouble(3), result.getDouble(2),1e-5);
+      assertEquals(rs.getString(4), result.getString(3));
+      assertEquals(rs.getInt(5), result.getInt(4));
+      assertEquals(rs.getDouble(6), result.getDouble(5),1e-5);
+      assertEquals(rs.getDouble(7), result.getDouble(6),1e-5);
     }
   }
 
@@ -345,7 +345,7 @@ public class TableauMySqlTpchQueryTestWithoutScrambles {
     VerdictSingleResult result = answerPair.getLeft();
     while (rs.next()) {
       result.next();
-      assertEquals(result.getDouble(0), rs.getDouble(1),1e-5);
+      assertEquals(rs.getDouble(1), result.getDouble(0),1e-5);
     }
   }
 
@@ -356,8 +356,8 @@ public class TableauMySqlTpchQueryTestWithoutScrambles {
     VerdictSingleResult result = answerPair.getLeft();
     while (rs.next()) {
       result.next();
-      assertEquals(result.getString(0), rs.getString(1));
-      assertEquals(result.getString(1), rs.getString(2));
+      assertEquals(rs.getString(1), result.getString(0));
+      assertEquals(rs.getString(2), result.getString(1));
     }
   }
 
@@ -368,9 +368,9 @@ public class TableauMySqlTpchQueryTestWithoutScrambles {
     VerdictSingleResult result = answerPair.getLeft();
     while (rs.next()) {
       result.next();
-      assertEquals(result.getString(0), rs.getString(1));
-      assertEquals(result.getDouble(1), rs.getDouble(2), 1e-5);
-      assertEquals(result.getDouble(2), rs.getDouble(3), 1e-5);
+      assertEquals(rs.getString(1), result.getString(0));
+      assertEquals(rs.getDouble(2), result.getDouble(1), 1e-5);
+      assertEquals(rs.getDouble(3), result.getDouble(2), 1e-5);
     }
   }
 
@@ -381,9 +381,9 @@ public class TableauMySqlTpchQueryTestWithoutScrambles {
     VerdictSingleResult result = answerPair.getLeft();
     while (rs.next()) {
       result.next();
-      assertEquals(result.getString(0), rs.getString(1));
-      assertEquals(result.getDouble(1), rs.getDouble(2), 1e-5);
-      assertEquals(result.getDouble(2), rs.getDouble(3), 1e-5);
+      assertEquals(rs.getString(1), result.getString(0));
+      assertEquals(rs.getDouble(2), result.getDouble(1), 1e-5);
+      assertEquals(rs.getDouble(3), result.getDouble(2), 1e-5);
     }
   }
 
