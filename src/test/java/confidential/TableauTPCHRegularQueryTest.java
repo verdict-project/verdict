@@ -58,48 +58,22 @@ public class TableauTPCHRegularQueryTest {
     stmt = conn.createStatement();
   }
 
-  //@Test
-  public void t() throws VerdictDBException {
-    String sql =   "      SELECT AVG(`t3`.`x_measure__0`) AS `x_measure__1`\n" +
-        "      FROM (\n" +
-        "        SELECT `customer`.`c_custkey` AS `c_custkey`,\n" +
-        "          MAX((CASE WHEN (`customer`.`c_acctbal` > 0) THEN `customer`.`c_acctbal` ELSE CAST(NULL AS DOUBLE) END)) AS `x_measure__0`\n" +
-        "        FROM `tpch_flat_orc_2`.`customer` `customer`\n" +
-        "        WHERE (CASE WHEN 2 >= 0 THEN SUBSTRING(`customer`.`c_phone`,1,CAST(2 AS INT)) ELSE CAST(NULL AS STRING) END IN ('13', '17', '18', '23', '29', '30', '31'))\n" +
-        "        GROUP BY 1\n" +
-        "      ) `t3`\n" +
-        "      HAVING (COUNT(1) > 0)\n";
-    VerdictContext verdictContext = new VerdictContext(dbmsConnection);
-    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
-    AbstractRelation relation = sqlToRelation.toRelation(sql);
-    RelationStandardizer gen = new RelationStandardizer(dbmsConnection);
-    relation = gen.standardize((SelectQuery) relation);
-
-    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
-    String stdQuery = selectQueryToSql.toSql(relation);
-
-  }
-
-  //@Test
+  @Test
   public void Query1Test() throws VerdictDBException, SQLException {
-    String sql =   "  SELECT CASE WHEN 2 >= 0 THEN SUBSTRING(`customer`.`c_phone`,1,CAST(2 AS INT)) ELSE CAST(NULL AS STRING) END AS `calculation_513103`,\n" +
-        "    COUNT(`customer`.`c_custkey`) AS `cnt_c_custkey_ok`\n" +
-        "  FROM `tpch_flat_orc_2`.`orders` `orders`\n" +
-        "    RIGHT OUTER JOIN `tpch_flat_orc_2`.`customer` `customer` ON (`orders`.`o_custkey` = `customer`.`c_custkey`)\n" +
-        "    CROSS JOIN (\n" +
-        "    SELECT AVG(`t0`.`x_measure__0`) AS `x_measure__1`\n" +
-        "    FROM (\n" +
-        "      SELECT `customer`.`c_custkey` AS `c_custkey`,\n" +
-        "        MAX((CASE WHEN (`customer`.`c_acctbal` > 0) THEN `customer`.`c_acctbal` ELSE CAST(NULL AS DOUBLE) END)) AS `x_measure__0`\n" +
-        "      FROM `tpch_flat_orc_2`.`customer` `customer`\n" +
-        "      WHERE (CASE WHEN 2 >= 0 THEN SUBSTRING(`customer`.`c_phone`,1,CAST(2 AS INT)) ELSE CAST(NULL AS STRING) END IN ('13', '17', '18', '23', '29', '30', '31'))\n" +
-        "      GROUP BY 1\n" +
-        "    ) `t0`\n" +
-        "    HAVING (COUNT(1) > 0)\n" +
-        "  ) `t1`\n" +
-        "  WHERE ((CASE WHEN 2 >= 0 THEN SUBSTRING(`customer`.`c_phone`,1,CAST(2 AS INT)) ELSE CAST(NULL AS STRING) END IN ('13', '17', '18', '23', '29', '30', '31')) AND (((`customer`.`c_acctbal` > `t1`.`x_measure__1`) <> 0) AND (`orders`.`o_orderkey` IS NULL)))\n" +
-        "  GROUP BY 1\n" +
-        "\n";
+    String sql =   "SELECT AVG(`lineitem`.`l_discount`) AS `avg_l_discount_ok`,\n" +
+        "  AVG(`lineitem`.`l_extendedprice`) AS `avg_l_extendedprice_ok`,\n" +
+        "  AVG(`lineitem`.`l_quantity`) AS `avg_l_quantity_ok`,\n" +
+        "  `lineitem`.`l_linestatus` AS `l_linestatus`,\n" +
+        "  `lineitem`.`l_returnflag` AS `l_returnflag`,\n" +
+        "  SUM(((`lineitem`.`l_extendedprice` * (1 - `lineitem`.`l_discount`)) * (1 + `lineitem`.`l_tax`))) AS `sum_Calculation_4310711085325373_ok`,\n" +
+        "  SUM((`lineitem`.`l_extendedprice` * (1 - `lineitem`.`l_discount`))) AS `sum_Calculation_7060711085256495_ok`,\n" +
+        "  SUM(1) AS `sum_Number of Records_ok`,\n" +
+        "  SUM(`lineitem`.`l_extendedprice`) AS `sum_l_extendedprice_ok`,\n" +
+        "  SUM(`lineitem`.`l_quantity`) AS `sum_l_quantity_ok`\n" +
+        "FROM `lineitem`\n" +
+        "WHERE (`lineitem`.`l_shipdate` <= TIMESTAMP('1998-09-02 00:00:00'))\n" +
+        "GROUP BY 4,\n" +
+        "  5;";
     stmt.execute("create schema if not exists `verdictdb_temp`");
     VerdictContext verdictContext = new VerdictContext(dbmsConnection);
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
@@ -128,7 +102,7 @@ public class TableauTPCHRegularQueryTest {
     }
   }
 
-  //@Test
+  @Test
   public void Query2Test() throws VerdictDBException, SQLException {
     String sql = "SELECT `nation`.`n_name` AS `n_name`,\n" +
         "  `part`.`p_mfgr` AS `p_mfgr`,\n" +
@@ -182,7 +156,7 @@ public class TableauTPCHRegularQueryTest {
     }
   }
 
-  //@Test
+  @Test
   public void Query3Test() throws VerdictDBException, SQLException {
     String sql = "SELECT `orders`.`o_orderdate` AS `o_orderdate`,\n" +
         "  `orders`.`o_orderkey` AS `o_orderkey`,\n" +
@@ -228,7 +202,7 @@ public class TableauTPCHRegularQueryTest {
     }
   }
 
-  //@Test
+  @Test
   public void Query4Test() throws VerdictDBException, SQLException {
     String sql = "SELECT COUNT(DISTINCT `orders`.`o_orderkey`) AS `ctd_o_orderkey_ok`,\n" +
         "  `orders`.`o_orderpriority` AS `o_orderpriority`\n" +
@@ -256,7 +230,7 @@ public class TableauTPCHRegularQueryTest {
     }
   }
 
-  //@Test
+  @Test
   public void Query5Test() throws VerdictDBException, SQLException {
     String sql = "SELECT `N2`.`n_name` AS `n_name`,\n" +
         "  SUM((`lineitem`.`l_extendedprice` * (1 - `lineitem`.`l_discount`))) AS `sum_Calculation_7060711085256495_ok`\n" +
@@ -289,7 +263,7 @@ public class TableauTPCHRegularQueryTest {
     }
   }
 
-  //@Test
+  @Test
   public void Query6Test() throws VerdictDBException, SQLException {
     String sql = "SELECT SUM((`lineitem`.`l_extendedprice` * `lineitem`.`l_discount`)) AS `sum_Calculation_8100805085146752_ok`\n" +
         "FROM `lineitem`\n" +
@@ -314,7 +288,7 @@ public class TableauTPCHRegularQueryTest {
     }
   }
 
-  //@Test
+  @Test
   public void Query7Test() throws VerdictDBException, SQLException {
     String sql = "SELECT `N1`.`n_name` AS `n_NAME (nation1)`,\n" +
         "  `N2`.`n_name` AS `n_name`,\n" +
@@ -352,7 +326,7 @@ public class TableauTPCHRegularQueryTest {
     }
   }
 
-  //@Test
+  @Test
   public void Query8Test() throws VerdictDBException, SQLException {
     String sql = "SELECT `N2`.`n_name` AS `n_name`,\n" +
         "  SUM((`lineitem`.`l_extendedprice` * (1 - `lineitem`.`l_discount`))) AS `sum_Calculation_7060711085256495_ok`,\n" +
@@ -389,7 +363,7 @@ public class TableauTPCHRegularQueryTest {
     }
   }
 
-  //@Test
+  @Test
   public void Query9Test() throws VerdictDBException, SQLException {
     String sql = "SELECT `N2`.`n_name` AS `n_name`,\n" +
         "  SUM(((`lineitem`.`l_extendedprice` * (1 - `lineitem`.`l_discount`)) - (`partsupp`.`ps_supplycost` * `lineitem`.`l_quantity`))) AS `sum_Calculation_1690805085450945_ok`,\n" +
@@ -424,7 +398,7 @@ public class TableauTPCHRegularQueryTest {
     }
   }
 
-  //@Test
+  @Test
   public void Query10Test() throws VerdictDBException, SQLException {
     String sql = "SELECT `customer`.`c_acctbal` AS `c_acctbal`,\n" +
         "  `customer`.`c_address` AS `c_address`,\n" +
@@ -482,7 +456,7 @@ public class TableauTPCHRegularQueryTest {
     }
   }
 
-  //@Test
+  @Test
   public void Query11Test() throws VerdictDBException, SQLException {
     String sql = "SELECT `partsupp`.`ps_partkey` AS `ps_partkey`,\n" +
         "  SUM((`partsupp`.`ps_supplycost` * `partsupp`.`ps_availqty`)) AS `sum_Calculation_6140711155912621_ok`\n" +
@@ -511,7 +485,7 @@ public class TableauTPCHRegularQueryTest {
     }
   }
 
-  //@Test
+  @Test
   public void Query12Test() throws VerdictDBException, SQLException {
     String sql = "SELECT (CASE WHEN (`orders`.`o_orderpriority` IN ('1-URGENT', '2-HIGH')) THEN '1-URGENT' WHEN (`orders`.`o_orderpriority` IN ('3-MEDIUM', '4-NOT SPECIFIED', '5-LOW')) THEN '3-MEDIUM' ELSE `orders`.`o_orderpriority` END) AS `O Orderpriority (group)`,\n" +
         "  `lineitem`.`l_shipmode` AS `l_shipmode`,\n" +
@@ -542,7 +516,7 @@ public class TableauTPCHRegularQueryTest {
     }
   }
 
-  //@Test
+  @Test
   public void Query13Test() throws VerdictDBException, SQLException {
     String sql = "SELECT `t0`.`__measure__0` AS `Calculation_1361031105746580`,\n" +
         "  COUNT(DISTINCT `customer`.`c_custkey`) AS `ctd_c_custkey_ok`\n" +
@@ -575,7 +549,7 @@ public class TableauTPCHRegularQueryTest {
     }
   }
 
-  //@Test
+  @Test
   public void Query14Test() throws VerdictDBException, SQLException {
     String sql = "SELECT (NOT ISNULL(`t0`.`_Tableau_join_flag`)) AS `io_Promo Tpe_nk`,\n" +
         "  SUM((`lineitem`.`l_extendedprice` * (1 - `lineitem`.`l_discount`))) AS `sum_Calculation_7060711085256495_ok`\n" +
@@ -611,7 +585,7 @@ public class TableauTPCHRegularQueryTest {
     }
   }
 
-  //@Test
+  @Test
   public void Query15Test() throws VerdictDBException, SQLException {
     String sql = "SELECT `lineitem`.`l_suppkey` AS `l_suppkey`,\n" +
         "  `supplier`.`s_address` AS `s_address`,\n" +
@@ -666,7 +640,7 @@ public class TableauTPCHRegularQueryTest {
     }
   }
 
-  //@Test
+  @Test
   public void Query16Test() throws VerdictDBException, SQLException {
     String sql = "SELECT COUNT(DISTINCT `partsupp`.`ps_suppkey`) AS `ctd_ps_suppkey_ok`,\n" +
         "  `part`.`p_brand` AS `p_brand`,\n" +
@@ -707,7 +681,7 @@ public class TableauTPCHRegularQueryTest {
     }
   }
 
-  //@Test
+  @Test
   public void Query17Test() throws VerdictDBException, SQLException {
     String sql = "SELECT SUM(`lineitem`.`l_extendedprice`) AS `TEMP(Calculation_7921031152254526)(1602391293)(0)`\n" +
         "FROM `lineitem`\n" +
@@ -739,7 +713,7 @@ public class TableauTPCHRegularQueryTest {
     }
   }
 
-  //@Test
+  @Test
   public void Query18Test() throws VerdictDBException, SQLException {
     String sql = "SELECT `customer`.`c_custkey` AS `c_custkey`,\n" +
         "  `customer`.`c_name` AS `c_name`,\n" +
@@ -782,7 +756,7 @@ public class TableauTPCHRegularQueryTest {
     }
   }
 
-  //@Test
+  @Test
   public void Query19Test() throws VerdictDBException, SQLException {
     String sql = "SELECT SUM((`lineitem`.`l_extendedprice` * (1 - `lineitem`.`l_discount`))) AS `sum_Calculation_7060711085256495_ok`\n" +
         "FROM `lineitem`\n" +
@@ -832,7 +806,7 @@ public class TableauTPCHRegularQueryTest {
     }
   }
 
-  //@Test
+  @Test
   public void Query20Test() throws VerdictDBException, SQLException {
     String sql = "SELECT `supplier`.`s_address` AS `s_address`,\n" +
         "  `supplier`.`s_name` AS `s_name`\n" +
@@ -872,7 +846,7 @@ public class TableauTPCHRegularQueryTest {
     }
   }
 
-  //@Test
+  @Test
   public void Query21Test() throws VerdictDBException, SQLException {
     String sql = "SELECT `supplier`.`s_name` AS `s_name`,\n" +
         "  SUM(1) AS `sum_Number of Records_ok`,\n" +
@@ -897,6 +871,42 @@ public class TableauTPCHRegularQueryTest {
         "GROUP BY 1\n" +
         "ORDER BY `$__alias__0` DESC\n" +
         "LIMIT 100;\n";
+    stmt.execute("create schema if not exists `verdictdb_temp`");
+    VerdictContext verdictContext = new VerdictContext(dbmsConnection);
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
+    RelationStandardizer gen = new RelationStandardizer(dbmsConnection);
+    relation = gen.standardize((SelectQuery) relation);
+
+    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
+    String stdQuery = selectQueryToSql.toSql(relation);
+
+    VerdictSingleResult result = verdictContext.sql(sql);
+
+    ResultSet rs = stmt.executeQuery(stdQuery);
+    while (result.next()) {
+      rs.next();
+      assertEquals(result.getString(0), rs.getString(1));
+      assertEquals(result.getDouble(1), rs.getDouble(2), 1e-5);
+      assertEquals(result.getDouble(2), rs.getDouble(3), 1e-5);
+    }
+  }
+
+  @Test
+  public void Query22Test() throws VerdictDBException, SQLException {
+    String sql = "SELECT (CASE WHEN 2 >= 0 THEN SUBSTR(CAST(`customer`.`c_phone` AS CHAR), 1, FLOOR(2)) ELSE NULL END) AS `Calculation_5131031153053149`,\n" +
+        "  COUNT(`customer`.`c_custkey`) AS `cnt:c_custkey:ok`,\n" +
+        "  SUM(`customer`.`c_acctbal`) AS `sum:c_acctbal:ok`\n" +
+        "FROM `tpch_flat_orc_2`.`orders` `orders`\n" +
+        "  RIGHT JOIN `tpch_flat_orc_2`.`customer` `customer` ON (`orders`.`o_custkey` = `customer`.`c_custkey`)\n" +
+        "  CROSS JOIN (\n" +
+        "  SELECT AVG((CASE WHEN (`customer`.`c_acctbal` > 0) THEN `customer`.`c_acctbal` ELSE NULL END)) AS `__measure__1`\n" +
+        "  FROM `tpch_flat_orc_2`.`customer` `customer`\n" +
+        "  WHERE ((CASE WHEN 2 >= 0 THEN SUBSTR(CAST(`customer`.`c_phone` AS CHAR), 1, FLOOR(2)) ELSE NULL END) IN ('13', '17', '18', '23', '29', '30', '31'))\n" +
+        "  HAVING (COUNT(1) > 0)\n" +
+        ") `t0`\n" +
+        "WHERE (((CASE WHEN 2 >= 0 THEN SUBSTR(CAST(`customer`.`c_phone` AS CHAR), 1, FLOOR(2)) ELSE NULL END) IN ('13', '17', '18', '23', '29', '30', '31')) AND ((`customer`.`c_acctbal` > `t0`.`__measure__1`) AND (`orders`.`o_orderkey` IS NULL)))\n" +
+        "GROUP BY `Calculation_5131031153053149`;";
     stmt.execute("create schema if not exists `verdictdb_temp`");
     VerdictContext verdictContext = new VerdictContext(dbmsConnection);
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
