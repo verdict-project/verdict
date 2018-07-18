@@ -28,8 +28,8 @@ jobs:
       # Customize the JVM maximum heap limit
       MAVEN_OPTS: -Xmx3200m
     steps:
+      - run: apt-get update; apt-get install -y git
       - checkout
-      - run: apt-get update; apt-get install git
       # Download and cache dependencies
       - restore_cache:
           keys:
@@ -75,8 +75,8 @@ jobs:
       # Customize the JVM maximum heap limit
       MAVEN_OPTS: -Xmx3200m
     steps:
+      - run: apt-get update; apt-get install -y git
       - checkout
-      - run: apt-get update; apt-get install git
       # Download and cache dependencies
       - restore_cache:
           keys:
@@ -107,8 +107,8 @@ jobs:
         # Customize the JVM maximum heap limit
         MAVEN_OPTS: -Xmx3200m
       steps:
+        - run: apt-get update; apt-get install -y git
         - checkout
-        - run: apt-get update; apt-get install git
         # Download and cache dependencies
         - restore_cache:
             keys:
