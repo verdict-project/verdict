@@ -561,7 +561,7 @@ public class AggQueryRewriter {
 //          ColumnOp newCol = ColumnOp.sum(ColumnOp.divide(op, inclusionProbabilityColumn));
           ColumnOp newCol = ColumnOp.sum(op);
           newInnerSelectList.add(new AliasedColumn(newCol, aliasForSubSumEst));   // aggregates of subsamples
-          ColumnOp oneIfNotNull = ColumnOp.whenthenelse(
+          ColumnOp oneIfNotNull = ColumnOp.casewhen(
               Arrays.asList(
               ColumnOp.isnotnull(op),
               ConstantColumn.valueOf(1),
@@ -660,7 +660,7 @@ public class AggQueryRewriter {
           UnnamedColumn op = col.getOperand();        // argument within the avg function
           ColumnOp newCol = ColumnOp.sum(op);
           newInnerSelectList.add(new AliasedColumn(newCol, aliasForSubSumEst));
-          ColumnOp oneIfNotNull = ColumnOp.whenthenelse(
+          ColumnOp oneIfNotNull = ColumnOp.casewhen(
               Arrays.asList(
               ColumnOp.isnotnull(op),
               ConstantColumn.valueOf(1),

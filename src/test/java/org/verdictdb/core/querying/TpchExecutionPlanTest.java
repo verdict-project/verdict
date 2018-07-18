@@ -881,7 +881,7 @@ public class TpchExecutionPlanTest {
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("tpch","vt1", "o_year"), "o_year"),
             new AliasedColumn(
-                new ColumnOp("sum", new ColumnOp("whenthenelse", Arrays.<UnnamedColumn>asList(
+                new ColumnOp("sum", new ColumnOp("casewhen", Arrays.<UnnamedColumn>asList(
                     new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                         new BaseColumn("tpch","vt1", "nation"),
                         ConstantColumn.valueOf("'PERU'")
@@ -1184,7 +1184,7 @@ public class TpchExecutionPlanTest {
     SelectQuery expected = SelectQuery.create(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("tpch", "lineitem","vt2", "l_shipmode"), "vc3"),
-            new AliasedColumn(new ColumnOp("sum", new ColumnOp("whenthenelse", Arrays.<UnnamedColumn>asList(
+            new AliasedColumn(new ColumnOp("sum", new ColumnOp("casewhen", Arrays.<UnnamedColumn>asList(
                 new ColumnOp("or", Arrays.<UnnamedColumn>asList(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
                     new BaseColumn("tpch", "orders","vt1", "o_orderpriority"),
                     ConstantColumn.valueOf("'1-URGENT'")
@@ -1197,7 +1197,7 @@ public class TpchExecutionPlanTest {
                 ConstantColumn.valueOf(1),
                 ConstantColumn.valueOf(0)
             ))), "high_line_count"),
-            new AliasedColumn(new ColumnOp("sum", new ColumnOp("whenthenelse", Arrays.<UnnamedColumn>asList(
+            new AliasedColumn(new ColumnOp("sum", new ColumnOp("casewhen", Arrays.<UnnamedColumn>asList(
                 new ColumnOp("and", Arrays.<UnnamedColumn>asList(new ColumnOp("notequal", Arrays.<UnnamedColumn>asList(
                     new BaseColumn("tpch", "orders","vt1", "o_orderpriority"),
                     ConstantColumn.valueOf("'1-URGENT'")
@@ -1336,7 +1336,7 @@ public class TpchExecutionPlanTest {
             new AliasedColumn(
                 new ColumnOp("multiply", Arrays.<UnnamedColumn>asList(
                     ConstantColumn.valueOf("100.00"),
-                    new ColumnOp("sum", new ColumnOp("whenthenelse", Arrays.<UnnamedColumn>asList(
+                    new ColumnOp("sum", new ColumnOp("casewhen", Arrays.<UnnamedColumn>asList(
                         new ColumnOp("like", Arrays.<UnnamedColumn>asList(
                             new BaseColumn("tpch", "part","vt2", "p_type"),
                             ConstantColumn.valueOf("'PROMO%'")

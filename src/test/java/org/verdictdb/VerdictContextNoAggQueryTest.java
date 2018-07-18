@@ -1,5 +1,7 @@
 package org.verdictdb;
 
+import com.google.common.base.Charsets;
+import com.google.common.io.Files;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.VerdictContext;
@@ -15,6 +17,8 @@ import org.verdictdb.sqlreader.RelationStandardizer;
 import org.verdictdb.sqlsyntax.MysqlSyntax;
 import org.verdictdb.sqlwriter.SelectQueryToSql;
 
+import java.io.File;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -22,7 +26,7 @@ import java.sql.Statement;
 
 import static org.junit.Assert.assertEquals;
 
-public class VerdictContextRegularQueryTest {
+public class VerdictContextNoAggQueryTest {
 
   static Connection conn;
 
@@ -56,11 +60,13 @@ public class VerdictContextRegularQueryTest {
     dbmsConnection = JdbcConnection.create(conn);
     dbmsConnection.setDefaultSchema(MYSQL_DATABASE);
     stmt = conn.createStatement();
+    stmt.execute("create schema if not exists `verdictdb_temp`");
   }
 
   @Test
-  public void BasicSelectTest() throws VerdictDBException {
-    String sql = "select 1+2";
+  public void BasicSelectTest() throws VerdictDBException, IOException {
+    File schemaFile = new File("src/test/resources/noAggQuery/basicSelectQuery.sql");
+    String sql = Files.toString(schemaFile, Charsets.UTF_8);
     VerdictContext verdictContext = new VerdictContext(dbmsConnection);
     VerdictSingleResult result = verdictContext.sql(sql);
     while (result.next()) {
@@ -70,9 +76,9 @@ public class VerdictContextRegularQueryTest {
   }
 
   @Test
-  public void SimpleSelectTest() throws VerdictDBException, SQLException {
-    String sql = "select r_regionkey from test.region order by r_regionkey";
-    stmt.execute("create schema if not exists `verdictdb_temp`");
+  public void SimpleSelectTest() throws VerdictDBException, SQLException, IOException {
+    File schemaFile = new File("src/test/resources/noAggQuery/simpleSelectQuery.sql");
+    String sql = Files.toString(schemaFile, Charsets.UTF_8);
     VerdictContext verdictContext = new VerdictContext(dbmsConnection);
     VerdictSingleResult result = verdictContext.sql(sql);
     ResultSet rs = stmt.executeQuery(sql);
@@ -83,9 +89,9 @@ public class VerdictContextRegularQueryTest {
   }
 
   @Test
-  public void SimpleAggTest() throws VerdictDBException, SQLException {
-    String sql = "select count(*) from test.region";
-    stmt.execute("create schema if not exists `verdictdb_temp`");
+  public void SimpleAggTest() throws VerdictDBException, SQLException, IOException {
+    File schemaFile = new File("src/test/resources/noAggQuery/simpleAggQuery.sql");
+    String sql = Files.toString(schemaFile, Charsets.UTF_8);
     VerdictContext verdictContext = new VerdictContext(dbmsConnection);
     VerdictSingleResult result = verdictContext.sql(sql);
     ResultSet rs = stmt.executeQuery(sql);
@@ -96,52 +102,9 @@ public class VerdictContextRegularQueryTest {
   }
 
   @Test
-  public void TpchQuery2Test() throws VerdictDBException, SQLException {
-    String sql = "select\n" +
-        "  s_acctbal,\n" +
-        "  s_name,\n" +
-        "  n_name,\n" +
-        "  p_partkey,\n" +
-        "  p_mfgr,\n" +
-        "  s_address,\n" +
-        "  s_phone,\n" +
-        "  s_comment\n" +
-        "from\n" +
-        "  part,\n" +
-        "  supplier,\n" +
-        "  partsupp,\n" +
-        "  nation,\n" +
-        "  region\n" +
-        "where\n" +
-        "  p_partkey = ps_partkey\n" +
-        "  and s_suppkey = ps_suppkey\n" +
-        "  and p_size = 37\n" +
-        "  and p_type like '%COPPER'\n" +
-        "  and s_nationkey = n_nationkey\n" +
-        "  and n_regionkey = r_regionkey\n" +
-        "  and r_name = 'EUROPE'\n" +
-        "  and ps_supplycost = (\n" +
-        "    select\n" +
-        "      min(ps_supplycost)\n" +
-        "    from\n" +
-        "      partsupp,\n" +
-        "      supplier,\n" +
-        "      nation,\n" +
-        "      region\n" +
-        "    where\n" +
-        "      p_partkey = ps_partkey\n" +
-        "      and s_suppkey = ps_suppkey\n" +
-        "      and s_nationkey = n_nationkey\n" +
-        "      and n_regionkey = r_regionkey\n" +
-        "      and r_name = 'EUROPE'\n" +
-        "  )\n" +
-        "order by\n" +
-        "  s_acctbal desc,\n" +
-        "  n_name,\n" +
-        "  s_name,\n" +
-        "  p_partkey\n" +
-        "limit 100;";
-    stmt.execute("create schema if not exists `verdictdb_temp`");
+  public void TpchQuery2Test() throws VerdictDBException, SQLException, IOException {
+    File schemaFile = new File("src/test/resources/noAggQuery/tpchQuery2.sql");
+    String sql = Files.toString(schemaFile, Charsets.UTF_8);
     VerdictContext verdictContext = new VerdictContext(dbmsConnection);
     VerdictSingleResult result = verdictContext.sql(sql);
 

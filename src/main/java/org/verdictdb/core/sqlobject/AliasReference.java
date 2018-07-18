@@ -19,8 +19,6 @@ public class AliasReference implements GroupingAttribute {
 
   String tableAlias;
 
-  UnnamedColumn column;
-
   public AliasReference(String aliasName) {
     this.aliasName = aliasName;
   }
@@ -36,12 +34,6 @@ public class AliasReference implements GroupingAttribute {
 
   public String getTableAlias() {
     return tableAlias;
-  }
-
-  public void setColumn(UnnamedColumn column) {this.column = column;}
-
-  public UnnamedColumn getColumn() {
-    return column;
   }
 
   @Override

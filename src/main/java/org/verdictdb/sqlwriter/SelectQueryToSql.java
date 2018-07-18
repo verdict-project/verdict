@@ -66,12 +66,8 @@ public class SelectQueryToSql {
       throw new VerdictDBTypeException("asterisk is not expected in the groupby clause.");
     }
     if (column instanceof AliasReference) {
-      if (((AliasReference) column).getColumn() instanceof ConstantColumn) {
-        return ((ConstantColumn) ((AliasReference) column).getColumn()).getValue().toString();
-      } else if (((AliasReference) column).getColumn() instanceof ColumnOp) {
-        return unnamedColumnToSqlPart(((AliasReference) column).getColumn());
-      }
-      return quoteName(((AliasReference) column).getAliasName());
+      AliasReference aliasedColumn = (AliasReference) column;
+      return quoteName(aliasedColumn.getAliasName());
     } else {
       return unnamedColumnToSqlPart((UnnamedColumn) column);
     }
@@ -123,7 +119,7 @@ public class SelectQueryToSql {
 //        + " else " + withParentheses(columnOp.getOperand(2))
 //        + " end";
 //      }
-      else if (columnOp.getOpType().equals("whenthenelse")) {
+      else if (columnOp.getOpType().equals("casewhen")) {
         String sql = "case";
         for (int i=0; i<columnOp.getOperands().size()-1;i=i+2) {
           sql = sql + " when " + withParentheses(columnOp.getOperand(i)) + " then " + withParentheses(columnOp.getOperand(i+1));
