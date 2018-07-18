@@ -26,12 +26,14 @@ public class SelectAllExecutionNode extends QueryNodeWithPlaceHolders {
     SelectAllExecutionNode selectAll = new SelectAllExecutionNode(null);
     Pair<BaseTable, SubscriptionTicket> baseAndSubscriptionTicket = selectAll.createPlaceHolderTable("t");
     SelectQuery selectQuery = SelectQuery.create(new AsteriskColumn(), baseAndSubscriptionTicket.getLeft());
+    selectQuery.addOrderby(query.getOrderby());
+    if (query.getLimit().isPresent()) selectQuery.addLimit(query.getLimit().get());
     selectAll.setSelectQuery(selectQuery);
     
 //    Pair<String, String> tempTableFullName = plan.generateTempTableName();
 //    String schemaName = tempTableFullName.getLeft();
 //    String tableName = tempTableFullName.getRight();
-    
+
     if (query.isSupportedAggregate()) {
       AggExecutionNode dependent = AggExecutionNode.create(namer, query);
       dependent.registerSubscriber(baseAndSubscriptionTicket.getRight());
