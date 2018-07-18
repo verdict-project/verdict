@@ -1,4 +1,4 @@
-package org.verdictdb.confidential;
+package org.verdictdb;
 
 import static org.junit.Assert.assertEquals;
 
@@ -29,7 +29,7 @@ import org.verdictdb.sqlwriter.SelectQueryToSql;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
-public class TableauMySqlTpchQueryTestWithoutScrambles {
+public class VariantMySqlTpchQueryTestWithoutScrambles {
 
   static Connection conn;
 
@@ -67,9 +67,9 @@ public class TableauMySqlTpchQueryTestWithoutScrambles {
   }
 
   public Pair<VerdictSingleResult, ResultSet> getAnswer(int queryNum) throws IOException, VerdictDBException, SQLException {
-    String filename = "tpchMySqlQuery" + queryNum + ".sql";
-    String path = "src/test/resources/confidential/" + filename;
-    File queryFile = new File(path);
+    ClassLoader classLoader = getClass().getClassLoader();
+    String filename = "companya/mysql_queries/tpchMySqlQuery" + queryNum + ".sql";
+    File queryFile = new File(classLoader.getResource(filename).getFile());
     String sql = Files.toString(queryFile, Charsets.UTF_8);
 
     VerdictContext verdictContext = new VerdictContext(dbmsConnection);
