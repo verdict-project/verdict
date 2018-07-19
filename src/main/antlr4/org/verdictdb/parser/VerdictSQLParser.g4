@@ -294,8 +294,6 @@ expression
     | LOCAL_ID                                                 #primitive_expression
     | constant                                                 #primitive_expression
     | true_orfalse                                             #primitive_expression
-    | function_call                                            #function_call_expression
-    | expression COLLATE id                                    #function_call_expression
     | case_expr                                                #case_expression
     | full_column_name                                         #column_ref_expression
     | '(' expression ')'                                       #bracket_expression
@@ -307,6 +305,8 @@ expression
     | expression comparison_operator expression                #binary_operator_expression
     | interval                                                 #interval_expression
     | date                                                     #date_expression
+    | function_call                                            #function_call_expression
+    | expression COLLATE id                                    #function_call_expression
     ;
 
 interval
@@ -321,7 +321,7 @@ constant_expression
     : NULL
     | constant
     // system functions: https://msdn.microsoft.com/en-us/library/ms187786.aspx
-    | function_call
+//    | function_call
     | LOCAL_ID         // TODO: remove.
     | '(' constant_expression ')'
     ;
@@ -375,7 +375,7 @@ predicate
     | expression NOT? LIKE expression (ESCAPE expression)?                  # like_predicate
     | expression IS null_notnull                                            # is_predicate
     | '(' search_condition ')'                                              # bracket_predicate
-    | predicate_function                                                    # func_predicate
+    | predicate_function                                               # func_predicate
     ;
 
 query_expression
@@ -519,7 +519,7 @@ derived_table
 
 function_call
     : ranking_windowed_function
-    | value_manipulation_function
+    | expression_function
     | aggregate_windowed_function
     ;
 
@@ -578,12 +578,12 @@ ranking_windowed_function
     | ROW_NUMBER '(' ')' over_clause
     ;
 
-value_manipulation_function
-    : unary_manipulation_function
-    | noparam_manipulation_function
-    | binary_manipulation_function
-    | ternary_manipulation_function
-    | nary_manipulation_function
+expression_function
+    : unary_function
+    | noparam_function
+    | binary_function
+    | ternary_function
+    | nary_function
     | extract_time_function
     | overlay_string_function
     | substring_string_function
@@ -608,7 +608,7 @@ substring_string_function
       '(' expression FROM expression (FOR expression)? ')'
     ;
 
-nary_manipulation_function
+nary_function
 	: function_name=(CONCAT | CONCAT_WS | COALESCE | FIELD | GREATEST | LEAST | WIDTH_BUCKET | BTRIM | FORMAT
 	| REGEXP_MATCHES | REGEXP_REPLACE | REGEXP_SPLIT_TO_ARRAY | REGEXP_SPLIT_TO_TABLE | LTRIM | RTRIM | TO_ASCII
 	| MAKE_TIMESTAMP | MAKE_TIMESTAMPTZ | TS_HEADLINE | TS_RANK | TS_RANK_CD | UNNEST | XMLCONCAT | XMLELEMENT
@@ -616,14 +616,14 @@ nary_manipulation_function
 		'(' expression (',' expression)* ')'
     ;
 
-ternary_manipulation_function
+ternary_function
     : function_name=(CONV | SUBSTR | HASH | RPAD | SUBSTRING | LPAD | MID | REPLACE | SUBSTRING_INDEX | MAKETIME | IF
     | CONVERT | SPLIT_PART | TRANSLATE | MAKE_DATE | MAKE_TIME | SETWEIGHT | TS_REWRITE | TSQUERY_PHRASE | XMLROOT
     | XPATH | XPATH_EXISTS | ARRAY_REPLACE | ARRAY_TO_STRING | STRING_TO_ARRAY | LOCATE)
       '(' expression ',' expression ',' expression ')'
     ;
 
-binary_manipulation_function
+binary_function
     : function_name=(ROUND | MOD | PMOD | LEFT | RIGHT | STRTOL | POW | POWER | PERCENTILE | SPLIT | INSTR | ENCODE | DECODE | SHIFTLEFT
     | SHIFTRIGHT | SHIFTRIGHTUNSIGNED | NVL | FIND_IN_SET | FORMAT_NUMBER | FORMAT | GET_JSON_OBJECT | IN_FILE
     | LOCATE | REPEAT | AES_ENCRYPT | AES_DECRYPT | POSITION | STRCMP | TRUNCATE | ADDDATE | ADDTIME | DATEDIFF | DATE_ADD
@@ -640,7 +640,7 @@ binary_manipulation_function
       '(' expression ',' expression ')'
     ;
 
-unary_manipulation_function
+unary_function
     : function_name=(ROUND | CHAR_LENGTH | FLOOR | CEIL | CEILING | EXP | LN | LOG | LOG10 | LOG2 | SIN | COS | COT | TAN | SIGN | RAND | FNV_HASH | RAWTOHEX
      | ABS | STDDEV | SQRT | LCASE | MD5 | CRC32 | YEAR | QUARTER | MONTH | DAY | HOUR | MINUTE | SECOND | WEEKOFYEAR | LOWER
      | UPPER | UCASE | ASCII | CHARACTER_LENGTH | FACTORIAL | CBRT | LENGTH | TRIM | ASIN | ACOS | ATAN | ATAN2 | DEGREES | RADIANS | POSITIVE
@@ -660,14 +660,13 @@ unary_manipulation_function
      | JSON_OBJECT_AGG | JSONB_OBJECT_AGG | STRING_AGG)
       '(' expression ')'
     | function_name=CAST '(' cast_as_expression ')'
-    | NOT? predicate_function
     ;
 
 predicate_function
     : function_name = ISNULL '(' expression ')'
     ;
 
-noparam_manipulation_function
+noparam_function
     : function_name=(UNIX_TIMESTAMP | CURRENT_TIMESTAMP | CURRENT_DATE | CURRENT_TIME | RANDOM | RAND | NATURAL_CONSTANT
     | PI | CURDATE | CURTIME | LOCALTIME | LOCALTIMESTAMP | NOW | SYSDATE | CURRENT_USER | DATABASE | LAST_INSERT_ID
     | SESSION_USER | SYSTEM_USER | USER | VERSION | PG_CLIENT_ENCODING | CLOCK_TIMESTAMP | STATEMENT_TIMESTAMP
@@ -858,7 +857,7 @@ default_value
 
 // https://msdn.microsoft.com/en-us/library/ms179899.aspx
 constant
-    : STRING // string, datetime or uniqueidentifier
+    : STRING     // string, datetime or uniqueidentifier
     | BINARY
     | number
     | sign? (REAL | FLOAT)  // float or decimal
@@ -882,42 +881,40 @@ id
     | BACKTICK_ID
     ;
 
+// This is required to make them to be identified both as identifiers (e.g., column names)
+// or function names.
 simple_id
     : ID
-    | ABSOLUTE
-    | APPLY
-    | AVG
-    | BASE64
-    | CAST
-    | CONCAT
-    | CONCAT_WS
-    | COUNT
-    | EXTRACT
-    | HASH
-    | MAX
-    | MIN
-    | PARTITION
-    | RANGE
-    | RANK
-    | STDEV
-    | STDEVP
-    | STDDEV_SAMP
-    | STRTOL
-    | SUBSTRING
-    | SUM
-    | TIME
-    | TYPE
-    | USING
-    | VAR
-    | VARP
-    | DAY
-    | MONTH
-    | YEAR
-    | DAYS
-    | MONTHS
-    | YEARS
-    | INTERVAL
+    | AGE
+    | AREA
+    | CENTER
+    | CIRCLE
     | DATE
+    | DAY
+    | DAYNAME
+    | DAYOFMONTH
+    | DAYOFWEEK
+    | DAYOFYEAR
+    | DEGREES
+    | DIAMETER
+    | HEIGHT
+    | HOUR
+    | LEFT
+    | LENGTH
+    | MAKEDATE
+    | MICROSECOND
+    | MINUTE
+    | MOD
+    | MONTH
+    | MONTHNAME
+    | RIGHT
+    | POWER
+    | SECOND
+    | TEXT
+    | TIME
+    | TIMESTAMP
+    | VARIANCE
+    | WEEKOFYEAR
     ;
 
 // https://msdn.microsoft.com/en-us/library/ms188074.aspx

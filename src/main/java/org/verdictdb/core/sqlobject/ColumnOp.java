@@ -46,6 +46,7 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
    * <ol>
    * <li>and</li>
    * <li>or</li>
+   * <li>not</li>
    * <li>equal</li>
    * <li>notequal</li>
    * <li>notgreaterthan</li>
@@ -345,6 +346,10 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
       newOperands.add(operand.deepcopy());
     }
     return new ColumnOp(opType, newOperands);
+  }
+
+  public static UnnamedColumn not(UnnamedColumn col1) {
+    return new ColumnOp("not", Arrays.asList(col1));
   }
 
 }
