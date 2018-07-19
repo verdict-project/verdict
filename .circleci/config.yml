@@ -5,9 +5,12 @@
 version: 2
 jobs:
   maven-version-check:
-    machine: true
+    machine:
+      image: circleci/classic:201703-01
     working_directory: ~/repo
     steps:
+      - run: java -version
+      - run: sudo apt-get install openjdk-7-jdk
       - run: java -version
 
   build-jdk7:
