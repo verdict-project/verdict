@@ -10,9 +10,11 @@ jobs:
     working_directory: ~/repo
     steps:
       - run: java -version
+      - run: javac -version
       - run: sudo apt-get update && sudo apt-get install -y openjdk-7-jdk
+      - run: sudo update-java-alternatives --set java-1.7.0-openjdk-amd64
       - run: java -version
-      - run: sudo  update-java-alternatives --list
+      - run: javac -version
 
   build-jdk7:
     docker:
