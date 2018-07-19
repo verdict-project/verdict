@@ -108,18 +108,16 @@ public class RelationGen extends VerdictSQLParserBaseVisitor<AbstractRelation> {
                 }
               } else {
                 ExpressionGen g = new ExpressionGen();
-                if (g.visit(ctx.expression()) instanceof BaseColumn) {
-                  elem = g.visit(ctx.expression());
+                elem = g.visit(ctx.expression());
+                if (elem instanceof BaseColumn) {
                   if (ctx.column_alias() != null) {
                     elem = new AliasedColumn((BaseColumn) elem, ctx.column_alias().getText());
                   }
-                } else if (g.visit(ctx.expression()) instanceof ColumnOp) {
-                  elem = g.visit(ctx.expression());
+                } else if (elem instanceof ColumnOp) {
                   if (ctx.column_alias() != null) {
                     elem = new AliasedColumn((ColumnOp) elem, ctx.column_alias().getText());
                   }
-                } else if (g.visit(ctx.expression()) instanceof ConstantColumn) {
-                  elem = g.visit(ctx.expression());
+                } else if (elem instanceof ConstantColumn) {
                   if (ctx.column_alias() != null) {
                     elem = new AliasedColumn((ConstantColumn) elem, ctx.column_alias().getText());
                   }

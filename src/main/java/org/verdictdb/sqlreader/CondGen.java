@@ -155,6 +155,16 @@ public class CondGen extends VerdictSQLParserBaseVisitor<UnnamedColumn> {
     return not ? ColumnOp.notlike(left, right) :
         ColumnOp.like(left, right);
   }
+  
+  @Override
+  public UnnamedColumn visitFunc_predicate(VerdictSQLParser.Func_predicateContext ctx) {
+    UnnamedColumn pred = visit(ctx.predicate_function());
+    if (ctx.NOT() == null) {
+      return pred;
+    } else {
+      return ColumnOp.not(pred);
+    }
+  }
 
   @Override
   public UnnamedColumn visitPredicate_function(VerdictSQLParser.Predicate_functionContext ctx) {
