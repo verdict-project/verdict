@@ -21,7 +21,7 @@ public class JdbcConnection implements DbmsConnection {
   
   String currentSchema = null;
   
-//  JdbcQueryResult jrs = null;
+  JdbcQueryResult jrs = null;
   
   public static JdbcConnection create(Connection conn) throws VerdictDBDbmsException {
     String connectionString = null;

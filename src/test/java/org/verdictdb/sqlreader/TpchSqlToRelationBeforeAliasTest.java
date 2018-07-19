@@ -61,8 +61,8 @@ public class TpchSqlToRelationBeforeAliasTest {
         base, new ColumnOp("lessequal", operand5));
     expected.addGroupby(Arrays.<GroupingAttribute>asList(new BaseColumn("l_returnflag"),
         new BaseColumn("l_linestatus")));
-    expected.addOrderby(Arrays.<OrderbyAttribute>asList(new OrderbyAttribute("l_returnflag"),
-        new OrderbyAttribute("l_linestatus")));
+    expected.addOrderby(Arrays.<OrderbyAttribute>asList(new OrderbyAttribute(new BaseColumn("l_returnflag")),
+        new OrderbyAttribute(new BaseColumn("l_linestatus"))));
     expected.addLimit(ConstantColumn.valueOf(1));
     String sql = "select t.l_returnflag, " +
         "t.l_linestatus, " +
@@ -166,10 +166,10 @@ public class TpchSqlToRelationBeforeAliasTest {
         SubqueryColumn.getSubqueryColumn(subquery)
     )));
     expected.addOrderby(Arrays.<OrderbyAttribute>asList(
-        new OrderbyAttribute("s_acctbal", "desc"),
-        new OrderbyAttribute("n_name"),
-        new OrderbyAttribute("s_name"),
-        new OrderbyAttribute("p_partkey")
+        new OrderbyAttribute(new BaseColumn("s_acctbal"), "desc"),
+        new OrderbyAttribute(new BaseColumn("n_name")),
+        new OrderbyAttribute(new BaseColumn("s_name")),
+        new OrderbyAttribute(new BaseColumn("p_partkey"))
     ));
     expected.addLimit(ConstantColumn.valueOf(100));
     String sql = "select " +
@@ -289,8 +289,8 @@ public class TpchSqlToRelationBeforeAliasTest {
         new BaseColumn("o_shippriority")
     ));
     expected.addOrderby(Arrays.<OrderbyAttribute>asList(
-        new OrderbyAttribute("revenue", "desc"),
-        new OrderbyAttribute("o_orderdate")
+        new OrderbyAttribute(new BaseColumn("revenue"), "desc"),
+        new OrderbyAttribute(new BaseColumn("o_orderdate"))
     ));
     expected.addLimit(ConstantColumn.valueOf(10));
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
@@ -331,7 +331,7 @@ public class TpchSqlToRelationBeforeAliasTest {
     )));
     expected.addFilterByAnd(new ColumnOp("exists", SubqueryColumn.getSubqueryColumn(subquery)));
     expected.addGroupby(new BaseColumn("o_orderpriority"));
-    expected.addOrderby(new OrderbyAttribute("o_orderpriority"));
+    expected.addOrderby(new OrderbyAttribute(new BaseColumn("o_orderpriority")));
     expected.addLimit(ConstantColumn.valueOf(1));
     String sql = "select " +
         "o.o_orderpriority, " +
@@ -422,7 +422,7 @@ public class TpchSqlToRelationBeforeAliasTest {
         ))
     )));
     expected.addGroupby(new BaseColumn("n_name"));
-    expected.addOrderby(new OrderbyAttribute("revenue", "desc"));
+    expected.addOrderby(new OrderbyAttribute(new BaseColumn("revenue"), "desc"));
     expected.addLimit(ConstantColumn.valueOf(1));
     String sql = "select " +
         "n.n_name, " +
@@ -588,9 +588,9 @@ public class TpchSqlToRelationBeforeAliasTest {
         new BaseColumn("l_year")
     ));
     expected.addOrderby(Arrays.<OrderbyAttribute>asList(
-        new OrderbyAttribute("supp_nation"),
-        new OrderbyAttribute("cust_nation"),
-        new OrderbyAttribute("l_year")
+        new OrderbyAttribute(new BaseColumn("supp_nation")),
+        new OrderbyAttribute(new BaseColumn("cust_nation")),
+        new OrderbyAttribute(new BaseColumn("l_year"))
     ));
     expected.addLimit(ConstantColumn.valueOf(1));
     String sql = "select " +
@@ -716,7 +716,7 @@ public class TpchSqlToRelationBeforeAliasTest {
             )),
         subquery);
     expected.addGroupby(new BaseColumn("o_year"));
-    expected.addOrderby(new OrderbyAttribute("o_year"));
+    expected.addOrderby(new OrderbyAttribute(new BaseColumn("o_year")));
     expected.addLimit(ConstantColumn.valueOf(1));
     String sql = "select " +
         "all_nations.o_year, " +
@@ -822,8 +822,8 @@ public class TpchSqlToRelationBeforeAliasTest {
         ),
         subquery);
     expected.addGroupby(Arrays.<GroupingAttribute>asList(new BaseColumn("nation"), new BaseColumn("o_year")));
-    expected.addOrderby(Arrays.<OrderbyAttribute>asList(new OrderbyAttribute("nation"),
-        new OrderbyAttribute("o_year", "desc")));
+    expected.addOrderby(Arrays.<OrderbyAttribute>asList(new OrderbyAttribute(new BaseColumn("nation")),
+        new OrderbyAttribute(new BaseColumn("o_year"), "desc")));
     expected.addLimit(ConstantColumn.valueOf(1));
     String sql = "select " +
         "profit.nation, " +
@@ -923,7 +923,7 @@ public class TpchSqlToRelationBeforeAliasTest {
         new BaseColumn("c_address"),
         new BaseColumn("c_comment")
     ));
-    expected.addOrderby(new OrderbyAttribute("revenue", "desc"));
+    expected.addOrderby(new OrderbyAttribute(new BaseColumn("revenue"), "desc"));
     expected.addLimit(ConstantColumn.valueOf(20));
     String sql = "select " +
         "c.c_custkey, " +
@@ -1018,7 +1018,7 @@ public class TpchSqlToRelationBeforeAliasTest {
         ))),
         SubqueryColumn.getSubqueryColumn(subquery)
     )));
-    expected.addOrderby(new OrderbyAttribute("value", "desc"));
+    expected.addOrderby(new OrderbyAttribute(new BaseColumn("value"), "desc"));
     expected.addLimit(ConstantColumn.valueOf(1));
     String sql = "select " +
         "ps.ps_partkey, " +
@@ -1118,7 +1118,7 @@ public class TpchSqlToRelationBeforeAliasTest {
         ))
     )));
     expected.addGroupby(new BaseColumn("l_shipmode"));
-    expected.addOrderby(new OrderbyAttribute("l_shipmode"));
+    expected.addOrderby(new OrderbyAttribute(new BaseColumn("l_shipmode")));
     expected.addLimit(ConstantColumn.valueOf(1));
     String sql = "select " +
         "l.l_shipmode, " +
@@ -1186,8 +1186,8 @@ public class TpchSqlToRelationBeforeAliasTest {
         subqery);
     expected.addGroupby(new BaseColumn("c_count"));
     expected.addOrderby(Arrays.<OrderbyAttribute>asList(
-        new OrderbyAttribute("custdist", "desc"),
-        new OrderbyAttribute("c_count", "desc")));
+        new OrderbyAttribute(new BaseColumn("custdist"), "desc"),
+        new OrderbyAttribute(new BaseColumn("c_count"), "desc")));
     expected.addLimit(ConstantColumn.valueOf(1));
     String sql = "select " +
         "c_orders.c_count, " +
@@ -1301,7 +1301,7 @@ public class TpchSqlToRelationBeforeAliasTest {
         new BaseColumn("r", "total_revenue"),
         SubqueryColumn.getSubqueryColumn(subquery)
     )));
-    expected.addOrderby(new OrderbyAttribute("s_suppkey"));
+    expected.addOrderby(new OrderbyAttribute(new BaseColumn("s_suppkey")));
     expected.addLimit(ConstantColumn.valueOf(1));
     String sql = "select " +
         "s.s_suppkey, " +
@@ -1374,10 +1374,10 @@ public class TpchSqlToRelationBeforeAliasTest {
         new BaseColumn("p_size")
     ));
     expected.addOrderby(Arrays.<OrderbyAttribute>asList(
-        new OrderbyAttribute("supplier_cnt", "desc"),
-        new OrderbyAttribute("p_brand"),
-        new OrderbyAttribute("p_type"),
-        new OrderbyAttribute("p_size")
+        new OrderbyAttribute(new BaseColumn("supplier_cnt"), "desc"),
+        new OrderbyAttribute(new BaseColumn("p_brand")),
+        new OrderbyAttribute(new BaseColumn("p_type")),
+        new OrderbyAttribute(new BaseColumn("p_size"))
     ));
     expected.addLimit(ConstantColumn.valueOf(1));
     String sql = "select " +
@@ -1521,8 +1521,8 @@ public class TpchSqlToRelationBeforeAliasTest {
         new BaseColumn("o_totalprice")
     ));
     expected.addOrderby(Arrays.<OrderbyAttribute>asList(
-        new OrderbyAttribute("o_totalprice", "desc"),
-        new OrderbyAttribute("o_orderdate")
+        new OrderbyAttribute(new BaseColumn("o_totalprice"), "desc"),
+        new OrderbyAttribute(new BaseColumn("o_orderdate"))
     ));
     expected.addLimit(ConstantColumn.valueOf(100));
     String sql = "select " +
@@ -1849,7 +1849,7 @@ public class TpchSqlToRelationBeforeAliasTest {
         new BaseColumn("n", "n_name"),
         ConstantColumn.valueOf("':3'")
     )));
-    expected.addOrderby(new OrderbyAttribute("s_name"));
+    expected.addOrderby(new OrderbyAttribute(new BaseColumn("s_name")));
     expected.addLimit(ConstantColumn.valueOf(1));
     String sql = "select " +
         "s.s_name, " +
@@ -1955,7 +1955,7 @@ public class TpchSqlToRelationBeforeAliasTest {
         new BaseColumn("l3", "l_receiptdate"),
         new BaseColumn("l3", "l_commitdate")
     )));
-    expected.addFilterByAnd(new ColumnOp("notexists", SubqueryColumn.getSubqueryColumn(subquery2)));
+    expected.addFilterByAnd(ColumnOp.not(ColumnOp.exists(SubqueryColumn.getSubqueryColumn(subquery2))));
     expected.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
         new BaseColumn("s", "s_nationkey"),
         new BaseColumn("n", "n_nationkey")
@@ -1965,8 +1965,8 @@ public class TpchSqlToRelationBeforeAliasTest {
         ConstantColumn.valueOf("':1'")
     )));
     expected.addGroupby(new BaseColumn("s_name"));
-    expected.addOrderby(new OrderbyAttribute("numwait", "desc"));
-    expected.addOrderby(new OrderbyAttribute("s_name"));
+    expected.addOrderby(new OrderbyAttribute(new BaseColumn("numwait"), "desc"));
+    expected.addOrderby(new OrderbyAttribute(new BaseColumn("s_name")));
     expected.addLimit(ConstantColumn.valueOf(100));
     String sql = "select " +
         "s.s_name, " +
@@ -2056,7 +2056,7 @@ public class TpchSqlToRelationBeforeAliasTest {
         new BaseColumn("o", "o_custkey"),
         new BaseColumn("c", "c_custkey")
     )));
-    subquery.addFilterByAnd(new ColumnOp("notexists", SubqueryColumn.getSubqueryColumn(subsubquery2)));
+    subquery.addFilterByAnd(ColumnOp.not(ColumnOp.exists(SubqueryColumn.getSubqueryColumn(subsubquery2))));
     subquery.setAliasName("custsale");
     SelectQuery expected = SelectQuery.create(
         Arrays.asList(
@@ -2066,7 +2066,7 @@ public class TpchSqlToRelationBeforeAliasTest {
         ),
         subquery);
     expected.addGroupby(new BaseColumn("cntrycode"));
-    expected.addOrderby(new OrderbyAttribute("cntrycode"));
+    expected.addOrderby(new OrderbyAttribute(new BaseColumn("cntrycode")));
     expected.addLimit(ConstantColumn.valueOf(1));
     String sql = "select " +
         "custsale.cntrycode, " +

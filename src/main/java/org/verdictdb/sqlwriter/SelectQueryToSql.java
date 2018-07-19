@@ -116,14 +116,9 @@ public class SelectQueryToSql {
         return withParentheses(columnOp.getOperand(0)) + " and " + withParentheses(columnOp.getOperand(1));
       } else if (columnOp.getOpType().equals("or")) {
         return withParentheses(columnOp.getOperand(0)) + " or " + withParentheses(columnOp.getOperand(1));
-      }
-//      else if (columnOp.getOpType().equals("casewhenelse")) {
-//        return "case " + withParentheses(columnOp.getOperand(0))
-//        + " when " + withParentheses(columnOp.getOperand(1))
-//        + " else " + withParentheses(columnOp.getOperand(2))
-//        + " end";
-//      }
-      else if (columnOp.getOpType().equals("casewhen")) {
+      } else if (columnOp.getOpType().equals("not")) {
+        return "not " + withParentheses(columnOp.getOperand(0));
+      } else if (columnOp.getOpType().equals("casewhen")) {
         String sql = "case";
         for (int i=0; i<columnOp.getOperands().size()-1;i=i+2) {
           sql = sql + " when " + withParentheses(columnOp.getOperand(i)) + " then " + withParentheses(columnOp.getOperand(i+1));
@@ -240,6 +235,8 @@ public class SelectQueryToSql {
       //}
     } else if (column instanceof SubqueryColumn) {
       return "(" + selectQueryToSql(((SubqueryColumn) column).getSubquery()) + ")";
+    } else if (column instanceof AliasReference) {
+      return groupingAttributeToSqlPart(column);
     }
     throw new VerdictDBTypeException("Unexpceted argument type: " + column.getClass().toString());
   }
@@ -317,11 +314,11 @@ public class SelectQueryToSql {
     for (OrderbyAttribute a : orderby) {
       if (isFirstOrderby) {
         sql.append(" order by ");
-        sql.append(quoteName(a.getAttributeName()));
+        sql.append(groupingAttributeToSqlPart(a.getAttribute()));
         sql.append(" " + a.getOrder());
         isFirstOrderby = false;
       } else {
-        sql.append(", " + quoteName(a.getAttributeName()));
+        sql.append(", " + groupingAttributeToSqlPart(a.getAttribute()));
         sql.append(" " + a.getOrder());
       }
     }
