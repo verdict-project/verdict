@@ -163,7 +163,7 @@ public class RelationStandardizer {
     return condition;
   }
 
-  private List<GroupingAttribute> replaceGroupby(List<GroupingAttribute> groupingAttributeList) throws VerdictDBDbmsException {
+  private List<GroupingAttribute> replaceGroupby(List<SelectItem> selectItems, List<GroupingAttribute> groupingAttributeList) throws VerdictDBDbmsException {
     List<GroupingAttribute> newGroupby = new ArrayList<>();
     for (GroupingAttribute g : groupingAttributeList) {
       if (g instanceof BaseColumn) {
@@ -186,15 +186,21 @@ public class RelationStandardizer {
         }
         else newGroupby.add(replaced);
       }
+      else if (g instanceof ConstantColumn) {
+        // replace index with column alias
+        String value = (String) ((ConstantColumn) g).getValue();
+        int index  = Integer.valueOf(value);
+        newGroupby.add(new AliasReference(((AliasedColumn)selectItems.get(index-1)).getAliasName()));
+      }
       else newGroupby.add(g);
     }
     return newGroupby;
   }
 
-  private List<OrderbyAttribute> replaceOrderby(List<OrderbyAttribute> orderbyAttributesList) throws VerdictDBDbmsException {
+  private List<OrderbyAttribute> replaceOrderby(List<SelectItem> selectItems, List<OrderbyAttribute> orderbyAttributesList) throws VerdictDBDbmsException {
     List<OrderbyAttribute> newOrderby = new ArrayList<>();
     for (OrderbyAttribute o : orderbyAttributesList) {
-      newOrderby.add(new OrderbyAttribute(replaceGroupby(Arrays.asList(o.getAttribute())).get(0), o.getOrder()));
+      newOrderby.add(new OrderbyAttribute(replaceGroupby(selectItems, Arrays.asList(o.getAttribute())).get(0), o.getOrder()));
     }
     return newOrderby;
   }
@@ -301,7 +307,7 @@ public class RelationStandardizer {
     //Group by
     List<GroupingAttribute> groupby;
     if (relationToAlias.getGroupby().size() != 0) {
-      groupby = replaceGroupby(relationToAlias.getGroupby());
+      groupby = replaceGroupby(selectItemList, relationToAlias.getGroupby());
       AliasedRelation.addGroupby(groupby);
     }
 
@@ -334,7 +340,7 @@ public class RelationStandardizer {
     //Order by
     List<OrderbyAttribute> orderby;
     if (relationToAlias.getOrderby().size() != 0) {
-      orderby = replaceOrderby(relationToAlias.getOrderby());
+      orderby = replaceOrderby(selectItemList, relationToAlias.getOrderby());
       AliasedRelation.addOrderby(orderby);
     }
 

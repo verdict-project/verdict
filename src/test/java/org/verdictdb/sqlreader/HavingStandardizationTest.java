@@ -154,4 +154,29 @@ public class HavingStandardizationTest {
         "order by `value` desc";
     assertEquals(expected, actual);
   }
+
+  @Test
+  public void ReplaceGroupbyIndexTest() throws VerdictDBException {
+    RelationStandardizer.resetItemID();
+
+    String sql =
+        "select ps_partkey as g, ps_supplycost as g2, count(*) as c\n" +
+            "from partsupp\n" +
+            "group by 1, 2";
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
+    RelationStandardizer gen = new RelationStandardizer(meta);
+    relation = gen.standardize((SelectQuery) relation);
+
+    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
+    String actual = selectQueryToSql.toSql(relation);
+    String expected =
+        "select " +
+            "vt1.`ps_partkey` as `g`, " +
+            "vt1.`ps_supplycost` as `g2`, " +
+            "count(*) as `c` " +
+            "from `tpch`.`partsupp` as vt1 " +
+            "group by `g`, `g2`";
+    assertEquals(expected, actual);
+  }
 }
