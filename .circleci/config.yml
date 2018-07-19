@@ -16,6 +16,15 @@ jobs:
       - run: java -version
       - run: javac -version
 
+  docker-env-check:
+    machine:
+      image: circleci/classic:201703-01
+    working_directory: ~/repo
+    steps:
+      - run: docker run --rm -d --name verdictdb-impala -p 127.0.0.1:21050:21050 codingtony/impala
+      - run: pwd
+      - run: echo "$(cd "$(dirname "src/test/resources")"; pwd)/$(basename "src/test/resources")"
+
   build-jdk7:
     machine:
       image: circleci/classic:201703-01
@@ -123,6 +132,7 @@ workflows:
   build_and_test:
     jobs:
       # - maven-version-check
-      - build-spark
-      - build-jdk7
-      - build-jdk8
+      - docker-env-check
+      # - build-spark
+      # - build-jdk7
+      # - build-jdk8
