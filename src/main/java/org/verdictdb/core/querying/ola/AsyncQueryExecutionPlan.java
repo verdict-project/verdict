@@ -3,10 +3,7 @@ package org.verdictdb.core.querying.ola;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.verdictdb.core.querying.AggExecutionNode;
-import org.verdictdb.core.querying.ExecutableNodeBase;
-import org.verdictdb.core.querying.QueryExecutionPlan;
-import org.verdictdb.core.querying.QueryNodeBase;
+import org.verdictdb.core.querying.*;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
 import org.verdictdb.core.sqlobject.AbstractRelation;
 import org.verdictdb.core.sqlobject.BaseTable;
@@ -52,10 +49,15 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
     for (int i = 0; i < aggBlocks.size(); i++) {
       // this node block contains the links to those nodes belonging to this block.
       AggExecutionNodeBlock nodeBlock = aggBlocks.get(i);
-      
+      SelectQuery originalQuery = null;
+      if (nodeBlock.getBlockRootNode() instanceof AggExecutionNode) {
+        originalQuery = ((AggExecutionNode) nodeBlock.getBlockRootNode()).getSelectQuery();
+      }
       ExecutableNodeBase oldNode = nodeBlock.getBlockRootNode();
       ExecutableNodeBase newNode = nodeBlock.convertToProgressiveAgg(scrambleMeta);
-
+      if (newNode instanceof AsyncAggExecutionNode && originalQuery!=null) {
+        ((AsyncAggExecutionNode) newNode).setSelectQuery(originalQuery);
+      }
       List<ExecutableNodeBase> parents = oldNode.getExecutableNodeBaseParents();
       for (ExecutableNodeBase parent : parents) {
         Integer channel = parent.getChannelForSource(oldNode);
