@@ -2,6 +2,8 @@ package org.verdictdb.sqlreader;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.sql.Connection;
@@ -108,8 +110,7 @@ public class MySqlSqlToRelationFailureTest {
       coordinator.process(errorSql);
       fail();
     } catch (Exception e) {
-      assertThat(e.getMessage(), is("syntax error occurred:extraneous input 'supplier' expecting " +
-          "{<EOF>, EXCEPT, FROM, GROUP, HAVING, INTERSECT, INTO, LIMIT, ORDER, UNION, WHERE, ',', ';'}"));
+      assertTrue(e.getMessage().startsWith("syntax error occurred:extraneous input "));
     }
   }
 
@@ -148,13 +149,7 @@ public class MySqlSqlToRelationFailureTest {
       coordinator.process(errorSql);
       fail();
     } catch (Exception e) {
-      assertThat(e.getMessage(), is("syntax error occurred:mismatched input '(' " +
-          "expecting {<EOF>, AS, COLLATE, EXCEPT, FROM, GROUP, HASH, HAVING, INTERSECT, INTO, LIMIT, ORDER, " +
-          "SUBSTRING, UNION, WHERE, ABSOLUTE, APPLY, AVG, BASE64, CAST, CONCAT, CONCAT_WS, COUNT, DATE, DAY, " +
-          "DAYS, EXTRACT, INTERVAL, MAX, MIN, MONTH, MONTHS, PARTITION, RANGE, RANK, STDEV, STDEVP, " +
-          "STDDEV_SAMP, SUM, STRTOL, TIME, TYPE, USING, VAR, VARP, YEAR, YEARS, DOUBLE_QUOTE_ID, " +
-          "BACKTICK_ID, SQUARE_BRACKET_ID, ID, STRING, '=', '>', '<', '!', '#', ',', ';', '*', '/', '%', '+', '-', " +
-          "'|', '&', '^', '||', '<<', '>>'}"));
+      assertTrue(e.getMessage().startsWith("syntax error occurred:mismatched input"));
     }
   }
 }

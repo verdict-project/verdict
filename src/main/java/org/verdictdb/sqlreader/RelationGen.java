@@ -39,10 +39,7 @@ public class RelationGen extends VerdictSQLParserBaseVisitor<AbstractRelation> {
       for (VerdictSQLParser.Order_by_expressionContext o : ctx.order_by_clause().order_by_expression()) {
         ExpressionGen g = new ExpressionGen();
         UnnamedColumn c = g.visit(o.expression());
-        OrderbyAttribute orderbyCol = null;
-        if (c instanceof BaseColumn) {
-          orderbyCol = new OrderbyAttribute(((BaseColumn) c).getColumnName(), (o.DESC() == null) ? "asc" : "desc");
-        }
+        OrderbyAttribute orderbyCol = new OrderbyAttribute(c, (o.DESC() == null) ? "asc" : "desc");
         sel.addOrderby(orderbyCol);
       }
     }
@@ -108,18 +105,16 @@ public class RelationGen extends VerdictSQLParserBaseVisitor<AbstractRelation> {
                 }
               } else {
                 ExpressionGen g = new ExpressionGen();
-                if (g.visit(ctx.expression()) instanceof BaseColumn) {
-                  elem = g.visit(ctx.expression());
+                elem = g.visit(ctx.expression());
+                if (elem instanceof BaseColumn) {
                   if (ctx.column_alias() != null) {
                     elem = new AliasedColumn((BaseColumn) elem, ctx.column_alias().getText());
                   }
-                } else if (g.visit(ctx.expression()) instanceof ColumnOp) {
-                  elem = g.visit(ctx.expression());
+                } else if (elem instanceof ColumnOp) {
                   if (ctx.column_alias() != null) {
                     elem = new AliasedColumn((ColumnOp) elem, ctx.column_alias().getText());
                   }
-                } else if (g.visit(ctx.expression()) instanceof ConstantColumn) {
-                  elem = g.visit(ctx.expression());
+                } else if (elem instanceof ConstantColumn) {
                   if (ctx.column_alias() != null) {
                     elem = new AliasedColumn((ConstantColumn) elem, ctx.column_alias().getText());
                   }
