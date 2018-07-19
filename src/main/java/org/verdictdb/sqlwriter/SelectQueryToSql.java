@@ -230,6 +230,8 @@ public class SelectQueryToSql {
       //}
     } else if (column instanceof SubqueryColumn) {
       return "(" + selectQueryToSql(((SubqueryColumn) column).getSubquery()) + ")";
+    } else if (column instanceof AliasReference) {
+      return groupingAttributeToSqlPart(column);
     }
     throw new VerdictDBTypeException("Unexpceted argument type: " + column.getClass().toString());
   }
@@ -307,11 +309,11 @@ public class SelectQueryToSql {
     for (OrderbyAttribute a : orderby) {
       if (isFirstOrderby) {
         sql.append(" order by ");
-        sql.append(quoteName(a.getAttributeName()));
+        sql.append(groupingAttributeToSqlPart(a.getAttribute()));
         sql.append(" " + a.getOrder());
         isFirstOrderby = false;
       } else {
-        sql.append(", " + quoteName(a.getAttributeName()));
+        sql.append(", " + groupingAttributeToSqlPart(a.getAttribute()));
         sql.append(" " + a.getOrder());
       }
     }
