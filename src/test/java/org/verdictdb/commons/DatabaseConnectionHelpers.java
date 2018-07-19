@@ -8,6 +8,8 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
+import com.google.common.base.Charsets;
+import com.google.common.io.Files;
 import org.apache.spark.sql.SparkSession;
 import org.postgresql.copy.CopyManager;
 import org.postgresql.core.BaseConnection;
@@ -164,6 +166,155 @@ public class DatabaseConnectionHelpers {
           schema, datafilePath));
 
     return spark;
+  }
+
+  public static Connection setupImpala(
+      String connectionString, String user, String password, String schema)
+      throws VerdictDBDbmsException, SQLException, IOException {
+
+    Connection conn = DriverManager.getConnection(connectionString, user, password);
+    DbmsConnection dbmsConn = JdbcConnection.create(conn);
+    dbmsConn.execute("USE default");
+    dbmsConn.execute(String.format("DROP TABLE IF EXISTS `%s`.`nation`", schema));
+    dbmsConn.execute(String.format("DROP TABLE IF EXISTS `%s`.`region`", schema));
+    dbmsConn.execute(String.format("DROP TABLE IF EXISTS `%s`.`supplier`", schema));
+    dbmsConn.execute(String.format("DROP TABLE IF EXISTS `%s`.`customer`", schema));
+    dbmsConn.execute(String.format("DROP TABLE IF EXISTS `%s`.`part`", schema));
+    dbmsConn.execute(String.format("DROP TABLE IF EXISTS `%s`.`partsupp`", schema));
+    dbmsConn.execute(String.format("DROP TABLE IF EXISTS `%s`.`orders`", schema));
+    dbmsConn.execute(String.format("DROP TABLE IF EXISTS `%s`.`lineitem`", schema));
+    dbmsConn.execute(String.format("DROP SCHEMA IF EXISTS `%s`", schema));
+    dbmsConn.execute(String.format("CREATE SCHEMA IF NOT EXISTS `%s`", schema));
+    dbmsConn.execute(String.format("USE `%s`", schema));
+
+    // Create tables
+    dbmsConn.execute(String.format(
+        "CREATE EXTERNAL TABLE  IF NOT EXISTS `%s`.`nation` (" +
+            "  `n_nationkey`  INT, " +
+            "  `n_name`       CHAR(25), " +
+            "  `n_regionkey`  INT, " +
+            "  `n_comment`    STRING, " +
+            "  `n_dummy`      STRING " +
+            "  )",
+        schema));
+    File file = new File("src/test/resources/tpch_test_data/nation/nation.tbl");
+    String content = Files.toString(file, Charsets.UTF_8);
+    for (String row : content.split("\n")) {
+      String[] values = row.split("\\|");
+      values[1] = "'" + values[1]+ "'";
+      values[3] = "'" + values[3]+ "'";
+      values[4] = "''";
+      row = values[0]+","+values[1]+","+values[2]+","+values[3]+","+"''";
+      dbmsConn.execute(String.format("insert into `%s`.`nation` values (%s)", schema, row));
+    }
+    dbmsConn.execute(String.format(
+        "CREATE TABLE  IF NOT EXISTS `%s`.`region`  (" +
+            "  `r_regionkey`  INT, " +
+            "  `r_name`       CHAR(25), " +
+            "  `r_comment`    STRING, " +
+            "  `r_dummy`      STRING " +
+            "  )",
+        schema));
+    dbmsConn.execute(String.format(
+        "CREATE TABLE  IF NOT EXISTS `%s`.`part`  ( `p_partkey`     INT, " +
+            "  `p_name`        STRING, " +
+            "  `p_mfgr`        CHAR(25), " +
+            "  `p_brand`       CHAR(10), " +
+            "  `p_type`        STRING, " +
+            "  `p_size`        INT, " +
+            "  `p_container`   CHAR(10), " +
+            "  `p_retailprice` DECIMAL(15,2) , " +
+            "  `p_comment`     STRING , " +
+            "  `p_dummy`       STRING " +
+            "  )",
+        schema));
+    dbmsConn.execute(String.format(
+        "CREATE TABLE  IF NOT EXISTS `%s`.`supplier` ( " +
+            "  `s_suppkey`     INT , " +
+            "  `s_name`        CHAR(25) , " +
+            "  `s_address`     STRING , " +
+            "  `s_nationkey`   INT , " +
+            "  `s_phone`       CHAR(15) , " +
+            "  `s_acctbal`     DECIMAL(15,2) , " +
+            "  `s_comment`     STRING, " +
+            "  `s_dummy` STRING " +
+            "  )",
+        schema));
+    dbmsConn.execute(String.format(
+        "CREATE TABLE  IF NOT EXISTS `%s`.`partsupp` ( " +
+            "  `ps_partkey`     INT , " +
+            "  `ps_suppkey`     INT , " +
+            "  `ps_availqty`    INT , " +
+            "  `ps_supplycost`  DECIMAL(15,2)  , " +
+            "  `ps_comment`     STRING, " +
+            "  `ps_dummy`       STRING " +
+            "  )",
+        schema));
+    dbmsConn.execute(String.format(
+        "CREATE TABLE  IF NOT EXISTS `%s`.`customer` (" +
+            "  `c_custkey`     INT , " +
+            "  `c_name`        STRING , " +
+            "  `c_address`     STRING , " +
+            "  `c_nationkey`   INT , " +
+            "  `c_phone`       CHAR(15) , " +
+            "  `c_acctbal`     DECIMAL(15,2)   , " +
+            "  `c_mktsegment`  CHAR(10) , " +
+            "  `c_comment`     STRING, " +
+            "  `c_dummy`       STRING " +
+            "  )",
+        schema));
+    dbmsConn.execute(String.format(
+        "CREATE TABLE IF NOT EXISTS  `%s`.`orders`  ( " +
+            "  `o_orderkey`       INT , " +
+            "  `o_custkey`        INT , " +
+            "  `o_orderstatus`    CHAR(1) , " +
+            "  `o_totalprice`     DECIMAL(15,2) , " +
+            "  `o_orderdate`      TIMESTAMP , " +
+            "  `o_orderpriority`  CHAR(15) , " +
+            "  `o_clerk`          CHAR(15) , " +
+            "  `o_shippriority`   INT , " +
+            "  `o_comment`        STRING, " +
+            "  `o_dummy` STRING " +
+            "  )",
+        schema));
+    dbmsConn.execute(String.format(
+        "CREATE TABLE IF NOT EXISTS `%s`.`lineitem` ( `l_orderkey`    INT , " +
+            "  `l_partkey`     INT , " +
+            "  `l_suppkey`     INT , " +
+            "  `l_linenumber`  INT , " +
+            "  `l_quantity`    DECIMAL(15,2) , " +
+            "  `l_extendedprice`  DECIMAL(15,2) , " +
+            "  `l_discount`    DECIMAL(15,2) , " +
+            "  `l_tax`         DECIMAL(15,2) , " +
+            "  `l_returnflag`  CHAR(1) , " +
+            "  `l_linestatus`  CHAR(1) , " +
+            "  `l_shipdate`    TIMESTAMP , " +
+            "  `l_commitdate`  TIMESTAMP , " +
+            "  `l_receiptdate` TIMESTAMP , " +
+            "  `l_shipinstruct` CHAR(25) , " +
+            "  `l_shipmode`     CHAR(10) , " +
+            "  `l_comment`      STRING, " +
+            "  `l_dummy` STRING)",
+        schema));
+
+    // Load data
+    dbmsConn.execute(String.format("LOAD DATA INPATH 'src/test/resources/tpch_test_data/region/region.tbl' " +
+        "INTO TABLE `%s`.`region`", schema));
+    dbmsConn.execute(String.format("LOAD DATA LOCAL INFILE 'src/test/resources/tpch_test_data/nation/nation.tbl' " +
+        "INTO TABLE `%s`.`nation` FIELDS TERMINATED BY '|'", schema));
+    dbmsConn.execute(String.format("LOAD DATA LOCAL INFILE 'src/test/resources/tpch_test_data/supplier/supplier.tbl' " +
+        "INTO TABLE `%s`.`supplier` FIELDS TERMINATED BY '|'", schema));
+    dbmsConn.execute(String.format("LOAD DATA LOCAL INFILE 'src/test/resources/tpch_test_data/customer/customer.tbl' " +
+        "INTO TABLE `%s`.`customer` FIELDS TERMINATED BY '|'", schema));
+    dbmsConn.execute(String.format("LOAD DATA LOCAL INFILE 'src/test/resources/tpch_test_data/part/part.tbl' " +
+        "INTO TABLE `%s`.`part` FIELDS TERMINATED BY '|'", schema));
+    dbmsConn.execute(String.format("LOAD DATA LOCAL INFILE 'src/test/resources/tpch_test_data/partsupp/partsupp.tbl' " +
+        "INTO TABLE `%s`.`partsupp` FIELDS TERMINATED BY '|'", schema));
+    dbmsConn.execute(String.format("LOAD DATA LOCAL INFILE 'src/test/resources/tpch_test_data/lineitem/lineitem.tbl' " +
+        "INTO TABLE `%s`.`lineitem` FIELDS TERMINATED BY '|'", schema));
+    dbmsConn.execute(String.format("LOAD DATA LOCAL INFILE 'src/test/resources/tpch_test_data/orders/orders.tbl' " +
+        "INTO TABLE `%s`.`orders` FIELDS TERMINATED BY '|'", schema));
+    return conn;
   }
 
   public static Connection setupMySql(
