@@ -12,6 +12,7 @@ jobs:
       - run: java -version
       - run: sudo apt-get update && sudo apt-get install -y openjdk-7-jdk
       - run: java -version
+      - run: sudo  update-java-alternatives --list
 
   build-jdk7:
     docker:
