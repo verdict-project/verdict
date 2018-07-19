@@ -166,6 +166,70 @@ public class DatabaseConnectionHelpers {
     return spark;
   }
 
+  public static Connection setupMySqlForDataTypeTest(
+      String connectionString, String user, String password, String schema, String table)
+      throws SQLException, VerdictDBDbmsException {
+    Connection conn = DriverManager.getConnection(connectionString, user, password);
+    DbmsConnection dbmsConn = JdbcConnection.create(conn);
+
+    dbmsConn.execute(String.format("DROP SCHEMA IF EXISTS `%s`", schema));
+    dbmsConn.execute(String.format("CREATE SCHEMA IF NOT EXISTS `%s`", schema));
+    dbmsConn.execute(String.format(
+        "CREATE TABLE IF NOT EXISTS `%s`.`%s` ("
+            + "bitCol        BIT(1), "
+            + "tinyintCol    TINYINT(2), "
+            + "boolCol       BOOL, "
+            + "smallintCol   SMALLINT(3), "
+            + "mediumintCol  MEDIUMINT(4), "
+            + "intCol        INT(4), "
+            + "integerCol    INTEGER(4), "
+            + "bigintCol     BIGINT(8), "
+            + "decimalCol    DECIMAL(4,2), "
+            + "decCol        DEC(4,2), "
+            + "floatCol      FLOAT(4,2), "
+            + "doubleCol     DOUBLE(8,2), "
+            + "doubleprecisionCol DOUBLE PRECISION(8,2), "
+            + "dateCol       DATE, "
+            + "datetimeCol   DATETIME, "
+            + "timestampCol  TIMESTAMP, "
+            + "timeCol       TIME, "
+            + "yearCol       YEAR(2), "
+            + "yearCol2      YEAR(4), "
+            + "charCol       CHAR(4), "
+            + "varcharCol    VARCHAR(4), "
+            + "binaryCol     BINARY(4), "
+            + "varbinaryCol  VARBINARY(4), "
+            + "tinyblobCol   TINYBLOB, "
+            + "tinytextCol   TINYTEXT, "
+            + "blobCol       BLOB(4), "
+            + "textCol       TEXT(100), "
+            + "medimumblobCol MEDIUMBLOB, "
+            + "medimumtextCol MEDIUMTEXT, "
+            + "longblobCol   LONGBLOB, "
+            + "longtextCol   LONGTEXT, "
+            + "enumCol       ENUM('1', '2'), "
+            + "setCol        SET('1', '2'))"
+        , schema, table));
+
+    dbmsConn.execute(String.format("INSERT INTO `%s`.`%s` VALUES ( "
+            + "1, 2, 1, 1, 1, 1, 1, 1, "
+            + "1.0, 1.0, 1.0, 1.0, 1.0, "
+            + "'2018-12-31', '2018-12-31 01:00:00', '2018-12-31 00:00:01', '10:59:59', "
+            + "18, 2018, 'abc', 'abc', '10', '10', "
+            + "'10', 'a', '10', 'abc', '1110', 'abc', '1110', 'abc', '1', '2')",
+        schema, table));
+
+    dbmsConn.execute(String.format("INSERT INTO `%s`.`%s` VALUES ( "
+            + "NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, "
+            + "NULL, NULL, NULL, NULL, NULL, "
+            + "NULL, NULL, NULL, NULL, "
+            + "NULL, NULL, NULL, NULL, NULL, NULL, "
+            + "NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL)",
+        schema, table));
+
+    return conn;
+  }
+
   public static Connection setupMySql(
       String connectionString, String user, String password, String schema)
           throws VerdictDBDbmsException, SQLException {

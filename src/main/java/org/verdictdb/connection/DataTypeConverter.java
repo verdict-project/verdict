@@ -127,14 +127,25 @@ public class DataTypeConverter {
     stringToIntMap.put("character varying", VARCHAR);
     stringToIntMap.put("character", CHAR);
     stringToIntMap.put("int", INTEGER);
+    stringToIntMap.put("mediumint", INTEGER);
     stringToIntMap.put("text", LONGNVARCHAR);
     stringToIntMap.put("double precision", DOUBLE);
     stringToIntMap.put("smallserial", INTEGER);
     stringToIntMap.put("serial", INTEGER);
     stringToIntMap.put("bigserial", BIGINT);
     stringToIntMap.put("string", VARCHAR);
+    stringToIntMap.put("datetime", TIMESTAMP);
     stringToIntMap.put("timestamp", TIMESTAMP);
     stringToIntMap.put("timestamp without time zone", TIMESTAMP);
+    stringToIntMap.put("tinyblob", BLOB);
+    stringToIntMap.put("mediumblob", BLOB);
+    stringToIntMap.put("longblob", BLOB);
+    stringToIntMap.put("tinytext", VARCHAR);
+    stringToIntMap.put("mediumtext", VARCHAR);
+    stringToIntMap.put("longtext", VARCHAR);
+    stringToIntMap.put("enum", CHAR);
+    stringToIntMap.put("set", CHAR);
+    stringToIntMap.put("year", DATE);
   }
 
   public static String typeName(int inttype) {
@@ -142,8 +153,10 @@ public class DataTypeConverter {
   }
   
   public static int typeInt(String typename) {
-//    System.out.println(typename);
-    return stringToIntMap.get(typename.toLowerCase().replaceAll("\\(.*\\)", ""));
+    System.out.println(typename);
+    String type = typename.toLowerCase().replaceAll("\\(.*\\)", "");
+//    return stringToIntMap.get(typename.toLowerCase().replaceAll("\\(.*\\)", ""));
+    return stringToIntMap.get(type);
   }
   
   private static HashSet<Integer> numericTypes = new HashSet<>(Arrays.asList(
