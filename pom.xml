@@ -67,7 +67,7 @@
               <goal>antlr4</goal>
             </goals>
             <configuration>
-              <listener>true</listener>
+              <listener>false</listener>
               <visitor>true</visitor>
             </configuration>
           </execution>

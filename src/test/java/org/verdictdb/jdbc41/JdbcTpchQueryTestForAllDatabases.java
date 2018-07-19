@@ -127,7 +127,7 @@ public class JdbcTpchQueryTestForAllDatabases {
 //    setupPostgresql();
   }
 
-  @Parameterized.Parameters(name="{0}_tpch{1}")
+  @Parameterized.Parameters(name="{0}_tpch_{1}")
   public static Collection databases() {
     Collection<Object[]> params = new ArrayList<>();
 

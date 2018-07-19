@@ -33,12 +33,9 @@ public class VerdictStatement implements java.sql.Statement {
     try {
       result = executionContext.sql(sql);
       return !result.isEmpty();
-    } catch (VerdictDBDbmsException e) {
-      e.printStackTrace();
     } catch (VerdictDBException e) {
-      e.printStackTrace();
+      throw new SQLException(e);
     }
-    return false;
   }
 
   @Override
@@ -47,9 +44,8 @@ public class VerdictStatement implements java.sql.Statement {
       result = executionContext.sql(sql);
       return new VerdictResultSet(result);
     } catch (VerdictDBException e) {
-      e.printStackTrace();
+      throw new SQLException(e);
     }
-    return null;
   }
 
   @Override
@@ -58,9 +54,8 @@ public class VerdictStatement implements java.sql.Statement {
       result = executionContext.sql(sql);
       return (int) result.getRowCount();
     } catch (VerdictDBException e) {
-      e.printStackTrace();
+      throw new SQLException(e);
     }
-    return 0;
   }
 
   @Override

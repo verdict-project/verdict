@@ -1289,7 +1289,7 @@ public class TpchExecutionPlanTest {
     SelectQuery expected = SelectQuery.create(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("tpch", "customer","vt1", "c_custkey"), "c_custkey"),
-            new AliasedColumn(new ColumnOp("count", new AsteriskColumn()), "c_count")
+            new AliasedColumn(new ColumnOp("count", new BaseColumn("tpch", "orders", "vt2", "o_orderkey")), "c_count")
         ), join
     );
     expected.addGroupby(new AliasReference("c_custkey"));
