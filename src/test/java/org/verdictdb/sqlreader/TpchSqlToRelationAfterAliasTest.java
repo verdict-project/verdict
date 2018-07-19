@@ -1324,7 +1324,8 @@ public class TpchSqlToRelationAfterAliasTest {
     SelectQuery subqery = SelectQuery.create(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn("tpch", "customer","vt2", "c_custkey"), "c_custkey"),
-            new AliasedColumn(new ColumnOp("count", new AsteriskColumn()), "c_count")
+            new AliasedColumn(new ColumnOp("count", new BaseColumn("tpch", "orders", "vt3", "o_orderkey")), "c_count")
+//    new AliasedColumn(new ColumnOp("count", new AsteriskColumn()), "c_count")
             ),
         join);
     subqery.addGroupby(new AliasReference("c_custkey"));

@@ -1559,7 +1559,7 @@ public class TpchExecutionPlanTest {
         ), new BaseTable("tpch", "lineitem", "vt4"));
     expected.addGroupby(new AliasReference("l_orderkey"));
     expected.setAliasName("vt3");
-    expected.addFilterByAnd(new ColumnOp("isnotnull",
+    expected.addFilterByAnd(new ColumnOp("is_not_null",
         new BaseColumn("tpch", "lineitem","vt4", "l_orderkey")
     ));
 

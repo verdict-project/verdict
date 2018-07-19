@@ -78,7 +78,7 @@ public class SelectQuery extends AbstractRelation implements SqlConvertible {
   public SelectQuery deepcopy() {
     SelectQuery sel = new SelectQuery();
     for (SelectItem c : getSelectList()) {
-      sel.addSelectItem(c);
+      sel.addSelectItem(c.deepcopy());
     }
     
     for (AbstractRelation r : getFromList()) {

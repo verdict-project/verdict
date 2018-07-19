@@ -33,7 +33,7 @@ public class SelectQueryToSql {
   SqlSyntax syntax;
 
   Set<String> opTypeNotRequiringParentheses = Sets.newHashSet(
-      "sum", "avg", "count", "max", "min", "std", "sqrt", "isnotnull", "isnull", "rand", "floor");
+      "sum", "avg", "count", "max", "min", "std", "sqrt", "is_not_null", "is_null", "rand", "floor");
 
   public SelectQueryToSql(SqlSyntax syntax) {
     this.syntax = syntax;
@@ -91,7 +91,8 @@ public class SelectQueryToSql {
       } else if (columnOp.getOpType().equals("sum")) {
         return "sum(" + unnamedColumnToSqlPart(columnOp.getOperand()) + ")";
       } else if (columnOp.getOpType().equals("count")) {
-        return "count(*)";
+        if (columnOp.getOperands().isEmpty()) return "count(*)";
+        else return "count(" + unnamedColumnToSqlPart(columnOp.getOperand(0)) + ")";
       } else if (columnOp.getOpType().equals("stddev_pop")) {
         String stddevPopulationFunctionName = syntax.getStddevPopulationFunctionName();
         return String.format("%s(", stddevPopulationFunctionName)
@@ -131,9 +132,13 @@ public class SelectQueryToSql {
         return sql;
       } else if (columnOp.getOpType().equals("notequal")) {
         return withParentheses(columnOp.getOperand(0)) + " <> " + withParentheses(columnOp.getOperand(1));
+      } else if (columnOp.getOpType().equals("notand")) {
+        return "not (" + withParentheses(columnOp.getOperand(0)) + " and " + withParentheses(columnOp.getOperand(1)) + ")";
       } else if (columnOp.getOpType().equals("isnull")) {
+        return "isnull(" + withParentheses(columnOp.getOperand(0)) + ")";
+      } else if (columnOp.getOpType().equals("is_null")) {
         return withParentheses(columnOp.getOperand(0)) + " is null";
-      } else if (columnOp.getOpType().equals("isnotnull")) {
+      } else if (columnOp.getOpType().equals("is_not_null")) {
         return withParentheses(columnOp.getOperand(0)) + " is not null";
       } else if (columnOp.getOpType().equals("interval")) {
         return "interval " + withParentheses(columnOp.getOperand(0)) + " " + withParentheses(columnOp.getOperand(1));
@@ -335,7 +340,11 @@ public class SelectQueryToSql {
 
     if (relation instanceof BaseTable) {
       BaseTable base = (BaseTable) relation;
-      sql.append(quoteName(base.getSchemaName()) + "." + quoteName(base.getTableName()));
+      if (base.getSchemaName().isEmpty()) {
+        sql.append(quoteName(base.getTableName()));
+      } else {
+        sql.append(quoteName(base.getSchemaName()) + "." + quoteName(base.getTableName()));
+      }
       if (base.getAliasName().isPresent()) {
         sql.append(" as " + base.getAliasName().get());
       }

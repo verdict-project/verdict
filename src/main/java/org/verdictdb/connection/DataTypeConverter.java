@@ -133,6 +133,8 @@ public class DataTypeConverter {
     stringToIntMap.put("serial", INTEGER);
     stringToIntMap.put("bigserial", BIGINT);
     stringToIntMap.put("string", VARCHAR);
+    stringToIntMap.put("timestamp", TIMESTAMP);
+    stringToIntMap.put("timestamp without time zone", TIMESTAMP);
   }
 
   public static String typeName(int inttype) {
