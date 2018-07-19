@@ -88,12 +88,13 @@ public class CondGen extends VerdictSQLParserBaseVisitor<UnnamedColumn> {
       return visit(ctx.predicate());
     } else {
       UnnamedColumn predicate = visit(ctx.predicate());
-      if (predicate instanceof ColumnOp) {
-        ((ColumnOp) predicate).setOpType("not" + ((ColumnOp) predicate).getOpType());
-        return predicate;
-      } else {
-        return null;
-      }
+      return ColumnOp.not(predicate);
+//      if (predicate instanceof ColumnOp) {
+//        ((ColumnOp) predicate).setOpType("not" + ((ColumnOp) predicate).getOpType());
+//        return predicate;
+//      } else {
+//        return null;
+//      }
     }
   }
 
@@ -159,11 +160,7 @@ public class CondGen extends VerdictSQLParserBaseVisitor<UnnamedColumn> {
   @Override
   public UnnamedColumn visitFunc_predicate(VerdictSQLParser.Func_predicateContext ctx) {
     UnnamedColumn pred = visit(ctx.predicate_function());
-    if (ctx.NOT() == null) {
-      return pred;
-    } else {
-      return ColumnOp.not(pred);
-    }
+    return pred;
   }
 
   @Override

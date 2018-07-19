@@ -1955,7 +1955,7 @@ public class TpchSqlToRelationBeforeAliasTest {
         new BaseColumn("l3", "l_receiptdate"),
         new BaseColumn("l3", "l_commitdate")
     )));
-    expected.addFilterByAnd(new ColumnOp("notexists", SubqueryColumn.getSubqueryColumn(subquery2)));
+    expected.addFilterByAnd(ColumnOp.not(ColumnOp.exists(SubqueryColumn.getSubqueryColumn(subquery2))));
     expected.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
         new BaseColumn("s", "s_nationkey"),
         new BaseColumn("n", "n_nationkey")
@@ -2056,7 +2056,7 @@ public class TpchSqlToRelationBeforeAliasTest {
         new BaseColumn("o", "o_custkey"),
         new BaseColumn("c", "c_custkey")
     )));
-    subquery.addFilterByAnd(new ColumnOp("notexists", SubqueryColumn.getSubqueryColumn(subsubquery2)));
+    subquery.addFilterByAnd(ColumnOp.not(ColumnOp.exists(SubqueryColumn.getSubqueryColumn(subsubquery2))));
     subquery.setAliasName("custsale");
     SelectQuery expected = SelectQuery.create(
         Arrays.asList(

@@ -375,7 +375,7 @@ predicate
     | expression NOT? LIKE expression (ESCAPE expression)?                  # like_predicate
     | expression IS null_notnull                                            # is_predicate
     | '(' search_condition ')'                                              # bracket_predicate
-    | NOT? predicate_function                                               # func_predicate
+    | predicate_function                                               # func_predicate
     ;
 
 query_expression
