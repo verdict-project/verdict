@@ -165,6 +165,132 @@ public class DatabaseConnectionHelpers {
 
     return spark;
   }
+  
+  public static Connection setupImpala(
+      String connectionString, String user, String password, String schema) 
+          throws SQLException, VerdictDBDbmsException {
+    
+    Connection conn = DriverManager.getConnection(connectionString, user, password);
+    DbmsConnection dbmsConn = JdbcConnection.create(conn);
+
+    // CASCADE does not work in our version
+    dbmsConn.execute(String.format("DROP TABLE IF EXISTS `%s`.`nation`", schema));
+    dbmsConn.execute(String.format("DROP TABLE IF EXISTS `%s`.`region`", schema));
+    dbmsConn.execute(String.format("DROP TABLE IF EXISTS `%s`.`part`", schema));
+    dbmsConn.execute(String.format("DROP TABLE IF EXISTS `%s`.`supplier`", schema));
+    dbmsConn.execute(String.format("DROP TABLE IF EXISTS `%s`.`partsupp`", schema));
+    dbmsConn.execute(String.format("DROP TABLE IF EXISTS `%s`.`customer`", schema));
+    dbmsConn.execute(String.format("DROP TABLE IF EXISTS `%s`.`orders`", schema));
+    dbmsConn.execute(String.format("DROP TABLE IF EXISTS `%s`.`lineitem`", schema));
+    
+    dbmsConn.execute(String.format("DROP SCHEMA IF EXISTS `%s`", schema));
+    dbmsConn.execute(String.format("CREATE SCHEMA IF NOT EXISTS `%s`", schema));
+    
+    // Create tables
+    dbmsConn.execute(String.format(
+        "CREATE EXTERNAL TABLE IF NOT EXISTS `%s`.`nation` (" +
+        "  `n_nationkey`  INT, " +
+        "  `n_name`       STRING, " +
+        "  `n_regionkey`  INT, " +
+        "  `n_comment`    STRING, " +
+        "  `n_dummy`      STRING) " +
+        "LOCATION '/tmp/tpch_test_data/nation'",
+          schema));
+    dbmsConn.execute(String.format(
+        "CREATE TABLE IF NOT EXISTS `%s`.`region`  (" +
+        "  `r_regionkey`  INT, " +
+        "  `r_name`       STRING, " +
+        "  `r_comment`    STRING, " +
+        "  `r_dummy`      STRING) " + 
+        "LOCATION '/tmp/tpch_test_data/region'",
+          schema));
+      dbmsConn.execute(String.format(
+        "CREATE TABLE  IF NOT EXISTS `%s`.`part`  ( " +
+        "  `p_partkey`     INT, " +
+        "  `p_name`        STRING, " +
+        "  `p_mfgr`        STRING, " +
+        "  `p_brand`       STRING, " +
+        "  `p_type`        STRING, " +
+        "  `p_size`        INT, " +
+        "  `p_container`   STRING, " +
+        "  `p_retailprice` DECIMAL(15,2) , " +
+        "  `p_comment`     STRING, " +
+        "  `p_dummy`       STRING) " + 
+        "LOCATION '/tmp/tpch_test_data/part'",
+          schema));
+      dbmsConn.execute(String.format(
+        "CREATE TABLE  IF NOT EXISTS `%s`.`supplier` ( " +
+        "  `s_suppkey`     INT , " +
+        "  `s_name`        STRING , " +
+        "  `s_address`     STRING, " +
+        "  `s_nationkey`   INT , " +
+        "  `s_phone`       STRING , " +
+        "  `s_acctbal`     DECIMAL(15,2) , " +
+        "  `s_comment`     STRING, " +
+        "  `s_dummy`       STRING) " + 
+        "LOCATION '/tmp/tpch_test_data/supplier'",
+          schema));
+      dbmsConn.execute(String.format(
+        "CREATE TABLE  IF NOT EXISTS `%s`.`partsupp` ( " +
+        "  `ps_partkey`     INT , " +
+        "  `ps_suppkey`     INT , " +
+        "  `ps_availqty`    INT , " +
+        "  `ps_supplycost`  DECIMAL(15,2)  , " +
+        "  `ps_comment`     STRING, " +
+        "  `ps_dummy`       STRING) " + 
+        "LOCATION '/tmp/tpch_test_data/partsupp'",
+          schema));
+      dbmsConn.execute(String.format(
+        "CREATE TABLE  IF NOT EXISTS `%s`.`customer` (" +
+        "  `c_custkey`     INT , " +
+        "  `c_name`        STRING , " +
+        "  `c_address`     STRING , " +
+        "  `c_nationkey`   INT , " +
+        "  `c_phone`       STRING , " +
+        "  `c_acctbal`     DECIMAL(15,2)   , " +
+        "  `c_mktsegment`  STRING , " +
+        "  `c_comment`     STRING, " +
+        "  `c_dummy`       STRING) " + 
+        "LOCATION '/tmp/tpch_test_data/customer'",
+          schema));
+      dbmsConn.execute(String.format(
+        "CREATE TABLE IF NOT EXISTS  `%s`.`orders`  ( " +
+        "  `o_orderkey`       INT , " +
+        "  `o_custkey`        INT , " +
+        "  `o_orderstatus`    STRING , " +
+        "  `o_totalprice`     DECIMAL(15,2) , " +
+        "  `o_orderdate`      STRING , " +    // incorrect! TIMESTAMP should be used
+        "  `o_orderpriority`  STRING , " +
+        "  `o_clerk`          STRING , " +
+        "  `o_shippriority`   INT, " +
+        "  `o_comment`        STRING, " +
+        "  `o_dummy`          STRING) " +
+        "LOCATION '/tmp/tpch_test_data/orders'",
+          schema));
+      dbmsConn.execute(String.format(
+        "CREATE TABLE IF NOT EXISTS `%s`.`lineitem` ( " + 
+        "  `l_orderkey`    INT , " +
+        "  `l_partkey`     INT , " +
+        "  `l_suppkey`     INT , " +
+        "  `l_linenumber`  INT , " +
+        "  `l_quantity`    DECIMAL(15,2) , " +
+        "  `l_extendedprice`  DECIMAL(15,2) , " +
+        "  `l_discount`    DECIMAL(15,2) , " +
+        "  `l_tax`         DECIMAL(15,2) , " +
+        "  `l_returnflag`  STRING , " +
+        "  `l_linestatus`  STRING , " +
+        "  `l_shipdate`    STRING , " +    // incorrect! TIMESTAMP should be used
+        "  `l_commitdate`  STRING , " +    // incorrect! TIMESTAMP should be used
+        "  `l_receiptdate` STRING , " +    // incorrect! TIMESTAMP should be used
+        "  `l_shipinstruct` STRING , " +
+        "  `l_shipmode`     STRING , " +
+        "  `l_comment`      STRING, " +
+        "  `l_dummy`        STRING) " + 
+        "LOCATION '/tmp/tpch_test_data/lineitem'",
+          schema));
+    
+    return conn;
+  }
 
   public static Connection setupMySql(
       String connectionString, String user, String password, String schema)
@@ -178,7 +304,7 @@ public class DatabaseConnectionHelpers {
 
     // Create tables
     dbmsConn.execute(String.format(
-      "CREATE TABLE  IF NOT EXISTS `%s`.`nation` (" +
+      "CREATE TABLE IF NOT EXISTS `%s`.`nation` (" +
       "  `n_nationkey`  INT, " +
       "  `n_name`       CHAR(25), " +
       "  `n_regionkey`  INT, " +
@@ -187,7 +313,7 @@ public class DatabaseConnectionHelpers {
       "  PRIMARY KEY (`n_nationkey`))",
         schema));
     dbmsConn.execute(String.format(
-      "CREATE TABLE  IF NOT EXISTS `%s`.`region`  (" +
+      "CREATE TABLE IF NOT EXISTS `%s`.`region`  (" +
       "  `r_regionkey`  INT, " +
       "  `r_name`       CHAR(25), " +
       "  `r_comment`    VARCHAR(152), " +
