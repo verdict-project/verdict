@@ -53,12 +53,27 @@ jobs:
       # Customize the JVM maximum heap limit
       MAVEN_OPTS: -Xmx3200m
     steps:
-      - run: sudo apt-get update; sudo apt-get install -y git
+      # - run: sudo apt-get update; sudo apt-get install -y git
       - checkout
       - run: docker run --rm -d --name verdictdb-mysql -p 127.0.0.1:3306:3306 -e MYSQL_DATABASE=test -e MYSQL_ALLOW_EMPTY_PASSWORD=yes mariadb:10
       - run: docker run --rm -d --name verdictdb-postgres -p 127.0.0.1:5432:5432 -e POSTGRES_DB=test -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD="" postgres:10
       - run: docker run --rm -d --name verdictdb-impala -p 127.0.0.1:21050:21050 codingtony/impala
-
+      - run: docker run --rm --link verdictdb-impala:impala-server -v "$(cd "$(dirname "src/test/resources")"; pwd)/$(basename "src/test/resources")":/work:ro codingtony/impala hdp impala-server hadoop fs -put /work/tpch_test_data /tmp/tpch_test_data
+      - restore_cache:
+          keys:
+          - v1-dependencies-{{ checksum "pom.xml" }}
+          # fallback to using the latest cache if no exact match is found
+          - v1-dependencies-
+      - run: mvn install:install-file -Dfile=src/test/resources/jars/ImpalaJDBC41-2.6.3.jar -DgroupId=com.cloudera -DartifactId=impala-jdbc41 -Dversion=2.6.3 -Dpackaging=jar
+      - run: mvn dependency:go-offline
+      - save_cache:
+          paths:
+            - ~/.m2
+          key: v1-dependencies-{{ checksum "pom.xml" }}
+      - run: git clone git@github.com:verdictdb/verdictdb-private-resources.git
+      - run: mvn -B test 2> /dev/null
+      - run: mvn cobertura:cobertura
+      - run: bash <(curl -s https://codecov.io/bash) -t 9cf48c61-07ed-4a14-9eed-f7129664ee79
 
     # docker:
     #   # specify the version you desire here
