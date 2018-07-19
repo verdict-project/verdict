@@ -10,7 +10,7 @@ jobs:
     working_directory: ~/repo
     steps:
       - run: java -version
-      - run: sudo apt-get install openjdk-7-jdk
+      - run: sudo apt-get update && sudo apt-get install -y openjdk-7-jdk
       - run: java -version
 
   build-jdk7:

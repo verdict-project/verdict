@@ -22,9 +22,18 @@ import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.connection.StaticMetaData;
 import org.verdictdb.coordinator.ScramblingCoordinator;
+import org.verdictdb.core.execplan.ExecutablePlanRunner;
+import org.verdictdb.core.querying.AggExecutionNode;
+import org.verdictdb.core.querying.QueryExecutionPlan;
 import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
+import org.verdictdb.core.sqlobject.AbstractRelation;
+import org.verdictdb.core.sqlobject.SelectQuery;
+import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.sqlreader.NonValidatingSQLParser;
+import org.verdictdb.sqlreader.RelationStandardizer;
+import org.verdictdb.sqlsyntax.MysqlSyntax;
 
 public class AsyncAggMultiTierSingleBlockTest {
   
@@ -38,16 +47,6 @@ public class AsyncAggMultiTierSingleBlockTest {
 
   static StaticMetaData staticMetaData = new StaticMetaData();
   
-  String placeholderSchemaName = "placeholderSchemaName";
-
-  String placeholderTableName = "placeholderTableName";
-
-  static String originalSchema = "originalSchema";
-
-  static String originalTable = "originalTable";
-
-  static String smallTable = "smallTable";
-  
   private static final String MYSQL_HOST;
 
   private static final String MYSQL_DATABASE = "async_agg_multi_tier_single_block";
@@ -57,6 +56,16 @@ public class AsyncAggMultiTierSingleBlockTest {
   private static final String MYSQL_PASSWORD = "";
 
   private static final String TABLE_NAME = "mytable";
+  
+  String placeholderSchemaName = "placeholderSchemaName";
+
+  String placeholderTableName = "placeholderTableName";
+
+  static String originalSchema = MYSQL_DATABASE;
+
+  static String originalTable = "originalTable";
+
+  static String smallTable = "smallTable";
 
   static {
     String env = System.getenv("BUILD_ENV");
@@ -96,21 +105,10 @@ public class AsyncAggMultiTierSingleBlockTest {
     Map<String, String> options = new HashMap<>();
     options.put("blockColumnName", "verdictdbaggblock");
     options.put("tierColumnName", "verdictdbtier");
-    long blockSize = 5;
+    long blockSize = 100;
     ScramblingCoordinator scrambler = new ScramblingCoordinator(dbmsConn, scrambleSchema, scratchpadSchema, blockSize);
-    ScrambleMeta tablemeta = scrambler.scramble(originalSchema, originalTable, originalSchema, scrambledTable, "fastconverge", primaryColumn, options);
-
-//    UniformScrambler scrambler =
-//        new UniformScrambler(originalSchema, originalTable, originalSchema, "originalTable_scrambled", aggBlockCount);
-//    CreateTableAsSelectQuery scramblingQuery = scrambler.createQuery();
-//    stmt.executeUpdate(QueryToSql.convert(new MysqlSyntax(), scramblingQuery));
-//    ScrambleMeta tablemeta = scrambler.generateMeta();
-//    tablemeta.setNumberOfTiers(2);
-//    HashMap<Integer, List<Double>> distribution = new HashMap<>();
-//    distribution.put(0, Arrays.asList(0.5, 1.0));
-//    distribution.put(1, Arrays.asList(0.2, 1.0));
-//    tablemeta.setCumulativeDistributionForTier(distribution);
-//    scrambledTable = tablemeta.getTableName();
+    ScrambleMeta tablemeta = scrambler.scramble(
+        originalSchema, originalTable, originalSchema, scrambledTable, "fastconverge", primaryColumn, options);
     meta.addScrambleMeta(tablemeta);
 
     staticMetaData.setDefaultSchema(originalSchema);
@@ -131,8 +129,25 @@ public class AsyncAggMultiTierSingleBlockTest {
   }
 
   @Test
-  public void test() {
-    fail("Not yet implemented");
+  public void test() throws VerdictDBException {
+    RelationStandardizer.resetItemID();
+    String sql = "select avg(value) from originalTable_scrambled";
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
+    RelationStandardizer gen = new RelationStandardizer(staticMetaData);
+    relation = gen.standardize((SelectQuery) relation);
+
+    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
+    queryExecutionPlan.cleanUp();
+    queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
+    Dimension d1 = new Dimension(originalSchema, "originalTable_scrambled", 0, 0);
+    assertEquals(
+        new HyperTableCube(Arrays.asList(d1)),
+        ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getMeta().getCubes().get(0));
+    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
+
+//    stmt.execute("create schema if not exists `verdictdb_temp`;");
+    ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new MysqlSyntax()), queryExecutionPlan);
   }
 
 }
