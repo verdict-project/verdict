@@ -189,6 +189,13 @@ public class RelationStandardizer {
       else if (g instanceof ConstantColumn) {
         // replace index with column alias
         String value = (String) ((ConstantColumn) g).getValue();
+        try {
+          Integer.parseInt(value);
+        }
+        catch(NumberFormatException e) {
+          newGroupby.add(new AliasReference(value));
+          continue;
+        }
         int index  = Integer.valueOf(value);
         newGroupby.add(new AliasReference(((AliasedColumn)selectItems.get(index-1)).getAliasName()));
       }
