@@ -34,7 +34,7 @@ import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sqlreader.NonValidatingSQLParser;
 import org.verdictdb.sqlreader.RelationStandardizer;
-import org.verdictdb.sqlsyntax.MysqlSyntax;
+import org.verdictdb.sqlsyntax.H2Syntax;
 
 public class AsyncAggScaleResultMultiTierTest {
 
@@ -50,42 +50,24 @@ public class AsyncAggScaleResultMultiTierTest {
 
   static String scrambledTable;
 
+
   static String originalSchema = "originalSchema";
 
   static String originalTable = "originalTable";
 
-  private static final String MYSQL_HOST;
-
-  private static final String MYSQL_DATABASE = "test";
-
-  private static final String MYSQL_UESR = "root";
-
-  private static final String MYSQL_PASSWORD = "";
-
-  private static final String TABLE_NAME = "mytable";
-
-  static {
-    String env = System.getenv("BUILD_ENV");
-    if (env != null && (env.equals("GitLab") || env.equals("DockerCompose"))) {
-      MYSQL_HOST = "mysql";
-    } else {
-      MYSQL_HOST = "localhost";
-    }
-  }
-
 
   @BeforeClass
-  public static void setupMysqlDatabase() throws SQLException, VerdictDBException {
-    String mysqlConnectionString =
-        String.format("jdbc:mysql://%s?autoReconnect=true&useSSL=false", MYSQL_HOST);
-    conn = DriverManager.getConnection(mysqlConnectionString, MYSQL_UESR, MYSQL_PASSWORD);
-    
+  public static void setupH2Database() throws SQLException, VerdictDBException {
+    final String DB_CONNECTION = "jdbc:h2:mem:asyncaggscaletest;DB_CLOSE_DELAY=-1";
+    final String DB_USER = "";
+    final String DB_PASSWORD = "";
+    conn = DriverManager.getConnection(DB_CONNECTION, DB_USER, DB_PASSWORD);
+
     stmt = conn.createStatement();
-    stmt.execute(String.format("DROP SCHEMA IF EXISTS `%s`", originalSchema));
-    stmt.execute(String.format("CREATE SCHEMA IF NOT EXISTS `%s`", originalSchema));
-    stmt.executeUpdate(String.format("CREATE TABLE `%s`.`%s` (`value` float, `verdictdbtier` int, `verdictdbaggblock` int)", originalSchema, originalTable));
+    stmt.execute(String.format("CREATE SCHEMA IF NOT EXISTS\"%s\"", originalSchema));
+    stmt.executeUpdate(String.format("CREATE TABLE \"%s\".\"%s\"(\"value\" float, \"verdictdbtier\" int, \"verdictdbaggblock\" int)", originalSchema, originalTable));
     for (int i = 0; i < 15; i++) {
-      stmt.executeUpdate(String.format("INSERT INTO `%s`.`%s` (`value`, `verdictdbtier`, `verdictdbaggblock`) VALUES (%f, %s, %s)",
+      stmt.executeUpdate(String.format("INSERT INTO \"%s\".\"%s\"(\"value\", \"verdictdbtier\", \"verdictdbaggblock\") VALUES(%f, %s, %s)",
           originalSchema, originalTable, (float)1, i%3==0?0:1, i/3));
     }
 
@@ -99,20 +81,6 @@ public class AsyncAggScaleResultMultiTierTest {
     tablemeta.setCumulativeDistributionForTier(distribution);
     scrambledTable = tablemeta.getTableName();
     meta.addScrambleMeta(tablemeta);
-    
-    // create scrambled table
-//    DbmsConnection dbmsConn = JdbcConnection.create(conn);
-//    String scrambleSchema = MYSQL_DATABASE;
-//    String scratchpadSchema = MYSQL_DATABASE;
-//    String scrambledTable = "originalTable_scrambled";
-//    String primaryColumn = null;
-//    Map<String, String> options = new HashMap<>();
-//    options.put("blockColumnName", "verdictdbaggblock");
-//    options.put("tierColumnName", "verdictdbtier");
-//    long blockSize = 5;
-//    ScramblingCoordinator scrambler = new ScramblingCoordinator(dbmsConn, scrambleSchema, scratchpadSchema, blockSize);
-//    ScrambleMeta tablemeta = scrambler.scramble(originalSchema, originalTable, originalSchema, scrambledTable, "fastconverge", primaryColumn, options);
-//    meta.addScrambleMeta(tablemeta);
 
     staticMetaData.setDefaultSchema(originalSchema);
     List<Pair<String, Integer>> arr = new ArrayList<>();
@@ -122,13 +90,7 @@ public class AsyncAggScaleResultMultiTierTest {
     ));
     staticMetaData.addTableData(new StaticMetaData.TableInfo(originalSchema, "originalTable"), arr);
 
-    stmt.execute("create schema if not exists `verdictdb_temp`");
-  }
-
-  @AfterClass
-  public static void tearDown() throws SQLException {
-    stmt.execute(String.format("DROP SCHEMA IF EXISTS `%s`", originalSchema));
-    stmt.execute("drop schema `verdictdb_temp`");
+    stmt.execute("create schema if not exists \"verdictdb_temp\";");
   }
 
   @Test
@@ -150,7 +112,7 @@ public class AsyncAggScaleResultMultiTierTest {
     ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
 
 
-    JdbcConnection jdbcConnection = new JdbcConnection(conn, new MysqlSyntax());
+    JdbcConnection jdbcConnection = new JdbcConnection(conn, new H2Syntax());
     //ExecutablePlanRunner.runTillEnd(jdbcConnection, queryExecutionPlan);
 
     ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(jdbcConnection, queryExecutionPlan);
@@ -183,7 +145,7 @@ public class AsyncAggScaleResultMultiTierTest {
     ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
 
 
-    JdbcConnection jdbcConnection = new JdbcConnection(conn, new MysqlSyntax());
+    JdbcConnection jdbcConnection = new JdbcConnection(conn, new H2Syntax());
     //ExecutablePlanRunner.runTillEnd(jdbcConnection, queryExecutionPlan);
 
     ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(jdbcConnection, queryExecutionPlan);
@@ -216,7 +178,7 @@ public class AsyncAggScaleResultMultiTierTest {
     ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
 
 
-    JdbcConnection jdbcConnection = new JdbcConnection(conn, new MysqlSyntax());
+    JdbcConnection jdbcConnection = new JdbcConnection(conn, new H2Syntax());
     //ExecutablePlanRunner.runTillEnd(jdbcConnection, queryExecutionPlan);
 
     ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(jdbcConnection, queryExecutionPlan);
@@ -249,7 +211,7 @@ public class AsyncAggScaleResultMultiTierTest {
     ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
 
 
-    JdbcConnection jdbcConnection = new JdbcConnection(conn, new MysqlSyntax());
+    JdbcConnection jdbcConnection = new JdbcConnection(conn, new H2Syntax());
     //ExecutablePlanRunner.runTillEnd(jdbcConnection, queryExecutionPlan);
 
     ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(jdbcConnection, queryExecutionPlan);
@@ -283,7 +245,7 @@ public class AsyncAggScaleResultMultiTierTest {
     ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
 
 
-    JdbcConnection jdbcConnection = new JdbcConnection(conn, new MysqlSyntax());
+    JdbcConnection jdbcConnection = new JdbcConnection(conn, new H2Syntax());
     //ExecutablePlanRunner.runTillEnd(jdbcConnection, queryExecutionPlan);
 
     ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(jdbcConnection, queryExecutionPlan);
@@ -317,7 +279,7 @@ public class AsyncAggScaleResultMultiTierTest {
     ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
 
 
-    JdbcConnection jdbcConnection = new JdbcConnection(conn, new MysqlSyntax());
+    JdbcConnection jdbcConnection = new JdbcConnection(conn, new H2Syntax());
     //ExecutablePlanRunner.runTillEnd(jdbcConnection, queryExecutionPlan);
 
     ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(jdbcConnection, queryExecutionPlan);
@@ -351,7 +313,7 @@ public class AsyncAggScaleResultMultiTierTest {
     ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
 
 
-    JdbcConnection jdbcConnection = new JdbcConnection(conn, new MysqlSyntax());
+    JdbcConnection jdbcConnection = new JdbcConnection(conn, new H2Syntax());
     //ExecutablePlanRunner.runTillEnd(jdbcConnection, queryExecutionPlan);
 
     ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(jdbcConnection, queryExecutionPlan);
@@ -360,7 +322,7 @@ public class AsyncAggScaleResultMultiTierTest {
       DbmsQueryResult dbmsQueryResult = reader.next();
       dbmsQueryResult.next();
       resultReturnedCnt++;
-      assertEquals(1.0, dbmsQueryResult.getDouble(0), 1e-6);
+      assertEquals(1.0, (double)dbmsQueryResult.getValue(0), 1e-6);
     }
     assertEquals(5, resultReturnedCnt);
   }
@@ -384,7 +346,7 @@ public class AsyncAggScaleResultMultiTierTest {
     ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
 
 
-    JdbcConnection jdbcConnection = new JdbcConnection(conn, new MysqlSyntax());
+    JdbcConnection jdbcConnection = new JdbcConnection(conn, new H2Syntax());
     //ExecutablePlanRunner.runTillEnd(jdbcConnection, queryExecutionPlan);
 
     ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(jdbcConnection, queryExecutionPlan);
@@ -393,8 +355,13 @@ public class AsyncAggScaleResultMultiTierTest {
       DbmsQueryResult dbmsQueryResult = reader.next();
       dbmsQueryResult.next();
       resultReturnedCnt++;
-      assertEquals(1.0, dbmsQueryResult.getDouble(0), 1e-6);
+      assertEquals(1.0, (double)dbmsQueryResult.getValue(0), 1e-6);
     }
     assertEquals(5, resultReturnedCnt);
+  }
+
+  @AfterClass
+  public static void tearDown() throws SQLException {
+    stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 }

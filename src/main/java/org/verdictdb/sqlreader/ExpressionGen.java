@@ -150,15 +150,15 @@ public class ExpressionGen extends VerdictSQLParserBaseVisitor<UnnamedColumn> {
       }
 
       @Override
-      public ColumnOp visitUnary_function(VerdictSQLParser.Unary_functionContext ctx) {
+      public ColumnOp visitUnary_manipulation_function(VerdictSQLParser.Unary_manipulation_functionContext ctx) {
         ExpressionGen g = new ExpressionGen();
-//        if (ctx.predicate_function()!=null) {
-//          String fname = ctx.predicate_function().function_name.getText().toLowerCase();
-//          if (ctx.NOT()!=null) {
-//            return new ColumnOp("not " + fname, g.visit(ctx.predicate_function().expression()));
-//          }
-//          else return new ColumnOp(fname, g.visit(ctx.expression()));
-//        }
+        if (ctx.predicate_function()!=null) {
+          String fname = ctx.predicate_function().function_name.getText().toLowerCase();
+          if (ctx.NOT()!=null) {
+            return new ColumnOp("not " + fname, g.visit(ctx.predicate_function().expression()));
+          }
+          else return new ColumnOp(fname, g.visit(ctx.expression()));
+        }
         String fname = ctx.function_name.getText().toLowerCase();
         if (fname.equals("cast")) {
           return new ColumnOp(fname, Arrays.asList(g.visit(ctx.cast_as_expression().expression()),
@@ -168,15 +168,15 @@ public class ExpressionGen extends VerdictSQLParserBaseVisitor<UnnamedColumn> {
       }
 
       @Override
-      public ColumnOp visitNoparam_function(
-          VerdictSQLParser.Noparam_functionContext ctx) {
+      public ColumnOp visitNoparam_manipulation_function(
+          VerdictSQLParser.Noparam_manipulation_functionContext ctx) {
         String fname = ctx.function_name.getText().toLowerCase();
         return new ColumnOp(fname);
       }
 
       @Override
-      public ColumnOp visitBinary_function(
-          VerdictSQLParser.Binary_functionContext ctx) {
+      public ColumnOp visitBinary_manipulation_function(
+          VerdictSQLParser.Binary_manipulation_functionContext ctx) {
         String fname = ctx.function_name.getText().toLowerCase();
         ExpressionGen g = new ExpressionGen();
         return new ColumnOp(fname, Arrays.<UnnamedColumn>asList(
@@ -186,8 +186,8 @@ public class ExpressionGen extends VerdictSQLParserBaseVisitor<UnnamedColumn> {
       }
 
       @Override
-      public ColumnOp visitTernary_function(
-          VerdictSQLParser.Ternary_functionContext ctx) {
+      public ColumnOp visitTernary_manipulation_function(
+          VerdictSQLParser.Ternary_manipulation_functionContext ctx) {
         String fname = ctx.function_name.getText().toLowerCase();
         ExpressionGen g = new ExpressionGen();
         return new ColumnOp(fname, Arrays.<UnnamedColumn>asList(
@@ -198,7 +198,7 @@ public class ExpressionGen extends VerdictSQLParserBaseVisitor<UnnamedColumn> {
       }
 
       @Override
-      public ColumnOp visitNary_function(VerdictSQLParser.Nary_functionContext ctx) {
+      public ColumnOp visitNary_manipulation_function(VerdictSQLParser.Nary_manipulation_functionContext ctx) {
         String fname = ctx.function_name.getText().toLowerCase();
         ExpressionGen g = new ExpressionGen();
         List<UnnamedColumn> columns = new ArrayList<>();

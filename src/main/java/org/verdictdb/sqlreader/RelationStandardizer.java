@@ -1,11 +1,28 @@
 package org.verdictdb.sqlreader;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Vector;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.connection.MetaDataProvider;
-import org.verdictdb.core.sqlobject.*;
+import org.verdictdb.core.sqlobject.AbstractRelation;
+import org.verdictdb.core.sqlobject.AliasReference;
+import org.verdictdb.core.sqlobject.AliasedColumn;
+import org.verdictdb.core.sqlobject.AsteriskColumn;
+import org.verdictdb.core.sqlobject.BaseColumn;
+import org.verdictdb.core.sqlobject.BaseTable;
+import org.verdictdb.core.sqlobject.ColumnOp;
+import org.verdictdb.core.sqlobject.GroupingAttribute;
+import org.verdictdb.core.sqlobject.JoinTable;
+import org.verdictdb.core.sqlobject.OrderbyAttribute;
+import org.verdictdb.core.sqlobject.SelectItem;
+import org.verdictdb.core.sqlobject.SelectQuery;
+import org.verdictdb.core.sqlobject.SubqueryColumn;
+import org.verdictdb.core.sqlobject.UnnamedColumn;
 import org.verdictdb.exception.VerdictDBDbmsException;
 
 public class RelationStandardizer {
@@ -26,9 +43,6 @@ public class RelationStandardizer {
 
   //key is the select column name, value is their alias
   private HashMap<String, String> colNameAndColAlias = new HashMap<>();
-
-  //key is columnOp, value is their alias name
-  private HashMap<ColumnOp, String> columnOpAliasMap = new HashMap<>();
 
   //key is schema name, column name, value is alias
   //only store value if there are duplicate column names
@@ -103,19 +117,14 @@ public class RelationStandardizer {
           sel = replaceFilter((ColumnOp) sel);
 
           if (((ColumnOp) sel).getOpType().equals("count")) {
-            columnOpAliasMap.put((ColumnOp)sel, "c" + itemID);
             newSelectItemList.add(new AliasedColumn((ColumnOp) sel, "c" + itemID++));
           } else if (((ColumnOp) sel).getOpType().equals("sum")) {
-            columnOpAliasMap.put((ColumnOp)sel, "s" + itemID);
             newSelectItemList.add(new AliasedColumn((ColumnOp) sel, "s" + itemID++));
           } else if (((ColumnOp) sel).getOpType().equals("avg")) {
-            columnOpAliasMap.put((ColumnOp)sel, "a" + itemID);
             newSelectItemList.add(new AliasedColumn((ColumnOp) sel, "a" + itemID++));
           } else if (((ColumnOp) sel).getOpType().equals("countdistinct")) {
-            columnOpAliasMap.put((ColumnOp)sel, "cd" + itemID);
             newSelectItemList.add(new AliasedColumn((ColumnOp) sel, "cd" + itemID++));
           } else {
-            columnOpAliasMap.put((ColumnOp)sel, "vc" + itemID);
             newSelectItemList.add(new AliasedColumn((ColumnOp) sel, "vc" + itemID++));
           }
         }
@@ -126,9 +135,6 @@ public class RelationStandardizer {
         newSelectItemList.add(sel);
         if (sel instanceof AliasedColumn && ((AliasedColumn) sel).getColumn() instanceof BaseColumn) {
           colNameAndColAlias.put(((BaseColumn) ((AliasedColumn) sel).getColumn()).getColumnName(),
-              ((AliasedColumn) sel).getAliasName());
-        } else if (sel instanceof AliasedColumn && ((AliasedColumn) sel).getColumn() instanceof ColumnOp) {
-          columnOpAliasMap.put(((ColumnOp) ((AliasedColumn) sel).getColumn()),
               ((AliasedColumn) sel).getAliasName());
         }
       }
@@ -153,7 +159,6 @@ public class RelationStandardizer {
         RelationStandardizer g = new RelationStandardizer(meta);
         g.oldTableAliasMap.putAll(oldTableAliasMap);
         g.setColNameAndColAlias(colNameAndColAlias);
-        g.setColumnOpAliasMap(columnOpAliasMap);
         g.setColNameAndTableAlias(colNameAndTableAlias);
         g.setTableInfoAndAlias(tableInfoAndAlias);
         SelectQuery newSubquery = g.standardize(((SubqueryColumn) cond).getSubquery());
@@ -163,7 +168,7 @@ public class RelationStandardizer {
     return condition;
   }
 
-  private List<GroupingAttribute> replaceGroupby(List<GroupingAttribute> groupingAttributeList) throws VerdictDBDbmsException {
+  private List<GroupingAttribute> replaceGroupby(List<GroupingAttribute> groupingAttributeList) {
     List<GroupingAttribute> newGroupby = new ArrayList<>();
     for (GroupingAttribute g : groupingAttributeList) {
       if (g instanceof BaseColumn) {
@@ -179,22 +184,29 @@ public class RelationStandardizer {
           newGroupby.add(new AliasReference(colNameAndColAlias.get(((BaseColumn) g).getColumnName())));
         } else newGroupby.add(new AliasReference(((BaseColumn) g).getColumnName()));
       }
-      else if (g instanceof ColumnOp) {
-        ColumnOp replaced = (ColumnOp) replaceFilter((ColumnOp) g);
-        if (columnOpAliasMap.containsKey(replaced)) {
-          newGroupby.add(new AliasReference(columnOpAliasMap.get(replaced)));
-        }
-        else newGroupby.add(replaced);
+      else {
+        newGroupby.add(g);
       }
-      else newGroupby.add(g);
     }
     return newGroupby;
   }
 
-  private List<OrderbyAttribute> replaceOrderby(List<OrderbyAttribute> orderbyAttributesList) throws VerdictDBDbmsException {
+  private List<OrderbyAttribute> replaceOrderby(List<OrderbyAttribute> orderbyAttributesList) {
     List<OrderbyAttribute> newOrderby = new ArrayList<>();
     for (OrderbyAttribute o : orderbyAttributesList) {
-      newOrderby.add(new OrderbyAttribute(replaceGroupby(Arrays.asList(o.getAttribute())).get(0), o.getOrder()));
+      if (o.getAliasName().getTableAlias()!=null) {
+        String tableSource = o.getAliasName().getTableAlias();
+        String alias = o.getAliasName().getAliasName();
+        if (duplicateColNameAndColAlias.containsKey(new ImmutablePair<>(tableSource, alias))) {
+          newOrderby.add(new OrderbyAttribute(duplicateColNameAndColAlias.get(new ImmutablePair<>(tableSource, alias)), o.getOrder()));
+        }
+        else if (colNameAndColAlias.containsKey(o.getAttributeName())) {
+          newOrderby.add(new OrderbyAttribute(colNameAndColAlias.get(o.getAttributeName()), o.getOrder()));
+        } else newOrderby.add(o);
+      }
+      else if (colNameAndColAlias.containsKey(o.getAttributeName())) {
+        newOrderby.add(new OrderbyAttribute(colNameAndColAlias.get(o.getAttributeName()), o.getOrder()));
+      } else newOrderby.add(o);
     }
     return newOrderby;
   }
@@ -309,25 +321,6 @@ public class RelationStandardizer {
     UnnamedColumn having;
     if (relationToAlias.getHaving().isPresent()) {
       having = replaceFilter(relationToAlias.getHaving().get());
-      // replace columnOp with alias if possible
-      if (having instanceof ColumnOp) {
-        List<ColumnOp> checklist = new ArrayList<>();
-        checklist.add((ColumnOp) having);
-        while (!checklist.isEmpty()) {
-          ColumnOp columnOp = checklist.get(0);
-          checklist.remove(0);
-          for (UnnamedColumn operand:columnOp.getOperands()) {
-            if (operand instanceof ColumnOp) {
-              if (columnOpAliasMap.containsKey(operand)) {
-                columnOp.setOperand(columnOp.getOperands().indexOf(operand), new AliasReference(columnOpAliasMap.get(operand)));
-              } else checklist.add((ColumnOp) operand);
-            }
-            //if (operand instanceof SubqueryColumn) {
-            //  throw new VerdictDBDbmsException("Do not support subquery in Having clause.");
-            //}
-          }
-        }
-      }
       AliasedRelation.addHavingByAnd(having);
     }
 
@@ -372,14 +365,6 @@ public class RelationStandardizer {
     for (String key : colNameAndColAlias.keySet()) {
       this.colNameAndColAlias.put(key, colNameAndColAlias.get(key));
     }
-  }
-
-  public void setColumnOpAliasMap(HashMap<ColumnOp, String> columnOpAliasMap) {
-    this.columnOpAliasMap = columnOpAliasMap;
-  }
-
-  public HashMap<ColumnOp, String> getColumnOpAliasMap() {
-    return columnOpAliasMap;
   }
 
   public static void resetItemID() {

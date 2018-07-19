@@ -1,5 +1,4 @@
-[![Build Status](https://circleci.com/gh/verdictdb/verdictdb-dev/tree/master.svg?style=shield&circle-token=ef8e6fc7f668eceee0b2a2a10c1af3f05f667b6b)](https://circleci.com/gh/verdictdb/verdictdb-dev/tree/master)
-[![Code Coverage](https://codecov.io/gh/mozafari/verdictdb/branch/master/graph/badge.svg)](https://codecov.io/gh/mozafari/verdictdb)
+[![CircleCI](https://circleci.com/gh/verdictdb/verdictdb-dev/tree/master.svg?style=shield&circle-token=ef8e6fc7f668eceee0b2a2a10c1af3f05f667b6b)](https://circleci.com/gh/verdictdb/verdictdb-dev/tree/master)
 
 # Same SQL, Same DB, 100x-200x Faster Analytics
 

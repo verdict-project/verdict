@@ -29,8 +29,6 @@ import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.core.sqlobject.SubqueryColumn;
 import org.verdictdb.core.sqlobject.UnnamedColumn;
 import org.verdictdb.exception.VerdictDBException;
-import org.verdictdb.sqlsyntax.HiveSyntax;
-import org.verdictdb.sqlwriter.QueryToSql;
 
 public class TpchSqlToRelationAfterAliasTest {
 
@@ -1159,7 +1157,10 @@ public class TpchSqlToRelationAfterAliasTest {
         ConstantColumn.valueOf("':1'")
         )));
     expected.addHavingByAnd(new ColumnOp("greater", Arrays.<UnnamedColumn>asList(
-        new AliasReference("value"),
+        new ColumnOp("sum", new ColumnOp("multiply", Arrays.<UnnamedColumn>asList(
+            new BaseColumn("tpch", "partsupp","vt1", "ps_supplycost"),
+            new BaseColumn("tpch", "partsupp","vt1", "ps_availqty")
+            ))),
         SubqueryColumn.getSubqueryColumn(subquery)
         )));
     expected.addOrderby(new OrderbyAttribute("value", "desc"));
@@ -2055,32 +2056,32 @@ public class TpchSqlToRelationAfterAliasTest {
         )));
     SelectQuery subquery1 = SelectQuery.create(Arrays.<SelectItem>asList(
         new AsteriskColumn()
-        ), new BaseTable("tpch", "lineitem", "vt5"));
+        ), new BaseTable("tpch", "lineitem", "vt6"));
     subquery1.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-        new BaseColumn("tpch", "lineitem","vt5", "l_orderkey"),
-        new BaseColumn("tpch","vt2", "l_orderkey")
-        )));
-    subquery1.addFilterByAnd(new ColumnOp("notequal", Arrays.<UnnamedColumn>asList(
-        new BaseColumn("tpch", "lineitem","vt5", "l_suppkey"),
-        new BaseColumn("tpch","vt2", "l_suppkey")
-        )));
-    expected.addFilterByAnd(new ColumnOp("exists", SubqueryColumn.getSubqueryColumn(subquery1)));
-    SelectQuery subquery2 = SelectQuery.create(
-        Arrays.<SelectItem>asList(new AsteriskColumn()), 
-        new BaseTable("tpch", "lineitem", "vt6"));
-    subquery2.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
         new BaseColumn("tpch", "lineitem","vt6", "l_orderkey"),
         new BaseColumn("tpch","vt2", "l_orderkey")
         )));
-    subquery2.addFilterByAnd(new ColumnOp("notequal", Arrays.<UnnamedColumn>asList(
+    subquery1.addFilterByAnd(new ColumnOp("notequal", Arrays.<UnnamedColumn>asList(
         new BaseColumn("tpch", "lineitem","vt6", "l_suppkey"),
         new BaseColumn("tpch","vt2", "l_suppkey")
         )));
-    subquery2.addFilterByAnd(new ColumnOp("greater", Arrays.<UnnamedColumn>asList(
-        new BaseColumn("tpch", "lineitem","vt6", "l_receiptdate"),
-        new BaseColumn("tpch", "lineitem","vt6", "l_commitdate")
+    expected.addFilterByAnd(new ColumnOp("exists", SubqueryColumn.getSubqueryColumn(subquery1)));
+    SelectQuery subquery2 = SelectQuery.create(Arrays.<SelectItem>asList(
+        new AsteriskColumn()
+        ), new BaseTable("tpch", "lineitem", "vt5"));
+    subquery2.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
+        new BaseColumn("tpch", "lineitem","vt5", "l_orderkey"),
+        new BaseColumn("tpch","vt2", "l_orderkey")
         )));
-    expected.addFilterByAnd(ColumnOp.not(ColumnOp.exists(SubqueryColumn.getSubqueryColumn(subquery2))));
+    subquery2.addFilterByAnd(new ColumnOp("notequal", Arrays.<UnnamedColumn>asList(
+        new BaseColumn("tpch", "lineitem","vt5", "l_suppkey"),
+        new BaseColumn("tpch","vt2", "l_suppkey")
+        )));
+    subquery2.addFilterByAnd(new ColumnOp("greater", Arrays.<UnnamedColumn>asList(
+        new BaseColumn("tpch", "lineitem","vt5", "l_receiptdate"),
+        new BaseColumn("tpch", "lineitem","vt5", "l_commitdate")
+        )));
+    expected.addFilterByAnd(new ColumnOp("notexists", SubqueryColumn.getSubqueryColumn(subquery2)));
     expected.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
         new BaseColumn("tpch", "supplier","vt1", "s_nationkey"),
         new BaseColumn("tpch", "nation","vt4", "n_nationkey")
@@ -2137,7 +2138,6 @@ public class TpchSqlToRelationAfterAliasTest {
     AbstractRelation relation = sqlToRelation.toRelation(sql);
     RelationStandardizer gen = new RelationStandardizer(meta);
     relation = gen.standardize((SelectQuery) relation);
-//    System.out.println(QueryToSql.convert(new HiveSyntax(), (SelectQuery) relation));
     assertEquals(expected, relation);
   }
 
@@ -2161,15 +2161,15 @@ public class TpchSqlToRelationAfterAliasTest {
         ConstantColumn.valueOf("':7'")
         )));
     SelectQuery subsubquery1 = SelectQuery.create(
-        Arrays.<SelectItem>asList(new AliasedColumn(new ColumnOp("avg", new BaseColumn("tpch", "customer","vt3", "c_acctbal")), "a4")),
-        new BaseTable("tpch", "customer", "vt3"));
+        Arrays.<SelectItem>asList(new AliasedColumn(new ColumnOp("avg", new BaseColumn("tpch", "customer","vt4", "c_acctbal")), "a5")),
+        new BaseTable("tpch", "customer", "vt4"));
     subsubquery1.addFilterByAnd(new ColumnOp("greater", Arrays.<UnnamedColumn>asList(
-        new BaseColumn("tpch", "customer","vt3", "c_acctbal"),
+        new BaseColumn("tpch", "customer","vt4", "c_acctbal"),
         ConstantColumn.valueOf("0.00")
         )));
     subsubquery1.addFilterByAnd(new ColumnOp("in", Arrays.<UnnamedColumn>asList(
         new ColumnOp("substr", Arrays.<UnnamedColumn>asList(
-            new BaseColumn("tpch", "customer","vt3", "c_phone"),
+            new BaseColumn("tpch", "customer","vt4", "c_phone"),
             ConstantColumn.valueOf(1), ConstantColumn.valueOf(2))),
         ConstantColumn.valueOf("':1'"), ConstantColumn.valueOf("':2'"), ConstantColumn.valueOf("':3'"),
         ConstantColumn.valueOf("':4'"), ConstantColumn.valueOf("':5'"), ConstantColumn.valueOf("':6'"),
@@ -2180,12 +2180,12 @@ public class TpchSqlToRelationAfterAliasTest {
         )));
     SelectQuery subsubquery2 = SelectQuery.create(
         Arrays.<SelectItem>asList(new AsteriskColumn()),
-        new BaseTable("tpch", "orders", "vt5"));
+        new BaseTable("tpch", "orders", "vt3"));
     subsubquery2.addFilterByAnd(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
-        new BaseColumn("tpch", "orders","vt5", "o_custkey"),
+        new BaseColumn("tpch", "orders","vt3", "o_custkey"),
         new BaseColumn("tpch", "customer","vt2", "c_custkey")
         )));
-    subquery.addFilterByAnd(ColumnOp.not(ColumnOp.exists(SubqueryColumn.getSubqueryColumn(subsubquery2))));
+    subquery.addFilterByAnd(new ColumnOp("notexists", SubqueryColumn.getSubqueryColumn(subsubquery2)));
     subquery.setAliasName("vt1");
     SelectQuery expected = SelectQuery.create(
         Arrays.<SelectItem>asList(
@@ -2239,7 +2239,6 @@ public class TpchSqlToRelationAfterAliasTest {
     AbstractRelation relation = sqlToRelation.toRelation(sql);
     RelationStandardizer gen = new RelationStandardizer(meta);
     relation = gen.standardize((SelectQuery) relation);
-    System.out.println(QueryToSql.convert(new HiveSyntax(), (SelectQuery) relation));
     assertEquals(expected, relation);
   }
 }

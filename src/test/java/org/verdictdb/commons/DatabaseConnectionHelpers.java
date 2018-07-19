@@ -43,6 +43,7 @@ public class DatabaseConnectionHelpers {
     // create schema
     spark.sql(String.format("DROP SCHEMA IF EXISTS `%s` CASCADE", schema));
     spark.sql(String.format("CREATE SCHEMA IF NOT EXISTS `%s`", schema));
+
     // create tables
     String datafilePath = new File("src/test/resources/tpch_test_data/").getAbsolutePath();
     spark.sql(String.format(

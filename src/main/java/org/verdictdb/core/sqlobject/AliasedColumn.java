@@ -6,7 +6,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
 /**
- * Represents "column as attribute".
+ * Represents "column as aliasName".
  *
  * @author Yongjoo Park
  */

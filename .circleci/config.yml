@@ -45,6 +45,10 @@ jobs:
       # run tests!
       - run: git clone git@github.com:verdictdb/verdictdb-private-resources.git
       - run: mvn -B clean test 2> /dev/null
+      - store_test_results:
+          path: ~/junit
+      - store_artifacts:
+          path: ~/junit
 
   build-jdk8:
     docker:
@@ -87,8 +91,10 @@ jobs:
       # run tests!
       - run: git clone git@github.com:verdictdb/verdictdb-private-resources.git
       - run: mvn -B clean test 2> /dev/null
-      - run: mvn cobertura:cobertura
-      - run: bash <(curl -s https://codecov.io/bash) -t 9cf48c61-07ed-4a14-9eed-f7129664ee79
+      - store_test_results:
+          path: ~/junit
+      - store_artifacts:
+          path: ~/junit
 
   build-spark:
       docker:
@@ -117,6 +123,10 @@ jobs:
         # run tests!
         - run: git clone git@github.com:verdictdb/verdictdb-private-resources.git
         - run: mvn test -Dtest=SparkTpchSelectQueryCoordinatorTest 2> /dev/null
+        - store_test_results:
+            path: ~/junit
+        - store_artifacts:
+            path: ~/junit
 
 workflows:
   version: 2

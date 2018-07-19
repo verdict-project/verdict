@@ -68,7 +68,7 @@ public class SelectQuery extends AbstractRelation implements SqlConvertible {
 
   Optional<UnnamedColumn> limit = Optional.absent();
 
-//  Optional<String> attribute = Optional.absent();
+//  Optional<String> aliasName = Optional.absent();
   
   /**
    * Copies query specification, i.e., everything except for orderby, having, and limit

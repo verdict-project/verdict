@@ -53,7 +53,6 @@ public class VerdictContextNoAggQueryTest {
 
   @BeforeClass
   public static void setupMySqlDatabase() throws SQLException, VerdictDBException {
-    // TPCH
     String mysqlConnectionString =
         String.format("jdbc:mysql://%s?autoReconnect=true&useSSL=false", MYSQL_HOST);
     conn = DatabaseConnectionHelpers.setupMySql(
@@ -62,17 +61,6 @@ public class VerdictContextNoAggQueryTest {
     dbmsConnection.setDefaultSchema(MYSQL_DATABASE);
     stmt = conn.createStatement();
     stmt.execute("create schema if not exists `verdictdb_temp`");
-    
-    // Table with a confusing column name
-    conn.createStatement().execute(
-        String.format("create table `%s`.`simpletable` (age integer, height float)", MYSQL_DATABASE));
-  }
-  
-  @Test
-  public void orderByConflictingNames() throws VerdictDBException {
-    String sql = String.format("select * from `%s`.`simpletable` order by age, height", MYSQL_DATABASE);
-    VerdictContext verdictContext = new VerdictContext(dbmsConnection);
-    verdictContext.sql(sql);
   }
 
   @Test

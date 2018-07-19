@@ -15,6 +15,7 @@ import org.verdictdb.exception.VerdictDBValueException;
 /**
  * 
  * @author Yongjoo Park
+ * TODO: Add Have
  */
 public class SelectAllExecutionNode extends QueryNodeWithPlaceHolders {
   
@@ -33,7 +34,7 @@ public class SelectAllExecutionNode extends QueryNodeWithPlaceHolders {
 //    Pair<String, String> tempTableFullName = plan.generateTempTableName();
 //    String schemaName = tempTableFullName.getLeft();
 //    String tableName = tempTableFullName.getRight();
-
+    
     if (query.isSupportedAggregate()) {
       AggExecutionNode dependent = AggExecutionNode.create(namer, query);
       dependent.registerSubscriber(baseAndSubscriptionTicket.getRight());

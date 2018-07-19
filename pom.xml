@@ -55,7 +55,7 @@
         <directory>verdictdb-private-resources/test_resources</directory>
       </testResource>
     </testResources>
-
+    
     <plugins>
       <plugin>
         <groupId>org.antlr</groupId>
@@ -82,19 +82,8 @@
           <target>1.7</target>
         </configuration>
       </plugin>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>cobertura-maven-plugin</artifactId>
-        <version>2.7</version>
-        <configuration>
-          <formats>
-            <format>html</format>
-            <format>xml</format>
-          </formats>
-          <check />
-        </configuration>
-      </plugin>
     </plugins>
+
   </build>
 
   <dependencies>
@@ -146,6 +135,8 @@
       <version>1.4.197</version>
       <scope>test</scope>
     </dependency>
+    <!-- <dependency> <groupId>org.postgresql</groupId> <artifactId>postgresql</artifactId> 
+      <version>42.2.2</version> <scope>test</scope> </dependency> -->
     <dependency>
       <groupId>org.postgresql</groupId>
       <artifactId>postgresql</artifactId>
@@ -170,8 +161,8 @@
       <version>${junit.version}</version>
       <scope>test</scope>
     </dependency>
-    <!-- Install this using the following command: mvn install:install-file
-      -Dfile=src/test/resources/jars/ImpalaJDBC41-2.6.3.jar -DgroupId=com.cloudera
+    <!-- Install this using the following command: mvn install:install-file 
+      -Dfile=src/test/resources/jars/ImpalaJDBC41-2.6.3.jar -DgroupId=com.cloudera 
       -DartifactId=impala-jdbc41 -Dversion=2.6.3 -Dpackaging=jar -->
     <dependency>
       <groupId>com.cloudera</groupId>
@@ -232,9 +223,9 @@
                 <enableTimeout>true</enableTimeout>
                 <timeoutSeconds>100</timeoutSeconds>
                 <timeoutRetries>2</timeoutRetries>
-                <!-- This seems to be slower.
-                <hiveconf_hive.execution.engine>tez</hiveconf_hive.execution.engine>
-                <hiveconf_hive.exec.counters.pull.interval>1000</hiveconf_hive.exec.counters.pull.interval>
+                <!-- This seems to be slower. 
+                <hiveconf_hive.execution.engine>tez</hiveconf_hive.execution.engine> 
+                <hiveconf_hive.exec.counters.pull.interval>1000</hiveconf_hive.exec.counters.pull.interval> 
                 -->
               </systemProperties>
               <!-- This option seems to be only working for JDK7 -->
@@ -266,8 +257,8 @@
                 <enableTimeout>true</enableTimeout>
                 <timeoutSeconds>100</timeoutSeconds>
                 <timeoutRetries>2</timeoutRetries>
-                <!-- This seems to be slower.
-                <hiveconf_hive.execution.engine>tez</hiveconf_hive.execution.engine>
+                <!-- This seems to be slower. 
+                <hiveconf_hive.execution.engine>tez</hiveconf_hive.execution.engine> 
                 <hiveconf_hive.exec.counters.pull.interval>1000</hiveconf_hive.exec.counters.pull.interval> -->
               </systemProperties>
               <!-- This fork mode seems to be only working configuration for JDK7 -->
@@ -325,8 +316,8 @@
           <groupId>org.apache.spark</groupId>
           <artifactId>spark-hive_2.11</artifactId>
           <version>${spark.version}</version>
-          <!-- <exclusions> <exclusion> <groupId>org.slf4j</groupId> <artifactId>slf4j-log4j12</artifactId>
-            </exclusion> <exclusion> <groupId>org.slf4j</groupId> <artifactId>slf4j-simple</artifactId>
+          <!-- <exclusions> <exclusion> <groupId>org.slf4j</groupId> <artifactId>slf4j-log4j12</artifactId> 
+            </exclusion> <exclusion> <groupId>org.slf4j</groupId> <artifactId>slf4j-simple</artifactId> 
             </exclusion> </exclusions> -->
         </dependency>
       </dependencies>
