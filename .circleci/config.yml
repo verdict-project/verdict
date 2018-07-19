@@ -24,6 +24,8 @@ jobs:
       # Customize the JVM maximum heap limit
       MAVEN_OPTS: -Xmx3200m
     steps:
+      - run: sudo apt-get update && sudo apt-get install -y openjdk-7-jdk
+      - run: sudo update-java-alternatives --set java-1.7.0-openjdk-amd64
       - run: java -version && javac -version
       # git is available by default
       - checkout
