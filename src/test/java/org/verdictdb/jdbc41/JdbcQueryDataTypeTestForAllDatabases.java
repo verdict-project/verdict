@@ -155,7 +155,7 @@ public class JdbcQueryDataTypeTestForAllDatabases {
 
   private static void setupImpala() throws SQLException, VerdictDBDbmsException {
     String connectionString =
-        String.format("jdbc:impala://%s:21050", IMPALA_HOST); // , IMPALA_DATABASE);
+        String.format("jdbc:impala://%s:21050", IMPALA_HOST);
     Connection conn =
         DatabaseConnectionHelpers.setupImpalaForDataTypeTest(
             connectionString, IMPALA_USER, IMPALA_PASSWORD, IMPALA_DATABASE, TABLE_NAME);
