@@ -30,22 +30,28 @@ jobs:
       - run: docker run --rm --link verdictdb-impala:impala-server -v /home/circleci/repo/src/test/resources:/work:ro codingtony/impala hdp impala-server hadoop fs -put /work/tpch_test_data /tmp/
 
   build-jdk7:
-    machine:
-      image: circleci/classic:201703-01
-    working_directory: ~/repo
-    environment:
-      # Customize the JVM maximum heap limit
-      MAVEN_OPTS: -Xmx3200m
-    steps:
-      - run: sudo apt-get update && sudo apt-get install -y openjdk-7-jdk
-      - run: sudo update-java-alternatives --set java-1.7.0-openjdk-amd64
-      - run: java -version && javac -version
-      # git is available by default
+    docker:
+      # specify the version you desire here
+      - image: maven:3.5.4-jdk-7-slim
+
+      # Specify service dependencies here if necessary
+      # CircleCI maintains a library of pre-built images
+      # documented at https://circleci.com/docs/2.0/circleci-images/
+      - image: mysql:5.5
+        environment:
+          MYSQL_DATABASE: test
+          MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+      - image: postgres:10
+        environment:
+          POSTGRES_DB: test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ""
+      working_directory: ~/repo
+      environment:
+        # Customize the JVM maximum heap limit
+        MAVEN_OPTS: -Xmx3200m
+      steps:
       - checkout
-      # Set up necessary dockers
-      - run: docker run --rm -d --name verdictdb-impala -p 127.0.0.1:21050:21050 codingtony/impala
-      - run: docker run --rm -d --name verdictdb-postgres -p 127.0.0.1:5432:5432 -e POSTGRES_DB=test -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD="" postgres:10
-      - run: docker run --rm -d --name verdictdb-mysql -p 127.0.0.1:3306:3306 -e MYSQL_DATABASE=test -e MYSQL_ALLOW_EMPTY_PASSWORD=yes mariadb:10
       # Set up maven dependencies
       - restore_cache:
           keys:
@@ -60,26 +66,32 @@ jobs:
           key: verdict-dependencies-{{ checksum "pom.xml" }}
       # Setup necessary test data
       - run: git clone git@github.com:verdictdb/verdictdb-private-resources.git
-      - run: bash .circleci/wait_until_ready.sh
-      - run: docker run --rm --link verdictdb-impala:impala-server -v "$(cd "$(dirname "src/test/resources")"; pwd)/$(basename "src/test/resources")":/work:ro codingtony/impala hdp impala-server hadoop fs -put /work/tpch_test_data /tmp/tpch_test_data
       # Now build and test
       - run: mvn -B test 2> /dev/null
 
   build-jdk8:
-    machine:
-      image: circleci/classic:201703-01
-    working_directory: ~/repo
-    environment:
-      # Customize the JVM maximum heap limit
-      MAVEN_OPTS: -Xmx3200m
-    steps:
-      - run: java -version && javac -version
-      # git is available by default
+    docker:
+      # specify the version you desire here
+      - image: maven:3.5.4-jdk-8-slim
+
+      # Specify service dependencies here if necessary
+      # CircleCI maintains a library of pre-built images
+      # documented at https://circleci.com/docs/2.0/circleci-images/
+      - image: mysql:5.5
+        environment:
+          MYSQL_DATABASE: test
+          MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+      - image: postgres:10
+        environment:
+          POSTGRES_DB: test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ""
+      working_directory: ~/repo
+      environment:
+        # Customize the JVM maximum heap limit
+        MAVEN_OPTS: -Xmx3200m
+      steps:
       - checkout
-      # Set up necessary dockers
-      - run: docker run --rm -d --name verdictdb-impala -p 127.0.0.1:21050:21050 codingtony/impala
-      - run: docker run --rm -d --name verdictdb-postgres -p 127.0.0.1:5432:5432 -e POSTGRES_DB=test -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD="" postgres:10
-      - run: docker run --rm -d --name verdictdb-mysql -p 127.0.0.1:3306:3306 -e MYSQL_DATABASE=test -e MYSQL_ALLOW_EMPTY_PASSWORD=yes mariadb:10
       # Set up maven dependencies
       - restore_cache:
           keys:
@@ -94,23 +106,33 @@ jobs:
           key: verdict-dependencies-{{ checksum "pom.xml" }}
       # Setup necessary test data
       - run: git clone git@github.com:verdictdb/verdictdb-private-resources.git
-      - run: bash .circleci/wait_until_ready.sh
-      - run: docker run --rm --link verdictdb-impala:impala-server -v "$(cd "$(dirname "src/test/resources")"; pwd)/$(basename "src/test/resources")":/work:ro codingtony/impala hdp impala-server hadoop fs -put /work/tpch_test_data /tmp/tpch_test_data
       # Now build and test
       - run: mvn -B test 2> /dev/null
       - run: mvn cobertura:cobertura
       - run: bash <(curl -s https://codecov.io/bash) -t 9cf48c61-07ed-4a14-9eed-f7129664ee79
 
   build-spark:
-      machine:
-        image: circleci/classic:201703-01
-      working_directory: ~/repo
-      environment:
-        # Customize the JVM maximum heap limit
-        MAVEN_OPTS: -Xmx3200m
-      steps:
-        - run: java -version && javac -version
-        # git is available by default
+      docker:
+        # specify the version you desire here
+        - image: maven:3.5.4-jdk-8-slim
+
+        # Specify service dependencies here if necessary
+        # CircleCI maintains a library of pre-built images
+        # documented at https://circleci.com/docs/2.0/circleci-images/
+        - image: mysql:5.5
+          environment:
+            MYSQL_DATABASE: test
+            MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+        - image: postgres:10
+          environment:
+            POSTGRES_DB: test
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: ""
+        working_directory: ~/repo
+        environment:
+          # Customize the JVM maximum heap limit
+          MAVEN_OPTS: -Xmx3200m
+        steps:
         - checkout
         # Set up maven dependencies
         - restore_cache:
@@ -135,6 +157,6 @@ workflows:
     jobs:
       # - maven-version-check
       # - docker-env-check
-      - build-spark
       - build-jdk7
       - build-jdk8
+      - build-spark

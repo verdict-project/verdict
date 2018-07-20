@@ -19,13 +19,17 @@ public class ImpalaUniformScramblingCoordinatorTest {
   
   private static Statement impalaStmt;
 
-  private static final String IMPALA_HOST = "localhost";
+  private static final String IMPALA_HOST;
 
   private static final String IMPALA_DATABASE = "scrambling_coordinator_test";
 
   private static final String IMPALA_UESR = "";
 
   private static final String IMPALA_PASSWORD = "";
+  
+  static {
+    IMPALA_HOST = System.getenv("VERDICTDB_TEST_IMPALA_HOST");
+  }
 
   @BeforeClass
   public static void setupMySqlDatabase() throws SQLException, VerdictDBDbmsException {
