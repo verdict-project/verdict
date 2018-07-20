@@ -43,9 +43,9 @@ jobs:
       # git is available by default
       - checkout
       # Set up necessary dockers
-      - run: docker run --rm -d --name verdictdb-mysql -p 127.0.0.1:3306:3306 -e MYSQL_DATABASE=test -e MYSQL_ALLOW_EMPTY_PASSWORD=yes mariadb:10
-      - run: docker run --rm -d --name verdictdb-postgres -p 127.0.0.1:5432:5432 -e POSTGRES_DB=test -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD="" postgres:10
       - run: docker run --rm -d --name verdictdb-impala -p 127.0.0.1:21050:21050 codingtony/impala
+      - run: docker run --rm -d --name verdictdb-postgres -p 127.0.0.1:5432:5432 -e POSTGRES_DB=test -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD="" postgres:10
+      - run: docker run --rm -d --name verdictdb-mysql -p 127.0.0.1:3306:3306 -e MYSQL_DATABASE=test -e MYSQL_ALLOW_EMPTY_PASSWORD=yes mariadb:10
       # Set up maven dependencies
       - restore_cache:
           keys:
@@ -60,7 +60,7 @@ jobs:
           key: verdict-dependencies-{{ checksum "pom.xml" }}
       # Setup necessary test data
       - run: git clone git@github.com:verdictdb/verdictdb-private-resources.git
-      - run: bash wait_until_ready.sh
+      - run: bash .circleci/wait_until_ready.sh
       - run: docker run --rm --link verdictdb-impala:impala-server -v "$(cd "$(dirname "src/test/resources")"; pwd)/$(basename "src/test/resources")":/work:ro codingtony/impala hdp impala-server hadoop fs -put /work/tpch_test_data /tmp/tpch_test_data
       # Now build and test
       - run: mvn -B test 2> /dev/null
@@ -77,9 +77,9 @@ jobs:
       # git is available by default
       - checkout
       # Set up necessary dockers
-      - run: docker run --rm -d --name verdictdb-mysql -p 127.0.0.1:3306:3306 -e MYSQL_DATABASE=test -e MYSQL_ALLOW_EMPTY_PASSWORD=yes mariadb:10
-      - run: docker run --rm -d --name verdictdb-postgres -p 127.0.0.1:5432:5432 -e POSTGRES_DB=test -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD="" postgres:10
       - run: docker run --rm -d --name verdictdb-impala -p 127.0.0.1:21050:21050 codingtony/impala
+      - run: docker run --rm -d --name verdictdb-postgres -p 127.0.0.1:5432:5432 -e POSTGRES_DB=test -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD="" postgres:10
+      - run: docker run --rm -d --name verdictdb-mysql -p 127.0.0.1:3306:3306 -e MYSQL_DATABASE=test -e MYSQL_ALLOW_EMPTY_PASSWORD=yes mariadb:10
       # Set up maven dependencies
       - restore_cache:
           keys:
@@ -94,7 +94,7 @@ jobs:
           key: verdict-dependencies-{{ checksum "pom.xml" }}
       # Setup necessary test data
       - run: git clone git@github.com:verdictdb/verdictdb-private-resources.git
-      - run: bash wait_until_ready.sh
+      - run: bash .circleci/wait_until_ready.sh
       - run: docker run --rm --link verdictdb-impala:impala-server -v "$(cd "$(dirname "src/test/resources")"; pwd)/$(basename "src/test/resources")":/work:ro codingtony/impala hdp impala-server hadoop fs -put /work/tpch_test_data /tmp/tpch_test_data
       # Now build and test
       - run: mvn -B test 2> /dev/null
@@ -112,10 +112,6 @@ jobs:
         - run: java -version && javac -version
         # git is available by default
         - checkout
-        # Set up necessary dockers
-        - run: docker run --rm -d --name verdictdb-mysql -p 127.0.0.1:3306:3306 -e MYSQL_DATABASE=test -e MYSQL_ALLOW_EMPTY_PASSWORD=yes mariadb:10
-        - run: docker run --rm -d --name verdictdb-postgres -p 127.0.0.1:5432:5432 -e POSTGRES_DB=test -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD="" postgres:10
-        - run: docker run --rm -d --name verdictdb-impala -p 127.0.0.1:21050:21050 codingtony/impala
         # Set up maven dependencies
         - restore_cache:
             keys:
@@ -139,6 +135,6 @@ workflows:
     jobs:
       # - maven-version-check
       # - docker-env-check
-      # - build-spark
+      - build-spark
       - build-jdk7
       - build-jdk8
