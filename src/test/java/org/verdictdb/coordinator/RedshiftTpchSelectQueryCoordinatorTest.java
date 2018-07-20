@@ -74,6 +74,8 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
 
   Pair<ExecutionResultReader, ResultSet> getAnswerPair(int queryNum)
       throws VerdictDBException, SQLException, IOException {
+    stmt.execute("drop schema if exists \"verdictdb_temp\" cascade");
+    stmt.execute("create schema if not exists \"verdictdb_temp\"");
     String filename = "query"+queryNum+".sql";
     File file = new File("src/test/resources/tpch_test_query/"+filename);
     String sql = Files.toString(file, Charsets.UTF_8);
@@ -117,8 +119,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
         scrambler.scramble(REDSHIFT_SCHEMA, "orders", REDSHIFT_SCHEMA, "orders_scrambled", "uniform");
     meta.addScrambleMeta(meta1);
     meta.addScrambleMeta(meta2);
-    stmt.execute("drop schema if exists \"verdictdb_temp\" cascade");
-    stmt.execute("create schema if not exists \"verdictdb_temp\"");
+
   }
 
   @Test
