@@ -377,7 +377,7 @@ public class AggExecutionNodeBlock {
                     new ImmutablePair<>(col.getOpType(), (UnnamedColumn)new AsteriskColumn()), "agg"+aggColumnIdentiferNum);
                 aggColumnAlias.add("agg"+aggColumnIdentiferNum++);
               }
-              else if (!meta.getAggColumnAggAliasPair().containsKey(
+              else if (col.getOpType().equals("sum") && !meta.getAggColumnAggAliasPair().containsKey(
                   new ImmutablePair<>(col.getOpType(), col.getOperand(0)))) {
                 ColumnOp col1 = new ColumnOp(col.getOpType(), col.getOperand(0));
                 newSelectlist.add(new AliasedColumn(col1, "agg"+aggColumnIdentiferNum));

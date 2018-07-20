@@ -206,7 +206,7 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
       tier1Predicate = ColumnOp.equal(ConstantColumn.valueOf(0), ConstantColumn.valueOf(1));
     } else {
       String rightTableSourceAlias = FastConvergeScramblingMethod.RIGHT_TABLE_SOURCE_ALIAS_NAME;
-      tier1Predicate = ColumnOp.isnull(
+      tier1Predicate = ColumnOp.rightisnull(
           new BaseColumn(rightTableSourceAlias, LargeGroupListNode.PRIMARY_GROUP_RENAME));
     }
 

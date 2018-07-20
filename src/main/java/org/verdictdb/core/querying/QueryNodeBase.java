@@ -30,6 +30,7 @@ public class QueryNodeBase extends ExecutableNodeBase {
   
   public void setSelectQuery(SelectQuery query) {
     this.selectQuery = query;
+//    this.selectQuery = query.deepcopy(); // dyoon: this seems to cause problem in other unit tests.
   }
   
   @Override

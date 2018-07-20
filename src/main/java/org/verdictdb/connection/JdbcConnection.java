@@ -11,11 +11,7 @@ import java.util.List;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.exception.VerdictDBDbmsException;
-import org.verdictdb.sqlsyntax.HiveSyntax;
-import org.verdictdb.sqlsyntax.PostgresqlSyntax;
-import org.verdictdb.sqlsyntax.SparkSyntax;
-import org.verdictdb.sqlsyntax.SqlSyntax;
-import org.verdictdb.sqlsyntax.SqlSyntaxList;
+import org.verdictdb.sqlsyntax.*;
 
 public class JdbcConnection implements DbmsConnection {
   
@@ -44,7 +40,11 @@ public class JdbcConnection implements DbmsConnection {
   public JdbcConnection(Connection conn, SqlSyntax syntax) {
     this.conn = conn;
     try {
-      this.currentSchema = conn.getCatalog();
+      if (syntax instanceof PostgresqlSyntax || syntax instanceof RedshiftSyntax) {
+        this.currentSchema = conn.getSchema();
+      } else {
+        this.currentSchema = conn.getCatalog();
+      }
     } catch (SQLException e) {
       e.printStackTrace();
       // leave currentSchema as null

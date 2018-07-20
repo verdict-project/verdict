@@ -193,7 +193,7 @@ public class FastConvergeScramblingMethodTest {
     List<UnnamedColumn> tiers = method.getTierExpressions(metaData);
     
     assertEquals("or", ((ColumnOp) tiers.get(0)).getOpType());
-    assertEquals("isnull", ((ColumnOp) tiers.get(1)).getOpType());
+    assertEquals("is_null", ((ColumnOp) tiers.get(1)).getOpType());
   }
 
 }

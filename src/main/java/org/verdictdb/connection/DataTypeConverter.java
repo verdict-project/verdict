@@ -1,45 +1,12 @@
 package org.verdictdb.connection;
 
-import static java.sql.Types.ARRAY;
-import static java.sql.Types.BIGINT;
-import static java.sql.Types.BINARY;
-import static java.sql.Types.BIT;
-import static java.sql.Types.BLOB;
-import static java.sql.Types.BOOLEAN;
-import static java.sql.Types.CHAR;
-import static java.sql.Types.CLOB;
-import static java.sql.Types.DATALINK;
-import static java.sql.Types.DATE;
-import static java.sql.Types.DECIMAL;
-import static java.sql.Types.DISTINCT;
-import static java.sql.Types.DOUBLE;
-import static java.sql.Types.FLOAT;
-import static java.sql.Types.INTEGER;
-import static java.sql.Types.LONGNVARCHAR;
-import static java.sql.Types.LONGVARBINARY;
-import static java.sql.Types.LONGVARCHAR;
-import static java.sql.Types.NCHAR;
-import static java.sql.Types.NCLOB;
-import static java.sql.Types.NULL;
-import static java.sql.Types.NUMERIC;
-import static java.sql.Types.NVARCHAR;
-import static java.sql.Types.REAL;
-import static java.sql.Types.REF;
-import static java.sql.Types.ROWID;
-import static java.sql.Types.SMALLINT;
-import static java.sql.Types.SQLXML;
-import static java.sql.Types.STRUCT;
-import static java.sql.Types.TIME;
-import static java.sql.Types.TIMESTAMP;
-import static java.sql.Types.TINYINT;
-import static java.sql.Types.VARBINARY;
-import static java.sql.Types.VARCHAR;
-
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
+
+import static java.sql.Types.*;
 
 public class DataTypeConverter {
   
@@ -127,12 +94,46 @@ public class DataTypeConverter {
     stringToIntMap.put("character varying", VARCHAR);
     stringToIntMap.put("character", CHAR);
     stringToIntMap.put("int", INTEGER);
+    stringToIntMap.put("mediumint", INTEGER);
     stringToIntMap.put("text", LONGNVARCHAR);
     stringToIntMap.put("double precision", DOUBLE);
     stringToIntMap.put("smallserial", INTEGER);
     stringToIntMap.put("serial", INTEGER);
     stringToIntMap.put("bigserial", BIGINT);
     stringToIntMap.put("string", VARCHAR);
+    stringToIntMap.put("datetime", TIMESTAMP);
+    stringToIntMap.put("timestamp", TIMESTAMP);
+    stringToIntMap.put("timestamp without time zone", TIMESTAMP);
+    // MySql
+    stringToIntMap.put("tinyblob", BLOB);
+    stringToIntMap.put("mediumblob", BLOB);
+    stringToIntMap.put("longblob", BLOB);
+    stringToIntMap.put("tinytext", VARCHAR);
+    stringToIntMap.put("mediumtext", VARCHAR);
+    stringToIntMap.put("longtext", VARCHAR);
+    stringToIntMap.put("enum", CHAR);
+    stringToIntMap.put("set", CHAR);
+    stringToIntMap.put("year", DATE);
+    // Postgresql
+    stringToIntMap.put("bit varying", BINARY);
+    stringToIntMap.put("box", BLOB); // Assign BLOB to geometric objects for now.
+    stringToIntMap.put("bytea", LONGVARBINARY);
+    stringToIntMap.put("cidr", VARCHAR);
+    stringToIntMap.put("circle", BLOB);
+    stringToIntMap.put("inet", VARCHAR);
+    stringToIntMap.put("json", CLOB);
+    stringToIntMap.put("line", BLOB);
+    stringToIntMap.put("lseg", BLOB);
+    stringToIntMap.put("macaddr", VARCHAR);
+    stringToIntMap.put("macaddr8", VARCHAR);
+    stringToIntMap.put("money", DOUBLE);
+    stringToIntMap.put("path", BLOB);
+    stringToIntMap.put("point", BLOB);
+    stringToIntMap.put("polygon", BLOB);
+    stringToIntMap.put("time without time zone", TIME);
+    stringToIntMap.put("time with time zone", TIME);
+    stringToIntMap.put("timestamp with time zone", TIMESTAMP);
+    stringToIntMap.put("uuid", VARCHAR);
   }
 
   public static String typeName(int inttype) {
@@ -141,7 +142,9 @@ public class DataTypeConverter {
   
   public static int typeInt(String typename) {
 //    System.out.println(typename);
-    return stringToIntMap.get(typename.toLowerCase().replaceAll("\\(.*\\)", ""));
+    String type = typename.toLowerCase().replaceAll("\\(.*\\)", "");
+//    return stringToIntMap.get(typename.toLowerCase().replaceAll("\\(.*\\)", ""));
+    return stringToIntMap.get(type);
   }
   
   private static HashSet<Integer> numericTypes = new HashSet<>(Arrays.asList(
