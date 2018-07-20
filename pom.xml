@@ -228,6 +228,7 @@
               <excludes>
                 <exclude>**/SparkTpchSelectQueryCoordinatorTest.java</exclude>
                 <exclude>**/RedshiftTpchSelectQueryCoordinatorTest.java</exclude>
+                <exclude>**/ImpalaTpchSelectQueryCoordinatorTest.java</exclude>
               </excludes>
               <systemProperties>
                 <enableTimeout>true</enableTimeout>
@@ -263,6 +264,7 @@
               <excludes>
                 <exclude>**/SparkTpchSelectQueryCoordinatorTest.java</exclude>
                 <exclude>**/RedshiftTpchSelectQueryCoordinatorTest.java</exclude>
+                <exclude>**/ImpalaTpchSelectQueryCoordinatorTest.java</exclude>
               </excludes>
               <systemProperties>
                 <enableTimeout>true</enableTimeout>

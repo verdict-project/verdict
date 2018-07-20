@@ -146,6 +146,7 @@ jobs:
         # run tests!
         - run: mvn test -Dtest=SparkTpchSelectQueryCoordinatorTest 2> /dev/null
         - run: mvn test -Dtest=RedshiftTpchSelectQueryCoordinatorTest 2> /dev/null
+        - run: mvn test -Dtest=ImpalaTpchSelectQueryCoordinatorTest 2> /dev/null
         - save_cache:
             paths:
               - ~/.m2
