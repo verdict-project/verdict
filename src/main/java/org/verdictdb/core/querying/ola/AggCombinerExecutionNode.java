@@ -26,6 +26,8 @@ import org.verdictdb.exception.VerdictDBValueException;
 
 public class AggCombinerExecutionNode extends CreateTableAsSelectNode {
 
+  private static final long serialVersionUID = -5083977853340736042L;
+
   AggMeta aggMeta = new AggMeta();
 
   static String unionTableAlias = "unionTable";

@@ -68,6 +68,7 @@ public class MySqlTpchSelectQueryCoordinatorTest {
     conn = DatabaseConnectionHelpers.setupMySql(
         mysqlConnectionString, MYSQL_UESR, MYSQL_PASSWORD, MYSQL_DATABASE);
     stmt = conn.createStatement();
+    stmt.execute(String.format("use `%s`", MYSQL_DATABASE));
     DbmsConnection dbmsConn = JdbcConnection.create(conn);
 
     // Create Scramble table
@@ -82,6 +83,11 @@ public class MySqlTpchSelectQueryCoordinatorTest {
         scrambler.scramble(MYSQL_DATABASE, "orders", MYSQL_DATABASE, "orders_scrambled", "uniform");
     meta.addScrambleMeta(meta1);
     meta.addScrambleMeta(meta2);
+  }
+
+  @AfterClass
+  public static void tearDown() throws SQLException {
+    stmt.execute(String.format("DROP SCHEMA IF EXISTS `%s`", MYSQL_DATABASE));
   }
 
   @Test
@@ -119,19 +125,19 @@ public class MySqlTpchSelectQueryCoordinatorTest {
 //    coordinator.setDefaultSchema("test");
     ExecutionResultReader reader = coordinator.process(sql);
 
-    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
-    AbstractRelation relation = sqlToRelation.toRelation(sql);
-    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
-    relation = gen.standardize((SelectQuery) relation);
-
-    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
-    String stdQuery = selectQueryToSql.toSql(relation);
+//    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+//    AbstractRelation relation = sqlToRelation.toRelation(sql);
+//    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
+//    relation = gen.standardize((SelectQuery) relation);
+//
+//    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
+//    String stdQuery = selectQueryToSql.toSql(relation);
     int cnt = 0;
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
       cnt++;
       if (cnt == 10) {
-        ResultSet rs = stmt.executeQuery(stdQuery);
+        ResultSet rs = stmt.executeQuery(sql);
         while (rs.next()) {
           dbmsQueryResult.next();
           assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
@@ -187,19 +193,19 @@ public class MySqlTpchSelectQueryCoordinatorTest {
 //    coordinator.setDefaultSchema("test");
     ExecutionResultReader reader = coordinator.process(sql);
 
-    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
-    AbstractRelation relation = sqlToRelation.toRelation(sql);
-    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
-    relation = gen.standardize((SelectQuery) relation);
-
-    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
-    String stdQuery = selectQueryToSql.toSql(relation);
+//    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+//    AbstractRelation relation = sqlToRelation.toRelation(sql);
+//    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
+//    relation = gen.standardize((SelectQuery) relation);
+//    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
+//    String stdQuery = selectQueryToSql.toSql(relation);
+    
     int cnt = 0;
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
       cnt++;
       if (cnt == 12) {
-        ResultSet rs = stmt.executeQuery(stdQuery);
+        ResultSet rs = stmt.executeQuery(sql);
         while (rs.next()) {
           dbmsQueryResult.next();
           assertEquals(rs.getDouble(1), dbmsQueryResult.getDouble(0), 1e-5);
@@ -240,19 +246,19 @@ public class MySqlTpchSelectQueryCoordinatorTest {
 //    coordinator.setDefaultSchema("test");
     ExecutionResultReader reader = coordinator.process(sql);
 
-    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
-    AbstractRelation relation = sqlToRelation.toRelation(sql);
-    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
-    relation = gen.standardize((SelectQuery) relation);
-
-    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
-    String stdQuery = selectQueryToSql.toSql(relation);
+//    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+//    AbstractRelation relation = sqlToRelation.toRelation(sql);
+//    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
+//    relation = gen.standardize((SelectQuery) relation);
+//    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
+//    String stdQuery = selectQueryToSql.toSql(relation);
+    
     int cnt = 0;
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
       cnt++;
       if (cnt == 12) {
-        ResultSet rs = stmt.executeQuery(stdQuery);
+        ResultSet rs = stmt.executeQuery(sql);
         while (rs.next()) {
           dbmsQueryResult.next();
           assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
@@ -301,19 +307,19 @@ public class MySqlTpchSelectQueryCoordinatorTest {
 //    coordinator.setDefaultSchema("test");
     ExecutionResultReader reader = coordinator.process(sql);
 
-    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
-    AbstractRelation relation = sqlToRelation.toRelation(sql);
-    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
-    relation = gen.standardize((SelectQuery) relation);
-
-    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
-    String stdQuery = selectQueryToSql.toSql(relation);
+//    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+//    AbstractRelation relation = sqlToRelation.toRelation(sql);
+//    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
+//    relation = gen.standardize((SelectQuery) relation);
+//    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
+//    String stdQuery = selectQueryToSql.toSql(relation);
+    
     int cnt = 0;
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
       cnt++;
       if (cnt == 12) {
-        ResultSet rs = stmt.executeQuery(stdQuery);
+        ResultSet rs = stmt.executeQuery(sql);
         while (rs.next()) {
           dbmsQueryResult.next();
           assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
@@ -347,19 +353,19 @@ public class MySqlTpchSelectQueryCoordinatorTest {
 //    coordinator.setDefaultSchema("test");
     ExecutionResultReader reader = coordinator.process(sql);
 
-    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
-    AbstractRelation relation = sqlToRelation.toRelation(sql);
-    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
-    relation = gen.standardize((SelectQuery) relation);
-
-    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
-    String stdQuery = selectQueryToSql.toSql(relation);
+//    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+//    AbstractRelation relation = sqlToRelation.toRelation(sql);
+//    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
+//    relation = gen.standardize((SelectQuery) relation);
+//    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
+//    String stdQuery = selectQueryToSql.toSql(relation);
+    
     int cnt = 0;
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
       cnt++;
       if (cnt == 10) {
-        ResultSet rs = stmt.executeQuery(stdQuery);
+        ResultSet rs = stmt.executeQuery(sql);
         while (rs.next()) {
           dbmsQueryResult.next();
           assertEquals(rs.getDouble(1), dbmsQueryResult.getDouble(0), 1e-5);
@@ -422,19 +428,19 @@ public class MySqlTpchSelectQueryCoordinatorTest {
 //    coordinator.setDefaultSchema("test");
     ExecutionResultReader reader = coordinator.process(sql);
 
-    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
-    AbstractRelation relation = sqlToRelation.toRelation(sql);
-    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
-    relation = gen.standardize((SelectQuery) relation);
-
-    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
-    String stdQuery = selectQueryToSql.toSql(relation);
+//    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+//    AbstractRelation relation = sqlToRelation.toRelation(sql);
+//    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
+//    relation = gen.standardize((SelectQuery) relation);
+//    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
+//    String stdQuery = selectQueryToSql.toSql(relation);
+    
     int cnt = 0;
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
       cnt++;
       if (cnt == 12) {
-        ResultSet rs = stmt.executeQuery(stdQuery);
+        ResultSet rs = stmt.executeQuery(sql);
         while (rs.next()) {
           dbmsQueryResult.next();
           assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
@@ -527,20 +533,20 @@ public class MySqlTpchSelectQueryCoordinatorTest {
 //    coordinator.setDefaultSchema("test");
     ExecutionResultReader reader = coordinator.process(sql);
 
-    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
-    AbstractRelation relation = sqlToRelation.toRelation(sql);
-    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
-    relation = gen.standardize((SelectQuery) relation);
-
-    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
-    String stdQuery = selectQueryToSql.toSql(relation);
+//    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+//    AbstractRelation relation = sqlToRelation.toRelation(sql);
+//    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
+//    relation = gen.standardize((SelectQuery) relation);
+//    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
+//    String stdQuery = selectQueryToSql.toSql(relation);
+    
     int cnt = 0;
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
       cnt++;
 //      System.out.println("test case 8 processing: " + cnt);
       if (cnt == 12) {
-        ResultSet rs = stmt.executeQuery(stdQuery);
+        ResultSet rs = stmt.executeQuery(sql);
         while (rs.next()) {
           dbmsQueryResult.next();
           assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
@@ -624,20 +630,20 @@ public class MySqlTpchSelectQueryCoordinatorTest {
 //    coordinator.setDefaultSchema("test");
     ExecutionResultReader reader = coordinator.process(sql);
 
-    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
-    AbstractRelation relation = sqlToRelation.toRelation(sql);
-    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
-    relation = gen.standardize((SelectQuery) relation);
-
-    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
-    String stdQuery = selectQueryToSql.toSql(relation);
+//    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+//    AbstractRelation relation = sqlToRelation.toRelation(sql);
+//    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
+//    relation = gen.standardize((SelectQuery) relation);
+//    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
+//    String stdQuery = selectQueryToSql.toSql(relation);
+    
     int cnt = 0;
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
       cnt++;
 //      System.out.println("test case 9 processing: " + cnt);
       if (cnt == 12) {
-        ResultSet rs = stmt.executeQuery(stdQuery);
+        ResultSet rs = stmt.executeQuery(sql);
         while (rs.next()) {
           dbmsQueryResult.next();
           assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
@@ -693,19 +699,19 @@ public class MySqlTpchSelectQueryCoordinatorTest {
 //    coordinator.setDefaultSchema("test");
     ExecutionResultReader reader = coordinator.process(sql);
 
-    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
-    AbstractRelation relation = sqlToRelation.toRelation(sql);
-    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
-    relation = gen.standardize((SelectQuery) relation);
-
-    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
-    String stdQuery = selectQueryToSql.toSql(relation);
+//    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+//    AbstractRelation relation = sqlToRelation.toRelation(sql);
+//    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
+//    relation = gen.standardize((SelectQuery) relation);
+//    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
+//    String stdQuery = selectQueryToSql.toSql(relation);
+    
     int cnt = 0;
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
       cnt++;
       if (cnt == 12) {
-        ResultSet rs = stmt.executeQuery(stdQuery);
+        ResultSet rs = stmt.executeQuery(sql);
         while (rs.next()) {
           dbmsQueryResult.next();
           assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
@@ -756,20 +762,20 @@ public class MySqlTpchSelectQueryCoordinatorTest {
     coordinator.setScrambleMetaSet(meta);
 //    coordinator.setDefaultSchema("test");
     ExecutionResultReader reader = coordinator.process(sql);
-
-    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
-    AbstractRelation relation = sqlToRelation.toRelation(sql);
-    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
-    relation = gen.standardize((SelectQuery) relation);
-
-    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
-    String stdQuery = selectQueryToSql.toSql(relation);
+    
+//    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+//    AbstractRelation relation = sqlToRelation.toRelation(sql);
+//    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
+//    relation = gen.standardize((SelectQuery) relation);
+//    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
+//    String stdQuery = selectQueryToSql.toSql(relation);
+    
     int cnt = 0;
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
       cnt++;
       if (cnt == 12) {
-        ResultSet rs = stmt.executeQuery(stdQuery);
+        ResultSet rs = stmt.executeQuery(sql);
         while (rs.next()) {
           dbmsQueryResult.next();
           assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
@@ -804,19 +810,19 @@ public class MySqlTpchSelectQueryCoordinatorTest {
 //    coordinator.setDefaultSchema("test");
     ExecutionResultReader reader = coordinator.process(sql);
 
-    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
-    AbstractRelation relation = sqlToRelation.toRelation(sql);
-    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
-    relation = gen.standardize((SelectQuery) relation);
-
-    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
-    String stdQuery = selectQueryToSql.toSql(relation);
+//    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+//    AbstractRelation relation = sqlToRelation.toRelation(sql);
+//    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
+//    relation = gen.standardize((SelectQuery) relation);
+//    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
+//    String stdQuery = selectQueryToSql.toSql(relation);
+    
     int cnt = 0;
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
       cnt++;
       if (cnt == 3) {
-        ResultSet rs = stmt.executeQuery(stdQuery);
+        ResultSet rs = stmt.executeQuery(sql);
         while (rs.next()) {
           dbmsQueryResult.next();
           assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
@@ -853,19 +859,19 @@ public class MySqlTpchSelectQueryCoordinatorTest {
 //    coordinator.setDefaultSchema("test");
     ExecutionResultReader reader = coordinator.process(sql);
 
-    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
-    AbstractRelation relation = sqlToRelation.toRelation(sql);
-    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
-    relation = gen.standardize((SelectQuery) relation);
-
-    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
-    String stdQuery = selectQueryToSql.toSql(relation);
+//    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+//    AbstractRelation relation = sqlToRelation.toRelation(sql);
+//    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
+//    relation = gen.standardize((SelectQuery) relation);
+//    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
+//    String stdQuery = selectQueryToSql.toSql(relation);
+    
     int cnt = 0;
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
       cnt++;
       if (cnt == 10) {
-        ResultSet rs = stmt.executeQuery(stdQuery);
+        ResultSet rs = stmt.executeQuery(sql);
         while (rs.next()) {
           dbmsQueryResult.next();
           assertEquals(rs.getDouble(2), dbmsQueryResult.getDouble(1), 1e-5);
@@ -901,19 +907,19 @@ public class MySqlTpchSelectQueryCoordinatorTest {
 //    coordinator.setDefaultSchema("test");
     ExecutionResultReader reader = coordinator.process(sql);
 
-    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
-    AbstractRelation relation = sqlToRelation.toRelation(sql);
-    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
-    relation = gen.standardize((SelectQuery) relation);
-
-    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
-    String stdQuery = selectQueryToSql.toSql(relation);
+//    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+//    AbstractRelation relation = sqlToRelation.toRelation(sql);
+//    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
+//    relation = gen.standardize((SelectQuery) relation);
+//    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
+//    String stdQuery = selectQueryToSql.toSql(relation);
+    
     int cnt = 0;
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
       cnt++;
       if (cnt == 10) {
-        ResultSet rs = stmt.executeQuery(stdQuery);
+        ResultSet rs = stmt.executeQuery(sql);
         while (rs.next()) {
           dbmsQueryResult.next();
           assertEquals(rs.getDouble(2), dbmsQueryResult.getDouble(1), 1e-5);
@@ -963,19 +969,19 @@ public class MySqlTpchSelectQueryCoordinatorTest {
 //    coordinator.setDefaultSchema("test");
     ExecutionResultReader reader = coordinator.process(sql);
 
-    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
-    AbstractRelation relation = sqlToRelation.toRelation(sql);
-    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
-    relation = gen.standardize((SelectQuery) relation);
-
-    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
-    String stdQuery = selectQueryToSql.toSql(relation);
+//    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+//    AbstractRelation relation = sqlToRelation.toRelation(sql);
+//    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
+//    relation = gen.standardize((SelectQuery) relation);
+//    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
+//    String stdQuery = selectQueryToSql.toSql(relation);
+    
     int cnt = 0;
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
       cnt++;
       if (cnt == 10) {
-        ResultSet rs = stmt.executeQuery(stdQuery);
+        ResultSet rs = stmt.executeQuery(sql);
         while (rs.next()) {
           dbmsQueryResult.next();
           assertEquals(rs.getDouble(1), dbmsQueryResult.getDouble(0), 1e-5);
@@ -1032,19 +1038,19 @@ public class MySqlTpchSelectQueryCoordinatorTest {
 //    coordinator.setDefaultSchema("test");
     ExecutionResultReader reader = coordinator.process(sql);
 
-    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
-    AbstractRelation relation = sqlToRelation.toRelation(sql);
-    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
-    relation = gen.standardize((SelectQuery) relation);
-
-    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
-    String stdQuery = selectQueryToSql.toSql(relation);
+//    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+//    AbstractRelation relation = sqlToRelation.toRelation(sql);
+//    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
+//    relation = gen.standardize((SelectQuery) relation);
+//    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
+//    String stdQuery = selectQueryToSql.toSql(relation);
+    
     int cnt = 0;
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
       cnt++;
       if (cnt == 12) {
-        ResultSet rs = stmt.executeQuery(stdQuery);
+        ResultSet rs = stmt.executeQuery(sql);
         while (rs.next()) {
           dbmsQueryResult.next();
           assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
@@ -1104,19 +1110,19 @@ public class MySqlTpchSelectQueryCoordinatorTest {
 //    coordinator.setDefaultSchema("test");
     ExecutionResultReader reader = coordinator.process(sql);
 
-    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
-    AbstractRelation relation = sqlToRelation.toRelation(sql);
-    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
-    relation = gen.standardize((SelectQuery) relation);
-
-    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
-    String stdQuery = selectQueryToSql.toSql(relation);
+//    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+//    AbstractRelation relation = sqlToRelation.toRelation(sql);
+//    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
+//    relation = gen.standardize((SelectQuery) relation);
+//    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
+//    String stdQuery = selectQueryToSql.toSql(relation);
+    
     int cnt = 0;
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
       cnt++;
       if (cnt == 10) {
-        ResultSet rs = stmt.executeQuery(stdQuery);
+        ResultSet rs = stmt.executeQuery(sql);
         while (rs.next()) {
           dbmsQueryResult.next();
           assertEquals(rs.getDouble(1), dbmsQueryResult.getDouble(0), 1e-5);
@@ -1162,19 +1168,19 @@ public class MySqlTpchSelectQueryCoordinatorTest {
 //    coordinator.setDefaultSchema("test");
     ExecutionResultReader reader = coordinator.process(sql);
 
-    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
-    AbstractRelation relation = sqlToRelation.toRelation(sql);
-    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
-    relation = gen.standardize((SelectQuery) relation);
-
-    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
-    String stdQuery = selectQueryToSql.toSql(relation);
+//    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+//    AbstractRelation relation = sqlToRelation.toRelation(sql);
+//    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
+//    relation = gen.standardize((SelectQuery) relation);
+//    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
+//    String stdQuery = selectQueryToSql.toSql(relation);
+    
     int cnt = 0;
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
       cnt++;
       if (cnt == 10) {
-        ResultSet rs = stmt.executeQuery(stdQuery);
+        ResultSet rs = stmt.executeQuery(sql);
         while (rs.next()) {
           dbmsQueryResult.next();
           assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
@@ -1237,20 +1243,20 @@ public class MySqlTpchSelectQueryCoordinatorTest {
 //    coordinator.setDefaultSchema("test");
     ExecutionResultReader reader = coordinator.process(sql);
 
-    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
-    AbstractRelation relation = sqlToRelation.toRelation(sql);
-    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
-    relation = gen.standardize((SelectQuery) relation);
-
-    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
-    String stdQuery = selectQueryToSql.toSql(relation);
+//    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+//    AbstractRelation relation = sqlToRelation.toRelation(sql);
+//    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
+//    relation = gen.standardize((SelectQuery) relation);
+//    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
+//    String stdQuery = selectQueryToSql.toSql(relation);
+    
     int cnt = 0;
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
       cnt++;
 //      System.out.println("test case 21 processing: " + cnt);
       if (cnt == 12) {
-        ResultSet rs = stmt.executeQuery(stdQuery);
+        ResultSet rs = stmt.executeQuery(sql);
         while (rs.next()) {
           dbmsQueryResult.next();
           assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
@@ -1260,10 +1266,5 @@ public class MySqlTpchSelectQueryCoordinatorTest {
     }
     assertEquals(12, cnt);
 //    System.out.println("test case 21 finished");
-  }
-
-  @AfterClass
-  public static void tearDown() throws SQLException {
-    stmt.execute(String.format("DROP SCHEMA IF EXISTS `%s`", MYSQL_DATABASE));
   }
 }

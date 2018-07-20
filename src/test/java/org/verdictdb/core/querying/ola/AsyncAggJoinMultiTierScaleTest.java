@@ -165,15 +165,15 @@ public class AsyncAggJoinMultiTierScaleTest {
     CreateTableAsSelectQuery query = (CreateTableAsSelectQuery) queryExecutionPlan.getRoot().getSources().get(0).getSources().get(0).createQuery(Arrays.asList(token));
     SelectQueryToSql queryToSql = new SelectQueryToSql(new H2Syntax());
     String actual = queryToSql.toSql(query.getSelect());
-    String expected = "select sum(vt4.\"a_value\" + vt5.\"b_value\") as \"agg0\", vt4.\"verdictdbtier\" as \"verdictdbtier0\"," +
-        " vt5.\"verdictdbtier\" as \"verdictdbtier1\" from \"originalSchema\".\"originalTable1_scrambled\" as vt4 " +
+    String expected = "select sum(vt4.\"a_value\" + vt5.\"b_value\") as \"agg0\", vt4.\"verdictdbtier\" as \"verdictdb_tier_internal0\"," +
+        " vt5.\"verdictdbtier\" as \"verdictdb_tier_internal1\" from \"originalSchema\".\"originalTable1_scrambled\" as vt4 " +
         "inner join \"originalSchema\".\"originalTable2_scrambled\" as vt5 " +
         "on (vt4.\"a_id\" = vt5.\"b_id\") " +
         "where " +
         "((vt4.\"verdictdbaggblock\" >= 0) " +
         "and (vt4.\"verdictdbaggblock\" <= 1)) " +
         "and (vt5.\"verdictdbaggblock\" = 0) " +
-        "group by \"verdictdbtier0\", \"verdictdbtier1\"";
+        "group by \"verdictdb_tier_internal0\", \"verdictdb_tier_internal1\"";
     assertEquals(expected, actual);
 
     ExecutionInfoToken token1 = new ExecutionInfoToken();
@@ -187,13 +187,13 @@ public class AsyncAggJoinMultiTierScaleTest {
     actual = actual.replaceAll("verdictdbalias_[0-9]*_[0-9]", "alias");
     expected = "select " +
         "sum(unionTable.\"agg0\") as \"agg0\", " +
-        "unionTable.\"verdictdbtier0\" as \"verdictdbtier0\", " +
-        "unionTable.\"verdictdbtier1\" as \"verdictdbtier1\" " +
+        "unionTable.\"verdictdb_tier_internal0\" as \"verdictdb_tier_internal0\", " +
+        "unionTable.\"verdictdb_tier_internal1\" as \"verdictdb_tier_internal1\" " +
         "from (" +
         "select * from \"verdict_temp\".\"table1\" as alias " +
         "UNION ALL " +
         "select * from \"verdict_temp\".\"table2\" as alias) " +
-        "as unionTable group by \"verdictdbtier0\", \"verdictdbtier1\"";
+        "as unionTable group by \"verdictdb_tier_internal0\", \"verdictdb_tier_internal1\"";
     assertEquals(expected, actual);
 
     ExecutionInfoToken token3 = queryExecutionPlan.getRoot().getSources().get(0).getSources().get(0).createToken(null);

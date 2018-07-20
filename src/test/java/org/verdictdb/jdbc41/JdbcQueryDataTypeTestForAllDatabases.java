@@ -58,13 +58,7 @@ public class JdbcQueryDataTypeTestForAllDatabases {
   private static final String IMPALA_HOST;
 
   static {
-    String env = System.getenv("BUILD_ENV");
-    if (env != null && (env.equals("GitLab") || env.equals("DockerCompose"))) {
-      IMPALA_HOST = "impala";
-    }
-    else {
-      IMPALA_HOST = "localhost";
-    }
+    IMPALA_HOST = System.getenv("VERDICTDB_TEST_IMPALA_HOST");
   }
 
   private static final String IMPALA_DATABASE = "test";
@@ -191,9 +185,10 @@ public class JdbcQueryDataTypeTestForAllDatabases {
   public void testDataType() throws IOException, SQLException {
     String sql = "";
     if (database.equals("mysql")) {
-      sql = String.format("SELECT * FROM `%s`.`%s`", SCHEMA_NAME, TABLE_NAME);
+      sql = String.format("SELECT * FROM `%s`.`%s`", MYSQL_DATABASE, TABLE_NAME);
     } else if (database.equals("impala")) {
-      sql = String.format("SELECT * FROM `test`.`%s`", TABLE_NAME);
+      sql = String.format("SELECT * FROM `%s`.`%s` ORDER BY bigintCol",
+          IMPALA_DATABASE, TABLE_NAME);
     } else if (database.equals("postgresql") || database.equals("redshift")) {
       sql = String.format("SELECT * FROM \"%s\".\"%s\"", SCHEMA_NAME, TABLE_NAME);
     }
