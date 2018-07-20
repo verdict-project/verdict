@@ -18,13 +18,9 @@ import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.core.resulthandler.ExecutionResultReader;
 import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
-import org.verdictdb.core.sqlobject.AbstractRelation;
-import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.exception.VerdictDBException;
-import org.verdictdb.sqlreader.NonValidatingSQLParser;
 import org.verdictdb.sqlreader.RelationStandardizer;
 import org.verdictdb.sqlsyntax.MysqlSyntax;
-import org.verdictdb.sqlwriter.SelectQueryToSql;
 
 /**
  *  Test cases are from
@@ -237,8 +233,9 @@ public class MySqlTpchSelectQueryCoordinatorTest {
         "o_orderpriority ";
     stmt.execute("create schema if not exists `verdictdb_temp`;");
 //    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcDbmsConnection(conn, new MysqlSyntax()));
-    DbmsConnection dbmsconn = new CachedDbmsConnection(
-        new JdbcConnection(conn, new MysqlSyntax()));
+    JdbcConnection jdbcConnection = new JdbcConnection(conn, new MysqlSyntax());
+    jdbcConnection.setOutputDebugMessage(true);
+    DbmsConnection dbmsconn = new CachedDbmsConnection(jdbcConnection);
     dbmsconn.setDefaultSchema(MYSQL_DATABASE);
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     

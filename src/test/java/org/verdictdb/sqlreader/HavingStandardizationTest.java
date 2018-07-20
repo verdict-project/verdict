@@ -1,22 +1,22 @@
 package org.verdictdb.sqlreader;
 
+import static java.sql.Types.BIGINT;
+import static org.junit.Assert.assertEquals;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Before;
 import org.junit.Test;
 import org.verdictdb.connection.StaticMetaData;
-import org.verdictdb.core.sqlobject.*;
+import org.verdictdb.core.sqlobject.AbstractRelation;
+import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sqlsyntax.MysqlSyntax;
 import org.verdictdb.sqlwriter.SelectQueryToSql;
-
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import static java.sql.Types.BIGINT;
-import static org.junit.Assert.assertEquals;
 
 public class HavingStandardizationTest {
 
