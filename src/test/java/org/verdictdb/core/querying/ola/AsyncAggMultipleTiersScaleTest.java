@@ -39,6 +39,25 @@ import org.verdictdb.sqlsyntax.MysqlSyntax;
 import org.verdictdb.sqlwriter.SelectQueryToSql;
 
 public class AsyncAggMultipleTiersScaleTest {
+  
+  private static final String MYSQL_HOST;
+
+  private static final String MYSQL_DATABASE = "async_agg_multi_tier_scale_test";
+
+  private static final String MYSQL_UESR = "root";
+
+  private static final String MYSQL_PASSWORD = "";
+
+  private static final String TABLE_NAME = "mytable";
+
+  static {
+    String env = System.getenv("BUILD_ENV");
+    if (env != null && (env.equals("GitLab") || env.equals("DockerCompose"))) {
+      MYSQL_HOST = "mysql";
+    } else {
+      MYSQL_HOST = "localhost";
+    }
+  }
 
   static Connection conn;
 
@@ -56,31 +75,14 @@ public class AsyncAggMultipleTiersScaleTest {
 
   String placeholderTableName = "placeholderTableName";
 
-  static String originalSchema = "originalSchema";
+//  static String originalSchema = "originalSchema";
+  static String originalSchema = MYSQL_DATABASE;
 
   static String originalTable = "originalTable";
 
   static String smallTable = "smallTable";
   
-  private static final String MYSQL_HOST;
-
-  private static final String MYSQL_DATABASE = "test";
-
-  private static final String MYSQL_UESR = "root";
-
-  private static final String MYSQL_PASSWORD = "";
-
-  private static final String TABLE_NAME = "mytable";
-
-  static {
-    String env = System.getenv("BUILD_ENV");
-    if (env != null && (env.equals("GitLab") || env.equals("DockerCompose"))) {
-      MYSQL_HOST = "mysql";
-    } else {
-      MYSQL_HOST = "localhost";
-    }
-  }
-
+  
   @BeforeClass
   public static void setupMySqlDatabase() throws SQLException, VerdictDBException {
     String mysqlConnectionString =
@@ -166,7 +168,7 @@ public class AsyncAggMultipleTiersScaleTest {
         new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    Dimension d1 = new Dimension("originalSchema", "originalTable_scrambled", 0, 0);
+    Dimension d1 = new Dimension(originalSchema, "originalTable_scrambled", 0, 0);
     assertEquals(
         new HyperTableCube(Arrays.asList(d1)), 
         ((AggExecutionNode)queryExecutionPlan.getRootNode().getExecutableNodeBaseDependent(0).getExecutableNodeBaseDependent(0)).getMeta().getCubes().get(0));
@@ -196,11 +198,12 @@ public class AsyncAggMultipleTiersScaleTest {
     CreateTableAsSelectQuery query = (CreateTableAsSelectQuery) queryExecutionPlan.getRoot().getSources().get(0).getSources().get(0).createQuery(Arrays.asList(token));
     SelectQueryToSql queryToSql = new SelectQueryToSql(new MysqlSyntax());
     String actual = queryToSql.toSql(query.getSelect());
-    String expected = "select sum(vt3.`value`) as `agg0`, "
+    String expected = String.format("select sum(vt3.`value`) as `agg0`, "
         + "count(*) as `agg1`, vt3.`verdictdbtier` as `verdictdbtier0` "
-        + "from `originalSchema`.`originalTable_scrambled` as vt3 "
+        + "from `%s`.`originalTable_scrambled` as vt3 "
         + "where vt3.`verdictdbaggblock` = 0 "
-        + "group by `verdictdbtier0`";
+        + "group by `verdictdbtier0`",
+        originalSchema);
     assertEquals(expected, actual);
 
     ExecutionInfoToken token1 = new ExecutionInfoToken();
@@ -257,7 +260,7 @@ public class AsyncAggMultipleTiersScaleTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    Dimension d1 = new Dimension("originalSchema", "originalTable_scrambled", 0, 0);
+    Dimension d1 = new Dimension(originalSchema, "originalTable_scrambled", 0, 0);
     assertEquals(
         new HyperTableCube(Arrays.asList(d1)),
         ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getMeta().getCubes().get(0));
@@ -271,12 +274,13 @@ public class AsyncAggMultipleTiersScaleTest {
     CreateTableAsSelectQuery query = (CreateTableAsSelectQuery) queryExecutionPlan.getRoot().getSources().get(0).getSources().get(0).createQuery(Arrays.asList(token));
     SelectQueryToSql queryToSql = new SelectQueryToSql(new MysqlSyntax());
     String actual = queryToSql.toSql(query.getSelect());
-    String expected = "select sum(vt1.`value`) as `agg0`, " +
+    String expected = String.format("select sum(vt1.`value`) as `agg0`, " +
         "count(*) as `agg1`, vt1.`verdictdbtier` as `verdictdbtier0` " +
-        "from `originalSchema`.`originalTable_scrambled` " +
+        "from `%s`.`originalTable_scrambled` " +
         "as vt1 " +
         "where vt1.`verdictdbaggblock` = 0 " +
-        "group by `verdictdbtier0`";
+        "group by `verdictdbtier0`",
+        originalSchema);
     assertEquals(expected, actual);
 
     ExecutionInfoToken token1 = new ExecutionInfoToken();
@@ -333,7 +337,7 @@ public class AsyncAggMultipleTiersScaleTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    Dimension d1 = new Dimension("originalSchema", "originalTable_scrambled", 0, 0);
+    Dimension d1 = new Dimension(originalSchema, "originalTable_scrambled", 0, 0);
     assertEquals(
         new HyperTableCube(Arrays.asList(d1)),
         ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getMeta().getCubes().get(0));
@@ -347,12 +351,13 @@ public class AsyncAggMultipleTiersScaleTest {
     CreateTableAsSelectQuery query = (CreateTableAsSelectQuery) queryExecutionPlan.getRoot().getSources().get(0).getSources().get(0).createQuery(Arrays.asList(token));
     SelectQueryToSql queryToSql = new SelectQueryToSql(new MysqlSyntax());
     String actual = queryToSql.toSql(query.getSelect());
-    String expected = "select " +
+    String expected = String.format("select " +
         "sum(vt1.`value`) as `agg0`, " +
         "vt1.`verdictdbtier` as `verdictdbtier0` " +
-        "from `originalSchema`.`originalTable_scrambled` as vt1 " +
+        "from `%s`.`originalTable_scrambled` as vt1 " +
         "where vt1.`verdictdbaggblock` = 0 " +
-        "group by `verdictdbtier0`";
+        "group by `verdictdbtier0`",
+        originalSchema);
     assertEquals(expected, actual);
 
     ExecutionInfoToken token1 = new ExecutionInfoToken();
@@ -405,7 +410,7 @@ public class AsyncAggMultipleTiersScaleTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    Dimension d1 = new Dimension("originalSchema", "originalTable_scrambled", 0, 0);
+    Dimension d1 = new Dimension(originalSchema, "originalTable_scrambled", 0, 0);
     assertEquals(
         new HyperTableCube(Arrays.asList(d1)),
         ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getMeta().getCubes().get(0));
@@ -420,12 +425,13 @@ public class AsyncAggMultipleTiersScaleTest {
     CreateTableAsSelectQuery query = (CreateTableAsSelectQuery) queryExecutionPlan.getRoot().getSources().get(0).getSources().get(0).createQuery(Arrays.asList(token));
     SelectQueryToSql queryToSql = new SelectQueryToSql(new MysqlSyntax());
     String actual = queryToSql.toSql(query.getSelect());
-    String expected = "select " +
+    String expected = String.format("select " +
         "count(*) as `agg0`, " +
         "vt1.`verdictdbtier` as `verdictdbtier0` " +
-        "from `originalSchema`.`originalTable_scrambled` as vt1 " +
+        "from `%s`.`originalTable_scrambled` as vt1 " +
         "where vt1.`verdictdbaggblock` = 0 " +
-        "group by `verdictdbtier0`";
+        "group by `verdictdbtier0`",
+        originalSchema);
     assertEquals(expected, actual);
 
     ExecutionInfoToken token1 = new ExecutionInfoToken();
@@ -478,7 +484,7 @@ public class AsyncAggMultipleTiersScaleTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    Dimension d1 = new Dimension("originalSchema", "originalTable_scrambled", 0, 0);
+    Dimension d1 = new Dimension(originalSchema, "originalTable_scrambled", 0, 0);
     assertEquals(
         new HyperTableCube(Arrays.asList(d1)),
         ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getMeta().getCubes().get(0));
@@ -492,14 +498,15 @@ public class AsyncAggMultipleTiersScaleTest {
     CreateTableAsSelectQuery query = (CreateTableAsSelectQuery) queryExecutionPlan.getRoot().getSources().get(0).getSources().get(0).createQuery(Arrays.asList(token));
     SelectQueryToSql queryToSql = new SelectQueryToSql(new MysqlSyntax());
     String actual = queryToSql.toSql(query.getSelect());
-    String expected = "select " +
+    String expected = String.format("select " +
         "sum(vt1.`value`) as `agg0`, " +
         "count(*) as `agg1`, " +
         "vt1.`verdictdbtier` as `verdictdbtier0` " +
-        "from `originalSchema`.`originalTable_scrambled` " +
+        "from `%s`.`originalTable_scrambled` " +
         "as vt1 " +
         "where vt1.`verdictdbaggblock` = 0 " +
-        "group by `verdictdbtier0`";
+        "group by `verdictdbtier0`",
+        originalSchema);
     assertEquals(expected, actual);
 
     ExecutionInfoToken token1 = new ExecutionInfoToken();
@@ -559,7 +566,7 @@ public class AsyncAggMultipleTiersScaleTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    Dimension d1 = new Dimension("originalSchema", "originalTable_scrambled", 0, 0);
+    Dimension d1 = new Dimension(originalSchema, "originalTable_scrambled", 0, 0);
     assertEquals(
         new HyperTableCube(Arrays.asList(d1)),
         ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getMeta().getCubes().get(0));
@@ -573,14 +580,15 @@ public class AsyncAggMultipleTiersScaleTest {
     CreateTableAsSelectQuery query = (CreateTableAsSelectQuery) queryExecutionPlan.getRoot().getSources().get(0).getSources().get(0).createQuery(Arrays.asList(token));
     SelectQueryToSql queryToSql = new SelectQueryToSql(new MysqlSyntax());
     String actual = queryToSql.toSql(query.getSelect());
-    String expected = "select " +
+    String expected = String.format("select " +
         "sum(vt1.`value`) as `agg0`, " +
         "count(*) as `agg1`, " +
         "vt1.`verdictdbtier` as `verdictdbtier0` " +
-        "from `originalSchema`.`originalTable_scrambled` " +
+        "from `%s`.`originalTable_scrambled` " +
         "as vt1 " +
         "where vt1.`verdictdbaggblock` = 0 " +
-        "group by `verdictdbtier0`";
+        "group by `verdictdbtier0`",
+        originalSchema);
     assertEquals(expected, actual);
 
     ExecutionInfoToken token1 = new ExecutionInfoToken();
@@ -640,7 +648,7 @@ public class AsyncAggMultipleTiersScaleTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    Dimension d1 = new Dimension("originalSchema", "originalTable_scrambled", 0, 0);
+    Dimension d1 = new Dimension(originalSchema, "originalTable_scrambled", 0, 0);
     assertEquals(
         new HyperTableCube(Arrays.asList(d1)),
         ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getMeta().getCubes().get(0));
@@ -654,12 +662,13 @@ public class AsyncAggMultipleTiersScaleTest {
     CreateTableAsSelectQuery query = (CreateTableAsSelectQuery) queryExecutionPlan.getRoot().getSources().get(0).getSources().get(0).createQuery(Arrays.asList(token));
     SelectQueryToSql queryToSql = new SelectQueryToSql(new MysqlSyntax());
     String actual = queryToSql.toSql(query.getSelect());
-    String expected = "select " +
+    String expected = String.format("select " +
         "count(*) as `agg0`, " +
         "sum(vt1.`value`) as `agg1`, " +
         "vt1.`verdictdbtier` as `verdictdbtier0` " +
-        "from `originalSchema`.`originalTable_scrambled` as vt1 " +
-        "where vt1.`verdictdbaggblock` = 0 group by `verdictdbtier0`";
+        "from `%s`.`originalTable_scrambled` as vt1 " +
+        "where vt1.`verdictdbaggblock` = 0 group by `verdictdbtier0`",
+        originalSchema);
     assertEquals(expected, actual);
 
     ExecutionInfoToken token1 = new ExecutionInfoToken();
@@ -719,7 +728,7 @@ public class AsyncAggMultipleTiersScaleTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    Dimension d1 = new Dimension("originalSchema", "originalTable_scrambled", 0, 0);
+    Dimension d1 = new Dimension(originalSchema, "originalTable_scrambled", 0, 0);
     assertEquals(
         new HyperTableCube(Arrays.asList(d1)),
         ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getMeta().getCubes().get(0));
@@ -733,13 +742,14 @@ public class AsyncAggMultipleTiersScaleTest {
     CreateTableAsSelectQuery query = (CreateTableAsSelectQuery) queryExecutionPlan.getRoot().getSources().get(0).getSources().get(0).createQuery(Arrays.asList(token));
     SelectQueryToSql queryToSql = new SelectQueryToSql(new MysqlSyntax());
     String actual = queryToSql.toSql(query.getSelect());
-    String expected = "select " +
+    String expected = String.format("select " +
         "sum(vt1.`value`) as `agg0`, " +
         "count(*) as `agg1`, " +
         "max(vt1.`value`) as `agg2`, " +
         "vt1.`verdictdbtier` as `verdictdbtier0` " +
-        "from `originalSchema`.`originalTable_scrambled` as vt1 " +
-        "where vt1.`verdictdbaggblock` = 0 group by `verdictdbtier0`";
+        "from `%s`.`originalTable_scrambled` as vt1 " +
+        "where vt1.`verdictdbaggblock` = 0 group by `verdictdbtier0`",
+        originalSchema);
     assertEquals(expected, actual);
 
     ExecutionInfoToken token1 = new ExecutionInfoToken();
@@ -801,7 +811,8 @@ public class AsyncAggMultipleTiersScaleTest {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    Dimension d1 = new Dimension("originalSchema", "originalTable_scrambled", 0, 0);
+//    Dimension d1 = new Dimension("originalSchema", "originalTable_scrambled", 0, 0);
+    Dimension d1 = new Dimension(originalSchema, "originalTable_scrambled", 0, 0);
     assertEquals(
         new HyperTableCube(Arrays.asList(d1)),
         ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getMeta().getCubes().get(0));
@@ -815,13 +826,14 @@ public class AsyncAggMultipleTiersScaleTest {
     CreateTableAsSelectQuery query = (CreateTableAsSelectQuery) queryExecutionPlan.getRoot().getSources().get(0).getSources().get(0).createQuery(Arrays.asList(token));
     SelectQueryToSql queryToSql = new SelectQueryToSql(new MysqlSyntax());
     String actual = queryToSql.toSql(query.getSelect());
-    String expected = "select " +
+    String expected = String.format("select " +
         "sum(vt1.`value`) as `agg0`, " +
         "count(*) as `agg1`, " +
         "min(vt1.`value`) as `agg2`, " +
         "vt1.`verdictdbtier` as `verdictdbtier0` " +
-        "from `originalSchema`.`originalTable_scrambled` as vt1 " +
-        "where vt1.`verdictdbaggblock` = 0 group by `verdictdbtier0`";
+        "from `%s`.`originalTable_scrambled` as vt1 " +
+        "where vt1.`verdictdbaggblock` = 0 group by `verdictdbtier0`",
+        originalSchema);
     assertEquals(expected, actual);
 
     ExecutionInfoToken token1 = new ExecutionInfoToken();
