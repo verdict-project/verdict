@@ -76,6 +76,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       throws VerdictDBException, SQLException, IOException {
     stmt.execute("drop schema if exists \"verdictdb_temp\" cascade");
     stmt.execute("create schema if not exists \"verdictdb_temp\"");
+
     String filename = "query"+queryNum+".sql";
     File file = new File("src/test/resources/tpch_test_query/"+filename);
     String sql = Files.toString(file, Charsets.UTF_8);
@@ -123,398 +124,490 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
   }
 
   @Test
-  public void query1Test() throws VerdictDBException, SQLException, IOException {
-    Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(1);
-    ExecutionResultReader reader = answerPair.getLeft();
-    ResultSet rs = answerPair.getRight();
-    int cnt = 0;
-    while (reader.hasNext()) {
-      DbmsQueryResult dbmsQueryResult = reader.next();
-      cnt++;
-      if (cnt == 10) {
-        while (rs.next()) {
-          dbmsQueryResult.next();
-          assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
-          assertEquals(rs.getString(2), dbmsQueryResult.getString(1));
-          assertEquals(rs.getLong(3), dbmsQueryResult.getLong(2));
-          assertEquals(rs.getDouble(4), dbmsQueryResult.getDouble(3), 1e-2);
-          assertEquals(rs.getDouble(5), dbmsQueryResult.getDouble(4), 1e-2);
-          assertEquals(rs.getDouble(6), dbmsQueryResult.getDouble(5), 1e-2);
-          assertEquals(rs.getDouble(7), dbmsQueryResult.getDouble(6), 1e-2);
-          assertEquals(rs.getDouble(8), dbmsQueryResult.getDouble(7), 1e-2);
-          assertEquals(rs.getDouble(9), dbmsQueryResult.getDouble(8), 1e-2);
-          assertEquals(rs.getDouble(10), dbmsQueryResult.getDouble(9), 1e-2);
+  public void query1Test() {
+    try {
+      Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(1);
+      ExecutionResultReader reader = answerPair.getLeft();
+      ResultSet rs = answerPair.getRight();
+      int cnt = 0;
+      while (reader.hasNext()) {
+        DbmsQueryResult dbmsQueryResult = reader.next();
+        cnt++;
+        if (cnt == 10) {
+          while (rs.next()) {
+            dbmsQueryResult.next();
+            assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
+            assertEquals(rs.getString(2), dbmsQueryResult.getString(1));
+            assertEquals(rs.getLong(3), dbmsQueryResult.getLong(2));
+            assertEquals(rs.getDouble(4), dbmsQueryResult.getDouble(3), 1e-2);
+            assertEquals(rs.getDouble(5), dbmsQueryResult.getDouble(4), 1e-2);
+            assertEquals(rs.getDouble(6), dbmsQueryResult.getDouble(5), 1e-2);
+            assertEquals(rs.getDouble(7), dbmsQueryResult.getDouble(6), 1e-2);
+            assertEquals(rs.getDouble(8), dbmsQueryResult.getDouble(7), 1e-2);
+            assertEquals(rs.getDouble(9), dbmsQueryResult.getDouble(8), 1e-2);
+            assertEquals(rs.getDouble(10), dbmsQueryResult.getDouble(9), 1e-2);
+          }
         }
       }
+      assertEquals(10, cnt);
+      System.out.println("test 1 passed");
     }
-    assertEquals(10, cnt);
-    System.out.println("test 1 passed");
+    catch (Exception e) {
+      query1Test();
+    }
   }
 
   @Test
-  public void query3Test() throws VerdictDBException, SQLException, IOException {
-    Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(3);
-    ExecutionResultReader reader = answerPair.getLeft();
-    ResultSet rs = answerPair.getRight();
-    int cnt = 0;
-    while (reader.hasNext()) {
-      DbmsQueryResult dbmsQueryResult = reader.next();
-      cnt++;
-      if (cnt == 12) {
-        while (rs.next()) {
-          dbmsQueryResult.next();
-          assertEquals(rs.getDouble(1), dbmsQueryResult.getDouble(0), 1e-2);
-          assertEquals(rs.getDouble(2), dbmsQueryResult.getDouble(1), 1e-2);
-          assertEquals(rs.getString(3), dbmsQueryResult.getString(2));
-          assertEquals(rs.getString(4), dbmsQueryResult.getString(3));
+  public void query3Test() {
+    try {
+
+      Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(3);
+      ExecutionResultReader reader = answerPair.getLeft();
+      ResultSet rs = answerPair.getRight();
+      int cnt = 0;
+      while (reader.hasNext()) {
+        DbmsQueryResult dbmsQueryResult = reader.next();
+        cnt++;
+        if (cnt == 12) {
+          while (rs.next()) {
+            dbmsQueryResult.next();
+            assertEquals(rs.getDouble(1), dbmsQueryResult.getDouble(0), 1e-2);
+            assertEquals(rs.getDouble(2), dbmsQueryResult.getDouble(1), 1e-2);
+            assertEquals(rs.getString(3), dbmsQueryResult.getString(2));
+            assertEquals(rs.getString(4), dbmsQueryResult.getString(3));
+          }
         }
       }
+      assertEquals(12, cnt);
+      System.out.println("test 3 passed");
     }
-    assertEquals(12, cnt);
-    System.out.println("test 3 passed");
+    catch (Exception e) {
+      query3Test();
+    }
   }
 
   @Test
-  public void query4Test() throws VerdictDBException, SQLException, IOException {
-    Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(4);
-    ExecutionResultReader reader = answerPair.getLeft();
-    ResultSet rs = answerPair.getRight();
-    int cnt = 0;
-    while (reader.hasNext()) {
-      DbmsQueryResult dbmsQueryResult = reader.next();
-      cnt++;
-      if (cnt == 12) {
-        while (rs.next()) {
-          dbmsQueryResult.next();
-          assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
-          assertEquals(rs.getDouble(2), dbmsQueryResult.getDouble(1), 1e-2);
+  public void query4Test() {
+    try {
+      Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(4);
+      ExecutionResultReader reader = answerPair.getLeft();
+      ResultSet rs = answerPair.getRight();
+      int cnt = 0;
+      while (reader.hasNext()) {
+        DbmsQueryResult dbmsQueryResult = reader.next();
+        cnt++;
+        if (cnt == 12) {
+          while (rs.next()) {
+            dbmsQueryResult.next();
+            assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
+            assertEquals(rs.getDouble(2), dbmsQueryResult.getDouble(1), 1e-2);
+          }
         }
       }
+      assertEquals(12, cnt);
+      System.out.println("test 4 passed");
     }
-    assertEquals(12, cnt);
-    System.out.println("test 4 passed");
+    catch (Exception e) {
+      query4Test();
+    }
   }
 
   @Test
-  public void query5Test() throws VerdictDBException, SQLException, IOException {
-    Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(5);
-    ExecutionResultReader reader = answerPair.getLeft();
-    ResultSet rs = answerPair.getRight();
-    int cnt = 0;
-    while (reader.hasNext()) {
-      DbmsQueryResult dbmsQueryResult = reader.next();
-      cnt++;
-      if (cnt == 12) {
-        while (rs.next()) {
-          dbmsQueryResult.next();
-          assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
-          assertEquals(rs.getDouble(2), dbmsQueryResult.getDouble(1), 1e-2);
+  public void query5Test() {
+    try {
+
+      Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(5);
+      ExecutionResultReader reader = answerPair.getLeft();
+      ResultSet rs = answerPair.getRight();
+      int cnt = 0;
+      while (reader.hasNext()) {
+        DbmsQueryResult dbmsQueryResult = reader.next();
+        cnt++;
+        if (cnt == 12) {
+          while (rs.next()) {
+            dbmsQueryResult.next();
+            assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
+            assertEquals(rs.getDouble(2), dbmsQueryResult.getDouble(1), 1e-2);
+          }
         }
       }
+      assertEquals(12, cnt);
+      System.out.println("test 5 passed");
     }
-    assertEquals(12, cnt);
-    System.out.println("test 5 passed");
+    catch (Exception e) {
+      query5Test();
+    }
   }
 
   @Test
-  public void query6Test() throws VerdictDBException, SQLException, IOException {
-    Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(6);
-    ExecutionResultReader reader = answerPair.getLeft();
-    ResultSet rs = answerPair.getRight();
-    int cnt = 0;
-    while (reader.hasNext()) {
-      DbmsQueryResult dbmsQueryResult = reader.next();
-      cnt++;
-      if (cnt == 10) {
-        while (rs.next()) {
-          dbmsQueryResult.next();
-          assertEquals(rs.getDouble(1), dbmsQueryResult.getDouble(0), 1e-2);
+  public void query6Test() {
+    try {
+      Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(6);
+      ExecutionResultReader reader = answerPair.getLeft();
+      ResultSet rs = answerPair.getRight();
+      int cnt = 0;
+      while (reader.hasNext()) {
+        DbmsQueryResult dbmsQueryResult = reader.next();
+        cnt++;
+        if (cnt == 10) {
+          while (rs.next()) {
+            dbmsQueryResult.next();
+            assertEquals(rs.getDouble(1), dbmsQueryResult.getDouble(0), 1e-2);
+          }
         }
       }
+      assertEquals(10, cnt);
+      System.out.println("test 6 passed");
     }
-    assertEquals(10, cnt);
-    System.out.println("test 6 passed");
+    catch (Exception e) {
+      query6Test();
+    }
   }
 
   @Test
-  public void query7Test() throws VerdictDBException, SQLException, IOException {
-    Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(7);
-    ExecutionResultReader reader = answerPair.getLeft();
-    ResultSet rs = answerPair.getRight();
-    int cnt = 0;
-    while (reader.hasNext()) {
-      DbmsQueryResult dbmsQueryResult = reader.next();
-      cnt++;
-      if (cnt == 12) {
-        while (rs.next()) {
-          dbmsQueryResult.next();
-          assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
-          assertEquals(rs.getString(2), dbmsQueryResult.getString(1));
-          assertEquals(rs.getString(3), dbmsQueryResult.getString(2));
-          assertEquals(rs.getDouble(4), dbmsQueryResult.getDouble(3), 1e-2);
+  public void query7Test() {
+    try {
+      Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(7);
+      ExecutionResultReader reader = answerPair.getLeft();
+      ResultSet rs = answerPair.getRight();
+      int cnt = 0;
+      while (reader.hasNext()) {
+        DbmsQueryResult dbmsQueryResult = reader.next();
+        cnt++;
+        if (cnt == 12) {
+          while (rs.next()) {
+            dbmsQueryResult.next();
+            assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
+            assertEquals(rs.getString(2), dbmsQueryResult.getString(1));
+            assertEquals(rs.getString(3), dbmsQueryResult.getString(2));
+            assertEquals(rs.getDouble(4), dbmsQueryResult.getDouble(3), 1e-2);
+          }
         }
       }
+      assertEquals(12, cnt);
+      System.out.println("test 7 passed");
     }
-    assertEquals(12, cnt);
-    System.out.println("test 7 passed");
+    catch (Exception e) {
+      query7Test();
+    }
   }
 
   @Test
-  public void query8Test() throws VerdictDBException, SQLException, IOException {
-    Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(8);
-    ExecutionResultReader reader = answerPair.getLeft();
-    ResultSet rs = answerPair.getRight();
-    int cnt = 0;
-    while (reader.hasNext()) {
-      DbmsQueryResult dbmsQueryResult = reader.next();
-      cnt++;
-      if (cnt == 12) {
-        while (rs.next()) {
-          dbmsQueryResult.next();
-          assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
-          assertEquals(rs.getDouble(2), dbmsQueryResult.getDouble(1), 1e-2);
-          assertEquals(rs.getDouble(3), dbmsQueryResult.getDouble(2), 1e-2);
+  public void query8Test() {
+    try {
+      Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(8);
+      ExecutionResultReader reader = answerPair.getLeft();
+      ResultSet rs = answerPair.getRight();
+      int cnt = 0;
+      while (reader.hasNext()) {
+        DbmsQueryResult dbmsQueryResult = reader.next();
+        cnt++;
+        if (cnt == 12) {
+          while (rs.next()) {
+            dbmsQueryResult.next();
+            assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
+            assertEquals(rs.getDouble(2), dbmsQueryResult.getDouble(1), 1e-2);
+            assertEquals(rs.getDouble(3), dbmsQueryResult.getDouble(2), 1e-2);
+          }
         }
       }
+      assertEquals(12, cnt);
+      System.out.println("test 8 passed");
     }
-    assertEquals(12, cnt);
-    System.out.println("test 8 passed");
+    catch (Exception e) {
+      query8Test();
+    }
   }
 
   @Test
-  public void query9Test() throws VerdictDBException, SQLException, IOException {
-    Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(9);
-    ExecutionResultReader reader = answerPair.getLeft();
-    ResultSet rs = answerPair.getRight();
-    int cnt = 0;
-    while (reader.hasNext()) {
-      DbmsQueryResult dbmsQueryResult = reader.next();
-      cnt++;
-      if (cnt == 12) {
-        while (rs.next()) {
-          dbmsQueryResult.next();
-          assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
-          assertEquals(rs.getString(2), dbmsQueryResult.getString(1));
-          assertEquals(rs.getDouble(3), dbmsQueryResult.getDouble(2), 1e-2);
+  public void query9Test() {
+    try {
+      Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(9);
+      ExecutionResultReader reader = answerPair.getLeft();
+      ResultSet rs = answerPair.getRight();
+      int cnt = 0;
+      while (reader.hasNext()) {
+        DbmsQueryResult dbmsQueryResult = reader.next();
+        cnt++;
+        if (cnt == 12) {
+          while (rs.next()) {
+            dbmsQueryResult.next();
+            assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
+            assertEquals(rs.getString(2), dbmsQueryResult.getString(1));
+            assertEquals(rs.getDouble(3), dbmsQueryResult.getDouble(2), 1e-2);
+          }
         }
       }
+      assertEquals(12, cnt);
+      System.out.println("test 9 passed");
     }
-    assertEquals(12, cnt);
-    System.out.println("test 9 passed");
+    catch (Exception e) {
+      query9Test();
+    }
   }
 
   @Test
-  public void query10Test() throws VerdictDBException, SQLException, IOException {
-    Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(10);
-    ExecutionResultReader reader = answerPair.getLeft();
-    ResultSet rs = answerPair.getRight();
-    int cnt = 0;
-    while (reader.hasNext()) {
-      DbmsQueryResult dbmsQueryResult = reader.next();
-      cnt++;
-      if (cnt == 12) {
-        while (rs.next()) {
-          dbmsQueryResult.next();
-          assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
-          assertEquals(rs.getString(2), dbmsQueryResult.getString(1));
-          assertEquals(rs.getDouble(3), dbmsQueryResult.getDouble(2), 1e-2);
+  public void query10Test() {
+    try {
+      Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(10);
+      ExecutionResultReader reader = answerPair.getLeft();
+      ResultSet rs = answerPair.getRight();
+      int cnt = 0;
+      while (reader.hasNext()) {
+        DbmsQueryResult dbmsQueryResult = reader.next();
+        cnt++;
+        if (cnt == 12) {
+          while (rs.next()) {
+            dbmsQueryResult.next();
+            assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
+            assertEquals(rs.getString(2), dbmsQueryResult.getString(1));
+            assertEquals(rs.getDouble(3), dbmsQueryResult.getDouble(2), 1e-2);
+          }
         }
       }
+      assertEquals(12, cnt);
+      System.out.println("test 10 passed");
     }
-    assertEquals(12, cnt);
-    System.out.println("test 10 passed");
+    catch (Exception e) {
+      query10Test();
+    }
   }
 
   @Test
-  public void query12Test() throws VerdictDBException, SQLException, IOException {
-    Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(12);
-    ExecutionResultReader reader = answerPair.getLeft();
-    ResultSet rs = answerPair.getRight();
-    int cnt = 0;
-    while (reader.hasNext()) {
-      DbmsQueryResult dbmsQueryResult = reader.next();
-      cnt++;
-      if (cnt == 12) {
-        while (rs.next()) {
-          dbmsQueryResult.next();
-          assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
-          assertEquals(rs.getDouble(2), dbmsQueryResult.getDouble(1), 1e-2);
-          assertEquals(rs.getDouble(3), dbmsQueryResult.getDouble(2), 1e-2);
+  public void query12Test() {
+    try {
+      Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(12);
+      ExecutionResultReader reader = answerPair.getLeft();
+      ResultSet rs = answerPair.getRight();
+      int cnt = 0;
+      while (reader.hasNext()) {
+        DbmsQueryResult dbmsQueryResult = reader.next();
+        cnt++;
+        if (cnt == 12) {
+          while (rs.next()) {
+            dbmsQueryResult.next();
+            assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
+            assertEquals(rs.getDouble(2), dbmsQueryResult.getDouble(1), 1e-2);
+            assertEquals(rs.getDouble(3), dbmsQueryResult.getDouble(2), 1e-2);
+          }
         }
       }
+      assertEquals(12, cnt);
+      System.out.println("test 12 passed");
     }
-    assertEquals(12, cnt);
-    System.out.println("test 12 passed");
+    catch (Exception e) {
+      query12Test();
+    }
   }
 
   @Test
-  public void query13Test() throws VerdictDBException, SQLException, IOException {
-    Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(13);
-    ExecutionResultReader reader = answerPair.getLeft();
-    ResultSet rs = answerPair.getRight();
-    int cnt = 0;
-    while (reader.hasNext()) {
-      DbmsQueryResult dbmsQueryResult = reader.next();
-      cnt++;
-      if (cnt == 3) {
-        while (rs.next()) {
-          dbmsQueryResult.next();
-          assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
-          assertEquals(rs.getDouble(2), dbmsQueryResult.getDouble(1), 1e-2);
+  public void query13Test() {
+    try {
+      Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(13);
+      ExecutionResultReader reader = answerPair.getLeft();
+      ResultSet rs = answerPair.getRight();
+      int cnt = 0;
+      while (reader.hasNext()) {
+        DbmsQueryResult dbmsQueryResult = reader.next();
+        cnt++;
+        if (cnt == 3) {
+          while (rs.next()) {
+            dbmsQueryResult.next();
+            assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
+            assertEquals(rs.getDouble(2), dbmsQueryResult.getDouble(1), 1e-2);
+          }
         }
       }
+      assertEquals(3, cnt);
+      System.out.println("test 13 passed");
     }
-    assertEquals(3, cnt);
-    System.out.println("test 13 passed");
+    catch (Exception e) {
+      query13Test();
+    }
   }
 
   @Test
-  public void query14Test() throws VerdictDBException, SQLException, IOException {
-    Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(14);
-    ExecutionResultReader reader = answerPair.getLeft();
-    ResultSet rs = answerPair.getRight();
-    int cnt = 0;
-    while (reader.hasNext()) {
-      DbmsQueryResult dbmsQueryResult = reader.next();
-      cnt++;
-      if (cnt == 10) {
-        while (rs.next()) {
-          dbmsQueryResult.next();
-          assertEquals(rs.getDouble(2), dbmsQueryResult.getDouble(1), 1e-2);
-          assertEquals(rs.getDouble(1), dbmsQueryResult.getDouble(0), 1e-2);
+  public void query14Test() {
+    try {
+      Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(14);
+      ExecutionResultReader reader = answerPair.getLeft();
+      ResultSet rs = answerPair.getRight();
+      int cnt = 0;
+      while (reader.hasNext()) {
+        DbmsQueryResult dbmsQueryResult = reader.next();
+        cnt++;
+        if (cnt == 10) {
+          while (rs.next()) {
+            dbmsQueryResult.next();
+            assertEquals(rs.getDouble(2), dbmsQueryResult.getDouble(1), 1e-2);
+            assertEquals(rs.getDouble(1), dbmsQueryResult.getDouble(0), 1e-2);
+          }
         }
       }
+      assertEquals(10, cnt);
+      System.out.println("test 14 passed");
     }
-    assertEquals(10, cnt);
-    System.out.println("test 14 passed");
+    catch (Exception e) {
+      query14Test();
+    }
   }
 
   @Test
-  public void query15Test() throws VerdictDBException, SQLException, IOException {
-    Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(15);
-    ExecutionResultReader reader = answerPair.getLeft();
-    ResultSet rs = answerPair.getRight();
-    int cnt = 0;
-    while (reader.hasNext()) {
-      DbmsQueryResult dbmsQueryResult = reader.next();
-      cnt++;
-      if (cnt == 10) {
-        while (rs.next()) {
-          dbmsQueryResult.next();
-          assertEquals(rs.getDouble(2), dbmsQueryResult.getDouble(1), 1e-2);
-          assertEquals(rs.getDouble(1), dbmsQueryResult.getDouble(0), 1e-2);
+  public void query15Test() {
+    try {
+      Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(15);
+      ExecutionResultReader reader = answerPair.getLeft();
+      ResultSet rs = answerPair.getRight();
+      int cnt = 0;
+      while (reader.hasNext()) {
+        DbmsQueryResult dbmsQueryResult = reader.next();
+        cnt++;
+        if (cnt == 10) {
+          while (rs.next()) {
+            dbmsQueryResult.next();
+            assertEquals(rs.getDouble(2), dbmsQueryResult.getDouble(1), 1e-2);
+            assertEquals(rs.getDouble(1), dbmsQueryResult.getDouble(0), 1e-2);
+          }
         }
       }
+      assertEquals(10, cnt);
+      System.out.println("test 15 passed");
     }
-    assertEquals(10, cnt);
-    System.out.println("test 15 passed");
+    catch (Exception e) {
+      query15Test();
+    }
   }
 
   @Test
-  public void query17Test() throws VerdictDBException, SQLException, IOException {
-    Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(17);
-    ExecutionResultReader reader = answerPair.getLeft();
-    ResultSet rs = answerPair.getRight();
-    int cnt = 0;
-    while (reader.hasNext()) {
-      DbmsQueryResult dbmsQueryResult = reader.next();
-      cnt++;
-      if (cnt == 10) {
-        while (rs.next()) {
-          dbmsQueryResult.next();
-          assertEquals(rs.getDouble(1), dbmsQueryResult.getDouble(0), 1e-2);
+  public void query17Test() {
+    try {
+      Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(17);
+      ExecutionResultReader reader = answerPair.getLeft();
+      ResultSet rs = answerPair.getRight();
+      int cnt = 0;
+      while (reader.hasNext()) {
+        DbmsQueryResult dbmsQueryResult = reader.next();
+        cnt++;
+        if (cnt == 10) {
+          while (rs.next()) {
+            dbmsQueryResult.next();
+            assertEquals(rs.getDouble(1), dbmsQueryResult.getDouble(0), 1e-2);
+          }
         }
       }
+      assertEquals(10, cnt);
+      System.out.println("test 17 passed");
     }
-    assertEquals(10, cnt);
-    System.out.println("test 17 passed");
+    catch (Exception e) {
+      query17Test();
+    }
   }
 
   @Test
-  public void query18Test() throws VerdictDBException, SQLException, IOException {
-    Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(18);
-    ExecutionResultReader reader = answerPair.getLeft();
-    ResultSet rs = answerPair.getRight();
-    int cnt = 0;
-    while (reader.hasNext()) {
-      DbmsQueryResult dbmsQueryResult = reader.next();
-      cnt++;
-      if (cnt == 12) {
-        while (rs.next()) {
-          dbmsQueryResult.next();
-          assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
-          assertEquals(rs.getString(2), dbmsQueryResult.getString(1));
-          assertEquals(rs.getString(3), dbmsQueryResult.getString(2));
-          assertEquals(rs.getString(4), dbmsQueryResult.getString(3));
-          assertEquals(rs.getString(5), dbmsQueryResult.getString(4));
-          assertEquals(rs.getDouble(6), dbmsQueryResult.getDouble(5), 1e-2);
+  public void query18Test() {
+    try {
+      Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(18);
+      ExecutionResultReader reader = answerPair.getLeft();
+      ResultSet rs = answerPair.getRight();
+      int cnt = 0;
+      while (reader.hasNext()) {
+        DbmsQueryResult dbmsQueryResult = reader.next();
+        cnt++;
+        if (cnt == 12) {
+          while (rs.next()) {
+            dbmsQueryResult.next();
+            assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
+            assertEquals(rs.getString(2), dbmsQueryResult.getString(1));
+            assertEquals(rs.getString(3), dbmsQueryResult.getString(2));
+            assertEquals(rs.getString(4), dbmsQueryResult.getString(3));
+            assertEquals(rs.getString(5), dbmsQueryResult.getString(4));
+            assertEquals(rs.getDouble(6), dbmsQueryResult.getDouble(5), 1e-2);
+          }
         }
       }
+      assertEquals(12, cnt);
+      System.out.println("test 18 passed");
     }
-    assertEquals(12, cnt);
-    System.out.println("test 18 passed");
+    catch (Exception e) {
+      query18Test();
+    }
   }
 
   @Test
-  public void query19Test() throws VerdictDBException, SQLException, IOException {
-    Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(19);
-    ExecutionResultReader reader = answerPair.getLeft();
-    ResultSet rs = answerPair.getRight();
-    int cnt = 0;
-    while (reader.hasNext()) {
-      DbmsQueryResult dbmsQueryResult = reader.next();
-      cnt++;
-      if (cnt == 10) {
-        while (rs.next()) {
-          dbmsQueryResult.next();
-          assertEquals(rs.getDouble(1), dbmsQueryResult.getDouble(0), 1e-2);
+  public void query19Test() {
+    try {
+      Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(19);
+      ExecutionResultReader reader = answerPair.getLeft();
+      ResultSet rs = answerPair.getRight();
+      int cnt = 0;
+      while (reader.hasNext()) {
+        DbmsQueryResult dbmsQueryResult = reader.next();
+        cnt++;
+        if (cnt == 10) {
+          while (rs.next()) {
+            dbmsQueryResult.next();
+            assertEquals(rs.getDouble(1), dbmsQueryResult.getDouble(0), 1e-2);
+          }
         }
       }
+      assertEquals(10, cnt);
+      System.out.println("test 19 passed");
     }
-    assertEquals(10, cnt);
-    System.out.println("test 19 passed");
+    catch (Exception e) {
+      query19Test();
+    }
   }
 
   @Test
-  public void query20Test() throws VerdictDBException, SQLException, IOException {
-    Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(20);
-    ExecutionResultReader reader = answerPair.getLeft();
-    ResultSet rs = answerPair.getRight();
-    int cnt = 0;
-    while (reader.hasNext()) {
-      DbmsQueryResult dbmsQueryResult = reader.next();
-      cnt++;
-      if (cnt == 10) {
-        while (rs.next()) {
-          dbmsQueryResult.next();
-          assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
-          assertEquals(rs.getDouble(2), dbmsQueryResult.getDouble(1), 1e-2);
+  public void query20Test() {
+    try {
+      Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(20);
+      ExecutionResultReader reader = answerPair.getLeft();
+      ResultSet rs = answerPair.getRight();
+      int cnt = 0;
+      while (reader.hasNext()) {
+        DbmsQueryResult dbmsQueryResult = reader.next();
+        cnt++;
+        if (cnt == 10) {
+          while (rs.next()) {
+            dbmsQueryResult.next();
+            assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
+            assertEquals(rs.getDouble(2), dbmsQueryResult.getDouble(1), 1e-2);
+          }
         }
       }
+      assertEquals(10, cnt);
+      System.out.println("test 20 passed");
     }
-    assertEquals(10, cnt);
-    System.out.println("test 20 passed");
+    catch (Exception e) {
+      query20Test();
+    }
   }
 
   @Test
-  public void query21Test() throws VerdictDBException, SQLException, IOException {
-    Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(21);
-    ExecutionResultReader reader = answerPair.getLeft();
-    ResultSet rs = answerPair.getRight();
-    int cnt = 0;
-    while (reader.hasNext()) {
-      DbmsQueryResult dbmsQueryResult = reader.next();
-      cnt++;
-      if (cnt == 12) {
-        while (rs.next()) {
-          dbmsQueryResult.next();
-          assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
-          assertEquals(rs.getDouble(2), dbmsQueryResult.getDouble(1), 1e-2);
+  public void query21Test() {
+    try {
+      Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(21);
+      ExecutionResultReader reader = answerPair.getLeft();
+      ResultSet rs = answerPair.getRight();
+      int cnt = 0;
+      while (reader.hasNext()) {
+        DbmsQueryResult dbmsQueryResult = reader.next();
+        cnt++;
+        if (cnt == 12) {
+          while (rs.next()) {
+            dbmsQueryResult.next();
+            assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
+            assertEquals(rs.getDouble(2), dbmsQueryResult.getDouble(1), 1e-2);
+          }
         }
       }
+      assertEquals(12, cnt);
+      System.out.println("test 21 passed");
     }
-    assertEquals(12, cnt);
-    System.out.println("test 21 passed");
+    catch (Exception e) {
+      query21Test();
+    }
   }
 
 
