@@ -9,11 +9,9 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
+import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -24,9 +22,7 @@ import org.verdictdb.exception.VerdictDBDbmsException;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
-/**
- * Created by Dong Young Yoon on 7/18/18.
- */
+/** Created by Dong Young Yoon on 7/18/18. */
 @RunWith(Parameterized.class)
 public class JdbcTpchQueryTestForAllDatabases {
 
@@ -38,6 +34,8 @@ public class JdbcTpchQueryTestForAllDatabases {
 
   private static final String MYSQL_HOST;
 
+  private static final int MYSQL_TPCH_QUERY_COUNT = 21;
+
   private static final int TPCH_QUERY_COUNT = 22;
 
   private String database = "";
@@ -45,14 +43,13 @@ public class JdbcTpchQueryTestForAllDatabases {
   private int query;
 
   // TODO: Add support for all four databases
-//  private static final String[] targetDatabases = {"mysql", "impala", "redshift", "postgresql"};
-  private static final String[] targetDatabases = {"mysql"};
+  //  private static final String[] targetDatabases = {"mysql", "impala", "redshift", "postgresql"};
+  private static final String[] targetDatabases = {"mysql", "impala"};
 
   public JdbcTpchQueryTestForAllDatabases(String database, int query) {
     this.database = database;
     this.query = query;
   }
-
 
   static {
     String env = System.getenv("BUILD_ENV");
@@ -63,24 +60,21 @@ public class JdbcTpchQueryTestForAllDatabases {
     }
   }
 
-  private static final String MYSQL_DATABASE = "tpch_flat_orc_2";
+  private static final String MYSQL_DATABASE =
+      "tpch_test_" + RandomStringUtils.randomAlphanumeric(4);
 
   private static final String MYSQL_USER = "root";
 
   private static final String MYSQL_PASSWORD = "";
 
   private static final String IMPALA_HOST;
+//  private static final String IMPALA_HOST = "ec2-54-145-197-147.compute-1.amazonaws.com";
 
   static {
-    String env = System.getenv("BUILD_ENV");
-    if (env != null && (env.equals("GitLab") || env.equals("DockerCompose"))) {
-      IMPALA_HOST = "impala";
-    } else {
-      IMPALA_HOST = "localhost";
-    }
+    IMPALA_HOST = System.getenv("VERDICTDB_TEST_IMPALA_HOST");
   }
 
-  private static final String IMPALA_DATABASE = "default";
+  private static final String IMPALA_DATABASE = "tpch_2_parquet";
 
   private static final String IMPALA_USER = "";
 
@@ -128,33 +122,45 @@ public class JdbcTpchQueryTestForAllDatabases {
   @BeforeClass
   public static void setupDatabases() throws SQLException, VerdictDBDbmsException {
     setupMysql();
+    setupImpala();
     // TODO: Add below databases too
-//    setupImpala();
-//    setupRedshift();
-//    setupPostgresql();
+    //    setupRedshift();
+    //    setupPostgresql();
   }
 
-  @Parameterized.Parameters(name="{0}_tpch_{1}")
+  @Parameterized.Parameters(name = "{0}_tpch_{1}")
   public static Collection databases() {
     Collection<Object[]> params = new ArrayList<>();
 
     for (String database : targetDatabases) {
-      for (int query = 1; query <= TPCH_QUERY_COUNT; ++query) {
-        params.add(new Object[]{database, query});
+      int queryCount = 0;
+      switch (database) {
+        case "mysql":
+          queryCount = MYSQL_TPCH_QUERY_COUNT;
+          break;
+        case "impala":
+          queryCount = TPCH_QUERY_COUNT;
+          break;
       }
+      for (int query = 1; query <= queryCount; ++query) {
+        params.add(new Object[] {database, query});
+      }
+//        params.add(new Object[] {database, 13});
     }
     return params;
   }
-
 
   private static Connection setupMysql() throws SQLException, VerdictDBDbmsException {
     String mysqlConnectionString =
         String.format("jdbc:mysql://%s?autoReconnect=true&useSSL=false", MYSQL_HOST);
     String vcMysqlConnectionString =
-        String.format("jdbc:mysql://%s/%s?autoReconnect=true&useSSL=false", MYSQL_HOST, MYSQL_DATABASE);
-    Connection conn = DatabaseConnectionHelpers.setupMySql(
-        mysqlConnectionString, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE);
-    VerdictConnection vc = new VerdictConnection(vcMysqlConnectionString, MYSQL_USER, MYSQL_PASSWORD);
+        String.format(
+            "jdbc:mysql://%s/%s?autoReconnect=true&useSSL=false", MYSQL_HOST, MYSQL_DATABASE);
+    Connection conn =
+        DatabaseConnectionHelpers.setupMySql(
+            mysqlConnectionString, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE);
+    VerdictConnection vc =
+        new VerdictConnection(vcMysqlConnectionString, MYSQL_USER, MYSQL_PASSWORD);
     conn.setCatalog(MYSQL_DATABASE);
     connMap.put("mysql", conn);
     vcMap.put("mysql", vc);
@@ -162,11 +168,12 @@ public class JdbcTpchQueryTestForAllDatabases {
     return conn;
   }
 
-  // TODO: add tpch setup step for impala
   private static Connection setupImpala() throws SQLException, VerdictDBDbmsException {
     String connectionString =
-        String.format("jdbc:impala://%s:21050/%s", IMPALA_HOST, IMPALA_DATABASE);
-    Connection conn = DriverManager.getConnection(connectionString, IMPALA_USER, IMPALA_PASSWORD);
+        String.format("jdbc:impala://%s:21050", IMPALA_HOST);
+    Connection conn =
+        DatabaseConnectionHelpers.setupImpala(
+            connectionString, IMPALA_USER, IMPALA_PASSWORD, IMPALA_DATABASE);
     VerdictConnection vc = new VerdictConnection(connectionString, IMPALA_USER, IMPALA_PASSWORD);
     connMap.put("impala", conn);
     vcMap.put("impala", vc);
@@ -178,20 +185,25 @@ public class JdbcTpchQueryTestForAllDatabases {
   public static Connection setupRedshift() throws SQLException, VerdictDBDbmsException {
     String connectionString =
         String.format("jdbc:redshift://%s/%s", REDSHIFT_HOST, REDSHIFT_DATABASE);
-    Connection conn = DriverManager.getConnection(connectionString, REDSHIFT_USER, REDSHIFT_PASSWORD);
-    VerdictConnection vc = new VerdictConnection(connectionString, REDSHIFT_USER, REDSHIFT_PASSWORD);
+    Connection conn =
+        DriverManager.getConnection(connectionString, REDSHIFT_USER, REDSHIFT_PASSWORD);
+    VerdictConnection vc =
+        new VerdictConnection(connectionString, REDSHIFT_USER, REDSHIFT_PASSWORD);
     connMap.put("redshift", conn);
     vcMap.put("redshift", vc);
     schemaMap.put("redshift", "");
     return conn;
   }
 
-  public static Connection setupPostgresql() throws SQLException, VerdictDBDbmsException, IOException {
+  public static Connection setupPostgresql()
+      throws SQLException, VerdictDBDbmsException, IOException {
     String connectionString =
         String.format("jdbc:postgresql://%s/%s", POSTGRES_HOST, POSTGRES_DATABASE);
-    Connection conn = DatabaseConnectionHelpers.setupPostgresql(
-        connectionString, POSTGRES_HOST, POSTGRES_PASSWORD, POSTGRES_SCHEMA);
-    VerdictConnection vc = new VerdictConnection(connectionString, POSTGRES_USER, POSTGRES_PASSWORD);
+    Connection conn =
+        DatabaseConnectionHelpers.setupPostgresql(
+            connectionString, POSTGRES_HOST, POSTGRES_PASSWORD, POSTGRES_SCHEMA);
+    VerdictConnection vc =
+        new VerdictConnection(connectionString, POSTGRES_USER, POSTGRES_PASSWORD);
     connMap.put("postgresql", conn);
     vcMap.put("postgresql", vc);
     schemaMap.put("postgresql", "");
@@ -201,10 +213,19 @@ public class JdbcTpchQueryTestForAllDatabases {
   @Test
   public void testTpch() throws IOException, SQLException {
     ClassLoader classLoader = getClass().getClassLoader();
-    String filename = "companya/mysql_queries/tpchMySqlQuery" + query + ".sql";
+    String filename = "";
+    switch (database) {
+      case "mysql":
+        filename = "companya/mysql_queries/tpchMySqlQuery" + query + ".sql";
+        break;
+      case "impala":
+        filename = "companya/impala_queries/tpchImpalaQuery" + query + ".sql";
+        break;
+    }
     File queryFile = new File(classLoader.getResource(filename).getFile());
     if (queryFile.exists()) {
       String sql = Files.toString(queryFile, Charsets.UTF_8);
+//      sql = "select * from tpch_2_parquet.lineitem limit 1000";
 
       Statement jdbcStmt = connMap.get(database).createStatement();
       Statement vcStmt = vcMap.get(database).createStatement();
@@ -213,15 +234,20 @@ public class JdbcTpchQueryTestForAllDatabases {
       ResultSet vcRs = vcStmt.executeQuery(sql);
 
       int columnCount = jdbcRs.getMetaData().getColumnCount();
-      while (jdbcRs.next() && vcRs.next()) {
+      boolean jdbcNext = jdbcRs.next();
+      boolean vcNext = vcRs.next();
+      while (jdbcNext && vcNext) {
+        assertEquals(jdbcNext, vcNext);
         for (int i = 1; i <= columnCount; ++i) {
           System.out.println(jdbcRs.getObject(i) + " : " + vcRs.getObject(i));
           assertEquals(jdbcRs.getObject(i), vcRs.getObject(i));
         }
+        jdbcNext = jdbcRs.next();
+        vcNext = vcRs.next();
       }
+      assertEquals(jdbcNext, vcNext);
     } else {
       System.out.println(String.format("tpch%d does not exist.", query));
     }
   }
-
 }

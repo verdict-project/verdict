@@ -134,7 +134,7 @@ public class JdbcQueryDataTypeTestForAllDatabases {
         String.format("jdbc:mysql://%s?autoReconnect=true&useSSL=false", MYSQL_HOST);
     String vcMysqlConnectionString =
         String.format(
-            "jdbc:mysql://%s/%s?autoReconnect=true&useSSL=false", MYSQL_HOST, MYSQL_DATABASE);
+            "jdbc:verdict:mysql://%s/%s?autoReconnect=true&useSSL=false", MYSQL_HOST, MYSQL_DATABASE);
     Connection conn =
         DatabaseConnectionHelpers.setupMySqlForDataTypeTest(
             mysqlConnectionString, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE, TABLE_NAME);

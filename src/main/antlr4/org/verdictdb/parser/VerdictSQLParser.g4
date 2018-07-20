@@ -303,6 +303,8 @@ expression
     | op=('+' | '-') expression                                #unary_operator_expression
     | expression op=('+' | '-' | '&' | '^' | '|' | '#' | '||' | '<<' | '>>'  ) expression   #binary_operator_expression
     | expression comparison_operator expression                #binary_operator_expression
+    | NOT expression                                           #not_expression
+    | expression IS null_notnull                               #is_null_expression
     | interval                                                 #interval_expression
     | date                                                     #date_expression
     | function_call                                            #function_call_expression
@@ -368,13 +370,14 @@ search_condition_not
 
 predicate
     : EXISTS '(' subquery ')'                                               # exists_predicate
+    | '(' search_condition ')'                                              # bracket_predicate
+    | predicate comparison_operator expression                              # comp_pred_expr_predicate
     | expression comparison_operator expression                             # comp_expr_predicate
     | expression comparison_operator (ALL | SOME | ANY) '(' subquery ')'    # setcomp_expr_predicate
     | expression NOT? BETWEEN expression AND expression                     # comp_between_expr
     | expression NOT? IN '(' (subquery | expression_list) ')'               # in_predicate
-    | expression NOT? LIKE expression (ESCAPE expression)?                  # like_predicate
+    | expression NOT? (LIKE | RLIKE) expression (ESCAPE expression)?                  # like_predicate
     | expression IS null_notnull                                            # is_predicate
-    | '(' search_condition ')'                                              # bracket_predicate
     | predicate_function                                               # func_predicate
     ;
 
@@ -618,7 +621,7 @@ nary_function
     ;
 
 ternary_function
-    : function_name=(CONV | SUBSTR | HASH | RPAD | SUBSTRING | LPAD | MID | REPLACE | SUBSTRING_INDEX | MAKETIME | IF
+    : function_name=(IF | CONV | SUBSTR | HASH | RPAD | SUBSTRING | LPAD | MID | REPLACE | SUBSTRING_INDEX | MAKETIME | IF
     | CONVERT | SPLIT_PART | TRANSLATE | MAKE_DATE | MAKE_TIME | SETWEIGHT | TS_REWRITE | TSQUERY_PHRASE | XMLROOT
     | XPATH | XPATH_EXISTS | ARRAY_REPLACE | ARRAY_TO_STRING | STRING_TO_ARRAY | LOCATE)
       '(' expression ',' expression ',' expression ')'
@@ -642,7 +645,7 @@ binary_function
     ;
 
 unary_function
-    : function_name=(ROUND | CHAR_LENGTH | FLOOR | CEIL | CEILING | EXP | LN | LOG | LOG10 | LOG2 | SIN | COS | COT | TAN | SIGN | RAND | FNV_HASH | RAWTOHEX
+    : function_name=(ISNULL |ROUND | CHAR_LENGTH | FLOOR | CEIL | CEILING | EXP | LN | LOG | LOG10 | LOG2 | SIN | COS | COT | TAN | SIGN | RAND | FNV_HASH | RAWTOHEX
      | ABS | STDDEV | SQRT | LCASE | MD5 | CRC32 | YEAR | QUARTER | MONTH | DAY | HOUR | MINUTE | SECOND | WEEKOFYEAR | LOWER
      | UPPER | UCASE | ASCII | CHARACTER_LENGTH | FACTORIAL | CBRT | LENGTH | TRIM | ASIN | ACOS | ATAN | ATAN2 | DEGREES | RADIANS | POSITIVE
      | NEGATIVE | BROUND | BIN | HEX | UNHEX | FROM_UNIXTIME | TO_DATE | CHR | LTRIM | RTRIM| REVERSE | SPACE_FUNCTION | SHA1

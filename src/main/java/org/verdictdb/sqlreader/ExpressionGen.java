@@ -100,6 +100,24 @@ public class ExpressionGen extends VerdictSQLParserBaseVisitor<UnnamedColumn> {
   }
 
   @Override
+  public UnnamedColumn visitIs_null_expression(VerdictSQLParser.Is_null_expressionContext ctx) {
+    UnnamedColumn left = visit(ctx.expression());
+
+    if (ctx.null_notnull().NOT() == null) {
+      return ColumnOp.rightisnull(left); // ?? is null
+    } else {
+      return ColumnOp.rightisnotnull(left); // ?? is not null
+    }
+  }
+
+  @Override
+  public UnnamedColumn visitNot_expression(VerdictSQLParser.Not_expressionContext ctx) {
+    UnnamedColumn col = visit(ctx.expression());
+
+    return ColumnOp.not(col);
+  }
+
+  @Override
   public ColumnOp visitFunction_call_expression(VerdictSQLParser.Function_call_expressionContext ctx) {
     VerdictSQLParserBaseVisitor<ColumnOp> v = new VerdictSQLParserBaseVisitor<ColumnOp>() {
 

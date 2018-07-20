@@ -197,6 +197,7 @@ public class DatabaseConnectionHelpers {
                 + "  `n_regionkey`  INT, "
                 + "  `n_comment`    STRING, "
                 + "  `n_dummy`      STRING) "
+                + "ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' "
                 + "LOCATION '/tmp/tpch_test_data/nation'",
             schema));
     dbmsConn.execute(
@@ -206,6 +207,7 @@ public class DatabaseConnectionHelpers {
                 + "  `r_name`       STRING, "
                 + "  `r_comment`    STRING, "
                 + "  `r_dummy`      STRING) "
+                + "ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' "
                 + "LOCATION '/tmp/tpch_test_data/region'",
             schema));
     dbmsConn.execute(
@@ -221,6 +223,7 @@ public class DatabaseConnectionHelpers {
                 + "  `p_retailprice` DECIMAL(15,2) , "
                 + "  `p_comment`     STRING, "
                 + "  `p_dummy`       STRING) "
+                + "ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' "
                 + "LOCATION '/tmp/tpch_test_data/part'",
             schema));
     dbmsConn.execute(
@@ -234,6 +237,7 @@ public class DatabaseConnectionHelpers {
                 + "  `s_acctbal`     DECIMAL(15,2) , "
                 + "  `s_comment`     STRING, "
                 + "  `s_dummy`       STRING) "
+                + "ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' "
                 + "LOCATION '/tmp/tpch_test_data/supplier'",
             schema));
     dbmsConn.execute(
@@ -245,6 +249,7 @@ public class DatabaseConnectionHelpers {
                 + "  `ps_supplycost`  DECIMAL(15,2)  , "
                 + "  `ps_comment`     STRING, "
                 + "  `ps_dummy`       STRING) "
+                + "ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' "
                 + "LOCATION '/tmp/tpch_test_data/partsupp'",
             schema));
     dbmsConn.execute(
@@ -259,6 +264,7 @@ public class DatabaseConnectionHelpers {
                 + "  `c_mktsegment`  STRING , "
                 + "  `c_comment`     STRING, "
                 + "  `c_dummy`       STRING) "
+                + "ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' "
                 + "LOCATION '/tmp/tpch_test_data/customer'",
             schema));
     dbmsConn.execute(
@@ -275,6 +281,7 @@ public class DatabaseConnectionHelpers {
                 + "  `o_shippriority`   INT, "
                 + "  `o_comment`        STRING, "
                 + "  `o_dummy`          STRING) "
+                + "ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' "
                 + "LOCATION '/tmp/tpch_test_data/orders'",
             schema));
     dbmsConn.execute(
@@ -300,7 +307,9 @@ public class DatabaseConnectionHelpers {
                 + "  `l_shipmode`     STRING , "
                 + "  `l_comment`      STRING, "
                 + "  `l_dummy`        STRING) "
-                + "LOCATION '/tmp/tpch_test_data/lineitem'",
+                + "ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' "
+                + "LOCATION '/tmp/tpch_test_data/lineitem' "
+            ,
             schema));
 
     return conn;

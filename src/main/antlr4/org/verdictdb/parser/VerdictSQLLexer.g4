@@ -163,6 +163,7 @@ RETURN:                          R E T U R N;
 REVERT:                          R E V E R T;
 REVOKE:                          R E V O K E;
 RIGHT:                           R I G H T;
+RLIKE:                           R L I K E;
 ROLLBACK:                        R O L L B A C K;
 ROWCOUNT:                        R O W C O U N T;
 ROWGUIDCOL:                      R O W G U I D C O L;

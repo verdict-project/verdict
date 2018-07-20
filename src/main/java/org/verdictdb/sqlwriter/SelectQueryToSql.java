@@ -161,6 +161,10 @@ public class SelectQueryToSql {
         return withParentheses(columnOp.getOperand(0)) + " like " + withParentheses(columnOp.getOperand(1));
       } else if (columnOp.getOpType().equals("notlike")) {
         return withParentheses(columnOp.getOperand(0)) + " not like " + withParentheses(columnOp.getOperand(1));
+      } else if (columnOp.getOpType().equals("rlike")) {
+        return withParentheses(columnOp.getOperand(0)) + " rlike " + withParentheses(columnOp.getOperand(1));
+      } else if (columnOp.getOpType().equals("notrlike")) {
+        return withParentheses(columnOp.getOperand(0)) + " not rlike " + withParentheses(columnOp.getOperand(1));
       } else if (columnOp.getOpType().equals("exists")) {
         return "exists " + withParentheses(columnOp.getOperand());
       } else if (columnOp.getOpType().equals("notexists")) {
@@ -198,8 +202,13 @@ public class SelectQueryToSql {
       } else if (columnOp.getOpType().equals("countdistinct")) {
         return "count(distinct " + withParentheses(columnOp.getOperand()) + ")";
       } else if (columnOp.getOpType().equals("substr")) {
-        return "substr(" + withParentheses(columnOp.getOperand(0)) + ", " +
-            withParentheses(columnOp.getOperand(1)) + ", " + withParentheses(columnOp.getOperand(2)) + ")";
+        if (columnOp.getOperands().size() == 3) {
+          return "substr(" + withParentheses(columnOp.getOperand(0)) + ", " +
+              withParentheses(columnOp.getOperand(1)) + ", " + withParentheses(columnOp.getOperand(2)) + ")";
+        } else {
+          return "substr(" + withParentheses(columnOp.getOperand(0)) + ", " +
+              withParentheses(columnOp.getOperand(1)) + ")";
+        }
       } else if (columnOp.getOpType().equals("rand")) {
         return syntax.randFunction();
       } else if (columnOp.getOpType().equals("cast")) {
