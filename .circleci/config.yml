@@ -26,7 +26,7 @@ jobs:
       - checkout
       - run: echo "$(cd "$(dirname "src/test/resources")"; pwd)/$(basename "src/test/resources")"
       - run: bash wait_until_ready.sh
-    
+
   build-jdk7:
     docker:
       # specify the version you desire here
