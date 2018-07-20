@@ -138,6 +138,11 @@
       <artifactId>jackson-databind</artifactId>
       <version>2.6.5</version>
     </dependency>
+    <dependency>
+      <groupId>com.esotericsoftware</groupId>
+      <artifactId>kryo</artifactId>
+      <version>5.0.0-RC1</version>
+    </dependency>
 
     <!-- test supports -->
     <dependency>
@@ -150,7 +155,7 @@
       <groupId>org.postgresql</groupId>
       <artifactId>postgresql</artifactId>
       <version>42.2.2.jre7</version>
-      <scope>test</scope>
+      <!--<scope>test</scope>-->
     </dependency>
     <dependency>
       <groupId>mysql</groupId>

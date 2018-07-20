@@ -26,6 +26,9 @@ public class JdbcQueryResult extends AttributeValueRetrievalHelper implements Db
 
   DbmsQueryResultMetaData dbmsQueryResultMetaData = new DbmsQueryResultMetaData();
 
+  public JdbcQueryResult() {
+  }
+
   public JdbcQueryResult(ResultSet resultSet) throws SQLException {
     List<Boolean> isCurrency = new ArrayList<>();
     List<Integer> isNullable = new ArrayList<>();

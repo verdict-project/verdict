@@ -3,9 +3,19 @@ package org.verdictdb.core.execplan;
 import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.Output;
+import com.esotericsoftware.kryo.util.DefaultInstantiatorStrategy;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
+import org.objenesis.strategy.StdInstantiatorStrategy;
+import org.postgresql.core.PGStream;
+import org.postgresql.ds.PGSimpleDataSource;
+import org.postgresql.jdbc.PgSQLXML;
+import org.verdictdb.commons.UUIDSerializer;
+import org.verdictdb.connection.JdbcQueryResult;
 
 public class ExecutionInfoToken implements Serializable {
 
@@ -85,18 +95,26 @@ public class ExecutionInfoToken implements Serializable {
     try {
       ByteArrayOutputStream bos = new ByteArrayOutputStream();
       ObjectOutputStream out = new ObjectOutputStream(bos);
-      out.writeObject(this);
-      out.flush();
-      out.close();
+      Kryo kryo = new Kryo();
+      kryo.setRegistrationRequired(false);
+      kryo.addDefaultSerializer(UUID.class, UUIDSerializer.class);
+//      kryo.setInstantiatorStrategy(new DefaultInstantiatorStrategy(new StdInstantiatorStrategy()));
+//      kryo.register(PGStream.class);
+      kryo.register(PgSQLXML.class);
+      return kryo.copy(this);
 
-      ObjectInputStream in = new ObjectInputStream(
-          new ByteArrayInputStream(bos.toByteArray()));
-      ExecutionInfoToken copiedToken = (ExecutionInfoToken) in.readObject();
-      return copiedToken;
+//      out.writeObject(this);
+//      out.flush();
+//      out.close();
+//
+//      ObjectInputStream in = new ObjectInputStream(
+//          new ByteArrayInputStream(bos.toByteArray()));
+//      ExecutionInfoToken copiedToken = (ExecutionInfoToken) in.readObject();
+//      return copiedToken;
       
-    } catch (ClassNotFoundException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
+//    } catch (ClassNotFoundException e) {
+//      // TODO Auto-generated catch block
+//      e.printStackTrace();
     } catch (NotSerializableException e) {
       // TODO: handle this case
       e.printStackTrace();

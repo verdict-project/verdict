@@ -32,7 +32,7 @@ public class JdbcQueryDataTypeTestForAllDatabases {
 
   // TODO: Add support for all four databases
 //  private static final String[] targetDatabases = {"mysql", "impala", "redshift", "postgresql"};
-  private static final String[] targetDatabases = {"mysql", "postgres", "redshift"};
+  private static final String[] targetDatabases = {"postgresql"};
 
   public JdbcQueryDataTypeTestForAllDatabases(String database) {
     this.database = database;

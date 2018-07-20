@@ -674,7 +674,7 @@ public class DatabaseConnectionHelpers {
             + "timeCol        time, "
             + "timestampCol   timestamp, "
             + "uuidCol        uuid, "
-//            + "xmlCol         xml,"
+            + "xmlCol         xml,"
             + "bitvaryCol     bit varying(1),"
             + "int8Col        int8,"
             + "boolCol        bool,"
@@ -700,7 +700,7 @@ public class DatabaseConnectionHelpers {
             + "'08002b:010203', '08002b:0102030405', '12.34', 1.0, '((1,1))', '(1,1)', "
             + "'((1,1))', 1.0, 1, 1, 1, '1110', '2018-12-31 00:00:01', '2018-12-31 00:00:01', "
             + "'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'," +
-//            "'<foo>bar</foo>'," +
+            "'<foo>bar</foo>'," +
             " '1', 1, true, '1234', '1234', 1, 1, 1.0, 1.0, 1.0"
             + ", 1, 1, 1, '2018-12-31 00:00:01', '2018-12-31 00:00:01', 1)",
         schema, table));
@@ -710,7 +710,7 @@ public class DatabaseConnectionHelpers {
             + "NULL, NULL, NULL, NULL, "
             + "NULL, NULL, NULL, NULL, NULL, NULL, "
             + "NULL, NULL, NULL, NULL, 1, 1, NULL, NULL, NULL, NULL," +
-//            "NULL," +
+            "NULL," +
             "NULL, NULL, NULL, NULL, NULL, NULL, "
             + "NULL, NULL, NULL, NULL, NULL, 1, 1, NULL, NULL, 1)",
         schema, table));
