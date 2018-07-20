@@ -857,9 +857,9 @@ public class DatabaseConnectionHelpers {
             + "smallintCol        smallint, "
             + "stringCol     string, "
             + "timestampCol        timestamp, "
-            + "tinyintCol      tinyint) "
+            + "tinyintCol      tinyint, "
         // dongyoungy: current version of impala we testing does not seem to support varchar
-//            + "varcharCol        varchar(10))"
+            + "varcharCol        varchar(10))"
         , schema, table));
 //    dbmsConn.execute("INVALIDATE METADATA");
 //    dbmsConn.execute(String.format("REFRESH %s.%s", schema, table));
@@ -876,6 +876,7 @@ public class DatabaseConnectionHelpers {
     insertDataList.add("'michael'"); // string
     insertDataList.add("now()"); // timestamp
     insertDataList.add("2"); // tinyint
+    insertDataList.add("cast('jackson' as varchar(10))"); // varchar
 
     dbmsConn.execute(String.format("INSERT INTO `%s`.`%s` VALUES (%s)",
         schema, table, Joiner.on(",").join(insertDataList)));
@@ -893,6 +894,7 @@ public class DatabaseConnectionHelpers {
     insertNullDataList.add("NULL"); // string
     insertNullDataList.add("NULL"); // timestamp
     insertNullDataList.add("NULL"); // tinyint
+    insertNullDataList.add("NULL"); // varchar
 
     dbmsConn.execute(String.format("INSERT INTO `%s`.`%s` VALUES (%s)",
         schema, table, Joiner.on(",").join(insertNullDataList)));
