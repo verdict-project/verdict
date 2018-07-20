@@ -59,15 +59,15 @@ jobs:
           # fallback to using the latest cache if no exact match is found
           # - v1-dependencies-
       - run: mvn install:install-file -Dfile=src/test/resources/jars/ImpalaJDBC41-2.6.3.jar -DgroupId=com.cloudera -DartifactId=impala-jdbc41 -Dversion=2.6.3 -Dpackaging=jar
-      - run: mvn dependency:go-offline
-      - save_cache:
-          paths:
-            - ~/.m2
-          key: verdict-dependencies-{{ checksum "pom.xml" }}
+      # - run: mvn dependency:go-offline
       # Setup necessary test data
       - run: git clone git@github.com:verdictdb/verdictdb-private-resources.git
       # Now build and test
       - run: mvn -B test 2> /dev/null
+      - save_cache:
+          paths:
+            - ~/.m2
+          key: verdict-dependencies-{{ checksum "pom.xml" }}
 
   build-jdk8:
     docker:
@@ -100,17 +100,17 @@ jobs:
           # fallback to using the latest cache if no exact match is found
           # - v1-dependencies-
       - run: mvn install:install-file -Dfile=src/test/resources/jars/ImpalaJDBC41-2.6.3.jar -DgroupId=com.cloudera -DartifactId=impala-jdbc41 -Dversion=2.6.3 -Dpackaging=jar
-      - run: mvn dependency:go-offline
-      - save_cache:
-          paths:
-            - ~/.m2
-          key: verdict-dependencies-{{ checksum "pom.xml" }}
+      # - run: mvn dependency:go-offline
       # Setup necessary test data
       - run: git clone git@github.com:verdictdb/verdictdb-private-resources.git
       # Now build and test
       - run: mvn -B test 2> /dev/null
       - run: mvn cobertura:cobertura
       - run: bash <(curl -s https://codecov.io/bash) -t 9cf48c61-07ed-4a14-9eed-f7129664ee79
+      - save_cache:
+          paths:
+            - ~/.m2
+          key: verdict-dependencies-{{ checksum "pom.xml" }}
 
   build-spark:
       docker:
@@ -142,15 +142,15 @@ jobs:
             # fallback to using the latest cache if no exact match is found
             # - v1-dependencies-
         - run: mvn install:install-file -Dfile=src/test/resources/jars/ImpalaJDBC41-2.6.3.jar -DgroupId=com.cloudera -DartifactId=impala-jdbc41 -Dversion=2.6.3 -Dpackaging=jar
-        - run: mvn dependency:go-offline
-        - save_cache:
-            paths:
-              - ~/.m2
-            key: verdict-dependencies-{{ checksum "pom.xml" }}
+        # - run: mvn dependency:go-offline
         # Setup necessary test data
         - run: git clone git@github.com:verdictdb/verdictdb-private-resources.git
         # run tests!
         - run: mvn test -Dtest=SparkTpchSelectQueryCoordinatorTest 2> /dev/null
+        - save_cache:
+            paths:
+              - ~/.m2
+            key: verdict-dependencies-{{ checksum "pom.xml" }}
 
 workflows:
   version: 2

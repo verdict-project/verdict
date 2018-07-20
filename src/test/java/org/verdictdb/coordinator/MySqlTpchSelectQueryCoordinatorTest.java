@@ -237,8 +237,9 @@ public class MySqlTpchSelectQueryCoordinatorTest {
         "o_orderpriority ";
     stmt.execute("create schema if not exists `verdictdb_temp`;");
 //    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new JdbcDbmsConnection(conn, new MysqlSyntax()));
-    DbmsConnection dbmsconn = new CachedDbmsConnection(
-        new JdbcConnection(conn, new MysqlSyntax()));
+    JdbcConnection jdbcConnection = new JdbcConnection(conn, new MysqlSyntax());
+    jdbcConnection.setOutputDebugMessage(true);
+    DbmsConnection dbmsconn = new CachedDbmsConnection(jdbcConnection);
     dbmsconn.setDefaultSchema(MYSQL_DATABASE);
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     

@@ -23,6 +23,8 @@ public class JdbcConnection implements DbmsConnection {
   
   JdbcQueryResult jrs = null;
   
+  private boolean outputDebugMessage = false;
+  
   public static JdbcConnection create(Connection conn) throws VerdictDBDbmsException {
     String connectionString = null;
     try {
@@ -63,7 +65,10 @@ public class JdbcConnection implements DbmsConnection {
   
   @Override
   public DbmsQueryResult execute(String sql) throws VerdictDBDbmsException {
-//    System.out.println("About to issue this query: " + sql);
+    if (outputDebugMessage) {
+      System.out.println("About to issue this query: " + sql);
+    }
+    
     try {
       Statement stmt = conn.createStatement();
       JdbcQueryResult jrs = null;
@@ -226,6 +231,14 @@ public class JdbcConnection implements DbmsConnection {
     } catch (SQLException e) {
       throw new VerdictDBDbmsException(e);
     }
+  }
+
+  public boolean isOutputDebugMessage() {
+    return outputDebugMessage;
+  }
+
+  public void setOutputDebugMessage(boolean outputDebugMessage) {
+    this.outputDebugMessage = outputDebugMessage;
   }
 
 }

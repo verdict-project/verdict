@@ -178,16 +178,16 @@ public class DatabaseConnectionHelpers {
     DbmsConnection dbmsConn = JdbcConnection.create(conn);
 
     // CASCADE does not work in our version
-    dbmsConn.execute(String.format("DROP TABLE IF EXISTS `%s`.`nation`", schema));
-    dbmsConn.execute(String.format("DROP TABLE IF EXISTS `%s`.`region`", schema));
-    dbmsConn.execute(String.format("DROP TABLE IF EXISTS `%s`.`part`", schema));
-    dbmsConn.execute(String.format("DROP TABLE IF EXISTS `%s`.`supplier`", schema));
-    dbmsConn.execute(String.format("DROP TABLE IF EXISTS `%s`.`partsupp`", schema));
-    dbmsConn.execute(String.format("DROP TABLE IF EXISTS `%s`.`customer`", schema));
-    dbmsConn.execute(String.format("DROP TABLE IF EXISTS `%s`.`orders`", schema));
-    dbmsConn.execute(String.format("DROP TABLE IF EXISTS `%s`.`lineitem`", schema));
+//    dbmsConn.execute(String.format("DROP TABLE IF EXISTS `%s`.`nation`", schema));
+//    dbmsConn.execute(String.format("DROP TABLE IF EXISTS `%s`.`region`", schema));
+//    dbmsConn.execute(String.format("DROP TABLE IF EXISTS `%s`.`part`", schema));
+//    dbmsConn.execute(String.format("DROP TABLE IF EXISTS `%s`.`supplier`", schema));
+//    dbmsConn.execute(String.format("DROP TABLE IF EXISTS `%s`.`partsupp`", schema));
+//    dbmsConn.execute(String.format("DROP TABLE IF EXISTS `%s`.`customer`", schema));
+//    dbmsConn.execute(String.format("DROP TABLE IF EXISTS `%s`.`orders`", schema));
+//    dbmsConn.execute(String.format("DROP TABLE IF EXISTS `%s`.`lineitem`", schema));
     
-    dbmsConn.execute(String.format("DROP SCHEMA IF EXISTS `%s`", schema));
+    dbmsConn.execute(String.format("DROP SCHEMA IF EXISTS `%s` CASCADE", schema));
     dbmsConn.execute(String.format("CREATE SCHEMA IF NOT EXISTS `%s`", schema));
     
     // Create tables
