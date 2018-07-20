@@ -147,6 +147,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       }
     }
     assertEquals(10, cnt);
+    System.out.println("test 1 passed");
   }
 
   @Test
@@ -169,6 +170,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       }
     }
     assertEquals(12, cnt);
+    System.out.println("test 3 passed");
   }
 
   @Test
@@ -189,6 +191,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       }
     }
     assertEquals(12, cnt);
+    System.out.println("test 4 passed");
   }
 
   @Test
@@ -209,6 +212,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       }
     }
     assertEquals(12, cnt);
+    System.out.println("test 5 passed");
   }
 
   @Test
@@ -228,6 +232,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       }
     }
     assertEquals(10, cnt);
+    System.out.println("test 6 passed");
   }
 
   @Test
@@ -250,6 +255,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       }
     }
     assertEquals(12, cnt);
+    System.out.println("test 7 passed");
   }
 
   @Test
@@ -271,6 +277,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       }
     }
     assertEquals(12, cnt);
+    System.out.println("test 8 passed");
   }
 
   @Test
@@ -292,6 +299,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       }
     }
     assertEquals(12, cnt);
+    System.out.println("test 9 passed");
   }
 
   @Test
@@ -313,6 +321,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       }
     }
     assertEquals(12, cnt);
+    System.out.println("test 10 passed");
   }
 
   @Test
@@ -334,6 +343,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       }
     }
     assertEquals(12, cnt);
+    System.out.println("test 12 passed");
   }
 
   @Test
@@ -354,6 +364,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       }
     }
     assertEquals(3, cnt);
+    System.out.println("test 13 passed");
   }
 
   @Test
@@ -374,6 +385,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       }
     }
     assertEquals(10, cnt);
+    System.out.println("test 14 passed");
   }
 
   @Test
@@ -394,6 +406,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       }
     }
     assertEquals(10, cnt);
+    System.out.println("test 15 passed");
   }
 
   @Test
@@ -413,6 +426,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       }
     }
     assertEquals(10, cnt);
+    System.out.println("test 17 passed");
   }
 
   @Test
@@ -437,6 +451,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       }
     }
     assertEquals(12, cnt);
+    System.out.println("test 18 passed");
   }
 
   @Test
@@ -456,6 +471,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       }
     }
     assertEquals(10, cnt);
+    System.out.println("test 19 passed");
   }
 
   @Test
@@ -476,6 +492,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       }
     }
     assertEquals(10, cnt);
+    System.out.println("test 20 passed");
   }
 
   @Test
@@ -496,6 +513,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       }
     }
     assertEquals(12, cnt);
+    System.out.println("test 21 passed");
   }
 
 
