@@ -245,7 +245,7 @@ public class ImpalaTpchSelectQueryCoordinatorTest {
     assertEquals(12, cnt);
   }
 
-  //@Test
+  @Test
   public void query8Test() throws VerdictDBException, SQLException, IOException {
     Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(8);
     ExecutionResultReader reader = answerPair.getLeft();
@@ -266,7 +266,7 @@ public class ImpalaTpchSelectQueryCoordinatorTest {
     assertEquals(12, cnt);
   }
 
-  //@Test
+  @Test
   public void query9Test() throws VerdictDBException, SQLException, IOException {
     Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(9);
     ExecutionResultReader reader = answerPair.getLeft();
