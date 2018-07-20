@@ -10,7 +10,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.google.common.base.Joiner;
 import org.apache.spark.sql.SparkSession;
 import org.postgresql.copy.CopyManager;
 import org.postgresql.core.BaseConnection;
@@ -20,6 +19,8 @@ import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.sqlsyntax.ImpalaSyntax;
 import org.verdictdb.sqlsyntax.PostgresqlSyntax;
 import org.verdictdb.sqlsyntax.RedshiftSyntax;
+
+import com.google.common.base.Joiner;
 
 public class DatabaseConnectionHelpers {
 
@@ -184,17 +185,7 @@ public class DatabaseConnectionHelpers {
     Connection conn = DriverManager.getConnection(connectionString, user, password);
     DbmsConnection dbmsConn = JdbcConnection.create(conn);
 
-    // CASCADE does not work in our version
-    dbmsConn.execute(String.format("DROP TABLE IF EXISTS `%s`.`nation`", schema));
-    dbmsConn.execute(String.format("DROP TABLE IF EXISTS `%s`.`region`", schema));
-    dbmsConn.execute(String.format("DROP TABLE IF EXISTS `%s`.`part`", schema));
-    dbmsConn.execute(String.format("DROP TABLE IF EXISTS `%s`.`supplier`", schema));
-    dbmsConn.execute(String.format("DROP TABLE IF EXISTS `%s`.`partsupp`", schema));
-    dbmsConn.execute(String.format("DROP TABLE IF EXISTS `%s`.`customer`", schema));
-    dbmsConn.execute(String.format("DROP TABLE IF EXISTS `%s`.`orders`", schema));
-    dbmsConn.execute(String.format("DROP TABLE IF EXISTS `%s`.`lineitem`", schema));
-
-    dbmsConn.execute(String.format("DROP SCHEMA IF EXISTS `%s`", schema));
+    dbmsConn.execute(String.format("DROP SCHEMA IF EXISTS `%s` CASCADE", schema));
     dbmsConn.execute(String.format("CREATE SCHEMA IF NOT EXISTS `%s`", schema));
 
     // Create tables

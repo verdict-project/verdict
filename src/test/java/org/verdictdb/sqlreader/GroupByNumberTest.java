@@ -38,12 +38,7 @@ public class GroupByNumberTest {
   private static DbmsConnection impalaConnection;
 
   static {
-    String env = System.getenv("BUILD_ENV");
-    if (env != null && (env.equals("GitLab") || env.equals("DockerCompose"))) {
-      IMPALA_HOST = "impala";
-    } else {
-      IMPALA_HOST = "localhost";
-    }
+    IMPALA_HOST = System.getenv("VERDICTDB_TEST_IMPALA_HOST");
   }
 
   @BeforeClass

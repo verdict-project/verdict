@@ -2,7 +2,6 @@ package org.verdictdb.core.sqlobject;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;

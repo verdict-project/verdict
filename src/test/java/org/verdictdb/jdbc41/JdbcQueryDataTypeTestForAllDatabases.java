@@ -1,5 +1,10 @@
 package org.verdictdb.jdbc41;
 
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -11,10 +16,6 @@ import org.verdictdb.exception.VerdictDBDbmsException;
 
 import java.sql.*;
 import java.util.*;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 /** Created by Dong Young Yoon on 7/18/18. */
 @RunWith(Parameterized.class)
@@ -80,7 +81,6 @@ public class JdbcQueryDataTypeTestForAllDatabases {
   private static final String POSTGRES_USER = "postgres";
 
   private static final String POSTGRES_PASSWORD = "";
-
 
   static {
     String env = System.getenv("BUILD_ENV");
@@ -221,7 +221,8 @@ public class JdbcQueryDataTypeTestForAllDatabases {
         break;
       case "impala":
         sql =
-            String.format("SELECT * FROM `%s`.`%s` ORDER BY bigintCol", IMPALA_DATABASE, TABLE_NAME);
+            String.format(
+                "SELECT * FROM `%s`.`%s` ORDER BY bigintCol", IMPALA_DATABASE, TABLE_NAME);
         break;
       case "postgresql":
       case "redshift":
