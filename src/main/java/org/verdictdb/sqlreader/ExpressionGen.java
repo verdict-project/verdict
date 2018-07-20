@@ -123,7 +123,12 @@ public class ExpressionGen extends VerdictSQLParserBaseVisitor<UnnamedColumn> {
             fname = "countdistinct";
           } else {
             fname = "count";
-            col = new AsteriskColumn();
+            if (ctx.all_distinct_expression() != null) {
+              ExpressionGen g = new ExpressionGen();
+              col = g.visit(ctx.all_distinct_expression());
+            } else {
+              col = new AsteriskColumn();
+            }
           }
         } //else if (ctx.NDV() != null) {
         //  fname = FuncName.IMPALA_APPROX_COUNT_DISTINCT;}

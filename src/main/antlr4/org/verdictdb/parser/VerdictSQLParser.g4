@@ -584,6 +584,7 @@ expression_function
     | binary_function
     | ternary_function
     | nary_function
+    | predicate_function
     | extract_time_function
     | overlay_string_function
     | substring_string_function
@@ -646,7 +647,7 @@ unary_function
      | UPPER | UCASE | ASCII | CHARACTER_LENGTH | FACTORIAL | CBRT | LENGTH | TRIM | ASIN | ACOS | ATAN | ATAN2 | DEGREES | RADIANS | POSITIVE
      | NEGATIVE | BROUND | BIN | HEX | UNHEX | FROM_UNIXTIME | TO_DATE | CHR | LTRIM | RTRIM| REVERSE | SPACE_FUNCTION | SHA1
      | SHA2 | SPACE | DATE | DAYNAME | DAYOFMONTH | DAYOFWEEK | DAYOFYEAR | FROM_DAYS | LAST_DAY | MICROSECOND | MONTHNAME | SEC_TO_TIME
-     | STR_TO_DATE | TIME | TIME_TO_SEC | TIMESTAMP | TO_DAYS | WEEK | WEEKDAY | YEARWEEK | BINARY | ISNULL | SCALE | TRUNC
+     | STR_TO_DATE | TIME | TIME_TO_SEC | TIMESTAMP | TO_DAYS | WEEK | WEEKDAY | YEARWEEK | BINARY | SCALE | TRUNC
      | SETSEED | BIT_LENGTH | OCTET_LENGTH | CHR | INITCAP | QUOTE_IDENT | QUOTE_LITERAL | QUOTE_NULLABLE | TO_HEX | AGE
      | ISFINITE | JUSTIFY_DAYS | JUSTIFY_HOURS | JUSTIFY_INTERVALS | TO_TIMESTAMP | ENUM_RANGE | ENUM_FIRST | ENUM_LAST
      | AREA | CENTER | DIAMETER | HEIGHT | ISCLOSED | ISOPEN | NPOINTS | PCLOSE | POPEN | RADIUS | WIDTH | BOX | CIRCLE
@@ -663,7 +664,7 @@ unary_function
     ;
 
 predicate_function
-    : function_name = ISNULL '(' expression ')'
+    : NOT? function_name = ISNULL '(' expression ')'
     ;
 
 noparam_function
@@ -816,6 +817,7 @@ data_type
     : BIGINT
     | BINARY '(' DECIMAL ')'
     | BIT
+    | CHAR
     | CHAR '(' DECIMAL ')'
     | DATE
     | DATETIME

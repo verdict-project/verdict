@@ -49,7 +49,13 @@ public class VerdictContext {
 
   static public VerdictContext fromConnectionString(String jdbcConnectionString, Properties info)
       throws SQLException, VerdictDBDbmsException {
-    Connection jdbcConn = DriverManager.getConnection(jdbcConnectionString);
+    Connection jdbcConn = DriverManager.getConnection(jdbcConnectionString, info);
+    return fromJdbcConnection(jdbcConn);
+  }
+
+  static public VerdictContext fromConnectionString(String jdbcConnectionString, String user, String password)
+      throws SQLException, VerdictDBDbmsException {
+    Connection jdbcConn = DriverManager.getConnection(jdbcConnectionString, user, password);
     return fromJdbcConnection(jdbcConn);
   }
 
@@ -61,7 +67,7 @@ public class VerdictContext {
     return contextId;
   }
 
-  private ExecutionContext createNewExecutionContext() {
+  public ExecutionContext createNewExecutionContext() {
     long execSerialNumber = getNextExecutionSerialNumber();
     ExecutionContext exec = new ExecutionContext(this, execSerialNumber);
     executionContexts.add(exec);

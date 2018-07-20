@@ -563,7 +563,7 @@ public class AggQueryRewriter {
           newInnerSelectList.add(new AliasedColumn(newCol, aliasForSubSumEst));   // aggregates of subsamples
           ColumnOp oneIfNotNull = ColumnOp.casewhen(
               Arrays.asList(
-              ColumnOp.isnotnull(op),
+              ColumnOp.rightisnotnull(op),
               ConstantColumn.valueOf(1),
               ConstantColumn.valueOf(0)));
           newInnerSelectList.add(
@@ -662,7 +662,7 @@ public class AggQueryRewriter {
           newInnerSelectList.add(new AliasedColumn(newCol, aliasForSubSumEst));
           ColumnOp oneIfNotNull = ColumnOp.casewhen(
               Arrays.asList(
-              ColumnOp.isnotnull(op),
+              ColumnOp.rightisnotnull(op),
               ConstantColumn.valueOf(1),
               ConstantColumn.valueOf(0)));
 //          newInnerSelectList.add(
