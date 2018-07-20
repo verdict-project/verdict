@@ -89,7 +89,7 @@ public class MySqlTpchSelectQueryCoordinatorTest {
         scrambler.scramble(MYSQL_DATABASE, "orders", MYSQL_DATABASE, "orders_scrambled", "uniform");
     meta.addScrambleMeta(meta1);
     meta.addScrambleMeta(meta2);
-    stmt.execute("drop schema if exists `verdictdb_temp` cascade");
+    stmt.execute("drop schema if exists `verdictdb_temp`");
     stmt.execute("create schema if not exists `verdictdb_temp`");
   }
 
