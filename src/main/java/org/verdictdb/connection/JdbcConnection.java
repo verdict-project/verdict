@@ -189,6 +189,14 @@ public class JdbcConnection implements DbmsConnection {
     if (syntax instanceof ImpalaSyntax) {
       try {
         queryResult = executeQuery(syntax.getPartitionCommand(schema, table));
+        for (int i=0;i<queryResult.getColumnCount();i++) {
+          String columnName = queryResult.getColumnName(i);
+          if (columnName.equals("#rows")) {
+            break;
+          }
+          else partition.add(columnName);
+        }
+        return partition;
       } catch (Exception e) {
         return partition;
       }

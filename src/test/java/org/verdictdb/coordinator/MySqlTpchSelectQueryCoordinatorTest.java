@@ -75,6 +75,7 @@ public class MySqlTpchSelectQueryCoordinatorTest {
     conn = DatabaseConnectionHelpers.setupMySql(
         mysqlConnectionString, MYSQL_UESR, MYSQL_PASSWORD, MYSQL_DATABASE);
     stmt = conn.createStatement();
+    stmt.execute(String.format("use `%s`", MYSQL_DATABASE));
     DbmsConnection dbmsConn = JdbcConnection.create(conn);
 
     // Create Scramble table

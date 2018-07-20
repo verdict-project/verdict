@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -40,7 +41,7 @@ public class ImpalaUniformScramblingCoordinatorTest {
   }
 
   @BeforeClass
-  public static void setupMySqlDatabase() throws SQLException, VerdictDBDbmsException {
+  public static void setupImpalaDatabase() throws SQLException, VerdictDBDbmsException {
     String impalaConnectionString =
         String.format("jdbc:impala://%s:21050", IMPALA_HOST);
     impalaConn =
@@ -78,7 +79,7 @@ public class ImpalaUniformScramblingCoordinatorTest {
     assertEquals(10, dbmsConn.getColumns(IMPALA_DATABASE, "orders").size());
     assertEquals(17, dbmsConn.getColumns(IMPALA_DATABASE, "lineitem").size());
   }
-/*
+
   @Test
   public void testScramblingCoordinatorLineitem() throws VerdictDBException {
     testScramblingCoordinator("lineitem");
@@ -132,6 +133,6 @@ public class ImpalaUniformScramblingCoordinatorTest {
     assertEquals(0, result.getInt(0));
     assertEquals((int) Math.ceil(result2.getInt(0) / (float) blockSize) - 1, result.getInt(1));
   }
-  */
+
 
 }

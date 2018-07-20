@@ -266,7 +266,7 @@ public class DatabaseConnectionHelpers {
         "  `o_custkey`        INT , " +
         "  `o_orderstatus`    STRING , " +
         "  `o_totalprice`     DECIMAL(15,2) , " +
-        "  `o_orderdate`      STRING , " +    // incorrect! TIMESTAMP should be used
+        "  `o_orderdate`      TIMESTAMP , " +
         "  `o_orderpriority`  STRING , " +
         "  `o_clerk`          STRING , " +
         "  `o_shippriority`   INT, " +
@@ -286,9 +286,9 @@ public class DatabaseConnectionHelpers {
         "  `l_tax`         DECIMAL(15,2) , " +
         "  `l_returnflag`  STRING , " +
         "  `l_linestatus`  STRING , " +
-        "  `l_shipdate`    STRING , " +    // incorrect! TIMESTAMP should be used
-        "  `l_commitdate`  STRING , " +    // incorrect! TIMESTAMP should be used
-        "  `l_receiptdate` STRING , " +    // incorrect! TIMESTAMP should be used
+        "  `l_shipdate`    TIMESTAMP , " +
+        "  `l_commitdate`  TIMESTAMP , " +
+        "  `l_receiptdate` TIMESTAMP , " +
         "  `l_shipinstruct` STRING , " +
         "  `l_shipmode`     STRING , " +
         "  `l_comment`      STRING, " +
@@ -296,6 +296,245 @@ public class DatabaseConnectionHelpers {
         "LOCATION '/tmp/tpch_test_data/lineitem'",
           schema));
     
+    return conn;
+  }
+
+  static String getQuoted(String value) {
+    return "'"+value+"'";
+  }
+
+  public static Connection setupRedshift(
+      String connectionString, String user, String password, String schema)
+      throws VerdictDBDbmsException, SQLException, IOException {
+    Connection conn = DriverManager.getConnection(connectionString, user, password);
+    DbmsConnection dbmsConn = new JdbcConnection(conn, new RedshiftSyntax());
+
+    dbmsConn.execute(String.format("DROP SCHEMA IF EXISTS \"%s\" CASCADE", schema));
+    dbmsConn.execute(String.format("CREATE SCHEMA IF NOT EXISTS \"%s\"", schema));
+
+    // Create tables
+    dbmsConn.execute(String.format(
+        "CREATE TABLE  IF NOT EXISTS \"%s\".\"nation\" (" +
+            "  \"n_nationkey\"  INT, " +
+            "  \"n_name\"       CHAR(25), " +
+            "  \"n_regionkey\"  INT, " +
+            "  \"n_comment\"    VARCHAR(152), " +
+            "  \"n_dummy\"      VARCHAR(10), " +
+            "  PRIMARY KEY (\"n_nationkey\"))",
+        schema));
+    dbmsConn.execute(String.format(
+        "CREATE TABLE  IF NOT EXISTS \"%s\".\"region\"  (" +
+            "  \"r_regionkey\"  INT, " +
+            "  \"r_name\"       CHAR(25), " +
+            "  \"r_comment\"    VARCHAR(152), " +
+            "  \"r_dummy\"      VARCHAR(10), " +
+            "  PRIMARY KEY (\"r_regionkey\"))",
+        schema));
+    dbmsConn.execute(String.format(
+        "CREATE TABLE  IF NOT EXISTS \"%s\".\"part\"  ( \"p_partkey\"     INT, " +
+            "  \"p_name\"        VARCHAR(55), " +
+            "  \"p_mfgr\"        CHAR(25), " +
+            "  \"p_brand\"       CHAR(10), " +
+            "  \"p_type\"        VARCHAR(25), " +
+            "  \"p_size\"        INT, " +
+            "  \"p_container\"   CHAR(10), " +
+            "  \"p_retailprice\" DECIMAL(15,2) , " +
+            "  \"p_comment\"     VARCHAR(23) , " +
+            "  \"p_dummy\"       VARCHAR(10), " +
+            "  PRIMARY KEY (\"p_partkey\"))",
+        schema));
+    dbmsConn.execute(String.format(
+        "CREATE TABLE  IF NOT EXISTS \"%s\".\"supplier\" ( " +
+            "  \"s_suppkey\"     INT , " +
+            "  \"s_name\"        CHAR(25) , " +
+            "  \"s_address\"     VARCHAR(40) , " +
+            "  \"s_nationkey\"   INT , " +
+            "  \"s_phone\"       CHAR(15) , " +
+            "  \"s_acctbal\"     DECIMAL(15,2) , " +
+            "  \"s_comment\"     VARCHAR(101), " +
+            "  \"s_dummy\" varchar(10), " +
+            "  PRIMARY KEY (\"s_suppkey\"))",
+        schema));
+    dbmsConn.execute(String.format(
+        "CREATE TABLE  IF NOT EXISTS \"%s\".\"partsupp\" ( " +
+            "  \"ps_partkey\"     INT , " +
+            "  \"ps_suppkey\"     INT , " +
+            "  \"ps_availqty\"    INT , " +
+            "  \"ps_supplycost\"  DECIMAL(15,2)  , " +
+            "  \"ps_comment\"     VARCHAR(199), " +
+            "  \"ps_dummy\"       VARCHAR(10), " +
+            "  PRIMARY KEY (\"ps_partkey\", \"ps_suppkey\"))",
+        schema));
+    dbmsConn.execute(String.format(
+        "CREATE TABLE  IF NOT EXISTS \"%s\".\"customer\" (" +
+            "  \"c_custkey\"     INT , " +
+            "  \"c_name\"        VARCHAR(25) , " +
+            "  \"c_address\"     VARCHAR(40) , " +
+            "  \"c_nationkey\"   INT , " +
+            "  \"c_phone\"       CHAR(15) , " +
+            "  \"c_acctbal\"     DECIMAL(15,2)   , " +
+            "  \"c_mktsegment\"  CHAR(10) , " +
+            "  \"c_comment\"     VARCHAR(117), " +
+            "  \"c_dummy\"       VARCHAR(10), " +
+            "  PRIMARY KEY (\"c_custkey\"))",
+        schema));
+    dbmsConn.execute(String.format(
+        "CREATE TABLE IF NOT EXISTS  \"%s\".\"orders\"  ( " +
+            "  \"o_orderkey\"       INT , " +
+            "  \"o_custkey\"        INT , " +
+            "  \"o_orderstatus\"    CHAR(1) , " +
+            "  \"o_totalprice\"     DECIMAL(15,2) , " +
+            "  \"o_orderdate\"      DATE , " +
+            "  \"o_orderpriority\"  CHAR(15) , " +
+            "  \"o_clerk\"          CHAR(15) , " +
+            "  \"o_shippriority\"   INT , " +
+            "  \"o_comment\"        VARCHAR(79), " +
+            "  \"o_dummy\" varchar(10), " +
+            "  PRIMARY KEY (\"o_orderkey\"))",
+        schema));
+    dbmsConn.execute(String.format(
+        "CREATE TABLE IF NOT EXISTS \"%s\".\"lineitem\" (" +
+            "  \"l_orderkey\"    INT , " +
+            "  \"l_partkey\"     INT , " +
+            "  \"l_suppkey\"     INT , " +
+            "  \"l_linenumber\"  INT , " +
+            "  \"l_quantity\"    DECIMAL(15,2) , " +
+            "  \"l_extendedprice\"  DECIMAL(15,2) , " +
+            "  \"l_discount\"    DECIMAL(15,2) , " +
+            "  \"l_tax\"         DECIMAL(15,2) , " +
+            "  \"l_returnflag\"  CHAR(1) , " +
+            "  \"l_linestatus\"  CHAR(1) , " +
+            "  \"l_shipdate\"    DATE , " +
+            "  \"l_commitdate\"  DATE , " +
+            "  \"l_receiptdate\" DATE , " +
+            "  \"l_shipinstruct\" CHAR(25) , " +
+            "  \"l_shipmode\"     CHAR(10) , " +
+            "  \"l_comment\"      VARCHAR(44), " +
+            "  \"l_dummy\" varchar(10))",
+        schema));
+    // load data use insert
+    String concat = "";
+    File file = new File("src/test/resources/tpch_test_data/nation/nation.tbl");
+    String content = Files.toString(file, Charsets.UTF_8);
+    for (String row : content.split("\n")) {
+      String[] values = row.split("\\|");
+      values[1] = "'" + values[1]+ "'";
+      values[3] = "'" + values[3]+ "'";
+      row = values[0]+","+values[1]+","+values[2]+","+values[3]+","+"''";
+      if (concat.equals("")) {
+        concat = concat + "(" + row + ")";
+      }
+      else concat = concat + "," + "(" + row + ")";
+    }
+    dbmsConn.execute(String.format("insert into \"%s\".\"nation\" values %s", schema, concat));
+
+    concat = "";
+    file = new File("src/test/resources/tpch_test_data/region/region.tbl");
+    content = Files.toString(file, Charsets.UTF_8);
+    for (String row : content.split("\n")) {
+      String[] values = row.split("\\|");
+      values[1] = "'" + values[1]+ "'";
+      values[2] = "'" + values[2]+ "'";
+      row = values[0]+","+values[1]+","+values[2]+","+"''";
+      if (concat.equals("")) {
+        concat = concat + "(" + row + ")";
+      }
+      else concat = concat + "," + "(" + row + ")";
+    }
+    dbmsConn.execute(String.format("insert into \"%s\".\"region\" values %s", schema, concat));
+
+    concat="";
+    file = new File("src/test/resources/tpch_test_data/part/part.tbl");
+    content = Files.toString(file, Charsets.UTF_8);
+    for (String row : content.split("\n")) {
+      String[] values = row.split("\\|");
+      row = values[0]+","+getQuoted(values[1])+","+getQuoted(values[2])+","
+          +getQuoted(values[3])+","+getQuoted(values[4])+","+values[5]+","+getQuoted(values[6])
+          +","+values[7]+","+getQuoted(values[8])+","+"''";
+      if (concat.equals("")) {
+        concat = concat + "(" + row + ")";
+      }
+      else concat = concat + "," + "(" + row + ")";
+    }
+    dbmsConn.execute(String.format("insert into \"%s\".\"part\" values %s", schema, concat));
+
+    concat = "";
+    file = new File("src/test/resources/tpch_test_data/supplier/supplier.tbl");
+    content = Files.toString(file, Charsets.UTF_8);
+    for (String row : content.split("\n")) {
+      String[] values = row.split("\\|");
+      row = values[0]+","+getQuoted(values[1])+","+getQuoted(values[2])+","
+          +values[3]+","+getQuoted(values[4])+","+values[5]+","+getQuoted(values[6])
+          + ","+"''";
+      if (concat.equals("")) {
+        concat = concat + "(" + row + ")";
+      }
+      else concat = concat + "," + "(" + row + ")";
+    }
+    dbmsConn.execute(String.format("insert into \"%s\".\"supplier\" values %s", schema, concat));
+
+    concat = "";
+    file = new File("src/test/resources/tpch_test_data/partsupp/partsupp.tbl");
+    content = Files.toString(file, Charsets.UTF_8);
+    for (String row : content.split("\n")) {
+      String[] values = row.split("\\|");
+      row = values[0]+","+values[1]+","+values[2]+","
+          +values[3]+","+getQuoted(values[4])
+          + ","+"''";
+      if (concat.equals("")) {
+        concat = concat + "(" + row + ")";
+      }
+      else concat = concat + "," + "(" + row + ")";
+    }
+    dbmsConn.execute(String.format("insert into \"%s\".\"partsupp\" values %s", schema, concat));
+
+    concat = "";
+    file = new File("src/test/resources/tpch_test_data/customer/customer.tbl");
+    content = Files.toString(file, Charsets.UTF_8);
+    for (String row : content.split("\n")) {
+      String[] values = row.split("\\|");
+      row = values[0]+","+getQuoted(values[1])+","+getQuoted(values[2])+","
+          +values[3]+","+getQuoted(values[4])+","+values[5]+","+getQuoted(values[6])
+          +","+getQuoted(values[7])+","+"''";
+      if (concat.equals("")) {
+        concat = concat + "(" + row + ")";
+      }
+      else concat = concat + "," + "(" + row + ")";
+    }
+    dbmsConn.execute(String.format("insert into \"%s\".\"customer\" values %s", schema, concat));
+
+    concat = "";
+    file = new File("src/test/resources/tpch_test_data/orders/orders.tbl");
+    content = Files.toString(file, Charsets.UTF_8);
+    for (String row : content.split("\n")) {
+      String[] values = row.split("\\|");
+      row = values[0]+","+values[1]+","+getQuoted(values[2])+","
+          +values[3]+","+getQuoted(values[4])+","+getQuoted(values[5])+","+getQuoted(values[6])
+          +","+values[7]+","+getQuoted(values[8])+","+"''";
+      if (concat.equals("")) {
+        concat = concat + "(" + row + ")";
+      }
+      else concat = concat + "," + "(" + row + ")";
+    }
+    dbmsConn.execute(String.format("insert into \"%s\".\"orders\" values %s", schema, concat));
+
+    concat = "";
+    file = new File("src/test/resources/tpch_test_data/lineitem/lineitem.tbl");
+    content = Files.toString(file, Charsets.UTF_8);
+    for (String row : content.split("\n")) {
+      String[] values = row.split("\\|");
+      row = values[0]+","+values[1]+","+values[2]+","
+          +values[3]+","+values[4]+","+values[5]+","+values[6]
+          +","+values[7]+","+getQuoted(values[8])+","+getQuoted(values[9])
+          +","+getQuoted(values[10])+","+getQuoted(values[11])
+          +","+getQuoted(values[12])+","+getQuoted(values[13])
+          +","+getQuoted(values[14])+","+getQuoted(values[15])+","+"''";
+      if (concat.equals("")) {
+        concat = concat + "(" + row + ")";
+      }
+      else concat = concat + "," + "(" + row + ")";
+    }
+    dbmsConn.execute(String.format("insert into \"%s\".\"lineitem\" values %s", schema, concat));
     return conn;
   }
 
