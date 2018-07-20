@@ -77,16 +77,15 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
     String filename = "query"+queryNum+".sql";
     File file = new File("src/test/resources/tpch_test_query/"+filename);
     String sql = Files.toString(file, Charsets.UTF_8);
-    DbmsConnection dbmsconn = new CachedDbmsConnection(
-        new JdbcConnection(redshiftConn, new RedshiftSyntax()));
+
     dbmsConn.setDefaultSchema(REDSHIFT_SCHEMA);
-    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
+    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsConn);
     coordinator.setScrambleMetaSet(meta);
     ExecutionResultReader reader = coordinator.process(sql);
 
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
-    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
+    RelationStandardizer gen = new RelationStandardizer(dbmsConn);
     relation = gen.standardize((SelectQuery) relation);
 
     SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new RedshiftSyntax());
@@ -104,9 +103,11 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
             connectionString, REDSHIFT_USER, REDSHIFT_PASSWORD, REDSHIFT_SCHEMA);
     stmt = redshiftConn.createStatement();
 
+    dbmsConn = new CachedDbmsConnection(
+        new JdbcConnection(redshiftConn, new RedshiftSyntax()));
     // Create Scramble table
-    dbmsConn.execute(String.format("DROP TABLE IF EXISTS \"%s\".\"lineitem_scrambled\"", REDSHIFT_SCHEMA));
-    dbmsConn.execute(String.format("DROP TABLE IF EXISTS \"%s\".\"orders_scrambled\"", REDSHIFT_SCHEMA));
+    stmt.execute(String.format("DROP TABLE IF EXISTS \"%s\".\"lineitem_scrambled\"", REDSHIFT_SCHEMA));
+    stmt.execute(String.format("DROP TABLE IF EXISTS \"%s\".\"orders_scrambled\"", REDSHIFT_SCHEMA));
 
     ScramblingCoordinator scrambler =
         new ScramblingCoordinator(dbmsConn, REDSHIFT_SCHEMA, REDSHIFT_SCHEMA, (long) 100);

@@ -17,6 +17,7 @@ import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.sqlsyntax.PostgresqlSyntax;
+import org.verdictdb.sqlsyntax.RedshiftSyntax;
 
 public class DatabaseConnectionHelpers {
   
@@ -452,7 +453,7 @@ public class DatabaseConnectionHelpers {
       String connectionString, String user, String password, String schema)
       throws VerdictDBDbmsException, SQLException, IOException {
     Connection conn = DriverManager.getConnection(connectionString, user, password);
-    DbmsConnection dbmsConn = new JdbcConnection(conn, new PostgresqlSyntax());
+    DbmsConnection dbmsConn = new JdbcConnection(conn, new RedshiftSyntax());
 
     dbmsConn.execute(String.format("DROP SCHEMA IF EXISTS \"%s\" CASCADE", schema));
     dbmsConn.execute(String.format("CREATE SCHEMA IF NOT EXISTS \"%s\"", schema));
