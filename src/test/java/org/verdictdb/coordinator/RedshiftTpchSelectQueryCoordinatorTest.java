@@ -410,7 +410,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
     System.out.println("test 15 passed");
   }
 
-  //@Test
+  @Test
   public void query17Test() throws VerdictDBException, SQLException, IOException {
     Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(17);
     ExecutionResultReader reader = answerPair.getLeft();
