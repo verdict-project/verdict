@@ -1,8 +1,19 @@
 package org.verdictdb.jdbc41;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
-import org.datanucleus.store.rdbms.query.AbstractRDBMSQueryResult;
+import static org.junit.Assert.assertEquals;
+
+import java.io.File;
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -10,12 +21,8 @@ import org.junit.runners.Parameterized;
 import org.verdictdb.commons.DatabaseConnectionHelpers;
 import org.verdictdb.exception.VerdictDBDbmsException;
 
-import java.io.File;
-import java.io.IOException;
-import java.sql.*;
-import java.util.*;
-
-import static org.junit.Assert.assertEquals;
+import com.google.common.base.Charsets;
+import com.google.common.io.Files;
 
 /**
  * Created by Dong Young Yoon on 7/18/18.
