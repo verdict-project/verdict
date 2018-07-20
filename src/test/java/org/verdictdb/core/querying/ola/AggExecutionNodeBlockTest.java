@@ -84,12 +84,16 @@ public class AggExecutionNodeBlockTest {
     SelectQuery aggQuery = SelectQuery.create(
         new AliasedColumn(ColumnOp.count(), "agg"),
         new BaseTable(newSchema, newTable, "t"));
-    QueryExecutionPlan plan = new QueryExecutionPlan(newSchema);
-    plan.setScrambleMeta(scrambleMeta);
+    QueryExecutionPlan plan = new QueryExecutionPlan(newSchema, scrambleMeta, aggQuery);
+//    plan.setScrambleMeta(scrambleMeta);
 
     AggExecutionNode aggnode = AggExecutionNode.create(plan, aggQuery);
-    AggExecutionNodeBlock block = new AggExecutionNodeBlock(plan, aggnode);
-    ExecutableNodeBase converted = block.convertToProgressiveAgg(plan.getScrambleMeta());   // AsyncAggregation
+    AsyncQueryExecutionPlan asyncPlan = AsyncQueryExecutionPlan.create(plan);
+//    AggExecutionNodeBlock block = new AggExecutionNodeBlock(plan, aggnode);
+    AggExecutionNodeBlock block = new AggExecutionNodeBlock(aggnode);
+    
+//    ExecutableNodeBase converted = block.convertToProgressiveAgg(plan.getScrambleMeta());   // AsyncAggregation
+    ExecutableNodeBase converted = asyncPlan.convertToProgressiveAgg(scrambleMeta, block);   // AsyncAggregation
 //    converted.print();
     assertTrue(converted instanceof AsyncAggExecutionNode);
     

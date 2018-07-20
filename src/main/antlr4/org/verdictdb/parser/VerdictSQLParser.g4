@@ -66,14 +66,8 @@ verdict_statement
 create_scramble_statement
     : CREATE SCRAMBLE scrambled_table=table_name FROM original_table=table_name
       (METHOD scrambling_method_name)? 
-      (SIZE percent=(FLOAT | DECIMAL) '%')? 
-     
+      (SIZE percent=(FLOAT | DECIMAL) '%')?
     ;
-    
-//scramble_type
-//    : UNIFORM
-//    | FASTCONVERGE
-//    ;
 
 scrambling_method_name
     : STRING
