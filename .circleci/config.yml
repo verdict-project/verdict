@@ -60,6 +60,7 @@ jobs:
           key: verdict-dependencies-{{ checksum "pom.xml" }}
       # Setup necessary test data
       - run: git clone git@github.com:verdictdb/verdictdb-private-resources.git
+      - run: bash wait_until_ready.sh
       - run: docker run --rm --link verdictdb-impala:impala-server -v "$(cd "$(dirname "src/test/resources")"; pwd)/$(basename "src/test/resources")":/work:ro codingtony/impala hdp impala-server hadoop fs -put /work/tpch_test_data /tmp/tpch_test_data
       # Now build and test
       - run: mvn -B test 2> /dev/null
@@ -93,6 +94,7 @@ jobs:
           key: verdict-dependencies-{{ checksum "pom.xml" }}
       # Setup necessary test data
       - run: git clone git@github.com:verdictdb/verdictdb-private-resources.git
+      - run: bash wait_until_ready.sh
       - run: docker run --rm --link verdictdb-impala:impala-server -v "$(cd "$(dirname "src/test/resources")"; pwd)/$(basename "src/test/resources")":/work:ro codingtony/impala hdp impala-server hadoop fs -put /work/tpch_test_data /tmp/tpch_test_data
       # Now build and test
       - run: mvn -B test 2> /dev/null
@@ -136,7 +138,7 @@ workflows:
   build_and_test:
     jobs:
       # - maven-version-check
-      - docker-env-check
+      # - docker-env-check
       # - build-spark
-      # - build-jdk7
-      # - build-jdk8
+      - build-jdk7
+      - build-jdk8
