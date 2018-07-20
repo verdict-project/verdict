@@ -19,6 +19,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.postgresql.jdbc.PgSQLXML;
 import org.verdictdb.commons.DatabaseConnectionHelpers;
 import org.verdictdb.exception.VerdictDBDbmsException;
 
@@ -221,6 +222,10 @@ public class JdbcQueryDataTypeTestForAllDatabases {
         System.out.println(columnName + " >> " + theirs + " : " + ours);
         if (theirs instanceof byte[]) {
           assertTrue(Arrays.equals((byte[]) theirs, (byte[]) ours));
+        } else if (theirs instanceof PgSQLXML) {
+          PgSQLXML xml1 = (PgSQLXML) theirs;
+          PgSQLXML xml2 = (PgSQLXML) ours;
+          assertEquals(xml1.getString(), xml2.getString());
         } else {
           assertEquals(jdbcRs.getObject(i), vcRs.getObject(i));
         }

@@ -20,6 +20,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+import com.rits.cloning.Cloner;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import org.apache.commons.lang3.tuple.Pair;
@@ -205,6 +206,7 @@ public class QueryExecutionPlan implements ExecutablePlan, IdCreator, Serializab
   }
 
   public QueryExecutionPlan deepcopy() {
+//    return new Cloner().deepClone(this);
     try {
       ByteArrayOutputStream bos = new ByteArrayOutputStream();
       ObjectOutputStream out = new ObjectOutputStream(bos);

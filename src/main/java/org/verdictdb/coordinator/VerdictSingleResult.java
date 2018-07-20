@@ -7,6 +7,7 @@ import java.io.NotSerializableException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
+import com.rits.cloning.Cloner;
 import org.verdictdb.commons.AttributeValueRetrievalHelper;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.connection.DbmsQueryResultMetaData;
@@ -59,26 +60,27 @@ public class VerdictSingleResult extends AttributeValueRetrievalHelper {
   }
 
   private DbmsQueryResult copyResult(DbmsQueryResult result) {
-    try {
-      ByteArrayOutputStream bos = new ByteArrayOutputStream();
-      ObjectOutputStream out = new ObjectOutputStream(bos);
-      out.writeObject(result);
-      out.flush();
-      out.close();
-
-      ObjectInputStream in = new ObjectInputStream(
-          new ByteArrayInputStream(bos.toByteArray()));
-      DbmsQueryResult copied = (DbmsQueryResult) in.readObject();
-      return copied;
-      
-    } catch (ClassNotFoundException e) {
-      e.printStackTrace();
-    } catch (NotSerializableException e) {
-      e.printStackTrace();
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-    return null;
+    return new Cloner().deepClone(result);
+//    try {
+//      ByteArrayOutputStream bos = new ByteArrayOutputStream();
+//      ObjectOutputStream out = new ObjectOutputStream(bos);
+//      out.writeObject(result);
+//      out.flush();
+//      out.close();
+//
+//      ObjectInputStream in = new ObjectInputStream(
+//          new ByteArrayInputStream(bos.toByteArray()));
+//      DbmsQueryResult copied = (DbmsQueryResult) in.readObject();
+//      return copied;
+//
+//    } catch (ClassNotFoundException e) {
+//      e.printStackTrace();
+//    } catch (NotSerializableException e) {
+//      e.printStackTrace();
+//    } catch (IOException e) {
+//      e.printStackTrace();
+//    }
+//    return null;
   }
 
   public DbmsQueryResultMetaData getMetaData() {

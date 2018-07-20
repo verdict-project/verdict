@@ -14,6 +14,7 @@ import java.util.UUID;
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Output;
 import com.esotericsoftware.kryo.util.DefaultInstantiatorStrategy;
+import com.rits.cloning.Cloner;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import org.objenesis.strategy.StdInstantiatorStrategy;
@@ -98,16 +99,16 @@ public class ExecutionInfoToken implements Serializable {
   }
 
   public ExecutionInfoToken deepcopy() {
-    try {
-      ByteArrayOutputStream bos = new ByteArrayOutputStream();
-      ObjectOutputStream out = new ObjectOutputStream(bos);
-      Kryo kryo = new Kryo();
-      kryo.setRegistrationRequired(false);
-      kryo.addDefaultSerializer(UUID.class, UUIDSerializer.class);
+    return new Cloner().deepClone(this);
+//    try {
+//      ByteArrayOutputStream bos = new ByteArrayOutputStream();
+//      ObjectOutputStream out = new ObjectOutputStream(bos);
+//      Kryo kryo = new Kryo();
+//      kryo.setRegistrationRequired(false);
+//      kryo.addDefaultSerializer(UUID.class, UUIDSerializer.class);
 //      kryo.setInstantiatorStrategy(new DefaultInstantiatorStrategy(new StdInstantiatorStrategy()));
-//      kryo.register(PGStream.class);
-      kryo.register(PgSQLXML.class);
-      return kryo.copy(this);
+////      kryo.register(PGStream.class);
+//      kryo.register(PgSQLXML.class);
 
 //      out.writeObject(this);
 //      out.flush();
@@ -121,13 +122,13 @@ public class ExecutionInfoToken implements Serializable {
 //    } catch (ClassNotFoundException e) {
 //      // TODO Auto-generated catch block
 //      e.printStackTrace();
-    } catch (NotSerializableException e) {
-      // TODO: handle this case
-      e.printStackTrace();
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-    return null;
+//    } catch (NotSerializableException e) {
+//      // TODO: handle this case
+//      e.printStackTrace();
+//    } catch (IOException e) {
+//      e.printStackTrace();
+//    }
+//    return null;
 
 
     //    ExecutionInfoToken newToken = new ExecutionInfoToken();
