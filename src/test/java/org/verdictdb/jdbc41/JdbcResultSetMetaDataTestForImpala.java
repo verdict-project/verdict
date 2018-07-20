@@ -64,21 +64,6 @@ public class JdbcResultSetMetaDataTestForImpala {
 
     stmt = conn.createStatement();
     stmt.execute(String.format("DROP TABLE IF EXISTS `%s`", TABLE_NAME));
-//    conn.createStatement().execute(String.format(
-//        "CREATE TABLE `%s` ("
-//            + "tinyintCol    TINYINT, "
-//            + "boolCol       BOOLEAN, "
-//            + "smallintCol   SMALLINT, "
-//            + "intCol        INT, "
-//            + "bigintCol     BIGINT, "
-//            + "decimalCol    DECIMAL, "
-//            + "floatCol      FLOAT, "
-//            + "doubleCol     DOUBLE, "
-//            + "timestampCol  TIMESTAMP, "
-//            + "charCol       CHAR(4), "
-//            + "stringCol     STRING)"
-//            , TABLE_NAME));
-    
     stmt.execute(String.format(
         "CREATE TABLE `%s` ("
             + "tinyintCol    TINYINT, "

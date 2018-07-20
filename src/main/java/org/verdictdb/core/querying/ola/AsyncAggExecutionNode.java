@@ -55,6 +55,8 @@ import com.google.common.base.Optional;
  */
 public class AsyncAggExecutionNode extends ProjectionNode {
 
+  private static final long serialVersionUID = -1829554239432075523L;
+
   ScrambleMetaSet scrambleMeta;
 
   // group-by columns
@@ -67,7 +69,7 @@ public class AsyncAggExecutionNode extends ProjectionNode {
 
   int tableNum = 1;
 
-  ExecutionInfoToken savedToken = null;
+//  ExecutionInfoToken savedToken = null;
 
   // Key is the index of scramble table in Dimension, value is the tier column alias name
   // Only record tables have multiple tiers
@@ -104,14 +106,14 @@ public class AsyncAggExecutionNode extends ProjectionNode {
 
   @Override
   public SqlConvertible createQuery(List<ExecutionInfoToken> tokens) throws VerdictDBException {
-    savedToken = tokens.get(0);
+    ExecutionInfoToken token = tokens.get(0);
 
     // First, calculate the scale factor
-    List<HyperTableCube> cubes = ((AggMeta) savedToken.getValue("aggMeta")).getCubes();
+    List<HyperTableCube> cubes = ((AggMeta) token.getValue("aggMeta")).getCubes();
     HashMap<List<Integer>, Double> scaleFactor = calculateScaleFactor(cubes);
 
     // Next, create the base select query for replacement
-    Pair<List<ColumnOp>, SqlConvertible> aggColumnsAndQuery = createBaseQueryForReplacement(cubes);
+    Pair<List<ColumnOp>, SqlConvertible> aggColumnsAndQuery = createBaseQueryForReplacement(cubes, token);
 
     // single tier case
     if (scaleFactor.size() == 1) {
@@ -125,14 +127,15 @@ public class AsyncAggExecutionNode extends ProjectionNode {
     else {
       // If it has multiple tiers, we need to rewrite the multiply column into when-then-else column
       for (ColumnOp col : aggColumnsAndQuery.getLeft()) {
-        String alias = ((BaseColumn) col.getOperand(1)).getColumnName();
+//        String alias = ((BaseColumn) col.getOperand(1)).getColumnName();
         col.setOpType("casewhen");
         List<UnnamedColumn> operands = new ArrayList<>();
         for (Map.Entry<List<Integer>, Double> entry : scaleFactor.entrySet()) {
           UnnamedColumn condition = generateCaseCondition(entry.getKey());
           operands.add(condition);
           ColumnOp multiply = new ColumnOp("multiply",
-              Arrays.asList(ConstantColumn.valueOf(String.format("%.16f",entry.getValue())),
+              Arrays.asList(
+                  ConstantColumn.valueOf(String.format("%.16f", entry.getValue())),
                   col.getOperand(1)));
           operands.add(multiply);
         }
@@ -140,16 +143,19 @@ public class AsyncAggExecutionNode extends ProjectionNode {
         col.setOperand(operands);
       }
     }
+    
     // If it has multiple tiers, we need to sum up the result
     SelectQuery query;
-    if (multipleTierTableTierInfo.size()>0) {
-      query = sumUpTierGroup((SelectQuery) aggColumnsAndQuery.getRight(), ((AggMeta) savedToken.getValue("aggMeta")));
+    if (multipleTierTableTierInfo.size() > 0) {
+      query = sumUpTierGroup((SelectQuery) aggColumnsAndQuery.getRight(), ((AggMeta) token.getValue("aggMeta")));
     }
-    else query = (SelectQuery) aggColumnsAndQuery.getRight();
+    else {
+      query = (SelectQuery) aggColumnsAndQuery.getRight();
+    }
     Pair<String, String> tempTableFullName = getNamer().generateTempTableName();
     newTableSchemaName = tempTableFullName.getLeft();
     newTableName = tempTableFullName.getRight();
-    SelectQuery createTableQuery = replaceWithOriginalSelectList(query, ((AggMeta) savedToken.getValue("aggMeta")));
+    SelectQuery createTableQuery = replaceWithOriginalSelectList(query, ((AggMeta) token.getValue("aggMeta")));
 
     if (selectQuery != null) {
       if (!selectQuery.getGroupby().isEmpty() && selectQuery.getHaving().isPresent()) {
@@ -203,26 +209,31 @@ public class AsyncAggExecutionNode extends ProjectionNode {
    * @param cubes
    * @return Key: aggregate column list
    */
-  Pair<List<ColumnOp>, SqlConvertible> createBaseQueryForReplacement(List<HyperTableCube> cubes) {
+  Pair<List<ColumnOp>, SqlConvertible> createBaseQueryForReplacement(
+      List<HyperTableCube> cubes, ExecutionInfoToken token) {
+    
     List<ColumnOp> aggColumnlist = new ArrayList<>();
-    SelectQuery dependentQuery = (SelectQuery) savedToken.getValue("dependentQuery");
+    SelectQuery dependentQuery = (SelectQuery) token.getValue("dependentQuery");
     List<SelectItem> newSelectList = dependentQuery.deepcopy().getSelectList();
-    AggMeta aggMeta = (AggMeta) savedToken.getValue("aggMeta");
+    AggMeta aggMeta = (AggMeta) token.getValue("aggMeta");
 
     for (SelectItem selectItem : newSelectList) {
       if (selectItem instanceof AliasedColumn) {
+        AliasedColumn aliasedColumn = (AliasedColumn) selectItem;
         int index = newSelectList.indexOf(selectItem);
-        UnnamedColumn col = ((AliasedColumn) selectItem).getColumn();
-        if (aggMeta.getAggAlias().contains(((AliasedColumn) selectItem).getAliasName())) {
+        UnnamedColumn col = aliasedColumn.getColumn();
+        
+        if (aggMeta.getAggAlias().contains(aliasedColumn.getAliasName())) {
           ColumnOp aggColumn = new ColumnOp("multiply", Arrays.<UnnamedColumn>asList(
-              ConstantColumn.valueOf(1.0), new BaseColumn("verdictdbbeforescaling", ((AliasedColumn) selectItem).getAliasName())
+              ConstantColumn.valueOf(1.0), new BaseColumn("verdictdbbeforescaling", aliasedColumn.getAliasName())
           ));
           aggColumnlist.add(aggColumn);
-          newSelectList.set(index, new AliasedColumn(aggColumn, ((AliasedColumn) selectItem).getAliasName()));
+          newSelectList.set(index, new AliasedColumn(aggColumn, aliasedColumn.getAliasName()));
         }
-        else if (aggMeta.getMaxminAggAlias().keySet().contains(((AliasedColumn) selectItem).getAliasName())) {
-          newSelectList.set(index, new AliasedColumn(new BaseColumn("verdictdbbeforescaling", ((AliasedColumn) selectItem).getAliasName()),
-              ((AliasedColumn) selectItem).getAliasName()));
+        else if (aggMeta.getMaxminAggAlias().keySet().contains(aliasedColumn.getAliasName())) {
+          newSelectList.set(index, new AliasedColumn(
+              new BaseColumn("verdictdbbeforescaling", aliasedColumn.getAliasName()),
+              aliasedColumn.getAliasName()));
         }
         else {
           // Looking for tier column
@@ -233,21 +244,23 @@ public class AsyncAggExecutionNode extends ProjectionNode {
                 ((BaseColumn) col).getColumnName().equals(scrambleMeta.getTierColumn(schemaName, tableName))) {
               for (Dimension d : cubes.get(0).getDimensions()) {
                 if (d.getTableName().equals(tableName) && d.getSchemaName().equals(schemaName)) {
-                  multipleTierTableTierInfo.put(cubes.get(0).getDimensions().indexOf(d), ((AliasedColumn) selectItem).getAliasName());
+                  multipleTierTableTierInfo.put(cubes.get(0).getDimensions().indexOf(d), aliasedColumn.getAliasName());
                   break;
                 }
               }
             }
           }
-          newSelectList.set(index, new AliasedColumn(new BaseColumn("verdictdbbeforescaling", ((AliasedColumn) selectItem).getAliasName()),
-              ((AliasedColumn) selectItem).getAliasName()));
+          newSelectList.set(index, new AliasedColumn(
+              new BaseColumn("verdictdbbeforescaling", aliasedColumn.getAliasName()),
+              aliasedColumn.getAliasName()));
         }
       }
     }
     Initiated = true;
+    
     // Setup from table
     SelectQuery query = SelectQuery.create(newSelectList,
-        new BaseTable((String) savedToken.getValue("schemaName"), (String) savedToken.getValue("tableName"), "verdictdbbeforescaling"));
+        new BaseTable((String) token.getValue("schemaName"), (String) token.getValue("tableName"), "verdictdbbeforescaling"));
     return new ImmutablePair<>(aggColumnlist, (SqlConvertible) query);
   }
 
@@ -340,11 +353,14 @@ public class AsyncAggExecutionNode extends ProjectionNode {
     Optional<ColumnOp> col = Optional.absent();
     for (Map.Entry<Integer, String> entry : multipleTierTableTierInfo.entrySet()) {
       BaseColumn tierColumn = new BaseColumn("verdictdbbeforescaling", entry.getValue());
-      ColumnOp equation = new ColumnOp("equal", Arrays.asList(tierColumn,
+      ColumnOp equation = new ColumnOp("equal", Arrays.asList(
+          tierColumn,
           ConstantColumn.valueOf(tierlist.get(entry.getKey()))));
       if (col.isPresent()) {
         col = Optional.of(new ColumnOp("equal", Arrays.<UnnamedColumn>asList(equation, col.get())));
-      } else col = Optional.of(equation);
+      } else {
+        col = Optional.of(equation);
+      }
     }
     return col.get();
   }
