@@ -25,6 +25,7 @@ jobs:
       - run: pwd
       - checkout
       - run: echo "$(cd "$(dirname "src/test/resources")"; pwd)/$(basename "src/test/resources")"
+      - run: sleep 10
       - run: docker run --rm --link verdictdb-impala:impala-server codingtony/impala hdp impala-server hadoop fs -ls /
       - run: docker run --rm --link verdictdb-impala:impala-server -v /home/circleci/repo/src/test/resources:/work:ro codingtony/impala hdp impala-server hadoop fs -put /work/tpch_test_data /tmp/
 
