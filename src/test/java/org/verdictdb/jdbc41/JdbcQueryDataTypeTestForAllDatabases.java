@@ -32,7 +32,7 @@ public class JdbcQueryDataTypeTestForAllDatabases {
 
   // TODO: Add support for all four databases
 //  private static final String[] targetDatabases = {"mysql", "impala", "redshift", "postgresql"};
-  private static final String[] targetDatabases = {"mysql", "postgres", "redshift"};
+  private static final String[] targetDatabases = {"impala"};
 
   public JdbcQueryDataTypeTestForAllDatabases(String database) {
     this.database = database;
@@ -55,8 +55,6 @@ public class JdbcQueryDataTypeTestForAllDatabases {
 
   private static final String MYSQL_PASSWORD = "";
 
-  private static final String MYSQL_TABLE = "mytable";
-
   private static final String IMPALA_HOST;
 
   static {
@@ -69,7 +67,7 @@ public class JdbcQueryDataTypeTestForAllDatabases {
     }
   }
 
-  private static final String IMPALA_DATABASE = "default";
+  private static final String IMPALA_DATABASE = "test";
 
   private static final String IMPALA_USER = "";
 
@@ -113,17 +111,16 @@ public class JdbcQueryDataTypeTestForAllDatabases {
 
   private static final String SCHEMA_NAME = "data_type_test";
 
-  private static final String TABLE_NAME = "mytable";
+  private static final String TABLE_NAME = "data_type_test";
 
   private static VerdictConnection mysqlVc;
 
   @BeforeClass
   public static void setupDatabases() throws SQLException, VerdictDBDbmsException {
-    setupMysql();
-    setupPostgresql();
-    setupRedshift();
-    // TODO: Add below databases too
-//    setupImpala();
+//    setupMysql();
+//    setupPostgresql();
+//    setupRedshift();
+    setupImpala();
   }
 
   @Parameterized.Parameters(name = "{0}")
@@ -143,7 +140,7 @@ public class JdbcQueryDataTypeTestForAllDatabases {
     String vcMysqlConnectionString =
         String.format("jdbc:mysql://%s/%s?autoReconnect=true&useSSL=false", MYSQL_HOST, MYSQL_DATABASE);
     Connection conn = DatabaseConnectionHelpers.setupMySqlForDataTypeTest(
-        mysqlConnectionString, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE, MYSQL_TABLE);
+        mysqlConnectionString, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE, TABLE_NAME);
     VerdictConnection vc = new VerdictConnection(vcMysqlConnectionString, MYSQL_USER, MYSQL_PASSWORD);
     conn.setCatalog(MYSQL_DATABASE);
     connMap.put("mysql", conn);
@@ -155,8 +152,9 @@ public class JdbcQueryDataTypeTestForAllDatabases {
   // TODO: add query data type test setup step for impala
   private static Connection setupImpala() throws SQLException, VerdictDBDbmsException {
     String connectionString =
-        String.format("jdbc:impala://%s:21050/%s", IMPALA_HOST, IMPALA_DATABASE);
-    Connection conn = DriverManager.getConnection(connectionString, IMPALA_USER, IMPALA_PASSWORD);
+        String.format("jdbc:impala://%s:21050", IMPALA_HOST); //, IMPALA_DATABASE);
+    Connection conn = DatabaseConnectionHelpers.setupImpalaForDataTypeTest(
+        connectionString, IMPALA_USER, IMPALA_PASSWORD, IMPALA_DATABASE, TABLE_NAME);
     VerdictConnection vc = new VerdictConnection(connectionString, IMPALA_USER, IMPALA_PASSWORD);
     connMap.put("impala", conn);
     vcMap.put("impala", vc);
@@ -194,6 +192,8 @@ public class JdbcQueryDataTypeTestForAllDatabases {
     String sql = "";
     if (database.equals("mysql")) {
       sql = String.format("SELECT * FROM `%s`.`%s`", SCHEMA_NAME, TABLE_NAME);
+    } else if (database.equals("impala")) {
+      sql = String.format("SELECT * FROM `test`.`%s`", TABLE_NAME);
     } else if (database.equals("postgresql") || database.equals("redshift")) {
       sql = String.format("SELECT * FROM \"%s\".\"%s\"", SCHEMA_NAME, TABLE_NAME);
     }

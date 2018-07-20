@@ -17,11 +17,12 @@ import org.postgresql.core.BaseConnection;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.exception.VerdictDBDbmsException;
+import org.verdictdb.sqlsyntax.ImpalaSyntax;
 import org.verdictdb.sqlsyntax.PostgresqlSyntax;
 import org.verdictdb.sqlsyntax.RedshiftSyntax;
 
 public class DatabaseConnectionHelpers {
-  
+
   public static SparkSession setupSpark(String appname, String schema) {
     SparkSession spark = SparkSession.builder().appName(appname)
         .master("local")
@@ -51,121 +52,121 @@ public class DatabaseConnectionHelpers {
     String datafilePath = new File("src/test/resources/tpch_test_data/").getAbsolutePath();
     spark.sql(String.format(
         "CREATE EXTERNAL TABLE IF NOT EXISTS `%s`.`nation` (" +
-        "  `n_nationkey`  INT, " +
-        "  `n_name`       CHAR(25), " +
-        "  `n_regionkey`  INT, " +
-        "  `n_comment`    VARCHAR(152), " +
-        "  `n_dummy`      VARCHAR(10)) " +
-        "ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' " +
-        "STORED AS TEXTFILE " +
-        "LOCATION '%s/nation'",
-          schema, datafilePath));
+            "  `n_nationkey`  INT, " +
+            "  `n_name`       CHAR(25), " +
+            "  `n_regionkey`  INT, " +
+            "  `n_comment`    VARCHAR(152), " +
+            "  `n_dummy`      VARCHAR(10)) " +
+            "ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' " +
+            "STORED AS TEXTFILE " +
+            "LOCATION '%s/nation'",
+        schema, datafilePath));
     spark.sql(String.format(
         "CREATE EXTERNAL TABLE IF NOT EXISTS `%s`.`region` (" +
-        "  `r_regionkey`  INT, " +
-        "  `r_name`       CHAR(25), " +
-        "  `r_comment`    VARCHAR(152), " +
-        "  `r_dummy`      VARCHAR(10)) " +
-        "ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' " +
-        "STORED AS TEXTFILE " +
-        "LOCATION '%s/region'",
-          schema, datafilePath));
+            "  `r_regionkey`  INT, " +
+            "  `r_name`       CHAR(25), " +
+            "  `r_comment`    VARCHAR(152), " +
+            "  `r_dummy`      VARCHAR(10)) " +
+            "ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' " +
+            "STORED AS TEXTFILE " +
+            "LOCATION '%s/region'",
+        schema, datafilePath));
     spark.sql(String.format(
         "CREATE EXTERNAL TABLE IF NOT EXISTS `%s`.`part`  (" +
-        "  `p_partkey`     INT, " +
-        "  `p_name`        VARCHAR(55), " +
-        "  `p_mfgr`        CHAR(25), " +
-        "  `p_brand`       CHAR(10), " +
-        "  `p_type`        VARCHAR(25), " +
-        "  `p_size`        INT, " +
-        "  `p_container`   CHAR(10), " +
-        "  `p_retailprice` DECIMAL(15,2) , " +
-        "  `p_comment`     VARCHAR(23) , " +
-        "  `p_dummy`       VARCHAR(10)) " +
-        "ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' " +
-        "STORED AS textfile " +
-        "LOCATION '%s/part'",
-          schema, datafilePath));
+            "  `p_partkey`     INT, " +
+            "  `p_name`        VARCHAR(55), " +
+            "  `p_mfgr`        CHAR(25), " +
+            "  `p_brand`       CHAR(10), " +
+            "  `p_type`        VARCHAR(25), " +
+            "  `p_size`        INT, " +
+            "  `p_container`   CHAR(10), " +
+            "  `p_retailprice` DECIMAL(15,2) , " +
+            "  `p_comment`     VARCHAR(23) , " +
+            "  `p_dummy`       VARCHAR(10)) " +
+            "ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' " +
+            "STORED AS textfile " +
+            "LOCATION '%s/part'",
+        schema, datafilePath));
     spark.sql(String.format(
         "CREATE EXTERNAL TABLE IF NOT EXISTS `%s`.`supplier` ( " +
-        "  `s_suppkey`     INT , " +
-        "  `s_name`        CHAR(25) , " +
-        "  `s_address`     VARCHAR(40) , " +
-        "  `s_nationkey`   INT , " +
-        "  `s_phone`       CHAR(15) , " +
-        "  `s_acctbal`     DECIMAL(15,2) , " +
-        "  `s_comment`     VARCHAR(101), " +
-        "  `s_dummy`       VARCHAR(10)) " +
-        "ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' " +
-        "STORED AS textfile " +
-        "LOCATION '%s/supplier'",
-          schema, datafilePath));
+            "  `s_suppkey`     INT , " +
+            "  `s_name`        CHAR(25) , " +
+            "  `s_address`     VARCHAR(40) , " +
+            "  `s_nationkey`   INT , " +
+            "  `s_phone`       CHAR(15) , " +
+            "  `s_acctbal`     DECIMAL(15,2) , " +
+            "  `s_comment`     VARCHAR(101), " +
+            "  `s_dummy`       VARCHAR(10)) " +
+            "ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' " +
+            "STORED AS textfile " +
+            "LOCATION '%s/supplier'",
+        schema, datafilePath));
     spark.sql(String.format(
         "CREATE EXTERNAL TABLE IF NOT EXISTS `%s`.`partsupp` ( " +
-        "  `ps_partkey`     INT , " +
-        "  `ps_suppkey`     INT , " +
-        "  `ps_availqty`    INT , " +
-        "  `ps_supplycost`  DECIMAL(15,2)  , " +
-        "  `ps_comment`     VARCHAR(199), " +
-        "  `ps_dummy`       VARCHAR(10)) " +
-        "ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' " +
-        "STORED AS textfile " +
-        "LOCATION '%s/partsupp'",
-          schema, datafilePath));
+            "  `ps_partkey`     INT , " +
+            "  `ps_suppkey`     INT , " +
+            "  `ps_availqty`    INT , " +
+            "  `ps_supplycost`  DECIMAL(15,2)  , " +
+            "  `ps_comment`     VARCHAR(199), " +
+            "  `ps_dummy`       VARCHAR(10)) " +
+            "ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' " +
+            "STORED AS textfile " +
+            "LOCATION '%s/partsupp'",
+        schema, datafilePath));
     spark.sql(String.format(
         "CREATE EXTERNAL TABLE IF NOT EXISTS `%s`.`customer` (" +
-        "  `c_custkey`     INT , " +
-        "  `c_name`        VARCHAR(25) , " +
-        "  `c_address`     VARCHAR(40) , " +
-        "  `c_nationkey`   INT , " +
-        "  `c_phone`       CHAR(15) , " +
-        "  `c_acctbal`     DECIMAL(15,2)   , " +
-        "  `c_mktsegment`  CHAR(10) , " +
-        "  `c_comment`     VARCHAR(117), " +
-        "  `c_dummy`       VARCHAR(10)) " +
-        "ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' " +
-        "STORED AS textfile " +
-        "LOCATION '%s/customer'",
-          schema, datafilePath));
+            "  `c_custkey`     INT , " +
+            "  `c_name`        VARCHAR(25) , " +
+            "  `c_address`     VARCHAR(40) , " +
+            "  `c_nationkey`   INT , " +
+            "  `c_phone`       CHAR(15) , " +
+            "  `c_acctbal`     DECIMAL(15,2)   , " +
+            "  `c_mktsegment`  CHAR(10) , " +
+            "  `c_comment`     VARCHAR(117), " +
+            "  `c_dummy`       VARCHAR(10)) " +
+            "ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' " +
+            "STORED AS textfile " +
+            "LOCATION '%s/customer'",
+        schema, datafilePath));
     spark.sql(String.format(
         "CREATE EXTERNAL TABLE IF NOT EXISTS  `%s`.`orders`  ( " +
-        "  `o_orderkey`       INT , " +
-        "  `o_custkey`        INT , " +
-        "  `o_orderstatus`    CHAR(1) , " +
-        "  `o_totalprice`     DECIMAL(15,2) , " +
-        "  `o_orderdate`      DATE , " +
-        "  `o_orderpriority`  CHAR(15) , " +
-        "  `o_clerk`          CHAR(15) , " +
-        "  `o_shippriority`   INT , " +
-        "  `o_comment`        VARCHAR(79), " +
-        "  `o_dummy`          VARCHAR(10)) " +
-        "ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' " +
-        "STORED AS textfile " +
-        "LOCATION '%s/orders'",
-          schema, datafilePath));
+            "  `o_orderkey`       INT , " +
+            "  `o_custkey`        INT , " +
+            "  `o_orderstatus`    CHAR(1) , " +
+            "  `o_totalprice`     DECIMAL(15,2) , " +
+            "  `o_orderdate`      DATE , " +
+            "  `o_orderpriority`  CHAR(15) , " +
+            "  `o_clerk`          CHAR(15) , " +
+            "  `o_shippriority`   INT , " +
+            "  `o_comment`        VARCHAR(79), " +
+            "  `o_dummy`          VARCHAR(10)) " +
+            "ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' " +
+            "STORED AS textfile " +
+            "LOCATION '%s/orders'",
+        schema, datafilePath));
     spark.sql(String.format(
         "CREATE EXTERNAL TABLE IF NOT EXISTS `%s`.`lineitem` (" +
-        "  `l_orderkey`       INT , " +
-        "  `l_partkey`        INT , " +
-        "  `l_suppkey`        INT , " +
-        "  `l_linenumber`     INT , " +
-        "  `l_quantity`       DECIMAL(15,2) , " +
-        "  `l_extendedprice`  DECIMAL(15,2) , " +
-        "  `l_discount`       DECIMAL(15,2) , " +
-        "  `l_tax`            DECIMAL(15,2) , " +
-        "  `l_returnflag`     CHAR(1) , " +
-        "  `l_linestatus`     CHAR(1) , " +
-        "  `l_shipdate`       DATE , " +
-        "  `l_commitdate`     DATE , " +
-        "  `l_receiptdate`    DATE , " +
-        "  `l_shipinstruct`   CHAR(25) , " +
-        "  `l_shipmode`       CHAR(10) , " +
-        "  `l_comment`        VARCHAR(44), " +
-        "  `l_dummy`          VARCHAR(10))" +
-        "ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' " +
-        "STORED AS textfile " +
-        "LOCATION '%s/lineitem'",
-          schema, datafilePath));
+            "  `l_orderkey`       INT , " +
+            "  `l_partkey`        INT , " +
+            "  `l_suppkey`        INT , " +
+            "  `l_linenumber`     INT , " +
+            "  `l_quantity`       DECIMAL(15,2) , " +
+            "  `l_extendedprice`  DECIMAL(15,2) , " +
+            "  `l_discount`       DECIMAL(15,2) , " +
+            "  `l_tax`            DECIMAL(15,2) , " +
+            "  `l_returnflag`     CHAR(1) , " +
+            "  `l_linestatus`     CHAR(1) , " +
+            "  `l_shipdate`       DATE , " +
+            "  `l_commitdate`     DATE , " +
+            "  `l_receiptdate`    DATE , " +
+            "  `l_shipinstruct`   CHAR(25) , " +
+            "  `l_shipmode`       CHAR(10) , " +
+            "  `l_comment`        VARCHAR(44), " +
+            "  `l_dummy`          VARCHAR(10))" +
+            "ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' " +
+            "STORED AS textfile " +
+            "LOCATION '%s/lineitem'",
+        schema, datafilePath));
 
     return spark;
   }
@@ -236,7 +237,7 @@ public class DatabaseConnectionHelpers {
 
   public static Connection setupMySql(
       String connectionString, String user, String password, String schema)
-          throws VerdictDBDbmsException, SQLException {
+      throws VerdictDBDbmsException, SQLException {
 
     Connection conn = DriverManager.getConnection(connectionString, user, password);
     DbmsConnection dbmsConn = JdbcConnection.create(conn);
@@ -246,102 +247,102 @@ public class DatabaseConnectionHelpers {
 
     // Create tables
     dbmsConn.execute(String.format(
-      "CREATE TABLE  IF NOT EXISTS `%s`.`nation` (" +
-      "  `n_nationkey`  INT, " +
-      "  `n_name`       CHAR(25), " +
-      "  `n_regionkey`  INT, " +
-      "  `n_comment`    VARCHAR(152), " +
-      "  `n_dummy`      VARCHAR(10), " +
-      "  PRIMARY KEY (`n_nationkey`))",
+        "CREATE TABLE  IF NOT EXISTS `%s`.`nation` (" +
+            "  `n_nationkey`  INT, " +
+            "  `n_name`       CHAR(25), " +
+            "  `n_regionkey`  INT, " +
+            "  `n_comment`    VARCHAR(152), " +
+            "  `n_dummy`      VARCHAR(10), " +
+            "  PRIMARY KEY (`n_nationkey`))",
         schema));
     dbmsConn.execute(String.format(
-      "CREATE TABLE  IF NOT EXISTS `%s`.`region`  (" +
-      "  `r_regionkey`  INT, " +
-      "  `r_name`       CHAR(25), " +
-      "  `r_comment`    VARCHAR(152), " +
-      "  `r_dummy`      VARCHAR(10), " +
-      "  PRIMARY KEY (`r_regionkey`))",
+        "CREATE TABLE  IF NOT EXISTS `%s`.`region`  (" +
+            "  `r_regionkey`  INT, " +
+            "  `r_name`       CHAR(25), " +
+            "  `r_comment`    VARCHAR(152), " +
+            "  `r_dummy`      VARCHAR(10), " +
+            "  PRIMARY KEY (`r_regionkey`))",
         schema));
     dbmsConn.execute(String.format(
-      "CREATE TABLE  IF NOT EXISTS `%s`.`part`  ( `p_partkey`     INT, " +
-      "  `p_name`        VARCHAR(55), " +
-      "  `p_mfgr`        CHAR(25), " +
-      "  `p_brand`       CHAR(10), " +
-      "  `p_type`        VARCHAR(25), " +
-      "  `p_size`        INT, " +
-      "  `p_container`   CHAR(10), " +
-      "  `p_retailprice` DECIMAL(15,2) , " +
-      "  `p_comment`     VARCHAR(23) , " +
-      "  `p_dummy`       VARCHAR(10), " +
-      "  PRIMARY KEY (`p_partkey`))",
+        "CREATE TABLE  IF NOT EXISTS `%s`.`part`  ( `p_partkey`     INT, " +
+            "  `p_name`        VARCHAR(55), " +
+            "  `p_mfgr`        CHAR(25), " +
+            "  `p_brand`       CHAR(10), " +
+            "  `p_type`        VARCHAR(25), " +
+            "  `p_size`        INT, " +
+            "  `p_container`   CHAR(10), " +
+            "  `p_retailprice` DECIMAL(15,2) , " +
+            "  `p_comment`     VARCHAR(23) , " +
+            "  `p_dummy`       VARCHAR(10), " +
+            "  PRIMARY KEY (`p_partkey`))",
         schema));
     dbmsConn.execute(String.format(
-      "CREATE TABLE  IF NOT EXISTS `%s`.`supplier` ( " +
-      "  `s_suppkey`     INT , " +
-      "  `s_name`        CHAR(25) , " +
-      "  `s_address`     VARCHAR(40) , " +
-      "  `s_nationkey`   INT , " +
-      "  `s_phone`       CHAR(15) , " +
-      "  `s_acctbal`     DECIMAL(15,2) , " +
-      "  `s_comment`     VARCHAR(101), " +
-      "  `s_dummy` varchar(10), " +
-      "  PRIMARY KEY (`s_suppkey`))",
+        "CREATE TABLE  IF NOT EXISTS `%s`.`supplier` ( " +
+            "  `s_suppkey`     INT , " +
+            "  `s_name`        CHAR(25) , " +
+            "  `s_address`     VARCHAR(40) , " +
+            "  `s_nationkey`   INT , " +
+            "  `s_phone`       CHAR(15) , " +
+            "  `s_acctbal`     DECIMAL(15,2) , " +
+            "  `s_comment`     VARCHAR(101), " +
+            "  `s_dummy` varchar(10), " +
+            "  PRIMARY KEY (`s_suppkey`))",
         schema));
     dbmsConn.execute(String.format(
-      "CREATE TABLE  IF NOT EXISTS `%s`.`partsupp` ( " +
-      "  `ps_partkey`     INT , " +
-      "  `ps_suppkey`     INT , " +
-      "  `ps_availqty`    INT , " +
-      "  `ps_supplycost`  DECIMAL(15,2)  , " +
-      "  `ps_comment`     VARCHAR(199), " +
-      "  `ps_dummy`       VARCHAR(10), " +
-      "  PRIMARY KEY (`ps_partkey`))",
+        "CREATE TABLE  IF NOT EXISTS `%s`.`partsupp` ( " +
+            "  `ps_partkey`     INT , " +
+            "  `ps_suppkey`     INT , " +
+            "  `ps_availqty`    INT , " +
+            "  `ps_supplycost`  DECIMAL(15,2)  , " +
+            "  `ps_comment`     VARCHAR(199), " +
+            "  `ps_dummy`       VARCHAR(10), " +
+            "  PRIMARY KEY (`ps_partkey`))",
         schema));
     dbmsConn.execute(String.format(
-      "CREATE TABLE  IF NOT EXISTS `%s`.`customer` (" +
-      "  `c_custkey`     INT , " +
-      "  `c_name`        VARCHAR(25) , " +
-      "  `c_address`     VARCHAR(40) , " +
-      "  `c_nationkey`   INT , " +
-      "  `c_phone`       CHAR(15) , " +
-      "  `c_acctbal`     DECIMAL(15,2)   , " +
-      "  `c_mktsegment`  CHAR(10) , " +
-      "  `c_comment`     VARCHAR(117), " +
-      "  `c_dummy`       VARCHAR(10), " +
-      "  PRIMARY KEY (`c_custkey`))",
+        "CREATE TABLE  IF NOT EXISTS `%s`.`customer` (" +
+            "  `c_custkey`     INT , " +
+            "  `c_name`        VARCHAR(25) , " +
+            "  `c_address`     VARCHAR(40) , " +
+            "  `c_nationkey`   INT , " +
+            "  `c_phone`       CHAR(15) , " +
+            "  `c_acctbal`     DECIMAL(15,2)   , " +
+            "  `c_mktsegment`  CHAR(10) , " +
+            "  `c_comment`     VARCHAR(117), " +
+            "  `c_dummy`       VARCHAR(10), " +
+            "  PRIMARY KEY (`c_custkey`))",
         schema));
     dbmsConn.execute(String.format(
-      "CREATE TABLE IF NOT EXISTS  `%s`.`orders`  ( " +
-      "  `o_orderkey`       INT , " +
-      "  `o_custkey`        INT , " +
-      "  `o_orderstatus`    CHAR(1) , " +
-      "  `o_totalprice`     DECIMAL(15,2) , " +
-      "  `o_orderdate`      DATE , " +
-      "  `o_orderpriority`  CHAR(15) , " +
-      "  `o_clerk`          CHAR(15) , " +
-      "  `o_shippriority`   INT , " +
-      "  `o_comment`        VARCHAR(79), " +
-      "  `o_dummy` varchar(10), " +
-      "  PRIMARY KEY (`o_orderkey`))",
+        "CREATE TABLE IF NOT EXISTS  `%s`.`orders`  ( " +
+            "  `o_orderkey`       INT , " +
+            "  `o_custkey`        INT , " +
+            "  `o_orderstatus`    CHAR(1) , " +
+            "  `o_totalprice`     DECIMAL(15,2) , " +
+            "  `o_orderdate`      DATE , " +
+            "  `o_orderpriority`  CHAR(15) , " +
+            "  `o_clerk`          CHAR(15) , " +
+            "  `o_shippriority`   INT , " +
+            "  `o_comment`        VARCHAR(79), " +
+            "  `o_dummy` varchar(10), " +
+            "  PRIMARY KEY (`o_orderkey`))",
         schema));
     dbmsConn.execute(String.format(
-      "CREATE TABLE IF NOT EXISTS `%s`.`lineitem` ( `l_orderkey`    INT , " +
-      "  `l_partkey`     INT , " +
-      "  `l_suppkey`     INT , " +
-      "  `l_linenumber`  INT , " +
-      "  `l_quantity`    DECIMAL(15,2) , " +
-      "  `l_extendedprice`  DECIMAL(15,2) , " +
-      "  `l_discount`    DECIMAL(15,2) , " +
-      "  `l_tax`         DECIMAL(15,2) , " +
-      "  `l_returnflag`  CHAR(1) , " +
-      "  `l_linestatus`  CHAR(1) , " +
-      "  `l_shipdate`    DATE , " +
-      "  `l_commitdate`  DATE , " +
-      "  `l_receiptdate` DATE , " +
-      "  `l_shipinstruct` CHAR(25) , " +
-      "  `l_shipmode`     CHAR(10) , " +
-      "  `l_comment`      VARCHAR(44), " +
-      "  `l_dummy` varchar(10))",
+        "CREATE TABLE IF NOT EXISTS `%s`.`lineitem` ( `l_orderkey`    INT , " +
+            "  `l_partkey`     INT , " +
+            "  `l_suppkey`     INT , " +
+            "  `l_linenumber`  INT , " +
+            "  `l_quantity`    DECIMAL(15,2) , " +
+            "  `l_extendedprice`  DECIMAL(15,2) , " +
+            "  `l_discount`    DECIMAL(15,2) , " +
+            "  `l_tax`         DECIMAL(15,2) , " +
+            "  `l_returnflag`  CHAR(1) , " +
+            "  `l_linestatus`  CHAR(1) , " +
+            "  `l_shipdate`    DATE , " +
+            "  `l_commitdate`  DATE , " +
+            "  `l_receiptdate` DATE , " +
+            "  `l_shipinstruct` CHAR(25) , " +
+            "  `l_shipmode`     CHAR(10) , " +
+            "  `l_comment`      VARCHAR(44), " +
+            "  `l_dummy` varchar(10))",
         schema));
 
     // Load data
@@ -548,6 +549,7 @@ public class DatabaseConnectionHelpers {
             + "timeCol        time, "
             + "timestampCol   timestamp, "
             + "uuidCol        uuid, "
+            // dongyoungy: xml type is not supported because its object is not serializable
 //            + "xmlCol         xml,"
             + "bitvaryCol     bit varying(1),"
             + "int8Col        int8,"
@@ -630,9 +632,9 @@ public class DatabaseConnectionHelpers {
             + "dateCol       date,"
             + "timestampCol     timestamp, "
             + "timestampwtzCol timestamp without time zone) "
-            // dongyoungy: below two types are problematic as redshift uses a custom object
-            // and we currently do not include such object. The error msg is
-            // java.lang.ClassNotFoundException: com.amazon.redshift.api.PGTimestamp
+        // dongyoungy: below two types are problematic as redshift uses a custom object
+        // and we currently do not include such object. The error msg is
+        // java.lang.ClassNotFoundException: com.amazon.redshift.api.PGTimestamp
 //            + "timestamptzCol    timestamptz) "
 //            + "timestamptzCol2 timestamp with time zone)"
         , schema, table));
@@ -702,6 +704,71 @@ public class DatabaseConnectionHelpers {
 
     dbmsConn.execute(String.format("INSERT INTO \"%s\".\"%s\" VALUES (%s)",
         schema, table, Joiner.on(",").join(insertNullDataList)));
+
+    return conn;
+  }
+
+  public static Connection setupImpalaForDataTypeTest(
+      String connectionString, String user, String password, String schema, String table)
+      throws SQLException, VerdictDBDbmsException {
+    Connection conn = DriverManager.getConnection(connectionString, user, password);
+    DbmsConnection dbmsConn = new JdbcConnection(conn, new ImpalaSyntax());
+
+    dbmsConn.execute(String.format("CREATE SCHEMA IF NOT EXISTS `%s`", schema));
+    dbmsConn.execute(String.format("DROP TABLE IF EXISTS `%s`.`%s`", schema, table));
+    // These types are gathered from (Jul 2018):
+    // https://www.cloudera.com/documentation/enterprise/latest/topics/impala_datatypes.html#datatypes
+    dbmsConn.execute(String.format(
+        "CREATE TABLE `%s`.`%s` ("
+            + "bigintCol    bigint, "
+            + "booleanCol   boolean, "
+            + "charCol         char(10), "
+            + "decimalCol      decimal(5,2), "
+            + "doubleCol     double, "
+            + "floatCol         float, "
+            + "realCol       real, "
+            + "smallintCol        smallint, "
+            + "stringCol     string, "
+            + "timestampCol        timestamp, "
+            + "tinyintCol      tinyint) "
+        // dongyoungy: current version of impala we testing does not seem to support varchar
+//            + "varcharCol        varchar(10))"
+        , schema, table));
+//    dbmsConn.execute("INVALIDATE METADATA");
+//    dbmsConn.execute(String.format("REFRESH %s.%s", schema, table));
+
+    List<String> insertDataList = new ArrayList<>();
+    insertDataList.add("6"); // bigint
+    insertDataList.add("true"); // boolean
+    insertDataList.add("'john'"); // char
+    insertDataList.add("123.45"); // decimal
+    insertDataList.add("1000.001"); // double
+    insertDataList.add("1000.001"); // float
+    insertDataList.add("1000.001"); // real
+    insertDataList.add("1"); // smallint
+    insertDataList.add("'michael'"); // string
+    insertDataList.add("now()"); // timestamp
+    insertDataList.add("2"); // tinyint
+
+//    dbmsConn.execute(String.format("INSERT OVERWRITE `%s` VALUES (%s)",
+//        table, Joiner.on(",").join(insertDataList)));
+
+    List<String> insertNullDataList = new ArrayList<>();
+
+    insertNullDataList.add("6"); // bigint
+    insertNullDataList.add("true"); // boolean
+    insertNullDataList.add("'john'"); // char
+    insertNullDataList.add("123.45"); // decimal
+    insertNullDataList.add("1000.001"); // double
+    insertNullDataList.add("1000.001"); // float
+    insertNullDataList.add("1000.001"); // real
+    insertNullDataList.add("1"); // smallint
+    insertNullDataList.add("'michael'"); // string
+    insertNullDataList.add("'2018-12-31 11:22:33'"); // timestamp
+    insertNullDataList.add("2"); // tinyint
+
+//    dbmsConn.execute(String.format("INSERT INTO `%s` VALUES (%s)",
+//        table, Joiner.on(",").join(insertNullDataList)));
 
     return conn;
   }
