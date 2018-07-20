@@ -31,8 +31,7 @@ public class JdbcQueryDataTypeTestForAllDatabases {
   private String database = "";
 
   // TODO: Add support for all four databases
-//  private static final String[] targetDatabases = {"mysql", "impala", "redshift", "postgresql"};
-  private static final String[] targetDatabases = {"impala"};
+  private static final String[] targetDatabases = {"mysql", "impala", "redshift", "postgresql"};
 
   public JdbcQueryDataTypeTestForAllDatabases(String database) {
     this.database = database;
@@ -111,9 +110,9 @@ public class JdbcQueryDataTypeTestForAllDatabases {
 
   @BeforeClass
   public static void setupDatabases() throws SQLException, VerdictDBDbmsException {
-//    setupMysql();
-//    setupPostgresql();
-//    setupRedshift();
+    setupMysql();
+    setupPostgresql();
+    setupRedshift();
     setupImpala();
   }
 
