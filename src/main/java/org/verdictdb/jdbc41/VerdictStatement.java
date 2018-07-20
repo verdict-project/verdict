@@ -6,10 +6,8 @@ import java.sql.SQLFeatureNotSupportedException;
 import java.sql.SQLWarning;
 
 import org.verdictdb.VerdictContext;
-import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.coordinator.ExecutionContext;
 import org.verdictdb.coordinator.VerdictSingleResult;
-import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.exception.VerdictDBException;
 
 public class VerdictStatement implements java.sql.Statement {

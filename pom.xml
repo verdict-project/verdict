@@ -330,6 +330,7 @@
           <groupId>org.apache.spark</groupId>
           <artifactId>spark-hive_2.11</artifactId>
           <version>${spark.version}</version>
+          <!--  This exclusion causes errors; I have added matching slf4j version in our project. -->
           <!-- <exclusions> <exclusion> <groupId>org.slf4j</groupId> <artifactId>slf4j-log4j12</artifactId>
             </exclusion> <exclusion> <groupId>org.slf4j</groupId> <artifactId>slf4j-simple</artifactId>
             </exclusion> </exclusions> -->
@@ -369,14 +370,14 @@
   </profiles>
 
   <scm>
-    <url>git@github.com:umich-dbgroup/verdictdb-core.git</url>
+    <url>git@github.com:mozafari/verdictdb.git</url>
     <connection>git</connection>
     <developerConnection>The University of Michigan, Ann Arbor</developerConnection>
   </scm>
   <ciManagement>
-    <url>https://github.com/umich-dbgroup/verdictdb-core</url>
+    <url>https://github.com/mozafari/verdictdb</url>
   </ciManagement>
   <issueManagement>
-    <url>https://github.com/umich-dbgroup/verdictdb-core/issues</url>
+    <url>https://github.com/mozafari/verdictdb/issues</url>
   </issueManagement>
 </project>

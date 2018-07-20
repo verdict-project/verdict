@@ -1,28 +1,6 @@
 package org.verdictdb.core.querying.ola;
 
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.verdictdb.commons.DatabaseConnectionHelpers;
-import org.verdictdb.connection.DbmsConnection;
-import org.verdictdb.connection.JdbcConnection;
-import org.verdictdb.connection.StaticMetaData;
-import org.verdictdb.coordinator.ScramblingCoordinator;
-import org.verdictdb.core.execplan.ExecutablePlanRunner;
-import org.verdictdb.core.querying.QueryExecutionPlan;
-import org.verdictdb.core.scrambling.ScrambleMeta;
-import org.verdictdb.core.scrambling.ScrambleMetaSet;
-import org.verdictdb.core.scrambling.UniformScrambler;
-import org.verdictdb.core.sqlobject.AbstractRelation;
-import org.verdictdb.core.sqlobject.CreateTableAsSelectQuery;
-import org.verdictdb.core.sqlobject.SelectQuery;
-import org.verdictdb.exception.VerdictDBDbmsException;
-import org.verdictdb.exception.VerdictDBException;
-import org.verdictdb.sqlreader.NonValidatingSQLParser;
-import org.verdictdb.sqlreader.RelationStandardizer;
-import org.verdictdb.sqlsyntax.H2Syntax;
-import org.verdictdb.sqlwriter.QueryToSql;
+import static java.sql.Types.BIGINT;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -33,7 +11,25 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
-import static java.sql.Types.BIGINT;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.verdictdb.connection.JdbcConnection;
+import org.verdictdb.connection.StaticMetaData;
+import org.verdictdb.core.execplan.ExecutablePlanRunner;
+import org.verdictdb.core.querying.QueryExecutionPlan;
+import org.verdictdb.core.scrambling.ScrambleMeta;
+import org.verdictdb.core.scrambling.ScrambleMetaSet;
+import org.verdictdb.core.scrambling.UniformScrambler;
+import org.verdictdb.core.sqlobject.AbstractRelation;
+import org.verdictdb.core.sqlobject.CreateTableAsSelectQuery;
+import org.verdictdb.core.sqlobject.SelectQuery;
+import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.sqlreader.NonValidatingSQLParser;
+import org.verdictdb.sqlreader.RelationStandardizer;
+import org.verdictdb.sqlsyntax.H2Syntax;
+import org.verdictdb.sqlwriter.QueryToSql;
 
 public class AsyncHavingStandardTest {
 

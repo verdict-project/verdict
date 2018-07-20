@@ -1,7 +1,5 @@
 package org.verdictdb.connection;
 
-import static java.sql.Types.BIT;
-
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
