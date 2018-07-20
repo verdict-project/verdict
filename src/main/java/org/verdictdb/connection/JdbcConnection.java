@@ -11,11 +11,7 @@ import java.util.List;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.exception.VerdictDBDbmsException;
-import org.verdictdb.sqlsyntax.HiveSyntax;
-import org.verdictdb.sqlsyntax.PostgresqlSyntax;
-import org.verdictdb.sqlsyntax.SparkSyntax;
-import org.verdictdb.sqlsyntax.SqlSyntax;
-import org.verdictdb.sqlsyntax.SqlSyntaxList;
+import org.verdictdb.sqlsyntax.*;
 
 public class JdbcConnection implements DbmsConnection {
   
@@ -175,7 +171,15 @@ public class JdbcConnection implements DbmsConnection {
   @Override
   public List<String> getPartitionColumns(String schema, String table) throws VerdictDBDbmsException {
     List<String> partition = new ArrayList<>();
-    DbmsQueryResult queryResult = executeQuery(syntax.getPartitionCommand(schema, table));
+    DbmsQueryResult queryResult;
+    if (syntax instanceof ImpalaSyntax) {
+      try {
+        queryResult = executeQuery(syntax.getPartitionCommand(schema, table));
+      } catch (Exception e) {
+        return partition;
+      }
+    }
+    else  queryResult = executeQuery(syntax.getPartitionCommand(schema, table));
     //    VerdictResultSet jdbcQueryResult = new VerdictResultSet(queryResult);
 
     // the result of postgresql is a vector of column index
