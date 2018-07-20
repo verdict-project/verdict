@@ -565,7 +565,6 @@ public class DatabaseConnectionHelpers {
       String[] values = row.split("\\|");
       values[1] = "'" + values[1]+ "'";
       values[3] = "'" + values[3]+ "'";
-      values[4] = "''";
       row = values[0]+","+values[1]+","+values[2]+","+values[3]+","+"''";
       if (concat.equals("")) {
         concat = concat + "(" + row + ")";
