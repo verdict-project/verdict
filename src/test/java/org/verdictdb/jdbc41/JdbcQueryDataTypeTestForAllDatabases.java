@@ -1,7 +1,5 @@
 package org.verdictdb.jdbc41;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -9,15 +7,12 @@ import org.junit.runners.Parameterized;
 import org.verdictdb.commons.DatabaseConnectionHelpers;
 import org.verdictdb.exception.VerdictDBDbmsException;
 
-import java.io.File;
 import java.io.IOException;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Created by Dong Young Yoon on 7/18/18.
@@ -37,7 +32,7 @@ public class JdbcQueryDataTypeTestForAllDatabases {
 
   // TODO: Add support for all four databases
 //  private static final String[] targetDatabases = {"mysql", "impala", "redshift", "postgresql"};
-  private static final String[] targetDatabases = {"mysql"};
+  private static final String[] targetDatabases = {"mysql", "postgres", "redshift"};
 
   public JdbcQueryDataTypeTestForAllDatabases(String database) {
     this.database = database;
@@ -116,6 +111,8 @@ public class JdbcQueryDataTypeTestForAllDatabases {
     REDSHIFT_PASSWORD = System.getenv("VERDICTDB_TEST_REDSHIFT_PASSWORD");
   }
 
+  private static final String SCHEMA_NAME = "data_type_test";
+
   private static final String TABLE_NAME = "mytable";
 
   private static VerdictConnection mysqlVc;
@@ -123,10 +120,10 @@ public class JdbcQueryDataTypeTestForAllDatabases {
   @BeforeClass
   public static void setupDatabases() throws SQLException, VerdictDBDbmsException {
     setupMysql();
+    setupPostgresql();
+    setupRedshift();
     // TODO: Add below databases too
 //    setupImpala();
-//    setupRedshift();
-//    setupPostgresql();
   }
 
   @Parameterized.Parameters(name = "{0}")
@@ -171,7 +168,8 @@ public class JdbcQueryDataTypeTestForAllDatabases {
   public static Connection setupRedshift() throws SQLException, VerdictDBDbmsException {
     String connectionString =
         String.format("jdbc:redshift://%s/%s", REDSHIFT_HOST, REDSHIFT_DATABASE);
-    Connection conn = DriverManager.getConnection(connectionString, REDSHIFT_USER, REDSHIFT_PASSWORD);
+    Connection conn = DatabaseConnectionHelpers.setupRedshiftForDataTypeTest(
+        connectionString, REDSHIFT_USER, REDSHIFT_PASSWORD, SCHEMA_NAME, TABLE_NAME);
     VerdictConnection vc = new VerdictConnection(connectionString, REDSHIFT_USER, REDSHIFT_PASSWORD);
     connMap.put("redshift", conn);
     vcMap.put("redshift", vc);
@@ -179,11 +177,11 @@ public class JdbcQueryDataTypeTestForAllDatabases {
     return conn;
   }
 
-  public static Connection setupPostgresql() throws SQLException, VerdictDBDbmsException, IOException {
+  public static Connection setupPostgresql() throws SQLException, VerdictDBDbmsException {
     String connectionString =
         String.format("jdbc:postgresql://%s/%s", POSTGRES_HOST, POSTGRES_DATABASE);
-    Connection conn = DatabaseConnectionHelpers.setupPostgresql(
-        connectionString, POSTGRES_HOST, POSTGRES_PASSWORD, POSTGRES_SCHEMA);
+    Connection conn = DatabaseConnectionHelpers.setupPostgresqlForDataTypeTest(
+        connectionString, POSTGRES_USER, POSTGRES_PASSWORD, SCHEMA_NAME, TABLE_NAME);
     VerdictConnection vc = new VerdictConnection(connectionString, POSTGRES_USER, POSTGRES_PASSWORD);
     connMap.put("postgresql", conn);
     vcMap.put("postgresql", vc);
@@ -193,7 +191,12 @@ public class JdbcQueryDataTypeTestForAllDatabases {
 
   @Test
   public void testDataType() throws IOException, SQLException {
-    String sql = String.format("SELECT * FROM `%s`.`%s`", MYSQL_DATABASE, MYSQL_TABLE);
+    String sql = "";
+    if (database.equals("mysql")) {
+      sql = String.format("SELECT * FROM `%s`.`%s`", SCHEMA_NAME, TABLE_NAME);
+    } else if (database.equals("postgresql") || database.equals("redshift")) {
+      sql = String.format("SELECT * FROM \"%s\".\"%s\"", SCHEMA_NAME, TABLE_NAME);
+    }
 
     Statement jdbcStmt = connMap.get(database).createStatement();
     Statement vcStmt = vcMap.get(database).createStatement();
@@ -204,8 +207,15 @@ public class JdbcQueryDataTypeTestForAllDatabases {
     int columnCount = jdbcRs.getMetaData().getColumnCount();
     while (jdbcRs.next() && vcRs.next()) {
       for (int i = 1; i <= columnCount; ++i) {
-        System.out.println(jdbcRs.getObject(i) + " : " + vcRs.getObject(i));
-        assertEquals(jdbcRs.getObject(i), vcRs.getObject(i));
+        String columnName = jdbcRs.getMetaData().getColumnName(i);
+        Object theirs = jdbcRs.getObject(i);
+        Object ours = vcRs.getObject(i);
+        System.out.println(columnName + " >> " + theirs + " : " + ours);
+        if (theirs instanceof byte[]) {
+          assertTrue(Arrays.equals((byte[]) theirs, (byte[]) ours));
+        } else {
+          assertEquals(jdbcRs.getObject(i), vcRs.getObject(i));
+        }
       }
     }
   }

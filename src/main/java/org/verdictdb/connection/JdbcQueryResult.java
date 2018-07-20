@@ -59,12 +59,12 @@ public class JdbcQueryResult extends AttributeValueRetrievalHelper implements Db
     while (resultSet.next()) {
       List<Object> row = new ArrayList<>();
       for (int i=0; i< columnCount; i++) {
-        if (resultSet.getMetaData().getColumnType(i+1) == BIT) {
-          row.add(resultSet.getString(i+1));
-        } else {
+//        if (resultSet.getMetaData().getColumnType(i+1) == BIT) {
+//          row.add(resultSet.getString(i+1));
+//        } else {
           Object value = resultSet.getObject(i+1);
           row.add(value);
-        }
+//        }
       }
       result.add(row);
     }
