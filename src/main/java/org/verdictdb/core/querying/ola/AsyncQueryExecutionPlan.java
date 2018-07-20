@@ -3,7 +3,10 @@ package org.verdictdb.core.querying.ola;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.verdictdb.core.querying.*;
+import org.verdictdb.core.querying.AggExecutionNode;
+import org.verdictdb.core.querying.ExecutableNodeBase;
+import org.verdictdb.core.querying.QueryExecutionPlan;
+import org.verdictdb.core.querying.QueryNodeBase;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
 import org.verdictdb.core.sqlobject.AbstractRelation;
 import org.verdictdb.core.sqlobject.BaseTable;
