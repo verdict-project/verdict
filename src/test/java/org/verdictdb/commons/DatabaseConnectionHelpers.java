@@ -858,7 +858,6 @@ public class DatabaseConnectionHelpers {
             + "stringCol     string, "
             + "timestampCol        timestamp, "
             + "tinyintCol      tinyint, "
-        // dongyoungy: current version of impala we testing does not seem to support varchar
             + "varcharCol        varchar(10))"
         , schema, table));
 //    dbmsConn.execute("INVALIDATE METADATA");
