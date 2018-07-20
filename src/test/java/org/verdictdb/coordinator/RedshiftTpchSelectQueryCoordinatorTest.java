@@ -1,14 +1,5 @@
 package org.verdictdb.coordinator;
 
-import static org.junit.Assert.assertEquals;
-
-import java.io.File;
-import java.io.IOException;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -26,12 +17,21 @@ import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
 import org.verdictdb.core.sqlobject.AbstractRelation;
 import org.verdictdb.core.sqlobject.SelectQuery;
+import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sqlreader.NonValidatingSQLParser;
 import org.verdictdb.sqlreader.RelationStandardizer;
-import org.verdictdb.sqlsyntax.MysqlSyntax;
 import org.verdictdb.sqlsyntax.RedshiftSyntax;
 import org.verdictdb.sqlwriter.SelectQueryToSql;
+
+import java.io.File;
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  *  Test cases are from
@@ -39,7 +39,11 @@ import org.verdictdb.sqlwriter.SelectQueryToSql;
  *
  *  Some test cases are slightly changed because size of test data are small.
  */
-public class MySqlTpchSelectQueryCoordinatorTest {
+public class RedshiftTpchSelectQueryCoordinatorTest {
+
+  static Connection redshiftConn;
+
+  static DbmsConnection dbmsConn;
 
   // lineitem has 10 blocks, orders has 3 blocks;
   // lineitem join orders has 12 blocks
@@ -47,50 +51,25 @@ public class MySqlTpchSelectQueryCoordinatorTest {
 
   static ScrambleMetaSet meta = new ScrambleMetaSet();
 
-  static Connection conn;
-
   private static Statement stmt;
 
-  private static final String MYSQL_HOST;
+  private static final String REDSHIFT_HOST;
+
+  private static final String REDSHIFT_DATABASE = "dev";
+
+  private static final String REDSHIFT_SCHEMA = "tpch";
+
+  private static final String REDSHIFT_USER;
+
+  private static final String REDSHIFT_PASSWORD;
 
   static {
-    String env = System.getenv("BUILD_ENV");
-    if (env != null && env.equals("GitLab")) {
-      MYSQL_HOST = "mysql";
-    } else {
-      MYSQL_HOST = "localhost";
-    }
-  }
-
-  private static final String MYSQL_DATABASE = "coordinator_test";
-
-  private static final String MYSQL_UESR = "root";
-
-  private static final String MYSQL_PASSWORD = "zhongshucheng123";
-
-  @BeforeClass
-  public static void setupMySqlDatabase() throws SQLException, VerdictDBException {
-    String mysqlConnectionString =
-        String.format("jdbc:mysql://%s?autoReconnect=true&useSSL=false", MYSQL_HOST);
-    conn = DatabaseConnectionHelpers.setupMySql(
-        mysqlConnectionString, MYSQL_UESR, MYSQL_PASSWORD, MYSQL_DATABASE);
-    stmt = conn.createStatement();
-    DbmsConnection dbmsConn = JdbcConnection.create(conn);
-
-    // Create Scramble table
-    dbmsConn.execute(String.format("DROP TABLE IF EXISTS `%s`.`lineitem_scrambled`", MYSQL_DATABASE));
-    dbmsConn.execute(String.format("DROP TABLE IF EXISTS `%s`.`orders_scrambled`", MYSQL_DATABASE));
-    
-    ScramblingCoordinator scrambler = 
-        new ScramblingCoordinator(dbmsConn, MYSQL_DATABASE, MYSQL_DATABASE, (long) 100);
-    ScrambleMeta meta1 = 
-        scrambler.scramble(MYSQL_DATABASE, "lineitem", MYSQL_DATABASE, "lineitem_scrambled", "uniform");
-    ScrambleMeta meta2 = 
-        scrambler.scramble(MYSQL_DATABASE, "orders", MYSQL_DATABASE, "orders_scrambled", "uniform");
-    meta.addScrambleMeta(meta1);
-    meta.addScrambleMeta(meta2);
-
-    stmt.execute("create schema if not exists `verdictdb_temp`");
+    REDSHIFT_HOST = System.getenv("VERDICTDB_TEST_REDSHIFT_ENDPOINT");
+    REDSHIFT_USER = System.getenv("VERDICTDB_TEST_REDSHIFT_USER");
+    REDSHIFT_PASSWORD = System.getenv("VERDICTDB_TEST_REDSHIFT_PASSWORD");
+//    System.out.println(REDSHIFT_HOST);
+//    System.out.println(REDSHIFT_USER);
+//    System.out.println(REDSHIFT_PASSWORD);
   }
 
   Pair<ExecutionResultReader, ResultSet> getAnswerPair(int queryNum)
@@ -99,8 +78,8 @@ public class MySqlTpchSelectQueryCoordinatorTest {
     File file = new File("src/test/resources/tpch_test_query/"+filename);
     String sql = Files.toString(file, Charsets.UTF_8);
     DbmsConnection dbmsconn = new CachedDbmsConnection(
-        new JdbcConnection(conn, new MysqlSyntax()));
-    dbmsconn.setDefaultSchema(MYSQL_DATABASE);
+        new JdbcConnection(redshiftConn, new RedshiftSyntax()));
+    dbmsConn.setDefaultSchema(REDSHIFT_SCHEMA);
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     coordinator.setScrambleMetaSet(meta);
     ExecutionResultReader reader = coordinator.process(sql);
@@ -110,10 +89,35 @@ public class MySqlTpchSelectQueryCoordinatorTest {
     RelationStandardizer gen = new RelationStandardizer(dbmsconn);
     relation = gen.standardize((SelectQuery) relation);
 
-    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
+    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new RedshiftSyntax());
     String stdQuery = selectQueryToSql.toSql(relation);
     ResultSet rs = stmt.executeQuery(stdQuery);
     return new ImmutablePair<>(reader, rs);
+  }
+
+  @BeforeClass
+  public static void setupRedshiftDatabase() throws SQLException, VerdictDBException, IOException {
+    String connectionString =
+        String.format("jdbc:redshift://%s/%s", REDSHIFT_HOST, REDSHIFT_DATABASE);
+    redshiftConn =
+        DatabaseConnectionHelpers.setupRedshift(
+            connectionString, REDSHIFT_USER, REDSHIFT_PASSWORD, REDSHIFT_SCHEMA);
+    stmt = redshiftConn.createStatement();
+
+    // Create Scramble table
+    dbmsConn.execute(String.format("DROP TABLE IF EXISTS \"%s\".\"lineitem_scrambled\"", REDSHIFT_SCHEMA));
+    dbmsConn.execute(String.format("DROP TABLE IF EXISTS \"%s\".\"orders_scrambled\"", REDSHIFT_SCHEMA));
+
+    ScramblingCoordinator scrambler =
+        new ScramblingCoordinator(dbmsConn, REDSHIFT_SCHEMA, REDSHIFT_SCHEMA, (long) 100);
+    ScrambleMeta meta1 =
+        scrambler.scramble(REDSHIFT_SCHEMA, "lineitem", REDSHIFT_SCHEMA, "lineitem_scrambled", "uniform");
+    ScrambleMeta meta2 =
+        scrambler.scramble(REDSHIFT_SCHEMA, "orders", REDSHIFT_SCHEMA, "orders_scrambled", "uniform");
+    meta.addScrambleMeta(meta1);
+    meta.addScrambleMeta(meta2);
+
+    stmt.execute("create schema if not exists \"verdictdb_temp\"");
   }
 
   @Test
@@ -310,7 +314,6 @@ public class MySqlTpchSelectQueryCoordinatorTest {
     assertEquals(12, cnt);
   }
 
-
   @Test
   public void query12Test() throws VerdictDBException, SQLException, IOException {
     Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(12);
@@ -435,7 +438,6 @@ public class MySqlTpchSelectQueryCoordinatorTest {
     assertEquals(12, cnt);
   }
 
-
   @Test
   public void query19Test() throws VerdictDBException, SQLException, IOException {
     Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(19);
@@ -475,7 +477,6 @@ public class MySqlTpchSelectQueryCoordinatorTest {
     assertEquals(10, cnt);
   }
 
-
   @Test
   public void query21Test() throws VerdictDBException, SQLException, IOException {
     Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(21);
@@ -496,8 +497,11 @@ public class MySqlTpchSelectQueryCoordinatorTest {
     assertEquals(12, cnt);
   }
 
+
+
+
   @AfterClass
   public static void tearDown() throws SQLException {
-    stmt.execute(String.format("DROP SCHEMA IF EXISTS `%s`", MYSQL_DATABASE));
+    stmt.execute(String.format("drop schema if exists \"%s\" CASCADE", REDSHIFT_SCHEMA));
   }
 }

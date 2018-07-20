@@ -44,10 +44,10 @@ public class ImpalaUniformScramblingCoordinatorTest {
   public static void setupMySqlDatabase() throws SQLException, VerdictDBDbmsException, IOException {
     String connectionString =
         String.format("jdbc:impala://%s:21050/%s", IMPALA_HOST, IMPALA_DATABASE);
-    conn =
-        DatabaseConnectionHelpers.setupImpala(
-            connectionString, IMPALA_UESR, IMPALA_PASSWORD, IMPALA_DATABASE);
-    stmt = conn.createStatement();
+   // conn =
+   //     DatabaseConnectionHelpers.setupImpala(
+   //         connectionString, IMPALA_UESR, IMPALA_PASSWORD, IMPALA_DATABASE);
+   // stmt = conn.createStatement();
   }
 
   @Test
@@ -55,8 +55,8 @@ public class ImpalaUniformScramblingCoordinatorTest {
 
   }
 
-  @AfterClass
-  public static void tearDown() throws SQLException {
-    stmt.execute(String.format("drop schema if exists `%s`", IMPALA_DATABASE));
-  }
+  //@AfterClass
+  //public static void tearDown() throws SQLException {
+  //  stmt.execute(String.format("drop schema if exists `%s`", IMPALA_DATABASE));
+  //}
 }
