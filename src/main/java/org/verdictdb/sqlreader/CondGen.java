@@ -104,9 +104,9 @@ public class CondGen extends VerdictSQLParserBaseVisitor<UnnamedColumn> {
     UnnamedColumn left = g.visit(ctx.expression());
 
     if (ctx.null_notnull().NOT() == null) {
-      return ColumnOp.isnull(left);
+      return ColumnOp.rightisnull(left); // ?? is null
     } else {
-      return ColumnOp.isnotnull(left);
+      return ColumnOp.rightisnotnull(left); // ?? is not null
     }
 //        UnnamedColumn right = visit(ctx.null_notnull());
 //        return new ColumnOp("is", Arrays.asList(left, right));

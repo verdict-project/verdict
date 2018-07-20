@@ -127,12 +127,46 @@ public class DataTypeConverter {
     stringToIntMap.put("character varying", VARCHAR);
     stringToIntMap.put("character", CHAR);
     stringToIntMap.put("int", INTEGER);
+    stringToIntMap.put("mediumint", INTEGER);
     stringToIntMap.put("text", LONGNVARCHAR);
     stringToIntMap.put("double precision", DOUBLE);
     stringToIntMap.put("smallserial", INTEGER);
     stringToIntMap.put("serial", INTEGER);
     stringToIntMap.put("bigserial", BIGINT);
     stringToIntMap.put("string", VARCHAR);
+    stringToIntMap.put("datetime", TIMESTAMP);
+    stringToIntMap.put("timestamp", TIMESTAMP);
+    stringToIntMap.put("timestamp without time zone", TIMESTAMP);
+    // MySql
+    stringToIntMap.put("tinyblob", BLOB);
+    stringToIntMap.put("mediumblob", BLOB);
+    stringToIntMap.put("longblob", BLOB);
+    stringToIntMap.put("tinytext", VARCHAR);
+    stringToIntMap.put("mediumtext", VARCHAR);
+    stringToIntMap.put("longtext", VARCHAR);
+    stringToIntMap.put("enum", CHAR);
+    stringToIntMap.put("set", CHAR);
+    stringToIntMap.put("year", DATE);
+    // Postgresql
+    stringToIntMap.put("bit varying", BINARY);
+    stringToIntMap.put("box", BLOB); // Assign BLOB to geometric objects for now.
+    stringToIntMap.put("bytea", LONGVARBINARY);
+    stringToIntMap.put("cidr", VARCHAR);
+    stringToIntMap.put("circle", BLOB);
+    stringToIntMap.put("inet", VARCHAR);
+    stringToIntMap.put("json", CLOB);
+    stringToIntMap.put("line", BLOB);
+    stringToIntMap.put("lseg", BLOB);
+    stringToIntMap.put("macaddr", VARCHAR);
+    stringToIntMap.put("macaddr8", VARCHAR);
+    stringToIntMap.put("money", DOUBLE);
+    stringToIntMap.put("path", BLOB);
+    stringToIntMap.put("point", BLOB);
+    stringToIntMap.put("polygon", BLOB);
+    stringToIntMap.put("time without time zone", TIME);
+    stringToIntMap.put("time with time zone", TIME);
+    stringToIntMap.put("timestamp with time zone", TIMESTAMP);
+    stringToIntMap.put("uuid", VARCHAR);
   }
 
   public static String typeName(int inttype) {
@@ -141,7 +175,9 @@ public class DataTypeConverter {
   
   public static int typeInt(String typename) {
 //    System.out.println(typename);
-    return stringToIntMap.get(typename.toLowerCase().replaceAll("\\(.*\\)", ""));
+    String type = typename.toLowerCase().replaceAll("\\(.*\\)", "");
+//    return stringToIntMap.get(typename.toLowerCase().replaceAll("\\(.*\\)", ""));
+    return stringToIntMap.get(type);
   }
   
   private static HashSet<Integer> numericTypes = new HashSet<>(Arrays.asList(

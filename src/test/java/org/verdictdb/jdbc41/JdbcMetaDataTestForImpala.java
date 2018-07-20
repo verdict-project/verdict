@@ -9,6 +9,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
 
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -18,12 +19,12 @@ import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.exception.VerdictDBDbmsException;
 
 /**
- * 
+ *
  * @author Yongjoo Park
  *
  */
 public class JdbcMetaDataTestForImpala {
-  
+
   static Connection conn;
 
   static DbmsConnection dbmsConn;
@@ -32,7 +33,7 @@ public class JdbcMetaDataTestForImpala {
 
   private static final String IMPALA_HOST;
 
-  private static final String IMPALA_DATABASE = "default";
+  private static final String IMPALA_DATABASE = "default_" + RandomStringUtils.randomNumeric(3);;
 
   private static final String IMPALA_UESR = "";
 
@@ -57,9 +58,10 @@ public class JdbcMetaDataTestForImpala {
     dbmsConn = JdbcConnection.create(conn);
 
     stmt = conn.createStatement();
-    stmt.execute(String.format("DROP TABLE IF EXISTS `%s`", TABLE_NAME));
+    stmt.execute(String.format("DROP SCHEMA IF EXISTS `%s` CASCADE", IMPALA_DATABASE));
+    // stmt.execute(String.format("DROP TABLE IF EXISTS `%s`.`%s`", IMPALA_DATABASE, TABLE_NAME));
     stmt.execute(String.format(
-        "CREATE TABLE `%s` ("
+        "CREATE TABLE `%s`.`%s` ("
             + "tinyintCol    TINYINT, "
             + "boolCol       BOOLEAN, "
             + "smallintCol   SMALLINT, "
@@ -70,16 +72,16 @@ public class JdbcMetaDataTestForImpala {
             + "doubleCol     DOUBLE, "
             + "timestampCol  TIMESTAMP, "
             + "charCol       CHAR(4), "
-            + "stringCol     STRING)"
-        , TABLE_NAME));
+            + "stringCol     STRING)",
+        IMPALA_DATABASE, TABLE_NAME));
   }
-  
+
   @AfterClass
   public static void tearDown() throws VerdictDBDbmsException {
-    dbmsConn.execute(String.format("DROP TABLE IF EXISTS %s", TABLE_NAME));
+    dbmsConn.execute(String.format("DROP SCHEMA IF EXISTS `%s` CASCADE", IMPALA_DATABASE));
     dbmsConn.close();
   }
-  
+
   @Test
   public void testColumnTypes() throws VerdictDBDbmsException, SQLException {
     List<Pair<String, String>> columns = dbmsConn.getColumns("default", TABLE_NAME);

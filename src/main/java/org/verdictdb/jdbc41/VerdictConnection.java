@@ -28,8 +28,16 @@ public class VerdictConnection implements java.sql.Connection {
 
   boolean isOpen = false;
 
+  public VerdictConnection(String url) throws VerdictDBDbmsException, SQLException {
+    vc = VerdictContext.fromConnectionString(url);
+  }
+
   public VerdictConnection(String url, Properties info) throws VerdictDBDbmsException, SQLException {
     vc = VerdictContext.fromConnectionString(url, info);
+  }
+
+  public VerdictConnection(String url, String user, String password) throws VerdictDBDbmsException, SQLException {
+    vc = VerdictContext.fromConnectionString(url, user, password);
   }
 
   private java.sql.DatabaseMetaData getDatabaseMetaData() {
@@ -55,7 +63,7 @@ public class VerdictConnection implements java.sql.Connection {
 
   @Override
   public java.sql.PreparedStatement prepareStatement(String sql) throws SQLException {
-    return new VerdictPreparedStatement(createStatement());
+    return new VerdictPreparedStatement(new VerdictStatement(this, vc));
   }
 
   @Override
@@ -80,7 +88,7 @@ public class VerdictConnection implements java.sql.Connection {
 
   @Override
   public void commit() throws SQLException {
-
+    throw new SQLFeatureNotSupportedException();
   }
 
   @Override

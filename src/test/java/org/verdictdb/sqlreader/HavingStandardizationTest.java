@@ -1,22 +1,22 @@
 package org.verdictdb.sqlreader;
 
+import static java.sql.Types.BIGINT;
+import static org.junit.Assert.assertEquals;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Before;
 import org.junit.Test;
 import org.verdictdb.connection.StaticMetaData;
-import org.verdictdb.core.sqlobject.*;
+import org.verdictdb.core.sqlobject.AbstractRelation;
+import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sqlsyntax.MysqlSyntax;
 import org.verdictdb.sqlwriter.SelectQueryToSql;
-
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import static java.sql.Types.BIGINT;
-import static org.junit.Assert.assertEquals;
 
 public class HavingStandardizationTest {
 
@@ -152,6 +152,31 @@ public class HavingStandardizationTest {
         "group by `groupkey` " +
         "having `value` > 10 " +
         "order by `value` desc";
+    assertEquals(expected, actual);
+  }
+
+  @Test
+  public void ReplaceGroupbyIndexTest() throws VerdictDBException {
+    RelationStandardizer.resetItemID();
+
+    String sql =
+        "select ps_partkey as g, ps_supplycost as g2, count(*) as c\n" +
+            "from partsupp\n" +
+            "group by 1, 2";
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
+    RelationStandardizer gen = new RelationStandardizer(meta);
+    relation = gen.standardize((SelectQuery) relation);
+
+    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
+    String actual = selectQueryToSql.toSql(relation);
+    String expected =
+        "select " +
+            "vt1.`ps_partkey` as `g`, " +
+            "vt1.`ps_supplycost` as `g2`, " +
+            "count(*) as `c` " +
+            "from `tpch`.`partsupp` as vt1 " +
+            "group by `g`, `g2`";
     assertEquals(expected, actual);
   }
 }

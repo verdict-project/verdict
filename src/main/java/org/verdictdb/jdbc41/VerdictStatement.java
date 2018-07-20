@@ -7,6 +7,8 @@ import java.sql.SQLWarning;
 
 import org.verdictdb.VerdictContext;
 import org.verdictdb.coordinator.ExecutionContext;
+import org.verdictdb.coordinator.VerdictSingleResult;
+import org.verdictdb.exception.VerdictDBException;
 
 public class VerdictStatement implements java.sql.Statement {
   
@@ -15,35 +17,49 @@ public class VerdictStatement implements java.sql.Statement {
   VerdictContext context;
   
   ExecutionContext executionContext;
-  
+
+  VerdictSingleResult result;
+
   public VerdictStatement(VerdictConnection jdbcConn, VerdictContext context) {
     this.jdbcConn = jdbcConn;
     this.context = context;
-//    this.executionContext = new ExecutionContext(context);
+    this.executionContext = context.createNewExecutionContext();
   }
 
   @Override
   public boolean execute(String sql) throws SQLException {
-    // TODO Auto-generated method stub
-    return false;
+    try {
+      result = executionContext.sql(sql);
+      return !result.isEmpty();
+    } catch (VerdictDBException e) {
+      throw new SQLException(e);
+    }
   }
 
   @Override
   public ResultSet executeQuery(String sql) throws SQLException {
-    // TODO Auto-generated method stub
-    return null;
+    try {
+      result = executionContext.sql(sql);
+      return new VerdictResultSet(result);
+    } catch (VerdictDBException e) {
+      throw new SQLException(e);
+    }
   }
 
   @Override
   public int executeUpdate(String sql) throws SQLException {
-    // TODO Auto-generated method stub
-    return 0;
+    try {
+      result = executionContext.sql(sql);
+      return (int) result.getRowCount();
+    } catch (VerdictDBException e) {
+      throw new SQLException(e);
+    }
   }
 
   @Override
   public void close() throws SQLException {
-    // TODO Auto-generated method stub
-
+    // dongyoungy: is this correct for close() to also call terminate() just like cancel()?
+    executionContext.terminate();
   }
 
   @Override
@@ -54,14 +70,12 @@ public class VerdictStatement implements java.sql.Statement {
 
   @Override
   public ResultSet getResultSet() throws SQLException {
-    // TODO Auto-generated method stub
-    return null;
+    return new VerdictResultSet(result);
   }
 
   @Override
   public java.sql.Connection getConnection() throws SQLException {
-    // TODO Auto-generated method stub
-    return null;
+    return jdbcConn;
   }
 
   @Override

@@ -3,6 +3,7 @@ package org.verdictdb.coordinator;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.NotSerializableException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
@@ -70,7 +71,11 @@ public class VerdictSingleResult extends AttributeValueRetrievalHelper {
       DbmsQueryResult copied = (DbmsQueryResult) in.readObject();
       return copied;
       
-    } catch (IOException | ClassNotFoundException e) {
+    } catch (ClassNotFoundException e) {
+      e.printStackTrace();
+    } catch (NotSerializableException e) {
+      e.printStackTrace();
+    } catch (IOException e) {
       e.printStackTrace();
     }
     return null;

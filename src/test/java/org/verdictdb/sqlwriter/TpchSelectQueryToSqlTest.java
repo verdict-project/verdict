@@ -1204,7 +1204,7 @@ public class TpchSelectQueryToSqlTest {
         "(" +
         "select " +
         "c.`c_custkey`, " +
-        "count(*) " +
+        "count(o.`o_orderkey`) " +
         "from " +
         "`tpch`.`customer` as c left outer join `tpch`.`orders` as o on " +
         "((c.`c_custkey` = o.`o_custkey`) " +

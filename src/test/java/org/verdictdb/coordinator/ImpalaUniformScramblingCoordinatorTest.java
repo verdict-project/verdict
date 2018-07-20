@@ -1,6 +1,6 @@
 package org.verdictdb.coordinator;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -8,7 +8,8 @@ import java.sql.Statement;
 import java.util.Arrays;
 import java.util.List;
 
-import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.commons.DatabaseConnectionHelpers;
@@ -19,28 +20,42 @@ import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.exception.VerdictDBException;
 
 public class ImpalaUniformScramblingCoordinatorTest {
-  
+
   private static Connection impalaConn;
-  
+
   private static Statement impalaStmt;
 
-  private static final String IMPALA_HOST = "localhost";
+  private static final String IMPALA_HOST;
 
-  private static final String IMPALA_DATABASE = "scrambling_coordinator_test";
+  // to avoid possible conflicts among concurrent tests
+  private static final String IMPALA_DATABASE =
+      "scrambling_coordinator_test_" + RandomStringUtils.randomNumeric(3);
 
   private static final String IMPALA_UESR = "";
 
   private static final String IMPALA_PASSWORD = "";
 
+  static {
+    IMPALA_HOST = System.getenv("VERDICTDB_TEST_IMPALA_HOST");
+  }
+
   @BeforeClass
   public static void setupMySqlDatabase() throws SQLException, VerdictDBDbmsException {
     String impalaConnectionString =
         String.format("jdbc:impala://%s:21050", IMPALA_HOST);
-    impalaConn = 
+    impalaConn =
         DatabaseConnectionHelpers.setupImpala(
             impalaConnectionString, IMPALA_UESR, IMPALA_PASSWORD, IMPALA_DATABASE);
 //    impalaStmt = impalaConn.createStatement();
   }
+
+  @AfterClass
+  public static void tearDown() throws SQLException {
+    impalaConn.createStatement().execute(
+        String.format("DROP SCHEMA IF EXISTS `%s` CASCADE", IMPALA_DATABASE));
+    impalaConn.close();
+  }
+
 
   @Test
   public void sanityCheck() throws VerdictDBDbmsException {
@@ -53,7 +68,7 @@ public class ImpalaUniformScramblingCoordinatorTest {
 //    System.out.println(dbmsConn.getColumns(IMPALA_DATABASE, "customer"));
 //    System.out.println(dbmsConn.getColumns(IMPALA_DATABASE, "orders"));
 //    System.out.println(dbmsConn.getColumns(IMPALA_DATABASE, "lineitem"));
-    
+
     assertEquals(5, dbmsConn.getColumns(IMPALA_DATABASE, "nation").size());
     assertEquals(4, dbmsConn.getColumns(IMPALA_DATABASE, "region").size());
     assertEquals(10, dbmsConn.getColumns(IMPALA_DATABASE, "part").size());

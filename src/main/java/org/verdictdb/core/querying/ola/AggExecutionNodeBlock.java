@@ -30,7 +30,7 @@ import org.verdictdb.exception.VerdictDBValueException;
 /**
  * Contains the references to the ExecutionNodes that contain scrambled tables. This does not include
  * the scrambled tables in sub aggregate queries.
- * 
+ *
  * @author Yongjoo Park
  *
  */
@@ -43,6 +43,8 @@ public class AggExecutionNodeBlock {
   List<ExecutableNodeBase> blockNodes;
 
   int aggColumnIdentiferNum = 0;
+  
+  static final String VERDICTDB_TIER_COLUMN_NAME = "verdictdb_tier_internal";
 
   int verdictdbTierIndentiferNum = 0;
 
@@ -78,16 +80,16 @@ public class AggExecutionNodeBlock {
 
   /**
    * Converts the root node and its descendants into the configuration that enables progressive aggregation.
-   * 
+   *
    * Basically aggregate subqueries are blocking operations while others operations are divided into smaller-
    * scale operations (which involve different portions of data).
-   * 
+   *
    * @param nodeBlock
    * @return Returns the root of the multiple aggregation nodes (each of which involves different combinations
    * of partitions)
-   * @throws VerdictDBValueException 
+   * @throws VerdictDBValueException
    */
-  public ExecutableNodeBase convertToProgressiveAgg(ScrambleMetaSet scrambleMeta) 
+  public ExecutableNodeBase convertToProgressiveAgg(ScrambleMetaSet scrambleMeta)
       throws VerdictDBValueException {
     List<ExecutableNodeBase> individualAggNodes = new ArrayList<>();
     List<ExecutableNodeBase> combiners = new ArrayList<>();
@@ -95,7 +97,7 @@ public class AggExecutionNodeBlock {
 
     // First, plan how to perform block aggregation
     // filtering predicates that must inserted into different scrambled tables are identified.
-    List<Pair<ExecutableNodeBase, Triple<String, String, String>>> scrambledNodes = 
+    List<Pair<ExecutableNodeBase, Triple<String, String, String>>> scrambledNodes =
         identifyScrambledNodes(scrambleMeta, blockNodes);
     List<Pair<String, String>> scrambles = new ArrayList<>();
     for (Pair<ExecutableNodeBase, Triple<String, String, String>> a : scrambledNodes) {
@@ -109,7 +111,7 @@ public class AggExecutionNodeBlock {
 
     // Second, according to the plan, create individual nodes that perform aggregations.
     for (int i = 0; i < aggPlan.totalBlockAggCount(); i++) {
-      
+
       // copy and remove the dependency to its parents
       oldSubscriptionInformation.clear();
       AggExecutionNodeBlock copy = deepcopyExcludingDependentAggregates(oldSubscriptionInformation);
@@ -120,7 +122,7 @@ public class AggExecutionNodeBlock {
       aggroot.cancelSubscriptionsFromAllSubscribers();   // subscription will be reconstructed later.
 
       // Add extra predicates to restrain each aggregation to particular parts of base tables.
-      List<Pair<ExecutableNodeBase, Triple<String, String, String>>> scrambledNodeAndTableName = 
+      List<Pair<ExecutableNodeBase, Triple<String, String, String>>> scrambledNodeAndTableName =
           identifyScrambledNodes(scrambleMeta, copy.getNodesInBlock());
 
       // Assign hyper table cube to the block
@@ -179,12 +181,12 @@ public class AggExecutionNodeBlock {
       if (i == 1) {
         combiner = AggCombinerExecutionNode.create(
             idCreator,
-            individualAggNodes.get(0), 
+            individualAggNodes.get(0),
             individualAggNodes.get(1));
       } else {
         combiner = AggCombinerExecutionNode.create(
             idCreator,
-            combiners.get(i-2), 
+            combiners.get(i-2),
             individualAggNodes.get(i));
       }
       combiners.add(combiner);
@@ -192,7 +194,7 @@ public class AggExecutionNodeBlock {
 
     // Fourth, re-link the subscription relationship for the new AsyncAggNode
     ExecutableNodeBase newRoot = AsyncAggExecutionNode.create(idCreator, individualAggNodes, combiners, scrambleMeta);
-    
+
     // Finally remove the old subscription information: old copied node -> still used old node
     for (Pair<ExecutableNodeBase, ExecutableNodeBase> parentToSource : oldSubscriptionInformation) {
       ExecutableNodeBase subscriber = parentToSource.getLeft();
@@ -203,7 +205,7 @@ public class AggExecutionNodeBlock {
     return newRoot;
   }
 
-  List<Pair<ExecutableNodeBase, Triple<String, String, String>>> 
+  List<Pair<ExecutableNodeBase, Triple<String, String, String>>>
   identifyScrambledNodes(ScrambleMetaSet scrambleMeta, List<ExecutableNodeBase> blockNodes) {
 
     List<Pair<ExecutableNodeBase, Triple<String, String, String>>> identified = new ArrayList<>();
@@ -214,13 +216,13 @@ public class AggExecutionNodeBlock {
           BaseTable base = (BaseTable) rel;
           if (scrambleMeta.isScrambled(base.getSchemaName(), base.getTableName())) {
             identified.add(Pair.of(
-                node, 
+                node,
                 Triple.of(
-                    base.getSchemaName(), 
+                    base.getSchemaName(),
                     base.getTableName(),
                     base.getAliasName().get())));
           }
-        } 
+        }
         else if (rel instanceof JoinTable) {
           for (AbstractRelation r : ((JoinTable) rel).getJoinList()) {
             if (r instanceof BaseTable) {
@@ -228,9 +230,9 @@ public class AggExecutionNodeBlock {
               if (scrambleMeta.isScrambled(base.getSchemaName(), base.getTableName())) {
                 identified.add(
                     Pair.of(
-                        node, 
+                        node,
                         Triple.of(
-                            base.getSchemaName(), 
+                            base.getSchemaName(),
                             base.getTableName(),
                             base.getAliasName().get())));
               }
@@ -250,7 +252,7 @@ public class AggExecutionNodeBlock {
         if (schemaName.equals(base.getSchemaName()) && tableName.equals(base.getTableName())) {
           return base.getAliasName().get();
         }
-      } 
+      }
       else if (rel instanceof JoinTable) {
         for (AbstractRelation r : ((JoinTable) rel).getJoinList()) {
           if (r instanceof BaseTable) {
@@ -266,15 +268,15 @@ public class AggExecutionNodeBlock {
   }
 
   /**
-   * Replicas of the group is made. The subscription relationships among the group's nodes are replicated. 
-   * The subscription relationships outside the group's nodes are shared. This is for each replicated group 
+   * Replicas of the group is made. The subscription relationships among the group's nodes are replicated.
+   * The subscription relationships outside the group's nodes are shared. This is for each replicated group
    * to receive the same information from the downstream operations.
-   * 
+   *
    * @param root
    * @param oldSubscriptionInformation  Pairs of (old parent, old source). After all deepcopying is
    *        finished, this old subscription can be cancelled.
    * @return
-   * @throws VerdictDBValueException 
+   * @throws VerdictDBValueException
    */
   public AggExecutionNodeBlock deepcopyExcludingDependentAggregates(
       List<Pair<ExecutableNodeBase, ExecutableNodeBase>> oldSubscriptionInformation) throws VerdictDBValueException {
@@ -303,7 +305,7 @@ public class AggExecutionNodeBlock {
         } else {
           // external dependency relationships
           newNode.subscribeTo(source.getLeft(), source.getRight());
-          
+
           // store old subscription information for reference
           oldSubscriptionInformation.add(Pair.of(oldNode, source.getLeft()));
         }
@@ -313,7 +315,7 @@ public class AggExecutionNodeBlock {
 
     // compose a return value
     int rootIdx = blockNodes.indexOf(blockRoot);
-    return new AggExecutionNodeBlock(idCreator, newNodes.get(rootIdx)); 
+    return new AggExecutionNodeBlock(idCreator, newNodes.get(rootIdx));
   }
 
 
@@ -375,7 +377,7 @@ public class AggExecutionNodeBlock {
                     new ImmutablePair<>(col.getOpType(), (UnnamedColumn)new AsteriskColumn()), "agg"+aggColumnIdentiferNum);
                 aggColumnAlias.add("agg"+aggColumnIdentiferNum++);
               }
-              else if (!meta.getAggColumnAggAliasPair().containsKey(
+              else if (col.getOpType().equals("sum") && !meta.getAggColumnAggAliasPair().containsKey(
                   new ImmutablePair<>(col.getOpType(), col.getOperand(0)))) {
                 ColumnOp col1 = new ColumnOp(col.getOpType(), col.getOperand(0));
                 newSelectlist.add(new AliasedColumn(col1, "agg"+aggColumnIdentiferNum));
@@ -405,14 +407,16 @@ public class AggExecutionNodeBlock {
   }
 
   void addTierColumn(SelectQuery query, List<SelectItem> newSelectList, ScrambleMetaSet scrambleMeta) {
-    for (AbstractRelation table:query.getFromList()) {
+    for (AbstractRelation table : query.getFromList()) {
       if (table instanceof BaseTable) {
         String schemaName = ((BaseTable) table).getSchemaName();
         String tableName = ((BaseTable) table).getTableName();
-        if (scrambleMeta.isScrambled(schemaName, tableName) && scrambleMeta.getMetaForTable(schemaName, tableName).getNumberOfTiers()>1) {
-          newSelectList.add(new AliasedColumn(new BaseColumn(schemaName, tableName, table.getAliasName().get(), scrambleMeta.getTierColumn(schemaName, tableName)),
-              "verdictdbtier"+verdictdbTierIndentiferNum));
-          query.addGroupby(new AliasReference("verdictdbtier"+verdictdbTierIndentiferNum++));
+        if (scrambleMeta.isScrambled(schemaName, tableName) && 
+            scrambleMeta.getMetaForTable(schemaName, tableName).getNumberOfTiers()>1) {
+          newSelectList.add(new AliasedColumn(
+              new BaseColumn(schemaName, tableName, table.getAliasName().get(), scrambleMeta.getTierColumn(schemaName, tableName)),
+              VERDICTDB_TIER_COLUMN_NAME + verdictdbTierIndentiferNum));
+          query.addGroupby(new AliasReference(VERDICTDB_TIER_COLUMN_NAME + verdictdbTierIndentiferNum++));
         }
       }
       else if (table instanceof JoinTable) {
@@ -421,9 +425,10 @@ public class AggExecutionNodeBlock {
             String schemaName = ((BaseTable) jointable).getSchemaName();
             String tableName = ((BaseTable) jointable).getTableName();
             if (scrambleMeta.isScrambled(schemaName, tableName) && scrambleMeta.getMetaForTable(schemaName, tableName).getNumberOfTiers()>1) {
-              newSelectList.add(new AliasedColumn(new BaseColumn(schemaName, tableName, jointable.getAliasName().get(), scrambleMeta.getTierColumn(schemaName, tableName)),
-                  "verdictdbtier"+verdictdbTierIndentiferNum));
-              query.addGroupby(new AliasReference("verdictdbtier"+verdictdbTierIndentiferNum++));
+              newSelectList.add(new AliasedColumn(
+                  new BaseColumn(schemaName, tableName, jointable.getAliasName().get(), scrambleMeta.getTierColumn(schemaName, tableName)),
+                  VERDICTDB_TIER_COLUMN_NAME + verdictdbTierIndentiferNum));
+              query.addGroupby(new AliasReference(VERDICTDB_TIER_COLUMN_NAME + verdictdbTierIndentiferNum++));
             }
           }
         }

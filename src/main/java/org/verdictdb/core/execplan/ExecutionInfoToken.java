@@ -3,6 +3,7 @@ package org.verdictdb.core.execplan;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.NotSerializableException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
@@ -99,8 +100,13 @@ public class ExecutionInfoToken implements Serializable {
       ExecutionInfoToken copiedToken = (ExecutionInfoToken) in.readObject();
       return copiedToken;
       
-    } catch (IOException | ClassNotFoundException e) {
+    } catch (ClassNotFoundException e) {
       // TODO Auto-generated catch block
+      e.printStackTrace();
+    } catch (NotSerializableException e) {
+      // TODO: handle this case
+      e.printStackTrace();
+    } catch (IOException e) {
       e.printStackTrace();
     }
     return null;

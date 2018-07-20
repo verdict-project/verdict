@@ -226,12 +226,16 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
     return new ColumnOp("percentile", Arrays.asList(column1, column2));
   }
 
-  public static ColumnOp isnull(UnnamedColumn column1) {
-    return new ColumnOp("isnull", Arrays.asList(column1));
+  public static ColumnOp rightisnull(UnnamedColumn column1) {
+    return new ColumnOp("is_null", Arrays.asList(column1));
   }
   
-  public static ColumnOp isnotnull(UnnamedColumn column1) {
-    return new ColumnOp("isnotnull", Arrays.asList(column1));
+  public static ColumnOp rightisnotnull(UnnamedColumn column1) {
+    return new ColumnOp("is_not_null", Arrays.asList(column1));
+  }
+
+  public static ColumnOp isnull(UnnamedColumn column1) {
+    return new ColumnOp("isnull", Arrays.asList(column1));
   }
 
   public static ColumnOp like(UnnamedColumn column1, UnnamedColumn column2) {
