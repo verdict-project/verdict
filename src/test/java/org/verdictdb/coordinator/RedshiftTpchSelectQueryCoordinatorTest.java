@@ -117,7 +117,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
         scrambler.scramble(REDSHIFT_SCHEMA, "orders", REDSHIFT_SCHEMA, "orders_scrambled", "uniform");
     meta.addScrambleMeta(meta1);
     meta.addScrambleMeta(meta2);
-
+    stmt.execute("drop schema if exists \"verdictdb_temp\" cascade");
     stmt.execute("create schema if not exists \"verdictdb_temp\"");
   }
 
