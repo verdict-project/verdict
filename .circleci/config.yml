@@ -107,8 +107,8 @@ jobs:
           paths:
             - ~/.m2
           key: verdict-dependencies-{{ checksum "pom.xml" }}
-      - run: mvn cobertura:cobertura
-      - run: bash <(curl -s https://codecov.io/bash) -t 9cf48c61-07ed-4a14-9eed-f7129664ee79
+      #- run: mvn cobertura:cobertura
+      #- run: bash <(curl -s https://codecov.io/bash) -t 9cf48c61-07ed-4a14-9eed-f7129664ee79
 
   build-spark:
       docker:
@@ -158,6 +158,6 @@ workflows:
     jobs:
       - build-jdk7
       - build-jdk8
-      - build-spark
+      #- build-spark
       # - maven-version-check
       # - docker-env-check
