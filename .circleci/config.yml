@@ -158,6 +158,6 @@ workflows:
     jobs:
       - build-jdk7
       - build-jdk8
-      #- build-spark
+      - build-spark
       # - maven-version-check
       # - docker-env-check
