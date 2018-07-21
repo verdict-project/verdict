@@ -1,20 +1,12 @@
 package org.verdictdb.jdbc41;
 
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
-import java.io.IOException;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-
+import org.apache.commons.lang3.RandomStringUtils;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -23,9 +15,10 @@ import org.postgresql.jdbc.PgSQLXML;
 import org.verdictdb.commons.DatabaseConnectionHelpers;
 import org.verdictdb.exception.VerdictDBDbmsException;
 
-/**
- * Created by Dong Young Yoon on 7/18/18.
- */
+import java.sql.*;
+import java.util.*;
+
+/** Created by Dong Young Yoon on 7/18/18. */
 @RunWith(Parameterized.class)
 public class JdbcQueryDataTypeTestForAllDatabases {
 
@@ -37,48 +30,38 @@ public class JdbcQueryDataTypeTestForAllDatabases {
 
   private static final String MYSQL_HOST;
 
-  private String database = "";
+  private String database;
 
-  // TODO: Add support for all four databases
-//  private static final String[] targetDatabases = {"mysql", "impala", "redshift", "postgresql"};
-  private static final String[] targetDatabases = {"postgresql"};
+  private static final String[] targetDatabases = {"mysql", "impala", "redshift", "postgresql"};
 
   public JdbcQueryDataTypeTestForAllDatabases(String database) {
     this.database = database;
   }
 
-
   static {
     String env = System.getenv("BUILD_ENV");
     if (env != null && (env.equals("GitLab") || env.equals("DockerCompose"))) {
       MYSQL_HOST = "mysql";
-    }
-    else {
+    } else {
       MYSQL_HOST = "localhost";
     }
   }
 
-  private static final String MYSQL_DATABASE = "data_type_test";
+  private static final String MYSQL_DATABASE =
+      "data_type_test" + RandomStringUtils.randomAlphanumeric(4);
 
   private static final String MYSQL_USER = "root";
 
   private static final String MYSQL_PASSWORD = "";
 
-  private static final String MYSQL_TABLE = "mytable";
-
   private static final String IMPALA_HOST;
 
   static {
-    String env = System.getenv("BUILD_ENV");
-    if (env != null && (env.equals("GitLab") || env.equals("DockerCompose"))) {
-      IMPALA_HOST = "impala";
-    }
-    else {
-      IMPALA_HOST = "localhost";
-    }
+    IMPALA_HOST = System.getenv("VERDICTDB_TEST_IMPALA_HOST");
   }
 
-  private static final String IMPALA_DATABASE = "default";
+  private static final String IMPALA_DATABASE =
+      "data_type_test" + RandomStringUtils.randomAlphanumeric(4);
 
   private static final String IMPALA_USER = "";
 
@@ -87,8 +70,6 @@ public class JdbcQueryDataTypeTestForAllDatabases {
   private static final String REDSHIFT_HOST;
 
   private static final String REDSHIFT_DATABASE = "dev";
-
-  private static final String REDSHIFT_SCHEMA = "public";
 
   private static final String REDSHIFT_USER;
 
@@ -102,14 +83,11 @@ public class JdbcQueryDataTypeTestForAllDatabases {
 
   private static final String POSTGRES_PASSWORD = "";
 
-  private static final String POSTGRES_SCHEMA = "";
-
   static {
     String env = System.getenv("BUILD_ENV");
     if (env != null && (env.equals("GitLab") || env.equals("DockerCompose"))) {
       POSTGRES_HOST = "postgres";
-    }
-    else {
+    } else {
       POSTGRES_HOST = "localhost";
     }
   }
@@ -120,19 +98,26 @@ public class JdbcQueryDataTypeTestForAllDatabases {
     REDSHIFT_PASSWORD = System.getenv("VERDICTDB_TEST_REDSHIFT_PASSWORD");
   }
 
-  private static final String SCHEMA_NAME = "data_type_test";
+  private static final String SCHEMA_NAME =
+      "data_type_test" + RandomStringUtils.randomAlphanumeric(4);
 
-  private static final String TABLE_NAME = "mytable";
-
-  private static VerdictConnection mysqlVc;
+  private static final String TABLE_NAME =
+      "data_type_test" + RandomStringUtils.randomAlphanumeric(4);
 
   @BeforeClass
-  public static void setupDatabases() throws SQLException, VerdictDBDbmsException {
+  public static void setup() throws SQLException, VerdictDBDbmsException {
     setupMysql();
     setupPostgresql();
     setupRedshift();
-    // TODO: Add below databases too
-//    setupImpala();
+    setupImpala();
+  }
+
+  @AfterClass
+  public static void tearDown() throws SQLException {
+    tearDownMysql();
+    tearDownPostgresql();
+    tearDownRedshift();
+    tearDownImpala();
   }
 
   @Parameterized.Parameters(name = "{0}")
@@ -140,71 +125,112 @@ public class JdbcQueryDataTypeTestForAllDatabases {
     Collection<Object[]> params = new ArrayList<>();
 
     for (String database : targetDatabases) {
-      params.add(new Object[]{database});
+      params.add(new Object[] {database});
     }
     return params;
   }
 
-
-  private static Connection setupMysql() throws SQLException, VerdictDBDbmsException {
+  private static void setupMysql() throws SQLException, VerdictDBDbmsException {
     String mysqlConnectionString =
         String.format("jdbc:mysql://%s?autoReconnect=true&useSSL=false", MYSQL_HOST);
     String vcMysqlConnectionString =
-        String.format("jdbc:mysql://%s/%s?autoReconnect=true&useSSL=false", MYSQL_HOST, MYSQL_DATABASE);
-    Connection conn = DatabaseConnectionHelpers.setupMySqlForDataTypeTest(
-        mysqlConnectionString, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE, MYSQL_TABLE);
-    VerdictConnection vc = new VerdictConnection(vcMysqlConnectionString, MYSQL_USER, MYSQL_PASSWORD);
+        String.format(
+            "jdbc:mysql://%s/%s?autoReconnect=true&useSSL=false", MYSQL_HOST, MYSQL_DATABASE);
+    Connection conn =
+        DatabaseConnectionHelpers.setupMySqlForDataTypeTest(
+            mysqlConnectionString, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE, TABLE_NAME);
+    VerdictConnection vc =
+        new VerdictConnection(vcMysqlConnectionString, MYSQL_USER, MYSQL_PASSWORD);
     conn.setCatalog(MYSQL_DATABASE);
     connMap.put("mysql", conn);
     vcMap.put("mysql", vc);
     schemaMap.put("mysql", MYSQL_DATABASE + ".");
-    return conn;
   }
 
-  // TODO: add query data type test setup step for impala
-  private static Connection setupImpala() throws SQLException, VerdictDBDbmsException {
+  private static void tearDownMysql() throws SQLException {
+    Connection conn = connMap.get("mysql");
+    Statement stmt = conn.createStatement();
+    stmt.execute(String.format("DROP SCHEMA IF EXISTS `%s`", MYSQL_DATABASE));
+    conn.close();
+  }
+
+  private static void setupImpala() throws SQLException, VerdictDBDbmsException {
     String connectionString =
-        String.format("jdbc:impala://%s:21050/%s", IMPALA_HOST, IMPALA_DATABASE);
-    Connection conn = DriverManager.getConnection(connectionString, IMPALA_USER, IMPALA_PASSWORD);
+        String.format("jdbc:impala://%s:21050", IMPALA_HOST);
+    Connection conn =
+        DatabaseConnectionHelpers.setupImpalaForDataTypeTest(
+            connectionString, IMPALA_USER, IMPALA_PASSWORD, IMPALA_DATABASE, TABLE_NAME);
     VerdictConnection vc = new VerdictConnection(connectionString, IMPALA_USER, IMPALA_PASSWORD);
     connMap.put("impala", conn);
     vcMap.put("impala", vc);
     schemaMap.put("impala", IMPALA_DATABASE + ".");
-    return conn;
   }
 
-  // TODO: add query data type test setup step for redshift
-  public static Connection setupRedshift() throws SQLException, VerdictDBDbmsException {
+  private static void tearDownImpala() throws SQLException {
+    Connection conn = connMap.get("impala");
+    Statement stmt = conn.createStatement();
+    stmt.execute(String.format("DROP SCHEMA IF EXISTS `%s` CASCADE", IMPALA_DATABASE));
+    conn.close();
+  }
+
+  private static void setupRedshift() throws SQLException, VerdictDBDbmsException {
     String connectionString =
         String.format("jdbc:redshift://%s/%s", REDSHIFT_HOST, REDSHIFT_DATABASE);
-    Connection conn = DatabaseConnectionHelpers.setupRedshiftForDataTypeTest(
-        connectionString, REDSHIFT_USER, REDSHIFT_PASSWORD, SCHEMA_NAME, TABLE_NAME);
-    VerdictConnection vc = new VerdictConnection(connectionString, REDSHIFT_USER, REDSHIFT_PASSWORD);
+    Connection conn =
+        DatabaseConnectionHelpers.setupRedshiftForDataTypeTest(
+            connectionString, REDSHIFT_USER, REDSHIFT_PASSWORD, SCHEMA_NAME, TABLE_NAME);
+    VerdictConnection vc =
+        new VerdictConnection(connectionString, REDSHIFT_USER, REDSHIFT_PASSWORD);
     connMap.put("redshift", conn);
     vcMap.put("redshift", vc);
     schemaMap.put("redshift", "");
-    return conn;
   }
 
-  public static Connection setupPostgresql() throws SQLException, VerdictDBDbmsException {
+  private static void tearDownRedshift() throws SQLException {
+    Connection conn = connMap.get("redshift");
+    Statement stmt = conn.createStatement();
+    stmt.execute(String.format("DROP SCHEMA IF EXISTS \"%s\" CASCADE", SCHEMA_NAME));
+    conn.close();
+  }
+
+  private static void setupPostgresql() throws SQLException, VerdictDBDbmsException {
     String connectionString =
         String.format("jdbc:postgresql://%s/%s", POSTGRES_HOST, POSTGRES_DATABASE);
-    Connection conn = DatabaseConnectionHelpers.setupPostgresqlForDataTypeTest(
-        connectionString, POSTGRES_USER, POSTGRES_PASSWORD, SCHEMA_NAME, TABLE_NAME);
-    VerdictConnection vc = new VerdictConnection(connectionString, POSTGRES_USER, POSTGRES_PASSWORD);
+    Connection conn =
+        DatabaseConnectionHelpers.setupPostgresqlForDataTypeTest(
+            connectionString, POSTGRES_USER, POSTGRES_PASSWORD, SCHEMA_NAME, TABLE_NAME);
+    VerdictConnection vc =
+        new VerdictConnection(connectionString, POSTGRES_USER, POSTGRES_PASSWORD);
     connMap.put("postgresql", conn);
     vcMap.put("postgresql", vc);
     schemaMap.put("postgresql", "");
-    return conn;
+  }
+
+  private static void tearDownPostgresql() throws SQLException {
+    Connection conn = connMap.get("postgresql");
+    Statement stmt = conn.createStatement();
+    stmt.execute(String.format("DROP SCHEMA IF EXISTS \"%s\" CASCADE", SCHEMA_NAME));
+    conn.close();
   }
 
   @Test
-  public void testDataType() throws IOException, SQLException {
+  public void testDataType() throws SQLException {
     String sql = "";
-    if (database.equals("mysql")) {
-      sql = String.format("SELECT * FROM `%s`.`%s`", SCHEMA_NAME, TABLE_NAME);
-    } else if (database.equals("postgresql") || database.equals("redshift")) {
-      sql = String.format("SELECT * FROM \"%s\".\"%s\"", SCHEMA_NAME, TABLE_NAME);
+    switch (database) {
+      case "mysql":
+        sql = String.format("SELECT * FROM `%s`.`%s`", MYSQL_DATABASE, TABLE_NAME);
+        break;
+      case "impala":
+        sql =
+            String.format(
+                "SELECT * FROM `%s`.`%s` ORDER BY bigintCol", IMPALA_DATABASE, TABLE_NAME);
+        break;
+      case "postgresql":
+      case "redshift":
+        sql = String.format("SELECT * FROM \"%s\".\"%s\"", SCHEMA_NAME, TABLE_NAME);
+        break;
+      default:
+        fail(String.format("Database '%s' not supported.", database));
     }
 
     Statement jdbcStmt = connMap.get(database).createStatement();
@@ -232,5 +258,4 @@ public class JdbcQueryDataTypeTestForAllDatabases {
       }
     }
   }
-
 }
