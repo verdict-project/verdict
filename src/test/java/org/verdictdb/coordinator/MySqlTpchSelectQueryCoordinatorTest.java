@@ -106,14 +106,8 @@ public class MySqlTpchSelectQueryCoordinatorTest {
     coordinator.setScrambleMetaSet(meta);
     ExecutionResultReader reader = coordinator.process(sql);
 
-    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
-    AbstractRelation relation = sqlToRelation.toRelation(sql);
-    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
-    relation = gen.standardize((SelectQuery) relation);
 
-    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
-    String stdQuery = selectQueryToSql.toSql(relation);
-    ResultSet rs = stmt.executeQuery(stdQuery);
+    ResultSet rs = stmt.executeQuery(sql);
     return new ImmutablePair<>(reader, rs);
   }
 

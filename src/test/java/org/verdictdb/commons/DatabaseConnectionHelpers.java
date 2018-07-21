@@ -12,12 +12,15 @@ import java.util.List;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.spark.sql.SparkSession;
 import org.postgresql.copy.CopyManager;
 import org.postgresql.core.BaseConnection;
 import org.verdictdb.connection.DbmsConnection;
+import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.exception.VerdictDBDbmsException;
+import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sqlsyntax.ImpalaSyntax;
 import org.verdictdb.sqlsyntax.PostgresqlSyntax;
 import org.verdictdb.sqlsyntax.RedshiftSyntax;
@@ -414,6 +417,45 @@ public class DatabaseConnectionHelpers {
     return "'"+value+"'";
   }
 
+  static void loadRedshiftData(String schema, String table, DbmsConnection dbmsConn)
+      throws IOException, VerdictDBDbmsException {
+    String concat = "";
+    File file = new File(String.format("src/test/resources/tpch_test_data/%s/%s.tbl",table, table));
+    DbmsQueryResult columnMeta = dbmsConn.execute(String.format(
+        "select data_type, ordinal_position from INFORMATION_SCHEMA.COLUMNS where table_name='%s' and table_schema='%s'", table, schema));
+    List<Boolean> quotedNeeded = new ArrayList<>();
+    for (int i=0;i<columnMeta.getRowCount();i++) {
+      quotedNeeded.add(true);
+    }
+    while (columnMeta.next()) {
+      String columnType = columnMeta.getString(0);
+      int columnIndex = columnMeta.getInt(1);
+      if (columnType.equals("integer")||columnType.equals("numeric")) {
+        quotedNeeded.set(columnIndex-1, false);
+      }
+    }
+
+    String content = Files.toString(file, Charsets.UTF_8);
+    for (String row : content.split("\n")) {
+      String[] values = row.split("\\|");
+      row = "";
+      for (int i=0;i<values.length-1;i++) {
+        if (quotedNeeded.get(i)) {
+          row=row+getQuoted(values[i])+",";
+        }
+        else {
+          row=row+values[i]+",";
+        }
+      }
+      row = row + "''";
+      if (concat.equals("")) {
+        concat = concat + "(" + row + ")";
+      }
+      else concat = concat + "," + "(" + row + ")";
+    }
+    dbmsConn.execute(String.format("insert into \"%s\".\"%s\" values %s", schema, table, concat));
+  }
+
   public static Connection setupRedshift(
       String connectionString, String user, String password, String schema)
       throws VerdictDBDbmsException, SQLException, IOException {
@@ -524,128 +566,14 @@ public class DatabaseConnectionHelpers {
             "  \"l_dummy\" varchar(10))",
         schema));
     // load data use insert
-    String concat = "";
-    File file = new File("src/test/resources/tpch_test_data/nation/nation.tbl");
-    String content = Files.toString(file, Charsets.UTF_8);
-    for (String row : content.split("\n")) {
-      String[] values = row.split("\\|");
-      values[1] = "'" + values[1]+ "'";
-      values[3] = "'" + values[3]+ "'";
-      row = values[0]+","+values[1]+","+values[2]+","+values[3]+","+"''";
-      if (concat.equals("")) {
-        concat = concat + "(" + row + ")";
-      }
-      else concat = concat + "," + "(" + row + ")";
-    }
-    dbmsConn.execute(String.format("insert into \"%s\".\"nation\" values %s", schema, concat));
-
-    concat = "";
-    file = new File("src/test/resources/tpch_test_data/region/region.tbl");
-    content = Files.toString(file, Charsets.UTF_8);
-    for (String row : content.split("\n")) {
-      String[] values = row.split("\\|");
-      values[1] = "'" + values[1]+ "'";
-      values[2] = "'" + values[2]+ "'";
-      row = values[0]+","+values[1]+","+values[2]+","+"''";
-      if (concat.equals("")) {
-        concat = concat + "(" + row + ")";
-      }
-      else concat = concat + "," + "(" + row + ")";
-    }
-    dbmsConn.execute(String.format("insert into \"%s\".\"region\" values %s", schema, concat));
-
-    concat="";
-    file = new File("src/test/resources/tpch_test_data/part/part.tbl");
-    content = Files.toString(file, Charsets.UTF_8);
-    for (String row : content.split("\n")) {
-      String[] values = row.split("\\|");
-      row = values[0]+","+getQuoted(values[1])+","+getQuoted(values[2])+","
-          +getQuoted(values[3])+","+getQuoted(values[4])+","+values[5]+","+getQuoted(values[6])
-          +","+values[7]+","+getQuoted(values[8])+","+"''";
-      if (concat.equals("")) {
-        concat = concat + "(" + row + ")";
-      }
-      else concat = concat + "," + "(" + row + ")";
-    }
-    dbmsConn.execute(String.format("insert into \"%s\".\"part\" values %s", schema, concat));
-
-    concat = "";
-    file = new File("src/test/resources/tpch_test_data/supplier/supplier.tbl");
-    content = Files.toString(file, Charsets.UTF_8);
-    for (String row : content.split("\n")) {
-      String[] values = row.split("\\|");
-      row = values[0]+","+getQuoted(values[1])+","+getQuoted(values[2])+","
-          +values[3]+","+getQuoted(values[4])+","+values[5]+","+getQuoted(values[6])
-          + ","+"''";
-      if (concat.equals("")) {
-        concat = concat + "(" + row + ")";
-      }
-      else concat = concat + "," + "(" + row + ")";
-    }
-    dbmsConn.execute(String.format("insert into \"%s\".\"supplier\" values %s", schema, concat));
-
-    concat = "";
-    file = new File("src/test/resources/tpch_test_data/partsupp/partsupp.tbl");
-    content = Files.toString(file, Charsets.UTF_8);
-    for (String row : content.split("\n")) {
-      String[] values = row.split("\\|");
-      row = values[0]+","+values[1]+","+values[2]+","
-          +values[3]+","+getQuoted(values[4])
-          + ","+"''";
-      if (concat.equals("")) {
-        concat = concat + "(" + row + ")";
-      }
-      else concat = concat + "," + "(" + row + ")";
-    }
-    dbmsConn.execute(String.format("insert into \"%s\".\"partsupp\" values %s", schema, concat));
-
-    concat = "";
-    file = new File("src/test/resources/tpch_test_data/customer/customer.tbl");
-    content = Files.toString(file, Charsets.UTF_8);
-    for (String row : content.split("\n")) {
-      String[] values = row.split("\\|");
-      row = values[0]+","+getQuoted(values[1])+","+getQuoted(values[2])+","
-          +values[3]+","+getQuoted(values[4])+","+values[5]+","+getQuoted(values[6])
-          +","+getQuoted(values[7])+","+"''";
-      if (concat.equals("")) {
-        concat = concat + "(" + row + ")";
-      }
-      else concat = concat + "," + "(" + row + ")";
-    }
-    dbmsConn.execute(String.format("insert into \"%s\".\"customer\" values %s", schema, concat));
-
-    concat = "";
-    file = new File("src/test/resources/tpch_test_data/orders/orders.tbl");
-    content = Files.toString(file, Charsets.UTF_8);
-    for (String row : content.split("\n")) {
-      String[] values = row.split("\\|");
-      row = values[0]+","+values[1]+","+getQuoted(values[2])+","
-          +values[3]+","+getQuoted(values[4])+","+getQuoted(values[5])+","+getQuoted(values[6])
-          +","+values[7]+","+getQuoted(values[8])+","+"''";
-      if (concat.equals("")) {
-        concat = concat + "(" + row + ")";
-      }
-      else concat = concat + "," + "(" + row + ")";
-    }
-    dbmsConn.execute(String.format("insert into \"%s\".\"orders\" values %s", schema, concat));
-
-    concat = "";
-    file = new File("src/test/resources/tpch_test_data/lineitem/lineitem.tbl");
-    content = Files.toString(file, Charsets.UTF_8);
-    for (String row : content.split("\n")) {
-      String[] values = row.split("\\|");
-      row = values[0]+","+values[1]+","+values[2]+","
-          +values[3]+","+values[4]+","+values[5]+","+values[6]
-          +","+values[7]+","+getQuoted(values[8])+","+getQuoted(values[9])
-          +","+getQuoted(values[10])+","+getQuoted(values[11])
-          +","+getQuoted(values[12])+","+getQuoted(values[13])
-          +","+getQuoted(values[14])+","+getQuoted(values[15])+","+"''";
-      if (concat.equals("")) {
-        concat = concat + "(" + row + ")";
-      }
-      else concat = concat + "," + "(" + row + ")";
-    }
-    dbmsConn.execute(String.format("insert into \"%s\".\"lineitem\" values %s", schema, concat));
+    loadRedshiftData(schema, "nation", dbmsConn);
+    loadRedshiftData(schema, "region", dbmsConn);
+    loadRedshiftData(schema, "part", dbmsConn);
+    loadRedshiftData(schema, "supplier", dbmsConn);
+    loadRedshiftData(schema, "customer", dbmsConn);
+    loadRedshiftData(schema, "partsupp", dbmsConn);
+    loadRedshiftData(schema, "orders", dbmsConn);
+    loadRedshiftData(schema, "lineitem", dbmsConn);
     return conn;
   }
 

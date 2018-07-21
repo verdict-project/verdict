@@ -105,7 +105,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
         DatabaseConnectionHelpers.setupRedshift(
             connectionString, REDSHIFT_USER, REDSHIFT_PASSWORD, REDSHIFT_SCHEMA);
     stmt = redshiftConn.createStatement();
-
+    stmt.execute(String.format("set search_path to \"%s\"", REDSHIFT_SCHEMA));
     dbmsConn = new CachedDbmsConnection(
         new JdbcConnection(redshiftConn, new RedshiftSyntax()));
     // Create Scramble table

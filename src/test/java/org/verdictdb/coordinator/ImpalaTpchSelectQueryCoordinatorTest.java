@@ -66,6 +66,7 @@ public class ImpalaTpchSelectQueryCoordinatorTest {
             impalaConnectionString, IMPALA_UESR, IMPALA_PASSWORD, IMPALA_DATABASE);
 //    impalaStmt = impalaConn.createStatement();
     stmt = impalaConn.createStatement();
+    stmt.execute(String.format("use `%s`", IMPALA_DATABASE));
     DbmsConnection dbmsConn = JdbcConnection.create(impalaConn);
 
     // Create Scramble table
@@ -86,6 +87,7 @@ public class ImpalaTpchSelectQueryCoordinatorTest {
 
   @AfterClass
   public static void tearDown() throws SQLException {
+    stmt.execute(String.format("use `%s`", "DEFAULT"));
     impalaConn.createStatement().execute(
         String.format("DROP SCHEMA IF EXISTS `%s` CASCADE", IMPALA_DATABASE));
     impalaConn.close();
@@ -103,14 +105,7 @@ public class ImpalaTpchSelectQueryCoordinatorTest {
     coordinator.setScrambleMetaSet(meta);
     ExecutionResultReader reader = coordinator.process(sql);
 
-    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
-    AbstractRelation relation = sqlToRelation.toRelation(sql);
-    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
-    relation = gen.standardize((SelectQuery) relation);
-
-    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new ImpalaSyntax());
-    String stdQuery = selectQueryToSql.toSql(relation);
-    ResultSet rs = stmt.executeQuery(stdQuery);
+    ResultSet rs = stmt.executeQuery(sql);
     return new ImmutablePair<>(reader, rs);
   }
 

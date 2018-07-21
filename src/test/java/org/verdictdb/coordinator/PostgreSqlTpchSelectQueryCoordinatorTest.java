@@ -68,6 +68,7 @@ public class PostgreSqlTpchSelectQueryCoordinatorTest {
             postgresConnectionString, POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_SCHEMA);
     postgresStmt = postgresConn.createStatement();
     postgresStmt.execute(String.format("create schema if not exists \"%s\"", POSTGRES_SCHEMA));
+    postgresStmt.execute(String.format("set search_path to \"%s\"", POSTGRES_SCHEMA));
     DbmsConnection dbmsConn = JdbcConnection.create(postgresConn);
 
     // Create Scramble table
@@ -102,14 +103,8 @@ public class PostgreSqlTpchSelectQueryCoordinatorTest {
     coordinator.setScrambleMetaSet(meta);
     ExecutionResultReader reader = coordinator.process(sql);
 
-    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
-    AbstractRelation relation = sqlToRelation.toRelation(sql);
-    RelationStandardizer gen = new RelationStandardizer(dbmsconn);
-    relation = gen.standardize((SelectQuery) relation);
 
-    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new PostgresqlSyntax());
-    String stdQuery = selectQueryToSql.toSql(relation);
-    ResultSet rs = postgresStmt.executeQuery(stdQuery);
+    ResultSet rs = postgresStmt.executeQuery(sql);
     return new ImmutablePair<>(reader, rs);
   }
 

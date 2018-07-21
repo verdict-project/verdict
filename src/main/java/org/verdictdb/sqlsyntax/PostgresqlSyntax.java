@@ -24,7 +24,7 @@ public class PostgresqlSyntax extends SqlSyntax {
     return 1;
   }
 
-  public int getCharacter_maximum_length() {
+  public int getCharacterMaximumLengthColumnIndex() {
     return 2;
   }
 

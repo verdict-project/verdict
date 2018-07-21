@@ -1,2 +1,5 @@
-echo 'export VERDICTDB_TEST_IMPALA_HOST=ec2-54-145-197-147.compute-1.amazonaws.com' >> ~/.bashrc
-source ~/.bashrc
+while [ "$(docker logs verdictdb-impala 2> /dev/null | grep -c "Impala is Started, Enjoy")" -le 0 ]
+do
+  echo "waiting for Impala"
+  sleep 2
+done
