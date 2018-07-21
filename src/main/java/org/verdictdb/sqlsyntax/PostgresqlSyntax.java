@@ -24,6 +24,9 @@ public class PostgresqlSyntax extends SqlSyntax {
     return 1;
   }
 
+  public int getCharacter_maximum_length() {
+    return 2;
+  }
 
   @Override
   public String getQuoteString() {
@@ -57,7 +60,7 @@ public class PostgresqlSyntax extends SqlSyntax {
 
   @Override
   public String getColumnsCommand(String schema, String table) {
-    return "select column_name, data_type " +
+    return "select column_name, data_type, character_maximum_length " +
         "from INFORMATION_SCHEMA.COLUMNS where table_name = '" + table + "' and table_schema = '" + schema + "'";
   }
 

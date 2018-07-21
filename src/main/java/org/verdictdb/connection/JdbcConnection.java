@@ -10,6 +10,7 @@ import java.util.List;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
+import org.stringtemplate.v4.ST;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.sqlsyntax.HiveSyntax;
 import org.verdictdb.sqlsyntax.PostgresqlSyntax;
@@ -169,7 +170,14 @@ public class JdbcConnection implements DbmsConnection {
     DbmsQueryResult queryResult = executeQuery(syntax.getColumnsCommand(schema, table));
 
     while (queryResult.next()) {
-      String type = queryResult.getString(syntax.getColumnTypeColumnIndex());
+      String type;
+      if (syntax instanceof PostgresqlSyntax){
+        type = queryResult.getString(syntax.getColumnTypeColumnIndex());
+        if (queryResult.getInt(((PostgresqlSyntax) syntax).getCharacter_maximum_length())!=0) {
+          type = type + "(" + queryResult.getInt(((PostgresqlSyntax) syntax).getCharacter_maximum_length()) + ")";
+        }
+      }
+      else type = queryResult.getString(syntax.getColumnTypeColumnIndex());
       type = type.toLowerCase();
 
       //        // remove the size of type
