@@ -5,9 +5,12 @@ import java.sql.DriverManager;
 import java.sql.DriverPropertyInfo;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 import java.util.logging.Logger;
 
+import com.google.common.base.Joiner;
 import org.verdictdb.exception.VerdictDBDbmsException;
 
 /**
@@ -31,8 +34,18 @@ public class Driver implements java.sql.Driver {
   @Override
   public Connection connect(String url, Properties info) throws SQLException {
     if (acceptsURL(url)) {
+      String newUrl = url;
       try {
-        return new org.verdictdb.jdbc41.VerdictConnection(url, info);
+        String[] tokens = url.split(":");
+        if (tokens.length >= 2 &&
+            (tokens[1].equalsIgnoreCase("verdict") || tokens[1].equalsIgnoreCase("verdictdb"))) {
+          List<String> newTokens = new ArrayList<>();
+          for (int i=0;i<tokens.length;++i) {
+            if (i!=1) newTokens.add(tokens[i]);
+          }
+          newUrl = Joiner.on(":").join(newTokens);
+        }
+        return new org.verdictdb.jdbc41.VerdictConnection(newUrl, info);
       } catch (VerdictDBDbmsException e) {
         e.printStackTrace();
         throw new SQLException(e.getMessage());

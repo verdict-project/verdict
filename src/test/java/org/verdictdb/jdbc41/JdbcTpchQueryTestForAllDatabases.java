@@ -1,6 +1,7 @@
 package org.verdictdb.jdbc41;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.io.IOException;
@@ -28,7 +29,8 @@ public class JdbcTpchQueryTestForAllDatabases {
 
   private static Map<String, Connection> connMap = new HashMap<>();
 
-  private static Map<String, VerdictConnection> vcMap = new HashMap<>();
+  //  private static Map<String, VerdictConnection> vcMap = new HashMap<>();
+  private static Map<String, Connection> vcMap = new HashMap<>();
 
   private static Map<String, String> schemaMap = new HashMap<>();
 
@@ -40,13 +42,13 @@ public class JdbcTpchQueryTestForAllDatabases {
 
   private String database = "";
 
-  private int query;
+  private String query;
 
   // TODO: Add support for all four databases
   //  private static final String[] targetDatabases = {"mysql", "impala", "redshift", "postgresql"};
   private static final String[] targetDatabases = {"mysql", "impala"};
 
-  public JdbcTpchQueryTestForAllDatabases(String database, int query) {
+  public JdbcTpchQueryTestForAllDatabases(String database, String query) {
     this.database = database;
     this.query = query;
   }
@@ -68,7 +70,7 @@ public class JdbcTpchQueryTestForAllDatabases {
   private static final String MYSQL_PASSWORD = "";
 
   private static final String IMPALA_HOST;
-//  private static final String IMPALA_HOST = "ec2-54-145-197-147.compute-1.amazonaws.com";
+  //  private static final String IMPALA_HOST = "ec2-54-145-197-147.compute-1.amazonaws.com";
 
   static {
     IMPALA_HOST = System.getenv("VERDICTDB_TEST_IMPALA_HOST");
@@ -139,13 +141,19 @@ public class JdbcTpchQueryTestForAllDatabases {
           queryCount = MYSQL_TPCH_QUERY_COUNT;
           break;
         case "impala":
+        case "redshift":
           queryCount = TPCH_QUERY_COUNT;
           break;
       }
       for (int query = 1; query <= queryCount; ++query) {
-        params.add(new Object[] {database, query});
+        params.add(new Object[] {database, String.valueOf(query)});
       }
-//        params.add(new Object[] {database, 13});
+      if (database.equals("redshift")) {
+        params.add(new Object[] {database, "e1"});
+        params.add(new Object[] {database, "e2"});
+        params.add(new Object[] {database, "e3"});
+      }
+      //        params.add(new Object[] {database, 13});
     }
     return params;
   }
@@ -155,12 +163,15 @@ public class JdbcTpchQueryTestForAllDatabases {
         String.format("jdbc:mysql://%s?autoReconnect=true&useSSL=false", MYSQL_HOST);
     String vcMysqlConnectionString =
         String.format(
-            "jdbc:mysql://%s/%s?autoReconnect=true&useSSL=false", MYSQL_HOST, MYSQL_DATABASE);
+            "jdbc:verdict:mysql://%s/%s?autoReconnect=true&useSSL=false",
+            MYSQL_HOST, MYSQL_DATABASE);
     Connection conn =
         DatabaseConnectionHelpers.setupMySql(
             mysqlConnectionString, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE);
-    VerdictConnection vc =
-        new VerdictConnection(vcMysqlConnectionString, MYSQL_USER, MYSQL_PASSWORD);
+    Connection vc =
+        DriverManager.getConnection(vcMysqlConnectionString, MYSQL_USER, MYSQL_PASSWORD);
+    //    VerdictConnection vc =
+    //        new VerdictConnection(vcMysqlConnectionString, MYSQL_USER, MYSQL_PASSWORD);
     conn.setCatalog(MYSQL_DATABASE);
     connMap.put("mysql", conn);
     vcMap.put("mysql", vc);
@@ -169,12 +180,14 @@ public class JdbcTpchQueryTestForAllDatabases {
   }
 
   private static Connection setupImpala() throws SQLException, VerdictDBDbmsException {
-    String connectionString =
-        String.format("jdbc:impala://%s:21050", IMPALA_HOST);
+    String connectionString = String.format("jdbc:impala://%s:21050", IMPALA_HOST);
+    String verdictConnectionString = String.format("jdbc:verdict:impala://%s:21050", IMPALA_HOST);
     Connection conn =
         DatabaseConnectionHelpers.setupImpala(
             connectionString, IMPALA_USER, IMPALA_PASSWORD, IMPALA_DATABASE);
-    VerdictConnection vc = new VerdictConnection(connectionString, IMPALA_USER, IMPALA_PASSWORD);
+    Connection vc =
+        DriverManager.getConnection(verdictConnectionString, IMPALA_USER, IMPALA_PASSWORD);
+    //    Connection vc = new VerdictConnection(connectionString, IMPALA_USER, IMPALA_PASSWORD);
     connMap.put("impala", conn);
     vcMap.put("impala", vc);
     schemaMap.put("impala", IMPALA_DATABASE + ".");
@@ -221,11 +234,16 @@ public class JdbcTpchQueryTestForAllDatabases {
       case "impala":
         filename = "companya/impala_queries/tpchImpalaQuery" + query + ".sql";
         break;
+      case "redshift":
+        filename = "companya/redshift_queries/" + query + ".sql";
+        break;
+      default:
+        fail(String.format("Database '%s' not supported.", database));
     }
     File queryFile = new File(classLoader.getResource(filename).getFile());
     if (queryFile.exists()) {
       String sql = Files.toString(queryFile, Charsets.UTF_8);
-//      sql = "select * from tpch_2_parquet.lineitem limit 1000";
+      //      sql = "select * from tpch_2_parquet.lineitem limit 1000";
 
       Statement jdbcStmt = connMap.get(database).createStatement();
       Statement vcStmt = vcMap.get(database).createStatement();
