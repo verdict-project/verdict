@@ -3,6 +3,7 @@ package org.verdictdb.core.sqlobject;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 
 public class AsteriskColumn implements UnnamedColumn, SelectItem {
   
@@ -39,11 +40,6 @@ public class AsteriskColumn implements UnnamedColumn, SelectItem {
   }
 
   @Override
-  public String toString() {
-    return ToStringBuilder.reflectionToString(this);
-  }
-
-  @Override
   public boolean isAggregateColumn() {
     return false;
   }
@@ -51,6 +47,11 @@ public class AsteriskColumn implements UnnamedColumn, SelectItem {
   @Override
   public AsteriskColumn deepcopy() {
     return new AsteriskColumn();
+  }
+  
+  @Override
+  public String toString() {
+    return this.getClass().getSimpleName();
   }
   
 }

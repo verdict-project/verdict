@@ -139,7 +139,7 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
       // copy and remove the dependency to its parents
       oldSubscriptionInformation.clear();
       AggExecutionNodeBlock copy = aggNodeBlock.deepcopyExcludingDependentAggregates(oldSubscriptionInformation);
-      ExecutableNodeBase aggroot = copy.getBlockRootNode();
+      AggExecutionNode aggroot = (AggExecutionNode) copy.getBlockRootNode();
       for (ExecutableNodeBase parent : aggroot.getExecutableNodeBaseParents()) {
         parent.cancelSubscriptionTo(aggroot);   // not sure if this is required, but do anyway
       }
@@ -150,17 +150,17 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
           identifyScrambledNodes(scrambleMeta, copy.getNodesInBlock());
 
       // Assign hyper table cube to the block
-      ((AggExecutionNode)aggroot).getMeta().setCubes(Arrays.asList(aggPlan.cubes.get(i)));
+      aggroot.getMeta().setCubes(Arrays.asList(aggPlan.cubes.get(i)));
 
       // Search for agg column
-      // Rewrite individual aggregate node so that it only select basic aggregate column and non-aggregate column
-      List<SelectItem> newSelectlist = rewriteSelectlistWithBasicAgg(((AggExecutionNode)aggroot).getSelectQuery(),  ((AggExecutionNode)aggroot).getMeta());
+      // Rewrite individual aggregate node so that it only select supported aggregate columns and non-aggregate columns
+      List<SelectItem> newSelectlist = rewriteSelectlistWithBasicAgg(aggroot.getSelectQuery(),  aggroot.getMeta());
 
       // Add a tier column and a group attribute if the from list has multiple tier table
-      addTierColumn(((AggExecutionNode)aggroot).getSelectQuery(), newSelectlist, scrambleMeta);
+      addTierColumn(aggroot.getSelectQuery(), newSelectlist, scrambleMeta);
 
-      ((AggExecutionNode)aggroot).getSelectQuery().clearSelectList();
-      ((AggExecutionNode)aggroot).getSelectQuery().getSelectList().addAll(newSelectlist);
+      aggroot.getSelectQuery().clearSelectList();
+      aggroot.getSelectQuery().getSelectList().addAll(newSelectlist);
 
       aggColumnIdentiferNum = 0;
 
@@ -431,7 +431,13 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
     return false;
   }
   
-  
+  /**
+   * Adds tier expressions to the individual aggregates
+   * 
+   * @param query
+   * @param newSelectList
+   * @param scrambleMeta
+   */
   private void addTierColumn(SelectQuery query, List<SelectItem> newSelectList, ScrambleMetaSet scrambleMeta) {
     for (AbstractRelation table : query.getFromList()) {
       if (table instanceof BaseTable) {

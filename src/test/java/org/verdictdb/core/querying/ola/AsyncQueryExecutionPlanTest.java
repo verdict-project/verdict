@@ -15,15 +15,18 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.connection.JdbcConnection;
+import org.verdictdb.core.execplan.ExecutableNode;
 import org.verdictdb.core.execplan.ExecutablePlanRunner;
 import org.verdictdb.core.querying.AggExecutionNode;
 import org.verdictdb.core.querying.ExecutableNodeBase;
 import org.verdictdb.core.querying.QueryExecutionPlan;
+import org.verdictdb.core.querying.QueryNodeBase;
 import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
 import org.verdictdb.core.scrambling.SimpleTreePlan;
 import org.verdictdb.core.scrambling.UniformScrambler;
 import org.verdictdb.core.sqlobject.AliasedColumn;
+import org.verdictdb.core.sqlobject.BaseColumn;
 import org.verdictdb.core.sqlobject.BaseTable;
 import org.verdictdb.core.sqlobject.ColumnOp;
 import org.verdictdb.core.sqlobject.CreateTableAsSelectQuery;
@@ -31,9 +34,10 @@ import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBValueException;
 import org.verdictdb.sqlsyntax.H2Syntax;
+import org.verdictdb.sqlsyntax.HiveSyntax;
 import org.verdictdb.sqlwriter.QueryToSql;
 
-public class AggExecutionNodeBlockTest {
+public class AsyncQueryExecutionPlanTest {
   
   static Connection conn;
   
@@ -85,14 +89,11 @@ public class AggExecutionNodeBlockTest {
         new AliasedColumn(ColumnOp.count(), "agg"),
         new BaseTable(newSchema, newTable, "t"));
     QueryExecutionPlan plan = new QueryExecutionPlan(newSchema, scrambleMeta, aggQuery);
-//    plan.setScrambleMeta(scrambleMeta);
 
     AggExecutionNode aggnode = AggExecutionNode.create(plan, aggQuery);
     AsyncQueryExecutionPlan asyncPlan = AsyncQueryExecutionPlan.create(plan);
-//    AggExecutionNodeBlock block = new AggExecutionNodeBlock(plan, aggnode);
     AggExecutionNodeBlock block = new AggExecutionNodeBlock(aggnode);
     
-//    ExecutableNodeBase converted = block.convertToProgressiveAgg(plan.getScrambleMeta());   // AsyncAggregation
     ExecutableNodeBase converted = asyncPlan.convertToProgressiveAgg(scrambleMeta, block);   // AsyncAggregation
 //    converted.print();
     assertTrue(converted instanceof AsyncAggExecutionNode);
@@ -108,33 +109,33 @@ public class AggExecutionNodeBlockTest {
         assertTrue(converted.getExecutableNodeBaseDependent(i).getExecutableNodeBaseDependent(1) instanceof AggExecutionNode);
       }
     }
-//    assertEquals("initialized", converted.getStatus());
-//    assertEquals("initialized", converted.getDependent(0).getStatus());
-//    for (int i = 1; i < aggBlockCount; i++) {
-//      assertEquals("initialized", converted.getDependent(i).getStatus());
-//      assertEquals("initialized", converted.getDependent(i).getDependent(0).getStatus());
-//      assertEquals("initialized", converted.getDependent(i).getDependent(1).getStatus());
-//    }
-    ((AsyncAggExecutionNode)converted).setScrambleMeta(scrambleMeta);
+    
+    ((AsyncAggExecutionNode) converted).setScrambleMeta(scrambleMeta);
     ExecutablePlanRunner.runTillEnd(
         new JdbcConnection(conn, new H2Syntax()), 
         new SimpleTreePlan(converted));
-//    converted.executeAndWaitForTermination(new JdbcConnection(conn, new H2Syntax()));
-    
-//    assertEquals("success", converted.getStatus());
-//    assertEquals("success", converted.getDependent(0).getStatus());
-//    for (int i = 1; i < aggBlockCount; i++) {
-//      assertEquals("success", converted.getDependent(i).getStatus());
-//      assertEquals("success", converted.getDependent(i).getDependent(0).getStatus());
-//      assertEquals("success", converted.getDependent(i).getDependent(1).getStatus());
-//    }
   }
   
-  // the origiinal query does not include any scrambled tables; thus, it must not be converted to any other
-  // form.
   @Test
-  public void testConvertNonBigFlatToProgressiveAgg() throws VerdictDBValueException {
+  public void testConvertNestedAgg() throws VerdictDBException {
+    SelectQuery projQuery = SelectQuery.create(
+        new AliasedColumn(new BaseColumn("t", "value"), "v"),
+        new BaseTable(newSchema, newTable, "t"));
+    projQuery.setAliasName("t2");
+    SelectQuery aggQuery = SelectQuery.create(
+        new AliasedColumn(ColumnOp.count(), "agg"),
+        projQuery);
     
+    QueryExecutionPlan plan = new QueryExecutionPlan(newSchema, scrambleMeta, aggQuery);
+    AsyncQueryExecutionPlan asyncPlan = AsyncQueryExecutionPlan.create(plan);
+    ExecutableNodeBase converted = asyncPlan.getRoot();
+    converted.print();
+    
+    List<ExecutableNode> nodes = asyncPlan.getAllNodes();
+    for (ExecutableNode n : nodes) {
+      SelectQuery q = ((QueryNodeBase) n).getSelectQuery();
+      System.out.println(QueryToSql.convert(new HiveSyntax(), q));
+    }
   }
   
   static void populateRandomData(Connection conn, String schemaName, String tableName) throws SQLException {

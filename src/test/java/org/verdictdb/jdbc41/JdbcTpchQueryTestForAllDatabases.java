@@ -135,7 +135,7 @@ public class JdbcTpchQueryTestForAllDatabases {
   }
 
   @Parameterized.Parameters(name="{0}_tpch_{1}")
-  public static Collection databases() {
+  public static Collection<Object[]> databases() {
     Collection<Object[]> params = new ArrayList<>();
 
     for (String database : targetDatabases) {

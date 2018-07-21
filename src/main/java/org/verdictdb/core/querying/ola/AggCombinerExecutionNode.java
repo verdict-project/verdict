@@ -40,6 +40,7 @@ public class AggCombinerExecutionNode extends CreateTableAsSelectNode {
       IdCreator namer,
       ExecutableNodeBase leftQueryExecutionNode,
       ExecutableNodeBase rightQueryExecutionNode) throws VerdictDBValueException {
+    
     AggCombinerExecutionNode node = new AggCombinerExecutionNode(namer);
     
     SelectQuery rightQuery = ((QueryNodeBase) rightQueryExecutionNode).getSelectQuery();   // the right one is the aggregate query
@@ -95,7 +96,6 @@ public class AggCombinerExecutionNode extends CreateTableAsSelectNode {
       }
     }
 
-
     SelectQuery left = SelectQuery.create(new AsteriskColumn(), leftBase);
     SelectQuery right = SelectQuery.create(new AsteriskColumn(), rightBase);
     SetOperationRelation newBase = new SetOperationRelation(left, right, SetOperationRelation.SetOpType.unionAll);
@@ -117,12 +117,17 @@ public class AggCombinerExecutionNode extends CreateTableAsSelectNode {
 
     return unionQuery;
   }
+  
 
   @Override
   public SqlConvertible createQuery(List<ExecutionInfoToken> tokens) throws VerdictDBException {
-    for (ExecutionInfoToken token:tokens) {
+    for (ExecutionInfoToken token : tokens) {
       AggMeta aggMeta = (AggMeta) token.getValue("aggMeta");
-      if (aggMeta!=null) {
+//      if (aggMeta == null) {
+//        throw new VerdictDBValueException("No aggregation metadata is passed from downstream nodes.");
+//      }
+      
+      if (aggMeta != null) {
         this.aggMeta.getCubes().addAll(aggMeta.getCubes());
         this.aggMeta.setAggAlias(aggMeta.getAggAlias());
         this.aggMeta.setOriginalSelectList(aggMeta.getOriginalSelectList());

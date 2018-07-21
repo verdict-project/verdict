@@ -188,6 +188,15 @@ public class QueryExecutionPlan implements ExecutablePlan, IdCreator, Serializab
     
     return relevantNodes;
   }
+  
+  public List<ExecutableNode> getAllNodes() {
+    List<ExecutableNode> allNodes = new ArrayList<>();
+    Set<Integer> groups = getNodeGroupIDs();
+    for (int g : groups) {
+      allNodes.addAll(getNodesInGroup(g));
+    }
+    return allNodes;
+  }
 
   @Override
   public ExecutableNode getReportingNode() {
