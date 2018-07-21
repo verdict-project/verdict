@@ -86,14 +86,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
     coordinator.setScrambleMetaSet(meta);
     ExecutionResultReader reader = coordinator.process(sql);
 
-    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
-    AbstractRelation relation = sqlToRelation.toRelation(sql);
-    RelationStandardizer gen = new RelationStandardizer(dbmsConn);
-    relation = gen.standardize((SelectQuery) relation);
-
-    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new RedshiftSyntax());
-    String stdQuery = selectQueryToSql.toSql(relation);
-    ResultSet rs = stmt.executeQuery(stdQuery);
+    ResultSet rs = stmt.executeQuery(sql);
     return new ImmutablePair<>(reader, rs);
   }
 
