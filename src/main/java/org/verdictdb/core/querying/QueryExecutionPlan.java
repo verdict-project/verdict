@@ -92,6 +92,8 @@ public class QueryExecutionPlan implements ExecutablePlan, IdCreator, Serializab
     //if (!query.isSupportedAggregate()) {
     //  throw new VerdictDBTypeException(query);
     //}
+    
+    // TODO: replace makePlan() with QueryExecutionPlanFactory.create().
     this.root = makePlan(query);
   }
 

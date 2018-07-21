@@ -152,6 +152,11 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
       // Assign hyper table cube to the block
       aggroot.getMeta().setCubes(Arrays.asList(aggPlan.cubes.get(i)));
 
+      // TODO: Create another function and use it here
+      // The new function performs both rewriting select list and adding tier columns
+      // The important thing is that this job should be done starting from the leaf nodes
+      // I created a skeleton function: rewriteSelectListOfRootAndListedDependents
+      
       // Search for agg column
       // Rewrite individual aggregate node so that it only select supported aggregate columns and non-aggregate columns
       List<SelectItem> newSelectlist = rewriteSelectlistWithBasicAgg(aggroot.getSelectQuery(),  aggroot.getMeta());
@@ -237,7 +242,7 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
    * @return ExecutableNodeBase is the reference to the scrambled base table.
    *         The triple is (schema, table, alias) of scrambled tables.
    */
-  static List<Pair<ExecutableNodeBase, Triple<String, String, String>>>
+  private static List<Pair<ExecutableNodeBase, Triple<String, String, String>>>
     identifyScrambledNodes(ScrambleMetaSet scrambleMeta, List<ExecutableNodeBase> blockNodes) {
 
     List<Pair<ExecutableNodeBase, Triple<String, String, String>>> identified = new ArrayList<>();
@@ -277,75 +282,6 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
     return identified;
   }
   
-  
-  List<SelectItem> rewriteSelectlistWithBasicAgg(SelectQuery query, AggMeta meta) {
-    
-    List<SelectItem> selectList = query.getSelectList();
-    List<String> aggColumnAlias = new ArrayList<>();
-    HashMap<String, String> maxminAlias = new HashMap<>();
-    List<SelectItem> newSelectlist = new ArrayList<>();
-    meta.setOriginalSelectList(selectList);
-    for (SelectItem selectItem : selectList) {
-      if (selectItem instanceof AliasedColumn) {
-        List<ColumnOp> columnOps = getAggregateColumn(((AliasedColumn) selectItem).getColumn());
-        // If it contains agg columns
-        if (!columnOps.isEmpty()) {
-          meta.getAggColumn().put(selectItem, columnOps);
-          for (ColumnOp col:columnOps) {
-            if (col.getOpType().equals("avg")) {
-              if (!meta.getAggColumnAggAliasPair().containsKey(
-                  new ImmutablePair<>("sum", col.getOperand(0)))) {
-                ColumnOp col1 = new ColumnOp("sum", col.getOperand(0));
-                newSelectlist.add(new AliasedColumn(col1, "agg"+aggColumnIdentiferNum));
-                meta.getAggColumnAggAliasPair().put(
-                    new ImmutablePair<>("sum", col1.getOperand(0)), "agg"+aggColumnIdentiferNum);
-                aggColumnAlias.add("agg"+aggColumnIdentiferNum++);
-              }
-              if (!meta.getAggColumnAggAliasPair().containsKey(
-                  new ImmutablePair<>("count", (UnnamedColumn) new AsteriskColumn()))) {
-                ColumnOp col2 = new ColumnOp("count", new AsteriskColumn());
-                newSelectlist.add(new AliasedColumn(col2, "agg"+aggColumnIdentiferNum));
-                meta.getAggColumnAggAliasPair().put(
-                    new ImmutablePair<>("count", (UnnamedColumn) new AsteriskColumn()), "agg"+aggColumnIdentiferNum);
-                aggColumnAlias.add("agg"+aggColumnIdentiferNum++);
-              }
-            } else if (col.getOpType().equals("count") || col.getOpType().equals("sum")){
-              if (col.getOpType().equals("count") && !meta.getAggColumnAggAliasPair().containsKey(
-                  new ImmutablePair<>("count", (UnnamedColumn)(new AsteriskColumn())))) {
-                ColumnOp col1 = new ColumnOp(col.getOpType());
-                newSelectlist.add(new AliasedColumn(col1, "agg"+aggColumnIdentiferNum));
-                meta.getAggColumnAggAliasPair().put(
-                    new ImmutablePair<>(col.getOpType(), (UnnamedColumn)new AsteriskColumn()), "agg"+aggColumnIdentiferNum);
-                aggColumnAlias.add("agg"+aggColumnIdentiferNum++);
-              }
-              else if (col.getOpType().equals("sum") && !meta.getAggColumnAggAliasPair().containsKey(
-                  new ImmutablePair<>(col.getOpType(), col.getOperand(0)))) {
-                ColumnOp col1 = new ColumnOp(col.getOpType(), col.getOperand(0));
-                newSelectlist.add(new AliasedColumn(col1, "agg"+aggColumnIdentiferNum));
-                meta.getAggColumnAggAliasPair().put(
-                    new ImmutablePair<>(col.getOpType(), col1.getOperand(0)), "agg"+aggColumnIdentiferNum);
-                aggColumnAlias.add("agg"+aggColumnIdentiferNum++);
-              }
-            } else if (col.getOpType().equals("max") || col.getOpType().equals("min")) {
-              ColumnOp col1 = new ColumnOp(col.getOpType(), col.getOperand(0));
-              newSelectlist.add(new AliasedColumn(col1, "agg"+aggColumnIdentiferNum));
-              meta.getAggColumnAggAliasPairOfMaxMin().put(
-                  new ImmutablePair<>(col.getOpType(), col1.getOperand(0)), "agg"+aggColumnIdentiferNum);
-              maxminAlias.put("agg"+aggColumnIdentiferNum++, col.getOpType());
-            }
-          }
-        }
-        else {
-          newSelectlist.add(selectItem);
-        }
-      } else {
-        newSelectlist.add(selectItem);
-      }
-    }
-    meta.setAggAlias(aggColumnAlias);
-    meta.setMaxminAggAlias(maxminAlias);
-    return newSelectlist;
-  }
   
   private List<ColumnOp> getAggregateColumn(UnnamedColumn sel) {
     List<SelectItem> itemToCheck = new ArrayList<>();
@@ -431,6 +367,105 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
     return false;
   }
   
+  /**
+   * Rewrite the select list of the nodes in a block; the nodes that belong ot the block are
+   * identified by the second parameter `nodeList`.
+   * 
+   * @param root
+   * @param nodeList
+   * @return
+   */
+  private ExecutableNodeBase rewriteSelectListOfRootAndListedDependents(
+      ExecutableNodeBase root, List<ExecutableNodeBase> nodeList) {
+    List<ExecutableNodeBase> visitList = new ArrayList<>();
+    ExecutableNodeBase rewritten = rewriteSelectListOfRootAndListedDependentsInner(root, nodeList, visitList);
+    return rewritten;
+  }
+  
+  private ExecutableNodeBase rewriteSelectListOfRootAndListedDependentsInner(
+      ExecutableNodeBase root, List<ExecutableNodeBase> nodeList, List<ExecutableNodeBase> visitList) {
+    
+    // base condition: return immediately if the root does not belong to nodeList.
+    
+    // base condition: return immediately if this node has been visited before.
+    
+    // call rewriteSelectListOfRootAndListedDependents for all dependents first
+    
+    // then does the job for the root node.
+    
+    return null;
+  }
+  
+  private List<SelectItem> rewriteSelectlistWithBasicAgg(SelectQuery query, AggMeta meta) {
+    
+    List<SelectItem> selectList = query.getSelectList();
+    List<String> aggColumnAlias = new ArrayList<>();
+    HashMap<String, String> maxminAlias = new HashMap<>();
+    List<SelectItem> newSelectlist = new ArrayList<>();
+    meta.setOriginalSelectList(selectList);
+    
+    for (SelectItem selectItem : selectList) {
+      if (selectItem instanceof AliasedColumn) {
+        List<ColumnOp> columnOps = getAggregateColumn(((AliasedColumn) selectItem).getColumn());
+        // If it contains agg columns
+        if (!columnOps.isEmpty()) {
+          meta.getAggColumn().put(selectItem, columnOps);
+          for (ColumnOp col:columnOps) {
+            if (col.getOpType().equals("avg")) {
+              if (!meta.getAggColumnAggAliasPair().containsKey(
+                  new ImmutablePair<>("sum", col.getOperand(0)))) {
+                ColumnOp col1 = new ColumnOp("sum", col.getOperand(0));
+                newSelectlist.add(new AliasedColumn(col1, "agg"+aggColumnIdentiferNum));
+                meta.getAggColumnAggAliasPair().put(
+                    new ImmutablePair<>("sum", col1.getOperand(0)), "agg"+aggColumnIdentiferNum);
+                aggColumnAlias.add("agg"+aggColumnIdentiferNum++);
+              }
+              if (!meta.getAggColumnAggAliasPair().containsKey(
+                  new ImmutablePair<>("count", (UnnamedColumn) new AsteriskColumn()))) {
+                ColumnOp col2 = new ColumnOp("count", new AsteriskColumn());
+                newSelectlist.add(new AliasedColumn(col2, "agg"+aggColumnIdentiferNum));
+                meta.getAggColumnAggAliasPair().put(
+                    new ImmutablePair<>("count", (UnnamedColumn) new AsteriskColumn()), "agg"+aggColumnIdentiferNum);
+                aggColumnAlias.add("agg"+aggColumnIdentiferNum++);
+              }
+            } else if (col.getOpType().equals("count") || col.getOpType().equals("sum")){
+              if (col.getOpType().equals("count") && !meta.getAggColumnAggAliasPair().containsKey(
+                  new ImmutablePair<>("count", (UnnamedColumn)(new AsteriskColumn())))) {
+                ColumnOp col1 = new ColumnOp(col.getOpType());
+                newSelectlist.add(new AliasedColumn(col1, "agg"+aggColumnIdentiferNum));
+                meta.getAggColumnAggAliasPair().put(
+                    new ImmutablePair<>(col.getOpType(), (UnnamedColumn)new AsteriskColumn()), "agg"+aggColumnIdentiferNum);
+                aggColumnAlias.add("agg"+aggColumnIdentiferNum++);
+              }
+              else if (col.getOpType().equals("sum") && !meta.getAggColumnAggAliasPair().containsKey(
+                  new ImmutablePair<>(col.getOpType(), col.getOperand(0)))) {
+                ColumnOp col1 = new ColumnOp(col.getOpType(), col.getOperand(0));
+                newSelectlist.add(new AliasedColumn(col1, "agg"+aggColumnIdentiferNum));
+                meta.getAggColumnAggAliasPair().put(
+                    new ImmutablePair<>(col.getOpType(), col1.getOperand(0)), "agg"+aggColumnIdentiferNum);
+                aggColumnAlias.add("agg"+aggColumnIdentiferNum++);
+              }
+            } else if (col.getOpType().equals("max") || col.getOpType().equals("min")) {
+              ColumnOp col1 = new ColumnOp(col.getOpType(), col.getOperand(0));
+              newSelectlist.add(new AliasedColumn(col1, "agg"+aggColumnIdentiferNum));
+              meta.getAggColumnAggAliasPairOfMaxMin().put(
+                  new ImmutablePair<>(col.getOpType(), col1.getOperand(0)), "agg"+aggColumnIdentiferNum);
+              maxminAlias.put("agg"+aggColumnIdentiferNum++, col.getOpType());
+            }
+          }
+        }
+        else {
+          newSelectlist.add(selectItem);
+        }
+      } else {
+        newSelectlist.add(selectItem);
+      }
+    }
+    meta.setAggAlias(aggColumnAlias);
+    meta.setMaxminAggAlias(maxminAlias);
+    return newSelectlist;
+  }
+
   /**
    * Adds tier expressions to the individual aggregates
    * 
