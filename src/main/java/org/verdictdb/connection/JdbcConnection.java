@@ -10,26 +10,27 @@ import java.util.List;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
+import org.stringtemplate.v4.ST;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.sqlsyntax.HiveSyntax;
 import org.verdictdb.sqlsyntax.PostgresqlSyntax;
-import org.verdictdb.sqlsyntax.RedshiftSyntax;
 import org.verdictdb.sqlsyntax.SparkSyntax;
 import org.verdictdb.sqlsyntax.SqlSyntax;
 import org.verdictdb.sqlsyntax.SqlSyntaxList;
+import org.verdictdb.sqlsyntax.*;
 
 public class JdbcConnection implements DbmsConnection {
-  
+
   Connection conn;
 
   SqlSyntax syntax;
-  
+
   String currentSchema = null;
-  
+
   JdbcQueryResult jrs = null;
-  
+
   private boolean outputDebugMessage = false;
-  
+
   public static JdbcConnection create(Connection conn) throws VerdictDBDbmsException {
     String connectionString = null;
     try {
@@ -37,13 +38,13 @@ public class JdbcConnection implements DbmsConnection {
     } catch (SQLException e) {
       throw new VerdictDBDbmsException(e);
     }
-    
+
     String dbName = connectionString.split(":")[1];
     SqlSyntax syntax = SqlSyntaxList.getSyntaxFor(dbName);
-    
+
     return new JdbcConnection(conn, syntax);
   }
-  
+
   public JdbcConnection(Connection conn, SqlSyntax syntax) {
     this.conn = conn;
     try {
@@ -58,7 +59,7 @@ public class JdbcConnection implements DbmsConnection {
     }
     this.syntax = syntax;
   }
-  
+
   @Override
   public void close() {
     try {
@@ -67,13 +68,13 @@ public class JdbcConnection implements DbmsConnection {
       e.printStackTrace();
     }
   }
-  
+
   @Override
   public DbmsQueryResult execute(String sql) throws VerdictDBDbmsException {
     if (outputDebugMessage) {
       System.out.println("About to issue this query: " + sql);
     }
-    
+
     try {
       Statement stmt = conn.createStatement();
       JdbcQueryResult jrs = null;
@@ -97,7 +98,7 @@ public class JdbcConnection implements DbmsConnection {
 //  public DbmsQueryResult getResult() {
 //    return jrs;
 //  }
-  
+
   public DbmsQueryResult executeQuery(String sql) throws VerdictDBDbmsException {
     return execute(sql);
   }
@@ -137,17 +138,19 @@ public class JdbcConnection implements DbmsConnection {
     return syntax;
   }
 
-  public Connection getConnection() {return conn;}
+  public Connection getConnection() {
+    return conn;
+  }
 
   @Override
-  public List<String> getSchemas() throws VerdictDBDbmsException{
+  public List<String> getSchemas() throws VerdictDBDbmsException {
     List<String> schemas = new ArrayList<>();
     DbmsQueryResult queryResult = executeQuery(syntax.getSchemaCommand());
 
     while (queryResult.next()) {
       schemas.add(queryResult.getString(syntax.getSchemaNameColumnIndex()));
     }
-    
+
     return schemas;
   }
 
@@ -159,7 +162,7 @@ public class JdbcConnection implements DbmsConnection {
     while (queryResult.next()) {
       tables.add(queryResult.getString(syntax.getTableNameColumnIndex()));
     }
-      
+
     return tables;
   }
 
@@ -169,7 +172,15 @@ public class JdbcConnection implements DbmsConnection {
     DbmsQueryResult queryResult = executeQuery(syntax.getColumnsCommand(schema, table));
 
     while (queryResult.next()) {
-      String type = queryResult.getString(syntax.getColumnTypeColumnIndex());
+      String type;
+      if (syntax instanceof PostgresqlSyntax) {
+        type = queryResult.getString(syntax.getColumnTypeColumnIndex());
+        if (queryResult.getInt(((PostgresqlSyntax) syntax).getCharacterMaximumLengthColumnIndex()) != 0) {
+          type = type + "(" + queryResult.getInt(((PostgresqlSyntax) syntax).getCharacterMaximumLengthColumnIndex()) + ")";
+        }
+      } else {
+        type = queryResult.getString(syntax.getColumnTypeColumnIndex());
+      }
       type = type.toLowerCase();
 
       //        // remove the size of type
@@ -178,14 +189,30 @@ public class JdbcConnection implements DbmsConnection {
       columns.add(
           new ImmutablePair<>(queryResult.getString(syntax.getColumnNameColumnIndex()), type));
     }
-    
+
     return columns;
   }
 
   @Override
   public List<String> getPartitionColumns(String schema, String table) throws VerdictDBDbmsException {
     List<String> partition = new ArrayList<>();
-    DbmsQueryResult queryResult = executeQuery(syntax.getPartitionCommand(schema, table));
+    DbmsQueryResult queryResult;
+    if (syntax instanceof ImpalaSyntax) {
+      try {
+        queryResult = executeQuery(syntax.getPartitionCommand(schema, table));
+        for (int i = 0; i < queryResult.getColumnCount(); i++) {
+          String columnName = queryResult.getColumnName(i);
+          if (columnName.equals("#rows")) {
+            break;
+          } else partition.add(columnName);
+        }
+        return partition;
+      } catch (Exception e) {
+        return partition;
+      }
+    } else {
+      queryResult = executeQuery(syntax.getPartitionCommand(schema, table));
+    }
     //    VerdictResultSet jdbcQueryResult = new VerdictResultSet(queryResult);
 
     // the result of postgresql is a vector of column index
@@ -194,8 +221,8 @@ public class JdbcConnection implements DbmsConnection {
         Object o = queryResult.getValue(0);
         String[] arr = o.toString().split(" ");
         List<Pair<String, String>> columns = getColumns(schema, table);
-        for (int i=0; i<arr.length; i++) {
-          partition.add(columns.get(Integer.valueOf(arr[i])-1).getKey());
+        for (int i = 0; i < arr.length; i++) {
+          partition.add(columns.get(Integer.valueOf(arr[i]) - 1).getKey());
         }
       }
     }
@@ -210,8 +237,7 @@ public class JdbcConnection implements DbmsConnection {
           hasPartitionInfoStarted = true;
         }
       }
-    }
-    else {
+    } else {
       while (queryResult.next()) {
         partition.add(queryResult.getString(0));
       }

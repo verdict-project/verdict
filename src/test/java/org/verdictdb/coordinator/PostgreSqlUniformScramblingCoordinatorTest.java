@@ -20,48 +20,51 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
-public class RedshiftUniformScramblingCoordinatorTest {
+public class PostgreSqlUniformScramblingCoordinatorTest {
 
-  static Connection redshiftConn;
+  private static Connection postgresConn;
 
-  static DbmsConnection dbmsConn;
+  private static Statement postgresStmt;
 
-  private static Statement stmt;
+  private static final String POSTGRES_HOST;
 
-  private static final String REDSHIFT_HOST;
+  private static final String POSTGRES_DATABASE = "test";
 
-  private static final String REDSHIFT_DATABASE = "dev";
+  private static final String POSTGRES_SCHEMA = "scrambling_coordinator_test";
 
-  private static final String REDSHIFT_SCHEMA = "tpch";
+  private static final String POSTGRES_USER = "postgres";
 
-  private static final String REDSHIFT_USER;
-
-  private static final String REDSHIFT_PASSWORD;
+  private static final String POSTGRES_PASSWORD = "";
 
   static {
-    REDSHIFT_HOST = System.getenv("VERDICTDB_TEST_REDSHIFT_ENDPOINT");
-    REDSHIFT_USER = System.getenv("VERDICTDB_TEST_REDSHIFT_USER");
-    REDSHIFT_PASSWORD = System.getenv("VERDICTDB_TEST_REDSHIFT_PASSWORD");
-//    System.out.println(REDSHIFT_HOST);
-//    System.out.println(REDSHIFT_USER);
-//    System.out.println(REDSHIFT_PASSWORD);
+    String env = System.getenv("BUILD_ENV");
+    if (env != null && env.equals("GitLab")) {
+      POSTGRES_HOST = "postgres";
+    } else {
+      POSTGRES_HOST = "localhost";
+    }
   }
 
-
   @BeforeClass
-  public static void setupRedshiftDatabase() throws SQLException, VerdictDBDbmsException, IOException {
-    String connectionString =
-        String.format("jdbc:redshift://%s/%s", REDSHIFT_HOST, REDSHIFT_DATABASE);
-    redshiftConn =
-        DatabaseConnectionHelpers.setupRedshift(
-            connectionString, REDSHIFT_USER, REDSHIFT_PASSWORD, REDSHIFT_SCHEMA);
-    stmt = redshiftConn.createStatement();
+  public static void setupPostgresDatabase() throws SQLException, VerdictDBDbmsException, IOException {
+    String postgresConnectionString =
+        String.format("jdbc:postgresql://%s/%s", POSTGRES_HOST, POSTGRES_DATABASE);
+    postgresConn =
+        DatabaseConnectionHelpers.setupPostgresql(
+            postgresConnectionString, POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_SCHEMA);
+    postgresStmt = postgresConn.createStatement();
+    postgresStmt.execute(String.format("create schema if not exists \"%s\"", POSTGRES_SCHEMA));
+  }
+
+  @AfterClass
+  public static void tearDown() throws SQLException {
+    postgresStmt.execute(String.format("drop schema if exists \"%s\" CASCADE", POSTGRES_SCHEMA));
   }
 
   @Test
   public void sanityCheck() throws VerdictDBDbmsException {
-    DbmsConnection conn = JdbcConnection.create(redshiftConn);
-    DbmsQueryResult result = conn.execute(String.format("select * from \"%s\".\"lineitem\"", REDSHIFT_SCHEMA));
+    DbmsConnection conn = JdbcConnection.create(postgresConn);
+    DbmsQueryResult result = conn.execute(String.format("select * from \"%s\".lineitem", POSTGRES_SCHEMA));
     int rowCount = 0;
     while (result.next()) {
       rowCount++;
@@ -80,36 +83,36 @@ public class RedshiftUniformScramblingCoordinatorTest {
   }
 
   public void testScramblingCoordinator(String tablename) throws VerdictDBException {
-    DbmsConnection conn = JdbcConnection.create(redshiftConn);
+    DbmsConnection conn = JdbcConnection.create(postgresConn);
 
-    String scrambleSchema = REDSHIFT_SCHEMA;
-    String scratchpadSchema = REDSHIFT_SCHEMA;
+    String scrambleSchema = POSTGRES_SCHEMA;
+    String scratchpadSchema = POSTGRES_SCHEMA;
     long blockSize = 100;
     ScramblingCoordinator scrambler = new ScramblingCoordinator(conn, scrambleSchema, scratchpadSchema, blockSize);
 
     // perform scrambling
-    String originalSchema = REDSHIFT_SCHEMA;
+    String originalSchema = POSTGRES_SCHEMA;
     String originalTable = tablename;
     String scrambledTable = tablename + "_scrambled";
-    conn.execute(String.format("drop table if exists %s.%s", REDSHIFT_SCHEMA, scrambledTable));
+    conn.execute(String.format("drop table if exists %s.%s", POSTGRES_SCHEMA, scrambledTable));
     scrambler.scramble(originalSchema, originalTable, originalSchema, scrambledTable, "uniform");
 
     // tests
-    List<Pair<String, String>> originalColumns = conn.getColumns(REDSHIFT_SCHEMA, originalTable);
-    List<Pair<String, String>> columns = conn.getColumns(REDSHIFT_SCHEMA, scrambledTable);
+    List<Pair<String, String>> originalColumns = conn.getColumns(POSTGRES_SCHEMA, originalTable);
+    List<Pair<String, String>> columns = conn.getColumns(POSTGRES_SCHEMA, scrambledTable);
     for (int i = 0; i < originalColumns.size(); i++) {
       assertEquals(originalColumns.get(i).getLeft(), columns.get(i).getLeft());
       assertEquals(originalColumns.get(i).getRight(), columns.get(i).getRight());
     }
     assertEquals(originalColumns.size()+2, columns.size());
 
-    List<String> partitions = conn.getPartitionColumns(REDSHIFT_SCHEMA, scrambledTable);
+    List<String> partitions = conn.getPartitionColumns(POSTGRES_SCHEMA, scrambledTable);
     assertEquals(Arrays.asList("verdictdbblock"), partitions);
 
     DbmsQueryResult result1 =
-        conn.execute(String.format("select count(*) from %s.%s", REDSHIFT_SCHEMA, originalTable));
+        conn.execute(String.format("select count(*) from %s.%s", POSTGRES_SCHEMA, originalTable));
     DbmsQueryResult result2 =
-        conn.execute(String.format("select count(*) from %s.%s", REDSHIFT_SCHEMA, scrambledTable));
+        conn.execute(String.format("select count(*) from %s.%s", POSTGRES_SCHEMA, scrambledTable));
     result1.next();
     result2.next();
     assertEquals(result1.getInt(0), result2.getInt(0));
@@ -117,15 +120,11 @@ public class RedshiftUniformScramblingCoordinatorTest {
     DbmsQueryResult result =
         conn.execute(
             String.format("select min(verdictdbblock), max(verdictdbblock) from %s.%s",
-                REDSHIFT_SCHEMA, scrambledTable));
+                POSTGRES_SCHEMA, scrambledTable));
     result.next();
     assertEquals(0, result.getInt(0));
     assertEquals((int) Math.ceil(result2.getInt(0) / (float) blockSize) - 1, result.getInt(1));
   }
 
-  @AfterClass
-  public static void tearDown() throws SQLException {
-    stmt.execute(String.format("drop schema if exists \"%s\" CASCADE", REDSHIFT_SCHEMA));
-  }
 
 }
