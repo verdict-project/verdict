@@ -100,61 +100,6 @@ public class ExecutionInfoToken implements Serializable {
 
   public ExecutionInfoToken deepcopy() {
     return new Cloner().deepClone(this);
-//    try {
-//      ByteArrayOutputStream bos = new ByteArrayOutputStream();
-//      ObjectOutputStream out = new ObjectOutputStream(bos);
-//      Kryo kryo = new Kryo();
-//      kryo.setRegistrationRequired(false);
-//      kryo.addDefaultSerializer(UUID.class, UUIDSerializer.class);
-//      kryo.setInstantiatorStrategy(new DefaultInstantiatorStrategy(new StdInstantiatorStrategy()));
-////      kryo.register(PGStream.class);
-//      kryo.register(PgSQLXML.class);
-
-//      out.writeObject(this);
-//      out.flush();
-//      out.close();
-//
-//      ObjectInputStream in = new ObjectInputStream(
-//          new ByteArrayInputStream(bos.toByteArray()));
-//      ExecutionInfoToken copiedToken = (ExecutionInfoToken) in.readObject();
-//      return copiedToken;
-      
-//    } catch (ClassNotFoundException e) {
-//      // TODO Auto-generated catch block
-//      e.printStackTrace();
-//    } catch (NotSerializableException e) {
-//      // TODO: handle this case
-//      e.printStackTrace();
-//    } catch (IOException e) {
-//      e.printStackTrace();
-//    }
-//    return null;
-
-
-    //    ExecutionInfoToken newToken = new ExecutionInfoToken();
-    //    
-    //    for (Entry<String, Object> entry : data.entrySet()) {
-    //      String key = entry.getKey();
-    //      Object value = entry.getValue();
-    //      
-    //      try {
-    //        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-    //        ObjectOutputStream out = new ObjectOutputStream(bos);
-    //        out.writeObject(value);
-    //        out.flush();
-    //        out.close();
-    //        
-    //        ObjectInputStream in = new ObjectInputStream(
-    //            new ByteArrayInputStream(bos.toByteArray()));
-    //        Object copedValue = in.readObject();
-    //        newToken.setKeyValue(key, copedValue);
-    //        
-    //      } catch (ClassNotFoundException | IOException e) {
-    //        e.printStackTrace();
-    //      }
-    //    }
-    //    
-    //    return newToken;
   }
 
 }
