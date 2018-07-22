@@ -46,7 +46,7 @@ public class AsyncAggMultipleTiersScaleTest {
 
   private static final String MYSQL_UESR = "root";
 
-  private static final String MYSQL_PASSWORD = "zhongshucheng123";
+  private static final String MYSQL_PASSWORD = "";
 
   private static final String TABLE_NAME = "mytable";
 
