@@ -1,0 +1,17 @@
+site_name: VerdictDB Docs
+site_url: 'https://verdictdb.org/'
+
+copyright: 'Copyright &copy; 2018 The University of Michigan'
+
+pages:
+  - Home: index.md
+  - About: about.md
+theme:
+  name: 'material'
+  palette:
+    primary: 'Deep Purple'
+    accent: 'Deep Purple'
+  feature:
+    tabs: false
+repo_name: 'mozafari/verdictdb'
+repo_url: 'https://github.com/mozafari/verdictdb'
