@@ -29,7 +29,7 @@ public class AggMeta implements Serializable {
 
   List<String> aggAlias = new ArrayList<>();
 
-  HashMap<ScrambleMeta, List<String>> scrambleTableTierColumnAlias = new HashMap<>();
+  HashMap<ScrambleMeta, String> scrambleTableTierColumnAlias = new HashMap<>();
 
   HashMap<String, String> maxminAggAlias = new HashMap<>();
 
@@ -60,7 +60,7 @@ public class AggMeta implements Serializable {
     return aggColumnAggAliasPairOfMaxMin;
   }
 
-  public HashMap<ScrambleMeta, List<String>> getScrambleTableTierColumnAlias() {
+  public HashMap<ScrambleMeta, String> getScrambleTableTierColumnAlias() {
     return scrambleTableTierColumnAlias;
   }
 
@@ -112,7 +112,7 @@ public class AggMeta implements Serializable {
     this.tierColumnName = tierColumnName;
   }
 
-  public void setScrambleTableTierColumnAlias(HashMap<ScrambleMeta, List<String>> scrambleTableTierColumnAlias) {
+  public void setScrambleTableTierColumnAlias(HashMap<ScrambleMeta, String> scrambleTableTierColumnAlias) {
     this.scrambleTableTierColumnAlias = scrambleTableTierColumnAlias;
   }
 

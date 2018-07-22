@@ -15,8 +15,6 @@ public class AggExecutionNode extends CreateTableAsSelectNode {
 
   private static final long serialVersionUID = 6222493718874657695L;
   
-  private final AggMeta aggMeta = new AggMeta();
-  
   //List<HyperTableCube> cubes = new ArrayList<>();
 
   protected AggExecutionNode(IdCreator namer, SelectQuery query) {
@@ -50,10 +48,6 @@ public class AggExecutionNode extends CreateTableAsSelectNode {
     copyFields(this, node);
     selectQuery = selectQuery.selectListDeepCopy();
     return node;
-  }
-
-  public AggMeta getMeta() {
-    return aggMeta;
   }
   
   @Override

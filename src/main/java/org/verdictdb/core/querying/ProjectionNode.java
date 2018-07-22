@@ -13,11 +13,6 @@ import org.verdictdb.exception.VerdictDBException;
 
 public class ProjectionNode extends CreateTableAsSelectNode {
 
-  // Whether the node has gone through the check of multi tier rewrite
-  Boolean AsyncPlanMultiTierRewriteCheck = false;
-
-  private final AggMeta aggMeta = new AggMeta();
-  
   public ProjectionNode(IdCreator namer, SelectQuery query) {
     super(namer, query);
   }
@@ -27,18 +22,6 @@ public class ProjectionNode extends CreateTableAsSelectNode {
     SubqueriesToDependentNodes.convertSubqueriesToDependentNodes(query, node);
     node.setSelectQuery(query);
     return node;
-  }
-
-  public AggMeta getAggMeta() {
-    return aggMeta;
-  }
-
-  public Boolean getAsyncPlanMultiTierRewriteCheck() {
-    return AsyncPlanMultiTierRewriteCheck;
-  }
-
-  public void haveAsyncPlanMultiTierRewriteCheck() {
-    AsyncPlanMultiTierRewriteCheck = true;
   }
 
   @Override
