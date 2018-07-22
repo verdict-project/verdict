@@ -300,7 +300,8 @@ public class ExecutableNodeBase implements ExecutableNode, Serializable {
   public String toString() {
     return new ToStringBuilder(this, ToStringStyle.DEFAULT_STYLE)
         .append("subscriberCount", subscribers.size())
-        .append("sources", sources)
+//        .append("sources", sources)
+        .append("sourcCount", sources.size())
         //        .append("channels", channels)
         //        .append("channels", channels)
         .toString();

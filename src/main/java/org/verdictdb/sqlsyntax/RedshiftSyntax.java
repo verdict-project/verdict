@@ -55,8 +55,8 @@ public class RedshiftSyntax extends SqlSyntax {
 
   @Override
   public String getColumnsCommand(String schema, String table) {
-    return "select column_name, data_type " +
-        "from INFORMATION_SCHEMA.COLUMNS where table_name = '" + table + "' and table_schema = '" + schema + "'";
+    return "select \"column\", \"type\" " +
+        "from PG_TABLE_DEF where tablename = '" + table + "' and schemaname = '" + schema + "'";
   }
 
   @Override

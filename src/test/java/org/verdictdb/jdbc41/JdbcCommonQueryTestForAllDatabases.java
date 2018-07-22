@@ -118,7 +118,7 @@ public class JdbcCommonQueryTestForAllDatabases {
   }
 
   @Parameterized.Parameters(name="{0}")
-  public static Collection databases() {
+  public static Collection<String> databases() {
     return Arrays.asList("mysql", "impala", "redshift", "postgresql");
   }
 

@@ -2,6 +2,8 @@ package org.verdictdb.core.querying;
 
 import java.util.List;
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.core.execplan.ExecutionInfoToken;
 import org.verdictdb.core.querying.ola.AggMeta;
@@ -13,7 +15,7 @@ public class AggExecutionNode extends CreateTableAsSelectNode {
 
   private static final long serialVersionUID = 6222493718874657695L;
   
-  AggMeta aggMeta = new AggMeta();
+  private final AggMeta aggMeta = new AggMeta();
   
   //List<HyperTableCube> cubes = new ArrayList<>();
 
@@ -52,5 +54,13 @@ public class AggExecutionNode extends CreateTableAsSelectNode {
 
   public AggMeta getMeta() {
     return aggMeta;
+  }
+  
+  @Override
+  public String toString() {
+    return new ToStringBuilder(this, ToStringStyle.DEFAULT_STYLE)
+        .appendSuper(super.toString())
+        .append("aggmeta", aggMeta)
+        .build();
   }
 }

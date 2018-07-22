@@ -1,17 +1,7 @@
 package org.verdictdb.jdbc41;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-
-import java.io.File;
-import java.io.IOException;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.*;
-
+import com.google.common.base.Charsets;
+import com.google.common.io.Files;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -20,8 +10,16 @@ import org.junit.runners.Parameterized;
 import org.verdictdb.commons.DatabaseConnectionHelpers;
 import org.verdictdb.exception.VerdictDBDbmsException;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
+import java.io.File;
+import java.io.IOException;
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 /** Created by Dong Young Yoon on 7/18/18. */
 @RunWith(Parameterized.class)
@@ -29,7 +27,6 @@ public class JdbcTpchQueryTestForAllDatabases {
 
   private static Map<String, Connection> connMap = new HashMap<>();
 
-  //  private static Map<String, VerdictConnection> vcMap = new HashMap<>();
   private static Map<String, Connection> vcMap = new HashMap<>();
 
   private static Map<String, String> schemaMap = new HashMap<>();
@@ -46,7 +43,7 @@ public class JdbcTpchQueryTestForAllDatabases {
 
   // TODO: Add support for all four databases
   //  private static final String[] targetDatabases = {"mysql", "impala", "redshift", "postgresql"};
-  private static final String[] targetDatabases = {"mysql", "impala"};
+  private static final String[] targetDatabases = {"mysql", "impala", "redshift"};
 
   public JdbcTpchQueryTestForAllDatabases(String database, String query) {
     this.database = database;
@@ -70,7 +67,6 @@ public class JdbcTpchQueryTestForAllDatabases {
   private static final String MYSQL_PASSWORD = "";
 
   private static final String IMPALA_HOST;
-  //  private static final String IMPALA_HOST = "ec2-54-145-197-147.compute-1.amazonaws.com";
 
   static {
     IMPALA_HOST = System.getenv("VERDICTDB_TEST_IMPALA_HOST");
@@ -122,16 +118,17 @@ public class JdbcTpchQueryTestForAllDatabases {
   private static VerdictConnection mysqlVc;
 
   @BeforeClass
-  public static void setupDatabases() throws SQLException, VerdictDBDbmsException {
+  public static void setupDatabases()
+      throws SQLException, VerdictDBDbmsException, IOException, InterruptedException {
     setupMysql();
     setupImpala();
+    setupRedshift();
     // TODO: Add below databases too
-    //    setupRedshift();
     //    setupPostgresql();
   }
 
   @Parameterized.Parameters(name = "{0}_tpch_{1}")
-  public static Collection databases() {
+  public static Collection<Object[]> databases() {
     Collection<Object[]> params = new ArrayList<>();
 
     for (String database : targetDatabases) {
@@ -153,7 +150,10 @@ public class JdbcTpchQueryTestForAllDatabases {
         params.add(new Object[] {database, "e2"});
         params.add(new Object[] {database, "e3"});
       }
-      //        params.add(new Object[] {database, 13});
+
+      // Uncomment below lines to test a specific query
+      //      params.clear();
+      //      params.add(new Object[] {database, "15"});
     }
     return params;
   }
@@ -194,14 +194,17 @@ public class JdbcTpchQueryTestForAllDatabases {
     return conn;
   }
 
-  // TODO: add tpch setup step for redshift
-  public static Connection setupRedshift() throws SQLException, VerdictDBDbmsException {
+  private static Connection setupRedshift()
+      throws SQLException, VerdictDBDbmsException, IOException {
     String connectionString =
         String.format("jdbc:redshift://%s/%s", REDSHIFT_HOST, REDSHIFT_DATABASE);
+    String verdictConnectionString =
+        String.format("jdbc:verdict:redshift://%s/%s", REDSHIFT_HOST, REDSHIFT_DATABASE);
     Connection conn =
-        DriverManager.getConnection(connectionString, REDSHIFT_USER, REDSHIFT_PASSWORD);
-    VerdictConnection vc =
-        new VerdictConnection(connectionString, REDSHIFT_USER, REDSHIFT_PASSWORD);
+        DatabaseConnectionHelpers.setupRedshift(
+            connectionString, REDSHIFT_USER, REDSHIFT_PASSWORD, REDSHIFT_SCHEMA);
+    Connection vc =
+        DriverManager.getConnection(verdictConnectionString, REDSHIFT_USER, REDSHIFT_PASSWORD);
     connMap.put("redshift", conn);
     vcMap.put("redshift", vc);
     schemaMap.put("redshift", "");
@@ -224,7 +227,7 @@ public class JdbcTpchQueryTestForAllDatabases {
   }
 
   @Test
-  public void testTpch() throws IOException, SQLException {
+  public void testTpch() throws IOException, SQLException, InterruptedException {
     ClassLoader classLoader = getClass().getClassLoader();
     String filename = "";
     switch (database) {

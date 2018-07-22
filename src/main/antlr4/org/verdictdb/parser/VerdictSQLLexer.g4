@@ -109,6 +109,7 @@ IN:                              I N;
 INDEX:                           I N D E X;
 INNER:                           I N N E R;
 INSERT:                          I N S E R T;
+INT4LARGER:                      I N T '4' L A R G E R;
 INTERSECT:                       I N T E R S E C T;
 INTO:                            I N T O;
 IS:                              I S;
@@ -217,7 +218,9 @@ WHERE:                           W H E R E;
 WHILE:                           W H I L E;
 WITH:                            W I T H;
 WITHIN:                          W I T H I N;
+WITHOUT:                         W I T H O U T;
 WRITETEXT:                       W R I T E T E X T;
+ZONE:                            Z O N E;
 
 // Additional keywords (they can be id).
 ABBREV:                          A B B R E V;

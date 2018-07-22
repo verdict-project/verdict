@@ -26,8 +26,6 @@ jobs:
       - checkout
       - run: echo "$(cd "$(dirname "src/test/resources")"; pwd)/$(basename "src/test/resources")"
       - run: bash wait_until_ready.sh
-      - run: docker run --rm --link verdictdb-impala:impala-server codingtony/impala hdp impala-server hadoop fs -ls /
-      - run: docker run --rm --link verdictdb-impala:impala-server -v /home/circleci/repo/src/test/resources:/work:ro codingtony/impala hdp impala-server hadoop fs -put /work/tpch_test_data /tmp/
 
   build-jdk7:
     docker:
@@ -109,8 +107,8 @@ jobs:
           paths:
             - ~/.m2
           key: verdict-dependencies-{{ checksum "pom.xml" }}
-      - run: mvn cobertura:cobertura
-      - run: bash <(curl -s https://codecov.io/bash) -t 9cf48c61-07ed-4a14-9eed-f7129664ee79
+      #- run: mvn cobertura:cobertura
+      #- run: bash <(curl -s https://codecov.io/bash) -t 9cf48c61-07ed-4a14-9eed-f7129664ee79
 
   build-spark:
       docker:
@@ -147,6 +145,8 @@ jobs:
         - run: git clone git@github.com:verdictdb/verdictdb-private-resources.git
         # run tests!
         - run: mvn test -Dtest=SparkTpchSelectQueryCoordinatorTest 2> /dev/null
+        - run: mvn test -Dtest=RedshiftTpchSelectQueryCoordinatorTest 2> /dev/null
+        - run: mvn test -Dtest=ImpalaTpchSelectQueryCoordinatorTest 2> /dev/null
         - save_cache:
             paths:
               - ~/.m2

@@ -1,20 +1,16 @@
 package org.verdictdb.sqlreader;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import org.verdictdb.core.sqlobject.AsteriskColumn;
-import org.verdictdb.core.sqlobject.BaseColumn;
-import org.verdictdb.core.sqlobject.ColumnOp;
-import org.verdictdb.core.sqlobject.ConstantColumn;
-import org.verdictdb.core.sqlobject.SelectQuery;
-import org.verdictdb.core.sqlobject.SubqueryColumn;
-import org.verdictdb.core.sqlobject.UnnamedColumn;
+import com.google.common.base.Joiner;
+import org.antlr.v4.runtime.tree.ParseTree;
+import org.verdictdb.core.sqlobject.*;
 import org.verdictdb.parser.VerdictSQLParser;
 import org.verdictdb.parser.VerdictSQLParser.Column_nameContext;
 import org.verdictdb.parser.VerdictSQLParser.Full_column_nameContext;
 import org.verdictdb.parser.VerdictSQLParserBaseVisitor;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class ExpressionGen extends VerdictSQLParserBaseVisitor<UnnamedColumn> {
 
@@ -24,8 +20,7 @@ public class ExpressionGen extends VerdictSQLParserBaseVisitor<UnnamedColumn> {
   //        this.meta = meta;
   //    }
 
-  public ExpressionGen() {
-  }
+  public ExpressionGen() {}
 
   @Override
   public ColumnOp visitInterval(VerdictSQLParser.IntervalContext ctx) {
@@ -37,21 +32,28 @@ public class ExpressionGen extends VerdictSQLParserBaseVisitor<UnnamedColumn> {
     } else if (ctx.YEAR() != null || ctx.YEARS() != null) {
       unit = "year";
     }
-    return new ColumnOp("interval", Arrays.<UnnamedColumn>asList(
-        ConstantColumn.valueOf(ctx.constant_expression().getText()),
-        ConstantColumn.valueOf(unit)
-    ));
+    return new ColumnOp(
+        "interval",
+        Arrays.<UnnamedColumn>asList(
+            ConstantColumn.valueOf(ctx.constant_expression().getText()),
+            ConstantColumn.valueOf(unit)));
   }
 
   @Override
   public ColumnOp visitDate(VerdictSQLParser.DateContext ctx) {
-    return new ColumnOp("date", Arrays.<UnnamedColumn>asList(
-        ConstantColumn.valueOf(ctx.constant_expression().getText())
-    ));
+    return new ColumnOp(
+        "date",
+        Arrays.<UnnamedColumn>asList(ConstantColumn.valueOf(ctx.constant_expression().getText())));
   }
 
   @Override
-  public ConstantColumn visitPrimitive_expression(VerdictSQLParser.Primitive_expressionContext ctx) {
+  public ConstantColumn visitPrimitive_expression(
+      VerdictSQLParser.Primitive_expressionContext ctx) {
+    return ConstantColumn.valueOf(ctx.getText());
+  }
+
+  @Override
+  public ConstantColumn visitTime_unit(VerdictSQLParser.Time_unitContext ctx) {
     return ConstantColumn.valueOf(ctx.getText());
   }
 
@@ -71,7 +73,8 @@ public class ExpressionGen extends VerdictSQLParserBaseVisitor<UnnamedColumn> {
     if (fullColName.table_name().schema == null) {
       return new BaseColumn(tableName, colName);
     } else {
-      return new BaseColumn(stripQuote(fullColName.table_name().schema.getText()), tableName, colName);
+      return new BaseColumn(
+          stripQuote(fullColName.table_name().schema.getText()), tableName, colName);
     }
   }
 
@@ -80,7 +83,8 @@ public class ExpressionGen extends VerdictSQLParserBaseVisitor<UnnamedColumn> {
   }
 
   @Override
-  public ColumnOp visitBinary_operator_expression(VerdictSQLParser.Binary_operator_expressionContext ctx) {
+  public ColumnOp visitBinary_operator_expression(
+      VerdictSQLParser.Binary_operator_expressionContext ctx) {
     String opType = null;
     if (ctx.op.getText().equals("+")) {
       opType = "add";
@@ -90,13 +94,10 @@ public class ExpressionGen extends VerdictSQLParserBaseVisitor<UnnamedColumn> {
       opType = "multiply";
     } else if (ctx.op.getText().equals("/")) {
       opType = "divide";
-    } else  {
+    } else {
       opType = ctx.op.getText();
     }
-    return new ColumnOp(opType, Arrays.asList(
-        visit(ctx.expression(0)),
-        visit(ctx.expression(1))
-    ));
+    return new ColumnOp(opType, Arrays.asList(visit(ctx.expression(0)), visit(ctx.expression(1))));
   }
 
   @Override
@@ -118,152 +119,183 @@ public class ExpressionGen extends VerdictSQLParserBaseVisitor<UnnamedColumn> {
   }
 
   @Override
-  public ColumnOp visitFunction_call_expression(VerdictSQLParser.Function_call_expressionContext ctx) {
-    VerdictSQLParserBaseVisitor<ColumnOp> v = new VerdictSQLParserBaseVisitor<ColumnOp>() {
+  public ColumnOp visitFunction_call_expression(
+      VerdictSQLParser.Function_call_expressionContext ctx) {
+    VerdictSQLParserBaseVisitor<ColumnOp> v =
+        new VerdictSQLParserBaseVisitor<ColumnOp>() {
 
-      @Override
-      public ColumnOp visitAggregate_windowed_function(VerdictSQLParser.Aggregate_windowed_functionContext ctx) {
-        String fname;
-        UnnamedColumn col = null;
-        if (ctx.all_distinct_expression() != null) {
-          ExpressionGen g = new ExpressionGen();
-          col = g.visit(ctx.all_distinct_expression());
-        }
-
-        //OverClause overClause = null;
-
-        if (ctx.AVG() != null) {
-          fname = "avg";
-        } else if (ctx.SUM() != null) {
-          fname = "sum";
-        } else if (ctx.COUNT() != null) {
-          if (ctx.all_distinct_expression() != null && ctx.all_distinct_expression().DISTINCT() != null) {
-            fname = "countdistinct";
-          } else {
-            fname = "count";
+          @Override
+          public ColumnOp visitAggregate_windowed_function(
+              VerdictSQLParser.Aggregate_windowed_functionContext ctx) {
+            String fname;
+            UnnamedColumn col = null;
             if (ctx.all_distinct_expression() != null) {
               ExpressionGen g = new ExpressionGen();
               col = g.visit(ctx.all_distinct_expression());
-            } else {
-              col = new AsteriskColumn();
             }
+
+            // OverClause overClause = null;
+
+            if (ctx.AVG() != null) {
+              fname = "avg";
+            } else if (ctx.SUM() != null) {
+              fname = "sum";
+            } else if (ctx.COUNT() != null) {
+              if (ctx.all_distinct_expression() != null
+                  && ctx.all_distinct_expression().DISTINCT() != null) {
+                fname = "countdistinct";
+              } else {
+                fname = "count";
+                if (ctx.all_distinct_expression() != null) {
+                  ExpressionGen g = new ExpressionGen();
+                  col = g.visit(ctx.all_distinct_expression());
+                } else {
+                  col = new AsteriskColumn();
+                }
+              }
+            } // else if (ctx.NDV() != null) {
+            //  fname = FuncName.IMPALA_APPROX_COUNT_DISTINCT;}
+            else if (ctx.MIN() != null) {
+              fname = "min";
+            } else if (ctx.MAX() != null) {
+              fname = "max";
+            } // else if (ctx.STDDEV_SAMP() != null) {
+            //  fname = FuncName.STDDEV_SAMP; }
+            else {
+              fname = "UNKNOWN";
+            }
+
+            //  if (ctx.over_clause() != null) {
+            //      overClause = OverClause.from(vc, ctx.over_clause());
+            //  }
+
+            return new ColumnOp(fname, col);
           }
-        } //else if (ctx.NDV() != null) {
-        //  fname = FuncName.IMPALA_APPROX_COUNT_DISTINCT;}
-        else if (ctx.MIN() != null) {
-          fname = "min";
-        } else if (ctx.MAX() != null) {
-          fname = "max";
-        } //else if (ctx.STDDEV_SAMP() != null) {
-        //  fname = FuncName.STDDEV_SAMP; }
-        else {
-          fname = "UNKNOWN";
-        }
 
-        //  if (ctx.over_clause() != null) {
-        //      overClause = OverClause.from(vc, ctx.over_clause());
-        //  }
+          @Override
+          public ColumnOp visitUnary_function(VerdictSQLParser.Unary_functionContext ctx) {
+            ExpressionGen g = new ExpressionGen();
+            //        if (ctx.predicate_function()!=null) {
+            //          String fname =
+            // ctx.predicate_function().function_name.getText().toLowerCase();
+            //          if (ctx.NOT()!=null) {
+            //            return new ColumnOp("not " + fname,
+            // g.visit(ctx.predicate_function().expression()));
+            //          }
+            //          else return new ColumnOp(fname, g.visit(ctx.expression()));
+            //        }
+            String fname = ctx.function_name.getText().toLowerCase();
+            if (fname.equals("cast")) {
+              List<String> dataTypeStr = new ArrayList<>();
+              for (ParseTree child : ctx.cast_as_expression().data_type().children) {
+                dataTypeStr.add(child.getText());
+              }
+              return new ColumnOp(
+                  fname,
+                  Arrays.asList(
+                      g.visit(ctx.cast_as_expression().expression()),
+                      ConstantColumn.valueOf(Joiner.on(" ").join(dataTypeStr))));
+              // ConstantColumn.valueOf(ctx.cast_as_expression().data_type().getText())));
+            } else return new ColumnOp(fname, g.visit(ctx.expression()));
+          }
 
-        return new ColumnOp(fname, col);
-      }
+          @Override
+          public ColumnOp visitNoparam_function(VerdictSQLParser.Noparam_functionContext ctx) {
+            String fname = ctx.function_name.getText().toLowerCase();
+            return new ColumnOp(fname);
+          }
 
-      @Override
-      public ColumnOp visitUnary_function(VerdictSQLParser.Unary_functionContext ctx) {
-        ExpressionGen g = new ExpressionGen();
-//        if (ctx.predicate_function()!=null) {
-//          String fname = ctx.predicate_function().function_name.getText().toLowerCase();
-//          if (ctx.NOT()!=null) {
-//            return new ColumnOp("not " + fname, g.visit(ctx.predicate_function().expression()));
-//          }
-//          else return new ColumnOp(fname, g.visit(ctx.expression()));
-//        }
-        String fname = ctx.function_name.getText().toLowerCase();
-        if (fname.equals("cast")) {
-          return new ColumnOp(fname, Arrays.asList(g.visit(ctx.cast_as_expression().expression()),
-              ConstantColumn.valueOf(ctx.cast_as_expression().data_type().getText())));
-        }
-        else return new ColumnOp(fname, g.visit(ctx.expression()));
-      }
+          @Override
+          public ColumnOp visitBinary_function(VerdictSQLParser.Binary_functionContext ctx) {
+            String fname = ctx.function_name.getText().toLowerCase();
+            ExpressionGen g = new ExpressionGen();
+            return new ColumnOp(
+                fname,
+                Arrays.<UnnamedColumn>asList(
+                    g.visit(ctx.expression(0)), g.visit(ctx.expression(1))));
+          }
 
-      @Override
-      public ColumnOp visitNoparam_function(
-          VerdictSQLParser.Noparam_functionContext ctx) {
-        String fname = ctx.function_name.getText().toLowerCase();
-        return new ColumnOp(fname);
-      }
+          @Override
+          public ColumnOp visitTernary_function(VerdictSQLParser.Ternary_functionContext ctx) {
+            String fname = ctx.function_name.getText().toLowerCase();
+            ExpressionGen g = new ExpressionGen();
+            return new ColumnOp(
+                fname,
+                Arrays.<UnnamedColumn>asList(
+                    g.visit(ctx.expression(0)),
+                    g.visit(ctx.expression(1)),
+                    g.visit(ctx.expression(2))));
+          }
 
-      @Override
-      public ColumnOp visitBinary_function(
-          VerdictSQLParser.Binary_functionContext ctx) {
-        String fname = ctx.function_name.getText().toLowerCase();
-        ExpressionGen g = new ExpressionGen();
-        return new ColumnOp(fname, Arrays.<UnnamedColumn>asList(
-            g.visit(ctx.expression(0)),
-            g.visit(ctx.expression(1))
-        ));
-      }
+          @Override
+          public ColumnOp visitNary_function(VerdictSQLParser.Nary_functionContext ctx) {
+            String fname = ctx.function_name.getText().toLowerCase();
+            ExpressionGen g = new ExpressionGen();
+            List<UnnamedColumn> columns = new ArrayList<>();
+            for (VerdictSQLParser.ExpressionContext expressionContext : ctx.expression()) {
+              columns.add(g.visit(expressionContext));
+            }
+            return new ColumnOp(fname, columns);
+          }
 
-      @Override
-      public ColumnOp visitTernary_function(
-          VerdictSQLParser.Ternary_functionContext ctx) {
-        String fname = ctx.function_name.getText().toLowerCase();
-        ExpressionGen g = new ExpressionGen();
-        return new ColumnOp(fname, Arrays.<UnnamedColumn>asList(
-            g.visit(ctx.expression(0)),
-            g.visit(ctx.expression(1)),
-            g.visit(ctx.expression(2))
-        ));
-      }
+          @Override
+          public ColumnOp visitExtract_time_function(
+              VerdictSQLParser.Extract_time_functionContext ctx) {
+            String fname = "extract";
+            ExpressionGen g = new ExpressionGen();
+            return new ColumnOp(
+                fname,
+                Arrays.<UnnamedColumn>asList(
+                    ConstantColumn.valueOf(ctx.extract_unit().getText()),
+                    g.visit(ctx.expression())));
+          }
 
-      @Override
-      public ColumnOp visitNary_function(VerdictSQLParser.Nary_functionContext ctx) {
-        String fname = ctx.function_name.getText().toLowerCase();
-        ExpressionGen g = new ExpressionGen();
-        List<UnnamedColumn> columns = new ArrayList<>();
-        for (VerdictSQLParser.ExpressionContext expressionContext : ctx.expression()) {
-          columns.add(g.visit(expressionContext));
-        }
-        return new ColumnOp(fname, columns);
-      }
+          @Override
+          public ColumnOp visitOverlay_string_function(
+              VerdictSQLParser.Overlay_string_functionContext ctx) {
+            String fname = "overlay";
+            ExpressionGen g = new ExpressionGen();
+            List<UnnamedColumn> operands = new ArrayList<>();
+            operands.add(g.visit(ctx.expression(0)));
+            operands.add(g.visit(ctx.expression(1)));
+            operands.add(g.visit(ctx.expression(2)));
+            if (ctx.expression().size() == 4) {
+              operands.add(g.visit(ctx.expression(3)));
+            }
+            return new ColumnOp(fname, operands);
+          }
 
-      @Override
-      public ColumnOp visitExtract_time_function(VerdictSQLParser.Extract_time_functionContext ctx) {
-        String fname = "extract";
-        ExpressionGen g = new ExpressionGen();
-        return new ColumnOp(fname, Arrays.<UnnamedColumn>asList(
-            ConstantColumn.valueOf(ctx.extract_unit().getText()),
-            g.visit(ctx.expression())
-        ));
-      }
+          @Override
+          public ColumnOp visitSubstring_string_function(
+              VerdictSQLParser.Substring_string_functionContext ctx) {
+            String fname = "substring";
+            ExpressionGen g = new ExpressionGen();
+            List<UnnamedColumn> operands = new ArrayList<>();
+            operands.add(g.visit(ctx.expression(0)));
+            operands.add(g.visit(ctx.expression(1)));
+            if (ctx.expression().size() == 3) {
+              operands.add(g.visit(ctx.expression(2)));
+            }
+            return new ColumnOp(fname, operands);
+          }
 
-      @Override
-      public ColumnOp visitOverlay_string_function(VerdictSQLParser.Overlay_string_functionContext ctx) {
-        String fname = "overlay";
-        ExpressionGen g = new ExpressionGen();
-        List<UnnamedColumn> operands = new ArrayList<>();
-        operands.add(g.visit(ctx.expression(0)));
-        operands.add(g.visit(ctx.expression(1)));
-        operands.add(g.visit(ctx.expression(2)));
-        if (ctx.expression().size() == 4) {
-          operands.add(g.visit(ctx.expression(3)));
-        }
-        return new ColumnOp(fname, operands);
-      }
+          @Override
+          public ColumnOp visitTimestamp_function(VerdictSQLParser.Timestamp_functionContext ctx) {
+            ExpressionGen g = new ExpressionGen();
+            return new ColumnOp("timestampwithoutparentheses", g.visit(ctx.expression()));
+          }
 
-      @Override
-      public ColumnOp visitSubstring_string_function(VerdictSQLParser.Substring_string_functionContext ctx) {
-        String fname = "substring";
-        ExpressionGen g = new ExpressionGen();
-        List<UnnamedColumn> operands = new ArrayList<>();
-        operands.add(g.visit(ctx.expression(0)));
-        operands.add(g.visit(ctx.expression(1)));
-        if (ctx.expression().size() == 3) {
-          operands.add(g.visit(ctx.expression(2)));
-        }
-        return new ColumnOp(fname, operands);
-      }
-
-    };
+          @Override
+          public ColumnOp visitDateadd_function(VerdictSQLParser.Dateadd_functionContext ctx) {
+            String fname = "dateadd";
+            ExpressionGen g = new ExpressionGen();
+            List<UnnamedColumn> operands = new ArrayList<>();
+            operands.add(g.visit(ctx.time_unit()));
+            operands.add(g.visit(ctx.expression(0)));
+            operands.add(g.visit(ctx.expression(1)));
+            return new ColumnOp(fname, operands);
+          }
+        };
     return v.visit(ctx);
   }
 
@@ -272,9 +304,9 @@ public class ExpressionGen extends VerdictSQLParserBaseVisitor<UnnamedColumn> {
     if (ctx.search_condition() != null) {
       List<UnnamedColumn> operands = new ArrayList<>();
       CondGen gen = new CondGen();
-      for (VerdictSQLParser.ExpressionContext expressionContext:ctx.expression()) {
+      for (VerdictSQLParser.ExpressionContext expressionContext : ctx.expression()) {
         int index = ctx.expression().indexOf(expressionContext);
-        if (index!=ctx.expression().size()-1)
+        if (index != ctx.expression().size() - 1)
           operands.add(gen.visit(ctx.search_condition(index)));
         operands.add(visit(expressionContext));
       }
@@ -282,7 +314,7 @@ public class ExpressionGen extends VerdictSQLParserBaseVisitor<UnnamedColumn> {
     } else {
       List<UnnamedColumn> operands = new ArrayList<>();
       ExpressionGen gen = new ExpressionGen();
-      for (VerdictSQLParser.ExpressionContext expressionContext:ctx.expression()) {
+      for (VerdictSQLParser.ExpressionContext expressionContext : ctx.expression()) {
         operands.add(gen.visit(expressionContext));
       }
       return new ColumnOp("caseexprwhen", operands);
@@ -297,7 +329,8 @@ public class ExpressionGen extends VerdictSQLParserBaseVisitor<UnnamedColumn> {
   @Override
   public SubqueryColumn visitSubquery_expression(VerdictSQLParser.Subquery_expressionContext ctx) {
     RelationGen g = new RelationGen();
-    return SubqueryColumn.getSubqueryColumn((SelectQuery) g.visit(ctx.subquery().select_statement()));
+    return SubqueryColumn.getSubqueryColumn(
+        (SelectQuery) g.visit(ctx.subquery().select_statement()));
   }
 
   public UnnamedColumn getSearch_condition(List<VerdictSQLParser.Search_conditionContext> ctx) {
@@ -307,9 +340,7 @@ public class ExpressionGen extends VerdictSQLParserBaseVisitor<UnnamedColumn> {
     } else {
       UnnamedColumn col = visit(ctx.get(0));
       for (int i = 0; i < ctx.size(); i++) {
-        col = new ColumnOp("and", Arrays.asList(
-            col, g.visit(ctx.get(i))
-        ));
+        col = new ColumnOp("and", Arrays.asList(col, g.visit(ctx.get(i))));
       }
       return col;
     }

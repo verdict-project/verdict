@@ -92,6 +92,8 @@ public class QueryExecutionPlan implements ExecutablePlan, IdCreator, Serializab
     //if (!query.isSupportedAggregate()) {
     //  throw new VerdictDBTypeException(query);
     //}
+    
+    // TODO: replace makePlan() with QueryExecutionPlanFactory.create().
     this.root = makePlan(query);
   }
 
@@ -187,6 +189,15 @@ public class QueryExecutionPlan implements ExecutablePlan, IdCreator, Serializab
     }
     
     return relevantNodes;
+  }
+  
+  public List<ExecutableNode> getAllNodes() {
+    List<ExecutableNode> allNodes = new ArrayList<>();
+    Set<Integer> groups = getNodeGroupIDs();
+    for (int g : groups) {
+      allNodes.addAll(getNodesInGroup(g));
+    }
+    return allNodes;
   }
 
   @Override
