@@ -1,6 +1,7 @@
 package org.verdictdb.core.querying;
 
 import org.verdictdb.core.sqlobject.SelectQuery;
+import org.verdictdb.exception.VerdictDBException;
 
 public class QueryExecutionPlanFactory {
   
@@ -9,7 +10,8 @@ public class QueryExecutionPlanFactory {
    * @param query
    * @return
    */
-  public static QueryExecutionPlan create(SelectQuery query) {
+  public static QueryExecutionPlan create(SelectQuery query, IdCreator idCreator) throws VerdictDBException {
+    ExecutableNodeBase root = SelectAllExecutionNode.create(idCreator, query);
     return null;
   }
   

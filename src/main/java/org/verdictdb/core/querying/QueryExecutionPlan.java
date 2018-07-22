@@ -94,7 +94,7 @@ public class QueryExecutionPlan implements ExecutablePlan, IdCreator, Serializab
     //}
     
     // TODO: replace makePlan() with QueryExecutionPlanFactory.create().
-    this.root = makePlan(query);
+    QueryExecutionPlanFactory.create(query, idCreator);
   }
 
   public String getScratchpadSchemaName() {
