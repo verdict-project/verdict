@@ -1,28 +1,12 @@
 package org.verdictdb.core.execplan;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.NotSerializableException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
-import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.kryo.io.Output;
-import com.esotericsoftware.kryo.util.DefaultInstantiatorStrategy;
 import com.rits.cloning.Cloner;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
-import org.objenesis.strategy.StdInstantiatorStrategy;
-import org.postgresql.core.PGStream;
-import org.postgresql.ds.PGSimpleDataSource;
-import org.postgresql.jdbc.PgSQLXML;
-import org.verdictdb.commons.UUIDSerializer;
-import org.verdictdb.connection.JdbcQueryResult;
 
 public class ExecutionInfoToken implements Serializable {
 
@@ -80,10 +64,6 @@ public class ExecutionInfoToken implements Serializable {
   public void setKeyValue(String key, Object value) {
     data.put(key, value);
   }
-
-  //  public Map<String, Object> getData() {
-  //    return data;
-  //  }
 
   @Override
   public String toString() {
