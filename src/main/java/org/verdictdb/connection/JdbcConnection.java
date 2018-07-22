@@ -71,6 +71,15 @@ public class JdbcConnection implements DbmsConnection {
 
   @Override
   public DbmsQueryResult execute(String sql) throws VerdictDBDbmsException {
+    String[] sqls = sql.split(";");
+    DbmsQueryResult finalResult = null;
+    for (String s : sqls) {
+      finalResult = executeSingle(s);
+    }
+    return finalResult;
+  }
+  
+  public DbmsQueryResult executeSingle(String sql) throws VerdictDBDbmsException {
     if (outputDebugMessage) {
       System.out.println("About to issue this query: " + sql);
     }

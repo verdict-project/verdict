@@ -3,15 +3,26 @@ site_url: 'https://verdictdb.org/'
 
 copyright: 'Copyright &copy; 2018 The University of Michigan'
 
+# Pages
 pages:
   - Home: index.md
-  - About: about.md
+  - Getting Started:
+    - Quickstart Guide: getting_started/quickstart.md
+    - Installation: getting_started/install.md
+    - How to Connect: getting_started/connection.md
+  - Supported Queries: supported_queries.md
+  - How it works:
+    - Architecture: how_it_works/architecture.md
+
+# Appearance
 theme:
   name: 'material'
   palette:
     primary: 'Deep Purple'
     accent: 'Deep Purple'
   feature:
-    tabs: false
+    tabs: true
+  logo: 'images/verdictdb-logo-icon.png'
+  favicon: 'images/verdictdb-favicon.png'
 repo_name: 'mozafari/verdictdb'
 repo_url: 'https://github.com/mozafari/verdictdb'

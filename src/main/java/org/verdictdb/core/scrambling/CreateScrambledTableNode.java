@@ -73,6 +73,8 @@ public class CreateScrambledTableNode extends QueryNodeWithPlaceHolders {
     partitionColumns.add(column);
   }
 
+  
+  @SuppressWarnings("unchecked")
   @Override
   public SqlConvertible createQuery(List<ExecutionInfoToken> tokens) throws VerdictDBException {
     super.createQuery(tokens);
