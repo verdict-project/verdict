@@ -5,8 +5,11 @@ import static org.junit.Assert.assertEquals;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Arrays;
+import java.util.List;
 
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -15,6 +18,7 @@ import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.exception.VerdictDBDbmsException;
+import org.verdictdb.exception.VerdictDBException;
 
 public class ImpalaUniformScramblingCoordinatorTest {
 
@@ -37,7 +41,7 @@ public class ImpalaUniformScramblingCoordinatorTest {
   }
 
   @BeforeClass
-  public static void setupMySqlDatabase() throws SQLException, VerdictDBDbmsException {
+  public static void setupImpalaDatabase() throws SQLException, VerdictDBDbmsException {
     String impalaConnectionString =
         String.format("jdbc:impala://%s:21050", IMPALA_HOST);
     impalaConn =
@@ -52,7 +56,7 @@ public class ImpalaUniformScramblingCoordinatorTest {
         String.format("DROP SCHEMA IF EXISTS `%s` CASCADE", IMPALA_DATABASE));
     impalaConn.close();
   }
-  
+
 
   @Test
   public void sanityCheck() throws VerdictDBDbmsException {
@@ -78,5 +82,60 @@ public class ImpalaUniformScramblingCoordinatorTest {
     DbmsQueryResult rs = dbmsConn.execute(String.format("select * from %s.lineitem", IMPALA_DATABASE));
     System.out.println(rs.getRowCount());
   }
+
+  @Test
+  public void testScramblingCoordinatorLineitem() throws VerdictDBException {
+    testScramblingCoordinator("lineitem");
+  }
+
+  @Test
+  public void testScramblingCoordinatorOrders() throws VerdictDBException {
+    testScramblingCoordinator("orders");
+  }
+
+  public void testScramblingCoordinator(String tablename) throws VerdictDBException {
+    DbmsConnection conn = JdbcConnection.create(impalaConn);
+
+    String scrambleSchema = IMPALA_DATABASE;
+    String scratchpadSchema = IMPALA_DATABASE;
+    long blockSize = 100;
+    ScramblingCoordinator scrambler = new ScramblingCoordinator(conn, scrambleSchema, scratchpadSchema, blockSize);
+
+    // perform scrambling
+    String originalSchema = IMPALA_DATABASE;
+    String originalTable = tablename;
+    String scrambledTable = tablename + "_scrambled";
+    conn.execute(String.format("drop table if exists %s.%s", IMPALA_DATABASE, scrambledTable));
+    scrambler.scramble(originalSchema, originalTable, originalSchema, scrambledTable, "uniform");
+
+    // tests
+    List<Pair<String, String>> originalColumns = conn.getColumns(IMPALA_DATABASE, originalTable);
+    List<Pair<String, String>> columns = conn.getColumns(IMPALA_DATABASE, scrambledTable);
+    for (int i = 0; i < originalColumns.size(); i++) {
+      assertEquals(originalColumns.get(i).getLeft(), columns.get(i).getLeft());
+      assertEquals(originalColumns.get(i).getRight(), columns.get(i).getRight());
+    }
+    assertEquals(originalColumns.size()+2, columns.size());
+
+    List<String> partitions = conn.getPartitionColumns(IMPALA_DATABASE, scrambledTable);
+    assertEquals(Arrays.asList("verdictdbblock"), partitions);
+
+    DbmsQueryResult result1 =
+        conn.execute(String.format("select count(*) from %s.%s", IMPALA_DATABASE, originalTable));
+    DbmsQueryResult result2 =
+        conn.execute(String.format("select count(*) from %s.%s", IMPALA_DATABASE, scrambledTable));
+    result1.next();
+    result2.next();
+    assertEquals(result1.getInt(0), result2.getInt(0));
+
+    DbmsQueryResult result =
+        conn.execute(
+            String.format("select min(verdictdbblock), max(verdictdbblock) from %s.%s",
+                IMPALA_DATABASE, scrambledTable));
+    result.next();
+    assertEquals(0, result.getInt(0));
+    assertEquals((int) Math.ceil(result2.getInt(0) / (float) blockSize) - 1, result.getInt(1));
+  }
+
 
 }

@@ -1,14 +1,5 @@
 package org.verdictdb.coordinator;
 
-import static org.junit.Assert.assertEquals;
-
-import java.io.File;
-import java.io.IOException;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -29,85 +20,91 @@ import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sqlreader.NonValidatingSQLParser;
 import org.verdictdb.sqlreader.RelationStandardizer;
-import org.verdictdb.sqlsyntax.MysqlSyntax;
-import org.verdictdb.sqlsyntax.RedshiftSyntax;
+import org.verdictdb.sqlsyntax.PostgresqlSyntax;
 import org.verdictdb.sqlwriter.SelectQueryToSql;
 
-/**
- *  Test cases are from
- *  https://github.com/umich-dbgroup/verdictdb-core/wiki/TPCH-Query-Reference--(Experiment-Version)
- *
- *  Some test cases are slightly changed because size of test data are small.
- */
-public class MySqlTpchSelectQueryCoordinatorTest {
+import java.io.File;
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 
-  // lineitem has 10 blocks, orders has 3 blocks;
-  // lineitem join orders has 12 blocks
-  final static int blockSize = 100;
+import static org.junit.Assert.assertEquals;
+
+public class PostgreSqlTpchSelectQueryCoordinatorTest {
+
+  private static Connection postgresConn;
+
+  private static Statement postgresStmt;
+
+  private static final String POSTGRES_HOST;
+
+  private static final String POSTGRES_DATABASE = "test";
+
+  private static final String POSTGRES_SCHEMA = "scrambling_coordinator_test";
+
+  private static final String POSTGRES_USER = "postgres";
+
+  private static final String POSTGRES_PASSWORD = "";
 
   static ScrambleMetaSet meta = new ScrambleMetaSet();
-
-  static Connection conn;
-
-  private static Statement stmt;
-
-  private static final String MYSQL_HOST;
 
   static {
     String env = System.getenv("BUILD_ENV");
     if (env != null && env.equals("GitLab")) {
-      MYSQL_HOST = "mysql";
+      POSTGRES_HOST = "postgres";
     } else {
-      MYSQL_HOST = "localhost";
+      POSTGRES_HOST = "localhost";
     }
   }
 
-  private static final String MYSQL_DATABASE = "coordinator_test";
-
-  private static final String MYSQL_UESR = "root";
-
-  private static final String MYSQL_PASSWORD = "";
-
   @BeforeClass
-  public static void setupMySqlDatabase() throws SQLException, VerdictDBException {
-    String mysqlConnectionString =
-        String.format("jdbc:mysql://%s?autoReconnect=true&useSSL=false", MYSQL_HOST);
-    conn = DatabaseConnectionHelpers.setupMySql(
-        mysqlConnectionString, MYSQL_UESR, MYSQL_PASSWORD, MYSQL_DATABASE);
-    stmt = conn.createStatement();
-    stmt.execute(String.format("use `%s`", MYSQL_DATABASE));
-    DbmsConnection dbmsConn = JdbcConnection.create(conn);
+  public static void setupPostgresDatabase() throws SQLException, VerdictDBException, IOException {
+    String postgresConnectionString =
+        String.format("jdbc:postgresql://%s/%s", POSTGRES_HOST, POSTGRES_DATABASE);
+    postgresConn =
+        DatabaseConnectionHelpers.setupPostgresql(
+            postgresConnectionString, POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_SCHEMA);
+    postgresStmt = postgresConn.createStatement();
+    postgresStmt.execute(String.format("create schema if not exists \"%s\"", POSTGRES_SCHEMA));
+    postgresStmt.execute(String.format("set search_path to \"%s\"", POSTGRES_SCHEMA));
+    DbmsConnection dbmsConn = JdbcConnection.create(postgresConn);
 
     // Create Scramble table
-    dbmsConn.execute(String.format("DROP TABLE IF EXISTS `%s`.`lineitem_scrambled`", MYSQL_DATABASE));
-    dbmsConn.execute(String.format("DROP TABLE IF EXISTS `%s`.`orders_scrambled`", MYSQL_DATABASE));
-    
-    ScramblingCoordinator scrambler = 
-        new ScramblingCoordinator(dbmsConn, MYSQL_DATABASE, MYSQL_DATABASE, (long) 100);
-    ScrambleMeta meta1 = 
-        scrambler.scramble(MYSQL_DATABASE, "lineitem", MYSQL_DATABASE, "lineitem_scrambled", "uniform");
-    ScrambleMeta meta2 = 
-        scrambler.scramble(MYSQL_DATABASE, "orders", MYSQL_DATABASE, "orders_scrambled", "uniform");
+    dbmsConn.execute(String.format("DROP TABLE IF EXISTS \"%s\".\"lineitem_scrambled\"", POSTGRES_SCHEMA));
+    dbmsConn.execute(String.format("DROP TABLE IF EXISTS \"%s\".\"orders_scrambled\"", POSTGRES_SCHEMA));
+
+    ScramblingCoordinator scrambler =
+        new ScramblingCoordinator(dbmsConn, POSTGRES_SCHEMA, POSTGRES_SCHEMA, (long) 100);
+    ScrambleMeta meta1 =
+        scrambler.scramble(POSTGRES_SCHEMA, "lineitem", POSTGRES_SCHEMA, "lineitem_scrambled", "uniform");
+    ScrambleMeta meta2 =
+        scrambler.scramble(POSTGRES_SCHEMA, "orders", POSTGRES_SCHEMA, "orders_scrambled", "uniform");
     meta.addScrambleMeta(meta1);
     meta.addScrambleMeta(meta2);
-    stmt.execute("drop schema if exists `verdictdb_temp`");
-    stmt.execute("create schema if not exists `verdictdb_temp`");
+    postgresStmt.execute("drop schema if exists \"verdictdb_temp\" CASCADE");
+    postgresStmt.execute("create schema if not exists \"verdictdb_temp\"");
   }
 
   Pair<ExecutionResultReader, ResultSet> getAnswerPair(int queryNum)
       throws VerdictDBException, SQLException, IOException {
-    String filename = "query"+queryNum+".sql";
+    String filename;
+    if (queryNum==7||queryNum==8||queryNum==9) {
+      filename = "query"+queryNum+"_postgres.sql";
+    }
+    else filename = "query"+queryNum+".sql";
     File file = new File("src/test/resources/tpch_test_query/"+filename);
     String sql = Files.toString(file, Charsets.UTF_8);
     DbmsConnection dbmsconn = new CachedDbmsConnection(
-        new JdbcConnection(conn, new MysqlSyntax()));
-    dbmsconn.setDefaultSchema(MYSQL_DATABASE);
+        new JdbcConnection(postgresConn, new PostgresqlSyntax()));
+    dbmsconn.setDefaultSchema(POSTGRES_SCHEMA);
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     coordinator.setScrambleMetaSet(meta);
     ExecutionResultReader reader = coordinator.process(sql);
 
 
-    ResultSet rs = stmt.executeQuery(sql);
+    ResultSet rs = postgresStmt.executeQuery(sql);
     return new ImmutablePair<>(reader, rs);
   }
 
@@ -493,6 +490,6 @@ public class MySqlTpchSelectQueryCoordinatorTest {
 
   @AfterClass
   public static void tearDown() throws SQLException {
-    stmt.execute(String.format("DROP SCHEMA IF EXISTS `%s`", MYSQL_DATABASE));
+    postgresStmt.execute(String.format("drop schema if exists \"%s\" CASCADE", POSTGRES_SCHEMA));
   }
 }

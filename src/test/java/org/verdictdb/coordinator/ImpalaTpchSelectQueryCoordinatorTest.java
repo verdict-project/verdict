@@ -1,16 +1,8 @@
 package org.verdictdb.coordinator;
 
-import static org.junit.Assert.assertEquals;
-
-import java.io.File;
-import java.io.IOException;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.AfterClass;
@@ -29,83 +21,89 @@ import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sqlreader.NonValidatingSQLParser;
 import org.verdictdb.sqlreader.RelationStandardizer;
-import org.verdictdb.sqlsyntax.MysqlSyntax;
-import org.verdictdb.sqlsyntax.RedshiftSyntax;
+import org.verdictdb.sqlsyntax.ImpalaSyntax;
 import org.verdictdb.sqlwriter.SelectQueryToSql;
 
-/**
- *  Test cases are from
- *  https://github.com/umich-dbgroup/verdictdb-core/wiki/TPCH-Query-Reference--(Experiment-Version)
- *
- *  Some test cases are slightly changed because size of test data are small.
- */
-public class MySqlTpchSelectQueryCoordinatorTest {
+import java.io.File;
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 
-  // lineitem has 10 blocks, orders has 3 blocks;
-  // lineitem join orders has 12 blocks
-  final static int blockSize = 100;
+import static org.junit.Assert.assertEquals;
 
-  static ScrambleMetaSet meta = new ScrambleMetaSet();
+public class ImpalaTpchSelectQueryCoordinatorTest {
 
-  static Connection conn;
+  private static Connection impalaConn;
 
   private static Statement stmt;
 
-  private static final String MYSQL_HOST;
+  static ScrambleMetaSet meta = new ScrambleMetaSet();
+
+  private static Statement impalaStmt;
+
+  private static final String IMPALA_HOST;
+
+  // to avoid possible conflicts among concurrent tests
+  private static final String IMPALA_DATABASE =
+      "scrambling_coordinator_test_" + RandomStringUtils.randomNumeric(3);
+
+  private static final String IMPALA_UESR = "";
+
+  private static final String IMPALA_PASSWORD = "";
 
   static {
-    String env = System.getenv("BUILD_ENV");
-    if (env != null && env.equals("GitLab")) {
-      MYSQL_HOST = "mysql";
-    } else {
-      MYSQL_HOST = "localhost";
-    }
+    IMPALA_HOST = System.getenv("VERDICTDB_TEST_IMPALA_HOST");
   }
 
-  private static final String MYSQL_DATABASE = "coordinator_test";
-
-  private static final String MYSQL_UESR = "root";
-
-  private static final String MYSQL_PASSWORD = "";
-
   @BeforeClass
-  public static void setupMySqlDatabase() throws SQLException, VerdictDBException {
-    String mysqlConnectionString =
-        String.format("jdbc:mysql://%s?autoReconnect=true&useSSL=false", MYSQL_HOST);
-    conn = DatabaseConnectionHelpers.setupMySql(
-        mysqlConnectionString, MYSQL_UESR, MYSQL_PASSWORD, MYSQL_DATABASE);
-    stmt = conn.createStatement();
-    stmt.execute(String.format("use `%s`", MYSQL_DATABASE));
-    DbmsConnection dbmsConn = JdbcConnection.create(conn);
+  public static void setupImpalaDatabase() throws SQLException, VerdictDBException {
+    String impalaConnectionString =
+        String.format("jdbc:impala://%s:21050", IMPALA_HOST);
+    impalaConn =
+        DatabaseConnectionHelpers.setupImpala(
+            impalaConnectionString, IMPALA_UESR, IMPALA_PASSWORD, IMPALA_DATABASE);
+//    impalaStmt = impalaConn.createStatement();
+    stmt = impalaConn.createStatement();
+    stmt.execute(String.format("use `%s`", IMPALA_DATABASE));
+    DbmsConnection dbmsConn = JdbcConnection.create(impalaConn);
 
     // Create Scramble table
-    dbmsConn.execute(String.format("DROP TABLE IF EXISTS `%s`.`lineitem_scrambled`", MYSQL_DATABASE));
-    dbmsConn.execute(String.format("DROP TABLE IF EXISTS `%s`.`orders_scrambled`", MYSQL_DATABASE));
-    
-    ScramblingCoordinator scrambler = 
-        new ScramblingCoordinator(dbmsConn, MYSQL_DATABASE, MYSQL_DATABASE, (long) 100);
-    ScrambleMeta meta1 = 
-        scrambler.scramble(MYSQL_DATABASE, "lineitem", MYSQL_DATABASE, "lineitem_scrambled", "uniform");
-    ScrambleMeta meta2 = 
-        scrambler.scramble(MYSQL_DATABASE, "orders", MYSQL_DATABASE, "orders_scrambled", "uniform");
+    dbmsConn.execute(String.format("DROP TABLE IF EXISTS `%s`.`lineitem_scrambled`", IMPALA_DATABASE));
+    dbmsConn.execute(String.format("DROP TABLE IF EXISTS `%s`.`orders_scrambled`", IMPALA_DATABASE));
+
+    ScramblingCoordinator scrambler =
+        new ScramblingCoordinator(dbmsConn, IMPALA_DATABASE, IMPALA_DATABASE, (long) 100);
+    ScrambleMeta meta1 =
+        scrambler.scramble(IMPALA_DATABASE, "lineitem", IMPALA_DATABASE, "lineitem_scrambled", "uniform");
+    ScrambleMeta meta2 =
+        scrambler.scramble(IMPALA_DATABASE, "orders", IMPALA_DATABASE, "orders_scrambled", "uniform");
     meta.addScrambleMeta(meta1);
     meta.addScrambleMeta(meta2);
-    stmt.execute("drop schema if exists `verdictdb_temp`");
+    stmt.execute("drop schema if exists `verdictdb_temp` CASCADE");
     stmt.execute("create schema if not exists `verdictdb_temp`");
+  }
+
+  @AfterClass
+  public static void tearDown() throws SQLException {
+    stmt.execute(String.format("use `%s`", "DEFAULT"));
+    impalaConn.createStatement().execute(
+        String.format("DROP SCHEMA IF EXISTS `%s` CASCADE", IMPALA_DATABASE));
+    impalaConn.close();
   }
 
   Pair<ExecutionResultReader, ResultSet> getAnswerPair(int queryNum)
       throws VerdictDBException, SQLException, IOException {
-    String filename = "query"+queryNum+".sql";
+    String filename = "query"+queryNum+"_impala"+".sql";
     File file = new File("src/test/resources/tpch_test_query/"+filename);
     String sql = Files.toString(file, Charsets.UTF_8);
     DbmsConnection dbmsconn = new CachedDbmsConnection(
-        new JdbcConnection(conn, new MysqlSyntax()));
-    dbmsconn.setDefaultSchema(MYSQL_DATABASE);
+        new JdbcConnection(impalaConn, new ImpalaSyntax()));
+    dbmsconn.setDefaultSchema(IMPALA_DATABASE);
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     coordinator.setScrambleMetaSet(meta);
     ExecutionResultReader reader = coordinator.process(sql);
-
 
     ResultSet rs = stmt.executeQuery(sql);
     return new ImmutablePair<>(reader, rs);
@@ -305,7 +303,6 @@ public class MySqlTpchSelectQueryCoordinatorTest {
     assertEquals(12, cnt);
   }
 
-
   @Test
   public void query12Test() throws VerdictDBException, SQLException, IOException {
     Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(12);
@@ -430,7 +427,6 @@ public class MySqlTpchSelectQueryCoordinatorTest {
     assertEquals(12, cnt);
   }
 
-
   @Test
   public void query19Test() throws VerdictDBException, SQLException, IOException {
     Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(19);
@@ -491,8 +487,4 @@ public class MySqlTpchSelectQueryCoordinatorTest {
     assertEquals(12, cnt);
   }
 
-  @AfterClass
-  public static void tearDown() throws SQLException {
-    stmt.execute(String.format("DROP SCHEMA IF EXISTS `%s`", MYSQL_DATABASE));
-  }
 }
