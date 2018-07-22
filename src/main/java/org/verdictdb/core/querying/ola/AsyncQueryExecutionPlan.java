@@ -535,7 +535,7 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
 
     // Add possible tier column if its sources are projectionNode
     for (ProjectionNode source:projectionNodeSources) {
-      for (Map.Entry<ScrambleMeta, List<String>> entry:source.getScrambleTableTierColumnAlias().entrySet()) {
+      for (Map.Entry<ScrambleMeta, List<String>> entry:source.getAggMeta().getScrambleTableTierColumnAlias().entrySet()) {
         for (String oldtierAlias:entry.getValue()) {
           // Add tier column to select list
           SelectItem selectItem;
@@ -561,11 +561,11 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
         String tierColumnAlias = VERDICTDB_TIER_COLUMN_NAME+verdictdbTierIndentiferNum++;
         // Record the tier column alias with its corresponding scramble table
         ScrambleMeta meta = scrambleMeta.getMetaForTable(t.getSchemaName(), t.getTableName());
-        if (node.getScrambleTableTierColumnAlias().containsKey(meta)) {
-          node.getScrambleTableTierColumnAlias().get(meta).add(tierColumnAlias);
+        if (node.getAggMeta().getScrambleTableTierColumnAlias().containsKey(meta)) {
+          node.getAggMeta().getScrambleTableTierColumnAlias().get(meta).add(tierColumnAlias);
         } else {
-          node.getScrambleTableTierColumnAlias().put(meta, new ArrayList<String>());
-          node.getScrambleTableTierColumnAlias().get(meta).add(tierColumnAlias);
+          node.getAggMeta().getScrambleTableTierColumnAlias().put(meta, new ArrayList<String>());
+          node.getAggMeta().getScrambleTableTierColumnAlias().get(meta).add(tierColumnAlias);
         }
       }
     }
@@ -584,11 +584,11 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
 
         // Record the tier column alias with its corresponding scramble table
         ScrambleMeta meta = scrambleMeta.getMetaForTable(t.getSchemaName(), t.getTableName());
-        if (node.getScrambleTableTierColumnAlias().containsKey(meta)) {
-          node.getScrambleTableTierColumnAlias().get(meta).add(tierColumnAlias);
+        if (node.getAggMeta().getScrambleTableTierColumnAlias().containsKey(meta)) {
+          node.getAggMeta().getScrambleTableTierColumnAlias().get(meta).add(tierColumnAlias);
         } else {
-          node.getScrambleTableTierColumnAlias().put(meta, new ArrayList<String>());
-          node.getScrambleTableTierColumnAlias().get(meta).add(tierColumnAlias);
+          node.getAggMeta().getScrambleTableTierColumnAlias().put(meta, new ArrayList<String>());
+          node.getAggMeta().getScrambleTableTierColumnAlias().get(meta).add(tierColumnAlias);
         }
       }
     }
@@ -623,7 +623,7 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
     List<SelectItem> selectItemList = node.getSelectQuery().getSelectList();
     boolean isAsterisk = selectItemList.get(0) instanceof AsteriskColumn;
     for (ProjectionNode source:projectionNodesSources) {
-      for (Map.Entry<ScrambleMeta, List<String>> entry:source.getScrambleTableTierColumnAlias().entrySet()) {
+      for (Map.Entry<ScrambleMeta, List<String>> entry:source.getAggMeta().getScrambleTableTierColumnAlias().entrySet()) {
         for (String oldtierAlias:entry.getValue()) {
           String tierColumnAlias = VERDICTDB_TIER_COLUMN_NAME + verdictdbTierIndentiferNum++;
           if (!isAsterisk) {
@@ -638,11 +638,11 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
             selectItemList.add(selectItem);
           }
           // Construct tier column Map
-          if (node.getScrambleTableTierColumnAlias().containsKey(entry.getKey())) {
-            node.getScrambleTableTierColumnAlias().get(entry.getKey()).add(tierColumnAlias);
+          if (node.getAggMeta().getScrambleTableTierColumnAlias().containsKey(entry.getKey())) {
+            node.getAggMeta().getScrambleTableTierColumnAlias().get(entry.getKey()).add(tierColumnAlias);
           } else {
-            node.getScrambleTableTierColumnAlias().put(entry.getKey(), new ArrayList<String>());
-            node.getScrambleTableTierColumnAlias().get(entry.getKey()).add(tierColumnAlias);
+            node.getAggMeta().getScrambleTableTierColumnAlias().put(entry.getKey(), new ArrayList<String>());
+            node.getAggMeta().getScrambleTableTierColumnAlias().get(entry.getKey()).add(tierColumnAlias);
           }
         }
       }
@@ -677,15 +677,15 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
 
     // Rewrite itself to add tier column
     for (ProjectionNode source:projectionNodes) {
-      for (Map.Entry<ScrambleMeta, List<String>> entry:source.getScrambleTableTierColumnAlias().entrySet()) {
+      for (Map.Entry<ScrambleMeta, List<String>> entry:source.getAggMeta().getScrambleTableTierColumnAlias().entrySet()) {
         for (String oldtierAlias:entry.getValue()) {
           String tierColumnAlias = VERDICTDB_TIER_COLUMN_NAME + verdictdbTierIndentiferNum++;
           // Construct tier column Map
-          if (node.getScrambleTableTierColumnAlias().containsKey(entry.getKey())) {
-            node.getScrambleTableTierColumnAlias().get(entry.getKey()).add(tierColumnAlias);
+          if (node.getAggMeta().getScrambleTableTierColumnAlias().containsKey(entry.getKey())) {
+            node.getAggMeta().getScrambleTableTierColumnAlias().get(entry.getKey()).add(tierColumnAlias);
           } else {
-            node.getScrambleTableTierColumnAlias().put(entry.getKey(), new ArrayList<String>());
-            node.getScrambleTableTierColumnAlias().get(entry.getKey()).add(tierColumnAlias);
+            node.getAggMeta().getScrambleTableTierColumnAlias().put(entry.getKey(), new ArrayList<String>());
+            node.getAggMeta().getScrambleTableTierColumnAlias().get(entry.getKey()).add(tierColumnAlias);
           }
         }
       }

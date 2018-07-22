@@ -9,6 +9,7 @@ import java.util.List;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import org.apache.commons.lang3.tuple.Pair;
+import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.core.sqlobject.ColumnOp;
 import org.verdictdb.core.sqlobject.SelectItem;
 import org.verdictdb.core.sqlobject.UnnamedColumn;
@@ -27,6 +28,8 @@ public class AggMeta implements Serializable {
   List<SelectItem> originalSelectList;
 
   List<String> aggAlias = new ArrayList<>();
+
+  HashMap<ScrambleMeta, List<String>> scrambleTableTierColumnAlias = new HashMap<>();
 
   HashMap<String, String> maxminAggAlias = new HashMap<>();
 
@@ -55,6 +58,10 @@ public class AggMeta implements Serializable {
 
   public HashMap<Pair<String, UnnamedColumn>, String> getAggColumnAggAliasPairOfMaxMin() {
     return aggColumnAggAliasPairOfMaxMin;
+  }
+
+  public HashMap<ScrambleMeta, List<String>> getScrambleTableTierColumnAlias() {
+    return scrambleTableTierColumnAlias;
   }
 
   public List<HyperTableCube> getCubes() {
@@ -104,7 +111,11 @@ public class AggMeta implements Serializable {
   public void setTierColumnName(String tierColumnName) {
     this.tierColumnName = tierColumnName;
   }
-  
+
+  public void setScrambleTableTierColumnAlias(HashMap<ScrambleMeta, List<String>> scrambleTableTierColumnAlias) {
+    this.scrambleTableTierColumnAlias = scrambleTableTierColumnAlias;
+  }
+
   @Override
   public String toString() {
     return new ToStringBuilder(this, ToStringStyle.DEFAULT_STYLE)

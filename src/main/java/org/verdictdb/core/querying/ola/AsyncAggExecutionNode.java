@@ -283,7 +283,7 @@ public class AsyncAggExecutionNode extends ProjectionNode {
               scrambleMeta.getMetaForTable(d.getSchemaName(), d.getTableName()).getNumberOfTiers()));
       if (scrambleMeta.getMetaForTable(d.getSchemaName(), d.getTableName()).getNumberOfTiers() > 1 && !Initiated) {
         ScrambleMeta meta = scrambleMeta.getMetaForTable(d.getSchemaName(), d.getTableName());
-        HashMap<ScrambleMeta, List<String>> scrambleTableTierColumnAlias = getScrambleTableTierColumnAlias();
+        HashMap<ScrambleMeta, List<String>> scrambleTableTierColumnAlias = getAggMeta().getScrambleTableTierColumnAlias();
         if (scrambleTableTierColumnAlias.containsKey(meta)) {
           multipleTierTableTierInfo.put(cubes.get(0).getDimensions().indexOf(d),
               scrambleTableTierColumnAlias.get(meta).get(0));

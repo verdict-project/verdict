@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.core.execplan.ExecutionInfoToken;
+import org.verdictdb.core.querying.ola.AggMeta;
 import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.core.sqlobject.SqlConvertible;
@@ -15,7 +16,7 @@ public class ProjectionNode extends CreateTableAsSelectNode {
   // Whether the node has gone through the check of multi tier rewrite
   Boolean AsyncPlanMultiTierRewriteCheck = false;
 
-  HashMap<ScrambleMeta, List<String>> scrambleTableTierColumnAlias = new HashMap<>();
+  private final AggMeta aggMeta = new AggMeta();
   
   public ProjectionNode(IdCreator namer, SelectQuery query) {
     super(namer, query);
@@ -28,8 +29,8 @@ public class ProjectionNode extends CreateTableAsSelectNode {
     return node;
   }
 
-  public HashMap<ScrambleMeta, List<String>> getScrambleTableTierColumnAlias() {
-    return scrambleTableTierColumnAlias;
+  public AggMeta getAggMeta() {
+    return aggMeta;
   }
 
   public Boolean getAsyncPlanMultiTierRewriteCheck() {
