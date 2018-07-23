@@ -2,6 +2,11 @@
 #
 # Check https://circleci.com/docs/2.0/language-java/ for more details
 #
+general:
+  branches:
+    ignore:
+      - gh-pages
+      
 version: 2
 jobs:
   maven-version-check:
