@@ -89,7 +89,7 @@ jobs:
       # Customize the JVM maximum heap limit
       MAVEN_OPTS: -Xmx3200m
     steps:
-      - run: apt-get update; apt-get install -y git python3 python3-pip python3-venv
+      - run: apt-get update; apt-get install -y git
       - checkout
       # Set up maven dependencies
       - restore_cache:
@@ -107,25 +107,8 @@ jobs:
           paths:
             - ~/.m2
           key: verdict-dependencies-{{ checksum "pom.xml" }}
-      # Download and cache dependencies
-      - run:
-          name: install dependencies
-          command: |
-            python3 -m venv venv
-            . venv/bin/activate
-            pip3 install --upgrade pip
-            pip3 install coverage codecov
-      # run tests!
-      - run:
-          name: run tests
-          command: |
-            . venv/bin/activate
-            codecov --token=9cf48c61-07ed-4a14-9eed-f7129664ee79
-      - store_artifacts:
-          path: test-reports
-          destination: test-reports
-      #- run: mvn cobertura:cobertura
-      #- run: bash <(curl -s https://codecov.io/bash) -t 9cf48c61-07ed-4a14-9eed-f7129664ee79
+      - run: mvn cobertura:cobertura
+      - run: bash <(curl -s https://codecov.io/bash) -t 9cf48c61-07ed-4a14-9eed-f7129664ee79
 
   build-spark:
       docker:
