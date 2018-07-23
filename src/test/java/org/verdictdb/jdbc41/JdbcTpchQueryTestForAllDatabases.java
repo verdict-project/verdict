@@ -3,6 +3,7 @@ package org.verdictdb.jdbc41;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -119,12 +120,18 @@ public class JdbcTpchQueryTestForAllDatabases {
 
   @BeforeClass
   public static void setupDatabases()
-      throws SQLException, VerdictDBDbmsException, IOException, InterruptedException {
+      throws SQLException, VerdictDBDbmsException, IOException {
     setupMysql();
     setupImpala();
     setupRedshift();
     // TODO: Add below databases too
     //    setupPostgresql();
+  }
+
+  @AfterClass
+  public static void tearDown() {
+    // TODO: add clean up code for each database once it becomes possible to specify which
+    // TODO: database/schema name to use in this unit test
   }
 
   @Parameterized.Parameters(name = "{0}_tpch_{1}")
