@@ -44,7 +44,7 @@ public class JdbcResultSetMetaDataTestForRedshift {
 
   private static ResultSet expectedRs;
 
-  Timestamp test1, test2;
+//  Timestamp test1, test2;
 
   static {
     REDSHIFT_HOST = System.getenv("VERDICTDB_TEST_REDSHIFT_ENDPOINT");
@@ -95,20 +95,21 @@ public class JdbcResultSetMetaDataTestForRedshift {
             + "nvarcharCol   NVARCHAR(4),"
             + "textCol       TEXT,"
             + "dateCol       DATE, "
-            + "timestampCol  TIMESTAMP, "
-            + "timestampwCol TIMESTAMP WITHOUT TIME ZONE,"
-            + "timestamptzwCol TIMESTAMP WITH TIME ZONE,"
-            + "timestamptzCol TIMESTAMPTZ"
+            + "timestampCol  TIMESTAMP "
+//            + "timestampwCol TIMESTAMP WITHOUT TIME ZONE,"
+//            + "timestamptzwCol TIMESTAMP WITH TIME ZONE,"
+//            + "timestamptzCol TIMESTAMPTZ"
             + ")"
         , REDSHIFT_SCHEMA, TABLE_NAME));
     stmt.execute(String.format("INSERT INTO %s.%s VALUES (1, 1, 1, 1, 1, 1, 1, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, true, true, " +
-            "'1234', '1234', '1234', '1234', '1234', '1234', '1234', '1234', '2018-12-31', '2018-12-31 00:00:01', '2018-12-31 00:00:01', " +
-            "'2018-12-31 00:00:01', '2018-12-31 00:00:01')",
-            REDSHIFT_SCHEMA, TABLE_NAME));
+        "'1234', '1234', '1234', '1234', '1234', '1234', '1234', '1234', '2018-12-31', '2018-12-31 00:00:01') ",
+//        "'2018-12-31 00:00:01', '2018-12-31 00:00:01', '2018-12-31 00:00:01')",
+        REDSHIFT_SCHEMA, TABLE_NAME));
     stmt.execute(String.format("INSERT INTO %s.%s VALUES (null, null, null, null, null, null, null, null, null, null, " +
-            "null, null, null, null, null, null, " +
-            "null, null, null, null, null, null, null, null, null, null, null, null, null)",
-            REDSHIFT_SCHEMA, TABLE_NAME));
+        "null, null, null, null, null, null, " +
+        "null, null, null, null, null, null, null, null, null, null) ",
+//        " null, null, null)",
+        REDSHIFT_SCHEMA, TABLE_NAME));
 
     expectedRs = stmt.executeQuery(String.format("select * from %s.%s", REDSHIFT_SCHEMA, TABLE_NAME));
   }
@@ -120,16 +121,16 @@ public class JdbcResultSetMetaDataTestForRedshift {
     dbmsConn.close();
   }
 
-//  @Test
+  @Test
   public void testColumnTypes() throws VerdictDBDbmsException, SQLException {
     expectedRs.next();
-    test1 = expectedRs.getTimestamp(28);
-    test2 = expectedRs.getTimestamp(29);
+//    test1 = expectedRs.getTimestamp(28);
+//    test2 = expectedRs.getTimestamp(29);
     String sql = String.format("select * from %s.%s", REDSHIFT_SCHEMA, TABLE_NAME);
     VerdictSingleResult verdictResult = new VerdictSingleResult(dbmsConn.execute(sql));
     ResultSet ourResult = new VerdictResultSet(verdictResult);
     ResultSetMetaData ourMetaData = ourResult.getMetaData();
-    assertEquals(29, ourMetaData.getColumnCount());
+    assertEquals(26, ourMetaData.getColumnCount());
 
     ResultSetMetaData expected = stmt.executeQuery(sql).getMetaData();
     assertEquals(expected.getColumnCount(), ourMetaData.getColumnCount());
@@ -222,9 +223,9 @@ public class JdbcResultSetMetaDataTestForRedshift {
         assertEquals(1.0, ourResult.getLong(11), 1e-6);          // float4
         assertEquals(Timestamp.valueOf("2018-12-31 00:00:00"), ourResult.getTimestamp(25));  // date
         assertEquals(Timestamp.valueOf("2018-12-31 00:00:01"), ourResult.getTimestamp(26));  // timestamp
-        assertEquals(Timestamp.valueOf("2018-12-31 00:00:01"), ourResult.getTimestamp(27));  // timestamp without tz
-        assertEquals(test1, ourResult.getTimestamp(28));  // timestamptz with tz
-        assertEquals(test2, ourResult.getTimestamp(29));  // timestamptz
+//        assertEquals(Timestamp.valueOf("2018-12-31 00:00:01"), ourResult.getTimestamp(27));  // timestamp without tz
+//        assertEquals(test1, ourResult.getTimestamp(28));  // timestamptz with tz
+//        assertEquals(test2, ourResult.getTimestamp(29));  // timestamptz
 
         assertEquals("1234", ourResult.getString(20));             // char
         assertEquals("1234", ourResult.getString(18));             // nchar
@@ -311,9 +312,9 @@ public class JdbcResultSetMetaDataTestForRedshift {
         assertEquals(0, ourResult.getLong(11), 1e-6);          // float4
         assertEquals(null, ourResult.getTimestamp(25));  // date
         assertEquals(null, ourResult.getTimestamp(26));  // timestamp
-        assertEquals(null, ourResult.getTimestamp(27));  // timestamp without tz
-        assertEquals(null, ourResult.getTimestamp(28));  // timestamptz with tz
-        assertEquals(null, ourResult.getTimestamp(29));  // timestamptz
+//        assertEquals(null, ourResult.getTimestamp(27));  // timestamp without tz
+//        assertEquals(null, ourResult.getTimestamp(28));  // timestamptz with tz
+//        assertEquals(null, ourResult.getTimestamp(29));  // timestamptz
 
         assertEquals(null, ourResult.getString(20));             // char
         assertEquals(null, ourResult.getString(18));             // nchar
