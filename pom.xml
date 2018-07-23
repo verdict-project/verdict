@@ -170,6 +170,7 @@
       <version>${junit.version}</version>
       <scope>test</scope>
     </dependency>
+
     <!-- Install this using the following command: mvn install:install-file
       -Dfile=src/test/resources/jars/ImpalaJDBC41-2.6.3.jar -DgroupId=com.cloudera
       -DartifactId=impala-jdbc41 -Dversion=2.6.3 -Dpackaging=jar -->
