@@ -1,7 +1,20 @@
-package org.verdictdb.connection;
+/*
+ *    Copyright 2017 University of Michigan
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
 
-import java.util.ArrayList;
-import java.util.List;
+package org.verdictdb.connection;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -12,14 +25,17 @@ import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.sqlsyntax.SparkSyntax;
 import org.verdictdb.sqlsyntax.SqlSyntax;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class SparkConnection implements DbmsConnection {
 
   SparkSession sc;
 
   SqlSyntax syntax;
-  
+
   String currentSchema;
-  
+
   public SparkConnection(SparkSession sc) {
     this.sc = sc;
     this.syntax = new SparkSyntax();
@@ -51,20 +67,21 @@ public class SparkConnection implements DbmsConnection {
   }
 
   @Override
-  public List<Pair<String, String>> getColumns(String schema, String table) throws VerdictDBDbmsException {
+  public List<Pair<String, String>> getColumns(String schema, String table)
+      throws VerdictDBDbmsException {
     List<Pair<String, String>> columns = new ArrayList<>();
     DbmsQueryResult queryResult = execute(syntax.getColumnsCommand(schema, table));
     while (queryResult.next()) {
       String name = queryResult.getString(syntax.getColumnNameColumnIndex());
       String type = queryResult.getString(syntax.getColumnTypeColumnIndex());
       type = type.toLowerCase();
-      
+
       // when there exists partitions in a table, this extra information will be returned.
       // we should ignore this.
       if (name.equalsIgnoreCase("# Partition Information")) {
         break;
       }
-      
+
       columns.add(new ImmutablePair<>(name, type));
     }
 
@@ -72,9 +89,10 @@ public class SparkConnection implements DbmsConnection {
   }
 
   @Override
-  public List<String> getPartitionColumns(String schema, String table) throws VerdictDBDbmsException {
+  public List<String> getPartitionColumns(String schema, String table)
+      throws VerdictDBDbmsException {
     List<String> partition = new ArrayList<>();
-    
+
     DbmsQueryResult queryResult = execute(syntax.getPartitionCommand(schema, table));
     boolean hasPartitionInfoStarted = false;
     while (queryResult.next()) {
@@ -85,7 +103,7 @@ public class SparkConnection implements DbmsConnection {
         hasPartitionInfoStarted = true;
       }
     }
-    
+
     return partition;
   }
 
@@ -102,7 +120,7 @@ public class SparkConnection implements DbmsConnection {
   @Override
   public DbmsQueryResult execute(String query) throws VerdictDBDbmsException {
     try {
-      //System.out.println("query to issue " + query);
+      // System.out.println("query to issue " + query);
       SparkQueryResult srs = null;
       Dataset<Row> result = sc.sql(query);
       if (result != null) {
@@ -110,7 +128,7 @@ public class SparkConnection implements DbmsConnection {
       }
       return srs;
     } catch (Exception e) {
-//      e.printStackTrace();
+      //      e.printStackTrace();
       throw new VerdictDBDbmsException(e.getMessage());
     }
   }
@@ -139,5 +157,4 @@ public class SparkConnection implements DbmsConnection {
     newConn.setDefaultSchema(currentSchema);
     return newConn;
   }
-
 }

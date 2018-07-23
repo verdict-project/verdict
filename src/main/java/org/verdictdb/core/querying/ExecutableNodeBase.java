@@ -1,16 +1,20 @@
-package org.verdictdb.core.querying;
+/*
+ *    Copyright 2017 University of Michigan
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.TreeMap;
+package org.verdictdb.core.querying;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
@@ -27,6 +31,10 @@ import org.verdictdb.core.querying.ola.AggMeta;
 import org.verdictdb.core.sqlobject.SqlConvertible;
 import org.verdictdb.exception.VerdictDBException;
 
+import java.io.Serializable;
+import java.util.*;
+import java.util.Map.Entry;
+
 public class ExecutableNodeBase implements ExecutableNode, Serializable {
 
   private static final long serialVersionUID = 1424215482199124961L;
@@ -39,9 +47,9 @@ public class ExecutableNodeBase implements ExecutableNode, Serializable {
 
   AggMeta aggMeta = new AggMeta();
 
-  final private String uniqueId;
-  
-  private int groupId;    // copied when deepcopying; used by ExecutablePlanRunner
+  private final String uniqueId;
+
+  private int groupId; // copied when deepcopying; used by ExecutablePlanRunner
 
   public ExecutableNodeBase() {
     uniqueId = RandomStringUtils.randomAlphanumeric(10);
@@ -51,7 +59,7 @@ public class ExecutableNodeBase implements ExecutableNode, Serializable {
   public static ExecutableNodeBase create() {
     return new ExecutableNodeBase();
   }
-  
+
   public int getGroupId() {
     return groupId;
   }
@@ -68,7 +76,7 @@ public class ExecutableNodeBase implements ExecutableNode, Serializable {
       ticket.getSubscriber().subscribeTo(this);
     }
   }
-  
+
   public void subscribeTo(ExecutableNodeBase node) {
     for (int channel = 0; ; channel++) {
       if (!channels.containsKey(channel)) {
@@ -93,7 +101,7 @@ public class ExecutableNodeBase implements ExecutableNode, Serializable {
 
   /**
    * Removes node from the subscription list (i.e., sources).
-   * 
+   *
    * @param node
    */
   public void cancelSubscriptionTo(ExecutableNodeBase node) {
@@ -109,17 +117,16 @@ public class ExecutableNodeBase implements ExecutableNode, Serializable {
     sources = newSources;
 
     // if there are no other nodes broadcasting to this channel, remove the queue
-    if (leftChannels.size()>0) {
+    if (leftChannels.size() > 0) {
       for (Integer c : leftChannels) {
         if (!channels.containsKey(c)) {
           channels.remove(c);
         }
       }
-    }
-    else {// the parent has only one child, so just remove the channel
+    } else { // the parent has only one child, so just remove the channel
       channels.clear();
     }
-    
+
     // inform the node
     node.removeSubscriber(this);
   }
@@ -134,12 +141,12 @@ public class ExecutableNodeBase implements ExecutableNode, Serializable {
     for (ExecutableNodeBase s : subscribers) {
       copiedSubscribiers.add(s);
     }
-    
+
     // now cancel subscriptions
     for (ExecutableNodeBase s : copiedSubscribiers) {
       s.cancelSubscriptionTo(this);
     }
-//    subscribers = new ArrayList<>();
+    //    subscribers = new ArrayList<>();
   }
 
   // runner methods
@@ -184,7 +191,7 @@ public class ExecutableNodeBase implements ExecutableNode, Serializable {
   public int getDependentNodeCount() {
     return sources.size();
   }
-  
+
   @Override
   public Map<String, MethodInvocationInformation> getMethodsToInvokeOnConnection() {
     return new HashMap<>();
@@ -193,12 +200,15 @@ public class ExecutableNodeBase implements ExecutableNode, Serializable {
   // Helpers
   public List<ExecutableNodeBase> getSources() {
     List<Pair<ExecutableNodeBase, Integer>> temp = getSourcesAndChannels();
-    Collections.sort(temp, new Comparator<Pair<ExecutableNodeBase, Integer>>() {
-      @Override
-      public int compare(Pair<ExecutableNodeBase, Integer> o1, Pair<ExecutableNodeBase, Integer> o2) {
-        return o1.getRight() - o2.getRight();
-      }
-    });
+    Collections.sort(
+        temp,
+        new Comparator<Pair<ExecutableNodeBase, Integer>>() {
+          @Override
+          public int compare(
+              Pair<ExecutableNodeBase, Integer> o1, Pair<ExecutableNodeBase, Integer> o2) {
+            return o1.getRight() - o2.getRight();
+          }
+        });
 
     List<ExecutableNodeBase> ss = new ArrayList<>();
     for (Pair<ExecutableNodeBase, Integer> s : temp) {
@@ -260,7 +270,7 @@ public class ExecutableNodeBase implements ExecutableNode, Serializable {
       to.channels.put(a.getKey(), new ExecutionTokenQueue());
     }
     to.groupId = from.groupId;
-//    to.channels = new TreeMap<>(from.channels);
+    //    to.channels = new TreeMap<>(from.channels);
   }
 
   public void print() {
@@ -295,8 +305,12 @@ public class ExecutableNodeBase implements ExecutableNode, Serializable {
 
   @Override
   public boolean equals(Object obj) {
-    if (obj == null) { return false; }
-    if (obj == this) { return true; }
+    if (obj == null) {
+      return false;
+    }
+    if (obj == this) {
+      return true;
+    }
     if (obj.getClass() != getClass()) {
       return false;
     }
@@ -311,11 +325,10 @@ public class ExecutableNodeBase implements ExecutableNode, Serializable {
   public String toString() {
     return new ToStringBuilder(this, ToStringStyle.DEFAULT_STYLE)
         .append("subscriberCount", subscribers.size())
-//        .append("sources", sources)
+        //        .append("sources", sources)
         .append("sourcCount", sources.size())
         //        .append("channels", channels)
         //        .append("channels", channels)
         .toString();
   }
-
 }

@@ -1,19 +1,22 @@
 /*
- * Copyright 2018 University of Michigan
+ *    Copyright 2017 University of Michigan
  *
- * You must contact Barzan Mozafari (mozafari@umich.edu) or Yongjoo Park (pyongjoo@umich.edu) to discuss
- * how you could use, modify, or distribute this code. By default, this code is not open-sourced and we do
- * not license this code.
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
  */
 
 package org.verdictdb.core.querying.ola;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
+import com.google.common.base.Optional;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.connection.DbmsQueryResult;
@@ -24,32 +27,19 @@ import org.verdictdb.core.querying.ProjectionNode;
 import org.verdictdb.core.rewriter.aggresult.AggNameAndType;
 import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
-import org.verdictdb.core.sqlobject.AliasReference;
-import org.verdictdb.core.sqlobject.AliasedColumn;
-import org.verdictdb.core.sqlobject.AsteriskColumn;
-import org.verdictdb.core.sqlobject.BaseColumn;
-import org.verdictdb.core.sqlobject.BaseTable;
-import org.verdictdb.core.sqlobject.ColumnOp;
-import org.verdictdb.core.sqlobject.ConstantColumn;
-import org.verdictdb.core.sqlobject.CreateTableAsSelectQuery;
-import org.verdictdb.core.sqlobject.SelectItem;
-import org.verdictdb.core.sqlobject.SelectQuery;
-import org.verdictdb.core.sqlobject.SqlConvertible;
-import org.verdictdb.core.sqlobject.UnnamedColumn;
+import org.verdictdb.core.sqlobject.*;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBValueException;
 
-import com.google.common.base.Optional;
+import java.util.*;
 
 /**
  * Represents an "progressive" execution of a single aggregate query (without nested components).
- * <p>
- * Steps:
- * 1. identify agg and nonagg columns of a given select agg query.
- * 2. convert the query into multiple block-agg queries.
- * 3. issue those block-agg queries one by one.
- * 4. combine the results of those block-agg queries as the answers to those queries arrive.
- * 5. depending on the interface, call an appropriate result handler.
+ *
+ * <p>Steps: 1. identify agg and nonagg columns of a given select agg query. 2. convert the query
+ * into multiple block-agg queries. 3. issue those block-agg queries one by one. 4. combine the
+ * results of those block-agg queries as the answers to those queries arrive. 5. depending on the
+ * interface, call an appropriate result handler.
  *
  * @author Yongjoo Park
  */
@@ -61,15 +51,15 @@ public class AsyncAggExecutionNode extends ProjectionNode {
 
   // group-by columns
   List<String> nonaggColumns;
-  //  
+  //
   // agg columns. pairs of their column names and their types (i.e., sum, avg, count)
   List<AggNameAndType> aggColumns;
 
-//  List<AsyncAggExecutionNode> children = new ArrayList<>();
+  //  List<AsyncAggExecutionNode> children = new ArrayList<>();
 
   int tableNum = 1;
 
-//  ExecutionInfoToken savedToken = null;
+  //  ExecutionInfoToken savedToken = null;
 
   // Key is the index of scramble table in Dimension, value is the tier column alias name
   // Only record tables have multiple tiers
@@ -87,7 +77,8 @@ public class AsyncAggExecutionNode extends ProjectionNode {
       IdCreator idCreator,
       List<ExecutableNodeBase> individualAggs,
       List<ExecutableNodeBase> combiners,
-      ScrambleMetaSet meta) throws VerdictDBValueException {
+      ScrambleMetaSet meta)
+      throws VerdictDBValueException {
 
     AsyncAggExecutionNode node = new AsyncAggExecutionNode();
 
@@ -107,7 +98,6 @@ public class AsyncAggExecutionNode extends ProjectionNode {
   @Override
   public SqlConvertible createQuery(List<ExecutionInfoToken> tokens) throws VerdictDBException {
 
-
     ExecutionInfoToken token = tokens.get(0);
 
     // First, calculate the scale factor
@@ -115,7 +105,8 @@ public class AsyncAggExecutionNode extends ProjectionNode {
     HashMap<List<Integer>, Double> scaleFactor = calculateScaleFactor(cubes);
 
     // Next, create the base select query for replacement
-    Pair<List<ColumnOp>, SqlConvertible> aggColumnsAndQuery = createBaseQueryForReplacement(cubes, token);
+    Pair<List<ColumnOp>, SqlConvertible> aggColumnsAndQuery =
+        createBaseQueryForReplacement(cubes, token);
 
     // single tier case
     if (scaleFactor.size() == 1) {
@@ -129,16 +120,18 @@ public class AsyncAggExecutionNode extends ProjectionNode {
     else {
       // If it has multiple tiers, we need to rewrite the multiply column into when-then-else column
       for (ColumnOp col : aggColumnsAndQuery.getLeft()) {
-//        String alias = ((BaseColumn) col.getOperand(1)).getColumnName();
+        //        String alias = ((BaseColumn) col.getOperand(1)).getColumnName();
         col.setOpType("casewhen");
         List<UnnamedColumn> operands = new ArrayList<>();
         for (Map.Entry<List<Integer>, Double> entry : scaleFactor.entrySet()) {
           UnnamedColumn condition = generateCaseCondition(entry.getKey());
           operands.add(condition);
-          ColumnOp multiply = new ColumnOp("multiply",
-              Arrays.asList(
-                  ConstantColumn.valueOf(String.format("%.16f", entry.getValue())),
-                  col.getOperand(1)));
+          ColumnOp multiply =
+              new ColumnOp(
+                  "multiply",
+                  Arrays.asList(
+                      ConstantColumn.valueOf(String.format("%.16f", entry.getValue())),
+                      col.getOperand(1)));
           operands.add(multiply);
         }
         operands.add(ConstantColumn.valueOf(0));
@@ -149,14 +142,17 @@ public class AsyncAggExecutionNode extends ProjectionNode {
     // If it has multiple tiers, we need to sum up the result
     SelectQuery query;
     if (multipleTierTableTierInfo.size() > 0) {
-      query = sumUpTierGroup((SelectQuery) aggColumnsAndQuery.getRight(), ((AggMeta) token.getValue("aggMeta")));
+      query =
+          sumUpTierGroup(
+              (SelectQuery) aggColumnsAndQuery.getRight(), ((AggMeta) token.getValue("aggMeta")));
     } else {
       query = (SelectQuery) aggColumnsAndQuery.getRight();
     }
     Pair<String, String> tempTableFullName = getNamer().generateTempTableName();
     newTableSchemaName = tempTableFullName.getLeft();
     newTableName = tempTableFullName.getRight();
-    SelectQuery createTableQuery = replaceWithOriginalSelectList(query, ((AggMeta) token.getValue("aggMeta")));
+    SelectQuery createTableQuery =
+        replaceWithOriginalSelectList(query, ((AggMeta) token.getValue("aggMeta")));
 
     if (selectQuery != null) {
       if (!selectQuery.getGroupby().isEmpty() && selectQuery.getHaving().isPresent()) {
@@ -173,7 +169,8 @@ public class AsyncAggExecutionNode extends ProjectionNode {
       }
     }
 
-    CreateTableAsSelectQuery createQuery = new CreateTableAsSelectQuery(newTableSchemaName, newTableName, createTableQuery);
+    CreateTableAsSelectQuery createQuery =
+        new CreateTableAsSelectQuery(newTableSchemaName, newTableName, createTableQuery);
     return createQuery;
   }
 
@@ -225,41 +222,56 @@ public class AsyncAggExecutionNode extends ProjectionNode {
         UnnamedColumn col = aliasedColumn.getColumn();
 
         if (aggMeta.getAggAlias().contains(aliasedColumn.getAliasName())) {
-          ColumnOp aggColumn = new ColumnOp("multiply", Arrays.<UnnamedColumn>asList(
-              ConstantColumn.valueOf(1.0), new BaseColumn("verdictdbbeforescaling", aliasedColumn.getAliasName())
-          ));
+          ColumnOp aggColumn =
+              new ColumnOp(
+                  "multiply",
+                  Arrays.<UnnamedColumn>asList(
+                      ConstantColumn.valueOf(1.0),
+                      new BaseColumn("verdictdbbeforescaling", aliasedColumn.getAliasName())));
           aggColumnlist.add(aggColumn);
           newSelectList.set(index, new AliasedColumn(aggColumn, aliasedColumn.getAliasName()));
         } else if (aggMeta.getMaxminAggAlias().keySet().contains(aliasedColumn.getAliasName())) {
-          newSelectList.set(index, new AliasedColumn(
-              new BaseColumn("verdictdbbeforescaling", aliasedColumn.getAliasName()),
-              aliasedColumn.getAliasName()));
+          newSelectList.set(
+              index,
+              new AliasedColumn(
+                  new BaseColumn("verdictdbbeforescaling", aliasedColumn.getAliasName()),
+                  aliasedColumn.getAliasName()));
         } else {
           // Looking for tier column
           if (!Initiated && col instanceof BaseColumn) {
             String schemaName = ((BaseColumn) col).getSchemaName();
             String tableName = ((BaseColumn) col).getTableName();
-            if (scrambleMeta.isScrambled(schemaName, tableName) &&
-                ((BaseColumn) col).getColumnName().equals(scrambleMeta.getTierColumn(schemaName, tableName))) {
+            if (scrambleMeta.isScrambled(schemaName, tableName)
+                && ((BaseColumn) col)
+                    .getColumnName()
+                    .equals(scrambleMeta.getTierColumn(schemaName, tableName))) {
               for (Dimension d : cubes.get(0).getDimensions()) {
                 if (d.getTableName().equals(tableName) && d.getSchemaName().equals(schemaName)) {
-                  multipleTierTableTierInfo.put(cubes.get(0).getDimensions().indexOf(d), aliasedColumn.getAliasName());
+                  multipleTierTableTierInfo.put(
+                      cubes.get(0).getDimensions().indexOf(d), aliasedColumn.getAliasName());
                   break;
                 }
               }
             }
           }
-          newSelectList.set(index, new AliasedColumn(
-              new BaseColumn("verdictdbbeforescaling", aliasedColumn.getAliasName()),
-              aliasedColumn.getAliasName()));
+          newSelectList.set(
+              index,
+              new AliasedColumn(
+                  new BaseColumn("verdictdbbeforescaling", aliasedColumn.getAliasName()),
+                  aliasedColumn.getAliasName()));
         }
       }
     }
     Initiated = true;
 
     // Setup from table
-    SelectQuery query = SelectQuery.create(newSelectList,
-        new BaseTable((String) token.getValue("schemaName"), (String) token.getValue("tableName"), "verdictdbbeforescaling"));
+    SelectQuery query =
+        SelectQuery.create(
+            newSelectList,
+            new BaseTable(
+                (String) token.getValue("schemaName"),
+                (String) token.getValue("tableName"),
+                "verdictdbbeforescaling"));
     return new ImmutablePair<>(aggColumnlist, (SqlConvertible) query);
   }
 
@@ -276,19 +288,26 @@ public class AsyncAggExecutionNode extends ProjectionNode {
     List<Pair<Integer, Integer>> scrambleTableTierInfo = new ArrayList<>();
 
     for (Dimension d : cubes.get(0).getDimensions()) {
-      blockCountList.add(scrambleMeta.getAggregationBlockCount(d.getSchemaName(), d.getTableName()));
+      blockCountList.add(
+          scrambleMeta.getAggregationBlockCount(d.getSchemaName(), d.getTableName()));
       metaForTablesList.add(scrambleMeta.getMetaForTable(d.getSchemaName(), d.getTableName()));
       scrambleTableTierInfo.add(
-          new ImmutablePair<>(cubes.get(0).getDimensions().indexOf(d),
-              scrambleMeta.getMetaForTable(d.getSchemaName(), d.getTableName()).getNumberOfTiers()));
-      if (scrambleMeta.getMetaForTable(d.getSchemaName(), d.getTableName()).getNumberOfTiers() > 1 && !Initiated) {
+          new ImmutablePair<>(
+              cubes.get(0).getDimensions().indexOf(d),
+              scrambleMeta
+                  .getMetaForTable(d.getSchemaName(), d.getTableName())
+                  .getNumberOfTiers()));
+      if (scrambleMeta.getMetaForTable(d.getSchemaName(), d.getTableName()).getNumberOfTiers() > 1
+          && !Initiated) {
         ScrambleMeta meta = scrambleMeta.getMetaForTable(d.getSchemaName(), d.getTableName());
-        HashMap<ScrambleMeta, String> scrambleTableTierColumnAlias = getAggMeta().getScrambleTableTierColumnAlias();
+        HashMap<ScrambleMeta, String> scrambleTableTierColumnAlias =
+            getAggMeta().getScrambleTableTierColumnAlias();
         if (scrambleTableTierColumnAlias.containsKey(meta)) {
-          multipleTierTableTierInfo.put(cubes.get(0).getDimensions().indexOf(d),
-              scrambleTableTierColumnAlias.get(meta));
+          multipleTierTableTierInfo.put(
+              cubes.get(0).getDimensions().indexOf(d), scrambleTableTierColumnAlias.get(meta));
         } else {
-          multipleTierTableTierInfo.put(cubes.get(0).getDimensions().indexOf(d),
+          multipleTierTableTierInfo.put(
+              cubes.get(0).getDimensions().indexOf(d),
               scrambleMeta.getMetaForTable(d.getSchemaName(), d.getTableName()).getTierColumn());
         }
       }
@@ -303,15 +322,23 @@ public class AsyncAggExecutionNode extends ProjectionNode {
         for (int i = 0; i < tierlist.size(); i++) {
           int tier = tierlist.get(i);
           Dimension d = cube.getDimensions().get(i);
-//          double prob = d.getBegin() == 0 ? metaForTablesList.get(i).getCumulativeProbabilityDistribution(tier).get(d.getEnd())
-//              : metaForTablesList.get(i).getCumulativeProbabilityDistribution(tier).get(d.getEnd()) -
-//              metaForTablesList.get(i).getCumulativeProbabilityDistribution(tier).get(d.getBegin() - 1);
+          //          double prob = d.getBegin() == 0 ?
+          // metaForTablesList.get(i).getCumulativeProbabilityDistribution(tier).get(d.getEnd())
+          //              :
+          // metaForTablesList.get(i).getCumulativeProbabilityDistribution(tier).get(d.getEnd()) -
+          //
+          // metaForTablesList.get(i).getCumulativeProbabilityDistribution(tier).get(d.getBegin() -
+          // 1);
           double prob = 0;
           if (d.getBegin() == 0) {
             prob = metaForTablesList.get(i).getCumulativeDistributionForTier(tier).get(d.getEnd());
           } else {
-            prob = metaForTablesList.get(i).getCumulativeDistributionForTier(tier).get(d.getEnd())
-                - metaForTablesList.get(i).getCumulativeDistributionForTier(tier).get(d.getBegin() - 1);
+            prob =
+                metaForTablesList.get(i).getCumulativeDistributionForTier(tier).get(d.getEnd())
+                    - metaForTablesList
+                        .get(i)
+                        .getCumulativeDistributionForTier(tier)
+                        .get(d.getBegin() - 1);
           }
 
           scale = scale * prob;
@@ -338,7 +365,8 @@ public class AsyncAggExecutionNode extends ProjectionNode {
       }
       return res;
     } else {
-      List<Pair<Integer, Integer>> next = scrambleTableTierInfo.subList(1, scrambleTableTierInfo.size());
+      List<Pair<Integer, Integer>> next =
+          scrambleTableTierInfo.subList(1, scrambleTableTierInfo.size());
       List<List<Integer>> subres = generateTierPermuation(next);
       List<List<Integer>> res = new ArrayList<>();
       for (int tier = 0; tier < scrambleTableTierInfo.get(0).getRight(); tier++) {
@@ -359,9 +387,10 @@ public class AsyncAggExecutionNode extends ProjectionNode {
     Optional<ColumnOp> col = Optional.absent();
     for (Map.Entry<Integer, String> entry : multipleTierTableTierInfo.entrySet()) {
       BaseColumn tierColumn = new BaseColumn("verdictdbbeforescaling", entry.getValue());
-      ColumnOp equation = new ColumnOp("equal", Arrays.asList(
-          tierColumn,
-          ConstantColumn.valueOf(tierlist.get(entry.getKey()))));
+      ColumnOp equation =
+          new ColumnOp(
+              "equal",
+              Arrays.asList(tierColumn, ConstantColumn.valueOf(tierlist.get(entry.getKey()))));
       if (col.isPresent()) {
         col = Optional.of(new ColumnOp("and", Arrays.<UnnamedColumn>asList(equation, col.get())));
       } else {
@@ -370,7 +399,6 @@ public class AsyncAggExecutionNode extends ProjectionNode {
     }
     return col.get();
   }
-
 
   /**
    * Replace the scaled select list with original select list
@@ -384,9 +412,11 @@ public class AsyncAggExecutionNode extends ProjectionNode {
     HashMap<String, UnnamedColumn> aggContents = new HashMap<>();
     for (SelectItem sel : queryToReplace.getSelectList()) {
       // this column is a basic aggregate column
-      if (sel instanceof AliasedColumn && aggMeta.getAggAlias().contains(((AliasedColumn) sel).getAliasName())) {
+      if (sel instanceof AliasedColumn
+          && aggMeta.getAggAlias().contains(((AliasedColumn) sel).getAliasName())) {
         aggContents.put(((AliasedColumn) sel).getAliasName(), ((AliasedColumn) sel).getColumn());
-      } else if (sel instanceof AliasedColumn && aggMeta.getMaxminAggAlias().keySet().contains(((AliasedColumn) sel).getAliasName())) {
+      } else if (sel instanceof AliasedColumn
+          && aggMeta.getMaxminAggAlias().keySet().contains(((AliasedColumn) sel).getAliasName())) {
         aggContents.put(((AliasedColumn) sel).getAliasName(), ((AliasedColumn) sel).getColumn());
       }
     }
@@ -399,14 +429,25 @@ public class AsyncAggExecutionNode extends ProjectionNode {
           if (col.getOpType().equals("count") || col.getOpType().equals("sum")) {
             String aliasName;
             if (col.getOpType().equals("count")) {
-              aliasName = aggMeta.getAggColumnAggAliasPair().get(new ImmutablePair<>(col.getOpType(), (UnnamedColumn) new AsteriskColumn()));
+              aliasName =
+                  aggMeta
+                      .getAggColumnAggAliasPair()
+                      .get(
+                          new ImmutablePair<>(
+                              col.getOpType(), (UnnamedColumn) new AsteriskColumn()));
             } else
-              aliasName = aggMeta.getAggColumnAggAliasPair().get(new ImmutablePair<>(col.getOpType(), col.getOperand(0)));
+              aliasName =
+                  aggMeta
+                      .getAggColumnAggAliasPair()
+                      .get(new ImmutablePair<>(col.getOpType(), col.getOperand(0)));
             ColumnOp aggContent = (ColumnOp) aggContents.get(aliasName);
             col.setOpType(aggContent.getOpType());
             col.setOperand(aggContent.getOperands());
           } else if (col.getOpType().equals("max") || col.getOpType().equals("min")) {
-            String aliasName = aggMeta.getAggColumnAggAliasPairOfMaxMin().get(new ImmutablePair<>(col.getOpType(), col.getOperand(0)));
+            String aliasName =
+                aggMeta
+                    .getAggColumnAggAliasPairOfMaxMin()
+                    .get(new ImmutablePair<>(col.getOpType(), col.getOperand(0)));
             if (aggContents.get(aliasName) instanceof BaseColumn) {
               BaseColumn aggContent = (BaseColumn) aggContents.get(aliasName);
               col.setOpType("multiply");
@@ -419,16 +460,24 @@ public class AsyncAggExecutionNode extends ProjectionNode {
           }
           // If it is avg, set col to be divide columnOp
           else if (col.getOpType().equals("avg")) {
-            String aliasNameSum = aggMeta.getAggColumnAggAliasPair().get(new ImmutablePair<>("sum", col.getOperand(0)));
+            String aliasNameSum =
+                aggMeta
+                    .getAggColumnAggAliasPair()
+                    .get(new ImmutablePair<>("sum", col.getOperand(0)));
             ColumnOp aggContentSum = (ColumnOp) aggContents.get(aliasNameSum);
-            String aliasNameCount = aggMeta.getAggColumnAggAliasPair().get(new ImmutablePair<>("count", (UnnamedColumn) new AsteriskColumn()));
+            String aliasNameCount =
+                aggMeta
+                    .getAggColumnAggAliasPair()
+                    .get(new ImmutablePair<>("count", (UnnamedColumn) new AsteriskColumn()));
             ColumnOp aggContentCount = (ColumnOp) aggContents.get(aliasNameCount);
             col.setOpType("divide");
             col.setOperand(Arrays.<UnnamedColumn>asList(aggContentSum, aggContentCount));
           }
         }
       } else if (sel instanceof AliasedColumn) {
-        ((AliasedColumn) sel).setColumn(new BaseColumn("verdictdbbeforescaling", ((AliasedColumn) sel).getAliasName()));
+        ((AliasedColumn) sel)
+            .setColumn(
+                new BaseColumn("verdictdbbeforescaling", ((AliasedColumn) sel).getAliasName()));
         ((AliasedColumn) sel).setAliasName(((AliasedColumn) sel).getAliasName());
       }
     }
@@ -451,19 +500,34 @@ public class AsyncAggExecutionNode extends ProjectionNode {
       if (sel instanceof AliasedColumn) {
         // If this is a basic aggregation, we need to sum up
         if (aggAlias.contains(((AliasedColumn) sel).getAliasName())) {
-          newSelectlist.add(new AliasedColumn(new ColumnOp("sum",
-              new BaseColumn("verdictdbafterscaling", ((AliasedColumn) sel).getAliasName())), ((AliasedColumn) sel).getAliasName()));
+          newSelectlist.add(
+              new AliasedColumn(
+                  new ColumnOp(
+                      "sum",
+                      new BaseColumn(
+                          "verdictdbafterscaling", ((AliasedColumn) sel).getAliasName())),
+                  ((AliasedColumn) sel).getAliasName()));
         }
         // If it is a max/min aggregation, we need to maximize/minimize
-        else if (aggMeta.getMaxminAggAlias().keySet().contains(((AliasedColumn) sel).getAliasName())) {
+        else if (aggMeta
+            .getMaxminAggAlias()
+            .keySet()
+            .contains(((AliasedColumn) sel).getAliasName())) {
           String opType = aggMeta.getMaxminAggAlias().get(((AliasedColumn) sel).getAliasName());
-          newSelectlist.add(new AliasedColumn(new ColumnOp(opType,
-              new BaseColumn("verdictdbafterscaling", ((AliasedColumn) sel).getAliasName())), ((AliasedColumn) sel).getAliasName()));
+          newSelectlist.add(
+              new AliasedColumn(
+                  new ColumnOp(
+                      opType,
+                      new BaseColumn(
+                          "verdictdbafterscaling", ((AliasedColumn) sel).getAliasName())),
+                  ((AliasedColumn) sel).getAliasName()));
         } else {
           // if it is not a tier column, we need to put it in the group by list
           if (!multipleTierTableTierInfo.values().contains(((AliasedColumn) sel).getAliasName())) {
-            newSelectlist.add(new AliasedColumn(new BaseColumn("verdictdbafterscaling", ((AliasedColumn) sel).getAliasName()),
-                ((AliasedColumn) sel).getAliasName()));
+            newSelectlist.add(
+                new AliasedColumn(
+                    new BaseColumn("verdictdbafterscaling", ((AliasedColumn) sel).getAliasName()),
+                    ((AliasedColumn) sel).getAliasName()));
             groupby.add(((AliasedColumn) sel).getAliasName());
           }
         }
@@ -476,6 +540,4 @@ public class AsyncAggExecutionNode extends ProjectionNode {
     }
     return query;
   }
-
-
 }

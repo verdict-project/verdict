@@ -1,21 +1,37 @@
-package org.verdictdb.jdbc41;
+/*
+ *    Copyright 2017 University of Michigan
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.SQLFeatureNotSupportedException;
-import java.sql.SQLWarning;
+package org.verdictdb.jdbc41;
 
 import org.verdictdb.VerdictContext;
 import org.verdictdb.coordinator.ExecutionContext;
 import org.verdictdb.coordinator.VerdictSingleResult;
 import org.verdictdb.exception.VerdictDBException;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
+import java.sql.SQLWarning;
+
 public class VerdictStatement implements java.sql.Statement {
-  
+
   VerdictConnection jdbcConn;
-  
+
   VerdictContext context;
-  
+
   ExecutionContext executionContext;
 
   VerdictSingleResult result;
@@ -93,7 +109,7 @@ public class VerdictStatement implements java.sql.Statement {
 
   @Override
   public int getMaxFieldSize() throws SQLException {
-    return 0;   // no limit
+    return 0; // no limit
   }
 
   @Override
@@ -103,7 +119,7 @@ public class VerdictStatement implements java.sql.Statement {
 
   @Override
   public int getMaxRows() throws SQLException {
-    return 0;   // no limit
+    return 0; // no limit
   }
 
   @Override
@@ -137,9 +153,7 @@ public class VerdictStatement implements java.sql.Statement {
   }
 
   @Override
-  public void clearWarnings() throws SQLException {
-
-  }
+  public void clearWarnings() throws SQLException {}
 
   @Override
   public void setCursorName(String name) throws SQLException {
@@ -265,5 +279,4 @@ public class VerdictStatement implements java.sql.Statement {
   public boolean isCloseOnCompletion() throws SQLException {
     throw new SQLFeatureNotSupportedException();
   }
-
 }

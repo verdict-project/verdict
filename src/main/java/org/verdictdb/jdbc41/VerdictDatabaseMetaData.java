@@ -1,15 +1,27 @@
+/*
+ *    Copyright 2017 University of Michigan
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
+
 package org.verdictdb.jdbc41;
 
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
-import java.sql.RowIdLifetime;
-import java.sql.SQLException;
+import java.sql.*;
 
 public class VerdictDatabaseMetaData implements java.sql.DatabaseMetaData {
 
   private DatabaseMetaData backend;
-  
+
   public VerdictDatabaseMetaData(java.sql.DatabaseMetaData backend) {
     this.backend = backend;
   }
@@ -286,7 +298,7 @@ public class VerdictDatabaseMetaData implements java.sql.DatabaseMetaData {
 
   @Override
   public boolean supportsExtendedSQLGrammar() throws SQLException {
-    return backend.supportsExtendedSQLGrammar() ;
+    return backend.supportsExtendedSQLGrammar();
   }
 
   @Override
@@ -621,13 +633,16 @@ public class VerdictDatabaseMetaData implements java.sql.DatabaseMetaData {
   }
 
   @Override
-  public ResultSet getProcedureColumns(String catalog, String schemaPattern, String procedureNamePattern,
-      String columnNamePattern) throws SQLException {
-    return backend.getProcedureColumns(catalog, schemaPattern, procedureNamePattern, columnNamePattern);
+  public ResultSet getProcedureColumns(
+      String catalog, String schemaPattern, String procedureNamePattern, String columnNamePattern)
+      throws SQLException {
+    return backend.getProcedureColumns(
+        catalog, schemaPattern, procedureNamePattern, columnNamePattern);
   }
 
   @Override
-  public ResultSet getTables(String catalog, String schemaPattern, String tableNamePattern, String[] types)
+  public ResultSet getTables(
+      String catalog, String schemaPattern, String tableNamePattern, String[] types)
       throws SQLException {
     return backend.getTables(catalog, schemaPattern, tableNamePattern, types);
   }
@@ -648,14 +663,15 @@ public class VerdictDatabaseMetaData implements java.sql.DatabaseMetaData {
   }
 
   @Override
-  public ResultSet getColumns(String catalog, String schemaPattern, String tableNamePattern,
-      String columnNamePattern) throws SQLException {
+  public ResultSet getColumns(
+      String catalog, String schemaPattern, String tableNamePattern, String columnNamePattern)
+      throws SQLException {
     return backend.getColumns(catalog, schemaPattern, tableNamePattern, columnNamePattern);
   }
 
   @Override
-  public ResultSet getColumnPrivileges(String catalog, String schema, String table, String columnNamePattern)
-      throws SQLException {
+  public ResultSet getColumnPrivileges(
+      String catalog, String schema, String table, String columnNamePattern) throws SQLException {
     return backend.getColumnPrivileges(catalog, schema, table, columnNamePattern);
   }
 
@@ -666,13 +682,15 @@ public class VerdictDatabaseMetaData implements java.sql.DatabaseMetaData {
   }
 
   @Override
-  public ResultSet getBestRowIdentifier(String catalog, String schema, String table, int scope,
-      boolean nullable) throws SQLException {
+  public ResultSet getBestRowIdentifier(
+      String catalog, String schema, String table, int scope, boolean nullable)
+      throws SQLException {
     return backend.getBestRowIdentifier(catalog, schema, table, scope, nullable);
   }
 
   @Override
-  public ResultSet getVersionColumns(String catalog, String schema, String table) throws SQLException {
+  public ResultSet getVersionColumns(String catalog, String schema, String table)
+      throws SQLException {
     return backend.getVersionColumns(catalog, schema, table);
   }
 
@@ -682,20 +700,28 @@ public class VerdictDatabaseMetaData implements java.sql.DatabaseMetaData {
   }
 
   @Override
-  public ResultSet getImportedKeys(String catalog, String schema, String table) throws SQLException {
+  public ResultSet getImportedKeys(String catalog, String schema, String table)
+      throws SQLException {
     return backend.getImportedKeys(catalog, schema, table);
   }
 
   @Override
-  public ResultSet getExportedKeys(String catalog, String schema, String table) throws SQLException {
+  public ResultSet getExportedKeys(String catalog, String schema, String table)
+      throws SQLException {
     return backend.getExportedKeys(catalog, schema, table);
   }
 
   @Override
-  public ResultSet getCrossReference(String parentCatalog, String parentSchema, String parentTable,
-      String foreignCatalog, String foreignSchema, String foreignTable) throws SQLException {
-    return backend.getCrossReference(parentCatalog, parentSchema, parentTable, foreignCatalog,
-        foreignSchema, foreignTable);
+  public ResultSet getCrossReference(
+      String parentCatalog,
+      String parentSchema,
+      String parentTable,
+      String foreignCatalog,
+      String foreignSchema,
+      String foreignTable)
+      throws SQLException {
+    return backend.getCrossReference(
+        parentCatalog, parentSchema, parentTable, foreignCatalog, foreignSchema, foreignTable);
   }
 
   @Override
@@ -704,8 +730,9 @@ public class VerdictDatabaseMetaData implements java.sql.DatabaseMetaData {
   }
 
   @Override
-  public ResultSet getIndexInfo(String catalog, String schema, String table, boolean unique,
-      boolean approximate) throws SQLException {
+  public ResultSet getIndexInfo(
+      String catalog, String schema, String table, boolean unique, boolean approximate)
+      throws SQLException {
     return backend.getIndexInfo(catalog, schema, table, unique, approximate);
   }
 
@@ -770,7 +797,8 @@ public class VerdictDatabaseMetaData implements java.sql.DatabaseMetaData {
   }
 
   @Override
-  public ResultSet getUDTs(String catalog, String schemaPattern, String typeNamePattern, int[] types)
+  public ResultSet getUDTs(
+      String catalog, String schemaPattern, String typeNamePattern, int[] types)
       throws SQLException {
     return backend.getUDTs(catalog, schemaPattern, typeNamePattern, types);
   }
@@ -813,8 +841,9 @@ public class VerdictDatabaseMetaData implements java.sql.DatabaseMetaData {
   }
 
   @Override
-  public ResultSet getAttributes(String catalog, String schemaPattern, String typeNamePattern,
-      String attributeNamePattern) throws SQLException {
+  public ResultSet getAttributes(
+      String catalog, String schemaPattern, String typeNamePattern, String attributeNamePattern)
+      throws SQLException {
     return backend.getAttributes(catalog, schemaPattern, typeNamePattern, attributeNamePattern);
   }
 
@@ -895,14 +924,17 @@ public class VerdictDatabaseMetaData implements java.sql.DatabaseMetaData {
   }
 
   @Override
-  public ResultSet getFunctionColumns(String catalog, String schemaPattern, String functionNamePattern,
-      String columnNamePattern) throws SQLException {
-    return backend.getFunctionColumns(catalog, schemaPattern, functionNamePattern, columnNamePattern);
+  public ResultSet getFunctionColumns(
+      String catalog, String schemaPattern, String functionNamePattern, String columnNamePattern)
+      throws SQLException {
+    return backend.getFunctionColumns(
+        catalog, schemaPattern, functionNamePattern, columnNamePattern);
   }
 
   @Override
-  public ResultSet getPseudoColumns(String catalog, String schemaPattern, String tableNamePattern,
-      String columnNamePattern) throws SQLException {
+  public ResultSet getPseudoColumns(
+      String catalog, String schemaPattern, String tableNamePattern, String columnNamePattern)
+      throws SQLException {
     return backend.getPseudoColumns(catalog, schemaPattern, tableNamePattern, columnNamePattern);
   }
 
@@ -910,7 +942,4 @@ public class VerdictDatabaseMetaData implements java.sql.DatabaseMetaData {
   public boolean generatedKeyAlwaysReturned() throws SQLException {
     return backend.generatedKeyAlwaysReturned();
   }
-  
-  
-
 }

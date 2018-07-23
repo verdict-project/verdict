@@ -1,3 +1,19 @@
+/*
+ *    Copyright 2017 University of Michigan
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
+
 package org.verdictdb.core.sqlobject;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
@@ -6,7 +22,6 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import org.verdictdb.exception.VerdictDBTypeException;
 import org.verdictdb.sqlsyntax.SqlSyntax;
-
 
 public class BaseTable extends AbstractRelation {
 
@@ -31,7 +46,6 @@ public class BaseTable extends AbstractRelation {
   public BaseTable(String schemaName, String tableName) {
     this.schemaName = schemaName;
     this.tableName = tableName;
-
   }
 
   public BaseTable(String tableName) {
@@ -54,13 +68,13 @@ public class BaseTable extends AbstractRelation {
     this.tableName = tableName;
   }
 
-//    public String getTableSourceAlias() {
-//        return tableSourceAlias;
-//    }
-//
-//    public void setTableSourceAlias(String tableSourceAlias) {
-//        this.tableSourceAlias = tableSourceAlias;
-//    }
+  //    public String getTableSourceAlias() {
+  //        return tableSourceAlias;
+  //    }
+  //
+  //    public void setTableSourceAlias(String tableSourceAlias) {
+  //        this.tableSourceAlias = tableSourceAlias;
+  //    }
 
   public String toSql(SqlSyntax syntax) throws VerdictDBTypeException {
     throw new VerdictDBTypeException("A base table itself cannot be converted to a sql.");

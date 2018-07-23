@@ -1,39 +1,20 @@
-package org.verdictdb.connection;
+/*
+ *    Copyright 2017 University of Michigan
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
 
-import static java.sql.Types.ARRAY;
-import static java.sql.Types.BIGINT;
-import static java.sql.Types.BINARY;
-import static java.sql.Types.BIT;
-import static java.sql.Types.BLOB;
-import static java.sql.Types.BOOLEAN;
-import static java.sql.Types.CHAR;
-import static java.sql.Types.CLOB;
-import static java.sql.Types.DATALINK;
-import static java.sql.Types.DATE;
-import static java.sql.Types.DECIMAL;
-import static java.sql.Types.DISTINCT;
-import static java.sql.Types.DOUBLE;
-import static java.sql.Types.FLOAT;
-import static java.sql.Types.INTEGER;
-import static java.sql.Types.LONGNVARCHAR;
-import static java.sql.Types.LONGVARBINARY;
-import static java.sql.Types.LONGVARCHAR;
-import static java.sql.Types.NCHAR;
-import static java.sql.Types.NCLOB;
-import static java.sql.Types.NULL;
-import static java.sql.Types.NUMERIC;
-import static java.sql.Types.NVARCHAR;
-import static java.sql.Types.REAL;
-import static java.sql.Types.REF;
-import static java.sql.Types.ROWID;
-import static java.sql.Types.SMALLINT;
-import static java.sql.Types.SQLXML;
-import static java.sql.Types.STRUCT;
-import static java.sql.Types.TIME;
-import static java.sql.Types.TIMESTAMP;
-import static java.sql.Types.TINYINT;
-import static java.sql.Types.VARBINARY;
-import static java.sql.Types.VARCHAR;
+package org.verdictdb.connection;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -41,14 +22,16 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import static java.sql.Types.*;
+
 public class DataTypeConverter {
-  
+
   static final Map<Integer, String> intToStringMap;
-  
+
   static final Map<String, Integer> stringToIntMap;
-  
-//  static final Map<String, String> typeNameToStandardName;
-  
+
+  //  static final Map<String, String> typeNameToStandardName;
+
   static {
     intToStringMap = new HashMap<>();
     intToStringMap.put(ARRAY, "array");
@@ -84,43 +67,43 @@ public class DataTypeConverter {
     intToStringMap.put(TINYINT, "tinyint");
     intToStringMap.put(VARBINARY, "varbinary");
     intToStringMap.put(VARCHAR, "varchar");
-    intToStringMap.put(DOUBLE, "double");   // h2 will convert float to double type
+    intToStringMap.put(DOUBLE, "double"); // h2 will convert float to double type
 
     stringToIntMap = new HashMap<>();
-//    stringToIntMap.put("array", ARRAY);
-//    stringToIntMap.put("bigint", BIGINT);
-//    stringToIntMap.put("binary", BINARY);
-//    stringToIntMap.put("bit", BIT);
-//    stringToIntMap.put("blob", BLOB);
-//    stringToIntMap.put("boolean", BOOLEAN);
-//    stringToIntMap.put("char", CHAR);
-//    stringToIntMap.put("clob", CLOB);
-//    stringToIntMap.put("datalink", DATALINK);
-//    stringToIntMap.put("date", DATE);
-//    stringToIntMap.put("decimal", DECIMAL);
-//    stringToIntMap.put("distinct", DISTINCT);
-//    stringToIntMap.put("double", DOUBLE);
-//    stringToIntMap.put("float", FLOAT);
-//    stringToIntMap.put("integer", INTEGER);
-//    stringToIntMap.put("longnvarchar", LONGNVARCHAR);
-//    stringToIntMap.put("longvarbinary", LONGVARBINARY);
-//    stringToIntMap.put("longvarJdchar", LONGVARCHAR);
-//    stringToIntMap.put("nchar", NCHAR);
-//    stringToIntMap.put("nclob", NCLOB);
-//    stringToIntMap.put("null", NULL);
-//    stringToIntMap.put("numeric", NUMERIC);
-//    stringToIntMap.put("nvarchar", NVARCHAR);
-//    stringToIntMap.put("real", REAL);
-//    stringToIntMap.put("ref", REF);
-//    stringToIntMap.put("rowid", ROWID);
-//    stringToIntMap.put("smallint", SMALLINT);
-//    stringToIntMap.put("xml", SQLXML);
-//    stringToIntMap.put("struct", STRUCT);
-//    stringToIntMap.put("time", TIME);
-//    stringToIntMap.put("timestamp", TIMESTAMP);
-//    stringToIntMap.put("tinyint", TINYINT);
-//    stringToIntMap.put("varbinary", VARBINARY);
-//    stringToIntMap.put("varchar", VARCHAR);
+    //    stringToIntMap.put("array", ARRAY);
+    //    stringToIntMap.put("bigint", BIGINT);
+    //    stringToIntMap.put("binary", BINARY);
+    //    stringToIntMap.put("bit", BIT);
+    //    stringToIntMap.put("blob", BLOB);
+    //    stringToIntMap.put("boolean", BOOLEAN);
+    //    stringToIntMap.put("char", CHAR);
+    //    stringToIntMap.put("clob", CLOB);
+    //    stringToIntMap.put("datalink", DATALINK);
+    //    stringToIntMap.put("date", DATE);
+    //    stringToIntMap.put("decimal", DECIMAL);
+    //    stringToIntMap.put("distinct", DISTINCT);
+    //    stringToIntMap.put("double", DOUBLE);
+    //    stringToIntMap.put("float", FLOAT);
+    //    stringToIntMap.put("integer", INTEGER);
+    //    stringToIntMap.put("longnvarchar", LONGNVARCHAR);
+    //    stringToIntMap.put("longvarbinary", LONGVARBINARY);
+    //    stringToIntMap.put("longvarJdchar", LONGVARCHAR);
+    //    stringToIntMap.put("nchar", NCHAR);
+    //    stringToIntMap.put("nclob", NCLOB);
+    //    stringToIntMap.put("null", NULL);
+    //    stringToIntMap.put("numeric", NUMERIC);
+    //    stringToIntMap.put("nvarchar", NVARCHAR);
+    //    stringToIntMap.put("real", REAL);
+    //    stringToIntMap.put("ref", REF);
+    //    stringToIntMap.put("rowid", ROWID);
+    //    stringToIntMap.put("smallint", SMALLINT);
+    //    stringToIntMap.put("xml", SQLXML);
+    //    stringToIntMap.put("struct", STRUCT);
+    //    stringToIntMap.put("time", TIME);
+    //    stringToIntMap.put("timestamp", TIMESTAMP);
+    //    stringToIntMap.put("tinyint", TINYINT);
+    //    stringToIntMap.put("varbinary", VARBINARY);
+    //    stringToIntMap.put("varchar", VARCHAR);
     for (Entry<Integer, String> pair : intToStringMap.entrySet()) {
       stringToIntMap.put(pair.getValue(), pair.getKey());
     }
@@ -172,24 +155,25 @@ public class DataTypeConverter {
   public static String typeName(int inttype) {
     return intToStringMap.get(inttype);
   }
-  
+
   public static int typeInt(String typename) {
-//    System.out.println(typename);
+    //    System.out.println(typename);
     String type = typename.toLowerCase().replaceAll("\\(.*\\)", "");
-//    return stringToIntMap.get(typename.toLowerCase().replaceAll("\\(.*\\)", ""));
+    //    return stringToIntMap.get(typename.toLowerCase().replaceAll("\\(.*\\)", ""));
     return stringToIntMap.get(type);
   }
-  
-  private static HashSet<Integer> numericTypes = new HashSet<>(Arrays.asList(
-      DECIMAL, FLOAT, DOUBLE, REAL, NUMERIC, INTEGER, TINYINT, SMALLINT, BIGINT));
+
+  private static HashSet<Integer> numericTypes =
+      new HashSet<>(
+          Arrays.asList(DECIMAL, FLOAT, DOUBLE, REAL, NUMERIC, INTEGER, TINYINT, SMALLINT, BIGINT));
 
   public static boolean isNumeric(String typename) {
     int type = typeInt(typename);
     return numericTypes.contains(type);
   }
 
-//  public static String standardize(String type) {
-//    // TODO Auto-generated method stub
-//    return null;
-//  }
+  //  public static String standardize(String type) {
+  //    // TODO Auto-generated method stub
+  //    return null;
+  //  }
 }

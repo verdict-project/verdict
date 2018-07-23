@@ -1,28 +1,37 @@
+/*
+ *    Copyright 2017 University of Michigan
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
+
 package org.verdictdb.coordinator;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.NotSerializableException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-
+import com.google.common.base.Optional;
 import org.verdictdb.commons.AttributeValueRetrievalHelper;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.connection.DbmsQueryResultMetaData;
 
-import com.google.common.base.Optional;
+import java.io.*;
 
 /**
  * Represents the result set returned from VerdictDB to the end user.
- * 
- * @author Yongjoo Park
  *
+ * @author Yongjoo Park
  */
 public class VerdictSingleResult extends AttributeValueRetrievalHelper {
 
   private Optional<DbmsQueryResult> result;
-  
+
   // used to support wasnull()
   private Object lastValueRead;
 
@@ -52,11 +61,10 @@ public class VerdictSingleResult extends AttributeValueRetrievalHelper {
     }
   }
 
-
   public static VerdictSingleResult empty() {
     return new VerdictSingleResult(null);
   }
-  
+
   public boolean isEmpty() {
     return !result.isPresent();
   }
@@ -69,11 +77,10 @@ public class VerdictSingleResult extends AttributeValueRetrievalHelper {
       out.flush();
       out.close();
 
-      ObjectInputStream in = new ObjectInputStream(
-          new ByteArrayInputStream(bos.toByteArray()));
+      ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(bos.toByteArray()));
       DbmsQueryResult copied = (DbmsQueryResult) in.readObject();
       return copied;
-      
+
     } catch (ClassNotFoundException e) {
       e.printStackTrace();
     } catch (NotSerializableException e) {
@@ -132,7 +139,7 @@ public class VerdictSingleResult extends AttributeValueRetrievalHelper {
       return value;
     }
   }
-  
+
   public boolean wasNull() {
     return lastValueRead == null;
   }
@@ -150,5 +157,4 @@ public class VerdictSingleResult extends AttributeValueRetrievalHelper {
       result.get().rewind();
     }
   }
-
 }

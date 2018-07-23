@@ -1,21 +1,35 @@
+/*
+ *    Copyright 2017 University of Michigan
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
+
 package org.verdictdb.core.sqlobject;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
+import com.google.common.base.Optional;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
-import com.google.common.base.Optional;
-
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class SelectQuery extends AbstractRelation implements SqlConvertible {
 
   private static final long serialVersionUID = -4830209213341883527L;
-  
+
   public static SelectQuery create(SelectItem column) {
     return create(Arrays.asList(column), Arrays.<AbstractRelation>asList());
   }
@@ -33,7 +47,8 @@ public class SelectQuery extends AbstractRelation implements SqlConvertible {
     return sel;
   }
 
-  public static SelectQuery create(List<SelectItem> columns, AbstractRelation relation, UnnamedColumn predicate) {
+  public static SelectQuery create(
+      List<SelectItem> columns, AbstractRelation relation, UnnamedColumn predicate) {
     SelectQuery sel = new SelectQuery();
     for (SelectItem c : columns) {
       sel.addSelectItem(c);
@@ -68,10 +83,11 @@ public class SelectQuery extends AbstractRelation implements SqlConvertible {
 
   Optional<UnnamedColumn> limit = Optional.absent();
 
-//  Optional<String> attribute = Optional.absent();
-  
+  //  Optional<String> attribute = Optional.absent();
+
   /**
    * Copies query specification, i.e., everything except for orderby, having, and limit
+   *
    * @return
    */
   @Override
@@ -80,7 +96,7 @@ public class SelectQuery extends AbstractRelation implements SqlConvertible {
     for (SelectItem c : getSelectList()) {
       sel.addSelectItem(c.deepcopy());
     }
-    
+
     for (AbstractRelation r : getFromList()) {
       sel.addTableSource(r.deepcopy());
     }
@@ -96,8 +112,7 @@ public class SelectQuery extends AbstractRelation implements SqlConvertible {
     return sel;
   }
 
-  public SelectQuery() {
-  }
+  public SelectQuery() {}
 
   public void addSelectItem(SelectItem column) {
     selectList.add(column);
@@ -143,7 +158,9 @@ public class SelectQuery extends AbstractRelation implements SqlConvertible {
     orderby.add(column);
   }
 
-  public void setFromList(List<AbstractRelation> fromList) { this.fromList = fromList; }
+  public void setFromList(List<AbstractRelation> fromList) {
+    this.fromList = fromList;
+  }
 
   public void clearFilters() {
     this.filter = Optional.absent();
@@ -207,7 +224,7 @@ public class SelectQuery extends AbstractRelation implements SqlConvertible {
   // deep copy the select list
   public SelectQuery selectListDeepCopy() {
     List<SelectItem> newSelectItemList = new ArrayList<>();
-    for (SelectItem sel:selectList) {
+    for (SelectItem sel : selectList) {
       SelectItem newSel = sel.deepcopy();
       newSelectItemList.add(newSel);
     }
@@ -220,5 +237,4 @@ public class SelectQuery extends AbstractRelation implements SqlConvertible {
     query.aliasName = aliasName;
     return query;
   }
-
 }

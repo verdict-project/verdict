@@ -1,25 +1,41 @@
+/*
+ *    Copyright 2017 University of Michigan
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
+
 package org.verdictdb.core.scrambling;
+
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
-
 public class ScrambleMetaSet implements Serializable, Iterable<ScrambleMeta> {
 
   private static final long serialVersionUID = 5106301901144427405L;
-  
+
   Map<Pair<String, String>, ScrambleMeta> meta = new HashMap<>();
 
   public ScrambleMetaSet() {}
 
   /**
-   * Returns the column name used for indicating aggregation block. Typically, the underlying database
-   * is physically partitioned on this column to speed up accessing particular blocks.
-   * 
+   * Returns the column name used for indicating aggregation block. Typically, the underlying
+   * database is physically partitioned on this column to speed up accessing particular blocks.
+   *
    * @param schemaName
    * @param tableName
    * @return
@@ -34,7 +50,7 @@ public class ScrambleMetaSet implements Serializable, Iterable<ScrambleMeta> {
 
   /**
    * Returns the number of the blocks for a specified scrambled table.
-   * 
+   *
    * @param schemaName
    * @param tableName
    * @return
@@ -60,11 +76,11 @@ public class ScrambleMetaSet implements Serializable, Iterable<ScrambleMeta> {
   public String getTierColumn(String schemaName, String tableName) {
     return meta.get(metaKey(schemaName, tableName)).getTierColumn();
   }
-  
+
   /**
    * Add a new scramble meta entry. If there exists an existing entry for the same scrambled table,
    * the value is overwritten.
-   * 
+   *
    * @param tablemeta
    */
   public void addScrambleMeta(ScrambleMeta tablemeta) {
@@ -76,12 +92,12 @@ public class ScrambleMetaSet implements Serializable, Iterable<ScrambleMeta> {
   @Deprecated
   public void insertScrambleMetaEntry(
       String aliasName,
-//      String inclusionProbabilityColumn,
-//      String inclusionProbBlockDiffColumn,
+      //      String inclusionProbabilityColumn,
+      //      String inclusionProbBlockDiffColumn,
       String subsampleColumn,
       String tierColumn) {
     ScrambleMeta tableMeta = new ScrambleMeta();
-//    tableMeta.setAliasName(aliasName);
+    //    tableMeta.setAliasName(aliasName);
     //    tableMeta.setAggregationBlockColumn(aggregationBlockColumn);
     tableMeta.setSubsampleColumn(subsampleColumn);
     tableMeta.setTierColumn(tierColumn);
@@ -130,7 +146,4 @@ public class ScrambleMetaSet implements Serializable, Iterable<ScrambleMeta> {
   public Iterator<ScrambleMeta> iterator() {
     return meta.values().iterator();
   }
-  
 }
-
-

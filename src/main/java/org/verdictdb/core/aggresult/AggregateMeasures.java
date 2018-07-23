@@ -1,19 +1,35 @@
-package org.verdictdb.core.aggresult;
+/*
+ *    Copyright 2017 University of Michigan
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
+package org.verdictdb.core.aggresult;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import org.verdictdb.exception.VerdictDBValueException;
 
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+
 public class AggregateMeasures implements Serializable {
 
   List<String> attributeNames;
 
-  List<Object> attributeValues;   // will be numeric types
-  
+  List<Object> attributeValues; // will be numeric types
+
   public AggregateMeasures() {
     this.attributeNames = new ArrayList<>();
     this.attributeValues = new ArrayList<>();
@@ -23,12 +39,12 @@ public class AggregateMeasures implements Serializable {
     this.attributeNames = attributeNames;
     this.attributeValues = attributeValues;
   }
-  
+
   public void addMeasure(String attributeName, Object attributeValue) {
     attributeNames.add(attributeName);
     attributeValues.add(attributeValue);
   }
-  
+
   public int getIndexOfAttributeName(String attributeName) throws VerdictDBValueException {
     int index = attributeNames.indexOf(attributeName);
     if (index == -1) {
@@ -36,11 +52,11 @@ public class AggregateMeasures implements Serializable {
     }
     return index;
   }
-  
+
   public Object getAttributeValueAt(int index) {
     return attributeValues.get(index);
   }
-  
+
   public Object getAttributeValue(String attributeName) throws VerdictDBValueException {
     return attributeValues.get(getIndexOfAttributeName(attributeName));
   }
@@ -56,23 +72,16 @@ public class AggregateMeasures implements Serializable {
 
   @Override
   public boolean equals(Object obj) {
-    if (this == obj)
-      return true;
-    if (obj == null)
-      return false;
-    if (getClass() != obj.getClass())
-      return false;
+    if (this == obj) return true;
+    if (obj == null) return false;
+    if (getClass() != obj.getClass()) return false;
     AggregateMeasures other = (AggregateMeasures) obj;
     if (attributeNames == null) {
-      if (other.attributeNames != null)
-        return false;
-    } else if (!attributeNames.equals(other.attributeNames))
-      return false;
+      if (other.attributeNames != null) return false;
+    } else if (!attributeNames.equals(other.attributeNames)) return false;
     if (attributeValues == null) {
-      if (other.attributeValues != null)
-        return false;
-    } else if (!attributeValues.equals(other.attributeValues))
-      return false;
+      if (other.attributeValues != null) return false;
+    } else if (!attributeValues.equals(other.attributeValues)) return false;
     return true;
   }
 

@@ -1,30 +1,35 @@
+/*
+ *    Copyright 2017 University of Michigan
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
+
 package org.verdictdb.commons;
-
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.math.BigDecimal;
-import java.net.URL;
-import java.sql.Array;
-import java.sql.Blob;
-import java.sql.Clob;
-import java.sql.Date;
-import java.sql.NClob;
-import java.sql.Ref;
-import java.sql.RowId;
-import java.sql.SQLException;
-import java.sql.SQLXML;
-import java.sql.Time;
-import java.sql.Timestamp;
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.sql.rowset.serial.SerialBlob;
 
 import org.verdictdb.connection.TypeCasting;
 import org.verdictdb.jdbc41.VerdictJdbcArray;
 
+import javax.sql.rowset.serial.SerialBlob;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.math.BigDecimal;
+import java.net.URL;
+import java.sql.*;
+import java.util.HashMap;
+import java.util.Map;
+
 public abstract class AttributeValueRetrievalHelper {
-  
+
   private Map<String, Integer> lazyLabel2IndexMap = null;
 
   protected Integer getIndexOf(String label) {
@@ -33,23 +38,22 @@ public abstract class AttributeValueRetrievalHelper {
     }
     return lazyLabel2IndexMap.get(label);
   }
-  
+
   private void constructLabel2IndexMap() {
     int columnCount = getColumnCount();
-    
+
     lazyLabel2IndexMap = new HashMap<>();
     for (int i = 0; i < columnCount; i++) {
       lazyLabel2IndexMap.put(getColumnName(i), i);
     }
   }
-  
+
   public abstract String getColumnName(int i);
 
   public abstract int getColumnCount();
 
   public abstract Object getValue(int index);
 
-  
   // Actual implementations provided by this class
 
   public Boolean getBoolean(int index) throws SQLException {
@@ -60,7 +64,10 @@ public abstract class AttributeValueRetrievalHelper {
     if (value instanceof Boolean) {
       return (boolean) value;
     }
-    if (value instanceof Integer || value instanceof Long || value instanceof Double || value instanceof Float) {
+    if (value instanceof Integer
+        || value instanceof Long
+        || value instanceof Double
+        || value instanceof Float) {
       int v = Integer.valueOf(value.toString());
       if (v == 1) {
         return true;
@@ -71,9 +78,9 @@ public abstract class AttributeValueRetrievalHelper {
       String v = value.toString();
       // PostgreSql return t/f
       // Redshift return true/false
-      if (v.equals("1")||v.equals("t")||v.equals("true")) {
+      if (v.equals("1") || v.equals("t") || v.equals("true")) {
         return true;
-      } else if (v.equals("0")||v.equals("f")||v.equals("false")) {
+      } else if (v.equals("0") || v.equals("f") || v.equals("false")) {
         return false;
       }
     }
@@ -92,7 +99,7 @@ public abstract class AttributeValueRetrievalHelper {
     }
     return String.valueOf(value);
   }
-  
+
   public String getString(String label) {
     int index = getIndexOf(label);
     return getString(index);
@@ -105,15 +112,15 @@ public abstract class AttributeValueRetrievalHelper {
     }
     if (value instanceof String) {
       String v = value.toString();
-      if (v.equals("t")||v.equals("true")) {
+      if (v.equals("t") || v.equals("true")) {
         return 1;
-      } else if (v.equals("f")||v.equals("false")) {
+      } else if (v.equals("f") || v.equals("false")) {
         return 0;
       }
     }
     return TypeCasting.toInteger(value);
   }
-  
+
   public int getInt(String label) {
     int index = getIndexOf(label);
     return getInt(index);
@@ -134,8 +141,8 @@ public abstract class AttributeValueRetrievalHelper {
     }
     return TypeCasting.toLong(value);
   }
-  
-  public long getLong(String label){
+
+  public long getLong(String label) {
     int index = getIndexOf(label);
     return getLong(index);
   }
@@ -147,7 +154,7 @@ public abstract class AttributeValueRetrievalHelper {
     }
     return TypeCasting.toDouble(value);
   }
-  
+
   public double getDouble(String label) {
     int index = getIndexOf(label);
     return getDouble(index);
@@ -160,7 +167,7 @@ public abstract class AttributeValueRetrievalHelper {
     }
     return TypeCasting.toFloat(value);
   }
-  
+
   public float getFloat(String label) {
     int index = getIndexOf(label);
     return getFloat(index);
@@ -168,47 +175,43 @@ public abstract class AttributeValueRetrievalHelper {
 
   public Date getDate(int index) {
     Object value = getValue(index);
-    
+
     if (value == null) {
       return null;
     }
-    
-    if (value instanceof Date){
+
+    if (value instanceof Date) {
       return (Date) value;
-    }
-    else if (value instanceof Timestamp) {
+    } else if (value instanceof Timestamp) {
       return new Date(((Timestamp) value).getTime());
-    }
-    else if (value instanceof Time) {
+    } else if (value instanceof Time) {
       return new Date(((Time) value).getTime());
-    }
-    else {
+    } else {
       return null;
-//      throw new VerdictDBTypeException("Could not obtain Date from: " + value);
+      //      throw new VerdictDBTypeException("Could not obtain Date from: " + value);
     }
   }
-  
+
   public Date getDate(String label) {
     int index = getIndexOf(label);
     return getDate(index);
   }
-  
 
   public byte getByte(int index) {
     Object value = getValue(index);
-    
+
     if (value == null) {
       return 0;
     }
     if (value instanceof String) {
       String v = value.toString();
-      if (v.equals("t")||v.equals("true")) {
+      if (v.equals("t") || v.equals("true")) {
         return 1;
-      } else if (v.equals("f")||v.equals("false")) {
+      } else if (v.equals("f") || v.equals("false")) {
         return 0;
       }
     }
-    
+
     return (byte) TypeCasting.toByte(value);
   }
 
@@ -219,24 +222,21 @@ public abstract class AttributeValueRetrievalHelper {
 
   public Timestamp getTimestamp(int index) {
     Object value = getValue(index);
-    
+
     if (value == null) {
       return null;
     }
-    if (value instanceof Date){
+    if (value instanceof Date) {
       return new Timestamp(((Date) value).getTime());
-    }
-    else if (value instanceof Time) {
+    } else if (value instanceof Time) {
       return new Timestamp(((Time) value).getTime());
-    }
-    else if (value instanceof Timestamp) {
+    } else if (value instanceof Timestamp) {
       return (Timestamp) value;
-    }
-    else {
+    } else {
       return null;
     }
   }
-  
+
   public Timestamp getTimestamp(String label) {
     int index = getIndexOf(label);
     return getTimestamp(index);
@@ -249,9 +249,9 @@ public abstract class AttributeValueRetrievalHelper {
     }
     if (value instanceof String) {
       String v = value.toString();
-      if (v.equals("t")||v.equals("true")) {
+      if (v.equals("t") || v.equals("true")) {
         return 1;
-      } else if (v.equals("f")||v.equals("false")) {
+      } else if (v.equals("f") || v.equals("false")) {
         return 0;
       }
     }
@@ -298,16 +298,13 @@ public abstract class AttributeValueRetrievalHelper {
     if (value == null) {
       return null;
     }
-    if (value instanceof Date){
+    if (value instanceof Date) {
       return new Time(((Date) value).getTime());
-    }
-    else if (value instanceof Time) {
+    } else if (value instanceof Time) {
       return (Time) value;
-    }
-    else if (value instanceof Timestamp) {
+    } else if (value instanceof Timestamp) {
       return new Time(((Timestamp) value).getTime());
-    }
-    else {
+    } else {
       return null;
     }
   }
@@ -344,7 +341,7 @@ public abstract class AttributeValueRetrievalHelper {
       byte[] a = {};
       return new ByteArrayInputStream(a);
     }
-    if (value instanceof byte[]){
+    if (value instanceof byte[]) {
       ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream((byte[]) value);
       return byteArrayInputStream;
     }
@@ -444,5 +441,4 @@ public abstract class AttributeValueRetrievalHelper {
     int index = getIndexOf(label);
     return getSQLXML(index);
   }
-
 }
