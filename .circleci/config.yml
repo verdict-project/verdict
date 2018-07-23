@@ -199,7 +199,6 @@ jobs:
         - image: circleci/python:3.6.1
       working_directory: ~/repo
       steps:
-        - run: apt-get update; apt-get install -y git
         - checkout
         # Download and cache dependencies
         - restore_cache:
@@ -212,7 +211,7 @@ jobs:
             command: |
               python3 -m venv venv
               . venv/bin/activate
-              pip install -r requirements.txt
+              pip install --upgrade pip
               pip install coverage codecov
         - save_cache:
             paths:
@@ -223,8 +222,8 @@ jobs:
             name: run tests
             command: |
               . venv/bin/activate
-              coverage run ./manage.py test accounts lists
               codecov
+              codecov --token=9cf48c61-07ed-4a14-9eed-f7129664ee79
         - store_artifacts:
             path: test-reports
             destination: test-reports
