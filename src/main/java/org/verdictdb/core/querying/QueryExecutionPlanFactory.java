@@ -21,7 +21,8 @@ public class QueryExecutionPlanFactory {
   public static QueryExecutionPlan create(
       String scratchpadSchemaName,
       ScrambleMetaSet scrambleMeta) {
-    QueryExecutionPlan queryExecutionPlan = create(scratchpadSchemaName);
+    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan();
+    queryExecutionPlan.idCreator = new TempIdCreatorInScratchpadSchema(scratchpadSchemaName);
     queryExecutionPlan.scrambleMeta = scrambleMeta;
     return queryExecutionPlan;
   }
@@ -30,7 +31,9 @@ public class QueryExecutionPlanFactory {
       String scratchpadSchemaName,
       ScrambleMetaSet scrambleMeta,
       SelectQuery query) throws VerdictDBException {
-    QueryExecutionPlan queryExecutionPlan = create(scratchpadSchemaName, scrambleMeta);
+    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan();
+    queryExecutionPlan.idCreator = new TempIdCreatorInScratchpadSchema(scratchpadSchemaName);
+    queryExecutionPlan.scrambleMeta = scrambleMeta;
     queryExecutionPlan.root = SelectAllExecutionNode.create(queryExecutionPlan.idCreator, query);
     return queryExecutionPlan;
   }
