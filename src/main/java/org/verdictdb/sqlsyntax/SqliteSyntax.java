@@ -11,7 +11,11 @@ public class SqliteSyntax extends SqlSyntax {
   @Override
   public void dropTable(String schema, String tablename) {
     // TODO Auto-generated method stub
-
+  }
+  
+  @Override
+  public String getFallbackDefaultSchema() {
+    return "main";
   }
 
   @Override
