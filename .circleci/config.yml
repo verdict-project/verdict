@@ -84,6 +84,7 @@ jobs:
           POSTGRES_DB: test
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: ""
+      - image: circleci/python:3.6.1
     working_directory: ~/repo
     environment:
       # Customize the JVM maximum heap limit
@@ -103,6 +104,20 @@ jobs:
       - run: git clone git@github.com:verdictdb/verdictdb-private-resources.git
       # Now build and test
       - run: mvn -B test 2> /dev/null
+      # Setup and report code coverage
+      - run:
+          name: install codecov dependencies
+          command: |
+            python3 -m venv env
+            . venv/bin/activate
+            pip install -r requirements.txt
+            pip install coverage codecov
+      - run:
+          name: run codecov
+          command: |
+            . venv/bin/activate
+            coverage run ./manage.py test accounts lists
+            codecov
       - save_cache:
           paths:
             - ~/.m2
