@@ -147,7 +147,10 @@ public class JdbcConnection implements DbmsConnection {
     }
     // if there anything remaining, add it as a separate sql
     if (beginConstructed.length() > 0) {
-      splitted.add(beginConstructed.toString());
+      String s = beginConstructed.toString();
+      if (s.trim().length() > 0) {
+        splitted.add(s);
+      }
     }
     
     return splitted;
