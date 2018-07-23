@@ -12,6 +12,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 
+import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -30,7 +31,8 @@ public class JdbcResultSetMetaDataTestForRedshift {
 
   private static final String REDSHIFT_DATABASE = "dev";
 
-  private static final String REDSHIFT_SCHEMA = "public";
+  private static final String REDSHIFT_SCHEMA = 
+      "resultset_metadata_test_" + RandomStringUtils.randomNumeric(3);
   
   private static final String REDSHIFT_HOST;
 
