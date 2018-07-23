@@ -246,6 +246,14 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
     return new ColumnOp("notlike", Arrays.asList(column1, column2));
   }
 
+  public static ColumnOp rlike(UnnamedColumn column1, UnnamedColumn column2) {
+    return new ColumnOp("rlike", Arrays.asList(column1, column2));
+  }
+
+  public static ColumnOp notrlike(UnnamedColumn column1, UnnamedColumn column2) {
+    return new ColumnOp("notrlike", Arrays.asList(column1, column2));
+  }
+
   public static ColumnOp exists(UnnamedColumn column) {
     return new ColumnOp("exists", column);
   }

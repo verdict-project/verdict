@@ -1,11 +1,5 @@
 package org.verdictdb.sqlreader;
 
-import static org.junit.Assert.fail;
-
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-
 import org.apache.spark.sql.SparkSession;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -14,6 +8,12 @@ import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.connection.SparkConnection;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.sqlsyntax.SparkSyntax;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+
+import static org.junit.Assert.fail;
 
 public class GroupByNumberTest {
 
@@ -44,32 +44,31 @@ public class GroupByNumberTest {
   @BeforeClass
   public static void setupDatabases() throws VerdictDBDbmsException, SQLException {
     // Impala
-    String connectionString =
-        String.format("jdbc:impala://%s/%s", IMPALA_HOST, IMPALA_DATABASE);
+    String connectionString = String.format("jdbc:impala://%s/%s", IMPALA_HOST, IMPALA_DATABASE);
     impalaConn = DriverManager.getConnection(connectionString, IMPALA_UESR, IMPALA_PASSWORD);
     impalaConnection = JdbcConnection.create(impalaConn);
 
     impalaConnection.execute(String.format("drop table if exists %s", IMPALA_TABLE_NAME));
-    impalaConnection.execute(String.format(
-        "CREATE TABLE %s ("
-            + "tinyintCol    TINYINT, "
-            + "boolCol       BOOLEAN)",
+    impalaConnection.execute(
+        String.format(
+            "CREATE TABLE %s (" + "tinyintCol    TINYINT, " + "boolCol       BOOLEAN)",
             IMPALA_TABLE_NAME));
 
     // Spark
-    spark = SparkSession.builder().appName("groupbyNumberTest")
-        .master("local")
-        .config("hive.groupby.orderby.position.alias", "true")
-        .config("hive.groupby.position.alias", "true")
-        .enableHiveSupport()
-        .getOrCreate();
+    spark =
+        SparkSession.builder()
+            .appName("groupbyNumberTest")
+            .master("local")
+            .config("hive.groupby.orderby.position.alias", "true")
+            .config("hive.groupby.position.alias", "true")
+            .enableHiveSupport()
+            .getOrCreate();
     sparkConnection = new SparkConnection(spark, new SparkSyntax());
 
     sparkConnection.execute(String.format("drop table if exists %s", SPARK_TABLE_NAME));
-    sparkConnection.execute(String.format(
-        "CREATE TABLE %s ("
-            + "tinyintCol    TINYINT, "
-            + "boolCol       BOOLEAN)",
+    sparkConnection.execute(
+        String.format(
+            "CREATE TABLE %s (" + "tinyintCol    TINYINT, " + "boolCol       BOOLEAN)",
             SPARK_TABLE_NAME));
   }
 
@@ -102,5 +101,4 @@ public class GroupByNumberTest {
       }
     }
   }
-
 }

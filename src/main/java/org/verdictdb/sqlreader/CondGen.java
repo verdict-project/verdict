@@ -46,6 +46,28 @@ public class CondGen extends VerdictSQLParserBaseVisitor<UnnamedColumn> {
   }
 
   @Override
+  public UnnamedColumn visitComp_pred_expr_predicate(VerdictSQLParser.Comp_pred_expr_predicateContext ctx) {
+    ExpressionGen g = new ExpressionGen();
+    UnnamedColumn e1 = visit(ctx.predicate());
+    UnnamedColumn e2 = g.visit(ctx.expression());
+    if (ctx.comparison_operator().getText().equals("=")) {
+      return new ColumnOp("equal", Arrays.asList(e1, e2));
+    } else if (ctx.comparison_operator().getText().equals(">")) {
+      return new ColumnOp("greater", Arrays.asList(e1, e2));
+    } else if (ctx.comparison_operator().getText().equals(">=")) {
+      return new ColumnOp("greaterequal", Arrays.asList(e1, e2));
+    } else if (ctx.comparison_operator().getText().equals("<")) {
+      return new ColumnOp("less", Arrays.asList(e1, e2));
+    } else if (ctx.comparison_operator().getText().equals("<=")) {
+      return new ColumnOp("lessequal", Arrays.asList(e1, e2));
+    } else if (ctx.comparison_operator().getText().equals("<>") || ctx.comparison_operator().getText().equals("!=")) {
+      return new ColumnOp("notequal", Arrays.asList(e1, e2));
+    } else {
+      return null;
+    }
+  }
+
+  @Override
   public UnnamedColumn visitSearch_condition_or(VerdictSQLParser.Search_condition_orContext ctx) {
     UnnamedColumn concat = null;
     for (VerdictSQLParser.Search_condition_notContext nctx : ctx.search_condition_not()) {
@@ -153,8 +175,14 @@ public class CondGen extends VerdictSQLParserBaseVisitor<UnnamedColumn> {
     UnnamedColumn left = g.visit(ctx.expression(0));
     UnnamedColumn right = g.visit(ctx.expression(1));
     boolean not = (ctx.NOT() != null) ? true : false;
-    return not ? ColumnOp.notlike(left, right) :
-        ColumnOp.like(left, right);
+    if (ctx.LIKE() != null) {
+      return not ? ColumnOp.notlike(left, right) :
+          ColumnOp.like(left, right);
+    } else if (ctx.RLIKE() != null) {
+      return not ? ColumnOp.notrlike(left, right) :
+          ColumnOp.rlike(left, right);
+    }
+    return null;
   }
   
   @Override
