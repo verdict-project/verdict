@@ -67,6 +67,20 @@ jobs:
             - ~/.m2
           key: verdict-dependencies-{{ checksum "pom.xml" }}
 
+  update-codecov:
+    docker:
+      # specify the version you desire here
+      - image: maven:3.5.4-jdk-8-slim
+    working_directory: ~/repo
+    environment:
+      # Customize the JVM maximum heap limit
+      MAVEN_OPTS: -Xmx3200m
+    steps:
+      - run: apt-get update; apt-get install -y git
+      - checkout
+      - run: mvn cobertura:cobertura
+      - run: bash <(curl -s https://codecov.io/bash) -t 9cf48c61-07ed-4a14-9eed-f7129664ee79
+
   build-jdk8:
     docker:
       # specify the version you desire here
@@ -107,8 +121,8 @@ jobs:
           paths:
             - ~/.m2
           key: verdict-dependencies-{{ checksum "pom.xml" }}
-      - run: mvn cobertura:cobertura
-      - run: bash <(curl -s https://codecov.io/bash) -t 9cf48c61-07ed-4a14-9eed-f7129664ee79
+          #- run: mvn cobertura:cobertura
+          #- run: bash <(curl -s https://codecov.io/bash) -t 9cf48c61-07ed-4a14-9eed-f7129664ee79
 
   build-spark:
       docker:
@@ -202,5 +216,6 @@ workflows:
       - build-jdk8
       - build-spark
       - build-impala-redshift
+      - update-codecov
       # - maven-version-check
       # - docker-env-check
