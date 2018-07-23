@@ -194,7 +194,7 @@ jobs:
               - ~/.m2
             key: verdict-dependencies-{{ checksum "pom.xml" }}
 
-    build-codecov:
+  build-codecov:
       docker:
         - image: python:3.6.1
 
