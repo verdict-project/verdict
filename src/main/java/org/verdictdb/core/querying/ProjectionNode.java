@@ -22,7 +22,7 @@ public class ProjectionNode extends CreateTableAsSelectNode {
     node.setSelectQuery(query);
     return node;
   }
-  
+
   @Override
   public SqlConvertible createQuery(List<ExecutionInfoToken> tokens) throws VerdictDBException {
     return super.createQuery(tokens);
