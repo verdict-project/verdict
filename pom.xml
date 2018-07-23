@@ -25,6 +25,7 @@
     <maven.javadoc.version>2.10.4</maven.javadoc.version>
     <spark.version>2.1.0</spark.version>
     <skipTests>false</skipTests>
+    <verdictdb-packaging>false</verdictdb-packaging>
   </properties>
 
   <repositories>
@@ -306,7 +307,7 @@
       <activation>
         <activeByDefault>true</activeByDefault>
         <property>
-          <name>packaging</name>
+          <name>verdictdb-packaging</name>
           <value>!true</value>
         </property>
       </activation>
@@ -357,7 +358,7 @@
       <id>packaging-stage</id>
       <activation>
         <property>
-          <name>packaging</name>
+          <name>verdictdb-packaging</name>
           <value>true</value>
         </property>
       </activation>
