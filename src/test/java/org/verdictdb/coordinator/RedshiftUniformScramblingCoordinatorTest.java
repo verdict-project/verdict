@@ -85,7 +85,7 @@ public class RedshiftUniformScramblingCoordinatorTest {
 
   public void testScramblingCoordinator(String tablename) throws VerdictDBException {
     JdbcConnection conn = JdbcConnection.create(redshiftConn);
-    //    conn.setOutputDebugMessage(true);
+    conn.setOutputDebugMessage(true);
 
     String scrambleSchema = REDSHIFT_SCHEMA;
     String scratchpadSchema = REDSHIFT_SCHEMA;
@@ -103,11 +103,11 @@ public class RedshiftUniformScramblingCoordinatorTest {
     // tests
     List<Pair<String, String>> originalColumns = conn.getColumns(REDSHIFT_SCHEMA, originalTable);
     List<Pair<String, String>> columns = conn.getColumns(REDSHIFT_SCHEMA, scrambledTable);
-    assertEquals(originalColumns.size() + 2, columns.size());
     // prints added for debugging
     for (int i = 0; i < originalColumns.size(); i++) {
       System.out.println(originalColumns.get(i).getLeft() + " : " + columns.get(i).getLeft());
     }
+    assertEquals(originalColumns.size() + 2, columns.size());
     for (int i = 0; i < originalColumns.size(); i++) {
       assertEquals(originalColumns.get(i).getLeft(), columns.get(i).getLeft());
       assertEquals(originalColumns.get(i).getRight(), columns.get(i).getRight());
