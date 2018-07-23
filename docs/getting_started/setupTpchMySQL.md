@@ -133,7 +133,7 @@ CREATE TABLE IF NOT EXISTS `tpch1g`.`lineitem`(
 ### 4. Load data into tables
 After creating tables, we can load data into tables. Suppose you stored your data in '/path/resources'. Then you can use following
 queries to load.
-```
+```sql
 LOAD DATA LOCAL INFILE '/path/resources/region/region.tbl'     INTO TABLE `tpch1g`.`region`     FIELDS TERMINATED BY '|';
 LOAD DATA LOCAL INFILE '/path/resources/nation/nation.tbl'     INTO TABLE `tpch1g`.`nation`     FIELDS TERMINATED BY '|';
 LOAD DATA LOCAL INFILE '/path/resources/customer/customer.tbl' INTO TABLE `tpch1g`.`customer`   FIELDS TERMINATED BY '|';
