@@ -39,7 +39,8 @@ public class JdbcResultSetMetaDataTestForImpala {
 
   private static final String IMPALA_HOST;
 
-  private static final String IMPALA_DATABASE = "default_" + RandomStringUtils.randomNumeric(3);;
+  private static final String IMPALA_DATABASE = 
+      "metadata_test_" + RandomStringUtils.randomNumeric(3);;
 
   private static final String IMPALA_UESR = "";
 
@@ -54,12 +55,13 @@ public class JdbcResultSetMetaDataTestForImpala {
   @BeforeClass
   public static void setupMySqlDatabase() throws SQLException, VerdictDBDbmsException {
     String connectionString =
-        String.format("jdbc:impala://%s:21050/%s", IMPALA_HOST, IMPALA_DATABASE);
+        String.format("jdbc:impala://%s", IMPALA_HOST);
     conn = DriverManager.getConnection(connectionString, IMPALA_UESR, IMPALA_PASSWORD);
     dbmsConn = JdbcConnection.create(conn);
 
     stmt = conn.createStatement();
     stmt.execute(String.format("DROP SCHEMA IF EXISTS `%s` CASCADE", IMPALA_DATABASE));
+    stmt.execute(String.format("CREATE SCHEMA IF NOT EXISTS `%s`", IMPALA_DATABASE));
     stmt.execute(String.format(
         "CREATE TABLE `%s`.`%s` ("
             + "tinyintCol    TINYINT, "
@@ -180,6 +182,7 @@ public class JdbcResultSetMetaDataTestForImpala {
 
     assertEquals("abc", ourResult.getString(9));            // string
     assertEquals(Timestamp.valueOf("2018-12-31 00:00:01"), ourResult.getTimestamp(10));  // timestamp
+    assertEquals("2018-12-31 00:00:01.0", ourResult.getString(10));  // timestamp
 
     // null values
     ourResult.next();
@@ -226,7 +229,7 @@ public class JdbcResultSetMetaDataTestForImpala {
     assertEquals(0, ourResult.getLong(8), 1e-6);          // double
 
     assertEquals(null, ourResult.getString(9));            // string
-    assertEquals(null, ourResult.getTimestamp(10));  // timestamp
+    assertEquals(null, ourResult.getTimestamp(10));        // timestamp
 
     ourResult.close();
   }

@@ -60,7 +60,7 @@ public class ImpalaTpchSelectQueryCoordinatorTest {
   @BeforeClass
   public static void setupImpalaDatabase() throws SQLException, VerdictDBException {
     String impalaConnectionString =
-        String.format("jdbc:impala://%s:21050", IMPALA_HOST);
+        String.format("jdbc:impala://%s", IMPALA_HOST);
     impalaConn =
         DatabaseConnectionHelpers.setupImpala(
             impalaConnectionString, IMPALA_UESR, IMPALA_PASSWORD, IMPALA_DATABASE);
@@ -81,8 +81,8 @@ public class ImpalaTpchSelectQueryCoordinatorTest {
         scrambler.scramble(IMPALA_DATABASE, "orders", IMPALA_DATABASE, "orders_scrambled", "uniform");
     meta.addScrambleMeta(meta1);
     meta.addScrambleMeta(meta2);
-    stmt.execute("drop schema if exists `verdictdb_temp` CASCADE");
-    stmt.execute("create schema if not exists `verdictdb_temp`");
+//    stmt.execute("drop schema if exists `verdictdb_temp` CASCADE");
+//    stmt.execute("create schema if not exists `verdictdb_temp`");
   }
 
   @AfterClass
@@ -95,12 +95,14 @@ public class ImpalaTpchSelectQueryCoordinatorTest {
 
   Pair<ExecutionResultReader, ResultSet> getAnswerPair(int queryNum)
       throws VerdictDBException, SQLException, IOException {
+    
     String filename = "query"+queryNum+"_impala"+".sql";
     File file = new File("src/test/resources/tpch_test_query/"+filename);
     String sql = Files.toString(file, Charsets.UTF_8);
     DbmsConnection dbmsconn = new CachedDbmsConnection(
         new JdbcConnection(impalaConn, new ImpalaSyntax()));
     dbmsconn.setDefaultSchema(IMPALA_DATABASE);
+    
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     coordinator.setScrambleMetaSet(meta);
     ExecutionResultReader reader = coordinator.process(sql);
@@ -124,13 +126,13 @@ public class ImpalaTpchSelectQueryCoordinatorTest {
           assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
           assertEquals(rs.getString(2), dbmsQueryResult.getString(1));
           assertEquals(rs.getLong(3), dbmsQueryResult.getLong(2));
-          assertEquals(rs.getDouble(4), dbmsQueryResult.getDouble(3), 1e-5);
-          assertEquals(rs.getDouble(5), dbmsQueryResult.getDouble(4), 1e-5);
-          assertEquals(rs.getDouble(6), dbmsQueryResult.getDouble(5), 1e-5);
-          assertEquals(rs.getDouble(7), dbmsQueryResult.getDouble(6), 1e-5);
-          assertEquals(rs.getDouble(8), dbmsQueryResult.getDouble(7), 1e-5);
-          assertEquals(rs.getDouble(9), dbmsQueryResult.getDouble(8), 1e-5);
-          assertEquals(rs.getDouble(10), dbmsQueryResult.getDouble(9), 1e-5);
+          assertEquals(rs.getDouble(4), dbmsQueryResult.getDouble(3), 1e-2);
+          assertEquals(rs.getDouble(5), dbmsQueryResult.getDouble(4), 1e-2);
+          assertEquals(rs.getDouble(6), dbmsQueryResult.getDouble(5), 1e-2);
+          assertEquals(rs.getDouble(7), dbmsQueryResult.getDouble(6), 1e-2);
+          assertEquals(rs.getDouble(8), dbmsQueryResult.getDouble(7), 1e-2);
+          assertEquals(rs.getDouble(9), dbmsQueryResult.getDouble(8), 1e-2);
+          assertEquals(rs.getDouble(10), dbmsQueryResult.getDouble(9), 1e-2);
         }
       }
     }
@@ -149,9 +151,9 @@ public class ImpalaTpchSelectQueryCoordinatorTest {
       if (cnt == 12) {
         while (rs.next()) {
           dbmsQueryResult.next();
-          assertEquals(rs.getDouble(1), dbmsQueryResult.getDouble(0), 1e-5);
-          assertEquals(rs.getDouble(2), dbmsQueryResult.getDouble(1), 1e-5);
-          assertEquals(rs.getString(3), dbmsQueryResult.getString(2));
+          assertEquals(rs.getDouble(1), dbmsQueryResult.getDouble(0), 1e-2);
+          assertEquals(rs.getDouble(2), dbmsQueryResult.getDouble(1), 1e-2);
+          assertEquals(rs.getTimestamp(3), dbmsQueryResult.getTimestamp(2));
           assertEquals(rs.getString(4), dbmsQueryResult.getString(3));
         }
       }
@@ -396,7 +398,7 @@ public class ImpalaTpchSelectQueryCoordinatorTest {
       if (cnt == 10) {
         while (rs.next()) {
           dbmsQueryResult.next();
-          assertEquals(rs.getDouble(1), dbmsQueryResult.getDouble(0), 1e-5);
+          assertEquals(rs.getDouble(1), dbmsQueryResult.getDouble(0), 1e-2);
         }
       }
     }
@@ -418,7 +420,7 @@ public class ImpalaTpchSelectQueryCoordinatorTest {
           assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
           assertEquals(rs.getString(2), dbmsQueryResult.getString(1));
           assertEquals(rs.getString(3), dbmsQueryResult.getString(2));
-          assertEquals(rs.getString(4), dbmsQueryResult.getString(3));
+          assertEquals(rs.getTimestamp(4), dbmsQueryResult.getTimestamp(3));
           assertEquals(rs.getString(5), dbmsQueryResult.getString(4));
           assertEquals(rs.getDouble(6), dbmsQueryResult.getDouble(5), 1e-5);
         }

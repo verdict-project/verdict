@@ -233,7 +233,7 @@ public class JdbcTpchQueryTestForAllDatabases {
   }
 
   @Test
-  public void testTpch() throws IOException, SQLException, InterruptedException {
+  public void testTpch() throws IOException, SQLException {
     ClassLoader classLoader = getClass().getClassLoader();
     String filename = "";
     switch (database) {

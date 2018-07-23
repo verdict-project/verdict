@@ -188,7 +188,7 @@ public class JdbcCommonQueryTestForAllDatabases {
 
   private static Connection setupImpala() throws SQLException, VerdictDBDbmsException {
     String connectionString =
-        String.format("jdbc:impala://%s:21050/%s", IMPALA_HOST, IMPALA_DATABASE);
+        String.format("jdbc:impala://%s/%s", IMPALA_HOST, IMPALA_DATABASE);
     Connection conn = DriverManager.getConnection(connectionString, IMPALA_USER, IMPALA_PASSWORD);
     VerdictConnection vc = new VerdictConnection(connectionString, IMPALA_USER, IMPALA_PASSWORD);
     loadDataImpala(conn);
