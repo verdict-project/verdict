@@ -140,16 +140,7 @@ public class ExecutableNodeRunner implements Runnable {
     DbmsQueryResult intermediate = null;
     if (sqlObj != null) {
       String sql = QueryToSql.convert(conn.getSyntax(), sqlObj);
-      // dongyoungy: 2018-07-22
-      // This logic executes queries separated by ';' sequentially
-      // and only returns the result from the last query.
-      // The logic is added because Impala does not seem to allow running
-      // multiple queries in a single execute via JDBC.
-      String sqls[] = sql.split(";");
-      for (int i = 0; i < sqls.length - 1; ++i) {
-        conn.execute(sqls[i]);
-      }
-      intermediate = conn.execute(sqls[sqls.length - 1]);
+      intermediate = conn.execute(sql);
     }
     ExecutionInfoToken token = node.createToken(intermediate);
 
