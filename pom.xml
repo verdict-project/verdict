@@ -368,7 +368,6 @@
       </dependencies>
     </profile>
   </profiles>
-
   <scm>
     <url>git@github.com:mozafari/verdictdb.git</url>
     <connection>git</connection>
