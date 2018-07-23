@@ -1,5 +1,6 @@
 package org.verdictdb.coordinator;
 
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -32,7 +33,8 @@ public class RedshiftUniformScramblingCoordinatorTest {
 
   private static final String REDSHIFT_DATABASE = "dev";
 
-  private static final String REDSHIFT_SCHEMA = "tpch";
+  private static final String REDSHIFT_SCHEMA = 
+      "uniform_scrambling_test" + RandomStringUtils.randomNumeric(3);
 
   private static final String REDSHIFT_USER;
 

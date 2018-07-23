@@ -31,8 +31,8 @@ public class JdbcResultSetMetaDataTestForRedshift {
 
   private static final String REDSHIFT_DATABASE = "dev";
 
-  private static final String REDSHIFT_SCHEMA = 
-      "resultset_metadata_test_" + RandomStringUtils.randomNumeric(3);
+  private static final String REDSHIFT_SCHEMA = "public";
+//      "resultset_metadata_test_" + RandomStringUtils.randomNumeric(3);
   
   private static final String REDSHIFT_HOST;
 
@@ -64,10 +64,12 @@ public class JdbcResultSetMetaDataTestForRedshift {
 
     stmt = conn.createStatement();
     stmt.execute(String.format("DROP TABLE IF EXISTS \"%s\"", TABLE_NAME));
+//    stmt.execute(String.format("DROP SCHEMA IF EXISTS \"%s\"", REDSHIFT_SCHEMA));
+//    stmt.execute(String.format("CREATE SCHEMA IF NOT EXISTS \"%s\"", REDSHIFT_SCHEMA));
 
     // create a test table
     stmt.execute(String.format(
-        "CREATE TABLE \"%s\" ("
+        "CREATE TABLE \"%s\".\"%s\" ("
             + "smallintCol   SMALLINT, "
             + "int2Col       INT2,"
             + "integerCol    INTEGER,"
@@ -98,31 +100,32 @@ public class JdbcResultSetMetaDataTestForRedshift {
             + "timestamptzwCol TIMESTAMP WITH TIME ZONE,"
             + "timestamptzCol TIMESTAMPTZ"
             + ")"
-        , TABLE_NAME));
-    stmt.execute(String.format("INSERT INTO %s VALUES (1, 1, 1, 1, 1, 1, 1, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, true, true, " +
+        , REDSHIFT_SCHEMA, TABLE_NAME));
+    stmt.execute(String.format("INSERT INTO %s.%s VALUES (1, 1, 1, 1, 1, 1, 1, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, true, true, " +
             "'1234', '1234', '1234', '1234', '1234', '1234', '1234', '1234', '2018-12-31', '2018-12-31 00:00:01', '2018-12-31 00:00:01', " +
             "'2018-12-31 00:00:01', '2018-12-31 00:00:01')",
-        TABLE_NAME));
-    stmt.execute(String.format("INSERT INTO %s VALUES (null, null, null, null, null, null, null, null, null, null, " +
+            REDSHIFT_SCHEMA, TABLE_NAME));
+    stmt.execute(String.format("INSERT INTO %s.%s VALUES (null, null, null, null, null, null, null, null, null, null, " +
             "null, null, null, null, null, null, " +
             "null, null, null, null, null, null, null, null, null, null, null, null, null)",
-        TABLE_NAME));
+            REDSHIFT_SCHEMA, TABLE_NAME));
 
-    expectedRs = stmt.executeQuery(String.format("select * from %s", TABLE_NAME));
+    expectedRs = stmt.executeQuery(String.format("select * from %s.%s", REDSHIFT_SCHEMA, TABLE_NAME));
   }
 
   @AfterClass
   public static void tearDown() throws VerdictDBDbmsException {
-    dbmsConn.execute(String.format("DROP TABLE IF EXISTS \"%s\"", TABLE_NAME));
+//    dbmsConn.execute(String.format("DROP SCHEMA IF EXISTS \"%s\"", REDSHIFT_SCHEMA));
+    dbmsConn.execute(String.format("DROP TABLE IF EXISTS \"%s\".\"%s\"", REDSHIFT_SCHEMA, TABLE_NAME));
     dbmsConn.close();
   }
 
-  @Test
+//  @Test
   public void testColumnTypes() throws VerdictDBDbmsException, SQLException {
     expectedRs.next();
     test1 = expectedRs.getTimestamp(28);
     test2 = expectedRs.getTimestamp(29);
-    String sql = String.format("select * from %s", TABLE_NAME);
+    String sql = String.format("select * from %s.%s", REDSHIFT_SCHEMA, TABLE_NAME);
     VerdictSingleResult verdictResult = new VerdictSingleResult(dbmsConn.execute(sql));
     ResultSet ourResult = new VerdictResultSet(verdictResult);
     ResultSetMetaData ourMetaData = ourResult.getMetaData();
