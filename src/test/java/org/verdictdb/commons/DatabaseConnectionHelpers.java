@@ -467,8 +467,10 @@ public class DatabaseConnectionHelpers {
   public static Connection setupRedshift(
       String connectionString, String user, String password, String schema)
       throws VerdictDBDbmsException, SQLException, IOException {
+    
     Connection conn = DriverManager.getConnection(connectionString, user, password);
-    DbmsConnection dbmsConn = new JdbcConnection(conn, new RedshiftSyntax());
+    JdbcConnection dbmsConn = new JdbcConnection(conn, new RedshiftSyntax());
+//    dbmsConn.setOutputDebugMessage(true);
 
     dbmsConn.execute(String.format("DROP SCHEMA IF EXISTS \"%s\" CASCADE", schema));
     dbmsConn.execute(String.format("CREATE SCHEMA IF NOT EXISTS \"%s\"", schema));

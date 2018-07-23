@@ -60,7 +60,7 @@ public class ImpalaTpchSelectQueryCoordinatorTest {
   @BeforeClass
   public static void setupImpalaDatabase() throws SQLException, VerdictDBException {
     String impalaConnectionString =
-        String.format("jdbc:impala://%s:21050", IMPALA_HOST);
+        String.format("jdbc:impala://%s", IMPALA_HOST);
     impalaConn =
         DatabaseConnectionHelpers.setupImpala(
             impalaConnectionString, IMPALA_UESR, IMPALA_PASSWORD, IMPALA_DATABASE);

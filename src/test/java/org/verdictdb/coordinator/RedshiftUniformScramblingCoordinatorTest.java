@@ -60,7 +60,8 @@ public class RedshiftUniformScramblingCoordinatorTest {
 
   @Test
   public void sanityCheck() throws VerdictDBDbmsException {
-    DbmsConnection conn = JdbcConnection.create(redshiftConn);
+    JdbcConnection conn = JdbcConnection.create(redshiftConn);
+//    conn.setOutputDebugMessage(true);
     DbmsQueryResult result = conn.execute(String.format("select * from \"%s\".\"lineitem\"", REDSHIFT_SCHEMA));
     int rowCount = 0;
     while (result.next()) {
@@ -80,8 +81,9 @@ public class RedshiftUniformScramblingCoordinatorTest {
   }
 
   public void testScramblingCoordinator(String tablename) throws VerdictDBException {
-    DbmsConnection conn = JdbcConnection.create(redshiftConn);
-
+    JdbcConnection conn = JdbcConnection.create(redshiftConn);
+//    conn.setOutputDebugMessage(true);
+    
     String scrambleSchema = REDSHIFT_SCHEMA;
     String scratchpadSchema = REDSHIFT_SCHEMA;
     long blockSize = 100;
