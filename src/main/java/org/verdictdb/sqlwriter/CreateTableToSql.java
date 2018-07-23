@@ -2,16 +2,21 @@ package org.verdictdb.sqlwriter;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.verdictdb.core.sqlobject.AsteriskColumn;
+import org.verdictdb.core.sqlobject.BaseTable;
 import org.verdictdb.core.sqlobject.CreateScrambledTableQuery;
 import org.verdictdb.core.sqlobject.CreateTableAsSelectQuery;
 import org.verdictdb.core.sqlobject.CreateTableDefinitionQuery;
 import org.verdictdb.core.sqlobject.CreateTableQuery;
+import org.verdictdb.core.sqlobject.DropTableQuery;
 import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBTypeException;
 import org.verdictdb.sqlsyntax.HiveSyntax;
+import org.verdictdb.sqlsyntax.ImpalaSyntax;
 import org.verdictdb.sqlsyntax.PostgresqlSyntax;
 import org.verdictdb.sqlsyntax.SparkSyntax;
 import org.verdictdb.sqlsyntax.SqlSyntax;
@@ -33,15 +38,65 @@ public class CreateTableToSql {
     } else if (query instanceof CreateTableDefinitionQuery) {
       sql = createTableToSql((CreateTableDefinitionQuery) query);
     } else if (query instanceof CreateScrambledTableQuery) {
-      sql = (syntax instanceof PostgresqlSyntax) ? createPartitionTableToSql((CreateScrambledTableQuery) query) :
-        createAsSelectQueryToSql(new CreateTableAsSelectQuery((CreateScrambledTableQuery) query));
+      if (syntax instanceof PostgresqlSyntax) {
+        sql = createPostgresqlPartitionTableToSql((CreateScrambledTableQuery) query);
+      } else if (syntax instanceof ImpalaSyntax) {
+        sql = createImpalaPartitionTableToSql((CreateScrambledTableQuery) query);
+      } else {
+        sql = createAsSelectQueryToSql(new CreateTableAsSelectQuery((CreateScrambledTableQuery) query));
+      }
     } else {
       throw new VerdictDBTypeException(query);
     }
     return sql;
   }
 
-  private String createPartitionTableToSql(CreateScrambledTableQuery query) throws VerdictDBException {
+  private String createImpalaPartitionTableToSql(CreateScrambledTableQuery query) throws VerdictDBException {
+    
+    // 1. This method should only get called when the target DB is Impala.
+    // 2. Currently, Impala's create-table-as-select has a bug; dynamic partitioning is faulty
+    // when used in conjunction with rand();
+    if (!(syntax instanceof ImpalaSyntax)) {
+      throw new VerdictDBException("Target database must be Impala.");
+    }
+    
+    StringBuilder sql = new StringBuilder();
+    
+    String schemaName = query.getSchemaName();
+    String tableName = query.getTableName();
+    SelectQuery select = query.getSelect();
+    
+    // this table will be created and dropped at the end
+    int randomNum = ThreadLocalRandom.current().nextInt(0, 10000);
+    String tempTableName = "verdictdb_scrambling_temp_" + randomNum;
+    
+    // create a non-partitioned temp table as a select
+    CreateTableAsSelectQuery tempCreate = new CreateTableAsSelectQuery(schemaName, tempTableName, select);
+    sql.append(QueryToSql.convert(syntax, tempCreate));
+    sql.append(";");
+    
+    // insert the temp table into a partitioned table.
+    String aliasName = "t";
+    SelectQuery selectAllFromTemp = SelectQuery.create(
+        new AsteriskColumn(), 
+        new BaseTable(schemaName, tempTableName, aliasName));
+    CreateTableAsSelectQuery insert = 
+        new CreateTableAsSelectQuery(schemaName, tableName, selectAllFromTemp);
+    for (String col : query.getPartitionColumns()) {
+      insert.addPartitionColumn(col);
+    }
+    sql.append(QueryToSql.convert(syntax, insert));
+    sql.append(";");
+    
+    // drop the temp table
+    DropTableQuery drop = new DropTableQuery(schemaName, tempTableName);
+    sql.append(QueryToSql.convert(syntax, drop));
+    sql.append(";");
+    
+    return sql.toString();
+  }
+
+  private String createPostgresqlPartitionTableToSql(CreateScrambledTableQuery query) throws VerdictDBException {
 
     // 1. This method should only get called when the target DB is postgres.
     // 2. Currently, partition tables in postgres must have a single partition column as we use 'partition by list'.
@@ -84,21 +139,20 @@ public class CreateTableToSql {
     String partitionColumn = query.getPartitionColumns().get(0);
     sql.append(quoteName(partitionColumn));
     sql.append(")");
-    if (syntax instanceof PostgresqlSyntax) {
-      sql.append("; ");
-      // create child partition tables for postgres
-      for (int blockNum = 0; blockNum < blockCount; ++blockNum) {
-        sql.append("create table ");
-        if (query.isIfNotExists()) {
-          sql.append("if not exists ");
-        }
-        sql.append(quoteName(schemaName));
-        sql.append(".");
-        sql.append(quoteName(String.format("%s" + PostgresqlSyntax.CHILD_PARTITION_TABLE_SUFFIX,
-            tableName, blockNum)));
-        sql.append(String.format(" partition of %s.%s for values in (%d); ",
-            quoteName(schemaName), quoteName(tableName), blockNum));
+    sql.append("; ")
+    ;
+    // create child partition tables for postgres
+    for (int blockNum = 0; blockNum < blockCount; ++blockNum) {
+      sql.append("create table ");
+      if (query.isIfNotExists()) {
+        sql.append("if not exists ");
       }
+      sql.append(quoteName(schemaName));
+      sql.append(".");
+      sql.append(quoteName(String.format("%s" + PostgresqlSyntax.CHILD_PARTITION_TABLE_SUFFIX,
+          tableName, blockNum)));
+      sql.append(String.format(" partition of %s.%s for values in (%d); ",
+          quoteName(schemaName), quoteName(tableName), blockNum));
     }
 
     sql.append("insert into ");

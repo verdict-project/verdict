@@ -10,6 +10,8 @@ import org.verdictdb.exception.VerdictDBException;
 
 public class ProjectionNode extends CreateTableAsSelectNode {
   
+  private static final long serialVersionUID = 3168447303333633662L;
+
   public ProjectionNode(IdCreator namer, SelectQuery query) {
     super(namer, query);
   }
@@ -20,7 +22,7 @@ public class ProjectionNode extends CreateTableAsSelectNode {
     node.setSelectQuery(query);
     return node;
   }
-  
+
   @Override
   public SqlConvertible createQuery(List<ExecutionInfoToken> tokens) throws VerdictDBException {
     return super.createQuery(tokens);

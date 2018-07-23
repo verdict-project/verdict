@@ -5,6 +5,15 @@ import org.verdictdb.sqlsyntax.SqlSyntax;
 
 public interface DbmsConnection extends MetaDataProvider {
   
+  /**
+   * Executes a query (or queries). If the result exists, return it.
+   * 
+   * If a query includes multiple queries separated by semicolons, issue them separately in order. 
+   * 
+   * @param query
+   * @return
+   * @throws VerdictDBDbmsException
+   */
   public DbmsQueryResult execute(String query) throws VerdictDBDbmsException;
   
 //  /**

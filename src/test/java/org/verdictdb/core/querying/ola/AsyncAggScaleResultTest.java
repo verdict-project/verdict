@@ -107,7 +107,7 @@ public class AsyncAggScaleResultTest {
     Dimension d1 = new Dimension("originalSchema", "originalTable", 0, 0);
     assertEquals(
         new HyperTableCube(Arrays.asList(d1)),
-        ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getMeta().getCubes().get(0));
+        ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getAggMeta().getCubes().get(0));
     ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
 
 
@@ -137,7 +137,7 @@ public class AsyncAggScaleResultTest {
     Dimension d1 = new Dimension("originalSchema", "originalTable", 0, 0);
     assertEquals(
         new HyperTableCube(Arrays.asList(d1)),
-        ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getMeta().getCubes().get(0));
+        ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getAggMeta().getCubes().get(0));
     ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
 
 
@@ -167,7 +167,7 @@ public class AsyncAggScaleResultTest {
     Dimension d1 = new Dimension("originalSchema", "originalTable", 0, 0);
     assertEquals(
         new HyperTableCube(Arrays.asList(d1)),
-        ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getMeta().getCubes().get(0));
+        ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getAggMeta().getCubes().get(0));
     ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
 
 
@@ -197,7 +197,7 @@ public class AsyncAggScaleResultTest {
     Dimension d1 = new Dimension("originalSchema", "originalTable", 0, 0);
     assertEquals(
         new HyperTableCube(Arrays.asList(d1)),
-        ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getMeta().getCubes().get(0));
+        ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getAggMeta().getCubes().get(0));
     ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
 
 
@@ -228,7 +228,7 @@ public class AsyncAggScaleResultTest {
     Dimension d1 = new Dimension("originalSchema", "originalTable", 0, 0);
     assertEquals(
         new HyperTableCube(Arrays.asList(d1)),
-        ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getMeta().getCubes().get(0));
+        ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getAggMeta().getCubes().get(0));
     ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
 
 
@@ -259,7 +259,7 @@ public class AsyncAggScaleResultTest {
     Dimension d1 = new Dimension("originalSchema", "originalTable", 0, 0);
     assertEquals(
         new HyperTableCube(Arrays.asList(d1)),
-        ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getMeta().getCubes().get(0));
+        ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getAggMeta().getCubes().get(0));
     ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
 
 
@@ -290,7 +290,7 @@ public class AsyncAggScaleResultTest {
     Dimension d1 = new Dimension("originalSchema", "originalTable", 0, 0);
     assertEquals(
         new HyperTableCube(Arrays.asList(d1)),
-        ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getMeta().getCubes().get(0));
+        ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getAggMeta().getCubes().get(0));
     ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
 
 
@@ -320,7 +320,7 @@ public class AsyncAggScaleResultTest {
     Dimension d1 = new Dimension("originalSchema", "originalTable", 0, 0);
     assertEquals(
         new HyperTableCube(Arrays.asList(d1)),
-        ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getMeta().getCubes().get(0));
+        ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getAggMeta().getCubes().get(0));
     ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
 
 

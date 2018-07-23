@@ -30,7 +30,7 @@ public class GroupByNumberTest {
   private static final String IMPALA_UESR = "";
 
   private static final String IMPALA_PASSWORD = "";
-  
+
   private static final String IMPALA_TABLE_NAME = "myimpalatable";
 
   private static Connection impalaConn;
@@ -45,10 +45,10 @@ public class GroupByNumberTest {
   public static void setupDatabases() throws VerdictDBDbmsException, SQLException {
     // Impala
     String connectionString =
-        String.format("jdbc:impala://%s:21050/%s", IMPALA_HOST, IMPALA_DATABASE);
+        String.format("jdbc:impala://%s/%s", IMPALA_HOST, IMPALA_DATABASE);
     impalaConn = DriverManager.getConnection(connectionString, IMPALA_UESR, IMPALA_PASSWORD);
     impalaConnection = JdbcConnection.create(impalaConn);
-    
+
     impalaConnection.execute(String.format("drop table if exists %s", IMPALA_TABLE_NAME));
     impalaConnection.execute(String.format(
         "CREATE TABLE %s ("
@@ -81,7 +81,7 @@ public class GroupByNumberTest {
       fail();
     } catch (VerdictDBDbmsException e) {
       if (e.getMessage().startsWith("GROUP BY position 1 is an aggregate function")) {
-        
+
       } else {
         throw e;
       }
@@ -96,7 +96,7 @@ public class GroupByNumberTest {
       fail();
     } catch (VerdictDBDbmsException e) {
       if (e.getMessage().contains("GROUP BY expression must not contain aggregate functions: 1")) {
-        
+
       } else {
         throw e;
       }
