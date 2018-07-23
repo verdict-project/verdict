@@ -18,6 +18,11 @@ public class PostgresqlSyntax extends SqlSyntax {
   public int getColumnNameColumnIndex() {
     return 0;
   }
+  
+  @Override
+  public String getFallbackDefaultSchema() {
+    return "public";
+  }
 
   @Override
   public int getColumnTypeColumnIndex() {

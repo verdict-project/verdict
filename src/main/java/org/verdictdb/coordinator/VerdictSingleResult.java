@@ -22,6 +22,9 @@ import com.google.common.base.Optional;
 public class VerdictSingleResult extends AttributeValueRetrievalHelper {
 
   private Optional<DbmsQueryResult> result;
+  
+  // used to support wasnull()
+  private Object lastValueRead;
 
   public VerdictSingleResult(DbmsQueryResult result) {
     if (result == null) {
@@ -124,8 +127,14 @@ public class VerdictSingleResult extends AttributeValueRetrievalHelper {
     if (result.isPresent() == false) {
       throw new RuntimeException("An empty result is accessed.");
     } else {
-      return result.get().getValue(index);
+      Object value = result.get().getValue(index);
+      lastValueRead = value;
+      return value;
     }
+  }
+  
+  public boolean wasNull() {
+    return lastValueRead == null;
   }
 
   public boolean next() {

@@ -133,4 +133,11 @@ public class SparkConnection implements DbmsConnection {
     return sc;
   }
 
+  @Override
+  public DbmsConnection copy() {
+    SparkConnection newConn = new SparkConnection(sc, syntax);
+    newConn.setDefaultSchema(currentSchema);
+    return newConn;
+  }
+
 }

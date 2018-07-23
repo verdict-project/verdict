@@ -12,7 +12,7 @@ public class CachedMetaDataProvider implements MetaDataProvider {
   
   MetaDataProvider metaProvider;
   
-  private String defaultSchema = null;
+//  private String defaultSchema = null;
 
   private List<String> schemaCache = new ArrayList<>();
 
@@ -77,15 +77,16 @@ public class CachedMetaDataProvider implements MetaDataProvider {
   }
   
   public String getDefaultSchema() {
-    if (defaultSchema == null) {
-      defaultSchema = metaProvider.getDefaultSchema();
-    }
-    return defaultSchema;
+    String schema = metaProvider.getDefaultSchema();
+//    if (defaultSchema == null) {
+//      defaultSchema = metaProvider.getDefaultSchema();
+//    }
+    return schema;
   }
   
   public void setDefaultSchema(String schema) {
     metaProvider.setDefaultSchema(schema);
-    defaultSchema = schema;
+//    defaultSchema = schema;
   }
 
 

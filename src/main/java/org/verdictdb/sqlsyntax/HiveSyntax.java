@@ -21,6 +21,11 @@ public class HiveSyntax extends SqlSyntax {
   public String getColumnsCommand(String schema, String table) {
     return "DESCRIBE " + quoteName(schema) + "." + quoteName(table);
   }
+  
+  @Override
+  public String getFallbackDefaultSchema() {
+    return "default";
+  }
 
   @Override
   public int getColumnTypeColumnIndex() {
