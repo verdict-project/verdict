@@ -84,7 +84,7 @@ jobs:
           POSTGRES_DB: test
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: ""
-      - image: circleci/python:3.6.1
+      - image: circleci/python:3.7.0
     working_directory: ~/repo
     environment:
       # Customize the JVM maximum heap limit
@@ -102,8 +102,6 @@ jobs:
       # - run: mvn dependency:go-offline
       # Setup necessary test data
       - run: git clone git@github.com:verdictdb/verdictdb-private-resources.git
-      # Now build and test
-      - run: mvn -B test 2> /dev/null
       # Setup and report code coverage
       - run:
           name: install codecov dependencies
@@ -118,6 +116,8 @@ jobs:
             . venv/bin/activate
             coverage run ./manage.py test accounts lists
             codecov
+      # Now build and test
+      - run: mvn -B test 2> /dev/null
       - save_cache:
           paths:
             - ~/.m2
