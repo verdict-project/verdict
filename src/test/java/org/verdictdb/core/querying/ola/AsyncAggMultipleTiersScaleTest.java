@@ -273,7 +273,7 @@ public class AsyncAggMultipleTiersScaleTest {
     RelationStandardizer gen = new RelationStandardizer(staticMetaData);
     relation = gen.standardize((SelectQuery) relation);
 
-    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
+    QueryExecutionPlan queryExecutionPlan = QueryExecutionPlanFactory.create("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
     Dimension d1 = new Dimension(originalSchema, "originalTable_scrambled", 0, 0);
@@ -353,7 +353,7 @@ public class AsyncAggMultipleTiersScaleTest {
     RelationStandardizer gen = new RelationStandardizer(staticMetaData);
     relation = gen.standardize((SelectQuery) relation);
 
-    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
+    QueryExecutionPlan queryExecutionPlan = QueryExecutionPlanFactory.create("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
    // Dimension d1 = new Dimension(originalSchema, "originalTable_scrambled", 0, 0);
@@ -449,7 +449,7 @@ public class AsyncAggMultipleTiersScaleTest {
     RelationStandardizer gen = new RelationStandardizer(staticMetaData);
     relation = gen.standardize((SelectQuery) relation);
 
-    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
+    QueryExecutionPlan queryExecutionPlan = QueryExecutionPlanFactory.create("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
     Dimension d1 = new Dimension(originalSchema, "originalTable_scrambled", 0, 0);
