@@ -29,7 +29,6 @@ We are using JDBC to set up TPC-H table. You can use following function.
     Connection conn = DriverManager.getConnection(mysqlConnectionString, user, password);
     Statement stmt = conn.createStatement();
 
-    stmt.execute(String.format("DROP SCHEMA IF EXISTS `%s`", schema));
     stmt.execute(String.format("CREATE SCHEMA IF NOT EXISTS `%s`", schema));
 
     // Create tables
@@ -187,6 +186,8 @@ We are using JDBC to set up TPC-H table. You can use following function.
 ```
 
 * `schema` is the database you want to set up your TPC-H table in.
+* `user` and `password` is the username and password of MySQL. For instance, if your MySQL username is `root` and password is `rootpassword`,
+then `user="root"` and `password="rootpassword"`.
 * `mysqlConnectionString` is the MySQL connection URL.
 * `path` is the infile path of the directory you stored your TPC-H test data. For instance, if you store the data in
 `src/test/resources`, then `path = "src/test/resources"`
