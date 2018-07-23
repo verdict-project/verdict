@@ -1,15 +1,18 @@
 package org.verdictdb.core.querying;
 
+import java.util.HashMap;
 import java.util.List;
 
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.core.execplan.ExecutionInfoToken;
+import org.verdictdb.core.querying.ola.AggMeta;
+import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.core.sqlobject.SqlConvertible;
 import org.verdictdb.exception.VerdictDBException;
 
 public class ProjectionNode extends CreateTableAsSelectNode {
-  
+
   public ProjectionNode(IdCreator namer, SelectQuery query) {
     super(namer, query);
   }
@@ -20,7 +23,7 @@ public class ProjectionNode extends CreateTableAsSelectNode {
     node.setSelectQuery(query);
     return node;
   }
-  
+
   @Override
   public SqlConvertible createQuery(List<ExecutionInfoToken> tokens) throws VerdictDBException {
     return super.createQuery(tokens);

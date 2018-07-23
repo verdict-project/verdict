@@ -23,6 +23,7 @@ import org.verdictdb.core.execplan.ExecutableNode;
 import org.verdictdb.core.execplan.ExecutionInfoToken;
 import org.verdictdb.core.execplan.ExecutionTokenQueue;
 import org.verdictdb.core.execplan.MethodInvocationInformation;
+import org.verdictdb.core.querying.ola.AggMeta;
 import org.verdictdb.core.sqlobject.SqlConvertible;
 import org.verdictdb.exception.VerdictDBException;
 
@@ -35,6 +36,8 @@ public class ExecutableNodeBase implements ExecutableNode, Serializable {
   List<Pair<ExecutableNodeBase, Integer>> sources = new ArrayList<>();
 
   Map<Integer, ExecutionTokenQueue> channels = new TreeMap<>();
+
+  AggMeta aggMeta = new AggMeta();
 
   final private String uniqueId;
   
@@ -275,6 +278,14 @@ public class ExecutableNodeBase implements ExecutableNode, Serializable {
     for (ExecutableNodeBase dep : getExecutableNodeBaseDependents()) {
       dep.print(indentSpace + 2);
     }
+  }
+
+  public AggMeta getAggMeta() {
+    return aggMeta;
+  }
+
+  public void setAggMeta(AggMeta aggMeta) {
+    this.aggMeta = aggMeta;
   }
 
   @Override
