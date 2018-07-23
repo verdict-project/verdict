@@ -61,7 +61,7 @@ public class JdbcTpchQueryTestForAllDatabases {
   }
 
   private static final String MYSQL_DATABASE =
-      "tpch_test_" + RandomStringUtils.randomAlphanumeric(4);
+      "tpch_test_" + RandomStringUtils.randomAlphanumeric(4).toLowerCase();
 
   private static final String MYSQL_USER = "root";
 

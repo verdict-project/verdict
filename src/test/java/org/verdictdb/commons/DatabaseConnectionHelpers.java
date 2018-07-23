@@ -476,6 +476,7 @@ public class DatabaseConnectionHelpers {
                 + "  \"l_comment\"      VARCHAR(44), "
                 + "  \"l_dummy\" varchar(10))",
             schema));
+
     // load data use insert
     loadRedshiftData(schema, "nation", dbmsConn);
     loadRedshiftData(schema, "region", dbmsConn);
