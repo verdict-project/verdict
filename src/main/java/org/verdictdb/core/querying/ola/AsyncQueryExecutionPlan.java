@@ -129,8 +129,6 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
     List<Pair<ExecutableNodeBase, ExecutableNodeBase>> oldSubscriptionInformation =
         new ArrayList<>();
 
-
-    List<ProjectionNode> projectionNodeSources = new ArrayList<>();
     // Second, according to the plan, create individual nodes that perform aggregations.
     for (int i = 0; i < aggPlan.totalBlockAggCount(); i++) {
 
@@ -150,23 +148,10 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
       // Assign hyper table cube to the block
       aggroot.getAggMeta().setCubes(Arrays.asList(aggPlan.cubes.get(i)));
 
-      // TODO: Create another function and use it here
       // The new function performs both rewriting select list and adding tier columns
       // The important thing is that this job should be done starting from the leaf nodes
       // I created a skeleton function: rewriteSelectListOfRootAndListedDependents
-      projectionNodeSources = rewriteSources(copy, aggroot.getSources());
-
-      // Search for agg column
-      // Rewrite individual aggregate node so that it only select supported aggregate columns and non-aggregate columns
-      List<SelectItem> newSelectlist = rewriteSelectlistWithBasicAgg(aggroot.getSelectQuery(), aggroot.getAggMeta());
-
-      // Add a tier column and a group attribute if the from list has multiple tier table
-      addTierColumn(aggroot.getSelectQuery(), newSelectlist, scrambleMeta, projectionNodeSources);
-
-      aggroot.getSelectQuery().clearSelectList();
-      aggroot.getSelectQuery().getSelectList().addAll(newSelectlist);
-
-      aggColumnIdentiferNum = 0;
+      addTierColumnsRecursively(copy, aggroot, new HashSet<ExecutableNode>());
 
       // Insert predicates into individual aggregation nodes
       for (Pair<ExecutableNodeBase, Triple<String, String, String>> a : scrambledNodeAndTableName) {
@@ -224,7 +209,7 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
     // Fourth, re-link the subscription relationship for the new AsyncAggNode
     ExecutableNodeBase newRoot = AsyncAggExecutionNode.create(idCreator, individualAggNodes, combiners, scrambleMeta);
     // Set hashmap of tier column alias for AsyncAggNode
-    setTierColumnAlias((AsyncAggExecutionNode) newRoot, projectionNodeSources);
+    setTierColumnAlias((AsyncAggExecutionNode) newRoot);
 
     // Finally remove the old subscription information: old copied node -> still used old node
     for (Pair<ExecutableNodeBase, ExecutableNodeBase> parentToSource : oldSubscriptionInformation) {
@@ -579,7 +564,7 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
     verdictdbTierIndentiferNum = 0;
   }
 
-  public void recursiveRewrittenProjectionNode(AggExecutionNodeBlock block, ProjectionNode node) {
+  public void rewrittenProjectionNode(AggExecutionNodeBlock block, ProjectionNode node) {
     // If it is a leaf node, check whether it contains scramble table
     if (node.getSources().size() == 0) {
       List<BaseTable> multiTierScrambleTables = getMultiTierScramble(node, scrambleMeta);
@@ -590,14 +575,10 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
       return;
     }
 
-    // Otherwise, rewrite its sources if not done yet.
     List<ProjectionNode> projectionNodesSources = new ArrayList<>();
     for (ExecutableNode source : node.getSources()) {
       if (source instanceof ProjectionNode && block.getNodesInBlock().contains(source)) {
         projectionNodesSources.add((ProjectionNode) source);
-        if (((ProjectionNode) source).getAggMeta().getScrambleTableTierColumnAlias().isEmpty()) {
-          recursiveRewrittenProjectionNode(block, (ProjectionNode) source);
-        }
       }
     }
 
@@ -632,22 +613,16 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
     verdictdbTierIndentiferNum = 0;
   }
 
-  private List<ProjectionNode> rewriteSources(AggExecutionNodeBlock block, List<ExecutableNodeBase> sources) {
-    // only rewrite nodes contain in the block
-    List<ProjectionNode> projectionNodeSource = new ArrayList<>();
-    for (ExecutableNode source : sources) {
-      // invariant: only the root in the block is AggNode
-      if (source instanceof ProjectionNode && block.blockNodes.contains(source)) {
-        recursiveRewrittenProjectionNode(block, (ProjectionNode) source);
-        projectionNodeSource.add((ProjectionNode) source);
+  public void setTierColumnAlias(AsyncAggExecutionNode node) {
+    AggExecutionNode aggNode = (AggExecutionNode) node.getSources().get(0);
+    List<ProjectionNode> projectionNodeList = new ArrayList<>();
+    for (ExecutableNodeBase source:aggNode.getSources()) {
+      if (source instanceof ProjectionNode) {
+        projectionNodeList.add((ProjectionNode) source);
       }
     }
-    return projectionNodeSource;
-  }
-
-  public void setTierColumnAlias(AsyncAggExecutionNode node, List<ProjectionNode> projectionNodes) {
     // Rewrite itself to add tier column
-    for (ProjectionNode source : projectionNodes) {
+    for (ProjectionNode source : projectionNodeList) {
       for (Map.Entry<ScrambleMeta, String> entry : source.getAggMeta().getScrambleTableTierColumnAlias().entrySet()) {
         // Construct tier column Map
         String tierColumnAlias = VERDICTDB_TIER_COLUMN_NAME + verdictdbTierIndentiferNum++;
@@ -656,5 +631,36 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
     }
 
     verdictdbTierIndentiferNum = 0;
+  }
+
+  void addTierColumnsRecursively(
+      AggExecutionNodeBlock block,
+      ExecutableNodeBase node,
+      Set<ExecutableNode> visitList) {
+
+    // rewrite all the sources
+    for (ExecutableNodeBase source : node.getSources()) {
+      if (!visitList.contains(source) && block.getNodesInBlock().contains(source)) {
+        addTierColumnsRecursively(block, source, visitList);
+      }
+    }
+
+    // rewrite the current node
+    visitList.add(node);
+    if (node instanceof AggExecutionNode) {
+      List<SelectItem> newSelectlist = rewriteSelectlistWithBasicAgg(((AggExecutionNode)node).getSelectQuery(), node.getAggMeta());
+      List<ProjectionNode> projectionNodeList = new ArrayList<>();
+      for (ExecutableNodeBase source:node.getSources()) {
+        if (source instanceof ProjectionNode && block.getNodesInBlock().contains(source)) {
+          projectionNodeList.add((ProjectionNode) source);
+        }
+      }
+      addTierColumn(((AggExecutionNode)node).getSelectQuery(), newSelectlist, scrambleMeta, projectionNodeList);
+      ((AggExecutionNode)node).getSelectQuery().clearSelectList();
+      ((AggExecutionNode)node).getSelectQuery().getSelectList().addAll(newSelectlist);
+      aggColumnIdentiferNum = 0;
+    } else if (node instanceof ProjectionNode) {
+      rewrittenProjectionNode(block, (ProjectionNode) node);
+    }
   }
 }
