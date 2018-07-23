@@ -40,7 +40,7 @@ import org.verdictdb.sqlsyntax.MysqlSyntax;
 import org.verdictdb.sqlwriter.SelectQueryToSql;
 
 public class AsyncAggMultipleTiersScaleTest {
-
+  
   private static final String MYSQL_HOST;
 
   private static final String MYSQL_DATABASE = "async_agg_multi_tier_scale_test";
@@ -82,9 +82,9 @@ public class AsyncAggMultipleTiersScaleTest {
   static String originalTable = "originalTable";
 
   static String smallTable = "smallTable";
-
+  
   final static String tierColumn = "mytier";
-
+  
   @BeforeClass
   public static void setupMySqlDatabase() throws SQLException, VerdictDBException {
     String mysqlConnectionString =
@@ -108,7 +108,7 @@ public class AsyncAggMultipleTiersScaleTest {
       stmt.executeUpdate(String.format("INSERT INTO `%s`.`%s` (`s_id`, `s_value`) VALUES(%s, %f)",
           originalSchema, smallTable, i, (double) i+1));
     }
-
+    
     // create scrambled table
     DbmsConnection dbmsConn = JdbcConnection.create(conn);
     String scrambleSchema = MYSQL_DATABASE;
@@ -122,7 +122,7 @@ public class AsyncAggMultipleTiersScaleTest {
     long blockSize = 5;
     ScramblingCoordinator scrambler = new ScramblingCoordinator(dbmsConn, scrambleSchema, scratchpadSchema, blockSize);
     ScrambleMeta tablemeta = scrambler.scramble(originalSchema, originalTable, originalSchema, scrambledTable, "fastconverge", primaryColumn, options);
-
+    ScrambleMeta tablemeta2 = scrambler.scramble(originalSchema, smallTable, originalSchema, "smallTable_scrambled", "fastconverge", primaryColumn, options);
 //    UniformScrambler scrambler =
 //        new UniformScrambler(originalSchema, originalTable, originalSchema, "originalTable_scrambled", aggBlockCount);
 //    CreateTableAsSelectQuery scramblingQuery = scrambler.createQuery();
@@ -135,7 +135,7 @@ public class AsyncAggMultipleTiersScaleTest {
 //    tablemeta.setCumulativeDistributionForTier(distribution);
 //    scrambledTable = tablemeta.getTableName();
     meta.addScrambleMeta(tablemeta);
-
+    meta.addScrambleMeta(tablemeta2);
     staticMetaData.setDefaultSchema(originalSchema);
     List<Pair<String, Integer>> arr = new ArrayList<>();
     arr.addAll(Arrays.asList(new ImmutablePair<>("id", BIGINT),
@@ -147,8 +147,8 @@ public class AsyncAggMultipleTiersScaleTest {
     arr.addAll(Arrays.asList(new ImmutablePair<>("s_id", BIGINT),
         new ImmutablePair<>("s_value", DOUBLE)
     ));
-    staticMetaData.addTableData(new StaticMetaData.TableInfo(originalSchema, smallTable), arr);
-
+    staticMetaData.addTableData(new StaticMetaData.TableInfo(originalSchema, "smallTable_scrambled"), arr);
+    
     // scratchpad schema
     stmt.execute("create schema if not exists `verdictdb_temp`;");
   }
@@ -173,8 +173,8 @@ public class AsyncAggMultipleTiersScaleTest {
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
     Dimension d1 = new Dimension(originalSchema, "originalTable_scrambled", 0, 0);
     assertEquals(
-        new HyperTableCube(Arrays.asList(d1)),
-        ((AggExecutionNode)queryExecutionPlan.getRootNode().getExecutableNodeBaseDependent(0).getExecutableNodeBaseDependent(0)).getMeta().getCubes().get(0));
+        new HyperTableCube(Arrays.asList(d1)), 
+        ((AggExecutionNode)queryExecutionPlan.getRootNode().getExecutableNodeBaseDependent(0).getExecutableNodeBaseDependent(0)).getAggMeta().getCubes().get(0));
 
     ((AsyncAggExecutionNode) queryExecutionPlan.getRoot().getExecutableNodeBaseDependent(0))
     .setScrambleMeta(meta);
@@ -183,8 +183,8 @@ public class AsyncAggMultipleTiersScaleTest {
     //queryExecutionPlan.getRoot().executeAndWaitForTermination(new JdbcConnection(conn, new H2Syntax()));
 //    stmt.execute("drop schema `verdictdb_temp` cascade;");
   }
-
-  // @Test
+  
+  @Test
   public void nestedAggTest1() throws VerdictDBException,SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select avg(value) from (select value from originalTable_scrambled)";
@@ -199,26 +199,27 @@ public class AsyncAggMultipleTiersScaleTest {
     Dimension d1 = new Dimension(originalSchema, "originalTable_scrambled", 0, 0);
     assertEquals(
         new HyperTableCube(Arrays.asList(d1)),
-        ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getMeta().getCubes().get(0));
+        ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getAggMeta().getCubes().get(0));
     ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
 
 //    stmt.execute("create schema if not exists `verdictdb_temp`;");
     JdbcConnection jdbcConnection = JdbcConnection.create(conn);
-    jdbcConnection.setOutputDebugMessage(true);
+    //jdbcConnection.setOutputDebugMessage(true);
     ExecutablePlanRunner.runTillEnd(jdbcConnection, queryExecutionPlan);
 //    stmt.execute("drop schema `verdictdb_temp` cascade;");
 
     ExecutionInfoToken token = new ExecutionInfoToken();
+    token.setKeyValue("schemaName", originalSchema);
+    token.setKeyValue("tableName", "originalTable_scrambled");
     CreateTableAsSelectQuery query = (CreateTableAsSelectQuery) queryExecutionPlan.getRoot().getSources().get(0).getSources().get(0).createQuery(Arrays.asList(token));
     SelectQueryToSql queryToSql = new SelectQueryToSql(new MysqlSyntax());
     String actual = queryToSql.toSql(query.getSelect());
     String expected = String.format("select sum(vt1.`value`) as `agg0`, " +
-        "count(*) as `agg1`, vt1.`%s` as `verdictdb_tier_internal0` " +
+        "count(*) as `agg1`, vt1.`verdictdb_tier_internal0` as `verdictdb_tier_internal0` " +
         "from `%s`.`originalTable_scrambled` " +
         "as vt1 " +
-        "where vt1.`verdictdbaggblock` = 0 " +
         "group by `verdictdb_tier_internal0`",
-        tierColumn, originalSchema);
+         originalSchema);
     assertEquals(expected, actual);
 
     ExecutionInfoToken token1 = new ExecutionInfoToken();
@@ -245,7 +246,7 @@ public class AsyncAggMultipleTiersScaleTest {
     query = (CreateTableAsSelectQuery) queryExecutionPlan.getRoot().getSources().get(0).createQuery(Arrays.asList(token3));
     actual = queryToSql.toSql(query.getSelect());
     actual = actual.replaceAll("verdictdbtemptable_[0-9]*_[0-9]", "alias");
-    expected = "select sum(verdictdbafterscaling.`agg0`) / sum(verdictdbafterscaling.`agg1`) as `a2` " +
+    expected = "select sum(verdictdbafterscaling.`agg0`) / sum(verdictdbafterscaling.`agg1`) as `a3` " +
         "from (select " +
         "case " +
         "when (verdictdbbeforescaling.`verdictdb_tier_internal0` = 1) then (1.0000000000000000 * verdictdbbeforescaling.`agg0`) " +
@@ -263,6 +264,241 @@ public class AsyncAggMultipleTiersScaleTest {
     assertEquals(expected, actual);
   }
 
+  @Test
+  public void nestedAggTest2() throws VerdictDBException,SQLException {
+    RelationStandardizer.resetItemID();
+    String sql = "select avg(value) from (select * from (select value from originalTable_scrambled))";
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
+    RelationStandardizer gen = new RelationStandardizer(staticMetaData);
+    relation = gen.standardize((SelectQuery) relation);
+
+    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
+    queryExecutionPlan.cleanUp();
+    queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
+    Dimension d1 = new Dimension(originalSchema, "originalTable_scrambled", 0, 0);
+    assertEquals(
+        new HyperTableCube(Arrays.asList(d1)),
+        ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getAggMeta().getCubes().get(0));
+    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
+
+//    stmt.execute("create schema if not exists `verdictdb_temp`;");
+    JdbcConnection jdbcConnection = JdbcConnection.create(conn);
+    //jdbcConnection.setOutputDebugMessage(true);
+    ExecutablePlanRunner.runTillEnd(jdbcConnection, queryExecutionPlan);
+//    stmt.execute("drop schema `verdictdb_temp` cascade;");
+
+    ExecutionInfoToken token = new ExecutionInfoToken();
+    token.setKeyValue("schemaName", originalSchema);
+    token.setKeyValue("tableName", "originalTable_scrambled");
+    CreateTableAsSelectQuery query = (CreateTableAsSelectQuery) queryExecutionPlan.getRoot().getSources().get(0).getSources().get(0).createQuery(Arrays.asList(token));
+    SelectQueryToSql queryToSql = new SelectQueryToSql(new MysqlSyntax());
+    String actual = queryToSql.toSql(query.getSelect());
+    String expected = String.format("select sum(vt1.`value`) as `agg0`, " +
+            "count(*) as `agg1`, vt1.`verdictdb_tier_internal0` as `verdictdb_tier_internal0` " +
+            "from `%s`.`originalTable_scrambled` " +
+            "as vt1 " +
+            "group by `verdictdb_tier_internal0`",
+        originalSchema);
+    assertEquals(expected, actual);
+
+    ExecutionInfoToken token1 = new ExecutionInfoToken();
+    token1.setKeyValue("schemaName", "verdict_temp");
+    token1.setKeyValue("tableName", "table1");
+    ExecutionInfoToken token2 = new ExecutionInfoToken();
+    token2.setKeyValue("schemaName", "verdict_temp");
+    token2.setKeyValue("tableName", "table2");
+    query = (CreateTableAsSelectQuery) queryExecutionPlan.getRoot().getSources().get(0).getSources().get(1).createQuery(Arrays.asList(token1, token2));
+    actual = queryToSql.toSql(query.getSelect());
+    actual = actual.replaceAll("verdictdbalias_[0-9]*_[0-9]", "alias");
+    expected = "select " +
+        "sum(unionTable.`agg0`) as `agg0`, " +
+        "sum(unionTable.`agg1`) as `agg1`, " +
+        "unionTable.`verdictdb_tier_internal0` as `verdictdb_tier_internal0` " +
+        "from (" +
+        "select * from `verdict_temp`.`table1` as alias " +
+        "UNION ALL " +
+        "select * from `verdict_temp`.`table2` as alias) " +
+        "as unionTable group by `verdictdb_tier_internal0`";
+    assertEquals(expected, actual);
+
+    ExecutionInfoToken token3 = queryExecutionPlan.getRoot().getSources().get(0).getSources().get(0).createToken(null);
+    query = (CreateTableAsSelectQuery) queryExecutionPlan.getRoot().getSources().get(0).createQuery(Arrays.asList(token3));
+    actual = queryToSql.toSql(query.getSelect());
+    actual = actual.replaceAll("verdictdbtemptable_[0-9]*_[0-9]", "alias");
+    expected = "select sum(verdictdbafterscaling.`agg0`) / sum(verdictdbafterscaling.`agg1`) as `a4` " +
+        "from (select " +
+        "case " +
+        "when (verdictdbbeforescaling.`verdictdb_tier_internal0` = 1) then (1.0000000000000000 * verdictdbbeforescaling.`agg0`) " +
+        "when (verdictdbbeforescaling.`verdictdb_tier_internal0` = 2) then (2.0000000000000000 * verdictdbbeforescaling.`agg0`) " +
+        "when (verdictdbbeforescaling.`verdictdb_tier_internal0` = 0) then (1.0000000000000000 * verdictdbbeforescaling.`agg0`) " +
+        "else 0 end as `agg0`, " +
+        "case " +
+        "when (verdictdbbeforescaling.`verdictdb_tier_internal0` = 1) then (1.0000000000000000 * verdictdbbeforescaling.`agg1`) " +
+        "when (verdictdbbeforescaling.`verdictdb_tier_internal0` = 2) then (2.0000000000000000 * verdictdbbeforescaling.`agg1`) " +
+        "when (verdictdbbeforescaling.`verdictdb_tier_internal0` = 0) then (1.0000000000000000 * verdictdbbeforescaling.`agg1`) " +
+        "else 0 end as `agg1`, " +
+        "verdictdbbeforescaling.`verdictdb_tier_internal0` as `verdictdb_tier_internal0` " +
+        "from `verdictdb_temp`.`alias` as verdictdbbeforescaling) " +
+        "as verdictdbafterscaling";
+    assertEquals(expected, actual);
+  }
+
+  @Test
+  public void nestedAggTest3() throws VerdictDBException,SQLException {
+    RelationStandardizer.resetItemID();
+    String sql = "select sum(value) from (select * from (select value from originalTable_scrambled)) inner join (select s_value from smallTable_scrambled) on value=s_value";
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
+    RelationStandardizer gen = new RelationStandardizer(staticMetaData);
+    relation = gen.standardize((SelectQuery) relation);
+
+    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
+    queryExecutionPlan.cleanUp();
+    queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
+   // Dimension d1 = new Dimension(originalSchema, "originalTable_scrambled", 0, 0);
+   // assertEquals(
+   //     new HyperTableCube(Arrays.asList(d1)),
+   //     ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getAggMeta().getCubes().get(0));
+    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
+
+//    stmt.execute("create schema if not exists `verdictdb_temp`;");
+    JdbcConnection jdbcConnection = JdbcConnection.create(conn);
+    //jdbcConnection.setOutputDebugMessage(true);
+    ExecutablePlanRunner.runTillEnd(jdbcConnection, queryExecutionPlan);
+//    stmt.execute("drop schema `verdictdb_temp` cascade;");
+
+    ExecutionInfoToken token1 = new ExecutionInfoToken(), token2 = new ExecutionInfoToken();
+    token1.setKeyValue("schemaName", originalSchema);
+    token1.setKeyValue("tableName", "originalTable_scrambled");
+    token2.setKeyValue("schemaName", originalSchema);
+    token2.setKeyValue("tableName", "smallTable_scrambled");
+    CreateTableAsSelectQuery query = (CreateTableAsSelectQuery) queryExecutionPlan.getRoot().getSources().get(0).getSources().get(0).createQuery(Arrays.asList(token1, token2));
+    SelectQueryToSql queryToSql = new SelectQueryToSql(new MysqlSyntax());
+    String actual = queryToSql.toSql(query.getSelect());
+    String expected = String.format("select sum(vt1.`value`) as `agg0`, " +
+            "vt1.`verdictdb_tier_internal0` as `verdictdb_tier_internal0`, vt4.`verdictdb_tier_internal0` as `verdictdb_tier_internal1` " +
+            "from `%s`.`originalTable_scrambled` " +
+            "as vt1 inner join `%s`.`smallTable_scrambled` as vt4 on " +
+            "(vt1.`value` = vt4.`s_value`) " +
+            "group by `verdictdb_tier_internal0`, `verdictdb_tier_internal1`",
+        originalSchema, originalSchema);
+    assertEquals(expected, actual);
+
+    token1 = new ExecutionInfoToken();
+    token1.setKeyValue("schemaName", "verdict_temp");
+    token1.setKeyValue("tableName", "table1");
+    token2 = new ExecutionInfoToken();
+    token2.setKeyValue("schemaName", "verdict_temp");
+    token2.setKeyValue("tableName", "table2");
+    query = (CreateTableAsSelectQuery) queryExecutionPlan.getRoot().getSources().get(0).getSources().get(1).createQuery(Arrays.asList(token1, token2));
+    actual = queryToSql.toSql(query.getSelect());
+    actual = actual.replaceAll("verdictdbalias_[0-9]*_[0-9]", "alias");
+    expected = "select " +
+        "sum(unionTable.`agg0`) as `agg0`, " +
+        "unionTable.`verdictdb_tier_internal0` as `verdictdb_tier_internal0`, " +
+        "unionTable.`verdictdb_tier_internal1` as `verdictdb_tier_internal1` " +
+        "from (" +
+        "select * from `verdict_temp`.`table1` as alias " +
+        "UNION ALL " +
+        "select * from `verdict_temp`.`table2` as alias) " +
+        "as unionTable " +
+        "group by `verdictdb_tier_internal0`, `verdictdb_tier_internal1`";
+    assertEquals(expected, actual);
+
+    // non-deterministic
+    /*
+    ExecutionInfoToken token3 = queryExecutionPlan.getRoot().getSources().get(0).getSources().get(0).createToken(null);
+    query = (CreateTableAsSelectQuery) queryExecutionPlan.getRoot().getSources().get(0).createQuery(Arrays.asList(token3));
+    actual = queryToSql.toSql(query.getSelect());
+    actual = actual.replaceAll("verdictdbtemptable_[0-9]*_[0-9]", "alias");
+    expected = "select sum(verdictdbafterscaling.`agg0`) as `s6` " +
+        "from (select " +
+        "case when ((verdictdbbeforescaling.`verdictdb_tier_internal1` = 0) and (verdictdbbeforescaling.`verdictdb_tier_internal0` = 1)) " +
+        "then (1.0000000000000000 * verdictdbbeforescaling.`agg0`) " +
+        "when ((verdictdbbeforescaling.`verdictdb_tier_internal1` = 1) and (verdictdbbeforescaling.`verdictdb_tier_internal0` = 2)) " +
+        "then (1.0000000000000000 * verdictdbbeforescaling.`agg0`) " +
+        "when ((verdictdbbeforescaling.`verdictdb_tier_internal1` = 0) and (verdictdbbeforescaling.`verdictdb_tier_internal0` = 0)) " +
+        "then (1.0000000000000000 * verdictdbbeforescaling.`agg0`) " +
+        "when ((verdictdbbeforescaling.`verdictdb_tier_internal1` = 1) and (verdictdbbeforescaling.`verdictdb_tier_internal0` = 1)) " +
+        "then (1.0000000000000000 * verdictdbbeforescaling.`agg0`) " +
+        "when ((verdictdbbeforescaling.`verdictdb_tier_internal1` = 2) and (verdictdbbeforescaling.`verdictdb_tier_internal0` = 2)) " +
+        "then (2.0000000000000000 * verdictdbbeforescaling.`agg0`) " +
+        "when ((verdictdbbeforescaling.`verdictdb_tier_internal1` = 1) and (verdictdbbeforescaling.`verdictdb_tier_internal0` = 0)) " +
+        "then (1.0000000000000000 * verdictdbbeforescaling.`agg0`) " +
+        "when ((verdictdbbeforescaling.`verdictdb_tier_internal1` = 2) and (verdictdbbeforescaling.`verdictdb_tier_internal0` = 1)) " +
+        "then (2.0000000000000000 * verdictdbbeforescaling.`agg0`) " +
+        "when ((verdictdbbeforescaling.`verdictdb_tier_internal1` = 2) and (verdictdbbeforescaling.`verdictdb_tier_internal0` = 0)) " +
+        "then (2.0000000000000000 * verdictdbbeforescaling.`agg0`) " +
+        "when ((verdictdbbeforescaling.`verdictdb_tier_internal1` = 0) and (verdictdbbeforescaling.`verdictdb_tier_internal0` = 2)) " +
+        "then (1.0000000000000000 * verdictdbbeforescaling.`agg0`) " +
+        "else 0 end as `agg0`, " +
+        "verdictdbbeforescaling.`verdictdb_tier_internal0` as `verdictdb_tier_internal0`, " +
+        "verdictdbbeforescaling.`verdictdb_tier_internal1` as `verdictdb_tier_internal1` " +
+        "from `verdictdb_temp`.`alias2` as verdictdbbeforescaling) as verdictdbafterscaling";
+    assertEquals(expected, actual);
+    */
+  }
+
+  @Test
+  public void nestedAggTest4() throws VerdictDBException,SQLException {
+    RelationStandardizer.resetItemID();
+    String sql = "select sum(value) from (select 1+value as value from (select 2+value as value from originalTable_scrambled))";
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation relation = sqlToRelation.toRelation(sql);
+    RelationStandardizer gen = new RelationStandardizer(staticMetaData);
+    relation = gen.standardize((SelectQuery) relation);
+
+    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
+    queryExecutionPlan.cleanUp();
+    queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
+    Dimension d1 = new Dimension(originalSchema, "originalTable_scrambled", 0, 0);
+    assertEquals(
+        new HyperTableCube(Arrays.asList(d1)),
+        ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getAggMeta().getCubes().get(0));
+    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
+
+//    stmt.execute("create schema if not exists `verdictdb_temp`;");
+    JdbcConnection jdbcConnection = JdbcConnection.create(conn);
+    jdbcConnection.setOutputDebugMessage(true);
+    ExecutablePlanRunner.runTillEnd(jdbcConnection, queryExecutionPlan);
+//    stmt.execute("drop schema `verdictdb_temp` cascade;");
+
+    ExecutionInfoToken token = new ExecutionInfoToken();
+    token.setKeyValue("schemaName", originalSchema);
+    token.setKeyValue("tableName", "originalTable_scrambled");
+
+    CreateTableAsSelectQuery query = (CreateTableAsSelectQuery) queryExecutionPlan.getRoot().getSources().get(0).getSources().get(0).createQuery(Arrays.asList(token));
+    SelectQueryToSql queryToSql = new SelectQueryToSql(new MysqlSyntax());
+    String actual = queryToSql.toSql(query.getSelect());
+    String expected = String.format("select sum(vt1.`value`) as `agg0`, " +
+            "vt1.`verdictdb_tier_internal0` as `verdictdb_tier_internal0` " +
+            "from `%s`.`originalTable_scrambled` " +
+            "as vt1 " +
+            "group by `verdictdb_tier_internal0`",
+        originalSchema);
+    assertEquals(expected, actual);
+
+    ExecutionInfoToken token1 = new ExecutionInfoToken();
+    token1.setKeyValue("schemaName", "verdict_temp");
+    token1.setKeyValue("tableName", "table1");
+    ExecutionInfoToken token2 = new ExecutionInfoToken();
+    token2.setKeyValue("schemaName", "verdict_temp");
+    token2.setKeyValue("tableName", "table2");
+    query = (CreateTableAsSelectQuery) queryExecutionPlan.getRoot().getSources().get(0).getSources().get(1).createQuery(Arrays.asList(token1, token2));
+    actual = queryToSql.toSql(query.getSelect());
+    actual = actual.replaceAll("verdictdbalias_[0-9]*_[0-9]", "alias");
+    expected = "select " +
+        "sum(unionTable.`agg0`) as `agg0`, " +
+        "unionTable.`verdictdb_tier_internal0` as `verdictdb_tier_internal0` " +
+        "from (" +
+        "select * from `verdict_temp`.`table1` as alias " +
+        "UNION ALL " +
+        "select * from `verdict_temp`.`table2` as alias) " +
+        "as unionTable group by `verdictdb_tier_internal0`";
+    assertEquals(expected, actual);
+
+  }
 
   @Test
   public void toSqlTest() throws VerdictDBException,SQLException {
@@ -346,7 +582,7 @@ public class AsyncAggMultipleTiersScaleTest {
     Dimension d1 = new Dimension(originalSchema, "originalTable_scrambled", 0, 0);
     assertEquals(
         new HyperTableCube(Arrays.asList(d1)),
-        ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getMeta().getCubes().get(0));
+        ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getAggMeta().getCubes().get(0));
     ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
 
 //    stmt.execute("create schema if not exists `verdictdb_temp`;");
@@ -425,7 +661,7 @@ public class AsyncAggMultipleTiersScaleTest {
     Dimension d1 = new Dimension(originalSchema, "originalTable_scrambled", 0, 0);
     assertEquals(
         new HyperTableCube(Arrays.asList(d1)),
-        ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getMeta().getCubes().get(0));
+        ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getAggMeta().getCubes().get(0));
     ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
 
 //    stmt.execute("create schema if not exists `verdictdb_temp`;");
@@ -500,7 +736,7 @@ public class AsyncAggMultipleTiersScaleTest {
     Dimension d1 = new Dimension(originalSchema, "originalTable_scrambled", 0, 0);
     assertEquals(
         new HyperTableCube(Arrays.asList(d1)),
-        ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getMeta().getCubes().get(0));
+        ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getAggMeta().getCubes().get(0));
     ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
 
 //    stmt.execute("create schema if not exists `verdictdb_temp`;");
@@ -576,7 +812,7 @@ public class AsyncAggMultipleTiersScaleTest {
     Dimension d1 = new Dimension(originalSchema, "originalTable_scrambled", 0, 0);
     assertEquals(
         new HyperTableCube(Arrays.asList(d1)),
-        ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getMeta().getCubes().get(0));
+        ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getAggMeta().getCubes().get(0));
     ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
 
 //    stmt.execute("create schema if not exists `verdictdb_temp`;");
@@ -660,7 +896,7 @@ public class AsyncAggMultipleTiersScaleTest {
     Dimension d1 = new Dimension(originalSchema, "originalTable_scrambled", 0, 0);
     assertEquals(
         new HyperTableCube(Arrays.asList(d1)),
-        ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getMeta().getCubes().get(0));
+        ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getAggMeta().getCubes().get(0));
     ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
 
 //    stmt.execute("create schema if not exists `verdictdb_temp`;");
@@ -744,7 +980,7 @@ public class AsyncAggMultipleTiersScaleTest {
     Dimension d1 = new Dimension(originalSchema, "originalTable_scrambled", 0, 0);
     assertEquals(
         new HyperTableCube(Arrays.asList(d1)),
-        ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getMeta().getCubes().get(0));
+        ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getAggMeta().getCubes().get(0));
     ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
 
 //    stmt.execute("create schema if not exists `verdictdb_temp`;");
@@ -752,7 +988,7 @@ public class AsyncAggMultipleTiersScaleTest {
     jdbcConnection.setOutputDebugMessage(true);
     ExecutablePlanRunner.runTillEnd(jdbcConnection, queryExecutionPlan);
 //    stmt.execute("drop schema `verdictdb_temp` cascade;");
-
+    
     ExecutionInfoToken token = new ExecutionInfoToken();
     CreateTableAsSelectQuery query = (CreateTableAsSelectQuery) queryExecutionPlan.getRoot().getSources().get(0).getSources().get(0).createQuery(Arrays.asList(token));
     SelectQueryToSql queryToSql = new SelectQueryToSql(new MysqlSyntax());
@@ -826,7 +1062,7 @@ public class AsyncAggMultipleTiersScaleTest {
     Dimension d1 = new Dimension(originalSchema, "originalTable_scrambled", 0, 0);
     assertEquals(
         new HyperTableCube(Arrays.asList(d1)),
-        ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getMeta().getCubes().get(0));
+        ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getAggMeta().getCubes().get(0));
     ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
 
 //    stmt.execute("create schema if not exists `verdictdb_temp`;");
@@ -875,7 +1111,7 @@ public class AsyncAggMultipleTiersScaleTest {
     actual = queryToSql.toSql(query.getSelect());
     actual = actual.replaceAll("verdictdbtemptable_[0-9]*_[0-9]", "alias");
     expected = "select " +
-        "(1 + max(verdictdbafterscaling.`agg2`)) * " +
+        "(1 + max(verdictdbafterscaling.`agg2`)) * " + 
         "(sum(verdictdbafterscaling.`agg0`) / sum(verdictdbafterscaling.`agg1`)) as `vc2` " +
         "from (" +
         "select " +
@@ -912,7 +1148,7 @@ public class AsyncAggMultipleTiersScaleTest {
     Dimension d1 = new Dimension(originalSchema, "originalTable_scrambled", 0, 0);
     assertEquals(
         new HyperTableCube(Arrays.asList(d1)),
-        ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getMeta().getCubes().get(0));
+        ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getAggMeta().getCubes().get(0));
     ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
 
 //    stmt.execute("create schema if not exists `verdictdb_temp`;");

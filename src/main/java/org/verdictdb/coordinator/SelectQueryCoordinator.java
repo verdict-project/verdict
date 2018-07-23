@@ -34,14 +34,20 @@ public class SelectQueryCoordinator {
 
   ScrambleMetaSet scrambleMetaSet;
 
+  String scratchpadSchema;
+
   public SelectQueryCoordinator(DbmsConnection conn) {
-    this.conn = conn;
-    this.scrambleMetaSet = new ScrambleMetaSet();
+    this(conn, new ScrambleMetaSet());
   }
   
   public SelectQueryCoordinator(DbmsConnection conn, ScrambleMetaSet scrambleMetaSet) {
+    this(conn, scrambleMetaSet, conn.getDefaultSchema());
+  }
+
+  public SelectQueryCoordinator(DbmsConnection conn, ScrambleMetaSet scrambleMetaSet, String scratchpadSchema) {
     this.conn = conn;
     this.scrambleMetaSet = scrambleMetaSet;
+    this.scratchpadSchema = scratchpadSchema;
   }
 
   public ScrambleMetaSet getScrambleMetaSet() {
@@ -58,7 +64,7 @@ public class SelectQueryCoordinator {
 
     // make plan
     // if the plan does not include any aggregates, it will simply be a parsed structure of the original query.
-    QueryExecutionPlan plan = QueryExecutionPlanFactory.create("verdictdb_temp", scrambleMetaSet, selectQuery);
+    QueryExecutionPlan plan = QueryExecutionPlanFactory.create(scratchpadSchema, scrambleMetaSet, selectQuery);
 
     // convert it to an asynchronous plan
     // if the plan does not include any aggregates, this operation should not alter the original plan.

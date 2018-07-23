@@ -16,7 +16,7 @@ import org.apache.commons.lang3.tuple.Pair;
  */
 public class CreateScrambledTableQuery extends CreateTableQuery {
 
-  private static final long serialVersionUID = 1L;
+  private static final long serialVersionUID = -5937857840290786646L;
 
   protected String originalSchemaName;
 
@@ -36,9 +36,10 @@ public class CreateScrambledTableQuery extends CreateTableQuery {
 
   protected int blockCount = 1;
 
-  public CreateScrambledTableQuery(String originalSchemaName, String originalTableName, String schemaName,
-                                   String tableName, String tierColumnName, String blockColumnName, SelectQuery select, int blockCount,
-                                   List<Pair<String, String>> columnMeta) {
+  public CreateScrambledTableQuery(
+      String originalSchemaName, String originalTableName, String schemaName,
+      String tableName, String tierColumnName, String blockColumnName, SelectQuery select, int blockCount,
+      List<Pair<String, String>> columnMeta) {
     this.originalSchemaName = originalSchemaName;
     this.originalTableName = originalTableName;
     this.schemaName = schemaName;

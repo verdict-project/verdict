@@ -1,5 +1,7 @@
 package org.verdictdb.sqlsyntax;
 
+import java.util.concurrent.ThreadLocalRandom;
+
 public class ImpalaSyntax extends SqlSyntax {
 
   @Override
@@ -64,7 +66,12 @@ public class ImpalaSyntax extends SqlSyntax {
 
   @Override
   public String randFunction() {
-    return "rand()";
+    int randomNum = ThreadLocalRandom.current().nextInt(0, (int) 1e9);
+    // 1. unix_timestamp() prevents the same random numbers are generated for different column
+    // especially when "create table as select" is used.
+    // 2. adding a random number to the timestamp prevents the same random numbers are generated
+    // for different columns.
+    return String.format("rand(unix_timestamp()+%d)", randomNum);
   }
   
   @Override

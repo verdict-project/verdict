@@ -136,7 +136,7 @@ public class AsyncAggJoinScaleTest {
         ((AggExecutionNode) 
             queryExecutionPlan.getRootNode()
             .getExecutableNodeBaseDependent(0)
-            .getExecutableNodeBaseDependent(0)).getMeta().getCubes().get(0));
+            .getExecutableNodeBaseDependent(0)).getAggMeta().getCubes().get(0));
     
     ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependent(0)).setScrambleMeta(meta);
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
