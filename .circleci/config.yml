@@ -84,6 +84,7 @@ jobs:
           POSTGRES_DB: test
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: ""
+      - image: circleci/python:3.6.1
     working_directory: ~/repo
     environment:
       # Customize the JVM maximum heap limit
@@ -107,6 +108,24 @@ jobs:
           paths:
             - ~/.m2
           key: verdict-dependencies-{{ checksum "pom.xml" }}
+      # Download and cache dependencies
+      - run:
+          name: install dependencies
+          command: |
+            python3 -m venv venv
+            . venv/bin/activate
+            pip install --upgrade pip
+            pip install coverage codecov
+      # run tests!
+      - run:
+          name: run tests
+          command: |
+            . venv/bin/activate
+            codecov
+            codecov --token=9cf48c61-07ed-4a14-9eed-f7129664ee79
+      - store_artifacts:
+          path: test-reports
+          destination: test-reports
       #- run: mvn cobertura:cobertura
       #- run: bash <(curl -s https://codecov.io/bash) -t 9cf48c61-07ed-4a14-9eed-f7129664ee79
 
@@ -194,32 +213,6 @@ jobs:
               - ~/.m2
             key: verdict-dependencies-{{ checksum "pom.xml" }}
 
-  build-codecov:
-      docker:
-        - image: circleci/python:3.6.1
-      working_directory: ~/repo
-      steps:
-        - checkout
-        # Download and cache dependencies
-        - run:
-            name: install dependencies
-            command: |
-              python3 -m venv venv
-              . venv/bin/activate
-              pip install --upgrade pip
-              pip install coverage codecov
-        # run tests!
-        - run:
-            name: run tests
-            command: |
-              . venv/bin/activate
-              coverage run tests.py
-              codecov
-              codecov --token=9cf48c61-07ed-4a14-9eed-f7129664ee79
-        - store_artifacts:
-            path: test-reports
-            destination: test-reports
-
 workflows:
   version: 2
   build_and_test:
@@ -228,6 +221,5 @@ workflows:
       - build-jdk8
       - build-spark
       - build-impala-redshift
-      - build-codecov
       # - maven-version-check
       # - docker-env-check
