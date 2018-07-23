@@ -119,8 +119,7 @@ public class JdbcTpchQueryTestForAllDatabases {
   private static VerdictConnection mysqlVc;
 
   @BeforeClass
-  public static void setupDatabases()
-      throws SQLException, VerdictDBDbmsException, IOException {
+  public static void setupDatabases() throws SQLException, VerdictDBDbmsException, IOException {
     setupMysql();
     setupImpala();
     setupRedshift();
@@ -187,8 +186,8 @@ public class JdbcTpchQueryTestForAllDatabases {
   }
 
   private static Connection setupImpala() throws SQLException, VerdictDBDbmsException {
-    String connectionString = String.format("jdbc:impala://%s:21050", IMPALA_HOST);
-    String verdictConnectionString = String.format("jdbc:verdict:impala://%s:21050", IMPALA_HOST);
+    String connectionString = String.format("jdbc:impala://%s", IMPALA_HOST);
+    String verdictConnectionString = String.format("jdbc:verdict:impala://%s", IMPALA_HOST);
     Connection conn =
         DatabaseConnectionHelpers.setupImpala(
             connectionString, IMPALA_USER, IMPALA_PASSWORD, IMPALA_DATABASE);
