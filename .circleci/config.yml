@@ -84,7 +84,7 @@ jobs:
           POSTGRES_DB: test
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: ""
-      - image: circleci/python:3.7.0
+      - image: python:3.7.0
     working_directory: ~/repo
     environment:
       # Customize the JVM maximum heap limit
