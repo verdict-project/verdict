@@ -111,16 +111,12 @@ jobs:
       - run:
           name: install dependencies
           command: |
-            python3 -m venv venv
-            . venv/bin/activate
             pip install --upgrade pip
             pip install coverage codecov
       # run tests!
       - run:
           name: run tests
           command: |
-            . venv/bin/activate
-            codecov
             codecov --token=9cf48c61-07ed-4a14-9eed-f7129664ee79
       - store_artifacts:
           path: test-reports
