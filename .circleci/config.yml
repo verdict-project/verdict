@@ -103,6 +103,7 @@ jobs:
       - run: git clone git@github.com:verdictdb/verdictdb-private-resources.git
       # Now build and test
       - run: mvn -B test 2> /dev/null
+      #- run: mvn -DskipTests -P packaging package
       - save_cache:
           paths:
             - ~/.m2

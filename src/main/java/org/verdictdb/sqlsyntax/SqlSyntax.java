@@ -1,5 +1,8 @@
 package org.verdictdb.sqlsyntax;
 
+import java.util.Collection;
+import java.util.Collections;
+
 public abstract class SqlSyntax {
 
   public abstract boolean doesSupportTablePartitioning();
@@ -44,5 +47,19 @@ public abstract class SqlSyntax {
 
   public String substituteTypeName(String type) {
     return type;
+  }
+  
+  /**
+   * The drivers returned by methods are loaded explicitly by JdbcConnection (when it makes a 
+   * JDBC connection to the backend database.) This mechanism is to support legacy library
+   * that does not support automatic JDBC driver discovery.
+   * @return
+   */
+  public Collection<String> getCandidateJDBCDriverClassNames() {
+    return Collections.emptyList();
+  }
+
+  public String getFallbackDefaultSchema() {
+    throw new RuntimeException("This function must be implemented for each dbms syntax.");
   }
 }

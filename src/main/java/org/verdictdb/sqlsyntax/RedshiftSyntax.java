@@ -1,37 +1,12 @@
 package org.verdictdb.sqlsyntax;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+
+import com.google.common.collect.Lists;
+
 public class RedshiftSyntax extends SqlSyntax {
-
-  @Override
-  public int getSchemaNameColumnIndex() {
-    return 0;
-  }
-
-  @Override
-  public int getTableNameColumnIndex() {
-    return 0;
-  }
-
-  @Override
-  public int getColumnNameColumnIndex() {
-    return 0;
-  }
-
-  @Override
-  public int getColumnTypeColumnIndex() {
-    return 1;
-  }
-
-
-  @Override
-  public String getQuoteString() {
-    return "\"";
-  }
-
-  @Override
-  public void dropTable(String schema, String tablename) {
-
-  }
 
   @Override
   public boolean doesSupportTablePartitioning() {
@@ -39,19 +14,33 @@ public class RedshiftSyntax extends SqlSyntax {
   }
 
   @Override
-  public String randFunction() {
-    return "random()";
+  public void dropTable(String schema, String tablename) {
+
+  }
+  
+  @Override
+  public boolean equals(Object obj) {
+    if (obj == null) { return false; }
+    if (obj == this) { return true; }
+    if (obj.getClass() != getClass()) {
+      return false;
+    }
+    return true;
   }
 
   @Override
-  public String getSchemaCommand() {
-    return "select schema_name from information_schema.schemata";
+  public Collection<String> getCandidateJDBCDriverClassNames() {
+    List<String> candidates = Lists.newArrayList(
+        "com.amazon.redshift.jdbc42.Driver", 
+        "com.amazon.redshift.jdbc41.Driver");
+    return candidates;
   }
 
   @Override
-  public String getTableCommand(String schema) {
-    return "SELECT table_name FROM information_schema.tables " + "WHERE table_schema = '" + schema +"'";
+  public int getColumnNameColumnIndex() {
+    return 0;
   }
+
 
   @Override
   public String getColumnsCommand(String schema, String table) {
@@ -60,20 +49,13 @@ public class RedshiftSyntax extends SqlSyntax {
   }
 
   @Override
-  public String getPartitionCommand(String schema, String table) {
-    StringBuilder sql = new StringBuilder();
-    sql.append(String.format(
-        "SET search_path to '%s'; ", schema));
-    sql.append(String.format(
-        "SELECT \"column\", \"type\" FROM PG_TABLE_DEF " +
-        "WHERE \"schemaname\" = '%s' and \"tablename\" = '%s' " +
-          "and \"sortkey\" > 0 " +
-        "ORDER BY \"sortkey\";",
-        schema, table));
-    return sql.toString();
-//    return "select partattrs from pg_partitioned_table join pg_class on pg_class.relname='" + table + "' " +
-//        "and pg_class.oid = pg_partitioned_table.partrelid join information_schema.tables " +
-//        "on table_schema='" + schema + "' and table_name = '" + table + "'";
+  public int getColumnTypeColumnIndex() {
+    return 1;
+  }
+  
+  @Override
+  public String getFallbackDefaultSchema() {
+    return "public";
   }
 
   /**
@@ -112,18 +94,55 @@ public class RedshiftSyntax extends SqlSyntax {
   }
 
   @Override
+  public String getPartitionCommand(String schema, String table) {
+    StringBuilder sql = new StringBuilder();
+    sql.append(String.format(
+        "SET search_path to '%s'; ", schema));
+    sql.append(String.format(
+        "SELECT \"column\", \"type\" FROM PG_TABLE_DEF " +
+        "WHERE \"schemaname\" = '%s' and \"tablename\" = '%s' " +
+          "and \"sortkey\" > 0 " +
+        "ORDER BY \"sortkey\";",
+        schema, table));
+    return sql.toString();
+//    return "select partattrs from pg_partitioned_table join pg_class on pg_class.relname='" + table + "' " +
+//        "and pg_class.oid = pg_partitioned_table.partrelid join information_schema.tables " +
+//        "on table_schema='" + schema + "' and table_name = '" + table + "'";
+  }
+
+  @Override
+  public String getQuoteString() {
+    return "\"";
+  }
+
+  @Override
+  public String getSchemaCommand() {
+    return "select schema_name from information_schema.schemata";
+  }
+
+  @Override
+  public int getSchemaNameColumnIndex() {
+    return 0;
+  }
+
+  @Override
+  public String getTableCommand(String schema) {
+    return "SELECT table_name FROM information_schema.tables " + "WHERE table_schema = '" + schema +"'";
+  }
+
+  @Override
+  public int getTableNameColumnIndex() {
+    return 0;
+  }
+
+  @Override
   public boolean isAsRequiredBeforeSelectInCreateTable() {
     return true;
   }
   
   @Override
-  public boolean equals(Object obj) {
-    if (obj == null) { return false; }
-    if (obj == this) { return true; }
-    if (obj.getClass() != getClass()) {
-      return false;
-    }
-    return true;
+  public String randFunction() {
+    return "random()";
   }
   
 }

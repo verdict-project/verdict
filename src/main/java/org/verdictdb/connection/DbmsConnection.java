@@ -30,4 +30,6 @@ public interface DbmsConnection extends MetaDataProvider {
   
   public void close();
 
+  public DbmsConnection copy();
+
 }

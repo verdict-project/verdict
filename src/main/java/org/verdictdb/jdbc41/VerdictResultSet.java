@@ -33,20 +33,7 @@ public class VerdictResultSet implements ResultSet {
   
   private ResultSetMetaData metadata;
 
-  private Object lastValue = null;
-  
   private long rowIndex = 0;
-
-//  private Boolean isBeforefirst = true;
-//
-//  private Boolean isAfterLast = false;
-//
-//  private Boolean isFirst = false;
-//
-//  private int rowCount = 0;
-
-//  private HashSet<String> numericType = new HashSet<>(Arrays.asList(
-//      "bigint", "decimal", "float", "integer", "real", "numeric", "tinyint", "smallint", "long", "double"));
 
   private HashMap<String, Integer> colNameIdx = new HashMap<>();
 
@@ -1265,6 +1252,6 @@ public class VerdictResultSet implements ResultSet {
 
   @Override
   public boolean wasNull() throws SQLException {
-    return lastValue == null;
+    return queryResult.wasNull();
   }
 }

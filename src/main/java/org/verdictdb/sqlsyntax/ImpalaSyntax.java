@@ -1,6 +1,10 @@
 package org.verdictdb.sqlsyntax;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
+
+import com.google.common.collect.Lists;
 
 public class ImpalaSyntax extends SqlSyntax {
 
@@ -13,10 +17,22 @@ public class ImpalaSyntax extends SqlSyntax {
   public void dropTable(String schema, String tablename) {
 
   }
+  
+  @Override
+  public Collection<String> getCandidateJDBCDriverClassNames() {
+    List<String> candidates = Lists.newArrayList(
+        "com.cloudera.impala.jdbc41.Driver");
+    return candidates;
+  }
 
   @Override
   public int getColumnNameColumnIndex() {
     return 0;
+  }
+  
+  @Override
+  public String getFallbackDefaultSchema() {
+    return "default";
   }
 
   @Override

@@ -30,6 +30,9 @@ public class VerdictStatement implements java.sql.Statement {
   public boolean execute(String sql) throws SQLException {
     try {
       result = executionContext.sql(sql);
+      if (result == null) {
+        return false;
+      }
       return !result.isEmpty();
     } catch (VerdictDBException e) {
       throw new SQLException(e);

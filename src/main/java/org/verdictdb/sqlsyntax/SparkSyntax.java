@@ -26,6 +26,11 @@ public class SparkSyntax extends SqlSyntax {
   public int getColumnTypeColumnIndex() {
     return 1;
   }
+  
+  @Override
+  public String getFallbackDefaultSchema() {
+    return "default";
+  }
 
   
   @Override

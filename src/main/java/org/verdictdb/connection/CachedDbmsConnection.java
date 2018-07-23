@@ -33,5 +33,15 @@ public class CachedDbmsConnection extends CachedMetaDataProvider implements Dbms
   public void close() {
     originalConn.close();
   }
+  
+  public DbmsConnection getOriginalConnection() {
+    return originalConn;
+  }
+
+  @Override
+  public DbmsConnection copy() {
+    CachedDbmsConnection newConn = new CachedDbmsConnection(originalConn.copy());
+    return newConn;
+  }
 
 }

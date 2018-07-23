@@ -363,7 +363,7 @@ public class DatabaseConnectionHelpers {
 
     Connection conn = DriverManager.getConnection(connectionString, user, password);
     JdbcConnection dbmsConn = new JdbcConnection(conn, new RedshiftSyntax());
-    //    dbmsConn.setOutputDebugMessage(true);
+    dbmsConn.setOutputDebugMessage(true);
 
     dbmsConn.execute(String.format("DROP SCHEMA IF EXISTS \"%s\" CASCADE", schema));
     dbmsConn.execute(String.format("CREATE SCHEMA IF NOT EXISTS \"%s\"", schema));

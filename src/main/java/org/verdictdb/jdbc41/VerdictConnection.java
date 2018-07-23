@@ -18,6 +18,7 @@ import java.util.Properties;
 import java.util.concurrent.Executor;
 
 import org.verdictdb.VerdictContext;
+import org.verdictdb.connection.CachedDbmsConnection;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.exception.VerdictDBDbmsException;
@@ -40,10 +41,22 @@ public class VerdictConnection implements java.sql.Connection {
     vc = VerdictContext.fromConnectionString(url, user, password);
   }
 
-  private java.sql.DatabaseMetaData getDatabaseMetaData() {
+  private java.sql.DatabaseMetaData getDatabaseMetaData() throws SQLException {
     DbmsConnection conn = vc.getConnection();
-    // Return metadata from java.sql.Connection if it is a JDBC connection.
-    if (conn instanceof JdbcConnection) {
+    java.sql.DatabaseMetaData metaData = getDatabaseMetaDataFromConnection(conn);
+    
+    if (metaData == null) {
+      throw new SQLException("Unexpected underlying connection: " + conn);
+    } else {
+      return metaData;
+    }
+  }
+  
+  private java.sql.DatabaseMetaData getDatabaseMetaDataFromConnection(DbmsConnection conn) {
+    if (conn instanceof CachedDbmsConnection) {
+      DbmsConnection originalConn = ((CachedDbmsConnection) conn).getOriginalConnection();
+      return getDatabaseMetaDataFromConnection(originalConn);
+    } else if (conn instanceof JdbcConnection) {
       JdbcConnection jdbcConn = (JdbcConnection) conn;
       try {
         return jdbcConn.getMetadata();

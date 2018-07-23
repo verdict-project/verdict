@@ -15,6 +15,11 @@ public class VerdictResultStream implements Iterable<VerdictSingleResult>, Itera
     this.reader = reader;
     this.execContext = execContext;
   }
+  
+  // TODO
+  public VerdictResultStream create(VerdictSingleResult singleResult) {
+    return null;
+  }
 
   @Override
   public boolean hasNext() {

@@ -40,12 +40,14 @@ public class Driver implements java.sql.Driver {
         if (tokens.length >= 2 &&
             (tokens[1].equalsIgnoreCase("verdict") || tokens[1].equalsIgnoreCase("verdictdb"))) {
           List<String> newTokens = new ArrayList<>();
-          for (int i=0;i<tokens.length;++i) {
-            if (i!=1) newTokens.add(tokens[i]);
+          for (int i = 0; i < tokens.length; ++i) {
+            if (i != 1) newTokens.add(tokens[i]);
           }
           newUrl = Joiner.on(":").join(newTokens);
         }
-        return new org.verdictdb.jdbc41.VerdictConnection(newUrl, info);
+        Connection verdictConnection = new org.verdictdb.jdbc41.VerdictConnection(newUrl, info);
+        System.out.println("VerdictConnection has been created: " + verdictConnection);
+        return verdictConnection;
       } catch (VerdictDBDbmsException e) {
         e.printStackTrace();
         throw new SQLException(e.getMessage());

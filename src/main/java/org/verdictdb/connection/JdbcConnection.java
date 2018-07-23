@@ -29,11 +29,14 @@ public class JdbcConnection implements DbmsConnection {
     } catch (SQLException e) {
       throw new VerdictDBDbmsException(e);
     }
+    
+    SqlSyntax syntax = SqlSyntaxList.getSyntaxFromConnectionString(connectionString);
+//    String dbName = connectionString.split(":")[1];
+//    SqlSyntax syntax = SqlSyntaxList.getSyntaxFor(dbName);
 
-    String dbName = connectionString.split(":")[1];
-    SqlSyntax syntax = SqlSyntaxList.getSyntaxFor(dbName);
-
-    return new JdbcConnection(conn, syntax);
+    JdbcConnection jdbcConn = new JdbcConnection(conn, syntax);
+//    jdbcConn.setOutputDebugMessage(true);
+    return jdbcConn;
   }
 
   public JdbcConnection(Connection conn, SqlSyntax syntax) {
@@ -46,8 +49,13 @@ public class JdbcConnection implements DbmsConnection {
       }
     } catch (SQLException e) {
       e.printStackTrace();
-      // leave currentSchema as null
     }
+    
+    // set a default value if an inappropriate value is set.
+    if (currentSchema == null || currentSchema.length() == 0) {
+      currentSchema = syntax.getFallbackDefaultSchema();
+    }
+    
     this.syntax = syntax;
   }
 
@@ -345,5 +353,14 @@ public class JdbcConnection implements DbmsConnection {
 
   public void setOutputDebugMessage(boolean outputDebugMessage) {
     this.outputDebugMessage = outputDebugMessage;
+  }
+
+  @Override
+  public DbmsConnection copy() {
+    JdbcConnection newConn = new JdbcConnection(conn, syntax);
+    newConn.setDefaultSchema(currentSchema);
+    newConn.jrs = this.jrs;
+    newConn.outputDebugMessage = this.outputDebugMessage;
+    return newConn;
   }
 }

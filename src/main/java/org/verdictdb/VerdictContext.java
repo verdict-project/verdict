@@ -3,6 +3,7 @@ package org.verdictdb;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
@@ -16,6 +17,8 @@ import org.verdictdb.coordinator.VerdictResultStream;
 import org.verdictdb.coordinator.VerdictSingleResult;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.sqlsyntax.SqlSyntax;
+import org.verdictdb.sqlsyntax.SqlSyntaxList;
 
 
 public class VerdictContext {
@@ -37,30 +40,52 @@ public class VerdictContext {
     this.contextId = RandomStringUtils.randomAlphanumeric(5);
   }
 
-  static public VerdictContext fromJdbcConnection(Connection jdbcConn) throws VerdictDBDbmsException {
+  static public VerdictContext fromJdbcConnection(Connection jdbcConn) 
+      throws VerdictDBDbmsException {
     DbmsConnection conn = JdbcConnection.create(jdbcConn);
     return new VerdictContext(conn);
   }
 
-  static public VerdictContext fromConnectionString(String jdbcConnectionString) throws SQLException, VerdictDBDbmsException {
+  static public VerdictContext fromConnectionString(String jdbcConnectionString) 
+      throws SQLException, VerdictDBDbmsException {
+    attemptLoadDriverClass(jdbcConnectionString);
     Connection jdbcConn = DriverManager.getConnection(jdbcConnectionString);
     return fromJdbcConnection(jdbcConn);
   }
 
   static public VerdictContext fromConnectionString(String jdbcConnectionString, Properties info)
       throws SQLException, VerdictDBDbmsException {
+    attemptLoadDriverClass(jdbcConnectionString);
     Connection jdbcConn = DriverManager.getConnection(jdbcConnectionString, info);
     return fromJdbcConnection(jdbcConn);
   }
 
-  static public VerdictContext fromConnectionString(String jdbcConnectionString, String user, String password)
+  static public VerdictContext fromConnectionString(
+      String jdbcConnectionString, String user, String password)
       throws SQLException, VerdictDBDbmsException {
+    attemptLoadDriverClass(jdbcConnectionString);
     Connection jdbcConn = DriverManager.getConnection(jdbcConnectionString, user, password);
     return fromJdbcConnection(jdbcConn);
+  }
+  
+  static private void attemptLoadDriverClass(String jdbcConnectionString) {
+    SqlSyntax syntax = SqlSyntaxList.getSyntaxFromConnectionString(jdbcConnectionString);
+    Collection<String> driverClassNames = syntax.getCandidateJDBCDriverClassNames();
+    for (String className : driverClassNames) {
+      try {
+        Class.forName(className);
+//        System.out.println(className + " has been loaded into the classpath.");
+      } catch (ClassNotFoundException e) {
+      }
+    }
   }
 
   public DbmsConnection getConnection() {
     return conn;
+  }
+  
+  public DbmsConnection getCopiedConnection() {
+    return conn.copy();
   }
   
   public String getContextId() {

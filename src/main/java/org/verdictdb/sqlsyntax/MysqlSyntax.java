@@ -16,6 +16,11 @@ public class MysqlSyntax extends SqlSyntax {
   public int getColumnNameColumnIndex() {
     return 0;
   }
+  
+  @Override
+  public String getFallbackDefaultSchema() {
+    return "test";
+  }
 
   @Override
   public String getColumnsCommand(String schema, String table) {
