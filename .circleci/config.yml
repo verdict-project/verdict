@@ -84,13 +84,12 @@ jobs:
           POSTGRES_DB: test
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: ""
-      - image: circleci/python:3.6.1
     working_directory: ~/repo
     environment:
       # Customize the JVM maximum heap limit
       MAVEN_OPTS: -Xmx3200m
     steps:
-      - run: apt-get update; apt-get install -y git
+      - run: apt-get update; apt-get install -y git python3 python3-pip
       - checkout
       # Set up maven dependencies
       - restore_cache:
