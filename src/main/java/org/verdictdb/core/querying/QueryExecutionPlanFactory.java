@@ -1,6 +1,9 @@
 package org.verdictdb.core.querying;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
+import org.verdictdb.core.sqlobject.AsteriskColumn;
+import org.verdictdb.core.sqlobject.BaseTable;
 import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.exception.VerdictDBException;
 
@@ -30,11 +33,11 @@ public class QueryExecutionPlanFactory {
   public static QueryExecutionPlan create(
       String scratchpadSchemaName,
       ScrambleMetaSet scrambleMeta,
-      SelectQuery query) throws VerdictDBException {
+      SelectQuery query) {
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan();
     queryExecutionPlan.idCreator = new TempIdCreatorInScratchpadSchema(scratchpadSchemaName);
     queryExecutionPlan.scrambleMeta = scrambleMeta;
-    queryExecutionPlan.root = SelectAllExecutionNode.create(queryExecutionPlan.idCreator, query);
+    queryExecutionPlan.root = createRootAndItsDependents(queryExecutionPlan.idCreator, query);
     return queryExecutionPlan;
   }
 
@@ -46,16 +49,35 @@ public class QueryExecutionPlanFactory {
     return queryExecutionPlan;
   }
   
-  static ExecutableNodeBase createRootAndItsDependents(SelectQuery query) {
-    
-    // identify the query type and calls an appropriate function defined below.
-    
-    return null;
+  static ExecutableNodeBase createRootAndItsDependents(IdCreator idCreator, SelectQuery query) {
+    if (query.isSupportedAggregate()) {
+      return createSelectAllExecutionNodeAndItsDependents(idCreator, query);
+    } else {
+      // Currently, the behaviour is the same.
+      return createSelectAllExecutionNodeAndItsDependents(idCreator, query);
+    }
   }
   
-  static SelectAllExecutionNode createSelectAllExecutionNodeAndItsDependents(SelectQuery query) {
-    // move an existing static create() factory method here.
-    return null;
+  static SelectAllExecutionNode createSelectAllExecutionNodeAndItsDependents(IdCreator idCreator, SelectQuery query) {
+    SelectAllExecutionNode selectAll = new SelectAllExecutionNode(null);
+    Pair<BaseTable, SubscriptionTicket> baseAndSubscriptionTicket = selectAll.createPlaceHolderTable("t");
+    SelectQuery selectQuery = SelectQuery.create(new AsteriskColumn(), baseAndSubscriptionTicket.getLeft());
+    selectQuery.addOrderby(query.getOrderby());
+    if (query.getLimit().isPresent()) selectQuery.addLimit(query.getLimit().get());
+    selectAll.setSelectQuery(selectQuery);
+
+    if (query.isSupportedAggregate()) {
+      AggExecutionNode dependent = AggExecutionNode.create(idCreator, query);
+      dependent.registerSubscriber(baseAndSubscriptionTicket.getRight());
+//      selectAll.addDependency(dependent);
+    }
+    else {
+      ProjectionNode dependent = ProjectionNode.create(idCreator, query);
+      dependent.registerSubscriber(baseAndSubscriptionTicket.getRight());
+//      selectAll.addDependency(dependent);
+    }
+
+    return selectAll;
   }
   
   // create more functions like this.

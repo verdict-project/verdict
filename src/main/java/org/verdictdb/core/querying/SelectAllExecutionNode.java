@@ -18,7 +18,7 @@ import org.verdictdb.exception.VerdictDBValueException;
  */
 public class SelectAllExecutionNode extends QueryNodeWithPlaceHolders {
   
-  private SelectAllExecutionNode(SelectQuery query){
+  public SelectAllExecutionNode(SelectQuery query){
     super(query);
   }
 
