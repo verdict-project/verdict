@@ -131,8 +131,12 @@ public class QueryExecutionPlanSimplifier {
 //    }
   }
 
-  // Return true if this node share queue with other dependant of its parent
-  static boolean isSharingQueue(ExecutableNodeBase node) {
+  /**
+   *
+   * @param node
+   * @return true if node is sharing channel with other sources of its subsriber
+   */
+   static boolean isSharingQueue(ExecutableNodeBase node) {
     // must have one parent and this parent must have multiple dependents
     if (node.getExecutableNodeBaseParents().size() != 1 ||
         node.getExecutableNodeBaseParents().get(0).getDependentNodeCount() <= 1) {
