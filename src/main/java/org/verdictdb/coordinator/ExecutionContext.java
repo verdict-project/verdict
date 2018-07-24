@@ -100,32 +100,8 @@ public class ExecutionContext {
   }
 
   private VerdictResultStream generateDesribeTableResultFromQuery(String query) throws VerdictDBException {
-    VerdictSQLParser parser = NonValidatingSQLParser.parserOf(query);
-    VerdictSQLParserBaseVisitor<Pair<String, String>> visitor = new VerdictSQLParserBaseVisitor<Pair<String, String>>() {
-      @Override
-      public Pair<String, String> visitDescribe_table_statement(VerdictSQLParser.Describe_table_statementContext ctx) {
-        String table = ctx.table.table.getText();
-        String schema = ctx.table.schema.getText();
-        if (schema==null) {
-          schema = context.getConnection().getDefaultSchema();
-        }
-        return new ImmutablePair<>(schema, table);
-      }
-    };
-    Pair<String, String> t = visitor.visit(parser.verdict_statement());
-    String table = t.getRight();
-    String schema = t.getLeft();
-    if (schema==null) {
-      schema = context.getConnection().getDefaultSchema();
-    }
-    List<Pair<String, String>> columnInfo = context.getConnection().getColumns(schema, table);
-    List<List<String>> newColumnInfo = new ArrayList<>();
-    for (Pair<String, String> pair:columnInfo) {
-      newColumnInfo.add(Arrays.asList(pair.getLeft(), pair.getRight()));
-    }
-    VerdictSingleResultFromListData result = new VerdictSingleResultFromListData(
-        (List)newColumnInfo);
-    return new VerdictResultStreamFromSingleResult(result);
+    DbmsQueryResult queryResult = context.getConnection().execute(query);
+    return new VerdictResultStreamFromSingleResult(new VerdictSingleResultFromDbmsQueryResult(queryResult));
   }
   
   private void updateDefaultSchemaFromQuery(String query) {

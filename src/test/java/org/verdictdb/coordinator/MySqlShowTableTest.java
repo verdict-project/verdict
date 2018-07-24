@@ -33,7 +33,7 @@ public class MySqlShowTableTest {
 
   private static final String MYSQL_UESR;
 
-  private static final String MYSQL_PASSWORD = "zhongshucheng123";
+  private static final String MYSQL_PASSWORD = "";
 
   static {
     String env = System.getenv("BUILD_ENV");
@@ -89,6 +89,7 @@ public class MySqlShowTableTest {
       result.next();
       assertEquals(rs.getString(1), result.getValue(0));
     }
+    assertEquals(rs.getMetaData().getColumnCount(), result.getColumnCount());
   }
 
   @Test
@@ -104,6 +105,7 @@ public class MySqlShowTableTest {
       result.next();
       assertEquals(rs.getString(1), result.getValue(0));
     }
+    assertEquals(rs.getMetaData().getColumnCount(), result.getColumnCount());
   }
 
   @Test
@@ -120,6 +122,7 @@ public class MySqlShowTableTest {
       assertEquals(rs.getString(1), result.getValue(0));
       assertEquals(rs.getString(2), result.getValue(1));
     }
+    assertEquals(rs.getMetaData().getColumnCount(), result.getColumnCount());
   }
 
 }
