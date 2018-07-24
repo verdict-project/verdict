@@ -99,6 +99,14 @@ public class VerdictContext {
     return conn;
   }
 
+  public JdbcConnection getJdbcConnection() {
+    DbmsConnection testConn = conn;
+    if (testConn instanceof CachedDbmsConnection) {
+      testConn = ((CachedDbmsConnection) conn).getOriginalConnection();
+    }
+    return (testConn instanceof JdbcConnection) ? (JdbcConnection) testConn : null;
+  }
+
   public DbmsConnection getCopiedConnection() {
     return conn.copy();
   }
