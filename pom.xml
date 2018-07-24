@@ -307,7 +307,7 @@
             <activation>
                 <activeByDefault>true</activeByDefault>
                 <property>
-                    <name>packaging</name>
+                    <name>verdictdb-packaging</name>
                     <value>!true</value>
                 </property>
             </activation>
@@ -358,7 +358,7 @@
             <id>packaging-stage</id>
             <activation>
                 <property>
-                    <name>packaging</name>
+                    <name>verdictdb-packaging</name>
                     <value>true</value>
                 </property>
             </activation>
@@ -384,7 +384,6 @@
                 </dependency>
             </dependencies>
         </profile>
-
         <profile>
             <id>release</id>
             <distributionManagement>

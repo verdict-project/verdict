@@ -93,9 +93,11 @@ jobs:
     environment:
       # Customize the JVM maximum heap limit
       MAVEN_OPTS: -Xmx3200m
+
     steps:
       - run: apt-get update; apt-get install -y git
       - checkout
+
       # Set up maven dependencies
       - restore_cache:
           keys:
@@ -104,11 +106,15 @@ jobs:
           # - v1-dependencies-
       - run: mvn install:install-file -Dfile=src/test/resources/jars/ImpalaJDBC41-2.6.3.jar -DgroupId=com.cloudera -DartifactId=impala-jdbc41 -Dversion=2.6.3 -Dpackaging=jar
       # - run: mvn dependency:go-offline
+
       # Setup necessary test data
       - run: git clone git@github.com:verdictdb/verdictdb-private-resources.git
       # Now build and test
       - run: mvn -B test 2> /dev/null
-      #- run: mvn -DskipTests -Dverdictdb-packaging=true package
+
+      # Check JDBC service file correctness
+      - run: mvn -DskipTests -Dverdictdb-packaging=true package
+      - run: l &&
       - save_cache:
           paths:
             - ~/.m2
