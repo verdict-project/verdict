@@ -134,7 +134,7 @@ jobs:
       # Setup necessary test data
       - run: git clone git@github.com:verdictdb/verdictdb-private-resources.git
       # Now build and test
-      - run: mvn -B test cobertura:cobertura 2> /dev/null
+      - run: mvn -B cobertura:cobertura 2> /dev/null
       # Upload codecov
       #- run: mvn -DskipTests cobertura:cobertura
       - run: bash <(curl -s https://codecov.io/bash) -t 9cf48c61-07ed-4a14-9eed-f7129664ee79
