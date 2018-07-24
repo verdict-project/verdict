@@ -40,6 +40,8 @@ public class QueryExecutionPlan implements ExecutablePlan, IdCreator, Serializab
 
   protected IdCreator idCreator;
 
+  public QueryExecutionPlan() {}
+
   public QueryExecutionPlan(String scratchpadSchemaName) {
     this.scrambleMeta = new ScrambleMetaSet();
     this.idCreator = new TempIdCreatorInScratchpadSchema(scratchpadSchemaName);
@@ -55,20 +57,20 @@ public class QueryExecutionPlan implements ExecutablePlan, IdCreator, Serializab
    * @throws VerdictDBValueException
    * @throws VerdictDBException
    */
+  /*
   public QueryExecutionPlan(
       String scratchpadSchemaName, ScrambleMetaSet scrambleMeta, SelectQuery query)
       throws VerdictDBException {
 
     this(scratchpadSchemaName);
     setScrambleMeta(scrambleMeta);
-    setSelectQuery(query);
   }
 
   public QueryExecutionPlan(String scratchpadSchemaName, ExecutableNodeBase root) {
     this(scratchpadSchemaName);
     this.root = root;
   }
-
+  */
   public int getSerialNumber() {
     return ((TempIdCreatorInScratchpadSchema) idCreator).getSerialNumber();
   }
@@ -80,7 +82,7 @@ public class QueryExecutionPlan implements ExecutablePlan, IdCreator, Serializab
   public void setScrambleMeta(ScrambleMetaSet scrambleMeta) {
     this.scrambleMeta = scrambleMeta;
   }
-
+/*
   public void setSelectQuery(SelectQuery query) throws VerdictDBException {
     // TODO: this should also test if subqueries include aggregates
     // Change this to something like 'doesContainSupportedAggregateInDescendents()'.
@@ -88,11 +90,18 @@ public class QueryExecutionPlan implements ExecutablePlan, IdCreator, Serializab
     // Accept all query
     // if (!query.isSupportedAggregate()) {
     //  throw new VerdictDBTypeException(query);
+<<<<<<< HEAD
+    //}
+
+    QueryExecutionPlanFactory.create(query, idCreator);
+=======
     // }
 
     // TODO: replace makePlan() with QueryExecutionPlanFactory.create().
     this.root = makePlan(query);
+>>>>>>> origin/master
   }
+  */
 
   public String getScratchpadSchemaName() {
     return ((TempIdCreatorInScratchpadSchema) idCreator).getScratchpadSchemaName();

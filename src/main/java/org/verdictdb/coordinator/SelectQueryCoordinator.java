@@ -24,6 +24,7 @@ import org.verdictdb.connection.MetaDataProvider;
 import org.verdictdb.connection.StaticMetaData;
 import org.verdictdb.core.execplan.ExecutablePlanRunner;
 import org.verdictdb.core.querying.QueryExecutionPlan;
+import org.verdictdb.core.querying.QueryExecutionPlanFactory;
 import org.verdictdb.core.querying.QueryExecutionPlanSimplifier;
 import org.verdictdb.core.querying.ola.AsyncQueryExecutionPlan;
 import org.verdictdb.core.resulthandler.ExecutionResultReader;
@@ -76,7 +77,7 @@ public class SelectQueryCoordinator {
     // if the plan does not include any aggregates, it will simply be a parsed structure of the
     // original query.
     QueryExecutionPlan plan =
-        new QueryExecutionPlan(scratchpadSchema, scrambleMetaSet, selectQuery);
+        QueryExecutionPlanFactory.create(scratchpadSchema, scrambleMetaSet, selectQuery);
 
     // convert it to an asynchronous plan
     // if the plan does not include any aggregates, this operation should not alter the original

@@ -72,7 +72,7 @@ public class AggExecutionNodeTest {
         new SubqueryColumn(subquery)
     )));
 //    AggExecutionNode node = new AggExecutionNode(conn, newSchema, newTable, query);
-    QueryExecutionPlan plan = new QueryExecutionPlan("newschema");
+    QueryExecutionPlan plan = QueryExecutionPlanFactory.create("newschema");
     AggExecutionNode node = AggExecutionNode.create(plan, query);
     String aliasName = String.format("verdictdbalias_%d_0", plan.getSerialNumber());
 
@@ -103,7 +103,7 @@ public class AggExecutionNodeTest {
         new SubqueryColumn(subquery)
     )));
 //    AggExecutionNode node = new AggExecutionNode(conn, newSchema, newTable, query);
-    AggExecutionNode node = AggExecutionNode.create(new QueryExecutionPlan("newschema"), query);
+    AggExecutionNode node = AggExecutionNode.create(QueryExecutionPlanFactory.create("newschema"), query);
 
     ExecutionInfoToken subqueryToken = new ExecutionInfoToken();
     subqueryToken.setKeyValue("schemaName", "newschema");

@@ -1,13 +1,67 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.verdictdb</groupId>
     <artifactId>verdictdb-core</artifactId>
     <packaging>jar</packaging>
     <version>0.5.0-alpha</version>
-    <name>VerdictDB Core</name>
+    <name>${project.groupId}:${project.artifactId}</name>
+    <description>Platform-independent data analytics system for interactive-speed analytics</description>
     <url>http://verdictdb.org</url>
+
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
+
+    <organization>
+        <name>University of Michigan</name>
+        <url>http://eecs.umich.edu</url>
+    </organization>
+
+    <developers>
+        <developer>
+            <id>mozafari</id>
+            <name>Barzan Mozafari</name>
+            <email>mozafari@umich.edu</email>
+            <url>http://web.eecs.umich.edu/~mozafari</url>
+            <organization>University of Michigan</organization>
+            <organizationUrl>http://eecs.umich.edu/</organizationUrl>
+            <roles>
+                <role>architect</role>
+                <role>developer</role>
+            </roles>
+            <timezone>America/New_York</timezone>
+        </developer>
+        <developer>
+            <id>pyongjoo</id>
+            <name>Yongjoo Park</name>
+            <email>pyongjoo@umich.edu</email>
+            <url>http://yongjoopark.com</url>
+            <organization>University of Michigan</organization>
+            <organizationUrl>http://eecs.umich.edu/</organizationUrl>
+            <roles>
+                <role>architect</role>
+                <role>developer</role>
+            </roles>
+            <timezone>America/New_York</timezone>
+        </developer>
+        <developer>
+            <id>dyoon</id>
+            <name>Dong Young Yoon</name>
+            <email>dyoon@umich.edu</email>
+            <organization>University of Michigan</organization>
+            <organizationUrl>http://eecs.umich.edu/</organizationUrl>
+            <roles>
+                <role>architect</role>
+                <role>developer</role>
+            </roles>
+            <timezone>America/New_York</timezone>
+        </developer>
+    </developers>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -210,6 +264,7 @@
             <groupId>com.amazon.redshift</groupId>
             <artifactId>redshift-jdbc41</artifactId>
             <version>1.2.10.1009</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.klarna</groupId>
@@ -306,7 +361,7 @@
             <activation>
                 <activeByDefault>true</activeByDefault>
                 <property>
-                    <name>packaging</name>
+                    <name>verdictdb-packaging</name>
                     <value>!true</value>
                 </property>
             </activation>
@@ -357,7 +412,7 @@
             <id>packaging-stage</id>
             <activation>
                 <property>
-                    <name>packaging</name>
+                    <name>verdictdb-packaging</name>
                     <value>true</value>
                 </property>
             </activation>
@@ -383,9 +438,8 @@
                 </dependency>
             </dependencies>
         </profile>
-
         <profile>
-            <id>release</id>
+            <id>sonatype-release</id>
             <distributionManagement>
                 <snapshotRepository>
                     <id>ossrh</id>
