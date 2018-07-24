@@ -5,7 +5,7 @@
     <groupId>org.verdictdb</groupId>
     <artifactId>verdictdb-core</artifactId>
     <packaging>jar</packaging>
-    <version>0.5.0-alpha</version>
+    <version>0.5.1</version>
     <name>${project.groupId}:${project.artifactId}</name>
     <description>Platform-independent data analytics system for interactive-speed analytics</description>
     <url>http://verdictdb.org</url>

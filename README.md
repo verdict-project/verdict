@@ -1,4 +1,4 @@
-[![Build Status](https://circleci.com/gh/verdictdb/verdictdb-dev/tree/master.svg?style=shield&circle-token=ef8e6fc7f668eceee0b2a2a10c1af3f05f667b6b)](https://circleci.com/gh/verdictdb/verdictdb-dev/tree/master)
+[![Build Status](https://circleci.com/gh/mozafari/verdictdb/tree/master.svg?style=shield&circle-token=16a7386340ff7022b21ce007434f8caa2fa97aec)](https://circleci.com/gh/mozafari/verdictdb/tree/master)
 [![Code Coverage](https://codecov.io/gh/mozafari/verdictdb/branch/master/graph/badge.svg)](https://codecov.io/gh/mozafari/verdictdb)
 
 # Same SQL, Same DB, 100x-200x Faster Analytics
@@ -58,7 +58,6 @@ Due to its support for standard interface, Verdict integrates easily with popula
 ## Download and install
 
 You only need to download a couple of jar files to get started. Verdict does not require "sudo" access or any complicated setup process. Go to [this download page](http://verdictdb.org/download/) to find out the files relevant to your data analytics platforms. We already provide pre-built jar files for Cloudera distributions, MapR distributions, and official Apache Spark. You can also build from the source code using the standard build tool, Apache Maven.
-
 
 
 ## Research

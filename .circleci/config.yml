@@ -83,6 +83,19 @@ jobs:
             - ~/.m2
           key: verdict-dependencies-{{ checksum "pom.xml" }}
 
+  #update-codecov:
+    #docker:
+      ## specify the version you desire here
+      #- image: maven:3.5.4-jdk-8-slim
+    #working_directory: ~/repo
+    #environment:
+      ## Customize the JVM maximum heap limit
+      #MAVEN_OPTS: -Xmx3200m
+    #steps:
+      #- run: apt-get update; apt-get install -y git
+      #- checkout
+      #- run: mvn install:install-file -Dfile=src/test/resources/jars/ImpalaJDBC41-2.6.3.jar -DgroupId=com.cloudera -DartifactId=impala-jdbc41 -Dversion=2.6.3 -Dpackaging=jar
+
   build-jdk8:
     docker:
       # specify the version you desire here
@@ -121,7 +134,10 @@ jobs:
       # Setup necessary test data
       - run: git clone git@github.com:verdictdb/verdictdb-private-resources.git
       # Now build and test
-      - run: mvn -B test 2> /dev/null
+      - run: mvn -B cobertura:cobertura 2> /dev/null
+      # Upload codecov
+      #- run: mvn -DskipTests cobertura:cobertura
+      - run: bash <(curl -s https://codecov.io/bash) -t 9cf48c61-07ed-4a14-9eed-f7129664ee79
 
       # Check the JDBC service file correctness
       - run: bash .circleci/check_jdbc_driver_name.sh
@@ -142,8 +158,8 @@ jobs:
           paths:
             - ~/.m2
           key: verdict-dependencies-{{ checksum "pom.xml" }}
-      #- run: mvn cobertura:cobertura
-      #- run: bash <(curl -s https://codecov.io/bash) -t 9cf48c61-07ed-4a14-9eed-f7129664ee79
+          #- run: mvn cobertura:cobertura
+          #- run: bash <(curl -s https://codecov.io/bash) -t 9cf48c61-07ed-4a14-9eed-f7129664ee79
 
   build-spark:
       docker:
@@ -258,5 +274,6 @@ workflows:
       - build-jdk8
       - build-spark
       - build-impala-redshift
+      #- update-codecov
       # - maven-version-check
       # - docker-env-check
