@@ -74,9 +74,9 @@ jobs:
       - store_artifacts:
           path: ~/junit
       - save_cache:
-        paths:
-          - ~/.m2
-        key: verdict-dependencies-{{ checksum "pom.xml" }}
+          paths:
+            - ~/.m2
+          key: verdict-dependencies-{{ checksum "pom.xml" }}
 
   build-jdk8:
     docker:
