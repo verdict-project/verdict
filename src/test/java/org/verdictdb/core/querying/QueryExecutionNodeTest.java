@@ -41,7 +41,7 @@ public class QueryExecutionNodeTest {
     String schemaName = "newschema";
     String tableName = "newtable";
     ScrambleMetaSet scrambleMeta = generateTestScrambleMeta();
-    ExecutableNodeBase node = AggExecutionNode.create(new QueryExecutionPlan("newschema"), query);
+    ExecutableNodeBase node = AggExecutionNode.create(QueryExecutionPlanFactory.create("newschema"), query);
 //    assertTrue(node.doesContainScrambledTablesInDescendants(scrambleMeta));
   }
   
@@ -63,7 +63,7 @@ public class QueryExecutionNodeTest {
     String schemaName = "newschema";
     String tableName = "newtable";
     ScrambleMetaSet scrambleMeta = generateTestScrambleMeta();
-    ExecutableNodeBase node = AggExecutionNode.create(new QueryExecutionPlan("newschema"), query);
+    ExecutableNodeBase node = AggExecutionNode.create(QueryExecutionPlanFactory.create("newschema"), query);
 //    assertFalse(node.doesContainScrambledTablesInDescendants(scrambleMeta));
   }
   

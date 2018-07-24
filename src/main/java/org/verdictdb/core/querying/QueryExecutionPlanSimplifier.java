@@ -1,7 +1,20 @@
-package org.verdictdb.core.querying;
+/*
+ *    Copyright 2018 University of Michigan
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
 
-import java.util.ArrayList;
-import java.util.List;
+package org.verdictdb.core.querying;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.core.execplan.ExecutableNode;
@@ -11,10 +24,12 @@ import org.verdictdb.core.sqlobject.BaseTable;
 import org.verdictdb.core.sqlobject.JoinTable;
 import org.verdictdb.core.sqlobject.SubqueryColumn;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class QueryExecutionPlanSimplifier {
 
   /**
-   *
    * @param originalPlan
    * @return a deepcopy of plan which is simplified
    */
@@ -31,30 +46,34 @@ public class QueryExecutionPlanSimplifier {
       traverse.remove(0);
       if (node.getDependentNodeCount() == 0 && !nodesToCompress.contains(node)) {
         nodesToCompress.add(node);
-      }
-      else traverse.addAll(node.getExecutableNodeBaseDependents());
+      } else traverse.addAll(node.getExecutableNodeBaseDependents());
     }
 
     List<ExecutableNodeBase> history = new ArrayList<>();
     while (!nodesToCompress.isEmpty()) {
       ExecutableNodeBase node = nodesToCompress.remove(0);
-      List<ExecutableNodeBase> nodeParentsSaved = new ArrayList<>(node.getExecutableNodeBaseParents());
-      
+      List<ExecutableNodeBase> nodeParentsSaved =
+          new ArrayList<>(node.getExecutableNodeBaseParents());
+
       // Exception 1: has no parent(root), or has multiple parent
-      // Exception 2: its parents has multiple dependents and this node share same queue with other dependents
+      // Exception 2: its parents has multiple dependents and this node share same queue with other
+      // dependents
       // Exception 3: two nodes are not SelectAllNode, ProjectionNode or AggregateNode
-      boolean compressable = node.getExecutableNodeBaseParents().size() == 1 && !isSharingQueue(node);
+      boolean compressable =
+          node.getExecutableNodeBaseParents().size() == 1 && !isSharingQueue(node);
       if (compressable) {
         ExecutableNodeBase parent = node.getExecutableNodeBaseParents().get(0);
-        if (((parent instanceof AggExecutionNode) || (parent instanceof SelectAllExecutionNode) ||
-            (parent instanceof ProjectionNode && !(parent instanceof AsyncAggExecutionNode)))
-            && ((node instanceof AggExecutionNode) ||(node instanceof SelectAllExecutionNode) ||
-            (node instanceof ProjectionNode && !(node instanceof AsyncAggExecutionNode))) ) {
+        if (((parent instanceof AggExecutionNode)
+                || (parent instanceof SelectAllExecutionNode)
+                || (parent instanceof ProjectionNode && !(parent instanceof AsyncAggExecutionNode)))
+            && ((node instanceof AggExecutionNode)
+                || (node instanceof SelectAllExecutionNode)
+                || (node instanceof ProjectionNode && !(node instanceof AsyncAggExecutionNode)))) {
           compressTwoNode(node, parent);
         }
       }
       history.add(node);
-      
+
       // the parent information of the "node" has been removed
       for (ExecutableNodeBase parent : nodeParentsSaved) {
         if (!history.contains(parent) && !nodesToCompress.contains(parent)) {
@@ -74,26 +93,29 @@ public class QueryExecutionPlanSimplifier {
     QueryNodeBase nodeQuery = (QueryNodeBase) node;
 
     // Change the query of parents
-    BaseTable placeholderTableinParent = ((QueryNodeWithPlaceHolders)parent).getPlaceholderTables().get(parent.getExecutableNodeBaseDependents().indexOf(node));
-    ((QueryNodeWithPlaceHolders)parent).getPlaceholderTables().remove(placeholderTableinParent);
+    BaseTable placeholderTableinParent =
+        ((QueryNodeWithPlaceHolders) parent)
+            .getPlaceholderTables()
+            .get(parent.getExecutableNodeBaseDependents().indexOf(node));
+    ((QueryNodeWithPlaceHolders) parent).getPlaceholderTables().remove(placeholderTableinParent);
 
     // If temp table is in from list of parent, just direct replace with the select query of node
     boolean find = false;
-    for (AbstractRelation table:parentQuery.getSelectQuery().getFromList()) {
+    for (AbstractRelation table : parentQuery.getSelectQuery().getFromList()) {
       if (table instanceof BaseTable && table.equals(placeholderTableinParent)) {
         int index = parentQuery.getSelectQuery().getFromList().indexOf(table);
-        nodeQuery.getSelectQuery().setAliasName(
-            parentQuery.getSelectQuery().getFromList().get(index).getAliasName().get());
+        nodeQuery
+            .getSelectQuery()
+            .setAliasName(
+                parentQuery.getSelectQuery().getFromList().get(index).getAliasName().get());
         parentQuery.getSelectQuery().getFromList().set(index, nodeQuery.getSelectQuery());
         find = true;
         break;
-      }
-      else if (table instanceof JoinTable) {
-        for (AbstractRelation joinTable:((JoinTable) table).getJoinList()) {
+      } else if (table instanceof JoinTable) {
+        for (AbstractRelation joinTable : ((JoinTable) table).getJoinList()) {
           if (joinTable instanceof BaseTable && joinTable.equals(placeholderTableinParent)) {
             int index = ((JoinTable) table).getJoinList().indexOf(joinTable);
-            nodeQuery.getSelectQuery().setAliasName(
-                joinTable.getAliasName().get());
+            nodeQuery.getSelectQuery().setAliasName(joinTable.getAliasName().get());
             ((JoinTable) table).getJoinList().set(index, nodeQuery.getSelectQuery());
             find = true;
             break;
@@ -105,30 +127,33 @@ public class QueryExecutionPlanSimplifier {
 
     // Otherwise, it need to search filter to find the temp table
     if (!find) {
-      List<SubqueryColumn> placeholderTablesinFilter = ((QueryNodeWithPlaceHolders)parent).getPlaceholderTablesinFilter();
-      for (SubqueryColumn filter:placeholderTablesinFilter) {
-        if (filter.getSubquery().getFromList().size()==1 && filter.getSubquery().getFromList().get(0).equals(placeholderTableinParent)) {
+      List<SubqueryColumn> placeholderTablesinFilter =
+          ((QueryNodeWithPlaceHolders) parent).getPlaceholderTablesinFilter();
+      for (SubqueryColumn filter : placeholderTablesinFilter) {
+        if (filter.getSubquery().getFromList().size() == 1
+            && filter.getSubquery().getFromList().get(0).equals(placeholderTableinParent)) {
           filter.setSubquery(nodeQuery.getSelectQuery());
         }
       }
     }
 
-    //Move node's placeholderTable to parent's
-    ((QueryNodeWithPlaceHolders) parent).placeholderTables.addAll(((QueryNodeWithPlaceHolders) node).placeholderTables);
+    // Move node's placeholderTable to parent's
+    ((QueryNodeWithPlaceHolders) parent)
+        .placeholderTables.addAll(((QueryNodeWithPlaceHolders) node).placeholderTables);
 
     // Compress the node tree
     parentQuery.cancelSubscriptionTo(nodeQuery);
     for (Pair<ExecutableNodeBase, Integer> s : nodeQuery.getSourcesAndChannels()) {
       parentQuery.subscribeTo(s.getLeft(), s.getRight());
     }
-//    parent.getListeningQueues().removeAll(node.broadcastingQueues);
-//    parent.getListeningQueues().addAll(node.getListeningQueues());
-//    parent.dependents.remove(node);
-//    parent.dependents.addAll(node.dependents);
-//    for (BaseQueryNode dependent:node.dependents) {
-//      dependent.parents.remove(node);
-//      dependent.parents.add(parent);
-//    }
+    //    parent.getListeningQueues().removeAll(node.broadcastingQueues);
+    //    parent.getListeningQueues().addAll(node.getListeningQueues());
+    //    parent.dependents.remove(node);
+    //    parent.dependents.addAll(node.dependents);
+    //    for (BaseQueryNode dependent:node.dependents) {
+    //      dependent.parents.remove(node);
+    //      dependent.parents.add(parent);
+    //    }
   }
 
   /**
@@ -138,8 +163,8 @@ public class QueryExecutionPlanSimplifier {
    */
    static boolean isSharingQueue(ExecutableNodeBase node) {
     // must have one parent and this parent must have multiple dependents
-    if (node.getExecutableNodeBaseParents().size() != 1 ||
-        node.getExecutableNodeBaseParents().get(0).getDependentNodeCount() <= 1) {
+    if (node.getExecutableNodeBaseParents().size() != 1
+        || node.getExecutableNodeBaseParents().get(0).getDependentNodeCount() <= 1) {
       return false;
     }
     else {
@@ -157,5 +182,4 @@ public class QueryExecutionPlanSimplifier {
       return false;
     }
   }
-
 }

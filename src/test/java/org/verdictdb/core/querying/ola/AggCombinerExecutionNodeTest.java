@@ -14,6 +14,7 @@ import org.verdictdb.core.execplan.ExecutablePlanRunner;
 import org.verdictdb.core.execplan.ExecutionInfoToken;
 import org.verdictdb.core.querying.AggExecutionNode;
 import org.verdictdb.core.querying.QueryExecutionPlan;
+import org.verdictdb.core.querying.QueryExecutionPlanFactory;
 import org.verdictdb.core.resulthandler.ExecutionTokenReader;
 import org.verdictdb.core.scrambling.SimpleTreePlan;
 import org.verdictdb.core.sqlobject.AliasedColumn;
@@ -53,7 +54,7 @@ public class AggCombinerExecutionNodeTest {
 
   @Test
   public void testSingleAggCombining() throws VerdictDBValueException {
-    QueryExecutionPlan plan = new QueryExecutionPlan("newschema");
+    QueryExecutionPlan plan = QueryExecutionPlanFactory.create("newschema");
     
     BaseTable base = new BaseTable("myschema", "mytable", "t");
     SelectQuery leftQuery = SelectQuery.create(new AliasedColumn(ColumnOp.count(), "acount"), base);
@@ -72,7 +73,7 @@ public class AggCombinerExecutionNodeTest {
   // Test if the combined answer is identical to the original answer
   @Test
   public void testSingleAggCombiningWithH2() throws VerdictDBDbmsException, VerdictDBException {
-    QueryExecutionPlan plan = new QueryExecutionPlan("newschema");
+    QueryExecutionPlan plan = QueryExecutionPlanFactory.create("newschema");
     
     BaseTable base = new BaseTable(originalSchema, originalTable, "t");
     SelectQuery leftQuery = SelectQuery.create(new AliasedColumn(ColumnOp.count(), "mycount"), base);

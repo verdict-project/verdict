@@ -9,6 +9,7 @@ import java.util.List;
 import org.junit.Test;
 import org.verdictdb.core.querying.ExecutableNodeBase;
 import org.verdictdb.core.querying.QueryExecutionPlan;
+import org.verdictdb.core.querying.QueryExecutionPlanFactory;
 import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
 import org.verdictdb.core.sqlobject.SelectQuery;
@@ -39,7 +40,7 @@ public class AsyncAggNodeGroupTest {
     SelectQuery query = (SelectQuery) parser.toRelation(sql);
     
     QueryExecutionPlan plan = 
-        new QueryExecutionPlan("verdictdb_temp1", meta, query);
+        QueryExecutionPlanFactory.create("verdictdb_temp1", meta, query);
 //    plan.getRoot().print();
     
     QueryExecutionPlan asyncPlan = AsyncQueryExecutionPlan.create(plan);
