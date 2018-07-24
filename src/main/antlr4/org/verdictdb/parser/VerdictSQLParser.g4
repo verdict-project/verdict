@@ -66,14 +66,8 @@ verdict_statement
 create_scramble_statement
     : CREATE SCRAMBLE scrambled_table=table_name FROM original_table=table_name
       (METHOD scrambling_method_name)? 
-      (SIZE percent=(FLOAT | DECIMAL) '%')? 
-     
+      (SIZE percent=(FLOAT | DECIMAL) '%')?
     ;
-    
-//scramble_type
-//    : UNIFORM
-//    | FASTCONVERGE
-//    ;
 
 scrambling_method_name
     : STRING
@@ -303,6 +297,8 @@ expression
     | op=('+' | '-') expression                                #unary_operator_expression
     | expression op=('+' | '-' | '&' | '^' | '|' | '#' | '||' | '<<' | '>>'  ) expression   #binary_operator_expression
     | expression comparison_operator expression                #binary_operator_expression
+    | NOT expression                                           #not_expression
+    | expression IS null_notnull                               #is_null_expression
     | interval                                                 #interval_expression
     | date                                                     #date_expression
     | function_call                                            #function_call_expression
@@ -368,13 +364,14 @@ search_condition_not
 
 predicate
     : EXISTS '(' subquery ')'                                               # exists_predicate
+    | '(' search_condition ')'                                              # bracket_predicate
+    | predicate comparison_operator expression                              # comp_pred_expr_predicate
     | expression comparison_operator expression                             # comp_expr_predicate
     | expression comparison_operator (ALL | SOME | ANY) '(' subquery ')'    # setcomp_expr_predicate
     | expression NOT? BETWEEN expression AND expression                     # comp_between_expr
     | expression NOT? IN '(' (subquery | expression_list) ')'               # in_predicate
-    | expression NOT? LIKE expression (ESCAPE expression)?                  # like_predicate
+    | expression NOT? (LIKE | RLIKE) expression (ESCAPE expression)?                  # like_predicate
     | expression IS null_notnull                                            # is_predicate
-    | '(' search_condition ')'                                              # bracket_predicate
     | predicate_function                                               # func_predicate
     ;
 
@@ -585,6 +582,8 @@ expression_function
     | ternary_function
     | nary_function
     | predicate_function
+    | timestamp_function
+    | dateadd_function
     | extract_time_function
     | overlay_string_function
     | substring_string_function
@@ -596,6 +595,10 @@ extract_time_function
     ;
 
 extract_unit
+    : YEAR | MONTH | DAY | HOUR | MINUTE | expression
+    ;
+
+time_unit
     : YEAR | MONTH | DAY | HOUR | MINUTE | expression
     ;
 
@@ -618,9 +621,9 @@ nary_function
     ;
 
 ternary_function
-    : function_name=(CONV | SUBSTR | HASH | RPAD | SUBSTRING | LPAD | MID | REPLACE | SUBSTRING_INDEX | MAKETIME | IF
+    : function_name=(IF | CONV | SUBSTR | HASH | RPAD | SUBSTRING | LPAD | MID | REPLACE | SUBSTRING_INDEX | MAKETIME | IF
     | CONVERT | SPLIT_PART | TRANSLATE | MAKE_DATE | MAKE_TIME | SETWEIGHT | TS_REWRITE | TSQUERY_PHRASE | XMLROOT
-    | XPATH | XPATH_EXISTS | ARRAY_REPLACE | ARRAY_TO_STRING | STRING_TO_ARRAY | LOCATE)
+    | XPATH | XPATH_EXISTS | ARRAY_REPLACE | ARRAY_TO_STRING | STRING_TO_ARRAY | LOCATE )
       '(' expression ',' expression ',' expression ')'
     ;
 
@@ -637,12 +640,12 @@ binary_function
     | ARRAY_APPEND | ARRAY_CAT | ARRAY_LENGTH | ARRAY_LOWER | ARRAY_POSITION | ARRAY_POSITIONS | ARRAY_PREPEND
     | ARRAY_REMOVE | ARRAY_TO_STRING | ARRAY_UPPER | STRING_TO_ARRAY | RANGE_MERGE | CORR | COVAR_POP | COVAR_SAMP
     | REGR_AVGX | REGR_AVGY | REGR_COUNT | REGR_INTERCEPT | REGR_R2 | REGR_SLOPE | REGR_SXX | REGR_SXY | REGR_SYY | SUBSTR
-    | STDDEV_POP | VARIANCE | VAR_POP | VAR_SAMP)
+    | STDDEV_POP | VARIANCE | VAR_POP | VAR_SAMP | INT4LARGER | SUBSTRING)
       '(' expression ',' expression ')'
     ;
 
 unary_function
-    : function_name=(ROUND | CHAR_LENGTH | FLOOR | CEIL | CEILING | EXP | LN | LOG | LOG10 | LOG2 | SIN | COS | COT | TAN | SIGN | RAND | FNV_HASH | RAWTOHEX
+    : function_name=(ISNULL |ROUND | CHAR_LENGTH | FLOOR | CEIL | CEILING | EXP | LN | LOG | LOG10 | LOG2 | SIN | COS | COT | TAN | SIGN | RAND | FNV_HASH | RAWTOHEX
      | ABS | STDDEV | SQRT | LCASE | MD5 | CRC32 | YEAR | QUARTER | MONTH | DAY | HOUR | MINUTE | SECOND | WEEKOFYEAR | LOWER
      | UPPER | UCASE | ASCII | CHARACTER_LENGTH | FACTORIAL | CBRT | LENGTH | TRIM | ASIN | ACOS | ATAN | ATAN2 | DEGREES | RADIANS | POSITIVE
      | NEGATIVE | BROUND | BIN | HEX | UNHEX | FROM_UNIXTIME | TO_DATE | CHR | LTRIM | RTRIM| REVERSE | SPACE_FUNCTION | SHA1
@@ -662,6 +665,14 @@ unary_function
       '(' expression ')'
     | function_name=CAST '(' cast_as_expression ')'
     ;
+
+timestamp_function
+    : function_name=TIMESTAMP expression
+    ;
+
+dateadd_function
+	: function_name=DATEADD '(' time_unit ',' expression ',' expression ')'
+	;
 
 predicate_function
     : NOT? function_name = ISNULL '(' expression ')'
@@ -824,7 +835,7 @@ data_type
     | DATETIME2
     | DATETIMEOFFSET '(' DECIMAL ')'
     | DECIMAL '(' DECIMAL ',' DECIMAL ')'
-    | DOUBLE
+    | DOUBLE PRECISION?
     | FLOAT
     | GEOGRAPHY
     | GEOMETRY
@@ -844,6 +855,7 @@ data_type
     | TEXT
     | TIME '(' DECIMAL ')'
     | TIMESTAMP
+    | TIMESTAMP WITHOUT TIME ZONE
     | TINYINT
     | UNIQUEIDENTIFIER
     | VARBINARY '(' DECIMAL | MAX ')'

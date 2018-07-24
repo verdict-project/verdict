@@ -1,11 +1,28 @@
-package org.verdictdb.core.resulthandler;
+/*
+ *    Copyright 2018 University of Michigan
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
 
-import java.util.Iterator;
+package org.verdictdb.core.resulthandler;
 
 import org.verdictdb.core.execplan.ExecutionInfoToken;
 import org.verdictdb.core.execplan.ExecutionTokenQueue;
 
-public class ExecutionTokenReader implements Iterable<ExecutionInfoToken>, Iterator<ExecutionInfoToken> {
+import java.util.Iterator;
+
+public class ExecutionTokenReader
+    implements Iterable<ExecutionInfoToken>, Iterator<ExecutionInfoToken> {
 
   ExecutionTokenQueue queue;
 
@@ -13,7 +30,7 @@ public class ExecutionTokenReader implements Iterable<ExecutionInfoToken>, Itera
   boolean hasEndOfQueueReached = false;
 
   ExecutionInfoToken queueBuffer = null;
-  
+
   public ExecutionTokenReader() {}
 
   public ExecutionTokenReader(ExecutionTokenQueue queue) {
@@ -27,7 +44,7 @@ public class ExecutionTokenReader implements Iterable<ExecutionInfoToken>, Itera
 
   public void takeOne() {
     queueBuffer = queue.take();
-    
+
     if (queueBuffer.isFailureToken()) {
       Exception e = (Exception) queueBuffer.getValue("errorMessage");
       if (e != null) {
@@ -41,7 +58,7 @@ public class ExecutionTokenReader implements Iterable<ExecutionInfoToken>, Itera
     if (queue == null) {
       return false;
     }
-    
+
     if (queueBuffer == null) {
       takeOne();
       return hasNext();
@@ -59,7 +76,7 @@ public class ExecutionTokenReader implements Iterable<ExecutionInfoToken>, Itera
     if (queue == null) {
       return null;
     }
-    
+
     if (queueBuffer == null) {
       takeOne();
       return next();
@@ -73,10 +90,9 @@ public class ExecutionTokenReader implements Iterable<ExecutionInfoToken>, Itera
       return result;
     }
   }
-  
+
   @Override
   public void remove() {
     throw new UnsupportedOperationException();
   }
-
 }

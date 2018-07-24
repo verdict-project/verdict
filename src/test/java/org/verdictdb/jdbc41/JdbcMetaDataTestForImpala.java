@@ -53,7 +53,7 @@ public class JdbcMetaDataTestForImpala {
   @BeforeClass
   public static void setupImpalaDatabase() throws SQLException, VerdictDBDbmsException {
     String connectionString =
-        String.format("jdbc:impala://%s:21050/%s", IMPALA_HOST, IMPALA_DATABASE);
+        String.format("jdbc:impala://%s/%s", IMPALA_HOST, IMPALA_DATABASE);
     conn = DriverManager.getConnection(connectionString, IMPALA_UESR, IMPALA_PASSWORD);
     dbmsConn = JdbcConnection.create(conn);
 

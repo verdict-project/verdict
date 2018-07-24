@@ -1,5 +1,19 @@
 package org.verdictdb.commons;
 
+import com.google.common.base.Charsets;
+import com.google.common.base.Joiner;
+import com.google.common.io.Files;
+import org.apache.spark.sql.SparkSession;
+import org.postgresql.copy.CopyManager;
+import org.postgresql.core.BaseConnection;
+import org.verdictdb.connection.DbmsConnection;
+import org.verdictdb.connection.DbmsQueryResult;
+import org.verdictdb.connection.JdbcConnection;
+import org.verdictdb.exception.VerdictDBDbmsException;
+import org.verdictdb.sqlsyntax.ImpalaSyntax;
+import org.verdictdb.sqlsyntax.PostgresqlSyntax;
+import org.verdictdb.sqlsyntax.RedshiftSyntax;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -9,18 +23,6 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-
-import org.apache.spark.sql.SparkSession;
-import org.postgresql.copy.CopyManager;
-import org.postgresql.core.BaseConnection;
-import org.verdictdb.connection.DbmsConnection;
-import org.verdictdb.connection.JdbcConnection;
-import org.verdictdb.exception.VerdictDBDbmsException;
-import org.verdictdb.sqlsyntax.ImpalaSyntax;
-import org.verdictdb.sqlsyntax.PostgresqlSyntax;
-import org.verdictdb.sqlsyntax.RedshiftSyntax;
-
-import com.google.common.base.Joiner;
 
 public class DatabaseConnectionHelpers {
 
@@ -197,6 +199,7 @@ public class DatabaseConnectionHelpers {
                 + "  `n_regionkey`  INT, "
                 + "  `n_comment`    STRING, "
                 + "  `n_dummy`      STRING) "
+                + "ROW FORMAT DELIMITED FIELDS TERMINATED BY '|'"
                 + "LOCATION '/tmp/tpch_test_data/nation'",
             schema));
     dbmsConn.execute(
@@ -206,6 +209,7 @@ public class DatabaseConnectionHelpers {
                 + "  `r_name`       STRING, "
                 + "  `r_comment`    STRING, "
                 + "  `r_dummy`      STRING) "
+                + "ROW FORMAT DELIMITED FIELDS TERMINATED BY '|'"
                 + "LOCATION '/tmp/tpch_test_data/region'",
             schema));
     dbmsConn.execute(
@@ -221,6 +225,7 @@ public class DatabaseConnectionHelpers {
                 + "  `p_retailprice` DECIMAL(15,2) , "
                 + "  `p_comment`     STRING, "
                 + "  `p_dummy`       STRING) "
+                + "ROW FORMAT DELIMITED FIELDS TERMINATED BY '|'"
                 + "LOCATION '/tmp/tpch_test_data/part'",
             schema));
     dbmsConn.execute(
@@ -234,6 +239,7 @@ public class DatabaseConnectionHelpers {
                 + "  `s_acctbal`     DECIMAL(15,2) , "
                 + "  `s_comment`     STRING, "
                 + "  `s_dummy`       STRING) "
+                + "ROW FORMAT DELIMITED FIELDS TERMINATED BY '|'"
                 + "LOCATION '/tmp/tpch_test_data/supplier'",
             schema));
     dbmsConn.execute(
@@ -245,6 +251,7 @@ public class DatabaseConnectionHelpers {
                 + "  `ps_supplycost`  DECIMAL(15,2)  , "
                 + "  `ps_comment`     STRING, "
                 + "  `ps_dummy`       STRING) "
+                + "ROW FORMAT DELIMITED FIELDS TERMINATED BY '|'"
                 + "LOCATION '/tmp/tpch_test_data/partsupp'",
             schema));
     dbmsConn.execute(
@@ -259,6 +266,7 @@ public class DatabaseConnectionHelpers {
                 + "  `c_mktsegment`  STRING , "
                 + "  `c_comment`     STRING, "
                 + "  `c_dummy`       STRING) "
+                + "ROW FORMAT DELIMITED FIELDS TERMINATED BY '|'"
                 + "LOCATION '/tmp/tpch_test_data/customer'",
             schema));
     dbmsConn.execute(
@@ -268,13 +276,13 @@ public class DatabaseConnectionHelpers {
                 + "  `o_custkey`        INT , "
                 + "  `o_orderstatus`    STRING , "
                 + "  `o_totalprice`     DECIMAL(15,2) , "
-                + "  `o_orderdate`      STRING , "
-                + // incorrect! TIMESTAMP should be used
-                "  `o_orderpriority`  STRING , "
+                + "  `o_orderdate`      TIMESTAMP , "
+                + "  `o_orderpriority`  STRING , "
                 + "  `o_clerk`          STRING , "
                 + "  `o_shippriority`   INT, "
                 + "  `o_comment`        STRING, "
                 + "  `o_dummy`          STRING) "
+                + "ROW FORMAT DELIMITED FIELDS TERMINATED BY '|'"
                 + "LOCATION '/tmp/tpch_test_data/orders'",
             schema));
     dbmsConn.execute(
@@ -290,19 +298,194 @@ public class DatabaseConnectionHelpers {
                 + "  `l_tax`         DECIMAL(15,2) , "
                 + "  `l_returnflag`  STRING , "
                 + "  `l_linestatus`  STRING , "
-                + "  `l_shipdate`    STRING , "
-                + // incorrect! TIMESTAMP should be used
-                "  `l_commitdate`  STRING , "
-                + // incorrect! TIMESTAMP should be used
-                "  `l_receiptdate` STRING , "
-                + // incorrect! TIMESTAMP should be used
-                "  `l_shipinstruct` STRING , "
+                + "  `l_shipdate`    TIMESTAMP , "
+                + "  `l_commitdate`  TIMESTAMP , "
+                + "  `l_receiptdate` TIMESTAMP , "
+                + "  `l_shipinstruct` STRING , "
                 + "  `l_shipmode`     STRING , "
                 + "  `l_comment`      STRING, "
                 + "  `l_dummy`        STRING) "
+                + "ROW FORMAT DELIMITED FIELDS TERMINATED BY '|'"
                 + "LOCATION '/tmp/tpch_test_data/lineitem'",
             schema));
 
+    return conn;
+  }
+
+  static String getQuoted(String value) {
+    return "'" + value + "'";
+  }
+
+  static void loadRedshiftData(String schema, String table, DbmsConnection dbmsConn)
+      throws IOException, VerdictDBDbmsException {
+    String concat = "";
+    File file =
+        new File(String.format("src/test/resources/tpch_test_data/%s/%s.tbl", table, table));
+    DbmsQueryResult columnMeta =
+        dbmsConn.execute(
+            String.format(
+                "select data_type, ordinal_position from INFORMATION_SCHEMA.COLUMNS where table_name='%s' and table_schema='%s'",
+                table, schema));
+    List<Boolean> quotedNeeded = new ArrayList<>();
+    for (int i = 0; i < columnMeta.getRowCount(); i++) {
+      quotedNeeded.add(true);
+    }
+    while (columnMeta.next()) {
+      String columnType = columnMeta.getString(0);
+      int columnIndex = columnMeta.getInt(1);
+      if (columnType.equals("integer") || columnType.equals("numeric")) {
+        quotedNeeded.set(columnIndex - 1, false);
+      }
+    }
+
+    String content = Files.toString(file, Charsets.UTF_8);
+    for (String row : content.split("\n")) {
+      String[] values = row.split("\\|");
+      row = "";
+      for (int i = 0; i < values.length - 1; i++) {
+        if (quotedNeeded.get(i)) {
+          row = row + getQuoted(values[i]) + ",";
+        } else {
+          row = row + values[i] + ",";
+        }
+      }
+      row = row + "''";
+      if (concat.equals("")) {
+        concat = concat + "(" + row + ")";
+      } else concat = concat + "," + "(" + row + ")";
+    }
+    dbmsConn.execute(String.format("insert into \"%s\".\"%s\" values %s", schema, table, concat));
+  }
+
+  public static Connection setupRedshift(
+      String connectionString, String user, String password, String schema)
+      throws VerdictDBDbmsException, SQLException, IOException {
+
+    Connection conn = DriverManager.getConnection(connectionString, user, password);
+    JdbcConnection dbmsConn = new JdbcConnection(conn, new RedshiftSyntax());
+//    dbmsConn.setOutputDebugMessage(true);
+
+    dbmsConn.execute(String.format("DROP SCHEMA IF EXISTS \"%s\" CASCADE", schema));
+    dbmsConn.execute(String.format("CREATE SCHEMA IF NOT EXISTS \"%s\"", schema));
+
+    // Create tables
+    dbmsConn.execute(
+        String.format(
+            "CREATE TABLE  IF NOT EXISTS \"%s\".\"nation\" ("
+                + "  \"n_nationkey\"  INT, "
+                + "  \"n_name\"       CHAR(25), "
+                + "  \"n_regionkey\"  INT, "
+                + "  \"n_comment\"    VARCHAR(152), "
+                + "  \"n_dummy\"      VARCHAR(10), "
+                + "  PRIMARY KEY (\"n_nationkey\"))",
+            schema));
+    dbmsConn.execute(
+        String.format(
+            "CREATE TABLE  IF NOT EXISTS \"%s\".\"region\"  ("
+                + "  \"r_regionkey\"  INT, "
+                + "  \"r_name\"       CHAR(25), "
+                + "  \"r_comment\"    VARCHAR(152), "
+                + "  \"r_dummy\"      VARCHAR(10), "
+                + "  PRIMARY KEY (\"r_regionkey\"))",
+            schema));
+    dbmsConn.execute(
+        String.format(
+            "CREATE TABLE  IF NOT EXISTS \"%s\".\"part\"  ( \"p_partkey\"     INT, "
+                + "  \"p_name\"        VARCHAR(55), "
+                + "  \"p_mfgr\"        CHAR(25), "
+                + "  \"p_brand\"       CHAR(10), "
+                + "  \"p_type\"        VARCHAR(25), "
+                + "  \"p_size\"        INT, "
+                + "  \"p_container\"   CHAR(10), "
+                + "  \"p_retailprice\" DECIMAL(15,2) , "
+                + "  \"p_comment\"     VARCHAR(23) , "
+                + "  \"p_dummy\"       VARCHAR(10), "
+                + "  PRIMARY KEY (\"p_partkey\"))",
+            schema));
+    dbmsConn.execute(
+        String.format(
+            "CREATE TABLE  IF NOT EXISTS \"%s\".\"supplier\" ( "
+                + "  \"s_suppkey\"     INT , "
+                + "  \"s_name\"        CHAR(25) , "
+                + "  \"s_address\"     VARCHAR(40) , "
+                + "  \"s_nationkey\"   INT , "
+                + "  \"s_phone\"       CHAR(15) , "
+                + "  \"s_acctbal\"     DECIMAL(15,2) , "
+                + "  \"s_comment\"     VARCHAR(101), "
+                + "  \"s_dummy\" varchar(10), "
+                + "  PRIMARY KEY (\"s_suppkey\"))",
+            schema));
+    dbmsConn.execute(
+        String.format(
+            "CREATE TABLE  IF NOT EXISTS \"%s\".\"partsupp\" ( "
+                + "  \"ps_partkey\"     INT , "
+                + "  \"ps_suppkey\"     INT , "
+                + "  \"ps_availqty\"    INT , "
+                + "  \"ps_supplycost\"  DECIMAL(15,2)  , "
+                + "  \"ps_comment\"     VARCHAR(199), "
+                + "  \"ps_dummy\"       VARCHAR(10), "
+                + "  PRIMARY KEY (\"ps_partkey\", \"ps_suppkey\"))",
+            schema));
+    dbmsConn.execute(
+        String.format(
+            "CREATE TABLE  IF NOT EXISTS \"%s\".\"customer\" ("
+                + "  \"c_custkey\"     INT , "
+                + "  \"c_name\"        VARCHAR(25) , "
+                + "  \"c_address\"     VARCHAR(40) , "
+                + "  \"c_nationkey\"   INT , "
+                + "  \"c_phone\"       CHAR(15) , "
+                + "  \"c_acctbal\"     DECIMAL(15,2)   , "
+                + "  \"c_mktsegment\"  CHAR(10) , "
+                + "  \"c_comment\"     VARCHAR(117), "
+                + "  \"c_dummy\"       VARCHAR(10), "
+                + "  PRIMARY KEY (\"c_custkey\"))",
+            schema));
+    dbmsConn.execute(
+        String.format(
+            "CREATE TABLE IF NOT EXISTS  \"%s\".\"orders\"  ( "
+                + "  \"o_orderkey\"       INT , "
+                + "  \"o_custkey\"        INT , "
+                + "  \"o_orderstatus\"    CHAR(1) , "
+                + "  \"o_totalprice\"     DECIMAL(15,2) , "
+                + "  \"o_orderdate\"      DATE , "
+                + "  \"o_orderpriority\"  CHAR(15) , "
+                + "  \"o_clerk\"          CHAR(15) , "
+                + "  \"o_shippriority\"   INT , "
+                + "  \"o_comment\"        VARCHAR(79), "
+                + "  \"o_dummy\" varchar(10), "
+                + "  PRIMARY KEY (\"o_orderkey\"))",
+            schema));
+    dbmsConn.execute(
+        String.format(
+            "CREATE TABLE IF NOT EXISTS \"%s\".\"lineitem\" ("
+                + "  \"l_orderkey\"    INT , "
+                + "  \"l_partkey\"     INT , "
+                + "  \"l_suppkey\"     INT , "
+                + "  \"l_linenumber\"  INT , "
+                + "  \"l_quantity\"    DECIMAL(15,2) , "
+                + "  \"l_extendedprice\"  DECIMAL(15,2) , "
+                + "  \"l_discount\"    DECIMAL(15,2) , "
+                + "  \"l_tax\"         DECIMAL(15,2) , "
+                + "  \"l_returnflag\"  CHAR(1) , "
+                + "  \"l_linestatus\"  CHAR(1) , "
+                + "  \"l_shipdate\"    DATE , "
+                + "  \"l_commitdate\"  DATE , "
+                + "  \"l_receiptdate\" DATE , "
+                + "  \"l_shipinstruct\" CHAR(25) , "
+                + "  \"l_shipmode\"     CHAR(10) , "
+                + "  \"l_comment\"      VARCHAR(44), "
+                + "  \"l_dummy\" varchar(10))",
+            schema));
+
+    // load data use insert
+    loadRedshiftData(schema, "nation", dbmsConn);
+    loadRedshiftData(schema, "region", dbmsConn);
+    loadRedshiftData(schema, "part", dbmsConn);
+    loadRedshiftData(schema, "supplier", dbmsConn);
+    loadRedshiftData(schema, "customer", dbmsConn);
+    loadRedshiftData(schema, "partsupp", dbmsConn);
+    loadRedshiftData(schema, "orders", dbmsConn);
+    loadRedshiftData(schema, "lineitem", dbmsConn);
     return conn;
   }
 

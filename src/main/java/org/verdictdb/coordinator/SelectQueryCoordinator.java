@@ -1,8 +1,20 @@
-package org.verdictdb.coordinator;
+/*
+ *    Copyright 2018 University of Michigan
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
+package org.verdictdb.coordinator;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -16,16 +28,14 @@ import org.verdictdb.core.querying.QueryExecutionPlanSimplifier;
 import org.verdictdb.core.querying.ola.AsyncQueryExecutionPlan;
 import org.verdictdb.core.resulthandler.ExecutionResultReader;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
-import org.verdictdb.core.sqlobject.AbstractRelation;
-import org.verdictdb.core.sqlobject.BaseTable;
-import org.verdictdb.core.sqlobject.ColumnOp;
-import org.verdictdb.core.sqlobject.JoinTable;
-import org.verdictdb.core.sqlobject.SelectQuery;
-import org.verdictdb.core.sqlobject.SubqueryColumn;
-import org.verdictdb.core.sqlobject.UnnamedColumn;
+import org.verdictdb.core.sqlobject.*;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sqlreader.NonValidatingSQLParser;
 import org.verdictdb.sqlreader.RelationStandardizer;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 
 public class SelectQueryCoordinator {
 
@@ -33,14 +43,21 @@ public class SelectQueryCoordinator {
 
   ScrambleMetaSet scrambleMetaSet;
 
+  String scratchpadSchema;
+
   public SelectQueryCoordinator(DbmsConnection conn) {
-    this.conn = conn;
-    this.scrambleMetaSet = new ScrambleMetaSet();
+    this(conn, new ScrambleMetaSet());
   }
-  
+
   public SelectQueryCoordinator(DbmsConnection conn, ScrambleMetaSet scrambleMetaSet) {
+    this(conn, scrambleMetaSet, conn.getDefaultSchema());
+  }
+
+  public SelectQueryCoordinator(
+      DbmsConnection conn, ScrambleMetaSet scrambleMetaSet, String scratchpadSchema) {
     this.conn = conn;
     this.scrambleMetaSet = scrambleMetaSet;
+    this.scratchpadSchema = scratchpadSchema;
   }
 
   public ScrambleMetaSet getScrambleMetaSet() {
@@ -56,11 +73,14 @@ public class SelectQueryCoordinator {
     SelectQuery selectQuery = standardizeQuery(query);
 
     // make plan
-    // if the plan does not include any aggregates, it will simply be a parsed structure of the original query.
-    QueryExecutionPlan plan = new QueryExecutionPlan("verdictdb_temp", scrambleMetaSet, selectQuery);
+    // if the plan does not include any aggregates, it will simply be a parsed structure of the
+    // original query.
+    QueryExecutionPlan plan =
+        new QueryExecutionPlan(scratchpadSchema, scrambleMetaSet, selectQuery);
 
     // convert it to an asynchronous plan
-    // if the plan does not include any aggregates, this operation should not alter the original plan.
+    // if the plan does not include any aggregates, this operation should not alter the original
+    // plan.
     QueryExecutionPlan asyncPlan = AsyncQueryExecutionPlan.create(plan);
 
     // simplify the plan
@@ -99,7 +119,7 @@ public class SelectQueryCoordinator {
         if (t instanceof BaseTable) tables.add((BaseTable) t);
         else if (t instanceof SelectQuery) queries.add((SelectQuery) t);
         else if (t instanceof JoinTable) {
-          for (AbstractRelation join:((JoinTable) t).getJoinList()) {
+          for (AbstractRelation join : ((JoinTable) t).getJoinList()) {
             if (join instanceof BaseTable) tables.add((BaseTable) join);
             else if (join instanceof SelectQuery) queries.add((SelectQuery) join);
           }
@@ -114,35 +134,34 @@ public class SelectQueryCoordinator {
           toCheck.remove(0);
           if (col instanceof ColumnOp) {
             toCheck.addAll(((ColumnOp) col).getOperands());
-          }
-          else if (col instanceof SubqueryColumn) {
+          } else if (col instanceof SubqueryColumn) {
             queries.add(((SubqueryColumn) col).getSubquery());
           }
         }
       }
     }
-  
+
     // Get table info from cached meta
     for (BaseTable t : tables) {
       List<Pair<String, String>> columns;
       StaticMetaData.TableInfo tableInfo;
-      
+
       if (t.getSchemaName() == null) {
         columns = conn.getColumns(defaultSchema, t.getTableName());
         tableInfo = new StaticMetaData.TableInfo(defaultSchema, t.getTableName());
-      }
-      else {
+      } else {
         columns = conn.getColumns(t.getSchemaName(), t.getTableName());
         tableInfo = new StaticMetaData.TableInfo(t.getSchemaName(), t.getTableName());
       }
       List<Pair<String, Integer>> colInfo = new ArrayList<>();
-      for (Pair<String, String> col:columns) {
-        colInfo.add(new ImmutablePair<>(col.getLeft(), DataTypeConverter.typeInt(col.getRight().toLowerCase())));
+      for (Pair<String, String> col : columns) {
+        colInfo.add(
+            new ImmutablePair<>(
+                col.getLeft(), DataTypeConverter.typeInt(col.getRight().toLowerCase())));
       }
       meta.addTableData(tableInfo, colInfo);
     }
-    
+
     return meta;
   }
-
 }

@@ -26,8 +26,6 @@ jobs:
       - checkout
       - run: echo "$(cd "$(dirname "src/test/resources")"; pwd)/$(basename "src/test/resources")"
       - run: bash wait_until_ready.sh
-      - run: docker run --rm --link verdictdb-impala:impala-server codingtony/impala hdp impala-server hadoop fs -ls /
-      - run: docker run --rm --link verdictdb-impala:impala-server -v /home/circleci/repo/src/test/resources:/work:ro codingtony/impala hdp impala-server hadoop fs -put /work/tpch_test_data /tmp/
 
   build-jdk7:
     docker:
@@ -64,6 +62,17 @@ jobs:
       - run: git clone git@github.com:verdictdb/verdictdb-private-resources.git
       # Now build and test
       - run: mvn -B test 2> /dev/null
+      # Collect test metadata
+      - run:
+          name: Save test results
+          command: |
+            mkdir -p ~/junit/
+            find . -type f -regex ".*/target/surefire-reports/.*xml" -exec cp {} ~/junit/ \;
+          when: always
+      - store_test_results:
+          path: ~/junit
+      - store_artifacts:
+          path: ~/junit
       - save_cache:
           paths:
             - ~/.m2
@@ -105,12 +114,24 @@ jobs:
       - run: git clone git@github.com:verdictdb/verdictdb-private-resources.git
       # Now build and test
       - run: mvn -B test 2> /dev/null
+      #- run: mvn -DskipTests -P packaging package
+      # Collect test metadata
+      - run:
+          name: Save test results
+          command: |
+            mkdir -p ~/junit/
+            find . -type f -regex ".*/target/surefire-reports/.*xml" -exec cp {} ~/junit/ \;
+          when: always
+      - store_test_results:
+          path: ~/junit
+      - store_artifacts:
+          path: ~/junit
       - save_cache:
           paths:
             - ~/.m2
           key: verdict-dependencies-{{ checksum "pom.xml" }}
-      - run: mvn cobertura:cobertura
-      - run: bash <(curl -s https://codecov.io/bash) -t 9cf48c61-07ed-4a14-9eed-f7129664ee79
+      #- run: mvn cobertura:cobertura
+      #- run: bash <(curl -s https://codecov.io/bash) -t 9cf48c61-07ed-4a14-9eed-f7129664ee79
 
   build-spark:
       docker:
@@ -147,6 +168,71 @@ jobs:
         - run: git clone git@github.com:verdictdb/verdictdb-private-resources.git
         # run tests!
         - run: mvn test -Dtest=SparkTpchSelectQueryCoordinatorTest 2> /dev/null
+        # - run: mvn test -Dtest=RedshiftTpchSelectQueryCoordinatorTest 2> /dev/null
+        # - run: mvn test -Dtest=ImpalaTpchSelectQueryCoordinatorTest 2> /dev/null
+        # Collect test metadata
+        - run:
+            name: Save test results
+            command: |
+              mkdir -p ~/junit/
+              find . -type f -regex ".*/target/surefire-reports/.*xml" -exec cp {} ~/junit/ \;
+            when: always
+        - store_test_results:
+            path: ~/junit
+        - store_artifacts:
+            path: ~/junit
+        - save_cache:
+            paths:
+              - ~/.m2
+            key: verdict-dependencies-{{ checksum "pom.xml" }}
+
+  build-impala-redshift:
+      docker:
+        # specify the version you desire here
+        - image: maven:3.5.4-jdk-8-slim
+        # Specify service dependencies here if necessary
+        # CircleCI maintains a library of pre-built images
+        # documented at https://circleci.com/docs/2.0/circleci-images/
+        - image: mysql:5.5
+          environment:
+            MYSQL_DATABASE: test
+            MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+        - image: postgres:10
+          environment:
+            POSTGRES_DB: test
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: ""
+      working_directory: ~/repo
+      environment:
+        # Customize the JVM maximum heap limit
+        MAVEN_OPTS: -Xmx3200m
+      steps:
+        - run: apt-get update; apt-get install -y git
+        - checkout
+        # Set up maven dependencies
+        - restore_cache:
+            keys:
+            - verdict-dependencies-{{ checksum "pom.xml" }}
+            # fallback to using the latest cache if no exact match is found
+            # - v1-dependencies-
+        - run: mvn install:install-file -Dfile=src/test/resources/jars/ImpalaJDBC41-2.6.3.jar -DgroupId=com.cloudera -DartifactId=impala-jdbc41 -Dversion=2.6.3 -Dpackaging=jar
+        # - run: mvn dependency:go-offline
+        # Setup necessary test data
+        - run: git clone git@github.com:verdictdb/verdictdb-private-resources.git
+        # run tests!
+        # - run: mvn test -Dtest=SparkTpchSelectQueryCoordinatorTest 2> /dev/null
+        - run: mvn test -Dtest=RedshiftTpchSelectQueryCoordinatorTest 2> /dev/null
+        - run: mvn test -Dtest=ImpalaTpchSelectQueryCoordinatorTest 2> /dev/null
+        - run:
+            name: Save test results
+            command: |
+              mkdir -p ~/junit/
+              find . -type f -regex ".*/target/surefire-reports/.*xml" -exec cp {} ~/junit/ \;
+            when: always
+        - store_test_results:
+            path: ~/junit
+        - store_artifacts:
+            path: ~/junit
         - save_cache:
             paths:
               - ~/.m2
@@ -159,5 +245,6 @@ workflows:
       - build-jdk7
       - build-jdk8
       - build-spark
+      - build-impala-redshift
       # - maven-version-check
       # - docker-env-check
