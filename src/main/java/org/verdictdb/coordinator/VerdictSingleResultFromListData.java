@@ -152,13 +152,20 @@ public class VerdictSingleResultFromListData extends VerdictSingleResult {
     if (result.isPresent() == false) {
       return false;
     } else {
-      if (cursor < getRowCount()-1) {
+      if (cursor < getRowCount() - 1) {
         cursor++;
         return true;
-      }
-      else {
+      } else {
         return false;
       }
+    }
+  }
+
+  public boolean hasNext() {
+    if (result.isPresent() == false) {
+      return false;
+    } else {
+      return cursor < getRowCount() - 1;
     }
   }
 

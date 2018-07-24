@@ -38,7 +38,6 @@ public abstract class VerdictSingleResult extends AttributeValueRetrievalHelper 
   @Override
   public abstract Object getValue(int index);
 
-
   public abstract boolean wasNull();
 
   public abstract boolean next();

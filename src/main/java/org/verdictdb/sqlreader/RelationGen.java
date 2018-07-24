@@ -3,6 +3,7 @@ package org.verdictdb.sqlreader;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.verdictdb.coordinator.ExecutionContext;
 import org.verdictdb.core.sqlobject.AbstractRelation;
 import org.verdictdb.core.sqlobject.AliasedColumn;
 import org.verdictdb.core.sqlobject.AsteriskColumn;
