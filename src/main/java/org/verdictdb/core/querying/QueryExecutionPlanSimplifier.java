@@ -156,26 +156,27 @@ public class QueryExecutionPlanSimplifier {
     //    }
   }
 
-  // Return true if this node share queue with other dependant of its parent
-  static boolean isSharingQueue(ExecutableNodeBase node) {
+  /**
+   *
+   * @param node
+   * @return true if node is sharing channel with other sources of its subsriber
+   */
+   static boolean isSharingQueue(ExecutableNodeBase node) {
     // must have one parent and this parent must have multiple dependents
     if (node.getExecutableNodeBaseParents().size() != 1
         || node.getExecutableNodeBaseParents().get(0).getDependentNodeCount() <= 1) {
       return false;
-    } else {
-      for (ExecutableNodeBase dependent :
-          node.getExecutableNodeBaseParents().get(0).getExecutableNodeBaseDependents()) {
+    }
+    else {
+      ExecutableNodeBase parent = node.getExecutableNodeBaseParents().get(0);
+      int nodeIndex = parent.getSources().indexOf(node);
+      for (ExecutableNodeBase dependent : parent.getExecutableNodeBaseDependents()) {
         if (!dependent.equals(node)) {
-          for (ExecutableNode s1 : node.getSubscribers()) {
-            for (ExecutableNode s2 : dependent.getSubscribers()) {
-              if (s1.equals(s2)) {
-                return true;
-              }
-            }
+          int dependentIndex = parent.getSources().indexOf(dependent);
+          if (parent.getSourcesAndChannels().get(nodeIndex).getRight().equals(
+              parent.getSourcesAndChannels().get(dependentIndex).getRight())) {
+            return true;
           }
-          //          && node.getBroadcastingQueues().equals(dependent.getBroadcastingQueues())) {
-          //        }
-          //          return true;
         }
       }
       return false;

@@ -17,11 +17,10 @@
 package org.verdictdb.coordinator;
 
 import com.google.common.base.Optional;
+import com.rits.cloning.Cloner;
 import org.verdictdb.commons.AttributeValueRetrievalHelper;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.connection.DbmsQueryResultMetaData;
-
-import java.io.*;
 
 /**
  * Represents the result set returned from VerdictDB to the end user.
@@ -70,25 +69,28 @@ public class VerdictSingleResult extends AttributeValueRetrievalHelper {
   }
 
   private DbmsQueryResult copyResult(DbmsQueryResult result) {
-    try {
-      ByteArrayOutputStream bos = new ByteArrayOutputStream();
-      ObjectOutputStream out = new ObjectOutputStream(bos);
-      out.writeObject(result);
-      out.flush();
-      out.close();
-
-      ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(bos.toByteArray()));
-      DbmsQueryResult copied = (DbmsQueryResult) in.readObject();
-      return copied;
-
-    } catch (ClassNotFoundException e) {
-      e.printStackTrace();
-    } catch (NotSerializableException e) {
-      e.printStackTrace();
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-    return null;
+    DbmsQueryResult copied = new Cloner().deepClone(result);
+    return new Cloner().deepClone(result);
+    //    try {
+    //      ByteArrayOutputStream bos = new ByteArrayOutputStream();
+    //      ObjectOutputStream out = new ObjectOutputStream(bos);
+    //      out.writeObject(result);
+    //      out.flush();
+    //      out.close();
+    //
+    //      ObjectInputStream in = new ObjectInputStream(new
+    // ByteArrayInputStream(bos.toByteArray()));
+    //      DbmsQueryResult copied = (DbmsQueryResult) in.readObject();
+    //      return copied;
+    //
+    //    } catch (ClassNotFoundException e) {
+    //      e.printStackTrace();
+    //    } catch (NotSerializableException e) {
+    //      e.printStackTrace();
+    //    } catch (IOException e) {
+    //      e.printStackTrace();
+    //    }
+    //    return null;
   }
 
   public DbmsQueryResultMetaData getMetaData() {

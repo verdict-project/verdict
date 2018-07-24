@@ -35,16 +35,19 @@ public class VerdictConnection implements java.sql.Connection {
 
   public VerdictConnection(String url) throws VerdictDBDbmsException, SQLException {
     vc = VerdictContext.fromConnectionString(url);
+    isOpen = true;
   }
 
   public VerdictConnection(String url, Properties info)
       throws VerdictDBDbmsException, SQLException {
     vc = VerdictContext.fromConnectionString(url, info);
+    isOpen = true;
   }
 
   public VerdictConnection(String url, String user, String password)
       throws VerdictDBDbmsException, SQLException {
     vc = VerdictContext.fromConnectionString(url, user, password);
+    isOpen = true;
   }
 
   private java.sql.DatabaseMetaData getDatabaseMetaData() throws SQLException {
@@ -117,6 +120,8 @@ public class VerdictConnection implements java.sql.Connection {
 
   @Override
   public void close() throws SQLException {
+    JdbcConnection conn = vc.getJdbcConnection();
+    if (conn != null) conn.getConnection().close();
     isOpen = false;
   }
 
@@ -287,7 +292,8 @@ public class VerdictConnection implements java.sql.Connection {
 
   @Override
   public boolean isValid(int timeout) throws SQLException {
-    return isOpen;
+    JdbcConnection conn = vc.getJdbcConnection();
+    return (conn != null) && conn.getConnection().isValid(timeout);
   }
 
   @Override

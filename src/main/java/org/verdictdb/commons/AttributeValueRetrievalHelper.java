@@ -95,7 +95,7 @@ public abstract class AttributeValueRetrievalHelper {
   public String getString(int index) {
     Object value = getValue(index);
     if (value == null) {
-      return "";
+      return null;
     }
     return String.valueOf(value);
   }
