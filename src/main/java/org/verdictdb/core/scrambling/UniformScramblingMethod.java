@@ -1,29 +1,38 @@
+/*
+ *    Copyright 2018 University of Michigan
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
+
 package org.verdictdb.core.scrambling;
+
+import org.verdictdb.connection.DbmsQueryResult;
+import org.verdictdb.core.execplan.ExecutionInfoToken;
+import org.verdictdb.core.querying.ExecutableNodeBase;
+import org.verdictdb.core.querying.QueryNodeBase;
+import org.verdictdb.core.sqlobject.*;
+import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.exception.VerdictDBValueException;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import org.verdictdb.connection.DbmsQueryResult;
-import org.verdictdb.core.execplan.ExecutionInfoToken;
-import org.verdictdb.core.querying.ExecutableNodeBase;
-import org.verdictdb.core.querying.QueryNodeBase;
-import org.verdictdb.core.sqlobject.AbstractRelation;
-import org.verdictdb.core.sqlobject.AliasedColumn;
-import org.verdictdb.core.sqlobject.BaseTable;
-import org.verdictdb.core.sqlobject.ColumnOp;
-import org.verdictdb.core.sqlobject.SelectItem;
-import org.verdictdb.core.sqlobject.SelectQuery;
-import org.verdictdb.core.sqlobject.SqlConvertible;
-import org.verdictdb.core.sqlobject.UnnamedColumn;
-import org.verdictdb.exception.VerdictDBException;
-import org.verdictdb.exception.VerdictDBValueException;
-
 public class UniformScramblingMethod extends ScramblingMethodBase {
-  
+
   private final String MAIN_TABLE_SOURCE_ALIAS = "t";
-  
+
   private int totalNumberOfblocks = -1;
 
   public UniformScramblingMethod(long blockSize) {
@@ -32,7 +41,10 @@ public class UniformScramblingMethod extends ScramblingMethodBase {
 
   @Override
   public List<ExecutableNodeBase> getStatisticsNode(
-      String oldSchemaName, String oldTableName, String columnMetaTokenKey, String partitionMetaTokenKey) {
+      String oldSchemaName,
+      String oldTableName,
+      String columnMetaTokenKey,
+      String partitionMetaTokenKey) {
     TableSizeCountNode countNode = new TableSizeCountNode(oldSchemaName, oldTableName);
     return Arrays.<ExecutableNodeBase>asList(countNode);
   }
@@ -43,26 +55,28 @@ public class UniformScramblingMethod extends ScramblingMethodBase {
   }
 
   @Override
-  public List<Double> getCumulativeProbabilityDistributionForTier(Map<String, Object> metaData, int tier) {
-    
-    DbmsQueryResult tableSizeResult = 
+  public List<Double> getCumulativeProbabilityDistributionForTier(
+      Map<String, Object> metaData, int tier) {
+
+    DbmsQueryResult tableSizeResult =
         (DbmsQueryResult) metaData.get(TableSizeCountNode.class.getSimpleName());
     tableSizeResult.next();
     long tableSize = tableSizeResult.getLong(TableSizeCountNode.TOTAL_COUNT_ALIAS_NAME);
     totalNumberOfblocks = (int) Math.ceil(tableSize / (float) blockSize);
-    
+
     List<Double> prob = new ArrayList<>();
     for (int i = 0; i < totalNumberOfblocks; i++) {
-      prob.add((i+1) / (double) totalNumberOfblocks);
+      prob.add((i + 1) / (double) totalNumberOfblocks);
     }
-    
+
     storeCumulativeProbabilityDistribution(tier, prob);
-    
+
     return prob;
   }
-  
+
   @Override
-  public AbstractRelation getScramblingSource(String originalSchema, String originalTable, Map<String, Object> metaData) {
+  public AbstractRelation getScramblingSource(
+      String originalSchema, String originalTable, Map<String, Object> metaData) {
     String tableSourceAlias = MAIN_TABLE_SOURCE_ALIAS;
     return new BaseTable(originalSchema, originalTable, tableSourceAlias);
   }
@@ -81,9 +95,7 @@ public class UniformScramblingMethod extends ScramblingMethodBase {
   public int getTierCount() {
     return 1;
   }
-
 }
-
 
 class TableSizeCountNode extends QueryNodeBase {
 
@@ -114,17 +126,15 @@ class TableSizeCountNode extends QueryNodeBase {
     List<SelectItem> selectList = new ArrayList<>();
     selectList.add(new AliasedColumn(ColumnOp.count(), TOTAL_COUNT_ALIAS_NAME));
 
-    selectQuery = SelectQuery.create(
-        selectList, 
-        new BaseTable(schemaName, tableName, tableSourceAlias));
+    selectQuery =
+        SelectQuery.create(selectList, new BaseTable(schemaName, tableName, tableSourceAlias));
     return selectQuery;
   }
-  
+
   @Override
   public ExecutionInfoToken createToken(DbmsQueryResult result) {
     ExecutionInfoToken token = new ExecutionInfoToken();
     token.setKeyValue(this.getClass().getSimpleName(), result);
     return token;
   }
-  
 }

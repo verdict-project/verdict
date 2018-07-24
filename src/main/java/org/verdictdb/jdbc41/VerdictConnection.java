@@ -1,27 +1,31 @@
-package org.verdictdb.jdbc41;
+/*
+ *    Copyright 2018 University of Michigan
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
 
-import java.sql.Array;
-import java.sql.Blob;
-import java.sql.CallableStatement;
-import java.sql.Clob;
-import java.sql.DatabaseMetaData;
-import java.sql.NClob;
-import java.sql.SQLClientInfoException;
-import java.sql.SQLException;
-import java.sql.SQLFeatureNotSupportedException;
-import java.sql.SQLWarning;
-import java.sql.SQLXML;
-import java.sql.Savepoint;
-import java.sql.Struct;
-import java.util.Map;
-import java.util.Properties;
-import java.util.concurrent.Executor;
+package org.verdictdb.jdbc41;
 
 import org.verdictdb.VerdictContext;
 import org.verdictdb.connection.CachedDbmsConnection;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.exception.VerdictDBDbmsException;
+
+import java.sql.*;
+import java.util.Map;
+import java.util.Properties;
+import java.util.concurrent.Executor;
 
 public class VerdictConnection implements java.sql.Connection {
 
@@ -33,25 +37,27 @@ public class VerdictConnection implements java.sql.Connection {
     vc = VerdictContext.fromConnectionString(url);
   }
 
-  public VerdictConnection(String url, Properties info) throws VerdictDBDbmsException, SQLException {
+  public VerdictConnection(String url, Properties info)
+      throws VerdictDBDbmsException, SQLException {
     vc = VerdictContext.fromConnectionString(url, info);
   }
 
-  public VerdictConnection(String url, String user, String password) throws VerdictDBDbmsException, SQLException {
+  public VerdictConnection(String url, String user, String password)
+      throws VerdictDBDbmsException, SQLException {
     vc = VerdictContext.fromConnectionString(url, user, password);
   }
 
   private java.sql.DatabaseMetaData getDatabaseMetaData() throws SQLException {
     DbmsConnection conn = vc.getConnection();
     java.sql.DatabaseMetaData metaData = getDatabaseMetaDataFromConnection(conn);
-    
+
     if (metaData == null) {
       throw new SQLException("Unexpected underlying connection: " + conn);
     } else {
       return metaData;
     }
   }
-  
+
   private java.sql.DatabaseMetaData getDatabaseMetaDataFromConnection(DbmsConnection conn) {
     if (conn instanceof CachedDbmsConnection) {
       DbmsConnection originalConn = ((CachedDbmsConnection) conn).getOriginalConnection();
@@ -121,13 +127,11 @@ public class VerdictConnection implements java.sql.Connection {
 
   @Override
   public DatabaseMetaData getMetaData() throws SQLException {
-      return getDatabaseMetaData();
+    return getDatabaseMetaData();
   }
 
   @Override
-  public void setReadOnly(boolean readOnly) throws SQLException {
-
-  }
+  public void setReadOnly(boolean readOnly) throws SQLException {}
 
   @Override
   public boolean isReadOnly() throws SQLException {
@@ -166,18 +170,20 @@ public class VerdictConnection implements java.sql.Connection {
   }
 
   @Override
-  public VerdictStatement createStatement(int resultSetType, int resultSetConcurrency) throws SQLException {
-    throw new SQLFeatureNotSupportedException();
-  }
-
-  @Override
-  public VerdictPreparedStatement prepareStatement(String sql, int resultSetType, int resultSetConcurrency)
+  public VerdictStatement createStatement(int resultSetType, int resultSetConcurrency)
       throws SQLException {
     throw new SQLFeatureNotSupportedException();
   }
 
   @Override
-  public CallableStatement prepareCall(String sql, int resultSetType, int resultSetConcurrency) throws SQLException {
+  public VerdictPreparedStatement prepareStatement(
+      String sql, int resultSetType, int resultSetConcurrency) throws SQLException {
+    throw new SQLFeatureNotSupportedException();
+  }
+
+  @Override
+  public CallableStatement prepareCall(String sql, int resultSetType, int resultSetConcurrency)
+      throws SQLException {
     throw new SQLFeatureNotSupportedException();
   }
 
@@ -222,35 +228,40 @@ public class VerdictConnection implements java.sql.Connection {
   }
 
   @Override
-  public VerdictStatement createStatement(int resultSetType, int resultSetConcurrency, int resultSetHoldability)
+  public VerdictStatement createStatement(
+      int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException {
+    throw new SQLFeatureNotSupportedException();
+  }
+
+  @Override
+  public VerdictPreparedStatement prepareStatement(
+      String sql, int resultSetType, int resultSetConcurrency, int resultSetHoldability)
       throws SQLException {
     throw new SQLFeatureNotSupportedException();
   }
 
   @Override
-  public VerdictPreparedStatement prepareStatement(String sql, int resultSetType, int resultSetConcurrency,
-      int resultSetHoldability) throws SQLException {
+  public CallableStatement prepareCall(
+      String sql, int resultSetType, int resultSetConcurrency, int resultSetHoldability)
+      throws SQLException {
     throw new SQLFeatureNotSupportedException();
   }
 
   @Override
-  public CallableStatement prepareCall(String sql, int resultSetType, int resultSetConcurrency,
-      int resultSetHoldability) throws SQLException {
+  public VerdictPreparedStatement prepareStatement(String sql, int autoGeneratedKeys)
+      throws SQLException {
     throw new SQLFeatureNotSupportedException();
   }
 
   @Override
-  public VerdictPreparedStatement prepareStatement(String sql, int autoGeneratedKeys) throws SQLException {
+  public VerdictPreparedStatement prepareStatement(String sql, int[] columnIndexes)
+      throws SQLException {
     throw new SQLFeatureNotSupportedException();
   }
 
   @Override
-  public VerdictPreparedStatement prepareStatement(String sql, int[] columnIndexes) throws SQLException {
-    throw new SQLFeatureNotSupportedException();
-  }
-
-  @Override
-  public VerdictPreparedStatement prepareStatement(String sql, String[] columnNames) throws SQLException {
+  public VerdictPreparedStatement prepareStatement(String sql, String[] columnNames)
+      throws SQLException {
     throw new SQLFeatureNotSupportedException();
   }
 
@@ -343,5 +354,4 @@ public class VerdictConnection implements java.sql.Connection {
   public boolean isWrapperFor(Class<?> iface) throws SQLException {
     throw new SQLFeatureNotSupportedException();
   }
-
 }

@@ -6,7 +6,7 @@ general:
   branches:
     ignore:
       - gh-pages
-      
+
 version: 2
 jobs:
   maven-version-check:
