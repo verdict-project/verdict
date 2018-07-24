@@ -1,27 +1,38 @@
+/*
+ *    Copyright 2018 University of Michigan
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
+
 package org.verdictdb.coordinator;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.NotSerializableException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-
+import com.google.common.base.Optional;
+import com.rits.cloning.Cloner;
 import org.verdictdb.commons.AttributeValueRetrievalHelper;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.connection.DbmsQueryResultMetaData;
 
-import com.google.common.base.Optional;
-
 /**
  * Represents the result set returned from VerdictDB to the end user.
- * 
- * @author Yongjoo Park
  *
+ * @author Yongjoo Park
  */
 public class VerdictSingleResult extends AttributeValueRetrievalHelper {
 
   private Optional<DbmsQueryResult> result;
+
+  // used to support wasnull()
+  private Object lastValueRead;
 
   public VerdictSingleResult(DbmsQueryResult result) {
     if (result == null) {
@@ -49,36 +60,37 @@ public class VerdictSingleResult extends AttributeValueRetrievalHelper {
     }
   }
 
-
   public static VerdictSingleResult empty() {
     return new VerdictSingleResult(null);
   }
-  
+
   public boolean isEmpty() {
     return !result.isPresent();
   }
 
   private DbmsQueryResult copyResult(DbmsQueryResult result) {
-    try {
-      ByteArrayOutputStream bos = new ByteArrayOutputStream();
-      ObjectOutputStream out = new ObjectOutputStream(bos);
-      out.writeObject(result);
-      out.flush();
-      out.close();
-
-      ObjectInputStream in = new ObjectInputStream(
-          new ByteArrayInputStream(bos.toByteArray()));
-      DbmsQueryResult copied = (DbmsQueryResult) in.readObject();
-      return copied;
-      
-    } catch (ClassNotFoundException e) {
-      e.printStackTrace();
-    } catch (NotSerializableException e) {
-      e.printStackTrace();
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-    return null;
+    DbmsQueryResult copied = new Cloner().deepClone(result);
+    return new Cloner().deepClone(result);
+    //    try {
+    //      ByteArrayOutputStream bos = new ByteArrayOutputStream();
+    //      ObjectOutputStream out = new ObjectOutputStream(bos);
+    //      out.writeObject(result);
+    //      out.flush();
+    //      out.close();
+    //
+    //      ObjectInputStream in = new ObjectInputStream(new
+    // ByteArrayInputStream(bos.toByteArray()));
+    //      DbmsQueryResult copied = (DbmsQueryResult) in.readObject();
+    //      return copied;
+    //
+    //    } catch (ClassNotFoundException e) {
+    //      e.printStackTrace();
+    //    } catch (NotSerializableException e) {
+    //      e.printStackTrace();
+    //    } catch (IOException e) {
+    //      e.printStackTrace();
+    //    }
+    //    return null;
   }
 
   public DbmsQueryResultMetaData getMetaData() {
@@ -124,8 +136,14 @@ public class VerdictSingleResult extends AttributeValueRetrievalHelper {
     if (result.isPresent() == false) {
       throw new RuntimeException("An empty result is accessed.");
     } else {
-      return result.get().getValue(index);
+      Object value = result.get().getValue(index);
+      lastValueRead = value;
+      return value;
     }
+  }
+
+  public boolean wasNull() {
+    return lastValueRead == null;
   }
 
   public boolean next() {
@@ -141,5 +159,4 @@ public class VerdictSingleResult extends AttributeValueRetrievalHelper {
       result.get().rewind();
     }
   }
-
 }

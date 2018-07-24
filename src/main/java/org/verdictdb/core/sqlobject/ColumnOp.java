@@ -1,14 +1,29 @@
-package org.verdictdb.core.sqlobject;
+/*
+ *    Copyright 2018 University of Michigan
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+package org.verdictdb.core.sqlobject;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class ColumnOp implements UnnamedColumn, SelectItem {
 
@@ -16,59 +31,61 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
 
   /**
    * opType must be one of the following.
-   * <p>
-   * Functions:
+   *
+   * <p>Functions:
+   *
    * <ol>
-   * <li>sum</li>
-   * <li>count</li>
-   * <li>avg</li>
-   * <li>add</li>
-   * <li>multiply</li>
-   * <li>subtract</li>
-   * <li>divide</li>
-   * <li>stddev_pop</li>
-   * <li>stddev_samp</li>
-   * <li>pow</li>
-   * <li>sqrt</li>
-   * <li>min</li>
-   * <li>max</li>
-   * <li>countdistinct</li>
-   * <li>substr</li>
-   * <li>substring</li>
-   * <li>rand</li>
-   * <li>floor</li>
-   * <li>cast</li>
-   * <li>percentile</li>
-   * <li>mod</li>
+   *   <li>sum
+   *   <li>count
+   *   <li>avg
+   *   <li>add
+   *   <li>multiply
+   *   <li>subtract
+   *   <li>divide
+   *   <li>stddev_pop
+   *   <li>stddev_samp
+   *   <li>pow
+   *   <li>sqrt
+   *   <li>min
+   *   <li>max
+   *   <li>countdistinct
+   *   <li>substr
+   *   <li>substring
+   *   <li>rand
+   *   <li>floor
+   *   <li>cast
+   *   <li>percentile
+   *   <li>mod
    * </ol>
-   * <p>
-   * Comparison:
+   *
+   * <p>Comparison:
+   *
    * <ol>
-   * <li>and</li>
-   * <li>or</li>
-   * <li>not</li>
-   * <li>equal</li>
-   * <li>notequal</li>
-   * <li>notgreaterthan</li>
-   * <li>notlessthan</li>
-   * <li>casewhenelse</li>
-   * <li>casewhen</li>
-   * <li>is null</li>
-   * <li>is not null</li>
-   * <li>interval</li>
-   * <li>date</li>
-   * <li>greater</li>
-   * <li>less</li>
-   * <li>greaterequal</li>
-   * <li>lessequal</li>
-   * <li>like</li>
-   * <li>notlike</li>
-   * <li>exists</li>
-   * <li>notexists</li>
-   * <li>between</li>
-   * <li>in</li>
-   * <li>notin</li>
-   * <li>year</li>
+   *   <li>and
+   *   <li>or
+   *   <li>not
+   *   <li>equal
+   *   <li>notequal
+   *   <li>notgreaterthan
+   *   <li>notlessthan
+   *   <li>casewhenelse
+   *   <li>casewhen
+   *   <li>is null
+   *   <li>is not null
+   *   <li>interval
+   *   <li>date
+   *   <li>greater
+   *   <li>less
+   *   <li>greaterequal
+   *   <li>lessequal
+   *   <li>like
+   *   <li>notlike
+   *   <li>exists
+   *   <li>notexists
+   *   <li>between
+   *   <li>in
+   *   <li>notin
+   *   <li>year
    * </ol>
    */
   String opType;
@@ -120,7 +137,7 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
   public static ColumnOp and(UnnamedColumn predicate1, UnnamedColumn predicate2) {
     return new ColumnOp("and", Arrays.asList(predicate1, predicate2));
   }
-  
+
   public static ColumnOp or(UnnamedColumn predicate1, UnnamedColumn predicate2) {
     return new ColumnOp("or", Arrays.asList(predicate1, predicate2));
   }
@@ -137,7 +154,6 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
     return new ColumnOp("notequal", Arrays.asList(column1, column2));
   }
 
-
   public static ColumnOp notgreaterthan(UnnamedColumn column1, UnnamedColumn column2) {
     return new ColumnOp("notgreaterthan", Arrays.asList(column1, column2));
   }
@@ -149,7 +165,7 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
   public static ColumnOp add(UnnamedColumn column1, UnnamedColumn column2) {
     return new ColumnOp("add", Arrays.asList(column1, column2));
   }
-  
+
   public static ColumnOp subtract(UnnamedColumn column1, UnnamedColumn column2) {
     return new ColumnOp("subtract", Arrays.asList(column1, column2));
   }
@@ -162,13 +178,14 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
     return new ColumnOp("divide", Arrays.asList(column1, column2));
   }
 
-//  public static ColumnOp casewhenelse(UnnamedColumn columnIf, UnnamedColumn condition, UnnamedColumn columnElse) {
-//    return new ColumnOp("casewhenelse", Arrays.asList(columnIf, condition, columnElse));
-//  }
+  //  public static ColumnOp casewhenelse(UnnamedColumn columnIf, UnnamedColumn condition,
+  // UnnamedColumn columnElse) {
+  //    return new ColumnOp("casewhenelse", Arrays.asList(columnIf, condition, columnElse));
+  //  }
 
-//  public static ColumnOp notnull(UnnamedColumn column1) {
-//    return new ColumnOp("notnull", Arrays.asList(column1));
-//  }
+  //  public static ColumnOp notnull(UnnamedColumn column1) {
+  //    return new ColumnOp("notnull", Arrays.asList(column1));
+  //  }
 
   public static ColumnOp std(UnnamedColumn column1) {
     return new ColumnOp("stddev_pop", Arrays.asList(column1));
@@ -181,7 +198,7 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
   public static ColumnOp avg(UnnamedColumn column1) {
     return new ColumnOp("avg", Arrays.asList(column1));
   }
-  
+
   public static ColumnOp sum(UnnamedColumn column1) {
     return new ColumnOp("sum", Arrays.asList(column1));
   }
@@ -221,7 +238,7 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
   public static ColumnOp max(UnnamedColumn column1, UnnamedColumn column2) {
     return new ColumnOp("max", Arrays.asList(column1, column2));
   }
-  
+
   public static ColumnOp percentile(UnnamedColumn column1, UnnamedColumn column2) {
     return new ColumnOp("percentile", Arrays.asList(column1, column2));
   }
@@ -229,7 +246,7 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
   public static ColumnOp rightisnull(UnnamedColumn column1) {
     return new ColumnOp("is_null", Arrays.asList(column1));
   }
-  
+
   public static ColumnOp rightisnotnull(UnnamedColumn column1) {
     return new ColumnOp("is_not_null", Arrays.asList(column1));
   }
@@ -262,7 +279,8 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
     return new ColumnOp("notexists", column);
   }
 
-  public static ColumnOp between(UnnamedColumn column1, UnnamedColumn column2, UnnamedColumn column3) {
+  public static ColumnOp between(
+      UnnamedColumn column1, UnnamedColumn column2, UnnamedColumn column3) {
     return new ColumnOp("between", Arrays.asList(column1, column2, column3));
   }
 
@@ -301,7 +319,7 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
   public static ColumnOp floor(UnnamedColumn column) {
     return new ColumnOp("floor", column);
   }
-  
+
   public static ColumnOp cast(UnnamedColumn column, UnnamedColumn dataType) {
     return new ColumnOp("cast", Arrays.asList(column, dataType));
   }
@@ -326,11 +344,11 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
   }
 
   public boolean isColumnOpAggregate() {
-    if (this.getOpType().equals("avg") ||
-        this.getOpType().equals("sum") ||
-        this.getOpType().equals("count") ||
-        this.getOpType().equals("max") ||
-        this.getOpType().equals("min")) {
+    if (this.getOpType().equals("avg")
+        || this.getOpType().equals("sum")
+        || this.getOpType().equals("count")
+        || this.getOpType().equals("max")
+        || this.getOpType().equals("min")) {
       return true;
     }
     boolean aggExists = false;
@@ -354,7 +372,7 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
   @Override
   public ColumnOp deepcopy() {
     List<UnnamedColumn> newOperands = new ArrayList<>();
-    for (UnnamedColumn operand:operands) {
+    for (UnnamedColumn operand : operands) {
       newOperands.add(operand.deepcopy());
     }
     return new ColumnOp(opType, newOperands);
@@ -363,5 +381,4 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
   public static UnnamedColumn not(UnnamedColumn col1) {
     return new ColumnOp("not", Arrays.asList(col1));
   }
-
 }

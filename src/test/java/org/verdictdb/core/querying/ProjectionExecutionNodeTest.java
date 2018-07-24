@@ -71,7 +71,7 @@ public class ProjectionExecutionNodeTest {
         new BaseColumn("t", "value"),
         new SubqueryColumn(subquery)
     )));
-    QueryExecutionPlan plan = new QueryExecutionPlan("newschema");
+    QueryExecutionPlan plan = QueryExecutionPlanFactory.create("newschema");
     ProjectionNode node = ProjectionNode.create(plan, query);
     String aliasName = String.format("verdictdbalias_%d_0", plan.getSerialNumber());
 
@@ -100,7 +100,7 @@ public class ProjectionExecutionNodeTest {
         new BaseColumn("t", "value"),
         new SubqueryColumn(subquery)
     )));
-    ProjectionNode node = ProjectionNode.create(new QueryExecutionPlan("newschema"), query);
+    ProjectionNode node = ProjectionNode.create(QueryExecutionPlanFactory.create("newschema"), query);
     // node.print();
 
 //    ExecutionInfoToken subqueryToken = new ExecutionInfoToken();

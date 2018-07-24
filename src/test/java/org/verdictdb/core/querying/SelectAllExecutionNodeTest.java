@@ -69,7 +69,7 @@ public class SelectAllExecutionNodeTest {
         new BaseColumn("t", "value"),
         new SubqueryColumn(subquery)
     )));
-    QueryExecutionPlan plan = new QueryExecutionPlan(newSchema);
+    QueryExecutionPlan plan = QueryExecutionPlanFactory.create(newSchema);
     SelectAllExecutionNode node = SelectAllExecutionNode.create(plan, query);
     String aliasName = String.format("verdictdbalias_%d_0", plan.getSerialNumber());
 
@@ -104,7 +104,7 @@ public class SelectAllExecutionNodeTest {
         new SubqueryColumn(subquery)
     )));
 
-//    QueryExecutionPlan plan = new QueryExecutionPlan(newSchema);
+//    QueryExecutionPlan plan = QueryExecutionPlanFactory.create(newSchema);
     SelectAllExecutionNode node = SelectAllExecutionNode.create(
         new TempIdCreatorInScratchpadSchema(newSchema), query);
 //    conn.executeUpdate(String.format("create table \"%s\".\"%s\"", newSchema, ((ProjectionExecutionNode)node.getExecutableNodeBaseDependent(0)).newTableName));

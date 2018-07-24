@@ -17,10 +17,7 @@ import org.junit.Test;
 import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.core.execplan.ExecutableNode;
 import org.verdictdb.core.execplan.ExecutablePlanRunner;
-import org.verdictdb.core.querying.AggExecutionNode;
-import org.verdictdb.core.querying.ExecutableNodeBase;
-import org.verdictdb.core.querying.QueryExecutionPlan;
-import org.verdictdb.core.querying.QueryNodeBase;
+import org.verdictdb.core.querying.*;
 import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
 import org.verdictdb.core.scrambling.SimpleTreePlan;
@@ -88,7 +85,7 @@ public class AsyncQueryExecutionPlanTest {
     SelectQuery aggQuery = SelectQuery.create(
         new AliasedColumn(ColumnOp.count(), "agg"),
         new BaseTable(newSchema, newTable, "t"));
-    QueryExecutionPlan plan = new QueryExecutionPlan(newSchema, scrambleMeta, aggQuery);
+    QueryExecutionPlan plan = QueryExecutionPlanFactory.create(newSchema, scrambleMeta, aggQuery);
 
     AggExecutionNode aggnode = AggExecutionNode.create(plan, aggQuery);
     AsyncQueryExecutionPlan asyncPlan = AsyncQueryExecutionPlan.create(plan);
@@ -126,7 +123,7 @@ public class AsyncQueryExecutionPlanTest {
         new AliasedColumn(ColumnOp.count(), "agg"),
         projQuery);
     
-    QueryExecutionPlan plan = new QueryExecutionPlan(newSchema, scrambleMeta, aggQuery);
+    QueryExecutionPlan plan = QueryExecutionPlanFactory.create(newSchema, scrambleMeta, aggQuery);
     AsyncQueryExecutionPlan asyncPlan = AsyncQueryExecutionPlan.create(plan);
     ExecutableNodeBase converted = asyncPlan.getRoot();
     converted.print();

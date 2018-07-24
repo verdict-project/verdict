@@ -1,3 +1,19 @@
+/*
+ *    Copyright 2018 University of Michigan
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
+
 package org.verdictdb.connection;
 
 import com.google.common.collect.Sets;
@@ -30,10 +46,13 @@ public class JdbcConnection implements DbmsConnection {
       throw new VerdictDBDbmsException(e);
     }
 
-    String dbName = connectionString.split(":")[1];
-    SqlSyntax syntax = SqlSyntaxList.getSyntaxFor(dbName);
+    SqlSyntax syntax = SqlSyntaxList.getSyntaxFromConnectionString(connectionString);
+    //    String dbName = connectionString.split(":")[1];
+    //    SqlSyntax syntax = SqlSyntaxList.getSyntaxFor(dbName);
 
-    return new JdbcConnection(conn, syntax);
+    JdbcConnection jdbcConn = new JdbcConnection(conn, syntax);
+    //    jdbcConn.setOutputDebugMessage(true);
+    return jdbcConn;
   }
 
   public JdbcConnection(Connection conn, SqlSyntax syntax) {
@@ -46,8 +65,13 @@ public class JdbcConnection implements DbmsConnection {
       }
     } catch (SQLException e) {
       e.printStackTrace();
-      // leave currentSchema as null
     }
+
+    // set a default value if an inappropriate value is set.
+    if (currentSchema == null || currentSchema.length() == 0) {
+      currentSchema = syntax.getFallbackDefaultSchema();
+    }
+
     this.syntax = syntax;
   }
 
@@ -345,5 +369,14 @@ public class JdbcConnection implements DbmsConnection {
 
   public void setOutputDebugMessage(boolean outputDebugMessage) {
     this.outputDebugMessage = outputDebugMessage;
+  }
+
+  @Override
+  public DbmsConnection copy() {
+    JdbcConnection newConn = new JdbcConnection(conn, syntax);
+    newConn.setDefaultSchema(currentSchema);
+    newConn.jrs = this.jrs;
+    newConn.outputDebugMessage = this.outputDebugMessage;
+    return newConn;
   }
 }

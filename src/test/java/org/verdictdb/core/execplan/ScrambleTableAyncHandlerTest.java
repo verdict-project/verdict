@@ -111,7 +111,7 @@ package org.verdictdb.core.execplan;
 //    RelationStandardizer gen = new RelationStandardizer(staticMetaData);
 //    relation = gen.standardize((SelectQuery) relation);
 //
-//    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
+//    QueryExecutionPlan queryExecutionPlan = QueryExecutionPlanFactory.create("verdictdb_temp", meta, (SelectQuery) relation);
 //    queryExecutionPlan.cleanUp();
 //    queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
 //
@@ -132,7 +132,7 @@ package org.verdictdb.core.execplan;
 //    RelationStandardizer gen = new RelationStandardizer(staticMetaData);
 //    relation = gen.standardize((SelectQuery) relation);
 //
-//    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
+//    QueryExecutionPlan queryExecutionPlan = QueryExecutionPlanFactory.create("verdictdb_temp", meta, (SelectQuery) relation);
 //    queryExecutionPlan.cleanUp();
 //    queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
 //
@@ -153,7 +153,7 @@ package org.verdictdb.core.execplan;
 //    RelationStandardizer gen = new RelationStandardizer(staticMetaData);
 //    relation = gen.standardize((SelectQuery) relation);
 //
-//    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
+//    QueryExecutionPlan queryExecutionPlan = QueryExecutionPlanFactory.create("verdictdb_temp", meta, (SelectQuery) relation);
 //    queryExecutionPlan.cleanUp();
 //    queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
 //    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().dependents.get(0)).setScrambleMeta(meta);

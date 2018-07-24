@@ -19,6 +19,7 @@ import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.connection.StaticMetaData;
 import org.verdictdb.core.execplan.ExecutablePlanRunner;
 import org.verdictdb.core.querying.QueryExecutionPlan;
+import org.verdictdb.core.querying.QueryExecutionPlanFactory;
 import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
 import org.verdictdb.core.scrambling.UniformScrambler;
@@ -200,9 +201,9 @@ public class AsyncHavingStandardTest {
     RelationStandardizer gen = new RelationStandardizer(staticMetaData);
     relation = gen.standardize((SelectQuery) relation);
 
-//    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(new JdbcConnection(conn, new H2Syntax()),
+//    QueryExecutionPlan queryExecutionPlan = QueryExecutionPlanFactory.create(new JdbcConnection(conn, new H2Syntax()),
 //        new H2Syntax(), meta, (SelectQuery) relation, "verdictdb_temp");
-    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
+    QueryExecutionPlan queryExecutionPlan = QueryExecutionPlanFactory.create("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
 

@@ -363,7 +363,7 @@ public class DatabaseConnectionHelpers {
 
     Connection conn = DriverManager.getConnection(connectionString, user, password);
     JdbcConnection dbmsConn = new JdbcConnection(conn, new RedshiftSyntax());
-    //    dbmsConn.setOutputDebugMessage(true);
+//    dbmsConn.setOutputDebugMessage(true);
 
     dbmsConn.execute(String.format("DROP SCHEMA IF EXISTS \"%s\" CASCADE", schema));
     dbmsConn.execute(String.format("CREATE SCHEMA IF NOT EXISTS \"%s\"", schema));
@@ -914,8 +914,7 @@ public class DatabaseConnectionHelpers {
                 + "timeCol        time, "
                 + "timestampCol   timestamp, "
                 + "uuidCol        uuid, "
-                // dongyoungy: xml type is not supported because its object is not serializable
-                //            + "xmlCol         xml,"
+                + "xmlCol         xml,"
                 + "bitvaryCol     bit varying(1),"
                 + "int8Col        int8,"
                 + "boolCol        bool,"
@@ -943,9 +942,8 @@ public class DatabaseConnectionHelpers {
                 + "'08002b:010203', '08002b:0102030405', '12.34', 1.0, '((1,1))', '(1,1)', "
                 + "'((1,1))', 1.0, 1, 1, 1, '1110', '2018-12-31 00:00:01', '2018-12-31 00:00:01', "
                 + "'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',"
-                +
-                //            "'<foo>bar</foo>'," +
-                " '1', 1, true, '1234', '1234', 1, 1, 1.0, 1.0, 1.0"
+                + "'<foo>bar</foo>',"
+                + " '1', 1, true, '1234', '1234', 1, 1, 1.0, 1.0, 1.0"
                 + ", 1, 1, 1, '2018-12-31 00:00:01', '2018-12-31 00:00:01', 1)",
             schema, table));
     dbmsConn.execute(
@@ -956,9 +954,8 @@ public class DatabaseConnectionHelpers {
                 + "NULL, NULL, NULL, NULL, "
                 + "NULL, NULL, NULL, NULL, NULL, NULL, "
                 + "NULL, NULL, NULL, NULL, 1, 1, NULL, NULL, NULL, NULL,"
-                +
-                //            "NULL," +
-                "NULL, NULL, NULL, NULL, NULL, NULL, "
+                + "NULL,"
+                + "NULL, NULL, NULL, NULL, NULL, NULL, "
                 + "NULL, NULL, NULL, NULL, NULL, 1, 1, NULL, NULL, 1)",
             schema, table));
 
@@ -1003,13 +1000,9 @@ public class DatabaseConnectionHelpers {
                 + "textCol        text, "
                 + "dateCol       date,"
                 + "timestampCol     timestamp, "
-                + "timestampwtzCol timestamp without time zone) "
-            // dongyoungy: below two types are problematic as redshift uses a custom object
-            // and we currently do not include such object. The error msg is
-            // java.lang.ClassNotFoundException: com.amazon.redshift.api.PGTimestamp
-            //            + "timestamptzCol    timestamptz) "
-            //            + "timestamptzCol2 timestamp with time zone)"
-            ,
+                + "timestampwtzCol timestamp without time zone, "
+                + "timestamptzCol    timestamptz, "
+                + "timestamptzCol2 timestamp with time zone)",
             schema, table));
 
     List<String> insertDataList = new ArrayList<>();
@@ -1039,8 +1032,8 @@ public class DatabaseConnectionHelpers {
     insertDataList.add("'2018-12-31'"); // date
     insertDataList.add("'2018-12-31 11:22:33'"); // timestamp
     insertDataList.add("'2018-12-31 11:22:33'"); // timestamp without time zone
-    //    insertDataList.add("'2018-12-31 11:22:33'"); // timestamptz
-    //    insertDataList.add("'2018-12-31 11:22:33'"); // timestamp with time zone
+    insertDataList.add("'2018-12-31 11:22:33'"); // timestamptz
+    insertDataList.add("'2018-12-31 11:22:33'"); // timestamp with time zone
 
     dbmsConn.execute(
         String.format(
@@ -1074,8 +1067,8 @@ public class DatabaseConnectionHelpers {
     insertNullDataList.add("NULL"); // date
     insertNullDataList.add("NULL"); // timestamp
     insertNullDataList.add("NULL"); // timestamp without time zone
-    //    insertNullDataList.add("NULL"); // timestamptz
-    //    insertNullDataList.add("NULL"); // timestamp with time zone
+    insertNullDataList.add("NULL"); // timestamptz
+    insertNullDataList.add("NULL"); // timestamp with time zone
 
     dbmsConn.execute(
         String.format(
