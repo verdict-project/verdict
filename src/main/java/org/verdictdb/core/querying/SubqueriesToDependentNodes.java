@@ -20,17 +20,15 @@ import org.verdictdb.exception.VerdictDBValueException;
 public class SubqueriesToDependentNodes {
 
   /**
-   * 
    * @param query A query that may include subqueries. The subqueries of this query will be replaced by
-   * placeholders.
+   *              placeholders.
    * @param node
-   * @throws VerdictDBValueException 
    */
   public static void convertSubqueriesToDependentNodes(
-      SelectQuery query, 
+      SelectQuery query,
       CreateTableAsSelectNode node) {
     IdCreator namer = node.getNamer();
-    
+
     // from list
     for (AbstractRelation source : query.getFromList()) {
       int index = query.getFromList().indexOf(source);
@@ -50,8 +48,7 @@ public class SubqueriesToDependentNodes {
         query.getFromList().set(index, baseAndSubscriptionTicket.getLeft());
         dep.registerSubscriber(baseAndSubscriptionTicket.getRight());
 //        dep.addBroadcastingQueue(baseAndQueue.getRight());
-      } 
-      else if (source instanceof JoinTable) {
+      } else if (source instanceof JoinTable) {
         for (AbstractRelation s : ((JoinTable) source).getJoinList()) {
           int joinindex = ((JoinTable) source).getJoinList().indexOf(s);
 
@@ -84,11 +81,11 @@ public class SubqueriesToDependentNodes {
       while (!filters.isEmpty()) {
         UnnamedColumn filter = filters.get(0);
         filters.remove(0);
-        
+
         // If filter is a subquery, we need to add it to dependency
         if (filter instanceof SubqueryColumn) {
           Pair<BaseTable, SubscriptionTicket> baseAndSubscriptionTicket;
-          if (((SubqueryColumn) filter).getSubquery().getAliasName().isPresent()){
+          if (((SubqueryColumn) filter).getSubquery().getAliasName().isPresent()) {
             baseAndSubscriptionTicket = node.createPlaceHolderTable(((SubqueryColumn) filter).getSubquery().getAliasName().get());
           } else {
 //            baseAndQueue = node.createPlaceHolderTable("filterPlaceholder"+filterPlaceholderNum++);
@@ -107,15 +104,15 @@ public class SubqueriesToDependentNodes {
           }
           dep.registerSubscriber(baseAndSubscriptionTicket.getRight());
 //          dep.addBroadcastingQueue(baseAndQueue.getRight());
-          
+
           // To replace the subquery, we use the selectlist of the subquery and tempTable to create a new non-aggregate subquery
           List<SelectItem> newSelectItem = new ArrayList<>();
           for (SelectItem item : subquery.getSelectList()) {
             if (item instanceof AliasedColumn) {
               newSelectItem.add(new AliasedColumn(
                   new BaseColumn(
-                      base.getSchemaName(), base.getAliasName().get(), 
-                      ((AliasedColumn) item).getAliasName()), 
+                      base.getSchemaName(), base.getAliasName().get(),
+                      ((AliasedColumn) item).getAliasName()),
                   ((AliasedColumn) item).getAliasName()));
             } else if (item instanceof AsteriskColumn) {
               newSelectItem.add(new AsteriskColumn());
@@ -127,13 +124,12 @@ public class SubqueriesToDependentNodes {
           }
           ((SubqueryColumn) filter).setSubquery(newSubquery);
           node.getPlaceholderTablesinFilter().add((SubqueryColumn) filter);
-        }
-        else if (filter instanceof ColumnOp) {
+        } else if (filter instanceof ColumnOp) {
           filters.addAll(((ColumnOp) filter).getOperands());
         }
       }
     }
-    
+
   }
 }
 
