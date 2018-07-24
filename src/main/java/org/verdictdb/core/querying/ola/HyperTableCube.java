@@ -1,8 +1,20 @@
-package org.verdictdb.core.querying.ola;
+/*
+ *    Copyright 2018 University of Michigan
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
+package org.verdictdb.core.querying.ola;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -11,18 +23,22 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.exception.VerdictDBValueException;
 
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+
 public class HyperTableCube implements Serializable {
 
   private static final long serialVersionUID = -2326120491898400014L;
-  
-  List<Dimension> dimensions = new ArrayList<>();   // serves as dimension constraints
+
+  List<Dimension> dimensions = new ArrayList<>(); // serves as dimension constraints
 
   public HyperTableCube() {}
 
   public HyperTableCube(List<Dimension> dimensions) {
     this.dimensions = dimensions;
   }
-  
+
   // TODO: use this method for creating a merged cube
   public static HyperTableCube createMergedCubes(HyperTableCube cube1, HyperTableCube cube2) {
     return null;
@@ -71,7 +87,7 @@ public class HyperTableCube implements Serializable {
       cubes.add(slice);
 
       // search for the index at which the length of dimension is longer than 1.
-      for(int i = 0; i < dimensions.size(); i++) {
+      for (int i = 0; i < dimensions.size(); i++) {
         tableIndex--;
         if (tableIndex < 0) {
           tableIndex = dimensions.size() - 1;
@@ -86,11 +102,10 @@ public class HyperTableCube implements Serializable {
   }
 
   /**
+   * This class should be used only when there exists at least two dimensions whose lengths are
+   * longer than one.
    *
-   * This class should be used only when there exists at least two dimensions whose lengths are longer than
-   * one.
-   *
-   * @param dimIndex  a slice dimension
+   * @param dimIndex a slice dimension
    * @return (SlidedCube, RemainingCube)
    */
   Pair<HyperTableCube, HyperTableCube> sliceAlong(int dimIndex) {
@@ -112,7 +127,7 @@ public class HyperTableCube implements Serializable {
         remaining.add(d);
       } else {
         slice.add(new Dimension(d.schemaName, d.tableName, d.begin, d.begin));
-        remaining.add(new Dimension(d.schemaName, d.tableName, d.begin+1, d.end));
+        remaining.add(new Dimension(d.schemaName, d.tableName, d.begin + 1, d.end));
       }
     }
 
@@ -127,6 +142,7 @@ public class HyperTableCube implements Serializable {
   public String toString() {
     return ToStringBuilder.reflectionToString(this, ToStringStyle.SHORT_PREFIX_STYLE);
   }
+
   @Override
   public int hashCode() {
     return HashCodeBuilder.reflectionHashCode(this);
@@ -136,5 +152,4 @@ public class HyperTableCube implements Serializable {
   public boolean equals(Object obj) {
     return EqualsBuilder.reflectionEquals(this, obj);
   }
-
 }

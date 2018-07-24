@@ -1,3 +1,19 @@
+/*
+ *    Copyright 2018 University of Michigan
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
+
 package org.verdictdb.sqlsyntax;
 
 import java.util.Collection;
@@ -33,13 +49,13 @@ public abstract class SqlSyntax {
   public abstract int getTableNameColumnIndex();
 
   public abstract String randFunction();
-  
+
   public abstract boolean isAsRequiredBeforeSelectInCreateTable();
 
   public String getStddevPopulationFunctionName() {
     return "stddev_pop";
   }
-  
+
   public String quoteName(String name) {
     String quoteString = getQuoteString();
     return quoteString + name + quoteString;
@@ -48,11 +64,12 @@ public abstract class SqlSyntax {
   public String substituteTypeName(String type) {
     return type;
   }
-  
+
   /**
-   * The drivers returned by methods are loaded explicitly by JdbcConnection (when it makes a 
-   * JDBC connection to the backend database.) This mechanism is to support legacy library
-   * that does not support automatic JDBC driver discovery.
+   * The drivers returned by methods are loaded explicitly by JdbcConnection (when it makes a JDBC
+   * connection to the backend database.) This mechanism is to support legacy library that does not
+   * support automatic JDBC driver discovery.
+   *
    * @return
    */
   public Collection<String> getCandidateJDBCDriverClassNames() {

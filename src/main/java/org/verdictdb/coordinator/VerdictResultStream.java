@@ -1,27 +1,62 @@
-package org.verdictdb.coordinator;
+/*
+ *    Copyright 2018 University of Michigan
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
 
-import java.util.Iterator;
+package org.verdictdb.coordinator;
 
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.core.resulthandler.ExecutionResultReader;
 
-public abstract class VerdictResultStream implements Iterable<VerdictSingleResult>, Iterator<VerdictSingleResult> {
-  
+import java.util.Iterator;
+
+public class VerdictResultStream
+    implements Iterable<VerdictSingleResult>, Iterator<VerdictSingleResult> {
+
+  ExecutionResultReader reader;
+
+  ExecutionContext execContext;
+
+  public VerdictResultStream(ExecutionResultReader reader, ExecutionContext execContext) {
+    this.reader = reader;
+    this.execContext = execContext;
+  }
+
   // TODO
-  public abstract VerdictResultStream create(VerdictSingleResult singleResult);
+  public VerdictResultStream create(VerdictSingleResult singleResult) {
+    return null;
+  }
 
   @Override
-  public abstract boolean hasNext();
+  public boolean hasNext() {
+    return reader.hasNext();
+  }
 
   @Override
-  public abstract VerdictSingleResult next();
+  public VerdictSingleResult next() {
+    DbmsQueryResult internalResult = reader.next();
+    VerdictSingleResult result = new VerdictSingleResult(internalResult);
+    return result;
+  }
 
   @Override
-  public abstract Iterator<VerdictSingleResult> iterator();
-  
-  @Override
-  public abstract void remove();
+  public Iterator<VerdictSingleResult> iterator() {
+    return this;
+  }
 
-  public abstract void close();
-  
+  @Override
+  public void remove() {}
+
+  public void close() {}
 }

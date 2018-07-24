@@ -1,10 +1,26 @@
+/*
+ *    Copyright 2018 University of Michigan
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
+
 package org.verdictdb.sqlsyntax;
+
+import com.google.common.collect.Lists;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
-
-import com.google.common.collect.Lists;
 
 public class ImpalaSyntax extends SqlSyntax {
 
@@ -14,14 +30,11 @@ public class ImpalaSyntax extends SqlSyntax {
   }
 
   @Override
-  public void dropTable(String schema, String tablename) {
+  public void dropTable(String schema, String tablename) {}
 
-  }
-  
   @Override
   public Collection<String> getCandidateJDBCDriverClassNames() {
-    List<String> candidates = Lists.newArrayList(
-        "com.cloudera.impala.jdbc41.Driver");
+    List<String> candidates = Lists.newArrayList("com.cloudera.impala.jdbc41.Driver");
     return candidates;
   }
 
@@ -29,7 +42,7 @@ public class ImpalaSyntax extends SqlSyntax {
   public int getColumnNameColumnIndex() {
     return 0;
   }
-  
+
   @Override
   public String getFallbackDefaultSchema() {
     return "default";
@@ -89,20 +102,23 @@ public class ImpalaSyntax extends SqlSyntax {
     // for different columns.
     return String.format("rand(unix_timestamp()+%d)", randomNum);
   }
-  
+
   @Override
   public boolean isAsRequiredBeforeSelectInCreateTable() {
     return true;
   }
-  
+
   @Override
   public boolean equals(Object obj) {
-    if (obj == null) { return false; }
-    if (obj == this) { return true; }
+    if (obj == null) {
+      return false;
+    }
+    if (obj == this) {
+      return true;
+    }
     if (obj.getClass() != getClass()) {
       return false;
     }
     return true;
   }
-  
 }

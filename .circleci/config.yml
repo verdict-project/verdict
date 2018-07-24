@@ -6,7 +6,7 @@ general:
   branches:
     ignore:
       - gh-pages
-      
+
 version: 2
 jobs:
   maven-version-check:
@@ -67,6 +67,17 @@ jobs:
       - run: git clone git@github.com:verdictdb/verdictdb-private-resources.git
       # Now build and test
       - run: mvn -B test 2> /dev/null
+      # Collect test metadata
+      - run:
+          name: Save test results
+          command: |
+            mkdir -p ~/junit/
+            find . -type f -regex ".*/target/surefire-reports/.*xml" -exec cp {} ~/junit/ \;
+          when: always
+      - store_test_results:
+          path: ~/junit
+      - store_artifacts:
+          path: ~/junit
       - save_cache:
           paths:
             - ~/.m2
@@ -93,9 +104,11 @@ jobs:
     environment:
       # Customize the JVM maximum heap limit
       MAVEN_OPTS: -Xmx3200m
+
     steps:
       - run: apt-get update; apt-get install -y git
       - checkout
+
       # Set up maven dependencies
       - restore_cache:
           keys:
@@ -104,11 +117,27 @@ jobs:
           # - v1-dependencies-
       - run: mvn install:install-file -Dfile=src/test/resources/jars/ImpalaJDBC41-2.6.3.jar -DgroupId=com.cloudera -DartifactId=impala-jdbc41 -Dversion=2.6.3 -Dpackaging=jar
       # - run: mvn dependency:go-offline
+
       # Setup necessary test data
       - run: git clone git@github.com:verdictdb/verdictdb-private-resources.git
       # Now build and test
       - run: mvn -B test 2> /dev/null
-      #- run: mvn -DskipTests -Dverdictdb-packaging=true package
+
+      # Check the JDBC service file correctness
+      - run: bash .circleci/check_jdbc_driver_name.sh
+
+      #- run: mvn -DskipTests -P packaging package
+      # Collect test metadata
+      - run:
+          name: Save test results
+          command: |
+            mkdir -p ~/junit/
+            find . -type f -regex ".*/target/surefire-reports/.*xml" -exec cp {} ~/junit/ \;
+          when: always
+      - store_test_results:
+          path: ~/junit
+      - store_artifacts:
+          path: ~/junit
       - save_cache:
           paths:
             - ~/.m2
@@ -153,6 +182,17 @@ jobs:
         - run: mvn test -Dtest=SparkTpchSelectQueryCoordinatorTest 2> /dev/null
         # - run: mvn test -Dtest=RedshiftTpchSelectQueryCoordinatorTest 2> /dev/null
         # - run: mvn test -Dtest=ImpalaTpchSelectQueryCoordinatorTest 2> /dev/null
+        # Collect test metadata
+        - run:
+            name: Save test results
+            command: |
+              mkdir -p ~/junit/
+              find . -type f -regex ".*/target/surefire-reports/.*xml" -exec cp {} ~/junit/ \;
+            when: always
+        - store_test_results:
+            path: ~/junit
+        - store_artifacts:
+            path: ~/junit
         - save_cache:
             paths:
               - ~/.m2
@@ -195,6 +235,16 @@ jobs:
         # - run: mvn test -Dtest=SparkTpchSelectQueryCoordinatorTest 2> /dev/null
         - run: mvn test -Dtest=RedshiftTpchSelectQueryCoordinatorTest 2> /dev/null
         - run: mvn test -Dtest=ImpalaTpchSelectQueryCoordinatorTest 2> /dev/null
+        - run:
+            name: Save test results
+            command: |
+              mkdir -p ~/junit/
+              find . -type f -regex ".*/target/surefire-reports/.*xml" -exec cp {} ~/junit/ \;
+            when: always
+        - store_test_results:
+            path: ~/junit
+        - store_artifacts:
+            path: ~/junit
         - save_cache:
             paths:
               - ~/.m2
