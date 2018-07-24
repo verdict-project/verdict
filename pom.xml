@@ -211,6 +211,7 @@
       <groupId>com.amazon.redshift</groupId>
       <artifactId>redshift-jdbc41</artifactId>
       <version>1.2.10.1009</version>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>com.klarna</groupId>
@@ -389,7 +390,7 @@
   <scm>
     <url>git@github.com:mozafari/verdictdb.git</url>
     <connection>git</connection>
-    <developerConnection>The University of Michigan, Ann Arbor</developerConnection>
+    <developerConnection>The University of Michigan</developerConnection>
   </scm>
   <ciManagement>
     <url>https://github.com/mozafari/verdictdb</url>
