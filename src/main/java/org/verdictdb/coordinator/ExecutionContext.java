@@ -22,7 +22,7 @@ public class ExecutionContext {
   private final long serialNumber;
   
   private enum QueryType {
-    select, scrambling, set_default_schema, unknown
+    select, scrambling, set_default_schema, unknown, show_databases, show_tables, describe_table
   }
   
   /**
@@ -106,6 +106,21 @@ public class ExecutionContext {
       @Override
       public QueryType visitUse_statement(VerdictSQLParser.Use_statementContext ctx) {
         return QueryType.set_default_schema;
+      }
+
+      @Override
+      public QueryType visitShow_databases_statement(VerdictSQLParser.Show_databases_statementContext ctx) {
+        return QueryType.show_databases;
+      }
+
+      @Override
+      public QueryType visitShow_tables_statement(VerdictSQLParser.Show_tables_statementContext ctx) {
+        return QueryType.show_tables;
+      }
+
+      @Override
+      public QueryType visitDescribe_table_statement(VerdictSQLParser.Describe_table_statementContext ctx) {
+        return QueryType.describe_table;
       }
     };
     

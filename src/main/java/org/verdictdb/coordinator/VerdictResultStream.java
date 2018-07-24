@@ -29,7 +29,7 @@ public class VerdictResultStream implements Iterable<VerdictSingleResult>, Itera
   @Override
   public VerdictSingleResult next() {
     DbmsQueryResult internalResult = reader.next();
-    VerdictSingleResult result = new VerdictSingleResult(internalResult);
+    VerdictSingleResult result = new VerdictSingleResultFromDbmsQueryResult(internalResult);
     return result;
   }
 

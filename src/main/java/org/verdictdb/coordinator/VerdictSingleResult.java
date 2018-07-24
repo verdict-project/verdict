@@ -19,136 +19,32 @@ import com.google.common.base.Optional;
  * @author Yongjoo Park
  *
  */
-public class VerdictSingleResult extends AttributeValueRetrievalHelper {
+public abstract class VerdictSingleResult extends AttributeValueRetrievalHelper {
 
-  private Optional<DbmsQueryResult> result;
-  
-  // used to support wasnull()
-  private Object lastValueRead;
+  public VerdictSingleResult() { }
 
-  public VerdictSingleResult(DbmsQueryResult result) {
-    if (result == null) {
-      this.result = Optional.absent();
-    } else {
-      DbmsQueryResult copied = copyResult(result);
-      copied.rewind();
-      this.result = Optional.of(copied);
-    }
-  }
+  public abstract boolean isEmpty();
 
-  public VerdictSingleResult(DbmsQueryResult result, boolean asIs) {
-    // If result contains objects that cannot be serialized (e.g., BLOB, CLOB in H2),
-    // it is just copied as-is (i.e., shallow copy) as opposed to deep copy.
-    if (result == null) {
-      this.result = Optional.absent();
-    } else {
-      if (asIs) {
-        this.result = Optional.of(result);
-      } else {
-        DbmsQueryResult copied = copyResult(result);
-        copied.rewind();
-        this.result = Optional.of(copied);
-      }
-    }
-  }
+  public abstract long getRowCount();
 
-
-  public static VerdictSingleResult empty() {
-    return new VerdictSingleResult(null);
-  }
-  
-  public boolean isEmpty() {
-    return !result.isPresent();
-  }
-
-  private DbmsQueryResult copyResult(DbmsQueryResult result) {
-    try {
-      ByteArrayOutputStream bos = new ByteArrayOutputStream();
-      ObjectOutputStream out = new ObjectOutputStream(bos);
-      out.writeObject(result);
-      out.flush();
-      out.close();
-
-      ObjectInputStream in = new ObjectInputStream(
-          new ByteArrayInputStream(bos.toByteArray()));
-      DbmsQueryResult copied = (DbmsQueryResult) in.readObject();
-      return copied;
-      
-    } catch (ClassNotFoundException e) {
-      e.printStackTrace();
-    } catch (NotSerializableException e) {
-      e.printStackTrace();
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-    return null;
-  }
-
-  public DbmsQueryResultMetaData getMetaData() {
-    return result.isPresent() ? result.get().getMetaData() : null;
-  }
+  public abstract DbmsQueryResultMetaData getMetaData();
 
   @Override
-  public int getColumnCount() {
-    if (result.isPresent() == false) {
-      return 0;
-    } else {
-      return result.get().getColumnCount();
-    }
-  }
+  public abstract int getColumnCount();
 
   @Override
-  public String getColumnName(int index) {
-    if (result.isPresent() == false) {
-      throw new RuntimeException("An empty result is accessed.");
-    } else {
-      return result.get().getColumnName(index);
-    }
-  }
+  public abstract String getColumnName(int index);
 
-  public int getColumnType(int index) {
-    if (result.isPresent() == false) {
-      throw new RuntimeException("An empty result is accessed.");
-    } else {
-      return result.get().getColumnType(index);
-    }
-  }
-
-  public long getRowCount() {
-    if (result.isPresent() == false) {
-      return 0;
-    } else {
-      return result.get().getRowCount();
-    }
-  }
+  public abstract int getColumnType(int index);
 
   @Override
-  public Object getValue(int index) {
-    if (result.isPresent() == false) {
-      throw new RuntimeException("An empty result is accessed.");
-    } else {
-      Object value = result.get().getValue(index);
-      lastValueRead = value;
-      return value;
-    }
-  }
-  
-  public boolean wasNull() {
-    return lastValueRead == null;
-  }
+  public abstract Object getValue(int index);
 
-  public boolean next() {
-    if (result.isPresent() == false) {
-      return false;
-    } else {
-      return result.get().next();
-    }
-  }
 
-  public void rewind() {
-    if (result.isPresent()) {
-      result.get().rewind();
-    }
-  }
+  public abstract boolean wasNull();
+
+  public abstract boolean next();
+
+  public abstract void rewind();
 
 }
