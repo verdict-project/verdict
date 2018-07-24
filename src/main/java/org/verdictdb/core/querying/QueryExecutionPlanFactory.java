@@ -67,12 +67,12 @@ public class QueryExecutionPlanFactory {
     selectAll.setSelectQuery(selectQuery);
 
     if (query.isSupportedAggregate()) {
-      AggExecutionNode dependent = AggExecutionNode.create(idCreator, query);
+      AggExecutionNode dependent = createAggExecutionNodeAndItsDependents(idCreator, query);
       dependent.registerSubscriber(baseAndSubscriptionTicket.getRight());
 //      selectAll.addDependency(dependent);
     }
     else {
-      ProjectionNode dependent = ProjectionNode.create(idCreator, query);
+      ProjectionNode dependent = createProjectionNodeAndItsDependents(idCreator, query);
       dependent.registerSubscriber(baseAndSubscriptionTicket.getRight());
 //      selectAll.addDependency(dependent);
     }
@@ -80,6 +80,19 @@ public class QueryExecutionPlanFactory {
     return selectAll;
   }
   
-  // create more functions like this.
+  static AggExecutionNode createAggExecutionNodeAndItsDependents(IdCreator idCreator, SelectQuery query) {
+    AggExecutionNode node = new AggExecutionNode(idCreator, null);
+    SubqueriesToDependentNodes.convertSubqueriesToDependentNodes(query, node);
+    node.setSelectQuery(query);
+
+    return node;
+  }
+
+  static ProjectionNode createProjectionNodeAndItsDependents(IdCreator idCreator, SelectQuery query) {
+    ProjectionNode node = new ProjectionNode(idCreator, null);
+    SubqueriesToDependentNodes.convertSubqueriesToDependentNodes(query, node);
+    node.setSelectQuery(query);
+    return node;
+  }
 
 }
