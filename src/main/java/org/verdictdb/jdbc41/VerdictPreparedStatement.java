@@ -1,30 +1,30 @@
+/*
+ *    Copyright 2018 University of Michigan
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
+
 package org.verdictdb.jdbc41;
 
 import java.io.InputStream;
 import java.io.Reader;
 import java.math.BigDecimal;
 import java.net.URL;
-import java.sql.Array;
-import java.sql.Blob;
-import java.sql.Clob;
-import java.sql.Connection;
-import java.sql.Date;
-import java.sql.NClob;
-import java.sql.ParameterMetaData;
-import java.sql.Ref;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.RowId;
-import java.sql.SQLException;
-import java.sql.SQLFeatureNotSupportedException;
-import java.sql.SQLWarning;
-import java.sql.SQLXML;
-import java.sql.Time;
-import java.sql.Timestamp;
+import java.sql.*;
 import java.util.Calendar;
 
 public class VerdictPreparedStatement implements java.sql.PreparedStatement {
-  
+
   VerdictStatement stmt;
 
   public VerdictPreparedStatement(VerdictStatement stmt) {
@@ -372,7 +372,8 @@ public class VerdictPreparedStatement implements java.sql.PreparedStatement {
   }
 
   @Override
-  public void setCharacterStream(int parameterIndex, Reader reader, int length) throws SQLException {
+  public void setCharacterStream(int parameterIndex, Reader reader, int length)
+      throws SQLException {
     throw new SQLFeatureNotSupportedException();
   }
 
@@ -409,7 +410,6 @@ public class VerdictPreparedStatement implements java.sql.PreparedStatement {
   @Override
   public void setTime(int parameterIndex, Time x, Calendar cal) throws SQLException {
     throw new SQLFeatureNotSupportedException();
-
   }
 
   @Override
@@ -443,7 +443,8 @@ public class VerdictPreparedStatement implements java.sql.PreparedStatement {
   }
 
   @Override
-  public void setNCharacterStream(int parameterIndex, Reader value, long length) throws SQLException {
+  public void setNCharacterStream(int parameterIndex, Reader value, long length)
+      throws SQLException {
     throw new SQLFeatureNotSupportedException();
   }
 
@@ -458,7 +459,8 @@ public class VerdictPreparedStatement implements java.sql.PreparedStatement {
   }
 
   @Override
-  public void setBlob(int parameterIndex, InputStream inputStream, long length) throws SQLException {
+  public void setBlob(int parameterIndex, InputStream inputStream, long length)
+      throws SQLException {
     throw new SQLFeatureNotSupportedException();
   }
 
@@ -489,7 +491,8 @@ public class VerdictPreparedStatement implements java.sql.PreparedStatement {
   }
 
   @Override
-  public void setCharacterStream(int parameterIndex, Reader reader, long length) throws SQLException {
+  public void setCharacterStream(int parameterIndex, Reader reader, long length)
+      throws SQLException {
     throw new SQLFeatureNotSupportedException();
   }
 
@@ -527,5 +530,4 @@ public class VerdictPreparedStatement implements java.sql.PreparedStatement {
   public void setNClob(int parameterIndex, Reader reader) throws SQLException {
     throw new SQLFeatureNotSupportedException();
   }
-
 }

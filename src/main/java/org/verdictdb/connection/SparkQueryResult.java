@@ -1,15 +1,31 @@
+/*
+ *    Copyright 2018 University of Michigan
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
+
 package org.verdictdb.connection;
-
-import static java.sql.ResultSetMetaData.columnNoNulls;
-import static java.sql.ResultSetMetaData.columnNullable;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.types.StructField;
 import org.verdictdb.commons.AttributeValueRetrievalHelper;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static java.sql.ResultSetMetaData.columnNoNulls;
+import static java.sql.ResultSetMetaData.columnNullable;
 
 public class SparkQueryResult extends AttributeValueRetrievalHelper implements DbmsQueryResult {
 
@@ -26,7 +42,7 @@ public class SparkQueryResult extends AttributeValueRetrievalHelper implements D
   int cursor = -1;
 
   public SparkQueryResult(Dataset<Row> dataset) {
-//    Tuple2<String, String>[] colNameAndColType = dataset.dtypes();
+    //    Tuple2<String, String>[] colNameAndColType = dataset.dtypes();
     List<Integer> nullable = new ArrayList<>();
     List<String> columnClassName = new ArrayList<>();
     for (StructField structField : dataset.schema().fields()) {
@@ -129,5 +145,4 @@ public class SparkQueryResult extends AttributeValueRetrievalHelper implements D
   public long getRowCount() {
     return result.size();
   }
-
 }

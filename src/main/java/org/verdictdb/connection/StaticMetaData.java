@@ -1,9 +1,20 @@
-package org.verdictdb.connection;
+/*
+ *    Copyright 2018 University of Michigan
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+package org.verdictdb.connection;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -11,7 +22,12 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
-public class StaticMetaData implements MetaDataProvider{
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+public class StaticMetaData implements MetaDataProvider {
 
   public static class TableInfo {
     String schema;
@@ -40,12 +56,11 @@ public class StaticMetaData implements MetaDataProvider{
     public String toString() {
       return ToStringBuilder.reflectionToString(this);
     }
-
   }
 
   private String defaultSchema = "";
 
-  //The value pair: left is column name and right is its type
+  // The value pair: left is column name and right is its type
   private HashMap<TableInfo, List<Pair<String, Integer>>> tablesData = new HashMap<>();
 
   private List<String> schemas = new ArrayList<>();
@@ -67,8 +82,7 @@ public class StaticMetaData implements MetaDataProvider{
       }
       tables.get(entry.getKey().schema).add(entry.getKey().tablename);
       columns.put(
-          new ImmutablePair<>(entry.getKey().schema, entry.getKey().tablename), 
-          entry.getValue());
+          new ImmutablePair<>(entry.getKey().schema, entry.getKey().tablename), entry.getValue());
     }
   }
 
@@ -86,7 +100,9 @@ public class StaticMetaData implements MetaDataProvider{
     partitions.put(new ImmutablePair<>(table.schema, table.tablename), column);
   }
 
-  public void setDefaultSchema(String schema) { defaultSchema = schema; }
+  public void setDefaultSchema(String schema) {
+    defaultSchema = schema;
+  }
 
   @Override
   public List<String> getSchemas() {
@@ -113,8 +129,11 @@ public class StaticMetaData implements MetaDataProvider{
     return partitions.get(new ImmutablePair<>(schema, table));
   }
 
-  public String getDefaultSchema() { return defaultSchema;}
+  public String getDefaultSchema() {
+    return defaultSchema;
+  }
 
-  public HashMap<TableInfo, List<Pair<String, Integer>>> getTablesData() { return tablesData; }
-
+  public HashMap<TableInfo, List<Pair<String, Integer>>> getTablesData() {
+    return tablesData;
+  }
 }

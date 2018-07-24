@@ -1,13 +1,28 @@
+/*
+ *    Copyright 2018 University of Michigan
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
+
 package org.verdictdb.core.sqlobject;
 
-import java.io.Serializable;
-import java.util.List;
-
+import com.google.common.base.Optional;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
-import com.google.common.base.Optional;
+import java.io.Serializable;
+import java.util.List;
 
 /**
  * Represents a relation (or a table) that can appear in the from clause.
@@ -17,7 +32,7 @@ import com.google.common.base.Optional;
 public abstract class AbstractRelation implements Serializable {
 
   private static final long serialVersionUID = 4819247286138983277L;
-  
+
   Optional<String> aliasName = Optional.absent();
 
   public void setAliasName(String aliasName) {

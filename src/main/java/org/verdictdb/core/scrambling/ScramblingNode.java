@@ -1,4 +1,27 @@
+/*
+ *    Copyright 2018 University of Michigan
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
+
 package org.verdictdb.core.scrambling;
+
+import org.apache.commons.lang3.tuple.Pair;
+import org.verdictdb.connection.DbmsQueryResult;
+import org.verdictdb.core.execplan.ExecutionInfoToken;
+import org.verdictdb.core.querying.IdCreator;
+import org.verdictdb.core.sqlobject.*;
+import org.verdictdb.exception.VerdictDBException;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -6,26 +29,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.apache.commons.lang3.tuple.Pair;
-import org.verdictdb.connection.DbmsQueryResult;
-import org.verdictdb.core.execplan.ExecutionInfoToken;
-import org.verdictdb.core.querying.IdCreator;
-import org.verdictdb.core.sqlobject.AbstractRelation;
-import org.verdictdb.core.sqlobject.AliasedColumn;
-import org.verdictdb.core.sqlobject.BaseColumn;
-import org.verdictdb.core.sqlobject.ColumnOp;
-import org.verdictdb.core.sqlobject.ConstantColumn;
-import org.verdictdb.core.sqlobject.SelectItem;
-import org.verdictdb.core.sqlobject.SelectQuery;
-import org.verdictdb.core.sqlobject.SqlConvertible;
-import org.verdictdb.core.sqlobject.UnnamedColumn;
-import org.verdictdb.exception.VerdictDBException;
-
 /**
  * The last stage of scramling process: creates a new table based on some statistics.
- * 
- * @author Yongjoo Park
  *
+ * @author Yongjoo Park
  */
 public class ScramblingNode extends CreateScrambledTableNode {
 
@@ -34,43 +41,58 @@ public class ScramblingNode extends CreateScrambledTableNode {
   //  Map<String, String> options;
 
   public ScramblingNode(
-      IdCreator namer, 
-      String originalSchemaName, String originalTableName,
-      ScramblingMethod method, String tierColumnName, String blockColumnName) {
+      IdCreator namer,
+      String originalSchemaName,
+      String originalTableName,
+      ScramblingMethod method,
+      String tierColumnName,
+      String blockColumnName) {
 
-    super(namer, null, originalSchemaName, originalTableName, method, tierColumnName, blockColumnName);
+    super(
+        namer,
+        null,
+        originalSchemaName,
+        originalTableName,
+        method,
+        tierColumnName,
+        blockColumnName);
   }
 
   /**
-   * 
    * @param newSchemaName
    * @param newTableName
    * @param oldSchemaName
    * @param oldTableName
    * @param method
-   * @param options Key-value map. It must contain the following keys:
-   *                "blockColumnName", "tierColumnName"
+   * @param options Key-value map. It must contain the following keys: "blockColumnName",
+   *     "tierColumnName"
    * @return
    */
   public static ScramblingNode create(
-      final String newSchemaName, final String newTableName,
-      String oldSchemaName, String oldTableName,
-      ScramblingMethod method, Map<String, String> options) {
+      final String newSchemaName,
+      final String newTableName,
+      String oldSchemaName,
+      String oldTableName,
+      ScramblingMethod method,
+      Map<String, String> options) {
 
-    IdCreator idCreator = new IdCreator() {
-      @Override
-      public String generateAliasName() {
-        return null;    // we don't need this method
-      }
-      @Override
-      public Pair<String, String> generateTempTableName() {
-        return Pair.of(newSchemaName, newTableName);
-      }
-    };
-    
+    IdCreator idCreator =
+        new IdCreator() {
+          @Override
+          public String generateAliasName() {
+            return null; // we don't need this method
+          }
+
+          @Override
+          public Pair<String, String> generateTempTableName() {
+            return Pair.of(newSchemaName, newTableName);
+          }
+        };
+
     String tierColumnName = options.get("tierColumnName");
     String blockColumnName = options.get("blockColumnName");
-    return new ScramblingNode(idCreator, oldSchemaName, oldTableName, method, tierColumnName, blockColumnName);
+    return new ScramblingNode(
+        idCreator, oldSchemaName, oldTableName, method, tierColumnName, blockColumnName);
   }
 
   @Override
@@ -95,12 +117,12 @@ public class ScramblingNode extends CreateScrambledTableNode {
     // read option values
     List<UnnamedColumn> tierPredicates = method.getTierExpressions(metaData);
     int tierCount = tierPredicates.size() + 1;
-    
+
     // composed select item expressions will be added to this list
     List<SelectItem> selectItems = new ArrayList<>();
     @SuppressWarnings("unchecked")
-    List<Pair<String, String>> columnNamesAndTypes = 
-    (List<Pair<String, String>>) metaData.get(ScramblingPlan.COLUMN_METADATA_KEY);
+    List<Pair<String, String>> columnNamesAndTypes =
+        (List<Pair<String, String>>) metaData.get(ScramblingPlan.COLUMN_METADATA_KEY);
     final String mainTableAlias = method.getMainTableAlias();
     for (Pair<String, String> nameAndType : columnNamesAndTypes) {
       String name = nameAndType.getLeft();
@@ -133,17 +155,19 @@ public class ScramblingNode extends CreateScrambledTableNode {
 
       List<UnnamedColumn> blockForTierOperands = new ArrayList<>();
       for (int j = 0; j < blockCount; j++) {
-        blockForTierOperands.add(ColumnOp.lessequal(ColumnOp.rand(), ConstantColumn.valueOf(condProb.get(j))));
+        blockForTierOperands.add(
+            ColumnOp.lessequal(ColumnOp.rand(), ConstantColumn.valueOf(condProb.get(j))));
         blockForTierOperands.add(ConstantColumn.valueOf(j));
       }
-      UnnamedColumn blockForTierExpr;;
+      UnnamedColumn blockForTierExpr;
+      ;
       if (blockForTierOperands.size() <= 1) {
         blockForTierExpr = ConstantColumn.valueOf(0);
       } else {
         blockForTierExpr = ColumnOp.casewhen(blockForTierOperands);
       }
 
-      if (i < tierCount-1) {
+      if (i < tierCount - 1) {
         // "when" part in the case-when-else expression
         // for the last tier, we don't need this "when" part
         blockOperands.add(ColumnOp.equal(tierExpr, ConstantColumn.valueOf(i)));
@@ -161,34 +185,34 @@ public class ScramblingNode extends CreateScrambledTableNode {
     selectItems.add(new AliasedColumn(blockExpr, blockColumnName));
 
     // compose the final query
-    AbstractRelation tableSource = method.getScramblingSource(originalSchemaName, originalTableName, metaData);
-    //    SelectQuery scramblingQuery = 
+    AbstractRelation tableSource =
+        method.getScramblingSource(originalSchemaName, originalTableName, metaData);
+    //    SelectQuery scramblingQuery =
     //        SelectQuery.create(
-    //            selectItems, 
+    //            selectItems,
     //            new BaseTable(oldSchemaName, oldTableName, MAIN_TABLE_SOURCE_ALIAS_NAME));
-    SelectQuery scramblingQuery = 
-        SelectQuery.create(
-            selectItems, 
-            tableSource);
+    SelectQuery scramblingQuery = SelectQuery.create(selectItems, tableSource);
 
     return scramblingQuery;
   }
 
   /**
    * To use a series of rand() in a case clause, we instead need this conditional probability.
-   * 
+   *
    * @param cumulativeProbabilityDistribution
    * @return
    */
-  List<Double> computeConditionalProbabilityDistribution(List<Double> cumulativeProbabilityDistribution) {
+  List<Double> computeConditionalProbabilityDistribution(
+      List<Double> cumulativeProbabilityDistribution) {
     List<Double> cond = new ArrayList<>();
     int length = cumulativeProbabilityDistribution.size();
     for (int i = 0; i < length; i++) {
       if (i == 0) {
         cond.add(cumulativeProbabilityDistribution.get(i));
       } else {
-        double numerator = cumulativeProbabilityDistribution.get(i) - cumulativeProbabilityDistribution.get(i-1);
-        double denominator = 1.0 - cumulativeProbabilityDistribution.get(i-1);
+        double numerator =
+            cumulativeProbabilityDistribution.get(i) - cumulativeProbabilityDistribution.get(i - 1);
+        double denominator = 1.0 - cumulativeProbabilityDistribution.get(i - 1);
         double condProb = 0;
         if (denominator != 0) {
           condProb = numerator / denominator;
@@ -203,5 +227,4 @@ public class ScramblingNode extends CreateScrambledTableNode {
   public ExecutionInfoToken createToken(DbmsQueryResult result) {
     return super.createToken(result);
   }
-
 }
