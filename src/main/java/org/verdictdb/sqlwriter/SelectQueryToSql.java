@@ -1,39 +1,50 @@
+/*
+ *    Copyright 2018 University of Michigan
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
+
 package org.verdictdb.sqlwriter;
 
-import java.util.List;
-import java.util.Set;
-
-import org.verdictdb.core.sqlobject.AbstractRelation;
-import org.verdictdb.core.sqlobject.AliasReference;
-import org.verdictdb.core.sqlobject.AliasedColumn;
-import org.verdictdb.core.sqlobject.AsteriskColumn;
-import org.verdictdb.core.sqlobject.BaseColumn;
-import org.verdictdb.core.sqlobject.BaseTable;
-import org.verdictdb.core.sqlobject.ColumnOp;
-import org.verdictdb.core.sqlobject.ConstantColumn;
-import org.verdictdb.core.sqlobject.GroupingAttribute;
-import org.verdictdb.core.sqlobject.JoinTable;
-import org.verdictdb.core.sqlobject.OrderbyAttribute;
-import org.verdictdb.core.sqlobject.SelectItem;
-import org.verdictdb.core.sqlobject.SelectQuery;
-import org.verdictdb.core.sqlobject.SetOperationRelation;
-import org.verdictdb.core.sqlobject.SubqueryColumn;
-import org.verdictdb.core.sqlobject.UnnamedColumn;
+import com.google.common.base.Optional;
+import com.google.common.collect.Sets;
+import org.verdictdb.core.sqlobject.*;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBTypeException;
 import org.verdictdb.exception.VerdictDBValueException;
 import org.verdictdb.sqlsyntax.PostgresqlSyntax;
 import org.verdictdb.sqlsyntax.SqlSyntax;
 
-import com.google.common.base.Optional;
-import com.google.common.collect.Sets;
+import java.util.List;
+import java.util.Set;
 
 public class SelectQueryToSql {
 
   SqlSyntax syntax;
 
-  Set<String> opTypeNotRequiringParentheses = Sets.newHashSet(
-      "sum", "avg", "count", "max", "min", "std", "sqrt", "is_not_null", "is_null", "rand", "floor");
+  Set<String> opTypeNotRequiringParentheses =
+      Sets.newHashSet(
+          "sum",
+          "avg",
+          "count",
+          "max",
+          "min",
+          "std",
+          "sqrt",
+          "is_not_null",
+          "is_null",
+          "rand",
+          "floor");
 
   public SelectQueryToSql(SqlSyntax syntax) {
     this.syntax = syntax;
@@ -67,7 +78,9 @@ public class SelectQueryToSql {
     }
     if (column instanceof AliasReference) {
       AliasReference aliasedColumn = (AliasReference) column;
-      return quoteName(aliasedColumn.getAliasName());
+      return (aliasedColumn.getTableAlias() != null)
+          ? quoteName(aliasedColumn.getTableAlias()) + "." + quoteName(aliasedColumn.getAliasName())
+          : quoteName(aliasedColumn.getAliasName());
     } else {
       return unnamedColumnToSqlPart((UnnamedColumn) column);
     }
@@ -76,10 +89,12 @@ public class SelectQueryToSql {
   String unnamedColumnToSqlPart(UnnamedColumn column) throws VerdictDBException {
     if (column instanceof BaseColumn) {
       BaseColumn base = (BaseColumn) column;
+      if (base.getTableSourceAlias() == null) {
+        return base.getColumnName();
+      }
       if (base.getTableSourceAlias().equals("")) {
         return quoteName(base.getColumnName());
-      }
-      else return base.getTableSourceAlias() + "." + quoteName(base.getColumnName());
+      } else return base.getTableSourceAlias() + "." + quoteName(base.getColumnName());
     } else if (column instanceof ConstantColumn) {
       return ((ConstantColumn) column).getValue().toString();
     } else if (column instanceof AsteriskColumn) {
@@ -96,39 +111,72 @@ public class SelectQueryToSql {
       } else if (columnOp.getOpType().equals("stddev_pop")) {
         String stddevPopulationFunctionName = syntax.getStddevPopulationFunctionName();
         return String.format("%s(", stddevPopulationFunctionName)
-            + unnamedColumnToSqlPart(columnOp.getOperand()) + ")";
+            + unnamedColumnToSqlPart(columnOp.getOperand())
+            + ")";
       } else if (columnOp.getOpType().equals("sqrt")) {
         return "sqrt(" + unnamedColumnToSqlPart(columnOp.getOperand()) + ")";
       } else if (columnOp.getOpType().equals("add")) {
-        return withParentheses(columnOp.getOperand(0)) + " + " + withParentheses(columnOp.getOperand(1));
+        return withParentheses(columnOp.getOperand(0))
+            + " + "
+            + withParentheses(columnOp.getOperand(1));
       } else if (columnOp.getOpType().equals("subtract")) {
-        return withParentheses(columnOp.getOperand(0)) + " - " + withParentheses(columnOp.getOperand(1));
+        return withParentheses(columnOp.getOperand(0))
+            + " - "
+            + withParentheses(columnOp.getOperand(1));
       } else if (columnOp.getOpType().equals("multiply")) {
-        return withParentheses(columnOp.getOperand(0)) + " * " + withParentheses(columnOp.getOperand(1));
+        return withParentheses(columnOp.getOperand(0))
+            + " * "
+            + withParentheses(columnOp.getOperand(1));
       } else if (columnOp.getOpType().equals("divide")) {
-        return withParentheses(columnOp.getOperand(0)) + " / " + withParentheses(columnOp.getOperand(1));
+        return withParentheses(columnOp.getOperand(0))
+            + " / "
+            + withParentheses(columnOp.getOperand(1));
       } else if (columnOp.getOpType().equals("pow")) {
-        return "pow(" + unnamedColumnToSqlPart(columnOp.getOperand(0)) + ", "
-            + unnamedColumnToSqlPart(columnOp.getOperand(1)) + ")";
+        return "pow("
+            + unnamedColumnToSqlPart(columnOp.getOperand(0))
+            + ", "
+            + unnamedColumnToSqlPart(columnOp.getOperand(1))
+            + ")";
       } else if (columnOp.getOpType().equals("equal")) {
-        return withParentheses(columnOp.getOperand(0)) + " = " + withParentheses(columnOp.getOperand(1));
+        return withParentheses(columnOp.getOperand(0))
+            + " = "
+            + withParentheses(columnOp.getOperand(1));
       } else if (columnOp.getOpType().equals("and")) {
-        return withParentheses(columnOp.getOperand(0)) + " and " + withParentheses(columnOp.getOperand(1));
+        return withParentheses(columnOp.getOperand(0))
+            + " and "
+            + withParentheses(columnOp.getOperand(1));
       } else if (columnOp.getOpType().equals("or")) {
-        return withParentheses(columnOp.getOperand(0)) + " or " + withParentheses(columnOp.getOperand(1));
+        return withParentheses(columnOp.getOperand(0))
+            + " or "
+            + withParentheses(columnOp.getOperand(1));
       } else if (columnOp.getOpType().equals("not")) {
         return "not " + withParentheses(columnOp.getOperand(0));
       } else if (columnOp.getOpType().equals("casewhen")) {
         String sql = "case";
-        for (int i=0; i<columnOp.getOperands().size()-1;i=i+2) {
-          sql = sql + " when " + withParentheses(columnOp.getOperand(i)) + " then " + withParentheses(columnOp.getOperand(i+1));
+        for (int i = 0; i < columnOp.getOperands().size() - 1; i = i + 2) {
+          sql =
+              sql
+                  + " when "
+                  + withParentheses(columnOp.getOperand(i))
+                  + " then "
+                  + withParentheses(columnOp.getOperand(i + 1));
         }
-        sql = sql + " else " + withParentheses(columnOp.getOperand(columnOp.getOperands().size()-1)) + " end";
+        sql =
+            sql
+                + " else "
+                + withParentheses(columnOp.getOperand(columnOp.getOperands().size() - 1))
+                + " end";
         return sql;
       } else if (columnOp.getOpType().equals("notequal")) {
-        return withParentheses(columnOp.getOperand(0)) + " <> " + withParentheses(columnOp.getOperand(1));
+        return withParentheses(columnOp.getOperand(0))
+            + " <> "
+            + withParentheses(columnOp.getOperand(1));
       } else if (columnOp.getOpType().equals("notand")) {
-        return "not (" + withParentheses(columnOp.getOperand(0)) + " and " + withParentheses(columnOp.getOperand(1)) + ")";
+        return "not ("
+            + withParentheses(columnOp.getOperand(0))
+            + " and "
+            + withParentheses(columnOp.getOperand(1))
+            + ")";
       } else if (columnOp.getOpType().equals("isnull")) {
         return "isnull(" + withParentheses(columnOp.getOperand(0)) + ")";
       } else if (columnOp.getOpType().equals("is_null")) {
@@ -136,17 +184,28 @@ public class SelectQueryToSql {
       } else if (columnOp.getOpType().equals("is_not_null")) {
         return withParentheses(columnOp.getOperand(0)) + " is not null";
       } else if (columnOp.getOpType().equals("interval")) {
-        return "interval " + withParentheses(columnOp.getOperand(0)) + " " + withParentheses(columnOp.getOperand(1));
+        return "interval "
+            + withParentheses(columnOp.getOperand(0))
+            + " "
+            + withParentheses(columnOp.getOperand(1));
       } else if (columnOp.getOpType().equals("date")) {
         return "date " + withParentheses(columnOp.getOperand());
       } else if (columnOp.getOpType().equals("greater")) {
-        return withParentheses(columnOp.getOperand(0)) + " > " + withParentheses(columnOp.getOperand(1));
+        return withParentheses(columnOp.getOperand(0))
+            + " > "
+            + withParentheses(columnOp.getOperand(1));
       } else if (columnOp.getOpType().equals("less")) {
-        return withParentheses(columnOp.getOperand(0)) + " < " + withParentheses(columnOp.getOperand(1));
+        return withParentheses(columnOp.getOperand(0))
+            + " < "
+            + withParentheses(columnOp.getOperand(1));
       } else if (columnOp.getOpType().equals("greaterequal")) {
-        return withParentheses(columnOp.getOperand(0)) + " >= " + withParentheses(columnOp.getOperand(1));
+        return withParentheses(columnOp.getOperand(0))
+            + " >= "
+            + withParentheses(columnOp.getOperand(1));
       } else if (columnOp.getOpType().equals("lessequal")) {
-        return withParentheses(columnOp.getOperand(0)) + " <= " + withParentheses(columnOp.getOperand(1));
+        return withParentheses(columnOp.getOperand(0))
+            + " <= "
+            + withParentheses(columnOp.getOperand(1));
       } else if (columnOp.getOpType().equals("min")) {
         return "min(" + selectItemToSqlPart(columnOp.getOperand()) + ")";
       } else if (columnOp.getOpType().equals("max")) {
@@ -155,25 +214,38 @@ public class SelectQueryToSql {
         return "max(" + selectItemToSqlPart(columnOp.getOperand()) + ")";
       } else if (columnOp.getOpType().equals("floor")) {
         return "floor(" + selectItemToSqlPart(columnOp.getOperand()) + ")";
-//      } else if (columnOp.getOpType().equals("is")) {
-//        return withParentheses(columnOp.getOperand(0)) + " is " + withParentheses(columnOp.getOperand(1));
+        //      } else if (columnOp.getOpType().equals("is")) {
+        //        return withParentheses(columnOp.getOperand(0)) + " is " +
+        // withParentheses(columnOp.getOperand(1));
       } else if (columnOp.getOpType().equals("like")) {
-        return withParentheses(columnOp.getOperand(0)) + " like " + withParentheses(columnOp.getOperand(1));
+        return withParentheses(columnOp.getOperand(0))
+            + " like "
+            + withParentheses(columnOp.getOperand(1));
       } else if (columnOp.getOpType().equals("notlike")) {
-        return withParentheses(columnOp.getOperand(0)) + " not like " + withParentheses(columnOp.getOperand(1));
+        return withParentheses(columnOp.getOperand(0))
+            + " not like "
+            + withParentheses(columnOp.getOperand(1));
+      } else if (columnOp.getOpType().equals("rlike")) {
+        return withParentheses(columnOp.getOperand(0))
+            + " rlike "
+            + withParentheses(columnOp.getOperand(1));
+      } else if (columnOp.getOpType().equals("notrlike")) {
+        return withParentheses(columnOp.getOperand(0))
+            + " not rlike "
+            + withParentheses(columnOp.getOperand(1));
       } else if (columnOp.getOpType().equals("exists")) {
         return "exists " + withParentheses(columnOp.getOperand());
       } else if (columnOp.getOpType().equals("notexists")) {
         return "not exists " + withParentheses(columnOp.getOperand());
       } else if (columnOp.getOpType().equals("between")) {
-        return withParentheses(columnOp.getOperand(0)) 
-            + " between " 
-            + withParentheses(columnOp.getOperand(1)) 
-            + " and " 
+        return withParentheses(columnOp.getOperand(0))
+            + " between "
+            + withParentheses(columnOp.getOperand(1))
+            + " and "
             + withParentheses(columnOp.getOperand(2));
       } else if (columnOp.getOpType().equals("in")) {
         List<UnnamedColumn> columns = columnOp.getOperands();
-        if (columns.size()==2 && columns.get(1) instanceof SubqueryColumn) {
+        if (columns.size() == 2 && columns.get(1) instanceof SubqueryColumn) {
           return withParentheses(columns.get(0)) + " in " + withParentheses(columns.get(1));
         }
         String temp = "";
@@ -185,7 +257,7 @@ public class SelectQueryToSql {
         return withParentheses(columns.get(0)) + " in (" + temp + ")";
       } else if (columnOp.getOpType().equals("notin")) {
         List<UnnamedColumn> columns = columnOp.getOperands();
-        if (columns.size()==2 && columns.get(1) instanceof SubqueryColumn) {
+        if (columns.size() == 2 && columns.get(1) instanceof SubqueryColumn) {
           return withParentheses(columns.get(0)) + " not in " + withParentheses(columns.get(1));
         }
         String temp = "";
@@ -198,29 +270,74 @@ public class SelectQueryToSql {
       } else if (columnOp.getOpType().equals("countdistinct")) {
         return "count(distinct " + withParentheses(columnOp.getOperand()) + ")";
       } else if (columnOp.getOpType().equals("substr")) {
-        return "substr(" + withParentheses(columnOp.getOperand(0)) + ", " +
-            withParentheses(columnOp.getOperand(1)) + ", " + withParentheses(columnOp.getOperand(2)) + ")";
+        if (columnOp.getOperands().size() == 3) {
+          return "substr("
+              + withParentheses(columnOp.getOperand(0))
+              + ", "
+              + withParentheses(columnOp.getOperand(1))
+              + ", "
+              + withParentheses(columnOp.getOperand(2))
+              + ")";
+        } else {
+          return "substr("
+              + withParentheses(columnOp.getOperand(0))
+              + ", "
+              + withParentheses(columnOp.getOperand(1))
+              + ")";
+        }
       } else if (columnOp.getOpType().equals("rand")) {
         return syntax.randFunction();
       } else if (columnOp.getOpType().equals("cast")) {
-        return "cast(" + withParentheses(columnOp.getOperand(0)) + " as " + withParentheses(columnOp.getOperand(1)) + ")";
+        return "cast("
+            + withParentheses(columnOp.getOperand(0))
+            + " as "
+            + withParentheses(columnOp.getOperand(1))
+            + ")";
       } else if (columnOp.getOpType().equals("extract")) {
-        return "extract(" + withParentheses(columnOp.getOperand(0)) + " from " + withParentheses(columnOp.getOperand(1)) + ")";
-      } else if (columnOp.getOpType().equals("||") || columnOp.getOpType().equals("|")
-          || columnOp.getOpType().equals("&") || columnOp.getOpType().equals("#")
-          || columnOp.getOpType().equals(">>") || columnOp.getOpType().equals("<<")) {
-        return  withParentheses(columnOp.getOperand(0)) + " " + columnOp.getOpType() + " " + withParentheses(columnOp.getOperand(1));
+        return "extract("
+            + withParentheses(columnOp.getOperand(0))
+            + " from "
+            + withParentheses(columnOp.getOperand(1))
+            + ")";
+      } else if (columnOp.getOpType().equals("||")
+          || columnOp.getOpType().equals("|")
+          || columnOp.getOpType().equals("&")
+          || columnOp.getOpType().equals("#")
+          || columnOp.getOpType().equals(">>")
+          || columnOp.getOpType().equals("<<")) {
+        return withParentheses(columnOp.getOperand(0))
+            + " "
+            + columnOp.getOpType()
+            + " "
+            + withParentheses(columnOp.getOperand(1));
       } else if (columnOp.getOpType().equals("overlay")) {
-        return "overlay(" + withParentheses(columnOp.getOperand(0)) + " placing " + withParentheses(columnOp.getOperand(1))
-            + " from " + withParentheses(columnOp.getOperand(2)) + ")";
+        return "overlay("
+            + withParentheses(columnOp.getOperand(0))
+            + " placing "
+            + withParentheses(columnOp.getOperand(1))
+            + " from "
+            + withParentheses(columnOp.getOperand(2))
+            + ")";
       } else if (columnOp.getOpType().equals("substring") && syntax instanceof PostgresqlSyntax) {
-        String temp = "substring(" + withParentheses(columnOp.getOperand(0)) + " from " + withParentheses(columnOp.getOperand(1));
-        if (columnOp.getOperands().size()==2) {
+        String temp =
+            "substring("
+                + withParentheses(columnOp.getOperand(0))
+                + " from "
+                + withParentheses(columnOp.getOperand(1));
+        if (columnOp.getOperands().size() == 2) {
           return temp + ")";
-        }
-        else return temp + " for " + withParentheses(columnOp.getOperand(2)) + ")";
-      }
-      else {
+        } else return temp + " for " + withParentheses(columnOp.getOperand(2)) + ")";
+      } else if (columnOp.getOpType().equals("timestampwithoutparentheses")) {
+        return "timestamp " + withParentheses(columnOp.getOperand(0));
+      } else if (columnOp.getOpType().equals("dateadd")) {
+        return "dateadd("
+            + withParentheses(columnOp.getOperand(0))
+            + ", "
+            + withParentheses(columnOp.getOperand(1))
+            + ", "
+            + withParentheses(columnOp.getOperand(2))
+            + ")";
+      } else {
         List<UnnamedColumn> columns = columnOp.getOperands();
         String temp = columnOp.getOpType() + "(";
         for (int i = 0; i < columns.size(); i++) {
@@ -230,9 +347,10 @@ public class SelectQueryToSql {
         }
         return temp + ")";
       }
-      //else {
-      //  throw new VerdictDBTypeException("Unexpceted opType of column: " + columnOp.getOpType().toString());
-      //}
+      // else {
+      //  throw new VerdictDBTypeException("Unexpceted opType of column: " +
+      // columnOp.getOpType().toString());
+      // }
     } else if (column instanceof SubqueryColumn) {
       return "(" + selectQueryToSql(((SubqueryColumn) column).getSubquery()) + ")";
     } else if (column instanceof AliasReference) {
@@ -241,10 +359,10 @@ public class SelectQueryToSql {
     throw new VerdictDBTypeException("Unexpceted argument type: " + column.getClass().toString());
   }
 
-
   String withParentheses(UnnamedColumn column) throws VerdictDBException {
     String sql = unnamedColumnToSqlPart(column);
-    if (column instanceof ColumnOp && !opTypeNotRequiringParentheses.contains(((ColumnOp) column).getOpType())) {
+    if (column instanceof ColumnOp
+        && !opTypeNotRequiringParentheses.contains(((ColumnOp) column).getOpType())) {
       sql = "(" + sql + ")";
     }
     return sql;
@@ -301,14 +419,14 @@ public class SelectQueryToSql {
       }
     }
 
-    //having
+    // having
     Optional<UnnamedColumn> having = sel.getHaving();
     if (having.isPresent()) {
       sql.append(" having ");
       sql.append(unnamedColumnToSqlPart(having.get()));
     }
 
-    //orderby
+    // orderby
     List<OrderbyAttribute> orderby = sel.getOrderby();
     boolean isFirstOrderby = true;
     for (OrderbyAttribute a : orderby) {
@@ -323,7 +441,7 @@ public class SelectQueryToSql {
       }
     }
 
-    //Limit
+    // Limit
     Optional<UnnamedColumn> limit = sel.getLimit();
     if (limit.isPresent()) {
       sql.append(" limit " + unnamedColumnToSqlPart(limit.get()));
@@ -349,29 +467,47 @@ public class SelectQueryToSql {
     }
 
     if (relation instanceof JoinTable) {
-      //sql.append("(");
+      // sql.append("(");
       sql.append(relationToSqlPart(((JoinTable) relation).getJoinList().get(0)));
       for (int i = 1; i < ((JoinTable) relation).getJoinList().size(); i++) {
         if (((JoinTable) relation).getJoinTypeList().get(i - 1).equals(JoinTable.JoinType.inner)) {
           sql.append(" inner join ");
-        } else if (((JoinTable) relation).getJoinTypeList().get(i - 1).equals(JoinTable.JoinType.outer)) {
+        } else if (((JoinTable) relation)
+            .getJoinTypeList()
+            .get(i - 1)
+            .equals(JoinTable.JoinType.outer)) {
           sql.append(" outer join ");
-        } else if (((JoinTable) relation).getJoinTypeList().get(i - 1).equals(JoinTable.JoinType.left)) {
+        } else if (((JoinTable) relation)
+            .getJoinTypeList()
+            .get(i - 1)
+            .equals(JoinTable.JoinType.left)) {
           sql.append(" left join ");
-        } else if (((JoinTable) relation).getJoinTypeList().get(i - 1).equals(JoinTable.JoinType.leftouter)) {
+        } else if (((JoinTable) relation)
+            .getJoinTypeList()
+            .get(i - 1)
+            .equals(JoinTable.JoinType.leftouter)) {
           sql.append(" left outer join ");
-        } else if (((JoinTable) relation).getJoinTypeList().get(i - 1).equals(JoinTable.JoinType.right)) {
+        } else if (((JoinTable) relation)
+            .getJoinTypeList()
+            .get(i - 1)
+            .equals(JoinTable.JoinType.right)) {
           sql.append(" right join ");
-        } else if (((JoinTable) relation).getJoinTypeList().get(i - 1).equals(JoinTable.JoinType.rightouter)) {
+        } else if (((JoinTable) relation)
+            .getJoinTypeList()
+            .get(i - 1)
+            .equals(JoinTable.JoinType.rightouter)) {
           sql.append(" right outer join ");
-        } else if (((JoinTable) relation).getJoinTypeList().get(i - 1).equals(JoinTable.JoinType.cross)) {
+        } else if (((JoinTable) relation)
+            .getJoinTypeList()
+            .get(i - 1)
+            .equals(JoinTable.JoinType.cross)) {
           sql.append(" cross join ");
         }
         sql.append(relationToSqlPart(((JoinTable) relation).getJoinList().get(i)));
-        if (((JoinTable) relation).getCondition().get(i-1)!=null)
+        if (((JoinTable) relation).getCondition().get(i - 1) != null)
           sql.append(" on " + withParentheses(((JoinTable) relation).getCondition().get(i - 1)));
       }
-      //sql.append(")");
+      // sql.append(")");
       if (((JoinTable) relation).getAliasName().isPresent()) {
         sql.append(" as " + ((JoinTable) relation).getAliasName().toString());
       }
@@ -392,7 +528,8 @@ public class SelectQueryToSql {
     }
 
     if (!(relation instanceof SelectQuery)) {
-      throw new VerdictDBTypeException("Unexpected relation type: " + relation.getClass().toString());
+      throw new VerdictDBTypeException(
+          "Unexpected relation type: " + relation.getClass().toString());
     }
 
     SelectQuery sel = (SelectQuery) relation;
@@ -407,9 +544,8 @@ public class SelectQueryToSql {
   String quoteName(String name) {
     String quoteString = syntax.getQuoteString();
     // already quoted
-    if (name.startsWith(quoteString)&&name.endsWith(quoteString)) {
+    if (name.startsWith(quoteString) && name.endsWith(quoteString)) {
       return name;
-    }
-    else return quoteString + name + quoteString;
+    } else return quoteString + name + quoteString;
   }
 }

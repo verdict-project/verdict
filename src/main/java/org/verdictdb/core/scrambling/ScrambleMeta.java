@@ -1,4 +1,31 @@
+/*
+ *    Copyright 2018 University of Michigan
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
+
 package org.verdictdb.core.scrambling;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
+import org.verdictdb.exception.VerdictDBValueException;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -7,28 +34,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
-import org.apache.commons.lang3.builder.ToStringBuilder;
-import org.apache.commons.lang3.builder.ToStringStyle;
-import org.verdictdb.exception.VerdictDBValueException;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 /**
  * Table-specific information
- * @author Yongjoo Park
  *
+ * @author Yongjoo Park
  */
-@JsonPropertyOrder({ 
-  "schemaName", "tableName", 
+@JsonPropertyOrder({
+  "schemaName", "tableName",
   "originalSchemaName", "originalTableName",
-  "aggregationBlockColumn", "aggregationBlockCount", 
-  "tierColumn", "numberOfTiers" })
+  "aggregationBlockColumn", "aggregationBlockCount",
+  "tierColumn", "numberOfTiers"
+})
 public class ScrambleMeta implements Serializable {
 
   private static final long serialVersionUID = -8422601151874567149L;
@@ -39,42 +55,45 @@ public class ScrambleMeta implements Serializable {
   String tableName;
 
   // aggregation block
-  String aggregationBlockColumn;        // agg block number (0 to count-1)
+  String aggregationBlockColumn; // agg block number (0 to count-1)
 
-  int aggregationBlockCount;            // agg block total count
+  int aggregationBlockCount; // agg block total count
 
   // tier
   String tierColumn;
-  
+
   int numberOfTiers;
-  
+
   // reference to the original tables
   String originalSchemaName;
-  
+
   String originalTableName;
-  
+
   /**
-   * The probability mass function of the sizes of the aggregation blocks for a tier.
-   * The key is the id of a tier (e.g., 0, 1, ..., 3), and the list is the cumulative distribution.
-   * The length of the cumulative distribution must be equal to aggregationBlockCount.
+   * The probability mass function of the sizes of the aggregation blocks for a tier. The key is the
+   * id of a tier (e.g., 0, 1, ..., 3), and the list is the cumulative distribution. The length of
+   * the cumulative distribution must be equal to aggregationBlockCount.
    */
   @JsonProperty("cumulativeDistributions")
   Map<Integer, List<Double>> cumulativeDistributionForTier = new HashMap<>();
-  
+
   // subsample column; not used currently
-  @JsonIgnore
-  String subsampleColumn;
+  @JsonIgnore String subsampleColumn;
 
   public ScrambleMeta() {}
-  
+
   public ScrambleMeta(
-      String scrambleSchemaName, String scrambleTableName,
-      String originalSchemaName, String originalTableName,
-      String blockColumn, int blockCount,
-      String tierColumn, int tierCount,
-      Map<Integer, List<Double>> cumulativeMassDistributionPerTier) 
-          throws VerdictDBValueException {
-    
+      String scrambleSchemaName,
+      String scrambleTableName,
+      String originalSchemaName,
+      String originalTableName,
+      String blockColumn,
+      int blockCount,
+      String tierColumn,
+      int tierCount,
+      Map<Integer, List<Double>> cumulativeMassDistributionPerTier)
+      throws VerdictDBValueException {
+
     if (tierCount != cumulativeMassDistributionPerTier.size()) {
       throw new VerdictDBValueException("The number of tiers don't match.");
     }
@@ -87,7 +106,7 @@ public class ScrambleMeta implements Serializable {
         throw new VerdictDBValueException("The number of blocks don't match.");
       }
     }
-    
+
     this.schemaName = scrambleSchemaName;
     this.tableName = scrambleTableName;
     this.aggregationBlockColumn = blockColumn;
@@ -98,7 +117,7 @@ public class ScrambleMeta implements Serializable {
     this.originalTableName = originalTableName;
     this.cumulativeDistributionForTier = cumulativeMassDistributionPerTier;
   }
-  
+
   public String getAggregationBlockColumn() {
     return aggregationBlockColumn;
   }
@@ -147,7 +166,8 @@ public class ScrambleMeta implements Serializable {
     this.aggregationBlockCount = aggregationBlockCount;
   }
 
-  public void setCumulativeDistributionForTier(Map<Integer, List<Double>> cumulativeDistributionForTier) {
+  public void setCumulativeDistributionForTier(
+      Map<Integer, List<Double>> cumulativeDistributionForTier) {
     this.cumulativeDistributionForTier = cumulativeDistributionForTier;
   }
 
@@ -158,7 +178,7 @@ public class ScrambleMeta implements Serializable {
   public void setOriginalSchemaName(String originalSchemaName) {
     this.originalSchemaName = originalSchemaName;
   }
-  
+
   public void setOriginalTableName(String originalTableName) {
     this.originalTableName = originalTableName;
   }
@@ -178,7 +198,7 @@ public class ScrambleMeta implements Serializable {
   public void setTierColumn(String tierColumn) {
     this.tierColumn = tierColumn;
   }
-  
+
   public String toJsonString() {
     ObjectMapper objectMapper = new ObjectMapper();
     String jsonString;
@@ -190,7 +210,7 @@ public class ScrambleMeta implements Serializable {
       return null;
     }
   }
-  
+
   public static ScrambleMeta fromJsonString(String jsonString) {
     ObjectMapper objectMapper = new ObjectMapper();
     try {
@@ -201,7 +221,7 @@ public class ScrambleMeta implements Serializable {
       return null;
     }
   }
-  
+
   @Override
   public int hashCode() {
     return HashCodeBuilder.reflectionHashCode(this);
@@ -216,6 +236,4 @@ public class ScrambleMeta implements Serializable {
   public String toString() {
     return ToStringBuilder.reflectionToString(this, ToStringStyle.SHORT_PREFIX_STYLE);
   }
-
 }
-

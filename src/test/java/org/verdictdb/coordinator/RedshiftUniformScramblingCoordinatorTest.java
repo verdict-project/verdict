@@ -33,8 +33,8 @@ public class RedshiftUniformScramblingCoordinatorTest {
 
   private static final String REDSHIFT_DATABASE = "dev";
 
-  private static final String REDSHIFT_SCHEMA = 
-      "uniform_scrambling_test" + RandomStringUtils.randomNumeric(3);
+  private static final String REDSHIFT_SCHEMA =
+      "uniform_scrambling_test_" + RandomStringUtils.randomAlphanumeric(4).toLowerCase();
 
   private static final String REDSHIFT_USER;
 
@@ -44,14 +44,14 @@ public class RedshiftUniformScramblingCoordinatorTest {
     REDSHIFT_HOST = System.getenv("VERDICTDB_TEST_REDSHIFT_ENDPOINT");
     REDSHIFT_USER = System.getenv("VERDICTDB_TEST_REDSHIFT_USER");
     REDSHIFT_PASSWORD = System.getenv("VERDICTDB_TEST_REDSHIFT_PASSWORD");
-//    System.out.println(REDSHIFT_HOST);
-//    System.out.println(REDSHIFT_USER);
-//    System.out.println(REDSHIFT_PASSWORD);
+    //    System.out.println(REDSHIFT_HOST);
+    //    System.out.println(REDSHIFT_USER);
+    //    System.out.println(REDSHIFT_PASSWORD);
   }
 
-
   @BeforeClass
-  public static void setupRedshiftDatabase() throws SQLException, VerdictDBDbmsException, IOException {
+  public static void setupRedshiftDatabase()
+      throws SQLException, VerdictDBDbmsException, IOException {
     String connectionString =
         String.format("jdbc:redshift://%s/%s", REDSHIFT_HOST, REDSHIFT_DATABASE);
     redshiftConn =
@@ -63,8 +63,9 @@ public class RedshiftUniformScramblingCoordinatorTest {
   @Test
   public void sanityCheck() throws VerdictDBDbmsException {
     JdbcConnection conn = JdbcConnection.create(redshiftConn);
-//    conn.setOutputDebugMessage(true);
-    DbmsQueryResult result = conn.execute(String.format("select * from \"%s\".\"lineitem\"", REDSHIFT_SCHEMA));
+    //    conn.setOutputDebugMessage(true);
+    DbmsQueryResult result =
+        conn.execute(String.format("select * from \"%s\".\"lineitem\"", REDSHIFT_SCHEMA));
     int rowCount = 0;
     while (result.next()) {
       rowCount++;
@@ -84,12 +85,13 @@ public class RedshiftUniformScramblingCoordinatorTest {
 
   public void testScramblingCoordinator(String tablename) throws VerdictDBException {
     JdbcConnection conn = JdbcConnection.create(redshiftConn);
-//    conn.setOutputDebugMessage(true);
-    
+    conn.setOutputDebugMessage(true);
+
     String scrambleSchema = REDSHIFT_SCHEMA;
     String scratchpadSchema = REDSHIFT_SCHEMA;
     long blockSize = 100;
-    ScramblingCoordinator scrambler = new ScramblingCoordinator(conn, scrambleSchema, scratchpadSchema, blockSize);
+    ScramblingCoordinator scrambler =
+        new ScramblingCoordinator(conn, scrambleSchema, scratchpadSchema, blockSize);
 
     // perform scrambling
     String originalSchema = REDSHIFT_SCHEMA;
@@ -101,11 +103,15 @@ public class RedshiftUniformScramblingCoordinatorTest {
     // tests
     List<Pair<String, String>> originalColumns = conn.getColumns(REDSHIFT_SCHEMA, originalTable);
     List<Pair<String, String>> columns = conn.getColumns(REDSHIFT_SCHEMA, scrambledTable);
+    // prints added for debugging
+    for (int i = 0; i < originalColumns.size(); i++) {
+      System.out.println(originalColumns.get(i).getLeft() + " : " + columns.get(i).getLeft());
+    }
+    assertEquals(originalColumns.size() + 2, columns.size());
     for (int i = 0; i < originalColumns.size(); i++) {
       assertEquals(originalColumns.get(i).getLeft(), columns.get(i).getLeft());
       assertEquals(originalColumns.get(i).getRight(), columns.get(i).getRight());
     }
-    assertEquals(originalColumns.size()+2, columns.size());
 
     List<String> partitions = conn.getPartitionColumns(REDSHIFT_SCHEMA, scrambledTable);
     assertEquals(Arrays.asList("verdictdbblock"), partitions);
@@ -120,7 +126,8 @@ public class RedshiftUniformScramblingCoordinatorTest {
 
     DbmsQueryResult result =
         conn.execute(
-            String.format("select min(verdictdbblock), max(verdictdbblock) from %s.%s",
+            String.format(
+                "select min(verdictdbblock), max(verdictdbblock) from %s.%s",
                 REDSHIFT_SCHEMA, scrambledTable));
     result.next();
     assertEquals(0, result.getInt(0));
@@ -131,5 +138,4 @@ public class RedshiftUniformScramblingCoordinatorTest {
   public static void tearDown() throws SQLException {
     stmt.execute(String.format("drop schema if exists \"%s\" CASCADE", REDSHIFT_SCHEMA));
   }
-
 }

@@ -1,9 +1,20 @@
-package org.verdictdb.metastore;
+/*
+ *    Copyright 2018 University of Michigan
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
 
-import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
+package org.verdictdb.metastore;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.connection.DbmsConnection;
@@ -11,32 +22,31 @@ import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.core.querying.CreateSchemaQuery;
 import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
-import org.verdictdb.core.sqlobject.BaseColumn;
-import org.verdictdb.core.sqlobject.BaseTable;
-import org.verdictdb.core.sqlobject.CreateTableDefinitionQuery;
-import org.verdictdb.core.sqlobject.InsertValuesQuery;
-import org.verdictdb.core.sqlobject.OrderbyAttribute;
-import org.verdictdb.core.sqlobject.SelectItem;
-import org.verdictdb.core.sqlobject.SelectQuery;
+import org.verdictdb.core.sqlobject.*;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sqlwriter.QueryToSql;
 
+import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+
 public class ScrambleMetaStore extends VerdictMetaStore {
-  
-  private final static String DEFAULT_STORE_SCHEMA = "verdictdbmetadata";
 
-  private final static String ADDED_AT_COLUMN = "addedat";
+  private static final String DEFAULT_STORE_SCHEMA = "verdictdbmetadata";
 
-  private final static String SCHEMA_COLUMN = "schema";
+  private static final String ADDED_AT_COLUMN = "addedat";
 
-  private final static String TABLE_COLUMN = "table";
+  private static final String SCHEMA_COLUMN = "schema";
 
-  private final static String DATA_COLUMN = "data";
+  private static final String TABLE_COLUMN = "table";
+
+  private static final String DATA_COLUMN = "data";
 
   private DbmsConnection conn;
 
   private String storeSchema = DEFAULT_STORE_SCHEMA;
-  
+
   public ScrambleMetaStore(DbmsConnection conn) {
     this(conn, DEFAULT_STORE_SCHEMA);
   }
@@ -49,23 +59,23 @@ public class ScrambleMetaStore extends VerdictMetaStore {
   public String getStoreSchema() {
     return storeSchema;
   }
-  
+
   public static String getDefaultStoreSchema() {
     return DEFAULT_STORE_SCHEMA;
   }
-  
+
   public static String getAddedAtColumn() {
     return ADDED_AT_COLUMN;
   }
-  
+
   public static String getSchemaColumn() {
     return SCHEMA_COLUMN;
   }
-  
+
   public static String getTableColumn() {
     return TABLE_COLUMN;
   }
-  
+
   public static String getDataColumn() {
     return DATA_COLUMN;
   }
@@ -78,11 +88,12 @@ public class ScrambleMetaStore extends VerdictMetaStore {
 
   /**
    * This will add on top of existing entries.
+   *
    * @param scrambleMetaSet
-   * @throws VerdictDBException 
+   * @throws VerdictDBException
    */
   public void addToStore(ScrambleMetaSet scrambleMetaSet) throws VerdictDBException {
-    
+
     // create a schema if not exists
     CreateSchemaQuery createSchemaQuery = new CreateSchemaQuery(storeSchema);
     createSchemaQuery.setIfNotExists(true);
@@ -150,18 +161,19 @@ public class ScrambleMetaStore extends VerdictMetaStore {
 
       // now ready to retrieve
       String tableAlias = "t";
-      SelectQuery query = SelectQuery.create(
-          Arrays.<SelectItem>asList(
-              new BaseColumn(tableAlias, ADDED_AT_COLUMN),
-              new BaseColumn(tableAlias, SCHEMA_COLUMN),
-              new BaseColumn(tableAlias, TABLE_COLUMN),
-              new BaseColumn(tableAlias, DATA_COLUMN)), 
-          new BaseTable(storeSchema, storeTable, tableAlias));
+      SelectQuery query =
+          SelectQuery.create(
+              Arrays.<SelectItem>asList(
+                  new BaseColumn(tableAlias, ADDED_AT_COLUMN),
+                  new BaseColumn(tableAlias, SCHEMA_COLUMN),
+                  new BaseColumn(tableAlias, TABLE_COLUMN),
+                  new BaseColumn(tableAlias, DATA_COLUMN)),
+              new BaseTable(storeSchema, storeTable, tableAlias));
       query.addOrderby(new OrderbyAttribute(ADDED_AT_COLUMN));
       String sql = QueryToSql.convert(conn.getSyntax(), query);
       DbmsQueryResult result = conn.execute(sql);
 
-      while(result.next()) {
+      while (result.next()) {
         //      String schema = result.getString(1);
         //      String table = result.getString(2);
         String jsonString = result.getString(3);
@@ -174,5 +186,4 @@ public class ScrambleMetaStore extends VerdictMetaStore {
 
     return retrieved;
   }
-
 }

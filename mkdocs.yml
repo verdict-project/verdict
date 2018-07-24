@@ -10,6 +10,7 @@ pages:
     - Quickstart Guide: getting_started/quickstart.md
     - Installation: getting_started/install.md
     - How to Connect: getting_started/connection.md
+    - Set up TPC-H tables in MySQL: getting_started/setupTpchMySQL.md
   - Supported Queries: supported_queries.md
   - How it works:
     - Architecture: how_it_works/architecture.md

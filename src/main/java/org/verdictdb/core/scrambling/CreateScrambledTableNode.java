@@ -1,7 +1,20 @@
-package org.verdictdb.core.scrambling;
+/*
+ *    Copyright 2018 University of Michigan
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
 
-import java.util.ArrayList;
-import java.util.List;
+package org.verdictdb.core.scrambling;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.connection.DbmsQueryResult;
@@ -14,9 +27,10 @@ import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.core.sqlobject.SqlConvertible;
 import org.verdictdb.exception.VerdictDBException;
 
-/**
- * Created by Dong Young Yoon on 7/17/18.
- */
+import java.util.ArrayList;
+import java.util.List;
+
+/** Created by Dong Young Yoon on 7/17/18. */
 public class CreateScrambledTableNode extends QueryNodeWithPlaceHolders {
 
   private static final long serialVersionUID = 1L;
@@ -39,15 +53,19 @@ public class CreateScrambledTableNode extends QueryNodeWithPlaceHolders {
 
   protected ScramblingMethod method;
 
-
   public CreateScrambledTableNode(IdCreator namer, SelectQuery query) {
     super(query);
     this.namer = namer;
   }
 
-  public CreateScrambledTableNode(IdCreator namer, SelectQuery query, String originalSchemaName,
-                                  String originalTableName, ScramblingMethod method, String tierColumnName,
-                                  String blockColumnName) {
+  public CreateScrambledTableNode(
+      IdCreator namer,
+      SelectQuery query,
+      String originalSchemaName,
+      String originalTableName,
+      ScramblingMethod method,
+      String tierColumnName,
+      String blockColumnName) {
     super(query);
     this.namer = namer;
     this.originalSchemaName = originalSchemaName;
@@ -73,7 +91,6 @@ public class CreateScrambledTableNode extends QueryNodeWithPlaceHolders {
     partitionColumns.add(column);
   }
 
-  
   @SuppressWarnings("unchecked")
   @Override
   public SqlConvertible createQuery(List<ExecutionInfoToken> tokens) throws VerdictDBException {
@@ -81,7 +98,7 @@ public class CreateScrambledTableNode extends QueryNodeWithPlaceHolders {
     Pair<String, String> tempTableFullName = namer.generateTempTableName();
     newTableSchemaName = tempTableFullName.getLeft();
     newTableName = tempTableFullName.getRight();
-    List<Pair<String, String>>  columnMeta = null;
+    List<Pair<String, String>> columnMeta = null;
     for (ExecutionInfoToken token : tokens) {
       Object val = token.getValue(ScramblingPlan.COLUMN_METADATA_KEY);
       if (val != null) {
@@ -94,8 +111,16 @@ public class CreateScrambledTableNode extends QueryNodeWithPlaceHolders {
     }
 
     CreateScrambledTableQuery createQuery =
-        new CreateScrambledTableQuery(originalSchemaName, originalTableName, newTableSchemaName,
-            newTableName, tierColumnName, blockColumnName, selectQuery, method.getBlockCount(), columnMeta);
+        new CreateScrambledTableQuery(
+            originalSchemaName,
+            originalTableName,
+            newTableSchemaName,
+            newTableName,
+            tierColumnName,
+            blockColumnName,
+            selectQuery,
+            method.getBlockCount(),
+            columnMeta);
     for (String col : partitionColumns) {
       createQuery.addPartitionColumn(col);
     }
@@ -120,5 +145,4 @@ public class CreateScrambledTableNode extends QueryNodeWithPlaceHolders {
   void copyFields(CreateScrambledTableNode from, CreateScrambledTableNode to) {
     super.copyFields(from, to);
   }
-
 }
