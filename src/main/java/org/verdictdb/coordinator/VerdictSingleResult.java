@@ -21,8 +21,6 @@ import com.google.common.base.Optional;
  */
 public abstract class VerdictSingleResult extends AttributeValueRetrievalHelper {
 
-  public VerdictSingleResult() { }
-
   public abstract boolean isEmpty();
 
   public abstract long getRowCount();

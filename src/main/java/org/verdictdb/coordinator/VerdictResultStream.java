@@ -5,46 +5,23 @@ import java.util.Iterator;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.core.resulthandler.ExecutionResultReader;
 
-public class VerdictResultStream implements Iterable<VerdictSingleResult>, Iterator<VerdictSingleResult> {
-  
-  ExecutionResultReader reader;
-  
-  ExecutionContext execContext;
-  
-  public VerdictResultStream(ExecutionResultReader reader, ExecutionContext execContext) {
-    this.reader = reader;
-    this.execContext = execContext;
-  }
+public abstract class VerdictResultStream implements Iterable<VerdictSingleResult>, Iterator<VerdictSingleResult> {
   
   // TODO
-  public VerdictResultStream create(VerdictSingleResult singleResult) {
-    return null;
-  }
+  public abstract VerdictResultStream create(VerdictSingleResult singleResult);
 
   @Override
-  public boolean hasNext() {
-    return reader.hasNext();
-  }
+  public abstract boolean hasNext();
 
   @Override
-  public VerdictSingleResult next() {
-    DbmsQueryResult internalResult = reader.next();
-    VerdictSingleResult result = new VerdictSingleResultFromDbmsQueryResult(internalResult);
-    return result;
-  }
+  public abstract VerdictSingleResult next();
 
   @Override
-  public Iterator<VerdictSingleResult> iterator() {
-    return this;
-  }
+  public abstract Iterator<VerdictSingleResult> iterator();
   
   @Override
-  public void remove() {
-    
-  }
+  public abstract void remove();
 
-  public void close() {
-    
-  }
+  public abstract void close();
   
 }
