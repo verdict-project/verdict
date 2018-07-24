@@ -16,6 +16,8 @@
 
 package org.verdictdb.jdbc41;
 
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -27,8 +29,6 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -37,13 +37,11 @@ import static org.junit.Assert.assertTrue;
 @RunWith(Parameterized.class)
 public class VerdictConnectionTest {
 
-  private static Map<String, Connection> connMap = new HashMap<>();
-
-  private static Map<String, Connection> vcMap = new HashMap<>();
-
   private static final String MYSQL_HOST;
 
   private String database;
+
+  private Pair<Connection, Connection> connectionPair;
 
   private static final String[] targetDatabases = {"mysql", "impala", "redshift", "postgresql"};
 
@@ -127,22 +125,10 @@ public class VerdictConnectionTest {
 
   @After
   public void tearDown() throws SQLException {
-    switch (database) {
-      case "mysql":
-        tearDownMysql();
-        break;
-      case "postgresql":
-        tearDownPostgresql();
-        break;
-      case "redshift":
-        tearDownRedshift();
-        break;
-      case "impala":
-        tearDownImpala();
-        break;
-      default:
-        break;
-    }
+    Connection conn = connectionPair.getLeft();
+    Connection vc = connectionPair.getRight();
+    if (!conn.isClosed()) conn.close();
+    if (!vc.isClosed()) vc.close();
   }
 
   @Parameterized.Parameters(name = "{0}")
@@ -155,7 +141,7 @@ public class VerdictConnectionTest {
     return params;
   }
 
-  private static void setupMysql() throws SQLException {
+  private void setupMysql() throws SQLException {
     String mysqlConnectionString =
         String.format("jdbc:mysql://%s?autoReconnect=true&useSSL=false", MYSQL_HOST);
     String vcMysqlConnectionString =
@@ -164,34 +150,18 @@ public class VerdictConnectionTest {
         DriverManager.getConnection(mysqlConnectionString, MYSQL_USER, MYSQL_PASSWORD);
     Connection vc =
         DriverManager.getConnection(vcMysqlConnectionString, MYSQL_USER, MYSQL_PASSWORD);
-    connMap.put("mysql", conn);
-    vcMap.put("mysql", vc);
+    connectionPair = ImmutablePair.of(conn, vc);
   }
 
-  private static void tearDownMysql() throws SQLException {
-    Connection conn = connMap.get("mysql");
-    Connection vc = vcMap.get("mysql");
-    if (!conn.isClosed()) conn.close();
-    if (!vc.isClosed()) vc.close();
-  }
-
-  private static void setupImpala() throws SQLException {
+  private void setupImpala() throws SQLException {
     String connectionString = String.format("jdbc:impala://%s", IMPALA_HOST);
     String vcConnectionString = String.format("jdbc:verdict:impala://%s", IMPALA_HOST);
     Connection conn = DriverManager.getConnection(connectionString, IMPALA_USER, IMPALA_PASSWORD);
     Connection vc = DriverManager.getConnection(vcConnectionString, IMPALA_USER, IMPALA_PASSWORD);
-    connMap.put("impala", conn);
-    vcMap.put("impala", vc);
+    connectionPair = ImmutablePair.of(conn, vc);
   }
 
-  private static void tearDownImpala() throws SQLException {
-    Connection conn = connMap.get("impala");
-    Connection vc = vcMap.get("impala");
-    if (!conn.isClosed()) conn.close();
-    if (!vc.isClosed()) vc.close();
-  }
-
-  private static void setupRedshift() throws SQLException {
+  private void setupRedshift() throws SQLException {
     String connectionString =
         String.format("jdbc:redshift://%s/%s", REDSHIFT_HOST, REDSHIFT_DATABASE);
     String vcConnectionString =
@@ -200,18 +170,10 @@ public class VerdictConnectionTest {
         DriverManager.getConnection(connectionString, REDSHIFT_USER, REDSHIFT_PASSWORD);
     Connection vc =
         DriverManager.getConnection(vcConnectionString, REDSHIFT_USER, REDSHIFT_PASSWORD);
-    connMap.put("redshift", conn);
-    vcMap.put("redshift", vc);
+    connectionPair = ImmutablePair.of(conn, vc);
   }
 
-  private static void tearDownRedshift() throws SQLException {
-    Connection conn = connMap.get("redshift");
-    Connection vc = vcMap.get("redshift");
-    if (!conn.isClosed()) conn.close();
-    if (!vc.isClosed()) vc.close();
-  }
-
-  private static void setupPostgresql() throws SQLException {
+  private void setupPostgresql() throws SQLException {
     String connectionString =
         String.format("jdbc:postgresql://%s/%s", POSTGRES_HOST, POSTGRES_DATABASE);
     String vcConnectionString =
@@ -220,48 +182,37 @@ public class VerdictConnectionTest {
         DriverManager.getConnection(connectionString, POSTGRES_USER, POSTGRES_PASSWORD);
     Connection vc =
         DriverManager.getConnection(vcConnectionString, POSTGRES_USER, POSTGRES_PASSWORD);
-    connMap.put("postgresql", conn);
-    vcMap.put("postgresql", vc);
-  }
-
-  private static void tearDownPostgresql() throws SQLException {
-    Connection conn = connMap.get("postgresql");
-    Connection vc = vcMap.get("postgresql");
-    if (!conn.isClosed()) conn.close();
-    if (!vc.isClosed()) vc.close();
+    connectionPair = ImmutablePair.of(conn, vc);
   }
 
   @Test
   public void testIsValidAfterConnect() throws SQLException {
-    boolean valid1 = connMap.get(database).isValid(10);
-    boolean valid2 = vcMap.get(database).isValid(10);
+    boolean valid1 = connectionPair.getLeft().isValid(10);
+    boolean valid2 = connectionPair.getRight().isValid(10);
 
     assertTrue(valid1);
     assertTrue(valid2);
 
-    boolean closed1 = connMap.get(database).isClosed();
-    boolean closed2 = vcMap.get(database).isClosed();
+    boolean closed1 = connectionPair.getLeft().isClosed();
+    boolean closed2 = connectionPair.getRight().isClosed();
 
     assertFalse(closed1);
     assertFalse(closed2);
-
-    connMap.get(database).close();
-    vcMap.get(database).close();
   }
 
   @Test
   public void testIsNotValidAfterClose() throws SQLException {
-    connMap.get(database).close();
-    vcMap.get(database).close();
+    connectionPair.getLeft().close();
+    connectionPair.getRight().close();
 
-    boolean valid1 = connMap.get(database).isValid(10);
-    boolean valid2 = vcMap.get(database).isValid(10);
+    boolean valid1 = connectionPair.getLeft().isValid(10);
+    boolean valid2 = connectionPair.getRight().isValid(10);
 
     assertFalse(valid1);
     assertFalse(valid2);
 
-    boolean closed1 = connMap.get(database).isClosed();
-    boolean closed2 = vcMap.get(database).isClosed();
+    boolean closed1 = connectionPair.getLeft().isClosed();
+    boolean closed2 = connectionPair.getRight().isClosed();
 
     assertTrue(closed1);
     assertTrue(closed2);
