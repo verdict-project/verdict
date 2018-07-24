@@ -1,4 +1,6 @@
-# Welcome to VerdictDB
+# VerdictDB Documentation
+
+Short description of VerdictDB 
 
 ## Contents
 

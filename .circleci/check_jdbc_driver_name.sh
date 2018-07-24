@@ -13,13 +13,12 @@ verdictdb_version=${verdictdb_version%$"</version>"}
 mvn -DskipTests -Dverdictdb-packaging=true package
 
 # Unzip the packaged file
-TEMP_DIR=target/jdbc-service-file-check
-rm -rf ${TEMP_DIR}
-mkdir ${TEMP_DIR}
-unzip -q target/verdictdb-core-${verdictdb_version}-jar-with-dependencies.jar -d ${TEMP_DIR}
+JAR_FILE_NAME=target/verdictdb-core-${verdictdb_version}-jar-with-dependencies.jar
+DRIVER_FILE_PATH=META-INF/services/java.sql.Driver
+unzip -p ${JAR_FILE_NAME} ${DRIVER_FILE_PATH} > ./java.sql.Driver
 
 # Read service file
-SERVICE_FILE_NAME=${TEMP_DIR}/META-INF/services/java.sql.Driver
+SERVICE_FILE_NAME=./java.sql.Driver
 driver_name=$(cat ${SERVICE_FILE_NAME})
 
 if [ ${driver_name} == ${VERDICTDB_JDBC_DRIVER_NAME} ]; then
