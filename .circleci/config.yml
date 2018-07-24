@@ -62,10 +62,21 @@ jobs:
       - run: git clone git@github.com:verdictdb/verdictdb-private-resources.git
       # Now build and test
       - run: mvn -B test 2> /dev/null
+      # Collect test metadata
+      - run:
+          name: Save test results
+          command: |
+            mkdir -p ~/junit/
+            find . -type f -regex ".*/target/surefire-reports/.*xml" -exec cp {} ~/junit/ \;
+          when: always
+      - store_test_results:
+          path: ~/junit
+      - store_artifacts:
+          path: ~/junit
       - save_cache:
-          paths:
-            - ~/.m2
-          key: verdict-dependencies-{{ checksum "pom.xml" }}
+        paths:
+          - ~/.m2
+        key: verdict-dependencies-{{ checksum "pom.xml" }}
 
   build-jdk8:
     docker:
@@ -104,6 +115,17 @@ jobs:
       # Now build and test
       - run: mvn -B test 2> /dev/null
       #- run: mvn -DskipTests -P packaging package
+      # Collect test metadata
+      - run:
+          name: Save test results
+          command: |
+            mkdir -p ~/junit/
+            find . -type f -regex ".*/target/surefire-reports/.*xml" -exec cp {} ~/junit/ \;
+          when: always
+      - store_test_results:
+          path: ~/junit
+      - store_artifacts:
+          path: ~/junit
       - save_cache:
           paths:
             - ~/.m2
@@ -148,6 +170,17 @@ jobs:
         - run: mvn test -Dtest=SparkTpchSelectQueryCoordinatorTest 2> /dev/null
         # - run: mvn test -Dtest=RedshiftTpchSelectQueryCoordinatorTest 2> /dev/null
         # - run: mvn test -Dtest=ImpalaTpchSelectQueryCoordinatorTest 2> /dev/null
+        # Collect test metadata
+        - run:
+            name: Save test results
+            command: |
+              mkdir -p ~/junit/
+              find . -type f -regex ".*/target/surefire-reports/.*xml" -exec cp {} ~/junit/ \;
+            when: always
+        - store_test_results:
+            path: ~/junit
+        - store_artifacts:
+            path: ~/junit
         - save_cache:
             paths:
               - ~/.m2
@@ -190,6 +223,16 @@ jobs:
         # - run: mvn test -Dtest=SparkTpchSelectQueryCoordinatorTest 2> /dev/null
         - run: mvn test -Dtest=RedshiftTpchSelectQueryCoordinatorTest 2> /dev/null
         - run: mvn test -Dtest=ImpalaTpchSelectQueryCoordinatorTest 2> /dev/null
+        - run:
+            name: Save test results
+            command: |
+              mkdir -p ~/junit/
+              find . -type f -regex ".*/target/surefire-reports/.*xml" -exec cp {} ~/junit/ \;
+            when: always
+        - store_test_results:
+            path: ~/junit
+        - store_artifacts:
+            path: ~/junit
         - save_cache:
             paths:
               - ~/.m2
