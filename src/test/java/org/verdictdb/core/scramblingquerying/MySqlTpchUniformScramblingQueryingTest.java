@@ -261,7 +261,7 @@
 //    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
 //    String stdQuery = selectQueryToSql.toSql(relation);
 //
-//    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
+//    QueryExecutionPlan queryExecutionPlan = QueryExecutionPlanFactory.create("verdictdb_temp", meta, (SelectQuery) relation);
 //    queryExecutionPlan.cleanUp();
 //    queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
 //    stmt.execute("create schema if not exists `verdictdb_temp`;");
@@ -315,7 +315,7 @@
 //    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
 //    String stdQuery = selectQueryToSql.toSql(relation);
 //
-//    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
+//    QueryExecutionPlan queryExecutionPlan = QueryExecutionPlanFactory.create("verdictdb_temp", meta, (SelectQuery) relation);
 //    queryExecutionPlan.cleanUp();
 //    queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
 //    stmt.execute("create schema if not exists `verdictdb_temp`;");
@@ -361,7 +361,7 @@
 //    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
 //    String stdQuery = selectQueryToSql.toSql(relation);
 //
-//    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
+//    QueryExecutionPlan queryExecutionPlan = QueryExecutionPlanFactory.create("verdictdb_temp", meta, (SelectQuery) relation);
 //    queryExecutionPlan.cleanUp();
 //    queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
 //    stmt.execute("create schema if not exists `verdictdb_temp`;");
@@ -417,7 +417,7 @@
 //    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
 //    String stdQuery = selectQueryToSql.toSql(relation);
 //
-//    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
+//    QueryExecutionPlan queryExecutionPlan = QueryExecutionPlanFactory.create("verdictdb_temp", meta, (SelectQuery) relation);
 //    queryExecutionPlan.cleanUp();
 //    queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
 //    stmt.execute("create schema if not exists `verdictdb_temp`;");
@@ -459,7 +459,7 @@
 //    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
 //    String stdQuery = selectQueryToSql.toSql(relation);
 //
-//    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
+//    QueryExecutionPlan queryExecutionPlan = QueryExecutionPlanFactory.create("verdictdb_temp", meta, (SelectQuery) relation);
 //    queryExecutionPlan.cleanUp();
 //    queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
 //    stmt.execute("create schema if not exists `verdictdb_temp`;");
@@ -531,7 +531,7 @@
 //    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
 //    String stdQuery = selectQueryToSql.toSql(relation);
 //
-//    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
+//    QueryExecutionPlan queryExecutionPlan = QueryExecutionPlanFactory.create("verdictdb_temp", meta, (SelectQuery) relation);
 //    queryExecutionPlan.cleanUp();
 //    queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
 //    stmt.execute("create schema if not exists `verdictdb_temp`;");
@@ -600,7 +600,7 @@
 //    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
 //    String stdQuery = selectQueryToSql.toSql(relation);
 //
-//    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
+//    QueryExecutionPlan queryExecutionPlan = QueryExecutionPlanFactory.create("verdictdb_temp", meta, (SelectQuery) relation);
 //    queryExecutionPlan.cleanUp();
 //    queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
 //    stmt.execute("create schema if not exists `verdictdb_temp`;");
@@ -664,7 +664,7 @@
 //    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
 //    String stdQuery = selectQueryToSql.toSql(relation);
 //
-//    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
+//    QueryExecutionPlan queryExecutionPlan = QueryExecutionPlanFactory.create("verdictdb_temp", meta, (SelectQuery) relation);
 //    queryExecutionPlan.cleanUp();
 //    queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
 //    stmt.execute("create schema if not exists `verdictdb_temp`;");
@@ -727,7 +727,7 @@
 //    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
 //    String stdQuery = selectQueryToSql.toSql(relation);
 //
-//    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
+//    QueryExecutionPlan queryExecutionPlan = QueryExecutionPlanFactory.create("verdictdb_temp", meta, (SelectQuery) relation);
 //    queryExecutionPlan.cleanUp();
 //    queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
 //    stmt.execute("create schema if not exists `verdictdb_temp`;");
@@ -786,7 +786,7 @@
 //    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
 //    String stdQuery = selectQueryToSql.toSql(relation);
 //
-//    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
+//    QueryExecutionPlan queryExecutionPlan = QueryExecutionPlanFactory.create("verdictdb_temp", meta, (SelectQuery) relation);
 //    queryExecutionPlan.cleanUp();
 //    queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
 //    stmt.execute("create schema if not exists `verdictdb_temp`;");
@@ -827,7 +827,7 @@
 //    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
 //    String stdQuery = selectQueryToSql.toSql(relation);
 //
-//    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
+//    QueryExecutionPlan queryExecutionPlan = QueryExecutionPlanFactory.create("verdictdb_temp", meta, (SelectQuery) relation);
 //    queryExecutionPlan.cleanUp();
 //    queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
 //    stmt.execute("create schema if not exists `verdictdb_temp`;");
@@ -872,7 +872,7 @@
 //    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
 //    String stdQuery = selectQueryToSql.toSql(relation);
 //
-//    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
+//    QueryExecutionPlan queryExecutionPlan = QueryExecutionPlanFactory.create("verdictdb_temp", meta, (SelectQuery) relation);
 //    queryExecutionPlan.cleanUp();
 //    queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
 //    stmt.execute("create schema if not exists `verdictdb_temp`;");
@@ -914,7 +914,7 @@
 //    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
 //    String stdQuery = selectQueryToSql.toSql(relation);
 //
-//    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
+//    QueryExecutionPlan queryExecutionPlan = QueryExecutionPlanFactory.create("verdictdb_temp", meta, (SelectQuery) relation);
 //    queryExecutionPlan.cleanUp();
 //    queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
 //    stmt.execute("create schema if not exists `verdictdb_temp`;");
@@ -972,7 +972,7 @@
 //    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
 //    String stdQuery = selectQueryToSql.toSql(relation);
 //
-//    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
+//    QueryExecutionPlan queryExecutionPlan = QueryExecutionPlanFactory.create("verdictdb_temp", meta, (SelectQuery) relation);
 //    queryExecutionPlan.cleanUp();
 //    queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
 //    stmt.execute("create schema if not exists `verdictdb_temp`;");
@@ -1037,7 +1037,7 @@
 //    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
 //    String stdQuery = selectQueryToSql.toSql(relation);
 //
-//    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
+//    QueryExecutionPlan queryExecutionPlan = QueryExecutionPlanFactory.create("verdictdb_temp", meta, (SelectQuery) relation);
 //    queryExecutionPlan.cleanUp();
 //    queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
 //    stmt.execute("create schema if not exists `verdictdb_temp`;");
@@ -1101,7 +1101,7 @@
 //    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
 //    String stdQuery = selectQueryToSql.toSql(relation);
 //
-//    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
+//    QueryExecutionPlan queryExecutionPlan = QueryExecutionPlanFactory.create("verdictdb_temp", meta, (SelectQuery) relation);
 //    queryExecutionPlan.cleanUp();
 //    queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
 //    stmt.execute("create schema if not exists `verdictdb_temp`;");
@@ -1155,7 +1155,7 @@
 //    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
 //    String stdQuery = selectQueryToSql.toSql(relation);
 //
-//    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
+//    QueryExecutionPlan queryExecutionPlan = QueryExecutionPlanFactory.create("verdictdb_temp", meta, (SelectQuery) relation);
 //    queryExecutionPlan.cleanUp();
 //    queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
 //    stmt.execute("create schema if not exists `verdictdb_temp`;");
@@ -1225,7 +1225,7 @@
 //    SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new MysqlSyntax());
 //    String stdQuery = selectQueryToSql.toSql(relation);
 //
-//    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan("verdictdb_temp", meta, (SelectQuery) relation);
+//    QueryExecutionPlan queryExecutionPlan = QueryExecutionPlanFactory.create("verdictdb_temp", meta, (SelectQuery) relation);
 //    queryExecutionPlan.cleanUp();
 //    queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
 //    stmt.execute("create schema if not exists `verdictdb_temp`;");

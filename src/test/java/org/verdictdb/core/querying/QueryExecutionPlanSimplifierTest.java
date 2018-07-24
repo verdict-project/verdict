@@ -55,7 +55,7 @@ public class QueryExecutionPlanSimplifierTest {
     String sql = "select avg(t.value) as a from originalschema.originaltable as t;";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     SelectQuery selectQuery = (SelectQuery) sqlToRelation.toRelation(sql);
-    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(newSchema, null, selectQuery);
+    QueryExecutionPlan queryExecutionPlan = QueryExecutionPlanFactory.create(newSchema, null, selectQuery);
     ExecutableNodeBase copy = queryExecutionPlan.root.deepcopy();
     QueryExecutionPlan plan = QueryExecutionPlanSimplifier.simplify(queryExecutionPlan);
     assertEquals(0, plan.root.getDependentNodeCount());
@@ -74,7 +74,7 @@ public class QueryExecutionPlanSimplifierTest {
     String sql = "select avg(t.value) from (select o.value from originalschema.originaltable as o where o.value>5) as t;";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     SelectQuery selectQuery = (SelectQuery) sqlToRelation.toRelation(sql);
-    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(newSchema, null, selectQuery);
+    QueryExecutionPlan queryExecutionPlan = QueryExecutionPlanFactory.create(newSchema, null, selectQuery);
     ExecutableNodeBase copy = queryExecutionPlan.root.getExecutableNodeBaseDependent(0).getExecutableNodeBaseDependent(0).deepcopy();
     QueryExecutionPlan plan = QueryExecutionPlanSimplifier.simplify(queryExecutionPlan);
     assertEquals(0, plan.root.getDependentNodeCount());
@@ -92,7 +92,7 @@ public class QueryExecutionPlanSimplifierTest {
         "(select avg(o.value) as avg_value from originalschema.originaltable as o);";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     SelectQuery selectQuery = (SelectQuery) sqlToRelation.toRelation(sql);
-    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(newSchema, null, selectQuery);
+    QueryExecutionPlan queryExecutionPlan = QueryExecutionPlanFactory.create(newSchema, null, selectQuery);
     ExecutableNodeBase copy = queryExecutionPlan.root.getExecutableNodeBaseDependent(0).getExecutableNodeBaseDependent(0).deepcopy();
     QueryExecutionPlan plan = QueryExecutionPlanSimplifier.simplify(queryExecutionPlan);
     
@@ -113,7 +113,7 @@ public class QueryExecutionPlanSimplifierTest {
 //    String sql = "select avg(t.value) as a from originalschema.originaltable as t;";
 //    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
 //    SelectQuery selectQuery = (SelectQuery) sqlToRelation.toRelation(sql);
-//    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(newSchema, null, selectQuery);
+//    QueryExecutionPlan queryExecutionPlan = QueryExecutionPlanFactory.create(newSchema, null, selectQuery);
 //
 //    BaseTable base = new BaseTable(originalSchema, originalTable, "t");
 //    SelectQuery leftQuery = SelectQuery.create(new AliasedColumn(ColumnOp.count(), "mycount"), base);
@@ -152,7 +152,7 @@ public class QueryExecutionPlanSimplifierTest {
 //    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
 //    SelectQuery selectQuery = (SelectQuery) sqlToRelation.toRelation(sql);
 //    
-//    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(newSchema, null, selectQuery);
+//    QueryExecutionPlan queryExecutionPlan = QueryExecutionPlanFactory.create(newSchema, null, selectQuery);
 //    BaseTable base = new BaseTable(originalSchema, originalTable, "t");
 //    SelectQuery leftQuery = SelectQuery.create(new AliasedColumn(ColumnOp.count(), "mycount"), base);
 //    leftQuery.addFilterByAnd(ColumnOp.lessequal(new BaseColumn("t", "value"), ConstantColumn.valueOf(5.0)));
@@ -191,7 +191,7 @@ public class QueryExecutionPlanSimplifierTest {
 //    String sql = "select avg(t.value) as a from (select o.value from originalschema.originaltable as o where o.value>5) as t;";
 //    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
 //    SelectQuery selectQuery = (SelectQuery) sqlToRelation.toRelation(sql);
-//    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(newSchema, null, selectQuery);
+//    QueryExecutionPlan queryExecutionPlan = QueryExecutionPlanFactory.create(newSchema, null, selectQuery);
 //    BaseTable base = new BaseTable(originalSchema, originalTable, "t");
 //    SelectQuery leftQuery = SelectQuery.create(new AliasedColumn(ColumnOp.count(), "mycount"), base);
 //    leftQuery.addFilterByAnd(ColumnOp.lessequal(new BaseColumn("t", "value"), ConstantColumn.valueOf(5.0)));
@@ -240,7 +240,7 @@ public class QueryExecutionPlanSimplifierTest {
 //    String sql = "select avg(t.value) as a from originalschema.originaltable as t;";
 //    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
 //    SelectQuery selectQuery = (SelectQuery) sqlToRelation.toRelation(sql);
-//    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(newSchema, null, selectQuery);
+//    QueryExecutionPlan queryExecutionPlan = QueryExecutionPlanFactory.create(newSchema, null, selectQuery);
 //
 //    BaseTable base = new BaseTable(originalSchema, originalTable, "t");
 //    SelectQuery leftQuery = SelectQuery.create(new AliasedColumn(ColumnOp.count(), "mycount"), base);
@@ -274,7 +274,7 @@ public class QueryExecutionPlanSimplifierTest {
 //    String sql = "select avg(t.value) as a from (select o.value from originalschema.originaltable as o where o.value>5) as t;";
 //    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
 //    SelectQuery selectQuery = (SelectQuery) sqlToRelation.toRelation(sql);
-//    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(newSchema, null, selectQuery);
+//    QueryExecutionPlan queryExecutionPlan = QueryExecutionPlanFactory.create(newSchema, null, selectQuery);
 //    BaseTable base = new BaseTable(originalSchema, originalTable, "t");
 //    SelectQuery leftQuery = SelectQuery.create(new AliasedColumn(ColumnOp.count(), "mycount"), base);
 //    leftQuery.addFilterByAnd(ColumnOp.lessequal(new BaseColumn("t", "value"), ConstantColumn.valueOf(5.0)));
@@ -313,7 +313,7 @@ public class QueryExecutionPlanSimplifierTest {
 //    String sql = "select avg(t.value) as a from (select o.value from originalschema.originaltable as o where o.value>5) as t;";
 //    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
 //    SelectQuery selectQuery = (SelectQuery) sqlToRelation.toRelation(sql);
-//    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(newSchema, null, selectQuery);
+//    QueryExecutionPlan queryExecutionPlan = QueryExecutionPlanFactory.create(newSchema, null, selectQuery);
 //    BaseTable base = new BaseTable(originalSchema, originalTable, "t");
 //    SelectQuery leftQuery = SelectQuery.create(new AliasedColumn(ColumnOp.count(), "mycount"), base);
 //    leftQuery.addFilterByAnd(ColumnOp.lessequal(new BaseColumn("t", "value"), ConstantColumn.valueOf(5.0)));
