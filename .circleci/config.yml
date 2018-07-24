@@ -123,8 +123,7 @@ jobs:
       # Now build and test
       - run: mvn -B test 2> /dev/null
 
-      # Check JDBC service file correctness
-      - run: mvn -DskipTests -Dverdictdb-packaging=true package
+      # Check the JDBC service file correctness
       - run: bash .circleci/check_jdbc_driver_name.sh
 
       #- run: mvn -DskipTests -P packaging package

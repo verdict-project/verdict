@@ -385,7 +385,7 @@
             </dependencies>
         </profile>
         <profile>
-            <id>release</id>
+            <id>sonatype-release</id>
             <distributionManagement>
                 <snapshotRepository>
                     <id>ossrh</id>
