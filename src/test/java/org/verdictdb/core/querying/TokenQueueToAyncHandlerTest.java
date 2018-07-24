@@ -53,7 +53,7 @@ public class TokenQueueToAyncHandlerTest {
     String sql = "select avg(t.value) as a from originalschema.originaltable as t;";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     SelectQuery selectQuery = (SelectQuery) sqlToRelation.toRelation(sql);
-    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(newSchema, null, selectQuery);
+    QueryExecutionPlan queryExecutionPlan = QueryExecutionPlanFactory.create(newSchema, null, selectQuery);
     // queryExecutionPlan.getRoot().print();
     ResultStandardOutputPrinter.run(ExecutablePlanRunner.getResultReader(conn, queryExecutionPlan));
 //    TokenQueueToAyncHandler tokenQueueToAyncHandler = new TokenQueueToAyncHandler(queryExecutionPlan, new ExecutionTokenQueue());
@@ -67,7 +67,7 @@ public class TokenQueueToAyncHandlerTest {
     String sql = "select avg(t.value) from (select o.value from originalschema.originaltable as o where o.value>5) as t;";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     SelectQuery selectQuery = (SelectQuery) sqlToRelation.toRelation(sql);
-    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(newSchema, null, selectQuery);
+    QueryExecutionPlan queryExecutionPlan = QueryExecutionPlanFactory.create(newSchema, null, selectQuery);
 
     // queryExecutionPlan.getRoot().print();
     ResultStandardOutputPrinter.run(ExecutablePlanRunner.getResultReader(conn, queryExecutionPlan));
@@ -83,7 +83,7 @@ public class TokenQueueToAyncHandlerTest {
         "(select avg(o.value) as avg_value from originalschema.originaltable as o);";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     SelectQuery selectQuery = (SelectQuery) sqlToRelation.toRelation(sql);
-    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(newSchema, null, selectQuery);
+    QueryExecutionPlan queryExecutionPlan = QueryExecutionPlanFactory.create(newSchema, null, selectQuery);
 
     // queryExecutionPlan.getRoot().print();
     ResultStandardOutputPrinter.run(ExecutablePlanRunner.getResultReader(conn, queryExecutionPlan));
@@ -98,7 +98,7 @@ public class TokenQueueToAyncHandlerTest {
     String sql = "select t.id as id, avg(t.value) as a from originalschema.originaltable as t group by id;";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     SelectQuery selectQuery = (SelectQuery) sqlToRelation.toRelation(sql);
-    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(newSchema, null, selectQuery);
+    QueryExecutionPlan queryExecutionPlan = QueryExecutionPlanFactory.create(newSchema, null, selectQuery);
 
     // queryExecutionPlan.getRoot().print();
     ResultStandardOutputPrinter.run(ExecutablePlanRunner.getResultReader(conn, queryExecutionPlan));
@@ -113,7 +113,7 @@ public class TokenQueueToAyncHandlerTest {
     String sql = "select t.id as id, avg(t.value) as a from (select o.id, o.value from originalschema.originaltable as o where o.value>5) as t group by id;";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     SelectQuery selectQuery = (SelectQuery) sqlToRelation.toRelation(sql);
-    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(newSchema, null, selectQuery);
+    QueryExecutionPlan queryExecutionPlan = QueryExecutionPlanFactory.create(newSchema, null, selectQuery);
 
     // queryExecutionPlan.getRoot().print();
     ResultStandardOutputPrinter.run(ExecutablePlanRunner.getResultReader(conn, queryExecutionPlan));

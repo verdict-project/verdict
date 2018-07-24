@@ -129,7 +129,7 @@ public class CreateTableAsSelectNodeTest {
   public void testExecuteNode() throws VerdictDBException {
     BaseTable base = new BaseTable(originalSchema, originalTable, "t");
     SelectQuery query = SelectQuery.create(Arrays.<SelectItem>asList(new AsteriskColumn()), base);
-    ExecutableNodeBase root = CreateTableAsSelectNode.create(new QueryExecutionPlan("newschema"), query);
+    ExecutableNodeBase root = CreateTableAsSelectNode.create(QueryExecutionPlanFactory.create("newschema"), query);
 //    ExecutionInfoToken token = new ExecutionInfoToken();
     ExecutionInfoToken newTableName = 
         ExecutableNodeRunner.execute(h2conn, root);
