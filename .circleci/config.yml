@@ -78,7 +78,8 @@ jobs:
     steps:
       - run: apt-get update; apt-get install -y git
       - checkout
-      - run: mvn cobertura:cobertura
+      - run: mvn install:install-file -Dfile=src/test/resources/jars/ImpalaJDBC41-2.6.3.jar -DgroupId=com.cloudera -DartifactId=impala-jdbc41 -Dversion=2.6.3 -Dpackaging=jar
+      - run: mvn -DskipTests cobertura:cobertura
       - run: bash <(curl -s https://codecov.io/bash) -t 9cf48c61-07ed-4a14-9eed-f7129664ee79
 
   build-jdk8:
