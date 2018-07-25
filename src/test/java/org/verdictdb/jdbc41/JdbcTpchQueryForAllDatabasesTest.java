@@ -24,7 +24,7 @@ import static org.junit.Assert.fail;
 
 /** Created by Dong Young Yoon on 7/18/18. */
 @RunWith(Parameterized.class)
-public class JdbcTpchQueryTestForAllDatabases {
+public class JdbcTpchQueryForAllDatabasesTest {
 
   private static Map<String, Connection> connMap = new HashMap<>();
 
@@ -46,7 +46,7 @@ public class JdbcTpchQueryTestForAllDatabases {
   //  private static final String[] targetDatabases = {"mysql", "impala", "redshift", "postgresql"};
   private static final String[] targetDatabases = {"mysql", "impala", "redshift"};
 
-  public JdbcTpchQueryTestForAllDatabases(String database, String query) {
+  public JdbcTpchQueryForAllDatabasesTest(String database, String query) {
     this.database = database;
     this.query = query;
   }
