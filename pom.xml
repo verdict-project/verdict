@@ -148,23 +148,6 @@
                     <check/>
                 </configuration>
             </plugin>
-            <plugin>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <version>${maven.assembly-plugin.version}</version>
-                <executions>
-                    <execution>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <descriptorRefs>
-                        <descriptorRef>jar-with-dependencies</descriptorRef>
-                    </descriptorRefs>
-                </configuration>
-            </plugin>
         </plugins>
     </build>
 
@@ -362,12 +345,67 @@
             </build>
         </profile>
         <profile>
-            <id>testing-stage</id>
+            <id>assemble-dependencies</id>
+            <activation>
+                <property>
+                    <name>packagePhase</name>
+                    <value>true</value>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-assembly-plugin</artifactId>
+                        <version>${maven.assembly-plugin.version}</version>
+                        <executions>
+                            <execution>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>single</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <descriptorRefs>
+                                <descriptorRef>jar-with-dependencies</descriptorRef>
+                            </descriptorRefs>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>assemble-no-dependencies</id>
+            <activation>
+                <property>
+                    <name>deployPhase</name>
+                    <value>true</value>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-assembly-plugin</artifactId>
+                        <version>${maven.assembly-plugin.version}</version>
+                        <executions>
+                            <execution>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>single</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>spark-compile</id>
             <activation>
                 <activeByDefault>true</activeByDefault>
                 <property>
-                    <name>verdictdb-packaging</name>
-                    <value>!true</value>
+                    <name>testPhase</name>
+                    <value>true</value>
                 </property>
             </activation>
             <dependencies>
@@ -414,10 +452,10 @@
             </dependencies>
         </profile>
         <profile>
-            <id>packaging-stage</id>
+            <id>spark-provided</id>
             <activation>
                 <property>
-                    <name>verdictdb-packaging</name>
+                    <name>packagePhase</name>
                     <value>true</value>
                 </property>
             </activation>
@@ -445,6 +483,12 @@
         </profile>
         <profile>
             <id>sonatype-release</id>
+            <activation>
+                <property>
+                    <name>deployPhase</name>
+                    <value>true</value>
+                </property>
+            </activation>
             <distributionManagement>
                 <snapshotRepository>
                     <id>ossrh</id>
