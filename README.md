@@ -1,6 +1,8 @@
 [![Build Status](https://circleci.com/gh/mozafari/verdictdb/tree/master.svg?style=shield&circle-token=16a7386340ff7022b21ce007434f8caa2fa97aec)](https://circleci.com/gh/mozafari/verdictdb/tree/master)
 [![Code Coverage](https://codecov.io/gh/mozafari/verdictdb/branch/master/graph/badge.svg)](https://codecov.io/gh/mozafari/verdictdb)
 
+July 25 2018: The current documentation is out of date; it will be updated in a few days.
+
 # Same SQL, Same DB, 100x-200x Faster Analytics
 
 <p align="center">
