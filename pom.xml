@@ -5,7 +5,7 @@
     <groupId>org.verdictdb</groupId>
     <artifactId>verdictdb-core</artifactId>
     <packaging>jar</packaging>
-    <version>0.5.1</version>
+    <version>0.5.2-SNAPSHOT</version>
     <name>${project.groupId}:${project.artifactId}</name>
     <description>Platform-independent data analytics system for interactive-speed analytics</description>
     <url>http://verdictdb.org</url>
@@ -64,8 +64,12 @@
     </developers>
 
     <properties>
+        <!-- one of the following three phases may be chosen -->
+        <testPhase>true</testPhase>
+        <packagePhase>false</packagePhase>
+        <deployPhase>false</deployPhase>
+
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <antlr4.visitor>true</antlr4.visitor>
         <antlr4.version>4.5.3</antlr4.version>
         <apache.commons.version>3.5</apache.commons.version>
         <junit.version>4.12</junit.version>
@@ -374,7 +378,7 @@
                 </plugins>
             </build>
         </profile>
-        <profile>
+        <!-- <profile>
             <id>assemble-no-dependencies</id>
             <activation>
                 <property>
@@ -398,7 +402,7 @@
                     </plugin>
                 </plugins>
             </build>
-        </profile>
+        </profile> -->
         <profile>
             <id>spark-compile</id>
             <activation>
@@ -455,8 +459,8 @@
             <id>spark-provided</id>
             <activation>
                 <property>
-                    <name>packagePhase</name>
-                    <value>true</value>
+                    <name>testPhase</name>
+                    <value>!true</value>
                 </property>
             </activation>
             <dependencies>

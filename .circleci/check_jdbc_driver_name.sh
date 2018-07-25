@@ -10,7 +10,7 @@ verdictdb_version=${verdictdb_version%$"</version>"}
 #echo "${verdictdb_version}"
 
 # Package
-mvn -DskipTests -Dverdictdb-packaging=true package
+mvn -DskipTests -DtestPhase=false -DpackagePhase=true package
 
 # Unzip the packaged file
 JAR_FILE_NAME=target/verdictdb-core-${verdictdb_version}-jar-with-dependencies.jar
