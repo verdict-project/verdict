@@ -1,11 +1,11 @@
 # TPC-H Data Setup
 
-This is a step-by-step guide about how to set up TPC-H tables in different databases.
+This is a step-by-step guide for setting up TPC-H data in different databases. This guide will use 1GB data. This guide assumes you have basic knowledge about issuing commands in a terminal application.
 
 
-## Download 1GB Data
+## Download Data
 
-In your terminal, go to your work directory (say `/home/username/workspace`) and download the data we have archived for you:
+Go to your work directory (say `/home/username/workspace`) and download the data:
 
 ```bash
 cd /home/username/workspace
@@ -38,7 +38,7 @@ mysql> create database tpch1g;
 mysql> use tpch1g;
 ```
 
-Create empty tables; simply copy and paste the following table definition statements. We will import the data later into these tables.
+Create empty tables; simply copy and paste the following table definition statements into the MySQL shell. We will import the data later into these tables.
 
 ```sql
 -- nation
@@ -144,7 +144,7 @@ CREATE TABLE IF NOT EXISTS lineitem`(
 
 ### Import Data
 
-Suppose your work directory is `/home/username/workspace` and the tpch1g data is stored in `/home/username/workspace/tpch1g`. Then use the following commands to load the data.
+Suppose your work directory is `/home/username/workspace` and the tpch1g data is stored in `/home/username/workspace/tpch1g`. Then, issue the following commands in the MySQL shell to load the data.
 
 ```sql
 LOAD DATA LOCAL INFILE '/home/username/workspace/tpch1g/region/region.tbl'     INTO TABLE region     FIELDS TERMINATED BY '|';

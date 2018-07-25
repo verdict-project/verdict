@@ -1,1 +1,0 @@
-# VerdictDB Queries

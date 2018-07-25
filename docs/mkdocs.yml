@@ -10,11 +10,13 @@ pages:
     - Quickstart: getting_started/quickstart.md
     - Installation: getting_started/install.md
     - Connecting to Data Sources: getting_started/connection.md
-    - VerdictDB Queries: getting_started/supported_queries.md
-  - Tutorial:
-    - Setup TPC-H Data: tutorial/tpch.md
   - How it works:
     - Architecture: how_it_works/architecture.md
+    - Query Processing: how_it_works/query_processing.md
+  - Reference:
+    - VerdictDB Queries: reference/supported_queries.md
+  - Tutorial:
+    - Setup TPC-H Data: tutorial/tpch.md
 
 # Appearance
 theme:
