@@ -16,9 +16,9 @@
 
 package org.verdictdb.core.rewriter.aggresult;
 
-import org.verdictdb.core.aggresult.AggregateFrame;
-
 import java.sql.ResultSet;
+
+import org.verdictdb.core.aggresult.AggregateFrame;
 
 public class QueryResultToAggregateFrame {
 

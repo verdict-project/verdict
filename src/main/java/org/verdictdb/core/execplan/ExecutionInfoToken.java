@@ -16,12 +16,18 @@
 
 package org.verdictdb.core.execplan;
 
-import org.apache.commons.lang3.builder.ToStringBuilder;
-import org.apache.commons.lang3.builder.ToStringStyle;
-
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.NotSerializableException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 
 public class ExecutionInfoToken implements Serializable {
 
@@ -110,10 +116,8 @@ public class ExecutionInfoToken implements Serializable {
       return copiedToken;
 
     } catch (ClassNotFoundException e) {
-      // TODO Auto-generated catch block
       e.printStackTrace();
     } catch (NotSerializableException e) {
-      // TODO: handle this case
       e.printStackTrace();
     } catch (IOException e) {
       e.printStackTrace();

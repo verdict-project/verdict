@@ -16,7 +16,12 @@
 
 package org.verdictdb.core.querying.ola;
 
-import com.google.common.base.Optional;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.connection.DbmsQueryResult;
@@ -27,11 +32,22 @@ import org.verdictdb.core.querying.ProjectionNode;
 import org.verdictdb.core.rewriter.aggresult.AggNameAndType;
 import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
-import org.verdictdb.core.sqlobject.*;
+import org.verdictdb.core.sqlobject.AliasReference;
+import org.verdictdb.core.sqlobject.AliasedColumn;
+import org.verdictdb.core.sqlobject.AsteriskColumn;
+import org.verdictdb.core.sqlobject.BaseColumn;
+import org.verdictdb.core.sqlobject.BaseTable;
+import org.verdictdb.core.sqlobject.ColumnOp;
+import org.verdictdb.core.sqlobject.ConstantColumn;
+import org.verdictdb.core.sqlobject.CreateTableAsSelectQuery;
+import org.verdictdb.core.sqlobject.SelectItem;
+import org.verdictdb.core.sqlobject.SelectQuery;
+import org.verdictdb.core.sqlobject.SqlConvertible;
+import org.verdictdb.core.sqlobject.UnnamedColumn;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBValueException;
 
-import java.util.*;
+import com.google.common.base.Optional;
 
 /**
  * Represents an "progressive" execution of a single aggregate query (without nested components).
@@ -101,14 +117,14 @@ public class AsyncAggExecutionNode extends ProjectionNode {
     ExecutionInfoToken token = tokens.get(0);
 
     // First, calculate the scale factor
-    List<HyperTableCube> cubes = ((AggMeta) token.getValue("aggMeta")).getCubes();
-    HashMap<List<Integer>, Double> scaleFactor = calculateScaleFactor(cubes);
+    AggMeta sourceAggMeta = (AggMeta) token.getValue("aggMeta");
+    HashMap<List<Integer>, Double> scaleFactor = calculateScaleFactor(sourceAggMeta);
 
     // Next, create the base select query for replacement
     Pair<List<ColumnOp>, SqlConvertible> aggColumnsAndQuery =
-        createBaseQueryForReplacement(cubes, token);
+        createBaseQueryForReplacement(sourceAggMeta, token);
 
-    // single tier case
+    // single-tier case
     if (scaleFactor.size() == 1) {
       // Substitute the scale factor
       Double s = (Double) (scaleFactor.values().toArray())[0];
@@ -116,7 +132,7 @@ public class AsyncAggExecutionNode extends ProjectionNode {
         col.setOperand(0, ConstantColumn.valueOf(String.format("%.16f", s)));
       }
     }
-    // multiple tiers case
+    // multiple-tiers case
     else {
       // If it has multiple tiers, we need to rewrite the multiply column into when-then-else column
       for (ColumnOp col : aggColumnsAndQuery.getLeft()) {
@@ -142,9 +158,8 @@ public class AsyncAggExecutionNode extends ProjectionNode {
     // If it has multiple tiers, we need to sum up the result
     SelectQuery query;
     if (multipleTierTableTierInfo.size() > 0) {
-      query =
-          sumUpTierGroup(
-              (SelectQuery) aggColumnsAndQuery.getRight(), ((AggMeta) token.getValue("aggMeta")));
+      query = sumUpTierGroup(
+          (SelectQuery) aggColumnsAndQuery.getRight(), ((AggMeta) token.getValue("aggMeta")));
     } else {
       query = (SelectQuery) aggColumnsAndQuery.getRight();
     }
@@ -204,11 +219,13 @@ public class AsyncAggExecutionNode extends ProjectionNode {
   }
 
   /**
-   * @param cubes
+   * @param sourceAggMeta
    * @return Key: aggregate column list
    */
   Pair<List<ColumnOp>, SqlConvertible> createBaseQueryForReplacement(
-      List<HyperTableCube> cubes, ExecutionInfoToken token) {
+      AggMeta sourceAggMeta, ExecutionInfoToken token) {
+  
+    List<HyperTableCube> cubes = sourceAggMeta.getCubes();
 
     List<ColumnOp> aggColumnlist = new ArrayList<>();
     SelectQuery dependentQuery = (SelectQuery) token.getValue("dependentQuery");
@@ -280,36 +297,48 @@ public class AsyncAggExecutionNode extends ProjectionNode {
    *
    * @return Return tier permutation list and its scale factor
    */
-  public HashMap<List<Integer>, Double> calculateScaleFactor(List<HyperTableCube> cubes) {
-
-    ScrambleMetaSet scrambleMeta = this.getScrambleMeta();
+  public HashMap<List<Integer>, Double> calculateScaleFactor(AggMeta sourceAggMeta) throws VerdictDBValueException {
+  
+    List<HyperTableCube> cubes = sourceAggMeta.getCubes();
+    ScrambleMetaSet scrambleMetaSet = this.getScrambleMeta();
     List<ScrambleMeta> metaForTablesList = new ArrayList<>();
     List<Integer> blockCountList = new ArrayList<>();
-    List<Pair<Integer, Integer>> scrambleTableTierInfo = new ArrayList<>();
+    List<Pair<Integer, Integer>> scrambleTableTierInfo = new ArrayList<>();   // block span index for each table
 
     for (Dimension d : cubes.get(0).getDimensions()) {
+      ScrambleMeta scrambleMeta = scrambleMetaSet.getSingleMeta(d.getSchemaName(), d.getTableName());
+      
       blockCountList.add(
-          scrambleMeta.getAggregationBlockCount(d.getSchemaName(), d.getTableName()));
-      metaForTablesList.add(scrambleMeta.getMetaForTable(d.getSchemaName(), d.getTableName()));
+          scrambleMetaSet.getAggregationBlockCount(d.getSchemaName(), d.getTableName()));
+      metaForTablesList.add(scrambleMeta);
       scrambleTableTierInfo.add(
           new ImmutablePair<>(
               cubes.get(0).getDimensions().indexOf(d),
-              scrambleMeta
-                  .getMetaForTable(d.getSchemaName(), d.getTableName())
+              scrambleMetaSet
+                  .getSingleMeta(d.getSchemaName(), d.getTableName())
                   .getNumberOfTiers()));
-      if (scrambleMeta.getMetaForTable(d.getSchemaName(), d.getTableName()).getNumberOfTiers() > 1
-          && !Initiated) {
-        ScrambleMeta meta = scrambleMeta.getMetaForTable(d.getSchemaName(), d.getTableName());
-        HashMap<ScrambleMeta, String> scrambleTableTierColumnAlias =
-            getAggMeta().getScrambleTableTierColumnAlias();
-        if (scrambleTableTierColumnAlias.containsKey(meta)) {
-          multipleTierTableTierInfo.put(
-              cubes.get(0).getDimensions().indexOf(d), scrambleTableTierColumnAlias.get(meta));
-        } else {
-          multipleTierTableTierInfo.put(
-              cubes.get(0).getDimensions().indexOf(d),
-              scrambleMeta.getMetaForTable(d.getSchemaName(), d.getTableName()).getTierColumn());
+      
+      if (scrambleMeta.getNumberOfTiers() > 1 && !Initiated) {
+//        ScrambleMeta meta = scrambleMetaSet.getSingleMeta(d.getSchemaName(), d.getTableName());
+        Map<ScrambleMeta, String> scrambleTableTierColumnAlias =
+            sourceAggMeta.getScrambleTableTierColumnAlias();
+        
+        if (scrambleTableTierColumnAlias.containsKey(scrambleMeta) == false) {
+          throw new VerdictDBValueException("The metadata for a scrambled table is not found.");
         }
+  
+        multipleTierTableTierInfo.put(
+            cubes.get(0).getDimensions().indexOf(d),
+            scrambleTableTierColumnAlias.get(scrambleMeta));
+        
+//        if (scrambleTableTierColumnAlias.containsKey(meta)) {
+//
+//        }
+//        else {
+//          multipleTierTableTierInfo.put(
+//              cubes.get(0).getDimensions().indexOf(d),
+//              scrambleMeta.getSingleMeta(d.getSchemaName(), d.getTableName()).getTierColumn());
+//        }
       }
     }
 
@@ -322,22 +351,15 @@ public class AsyncAggExecutionNode extends ProjectionNode {
         for (int i = 0; i < tierlist.size(); i++) {
           int tier = tierlist.get(i);
           Dimension d = cube.getDimensions().get(i);
-          //          double prob = d.getBegin() == 0 ?
-          // metaForTablesList.get(i).getCumulativeProbabilityDistribution(tier).get(d.getEnd())
-          //              :
-          // metaForTablesList.get(i).getCumulativeProbabilityDistribution(tier).get(d.getEnd()) -
-          //
-          // metaForTablesList.get(i).getCumulativeProbabilityDistribution(tier).get(d.getBegin() -
-          // 1);
-          double prob = 0;
+          
+          double prob;
           if (d.getBegin() == 0) {
             prob = metaForTablesList.get(i).getCumulativeDistributionForTier(tier).get(d.getEnd());
           } else {
-            prob =
-                metaForTablesList.get(i).getCumulativeDistributionForTier(tier).get(d.getEnd())
-                    - metaForTablesList
-                        .get(i)
-                        .getCumulativeDistributionForTier(tier)
+            prob = metaForTablesList.get(i).getCumulativeDistributionForTier(tier).get(d.getEnd())
+                       - metaForTablesList
+                             .get(i)
+                             .getCumulativeDistributionForTier(tier)
                         .get(d.getBegin() - 1);
           }
 
@@ -345,8 +367,12 @@ public class AsyncAggExecutionNode extends ProjectionNode {
         }
         total += scale;
       }
-      if (total == 0) scaleFactor.put(tierlist, 0.0);
-      else scaleFactor.put(tierlist, 1 / total);
+      
+      if (total == 0) {
+        scaleFactor.put(tierlist, 0.0);
+      } else {
+        scaleFactor.put(tierlist, 1.0 / total);
+      }
     }
     return scaleFactor;
   }
@@ -408,7 +434,7 @@ public class AsyncAggExecutionNode extends ProjectionNode {
    */
   SelectQuery replaceWithOriginalSelectList(SelectQuery queryToReplace, AggMeta aggMeta) {
     List<SelectItem> originalSelectList = aggMeta.getOriginalSelectList();
-    HashMap<SelectItem, List<ColumnOp>> aggColumn = aggMeta.getAggColumn();
+    Map<SelectItem, List<ColumnOp>> aggColumn = aggMeta.getAggColumn();
     HashMap<String, UnnamedColumn> aggContents = new HashMap<>();
     for (SelectItem sel : queryToReplace.getSelectList()) {
       // this column is a basic aggregate column

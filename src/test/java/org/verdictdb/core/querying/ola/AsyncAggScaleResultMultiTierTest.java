@@ -152,7 +152,8 @@ public class AsyncAggScaleResultMultiTierTest {
 
 
     JdbcConnection jdbcConnection = new JdbcConnection(conn, new MysqlSyntax());
-    //ExecutablePlanRunner.runTillEnd(jdbcConnection, queryExecutionPlan);
+    jdbcConnection.setOutputDebugMessage(true);
+//    ExecutablePlanRunner.runTillEnd(jdbcConnection, queryExecutionPlan);
 
     ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(jdbcConnection, queryExecutionPlan);
     int resultReturnedCnt = 0;
@@ -386,7 +387,7 @@ public class AsyncAggScaleResultMultiTierTest {
 
 
     JdbcConnection jdbcConnection = new JdbcConnection(conn, new MysqlSyntax());
-    //ExecutablePlanRunner.runTillEnd(jdbcConnection, queryExecutionPlan);
+//    ExecutablePlanRunner.runTillEnd(jdbcConnection, queryExecutionPlan);
 
     ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(jdbcConnection, queryExecutionPlan);
     int resultReturnedCnt = 0;

@@ -16,6 +16,12 @@
 
 package org.verdictdb.core.querying.ola;
 
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.List;
+
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import org.apache.commons.lang3.tuple.Pair;
@@ -23,11 +29,6 @@ import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.core.sqlobject.ColumnOp;
 import org.verdictdb.core.sqlobject.SelectItem;
 import org.verdictdb.core.sqlobject.UnnamedColumn;
-
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 
 /**
  * Use for store hyper table cube and aggregate column alias name of individual aggregate node and
@@ -37,22 +38,23 @@ public class AggMeta implements Serializable {
 
   private static final long serialVersionUID = 3186577687141707687L;
 
+  // List of covered blocks
   List<HyperTableCube> cubes = new ArrayList<>();
 
   List<SelectItem> originalSelectList;
 
   List<String> aggAlias = new ArrayList<>();
 
-  HashMap<ScrambleMeta, String> scrambleTableTierColumnAlias = new HashMap<>();
-
-  HashMap<String, String> maxminAggAlias = new HashMap<>();
-
-  HashMap<SelectItem, List<ColumnOp>> aggColumn = new HashMap<>();
+  Map<ScrambleMeta, String> scrambleTableTierColumnAlias = new HashMap<>();
+  
+  Map<String, String> maxminAggAlias = new HashMap<>();
+  
+  Map<SelectItem, List<ColumnOp>> aggColumn = new HashMap<>();
 
   // (agg function, argument), alias
-  HashMap<Pair<String, UnnamedColumn>, String> aggColumnAggAliasPair = new HashMap<>();
-
-  HashMap<Pair<String, UnnamedColumn>, String> aggColumnAggAliasPairOfMaxMin = new HashMap<>();
+  Map<Pair<String, UnnamedColumn>, String> aggColumnAggAliasPair = new HashMap<>();
+  
+  Map<Pair<String, UnnamedColumn>, String> aggColumnAggAliasPairOfMaxMin = new HashMap<>();
 
   String tierColumnName;
 
@@ -62,19 +64,19 @@ public class AggMeta implements Serializable {
     return aggAlias;
   }
 
-  public HashMap<SelectItem, List<ColumnOp>> getAggColumn() {
+  public Map<SelectItem, List<ColumnOp>> getAggColumn() {
     return aggColumn;
   }
 
-  public HashMap<Pair<String, UnnamedColumn>, String> getAggColumnAggAliasPair() {
+  public Map<Pair<String, UnnamedColumn>, String> getAggColumnAggAliasPair() {
     return aggColumnAggAliasPair;
   }
 
-  public HashMap<Pair<String, UnnamedColumn>, String> getAggColumnAggAliasPairOfMaxMin() {
+  public Map<Pair<String, UnnamedColumn>, String> getAggColumnAggAliasPairOfMaxMin() {
     return aggColumnAggAliasPairOfMaxMin;
   }
 
-  public HashMap<ScrambleMeta, String> getScrambleTableTierColumnAlias() {
+  public Map<ScrambleMeta, String> getScrambleTableTierColumnAlias() {
     return scrambleTableTierColumnAlias;
   }
 
@@ -82,7 +84,7 @@ public class AggMeta implements Serializable {
     return cubes;
   }
 
-  public HashMap<String, String> getMaxminAggAlias() {
+  public Map<String, String> getMaxminAggAlias() {
     return maxminAggAlias;
   }
 
@@ -98,17 +100,17 @@ public class AggMeta implements Serializable {
     this.aggAlias = aggAlias;
   }
 
-  public void setAggColumn(HashMap<SelectItem, List<ColumnOp>> aggColumn) {
+  public void setAggColumn(Map<SelectItem, List<ColumnOp>> aggColumn) {
     this.aggColumn = aggColumn;
   }
 
   public void setAggColumnAggAliasPair(
-      HashMap<Pair<String, UnnamedColumn>, String> aggColumnAggAliasPair) {
+      Map<Pair<String, UnnamedColumn>, String> aggColumnAggAliasPair) {
     this.aggColumnAggAliasPair = aggColumnAggAliasPair;
   }
 
   public void setAggColumnAggAliasPairOfMaxMin(
-      HashMap<Pair<String, UnnamedColumn>, String> aggColumnAggAliasPairOfMaxMin) {
+      Map<Pair<String, UnnamedColumn>, String> aggColumnAggAliasPairOfMaxMin) {
     this.aggColumnAggAliasPairOfMaxMin = aggColumnAggAliasPairOfMaxMin;
   }
 
@@ -116,7 +118,7 @@ public class AggMeta implements Serializable {
     this.cubes = cubes;
   }
 
-  public void setMaxminAggAlias(HashMap<String, String> maxminAggAlias) {
+  public void setMaxminAggAlias(Map<String, String> maxminAggAlias) {
     this.maxminAggAlias = maxminAggAlias;
   }
 
@@ -129,7 +131,7 @@ public class AggMeta implements Serializable {
   }
 
   public void setScrambleTableTierColumnAlias(
-      HashMap<ScrambleMeta, String> scrambleTableTierColumnAlias) {
+      Map<ScrambleMeta, String> scrambleTableTierColumnAlias) {
     this.scrambleTableTierColumnAlias = scrambleTableTierColumnAlias;
   }
 

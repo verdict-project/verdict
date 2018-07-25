@@ -16,6 +16,18 @@
 
 package org.verdictdb.core.querying;
 
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.TreeMap;
+
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -31,10 +43,6 @@ import org.verdictdb.core.querying.ola.AggMeta;
 import org.verdictdb.core.sqlobject.SqlConvertible;
 import org.verdictdb.exception.VerdictDBException;
 
-import java.io.Serializable;
-import java.util.*;
-import java.util.Map.Entry;
-
 public class ExecutableNodeBase implements ExecutableNode, Serializable {
 
   private static final long serialVersionUID = 1424215482199124961L;
@@ -45,7 +53,7 @@ public class ExecutableNodeBase implements ExecutableNode, Serializable {
 
   Map<Integer, ExecutionTokenQueue> channels = new TreeMap<>();
 
-  AggMeta aggMeta = new AggMeta();
+  protected AggMeta aggMeta = new AggMeta();
 
   private final String uniqueId;
 

@@ -16,13 +16,13 @@
 
 package org.verdictdb.core.scrambling;
 
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
-
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 
 public class ScrambleMetaSet implements Serializable, Iterable<ScrambleMeta> {
 
@@ -44,7 +44,7 @@ public class ScrambleMetaSet implements Serializable, Iterable<ScrambleMeta> {
     return meta.get(metaKey(schemaName, tableName)).getAggregationBlockColumn();
   }
 
-  public ScrambleMeta getMetaForTable(String schemaName, String tableName) {
+  public ScrambleMeta getSingleMeta(String schemaName, String tableName) {
     return meta.get(new ImmutablePair<String, String>(schemaName, tableName));
   }
 
