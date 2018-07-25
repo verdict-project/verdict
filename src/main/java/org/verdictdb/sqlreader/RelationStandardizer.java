@@ -191,6 +191,19 @@ public class RelationStandardizer {
     return condition;
   }
 
+  private AliasedColumn matchAliasFromSelectList(List<SelectItem> selectItems, BaseColumn col) {
+    for (SelectItem item : selectItems) {
+      if (item instanceof AliasedColumn) {
+        AliasedColumn aliasedColumn =(AliasedColumn) item;
+        if (aliasedColumn.getAliasName().equals(col)) {
+          return aliasedColumn;
+        }
+      }
+    }
+    return null;
+  }
+
+
   private List<GroupingAttribute> replaceGroupby(
       List<SelectItem> selectItems, List<GroupingAttribute> groupingAttributeList)
       throws VerdictDBDbmsException {
@@ -205,7 +218,21 @@ public class RelationStandardizer {
     List<GroupingAttribute> newGroupby = new ArrayList<>();
     for (GroupingAttribute g : groupingAttributeList) {
       if (g instanceof BaseColumn) {
-        if (((BaseColumn) g).getTableSourceAlias() != null) {
+        // 'col' can be either a base column or an alias to a select item
+        BaseColumn col = (BaseColumn) g;
+
+        // Check for aliases
+        AliasedColumn aliasMatch = matchAliasFromSelectList(selectItems, col);
+        if (aliasMatch != null) {
+          UnnamedColumn column = aliasMatch.getColumn();
+          // Unless it is a subquery, we use the actual operation in the group-by.
+          if (column instanceof SubqueryColumn) {
+            newGroupby.add(new AliasReference(aliasMatch.getAliasName()));
+          } else {
+            newGroupby.add(column);
+          }
+        } else if (((BaseColumn) g).getTableSourceAlias() != null) {
+          // if it is a base column, let's get its current table alias and replace.
           String tableSource = ((BaseColumn) g).getTableSourceAlias();
           String columnName = ((BaseColumn) g).getColumnName();
           if (duplicateColNameAndColAlias.containsKey(
@@ -215,17 +242,27 @@ public class RelationStandardizer {
                     tableSource,
                     duplicateColNameAndColAlias.get(new ImmutablePair<>(tableSource, columnName))));
           } else if (colNameAndColAlias.containsKey(columnName)) {
-            newGroupby.add(new AliasReference(colNameAndColAlias.get(columnName)));
+            newGroupby.add(
+                new AliasReference(
+                    oldTableAliasMap.get(tableSource), colNameAndColAlias.get(columnName)));
           } else newGroupby.add(new AliasReference(((BaseColumn) g).getColumnName()));
         } else if (colNameAndColAlias.containsKey(((BaseColumn) g).getColumnName())) {
           newGroupby.add(
               new AliasReference(colNameAndColAlias.get(((BaseColumn) g).getColumnName())));
         } else newGroupby.add(new AliasReference(((BaseColumn) g).getColumnName()));
       } else if (g instanceof ColumnOp) {
-        ColumnOp replaced = (ColumnOp) replaceFilter((ColumnOp) g);
-        if (columnOpAliasMap.containsKey(replaced)) {
-          newGroupby.add(new AliasReference(columnOpAliasMap.get(replaced)));
-        } else newGroupby.add(replaced);
+        // If it is a column-op, we substitute its table reference to our alias unless
+        // this method is called to get order-by columns. In such case, we simply use alias.
+        if (isforOrderBy) {
+          ColumnOp replaced = (ColumnOp) replaceFilter((ColumnOp) g);
+          if (columnOpAliasMap.containsKey(replaced)) {
+            newGroupby.add(new AliasReference(columnOpAliasMap.get(replaced)));
+          } else newGroupby.add(replaced);
+        } else {
+          ColumnOp newCol = ((ColumnOp) g).deepcopy();
+          this.replaceGroupByReference(newCol);
+          newGroupby.add(newCol);
+        }
       } else if (g instanceof ConstantColumn) {
         // replace index with column alias
         String value = (String) ((ConstantColumn) g).getValue();
@@ -248,6 +285,19 @@ public class RelationStandardizer {
       } else newGroupby.add(g);
     }
     return newGroupby;
+  }
+
+  private void replaceGroupByReference(UnnamedColumn c) {
+    if (c instanceof ColumnOp) {
+      ColumnOp colOp = (ColumnOp) c;
+      for (UnnamedColumn o : colOp.getOperands()) {
+        this.replaceGroupByReference(o);
+      }
+    } else if (c instanceof BaseColumn) {
+      BaseColumn baseCol = (BaseColumn) c;
+      String newRef = oldTableAliasMap.get(baseCol.getTableSourceAlias());
+      if (newRef != null) baseCol.setTableSourceAlias(newRef);
+    }
   }
 
   private List<OrderbyAttribute> replaceOrderby(

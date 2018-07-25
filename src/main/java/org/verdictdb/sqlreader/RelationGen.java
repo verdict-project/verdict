@@ -44,7 +44,12 @@ public class RelationGen extends VerdictSQLParserBaseVisitor<AbstractRelation> {
           ctx.order_by_clause().order_by_expression()) {
         ExpressionGen g = new ExpressionGen();
         UnnamedColumn c = g.visit(o.expression());
-        OrderbyAttribute orderbyCol = new OrderbyAttribute(c, (o.DESC() == null) ? "asc" : "desc");
+        String nullsOrder = "";
+        if (o.NULLS() != null) {
+          nullsOrder = (o.FIRST() != null) ? "nulls first" : "nulls last";
+        }
+        OrderbyAttribute orderbyCol =
+            new OrderbyAttribute(c, (o.DESC() == null) ? "asc" : "desc", nullsOrder);
         sel.addOrderby(orderbyCol);
       }
     }

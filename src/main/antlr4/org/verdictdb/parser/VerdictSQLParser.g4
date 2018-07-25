@@ -420,7 +420,7 @@ xml_common_directives
     ;
 
 order_by_expression
-    : expression (ASC | DESC)?
+    : expression (ASC | DESC)? (NULLS FIRST | NULLS LAST)?
     ;
 
 group_by_item

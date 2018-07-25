@@ -44,7 +44,8 @@ public class JdbcTpchQueryTestForAllDatabases {
 
   // TODO: Add support for all four databases
   //  private static final String[] targetDatabases = {"mysql", "impala", "redshift", "postgresql"};
-  private static final String[] targetDatabases = {"mysql", "impala", "redshift"};
+  //  private static final String[] targetDatabases = {"mysql", "impala", "redshift"};
+  private static final String[] targetDatabases = {"redshift"};
 
   public JdbcTpchQueryTestForAllDatabases(String database, String query) {
     this.database = database;
@@ -120,8 +121,8 @@ public class JdbcTpchQueryTestForAllDatabases {
 
   @BeforeClass
   public static void setupDatabases() throws SQLException, VerdictDBDbmsException, IOException {
-    setupMysql();
-    setupImpala();
+    //    setupMysql();
+    //    setupImpala();
     setupRedshift();
     // TODO: Add below databases too
     //    setupPostgresql();
@@ -155,11 +156,17 @@ public class JdbcTpchQueryTestForAllDatabases {
         params.add(new Object[] {database, "e1"});
         params.add(new Object[] {database, "e2"});
         params.add(new Object[] {database, "e3"});
+        params.add(new Object[] {database, "e4"});
+        params.add(new Object[] {database, "e5"});
+        params.add(new Object[] {database, "e6"});
+        params.add(new Object[] {database, "e7"});
       }
 
       // Uncomment below lines to test a specific query
-      //      params.clear();
-      //      params.add(new Object[] {database, "15"});
+      params.clear();
+      params.add(new Object[] {database, "e5"});
+      params.add(new Object[] {database, "e6"});
+      params.add(new Object[] {database, "e7"});
     }
     return params;
   }
@@ -253,7 +260,6 @@ public class JdbcTpchQueryTestForAllDatabases {
     if (queryFile.exists()) {
       String sql = Files.toString(queryFile, Charsets.UTF_8);
       //      sql = "select * from tpch_2_parquet.lineitem limit 1000";
-
       Statement jdbcStmt = connMap.get(database).createStatement();
       Statement vcStmt = vcMap.get(database).createStatement();
 

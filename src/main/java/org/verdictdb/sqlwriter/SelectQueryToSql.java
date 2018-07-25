@@ -433,11 +433,11 @@ public class SelectQueryToSql {
       if (isFirstOrderby) {
         sql.append(" order by ");
         sql.append(groupingAttributeToSqlPart(a.getAttribute()));
-        sql.append(" " + a.getOrder());
+        sql.append(" " + a.getOrder() + " " + a.getNullsOrder());
         isFirstOrderby = false;
       } else {
         sql.append(", " + groupingAttributeToSqlPart(a.getAttribute()));
-        sql.append(" " + a.getOrder());
+        sql.append(" " + a.getOrder() + " " + a.getNullsOrder());
       }
     }
 
