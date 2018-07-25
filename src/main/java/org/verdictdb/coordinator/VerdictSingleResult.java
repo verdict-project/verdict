@@ -16,147 +16,166 @@
 
 package org.verdictdb.coordinator;
 
-import com.google.common.base.Optional;
-import com.rits.cloning.Cloner;
-import org.verdictdb.commons.AttributeValueRetrievalHelper;
-import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.connection.DbmsQueryResultMetaData;
+
+import java.io.InputStream;
+import java.math.BigDecimal;
+import java.net.URL;
+import java.sql.*;
 
 /**
  * Represents the result set returned from VerdictDB to the end user.
  *
  * @author Yongjoo Park
  */
-public class VerdictSingleResult extends AttributeValueRetrievalHelper {
+public interface VerdictSingleResult {
 
-  private Optional<DbmsQueryResult> result;
+  public boolean isEmpty();
 
-  // used to support wasnull()
-  private Object lastValueRead;
 
-  public VerdictSingleResult(DbmsQueryResult result) {
-    if (result == null) {
-      this.result = Optional.absent();
-    } else {
-      DbmsQueryResult copied = copyResult(result);
-      copied.rewind();
-      this.result = Optional.of(copied);
-    }
-  }
+  /** @return Meta Data from ResultSet */
+  public DbmsQueryResultMetaData getMetaData();
 
-  public VerdictSingleResult(DbmsQueryResult result, boolean asIs) {
-    // If result contains objects that cannot be serialized (e.g., BLOB, CLOB in H2),
-    // it is just copied as-is (i.e., shallow copy) as opposed to deep copy.
-    if (result == null) {
-      this.result = Optional.absent();
-    } else {
-      if (asIs) {
-        this.result = Optional.of(result);
-      } else {
-        DbmsQueryResult copied = copyResult(result);
-        copied.rewind();
-        this.result = Optional.of(copied);
-      }
-    }
-  }
+  public int getColumnCount();
 
-  public static VerdictSingleResult empty() {
-    return new VerdictSingleResult(null);
-  }
+  /**
+   * @param index zero-based index
+   * @return
+   */
+  public String getColumnName(int index);
 
-  public boolean isEmpty() {
-    return !result.isPresent();
-  }
+  /**
+   * @param index zero-based index
+   * @return
+   */
+  public int getColumnType(int index);
 
-  private DbmsQueryResult copyResult(DbmsQueryResult result) {
-    DbmsQueryResult copied = new Cloner().deepClone(result);
-    return new Cloner().deepClone(result);
-    //    try {
-    //      ByteArrayOutputStream bos = new ByteArrayOutputStream();
-    //      ObjectOutputStream out = new ObjectOutputStream(bos);
-    //      out.writeObject(result);
-    //      out.flush();
-    //      out.close();
-    //
-    //      ObjectInputStream in = new ObjectInputStream(new
-    // ByteArrayInputStream(bos.toByteArray()));
-    //      DbmsQueryResult copied = (DbmsQueryResult) in.readObject();
-    //      return copied;
-    //
-    //    } catch (ClassNotFoundException e) {
-    //      e.printStackTrace();
-    //    } catch (NotSerializableException e) {
-    //      e.printStackTrace();
-    //    } catch (IOException e) {
-    //      e.printStackTrace();
-    //    }
-    //    return null;
-  }
+  /**
+   * set the index before the first one; when next() is called, the index will move to the first
+   * row.
+   */
+  public void rewind();
 
-  public DbmsQueryResultMetaData getMetaData() {
-    return result.isPresent() ? result.get().getMetaData() : null;
-  }
+  /**
+   * Forward a cursor to rows by one. Similar to JDBC ResultSet.next().
+   *
+   * @return True if next row exists.
+   */
+  public boolean next();
 
-  @Override
-  public int getColumnCount() {
-    if (result.isPresent() == false) {
-      return 0;
-    } else {
-      return result.get().getColumnCount();
-    }
-  }
+  /**
+   * Returns the total number of rows.
+   *
+   * @return
+   */
+  public long getRowCount();
 
-  @Override
-  public String getColumnName(int index) {
-    if (result.isPresent() == false) {
-      throw new RuntimeException("An empty result is accessed.");
-    } else {
-      return result.get().getColumnName(index);
-    }
-  }
+  /**
+   * @param index This is a zero-based index.
+   * @return
+   */
+  public Object getValue(int index);
 
-  public int getColumnType(int index) {
-    if (result.isPresent() == false) {
-      throw new RuntimeException("An empty result is accessed.");
-    } else {
-      return result.get().getColumnType(index);
-    }
-  }
+  // implemented in DbmsQueryResultBase
+  public String getString(int index);
 
-  public long getRowCount() {
-    if (result.isPresent() == false) {
-      return 0;
-    } else {
-      return result.get().getRowCount();
-    }
-  }
+  public String getString(String label);
 
-  @Override
-  public Object getValue(int index) {
-    if (result.isPresent() == false) {
-      throw new RuntimeException("An empty result is accessed.");
-    } else {
-      Object value = result.get().getValue(index);
-      lastValueRead = value;
-      return value;
-    }
-  }
+  public Boolean getBoolean(int index) throws SQLException;
 
-  public boolean wasNull() {
-    return lastValueRead == null;
-  }
+  public Boolean getBoolean(String label) throws SQLException;
 
-  public boolean next() {
-    if (result.isPresent() == false) {
-      return false;
-    } else {
-      return result.get().next();
-    }
-  }
+  public int getInt(int index);
 
-  public void rewind() {
-    if (result.isPresent()) {
-      result.get().rewind();
-    }
-  }
+  public int getInt(String label);
+
+  public long getLong(int index);
+
+  public long getLong(String label);
+
+  public short getShort(int index);
+
+  public short getShort(String label);
+
+  public double getDouble(int index);
+
+  public double getDouble(String label);
+
+  public float getFloat(int index);
+
+  public float getFloat(String label);
+
+  public Date getDate(int index);
+
+  public Date getDate(String label);
+
+  public byte getByte(int index);
+
+  public byte getByte(String label);
+
+  public Timestamp getTimestamp(int index);
+
+  public Timestamp getTimestamp(String label);
+
+  public BigDecimal getBigDecimal(int index, int scale);
+
+  public BigDecimal getBigDecimal(String label, int scale);
+
+  public BigDecimal getBigDecimal(int index);
+
+  public BigDecimal getBigDecimal(String label);
+
+  public byte[] getBytes(int index);
+
+  public byte[] getBytes(String label);
+
+  public Time getTime(int index);
+
+  public Time getTime(String label);
+
+  public InputStream getAsciiStream(int index);
+
+  public InputStream getAsciiStream(String label);
+
+  public InputStream getUnicodeStream(int index);
+
+  public InputStream getUnicodeStream(String label);
+
+  public InputStream getBinaryStream(int index);
+
+  public InputStream getBinaryStream(String label);
+
+  public Ref getRef(int index);
+
+  public Ref getRef(String label);
+
+  public Blob getBlob(int index) throws SQLException;
+
+  public Blob getBlob(String label) throws SQLException;
+
+  public Clob getClob(int index);
+
+  public Clob getClob(String label);
+
+  public Array getArray(int index);
+
+  public Array getArray(String label);
+
+  public URL getURL(int index);
+
+  public URL getURL(String label);
+
+  public RowId getRowId(int index);
+
+  public RowId getRowId(String label);
+
+  public NClob getNClob(int index);
+
+  public NClob getNClob(String label);
+
+  public SQLXML getSQLXML(int index);
+
+  public SQLXML getSQLXML(String label);
+
+  public boolean wasNull() throws SQLException;
 }

@@ -16,47 +16,24 @@
 
 package org.verdictdb.coordinator;
 
-import org.verdictdb.connection.DbmsQueryResult;
-import org.verdictdb.core.resulthandler.ExecutionResultReader;
-
 import java.util.Iterator;
 
-public class VerdictResultStream
-    implements Iterable<VerdictSingleResult>, Iterator<VerdictSingleResult> {
+public interface VerdictResultStream
+    extends Iterable<VerdictSingleResult>, Iterator<VerdictSingleResult> {
 
-  ExecutionResultReader reader;
-
-  ExecutionContext execContext;
-
-  public VerdictResultStream(ExecutionResultReader reader, ExecutionContext execContext) {
-    this.reader = reader;
-    this.execContext = execContext;
-  }
-
-  // TODO
-  public VerdictResultStream create(VerdictSingleResult singleResult) {
-    return null;
-  }
+  public VerdictResultStream create(VerdictSingleResult singleResult);
 
   @Override
-  public boolean hasNext() {
-    return reader.hasNext();
-  }
+  public boolean hasNext();
 
   @Override
-  public VerdictSingleResult next() {
-    DbmsQueryResult internalResult = reader.next();
-    VerdictSingleResult result = new VerdictSingleResult(internalResult);
-    return result;
-  }
+  public VerdictSingleResult next();
 
   @Override
-  public Iterator<VerdictSingleResult> iterator() {
-    return this;
-  }
+  public Iterator<VerdictSingleResult> iterator();
 
   @Override
-  public void remove() {}
+  public void remove();
 
-  public void close() {}
+  public void close();
 }
