@@ -7,13 +7,11 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.verdictdb.VerdictContext;
-import org.verdictdb.commons.DatabaseConnectionHelpers;
 import org.verdictdb.connection.CachedDbmsConnection;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.exception.VerdictDBException;
-import org.verdictdb.jdbc41.VerdictConnection;
 import org.verdictdb.sqlsyntax.*;
 
 import java.io.IOException;
@@ -105,7 +103,7 @@ public class MetaDataStatementsTest {
     REDSHIFT_PASSWORD = System.getenv("VERDICTDB_TEST_REDSHIFT_PASSWORD");
   }
 
-  private static final String SCHEMA_NAME =
+  private static final String PostgresRedshift_SCHEMA_NAME =
       "data_type_test" + RandomStringUtils.randomAlphanumeric(4).toLowerCase();
 
   private static final String TABLE_NAME =
@@ -182,9 +180,9 @@ public class MetaDataStatementsTest {
         String.format("jdbc:redshift://%s/%s", REDSHIFT_HOST, REDSHIFT_DATABASE);
     Connection conn = DriverManager.getConnection(connectionString, REDSHIFT_USER, REDSHIFT_PASSWORD);
     JdbcConnection dbmsConn = new JdbcConnection(conn, new RedshiftSyntax());
-    dbmsConn.execute(String.format("DROP SCHEMA IF EXISTS \"%s\" CASCADE", SCHEMA_NAME));
-    dbmsConn.execute(String.format("CREATE SCHEMA IF NOT EXISTS \"%s\"", SCHEMA_NAME));
-    dbmsConn.execute(String.format("CREATE TABLE \"%s\".\"%s\"(intcol int, strcol varchar(5))", SCHEMA_NAME, TABLE_NAME));
+    dbmsConn.execute(String.format("DROP SCHEMA IF EXISTS \"%s\" CASCADE", PostgresRedshift_SCHEMA_NAME));
+    dbmsConn.execute(String.format("CREATE SCHEMA IF NOT EXISTS \"%s\"", PostgresRedshift_SCHEMA_NAME));
+    dbmsConn.execute(String.format("CREATE TABLE \"%s\".\"%s\"(intcol int, strcol varchar(5))", PostgresRedshift_SCHEMA_NAME, TABLE_NAME));
 
     connMap.put("redshift", conn);
     schemaMap.put("redshift", "");
@@ -194,7 +192,7 @@ public class MetaDataStatementsTest {
   private static void tearDownRedshift() throws SQLException {
     Connection conn = connMap.get("redshift");
     Statement stmt = conn.createStatement();
-    stmt.execute(String.format("DROP SCHEMA IF EXISTS \"%s\" CASCADE", SCHEMA_NAME));
+    stmt.execute(String.format("DROP SCHEMA IF EXISTS \"%s\" CASCADE", PostgresRedshift_SCHEMA_NAME));
     conn.close();
   }
 
@@ -204,9 +202,9 @@ public class MetaDataStatementsTest {
     Connection conn = DriverManager.getConnection(connectionString, POSTGRES_USER, POSTGRES_PASSWORD);
     JdbcConnection dbmsConn = new JdbcConnection(conn, new RedshiftSyntax());
 
-    dbmsConn.execute(String.format("DROP SCHEMA IF EXISTS \"%s\" CASCADE", SCHEMA_NAME));
-    dbmsConn.execute(String.format("CREATE SCHEMA IF NOT EXISTS \"%s\"", SCHEMA_NAME));
-    dbmsConn.execute(String.format("CREATE TABLE \"%s\".\"%s\"(intcol int, strcol varchar(5))", SCHEMA_NAME, TABLE_NAME));
+    dbmsConn.execute(String.format("DROP SCHEMA IF EXISTS \"%s\" CASCADE", PostgresRedshift_SCHEMA_NAME));
+    dbmsConn.execute(String.format("CREATE SCHEMA IF NOT EXISTS \"%s\"", PostgresRedshift_SCHEMA_NAME));
+    dbmsConn.execute(String.format("CREATE TABLE \"%s\".\"%s\"(intcol int, strcol varchar(5))", PostgresRedshift_SCHEMA_NAME, TABLE_NAME));
     connMap.put("postgresql", conn);
     schemaMap.put("postgresql", "");
     syntaxMap.put("postgresql", new PostgresqlSyntax());
@@ -215,7 +213,7 @@ public class MetaDataStatementsTest {
   private static void tearDownPostgresql() throws SQLException {
     Connection conn = connMap.get("postgresql");
     Statement stmt = conn.createStatement();
-    stmt.execute(String.format("DROP SCHEMA IF EXISTS \"%s\" CASCADE", SCHEMA_NAME));
+    stmt.execute(String.format("DROP SCHEMA IF EXISTS \"%s\" CASCADE", PostgresRedshift_SCHEMA_NAME));
     conn.close();
   }
 
@@ -265,12 +263,12 @@ public class MetaDataStatementsTest {
         vcsql = "SHOW TABLES IN " + IMPALA_DATABASE;
         break;
       case "postgresql":
-        sql = new PostgresqlSyntax().getTableCommand(SCHEMA_NAME);
-        vcsql = "SHOW TABLES IN " + SCHEMA_NAME;
+        sql = new PostgresqlSyntax().getTableCommand(PostgresRedshift_SCHEMA_NAME);
+        vcsql = "SHOW TABLES IN " + PostgresRedshift_SCHEMA_NAME;
         break;
       case "redshift":
-        sql = new RedshiftSyntax().getTableCommand(SCHEMA_NAME);
-        vcsql = "SHOW TABLES IN " + SCHEMA_NAME;
+        sql = new RedshiftSyntax().getTableCommand(PostgresRedshift_SCHEMA_NAME);
+        vcsql = "SHOW TABLES IN " + PostgresRedshift_SCHEMA_NAME;
         break;
       default:
         fail(String.format("Database '%s' not supported.", database));
@@ -304,12 +302,12 @@ public class MetaDataStatementsTest {
         vcsql = String.format("DESCRIBE %s.%s", IMPALA_DATABASE, TABLE_NAME);
         break;
       case "postgresql":
-        sql = new PostgresqlSyntax().getColumnsCommand(SCHEMA_NAME, TABLE_NAME);
-        vcsql = String.format("DESCRIBE %s.%s", SCHEMA_NAME, TABLE_NAME);
+        sql = new PostgresqlSyntax().getColumnsCommand(PostgresRedshift_SCHEMA_NAME, TABLE_NAME);
+        vcsql = String.format("DESCRIBE %s.%s", PostgresRedshift_SCHEMA_NAME, TABLE_NAME);
         break;
       case "redshift":
-        sql = new RedshiftSyntax().getColumnsCommand(SCHEMA_NAME, TABLE_NAME);
-        vcsql = String.format("DESCRIBE %s.%s", SCHEMA_NAME, TABLE_NAME);
+        sql = new RedshiftSyntax().getColumnsCommand(PostgresRedshift_SCHEMA_NAME, TABLE_NAME);
+        vcsql = String.format("DESCRIBE %s.%s", PostgresRedshift_SCHEMA_NAME, TABLE_NAME);
         break;
       default:
         fail(String.format("Database '%s' not supported.", database));
@@ -332,57 +330,5 @@ public class MetaDataStatementsTest {
       else assertEquals(jdbcRs.getString(2), result.getValue(1));
     }
   }
-
-
-  /*
-  @Test
-  public void showSchemaTest() throws VerdictDBException,SQLException {
-    String sql = "show schemas";
-    DbmsConnection dbmsconn = new CachedDbmsConnection(
-        new JdbcConnection(mysqlConn, new MysqlSyntax()));
-    VerdictContext verdict = new VerdictContext(dbmsconn);
-    ExecutionContext exec = new ExecutionContext(verdict, 0);
-    VerdictSingleResult result = exec.sql(sql);
-    ResultSet rs = mysqlStmt.executeQuery(sql);
-    while (rs.next()) {
-      result.next();
-      assertEquals(rs.getString(1), result.getValue(0));
-    }
-    assertEquals(rs.getMetaData().getColumnCount(), result.getColumnCount());
-  }
-
-  @Test
-  public void showTablesTest() throws VerdictDBException,SQLException {
-    String sql = "show tables in " + MYSQL_DATABASE;
-    DbmsConnection dbmsconn = new CachedDbmsConnection(
-        new JdbcConnection(mysqlConn, new MysqlSyntax()));
-    VerdictContext verdict = new VerdictContext(dbmsconn);
-    ExecutionContext exec = new ExecutionContext(verdict, 0);
-    VerdictSingleResult result = exec.sql(sql);
-    ResultSet rs = mysqlStmt.executeQuery(sql);
-    while (rs.next()) {
-      result.next();
-      assertEquals(rs.getString(1), result.getValue(0));
-    }
-    assertEquals(rs.getMetaData().getColumnCount(), result.getColumnCount());
-  }
-
-  @Test
-  public void DescribeTableTest() throws VerdictDBException,SQLException {
-    String sql = String.format("DESCRIBE %s.%s",MYSQL_DATABASE, "nation");
-    DbmsConnection dbmsconn = new CachedDbmsConnection(
-        new JdbcConnection(mysqlConn, new MysqlSyntax()));
-    VerdictContext verdict = new VerdictContext(dbmsconn);
-    ExecutionContext exec = new ExecutionContext(verdict, 0);
-    VerdictSingleResult result = exec.sql(sql);
-    ResultSet rs = mysqlStmt.executeQuery(sql);
-    while (rs.next()) {
-      result.next();
-      assertEquals(rs.getString("field"), result.getValue(0));
-      assertEquals(rs.getString("type"), result.getValue(1));
-    }
-    assertEquals(2, result.getColumnCount());
-  }
-  */
 
 }

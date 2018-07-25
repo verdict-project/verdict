@@ -10,12 +10,13 @@ import org.verdictdb.connection.DbmsQueryResultMetaData;
 import java.io.*;
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class VerdictSingleResultFromListData
     extends AttributeValueRetrievalHelper implements VerdictSingleResult {
 
-  private Optional<List<Object>> result;
+  private Optional<List<List<Object>>> result;
 
   List<String> fieldsName = new ArrayList<>();
 
@@ -24,25 +25,20 @@ public class VerdictSingleResultFromListData
 
   int cursor = -1;
 
-  public VerdictSingleResultFromListData(ExecutionContext.QueryType type, List<Object> result) {
+  public VerdictSingleResultFromListData(){}
+
+  public VerdictSingleResultFromListData(List<String> header, List<List<Object>> result) {
     super();
     if (result == null) {
       this.result = Optional.absent();
     } else {
-      if (type.equals(ExecutionContext.QueryType.show_databases)) {
-        fieldsName.add("schema name");
-      } else if (type.equals(ExecutionContext.QueryType.show_tables)) {
-        fieldsName.add("table name");
-      } else if (type.equals(ExecutionContext.QueryType.describe_table)) {
-        fieldsName.add("column name");
-        fieldsName.add("column type");
-      }
-      List<Object> copied = copyResult(result);
+      fieldsName = header;
+      List<List<Object>>  copied = copyResult(result);
       this.result = Optional.of(copied);
     }
   }
 
-  public VerdictSingleResultFromListData(ExecutionContext.QueryType type, List<Object> result, boolean asIs) {
+  public VerdictSingleResultFromListData(List<String> header, List<List<Object>>  result, boolean asIs) {
     // If result contains objects that cannot be serialized (e.g., BLOB, CLOB in H2),
     // it is just copied as-is (i.e., shallow copy) as opposed to deep copy.
     super();
@@ -52,15 +48,8 @@ public class VerdictSingleResultFromListData
       if (asIs) {
         this.result = Optional.of(result);
       } else {
-        if (type.equals(ExecutionContext.QueryType.show_databases)) {
-          fieldsName.add("schema name");
-        } else if (type.equals(ExecutionContext.QueryType.show_tables)) {
-          fieldsName.add("table name");
-        } else if (type.equals(ExecutionContext.QueryType.describe_table)) {
-          fieldsName.add("column name");
-          fieldsName.add("column type");
-        }
-        List<Object> copied = copyResult(result);
+        fieldsName = header;
+        List<List<Object>>  copied = copyResult(result);
         this.result = Optional.of(copied);
       }
     }
@@ -75,8 +64,8 @@ public class VerdictSingleResultFromListData
   }
 
 
-  private List<Object> copyResult(List<Object> result) {
-    List<Object> copied = new Cloner().deepClone(result);
+  private static List<List<Object>>  copyResult(List<List<Object>>  result) {
+    List<List<Object>>  copied = new Cloner().deepClone(result);
     return copied;
   }
 
@@ -110,17 +99,16 @@ public class VerdictSingleResultFromListData
     if (result.isPresent() == false || result.get().isEmpty()) {
       throw new RuntimeException("An empty result is accessed.");
     } else {
-      Object o = result.get().get(0);
+      Object o = (result.get().get(0)).get(index);
       if (o instanceof String) {
         return DataTypeConverter.typeInt("varchar");
       }
       else if (o instanceof Integer) {
         return DataTypeConverter.typeInt("int");
       }
-      else if (o instanceof List) {
+      else {
         return Types.JAVA_OBJECT;
       }
-      else throw new RuntimeException("Unexpected columns");
     }
   }
 
@@ -137,16 +125,7 @@ public class VerdictSingleResultFromListData
     if (result.isPresent() == false) {
       throw new RuntimeException("An empty result is accessed.");
     } else {
-      Object o = result.get().get(cursor);
-      if (o instanceof List) {
-        return ((List) o).get(index);
-      }
-      else {
-        if (index!=0) {
-          throw new RuntimeException("Index is out of boundary.");
-        }
-        return o;
-      }
+      return result.get().get(cursor).get(index);
     }
   }
 
@@ -177,5 +156,21 @@ public class VerdictSingleResultFromListData
 
   public void rewind() {
     cursor = -1;
+  }
+
+  public static VerdictSingleResultFromListData createWithSingleColumn(List<String> header, List<Object> result) {
+    VerdictSingleResultFromListData singleResultFromListData = new VerdictSingleResultFromListData();
+    if (result == null) {
+      singleResultFromListData.result = Optional.absent();
+    } else {
+      List<List<Object>> rows = new ArrayList<>();
+      for (Object o:result) {
+        rows.add(Arrays.asList(o));
+      }
+      singleResultFromListData.fieldsName = header;
+      List<List<Object>>  copied = copyResult(rows);
+      singleResultFromListData.result = Optional.of(copied);
+    }
+    return singleResultFromListData;
   }
 }

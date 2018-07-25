@@ -29,7 +29,10 @@ import org.verdictdb.sqlreader.NonValidatingSQLParser;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+
+import static org.verdictdb.coordinator.VerdictSingleResultFromListData.createWithSingleColumn;
 
 /**
  * Stores the context for a single query execution. Includes both scrambling query and select query.
@@ -42,7 +45,7 @@ public class ExecutionContext {
 
   private final long serialNumber;
 
-  public enum QueryType {
+  private enum QueryType {
     select,
     scrambling,
     set_default_schema,
@@ -109,15 +112,20 @@ public class ExecutionContext {
 
 
   private VerdictResultStream generateShowSchemaResultFromQuery() throws VerdictDBException {
-    VerdictSingleResultFromListData result = new VerdictSingleResultFromListData(QueryType.show_databases, (List) context.getConnection().getSchemas());
+    List<String> header = Arrays.asList("schema");
+    List<String> rows = context.getConnection().getSchemas();
+    VerdictSingleResultFromListData result =
+        createWithSingleColumn(header, (List)rows);
     return new VerdictResultStreamFromSingleResult(result);
   }
 
   private VerdictResultStream generateShowTablesResultFromQuery(String query) throws VerdictDBException {
     VerdictSQLParser parser = NonValidatingSQLParser.parserOf(query);
     String schema = parser.show_tables_statement().schema.getText();
-    VerdictSingleResultFromListData result = new VerdictSingleResultFromListData(
-        QueryType.show_tables, (List) context.getConnection().getTables(schema));
+    List<String> header = Arrays.asList("table");
+    List<String> rows = context.getConnection().getTables(schema);
+    VerdictSingleResultFromListData result =
+        createWithSingleColumn(header, (List)rows);
     return new VerdictResultStreamFromSingleResult(result);
   }
 
@@ -145,8 +153,9 @@ public class ExecutionContext {
     for (Pair<String, String> pair : columnInfo) {
       newColumnInfo.add(Arrays.asList(pair.getLeft(), pair.getRight()));
     }
+    List<String> header = Arrays.asList("column name", "column type");
     VerdictSingleResultFromListData result = new VerdictSingleResultFromListData(
-        QueryType.describe_table, (List) newColumnInfo);
+        header, (List)newColumnInfo);
     return new VerdictResultStreamFromSingleResult(result);
   }
 
