@@ -7,7 +7,7 @@
     <packaging>jar</packaging>
     <version>0.5.2-SNAPSHOT</version>
     <name>${project.groupId}:${project.artifactId}</name>
-    <description>Platform-independent data analytics system for interactive-speed analytics</description>
+    <description>Platform-independent, interactive-speed data analytics system</description>
     <url>http://verdictdb.org</url>
 
     <licenses>

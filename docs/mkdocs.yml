@@ -7,11 +7,12 @@ copyright: 'Copyright &copy; 2018 The University of Michigan'
 pages:
   - Home: index.md
   - Getting Started:
-    - Quickstart Guide: getting_started/quickstart.md
+    - Quickstart: getting_started/quickstart.md
     - Installation: getting_started/install.md
-    - How to Connect: getting_started/connection.md
-    - Set up TPC-H tables in MySQL: getting_started/setupTpchMySQL.md
-  - Supported Queries: supported_queries.md
+    - Connecting to Data Sources: getting_started/connection.md
+    - VerdictDB Queries: getting_started/supported_queries.md
+  - Tutorial:
+    - Setup TPC-H Data: tutorial/tpch.md
   - How it works:
     - Architecture: how_it_works/architecture.md
 
@@ -27,3 +28,36 @@ theme:
   favicon: 'images/verdictdb-favicon.png'
 repo_name: 'mozafari/verdictdb'
 repo_url: 'https://github.com/mozafari/verdictdb'
+font:
+    text: Open Sans
+    code: Roboto Mono
+extra_css:
+  - 'stylesheets/extra.css'
+
+# Extensions
+markdown_extensions:
+  - markdown.extensions.admonition
+  - markdown.extensions.codehilite:
+      guess_lang: false
+  - markdown.extensions.def_list
+  - markdown.extensions.footnotes
+  - markdown.extensions.meta
+  - markdown.extensions.toc:
+      permalink: true
+  - pymdownx.arithmatex
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.critic
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_generator: !!python/name:pymdownx.emoji.to_svg
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.magiclink
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
