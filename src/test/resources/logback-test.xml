@@ -7,7 +7,7 @@
         </layout>
     </appender>
     <statusListener class="ch.qos.logback.core.status.OnConsoleStatusListener" />
-    <root level="debug">
+    <root level="warn">
         <appender-ref ref="STDOUT"/>
     </root>
 </configuration>
