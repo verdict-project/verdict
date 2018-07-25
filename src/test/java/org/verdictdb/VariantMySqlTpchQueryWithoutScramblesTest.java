@@ -1,14 +1,7 @@
 package org.verdictdb;
 
-import static org.junit.Assert.assertEquals;
-
-import java.io.File;
-import java.io.IOException;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-
+import com.google.common.base.Charsets;
+import com.google.common.io.Files;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.BeforeClass;
@@ -17,7 +10,6 @@ import org.verdictdb.commons.DatabaseConnectionHelpers;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.coordinator.VerdictSingleResult;
-import org.verdictdb.coordinator.VerdictSingleResultFromDbmsQueryResult;
 import org.verdictdb.core.sqlobject.AbstractRelation;
 import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.exception.VerdictDBException;
@@ -26,10 +18,16 @@ import org.verdictdb.sqlreader.RelationStandardizer;
 import org.verdictdb.sqlsyntax.MysqlSyntax;
 import org.verdictdb.sqlwriter.SelectQueryToSql;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
+import java.io.File;
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 
-public class VariantMySqlTpchQueryTestWithoutScrambles {
+import static org.junit.Assert.assertEquals;
+
+public class VariantMySqlTpchQueryWithoutScramblesTest {
 
   static Connection conn;
 
@@ -58,15 +56,17 @@ public class VariantMySqlTpchQueryTestWithoutScrambles {
   public static void setupMySqlDatabase() throws SQLException, VerdictDBException {
     String mysqlConnectionString =
         String.format("jdbc:mysql://%s?autoReconnect=true&useSSL=false", MYSQL_HOST);
-    conn = DatabaseConnectionHelpers.setupMySql(
-        mysqlConnectionString, MYSQL_UESR, MYSQL_PASSWORD, MYSQL_DATABASE);
+    conn =
+        DatabaseConnectionHelpers.setupMySql(
+            mysqlConnectionString, MYSQL_UESR, MYSQL_PASSWORD, MYSQL_DATABASE);
     dbmsConnection = JdbcConnection.create(conn);
     dbmsConnection.setDefaultSchema(MYSQL_DATABASE);
     stmt = conn.createStatement();
     stmt.execute("create schema if not exists `verdictdb_temp`");
   }
 
-  public Pair<VerdictSingleResult, ResultSet> getAnswer(int queryNum) throws IOException, VerdictDBException, SQLException {
+  public Pair<VerdictSingleResult, ResultSet> getAnswer(int queryNum)
+      throws IOException, VerdictDBException, SQLException {
     ClassLoader classLoader = getClass().getClassLoader();
     String filename = "companya/mysql_queries/tpchMySqlQuery" + queryNum + ".sql";
     File queryFile = new File(classLoader.getResource(filename).getFile());
@@ -331,11 +331,11 @@ public class VariantMySqlTpchQueryTestWithoutScrambles {
       result.next();
       assertEquals(rs.getInt(1), result.getInt(0));
       assertEquals(rs.getString(2), result.getString(1));
-      assertEquals(rs.getDouble(3), result.getDouble(2),1e-5);
+      assertEquals(rs.getDouble(3), result.getDouble(2), 1e-5);
       assertEquals(rs.getString(4), result.getString(3));
       assertEquals(rs.getInt(5), result.getInt(4));
-      assertEquals(rs.getDouble(6), result.getDouble(5),1e-5);
-      assertEquals(rs.getDouble(7), result.getDouble(6),1e-5);
+      assertEquals(rs.getDouble(6), result.getDouble(5), 1e-5);
+      assertEquals(rs.getDouble(7), result.getDouble(6), 1e-5);
     }
   }
 
@@ -346,7 +346,7 @@ public class VariantMySqlTpchQueryTestWithoutScrambles {
     VerdictSingleResult result = answerPair.getLeft();
     while (rs.next()) {
       result.next();
-      assertEquals(rs.getDouble(1), result.getDouble(0),1e-5);
+      assertEquals(rs.getDouble(1), result.getDouble(0), 1e-5);
     }
   }
 
@@ -387,6 +387,4 @@ public class VariantMySqlTpchQueryTestWithoutScrambles {
       assertEquals(rs.getDouble(3), result.getDouble(2), 1e-5);
     }
   }
-
-
 }

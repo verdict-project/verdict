@@ -20,7 +20,7 @@ import static org.junit.Assert.*;
 
 /** Created by Dong Young Yoon on 7/18/18. */
 @RunWith(Parameterized.class)
-public class JdbcQueryDataTypeTestForAllDatabases {
+public class JdbcQueryDataTypeForAllDatabasesTest {
 
   private static Map<String, Connection> connMap = new HashMap<>();
 
@@ -34,7 +34,7 @@ public class JdbcQueryDataTypeTestForAllDatabases {
 
   private static final String[] targetDatabases = {"mysql", "impala", "redshift", "postgresql"};
 
-  public JdbcQueryDataTypeTestForAllDatabases(String database) {
+  public JdbcQueryDataTypeForAllDatabasesTest(String database) {
     this.database = database;
   }
 

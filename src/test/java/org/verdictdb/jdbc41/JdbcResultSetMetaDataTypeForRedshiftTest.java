@@ -12,7 +12,7 @@ import java.sql.*;
 
 import static org.junit.Assert.*;
 
-public class JdbcResultSetMetaDataTestForRedshift {
+public class JdbcResultSetMetaDataTypeForRedshiftTest {
 
   static Connection conn;
 
@@ -129,7 +129,8 @@ public class JdbcResultSetMetaDataTestForRedshift {
     Timestamp test2 = expectedRs.getTimestamp(29);
     String testStr = expectedRs.getString(20);
     String sql = String.format("select * from %s.%s", REDSHIFT_SCHEMA, TABLE_NAME);
-    VerdictSingleResultFromDbmsQueryResult verdictResult = new VerdictSingleResultFromDbmsQueryResult(dbmsConn.execute(sql));
+    VerdictSingleResultFromDbmsQueryResult verdictResult =
+        new VerdictSingleResultFromDbmsQueryResult(dbmsConn.execute(sql));
     ResultSet ourResult = new VerdictResultSet(verdictResult);
     ResultSetMetaData ourMetaData = ourResult.getMetaData();
     assertEquals(29, ourMetaData.getColumnCount());

@@ -1,14 +1,5 @@
 package org.verdictdb.jdbc41;
 
-import static org.junit.Assert.assertEquals;
-
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.List;
-
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.AfterClass;
@@ -18,12 +9,13 @@ import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.exception.VerdictDBDbmsException;
 
-/**
- *
- * @author Yongjoo Park
- *
- */
-public class JdbcMetaDataTestForImpala {
+import java.sql.*;
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
+
+/** @author Yongjoo Park */
+public class JdbcMetaDataForImpalaTest {
 
   static Connection conn;
 
@@ -52,28 +44,28 @@ public class JdbcMetaDataTestForImpala {
 
   @BeforeClass
   public static void setupImpalaDatabase() throws SQLException, VerdictDBDbmsException {
-    String connectionString =
-        String.format("jdbc:impala://%s/%s", IMPALA_HOST, IMPALA_DATABASE);
+    String connectionString = String.format("jdbc:impala://%s/%s", IMPALA_HOST, IMPALA_DATABASE);
     conn = DriverManager.getConnection(connectionString, IMPALA_UESR, IMPALA_PASSWORD);
     dbmsConn = JdbcConnection.create(conn);
 
     stmt = conn.createStatement();
     stmt.execute(String.format("DROP SCHEMA IF EXISTS `%s` CASCADE", IMPALA_DATABASE));
     // stmt.execute(String.format("DROP TABLE IF EXISTS `%s`.`%s`", IMPALA_DATABASE, TABLE_NAME));
-    stmt.execute(String.format(
-        "CREATE TABLE `%s`.`%s` ("
-            + "tinyintCol    TINYINT, "
-            + "boolCol       BOOLEAN, "
-            + "smallintCol   SMALLINT, "
-            + "intCol        INT, "
-            + "bigintCol     BIGINT, "
-            + "decimalCol    DECIMAL, "
-            + "floatCol      FLOAT, "
-            + "doubleCol     DOUBLE, "
-            + "timestampCol  TIMESTAMP, "
-            + "charCol       CHAR(4), "
-            + "stringCol     STRING)",
-        IMPALA_DATABASE, TABLE_NAME));
+    stmt.execute(
+        String.format(
+            "CREATE TABLE `%s`.`%s` ("
+                + "tinyintCol    TINYINT, "
+                + "boolCol       BOOLEAN, "
+                + "smallintCol   SMALLINT, "
+                + "intCol        INT, "
+                + "bigintCol     BIGINT, "
+                + "decimalCol    DECIMAL, "
+                + "floatCol      FLOAT, "
+                + "doubleCol     DOUBLE, "
+                + "timestampCol  TIMESTAMP, "
+                + "charCol       CHAR(4), "
+                + "stringCol     STRING)",
+            IMPALA_DATABASE, TABLE_NAME));
   }
 
   @AfterClass
@@ -101,5 +93,4 @@ public class JdbcMetaDataTestForImpala {
     // column type name is lower case and includes parentheses for mysql
     assertEquals("char(4)", columns.get(9).getRight());
   }
-
 }

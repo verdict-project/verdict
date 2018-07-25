@@ -1,14 +1,5 @@
 package org.verdictdb.jdbc41;
 
-import static org.junit.Assert.assertEquals;
-
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.List;
-
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -16,7 +7,12 @@ import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.exception.VerdictDBDbmsException;
 
-public class JdbcMetaDataTestForMySql {
+import java.sql.*;
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
+
+public class JdbcMetaDataForMySqlTest {
 
   static Connection conn;
 
@@ -46,48 +42,50 @@ public class JdbcMetaDataTestForMySql {
   @BeforeClass
   public static void setupMySqlDatabase() throws SQLException, VerdictDBDbmsException {
     String mysqlConnectionString =
-        String.format("jdbc:mysql://%s/%s?autoReconnect=true&useSSL=false", MYSQL_HOST, MYSQL_DATABASE);
+        String.format(
+            "jdbc:mysql://%s/%s?autoReconnect=true&useSSL=false", MYSQL_HOST, MYSQL_DATABASE);
     conn = DriverManager.getConnection(mysqlConnectionString, MYSQL_UESR, MYSQL_PASSWORD);
     dbmsConn = JdbcConnection.create(conn);
 
     stmt = conn.createStatement();
     stmt.execute(String.format("DROP TABLE IF EXISTS %s", TABLE_NAME));
-    stmt.execute(String.format(
-        "CREATE TABLE %s ("
-        + "bitCol        BIT(1), "
-        + "tinyintCol    TINYINT(2), "
-        + "boolCol       BOOL, "
-        + "smallintCol   SMALLINT(3), "
-        + "mediumintCol  MEDIUMINT(4), "
-        + "intCol        INT(4), "
-        + "integerCol    INTEGER(4), "
-        + "bigintCol     BIGINT(8), "
-        + "decimalCol    DECIMAL(4,2), "
-        + "decCol        DEC(4,2), "
-        + "floatCol      FLOAT(4,2), "
-        + "doubleCol     DOUBLE(8,2), "
-        + "doubleprecisionCol DOUBLE PRECISION(8,2), "
-        + "dateCol       DATE, "
-        + "datetimeCol   DATETIME, "
-        + "timestampCol  TIMESTAMP, "
-        + "timeCol       TIME, "
-        + "yearCol       YEAR(2), "
-        + "yearCol2      YEAR(4), "
-        + "charCol       CHAR(4), "
-        + "varcharCol    VARCHAR(4), "
-        + "binaryCol     BINARY(4), "
-        + "varbinaryCol  VARBINARY(4), "
-        + "tinyblobCol   TINYBLOB, "
-        + "tinytextCol   TINYTEXT, "
-        + "blobCol       BLOB(4), "
-        + "textCol       TEXT(100), "
-        + "medimumblobCol MEDIUMBLOB, "
-        + "medimumtextCol MEDIUMTEXT, "
-        + "longblobCol   LONGBLOB, "
-        + "longtextCol   LONGTEXT, "
-        + "enumCol       ENUM('1', '2'), "
-        + "setCol        SET('1', '2'))"
-        , TABLE_NAME));
+    stmt.execute(
+        String.format(
+            "CREATE TABLE %s ("
+                + "bitCol        BIT(1), "
+                + "tinyintCol    TINYINT(2), "
+                + "boolCol       BOOL, "
+                + "smallintCol   SMALLINT(3), "
+                + "mediumintCol  MEDIUMINT(4), "
+                + "intCol        INT(4), "
+                + "integerCol    INTEGER(4), "
+                + "bigintCol     BIGINT(8), "
+                + "decimalCol    DECIMAL(4,2), "
+                + "decCol        DEC(4,2), "
+                + "floatCol      FLOAT(4,2), "
+                + "doubleCol     DOUBLE(8,2), "
+                + "doubleprecisionCol DOUBLE PRECISION(8,2), "
+                + "dateCol       DATE, "
+                + "datetimeCol   DATETIME, "
+                + "timestampCol  TIMESTAMP, "
+                + "timeCol       TIME, "
+                + "yearCol       YEAR(2), "
+                + "yearCol2      YEAR(4), "
+                + "charCol       CHAR(4), "
+                + "varcharCol    VARCHAR(4), "
+                + "binaryCol     BINARY(4), "
+                + "varbinaryCol  VARBINARY(4), "
+                + "tinyblobCol   TINYBLOB, "
+                + "tinytextCol   TINYTEXT, "
+                + "blobCol       BLOB(4), "
+                + "textCol       TEXT(100), "
+                + "medimumblobCol MEDIUMBLOB, "
+                + "medimumtextCol MEDIUMTEXT, "
+                + "longblobCol   LONGBLOB, "
+                + "longtextCol   LONGTEXT, "
+                + "enumCol       ENUM('1', '2'), "
+                + "setCol        SET('1', '2'))",
+            TABLE_NAME));
   }
 
   public static void tearDown() throws VerdictDBDbmsException {
@@ -113,5 +111,4 @@ public class JdbcMetaDataTestForMySql {
     // column type name is lower case and includes parentheses for mysql
     assertEquals("bit(1)", columns.get(0).getRight());
   }
-
 }
