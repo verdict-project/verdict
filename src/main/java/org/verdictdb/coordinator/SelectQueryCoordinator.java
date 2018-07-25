@@ -99,7 +99,7 @@ public class SelectQueryCoordinator {
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     SelectQuery relation = (SelectQuery) sqlToRelation.toRelation(query);
     MetaDataProvider metaData = createMetaDataFor(relation);
-    RelationStandardizer gen = new RelationStandardizer(metaData);
+    RelationStandardizer gen = new RelationStandardizer(metaData, conn.getSyntax());
     relation = gen.standardize(relation);
     return relation;
   }

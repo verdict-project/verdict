@@ -159,7 +159,7 @@ public class HavingStandardizationTest {
             + "where "
             + "(vt1.`ps_suppkey` = vt2.`s_suppkey`) "
             + "and (vt2.`s_nationkey` = vt3.`n_nationkey`) "
-            + "group by `groupkey` "
+            + "group by vt1.`ps_partkey` * 2 "
             + "having `value` > 10 "
             + "order by `value` desc";
     assertEquals(expected, actual);

@@ -21,12 +21,16 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.connection.MetaDataProvider;
 import org.verdictdb.core.sqlobject.*;
 import org.verdictdb.exception.VerdictDBDbmsException;
+import org.verdictdb.sqlsyntax.H2Syntax;
+import org.verdictdb.sqlsyntax.SqlSyntax;
 
 import java.util.*;
 
 public class RelationStandardizer {
 
   private MetaDataProvider meta;
+
+  private SqlSyntax syntax;
 
   private static long itemID = 1;
 
@@ -62,6 +66,20 @@ public class RelationStandardizer {
 
   public RelationStandardizer(MetaDataProvider meta) {
     this.meta = meta;
+  }
+
+  public RelationStandardizer(MetaDataProvider meta, SqlSyntax syntax) {
+    this.meta = meta;
+    this.syntax = syntax;
+  }
+
+  /**
+   * (optional) set database syntax to enable database-specific standardization.
+   *
+   * @param syntax
+   */
+  public void setSyntax(SqlSyntax syntax) {
+    this.syntax = syntax;
   }
 
   private BaseColumn replaceBaseColumn(BaseColumn col) {
@@ -178,7 +196,7 @@ public class RelationStandardizer {
           searchList.add(col);
         }
       } else if (cond instanceof SubqueryColumn) {
-        RelationStandardizer g = new RelationStandardizer(meta);
+        RelationStandardizer g = new RelationStandardizer(meta, syntax);
         g.oldTableAliasMap.putAll(oldTableAliasMap);
         g.setColNameAndColAlias(colNameAndColAlias);
         g.setColumnOpAliasMap(columnOpAliasMap);
@@ -194,7 +212,7 @@ public class RelationStandardizer {
   private AliasedColumn matchAliasFromSelectList(List<SelectItem> selectItems, BaseColumn col) {
     for (SelectItem item : selectItems) {
       if (item instanceof AliasedColumn) {
-        AliasedColumn aliasedColumn =(AliasedColumn) item;
+        AliasedColumn aliasedColumn = (AliasedColumn) item;
         if (aliasedColumn.getAliasName().equals(col)) {
           return aliasedColumn;
         }
@@ -202,7 +220,6 @@ public class RelationStandardizer {
     }
     return null;
   }
-
 
   private List<GroupingAttribute> replaceGroupby(
       List<SelectItem> selectItems, List<GroupingAttribute> groupingAttributeList)
@@ -213,7 +230,7 @@ public class RelationStandardizer {
   private List<GroupingAttribute> replaceGroupby(
       List<SelectItem> selectItems,
       List<GroupingAttribute> groupingAttributeList,
-      boolean isforOrderBy)
+      boolean isForOrderBy)
       throws VerdictDBDbmsException {
     List<GroupingAttribute> newGroupby = new ArrayList<>();
     for (GroupingAttribute g : groupingAttributeList) {
@@ -223,9 +240,10 @@ public class RelationStandardizer {
 
         // Check for aliases
         AliasedColumn aliasMatch = matchAliasFromSelectList(selectItems, col);
-        if (aliasMatch != null) {
+        if (aliasMatch != null && !isForOrderBy) {
           UnnamedColumn column = aliasMatch.getColumn();
-          // Unless it is a subquery, we use the actual operation in the group-by.
+          // Unless it is a subquery (I think it would not be possible, but just in case),
+          // we use the actual operation in the group-by.
           if (column instanceof SubqueryColumn) {
             newGroupby.add(new AliasReference(aliasMatch.getAliasName()));
           } else {
@@ -253,7 +271,8 @@ public class RelationStandardizer {
       } else if (g instanceof ColumnOp) {
         // If it is a column-op, we substitute its table reference to our alias unless
         // this method is called to get order-by columns. In such case, we simply use alias.
-        if (isforOrderBy) {
+        // Also, H2 does not support ColumnOp in group-by.
+        if (isForOrderBy || (syntax instanceof H2Syntax)) {
           ColumnOp replaced = (ColumnOp) replaceFilter((ColumnOp) g);
           if (columnOpAliasMap.containsKey(replaced)) {
             newGroupby.add(new AliasReference(columnOpAliasMap.get(replaced)));
@@ -275,7 +294,7 @@ public class RelationStandardizer {
         int index = Integer.valueOf(value);
         AliasedColumn col = (AliasedColumn) selectItems.get(index - 1);
         UnnamedColumn column = col.getColumn();
-        if (column instanceof BaseColumn && !isforOrderBy) {
+        if (column instanceof BaseColumn && !isForOrderBy) {
           BaseColumn baseCol = (BaseColumn) column;
           newGroupby.add(
               new AliasReference(baseCol.getTableSourceAlias(), baseCol.getColumnName()));
@@ -297,6 +316,10 @@ public class RelationStandardizer {
       BaseColumn baseCol = (BaseColumn) c;
       String newRef = oldTableAliasMap.get(baseCol.getTableSourceAlias());
       if (newRef != null) baseCol.setTableSourceAlias(newRef);
+      else {
+        newRef = colNameAndTableAlias.get(baseCol.getColumnName());
+        if (newRef != null) baseCol.setTableSourceAlias(newRef);
+      }
     }
   }
 
@@ -363,7 +386,7 @@ public class RelationStandardizer {
       return new ImmutablePair<>(joinColName, table);
     } else if (table instanceof SelectQuery) {
       List<String> colName = new ArrayList<>();
-      RelationStandardizer g = new RelationStandardizer(meta);
+      RelationStandardizer g = new RelationStandardizer(meta, syntax);
       g.oldTableAliasMap.putAll(oldTableAliasMap);
       g.setTableInfoAndAlias(tableInfoAndAlias);
       g.setColNameAndTableAlias(colNameAndTableAlias);
