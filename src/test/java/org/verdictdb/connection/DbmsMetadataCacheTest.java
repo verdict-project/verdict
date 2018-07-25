@@ -32,7 +32,7 @@ public class DbmsMetadataCacheTest {
 
   private static final String MYSQL_HOST;
 
-  private static final String MYSQL_DATABASE = "test";
+  private static final String MYSQL_DATABASE = "dbmsmeta_test";
 
   private static final String MYSQL_UESR;
 

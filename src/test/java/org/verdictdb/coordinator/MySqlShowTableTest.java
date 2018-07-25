@@ -1,6 +1,5 @@
 package org.verdictdb.coordinator;
 
-import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -9,7 +8,6 @@ import org.verdictdb.commons.DatabaseConnectionHelpers;
 import org.verdictdb.connection.CachedDbmsConnection;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.JdbcConnection;
-import org.verdictdb.core.resulthandler.ExecutionResultReader;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sqlsyntax.MysqlSyntax;
@@ -29,7 +27,7 @@ public class MySqlShowTableTest {
 
   private static final String MYSQL_HOST;
 
-  private static final String MYSQL_DATABASE = "test";
+  private static final String MYSQL_DATABASE = "test_show_query";
 
   private static final String MYSQL_UESR;
 

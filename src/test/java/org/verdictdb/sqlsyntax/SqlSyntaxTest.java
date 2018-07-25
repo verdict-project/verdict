@@ -28,7 +28,7 @@ public class SqlSyntaxTest {
   @Test
   public void testMySqlSyntaxInference() throws SQLException, VerdictDBDbmsException {
     String MYSQL_HOST = null;
-    final String MYSQL_DATABASE = "test";
+    final String MYSQL_DATABASE = "syntax_test";
     final String MYSQL_UESR = "root";
     final String MYSQL_PASSWORD = "";
     String env = System.getenv("BUILD_ENV");

@@ -35,7 +35,7 @@ public class JdbcConnectionTest {
 
   private static final String MYSQL_HOST;
 
-  private static final String MYSQL_DATABASE = "test";
+  private static final String MYSQL_DATABASE = "jdbc_connection_test";
 
   private static final String MYSQL_UESR;
 
