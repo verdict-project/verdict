@@ -17,6 +17,7 @@
 package org.verdictdb.jdbc41;
 
 import org.verdictdb.coordinator.VerdictSingleResult;
+import org.verdictdb.coordinator.VerdictSingleResultFromDbmsQueryResult;
 
 import java.io.InputStream;
 import java.io.Reader;

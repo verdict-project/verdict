@@ -2,34 +2,47 @@ package org.verdictdb.coordinator;
 
 import com.google.common.base.Optional;
 import com.rits.cloning.Cloner;
+import org.verdictdb.commons.AttributeValueRetrievalHelper;
 import org.verdictdb.connection.DataTypeConverter;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.connection.DbmsQueryResultMetaData;
 
 import java.io.*;
 import java.sql.Types;
+import java.util.ArrayList;
 import java.util.List;
 
-public class VerdictSingleResultFromListData extends VerdictSingleResult {
+public class VerdictSingleResultFromListData
+    extends AttributeValueRetrievalHelper implements VerdictSingleResult {
 
   private Optional<List<Object>> result;
+
+  List<String> fieldsName = new ArrayList<>();
 
   // used to support wasnull()
   private Object lastValueRead;
 
   int cursor = -1;
 
-  public VerdictSingleResultFromListData(List<Object> result) {
+  public VerdictSingleResultFromListData(ExecutionContext.QueryType type, List<Object> result) {
     super();
     if (result == null) {
       this.result = Optional.absent();
     } else {
+      if (type.equals(ExecutionContext.QueryType.show_databases)) {
+        fieldsName.add("schema name");
+      } else if (type.equals(ExecutionContext.QueryType.show_tables)) {
+        fieldsName.add("table name");
+      } else if (type.equals(ExecutionContext.QueryType.describe_table)) {
+        fieldsName.add("column name");
+        fieldsName.add("column type");
+      }
       List<Object> copied = copyResult(result);
       this.result = Optional.of(copied);
     }
   }
 
-  public VerdictSingleResultFromListData(List<Object> result, boolean asIs) {
+  public VerdictSingleResultFromListData(ExecutionContext.QueryType type, List<Object> result, boolean asIs) {
     // If result contains objects that cannot be serialized (e.g., BLOB, CLOB in H2),
     // it is just copied as-is (i.e., shallow copy) as opposed to deep copy.
     super();
@@ -39,6 +52,14 @@ public class VerdictSingleResultFromListData extends VerdictSingleResult {
       if (asIs) {
         this.result = Optional.of(result);
       } else {
+        if (type.equals(ExecutionContext.QueryType.show_databases)) {
+          fieldsName.add("schema name");
+        } else if (type.equals(ExecutionContext.QueryType.show_tables)) {
+          fieldsName.add("table name");
+        } else if (type.equals(ExecutionContext.QueryType.describe_table)) {
+          fieldsName.add("column name");
+          fieldsName.add("column type");
+        }
         List<Object> copied = copyResult(result);
         this.result = Optional.of(copied);
       }
@@ -46,7 +67,7 @@ public class VerdictSingleResultFromListData extends VerdictSingleResult {
   }
 
   public static VerdictSingleResultFromListData empty() {
-    return new VerdictSingleResultFromListData(null);
+    return new VerdictSingleResultFromListData(null, null);
   }
 
   public boolean isEmpty() {
@@ -78,14 +99,10 @@ public class VerdictSingleResultFromListData extends VerdictSingleResult {
 
   @Override
   public String getColumnName(int index) {
-    if (result.isPresent() == false || result.get().isEmpty()) {
+    if (result.isPresent() == false) {
       throw new RuntimeException("An empty result is accessed.");
     } else {
-      Object o = result.get().get(0);
-      if (o instanceof String) return "columnLabels";
-      else if (o instanceof Integer) return "columnTypes";
-      else if (o instanceof List) return "values";
-      else throw new RuntimeException("Unexpected columns");
+      return fieldsName.get(index);
     }
   }
 
@@ -94,9 +111,15 @@ public class VerdictSingleResultFromListData extends VerdictSingleResult {
       throw new RuntimeException("An empty result is accessed.");
     } else {
       Object o = result.get().get(0);
-      if (o instanceof String) return DataTypeConverter.typeInt("varchar");
-      else if (o instanceof Integer) return DataTypeConverter.typeInt("int");
-      else if (o instanceof List) return Types.JAVA_OBJECT;
+      if (o instanceof String) {
+        return DataTypeConverter.typeInt("varchar");
+      }
+      else if (o instanceof Integer) {
+        return DataTypeConverter.typeInt("int");
+      }
+      else if (o instanceof List) {
+        return Types.JAVA_OBJECT;
+      }
       else throw new RuntimeException("Unexpected columns");
     }
   }

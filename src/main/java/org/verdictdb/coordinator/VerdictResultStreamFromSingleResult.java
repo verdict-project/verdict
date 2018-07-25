@@ -5,19 +5,28 @@ import org.verdictdb.core.resulthandler.ExecutionResultReader;
 
 import java.util.Iterator;
 
-public class VerdictResultStreamFromSingleResult extends VerdictResultStream {
+public class VerdictResultStreamFromSingleResult implements VerdictResultStream {
 
   VerdictSingleResult result;
 
   boolean nextHaveCalled = false;
+
+  public VerdictSingleResult getResult() {
+    return result;
+  }
+
+  public void setResult(VerdictSingleResult result) {
+    this.result = result;
+  }
 
   public VerdictResultStreamFromSingleResult(VerdictSingleResult result) {
     super();
     this.result = result;
   }
 
-  public VerdictResultStreamFromSingleResult create(VerdictSingleResult singleResult) {
-    return new VerdictResultStreamFromSingleResult(singleResult);
+  @Override
+  public VerdictResultStream create(VerdictSingleResult singleResult) {
+    return new VerdictResultStreamFromSingleResult(result);
   }
 
   @Override
@@ -41,6 +50,7 @@ public class VerdictResultStreamFromSingleResult extends VerdictResultStream {
 
   }
 
+  @Override
   public void close() {
 
   }

@@ -42,7 +42,7 @@ public class ExecutionContext {
 
   private final long serialNumber;
 
-  private enum QueryType {
+  public enum QueryType {
     select,
     scrambling,
     set_default_schema,
@@ -53,7 +53,7 @@ public class ExecutionContext {
   }
 
   /**
-   * @param context Parent context
+   * @param context   Parent context
    * @param contextId
    */
   public ExecutionContext(VerdictContext context, long serialNumber) {
@@ -94,11 +94,14 @@ public class ExecutionContext {
       updateDefaultSchemaFromQuery(query);
       return null;
     } else if (queryType.equals(QueryType.show_databases)) {
-      return generateShowSchemaResultFromQuery();
+      VerdictResultStream stream = generateShowSchemaResultFromQuery();
+      return stream;
     } else if (queryType.equals(QueryType.show_tables)) {
-      return generateShowTablesResultFromQuery(query);
+      VerdictResultStream stream = generateShowTablesResultFromQuery(query);
+      return stream;
     } else if (queryType.equals(QueryType.describe_table)) {
-      return generateDesribeTableResultFromQuery(query);
+      VerdictResultStream stream = generateDesribeTableResultFromQuery(query);
+      return stream;
     } else {
       throw new VerdictDBTypeException("Unexpected type of query: " + query);
     }
@@ -106,7 +109,7 @@ public class ExecutionContext {
 
 
   private VerdictResultStream generateShowSchemaResultFromQuery() throws VerdictDBException {
-    VerdictSingleResultFromListData result = new VerdictSingleResultFromListData((List)context.getConnection().getSchemas());
+    VerdictSingleResultFromListData result = new VerdictSingleResultFromListData(QueryType.show_databases, (List) context.getConnection().getSchemas());
     return new VerdictResultStreamFromSingleResult(result);
   }
 
@@ -114,13 +117,37 @@ public class ExecutionContext {
     VerdictSQLParser parser = NonValidatingSQLParser.parserOf(query);
     String schema = parser.show_tables_statement().schema.getText();
     VerdictSingleResultFromListData result = new VerdictSingleResultFromListData(
-        (List)context.getConnection().getTables(schema));
+        QueryType.show_tables, (List) context.getConnection().getTables(schema));
     return new VerdictResultStreamFromSingleResult(result);
   }
 
   private VerdictResultStream generateDesribeTableResultFromQuery(String query) throws VerdictDBException {
-    DbmsQueryResult queryResult = context.getConnection().execute(query);
-    return new VerdictResultStreamFromSingleResult(new VerdictSingleResultFromDbmsQueryResult(queryResult));
+    VerdictSQLParser parser = NonValidatingSQLParser.parserOf(query);
+    VerdictSQLParserBaseVisitor<Pair<String, String>> visitor = new VerdictSQLParserBaseVisitor<Pair<String, String>>() {
+      @Override
+      public Pair<String, String> visitDescribe_table_statement(VerdictSQLParser.Describe_table_statementContext ctx) {
+        String table = ctx.table.table.getText();
+        String schema = ctx.table.schema.getText();
+        if (schema == null) {
+          schema = context.getConnection().getDefaultSchema();
+        }
+        return new ImmutablePair<>(schema, table);
+      }
+    };
+    Pair<String, String> t = visitor.visit(parser.verdict_statement());
+    String table = t.getRight();
+    String schema = t.getLeft();
+    if (schema == null) {
+      schema = context.getConnection().getDefaultSchema();
+    }
+    List<Pair<String, String>> columnInfo = context.getConnection().getColumns(schema, table);
+    List<List<String>> newColumnInfo = new ArrayList<>();
+    for (Pair<String, String> pair : columnInfo) {
+      newColumnInfo.add(Arrays.asList(pair.getLeft(), pair.getRight()));
+    }
+    VerdictSingleResultFromListData result = new VerdictSingleResultFromListData(
+        QueryType.describe_table, (List) newColumnInfo);
+    return new VerdictResultStreamFromSingleResult(result);
   }
 
   private void updateDefaultSchemaFromQuery(String query) {
@@ -139,19 +166,19 @@ public class ExecutionContext {
 
   private QueryType identifyQueryType(String query) {
     VerdictSQLParser parser = NonValidatingSQLParser.parserOf(query);
-    
+
     VerdictSQLParserBaseVisitor<QueryType> visitor = new VerdictSQLParserBaseVisitor<QueryType>() {
-      
+
       @Override
       public QueryType visitSelect_statement(VerdictSQLParser.Select_statementContext ctx) {
         return QueryType.select;
       }
-      
+
       @Override
       public QueryType visitCreate_scramble_statement(VerdictSQLParser.Create_scramble_statementContext ctx) {
         return QueryType.scrambling;
       }
-      
+
       @Override
       public QueryType visitUse_statement(VerdictSQLParser.Use_statementContext ctx) {
         return QueryType.set_default_schema;
@@ -172,7 +199,7 @@ public class ExecutionContext {
         return QueryType.describe_table;
       }
     };
-    
+
     QueryType type = visitor.visit(parser.verdict_statement());
     return type;
   }

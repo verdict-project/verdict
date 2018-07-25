@@ -5,7 +5,7 @@ import org.verdictdb.core.resulthandler.ExecutionResultReader;
 
 import java.util.Iterator;
 
-public class VerdictResultStreamFromExecutionResultReader extends VerdictResultStream {
+public class VerdictResultStreamFromExecutionResultReader implements VerdictResultStream {
 
   ExecutionResultReader reader;
 
@@ -17,8 +17,8 @@ public class VerdictResultStreamFromExecutionResultReader extends VerdictResultS
     this.execContext = execContext;
   }
 
-  // TODO
-  public VerdictResultStreamFromExecutionResultReader create(VerdictSingleResult singleResult) {
+  @Override
+  public VerdictResultStream create(VerdictSingleResult singleResult) {
     return null;
   }
 
@@ -44,6 +44,7 @@ public class VerdictResultStreamFromExecutionResultReader extends VerdictResultS
 
   }
 
+  @Override
   public void close() {
 
   }

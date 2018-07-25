@@ -18,23 +18,22 @@ package org.verdictdb.coordinator;
 
 import java.util.Iterator;
 
-public abstract class VerdictResultStream
-    implements Iterable<VerdictSingleResult>, Iterator<VerdictSingleResult> {
+public interface VerdictResultStream
+    extends Iterable<VerdictSingleResult>, Iterator<VerdictSingleResult> {
 
-  // TODO
-  public abstract VerdictResultStream create(VerdictSingleResult singleResult);
-
-  @Override
-  public abstract boolean hasNext();
+  public VerdictResultStream create(VerdictSingleResult singleResult);
 
   @Override
-  public abstract VerdictSingleResult next();
+  public boolean hasNext();
 
   @Override
-  public abstract Iterator<VerdictSingleResult> iterator();
+  public VerdictSingleResult next();
 
   @Override
-  public abstract void remove();
+  public Iterator<VerdictSingleResult> iterator();
 
-  public abstract void close();
+  @Override
+  public void remove();
+
+  public void close();
 }
