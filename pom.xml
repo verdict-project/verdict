@@ -5,7 +5,7 @@
     <groupId>org.verdictdb</groupId>
     <artifactId>verdictdb-core</artifactId>
     <packaging>jar</packaging>
-    <version>0.5.1</version>
+    <version>0.5.2-SNAPSHOT</version>
     <name>${project.groupId}:${project.artifactId}</name>
     <description>Platform-independent data analytics system for interactive-speed analytics</description>
     <url>http://verdictdb.org</url>
@@ -64,8 +64,12 @@
     </developers>
 
     <properties>
+        <!-- one of the following three phases may be chosen -->
+        <testPhase>true</testPhase>
+        <packagePhase>false</packagePhase>
+        <deployPhase>false</deployPhase>
+
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <antlr4.visitor>true</antlr4.visitor>
         <antlr4.version>4.5.3</antlr4.version>
         <apache.commons.version>3.5</apache.commons.version>
         <junit.version>4.12</junit.version>
@@ -146,23 +150,6 @@
                         <format>xml</format>
                     </formats>
                     <check/>
-                </configuration>
-            </plugin>
-            <plugin>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <version>${maven.assembly-plugin.version}</version>
-                <executions>
-                    <execution>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <descriptorRefs>
-                        <descriptorRef>jar-with-dependencies</descriptorRef>
-                    </descriptorRefs>
                 </configuration>
             </plugin>
         </plugins>
@@ -352,12 +339,67 @@
             </build>
         </profile>
         <profile>
-            <id>testing-stage</id>
+            <id>assemble-dependencies</id>
+            <activation>
+                <property>
+                    <name>packagePhase</name>
+                    <value>true</value>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-assembly-plugin</artifactId>
+                        <version>${maven.assembly-plugin.version}</version>
+                        <executions>
+                            <execution>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>single</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <descriptorRefs>
+                                <descriptorRef>jar-with-dependencies</descriptorRef>
+                            </descriptorRefs>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <!-- <profile>
+            <id>assemble-no-dependencies</id>
+            <activation>
+                <property>
+                    <name>deployPhase</name>
+                    <value>true</value>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-assembly-plugin</artifactId>
+                        <version>${maven.assembly-plugin.version}</version>
+                        <executions>
+                            <execution>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>single</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile> -->
+        <profile>
+            <id>spark-compile</id>
             <activation>
                 <activeByDefault>true</activeByDefault>
                 <property>
-                    <name>verdictdb-packaging</name>
-                    <value>!true</value>
+                    <name>testPhase</name>
+                    <value>true</value>
                 </property>
             </activation>
             <dependencies>
@@ -404,11 +446,11 @@
             </dependencies>
         </profile>
         <profile>
-            <id>packaging-stage</id>
+            <id>spark-provided</id>
             <activation>
                 <property>
-                    <name>verdictdb-packaging</name>
-                    <value>true</value>
+                    <name>testPhase</name>
+                    <value>!true</value>
                 </property>
             </activation>
             <dependencies>
@@ -435,6 +477,12 @@
         </profile>
         <profile>
             <id>sonatype-release</id>
+            <activation>
+                <property>
+                    <name>deployPhase</name>
+                    <value>true</value>
+                </property>
+            </activation>
             <distributionManagement>
                 <snapshotRepository>
                     <id>ossrh</id>
