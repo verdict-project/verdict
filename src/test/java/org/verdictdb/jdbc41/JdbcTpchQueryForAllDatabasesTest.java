@@ -168,8 +168,8 @@ public class JdbcTpchQueryForAllDatabasesTest {
       }
 
       // Uncomment below lines to test a specific query
-      params.clear();
-      params.add(new Object[] {database, "22"});
+      //      params.clear();
+      //      params.add(new Object[] {database, "22"});
     }
     return params;
   }
