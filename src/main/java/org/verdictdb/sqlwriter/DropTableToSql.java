@@ -36,6 +36,9 @@ public class DropTableToSql {
 
     // table
     sql.append("drop table ");
+    if (query.isIfExists()) {
+      sql.append("if exists ");
+    }
     sql.append(quoteName(schemaName));
     sql.append(".");
     sql.append(quoteName(tableName));

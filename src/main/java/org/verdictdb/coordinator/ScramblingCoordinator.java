@@ -201,7 +201,8 @@ public class ScramblingCoordinator {
             blockCount,
             tierColumn,
             tierCount,
-            cumulativeDistribution);
+            cumulativeDistribution,
+            methodName);
 
     return meta;
   }

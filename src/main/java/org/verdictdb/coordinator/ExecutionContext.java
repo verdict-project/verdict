@@ -19,12 +19,14 @@ package org.verdictdb.coordinator;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.VerdictContext;
+import org.verdictdb.commons.VerdictDBLogger;
 import org.verdictdb.core.resulthandler.ExecutionResultReader;
 import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.core.sqlobject.BaseTable;
 import org.verdictdb.core.sqlobject.CreateScrambleQuery;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBTypeException;
+import org.verdictdb.metastore.ScrambleMetaStore;
 import org.verdictdb.parser.VerdictSQLParser;
 import org.verdictdb.parser.VerdictSQLParserBaseVisitor;
 import org.verdictdb.sqlreader.NonValidatingSQLParser;
@@ -46,6 +48,8 @@ public class ExecutionContext {
   private VerdictContext context;
 
   private final long serialNumber;
+
+  private static final VerdictDBLogger LOG = VerdictDBLogger.getLogger(ExecutionContext.class);
 
   private enum QueryType {
     select,
@@ -87,12 +91,14 @@ public class ExecutionContext {
     QueryType queryType = identifyQueryType(query);
 
     if (queryType.equals(QueryType.select)) {
+      LOG.debug("Query type: select");
       SelectQueryCoordinator coordinator =
           new SelectQueryCoordinator(context.getCopiedConnection());
       ExecutionResultReader reader = coordinator.process(query);
       VerdictResultStream stream = new VerdictResultStreamFromExecutionResultReader(reader, this);
       return stream;
     } else if (queryType.equals(QueryType.scrambling)) {
+      LOG.debug("Query type: scrambling");
       CreateScrambleQuery scrambleQuery = generateScrambleQuery(query);
       ScramblingCoordinator scrambler =
           new ScramblingCoordinator(context.getCopiedConnection(), scrambleQuery.getNewSchema());
@@ -111,17 +117,25 @@ public class ExecutionContext {
               scrambleQuery.getNewSchema(),
               scrambleQuery.getNewTable(),
               scrambleQuery.getMethod()); // dyoon: size is not used atm?
+
+      // Add metadata to metastore
+      ScrambleMetaStore metaStore = new ScrambleMetaStore(context.getConnection());
+      metaStore.addToStore(meta);
       return null;
     } else if (queryType.equals(QueryType.set_default_schema)) {
+      LOG.debug("Query type: set_default_schema");
       updateDefaultSchemaFromQuery(query);
       return null;
     } else if (queryType.equals(QueryType.show_databases)) {
+      LOG.debug("Query type: show_databases");
       VerdictResultStream stream = generateShowSchemaResultFromQuery();
       return stream;
     } else if (queryType.equals(QueryType.show_tables)) {
+      LOG.debug("Query type: show_tables");
       VerdictResultStream stream = generateShowTablesResultFromQuery(query);
       return stream;
     } else if (queryType.equals(QueryType.describe_table)) {
+      LOG.debug("Query type: describe_table");
       VerdictResultStream stream = generateDesribeTableResultFromQuery(query);
       return stream;
     } else {

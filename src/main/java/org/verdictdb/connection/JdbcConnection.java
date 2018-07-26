@@ -20,6 +20,7 @@ import com.google.common.collect.Sets;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
+import org.verdictdb.commons.VerdictDBLogger;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.sqlsyntax.*;
 
@@ -37,6 +38,8 @@ public class JdbcConnection implements DbmsConnection {
   JdbcQueryResult jrs = null;
 
   private boolean outputDebugMessage = false;
+
+  private VerdictDBLogger log;
 
   public static JdbcConnection create(Connection conn) throws VerdictDBDbmsException {
     String connectionString = null;
@@ -73,6 +76,7 @@ public class JdbcConnection implements DbmsConnection {
     }
 
     this.syntax = syntax;
+    this.log = VerdictDBLogger.getLogger(this.getClass());
   }
 
   @Override
@@ -86,9 +90,12 @@ public class JdbcConnection implements DbmsConnection {
 
   @Override
   public DbmsQueryResult execute(String sql) throws VerdictDBDbmsException {
+
     if (outputDebugMessage) {
       System.out.println("About to issue this batch query: " + sql);
     }
+
+    log.trace("Issue query: {}", sql);
 
     //    String[] sqls = sql.split(";(?=(?:[^\']*\'[^\']*\')*[^\']*$)", -1);
     String quoteChars = "'\"";

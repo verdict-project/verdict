@@ -17,6 +17,7 @@
 package org.verdictdb.metastore;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.verdictdb.commons.VerdictDBLogger;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.core.querying.CreateSchemaQuery;
@@ -24,6 +25,8 @@ import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
 import org.verdictdb.core.sqlobject.*;
 import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.sqlsyntax.ImpalaSyntax;
+import org.verdictdb.sqlsyntax.RedshiftSyntax;
 import org.verdictdb.sqlwriter.QueryToSql;
 
 import java.text.SimpleDateFormat;
@@ -35,17 +38,25 @@ public class ScrambleMetaStore extends VerdictMetaStore {
 
   private static final String DEFAULT_STORE_SCHEMA = "verdictdbmetadata";
 
-  private static final String ADDED_AT_COLUMN = "addedat";
+  private static final String ORIGINAL_SCHEMA_COLUMN = "original_schema";
 
-  private static final String SCHEMA_COLUMN = "schema";
+  private static final String ORIGINAL_TABLE_COLUMN = "original_table";
 
-  private static final String TABLE_COLUMN = "table";
+  private static final String SCRAMBLE_SCHEMA_COLUMN = "scramble_schema";
+
+  private static final String SCRAMBLE_TABLE_COLUMN = "scramble_table";
+
+  private static final String SCRAMBLE_METHOD_COLUMN = "scramble_method";
+
+  private static final String ADDED_AT_COLUMN = "added_at";
 
   private static final String DATA_COLUMN = "data";
 
   private DbmsConnection conn;
 
   private String storeSchema = DEFAULT_STORE_SCHEMA;
+
+  private static final VerdictDBLogger LOG = VerdictDBLogger.getLogger(ScrambleMetaStore.class);
 
   public ScrambleMetaStore(DbmsConnection conn) {
     this(conn, DEFAULT_STORE_SCHEMA);
@@ -68,12 +79,24 @@ public class ScrambleMetaStore extends VerdictMetaStore {
     return ADDED_AT_COLUMN;
   }
 
-  public static String getSchemaColumn() {
-    return SCHEMA_COLUMN;
+  public static String getOriginalSchemaColumn() {
+    return ORIGINAL_SCHEMA_COLUMN;
   }
 
-  public static String getTableColumn() {
-    return TABLE_COLUMN;
+  public static String getOriginalTableColumn() {
+    return ORIGINAL_TABLE_COLUMN;
+  }
+
+  public static String getScrambleSchemaColumn() {
+    return SCRAMBLE_SCHEMA_COLUMN;
+  }
+
+  public static String getScrambleTableColumn() {
+    return SCRAMBLE_TABLE_COLUMN;
+  }
+
+  public static String getScrambleMethodColumn() {
+    return SCRAMBLE_METHOD_COLUMN;
   }
 
   public static String getDataColumn() {
@@ -84,6 +107,13 @@ public class ScrambleMetaStore extends VerdictMetaStore {
     ScrambleMetaSet scrambleMetaSet = new ScrambleMetaSet();
     scrambleMetaSet.addScrambleMeta(scrambleMeta);
     addToStore(scrambleMetaSet);
+  }
+
+  public void remove() throws VerdictDBException {
+    DropTableQuery dropQuery = new DropTableQuery(storeSchema, getMetaStoreTableName());
+    dropQuery.setIfExists(true);
+    String sql = QueryToSql.convert(conn.getSyntax(), dropQuery);
+    conn.execute(sql);
   }
 
   /**
@@ -110,6 +140,7 @@ public class ScrambleMetaStore extends VerdictMetaStore {
     for (ScrambleMeta meta : scrambleMetaSet) {
       InsertValuesQuery q = createInsertMetaQuery(meta);
       String s = QueryToSql.convert(conn.getSyntax(), q);
+      LOG.debug("Adding a new scramble meta entry with the query: {}", s);
       insertSqls.append(s);
       insertSqls.append("; ");
     }
@@ -118,13 +149,25 @@ public class ScrambleMetaStore extends VerdictMetaStore {
 
   private CreateTableDefinitionQuery createScrambleMetaStoreTableStatement() {
     // create table
+    String schemaAndTableColumnType = "VARCHAR(100)";
+    String addedAtColumnType = "TIMESTAMP";
+    String dataColumnType = "TEXT";
+    if (conn.getSyntax() instanceof ImpalaSyntax) {
+      schemaAndTableColumnType = "STRING";
+    } else if (conn.getSyntax() instanceof RedshiftSyntax) {
+      dataColumnType = "VARCHAR(MAX)";
+    }
+
     CreateTableDefinitionQuery query = new CreateTableDefinitionQuery();
     query.setSchemaName(storeSchema);
     query.setTableName(getMetaStoreTableName());
-    query.addColumnNameAndType(Pair.of(ADDED_AT_COLUMN, "TIMESTAMP"));
-    query.addColumnNameAndType(Pair.of(SCHEMA_COLUMN, "VARCHAR(100)"));
-    query.addColumnNameAndType(Pair.of(TABLE_COLUMN, "VARCHAR(100)"));
-    query.addColumnNameAndType(Pair.of(DATA_COLUMN, "TEXT"));
+    query.addColumnNameAndType(Pair.of(ORIGINAL_SCHEMA_COLUMN, schemaAndTableColumnType));
+    query.addColumnNameAndType(Pair.of(ORIGINAL_TABLE_COLUMN, schemaAndTableColumnType));
+    query.addColumnNameAndType(Pair.of(SCRAMBLE_SCHEMA_COLUMN, schemaAndTableColumnType));
+    query.addColumnNameAndType(Pair.of(SCRAMBLE_TABLE_COLUMN, schemaAndTableColumnType));
+    query.addColumnNameAndType(Pair.of(SCRAMBLE_METHOD_COLUMN, schemaAndTableColumnType));
+    query.addColumnNameAndType(Pair.of(ADDED_AT_COLUMN, addedAtColumnType));
+    query.addColumnNameAndType(Pair.of(DATA_COLUMN, dataColumnType));
     query.setIfNotExists(true);
     return query;
   }
@@ -134,14 +177,30 @@ public class ScrambleMetaStore extends VerdictMetaStore {
     query.setSchemaName(getStoreSchema());
     query.setTableName(getMetaStoreTableName());
 
-    String timeStamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+    String originalSchema = meta.getOriginalSchemaName();
+    String originalTable = meta.getOriginalTableName();
     String scrambleSchema = meta.getSchemaName();
     String scrambleTable = meta.getTableName();
+    String scrambleMethod = meta.getMethod();
+    String timeStamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
     String jsonString = meta.toJsonString();
-    query.setValues(Arrays.<Object>asList(timeStamp, scrambleSchema, scrambleTable, jsonString));
+    query.setValues(
+        Arrays.<Object>asList(
+            originalSchema,
+            originalTable,
+            scrambleSchema,
+            scrambleTable,
+            scrambleMethod,
+            timeStamp,
+            jsonString));
     return query;
   }
 
+  /**
+   * Retrieve all scramble metadata
+   *
+   * @return a set of scramble meta
+   */
   public ScrambleMetaSet retrieve() {
     ScrambleMetaSet retrieved = new ScrambleMetaSet();
 
@@ -165,8 +224,6 @@ public class ScrambleMetaStore extends VerdictMetaStore {
           SelectQuery.create(
               Arrays.<SelectItem>asList(
                   new BaseColumn(tableAlias, ADDED_AT_COLUMN),
-                  new BaseColumn(tableAlias, SCHEMA_COLUMN),
-                  new BaseColumn(tableAlias, TABLE_COLUMN),
                   new BaseColumn(tableAlias, DATA_COLUMN)),
               new BaseTable(storeSchema, storeTable, tableAlias));
       query.addOrderby(new OrderbyAttribute(ADDED_AT_COLUMN));
@@ -174,9 +231,7 @@ public class ScrambleMetaStore extends VerdictMetaStore {
       DbmsQueryResult result = conn.execute(sql);
 
       while (result.next()) {
-        //      String schema = result.getString(1);
-        //      String table = result.getString(2);
-        String jsonString = result.getString(3);
+        String jsonString = result.getString(1);
         ScrambleMeta meta = ScrambleMeta.fromJsonString(jsonString);
         retrieved.addScrambleMeta(meta);
       }
