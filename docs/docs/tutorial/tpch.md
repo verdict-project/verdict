@@ -314,11 +314,10 @@ $ hdfs dfs -put /home/username/workspace/tpch1g/partsupp/partsupp.tbl   /tmp/tpc
 $ hdfs dfs -put /home/username/workspace/tpch1g/orders/orders.tbl       /tmp/tpch1g/orders
 $ hdfs dfs -put /home/username/workspace/tpch1g/lineitem/lineitem.tbl   /tmp/tpch1g/lineitem
 ```
-`user` is the owner of the tpch1g directory you want.
 
 If you encounter write permission problem in the next step when creating tables, you can use command
 ```bash
-$ hdfs dfs -chmomd -R 777 /tmp/tpch1g
+$ hdfs dfs -chmod -R 777 /tmp/tpch1g
 ```
 to give full access to your directory.
 
@@ -636,7 +635,7 @@ $ hdfs dfs -put /home/username/workspace/tpch1g/lineitem/lineitem.tbl   /tmp/tpc
 
 If you encounter write permission problem in the next step when creating tables, you can use command
 ```bash
-$ hdfs dfs -chmomd -R 777 /tmp/tpch1g
+$ hdfs dfs -chmod -R 777 /tmp/tpch1g
 ```
 to give full access to your directory.
 
