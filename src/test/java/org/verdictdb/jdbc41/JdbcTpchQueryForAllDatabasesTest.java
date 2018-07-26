@@ -238,7 +238,7 @@ public class JdbcTpchQueryForAllDatabasesTest {
     String filename = "";
     switch (database) {
       case "mysql":
-        filename = "companya/mysql_queries/tpchMySqlQuery" + query + ".sql";
+        filename = "companya/mysql_queries/tpchMySQLQuery" + query + ".sql";
         break;
       case "impala":
         filename = "companya/impala_queries/tpchImpalaQuery" + query + ".sql";

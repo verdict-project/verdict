@@ -1,5 +1,6 @@
 package org.verdictdb.jdbc41;
 
+import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -30,6 +31,9 @@ public class JdbcMetaDataForRedshiftTest {
 
   private static final String REDSHIFT_PASSWORD;
 
+  private static final String SCHEMA_NAME =
+      "verdict_test_" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
+
   private static final String TABLE_NAME = "mytable";
 
   static {
@@ -54,7 +58,7 @@ public class JdbcMetaDataForRedshiftTest {
     // create a test table
     stmt.execute(
         String.format(
-            "CREATE TABLE \"%s\" ("
+            "CREATE TABLE \"%s\".\"%s\" ("
                 + "smallintCol   SMALLINT, "
                 + "intCol        INT, "
                 + "bigintCol     BIGINT, "
@@ -68,12 +72,13 @@ public class JdbcMetaDataForRedshiftTest {
                 + "timestampCol  TIMESTAMP, "
                 + "timestamptzCol TIMESTAMPTZ"
                 + ")",
-            TABLE_NAME));
+            SCHEMA_NAME, TABLE_NAME));
   }
 
   @AfterClass
   public static void tearDown() throws VerdictDBDbmsException {
     dbmsConn.execute(String.format("DROP TABLE IF EXISTS \"%s\"", TABLE_NAME));
+    dbmsConn.execute(String.format("DROP SCHEMA IF EXISTS \"%s\" CASCADE", SCHEMA_NAME));
     dbmsConn.close();
   }
 

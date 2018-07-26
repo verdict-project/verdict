@@ -68,7 +68,7 @@ public class VariantMySqlTpchQueryWithoutScramblesTest {
   public Pair<VerdictSingleResult, ResultSet> getAnswer(int queryNum)
       throws IOException, VerdictDBException, SQLException {
     ClassLoader classLoader = getClass().getClassLoader();
-    String filename = "companya/mysql_queries/tpchMySqlQuery" + queryNum + ".sql";
+    String filename = "companya/mysql_queries/tpchMySQLQuery" + queryNum + ".sql";
     File queryFile = new File(classLoader.getResource(filename).getFile());
     String sql = Files.toString(queryFile, Charsets.UTF_8);
 

@@ -25,22 +25,17 @@ public class JdbcMetaDataForImpalaTest {
 
   private static final String IMPALA_HOST;
 
-  private static final String IMPALA_DATABASE = "default_" + RandomStringUtils.randomNumeric(3);;
+  static {
+    IMPALA_HOST = System.getenv("VERDICTDB_TEST_IMPALA_HOST");
+  }
+
+  private static final String IMPALA_DATABASE = "default_" + RandomStringUtils.randomNumeric(3);
 
   private static final String IMPALA_UESR = "";
 
   private static final String IMPALA_PASSWORD = "";
 
   private static final String TABLE_NAME = "mytable";
-
-  static {
-    String env = System.getenv("BUILD_ENV");
-    if (env != null && (env.equals("GitLab") || env.equals("DockerCompose"))) {
-      IMPALA_HOST = "impala";
-    } else {
-      IMPALA_HOST = "localhost";
-    }
-  }
 
   @BeforeClass
   public static void setupImpalaDatabase() throws SQLException, VerdictDBDbmsException {
