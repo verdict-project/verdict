@@ -62,12 +62,11 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
 
   private int aggColumnIdentiferNum = 0;
 
-  private int verdictdbTierIndentiferNum = 0;
+//  private int verdictdbTierIndentiferNum = 0;
+//
+//  private static final String VERDICTDB_TIER_COLUMN_NAME = "verdictdb_tier_internal";
 
-  static final String VERDICTDB_TIER_COLUMN_NAME = "verdictdb_tier_internal";
-
-  private AsyncQueryExecutionPlan(String scratchpadSchemaName, ScrambleMetaSet scrambleMeta)
-      throws VerdictDBException {
+  private AsyncQueryExecutionPlan(String scratchpadSchemaName, ScrambleMetaSet scrambleMeta) {
     super(scratchpadSchemaName, scrambleMeta);
   }
 
@@ -454,7 +453,8 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
     List<SelectItem> selectItemList = node.getSelectQuery().getSelectList();
     if (selectItemList.get(0) instanceof AsteriskColumn) {
       for (BaseTable t : MultiTiertables) {
-        String tierColumnAlias = VERDICTDB_TIER_COLUMN_NAME + verdictdbTierIndentiferNum++;
+        String tierColumnAlias = generateAliasName();
+//            VERDICTDB_TIER_COLUMN_NAME + verdictdbTierIndentiferNum++;
         // Record the tier column alias with its corresponding scramble table
         ScrambleMeta meta = scrambleMeta.getSingleMeta(t.getSchemaName(), t.getTableName());
         node.getAggMeta().getScrambleTableTierColumnAlias().put(meta, tierColumnAlias);
@@ -464,7 +464,8 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
         // Add tier column to the select list
         String tierColumnName = scrambleMeta.getTierColumn(t.getSchemaName(), t.getTableName());
         SelectItem tierColumn;
-        String tierColumnAlias = VERDICTDB_TIER_COLUMN_NAME + verdictdbTierIndentiferNum++;
+        String tierColumnAlias = generateAliasName();
+//        VERDICTDB_TIER_COLUMN_NAME + verdictdbTierIndentiferNum++;
         if (t.getAliasName().isPresent()) {
           tierColumn =
               new AliasedColumn(
@@ -480,7 +481,7 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
         node.getAggMeta().getScrambleTableTierColumnAlias().put(meta, tierColumnAlias);
       }
     }
-    verdictdbTierIndentiferNum = 0;
+//    verdictdbTierIndentiferNum = 0;
   }
   
 //  private void setTierColumnAlias(AsyncAggExecutionNode node) {
@@ -658,7 +659,8 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
         if (scrambleMetaSet.isScrambled(schemaName, tableName)) {
           ScrambleMeta singleMeta = scrambleMetaSet.getSingleMeta(schemaName, tableName);
           String tierColumnName = scrambleMetaSet.getTierColumn(schemaName, tableName);
-          String newTierColumnAlias = VERDICTDB_TIER_COLUMN_NAME + verdictdbTierIndentiferNum++;
+          String newTierColumnAlias = generateAliasName();
+//          VERDICTDB_TIER_COLUMN_NAME + verdictdbTierIndentiferNum++;
           newSelectList.add(
               new AliasedColumn(
                   new BaseColumn(
@@ -681,7 +683,8 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
             if (scrambleMetaSet.isScrambled(schemaName, tableName)) {
               ScrambleMeta singleMeta = scrambleMetaSet.getSingleMeta(schemaName, tableName);
               String tierColumnName = scrambleMetaSet.getTierColumn(schemaName, tableName);
-              String newTierColumnAlias = VERDICTDB_TIER_COLUMN_NAME + verdictdbTierIndentiferNum++;
+              String newTierColumnAlias = generateAliasName();
+//              VERDICTDB_TIER_COLUMN_NAME + verdictdbTierIndentiferNum++;
               
               newSelectList.add(
                   new AliasedColumn(
@@ -711,7 +714,8 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
         
         // Add tier column to select list
         SelectItem selectItem;
-        String newTierColumnAlias = VERDICTDB_TIER_COLUMN_NAME + verdictdbTierIndentiferNum++;
+        String newTierColumnAlias = generateAliasName();
+//        VERDICTDB_TIER_COLUMN_NAME + verdictdbTierIndentiferNum++;
         if (source.getSelectQuery().getAliasName().isPresent()) {
           String sourceAlias = source.getSelectQuery().getAliasName().get();
           selectItem =
@@ -726,7 +730,7 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
         scrambleMetaAnditsAlias.put(singleMeta, newTierColumnAlias);
       }
     }
-    verdictdbTierIndentiferNum = 0;
+//    verdictdbTierIndentiferNum = 0;
     
     return scrambleMetaAnditsAlias;
   }
@@ -757,7 +761,8 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
           source.getAggMeta().getScrambleTableTierColumnAlias().entrySet()) {
         
         String oldtierAlias = entry.getValue();
-        String tierColumnAlias = VERDICTDB_TIER_COLUMN_NAME + verdictdbTierIndentiferNum++;
+        String tierColumnAlias = generateAliasName();
+//        VERDICTDB_TIER_COLUMN_NAME + verdictdbTierIndentiferNum++;
         
         // Add tier column to select list
         SelectItem selectItem;
@@ -780,6 +785,6 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
     if (!multiTierScrambleTables.isEmpty()) {
       rewriteProjectionNodeForMultiTier(node, multiTierScrambleTables, scrambleMeta);
     }
-    verdictdbTierIndentiferNum = 0;
+//    verdictdbTierIndentiferNum = 0;
   }
 }

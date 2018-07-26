@@ -136,8 +136,12 @@ public class AggCombinerExecutionNode extends CreateTableAsSelectNode {
 
     SelectQuery left = SelectQuery.create(new AsteriskColumn(), leftBase);
     SelectQuery right = SelectQuery.create(new AsteriskColumn(), rightBase);
+//    SetOperationRelation newBase =
+//        new SetOperationRelation(left, right, SetOperationRelation.SetOpType.unionAll);
+    
+    // we place the right one on top so that the generated table uses its column names
     SetOperationRelation newBase =
-        new SetOperationRelation(left, right, SetOperationRelation.SetOpType.unionAll);
+        new SetOperationRelation(right, left, SetOperationRelation.SetOpType.unionAll);
     newBase.setAliasName(unionTableAlias);
     SelectQuery unionQuery = SelectQuery.create(allItems, newBase);
     for (String a : groupAliasNames) {
@@ -167,6 +171,9 @@ public class AggCombinerExecutionNode extends CreateTableAsSelectNode {
       //      }
 
       if (childAggMeta != null) {
+        System.out.println(childAggMeta);
+        
+        AggMeta aggMeta = new AggMeta();
         aggMeta.getCubes().addAll(childAggMeta.getCubes());
         aggMeta.setAggAlias(childAggMeta.getAggAlias());
         aggMeta.setOriginalSelectList(childAggMeta.getOriginalSelectList());

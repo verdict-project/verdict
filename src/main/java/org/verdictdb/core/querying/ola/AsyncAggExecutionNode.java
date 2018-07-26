@@ -24,6 +24,7 @@ import java.util.Map;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.core.execplan.ExecutionInfoToken;
 import org.verdictdb.core.querying.ExecutableNodeBase;
@@ -83,7 +84,7 @@ public class AsyncAggExecutionNode extends ProjectionNode {
 
   // Key is the index of scramble table in Dimension, value is the tier column alias name
   // Only record tables have multiple tiers
-  HashMap<Integer, String> multipleTierTableTierInfo = new HashMap<>();
+//  HashMap<Integer, String> multipleTierTableTierInfo = new HashMap<>();
 
   Boolean Initiated = false;
 
@@ -119,33 +120,37 @@ public class AsyncAggExecutionNode extends ProjectionNode {
   public SqlConvertible createQuery(List<ExecutionInfoToken> tokens) throws VerdictDBException {
 
     ExecutionInfoToken token = tokens.get(0);
-
-    // First, calculate the scale factor
     AggMeta sourceAggMeta = (AggMeta) token.getValue("aggMeta");
-    HashMap<List<Integer>, Double> scaleFactor = calculateScaleFactor(sourceAggMeta);
 
-    // Next, create the base select query for replacement
-    Pair<List<ColumnOp>, SqlConvertible> aggColumnsAndQuery =
+    // First, create the base select query for replacement
+    Triple<List<ColumnOp>, SqlConvertible, Map<Integer, String>> aggColumnsAndQuery =
         createBaseQueryForReplacement(sourceAggMeta, token);
+  
+    SelectQuery baseQuery = (SelectQuery) aggColumnsAndQuery.getMiddle();
+    List<ColumnOp> aggColumns = aggColumnsAndQuery.getLeft();
+    Map<Integer, String> multipleTierTableTierInfo = aggColumnsAndQuery.getRight();
+  
+    // Second, calculate the scale factor
+    HashMap<List<Integer>, Double> scaleFactor =
+        calculateScaleFactor(sourceAggMeta, multipleTierTableTierInfo);
 
     // single-tier case
     if (scaleFactor.size() == 1) {
       // Substitute the scale factor
       Double s = (Double) (scaleFactor.values().toArray())[0];
-      for (ColumnOp col : aggColumnsAndQuery.getLeft()) {
+      for (ColumnOp col : aggColumns) {
         col.setOperand(0, ConstantColumn.valueOf(String.format("%.16f", s)));
       }
     }
     // multiple-tiers case
     else {
-      // We treat both single-tier and multi-tier cases consistently.
       // If it has multiple tiers, we need to rewrite the multiply column into when-then-else column
-      for (ColumnOp col : aggColumnsAndQuery.getLeft()) {
+      for (ColumnOp col : aggColumns) {
         //        String alias = ((BaseColumn) col.getOperand(1)).getColumnName();
         col.setOpType("casewhen");
         List<UnnamedColumn> operands = new ArrayList<>();
         for (Map.Entry<List<Integer>, Double> entry : scaleFactor.entrySet()) {
-          UnnamedColumn condition = generateCaseCondition(entry.getKey());
+          UnnamedColumn condition = generateCaseCondition(entry.getKey(), multipleTierTableTierInfo);
           operands.add(condition);
           ColumnOp multiply =
               new ColumnOp(
@@ -164,7 +169,8 @@ public class AsyncAggExecutionNode extends ProjectionNode {
     // We treat both single-tier and multi-tier cases simultaneously here to make alias management
     // easier.
     SelectQuery query = sumUpTierGroup(
-        (SelectQuery) aggColumnsAndQuery.getRight(), ((AggMeta) token.getValue("aggMeta")));
+        baseQuery, ((AggMeta) token.getValue("aggMeta")), multipleTierTableTierInfo);
+    
 //    if (multipleTierTableTierInfo.size() > 0) {
 //      query = sumUpTierGroup(
 //          (SelectQuery) aggColumnsAndQuery.getRight(), ((AggMeta) token.getValue("aggMeta")));
@@ -225,12 +231,13 @@ public class AsyncAggExecutionNode extends ProjectionNode {
    * @param sourceAggMeta
    * @return Key: aggregate column list
    */
-  Pair<List<ColumnOp>, SqlConvertible> createBaseQueryForReplacement(
+  Triple<List<ColumnOp>, SqlConvertible, Map<Integer, String>> createBaseQueryForReplacement(
       AggMeta sourceAggMeta, ExecutionInfoToken token) {
   
-    List<HyperTableCube> cubes = sourceAggMeta.getCubes();
-
+    Map<Integer, String> multipleTierTableTierInfo = new HashMap<>();
     List<ColumnOp> aggColumnlist = new ArrayList<>();
+    
+    List<HyperTableCube> cubes = sourceAggMeta.getCubes();
     SelectQuery dependentQuery = (SelectQuery) token.getValue("dependentQuery");
     List<SelectItem> newSelectList = dependentQuery.deepcopy().getSelectList();
     AggMeta aggMeta = (AggMeta) token.getValue("aggMeta");
@@ -281,7 +288,7 @@ public class AsyncAggExecutionNode extends ProjectionNode {
         }
       }
     }
-    Initiated = true;
+//    Initiated = true;
 
     // Setup from table
     SelectQuery query =
@@ -291,7 +298,8 @@ public class AsyncAggExecutionNode extends ProjectionNode {
                 (String) token.getValue("schemaName"),
                 (String) token.getValue("tableName"),
                 INNER_RAW_AGG_TABLE_ALIAS));
-    return new ImmutablePair<>(aggColumnlist, (SqlConvertible) query);
+    
+    return Triple.of(aggColumnlist, (SqlConvertible) query, multipleTierTableTierInfo);
   }
   
   /**
@@ -299,7 +307,10 @@ public class AsyncAggExecutionNode extends ProjectionNode {
    *
    * @return Return tier permutation list and its scale factor
    */
-  public HashMap<List<Integer>, Double> calculateScaleFactor(AggMeta sourceAggMeta) throws VerdictDBValueException {
+  public HashMap<List<Integer>, Double> calculateScaleFactor(
+      AggMeta sourceAggMeta,
+      Map<Integer, String> multipleTierTableTierInfo)
+      throws VerdictDBValueException {
   
     List<HyperTableCube> cubes = sourceAggMeta.getCubes();
     ScrambleMetaSet scrambleMetaSet = this.getScrambleMeta();
@@ -411,7 +422,10 @@ public class AsyncAggExecutionNode extends ProjectionNode {
     }
   }
   
-  UnnamedColumn generateCaseCondition(List<Integer> tierlist) {
+  UnnamedColumn generateCaseCondition(
+      List<Integer> tierlist,
+      Map<Integer, String> multipleTierTableTierInfo) {
+    
     Optional<ColumnOp> col = Optional.absent();
     for (Map.Entry<Integer, String> entry : multipleTierTableTierInfo.entrySet()) {
       BaseColumn tierColumn = new BaseColumn(INNER_RAW_AGG_TABLE_ALIAS, entry.getValue());
@@ -524,7 +538,11 @@ public class AsyncAggExecutionNode extends ProjectionNode {
    * @param subquery
    * @return select query that sum all the tier results
    */
-  SelectQuery sumUpTierGroup(SelectQuery subquery, AggMeta aggMeta) {
+  SelectQuery sumUpTierGroup(
+      SelectQuery subquery,
+      AggMeta aggMeta,
+      Map<Integer, String> multipleTierTableTierInfo) {
+    
     List<String> aggAlias = aggMeta.getAggAlias();
     List<String> groupby = new ArrayList<>();
     List<SelectItem> newSelectlist = new ArrayList<>();

@@ -35,111 +35,112 @@ import org.verdictdb.core.sqlobject.UnnamedColumn;
  * combiner
  */
 public class AggMeta implements Serializable {
-
+  
   private static final long serialVersionUID = 3186577687141707687L;
-
+  
   // List of covered blocks
   List<HyperTableCube> cubes = new ArrayList<>();
-
+  
   List<SelectItem> originalSelectList;
-
+  
   List<String> aggAlias = new ArrayList<>();
-
+  
   Map<ScrambleMeta, String> scrambleTableTierColumnAlias = new HashMap<>();
   
   Map<String, String> maxminAggAlias = new HashMap<>();
   
   Map<SelectItem, List<ColumnOp>> aggColumn = new HashMap<>();
-
+  
   // (agg function, argument), alias
   Map<Pair<String, UnnamedColumn>, String> aggColumnAggAliasPair = new HashMap<>();
   
   Map<Pair<String, UnnamedColumn>, String> aggColumnAggAliasPairOfMaxMin = new HashMap<>();
-
+  
   String tierColumnName;
-
-  public AggMeta() {}
-
+  
+  public AggMeta() {
+  }
+  
   public List<String> getAggAlias() {
     return aggAlias;
   }
-
+  
   public Map<SelectItem, List<ColumnOp>> getAggColumn() {
     return aggColumn;
   }
-
+  
   public Map<Pair<String, UnnamedColumn>, String> getAggColumnAggAliasPair() {
     return aggColumnAggAliasPair;
   }
-
+  
   public Map<Pair<String, UnnamedColumn>, String> getAggColumnAggAliasPairOfMaxMin() {
     return aggColumnAggAliasPairOfMaxMin;
   }
-
+  
   public Map<ScrambleMeta, String> getScrambleTableTierColumnAlias() {
     return scrambleTableTierColumnAlias;
   }
-
+  
   public List<HyperTableCube> getCubes() {
     return cubes;
   }
-
+  
   public Map<String, String> getMaxminAggAlias() {
     return maxminAggAlias;
   }
-
+  
   public List<SelectItem> getOriginalSelectList() {
     return originalSelectList;
   }
-
+  
   public String getTierColumnName() {
     return tierColumnName;
   }
-
+  
   public void setAggAlias(List<String> aggAlias) {
     this.aggAlias = aggAlias;
   }
-
+  
   public void setAggColumn(Map<SelectItem, List<ColumnOp>> aggColumn) {
     this.aggColumn = aggColumn;
   }
-
+  
   public void setAggColumnAggAliasPair(
       Map<Pair<String, UnnamedColumn>, String> aggColumnAggAliasPair) {
     this.aggColumnAggAliasPair = aggColumnAggAliasPair;
   }
-
+  
   public void setAggColumnAggAliasPairOfMaxMin(
       Map<Pair<String, UnnamedColumn>, String> aggColumnAggAliasPairOfMaxMin) {
     this.aggColumnAggAliasPairOfMaxMin = aggColumnAggAliasPairOfMaxMin;
   }
-
+  
   public void setCubes(List<HyperTableCube> cubes) {
     this.cubes = cubes;
   }
-
+  
   public void setMaxminAggAlias(Map<String, String> maxminAggAlias) {
     this.maxminAggAlias = maxminAggAlias;
   }
-
+  
   public void setOriginalSelectList(List<SelectItem> originalSelectList) {
     this.originalSelectList = originalSelectList;
   }
-
+  
   public void setTierColumnName(String tierColumnName) {
     this.tierColumnName = tierColumnName;
   }
-
+  
   public void setScrambleTableTierColumnAlias(
       Map<ScrambleMeta, String> scrambleTableTierColumnAlias) {
     this.scrambleTableTierColumnAlias = scrambleTableTierColumnAlias;
   }
-
+  
   @Override
   public String toString() {
     return new ToStringBuilder(this, ToStringStyle.DEFAULT_STYLE)
-        .append("aggAliasPairs", aggColumnAggAliasPair)
-        //        .append("cubes", cubes)
-        .build();
+               .append("aggAliasPairs", aggColumnAggAliasPair)
+               .append("tierColumns", scrambleTableTierColumnAlias.values())
+               .build();
   }
 }
