@@ -1,28 +1,22 @@
 package org.verdictdb.jdbc41;
 
-import static java.sql.Types.BIGINT;
-import static java.sql.Types.DOUBLE;
-import static java.sql.Types.VARCHAR;
-import static org.junit.Assert.assertEquals;
-
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.connection.JdbcQueryResult;
-import org.verdictdb.coordinator.VerdictSingleResult;
+import org.verdictdb.coordinator.VerdictSingleResultFromDbmsQueryResult;
 import org.verdictdb.core.aggresult.AggregateFrame;
 import org.verdictdb.core.aggresult.AggregateFrameQueryResult;
 import org.verdictdb.core.rewriter.aggresult.AggNameAndType;
 import org.verdictdb.exception.VerdictDBValueException;
+
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import static java.sql.Types.*;
+import static org.junit.Assert.assertEquals;
 
 public class JdbcResultSetMetaDataH2Test {
 
@@ -76,8 +70,8 @@ public class JdbcResultSetMetaDataH2Test {
     agg.add(new AggNameAndType("AGEAVG", "SUM"));
     AggregateFrame aggregateFrame = AggregateFrame.fromDmbsQueryResult(queryResult, nonAgg, agg);
     AggregateFrameQueryResult aggregateFrameQueryResult = (AggregateFrameQueryResult) aggregateFrame.toDbmsQueryResult();
-    VerdictSingleResult result1 = new VerdictSingleResult(queryResult);
-    VerdictSingleResult result2 = new VerdictSingleResult(aggregateFrameQueryResult);
+    VerdictSingleResultFromDbmsQueryResult result1 = new VerdictSingleResultFromDbmsQueryResult(queryResult);
+    VerdictSingleResultFromDbmsQueryResult result2 = new VerdictSingleResultFromDbmsQueryResult(aggregateFrameQueryResult);
     jdbcResultSetMetaData1 = new VerdictResultSet(result1).getMetaData();
 //    jdbcResultSetMetaData1 = new JdbcResultSetMetaData(queryResult);
     jdbcResultSetMetaData2 = new VerdictResultSet(result2).getMetaData();

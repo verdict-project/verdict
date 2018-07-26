@@ -16,11 +16,11 @@
 
 package org.verdictdb.core.scrambling;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.verdictdb.core.execplan.MethodInvocationInformation;
 import org.verdictdb.core.querying.ExecutableNodeBase;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class ColumnMetadataRetrievalNode extends ExecutableNodeBase {
 

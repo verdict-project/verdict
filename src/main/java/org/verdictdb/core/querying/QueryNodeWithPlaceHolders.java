@@ -16,19 +16,14 @@
 
 package org.verdictdb.core.querying;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.core.execplan.ExecutionInfoToken;
-import org.verdictdb.core.sqlobject.AbstractRelation;
-import org.verdictdb.core.sqlobject.BaseTable;
-import org.verdictdb.core.sqlobject.JoinTable;
-import org.verdictdb.core.sqlobject.SelectQuery;
-import org.verdictdb.core.sqlobject.SqlConvertible;
-import org.verdictdb.core.sqlobject.SubqueryColumn;
+import org.verdictdb.core.sqlobject.*;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBValueException;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public abstract class QueryNodeWithPlaceHolders extends QueryNodeBase {
 

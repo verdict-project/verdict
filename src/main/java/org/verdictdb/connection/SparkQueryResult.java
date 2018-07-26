@@ -16,16 +16,16 @@
 
 package org.verdictdb.connection;
 
-import static java.sql.ResultSetMetaData.columnNoNulls;
-import static java.sql.ResultSetMetaData.columnNullable;
-
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.types.StructField;
 import org.verdictdb.commons.AttributeValueRetrievalHelper;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static java.sql.ResultSetMetaData.columnNoNulls;
+import static java.sql.ResultSetMetaData.columnNullable;
 
 public class SparkQueryResult extends AttributeValueRetrievalHelper implements DbmsQueryResult {
 

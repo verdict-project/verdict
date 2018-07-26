@@ -16,12 +16,6 @@
 
 package org.verdictdb.core.querying.ola;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.List;
-
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import org.apache.commons.lang3.tuple.Pair;
@@ -29,6 +23,12 @@ import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.core.sqlobject.ColumnOp;
 import org.verdictdb.core.sqlobject.SelectItem;
 import org.verdictdb.core.sqlobject.UnnamedColumn;
+
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Use for store hyper table cube and aggregate column alias name of individual aggregate node and

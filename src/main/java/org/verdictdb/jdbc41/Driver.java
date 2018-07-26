@@ -16,19 +16,14 @@
 
 package org.verdictdb.jdbc41;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.DriverPropertyInfo;
-import java.sql.SQLException;
-import java.sql.SQLFeatureNotSupportedException;
+import com.google.common.base.Joiner;
+import org.verdictdb.exception.VerdictDBDbmsException;
+
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import java.util.logging.Logger;
-
-import org.verdictdb.exception.VerdictDBDbmsException;
-
-import com.google.common.base.Joiner;
 
 /**
  * Importat: If the name of this class changes, the change must be reflected in the service file

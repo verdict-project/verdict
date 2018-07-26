@@ -1,13 +1,13 @@
 package org.verdictdb.core.querying.ola;
 
-import static org.junit.Assert.assertEquals;
+import org.apache.commons.lang3.tuple.Pair;
+import org.junit.Test;
+import org.verdictdb.exception.VerdictDBValueException;
 
 import java.util.Arrays;
 import java.util.List;
 
-import org.apache.commons.lang3.tuple.Pair;
-import org.junit.Test;
-import org.verdictdb.exception.VerdictDBValueException;
+import static org.junit.Assert.assertEquals;
 
 public class HyperTableCubeTest {
   

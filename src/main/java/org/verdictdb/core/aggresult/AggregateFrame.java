@@ -16,21 +16,16 @@
 
 package org.verdictdb.core.aggresult;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.connection.DbmsQueryResultMetaData;
 import org.verdictdb.core.rewriter.aggresult.AggNameAndType;
 import org.verdictdb.exception.VerdictDBValueException;
+
+import java.io.Serializable;
+import java.util.*;
+import java.util.Map.Entry;
 
 /**
  * Represents a data frame (after aggregation).

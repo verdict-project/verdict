@@ -1,29 +1,23 @@
 package org.verdictdb.jdbc41;
 
-import static java.sql.Types.BIGINT;
-import static java.sql.Types.DOUBLE;
-import static java.sql.Types.VARCHAR;
-import static org.junit.Assert.assertEquals;
-
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
+import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.connection.JdbcQueryResult;
-import org.verdictdb.coordinator.VerdictSingleResult;
+import org.verdictdb.coordinator.VerdictSingleResultFromDbmsQueryResult;
 import org.verdictdb.core.aggresult.AggregateFrame;
 import org.verdictdb.core.aggresult.AggregateFrameQueryResult;
 import org.verdictdb.core.rewriter.aggresult.AggNameAndType;
 import org.verdictdb.exception.VerdictDBValueException;
+
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import static java.sql.Types.*;
+import static org.junit.Assert.assertEquals;
 
 public class JdbcResultSetMetaDataPostgresTest {
 
@@ -43,6 +37,9 @@ public class JdbcResultSetMetaDataPostgresTest {
 
   private static final String POSTGRES_PASSWORD = "";
 
+  private static final String SCHEMA_NAME =
+      "rs_metadata_test_" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
+
   static {
     String env = System.getenv("BUILD_ENV");
     if (env != null && (env.equals("GitLab") || env.equals("DockerCompose"))) {
@@ -59,17 +56,25 @@ public class JdbcResultSetMetaDataPostgresTest {
     conn = DriverManager.getConnection(postgresConnectionString, POSTGRES_USER, POSTGRES_PASSWORD);
 
     List<List<Object>> contents = new ArrayList<>();
-    contents.add(Arrays.<Object>asList(1, "Anju", "female", 15, 170.2, "USA", "2017-10-12 21:22:23"));
-    contents.add(Arrays.<Object>asList(2, "Sonia", "female", 17, 156.5, "USA", "2017-10-12 21:22:23"));
+    contents.add(
+        Arrays.<Object>asList(1, "Anju", "female", 15, 170.2, "USA", "2017-10-12 21:22:23"));
+    contents.add(
+        Arrays.<Object>asList(2, "Sonia", "female", 17, 156.5, "USA", "2017-10-12 21:22:23"));
     contents.add(Arrays.<Object>asList(3, "Asha", "male", 23, 168.1, "CHN", "2017-10-12 21:22:23"));
     contents.add(Arrays.<Object>asList(3, "Joe", "male", 14, 178.6, "USA", "2017-10-12 21:22:23"));
     contents.add(Arrays.<Object>asList(3, "JoJo", "male", 18, 190.7, "CHN", "2017-10-12 21:22:23"));
     contents.add(Arrays.<Object>asList(3, "Sam", "male", 18, 190.0, "USA", "2017-10-12 21:22:23"));
-    contents.add(Arrays.<Object>asList(3, "Alice", "female", 18, 190.21, "CHN", "2017-10-12 21:22:23"));
+    contents.add(
+        Arrays.<Object>asList(3, "Alice", "female", 18, 190.21, "CHN", "2017-10-12 21:22:23"));
     contents.add(Arrays.<Object>asList(3, "Bob", "male", 18, 190.3, "CHN", "2017-10-12 21:22:23"));
     stmt = conn.createStatement();
-    stmt.execute("DROP TABLE IF EXISTS PEOPLE");
-    stmt.execute("CREATE TABLE PEOPLE(id smallint, name varchar(255), gender varchar(8), age float, height float, nation varchar(8), birth timestamp)");
+    stmt.execute(String.format("DROP SCHEMA IF EXISTS %s CASCADE", SCHEMA_NAME));
+    stmt.execute(String.format("CREATE SCHEMA IF NOT EXISTS %s", SCHEMA_NAME));
+    stmt.execute(
+        String.format(
+            "CREATE TABLE %s.PEOPLE(id smallint, name varchar(255), "
+                + "gender varchar(8), age float, height float, nation varchar(8), birth timestamp)",
+            SCHEMA_NAME));
     for (List<Object> row : contents) {
       String id = row.get(0).toString();
       String name = row.get(1).toString();
@@ -78,13 +83,21 @@ public class JdbcResultSetMetaDataPostgresTest {
       String height = row.get(4).toString();
       String nation = row.get(5).toString();
       String birth = row.get(6).toString();
-      stmt.execute(String.format("INSERT INTO PEOPLE(id, name, gender, age, height, nation, birth) VALUES(%s, '%s', '%s', %s, %s, '%s', '%s')", id, name, gender, age, height, nation, birth));
+      stmt.execute(
+          String.format(
+              "INSERT INTO %s.PEOPLE(id, name, gender, age, height, nation, birth) "
+                  + "VALUES(%s, '%s', '%s', %s, %s, '%s', '%s')",
+              SCHEMA_NAME, id, name, gender, age, height, nation, birth));
     }
   }
 
   @Before
   public void createJdbcResultSetMetaData() throws SQLException, VerdictDBValueException {
-    rs = stmt.executeQuery("SELECT gender, count(*) as cnt, avg(age) as ageavg FROM PEOPLE GROUP BY gender");
+    rs =
+        stmt.executeQuery(
+            String.format(
+                "SELECT gender, count(*) as cnt, avg(age) as ageavg FROM %s.PEOPLE GROUP BY gender",
+                SCHEMA_NAME));
     JdbcQueryResult queryResult = new JdbcQueryResult(rs);
     List<String> nonAgg = new ArrayList<>();
     List<AggNameAndType> agg = new ArrayList<>();
@@ -92,18 +105,21 @@ public class JdbcResultSetMetaDataPostgresTest {
     agg.add(new AggNameAndType("CNT", "COUNT"));
     agg.add(new AggNameAndType("AGEAVG", "SUM"));
     AggregateFrame aggregateFrame = AggregateFrame.fromDmbsQueryResult(queryResult, nonAgg, agg);
-    AggregateFrameQueryResult aggregateFrameQueryResult = (AggregateFrameQueryResult) aggregateFrame.toDbmsQueryResult();
-    VerdictSingleResult result1 = new VerdictSingleResult(queryResult);
-    VerdictSingleResult result2 = new VerdictSingleResult(aggregateFrameQueryResult);
-//    jdbcResultSetMetaData1 = new JdbcResultSetMetaData(queryResult);
+    AggregateFrameQueryResult aggregateFrameQueryResult =
+        (AggregateFrameQueryResult) aggregateFrame.toDbmsQueryResult();
+    VerdictSingleResultFromDbmsQueryResult result1 =
+        new VerdictSingleResultFromDbmsQueryResult(queryResult);
+    VerdictSingleResultFromDbmsQueryResult result2 =
+        new VerdictSingleResultFromDbmsQueryResult(aggregateFrameQueryResult);
+    //    jdbcResultSetMetaData1 = new JdbcResultSetMetaData(queryResult);
     jdbcResultSetMetaData1 = new VerdictResultSet(result1).getMetaData();
-//    jdbcResultSetMetaData2 = new JdbcResultSetMetaData(aggregateFrameQueryResult);
+    //    jdbcResultSetMetaData2 = new JdbcResultSetMetaData(aggregateFrameQueryResult);
     jdbcResultSetMetaData2 = new VerdictResultSet(result2).getMetaData();
   }
 
   @Test
   public void quotedAliasTableTest() throws SQLException {
-    stmt.execute("select \"PEOPLE\".name from people as \"PEOPLE\"");
+    stmt.execute(String.format("select \"PEOPLE\".name from %s.people as \"PEOPLE\"", SCHEMA_NAME));
   }
 
   @Test
@@ -112,7 +128,7 @@ public class JdbcResultSetMetaDataPostgresTest {
     assertEquals(3, jdbcResultSetMetaData2.getColumnCount());
   }
 
-  //@Test
+  // @Test
   public void isCaseSensitive() throws SQLException {
     assertEquals(true, jdbcResultSetMetaData1.isCaseSensitive(1));
     assertEquals(false, jdbcResultSetMetaData1.isCaseSensitive(2));
@@ -134,10 +150,14 @@ public class JdbcResultSetMetaDataPostgresTest {
 
   @Test
   public void getColumnDisplaySizeTest() throws SQLException {
-    assertEquals(rs.getMetaData().getColumnDisplaySize(2), jdbcResultSetMetaData1.getColumnDisplaySize(2));
-    assertEquals(rs.getMetaData().getColumnDisplaySize(3), jdbcResultSetMetaData1.getColumnDisplaySize(3));
-    assertEquals(rs.getMetaData().getColumnDisplaySize(2), jdbcResultSetMetaData2.getColumnDisplaySize(2));
-    assertEquals(rs.getMetaData().getColumnDisplaySize(3), jdbcResultSetMetaData2.getColumnDisplaySize(3));
+    assertEquals(
+        rs.getMetaData().getColumnDisplaySize(2), jdbcResultSetMetaData1.getColumnDisplaySize(2));
+    assertEquals(
+        rs.getMetaData().getColumnDisplaySize(3), jdbcResultSetMetaData1.getColumnDisplaySize(3));
+    assertEquals(
+        rs.getMetaData().getColumnDisplaySize(2), jdbcResultSetMetaData2.getColumnDisplaySize(2));
+    assertEquals(
+        rs.getMetaData().getColumnDisplaySize(3), jdbcResultSetMetaData2.getColumnDisplaySize(3));
   }
 
   @Test
@@ -227,5 +247,4 @@ public class JdbcResultSetMetaDataPostgresTest {
     assertEquals(rs.getMetaData().isNullable(2), jdbcResultSetMetaData2.isNullable(2));
     assertEquals(rs.getMetaData().isNullable(3), jdbcResultSetMetaData2.isNullable(3));
   }
-
 }

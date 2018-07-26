@@ -1,12 +1,5 @@
 package org.verdictdb.sqlwriter;
 
-import static org.junit.Assert.assertEquals;
-
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.util.Arrays;
-
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -15,6 +8,13 @@ import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.core.sqlobject.InsertValuesQuery;
 import org.verdictdb.exception.VerdictDBException;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.util.Arrays;
+
+import static org.junit.Assert.assertEquals;
 
 public class InsertValuesQueryToSqlTest {
   

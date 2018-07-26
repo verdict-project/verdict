@@ -16,13 +16,13 @@
 
 package org.verdictdb.jdbc41;
 
-import static java.sql.Types.JAVA_OBJECT;
-
 import java.sql.Array;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Map;
+
+import static java.sql.Types.JAVA_OBJECT;
 
 public class VerdictJdbcArray implements Array {
 

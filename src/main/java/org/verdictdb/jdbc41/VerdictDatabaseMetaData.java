@@ -16,11 +16,7 @@
 
 package org.verdictdb.jdbc41;
 
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
-import java.sql.RowIdLifetime;
-import java.sql.SQLException;
+import java.sql.*;
 
 public class VerdictDatabaseMetaData implements java.sql.DatabaseMetaData {
 

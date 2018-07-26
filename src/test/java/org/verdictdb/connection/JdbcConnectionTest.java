@@ -1,21 +1,16 @@
 package org.verdictdb.connection;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.sqlsyntax.HiveSyntax;
 import org.verdictdb.sqlsyntax.MysqlSyntax;
 import org.verdictdb.sqlsyntax.PostgresqlSyntax;
+
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class JdbcConnectionTest {
 

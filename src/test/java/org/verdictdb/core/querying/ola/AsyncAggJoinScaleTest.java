@@ -1,18 +1,5 @@
 package org.verdictdb.core.querying.ola;
 
-import static java.sql.Types.BIGINT;
-import static java.sql.Types.DOUBLE;
-import static org.junit.Assert.assertEquals;
-
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Assert;
@@ -37,6 +24,19 @@ import org.verdictdb.sqlreader.RelationStandardizer;
 import org.verdictdb.sqlsyntax.H2Syntax;
 import org.verdictdb.sqlwriter.QueryToSql;
 import org.verdictdb.sqlwriter.SelectQueryToSql;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+
+import static java.sql.Types.BIGINT;
+import static java.sql.Types.DOUBLE;
+import static org.junit.Assert.assertEquals;
 
 public class AsyncAggJoinScaleTest {
 

@@ -1,19 +1,5 @@
 package org.verdictdb.core.querying.ola;
 
-import static java.sql.Types.BIGINT;
-import static java.sql.Types.DOUBLE;
-import static org.junit.Assert.assertEquals;
-
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.AfterClass;
@@ -38,6 +24,16 @@ import org.verdictdb.sqlreader.NonValidatingSQLParser;
 import org.verdictdb.sqlreader.RelationStandardizer;
 import org.verdictdb.sqlsyntax.MysqlSyntax;
 import org.verdictdb.sqlwriter.SelectQueryToSql;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.*;
+
+import static java.sql.Types.BIGINT;
+import static java.sql.Types.DOUBLE;
+import static org.junit.Assert.assertEquals;
 
 public class AsyncAggMultipleTiersScaleTest {
   
@@ -1261,7 +1257,7 @@ public class AsyncAggMultipleTiersScaleTest {
     actual = actual.replaceAll("verdictdbtemptable_\\d+_\\d+", "verdictdbtemptable");
     actual = actual.replaceAll("verdictdb_alias_\\d+_\\d+", "verdictdb_alias");
     actual = actual.replaceAll("verdictdb_tier_alias_\\d+_\\d+", "verdictdb_tier_alias");
-    System.out.println(actual);
+//    System.out.println(actual);
     expected = "select " +
         "(1 + min(verdictdb_internal_tier_consolidated.`agg2`)) * " +
         "(sum(verdictdb_internal_tier_consolidated.`agg0`) / sum(verdictdb_internal_tier_consolidated.`agg1`)) as `vc2` " +

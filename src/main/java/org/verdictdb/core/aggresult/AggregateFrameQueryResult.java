@@ -16,16 +16,16 @@
 
 package org.verdictdb.core.aggresult;
 
+import org.verdictdb.commons.AttributeValueRetrievalHelper;
+import org.verdictdb.connection.DbmsQueryResult;
+import org.verdictdb.connection.DbmsQueryResultMetaData;
+
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
-import org.verdictdb.commons.AttributeValueRetrievalHelper;
-import org.verdictdb.connection.DbmsQueryResult;
-import org.verdictdb.connection.DbmsQueryResultMetaData;
 
 public class AggregateFrameQueryResult extends AttributeValueRetrievalHelper
     implements DbmsQueryResult {

@@ -16,24 +16,17 @@
 
 package org.verdictdb.sqlreader;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
+import com.google.common.base.Joiner;
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.verdictdb.core.sqlobject.AsteriskColumn;
-import org.verdictdb.core.sqlobject.BaseColumn;
-import org.verdictdb.core.sqlobject.ColumnOp;
-import org.verdictdb.core.sqlobject.ConstantColumn;
-import org.verdictdb.core.sqlobject.SelectQuery;
-import org.verdictdb.core.sqlobject.SubqueryColumn;
-import org.verdictdb.core.sqlobject.UnnamedColumn;
+import org.verdictdb.core.sqlobject.*;
 import org.verdictdb.parser.VerdictSQLParser;
 import org.verdictdb.parser.VerdictSQLParser.Column_nameContext;
 import org.verdictdb.parser.VerdictSQLParser.Full_column_nameContext;
 import org.verdictdb.parser.VerdictSQLParserBaseVisitor;
 
-import com.google.common.base.Joiner;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class ExpressionGen extends VerdictSQLParserBaseVisitor<UnnamedColumn> {
 

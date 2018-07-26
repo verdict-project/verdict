@@ -16,11 +16,11 @@
 
 package org.verdictdb.sqlsyntax;
 
+import com.google.common.collect.Lists;
+
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
-
-import com.google.common.collect.Lists;
 
 public class ImpalaSyntax extends SqlSyntax {
 

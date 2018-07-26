@@ -16,12 +16,12 @@
 
 package org.verdictdb.core.rewriter.query;
 
+import org.apache.commons.lang3.tuple.Pair;
+
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
-
-import org.apache.commons.lang3.tuple.Pair;
 
 /**
  * This class effectively has the following information. [ { "tier": number, "total": } ... ]

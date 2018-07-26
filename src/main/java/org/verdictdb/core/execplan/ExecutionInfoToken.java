@@ -16,18 +16,13 @@
 
 package org.verdictdb.core.execplan;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.NotSerializableException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import com.rits.cloning.Cloner;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
+
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
-
-import org.apache.commons.lang3.builder.ToStringBuilder;
-import org.apache.commons.lang3.builder.ToStringStyle;
 
 public class ExecutionInfoToken implements Serializable {
 
@@ -104,25 +99,51 @@ public class ExecutionInfoToken implements Serializable {
   }
 
   public ExecutionInfoToken deepcopy() {
-    try {
-      ByteArrayOutputStream bos = new ByteArrayOutputStream();
-      ObjectOutputStream out = new ObjectOutputStream(bos);
-      out.writeObject(this);
-      out.flush();
-      out.close();
-
-      ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(bos.toByteArray()));
-      ExecutionInfoToken copiedToken = (ExecutionInfoToken) in.readObject();
-      return copiedToken;
-
-    } catch (ClassNotFoundException e) {
-      e.printStackTrace();
-    } catch (NotSerializableException e) {
-      e.printStackTrace();
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-    return null;
+//<<<<<<< HEAD
+//    try {
+//      ByteArrayOutputStream bos = new ByteArrayOutputStream();
+//      ObjectOutputStream out = new ObjectOutputStream(bos);
+//      out.writeObject(this);
+//      out.flush();
+//      out.close();
+//
+//      ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(bos.toByteArray()));
+//      ExecutionInfoToken copiedToken = (ExecutionInfoToken) in.readObject();
+//      return copiedToken;
+//
+//    } catch (ClassNotFoundException e) {
+//      e.printStackTrace();
+//    } catch (NotSerializableException e) {
+//      e.printStackTrace();
+//    } catch (IOException e) {
+//      e.printStackTrace();
+//    }
+//    return null;
+//=======
+    return new Cloner().deepClone(this);
+    //    try {
+    //      ByteArrayOutputStream bos = new ByteArrayOutputStream();
+    //      ObjectOutputStream out = new ObjectOutputStream(bos);
+    //      out.writeObject(this);
+    //      out.flush();
+    //      out.close();
+    //
+    //      ObjectInputStream in = new ObjectInputStream(new
+    // ByteArrayInputStream(bos.toByteArray()));
+    //      ExecutionInfoToken copiedToken = (ExecutionInfoToken) in.readObject();
+    //      return copiedToken;
+    //
+    //    } catch (ClassNotFoundException e) {
+    //      // TODO Auto-generated catch block
+    //      e.printStackTrace();
+    //    } catch (NotSerializableException e) {
+    //      // TODO: handle this case
+    //      e.printStackTrace();
+    //    } catch (IOException e) {
+    //      e.printStackTrace();
+    //    }
+    //    return null;
+//>>>>>>> origin/master
 
     //    ExecutionInfoToken newToken = new ExecutionInfoToken();
     //

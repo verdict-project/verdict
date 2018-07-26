@@ -16,11 +16,11 @@
 
 package org.verdictdb.core.resulthandler;
 
-import java.util.Iterator;
-
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.core.execplan.ExecutionInfoToken;
 import org.verdictdb.core.execplan.ExecutionTokenQueue;
+
+import java.util.Iterator;
 
 public class ExecutionResultReader implements Iterable<DbmsQueryResult>, Iterator<DbmsQueryResult> {
 

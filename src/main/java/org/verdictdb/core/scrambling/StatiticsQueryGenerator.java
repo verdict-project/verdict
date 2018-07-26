@@ -16,10 +16,10 @@
 
 package org.verdictdb.core.scrambling;
 
-import java.util.List;
-
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.core.sqlobject.SelectQuery;
+
+import java.util.List;
 
 public interface StatiticsQueryGenerator {
 

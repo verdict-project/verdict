@@ -17,12 +17,7 @@
 package org.verdictdb.sqlwriter;
 
 import org.verdictdb.core.querying.CreateSchemaQuery;
-import org.verdictdb.core.sqlobject.CreateTableQuery;
-import org.verdictdb.core.sqlobject.DropTableQuery;
-import org.verdictdb.core.sqlobject.InsertValuesQuery;
-import org.verdictdb.core.sqlobject.SelectQuery;
-import org.verdictdb.core.sqlobject.SetOperationRelation;
-import org.verdictdb.core.sqlobject.SqlConvertible;
+import org.verdictdb.core.sqlobject.*;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBTypeException;
 import org.verdictdb.exception.VerdictDBValueException;

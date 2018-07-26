@@ -1,9 +1,5 @@
 package org.verdictdb.core.querying;
 
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.util.Arrays;
-
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.connection.DbmsConnection;
@@ -13,6 +9,10 @@ import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sqlsyntax.H2Syntax;
 import org.verdictdb.sqlwriter.QueryToSql;
+
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.util.Arrays;
 
 public class DropTableExecutionNodeTest {
   

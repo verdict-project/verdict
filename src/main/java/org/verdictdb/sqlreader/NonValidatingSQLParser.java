@@ -16,8 +16,6 @@
 
 package org.verdictdb.sqlreader;
 
-import java.util.List;
-
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.apache.commons.lang3.tuple.Pair;
@@ -25,6 +23,8 @@ import org.verdictdb.core.sqlobject.AbstractRelation;
 import org.verdictdb.core.sqlobject.CreateScrambleQuery;
 import org.verdictdb.parser.VerdictSQLLexer;
 import org.verdictdb.parser.VerdictSQLParser;
+
+import java.util.List;
 
 /**
  * This is the entry point to both the select query and the scrambling query.

@@ -1,14 +1,14 @@
 package org.verdictdb.sqlsyntax;
 
-import static org.junit.Assert.assertEquals;
+import org.junit.Test;
+import org.verdictdb.connection.JdbcConnection;
+import org.verdictdb.exception.VerdictDBDbmsException;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
-import org.junit.Test;
-import org.verdictdb.connection.JdbcConnection;
-import org.verdictdb.exception.VerdictDBDbmsException;
+import static org.junit.Assert.assertEquals;
 
 public class SqlSyntaxTest {
 

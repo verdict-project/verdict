@@ -16,28 +16,17 @@
 
 package org.verdictdb.commons;
 
+import org.verdictdb.connection.TypeCasting;
+import org.verdictdb.jdbc41.VerdictJdbcArray;
+
+import javax.sql.rowset.serial.SerialBlob;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.net.URL;
-import java.sql.Array;
-import java.sql.Blob;
-import java.sql.Clob;
-import java.sql.Date;
-import java.sql.NClob;
-import java.sql.Ref;
-import java.sql.RowId;
-import java.sql.SQLException;
-import java.sql.SQLXML;
-import java.sql.Time;
-import java.sql.Timestamp;
+import java.sql.*;
 import java.util.HashMap;
 import java.util.Map;
-
-import javax.sql.rowset.serial.SerialBlob;
-
-import org.verdictdb.connection.TypeCasting;
-import org.verdictdb.jdbc41.VerdictJdbcArray;
 
 public abstract class AttributeValueRetrievalHelper {
 
