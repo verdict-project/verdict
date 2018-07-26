@@ -73,7 +73,7 @@ public class ProjectionExecutionNodeTest {
     )));
     QueryExecutionPlan plan = QueryExecutionPlanFactory.create("newschema");
     ProjectionNode node = ProjectionNode.create(plan, query);
-    String aliasName = String.format("verdictdbalias_%d_0", plan.getSerialNumber());
+    String aliasName = String.format("verdictdb_alias_%d_0", plan.getSerialNumber());
 
     assertEquals(1, node.getExecutableNodeBaseDependents().size());
     SelectQuery rewritten = SelectQuery.create(

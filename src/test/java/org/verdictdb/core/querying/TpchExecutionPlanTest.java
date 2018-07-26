@@ -2121,7 +2121,7 @@ public class TpchExecutionPlanTest {
     QueryExecutionPlan queryExecutionPlan = QueryExecutionPlanFactory.create("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
 
-    String aliasName = String.format("verdictdbalias_%d_0", queryExecutionPlan.getSerialNumber());
+    String aliasName = String.format("verdictdb_alias_%d_0", queryExecutionPlan.getSerialNumber());
     SelectQuery rewritten = SelectQuery.create(
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn(placeholderSchemaName, aliasName, "quantity_avg"), "quantity_avg")),

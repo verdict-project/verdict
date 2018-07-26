@@ -251,7 +251,7 @@ public class AsyncAggScaleTest {
     actual = actual.replaceAll("verdictdbtemptable_\\d+_\\d+", "verdictdbtemptable");
     expected = "select (1 + (sum(verdictdb_internal_tier_consolidated.\"agg0\") / " +
                    "sum(verdictdb_internal_tier_consolidated.\"agg1\"))) * " +
-                   "sum(verdictdb_internal_tier_consolidated.\"agg0\") as \"vc2\" " +
+                   "sum(verdictdb_internal_tier_consolidated.\"agg0\") as \"vc4\" " +
                    "from (" +
                    "select 2.0000000000000000 * verdictdb_internal_before_scaling.\"agg0\" as \"agg0\", " +
                    "2.0000000000000000 * verdictdb_internal_before_scaling.\"agg1\" as \"agg1\", " +
