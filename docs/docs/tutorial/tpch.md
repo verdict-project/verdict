@@ -589,11 +589,11 @@ static void loadRedshiftData(String schema, String table, Connection conn)
 
 Use following commands to put data into HDFS. Suppose the tpch1g data is stored in `/home/username/workspace/tpch1g` and you hope to put your data in `/tmp/tpch1g` in HDFS.
 ```bash
-$ sudo su dfs
+$ sudo su hdfs
 $ hdfs dfs -put /home/username/workspace/tpch1g /tmp/tpch1g
 $ hdfs dfs -chown -R user /tmp/tpch1g
 ```
-`user` is the owner of the tpch1g directory you want to.
+`user` is the owner of the tpch1g directory you want.
 
 If you encounter write permission problem in the next step when creating tables, you can use command
 ```bash
