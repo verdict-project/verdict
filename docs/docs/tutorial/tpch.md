@@ -31,18 +31,17 @@ Connect to your MySQL database.
 mysql -uroot
 ```
 
-Create a schema and set it as the default schema.
+Create a schema for test.
 
 ```bash
 mysql> create database tpch1g;
-mysql> use tpch1g;
 ```
 
 Create empty tables; simply copy and paste the following table definition statements into the MySQL shell. We will import the data later into these tables.
 
 ```sql
 -- nation
-CREATE TABLE IF NOT EXISTS nation (
+CREATE TABLE IF NOT EXISTS tpch1g.nation (
   `n_nationkey`  INT,
   `n_name`       CHAR(25),
   `n_regionkey`  INT,
@@ -51,7 +50,7 @@ CREATE TABLE IF NOT EXISTS nation (
   PRIMARY KEY (`n_nationkey`));
 
 -- region
-CREATE TABLE IF NOT EXISTS region (
+CREATE TABLE IF NOT EXISTS tpch1g.region (
   `r_regionkey`  INT,
   `r_name`       CHAR(25),
   `r_comment`    VARCHAR(152),
@@ -59,7 +58,7 @@ CREATE TABLE IF NOT EXISTS region (
   PRIMARY KEY (`r_regionkey`));
 
 -- supplier
-CREATE TABLE IF NOT EXISTS supplier (
+CREATE TABLE IF NOT EXISTS tpch1g.supplier (
   `s_suppkey`     INT,
   `s_name`        CHAR(25),
   `s_address`     VARCHAR(40),
@@ -71,7 +70,7 @@ CREATE TABLE IF NOT EXISTS supplier (
   PRIMARY KEY (`s_suppkey`));
 
 -- customer
-CREATE TABLE IF NOT EXISTS customer (
+CREATE TABLE IF NOT EXISTS tpch1g.customer (
   `c_custkey`     INT,
   `c_name`        VARCHAR(25),
   `c_address`     VARCHAR(40),
@@ -84,7 +83,7 @@ CREATE TABLE IF NOT EXISTS customer (
   PRIMARY KEY (`c_custkey`));
 
 -- part
-CREATE TABLE IF NOT EXISTS part (
+CREATE TABLE IF NOT EXISTS tpch1g.part (
   `p_partkey`     INT,
   `p_name`        VARCHAR(55),
   `p_mfgr`        CHAR(25),
@@ -98,7 +97,7 @@ CREATE TABLE IF NOT EXISTS part (
   PRIMARY KEY (`p_partkey`));
 
 -- partsupp
-CREATE TABLE IF NOT EXISTS partsupp (
+CREATE TABLE IF NOT EXISTS tpch1g.partsupp (
   `ps_partkey`     INT,
   `ps_suppkey`     INT,
   `ps_availqty`    INT,
@@ -108,7 +107,7 @@ CREATE TABLE IF NOT EXISTS partsupp (
   PRIMARY KEY (`ps_partkey`));
 
 -- orders
-CREATE TABLE IF NOT EXISTS orders (
+CREATE TABLE IF NOT EXISTS tpch1g.orders (
   `o_orderkey`       INT,
   `o_custkey`        INT,
   `o_orderstatus`    CHAR(1),
@@ -122,7 +121,7 @@ CREATE TABLE IF NOT EXISTS orders (
   PRIMARY KEY (`o_orderkey`));
 
 -- lineitem
-CREATE TABLE IF NOT EXISTS lineitem (
+CREATE TABLE IF NOT EXISTS tpch1g.lineitem (
   `l_orderkey`    INT,
   `l_partkey`     INT,
   `l_suppkey`     INT,
@@ -202,7 +201,7 @@ CREATE TABLE IF NOT EXISTS "tpch1g"."supplier" (
   "s_phone"       CHAR(15),
   "s_acctbal"     DECIMAL(15,2),
   "s_comment"     VARCHAR(101),
-  "s_dummy" varchar(10),
+  "s_dummy"       VARCHAR(10),
   PRIMARY KEY ("s_suppkey"));
 
 -- customer
@@ -258,23 +257,23 @@ CREATE TABLE IF NOT EXISTS "tpch1g"."orders" (
 
 -- lineitem
 CREATE TABLE IF NOT EXISTS "tpch1g"."lineitem"(
-  "l_orderkey"    INT,
-  "l_partkey"     INT,
-  "l_suppkey"     INT,
-  "l_linenumber"  INT,
-  "l_quantity"    DECIMAL(15,2),
-  "l_extendedprice"  DECIMAL(15,2),
-  "l_discount"    DECIMAL(15,2),
-  "l_tax"         DECIMAL(15,2),
-  "l_returnflag"  CHAR(1),
-  "l_linestatus"  CHAR(1),
-  "l_shipdate"    DATE,
-  "l_commitdate"  DATE,
-  "l_receiptdate" DATE,
-  "l_shipinstruct" CHAR(25),
-  "l_shipmode"    CHAR(10),
-  "l_comment"     VARCHAR(44),
-  "l_dummy"       VARCHAR(10));
+  "l_orderkey"          INT,
+  "l_partkey"           INT,
+  "l_suppkey"           INT,
+  "l_linenumber"        INT,
+  "l_quantity"          DECIMAL(15,2),
+  "l_extendedprice"     DECIMAL(15,2),
+  "l_discount"          DECIMAL(15,2),
+  "l_tax"               DECIMAL(15,2),
+  "l_returnflag"        CHAR(1),
+  "l_linestatus"        CHAR(1),
+  "l_shipdate"          DATE,
+  "l_commitdate"        DATE,
+  "l_receiptdate"       DATE,
+  "l_shipinstruct"      CHAR(25),
+  "l_shipmode"          CHAR(10),
+  "l_comment"           VARCHAR(44),
+  "l_dummy"             VARCHAR(10));
 ```
 
 ### Import Data
@@ -294,10 +293,38 @@ Suppose your work directory is `/home/username/workspace` and the tpch1g data is
 
 ## Apache Spark
 
+### Put data to HDFS
+
+Use following commands to put data into HDFS. Suppose the tpch1g data is stored in `/home/username/workspace/tpch1g` and you hope to put your data in `/tmp/tpch1g` in HDFS.
+```bash
+$ hdfs dfs -mkdir -p /tmp/tpch1g/region
+$ hdfs dfs -mkdir -p /tmp/tpch1g/nation
+$ hdfs dfs -mkdir -p /tmp/tpch1g/customer
+$ hdfs dfs -mkdir -p /tmp/tpch1g/supplier
+$ hdfs dfs -mkdir -p /tmp/tpch1g/part
+$ hdfs dfs -mkdir -p /tmp/tpch1g/partsupp
+$ hdfs dfs -mkdir -p /tmp/tpch1g/orders
+$ hdfs dfs -mkdir -p /tmp/tpch1g/lineitem
+$ hdfs dfs -put /home/username/workspace/tpch1g/region/region.tbl       /tmp/tpch1g/region
+$ hdfs dfs -put /home/username/workspace/tpch1g/nation/nation.tbl       /tmp/tpch1g/nation
+$ hdfs dfs -put /home/username/workspace/tpch1g/customer/customer.tbl   /tmp/tpch1g/customer
+$ hdfs dfs -put /home/username/workspace/tpch1g/supplier/supplier.tbl   /tmp/tpch1g/supplier
+$ hdfs dfs -put /home/username/workspace/tpch1g/part/part.tbl           /tmp/tpch1g/part
+$ hdfs dfs -put /home/username/workspace/tpch1g/partsupp/partsupp.tbl   /tmp/tpch1g/partsupp
+$ hdfs dfs -put /home/username/workspace/tpch1g/orders/orders.tbl       /tmp/tpch1g/orders
+$ hdfs dfs -put /home/username/workspace/tpch1g/lineitem/lineitem.tbl   /tmp/tpch1g/lineitem
+```
+`user` is the owner of the tpch1g directory you want.
+
+If you encounter write permission problem in the next step when creating tables, you can use command
+```bash
+$ hdfs dfs -chmomd -R 777 /tmp/tpch1g
+```
+to give full access to your directory.
+
 ### Create table and load data
 
 Simply copy and paste following queries to spark to set up TPC-H tables.
-Suppose your work directory is `/home/username/workspace` and the tpch1g data is stored in `/home/username/workspace/tpch1g`.
 
 ```sql
 -- nation
@@ -309,7 +336,7 @@ CREATE TABLE IF NOT EXISTS nation (
   `n_dummy`      VARCHAR(10))
   ROW FORMAT DELIMITED FIELDS TERMINATED BY '|'
   STORED AS TEXTFILE
-  LOCATION '/home/username/workspace/tpch1g/nation/nation';
+  LOCATION '/tmp/tpch1g/nation/nation';
 
 -- region
 CREATE TABLE IF NOT EXISTS region (
@@ -319,7 +346,7 @@ CREATE TABLE IF NOT EXISTS region (
   `r_dummy`      VARCHAR(10))
   ROW FORMAT DELIMITED FIELDS TERMINATED BY '|'
   STORED AS TEXTFILE
-  LOCATION '/home/username/workspace/tpch1g/region/region';
+  LOCATION '/tmp/tpch1g/region/region';
 
 
 -- supplier
@@ -334,7 +361,7 @@ CREATE TABLE IF NOT EXISTS supplier (
   `s_dummy` varchar(10))
   ROW FORMAT DELIMITED FIELDS TERMINATED BY '|'
   STORED AS TEXTFILE
-  LOCATION '/home/username/workspace/tpch1g/supplier/supplier';
+  LOCATION '/tmp/tpch1g/supplier/supplier';
 
 
 -- customer
@@ -350,7 +377,7 @@ CREATE TABLE IF NOT EXISTS customer (
   `c_dummy`       VARCHAR(10))
   ROW FORMAT DELIMITED FIELDS TERMINATED BY '|'
   STORED AS TEXTFILE
-  LOCATION '/home/username/workspace/tpch1g/customer/customer';
+  LOCATION '/tmp/tpch1g/customer/customer';
 
 
 -- part
@@ -367,7 +394,7 @@ CREATE TABLE IF NOT EXISTS part (
   `p_dummy`       VARCHAR(10))
   ROW FORMAT DELIMITED FIELDS TERMINATED BY '|'
   STORED AS TEXTFILE
-  LOCATION '/home/username/workspace/tpch1g/part/part';
+  LOCATION '/tmp/tpch1g/part/part';
 
 -- partsupp
 CREATE TABLE IF NOT EXISTS partsupp (
@@ -379,7 +406,7 @@ CREATE TABLE IF NOT EXISTS partsupp (
   `ps_dummy`       VARCHAR(10))
   ROW FORMAT DELIMITED FIELDS TERMINATED BY '|'
   STORED AS TEXTFILE
-  LOCATION '/home/username/workspace/tpch1g/partsupp/partsupp';
+  LOCATION '/tmp/tpch1g/partsupp/partsupp';
 
 -- orders
 CREATE TABLE IF NOT EXISTS orders (
@@ -395,30 +422,30 @@ CREATE TABLE IF NOT EXISTS orders (
   `o_dummy`          VARCHAR(10))
    ROW FORMAT DELIMITED FIELDS TERMINATED BY '|'
    STORED AS TEXTFILE
-   LOCATION '/home/username/workspace/tpch1g/orders/orders';
+   LOCATION '/tmp/tpch1g/orders/orders';
 
 -- lineitem
 CREATE TABLE IF NOT EXISTS lineitem (
-  `l_orderkey`    INT,
-  `l_partkey`     INT,
-  `l_suppkey`     INT,
-  `l_linenumber`  INT,
-  `l_quantity`    DECIMAL(15,2),
-  `l_extendedprice`  DECIMAL(15,2),
-  `l_discount`    DECIMAL(15,2),
-  `l_tax`         DECIMAL(15,2),
-  `l_returnflag`  CHAR(1),
-  `l_linestatus`  CHAR(1),
-  `l_shipdate`    DATE,
-  `l_commitdate`  DATE,
-  `l_receiptdate` DATE,
-  `l_shipinstruct` CHAR(25),
-  `l_shipmode`    CHAR(10),
-  `l_comment`     VARCHAR(44),
-  `l_dummy`       VARCHAR(10))
+  `l_orderkey`          INT,
+  `l_partkey`           INT,
+  `l_suppkey`           INT,
+  `l_linenumber`        INT,
+  `l_quantity`          DECIMAL(15,2),
+  `l_extendedprice`     DECIMAL(15,2),
+  `l_discount`          DECIMAL(15,2),
+  `l_tax`               DECIMAL(15,2),
+  `l_returnflag`        CHAR(1),
+  `l_linestatus`        CHAR(1),
+  `l_shipdate`          DATE,
+  `l_commitdate`        DATE,
+  `l_receiptdate`       DATE,
+  `l_shipinstruct`      CHAR(25),
+  `l_shipmode`          CHAR(10),
+  `l_comment`           VARCHAR(44),
+  `l_dummy`             VARCHAR(10))
   ROW FORMAT DELIMITED FIELDS TERMINATED BY '|'
   STORED AS TEXTFILE
-  LOCATION '/home/username/workspace/tpch1g/lineitem/lineitem';
+  LOCATION '/tmp/tpch1g/lineitem/lineitem';
 ```
 
 
@@ -460,7 +487,7 @@ CREATE TABLE IF NOT EXISTS "tpch1g"."supplier" (
   "s_phone"       CHAR(15),
   "s_acctbal"     DECIMAL(15,2),
   "s_comment"     VARCHAR(101),
-  "s_dummy" varchar(10),
+  "s_dummy"       VARCHAR(10),
   PRIMARY KEY ("s_suppkey"));
 
 -- customer
@@ -516,23 +543,23 @@ CREATE TABLE IF NOT EXISTS "tpch1g"."orders" (
 
 -- lineitem
 CREATE TABLE IF NOT EXISTS "tpch1g"."lineitem"(
-  "l_orderkey"    INT,
-  "l_partkey"     INT,
-  "l_suppkey"     INT,
-  "l_linenumber"  INT,
-  "l_quantity"    DECIMAL(15,2),
-  "l_extendedprice"  DECIMAL(15,2),
-  "l_discount"    DECIMAL(15,2),
-  "l_tax"         DECIMAL(15,2),
-  "l_returnflag"  CHAR(1),
-  "l_linestatus"  CHAR(1),
-  "l_shipdate"    DATE,
-  "l_commitdate"  DATE,
-  "l_receiptdate" DATE,
-  "l_shipinstruct" CHAR(25),
-  "l_shipmode"    CHAR(10),
-  "l_comment"     VARCHAR(44),
-  "l_dummy"       VARCHAR(10));
+  "l_orderkey"          INT,
+  "l_partkey"           INT,
+  "l_suppkey"           INT,
+  "l_linenumber"        INT,
+  "l_quantity"          DECIMAL(15,2),
+  "l_extendedprice"     DECIMAL(15,2),
+  "l_discount"          DECIMAL(15,2),
+  "l_tax"               DECIMAL(15,2),
+  "l_returnflag"        CHAR(1),
+  "l_linestatus"        CHAR(1),
+  "l_shipdate"          DATE,
+  "l_commitdate"        DATE,
+  "l_receiptdate"       DATE,
+  "l_shipinstruct"      CHAR(25),
+  "l_shipmode"          CHAR(10),
+  "l_comment"           VARCHAR(44),
+  "l_dummy"             VARCHAR(10));
 ```
 
 ### Load Data
@@ -589,7 +616,14 @@ static void loadRedshiftData(String schema, String table, Connection conn)
 
 Use following commands to put data into HDFS. Suppose the tpch1g data is stored in `/home/username/workspace/tpch1g` and you hope to put your data in `/tmp/tpch1g` in HDFS.
 ```bash
-$ sudo su hdfs
+$ hdfs dfs -mkdir -p /tmp/tpch1g/region
+$ hdfs dfs -mkdir -p /tmp/tpch1g/nation
+$ hdfs dfs -mkdir -p /tmp/tpch1g/customer
+$ hdfs dfs -mkdir -p /tmp/tpch1g/supplier
+$ hdfs dfs -mkdir -p /tmp/tpch1g/part
+$ hdfs dfs -mkdir -p /tmp/tpch1g/partsupp
+$ hdfs dfs -mkdir -p /tmp/tpch1g/orders
+$ hdfs dfs -mkdir -p /tmp/tpch1g/lineitem
 $ hdfs dfs -put /home/username/workspace/tpch1g/region/region.tbl       /tmp/tpch1g/region
 $ hdfs dfs -put /home/username/workspace/tpch1g/nation/nation.tbl       /tmp/tpch1g/nation
 $ hdfs dfs -put /home/username/workspace/tpch1g/customer/customer.tbl   /tmp/tpch1g/customer
@@ -598,9 +632,7 @@ $ hdfs dfs -put /home/username/workspace/tpch1g/part/part.tbl           /tmp/tpc
 $ hdfs dfs -put /home/username/workspace/tpch1g/partsupp/partsupp.tbl   /tmp/tpch1g/partsupp
 $ hdfs dfs -put /home/username/workspace/tpch1g/orders/orders.tbl       /tmp/tpch1g/orders
 $ hdfs dfs -put /home/username/workspace/tpch1g/lineitem/lineitem.tbl   /tmp/tpch1g/lineitem
-$ hdfs dfs -chown -R user /tmp/tpch1g
 ```
-`user` is the owner of the tpch1g directory you want.
 
 If you encounter write permission problem in the next step when creating tables, you can use command
 ```bash
@@ -715,23 +747,23 @@ CREATE EXTERNAL TABLE IF NOT EXISTS `tpch1g`.`orders` (
 
 -- lineitem
 CREATE EXTERNAL TABLE IF NOT EXISTS `tpch1g`.`lineitem`(
-  `l_orderkey`    INT,
-  `l_partkey`     INT,
-  `l_suppkey`     INT,
-  `l_linenumber`  INT,
-  `l_quantity`    DECIMAL(15,2),
-  `l_extendedprice`  DECIMAL(15,2),
-  `l_discount`    DECIMAL(15,2),
-  `l_tax`         DECIMAL(15,2),
-  `l_returnflag`  STRING,
-  `l_linestatus`  STRING,
-  `l_shipdate`    TIMESTAMP,
-  `l_commitdate`  TIMESTAMP,
-  `l_receiptdate` TIMESTAMP,
-  `l_shipinstruct` STRING,
-  `l_shipmode`    STRING,
-  `l_comment`     STRING,
-  `l_dummy`       STRING)
+  `l_orderkey`          INT,
+  `l_partkey`           INT,
+  `l_suppkey`           INT,
+  `l_linenumber`        INT,
+  `l_quantity`          DECIMAL(15,2),
+  `l_extendedprice`     DECIMAL(15,2),
+  `l_discount`          DECIMAL(15,2),
+  `l_tax`               DECIMAL(15,2),
+  `l_returnflag`        STRING,
+  `l_linestatus`        STRING,
+  `l_shipdate`          TIMESTAMP,
+  `l_commitdate`        TIMESTAMP,
+  `l_receiptdate`       TIMESTAMP,
+  `l_shipinstruct`      STRING,
+  `l_shipmode`          STRING,
+  `l_comment`           STRING,
+  `l_dummy`             STRING)
   ROW FORMAT DELIMITED FIELDS TERMINATED BY '|'
   LOCATION '/tmp/tpch1g/lineitem';
 ```

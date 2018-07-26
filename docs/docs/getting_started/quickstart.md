@@ -39,11 +39,10 @@ stmt.execute(
     "  product   varchar(100)," +
     "  price     double)");
 List<List<Object>> contents = new ArrayList<>();
-contents.add(Arrays.<Object>asList("A", 3.6));
-contents.add(Arrays.<Object>asList("B", 21));
-contents.add(Arrays.<Object>asList("C", 23));
-contents.add(Arrays.<Object>asList("D", 2.8));
-contents.add(Arrays.<Object>asList("E", 15.9));
+// generate 1000 rows
+for (int i=0;i<1000;i++) {
+  contents.add(Arrays.<Object>asList(Character.toString ((char) (i%26+65)), Math.random()*100));
+}
 
 stmt.execute("CREATE SCHEMA \"MYSCHEMA\"");
 stmt.execute("CREATE TABLE \"MYSCHEMA\".\"sales\"(product varchar(100), price double)");
@@ -108,11 +107,10 @@ public class FirstVerdictDBExample {
             "  product   varchar(100)," +
             "  price     double)");
     List<List<Object>> contents = new ArrayList<>();
-    contents.add(Arrays.<Object>asList("A", 3.6));
-    contents.add(Arrays.<Object>asList("B", 21));
-    contents.add(Arrays.<Object>asList("C", 23));
-    contents.add(Arrays.<Object>asList("D", 2.8));
-    contents.add(Arrays.<Object>asList("E", 15.9));
+    // generate 1000 rows
+    for (int i=0;i<1000;i++) {
+      contents.add(Arrays.<Object>asList(Character.toString ((char) (i%26+65)), Math.random()*100));
+    }
 
     stmt.execute("CREATE SCHEMA \"MYSCHEMA\"");
     stmt.execute("CREATE TABLE \"MYSCHEMA\".\"sales\"(product varchar(100), price double)");
