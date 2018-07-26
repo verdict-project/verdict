@@ -72,7 +72,7 @@ public class JdbcMetaDataForImpalaTest {
 
   @Test
   public void testColumnTypes() throws VerdictDBDbmsException, SQLException {
-    List<Pair<String, String>> columns = dbmsConn.getColumns("default", TABLE_NAME);
+    List<Pair<String, String>> columns = dbmsConn.getColumns(IMPALA_DATABASE, TABLE_NAME);
     assertEquals(11, columns.size());
 
     ResultSet expected =

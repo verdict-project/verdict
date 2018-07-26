@@ -49,7 +49,8 @@ public class JdbcMetaDataForMySqlTest {
     dbmsConn = JdbcConnection.create(conn);
 
     stmt = conn.createStatement();
-    stmt.execute(String.format("DROP TABLE IF EXISTS %s", TABLE_NAME));
+    stmt.execute(String.format("DROP SCHEMA IF EXISTS %s", MYSQL_DATABASE));
+    stmt.execute(String.format("CREATE SCHEMA IF NOT EXISTS %s", MYSQL_DATABASE));
     stmt.execute(
         String.format(
             "CREATE TABLE %s.%s ("
@@ -90,7 +91,6 @@ public class JdbcMetaDataForMySqlTest {
   }
 
   public static void tearDown() throws VerdictDBDbmsException {
-    dbmsConn.execute(String.format("DROP TABLE IF EXISTS %s", TABLE_NAME));
     dbmsConn.execute(String.format("DROP SCHEMA IF EXISTS %s", MYSQL_DATABASE));
     dbmsConn.close();
   }

@@ -102,7 +102,9 @@ public class JdbcResultSetMetaDataMysqlTest {
   public void createJdbcResultSetMetaData() throws SQLException, VerdictDBValueException {
     rs =
         stmt.executeQuery(
-            "SELECT gender, count(*) as cnt, avg(age) as ageavg FROM people GROUP BY gender");
+            String.format(
+                "SELECT gender, count(*) as cnt, avg(age) as ageavg FROM %s.people GROUP BY gender",
+                MYSQL_DATABASE));
     JdbcQueryResult queryResult = new JdbcQueryResult(rs);
     List<String> nonAgg = new ArrayList<>();
     List<AggNameAndType> agg = new ArrayList<>();

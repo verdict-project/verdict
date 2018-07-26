@@ -129,7 +129,8 @@ public class JdbcResultSetMetaDataTypeForRedshiftTest {
     Timestamp test1 = expectedRs.getTimestamp(28);
     Timestamp test2 = expectedRs.getTimestamp(29);
     String testStr = expectedRs.getString(20);
-    String sql = String.format("select * from %s.%s", REDSHIFT_SCHEMA, TABLE_NAME);
+    String sql =
+        String.format("select * from %s.%s order by smallintcol", REDSHIFT_SCHEMA, TABLE_NAME);
     VerdictSingleResultFromDbmsQueryResult verdictResult =
         new VerdictSingleResultFromDbmsQueryResult(dbmsConn.execute(sql));
     ResultSet ourResult = new VerdictResultSet(verdictResult);
