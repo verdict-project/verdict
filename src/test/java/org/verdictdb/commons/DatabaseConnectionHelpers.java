@@ -99,6 +99,7 @@ public class DatabaseConnectionHelpers {
   public static final String COMMON_TABLE_NAME = "mytable";
   public static final String COMMON_SCHEMA_NAME =
       "verdictdb_test_" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
+  public static final String TEMPLATE_SCHEMA_NAME = "VERDICTDB_TEST_DBNAME";
 
   public static SparkSession setupSpark(String appname, String schema) {
     SparkSession spark =

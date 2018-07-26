@@ -42,3 +42,4 @@ license_update.py
 core/src/test/java/edu/umich/verdict/temp/
 spark-warehouse/
 metastore_db/
+**/**/VerdictSQLLexer.tokens

@@ -1,30 +1,21 @@
 package org.verdictdb.jdbc41;
 
-import static org.junit.Assert.assertEquals;
-
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
+import org.apache.commons.lang3.RandomStringUtils;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.verdictdb.exception.VerdictDBDbmsException;
 
-/**
- * Created by Dong Young Yoon on 7/18/18.
- */
+import java.sql.*;
+import java.util.*;
+
+import static org.junit.Assert.assertEquals;
+
+/** Created by Dong Young Yoon on 7/18/18. */
 @RunWith(Parameterized.class)
-public class JdbcCommonQueryTestForAllDatabases {
+public class JdbcCommonQueryForAllDatabasesTest {
 
   private static Map<String, Connection> connMap = new HashMap<>();
 
@@ -54,12 +45,7 @@ public class JdbcCommonQueryTestForAllDatabases {
   private static final String IMPALA_HOST;
 
   static {
-    String env = System.getenv("BUILD_ENV");
-    if (env != null && (env.equals("GitLab") || env.equals("DockerCompose"))) {
-      IMPALA_HOST = "impala";
-    } else {
-      IMPALA_HOST = "localhost";
-    }
+    IMPALA_HOST = System.getenv("VERDICTDB_TEST_IMPALA_HOST");
   }
 
   private static final String IMPALA_DATABASE = "default";
@@ -103,9 +89,12 @@ public class JdbcCommonQueryTestForAllDatabases {
 
   private static final String TABLE_NAME = "mytable";
 
+  private static final String SCHEMA_NAME =
+      "verdict_test_" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
+
   private static VerdictConnection mysqlVc;
 
-  public JdbcCommonQueryTestForAllDatabases(String database) {
+  public JdbcCommonQueryForAllDatabasesTest(String database) {
     this.database = database;
   }
 
@@ -117,25 +106,48 @@ public class JdbcCommonQueryTestForAllDatabases {
     setupPostgresql();
   }
 
-  @Parameterized.Parameters(name="{0}")
+  @AfterClass
+  public static void tearDown() throws SQLException {
+    for (String database : connMap.keySet()) {
+      Connection conn = connMap.get(database);
+      if (conn != null) {
+        if (database.equals("mysql")) {
+          conn.createStatement().execute(String.format("DROP SCHEMA IF EXISTS %s", SCHEMA_NAME));
+        } else {
+          conn.createStatement()
+              .execute(String.format("DROP SCHEMA IF EXISTS %s CASCADE", SCHEMA_NAME));
+        }
+        conn.close();
+      }
+    }
+  }
+
+  @Parameterized.Parameters(name = "{0}")
   public static Collection<String> databases() {
     return Arrays.asList("mysql", "impala", "redshift", "postgresql");
   }
 
   private static void loadData(Connection conn) throws SQLException {
     List<List<Object>> contents = new ArrayList<>();
-    contents.add(Arrays.<Object>asList(1, "Anju", "female", 15, 170.2, "USA", "2017-10-01 21:22:23"));
-    contents.add(Arrays.<Object>asList(2, "Sonia", "female", 17, 156.5, "USA", "2017-10-02 21:22:23"));
+    contents.add(
+        Arrays.<Object>asList(1, "Anju", "female", 15, 170.2, "USA", "2017-10-01 21:22:23"));
+    contents.add(
+        Arrays.<Object>asList(2, "Sonia", "female", 17, 156.5, "USA", "2017-10-02 21:22:23"));
     contents.add(Arrays.<Object>asList(3, "Asha", "male", 23, 168.1, "CHN", "2017-10-03 21:22:23"));
     contents.add(Arrays.<Object>asList(3, "Joe", "male", 14, 178.6, "USA", "2017-10-04 21:22:23"));
     contents.add(Arrays.<Object>asList(3, "JoJo", "male", 18, 190.7, "CHN", "2017-10-05 21:22:23"));
     contents.add(Arrays.<Object>asList(3, "Sam", "male", 18, 190.0, "USA", "2017-10-06 21:22:23"));
-    contents.add(Arrays.<Object>asList(3, "Alice", "female", 18, 190.21, "CHN", "2017-10-07 21:22:23"));
+    contents.add(
+        Arrays.<Object>asList(3, "Alice", "female", 18, 190.21, "CHN", "2017-10-07 21:22:23"));
     contents.add(Arrays.<Object>asList(3, "Bob", "male", 18, 190.3, "CHN", "2017-10-08 21:22:23"));
 
     Statement stmt = conn.createStatement();
-    stmt.execute("DROP TABLE IF EXISTS people");
-    stmt.execute("CREATE TABLE people(id smallint, name varchar(255), gender varchar(8), age float, height float, nation varchar(8), birth timestamp)");
+    stmt.execute(String.format("CREATE SCHEMA IF NOT EXISTS %s", SCHEMA_NAME));
+    stmt.execute(String.format("DROP TABLE IF EXISTS %s.people", SCHEMA_NAME));
+    stmt.execute(
+        String.format(
+            "CREATE TABLE %s.people(id smallint, name varchar(255), gender varchar(8), age float, height float, nation varchar(8), birth timestamp)",
+            SCHEMA_NAME));
     for (List<Object> row : contents) {
       String id = row.get(0).toString();
       String name = row.get(1).toString();
@@ -144,24 +156,34 @@ public class JdbcCommonQueryTestForAllDatabases {
       String height = row.get(4).toString();
       String nation = row.get(5).toString();
       String birth = row.get(6).toString();
-      stmt.execute(String.format("INSERT INTO people(id, name, gender, age, height, nation, birth) VALUES(%s, '%s', '%s', %s, %s, '%s', '%s')", id, name, gender, age, height, nation, birth));
+      stmt.execute(
+          String.format(
+              "INSERT INTO %s.people(id, name, gender, age, height, nation, birth) VALUES(%s, '%s', '%s', %s, %s, '%s', '%s')",
+              SCHEMA_NAME, id, name, gender, age, height, nation, birth));
     }
   }
 
   private static void loadDataImpala(Connection conn) throws SQLException {
     List<List<Object>> contents = new ArrayList<>();
-    contents.add(Arrays.<Object>asList(1, "Anju", "female", 15, 170.2, "USA", "2017-10-01 21:22:23"));
-    contents.add(Arrays.<Object>asList(2, "Sonia", "female", 17, 156.5, "USA", "2017-10-02 21:22:23"));
+    contents.add(
+        Arrays.<Object>asList(1, "Anju", "female", 15, 170.2, "USA", "2017-10-01 21:22:23"));
+    contents.add(
+        Arrays.<Object>asList(2, "Sonia", "female", 17, 156.5, "USA", "2017-10-02 21:22:23"));
     contents.add(Arrays.<Object>asList(3, "Asha", "male", 23, 168.1, "CHN", "2017-10-03 21:22:23"));
     contents.add(Arrays.<Object>asList(3, "Joe", "male", 14, 178.6, "USA", "2017-10-04 21:22:23"));
     contents.add(Arrays.<Object>asList(3, "JoJo", "male", 18, 190.7, "CHN", "2017-10-05 21:22:23"));
     contents.add(Arrays.<Object>asList(3, "Sam", "male", 18, 190.0, "USA", "2017-10-06 21:22:23"));
-    contents.add(Arrays.<Object>asList(3, "Alice", "female", 18, 190.21, "CHN", "2017-10-07 21:22:23"));
+    contents.add(
+        Arrays.<Object>asList(3, "Alice", "female", 18, 190.21, "CHN", "2017-10-07 21:22:23"));
     contents.add(Arrays.<Object>asList(3, "Bob", "male", 18, 190.3, "CHN", "2017-10-08 21:22:23"));
 
     Statement stmt = conn.createStatement();
-    stmt.execute("DROP TABLE IF EXISTS people");
-    stmt.execute("CREATE TABLE people(id smallint, name string, gender string, age float, height float, nation string, birth timestamp)");
+    stmt.execute(String.format("CREATE SCHEMA IF NOT EXISTS %s", SCHEMA_NAME));
+    stmt.execute(String.format("DROP TABLE IF EXISTS %s.people", SCHEMA_NAME));
+    stmt.execute(
+        String.format(
+            "CREATE TABLE %s.people(id smallint, name string, gender string, age float, height float, nation string, birth timestamp)",
+            SCHEMA_NAME));
     for (List<Object> row : contents) {
       String id = row.get(0).toString();
       String name = row.get(1).toString();
@@ -170,14 +192,18 @@ public class JdbcCommonQueryTestForAllDatabases {
       String height = row.get(4).toString();
       String nation = row.get(5).toString();
       String birth = row.get(6).toString();
-      stmt.execute(String.format("INSERT INTO people(id, name, gender, age, height, nation, birth) VALUES(%s, '%s', '%s', %s, %s, '%s', '%s')", id, name, gender, age, height, nation, birth));
+      stmt.execute(
+          String.format(
+              "INSERT INTO %s.people(id, name, gender, age, height, nation, birth) VALUES(%s, '%s', '%s', %s, %s, '%s', '%s')",
+              SCHEMA_NAME, id, name, gender, age, height, nation, birth));
     }
   }
 
   private static Connection setupMysql() throws SQLException, VerdictDBDbmsException {
     String mysqlConnectionString =
-        String.format("jdbc:mysql://%s/%s?autoReconnect=true&useSSL=false", MYSQL_HOST, MYSQL_DATABASE);
-    Connection conn = DriverManager.getConnection(mysqlConnectionString, MYSQL_USER, MYSQL_PASSWORD);
+        String.format("jdbc:mysql://%s?autoReconnect=true&useSSL=false", MYSQL_HOST);
+    Connection conn =
+        DriverManager.getConnection(mysqlConnectionString, MYSQL_USER, MYSQL_PASSWORD);
     VerdictConnection vc = new VerdictConnection(mysqlConnectionString, MYSQL_USER, MYSQL_PASSWORD);
     loadData(conn);
     connMap.put("mysql", conn);
@@ -187,8 +213,7 @@ public class JdbcCommonQueryTestForAllDatabases {
   }
 
   private static Connection setupImpala() throws SQLException, VerdictDBDbmsException {
-    String connectionString =
-        String.format("jdbc:impala://%s/%s", IMPALA_HOST, IMPALA_DATABASE);
+    String connectionString = String.format("jdbc:impala://%s", IMPALA_HOST);
     Connection conn = DriverManager.getConnection(connectionString, IMPALA_USER, IMPALA_PASSWORD);
     VerdictConnection vc = new VerdictConnection(connectionString, IMPALA_USER, IMPALA_PASSWORD);
     loadDataImpala(conn);
@@ -201,8 +226,10 @@ public class JdbcCommonQueryTestForAllDatabases {
   public static Connection setupRedshift() throws SQLException, VerdictDBDbmsException {
     String connectionString =
         String.format("jdbc:redshift://%s/%s", REDSHIFT_HOST, REDSHIFT_DATABASE);
-    Connection conn = DriverManager.getConnection(connectionString, REDSHIFT_USER, REDSHIFT_PASSWORD);
-    VerdictConnection vc = new VerdictConnection(connectionString, REDSHIFT_USER, REDSHIFT_PASSWORD);
+    Connection conn =
+        DriverManager.getConnection(connectionString, REDSHIFT_USER, REDSHIFT_PASSWORD);
+    VerdictConnection vc =
+        new VerdictConnection(connectionString, REDSHIFT_USER, REDSHIFT_PASSWORD);
     loadData(conn);
     connMap.put("redshift", conn);
     vcMap.put("redshift", vc);
@@ -213,8 +240,10 @@ public class JdbcCommonQueryTestForAllDatabases {
   public static Connection setupPostgresql() throws SQLException, VerdictDBDbmsException {
     String connectionString =
         String.format("jdbc:postgresql://%s/%s", POSTGRES_HOST, POSTGRES_DATABASE);
-    Connection conn = DriverManager.getConnection(connectionString, POSTGRES_USER, POSTGRES_PASSWORD);
-    VerdictConnection vc = new VerdictConnection(connectionString, POSTGRES_USER, POSTGRES_PASSWORD);
+    Connection conn =
+        DriverManager.getConnection(connectionString, POSTGRES_USER, POSTGRES_PASSWORD);
+    VerdictConnection vc =
+        new VerdictConnection(connectionString, POSTGRES_USER, POSTGRES_PASSWORD);
     loadData(conn);
     connMap.put("postgresql", conn);
     vcMap.put("postgresql", vc);
@@ -235,12 +264,11 @@ public class JdbcCommonQueryTestForAllDatabases {
     while (jdbcRs.next() && vcRs.next()) {
       assertEquals(jdbcRs.getInt(1), vcRs.getInt(1));
     }
-
   }
 
   @Test
   public void runSelectQueryTest() throws SQLException {
-    String sql = String.format("SELECT * FROM %s", schemaMap.get(database)) + "people order by birth";
+    String sql = String.format("SELECT * FROM %s", SCHEMA_NAME) + ".people order by birth";
     Statement jdbcStmt = connMap.get(database).createStatement();
     Statement vcStmt = vcMap.get(database).createStatement();
 
@@ -261,7 +289,7 @@ public class JdbcCommonQueryTestForAllDatabases {
 
   @Test
   public void runAggregateQueryTest() throws SQLException {
-    String sql = String.format("SELECT COUNT(*) FROM %s", schemaMap.get(database)) + "people";
+    String sql = String.format("SELECT COUNT(*) FROM %s", SCHEMA_NAME) + ".people";
     Statement jdbcStmt = connMap.get(database).createStatement();
     Statement vcStmt = vcMap.get(database).createStatement();
 
