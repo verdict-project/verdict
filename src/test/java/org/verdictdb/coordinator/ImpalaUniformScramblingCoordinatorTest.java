@@ -80,7 +80,7 @@ public class ImpalaUniformScramblingCoordinatorTest {
 
     DbmsQueryResult rs =
         dbmsConn.execute(String.format("select * from %s.lineitem", IMPALA_DATABASE));
-    System.out.println(rs.getRowCount());
+    assertEquals(1000, rs.getRowCount());
   }
 
   @Test
