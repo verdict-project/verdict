@@ -70,19 +70,25 @@ public class AsyncAggScaleTest {
 
     stmt = conn.createStatement();
     stmt.execute(String.format("CREATE SCHEMA IF NOT EXISTS\"%s\"", originalSchema));
-    stmt.executeUpdate(String.format("CREATE TABLE \"%s\".\"%s\"(\"id\" int, \"value\" double)", originalSchema, originalTable));
+    stmt.executeUpdate(
+        String.format("CREATE TABLE \"%s\".\"%s\"(\"id\" int, \"value\" double)",
+            originalSchema, originalTable));
     for (int i = 0; i < 10; i++) {
       stmt.executeUpdate(String.format("INSERT INTO \"%s\".\"%s\"(\"id\", \"value\") VALUES(%s, %f)",
           originalSchema, originalTable, i, (double) i+1));
     }
-    stmt.executeUpdate(String.format("CREATE TABLE \"%s\".\"%s\"(\"s_id\" int, \"s_value\" double)", originalSchema, smallTable));
+    stmt.executeUpdate(
+        String.format("CREATE TABLE \"%s\".\"%s\"(\"s_id\" int, \"s_value\" double)",
+            originalSchema, smallTable));
     for (int i = 0; i < 10; i++) {
-      stmt.executeUpdate(String.format("INSERT INTO \"%s\".\"%s\"(\"s_id\", \"s_value\") VALUES(%s, %f)",
-          originalSchema, smallTable, i, (double) i+1));
+      stmt.executeUpdate(
+          String.format("INSERT INTO \"%s\".\"%s\"(\"s_id\", \"s_value\") VALUES(%s, %f)",
+              originalSchema, smallTable, i, (double) i+1));
     }
 
     UniformScrambler scrambler =
-        new UniformScrambler(originalSchema, originalTable, originalSchema, "originalTable_scrambled", aggBlockCount);
+        new UniformScrambler(originalSchema, originalTable, originalSchema,
+            "originalTable_scrambled", aggBlockCount);
     CreateTableAsSelectQuery scramblingQuery = scrambler.createQuery();
     stmt.executeUpdate(QueryToSql.convert(new H2Syntax(), scramblingQuery));
     ScrambleMeta tablemeta = scrambler.generateMeta();
@@ -98,7 +104,8 @@ public class AsyncAggScaleTest {
     arr.addAll(Arrays.asList(new ImmutablePair<>("id", BIGINT),
         new ImmutablePair<>("value", DOUBLE)
     ));
-    staticMetaData.addTableData(new StaticMetaData.TableInfo(originalSchema, "originalTable_scrambled"), arr);
+    staticMetaData.addTableData(
+        new StaticMetaData.TableInfo(originalSchema, "originalTable_scrambled"), arr);
     arr = new ArrayList<>();
     arr.addAll(Arrays.asList(new ImmutablePair<>("s_id", BIGINT),
         new ImmutablePair<>("s_value", DOUBLE)
@@ -115,7 +122,8 @@ public class AsyncAggScaleTest {
     RelationStandardizer gen = new RelationStandardizer(staticMetaData);
     relation = gen.standardize((SelectQuery) relation);
 
-    QueryExecutionPlan queryExecutionPlan = QueryExecutionPlanFactory.create("verdictdb_temp", meta, (SelectQuery) relation);
+    QueryExecutionPlan queryExecutionPlan =
+        QueryExecutionPlanFactory.create("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
     Dimension d1 = new Dimension("originalSchema", "originalTable_scrambled", 0, 0);
@@ -169,7 +177,8 @@ public class AsyncAggScaleTest {
     RelationStandardizer gen = new RelationStandardizer(staticMetaData);
     relation = gen.standardize((SelectQuery) relation);
 
-    QueryExecutionPlan queryExecutionPlan = QueryExecutionPlanFactory.create("verdictdb_temp", meta, (SelectQuery) relation);
+    QueryExecutionPlan queryExecutionPlan =
+        QueryExecutionPlanFactory.create("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
     Dimension d1 = new Dimension("originalSchema", "originalTable_scrambled", 0, 0);
@@ -191,7 +200,8 @@ public class AsyncAggScaleTest {
     RelationStandardizer gen = new RelationStandardizer(staticMetaData);
     relation = gen.standardize((SelectQuery) relation);
 
-    QueryExecutionPlan queryExecutionPlan = QueryExecutionPlanFactory.create("verdictdb_temp", meta, (SelectQuery) relation);
+    QueryExecutionPlan queryExecutionPlan =
+        QueryExecutionPlanFactory.create("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
     ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMetaSet(meta);

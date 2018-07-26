@@ -74,7 +74,7 @@ public class AggExecutionNodeTest {
 //    AggExecutionNode node = new AggExecutionNode(conn, newSchema, newTable, query);
     QueryExecutionPlan plan = QueryExecutionPlanFactory.create("newschema");
     AggExecutionNode node = AggExecutionNode.create(plan, query);
-    String aliasName = String.format("verdictdbalias_%d_0", plan.getSerialNumber());
+    String aliasName = String.format("verdictdb_alias_%d_0", plan.getSerialNumber());
 
     assertEquals(1, node.getExecutableNodeBaseDependents().size());
     SelectQuery rewritten = SelectQuery.create(
