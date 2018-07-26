@@ -165,21 +165,21 @@ public class AsyncAggJoinScaleTest {
     SelectQueryToSql queryToSql = new SelectQueryToSql(new H2Syntax());
     String actual = queryToSql.toSql(query.getSelect());
     actual = actual.replaceAll("verdictdb_tier_alias_\\d+_\\d+", "verdictdb_tier_alias");
-//    actual = actual.replaceAll("vt\\d+", "vt");
+    actual = actual.replaceAll("vt\\d+", "vt");
     String expected;
 //    String expected = "select sum(vt4.\"a_value\" + vt5.\"b_value\") as \"agg0\" " +
 //                          "from \"originalSchema\".\"originalTable1_scrambled\" as vt4 " +
 //                          "inner join \"originalSchema\".\"originalTable2_scrambled\" as vt5 " +
 //                          "on (vt4.\"a_id\" = vt5.\"b_id\") where ((vt4.\"verdictdbaggblock\" >= 0) " +
 //                          "and (vt4.\"verdictdbaggblock\" <= 1)) and (vt5.\"verdictdbaggblock\" = 0)";
-    String exepected2 = "select sum(vt1.\"a_value\" + vt2.\"b_value\") as \"agg0\", " +
-                            "vt1.\"verdictdbtier\" as \"verdictdb_tier_alias\", " +
-                            "vt2.\"verdictdbtier\" as \"verdictdb_tier_alias\" " +
-                            "from \"originalSchema\".\"originalTable1_scrambled\" as vt1 " +
-                            "inner join \"originalSchema\".\"originalTable2_scrambled\" as vt2 " +
-                            "on (vt1.\"a_id\" = vt2.\"b_id\") " +
-                            "where ((vt1.\"verdictdbaggblock\" >= 0) " +
-                            "and (vt1.\"verdictdbaggblock\" <= 1)) and (vt2.\"verdictdbaggblock\" = 0) " +
+    String exepected2 = "select sum(vt.\"a_value\" + vt.\"b_value\") as \"agg0\", " +
+                            "vt.\"verdictdbtier\" as \"verdictdb_tier_alias\", " +
+                            "vt.\"verdictdbtier\" as \"verdictdb_tier_alias\" " +
+                            "from \"originalSchema\".\"originalTable1_scrambled\" as vt " +
+                            "inner join \"originalSchema\".\"originalTable2_scrambled\" as vt " +
+                            "on (vt.\"a_id\" = vt.\"b_id\") " +
+                            "where ((vt.\"verdictdbaggblock\" >= 0) " +
+                            "and (vt.\"verdictdbaggblock\" <= 1)) and (vt.\"verdictdbaggblock\" = 0) " +
                             "group by \"verdictdb_tier_alias\", \"verdictdb_tier_alias\"";
     assertEquals(exepected2, actual);
 
@@ -210,8 +210,9 @@ public class AsyncAggJoinScaleTest {
     actual = actual.replaceAll("verdictdb_tier_alias_\\d+_\\d+", "verdictdb_tier_alias");
     actual = actual.replaceAll("verdictdb_alias_\\d+_\\d+", "verdictdb_alias");
     actual = actual.replaceAll("verdictdbtemptable_\\d+_\\d+", "verdictdbtemptable");
+    actual = actual.replaceAll("s\\d+", "ss");
     expected =
-        "select sum(verdictdb_internal_tier_consolidated.\"agg0\") as \"s3\" " +
+        "select sum(verdictdb_internal_tier_consolidated.\"agg0\") as \"ss\" " +
             "from (select 2.0000000000000000 * verdictdb_internal_before_scaling.\"agg0\" as \"agg0\", " +
                    "verdictdb_internal_before_scaling.\"verdictdb_tier_alias\" as \"verdictdb_tier_alias\", " +
             "verdictdb_internal_before_scaling.\"verdictdb_tier_alias\" as \"verdictdb_tier_alias\" " +

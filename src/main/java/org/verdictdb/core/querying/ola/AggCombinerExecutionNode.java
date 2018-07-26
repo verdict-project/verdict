@@ -171,7 +171,7 @@ public class AggCombinerExecutionNode extends CreateTableAsSelectNode {
       //      }
 
       if (childAggMeta != null) {
-        System.out.println(childAggMeta);
+//        System.out.println(childAggMeta);
         
 //        AggMeta aggMeta = new AggMeta();
         // cubes must be cumulatively aggregated
