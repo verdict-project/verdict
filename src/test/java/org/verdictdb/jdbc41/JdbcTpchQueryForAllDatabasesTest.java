@@ -24,7 +24,7 @@ import static org.junit.Assert.fail;
 
 /** Created by Dong Young Yoon on 7/18/18. */
 @RunWith(Parameterized.class)
-public class JdbcTpchQueryTestForAllDatabases {
+public class JdbcTpchQueryForAllDatabasesTest {
 
   private static Map<String, Connection> connMap = new HashMap<>();
 
@@ -46,7 +46,7 @@ public class JdbcTpchQueryTestForAllDatabases {
   //  private static final String[] targetDatabases = {"mysql", "impala", "redshift", "postgresql"};
   private static final String[] targetDatabases = {"mysql", "impala", "redshift"};
 
-  public JdbcTpchQueryTestForAllDatabases(String database, String query) {
+  public JdbcTpchQueryForAllDatabasesTest(String database, String query) {
     this.database = database;
     this.query = query;
   }
@@ -114,9 +114,8 @@ public class JdbcTpchQueryTestForAllDatabases {
     REDSHIFT_PASSWORD = System.getenv("VERDICTDB_TEST_REDSHIFT_PASSWORD");
   }
 
-  private static final String TABLE_NAME = "mytable";
-
-  private static VerdictConnection mysqlVc;
+  private static final String SCHEMA_NAME =
+      "verdictdb_tpch_query_test_" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
 
   @BeforeClass
   public static void setupDatabases() throws SQLException, VerdictDBDbmsException, IOException {
@@ -128,9 +127,16 @@ public class JdbcTpchQueryTestForAllDatabases {
   }
 
   @AfterClass
-  public static void tearDown() {
-    // TODO: add clean up code for each database once it becomes possible to specify which
-    // TODO: database/schema name to use in this unit test
+  public static void tearDown() throws SQLException {
+    for (String s : connMap.keySet()) {
+      Connection conn = connMap.get(s);
+      if (s.equals("mysql")) {
+        conn.createStatement().execute(String.format("DROP SCHEMA IF EXISTS %s", SCHEMA_NAME));
+      } else {
+        conn.createStatement()
+            .execute(String.format("DROP SCHEMA IF EXISTS %s CASCADE", SCHEMA_NAME));
+      }
+    }
   }
 
   @Parameterized.Parameters(name = "{0}_tpch_{1}")
@@ -168,17 +174,14 @@ public class JdbcTpchQueryTestForAllDatabases {
     String mysqlConnectionString =
         String.format("jdbc:mysql://%s?autoReconnect=true&useSSL=false", MYSQL_HOST);
     String vcMysqlConnectionString =
-        String.format(
-            "jdbc:verdict:mysql://%s/%s?autoReconnect=true&useSSL=false",
-            MYSQL_HOST, MYSQL_DATABASE);
+        String.format("jdbc:verdict:mysql://%s?autoReconnect=true&useSSL=false", MYSQL_HOST);
     Connection conn =
         DatabaseConnectionHelpers.setupMySql(
-            mysqlConnectionString, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE);
+            mysqlConnectionString, MYSQL_USER, MYSQL_PASSWORD, SCHEMA_NAME);
     Connection vc =
         DriverManager.getConnection(vcMysqlConnectionString, MYSQL_USER, MYSQL_PASSWORD);
-    //    VerdictConnection vc =
-    //        new VerdictConnection(vcMysqlConnectionString, MYSQL_USER, MYSQL_PASSWORD);
-    conn.setCatalog(MYSQL_DATABASE);
+    conn.setCatalog(SCHEMA_NAME);
+    vc.setCatalog(SCHEMA_NAME);
     connMap.put("mysql", conn);
     vcMap.put("mysql", vc);
     schemaMap.put("mysql", MYSQL_DATABASE + ".");
@@ -190,10 +193,9 @@ public class JdbcTpchQueryTestForAllDatabases {
     String verdictConnectionString = String.format("jdbc:verdict:impala://%s", IMPALA_HOST);
     Connection conn =
         DatabaseConnectionHelpers.setupImpala(
-            connectionString, IMPALA_USER, IMPALA_PASSWORD, IMPALA_DATABASE);
+            connectionString, IMPALA_USER, IMPALA_PASSWORD, SCHEMA_NAME);
     Connection vc =
         DriverManager.getConnection(verdictConnectionString, IMPALA_USER, IMPALA_PASSWORD);
-    //    Connection vc = new VerdictConnection(connectionString, IMPALA_USER, IMPALA_PASSWORD);
     connMap.put("impala", conn);
     vcMap.put("impala", vc);
     schemaMap.put("impala", IMPALA_DATABASE + ".");
@@ -208,7 +210,7 @@ public class JdbcTpchQueryTestForAllDatabases {
         String.format("jdbc:verdict:redshift://%s/%s", REDSHIFT_HOST, REDSHIFT_DATABASE);
     Connection conn =
         DatabaseConnectionHelpers.setupRedshift(
-            connectionString, REDSHIFT_USER, REDSHIFT_PASSWORD, REDSHIFT_SCHEMA);
+            connectionString, REDSHIFT_USER, REDSHIFT_PASSWORD, SCHEMA_NAME);
     Connection vc =
         DriverManager.getConnection(verdictConnectionString, REDSHIFT_USER, REDSHIFT_PASSWORD);
     connMap.put("redshift", conn);
@@ -223,7 +225,7 @@ public class JdbcTpchQueryTestForAllDatabases {
         String.format("jdbc:postgresql://%s/%s", POSTGRES_HOST, POSTGRES_DATABASE);
     Connection conn =
         DatabaseConnectionHelpers.setupPostgresql(
-            connectionString, POSTGRES_HOST, POSTGRES_PASSWORD, POSTGRES_SCHEMA);
+            connectionString, POSTGRES_HOST, POSTGRES_PASSWORD, SCHEMA_NAME);
     VerdictConnection vc =
         new VerdictConnection(connectionString, POSTGRES_USER, POSTGRES_PASSWORD);
     connMap.put("postgresql", conn);
@@ -238,21 +240,22 @@ public class JdbcTpchQueryTestForAllDatabases {
     String filename = "";
     switch (database) {
       case "mysql":
-        filename = "companya/mysql_queries/tpchMySqlQuery" + query + ".sql";
+        filename = "companya/templated/mysql_queries/tpchMySQLQuery" + query + ".sql";
         break;
       case "impala":
-        filename = "companya/impala_queries/tpchImpalaQuery" + query + ".sql";
+        filename = "companya/templated/impala_queries/tpchImpalaQuery" + query + ".sql";
         break;
       case "redshift":
-        filename = "companya/redshift_queries/" + query + ".sql";
+        filename = "companya/templated/redshift_queries/" + query + ".sql";
         break;
       default:
         fail(String.format("Database '%s' not supported.", database));
     }
     File queryFile = new File(classLoader.getResource(filename).getFile());
     if (queryFile.exists()) {
-      String sql = Files.toString(queryFile, Charsets.UTF_8);
-      //      sql = "select * from tpch_2_parquet.lineitem limit 1000";
+      String originalSql = Files.toString(queryFile, Charsets.UTF_8);
+      String sql =
+          originalSql.replaceAll(DatabaseConnectionHelpers.TEMPLATE_SCHEMA_NAME, SCHEMA_NAME);
 
       Statement jdbcStmt = connMap.get(database).createStatement();
       Statement vcStmt = vcMap.get(database).createStatement();

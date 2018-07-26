@@ -1,5 +1,6 @@
 package org.verdictdb.sqlreader;
 
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.spark.sql.SparkSession;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -25,7 +26,8 @@ public class GroupByNumberTest {
 
   private static final String IMPALA_HOST;
 
-  private static final String IMPALA_DATABASE = "default";
+  private static final String IMPALA_DATABASE =
+      "groupbynumbertest_" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
 
   private static final String IMPALA_UESR = "";
 
@@ -44,15 +46,16 @@ public class GroupByNumberTest {
   @BeforeClass
   public static void setupDatabases() throws VerdictDBDbmsException, SQLException {
     // Impala
-    String connectionString = String.format("jdbc:impala://%s/%s", IMPALA_HOST, IMPALA_DATABASE);
+    String connectionString = String.format("jdbc:impala://%s", IMPALA_HOST);
     impalaConn = DriverManager.getConnection(connectionString, IMPALA_UESR, IMPALA_PASSWORD);
     impalaConnection = JdbcConnection.create(impalaConn);
 
-    impalaConnection.execute(String.format("drop table if exists %s", IMPALA_TABLE_NAME));
+    impalaConnection.execute(String.format("drop schema if exists %s cascade", IMPALA_DATABASE));
+    impalaConnection.execute(String.format("create schema if not exists %s", IMPALA_DATABASE));
     impalaConnection.execute(
         String.format(
-            "CREATE TABLE %s (" + "tinyintCol    TINYINT, " + "boolCol       BOOLEAN)",
-            IMPALA_TABLE_NAME));
+            "CREATE TABLE %s.%s (" + "tinyintCol    TINYINT, " + "boolCol       BOOLEAN)",
+            IMPALA_DATABASE, IMPALA_TABLE_NAME));
 
     // Spark
     spark =
@@ -89,7 +92,9 @@ public class GroupByNumberTest {
 
   @Test
   public void testImpala() throws VerdictDBDbmsException {
-    String sql = String.format("select avg(tinyintCol) from %s group by 1", IMPALA_TABLE_NAME);
+    String sql =
+        String.format(
+            "select avg(tinyintCol) from %s.%s group by 1", IMPALA_DATABASE, IMPALA_TABLE_NAME);
     try {
       impalaConnection.execute(sql);
       fail();

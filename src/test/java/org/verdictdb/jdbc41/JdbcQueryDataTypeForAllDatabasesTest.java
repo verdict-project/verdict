@@ -20,7 +20,7 @@ import static org.junit.Assert.*;
 
 /** Created by Dong Young Yoon on 7/18/18. */
 @RunWith(Parameterized.class)
-public class JdbcQueryDataTypeTestForAllDatabases {
+public class JdbcQueryDataTypeForAllDatabasesTest {
 
   private static Map<String, Connection> connMap = new HashMap<>();
 
@@ -34,7 +34,7 @@ public class JdbcQueryDataTypeTestForAllDatabases {
 
   private static final String[] targetDatabases = {"mysql", "impala", "redshift", "postgresql"};
 
-  public JdbcQueryDataTypeTestForAllDatabases(String database) {
+  public JdbcQueryDataTypeForAllDatabasesTest(String database) {
     this.database = database;
   }
 
@@ -99,10 +99,10 @@ public class JdbcQueryDataTypeTestForAllDatabases {
   }
 
   private static final String SCHEMA_NAME =
-      "data_type_test" + RandomStringUtils.randomAlphanumeric(4).toLowerCase();
+      "data_type_test" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
 
   private static final String TABLE_NAME =
-      "data_type_test" + RandomStringUtils.randomAlphanumeric(4).toLowerCase();
+      "data_type_test" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
 
   @BeforeClass
   public static void setup() throws SQLException, VerdictDBDbmsException {
@@ -134,9 +134,7 @@ public class JdbcQueryDataTypeTestForAllDatabases {
     String mysqlConnectionString =
         String.format("jdbc:mysql://%s?autoReconnect=true&useSSL=false", MYSQL_HOST);
     String vcMysqlConnectionString =
-        String.format(
-            "jdbc:verdict:mysql://%s/%s?autoReconnect=true&useSSL=false",
-            MYSQL_HOST, MYSQL_DATABASE);
+        String.format("jdbc:mysql://%s?autoReconnect=true&useSSL=false", MYSQL_HOST);
     Connection conn =
         DatabaseConnectionHelpers.setupMySqlForDataTypeTest(
             mysqlConnectionString, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE, TABLE_NAME);
