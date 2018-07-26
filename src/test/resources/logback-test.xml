@@ -7,7 +7,7 @@
         </layout>
     </appender>
     <!--<statusListener class="ch.qos.logback.core.status.OnConsoleStatusListener" />-->
-    <statusListener class="ch.qos.logback.core.status.NopStatusListener" />
+    <statusListener class="ch.qos.logback.core.status.NopStatusListener"/>
     <logger name="org.verdictdb" level="debug"/>
     <root level="error">
         <appender-ref ref="STDOUT"/>
