@@ -1,5 +1,6 @@
 package org.verdictdb.jdbc41;
 
+import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.connection.DbmsConnection;
@@ -28,6 +29,9 @@ public class JdbcResultSetMetaDataTypeForPostgreSQLTest {
 
   private static final String POSTGRESQL_PASSWORD = "";
 
+  private static final String SCHEMA_NAME =
+      "rs_metadata_test_" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
+
   private static final String TABLE_NAME = "mytable";
 
   static {
@@ -47,10 +51,11 @@ public class JdbcResultSetMetaDataTypeForPostgreSQLTest {
     dbmsConn = new JdbcConnection(conn, new PostgresqlSyntax());
 
     stmt = conn.createStatement();
-    stmt.execute(String.format("DROP TABLE IF EXISTS %s", TABLE_NAME));
+    stmt.execute(String.format("DROP SCHEMA IF EXISTS %s CASCADE", SCHEMA_NAME));
+    stmt.execute(String.format("CREATE SCHEMA IF NOT EXISTS %s", SCHEMA_NAME));
     stmt.execute(
         String.format(
-            "CREATE TABLE %s ("
+            "CREATE TABLE %s.%s ("
                 + "bigintCol      bigint, "
                 + "bigserialCol   bigserial, "
                 + "bitCol         bit(1), "
@@ -101,10 +106,10 @@ public class JdbcResultSetMetaDataTypeForPostgreSQLTest {
                 + "timetzCol      timetz,"
                 + "timestamptzCol timestamptz,"
                 + "serial8Col     serial8)",
-            TABLE_NAME));
+            SCHEMA_NAME, TABLE_NAME));
     stmt.execute(
         String.format(
-            "INSERT INTO %s VALUES ( "
+            "INSERT INTO %s.%s VALUES ( "
                 + "1, 1, '1', '1011', true, '((1,1), (2,2))', '1', '1234', '1234', "
                 + "'10', '((1,1),2)', '2018-12-31', 1.0, '88.99.0.0/16', 1, "
                 + "'{\"2\":1}', '{1,2,3}', '((1,1),(2,2))', "
@@ -112,27 +117,28 @@ public class JdbcResultSetMetaDataTypeForPostgreSQLTest {
                 + "'((1,1))', 1.0, 1, 1, 1, '1110', '2018-12-31 00:00:01', '2018-12-31 00:00:01', "
                 + "'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11','<foo>bar</foo>', '1', 1, true, '1234', '1234', 1, 1, 1.0, 1.0, 1.0"
                 + ", 1, 1, 1, '2018-12-31 00:00:01', '2018-12-31 00:00:01', 1)",
-            TABLE_NAME));
+            SCHEMA_NAME, TABLE_NAME));
     stmt.execute(
         String.format(
-            "INSERT INTO %s VALUES ( "
+            "INSERT INTO %s.%s VALUES ( "
                 + "NULL, 1, NULL, NULL, NULL, NULL, NULL, NULL, "
                 + "NULL, NULL, NULL, NULL, NULL, "
                 + "NULL, NULL, NULL, NULL, "
                 + "NULL, NULL, NULL, NULL, NULL, NULL, "
                 + "NULL, NULL, NULL, NULL, 1, 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, "
                 + "NULL, NULL, NULL, NULL, NULL, 1, 1, NULL, NULL, 1)",
-            TABLE_NAME));
+            SCHEMA_NAME, TABLE_NAME));
   }
 
   public static void tearDown() throws VerdictDBDbmsException {
-    dbmsConn.execute(String.format("DROP TABLE IF EXISTS %s", TABLE_NAME));
+    dbmsConn.execute(String.format("DROP TABLE IF EXISTS %s.%s", SCHEMA_NAME, TABLE_NAME));
+    dbmsConn.execute(String.format("DROP SCHEMA IF EXISTS %s CASCADE", SCHEMA_NAME));
     dbmsConn.close();
   }
 
   @Test
   public void testColumnTypes() throws VerdictDBDbmsException, SQLException {
-    String sql = String.format("select * from %s", TABLE_NAME);
+    String sql = String.format("select * from %s.%s", SCHEMA_NAME, TABLE_NAME);
     VerdictSingleResultFromDbmsQueryResult result =
         new VerdictSingleResultFromDbmsQueryResult(dbmsConn.execute(sql));
     ResultSet ourResult = new VerdictResultSet(result);

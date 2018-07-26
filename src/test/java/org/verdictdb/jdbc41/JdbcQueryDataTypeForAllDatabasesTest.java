@@ -99,10 +99,10 @@ public class JdbcQueryDataTypeForAllDatabasesTest {
   }
 
   private static final String SCHEMA_NAME =
-      "data_type_test" + RandomStringUtils.randomAlphanumeric(4).toLowerCase();
+      "data_type_test" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
 
   private static final String TABLE_NAME =
-      "data_type_test" + RandomStringUtils.randomAlphanumeric(4).toLowerCase();
+      "data_type_test" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
 
   @BeforeClass
   public static void setup() throws SQLException, VerdictDBDbmsException {

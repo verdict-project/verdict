@@ -1,5 +1,6 @@
 package org.verdictdb.jdbc41;
 
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -22,7 +23,8 @@ public class JdbcMetaDataForMySqlTest {
 
   private static final String MYSQL_HOST;
 
-  private static final String MYSQL_DATABASE = "test";
+  private static final String MYSQL_DATABASE =
+      "metadata_test_" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
 
   private static final String MYSQL_UESR = "root";
 
@@ -42,8 +44,7 @@ public class JdbcMetaDataForMySqlTest {
   @BeforeClass
   public static void setupMySqlDatabase() throws SQLException, VerdictDBDbmsException {
     String mysqlConnectionString =
-        String.format(
-            "jdbc:mysql://%s/%s?autoReconnect=true&useSSL=false", MYSQL_HOST, MYSQL_DATABASE);
+        String.format("jdbc:mysql://%s?autoReconnect=true&useSSL=false", MYSQL_HOST);
     conn = DriverManager.getConnection(mysqlConnectionString, MYSQL_UESR, MYSQL_PASSWORD);
     dbmsConn = JdbcConnection.create(conn);
 
@@ -51,7 +52,7 @@ public class JdbcMetaDataForMySqlTest {
     stmt.execute(String.format("DROP TABLE IF EXISTS %s", TABLE_NAME));
     stmt.execute(
         String.format(
-            "CREATE TABLE %s ("
+            "CREATE TABLE %s.%s ("
                 + "bitCol        BIT(1), "
                 + "tinyintCol    TINYINT(2), "
                 + "boolCol       BOOL, "
@@ -85,19 +86,21 @@ public class JdbcMetaDataForMySqlTest {
                 + "longtextCol   LONGTEXT, "
                 + "enumCol       ENUM('1', '2'), "
                 + "setCol        SET('1', '2'))",
-            TABLE_NAME));
+            MYSQL_DATABASE, TABLE_NAME));
   }
 
   public static void tearDown() throws VerdictDBDbmsException {
     dbmsConn.execute(String.format("DROP TABLE IF EXISTS %s", TABLE_NAME));
+    dbmsConn.execute(String.format("DROP SCHEMA IF EXISTS %s", MYSQL_DATABASE));
     dbmsConn.close();
   }
 
   @Test
   public void testGetColumns() throws VerdictDBDbmsException, SQLException {
-    List<Pair<String, String>> columns = dbmsConn.getColumns("test", TABLE_NAME);
+    List<Pair<String, String>> columns = dbmsConn.getColumns(MYSQL_DATABASE, TABLE_NAME);
     assertEquals(33, columns.size());
-    ResultSet expected = stmt.executeQuery(String.format("describe %s", TABLE_NAME));
+    ResultSet expected =
+        stmt.executeQuery(String.format("describe %s.%s", MYSQL_DATABASE, TABLE_NAME));
     int idx = 0;
     while (expected.next()) {
       assertEquals(expected.getString(1), columns.get(idx).getLeft());

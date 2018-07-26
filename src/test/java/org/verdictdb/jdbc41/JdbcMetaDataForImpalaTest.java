@@ -29,7 +29,7 @@ public class JdbcMetaDataForImpalaTest {
     IMPALA_HOST = System.getenv("VERDICTDB_TEST_IMPALA_HOST");
   }
 
-  private static final String IMPALA_DATABASE = "default_" + RandomStringUtils.randomNumeric(4);
+  private static final String IMPALA_DATABASE = "default_" + RandomStringUtils.randomNumeric(8);
 
   private static final String IMPALA_UESR = "";
 

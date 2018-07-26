@@ -34,7 +34,7 @@ public class JdbcResultSetMetaDataTypeForImpalaTest {
   private static final String IMPALA_HOST;
 
   private static final String IMPALA_DATABASE =
-      "metadata_test_" + RandomStringUtils.randomNumeric(3);;
+      "metadata_test_" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
 
   private static final String IMPALA_UESR = "";
 

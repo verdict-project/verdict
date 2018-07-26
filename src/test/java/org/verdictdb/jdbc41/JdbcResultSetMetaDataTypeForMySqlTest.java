@@ -1,6 +1,7 @@
 package org.verdictdb.jdbc41;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.connection.DbmsConnection;
@@ -29,7 +30,8 @@ public class JdbcResultSetMetaDataTypeForMySqlTest {
 
   private static final String MYSQL_HOST;
 
-  private static final String MYSQL_DATABASE = "test";
+  private static final String MYSQL_DATABASE =
+      "rs_metadata_test_" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
 
   private static final String MYSQL_UESR = "root";
 
@@ -49,16 +51,16 @@ public class JdbcResultSetMetaDataTypeForMySqlTest {
   @BeforeClass
   public static void setupMySqlDatabase() throws SQLException, VerdictDBDbmsException {
     String mysqlConnectionString =
-        String.format(
-            "jdbc:mysql://%s/%s?autoReconnect=true&useSSL=false", MYSQL_HOST, MYSQL_DATABASE);
+        String.format("jdbc:mysql://%s?autoReconnect=true&useSSL=false", MYSQL_HOST);
     conn = DriverManager.getConnection(mysqlConnectionString, MYSQL_UESR, MYSQL_PASSWORD);
     dbmsConn = JdbcConnection.create(conn);
 
     stmt = conn.createStatement();
-    stmt.execute(String.format("DROP TABLE IF EXISTS %s", TABLE_NAME));
+    stmt.execute(String.format("DROP SCHEMA IF EXISTS %s", MYSQL_DATABASE));
+    stmt.execute(String.format("CREATE SCHEMA IF NOT EXISTS %s", MYSQL_DATABASE));
     stmt.execute(
         String.format(
-            "CREATE TABLE %s ("
+            "CREATE TABLE %s.%s ("
                 + "bitCol        BIT(1), "
                 + "tinyintCol    TINYINT(2), "
                 + "boolCol       BOOL, "
@@ -92,37 +94,38 @@ public class JdbcResultSetMetaDataTypeForMySqlTest {
                 + "longtextCol   LONGTEXT, "
                 + "enumCol       ENUM('1', '2'), "
                 + "setCol        SET('1', '2'))",
-            TABLE_NAME));
+            MYSQL_DATABASE, TABLE_NAME));
 
     stmt.execute(
         String.format(
-            "INSERT INTO %s VALUES ( "
+            "INSERT INTO %s.%s VALUES ( "
                 + "1, 2, 1, 1, 1, 1, 1, 1, "
                 + "1.0, 1.0, 1.0, 1.0, 1.0, "
                 + "'2018-12-31', '2018-12-31 01:00:00', '2018-12-31 00:00:01', '10:59:59', "
                 + "18, 2018, 'abc', 'abc', '10', '10', "
                 + "'10', 'a', '10', 'abc', '1110', 'abc', '1110', 'abc', '1', '2')",
-            TABLE_NAME));
+            MYSQL_DATABASE, TABLE_NAME));
 
     stmt.execute(
         String.format(
-            "INSERT INTO %s VALUES ( "
+            "INSERT INTO %s.%s VALUES ( "
                 + "NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, "
                 + "NULL, NULL, NULL, NULL, NULL, "
                 + "NULL, NULL, NULL, NULL, "
                 + "NULL, NULL, NULL, NULL, NULL, NULL, "
                 + "NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL)",
-            TABLE_NAME));
+            MYSQL_DATABASE, TABLE_NAME));
   }
 
   public static void tearDown() throws VerdictDBDbmsException {
-    dbmsConn.execute(String.format("DROP TABLE IF EXISTS %s", TABLE_NAME));
+    dbmsConn.execute(String.format("DROP TABLE IF EXISTS %s.%s", MYSQL_DATABASE, TABLE_NAME));
+    dbmsConn.execute(String.format("DROP SCHEMA IF EXISTS %s", MYSQL_DATABASE));
     dbmsConn.close();
   }
 
   @Test
   public void testColumnTypes() throws VerdictDBDbmsException, SQLException, IOException {
-    String sql = String.format("select * from %s", TABLE_NAME);
+    String sql = String.format("select * from %s.%s", MYSQL_DATABASE, TABLE_NAME);
     VerdictSingleResultFromDbmsQueryResult result =
         new VerdictSingleResultFromDbmsQueryResult(dbmsConn.execute(sql));
     ResultSet ourResult = new VerdictResultSet(result);

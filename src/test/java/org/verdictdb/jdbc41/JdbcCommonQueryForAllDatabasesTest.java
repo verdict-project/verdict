@@ -110,11 +110,14 @@ public class JdbcCommonQueryForAllDatabasesTest {
   public static void tearDown() throws SQLException {
     for (String database : connMap.keySet()) {
       Connection conn = connMap.get(database);
-      if (database.equals("mysql")) {
-        conn.createStatement().execute(String.format("DROP SCHEMA IF EXISTS %s", SCHEMA_NAME));
-      } else {
-        conn.createStatement()
-            .execute(String.format("DROP SCHEMA IF EXISTS %s CASCADE", SCHEMA_NAME));
+      if (conn != null) {
+        if (database.equals("mysql")) {
+          conn.createStatement().execute(String.format("DROP SCHEMA IF EXISTS %s", SCHEMA_NAME));
+        } else {
+          conn.createStatement()
+              .execute(String.format("DROP SCHEMA IF EXISTS %s CASCADE", SCHEMA_NAME));
+        }
+        conn.close();
       }
     }
   }
