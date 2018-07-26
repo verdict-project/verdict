@@ -590,7 +590,14 @@ static void loadRedshiftData(String schema, String table, Connection conn)
 Use following commands to put data into HDFS. Suppose the tpch1g data is stored in `/home/username/workspace/tpch1g` and you hope to put your data in `/tmp/tpch1g` in HDFS.
 ```bash
 $ sudo su hdfs
-$ hdfs dfs -put /home/username/workspace/tpch1g /tmp/tpch1g
+$ hdfs dfs -put /home/username/workspace/tpch1g/region/region.tbl       /tmp/tpch1g/region
+$ hdfs dfs -put /home/username/workspace/tpch1g/nation/nation.tbl       /tmp/tpch1g/nation
+$ hdfs dfs -put /home/username/workspace/tpch1g/customer/customer.tbl   /tmp/tpch1g/customer
+$ hdfs dfs -put /home/username/workspace/tpch1g/supplier/supplier.tbl   /tmp/tpch1g/supplier
+$ hdfs dfs -put /home/username/workspace/tpch1g/part/part.tbl           /tmp/tpch1g/part
+$ hdfs dfs -put /home/username/workspace/tpch1g/partsupp/partsupp.tbl   /tmp/tpch1g/partsupp
+$ hdfs dfs -put /home/username/workspace/tpch1g/orders/orders.tbl       /tmp/tpch1g/orders
+$ hdfs dfs -put /home/username/workspace/tpch1g/lineitem/lineitem.tbl   /tmp/tpch1g/lineitem
 $ hdfs dfs -chown -R user /tmp/tpch1g
 ```
 `user` is the owner of the tpch1g directory you want.
@@ -613,14 +620,14 @@ $ impala-shell
 Create a schema for testing.
 
 ```
-postgres=# create schema `tpch1g`;
+create schema `tpch1g`;
 ```
 
 Create tables and load data. Simply copy and paste the following table definition statements into the Impala shell.
 
 ```sql
 -- nation
-CREATE TABLE IF NOT EXISTS `tpch1g`.`nation` (
+CREATE EXTERNAL TABLE IF NOT EXISTS `tpch1g`.`nation` (
   `n_nationkey`  INT,
   `n_name`       STRING,
   `n_regionkey`  INT,
@@ -630,7 +637,7 @@ CREATE TABLE IF NOT EXISTS `tpch1g`.`nation` (
   LOCATION '/tmp/tpch1g/nation';
 
 -- region
-CREATE TABLE IF NOT EXISTS `tpch1g`.`region` (
+CREATE EXTERNAL TABLE IF NOT EXISTS `tpch1g`.`region` (
   `r_regionkey`  INT,
   `r_name`       STRING,
   `r_comment`    STRING,
@@ -639,7 +646,7 @@ CREATE TABLE IF NOT EXISTS `tpch1g`.`region` (
   LOCATION '/tmp/tpch1g/region';
 
 -- supplier
-CREATE TABLE IF NOT EXISTS `tpch1g`.`supplier` (
+CREATE EXTERNAL TABLE IF NOT EXISTS `tpch1g`.`supplier` (
   `s_suppkey`     INT,
   `s_name`        STRING,
   `s_address`     STRING,
@@ -652,7 +659,7 @@ CREATE TABLE IF NOT EXISTS `tpch1g`.`supplier` (
   LOCATION '/tmp/tpch1g/supplier';
 
 -- customer
-CREATE TABLE IF NOT EXISTS `tpch1g`.`customer` (
+CREATE EXTERNAL TABLE IF NOT EXISTS `tpch1g`.`customer` (
   `c_custkey`     INT,
   `c_name`        STRING,
   `c_address`     STRING,
@@ -666,7 +673,7 @@ CREATE TABLE IF NOT EXISTS `tpch1g`.`customer` (
   LOCATION '/tmp/tpch1g/customer';
 
 -- part
-CREATE TABLE IF NOT EXISTS `tpch1g`.`part` (
+CREATE EXTERNAL TABLE IF NOT EXISTS `tpch1g`.`part` (
   `p_partkey`     INT,
   `p_name`        STRING,
   `p_mfgr`        STRING,
@@ -681,7 +688,7 @@ CREATE TABLE IF NOT EXISTS `tpch1g`.`part` (
   LOCATION '/tmp/tpch1g/part';
 
 -- partsupp
-CREATE TABLE IF NOT EXISTS `tpch1g`.`partsupp` (
+CREATE EXTERNAL TABLE IF NOT EXISTS `tpch1g`.`partsupp` (
   `ps_partkey`     INT,
   `ps_suppkey`     INT,
   `ps_availqty`    INT,
@@ -692,7 +699,7 @@ CREATE TABLE IF NOT EXISTS `tpch1g`.`partsupp` (
   LOCATION '/tmp/tpch1g/partsupp';
 
 -- orders
-CREATE TABLE IF NOT EXISTS `tpch1g`.`orders` (
+CREATE EXTERNAL TABLE IF NOT EXISTS `tpch1g`.`orders` (
   `o_orderkey`       INT,
   `o_custkey`        INT,
   `o_orderstatus`    STRING,
@@ -707,7 +714,7 @@ CREATE TABLE IF NOT EXISTS `tpch1g`.`orders` (
   LOCATION '/tmp/tpch1g/orders';
 
 -- lineitem
-CREATE TABLE IF NOT EXISTS `tpch1g`.`lineitem`(
+CREATE EXTERNAL TABLE IF NOT EXISTS `tpch1g`.`lineitem`(
   `l_orderkey`    INT,
   `l_partkey`     INT,
   `l_suppkey`     INT,
