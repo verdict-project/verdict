@@ -177,7 +177,7 @@ public class AsyncAggMultipleTiersScaleTest {
         ((AggExecutionNode)queryExecutionPlan.getRootNode().getExecutableNodeBaseDependent(0).getExecutableNodeBaseDependent(0)).getAggMeta().getCubes().get(0));
 
     ((AsyncAggExecutionNode) queryExecutionPlan.getRoot().getExecutableNodeBaseDependent(0))
-    .setScrambleMeta(meta);
+    .setScrambleMetaSet(meta);
     stmt.execute("create schema if not exists `verdictdb_temp`;");
     ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new MysqlSyntax()), queryExecutionPlan);
     //queryExecutionPlan.getRoot().executeAndWaitForTermination(new JdbcConnection(conn, new H2Syntax()));
@@ -200,7 +200,7 @@ public class AsyncAggMultipleTiersScaleTest {
     assertEquals(
         new HyperTableCube(Arrays.asList(d1)),
         ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getAggMeta().getCubes().get(0));
-    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
+    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMetaSet(meta);
 
 //    stmt.execute("create schema if not exists `verdictdb_temp`;");
     JdbcConnection jdbcConnection = JdbcConnection.create(conn);
@@ -282,7 +282,7 @@ public class AsyncAggMultipleTiersScaleTest {
     assertEquals(
         new HyperTableCube(Arrays.asList(d1)),
         ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getAggMeta().getCubes().get(0));
-    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
+    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMetaSet(meta);
 
 //    stmt.execute("create schema if not exists `verdictdb_temp`;");
     JdbcConnection jdbcConnection = JdbcConnection.create(conn);
@@ -364,7 +364,7 @@ public class AsyncAggMultipleTiersScaleTest {
    // assertEquals(
    //     new HyperTableCube(Arrays.asList(d1)),
    //     ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getAggMeta().getCubes().get(0));
-    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
+    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMetaSet(meta);
 
 //    stmt.execute("create schema if not exists `verdictdb_temp`;");
     JdbcConnection jdbcConnection = JdbcConnection.create(conn);
@@ -461,7 +461,7 @@ public class AsyncAggMultipleTiersScaleTest {
     assertEquals(
         new HyperTableCube(Arrays.asList(d1)),
         ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getAggMeta().getCubes().get(0));
-    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
+    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMetaSet(meta);
 
 //    stmt.execute("create schema if not exists `verdictdb_temp`;");
     JdbcConnection jdbcConnection = JdbcConnection.create(conn);
@@ -517,7 +517,7 @@ public class AsyncAggMultipleTiersScaleTest {
     QueryExecutionPlan queryExecutionPlan = QueryExecutionPlanFactory.create("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
+    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMetaSet(meta);
 
     ExecutionInfoToken token = new ExecutionInfoToken();
     CreateTableAsSelectQuery query = (CreateTableAsSelectQuery) queryExecutionPlan.getRoot().getSources().get(0).getSources().get(0).createQuery(Arrays.asList(token));
@@ -593,7 +593,7 @@ public class AsyncAggMultipleTiersScaleTest {
     assertEquals(
         new HyperTableCube(Arrays.asList(d1)),
         ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getAggMeta().getCubes().get(0));
-    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
+    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMetaSet(meta);
 
 //    stmt.execute("create schema if not exists `verdictdb_temp`;");
     JdbcConnection jdbcConnection = JdbcConnection.create(conn);
@@ -674,7 +674,7 @@ public class AsyncAggMultipleTiersScaleTest {
     assertEquals(
         new HyperTableCube(Arrays.asList(d1)),
         ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getAggMeta().getCubes().get(0));
-    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
+    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMetaSet(meta);
 
 //    stmt.execute("create schema if not exists `verdictdb_temp`;");
     JdbcConnection jdbcConnection = JdbcConnection.create(conn);
@@ -751,7 +751,7 @@ public class AsyncAggMultipleTiersScaleTest {
     assertEquals(
         new HyperTableCube(Arrays.asList(d1)),
         ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getAggMeta().getCubes().get(0));
-    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
+    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMetaSet(meta);
 
 //    stmt.execute("create schema if not exists `verdictdb_temp`;");
     JdbcConnection jdbcConnection = JdbcConnection.create(conn);
@@ -829,7 +829,7 @@ public class AsyncAggMultipleTiersScaleTest {
     assertEquals(
         new HyperTableCube(Arrays.asList(d1)),
         ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getAggMeta().getCubes().get(0));
-    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
+    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMetaSet(meta);
 
 //    stmt.execute("create schema if not exists `verdictdb_temp`;");
     JdbcConnection jdbcConnection = JdbcConnection.create(conn);
@@ -915,7 +915,7 @@ public class AsyncAggMultipleTiersScaleTest {
     assertEquals(
         new HyperTableCube(Arrays.asList(d1)),
         ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getAggMeta().getCubes().get(0));
-    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
+    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMetaSet(meta);
 
 //    stmt.execute("create schema if not exists `verdictdb_temp`;");
     JdbcConnection jdbcConnection = JdbcConnection.create(conn);
@@ -1001,7 +1001,7 @@ public class AsyncAggMultipleTiersScaleTest {
     assertEquals(
         new HyperTableCube(Arrays.asList(d1)),
         ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getAggMeta().getCubes().get(0));
-    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
+    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMetaSet(meta);
 
 //    stmt.execute("create schema if not exists `verdictdb_temp`;");
     JdbcConnection jdbcConnection = JdbcConnection.create(conn);
@@ -1085,7 +1085,7 @@ public class AsyncAggMultipleTiersScaleTest {
     assertEquals(
         new HyperTableCube(Arrays.asList(d1)),
         ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getAggMeta().getCubes().get(0));
-    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
+    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMetaSet(meta);
 
 //    stmt.execute("create schema if not exists `verdictdb_temp`;");
     JdbcConnection jdbcConnection = JdbcConnection.create(conn);
@@ -1173,7 +1173,7 @@ public class AsyncAggMultipleTiersScaleTest {
     assertEquals(
         new HyperTableCube(Arrays.asList(d1)),
         ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getAggMeta().getCubes().get(0));
-    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
+    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMetaSet(meta);
 
 //    stmt.execute("create schema if not exists `verdictdb_temp`;");
     JdbcConnection jdbcConnection = JdbcConnection.create(conn);

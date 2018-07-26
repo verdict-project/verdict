@@ -72,7 +72,7 @@ public class QueryExecutionPlan implements ExecutablePlan, IdCreator, Serializab
       throws VerdictDBException {
 
     this(scratchpadSchemaName);
-    setScrambleMeta(scrambleMeta);
+    setScrambleMetaSet(scrambleMeta);
   }
 
   public QueryExecutionPlan(String scratchpadSchemaName, ExecutableNodeBase root) {

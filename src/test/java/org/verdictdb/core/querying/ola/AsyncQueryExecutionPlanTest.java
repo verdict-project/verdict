@@ -110,7 +110,7 @@ public class AsyncQueryExecutionPlanTest {
       }
     }
     
-    ((AsyncAggExecutionNode) converted).setScrambleMeta(scrambleMeta);
+    ((AsyncAggExecutionNode) converted).setScrambleMetaSet(scrambleMeta);
     ExecutablePlanRunner.runTillEnd(
         new JdbcConnection(conn, new H2Syntax()), 
         new SimpleTreePlan(converted));
