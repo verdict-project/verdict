@@ -112,7 +112,8 @@ public class JdbcResultSetMetaDataTypeForRedshiftTest {
             REDSHIFT_SCHEMA, TABLE_NAME));
 
     expectedRs =
-        stmt.executeQuery(String.format("select * from %s.%s", REDSHIFT_SCHEMA, TABLE_NAME));
+        stmt.executeQuery(
+            String.format("select * from %s.%s order by smallintcol", REDSHIFT_SCHEMA, TABLE_NAME));
   }
 
   @AfterClass
