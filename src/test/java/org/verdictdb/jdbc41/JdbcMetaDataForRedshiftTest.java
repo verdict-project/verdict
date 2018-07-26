@@ -53,6 +53,8 @@ public class JdbcMetaDataForRedshiftTest {
     dbmsConn = JdbcConnection.create(conn);
 
     stmt = conn.createStatement();
+    stmt.execute(String.format("DROP SCHEMA IF EXISTS \"%s\"", SCHEMA_NAME));
+    stmt.execute(String.format("CREATE SCHEMA IF NOT EXISTS \"%s\"", SCHEMA_NAME));
     stmt.execute(String.format("DROP TABLE IF EXISTS \"%s\"", TABLE_NAME));
 
     // create a test table

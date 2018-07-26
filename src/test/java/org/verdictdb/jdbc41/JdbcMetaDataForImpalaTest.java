@@ -29,7 +29,7 @@ public class JdbcMetaDataForImpalaTest {
     IMPALA_HOST = System.getenv("VERDICTDB_TEST_IMPALA_HOST");
   }
 
-  private static final String IMPALA_DATABASE = "default_" + RandomStringUtils.randomNumeric(3);
+  private static final String IMPALA_DATABASE = "default_" + RandomStringUtils.randomNumeric(4);
 
   private static final String IMPALA_UESR = "";
 
@@ -39,12 +39,13 @@ public class JdbcMetaDataForImpalaTest {
 
   @BeforeClass
   public static void setupImpalaDatabase() throws SQLException, VerdictDBDbmsException {
-    String connectionString = String.format("jdbc:impala://%s/%s", IMPALA_HOST, IMPALA_DATABASE);
+    String connectionString = String.format("jdbc:impala://%s", IMPALA_HOST);
     conn = DriverManager.getConnection(connectionString, IMPALA_UESR, IMPALA_PASSWORD);
     dbmsConn = JdbcConnection.create(conn);
 
     stmt = conn.createStatement();
     stmt.execute(String.format("DROP SCHEMA IF EXISTS `%s` CASCADE", IMPALA_DATABASE));
+    stmt.execute(String.format("CREATE SCHEMA `%s`", IMPALA_DATABASE));
     // stmt.execute(String.format("DROP TABLE IF EXISTS `%s`.`%s`", IMPALA_DATABASE, TABLE_NAME));
     stmt.execute(
         String.format(
@@ -74,7 +75,8 @@ public class JdbcMetaDataForImpalaTest {
     List<Pair<String, String>> columns = dbmsConn.getColumns("default", TABLE_NAME);
     assertEquals(11, columns.size());
 
-    ResultSet expected = stmt.executeQuery(String.format("describe %s", TABLE_NAME));
+    ResultSet expected =
+        stmt.executeQuery(String.format("describe `%s`.`%s`", IMPALA_DATABASE, TABLE_NAME));
     int idx = 0;
     while (expected.next()) {
       assertEquals(expected.getString(1), columns.get(idx).getLeft());

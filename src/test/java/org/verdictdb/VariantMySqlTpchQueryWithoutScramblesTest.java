@@ -375,16 +375,16 @@ public class VariantMySqlTpchQueryWithoutScramblesTest {
     }
   }
 
-  @Test
-  public void Query22Test() throws VerdictDBException, SQLException, IOException {
-    Pair<VerdictSingleResult, ResultSet> answerPair = getAnswer(22);
-    ResultSet rs = answerPair.getRight();
-    VerdictSingleResult result = answerPair.getLeft();
-    while (rs.next()) {
-      result.next();
-      assertEquals(rs.getString(1), result.getString(0));
-      assertEquals(rs.getDouble(2), result.getDouble(1), 1e-5);
-      assertEquals(rs.getDouble(3), result.getDouble(2), 1e-5);
-    }
-  }
+  //  @Test
+  //  public void Query22Test() throws VerdictDBException, SQLException, IOException {
+  //    Pair<VerdictSingleResult, ResultSet> answerPair = getAnswer(22);
+  //    ResultSet rs = answerPair.getRight();
+  //    VerdictSingleResult result = answerPair.getLeft();
+  //    while (rs.next()) {
+  //      result.next();
+  //      assertEquals(rs.getString(1), result.getString(0));
+  //      assertEquals(rs.getDouble(2), result.getDouble(1), 1e-5);
+  //      assertEquals(rs.getDouble(3), result.getDouble(2), 1e-5);
+  //    }
+  //  }
 }

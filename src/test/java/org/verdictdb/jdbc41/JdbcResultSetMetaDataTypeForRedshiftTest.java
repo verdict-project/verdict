@@ -1,5 +1,6 @@
 package org.verdictdb.jdbc41;
 
+import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -22,8 +23,8 @@ public class JdbcResultSetMetaDataTypeForRedshiftTest {
 
   private static final String REDSHIFT_DATABASE = "dev";
 
-  private static final String REDSHIFT_SCHEMA = "public";
-  //      "resultset_metadata_test_" + RandomStringUtils.randomNumeric(3);
+  private static final String REDSHIFT_SCHEMA =
+      "resultset_metadata_test_" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
 
   private static final String REDSHIFT_HOST;
 
@@ -55,9 +56,9 @@ public class JdbcResultSetMetaDataTypeForRedshiftTest {
     dbmsConn = JdbcConnection.create(conn);
 
     stmt = conn.createStatement();
+    stmt.execute(String.format("DROP SCHEMA IF EXISTS \"%s\"", REDSHIFT_SCHEMA));
+    stmt.execute(String.format("CREATE SCHEMA IF NOT EXISTS \"%s\"", REDSHIFT_SCHEMA));
     stmt.execute(String.format("DROP TABLE IF EXISTS \"%s\"", TABLE_NAME));
-    //    stmt.execute(String.format("DROP SCHEMA IF EXISTS \"%s\"", REDSHIFT_SCHEMA));
-    //    stmt.execute(String.format("CREATE SCHEMA IF NOT EXISTS \"%s\"", REDSHIFT_SCHEMA));
 
     // create a test table
     stmt.execute(
@@ -116,9 +117,9 @@ public class JdbcResultSetMetaDataTypeForRedshiftTest {
 
   @AfterClass
   public static void tearDown() throws VerdictDBDbmsException {
-    //    dbmsConn.execute(String.format("DROP SCHEMA IF EXISTS \"%s\"", REDSHIFT_SCHEMA));
     dbmsConn.execute(
         String.format("DROP TABLE IF EXISTS \"%s\".\"%s\"", REDSHIFT_SCHEMA, TABLE_NAME));
+    dbmsConn.execute(String.format("DROP SCHEMA IF EXISTS \"%s\" CASCADE", REDSHIFT_SCHEMA));
     dbmsConn.close();
   }
 
