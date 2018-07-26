@@ -585,13 +585,29 @@ static void loadRedshiftData(String schema, String table, Connection conn)
 
 ## Cloudera Impala
 
+### Put data to HDFS
+
+Use following commands to put data into HDFS. Suppose the tpch1g data is stored in `/home/username/workspace/tpch1g` and you hope to put your data in `/tmp/tpch1g` in HDFS.
+```bash
+$ sudo su dfs
+$ hdfs dfs -put /home/username/workspace/tpch1g /tmp/tpch1g
+$ hdfs dfs -chown -R user /tmp/tpch1g
+```
+`user` is the owner of the tpch1g directory you want to.
+
+If you encounter write permission problem in the next step when creating tables, you can use command
+```bash
+$ hdfs dfs -chmomd -R 777 /tmp/tpch1g
+```
+to give full access to your directory.
+
+
 ### Create tables and load data
 
 Connect to Impala.
 
 ```bash
 $ impala-shell
-[Not connected] > connect impalad-host
 ```
 
 Create a schema for testing.
