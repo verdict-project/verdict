@@ -192,6 +192,9 @@ public class RelationGen extends VerdictSQLParserBaseVisitor<AbstractRelation> {
     if (having != null) {
       sel.addHavingByAnd(having);
     }
+    if (ctx.top_clause() != null) {
+      sel.addLimit(ConstantColumn.valueOf(ctx.top_clause().number().getText()));
+    }
     return sel;
   }
 

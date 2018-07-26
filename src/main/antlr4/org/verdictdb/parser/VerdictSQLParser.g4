@@ -385,7 +385,7 @@ union
 
 // https://msdn.microsoft.com/en-us/library/ms176104.aspx
 query_specification
-    : SELECT (ALL | DISTINCT)? (TOP expression PERCENT? (WITH TIES)?)?
+    : SELECT (ALL | DISTINCT)? top_clause? // (TOP expression PERCENT? (WITH TIES)?)?
       select_list
       // https://msdn.microsoft.com/en-us/library/ms188029.aspx
       (INTO into_table=table_name)?
@@ -396,6 +396,10 @@ query_specification
       (GROUP BY ROLLUP '(' group_by_item (',' group_by_item)* ')'))?
       (HAVING having=search_condition)?
     ;
+
+top_clause
+	: TOP number
+	;
 
 limit_clause
     : LIMIT number
