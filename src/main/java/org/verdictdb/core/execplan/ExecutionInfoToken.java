@@ -16,10 +16,11 @@
 
 package org.verdictdb.core.execplan;
 
+import com.rits.cloning.Cloner;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
-import java.io.*;
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -98,27 +99,29 @@ public class ExecutionInfoToken implements Serializable {
   }
 
   public ExecutionInfoToken deepcopy() {
-    try {
-      ByteArrayOutputStream bos = new ByteArrayOutputStream();
-      ObjectOutputStream out = new ObjectOutputStream(bos);
-      out.writeObject(this);
-      out.flush();
-      out.close();
-
-      ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(bos.toByteArray()));
-      ExecutionInfoToken copiedToken = (ExecutionInfoToken) in.readObject();
-      return copiedToken;
-
-    } catch (ClassNotFoundException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
-    } catch (NotSerializableException e) {
-      // TODO: handle this case
-      e.printStackTrace();
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-    return null;
+    return new Cloner().deepClone(this);
+    //    try {
+    //      ByteArrayOutputStream bos = new ByteArrayOutputStream();
+    //      ObjectOutputStream out = new ObjectOutputStream(bos);
+    //      out.writeObject(this);
+    //      out.flush();
+    //      out.close();
+    //
+    //      ObjectInputStream in = new ObjectInputStream(new
+    // ByteArrayInputStream(bos.toByteArray()));
+    //      ExecutionInfoToken copiedToken = (ExecutionInfoToken) in.readObject();
+    //      return copiedToken;
+    //
+    //    } catch (ClassNotFoundException e) {
+    //      // TODO Auto-generated catch block
+    //      e.printStackTrace();
+    //    } catch (NotSerializableException e) {
+    //      // TODO: handle this case
+    //      e.printStackTrace();
+    //    } catch (IOException e) {
+    //      e.printStackTrace();
+    //    }
+    //    return null;
 
     //    ExecutionInfoToken newToken = new ExecutionInfoToken();
     //
