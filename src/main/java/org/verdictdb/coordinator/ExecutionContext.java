@@ -93,8 +93,15 @@ public class ExecutionContext {
       VerdictResultStream stream = new VerdictResultStreamFromExecutionResultReader(reader, this);
       return stream;
     } else if (queryType.equals(QueryType.scrambling)) {
-      ScramblingCoordinator scrambler = new ScramblingCoordinator(context.getCopiedConnection());
       CreateScrambleQuery scrambleQuery = generateScrambleQuery(query);
+      ScramblingCoordinator scrambler =
+          new ScramblingCoordinator(context.getCopiedConnection(), scrambleQuery.getNewSchema());
+
+      // Specifying size/ratio of scrambled table is not supported.
+      if (scrambleQuery.getSize() != 1.0) {
+        throw new VerdictDBTypeException(
+            String.format("Scramble size of %f not supported.", scrambleQuery.getSize()));
+      }
 
       // TODO: store this to our own metadata db later
       ScrambleMeta meta =
@@ -135,7 +142,11 @@ public class ExecutionContext {
             String method =
                 (ctx.scrambling_method_name() == null)
                     ? "uniform"
-                    : ctx.scrambling_method_name().getText();
+                    : ctx.scrambling_method_name()
+                        .getText()
+                        .replace("'", "")
+                        .replace("\"", "")
+                        .replace("`", ""); // remove all types of 'quotes'
             double percent =
                 (ctx.percent == null) ? 1.0 : Double.parseDouble(ctx.percent.getText());
             return new CreateScrambleQuery(

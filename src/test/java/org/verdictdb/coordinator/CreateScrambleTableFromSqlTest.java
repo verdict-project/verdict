@@ -115,13 +115,9 @@ public class CreateScrambleTableFromSqlTest {
 
   private static void setupImpala() throws VerdictDBDbmsException, SQLException {
     String connectionString =
-        String.format(
-            "jdbc:impala://%s?autoReconnect=true&useSSL=false",
-            DatabaseConnectionHelpers.IMPALA_HOST);
+        String.format("jdbc:impala://%s", DatabaseConnectionHelpers.IMPALA_HOST);
     String vcConnectionString =
-        String.format(
-            "jdbc:verdict:impala://%s?autoReconnect=true&useSSL=false",
-            DatabaseConnectionHelpers.IMPALA_HOST);
+        String.format("jdbc:verdict:impala://%s", DatabaseConnectionHelpers.IMPALA_HOST);
     Connection conn =
         DatabaseConnectionHelpers.setupImpala(
             connectionString,
@@ -146,11 +142,11 @@ public class CreateScrambleTableFromSqlTest {
 
     String connectionString =
         String.format(
-            "jdbc:redshift://%s/%s?autoReconnect=true&useSSL=false",
+            "jdbc:redshift://%s/%s",
             DatabaseConnectionHelpers.REDSHIFT_HOST, DatabaseConnectionHelpers.REDSHIFT_DATABASE);
     String vcConnectionString =
         String.format(
-            "jdbc:verdict:redshift://%s/%s?autoReconnect=true&useSSL=false",
+            "jdbc:verdict:redshift://%s/%s",
             DatabaseConnectionHelpers.REDSHIFT_HOST, DatabaseConnectionHelpers.REDSHIFT_DATABASE);
     Connection conn =
         DatabaseConnectionHelpers.setupRedshift(
@@ -176,11 +172,11 @@ public class CreateScrambleTableFromSqlTest {
 
     String connectionString =
         String.format(
-            "jdbc:postgresql://%s/%s?autoReconnect=true&useSSL=false",
+            "jdbc:postgresql://%s/%s",
             DatabaseConnectionHelpers.POSTGRES_HOST, DatabaseConnectionHelpers.POSTGRES_DATABASE);
     String vcConnectionString =
         String.format(
-            "jdbc:verdict:postgresql://%s/%s?autoReconnect=true&useSSL=false",
+            "jdbc:verdict:postgresql://%s/%s",
             DatabaseConnectionHelpers.POSTGRES_HOST, DatabaseConnectionHelpers.POSTGRES_DATABASE);
     Connection conn =
         DatabaseConnectionHelpers.setupPostgresql(
@@ -208,7 +204,7 @@ public class CreateScrambleTableFromSqlTest {
     Connection vc = connections.get(database).getRight();
     String createScrambleSql =
         String.format(
-            "CREATE SCRAMBLE %s.lineitem_scramble FROM %s.lineitem METHOD uniform",
+            "CREATE SCRAMBLE %s.lineitem_uniform_scramble FROM %s.lineitem METHOD 'uniform'",
             TEMP_SCHEMA_NAME, DatabaseConnectionHelpers.COMMON_SCHEMA_NAME);
 
     Statement stmt = vc.createStatement();
@@ -218,11 +214,37 @@ public class CreateScrambleTableFromSqlTest {
         String.format(
             "SELECT COUNT(*) FROM %s.lineitem", DatabaseConnectionHelpers.COMMON_SCHEMA_NAME);
     String countScrambleSql =
-        String.format("SELECT COUNT(*) FROM %s.lineitem_scramble", TEMP_SCHEMA_NAME);
+        String.format("SELECT COUNT(*) FROM %s.lineitem_uniform_scramble", TEMP_SCHEMA_NAME);
 
     ResultSet rs1 = conn.createStatement().executeQuery(countOriginalSql);
     ResultSet rs2 = conn.createStatement().executeQuery(countScrambleSql);
 
+    assertEquals(rs1.next(), rs2.next());
+    assertEquals(rs1.getLong(1), rs2.getLong(1));
+  }
+
+  @Test
+  public void createFastConvergeScrambleTableTest() throws SQLException {
+    Connection conn = connections.get(database).getLeft();
+    Connection vc = connections.get(database).getRight();
+    String createScrambleSql =
+        String.format(
+            "CREATE SCRAMBLE %s.lineitem_fc_scramble FROM %s.lineitem METHOD 'fastconverge'",
+            TEMP_SCHEMA_NAME, DatabaseConnectionHelpers.COMMON_SCHEMA_NAME);
+
+    Statement stmt = vc.createStatement();
+    stmt.execute(createScrambleSql);
+
+    String countOriginalSql =
+        String.format(
+            "SELECT COUNT(*) FROM %s.lineitem", DatabaseConnectionHelpers.COMMON_SCHEMA_NAME);
+    String countScrambleSql =
+        String.format("SELECT COUNT(*) FROM %s.lineitem_fc_scramble", TEMP_SCHEMA_NAME);
+
+    ResultSet rs1 = conn.createStatement().executeQuery(countOriginalSql);
+    ResultSet rs2 = conn.createStatement().executeQuery(countScrambleSql);
+
+    assertEquals(rs1.next(), rs2.next());
     assertEquals(rs1.getLong(1), rs2.getLong(1));
   }
 }
