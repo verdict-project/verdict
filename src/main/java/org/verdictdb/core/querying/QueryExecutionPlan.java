@@ -225,7 +225,12 @@ public class QueryExecutionPlan implements ExecutablePlan, IdCreator, Serializab
   public String generateAliasName() {
     return idCreator.generateAliasName();
   }
-
+  
+  @Override
+  public String generateAliasName(String keyword) {
+    return idCreator.generateAliasName(keyword);
+  }
+  
   @Override
   public Pair<String, String> generateTempTableName() {
     return idCreator.generateTempTableName();

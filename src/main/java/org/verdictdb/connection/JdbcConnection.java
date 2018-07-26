@@ -177,9 +177,9 @@ public class JdbcConnection implements DbmsConnection {
   }
 
   public DbmsQueryResult executeSingle(String sql) throws VerdictDBDbmsException {
-    if (outputDebugMessage) {
-      System.out.println("About to issue this query: " + sql);
-    }
+//    if (outputDebugMessage) {
+//      System.out.println("About to issue this query: " + sql);
+//    }
 
     try {
       Statement stmt = conn.createStatement();

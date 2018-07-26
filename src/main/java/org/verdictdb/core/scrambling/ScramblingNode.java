@@ -90,7 +90,12 @@ public class ScramblingNode extends CreateScrambledTableNode {
           public String generateAliasName() {
             return null; // we don't need this method
           }
-
+  
+          @Override
+          public String generateAliasName(String keyword) {
+            return null; // we don't need this method
+          }
+  
           @Override
           public Pair<String, String> generateTempTableName() {
             return Pair.of(newSchemaName, newTableName);

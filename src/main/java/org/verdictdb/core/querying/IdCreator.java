@@ -20,7 +20,9 @@ import org.apache.commons.lang3.tuple.Pair;
 
 public interface IdCreator {
 
-  public String generateAliasName();
+  String generateAliasName();
+  
+  String generateAliasName(String keyword);
 
-  public Pair<String, String> generateTempTableName();
+  Pair<String, String> generateTempTableName();
 }

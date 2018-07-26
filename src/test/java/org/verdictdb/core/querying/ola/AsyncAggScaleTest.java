@@ -200,10 +200,14 @@ public class AsyncAggScaleTest {
     CreateTableAsSelectQuery query = (CreateTableAsSelectQuery) queryExecutionPlan.getRoot().getSources().get(0).getSources().get(0).createQuery(Arrays.asList(token));
     SelectQueryToSql queryToSql = new SelectQueryToSql(new H2Syntax());
     String actual = queryToSql.toSql(query.getSelect());
-    String expected = "select sum(vt3.\"value\") as \"agg0\", "
-        + "count(*) as \"agg1\" "
-        + "from \"originalSchema\".\"originalTable_scrambled\" as vt3 "
-        + "where vt3.\"verdictdbaggblock\" = 0";
+    actual = actual.replaceAll("vt\\d+", "vt");
+    actual = actual.replaceAll("verdictdb_alias_\\d+_\\d+", "verdictdb_alias");
+    actual = actual.replaceAll("verdictdb_tier_alias_\\d+_\\d+", "verdictdb_tier_alias");
+    String expected = "select sum(vt.\"value\") as \"agg0\", "
+        + "count(*) as \"agg1\", vt.\"verdictdbtier\" as \"verdictdb_tier_alias\" "
+        + "from \"originalSchema\".\"originalTable_scrambled\" as vt "
+        + "where vt.\"verdictdbaggblock\" = 0 "
+        + "group by \"verdictdb_tier_alias\"";
     assertEquals(expected, actual);
 
     ExecutionInfoToken token1 = new ExecutionInfoToken();
@@ -214,22 +218,37 @@ public class AsyncAggScaleTest {
     token2.setKeyValue("tableName", "table2");
     query = (CreateTableAsSelectQuery) queryExecutionPlan.getRoot().getSources().get(0).getSources().get(1).createQuery(Arrays.asList(token1, token2));
     actual = queryToSql.toSql(query.getSelect());
-    actual = actual.replaceAll("verdictdbalias_[0-9]*_[0-9]", "alias");
+    actual = actual.replaceAll("vt\\d+", "vt");
+    actual = actual.replaceAll("verdictdb_alias_\\d+_\\d+", "verdictdb_alias");
+    actual = actual.replaceAll("verdictdb_tier_alias_\\d+_\\d+", "verdictdb_tier_alias");
     expected = "select " +
-        "sum(unionTable.\"agg0\") as \"agg0\", " +
-        "sum(unionTable.\"agg1\") as \"agg1\" " +
-        "from (" +
-        "select * from \"verdict_temp\".\"table1\" as alias " +
-        "UNION ALL " +
-        "select * from \"verdict_temp\".\"table2\" as alias) as unionTable";
+                   "sum(unionTable.\"agg0\") as \"agg0\", " +
+                   "sum(unionTable.\"agg1\") as \"agg1\", " +
+                   "unionTable.\"verdictdb_tier_alias\" as \"verdictdb_tier_alias\" " +
+                   "from (" +
+                   "select * from \"verdict_temp\".\"table2\" as verdictdb_alias " +
+                   "UNION ALL " +
+                   "select * from \"verdict_temp\".\"table1\" as verdictdb_alias) as unionTable " +
+                   "group by \"verdictdb_tier_alias\"";
     assertEquals(expected, actual);
 
     ExecutionInfoToken token3 = queryExecutionPlan.getRoot().getSources().get(0).getSources().get(0).createToken(null);
     query = (CreateTableAsSelectQuery) queryExecutionPlan.getRoot().getSources().get(0).createQuery(Arrays.asList(token3));
     actual = queryToSql.toSql(query.getSelect());
-    actual = actual.replaceAll("verdictdbtemptable_[0-9]*_[0-9]", "alias");
-    expected = "select (1 + ((2.0000000000000000 * verdictdbbeforescaling.\"agg0\") / (2.0000000000000000 * verdictdbbeforescaling.\"agg1\"))) * (2.0000000000000000 * verdictdbbeforescaling.\"agg0\") as \"vc4\" from \"verdictdb_temp\".\"alias\" as verdictdbbeforescaling";
-    assertEquals(actual, expected);
+    actual = actual.replaceAll("vt\\d+", "vt");
+    actual = actual.replaceAll("verdictdb_alias_\\d+_\\d+", "verdictdb_alias");
+    actual = actual.replaceAll("verdictdb_tier_alias_\\d+_\\d+", "verdictdb_tier_alias");
+    actual = actual.replaceAll("verdictdbtemptable_\\d+_\\d+", "verdictdbtemptable");
+    expected = "select (1 + (sum(verdictdb_internal_tier_consolidated.\"agg0\") / " +
+                   "sum(verdictdb_internal_tier_consolidated.\"agg1\"))) * " +
+                   "sum(verdictdb_internal_tier_consolidated.\"agg0\") as \"vc2\" " +
+                   "from (" +
+                   "select 2.0000000000000000 * verdictdb_internal_before_scaling.\"agg0\" as \"agg0\", " +
+                   "2.0000000000000000 * verdictdb_internal_before_scaling.\"agg1\" as \"agg1\", " +
+                   "verdictdb_internal_before_scaling.\"verdictdb_tier_alias\" as \"verdictdb_tier_alias\" " +
+                   "from \"verdictdb_temp\".\"verdictdbtemptable\" as verdictdb_internal_before_scaling) " +
+                   "as verdictdb_internal_tier_consolidated";
+    assertEquals(expected, actual);
   }
 
   @Test

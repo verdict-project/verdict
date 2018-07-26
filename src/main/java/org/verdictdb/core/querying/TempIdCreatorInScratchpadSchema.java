@@ -51,10 +51,17 @@ public class TempIdCreatorInScratchpadSchema implements IdCreator, Serializable 
     return String.format("%d_%d", serialNum, identifierNum++);
   }
 
+  @Override
   public String generateAliasName() {
-    return String.format("verdictdbalias_%s", generateUniqueIdentifier());
+    return String.format("verdictdb_alias_%s", generateUniqueIdentifier());
   }
-
+  
+  @Override
+  public String generateAliasName(String keyword) {
+    return String.format("verdictdb_%s_alias_%s", keyword, generateUniqueIdentifier());
+  }
+  
+  @Override
   public Pair<String, String> generateTempTableName() {
     //    return Pair.of(scratchpadSchemaName, String.format("verdictdbtemptable_%d",
     // tempTableNameNum++));
