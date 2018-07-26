@@ -94,8 +94,9 @@ public class MySqlTpchSelectQueryCoordinatorTest {
     String filename = "query"+queryNum+".sql";
     File file = new File("src/test/resources/tpch_test_query/"+filename);
     String sql = Files.toString(file, Charsets.UTF_8);
-    DbmsConnection dbmsconn = new CachedDbmsConnection(
-        new JdbcConnection(conn, new MysqlSyntax()));
+    JdbcConnection jdbcConn = new JdbcConnection(conn, new MysqlSyntax());
+    jdbcConn.setOutputDebugMessage(true);
+    DbmsConnection dbmsconn = new CachedDbmsConnection(jdbcConn);
     dbmsconn.setDefaultSchema(MYSQL_DATABASE);
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     coordinator.setScrambleMetaSet(meta);

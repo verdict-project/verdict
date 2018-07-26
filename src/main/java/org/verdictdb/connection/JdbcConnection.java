@@ -101,9 +101,9 @@ public class JdbcConnection implements DbmsConnection {
 
   @Override
   public DbmsQueryResult execute(String sql) throws VerdictDBDbmsException {
-    if (outputDebugMessage) {
-      System.out.println("About to issue this batch query: " + sql);
-    }
+//    if (outputDebugMessage) {
+//      System.out.println("About to issue this batch query: " + sql);
+//    }
 
     //    String[] sqls = sql.split(";(?=(?:[^\']*\'[^\']*\')*[^\']*$)", -1);
     String quoteChars = "'\"";
