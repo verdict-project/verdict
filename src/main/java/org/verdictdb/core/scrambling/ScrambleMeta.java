@@ -41,10 +41,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * @author Yongjoo Park
  */
 @JsonPropertyOrder({
-  "schemaName", "tableName",
-  "originalSchemaName", "originalTableName",
-  "aggregationBlockColumn", "aggregationBlockCount",
-  "tierColumn", "numberOfTiers"
+  "schemaName",
+  "tableName",
+  "originalSchemaName",
+  "originalTableName",
+  "aggregationBlockColumn",
+  "aggregationBlockCount",
+  "tierColumn",
+  "numberOfTiers",
+  "method"
 })
 public class ScrambleMeta implements Serializable {
 
@@ -69,6 +74,9 @@ public class ScrambleMeta implements Serializable {
   String originalSchemaName;
 
   String originalTableName;
+
+  // scramble method used
+  String method;
 
   /**
    * The probability mass function of the sizes of the aggregation blocks for a tier. The key is the
@@ -119,6 +127,33 @@ public class ScrambleMeta implements Serializable {
     this.cumulativeDistributionForTier = cumulativeMassDistributionPerTier;
   }
 
+  public ScrambleMeta(
+      String scrambleSchemaName,
+      String scrambleTableName,
+      String originalSchemaName,
+      String originalTableName,
+      String blockColumn,
+      int blockCount,
+      String tierColumn,
+      int tierCount,
+      Map<Integer, List<Double>> cumulativeMassDistributionPerTier,
+      String method)
+      throws VerdictDBValueException {
+
+    this(
+        scrambleSchemaName,
+        scrambleTableName,
+        originalSchemaName,
+        originalTableName,
+        blockColumn,
+        blockCount,
+        tierColumn,
+        tierCount,
+        cumulativeMassDistributionPerTier);
+
+    this.method = method;
+  }
+
   public String getAggregationBlockColumn() {
     return aggregationBlockColumn;
   }
@@ -157,6 +192,10 @@ public class ScrambleMeta implements Serializable {
 
   public String getTierColumn() {
     return tierColumn;
+  }
+
+  public String getMethod() {
+    return method;
   }
 
   public void setAggregationBlockColumn(String aggregationBlockColumn) {

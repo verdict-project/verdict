@@ -24,6 +24,8 @@ public class DropTableQuery implements SqlConvertible {
 
   String tableName;
 
+  boolean isIfExists;
+
   public DropTableQuery(String schemaName, String tableName) {
     this.schemaName = schemaName;
     this.tableName = tableName;
@@ -39,5 +41,13 @@ public class DropTableQuery implements SqlConvertible {
 
   public String getTableName() {
     return tableName;
+  }
+
+  public boolean isIfExists() {
+    return isIfExists;
+  }
+
+  public void setIfExists(boolean ifExists) {
+    isIfExists = ifExists;
   }
 }

@@ -16,32 +16,16 @@
 
 package org.verdictdb.connection;
 
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
+import com.google.common.collect.Sets;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
-import org.verdictdb.commons.StackTraceReader;
 import org.verdictdb.commons.VerdictDBLogger;
 import org.verdictdb.exception.VerdictDBDbmsException;
-import org.verdictdb.sqlsyntax.HiveSyntax;
-import org.verdictdb.sqlsyntax.ImpalaSyntax;
-import org.verdictdb.sqlsyntax.PostgresqlSyntax;
-import org.verdictdb.sqlsyntax.RedshiftSyntax;
-import org.verdictdb.sqlsyntax.SparkSyntax;
-import org.verdictdb.sqlsyntax.SqlSyntax;
-import org.verdictdb.sqlsyntax.SqlSyntaxList;
+import org.verdictdb.sqlsyntax.*;
 
-import com.google.common.collect.Sets;
+import java.sql.*;
+import java.util.*;
 
 public class JdbcConnection implements DbmsConnection {
   
@@ -54,7 +38,7 @@ public class JdbcConnection implements DbmsConnection {
   JdbcQueryResult jrs = null;
   
   private boolean outputDebugMessage = false;
-  
+
   public static JdbcConnection create(Connection conn) throws VerdictDBDbmsException {
     String connectionString = null;
     try {
@@ -103,6 +87,7 @@ public class JdbcConnection implements DbmsConnection {
   
   @Override
   public DbmsQueryResult execute(String sql) throws VerdictDBDbmsException {
+
     String quoteChars = "'\"";
     List<String> sqls = splitOnSemicolon(sql, quoteChars);
     DbmsQueryResult finalResult = null;

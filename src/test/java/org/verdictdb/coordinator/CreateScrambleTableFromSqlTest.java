@@ -9,7 +9,12 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.verdictdb.commons.DatabaseConnectionHelpers;
+import org.verdictdb.connection.JdbcConnection;
+import org.verdictdb.core.scrambling.ScrambleMeta;
+import org.verdictdb.core.scrambling.ScrambleMetaSet;
 import org.verdictdb.exception.VerdictDBDbmsException;
+import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.metastore.ScrambleMetaStore;
 
 import java.io.IOException;
 import java.sql.*;
@@ -199,9 +204,12 @@ public class CreateScrambleTableFromSqlTest {
   }
 
   @Test
-  public void createUniformScrambleTableTest() throws SQLException {
+  public void createUniformScrambleTableTest() throws SQLException, VerdictDBException {
     Connection conn = connections.get(database).getLeft();
     Connection vc = connections.get(database).getRight();
+    JdbcConnection jdbcConn = JdbcConnection.create(conn);
+    ScrambleMetaStore store = new ScrambleMetaStore(jdbcConn);
+    store.remove();
     String createScrambleSql =
         String.format(
             "CREATE SCRAMBLE %s.lineitem_uniform_scramble FROM %s.lineitem METHOD 'uniform'",
@@ -221,12 +229,24 @@ public class CreateScrambleTableFromSqlTest {
 
     assertEquals(rs1.next(), rs2.next());
     assertEquals(rs1.getLong(1), rs2.getLong(1));
+
+    ScrambleMetaSet scrambleMetadata = store.retrieve();
+    ScrambleMeta meta =
+        scrambleMetadata.getMetaForTable(TEMP_SCHEMA_NAME, "lineitem_uniform_scramble");
+    assertEquals(DatabaseConnectionHelpers.COMMON_SCHEMA_NAME, meta.getOriginalSchemaName());
+    assertEquals("lineitem", meta.getOriginalTableName());
+    assertEquals(TEMP_SCHEMA_NAME, meta.getSchemaName());
+    assertEquals("lineitem_uniform_scramble", meta.getTableName());
+    assertEquals("uniform", meta.getMethod());
   }
 
   @Test
-  public void createFastConvergeScrambleTableTest() throws SQLException {
+  public void createFastConvergeScrambleTableTest() throws SQLException, VerdictDBException {
     Connection conn = connections.get(database).getLeft();
     Connection vc = connections.get(database).getRight();
+    JdbcConnection jdbcConn = JdbcConnection.create(conn);
+    ScrambleMetaStore store = new ScrambleMetaStore(jdbcConn);
+    store.remove();
     String createScrambleSql =
         String.format(
             "CREATE SCRAMBLE %s.lineitem_fc_scramble FROM %s.lineitem METHOD 'fastconverge'",
@@ -246,5 +266,13 @@ public class CreateScrambleTableFromSqlTest {
 
     assertEquals(rs1.next(), rs2.next());
     assertEquals(rs1.getLong(1), rs2.getLong(1));
+
+    ScrambleMetaSet scrambleMetadata = store.retrieve();
+    ScrambleMeta meta = scrambleMetadata.getMetaForTable(TEMP_SCHEMA_NAME, "lineitem_fc_scramble");
+    assertEquals(DatabaseConnectionHelpers.COMMON_SCHEMA_NAME, meta.getOriginalSchemaName());
+    assertEquals("lineitem", meta.getOriginalTableName());
+    assertEquals(TEMP_SCHEMA_NAME, meta.getSchemaName());
+    assertEquals("lineitem_fc_scramble", meta.getTableName());
+    assertEquals("fastconverge", meta.getMethod());
   }
 }

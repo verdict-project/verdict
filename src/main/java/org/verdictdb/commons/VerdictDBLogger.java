@@ -45,6 +45,10 @@ public class VerdictDBLogger implements org.slf4j.Logger {
     }
   }
 
+  public void SetRootLogLevel(Level level) {
+    ((Logger) LoggerFactory.getLogger(ROOT_LOGGER_NAME)).setLevel(level);
+  }
+
   public void addAppender(Appender<ILoggingEvent> appender) {
     if (logger instanceof ch.qos.logback.classic.Logger) {
       appender.setContext(((ch.qos.logback.classic.Logger) logger).getLoggerContext());
@@ -69,7 +73,7 @@ public class VerdictDBLogger implements org.slf4j.Logger {
 
   @Override
   public void trace(String s, Object o) {
-    logger.trace(s,o);
+    logger.trace(s, o);
   }
 
   @Override
