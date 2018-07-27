@@ -107,39 +107,50 @@ public class ExecutableNodeRunner implements Runnable {
   }
 
   List<ExecutionInfoToken> retrieve() {
-    List<ExecutionTokenQueue> sourceQueues = node.getSourceQueues();
-    //    System.out.println("Source queues:\n" + new ToStringBuilder(node,
-    // ToStringStyle.DEFAULT_STYLE) + " " + sourceQueues);
-
-    for (int i = 0; i < sourceQueues.size(); i++) {
-      ExecutionInfoToken rs = sourceQueues.get(i).peek();
+    Map<Integer, ExecutionTokenQueue> sourceChannelAndQueues = node.getSourceQueues();
+    
+    for (ExecutionTokenQueue queue : sourceChannelAndQueues.values()) {
+      ExecutionInfoToken rs = queue.peek();
       if (rs == null) {
         return null;
       }
     }
+//    for (int i = 0; i < sourceQueues.size(); i++) {
+//      ExecutionInfoToken rs = sourceQueues.get(i).peek();
+//      if (rs == null) {
+//        return null;
+//      }
+//    }
 
     // all results available now
     List<ExecutionInfoToken> results = new ArrayList<>();
-    for (int i = 0; i < sourceQueues.size(); i++) {
-      ExecutionInfoToken rs = sourceQueues.get(i).take();
+    for (Entry<Integer, ExecutionTokenQueue> channelAndQueue : sourceChannelAndQueues.entrySet()) {
+      int channel = channelAndQueue.getKey();
+      ExecutionInfoToken rs = channelAndQueue.getValue().take();
+      rs.setKeyValue("channel", channel);
       results.add(rs);
     }
+//    for (int i = 0; i < sourceQueues.size(); i++) {
+//      ExecutionInfoToken rs = sourceQueues.get(i).take();
+//      results.add(rs);
+//    }
     return results;
   }
 
   void broadcast(ExecutionInfoToken token) {
-    // System.out.println(new ToStringBuilder(node, ToStringStyle.DEFAULT_STYLE) + " broadcasts: " +
-    // token);
+  
     VerdictDBLogger logger = VerdictDBLogger.getLogger(this.getClass());
-    logger.trace(String.format("[%s ->] Broadcasting:", node.toString()));
+    logger.trace(String.format("[%s] Broadcasting:", node.toString()));
+    for (ExecutableNode dest : node.getSubscribers()) {
+      logger.trace(String.format("  -> %s", dest.toString()));
+    }
     logger.trace(token.toString());
     
     for (ExecutableNode dest : node.getSubscribers()) {
       ExecutionInfoToken copiedToken = token.deepcopy();
       dest.getNotified(node, copiedToken);
-  
-      logger.trace(String.format("[-> %s]", dest.toString()));
-      logger.trace(copiedToken.toString());
+//      logger.trace(String.format("[-> %s]", dest.toString()));
+//      logger.trace(copiedToken.toString());
     }
   }
 

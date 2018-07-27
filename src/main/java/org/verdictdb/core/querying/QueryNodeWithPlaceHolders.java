@@ -29,18 +29,21 @@ import java.util.List;
 public abstract class QueryNodeWithPlaceHolders extends QueryNodeBase {
 
   private static final long serialVersionUID = 5770210201301837177L;
-
+  
   List<PlaceHolderRecord> placeholderRecords = new ArrayList<>();
 
   // use this to compress the placeholderTable in filter
   List<SubqueryColumn> placeholderTablesinFilter = new ArrayList<>();
+  
+  private UniquePlaceholderNameCreator placeholderNameCreator = new UniquePlaceholderNameCreator();
 
   public QueryNodeWithPlaceHolders(SelectQuery query) {
     super(query);
   }
 
   public Pair<BaseTable, SubscriptionTicket> createPlaceHolderTable(String aliasName) {
-    BaseTable table = new BaseTable("placeholderSchemaName", "placeholderTableName", aliasName);
+    Pair<String, String> placeholder = placeholderNameCreator.getUniqueStringPair();
+    BaseTable table = new BaseTable(placeholder.getLeft(), placeholder.getRight(), aliasName);
     SubscriptionTicket ticket = createSubscriptionTicket();
     int channel = ticket.getChannel().get();
     placeholderRecords.add(new PlaceHolderRecord(table, channel));
@@ -55,21 +58,122 @@ public abstract class QueryNodeWithPlaceHolders extends QueryNodeBase {
     if (tokens.size() < placeholderRecords.size()) {
       throw new VerdictDBValueException("Not enough temp tables to plug into placeholder tables.");
     }
-
-    for (int i = 0; i < placeholderRecords.size(); i++) {
-      PlaceHolderRecord record = placeholderRecords.get(i);
-      BaseTable t = record.getPlaceholderTable();
-      ExecutionInfoToken r = tokens.get(i);
-      String schemaName = (String) r.getValue("schemaName");
-      String tableName = (String) r.getValue("tableName");
-      t.setSchemaName(schemaName);
-      t.setTableName(tableName);
-      //      System.out.println("!!placeholder replacement!!  \n" +
-      //                         new ToStringBuilder(this, ToStringStyle.DEFAULT_STYLE) + "\n" +
-      //                         schemaName + " " + tableName);
+    
+    for (ExecutionInfoToken token : tokens) {
+      // these names will replace the placeholders
+      String actualSchemaName = (String) token.getValue("schemaName");
+      String actualTableName = (String) token.getValue("tableName");
+      Integer channel = (Integer) token.getValue("channel");
+      if (actualSchemaName == null || actualTableName == null || channel == null) {
+        continue;
+      }
+  
+      for (PlaceHolderRecord record : placeholderRecords) {
+        BaseTable placeholderTable = record.getPlaceholderTable();
+        int registeredChannel = record.getSubscriptionChannel();
+        if (registeredChannel == channel) {
+          BaseTable newBaseTable = new BaseTable(actualSchemaName, actualTableName);
+          findPlaceHolderAndReplace(placeholderTable, newBaseTable);
+        }
+      }
     }
 
+//    for (int i = 0; i < placeholderRecords.size(); i++) {
+//      PlaceHolderRecord record = placeholderRecords.get(i);
+//      BaseTable t = record.getPlaceholderTable();
+////      ExecutionInfoToken r = tokens.get(i);
+////      String schemaName = (String) r.getValue("schemaName");
+////      String tableName = (String) r.getValue("tableName");
+////      t.setSchemaName(schemaName);
+////      t.setTableName(tableName);
+//      //      System.out.println("!!placeholder replacement!!  \n" +
+//      //                         new ToStringBuilder(this, ToStringStyle.DEFAULT_STYLE) + "\n" +
+//      //                         schemaName + " " + tableName);
+//    }
+
     return selectQuery;
+  }
+  
+  /**
+   * Examine the selectQuery and replace the schema and table names with the new ones.
+   *
+   * @param placeholderTable The old table
+   * @param actualTable The new table
+   */
+  private void findPlaceHolderAndReplace(BaseTable placeholderTable, BaseTable actualTable) {
+    SelectQuery selectQuery = getSelectQuery();
+    
+    // check the source list
+    for (AbstractRelation source : selectQuery.getFromList()) {
+      findPlaceHolderAndReplaceInSource(source, placeholderTable, actualTable);
+    }
+    
+    // check the filter
+    if (selectQuery.getFilter().isPresent()) {
+      UnnamedColumn filter = selectQuery.getFilter().get();
+      findPlaceHolderAndReplaceInFilter(filter, placeholderTable, actualTable);
+    }
+    
+    setSelectQuery(selectQuery);
+  }
+  
+  private void findPlaceHolderAndReplaceInSource(
+      AbstractRelation source, BaseTable placeholderTable, BaseTable actualTable) {
+    
+    if (source instanceof BaseTable) {
+      BaseTable baseTableSource = (BaseTable) source;
+      if (baseTableSource.equals(placeholderTable)) {
+        baseTableSource.setSchemaName(actualTable.getSchemaName());
+        baseTableSource.setTableName(actualTable.getTableName());
+      }
+    } else if (source instanceof JoinTable) {
+      for (AbstractRelation joinSource : ((JoinTable) source).getJoinList()) {
+        findPlaceHolderAndReplaceInSource(joinSource, placeholderTable, actualTable);
+      }
+    } else if (source instanceof SelectQuery) {
+      SelectQuery subquery = (SelectQuery) source;
+  
+      // check the source list
+      for (AbstractRelation subsource : subquery.getFromList()) {
+        findPlaceHolderAndReplaceInSource(subsource, placeholderTable, actualTable);
+      }
+  
+      // check the filter
+      if (subquery.getFilter().isPresent()) {
+        UnnamedColumn subfilter = subquery.getFilter().get();
+        findPlaceHolderAndReplaceInFilter(subfilter, placeholderTable, actualTable);
+      }
+    } else if (source instanceof SetOperationRelation) {
+      SetOperationRelation unionQuery = (SetOperationRelation) source;
+      AbstractRelation leftSource = unionQuery.getLeft();
+      AbstractRelation rightSource = unionQuery.getRight();
+      findPlaceHolderAndReplaceInSource(leftSource, placeholderTable, actualTable);
+      findPlaceHolderAndReplaceInSource(rightSource, placeholderTable, actualTable);
+    }
+  }
+  
+  private void findPlaceHolderAndReplaceInFilter(
+      UnnamedColumn filter, BaseTable placeholderTable, BaseTable actualTable) {
+    
+    if (filter instanceof ColumnOp) {
+      ColumnOp opFilter = (ColumnOp) filter;
+      for (UnnamedColumn operand : opFilter.getOperands()) {
+        findPlaceHolderAndReplaceInFilter(operand, placeholderTable, actualTable);
+      }
+    } else if (filter instanceof SubqueryColumn) {
+      SelectQuery subquery = ((SubqueryColumn) filter).getSubquery();
+      
+      // check the source list
+      for (AbstractRelation subsource : subquery.getFromList()) {
+        findPlaceHolderAndReplaceInSource(subsource, placeholderTable, actualTable);
+      }
+  
+      // check the filter
+      if (subquery.getFilter().isPresent()) {
+        UnnamedColumn subfilter = subquery.getFilter().get();
+        findPlaceHolderAndReplaceInFilter(subfilter, placeholderTable, actualTable);
+      }
+    }
   }
   
   /**
@@ -175,3 +279,15 @@ class PlaceHolderRecord implements Serializable {
   }
 }
 
+class UniquePlaceholderNameCreator implements Serializable {
+
+  private int identifier = 0;
+  
+  Pair<String, String> getUniqueStringPair() {
+    String schemaName = String.format("placeholderSchema_%d_%d", hashCode(), identifier);
+    String tableName = String.format("placeholderTable_%d_%d", hashCode(), identifier);
+    identifier += 1;
+    return Pair.of(schemaName, tableName);
+  }
+
+}

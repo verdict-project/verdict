@@ -167,8 +167,8 @@ public class ExecutableNodeBase implements ExecutableNode, Serializable {
   }
 
   @Override
-  public List<ExecutionTokenQueue> getSourceQueues() {
-    return new ArrayList<ExecutionTokenQueue>(channels.values());
+  public Map<Integer, ExecutionTokenQueue> getSourceQueues() {
+    return channels;
   }
 
   @Override

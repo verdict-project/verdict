@@ -331,11 +331,17 @@ public class QueryExecutionPlanSimplifier {
     QueryNodeBase nodeQuery = (QueryNodeBase) node;
 
     // Change the query of parents
-    BaseTable placeholderTableinParent =
+    PlaceHolderRecord placeholderRecordinParent =
         ((QueryNodeWithPlaceHolders) parent)
-            .getPlaceholderTables()
+            .getPlaceholderRecords()
             .get(parent.getExecutableNodeBaseDependents().indexOf(node));
-    ((QueryNodeWithPlaceHolders) parent).getPlaceholderTables().remove(placeholderTableinParent);
+    ((QueryNodeWithPlaceHolders) parent).getPlaceholderRecords().remove(placeholderRecordinParent);
+    BaseTable placeholderTableinParent =placeholderRecordinParent.getPlaceholderTable();
+//    BaseTable placeholderTableinParent =
+//        ((QueryNodeWithPlaceHolders) parent)
+//            .getPlaceholderTables()
+//            .get(parent.getExecutableNodeBaseDependents().indexOf(node));
+//    ((QueryNodeWithPlaceHolders) parent).getPlaceholderTables().remove(placeholderTableinParent);
 
     // If temp table is in from list of parent, just direct replace with the select query of node
     boolean find = false;
@@ -377,7 +383,9 @@ public class QueryExecutionPlanSimplifier {
 
     // Move node's placeholderTable to parent's
     ((QueryNodeWithPlaceHolders) parent)
-        .getPlaceholderTables().addAll(((QueryNodeWithPlaceHolders) node).getPlaceholderTables());
+        .getPlaceholderRecords().addAll(((QueryNodeWithPlaceHolders) node).getPlaceholderRecords());
+//    ((QueryNodeWithPlaceHolders) parent)
+//        .getPlaceholderTables().addAll(((QueryNodeWithPlaceHolders) node).getPlaceholderTables());
 
     // Compress the node tree
     parentQuery.cancelSubscriptionTo(nodeQuery);

@@ -45,9 +45,9 @@ public interface ExecutableNode {
   /**
    * The tokens are retrieved from these queues.
    *
-   * @return
+   * @return channel -> queue
    */
-  public List<ExecutionTokenQueue> getSourceQueues();
+  public Map<Integer, ExecutionTokenQueue> getSourceQueues();
 
   /**
    * The result of createToken() is broadcasted to these queues.

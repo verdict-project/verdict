@@ -20,6 +20,7 @@ import com.google.common.collect.Sets;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
+import org.verdictdb.commons.VerdictDBLogger;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.sqlsyntax.*;
 
@@ -162,9 +163,9 @@ public class JdbcConnection implements DbmsConnection {
   }
 
   public DbmsQueryResult executeSingle(String sql) throws VerdictDBDbmsException {
-//    if (outputDebugMessage) {
-//      System.out.println("About to issue this query: " + sql);
-//    }
+  
+    VerdictDBLogger logger = VerdictDBLogger.getLogger(this.getClass());
+    logger.debug("Issuing the following query to DBMS: " + sql);
 
     try {
       Statement stmt = conn.createStatement();
