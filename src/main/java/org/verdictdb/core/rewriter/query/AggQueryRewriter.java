@@ -130,7 +130,7 @@ public class AggQueryRewriter {
           BaseColumn blockaggBaseColumn = baseColumns.get(m);
           Pair<Integer, Integer> blockingIndex = blockingIndices.get(m).get(k);
           SelectQuery selectAllScramledBase = (SelectQuery) selectAllScrambledBases.get(m);
-          selectAllScramledBase.clearFilters();
+          selectAllScramledBase.clearFilter();
           selectAllScramledBase.addFilterByAnd(
               ColumnOp.equal(blockaggBaseColumn, ConstantColumn.valueOf(blockingIndex.getLeft())));
           aggblockMeta.addMeta(

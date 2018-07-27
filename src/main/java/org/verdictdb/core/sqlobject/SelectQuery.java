@@ -162,7 +162,7 @@ public class SelectQuery extends AbstractRelation implements SqlConvertible {
     this.fromList = fromList;
   }
 
-  public void clearFilters() {
+  public void clearFilter() {
     this.filter = Optional.absent();
   }
 

@@ -16,6 +16,7 @@
 
 package org.verdictdb.core.querying;
 
+import com.google.common.base.Optional;
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.core.querying.ola.AsyncAggExecutionNode;
 import org.verdictdb.core.sqlobject.*;
@@ -60,14 +61,15 @@ public class QueryExecutionPlanSimplifier {
           break;
         }
       }
-      if (isConsolidated == false) {
+      if (!isConsolidated) {
         break;
       }
     }
   }
   
   /**
-   * Consolidates to a single child if the condition is met.
+   * Consolidates to a single child if the condition is met. This is a helper function for
+   * simplify2().
    *
    * @param parent The parent node
    * @param childIndex The index of the child node to consolidate (if possible)
@@ -84,7 +86,7 @@ public class QueryExecutionPlanSimplifier {
     // Check consolidation conditions
     
     // first condition: the child must inherits CreateTableAsSelectNode.
-    if ((child instanceof CreateTableAsSelectNode) == false) {
+    if (!(child instanceof CreateTableAsSelectNode)) {
       return false;
     }
     
@@ -118,7 +120,8 @@ public class QueryExecutionPlanSimplifier {
       // remove the placeholder for the child in the parent's list
       int channelForChild = parent.getChannelForSource(child);
       QueryNodeWithPlaceHolders placeholderParent = (QueryNodeWithPlaceHolders) parent;
-      PlaceHolderRecord removedRecord = placeholderParent.removePlaceholderRecordForChannel(channelForChild);
+      PlaceHolderRecord removedRecord =
+          placeholderParent.removePlaceholderRecordForChannel(channelForChild);
       BaseTable baseTableToRemove = removedRecord.getPlaceholderTable();
       
       // replace the placeholder BaseTable (in the from list) with the SelectQuery of the child
@@ -126,7 +129,7 @@ public class QueryExecutionPlanSimplifier {
       List<AbstractRelation> newParentFromList = new ArrayList<>();
       SelectQuery childQuery = ((QueryNodeBase) child).getSelectQuery();
       for (AbstractRelation source : parentFromList) {
-        if ((source instanceof BaseTable) == false) {
+        if (!(source instanceof BaseTable)) {
           newParentFromList.add(source);
           continue;
         }
@@ -142,6 +145,14 @@ public class QueryExecutionPlanSimplifier {
       placeholderParent.getSelectQuery().setFromList(newParentFromList);
       
       // replace the placeholder BaseTable (in the filter list) with the SelectQuery of the child
+      SelectQuery parentSelectQuery = placeholderParent.getSelectQuery();
+      Optional<UnnamedColumn> parentFilterOptional = parentSelectQuery.getFilter();
+      if (parentFilterOptional.isPresent()) {
+        UnnamedColumn originalFilter = parentFilterOptional.get();
+        UnnamedColumn newFilter = consolidateFilter(originalFilter, child, baseTableToRemove);
+        parentSelectQuery.clearFilter();
+        parentSelectQuery.addFilterByAnd(newFilter);
+      }
       
       // add child's placeholders to the parent
       if (child instanceof QueryNodeWithPlaceHolders) {
@@ -182,7 +193,39 @@ public class QueryExecutionPlanSimplifier {
       }
     }
     
+    // indicates that a consolidation is performed
     return true;
+  }
+  
+  private static UnnamedColumn consolidateFilter(
+      UnnamedColumn originalFilter, ExecutableNodeBase child, BaseTable baseTableToRemove) {
+    
+    // exception
+    if (!(child instanceof QueryNodeBase)) {
+      return originalFilter;
+    }
+    
+    SelectQuery childSelectQuery = ((QueryNodeBase) child).getSelectQuery();
+  
+    if (originalFilter instanceof ColumnOp) {
+      ColumnOp originalColumnOp = (ColumnOp) originalFilter;
+      List<UnnamedColumn> newOperands = new ArrayList<>();
+      for (UnnamedColumn o : originalColumnOp.getOperands()) {
+        newOperands.add(consolidateFilter(o, child, baseTableToRemove));
+      }
+      ColumnOp newColumnOp = new ColumnOp(originalColumnOp.getOpType(), newOperands);
+      return newColumnOp;
+    } else if (originalFilter instanceof SubqueryColumn) {
+      SubqueryColumn originalSubquery = (SubqueryColumn) originalFilter;
+      SelectQuery subquery = originalSubquery.getSubquery();
+      List<AbstractRelation> subqueryFromList = subquery.getFromList();
+      if (subqueryFromList.size() == 1 && subqueryFromList.get(0).equals(baseTableToRemove)) {
+        originalSubquery.setSubquery(childSelectQuery);
+      }
+      return originalSubquery;
+    }
+    
+    return originalFilter;
   }
   
 

@@ -220,6 +220,10 @@ public class RelationGen extends VerdictSQLParserBaseVisitor<AbstractRelation> {
   @Override
   public AbstractRelation visitJoin_part(VerdictSQLParser.Join_partContext ctx) {
     if (ctx.INNER() != null) {
+      if (ctx.search_condition() == null) {
+        throw new RuntimeException("The join condition for a inner join does not exist.");
+      }
+      
       AbstractRelation r = this.visit(ctx.table_source());
       CondGen g = new CondGen();
       UnnamedColumn cond = g.visit(ctx.search_condition());
