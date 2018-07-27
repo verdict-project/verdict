@@ -18,10 +18,7 @@ package org.verdictdb.core.querying;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.core.querying.ola.AsyncAggExecutionNode;
-import org.verdictdb.core.sqlobject.AbstractRelation;
-import org.verdictdb.core.sqlobject.BaseTable;
-import org.verdictdb.core.sqlobject.JoinTable;
-import org.verdictdb.core.sqlobject.SubqueryColumn;
+import org.verdictdb.core.sqlobject.*;
 import org.verdictdb.exception.VerdictDBValidationException;
 
 import java.util.ArrayList;
@@ -78,7 +75,8 @@ public class QueryExecutionPlanSimplifier {
    * @throws VerdictDBValidationException This exception is thrown if the number of placeholders in
    * the parent does not match the number of the children.
    */
-  private static boolean consolidates(ExecutableNodeBase parent, int childIndex) {
+  private static boolean consolidates(ExecutableNodeBase parent, int childIndex)
+      throws VerdictDBValidationException {
   
     List<ExecutableNodeBase> sources = parent.getSources();
     ExecutableNodeBase child = sources.get(childIndex);
@@ -116,11 +114,34 @@ public class QueryExecutionPlanSimplifier {
     // the child itself may include one or more placeholders; so, those existing placeholders are
     // added into the parent's placeholder list.
     // The placeholders are associated with unique IDs; thus, safe to add/remove placehoders
-    if (parent instanceof QueryNodeWithPlaceHolders) {
+    if (parent instanceof QueryNodeWithPlaceHolders && child instanceof QueryNodeBase) {
       // remove the placeholder for the child in the parent's list
       int channelForChild = parent.getChannelForSource(child);
       QueryNodeWithPlaceHolders placeholderParent = (QueryNodeWithPlaceHolders) parent;
-      placeholderParent.removePlaceholderRecordForChannel(channelForChild);
+      PlaceHolderRecord removedRecord = placeholderParent.removePlaceholderRecordForChannel(channelForChild);
+      BaseTable baseTableToRemove = removedRecord.getPlaceholderTable();
+      
+      // replace the placeholder BaseTable (in the from list) with the SelectQuery of the child
+      List<AbstractRelation> parentFromList = placeholderParent.getSelectQuery().getFromList();
+      List<AbstractRelation> newParentFromList = new ArrayList<>();
+      SelectQuery childQuery = ((QueryNodeBase) child).getSelectQuery();
+      for (AbstractRelation source : parentFromList) {
+        if ((source instanceof BaseTable) == false) {
+          newParentFromList.add(source);
+          continue;
+        }
+        
+        BaseTable baseTableSource = (BaseTable) source;
+        if (baseTableSource.equals(baseTableToRemove)) {
+          childQuery.setAliasName(baseTableToRemove.getAliasName().get());
+          newParentFromList.add(childQuery);
+        } else {
+          newParentFromList.add(source);
+        }
+      }
+      placeholderParent.getSelectQuery().setFromList(newParentFromList);
+      
+      // replace the placeholder BaseTable (in the filter list) with the SelectQuery of the child
       
       // add child's placeholders to the parent
       if (child instanceof QueryNodeWithPlaceHolders) {
@@ -140,6 +161,25 @@ public class QueryExecutionPlanSimplifier {
       int childSourceChannel = childSourceAndChannel.getRight();
       child.cancelSubscriptionTo(childSource);
       parent.subscribeTo(childSource, childSourceChannel);
+    }
+    
+    // One extra step: if the root node is the "select *" query without any group-by clauses
+    // we just use the inner query.
+    if (parent instanceof QueryNodeBase) {
+      QueryNodeBase parentAsQueryNode = (QueryNodeBase) parent;
+      SelectQuery parentSelectQuery = parentAsQueryNode.getSelectQuery();
+      List<SelectItem> parentSelectList = parentSelectQuery.getSelectList();
+      List<AbstractRelation> parentFromList = parentSelectQuery.getFromList();
+      List<GroupingAttribute> parentGroupbyList = parentSelectQuery.getGroupby();
+      if (parentSelectList.size() == 1
+              && (parentSelectList.get(0) instanceof AsteriskColumn)
+              && (parentGroupbyList.size() == 0)
+              && (parentFromList.size() == 1)
+              && (parentFromList.get(0) instanceof SelectQuery)) {
+        SelectQuery innerQuery = (SelectQuery) parentFromList.get(0);
+        innerQuery.clearAliasName();
+        parentAsQueryNode.setSelectQuery(innerQuery);
+      }
     }
     
     return true;

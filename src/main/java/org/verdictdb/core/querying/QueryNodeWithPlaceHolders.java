@@ -22,6 +22,7 @@ import org.verdictdb.core.sqlobject.*;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBValueException;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -154,7 +155,7 @@ public abstract class QueryNodeWithPlaceHolders extends QueryNodeBase {
   }
 }
 
-class PlaceHolderRecord {
+class PlaceHolderRecord implements Serializable {
 
   private BaseTable placeholderTable;
   

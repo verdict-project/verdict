@@ -42,6 +42,10 @@ public abstract class AbstractRelation implements Serializable {
   public Optional<String> getAliasName() {
     return aliasName;
   }
+  
+  public void clearAliasName() {
+    aliasName = Optional.absent();
+  }
 
   @Override
   public int hashCode() {

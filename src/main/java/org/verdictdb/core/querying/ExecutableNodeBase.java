@@ -286,7 +286,7 @@ public class ExecutableNodeBase implements ExecutableNode, Serializable {
       builder.append(" ");
     }
     builder.append(this.toString());
-//    System.out.println(builder.toString());
+    System.out.println(builder.toString());
 
     for (ExecutableNodeBase dep : getExecutableNodeBaseDependents()) {
       dep.print(indentSpace + 2);
@@ -336,7 +336,7 @@ public class ExecutableNodeBase implements ExecutableNode, Serializable {
   }
 }
 
-class UniqueChannelCreator {
+class UniqueChannelCreator implements Serializable {
   
   private int identifierNum = 0;
   

@@ -9,6 +9,7 @@ import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.core.sqlobject.SubqueryColumn;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.exception.VerdictDBValidationException;
 import org.verdictdb.sqlreader.NonValidatingSQLParser;
 import org.verdictdb.sqlsyntax.H2Syntax;
 
@@ -48,6 +49,31 @@ public class QueryExecutionPlanSimplifierTest {
       conn.execute(String.format("INSERT INTO \"%s\".\"%s\"(\"id\", \"value\") VALUES(%s, %f)",
           schemaName, tableName, i, (double) i+1));
     }
+  }
+  
+  @Test
+  public void simpleAggregateVersion2Test() throws VerdictDBValidationException {
+    String sql = "select avg(t.value) as a from originalschema.originaltable as t";
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    SelectQuery selectQuery = (SelectQuery) sqlToRelation.toRelation(sql);
+    SelectQuery originalQuery = selectQuery.deepcopy();
+    QueryExecutionPlan plan = QueryExecutionPlanFactory.create(newSchema, null, selectQuery);
+  
+//    System.out.println(((QueryNodeBase) plan.getRootNode()).getSelectQuery());
+    assertEquals(
+        originalQuery,
+        ((QueryNodeBase) plan.getRootNode().getExecutableNodeBaseDependent(0))
+            .getSelectQuery());
+    
+    // after simplification
+    QueryExecutionPlanSimplifier.simplify2(plan);
+  
+    System.out.println(((QueryNodeBase) plan.getRootNode()).getSelectQuery());
+    assertEquals(
+        originalQuery,
+        ((QueryNodeBase) plan.getRootNode()).getSelectQuery());
+    
+//    plan.getRootNode().print();
   }
 
   @Test
