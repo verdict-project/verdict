@@ -9,6 +9,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.verdictdb.commons.DatabaseConnectionHelpers;
+import org.verdictdb.commons.VerdictDBLogger;
 import org.verdictdb.exception.VerdictDBDbmsException;
 
 import java.io.File;
@@ -44,7 +45,8 @@ public class JdbcTpchQueryForAllDatabasesTest {
 
   // TODO: Add support for all four databases
   //  private static final String[] targetDatabases = {"mysql", "impala", "redshift", "postgresql"};
-  private static final String[] targetDatabases = {"mysql", "impala", "redshift"};
+//  private static final String[] targetDatabases = {"mysql", "impala", "redshift"};
+  private static final String[] targetDatabases = { "redshift" };
 
   public JdbcTpchQueryForAllDatabasesTest(String database, String query) {
     this.database = database;
@@ -119,8 +121,8 @@ public class JdbcTpchQueryForAllDatabasesTest {
 
   @BeforeClass
   public static void setupDatabases() throws SQLException, VerdictDBDbmsException, IOException {
-    setupMysql();
-    setupImpala();
+//    setupMysql();
+//    setupImpala();
     setupRedshift();
     // TODO: Add below databases too
     //    setupPostgresql();
@@ -164,8 +166,8 @@ public class JdbcTpchQueryForAllDatabasesTest {
       }
 
       // Uncomment below lines to test a specific query
-      //      params.clear();
-      //      params.add(new Object[] {database, "15"});
+      params.clear();
+      params.add(new Object[]{database, "22"});
     }
     return params;
   }

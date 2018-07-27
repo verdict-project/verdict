@@ -22,11 +22,129 @@ import org.verdictdb.core.sqlobject.AbstractRelation;
 import org.verdictdb.core.sqlobject.BaseTable;
 import org.verdictdb.core.sqlobject.JoinTable;
 import org.verdictdb.core.sqlobject.SubqueryColumn;
+import org.verdictdb.exception.VerdictDBValidationException;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class QueryExecutionPlanSimplifier {
+  
+  /**
+   * Simplifies the originalPlan in place.
+   *
+   * The parent node may consolidates with its child when all of the following conditions are
+   * satisfied:
+   * 1. The child node is a descendant of CreateTableAsSelectNode
+   * 2. The child node is the unique source of the channel to which the child node is set to
+   * broadcast
+   * 3. The parent is the only subscriber of the child.
+   *
+   * @param originalPlan The plan to simplify
+   * @throws VerdictDBValidationException This exception is thrown if the number of placeholders in
+   * the parent does not match the number of the children.
+   */
+  public static void simplify2(QueryExecutionPlan originalPlan)
+      throws VerdictDBValidationException {
+
+    // Every iteration of this loop completely reconfigure placeholder list and subscription list
+    // properly so that the next iteration does not need to know about the previous iteration.
+    while (true) {
+      ExecutableNodeBase parent = originalPlan.getRootNode();
+      List<ExecutableNodeBase> sources = parent.getSources();
+  
+      // if the parent has no child, this loop will immediately finish.
+      // if any child is consolidated, this loop will start all over again from the beginning
+      // however, since each consolidation removes a node from the tree, this loop only iterates
+      // as many times as the number of the nodes in the tree.
+      boolean isConsolidated = false;
+      for (int childIndex = 0; childIndex < sources.size(); childIndex++) {
+        isConsolidated = consolidates(parent, childIndex);
+        if (isConsolidated) {
+          break;
+        }
+      }
+      if (isConsolidated == false) {
+        break;
+      }
+    }
+  }
+  
+  /**
+   * Consolidates to a single child if the condition is met.
+   *
+   * @param parent The parent node
+   * @param childIndex The index of the child node to consolidate (if possible)
+   * @return True if consolidated; false otherwise
+   * @throws VerdictDBValidationException This exception is thrown if the number of placeholders in
+   * the parent does not match the number of the children.
+   */
+  private static boolean consolidates(ExecutableNodeBase parent, int childIndex) {
+  
+    List<ExecutableNodeBase> sources = parent.getSources();
+    ExecutableNodeBase child = sources.get(childIndex);
+  
+    // Check consolidation conditions
+    
+    // first condition: the child must inherits CreateTableAsSelectNode.
+    if ((child instanceof CreateTableAsSelectNode) == false) {
+      return false;
+    }
+    
+    // second condition: the child must be the unique broadcaster to the channel it broadcasts to.
+    int channelSharingSourceCount = 0;
+    int childChannel = parent.getChannelForSource(child);
+    List<Pair<ExecutableNodeBase, Integer>> sourceAndChannelList = parent.getSourcesAndChannels();
+    for (Pair<ExecutableNodeBase, Integer> sourceAndChannel : sourceAndChannelList) {
+      int channel = sourceAndChannel.getRight();
+      if (channel == childChannel) {
+        channelSharingSourceCount += 1;
+      }
+    }
+    if (channelSharingSourceCount > 1) {
+      return false;
+    }
+    
+    // third condition: the parent is the only subscriber of the child
+    if (child.getSubscribers().size() > 1) {
+      return false;
+    }
+    
+    // Now actually consolidate
+    
+    // replace the placeholder associated with the child.
+    // the existing placeholder is removed from the parent's placehoder table list.
+    // the child itself may include one or more placeholders; so, those existing placeholders are
+    // added into the parent's placeholder list.
+    // The placeholders are associated with unique IDs; thus, safe to add/remove placehoders
+    if (parent instanceof QueryNodeWithPlaceHolders) {
+      // remove the placeholder for the child in the parent's list
+      int channelForChild = parent.getChannelForSource(child);
+      QueryNodeWithPlaceHolders placeholderParent = (QueryNodeWithPlaceHolders) parent;
+      placeholderParent.removePlaceholderRecordForChannel(channelForChild);
+      
+      // add child's placeholders to the parent
+      if (child instanceof QueryNodeWithPlaceHolders) {
+        QueryNodeWithPlaceHolders placeHolderChild = (QueryNodeWithPlaceHolders) child;
+        for (PlaceHolderRecord record : placeHolderChild.getPlaceholderRecords()) {
+          placeholderParent.addPlaceholderRecord(record);
+        }
+      }
+    }
+    
+    // the parent's subscription to the child is removed.
+    // however, the parent now subscribes to the previous broadcastors to the child.
+    parent.cancelSubscriptionTo(child);
+    List<Pair<ExecutableNodeBase, Integer>> childSourceAndChannels = child.getSourcesAndChannels();
+    for (Pair<ExecutableNodeBase, Integer> childSourceAndChannel : childSourceAndChannels) {
+      ExecutableNodeBase childSource = childSourceAndChannel.getLeft();
+      int childSourceChannel = childSourceAndChannel.getRight();
+      child.cancelSubscriptionTo(childSource);
+      parent.subscribeTo(childSource, childSourceChannel);
+    }
+    
+    return true;
+  }
+  
 
   /**
    * @param originalPlan
@@ -138,7 +256,7 @@ public class QueryExecutionPlanSimplifier {
 
     // Move node's placeholderTable to parent's
     ((QueryNodeWithPlaceHolders) parent)
-        .placeholderTables.addAll(((QueryNodeWithPlaceHolders) node).placeholderTables);
+        .getPlaceholderTables().addAll(((QueryNodeWithPlaceHolders) node).getPlaceholderTables());
 
     // Compress the node tree
     parentQuery.cancelSubscriptionTo(nodeQuery);

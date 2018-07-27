@@ -29,7 +29,7 @@ public abstract class QueryNodeWithPlaceHolders extends QueryNodeBase {
 
   private static final long serialVersionUID = 5770210201301837177L;
 
-  List<BaseTable> placeholderTables = new ArrayList<>();
+  List<PlaceHolderRecord> placeholderRecords = new ArrayList<>();
 
   // use this to compress the placeholderTable in filter
   List<SubqueryColumn> placeholderTablesinFilter = new ArrayList<>();
@@ -39,11 +39,10 @@ public abstract class QueryNodeWithPlaceHolders extends QueryNodeBase {
   }
 
   public Pair<BaseTable, SubscriptionTicket> createPlaceHolderTable(String aliasName) {
-    //      throws VerdictDBValueException {
     BaseTable table = new BaseTable("placeholderSchemaName", "placeholderTableName", aliasName);
-    placeholderTables.add(table);
-    //    ExecutionTokenQueue listeningQueue = generateListeningQueue();
     SubscriptionTicket ticket = createSubscriptionTicket();
+    int channel = ticket.getChannel().get();
+    placeholderRecords.add(new PlaceHolderRecord(table, channel));
     return Pair.of(table, ticket);
   }
 
@@ -52,12 +51,13 @@ public abstract class QueryNodeWithPlaceHolders extends QueryNodeBase {
     if (tokens == null) {
       return null;
     }
-    if (tokens.size() < placeholderTables.size()) {
+    if (tokens.size() < placeholderRecords.size()) {
       throw new VerdictDBValueException("Not enough temp tables to plug into placeholder tables.");
     }
 
-    for (int i = 0; i < placeholderTables.size(); i++) {
-      BaseTable t = placeholderTables.get(i);
+    for (int i = 0; i < placeholderRecords.size(); i++) {
+      PlaceHolderRecord record = placeholderRecords.get(i);
+      BaseTable t = record.getPlaceholderTable();
       ExecutionInfoToken r = tokens.get(i);
       String schemaName = (String) r.getValue("schemaName");
       String tableName = (String) r.getValue("tableName");
@@ -70,30 +70,39 @@ public abstract class QueryNodeWithPlaceHolders extends QueryNodeBase {
 
     return selectQuery;
   }
+  
+  /**
+   * Finds and removes the placeholder that is associated with the given channel
+   * @param channel The channel number
+   * @return The removed record
+   */
+  public PlaceHolderRecord removePlaceholderRecordForChannel(int channel) {
+    int indexToRemove = 0;
+    for (int i = 0; i < placeholderRecords.size(); i++) {
+      PlaceHolderRecord record = placeholderRecords.get(i);
+      if (record.getSubscriptionChannel() == channel) {
+        indexToRemove = i;
+        break;
+      }
+    }
+    PlaceHolderRecord removed = placeholderRecords.remove(indexToRemove);
+    return removed;
+  }
+  
+  public void addPlaceholderRecord(PlaceHolderRecord record) {
+    placeholderRecords.add(record);
+  }
 
-  //  @Override
-  //  public ExecutionInfoToken executeNode(DbmsConnection conn, List<ExecutionInfoToken>
-  // downstreamResults)
-  //      throws VerdictDBException {
-  //    if (downstreamResults==null) { return null; }
-  //    if (downstreamResults.size() < placeholderTables.size()) {
-  //      throw new VerdictDBValueException("Not enough temp tables to plug into placeholder
-  // tables.");
-  //    }
-  //
-  //    for (int i = 0; i < placeholderTables.size(); i++) {
-  //      BaseTable t = placeholderTables.get(i);
-  //      ExecutionInfoToken r = downstreamResults.get(i);
-  //      String schemaName = (String) r.getValue("schemaName");
-  //      String tableName = (String) r.getValue("tableName");
-  //      t.setSchemaName(schemaName);
-  //      t.setTableName(tableName);
-  //    }
-  //    return null;
-  //  }
-
+  public List<PlaceHolderRecord> getPlaceholderRecords() {
+    return placeholderRecords;
+  }
+  
   public List<BaseTable> getPlaceholderTables() {
-    return placeholderTables;
+    List<BaseTable> tables = new ArrayList<>();
+    for (PlaceHolderRecord record : placeholderRecords) {
+      tables.add(record.getPlaceholderTable());
+    }
+    return tables;
   }
 
   public List<SubqueryColumn> getPlaceholderTablesinFilter() {
@@ -102,14 +111,19 @@ public abstract class QueryNodeWithPlaceHolders extends QueryNodeBase {
 
   protected void copyFields(QueryNodeWithPlaceHolders from, QueryNodeWithPlaceHolders to) {
     super.copyFields(from, to);
-    to.placeholderTables = new ArrayList<>();
-    to.placeholderTables.addAll(from.placeholderTables);
+    to.placeholderRecords = new ArrayList<>();
+    to.placeholderRecords.addAll(from.placeholderRecords);
     to.placeholderTablesinFilter = new ArrayList<>();
     to.placeholderTablesinFilter.addAll(from.placeholderTablesinFilter);
-    deepcopyPlaceHolderTable(to.placeholderTables, to.selectQuery);
+    deepcopyPlaceHolderTable(to.placeholderRecords, to.selectQuery);
   }
 
-  private void deepcopyPlaceHolderTable(List<BaseTable> to, SelectQuery relation) {
+  private void deepcopyPlaceHolderTable(List<PlaceHolderRecord> records, SelectQuery relation) {
+    List<BaseTable> to = new ArrayList<>();
+    for (PlaceHolderRecord r : records) {
+      to.add(r.getPlaceholderTable());
+    }
+    
     List<SelectQuery> queries = new ArrayList<>();
     queries.add(relation);
     while (!queries.isEmpty()) {
@@ -139,3 +153,24 @@ public abstract class QueryNodeWithPlaceHolders extends QueryNodeBase {
     }
   }
 }
+
+class PlaceHolderRecord {
+
+  private BaseTable placeholderTable;
+  
+  private int subscriptionChannel;
+  
+  public PlaceHolderRecord(BaseTable placeholderTable, int subscriptionChannel) {
+    this.placeholderTable = placeholderTable;
+    this.subscriptionChannel = subscriptionChannel;
+  }
+  
+  public BaseTable getPlaceholderTable() {
+    return placeholderTable;
+  }
+  
+  public int getSubscriptionChannel() {
+    return subscriptionChannel;
+  }
+}
+

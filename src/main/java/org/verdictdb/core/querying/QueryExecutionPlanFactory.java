@@ -28,7 +28,7 @@ public class QueryExecutionPlanFactory {
   /**
    * Creates a node tree and return it as an instance of QueryExecutionPlan.
    *
-   * @param query
+   * @param scratchpadSchemaName
    * @return
    */
   public static QueryExecutionPlan create(
@@ -99,7 +99,7 @@ public class QueryExecutionPlanFactory {
   
   static AggExecutionNode createAggExecutionNodeAndItsDependents(IdCreator idCreator, SelectQuery query) {
     AggExecutionNode node = new AggExecutionNode(idCreator, null);
-    generateNodeDependents(query, node);
+    convertSubqueriesToDependentNodes(query, node);
     node.setSelectQuery(query);
 
     return node;
@@ -107,7 +107,7 @@ public class QueryExecutionPlanFactory {
 
   static ProjectionNode createProjectionNodeAndItsDependents(IdCreator idCreator, SelectQuery query) {
     ProjectionNode node = new ProjectionNode(idCreator, null);
-    generateNodeDependents(query, node);
+    convertSubqueriesToDependentNodes(query, node);
     node.setSelectQuery(query);
     return node;
   }
@@ -118,7 +118,7 @@ public class QueryExecutionPlanFactory {
    * placeholders.
    * @param node
    */
-  static void generateNodeDependents(
+  static void convertSubqueriesToDependentNodes(
       SelectQuery query,
       CreateTableAsSelectNode node) {
     IdCreator namer = node.getNamer();
@@ -135,13 +135,12 @@ public class QueryExecutionPlanFactory {
         } else {
           dep = ProjectionNode.create(namer, (SelectQuery) source);
         }
-//        node.addDependency(dep);
 
         // use placeholders to mark the locations whose names will be updated in the future
         Pair<BaseTable, SubscriptionTicket> baseAndSubscriptionTicket = node.createPlaceHolderTable(source.getAliasName().get());
         query.getFromList().set(index, baseAndSubscriptionTicket.getLeft());
         dep.registerSubscriber(baseAndSubscriptionTicket.getRight());
-//        dep.addBroadcastingQueue(baseAndQueue.getRight());
+      
       } else if (source instanceof JoinTable) {
         for (AbstractRelation s : ((JoinTable) source).getJoinList()) {
           int joinindex = ((JoinTable) source).getJoinList().indexOf(s);
@@ -154,19 +153,16 @@ public class QueryExecutionPlanFactory {
             } else {
               dep = ProjectionNode.create(namer, (SelectQuery) s);
             }
-//            node.addDependency(dep);
 
             // use placeholders to mark the locations whose names will be updated in the future
             Pair<BaseTable, SubscriptionTicket> baseAndSubscriptionTicket = node.createPlaceHolderTable(s.getAliasName().get());
             ((JoinTable) source).getJoinList().set(joinindex, baseAndSubscriptionTicket.getLeft());
             dep.registerSubscriber(baseAndSubscriptionTicket.getRight());
-//            dep.addBroadcastingQueue(baseAndQueue.getRight());
           }
         }
       }
     }
 
-//    int filterPlaceholderNum = 0;
     // Filter
     if (query.getFilter().isPresent()) {
       UnnamedColumn where = query.getFilter().get();
@@ -179,33 +175,33 @@ public class QueryExecutionPlanFactory {
         // If filter is a subquery, we need to add it to dependency
         if (filter instanceof SubqueryColumn) {
           Pair<BaseTable, SubscriptionTicket> baseAndSubscriptionTicket;
-          if (((SubqueryColumn) filter).getSubquery().getAliasName().isPresent()) {
-            baseAndSubscriptionTicket = node.createPlaceHolderTable(((SubqueryColumn) filter).getSubquery().getAliasName().get());
+          SubqueryColumn subqueryFilter = (SubqueryColumn) filter;
+          if (subqueryFilter.getSubquery().getAliasName().isPresent()) {
+            baseAndSubscriptionTicket =
+                node.createPlaceHolderTable(subqueryFilter.getSubquery().getAliasName().get());
           } else {
-//            baseAndQueue = node.createPlaceHolderTable("filterPlaceholder"+filterPlaceholderNum++);
             baseAndSubscriptionTicket = node.createPlaceHolderTable(namer.generateAliasName());
           }
           BaseTable base = baseAndSubscriptionTicket.getLeft();
 
           CreateTableAsSelectNode dep;
-          SelectQuery subquery = ((SubqueryColumn) filter).getSubquery();
-          if (subquery.isSupportedAggregate()) {
+          SelectQuery subquery = subqueryFilter.getSubquery();
+          if (subquery.isSupportedAggregate()) {    // TODO: this should check any aggregates
             dep = AggExecutionNode.create(namer, subquery);
-//            node.addDependency(dep);
           } else {
             dep = ProjectionNode.create(namer, subquery);
-//            node.addDependency(dep);
           }
           dep.registerSubscriber(baseAndSubscriptionTicket.getRight());
-//          dep.addBroadcastingQueue(baseAndQueue.getRight());
 
-          // To replace the subquery, we use the selectlist of the subquery and tempTable to create a new non-aggregate subquery
+          // To replace the subquery, we use the selectlist of the subquery and tempTable to
+          // create a new non-aggregate subquery
           List<SelectItem> newSelectItem = new ArrayList<>();
           for (SelectItem item : subquery.getSelectList()) {
             if (item instanceof AliasedColumn) {
               newSelectItem.add(new AliasedColumn(
                   new BaseColumn(
-                      base.getSchemaName(), base.getAliasName().get(),
+                      base.getSchemaName(),
+                      base.getAliasName().get(),
                       ((AliasedColumn) item).getAliasName()),
                   ((AliasedColumn) item).getAliasName()));
             } else if (item instanceof AsteriskColumn) {
@@ -217,6 +213,7 @@ public class QueryExecutionPlanFactory {
             newSubquery.setAliasName(((SubqueryColumn) filter).getSubquery().getAliasName().get());
           }
           ((SubqueryColumn) filter).setSubquery(newSubquery);
+          // this doesn't seem to be necessary
           node.getPlaceholderTablesinFilter().add((SubqueryColumn) filter);
         } else if (filter instanceof ColumnOp) {
           filters.addAll(((ColumnOp) filter).getOperands());

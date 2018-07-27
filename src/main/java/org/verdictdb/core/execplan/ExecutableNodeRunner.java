@@ -16,6 +16,7 @@
 
 package org.verdictdb.core.execplan;
 
+import org.verdictdb.commons.VerdictDBLogger;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.core.sqlobject.SqlConvertible;
@@ -129,9 +130,16 @@ public class ExecutableNodeRunner implements Runnable {
   void broadcast(ExecutionInfoToken token) {
     // System.out.println(new ToStringBuilder(node, ToStringStyle.DEFAULT_STYLE) + " broadcasts: " +
     // token);
+    VerdictDBLogger logger = VerdictDBLogger.getLogger(this.getClass());
+    logger.trace(String.format("[%s ->] Broadcasting:", node.toString()));
+    logger.trace(token.toString());
+    
     for (ExecutableNode dest : node.getSubscribers()) {
       ExecutionInfoToken copiedToken = token.deepcopy();
       dest.getNotified(node, copiedToken);
+  
+      logger.trace(String.format("[-> %s]", dest.toString()));
+      logger.trace(copiedToken.toString());
     }
   }
 

@@ -50,6 +50,8 @@ public class ExecutableNodeBase implements ExecutableNode, Serializable {
   private final String uniqueId;
 
   private int groupId; // copied when deepcopying; used by ExecutablePlanRunner
+  
+  private UniqueChannelCreator channelCreator = new UniqueChannelCreator(this);
 
   public ExecutableNodeBase() {
     uniqueId = RandomStringUtils.randomAlphanumeric(10);
@@ -66,7 +68,8 @@ public class ExecutableNodeBase implements ExecutableNode, Serializable {
 
   // setup method
   public SubscriptionTicket createSubscriptionTicket() {
-    return new SubscriptionTicket(this);
+    int channelNumber = channelCreator.getNewChannelNumber();
+    return new SubscriptionTicket(this, channelNumber);
   }
 
   public void registerSubscriber(SubscriptionTicket ticket) {
@@ -331,4 +334,23 @@ public class ExecutableNodeBase implements ExecutableNode, Serializable {
         //        .append("channels", channels)
         .toString();
   }
+}
+
+class UniqueChannelCreator {
+  
+  private int identifierNum = 0;
+  
+  private Object obj;
+  
+  public UniqueChannelCreator(Object obj) {
+    this.obj = obj;
+  }
+  
+  public int getNewChannelNumber() {
+    // 17 is an arbitrary number
+    int newNumber = obj.hashCode()*17 + identifierNum;
+    identifierNum++;
+    return newNumber;
+  }
+  
 }

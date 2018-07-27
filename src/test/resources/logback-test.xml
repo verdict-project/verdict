@@ -7,6 +7,7 @@
         </layout>
     </appender>
     <statusListener class="ch.qos.logback.core.status.OnConsoleStatusListener" />
+    <logger name="org.verdictdb" level="TRACE"/>
     <root level="warn">
         <appender-ref ref="STDOUT"/>
     </root>
