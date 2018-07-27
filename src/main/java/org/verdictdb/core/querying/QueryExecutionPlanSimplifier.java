@@ -127,24 +127,14 @@ public class QueryExecutionPlanSimplifier {
       // replace the placeholder BaseTable (in the from list) with the SelectQuery of the child
       List<AbstractRelation> parentFromList = placeholderParent.getSelectQuery().getFromList();
       List<AbstractRelation> newParentFromList = new ArrayList<>();
-      SelectQuery childQuery = ((QueryNodeBase) child).getSelectQuery();
-      for (AbstractRelation source : parentFromList) {
-        if (!(source instanceof BaseTable)) {
-          newParentFromList.add(source);
-          continue;
-        }
-        
-        BaseTable baseTableSource = (BaseTable) source;
-        if (baseTableSource.equals(baseTableToRemove)) {
-          childQuery.setAliasName(baseTableToRemove.getAliasName().get());
-          newParentFromList.add(childQuery);
-        } else {
-          newParentFromList.add(source);
-        }
+      for (AbstractRelation originalSource : parentFromList) {
+        AbstractRelation newSource = consolidateSource(originalSource, child, baseTableToRemove);
+        newParentFromList.add(newSource);
       }
       placeholderParent.getSelectQuery().setFromList(newParentFromList);
       
-      // replace the placeholder BaseTable (in the filter list) with the SelectQuery of the child
+      // Filter: replace the placeholder BaseTable (in the filter list) with
+      // the SelectQuery of the child
       SelectQuery parentSelectQuery = placeholderParent.getSelectQuery();
       Optional<UnnamedColumn> parentFilterOptional = parentSelectQuery.getFilter();
       if (parentFilterOptional.isPresent()) {
@@ -197,6 +187,54 @@ public class QueryExecutionPlanSimplifier {
     return true;
   }
   
+  /**
+   * May consonlidate a single source with `child`. This is a helper function for simplify2().
+   *
+   * @param originalSource The original source
+   * @param child The child node
+   * @param baseTableToRemove The placeholder to be replaced
+   * @return A new source
+   */
+  private static AbstractRelation consolidateSource(
+      AbstractRelation originalSource, ExecutableNodeBase child, BaseTable baseTableToRemove) {
+  
+    // exception
+    if (!(child instanceof QueryNodeBase)) {
+      return originalSource;
+    }
+    
+    SelectQuery childQuery = ((QueryNodeBase) child).getSelectQuery();
+    
+    if (originalSource instanceof BaseTable) {
+      BaseTable baseTableSource = (BaseTable) originalSource;
+      if (baseTableSource.equals(baseTableToRemove)) {
+        childQuery.setAliasName(baseTableToRemove.getAliasName().get());
+        return childQuery;
+      } else {
+        return originalSource;
+      }
+    } else if (originalSource instanceof JoinTable) {
+      JoinTable joinTableSource = (JoinTable) originalSource;
+      List<AbstractRelation> joinSourceList = joinTableSource.getJoinList();
+      List<AbstractRelation> newJoinSourceList = new ArrayList<>();
+      for (AbstractRelation joinSource : joinSourceList) {
+        newJoinSourceList.add(consolidateSource(joinSource, child, baseTableToRemove));
+      }
+      joinTableSource.setJoinList(newJoinSourceList);
+      return joinTableSource;
+    } else {
+      return originalSource;
+    }
+  }
+  
+  /**
+   * May consolidate a single filter with `child`. This is a helper function for simplify2().
+   *
+   * @param originalFilter The original filter
+   * @param child The child node
+   * @param baseTableToRemove The placeholder to be replaced
+   * @return
+   */
   private static UnnamedColumn consolidateFilter(
       UnnamedColumn originalFilter, ExecutableNodeBase child, BaseTable baseTableToRemove) {
     

@@ -71,6 +71,10 @@ public class JoinTable extends AbstractRelation {
   public List<AbstractRelation> getJoinList() {
     return joinList;
   }
+  
+  public void setJoinList(List<AbstractRelation> joinList) {
+    this.joinList = joinList;
+  }
 
   public List<JoinType> getJoinTypeList() {
     return joinTypeList;
