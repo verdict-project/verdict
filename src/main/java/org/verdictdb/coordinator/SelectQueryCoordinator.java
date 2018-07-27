@@ -85,10 +85,14 @@ public class SelectQueryCoordinator {
     QueryExecutionPlan asyncPlan = AsyncQueryExecutionPlan.create(plan);
 
     // simplify the plan
-    QueryExecutionPlan simplifiedAsyncPlan = QueryExecutionPlanSimplifier.simplify(asyncPlan);
+//    QueryExecutionPlan simplifiedAsyncPlan = QueryExecutionPlanSimplifier.simplify(asyncPlan);
+    QueryExecutionPlanSimplifier.simplify2(asyncPlan);
+    
+//    asyncPlan.getRootNode().print();
 
     // execute the plan
-    ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(conn, simplifiedAsyncPlan);
+//    ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(conn, simplifiedAsyncPlan);
+    ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(conn, asyncPlan);
 
     return reader;
   }

@@ -52,11 +52,11 @@ public class QueryExecutionPlan implements ExecutablePlan, IdCreator, Serializab
     this.scrambleMeta = scrambleMeta;
   }
 
-  /**
-   * @param query A well-formed select query object
-   * @throws VerdictDBValueException
-   * @throws VerdictDBException
-   */
+//  /**
+//   * @param query A well-formed select query object
+//   * @throws VerdictDBValueException
+//   * @throws VerdictDBException
+//   */
   /*
   public QueryExecutionPlan(
       String scratchpadSchemaName, ScrambleMetaSet scrambleMeta, SelectQuery query)
@@ -142,7 +142,7 @@ public class QueryExecutionPlan implements ExecutablePlan, IdCreator, Serializab
 
   // clean up any intermediate materialized tables
   public void cleanUp() {
-    ((TempIdCreatorInScratchpadSchema) idCreator).reset();
+  
   }
 
   @Override
@@ -211,7 +211,7 @@ public class QueryExecutionPlan implements ExecutablePlan, IdCreator, Serializab
   public ExecutableNode getReportingNode() {
     return root;
   }
-
+  
   @Override
   public String generateAliasName() {
     return idCreator.generateAliasName();
@@ -220,6 +220,14 @@ public class QueryExecutionPlan implements ExecutablePlan, IdCreator, Serializab
   @Override
   public String generateAliasName(String keyword) {
     return idCreator.generateAliasName(keyword);
+  }
+  
+  protected void resetAliasNameGeneration() {
+    ((TempIdCreatorInScratchpadSchema) idCreator).resetAliasNameGeneration();
+  }
+  
+  protected void resetAliasNameGeneration(String keyword) {
+    ((TempIdCreatorInScratchpadSchema) idCreator).resetAliasNameGeneration(keyword);
   }
   
   @Override

@@ -23,6 +23,10 @@ public interface IdCreator {
   String generateAliasName();
   
   String generateAliasName(String keyword);
+  
+//  void resetAliasNameGeneration();
+//
+//  void resetAliasNameGeneration(String keyword);
 
   Pair<String, String> generateTempTableName();
 }

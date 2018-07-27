@@ -19,6 +19,8 @@ package org.verdictdb.core.querying;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class TempIdCreatorInScratchpadSchema implements IdCreator, Serializable {
@@ -28,8 +30,10 @@ public class TempIdCreatorInScratchpadSchema implements IdCreator, Serializable 
   String scratchpadSchemaName;
 
   final int serialNum = ThreadLocalRandom.current().nextInt(0, 1000000);
-
-  int identifierNum = 0;
+  
+  final static String GLOBAL_KEYWORD = "internal_global_keyword";
+  
+  private Map<String, Integer> keywordIdentifierMap = new HashMap<>();
 
   public TempIdCreatorInScratchpadSchema(String scratchpadSchemaName) {
     this.scratchpadSchemaName = scratchpadSchemaName;
@@ -39,16 +43,33 @@ public class TempIdCreatorInScratchpadSchema implements IdCreator, Serializable 
     return serialNum;
   }
 
-  public void reset() {
-    identifierNum = 0;
+  public void resetAliasNameGeneration() {
+    resetAliasNameGeneration(GLOBAL_KEYWORD);
+  }
+  
+  public void resetAliasNameGeneration(String keyword) {
+    if (keywordIdentifierMap.containsKey(keyword)) {
+      keywordIdentifierMap.put(keyword, 0);
+    }
   }
 
   public String getScratchpadSchemaName() {
     return scratchpadSchemaName;
   }
 
-  synchronized String generateUniqueIdentifier() {
-    return String.format("%d_%d", serialNum, identifierNum++);
+  synchronized String generateUniqueIdentifier(String keyword) {
+    if (!keywordIdentifierMap.containsKey(keyword)) {
+      keywordIdentifierMap.put(keyword, 0);
+    }
+    
+    int currentId = keywordIdentifierMap.get(keyword);
+    String uniqueId = String.format("%d_%d", serialNum, currentId);
+    keywordIdentifierMap.put(keyword, currentId + 1);
+    return uniqueId;
+  }
+  
+  String generateUniqueIdentifier() {
+    return generateUniqueIdentifier(GLOBAL_KEYWORD);
   }
 
   @Override
@@ -58,7 +79,7 @@ public class TempIdCreatorInScratchpadSchema implements IdCreator, Serializable 
   
   @Override
   public String generateAliasName(String keyword) {
-    return String.format("verdictdb_%s_alias_%s", keyword, generateUniqueIdentifier());
+    return String.format("verdictdb_%s_alias_%s", keyword, generateUniqueIdentifier(keyword));
   }
   
   @Override

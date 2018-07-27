@@ -63,7 +63,28 @@ public class AggCombinerExecutionNode extends CreateTableAsSelectNode {
     rightQueryExecutionNode.registerSubscriber(rightBaseAndTicket.getRight());
 
     node.setSelectQuery(unionQuery);
+    
+    // Update aggMeta of this node
+    updateAggMeta(node, leftQueryExecutionNode);
+    updateAggMeta(node, rightQueryExecutionNode);
+    
     return node;
+  }
+  
+  private static void updateAggMeta(AggCombinerExecutionNode node, ExecutableNodeBase child) {
+    AggMeta nodeMeta = node.getAggMeta();
+    AggMeta childAggMeta = child.getAggMeta();
+  
+    nodeMeta.getCubes().addAll(childAggMeta.getCubes());
+    nodeMeta.setAggAlias(childAggMeta.getAggAlias());
+    nodeMeta.setOriginalSelectList(childAggMeta.getOriginalSelectList());
+    nodeMeta.setAggColumn(childAggMeta.getAggColumn());
+    nodeMeta.setAggColumnAggAliasPair(childAggMeta.getAggColumnAggAliasPair());
+    nodeMeta.setAggColumnAggAliasPairOfMaxMin(childAggMeta.getAggColumnAggAliasPairOfMaxMin());
+    nodeMeta.setMaxminAggAlias(childAggMeta.getMaxminAggAlias());
+    nodeMeta.setScrambleTableTierColumnAlias(childAggMeta.getScrambleTableTierColumnAlias());
+    
+    node.setAggMeta(nodeMeta);
   }
 
   /**
@@ -149,30 +170,6 @@ public class AggCombinerExecutionNode extends CreateTableAsSelectNode {
 
   @Override
   public SqlConvertible createQuery(List<ExecutionInfoToken> tokens) throws VerdictDBException {
-    for (ExecutionInfoToken token : tokens) {
-      AggMeta childAggMeta = (AggMeta) token.getValue("aggMeta");
-      //      if (aggMeta == null) {
-      //        throw new VerdictDBValueException("No aggregation metadata is passed from downstream
-      // nodes.");
-      //      }
-
-      if (childAggMeta != null) {
-//        System.out.println(childAggMeta);
-        
-//        AggMeta aggMeta = new AggMeta();
-        // cubes must be cumulatively aggregated
-        aggMeta.getCubes().addAll(childAggMeta.getCubes());
-        
-        aggMeta.setAggAlias(childAggMeta.getAggAlias());
-        aggMeta.setOriginalSelectList(childAggMeta.getOriginalSelectList());
-        aggMeta.setAggColumn(childAggMeta.getAggColumn());
-        aggMeta.setAggColumnAggAliasPair(childAggMeta.getAggColumnAggAliasPair());
-        aggMeta.setAggColumnAggAliasPairOfMaxMin(childAggMeta.getAggColumnAggAliasPairOfMaxMin());
-        aggMeta.setMaxminAggAlias(childAggMeta.getMaxminAggAlias());
-        aggMeta.setScrambleTableTierColumnAlias(childAggMeta.getScrambleTableTierColumnAlias());
-        setAggMeta(aggMeta);
-      }
-    }
     return super.createQuery(tokens);
   }
 

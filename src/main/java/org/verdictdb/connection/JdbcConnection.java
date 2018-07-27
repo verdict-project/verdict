@@ -166,7 +166,7 @@ public class JdbcConnection implements DbmsConnection {
   public DbmsQueryResult executeSingle(String sql) throws VerdictDBDbmsException {
     
     VerdictDBLogger logger = VerdictDBLogger.getLogger(this.getClass());
-    logger.trace("Issuing the following query to DBMS: " + sql);
+    logger.debug("Issuing the following query to DBMS: " + sql);
     
     try {
       Statement stmt = conn.createStatement();

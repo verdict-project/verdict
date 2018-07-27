@@ -101,7 +101,6 @@ public class MySqlTpchSelectQueryCoordinatorTest {
     coordinator.setScrambleMetaSet(meta);
     ExecutionResultReader reader = coordinator.process(sql);
 
-
     ResultSet rs = stmt.executeQuery(sql);
     return new ImmutablePair<>(reader, rs);
   }

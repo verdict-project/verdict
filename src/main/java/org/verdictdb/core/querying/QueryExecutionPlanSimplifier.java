@@ -36,6 +36,8 @@ public class QueryExecutionPlanSimplifier {
    * 2. The child node is the unique source of the channel to which the child node is set to
    * broadcast
    * 3. The parent is the only subscriber of the child.
+   * 4. ProjectionNode can be safely consolidated.
+   * 5. AggExecutionNode can only be consolidated when its aggMeta is empty.
    *
    * @param originalPlan The plan to simplify
    * @throws VerdictDBValidationException This exception is thrown if the number of placeholders in

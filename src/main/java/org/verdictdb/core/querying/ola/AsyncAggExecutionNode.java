@@ -17,14 +17,13 @@
 package org.verdictdb.core.querying.ola;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.core.execplan.ExecutionInfoToken;
-import org.verdictdb.core.querying.ExecutableNodeBase;
-import org.verdictdb.core.querying.IdCreator;
-import org.verdictdb.core.querying.ProjectionNode;
+import org.verdictdb.core.querying.*;
 import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
 import org.verdictdb.core.sqlobject.*;
@@ -59,31 +58,35 @@ public class AsyncAggExecutionNode extends ProjectionNode {
   
   private String newTableName;
   
-  //  List<AggNameAndType> aggColumns;
-  // agg columns. pairs of their column names and their types (i.e., sum, avg, count)
-  //
-  //  List<String> nonaggColumns;
-  // group-by columns
+  // This is the list of aggregate columns contained in the selectQuery field.
+  private List<ColumnOp> aggColumns;
   
-  //  List<AsyncAggExecutionNode> children = new ArrayList<>();
+//  private SelectQuery selectQuery;
+  
+  private Map<Integer, String> scrambledTableTierInfo;
   
   int tableNum = 1;
-  
-  //  ExecutionInfoToken savedToken = null;
-  
-  //  HashMap<Integer, String> multipleTierTableTierInfo = new HashMap<>();
-  // Only record tables have multiple tiers
-  // Key is the index of scramble table in Dimension, value is the tier column alias name
-  
-//  Boolean Initiated = false;
-
-//  String newTableSchemaName, newTableName;
   
   
   private AsyncAggExecutionNode() {
     super(null, null);
   }
   
+  /**
+   * A factory method for AsyncAggExecutionNode.
+   *
+   * This static method performs the following operations:
+   * 1. Link individual aggregate nodes and combiners appropriately.
+   * 2. Create a base table which includes several placeholders
+   *     - scale factor placeholder
+   *     - temp table placeholder
+   *
+   * @param idCreator
+   * @param individualAggs
+   * @param combiners
+   * @param meta
+   * @return
+   */
   public static AsyncAggExecutionNode create(
       IdCreator idCreator,
       List<ExecutableNodeBase> individualAggs,
@@ -91,36 +94,50 @@ public class AsyncAggExecutionNode extends ProjectionNode {
       ScrambleMetaSet meta) {
 
     AsyncAggExecutionNode node = new AsyncAggExecutionNode();
+    
+    // this placeholder base table is used for query construction later
+    String alias = INNER_RAW_AGG_TABLE_ALIAS;
+    Pair<BaseTable, SubscriptionTicket> tableAndTicket = node.createPlaceHolderTable(alias);
+    BaseTable placeholderTable = tableAndTicket.getLeft();
+    SubscriptionTicket ticket = tableAndTicket.getRight();
 
     // first agg -> root
-    node.subscribeTo(individualAggs.get(0), 0);
+    AggExecutionNode firstSource = (AggExecutionNode) individualAggs.get(0);
+    firstSource.registerSubscriber(ticket);
+//    node.subscribeTo(individualAggs.get(0), 0);
 
     // combiners -> root
     for (ExecutableNodeBase c : combiners) {
-      node.subscribeTo(c, 0);
+      c.registerSubscriber(ticket);
+//      node.subscribeTo(c, 0);
     }
 
     node.setScrambleMetaSet(meta);   // the scramble meta must be not be shared; thus, thread-safe
     node.setNamer(idCreator);        // the name can be shared
+    
+    // creates a base query that contain placeholders
+    AggMeta sourceAggMeta = firstSource.getAggMeta();
+    List<SelectItem> sourceSelectList = firstSource.getSelectQuery().getSelectList();
+    Triple<List<ColumnOp>, SqlConvertible, Map<Integer, String>> aggColumnsAndQuery =
+        createBaseQueryForReplacement(sourceAggMeta, sourceSelectList, placeholderTable, meta);
+    node.aggColumns = aggColumnsAndQuery.getLeft();
+    node.selectQuery = (SelectQuery) aggColumnsAndQuery.getMiddle();
+    node.scrambledTableTierInfo = new ImmutableMap.Builder<Integer, String>()
+                                      .putAll(aggColumnsAndQuery.getRight())
+                                      .build();
     return node;
   }
   
   @Override
   public SqlConvertible createQuery(List<ExecutionInfoToken> tokens) throws VerdictDBException {
-
+    super.createQuery(tokens);
+    
     ExecutionInfoToken token = tokens.get(0);
     AggMeta sourceAggMeta = (AggMeta) token.getValue("aggMeta");
-
-    // First, create the base select query for replacement
-    Triple<List<ColumnOp>, SqlConvertible, Map<Integer, String>> aggColumnsAndQuery =
-        createBaseQueryForReplacement(sourceAggMeta, token);
-    List<ColumnOp> aggColumns = aggColumnsAndQuery.getLeft();
-    SelectQuery baseQuery = (SelectQuery) aggColumnsAndQuery.getMiddle();
-    Map<Integer, String> multipleTierTableTierInfo = aggColumnsAndQuery.getRight();
   
-    // Second, calculate the scale factor
+    // First, calculate the scale factor and use it to replace the scale factor placeholder
     HashMap<List<Integer>, Double> scaleFactor =
-        calculateScaleFactor(sourceAggMeta, multipleTierTableTierInfo);
+        calculateScaleFactor(sourceAggMeta, scrambledTableTierInfo);
 
     // single-tier case
     if (scaleFactor.size() == 1) {
@@ -139,7 +156,7 @@ public class AsyncAggExecutionNode extends ProjectionNode {
         List<UnnamedColumn> operands = new ArrayList<>();
         for (Map.Entry<List<Integer>, Double> entry : scaleFactor.entrySet()) {
           List<Integer> tierPermutation = entry.getKey();
-          UnnamedColumn condition = generateCaseCondition(tierPermutation, multipleTierTableTierInfo);
+          UnnamedColumn condition = generateCaseCondition(tierPermutation, scrambledTableTierInfo);
           operands.add(condition);
           ColumnOp multiply =
               new ColumnOp(
@@ -157,8 +174,7 @@ public class AsyncAggExecutionNode extends ProjectionNode {
     // If it has multiple tiers, we need to sum up the result
     // We treat both single-tier and multi-tier cases simultaneously here to make alias management
     // easier.
-    SelectQuery query = sumUpTierGroup(
-        baseQuery, ((AggMeta) token.getValue("aggMeta")), multipleTierTableTierInfo);
+    SelectQuery query = sumUpTierGroup(selectQuery.deepcopy(), sourceAggMeta, scrambledTableTierInfo);
     
 //    if (multipleTierTableTierInfo.size() > 0) {
 //      query = sumUpTierGroup(
@@ -170,27 +186,24 @@ public class AsyncAggExecutionNode extends ProjectionNode {
     Pair<String, String> tempTableFullName = getNamer().generateTempTableName();
     newTableSchemaName = tempTableFullName.getLeft();
     newTableName = tempTableFullName.getRight();
-    SelectQuery createTableQuery =
-        replaceWithOriginalSelectList(query, ((AggMeta) token.getValue("aggMeta")));
+    SelectQuery createTableQuery = replaceWithOriginalSelectList(query, sourceAggMeta);
 
-    // TODO: this logic should have been placed in the root
-    if (selectQuery != null) {
-      if (!selectQuery.getGroupby().isEmpty() && selectQuery.getHaving().isPresent()) {
-        createTableQuery.addGroupby(selectQuery.getGroupby());
-      }
-      if (!selectQuery.getOrderby().isEmpty()) {
-        createTableQuery.addOrderby(selectQuery.getOrderby());
-      }
-      if (selectQuery.getHaving().isPresent()) {
-        createTableQuery.addHavingByAnd(selectQuery.getHaving().get());
-      }
-      if (selectQuery.getLimit().isPresent()) {
-        createTableQuery.addLimit(selectQuery.getLimit().get());
-      }
-    }
+//    // TODO: this logic should have been placed in the root
+//    if (selectQuery != null) {
+//      if (!selectQuery.getGroupby().isEmpty() && selectQuery.getHaving().isPresent()) {
+//        createTableQuery.addGroupby(selectQuery.getGroupby());
+//      }
+//      if (!selectQuery.getOrderby().isEmpty()) {
+//        createTableQuery.addOrderby(selectQuery.getOrderby());
+//      }
+//      if (selectQuery.getHaving().isPresent()) {
+//        createTableQuery.addHavingByAnd(selectQuery.getHaving().get());
+//      }
+//      if (selectQuery.getLimit().isPresent()) {
+//        createTableQuery.addLimit(selectQuery.getLimit().get());
+//      }
+//    }
 
-//    storeObjectThreadSafely("schemaName", newTableSchemaName);
-//    storeObjectThreadSafely("tableName", newTableName);
     CreateTableAsSelectQuery createQuery =
         new CreateTableAsSelectQuery(newTableSchemaName, newTableName, createTableQuery);
     return createQuery;
@@ -199,8 +212,6 @@ public class AsyncAggExecutionNode extends ProjectionNode {
   @Override
   public ExecutionInfoToken createToken(DbmsQueryResult result) {
     ExecutionInfoToken token = super.createToken(result);
-//    String newTableSchemaName = (String) retrieveStoredObjectThreadSafely("schemaName");
-//    String newTableName = (String) retrieveStoredObjectThreadSafely("tableName");
     token.setKeyValue("schemaName", newTableSchemaName);
     token.setKeyValue("tableName", newTableName);
     return token;
@@ -223,16 +234,22 @@ public class AsyncAggExecutionNode extends ProjectionNode {
    *                      are being computed.
    * @return Key: aggregate column list
    */
-  private Triple<List<ColumnOp>, SqlConvertible, Map<Integer, String>> createBaseQueryForReplacement(
-      AggMeta sourceAggMeta, ExecutionInfoToken token) {
+  private static Triple<List<ColumnOp>, SqlConvertible, Map<Integer, String>>
+  createBaseQueryForReplacement(
+      AggMeta sourceAggMeta,
+      List<SelectItem> sourceSelectList,
+      BaseTable placeholderTable,
+      ScrambleMetaSet metaSet) {
   
     Map<Integer, String> multipleTierTableTierInfo = new HashMap<>();
     List<ColumnOp> aggColumnlist = new ArrayList<>();
-    ScrambleMetaSet scrambleMetaSet = getScrambleMeta();
+//    ScrambleMetaSet scrambleMetaSet = getScrambleMeta();
     
     List<HyperTableCube> cubes = sourceAggMeta.getCubes();
-    SelectQuery dependentQuery = (SelectQuery) token.getValue("dependentQuery");
-    List<SelectItem> newSelectList = dependentQuery.deepcopy().getSelectList();
+//    SelectQuery dependentQuery = (SelectQuery) token.getValue("dependentQuery");
+
+//    dependentQuery.deepcopy().getSelectList();
+    List<SelectItem> newSelectList = new ArrayList<>(sourceSelectList);
 //    AggMeta aggMeta = (AggMeta) token.getValue("aggMeta");
 
     for (SelectItem selectItem : newSelectList) {
@@ -260,10 +277,10 @@ public class AsyncAggExecutionNode extends ProjectionNode {
             if (col instanceof BaseColumn) {
             String schemaName = ((BaseColumn) col).getSchemaName();
             String tableName = ((BaseColumn) col).getTableName();
-            if (scrambleMetaSet.isScrambled(schemaName, tableName)
+            if (metaSet.isScrambled(schemaName, tableName)
                 && ((BaseColumn) col)
                     .getColumnName()
-                    .equals(scrambleMetaSet.getTierColumn(schemaName, tableName))) {
+                    .equals(metaSet.getTierColumn(schemaName, tableName))) {
               for (Dimension d : cubes.get(0).getDimensions()) {
                 if (d.getTableName().equals(tableName) && d.getSchemaName().equals(schemaName)) {
                   multipleTierTableTierInfo.put(
@@ -282,16 +299,9 @@ public class AsyncAggExecutionNode extends ProjectionNode {
         }
       }
     }
-//    Initiated = true;
 
     // Setup from table
-    SelectQuery query =
-        SelectQuery.create(
-            newSelectList,
-            new BaseTable(
-                (String) token.getValue("schemaName"),
-                (String) token.getValue("tableName"),
-                INNER_RAW_AGG_TABLE_ALIAS));
+    SelectQuery query = SelectQuery.create(newSelectList,placeholderTable);
     
     return Triple.of(aggColumnlist, (SqlConvertible) query, multipleTierTableTierInfo);
   }
