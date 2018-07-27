@@ -33,6 +33,7 @@ public class QueryExecutionPlanFactory {
    */
   public static QueryExecutionPlan create(
       String scratchpadSchemaName) {
+    resetUniqueIdGeneration();
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan();
     queryExecutionPlan.idCreator = new TempIdCreatorInScratchpadSchema(scratchpadSchemaName);
     return queryExecutionPlan;
@@ -41,6 +42,7 @@ public class QueryExecutionPlanFactory {
   public static QueryExecutionPlan create(
       String scratchpadSchemaName,
       ScrambleMetaSet scrambleMeta) {
+    resetUniqueIdGeneration();
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan();
     queryExecutionPlan.idCreator = new TempIdCreatorInScratchpadSchema(scratchpadSchemaName);
     queryExecutionPlan.scrambleMeta = scrambleMeta;
@@ -51,6 +53,7 @@ public class QueryExecutionPlanFactory {
       String scratchpadSchemaName,
       ScrambleMetaSet scrambleMeta,
       SelectQuery query) {
+    resetUniqueIdGeneration();
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan();
     queryExecutionPlan.idCreator = new TempIdCreatorInScratchpadSchema(scratchpadSchemaName);
     queryExecutionPlan.scrambleMeta = scrambleMeta;
@@ -77,6 +80,8 @@ public class QueryExecutionPlanFactory {
 
   static SelectAllExecutionNode createSelectAllExecutionNodeAndItsDependents(IdCreator idCreator, SelectQuery query) {
     SelectAllExecutionNode selectAll = new SelectAllExecutionNode(null);
+    selectAll.setId(generateUniqueId());
+    
     Pair<BaseTable, SubscriptionTicket> baseAndSubscriptionTicket = selectAll.createPlaceHolderTable("t");
     SelectQuery selectQuery = SelectQuery.create(new AsteriskColumn(), baseAndSubscriptionTicket.getLeft());
     selectQuery.addOrderby(query.getOrderby());
@@ -93,20 +98,21 @@ public class QueryExecutionPlanFactory {
       dependent.registerSubscriber(baseAndSubscriptionTicket.getRight());
 //      selectAll.addDependency(dependent);
     }
-
+    
     return selectAll;
   }
   
   static AggExecutionNode createAggExecutionNodeAndItsDependents(IdCreator idCreator, SelectQuery query) {
     AggExecutionNode node = new AggExecutionNode(idCreator, null);
+    node.setId(generateUniqueId());
     convertSubqueriesToDependentNodes(query, node);
     node.setSelectQuery(query);
-
     return node;
   }
 
   static ProjectionNode createProjectionNodeAndItsDependents(IdCreator idCreator, SelectQuery query) {
     ProjectionNode node = new ProjectionNode(idCreator, null);
+    node.setId(generateUniqueId());
     convertSubqueriesToDependentNodes(query, node);
     node.setSelectQuery(query);
     return node;
@@ -131,9 +137,9 @@ public class QueryExecutionPlanFactory {
       if (source instanceof SelectQuery) {
         CreateTableAsSelectNode dep;
         if (source.isSupportedAggregate()) {
-          dep = AggExecutionNode.create(namer, (SelectQuery) source);
+          dep = createAggExecutionNodeAndItsDependents(namer, (SelectQuery) source);
         } else {
-          dep = ProjectionNode.create(namer, (SelectQuery) source);
+          dep = createProjectionNodeAndItsDependents(namer, (SelectQuery) source);
         }
 
         // use placeholders to mark the locations whose names will be updated in the future
@@ -149,9 +155,9 @@ public class QueryExecutionPlanFactory {
           if (s instanceof SelectQuery) {
             CreateTableAsSelectNode dep;
             if (s.isSupportedAggregate()) {
-              dep = AggExecutionNode.create(namer, (SelectQuery) s);
+              dep = createAggExecutionNodeAndItsDependents(namer, (SelectQuery) s);
             } else {
-              dep = ProjectionNode.create(namer, (SelectQuery) s);
+              dep = createProjectionNodeAndItsDependents(namer, (SelectQuery) s);
             }
 
             // use placeholders to mark the locations whose names will be updated in the future
@@ -187,9 +193,9 @@ public class QueryExecutionPlanFactory {
           CreateTableAsSelectNode dep;
           SelectQuery subquery = subqueryFilter.getSubquery();
           if (subquery.isSupportedAggregate()) {    // TODO: this should check any aggregates
-            dep = AggExecutionNode.create(namer, subquery);
+            dep = createAggExecutionNodeAndItsDependents(namer, subquery);
           } else {
-            dep = ProjectionNode.create(namer, subquery);
+            dep = createProjectionNodeAndItsDependents(namer, subquery);
           }
           dep.registerSubscriber(baseAndSubscriptionTicket.getRight());
 
@@ -221,6 +227,16 @@ public class QueryExecutionPlanFactory {
       }
     }
 
+  }
+  
+  private static int nextIdentifier = 0;
+  
+  private static int generateUniqueId() {
+    return nextIdentifier++;
+  }
+  
+  private static void resetUniqueIdGeneration() {
+    nextIdentifier = 0;
   }
 
 }

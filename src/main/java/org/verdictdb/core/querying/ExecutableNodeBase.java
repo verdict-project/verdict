@@ -34,6 +34,7 @@ import org.verdictdb.exception.VerdictDBException;
 import java.io.Serializable;
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class ExecutableNodeBase implements ExecutableNode, Serializable {
 
@@ -47,15 +48,23 @@ public class ExecutableNodeBase implements ExecutableNode, Serializable {
 
   protected AggMeta aggMeta = new AggMeta();
 
-  private final String uniqueId;
+  private int uniqueId;
 
   private int groupId; // copied when deepcopying; used by ExecutablePlanRunner
   
   private UniqueChannelCreator channelCreator = new UniqueChannelCreator(this);
 
   public ExecutableNodeBase() {
-    uniqueId = RandomStringUtils.randomAlphanumeric(10);
+    uniqueId = ThreadLocalRandom.current().nextInt(0, 1000000 + 1);
     groupId = Integer.valueOf(RandomStringUtils.randomNumeric(5));
+  }
+  
+  public void setId(int id) {
+    uniqueId = id;
+  }
+  
+  public int getId() {
+    return uniqueId;
   }
 
   public static ExecutableNodeBase create() {

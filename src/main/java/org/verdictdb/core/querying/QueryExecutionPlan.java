@@ -115,30 +115,30 @@ public class QueryExecutionPlan implements ExecutablePlan, IdCreator, Serializab
     this.root = root;
   }
 
-  /**
-   * Creates a tree in which each node is QueryExecutionNode. Each AggQueryExecutionNode corresponds
-   * to an aggregate query, whether it is the main query or a subquery.
-   *
-   * <p>1. Each QueryExecutionNode is supposed to run on a separate thread. 2. Restrict the
-   * aggregate subqueries to appear in the where clause or in the from clause (i.e., not in the
-   * select list, not in having or group-by) 3. Each node cannot include any correlated predicate
-   * (i.e., the column that appears in outer queries). (1) In the future, we should convert a
-   * correlated subquery into a joined subquery (if possible). (2) Otherwise, the entire query
-   * including a correlated subquery must be the query of a single node. 4. The results of AggNode
-   * and ProjectionNode are stored as a materialized view; the names of those materialized views are
-   * passed to their parents for potential additional processing or reporting.
-   *
-   * <p>//@param conn
-   *
-   * @param query
-   * @return Pair of roots of the tree and post-processing interface.
-   * @throws VerdictDBValueException
-   * @throws VerdictDBTypeException
-   */
-  ExecutableNodeBase makePlan(SelectQuery query) throws VerdictDBException {
-    ExecutableNodeBase root = SelectAllExecutionNode.create(idCreator, query);
-    return root;
-  }
+//  /**
+//   * Creates a tree in which each node is QueryExecutionNode. Each AggQueryExecutionNode corresponds
+//   * to an aggregate query, whether it is the main query or a subquery.
+//   *
+//   * <p>1. Each QueryExecutionNode is supposed to run on a separate thread. 2. Restrict the
+//   * aggregate subqueries to appear in the where clause or in the from clause (i.e., not in the
+//   * select list, not in having or group-by) 3. Each node cannot include any correlated predicate
+//   * (i.e., the column that appears in outer queries). (1) In the future, we should convert a
+//   * correlated subquery into a joined subquery (if possible). (2) Otherwise, the entire query
+//   * including a correlated subquery must be the query of a single node. 4. The results of AggNode
+//   * and ProjectionNode are stored as a materialized view; the names of those materialized views are
+//   * passed to their parents for potential additional processing or reporting.
+//   *
+//   * <p>//@param conn
+//   *
+//   * @param query
+//   * @return Pair of roots of the tree and post-processing interface.
+//   * @throws VerdictDBValueException
+//   * @throws VerdictDBTypeException
+//   */
+//  ExecutableNodeBase makePlan(SelectQuery query) throws VerdictDBException {
+//    ExecutableNodeBase root = SelectAllExecutionNode.create(idCreator, query);
+//    return root;
+//  }
 
   // clean up any intermediate materialized tables
   public void cleanUp() {

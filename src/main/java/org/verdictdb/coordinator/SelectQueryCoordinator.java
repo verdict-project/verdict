@@ -86,7 +86,7 @@ public class SelectQueryCoordinator {
 
     // simplify the plan
 //    QueryExecutionPlan simplifiedAsyncPlan = QueryExecutionPlanSimplifier.simplify(asyncPlan);
-    QueryExecutionPlanSimplifier.simplify2(asyncPlan);
+//    QueryExecutionPlanSimplifier.simplify2(asyncPlan);
     
 //    asyncPlan.getRootNode().print();
 

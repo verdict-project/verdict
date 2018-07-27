@@ -36,7 +36,7 @@ public abstract class QueryNodeWithPlaceHolders extends QueryNodeBase {
   List<SubqueryColumn> placeholderTablesinFilter = new ArrayList<>();
   
   private UniquePlaceholderNameCreator placeholderNameCreator =
-      new UniquePlaceholderNameCreator(this.hashCode());
+      new UniquePlaceholderNameCreator(this);
 
   public QueryNodeWithPlaceHolders(SelectQuery query) {
     super(query);
@@ -284,13 +284,18 @@ class UniquePlaceholderNameCreator implements Serializable {
 
   private int identifier = 0;
   
-  private int parentCode;
+  private QueryNodeWithPlaceHolders parent;
   
-  public UniquePlaceholderNameCreator(int parentCode) {
-    this.parentCode = parentCode;
+  public UniquePlaceholderNameCreator(QueryNodeWithPlaceHolders parent) {
+    this.parent = parent;
+  }
+  
+  private int getParentCode() {
+    return parent.getId();
   }
   
   Pair<String, String> getUniqueStringPair() {
+    int parentCode = getParentCode();
     String schemaName = String.format("placeholderSchema_%d_%d", parentCode, identifier);
     String tableName = String.format("placeholderTable_%d_%d", parentCode, identifier);
     identifier += 1;

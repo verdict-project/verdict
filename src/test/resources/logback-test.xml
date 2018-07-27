@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<configuration>
+<configuration debug="false">
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <layout class="ch.qos.logback.classic.PatternLayout">
             <Pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</Pattern>
         </layout>
     </appender>
-    <statusListener class="ch.qos.logback.core.status.OnConsoleStatusListener" />
-    <logger name="org.verdictdb" level="debug"/>
+    <!--<statusListener class="ch.qos.logback.core.status.OnConsoleStatusListener" />-->
+    <statusListener class="ch.qos.logback.core.status.NopStatusListener" />
+    <logger name="org.verdictdb" level="warn"/>
     <root level="error">
         <appender-ref ref="STDOUT"/>
     </root>
