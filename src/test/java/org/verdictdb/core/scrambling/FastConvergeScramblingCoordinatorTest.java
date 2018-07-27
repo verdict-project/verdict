@@ -21,6 +21,7 @@ import java.util.List;
 import static org.junit.Assert.assertEquals;
 
 public class FastConvergeScramblingCoordinatorTest {
+  
   private static Connection mysqlConn;
 
   private static Statement mysqlStmt;

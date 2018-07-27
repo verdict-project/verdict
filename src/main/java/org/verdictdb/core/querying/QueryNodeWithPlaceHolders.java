@@ -35,7 +35,8 @@ public abstract class QueryNodeWithPlaceHolders extends QueryNodeBase {
   // use this to compress the placeholderTable in filter
   List<SubqueryColumn> placeholderTablesinFilter = new ArrayList<>();
   
-  private UniquePlaceholderNameCreator placeholderNameCreator = new UniquePlaceholderNameCreator();
+  private UniquePlaceholderNameCreator placeholderNameCreator =
+      new UniquePlaceholderNameCreator(this.hashCode());
 
   public QueryNodeWithPlaceHolders(SelectQuery query) {
     super(query);
@@ -283,9 +284,15 @@ class UniquePlaceholderNameCreator implements Serializable {
 
   private int identifier = 0;
   
+  private int parentCode;
+  
+  public UniquePlaceholderNameCreator(int parentCode) {
+    this.parentCode = parentCode;
+  }
+  
   Pair<String, String> getUniqueStringPair() {
-    String schemaName = String.format("placeholderSchema_%d_%d", hashCode(), identifier);
-    String tableName = String.format("placeholderTable_%d_%d", hashCode(), identifier);
+    String schemaName = String.format("placeholderSchema_%d_%d", parentCode, identifier);
+    String tableName = String.format("placeholderTable_%d_%d", parentCode, identifier);
     identifier += 1;
     return Pair.of(schemaName, tableName);
   }

@@ -133,12 +133,13 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
       LargeGroupListNode ll =
           new LargeGroupListNode(
               idCreator, oldSchemaName, oldTableName, primaryColumnName.get(), blockSize);
-      ll.subscribeTo(
-          pc, 0); // subscribed to 'pc' to obtain count(*) of the table, which is used to infer
+      // subscribed to 'pc' to obtain count(*) of the table, which is used to infer
       // appropriate sampling ratio.
+      ll.subscribeTo(pc, 0);
 
       LargeGroupSizeNode ls = new LargeGroupSizeNode(primaryColumnName.get());
-      ls.subscribeTo(ll, 0);
+      ll.registerSubscriber(ls.getSubscriptionTicket());
+//      ls.subscribeTo(ll, 0);
 
       statisticsNodes.add(ll);
       statisticsNodes.add(ls);
@@ -756,12 +757,33 @@ class LargeGroupSizeNode extends QueryNodeWithPlaceHolders {
   private static final long serialVersionUID = -7863166573727173728L;
 
   private String primaryColumnName;
+  
+  // When this node subscribes to the downstream nodes, this information must be used.
+  private SubscriptionTicket subscriptionTicket;
 
   public static final String LARGE_GROUP_SIZE_SUM_ALIAS = "largeGroupSizeSum";
 
   public LargeGroupSizeNode(String primaryColumnName) {
     super(null);
     this.primaryColumnName = primaryColumnName;
+  
+    // create a selectQuery for this node
+    String tableSourceAlias = "t";
+    String aliasName = LARGE_GROUP_SIZE_SUM_ALIAS;
+    String groupSizeAlias = LargeGroupListNode.LARGE_GROUP_SIZE_COLUMN_ALIAS;
+    
+    Pair<BaseTable, SubscriptionTicket> placeholder = createPlaceHolderTable(tableSourceAlias);
+    BaseTable baseTable = placeholder.getLeft();
+    selectQuery =
+        SelectQuery.create(
+            new AliasedColumn(
+                ColumnOp.sum(new BaseColumn(tableSourceAlias, groupSizeAlias)), aliasName),
+            baseTable);
+    subscriptionTicket = placeholder.getRight();
+  }
+  
+  public SubscriptionTicket getSubscriptionTicket() {
+    return subscriptionTicket;
   }
 
   /**
@@ -773,20 +795,18 @@ class LargeGroupSizeNode extends QueryNodeWithPlaceHolders {
    */
   @Override
   public SqlConvertible createQuery(List<ExecutionInfoToken> tokens) throws VerdictDBException {
-    String tableSourceAlias = "t";
-    String aliasName = LARGE_GROUP_SIZE_SUM_ALIAS;
-    String groupSizeAlias = LargeGroupListNode.LARGE_GROUP_SIZE_COLUMN_ALIAS;
+  
+//    // Note: this node already has been subscribed; thus, we don't need an explicit subscription.
+//    Pair<BaseTable, SubscriptionTicket> placeholder = createPlaceHolderTable(tableSourceAlias);
+//    BaseTable baseTable = placeholder.getLeft();
+//    selectQuery =
+//        SelectQuery.create(
+//            new AliasedColumn(
+//                ColumnOp.sum(new BaseColumn(tableSourceAlias, groupSizeAlias)), aliasName),
+//            baseTable);
+//    subscriptionTicket = placeholder.getRight();
 
-    // Note: this node already has been subscribed; thus, we don't need an explicit subscription.
-    Pair<BaseTable, SubscriptionTicket> placeholder = createPlaceHolderTable(tableSourceAlias);
-    BaseTable baseTable = placeholder.getLeft();
-    selectQuery =
-        SelectQuery.create(
-            new AliasedColumn(
-                ColumnOp.sum(new BaseColumn(tableSourceAlias, groupSizeAlias)), aliasName),
-            baseTable);
-
-    super.createQuery(tokens); // placeholder replacements performed here
+    super.createQuery(tokens);    // placeholder replacements performed here
     return selectQuery;
   }
 
