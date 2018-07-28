@@ -511,7 +511,7 @@ class PercentilesAndCountNode extends QueryNodeBase {
       String columnMetaTokenKey,
       String partitionMetaTokenKey,
       Optional<String> primaryColumnName) {
-    super(null);
+    super(-1, null);
     this.schemaName = schemaName;
     this.tableName = tableName;
     this.columnMetaTokenKey = columnMetaTokenKey;
@@ -607,7 +607,7 @@ class OutlierProportionNode extends QueryNodeBase {
   public static String OUTLIER_SIZE_ALIAS = "verdictdbOutlierProportion";
 
   public OutlierProportionNode(String schemaName, String tableName) {
-    super(null);
+    super(-1, null);
     this.schemaName = schemaName;
     this.tableName = tableName;
   }
@@ -764,7 +764,7 @@ class LargeGroupSizeNode extends QueryNodeWithPlaceHolders {
   public static final String LARGE_GROUP_SIZE_SUM_ALIAS = "largeGroupSizeSum";
 
   public LargeGroupSizeNode(String primaryColumnName) {
-    super(null);
+    super(-1, null);
     this.primaryColumnName = primaryColumnName;
   
     // create a selectQuery for this node

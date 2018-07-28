@@ -12,6 +12,7 @@ import org.verdictdb.coordinator.ScramblingCoordinator;
 import org.verdictdb.core.execplan.ExecutablePlanRunner;
 import org.verdictdb.core.execplan.ExecutionInfoToken;
 import org.verdictdb.core.querying.AggExecutionNode;
+import org.verdictdb.core.querying.ExecutableNodeBase;
 import org.verdictdb.core.querying.QueryExecutionPlan;
 import org.verdictdb.core.querying.QueryExecutionPlanFactory;
 import org.verdictdb.core.scrambling.ScrambleMeta;
@@ -627,14 +628,17 @@ public class AsyncAggMultipleTiersScaleTest {
         "group by `verdictdb_tier_alias`",
         tierColumn, originalSchema);
     assertEquals(expected, actual);
-
+  
+    ExecutableNodeBase combinerNode = queryExecutionPlan.getRoot().getSources().get(0).getSources().get(1);
     ExecutionInfoToken token1 = new ExecutionInfoToken();
     token1.setKeyValue("schemaName", "verdict_temp");
     token1.setKeyValue("tableName", "table1");
+    token1.setKeyValue("channel", combinerNode.getId() * 1000);
     ExecutionInfoToken token2 = new ExecutionInfoToken();
     token2.setKeyValue("schemaName", "verdict_temp");
     token2.setKeyValue("tableName", "table2");
-    query = (CreateTableAsSelectQuery) queryExecutionPlan.getRoot().getSources().get(0).getSources().get(1).createQuery(Arrays.asList(token1, token2));
+    token2.setKeyValue("channel", combinerNode.getId() * 1000 + 1);
+    query = (CreateTableAsSelectQuery) combinerNode.createQuery(Arrays.asList(token1, token2));
     actual = queryToSql.toSql(query.getSelect());
     actual = actual.replaceAll("verdictdb_alias_\\d+_\\d+", "verdictdb_alias");
     actual = actual.replaceAll("verdictdb_tier_alias_\\d+_\\d+", "verdictdb_tier_alias");
@@ -711,14 +715,17 @@ public class AsyncAggMultipleTiersScaleTest {
         "group by `verdictdb_tier_alias`",
         tierColumn, originalSchema);
     assertEquals(expected, actual);
-
+  
+    ExecutableNodeBase combinerNode = queryExecutionPlan.getRoot().getSources().get(0).getSources().get(1);
     ExecutionInfoToken token1 = new ExecutionInfoToken();
     token1.setKeyValue("schemaName", "verdict_temp");
     token1.setKeyValue("tableName", "table1");
+    token1.setKeyValue("channel", combinerNode.getId() * 1000);
     ExecutionInfoToken token2 = new ExecutionInfoToken();
     token2.setKeyValue("schemaName", "verdict_temp");
     token2.setKeyValue("tableName", "table2");
-    query = (CreateTableAsSelectQuery) queryExecutionPlan.getRoot().getSources().get(0).getSources().get(1).createQuery(Arrays.asList(token1, token2));
+    token2.setKeyValue("channel", combinerNode.getId() * 1000 + 1);
+    query = (CreateTableAsSelectQuery) combinerNode.createQuery(Arrays.asList(token1, token2));
     actual = queryToSql.toSql(query.getSelect());
     actual = actual.replaceAll("verdictdb_alias_\\d+_\\d+", "verdictdb_alias");
     actual = actual.replaceAll("verdictdb_tier_alias_\\d+_\\d+", "verdictdb_tier_alias");
@@ -792,14 +799,17 @@ public class AsyncAggMultipleTiersScaleTest {
         "group by `verdictdb_tier_alias`",
         tierColumn, originalSchema);
     assertEquals(expected, actual);
-
+  
+    ExecutableNodeBase combinerNode = queryExecutionPlan.getRoot().getSources().get(0).getSources().get(1);
     ExecutionInfoToken token1 = new ExecutionInfoToken();
     token1.setKeyValue("schemaName", "verdict_temp");
     token1.setKeyValue("tableName", "table1");
+    token1.setKeyValue("channel", combinerNode.getId() * 1000);
     ExecutionInfoToken token2 = new ExecutionInfoToken();
     token2.setKeyValue("schemaName", "verdict_temp");
     token2.setKeyValue("tableName", "table2");
-    query = (CreateTableAsSelectQuery) queryExecutionPlan.getRoot().getSources().get(0).getSources().get(1).createQuery(Arrays.asList(token1, token2));
+    token2.setKeyValue("channel", combinerNode.getId() * 1000 + 1);
+    query = (CreateTableAsSelectQuery) combinerNode.createQuery(Arrays.asList(token1, token2));
     actual = queryToSql.toSql(query.getSelect());
     actual = actual.replaceAll("verdictdb_alias_\\d+_\\d+", "verdictdb_alias");
     actual = actual.replaceAll("verdictdb_tier_alias_\\d+_\\d+", "verdictdb_tier_alias");
@@ -875,13 +885,16 @@ public class AsyncAggMultipleTiersScaleTest {
         tierColumn, originalSchema);
     assertEquals(expected, actual);
 
+    ExecutableNodeBase combiner = queryExecutionPlan.getRoot().getSources().get(0).getSources().get(1);
     ExecutionInfoToken token1 = new ExecutionInfoToken();
     token1.setKeyValue("schemaName", "verdict_temp");
     token1.setKeyValue("tableName", "table1");
+    token1.setKeyValue("channel", combiner.getId() * 1000);
     ExecutionInfoToken token2 = new ExecutionInfoToken();
     token2.setKeyValue("schemaName", "verdict_temp");
     token2.setKeyValue("tableName", "table2");
-    query = (CreateTableAsSelectQuery) queryExecutionPlan.getRoot().getSources().get(0).getSources().get(1).createQuery(Arrays.asList(token1, token2));
+    token2.setKeyValue("channel", combiner.getId() * 1000 + 1);
+    query = (CreateTableAsSelectQuery) combiner.createQuery(Arrays.asList(token1, token2));
     actual = queryToSql.toSql(query.getSelect());
     actual = actual.replaceAll("verdictdb_alias_\\d+_\\d+", "verdictdb_alias");
     actual = actual.replaceAll("verdictdb_tier_alias_\\d+_\\d+", "verdictdb_tier_alias");
@@ -963,14 +976,17 @@ public class AsyncAggMultipleTiersScaleTest {
         "group by `verdictdb_tier_alias`",
         tierColumn, originalSchema);
     assertEquals(expected, actual);
-
+  
+    ExecutableNodeBase combiner = queryExecutionPlan.getRoot().getSources().get(0).getSources().get(1);
     ExecutionInfoToken token1 = new ExecutionInfoToken();
     token1.setKeyValue("schemaName", "verdict_temp");
     token1.setKeyValue("tableName", "table1");
+    token1.setKeyValue("channel", combiner.getId() * 1000);
     ExecutionInfoToken token2 = new ExecutionInfoToken();
     token2.setKeyValue("schemaName", "verdict_temp");
     token2.setKeyValue("tableName", "table2");
-    query = (CreateTableAsSelectQuery) queryExecutionPlan.getRoot().getSources().get(0).getSources().get(1).createQuery(Arrays.asList(token1, token2));
+    token2.setKeyValue("channel", combiner.getId() * 1000 + 1);
+    query = (CreateTableAsSelectQuery) combiner.createQuery(Arrays.asList(token1, token2));
     actual = queryToSql.toSql(query.getSelect());
     actual = actual.replaceAll("verdictdb_alias_\\d+_\\d+", "verdictdb_alias");
     actual = actual.replaceAll("verdictdb_tier_alias_\\d+_\\d+", "verdictdb_tier_alias");
@@ -1051,13 +1067,16 @@ public class AsyncAggMultipleTiersScaleTest {
         tierColumn, originalSchema);
     assertEquals(expected, actual);
 
+    ExecutableNodeBase combiner = queryExecutionPlan.getRoot().getSources().get(0).getSources().get(1);
     ExecutionInfoToken token1 = new ExecutionInfoToken();
     token1.setKeyValue("schemaName", "verdict_temp");
     token1.setKeyValue("tableName", "table1");
+    token1.setKeyValue("channel", combiner.getId() * 1000);
     ExecutionInfoToken token2 = new ExecutionInfoToken();
     token2.setKeyValue("schemaName", "verdict_temp");
     token2.setKeyValue("tableName", "table2");
-    query = (CreateTableAsSelectQuery) queryExecutionPlan.getRoot().getSources().get(0).getSources().get(1).createQuery(Arrays.asList(token1, token2));
+    token2.setKeyValue("channel", combiner.getId() * 1000 + 1);
+    query = (CreateTableAsSelectQuery) combiner.createQuery(Arrays.asList(token1, token2));
     actual = queryToSql.toSql(query.getSelect());
     actual = actual.replaceAll("verdictdb_alias_\\d+_\\d+", "verdictdb_alias");
     actual = actual.replaceAll("verdictdb_tier_alias_\\d+_\\d+", "verdictdb_tier_alias");
@@ -1232,9 +1251,11 @@ public class AsyncAggMultipleTiersScaleTest {
     ExecutionInfoToken token1 = new ExecutionInfoToken();
     token1.setKeyValue("schemaName", "verdict_temp");
     token1.setKeyValue("tableName", "table1");
+    token1.setKeyValue("channel", 4000);
     ExecutionInfoToken token2 = new ExecutionInfoToken();
     token2.setKeyValue("schemaName", "verdict_temp");
     token2.setKeyValue("tableName", "table2");
+    token2.setKeyValue("channel", 4001);
     query = (CreateTableAsSelectQuery) queryExecutionPlan.getRoot().getSources().get(0).getSources().get(1).createQuery(Arrays.asList(token1, token2));
     actual = queryToSql.toSql(query.getSelect());
     actual = actual.replaceAll("verdictdb_alias_\\d+_\\d+", "verdictdb_alias");

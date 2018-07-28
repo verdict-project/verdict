@@ -39,10 +39,8 @@ public class CreateTableAsSelectNode extends QueryNodeWithPlaceHolders {
 
   List<String> partitionColumns = new ArrayList<>();
 
-  boolean ifNotExists = false;
-
   public CreateTableAsSelectNode(IdCreator namer, SelectQuery query) {
-    super(query);
+    super(namer, query);
     this.namer = namer;
   }
 

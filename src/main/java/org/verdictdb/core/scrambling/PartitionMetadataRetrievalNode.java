@@ -36,7 +36,7 @@ public class PartitionMetadataRetrievalNode extends ExecutableNodeBase {
   private String tokenKey;
 
   private PartitionMetadataRetrievalNode() {
-    super();
+    super(-1);
   }
 
   public static PartitionMetadataRetrievalNode create(

@@ -24,6 +24,8 @@ public interface IdCreator {
   
   String generateAliasName(String keyword);
   
+  int generateSerialNumber();
+  
 //  void resetAliasNameGeneration();
 //
 //  void resetAliasNameGeneration(String keyword);

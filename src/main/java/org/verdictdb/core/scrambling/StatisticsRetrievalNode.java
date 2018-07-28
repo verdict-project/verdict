@@ -37,7 +37,7 @@ public class StatisticsRetrievalNode extends QueryNodeBase {
   StatiticsQueryGenerator queryGenerator;
 
   public StatisticsRetrievalNode(String schemaName, String tableName) {
-    super(null);
+    super(-1, null);
     this.schemaName = schemaName;
     this.tableName = tableName;
   }

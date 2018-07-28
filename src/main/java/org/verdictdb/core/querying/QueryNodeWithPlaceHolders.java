@@ -37,9 +37,13 @@ public abstract class QueryNodeWithPlaceHolders extends QueryNodeBase {
   
   private UniquePlaceholderNameCreator placeholderNameCreator =
       new UniquePlaceholderNameCreator(this);
-
-  public QueryNodeWithPlaceHolders(SelectQuery query) {
-    super(query);
+  
+  public QueryNodeWithPlaceHolders(IdCreator idCreator, SelectQuery query) {
+    super(idCreator, query);
+  }
+  
+  public QueryNodeWithPlaceHolders(int uniqueId, SelectQuery query) {
+    super(uniqueId, query);
   }
 
   public Pair<BaseTable, SubscriptionTicket> createPlaceHolderTable(String aliasName) {

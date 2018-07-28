@@ -31,13 +31,17 @@ import java.util.List;
 /** @author Yongjoo Park */
 public class SelectAllExecutionNode extends QueryNodeWithPlaceHolders {
 
-  public SelectAllExecutionNode(SelectQuery query) {
-    super(query);
+  public SelectAllExecutionNode(IdCreator idCreator, SelectQuery query) {
+    super(idCreator, query);
+  }
+  
+  public SelectAllExecutionNode(int uniqueId, SelectQuery query) {
+    super(uniqueId, query);
   }
 
   public static SelectAllExecutionNode create(IdCreator namer, SelectQuery query)
       throws VerdictDBValueException {
-    SelectAllExecutionNode selectAll = new SelectAllExecutionNode(null);
+    SelectAllExecutionNode selectAll = new SelectAllExecutionNode(namer, null);
     Pair<BaseTable, SubscriptionTicket> baseAndSubscriptionTicket =
         selectAll.createPlaceHolderTable("t");
     SelectQuery selectQuery =
@@ -95,7 +99,7 @@ public class SelectAllExecutionNode extends QueryNodeWithPlaceHolders {
 
   @Override
   public ExecutableNodeBase deepcopy() {
-    SelectAllExecutionNode node = new SelectAllExecutionNode(selectQuery);
+    SelectAllExecutionNode node = new SelectAllExecutionNode(uniqueId, selectQuery);
     copyFields(this, node);
     return node;
   }

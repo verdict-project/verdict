@@ -29,8 +29,14 @@ import org.verdictdb.core.scrambling.ScrambleMetaSet;
 import org.verdictdb.core.sqlobject.*;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBValueException;
+import scala.reflect.internal.Constants.Constant;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import static java.util.Map.Entry;
 
 /**
  * Represents an "progressive" execution of a single aggregate query (without nested components).
@@ -67,9 +73,8 @@ public class AsyncAggExecutionNode extends ProjectionNode {
   
   int tableNum = 1;
   
-  
-  private AsyncAggExecutionNode() {
-    super(null, null);
+  private AsyncAggExecutionNode(IdCreator idCreator) {
+    super(idCreator, null);
   }
   
   /**
@@ -93,7 +98,7 @@ public class AsyncAggExecutionNode extends ProjectionNode {
       List<ExecutableNodeBase> combiners,
       ScrambleMetaSet meta) {
 
-    AsyncAggExecutionNode node = new AsyncAggExecutionNode();
+    AsyncAggExecutionNode node = new AsyncAggExecutionNode(idCreator);
     
     // this placeholder base table is used for query construction later
     String alias = INNER_RAW_AGG_TABLE_ALIAS;
@@ -128,6 +133,62 @@ public class AsyncAggExecutionNode extends ProjectionNode {
     return node;
   }
   
+  /**
+   *
+   * @param sourceAggMeta The aggmeta of the downstream node
+   * @return Map of a filtering condition to the scaling factor
+   */
+  private Map<UnnamedColumn, Double> computeScaleFactorForTierCombinations(
+      AggMeta sourceAggMeta, String sourceTableAlias) {
+    Map<UnnamedColumn, Double> scalingFactorPerTier = new HashMap<>();
+    
+    Map<TierCombination, Double> scaleFactors = sourceAggMeta.computeScaleFactors();
+    Map<ScrambleMeta, String> tierColums = sourceAggMeta.getTierColumnForScramble();
+    
+    // each iteration of this loop generates a single condition-then part
+    for (Entry<TierCombination, Double> tierScale : scaleFactors.entrySet()) {
+      UnnamedColumn tierCombinationCondition = null;
+      TierCombination combination = tierScale.getKey();
+      double scale = tierScale.getValue();
+      
+      // each iteration of this loop generates a condition that must be AND-connected
+      // to compose the condition for an entire tier combination.
+      for (Entry<Pair<String, String>, Integer> perTable : combination) {
+        Pair<String, String> table = perTable.getKey();
+        Integer tier = perTable.getValue();
+        String aliasName = findScrambleAlias(tierColums, table);
+  
+        UnnamedColumn part = ColumnOp.equal(
+            new BaseColumn(sourceTableAlias, aliasName),
+            ConstantColumn.valueOf(tier));
+        
+        if (tierCombinationCondition == null) {
+          tierCombinationCondition = part;
+        } else {
+          tierCombinationCondition = ColumnOp.and(tierCombinationCondition, part);
+        }
+      }
+  
+      scalingFactorPerTier.put(tierCombinationCondition, scale);
+    }
+    
+    return scalingFactorPerTier;
+  }
+  
+  private String findScrambleAlias(
+      Map<ScrambleMeta, String> tierColums, Pair<String, String> table) {
+    
+    for (Entry<ScrambleMeta, String> metaToAlias : tierColums.entrySet()) {
+      ScrambleMeta meta = metaToAlias.getKey();
+      String aliasName = metaToAlias.getValue();
+      if (meta.getSchemaName().equals(table.getLeft()) &&
+              meta.getTableName().equals(table.getRight())) {
+        return aliasName;
+      }
+    }
+    return null;
+  }
+  
   @Override
   public SqlConvertible createQuery(List<ExecutionInfoToken> tokens) throws VerdictDBException {
     super.createQuery(tokens);
@@ -136,45 +197,75 @@ public class AsyncAggExecutionNode extends ProjectionNode {
     AggMeta sourceAggMeta = (AggMeta) token.getValue("aggMeta");
   
     // First, calculate the scale factor and use it to replace the scale factor placeholder
-    HashMap<List<Integer>, Double> scaleFactor =
-        calculateScaleFactor(sourceAggMeta, scrambledTableTierInfo);
+//    HashMap<List<Integer>, Double> scaleFactor =
+//        calculateScaleFactor(sourceAggMeta, scrambledTableTierInfo);
+  
+    Map<UnnamedColumn, Double> conditionToScaleFactor =
+        computeScaleFactorForTierCombinations(sourceAggMeta, INNER_RAW_AGG_TABLE_ALIAS);
+    
+    // we store the original aggColumns to restore it later.
+    List<ColumnOp> clonedAggColumns = new ArrayList<>();
+    for (ColumnOp col : aggColumns) {
+      clonedAggColumns.add(col.deepcopy());
+    }
+    
+    // update the agg column scaling factor
+    List<UnnamedColumn> scalingOperands = new ArrayList<>();
+    for (Entry<UnnamedColumn, Double> condToScale : conditionToScaleFactor.entrySet()) {
+      UnnamedColumn cond = condToScale.getKey();
+      double scale = condToScale.getValue();
+      scalingOperands.add(cond);
+      scalingOperands.add(ConstantColumn.valueOf(scale));
+    }
+    ColumnOp scalingColumn = ColumnOp.casewhen(scalingOperands);
+    for (ColumnOp aggcol : aggColumns) {
+      aggcol.setOperand(0, scalingColumn);
+    }
 
-    // single-tier case
-    if (scaleFactor.size() == 1) {
-      // Substitute the scale factor
-      Double s = (Double) (scaleFactor.values().toArray())[0];
-      for (ColumnOp col : aggColumns) {
-        col.setOperand(0, ConstantColumn.valueOf(String.format("%.16f", s)));
-      }
-    }
-    // multiple-tiers case
-    else {
-      // If it has multiple tiers, we need to rewrite the multiply column into when-then-else column
-      for (ColumnOp col : aggColumns) {
-        //        String alias = ((BaseColumn) col.getOperand(1)).getColumnName();
-        col.setOpType("casewhen");
-        List<UnnamedColumn> operands = new ArrayList<>();
-        for (Map.Entry<List<Integer>, Double> entry : scaleFactor.entrySet()) {
-          List<Integer> tierPermutation = entry.getKey();
-          UnnamedColumn condition = generateCaseCondition(tierPermutation, scrambledTableTierInfo);
-          operands.add(condition);
-          ColumnOp multiply =
-              new ColumnOp(
-                  "multiply",
-                  Arrays.asList(
-                      ConstantColumn.valueOf(String.format("%.16f", entry.getValue())),
-                      col.getOperand(1)));
-          operands.add(multiply);
-        }
-        operands.add(ConstantColumn.valueOf(0));
-        col.setOperand(operands);
-      }
-    }
+//    // single-tier case
+//    if (scaleFactor.size() == 1) {
+//      // Substitute the scale factor
+//      Double s = (Double) (scaleFactor.values().toArray())[0];
+//      for (ColumnOp col : aggColumns) {
+//        col.setOperand(0, ConstantColumn.valueOf(String.format("%.16f", s)));
+//      }
+//    }
+//    // multiple-tiers case
+//    else {
+//      // If it has multiple tiers, we need to rewrite the multiply column into when-then-else column
+//      for (ColumnOp col : aggColumns) {
+//        //        String alias = ((BaseColumn) col.getOperand(1)).getColumnName();
+//        col.setOpType("casewhen");
+//        List<UnnamedColumn> operands = new ArrayList<>();
+//        for (Map.Entry<List<Integer>, Double> entry : scaleFactor.entrySet()) {
+//          List<Integer> tierPermutation = entry.getKey();
+//          UnnamedColumn condition = generateCaseCondition(tierPermutation, scrambledTableTierInfo);
+//          operands.add(condition);
+//          ColumnOp multiply =
+//              new ColumnOp(
+//                  "multiply",
+//                  Arrays.asList(
+//                      ConstantColumn.valueOf(String.format("%.16f", entry.getValue())),
+//                      col.getOperand(1)));
+//          operands.add(multiply);
+//        }
+//        operands.add(ConstantColumn.valueOf(0));
+//        col.setOperand(operands);
+//      }
+//    }
 
     // If it has multiple tiers, we need to sum up the result
     // We treat both single-tier and multi-tier cases simultaneously here to make alias management
     // easier.
     SelectQuery query = sumUpTierGroup(selectQuery.deepcopy(), sourceAggMeta, scrambledTableTierInfo);
+    
+    // Restore the original aggColumns
+    for (int i = 0; i < clonedAggColumns.size(); i++) {
+      ColumnOp cloned = clonedAggColumns.get(i);
+      ColumnOp originalReference = aggColumns.get(i);
+      originalReference.setOpType(cloned.getOpType());
+      originalReference.setOperand(cloned.getOperands());
+    }
     
 //    if (multipleTierTableTierInfo.size() > 0) {
 //      query = sumUpTierGroup(
@@ -339,17 +430,18 @@ public class AsyncAggExecutionNode extends ProjectionNode {
         if (scrambleMeta.getNumberOfTiers() > 1) {
 //        ScrambleMeta meta = scrambleMetaSet.getSingleMeta(d.getSchemaName(), d.getTableName());
         Map<ScrambleMeta, String> scrambleTableTierColumnAlias =
-            sourceAggMeta.getScrambleTableTierColumnAlias();
+            sourceAggMeta.getTierColumnForScramble();
         
         if (scrambleTableTierColumnAlias.containsKey(scrambleMeta) == false) {
           throw new VerdictDBValueException("The metadata for a scrambled table is not found.");
         }
   
-        multipleTierTableTierInfo.put(
-            cubes.get(0).getDimensions().indexOf(d),
-            scrambleTableTierColumnAlias.get(scrambleMeta));
+        // TODO: move this somewhere
+//        multipleTierTableTierInfo.put(
+//            cubes.get(0).getDimensions().indexOf(d),
+//            tierColumnForScramble.get(scrambleMeta));
         
-//        if (scrambleTableTierColumnAlias.containsKey(meta)) {
+//        if (tierColumnForScramble.containsKey(meta)) {
 //
 //        }
 //        else {
@@ -594,7 +686,7 @@ public class AsyncAggExecutionNode extends ProjectionNode {
   
   @Override
   public ExecutableNodeBase deepcopy() {
-    AsyncAggExecutionNode copy = new AsyncAggExecutionNode();
+    AsyncAggExecutionNode copy = new AsyncAggExecutionNode(getNamer());
     copyFields(this, copy);
     return copy;
   }

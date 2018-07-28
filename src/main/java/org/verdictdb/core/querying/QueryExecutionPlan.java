@@ -41,10 +41,20 @@ public class QueryExecutionPlan implements ExecutablePlan, IdCreator, Serializab
   protected IdCreator idCreator;
 
   public QueryExecutionPlan() {}
+  
+  public QueryExecutionPlan(IdCreator idCreator) {
+    this.idCreator = idCreator;
+    this.scrambleMeta = new ScrambleMetaSet();
+  }
+  
+  public QueryExecutionPlan(IdCreator idCreator, ScrambleMetaSet scrambleMeta) {
+    this.idCreator = idCreator;
+    this.scrambleMeta = scrambleMeta;
+  }
 
   public QueryExecutionPlan(String scratchpadSchemaName) {
-    this.scrambleMeta = new ScrambleMetaSet();
     this.idCreator = new TempIdCreatorInScratchpadSchema(scratchpadSchemaName);
+    this.scrambleMeta = new ScrambleMetaSet();
   }
 
   public QueryExecutionPlan(String scratchpadSchemaName, ScrambleMetaSet scrambleMeta) {
@@ -73,6 +83,10 @@ public class QueryExecutionPlan implements ExecutablePlan, IdCreator, Serializab
   */
   public int getSerialNumber() {
     return ((TempIdCreatorInScratchpadSchema) idCreator).getSerialNumber();
+  }
+  
+  public IdCreator getIdCreator() {
+    return idCreator;
   }
 
   public ScrambleMetaSet getScrambleMeta() {
@@ -220,6 +234,11 @@ public class QueryExecutionPlan implements ExecutablePlan, IdCreator, Serializab
   @Override
   public String generateAliasName(String keyword) {
     return idCreator.generateAliasName(keyword);
+  }
+  
+  @Override
+  public int generateSerialNumber() {
+    return idCreator.generateSerialNumber();
   }
   
   protected void resetAliasNameGeneration() {

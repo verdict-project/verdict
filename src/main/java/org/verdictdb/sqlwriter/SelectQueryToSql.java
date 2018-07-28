@@ -79,7 +79,8 @@ public class SelectQueryToSql {
     if (column instanceof AliasReference) {
       AliasReference aliasedColumn = (AliasReference) column;
       return (aliasedColumn.getTableAlias() != null)
-          ? quoteName(aliasedColumn.getTableAlias()) + "." + quoteName(aliasedColumn.getAliasName())
+          ? quoteName(aliasedColumn.getTableAlias()) + "." +
+                quoteName(aliasedColumn.getAliasName())
           : quoteName(aliasedColumn.getAliasName());
     } else {
       return unnamedColumnToSqlPart((UnnamedColumn) column);
@@ -152,21 +153,16 @@ public class SelectQueryToSql {
       } else if (columnOp.getOpType().equals("not")) {
         return "not " + withParentheses(columnOp.getOperand(0));
       } else if (columnOp.getOpType().equals("casewhen")) {
-        String sql = "case";
+        StringBuilder sql = new StringBuilder();
+        sql.append("case");
         for (int i = 0; i < columnOp.getOperands().size() - 1; i = i + 2) {
-          sql =
-              sql
-                  + " when "
-                  + withParentheses(columnOp.getOperand(i))
-                  + " then "
-                  + withParentheses(columnOp.getOperand(i + 1));
+          sql.append(" when " + withParentheses(columnOp.getOperand(i))
+                         + " then " + withParentheses(columnOp.getOperand(i + 1)));
         }
-        sql =
-            sql
-                + " else "
-                + withParentheses(columnOp.getOperand(columnOp.getOperands().size() - 1))
-                + " end";
-        return sql;
+        sql.append(
+            " else " + withParentheses(columnOp.getOperand(columnOp.getOperands().size() - 1))
+                       + " end");
+        return sql.toString();
       } else if (columnOp.getOpType().equals("notequal")) {
         return withParentheses(columnOp.getOperand(0))
             + " <> "
@@ -318,7 +314,7 @@ public class SelectQueryToSql {
             + " from "
             + withParentheses(columnOp.getOperand(2))
             + ")";
-      } else if (columnOp.getOpType().equals("substring") && syntax instanceof PostgresqlSyntax) {
+      } else if (columnOp.getOpType().equals("substring") && (syntax instanceof PostgresqlSyntax)) {
         String temp =
             "substring("
                 + withParentheses(columnOp.getOperand(0))
@@ -326,7 +322,9 @@ public class SelectQueryToSql {
                 + withParentheses(columnOp.getOperand(1));
         if (columnOp.getOperands().size() == 2) {
           return temp + ")";
-        } else return temp + " for " + withParentheses(columnOp.getOperand(2)) + ")";
+        } else {
+          return temp + " for " + withParentheses(columnOp.getOperand(2)) + ")";
+        }
       } else if (columnOp.getOpType().equals("timestampwithoutparentheses")) {
         return "timestamp " + withParentheses(columnOp.getOperand(0));
       } else if (columnOp.getOpType().equals("dateadd")) {

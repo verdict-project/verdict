@@ -46,6 +46,10 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
   private AsyncQueryExecutionPlan(String scratchpadSchemaName, ScrambleMetaSet scrambleMeta) {
     super(scratchpadSchemaName, scrambleMeta);
   }
+  
+  private AsyncQueryExecutionPlan(IdCreator idCreator, ScrambleMetaSet scrambleMeta) {
+    super(idCreator, scrambleMeta);
+  }
 
   public static AsyncQueryExecutionPlan create(QueryExecutionPlan plan) throws VerdictDBException {
     if (plan instanceof AsyncQueryExecutionPlan) {
@@ -54,7 +58,7 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
     }
 
     AsyncQueryExecutionPlan asyncPlan =
-        new AsyncQueryExecutionPlan(plan.getScratchpadSchemaName(), plan.getScrambleMeta());
+        new AsyncQueryExecutionPlan(plan.getIdCreator(), plan.getScrambleMeta());
     ExecutableNodeBase newRoot = asyncPlan.makeAsyncronousAggIfAvailable(plan.getRootNode());
     asyncPlan.setRootNode(newRoot);
     return asyncPlan;
@@ -455,7 +459,7 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
   
       // Record the tier column alias with its corresponding scramble table
       ScrambleMeta meta = scrambleMeta.getSingleMeta(t.getSchemaName(), t.getTableName());
-      node.getAggMeta().getScrambleTableTierColumnAlias().put(meta, tierColumnAlias);
+      node.getAggMeta().getTierColumnForScramble().put(meta, tierColumnAlias);
     }
     
 //    node.getSelectQuery().addSelectItem();
@@ -468,7 +472,7 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
 //
 //        // Record the tier column alias with its corresponding scramble table
 //        ScrambleMeta meta = scrambleMeta.getSingleMeta(t.getSchemaName(), t.getTableName());
-//        node.getAggMeta().getScrambleTableTierColumnAlias().put(meta, tierColumnAlias);
+//        node.getAggMeta().getTierColumnForScramble().put(meta, tierColumnAlias);
 //      }
 //    } else {
 //      for (BaseTable t : MultiTiertables) {
@@ -489,7 +493,7 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
 //
 //        // Record the tier column alias with its corresponding scramble table
 //        ScrambleMeta meta = scrambleMeta.getSingleMeta(t.getSchemaName(), t.getTableName());
-//        node.getAggMeta().getScrambleTableTierColumnAlias().put(meta, tierColumnAlias);
+//        node.getAggMeta().getTierColumnForScramble().put(meta, tierColumnAlias);
 //      }
 //    }
 //    verdictdbTierIndentiferNum = 0;
@@ -527,7 +531,7 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
       ((AggExecutionNode) node).getSelectQuery().getSelectList().addAll(newSelectlist);
       aggColumnIdentiferNum = 0;
       
-      node.getAggMeta().setScrambleTableTierColumnAlias(scrambleMetaAndTierColumnAlias);
+      node.getAggMeta().setTierColumnForScramble(scrambleMetaAndTierColumnAlias);
       
     } else if (node instanceof ProjectionNode) {
       rewriteProjectionNodeToAddTierColumn(block, (ProjectionNode) node);
@@ -696,7 +700,7 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
     // Add possible tier column if its sources are projectionNode
     for (ProjectionNode source : projectionNodeSources) {
       for (Map.Entry<ScrambleMeta, String> entry :
-          source.getAggMeta().getScrambleTableTierColumnAlias().entrySet()) {
+          source.getAggMeta().getTierColumnForScramble().entrySet()) {
         
         ScrambleMeta singleMeta = entry.getKey();
         String oldtierAlias = entry.getValue();
@@ -747,7 +751,7 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
     List<SelectItem> selectItemList = node.getSelectQuery().getSelectList();
     for (ProjectionNode source : projectionNodesSources) {
       for (Map.Entry<ScrambleMeta, String> entry :
-          source.getAggMeta().getScrambleTableTierColumnAlias().entrySet()) {
+          source.getAggMeta().getTierColumnForScramble().entrySet()) {
         
         String oldtierAlias = entry.getValue();
         String tierColumnAlias = generateTierColumnAliasName();
@@ -765,7 +769,7 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
         selectItemList.add(selectItem);
         
         // Construct tier column Map
-        node.getAggMeta().getScrambleTableTierColumnAlias().put(entry.getKey(), tierColumnAlias);
+        node.getAggMeta().getTierColumnForScramble().put(entry.getKey(), tierColumnAlias);
       }
     }
     List<BaseTable> multiTierScrambleTables = identifyScrambledTables(node, scrambleMeta);

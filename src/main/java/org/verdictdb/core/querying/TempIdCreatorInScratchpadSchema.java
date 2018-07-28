@@ -56,15 +56,19 @@ public class TempIdCreatorInScratchpadSchema implements IdCreator, Serializable 
   public String getScratchpadSchemaName() {
     return scratchpadSchemaName;
   }
-
-  synchronized String generateUniqueIdentifier(String keyword) {
+  
+  synchronized private int getNextId(String keyword) {
     if (!keywordIdentifierMap.containsKey(keyword)) {
       keywordIdentifierMap.put(keyword, 0);
     }
-    
     int currentId = keywordIdentifierMap.get(keyword);
-    String uniqueId = String.format("%d_%d", serialNum, currentId);
     keywordIdentifierMap.put(keyword, currentId + 1);
+    return currentId;
+  }
+
+  private String generateUniqueIdentifier(String keyword) {
+    int currentId = getNextId(keyword);
+    String uniqueId = String.format("%d_%d", serialNum, currentId);
     return uniqueId;
   }
   
@@ -80,6 +84,11 @@ public class TempIdCreatorInScratchpadSchema implements IdCreator, Serializable 
   @Override
   public String generateAliasName(String keyword) {
     return String.format("verdictdb_%s_alias_%s", keyword, generateUniqueIdentifier(keyword));
+  }
+  
+  @Override
+  public int generateSerialNumber() {
+    return getNextId(GLOBAL_KEYWORD);
   }
   
   @Override

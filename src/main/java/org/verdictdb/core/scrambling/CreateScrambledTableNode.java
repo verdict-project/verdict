@@ -54,7 +54,7 @@ public class CreateScrambledTableNode extends QueryNodeWithPlaceHolders {
   protected ScramblingMethod method;
 
   public CreateScrambledTableNode(IdCreator namer, SelectQuery query) {
-    super(query);
+    super(namer, query);
     this.namer = namer;
   }
 
@@ -66,7 +66,7 @@ public class CreateScrambledTableNode extends QueryNodeWithPlaceHolders {
       ScramblingMethod method,
       String tierColumnName,
       String blockColumnName) {
-    super(query);
+    super(namer, query);
     this.namer = namer;
     this.originalSchemaName = originalSchemaName;
     this.originalTableName = originalTableName;

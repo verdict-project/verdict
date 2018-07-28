@@ -89,6 +89,11 @@ public class ScramblingNode extends CreateScrambledTableNode {
           }
   
           @Override
+          public int generateSerialNumber() {
+            return 0;
+          }
+  
+          @Override
           public Pair<String, String> generateTempTableName() {
             return Pair.of(newSchemaName, newTableName);
           }

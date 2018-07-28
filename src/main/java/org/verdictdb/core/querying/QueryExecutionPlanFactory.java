@@ -34,8 +34,8 @@ public class QueryExecutionPlanFactory {
   public static QueryExecutionPlan create(
       String scratchpadSchemaName) {
     resetUniqueIdGeneration();
-    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan();
-    queryExecutionPlan.idCreator = new TempIdCreatorInScratchpadSchema(scratchpadSchemaName);
+    IdCreator idCreator = new TempIdCreatorInScratchpadSchema(scratchpadSchemaName);
+    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(idCreator);
     return queryExecutionPlan;
   }
 
@@ -43,8 +43,8 @@ public class QueryExecutionPlanFactory {
       String scratchpadSchemaName,
       ScrambleMetaSet scrambleMeta) {
     resetUniqueIdGeneration();
-    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan();
-    queryExecutionPlan.idCreator = new TempIdCreatorInScratchpadSchema(scratchpadSchemaName);
+    IdCreator idCreator = new TempIdCreatorInScratchpadSchema(scratchpadSchemaName);
+    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(idCreator);
     queryExecutionPlan.scrambleMeta = scrambleMeta;
     return queryExecutionPlan;
   }
@@ -54,8 +54,8 @@ public class QueryExecutionPlanFactory {
       ScrambleMetaSet scrambleMeta,
       SelectQuery query) {
     resetUniqueIdGeneration();
-    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan();
-    queryExecutionPlan.idCreator = new TempIdCreatorInScratchpadSchema(scratchpadSchemaName);
+    IdCreator idCreator = new TempIdCreatorInScratchpadSchema(scratchpadSchemaName);
+    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(idCreator);
     queryExecutionPlan.scrambleMeta = scrambleMeta;
     queryExecutionPlan.root = createRootAndItsDependents(queryExecutionPlan.idCreator, query);
     return queryExecutionPlan;
@@ -69,7 +69,7 @@ public class QueryExecutionPlanFactory {
     return queryExecutionPlan;
   }
   
-  static ExecutableNodeBase createRootAndItsDependents(IdCreator idCreator, SelectQuery query) {
+  private static ExecutableNodeBase createRootAndItsDependents(IdCreator idCreator, SelectQuery query) {
     if (query.isSupportedAggregate()) {
       return createSelectAllExecutionNodeAndItsDependents(idCreator, query);
     } else {
@@ -78,9 +78,8 @@ public class QueryExecutionPlanFactory {
     }
   }
 
-  static SelectAllExecutionNode createSelectAllExecutionNodeAndItsDependents(IdCreator idCreator, SelectQuery query) {
-    SelectAllExecutionNode selectAll = new SelectAllExecutionNode(null);
-    selectAll.setId(generateUniqueId());
+  private static SelectAllExecutionNode createSelectAllExecutionNodeAndItsDependents(IdCreator idCreator, SelectQuery query) {
+    SelectAllExecutionNode selectAll = new SelectAllExecutionNode(idCreator, null);
     
     Pair<BaseTable, SubscriptionTicket> baseAndSubscriptionTicket = selectAll.createPlaceHolderTable("t");
     SelectQuery selectQuery = SelectQuery.create(new AsteriskColumn(), baseAndSubscriptionTicket.getLeft());
@@ -102,17 +101,15 @@ public class QueryExecutionPlanFactory {
     return selectAll;
   }
   
-  static AggExecutionNode createAggExecutionNodeAndItsDependents(IdCreator idCreator, SelectQuery query) {
+  private static AggExecutionNode createAggExecutionNodeAndItsDependents(IdCreator idCreator, SelectQuery query) {
     AggExecutionNode node = new AggExecutionNode(idCreator, null);
-    node.setId(generateUniqueId());
     convertSubqueriesToDependentNodes(query, node);
     node.setSelectQuery(query);
     return node;
   }
 
-  static ProjectionNode createProjectionNodeAndItsDependents(IdCreator idCreator, SelectQuery query) {
+  private static ProjectionNode createProjectionNodeAndItsDependents(IdCreator idCreator, SelectQuery query) {
     ProjectionNode node = new ProjectionNode(idCreator, null);
-    node.setId(generateUniqueId());
     convertSubqueriesToDependentNodes(query, node);
     node.setSelectQuery(query);
     return node;
@@ -124,7 +121,7 @@ public class QueryExecutionPlanFactory {
    * placeholders.
    * @param node
    */
-  static void convertSubqueriesToDependentNodes(
+  private static void convertSubqueriesToDependentNodes(
       SelectQuery query,
       CreateTableAsSelectNode node) {
     IdCreator namer = node.getNamer();

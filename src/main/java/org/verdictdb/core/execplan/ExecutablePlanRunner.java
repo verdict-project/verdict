@@ -66,7 +66,7 @@ public class ExecutablePlanRunner {
     // set up to get the results
     ExecutionTokenReader reader;
     if (plan.getReportingNode() != null) {
-      ExecutableNodeBase node = ExecutableNodeBase.create();
+      ExecutableNodeBase node = new ExecutableNodeBase(-1);
       //      ExecutionTokenQueue outputQueue = new ExecutionTokenQueue();
       node.subscribeTo((ExecutableNodeBase) plan.getReportingNode());
       //      plan.getReportingNode().getDestinationQueues().add(outputQueue);

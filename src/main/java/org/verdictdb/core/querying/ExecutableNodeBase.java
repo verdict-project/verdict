@@ -48,14 +48,22 @@ public class ExecutableNodeBase implements ExecutableNode, Serializable {
 
   protected AggMeta aggMeta = new AggMeta();
 
-  private int uniqueId;
+  protected int uniqueId;
 
   private int groupId; // copied when deepcopying; used by ExecutablePlanRunner
   
   private UniqueChannelCreator channelCreator = new UniqueChannelCreator(this);
-
-  public ExecutableNodeBase() {
-    uniqueId = ThreadLocalRandom.current().nextInt(0, 1000000 + 1);
+  
+  public ExecutableNodeBase(IdCreator creator) {
+    this(creator.generateSerialNumber());
+  }
+  
+  /**
+   *
+   * @param uniqueId -1 indicates 'not assinged'
+   */
+  public ExecutableNodeBase(int uniqueId) {
+    this.uniqueId = uniqueId;
     groupId = Integer.valueOf(RandomStringUtils.randomNumeric(5));
   }
   
@@ -67,9 +75,9 @@ public class ExecutableNodeBase implements ExecutableNode, Serializable {
     return uniqueId;
   }
 
-  public static ExecutableNodeBase create() {
-    return new ExecutableNodeBase();
-  }
+//  public static ExecutableNodeBase create() {
+//    return new ExecutableNodeBase();
+//  }
 
   public int getGroupId() {
     return groupId;
@@ -269,7 +277,7 @@ public class ExecutableNodeBase implements ExecutableNode, Serializable {
   }
 
   public ExecutableNodeBase deepcopy() {
-    ExecutableNodeBase node = ExecutableNodeBase.create();
+    ExecutableNodeBase node = new ExecutableNodeBase(uniqueId);
     copyFields(this, node);
     return node;
   }
@@ -349,15 +357,15 @@ class UniqueChannelCreator implements Serializable {
   
   private int identifierNum = 0;
   
-  private Object obj;
+  private ExecutableNodeBase node;
   
-  public UniqueChannelCreator(Object obj) {
-    this.obj = obj;
+  public UniqueChannelCreator(ExecutableNodeBase node) {
+    this.node = node;
   }
   
   public int getNewChannelNumber() {
-    // 17 is an arbitrary number
-    int newNumber = obj.hashCode()*17 + identifierNum;
+    // 1000 is an arbitrary number
+    int newNumber = node.getId()*1000 + identifierNum;
     identifierNum++;
     return newNumber;
   }

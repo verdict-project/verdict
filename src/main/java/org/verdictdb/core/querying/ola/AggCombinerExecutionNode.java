@@ -82,7 +82,7 @@ public class AggCombinerExecutionNode extends CreateTableAsSelectNode {
     nodeMeta.setAggColumnAggAliasPair(childAggMeta.getAggColumnAggAliasPair());
     nodeMeta.setAggColumnAggAliasPairOfMaxMin(childAggMeta.getAggColumnAggAliasPairOfMaxMin());
     nodeMeta.setMaxminAggAlias(childAggMeta.getMaxminAggAlias());
-    nodeMeta.setScrambleTableTierColumnAlias(childAggMeta.getScrambleTableTierColumnAlias());
+    nodeMeta.setTierColumnForScramble(childAggMeta.getTierColumnForScramble());
     
     node.setAggMeta(nodeMeta);
   }

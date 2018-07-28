@@ -108,7 +108,7 @@ class TableSizeCountNode extends QueryNodeBase {
   public static final String TOTAL_COUNT_ALIAS_NAME = "verdictdbtotalcount";
 
   public TableSizeCountNode(String schemaName, String tableName) {
-    super(null);
+    super(-1, null);
     this.schemaName = schemaName;
     this.tableName = tableName;
   }

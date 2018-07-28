@@ -36,7 +36,7 @@ public class ColumnMetadataRetrievalNode extends ExecutableNodeBase {
   private String tokenKey;
 
   private ColumnMetadataRetrievalNode() {
-    super();
+    super(-1);
   }
 
   public static ColumnMetadataRetrievalNode create(

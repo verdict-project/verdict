@@ -36,7 +36,13 @@ public class QueryNodeBase extends ExecutableNodeBase {
   
   private Map<Long, Map<String, Object>> threadSafeStorage = new HashMap<>();
 
-  public QueryNodeBase(SelectQuery selectQuery) {
+  public QueryNodeBase(IdCreator idCreator, SelectQuery selectQuery) {
+    super(idCreator);
+    this.selectQuery = selectQuery;
+  }
+  
+  public QueryNodeBase(int uniqueId, SelectQuery selectQuery) {
+    super(uniqueId);
     this.selectQuery = selectQuery;
   }
 
@@ -98,7 +104,7 @@ public class QueryNodeBase extends ExecutableNodeBase {
 
   @Override
   public ExecutableNodeBase deepcopy() {
-    QueryNodeBase node = new QueryNodeBase(selectQuery);
+    QueryNodeBase node = new QueryNodeBase(uniqueId, selectQuery);
     copyFields(this, node);
     return node;
   }

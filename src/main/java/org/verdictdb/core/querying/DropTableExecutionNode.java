@@ -26,13 +26,13 @@ import org.verdictdb.exception.VerdictDBValueException;
 import java.util.List;
 
 public class DropTableExecutionNode extends ExecutableNodeBase {
-
-  public DropTableExecutionNode() {
-    super();
+  
+  public DropTableExecutionNode(int uniqueId) {
+    super(uniqueId);
   }
 
   public static DropTableExecutionNode create() {
-    DropTableExecutionNode node = new DropTableExecutionNode();
+    DropTableExecutionNode node = new DropTableExecutionNode(-1);
     return node;
   }
 
@@ -60,7 +60,7 @@ public class DropTableExecutionNode extends ExecutableNodeBase {
 
   @Override
   public ExecutableNodeBase deepcopy() {
-    DropTableExecutionNode node = new DropTableExecutionNode();
+    DropTableExecutionNode node = new DropTableExecutionNode(uniqueId);
     copyFields(this, node);
     return node;
   }

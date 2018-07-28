@@ -12,7 +12,7 @@ public class ExecutableNodeBaseTest {
 
   @Test
   public void testEquals() {
-    ExecutableNodeBase a = new ExecutableNodeBase();
+    ExecutableNodeBase a = new ExecutableNodeBase(-1);
     ExecutableNodeBase b = a;
     assertEquals(b, a);
   }
@@ -20,7 +20,7 @@ public class ExecutableNodeBaseTest {
   @Test
   public void testContains() {
     Map<ExecutableNodeBase, Integer> mymap = new HashMap<>();
-    ExecutableNodeBase a = new ExecutableNodeBase();
+    ExecutableNodeBase a = new ExecutableNodeBase(-1);
     mymap.put(a, 3);
     assertTrue(mymap.containsKey(a));
   }
