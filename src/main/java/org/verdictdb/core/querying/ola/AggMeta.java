@@ -51,6 +51,23 @@ public class AggMeta implements Serializable {
    */
   private Map<ScrambleMeta, String> tierColumnForScramble = new HashMap<>();
   
+  Map<String, String> maxminAggAlias = new HashMap<>();
+  
+  Map<SelectItem, List<ColumnOp>> aggColumn = new HashMap<>();
+  
+  // (agg function, argument), alias
+  Map<Pair<String, UnnamedColumn>, String> aggColumnAggAliasPair = new HashMap<>();
+  
+  Map<Pair<String, UnnamedColumn>, String> aggColumnAggAliasPairOfMaxMin = new HashMap<>();
+  
+  String tierColumnName;
+  
+  public AggMeta() { }
+  
+  public Set<String> getAllTierColumnAliases() {
+    return new HashSet<String>(tierColumnForScramble.values());
+  }
+  
   /**
    * Computes the scale factor for every combination of the tiers of involved scrambled tables.
    * The return value contains the scaling factor in terms of the original scrambled tables. The
@@ -73,7 +90,7 @@ public class AggMeta implements Serializable {
     
     return tierToScalingFactor;
   }
-  
+
   private List<TierCombination> generateAllTierCombinations(ScrambleMetaSet metaset) {
     List<TierCombination> combinations = new ArrayList<>();
     List<Pair<String, String>> scrambles = new ArrayList<>();
@@ -111,7 +128,7 @@ public class AggMeta implements Serializable {
     
     return combinations;
   }
-  
+
   /**
    * Computes the scaling ratio for a certain tier combination, which is simply the inverse of the
    * sampling probability.
@@ -130,7 +147,7 @@ public class AggMeta implements Serializable {
     }
     return ratio;
   }
-  
+
   private double ratioOfCube(HyperTableCube cube, ScrambleMetaSet metaset, TierCombination tiers) {
     double ratio = 1.0;
     for (Dimension dim : cube.getDimensions()) {
@@ -142,7 +159,7 @@ public class AggMeta implements Serializable {
     }
     return ratio;
   }
-  
+
   private double ratioOfDimension(Dimension dim, ScrambleMetaSet metaset, int tier) {
     String schemaName = dim.getSchemaName();
     String tableName = dim.getTableName();
@@ -159,21 +176,7 @@ public class AggMeta implements Serializable {
     }
     return ratio;
   }
-  
-  Map<String, String> maxminAggAlias = new HashMap<>();
-  
-  Map<SelectItem, List<ColumnOp>> aggColumn = new HashMap<>();
-  
-  // (agg function, argument), alias
-  Map<Pair<String, UnnamedColumn>, String> aggColumnAggAliasPair = new HashMap<>();
-  
-  Map<Pair<String, UnnamedColumn>, String> aggColumnAggAliasPairOfMaxMin = new HashMap<>();
-  
-  String tierColumnName;
-  
-  public AggMeta() {
-  }
-  
+
   public List<String> getAggAlias() {
     return aggAlias;
   }

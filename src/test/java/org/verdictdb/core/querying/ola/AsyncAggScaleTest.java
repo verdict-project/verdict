@@ -6,9 +6,11 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.connection.StaticMetaData;
+import org.verdictdb.core.execplan.ExecutableNode;
 import org.verdictdb.core.execplan.ExecutablePlanRunner;
 import org.verdictdb.core.execplan.ExecutionInfoToken;
 import org.verdictdb.core.querying.AggExecutionNode;
+import org.verdictdb.core.querying.ExecutableNodeBase;
 import org.verdictdb.core.querying.QueryExecutionPlan;
 import org.verdictdb.core.querying.QueryExecutionPlanFactory;
 import org.verdictdb.core.scrambling.ScrambleMeta;
@@ -219,14 +221,17 @@ public class AsyncAggScaleTest {
         + "where vt.\"verdictdbaggblock\" = 0 "
         + "group by \"verdictdb_tier_alias\"";
     assertEquals(expected, actual);
-
+  
+    ExecutableNodeBase combiner = queryExecutionPlan.getRoot().getSources().get(0).getSources().get(1);
     ExecutionInfoToken token1 = new ExecutionInfoToken();
     token1.setKeyValue("schemaName", "verdict_temp");
     token1.setKeyValue("tableName", "table1");
+    token1.setKeyValue("channel", combiner.getId()*1000);
     ExecutionInfoToken token2 = new ExecutionInfoToken();
     token2.setKeyValue("schemaName", "verdict_temp");
     token2.setKeyValue("tableName", "table2");
-    query = (CreateTableAsSelectQuery) queryExecutionPlan.getRoot().getSources().get(0).getSources().get(1).createQuery(Arrays.asList(token1, token2));
+    token2.setKeyValue("channel", combiner.getId()*1000 + 1);
+    query = (CreateTableAsSelectQuery) combiner.createQuery(Arrays.asList(token1, token2));
     actual = queryToSql.toSql(query.getSelect());
     actual = actual.replaceAll("vt\\d+", "vt");
     actual = actual.replaceAll("verdictdb_alias_\\d+_\\d+", "verdictdb_alias");
@@ -241,20 +246,26 @@ public class AsyncAggScaleTest {
                    "select * from \"verdict_temp\".\"table1\" as verdictdb_alias) as unionTable " +
                    "group by \"verdictdb_tier_alias\"";
     assertEquals(expected, actual);
-
-    ExecutionInfoToken token3 = queryExecutionPlan.getRoot().getSources().get(0).getSources().get(0).createToken(null);
-    query = (CreateTableAsSelectQuery) queryExecutionPlan.getRoot().getSources().get(0).createQuery(Arrays.asList(token3));
+  
+    ExecutableNodeBase aggNode = queryExecutionPlan.getRoot().getSources().get(0).getSources().get(0);
+    ExecutableNodeBase asyncNode = queryExecutionPlan.getRoot().getSources().get(0);
+    ExecutionInfoToken token3 = aggNode.createToken(null);
+    token3.setKeyValue("channel", asyncNode.getId()*1000);
+    query = (CreateTableAsSelectQuery) asyncNode.createQuery(Arrays.asList(token3));
     actual = queryToSql.toSql(query.getSelect());
     actual = actual.replaceAll("vt\\d+", "vt");
+    actual = actual.replaceAll("vc\\d+", "vc");
     actual = actual.replaceAll("verdictdb_alias_\\d+_\\d+", "verdictdb_alias");
     actual = actual.replaceAll("verdictdb_tier_alias_\\d+_\\d+", "verdictdb_tier_alias");
     actual = actual.replaceAll("verdictdbtemptable_\\d+_\\d+", "verdictdbtemptable");
     expected = "select (1 + (sum(verdictdb_internal_tier_consolidated.\"agg0\") / " +
                    "sum(verdictdb_internal_tier_consolidated.\"agg1\"))) * " +
-                   "sum(verdictdb_internal_tier_consolidated.\"agg0\") as \"vc4\" " +
+                   "sum(verdictdb_internal_tier_consolidated.\"agg0\") as \"vc\" " +
                    "from (" +
-                   "select 2.0000000000000000 * verdictdb_internal_before_scaling.\"agg0\" as \"agg0\", " +
-                   "2.0000000000000000 * verdictdb_internal_before_scaling.\"agg1\" as \"agg1\", " +
+                   "select (case when (verdictdb_internal_before_scaling.\"verdictdb_tier_alias\" = 0) then 2.0 else 1.0 end)" +
+                   " * verdictdb_internal_before_scaling.\"agg0\" as \"agg0\", " +
+                   "(case when (verdictdb_internal_before_scaling.\"verdictdb_tier_alias\" = 0) then 2.0 else 1.0 end)" +
+                   " * verdictdb_internal_before_scaling.\"agg1\" as \"agg1\", " +
                    "verdictdb_internal_before_scaling.\"verdictdb_tier_alias\" as \"verdictdb_tier_alias\" " +
                    "from \"verdictdb_temp\".\"verdictdbtemptable\" as verdictdb_internal_before_scaling) " +
                    "as verdictdb_internal_tier_consolidated";

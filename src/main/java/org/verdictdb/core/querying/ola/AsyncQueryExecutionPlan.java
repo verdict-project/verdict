@@ -226,6 +226,8 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
     ExecutableNodeBase newRoot =
         AsyncAggExecutionNode.create(idCreator, individualAggNodes, combiners, scrambleMeta);
     
+    // this newRoot must use the 
+    
 //    // Set hashmap of tier column alias for AsyncAggNode
 //    setTierColumnAlias((AsyncAggExecutionNode) newRoot);
 

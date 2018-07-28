@@ -18,6 +18,7 @@ package org.verdictdb.sqlwriter;
 
 import com.google.common.base.Joiner;
 import org.apache.commons.lang3.tuple.Pair;
+import org.verdictdb.commons.VerdictDBLogger;
 import org.verdictdb.core.sqlobject.*;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBTypeException;
@@ -36,6 +37,9 @@ public class CreateTableToSql {
   }
 
   public String toSql(CreateTableQuery query) throws VerdictDBException {
+    VerdictDBLogger logger = VerdictDBLogger.getLogger(this.getClass());
+    logger.debug("Converting the following sql object to string: " + query);
+    
     String sql;
     if (query instanceof CreateTableAsSelectQuery) {
       sql = createAsSelectQueryToSql((CreateTableAsSelectQuery) query);
