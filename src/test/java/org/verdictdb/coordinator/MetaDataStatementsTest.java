@@ -249,7 +249,7 @@ public class MetaDataStatementsTest {
     }
   }
 
-  //@Test
+  @Test
   public void showTablesTest() throws SQLException, VerdictDBException {
     String vcsql = "";
     String sql = "";
@@ -288,7 +288,7 @@ public class MetaDataStatementsTest {
     }
   }
 
-  //@Test
+  @Test
   public void describeColumnsTest() throws SQLException, VerdictDBException {
     String vcsql = "";
     String sql = "";
