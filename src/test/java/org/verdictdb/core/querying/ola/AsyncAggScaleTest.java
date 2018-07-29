@@ -115,7 +115,7 @@ public class AsyncAggScaleTest {
     staticMetaData.addTableData(new StaticMetaData.TableInfo(originalSchema, smallTable), arr);
   }
 
-  //@Test
+  @Test
   public void ScrambleTableTest() throws VerdictDBException,SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select sum(value) from originalTable_scrambled";
