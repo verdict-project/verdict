@@ -57,7 +57,7 @@ public class MetaDataStatementsTest {
 
   private static final String MYSQL_USER = "root";
 
-  private static final String MYSQL_PASSWORD = "zhongshucheng123";
+  private static final String MYSQL_PASSWORD = "";
 
   private static final String IMPALA_HOST;
 
@@ -86,7 +86,7 @@ public class MetaDataStatementsTest {
 
   private static final String POSTGRES_USER = "postgres";
 
-  private static final String POSTGRES_PASSWORD = "zhongshucheng123";
+  private static final String POSTGRES_PASSWORD = "";
 
   static {
     String env = System.getenv("BUILD_ENV");
