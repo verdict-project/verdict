@@ -72,6 +72,9 @@ public class AsyncAggExecutionNode extends ProjectionNode {
 
   private Map<Integer, String> scrambledTableTierInfo;
 
+  // This is the Map that maps the aggregation alias to its column contents
+  HashMap<String, UnnamedColumn> aggContents = new HashMap<>();
+
   int tableNum = 1;
 
   private AsyncAggExecutionNode(IdCreator idCreator) {
@@ -128,7 +131,9 @@ public class AsyncAggExecutionNode extends ProjectionNode {
         createBaseQueryForReplacement(sourceAggMeta, sourceSelectList, placeholderTable, meta);
     node.aggColumns = aggColumnsAndQuery.getLeft();
     SelectQuery subquery = (SelectQuery) aggColumnsAndQuery.getMiddle();
-    node.selectQuery = sumUpTierGroup(subquery, sourceAggMeta);
+    Pair<SelectQuery, HashMap<String, UnnamedColumn>> pair = sumUpTierGroup(subquery, sourceAggMeta);
+    node.selectQuery = pair.getLeft();
+    node.aggContents = pair.getRight();
     node.scrambledTableTierInfo = new ImmutableMap.Builder<Integer, String>()
         .putAll(aggColumnsAndQuery.getRight())
         .build();
@@ -553,7 +558,7 @@ public class AsyncAggExecutionNode extends ProjectionNode {
   private SelectQuery replaceWithOriginalSelectList(SelectQuery queryToReplace, AggMeta aggMeta) {
     List<SelectItem> originalSelectList = aggMeta.getOriginalSelectList();
     Map<SelectItem, List<ColumnOp>> aggColumn = aggMeta.getAggColumn();
-    HashMap<String, UnnamedColumn> aggContents = new HashMap<>();
+  /*  HashMap<String, UnnamedColumn> aggContents = new HashMap<>();
     for (SelectItem sel : queryToReplace.getSelectList()) {
       // this column is a basic aggregate column
       if (sel instanceof AliasedColumn
@@ -563,7 +568,7 @@ public class AsyncAggExecutionNode extends ProjectionNode {
           && aggMeta.getMaxminAggAlias().keySet().contains(((AliasedColumn) sel).getAliasName())) {
         aggContents.put(((AliasedColumn) sel).getAliasName(), ((AliasedColumn) sel).getColumn());
       }
-    }
+    }*/
 
     for (SelectItem sel : originalSelectList) {
       // Case 1: aggregate column
@@ -638,14 +643,16 @@ public class AsyncAggExecutionNode extends ProjectionNode {
    * Create a sum-up query that sum the results from all tier permutations
    *
    * @param subquery
-   * @return select query that sum all the tier results
+   * @return select a pair that key is the query that sum all the tier results and
+   *         value is the aggContents that record the aggregation column alias and the column itself
    */
-  private static SelectQuery sumUpTierGroup(
+  private static Pair<SelectQuery, HashMap<String, UnnamedColumn>> sumUpTierGroup(
       SelectQuery subquery,
       AggMeta sourceAggMeta) {
 
     List<String> aggAlias = sourceAggMeta.getAggAlias();
     Set<String> tierColumnAliases = sourceAggMeta.getAllTierColumnAliases();
+    HashMap<String, UnnamedColumn> aggContents = new HashMap<>();
 
     List<String> groupby = new ArrayList<>();
     List<SelectItem> newSelectlist = new ArrayList<>();
@@ -653,10 +660,12 @@ public class AsyncAggExecutionNode extends ProjectionNode {
       if (sel instanceof AliasedColumn) {
         // If this is a basic aggregation, we need to sum up
         if (aggAlias.contains(((AliasedColumn) sel).getAliasName())) {
+          UnnamedColumn col = ColumnOp.sum(new BaseColumn(TIER_CONSOLIDATED_TABLE_ALIAS, ((AliasedColumn) sel).getAliasName()));
           newSelectlist.add(
               new AliasedColumn(
-                  ColumnOp.sum(new BaseColumn(TIER_CONSOLIDATED_TABLE_ALIAS, ((AliasedColumn) sel).getAliasName())),
+                  col,
                   ((AliasedColumn) sel).getAliasName()));
+          aggContents.put(((AliasedColumn) sel).getAliasName(), col);
         }
         // If it is a max/min aggregation, we need to maximize/minimize
         else if (sourceAggMeta
@@ -664,12 +673,13 @@ public class AsyncAggExecutionNode extends ProjectionNode {
             .keySet()
             .contains(((AliasedColumn) sel).getAliasName())) {
           String opType = sourceAggMeta.getMaxminAggAlias().get(((AliasedColumn) sel).getAliasName());
+          UnnamedColumn col = new ColumnOp(opType,
+              new BaseColumn(TIER_CONSOLIDATED_TABLE_ALIAS, ((AliasedColumn) sel).getAliasName()));
           newSelectlist.add(
               new AliasedColumn(
-                  new ColumnOp(
-                      opType,
-                      new BaseColumn(TIER_CONSOLIDATED_TABLE_ALIAS, ((AliasedColumn) sel).getAliasName())),
+                  col,
                   ((AliasedColumn) sel).getAliasName()));
+          aggContents.put(((AliasedColumn) sel).getAliasName(), col);
         } else {
           // if it is not a tier column, we need to put it in the group by list
           if (!tierColumnAliases.contains(((AliasedColumn) sel).getAliasName())) {
@@ -687,7 +697,7 @@ public class AsyncAggExecutionNode extends ProjectionNode {
     for (String group : groupby) {
       query.addGroupby(new AliasReference(group));
     }
-    return query;
+    return new ImmutablePair<>(query, aggContents);
   }
 
   @Override
