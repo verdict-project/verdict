@@ -73,14 +73,18 @@ public class SelectAllExecutionNodeTest {
 );
     SelectQuery rewritten = SelectQuery.create(
         Arrays.<SelectItem>asList(
-            new AliasedColumn(new BaseColumn("placeholderSchemaName", aliasName, "a"), "a"))
-        , new BaseTable("placeholderSchemaName", "placeholderTableName", aliasName));
+            new AliasedColumn(new BaseColumn("placeholderSchema_1_0", aliasName, "a"), "a"))
+        , new BaseTable("placeholderSchema_1_0", "placeholderTable_1_0", aliasName));
+    String rewrittenStr = rewritten.toString();
+    String actualStr = ((SubqueryColumn)
+        ((ColumnOp)
+            ((QueryNodeBase) node.getExecutableNodeBaseDependent(0)).getSelectQuery()
+                .getFilter().get()).getOperand(1)).getSubquery().toString();
+    actualStr = actualStr.replaceAll("verdictdb_alias_\\d+_\\d+", "verdictdb_alias");
+    rewrittenStr = rewrittenStr.replaceAll("verdictdb_alias_\\d+_\\d+", "verdictdb_alias");
     assertEquals(
-        rewritten, 
-        ((SubqueryColumn)
-            ((ColumnOp) 
-                ((QueryNodeBase) node.getExecutableNodeBaseDependent(0)).getSelectQuery()
-                .getFilter().get()).getOperand(1)).getSubquery());
+        rewrittenStr,
+        actualStr);
   }
 
   //

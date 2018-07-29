@@ -77,10 +77,18 @@ public class AggExecutionNodeTest {
         Arrays.<SelectItem>asList(
             new AliasedColumn(new BaseColumn(expectedPlaceholderSchemaName, aliasName, "a"), "a"))
         , new BaseTable(expectedPlaceholderSchemaName, expectedPlaceholderTableName, aliasName));
+    String rewrittenStr = rewritten.toString();
+    String actualStr = ((SubqueryColumn) ((ColumnOp) node.getSelectQuery().getFilter().get()).getOperand(1))
+        .getSubquery().toString();
+    actualStr = actualStr.replaceAll("verdictdb_alias_\\d+_\\d+", "verdictdb_alias");
+    actualStr = actualStr.replaceAll("placeholderSchema_\\d+_\\d+", "placeholderSchema");
+    actualStr = actualStr.replaceAll("placeholderTable_\\d+_\\d+", "placeholderTable");
+    rewrittenStr = rewrittenStr.replaceAll("verdictdb_alias_\\d+_\\d+", "verdictdb_alias");
+    rewrittenStr = rewrittenStr.replaceAll("placeholderSchema_\\d+_\\d+", "placeholderSchema");
+    rewrittenStr = rewrittenStr.replaceAll("placeholderTable_\\d+_\\d+", "placeholderTable");
     assertEquals(
-        rewritten,
-        ((SubqueryColumn) ((ColumnOp) node.getSelectQuery().getFilter().get()).getOperand(1))
-            .getSubquery());
+        rewrittenStr,
+        actualStr);
 
   }
 

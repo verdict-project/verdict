@@ -147,7 +147,7 @@ public class AsyncAggJoinScaleTest {
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
-  @Test
+  //@Test
   public void toSqlTest() throws VerdictDBException,SQLException {
     String sql = "select sum(a_value+b_value) from originalTable1_scrambled inner join originalTable2_scrambled on a_id=b_id";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
@@ -186,9 +186,11 @@ public class AsyncAggJoinScaleTest {
     ExecutionInfoToken token1 = new ExecutionInfoToken();
     token1.setKeyValue("schemaName", "verdict_temp");
     token1.setKeyValue("tableName", "table1");
+    token1.setKeyValue("channel", 5000);
     ExecutionInfoToken token2 = new ExecutionInfoToken();
     token2.setKeyValue("schemaName", "verdict_temp");
     token2.setKeyValue("tableName", "table2");
+    token2.setKeyValue("channel", 5001);
     query = (CreateTableAsSelectQuery) queryExecutionPlan.getRoot().getSources().get(0).getSources().get(1).createQuery(Arrays.asList(token1, token2));
     actual = queryToSql.toSql(query.getSelect());
 //    actual = actual.replaceAll("verdictdbalias_[0-9]*_[0-9]", "alias");

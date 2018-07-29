@@ -73,9 +73,17 @@ public class ProjectionExecutionNodeTest {
     assertEquals(1, node.getExecutableNodeBaseDependents().size());
     SelectQuery rewritten = SelectQuery.create(
         Arrays.<SelectItem>asList(
-            new AliasedColumn(new BaseColumn("placeholderSchemaName", aliasName, "a"), "a"))
-        , new BaseTable("placeholderSchemaName", "placeholderTableName", aliasName));
-    assertEquals(rewritten, ((SubqueryColumn)((ColumnOp) node.getSelectQuery().getFilter().get()).getOperand(1)).getSubquery());
+            new AliasedColumn(new BaseColumn("placeholderSchema", aliasName, "a"), "a"))
+        , new BaseTable("placeholderSchema", "placeholderTable", aliasName));
+    String rewrittenStr = rewritten.toString();
+    String actualStr = ((SubqueryColumn)((ColumnOp) node.getSelectQuery().getFilter().get()).getOperand(1)).getSubquery().toString();
+    actualStr = actualStr.replaceAll("verdictdb_alias_\\d+_\\d+", "verdictdb_alias");
+    actualStr = actualStr.replaceAll("placeholderSchema_\\d+_\\d+", "placeholderSchema");
+    actualStr = actualStr.replaceAll("placeholderTable_\\d+_\\d+", "placeholderTable");
+    rewrittenStr = rewrittenStr.replaceAll("verdictdb_alias_\\d+_\\d+", "verdictdb_alias");
+    rewrittenStr = rewrittenStr.replaceAll("placeholderSchema_\\d+_\\d+", "placeholderSchema");
+    rewrittenStr = rewrittenStr.replaceAll("placeholderTable_\\d+_\\d+", "placeholderTable");
+    assertEquals(rewrittenStr, actualStr);
   }
 
   //
