@@ -147,7 +147,7 @@ public class AsyncAggExecutionNode extends ProjectionNode {
     //        calculateScaleFactor(sourceAggMeta, scrambledTableTierInfo);
 
     Map<UnnamedColumn, Double> conditionToScaleFactor =
-        computeScaleFactorForTierCombinations(sourceAggMeta, INNER_RAW_AGG_TABLE_ALIAS);
+        composeScaleFactorForTierCombinations(sourceAggMeta, INNER_RAW_AGG_TABLE_ALIAS);
 
 //    // we store the original aggColumns to restore it later.
 //    List<ColumnOp> clonedAggColumns = new ArrayList<>();
@@ -248,11 +248,15 @@ public class AsyncAggExecutionNode extends ProjectionNode {
   }
 
   /**
+   * Compose pairs of tier indicator and its associated scaling factor. The function generates
+   * the operands needed for writing (by the caller) the following case-when clause:
+   * "case when cond1 then scale1 when cond2 else scale2 end" clause.
    *
    * @param sourceAggMeta The aggmeta of the downstream node
-   * @return Map of a filtering condition to the scaling factor
+   * @return Map of a filtering condition to the scaling factor; the filtering conditions
+   * correspond to cond1, cond2, etc.; the scaling factors correspond to scale1, scale2, etc.
    */
-  private Map<UnnamedColumn, Double> computeScaleFactorForTierCombinations(
+  private Map<UnnamedColumn, Double> composeScaleFactorForTierCombinations(
       AggMeta sourceAggMeta, String sourceTableAlias) {
     Map<UnnamedColumn, Double> scalingFactorPerTier = new HashMap<>();
 
