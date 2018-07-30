@@ -77,6 +77,9 @@ public class TierCombination implements Iterable<Map.Entry<Pair<String, String>,
         return yy.compareTo(xx);
       }
     }
-    return -1;
+    if (keysets1.length==keysets2.length) {
+      return 0;
+    }
+    else return -1;
   }
 }
