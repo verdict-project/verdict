@@ -379,9 +379,9 @@ public class TpchExecutionPlanTest {
         new ColumnOp("date", ConstantColumn.valueOf("'1998-12-01'"))
     )));
     expected.addGroupby(Arrays.<GroupingAttribute>asList(
-        new AliasReference("l_orderkey"),
-        new AliasReference("o_orderdate"),
-        new AliasReference("o_shippriority")
+        new BaseColumn("l_orderkey"),
+        new BaseColumn("o_orderdate"),
+        new BaseColumn("o_shippriority")
     ));
     expected.addOrderby(Arrays.<OrderbyAttribute>asList(
         new OrderbyAttribute("revenue", "desc"),
@@ -533,7 +533,7 @@ public class TpchExecutionPlanTest {
         new BaseColumn("tpch", "orders","vt2", "o_orderdate"),
         new ColumnOp("date", ConstantColumn.valueOf("'1998-12-01'"))
     )));
-    expected.addGroupby(new AliasReference("n_name"));
+    expected.addGroupby(new BaseColumn("n_name"));
     expected.addOrderby(new OrderbyAttribute("revenue", "desc"));
     expected.addLimit(ConstantColumn.valueOf(1));
     assertEquals(expected, ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0)).selectQuery);
@@ -732,9 +732,9 @@ public class TpchExecutionPlanTest {
         ),
         new BaseTable("placeholderSchema_1_0", "placeholderTable_1_0", "vt1"));
     expected.addGroupby(Arrays.<GroupingAttribute>asList(
-        new AliasReference("supp_nation"),
-        new AliasReference("cust_nation"),
-        new AliasReference("l_year")
+        new BaseColumn("supp_nation"),
+        new BaseColumn("cust_nation"),
+        new BaseColumn("l_year")
     ));
     expected.addOrderby(Arrays.<OrderbyAttribute>asList(
         new OrderbyAttribute("supp_nation"),
@@ -878,7 +878,7 @@ public class TpchExecutionPlanTest {
 
         ),
         new BaseTable("placeholderSchema_1_0", "placeholderTable_1_0", "vt1"));
-    expected.addGroupby(new AliasReference("o_year"));
+    expected.addGroupby(new BaseColumn("o_year"));
     expected.addOrderby(new OrderbyAttribute("o_year"));
     expected.addLimit(ConstantColumn.valueOf(1));
     assertEquals(expected, ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0)).selectQuery);
@@ -997,7 +997,7 @@ public class TpchExecutionPlanTest {
             new AliasedColumn(new ColumnOp("sum", new BaseColumn("tpch","vt1", "amount")), "sum_profit")
         ),
         new BaseTable("placeholderSchema_1_0", "placeholderTable_1_0", "vt1"));
-    expected.addGroupby(Arrays.<GroupingAttribute>asList(new AliasReference("nation"), new AliasReference("o_year")));
+    expected.addGroupby(Arrays.<GroupingAttribute>asList(new BaseColumn("nation"), new BaseColumn("o_year")));
     expected.addOrderby(Arrays.<OrderbyAttribute>asList(new OrderbyAttribute("nation"),
         new OrderbyAttribute("o_year", "desc")));
     expected.addLimit(ConstantColumn.valueOf(1));
@@ -1104,13 +1104,13 @@ public class TpchExecutionPlanTest {
         new BaseColumn("tpch", "nation","vt4", "n_nationkey")
     )));
     expected.addGroupby(Arrays.<GroupingAttribute>asList(
-        new AliasReference("c_custkey"),
-        new AliasReference("c_name"),
-        new AliasReference("c_acctbal"),
-        new AliasReference("c_phone"),
-        new AliasReference("n_name"),
-        new AliasReference("c_address"),
-        new AliasReference("c_comment")
+        new BaseColumn("c_custkey"),
+        new BaseColumn("c_name"),
+        new BaseColumn("c_acctbal"),
+        new BaseColumn("c_phone"),
+        new BaseColumn("n_name"),
+        new BaseColumn("c_address"),
+        new BaseColumn("c_comment")
     ));
     expected.addOrderby(new OrderbyAttribute("revenue", "desc"));
     expected.addLimit(ConstantColumn.valueOf(20));
@@ -1278,7 +1278,7 @@ public class TpchExecutionPlanTest {
             new AliasedColumn(new ColumnOp("count", new BaseColumn("tpch", "orders", "vt2", "o_orderkey")), "c_count")
         ), join
     );
-    expected.addGroupby(new AliasReference("c_custkey"));
+    expected.addGroupby(new BaseColumn("c_custkey"));
     assertEquals(expected, ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0)).selectQuery);
 
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
@@ -1401,7 +1401,7 @@ public class TpchExecutionPlanTest {
         new BaseColumn("tpch", "lineitem", "vt1","l_shipdate"),
         new ColumnOp("date", ConstantColumn.valueOf("'1999-01-01'"))
     )));
-    expected.addGroupby(new AliasReference("l_suppkey"));
+    expected.addGroupby(new BaseColumn("l_suppkey"));
     assertEquals(
         expected,
         ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0)).getSelectQuery());
@@ -1480,7 +1480,7 @@ public class TpchExecutionPlanTest {
             )), "t_avg_quantity")
         ),
         new BaseTable("tpch", "lineitem", "vt3"));
-    expected.addGroupby(new AliasReference("t_partkey"));
+    expected.addGroupby(new BaseColumn("l_partkey"));
     expected.setAliasName("vt2");
     assertEquals(expected, ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).selectQuery);
 
@@ -1543,7 +1543,7 @@ public class TpchExecutionPlanTest {
             new AliasedColumn(new BaseColumn("tpch", "lineitem","vt4", "l_orderkey"), "l_orderkey"),
             new AliasedColumn(new ColumnOp("sum", new BaseColumn("tpch", "lineitem","vt4", "l_quantity")), "t_sum_quantity")
         ), new BaseTable("tpch", "lineitem", "vt4"));
-    expected.addGroupby(new AliasReference("l_orderkey"));
+    expected.addGroupby(new BaseColumn("l_orderkey"));
     expected.setAliasName("vt3");
     expected.addFilterByAnd(new ColumnOp("is_not_null",
         new BaseColumn("tpch", "lineitem","vt4", "l_orderkey")
@@ -1840,8 +1840,8 @@ public class TpchExecutionPlanTest {
         new BaseColumn("tpch", "lineitem","vt5", "l_shipdate"),
         ConstantColumn.valueOf("'1995-01-01'")
     )));
-    expected.addGroupby(new AliasReference("l_partkey"));
-    expected.addGroupby(new AliasReference("l_suppkey"));
+    expected.addGroupby(new BaseColumn("l_partkey"));
+    expected.addGroupby(new BaseColumn("l_suppkey"));
     expected.setAliasName("vt4");
     assertEquals(expected, ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).selectQuery);
     assertEquals(new BaseTable("placeholderSchema_1_0", "placeholderTable_1_0", "vt4"),
