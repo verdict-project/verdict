@@ -656,15 +656,16 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
           String tierColumnName = scrambleMetaSet.getTierColumn(schemaName, tableName);
           String newTierColumnAlias = generateTierColumnAliasName();
 //          VERDICTDB_TIER_COLUMN_NAME + verdictdbTierIndentiferNum++;
+          BaseColumn tierColumn = new BaseColumn(
+              schemaName,
+              tableName,
+              table.getAliasName().get(),
+              tierColumnName);
           newSelectList.add(
               new AliasedColumn(
-                  new BaseColumn(
-                      schemaName,
-                      tableName,
-                      table.getAliasName().get(),
-                      tierColumnName),
+                  tierColumn,
                   newTierColumnAlias));
-          query.addGroupby(new AliasReference(newTierColumnAlias));
+          query.addGroupby(tierColumn);
   
           // Add to the tier column Map
           scrambleMetaAnditsAlias.put(singleMeta, newTierColumnAlias);
@@ -680,16 +681,16 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
               String tierColumnName = scrambleMetaSet.getTierColumn(schemaName, tableName);
               String newTierColumnAlias = generateTierColumnAliasName();
 //              VERDICTDB_TIER_COLUMN_NAME + verdictdbTierIndentiferNum++;
-              
+              BaseColumn tierColumn = new BaseColumn(
+                  schemaName,
+                  tableName,
+                  jointable.getAliasName().get(),
+                  tierColumnName);
               newSelectList.add(
                   new AliasedColumn(
-                      new BaseColumn(
-                          schemaName,
-                          tableName,
-                          jointable.getAliasName().get(),
-                          tierColumnName),
+                      tierColumn,
                       newTierColumnAlias));
-              query.addGroupby(new AliasReference(newTierColumnAlias));
+              query.addGroupby(tierColumn);
   
               // Add to the tier column Map
               scrambleMetaAnditsAlias.put(singleMeta, newTierColumnAlias);

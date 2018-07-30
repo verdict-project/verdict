@@ -147,7 +147,7 @@ public class AsyncAggJoinScaleTest {
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
-  //@Test
+  @Test
   public void toSqlTest() throws VerdictDBException,SQLException {
     String sql = "select sum(a_value+b_value) from originalTable1_scrambled inner join originalTable2_scrambled on a_id=b_id";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
@@ -180,7 +180,7 @@ public class AsyncAggJoinScaleTest {
                             "on (vt.\"a_id\" = vt.\"b_id\") " +
                             "where ((vt.\"verdictdbaggblock\" >= 0) " +
                             "and (vt.\"verdictdbaggblock\" <= 1)) and (vt.\"verdictdbaggblock\" = 0) " +
-                            "group by \"verdictdb_tier_alias\", \"verdictdb_tier_alias\"";
+                            "group by vt.\"verdictdbtier\", vt.\"verdictdbtier\"";
     assertEquals(exepected2, actual);
 
     ExecutionInfoToken token1 = new ExecutionInfoToken();
@@ -206,6 +206,7 @@ public class AsyncAggJoinScaleTest {
     assertEquals(expected, actual);
 
     ExecutionInfoToken token3 = queryExecutionPlan.getRoot().getSources().get(0).getSources().get(0).createToken(null);
+    token3.setKeyValue("channel", 11000);
     query = (CreateTableAsSelectQuery) queryExecutionPlan.getRoot().getSources().get(0).createQuery(Arrays.asList(token3));
     actual = queryToSql.toSql(query.getSelect());
 //    actual = actual.replaceAll("verdictdbtemptable_[0-9]*_[0-9]", "alias");
@@ -213,13 +214,18 @@ public class AsyncAggJoinScaleTest {
     actual = actual.replaceAll("verdictdb_alias_\\d+_\\d+", "verdictdb_alias");
     actual = actual.replaceAll("verdictdbtemptable_\\d+_\\d+", "verdictdbtemptable");
     actual = actual.replaceAll("s\\d+", "ss");
+
     expected =
         "select sum(verdictdb_internal_tier_consolidated.\"agg0\") as \"ss\" " +
-            "from (select 2.0000000000000000 * verdictdb_internal_before_scaling.\"agg0\" as \"agg0\", " +
-                   "verdictdb_internal_before_scaling.\"verdictdb_tier_alias\" as \"verdictdb_tier_alias\", " +
+            "from " +
+            "(select (case when ((verdictdb_internal_before_scaling.\"verdictdb_tier_alias\" = 0) " +
+            "and (verdictdb_internal_before_scaling.\"verdictdb_tier_alias\" = 0)) then 2.0 else 1.0 end) * " +
+            "verdictdb_internal_before_scaling.\"agg0\" as \"agg0\", " +
+            "verdictdb_internal_before_scaling.\"verdictdb_tier_alias\" as \"verdictdb_tier_alias\", " +
             "verdictdb_internal_before_scaling.\"verdictdb_tier_alias\" as \"verdictdb_tier_alias\" " +
-            "from \"verdictdb_temp\".\"verdictdbtemptable\" as verdictdb_internal_before_scaling" +
-            ") as verdictdb_internal_tier_consolidated";
+            "from " +
+            "\"verdictdb_temp\".\"verdictdbtemptable\" as " +
+            "verdictdb_internal_before_scaling) as verdictdb_internal_tier_consolidated";
     assertEquals(expected, actual);
   }
 }

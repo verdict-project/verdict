@@ -21,6 +21,7 @@ import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
+import org.codehaus.jackson.map.Serializers;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.core.execplan.ExecutionInfoToken;
 import org.verdictdb.core.querying.*;
@@ -72,7 +73,11 @@ public class AsyncAggExecutionNode extends ProjectionNode {
 
   private Map<Integer, String> scrambledTableTierInfo;
 
-  // This is the Map that maps the aggregation alias to its column contents
+  /**
+   * This is the Map that maps the aggregation alias to its column contents.
+   * For example, if one basic aggregate column in the aggregate node is sum(value) as agg0,
+   * it will record [agg0, sum(value)].
+   */
   HashMap<String, UnnamedColumn> aggContents = new HashMap<>();
 
   int tableNum = 1;
@@ -654,7 +659,7 @@ public class AsyncAggExecutionNode extends ProjectionNode {
     Set<String> tierColumnAliases = sourceAggMeta.getAllTierColumnAliases();
     HashMap<String, UnnamedColumn> aggContents = new HashMap<>();
 
-    List<String> groupby = new ArrayList<>();
+    List<GroupingAttribute> groupby = new ArrayList<>();
     List<SelectItem> newSelectlist = new ArrayList<>();
     for (SelectItem sel : subquery.getSelectList()) {
       if (sel instanceof AliasedColumn) {
@@ -683,19 +688,20 @@ public class AsyncAggExecutionNode extends ProjectionNode {
         } else {
           // if it is not a tier column, we need to put it in the group by list
           if (!tierColumnAliases.contains(((AliasedColumn) sel).getAliasName())) {
+            UnnamedColumn newcol = new BaseColumn(TIER_CONSOLIDATED_TABLE_ALIAS, ((AliasedColumn) sel).getAliasName());
             newSelectlist.add(
                 new AliasedColumn(
-                    new BaseColumn(TIER_CONSOLIDATED_TABLE_ALIAS, ((AliasedColumn) sel).getAliasName()),
+                    newcol,
                     ((AliasedColumn) sel).getAliasName()));
-            groupby.add(((AliasedColumn) sel).getAliasName());
+            groupby.add(newcol);
           }
         }
       }
     }
     subquery.setAliasName(TIER_CONSOLIDATED_TABLE_ALIAS);
     SelectQuery query = SelectQuery.create(newSelectlist, subquery);
-    for (String group : groupby) {
-      query.addGroupby(new AliasReference(group));
+    for (GroupingAttribute group : groupby) {
+      query.addGroupby(group);
     }
     return new ImmutablePair<>(query, aggContents);
   }

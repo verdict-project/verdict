@@ -219,7 +219,7 @@ public class AsyncAggScaleTest {
         + "count(*) as \"agg1\", vt.\"verdictdbtier\" as \"verdictdb_tier_alias\" "
         + "from \"originalSchema\".\"originalTable_scrambled\" as vt "
         + "where vt.\"verdictdbaggblock\" = 0 "
-        + "group by \"verdictdb_tier_alias\"";
+        + "group by vt.\"verdictdbtier\"";
     assertEquals(expected, actual);
   
     ExecutableNodeBase combiner = queryExecutionPlan.getRoot().getSources().get(0).getSources().get(1);

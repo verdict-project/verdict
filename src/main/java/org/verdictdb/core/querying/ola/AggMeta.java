@@ -167,7 +167,7 @@ public class AggMeta implements Serializable {
     int end = dim.getEnd();
     ScrambleMeta meta = metaset.getSingleMeta(schemaName, tableName);
     List<Double> cumulDist = meta.getCumulativeDistributionForTier(tier);
-    
+
     double ratio;
     if (begin == 0) {
       ratio = cumulDist.get(end);
