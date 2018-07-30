@@ -254,8 +254,26 @@ public class RelationStandardizer {
         } else newGroupby.add(g);
       }
       return newGroupby;
+    } else {
+      for (GroupingAttribute g : groupingAttributeList) {
+        if (g instanceof ConstantColumn) {
+          int groupIndex = groupingAttributeList.indexOf(g);
+          // replace index with column alias
+          String value = (String) ((ConstantColumn) g).getValue();
+          try {
+            Integer.parseInt(value);
+          } catch (NumberFormatException e) {
+            groupingAttributeList.set(groupIndex, new AliasReference(value));
+            continue;
+          }
+          int index = Integer.valueOf(value);
+          AliasedColumn col = (AliasedColumn) selectItems.get(index - 1);
+          UnnamedColumn column = col.getColumn();
+          groupingAttributeList.set(groupIndex, column);
+        }
+      }
     }
-    else return groupingAttributeList;
+    return groupingAttributeList;
   }
 
   private List<OrderbyAttribute> replaceOrderby(

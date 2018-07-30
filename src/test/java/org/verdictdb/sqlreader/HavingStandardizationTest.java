@@ -159,7 +159,7 @@ public class HavingStandardizationTest {
             + "where "
             + "(vt1.`ps_suppkey` = vt2.`s_suppkey`) "
             + "and (vt2.`s_nationkey` = vt3.`n_nationkey`) "
-            + "group by `groupkey` "
+            + "group by `ps_partkey` * 2 "
             + "having `value` > 10 "
             + "order by `value` desc";
     assertEquals(expected, actual);
@@ -186,7 +186,7 @@ public class HavingStandardizationTest {
             + "vt1.`ps_supplycost` as `g2`, "
             + "count(*) as `c` "
             + "from `tpch`.`partsupp` as vt1 "
-            + "group by `vt1`.`ps_partkey`, `vt1`.`ps_supplycost`";
+            + "group by vt1.`ps_partkey`, vt1.`ps_supplycost`";
     assertEquals(expected, actual);
   }
 }
