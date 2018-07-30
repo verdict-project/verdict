@@ -16,6 +16,12 @@
 
 package org.verdictdb.coordinator;
 
+import static org.verdictdb.coordinator.VerdictSingleResultFromListData.createWithSingleColumn;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.VerdictContext;
@@ -25,12 +31,6 @@ import org.verdictdb.exception.VerdictDBTypeException;
 import org.verdictdb.parser.VerdictSQLParser;
 import org.verdictdb.parser.VerdictSQLParserBaseVisitor;
 import org.verdictdb.sqlreader.NonValidatingSQLParser;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import static org.verdictdb.coordinator.VerdictSingleResultFromListData.createWithSingleColumn;
 
 /**
  * Stores the context for a single query execution. Includes both scrambling query and select query.

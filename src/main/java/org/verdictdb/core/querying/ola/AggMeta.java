@@ -16,6 +16,14 @@
 
 package org.verdictdb.core.querying.ola;
 
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import org.apache.commons.lang3.tuple.Pair;
@@ -25,8 +33,9 @@ import org.verdictdb.core.sqlobject.ColumnOp;
 import org.verdictdb.core.sqlobject.SelectItem;
 import org.verdictdb.core.sqlobject.UnnamedColumn;
 
-import java.io.Serializable;
-import java.util.*;
+import com.google.common.collect.DiscreteDomains;
+import com.google.common.collect.Ranges;
+import com.google.common.collect.Sets;
 
 /**
  * Use for store hyper table cube and aggregate column alias name of individual aggregate node and
@@ -91,7 +100,7 @@ public class AggMeta implements Serializable {
     return tierToScalingFactor;
   }
 
-  private List<TierCombination> generateAllTierCombinations(ScrambleMetaSet metaset) {
+  List<TierCombination> generateAllTierCombinations(ScrambleMetaSet metaset) {
     List<TierCombination> combinations = new ArrayList<>();
     List<Pair<String, String>> scrambles = new ArrayList<>();
     List<Integer> tierCounts = new ArrayList<>();
@@ -101,30 +110,51 @@ public class AggMeta implements Serializable {
       scrambles.add(Pair.of(schemaName, tableName));
       tierCounts.add(meta.getNumberOfTiers());
     }
-  
-    List<Integer> currentTierNumbers = new ArrayList<>(Collections.nCopies(tierCounts.size(), 0));
-    while (true) {
-      // add the tier permutation for the current
-      List<Integer> numbers = new ArrayList<>(currentTierNumbers);
-      TierCombination comb = new TierCombination(scrambles, numbers);
-      combinations.add(comb);
     
-      // increment the tier permutation by one.
-      int lastItemIndex = currentTierNumbers.size() - 1;
-      boolean carryOverExists = true;
-      for (int i = lastItemIndex; i >= 0; i--) {
-        if (carryOverExists) {
-          currentTierNumbers.set(i, currentTierNumbers.get(i) + 1);
-        }
-  
-        carryOverExists = currentTierNumbers.get(i).equals(tierCounts.get(i));
-      }
-    
-      // the existence of the carry over indicates that we have covered all combinations.
-      if (carryOverExists) {
-        break;
-      }
+    // create individual tier number sets; this will be the argument for the cartesian product
+    List<Set<Integer>> tierLists = new ArrayList<>();
+    for (int c : tierCounts) {
+      Set<Integer> tiers = Ranges.closedOpen(0, c).asSet(DiscreteDomains.integers());
+      tierLists.add(tiers);
     }
+    Set<List<Integer>> product = Sets.cartesianProduct(tierLists);
+    
+    // convert the product to tier combination object
+    for (List<Integer> c : product) {
+      TierCombination comb = new TierCombination(scrambles, c);
+      combinations.add(comb);
+    }
+  
+//    List<Integer> currentTierNumbers = new ArrayList<>(Collections.nCopies(tierCounts.size(), 0));
+//    while (true) {
+//      // add the tier permutation for the current
+//      List<Integer> numbers = new ArrayList<>(currentTierNumbers);
+//      TierCombination comb = new TierCombination(scrambles, numbers);
+//      combinations.add(comb);
+//    
+//      // increment the tier permutation by one.
+//      int lastItemIndex = currentTierNumbers.size() - 1;
+//      currentTierNumbers.set(lastItemIndex, currentTierNumbers.get(lastItemIndex) + 1);
+//      
+//      // propagate the carry over if exists
+//      boolean carryOverExists = false;
+//      for (int i = lastItemIndex; i >= 0; i--) {
+//        if (carryOverExists) {
+//          currentTierNumbers.set(i, currentTierNumbers.get(i) + 1);
+//        }
+//        if (currentTierNumbers.get(i).equals(tierCounts.get(i))) {
+//          currentTierNumbers.set(i, 0);
+//          carryOverExists = true;
+//        } else {
+//          carryOverExists = false;
+//        }
+//      }
+//    
+//      // the existence of the carry over indicates that we have covered all combinations.
+//      if (carryOverExists) {
+//        break;
+//      }
+//    }
     
     return combinations;
   }

@@ -16,15 +16,28 @@
 
 package org.verdictdb.core.querying.ola;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.core.execplan.ExecutionInfoToken;
-import org.verdictdb.core.querying.*;
-import org.verdictdb.core.sqlobject.*;
+import org.verdictdb.core.querying.CreateTableAsSelectNode;
+import org.verdictdb.core.querying.ExecutableNodeBase;
+import org.verdictdb.core.querying.IdCreator;
+import org.verdictdb.core.querying.QueryNodeBase;
+import org.verdictdb.core.querying.SubscriptionTicket;
+import org.verdictdb.core.sqlobject.AliasReference;
+import org.verdictdb.core.sqlobject.AliasedColumn;
+import org.verdictdb.core.sqlobject.AsteriskColumn;
+import org.verdictdb.core.sqlobject.BaseColumn;
+import org.verdictdb.core.sqlobject.BaseTable;
+import org.verdictdb.core.sqlobject.ColumnOp;
+import org.verdictdb.core.sqlobject.SelectItem;
+import org.verdictdb.core.sqlobject.SelectQuery;
+import org.verdictdb.core.sqlobject.SetOperationRelation;
+import org.verdictdb.core.sqlobject.SqlConvertible;
 import org.verdictdb.exception.VerdictDBException;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class AggCombinerExecutionNode extends CreateTableAsSelectNode {
 

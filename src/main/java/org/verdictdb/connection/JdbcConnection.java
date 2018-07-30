@@ -16,17 +16,32 @@
 
 package org.verdictdb.connection;
 
-import com.google.common.collect.Sets;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.commons.StackTraceReader;
 import org.verdictdb.commons.VerdictDBLogger;
 import org.verdictdb.exception.VerdictDBDbmsException;
-import org.verdictdb.sqlsyntax.*;
+import org.verdictdb.sqlsyntax.HiveSyntax;
+import org.verdictdb.sqlsyntax.ImpalaSyntax;
+import org.verdictdb.sqlsyntax.PostgresqlSyntax;
+import org.verdictdb.sqlsyntax.RedshiftSyntax;
+import org.verdictdb.sqlsyntax.SparkSyntax;
+import org.verdictdb.sqlsyntax.SqlSyntax;
+import org.verdictdb.sqlsyntax.SqlSyntaxList;
 
-import java.sql.*;
-import java.util.*;
+import com.google.common.collect.Sets;
 
 public class JdbcConnection implements DbmsConnection {
   
@@ -315,7 +330,6 @@ public class JdbcConnection implements DbmsConnection {
     } else {
       queryResult = executeQuery(syntax.getPartitionCommand(schema, table));
     }
-    //    VerdictResultSet jdbcQueryResult = new VerdictResultSet(queryResult);
     
     // the result of postgresql is a vector of column index
     if (syntax instanceof PostgresqlSyntax) {

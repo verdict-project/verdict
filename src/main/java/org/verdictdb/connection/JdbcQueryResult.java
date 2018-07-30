@@ -16,13 +16,13 @@
 
 package org.verdictdb.connection;
 
-import org.verdictdb.commons.AttributeValueRetrievalHelper;
-
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.verdictdb.commons.AttributeValueRetrievalHelper;
 
 public class JdbcQueryResult extends AttributeValueRetrievalHelper implements DbmsQueryResult {
 

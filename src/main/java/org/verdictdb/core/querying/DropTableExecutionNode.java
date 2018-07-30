@@ -16,14 +16,14 @@
 
 package org.verdictdb.core.querying;
 
+import java.util.List;
+
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.core.execplan.ExecutionInfoToken;
 import org.verdictdb.core.sqlobject.DropTableQuery;
 import org.verdictdb.core.sqlobject.SqlConvertible;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBValueException;
-
-import java.util.List;
 
 public class DropTableExecutionNode extends ExecutableNodeBase {
   

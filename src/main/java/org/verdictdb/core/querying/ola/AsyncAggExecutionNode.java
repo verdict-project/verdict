@@ -16,22 +16,6 @@
 
 package org.verdictdb.core.querying.ola;
 
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableMap;
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
-import org.apache.commons.lang3.tuple.Triple;
-import org.codehaus.jackson.map.Serializers;
-import org.verdictdb.connection.DbmsQueryResult;
-import org.verdictdb.core.execplan.ExecutionInfoToken;
-import org.verdictdb.core.querying.*;
-import org.verdictdb.core.scrambling.ScrambleMeta;
-import org.verdictdb.core.scrambling.ScrambleMetaSet;
-import org.verdictdb.core.sqlobject.*;
-import org.verdictdb.exception.VerdictDBException;
-import org.verdictdb.exception.VerdictDBValueException;
-import scala.reflect.internal.Constants.Constant;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -40,7 +24,34 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import static java.util.Map.Entry;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
+import org.verdictdb.connection.DbmsQueryResult;
+import org.verdictdb.core.execplan.ExecutionInfoToken;
+import org.verdictdb.core.querying.AggExecutionNode;
+import org.verdictdb.core.querying.ExecutableNodeBase;
+import org.verdictdb.core.querying.IdCreator;
+import org.verdictdb.core.querying.ProjectionNode;
+import org.verdictdb.core.querying.SubscriptionTicket;
+import org.verdictdb.core.scrambling.ScrambleMeta;
+import org.verdictdb.core.scrambling.ScrambleMetaSet;
+import org.verdictdb.core.sqlobject.AliasedColumn;
+import org.verdictdb.core.sqlobject.AsteriskColumn;
+import org.verdictdb.core.sqlobject.BaseColumn;
+import org.verdictdb.core.sqlobject.BaseTable;
+import org.verdictdb.core.sqlobject.ColumnOp;
+import org.verdictdb.core.sqlobject.ConstantColumn;
+import org.verdictdb.core.sqlobject.GroupingAttribute;
+import org.verdictdb.core.sqlobject.SelectItem;
+import org.verdictdb.core.sqlobject.SelectQuery;
+import org.verdictdb.core.sqlobject.SqlConvertible;
+import org.verdictdb.core.sqlobject.UnnamedColumn;
+import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.exception.VerdictDBValueException;
+
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 
 /**
  * Represents an "progressive" execution of a single aggregate query (without nested components).

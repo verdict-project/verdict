@@ -1,17 +1,5 @@
 package org.verdictdb.core.querying;
 
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.verdictdb.connection.DbmsConnection;
-import org.verdictdb.connection.JdbcConnection;
-import org.verdictdb.core.scrambling.ScrambleMeta;
-import org.verdictdb.core.scrambling.ScrambleMetaSet;
-import org.verdictdb.core.scrambling.UniformScrambler;
-import org.verdictdb.core.sqlobject.*;
-import org.verdictdb.exception.VerdictDBException;
-import org.verdictdb.sqlsyntax.H2Syntax;
-import org.verdictdb.sqlwriter.CreateTableToSql;
-
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -19,6 +7,24 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.verdictdb.connection.DbmsConnection;
+import org.verdictdb.connection.JdbcConnection;
+import org.verdictdb.core.scrambling.ScrambleMeta;
+import org.verdictdb.core.scrambling.ScrambleMetaSet;
+import org.verdictdb.core.scrambling.UniformScrambler;
+import org.verdictdb.core.sqlobject.AliasedColumn;
+import org.verdictdb.core.sqlobject.BaseColumn;
+import org.verdictdb.core.sqlobject.BaseTable;
+import org.verdictdb.core.sqlobject.ColumnOp;
+import org.verdictdb.core.sqlobject.CreateTableAsSelectQuery;
+import org.verdictdb.core.sqlobject.SelectItem;
+import org.verdictdb.core.sqlobject.SelectQuery;
+import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.sqlsyntax.H2Syntax;
+import org.verdictdb.sqlwriter.CreateTableToSql;
 
 public class ExecutionNodeTest {
   

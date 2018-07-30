@@ -1,5 +1,8 @@
 package org.verdictdb.coordinator;
 
+import java.sql.Connection;
+import java.sql.SQLException;
+
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -11,9 +14,6 @@ import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.exception.VerdictDBException;
-
-import java.sql.Connection;
-import java.sql.SQLException;
 
 public class ExecutionContextTest {
 

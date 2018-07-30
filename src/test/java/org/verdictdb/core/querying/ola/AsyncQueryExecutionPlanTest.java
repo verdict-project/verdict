@@ -1,21 +1,6 @@
 package org.verdictdb.core.querying.ola;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.verdictdb.connection.JdbcConnection;
-import org.verdictdb.core.execplan.ExecutableNode;
-import org.verdictdb.core.execplan.ExecutablePlanRunner;
-import org.verdictdb.core.querying.*;
-import org.verdictdb.core.scrambling.ScrambleMeta;
-import org.verdictdb.core.scrambling.ScrambleMetaSet;
-import org.verdictdb.core.scrambling.SimpleTreePlan;
-import org.verdictdb.core.scrambling.UniformScrambler;
-import org.verdictdb.core.sqlobject.*;
-import org.verdictdb.exception.VerdictDBException;
-import org.verdictdb.sqlsyntax.H2Syntax;
-import org.verdictdb.sqlsyntax.HiveSyntax;
-import org.verdictdb.sqlwriter.QueryToSql;
+import static org.junit.Assert.assertTrue;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -26,7 +11,31 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 
-import static org.junit.Assert.assertTrue;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.verdictdb.connection.JdbcConnection;
+import org.verdictdb.core.execplan.ExecutableNode;
+import org.verdictdb.core.execplan.ExecutablePlanRunner;
+import org.verdictdb.core.querying.AggExecutionNode;
+import org.verdictdb.core.querying.ExecutableNodeBase;
+import org.verdictdb.core.querying.QueryExecutionPlan;
+import org.verdictdb.core.querying.QueryExecutionPlanFactory;
+import org.verdictdb.core.querying.QueryNodeBase;
+import org.verdictdb.core.scrambling.ScrambleMeta;
+import org.verdictdb.core.scrambling.ScrambleMetaSet;
+import org.verdictdb.core.scrambling.SimpleTreePlan;
+import org.verdictdb.core.scrambling.UniformScrambler;
+import org.verdictdb.core.sqlobject.AliasedColumn;
+import org.verdictdb.core.sqlobject.BaseColumn;
+import org.verdictdb.core.sqlobject.BaseTable;
+import org.verdictdb.core.sqlobject.ColumnOp;
+import org.verdictdb.core.sqlobject.CreateTableAsSelectQuery;
+import org.verdictdb.core.sqlobject.SelectQuery;
+import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.sqlsyntax.H2Syntax;
+import org.verdictdb.sqlsyntax.HiveSyntax;
+import org.verdictdb.sqlwriter.QueryToSql;
 
 public class AsyncQueryExecutionPlanTest {
   

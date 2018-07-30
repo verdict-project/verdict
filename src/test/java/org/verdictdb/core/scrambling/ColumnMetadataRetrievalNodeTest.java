@@ -1,5 +1,12 @@
 package org.verdictdb.core.scrambling;
 
+import static org.junit.Assert.assertEquals;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.util.List;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -12,13 +19,6 @@ import org.verdictdb.core.execplan.ExecutionInfoToken;
 import org.verdictdb.core.resulthandler.ExecutionTokenReader;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.exception.VerdictDBException;
-
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.util.List;
-
-import static org.junit.Assert.assertEquals;
 
 public class ColumnMetadataRetrievalNodeTest {
 

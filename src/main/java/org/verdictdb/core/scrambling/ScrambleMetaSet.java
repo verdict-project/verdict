@@ -16,11 +16,14 @@
 
 package org.verdictdb.core.scrambling;
 
+import java.io.Serializable;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
-
-import java.io.Serializable;
-import java.util.*;
 
 public class ScrambleMetaSet implements Serializable, Iterable<ScrambleMeta> {
 

@@ -1,5 +1,11 @@
 package org.verdictdb.core.querying.ola;
 
+import static org.junit.Assert.assertEquals;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+
 import org.junit.Test;
 import org.verdictdb.core.querying.ExecutableNodeBase;
 import org.verdictdb.core.querying.QueryExecutionPlan;
@@ -9,12 +15,6 @@ import org.verdictdb.core.scrambling.ScrambleMetaSet;
 import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sqlreader.NonValidatingSQLParser;
-
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-
-import static org.junit.Assert.assertEquals;
 
 public class AsyncAggNodeGroupTest {
 

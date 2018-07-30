@@ -16,10 +16,17 @@
 
 package org.verdictdb.core.scrambling;
 
-import org.verdictdb.core.sqlobject.*;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import org.verdictdb.core.sqlobject.AliasedColumn;
+import org.verdictdb.core.sqlobject.AsteriskColumn;
+import org.verdictdb.core.sqlobject.BaseTable;
+import org.verdictdb.core.sqlobject.ColumnOp;
+import org.verdictdb.core.sqlobject.ConstantColumn;
+import org.verdictdb.core.sqlobject.CreateTableAsSelectQuery;
+import org.verdictdb.core.sqlobject.SelectItem;
+import org.verdictdb.core.sqlobject.SelectQuery;
 
 public class UniformScrambler extends BaseScrambler {
 

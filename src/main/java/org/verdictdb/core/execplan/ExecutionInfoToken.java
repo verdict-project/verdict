@@ -16,12 +16,13 @@
 
 package org.verdictdb.core.execplan;
 
-import com.rits.cloning.Cloner;
-import org.apache.commons.lang3.builder.ToStringBuilder;
-
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.apache.commons.lang3.builder.ToStringBuilder;
+
+import com.rits.cloning.Cloner;
 
 public class ExecutionInfoToken implements Serializable {
 

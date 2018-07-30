@@ -16,12 +16,12 @@
 
 package org.verdictdb.core.querying;
 
-import org.apache.commons.lang3.tuple.Pair;
-
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
+
+import org.apache.commons.lang3.tuple.Pair;
 
 public class TempIdCreatorInScratchpadSchema implements IdCreator, Serializable {
 
