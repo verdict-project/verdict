@@ -111,7 +111,11 @@ public class ScramblingNode extends CreateScrambledTableNode {
 
     String tierColumnName = options.get("tierColumnName");
     String blockColumnName = options.get("blockColumnName");
-    boolean createIfNotExists = options.get("createIfNotExists").equals("true");
+    String createIfNotExistsStr = options.get("createIfNotExists");
+    boolean createIfNotExists = false;
+    if (createIfNotExistsStr != null && createIfNotExistsStr.equals("true")) {
+      createIfNotExists = true;
+    }
     return new ScramblingNode(
         idCreator,
         oldSchemaName,
