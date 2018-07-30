@@ -61,7 +61,8 @@ public class CreateScrambledTableQuery extends CreateTableQuery {
       String blockColumnName,
       SelectQuery select,
       int blockCount,
-      List<Pair<String, String>> columnMeta) {
+      List<Pair<String, String>> columnMeta,
+      boolean createIfNotExists) {
     this.originalSchemaName = originalSchemaName;
     this.originalTableName = originalTableName;
     this.schemaName = schemaName;
@@ -71,6 +72,7 @@ public class CreateScrambledTableQuery extends CreateTableQuery {
     this.select = select;
     this.blockCount = blockCount;
     this.columnMeta = columnMeta;
+    this.overwrite = createIfNotExists;
   }
 
   public void addPartitionColumn(String column) {
@@ -107,6 +109,10 @@ public class CreateScrambledTableQuery extends CreateTableQuery {
 
   public void setOverwrite(boolean overwrite) {
     this.overwrite = overwrite;
+  }
+
+  public boolean isOverwrite() {
+    return overwrite;
   }
 
   public int getBlockCount() {

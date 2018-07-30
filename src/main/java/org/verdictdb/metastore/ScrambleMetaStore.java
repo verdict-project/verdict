@@ -54,7 +54,7 @@ public class ScrambleMetaStore extends VerdictMetaStore {
 
   private DbmsConnection conn;
 
-  private String storeSchema = DEFAULT_STORE_SCHEMA;
+  private String storeSchema;
 
   private static final VerdictDBLogger LOG = VerdictDBLogger.getLogger(ScrambleMetaStore.class);
 

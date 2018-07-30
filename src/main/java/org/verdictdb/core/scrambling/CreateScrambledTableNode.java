@@ -49,6 +49,8 @@ public class CreateScrambledTableNode extends QueryNodeWithPlaceHolders {
 
   private String newTableName;
 
+  private boolean createIfNotExists;
+
   private List<String> partitionColumns = new ArrayList<>();
 
   protected ScramblingMethod method;
@@ -65,7 +67,8 @@ public class CreateScrambledTableNode extends QueryNodeWithPlaceHolders {
       String originalTableName,
       ScramblingMethod method,
       String tierColumnName,
-      String blockColumnName) {
+      String blockColumnName,
+      boolean createIfNotExists) {
     super(query);
     this.namer = namer;
     this.originalSchemaName = originalSchemaName;
@@ -73,6 +76,7 @@ public class CreateScrambledTableNode extends QueryNodeWithPlaceHolders {
     this.method = method;
     this.tierColumnName = tierColumnName;
     this.blockColumnName = blockColumnName;
+    this.createIfNotExists = createIfNotExists;
   }
 
   public static CreateScrambledTableNode create(IdCreator namer, SelectQuery query) {
@@ -120,7 +124,8 @@ public class CreateScrambledTableNode extends QueryNodeWithPlaceHolders {
             blockColumnName,
             selectQuery,
             method.getBlockCount(),
-            columnMeta);
+            columnMeta,
+            createIfNotExists);
     for (String col : partitionColumns) {
       createQuery.addPartitionColumn(col);
     }

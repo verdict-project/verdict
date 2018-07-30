@@ -64,7 +64,7 @@ verdict_statement
 
 //WITH SIZE size=(FLOAT | DECIMAL) '%' (STORE poission_cols=DECIMAL POISSON COLUMNS)? (STRATIFIED BY column_name (',' column_name)*)?
 create_scramble_statement
-    : CREATE SCRAMBLE scrambled_table=table_name FROM original_table=table_name
+    : CREATE SCRAMBLE (IF NOT EXISTS)? scrambled_table=table_name FROM original_table=table_name
       (METHOD scrambling_method_name)? 
       (SIZE percent=(FLOAT | DECIMAL) '%')?
     ;

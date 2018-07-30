@@ -12,6 +12,9 @@ import org.verdictdb.commons.DatabaseConnectionHelpers;
 import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
+import org.verdictdb.core.sqlobject.AbstractRelation;
+import org.verdictdb.core.sqlobject.BaseTable;
+import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.metastore.ScrambleMetaStore;
@@ -24,6 +27,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /** Created by Dong Young Yoon on 7/26/18. */
 @RunWith(Parameterized.class)
@@ -274,5 +278,77 @@ public class CreateScrambleTableFromSqlTest {
     assertEquals(TEMP_SCHEMA_NAME, meta.getSchemaName());
     assertEquals("lineitem_fc_scramble", meta.getTableName());
     assertEquals("fastconverge", meta.getMethod());
+  }
+
+  @Test
+  public void replaceUniformScrambleTableTest() throws SQLException, VerdictDBException {
+    Connection conn = connections.get(database).getLeft();
+    Connection vc = connections.get(database).getRight();
+    JdbcConnection jdbcConn = JdbcConnection.create(conn);
+    ScrambleMetaStore store = new ScrambleMetaStore(jdbcConn);
+    store.remove();
+    // drop existing table
+    String dropScrambleSql =
+        String.format("DROP TABLE IF EXISTS %s.lineitem_uniform_scramble", TEMP_SCHEMA_NAME);
+    conn.createStatement().execute(dropScrambleSql);
+
+    String createScrambleSql =
+        String.format(
+            "CREATE SCRAMBLE %s.lineitem_uniform_scramble FROM %s.lineitem " + "METHOD 'uniform'",
+            TEMP_SCHEMA_NAME, DatabaseConnectionHelpers.COMMON_SCHEMA_NAME);
+
+    Statement stmt = vc.createStatement();
+    stmt.execute(createScrambleSql);
+
+    String countOriginalSql =
+        String.format(
+            "SELECT * FROM %s.lineitem LIMIT 1", DatabaseConnectionHelpers.COMMON_SCHEMA_NAME);
+
+    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(jdbcConn);
+    coordinator.process(countOriginalSql);
+    SelectQuery query = coordinator.getLastQuery();
+
+    AbstractRelation table = query.getFromList().get(0);
+
+    assertTrue(table instanceof BaseTable);
+    BaseTable bt = (BaseTable) table;
+    assertEquals(TEMP_SCHEMA_NAME, bt.getSchemaName());
+    assertEquals("lineitem_uniform_scramble", bt.getTableName());
+  }
+
+  @Test
+  public void replaceFastConvergeScrambleTableTest() throws SQLException, VerdictDBException {
+    Connection conn = connections.get(database).getLeft();
+    Connection vc = connections.get(database).getRight();
+    JdbcConnection jdbcConn = JdbcConnection.create(conn);
+    ScrambleMetaStore store = new ScrambleMetaStore(jdbcConn);
+    store.remove();
+    // drop existing table
+    String dropScrambleSql =
+        String.format("DROP TABLE IF EXISTS %s.lineitem_fc_scramble", TEMP_SCHEMA_NAME);
+    conn.createStatement().execute(dropScrambleSql);
+
+    String createScrambleSql =
+        String.format(
+            "CREATE SCRAMBLE %s.lineitem_fc_scramble FROM %s.lineitem " + "METHOD 'fastconverge'",
+            TEMP_SCHEMA_NAME, DatabaseConnectionHelpers.COMMON_SCHEMA_NAME);
+
+    Statement stmt = vc.createStatement();
+    stmt.execute(createScrambleSql);
+
+    String countOriginalSql =
+        String.format(
+            "SELECT * FROM %s.lineitem LIMIT 1", DatabaseConnectionHelpers.COMMON_SCHEMA_NAME);
+
+    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(jdbcConn);
+    coordinator.process(countOriginalSql);
+    SelectQuery query = coordinator.getLastQuery();
+
+    AbstractRelation table = query.getFromList().get(0);
+
+    assertTrue(table instanceof BaseTable);
+    BaseTable bt = (BaseTable) table;
+    assertEquals(TEMP_SCHEMA_NAME, bt.getSchemaName());
+    assertEquals("lineitem_fc_scramble", bt.getTableName());
   }
 }

@@ -31,6 +31,7 @@ import org.verdictdb.core.resulthandler.ExecutionResultReader;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
 import org.verdictdb.core.sqlobject.*;
 import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.metastore.ScrambleMetaStore;
 import org.verdictdb.sqlreader.NonValidatingSQLParser;
 import org.verdictdb.sqlreader.RelationStandardizer;
 
@@ -45,6 +46,8 @@ public class SelectQueryCoordinator {
   ScrambleMetaSet scrambleMetaSet;
 
   String scratchpadSchema;
+
+  SelectQuery lastQuery;
 
   public SelectQueryCoordinator(DbmsConnection conn) {
     this(conn, new ScrambleMetaSet());
@@ -69,6 +72,10 @@ public class SelectQueryCoordinator {
     this.scrambleMetaSet = scrambleMetaSet;
   }
 
+  public SelectQuery getLastQuery() {
+    return lastQuery;
+  }
+
   public ExecutionResultReader process(String query) throws VerdictDBException {
 
     SelectQuery selectQuery = standardizeQuery(query);
@@ -90,6 +97,8 @@ public class SelectQueryCoordinator {
     // execute the plan
     ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(conn, simplifiedAsyncPlan);
 
+    lastQuery = selectQuery;
+
     return reader;
   }
 
@@ -99,7 +108,8 @@ public class SelectQueryCoordinator {
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     SelectQuery relation = (SelectQuery) sqlToRelation.toRelation(query);
     MetaDataProvider metaData = createMetaDataFor(relation);
-    RelationStandardizer gen = new RelationStandardizer(metaData);
+    ScrambleMetaStore metaStore = new ScrambleMetaStore(conn);
+    RelationStandardizer gen = new RelationStandardizer(metaData, metaStore);
     relation = gen.standardize(relation);
     return relation;
   }
