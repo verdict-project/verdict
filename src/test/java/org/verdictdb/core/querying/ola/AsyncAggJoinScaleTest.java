@@ -202,7 +202,7 @@ public class AsyncAggJoinScaleTest {
                    "from (select * from \"verdict_temp\".\"table2\" as verdictdb_alias " +
                    "UNION ALL " +
                    "select * from \"verdict_temp\".\"table1\" as verdictdb_alias) as unionTable " +
-                   "group by \"verdictdb_tier_alias\", \"verdictdb_tier_alias\"";
+                   "group by unionTable.\"verdictdb_tier_alias\", unionTable.\"verdictdb_tier_alias\"";
     assertEquals(expected, actual);
 
     ExecutionInfoToken token3 = queryExecutionPlan.getRoot().getSources().get(0).getSources().get(0).createToken(null);
