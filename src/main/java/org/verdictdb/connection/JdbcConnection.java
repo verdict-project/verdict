@@ -330,7 +330,6 @@ public class JdbcConnection implements DbmsConnection {
     } else {
       queryResult = executeQuery(syntax.getPartitionCommand(schema, table));
     }
-    //    VerdictResultSet jdbcQueryResult = new VerdictResultSet(queryResult);
     
     // the result of postgresql is a vector of column index
     if (syntax instanceof PostgresqlSyntax) {
