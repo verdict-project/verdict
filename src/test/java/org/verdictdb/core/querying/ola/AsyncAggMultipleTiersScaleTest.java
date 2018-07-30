@@ -48,7 +48,7 @@ public class AsyncAggMultipleTiersScaleTest {
 
   private static final String MYSQL_UESR = "root";
 
-  private static final String MYSQL_PASSWORD = "";
+  private static final String MYSQL_PASSWORD = "zhongshucheng123";
 
   private static final String TABLE_NAME = "mytable";
 
@@ -248,7 +248,7 @@ public class AsyncAggMultipleTiersScaleTest {
         "select * from `verdictdb_temp`.`verdictdbtemptable` as verdictdb_alias) " +
         "as unionTable group by unionTable.`verdictdb_tier_alias`";
     assertEquals(expected, actual);
-/*
+
     ExecutionInfoToken token3 = queryExecutionPlan.getRoot().getSources().get(0).getSources().get(0).createToken(null);
     query = (CreateTableAsSelectQuery) queryExecutionPlan.getRoot().getSources().get(0).createQuery(Arrays.asList(token3));
     actual = queryToSql.toSql(query.getSelect());
@@ -257,21 +257,20 @@ public class AsyncAggMultipleTiersScaleTest {
     actual = actual.replaceAll("verdictdb_tier_alias_\\d+_\\d+", "verdictdb_tier_alias");
     expected = "select " +
         "sum(verdictdb_internal_tier_consolidated.`agg0`) / sum(verdictdb_internal_tier_consolidated.`agg1`) as `a3` " +
-        "from (" +
-        "select (" +
-        "case when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 2) then 2.0 " +
-        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 0) then 1.0 " +
+        "from (select " +
+        "(case when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 0) then 1.0 " +
         "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 1) then 1.0 " +
+        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 2) then 2.0 " +
         "else 1.0 end) * verdictdb_internal_before_scaling.`agg0` as `agg0`, " +
-        "(case when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 2) then 2.0 " +
-        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 0) then 1.0 " +
+        "(case when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 0) then 1.0 " +
         "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 1) then 1.0 " +
+        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 2) then 2.0 " +
         "else 1.0 end) * verdictdb_internal_before_scaling.`agg1` as `agg1`, " +
         "verdictdb_internal_before_scaling.`verdictdb_tier_alias` as `verdictdb_tier_alias` " +
         "from `verdictdb_temp`.`verdictdbtemptable` as verdictdb_internal_before_scaling) " +
         "as verdictdb_internal_tier_consolidated";
     assertEquals(expected, actual);
-    */
+
   }
 
   @Test
@@ -336,7 +335,7 @@ public class AsyncAggMultipleTiersScaleTest {
         "select * from `verdictdb_temp`.`verdictdbtemptable` as verdictdb_alias) " +
         "as unionTable group by unionTable.`verdictdb_tier_alias`";
     assertEquals(expected, actual);
-  /*
+
     ExecutionInfoToken token3 = queryExecutionPlan.getRoot().getSources().get(0).getSources().get(0).createToken(null);
     query = (CreateTableAsSelectQuery) queryExecutionPlan.getRoot().getSources().get(0).createQuery(Arrays.asList(token3));
     actual = queryToSql.toSql(query.getSelect());
@@ -345,9 +344,8 @@ public class AsyncAggMultipleTiersScaleTest {
     actual = actual.replaceAll("verdictdb_tier_alias_\\d+_\\d+", "verdictdb_tier_alias");
     expected = "select " +
         "sum(verdictdb_internal_tier_consolidated.`agg0`) / sum(verdictdb_internal_tier_consolidated.`agg1`) as `a4` " +
-        "from (" +
-        "select (" +
-        "case when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 0) then 1.0 " +
+        "from (select " +
+        "(case when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 0) then 1.0 " +
         "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 1) then 1.0 " +
         "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 2) then 2.0 " +
         "else 1.0 end) * verdictdb_internal_before_scaling.`agg0` as `agg0`, " +
@@ -359,7 +357,7 @@ public class AsyncAggMultipleTiersScaleTest {
         "from `verdictdb_temp`.`verdictdbtemptable` as verdictdb_internal_before_scaling) " +
         "as verdictdb_internal_tier_consolidated";
     assertEquals(expected, actual);
-    */
+
   }
 
   @Test
@@ -432,38 +430,39 @@ public class AsyncAggMultipleTiersScaleTest {
         "group by unionTable.`verdictdb_tier_alias`, unionTable.`verdictdb_tier_alias`";
     assertEquals(expected, actual);
 
-    // non-deterministic
-    /*
+
     ExecutionInfoToken token3 = queryExecutionPlan.getRoot().getSources().get(0).getSources().get(0).createToken(null);
     query = (CreateTableAsSelectQuery) queryExecutionPlan.getRoot().getSources().get(0).createQuery(Arrays.asList(token3));
     actual = queryToSql.toSql(query.getSelect());
-    actual = actual.replaceAll("verdictdbtemptable_[0-9]*_[0-9]", "alias");
-    expected = "select sum(verdictdb_internal_tier_consolidated.`agg0`) as `s6` " +
-        "from (select " +
-        "case when ((verdictdb_internal_before_scaling.`verdictdb_tier_internal1` = 0) and (verdictdb_internal_before_scaling.`verdictdb_alias` = 1)) " +
-        "then (1.0000000000000000 * verdictdb_internal_before_scaling.`agg0`) " +
-        "when ((verdictdb_internal_before_scaling.`verdictdb_tier_internal1` = 1) and (verdictdb_internal_before_scaling.`verdictdb_alias` = 2)) " +
-        "then (1.0000000000000000 * verdictdb_internal_before_scaling.`agg0`) " +
-        "when ((verdictdb_internal_before_scaling.`verdictdb_tier_internal1` = 0) and (verdictdb_internal_before_scaling.`verdictdb_alias` = 0)) " +
-        "then (1.0000000000000000 * verdictdb_internal_before_scaling.`agg0`) " +
-        "when ((verdictdb_internal_before_scaling.`verdictdb_tier_internal1` = 1) and (verdictdb_internal_before_scaling.`verdictdb_alias` = 1)) " +
-        "then (1.0000000000000000 * verdictdb_internal_before_scaling.`agg0`) " +
-        "when ((verdictdb_internal_before_scaling.`verdictdb_tier_internal1` = 2) and (verdictdb_internal_before_scaling.`verdictdb_alias` = 2)) " +
-        "then (2.0000000000000000 * verdictdb_internal_before_scaling.`agg0`) " +
-        "when ((verdictdb_internal_before_scaling.`verdictdb_tier_internal1` = 1) and (verdictdb_internal_before_scaling.`verdictdb_alias` = 0)) " +
-        "then (1.0000000000000000 * verdictdb_internal_before_scaling.`agg0`) " +
-        "when ((verdictdb_internal_before_scaling.`verdictdb_tier_internal1` = 2) and (verdictdb_internal_before_scaling.`verdictdb_alias` = 1)) " +
-        "then (2.0000000000000000 * verdictdb_internal_before_scaling.`agg0`) " +
-        "when ((verdictdb_internal_before_scaling.`verdictdb_tier_internal1` = 2) and (verdictdb_internal_before_scaling.`verdictdb_alias` = 0)) " +
-        "then (2.0000000000000000 * verdictdb_internal_before_scaling.`agg0`) " +
-        "when ((verdictdb_internal_before_scaling.`verdictdb_tier_internal1` = 0) and (verdictdb_internal_before_scaling.`verdictdb_alias` = 2)) " +
-        "then (1.0000000000000000 * verdictdb_internal_before_scaling.`agg0`) " +
-        "else 0 end as `agg0`, " +
-        "verdictdb_internal_before_scaling.`verdictdb_alias` as `verdictdb_alias`, " +
-        "verdictdb_internal_before_scaling.`verdictdb_tier_internal1` as `verdictdb_tier_internal1` " +
-        "from `verdictdb_temp`.`alias2` as verdictdb_internal_before_scaling) as verdictdb_internal_tier_consolidated";
+    actual = actual.replaceAll("verdictdbtemptable_\\d+_\\d+", "verdictdbtemptable");
+    actual = actual.replaceAll("verdictdb_tier_alias_\\d+_\\d+", "verdictdb_tier_alias");
+    expected = "select " +
+        "sum(verdictdb_internal_tier_consolidated.`agg0`) as `s6` " +
+        "from (select (" +
+        "case when ((verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 0) " +
+        "and (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 0)) then 1.0 " +
+        "when ((verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 0) " +
+        "and (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 1)) then 1.0 " +
+        "when ((verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 0) " +
+        "and (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 2)) then 2.0 " +
+        "when ((verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 1) " +
+        "and (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 0)) then 1.0 " +
+        "when ((verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 1) " +
+        "and (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 1)) then 1.0 " +
+        "when ((verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 1) " +
+        "and (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 2)) then 2.0 " +
+        "when ((verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 2) " +
+        "and (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 0)) then 1.0 " +
+        "when ((verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 2) " +
+        "and (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 1)) then 1.0 " +
+        "when ((verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 2) " +
+        "and (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 2)) then 2.0 " +
+        "else 1.0 end) * verdictdb_internal_before_scaling.`agg0` as `agg0`, " +
+        "verdictdb_internal_before_scaling.`verdictdb_tier_alias` as `verdictdb_tier_alias`, " +
+        "verdictdb_internal_before_scaling.`verdictdb_tier_alias` as `verdictdb_tier_alias` " +
+        "from `verdictdb_temp`.`verdictdbtemptable` as verdictdb_internal_before_scaling) as verdictdb_internal_tier_consolidated";
     assertEquals(expected, actual);
-    */
+
   }
 
   @Test
@@ -581,7 +580,7 @@ public class AsyncAggMultipleTiersScaleTest {
         "select * from `verdict_temp`.`table1` as verdictdb_alias) " +
         "as unionTable group by unionTable.`verdictdb_tier_alias`";
     assertEquals(expected, actual);
-/*
+
     ExecutionInfoToken token3 = queryExecutionPlan.getRoot().getSources().get(0).getSources().get(0).createToken(null);
     query = (CreateTableAsSelectQuery) queryExecutionPlan.getRoot().getSources().get(0).createQuery(Arrays.asList(token3));
     actual = queryToSql.toSql(query.getSelect());
@@ -589,23 +588,23 @@ public class AsyncAggMultipleTiersScaleTest {
     actual = actual.replaceAll("verdictdb_alias_\\d+_\\d+", "verdictdb_alias");
     actual = actual.replaceAll("verdictdb_tier_alias_\\d+_\\d+", "verdictdb_tier_alias");
     actual = actual.replaceAll("vc\\d+", "vc1");
-    expected = "select (1 + (sum(verdictdb_internal_tier_consolidated.`agg0`) / sum(verdictdb_internal_tier_consolidated.`agg1`))) * sum(verdictdb_internal_tier_consolidated.`agg0`) as `vc1` " +
-        "from " +
-        "(select case " +
-        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 1) then (1.0000000000000000 * verdictdb_internal_before_scaling.`agg0`) " +
-        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 2) then (2.0000000000000000 * verdictdb_internal_before_scaling.`agg0`) " +
-        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 0) then (1.0000000000000000 * verdictdb_internal_before_scaling.`agg0`) " +
-        "else 0 end as `agg0`, " +
-        "case " +
-        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 1) then (1.0000000000000000 * verdictdb_internal_before_scaling.`agg1`) " +
-        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 2) then (2.0000000000000000 * verdictdb_internal_before_scaling.`agg1`) " +
-        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 0) then (1.0000000000000000 * verdictdb_internal_before_scaling.`agg1`) " +
-        "else 0 end as `agg1`, " +
+    expected = "select " +
+        "(1 + (sum(verdictdb_internal_tier_consolidated.`agg0`) / sum(verdictdb_internal_tier_consolidated.`agg1`))) * sum(verdictdb_internal_tier_consolidated.`agg0`) as `vc1` " +
+        "from (" +
+        "select (" +
+        "case when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 0) then 1.0 " +
+        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 1) then 1.0 " +
+        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 2) then 2.0 " +
+        "else 1.0 end) * verdictdb_internal_before_scaling.`agg0` as `agg0`, " +
+        "(case when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 0) then 1.0 " +
+        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 1) then 1.0 " +
+        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 2) then 2.0 " +
+        "else 1.0 end) * verdictdb_internal_before_scaling.`agg1` as `agg1`, " +
         "verdictdb_internal_before_scaling.`verdictdb_tier_alias` as `verdictdb_tier_alias` " +
-        "from `verdictdb_temp`.`verdictdbtemptable` as verdictdb_internal_before_scaling) " +
+        "from `placeholderSchema_7_0`.`placeholderTable_7_0` as verdictdb_internal_before_scaling) " +
         "as verdictdb_internal_tier_consolidated";
     assertEquals(actual, expected);
-    */
+
   }
 
   @Test
@@ -670,30 +669,29 @@ public class AsyncAggMultipleTiersScaleTest {
         "select * from `verdict_temp`.`table1` as verdictdb_alias) " +
         "as unionTable group by unionTable.`verdictdb_tier_alias`";
     assertEquals(expected, actual);
-/*
+
     ExecutionInfoToken token3 = queryExecutionPlan.getRoot().getSources().get(0).getSources().get(0).createToken(null);
     query = (CreateTableAsSelectQuery) queryExecutionPlan.getRoot().getSources().get(0).createQuery(Arrays.asList(token3));
     actual = queryToSql.toSql(query.getSelect());
     actual = actual.replaceAll("verdictdbtemptable_\\d+_\\d+", "verdictdbtemptable");
     actual = actual.replaceAll("verdictdb_alias_\\d+_\\d+", "verdictdb_alias");
     actual = actual.replaceAll("verdictdb_tier_alias_\\d+_\\d+", "verdictdb_tier_alias");
-    expected = "select sum(verdictdb_internal_tier_consolidated.`agg0`) / sum(verdictdb_internal_tier_consolidated.`agg1`) as `a2` " +
-        "from (select " +
-        "case " +
-        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 1) then (1.0000000000000000 * verdictdb_internal_before_scaling.`agg0`) " +
-        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 2) then (2.0000000000000000 * verdictdb_internal_before_scaling.`agg0`) " +
-        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 0) then (1.0000000000000000 * verdictdb_internal_before_scaling.`agg0`) " +
-        "else 0 end as `agg0`, " +
-        "case " +
-        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 1) then (1.0000000000000000 * verdictdb_internal_before_scaling.`agg1`) " +
-        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 2) then (2.0000000000000000 * verdictdb_internal_before_scaling.`agg1`) " +
-        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 0) then (1.0000000000000000 * verdictdb_internal_before_scaling.`agg1`) " +
-        "else 0 end as `agg1`, " +
+    expected = "select " +
+        "sum(verdictdb_internal_tier_consolidated.`agg0`) / sum(verdictdb_internal_tier_consolidated.`agg1`) as `a2` " +
+        "from (select (" +
+        "case when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 0) then 1.0 " +
+        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 1) then 1.0 " +
+        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 2) then 2.0 " +
+        "else 1.0 end) * verdictdb_internal_before_scaling.`agg0` as `agg0`, " +
+        "(case when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 0) then 1.0 " +
+        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 1) then 1.0 " +
+        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 2) then 2.0 " +
+        "else 1.0 end) * verdictdb_internal_before_scaling.`agg1` as `agg1`, " +
         "verdictdb_internal_before_scaling.`verdictdb_tier_alias` as `verdictdb_tier_alias` " +
         "from `verdictdb_temp`.`verdictdbtemptable` as verdictdb_internal_before_scaling) " +
         "as verdictdb_internal_tier_consolidated";
     assertEquals(expected, actual);
-    */
+
   }
 
   @Test
@@ -757,7 +755,7 @@ public class AsyncAggMultipleTiersScaleTest {
         "select * from `verdict_temp`.`table1` as verdictdb_alias) " +
         "as unionTable group by unionTable.`verdictdb_tier_alias`";
     assertEquals(expected, actual);
-/*
+
     ExecutionInfoToken token3 = queryExecutionPlan.getRoot().getSources().get(0).getSources().get(0).createToken(null);
     query = (CreateTableAsSelectQuery) queryExecutionPlan.getRoot().getSources().get(0).createQuery(Arrays.asList(token3));
     actual = queryToSql.toSql(query.getSelect());
@@ -766,18 +764,16 @@ public class AsyncAggMultipleTiersScaleTest {
     actual = actual.replaceAll("verdictdb_tier_alias_\\d+_\\d+", "verdictdb_tier_alias");
     expected = "select " +
         "sum(verdictdb_internal_tier_consolidated.`agg0`) as `s2` " +
-        "from (" +
-        "select " +
-        "case " +
-        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 1) then (1.0000000000000000 * verdictdb_internal_before_scaling.`agg0`) " +
-        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 2) then (2.0000000000000000 * verdictdb_internal_before_scaling.`agg0`) " +
-        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 0) then (1.0000000000000000 * verdictdb_internal_before_scaling.`agg0`) " +
-        "else 0 end as `agg0`, " +
+        "from (select (" +
+        "case when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 0) then 1.0 " +
+        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 1) then 1.0 " +
+        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 2) then 2.0 " +
+        "else 1.0 end) * verdictdb_internal_before_scaling.`agg0` as `agg0`, " +
         "verdictdb_internal_before_scaling.`verdictdb_tier_alias` as `verdictdb_tier_alias` " +
         "from `verdictdb_temp`.`verdictdbtemptable` as verdictdb_internal_before_scaling) " +
         "as verdictdb_internal_tier_consolidated";
     assertEquals(expected, actual);
-    */
+
   }
 
   @Test
@@ -842,7 +838,7 @@ public class AsyncAggMultipleTiersScaleTest {
         "select * from `verdict_temp`.`table1` as verdictdb_alias) " +
         "as unionTable group by unionTable.`verdictdb_tier_alias`";
     assertEquals(expected, actual);
-/*
+
     ExecutionInfoToken token3 = queryExecutionPlan.getRoot().getSources().get(0).getSources().get(0).createToken(null);
     query = (CreateTableAsSelectQuery) queryExecutionPlan.getRoot().getSources().get(0).createQuery(Arrays.asList(token3));
     actual = queryToSql.toSql(query.getSelect());
@@ -851,18 +847,16 @@ public class AsyncAggMultipleTiersScaleTest {
     actual = actual.replaceAll("verdictdb_tier_alias_\\d+_\\d+", "verdictdb_tier_alias");
     expected = "select " +
         "sum(verdictdb_internal_tier_consolidated.`agg0`) as `c2` " +
-        "from (" +
-        "select " +
-        "case " +
-        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 1) then (1.0000000000000000 * verdictdb_internal_before_scaling.`agg0`) " +
-        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 2) then (2.0000000000000000 * verdictdb_internal_before_scaling.`agg0`) " +
-        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 0) then (1.0000000000000000 * verdictdb_internal_before_scaling.`agg0`) " +
-        "else 0 end as `agg0`, " +
+        "from (select (" +
+        "case when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 0) then 1.0 " +
+        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 1) then 1.0 " +
+        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 2) then 2.0 " +
+        "else 1.0 end) * verdictdb_internal_before_scaling.`agg0` as `agg0`, " +
         "verdictdb_internal_before_scaling.`verdictdb_tier_alias` as `verdictdb_tier_alias` " +
         "from `verdictdb_temp`.`verdictdbtemptable` as verdictdb_internal_before_scaling) " +
         "as verdictdb_internal_tier_consolidated";
     assertEquals(expected, actual);
-    */
+
   }
 
   @Test
@@ -929,7 +923,7 @@ public class AsyncAggMultipleTiersScaleTest {
         "select * from `verdict_temp`.`table1` as verdictdb_alias) " +
         "as unionTable group by unionTable.`verdictdb_tier_alias`";
     assertEquals(expected, actual);
-/*
+
     ExecutionInfoToken token3 = queryExecutionPlan.getRoot().getSources().get(0).getSources().get(0).createToken(null);
     query = (CreateTableAsSelectQuery) queryExecutionPlan.getRoot().getSources().get(0).createQuery(Arrays.asList(token3));
     actual = queryToSql.toSql(query.getSelect());
@@ -939,23 +933,20 @@ public class AsyncAggMultipleTiersScaleTest {
     expected = "select " +
         "sum(verdictdb_internal_tier_consolidated.`agg0`) / sum(verdictdb_internal_tier_consolidated.`agg1`) as `a2`, " +
         "sum(verdictdb_internal_tier_consolidated.`agg0`) as `s3` " +
-        "from " +
-        "(select " +
-        "case " +
-        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 1) then (1.0000000000000000 * verdictdb_internal_before_scaling.`agg0`) " +
-        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 2) then (2.0000000000000000 * verdictdb_internal_before_scaling.`agg0`) " +
-        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 0) then (1.0000000000000000 * verdictdb_internal_before_scaling.`agg0`) " +
-        "else 0 end as `agg0`, " +
-        "case " +
-        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 1) then (1.0000000000000000 * verdictdb_internal_before_scaling.`agg1`) " +
-        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 2) then (2.0000000000000000 * verdictdb_internal_before_scaling.`agg1`) " +
-        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 0) then (1.0000000000000000 * verdictdb_internal_before_scaling.`agg1`) " +
-        "else 0 end as `agg1`, " +
+        "from (select (" +
+        "case when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 0) then 1.0 " +
+        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 1) then 1.0 " +
+        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 2) then 2.0 " +
+        "else 1.0 end) * verdictdb_internal_before_scaling.`agg0` as `agg0`, " +
+        "(case when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 0) then 1.0 " +
+        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 1) then 1.0 " +
+        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 2) then 2.0 " +
+        "else 1.0 end) * verdictdb_internal_before_scaling.`agg1` as `agg1`, " +
         "verdictdb_internal_before_scaling.`verdictdb_tier_alias` as `verdictdb_tier_alias` " +
         "from `verdictdb_temp`.`verdictdbtemptable` as verdictdb_internal_before_scaling) " +
         "as verdictdb_internal_tier_consolidated";
     assertEquals(expected, actual);
-    */
+
   }
 
   @Test
@@ -1022,7 +1013,7 @@ public class AsyncAggMultipleTiersScaleTest {
         "select * from `verdict_temp`.`table1` as verdictdb_alias) " +
         "as unionTable group by unionTable.`verdictdb_tier_alias`";
     assertEquals(expected, actual);
-/*
+
     ExecutionInfoToken token3 = queryExecutionPlan.getRoot().getSources().get(0).getSources().get(0).createToken(null);
     query = (CreateTableAsSelectQuery) queryExecutionPlan.getRoot().getSources().get(0).createQuery(Arrays.asList(token3));
     actual = queryToSql.toSql(query.getSelect());
@@ -1032,23 +1023,21 @@ public class AsyncAggMultipleTiersScaleTest {
     expected = "select " +
         "sum(verdictdb_internal_tier_consolidated.`agg0`) / sum(verdictdb_internal_tier_consolidated.`agg1`) as `a2`, " +
         "sum(verdictdb_internal_tier_consolidated.`agg1`) as `c3` " +
-        "from " +
-        "(select " +
-        "case " +
-        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 1) then (1.0000000000000000 * verdictdb_internal_before_scaling.`agg0`) " +
-        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 2) then (2.0000000000000000 * verdictdb_internal_before_scaling.`agg0`) " +
-        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 0) then (1.0000000000000000 * verdictdb_internal_before_scaling.`agg0`) " +
-        "else 0 end as `agg0`, " +
-        "case " +
-        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 1) then (1.0000000000000000 * verdictdb_internal_before_scaling.`agg1`) " +
-        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 2) then (2.0000000000000000 * verdictdb_internal_before_scaling.`agg1`) " +
-        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 0) then (1.0000000000000000 * verdictdb_internal_before_scaling.`agg1`) " +
-        "else 0 end as `agg1`, " +
+        "from (" +
+        "select (" +
+        "case when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 0) then 1.0 " +
+        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 1) then 1.0 " +
+        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 2) then 2.0 " +
+        "else 1.0 end) * verdictdb_internal_before_scaling.`agg0` as `agg0`, " +
+        "(case when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 0) then 1.0 " +
+        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 1) then 1.0 " +
+        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 2) then 2.0 " +
+        "else 1.0 end) * verdictdb_internal_before_scaling.`agg1` as `agg1`, " +
         "verdictdb_internal_before_scaling.`verdictdb_tier_alias` as `verdictdb_tier_alias` " +
         "from `verdictdb_temp`.`verdictdbtemptable` as verdictdb_internal_before_scaling) " +
         "as verdictdb_internal_tier_consolidated";
     assertEquals(expected, actual);
-    */
+
   }
 
   @Test
@@ -1113,7 +1102,7 @@ public class AsyncAggMultipleTiersScaleTest {
         "select * from `verdict_temp`.`table1` as verdictdb_alias) " +
         "as unionTable group by unionTable.`verdictdb_tier_alias`";
     assertEquals(expected, actual);
-/*
+
     ExecutionInfoToken token3 = queryExecutionPlan.getRoot().getSources().get(0).getSources().get(0).createToken(null);
     query = (CreateTableAsSelectQuery) queryExecutionPlan.getRoot().getSources().get(0).createQuery(Arrays.asList(token3));
     actual = queryToSql.toSql(query.getSelect());
@@ -1123,23 +1112,20 @@ public class AsyncAggMultipleTiersScaleTest {
     expected = "select " +
         "sum(verdictdb_internal_tier_consolidated.`agg0`) as `c2`, " +
         "sum(verdictdb_internal_tier_consolidated.`agg1`) as `s3` " +
-        "from (" +
-        "select " +
-        "case " +
-        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 1) then (1.0000000000000000 * verdictdb_internal_before_scaling.`agg0`) " +
-        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 2) then (2.0000000000000000 * verdictdb_internal_before_scaling.`agg0`) " +
-        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 0) then (1.0000000000000000 * verdictdb_internal_before_scaling.`agg0`) " +
-        "else 0 end as `agg0`, " +
-        "case " +
-        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 1) then (1.0000000000000000 * verdictdb_internal_before_scaling.`agg1`) " +
-        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 2) then (2.0000000000000000 * verdictdb_internal_before_scaling.`agg1`) " +
-        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 0) then (1.0000000000000000 * verdictdb_internal_before_scaling.`agg1`) " +
-        "else 0 end as `agg1`, " +
+        "from (select (" +
+        "case when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 0) then 1.0 " +
+        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 1) then 1.0 " +
+        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 2) then 2.0 " +
+        "else 1.0 end) * verdictdb_internal_before_scaling.`agg0` as `agg0`, " +
+        "(case when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 0) then 1.0 " +
+        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 1) then 1.0 " +
+        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 2) then 2.0 " +
+        "else 1.0 end) * verdictdb_internal_before_scaling.`agg1` as `agg1`, " +
         "verdictdb_internal_before_scaling.`verdictdb_tier_alias` as `verdictdb_tier_alias` " +
         "from `verdictdb_temp`.`verdictdbtemptable` as verdictdb_internal_before_scaling) " +
         "as verdictdb_internal_tier_consolidated";
     assertEquals(expected, actual);
-    */
+
   }
 
   @Test
@@ -1205,7 +1191,7 @@ public class AsyncAggMultipleTiersScaleTest {
         "select * from `verdict_temp`.`table1` as verdictdb_alias) " +
         "as unionTable group by unionTable.`verdictdb_tier_alias`";
     assertEquals(expected, actual);
-/*
+
     ExecutionInfoToken token3 = queryExecutionPlan.getRoot().getSources().get(0).getSources().get(0).createToken(null);
     query = (CreateTableAsSelectQuery) queryExecutionPlan.getRoot().getSources().get(0).createQuery(Arrays.asList(token3));
     actual = queryToSql.toSql(query.getSelect());
@@ -1213,26 +1199,22 @@ public class AsyncAggMultipleTiersScaleTest {
     actual = actual.replaceAll("verdictdb_alias_\\d+_\\d+", "verdictdb_alias");
     actual = actual.replaceAll("verdictdb_tier_alias_\\d+_\\d+", "verdictdb_tier_alias");
     expected = "select " +
-        "(1 + max(verdictdb_internal_tier_consolidated.`agg2`)) * " + 
-        "(sum(verdictdb_internal_tier_consolidated.`agg0`) / sum(verdictdb_internal_tier_consolidated.`agg1`)) as `vc2` " +
-        "from (" +
-        "select " +
-        "case " +
-        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 1) then (1.0000000000000000 * verdictdb_internal_before_scaling.`agg0`) " +
-        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 2) then (2.0000000000000000 * verdictdb_internal_before_scaling.`agg0`) " +
-        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 0) then (1.0000000000000000 * verdictdb_internal_before_scaling.`agg0`) " +
-        "else 0 end as `agg0`, " +
-        "case " +
-        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 1) then (1.0000000000000000 * verdictdb_internal_before_scaling.`agg1`) " +
-        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 2) then (2.0000000000000000 * verdictdb_internal_before_scaling.`agg1`) " +
-        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 0) then (1.0000000000000000 * verdictdb_internal_before_scaling.`agg1`) " +
-        "else 0 end as `agg1`, " +
+        "(1 + max(verdictdb_internal_tier_consolidated.`agg2`)) * (sum(verdictdb_internal_tier_consolidated.`agg0`) / sum(verdictdb_internal_tier_consolidated.`agg1`)) as `vc2` " +
+        "from (select (" +
+        "case when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 0) then 1.0 " +
+        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 1) then 1.0 " +
+        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 2) then 2.0 " +
+        "else 1.0 end) * verdictdb_internal_before_scaling.`agg0` as `agg0`, " +
+        "(case when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 0) then 1.0 " +
+        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 1) then 1.0 " +
+        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 2) then 2.0 " +
+        "else 1.0 end) * verdictdb_internal_before_scaling.`agg1` as `agg1`, " +
         "verdictdb_internal_before_scaling.`agg2` as `agg2`, " +
         "verdictdb_internal_before_scaling.`verdictdb_tier_alias` as `verdictdb_tier_alias` " +
         "from `verdictdb_temp`.`verdictdbtemptable` as verdictdb_internal_before_scaling) " +
         "as verdictdb_internal_tier_consolidated";
     assertEquals(expected, actual);
-    */
+
   }
 
   @Test
@@ -1298,7 +1280,7 @@ public class AsyncAggMultipleTiersScaleTest {
         "select * from `verdict_temp`.`table1` as verdictdb_alias) " +
         "as unionTable group by unionTable.`verdictdb_tier_alias`";
     assertEquals(expected, actual);
-/*
+
     ExecutionInfoToken token3 = queryExecutionPlan.getRoot().getSources().get(0).getSources().get(0).createToken(null);
     query = (CreateTableAsSelectQuery) queryExecutionPlan.getRoot().getSources().get(0).createQuery(Arrays.asList(token3));
     actual = queryToSql.toSql(query.getSelect());
@@ -1306,26 +1288,21 @@ public class AsyncAggMultipleTiersScaleTest {
     actual = actual.replaceAll("verdictdb_alias_\\d+_\\d+", "verdictdb_alias");
     actual = actual.replaceAll("verdictdb_tier_alias_\\d+_\\d+", "verdictdb_tier_alias");
 //    System.out.println(actual);
-    expected = "select " +
-        "(1 + min(verdictdb_internal_tier_consolidated.`agg2`)) * " +
-        "(sum(verdictdb_internal_tier_consolidated.`agg0`) / sum(verdictdb_internal_tier_consolidated.`agg1`)) as `vc2` " +
-        "from (" +
-        "select " +
-        "case " +
-        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 1) then (1.0000000000000000 * verdictdb_internal_before_scaling.`agg0`) " +
-        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 2) then (2.0000000000000000 * verdictdb_internal_before_scaling.`agg0`) " +
-        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 0) then (1.0000000000000000 * verdictdb_internal_before_scaling.`agg0`) " +
-        "else 0 end as `agg0`, " +
-        "case " +
-        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 1) then (1.0000000000000000 * verdictdb_internal_before_scaling.`agg1`) " +
-        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 2) then (2.0000000000000000 * verdictdb_internal_before_scaling.`agg1`) " +
-        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 0) then (1.0000000000000000 * verdictdb_internal_before_scaling.`agg1`) " +
-        "else 0 end as `agg1`, " +
+    expected = "select (1 + min(verdictdb_internal_tier_consolidated.`agg2`)) * (sum(verdictdb_internal_tier_consolidated.`agg0`) / sum(verdictdb_internal_tier_consolidated.`agg1`)) as `vc2` " +
+        "from (select (" +
+        "case when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 0) then 1.0 " +
+        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 1) then 1.0 " +
+        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 2) then 2.0 " +
+        "else 1.0 end) * verdictdb_internal_before_scaling.`agg0` as `agg0`, " +
+        "(case when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 0) then 1.0 " +
+        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 1) then 1.0 " +
+        "when (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 2) then 2.0 " +
+        "else 1.0 end) * verdictdb_internal_before_scaling.`agg1` as `agg1`, " +
         "verdictdb_internal_before_scaling.`agg2` as `agg2`, " +
         "verdictdb_internal_before_scaling.`verdictdb_tier_alias` as `verdictdb_tier_alias` " +
         "from `verdictdb_temp`.`verdictdbtemptable` as verdictdb_internal_before_scaling) " +
         "as verdictdb_internal_tier_consolidated";
     assertEquals(expected, actual);
-    */
+
   }
 }
