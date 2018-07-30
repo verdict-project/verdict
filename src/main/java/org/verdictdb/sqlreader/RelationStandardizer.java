@@ -309,6 +309,7 @@ public class RelationStandardizer {
         Iterator<ScrambleMeta> iterator = metaSet.iterator();
         while (iterator.hasNext()) {
           ScrambleMeta meta = iterator.next();
+          // substitute names with those of the first scrambled table.
           if (meta.getOriginalSchemaName().equals(bt.getSchemaName())
               && meta.getOriginalTableName().equals(bt.getTableName())) {
             bt.setSchemaName(meta.getSchemaName());
