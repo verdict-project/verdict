@@ -57,7 +57,7 @@ public class MetaDataStatementsTest {
 
   private static final String MYSQL_USER = "root";
 
-  private static final String MYSQL_PASSWORD = "";
+  private static final String MYSQL_PASSWORD = "zhongshucheng123";
 
   private static final String IMPALA_HOST;
 
@@ -86,7 +86,7 @@ public class MetaDataStatementsTest {
 
   private static final String POSTGRES_USER = "postgres";
 
-  private static final String POSTGRES_PASSWORD = "";
+  private static final String POSTGRES_PASSWORD = "zhongshucheng123";
 
   static {
     String env = System.getenv("BUILD_ENV");
@@ -242,7 +242,7 @@ public class MetaDataStatementsTest {
         syntaxMap.get(database)));
     VerdictContext verdict = new VerdictContext(dbmsconn);
     ExecutionContext exec = new ExecutionContext(verdict, 0);
-    VerdictSingleResult result = exec.sql(sql);
+    VerdictSingleResult result = exec.sql("show schemas");
     while (jdbcRs.next()) {
       result.next();
       assertEquals(jdbcRs.getString(1), result.getValue(0));
