@@ -243,7 +243,7 @@ public class AsyncAggScaleTest {
                    "select * from \"verdict_temp\".\"table2\" as verdictdb_alias " +
                    "UNION ALL " +
                    "select * from \"verdict_temp\".\"table1\" as verdictdb_alias) as unionTable " +
-                   "group by \"verdictdb_tier_alias\"";
+                   "group by unionTable.\"verdictdb_tier_alias\"";
     assertEquals(expected, actual);
   
     ExecutableNodeBase aggNode = queryExecutionPlan.getRoot().getSources().get(0).getSources().get(0);

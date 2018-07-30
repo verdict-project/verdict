@@ -17,12 +17,7 @@
 package org.verdictdb.core.querying.ola;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
@@ -86,7 +81,7 @@ public class AggMeta implements Serializable {
    * @return Tier combination -> scaling factor for that tier.
    */
   public Map<TierCombination, Double> computeScaleFactors() {
-    Map<TierCombination, Double> tierToScalingFactor = new HashMap<>();
+    Map<TierCombination, Double> tierToScalingFactor = new TreeMap<>();
     ScrambleMetaSet metaset =
         ScrambleMetaSet.createFromCollection(tierColumnForScramble.keySet());
     

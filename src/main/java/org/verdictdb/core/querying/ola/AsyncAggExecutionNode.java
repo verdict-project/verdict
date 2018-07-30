@@ -16,13 +16,8 @@
 
 package org.verdictdb.core.querying.ola;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -167,7 +162,7 @@ public class AsyncAggExecutionNode extends ProjectionNode {
     //    HashMap<List<Integer>, Double> scaleFactor =
     //        calculateScaleFactor(sourceAggMeta, scrambledTableTierInfo);
 
-    Map<UnnamedColumn, Double> conditionToScaleFactor =
+    List<Pair<UnnamedColumn, Double>> conditionToScaleFactor =
         composeScaleFactorForTierCombinations(sourceAggMeta, INNER_RAW_AGG_TABLE_ALIAS);
 
 //    // we store the original aggColumns to restore it later.
@@ -178,7 +173,7 @@ public class AsyncAggExecutionNode extends ProjectionNode {
 
     // update the agg column scaling factor
     List<UnnamedColumn> scalingOperands = new ArrayList<>();
-    for (Entry<UnnamedColumn, Double> condToScale : conditionToScaleFactor.entrySet()) {
+    for (Pair<UnnamedColumn, Double> condToScale : conditionToScaleFactor) {
       UnnamedColumn cond = condToScale.getKey();
       double scale = condToScale.getValue();
       scalingOperands.add(cond);
@@ -277,9 +272,9 @@ public class AsyncAggExecutionNode extends ProjectionNode {
    * @return Map of a filtering condition to the scaling factor; the filtering conditions
    * correspond to cond1, cond2, etc.; the scaling factors correspond to scale1, scale2, etc.
    */
-  private Map<UnnamedColumn, Double> composeScaleFactorForTierCombinations(
+  private List<Pair<UnnamedColumn, Double>> composeScaleFactorForTierCombinations(
       AggMeta sourceAggMeta, String sourceTableAlias) {
-    Map<UnnamedColumn, Double> scalingFactorPerTier = new HashMap<>();
+    List<Pair<UnnamedColumn, Double>> scalingFactorPerTier = new ArrayList<>();
 
     Map<TierCombination, Double> scaleFactors = sourceAggMeta.computeScaleFactors();
     Map<ScrambleMeta, String> tierColums = sourceAggMeta.getTierColumnForScramble();
@@ -308,7 +303,7 @@ public class AsyncAggExecutionNode extends ProjectionNode {
         }
       }
 
-      scalingFactorPerTier.put(tierCombinationCondition, scale);
+      scalingFactorPerTier.add(new ImmutablePair<>(tierCombinationCondition, scale));
     }
 
     return scalingFactorPerTier;

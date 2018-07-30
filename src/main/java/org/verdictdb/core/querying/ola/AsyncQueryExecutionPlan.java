@@ -733,16 +733,20 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
         // Add tier column to select list
         SelectItem selectItem;
         String newTierColumnAlias = generateTierColumnAliasName();
+        UnnamedColumn column;
 //        VERDICTDB_TIER_COLUMN_NAME + verdictdbTierIndentiferNum++;
         if (source.getSelectQuery().getAliasName().isPresent()) {
           String sourceAlias = source.getSelectQuery().getAliasName().get();
+          column = new BaseColumn(sourceAlias, oldtierAlias);
           selectItem =
-              new AliasedColumn(new BaseColumn(sourceAlias, oldtierAlias), newTierColumnAlias);
+              new AliasedColumn(column, newTierColumnAlias);
         } else {
-          selectItem = new AliasedColumn(new BaseColumn(oldtierAlias), newTierColumnAlias);
+          column = new BaseColumn(oldtierAlias);
+          selectItem = new AliasedColumn(column, newTierColumnAlias);
         }
         newSelectList.add(selectItem);
-        query.addGroupby(new AliasReference(newTierColumnAlias));
+
+        query.addGroupby(column);
   
         // Add to the tier column Map
         scrambleMetaAnditsAlias.put(singleMeta, newTierColumnAlias);

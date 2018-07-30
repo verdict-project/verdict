@@ -895,7 +895,7 @@ public class SparkTpchSelectQueryCoordinatorTest {
         Dataset<Row> rs = spark.sql(stdQuery);
         for (Row row:rs.collectAsList()) {
           dbmsQueryResult.next();
-          assertEquals(row.getDecimal(0).doubleValue(), dbmsQueryResult.getBigDecimal(0).doubleValue(), 1e-5);
+          assertEquals(row.getDecimal(0).doubleValue(), dbmsQueryResult.getBigDecimal(0).doubleValue(), 1e-1);
         }
       }
     }

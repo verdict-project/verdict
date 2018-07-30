@@ -176,15 +176,17 @@ public class AsyncAggJoinMultiTierScaleTest {
         "((vt.\"verdictdbaggblock\" >= 0) " +
         "and (vt.\"verdictdbaggblock\" <= 1)) " +
         "and (vt.\"verdictdbaggblock\" = 0) " +
-        "group by \"verdictdb_tier_alias\", \"verdictdb_tier_alias\"";
+        "group by vt.\"verdictdbtier\", vt.\"verdictdbtier\"";
     assertEquals(expected, actual);
 
     ExecutionInfoToken token1 = new ExecutionInfoToken();
     token1.setKeyValue("schemaName", "verdict_temp");
     token1.setKeyValue("tableName", "table1");
+    token1.setKeyValue("channel", 5000);
     ExecutionInfoToken token2 = new ExecutionInfoToken();
     token2.setKeyValue("schemaName", "verdict_temp");
     token2.setKeyValue("tableName", "table2");
+    token2.setKeyValue("channel", 5001);
     query = (CreateTableAsSelectQuery) queryExecutionPlan.getRoot().getSources().get(0).getSources().get(1).createQuery(Arrays.asList(token1, token2));
     actual = queryToSql.toSql(query.getSelect());
     actual = actual.replaceAll("verdictdb_tier_alias_\\d+_\\d+", "verdictdb_tier_alias");
@@ -197,7 +199,7 @@ public class AsyncAggJoinMultiTierScaleTest {
         "select * from \"verdict_temp\".\"table2\" as verdictdb_alias " +
         "UNION ALL " +
         "select * from \"verdict_temp\".\"table1\" as verdictdb_alias) " +
-        "as unionTable group by \"verdictdb_tier_alias\", \"verdictdb_tier_alias\"";
+        "as unionTable group by unionTable.\"verdictdb_tier_alias\", unionTable.\"verdictdb_tier_alias\"";
     assertEquals(expected, actual);
 
     ExecutionInfoToken token3 = queryExecutionPlan.getRoot().getSources().get(0).getSources().get(0).createToken(null);

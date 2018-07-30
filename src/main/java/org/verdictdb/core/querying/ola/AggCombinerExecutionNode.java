@@ -27,16 +27,7 @@ import org.verdictdb.core.querying.ExecutableNodeBase;
 import org.verdictdb.core.querying.IdCreator;
 import org.verdictdb.core.querying.QueryNodeBase;
 import org.verdictdb.core.querying.SubscriptionTicket;
-import org.verdictdb.core.sqlobject.AliasReference;
-import org.verdictdb.core.sqlobject.AliasedColumn;
-import org.verdictdb.core.sqlobject.AsteriskColumn;
-import org.verdictdb.core.sqlobject.BaseColumn;
-import org.verdictdb.core.sqlobject.BaseTable;
-import org.verdictdb.core.sqlobject.ColumnOp;
-import org.verdictdb.core.sqlobject.SelectItem;
-import org.verdictdb.core.sqlobject.SelectQuery;
-import org.verdictdb.core.sqlobject.SetOperationRelation;
-import org.verdictdb.core.sqlobject.SqlConvertible;
+import org.verdictdb.core.sqlobject.*;
 import org.verdictdb.exception.VerdictDBException;
 
 public class AggCombinerExecutionNode extends CreateTableAsSelectNode {
@@ -118,7 +109,7 @@ public class AggCombinerExecutionNode extends CreateTableAsSelectNode {
     List<SelectItem> allItems = new ArrayList<>();
     
     // replace the select list
-    List<String> groupAliasNames = new ArrayList<>();
+    List<GroupingAttribute> groupingAttributes = new ArrayList<>();
     for (SelectItem item : rightQuery.getSelectList()) {
       // an aggregate column is either max/min-ed or summed.
       if (item.isAggregateColumn()) {
@@ -146,11 +137,12 @@ public class AggCombinerExecutionNode extends CreateTableAsSelectNode {
         }
       }
       else {
+        UnnamedColumn col =  new BaseColumn(unionTableAlias, ((AliasedColumn) item).getAliasName());
         allItems.add(
             new AliasedColumn(
-                new BaseColumn(unionTableAlias, ((AliasedColumn) item).getAliasName()),
+                col,
                 ((AliasedColumn) item).getAliasName()));
-        groupAliasNames.add(((AliasedColumn) item).getAliasName());
+        groupingAttributes.add(col);
       }
     }
 
@@ -164,8 +156,8 @@ public class AggCombinerExecutionNode extends CreateTableAsSelectNode {
         new SetOperationRelation(right, left, SetOperationRelation.SetOpType.unionAll);
     newBase.setAliasName(unionTableAlias);
     SelectQuery unionQuery = SelectQuery.create(allItems, newBase);
-    for (String a : groupAliasNames) {
-      unionQuery.addGroupby(new AliasReference(a));
+    for (GroupingAttribute a : groupingAttributes) {
+      unionQuery.addGroupby(a);
     }
     /*
     // finally, creates a join query
