@@ -105,7 +105,7 @@ public class AggCombinerExecutionNode extends CreateTableAsSelectNode {
     List<SelectItem> allItems = new ArrayList<>();
     
     // replace the select list
-    List<String> groupAliasNames = new ArrayList<>();
+    List<GroupingAttribute> groupingAttributes = new ArrayList<>();
     for (SelectItem item : rightQuery.getSelectList()) {
       // an aggregate column is either max/min-ed or summed.
       if (item.isAggregateColumn()) {
@@ -133,11 +133,12 @@ public class AggCombinerExecutionNode extends CreateTableAsSelectNode {
         }
       }
       else {
+        UnnamedColumn col =  new BaseColumn(unionTableAlias, ((AliasedColumn) item).getAliasName());
         allItems.add(
             new AliasedColumn(
-                new BaseColumn(unionTableAlias, ((AliasedColumn) item).getAliasName()),
+                col,
                 ((AliasedColumn) item).getAliasName()));
-        groupAliasNames.add(((AliasedColumn) item).getAliasName());
+        groupingAttributes.add(col);
       }
     }
 
@@ -151,8 +152,8 @@ public class AggCombinerExecutionNode extends CreateTableAsSelectNode {
         new SetOperationRelation(right, left, SetOperationRelation.SetOpType.unionAll);
     newBase.setAliasName(unionTableAlias);
     SelectQuery unionQuery = SelectQuery.create(allItems, newBase);
-    for (String a : groupAliasNames) {
-      unionQuery.addGroupby(new AliasReference(a));
+    for (GroupingAttribute a : groupingAttributes) {
+      unionQuery.addGroupby(a);
     }
     /*
     // finally, creates a join query
