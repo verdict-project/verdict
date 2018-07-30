@@ -16,17 +16,29 @@
 
 package org.verdictdb.sqlwriter;
 
-import com.google.common.base.Joiner;
-import org.apache.commons.lang3.tuple.Pair;
-import org.verdictdb.commons.VerdictDBLogger;
-import org.verdictdb.core.sqlobject.*;
-import org.verdictdb.exception.VerdictDBException;
-import org.verdictdb.exception.VerdictDBTypeException;
-import org.verdictdb.sqlsyntax.*;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
+
+import org.apache.commons.lang3.tuple.Pair;
+import org.verdictdb.commons.VerdictDBLogger;
+import org.verdictdb.core.sqlobject.AsteriskColumn;
+import org.verdictdb.core.sqlobject.BaseTable;
+import org.verdictdb.core.sqlobject.CreateScrambledTableQuery;
+import org.verdictdb.core.sqlobject.CreateTableAsSelectQuery;
+import org.verdictdb.core.sqlobject.CreateTableDefinitionQuery;
+import org.verdictdb.core.sqlobject.CreateTableQuery;
+import org.verdictdb.core.sqlobject.DropTableQuery;
+import org.verdictdb.core.sqlobject.SelectQuery;
+import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.exception.VerdictDBTypeException;
+import org.verdictdb.sqlsyntax.HiveSyntax;
+import org.verdictdb.sqlsyntax.ImpalaSyntax;
+import org.verdictdb.sqlsyntax.PostgresqlSyntax;
+import org.verdictdb.sqlsyntax.SparkSyntax;
+import org.verdictdb.sqlsyntax.SqlSyntax;
+
+import com.google.common.base.Joiner;
 
 public class CreateTableToSql {
 

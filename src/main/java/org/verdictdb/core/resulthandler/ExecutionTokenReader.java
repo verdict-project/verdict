@@ -16,10 +16,10 @@
 
 package org.verdictdb.core.resulthandler;
 
+import java.util.Iterator;
+
 import org.verdictdb.core.execplan.ExecutionInfoToken;
 import org.verdictdb.core.execplan.ExecutionTokenQueue;
-
-import java.util.Iterator;
 
 public class ExecutionTokenReader
     implements Iterable<ExecutionInfoToken>, Iterator<ExecutionInfoToken> {

@@ -1,9 +1,9 @@
 package org.verdictdb.coordinator;
 
+import java.util.Iterator;
+
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.core.resulthandler.ExecutionResultReader;
-
-import java.util.Iterator;
 
 public class VerdictResultStreamFromExecutionResultReader implements VerdictResultStream {
 

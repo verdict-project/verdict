@@ -1,5 +1,10 @@
 package org.verdictdb.core.querying.ola;
 
+import static org.junit.Assert.assertEquals;
+
+import java.sql.DriverManager;
+import java.sql.SQLException;
+
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.connection.DbmsConnection;
@@ -12,17 +17,19 @@ import org.verdictdb.core.querying.QueryExecutionPlan;
 import org.verdictdb.core.querying.QueryExecutionPlanFactory;
 import org.verdictdb.core.resulthandler.ExecutionTokenReader;
 import org.verdictdb.core.scrambling.SimpleTreePlan;
-import org.verdictdb.core.sqlobject.*;
+import org.verdictdb.core.sqlobject.AliasedColumn;
+import org.verdictdb.core.sqlobject.AsteriskColumn;
+import org.verdictdb.core.sqlobject.BaseColumn;
+import org.verdictdb.core.sqlobject.BaseTable;
+import org.verdictdb.core.sqlobject.ColumnOp;
+import org.verdictdb.core.sqlobject.ConstantColumn;
+import org.verdictdb.core.sqlobject.DropTableQuery;
+import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBValueException;
 import org.verdictdb.sqlsyntax.H2Syntax;
 import org.verdictdb.sqlwriter.QueryToSql;
-
-import java.sql.DriverManager;
-import java.sql.SQLException;
-
-import static org.junit.Assert.assertEquals;
 
 public class AggCombinerExecutionNodeTest {
   

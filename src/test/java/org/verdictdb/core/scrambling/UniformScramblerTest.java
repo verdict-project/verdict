@@ -1,5 +1,14 @@
 package org.verdictdb.core.scrambling;
 
+import static org.junit.Assert.assertEquals;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.Random;
+
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -10,11 +19,6 @@ import org.verdictdb.sqlsyntax.H2Syntax;
 import org.verdictdb.sqlsyntax.HiveSyntax;
 import org.verdictdb.sqlwriter.CreateTableToSql;
 import org.verdictdb.sqlwriter.SelectQueryToSql;
-
-import java.sql.*;
-import java.util.Random;
-
-import static org.junit.Assert.assertEquals;
 
 public class UniformScramblerTest {
 

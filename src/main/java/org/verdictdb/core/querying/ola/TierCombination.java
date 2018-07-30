@@ -1,13 +1,13 @@
 package org.verdictdb.core.querying.ola;
 
-import org.apache.commons.lang3.tuple.Pair;
-
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+
+import org.apache.commons.lang3.tuple.Pair;
 
 public class TierCombination implements Iterable<Map.Entry<Pair<String, String>, Integer>> {
   

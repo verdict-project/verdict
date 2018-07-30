@@ -16,14 +16,6 @@
 
 package org.verdictdb.core.execplan;
 
-import org.verdictdb.commons.VerdictDBLogger;
-import org.verdictdb.connection.DbmsConnection;
-import org.verdictdb.connection.DbmsQueryResult;
-import org.verdictdb.core.sqlobject.SqlConvertible;
-import org.verdictdb.exception.VerdictDBException;
-import org.verdictdb.exception.VerdictDBValueException;
-import org.verdictdb.sqlwriter.QueryToSql;
-
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -31,6 +23,14 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+
+import org.verdictdb.commons.VerdictDBLogger;
+import org.verdictdb.connection.DbmsConnection;
+import org.verdictdb.connection.DbmsQueryResult;
+import org.verdictdb.core.sqlobject.SqlConvertible;
+import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.exception.VerdictDBValueException;
+import org.verdictdb.sqlwriter.QueryToSql;
 
 public class ExecutableNodeRunner implements Runnable {
 

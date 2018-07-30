@@ -16,12 +16,12 @@
 
 package org.verdictdb.core.execplan;
 
+import java.util.List;
+import java.util.Map;
+
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.core.sqlobject.SqlConvertible;
 import org.verdictdb.exception.VerdictDBException;
-
-import java.util.List;
-import java.util.Map;
 
 public interface ExecutableNode {
 

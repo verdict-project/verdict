@@ -16,11 +16,16 @@
 
 package org.verdictdb.core.scrambling;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
+
 import org.verdictdb.core.execplan.ExecutableNode;
 import org.verdictdb.core.execplan.ExecutablePlan;
 import org.verdictdb.core.querying.ExecutableNodeBase;
-
-import java.util.*;
 
 /**
  * Easily creates a plan given a root node.

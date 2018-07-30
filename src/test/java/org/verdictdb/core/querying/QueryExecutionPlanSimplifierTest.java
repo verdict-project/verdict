@@ -1,5 +1,10 @@
 package org.verdictdb.core.querying;
 
+import static org.junit.Assert.assertEquals;
+
+import java.sql.DriverManager;
+import java.sql.SQLException;
+
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.connection.DbmsConnection;
@@ -12,11 +17,6 @@ import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBValidationException;
 import org.verdictdb.sqlreader.NonValidatingSQLParser;
 import org.verdictdb.sqlsyntax.H2Syntax;
-
-import java.sql.DriverManager;
-import java.sql.SQLException;
-
-import static org.junit.Assert.assertEquals;
 
 public class QueryExecutionPlanSimplifierTest {
 

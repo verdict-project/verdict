@@ -1,16 +1,21 @@
 package org.verdictdb.jdbc41;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
-import org.junit.Test;
-import org.verdictdb.exception.VerdictDBDbmsException;
+import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.io.IOException;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
 import java.util.Properties;
 
-import static org.junit.Assert.assertEquals;
+import org.junit.Test;
+import org.verdictdb.exception.VerdictDBDbmsException;
+
+import com.google.common.base.Charsets;
+import com.google.common.io.Files;
 
 public class DriverTest {
 
