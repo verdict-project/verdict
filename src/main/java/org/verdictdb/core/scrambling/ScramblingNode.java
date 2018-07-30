@@ -54,7 +54,8 @@ public class ScramblingNode extends CreateScrambledTableNode {
       String originalTableName,
       ScramblingMethod method,
       String tierColumnName,
-      String blockColumnName) {
+      String blockColumnName,
+      boolean createIfNotExists) {
 
     super(
         namer,
@@ -63,7 +64,8 @@ public class ScramblingNode extends CreateScrambledTableNode {
         originalTableName,
         method,
         tierColumnName,
-        blockColumnName);
+        blockColumnName,
+        createIfNotExists);
   }
 
   /**
@@ -109,8 +111,15 @@ public class ScramblingNode extends CreateScrambledTableNode {
 
     String tierColumnName = options.get("tierColumnName");
     String blockColumnName = options.get("blockColumnName");
+    boolean createIfNotExists = options.get("createIfNotExists").equals("true");
     return new ScramblingNode(
-        idCreator, oldSchemaName, oldTableName, method, tierColumnName, blockColumnName);
+        idCreator,
+        oldSchemaName,
+        oldTableName,
+        method,
+        tierColumnName,
+        blockColumnName,
+        createIfNotExists);
   }
 
   @Override

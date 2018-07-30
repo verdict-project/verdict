@@ -109,14 +109,13 @@ public class ExecutionContext {
             String.format("Scramble size of %f not supported.", scrambleQuery.getSize()));
       }
 
-      // TODO: store this to our own metadata db later
-      ScrambleMeta meta =
-          scrambler.scramble(
-              scrambleQuery.getOriginalSchema(),
-              scrambleQuery.getOriginalTable(),
-              scrambleQuery.getNewSchema(),
-              scrambleQuery.getNewTable(),
-              scrambleQuery.getMethod()); // dyoon: size is not used atm?
+      // store this to our own metadata db.
+      ScrambleMeta meta = scrambler.scramble(scrambleQuery);
+      //              scrambleQuery.getOriginalSchema(),
+      //              scrambleQuery.getOriginalTable(),
+      //              scrambleQuery.getNewSchema(),
+      //              scrambleQuery.getNewTable(),
+      //              scrambleQuery.getMethod()); // dyoon: size is not used atm?
 
       // Add metadata to metastore
       ScrambleMetaStore metaStore = new ScrambleMetaStore(context.getConnection());
@@ -163,13 +162,16 @@ public class ExecutionContext {
                         .replace("`", ""); // remove all types of 'quotes'
             double percent =
                 (ctx.percent == null) ? 1.0 : Double.parseDouble(ctx.percent.getText());
-            return new CreateScrambleQuery(
-                scrambleTable.getSchemaName(),
-                scrambleTable.getTableName(),
-                originalTable.getSchemaName(),
-                originalTable.getTableName(),
-                method,
-                percent);
+            CreateScrambleQuery query =
+                new CreateScrambleQuery(
+                    scrambleTable.getSchemaName(),
+                    scrambleTable.getTableName(),
+                    originalTable.getSchemaName(),
+                    originalTable.getTableName(),
+                    method,
+                    percent);
+            if (ctx.IF() != null) query.setIfNotExists(true);
+            return query;
           }
         };
 

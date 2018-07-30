@@ -16,32 +16,16 @@
 
 package org.verdictdb.sqlreader;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Vector;
-
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.connection.MetaDataProvider;
-import org.verdictdb.core.sqlobject.AbstractRelation;
-import org.verdictdb.core.sqlobject.AliasReference;
-import org.verdictdb.core.sqlobject.AliasedColumn;
-import org.verdictdb.core.sqlobject.AsteriskColumn;
-import org.verdictdb.core.sqlobject.BaseColumn;
-import org.verdictdb.core.sqlobject.BaseTable;
-import org.verdictdb.core.sqlobject.ColumnOp;
-import org.verdictdb.core.sqlobject.ConstantColumn;
-import org.verdictdb.core.sqlobject.GroupingAttribute;
-import org.verdictdb.core.sqlobject.JoinTable;
-import org.verdictdb.core.sqlobject.OrderbyAttribute;
-import org.verdictdb.core.sqlobject.SelectItem;
-import org.verdictdb.core.sqlobject.SelectQuery;
-import org.verdictdb.core.sqlobject.SubqueryColumn;
-import org.verdictdb.core.sqlobject.UnnamedColumn;
+import org.verdictdb.core.scrambling.ScrambleMeta;
+import org.verdictdb.core.scrambling.ScrambleMetaSet;
+import org.verdictdb.core.sqlobject.*;
 import org.verdictdb.exception.VerdictDBDbmsException;
+import org.verdictdb.metastore.ScrambleMetaStore;
+
+import java.util.*;
 
 public class RelationStandardizer {
 
@@ -52,6 +36,9 @@ public class RelationStandardizer {
   private static long duplicateIdentifer = 1;
 
   private static String verdictTableAliasPrefix = "vt";
+
+  // metadata for existing scramble tables.
+  private ScrambleMetaStore metaStore;
 
   // key is the column name and value is table alias name
   private HashMap<String, String> colNameAndTableAlias = new HashMap<>();
@@ -81,6 +68,11 @@ public class RelationStandardizer {
 
   public RelationStandardizer(MetaDataProvider meta) {
     this.meta = meta;
+  }
+
+  public RelationStandardizer(MetaDataProvider meta, ScrambleMetaStore metaStore) {
+    this.meta = meta;
+    this.metaStore = metaStore;
   }
 
   private BaseColumn replaceBaseColumn(BaseColumn col) {
@@ -197,7 +189,7 @@ public class RelationStandardizer {
           searchList.add(col);
         }
       } else if (cond instanceof SubqueryColumn) {
-        RelationStandardizer g = new RelationStandardizer(meta);
+        RelationStandardizer g = new RelationStandardizer(meta, metaStore);
         g.oldTableAliasMap.putAll(oldTableAliasMap);
         g.setColNameAndColAlias(colNameAndColAlias);
         g.setColumnOpAliasMap(columnOpAliasMap);
@@ -217,9 +209,8 @@ public class RelationStandardizer {
   }
 
   /**
-   *
-   * @return: replaced Groupby list or Orderby list
-   * If it is groupby, we should return column instead of alias
+   * @return: replaced Groupby list or Orderby list If it is groupby, we should return column
+   *     instead of alias
    */
   private List<GroupingAttribute> replaceGroupby(
       List<SelectItem> selectItems,
@@ -238,7 +229,8 @@ public class RelationStandardizer {
               newGroupby.add(
                   new AliasReference(
                       tableSource,
-                      duplicateColNameAndColAlias.get(new ImmutablePair<>(tableSource, columnName))));
+                      duplicateColNameAndColAlias.get(
+                          new ImmutablePair<>(tableSource, columnName))));
             } else if (colNameAndColAlias.containsKey(columnName)) {
               newGroupby.add(new AliasReference(colNameAndColAlias.get(columnName)));
             } else newGroupby.add(new AliasReference(((BaseColumn) g).getColumnName()));
@@ -327,20 +319,32 @@ public class RelationStandardizer {
     //  table.setAliasName(verdictTableAliasPrefix + itemID++);
     // }
     if (table instanceof BaseTable) {
+      BaseTable bt = (BaseTable) table;
       List<String> colName = new ArrayList<>();
-      if (((BaseTable) table).getSchemaName() == null) {
-        ((BaseTable) table).setSchemaName(meta.getDefaultSchema());
+      if (bt.getSchemaName() == null) {
+        bt.setSchemaName(meta.getDefaultSchema());
       }
-      List<Pair<String, String>> cols =
-          meta.getColumns(((BaseTable) table).getSchemaName(), ((BaseTable) table).getTableName());
+      List<Pair<String, String>> cols = meta.getColumns(bt.getSchemaName(), bt.getTableName());
       for (Pair<String, String> c : cols) {
-        colNameAndTableAlias.put(c.getKey(), table.getAliasName().get());
+        colNameAndTableAlias.put(c.getKey(), bt.getAliasName().get());
         colName.add(c.getKey());
       }
+      // replace original table with its scrambled table if exists.
+      if (metaStore != null) {
+        ScrambleMetaSet metaSet = metaStore.retrieve();
+        Iterator<ScrambleMeta> iterator = metaSet.iterator();
+        while (iterator.hasNext()) {
+          ScrambleMeta meta = iterator.next();
+          if (meta.getOriginalSchemaName().equals(bt.getSchemaName())
+              && meta.getOriginalTableName().equals(bt.getTableName())) {
+            bt.setSchemaName(meta.getSchemaName());
+            bt.setTableName(meta.getTableName());
+            break;
+          }
+        }
+      }
       tableInfoAndAlias.put(
-          new ImmutablePair<>(
-              ((BaseTable) table).getSchemaName(), ((BaseTable) table).getTableName()),
-          table.getAliasName().get());
+          ImmutablePair.of(bt.getSchemaName(), bt.getTableName()), table.getAliasName().get());
       return new ImmutablePair<>(colName, table);
     } else if (table instanceof JoinTable) {
       List<String> joinColName = new ArrayList<>();
@@ -358,7 +362,7 @@ public class RelationStandardizer {
       return new ImmutablePair<>(joinColName, table);
     } else if (table instanceof SelectQuery) {
       List<String> colName = new ArrayList<>();
-      RelationStandardizer g = new RelationStandardizer(meta);
+      RelationStandardizer g = new RelationStandardizer(meta, metaStore);
       g.oldTableAliasMap.putAll(oldTableAliasMap);
       g.setTableInfoAndAlias(tableInfoAndAlias);
       g.setColNameAndTableAlias(colNameAndTableAlias);
