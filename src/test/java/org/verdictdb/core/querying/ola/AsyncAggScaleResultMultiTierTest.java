@@ -148,11 +148,12 @@ public class AsyncAggScaleResultMultiTierTest {
     assertEquals(
         new HyperTableCube(Arrays.asList(d1)),
         ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getAggMeta().getCubes().get(0));
-    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
+    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMetaSet(meta);
 
 
     JdbcConnection jdbcConnection = new JdbcConnection(conn, new MysqlSyntax());
-    //ExecutablePlanRunner.runTillEnd(jdbcConnection, queryExecutionPlan);
+    jdbcConnection.setOutputDebugMessage(true);
+//    ExecutablePlanRunner.runTillEnd(jdbcConnection, queryExecutionPlan);
 
     ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(jdbcConnection, queryExecutionPlan);
     int resultReturnedCnt = 0;
@@ -181,7 +182,7 @@ public class AsyncAggScaleResultMultiTierTest {
     assertEquals(
         new HyperTableCube(Arrays.asList(d1)),
         ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getAggMeta().getCubes().get(0));
-    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
+    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMetaSet(meta);
 
 
     JdbcConnection jdbcConnection = new JdbcConnection(conn, new MysqlSyntax());
@@ -214,7 +215,7 @@ public class AsyncAggScaleResultMultiTierTest {
     assertEquals(
         new HyperTableCube(Arrays.asList(d1)),
         ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getAggMeta().getCubes().get(0));
-    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
+    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMetaSet(meta);
 
 
     JdbcConnection jdbcConnection = new JdbcConnection(conn, new MysqlSyntax());
@@ -247,7 +248,7 @@ public class AsyncAggScaleResultMultiTierTest {
     assertEquals(
         new HyperTableCube(Arrays.asList(d1)),
         ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getAggMeta().getCubes().get(0));
-    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
+    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMetaSet(meta);
 
 
     JdbcConnection jdbcConnection = new JdbcConnection(conn, new MysqlSyntax());
@@ -281,7 +282,7 @@ public class AsyncAggScaleResultMultiTierTest {
     assertEquals(
         new HyperTableCube(Arrays.asList(d1)),
         ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getAggMeta().getCubes().get(0));
-    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
+    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMetaSet(meta);
 
 
     JdbcConnection jdbcConnection = new JdbcConnection(conn, new MysqlSyntax());
@@ -315,7 +316,7 @@ public class AsyncAggScaleResultMultiTierTest {
     assertEquals(
         new HyperTableCube(Arrays.asList(d1)),
         ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getAggMeta().getCubes().get(0));
-    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
+    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMetaSet(meta);
 
 
     JdbcConnection jdbcConnection = new JdbcConnection(conn, new MysqlSyntax());
@@ -349,7 +350,7 @@ public class AsyncAggScaleResultMultiTierTest {
     assertEquals(
         new HyperTableCube(Arrays.asList(d1)),
         ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getAggMeta().getCubes().get(0));
-    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
+    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMetaSet(meta);
 
 
     JdbcConnection jdbcConnection = new JdbcConnection(conn, new MysqlSyntax());
@@ -382,11 +383,11 @@ public class AsyncAggScaleResultMultiTierTest {
     assertEquals(
         new HyperTableCube(Arrays.asList(d1)),
         ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getAggMeta().getCubes().get(0));
-    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
+    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMetaSet(meta);
 
 
     JdbcConnection jdbcConnection = new JdbcConnection(conn, new MysqlSyntax());
-    //ExecutablePlanRunner.runTillEnd(jdbcConnection, queryExecutionPlan);
+//    ExecutablePlanRunner.runTillEnd(jdbcConnection, queryExecutionPlan);
 
     ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(jdbcConnection, queryExecutionPlan);
     int resultReturnedCnt = 0;

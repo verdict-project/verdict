@@ -66,7 +66,7 @@ jobs:
       # Setup necessary test data
       - run: git clone git@github.com:verdictdb/verdictdb-private-resources.git
       # Now build and test
-      - run: mvn -B test 2> /dev/null | tee /tmp/test.log
+      - run: mvn -B test 2> /dev/null
       # Collect test metadata
       - run:
           name: Save test results
@@ -79,7 +79,7 @@ jobs:
       - store_artifacts:
           path: ~/junit
       - store_artifacts:
-          path: /tmp/test.log
+          path: /tmp/verdictdb-debug.log
       - save_cache:
           paths:
             - ~/.m2
@@ -136,12 +136,12 @@ jobs:
       # Setup necessary test data
       - run: git clone git@github.com:verdictdb/verdictdb-private-resources.git
       # Now build and test
-      - run: mvn -B cobertura:cobertura 2> /dev/null | tee /tmp/test.log
+      - run: mvn -B cobertura:cobertura 2> /dev/null
       # Upload codecov
       #- run: mvn -DskipTests cobertura:cobertura
       - run: bash <(curl -s https://codecov.io/bash) -t 9cf48c61-07ed-4a14-9eed-f7129664ee79
       - store_artifacts:
-          path: /tmp/test.log
+          path: /tmp/verdictdb-debug.log
       - save_cache:
           paths:
             - ~/.m2
@@ -187,7 +187,7 @@ jobs:
       # Setup necessary test data
       - run: git clone git@github.com:verdictdb/verdictdb-private-resources.git
       # Now build and test
-      - run: mvn -B test 2> /dev/null | tee /tmp/test.log
+      - run: mvn -B test 2> /dev/null
 
       # Check the JDBC service file correctness
       - run: bash .circleci/check_jdbc_driver_name.sh
@@ -205,7 +205,7 @@ jobs:
       - store_artifacts:
           path: ~/junit
       - store_artifacts:
-          path: /tmp/test.log
+          path: /tmp/verdictdb-debug.log
       - save_cache:
           paths:
             - ~/.m2
@@ -247,7 +247,7 @@ jobs:
         # Setup necessary test data
         - run: git clone git@github.com:verdictdb/verdictdb-private-resources.git
         # run tests!
-        - run: mvn test -Dtest=SparkTpchSelectQueryCoordinatorTest 2> /dev/null | tee /tmp/test.log
+        - run: mvn test -Dtest=SparkTpchSelectQueryCoordinatorTest 2> /dev/null
         # - run: mvn test -Dtest=RedshiftTpchSelectQueryCoordinatorTest 2> /dev/null
         # - run: mvn test -Dtest=ImpalaTpchSelectQueryCoordinatorTest 2> /dev/null
         # Collect test metadata
@@ -262,7 +262,7 @@ jobs:
         - store_artifacts:
             path: ~/junit
         - store_artifacts:
-            path: /tmp/test.log
+            path: /tmp/verdictdb-debug.log
         - save_cache:
             paths:
               - ~/.m2
@@ -303,8 +303,8 @@ jobs:
         - run: git clone git@github.com:verdictdb/verdictdb-private-resources.git
         # run tests!
         # - run: mvn test -Dtest=SparkTpchSelectQueryCoordinatorTest 2> /dev/null
-        - run: mvn test -Dtest=RedshiftTpchSelectQueryCoordinatorTest 2> /dev/null | tee /tmp/test-redshift.log
-        - run: mvn test -Dtest=ImpalaTpchSelectQueryCoordinatorTest 2> /dev/null | tee /tmp/test-impala.log
+        - run: mvn test -Dtest=RedshiftTpchSelectQueryCoordinatorTest 2> /dev/null
+        - run: mvn test -Dtest=ImpalaTpchSelectQueryCoordinatorTest 2> /dev/null
         - run:
             name: Save test results
             command: |
@@ -316,9 +316,7 @@ jobs:
         - store_artifacts:
             path: ~/junit
         - store_artifacts:
-            path: /tmp/test-impala.log
-        - store_artifacts:
-            path: /tmp/test-redshift.log
+            path: /tmp/verdictdb-debug.log
         - save_cache:
             paths:
               - ~/.m2

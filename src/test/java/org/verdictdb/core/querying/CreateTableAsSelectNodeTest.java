@@ -107,6 +107,17 @@ public class CreateTableAsSelectNodeTest {
           public String generateAliasName() {
             return "t";
           }
+  
+          @Override
+          public String generateAliasName(String keyword) {
+            return "t";
+          }
+  
+          @Override
+          public int generateSerialNumber() {
+            return 0;
+          }
+  
           @Override
           public Pair<String, String> generateTempTableName() {
             return Pair.of(REDSHIFT_SCHEMA, partitionedTable);

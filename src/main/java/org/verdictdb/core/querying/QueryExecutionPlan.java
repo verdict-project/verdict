@@ -16,19 +16,24 @@
 
 package org.verdictdb.core.querying;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
+
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.core.execplan.ExecutableNode;
 import org.verdictdb.core.execplan.ExecutablePlan;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
-import org.verdictdb.core.sqlobject.SelectQuery;
-import org.verdictdb.exception.VerdictDBException;
-import org.verdictdb.exception.VerdictDBTypeException;
-import org.verdictdb.exception.VerdictDBValueException;
-
-import java.io.*;
-import java.util.*;
 
 public class QueryExecutionPlan implements ExecutablePlan, IdCreator, Serializable {
 
@@ -41,10 +46,20 @@ public class QueryExecutionPlan implements ExecutablePlan, IdCreator, Serializab
   protected IdCreator idCreator;
 
   public QueryExecutionPlan() {}
+  
+  public QueryExecutionPlan(IdCreator idCreator) {
+    this.idCreator = idCreator;
+    this.scrambleMeta = new ScrambleMetaSet();
+  }
+  
+  public QueryExecutionPlan(IdCreator idCreator, ScrambleMetaSet scrambleMeta) {
+    this.idCreator = idCreator;
+    this.scrambleMeta = scrambleMeta;
+  }
 
   public QueryExecutionPlan(String scratchpadSchemaName) {
-    this.scrambleMeta = new ScrambleMetaSet();
     this.idCreator = new TempIdCreatorInScratchpadSchema(scratchpadSchemaName);
+    this.scrambleMeta = new ScrambleMetaSet();
   }
 
   public QueryExecutionPlan(String scratchpadSchemaName, ScrambleMetaSet scrambleMeta) {
@@ -52,18 +67,18 @@ public class QueryExecutionPlan implements ExecutablePlan, IdCreator, Serializab
     this.scrambleMeta = scrambleMeta;
   }
 
-  /**
-   * @param query A well-formed select query object
-   * @throws VerdictDBValueException
-   * @throws VerdictDBException
-   */
+//  /**
+//   * @param query A well-formed select query object
+//   * @throws VerdictDBValueException
+//   * @throws VerdictDBException
+//   */
   /*
   public QueryExecutionPlan(
       String scratchpadSchemaName, ScrambleMetaSet scrambleMeta, SelectQuery query)
       throws VerdictDBException {
 
     this(scratchpadSchemaName);
-    setScrambleMeta(scrambleMeta);
+    setScrambleMetaSet(scrambleMeta);
   }
 
   public QueryExecutionPlan(String scratchpadSchemaName, ExecutableNodeBase root) {
@@ -73,6 +88,10 @@ public class QueryExecutionPlan implements ExecutablePlan, IdCreator, Serializab
   */
   public int getSerialNumber() {
     return ((TempIdCreatorInScratchpadSchema) idCreator).getSerialNumber();
+  }
+  
+  public IdCreator getIdCreator() {
+    return idCreator;
   }
 
   public ScrambleMetaSet getScrambleMeta() {
@@ -115,34 +134,34 @@ public class QueryExecutionPlan implements ExecutablePlan, IdCreator, Serializab
     this.root = root;
   }
 
-  /**
-   * Creates a tree in which each node is QueryExecutionNode. Each AggQueryExecutionNode corresponds
-   * to an aggregate query, whether it is the main query or a subquery.
-   *
-   * <p>1. Each QueryExecutionNode is supposed to run on a separate thread. 2. Restrict the
-   * aggregate subqueries to appear in the where clause or in the from clause (i.e., not in the
-   * select list, not in having or group-by) 3. Each node cannot include any correlated predicate
-   * (i.e., the column that appears in outer queries). (1) In the future, we should convert a
-   * correlated subquery into a joined subquery (if possible). (2) Otherwise, the entire query
-   * including a correlated subquery must be the query of a single node. 4. The results of AggNode
-   * and ProjectionNode are stored as a materialized view; the names of those materialized views are
-   * passed to their parents for potential additional processing or reporting.
-   *
-   * <p>//@param conn
-   *
-   * @param query
-   * @return Pair of roots of the tree and post-processing interface.
-   * @throws VerdictDBValueException
-   * @throws VerdictDBTypeException
-   */
-  ExecutableNodeBase makePlan(SelectQuery query) throws VerdictDBException {
-    ExecutableNodeBase root = SelectAllExecutionNode.create(idCreator, query);
-    return root;
-  }
+//  /**
+//   * Creates a tree in which each node is QueryExecutionNode. Each AggQueryExecutionNode corresponds
+//   * to an aggregate query, whether it is the main query or a subquery.
+//   *
+//   * <p>1. Each QueryExecutionNode is supposed to run on a separate thread. 2. Restrict the
+//   * aggregate subqueries to appear in the where clause or in the from clause (i.e., not in the
+//   * select list, not in having or group-by) 3. Each node cannot include any correlated predicate
+//   * (i.e., the column that appears in outer queries). (1) In the future, we should convert a
+//   * correlated subquery into a joined subquery (if possible). (2) Otherwise, the entire query
+//   * including a correlated subquery must be the query of a single node. 4. The results of AggNode
+//   * and ProjectionNode are stored as a materialized view; the names of those materialized views are
+//   * passed to their parents for potential additional processing or reporting.
+//   *
+//   * <p>//@param conn
+//   *
+//   * @param query
+//   * @return Pair of roots of the tree and post-processing interface.
+//   * @throws VerdictDBValueException
+//   * @throws VerdictDBTypeException
+//   */
+//  ExecutableNodeBase makePlan(SelectQuery query) throws VerdictDBException {
+//    ExecutableNodeBase root = SelectAllExecutionNode.create(idCreator, query);
+//    return root;
+//  }
 
   // clean up any intermediate materialized tables
   public void cleanUp() {
-    ((TempIdCreatorInScratchpadSchema) idCreator).reset();
+  
   }
 
   @Override
@@ -211,12 +230,30 @@ public class QueryExecutionPlan implements ExecutablePlan, IdCreator, Serializab
   public ExecutableNode getReportingNode() {
     return root;
   }
-
+  
   @Override
   public String generateAliasName() {
     return idCreator.generateAliasName();
   }
-
+  
+  @Override
+  public String generateAliasName(String keyword) {
+    return idCreator.generateAliasName(keyword);
+  }
+  
+  @Override
+  public int generateSerialNumber() {
+    return idCreator.generateSerialNumber();
+  }
+  
+  protected void resetAliasNameGeneration() {
+    ((TempIdCreatorInScratchpadSchema) idCreator).resetAliasNameGeneration();
+  }
+  
+  protected void resetAliasNameGeneration(String keyword) {
+    ((TempIdCreatorInScratchpadSchema) idCreator).resetAliasNameGeneration(keyword);
+  }
+  
   @Override
   public Pair<String, String> generateTempTableName() {
     return idCreator.generateTempTableName();

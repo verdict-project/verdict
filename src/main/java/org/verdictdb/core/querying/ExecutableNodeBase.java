@@ -16,6 +16,18 @@
 
 package org.verdictdb.core.querying;
 
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.TreeMap;
+
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -31,10 +43,6 @@ import org.verdictdb.core.querying.ola.AggMeta;
 import org.verdictdb.core.sqlobject.SqlConvertible;
 import org.verdictdb.exception.VerdictDBException;
 
-import java.io.Serializable;
-import java.util.*;
-import java.util.Map.Entry;
-
 public class ExecutableNodeBase implements ExecutableNode, Serializable {
 
   private static final long serialVersionUID = 1424215482199124961L;
@@ -45,20 +53,38 @@ public class ExecutableNodeBase implements ExecutableNode, Serializable {
 
   Map<Integer, ExecutionTokenQueue> channels = new TreeMap<>();
 
-  AggMeta aggMeta = new AggMeta();
+  protected AggMeta aggMeta = new AggMeta();
 
-  private final String uniqueId;
+  protected int uniqueId;
 
   private int groupId; // copied when deepcopying; used by ExecutablePlanRunner
-
-  public ExecutableNodeBase() {
-    uniqueId = RandomStringUtils.randomAlphanumeric(10);
+  
+  private UniqueChannelCreator channelCreator = new UniqueChannelCreator(this);
+  
+  public ExecutableNodeBase(IdCreator creator) {
+    this(creator.generateSerialNumber());
+  }
+  
+  /**
+   *
+   * @param uniqueId -1 indicates 'not assinged'
+   */
+  public ExecutableNodeBase(int uniqueId) {
+    this.uniqueId = uniqueId;
     groupId = Integer.valueOf(RandomStringUtils.randomNumeric(5));
   }
-
-  public static ExecutableNodeBase create() {
-    return new ExecutableNodeBase();
+  
+  public void setId(int id) {
+    uniqueId = id;
   }
+  
+  public int getId() {
+    return uniqueId;
+  }
+
+//  public static ExecutableNodeBase create() {
+//    return new ExecutableNodeBase();
+//  }
 
   public int getGroupId() {
     return groupId;
@@ -66,7 +92,8 @@ public class ExecutableNodeBase implements ExecutableNode, Serializable {
 
   // setup method
   public SubscriptionTicket createSubscriptionTicket() {
-    return new SubscriptionTicket(this);
+    int channelNumber = channelCreator.getNewChannelNumber();
+    return new SubscriptionTicket(this, channelNumber);
   }
 
   public void registerSubscriber(SubscriptionTicket ticket) {
@@ -164,8 +191,8 @@ public class ExecutableNodeBase implements ExecutableNode, Serializable {
   }
 
   @Override
-  public List<ExecutionTokenQueue> getSourceQueues() {
-    return new ArrayList<ExecutionTokenQueue>(channels.values());
+  public Map<Integer, ExecutionTokenQueue> getSourceQueues() {
+    return channels;
   }
 
   @Override
@@ -257,7 +284,7 @@ public class ExecutableNodeBase implements ExecutableNode, Serializable {
   }
 
   public ExecutableNodeBase deepcopy() {
-    ExecutableNodeBase node = ExecutableNodeBase.create();
+    ExecutableNodeBase node = new ExecutableNodeBase(uniqueId);
     copyFields(this, node);
     return node;
   }
@@ -331,4 +358,23 @@ public class ExecutableNodeBase implements ExecutableNode, Serializable {
         //        .append("channels", channels)
         .toString();
   }
+}
+
+class UniqueChannelCreator implements Serializable {
+  
+  private int identifierNum = 0;
+  
+  private ExecutableNodeBase node;
+  
+  public UniqueChannelCreator(ExecutableNodeBase node) {
+    this.node = node;
+  }
+  
+  public int getNewChannelNumber() {
+    // 1000 is an arbitrary number
+    int newNumber = node.getId()*1000 + identifierNum;
+    identifierNum++;
+    return newNumber;
+  }
+  
 }

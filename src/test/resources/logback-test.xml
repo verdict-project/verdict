@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <configuration>
-    <appender name="FILE" class="ch.qos.logback.core.FileAppender">
-        <file>debug.log</file>
+
+    <appender name="DEBUG" class="ch.qos.logback.core.FileAppender">
+        <file>/tmp/verdictdb-debug.log</file>
         <immediateFlush>true</immediateFlush>
         <encoder>
-            <pattern>%-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <Pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</Pattern>
         </encoder>
     </appender>
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
@@ -16,9 +17,11 @@
             <Pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</Pattern>
         </layout>
     </appender>
-    <statusListener class="ch.qos.logback.core.status.OnConsoleStatusListener"/>
-    <root level="TRACE">
+    <!--<statusListener class="ch.qos.logback.core.status.OnConsoleStatusListener" />-->
+    <statusListener class="ch.qos.logback.core.status.NopStatusListener"/>
+    <logger name="org.verdictdb" level="debug"/>
+    <root level="warn">
         <appender-ref ref="STDOUT"/>
-        <appender-ref ref="FILE"/>
+        <appender-ref ref="DEBUG"/>
     </root>
 </configuration>

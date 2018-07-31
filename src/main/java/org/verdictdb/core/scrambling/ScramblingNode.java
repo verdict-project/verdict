@@ -16,18 +16,26 @@
 
 package org.verdictdb.core.scrambling;
 
-import org.apache.commons.lang3.tuple.Pair;
-import org.verdictdb.connection.DbmsQueryResult;
-import org.verdictdb.core.execplan.ExecutionInfoToken;
-import org.verdictdb.core.querying.IdCreator;
-import org.verdictdb.core.sqlobject.*;
-import org.verdictdb.exception.VerdictDBException;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+
+import org.apache.commons.lang3.tuple.Pair;
+import org.verdictdb.connection.DbmsQueryResult;
+import org.verdictdb.core.execplan.ExecutionInfoToken;
+import org.verdictdb.core.querying.IdCreator;
+import org.verdictdb.core.sqlobject.AbstractRelation;
+import org.verdictdb.core.sqlobject.AliasedColumn;
+import org.verdictdb.core.sqlobject.BaseColumn;
+import org.verdictdb.core.sqlobject.ColumnOp;
+import org.verdictdb.core.sqlobject.ConstantColumn;
+import org.verdictdb.core.sqlobject.SelectItem;
+import org.verdictdb.core.sqlobject.SelectQuery;
+import org.verdictdb.core.sqlobject.SqlConvertible;
+import org.verdictdb.core.sqlobject.UnnamedColumn;
+import org.verdictdb.exception.VerdictDBException;
 
 /**
  * The last stage of scramling process: creates a new table based on some statistics.
@@ -82,7 +90,17 @@ public class ScramblingNode extends CreateScrambledTableNode {
           public String generateAliasName() {
             return null; // we don't need this method
           }
-
+  
+          @Override
+          public String generateAliasName(String keyword) {
+            return null; // we don't need this method
+          }
+  
+          @Override
+          public int generateSerialNumber() {
+            return 0;
+          }
+  
           @Override
           public Pair<String, String> generateTempTableName() {
             return Pair.of(newSchemaName, newTableName);

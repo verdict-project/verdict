@@ -16,13 +16,13 @@
 
 package org.verdictdb.core.execplan;
 
-import com.rits.cloning.Cloner;
-import org.apache.commons.lang3.builder.ToStringBuilder;
-import org.apache.commons.lang3.builder.ToStringStyle;
-
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.apache.commons.lang3.builder.ToStringBuilder;
+
+import com.rits.cloning.Cloner;
 
 public class ExecutionInfoToken implements Serializable {
 
@@ -87,7 +87,9 @@ public class ExecutionInfoToken implements Serializable {
 
   @Override
   public String toString() {
-    return ToStringBuilder.reflectionToString(this, ToStringStyle.SHORT_PREFIX_STYLE);
+    return new ToStringBuilder(this)
+               .append("data", data)
+               .toString();
   }
 
   public Iterable<Map.Entry<String, Object>> entrySet() {
@@ -99,6 +101,27 @@ public class ExecutionInfoToken implements Serializable {
   }
 
   public ExecutionInfoToken deepcopy() {
+//<<<<<<< HEAD
+//    try {
+//      ByteArrayOutputStream bos = new ByteArrayOutputStream();
+//      ObjectOutputStream out = new ObjectOutputStream(bos);
+//      out.writeObject(this);
+//      out.flush();
+//      out.close();
+//
+//      ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(bos.toByteArray()));
+//      ExecutionInfoToken copiedToken = (ExecutionInfoToken) in.readObject();
+//      return copiedToken;
+//
+//    } catch (ClassNotFoundException e) {
+//      e.printStackTrace();
+//    } catch (NotSerializableException e) {
+//      e.printStackTrace();
+//    } catch (IOException e) {
+//      e.printStackTrace();
+//    }
+//    return null;
+//=======
     return new Cloner().deepClone(this);
     //    try {
     //      ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -122,6 +145,7 @@ public class ExecutionInfoToken implements Serializable {
     //      e.printStackTrace();
     //    }
     //    return null;
+//>>>>>>> origin/master
 
     //    ExecutionInfoToken newToken = new ExecutionInfoToken();
     //

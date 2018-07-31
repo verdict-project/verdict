@@ -21,6 +21,7 @@ import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.exception.VerdictDBException;
 
 public class FastConvergeScramblingCoordinatorTest {
+  
   private static Connection mysqlConn;
 
   private static Statement mysqlStmt;

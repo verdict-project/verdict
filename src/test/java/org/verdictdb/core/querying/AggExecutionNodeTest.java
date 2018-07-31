@@ -74,14 +74,27 @@ public class AggExecutionNodeTest {
 //    AggExecutionNode node = new AggExecutionNode(conn, newSchema, newTable, query);
     QueryExecutionPlan plan = QueryExecutionPlanFactory.create("newschema");
     AggExecutionNode node = AggExecutionNode.create(plan, query);
-    String aliasName = String.format("verdictdbalias_%d_0", plan.getSerialNumber());
+    String aliasName = String.format("verdictdb_alias_%d_0", plan.getSerialNumber());
 
     assertEquals(1, node.getExecutableNodeBaseDependents().size());
+    String expectedPlaceholderSchemaName = String.format("placeholderSchema_%d_0", node.hashCode());
+    String expectedPlaceholderTableName = String.format("placeholderTable_%d_0", node.hashCode());
     SelectQuery rewritten = SelectQuery.create(
         Arrays.<SelectItem>asList(
-            new AliasedColumn(new BaseColumn("placeholderSchemaName", aliasName, "a"), "a"))
-        , new BaseTable("placeholderSchemaName", "placeholderTableName", aliasName));
-    assertEquals(rewritten, ((SubqueryColumn)((ColumnOp) node.getSelectQuery().getFilter().get()).getOperand(1)).getSubquery());
+            new AliasedColumn(new BaseColumn(expectedPlaceholderSchemaName, aliasName, "a"), "a"))
+        , new BaseTable(expectedPlaceholderSchemaName, expectedPlaceholderTableName, aliasName));
+    String rewrittenStr = rewritten.toString();
+    String actualStr = ((SubqueryColumn) ((ColumnOp) node.getSelectQuery().getFilter().get()).getOperand(1))
+        .getSubquery().toString();
+    actualStr = actualStr.replaceAll("verdictdb_alias_\\d+_\\d+", "verdictdb_alias");
+    actualStr = actualStr.replaceAll("placeholderSchema_\\d+_\\d+", "placeholderSchema");
+    actualStr = actualStr.replaceAll("placeholderTable_\\d+_\\d+", "placeholderTable");
+    rewrittenStr = rewrittenStr.replaceAll("verdictdb_alias_\\d+_\\d+", "verdictdb_alias");
+    rewrittenStr = rewrittenStr.replaceAll("placeholderSchema_\\d+_\\d+", "placeholderSchema");
+    rewrittenStr = rewrittenStr.replaceAll("placeholderTable_\\d+_\\d+", "placeholderTable");
+    assertEquals(
+        rewrittenStr,
+        actualStr);
 
   }
 

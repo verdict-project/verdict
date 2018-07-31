@@ -16,13 +16,14 @@
 
 package org.verdictdb.core.scrambling;
 
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
-
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 
 public class ScrambleMetaSet implements Serializable, Iterable<ScrambleMeta> {
 
@@ -31,6 +32,14 @@ public class ScrambleMetaSet implements Serializable, Iterable<ScrambleMeta> {
   Map<Pair<String, String>, ScrambleMeta> meta = new HashMap<>();
 
   public ScrambleMetaSet() {}
+  
+  public static ScrambleMetaSet createFromCollection(Collection<ScrambleMeta> metaList) {
+    ScrambleMetaSet metaset = new ScrambleMetaSet();
+    for (ScrambleMeta meta : metaList) {
+      metaset.addScrambleMeta(meta);
+    }
+    return metaset;
+  }
 
   /**
    * Returns the column name used for indicating aggregation block. Typically, the underlying
@@ -44,7 +53,7 @@ public class ScrambleMetaSet implements Serializable, Iterable<ScrambleMeta> {
     return meta.get(metaKey(schemaName, tableName)).getAggregationBlockColumn();
   }
 
-  public ScrambleMeta getMetaForTable(String schemaName, String tableName) {
+  public ScrambleMeta getSingleMeta(String schemaName, String tableName) {
     return meta.get(new ImmutablePair<String, String>(schemaName, tableName));
   }
 

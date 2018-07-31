@@ -1,12 +1,11 @@
 package org.verdictdb.coordinator;
 
-import com.google.common.base.Optional;
-import com.rits.cloning.Cloner;
 import org.verdictdb.commons.AttributeValueRetrievalHelper;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.connection.DbmsQueryResultMetaData;
 
-import java.io.*;
+import com.google.common.base.Optional;
+import com.rits.cloning.Cloner;
 
 public class VerdictSingleResultFromDbmsQueryResult
     extends AttributeValueRetrievalHelper implements VerdictSingleResult {
