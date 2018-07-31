@@ -231,7 +231,7 @@ public class JdbcQueryDataTypeForAllDatabasesTest {
         break;
       case "postgresql":
       case "redshift":
-        sql = String.format("SELECT * FROM \"%s\".\"%s\"", SCHEMA_NAME, TABLE_NAME);
+        sql = String.format("SELECT * FROM \"%s\".\"%s\" ORDER BY bigintcol", SCHEMA_NAME, TABLE_NAME);
         break;
       default:
         fail(String.format("Database '%s' not supported.", database));
@@ -258,6 +258,7 @@ public class JdbcQueryDataTypeForAllDatabasesTest {
           assertEquals(xml1.getString(), xml2.getString());
         } else {
 //          assertEquals(jdbcRs.getObject(i), vcRs.getObject(i));
+//          System.out.println(columnName + " >> " + theirs + " : " + ours);
           assertEquals(theirs, ours);
         }
       }
