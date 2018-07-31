@@ -12,7 +12,9 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.AfterClass;
@@ -251,10 +253,16 @@ public class MetaDataStatementsTest {
     VerdictContext verdict = new VerdictContext(dbmsconn);
     ExecutionContext exec = new ExecutionContext(verdict, 0);
     VerdictSingleResult result = exec.sql("show schemas");
+    
+    Set<String> expected = new HashSet<>();
+    Set<String> actual = new HashSet<>();
     while (jdbcRs.next()) {
       result.next();
-      assertEquals(jdbcRs.getString(1), result.getValue(0));
+      expected.add(jdbcRs.getString(1));
+      actual.add(result.getString(0));
+//      assertEquals(jdbcRs.getString(1), result.getValue(0));
     }
+    assertEquals(expected, actual);
   }
 
   @Test
@@ -290,10 +298,16 @@ public class MetaDataStatementsTest {
     VerdictContext verdict = new VerdictContext(dbmsconn);
     ExecutionContext exec = new ExecutionContext(verdict, 0);
     VerdictSingleResult result = exec.sql(vcsql);
+    
+    Set<String> expected = new HashSet<>();
+    Set<String> actual = new HashSet<>();
     while (jdbcRs.next()) {
       result.next();
-      assertEquals(jdbcRs.getString(1), result.getValue(0));
+      expected.add(jdbcRs.getString(1));
+      actual.add(result.getString(0));
+//      assertEquals(jdbcRs.getString(1), result.getValue(0));
     }
+    assertEquals(expected, actual);
   }
 
   @Test
