@@ -16,17 +16,33 @@
 
 package org.verdictdb.sqlwriter;
 
-import com.google.common.base.Optional;
-import com.google.common.collect.Sets;
-import org.verdictdb.core.sqlobject.*;
+import java.util.List;
+import java.util.Set;
+
+import org.verdictdb.core.sqlobject.AbstractRelation;
+import org.verdictdb.core.sqlobject.AliasReference;
+import org.verdictdb.core.sqlobject.AliasedColumn;
+import org.verdictdb.core.sqlobject.AsteriskColumn;
+import org.verdictdb.core.sqlobject.BaseColumn;
+import org.verdictdb.core.sqlobject.BaseTable;
+import org.verdictdb.core.sqlobject.ColumnOp;
+import org.verdictdb.core.sqlobject.ConstantColumn;
+import org.verdictdb.core.sqlobject.GroupingAttribute;
+import org.verdictdb.core.sqlobject.JoinTable;
+import org.verdictdb.core.sqlobject.OrderbyAttribute;
+import org.verdictdb.core.sqlobject.SelectItem;
+import org.verdictdb.core.sqlobject.SelectQuery;
+import org.verdictdb.core.sqlobject.SetOperationRelation;
+import org.verdictdb.core.sqlobject.SubqueryColumn;
+import org.verdictdb.core.sqlobject.UnnamedColumn;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBTypeException;
 import org.verdictdb.exception.VerdictDBValueException;
 import org.verdictdb.sqlsyntax.PostgresqlSyntax;
 import org.verdictdb.sqlsyntax.SqlSyntax;
 
-import java.util.List;
-import java.util.Set;
+import com.google.common.base.Optional;
+import com.google.common.collect.Sets;
 
 public class SelectQueryToSql {
 
@@ -79,7 +95,8 @@ public class SelectQueryToSql {
     if (column instanceof AliasReference) {
       AliasReference aliasedColumn = (AliasReference) column;
       return (aliasedColumn.getTableAlias() != null)
-          ? quoteName(aliasedColumn.getTableAlias()) + "." + quoteName(aliasedColumn.getAliasName())
+          ? quoteName(aliasedColumn.getTableAlias()) + "." +
+                quoteName(aliasedColumn.getAliasName())
           : quoteName(aliasedColumn.getAliasName());
     } else {
       return unnamedColumnToSqlPart((UnnamedColumn) column);
@@ -152,21 +169,16 @@ public class SelectQueryToSql {
       } else if (columnOp.getOpType().equals("not")) {
         return "not " + withParentheses(columnOp.getOperand(0));
       } else if (columnOp.getOpType().equals("casewhen")) {
-        String sql = "case";
+        StringBuilder sql = new StringBuilder();
+        sql.append("case");
         for (int i = 0; i < columnOp.getOperands().size() - 1; i = i + 2) {
-          sql =
-              sql
-                  + " when "
-                  + withParentheses(columnOp.getOperand(i))
-                  + " then "
-                  + withParentheses(columnOp.getOperand(i + 1));
+          sql.append(" when " + withParentheses(columnOp.getOperand(i))
+                         + " then " + withParentheses(columnOp.getOperand(i + 1)));
         }
-        sql =
-            sql
-                + " else "
-                + withParentheses(columnOp.getOperand(columnOp.getOperands().size() - 1))
-                + " end";
-        return sql;
+        sql.append(
+            " else " + withParentheses(columnOp.getOperand(columnOp.getOperands().size() - 1))
+                       + " end");
+        return sql.toString();
       } else if (columnOp.getOpType().equals("notequal")) {
         return withParentheses(columnOp.getOperand(0))
             + " <> "
@@ -318,7 +330,7 @@ public class SelectQueryToSql {
             + " from "
             + withParentheses(columnOp.getOperand(2))
             + ")";
-      } else if (columnOp.getOpType().equals("substring") && syntax instanceof PostgresqlSyntax) {
+      } else if (columnOp.getOpType().equals("substring") && (syntax instanceof PostgresqlSyntax)) {
         String temp =
             "substring("
                 + withParentheses(columnOp.getOperand(0))
@@ -326,7 +338,9 @@ public class SelectQueryToSql {
                 + withParentheses(columnOp.getOperand(1));
         if (columnOp.getOperands().size() == 2) {
           return temp + ")";
-        } else return temp + " for " + withParentheses(columnOp.getOperand(2)) + ")";
+        } else {
+          return temp + " for " + withParentheses(columnOp.getOperand(2)) + ")";
+        }
       } else if (columnOp.getOpType().equals("timestampwithoutparentheses")) {
         return "timestamp " + withParentheses(columnOp.getOperand(0));
       } else if (columnOp.getOpType().equals("dateadd")) {

@@ -16,11 +16,11 @@
 
 package org.verdictdb.core.scrambling;
 
-import org.verdictdb.core.execplan.MethodInvocationInformation;
-import org.verdictdb.core.querying.ExecutableNodeBase;
-
 import java.util.HashMap;
 import java.util.Map;
+
+import org.verdictdb.core.execplan.MethodInvocationInformation;
+import org.verdictdb.core.querying.ExecutableNodeBase;
 
 public class PartitionMetadataRetrievalNode extends ExecutableNodeBase {
 
@@ -36,7 +36,7 @@ public class PartitionMetadataRetrievalNode extends ExecutableNodeBase {
   private String tokenKey;
 
   private PartitionMetadataRetrievalNode() {
-    super();
+    super(-1);
   }
 
   public static PartitionMetadataRetrievalNode create(

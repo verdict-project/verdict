@@ -9,8 +9,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.AfterClass;
@@ -24,14 +22,11 @@ import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.core.resulthandler.ExecutionResultReader;
 import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
-import org.verdictdb.core.sqlobject.AbstractRelation;
-import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.exception.VerdictDBException;
-import org.verdictdb.sqlreader.NonValidatingSQLParser;
-import org.verdictdb.sqlreader.RelationStandardizer;
 import org.verdictdb.sqlsyntax.MysqlSyntax;
-import org.verdictdb.sqlsyntax.RedshiftSyntax;
-import org.verdictdb.sqlwriter.SelectQueryToSql;
+
+import com.google.common.base.Charsets;
+import com.google.common.io.Files;
 
 /**
  *  Test cases are from
@@ -99,13 +94,13 @@ public class MySqlTpchSelectQueryCoordinatorTest {
     String filename = "query"+queryNum+".sql";
     File file = new File("src/test/resources/tpch_test_query/"+filename);
     String sql = Files.toString(file, Charsets.UTF_8);
-    DbmsConnection dbmsconn = new CachedDbmsConnection(
-        new JdbcConnection(conn, new MysqlSyntax()));
+    JdbcConnection jdbcConn = new JdbcConnection(conn, new MysqlSyntax());
+    jdbcConn.setOutputDebugMessage(true);
+    DbmsConnection dbmsconn = new CachedDbmsConnection(jdbcConn);
     dbmsconn.setDefaultSchema(MYSQL_DATABASE);
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     coordinator.setScrambleMetaSet(meta);
     ExecutionResultReader reader = coordinator.process(sql);
-
 
     ResultSet rs = stmt.executeQuery(sql);
     return new ImmutablePair<>(reader, rs);

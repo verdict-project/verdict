@@ -21,19 +21,19 @@ import java.util.Iterator;
 public interface VerdictResultStream
     extends Iterable<VerdictSingleResult>, Iterator<VerdictSingleResult> {
 
-  public VerdictResultStream create(VerdictSingleResult singleResult);
+  VerdictResultStream create(VerdictSingleResult singleResult);
 
   @Override
-  public boolean hasNext();
+  boolean hasNext();
 
   @Override
-  public VerdictSingleResult next();
+  VerdictSingleResult next();
 
   @Override
-  public Iterator<VerdictSingleResult> iterator();
+  Iterator<VerdictSingleResult> iterator();
 
   @Override
-  public void remove();
+  void remove();
 
-  public void close();
+  void close();
 }

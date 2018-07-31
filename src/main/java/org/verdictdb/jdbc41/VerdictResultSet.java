@@ -16,17 +16,31 @@
 
 package org.verdictdb.jdbc41;
 
-import org.verdictdb.coordinator.VerdictSingleResult;
-import org.verdictdb.coordinator.VerdictSingleResultFromDbmsQueryResult;
-
 import java.io.InputStream;
 import java.io.Reader;
 import java.math.BigDecimal;
 import java.net.URL;
-import java.sql.*;
+import java.sql.Array;
+import java.sql.Blob;
+import java.sql.Clob;
+import java.sql.Date;
+import java.sql.NClob;
+import java.sql.Ref;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.RowId;
+import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
+import java.sql.SQLWarning;
+import java.sql.SQLXML;
+import java.sql.Statement;
+import java.sql.Time;
+import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.verdictdb.coordinator.VerdictSingleResult;
 
 public class VerdictResultSet implements ResultSet {
 

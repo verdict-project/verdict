@@ -144,7 +144,7 @@ public class AsyncAggMultiTierSingleBlockTest {
     assertEquals(
         new HyperTableCube(Arrays.asList(d1)),
         ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getAggMeta().getCubes().get(0));
-    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMeta(meta);
+    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMetaSet(meta);
 
 //    stmt.execute("create schema if not exists `verdictdb_temp`;");
     ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new MysqlSyntax()), queryExecutionPlan);

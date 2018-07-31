@@ -1,17 +1,16 @@
 package org.verdictdb.coordinator;
 
-import com.google.common.base.Optional;
-import com.rits.cloning.Cloner;
-import org.verdictdb.commons.AttributeValueRetrievalHelper;
-import org.verdictdb.connection.DataTypeConverter;
-import org.verdictdb.connection.DbmsQueryResult;
-import org.verdictdb.connection.DbmsQueryResultMetaData;
-
-import java.io.*;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import org.verdictdb.commons.AttributeValueRetrievalHelper;
+import org.verdictdb.connection.DataTypeConverter;
+import org.verdictdb.connection.DbmsQueryResultMetaData;
+
+import com.google.common.base.Optional;
+import com.rits.cloning.Cloner;
 
 public class VerdictSingleResultFromListData
     extends AttributeValueRetrievalHelper implements VerdictSingleResult {
