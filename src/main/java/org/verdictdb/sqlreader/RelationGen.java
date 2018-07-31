@@ -330,4 +330,12 @@ public class RelationGen extends VerdictSQLParserBaseVisitor<AbstractRelation> {
     }
     return r;
   }
+
+  @Override
+  public AbstractRelation visitTable_name(VerdictSQLParser.Table_nameContext ctx) {
+    String schemaName = (ctx.schema == null) ? "" : ctx.schema.getText();
+    String tableName = (ctx.table == null) ? "" : ctx.table.getText();
+
+    return new BaseTable(schemaName, tableName);
+  }
 }
