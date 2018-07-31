@@ -103,22 +103,10 @@ public class JdbcConnection implements DbmsConnection {
   
   @Override
   public DbmsQueryResult execute(String sql) throws VerdictDBDbmsException {
-//    if (outputDebugMessage) {
-//      System.out.println("About to issue this batch query: " + sql);
-//    }
-    
-    //    String[] sqls = sql.split(";(?=(?:[^\']*\'[^\']*\')*[^\']*$)", -1);
     String quoteChars = "'\"";
     List<String> sqls = splitOnSemicolon(sql, quoteChars);
-    //  StrTokenizer tokenizer =
-    //  new StrTokenizer(sql, StrMatcher.charSetMatcher(";"), StrMatcher.charSetMatcher("'\""));
     DbmsQueryResult finalResult = null;
     for (String s : sqls) {
-      //    while (true) {
-      //      String s = tokenizer.nextToken();
-      //      if (s == null) {
-      //        break;
-      //      }
       finalResult = executeSingle(s);
     }
     return finalResult;
@@ -197,8 +185,8 @@ public class JdbcConnection implements DbmsConnection {
       stmt.close();
       return jrs;
     } catch (SQLException e) {
-      e.printStackTrace();
-      logger.debug(StackTraceReader.stackTrace2String(e));
+//      e.printStackTrace();
+//      logger.debug(StackTraceReader.stackTrace2String(e));
       throw new VerdictDBDbmsException(e.getMessage());
     }
   }
@@ -325,7 +313,12 @@ public class JdbcConnection implements DbmsConnection {
         }
         return partition;
       } catch (Exception e) {
-        return partition;
+        if (e.getMessage().contains("Table is not partitioned")) {
+          return partition;
+        } else {
+          throw e;
+        }
+        
       }
     } else {
       queryResult = executeQuery(syntax.getPartitionCommand(schema, table));

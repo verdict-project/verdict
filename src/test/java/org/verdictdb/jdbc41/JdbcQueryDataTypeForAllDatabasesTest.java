@@ -127,7 +127,7 @@ public class JdbcQueryDataTypeForAllDatabasesTest {
   }
 
   @Parameterized.Parameters(name = "{0}")
-  public static Collection databases() {
+  public static Collection<Object[]> databases() {
     Collection<Object[]> params = new ArrayList<>();
 
     for (String database : targetDatabases) {
@@ -257,7 +257,8 @@ public class JdbcQueryDataTypeForAllDatabasesTest {
           PgSQLXML xml2 = (PgSQLXML) ours;
           assertEquals(xml1.getString(), xml2.getString());
         } else {
-          assertEquals(jdbcRs.getObject(i), vcRs.getObject(i));
+//          assertEquals(jdbcRs.getObject(i), vcRs.getObject(i));
+          assertEquals(theirs, ours);
         }
       }
     }
