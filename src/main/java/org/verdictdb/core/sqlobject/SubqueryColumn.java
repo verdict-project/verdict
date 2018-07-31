@@ -68,6 +68,6 @@ public class SubqueryColumn implements UnnamedColumn {
   // not need this
   @Override
   public SubqueryColumn deepcopy() {
-    return this;
+    return new SubqueryColumn(subquery.deepcopy());
   }
 }

@@ -16,20 +16,38 @@
 
 package org.verdictdb.core.scrambling;
 
-import com.google.common.base.Optional;
-import org.apache.commons.lang3.tuple.Pair;
-import org.verdictdb.connection.DataTypeConverter;
-import org.verdictdb.connection.DbmsQueryResult;
-import org.verdictdb.core.execplan.ExecutionInfoToken;
-import org.verdictdb.core.querying.*;
-import org.verdictdb.core.sqlobject.*;
-import org.verdictdb.exception.VerdictDBException;
-import org.verdictdb.exception.VerdictDBValueException;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+
+import org.apache.commons.lang3.tuple.Pair;
+import org.verdictdb.connection.DataTypeConverter;
+import org.verdictdb.connection.DbmsQueryResult;
+import org.verdictdb.core.execplan.ExecutionInfoToken;
+import org.verdictdb.core.querying.CreateTableAsSelectNode;
+import org.verdictdb.core.querying.ExecutableNodeBase;
+import org.verdictdb.core.querying.IdCreator;
+import org.verdictdb.core.querying.QueryNodeBase;
+import org.verdictdb.core.querying.QueryNodeWithPlaceHolders;
+import org.verdictdb.core.querying.SubscriptionTicket;
+import org.verdictdb.core.querying.TempIdCreatorInScratchpadSchema;
+import org.verdictdb.core.sqlobject.AbstractRelation;
+import org.verdictdb.core.sqlobject.AliasReference;
+import org.verdictdb.core.sqlobject.AliasedColumn;
+import org.verdictdb.core.sqlobject.BaseColumn;
+import org.verdictdb.core.sqlobject.BaseTable;
+import org.verdictdb.core.sqlobject.ColumnOp;
+import org.verdictdb.core.sqlobject.ConstantColumn;
+import org.verdictdb.core.sqlobject.JoinTable;
+import org.verdictdb.core.sqlobject.SelectItem;
+import org.verdictdb.core.sqlobject.SelectQuery;
+import org.verdictdb.core.sqlobject.SqlConvertible;
+import org.verdictdb.core.sqlobject.UnnamedColumn;
+import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.exception.VerdictDBValueException;
+
+import com.google.common.base.Optional;
 
 /**
  * Policy: 1. Tier 0: tuples containing outlier values. 2. Tier 1: tuples containing rare groups 3.
@@ -133,12 +151,13 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
       LargeGroupListNode ll =
           new LargeGroupListNode(
               idCreator, oldSchemaName, oldTableName, primaryColumnName.get(), blockSize);
-      ll.subscribeTo(
-          pc, 0); // subscribed to 'pc' to obtain count(*) of the table, which is used to infer
+      // subscribed to 'pc' to obtain count(*) of the table, which is used to infer
       // appropriate sampling ratio.
+      ll.subscribeTo(pc, 0);
 
       LargeGroupSizeNode ls = new LargeGroupSizeNode(primaryColumnName.get());
-      ls.subscribeTo(ll, 0);
+      ll.registerSubscriber(ls.getSubscriptionTicket());
+//      ls.subscribeTo(ll, 0);
 
       statisticsNodes.add(ll);
       statisticsNodes.add(ls);
@@ -510,7 +529,7 @@ class PercentilesAndCountNode extends QueryNodeBase {
       String columnMetaTokenKey,
       String partitionMetaTokenKey,
       Optional<String> primaryColumnName) {
-    super(null);
+    super(-1, null);
     this.schemaName = schemaName;
     this.tableName = tableName;
     this.columnMetaTokenKey = columnMetaTokenKey;
@@ -606,7 +625,7 @@ class OutlierProportionNode extends QueryNodeBase {
   public static String OUTLIER_SIZE_ALIAS = "verdictdbOutlierProportion";
 
   public OutlierProportionNode(String schemaName, String tableName) {
-    super(null);
+    super(-1, null);
     this.schemaName = schemaName;
     this.tableName = tableName;
   }
@@ -756,12 +775,33 @@ class LargeGroupSizeNode extends QueryNodeWithPlaceHolders {
   private static final long serialVersionUID = -7863166573727173728L;
 
   private String primaryColumnName;
+  
+  // When this node subscribes to the downstream nodes, this information must be used.
+  private SubscriptionTicket subscriptionTicket;
 
   public static final String LARGE_GROUP_SIZE_SUM_ALIAS = "largeGroupSizeSum";
 
   public LargeGroupSizeNode(String primaryColumnName) {
-    super(null);
+    super(-1, null);
     this.primaryColumnName = primaryColumnName;
+  
+    // create a selectQuery for this node
+    String tableSourceAlias = "t";
+    String aliasName = LARGE_GROUP_SIZE_SUM_ALIAS;
+    String groupSizeAlias = LargeGroupListNode.LARGE_GROUP_SIZE_COLUMN_ALIAS;
+    
+    Pair<BaseTable, SubscriptionTicket> placeholder = createPlaceHolderTable(tableSourceAlias);
+    BaseTable baseTable = placeholder.getLeft();
+    selectQuery =
+        SelectQuery.create(
+            new AliasedColumn(
+                ColumnOp.sum(new BaseColumn(tableSourceAlias, groupSizeAlias)), aliasName),
+            baseTable);
+    subscriptionTicket = placeholder.getRight();
+  }
+  
+  public SubscriptionTicket getSubscriptionTicket() {
+    return subscriptionTicket;
   }
 
   /**
@@ -773,20 +813,18 @@ class LargeGroupSizeNode extends QueryNodeWithPlaceHolders {
    */
   @Override
   public SqlConvertible createQuery(List<ExecutionInfoToken> tokens) throws VerdictDBException {
-    String tableSourceAlias = "t";
-    String aliasName = LARGE_GROUP_SIZE_SUM_ALIAS;
-    String groupSizeAlias = LargeGroupListNode.LARGE_GROUP_SIZE_COLUMN_ALIAS;
+  
+//    // Note: this node already has been subscribed; thus, we don't need an explicit subscription.
+//    Pair<BaseTable, SubscriptionTicket> placeholder = createPlaceHolderTable(tableSourceAlias);
+//    BaseTable baseTable = placeholder.getLeft();
+//    selectQuery =
+//        SelectQuery.create(
+//            new AliasedColumn(
+//                ColumnOp.sum(new BaseColumn(tableSourceAlias, groupSizeAlias)), aliasName),
+//            baseTable);
+//    subscriptionTicket = placeholder.getRight();
 
-    // Note: this node already has been subscribed; thus, we don't need an explicit subscription.
-    Pair<BaseTable, SubscriptionTicket> placeholder = createPlaceHolderTable(tableSourceAlias);
-    BaseTable baseTable = placeholder.getLeft();
-    selectQuery =
-        SelectQuery.create(
-            new AliasedColumn(
-                ColumnOp.sum(new BaseColumn(tableSourceAlias, groupSizeAlias)), aliasName),
-            baseTable);
-
-    super.createQuery(tokens); // placeholder replacements performed here
+    super.createQuery(tokens);    // placeholder replacements performed here
     return selectQuery;
   }
 

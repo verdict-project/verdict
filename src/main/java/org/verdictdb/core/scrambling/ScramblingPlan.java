@@ -16,10 +16,10 @@
 
 package org.verdictdb.core.scrambling;
 
-import org.verdictdb.core.querying.ExecutableNodeBase;
-
 import java.util.List;
 import java.util.Map;
+
+import org.verdictdb.core.querying.ExecutableNodeBase;
 
 /**
  * Execution plan for scrambling.

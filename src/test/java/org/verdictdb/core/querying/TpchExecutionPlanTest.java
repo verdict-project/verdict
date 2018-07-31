@@ -393,9 +393,9 @@ public class TpchExecutionPlanTest {
         new ColumnOp("date", ConstantColumn.valueOf("'1998-12-01'"))
     )));
     expected.addGroupby(Arrays.<GroupingAttribute>asList(
-        new AliasReference("l_orderkey"),
-        new AliasReference("o_orderdate"),
-        new AliasReference("o_shippriority")
+        new BaseColumn("l_orderkey"),
+        new BaseColumn("o_orderdate"),
+        new BaseColumn("o_shippriority")
     ));
     expected.addOrderby(Arrays.<OrderbyAttribute>asList(
         new OrderbyAttribute("revenue", "desc"),
@@ -547,7 +547,7 @@ public class TpchExecutionPlanTest {
         new BaseColumn("tpch", "orders","vt2", "o_orderdate"),
         new ColumnOp("date", ConstantColumn.valueOf("'1998-12-01'"))
     )));
-    expected.addGroupby(new AliasReference("n_name"));
+    expected.addGroupby(new BaseColumn("n_name"));
     expected.addOrderby(new OrderbyAttribute("revenue", "desc"));
     expected.addLimit(ConstantColumn.valueOf(1));
     assertEquals(expected, ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0)).selectQuery);
@@ -744,11 +744,11 @@ public class TpchExecutionPlanTest {
             new AliasedColumn(new BaseColumn("tpch","vt1", "l_year"), "l_year"),
             new AliasedColumn(new ColumnOp("sum", new BaseColumn("tpch","vt1", "volume")), "revenue")
         ),
-        new BaseTable("placeholderSchemaName", "placeholderTableName", "vt1"));
+        new BaseTable("placeholderSchema_1_0", "placeholderTable_1_0", "vt1"));
     expected.addGroupby(Arrays.<GroupingAttribute>asList(
-        new AliasReference("supp_nation"),
-        new AliasReference("cust_nation"),
-        new AliasReference("l_year")
+        new BaseColumn("supp_nation"),
+        new BaseColumn("cust_nation"),
+        new BaseColumn("l_year")
     ));
     expected.addOrderby(Arrays.<OrderbyAttribute>asList(
         new OrderbyAttribute("supp_nation"),
@@ -891,8 +891,8 @@ public class TpchExecutionPlanTest {
             new AliasedColumn(new ColumnOp("sum", new BaseColumn("tpch","vt1", "volume")), "denominator")
 
         ),
-        new BaseTable(placeholderSchemaName, placeholderTableName, "vt1"));
-    expected.addGroupby(new AliasReference("o_year"));
+        new BaseTable("placeholderSchema_1_0", "placeholderTable_1_0", "vt1"));
+    expected.addGroupby(new BaseColumn("o_year"));
     expected.addOrderby(new OrderbyAttribute("o_year"));
     expected.addLimit(ConstantColumn.valueOf(1));
     assertEquals(expected, ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0)).selectQuery);
@@ -1010,8 +1010,8 @@ public class TpchExecutionPlanTest {
             new AliasedColumn(new BaseColumn("tpch","vt1", "o_year"), "o_year"),
             new AliasedColumn(new ColumnOp("sum", new BaseColumn("tpch","vt1", "amount")), "sum_profit")
         ),
-        new BaseTable(placeholderSchemaName, placeholderTableName, "vt1"));
-    expected.addGroupby(Arrays.<GroupingAttribute>asList(new AliasReference("nation"), new AliasReference("o_year")));
+        new BaseTable("placeholderSchema_1_0", "placeholderTable_1_0", "vt1"));
+    expected.addGroupby(Arrays.<GroupingAttribute>asList(new BaseColumn("nation"), new BaseColumn("o_year")));
     expected.addOrderby(Arrays.<OrderbyAttribute>asList(new OrderbyAttribute("nation"),
         new OrderbyAttribute("o_year", "desc")));
     expected.addLimit(ConstantColumn.valueOf(1));
@@ -1118,13 +1118,13 @@ public class TpchExecutionPlanTest {
         new BaseColumn("tpch", "nation","vt4", "n_nationkey")
     )));
     expected.addGroupby(Arrays.<GroupingAttribute>asList(
-        new AliasReference("c_custkey"),
-        new AliasReference("c_name"),
-        new AliasReference("c_acctbal"),
-        new AliasReference("c_phone"),
-        new AliasReference("n_name"),
-        new AliasReference("c_address"),
-        new AliasReference("c_comment")
+        new BaseColumn("c_custkey"),
+        new BaseColumn("c_name"),
+        new BaseColumn("c_acctbal"),
+        new BaseColumn("c_phone"),
+        new BaseColumn("n_name"),
+        new BaseColumn("c_address"),
+        new BaseColumn("c_comment")
     ));
     expected.addOrderby(new OrderbyAttribute("revenue", "desc"));
     expected.addLimit(ConstantColumn.valueOf(20));
@@ -1292,7 +1292,7 @@ public class TpchExecutionPlanTest {
             new AliasedColumn(new ColumnOp("count", new BaseColumn("tpch", "orders", "vt2", "o_orderkey")), "c_count")
         ), join
     );
-    expected.addGroupby(new AliasReference("c_custkey"));
+    expected.addGroupby(new BaseColumn("c_custkey"));
     assertEquals(expected, ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0)).selectQuery);
 
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
@@ -1415,7 +1415,7 @@ public class TpchExecutionPlanTest {
         new BaseColumn("tpch", "lineitem", "vt1","l_shipdate"),
         new ColumnOp("date", ConstantColumn.valueOf("'1999-01-01'"))
     )));
-    expected.addGroupby(new AliasReference("l_suppkey"));
+    expected.addGroupby(new BaseColumn("l_suppkey"));
     assertEquals(
         expected,
         ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0)).getSelectQuery());
@@ -1471,11 +1471,11 @@ public class TpchExecutionPlanTest {
     assertEquals(1, queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().size());
     assertEquals(2, queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().size());
 
-    assertEquals(new BaseTable(placeholderSchemaName, placeholderTableName, "vt1"),
+    assertEquals(new BaseTable("placeholderSchema_1_0", "placeholderTable_1_0", "vt1"),
         ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0)).getSelectQuery().getFromList().get(0));
     JoinTable join = JoinTable.create(Arrays.<AbstractRelation>asList(
-        new BaseTable(placeholderSchemaName, placeholderTableName, "vt2"),
-        new BaseTable(placeholderSchemaName, placeholderTableName, "vt4")),
+        new BaseTable("placeholderSchema_2_0", "placeholderTable_2_0", "vt2"),
+        new BaseTable("placeholderSchema_2_1", "placeholderTable_2_1", "vt4")),
         Arrays.<JoinTable.JoinType>asList(JoinTable.JoinType.inner),
         Arrays.<UnnamedColumn>asList(
             new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
@@ -1494,7 +1494,7 @@ public class TpchExecutionPlanTest {
             )), "t_avg_quantity")
         ),
         new BaseTable("tpch", "lineitem", "vt3"));
-    expected.addGroupby(new AliasReference("t_partkey"));
+    expected.addGroupby(new BaseColumn("l_partkey"));
     expected.setAliasName("vt2");
     assertEquals(expected, ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).selectQuery);
 
@@ -1557,14 +1557,14 @@ public class TpchExecutionPlanTest {
             new AliasedColumn(new BaseColumn("tpch", "lineitem","vt4", "l_orderkey"), "l_orderkey"),
             new AliasedColumn(new ColumnOp("sum", new BaseColumn("tpch", "lineitem","vt4", "l_quantity")), "t_sum_quantity")
         ), new BaseTable("tpch", "lineitem", "vt4"));
-    expected.addGroupby(new AliasReference("l_orderkey"));
+    expected.addGroupby(new BaseColumn("l_orderkey"));
     expected.setAliasName("vt3");
     expected.addFilterByAnd(new ColumnOp("is_not_null",
         new BaseColumn("tpch", "lineitem","vt4", "l_orderkey")
     ));
 
     assertEquals(expected, ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).selectQuery);
-    assertEquals(new BaseTable(placeholderSchemaName, placeholderTableName, "vt3"),
+    assertEquals(new BaseTable("placeholderSchema_1_0", "placeholderTable_1_0", "vt3"),
         ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0)).getSelectQuery().getFromList().get(2));
 
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
@@ -1854,11 +1854,11 @@ public class TpchExecutionPlanTest {
         new BaseColumn("tpch", "lineitem","vt5", "l_shipdate"),
         ConstantColumn.valueOf("'1995-01-01'")
     )));
-    expected.addGroupby(new AliasReference("l_partkey"));
-    expected.addGroupby(new AliasReference("l_suppkey"));
+    expected.addGroupby(new BaseColumn("l_partkey"));
+    expected.addGroupby(new BaseColumn("l_suppkey"));
     expected.setAliasName("vt4");
     assertEquals(expected, ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).selectQuery);
-    assertEquals(new BaseTable(placeholderSchemaName, placeholderTableName, "vt4"),
+    assertEquals(new BaseTable("placeholderSchema_1_0", "placeholderTable_1_0", "vt4"),
         ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0)).getSelectQuery().getFromList().get(3));
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
     ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
@@ -1969,13 +1969,13 @@ public class TpchExecutionPlanTest {
     assertEquals(0, queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().size());
     assertEquals(1, queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(1).getExecutableNodeBaseDependents().size());
 
-    assertEquals(new BaseTable(placeholderSchemaName, placeholderTableName, "vt1"),
+    assertEquals(new BaseTable("placeholderSchema_1_0", "placeholderTable_1_0", "vt1"),
         ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0)).getSelectQuery().getFromList().get(0));
-    assertEquals(new BaseTable(placeholderSchemaName, placeholderTableName, "vt2"),
+    assertEquals(new BaseTable("placeholderSchema_2_0", "placeholderTable_2_0", "vt2"),
         ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getSelectQuery().getFromList().get(0));
     JoinTable join = JoinTable.create(Arrays.<AbstractRelation>asList(
-        new BaseTable(placeholderSchemaName, placeholderTableName, "vt3"),
-        new BaseTable(placeholderSchemaName, placeholderTableName, "vt5")),
+        new BaseTable("placeholderSchema_3_0", "placeholderTable_3_0", "vt3"),
+        new BaseTable("placeholderSchema_3_1", "placeholderTable_3_1", "vt5")),
         Arrays.<JoinTable.JoinType>asList(JoinTable.JoinType.rightouter),
         Arrays.<UnnamedColumn>asList(
             new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
@@ -2073,11 +2073,11 @@ public class TpchExecutionPlanTest {
     assertEquals(1, queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().size());
     assertEquals(2, queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(1).getExecutableNodeBaseDependents().size());
 
-    assertEquals(new BaseTable(placeholderSchemaName, placeholderTableName, "vt1"),
+    assertEquals(new BaseTable("placeholderSchema_1_0", "placeholderTable_1_0", "vt1"),
         ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0)).getSelectQuery().getFromList().get(0));
     JoinTable join = JoinTable.create(Arrays.<AbstractRelation>asList(
-        new BaseTable(placeholderSchemaName, placeholderTableName, "vt2"),
-        new BaseTable(placeholderSchemaName, placeholderTableName, "vt5")),
+        new BaseTable("placeholderSchema_2_0", "placeholderTable_2_0", "vt2"),
+        new BaseTable("placeholderSchema_2_1", "placeholderTable_2_1", "vt5")),
         Arrays.<JoinTable.JoinType>asList(JoinTable.JoinType.inner),
         Arrays.<UnnamedColumn>asList(
             new ColumnOp("greater", Arrays.<UnnamedColumn>asList(
@@ -2086,11 +2086,11 @@ public class TpchExecutionPlanTest {
             ))
         ));
     assertEquals(join, ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getSelectQuery().getFromList().get(0));
-    assertEquals(new BaseTable(placeholderSchemaName, placeholderTableName, "vt3"),
+    assertEquals(new BaseTable("placeholderSchema_3_0", "placeholderTable_3_0", "vt3"),
         ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getSelectQuery().getFromList().get(0));
     JoinTable join1 = JoinTable.create(Arrays.<AbstractRelation>asList(
-        new BaseTable(placeholderSchemaName, placeholderTableName, "vt6"),
-        new BaseTable(placeholderSchemaName, placeholderTableName, "vt8")),
+        new BaseTable("placeholderSchema_5_0", "placeholderTable_5_0", "vt6"),
+        new BaseTable("placeholderSchema_5_1", "placeholderTable_5_1", "vt8")),
         Arrays.<JoinTable.JoinType>asList(JoinTable.JoinType.rightouter),
         Arrays.<UnnamedColumn>asList(
             new ColumnOp("equal", Arrays.<UnnamedColumn>asList(
@@ -2121,11 +2121,11 @@ public class TpchExecutionPlanTest {
     QueryExecutionPlan queryExecutionPlan = QueryExecutionPlanFactory.create("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
 
-    String aliasName = String.format("verdictdbalias_%d_0", queryExecutionPlan.getSerialNumber());
+    String aliasName = String.format("verdictdb_alias_%d_2", queryExecutionPlan.getSerialNumber());
     SelectQuery rewritten = SelectQuery.create(
         Arrays.<SelectItem>asList(
-            new AliasedColumn(new BaseColumn(placeholderSchemaName, aliasName, "quantity_avg"), "quantity_avg")),
-        new BaseTable(placeholderSchemaName, placeholderTableName, aliasName));
+            new AliasedColumn(new BaseColumn("placeholderSchema_1_0", aliasName, "quantity_avg"), "quantity_avg")),
+        new BaseTable("placeholderSchema_1_0", "placeholderTable_1_0", aliasName));
     assertEquals(rewritten,
         ((SubqueryColumn)((ColumnOp)((CreateTableAsSelectNode)(queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0))).getSelectQuery().getFilter().get()).getOperand(1)).getSubquery());
 
@@ -2143,7 +2143,7 @@ public class TpchExecutionPlanTest {
   @Test
   public void SubqueryInFilterTestExists() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
-    String sql = "select avg(l_quantity) from lineitem where exists(select * from lineitem);";
+    String sql = "select avg(l_quantity) from lineitem where exists (select * from lineitem);";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
     RelationStandardizer gen = new RelationStandardizer(staticMetaData);
@@ -2154,7 +2154,7 @@ public class TpchExecutionPlanTest {
     String alias = ((CreateTableAsSelectNode) (queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0))).getPlaceholderTables().get(0).getAliasName().get();
     SelectQuery rewritten = SelectQuery.create(
         Arrays.<SelectItem>asList(new AsteriskColumn()),
-        new BaseTable(placeholderSchemaName, placeholderTableName, alias));
+        new BaseTable("placeholderSchema_1_0", "placeholderTable_1_0", alias));
     assertEquals(rewritten,
         ((SubqueryColumn) ((ColumnOp) ((CreateTableAsSelectNode) (queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0))).getSelectQuery().getFilter().get()).getOperand(0)).getSubquery());
 
@@ -2182,8 +2182,8 @@ public class TpchExecutionPlanTest {
 
     String alias = ((CreateTableAsSelectNode) (queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0))).getPlaceholderTables().get(0).getAliasName().get();
     SelectQuery rewritten = SelectQuery.create(
-        Arrays.<SelectItem>asList(new AliasedColumn(new BaseColumn(placeholderSchemaName, alias, "l_quantity"), "l_quantity")),
-        new BaseTable(placeholderSchemaName, placeholderTableName, alias));
+        Arrays.<SelectItem>asList(new AliasedColumn(new BaseColumn("placeholderSchema_1_0", alias, "l_quantity"), "l_quantity")),
+        new BaseTable("placeholderSchema_1_0", "placeholderTable_1_0", alias));
     assertEquals(rewritten,
         ((SubqueryColumn) ((ColumnOp) ((CreateTableAsSelectNode) (queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0))).getSelectQuery().getFilter().get()).getOperand(1)).getSubquery());
 
@@ -2211,8 +2211,8 @@ public class TpchExecutionPlanTest {
 
     String alias = ((CreateTableAsSelectNode) (queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0))).getPlaceholderTables().get(0).getAliasName().get();
     SelectQuery rewritten1 = SelectQuery.create(
-        Arrays.<SelectItem>asList(new AliasedColumn(new BaseColumn(placeholderSchemaName, alias, "quantity_avg"), "quantity_avg")),
-        new BaseTable(placeholderSchemaName, placeholderTableName, alias));
+        Arrays.<SelectItem>asList(new AliasedColumn(new BaseColumn("placeholderSchema_1_0", alias, "quantity_avg"), "quantity_avg")),
+        new BaseTable("placeholderSchema_1_0", "placeholderTable_1_0", alias));
     assertEquals(rewritten1,
         ((SubqueryColumn) 
             ((ColumnOp) 
@@ -2222,8 +2222,8 @@ public class TpchExecutionPlanTest {
 
     alias = ((CreateTableAsSelectNode) (queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0))).getPlaceholderTables().get(1).getAliasName().get();
     SelectQuery rewritten2 = SelectQuery.create(
-        Arrays.<SelectItem>asList(new AliasedColumn(new BaseColumn(placeholderSchemaName, alias, "l_quantity"), "l_quantity")),
-        new BaseTable(placeholderSchemaName, placeholderTableName, alias));
+        Arrays.<SelectItem>asList(new AliasedColumn(new BaseColumn("placeholderSchema_1_1", alias, "l_quantity"), "l_quantity")),
+        new BaseTable("placeholderSchema_1_1", "placeholderTable_1_1", alias));
     assertEquals(rewritten2,
         ((SubqueryColumn) 
             ((ColumnOp) 

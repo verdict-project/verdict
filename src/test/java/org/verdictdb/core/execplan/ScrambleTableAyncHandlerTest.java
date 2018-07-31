@@ -156,7 +156,7 @@ package org.verdictdb.core.execplan;
 //    QueryExecutionPlan queryExecutionPlan = QueryExecutionPlanFactory.create("verdictdb_temp", meta, (SelectQuery) relation);
 //    queryExecutionPlan.cleanUp();
 //    queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-//    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().dependents.get(0)).setScrambleMeta(meta);
+//    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().dependents.get(0)).setScrambleMetaSet(meta);
 //    queryExecutionPlan.setScalingNode();
 //
 //    TokenQueueToAyncHandler tokenQueueToAyncHandler = new TokenQueueToAyncHandler(queryExecutionPlan, new ExecutionTokenQueue());

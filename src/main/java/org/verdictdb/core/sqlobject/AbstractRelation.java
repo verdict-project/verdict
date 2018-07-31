@@ -16,13 +16,14 @@
 
 package org.verdictdb.core.sqlobject;
 
-import com.google.common.base.Optional;
+import java.io.Serializable;
+import java.util.List;
+
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
-import java.io.Serializable;
-import java.util.List;
+import com.google.common.base.Optional;
 
 /**
  * Represents a relation (or a table) that can appear in the from clause.
@@ -41,6 +42,10 @@ public abstract class AbstractRelation implements Serializable {
 
   public Optional<String> getAliasName() {
     return aliasName;
+  }
+  
+  public void clearAliasName() {
+    aliasName = Optional.absent();
   }
 
   @Override

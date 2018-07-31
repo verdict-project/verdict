@@ -16,36 +16,40 @@
 
 package org.verdictdb.commons;
 
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.Logger;
-import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.core.Appender;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.Appender;
+
 public class VerdictDBLogger implements org.slf4j.Logger {
 
-  private Logger logger;
+  private org.slf4j.Logger logger;
 
-  private VerdictDBLogger(Logger logger) {
+  private VerdictDBLogger(org.slf4j.Logger logger) {
     this.logger = logger;
   }
 
   public static VerdictDBLogger getLogger(Class<?> c) {
-    return new VerdictDBLogger((Logger) LoggerFactory.getLogger(c));
+    return new VerdictDBLogger(LoggerFactory.getLogger(c));
   }
 
   public static VerdictDBLogger getLogger(String name) {
-    return new VerdictDBLogger((Logger) LoggerFactory.getLogger(name));
+    return new VerdictDBLogger(LoggerFactory.getLogger(name));
   }
 
   public void setLevel(Level level) {
-    logger.setLevel(level);
+    if (logger instanceof ch.qos.logback.classic.Logger) {
+      ((ch.qos.logback.classic.Logger) logger).setLevel(level);
+    }
   }
 
   public void addAppender(Appender<ILoggingEvent> appender) {
-    appender.setContext(logger.getLoggerContext());
-    logger.addAppender(appender);
+    if (logger instanceof ch.qos.logback.classic.Logger) {
+      appender.setContext(((ch.qos.logback.classic.Logger) logger).getLoggerContext());
+      ((ch.qos.logback.classic.Logger) logger).addAppender(appender);
+    }
   }
 
   @Override
