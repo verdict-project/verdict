@@ -1,17 +1,11 @@
 package org.verdictdb.coordinator;
 
-import static org.junit.Assert.assertEquals;
-
-import java.io.File;
-import java.io.IOException;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-
+import com.google.common.base.Charsets;
+import com.google.common.io.Files;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
+import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -26,8 +20,14 @@ import org.verdictdb.core.scrambling.ScrambleMetaSet;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sqlsyntax.ImpalaSyntax;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
+import java.io.File;
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+
+import static org.junit.Assert.assertEquals;
 
 public class ImpalaTpchSelectQueryCoordinatorTest {
 
@@ -49,56 +49,68 @@ public class ImpalaTpchSelectQueryCoordinatorTest {
 
   private static final String IMPALA_PASSWORD = "";
 
+  private int lastQuery;
+
   static {
     IMPALA_HOST = System.getenv("VERDICTDB_TEST_IMPALA_HOST");
   }
 
   @BeforeClass
   public static void setupImpalaDatabase() throws SQLException, VerdictDBException {
-    String impalaConnectionString =
-        String.format("jdbc:impala://%s", IMPALA_HOST);
+    String impalaConnectionString = String.format("jdbc:impala://%s", IMPALA_HOST);
     impalaConn =
         DatabaseConnectionHelpers.setupImpala(
             impalaConnectionString, IMPALA_UESR, IMPALA_PASSWORD, IMPALA_DATABASE);
-//    impalaStmt = impalaConn.createStatement();
+    //    impalaStmt = impalaConn.createStatement();
     stmt = impalaConn.createStatement();
     stmt.execute(String.format("use `%s`", IMPALA_DATABASE));
     DbmsConnection dbmsConn = JdbcConnection.create(impalaConn);
 
     // Create Scramble table
-    dbmsConn.execute(String.format("DROP TABLE IF EXISTS `%s`.`lineitem_scrambled`", IMPALA_DATABASE));
-    dbmsConn.execute(String.format("DROP TABLE IF EXISTS `%s`.`orders_scrambled`", IMPALA_DATABASE));
+    dbmsConn.execute(
+        String.format("DROP TABLE IF EXISTS `%s`.`lineitem_scrambled`", IMPALA_DATABASE));
+    dbmsConn.execute(
+        String.format("DROP TABLE IF EXISTS `%s`.`orders_scrambled`", IMPALA_DATABASE));
 
     ScramblingCoordinator scrambler =
         new ScramblingCoordinator(dbmsConn, IMPALA_DATABASE, IMPALA_DATABASE, (long) 100);
     ScrambleMeta meta1 =
-        scrambler.scramble(IMPALA_DATABASE, "lineitem", IMPALA_DATABASE, "lineitem_scrambled", "uniform");
+        scrambler.scramble(
+            IMPALA_DATABASE, "lineitem", IMPALA_DATABASE, "lineitem_scrambled", "uniform");
     ScrambleMeta meta2 =
-        scrambler.scramble(IMPALA_DATABASE, "orders", IMPALA_DATABASE, "orders_scrambled", "uniform");
+        scrambler.scramble(
+            IMPALA_DATABASE, "orders", IMPALA_DATABASE, "orders_scrambled", "uniform");
     meta.addScrambleMeta(meta1);
     meta.addScrambleMeta(meta2);
-//    stmt.execute("drop schema if exists `verdictdb_temp` CASCADE");
-//    stmt.execute("create schema if not exists `verdictdb_temp`");
+    //    stmt.execute("drop schema if exists `verdictdb_temp` CASCADE");
+    //    stmt.execute("create schema if not exists `verdictdb_temp`");
   }
 
   @AfterClass
   public static void tearDown() throws SQLException {
     stmt.execute(String.format("use `%s`", "DEFAULT"));
-    impalaConn.createStatement().execute(
-        String.format("DROP SCHEMA IF EXISTS `%s` CASCADE", IMPALA_DATABASE));
+    impalaConn
+        .createStatement()
+        .execute(String.format("DROP SCHEMA IF EXISTS `%s` CASCADE", IMPALA_DATABASE));
     impalaConn.close();
+  }
+
+  @After
+  public void printOutput() {
+    System.out.println(String.format("Test %d has passed.", lastQuery));
   }
 
   Pair<ExecutionResultReader, ResultSet> getAnswerPair(int queryNum)
       throws VerdictDBException, SQLException, IOException {
-    
-    String filename = "query"+queryNum+"_impala"+".sql";
-    File file = new File("src/test/resources/tpch_test_query/"+filename);
+
+    lastQuery = queryNum;
+    String filename = "query" + queryNum + "_impala" + ".sql";
+    File file = new File("src/test/resources/tpch_test_query/" + filename);
     String sql = Files.toString(file, Charsets.UTF_8);
-    DbmsConnection dbmsconn = new CachedDbmsConnection(
-        new JdbcConnection(impalaConn, new ImpalaSyntax()));
+    DbmsConnection dbmsconn =
+        new CachedDbmsConnection(new JdbcConnection(impalaConn, new ImpalaSyntax()));
     dbmsconn.setDefaultSchema(IMPALA_DATABASE);
-    
+
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     coordinator.setScrambleMetaSet(meta);
     ExecutionResultReader reader = coordinator.process(sql);
@@ -464,7 +476,6 @@ public class ImpalaTpchSelectQueryCoordinatorTest {
     assertEquals(10, cnt);
   }
 
-
   @Test
   public void query21Test() throws VerdictDBException, SQLException, IOException {
     Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(21);
@@ -484,5 +495,4 @@ public class ImpalaTpchSelectQueryCoordinatorTest {
     }
     assertEquals(12, cnt);
   }
-
 }
