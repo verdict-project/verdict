@@ -322,7 +322,11 @@ public class MetaDataStatementsTest {
     }
 
     Statement jdbcStmt = connMap.get(database).createStatement();
-    ResultSet jdbcRs = jdbcStmt.executeQuery(sql);
+    ResultSet jdbcRs = null;
+    for (String s : sql.split(";")) { 
+      jdbcStmt.execute(s);
+    }
+    jdbcRs = jdbcStmt.getResultSet();
 
     DbmsConnection dbmsconn = new CachedDbmsConnection(new JdbcConnection(connMap.get(database),
         syntaxMap.get(database)));
