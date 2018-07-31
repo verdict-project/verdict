@@ -303,8 +303,8 @@ jobs:
         - run: git clone git@github.com:verdictdb/verdictdb-private-resources.git
         # run tests!
         # - run: mvn test -Dtest=SparkTpchSelectQueryCoordinatorTest 2> /dev/null
-        - run: mvn test -Dtest=RedshiftTpchSelectQueryCoordinatorTest 2> /dev/null | tee /tmp/test.log
-        - run: mvn test -Dtest=ImpalaTpchSelectQueryCoordinatorTest 2> /dev/null | tee -a /tmp/test.log
+        - run: mvn test -Dtest=RedshiftTpchSelectQueryCoordinatorTest 2> /dev/null | tee /tmp/test-redshift.log
+        - run: mvn test -Dtest=ImpalaTpchSelectQueryCoordinatorTest 2> /dev/null | tee /tmp/test-impala.log
         - run:
             name: Save test results
             command: |
@@ -316,7 +316,9 @@ jobs:
         - store_artifacts:
             path: ~/junit
         - store_artifacts:
-            path: /tmp/test.log
+            path: /tmp/test-impala.log
+        - store_artifacts:
+            path: /tmp/test-redshift.log
         - save_cache:
             paths:
               - ~/.m2
