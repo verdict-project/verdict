@@ -16,12 +16,12 @@
 
 package org.verdictdb.sqlsyntax;
 
+import com.google.common.collect.Lists;
+
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import com.google.common.collect.Lists;
 
 public class RedshiftSyntax extends SqlSyntax {
 
@@ -70,9 +70,11 @@ public class RedshiftSyntax extends SqlSyntax {
   public String getColumnsCommand(String schema, String table) {
     StringBuilder sql = new StringBuilder();
     sql.append(String.format("SET search_path to '%s'; ", schema));
-    sql.append(String.format("select \"column\", \"type\" "
-        + "from PG_TABLE_DEF where tablename = '%s' and schemaname = '%s';",
-        table, schema));
+    sql.append(
+        String.format(
+            "select \"column\", \"type\" "
+                + "from PG_TABLE_DEF where tablename = '%s' and schemaname = '%s';",
+            table, schema));
     return sql.toString();
   }
 

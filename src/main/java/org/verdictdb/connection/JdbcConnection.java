@@ -39,6 +39,8 @@ public class JdbcConnection implements DbmsConnection {
 
   private boolean outputDebugMessage = false;
 
+  private VerdictDBLogger log;
+
   public static JdbcConnection create(Connection conn) throws VerdictDBDbmsException {
     String connectionString = null;
     try {
@@ -74,6 +76,7 @@ public class JdbcConnection implements DbmsConnection {
     }
 
     this.syntax = syntax;
+    this.log = VerdictDBLogger.getLogger(this.getClass());
   }
 
   @Override
