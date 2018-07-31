@@ -19,11 +19,8 @@ package org.verdictdb.sqlreader;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.connection.MetaDataProvider;
-import org.verdictdb.core.scrambling.ScrambleMeta;
-import org.verdictdb.core.scrambling.ScrambleMetaSet;
 import org.verdictdb.core.sqlobject.*;
 import org.verdictdb.exception.VerdictDBDbmsException;
-import org.verdictdb.metastore.ScrambleMetaStore;
 
 import java.util.*;
 
@@ -36,9 +33,6 @@ public class RelationStandardizer {
   private static long duplicateIdentifer = 1;
 
   private static String verdictTableAliasPrefix = "vt";
-
-  // metadata for existing scramble tables.
-  private ScrambleMetaStore metaStore;
 
   // key is the column name and value is table alias name
   private HashMap<String, String> colNameAndTableAlias = new HashMap<>();
@@ -68,11 +62,6 @@ public class RelationStandardizer {
 
   public RelationStandardizer(MetaDataProvider meta) {
     this.meta = meta;
-  }
-
-  public RelationStandardizer(MetaDataProvider meta, ScrambleMetaStore metaStore) {
-    this.meta = meta;
-    this.metaStore = metaStore;
   }
 
   private BaseColumn replaceBaseColumn(BaseColumn col) {
@@ -189,7 +178,7 @@ public class RelationStandardizer {
           searchList.add(col);
         }
       } else if (cond instanceof SubqueryColumn) {
-        RelationStandardizer g = new RelationStandardizer(meta, metaStore);
+        RelationStandardizer g = new RelationStandardizer(meta);
         g.oldTableAliasMap.putAll(oldTableAliasMap);
         g.setColNameAndColAlias(colNameAndColAlias);
         g.setColumnOpAliasMap(columnOpAliasMap);
@@ -329,21 +318,6 @@ public class RelationStandardizer {
         colNameAndTableAlias.put(c.getKey(), bt.getAliasName().get());
         colName.add(c.getKey());
       }
-      // replace original table with its scrambled table if exists.
-      if (metaStore != null) {
-        ScrambleMetaSet metaSet = metaStore.retrieve();
-        Iterator<ScrambleMeta> iterator = metaSet.iterator();
-        while (iterator.hasNext()) {
-          ScrambleMeta meta = iterator.next();
-          // substitute names with those of the first scrambled table.
-          if (meta.getOriginalSchemaName().equals(bt.getSchemaName())
-              && meta.getOriginalTableName().equals(bt.getTableName())) {
-            bt.setSchemaName(meta.getSchemaName());
-            bt.setTableName(meta.getTableName());
-            break;
-          }
-        }
-      }
       tableInfoAndAlias.put(
           ImmutablePair.of(bt.getSchemaName(), bt.getTableName()), table.getAliasName().get());
       return new ImmutablePair<>(colName, table);
@@ -363,7 +337,7 @@ public class RelationStandardizer {
       return new ImmutablePair<>(joinColName, table);
     } else if (table instanceof SelectQuery) {
       List<String> colName = new ArrayList<>();
-      RelationStandardizer g = new RelationStandardizer(meta, metaStore);
+      RelationStandardizer g = new RelationStandardizer(meta);
       g.oldTableAliasMap.putAll(oldTableAliasMap);
       g.setTableInfoAndAlias(tableInfoAndAlias);
       g.setColNameAndTableAlias(colNameAndTableAlias);
