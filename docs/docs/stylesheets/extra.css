@@ -13,3 +13,11 @@
 .md-footer-meta {
   background-color: black !important;
 }
+
+.md-typeset {
+  font-size: 1.4em;
+}
+
+.codehilite {
+  font-size: 1.2em;
+}

@@ -1,11 +1,17 @@
 # Download / Install
 
-## Maven
+Depending on your language preference (Java or Python), you can use different approaches.
 
-Add following lines to your maven dependency list to use VerdictDB.
+*Note: Python interface is currently in preparation.*
+
+
+## Java
+
+### Maven
+
+If you use [Apache Maven](https://maven.apache.org/) for your project's dependency management, including the following dependency item is all you need to do to use VerdictDB.
 
 ```pom
-<!-- https://mvnrepository.com/artifact/org.verdictdb/verdictdb-core -->
 <dependency>
     <groupId>org.verdictdb</groupId>
     <artifactId>verdictdb-core</artifactId>
@@ -14,19 +20,14 @@ Add following lines to your maven dependency list to use VerdictDB.
 
 ```
 
-## pip
+### Download a Pre-compiled Jar
 
-This is in preparation.
+You only need a single jar file. This jar file is compiled with JDK8.
 
-
-## Download a Compiled Jar
-
-You only need a single Jar file.
-
-Download: [verdictdb-core-0.5.0-alpha-jar-with-dependencies.jar](https://github.com/mozafari/verdictdb/releases/download/v0.5.0-alpha/verdictdb-core-0.5.0-alpha-jar-with-dependencies.jar)
+**Download**: [verdictdb-core-0.5.0-alpha-jar-with-dependencies.jar](https://github.com/mozafari/verdictdb/releases/download/v0.5.0-alpha/verdictdb-core-0.5.0-alpha-jar-with-dependencies.jar)
 
 
-## Build Yourself
+### Build Yourself
 
 1. **Clone** from our [Github public repository](https://github.com/mozafari/verdictdb). Use command
     ```
@@ -39,9 +40,11 @@ Download: [verdictdb-core-0.5.0-alpha-jar-with-dependencies.jar](https://github.
 
 3. **Build** the jar file by maven. Use command
     ```
-    mvn package -Dmaven.test.skip=true
+    mvn -DskipTests -DtestPhase=false -DpackagePhase=true clean package
     ```
-    It will download the dependencies for VerdictDB and skip the tests. It will generate the jar file
-    `verdictdb-core-0.5.0-alpha.jar` under `target` directory.
+    Check the `target` directory for the created jar files.
 
 
+## Python
+
+This is in preparation.

@@ -10,6 +10,8 @@ pages:
     - Quickstart: getting_started/quickstart.md
     - Download/Install: getting_started/install.md
     - Connecting to Data Sources: getting_started/connection.md
+    - Creating Scrambles: getting_started/scrambling.md
+    - Interactive Querying: getting_started/querying.md
   - How it works:
     - Architecture: how_it_works/architecture.md
     - Query Processing: how_it_works/query_processing.md
@@ -23,7 +25,7 @@ theme:
   name: 'material'
   font:
     text: Open Sans
-    code: Roboto Mono
+    code: Inconsolata
   palette:
     primary: 'Deep Purple'
     accent: 'Deep Purple'
