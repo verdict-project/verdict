@@ -78,6 +78,8 @@ jobs:
           path: ~/junit
       - store_artifacts:
           path: ~/junit
+      - store_artifacts:
+          path: /tmp/verdictdb-debug.log
       - save_cache:
           paths:
             - ~/.m2
@@ -138,6 +140,8 @@ jobs:
       # Upload codecov
       #- run: mvn -DskipTests cobertura:cobertura
       - run: bash <(curl -s https://codecov.io/bash) -t 9cf48c61-07ed-4a14-9eed-f7129664ee79
+      - store_artifacts:
+          path: /tmp/verdictdb-debug.log
       - save_cache:
           paths:
             - ~/.m2
@@ -200,6 +204,8 @@ jobs:
           path: ~/junit
       - store_artifacts:
           path: ~/junit
+      - store_artifacts:
+          path: /tmp/verdictdb-debug.log
       - save_cache:
           paths:
             - ~/.m2
@@ -255,6 +261,8 @@ jobs:
             path: ~/junit
         - store_artifacts:
             path: ~/junit
+        - store_artifacts:
+            path: /tmp/verdictdb-debug.log
         - save_cache:
             paths:
               - ~/.m2
@@ -307,6 +315,8 @@ jobs:
             path: ~/junit
         - store_artifacts:
             path: ~/junit
+        - store_artifacts:
+            path: /tmp/verdictdb-debug.log
         - save_cache:
             paths:
               - ~/.m2

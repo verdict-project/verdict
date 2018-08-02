@@ -227,6 +227,10 @@ public class RelationStandardizer {
     return this.replaceGroupby(selectItems, groupingAttributeList, false);
   }
 
+  /**
+   * @return: replaced Groupby list or Orderby list If it is groupby, we should return column
+   *     instead of alias
+   */
   private List<GroupingAttribute> replaceGroupby(
       List<SelectItem> selectItems,
       List<GroupingAttribute> groupingAttributeList,
@@ -256,18 +260,18 @@ public class RelationStandardizer {
           if (duplicateColNameAndColAlias.containsKey(
               new ImmutablePair<>(tableSource, columnName))) {
             newGroupby.add(
-                new AliasReference(
+                getGroupOrOrderByColumn(
                     tableSource,
-                    duplicateColNameAndColAlias.get(new ImmutablePair<>(tableSource, columnName))));
+                    duplicateColNameAndColAlias.get(new ImmutablePair<>(tableSource, columnName)),
+                    isForOrderBy));
           } else if (colNameAndColAlias.containsKey(columnName)) {
             newGroupby.add(
-                new AliasReference(
-                    oldTableAliasMap.get(tableSource), colNameAndColAlias.get(columnName)));
-          } else newGroupby.add(new AliasReference(((BaseColumn) g).getColumnName()));
-        } else if (colNameAndColAlias.containsKey(((BaseColumn) g).getColumnName())) {
-          newGroupby.add(
-              new AliasReference(colNameAndColAlias.get(((BaseColumn) g).getColumnName())));
-        } else newGroupby.add(new AliasReference(((BaseColumn) g).getColumnName()));
+                getGroupOrOrderByColumn(
+                    oldTableAliasMap.get(tableSource), columnName, isForOrderBy));
+          } else
+            newGroupby.add(getGroupOrOrderByColumn(((BaseColumn) g).getColumnName(), isForOrderBy));
+        } else
+          newGroupby.add(getGroupOrOrderByColumn(((BaseColumn) g).getColumnName(), isForOrderBy));
       } else if (g instanceof ColumnOp) {
         // If it is a column-op, we substitute its table reference to our alias unless
         // this method is called to get order-by columns. In such case, we simply use alias.
@@ -296,14 +300,27 @@ public class RelationStandardizer {
         UnnamedColumn column = col.getColumn();
         if (column instanceof BaseColumn && !isForOrderBy) {
           BaseColumn baseCol = (BaseColumn) column;
-          newGroupby.add(
-              new AliasReference(baseCol.getTableSourceAlias(), baseCol.getColumnName()));
+          newGroupby.add(new BaseColumn(baseCol.getTableSourceAlias(), baseCol.getColumnName()));
         } else {
           newGroupby.add(new AliasReference(col.getAliasName()));
         }
-      } else newGroupby.add(g);
+      }
     }
     return newGroupby;
+  }
+
+  // returns BaseColumn for group-by, AliasReference for order-by
+  private GroupingAttribute getGroupOrOrderByColumn(
+      String table, String column, boolean isForOrderBy) {
+    if (isForOrderBy)
+      return (table != null) ? new AliasReference(table, column) : new AliasReference(column);
+    else return (table != null) ? new BaseColumn(table, column) : new BaseColumn(column);
+  }
+
+  // returns BaseColumn for group-by, AliasReference for order-by
+  private GroupingAttribute getGroupOrOrderByColumn(String column, boolean isForOrderBy) {
+    if (isForOrderBy) return new AliasReference(column);
+    else return new BaseColumn(column);
   }
 
   private void replaceGroupByReference(UnnamedColumn c) {

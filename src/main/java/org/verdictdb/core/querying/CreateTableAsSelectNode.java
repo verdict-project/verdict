@@ -16,6 +16,9 @@
 
 package org.verdictdb.core.querying;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.core.execplan.ExecutionInfoToken;
@@ -23,9 +26,6 @@ import org.verdictdb.core.sqlobject.CreateTableAsSelectQuery;
 import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.core.sqlobject.SqlConvertible;
 import org.verdictdb.exception.VerdictDBException;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class CreateTableAsSelectNode extends QueryNodeWithPlaceHolders {
 
@@ -39,10 +39,8 @@ public class CreateTableAsSelectNode extends QueryNodeWithPlaceHolders {
 
   List<String> partitionColumns = new ArrayList<>();
 
-  boolean ifNotExists = false;
-
   public CreateTableAsSelectNode(IdCreator namer, SelectQuery query) {
-    super(query);
+    super(namer, query);
     this.namer = namer;
   }
 

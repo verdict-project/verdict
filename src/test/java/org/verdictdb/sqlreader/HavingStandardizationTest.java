@@ -186,7 +186,7 @@ public class HavingStandardizationTest {
             + "vt1.`ps_supplycost` as `g2`, "
             + "count(*) as `c` "
             + "from `tpch`.`partsupp` as vt1 "
-            + "group by `vt1`.`ps_partkey`, `vt1`.`ps_supplycost`";
+            + "group by vt1.`ps_partkey`, vt1.`ps_supplycost`";
     assertEquals(expected, actual);
   }
 }

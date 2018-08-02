@@ -16,12 +16,12 @@
 
 package org.verdictdb.core.execplan;
 
+import java.util.List;
+import java.util.Map;
+
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.core.sqlobject.SqlConvertible;
 import org.verdictdb.exception.VerdictDBException;
-
-import java.util.List;
-import java.util.Map;
 
 public interface ExecutableNode {
 
@@ -45,9 +45,9 @@ public interface ExecutableNode {
   /**
    * The tokens are retrieved from these queues.
    *
-   * @return
+   * @return channel -> queue
    */
-  public List<ExecutionTokenQueue> getSourceQueues();
+  public Map<Integer, ExecutionTokenQueue> getSourceQueues();
 
   /**
    * The result of createToken() is broadcasted to these queues.

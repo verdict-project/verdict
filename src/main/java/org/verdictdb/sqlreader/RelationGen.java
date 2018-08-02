@@ -16,12 +16,24 @@
 
 package org.verdictdb.sqlreader;
 
-import org.verdictdb.core.sqlobject.*;
-import org.verdictdb.parser.VerdictSQLParser;
-import org.verdictdb.parser.VerdictSQLParserBaseVisitor;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import org.verdictdb.core.sqlobject.AbstractRelation;
+import org.verdictdb.core.sqlobject.AliasedColumn;
+import org.verdictdb.core.sqlobject.AsteriskColumn;
+import org.verdictdb.core.sqlobject.BaseColumn;
+import org.verdictdb.core.sqlobject.BaseTable;
+import org.verdictdb.core.sqlobject.ColumnOp;
+import org.verdictdb.core.sqlobject.ConstantColumn;
+import org.verdictdb.core.sqlobject.GroupingAttribute;
+import org.verdictdb.core.sqlobject.JoinTable;
+import org.verdictdb.core.sqlobject.OrderbyAttribute;
+import org.verdictdb.core.sqlobject.SelectItem;
+import org.verdictdb.core.sqlobject.SelectQuery;
+import org.verdictdb.core.sqlobject.UnnamedColumn;
+import org.verdictdb.parser.VerdictSQLParser;
+import org.verdictdb.parser.VerdictSQLParserBaseVisitor;
 
 public class RelationGen extends VerdictSQLParserBaseVisitor<AbstractRelation> {
 
@@ -228,6 +240,10 @@ public class RelationGen extends VerdictSQLParserBaseVisitor<AbstractRelation> {
   @Override
   public AbstractRelation visitJoin_part(VerdictSQLParser.Join_partContext ctx) {
     if (ctx.INNER() != null) {
+      if (ctx.search_condition() == null) {
+        throw new RuntimeException("The join condition for a inner join does not exist.");
+      }
+      
       AbstractRelation r = this.visit(ctx.table_source());
       CondGen g = new CondGen();
       UnnamedColumn cond = g.visit(ctx.search_condition());
@@ -321,5 +337,13 @@ public class RelationGen extends VerdictSQLParserBaseVisitor<AbstractRelation> {
       }
     }
     return r;
+  }
+
+  @Override
+  public AbstractRelation visitTable_name(VerdictSQLParser.Table_nameContext ctx) {
+    String schemaName = (ctx.schema == null) ? "" : ctx.schema.getText();
+    String tableName = (ctx.table == null) ? "" : ctx.table.getText();
+
+    return new BaseTable(schemaName, tableName);
   }
 }

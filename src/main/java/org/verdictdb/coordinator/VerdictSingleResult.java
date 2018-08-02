@@ -16,12 +16,22 @@
 
 package org.verdictdb.coordinator;
 
-import org.verdictdb.connection.DbmsQueryResultMetaData;
-
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.net.URL;
-import java.sql.*;
+import java.sql.Array;
+import java.sql.Blob;
+import java.sql.Clob;
+import java.sql.Date;
+import java.sql.NClob;
+import java.sql.Ref;
+import java.sql.RowId;
+import java.sql.SQLException;
+import java.sql.SQLXML;
+import java.sql.Time;
+import java.sql.Timestamp;
+
+import org.verdictdb.connection.DbmsQueryResultMetaData;
 
 /**
  * Represents the result set returned from VerdictDB to the end user.

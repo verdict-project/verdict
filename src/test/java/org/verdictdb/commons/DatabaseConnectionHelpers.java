@@ -3,6 +3,7 @@ package org.verdictdb.commons;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.io.Files;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.spark.sql.SparkSession;
 import org.postgresql.copy.CopyManager;
 import org.postgresql.core.BaseConnection;
@@ -26,6 +27,78 @@ import java.util.List;
 
 public class DatabaseConnectionHelpers {
 
+  // Default connection variables for databases used in unit tests
+  public static final String MYSQL_HOST;
+
+  public static final String MYSQL_DATABASE =
+      "verdictdb_test_" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
+
+  public static final String MYSQL_USER = "root";
+
+  public static final String MYSQL_PASSWORD = "";
+
+  public static final String IMPALA_HOST;
+
+  public static final String IMPALA_DATABASE =
+      "verdictdb_test_" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
+
+  public static final String IMPALA_USER = "";
+
+  public static final String IMPALA_PASSWORD = "";
+
+  public static final String REDSHIFT_HOST;
+
+  public static final String REDSHIFT_DATABASE = "dev";
+
+  public static final String REDSHIFT_SCHEMA =
+      "verdictdb_test_" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
+
+  public static final String REDSHIFT_USER;
+
+  public static final String REDSHIFT_PASSWORD;
+
+  public static final String POSTGRES_HOST;
+
+  public static final String POSTGRES_DATABASE = "test";
+
+  public static final String POSTGRES_USER = "postgres";
+
+  public static final String POSTGRES_PASSWORD = "";
+
+  public static final String POSTGRES_SCHEMA =
+      "verdictdb_test_" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
+
+  static {
+    String env = System.getenv("BUILD_ENV");
+    if (env != null && (env.equals("GitLab") || env.equals("DockerCompose"))) {
+      MYSQL_HOST = "mysql";
+    } else {
+      MYSQL_HOST = "localhost";
+    }
+  }
+
+  static {
+    IMPALA_HOST = System.getenv("VERDICTDB_TEST_IMPALA_HOST");
+  }
+
+  static {
+    String env = System.getenv("BUILD_ENV");
+    if (env != null && (env.equals("GitLab") || env.equals("DockerCompose"))) {
+      POSTGRES_HOST = "postgres";
+    } else {
+      POSTGRES_HOST = "localhost";
+    }
+  }
+
+  static {
+    REDSHIFT_HOST = System.getenv("VERDICTDB_TEST_REDSHIFT_ENDPOINT");
+    REDSHIFT_USER = System.getenv("VERDICTDB_TEST_REDSHIFT_USER");
+    REDSHIFT_PASSWORD = System.getenv("VERDICTDB_TEST_REDSHIFT_PASSWORD");
+  }
+
+  public static final String COMMON_TABLE_NAME = "mytable";
+  public static final String COMMON_SCHEMA_NAME =
+      "verdictdb_test_" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
   public static final String TEMPLATE_SCHEMA_NAME = "VERDICTDB_TEST_DBNAME";
 
   public static SparkSession setupSpark(String appname, String schema) {
@@ -365,7 +438,7 @@ public class DatabaseConnectionHelpers {
 
     Connection conn = DriverManager.getConnection(connectionString, user, password);
     JdbcConnection dbmsConn = new JdbcConnection(conn, new RedshiftSyntax());
-//    dbmsConn.setOutputDebugMessage(true);
+    //    dbmsConn.setOutputDebugMessage(true);
 
     dbmsConn.execute(String.format("DROP SCHEMA IF EXISTS \"%s\" CASCADE", schema));
     dbmsConn.execute(String.format("CREATE SCHEMA IF NOT EXISTS \"%s\"", schema));

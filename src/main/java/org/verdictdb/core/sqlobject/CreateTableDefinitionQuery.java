@@ -16,10 +16,10 @@
 
 package org.verdictdb.core.sqlobject;
 
-import org.apache.commons.lang3.tuple.Pair;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import org.apache.commons.lang3.tuple.Pair;
 
 /**
  * Not implemented yet.

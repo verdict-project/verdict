@@ -16,6 +16,9 @@
 
 package org.verdictdb.core.querying.ola;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.verdictdb.core.querying.AggExecutionNode;
@@ -26,9 +29,6 @@ import org.verdictdb.core.sqlobject.AbstractRelation;
 import org.verdictdb.core.sqlobject.BaseTable;
 import org.verdictdb.core.sqlobject.JoinTable;
 import org.verdictdb.exception.VerdictDBValueException;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Contains the references to the ExecutionNodes that contain scrambled tables. This does not
@@ -430,7 +430,7 @@ public class AggExecutionNodeBlock {
   //        String schemaName = ((BaseTable) table).getSchemaName();
   //        String tableName = ((BaseTable) table).getTableName();
   //        if (scrambleMeta.isScrambled(schemaName, tableName) &&
-  //            scrambleMeta.getMetaForTable(schemaName, tableName).getNumberOfTiers()>1) {
+  //            scrambleMeta.getSingleMeta(schemaName, tableName).getNumberOfTiers()>1) {
   //          newSelectList.add(new AliasedColumn(
   //              new BaseColumn(schemaName, tableName, table.getAliasName().get(),
   // scrambleMeta.getTierColumn(schemaName, tableName)),
@@ -445,7 +445,7 @@ public class AggExecutionNodeBlock {
   //            String schemaName = ((BaseTable) jointable).getSchemaName();
   //            String tableName = ((BaseTable) jointable).getTableName();
   //            if (scrambleMeta.isScrambled(schemaName, tableName) &&
-  // scrambleMeta.getMetaForTable(schemaName, tableName).getNumberOfTiers()>1) {
+  // scrambleMeta.getSingleMeta(schemaName, tableName).getNumberOfTiers()>1) {
   //              newSelectList.add(new AliasedColumn(
   //                  new BaseColumn(schemaName, tableName, jointable.getAliasName().get(),
   // scrambleMeta.getTierColumn(schemaName, tableName)),

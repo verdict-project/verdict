@@ -16,12 +16,12 @@
 
 package org.verdictdb.core.sqlobject;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class JoinTable extends AbstractRelation {
 
@@ -70,6 +70,10 @@ public class JoinTable extends AbstractRelation {
 
   public List<AbstractRelation> getJoinList() {
     return joinList;
+  }
+  
+  public void setJoinList(List<AbstractRelation> joinList) {
+    this.joinList = joinList;
   }
 
   public List<JoinType> getJoinTypeList() {

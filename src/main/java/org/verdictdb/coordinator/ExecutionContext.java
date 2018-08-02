@@ -19,17 +19,19 @@ package org.verdictdb.coordinator;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.VerdictContext;
-import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.core.resulthandler.ExecutionResultReader;
+import org.verdictdb.core.scrambling.ScrambleMeta;
+import org.verdictdb.core.sqlobject.BaseTable;
+import org.verdictdb.core.sqlobject.CreateScrambleQuery;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBTypeException;
 import org.verdictdb.parser.VerdictSQLParser;
 import org.verdictdb.parser.VerdictSQLParserBaseVisitor;
 import org.verdictdb.sqlreader.NonValidatingSQLParser;
+import org.verdictdb.sqlreader.RelationGen;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import static org.verdictdb.coordinator.VerdictSingleResultFromListData.createWithSingleColumn;
@@ -56,8 +58,8 @@ public class ExecutionContext {
   }
 
   /**
-   * @param context   Parent context
-   * @param contextId
+   * @param context Parent context
+   * @param serialNumber
    */
   public ExecutionContext(VerdictContext context, long serialNumber) {
     this.context = context;
@@ -91,7 +93,24 @@ public class ExecutionContext {
       VerdictResultStream stream = new VerdictResultStreamFromExecutionResultReader(reader, this);
       return stream;
     } else if (queryType.equals(QueryType.scrambling)) {
-      ScramblingCoordinator coordinator = new ScramblingCoordinator(context.getCopiedConnection());
+      CreateScrambleQuery scrambleQuery = generateScrambleQuery(query);
+      ScramblingCoordinator scrambler =
+          new ScramblingCoordinator(context.getCopiedConnection(), scrambleQuery.getNewSchema());
+
+      // Specifying size/ratio of scrambled table is not supported.
+      if (scrambleQuery.getSize() != 1.0) {
+        throw new VerdictDBTypeException(
+            String.format("Scramble size of %f not supported.", scrambleQuery.getSize()));
+      }
+
+      // TODO: store this to our own metadata db later
+      ScrambleMeta meta =
+          scrambler.scramble(
+              scrambleQuery.getOriginalSchema(),
+              scrambleQuery.getOriginalTable(),
+              scrambleQuery.getNewSchema(),
+              scrambleQuery.getNewTable(),
+              scrambleQuery.getMethod()); // dyoon: size is not used atm?
       return null;
     } else if (queryType.equals(QueryType.set_default_schema)) {
       updateDefaultSchemaFromQuery(query);
@@ -110,38 +129,73 @@ public class ExecutionContext {
     }
   }
 
+  private CreateScrambleQuery generateScrambleQuery(String query) {
+    VerdictSQLParser parser = NonValidatingSQLParser.parserOf(query);
+    VerdictSQLParserBaseVisitor<CreateScrambleQuery> visitor =
+        new VerdictSQLParserBaseVisitor<CreateScrambleQuery>() {
+          @Override
+          public CreateScrambleQuery visitCreate_scramble_statement(
+              VerdictSQLParser.Create_scramble_statementContext ctx) {
+            RelationGen g = new RelationGen();
+            BaseTable originalTable = (BaseTable) g.visit(ctx.original_table);
+            BaseTable scrambleTable = (BaseTable) g.visit(ctx.scrambled_table);
+            String method =
+                (ctx.scrambling_method_name() == null)
+                    ? "uniform"
+                    : ctx.scrambling_method_name()
+                        .getText()
+                        .replace("'", "")
+                        .replace("\"", "")
+                        .replace("`", ""); // remove all types of 'quotes'
+            double percent =
+                (ctx.percent == null) ? 1.0 : Double.parseDouble(ctx.percent.getText());
+            return new CreateScrambleQuery(
+                scrambleTable.getSchemaName(),
+                scrambleTable.getTableName(),
+                originalTable.getSchemaName(),
+                originalTable.getTableName(),
+                method,
+                percent);
+          }
+        };
+
+    CreateScrambleQuery scrambleQuery = visitor.visit(parser.create_scramble_statement());
+    return scrambleQuery;
+  }
 
   private VerdictResultStream generateShowSchemaResultFromQuery() throws VerdictDBException {
     List<String> header = Arrays.asList("schema");
     List<String> rows = context.getConnection().getSchemas();
-    VerdictSingleResultFromListData result =
-        createWithSingleColumn(header, (List)rows);
+    VerdictSingleResultFromListData result = createWithSingleColumn(header, (List) rows);
     return new VerdictResultStreamFromSingleResult(result);
   }
 
-  private VerdictResultStream generateShowTablesResultFromQuery(String query) throws VerdictDBException {
+  private VerdictResultStream generateShowTablesResultFromQuery(String query)
+      throws VerdictDBException {
     VerdictSQLParser parser = NonValidatingSQLParser.parserOf(query);
     String schema = parser.show_tables_statement().schema.getText();
     List<String> header = Arrays.asList("table");
     List<String> rows = context.getConnection().getTables(schema);
-    VerdictSingleResultFromListData result =
-        createWithSingleColumn(header, (List)rows);
+    VerdictSingleResultFromListData result = createWithSingleColumn(header, (List) rows);
     return new VerdictResultStreamFromSingleResult(result);
   }
 
-  private VerdictResultStream generateDesribeTableResultFromQuery(String query) throws VerdictDBException {
+  private VerdictResultStream generateDesribeTableResultFromQuery(String query)
+      throws VerdictDBException {
     VerdictSQLParser parser = NonValidatingSQLParser.parserOf(query);
-    VerdictSQLParserBaseVisitor<Pair<String, String>> visitor = new VerdictSQLParserBaseVisitor<Pair<String, String>>() {
-      @Override
-      public Pair<String, String> visitDescribe_table_statement(VerdictSQLParser.Describe_table_statementContext ctx) {
-        String table = ctx.table.table.getText();
-        String schema = ctx.table.schema.getText();
-        if (schema == null) {
-          schema = context.getConnection().getDefaultSchema();
-        }
-        return new ImmutablePair<>(schema, table);
-      }
-    };
+    VerdictSQLParserBaseVisitor<Pair<String, String>> visitor =
+        new VerdictSQLParserBaseVisitor<Pair<String, String>>() {
+          @Override
+          public Pair<String, String> visitDescribe_table_statement(
+              VerdictSQLParser.Describe_table_statementContext ctx) {
+            String table = ctx.table.table.getText();
+            String schema = ctx.table.schema.getText();
+            if (schema == null) {
+              schema = context.getConnection().getDefaultSchema();
+            }
+            return new ImmutablePair<>(schema, table);
+          }
+        };
     Pair<String, String> t = visitor.visit(parser.verdict_statement());
     String table = t.getRight();
     String schema = t.getLeft();
@@ -154,8 +208,8 @@ public class ExecutionContext {
       newColumnInfo.add(Arrays.asList(pair.getLeft(), pair.getRight()));
     }
     List<String> header = Arrays.asList("column name", "column type");
-    VerdictSingleResultFromListData result = new VerdictSingleResultFromListData(
-        header, (List)newColumnInfo);
+    VerdictSingleResultFromListData result =
+        new VerdictSingleResultFromListData(header, (List) newColumnInfo);
     return new VerdictResultStreamFromSingleResult(result);
   }
 
@@ -176,38 +230,43 @@ public class ExecutionContext {
   private QueryType identifyQueryType(String query) {
     VerdictSQLParser parser = NonValidatingSQLParser.parserOf(query);
 
-    VerdictSQLParserBaseVisitor<QueryType> visitor = new VerdictSQLParserBaseVisitor<QueryType>() {
+    VerdictSQLParserBaseVisitor<QueryType> visitor =
+        new VerdictSQLParserBaseVisitor<QueryType>() {
 
-      @Override
-      public QueryType visitSelect_statement(VerdictSQLParser.Select_statementContext ctx) {
-        return QueryType.select;
-      }
+          @Override
+          public QueryType visitSelect_statement(VerdictSQLParser.Select_statementContext ctx) {
+            return QueryType.select;
+          }
 
-      @Override
-      public QueryType visitCreate_scramble_statement(VerdictSQLParser.Create_scramble_statementContext ctx) {
-        return QueryType.scrambling;
-      }
+          @Override
+          public QueryType visitCreate_scramble_statement(
+              VerdictSQLParser.Create_scramble_statementContext ctx) {
+            return QueryType.scrambling;
+          }
 
-      @Override
-      public QueryType visitUse_statement(VerdictSQLParser.Use_statementContext ctx) {
-        return QueryType.set_default_schema;
-      }
+          @Override
+          public QueryType visitUse_statement(VerdictSQLParser.Use_statementContext ctx) {
+            return QueryType.set_default_schema;
+          }
 
-      @Override
-      public QueryType visitShow_databases_statement(VerdictSQLParser.Show_databases_statementContext ctx) {
-        return QueryType.show_databases;
-      }
+          @Override
+          public QueryType visitShow_databases_statement(
+              VerdictSQLParser.Show_databases_statementContext ctx) {
+            return QueryType.show_databases;
+          }
 
-      @Override
-      public QueryType visitShow_tables_statement(VerdictSQLParser.Show_tables_statementContext ctx) {
-        return QueryType.show_tables;
-      }
+          @Override
+          public QueryType visitShow_tables_statement(
+              VerdictSQLParser.Show_tables_statementContext ctx) {
+            return QueryType.show_tables;
+          }
 
-      @Override
-      public QueryType visitDescribe_table_statement(VerdictSQLParser.Describe_table_statementContext ctx) {
-        return QueryType.describe_table;
-      }
-    };
+          @Override
+          public QueryType visitDescribe_table_statement(
+              VerdictSQLParser.Describe_table_statementContext ctx) {
+            return QueryType.describe_table;
+          }
+        };
 
     QueryType type = visitor.visit(parser.verdict_statement());
     return type;

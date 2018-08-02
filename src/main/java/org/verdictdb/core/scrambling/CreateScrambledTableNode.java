@@ -16,6 +16,9 @@
 
 package org.verdictdb.core.scrambling;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.core.execplan.ExecutionInfoToken;
@@ -26,9 +29,6 @@ import org.verdictdb.core.sqlobject.CreateScrambledTableQuery;
 import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.core.sqlobject.SqlConvertible;
 import org.verdictdb.exception.VerdictDBException;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /** Created by Dong Young Yoon on 7/17/18. */
 public class CreateScrambledTableNode extends QueryNodeWithPlaceHolders {
@@ -54,7 +54,7 @@ public class CreateScrambledTableNode extends QueryNodeWithPlaceHolders {
   protected ScramblingMethod method;
 
   public CreateScrambledTableNode(IdCreator namer, SelectQuery query) {
-    super(query);
+    super(namer, query);
     this.namer = namer;
   }
 
@@ -66,7 +66,7 @@ public class CreateScrambledTableNode extends QueryNodeWithPlaceHolders {
       ScramblingMethod method,
       String tierColumnName,
       String blockColumnName) {
-    super(query);
+    super(namer, query);
     this.namer = namer;
     this.originalSchemaName = originalSchemaName;
     this.originalTableName = originalTableName;

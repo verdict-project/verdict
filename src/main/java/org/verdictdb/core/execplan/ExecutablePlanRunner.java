@@ -16,18 +16,18 @@
 
 package org.verdictdb.core.execplan;
 
-import org.verdictdb.connection.DbmsConnection;
-import org.verdictdb.core.querying.ExecutableNodeBase;
-import org.verdictdb.core.resulthandler.ExecutionResultReader;
-import org.verdictdb.core.resulthandler.ExecutionTokenReader;
-import org.verdictdb.exception.VerdictDBException;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
+import org.verdictdb.connection.DbmsConnection;
+import org.verdictdb.core.querying.ExecutableNodeBase;
+import org.verdictdb.core.resulthandler.ExecutionResultReader;
+import org.verdictdb.core.resulthandler.ExecutionTokenReader;
+import org.verdictdb.exception.VerdictDBException;
 
 public class ExecutablePlanRunner {
 
@@ -66,7 +66,7 @@ public class ExecutablePlanRunner {
     // set up to get the results
     ExecutionTokenReader reader;
     if (plan.getReportingNode() != null) {
-      ExecutableNodeBase node = ExecutableNodeBase.create();
+      ExecutableNodeBase node = new ExecutableNodeBase(-1);
       //      ExecutionTokenQueue outputQueue = new ExecutionTokenQueue();
       node.subscribeTo((ExecutableNodeBase) plan.getReportingNode());
       //      plan.getReportingNode().getDestinationQueues().add(outputQueue);
