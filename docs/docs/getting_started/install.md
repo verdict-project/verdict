@@ -1,4 +1,4 @@
-# Installation
+# Download / Install
 
 ## Maven
 
