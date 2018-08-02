@@ -30,6 +30,8 @@ public class OrderbyAttribute implements Serializable {
 
   String order = "asc";
 
+  String nullsOrder = "";
+
   public OrderbyAttribute(String attributeName) {
     this.attribute = new AliasReference(attributeName);
   }
@@ -48,8 +50,19 @@ public class OrderbyAttribute implements Serializable {
     this.order = order;
   }
 
+  public OrderbyAttribute(
+      GroupingAttribute attribute, String order, String nullsOrder) {
+    this.attribute = attribute;
+    this.order = order;
+    this.nullsOrder = nullsOrder;
+  }
+
   public String getOrder() {
     return order;
+  }
+
+  public String getNullsOrder() {
+    return nullsOrder;
   }
 
   public GroupingAttribute getAttribute() {

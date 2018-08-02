@@ -16,36 +16,21 @@
 
 package org.verdictdb.sqlreader;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Vector;
-
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.connection.MetaDataProvider;
-import org.verdictdb.core.sqlobject.AbstractRelation;
-import org.verdictdb.core.sqlobject.AliasReference;
-import org.verdictdb.core.sqlobject.AliasedColumn;
-import org.verdictdb.core.sqlobject.AsteriskColumn;
-import org.verdictdb.core.sqlobject.BaseColumn;
-import org.verdictdb.core.sqlobject.BaseTable;
-import org.verdictdb.core.sqlobject.ColumnOp;
-import org.verdictdb.core.sqlobject.ConstantColumn;
-import org.verdictdb.core.sqlobject.GroupingAttribute;
-import org.verdictdb.core.sqlobject.JoinTable;
-import org.verdictdb.core.sqlobject.OrderbyAttribute;
-import org.verdictdb.core.sqlobject.SelectItem;
-import org.verdictdb.core.sqlobject.SelectQuery;
-import org.verdictdb.core.sqlobject.SubqueryColumn;
-import org.verdictdb.core.sqlobject.UnnamedColumn;
+import org.verdictdb.core.sqlobject.*;
 import org.verdictdb.exception.VerdictDBDbmsException;
+import org.verdictdb.sqlsyntax.H2Syntax;
+import org.verdictdb.sqlsyntax.SqlSyntax;
+
+import java.util.*;
 
 public class RelationStandardizer {
 
   private MetaDataProvider meta;
+
+  private SqlSyntax syntax;
 
   private static long itemID = 1;
 
@@ -81,6 +66,20 @@ public class RelationStandardizer {
 
   public RelationStandardizer(MetaDataProvider meta) {
     this.meta = meta;
+  }
+
+  public RelationStandardizer(MetaDataProvider meta, SqlSyntax syntax) {
+    this.meta = meta;
+    this.syntax = syntax;
+  }
+
+  /**
+   * (optional) set database syntax to enable database-specific standardization.
+   *
+   * @param syntax
+   */
+  public void setSyntax(SqlSyntax syntax) {
+    this.syntax = syntax;
   }
 
   private BaseColumn replaceBaseColumn(BaseColumn col) {
@@ -197,7 +196,7 @@ public class RelationStandardizer {
           searchList.add(col);
         }
       } else if (cond instanceof SubqueryColumn) {
-        RelationStandardizer g = new RelationStandardizer(meta);
+        RelationStandardizer g = new RelationStandardizer(meta, syntax);
         g.oldTableAliasMap.putAll(oldTableAliasMap);
         g.setColNameAndColAlias(colNameAndColAlias);
         g.setColumnOpAliasMap(columnOpAliasMap);
@@ -210,6 +209,18 @@ public class RelationStandardizer {
     return condition;
   }
 
+  private AliasedColumn matchAliasFromSelectList(List<SelectItem> selectItems, BaseColumn col) {
+    for (SelectItem item : selectItems) {
+      if (item instanceof AliasedColumn) {
+        AliasedColumn aliasedColumn = (AliasedColumn) item;
+        if (aliasedColumn.getAliasName().equals(col)) {
+          return aliasedColumn;
+        }
+      }
+    }
+    return null;
+  }
+
   private List<GroupingAttribute> replaceGroupby(
       List<SelectItem> selectItems, List<GroupingAttribute> groupingAttributeList)
       throws VerdictDBDbmsException {
@@ -217,82 +228,116 @@ public class RelationStandardizer {
   }
 
   /**
-   *
-   * @return: replaced Groupby list or Orderby list
-   * If it is groupby, we should return column instead of alias
+   * @return: replaced Groupby list or Orderby list If it is groupby, we should return column
+   *     instead of alias
    */
   private List<GroupingAttribute> replaceGroupby(
       List<SelectItem> selectItems,
       List<GroupingAttribute> groupingAttributeList,
-      boolean isforOrderBy)
+      boolean isForOrderBy)
       throws VerdictDBDbmsException {
-    if (isforOrderBy) {
-      List<GroupingAttribute> newGroupby = new ArrayList<>();
-      for (GroupingAttribute g : groupingAttributeList) {
-        if (g instanceof BaseColumn) {
-          if (((BaseColumn) g).getTableSourceAlias() != null) {
-            String tableSource = ((BaseColumn) g).getTableSourceAlias();
-            String columnName = ((BaseColumn) g).getColumnName();
-            if (duplicateColNameAndColAlias.containsKey(
-                new ImmutablePair<>(tableSource, columnName))) {
-              newGroupby.add(
-                  new AliasReference(
-                      tableSource,
-                      duplicateColNameAndColAlias.get(new ImmutablePair<>(tableSource, columnName))));
-            } else if (colNameAndColAlias.containsKey(columnName)) {
-              newGroupby.add(new AliasReference(colNameAndColAlias.get(columnName)));
-            } else newGroupby.add(new AliasReference(((BaseColumn) g).getColumnName()));
-          } else if (colNameAndColAlias.containsKey(((BaseColumn) g).getColumnName())) {
+    List<GroupingAttribute> newGroupby = new ArrayList<>();
+    for (GroupingAttribute g : groupingAttributeList) {
+      if (g instanceof BaseColumn) {
+        // 'col' can be either a base column or an alias to a select item
+        BaseColumn col = (BaseColumn) g;
+
+        // Check for aliases
+        AliasedColumn aliasMatch = matchAliasFromSelectList(selectItems, col);
+        if (aliasMatch != null && !isForOrderBy) {
+          UnnamedColumn column = aliasMatch.getColumn();
+          // Unless it is a subquery (I think it would not be possible, but just in case),
+          // we use the actual operation in the group-by.
+          if (column instanceof SubqueryColumn) {
+            newGroupby.add(new AliasReference(aliasMatch.getAliasName()));
+          } else {
+            newGroupby.add(column);
+          }
+        } else if (((BaseColumn) g).getTableSourceAlias() != null) {
+          // if it is a base column, let's get its current table alias and replace.
+          String tableSource = ((BaseColumn) g).getTableSourceAlias();
+          String columnName = ((BaseColumn) g).getColumnName();
+          if (duplicateColNameAndColAlias.containsKey(
+              new ImmutablePair<>(tableSource, columnName))) {
             newGroupby.add(
-                new AliasReference(colNameAndColAlias.get(((BaseColumn) g).getColumnName())));
-          } else newGroupby.add(new AliasReference(((BaseColumn) g).getColumnName()));
-        } else if (g instanceof ColumnOp) {
+                getGroupOrOrderByColumn(
+                    tableSource,
+                    duplicateColNameAndColAlias.get(new ImmutablePair<>(tableSource, columnName)),
+                    isForOrderBy));
+          } else if (colNameAndColAlias.containsKey(columnName)) {
+            newGroupby.add(
+                getGroupOrOrderByColumn(
+                    oldTableAliasMap.get(tableSource), columnName, isForOrderBy));
+          } else
+            newGroupby.add(getGroupOrOrderByColumn(((BaseColumn) g).getColumnName(), isForOrderBy));
+        } else
+          newGroupby.add(getGroupOrOrderByColumn(((BaseColumn) g).getColumnName(), isForOrderBy));
+      } else if (g instanceof ColumnOp) {
+        // If it is a column-op, we substitute its table reference to our alias unless
+        // this method is called to get order-by columns. In such case, we simply use alias.
+        // Also, H2 does not support ColumnOp in group-by.
+        if (isForOrderBy || (syntax instanceof H2Syntax)) {
           ColumnOp replaced = (ColumnOp) replaceFilter((ColumnOp) g);
           if (columnOpAliasMap.containsKey(replaced)) {
             newGroupby.add(new AliasReference(columnOpAliasMap.get(replaced)));
           } else newGroupby.add(replaced);
-        } else if (g instanceof ConstantColumn) {
-          // replace index with column alias
-          String value = (String) ((ConstantColumn) g).getValue();
-          try {
-            Integer.parseInt(value);
-          } catch (NumberFormatException e) {
-            newGroupby.add(new AliasReference(value));
-            continue;
-          }
-          int index = Integer.valueOf(value);
-          AliasedColumn col = (AliasedColumn) selectItems.get(index - 1);
-          UnnamedColumn column = col.getColumn();
-          if (column instanceof BaseColumn && !isforOrderBy) {
-            BaseColumn baseCol = (BaseColumn) column;
-            newGroupby.add(
-                new AliasReference(baseCol.getTableSourceAlias(), baseCol.getColumnName()));
-          } else {
-            newGroupby.add(new AliasReference(col.getAliasName()));
-          }
-        } else newGroupby.add(g);
-      }
-      return newGroupby;
-    } else {
-      for (GroupingAttribute g : groupingAttributeList) {
-        if (g instanceof ConstantColumn) {
-          int groupIndex = groupingAttributeList.indexOf(g);
-          // replace index with column alias
-          String value = (String) ((ConstantColumn) g).getValue();
-          try {
-            Integer.parseInt(value);
-          } catch (NumberFormatException e) {
-            groupingAttributeList.set(groupIndex, new AliasReference(value));
-            continue;
-          }
-          int index = Integer.valueOf(value);
-          AliasedColumn col = (AliasedColumn) selectItems.get(index - 1);
-          UnnamedColumn column = col.getColumn();
-          groupingAttributeList.set(groupIndex, column);
+        } else {
+          ColumnOp newCol = ((ColumnOp) g).deepcopy();
+          this.replaceGroupByReference(newCol);
+          newGroupby.add(newCol);
+        }
+      } else if (g instanceof ConstantColumn) {
+        // replace index with column alias
+        String value = (String) ((ConstantColumn) g).getValue();
+        try {
+          Integer.parseInt(value);
+        } catch (NumberFormatException e) {
+          newGroupby.add(new AliasReference(value));
+          continue;
+        }
+        int index = Integer.valueOf(value);
+        AliasedColumn col = (AliasedColumn) selectItems.get(index - 1);
+        UnnamedColumn column = col.getColumn();
+        if (column instanceof BaseColumn && !isForOrderBy) {
+          BaseColumn baseCol = (BaseColumn) column;
+          newGroupby.add(new BaseColumn(baseCol.getTableSourceAlias(), baseCol.getColumnName()));
+        } else {
+          newGroupby.add(new AliasReference(col.getAliasName()));
         }
       }
     }
-    return groupingAttributeList;
+    return newGroupby;
+  }
+
+  // returns BaseColumn for group-by, AliasReference for order-by
+  private GroupingAttribute getGroupOrOrderByColumn(
+      String table, String column, boolean isForOrderBy) {
+    if (isForOrderBy)
+      return (table != null) ? new AliasReference(table, column) : new AliasReference(column);
+    else return (table != null) ? new BaseColumn(table, column) : new BaseColumn(column);
+  }
+
+  // returns BaseColumn for group-by, AliasReference for order-by
+  private GroupingAttribute getGroupOrOrderByColumn(String column, boolean isForOrderBy) {
+    if (isForOrderBy) return new AliasReference(column);
+    else return new BaseColumn(column);
+  }
+
+  private void replaceGroupByReference(UnnamedColumn c) {
+    if (c instanceof ColumnOp) {
+      ColumnOp colOp = (ColumnOp) c;
+      for (UnnamedColumn o : colOp.getOperands()) {
+        this.replaceGroupByReference(o);
+      }
+    } else if (c instanceof BaseColumn) {
+      BaseColumn baseCol = (BaseColumn) c;
+      String newRef = oldTableAliasMap.get(baseCol.getTableSourceAlias());
+      if (newRef != null) baseCol.setTableSourceAlias(newRef);
+      else {
+        newRef = colNameAndTableAlias.get(baseCol.getColumnName());
+        if (newRef != null) baseCol.setTableSourceAlias(newRef);
+      }
+    }
   }
 
   private List<OrderbyAttribute> replaceOrderby(
@@ -358,7 +403,7 @@ public class RelationStandardizer {
       return new ImmutablePair<>(joinColName, table);
     } else if (table instanceof SelectQuery) {
       List<String> colName = new ArrayList<>();
-      RelationStandardizer g = new RelationStandardizer(meta);
+      RelationStandardizer g = new RelationStandardizer(meta, syntax);
       g.oldTableAliasMap.putAll(oldTableAliasMap);
       g.setTableInfoAndAlias(tableInfoAndAlias);
       g.setColNameAndTableAlias(colNameAndTableAlias);

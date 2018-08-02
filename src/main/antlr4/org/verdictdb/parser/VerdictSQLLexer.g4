@@ -129,6 +129,7 @@ NONCLUSTERED:                    N O N C L U S T E R E D;
 NOT:                             N O T;
 NULL:                            N U L L;
 NULLIF:                          N U L L I F;
+NULLS:                           N U L L S;
 OF:                              O F;
 OFF:                             O F F;
 OFFSETS:                         O F F S E T S;
