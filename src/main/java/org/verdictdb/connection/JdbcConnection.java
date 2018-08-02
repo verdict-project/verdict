@@ -16,45 +16,31 @@
 
 package org.verdictdb.connection;
 
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
+import com.google.common.collect.Sets;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
-import org.verdictdb.commons.StackTraceReader;
 import org.verdictdb.commons.VerdictDBLogger;
 import org.verdictdb.exception.VerdictDBDbmsException;
-import org.verdictdb.sqlsyntax.HiveSyntax;
-import org.verdictdb.sqlsyntax.ImpalaSyntax;
-import org.verdictdb.sqlsyntax.PostgresqlSyntax;
-import org.verdictdb.sqlsyntax.RedshiftSyntax;
-import org.verdictdb.sqlsyntax.SparkSyntax;
-import org.verdictdb.sqlsyntax.SqlSyntax;
-import org.verdictdb.sqlsyntax.SqlSyntaxList;
+import org.verdictdb.sqlsyntax.*;
 
-import com.google.common.collect.Sets;
+import java.sql.*;
+import java.util.*;
 
 public class JdbcConnection implements DbmsConnection {
-  
+
   Connection conn;
-  
+
   SqlSyntax syntax;
-  
+
   String currentSchema = null;
-  
+
   JdbcQueryResult jrs = null;
-  
+
   private boolean outputDebugMessage = false;
-  
+
+  private VerdictDBLogger log;
+
   public static JdbcConnection create(Connection conn) throws VerdictDBDbmsException {
     String connectionString = null;
     try {
@@ -62,16 +48,16 @@ public class JdbcConnection implements DbmsConnection {
     } catch (SQLException e) {
       throw new VerdictDBDbmsException(e);
     }
-    
+
     SqlSyntax syntax = SqlSyntaxList.getSyntaxFromConnectionString(connectionString);
     //    String dbName = connectionString.split(":")[1];
     //    SqlSyntax syntax = SqlSyntaxList.getSyntaxFor(dbName);
-    
+
     JdbcConnection jdbcConn = new JdbcConnection(conn, syntax);
     //    jdbcConn.setOutputDebugMessage(true);
     return jdbcConn;
   }
-  
+
   public JdbcConnection(Connection conn, SqlSyntax syntax) {
     this.conn = conn;
     try {
@@ -84,15 +70,16 @@ public class JdbcConnection implements DbmsConnection {
     } catch (SQLException e) {
       e.printStackTrace();
     }
-    
+
     // set a default value if an inappropriate value is set.
     if (currentSchema == null || currentSchema.length() == 0) {
       currentSchema = syntax.getFallbackDefaultSchema();
     }
-    
+
     this.syntax = syntax;
+    this.log = VerdictDBLogger.getLogger(this.getClass());
   }
-  
+
   @Override
   public void close() {
     try {
@@ -101,9 +88,10 @@ public class JdbcConnection implements DbmsConnection {
       e.printStackTrace();
     }
   }
-  
+
   @Override
   public DbmsQueryResult execute(String sql) throws VerdictDBDbmsException {
+
     String quoteChars = "'\"";
     List<String> sqls = splitOnSemicolon(sql, quoteChars);
     DbmsQueryResult finalResult = null;
@@ -112,7 +100,7 @@ public class JdbcConnection implements DbmsConnection {
     }
     return finalResult;
   }
-  
+
   /**
    * Splits a given query using the delimiter. The delimiters in quote chars are ignored.
    *
@@ -130,7 +118,7 @@ public class JdbcConnection implements DbmsConnection {
       quoteCharCounts.put(c, 0);
     }
     char delimiter = ';';
-    
+
     StringBuilder beginConstructed = new StringBuilder();
     for (char c : sql.toCharArray()) {
       // when encountered a delimiter
@@ -163,15 +151,15 @@ public class JdbcConnection implements DbmsConnection {
         splitted.add(s);
       }
     }
-    
+
     return splitted;
   }
-  
+
   public DbmsQueryResult executeSingle(String sql) throws VerdictDBDbmsException {
-    
+
     VerdictDBLogger logger = VerdictDBLogger.getLogger(this.getClass());
     logger.debug("Issuing the following query to DBMS: " + sql);
-    
+
     try {
       Statement stmt = conn.createStatement();
       JdbcQueryResult jrs = null;
@@ -186,21 +174,21 @@ public class JdbcConnection implements DbmsConnection {
       stmt.close();
       return jrs;
     } catch (SQLException e) {
-//      e.printStackTrace();
-//      logger.debug(StackTraceReader.stackTrace2String(e));
+      //      e.printStackTrace();
+      //      logger.debug(StackTraceReader.stackTrace2String(e));
       throw new VerdictDBDbmsException(e.getMessage());
     }
   }
-  
+
   //  @Override
   //  public DbmsQueryResult getResult() {
   //    return jrs;
   //  }
-  
+
   public DbmsQueryResult executeQuery(String sql) throws VerdictDBDbmsException {
     return execute(sql);
   }
-  
+
   //  @Override
   //  public DbmsQueryResult executeQuery(String query) throws VerdictDBDbmsException {
   //    System.out.println("About to issue this query: " + query);
@@ -230,74 +218,74 @@ public class JdbcConnection implements DbmsConnection {
   ////      return 0;
   //    }
   //  }
-  
+
   @Override
   public SqlSyntax getSyntax() {
     return syntax;
   }
-  
+
   public Connection getConnection() {
     return conn;
   }
-  
+
   @Override
   public List<String> getSchemas() throws VerdictDBDbmsException {
     List<String> schemas = new ArrayList<>();
     DbmsQueryResult queryResult = executeQuery(syntax.getSchemaCommand());
-    
+
     while (queryResult.next()) {
       schemas.add(queryResult.getString(syntax.getSchemaNameColumnIndex()));
     }
-    
+
     return schemas;
   }
-  
+
   @Override
   public List<String> getTables(String schema) throws VerdictDBDbmsException {
     List<String> tables = new ArrayList<>();
     DbmsQueryResult queryResult = executeQuery(syntax.getTableCommand(schema));
-    
+
     while (queryResult.next()) {
       tables.add(queryResult.getString(syntax.getTableNameColumnIndex()));
     }
-    
+
     return tables;
   }
-  
+
   @Override
   public List<Pair<String, String>> getColumns(String schema, String table)
       throws VerdictDBDbmsException {
     List<Pair<String, String>> columns = new ArrayList<>();
     DbmsQueryResult queryResult = executeQuery(syntax.getColumnsCommand(schema, table));
-    
+
     while (queryResult.next()) {
       String type;
       if (syntax instanceof PostgresqlSyntax) {
         type = queryResult.getString(syntax.getColumnTypeColumnIndex());
         if (queryResult.getInt(((PostgresqlSyntax) syntax).getCharacterMaximumLengthColumnIndex())
-                != 0) {
+            != 0) {
           type =
               type
                   + "("
                   + queryResult.getInt(
-                  ((PostgresqlSyntax) syntax).getCharacterMaximumLengthColumnIndex())
+                      ((PostgresqlSyntax) syntax).getCharacterMaximumLengthColumnIndex())
                   + ")";
         }
       } else {
         type = queryResult.getString(syntax.getColumnTypeColumnIndex());
       }
       type = type.toLowerCase();
-      
+
       //        // remove the size of type
       //        type = type.replaceAll("\\(.*\\)", "");
-      
+
       columns.add(
           new ImmutablePair<>(queryResult.getString(syntax.getColumnNameColumnIndex()), type));
     }
-    
+
     return columns;
   }
-  
+
   @Override
   public List<String> getPartitionColumns(String schema, String table)
       throws VerdictDBDbmsException {
@@ -319,12 +307,11 @@ public class JdbcConnection implements DbmsConnection {
         } else {
           throw e;
         }
-        
       }
     } else {
       queryResult = executeQuery(syntax.getPartitionCommand(schema, table));
     }
-    
+
     // the result of postgresql is a vector of column index
     if (syntax instanceof PostgresqlSyntax) {
       if (queryResult.next()) {
@@ -352,20 +339,20 @@ public class JdbcConnection implements DbmsConnection {
         partition.add(queryResult.getString(0));
       }
     }
-    
+
     return partition;
   }
-  
+
   @Override
   public String getDefaultSchema() {
     return currentSchema;
   }
-  
+
   @Override
   public void setDefaultSchema(String schema) {
     currentSchema = schema;
   }
-  
+
   public DatabaseMetaData getMetadata() throws VerdictDBDbmsException {
     try {
       return conn.getMetaData();
@@ -373,15 +360,15 @@ public class JdbcConnection implements DbmsConnection {
       throw new VerdictDBDbmsException(e);
     }
   }
-  
+
   public boolean isOutputDebugMessage() {
     return outputDebugMessage;
   }
-  
+
   public void setOutputDebugMessage(boolean outputDebugMessage) {
     this.outputDebugMessage = outputDebugMessage;
   }
-  
+
   @Override
   public DbmsConnection copy() {
     JdbcConnection newConn = new JdbcConnection(conn, syntax);

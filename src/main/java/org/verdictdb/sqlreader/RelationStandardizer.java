@@ -372,20 +372,18 @@ public class RelationStandardizer {
     //  table.setAliasName(verdictTableAliasPrefix + itemID++);
     // }
     if (table instanceof BaseTable) {
+      BaseTable bt = (BaseTable) table;
       List<String> colName = new ArrayList<>();
-      if (((BaseTable) table).getSchemaName() == null) {
-        ((BaseTable) table).setSchemaName(meta.getDefaultSchema());
+      if (bt.getSchemaName() == null) {
+        bt.setSchemaName(meta.getDefaultSchema());
       }
-      List<Pair<String, String>> cols =
-          meta.getColumns(((BaseTable) table).getSchemaName(), ((BaseTable) table).getTableName());
+      List<Pair<String, String>> cols = meta.getColumns(bt.getSchemaName(), bt.getTableName());
       for (Pair<String, String> c : cols) {
-        colNameAndTableAlias.put(c.getKey(), table.getAliasName().get());
+        colNameAndTableAlias.put(c.getKey(), bt.getAliasName().get());
         colName.add(c.getKey());
       }
       tableInfoAndAlias.put(
-          new ImmutablePair<>(
-              ((BaseTable) table).getSchemaName(), ((BaseTable) table).getTableName()),
-          table.getAliasName().get());
+          ImmutablePair.of(bt.getSchemaName(), bt.getTableName()), table.getAliasName().get());
       return new ImmutablePair<>(colName, table);
     } else if (table instanceof JoinTable) {
       List<String> joinColName = new ArrayList<>();

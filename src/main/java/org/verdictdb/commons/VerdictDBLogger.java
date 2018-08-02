@@ -16,12 +16,12 @@
 
 package org.verdictdb.commons;
 
-import org.slf4j.LoggerFactory;
-import org.slf4j.Marker;
-
 import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.Appender;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
 
 public class VerdictDBLogger implements org.slf4j.Logger {
 
@@ -43,6 +43,10 @@ public class VerdictDBLogger implements org.slf4j.Logger {
     if (logger instanceof ch.qos.logback.classic.Logger) {
       ((ch.qos.logback.classic.Logger) logger).setLevel(level);
     }
+  }
+
+  public void SetRootLogLevel(Level level) {
+    ((Logger) LoggerFactory.getLogger(ROOT_LOGGER_NAME)).setLevel(level);
   }
 
   public void addAppender(Appender<ILoggingEvent> appender) {
@@ -69,7 +73,7 @@ public class VerdictDBLogger implements org.slf4j.Logger {
 
   @Override
   public void trace(String s, Object o) {
-    logger.trace(s,o);
+    logger.trace(s, o);
   }
 
   @Override
