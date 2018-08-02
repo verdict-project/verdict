@@ -1,13 +1,13 @@
 # Quickstart Guide
 
-We will install VerdictDB, create a connection, and issue a simple query to VerdictDB. In this Quickstart Guide, we will use an embedded H2 database for VerdictDB's backend database. See [How to Connect](/connection/) for how to use other backend databases.
+We will install VerdictDB, create a connection, and issue a simple query to VerdictDB. In this Quickstart Guide, we will use an embedded [H2 database](http://www.h2database.com/) for VerdictDB's backend database. See [How to Connect](/getting_started/connection/) for the examples of connecting to other databases.
 
 
 ## Install
 
-Place the following dependency in your maven pom.xml.
+Create a [Maven](https://maven.apache.org/) project and
+place the following dependency in your pom.xml.
 ```pom
-<!-- https://mvnrepository.com/artifact/org.verdictdb/verdictdb-core -->
 <dependency>
     <groupId>org.verdictdb</groupId>
     <artifactId>verdictdb-core</artifactId>
@@ -15,8 +15,7 @@ Place the following dependency in your maven pom.xml.
 </dependency>
 ```
 
-
-We will use the in-memory [H2 database](http://www.h2database.com/) for quick tests, which can be loaded using the following maven dependency:
+To use H2, add the following entry as well:
 ```pom
 <dependency>
     <groupId>com.h2database</groupId>
@@ -24,8 +23,6 @@ We will use the in-memory [H2 database](http://www.h2database.com/) for quick te
     <version>1.4.197</version>
 </dependency>
 ```
-
-Using VerdictDB with other databases are described in more detail in [this page](/getting_started/connection/).
 
 
 ## Insert Data

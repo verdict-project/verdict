@@ -1,15 +1,21 @@
-# Download / Install
+# Download/Install
 
-Depending on your language preference (Java or Python), you can use different approaches.
+Use a different interface depending on your language preference (Java or Python).
 
 *Note: Python interface is currently in preparation.*
 
 
 ## Java
 
+One of the following three methods can be used:
+
+1. Maven
+1. Using a pre-compiled jar
+1. Build yourself
+
 ### Maven
 
-If you use [Apache Maven](https://maven.apache.org/) for your project's dependency management, including the following dependency item is all you need to do to use VerdictDB.
+If you use [Apache Maven](https://maven.apache.org/) for your project's dependency management, adding the following dependency entry to your `pom.xml` is all you need to do to use VerdictDB.
 
 ```pom
 <dependency>
