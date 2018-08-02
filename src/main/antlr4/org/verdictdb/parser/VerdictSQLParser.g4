@@ -64,7 +64,7 @@ verdict_statement
 
 //WITH SIZE size=(FLOAT | DECIMAL) '%' (STORE poission_cols=DECIMAL POISSON COLUMNS)? (STRATIFIED BY column_name (',' column_name)*)?
 create_scramble_statement
-    : CREATE SCRAMBLE scrambled_table=table_name FROM original_table=table_name
+    : CREATE SCRAMBLE (IF NOT EXISTS)? scrambled_table=table_name FROM original_table=table_name
       (METHOD scrambling_method_name)? 
       (SIZE percent=(FLOAT | DECIMAL) '%')?
     ;
@@ -385,7 +385,7 @@ union
 
 // https://msdn.microsoft.com/en-us/library/ms176104.aspx
 query_specification
-    : SELECT (ALL | DISTINCT)? (TOP expression PERCENT? (WITH TIES)?)?
+    : SELECT (ALL | DISTINCT)? top_clause? // (TOP expression PERCENT? (WITH TIES)?)?
       select_list
       // https://msdn.microsoft.com/en-us/library/ms188029.aspx
       (INTO into_table=table_name)?
@@ -396,6 +396,10 @@ query_specification
       (GROUP BY ROLLUP '(' group_by_item (',' group_by_item)* ')'))?
       (HAVING having=search_condition)?
     ;
+
+top_clause
+	: TOP number
+	;
 
 limit_clause
     : LIMIT number
@@ -420,7 +424,7 @@ xml_common_directives
     ;
 
 order_by_expression
-    : expression (ASC | DESC)?
+    : expression (ASC | DESC)? (NULLS FIRST | NULLS LAST)?
     ;
 
 group_by_item

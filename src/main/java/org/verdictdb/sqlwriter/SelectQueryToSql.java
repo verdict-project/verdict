@@ -448,10 +448,16 @@ public class SelectQueryToSql {
         sql.append(" order by ");
         sql.append(groupingAttributeToSqlPart(a.getAttribute()));
         sql.append(" " + a.getOrder());
+        if (!a.getNullsOrder().isEmpty()) {
+          sql.append(" " + a.getNullsOrder());
+        }
         isFirstOrderby = false;
       } else {
         sql.append(", " + groupingAttributeToSqlPart(a.getAttribute()));
         sql.append(" " + a.getOrder());
+        if (!a.getNullsOrder().isEmpty()) {
+          sql.append(" " + a.getNullsOrder());
+        }
       }
     }
 

@@ -17,12 +17,21 @@
 package org.verdictdb.sqlsyntax;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
 import com.google.common.collect.Lists;
 
 public class ImpalaSyntax extends SqlSyntax {
+
+  private static final Map<String, String> typeMap;
+
+  static {
+    typeMap = new HashMap<>();
+    typeMap.put("text", "string");
+  }
 
   @Override
   public boolean doesSupportTablePartitioning() {
@@ -120,5 +129,11 @@ public class ImpalaSyntax extends SqlSyntax {
       return false;
     }
     return true;
+  }
+
+  @Override
+  public String substituteTypeName(String type) {
+    String newType = typeMap.get(type.toLowerCase());
+    return (newType != null) ? newType : type;
   }
 }

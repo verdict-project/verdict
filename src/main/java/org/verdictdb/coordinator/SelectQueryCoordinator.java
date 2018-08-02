@@ -16,10 +16,6 @@
 
 package org.verdictdb.coordinator;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.connection.DataTypeConverter;
@@ -32,16 +28,16 @@ import org.verdictdb.core.querying.QueryExecutionPlanFactory;
 import org.verdictdb.core.querying.ola.AsyncQueryExecutionPlan;
 import org.verdictdb.core.resulthandler.ExecutionResultReader;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
-import org.verdictdb.core.sqlobject.AbstractRelation;
-import org.verdictdb.core.sqlobject.BaseTable;
-import org.verdictdb.core.sqlobject.ColumnOp;
-import org.verdictdb.core.sqlobject.JoinTable;
-import org.verdictdb.core.sqlobject.SelectQuery;
-import org.verdictdb.core.sqlobject.SubqueryColumn;
-import org.verdictdb.core.sqlobject.UnnamedColumn;
+import org.verdictdb.core.sqlobject.*;
 import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.metastore.ScrambleMetaStore;
 import org.verdictdb.sqlreader.NonValidatingSQLParser;
 import org.verdictdb.sqlreader.RelationStandardizer;
+import org.verdictdb.sqlreader.ScrambleTableReplacer;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 
 public class SelectQueryCoordinator {
 
@@ -50,6 +46,8 @@ public class SelectQueryCoordinator {
   ScrambleMetaSet scrambleMetaSet;
 
   String scratchpadSchema;
+
+  SelectQuery lastQuery;
 
   public SelectQueryCoordinator(DbmsConnection conn) {
     this(conn, new ScrambleMetaSet());
@@ -74,6 +72,10 @@ public class SelectQueryCoordinator {
     this.scrambleMetaSet = scrambleMetaSet;
   }
 
+  public SelectQuery getLastQuery() {
+    return lastQuery;
+  }
+
   public ExecutionResultReader process(String query) throws VerdictDBException {
 
     SelectQuery selectQuery = standardizeQuery(query);
@@ -90,14 +92,19 @@ public class SelectQueryCoordinator {
     QueryExecutionPlan asyncPlan = AsyncQueryExecutionPlan.create(plan);
 
     // simplify the plan
-//    QueryExecutionPlan simplifiedAsyncPlan = QueryExecutionPlanSimplifier.simplify(asyncPlan);
-//    QueryExecutionPlanSimplifier.simplify2(asyncPlan);
-    
-//    asyncPlan.getRootNode().print();
+    //    QueryExecutionPlan simplifiedAsyncPlan = QueryExecutionPlanSimplifier.simplify(asyncPlan);
+    //    QueryExecutionPlanSimplifier.simplify2(asyncPlan);
+
+    //    asyncPlan.getRootNode().print();
 
     // execute the plan
-//    ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(conn, simplifiedAsyncPlan);
+    //    ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(conn,
+    // simplifiedAsyncPlan);
     ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(conn, asyncPlan);
+
+    lastQuery = selectQuery;
+
+    lastQuery = selectQuery;
 
     return reader;
   }
@@ -108,8 +115,13 @@ public class SelectQueryCoordinator {
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     SelectQuery relation = (SelectQuery) sqlToRelation.toRelation(query);
     MetaDataProvider metaData = createMetaDataFor(relation);
-    RelationStandardizer gen = new RelationStandardizer(metaData);
+    ScrambleMetaStore metaStore = new ScrambleMetaStore(conn);
+    RelationStandardizer gen = new RelationStandardizer(metaData, conn.getSyntax());
     relation = gen.standardize(relation);
+
+    ScrambleTableReplacer replacer = new ScrambleTableReplacer(metaStore);
+    replacer.replace(relation);
+
     return relation;
   }
 

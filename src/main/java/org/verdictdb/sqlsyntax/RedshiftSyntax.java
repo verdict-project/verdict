@@ -16,12 +16,20 @@
 
 package org.verdictdb.sqlsyntax;
 
-import java.util.Collection;
-import java.util.List;
-
 import com.google.common.collect.Lists;
 
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 public class RedshiftSyntax extends SqlSyntax {
+
+  private static final Map<String, String> typeMap;
+
+  static {
+    typeMap = new HashMap<>();
+  }
 
   @Override
   public boolean doesSupportTablePartitioning() {
@@ -62,9 +70,11 @@ public class RedshiftSyntax extends SqlSyntax {
   public String getColumnsCommand(String schema, String table) {
     StringBuilder sql = new StringBuilder();
     sql.append(String.format("SET search_path to '%s'; ", schema));
-    sql.append(String.format("select \"column\", \"type\" "
-        + "from PG_TABLE_DEF where tablename = '%s' and schemaname = '%s';",
-        table, schema));
+    sql.append(
+        String.format(
+            "select \"column\", \"type\" "
+                + "from PG_TABLE_DEF where tablename = '%s' and schemaname = '%s';",
+            table, schema));
     return sql.toString();
   }
 
@@ -159,6 +169,12 @@ public class RedshiftSyntax extends SqlSyntax {
   @Override
   public boolean isAsRequiredBeforeSelectInCreateTable() {
     return true;
+  }
+
+  @Override
+  public String substituteTypeName(String type) {
+    String newType = typeMap.get(type.toLowerCase());
+    return (newType != null) ? newType : type;
   }
 
   @Override

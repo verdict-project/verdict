@@ -1,12 +1,5 @@
 package org.verdictdb.sqlreader;
 
-import static java.sql.Types.BIGINT;
-import static org.junit.Assert.assertEquals;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Before;
@@ -17,6 +10,13 @@ import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sqlsyntax.MysqlSyntax;
 import org.verdictdb.sqlwriter.SelectQueryToSql;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import static java.sql.Types.BIGINT;
+import static org.junit.Assert.assertEquals;
 
 public class HavingStandardizationTest {
 
@@ -159,7 +159,7 @@ public class HavingStandardizationTest {
             + "where "
             + "(vt1.`ps_suppkey` = vt2.`s_suppkey`) "
             + "and (vt2.`s_nationkey` = vt3.`n_nationkey`) "
-            + "group by `ps_partkey` * 2 "
+            + "group by vt1.`ps_partkey` * 2 "
             + "having `value` > 10 "
             + "order by `value` desc";
     assertEquals(expected, actual);
