@@ -1,7 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<configuration debug="false">
+<configuration>
+    <appender name="DEBUG" class="ch.qos.logback.core.FileAppender">
+        <file>/tmp/verdictdb-debug.log</file>
+        <immediateFlush>true</immediateFlush>
+        <encoder>
+            <Pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</Pattern>
+        </encoder>
+    </appender>
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>INFO</level>
+        </filter>
         <layout class="ch.qos.logback.classic.PatternLayout">
             <Pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</Pattern>
         </layout>
@@ -9,7 +19,8 @@
     <!--<statusListener class="ch.qos.logback.core.status.OnConsoleStatusListener" />-->
     <statusListener class="ch.qos.logback.core.status.NopStatusListener"/>
     <logger name="org.verdictdb" level="debug"/>
-    <root level="error">
+    <root level="ERROR">
         <appender-ref ref="STDOUT"/>
+        <appender-ref ref="DEBUG"/>
     </root>
 </configuration>
