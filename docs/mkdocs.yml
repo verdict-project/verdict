@@ -8,19 +8,24 @@ pages:
   - Home: index.md
   - Getting Started:
     - Quickstart: getting_started/quickstart.md
-    - Installation: getting_started/install.md
+    - Download/Install: getting_started/install.md
     - Connecting to Data Sources: getting_started/connection.md
+    - Creating Scrambles: getting_started/scrambling.md
+    - Interactive Querying: getting_started/querying.md
   - How it works:
     - Architecture: how_it_works/architecture.md
     - Query Processing: how_it_works/query_processing.md
-  - Reference:
-    - VerdictDB Queries: reference/supported_queries.md
   - Tutorial:
     - Setup TPC-H Data: tutorial/tpch.md
+  - Reference:
+    - VerdictDB Queries: reference/supported_queries.md
 
 # Appearance
 theme:
   name: 'material'
+  font:
+    text: Open Sans
+    code: Inconsolata
   palette:
     primary: 'Deep Purple'
     accent: 'Deep Purple'
@@ -30,9 +35,7 @@ theme:
   favicon: 'images/verdictdb-favicon.png'
 repo_name: 'mozafari/verdictdb'
 repo_url: 'https://github.com/mozafari/verdictdb'
-font:
-    text: Open Sans
-    code: Roboto Mono
+
 extra_css:
   - 'stylesheets/extra.css'
 
