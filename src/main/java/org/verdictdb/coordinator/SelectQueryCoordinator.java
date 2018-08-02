@@ -116,7 +116,7 @@ public class SelectQueryCoordinator {
     SelectQuery relation = (SelectQuery) sqlToRelation.toRelation(query);
     MetaDataProvider metaData = createMetaDataFor(relation);
     ScrambleMetaStore metaStore = new ScrambleMetaStore(conn);
-    RelationStandardizer gen = new RelationStandardizer(metaData);
+    RelationStandardizer gen = new RelationStandardizer(metaData, conn.getSyntax());
     relation = gen.standardize(relation);
 
     ScrambleTableReplacer replacer = new ScrambleTableReplacer(metaStore);

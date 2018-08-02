@@ -308,4 +308,28 @@ public class JdbcCommonQueryForAllDatabasesTest {
       assertEquals(jdbcRs.getInt(1), vcRs.getInt(1));
     }
   }
+
+  @Test
+  public void runSelectTopQueryRedshiftTest() throws SQLException {
+    if (database.equals("redshift")) {
+      String sql = String.format("SELECT TOP 3 * FROM %s", SCHEMA_NAME) + ".people order by birth";
+      Statement jdbcStmt = connMap.get(database).createStatement();
+      Statement vcStmt = vcMap.get(database).createStatement();
+
+      ResultSet jdbcRs = jdbcStmt.executeQuery(sql);
+      ResultSet vcRs = vcStmt.executeQuery(sql);
+      int rowCount = 0;
+      while (jdbcRs.next() && vcRs.next()) {
+        assertEquals(jdbcRs.getInt(1), vcRs.getInt(1));
+        assertEquals(jdbcRs.getString(2), vcRs.getString(2));
+        assertEquals(jdbcRs.getString(3), vcRs.getString(3));
+        assertEquals(jdbcRs.getFloat(4), vcRs.getFloat(4), 0.000001);
+        assertEquals(jdbcRs.getFloat(5), vcRs.getFloat(5), 0.000001);
+        assertEquals(jdbcRs.getString(6), vcRs.getString(6));
+        assertEquals(jdbcRs.getTimestamp(7), vcRs.getTimestamp(7));
+        ++rowCount;
+      }
+      assertEquals(3, rowCount);
+    }
+  }
 }
