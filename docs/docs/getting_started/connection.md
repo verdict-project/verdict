@@ -41,7 +41,16 @@ Connection vc = DriverManager.getConnection(connectionString, MYSQL_UESR, MYSQL_
 
 ### JDBC connection
 
-*(Yongjoo: fill this in)*
+```java
+// create MySQL JDBC connection
+String mysqlConnectionString =
+        String.format("jdbc:mysql://%s/%s", MYSQL_HOST, MYSQL_DATABASE);
+Connection mysqlConn = DriverManager.getConnection(mysqlConnectionString, MYSQL_USER, MYSQL_PASSWORD);
+// modify MySQL JDBC connection URL and create VerdictConnection
+StringBuilder jdbcUrl = new StringBuilder(postgresConn.getMetaData().getURL());
+jdbcUrl.insert(5, "verdict:");
+Connection vc = DriverManager.getConnection(jdbcUrl.toString(), MYSQL_USER, MYSQL_PASSWORD);
+```
 
 
 
@@ -58,7 +67,16 @@ Connection vc = DriverManager.getConnection(connectionString, POSTGRES_USER, POS
 
 ### JDBC connection
 
-*(Yongjoo: fill this in)*
+```java
+// create PostgreSQL JDBC connection
+String postgresConnectionString =
+        String.format("jdbc:postgresql://%s/%s", POSTGRES_HOST, POSTGRES_DATABASE);
+Connection postgresConn = DriverManager.getConnection(postgresConnectionString, POSTGRES_USER, POSTGRES_PASSWORD);
+// modify PostgreSQL JDBC connection URL and create VerdictConnection
+StringBuilder jdbcUrl = new StringBuilder(postgresConn.getMetaData().getURL());
+jdbcUrl.insert(5, "verdict:");
+Connection vc = DriverManager.getConnection(jdbcUrl.toString(), POSTGRES_USER, POSTGRES_PASSWORD);
+```
 
 
 
@@ -75,7 +93,16 @@ Connection vc = DriverManager.getConnection(connectionString, REDSHIFT_USER, RED
 
 ### JDBC connection
 
-*(Yongjoo: fill this in)*
+```java
+// create RedShift JDBC connection
+String redshiftConnectionString =
+        String.format("jdbc:redshift://%s/%s", REDSHIFT_HOST, REDSHIFT_DATABASE);
+Connection redshiftConn = DriverManager.getConnection(redshiftConnectionString, REDSHIFT_USER, REDSHIFT_PASSWORD);
+// modify RedShift JDBC connection URL and create VerdictConnection
+StringBuilder jdbcUrl = new StringBuilder(redshiftConn.getMetaData().getURL());
+jdbcUrl.insert(5, "verdict:");
+Connection vc = DriverManager.getConnection(jdbcUrl.toString(), REDSHIFT_USER, REDSHIFT_PASSWORD);
+```
 
 
 ## Cloudera Impala
@@ -91,7 +118,16 @@ Connection vc = DriverManager.getConnection(impalaConnectionString, IMPALA_USER,
 
 ### JDBC connection
 
-*(Yongjoo: fill this in)*
+```java
+// create Impala JDBC connection
+String impalaConnectionString =
+        String.format("jdbc:impala://%s/%s", IMPALA_HOST, IMPALA_DATABASE);
+Connection impalaConn = DriverManager.getConnection(impalaConnectionString, IMPALA_USER, IMPALA_PASSWORD);
+// modify Impala JDBC connection URL and create VerdictConnection
+StringBuilder jdbcUrl = new StringBuilder(impalaConn.getMetaData().getURL());
+jdbcUrl.insert(5, "verdict:");
+Connection vc = DriverManager.getConnection(jdbcUrl.toString(), IMPALA_USER, IMPALA_PASSWORD);
+```
 
 
 ## Apache Spark
