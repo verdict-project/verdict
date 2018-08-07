@@ -18,7 +18,7 @@ pages:
   - Tutorial:
     - Setup MySQL (Optional): tutorial/mysql.md
     - Setup TPC-H Data: tutorial/tpch.md
-    - VerdictDB Turorial: tutorial/tutorial.md
+    - VerdictDB Application Example: tutorial/example.md
   - Reference:
     - VerdictDB Queries: reference/supported_queries.md
 

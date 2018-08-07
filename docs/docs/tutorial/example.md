@@ -1,6 +1,6 @@
-# Tutorial
+# An Example VerdictDB Application
 
-In this tutorial, we will demonstrate an example of a Java application with a VerdictDB library that creates a scrambled table for your database, then executes a query that enable VerdictDB to utilize the scrambled table. 
+On this page, we will demonstrate an example of a Java application with a VerdictDB library that creates a scrambled table for your database, then executes a query that enable VerdictDB to utilize the scrambled table. 
 
 Here we assume 1) your MySQL database is running and 
 2) TPC-H data has been loaded into your database following the instructions in the previous **Setup TPC-H Data** page.
