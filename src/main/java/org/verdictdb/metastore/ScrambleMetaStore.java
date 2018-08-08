@@ -241,4 +241,50 @@ public class ScrambleMetaStore extends VerdictMetaStore {
 
     return retrieved;
   }
+
+  /**
+   * Static version of retrieve() that uses default schema and table names
+   *
+   * @return a set of scramble meta
+   */
+  public static ScrambleMetaSet retrieve(DbmsConnection conn) {
+    ScrambleMetaSet retrieved = new ScrambleMetaSet();
+
+    try {
+      String storeSchema = DEFAULT_STORE_SCHEMA;
+      String storeTable = METASTORE_TABLE_NAME;
+
+      List<String> existingSchemas = conn.getSchemas();
+      if (existingSchemas.contains(storeSchema) == false) {
+        return new ScrambleMetaSet();
+      }
+
+      List<String> existingTables = conn.getTables(storeSchema);
+      if (existingTables.contains(storeTable) == false) {
+        return new ScrambleMetaSet();
+      }
+
+      // now ready to retrieve
+      String tableAlias = "t";
+      SelectQuery query =
+          SelectQuery.create(
+              Arrays.<SelectItem>asList(
+                  new BaseColumn(tableAlias, ADDED_AT_COLUMN),
+                  new BaseColumn(tableAlias, DATA_COLUMN)),
+              new BaseTable(storeSchema, storeTable, tableAlias));
+      query.addOrderby(new OrderbyAttribute(ADDED_AT_COLUMN));
+      String sql = QueryToSql.convert(conn.getSyntax(), query);
+      DbmsQueryResult result = conn.execute(sql);
+
+      while (result.next()) {
+        String jsonString = result.getString(1);
+        ScrambleMeta meta = ScrambleMeta.fromJsonString(jsonString);
+        retrieved.addScrambleMeta(meta);
+      }
+    } catch (VerdictDBException e) {
+      e.printStackTrace();
+    }
+
+    return retrieved;
+  }
 }

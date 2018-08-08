@@ -93,7 +93,7 @@ public class ExecutionContext {
     if (queryType.equals(QueryType.select)) {
       LOG.debug("Query type: select");
       SelectQueryCoordinator coordinator =
-          new SelectQueryCoordinator(context.getCopiedConnection());
+          new SelectQueryCoordinator(context.getCopiedConnection(), context.getScrambleMetaSet());
       ExecutionResultReader reader = coordinator.process(query);
       VerdictResultStream stream = new VerdictResultStreamFromExecutionResultReader(reader, this);
       return stream;
