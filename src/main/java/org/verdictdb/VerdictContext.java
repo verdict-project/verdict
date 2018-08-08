@@ -26,6 +26,7 @@ import java.util.Properties;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.verdictdb.connection.CachedDbmsConnection;
+import org.verdictdb.connection.ConcurrentJdbcConnection;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.coordinator.ExecutionContext;
@@ -39,6 +40,8 @@ import org.verdictdb.sqlsyntax.SqlSyntaxList;
 public class VerdictContext {
 
   private DbmsConnection conn;
+  
+  private boolean isClosed = false;
 
   private final String contextId;
 
@@ -55,32 +58,71 @@ public class VerdictContext {
     this.contextId = RandomStringUtils.randomAlphanumeric(5);
   }
 
+  /**
+   * This method does not support concurrent execution of queries; thus, should not be used in 
+   * production.
+   * 
+   * @param jdbcConn
+   * @return
+   * @throws VerdictDBDbmsException
+   */
   public static VerdictContext fromJdbcConnection(Connection jdbcConn)
       throws VerdictDBDbmsException {
     DbmsConnection conn = JdbcConnection.create(jdbcConn);
     return new VerdictContext(conn);
   }
 
+  /**
+   * Uses a connection pool.
+   * 
+   * @param jdbcConnectionString
+   * @return
+   * @throws SQLException
+   * @throws VerdictDBDbmsException
+   */
   public static VerdictContext fromConnectionString(String jdbcConnectionString)
       throws SQLException, VerdictDBDbmsException {
     attemptLoadDriverClass(jdbcConnectionString);
-    Connection jdbcConn = DriverManager.getConnection(jdbcConnectionString);
-    return fromJdbcConnection(jdbcConn);
+    return new VerdictContext(ConcurrentJdbcConnection.create(jdbcConnectionString));
   }
 
+  /**
+   * Uses a connection pool.
+   * 
+   * @param jdbcConnectionString
+   * @param info
+   * @return
+   * @throws SQLException
+   * @throws VerdictDBDbmsException
+   */
   public static VerdictContext fromConnectionString(String jdbcConnectionString, Properties info)
       throws SQLException, VerdictDBDbmsException {
     attemptLoadDriverClass(jdbcConnectionString);
-    Connection jdbcConn = DriverManager.getConnection(jdbcConnectionString, info);
-    return fromJdbcConnection(jdbcConn);
+    return new VerdictContext(ConcurrentJdbcConnection.create(jdbcConnectionString, info));
+//    Connection jdbcConn = DriverManager.getConnection(jdbcConnectionString, info);
+//    return fromJdbcConnection(jdbcConn);
   }
 
+  /**
+   * Uses a connection pool.
+   * 
+   * @param jdbcConnectionString
+   * @param user
+   * @param password
+   * @return
+   * @throws SQLException
+   * @throws VerdictDBDbmsException
+   */
   public static VerdictContext fromConnectionString(
       String jdbcConnectionString, String user, String password)
       throws SQLException, VerdictDBDbmsException {
     attemptLoadDriverClass(jdbcConnectionString);
-    Connection jdbcConn = DriverManager.getConnection(jdbcConnectionString, user, password);
-    return fromJdbcConnection(jdbcConn);
+    Properties info = new Properties();
+    info.setProperty("username", user);
+    info.setProperty("password", password);
+    return new VerdictContext(ConcurrentJdbcConnection.create(jdbcConnectionString, info));
+//    Connection jdbcConn = DriverManager.getConnection(jdbcConnectionString, user, password);
+//    return fromJdbcConnection(jdbcConn);
   }
 
   private static void attemptLoadDriverClass(String jdbcConnectionString) {
@@ -98,7 +140,16 @@ public class VerdictContext {
   public DbmsConnection getConnection() {
     return conn;
   }
+  
+  public void close() {
+    conn.close();
+  }
+  
+  public boolean isClosed() {
+    return isClosed;
+  }
 
+  @Deprecated
   public JdbcConnection getJdbcConnection() {
     DbmsConnection testConn = conn;
     if (testConn instanceof CachedDbmsConnection) {

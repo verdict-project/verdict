@@ -132,8 +132,9 @@ public class VerdictConnection implements java.sql.Connection {
 
   @Override
   public void close() throws SQLException {
-    JdbcConnection conn = vc.getJdbcConnection();
-    if (conn != null) conn.getConnection().close();
+    vc.close();
+//    JdbcConnection conn = vc.getJdbcConnection();
+//    if (conn != null) conn.getConnection().close();
     isOpen = false;
   }
 
@@ -304,8 +305,9 @@ public class VerdictConnection implements java.sql.Connection {
 
   @Override
   public boolean isValid(int timeout) throws SQLException {
-    JdbcConnection conn = vc.getJdbcConnection();
-    return (conn != null) && conn.getConnection().isValid(timeout);
+    return !vc.isClosed();
+//    JdbcConnection conn = vc.getJdbcConnection();
+//    return (conn != null) && conn.getConnection().isValid(timeout);
   }
 
   @Override
