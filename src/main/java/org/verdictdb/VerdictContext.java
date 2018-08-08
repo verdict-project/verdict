@@ -31,8 +31,10 @@ import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.coordinator.ExecutionContext;
 import org.verdictdb.coordinator.VerdictResultStream;
 import org.verdictdb.coordinator.VerdictSingleResult;
+import org.verdictdb.core.scrambling.ScrambleMetaSet;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.metastore.ScrambleMetaStore;
 import org.verdictdb.sqlsyntax.SqlSyntax;
 import org.verdictdb.sqlsyntax.SqlSyntaxList;
 
@@ -41,6 +43,8 @@ public class VerdictContext {
   private DbmsConnection conn;
   
   private boolean isClosed = false;
+
+  private ScrambleMetaSet scrambleMetaSet;
 
   private final String contextId;
 
@@ -55,6 +59,7 @@ public class VerdictContext {
     this.conn = new CachedDbmsConnection(conn);
     //    this.metadataProvider = new CachedMetaDataProvider(conn);
     this.contextId = RandomStringUtils.randomAlphanumeric(5);
+    this.scrambleMetaSet = ScrambleMetaStore.retrieve(conn);
   }
 
   /**
@@ -176,6 +181,10 @@ public class VerdictContext {
   private synchronized long getNextExecutionSerialNumber() {
     executionSerialNumber++;
     return executionSerialNumber;
+  }
+
+  public ScrambleMetaSet getScrambleMetaSet() {
+    return scrambleMetaSet;
   }
 
   private void removeExecutionContext(ExecutionContext exec) {

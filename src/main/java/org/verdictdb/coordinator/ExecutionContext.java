@@ -47,8 +47,6 @@ public class ExecutionContext {
 
   private VerdictContext context;
 
-  private ScrambleMetaStore metaStore;
-
   private final long serialNumber;
 
   private static final VerdictDBLogger LOG = VerdictDBLogger.getLogger(ExecutionContext.class);
@@ -70,7 +68,6 @@ public class ExecutionContext {
   public ExecutionContext(VerdictContext context, long serialNumber) {
     this.context = context;
     this.serialNumber = serialNumber;
-    this.metaStore = new ScrambleMetaStore(context.getCopiedConnection());
   }
 
   public long getExecutionContextSerialNumber() {
@@ -96,8 +93,7 @@ public class ExecutionContext {
     if (queryType.equals(QueryType.select)) {
       LOG.debug("Query type: select");
       SelectQueryCoordinator coordinator =
-          new SelectQueryCoordinator(context.getCopiedConnection());
-      coordinator.setScrambleMetaSet(metaStore.retrieve());
+          new SelectQueryCoordinator(context.getCopiedConnection(), context.getScrambleMetaSet());
       ExecutionResultReader reader = coordinator.process(query);
       VerdictResultStream stream = new VerdictResultStreamFromExecutionResultReader(reader, this);
       return stream;
@@ -123,6 +119,7 @@ public class ExecutionContext {
       //              scrambleQuery.getMethod()); // dyoon: size is not used atm?
 
       // Add metadata to metastore
+      ScrambleMetaStore metaStore = new ScrambleMetaStore(context.getConnection());
       metaStore.addToStore(meta);
       return null;
       
