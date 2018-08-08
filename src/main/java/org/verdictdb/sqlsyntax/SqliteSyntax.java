@@ -16,6 +16,8 @@
 
 package org.verdictdb.sqlsyntax;
 
+import java.util.List;
+
 public class SqliteSyntax extends SqlSyntax {
 
   @Override
@@ -53,7 +55,8 @@ public class SqliteSyntax extends SqlSyntax {
   }
 
   @Override
-  public String getPartitionByInCreateTable() {
+  public String getPartitionByInCreateTable(
+      List<String> partitionColumns, List<Integer> partitionCounts) {
     // TODO Auto-generated method stub
     return null;
   }

@@ -38,6 +38,9 @@ public class CreateTableAsSelectQuery extends CreateTableQuery {
   protected SelectQuery select;
 
   protected List<String> partitionColumns = new ArrayList<>();
+  
+  // the number of blocks for each partitioning column
+  protected List<Integer> partitionCounts = new ArrayList<>();    
 
   protected boolean overwrite = false;
 
@@ -51,6 +54,7 @@ public class CreateTableAsSelectQuery extends CreateTableQuery {
     this.schemaName = query.schemaName;
     this.tableName = query.tableName;
     this.partitionColumns.addAll(query.partitionColumns);
+    this.partitionCounts.add(query.getBlockCount());
     this.select = query.select;
     this.overwrite = query.overwrite;
     this.ifNotExists = query.ifNotExists;
@@ -59,6 +63,10 @@ public class CreateTableAsSelectQuery extends CreateTableQuery {
   public void addPartitionColumn(String column) {
     partitionColumns.add(column);
   }
+  
+  public void addPartitionCount(int count) {
+    partitionCounts.add(count);
+  }
 
   public boolean getOverwrite() {
     return overwrite;
@@ -66,6 +74,10 @@ public class CreateTableAsSelectQuery extends CreateTableQuery {
 
   public List<String> getPartitionColumns() {
     return partitionColumns;
+  }
+  
+  public List<Integer> getPartitionCounts() {
+    return partitionCounts;
   }
 
   public SelectQuery getSelect() {

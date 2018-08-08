@@ -16,6 +16,8 @@
 
 package org.verdictdb.sqlsyntax;
 
+import java.util.List;
+
 public class SparkSyntax extends SqlSyntax {
 
   @Override
@@ -47,8 +49,22 @@ public class SparkSyntax extends SqlSyntax {
   }
 
   @Override
-  public String getPartitionByInCreateTable() {
-    return "using parquet partitioned by";
+  public String getPartitionByInCreateTable(
+      List<String> partitionColumns, List<Integer> partitionCounts) {
+    StringBuilder sql = new StringBuilder();
+    sql.append("using parquet partitioned by");
+    sql.append(" (");
+    boolean isFirstColumn = true;
+    for (String col : partitionColumns) {
+      if (isFirstColumn) {
+        sql.append(quoteName(col));
+        isFirstColumn = false;
+      } else {
+        sql.append(", " + quoteName(col));
+      }
+    }
+    sql.append(")");
+    return sql.toString();
   }
 
   /** This command also returns partition information if exists. */

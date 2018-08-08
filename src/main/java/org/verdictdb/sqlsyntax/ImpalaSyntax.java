@@ -68,8 +68,10 @@ public class ImpalaSyntax extends SqlSyntax {
   }
 
   @Override
-  public String getPartitionByInCreateTable() {
-    return "partitioned by";
+  public String getPartitionByInCreateTable(
+      List<String> partitionColumns, List<Integer> partitionCounts) {
+    String sql = new HiveSyntax().getPartitionByInCreateTable(partitionColumns, partitionCounts);
+    return sql;
   }
 
   @Override

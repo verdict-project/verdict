@@ -92,7 +92,7 @@ public class FastConvergeScramblingMethodTest {
     String sql = QueryToSql.convert(new HiveSyntax(), sqlobj);
     String actual = sql.replaceAll("verdictdbtemptable_\\d+_\\d+", "verdictdbtemptable");
     
-    String expected = "create table `verdictdbtempSchema`.`verdictdbtemptable` using parquet "
+    String expected = "create table `verdictdbtempSchema`.`verdictdbtemptable` stored as parquet "
         + "as select t.`pcolumn` as `verdictdbrenameprimarygroup`, "
         + "count(*) * (1.0 / 0.001) as `groupSize` "
         + "from `oldSchema`.`oldTable` as t "
@@ -126,7 +126,7 @@ public class FastConvergeScramblingMethodTest {
     String sql = QueryToSql.convert(new HiveSyntax(), sqlobj);
     String actual = sql.replaceAll("verdictdbtemptable_\\d+_\\d+", "verdictdbtemptable");
     
-    String expected = "create table `verdictdbtempSchema`.`verdictdbtemptable` using parquet "
+    String expected = "create table `verdictdbtempSchema`.`verdictdbtemptable` stored as parquet "
         + "as select t.`pcolumn` as `verdictdbrenameprimarygroup`, "
         + "count(*) * (1.0 / 0.1) as `groupSize` "
         + "from `oldSchema`.`oldTable` as t "

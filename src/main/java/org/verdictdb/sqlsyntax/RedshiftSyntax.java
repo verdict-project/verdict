@@ -116,8 +116,24 @@ public class RedshiftSyntax extends SqlSyntax {
    * as identity columns, dates, or timestamps.
    */
   @Override
-  public String getPartitionByInCreateTable() {
-    return "COMPOUND SORTKEY";
+  public String getPartitionByInCreateTable(
+      List<String> partitionColumns, List<Integer> partitionCounts) {
+    StringBuilder sql = new StringBuilder();
+    
+    sql.append("COMPOUND SORTKEY");
+    sql.append(" (");
+    boolean isFirstColumn = true;
+    for (String col : partitionColumns) {
+      if (isFirstColumn) {
+        sql.append(quoteName(col));
+        isFirstColumn = false;
+      } else {
+        sql.append(", " + quoteName(col));
+      }
+    }
+    sql.append(")");
+    
+    return sql.toString();
   }
 
   @Override

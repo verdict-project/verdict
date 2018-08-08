@@ -54,19 +54,19 @@ public class CreateTableToSqlMysqlTest {
     mysqlConn = DriverManager.getConnection(mysqlConnectionString, MYSQL_UESR, MYSQL_PASSWORD);
 
     List<List<Object>> contents = new ArrayList<>();
-    contents.add(Arrays.<Object>asList(1, "Anju", "female", 15, 170.2, "USA", "2017-10-12 21:22:23"));
-    contents.add(Arrays.<Object>asList(2, "Sonia", "female", 17, 156.5, "USA", "2017-10-12 21:22:23"));
-    contents.add(Arrays.<Object>asList(3, "Asha", "male", 23, 168.1, "CHN", "2017-10-12 21:22:23"));
-    contents.add(Arrays.<Object>asList(3, "Joe", "male", 14, 178.6, "USA", "2017-10-12 21:22:23"));
-    contents.add(Arrays.<Object>asList(3, "JoJo", "male", 18, 190.7, "CHN", "2017-10-12 21:22:23"));
-    contents.add(Arrays.<Object>asList(3, "Sam", "male", 18, 190.0, "USA", "2017-10-12 21:22:23"));
-    contents.add(Arrays.<Object>asList(3, "Alice", "female", 18, 190.21, "CHN", "2017-10-12 21:22:23"));
-    contents.add(Arrays.<Object>asList(3, "Bob", "male", 18, 190.3, "CHN", "2017-10-12 21:22:23"));
+    contents.add(Arrays.<Object>asList(0, "Anju", "female", 0, 170.2, "USA", "2017-10-12 21:22:23"));
+    contents.add(Arrays.<Object>asList(0, "Sonia", "female", 0, 156.5, "USA", "2017-10-12 21:22:23"));
+    contents.add(Arrays.<Object>asList(0, "Asha", "male", 0, 168.1, "CHN", "2017-10-12 21:22:23"));
+    contents.add(Arrays.<Object>asList(1, "Joe", "male", 0, 178.6, "USA", "2017-10-12 21:22:23"));
+    contents.add(Arrays.<Object>asList(1, "JoJo", "male", 0, 190.7, "CHN", "2017-10-12 21:22:23"));
+    contents.add(Arrays.<Object>asList(1, "Sam", "male", 1, 190.0, "USA", "2017-10-12 21:22:23"));
+    contents.add(Arrays.<Object>asList(1, "Alice", "female", 1, 190.21, "CHN", "2017-10-12 21:22:23"));
+    contents.add(Arrays.<Object>asList(1, "Bob", "male", 1, 190.3, "CHN", "2017-10-12 21:22:23"));
     mysqlStmt = mysqlConn.createStatement();
     mysqlStmt.execute("CREATE SCHEMA IF NOT EXISTS test");
 //    mysqlStmt.execute("USE TEST");
     mysqlStmt.execute("DROP TABLE IF EXISTS test.people");
-    mysqlStmt.execute("CREATE TABLE test.people (id smallint, name varchar(255), gender varchar(8), age float, height float, nation varchar(8), birth timestamp)");
+    mysqlStmt.execute("CREATE TABLE test.people (id smallint, name varchar(255), gender varchar(8), age smallint, height float, nation varchar(8), birth timestamp)");
     for (List<Object> row : contents) {
       String id = row.get(0).toString();
       String name = row.get(1).toString();
@@ -87,7 +87,11 @@ public class CreateTableToSqlMysqlTest {
         base);
     CreateTableAsSelectQuery create = new CreateTableAsSelectQuery("test", "newtable", relation);
     create.addPartitionColumn("id");
-    String expected = "create table `test`.`newtable` partition by key (`id`) select * from `test`.`people` as t";
+    create.addPartitionCount(2);
+    String expected = "create table `test`.`newtable` partition by list columns (`id`) ("
+        + "partition p0 values in (0), "
+        + "partition p1 values in (1)) "
+        + "select * from `test`.`people` as t";
     CreateTableToSql queryToSql = new CreateTableToSql(new MysqlSyntax());
     String actual = queryToSql.toSql(create);
     assertEquals(expected, actual);
@@ -106,8 +110,15 @@ public class CreateTableToSqlMysqlTest {
     CreateTableAsSelectQuery create = new CreateTableAsSelectQuery("test", "newtable", relation);
     create.addPartitionColumn("id");
     create.addPartitionColumn("age");
+    create.addPartitionCount(2);
+    create.addPartitionCount(2);
     //    String expected = "create table `newschema`.`newtable` partitioned by (`part1`, `part2`) as select * from `myschema`.`mytable` as t";
-    String expected = "create table `test`.`newtable` partition by key (`id`, `age`) select * from `test`.`people` as t";
+    String expected = "create table `test`.`newtable` partition by list columns (`id`, `age`) ("
+        + "partition p0 values in ((0,0)), "
+        + "partition p1 values in ((0,1)), "
+        + "partition p2 values in ((1,0)), "
+        + "partition p3 values in ((1,1))) "
+        + "select * from `test`.`people` as t";
     CreateTableToSql queryToSql = new CreateTableToSql(new MysqlSyntax());
     String actual = queryToSql.toSql(create);
     assertEquals(expected, actual);
