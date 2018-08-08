@@ -16,10 +16,21 @@
 
 package org.verdictdb.sqlsyntax;
 
+import com.google.common.collect.Lists;
+
+import java.util.Collection;
+import java.util.List;
+
 public class H2Syntax extends SqlSyntax {
 
-  // The column index that stored meta information in the original database
+  @Override
+  public Collection<String> getCandidateJDBCDriverClassNames() {
+    List<String> candidates = Lists.newArrayList("org.h2.Driver");
+    return candidates;
+  }
 
+
+  // The column index that stored meta information in the original database
   @Override
   public int getSchemaNameColumnIndex() {
     return 0;
