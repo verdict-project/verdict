@@ -118,7 +118,7 @@ public class VerdictContext {
       throws SQLException, VerdictDBDbmsException {
     attemptLoadDriverClass(jdbcConnectionString);
     Properties info = new Properties();
-    info.setProperty("username", user);
+    info.setProperty("user", user);
     info.setProperty("password", password);
     return new VerdictContext(ConcurrentJdbcConnection.create(jdbcConnectionString, info));
 //    Connection jdbcConn = DriverManager.getConnection(jdbcConnectionString, user, password);
