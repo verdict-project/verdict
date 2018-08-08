@@ -1,0 +1,120 @@
+package org.verdictdb.connection;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
+
+import org.apache.commons.lang3.tuple.Pair;
+import org.verdictdb.exception.VerdictDBDbmsException;
+import org.verdictdb.sqlsyntax.SqlSyntax;
+import org.verdictdb.sqlsyntax.SqlSyntaxList;
+
+public class ConcurrentJdbcConnection implements DbmsConnection {
+  
+  private static final int CONNECTION_POOL_SIZE = 10;
+  
+  private List<JdbcConnection> connections = new ArrayList<>();
+  
+  private int nextConnectionIndex = 0;
+  
+  public ConcurrentJdbcConnection(List<JdbcConnection> connections) {
+    this.connections.addAll(connections);
+  }
+  
+  public ConcurrentJdbcConnection(String url, Properties info, SqlSyntax syntax) 
+      throws VerdictDBDbmsException {
+    for (int i = 0; i < CONNECTION_POOL_SIZE; i++) {
+      try {
+        Connection c;
+        if (info == null) {
+          c = DriverManager.getConnection(url);
+        } else {
+          c = DriverManager.getConnection(url, info);
+        }
+        connections.add(JdbcConnection.create(c));
+      } catch (SQLException e) {
+        throw new VerdictDBDbmsException(e);
+      }
+    }
+  }
+  
+  public static ConcurrentJdbcConnection create(String connectionString, Properties info) 
+      throws VerdictDBDbmsException {
+    SqlSyntax syntax = SqlSyntaxList.getSyntaxFromConnectionString(connectionString);
+    return new ConcurrentJdbcConnection(connectionString, info, syntax);
+  }
+  
+  public static ConcurrentJdbcConnection create(String connectionString) 
+      throws VerdictDBDbmsException {
+    SqlSyntax syntax = SqlSyntaxList.getSyntaxFromConnectionString(connectionString);
+    return new ConcurrentJdbcConnection(connectionString, null, syntax);
+  }
+  
+  private JdbcConnection getNextConnection() {
+    JdbcConnection c = connections.get(nextConnectionIndex);
+    nextConnectionIndex++;
+    if (nextConnectionIndex >= connections.size()) {
+      nextConnectionIndex = 0;
+    }
+    return c;
+  }
+
+  @Override
+  public List<String> getSchemas() throws VerdictDBDbmsException {
+    return getNextConnection().getSchemas();
+  }
+
+  @Override
+  public List<String> getTables(String schema) throws VerdictDBDbmsException {
+    return getNextConnection().getTables(schema);
+  }
+
+  @Override
+  public List<Pair<String, String>> getColumns(String schema, String table) 
+      throws VerdictDBDbmsException {
+    return getNextConnection().getColumns(schema, table);
+  }
+
+  @Override
+  public List<String> getPartitionColumns(String schema, String table) throws VerdictDBDbmsException {
+    return getNextConnection().getPartitionColumns(schema, table);
+  }
+
+  @Override
+  public String getDefaultSchema() {
+    return getNextConnection().getDefaultSchema();
+  }
+
+  @Override
+  public void setDefaultSchema(String schema) {
+    for (JdbcConnection c : connections) {
+      c.setDefaultSchema(schema);
+    }
+  }
+
+  @Override
+  public DbmsQueryResult execute(String query) throws VerdictDBDbmsException {
+    return getNextConnection().execute(query);
+  }
+
+  @Override
+  public SqlSyntax getSyntax() {
+    return getNextConnection().getSyntax();
+  }
+
+  @Override
+  public void close() {
+    for (JdbcConnection c : connections) {
+      c.close();
+    }
+  }
+
+  @Override
+  public DbmsConnection copy() {
+    return new ConcurrentJdbcConnection(connections);
+  }
+
+}
