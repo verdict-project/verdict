@@ -81,7 +81,7 @@ SELECT avg(l_extendedprice) FROM tpch1g.lineitem
 To run this query with/without VerdictDB, you can simply run the following command:
 
 ```bash
-$ ./run.sh localhost 3306 tpc1g run
+$ ./run.sh localhost 3306 tpch1g run
 Wihtout VerdictDB: average(l_extendedprice) = 38255.138485
 Time Taken = xx s
 Wiht VerdictDB: average(l_extendedprice) = 38255.138485
