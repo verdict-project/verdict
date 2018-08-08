@@ -25,6 +25,8 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 
 public class ExecutionTokenQueue implements Serializable {
 
+  private static final long serialVersionUID = -1454513638973300702L;
+  
   BlockingDeque<ExecutionInfoToken> internalQueue = new LinkedBlockingDeque<>();
 
   public void add(ExecutionInfoToken e) {

@@ -35,7 +35,7 @@ public class ExecutionResultReader implements Iterable<DbmsQueryResult>, Iterato
   public ExecutionResultReader(ExecutionTokenQueue queue) {
     this(new ExecutionTokenReader(queue));
   }
-
+  
   @Override
   public Iterator<DbmsQueryResult> iterator() {
     return this;

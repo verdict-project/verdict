@@ -80,13 +80,6 @@ public class ExecutablePlanRunner {
 
     Map<Integer, ExecutorService> executorPool = new HashMap<>();
 
-    //    List<List<ExecutableNode>> nodeGroups = new ArrayList<>();
-    //    for (int gid : groupIds) {
-    //      List<ExecutableNode> nodes = plan.getNodesInGroup(gid);
-    //      nodeGroups.add(nodes);
-    //      executorPool.put(gid, Executors.newFixedThreadPool(nThreads));
-    //    }
-
     Set<Integer> groupIds = plan.getNodeGroupIDs();
     for (int gid : groupIds) {
       List<ExecutableNode> nodes = plan.getNodesInGroup(gid);
@@ -97,24 +90,10 @@ public class ExecutablePlanRunner {
       executorPool.put(gid, executor);
     }
 
-    //    while (true) {
-    //      boolean submittedAtLeastOne = false;
-    //      for (int i = 0; i < nodeGroups.size(); i++) {
-    //        List<ExecutableNode> nodes = nodeGroups.get(i);
-    //        if (!nodes.isEmpty()) {
-    //          ExecutableNode node = nodes.remove(0);
-    ////          System.out.println("Submitting: " + node);
-    //          ExecutorService executor = executorPool.get(key)
-    //          executor.submit(new ExecutableNodeRunner(conn, node));
-    //          submittedAtLeastOne = true;
-    //        }
-    //      }
-    //      if (submittedAtLeastOne) {
-    //        continue;
-    //      } else {
-    //        break;
-    //      }
-    //    }
+    // shutdown
+    for (ExecutorService service : executorPool.values()) {
+      service.shutdown();
+    }
 
     return reader;
   }

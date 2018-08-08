@@ -97,6 +97,7 @@ public class ExecutionContext {
       ExecutionResultReader reader = coordinator.process(query);
       VerdictResultStream stream = new VerdictResultStreamFromExecutionResultReader(reader, this);
       return stream;
+      
     } else if (queryType.equals(QueryType.scrambling)) {
       LOG.debug("Query type: scrambling");
       CreateScrambleQuery scrambleQuery = generateScrambleQuery(query);
@@ -121,6 +122,7 @@ public class ExecutionContext {
       ScrambleMetaStore metaStore = new ScrambleMetaStore(context.getConnection());
       metaStore.addToStore(meta);
       return null;
+      
     } else if (queryType.equals(QueryType.set_default_schema)) {
       LOG.debug("Query type: set_default_schema");
       updateDefaultSchemaFromQuery(query);

@@ -28,7 +28,7 @@ It will create a new directory named `tpch1g` under your work directory. The dir
 Connect to your MySQL database.
 
 ```bash
-mysql -uroot
+mysql --local-infile -h 127.0.0.1 -uroot
 ```
 
 Create a schema for test.

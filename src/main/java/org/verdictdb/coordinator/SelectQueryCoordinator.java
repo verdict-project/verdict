@@ -104,8 +104,6 @@ public class SelectQueryCoordinator {
 
     lastQuery = selectQuery;
 
-    lastQuery = selectQuery;
-
     return reader;
   }
 
