@@ -143,6 +143,7 @@ public class VerdictContext {
   
   public void close() {
     conn.close();
+    isClosed = true;
   }
   
   public boolean isClosed() {
