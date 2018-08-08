@@ -53,6 +53,14 @@ public class MysqlSyntax extends SqlSyntax {
   @Override
   public String getPartitionByInCreateTable(
       List<String> partitionColumns, List<Integer> partitionCounts) {
+    
+    for (int count : partitionCounts) {
+      if (count == 0) {
+        return "";
+      }
+    }
+    
+    
     StringBuilder sql = new StringBuilder();
     sql.append("partition by list columns (");
     
@@ -69,6 +77,9 @@ public class MysqlSyntax extends SqlSyntax {
     List<Integer> currentPart = new ArrayList<>(Collections.nCopies(partitionCounts.size(), 0));
     int partNum = 0;
     while (true) {
+//      System.out.println(sql.toString());
+//      System.out.println(partitionCounts);
+      
       if (partNum != 0) {
         sql.append(", ");
       }

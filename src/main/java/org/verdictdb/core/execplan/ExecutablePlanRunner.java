@@ -35,7 +35,7 @@ public class ExecutablePlanRunner {
 
   private ExecutablePlan plan;
 
-  private int nThreads = 2;
+  private int nThreads = 1;
 
   public ExecutablePlanRunner(DbmsConnection conn, ExecutablePlan plan) {
     this.conn = conn;
@@ -90,7 +90,7 @@ public class ExecutablePlanRunner {
       executorPool.put(gid, executor);
     }
 
-    // shutdown
+    // accepts no more jobs
     for (ExecutorService service : executorPool.values()) {
       service.shutdown();
     }
