@@ -16,6 +16,20 @@
 
 package org.verdictdb;
 
+import org.apache.commons.lang3.RandomStringUtils;
+import org.verdictdb.connection.CachedDbmsConnection;
+import org.verdictdb.connection.DbmsConnection;
+import org.verdictdb.connection.JdbcConnection;
+import org.verdictdb.coordinator.ExecutionContext;
+import org.verdictdb.coordinator.VerdictResultStream;
+import org.verdictdb.coordinator.VerdictSingleResult;
+import org.verdictdb.core.scrambling.ScrambleMetaSet;
+import org.verdictdb.exception.VerdictDBDbmsException;
+import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.metastore.ScrambleMetaStore;
+import org.verdictdb.sqlsyntax.SqlSyntax;
+import org.verdictdb.sqlsyntax.SqlSyntaxList;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -24,21 +38,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
 
-import org.apache.commons.lang3.RandomStringUtils;
-import org.verdictdb.connection.CachedDbmsConnection;
-import org.verdictdb.connection.DbmsConnection;
-import org.verdictdb.connection.JdbcConnection;
-import org.verdictdb.coordinator.ExecutionContext;
-import org.verdictdb.coordinator.VerdictResultStream;
-import org.verdictdb.coordinator.VerdictSingleResult;
-import org.verdictdb.exception.VerdictDBDbmsException;
-import org.verdictdb.exception.VerdictDBException;
-import org.verdictdb.sqlsyntax.SqlSyntax;
-import org.verdictdb.sqlsyntax.SqlSyntaxList;
-
 public class VerdictContext {
 
   private DbmsConnection conn;
+
+  private ScrambleMetaSet scrambleMetaSet;
 
   private final String contextId;
 
@@ -53,6 +57,7 @@ public class VerdictContext {
     this.conn = new CachedDbmsConnection(conn);
     //    this.metadataProvider = new CachedMetaDataProvider(conn);
     this.contextId = RandomStringUtils.randomAlphanumeric(5);
+    this.scrambleMetaSet = ScrambleMetaStore.retrieve(conn);
   }
 
   public static VerdictContext fromJdbcConnection(Connection jdbcConn)
@@ -125,6 +130,10 @@ public class VerdictContext {
   private synchronized long getNextExecutionSerialNumber() {
     executionSerialNumber++;
     return executionSerialNumber;
+  }
+
+  public ScrambleMetaSet getScrambleMetaSet() {
+    return scrambleMetaSet;
   }
 
   private void removeExecutionContext(ExecutionContext exec) {
