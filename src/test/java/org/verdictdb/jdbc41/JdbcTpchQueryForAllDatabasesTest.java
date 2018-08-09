@@ -1,20 +1,7 @@
 package org.verdictdb.jdbc41;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-
-import java.io.File;
-import java.io.IOException;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-
+import com.google.common.base.Charsets;
+import com.google.common.io.Files;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -22,10 +9,19 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.verdictdb.commons.DatabaseConnectionHelpers;
+import org.verdictdb.commons.VerdictOption;
 import org.verdictdb.exception.VerdictDBDbmsException;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
+import java.io.File;
+import java.io.IOException;
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 /** Created by Dong Young Yoon on 7/18/18. */
 @RunWith(Parameterized.class)
@@ -36,6 +32,8 @@ public class JdbcTpchQueryForAllDatabasesTest {
   private static Map<String, Connection> vcMap = new HashMap<>();
 
   private static Map<String, String> schemaMap = new HashMap<>();
+
+  private static VerdictOption options = new VerdictOption();
 
   private static final String MYSQL_HOST;
 
@@ -195,6 +193,10 @@ public class JdbcTpchQueryForAllDatabasesTest {
     connMap.put("mysql", conn);
     vcMap.put("mysql", vc);
     schemaMap.put("mysql", MYSQL_DATABASE + ".");
+
+    conn.createStatement()
+        .execute(
+            String.format("CREATE SCHEMA IF NOT EXISTS %s", options.getVerdictTempSchemaName()));
     return conn;
   }
 
@@ -209,6 +211,9 @@ public class JdbcTpchQueryForAllDatabasesTest {
     connMap.put("impala", conn);
     vcMap.put("impala", vc);
     schemaMap.put("impala", IMPALA_DATABASE + ".");
+    conn.createStatement()
+        .execute(
+            String.format("CREATE SCHEMA IF NOT EXISTS %s", options.getVerdictTempSchemaName()));
     return conn;
   }
 
@@ -226,6 +231,9 @@ public class JdbcTpchQueryForAllDatabasesTest {
     connMap.put("redshift", conn);
     vcMap.put("redshift", vc);
     schemaMap.put("redshift", "");
+    conn.createStatement()
+        .execute(
+            String.format("CREATE SCHEMA IF NOT EXISTS %s", options.getVerdictTempSchemaName()));
     return conn;
   }
 

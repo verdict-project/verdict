@@ -1,19 +1,5 @@
 package org.verdictdb.coordinator;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
-import java.io.IOException;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -23,6 +9,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.verdictdb.commons.DatabaseConnectionHelpers;
+import org.verdictdb.commons.VerdictOption;
 import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
@@ -33,6 +20,16 @@ import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.metastore.ScrambleMetaStore;
 
+import java.io.IOException;
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 /** Created by Dong Young Yoon on 7/26/18. */
 @RunWith(Parameterized.class)
 public class CreateScrambleTableFromSqlTest {
@@ -42,6 +39,8 @@ public class CreateScrambleTableFromSqlTest {
   private static Map<String, Pair<Connection, Connection>> connections = new HashMap<>();
 
   private String database;
+
+  private static VerdictOption options = new VerdictOption();
 
   private static final String TEMP_SCHEMA_NAME =
       "verdictdb_temp_schema_" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
@@ -216,7 +215,7 @@ public class CreateScrambleTableFromSqlTest {
     Connection conn = connections.get(database).getLeft();
     Connection vc = connections.get(database).getRight();
     JdbcConnection jdbcConn = JdbcConnection.create(conn);
-    ScrambleMetaStore store = new ScrambleMetaStore(jdbcConn);
+    ScrambleMetaStore store = new ScrambleMetaStore(jdbcConn, options);
     store.remove();
     String createScrambleSql =
         String.format(
@@ -253,7 +252,7 @@ public class CreateScrambleTableFromSqlTest {
     Connection conn = connections.get(database).getLeft();
     Connection vc = connections.get(database).getRight();
     JdbcConnection jdbcConn = JdbcConnection.create(conn);
-    ScrambleMetaStore store = new ScrambleMetaStore(jdbcConn);
+    ScrambleMetaStore store = new ScrambleMetaStore(jdbcConn, options);
     store.remove();
     String createScrambleSql =
         String.format(
@@ -289,7 +288,7 @@ public class CreateScrambleTableFromSqlTest {
     Connection conn = connections.get(database).getLeft();
     Connection vc = connections.get(database).getRight();
     JdbcConnection jdbcConn = JdbcConnection.create(conn);
-    ScrambleMetaStore store = new ScrambleMetaStore(jdbcConn);
+    ScrambleMetaStore store = new ScrambleMetaStore(jdbcConn, options);
     store.remove();
     // drop existing table
     String dropScrambleSql =
@@ -325,7 +324,7 @@ public class CreateScrambleTableFromSqlTest {
     Connection conn = connections.get(database).getLeft();
     Connection vc = connections.get(database).getRight();
     JdbcConnection jdbcConn = JdbcConnection.create(conn);
-    ScrambleMetaStore store = new ScrambleMetaStore(jdbcConn);
+    ScrambleMetaStore store = new ScrambleMetaStore(jdbcConn, options);
     store.remove();
     // drop existing table
     String dropScrambleSql =
