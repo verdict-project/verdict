@@ -16,6 +16,8 @@
 
 package org.verdictdb.sqlsyntax;
 
+import java.util.List;
+
 public class PostgresqlSyntax extends SqlSyntax {
 
   public static final String CHILD_PARTITION_TABLE_SUFFIX = "_vpart%05d";
@@ -104,8 +106,9 @@ public class PostgresqlSyntax extends SqlSyntax {
   }
 
   @Override
-  public String getPartitionByInCreateTable() {
-    return "partition by list";
+  public String getPartitionByInCreateTable(
+      List<String> partitionColumns, List<Integer> partitionCounts) {
+    return "PARTITION BY LIST";
   }
 
   @Override

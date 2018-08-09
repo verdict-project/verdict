@@ -16,6 +16,12 @@
 
 package org.verdictdb.coordinator;
 
+import static org.verdictdb.coordinator.VerdictSingleResultFromListData.createWithSingleColumn;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.VerdictContext;
@@ -31,12 +37,6 @@ import org.verdictdb.parser.VerdictSQLParser;
 import org.verdictdb.parser.VerdictSQLParserBaseVisitor;
 import org.verdictdb.sqlreader.NonValidatingSQLParser;
 import org.verdictdb.sqlreader.RelationGen;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import static org.verdictdb.coordinator.VerdictSingleResultFromListData.createWithSingleColumn;
 
 /**
  * Stores the context for a single query execution. Includes both scrambling query and select query.
@@ -97,6 +97,7 @@ public class ExecutionContext {
       ExecutionResultReader reader = coordinator.process(query);
       VerdictResultStream stream = new VerdictResultStreamFromExecutionResultReader(reader, this);
       return stream;
+      
     } else if (queryType.equals(QueryType.scrambling)) {
       LOG.debug("Query type: scrambling");
       CreateScrambleQuery scrambleQuery = generateScrambleQuery(query);
@@ -121,6 +122,7 @@ public class ExecutionContext {
       ScrambleMetaStore metaStore = new ScrambleMetaStore(context.getConnection());
       metaStore.addToStore(meta);
       return null;
+      
     } else if (queryType.equals(QueryType.set_default_schema)) {
       LOG.debug("Query type: set_default_schema");
       updateDefaultSchemaFromQuery(query);

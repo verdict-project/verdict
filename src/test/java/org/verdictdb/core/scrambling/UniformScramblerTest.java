@@ -80,7 +80,7 @@ public class UniformScramblerTest {
 
     String expected = String.format("create table `%s`.`%s` ", newSchema, newTable)
         + String.format("partitioned by (`%s`) ", meta.getAggregationBlockColumn())
-        + "as select *"
+        + "stored as parquet as select *"
         + String.format(", cast(floor(rand() * %d) as smallint) as `%s`", aggBlockCount, meta.getAggregationBlockColumn())
         + String.format(", cast(floor(rand() * 100) as smallint) as `%s`, ", meta.getSubsampleColumn())
         + String.format("1 as `%s` ", meta.getTierColumn())

@@ -11,7 +11,9 @@ public class VerdictResultStreamFromExecutionResultReader implements VerdictResu
 
   ExecutionContext execContext;
 
-  public VerdictResultStreamFromExecutionResultReader(ExecutionResultReader reader, ExecutionContext execContext) {
+  public VerdictResultStreamFromExecutionResultReader(
+      ExecutionResultReader reader, 
+      ExecutionContext execContext) {
     super();
     this.reader = reader;
     this.execContext = execContext;
@@ -46,7 +48,7 @@ public class VerdictResultStreamFromExecutionResultReader implements VerdictResu
 
   @Override
   public void close() {
-
+    
   }
 
 }
