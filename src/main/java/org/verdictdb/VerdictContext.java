@@ -16,13 +16,6 @@
 
 package org.verdictdb;
 
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Properties;
-
 import org.apache.commons.lang3.RandomStringUtils;
 import org.verdictdb.connection.CachedDbmsConnection;
 import org.verdictdb.connection.ConcurrentJdbcConnection;
@@ -38,10 +31,17 @@ import org.verdictdb.metastore.ScrambleMetaStore;
 import org.verdictdb.sqlsyntax.SqlSyntax;
 import org.verdictdb.sqlsyntax.SqlSyntaxList;
 
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Properties;
+
 public class VerdictContext {
 
   private DbmsConnection conn;
-  
+
   private boolean isClosed = false;
 
   private ScrambleMetaSet scrambleMetaSet;
@@ -63,9 +63,9 @@ public class VerdictContext {
   }
 
   /**
-   * This method does not support concurrent execution of queries; thus, should not be used in 
+   * This method does not support concurrent execution of queries; thus, should not be used in
    * production.
-   * 
+   *
    * @param jdbcConn
    * @return
    * @throws VerdictDBDbmsException
@@ -78,7 +78,7 @@ public class VerdictContext {
 
   /**
    * Uses a connection pool.
-   * 
+   *
    * @param jdbcConnectionString
    * @return
    * @throws SQLException
@@ -92,7 +92,7 @@ public class VerdictContext {
 
   /**
    * Uses a connection pool.
-   * 
+   *
    * @param jdbcConnectionString
    * @param info
    * @return
@@ -103,13 +103,13 @@ public class VerdictContext {
       throws SQLException, VerdictDBDbmsException {
     attemptLoadDriverClass(jdbcConnectionString);
     return new VerdictContext(ConcurrentJdbcConnection.create(jdbcConnectionString, info));
-//    Connection jdbcConn = DriverManager.getConnection(jdbcConnectionString, info);
-//    return fromJdbcConnection(jdbcConn);
+    //    Connection jdbcConn = DriverManager.getConnection(jdbcConnectionString, info);
+    //    return fromJdbcConnection(jdbcConn);
   }
 
   /**
    * Uses a connection pool.
-   * 
+   *
    * @param jdbcConnectionString
    * @param user
    * @param password
@@ -125,8 +125,8 @@ public class VerdictContext {
     info.setProperty("user", user);
     info.setProperty("password", password);
     return new VerdictContext(ConcurrentJdbcConnection.create(jdbcConnectionString, info));
-//    Connection jdbcConn = DriverManager.getConnection(jdbcConnectionString, user, password);
-//    return fromJdbcConnection(jdbcConn);
+    //    Connection jdbcConn = DriverManager.getConnection(jdbcConnectionString, user, password);
+    //    return fromJdbcConnection(jdbcConn);
   }
 
   private static void attemptLoadDriverClass(String jdbcConnectionString) {
@@ -144,12 +144,12 @@ public class VerdictContext {
   public DbmsConnection getConnection() {
     return conn;
   }
-  
+
   public void close() {
     conn.close();
     isClosed = true;
   }
-  
+
   public boolean isClosed() {
     return isClosed;
   }
@@ -188,13 +188,15 @@ public class VerdictContext {
   }
 
   private void removeExecutionContext(ExecutionContext exec) {
+    exec.terminate();
     executionContexts.remove(exec);
   }
 
   /** terminates all open execution context. */
   public void abort() {
-    // TODO Auto-generated method stub
-
+    for (ExecutionContext context : executionContexts) {
+      context.terminate();
+    }
   }
 
   public void scramble(String originalSchema, String originalTable) {}
