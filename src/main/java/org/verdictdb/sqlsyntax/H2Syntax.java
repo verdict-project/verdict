@@ -16,6 +16,8 @@
 
 package org.verdictdb.sqlsyntax;
 
+import java.util.List;
+
 public class H2Syntax extends SqlSyntax {
 
   // The column index that stored meta information in the original database
@@ -81,7 +83,8 @@ public class H2Syntax extends SqlSyntax {
 
   /** H2 does not support partitioning. */
   @Override
-  public String getPartitionByInCreateTable() {
+  public String getPartitionByInCreateTable(
+      List<String> partitionColumns, List<Integer> partitionCounts) {
     return null;
   }
 

@@ -20,11 +20,13 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.VerdictContext;
 import org.verdictdb.commons.VerdictDBLogger;
-import org.verdictdb.connection.JdbcConnection;
+import org.verdictdb.connection.DbmsConnection;
+import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.core.resulthandler.ExecutionResultReader;
 import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.core.sqlobject.BaseTable;
 import org.verdictdb.core.sqlobject.CreateScrambleQuery;
+import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBTypeException;
 import org.verdictdb.metastore.ScrambleMetaStore;
@@ -33,9 +35,6 @@ import org.verdictdb.parser.VerdictSQLParserBaseVisitor;
 import org.verdictdb.sqlreader.NonValidatingSQLParser;
 import org.verdictdb.sqlreader.RelationGen;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -247,28 +246,29 @@ public class ExecutionContext {
    *
    * <p>This method also removes all temporary tables created by this ExecutionContext.
    */
-  public void terminate() throws SQLException {
-    JdbcConnection conn = context.getJdbcConnection();
-    String schema = conn.getDefaultSchema();
-    Statement stmt = conn.getConnection().createStatement();
-    stmt.execute(String.format("use %s", schema));
+  public void terminate() {
+    try {
+      DbmsConnection conn = context.getCopiedConnection();
+      String schema = conn.getDefaultSchema();
+      conn.execute(String.format("use %s", schema));
+      String tempTablePrefix =
+          String.format("verdictdbtemptable_%s_%d", context.getContextId(), this.serialNumber);
+      List<String> tempTableList = new ArrayList<>();
 
-    String tempTablePrefix =
-        String.format("verdictdbtemptable_%s_%d", context.getContextId(), this.serialNumber);
-    List<String> tempTableList = new ArrayList<>();
-
-    ResultSet rs = stmt.executeQuery("show tables");
-    while (rs.next()) {
-      String tableName = rs.getString(1);
-      if (tableName.startsWith(tempTablePrefix)) {
-        tempTableList.add(tableName);
+      DbmsQueryResult rs = conn.execute("show tables");
+      while (rs.next()) {
+        String tableName = rs.getString(0);
+        if (tableName.startsWith(tempTablePrefix)) {
+          tempTableList.add(tableName);
+        }
       }
-    }
 
-    for (String tempTable : tempTableList) {
-      stmt.executeUpdate(String.format("DROP TABLE IF EXISTS %s", tempTable));
+      for (String tempTable : tempTableList) {
+        conn.execute(String.format("DROP TABLE IF EXISTS %s", tempTable));
+      }
+    } catch (VerdictDBDbmsException e) {
+      e.printStackTrace();
     }
-    stmt.close();
   }
 
   private QueryType identifyQueryType(String query) {

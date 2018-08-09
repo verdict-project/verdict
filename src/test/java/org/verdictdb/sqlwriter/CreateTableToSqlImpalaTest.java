@@ -24,7 +24,7 @@ public class CreateTableToSqlImpalaTest {
         base);
     CreateTableAsSelectQuery create = new CreateTableAsSelectQuery("tpch", "newtable", relation);
     create.addPartitionColumn("n_nationkey");
-    String expected = "create table `tpch`.`newtable` partitioned by (`n_nationkey`) as select * from `tpch`.`nation` as t";
+    String expected = "create table `tpch`.`newtable` partitioned by (`n_nationkey`) stored as parquet as select * from `tpch`.`nation` as t";
     CreateTableToSql queryToSql = new CreateTableToSql(new ImpalaSyntax());
     String actual = queryToSql.toSql(create);
     assertEquals(expected, actual);
@@ -39,7 +39,7 @@ public class CreateTableToSqlImpalaTest {
     CreateTableAsSelectQuery create = new CreateTableAsSelectQuery("tpch", "newtable", relation);
     create.addPartitionColumn("n_nationkey");
     create.addPartitionColumn("n_name");
-    String expected = "create table `tpch`.`newtable` partitioned by (`n_nationkey`, `n_name`) as select * from `tpch`.`nation` as t";
+    String expected = "create table `tpch`.`newtable` partitioned by (`n_nationkey`, `n_name`) stored as parquet as select * from `tpch`.`nation` as t";
     CreateTableToSql queryToSql = new CreateTableToSql(new ImpalaSyntax());
     String actual = queryToSql.toSql(create);
     assertEquals(expected, actual);

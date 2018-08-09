@@ -16,12 +16,13 @@
 
 package org.verdictdb.commons;
 
+import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
+
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.Appender;
-import org.slf4j.LoggerFactory;
-import org.slf4j.Marker;
 
 public class VerdictDBLogger implements org.slf4j.Logger {
 

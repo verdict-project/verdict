@@ -23,7 +23,7 @@ public class CreateTableToSqlTest {
         Arrays.<SelectItem>asList(new AsteriskColumn()),
         base);
     CreateTableAsSelectQuery create = new CreateTableAsSelectQuery("newschema", "newtable", relation);
-    String expected = "create table `newschema`.`newtable` using parquet as select * from `myschema`.`mytable` as t";
+    String expected = "create table `newschema`.`newtable` stored as parquet as select * from `myschema`.`mytable` as t";
     CreateTableToSql queryToSql = new CreateTableToSql(new HiveSyntax());
     String actual = queryToSql.toSql(create);
     assertEquals(expected, actual);
@@ -37,7 +37,7 @@ public class CreateTableToSqlTest {
         base);
     CreateTableAsSelectQuery create = new CreateTableAsSelectQuery("newschema", "newtable", relation);
     create.addPartitionColumn("part1");
-    String expected = "create table `newschema`.`newtable` partitioned by (`part1`) as select * from `myschema`.`mytable` as t";
+    String expected = "create table `newschema`.`newtable` partitioned by (`part1`) stored as parquet as select * from `myschema`.`mytable` as t";
     CreateTableToSql queryToSql = new CreateTableToSql(new HiveSyntax());
     String actual = queryToSql.toSql(create);
     assertEquals(expected, actual);
@@ -52,7 +52,7 @@ public class CreateTableToSqlTest {
     CreateTableAsSelectQuery create = new CreateTableAsSelectQuery("newschema", "newtable", relation);
     create.addPartitionColumn("part1");
     create.addPartitionColumn("part2");
-    String expected = "create table `newschema`.`newtable` partitioned by (`part1`, `part2`) as select * from `myschema`.`mytable` as t";
+    String expected = "create table `newschema`.`newtable` partitioned by (`part1`, `part2`) stored as parquet as select * from `myschema`.`mytable` as t";
     CreateTableToSql queryToSql = new CreateTableToSql(new HiveSyntax());
     String actual = queryToSql.toSql(create);
     assertEquals(expected, actual);

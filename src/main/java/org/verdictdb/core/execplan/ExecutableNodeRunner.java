@@ -78,6 +78,11 @@ public class ExecutableNodeRunner implements Runnable {
 
     // dependency exists
     while (true) {
+      // standard interruption handling
+      if (Thread.currentThread().isInterrupted()) {
+        break;
+      }
+      
       List<ExecutionInfoToken> tokens = retrieve();
       if (tokens == null) {
         continue;

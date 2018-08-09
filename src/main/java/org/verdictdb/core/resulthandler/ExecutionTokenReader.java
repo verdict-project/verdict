@@ -36,7 +36,7 @@ public class ExecutionTokenReader
   public ExecutionTokenReader(ExecutionTokenQueue queue) {
     this.queue = queue;
   }
-
+  
   @Override
   public Iterator<ExecutionInfoToken> iterator() {
     return this;

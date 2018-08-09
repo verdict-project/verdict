@@ -115,7 +115,10 @@ public class UniformScramblingNodeTest {
     SqlConvertible query = node.createQuery(tokens);
     sql = QueryToSql.convert(new MysqlSyntax(), query);
     String expected = "create table `newschema`.`newtable` "
-        + "partition by key (`blockcolumn`) "
+        + "partition by list columns (`blockcolumn`) ("
+        + "partition p0 values in (0), "
+        + "partition p1 values in (1), "
+        + "partition p2 values in (2)) "
         + "select t.`id`, 0 as `tiercolumn`, "
         + "case when (rand() <= 0.3333333333333333) then 0 "
         + "when (rand() <= 0.49999999999999994) then 1 "

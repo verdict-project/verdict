@@ -16,6 +16,11 @@
 
 package org.verdictdb.metastore;
 
+import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.commons.VerdictDBLogger;
 import org.verdictdb.connection.DbmsConnection;
@@ -23,16 +28,18 @@ import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.core.querying.CreateSchemaQuery;
 import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
-import org.verdictdb.core.sqlobject.*;
+import org.verdictdb.core.sqlobject.BaseColumn;
+import org.verdictdb.core.sqlobject.BaseTable;
+import org.verdictdb.core.sqlobject.CreateTableDefinitionQuery;
+import org.verdictdb.core.sqlobject.DropTableQuery;
+import org.verdictdb.core.sqlobject.InsertValuesQuery;
+import org.verdictdb.core.sqlobject.OrderbyAttribute;
+import org.verdictdb.core.sqlobject.SelectItem;
+import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sqlsyntax.ImpalaSyntax;
 import org.verdictdb.sqlsyntax.RedshiftSyntax;
 import org.verdictdb.sqlwriter.QueryToSql;
-
-import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
 
 public class ScrambleMetaStore extends VerdictMetaStore {
 
@@ -207,6 +214,52 @@ public class ScrambleMetaStore extends VerdictMetaStore {
     try {
       String storeSchema = getStoreSchema();
       String storeTable = getMetaStoreTableName();
+
+      List<String> existingSchemas = conn.getSchemas();
+      if (existingSchemas.contains(storeSchema) == false) {
+        return new ScrambleMetaSet();
+      }
+
+      List<String> existingTables = conn.getTables(storeSchema);
+      if (existingTables.contains(storeTable) == false) {
+        return new ScrambleMetaSet();
+      }
+
+      // now ready to retrieve
+      String tableAlias = "t";
+      SelectQuery query =
+          SelectQuery.create(
+              Arrays.<SelectItem>asList(
+                  new BaseColumn(tableAlias, ADDED_AT_COLUMN),
+                  new BaseColumn(tableAlias, DATA_COLUMN)),
+              new BaseTable(storeSchema, storeTable, tableAlias));
+      query.addOrderby(new OrderbyAttribute(ADDED_AT_COLUMN));
+      String sql = QueryToSql.convert(conn.getSyntax(), query);
+      DbmsQueryResult result = conn.execute(sql);
+
+      while (result.next()) {
+        String jsonString = result.getString(1);
+        ScrambleMeta meta = ScrambleMeta.fromJsonString(jsonString);
+        retrieved.addScrambleMeta(meta);
+      }
+    } catch (VerdictDBException e) {
+      e.printStackTrace();
+    }
+
+    return retrieved;
+  }
+
+  /**
+   * Static version of retrieve() that uses default schema and table names
+   *
+   * @return a set of scramble meta
+   */
+  public static ScrambleMetaSet retrieve(DbmsConnection conn) {
+    ScrambleMetaSet retrieved = new ScrambleMetaSet();
+
+    try {
+      String storeSchema = DEFAULT_STORE_SCHEMA;
+      String storeTable = METASTORE_TABLE_NAME;
 
       List<String> existingSchemas = conn.getSchemas();
       if (existingSchemas.contains(storeSchema) == false) {
