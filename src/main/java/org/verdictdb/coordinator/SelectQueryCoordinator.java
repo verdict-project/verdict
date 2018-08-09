@@ -16,10 +16,6 @@
 
 package org.verdictdb.coordinator;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.connection.DataTypeConverter;
@@ -32,18 +28,16 @@ import org.verdictdb.core.querying.QueryExecutionPlanFactory;
 import org.verdictdb.core.querying.ola.AsyncQueryExecutionPlan;
 import org.verdictdb.core.resulthandler.ExecutionResultReader;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
-import org.verdictdb.core.sqlobject.AbstractRelation;
-import org.verdictdb.core.sqlobject.BaseTable;
-import org.verdictdb.core.sqlobject.ColumnOp;
-import org.verdictdb.core.sqlobject.JoinTable;
-import org.verdictdb.core.sqlobject.SelectQuery;
-import org.verdictdb.core.sqlobject.SubqueryColumn;
-import org.verdictdb.core.sqlobject.UnnamedColumn;
+import org.verdictdb.core.sqlobject.*;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.metastore.ScrambleMetaStore;
 import org.verdictdb.sqlreader.NonValidatingSQLParser;
 import org.verdictdb.sqlreader.RelationStandardizer;
 import org.verdictdb.sqlreader.ScrambleTableReplacer;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 
 public class SelectQueryCoordinator {
 
@@ -91,6 +85,38 @@ public class SelectQueryCoordinator {
     // original query.
     QueryExecutionPlan plan =
         QueryExecutionPlanFactory.create(scratchpadSchema, scrambleMetaSet, selectQuery);
+
+    // convert it to an asynchronous plan
+    // if the plan does not include any aggregates, this operation should not alter the original
+    // plan.
+    QueryExecutionPlan asyncPlan = AsyncQueryExecutionPlan.create(plan);
+
+    // simplify the plan
+    //    QueryExecutionPlan simplifiedAsyncPlan = QueryExecutionPlanSimplifier.simplify(asyncPlan);
+    //    QueryExecutionPlanSimplifier.simplify2(asyncPlan);
+
+    //    asyncPlan.getRootNode().print();
+
+    // execute the plan
+    //    ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(conn,
+    // simplifiedAsyncPlan);
+    ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(conn, asyncPlan);
+
+    lastQuery = selectQuery;
+
+    return reader;
+  }
+
+  public ExecutionResultReader process(String query, QueryContext context)
+      throws VerdictDBException {
+
+    SelectQuery selectQuery = standardizeQuery(query);
+
+    // make plan
+    // if the plan does not include any aggregates, it will simply be a parsed structure of the
+    // original query.
+    QueryExecutionPlan plan =
+        QueryExecutionPlanFactory.create(scratchpadSchema, scrambleMetaSet, selectQuery, context);
 
     // convert it to an asynchronous plan
     // if the plan does not include any aggregates, this operation should not alter the original
