@@ -2,7 +2,11 @@ package org.verdictdb.jdbc41;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
+import org.verdictdb.commons.DatabaseConnectionHelpers;
 import org.verdictdb.exception.VerdictDBDbmsException;
 
 import java.io.File;
@@ -18,11 +22,14 @@ public class DriverTest {
 
   private static final String REDSHIFT_DATABASE = "dev";
 
-  private static final String REDSHIFT_SCHEMA = "tpch_test";
+  private static final String REDSHIFT_SCHEMA =
+      "tpch_test_" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
 
   private static final String REDSHIFT_USER;
 
   private static final String REDSHIFT_PASSWORD;
+
+  private static Connection conn;
 
   static {
     REDSHIFT_HOST = System.getenv("VERDICTDB_TEST_REDSHIFT_ENDPOINT");
@@ -30,14 +37,20 @@ public class DriverTest {
     REDSHIFT_PASSWORD = System.getenv("VERDICTDB_TEST_REDSHIFT_PASSWORD");
   }
 
-  //  @BeforeClass
-  //  public static void setupRedshift() throws VerdictDBDbmsException, SQLException, IOException {
-  //    String connectionString =
-  //        String.format("jdbc:redshift://%s/%s", REDSHIFT_HOST, REDSHIFT_DATABASE);
-  //    Connection conn =
-  //        DatabaseConnectionHelpers.setupRedshift(
-  //            connectionString, REDSHIFT_USER, REDSHIFT_PASSWORD, REDSHIFT_SCHEMA);
-  //  }
+  @BeforeClass
+  public static void setup() throws VerdictDBDbmsException, SQLException, IOException {
+    String connectionString =
+        String.format("jdbc:redshift://%s/%s", REDSHIFT_HOST, REDSHIFT_DATABASE);
+    conn =
+        DatabaseConnectionHelpers.setupRedshift(
+            connectionString, REDSHIFT_USER, REDSHIFT_PASSWORD, REDSHIFT_SCHEMA);
+  }
+
+  @AfterClass
+  public static void tearDown() throws SQLException {
+    conn.createStatement()
+        .execute(String.format("DROP SCHEMA IF EXISTS %s CASCADE", REDSHIFT_SCHEMA));
+  }
 
   @Test
   public void printData() throws SQLException {
