@@ -4,9 +4,11 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.junit.AfterClass;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.commons.DatabaseConnectionHelpers;
+import org.verdictdb.commons.VerdictOption;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.connection.SparkConnection;
@@ -61,6 +63,16 @@ public class SparkTpchSelectQueryCoordinatorTest {
     meta.addScrambleMeta(meta2);
   }
 
+  @Before
+  public void setupSchema() {
+    spark.sql(
+        String.format(
+            "drop schema if exists `%s` cascade", VerdictOption.getDefaultTempSchemaName()));
+    spark.sql(
+        String.format(
+            "create schema if not exists `%s`", VerdictOption.getDefaultTempSchemaName()));
+  }
+
   @Test
   public void testTpch1() throws VerdictDBException {
     String sql =
@@ -86,10 +98,6 @@ public class SparkTpchSelectQueryCoordinatorTest {
             + " l_returnflag, "
             + " l_linestatus ";
 
-    //    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new
-    // JdbcDbmsConnection(conn, new MysqlSyntax()));
-    spark.sql("drop schema if exists `verdictdb_temp` cascade");
-    spark.sql("create schema if not exists `verdictdb_temp`");
     DbmsConnection dbmsconn = new SparkConnection(spark);
     dbmsconn.setDefaultSchema(TEST_SCHEMA);
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
@@ -173,10 +181,6 @@ public class SparkTpchSelectQueryCoordinatorTest {
             + "o_orderdate "
             + "limit 10";
 
-    //    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new
-    // JdbcDbmsConnection(conn, new MysqlSyntax()));
-    spark.sql("drop schema if exists `verdictdb_temp` cascade");
-    spark.sql("create schema if not exists `verdictdb_temp`");
     DbmsConnection dbmsconn = new SparkConnection(spark);
     dbmsconn.setDefaultSchema(TEST_SCHEMA);
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
@@ -230,10 +234,6 @@ public class SparkTpchSelectQueryCoordinatorTest {
             + "order by "
             + "o_orderpriority ";
 
-    //    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new
-    // JdbcDbmsConnection(conn, new MysqlSyntax()));
-    spark.sql("drop schema if exists `verdictdb_temp` cascade");
-    spark.sql("create schema if not exists `verdictdb_temp`");
     DbmsConnection dbmsconn = new SparkConnection(spark);
     dbmsconn.setDefaultSchema(TEST_SCHEMA);
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
@@ -293,10 +293,6 @@ public class SparkTpchSelectQueryCoordinatorTest {
             + "order by "
             + "revenue desc ";
 
-    //    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new
-    // JdbcDbmsConnection(conn, new MysqlSyntax()));
-    spark.sql("drop schema if exists `verdictdb_temp` cascade");
-    spark.sql("create schema if not exists `verdictdb_temp`");
     DbmsConnection dbmsconn = new SparkConnection(spark);
     dbmsconn.setDefaultSchema(TEST_SCHEMA);
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
@@ -345,10 +341,6 @@ public class SparkTpchSelectQueryCoordinatorTest {
             + "and l_discount between 0.04 - 0.02 and 0.04 + 0.02 "
             + "and l_quantity < 15 ";
 
-    //    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new
-    // JdbcDbmsConnection(conn, new MysqlSyntax()));
-    spark.sql("drop schema if exists `verdictdb_temp` cascade");
-    spark.sql("create schema if not exists `verdictdb_temp`");
     DbmsConnection dbmsconn = new SparkConnection(spark);
     dbmsconn.setDefaultSchema(TEST_SCHEMA);
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
@@ -426,10 +418,6 @@ public class SparkTpchSelectQueryCoordinatorTest {
             + "cust_nation, "
             + "l_year ";
 
-    //    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new
-    // JdbcDbmsConnection(conn, new MysqlSyntax()));
-    spark.sql("drop schema if exists `verdictdb_temp` cascade");
-    spark.sql("create schema if not exists `verdictdb_temp`");
     DbmsConnection dbmsconn = new SparkConnection(spark);
     dbmsconn.setDefaultSchema(TEST_SCHEMA);
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
@@ -500,10 +488,6 @@ public class SparkTpchSelectQueryCoordinatorTest {
             + "order by\n"
             + "  o_year";
 
-    //    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new
-    // JdbcDbmsConnection(conn, new MysqlSyntax()));
-    spark.sql("drop schema if exists `verdictdb_temp` cascade");
-    spark.sql("create schema if not exists `verdictdb_temp`");
     DbmsConnection dbmsconn = new SparkConnection(spark);
     dbmsconn.setDefaultSchema(TEST_SCHEMA);
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
@@ -572,10 +556,6 @@ public class SparkTpchSelectQueryCoordinatorTest {
             + "  nation,\n"
             + "  o_year desc";
 
-    //    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new
-    // JdbcDbmsConnection(conn, new MysqlSyntax()));
-    spark.sql("drop schema if exists `verdictdb_temp` cascade");
-    spark.sql("create schema if not exists `verdictdb_temp`");
     DbmsConnection dbmsconn = new SparkConnection(spark);
     dbmsconn.setDefaultSchema(TEST_SCHEMA);
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
@@ -647,10 +627,6 @@ public class SparkTpchSelectQueryCoordinatorTest {
             + "order by "
             + "revenue desc ";
 
-    //    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new
-    // JdbcDbmsConnection(conn, new MysqlSyntax()));
-    spark.sql("drop schema if exists `verdictdb_temp` cascade");
-    spark.sql("create schema if not exists `verdictdb_temp`");
     DbmsConnection dbmsconn = new SparkConnection(spark);
     dbmsconn.setDefaultSchema(TEST_SCHEMA);
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
@@ -717,10 +693,6 @@ public class SparkTpchSelectQueryCoordinatorTest {
             + "order by "
             + "l_shipmode ";
 
-    //    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new
-    // JdbcDbmsConnection(conn, new MysqlSyntax()));
-    spark.sql("drop schema if exists `verdictdb_temp` cascade");
-    spark.sql("create schema if not exists `verdictdb_temp`");
     DbmsConnection dbmsconn = new SparkConnection(spark);
     dbmsconn.setDefaultSchema(TEST_SCHEMA);
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
@@ -768,10 +740,6 @@ public class SparkTpchSelectQueryCoordinatorTest {
             + "c_custkey "
             + "order by c_custkey";
 
-    //    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new
-    // JdbcDbmsConnection(conn, new MysqlSyntax()));
-    spark.sql("drop schema if exists `verdictdb_temp` cascade");
-    spark.sql("create schema if not exists `verdictdb_temp`");
     DbmsConnection dbmsconn = new SparkConnection(spark);
     dbmsconn.setDefaultSchema(TEST_SCHEMA);
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
@@ -820,10 +788,6 @@ public class SparkTpchSelectQueryCoordinatorTest {
             + "and l_shipdate >= date '1992-01-01' "
             + "and l_shipdate < date '1998-01-01' ";
 
-    //    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new
-    // JdbcDbmsConnection(conn, new MysqlSyntax()));
-    spark.sql("drop schema if exists `verdictdb_temp` cascade");
-    spark.sql("create schema if not exists `verdictdb_temp`");
     DbmsConnection dbmsconn = new SparkConnection(spark);
     dbmsconn.setDefaultSchema(TEST_SCHEMA);
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
@@ -878,10 +842,6 @@ public class SparkTpchSelectQueryCoordinatorTest {
             + "order by "
             + "l_suppkey";
 
-    //    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new
-    // JdbcDbmsConnection(conn, new MysqlSyntax()));
-    spark.sql("drop schema if exists `verdictdb_temp` cascade");
-    spark.sql("create schema if not exists `verdictdb_temp`");
     DbmsConnection dbmsconn = new SparkConnection(spark);
     dbmsconn.setDefaultSchema(TEST_SCHEMA);
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
@@ -946,10 +906,6 @@ public class SparkTpchSelectQueryCoordinatorTest {
             + ") a \n"
             + "where quantity > t_avg_quantity";
 
-    //    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new
-    // JdbcDbmsConnection(conn, new MysqlSyntax()));
-    spark.sql("drop schema if exists `verdictdb_temp` cascade");
-    spark.sql("create schema if not exists `verdictdb_temp`");
     DbmsConnection dbmsconn = new SparkConnection(spark);
     dbmsconn.setDefaultSchema(TEST_SCHEMA);
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
@@ -1022,10 +978,6 @@ public class SparkTpchSelectQueryCoordinatorTest {
             + "  o_totalprice desc,\n"
             + "  o_orderdate \n";
 
-    //    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new
-    // JdbcDbmsConnection(conn, new MysqlSyntax()));
-    spark.sql("drop schema if exists `verdictdb_temp` cascade");
-    spark.sql("create schema if not exists `verdictdb_temp`");
     DbmsConnection dbmsconn = new SparkConnection(spark);
     dbmsconn.setDefaultSchema(TEST_SCHEMA);
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
@@ -1096,10 +1048,6 @@ public class SparkTpchSelectQueryCoordinatorTest {
             + "and l_shipinstruct = 'DELIVER IN PERSON' "
             + ") ";
 
-    //    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new
-    // JdbcDbmsConnection(conn, new MysqlSyntax()));
-    spark.sql("drop schema if exists `verdictdb_temp` cascade");
-    spark.sql("create schema if not exists `verdictdb_temp`");
     DbmsConnection dbmsconn = new SparkConnection(spark);
     dbmsconn.setDefaultSchema(TEST_SCHEMA);
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
@@ -1158,10 +1106,6 @@ public class SparkTpchSelectQueryCoordinatorTest {
             + "  group by s_name\n"
             + "order by s_name";
 
-    //    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new
-    // JdbcDbmsConnection(conn, new MysqlSyntax()));
-    spark.sql("drop schema if exists `verdictdb_temp` cascade");
-    spark.sql("create schema if not exists `verdictdb_temp`");
     DbmsConnection dbmsconn = new SparkConnection(spark);
     dbmsconn.setDefaultSchema(TEST_SCHEMA);
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
@@ -1236,10 +1180,6 @@ public class SparkTpchSelectQueryCoordinatorTest {
             + "group by s_name "
             + "order by numwait desc, s_name ";
 
-    //    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(new
-    // JdbcDbmsConnection(conn, new MysqlSyntax()));
-    spark.sql("drop schema if exists `verdictdb_temp` cascade");
-    spark.sql("create schema if not exists `verdictdb_temp`");
     DbmsConnection dbmsconn = new SparkConnection(spark);
     dbmsconn.setDefaultSchema(TEST_SCHEMA);
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);

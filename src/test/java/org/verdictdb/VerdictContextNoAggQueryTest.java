@@ -1,17 +1,11 @@
 package org.verdictdb;
 
-import static org.junit.Assert.assertEquals;
-
-import java.io.File;
-import java.io.IOException;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-
+import com.google.common.base.Charsets;
+import com.google.common.io.Files;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.commons.DatabaseConnectionHelpers;
+import org.verdictdb.commons.VerdictOption;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.coordinator.VerdictSingleResult;
@@ -23,8 +17,14 @@ import org.verdictdb.sqlreader.RelationStandardizer;
 import org.verdictdb.sqlsyntax.MysqlSyntax;
 import org.verdictdb.sqlwriter.SelectQueryToSql;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
+import java.io.File;
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+
+import static org.junit.Assert.assertEquals;
 
 public class VerdictContextNoAggQueryTest {
 
@@ -56,21 +56,27 @@ public class VerdictContextNoAggQueryTest {
     // TPCH
     String mysqlConnectionString =
         String.format("jdbc:mysql://%s?autoReconnect=true&useSSL=false", MYSQL_HOST);
-    conn = DatabaseConnectionHelpers.setupMySql(
-        mysqlConnectionString, MYSQL_UESR, MYSQL_PASSWORD, MYSQL_DATABASE);
+    conn =
+        DatabaseConnectionHelpers.setupMySql(
+            mysqlConnectionString, MYSQL_UESR, MYSQL_PASSWORD, MYSQL_DATABASE);
     dbmsConnection = JdbcConnection.create(conn);
     dbmsConnection.setDefaultSchema(MYSQL_DATABASE);
     stmt = conn.createStatement();
-    stmt.execute("create schema if not exists `verdictdb_temp`");
-    
+    stmt.execute(
+        String.format(
+            "create schema if not exists `%s`", VerdictOption.getDefaultTempSchemaName()));
+
     // Table with a confusing column name
-    conn.createStatement().execute(
-        String.format("create table `%s`.`simpletable` (age integer, height float)", MYSQL_DATABASE));
+    conn.createStatement()
+        .execute(
+            String.format(
+                "create table `%s`.`simpletable` (age integer, height float)", MYSQL_DATABASE));
   }
-  
+
   @Test
   public void orderByConflictingNames() throws VerdictDBException {
-    String sql = String.format("select * from `%s`.`simpletable` order by age, height", MYSQL_DATABASE);
+    String sql =
+        String.format("select * from `%s`.`simpletable` order by age, height", MYSQL_DATABASE);
     VerdictContext verdictContext = new VerdictContext(dbmsConnection);
     verdictContext.sql(sql);
   }
@@ -116,7 +122,7 @@ public class VerdictContextNoAggQueryTest {
   /*
   Wrong without simplify
    */
-  //@Test
+  // @Test
   public void TpchQuery2Test() throws VerdictDBException, SQLException, IOException {
     File schemaFile = new File("src/test/resources/noAggQuery/tpchQuery2.sql");
     String sql = Files.toString(schemaFile, Charsets.UTF_8);
