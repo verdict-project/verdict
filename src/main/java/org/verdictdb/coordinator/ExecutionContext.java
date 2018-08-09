@@ -20,6 +20,7 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.VerdictContext;
 import org.verdictdb.commons.VerdictDBLogger;
+import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.core.resulthandler.ExecutionResultReader;
 import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.core.sqlobject.BaseTable;
@@ -32,6 +33,9 @@ import org.verdictdb.parser.VerdictSQLParserBaseVisitor;
 import org.verdictdb.sqlreader.NonValidatingSQLParser;
 import org.verdictdb.sqlreader.RelationGen;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -46,6 +50,8 @@ import static org.verdictdb.coordinator.VerdictSingleResultFromListData.createWi
 public class ExecutionContext {
 
   private VerdictContext context;
+
+  private QueryContext queryContext;
 
   private final long serialNumber;
 
@@ -68,6 +74,7 @@ public class ExecutionContext {
   public ExecutionContext(VerdictContext context, long serialNumber) {
     this.context = context;
     this.serialNumber = serialNumber;
+    this.queryContext = new QueryContext(context.getContextId(), serialNumber);
   }
 
   public long getExecutionContextSerialNumber() {
@@ -94,7 +101,7 @@ public class ExecutionContext {
       LOG.debug("Query type: select");
       SelectQueryCoordinator coordinator =
           new SelectQueryCoordinator(context.getCopiedConnection());
-      ExecutionResultReader reader = coordinator.process(query);
+      ExecutionResultReader reader = coordinator.process(query, queryContext);
       VerdictResultStream stream = new VerdictResultStreamFromExecutionResultReader(reader, this);
       return stream;
     } else if (queryType.equals(QueryType.scrambling)) {
@@ -237,10 +244,31 @@ public class ExecutionContext {
 
   /**
    * Terminates existing threads. The created database tables may still exist for successive uses.
+   *
+   * <p>This method also removes all temporary tables created by this ExecutionContext.
    */
-  public void terminate() {
-    // TODO Auto-generated method stub
+  public void terminate() throws SQLException {
+    JdbcConnection conn = context.getJdbcConnection();
+    String schema = conn.getDefaultSchema();
+    Statement stmt = conn.getConnection().createStatement();
+    stmt.execute(String.format("use %s", schema));
 
+    String tempTablePrefix =
+        String.format("verdictdbtemptable_%s_%d", context.getContextId(), this.serialNumber);
+    List<String> tempTableList = new ArrayList<>();
+
+    ResultSet rs = stmt.executeQuery("show tables");
+    while (rs.next()) {
+      String tableName = rs.getString(1);
+      if (tableName.startsWith(tempTablePrefix)) {
+        tempTableList.add(tableName);
+      }
+    }
+
+    for (String tempTable : tempTableList) {
+      stmt.executeUpdate(String.format("DROP TABLE IF EXISTS %s", tempTable));
+    }
+    stmt.close();
   }
 
   private QueryType identifyQueryType(String query) {

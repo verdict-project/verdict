@@ -62,11 +62,11 @@ public class JdbcConnection implements DbmsConnection {
     this.conn = conn;
     try {
       this.currentSchema = conn.getSchema();
-//      if (syntax instanceof PostgresqlSyntax || syntax instanceof RedshiftSyntax) {
-//        
-//      } else {
-//        this.currentSchema = conn.getCatalog();
-//      }
+      //      if (syntax instanceof PostgresqlSyntax || syntax instanceof RedshiftSyntax) {
+      //
+      //      } else {
+      //        this.currentSchema = conn.getCatalog();
+      //      }
     } catch (SQLException e) {
       e.printStackTrace();
     }

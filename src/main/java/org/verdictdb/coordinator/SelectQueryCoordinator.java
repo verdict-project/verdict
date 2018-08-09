@@ -104,6 +104,36 @@ public class SelectQueryCoordinator {
 
     lastQuery = selectQuery;
 
+    return reader;
+  }
+
+  public ExecutionResultReader process(String query, QueryContext context)
+      throws VerdictDBException {
+
+    SelectQuery selectQuery = standardizeQuery(query);
+
+    // make plan
+    // if the plan does not include any aggregates, it will simply be a parsed structure of the
+    // original query.
+    QueryExecutionPlan plan =
+        QueryExecutionPlanFactory.create(scratchpadSchema, scrambleMetaSet, selectQuery, context);
+
+    // convert it to an asynchronous plan
+    // if the plan does not include any aggregates, this operation should not alter the original
+    // plan.
+    QueryExecutionPlan asyncPlan = AsyncQueryExecutionPlan.create(plan);
+
+    // simplify the plan
+    //    QueryExecutionPlan simplifiedAsyncPlan = QueryExecutionPlanSimplifier.simplify(asyncPlan);
+    //    QueryExecutionPlanSimplifier.simplify2(asyncPlan);
+
+    //    asyncPlan.getRootNode().print();
+
+    // execute the plan
+    //    ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(conn,
+    // simplifiedAsyncPlan);
+    ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(conn, asyncPlan);
+
     lastQuery = selectQuery;
 
     return reader;
