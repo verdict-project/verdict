@@ -146,6 +146,7 @@ public class VerdictContext {
   }
 
   public void close() {
+    this.abort(); // terminates all ExecutionContexts first.
     conn.close();
     isClosed = true;
   }
