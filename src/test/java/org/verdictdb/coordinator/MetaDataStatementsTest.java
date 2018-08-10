@@ -1,21 +1,5 @@
 package org.verdictdb.coordinator;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-
-import java.io.IOException;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -23,16 +7,20 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.verdictdb.VerdictContext;
+import org.verdictdb.commons.VerdictOption;
 import org.verdictdb.connection.CachedDbmsConnection;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.exception.VerdictDBException;
-import org.verdictdb.sqlsyntax.ImpalaSyntax;
-import org.verdictdb.sqlsyntax.MysqlSyntax;
-import org.verdictdb.sqlsyntax.PostgresqlSyntax;
-import org.verdictdb.sqlsyntax.RedshiftSyntax;
-import org.verdictdb.sqlsyntax.SqlSyntax;
+import org.verdictdb.sqlsyntax.*;
+
+import java.io.IOException;
+import java.sql.*;
+import java.util.*;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 @RunWith(Parameterized.class)
 public class MetaDataStatementsTest {
@@ -44,6 +32,8 @@ public class MetaDataStatementsTest {
   private static Map<String, SqlSyntax> syntaxMap = new HashMap<>();
 
   private static final String MYSQL_HOST;
+
+  private static VerdictOption options = new VerdictOption();
 
   private String database;
 
@@ -148,12 +138,15 @@ public class MetaDataStatementsTest {
   private static void setupMysql() throws SQLException, VerdictDBDbmsException {
     String mysqlConnectionString =
         String.format("jdbc:mysql://%s?autoReconnect=true&useSSL=false", MYSQL_HOST);
-    Connection conn = DriverManager.getConnection(mysqlConnectionString, MYSQL_USER, MYSQL_PASSWORD);
+    Connection conn =
+        DriverManager.getConnection(mysqlConnectionString, MYSQL_USER, MYSQL_PASSWORD);
     DbmsConnection dbmsConn = JdbcConnection.create(conn);
     dbmsConn.execute(String.format("DROP SCHEMA IF EXISTS `%s`", MYSQL_DATABASE));
     dbmsConn.execute(String.format("CREATE SCHEMA IF NOT EXISTS `%s`", MYSQL_DATABASE));
-    dbmsConn.execute(String.format("CREATE TABLE `%s`.`%s`(intcol int, strcol varchar(5))", MYSQL_DATABASE, TABLE_NAME));
-    //conn.setCatalog(MYSQL_DATABASE);
+    dbmsConn.execute(
+        String.format(
+            "CREATE TABLE `%s`.`%s`(intcol int, strcol varchar(5))", MYSQL_DATABASE, TABLE_NAME));
+    // conn.setCatalog(MYSQL_DATABASE);
     connMap.put("mysql", conn);
     schemaMap.put("mysql", MYSQL_DATABASE + ".");
     syntaxMap.put("mysql", new MysqlSyntax());
@@ -172,7 +165,9 @@ public class MetaDataStatementsTest {
     DbmsConnection dbmsConn = JdbcConnection.create(conn);
     dbmsConn.execute(String.format("DROP SCHEMA IF EXISTS `%s` CASCADE", IMPALA_DATABASE));
     dbmsConn.execute(String.format("CREATE SCHEMA IF NOT EXISTS `%s`", IMPALA_DATABASE));
-    dbmsConn.execute(String.format("CREATE TABLE `%s`.`%s`(intcol int, strcol varchar(5))", IMPALA_DATABASE, TABLE_NAME));
+    dbmsConn.execute(
+        String.format(
+            "CREATE TABLE `%s`.`%s`(intcol int, strcol varchar(5))", IMPALA_DATABASE, TABLE_NAME));
     connMap.put("impala", conn);
     schemaMap.put("impala", IMPALA_DATABASE + ".");
     syntaxMap.put("impala", new ImpalaSyntax());
@@ -188,11 +183,17 @@ public class MetaDataStatementsTest {
   private static void setupRedshift() throws SQLException, VerdictDBDbmsException, IOException {
     String connectionString =
         String.format("jdbc:redshift://%s/%s", REDSHIFT_HOST, REDSHIFT_DATABASE);
-    Connection conn = DriverManager.getConnection(connectionString, REDSHIFT_USER, REDSHIFT_PASSWORD);
+    Connection conn =
+        DriverManager.getConnection(connectionString, REDSHIFT_USER, REDSHIFT_PASSWORD);
     JdbcConnection dbmsConn = new JdbcConnection(conn, new RedshiftSyntax());
-    dbmsConn.execute(String.format("DROP SCHEMA IF EXISTS \"%s\" CASCADE", PostgresRedshift_SCHEMA_NAME));
-    dbmsConn.execute(String.format("CREATE SCHEMA IF NOT EXISTS \"%s\"", PostgresRedshift_SCHEMA_NAME));
-    dbmsConn.execute(String.format("CREATE TABLE \"%s\".\"%s\"(intcol int, strcol varchar(5))", PostgresRedshift_SCHEMA_NAME, TABLE_NAME));
+    dbmsConn.execute(
+        String.format("DROP SCHEMA IF EXISTS \"%s\" CASCADE", PostgresRedshift_SCHEMA_NAME));
+    dbmsConn.execute(
+        String.format("CREATE SCHEMA IF NOT EXISTS \"%s\"", PostgresRedshift_SCHEMA_NAME));
+    dbmsConn.execute(
+        String.format(
+            "CREATE TABLE \"%s\".\"%s\"(intcol int, strcol varchar(5))",
+            PostgresRedshift_SCHEMA_NAME, TABLE_NAME));
 
     connMap.put("redshift", conn);
     schemaMap.put("redshift", "");
@@ -202,19 +203,26 @@ public class MetaDataStatementsTest {
   private static void tearDownRedshift() throws SQLException {
     Connection conn = connMap.get("redshift");
     Statement stmt = conn.createStatement();
-    stmt.execute(String.format("DROP SCHEMA IF EXISTS \"%s\" CASCADE", PostgresRedshift_SCHEMA_NAME));
+    stmt.execute(
+        String.format("DROP SCHEMA IF EXISTS \"%s\" CASCADE", PostgresRedshift_SCHEMA_NAME));
     conn.close();
   }
 
   private static void setupPostgresql() throws SQLException, VerdictDBDbmsException, IOException {
     String connectionString =
         String.format("jdbc:postgresql://%s/%s", POSTGRES_HOST, POSTGRES_DATABASE);
-    Connection conn = DriverManager.getConnection(connectionString, POSTGRES_USER, POSTGRES_PASSWORD);
+    Connection conn =
+        DriverManager.getConnection(connectionString, POSTGRES_USER, POSTGRES_PASSWORD);
     JdbcConnection dbmsConn = new JdbcConnection(conn, new RedshiftSyntax());
 
-    dbmsConn.execute(String.format("DROP SCHEMA IF EXISTS \"%s\" CASCADE", PostgresRedshift_SCHEMA_NAME));
-    dbmsConn.execute(String.format("CREATE SCHEMA IF NOT EXISTS \"%s\"", PostgresRedshift_SCHEMA_NAME));
-    dbmsConn.execute(String.format("CREATE TABLE \"%s\".\"%s\"(intcol int, strcol varchar(5))", PostgresRedshift_SCHEMA_NAME, TABLE_NAME));
+    dbmsConn.execute(
+        String.format("DROP SCHEMA IF EXISTS \"%s\" CASCADE", PostgresRedshift_SCHEMA_NAME));
+    dbmsConn.execute(
+        String.format("CREATE SCHEMA IF NOT EXISTS \"%s\"", PostgresRedshift_SCHEMA_NAME));
+    dbmsConn.execute(
+        String.format(
+            "CREATE TABLE \"%s\".\"%s\"(intcol int, strcol varchar(5))",
+            PostgresRedshift_SCHEMA_NAME, TABLE_NAME));
     connMap.put("postgresql", conn);
     schemaMap.put("postgresql", "");
     syntaxMap.put("postgresql", new PostgresqlSyntax());
@@ -223,7 +231,8 @@ public class MetaDataStatementsTest {
   private static void tearDownPostgresql() throws SQLException {
     Connection conn = connMap.get("postgresql");
     Statement stmt = conn.createStatement();
-    stmt.execute(String.format("DROP SCHEMA IF EXISTS \"%s\" CASCADE", PostgresRedshift_SCHEMA_NAME));
+    stmt.execute(
+        String.format("DROP SCHEMA IF EXISTS \"%s\" CASCADE", PostgresRedshift_SCHEMA_NAME));
     conn.close();
   }
 
@@ -248,19 +257,20 @@ public class MetaDataStatementsTest {
     Statement jdbcStmt = connMap.get(database).createStatement();
     ResultSet jdbcRs = jdbcStmt.executeQuery(sql);
 
-    DbmsConnection dbmsconn = new CachedDbmsConnection(new JdbcConnection(connMap.get(database),
-        syntaxMap.get(database)));
+    DbmsConnection dbmsconn =
+        new CachedDbmsConnection(
+            new JdbcConnection(connMap.get(database), syntaxMap.get(database)));
     VerdictContext verdict = new VerdictContext(dbmsconn);
-    ExecutionContext exec = new ExecutionContext(verdict, 0);
+    ExecutionContext exec = new ExecutionContext(verdict, 0, options);
     VerdictSingleResult result = exec.sql("show schemas");
-    
+
     Set<String> expected = new HashSet<>();
     Set<String> actual = new HashSet<>();
     while (jdbcRs.next()) {
       result.next();
       expected.add(jdbcRs.getString(1));
       actual.add(result.getString(0));
-//      assertEquals(jdbcRs.getString(1), result.getValue(0));
+      //      assertEquals(jdbcRs.getString(1), result.getValue(0));
     }
     assertEquals(expected, actual);
   }
@@ -293,19 +303,20 @@ public class MetaDataStatementsTest {
     Statement jdbcStmt = connMap.get(database).createStatement();
     ResultSet jdbcRs = jdbcStmt.executeQuery(sql);
 
-    DbmsConnection dbmsconn = new CachedDbmsConnection(new JdbcConnection(connMap.get(database),
-        syntaxMap.get(database)));
+    DbmsConnection dbmsconn =
+        new CachedDbmsConnection(
+            new JdbcConnection(connMap.get(database), syntaxMap.get(database)));
     VerdictContext verdict = new VerdictContext(dbmsconn);
-    ExecutionContext exec = new ExecutionContext(verdict, 0);
+    ExecutionContext exec = new ExecutionContext(verdict, 0, options);
     VerdictSingleResult result = exec.sql(vcsql);
-    
+
     Set<String> expected = new HashSet<>();
     Set<String> actual = new HashSet<>();
     while (jdbcRs.next()) {
       result.next();
       expected.add(jdbcRs.getString(1));
       actual.add(result.getString(0));
-//      assertEquals(jdbcRs.getString(1), result.getValue(0));
+      //      assertEquals(jdbcRs.getString(1), result.getValue(0));
     }
     assertEquals(expected, actual);
   }
@@ -318,7 +329,7 @@ public class MetaDataStatementsTest {
       case "mysql":
         sql = String.format("DESCRIBE %s.%s", MYSQL_DATABASE, TABLE_NAME);
         vcsql = String.format("DESCRIBE %s.%s", MYSQL_DATABASE, TABLE_NAME);
-      break;
+        break;
       case "impala":
         sql = String.format("DESCRIBE %s.%s", IMPALA_DATABASE, TABLE_NAME);
         vcsql = String.format("DESCRIBE %s.%s", IMPALA_DATABASE, TABLE_NAME);
@@ -337,24 +348,23 @@ public class MetaDataStatementsTest {
 
     Statement jdbcStmt = connMap.get(database).createStatement();
     ResultSet jdbcRs = null;
-    for (String s : sql.split(";")) { 
+    for (String s : sql.split(";")) {
       jdbcStmt.execute(s);
     }
     jdbcRs = jdbcStmt.getResultSet();
 
-    DbmsConnection dbmsconn = new CachedDbmsConnection(new JdbcConnection(connMap.get(database),
-        syntaxMap.get(database)));
+    DbmsConnection dbmsconn =
+        new CachedDbmsConnection(
+            new JdbcConnection(connMap.get(database), syntaxMap.get(database)));
     VerdictContext verdict = new VerdictContext(dbmsconn);
-    ExecutionContext exec = new ExecutionContext(verdict, 0);
+    ExecutionContext exec = new ExecutionContext(verdict, 0, options);
     VerdictSingleResult result = exec.sql(vcsql);
     while (jdbcRs.next()) {
       result.next();
       assertEquals(jdbcRs.getString(1), result.getValue(0));
       if (database.equals("postgresql") && jdbcRs.getString(1).equals("strcol")) {
         assertEquals("character varying(5)", result.getValue(1));
-      }
-      else assertEquals(jdbcRs.getString(2), result.getValue(1));
+      } else assertEquals(jdbcRs.getString(2), result.getValue(1));
     }
   }
-
 }

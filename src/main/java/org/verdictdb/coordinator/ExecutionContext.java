@@ -20,6 +20,7 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.VerdictContext;
 import org.verdictdb.commons.VerdictDBLogger;
+import org.verdictdb.commons.VerdictOption;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.core.resulthandler.ExecutionResultReader;
@@ -34,6 +35,8 @@ import org.verdictdb.parser.VerdictSQLParser;
 import org.verdictdb.parser.VerdictSQLParserBaseVisitor;
 import org.verdictdb.sqlreader.NonValidatingSQLParser;
 import org.verdictdb.sqlreader.RelationGen;
+import org.verdictdb.sqlsyntax.PostgresqlSyntax;
+import org.verdictdb.sqlsyntax.RedshiftSyntax;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -56,6 +59,8 @@ public class ExecutionContext {
 
   private static final VerdictDBLogger LOG = VerdictDBLogger.getLogger(ExecutionContext.class);
 
+  private VerdictOption options;
+
   private enum QueryType {
     select,
     scrambling,
@@ -69,11 +74,13 @@ public class ExecutionContext {
   /**
    * @param context Parent context
    * @param serialNumber
+   * @param options
    */
-  public ExecutionContext(VerdictContext context, long serialNumber) {
+  public ExecutionContext(VerdictContext context, long serialNumber, VerdictOption options) {
     this.context = context;
     this.serialNumber = serialNumber;
     this.queryContext = new QueryContext(context.getContextId(), serialNumber);
+    this.options = options;
   }
 
   public long getExecutionContextSerialNumber() {
@@ -99,7 +106,7 @@ public class ExecutionContext {
     if (queryType.equals(QueryType.select)) {
       LOG.debug("Query type: select");
       SelectQueryCoordinator coordinator =
-          new SelectQueryCoordinator(context.getCopiedConnection());
+          new SelectQueryCoordinator(context.getCopiedConnection(), options);
       ExecutionResultReader reader = coordinator.process(query, queryContext);
       VerdictResultStream stream = new VerdictResultStreamFromExecutionResultReader(reader, this);
       return stream;
@@ -107,7 +114,10 @@ public class ExecutionContext {
       LOG.debug("Query type: scrambling");
       CreateScrambleQuery scrambleQuery = generateScrambleQuery(query);
       ScramblingCoordinator scrambler =
-          new ScramblingCoordinator(context.getCopiedConnection(), scrambleQuery.getNewSchema());
+          new ScramblingCoordinator(
+              context.getCopiedConnection(),
+              scrambleQuery.getNewSchema(),
+              options.getVerdictTempSchemaName());
 
       // Specifying size/ratio of scrambled table is not supported.
       if (scrambleQuery.getSize() != 1.0) {
@@ -124,7 +134,7 @@ public class ExecutionContext {
       //              scrambleQuery.getMethod()); // dyoon: size is not used atm?
 
       // Add metadata to metastore
-      ScrambleMetaStore metaStore = new ScrambleMetaStore(context.getConnection());
+      ScrambleMetaStore metaStore = new ScrambleMetaStore(context.getConnection(), options);
       metaStore.addToStore(meta);
       return null;
     } else if (queryType.equals(QueryType.set_default_schema)) {
@@ -249,13 +259,24 @@ public class ExecutionContext {
   public void terminate() {
     try {
       DbmsConnection conn = context.getCopiedConnection();
-      String schema = conn.getDefaultSchema();
-      conn.execute(String.format("use %s", schema));
+      String schema = options.getVerdictTempSchemaName();
       String tempTablePrefix =
-          String.format("verdictdbtemptable_%s_%d", context.getContextId(), this.serialNumber);
+          String.format(
+              "%s_%s_%d",
+              VerdictOption.getVerdictTempTablePrefix(), context.getContextId(), this.serialNumber);
       List<String> tempTableList = new ArrayList<>();
 
-      DbmsQueryResult rs = conn.execute("show tables");
+      DbmsQueryResult rs;
+
+      if (conn.getSyntax() instanceof RedshiftSyntax
+          || conn.getSyntax() instanceof PostgresqlSyntax) {
+        rs =
+            conn.execute(
+                String.format(
+                    "SELECT * FROM information_schema.tables WHERE table_schema = '%s'", schema));
+      } else {
+        rs = conn.execute(String.format("show tables in %s", schema));
+      }
       while (rs.next()) {
         String tableName = rs.getString(0);
         if (tableName.startsWith(tempTablePrefix)) {
@@ -264,7 +285,7 @@ public class ExecutionContext {
       }
 
       for (String tempTable : tempTableList) {
-        conn.execute(String.format("DROP TABLE IF EXISTS %s", tempTable));
+        conn.execute(String.format("DROP TABLE IF EXISTS %s.%s", schema, tempTable));
       }
     } catch (VerdictDBDbmsException e) {
       e.printStackTrace();

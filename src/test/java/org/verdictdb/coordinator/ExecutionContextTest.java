@@ -7,6 +7,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.VerdictContext;
 import org.verdictdb.commons.DatabaseConnectionHelpers;
+import org.verdictdb.commons.VerdictOption;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.core.scrambling.ScrambleMeta;
@@ -31,6 +32,8 @@ public class ExecutionContextTest {
   static final int blockSize = 100;
 
   static ScrambleMetaSet meta = new ScrambleMetaSet();
+
+  static VerdictOption options = new VerdictOption();
 
   static Connection conn;
 
@@ -74,8 +77,12 @@ public class ExecutionContextTest {
         scrambler.scramble(MYSQL_DATABASE, "orders", MYSQL_DATABASE, "orders_scrambled", "uniform");
     meta.addScrambleMeta(meta1);
     meta.addScrambleMeta(meta2);
-    ScrambleMetaStore store = new ScrambleMetaStore(dbmsConn);
+    ScrambleMetaStore store = new ScrambleMetaStore(dbmsConn, options);
     store.addToStore(meta);
+    dbmsConn.execute(
+        String.format("drop schema if exists `%s`", options.getVerdictTempSchemaName()));
+    dbmsConn.execute(
+        String.format("create schema if not exists `%s`", options.getVerdictTempSchemaName()));
   }
 
   @AfterClass
@@ -91,7 +98,7 @@ public class ExecutionContextTest {
     String sql = String.format("select avg(l_quantity) from %s.lineitem_scrambled", MYSQL_DATABASE);
     DbmsConnection dbmsConn = JdbcConnection.create(conn);
     VerdictContext verdict = new VerdictContext(dbmsConn);
-    ExecutionContext exec = new ExecutionContext(verdict, 0);
+    ExecutionContext exec = new ExecutionContext(verdict, 0, options.copy());
 
     VerdictSingleResult result = exec.sql(sql);
   }
@@ -105,8 +112,8 @@ public class ExecutionContextTest {
     DbmsConnection dbmsConn = JdbcConnection.create(conn);
     ((JdbcConnection) dbmsConn).setOutputDebugMessage(true);
     dbmsConn.setDefaultSchema(MYSQL_DATABASE);
-    VerdictContext verdict = new VerdictContext(dbmsConn);
-    ExecutionContext exec = new ExecutionContext(verdict, 0);
+    VerdictContext verdict = new VerdictContext(dbmsConn, options);
+    ExecutionContext exec = new ExecutionContext(verdict, 0, options);
 
     VerdictResultStream result = exec.streamsql(sql);
 
@@ -115,11 +122,11 @@ public class ExecutionContextTest {
     }
 
     int tempCount = 0;
-    conn.setCatalog(MYSQL_DATABASE);
+    conn.setCatalog(options.getVerdictTempSchemaName());
     ResultSet tables = conn.createStatement().executeQuery("show tables");
     while (tables.next()) {
       String tableName = tables.getString(1);
-      if (tableName.startsWith("verdictdbtemptable")) {
+      if (tableName.startsWith(VerdictOption.getVerdictTempTablePrefix())) {
         ++tempCount;
       }
     }
@@ -134,10 +141,9 @@ public class ExecutionContextTest {
     File file = new File("src/test/resources/tpch_test_query/" + filename);
     String sql = Files.toString(file, Charsets.UTF_8);
     DbmsConnection dbmsConn = JdbcConnection.create(conn);
-    ((JdbcConnection) dbmsConn).setOutputDebugMessage(true);
     dbmsConn.setDefaultSchema(MYSQL_DATABASE);
-    VerdictContext verdict = new VerdictContext(dbmsConn);
-    ExecutionContext exec = new ExecutionContext(verdict, 0);
+    VerdictContext verdict = new VerdictContext(dbmsConn, options);
+    ExecutionContext exec = new ExecutionContext(verdict, 0, options);
 
     VerdictResultStream result = exec.streamsql(sql);
 
@@ -148,11 +154,12 @@ public class ExecutionContextTest {
     exec.terminate();
 
     int tempCount = 0;
-    conn.setCatalog(MYSQL_DATABASE);
-    ResultSet tables = conn.createStatement().executeQuery("show tables");
+    ResultSet tables =
+        conn.createStatement()
+            .executeQuery(String.format("show tables in %s", options.getVerdictTempSchemaName()));
     while (tables.next()) {
       String tableName = tables.getString(1);
-      if (tableName.startsWith("verdictdbtemptable")) {
+      if (tableName.startsWith(VerdictOption.getVerdictTempTablePrefix())) {
         System.out.println(tableName);
         ++tempCount;
       }

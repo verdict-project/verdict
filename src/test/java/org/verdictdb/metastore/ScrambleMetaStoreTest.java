@@ -1,19 +1,10 @@
 package org.verdictdb.metastore;
 
-import static org.junit.Assert.assertEquals;
-
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.verdictdb.commons.VerdictOption;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.connection.JdbcConnection;
@@ -23,9 +14,21 @@ import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBValueException;
 
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static org.junit.Assert.assertEquals;
+
 public class ScrambleMetaStoreTest {
 
   static Connection mysqlConn;
+
+  static VerdictOption options = new VerdictOption();
 
   private static final String MYSQL_HOST;
 
@@ -76,7 +79,8 @@ public class ScrambleMetaStoreTest {
   public void testAddScrambleMeta() throws VerdictDBException {
     DbmsConnection dbmsConnection = JdbcConnection.create(mysqlConn);
     ScrambleMeta scrambleMeta = createScrambleMeta();
-    ScrambleMetaStore metaStore = new ScrambleMetaStore(dbmsConnection);
+    ScrambleMetaStore metaStore = new ScrambleMetaStore(dbmsConnection, options);
+    metaStore.remove();
     metaStore.addToStore(scrambleMeta);
 
     // tests

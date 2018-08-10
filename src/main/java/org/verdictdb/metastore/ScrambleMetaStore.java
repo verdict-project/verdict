@@ -16,30 +16,24 @@
 
 package org.verdictdb.metastore;
 
-import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.commons.VerdictDBLogger;
+import org.verdictdb.commons.VerdictOption;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.core.querying.CreateSchemaQuery;
 import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
-import org.verdictdb.core.sqlobject.BaseColumn;
-import org.verdictdb.core.sqlobject.BaseTable;
-import org.verdictdb.core.sqlobject.CreateTableDefinitionQuery;
-import org.verdictdb.core.sqlobject.DropTableQuery;
-import org.verdictdb.core.sqlobject.InsertValuesQuery;
-import org.verdictdb.core.sqlobject.OrderbyAttribute;
-import org.verdictdb.core.sqlobject.SelectItem;
-import org.verdictdb.core.sqlobject.SelectQuery;
+import org.verdictdb.core.sqlobject.*;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sqlsyntax.ImpalaSyntax;
 import org.verdictdb.sqlsyntax.RedshiftSyntax;
 import org.verdictdb.sqlwriter.QueryToSql;
+
+import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
 
 public class ScrambleMetaStore extends VerdictMetaStore {
 
@@ -65,8 +59,8 @@ public class ScrambleMetaStore extends VerdictMetaStore {
 
   private static final VerdictDBLogger LOG = VerdictDBLogger.getLogger(ScrambleMetaStore.class);
 
-  public ScrambleMetaStore(DbmsConnection conn) {
-    this(conn, DEFAULT_STORE_SCHEMA);
+  public ScrambleMetaStore(DbmsConnection conn, VerdictOption options) {
+    this(conn, options.getVerdictMetaSchemaName());
   }
 
   public ScrambleMetaStore(DbmsConnection conn, String storeSchema) {
@@ -117,9 +111,15 @@ public class ScrambleMetaStore extends VerdictMetaStore {
   }
 
   public void remove() throws VerdictDBException {
+    // create a schema if not exists
+    CreateSchemaQuery createSchemaQuery = new CreateSchemaQuery(storeSchema);
+    createSchemaQuery.setIfNotExists(true);
+    String sql = QueryToSql.convert(conn.getSyntax(), createSchemaQuery);
+    conn.execute(sql);
+
     DropTableQuery dropQuery = new DropTableQuery(storeSchema, getMetaStoreTableName());
     dropQuery.setIfExists(true);
-    String sql = QueryToSql.convert(conn.getSyntax(), dropQuery);
+    sql = QueryToSql.convert(conn.getSyntax(), dropQuery);
     conn.execute(sql);
   }
 
@@ -254,11 +254,11 @@ public class ScrambleMetaStore extends VerdictMetaStore {
    *
    * @return a set of scramble meta
    */
-  public static ScrambleMetaSet retrieve(DbmsConnection conn) {
+  public static ScrambleMetaSet retrieve(DbmsConnection conn, VerdictOption options) {
     ScrambleMetaSet retrieved = new ScrambleMetaSet();
 
     try {
-      String storeSchema = DEFAULT_STORE_SCHEMA;
+      String storeSchema = options.getVerdictMetaSchemaName();
       String storeTable = METASTORE_TABLE_NAME;
 
       List<String> existingSchemas = conn.getSchemas();

@@ -1,19 +1,13 @@
 package org.verdictdb;
 
-import static org.junit.Assert.assertEquals;
-
-import java.io.File;
-import java.io.IOException;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-
+import com.google.common.base.Charsets;
+import com.google.common.io.Files;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.commons.DatabaseConnectionHelpers;
+import org.verdictdb.commons.VerdictOption;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.coordinator.VerdictSingleResult;
@@ -25,8 +19,14 @@ import org.verdictdb.sqlreader.RelationStandardizer;
 import org.verdictdb.sqlsyntax.MysqlSyntax;
 import org.verdictdb.sqlwriter.SelectQueryToSql;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
+import java.io.File;
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+
+import static org.junit.Assert.assertEquals;
 
 public class VariantMySqlTpchQueryWithoutScramblesTest {
 
@@ -49,7 +49,7 @@ public class VariantMySqlTpchQueryWithoutScramblesTest {
 
   private static final String MYSQL_DATABASE = "tpch_flat_orc_2";
 
-  private static final String MYSQL_UESR = "root";
+  private static final String MYSQL_USER = "root";
 
   private static final String MYSQL_PASSWORD = "";
 
@@ -59,11 +59,13 @@ public class VariantMySqlTpchQueryWithoutScramblesTest {
         String.format("jdbc:mysql://%s?autoReconnect=true&useSSL=false", MYSQL_HOST);
     conn =
         DatabaseConnectionHelpers.setupMySql(
-            mysqlConnectionString, MYSQL_UESR, MYSQL_PASSWORD, MYSQL_DATABASE);
+            mysqlConnectionString, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE);
     dbmsConnection = JdbcConnection.create(conn);
     dbmsConnection.setDefaultSchema(MYSQL_DATABASE);
     stmt = conn.createStatement();
-    stmt.execute("create schema if not exists `verdictdb_temp`");
+    stmt.execute(
+        String.format(
+            "create schema if not exists `%s`", VerdictOption.getDefaultTempSchemaName()));
   }
 
   public Pair<VerdictSingleResult, ResultSet> getAnswer(int queryNum)
