@@ -16,11 +16,20 @@
 
 package org.verdictdb.sqlsyntax;
 
+import com.google.common.collect.Lists;
+
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
 public class MysqlSyntax extends SqlSyntax {
+
+  @Override
+  public Collection<String> getCandidateJDBCDriverClassNames() {
+    List<String> candidates = Lists.newArrayList("com.mysql.jdbc.Driver");
+    return candidates;
+  }
 
   @Override
   public boolean doesSupportTablePartitioning() {
@@ -53,17 +62,16 @@ public class MysqlSyntax extends SqlSyntax {
   @Override
   public String getPartitionByInCreateTable(
       List<String> partitionColumns, List<Integer> partitionCounts) {
-    
+
     for (int count : partitionCounts) {
       if (count == 0) {
         return "";
       }
     }
-    
-    
+
     StringBuilder sql = new StringBuilder();
     sql.append("partition by list columns (");
-    
+
     // use a single column
     for (int i = 0; i < partitionColumns.size(); i++) {
       if (i != 0) {
@@ -72,14 +80,14 @@ public class MysqlSyntax extends SqlSyntax {
       sql.append(String.format("`%s`", partitionColumns.get(i)));
     }
     sql.append(") (");
-    
+
     // add list
     List<Integer> currentPart = new ArrayList<>(Collections.nCopies(partitionCounts.size(), 0));
     int partNum = 0;
     while (true) {
-//      System.out.println(sql.toString());
-//      System.out.println(partitionCounts);
-      
+      //      System.out.println(sql.toString());
+      //      System.out.println(partitionCounts);
+
       if (partNum != 0) {
         sql.append(", ");
       }
@@ -92,18 +100,18 @@ public class MysqlSyntax extends SqlSyntax {
         } else {
           sql.append(",");
         }
-        
+
         sql.append(String.format("%d", currentPart.get(i)));
-        
-        if (i == currentPart.size()-1 && currentPart.size() > 1) {
+
+        if (i == currentPart.size() - 1 && currentPart.size() > 1) {
           sql.append(")");
         }
       }
       sql.append(")");
-      
+
       // increase currentPart by one
       boolean carry = true;
-      for (int j = partitionCounts.size()-1; j >= 0; j--) {
+      for (int j = partitionCounts.size() - 1; j >= 0; j--) {
         if (carry) {
           currentPart.set(j, currentPart.get(j) + 1);
           carry = false;
@@ -113,15 +121,15 @@ public class MysqlSyntax extends SqlSyntax {
           currentPart.set(j, 0);
         }
       }
-      
+
       // overflow
       if (carry) {
         break;
       }
-      
+
       partNum += 1;
     }
-    
+
     sql.append(")");
     return sql.toString();
   }
