@@ -82,11 +82,15 @@ To run this query with/without VerdictDB, you can simply run the following comma
 
 ```bash
 $ ./run.sh localhost 3306 tpch1g run
-Wihtout VerdictDB: average(l_extendedprice) = 38255.138485
-Time Taken = xx s
-Wiht VerdictDB: average(l_extendedprice) = 38255.138485
-Time Taken = yy s
+Without VerdictDB: average(l_extendedprice) = 38255.138485
+Time Taken = 43 s
+With VerdictDB: average(l_extendedprice) = 38219.8871659
+Time Taken = 10 s
 ```
+
+You can see that VerdictDB achieves more than 4x speedup with a 99.9% accurate result even with a relatively small dataset that we use in this tutorial (i.e., 1GB).
+
+
 
 
 
