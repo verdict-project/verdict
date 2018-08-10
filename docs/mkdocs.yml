@@ -16,7 +16,9 @@ pages:
     - Architecture: how_it_works/architecture.md
     - Query Processing: how_it_works/query_processing.md
   - Tutorial:
+    - Setup MySQL (Optional): tutorial/mysql.md
     - Setup TPC-H Data: tutorial/tpch.md
+    - Example VerdictDB Application: tutorial/example.md
   - Reference:
     - VerdictDB Queries: reference/supported_queries.md
 
