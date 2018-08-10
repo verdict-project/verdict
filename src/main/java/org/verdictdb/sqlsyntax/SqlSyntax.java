@@ -18,6 +18,7 @@ package org.verdictdb.sqlsyntax;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 
 public abstract class SqlSyntax {
 
@@ -33,7 +34,10 @@ public abstract class SqlSyntax {
   // The column index that stored meta information in the original database
   public abstract int getColumnTypeColumnIndex();
 
-  public abstract String getPartitionByInCreateTable();
+  // Assumes that each partitioning column is an int-type column that contains values ranging from
+  // 0 to partitionCounts.get(i)-1.
+  public abstract String getPartitionByInCreateTable(
+      List<String> partitionColumns, List<Integer> partitionCounts);
 
   public abstract String getPartitionCommand(String schema, String table);
 

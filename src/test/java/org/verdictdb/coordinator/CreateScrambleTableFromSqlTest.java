@@ -9,6 +9,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.verdictdb.commons.DatabaseConnectionHelpers;
+import org.verdictdb.commons.VerdictOption;
 import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
@@ -39,6 +40,8 @@ public class CreateScrambleTableFromSqlTest {
 
   private String database;
 
+  private static VerdictOption options = new VerdictOption();
+
   private static final String TEMP_SCHEMA_NAME =
       "verdictdb_temp_schema_" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
 
@@ -57,6 +60,7 @@ public class CreateScrambleTableFromSqlTest {
 
   @BeforeClass
   public static void setup() throws VerdictDBDbmsException, SQLException, IOException {
+    options.setVerdictTempSchemaName(TEMP_SCHEMA_NAME);
     setupMysql();
     setupImpala();
     setupRedshift();
@@ -212,7 +216,7 @@ public class CreateScrambleTableFromSqlTest {
     Connection conn = connections.get(database).getLeft();
     Connection vc = connections.get(database).getRight();
     JdbcConnection jdbcConn = JdbcConnection.create(conn);
-    ScrambleMetaStore store = new ScrambleMetaStore(jdbcConn);
+    ScrambleMetaStore store = new ScrambleMetaStore(jdbcConn, options);
     store.remove();
     String createScrambleSql =
         String.format(
@@ -249,7 +253,7 @@ public class CreateScrambleTableFromSqlTest {
     Connection conn = connections.get(database).getLeft();
     Connection vc = connections.get(database).getRight();
     JdbcConnection jdbcConn = JdbcConnection.create(conn);
-    ScrambleMetaStore store = new ScrambleMetaStore(jdbcConn);
+    ScrambleMetaStore store = new ScrambleMetaStore(jdbcConn, options);
     store.remove();
     String createScrambleSql =
         String.format(
@@ -285,7 +289,7 @@ public class CreateScrambleTableFromSqlTest {
     Connection conn = connections.get(database).getLeft();
     Connection vc = connections.get(database).getRight();
     JdbcConnection jdbcConn = JdbcConnection.create(conn);
-    ScrambleMetaStore store = new ScrambleMetaStore(jdbcConn);
+    ScrambleMetaStore store = new ScrambleMetaStore(jdbcConn, options);
     store.remove();
     // drop existing table
     String dropScrambleSql =
@@ -321,7 +325,7 @@ public class CreateScrambleTableFromSqlTest {
     Connection conn = connections.get(database).getLeft();
     Connection vc = connections.get(database).getRight();
     JdbcConnection jdbcConn = JdbcConnection.create(conn);
-    ScrambleMetaStore store = new ScrambleMetaStore(jdbcConn);
+    ScrambleMetaStore store = new ScrambleMetaStore(jdbcConn, options);
     store.remove();
     // drop existing table
     String dropScrambleSql =

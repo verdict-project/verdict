@@ -115,8 +115,9 @@ public class PostgresqlSyntax extends SqlSyntax {
   }
 
   @Override
-  public String getPartitionByInCreateTable() {
-    return "partition by list";
+  public String getPartitionByInCreateTable(
+      List<String> partitionColumns, List<Integer> partitionCounts) {
+    return "PARTITION BY LIST";
   }
 
   @Override

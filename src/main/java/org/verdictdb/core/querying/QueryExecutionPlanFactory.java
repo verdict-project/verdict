@@ -16,22 +16,13 @@
 
 package org.verdictdb.core.querying;
 
+import org.apache.commons.lang3.tuple.Pair;
+import org.verdictdb.coordinator.QueryContext;
+import org.verdictdb.core.scrambling.ScrambleMetaSet;
+import org.verdictdb.core.sqlobject.*;
+
 import java.util.ArrayList;
 import java.util.List;
-
-import org.apache.commons.lang3.tuple.Pair;
-import org.verdictdb.core.scrambling.ScrambleMetaSet;
-import org.verdictdb.core.sqlobject.AbstractRelation;
-import org.verdictdb.core.sqlobject.AliasedColumn;
-import org.verdictdb.core.sqlobject.AsteriskColumn;
-import org.verdictdb.core.sqlobject.BaseColumn;
-import org.verdictdb.core.sqlobject.BaseTable;
-import org.verdictdb.core.sqlobject.ColumnOp;
-import org.verdictdb.core.sqlobject.JoinTable;
-import org.verdictdb.core.sqlobject.SelectItem;
-import org.verdictdb.core.sqlobject.SelectQuery;
-import org.verdictdb.core.sqlobject.SubqueryColumn;
-import org.verdictdb.core.sqlobject.UnnamedColumn;
 
 public class QueryExecutionPlanFactory {
 
@@ -41,8 +32,7 @@ public class QueryExecutionPlanFactory {
    * @param scratchpadSchemaName
    * @return
    */
-  public static QueryExecutionPlan create(
-      String scratchpadSchemaName) {
+  public static QueryExecutionPlan create(String scratchpadSchemaName) {
     resetUniqueIdGeneration();
     IdCreator idCreator = new TempIdCreatorInScratchpadSchema(scratchpadSchemaName);
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(idCreator);
@@ -50,8 +40,7 @@ public class QueryExecutionPlanFactory {
   }
 
   public static QueryExecutionPlan create(
-      String scratchpadSchemaName,
-      ScrambleMetaSet scrambleMeta) {
+      String scratchpadSchemaName, ScrambleMetaSet scrambleMeta) {
     resetUniqueIdGeneration();
     IdCreator idCreator = new TempIdCreatorInScratchpadSchema(scratchpadSchemaName);
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(idCreator);
@@ -60,9 +49,7 @@ public class QueryExecutionPlanFactory {
   }
 
   public static QueryExecutionPlan create(
-      String scratchpadSchemaName,
-      ScrambleMetaSet scrambleMeta,
-      SelectQuery query) {
+      String scratchpadSchemaName, ScrambleMetaSet scrambleMeta, SelectQuery query) {
     resetUniqueIdGeneration();
     IdCreator idCreator = new TempIdCreatorInScratchpadSchema(scratchpadSchemaName);
     QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(idCreator);
@@ -73,13 +60,25 @@ public class QueryExecutionPlanFactory {
 
   public static QueryExecutionPlan create(
       String scratchpadSchemaName,
-      ExecutableNodeBase root) {
+      ScrambleMetaSet scrambleMeta,
+      SelectQuery query,
+      QueryContext context) {
+    resetUniqueIdGeneration();
+    IdCreator idCreator = new TempIdCreatorInScratchpadSchema(scratchpadSchemaName, context);
+    QueryExecutionPlan queryExecutionPlan = new QueryExecutionPlan(idCreator);
+    queryExecutionPlan.scrambleMeta = scrambleMeta;
+    queryExecutionPlan.root = createRootAndItsDependents(queryExecutionPlan.idCreator, query);
+    return queryExecutionPlan;
+  }
+
+  public static QueryExecutionPlan create(String scratchpadSchemaName, ExecutableNodeBase root) {
     QueryExecutionPlan queryExecutionPlan = create(scratchpadSchemaName);
     queryExecutionPlan.root = root;
     return queryExecutionPlan;
   }
-  
-  private static ExecutableNodeBase createRootAndItsDependents(IdCreator idCreator, SelectQuery query) {
+
+  private static ExecutableNodeBase createRootAndItsDependents(
+      IdCreator idCreator, SelectQuery query) {
     if (query.isSupportedAggregate()) {
       return createSelectAllExecutionNodeAndItsDependents(idCreator, query);
     } else {
@@ -88,11 +87,14 @@ public class QueryExecutionPlanFactory {
     }
   }
 
-  private static SelectAllExecutionNode createSelectAllExecutionNodeAndItsDependents(IdCreator idCreator, SelectQuery query) {
+  private static SelectAllExecutionNode createSelectAllExecutionNodeAndItsDependents(
+      IdCreator idCreator, SelectQuery query) {
     SelectAllExecutionNode selectAll = new SelectAllExecutionNode(idCreator, null);
-    
-    Pair<BaseTable, SubscriptionTicket> baseAndSubscriptionTicket = selectAll.createPlaceHolderTable("t");
-    SelectQuery selectQuery = SelectQuery.create(new AsteriskColumn(), baseAndSubscriptionTicket.getLeft());
+
+    Pair<BaseTable, SubscriptionTicket> baseAndSubscriptionTicket =
+        selectAll.createPlaceHolderTable("t");
+    SelectQuery selectQuery =
+        SelectQuery.create(new AsteriskColumn(), baseAndSubscriptionTicket.getLeft());
     selectQuery.addOrderby(query.getOrderby());
     if (query.getLimit().isPresent()) selectQuery.addLimit(query.getLimit().get());
     selectAll.setSelectQuery(selectQuery);
@@ -100,25 +102,26 @@ public class QueryExecutionPlanFactory {
     if (query.isSupportedAggregate()) {
       AggExecutionNode dependent = createAggExecutionNodeAndItsDependents(idCreator, query);
       dependent.registerSubscriber(baseAndSubscriptionTicket.getRight());
-//      selectAll.addDependency(dependent);
-    }
-    else {
+      //      selectAll.addDependency(dependent);
+    } else {
       ProjectionNode dependent = createProjectionNodeAndItsDependents(idCreator, query);
       dependent.registerSubscriber(baseAndSubscriptionTicket.getRight());
-//      selectAll.addDependency(dependent);
+      //      selectAll.addDependency(dependent);
     }
-    
+
     return selectAll;
   }
-  
-  private static AggExecutionNode createAggExecutionNodeAndItsDependents(IdCreator idCreator, SelectQuery query) {
+
+  private static AggExecutionNode createAggExecutionNodeAndItsDependents(
+      IdCreator idCreator, SelectQuery query) {
     AggExecutionNode node = new AggExecutionNode(idCreator, null);
     convertSubqueriesToDependentNodes(query, node);
     node.setSelectQuery(query);
     return node;
   }
 
-  private static ProjectionNode createProjectionNodeAndItsDependents(IdCreator idCreator, SelectQuery query) {
+  private static ProjectionNode createProjectionNodeAndItsDependents(
+      IdCreator idCreator, SelectQuery query) {
     ProjectionNode node = new ProjectionNode(idCreator, null);
     convertSubqueriesToDependentNodes(query, node);
     node.setSelectQuery(query);
@@ -126,14 +129,12 @@ public class QueryExecutionPlanFactory {
   }
 
   /**
-   *
-   * @param query A query that may include subqueries. The subqueries of this query will be replaced by
-   * placeholders.
+   * @param query A query that may include subqueries. The subqueries of this query will be replaced
+   *     by placeholders.
    * @param node
    */
   private static void convertSubqueriesToDependentNodes(
-      SelectQuery query,
-      CreateTableAsSelectNode node) {
+      SelectQuery query, CreateTableAsSelectNode node) {
     IdCreator namer = node.getNamer();
 
     // from list
@@ -150,10 +151,11 @@ public class QueryExecutionPlanFactory {
         }
 
         // use placeholders to mark the locations whose names will be updated in the future
-        Pair<BaseTable, SubscriptionTicket> baseAndSubscriptionTicket = node.createPlaceHolderTable(source.getAliasName().get());
+        Pair<BaseTable, SubscriptionTicket> baseAndSubscriptionTicket =
+            node.createPlaceHolderTable(source.getAliasName().get());
         query.getFromList().set(index, baseAndSubscriptionTicket.getLeft());
         dep.registerSubscriber(baseAndSubscriptionTicket.getRight());
-      
+
       } else if (source instanceof JoinTable) {
         for (AbstractRelation s : ((JoinTable) source).getJoinList()) {
           int joinindex = ((JoinTable) source).getJoinList().indexOf(s);
@@ -168,7 +170,8 @@ public class QueryExecutionPlanFactory {
             }
 
             // use placeholders to mark the locations whose names will be updated in the future
-            Pair<BaseTable, SubscriptionTicket> baseAndSubscriptionTicket = node.createPlaceHolderTable(s.getAliasName().get());
+            Pair<BaseTable, SubscriptionTicket> baseAndSubscriptionTicket =
+                node.createPlaceHolderTable(s.getAliasName().get());
             ((JoinTable) source).getJoinList().set(joinindex, baseAndSubscriptionTicket.getLeft());
             dep.registerSubscriber(baseAndSubscriptionTicket.getRight());
           }
@@ -199,7 +202,7 @@ public class QueryExecutionPlanFactory {
 
           CreateTableAsSelectNode dep;
           SelectQuery subquery = subqueryFilter.getSubquery();
-          if (subquery.isSupportedAggregate()) {    // TODO: this should check any aggregates
+          if (subquery.isSupportedAggregate()) { // TODO: this should check any aggregates
             dep = createAggExecutionNodeAndItsDependents(namer, subquery);
           } else {
             dep = createProjectionNodeAndItsDependents(namer, subquery);
@@ -211,12 +214,13 @@ public class QueryExecutionPlanFactory {
           List<SelectItem> newSelectItem = new ArrayList<>();
           for (SelectItem item : subquery.getSelectList()) {
             if (item instanceof AliasedColumn) {
-              newSelectItem.add(new AliasedColumn(
-                  new BaseColumn(
-                      base.getSchemaName(),
-                      base.getAliasName().get(),
-                      ((AliasedColumn) item).getAliasName()),
-                  ((AliasedColumn) item).getAliasName()));
+              newSelectItem.add(
+                  new AliasedColumn(
+                      new BaseColumn(
+                          base.getSchemaName(),
+                          base.getAliasName().get(),
+                          ((AliasedColumn) item).getAliasName()),
+                      ((AliasedColumn) item).getAliasName()));
             } else if (item instanceof AsteriskColumn) {
               newSelectItem.add(new AsteriskColumn());
             }
@@ -233,17 +237,15 @@ public class QueryExecutionPlanFactory {
         }
       }
     }
-
   }
-  
+
   private static int nextIdentifier = 0;
-  
+
   private static int generateUniqueId() {
     return nextIdentifier++;
   }
-  
+
   private static void resetUniqueIdGeneration() {
     nextIdentifier = 0;
   }
-
 }

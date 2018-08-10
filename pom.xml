@@ -1,11 +1,11 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.verdictdb</groupId>
     <artifactId>verdictdb-core</artifactId>
     <packaging>jar</packaging>
-    <version>0.5.2-SNAPSHOT</version>
+    <version>0.5.3-SNAPSHOT</version>
     <name>${project.groupId}:${project.artifactId}</name>
     <description>Platform-independent, interactive-speed data analytics system</description>
     <url>http://verdictdb.org</url>
@@ -277,7 +277,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
-                        <version>2.17</version>
+                        <version>2.22.0</version>
                         <configuration>
                             <excludes>
                                 <exclude>**/SparkTpchSelectQueryCoordinatorTest.java</exclude>
@@ -313,7 +313,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
-                        <version>2.17</version>
+                        <version>2.22.0</version>
                         <configuration>
                             <excludes>
                                 <exclude>**/SparkTpchSelectQueryCoordinatorTest.java</exclude>
@@ -461,14 +461,14 @@
                     <version>${spark.version}</version>
                     <scope>provided</scope>
                     <exclusions>
-                      <exclusion>
-                        <groupId>org.slf4j</groupId>
-                        <artifactId>slf4j-log4j12</artifactId>
-                      </exclusion>
-                      <exclusion>
-                        <groupId>org.slf4j</groupId>
-                        <artifactId>slf4j-simple</artifactId>
-                      </exclusion>
+                        <exclusion>
+                            <groupId>org.slf4j</groupId>
+                            <artifactId>slf4j-log4j12</artifactId>
+                        </exclusion>
+                        <exclusion>
+                            <groupId>org.slf4j</groupId>
+                            <artifactId>slf4j-simple</artifactId>
+                        </exclusion>
                     </exclusions>
                 </dependency>
                 <dependency>

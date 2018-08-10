@@ -1,20 +1,15 @@
 package org.verdictdb.coordinator;
 
-import static org.junit.Assert.assertEquals;
-
-import java.io.File;
-import java.io.IOException;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-
+import com.google.common.base.Charsets;
+import com.google.common.io.Files;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.commons.DatabaseConnectionHelpers;
+import org.verdictdb.commons.VerdictOption;
 import org.verdictdb.connection.CachedDbmsConnection;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.DbmsQueryResult;
@@ -25,22 +20,30 @@ import org.verdictdb.core.scrambling.ScrambleMetaSet;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sqlsyntax.MysqlSyntax;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
+import java.io.File;
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+
+import static org.junit.Assert.assertEquals;
 
 /**
- *  Test cases are from
- *  https://github.com/umich-dbgroup/verdictdb-core/wiki/TPCH-Query-Reference--(Experiment-Version)
+ * Test cases are from
+ * https://github.com/umich-dbgroup/verdictdb-core/wiki/TPCH-Query-Reference--(Experiment-Version)
  *
- *  Some test cases are slightly changed because size of test data are small.
+ * <p>Some test cases are slightly changed because size of test data are small.
  */
 public class MySqlTpchSelectQueryCoordinatorTest {
 
   // lineitem has 10 blocks, orders has 3 blocks;
   // lineitem join orders has 12 blocks
-  final static int blockSize = 100;
+  static final int blockSize = 100;
 
   static ScrambleMetaSet meta = new ScrambleMetaSet();
+
+  static VerdictOption options = new VerdictOption();
 
   static Connection conn;
 
@@ -57,7 +60,8 @@ public class MySqlTpchSelectQueryCoordinatorTest {
     }
   }
 
-  private static final String MYSQL_DATABASE = "coordinator_test";
+  private static final String MYSQL_DATABASE =
+      "coordinator_test_" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
 
   private static final String MYSQL_UESR = "root";
 
@@ -67,42 +71,47 @@ public class MySqlTpchSelectQueryCoordinatorTest {
   public static void setupMySqlDatabase() throws SQLException, VerdictDBException {
     String mysqlConnectionString =
         String.format("jdbc:mysql://%s?autoReconnect=true&useSSL=false", MYSQL_HOST);
-    conn = DatabaseConnectionHelpers.setupMySql(
-        mysqlConnectionString, MYSQL_UESR, MYSQL_PASSWORD, MYSQL_DATABASE);
+    conn =
+        DatabaseConnectionHelpers.setupMySql(
+            mysqlConnectionString, MYSQL_UESR, MYSQL_PASSWORD, MYSQL_DATABASE);
     stmt = conn.createStatement();
     stmt.execute(String.format("use `%s`", MYSQL_DATABASE));
     DbmsConnection dbmsConn = JdbcConnection.create(conn);
 
     // Create Scramble table
-    dbmsConn.execute(String.format("DROP TABLE IF EXISTS `%s`.`lineitem_scrambled`", MYSQL_DATABASE));
+    dbmsConn.execute(
+        String.format("DROP TABLE IF EXISTS `%s`.`lineitem_scrambled`", MYSQL_DATABASE));
     dbmsConn.execute(String.format("DROP TABLE IF EXISTS `%s`.`orders_scrambled`", MYSQL_DATABASE));
-    
-    ScramblingCoordinator scrambler = 
+
+    ScramblingCoordinator scrambler =
         new ScramblingCoordinator(dbmsConn, MYSQL_DATABASE, MYSQL_DATABASE, (long) 100);
-    ScrambleMeta meta1 = 
-        scrambler.scramble(MYSQL_DATABASE, "lineitem", MYSQL_DATABASE, "lineitem_scrambled", "uniform");
-    ScrambleMeta meta2 = 
+    ScrambleMeta meta1 =
+        scrambler.scramble(
+            MYSQL_DATABASE, "lineitem", MYSQL_DATABASE, "lineitem_scrambled", "uniform");
+    ScrambleMeta meta2 =
         scrambler.scramble(MYSQL_DATABASE, "orders", MYSQL_DATABASE, "orders_scrambled", "uniform");
     meta.addScrambleMeta(meta1);
     meta.addScrambleMeta(meta2);
-    stmt.execute("drop schema if exists `verdictdb_temp`");
-    stmt.execute("create schema if not exists `verdictdb_temp`");
+    stmt.execute(String.format("drop schema if exists `%s`", options.getVerdictTempSchemaName()));
+    stmt.execute(
+        String.format("create schema if not exists `%s`", options.getVerdictTempSchemaName()));
   }
 
   Pair<ExecutionResultReader, ResultSet> getAnswerPair(int queryNum)
       throws VerdictDBException, SQLException, IOException {
-    String filename = "query"+queryNum+".sql";
-    File file = new File("src/test/resources/tpch_test_query/"+filename);
+    String filename = "query" + queryNum + ".sql";
+    File file = new File("src/test/resources/tpch_test_query/" + filename);
     String sql = Files.toString(file, Charsets.UTF_8);
     JdbcConnection jdbcConn = new JdbcConnection(conn, new MysqlSyntax());
     jdbcConn.setOutputDebugMessage(true);
     DbmsConnection dbmsconn = new CachedDbmsConnection(jdbcConn);
     dbmsconn.setDefaultSchema(MYSQL_DATABASE);
-    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
+    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn, options);
     coordinator.setScrambleMetaSet(meta);
     ExecutionResultReader reader = coordinator.process(sql);
 
     ResultSet rs = stmt.executeQuery(sql);
+    System.out.println(String.format("Query %d Executed.", queryNum));
     return new ImmutablePair<>(reader, rs);
   }
 
@@ -300,7 +309,6 @@ public class MySqlTpchSelectQueryCoordinatorTest {
     assertEquals(12, cnt);
   }
 
-
   @Test
   public void query12Test() throws VerdictDBException, SQLException, IOException {
     Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(12);
@@ -425,7 +433,6 @@ public class MySqlTpchSelectQueryCoordinatorTest {
     assertEquals(12, cnt);
   }
 
-
   @Test
   public void query19Test() throws VerdictDBException, SQLException, IOException {
     Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(19);
@@ -464,7 +471,6 @@ public class MySqlTpchSelectQueryCoordinatorTest {
     }
     assertEquals(10, cnt);
   }
-
 
   @Test
   public void query21Test() throws VerdictDBException, SQLException, IOException {

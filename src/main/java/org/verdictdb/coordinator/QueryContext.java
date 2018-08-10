@@ -14,13 +14,23 @@
  *    limitations under the License.
  */
 
-package org.verdictdb.metastore;
+package org.verdictdb.coordinator;
 
-public class VerdictMetaStore {
+/** Created by Dong Young Yoon on 8/8/18. */
+public class QueryContext {
+  private String verdictContextId;
+  private Long executionSerialNumber;
 
-  protected static final String METASTORE_TABLE_NAME = "verdictdbmeta";
+  public QueryContext(String verdictContextId, Long executionSerialNumber) {
+    this.verdictContextId = verdictContextId;
+    this.executionSerialNumber = executionSerialNumber;
+  }
 
-  public String getMetaStoreTableName() {
-    return METASTORE_TABLE_NAME;
+  public String getVerdictContextId() {
+    return verdictContextId;
+  }
+
+  public Long getExecutionSerialNumber() {
+    return executionSerialNumber;
   }
 }

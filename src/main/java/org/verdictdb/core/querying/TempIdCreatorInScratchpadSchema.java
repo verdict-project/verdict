@@ -16,12 +16,13 @@
 
 package org.verdictdb.core.querying;
 
+import org.apache.commons.lang3.tuple.Pair;
+import org.verdictdb.coordinator.QueryContext;
+
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
-
-import org.apache.commons.lang3.tuple.Pair;
 
 public class TempIdCreatorInScratchpadSchema implements IdCreator, Serializable {
 
@@ -29,14 +30,21 @@ public class TempIdCreatorInScratchpadSchema implements IdCreator, Serializable 
 
   String scratchpadSchemaName;
 
+  QueryContext context = null;
+
   final int serialNum = ThreadLocalRandom.current().nextInt(0, 1000000);
-  
-  final static String GLOBAL_KEYWORD = "internal_global_keyword";
-  
+
+  static final String GLOBAL_KEYWORD = "internal_global_keyword";
+
   private Map<String, Integer> keywordIdentifierMap = new HashMap<>();
 
   public TempIdCreatorInScratchpadSchema(String scratchpadSchemaName) {
     this.scratchpadSchemaName = scratchpadSchemaName;
+  }
+
+  public TempIdCreatorInScratchpadSchema(String scratchpadSchemaName, QueryContext context) {
+    this.scratchpadSchemaName = scratchpadSchemaName;
+    this.context = context;
   }
 
   public int getSerialNumber() {
@@ -46,7 +54,7 @@ public class TempIdCreatorInScratchpadSchema implements IdCreator, Serializable 
   public void resetAliasNameGeneration() {
     resetAliasNameGeneration(GLOBAL_KEYWORD);
   }
-  
+
   public void resetAliasNameGeneration(String keyword) {
     if (keywordIdentifierMap.containsKey(keyword)) {
       keywordIdentifierMap.put(keyword, 0);
@@ -56,8 +64,8 @@ public class TempIdCreatorInScratchpadSchema implements IdCreator, Serializable 
   public String getScratchpadSchemaName() {
     return scratchpadSchemaName;
   }
-  
-  synchronized private int getNextId(String keyword) {
+
+  private synchronized int getNextId(String keyword) {
     if (!keywordIdentifierMap.containsKey(keyword)) {
       keywordIdentifierMap.put(keyword, 0);
     }
@@ -71,7 +79,7 @@ public class TempIdCreatorInScratchpadSchema implements IdCreator, Serializable 
     String uniqueId = String.format("%d_%d", serialNum, currentId);
     return uniqueId;
   }
-  
+
   String generateUniqueIdentifier() {
     return generateUniqueIdentifier(GLOBAL_KEYWORD);
   }
@@ -80,22 +88,32 @@ public class TempIdCreatorInScratchpadSchema implements IdCreator, Serializable 
   public String generateAliasName() {
     return String.format("verdictdb_alias_%s", generateUniqueIdentifier());
   }
-  
+
   @Override
   public String generateAliasName(String keyword) {
     return String.format("verdictdb_%s_alias_%s", keyword, generateUniqueIdentifier(keyword));
   }
-  
+
   @Override
   public int generateSerialNumber() {
     return getNextId(GLOBAL_KEYWORD);
   }
-  
+
   @Override
   public Pair<String, String> generateTempTableName() {
     //    return Pair.of(scratchpadSchemaName, String.format("verdictdbtemptable_%d",
     // tempTableNameNum++));
-    return Pair.of(
-        scratchpadSchemaName, String.format("verdictdbtemptable_%s", generateUniqueIdentifier()));
+    if (context == null) {
+      return Pair.of(
+          scratchpadSchemaName, String.format("verdictdbtemptable_%s", generateUniqueIdentifier()));
+    } else {
+      return Pair.of(
+          scratchpadSchemaName,
+          String.format(
+              "verdictdbtemptable_%s_%d_%s",
+              context.getVerdictContextId(),
+              context.getExecutionSerialNumber(),
+              generateUniqueIdentifier()));
+    }
   }
 }

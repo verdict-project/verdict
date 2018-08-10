@@ -14,13 +14,19 @@
  *    limitations under the License.
  */
 
-package org.verdictdb.metastore;
+package org.verdictdb.connection;
 
-public class VerdictMetaStore {
+import org.junit.Test;
+import org.verdictdb.exception.VerdictDBDbmsException;
 
-  protected static final String METASTORE_TABLE_NAME = "verdictdbmeta";
+public class ConcurrentJdbcConnectionTest {
 
-  public String getMetaStoreTableName() {
-    return METASTORE_TABLE_NAME;
+  @Test
+  public void test() throws VerdictDBDbmsException {
+    String url = "jdbc:mysql://localhost?user=root";
+    DbmsConnection c = ConcurrentJdbcConnection.create(url);
+    c.getSchemas();
+    c.close();
   }
+
 }

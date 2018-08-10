@@ -4,6 +4,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.verdictdb.commons.VerdictOption;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.connection.JdbcConnection;
@@ -26,6 +27,8 @@ import static org.junit.Assert.assertEquals;
 public class ScrambleMetaStoreTest {
 
   static Connection mysqlConn;
+
+  static VerdictOption options = new VerdictOption();
 
   private static final String MYSQL_HOST;
 
@@ -76,7 +79,8 @@ public class ScrambleMetaStoreTest {
   public void testAddScrambleMeta() throws VerdictDBException {
     DbmsConnection dbmsConnection = JdbcConnection.create(mysqlConn);
     ScrambleMeta scrambleMeta = createScrambleMeta();
-    ScrambleMetaStore metaStore = new ScrambleMetaStore(dbmsConnection);
+    ScrambleMetaStore metaStore = new ScrambleMetaStore(dbmsConnection, options);
+    metaStore.remove();
     metaStore.addToStore(scrambleMeta);
 
     // tests

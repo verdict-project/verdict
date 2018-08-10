@@ -1,20 +1,15 @@
 package org.verdictdb.coordinator;
 
-import static org.junit.Assert.assertEquals;
-
-import java.io.File;
-import java.io.IOException;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-
+import com.google.common.base.Charsets;
+import com.google.common.io.Files;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.commons.DatabaseConnectionHelpers;
+import org.verdictdb.commons.VerdictOption;
 import org.verdictdb.connection.CachedDbmsConnection;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.DbmsQueryResult;
@@ -25,8 +20,14 @@ import org.verdictdb.core.scrambling.ScrambleMetaSet;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sqlsyntax.PostgresqlSyntax;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
+import java.io.File;
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+
+import static org.junit.Assert.assertEquals;
 
 public class PostgreSqlTpchSelectQueryCoordinatorTest {
 
@@ -34,11 +35,14 @@ public class PostgreSqlTpchSelectQueryCoordinatorTest {
 
   private static Statement postgresStmt;
 
+  private static VerdictOption options = new VerdictOption();
+
   private static final String POSTGRES_HOST;
 
   private static final String POSTGRES_DATABASE = "test";
 
-  private static final String POSTGRES_SCHEMA = "scrambling_coordinator_test";
+  private static final String POSTGRES_SCHEMA =
+      "scrambling_coordinator_test_" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
 
   private static final String POSTGRES_USER = "postgres";
 
@@ -68,37 +72,41 @@ public class PostgreSqlTpchSelectQueryCoordinatorTest {
     DbmsConnection dbmsConn = JdbcConnection.create(postgresConn);
 
     // Create Scramble table
-    dbmsConn.execute(String.format("DROP TABLE IF EXISTS \"%s\".\"lineitem_scrambled\"", POSTGRES_SCHEMA));
-    dbmsConn.execute(String.format("DROP TABLE IF EXISTS \"%s\".\"orders_scrambled\"", POSTGRES_SCHEMA));
+    dbmsConn.execute(
+        String.format("DROP TABLE IF EXISTS \"%s\".\"lineitem_scrambled\"", POSTGRES_SCHEMA));
+    dbmsConn.execute(
+        String.format("DROP TABLE IF EXISTS \"%s\".\"orders_scrambled\"", POSTGRES_SCHEMA));
 
     ScramblingCoordinator scrambler =
         new ScramblingCoordinator(dbmsConn, POSTGRES_SCHEMA, POSTGRES_SCHEMA, (long) 100);
     ScrambleMeta meta1 =
-        scrambler.scramble(POSTGRES_SCHEMA, "lineitem", POSTGRES_SCHEMA, "lineitem_scrambled", "uniform");
+        scrambler.scramble(
+            POSTGRES_SCHEMA, "lineitem", POSTGRES_SCHEMA, "lineitem_scrambled", "uniform");
     ScrambleMeta meta2 =
-        scrambler.scramble(POSTGRES_SCHEMA, "orders", POSTGRES_SCHEMA, "orders_scrambled", "uniform");
+        scrambler.scramble(
+            POSTGRES_SCHEMA, "orders", POSTGRES_SCHEMA, "orders_scrambled", "uniform");
     meta.addScrambleMeta(meta1);
     meta.addScrambleMeta(meta2);
-    postgresStmt.execute("drop schema if exists \"verdictdb_temp\" CASCADE");
-    postgresStmt.execute("create schema if not exists \"verdictdb_temp\"");
+    postgresStmt.execute(
+        String.format("drop schema if exists \"%s\" CASCADE", options.getVerdictTempSchemaName()));
+    postgresStmt.execute(
+        String.format("create schema if not exists \"%s\"", options.getVerdictTempSchemaName()));
   }
 
   Pair<ExecutionResultReader, ResultSet> getAnswerPair(int queryNum)
       throws VerdictDBException, SQLException, IOException {
     String filename;
-    if (queryNum==7||queryNum==8||queryNum==9) {
-      filename = "query"+queryNum+"_postgres.sql";
-    }
-    else filename = "query"+queryNum+".sql";
-    File file = new File("src/test/resources/tpch_test_query/"+filename);
+    if (queryNum == 7 || queryNum == 8 || queryNum == 9) {
+      filename = "query" + queryNum + "_postgres.sql";
+    } else filename = "query" + queryNum + ".sql";
+    File file = new File("src/test/resources/tpch_test_query/" + filename);
     String sql = Files.toString(file, Charsets.UTF_8);
-    DbmsConnection dbmsconn = new CachedDbmsConnection(
-        new JdbcConnection(postgresConn, new PostgresqlSyntax()));
+    DbmsConnection dbmsconn =
+        new CachedDbmsConnection(new JdbcConnection(postgresConn, new PostgresqlSyntax()));
     dbmsconn.setDefaultSchema(POSTGRES_SCHEMA);
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     coordinator.setScrambleMetaSet(meta);
     ExecutionResultReader reader = coordinator.process(sql);
-
 
     ResultSet rs = postgresStmt.executeQuery(sql);
     return new ImmutablePair<>(reader, rs);
@@ -298,7 +306,6 @@ public class PostgreSqlTpchSelectQueryCoordinatorTest {
     assertEquals(12, cnt);
   }
 
-
   @Test
   public void query12Test() throws VerdictDBException, SQLException, IOException {
     Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(12);
@@ -423,7 +430,6 @@ public class PostgreSqlTpchSelectQueryCoordinatorTest {
     assertEquals(12, cnt);
   }
 
-
   @Test
   public void query19Test() throws VerdictDBException, SQLException, IOException {
     Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(19);
@@ -462,7 +468,6 @@ public class PostgreSqlTpchSelectQueryCoordinatorTest {
     }
     assertEquals(10, cnt);
   }
-
 
   @Test
   public void query21Test() throws VerdictDBException, SQLException, IOException {

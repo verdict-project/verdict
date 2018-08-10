@@ -43,7 +43,7 @@ public class ImpalaTpchSelectQueryCoordinatorTest {
 
   // to avoid possible conflicts among concurrent tests
   private static final String IMPALA_DATABASE =
-      "scrambling_coordinator_test_" + RandomStringUtils.randomNumeric(3);
+      "scrambling_coordinator_test_" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
 
   private static final String IMPALA_UESR = "";
 

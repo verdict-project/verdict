@@ -18,6 +18,7 @@ package org.verdictdb.metastore;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.commons.VerdictDBLogger;
+import org.verdictdb.commons.VerdictOption;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.core.querying.CreateSchemaQuery;
@@ -58,8 +59,8 @@ public class ScrambleMetaStore extends VerdictMetaStore {
 
   private static final VerdictDBLogger LOG = VerdictDBLogger.getLogger(ScrambleMetaStore.class);
 
-  public ScrambleMetaStore(DbmsConnection conn) {
-    this(conn, DEFAULT_STORE_SCHEMA);
+  public ScrambleMetaStore(DbmsConnection conn, VerdictOption options) {
+    this(conn, options.getVerdictMetaSchemaName());
   }
 
   public ScrambleMetaStore(DbmsConnection conn, String storeSchema) {
@@ -110,9 +111,15 @@ public class ScrambleMetaStore extends VerdictMetaStore {
   }
 
   public void remove() throws VerdictDBException {
+    // create a schema if not exists
+    CreateSchemaQuery createSchemaQuery = new CreateSchemaQuery(storeSchema);
+    createSchemaQuery.setIfNotExists(true);
+    String sql = QueryToSql.convert(conn.getSyntax(), createSchemaQuery);
+    conn.execute(sql);
+
     DropTableQuery dropQuery = new DropTableQuery(storeSchema, getMetaStoreTableName());
     dropQuery.setIfExists(true);
-    String sql = QueryToSql.convert(conn.getSyntax(), dropQuery);
+    sql = QueryToSql.convert(conn.getSyntax(), dropQuery);
     conn.execute(sql);
   }
 
@@ -207,6 +214,52 @@ public class ScrambleMetaStore extends VerdictMetaStore {
     try {
       String storeSchema = getStoreSchema();
       String storeTable = getMetaStoreTableName();
+
+      List<String> existingSchemas = conn.getSchemas();
+      if (existingSchemas.contains(storeSchema) == false) {
+        return new ScrambleMetaSet();
+      }
+
+      List<String> existingTables = conn.getTables(storeSchema);
+      if (existingTables.contains(storeTable) == false) {
+        return new ScrambleMetaSet();
+      }
+
+      // now ready to retrieve
+      String tableAlias = "t";
+      SelectQuery query =
+          SelectQuery.create(
+              Arrays.<SelectItem>asList(
+                  new BaseColumn(tableAlias, ADDED_AT_COLUMN),
+                  new BaseColumn(tableAlias, DATA_COLUMN)),
+              new BaseTable(storeSchema, storeTable, tableAlias));
+      query.addOrderby(new OrderbyAttribute(ADDED_AT_COLUMN));
+      String sql = QueryToSql.convert(conn.getSyntax(), query);
+      DbmsQueryResult result = conn.execute(sql);
+
+      while (result.next()) {
+        String jsonString = result.getString(1);
+        ScrambleMeta meta = ScrambleMeta.fromJsonString(jsonString);
+        retrieved.addScrambleMeta(meta);
+      }
+    } catch (VerdictDBException e) {
+      e.printStackTrace();
+    }
+
+    return retrieved;
+  }
+
+  /**
+   * Static version of retrieve() that uses default schema and table names
+   *
+   * @return a set of scramble meta
+   */
+  public static ScrambleMetaSet retrieve(DbmsConnection conn, VerdictOption options) {
+    ScrambleMetaSet retrieved = new ScrambleMetaSet();
+
+    try {
+      String storeSchema = options.getVerdictMetaSchemaName();
+      String storeTable = METASTORE_TABLE_NAME;
 
       List<String> existingSchemas = conn.getSchemas();
       if (existingSchemas.contains(storeSchema) == false) {

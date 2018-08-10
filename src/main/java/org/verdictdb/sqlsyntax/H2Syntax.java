@@ -29,7 +29,6 @@ public class H2Syntax extends SqlSyntax {
     return candidates;
   }
 
-
   // The column index that stored meta information in the original database
   @Override
   public int getSchemaNameColumnIndex() {
@@ -92,7 +91,8 @@ public class H2Syntax extends SqlSyntax {
 
   /** H2 does not support partitioning. */
   @Override
-  public String getPartitionByInCreateTable() {
+  public String getPartitionByInCreateTable(
+      List<String> partitionColumns, List<Integer> partitionCounts) {
     return null;
   }
 

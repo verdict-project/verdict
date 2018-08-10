@@ -9,6 +9,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.verdictdb.commons.DatabaseConnectionHelpers;
+import org.verdictdb.commons.VerdictOption;
 import org.verdictdb.exception.VerdictDBDbmsException;
 
 import java.io.File;
@@ -31,6 +32,8 @@ public class JdbcTpchQueryForAllDatabasesTest {
   private static Map<String, Connection> vcMap = new HashMap<>();
 
   private static Map<String, String> schemaMap = new HashMap<>();
+
+  private static VerdictOption options = new VerdictOption();
 
   private static final String MYSQL_HOST;
 
@@ -190,6 +193,10 @@ public class JdbcTpchQueryForAllDatabasesTest {
     connMap.put("mysql", conn);
     vcMap.put("mysql", vc);
     schemaMap.put("mysql", MYSQL_DATABASE + ".");
+
+    conn.createStatement()
+        .execute(
+            String.format("CREATE SCHEMA IF NOT EXISTS %s", options.getVerdictTempSchemaName()));
     return conn;
   }
 
@@ -204,6 +211,9 @@ public class JdbcTpchQueryForAllDatabasesTest {
     connMap.put("impala", conn);
     vcMap.put("impala", vc);
     schemaMap.put("impala", IMPALA_DATABASE + ".");
+    conn.createStatement()
+        .execute(
+            String.format("CREATE SCHEMA IF NOT EXISTS %s", options.getVerdictTempSchemaName()));
     return conn;
   }
 
@@ -221,6 +231,9 @@ public class JdbcTpchQueryForAllDatabasesTest {
     connMap.put("redshift", conn);
     vcMap.put("redshift", vc);
     schemaMap.put("redshift", "");
+    conn.createStatement()
+        .execute(
+            String.format("CREATE SCHEMA IF NOT EXISTS %s", options.getVerdictTempSchemaName()));
     return conn;
   }
 

@@ -17,6 +17,7 @@
 package org.verdictdb.sqlwriter;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -156,12 +157,13 @@ public class CreateTableToSql {
     sql.append(Joiner.on(",").join(columns));
     sql.append(
         String.format(
-            ",%s integer,%s integer", query.getTierColumnName(), query.getBlockColumnName()));
+            ", %s integer, %s integer", query.getTierColumnName(), query.getBlockColumnName()));
     sql.append(")");
 
     // partitions
     sql.append(" ");
-    sql.append(syntax.getPartitionByInCreateTable());
+    sql.append(syntax.getPartitionByInCreateTable(
+        query.getPartitionColumns(), Arrays.<Integer>asList(query.getBlockCount())));
     sql.append(" (");
 
     // only single column for partition
@@ -217,32 +219,29 @@ public class CreateTableToSql {
     sql.append(quoteName(schemaName));
     sql.append(".");
     sql.append(quoteName(tableName));
+    sql.append(" ");
+    
+    // parquet format for Spark
+    if (syntax instanceof SparkSyntax) {
+      sql.append("using parquet ");
+    }
 
     // partitions
     if (syntax.doesSupportTablePartitioning() && query.getPartitionColumns().size() > 0) {
+      sql.append(
+          syntax.getPartitionByInCreateTable(
+              query.getPartitionColumns(), query.getPartitionCounts()));
       sql.append(" ");
-      sql.append(syntax.getPartitionByInCreateTable());
-      sql.append(" (");
-      List<String> partitionColumns = query.getPartitionColumns();
-      boolean isFirstColumn = true;
-      for (String col : partitionColumns) {
-        if (isFirstColumn) {
-          sql.append(quoteName(col));
-          isFirstColumn = false;
-        } else {
-          sql.append(", " + quoteName(col));
-        }
-      }
-      sql.append(")");
-    } else if (syntax instanceof SparkSyntax || syntax instanceof HiveSyntax) {
-      sql.append(" using parquet");
+    }
+    
+    // parquet format
+    if (syntax instanceof HiveSyntax || syntax instanceof ImpalaSyntax) {
+      sql.append("stored as parquet ");
     }
 
     // select
     if (syntax.isAsRequiredBeforeSelectInCreateTable()) {
-      sql.append(" as ");
-    } else {
-      sql.append(" ");
+      sql.append("as ");
     }
     SelectQueryToSql selectWriter = new SelectQueryToSql(syntax);
     String selectSql = selectWriter.toSql(select);

@@ -1,20 +1,15 @@
 package org.verdictdb.coordinator;
 
-import static org.junit.Assert.assertEquals;
-
-import java.io.File;
-import java.io.IOException;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-
+import com.google.common.base.Charsets;
+import com.google.common.io.Files;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.commons.DatabaseConnectionHelpers;
+import org.verdictdb.commons.VerdictOption;
 import org.verdictdb.connection.CachedDbmsConnection;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.DbmsQueryResult;
@@ -25,14 +20,20 @@ import org.verdictdb.core.scrambling.ScrambleMetaSet;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sqlsyntax.RedshiftSyntax;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
+import java.io.File;
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+
+import static org.junit.Assert.assertEquals;
 
 /**
- *  Test cases are from
- *  https://github.com/umich-dbgroup/verdictdb-core/wiki/TPCH-Query-Reference--(Experiment-Version)
+ * Test cases are from
+ * https://github.com/umich-dbgroup/verdictdb-core/wiki/TPCH-Query-Reference--(Experiment-Version)
  *
- *  Some test cases are slightly changed because size of test data are small.
+ * <p>Some test cases are slightly changed because size of test data are small.
  */
 public class RedshiftTpchSelectQueryCoordinatorTest {
 
@@ -42,7 +43,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
 
   // lineitem has 10 blocks, orders has 3 blocks;
   // lineitem join orders has 12 blocks
-  final static int blockSize = 100;
+  static final int blockSize = 100;
 
   static ScrambleMetaSet meta = new ScrambleMetaSet();
 
@@ -52,7 +53,8 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
 
   private static final String REDSHIFT_DATABASE = "dev";
 
-  private static final String REDSHIFT_SCHEMA = "tpch";
+  private static final String REDSHIFT_SCHEMA =
+      "tpch_" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
 
   private static final String REDSHIFT_USER;
 
@@ -62,18 +64,22 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
     REDSHIFT_HOST = System.getenv("VERDICTDB_TEST_REDSHIFT_ENDPOINT");
     REDSHIFT_USER = System.getenv("VERDICTDB_TEST_REDSHIFT_USER");
     REDSHIFT_PASSWORD = System.getenv("VERDICTDB_TEST_REDSHIFT_PASSWORD");
-//    System.out.println(REDSHIFT_HOST);
-//    System.out.println(REDSHIFT_USER);
-//    System.out.println(REDSHIFT_PASSWORD);
+    //    System.out.println(REDSHIFT_HOST);
+    //    System.out.println(REDSHIFT_USER);
+    //    System.out.println(REDSHIFT_PASSWORD);
   }
 
   Pair<ExecutionResultReader, ResultSet> getAnswerPair(int queryNum)
       throws VerdictDBException, SQLException, IOException {
-    stmt.execute("drop schema if exists \"verdictdb_temp\" cascade");
-    stmt.execute("create schema if not exists \"verdictdb_temp\"");
+    stmt.execute(
+        String.format(
+            "drop schema if exists \"%s\" cascade", VerdictOption.getDefaultTempSchemaName()));
+    stmt.execute(
+        String.format(
+            "create schema if not exists \"%s\"", VerdictOption.getDefaultTempSchemaName()));
 
-    String filename = "query"+queryNum+".sql";
-    File file = new File("src/test/resources/tpch_test_query/"+filename);
+    String filename = "query" + queryNum + ".sql";
+    File file = new File("src/test/resources/tpch_test_query/" + filename);
     String sql = Files.toString(file, Charsets.UTF_8);
 
     dbmsConn.setDefaultSchema(REDSHIFT_SCHEMA);
@@ -94,21 +100,23 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
             connectionString, REDSHIFT_USER, REDSHIFT_PASSWORD, REDSHIFT_SCHEMA);
     stmt = redshiftConn.createStatement();
     stmt.execute(String.format("set search_path to \"%s\"", REDSHIFT_SCHEMA));
-    dbmsConn = new CachedDbmsConnection(
-        new JdbcConnection(redshiftConn, new RedshiftSyntax()));
+    dbmsConn = new CachedDbmsConnection(new JdbcConnection(redshiftConn, new RedshiftSyntax()));
     // Create Scramble table
-    stmt.execute(String.format("DROP TABLE IF EXISTS \"%s\".\"lineitem_scrambled\"", REDSHIFT_SCHEMA));
-    stmt.execute(String.format("DROP TABLE IF EXISTS \"%s\".\"orders_scrambled\"", REDSHIFT_SCHEMA));
+    stmt.execute(
+        String.format("DROP TABLE IF EXISTS \"%s\".\"lineitem_scrambled\"", REDSHIFT_SCHEMA));
+    stmt.execute(
+        String.format("DROP TABLE IF EXISTS \"%s\".\"orders_scrambled\"", REDSHIFT_SCHEMA));
 
     ScramblingCoordinator scrambler =
         new ScramblingCoordinator(dbmsConn, REDSHIFT_SCHEMA, REDSHIFT_SCHEMA, (long) 100);
     ScrambleMeta meta1 =
-        scrambler.scramble(REDSHIFT_SCHEMA, "lineitem", REDSHIFT_SCHEMA, "lineitem_scrambled", "uniform");
+        scrambler.scramble(
+            REDSHIFT_SCHEMA, "lineitem", REDSHIFT_SCHEMA, "lineitem_scrambled", "uniform");
     ScrambleMeta meta2 =
-        scrambler.scramble(REDSHIFT_SCHEMA, "orders", REDSHIFT_SCHEMA, "orders_scrambled", "uniform");
+        scrambler.scramble(
+            REDSHIFT_SCHEMA, "orders", REDSHIFT_SCHEMA, "orders_scrambled", "uniform");
     meta.addScrambleMeta(meta1);
     meta.addScrambleMeta(meta2);
-
   }
 
   @Test
@@ -139,8 +147,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       }
       assertEquals(10, cnt);
       System.out.println("test 1 passed");
-    }
-    catch (Exception e) {
+    } catch (Exception e) {
       query1Test();
     }
   }
@@ -168,8 +175,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       }
       assertEquals(12, cnt);
       System.out.println("test 3 passed");
-    }
-    catch (Exception e) {
+    } catch (Exception e) {
       query3Test();
     }
   }
@@ -194,8 +200,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       }
       assertEquals(12, cnt);
       System.out.println("test 4 passed");
-    }
-    catch (Exception e) {
+    } catch (Exception e) {
       query4Test();
     }
   }
@@ -221,8 +226,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       }
       assertEquals(12, cnt);
       System.out.println("test 5 passed");
-    }
-    catch (Exception e) {
+    } catch (Exception e) {
       query5Test();
     }
   }
@@ -246,8 +250,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       }
       assertEquals(10, cnt);
       System.out.println("test 6 passed");
-    }
-    catch (Exception e) {
+    } catch (Exception e) {
       query6Test();
     }
   }
@@ -274,8 +277,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       }
       assertEquals(12, cnt);
       System.out.println("test 7 passed");
-    }
-    catch (Exception e) {
+    } catch (Exception e) {
       query7Test();
     }
   }
@@ -301,8 +303,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       }
       assertEquals(12, cnt);
       System.out.println("test 8 passed");
-    }
-    catch (Exception e) {
+    } catch (Exception e) {
       query8Test();
     }
   }
@@ -328,8 +329,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       }
       assertEquals(12, cnt);
       System.out.println("test 9 passed");
-    }
-    catch (Exception e) {
+    } catch (Exception e) {
       query9Test();
     }
   }
@@ -355,8 +355,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       }
       assertEquals(12, cnt);
       System.out.println("test 10 passed");
-    }
-    catch (Exception e) {
+    } catch (Exception e) {
       query10Test();
     }
   }
@@ -382,8 +381,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       }
       assertEquals(12, cnt);
       System.out.println("test 12 passed");
-    }
-    catch (Exception e) {
+    } catch (Exception e) {
       query12Test();
     }
   }
@@ -408,8 +406,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       }
       assertEquals(3, cnt);
       System.out.println("test 13 passed");
-    }
-    catch (Exception e) {
+    } catch (Exception e) {
       query13Test();
     }
   }
@@ -434,8 +431,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       }
       assertEquals(10, cnt);
       System.out.println("test 14 passed");
-    }
-    catch (Exception e) {
+    } catch (Exception e) {
       query14Test();
     }
   }
@@ -460,8 +456,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       }
       assertEquals(10, cnt);
       System.out.println("test 15 passed");
-    }
-    catch (Exception e) {
+    } catch (Exception e) {
       query15Test();
     }
   }
@@ -485,8 +480,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       }
       assertEquals(10, cnt);
       System.out.println("test 17 passed");
-    }
-    catch (Exception e) {
+    } catch (Exception e) {
       query17Test();
     }
   }
@@ -515,8 +509,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       }
       assertEquals(12, cnt);
       System.out.println("test 18 passed");
-    }
-    catch (Exception e) {
+    } catch (Exception e) {
       query18Test();
     }
   }
@@ -540,8 +533,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       }
       assertEquals(10, cnt);
       System.out.println("test 19 passed");
-    }
-    catch (Exception e) {
+    } catch (Exception e) {
       query19Test();
     }
   }
@@ -566,8 +558,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       }
       assertEquals(10, cnt);
       System.out.println("test 20 passed");
-    }
-    catch (Exception e) {
+    } catch (Exception e) {
       query20Test();
     }
   }
@@ -592,14 +583,10 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       }
       assertEquals(12, cnt);
       System.out.println("test 21 passed");
-    }
-    catch (Exception e) {
+    } catch (Exception e) {
       query21Test();
     }
   }
-
-
-
 
   @AfterClass
   public static void tearDown() throws SQLException {
