@@ -41,6 +41,11 @@ public class JdbcTpchQueryForAllDatabasesTest {
 
   private static final int TPCH_QUERY_COUNT = 22;
 
+  private static final String VERDICT_META_SCHEMA =
+      "verdictdbmetaschema_" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
+  private static final String VERDICT_TEMP_SCHEMA =
+      "verdictdbtempschema_" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
+
   private String database = "";
 
   private String query;
@@ -123,6 +128,8 @@ public class JdbcTpchQueryForAllDatabasesTest {
 
   @BeforeClass
   public static void setupDatabases() throws SQLException, VerdictDBDbmsException, IOException {
+    options.setVerdictMetaSchemaName(VERDICT_META_SCHEMA);
+    options.setVerdictTempSchemaName(VERDICT_TEMP_SCHEMA);
     setupMysql();
     setupImpala();
     setupRedshift();

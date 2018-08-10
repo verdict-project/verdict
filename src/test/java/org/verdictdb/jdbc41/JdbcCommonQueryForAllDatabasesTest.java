@@ -26,6 +26,11 @@ public class JdbcCommonQueryForAllDatabasesTest {
 
   private static VerdictOption options = new VerdictOption();
 
+  private static final String VERDICT_META_SCHEMA =
+      "verdictdbmetaschema_" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
+  private static final String VERDICT_TEMP_SCHEMA =
+      "verdictdbtempschema_" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
+
   private static final String MYSQL_HOST;
 
   private String database = "";
@@ -103,6 +108,8 @@ public class JdbcCommonQueryForAllDatabasesTest {
 
   @BeforeClass
   public static void setupDatabases() throws SQLException, VerdictDBDbmsException {
+    options.setVerdictMetaSchemaName(VERDICT_META_SCHEMA);
+    options.setVerdictTempSchemaName(VERDICT_TEMP_SCHEMA);
     setupMysql();
     setupImpala();
     setupRedshift();
