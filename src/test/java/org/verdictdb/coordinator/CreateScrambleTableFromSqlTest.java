@@ -34,8 +34,7 @@ import static org.junit.Assert.assertTrue;
 @RunWith(Parameterized.class)
 public class CreateScrambleTableFromSqlTest {
 
-//  private static final String[] targetDatabases = {"mysql", "impala", "redshift", "postgresql"};
-  private static final String[] targetDatabases = {"mysql"};
+  private static final String[] targetDatabases = {"mysql", "impala", "redshift", "postgresql"};
 
   private static Map<String, Pair<Connection, Connection>> connections = new HashMap<>();
 
@@ -63,9 +62,9 @@ public class CreateScrambleTableFromSqlTest {
   public static void setup() throws VerdictDBDbmsException, SQLException, IOException {
     options.setVerdictTempSchemaName(TEMP_SCHEMA_NAME);
     setupMysql();
-//    setupImpala();
-//    setupRedshift();
-//    setupPostgresql();
+    setupImpala();
+    setupRedshift();
+    setupPostgresql();
   }
 
   @AfterClass
