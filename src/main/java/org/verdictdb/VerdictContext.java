@@ -141,8 +141,17 @@ public class VerdictContext {
     VerdictOption options = new VerdictOption();
     options.parseConnectionString(jdbcConnectionString);
     return new VerdictContext(ConcurrentJdbcConnection.create(jdbcConnectionString, info), options);
-    //    Connection jdbcConn = DriverManager.getConnection(jdbcConnectionString, user, password);
-    //    return fromJdbcConnection(jdbcConn);
+  }
+
+  public static VerdictContext fromConnectionString(
+      String jdbcConnectionString, String user, String password, VerdictOption options)
+      throws SQLException, VerdictDBDbmsException {
+    attemptLoadDriverClass(jdbcConnectionString);
+    Properties info = new Properties();
+    info.setProperty("user", user);
+    info.setProperty("password", password);
+    options.parseConnectionString(jdbcConnectionString);
+    return new VerdictContext(ConcurrentJdbcConnection.create(jdbcConnectionString, info), options);
   }
 
   private static void attemptLoadDriverClass(String jdbcConnectionString) {

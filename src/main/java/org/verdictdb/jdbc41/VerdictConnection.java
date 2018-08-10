@@ -16,28 +16,17 @@
 
 package org.verdictdb.jdbc41;
 
-import java.sql.Array;
-import java.sql.Blob;
-import java.sql.CallableStatement;
-import java.sql.Clob;
-import java.sql.DatabaseMetaData;
-import java.sql.NClob;
-import java.sql.SQLClientInfoException;
-import java.sql.SQLException;
-import java.sql.SQLFeatureNotSupportedException;
-import java.sql.SQLWarning;
-import java.sql.SQLXML;
-import java.sql.Savepoint;
-import java.sql.Struct;
-import java.util.Map;
-import java.util.Properties;
-import java.util.concurrent.Executor;
-
 import org.verdictdb.VerdictContext;
+import org.verdictdb.commons.VerdictOption;
 import org.verdictdb.connection.CachedDbmsConnection;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.exception.VerdictDBDbmsException;
+
+import java.sql.*;
+import java.util.Map;
+import java.util.Properties;
+import java.util.concurrent.Executor;
 
 public class VerdictConnection implements java.sql.Connection {
 
@@ -59,6 +48,12 @@ public class VerdictConnection implements java.sql.Connection {
   public VerdictConnection(String url, String user, String password)
       throws VerdictDBDbmsException, SQLException {
     vc = VerdictContext.fromConnectionString(url, user, password);
+    isOpen = true;
+  }
+
+  public VerdictConnection(String url, String user, String password, VerdictOption options)
+      throws VerdictDBDbmsException, SQLException {
+    vc = VerdictContext.fromConnectionString(url, user, password, options);
     isOpen = true;
   }
 
@@ -133,8 +128,8 @@ public class VerdictConnection implements java.sql.Connection {
   @Override
   public void close() throws SQLException {
     vc.close();
-//    JdbcConnection conn = vc.getJdbcConnection();
-//    if (conn != null) conn.getConnection().close();
+    //    JdbcConnection conn = vc.getJdbcConnection();
+    //    if (conn != null) conn.getConnection().close();
     isOpen = false;
   }
 
@@ -306,8 +301,8 @@ public class VerdictConnection implements java.sql.Connection {
   @Override
   public boolean isValid(int timeout) throws SQLException {
     return !vc.isClosed();
-//    JdbcConnection conn = vc.getJdbcConnection();
-//    return (conn != null) && conn.getConnection().isValid(timeout);
+    //    JdbcConnection conn = vc.getJdbcConnection();
+    //    return (conn != null) && conn.getConnection().isValid(timeout);
   }
 
   @Override
