@@ -53,7 +53,7 @@ public class MetaDataStatementsTest {
   }
 
   private static final String MYSQL_DATABASE =
-      "data_type_test" + RandomStringUtils.randomAlphanumeric(4).toLowerCase();
+      "data_type_test_" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
 
   private static final String MYSQL_USER = "root";
 
@@ -66,7 +66,7 @@ public class MetaDataStatementsTest {
   }
 
   private static final String IMPALA_DATABASE =
-      "data_type_test" + RandomStringUtils.randomAlphanumeric(4).toLowerCase();
+      "data_type_test_" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
 
   private static final String IMPALA_USER = "";
 
@@ -104,10 +104,10 @@ public class MetaDataStatementsTest {
   }
 
   private static final String PostgresRedshift_SCHEMA_NAME =
-      "data_type_test" + RandomStringUtils.randomAlphanumeric(4).toLowerCase();
+      "data_type_test_" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
 
   private static final String TABLE_NAME =
-      "data_type_test" + RandomStringUtils.randomAlphanumeric(4).toLowerCase();
+      "data_type_test_" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
 
   @BeforeClass
   public static void setup() throws SQLException, VerdictDBDbmsException, IOException {

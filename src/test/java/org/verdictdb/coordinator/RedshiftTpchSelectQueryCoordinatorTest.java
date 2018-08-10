@@ -2,6 +2,7 @@ package org.verdictdb.coordinator;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.AfterClass;
@@ -52,7 +53,8 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
 
   private static final String REDSHIFT_DATABASE = "dev";
 
-  private static final String REDSHIFT_SCHEMA = "tpch";
+  private static final String REDSHIFT_SCHEMA =
+      "tpch_" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
 
   private static final String REDSHIFT_USER;
 

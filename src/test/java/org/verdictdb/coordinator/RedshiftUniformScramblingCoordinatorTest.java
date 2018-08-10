@@ -1,14 +1,5 @@
 package org.verdictdb.coordinator;
 
-import static org.junit.Assert.assertEquals;
-
-import java.io.IOException;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.Arrays;
-import java.util.List;
-
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.AfterClass;
@@ -20,6 +11,15 @@ import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.exception.VerdictDBException;
+
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.Arrays;
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
 
 public class RedshiftUniformScramblingCoordinatorTest {
 
@@ -34,7 +34,7 @@ public class RedshiftUniformScramblingCoordinatorTest {
   private static final String REDSHIFT_DATABASE = "dev";
 
   private static final String REDSHIFT_SCHEMA =
-      "uniform_scrambling_test_" + RandomStringUtils.randomAlphanumeric(4).toLowerCase();
+      "uniform_scrambling_test_" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
 
   private static final String REDSHIFT_USER;
 

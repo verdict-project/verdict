@@ -1,5 +1,6 @@
 package org.verdictdb.coordinator;
 
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
@@ -37,7 +38,8 @@ public class SparkTpchSelectQueryCoordinatorTest {
 
   static ScrambleMetaSet meta = new ScrambleMetaSet();
 
-  static final String TEST_SCHEMA = "scrambling_coordinator_test";
+  static final String TEST_SCHEMA =
+      "scrambling_coordinator_test_" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
 
   static DbmsConnection conn;
 

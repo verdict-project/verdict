@@ -2,6 +2,7 @@ package org.verdictdb.coordinator;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.AfterClass;
@@ -59,7 +60,8 @@ public class MySqlTpchSelectQueryCoordinatorTest {
     }
   }
 
-  private static final String MYSQL_DATABASE = "coordinator_test";
+  private static final String MYSQL_DATABASE =
+      "coordinator_test_" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
 
   private static final String MYSQL_UESR = "root";
 
