@@ -111,6 +111,7 @@ public class MySqlTpchSelectQueryCoordinatorTest {
     ExecutionResultReader reader = coordinator.process(sql);
 
     ResultSet rs = stmt.executeQuery(sql);
+    System.out.println(String.format("Query %d Executed.", queryNum));
     return new ImmutablePair<>(reader, rs);
   }
 
