@@ -34,7 +34,8 @@ import static org.junit.Assert.assertTrue;
 @RunWith(Parameterized.class)
 public class CreateScrambleTableFromSqlTest {
 
-  private static final String[] targetDatabases = {"mysql", "impala", "redshift", "postgresql"};
+//  private static final String[] targetDatabases = {"mysql", "impala", "redshift", "postgresql"};
+  private static final String[] targetDatabases = {"mysql"};
 
   private static Map<String, Pair<Connection, Connection>> connections = new HashMap<>();
 
@@ -62,9 +63,9 @@ public class CreateScrambleTableFromSqlTest {
   public static void setup() throws VerdictDBDbmsException, SQLException, IOException {
     options.setVerdictTempSchemaName(TEMP_SCHEMA_NAME);
     setupMysql();
-    setupImpala();
-    setupRedshift();
-    setupPostgresql();
+//    setupImpala();
+//    setupRedshift();
+//    setupPostgresql();
   }
 
   @AfterClass
@@ -105,8 +106,8 @@ public class CreateScrambleTableFromSqlTest {
             DatabaseConnectionHelpers.MYSQL_HOST);
     String vcMysqlConnectionString =
         String.format(
-            "jdbc:verdict:mysql://%s?autoReconnect=true&useSSL=false",
-            DatabaseConnectionHelpers.MYSQL_HOST);
+            "jdbc:verdict:mysql://%s?autoReconnect=true&useSSL=false&verdictdbtempschema=%s",
+            DatabaseConnectionHelpers.MYSQL_HOST, TEMP_SCHEMA_NAME);
     Connection conn =
         DatabaseConnectionHelpers.setupMySql(
             mysqlConnectionString,
@@ -130,7 +131,8 @@ public class CreateScrambleTableFromSqlTest {
     String connectionString =
         String.format("jdbc:impala://%s", DatabaseConnectionHelpers.IMPALA_HOST);
     String vcConnectionString =
-        String.format("jdbc:verdict:impala://%s", DatabaseConnectionHelpers.IMPALA_HOST);
+        String.format("jdbc:verdict:impala://%s;verdictdbtempschema=%s", 
+            DatabaseConnectionHelpers.IMPALA_HOST, TEMP_SCHEMA_NAME);
     Connection conn =
         DatabaseConnectionHelpers.setupImpala(
             connectionString,
@@ -159,8 +161,10 @@ public class CreateScrambleTableFromSqlTest {
             DatabaseConnectionHelpers.REDSHIFT_HOST, DatabaseConnectionHelpers.REDSHIFT_DATABASE);
     String vcConnectionString =
         String.format(
-            "jdbc:verdict:redshift://%s/%s",
-            DatabaseConnectionHelpers.REDSHIFT_HOST, DatabaseConnectionHelpers.REDSHIFT_DATABASE);
+            "jdbc:verdict:redshift://%s/%s?verdictdbtempschema=%s",
+            DatabaseConnectionHelpers.REDSHIFT_HOST, 
+            DatabaseConnectionHelpers.REDSHIFT_DATABASE,
+            TEMP_SCHEMA_NAME);
     Connection conn =
         DatabaseConnectionHelpers.setupRedshift(
             connectionString,
@@ -189,8 +193,10 @@ public class CreateScrambleTableFromSqlTest {
             DatabaseConnectionHelpers.POSTGRES_HOST, DatabaseConnectionHelpers.POSTGRES_DATABASE);
     String vcConnectionString =
         String.format(
-            "jdbc:verdict:postgresql://%s/%s",
-            DatabaseConnectionHelpers.POSTGRES_HOST, DatabaseConnectionHelpers.POSTGRES_DATABASE);
+            "jdbc:verdict:postgresql://%s/%s?verdictdbtempschema=%s",
+            DatabaseConnectionHelpers.POSTGRES_HOST, 
+            DatabaseConnectionHelpers.POSTGRES_DATABASE,
+            TEMP_SCHEMA_NAME);
     Connection conn =
         DatabaseConnectionHelpers.setupPostgresql(
             connectionString,
@@ -308,7 +314,7 @@ public class CreateScrambleTableFromSqlTest {
         String.format(
             "SELECT * FROM %s.lineitem LIMIT 1", DatabaseConnectionHelpers.COMMON_SCHEMA_NAME);
 
-    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(jdbcConn);
+    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(jdbcConn, options);
     coordinator.process(countOriginalSql);
     SelectQuery query = coordinator.getLastQuery();
 
@@ -344,7 +350,7 @@ public class CreateScrambleTableFromSqlTest {
         String.format(
             "SELECT * FROM %s.lineitem LIMIT 1", DatabaseConnectionHelpers.COMMON_SCHEMA_NAME);
 
-    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(jdbcConn);
+    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(jdbcConn, options);
     coordinator.process(countOriginalSql);
     SelectQuery query = coordinator.getLastQuery();
 

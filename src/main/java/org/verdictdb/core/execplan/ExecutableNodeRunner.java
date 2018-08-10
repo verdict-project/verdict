@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.TimeUnit;
 
 import org.verdictdb.commons.VerdictDBLogger;
 import org.verdictdb.connection.DbmsConnection;
@@ -177,6 +178,13 @@ public class ExecutableNodeRunner implements Runnable {
     if (sqlObj != null) {
       String sql = QueryToSql.convert(conn.getSyntax(), sqlObj);
       intermediate = conn.execute(sql);
+      
+//      // Give database some time to ensure ACID
+//      try {
+//        TimeUnit.MILLISECONDS.sleep(10);
+//      } catch (InterruptedException e) {
+//        e.printStackTrace();
+//      }
     }
     ExecutionInfoToken token = node.createToken(intermediate);
 

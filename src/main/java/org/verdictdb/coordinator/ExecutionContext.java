@@ -265,24 +265,30 @@ public class ExecutionContext {
               "%s_%s_%d",
               VerdictOption.getVerdictTempTablePrefix(), context.getContextId(), this.serialNumber);
       List<String> tempTableList = new ArrayList<>();
-
-      DbmsQueryResult rs;
-
-      if (conn.getSyntax() instanceof RedshiftSyntax
-          || conn.getSyntax() instanceof PostgresqlSyntax) {
-        rs =
-            conn.execute(
-                String.format(
-                    "SELECT * FROM information_schema.tables WHERE table_schema = '%s'", schema));
-      } else {
-        rs = conn.execute(String.format("show tables in %s", schema));
-      }
-      while (rs.next()) {
-        String tableName = rs.getString(0);
+      
+      List<String> allTempTables = conn.getTables(schema);
+      for (String tableName : allTempTables) {
         if (tableName.startsWith(tempTablePrefix)) {
           tempTableList.add(tableName);
         }
       }
+
+//      DbmsQueryResult rs;
+//      if (conn.getSyntax() instanceof RedshiftSyntax
+//          || conn.getSyntax() instanceof PostgresqlSyntax) {
+//        rs =
+//            conn.execute(
+//                String.format(
+//                    "SELECT * FROM information_schema.tables WHERE table_schema = '%s'", schema));
+//      } else {
+//        rs = conn.execute(String.format("show tables in %s", schema));
+//      }
+//      while (rs.next()) {
+//        String tableName = rs.getString(0);
+//        if (tableName.startsWith(tempTablePrefix)) {
+//          tempTableList.add(tableName);
+//        }
+//      }
 
       for (String tempTable : tempTableList) {
         conn.execute(String.format("DROP TABLE IF EXISTS %s.%s", schema, tempTable));

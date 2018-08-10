@@ -255,14 +255,16 @@ public class JdbcConnection implements DbmsConnection {
   }
 
   @Override
-  public List<String> getTables(String schema) throws VerdictDBDbmsException {
+  public List<String> getTables(String schema) {
     List<String> tables = new ArrayList<>();
-    DbmsQueryResult queryResult = executeQuery(syntax.getTableCommand(schema));
-
-    while (queryResult.next()) {
-      tables.add(queryResult.getString(syntax.getTableNameColumnIndex()));
+    try {
+      DbmsQueryResult queryResult = executeQuery(syntax.getTableCommand(schema));
+      while (queryResult.next()) {
+        tables.add(queryResult.getString(syntax.getTableNameColumnIndex()));
+      }
+    } catch (VerdictDBDbmsException e) {
+      log.debug(e.getMessage());
     }
-
     return tables;
   }
 

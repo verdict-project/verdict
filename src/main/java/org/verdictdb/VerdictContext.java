@@ -116,6 +116,7 @@ public class VerdictContext {
     attemptLoadDriverClass(jdbcConnectionString);
     VerdictOption options = new VerdictOption();
     options.parseProperties(info);
+    options.parseConnectionString(jdbcConnectionString);
     return new VerdictContext(ConcurrentJdbcConnection.create(jdbcConnectionString, info), options);
     //    Connection jdbcConn = DriverManager.getConnection(jdbcConnectionString, info);
     //    return fromJdbcConnection(jdbcConn);
