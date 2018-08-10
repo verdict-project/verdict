@@ -16,11 +16,20 @@
 
 package org.verdictdb.sqlsyntax;
 
+import com.google.common.collect.Lists;
+
+import java.util.Collection;
 import java.util.List;
 
 public class PostgresqlSyntax extends SqlSyntax {
 
   public static final String CHILD_PARTITION_TABLE_SUFFIX = "_vpart%05d";
+
+  @Override
+  public Collection<String> getCandidateJDBCDriverClassNames() {
+    List<String> candidates = Lists.newArrayList("org.postgresql.Driver");
+    return candidates;
+  }
 
   @Override
   public int getSchemaNameColumnIndex() {
