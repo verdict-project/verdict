@@ -2,6 +2,7 @@ package org.verdictdb.coordinator;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.AfterClass;
@@ -40,7 +41,8 @@ public class PostgreSqlTpchSelectQueryCoordinatorTest {
 
   private static final String POSTGRES_DATABASE = "test";
 
-  private static final String POSTGRES_SCHEMA = "scrambling_coordinator_test";
+  private static final String POSTGRES_SCHEMA =
+      "scrambling_coordinator_test_" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
 
   private static final String POSTGRES_USER = "postgres";
 

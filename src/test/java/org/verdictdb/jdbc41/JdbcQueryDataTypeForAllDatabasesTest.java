@@ -1,19 +1,5 @@
 package org.verdictdb.jdbc41;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -22,7 +8,17 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.postgresql.jdbc.PgSQLXML;
 import org.verdictdb.commons.DatabaseConnectionHelpers;
+import org.verdictdb.commons.VerdictOption;
 import org.verdictdb.exception.VerdictDBDbmsException;
+import org.verdictdb.exception.VerdictDBException;
+
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.*;
+
+import static org.junit.Assert.*;
 
 /** Created by Dong Young Yoon on 7/18/18. */
 @RunWith(Parameterized.class)
@@ -89,6 +85,14 @@ public class JdbcQueryDataTypeForAllDatabasesTest {
 
   private static final String POSTGRES_PASSWORD = "";
 
+  private static final String VERDICT_META_SCHEMA =
+      "verdictdbmetaschema_" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
+
+  private static final String VERDICT_TEMP_SCHEMA =
+      "verdictdbtempschema_" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
+
+  private static VerdictOption options = new VerdictOption();
+
   static {
     String env = System.getenv("BUILD_ENV");
     if (env != null && (env.equals("GitLab") || env.equals("DockerCompose"))) {
@@ -112,6 +116,8 @@ public class JdbcQueryDataTypeForAllDatabasesTest {
 
   @BeforeClass
   public static void setup() throws SQLException, VerdictDBDbmsException {
+    options.setVerdictMetaSchemaName(VERDICT_META_SCHEMA);
+    options.setVerdictTempSchemaName(VERDICT_TEMP_SCHEMA);
     setupMysql();
     setupPostgresql();
     setupRedshift();
@@ -145,8 +151,14 @@ public class JdbcQueryDataTypeForAllDatabasesTest {
         DatabaseConnectionHelpers.setupMySqlForDataTypeTest(
             mysqlConnectionString, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE, TABLE_NAME);
     VerdictConnection vc =
-        new VerdictConnection(vcMysqlConnectionString, MYSQL_USER, MYSQL_PASSWORD);
+        new VerdictConnection(vcMysqlConnectionString, MYSQL_USER, MYSQL_PASSWORD, options);
     conn.setCatalog(MYSQL_DATABASE);
+    conn.createStatement()
+        .execute(
+            String.format("CREATE SCHEMA IF NOT EXISTS %s", options.getVerdictTempSchemaName()));
+    conn.createStatement()
+        .execute(
+            String.format("CREATE SCHEMA IF NOT EXISTS %s", options.getVerdictMetaSchemaName()));
     connMap.put("mysql", conn);
     vcMap.put("mysql", vc);
     schemaMap.put("mysql", MYSQL_DATABASE + ".");
@@ -156,6 +168,8 @@ public class JdbcQueryDataTypeForAllDatabasesTest {
     Connection conn = connMap.get("mysql");
     Statement stmt = conn.createStatement();
     stmt.execute(String.format("DROP SCHEMA IF EXISTS `%s`", MYSQL_DATABASE));
+    stmt.execute(String.format("DROP SCHEMA IF EXISTS `%s`", options.getVerdictTempSchemaName()));
+    stmt.execute(String.format("DROP SCHEMA IF EXISTS `%s`", options.getVerdictMetaSchemaName()));
     conn.close();
   }
 
@@ -164,7 +178,14 @@ public class JdbcQueryDataTypeForAllDatabasesTest {
     Connection conn =
         DatabaseConnectionHelpers.setupImpalaForDataTypeTest(
             connectionString, IMPALA_USER, IMPALA_PASSWORD, IMPALA_DATABASE, TABLE_NAME);
-    VerdictConnection vc = new VerdictConnection(connectionString, IMPALA_USER, IMPALA_PASSWORD);
+    VerdictConnection vc =
+        new VerdictConnection(connectionString, IMPALA_USER, IMPALA_PASSWORD, options);
+    conn.createStatement()
+        .execute(
+            String.format("CREATE SCHEMA IF NOT EXISTS %s", options.getVerdictTempSchemaName()));
+    conn.createStatement()
+        .execute(
+            String.format("CREATE SCHEMA IF NOT EXISTS %s", options.getVerdictMetaSchemaName()));
     connMap.put("impala", conn);
     vcMap.put("impala", vc);
     schemaMap.put("impala", IMPALA_DATABASE + ".");
@@ -174,6 +195,10 @@ public class JdbcQueryDataTypeForAllDatabasesTest {
     Connection conn = connMap.get("impala");
     Statement stmt = conn.createStatement();
     stmt.execute(String.format("DROP SCHEMA IF EXISTS `%s` CASCADE", IMPALA_DATABASE));
+    stmt.execute(
+        String.format("DROP SCHEMA IF EXISTS `%s` CASCADE", options.getVerdictMetaSchemaName()));
+    stmt.execute(
+        String.format("DROP SCHEMA IF EXISTS `%s` CASCADE", options.getVerdictTempSchemaName()));
     conn.close();
   }
 
@@ -184,7 +209,13 @@ public class JdbcQueryDataTypeForAllDatabasesTest {
         DatabaseConnectionHelpers.setupRedshiftForDataTypeTest(
             connectionString, REDSHIFT_USER, REDSHIFT_PASSWORD, SCHEMA_NAME, TABLE_NAME);
     VerdictConnection vc =
-        new VerdictConnection(connectionString, REDSHIFT_USER, REDSHIFT_PASSWORD);
+        new VerdictConnection(connectionString, REDSHIFT_USER, REDSHIFT_PASSWORD, options);
+    conn.createStatement()
+        .execute(
+            String.format("CREATE SCHEMA IF NOT EXISTS %s", options.getVerdictTempSchemaName()));
+    conn.createStatement()
+        .execute(
+            String.format("CREATE SCHEMA IF NOT EXISTS %s", options.getVerdictMetaSchemaName()));
     connMap.put("redshift", conn);
     vcMap.put("redshift", vc);
     schemaMap.put("redshift", "");
@@ -194,6 +225,10 @@ public class JdbcQueryDataTypeForAllDatabasesTest {
     Connection conn = connMap.get("redshift");
     Statement stmt = conn.createStatement();
     stmt.execute(String.format("DROP SCHEMA IF EXISTS \"%s\" CASCADE", SCHEMA_NAME));
+    stmt.execute(
+        String.format("DROP SCHEMA IF EXISTS \"%s\" CASCADE", options.getVerdictMetaSchemaName()));
+    stmt.execute(
+        String.format("DROP SCHEMA IF EXISTS \"%s\" CASCADE", options.getVerdictTempSchemaName()));
     conn.close();
   }
 
@@ -204,7 +239,13 @@ public class JdbcQueryDataTypeForAllDatabasesTest {
         DatabaseConnectionHelpers.setupPostgresqlForDataTypeTest(
             connectionString, POSTGRES_USER, POSTGRES_PASSWORD, SCHEMA_NAME, TABLE_NAME);
     VerdictConnection vc =
-        new VerdictConnection(connectionString, POSTGRES_USER, POSTGRES_PASSWORD);
+        new VerdictConnection(connectionString, POSTGRES_USER, POSTGRES_PASSWORD, options);
+    conn.createStatement()
+        .execute(
+            String.format("CREATE SCHEMA IF NOT EXISTS %s", options.getVerdictTempSchemaName()));
+    conn.createStatement()
+        .execute(
+            String.format("CREATE SCHEMA IF NOT EXISTS %s", options.getVerdictMetaSchemaName()));
     connMap.put("postgresql", conn);
     vcMap.put("postgresql", vc);
     schemaMap.put("postgresql", "");
@@ -214,11 +255,15 @@ public class JdbcQueryDataTypeForAllDatabasesTest {
     Connection conn = connMap.get("postgresql");
     Statement stmt = conn.createStatement();
     stmt.execute(String.format("DROP SCHEMA IF EXISTS \"%s\" CASCADE", SCHEMA_NAME));
+    stmt.execute(
+        String.format("DROP SCHEMA IF EXISTS \"%s\" CASCADE", options.getVerdictMetaSchemaName()));
+    stmt.execute(
+        String.format("DROP SCHEMA IF EXISTS \"%s\" CASCADE", options.getVerdictTempSchemaName()));
     conn.close();
   }
 
   @Test
-  public void testDataType() throws SQLException {
+  public void testDataType() throws SQLException, VerdictDBException {
     String sql = "";
     switch (database) {
       case "mysql":
@@ -231,7 +276,9 @@ public class JdbcQueryDataTypeForAllDatabasesTest {
         break;
       case "postgresql":
       case "redshift":
-        sql = String.format("SELECT * FROM \"%s\".\"%s\" ORDER BY bigintcol", SCHEMA_NAME, TABLE_NAME);
+        sql =
+            String.format(
+                "SELECT * FROM \"%s\".\"%s\" ORDER BY bigintcol", SCHEMA_NAME, TABLE_NAME);
         break;
       default:
         fail(String.format("Database '%s' not supported.", database));
@@ -257,8 +304,8 @@ public class JdbcQueryDataTypeForAllDatabasesTest {
           PgSQLXML xml2 = (PgSQLXML) ours;
           assertEquals(xml1.getString(), xml2.getString());
         } else {
-//          assertEquals(jdbcRs.getObject(i), vcRs.getObject(i));
-//          System.out.println(columnName + " >> " + theirs + " : " + ours);
+          //          assertEquals(jdbcRs.getObject(i), vcRs.getObject(i));
+          //          System.out.println(columnName + " >> " + theirs + " : " + ours);
           assertEquals(theirs, ours);
         }
       }

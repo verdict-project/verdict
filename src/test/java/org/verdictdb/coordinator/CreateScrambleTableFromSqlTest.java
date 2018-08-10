@@ -60,6 +60,7 @@ public class CreateScrambleTableFromSqlTest {
 
   @BeforeClass
   public static void setup() throws VerdictDBDbmsException, SQLException, IOException {
+    options.setVerdictTempSchemaName(TEMP_SCHEMA_NAME);
     setupMysql();
     setupImpala();
     setupRedshift();
