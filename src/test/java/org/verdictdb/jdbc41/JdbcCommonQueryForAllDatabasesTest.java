@@ -242,7 +242,9 @@ public class JdbcCommonQueryForAllDatabasesTest {
 
   public static Connection setupRedshift() throws SQLException, VerdictDBDbmsException {
     String connectionString =
-        String.format("jdbc:redshift://%s/%s", REDSHIFT_HOST, REDSHIFT_DATABASE);
+        String.format(
+            "jdbc:redshift://%s/%s;verdictdbtempschema=%s",
+            REDSHIFT_HOST, REDSHIFT_DATABASE, SCHEMA_NAME);
     Connection conn =
         DriverManager.getConnection(connectionString, REDSHIFT_USER, REDSHIFT_PASSWORD);
     VerdictConnection vc =
