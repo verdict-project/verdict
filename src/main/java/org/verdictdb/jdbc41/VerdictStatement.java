@@ -17,14 +17,14 @@
 package org.verdictdb.jdbc41;
 
 import org.verdictdb.VerdictContext;
-import org.verdictdb.connection.*;
 import org.verdictdb.coordinator.ExecutionContext;
 import org.verdictdb.coordinator.VerdictSingleResult;
-import org.verdictdb.coordinator.VerdictSingleResultFromDbmsQueryResult;
-import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.exception.VerdictDBException;
 
-import java.sql.*;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
+import java.sql.SQLWarning;
 
 public class VerdictStatement implements java.sql.Statement {
 
@@ -42,67 +42,10 @@ public class VerdictStatement implements java.sql.Statement {
     this.executionContext = context.createNewExecutionContext();
   }
 
-  /**
-   * Check whether given sql contains 'bypass' keyword at the beginning
-   *
-   * @param sql original sql
-   * @return without 'bypass' keyword if the original sql begins with it. null otherwise.
-   */
-  private String checkBypass(String sql) {
-    if (sql.trim().toLowerCase().startsWith("bypass")) {
-      return sql.trim().substring(6);
-    }
-    return null;
-  }
-
-  private VerdictSingleResult executeAsIs(String sql) throws SQLException, VerdictDBDbmsException {
-    DbmsConnection dbmsConn = context.getConnection();
-    if (dbmsConn instanceof CachedDbmsConnection) {
-      dbmsConn = ((CachedDbmsConnection) dbmsConn).getOriginalConnection();
-    }
-    if (dbmsConn instanceof ConcurrentJdbcConnection) {
-      dbmsConn = ((ConcurrentJdbcConnection) dbmsConn).getNextConnection();
-    }
-    if (dbmsConn instanceof JdbcConnection) {
-      Statement stmt = ((JdbcConnection) dbmsConn).getConnection().createStatement();
-      boolean exist = stmt.execute(sql);
-      if (exist)
-        return new VerdictSingleResultFromDbmsQueryResult(new JdbcQueryResult(stmt.getResultSet()));
-      else return null;
-    } else if (dbmsConn instanceof SparkConnection) {
-      return new VerdictSingleResultFromDbmsQueryResult(dbmsConn.execute(sql));
-    } else {
-      throw new VerdictDBDbmsException("Unsupported DBMS for BYPASS statement.");
-    }
-  }
-
-  private int executeUpdateAsIs(String sql) throws SQLException, VerdictDBDbmsException {
-    DbmsConnection dbmsConn = context.getConnection();
-    if (dbmsConn instanceof CachedDbmsConnection) {
-      dbmsConn = ((CachedDbmsConnection) dbmsConn).getOriginalConnection();
-    }
-    if (dbmsConn instanceof ConcurrentJdbcConnection) {
-      dbmsConn = ((ConcurrentJdbcConnection) dbmsConn).getNextConnection();
-    }
-    if (dbmsConn instanceof JdbcConnection) {
-      return ((JdbcConnection) dbmsConn).getConnection().createStatement().executeUpdate(sql);
-    } else if (dbmsConn instanceof SparkConnection) {
-      return (int) dbmsConn.execute(sql).getRowCount();
-    } else {
-      throw new VerdictDBDbmsException("Unsupported DBMS for BYPASS statement.");
-    }
-  }
-
   @Override
   public boolean execute(String sql) throws SQLException {
     try {
-      String bypassSql = checkBypass(sql);
-      if (bypassSql != null) {
-        result = this.executeAsIs(bypassSql);
-      } else {
-        result = executionContext.sql(sql);
-      }
-
+      result = context.sql(sql);
       if (result == null) {
         return false;
       }
@@ -115,12 +58,7 @@ public class VerdictStatement implements java.sql.Statement {
   @Override
   public ResultSet executeQuery(String sql) throws SQLException {
     try {
-      String bypassSql = checkBypass(sql);
-      if (bypassSql != null) {
-        result = this.executeAsIs(bypassSql);
-      } else {
-        result = executionContext.sql(sql);
-      }
+      result = context.sql(sql);
       return new VerdictResultSet(result);
     } catch (VerdictDBException e) {
       throw new SQLException(e);
@@ -130,13 +68,7 @@ public class VerdictStatement implements java.sql.Statement {
   @Override
   public int executeUpdate(String sql) throws SQLException {
     try {
-      String bypassSql = checkBypass(sql);
-      if (bypassSql != null) {
-        result = null; // This should be null for update.
-        return this.executeUpdateAsIs(bypassSql);
-      } else {
-        result = executionContext.sql(sql);
-      }
+      result = context.sql(sql);
       return (int) result.getRowCount();
     } catch (VerdictDBException e) {
       throw new SQLException(e);

@@ -350,11 +350,9 @@ public class JdbcCommonQueryForAllDatabasesTest {
                 "BYPASS INSERT INTO %s.people(id, name, gender, age, height, nation, birth) "
                     + "VALUES(10, 'mike', 'male', 38, 190, 'Russia', '1980-10-10 10:10:10')",
                 SCHEMA_NAME));
-    if (database.equals("impala")) {
-      assertEquals(-1, count); // Impala JDBC always returns -1.
-    } else {
-      assertEquals(1, count);
-    }
+    // We do not differentiate between execute and executeUpdate. As a result we always return 0 for
+    // executeUpdate
+    assertEquals(0, count);
   }
 
   @Test
