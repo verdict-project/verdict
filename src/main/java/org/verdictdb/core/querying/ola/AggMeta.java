@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
@@ -115,7 +116,11 @@ public class AggMeta implements Serializable {
     // create individual tier number sets; this will be the argument for the cartesian product
     List<Set<Integer>> tierLists = new ArrayList<>();
     for (int c : tierCounts) {
-      Set<Integer> tiers = Ranges.closedOpen(0, c).asSet(DiscreteDomains.integers());
+//      Set<Integer> tiers = Ranges.closedOpen(0, c).asSet(DiscreteDomains.integers());
+      Set<Integer> tiers = new TreeSet<>();
+      for (int i = 0; i < c; i++) {
+        tiers.add(i);
+      }
       tierLists.add(tiers);
     }
     Set<List<Integer>> product = Sets.cartesianProduct(tierLists);

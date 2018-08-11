@@ -56,6 +56,8 @@ public abstract class DbmsConnection implements MetaDataProvider {
   //  public Connection getConnection();
 
   public abstract void close();
+  
+  public abstract void abort();
 
   public abstract DbmsConnection copy();
 }

@@ -51,6 +51,8 @@ public class ExecutionContext {
   private VerdictContext context;
 
   private QueryContext queryContext;
+  
+  private Coordinator runningCoordinator = null;
 
   private final long serialNumber;
 
@@ -104,9 +106,11 @@ public class ExecutionContext {
       LOG.debug("Query type: select");
       SelectQueryCoordinator coordinator =
           new SelectQueryCoordinator(context.getCopiedConnection(), context.getScrambleMetaSet(), options);
+      runningCoordinator = coordinator;
       ExecutionResultReader reader = coordinator.process(query, queryContext);
       VerdictResultStream stream = new VerdictResultStreamFromExecutionResultReader(reader, this);
       return stream;
+      
     } else if (queryType.equals(QueryType.scrambling)) {
       LOG.debug("Query type: scrambling");
       CreateScrambleQuery scrambleQuery = generateScrambleQuery(query);
@@ -247,6 +251,12 @@ public class ExecutionContext {
     String schema = parser.use_statement().database.getText();
     context.getConnection().setDefaultSchema(schema);
   }
+  
+  public void abort() {
+    if (runningCoordinator != null) {
+      runningCoordinator.abort();
+    }
+  }
 
   /**
    * Terminates existing threads. The created database tables may still exist for successive uses.
@@ -254,6 +264,8 @@ public class ExecutionContext {
    * <p>This method also removes all temporary tables created by this ExecutionContext.
    */
   public void terminate() {
+    abort();
+    
     try {
       DbmsConnection conn = context.getCopiedConnection();
       String schema = options.getVerdictTempSchemaName();

@@ -22,6 +22,7 @@ import java.util.List;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
+import org.verdictdb.commons.VerdictDBLogger;
 import org.verdictdb.commons.VerdictOption;
 import org.verdictdb.connection.DataTypeConverter;
 import org.verdictdb.connection.DbmsConnection;
@@ -46,7 +47,9 @@ import org.verdictdb.sqlreader.NonValidatingSQLParser;
 import org.verdictdb.sqlreader.RelationStandardizer;
 import org.verdictdb.sqlreader.ScrambleTableReplacer;
 
-public class SelectQueryCoordinator {
+public class SelectQueryCoordinator implements Coordinator {
+  
+  private ExecutablePlanRunner planRunner;
 
   DbmsConnection conn;
 
@@ -57,6 +60,8 @@ public class SelectQueryCoordinator {
   SelectQuery lastQuery;
 
   VerdictOption options;
+  
+  private VerdictDBLogger log = VerdictDBLogger.getLogger(this.getClass());
 
   public SelectQueryCoordinator(DbmsConnection conn) {
     this(conn, new ScrambleMetaSet(), new VerdictOption());
@@ -92,6 +97,10 @@ public class SelectQueryCoordinator {
     return lastQuery;
   }
 
+  /**
+   * This method should only be used for testing.
+   * Use process(String query, QueryContext context) for actual applications instead.
+   */
   public ExecutionResultReader process(String query) throws VerdictDBException {
 
     SelectQuery selectQuery = standardizeQuery(query);
@@ -114,9 +123,8 @@ public class SelectQueryCoordinator {
     //    asyncPlan.getRootNode().print();
 
     // execute the plan
-    //    ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(conn,
-    // simplifiedAsyncPlan);
-    ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(conn, asyncPlan);
+    planRunner = new ExecutablePlanRunner(conn, asyncPlan);
+    ExecutionResultReader reader = planRunner.getResultReader();
 
     lastQuery = selectQuery;
 
@@ -138,21 +146,27 @@ public class SelectQueryCoordinator {
     // if the plan does not include any aggregates, this operation should not alter the original
     // plan.
     QueryExecutionPlan asyncPlan = AsyncQueryExecutionPlan.create(plan);
+    
+    log.debug(asyncPlan.getRoot().getStructure());
 
     // simplify the plan
     //    QueryExecutionPlan simplifiedAsyncPlan = QueryExecutionPlanSimplifier.simplify(asyncPlan);
     //    QueryExecutionPlanSimplifier.simplify2(asyncPlan);
 
-    //    asyncPlan.getRootNode().print();
-
     // execute the plan
-    //    ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(conn,
-    // simplifiedAsyncPlan);
-    ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(conn, asyncPlan);
+    planRunner = new ExecutablePlanRunner(conn, asyncPlan);
+    ExecutionResultReader reader = planRunner.getResultReader();
+//    ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(conn, asyncPlan);
 
     lastQuery = selectQuery;
 
     return reader;
+  }
+  
+  @Override
+  public void abort() {
+    log.debug(String.format("Closes %s.", this.getClass().getSimpleName()));
+    planRunner.abort();
   }
 
   private SelectQuery standardizeQuery(String query) throws VerdictDBException {

@@ -131,6 +131,13 @@ public class ConcurrentJdbcConnection extends DbmsConnection {
   public SqlSyntax getSyntax() {
     return getNextConnection().getSyntax();
   }
+  
+  @Override
+  public void abort() {
+    for (JdbcConnection c : connections) {
+      c.abort();
+    }
+  }
 
   @Override
   public void close() {

@@ -52,6 +52,8 @@ public class JdbcConnection extends DbmsConnection {
   JdbcQueryResult jrs = null;
 
   private boolean outputDebugMessage = false;
+  
+  private Statement runningStatement = null;
 
   private VerdictDBLogger log;
 
@@ -88,9 +90,26 @@ public class JdbcConnection extends DbmsConnection {
     this.syntax = syntax;
     this.log = VerdictDBLogger.getLogger(this.getClass());
   }
+  
+  @Override
+  public void abort() {
+    log.trace("Aborts a statement if running.");
+    try {
+      if (runningStatement != null && !runningStatement.isClosed()) {
+        log.trace("Aborts a running statement.");
+        runningStatement.cancel();
+        runningStatement.close();
+        runningStatement = null;
+      }
+    } catch (SQLException e) {
+      e.printStackTrace();
+    }
+  }
 
   @Override
   public void close() {
+    log.debug("Closes a JDBC connection.");
+    abort();
     try {
       this.conn.close();
     } catch (SQLException e) {
@@ -171,6 +190,7 @@ public class JdbcConnection extends DbmsConnection {
 
     try {
       Statement stmt = conn.createStatement();
+      runningStatement = stmt;
       JdbcQueryResult jrs = null;
       boolean doesResultExist = stmt.execute(sql);
       if (doesResultExist) {
@@ -180,10 +200,11 @@ public class JdbcConnection extends DbmsConnection {
       } else {
         jrs = null;
       }
+      runningStatement = null;
       stmt.close();
       return jrs;
     } catch (SQLException e) {
-      //      e.printStackTrace();
+//      e.printStackTrace();
       //      logger.debug(StackTraceReader.stackTrace2String(e));
       throw new VerdictDBDbmsException(e.getMessage());
     }

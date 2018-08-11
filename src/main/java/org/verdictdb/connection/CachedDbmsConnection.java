@@ -49,6 +49,11 @@ public class CachedDbmsConnection extends DbmsConnection implements MetaDataProv
   public SqlSyntax getSyntax() {
     return originalConn.getSyntax();
   }
+  
+  @Override
+  public void abort() {
+    originalConn.abort();
+  }
 
   @Override
   public void close() {

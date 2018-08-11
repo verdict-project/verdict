@@ -137,6 +137,11 @@ public class SparkConnection extends DbmsConnection {
   public SqlSyntax getSyntax() {
     return syntax;
   }
+  
+  @Override
+  public void abort() {
+    
+  }
 
   @Override
   public void close() {
