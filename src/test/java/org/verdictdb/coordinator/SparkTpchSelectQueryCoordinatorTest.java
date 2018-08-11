@@ -1,5 +1,7 @@
 package org.verdictdb.coordinator;
 
+import static org.junit.Assert.assertEquals;
+
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -23,8 +25,6 @@ import org.verdictdb.sqlreader.NonValidatingSQLParser;
 import org.verdictdb.sqlreader.RelationStandardizer;
 import org.verdictdb.sqlsyntax.MysqlSyntax;
 import org.verdictdb.sqlwriter.SelectQueryToSql;
-
-import static org.junit.Assert.assertEquals;
 
 /**
  * Test cases are from

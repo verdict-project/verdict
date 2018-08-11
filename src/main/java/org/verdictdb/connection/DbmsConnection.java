@@ -16,10 +16,13 @@
 
 package org.verdictdb.connection;
 
+import org.verdictdb.core.sqlobject.SqlConvertible;
 import org.verdictdb.exception.VerdictDBDbmsException;
+import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sqlsyntax.SqlSyntax;
+import org.verdictdb.sqlwriter.QueryToSql;
 
-public interface DbmsConnection extends MetaDataProvider {
+public abstract class DbmsConnection implements MetaDataProvider {
 
   /**
    * Executes a query (or queries). If the result exists, return it.
@@ -27,11 +30,17 @@ public interface DbmsConnection extends MetaDataProvider {
    * <p>If a query includes multiple queries separated by semicolons, issue them separately in
    * order.
    *
-   * @param query
+   * @param sql
    * @return
    * @throws VerdictDBDbmsException
    */
-  public DbmsQueryResult execute(String query) throws VerdictDBDbmsException;
+  public abstract DbmsQueryResult execute(String sql) throws VerdictDBDbmsException;
+  
+  public DbmsQueryResult execute(SqlConvertible query) throws VerdictDBException {
+    String sql = QueryToSql.convert(getSyntax(), query);
+    DbmsQueryResult result = execute(sql);
+    return result;
+  }
 
   //  /**
   //   *
@@ -42,11 +51,11 @@ public interface DbmsConnection extends MetaDataProvider {
   //   */
   //  public int executeUpdate(String query) throws VerdictDBDbmsException;
 
-  public SqlSyntax getSyntax();
+  public abstract SqlSyntax getSyntax();
 
   //  public Connection getConnection();
 
-  public void close();
+  public abstract void close();
 
-  public DbmsConnection copy();
+  public abstract DbmsConnection copy();
 }

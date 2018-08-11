@@ -41,7 +41,7 @@ import org.verdictdb.sqlsyntax.SqlSyntaxList;
 
 import com.google.common.collect.Sets;
 
-public class JdbcConnection implements DbmsConnection {
+public class JdbcConnection extends DbmsConnection {
 
   Connection conn;
 
@@ -76,11 +76,6 @@ public class JdbcConnection implements DbmsConnection {
     this.conn = conn;
     try {
       this.currentSchema = conn.getSchema();
-      //      if (syntax instanceof PostgresqlSyntax || syntax instanceof RedshiftSyntax) {
-      //
-      //      } else {
-      //        this.currentSchema = conn.getCatalog();
-      //      }
     } catch (SQLException e) {
       e.printStackTrace();
     }

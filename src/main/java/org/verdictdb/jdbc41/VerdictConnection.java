@@ -16,17 +16,30 @@
 
 package org.verdictdb.jdbc41;
 
+import java.sql.Array;
+import java.sql.Blob;
+import java.sql.CallableStatement;
+import java.sql.Clob;
+import java.sql.DatabaseMetaData;
+import java.sql.NClob;
+import java.sql.SQLClientInfoException;
+import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
+import java.sql.SQLWarning;
+import java.sql.SQLXML;
+import java.sql.Savepoint;
+import java.sql.Struct;
+import java.util.Map;
+import java.util.Properties;
+import java.util.concurrent.Executor;
+
 import org.verdictdb.VerdictContext;
 import org.verdictdb.commons.VerdictOption;
 import org.verdictdb.connection.CachedDbmsConnection;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.exception.VerdictDBDbmsException;
-
-import java.sql.*;
-import java.util.Map;
-import java.util.Properties;
-import java.util.concurrent.Executor;
+import org.verdictdb.exception.VerdictDBException;
 
 public class VerdictConnection implements java.sql.Connection {
 
@@ -34,25 +47,25 @@ public class VerdictConnection implements java.sql.Connection {
 
   boolean isOpen = false;
 
-  public VerdictConnection(String url) throws VerdictDBDbmsException, SQLException {
+  public VerdictConnection(String url) throws SQLException, VerdictDBException {
     vc = VerdictContext.fromConnectionString(url);
     isOpen = true;
   }
 
   public VerdictConnection(String url, Properties info)
-      throws VerdictDBDbmsException, SQLException {
+      throws SQLException, VerdictDBException {
     vc = VerdictContext.fromConnectionString(url, info);
     isOpen = true;
   }
 
   public VerdictConnection(String url, String user, String password)
-      throws VerdictDBDbmsException, SQLException {
+      throws SQLException, VerdictDBException {
     vc = VerdictContext.fromConnectionString(url, user, password);
     isOpen = true;
   }
 
   public VerdictConnection(String url, String user, String password, VerdictOption options)
-      throws VerdictDBDbmsException, SQLException {
+      throws SQLException, VerdictDBException {
     vc = VerdictContext.fromConnectionString(url, user, password, options);
     isOpen = true;
   }

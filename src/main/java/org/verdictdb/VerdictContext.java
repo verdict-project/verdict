@@ -16,6 +16,13 @@
 
 package org.verdictdb;
 
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Properties;
+
 import org.apache.commons.lang3.RandomStringUtils;
 import org.verdictdb.commons.VerdictOption;
 import org.verdictdb.connection.CachedDbmsConnection;
@@ -26,18 +33,12 @@ import org.verdictdb.coordinator.ExecutionContext;
 import org.verdictdb.coordinator.VerdictResultStream;
 import org.verdictdb.coordinator.VerdictSingleResult;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
+import org.verdictdb.core.sqlobject.CreateSchemaQuery;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.metastore.ScrambleMetaStore;
 import org.verdictdb.sqlsyntax.SqlSyntax;
 import org.verdictdb.sqlsyntax.SqlSyntaxList;
-
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Properties;
 
 public class VerdictContext {
 
@@ -65,11 +66,23 @@ public class VerdictContext {
     this.scrambleMetaSet = ScrambleMetaStore.retrieve(conn, options);
   }
 
-  public VerdictContext(DbmsConnection conn, VerdictOption options) {
+  public VerdictContext(DbmsConnection conn, VerdictOption options) throws VerdictDBException {
     this.conn = new CachedDbmsConnection(conn);
     this.contextId = RandomStringUtils.randomAlphanumeric(5);
     this.options = options;
     this.scrambleMetaSet = ScrambleMetaStore.retrieve(conn, options);
+    initialize(options);
+  }
+  
+  /**
+   * Creates the schema for temp tables.
+   * @throws VerdictDBException 
+   */
+  private void initialize(VerdictOption option) throws VerdictDBException {
+    String schema = option.getVerdictTempSchemaName();
+    CreateSchemaQuery query = new CreateSchemaQuery(schema);
+    query.setIfNotExists(true);
+    conn.execute(query);
   }
 
   /**
@@ -92,10 +105,10 @@ public class VerdictContext {
    * @param jdbcConnectionString
    * @return
    * @throws SQLException
-   * @throws VerdictDBDbmsException
+   * @throws VerdictDBException 
    */
   public static VerdictContext fromConnectionString(String jdbcConnectionString)
-      throws SQLException, VerdictDBDbmsException {
+      throws SQLException, VerdictDBException {
     attemptLoadDriverClass(jdbcConnectionString);
     VerdictOption options = new VerdictOption();
     options.parseConnectionString(jdbcConnectionString);
@@ -109,10 +122,10 @@ public class VerdictContext {
    * @param info
    * @return
    * @throws SQLException
-   * @throws VerdictDBDbmsException
+   * @throws VerdictDBException 
    */
   public static VerdictContext fromConnectionString(String jdbcConnectionString, Properties info)
-      throws SQLException, VerdictDBDbmsException {
+      throws SQLException, VerdictDBException {
     attemptLoadDriverClass(jdbcConnectionString);
     VerdictOption options = new VerdictOption();
     options.parseProperties(info);
@@ -130,11 +143,11 @@ public class VerdictContext {
    * @param password
    * @return
    * @throws SQLException
-   * @throws VerdictDBDbmsException
+   * @throws VerdictDBException 
    */
   public static VerdictContext fromConnectionString(
       String jdbcConnectionString, String user, String password)
-      throws SQLException, VerdictDBDbmsException {
+      throws SQLException, VerdictDBException {
     attemptLoadDriverClass(jdbcConnectionString);
     Properties info = new Properties();
     info.setProperty("user", user);
@@ -143,10 +156,18 @@ public class VerdictContext {
     options.parseConnectionString(jdbcConnectionString);
     return new VerdictContext(ConcurrentJdbcConnection.create(jdbcConnectionString, info), options);
   }
+  
+  public static VerdictContext fromConnectionString(
+      String jdbcConnectionString, VerdictOption options)
+      throws SQLException, VerdictDBException {
+    attemptLoadDriverClass(jdbcConnectionString);
+    options.parseConnectionString(jdbcConnectionString);
+    return new VerdictContext(ConcurrentJdbcConnection.create(jdbcConnectionString), options);
+  }
 
   public static VerdictContext fromConnectionString(
       String jdbcConnectionString, String user, String password, VerdictOption options)
-      throws SQLException, VerdictDBDbmsException {
+      throws SQLException, VerdictDBException {
     attemptLoadDriverClass(jdbcConnectionString);
     Properties info = new Properties();
     info.setProperty("user", user);
@@ -169,6 +190,10 @@ public class VerdictContext {
 
   public DbmsConnection getConnection() {
     return conn;
+  }
+  
+  public void setDefaultSchema(String schema) {
+    conn.setDefaultSchema(schema);
   }
 
   public void close() {

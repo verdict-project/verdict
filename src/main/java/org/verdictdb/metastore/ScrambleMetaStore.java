@@ -16,24 +16,31 @@
 
 package org.verdictdb.metastore;
 
+import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.commons.VerdictDBLogger;
 import org.verdictdb.commons.VerdictOption;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.DbmsQueryResult;
-import org.verdictdb.core.querying.CreateSchemaQuery;
 import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
-import org.verdictdb.core.sqlobject.*;
+import org.verdictdb.core.sqlobject.BaseColumn;
+import org.verdictdb.core.sqlobject.BaseTable;
+import org.verdictdb.core.sqlobject.CreateSchemaQuery;
+import org.verdictdb.core.sqlobject.CreateTableDefinitionQuery;
+import org.verdictdb.core.sqlobject.DropTableQuery;
+import org.verdictdb.core.sqlobject.InsertValuesQuery;
+import org.verdictdb.core.sqlobject.OrderbyAttribute;
+import org.verdictdb.core.sqlobject.SelectItem;
+import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sqlsyntax.ImpalaSyntax;
 import org.verdictdb.sqlsyntax.RedshiftSyntax;
 import org.verdictdb.sqlwriter.QueryToSql;
-
-import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
 
 public class ScrambleMetaStore extends VerdictMetaStore {
 

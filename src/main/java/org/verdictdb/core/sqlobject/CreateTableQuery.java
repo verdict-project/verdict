@@ -25,6 +25,14 @@ public class CreateTableQuery implements SqlConvertible {
   protected String tableName;
 
   protected boolean ifNotExists = false;
+  
+  public static CreateTableQuery create(String schema, String table) {
+    CreateTableQuery query = new CreateTableQuery();
+    query.schemaName = schema;
+    query.tableName = table;
+    query.ifNotExists = true;
+    return query;
+  }
 
   public String getSchemaName() {
     return schemaName;

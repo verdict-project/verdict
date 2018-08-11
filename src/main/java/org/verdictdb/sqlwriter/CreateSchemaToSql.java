@@ -16,7 +16,7 @@
 
 package org.verdictdb.sqlwriter;
 
-import org.verdictdb.core.querying.CreateSchemaQuery;
+import org.verdictdb.core.sqlobject.CreateSchemaQuery;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sqlsyntax.SqlSyntax;
 

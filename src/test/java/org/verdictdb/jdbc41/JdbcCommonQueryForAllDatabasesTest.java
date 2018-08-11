@@ -1,5 +1,19 @@
 package org.verdictdb.jdbc41;
 
+import static org.junit.Assert.assertEquals;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -7,12 +21,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.verdictdb.commons.VerdictOption;
-import org.verdictdb.exception.VerdictDBDbmsException;
-
-import java.sql.*;
-import java.util.*;
-
-import static org.junit.Assert.assertEquals;
+import org.verdictdb.exception.VerdictDBException;
 
 /** Created by Dong Young Yoon on 7/18/18. */
 @RunWith(Parameterized.class)
@@ -102,7 +111,7 @@ public class JdbcCommonQueryForAllDatabasesTest {
   }
 
   @BeforeClass
-  public static void setupDatabases() throws SQLException, VerdictDBDbmsException {
+  public static void setupDatabases() throws SQLException, VerdictDBException {
     setupMysql();
     setupImpala();
     setupRedshift();
@@ -202,7 +211,7 @@ public class JdbcCommonQueryForAllDatabasesTest {
     }
   }
 
-  private static Connection setupMysql() throws SQLException, VerdictDBDbmsException {
+  private static Connection setupMysql() throws SQLException, VerdictDBException {
     String mysqlConnectionString =
         String.format("jdbc:mysql://%s?autoReconnect=true&useSSL=false", MYSQL_HOST);
     Connection conn =
@@ -218,7 +227,7 @@ public class JdbcCommonQueryForAllDatabasesTest {
     return conn;
   }
 
-  private static Connection setupImpala() throws SQLException, VerdictDBDbmsException {
+  private static Connection setupImpala() throws SQLException, VerdictDBException {
     String connectionString = String.format("jdbc:impala://%s", IMPALA_HOST);
     Connection conn = DriverManager.getConnection(connectionString, IMPALA_USER, IMPALA_PASSWORD);
     VerdictConnection vc = new VerdictConnection(connectionString, IMPALA_USER, IMPALA_PASSWORD);
@@ -232,7 +241,7 @@ public class JdbcCommonQueryForAllDatabasesTest {
     return conn;
   }
 
-  public static Connection setupRedshift() throws SQLException, VerdictDBDbmsException {
+  public static Connection setupRedshift() throws SQLException, VerdictDBException {
     String connectionString =
         String.format("jdbc:redshift://%s/%s", REDSHIFT_HOST, REDSHIFT_DATABASE);
     Connection conn =
@@ -249,7 +258,7 @@ public class JdbcCommonQueryForAllDatabasesTest {
     return conn;
   }
 
-  public static Connection setupPostgresql() throws SQLException, VerdictDBDbmsException {
+  public static Connection setupPostgresql() throws SQLException, VerdictDBException {
     String connectionString =
         String.format("jdbc:postgresql://%s/%s", POSTGRES_HOST, POSTGRES_DATABASE);
     Connection conn =

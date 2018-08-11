@@ -1,5 +1,19 @@
 package org.verdictdb.jdbc41;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -9,16 +23,7 @@ import org.junit.runners.Parameterized;
 import org.postgresql.jdbc.PgSQLXML;
 import org.verdictdb.commons.DatabaseConnectionHelpers;
 import org.verdictdb.commons.VerdictOption;
-import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.exception.VerdictDBException;
-
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.*;
-
-import static org.junit.Assert.*;
 
 /** Created by Dong Young Yoon on 7/18/18. */
 @RunWith(Parameterized.class)
@@ -115,7 +120,7 @@ public class JdbcQueryDataTypeForAllDatabasesTest {
       "data_type_test" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
 
   @BeforeClass
-  public static void setup() throws SQLException, VerdictDBDbmsException {
+  public static void setup() throws SQLException, VerdictDBException {
     options.setVerdictMetaSchemaName(VERDICT_META_SCHEMA);
     options.setVerdictTempSchemaName(VERDICT_TEMP_SCHEMA);
     setupMysql();
@@ -142,7 +147,7 @@ public class JdbcQueryDataTypeForAllDatabasesTest {
     return params;
   }
 
-  private static void setupMysql() throws SQLException, VerdictDBDbmsException {
+  private static void setupMysql() throws SQLException, VerdictDBException {
     String mysqlConnectionString =
         String.format("jdbc:mysql://%s?autoReconnect=true&useSSL=false", MYSQL_HOST);
     String vcMysqlConnectionString =
@@ -173,7 +178,7 @@ public class JdbcQueryDataTypeForAllDatabasesTest {
     conn.close();
   }
 
-  private static void setupImpala() throws SQLException, VerdictDBDbmsException {
+  private static void setupImpala() throws SQLException, VerdictDBException {
     String connectionString = String.format("jdbc:impala://%s", IMPALA_HOST);
     Connection conn =
         DatabaseConnectionHelpers.setupImpalaForDataTypeTest(
@@ -202,7 +207,7 @@ public class JdbcQueryDataTypeForAllDatabasesTest {
     conn.close();
   }
 
-  private static void setupRedshift() throws SQLException, VerdictDBDbmsException {
+  private static void setupRedshift() throws SQLException, VerdictDBException {
     String connectionString =
         String.format("jdbc:redshift://%s/%s", REDSHIFT_HOST, REDSHIFT_DATABASE);
     Connection conn =
@@ -232,7 +237,7 @@ public class JdbcQueryDataTypeForAllDatabasesTest {
     conn.close();
   }
 
-  private static void setupPostgresql() throws SQLException, VerdictDBDbmsException {
+  private static void setupPostgresql() throws SQLException, VerdictDBException {
     String connectionString =
         String.format("jdbc:postgresql://%s/%s", POSTGRES_HOST, POSTGRES_DATABASE);
     Connection conn =

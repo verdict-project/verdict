@@ -16,13 +16,18 @@
 
 package org.verdictdb.coordinator;
 
+import static org.verdictdb.coordinator.VerdictSingleResultFromListData.createWithSingleColumn;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.VerdictContext;
 import org.verdictdb.commons.VerdictDBLogger;
 import org.verdictdb.commons.VerdictOption;
 import org.verdictdb.connection.DbmsConnection;
-import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.core.resulthandler.ExecutionResultReader;
 import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.core.sqlobject.BaseTable;
@@ -35,14 +40,6 @@ import org.verdictdb.parser.VerdictSQLParser;
 import org.verdictdb.parser.VerdictSQLParserBaseVisitor;
 import org.verdictdb.sqlreader.NonValidatingSQLParser;
 import org.verdictdb.sqlreader.RelationGen;
-import org.verdictdb.sqlsyntax.PostgresqlSyntax;
-import org.verdictdb.sqlsyntax.RedshiftSyntax;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import static org.verdictdb.coordinator.VerdictSingleResultFromListData.createWithSingleColumn;
 
 /**
  * Stores the context for a single query execution. Includes both scrambling query and select query.
@@ -106,7 +103,7 @@ public class ExecutionContext {
     if (queryType.equals(QueryType.select)) {
       LOG.debug("Query type: select");
       SelectQueryCoordinator coordinator =
-          new SelectQueryCoordinator(context.getCopiedConnection(), options);
+          new SelectQueryCoordinator(context.getCopiedConnection(), context.getScrambleMetaSet(), options);
       ExecutionResultReader reader = coordinator.process(query, queryContext);
       VerdictResultStream stream = new VerdictResultStreamFromExecutionResultReader(reader, this);
       return stream;

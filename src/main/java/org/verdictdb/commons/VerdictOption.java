@@ -16,11 +16,11 @@
 
 package org.verdictdb.commons;
 
-import com.rits.cloning.Cloner;
-
 import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import com.rits.cloning.Cloner;
 
 /** Created by Dong Young Yoon on 8/9/18. */
 public class VerdictOption {
