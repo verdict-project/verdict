@@ -26,6 +26,11 @@ public class JdbcCommonQueryForAllDatabasesTest {
 
   private static VerdictOption options = new VerdictOption();
 
+  private static final String VERDICT_META_SCHEMA =
+      "verdictdbmetaschema_" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
+  private static final String VERDICT_TEMP_SCHEMA =
+      "verdictdbtempschema_" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
+
   private static final String MYSQL_HOST;
 
   private String database = "";
@@ -103,6 +108,8 @@ public class JdbcCommonQueryForAllDatabasesTest {
 
   @BeforeClass
   public static void setupDatabases() throws SQLException, VerdictDBDbmsException {
+    options.setVerdictMetaSchemaName(VERDICT_META_SCHEMA);
+    options.setVerdictTempSchemaName(VERDICT_TEMP_SCHEMA);
     setupMysql();
     setupImpala();
     setupRedshift();
@@ -215,7 +222,8 @@ public class JdbcCommonQueryForAllDatabasesTest {
         String.format("jdbc:mysql://%s?autoReconnect=true&useSSL=false", MYSQL_HOST);
     Connection conn =
         DriverManager.getConnection(mysqlConnectionString, MYSQL_USER, MYSQL_PASSWORD);
-    VerdictConnection vc = new VerdictConnection(mysqlConnectionString, MYSQL_USER, MYSQL_PASSWORD);
+    VerdictConnection vc =
+        new VerdictConnection(mysqlConnectionString, MYSQL_USER, MYSQL_PASSWORD, options);
     loadData(conn);
     connMap.put("mysql", conn);
     vcMap.put("mysql", vc);
@@ -229,7 +237,8 @@ public class JdbcCommonQueryForAllDatabasesTest {
   private static Connection setupImpala() throws SQLException, VerdictDBDbmsException {
     String connectionString = String.format("jdbc:impala://%s", IMPALA_HOST);
     Connection conn = DriverManager.getConnection(connectionString, IMPALA_USER, IMPALA_PASSWORD);
-    VerdictConnection vc = new VerdictConnection(connectionString, IMPALA_USER, IMPALA_PASSWORD);
+    VerdictConnection vc =
+        new VerdictConnection(connectionString, IMPALA_USER, IMPALA_PASSWORD, options);
     loadDataImpala(conn);
     connMap.put("impala", conn);
     vcMap.put("impala", vc);
@@ -248,7 +257,7 @@ public class JdbcCommonQueryForAllDatabasesTest {
     Connection conn =
         DriverManager.getConnection(connectionString, REDSHIFT_USER, REDSHIFT_PASSWORD);
     VerdictConnection vc =
-        new VerdictConnection(connectionString, REDSHIFT_USER, REDSHIFT_PASSWORD);
+        new VerdictConnection(connectionString, REDSHIFT_USER, REDSHIFT_PASSWORD, options);
     loadData(conn);
     connMap.put("redshift", conn);
     vcMap.put("redshift", vc);
@@ -265,7 +274,7 @@ public class JdbcCommonQueryForAllDatabasesTest {
     Connection conn =
         DriverManager.getConnection(connectionString, POSTGRES_USER, POSTGRES_PASSWORD);
     VerdictConnection vc =
-        new VerdictConnection(connectionString, POSTGRES_USER, POSTGRES_PASSWORD);
+        new VerdictConnection(connectionString, POSTGRES_USER, POSTGRES_PASSWORD, options);
     loadData(conn);
     connMap.put("postgresql", conn);
     vcMap.put("postgresql", vc);
