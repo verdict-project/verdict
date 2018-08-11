@@ -25,7 +25,6 @@ import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.coordinator.ExecutionContext;
 import org.verdictdb.coordinator.VerdictResultStream;
 import org.verdictdb.coordinator.VerdictSingleResult;
-import org.verdictdb.coordinator.VerdictSingleResultFromDbmsQueryResult;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.exception.VerdictDBException;
@@ -116,6 +115,7 @@ public class VerdictContext {
       throws SQLException, VerdictDBDbmsException {
     attemptLoadDriverClass(jdbcConnectionString);
     VerdictOption options = new VerdictOption();
+    options.parseConnectionString(jdbcConnectionString);
     options.parseProperties(info);
     return new VerdictContext(ConcurrentJdbcConnection.create(jdbcConnectionString, info), options);
     //    Connection jdbcConn = DriverManager.getConnection(jdbcConnectionString, info);
@@ -204,7 +204,8 @@ public class VerdictContext {
 
   public ExecutionContext createNewExecutionContext() {
     long execSerialNumber = getNextExecutionSerialNumber();
-    ExecutionContext exec = new ExecutionContext(this, execSerialNumber, options.copy());
+    ExecutionContext exec =
+        new ExecutionContext(conn.copy(), contextId, execSerialNumber, options.copy());
     executionContexts.add(exec);
     return exec;
   }
@@ -236,19 +237,6 @@ public class VerdictContext {
       String originalSchema, String originalTable, String newSchema, String newTable) {}
 
   /**
-   * Check whether given sql contains 'bypass' keyword at the beginning
-   *
-   * @param sql original sql
-   * @return without 'bypass' keyword if the original sql begins with it. null otherwise.
-   */
-  private String checkBypass(String sql) {
-    if (sql.trim().toLowerCase().startsWith("bypass")) {
-      return sql.trim().substring(6);
-    }
-    return null;
-  }
-
-  /**
    * Returns a reliable result set as an answer. Right now, simply returns the first batch of
    * Continuous results.
    *
@@ -260,15 +248,10 @@ public class VerdictContext {
    * @throws VerdictDBException
    */
   public VerdictSingleResult sql(String query) throws VerdictDBException {
-    String bypassSql = checkBypass(query);
-    if (bypassSql != null) {
-      return executeAsIs(bypassSql);
-    } else {
-      ExecutionContext exec = createNewExecutionContext();
-      VerdictSingleResult result = exec.sql(query);
-      removeExecutionContext(exec);
-      return result;
-    }
+    ExecutionContext exec = createNewExecutionContext();
+    VerdictSingleResult result = exec.sql(query);
+    removeExecutionContext(exec);
+    return result;
   }
 
   /**
@@ -281,9 +264,5 @@ public class VerdictContext {
     ExecutionContext exec = createNewExecutionContext();
     VerdictResultStream stream = exec.streamsql(query);
     return stream;
-  }
-
-  private VerdictSingleResult executeAsIs(String sql) throws VerdictDBDbmsException {
-    return new VerdictSingleResultFromDbmsQueryResult(conn.execute(sql));
   }
 }

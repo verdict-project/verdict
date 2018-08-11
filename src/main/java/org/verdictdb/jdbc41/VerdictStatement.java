@@ -21,31 +21,25 @@ import org.verdictdb.coordinator.ExecutionContext;
 import org.verdictdb.coordinator.VerdictSingleResult;
 import org.verdictdb.exception.VerdictDBException;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.SQLFeatureNotSupportedException;
-import java.sql.SQLWarning;
+import java.sql.*;
 
 public class VerdictStatement implements java.sql.Statement {
 
-  VerdictConnection jdbcConn;
-
-  VerdictContext context;
+  Connection conn;
 
   ExecutionContext executionContext;
 
   VerdictSingleResult result;
 
-  public VerdictStatement(VerdictConnection jdbcConn, VerdictContext context) {
-    this.jdbcConn = jdbcConn;
-    this.context = context;
+  public VerdictStatement(Connection conn, VerdictContext context) {
+    this.conn = conn;
     this.executionContext = context.createNewExecutionContext();
   }
 
   @Override
   public boolean execute(String sql) throws SQLException {
     try {
-      result = context.sql(sql);
+      result = executionContext.sql(sql);
       if (result == null) {
         return false;
       }
@@ -58,7 +52,7 @@ public class VerdictStatement implements java.sql.Statement {
   @Override
   public ResultSet executeQuery(String sql) throws SQLException {
     try {
-      result = context.sql(sql);
+      result = executionContext.sql(sql);
       return new VerdictResultSet(result);
     } catch (VerdictDBException e) {
       throw new SQLException(e);
@@ -68,7 +62,7 @@ public class VerdictStatement implements java.sql.Statement {
   @Override
   public int executeUpdate(String sql) throws SQLException {
     try {
-      result = context.sql(sql);
+      result = executionContext.sql(sql);
       return (int) result.getRowCount();
     } catch (VerdictDBException e) {
       throw new SQLException(e);
@@ -94,7 +88,7 @@ public class VerdictStatement implements java.sql.Statement {
 
   @Override
   public java.sql.Connection getConnection() throws SQLException {
-    return jdbcConn;
+    return conn;
   }
 
   @Override
