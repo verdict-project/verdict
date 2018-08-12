@@ -23,10 +23,7 @@ import org.verdictdb.metastore.ScrambleMetaStore;
 
 import java.io.IOException;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -62,6 +59,7 @@ public class CreateScrambleTableFromSqlTest {
   @BeforeClass
   public static void setup() throws VerdictDBDbmsException, SQLException, IOException {
     options.setVerdictTempSchemaName(TEMP_SCHEMA_NAME);
+    options.setVerdictMetaSchemaName(TEMP_SCHEMA_NAME);
     setupMysql();
     setupImpala();
     setupRedshift();
@@ -106,8 +104,8 @@ public class CreateScrambleTableFromSqlTest {
             DatabaseConnectionHelpers.MYSQL_HOST);
     String vcMysqlConnectionString =
         String.format(
-            "jdbc:verdict:mysql://%s?autoReconnect=true&useSSL=false",
-            DatabaseConnectionHelpers.MYSQL_HOST);
+            "jdbc:verdict:mysql://%s?autoReconnect=true&useSSL=false&verdictdbtempschema=%s&verdictdbmetaschema=%s",
+            DatabaseConnectionHelpers.MYSQL_HOST, TEMP_SCHEMA_NAME, TEMP_SCHEMA_NAME);
     Connection conn =
         DatabaseConnectionHelpers.setupMySql(
             mysqlConnectionString,
@@ -131,7 +129,9 @@ public class CreateScrambleTableFromSqlTest {
     String connectionString =
         String.format("jdbc:impala://%s", DatabaseConnectionHelpers.IMPALA_HOST);
     String vcConnectionString =
-        String.format("jdbc:verdict:impala://%s", DatabaseConnectionHelpers.IMPALA_HOST);
+        String.format(
+            "jdbc:verdict:impala://%s;verdictdbtempschema=%s;verdictdbmetaschema=%s",
+            DatabaseConnectionHelpers.IMPALA_HOST, TEMP_SCHEMA_NAME, TEMP_SCHEMA_NAME);
     Connection conn =
         DatabaseConnectionHelpers.setupImpala(
             connectionString,
@@ -160,9 +160,10 @@ public class CreateScrambleTableFromSqlTest {
             DatabaseConnectionHelpers.REDSHIFT_HOST, DatabaseConnectionHelpers.REDSHIFT_DATABASE);
     String vcConnectionString =
         String.format(
-            "jdbc:verdict:redshift://%s/%s;verdictdbtempschema=%s",
+            "jdbc:verdict:redshift://%s/%s;verdictdbtempschema=%s;verdictdbmetaschema=%s",
             DatabaseConnectionHelpers.REDSHIFT_HOST,
             DatabaseConnectionHelpers.REDSHIFT_DATABASE,
+            TEMP_SCHEMA_NAME,
             TEMP_SCHEMA_NAME);
     Connection conn =
         DatabaseConnectionHelpers.setupRedshift(
@@ -200,11 +201,12 @@ public class CreateScrambleTableFromSqlTest {
             DatabaseConnectionHelpers.POSTGRES_USER,
             DatabaseConnectionHelpers.POSTGRES_PASSWORD,
             DatabaseConnectionHelpers.COMMON_SCHEMA_NAME);
-    Connection vc =
-        DriverManager.getConnection(
-            vcConnectionString,
-            DatabaseConnectionHelpers.POSTGRES_USER,
-            DatabaseConnectionHelpers.COMMON_SCHEMA_NAME);
+    Properties prop = new Properties();
+    prop.setProperty("user", DatabaseConnectionHelpers.POSTGRES_USER);
+    prop.setProperty("password", DatabaseConnectionHelpers.POSTGRES_PASSWORD);
+    prop.setProperty("verdictdbmetaschema", TEMP_SCHEMA_NAME);
+    prop.setProperty("verdictdbtempschema", TEMP_SCHEMA_NAME);
+    Connection vc = DriverManager.getConnection(vcConnectionString, prop);
 
     conn.createStatement()
         .execute(String.format("DROP SCHEMA IF EXISTS %s CASCADE", TEMP_SCHEMA_NAME));
