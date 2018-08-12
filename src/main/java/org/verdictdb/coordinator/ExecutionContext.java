@@ -120,6 +120,7 @@ public class ExecutionContext {
 
       VerdictSingleResult result = stream.next();
       stream.close();
+      abort();
       return result;
     }
   }

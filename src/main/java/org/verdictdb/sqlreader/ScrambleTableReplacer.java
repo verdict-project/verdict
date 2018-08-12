@@ -19,6 +19,7 @@ package org.verdictdb.sqlreader;
 import java.util.Iterator;
 import java.util.List;
 
+import org.verdictdb.commons.VerdictDBLogger;
 import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
 import org.verdictdb.core.sqlobject.AbstractRelation;
@@ -33,6 +34,8 @@ public class ScrambleTableReplacer {
 //  private ScrambleMetaStore store;
   
   private ScrambleMetaSet metaSet;
+  
+  private VerdictDBLogger log = VerdictDBLogger.getLogger(this.getClass());
 
   public ScrambleTableReplacer(ScrambleMetaSet metaSet) {
     this.metaSet = metaSet;
@@ -60,6 +63,11 @@ public class ScrambleTableReplacer {
             && meta.getOriginalTableName().equals(bt.getTableName())) {
           bt.setSchemaName(meta.getSchemaName());
           bt.setTableName(meta.getTableName());
+          
+          log.info(String.format("Automatic table replacement: %s.%s -> %s.%s",
+              meta.getOriginalSchemaName(), meta.getOriginalTableName(), 
+              meta.getSchemaName(), meta.getTableName()));
+          
           break;
         }
       }

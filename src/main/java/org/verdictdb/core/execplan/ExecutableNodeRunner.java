@@ -30,6 +30,7 @@ import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.core.querying.ExecutableNodeBase;
 import org.verdictdb.core.sqlobject.SqlConvertible;
+import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBValueException;
 import org.verdictdb.sqlwriter.QueryToSql;
@@ -216,7 +217,15 @@ public class ExecutableNodeRunner implements Runnable {
     DbmsQueryResult intermediate = null;
     if (sqlObj != null) {
       String sql = QueryToSql.convert(conn.getSyntax(), sqlObj);
-      intermediate = conn.execute(sql);
+      try {
+        intermediate = conn.execute(sql);
+      } catch (VerdictDBDbmsException e) {
+        if (isAborted) {
+          // the errors from the underlying dbms are expected if the query is cancelled.
+        } else {
+          throw e;
+        }
+      }
     }
     ExecutionInfoToken token = node.createToken(intermediate);
 

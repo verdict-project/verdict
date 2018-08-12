@@ -56,6 +56,8 @@ public class JdbcConnection extends DbmsConnection {
   private Statement runningStatement = null;
 
   private VerdictDBLogger log;
+  
+  private boolean isAborting = false;
 
   public static JdbcConnection create(Connection conn) throws VerdictDBDbmsException {
     String connectionString = null;
@@ -94,6 +96,7 @@ public class JdbcConnection extends DbmsConnection {
   @Override
   public void abort() {
     log.trace("Aborts a statement if running.");
+    isAborting = true;
     try {
       if (runningStatement != null && !runningStatement.isClosed()) {
         log.trace("Aborts a running statement.");
@@ -101,6 +104,8 @@ public class JdbcConnection extends DbmsConnection {
         runningStatement.close();
         runningStatement = null;
       }
+      
+      isAborting = false;
     } catch (SQLException e) {
       e.printStackTrace();
     }
@@ -202,8 +207,7 @@ public class JdbcConnection extends DbmsConnection {
       stmt.close();
       return jrs;
     } catch (SQLException e) {
-      if (e.getMessage().contains("Operation is canceled")) {
-        // do nothing
+      if (isAborting) {
         return null;
       } else {
         throw new VerdictDBDbmsException(e.getMessage());
