@@ -272,27 +272,9 @@ public abstract class QueryNodeWithPlaceHolders extends QueryNodeBase {
   }
 }
 
-class PlaceHolderRecord implements Serializable {
-
-  private BaseTable placeholderTable;
-  
-  private int subscriptionChannel;
-  
-  public PlaceHolderRecord(BaseTable placeholderTable, int subscriptionChannel) {
-    this.placeholderTable = placeholderTable;
-    this.subscriptionChannel = subscriptionChannel;
-  }
-  
-  public BaseTable getPlaceholderTable() {
-    return placeholderTable;
-  }
-  
-  public int getSubscriptionChannel() {
-    return subscriptionChannel;
-  }
-}
-
 class UniquePlaceholderNameCreator implements Serializable {
+
+  private static final long serialVersionUID = -1364930156601816114L;
 
   private int identifier = 0;
   
