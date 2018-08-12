@@ -195,7 +195,7 @@ public abstract class QueryNodeWithPlaceHolders extends QueryNodeBase {
    * @return The removed record
    */
   public PlaceHolderRecord removePlaceholderRecordForChannel(int channel) {
-    int indexToRemove = 0;
+    int indexToRemove = -1;
     for (int i = 0; i < placeholderRecords.size(); i++) {
       PlaceHolderRecord record = placeholderRecords.get(i);
       if (record.getSubscriptionChannel() == channel) {
@@ -203,8 +203,12 @@ public abstract class QueryNodeWithPlaceHolders extends QueryNodeBase {
         break;
       }
     }
-    PlaceHolderRecord removed = placeholderRecords.remove(indexToRemove);
-    return removed;
+    if (indexToRemove >= 0) {
+      PlaceHolderRecord removed = placeholderRecords.remove(indexToRemove);
+      return removed;
+    } else {
+      return null;
+    }
   }
   
   public void addPlaceholderRecord(PlaceHolderRecord record) {

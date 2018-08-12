@@ -54,7 +54,7 @@ public class JdbcTpchQueryForAllDatabasesTest {
   // TODO: Add support for all four databases
   //  private static final String[] targetDatabases = {"mysql", "impala", "redshift", "postgresql"};
   private static final String[] targetDatabases = {"mysql", "impala", "redshift"};
-  //  private static final String[] targetDatabases = { "impala" };
+//    private static final String[] targetDatabases = { "mysql" };
 
   public JdbcTpchQueryForAllDatabasesTest(String database, String query) {
     this.database = database;

@@ -184,9 +184,7 @@ public class JdbcConnection extends DbmsConnection {
   }
 
   public DbmsQueryResult executeSingle(String sql) throws VerdictDBDbmsException {
-
-    VerdictDBLogger logger = VerdictDBLogger.getLogger(this.getClass());
-    logger.debug("Issuing the following query to DBMS: " + sql);
+    log.debug("Issuing the following query to DBMS: " + sql);
 
     try {
       Statement stmt = conn.createStatement();
@@ -204,50 +202,18 @@ public class JdbcConnection extends DbmsConnection {
       stmt.close();
       return jrs;
     } catch (SQLException e) {
-//      e.printStackTrace();
-      //      logger.debug(StackTraceReader.stackTrace2String(e));
-      throw new VerdictDBDbmsException(e.getMessage());
+      if (e.getMessage().contains("Operation is canceled")) {
+        // do nothing
+        return null;
+      } else {
+        throw new VerdictDBDbmsException(e.getMessage());
+      }
     }
   }
-
-  //  @Override
-  //  public DbmsQueryResult getResult() {
-  //    return jrs;
-  //  }
 
   public DbmsQueryResult executeQuery(String sql) throws VerdictDBDbmsException {
     return execute(sql);
   }
-
-  //  @Override
-  //  public DbmsQueryResult executeQuery(String query) throws VerdictDBDbmsException {
-  //    System.out.println("About to issue this query: " + query);
-  //    try {
-  //      Statement stmt = conn.createStatement();
-  //      ResultSet rs = stmt.executeQuery(query);
-  //      JdbcQueryResult jrs = new JdbcQueryResult(rs);
-  //      rs.close();
-  //      stmt.close();
-  //      return jrs;
-  //    } catch (SQLException e) {
-  //      throw new VerdictDBDbmsException(e.getMessage());
-  //    }
-  //  }
-  //
-  //  @Override
-  //  public int executeUpdate(String query) throws VerdictDBDbmsException {
-  //    System.out.println("About to issue this query: " + query);
-  //    try {
-  //      Statement stmt = conn.createStatement();
-  //      int r = stmt.executeUpdate(query);
-  //      stmt.close();
-  //      return r;
-  //    } catch (SQLException e) {
-  //      throw new VerdictDBDbmsException(e);
-  ////      e.printStackTrace();
-  ////      return 0;
-  //    }
-  //  }
 
   @Override
   public SqlSyntax getSyntax() {
@@ -307,9 +273,6 @@ public class JdbcConnection extends DbmsConnection {
         type = queryResult.getString(syntax.getColumnTypeColumnIndex());
       }
       type = type.toLowerCase();
-
-      //        // remove the size of type
-      //        type = type.replaceAll("\\(.*\\)", "");
 
       columns.add(
           new ImmutablePair<>(queryResult.getString(syntax.getColumnNameColumnIndex()), type));

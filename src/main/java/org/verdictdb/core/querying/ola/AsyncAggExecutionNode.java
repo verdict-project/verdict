@@ -33,6 +33,7 @@ import org.verdictdb.core.querying.AggExecutionNode;
 import org.verdictdb.core.querying.ExecutableNodeBase;
 import org.verdictdb.core.querying.IdCreator;
 import org.verdictdb.core.querying.ProjectionNode;
+import org.verdictdb.core.querying.QueryNodeBase;
 import org.verdictdb.core.querying.SubscriptionTicket;
 import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
@@ -110,13 +111,15 @@ public class AsyncAggExecutionNode extends ProjectionNode {
    * @param individualAggs
    * @param combiners
    * @param meta
+   * @param aggNodeBlock 
    * @return
    */
   public static AsyncAggExecutionNode create(
       IdCreator idCreator,
       List<ExecutableNodeBase> individualAggs,
       List<ExecutableNodeBase> combiners,
-      ScrambleMetaSet meta) {
+      ScrambleMetaSet meta, 
+      AggExecutionNodeBlock aggNodeBlock) {
 
     AsyncAggExecutionNode node = new AsyncAggExecutionNode(idCreator);
 
@@ -153,6 +156,18 @@ public class AsyncAggExecutionNode extends ProjectionNode {
     node.scrambledTableTierInfo = new ImmutableMap.Builder<Integer, String>()
         .putAll(aggColumnsAndQuery.getRight())
         .build();
+    
+    // add (1) order-by, (2) limit, (3) having clauses to the select query
+    QueryNodeBase aggRoot = (QueryNodeBase) aggNodeBlock.getBlockRootNode();
+    SelectQuery originalAggQuery = aggRoot.getSelectQuery();
+    node.selectQuery.addOrderby(originalAggQuery.getOrderby());
+    if (originalAggQuery.getLimit().isPresent()) {
+      node.selectQuery.addLimit(originalAggQuery.getLimit().get());
+    }
+    if (originalAggQuery.getHaving().isPresent()) {
+      node.selectQuery.addHavingByAnd(originalAggQuery.getHaving().get());
+    }
+    
     return node;
   }
 

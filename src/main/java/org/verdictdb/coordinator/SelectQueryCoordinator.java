@@ -31,6 +31,7 @@ import org.verdictdb.connection.StaticMetaData;
 import org.verdictdb.core.execplan.ExecutablePlanRunner;
 import org.verdictdb.core.querying.QueryExecutionPlan;
 import org.verdictdb.core.querying.QueryExecutionPlanFactory;
+import org.verdictdb.core.querying.QueryExecutionPlanSimplifier;
 import org.verdictdb.core.querying.ola.AsyncQueryExecutionPlan;
 import org.verdictdb.core.resulthandler.ExecutionResultReader;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
@@ -118,7 +119,7 @@ public class SelectQueryCoordinator implements Coordinator {
 
     // simplify the plan
     //    QueryExecutionPlan simplifiedAsyncPlan = QueryExecutionPlanSimplifier.simplify(asyncPlan);
-    //    QueryExecutionPlanSimplifier.simplify2(asyncPlan);
+    QueryExecutionPlanSimplifier.simplify2(asyncPlan);
 
     //    asyncPlan.getRootNode().print();
 
@@ -146,12 +147,12 @@ public class SelectQueryCoordinator implements Coordinator {
     // if the plan does not include any aggregates, this operation should not alter the original
     // plan.
     QueryExecutionPlan asyncPlan = AsyncQueryExecutionPlan.create(plan);
-    
-    log.debug(asyncPlan.getRoot().getStructure());
 
     // simplify the plan
     //    QueryExecutionPlan simplifiedAsyncPlan = QueryExecutionPlanSimplifier.simplify(asyncPlan);
-    //    QueryExecutionPlanSimplifier.simplify2(asyncPlan);
+    QueryExecutionPlanSimplifier.simplify2(asyncPlan);
+    
+    log.debug(asyncPlan.getRoot().getStructure());
 
     // execute the plan
     planRunner = new ExecutablePlanRunner(conn, asyncPlan);
@@ -175,11 +176,11 @@ public class SelectQueryCoordinator implements Coordinator {
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     SelectQuery relation = (SelectQuery) sqlToRelation.toRelation(query);
     MetaDataProvider metaData = createMetaDataFor(relation);
-    ScrambleMetaStore metaStore = new ScrambleMetaStore(conn, options);
+//    ScrambleMetaStore metaStore = new ScrambleMetaStore(conn, options);
     RelationStandardizer gen = new RelationStandardizer(metaData, conn.getSyntax());
     relation = gen.standardize(relation);
 
-    ScrambleTableReplacer replacer = new ScrambleTableReplacer(metaStore);
+    ScrambleTableReplacer replacer = new ScrambleTableReplacer(scrambleMetaSet);
     replacer.replace(relation);
 
     return relation;

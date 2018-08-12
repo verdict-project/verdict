@@ -38,12 +38,22 @@ public class DirectRetrievalExecutionNode extends QueryNodeWithPlaceHolders {
     parentNode = parent;
     childNode = child;
     
-    for (PlaceHolderRecord record : parentNode.getPlaceholderRecords()) {
-      addPlaceholderRecord(record);
+//    for (PlaceHolderRecord record : parentNode.getPlaceholderRecords()) {
+//      addPlaceholderRecord(record);
+//    }
+//    for (PlaceHolderRecord record : childNode.getPlaceholderRecords()) {
+//      addPlaceholderRecord(record);
+//    }
+  }
+  
+  @Override
+  public PlaceHolderRecord removePlaceholderRecordForChannel(int channel) {
+    PlaceHolderRecord record = parentNode.removePlaceholderRecordForChannel(channel);
+    if (record != null) {
+      return record;
     }
-    for (PlaceHolderRecord record : childNode.getPlaceholderRecords()) {
-      addPlaceholderRecord(record);
-    }
+    record = childNode.removePlaceholderRecordForChannel(channel);
+    return record;
   }
   
   public static DirectRetrievalExecutionNode create(
@@ -58,13 +68,14 @@ public class DirectRetrievalExecutionNode extends QueryNodeWithPlaceHolders {
     BaseTable baseTableToRemove = placeHolderToRemove.getPlaceholderTable();
     
     // replace in the source list
-    List<AbstractRelation> parentFromList = parentQuery.getFromList();
-    List<AbstractRelation> newParentFromList = new ArrayList<>();
-    for (AbstractRelation originalSource : parentFromList) {
-      AbstractRelation newSource = consolidateSource(originalSource, child, baseTableToRemove);
-      newParentFromList.add(newSource);
-    }
-    parentQuery.setFromList(newParentFromList);
+    parentQuery = (SelectQuery) consolidateSource(parentQuery, child, baseTableToRemove);
+//    List<AbstractRelation> parentFromList = parentQuery.getFromList();
+//    List<AbstractRelation> newParentFromList = new ArrayList<>();
+//    for (AbstractRelation originalSource : parentFromList) {
+//      AbstractRelation newSource = consolidateSource(originalSource, child, baseTableToRemove);
+//      newParentFromList.add(newSource);
+//    }
+//    parentQuery.setFromList(newParentFromList);
     
     // Filter: replace the placeholder BaseTable (in the filter list) with
     // the SelectQuery of the child
@@ -116,6 +127,18 @@ public class DirectRetrievalExecutionNode extends QueryNodeWithPlaceHolders {
       }
       joinTableSource.setJoinList(newJoinSourceList);
       return joinTableSource;
+      
+    } else if (originalSource instanceof SelectQuery) {
+      SelectQuery selectQuerySource = (SelectQuery) originalSource;
+      List<AbstractRelation> originalFromList = selectQuerySource.getFromList();
+      List<AbstractRelation> newFromList = new ArrayList<>();
+      for (AbstractRelation source : originalFromList) {
+        AbstractRelation newSource = consolidateSource(source, child, baseTableToRemove);
+        newFromList.add(newSource);
+      }
+      selectQuerySource.setFromList(newFromList);
+      return selectQuerySource;
+      
     } else {
       return originalSource;
     }
@@ -162,7 +185,9 @@ public class DirectRetrievalExecutionNode extends QueryNodeWithPlaceHolders {
   
   @Override
   public SqlConvertible createQuery(List<ExecutionInfoToken> tokens) throws VerdictDBException {
-    
+    // this will replace the placeholders contained the subquery.
+    childNode.createQuery(tokens);
+    parentNode.createQuery(tokens);
     return selectQuery;
   }
   

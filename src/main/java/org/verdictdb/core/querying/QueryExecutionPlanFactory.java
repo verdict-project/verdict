@@ -105,8 +105,8 @@ public class QueryExecutionPlanFactory {
         selectAll.createPlaceHolderTable("t");
     SelectQuery selectQuery =
         SelectQuery.create(new AsteriskColumn(), baseAndSubscriptionTicket.getLeft());
-    selectQuery.addOrderby(query.getOrderby());
-    if (query.getLimit().isPresent()) selectQuery.addLimit(query.getLimit().get());
+//    selectQuery.addOrderby(query.getOrderby());
+//    if (query.getLimit().isPresent()) selectQuery.addLimit(query.getLimit().get());
     selectAll.setSelectQuery(selectQuery);
 
     if (query.isSupportedAggregate()) {
@@ -126,6 +126,8 @@ public class QueryExecutionPlanFactory {
       IdCreator idCreator, SelectQuery query) {
     AggExecutionNode node = new AggExecutionNode(idCreator, null);
     convertSubqueriesToDependentNodes(query, node);
+//    query.addOrderby(query.getOrderby());
+//  if (query.getLimit().isPresent()) selectQuery.addLimit(query.getLimit().get());
     node.setSelectQuery(query);
     return node;
   }
