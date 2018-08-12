@@ -35,6 +35,11 @@ public class JdbcCommonQueryForAllDatabasesTest {
 
   private static VerdictOption options = new VerdictOption();
 
+  private static final String VERDICT_META_SCHEMA =
+      "verdictdbmetaschema_" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
+  private static final String VERDICT_TEMP_SCHEMA =
+      "verdictdbtempschema_" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
+
   private static final String MYSQL_HOST;
 
   private String database = "";
@@ -112,6 +117,8 @@ public class JdbcCommonQueryForAllDatabasesTest {
 
   @BeforeClass
   public static void setupDatabases() throws SQLException, VerdictDBException {
+    options.setVerdictMetaSchemaName(VERDICT_META_SCHEMA);
+    options.setVerdictTempSchemaName(VERDICT_TEMP_SCHEMA);
     setupMysql();
     setupImpala();
     setupRedshift();
@@ -160,6 +167,10 @@ public class JdbcCommonQueryForAllDatabasesTest {
         String.format(
             "CREATE TABLE %s.people(id smallint, name varchar(255), gender varchar(8), age float, height float, nation varchar(8), birth timestamp)",
             SCHEMA_NAME));
+    stmt.execute(
+        String.format(
+            "CREATE TABLE %s.drop_table(id smallint, name varchar(255), gender varchar(8), age float, height float, nation varchar(8), birth timestamp)",
+            SCHEMA_NAME));
     for (List<Object> row : contents) {
       String id = row.get(0).toString();
       String name = row.get(1).toString();
@@ -196,6 +207,10 @@ public class JdbcCommonQueryForAllDatabasesTest {
         String.format(
             "CREATE TABLE %s.people(id smallint, name string, gender string, age float, height float, nation string, birth timestamp)",
             SCHEMA_NAME));
+    stmt.execute(
+        String.format(
+            "CREATE TABLE %s.drop_table(id smallint, name varchar(255), gender varchar(8), age float, height float, nation varchar(8), birth timestamp)",
+            SCHEMA_NAME));
     for (List<Object> row : contents) {
       String id = row.get(0).toString();
       String name = row.get(1).toString();
@@ -216,7 +231,8 @@ public class JdbcCommonQueryForAllDatabasesTest {
         String.format("jdbc:mysql://%s?autoReconnect=true&useSSL=false", MYSQL_HOST);
     Connection conn =
         DriverManager.getConnection(mysqlConnectionString, MYSQL_USER, MYSQL_PASSWORD);
-    VerdictConnection vc = new VerdictConnection(mysqlConnectionString, MYSQL_USER, MYSQL_PASSWORD);
+    VerdictConnection vc =
+        new VerdictConnection(mysqlConnectionString, MYSQL_USER, MYSQL_PASSWORD, options);
     loadData(conn);
     connMap.put("mysql", conn);
     vcMap.put("mysql", vc);
@@ -230,7 +246,8 @@ public class JdbcCommonQueryForAllDatabasesTest {
   private static Connection setupImpala() throws SQLException, VerdictDBException {
     String connectionString = String.format("jdbc:impala://%s", IMPALA_HOST);
     Connection conn = DriverManager.getConnection(connectionString, IMPALA_USER, IMPALA_PASSWORD);
-    VerdictConnection vc = new VerdictConnection(connectionString, IMPALA_USER, IMPALA_PASSWORD);
+    VerdictConnection vc =
+        new VerdictConnection(connectionString, IMPALA_USER, IMPALA_PASSWORD, options);
     loadDataImpala(conn);
     connMap.put("impala", conn);
     vcMap.put("impala", vc);
@@ -243,11 +260,13 @@ public class JdbcCommonQueryForAllDatabasesTest {
 
   public static Connection setupRedshift() throws SQLException, VerdictDBException {
     String connectionString =
-        String.format("jdbc:redshift://%s/%s", REDSHIFT_HOST, REDSHIFT_DATABASE);
+        String.format(
+            "jdbc:redshift://%s/%s;verdictdbtempschema=%s",
+            REDSHIFT_HOST, REDSHIFT_DATABASE, SCHEMA_NAME);
     Connection conn =
         DriverManager.getConnection(connectionString, REDSHIFT_USER, REDSHIFT_PASSWORD);
     VerdictConnection vc =
-        new VerdictConnection(connectionString, REDSHIFT_USER, REDSHIFT_PASSWORD);
+        new VerdictConnection(connectionString, REDSHIFT_USER, REDSHIFT_PASSWORD, options);
     loadData(conn);
     connMap.put("redshift", conn);
     vcMap.put("redshift", vc);
@@ -264,7 +283,7 @@ public class JdbcCommonQueryForAllDatabasesTest {
     Connection conn =
         DriverManager.getConnection(connectionString, POSTGRES_USER, POSTGRES_PASSWORD);
     VerdictConnection vc =
-        new VerdictConnection(connectionString, POSTGRES_USER, POSTGRES_PASSWORD);
+        new VerdictConnection(connectionString, POSTGRES_USER, POSTGRES_PASSWORD, options);
     loadData(conn);
     connMap.put("postgresql", conn);
     vcMap.put("postgresql", vc);
@@ -309,6 +328,51 @@ public class JdbcCommonQueryForAllDatabasesTest {
       assertEquals(jdbcRs.getString(6), vcRs.getString(6));
       assertEquals(jdbcRs.getTimestamp(7), vcRs.getTimestamp(7));
     }
+  }
+
+  @Test
+  public void runSelectQueryWithBypassTest() throws SQLException {
+    String sql = String.format("SELECT * FROM %s", SCHEMA_NAME) + ".people order by birth";
+    String bypassSql =
+        String.format("BYPASS SELECT * FROM %s", SCHEMA_NAME) + ".people order by birth";
+    Statement jdbcStmt = connMap.get(database).createStatement();
+    Statement vcStmt = vcMap.get(database).createStatement();
+
+    ResultSet jdbcRs = jdbcStmt.executeQuery(sql);
+    ResultSet vcRs = vcStmt.executeQuery(bypassSql);
+    assertEquals(jdbcRs.getMetaData().getColumnCount(), vcRs.getMetaData().getColumnCount());
+    assertEquals(jdbcRs.getMetaData().getColumnCount(), 7);
+    while (jdbcRs.next() && vcRs.next()) {
+      assertEquals(jdbcRs.getInt(1), vcRs.getInt(1));
+      assertEquals(jdbcRs.getString(2), vcRs.getString(2));
+      assertEquals(jdbcRs.getString(3), vcRs.getString(3));
+      assertEquals(jdbcRs.getFloat(4), vcRs.getFloat(4), 0.000001);
+      assertEquals(jdbcRs.getFloat(5), vcRs.getFloat(5), 0.000001);
+      assertEquals(jdbcRs.getString(6), vcRs.getString(6));
+      assertEquals(jdbcRs.getTimestamp(7), vcRs.getTimestamp(7));
+    }
+  }
+
+  @Test
+  public void runDropQueryWithBypassTest() throws SQLException {
+    String bypassSql = String.format("BYPASS DROP TABLE IF EXISTS %s.drop_table", SCHEMA_NAME);
+    Statement vcStmt = vcMap.get(database).createStatement();
+    vcStmt.execute(bypassSql);
+    vcStmt.close();
+  }
+
+  @Test
+  public void runInsertQueryWithBypassTest() throws SQLException {
+    Statement stmt = vcMap.get(database).createStatement();
+    int count =
+        stmt.executeUpdate(
+            String.format(
+                "BYPASS INSERT INTO %s.people(id, name, gender, age, height, nation, birth) "
+                    + "VALUES(10, 'mike', 'male', 38, 190, 'Russia', '1980-10-10 10:10:10')",
+                SCHEMA_NAME));
+    // We do not differentiate between execute and executeUpdate. As a result we always return 0 for
+    // executeUpdate
+    assertEquals(0, count);
   }
 
   @Test

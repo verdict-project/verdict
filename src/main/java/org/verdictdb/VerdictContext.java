@@ -128,6 +128,7 @@ public class VerdictContext {
       throws SQLException, VerdictDBException {
     attemptLoadDriverClass(jdbcConnectionString);
     VerdictOption options = new VerdictOption();
+    options.parseConnectionString(jdbcConnectionString);
     options.parseProperties(info);
     options.parseConnectionString(jdbcConnectionString);
     return new VerdictContext(ConcurrentJdbcConnection.create(jdbcConnectionString, info), options);
@@ -229,7 +230,8 @@ public class VerdictContext {
 
   public ExecutionContext createNewExecutionContext() {
     long execSerialNumber = getNextExecutionSerialNumber();
-    ExecutionContext exec = new ExecutionContext(this, execSerialNumber, options.copy());
+    ExecutionContext exec =
+        new ExecutionContext(conn.copy(), scrambleMetaSet, contextId, execSerialNumber, options.copy());
     executionContexts.add(exec);
     return exec;
   }

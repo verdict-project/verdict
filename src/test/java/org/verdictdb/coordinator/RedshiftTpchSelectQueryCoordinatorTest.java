@@ -61,6 +61,8 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
 
   private static final String REDSHIFT_PASSWORD;
 
+  private static VerdictOption options = new VerdictOption();
+
   static {
     REDSHIFT_HOST = System.getenv("VERDICTDB_TEST_REDSHIFT_ENDPOINT");
     REDSHIFT_USER = System.getenv("VERDICTDB_TEST_REDSHIFT_USER");
@@ -72,19 +74,12 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
 
   Pair<ExecutionResultReader, ResultSet> getAnswerPair(int queryNum)
       throws VerdictDBException, SQLException, IOException {
-    stmt.execute(
-        String.format(
-            "drop schema if exists \"%s\" cascade", VerdictOption.getDefaultTempSchemaName()));
-    stmt.execute(
-        String.format(
-            "create schema if not exists \"%s\"", VerdictOption.getDefaultTempSchemaName()));
-
     String filename = "query" + queryNum + ".sql";
     File file = new File("src/test/resources/tpch_test_query/" + filename);
     String sql = Files.toString(file, Charsets.UTF_8);
 
     dbmsConn.setDefaultSchema(REDSHIFT_SCHEMA);
-    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsConn);
+    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsConn, options);
     coordinator.setScrambleMetaSet(meta);
     ExecutionResultReader reader = coordinator.process(sql);
 
@@ -102,6 +97,8 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
     stmt = redshiftConn.createStatement();
     stmt.execute(String.format("set search_path to \"%s\"", REDSHIFT_SCHEMA));
     dbmsConn = new CachedDbmsConnection(new JdbcConnection(redshiftConn, new RedshiftSyntax()));
+
+    options.setVerdictTempSchemaName(REDSHIFT_SCHEMA);
     // Create Scramble table
     stmt.execute(
         String.format("DROP TABLE IF EXISTS \"%s\".\"lineitem_scrambled\"", REDSHIFT_SCHEMA));

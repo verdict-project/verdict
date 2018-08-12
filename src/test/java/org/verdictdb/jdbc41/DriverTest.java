@@ -16,6 +16,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.commons.DatabaseConnectionHelpers;
+import org.verdictdb.commons.VerdictOption;
 import org.verdictdb.exception.VerdictDBDbmsException;
 
 import com.google.common.base.Charsets;
@@ -36,6 +37,8 @@ public class DriverTest {
 
   private static Connection conn;
 
+  private static VerdictOption options = new VerdictOption();
+
   static {
     REDSHIFT_HOST = System.getenv("VERDICTDB_TEST_REDSHIFT_ENDPOINT");
     REDSHIFT_USER = System.getenv("VERDICTDB_TEST_REDSHIFT_USER");
@@ -44,6 +47,7 @@ public class DriverTest {
 
   @BeforeClass
   public static void setup() throws VerdictDBDbmsException, SQLException, IOException {
+    options.setVerdictTempSchemaName(REDSHIFT_SCHEMA);
     String connectionString =
         String.format("jdbc:redshift://%s/%s", REDSHIFT_HOST, REDSHIFT_DATABASE);
     conn =
@@ -64,6 +68,7 @@ public class DriverTest {
     Properties info = new Properties();
     info.setProperty("user", REDSHIFT_USER);
     info.setProperty("password", REDSHIFT_PASSWORD);
+    info.setProperty("verdictdbtempschema", REDSHIFT_SCHEMA);
     Connection conn = DriverManager.getConnection(verdictConnectionString, info);
 
     ResultSet rs =

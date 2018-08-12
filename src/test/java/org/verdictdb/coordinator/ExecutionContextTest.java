@@ -99,7 +99,8 @@ public class ExecutionContextTest {
     String sql = String.format("select avg(l_quantity) from %s.lineitem_scrambled", MYSQL_DATABASE);
     DbmsConnection dbmsConn = JdbcConnection.create(conn);
     VerdictContext verdict = new VerdictContext(dbmsConn);
-    ExecutionContext exec = new ExecutionContext(verdict, 0, options.copy());
+    ExecutionContext exec = new ExecutionContext(
+        dbmsConn, verdict.getScrambleMetaSet(), verdict.getContextId(), 0, options);
 
     VerdictSingleResult result = exec.sql(sql);
   }
@@ -114,7 +115,8 @@ public class ExecutionContextTest {
     ((JdbcConnection) dbmsConn).setOutputDebugMessage(true);
     dbmsConn.setDefaultSchema(MYSQL_DATABASE);
     VerdictContext verdict = new VerdictContext(dbmsConn, options);
-    ExecutionContext exec = new ExecutionContext(verdict, 0, options);
+    ExecutionContext exec = new ExecutionContext(
+        dbmsConn, verdict.getScrambleMetaSet(), verdict.getContextId(), 0, options);
 
     VerdictResultStream result = exec.streamsql(sql);
 
@@ -144,7 +146,8 @@ public class ExecutionContextTest {
     DbmsConnection dbmsConn = JdbcConnection.create(conn);
     dbmsConn.setDefaultSchema(MYSQL_DATABASE);
     VerdictContext verdict = new VerdictContext(dbmsConn, options);
-    ExecutionContext exec = new ExecutionContext(verdict, 0, options);
+    ExecutionContext exec = new ExecutionContext(
+        dbmsConn, verdict.getScrambleMetaSet(), verdict.getContextId(), 0, options);
 
     VerdictResultStream result = exec.streamsql(sql);
 

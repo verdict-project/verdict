@@ -24,12 +24,12 @@ import java.util.List;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
-import org.verdictdb.VerdictContext;
 import org.verdictdb.commons.VerdictDBLogger;
 import org.verdictdb.commons.VerdictOption;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.core.resulthandler.ExecutionResultReader;
 import org.verdictdb.core.scrambling.ScrambleMeta;
+import org.verdictdb.core.scrambling.ScrambleMetaSet;
 import org.verdictdb.core.sqlobject.BaseTable;
 import org.verdictdb.core.sqlobject.CreateScrambleQuery;
 import org.verdictdb.exception.VerdictDBDbmsException;
@@ -48,7 +48,9 @@ import org.verdictdb.sqlreader.RelationGen;
  */
 public class ExecutionContext {
 
-  private VerdictContext context;
+  private DbmsConnection conn;
+  
+  private ScrambleMetaSet scrambleMetaSet;
 
   private QueryContext queryContext;
   
@@ -71,14 +73,17 @@ public class ExecutionContext {
   }
 
   /**
-   * @param context Parent context
-   * @param serialNumber
+   * @param conn DbmsConnection
+   * @param contextId parent's context id
+   * @param serialNumber serial number of this ExecutionContext
    * @param options
    */
-  public ExecutionContext(VerdictContext context, long serialNumber, VerdictOption options) {
-    this.context = context;
+  public ExecutionContext(
+      DbmsConnection conn, ScrambleMetaSet scrambleMetaSet, String contextId, long serialNumber, VerdictOption options) {
+    this.conn = conn;
+    this.scrambleMetaSet = scrambleMetaSet;
     this.serialNumber = serialNumber;
-    this.queryContext = new QueryContext(context.getContextId(), serialNumber);
+    this.queryContext = new QueryContext(contextId, serialNumber);
     this.options = options;
   }
 
@@ -86,15 +91,37 @@ public class ExecutionContext {
     return serialNumber;
   }
 
-  public VerdictSingleResult sql(String query) throws VerdictDBException {
-    VerdictResultStream stream = streamsql(query);
-    if (stream == null) {
-      return null;
+  /**
+   * Check whether given sql contains 'bypass' keyword at the beginning
+   *
+   * @param sql original sql
+   * @return without 'bypass' keyword if the original sql begins with it. null otherwise.
+   */
+  private String checkBypass(String sql) {
+    if (sql.trim().toLowerCase().startsWith("bypass")) {
+      return sql.trim().substring(6);
     }
+    return null;
+  }
 
-    VerdictSingleResult result = stream.next();
-    stream.close();
-    return result;
+  private VerdictSingleResult executeAsIs(String sql) throws VerdictDBDbmsException {
+    return new VerdictSingleResultFromDbmsQueryResult(conn.execute(sql));
+  }
+
+  public VerdictSingleResult sql(String query) throws VerdictDBException {
+    String bypassSql = checkBypass(query);
+    if (bypassSql != null) {
+      return executeAsIs(bypassSql);
+    } else {
+      VerdictResultStream stream = streamsql(query);
+      if (stream == null) {
+        return null;
+      }
+
+      VerdictSingleResult result = stream.next();
+      stream.close();
+      return result;
+    }
   }
 
   public VerdictResultStream streamsql(String query) throws VerdictDBException {
@@ -105,8 +132,11 @@ public class ExecutionContext {
     if (queryType.equals(QueryType.select)) {
       LOG.debug("Query type: select");
       SelectQueryCoordinator coordinator =
-          new SelectQueryCoordinator(context.getCopiedConnection(), context.getScrambleMetaSet(), options);
+          new SelectQueryCoordinator(conn, scrambleMetaSet, options);
       runningCoordinator = coordinator;
+//=======
+//      SelectQueryCoordinator coordinator = new SelectQueryCoordinator(conn, options);
+//>>>>>>> origin/master
       ExecutionResultReader reader = coordinator.process(query, queryContext);
       VerdictResultStream stream = new VerdictResultStreamFromExecutionResultReader(reader, this);
       return stream;
@@ -116,9 +146,7 @@ public class ExecutionContext {
       CreateScrambleQuery scrambleQuery = generateScrambleQuery(query);
       ScramblingCoordinator scrambler =
           new ScramblingCoordinator(
-              context.getCopiedConnection(),
-              scrambleQuery.getNewSchema(),
-              options.getVerdictTempSchemaName());
+              conn, scrambleQuery.getNewSchema(), options.getVerdictTempSchemaName());
 
       // Specifying size/ratio of scrambled table is not supported.
       if (scrambleQuery.getSize() != 1.0) {
@@ -135,7 +163,7 @@ public class ExecutionContext {
       //              scrambleQuery.getMethod()); // dyoon: size is not used atm?
 
       // Add metadata to metastore
-      ScrambleMetaStore metaStore = new ScrambleMetaStore(context.getConnection(), options);
+      ScrambleMetaStore metaStore = new ScrambleMetaStore(conn, options);
       metaStore.addToStore(meta);
       return null;
     } else if (queryType.equals(QueryType.set_default_schema)) {
@@ -198,7 +226,7 @@ public class ExecutionContext {
 
   private VerdictResultStream generateShowSchemaResultFromQuery() throws VerdictDBException {
     List<String> header = Arrays.asList("schema");
-    List<String> rows = context.getConnection().getSchemas();
+    List<String> rows = conn.getSchemas();
     VerdictSingleResultFromListData result = createWithSingleColumn(header, (List) rows);
     return new VerdictResultStreamFromSingleResult(result);
   }
@@ -208,7 +236,7 @@ public class ExecutionContext {
     VerdictSQLParser parser = NonValidatingSQLParser.parserOf(query);
     String schema = parser.show_tables_statement().schema.getText();
     List<String> header = Arrays.asList("table");
-    List<String> rows = context.getConnection().getTables(schema);
+    List<String> rows = conn.getTables(schema);
     VerdictSingleResultFromListData result = createWithSingleColumn(header, (List) rows);
     return new VerdictResultStreamFromSingleResult(result);
   }
@@ -224,7 +252,7 @@ public class ExecutionContext {
             String table = ctx.table.table.getText();
             String schema = ctx.table.schema.getText();
             if (schema == null) {
-              schema = context.getConnection().getDefaultSchema();
+              schema = conn.getDefaultSchema();
             }
             return new ImmutablePair<>(schema, table);
           }
@@ -233,9 +261,9 @@ public class ExecutionContext {
     String table = t.getRight();
     String schema = t.getLeft();
     if (schema == null) {
-      schema = context.getConnection().getDefaultSchema();
+      schema = conn.getDefaultSchema();
     }
-    List<Pair<String, String>> columnInfo = context.getConnection().getColumns(schema, table);
+    List<Pair<String, String>> columnInfo = conn.getColumns(schema, table);
     List<List<String>> newColumnInfo = new ArrayList<>();
     for (Pair<String, String> pair : columnInfo) {
       newColumnInfo.add(Arrays.asList(pair.getLeft(), pair.getRight()));
@@ -249,7 +277,7 @@ public class ExecutionContext {
   private void updateDefaultSchemaFromQuery(String query) {
     VerdictSQLParser parser = NonValidatingSQLParser.parserOf(query);
     String schema = parser.use_statement().database.getText();
-    context.getConnection().setDefaultSchema(schema);
+    conn.setDefaultSchema(schema);
   }
   
   public void abort() {
@@ -267,12 +295,13 @@ public class ExecutionContext {
     abort();
     
     try {
-      DbmsConnection conn = context.getCopiedConnection();
       String schema = options.getVerdictTempSchemaName();
       String tempTablePrefix =
           String.format(
               "%s_%s_%d",
-              VerdictOption.getVerdictTempTablePrefix(), context.getContextId(), this.serialNumber);
+              VerdictOption.getVerdictTempTablePrefix(),
+              queryContext.getVerdictContextId(),
+              this.serialNumber);
       List<String> tempTableList = new ArrayList<>();
       
       List<String> allTempTables = conn.getTables(schema);

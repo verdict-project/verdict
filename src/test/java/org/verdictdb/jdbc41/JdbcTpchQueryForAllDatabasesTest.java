@@ -47,6 +47,11 @@ public class JdbcTpchQueryForAllDatabasesTest {
 
   private static final int TPCH_QUERY_COUNT = 22;
 
+  private static final String VERDICT_META_SCHEMA =
+      "verdictdbmetaschema_" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
+  private static final String VERDICT_TEMP_SCHEMA =
+      "verdictdbtempschema_" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
+
   private String database = "";
 
   private String query;
@@ -54,7 +59,6 @@ public class JdbcTpchQueryForAllDatabasesTest {
   // TODO: Add support for all four databases
   //  private static final String[] targetDatabases = {"mysql", "impala", "redshift", "postgresql"};
   private static final String[] targetDatabases = {"mysql", "impala", "redshift"};
-//    private static final String[] targetDatabases = { "mysql" };
 
   public JdbcTpchQueryForAllDatabasesTest(String database, String query) {
     this.database = database;
@@ -93,8 +97,6 @@ public class JdbcTpchQueryForAllDatabasesTest {
 
   private static final String REDSHIFT_DATABASE = "dev";
 
-  private static final String REDSHIFT_SCHEMA = "public";
-
   private static final String REDSHIFT_USER;
 
   private static final String REDSHIFT_PASSWORD;
@@ -106,8 +108,6 @@ public class JdbcTpchQueryForAllDatabasesTest {
   private static final String POSTGRES_USER = "postgres";
 
   private static final String POSTGRES_PASSWORD = "";
-
-  private static final String POSTGRES_SCHEMA = "";
 
   static {
     String env = System.getenv("BUILD_ENV");
@@ -129,6 +129,8 @@ public class JdbcTpchQueryForAllDatabasesTest {
 
   @BeforeClass
   public static void setupDatabases() throws SQLException, VerdictDBDbmsException, IOException {
+    options.setVerdictMetaSchemaName(VERDICT_META_SCHEMA);
+    options.setVerdictTempSchemaName(VERDICT_TEMP_SCHEMA);
     setupMysql();
     setupImpala();
     setupRedshift();
@@ -179,7 +181,7 @@ public class JdbcTpchQueryForAllDatabasesTest {
 
       // Uncomment below lines to test a specific query
       //      params.clear();
-      //      params.add(new Object[] {database, "22"});
+      //      params.add(new Object[] {database, "1"});
     }
     return params;
   }
@@ -188,7 +190,9 @@ public class JdbcTpchQueryForAllDatabasesTest {
     String mysqlConnectionString =
         String.format("jdbc:mysql://%s?autoReconnect=true&useSSL=false", MYSQL_HOST);
     String vcMysqlConnectionString =
-        String.format("jdbc:verdict:mysql://%s?autoReconnect=true&useSSL=false", MYSQL_HOST);
+        String.format(
+            "jdbc:verdict:mysql://%s?autoReconnect=true&useSSL=false&verdictdbmetaschema=%s&verdictdbtempschema=%s",
+            MYSQL_HOST, VERDICT_META_SCHEMA, VERDICT_TEMP_SCHEMA);
     Connection conn =
         DatabaseConnectionHelpers.setupMySql(
             mysqlConnectionString, MYSQL_USER, MYSQL_PASSWORD, SCHEMA_NAME);
@@ -208,7 +212,10 @@ public class JdbcTpchQueryForAllDatabasesTest {
 
   private static Connection setupImpala() throws SQLException, VerdictDBDbmsException {
     String connectionString = String.format("jdbc:impala://%s", IMPALA_HOST);
-    String verdictConnectionString = String.format("jdbc:verdict:impala://%s", IMPALA_HOST);
+    String verdictConnectionString =
+        String.format(
+            "jdbc:verdict:impala://%s;verdictdbmetaschema=%s;verdictdbtempschema=%s",
+            IMPALA_HOST, VERDICT_META_SCHEMA, VERDICT_TEMP_SCHEMA);
     Connection conn =
         DatabaseConnectionHelpers.setupImpala(
             connectionString, IMPALA_USER, IMPALA_PASSWORD, SCHEMA_NAME);
@@ -228,7 +235,9 @@ public class JdbcTpchQueryForAllDatabasesTest {
     String connectionString =
         String.format("jdbc:redshift://%s/%s", REDSHIFT_HOST, REDSHIFT_DATABASE);
     String verdictConnectionString =
-        String.format("jdbc:verdict:redshift://%s/%s", REDSHIFT_HOST, REDSHIFT_DATABASE);
+        String.format(
+            "jdbc:verdict:redshift://%s/%s;verdictdbtempschema=%s",
+            REDSHIFT_HOST, REDSHIFT_DATABASE, SCHEMA_NAME);
     Connection conn =
         DatabaseConnectionHelpers.setupRedshift(
             connectionString, REDSHIFT_USER, REDSHIFT_PASSWORD, SCHEMA_NAME);
@@ -251,7 +260,7 @@ public class JdbcTpchQueryForAllDatabasesTest {
         DatabaseConnectionHelpers.setupPostgresql(
             connectionString, POSTGRES_HOST, POSTGRES_PASSWORD, SCHEMA_NAME);
     VerdictConnection vc =
-        new VerdictConnection(connectionString, POSTGRES_USER, POSTGRES_PASSWORD);
+        new VerdictConnection(connectionString, POSTGRES_USER, POSTGRES_PASSWORD, options);
     connMap.put("postgresql", conn);
     vcMap.put("postgresql", vc);
     schemaMap.put("postgresql", "");

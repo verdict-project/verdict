@@ -16,29 +16,23 @@
 
 package org.verdictdb.jdbc41;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.SQLFeatureNotSupportedException;
-import java.sql.SQLWarning;
-
 import org.verdictdb.VerdictContext;
 import org.verdictdb.coordinator.ExecutionContext;
 import org.verdictdb.coordinator.VerdictSingleResult;
 import org.verdictdb.exception.VerdictDBException;
 
+import java.sql.*;
+
 public class VerdictStatement implements java.sql.Statement {
 
-  VerdictConnection jdbcConn;
-
-  VerdictContext context;
+  Connection conn;
 
   ExecutionContext executionContext;
 
   VerdictSingleResult result;
 
-  public VerdictStatement(VerdictConnection jdbcConn, VerdictContext context) {
-    this.jdbcConn = jdbcConn;
-    this.context = context;
+  public VerdictStatement(Connection conn, VerdictContext context) {
+    this.conn = conn;
     this.executionContext = context.createNewExecutionContext();
   }
 
@@ -94,7 +88,7 @@ public class VerdictStatement implements java.sql.Statement {
 
   @Override
   public java.sql.Connection getConnection() throws SQLException {
-    return jdbcConn;
+    return conn;
   }
 
   @Override

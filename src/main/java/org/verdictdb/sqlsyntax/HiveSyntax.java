@@ -16,9 +16,18 @@
 
 package org.verdictdb.sqlsyntax;
 
+import com.google.common.collect.Lists;
+
+import java.util.Collection;
 import java.util.List;
 
 public class HiveSyntax extends SqlSyntax {
+
+  @Override
+  public Collection<String> getCandidateJDBCDriverClassNames() {
+    List<String> candidates = Lists.newArrayList("org.apache.hive.jdbc.HiveDriver");
+    return candidates;
+  }
 
   @Override
   public boolean doesSupportTablePartitioning() {
