@@ -28,7 +28,7 @@ import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.sqlsyntax.SparkSyntax;
 import org.verdictdb.sqlsyntax.SqlSyntax;
 
-public class SparkConnection implements DbmsConnection {
+public class SparkConnection extends DbmsConnection {
 
   SparkSession sc;
 
@@ -136,6 +136,11 @@ public class SparkConnection implements DbmsConnection {
   @Override
   public SqlSyntax getSyntax() {
     return syntax;
+  }
+  
+  @Override
+  public void abort() {
+    
   }
 
   @Override

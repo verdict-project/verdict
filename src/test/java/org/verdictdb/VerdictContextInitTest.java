@@ -16,14 +16,14 @@
 
 package org.verdictdb;
 
-import org.junit.Test;
-import org.verdictdb.commons.VerdictOption;
-import org.verdictdb.exception.VerdictDBDbmsException;
+import static org.junit.Assert.assertEquals;
 
 import java.sql.SQLException;
 import java.util.Properties;
 
-import static org.junit.Assert.assertEquals;
+import org.junit.Test;
+import org.verdictdb.commons.VerdictOption;
+import org.verdictdb.exception.VerdictDBException;
 
 /** Created by Dong Young Yoon on 8/9/18. */
 public class VerdictContextInitTest {
@@ -44,7 +44,7 @@ public class VerdictContextInitTest {
   private static final String MYSQL_PASSWORD = "";
 
   @Test
-  public void initFromConnectionStringTest1() throws SQLException, VerdictDBDbmsException {
+  public void initFromConnectionStringTest1() throws SQLException, VerdictDBException {
     String url =
         String.format(
             "jdbc:mysql://%s?autoReconnect=true&useSSL=false&"
@@ -58,7 +58,7 @@ public class VerdictContextInitTest {
   }
 
   @Test
-  public void initFromConnectionStringTest2() throws SQLException, VerdictDBDbmsException {
+  public void initFromConnectionStringTest2() throws SQLException, VerdictDBException {
     String url =
         String.format(
             "jdbc:mysql://%s?autoReconnect=true&useSSL=false&user=root&password=", MYSQL_HOST);

@@ -16,32 +16,32 @@
 
 package org.verdictdb.coordinator;
 
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
-import org.verdictdb.commons.VerdictDBLogger;
-import org.verdictdb.commons.VerdictOption;
-import org.verdictdb.connection.DbmsConnection;
-import org.verdictdb.connection.DbmsQueryResult;
-import org.verdictdb.core.resulthandler.ExecutionResultReader;
-import org.verdictdb.core.scrambling.ScrambleMeta;
-import org.verdictdb.core.sqlobject.BaseTable;
-import org.verdictdb.core.sqlobject.CreateScrambleQuery;
-import org.verdictdb.exception.VerdictDBDbmsException;
-import org.verdictdb.exception.VerdictDBException;
-import org.verdictdb.exception.VerdictDBTypeException;
-import org.verdictdb.metastore.ScrambleMetaStore;
-import org.verdictdb.parser.VerdictSQLParser;
-import org.verdictdb.parser.VerdictSQLParserBaseVisitor;
-import org.verdictdb.sqlreader.NonValidatingSQLParser;
-import org.verdictdb.sqlreader.RelationGen;
-import org.verdictdb.sqlsyntax.PostgresqlSyntax;
-import org.verdictdb.sqlsyntax.RedshiftSyntax;
+import static org.verdictdb.coordinator.VerdictSingleResultFromListData.createWithSingleColumn;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.verdictdb.coordinator.VerdictSingleResultFromListData.createWithSingleColumn;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
+import org.verdictdb.commons.VerdictDBLogger;
+import org.verdictdb.commons.VerdictOption;
+import org.verdictdb.connection.DbmsConnection;
+import org.verdictdb.core.resulthandler.ExecutionResultReader;
+import org.verdictdb.core.scrambling.ScrambleMeta;
+import org.verdictdb.core.scrambling.ScrambleMetaSet;
+import org.verdictdb.core.sqlobject.BaseTable;
+import org.verdictdb.core.sqlobject.CreateScrambleQuery;
+import org.verdictdb.exception.VerdictDBDbmsException;
+import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.exception.VerdictDBTypeException;
+import org.verdictdb.metastore.CachedScrambleMetaStore;
+import org.verdictdb.metastore.ScrambleMetaStore;
+import org.verdictdb.metastore.VerdictMetaStore;
+import org.verdictdb.parser.VerdictSQLParser;
+import org.verdictdb.parser.VerdictSQLParserBaseVisitor;
+import org.verdictdb.sqlreader.NonValidatingSQLParser;
+import org.verdictdb.sqlreader.RelationGen;
 
 /**
  * Stores the context for a single query execution. Includes both scrambling query and select query.
@@ -51,8 +51,14 @@ import static org.verdictdb.coordinator.VerdictSingleResultFromListData.createWi
 public class ExecutionContext {
 
   private DbmsConnection conn;
+  
+//  private ScrambleMetaSet scrambleMetaSet;
+  
+  private VerdictMetaStore metaStore;
 
   private QueryContext queryContext;
+  
+  private Coordinator runningCoordinator = null;
 
   private final long serialNumber;
 
@@ -77,8 +83,9 @@ public class ExecutionContext {
    * @param options
    */
   public ExecutionContext(
-      DbmsConnection conn, String contextId, long serialNumber, VerdictOption options) {
+      DbmsConnection conn, VerdictMetaStore metaStore, String contextId, long serialNumber, VerdictOption options) {
     this.conn = conn;
+    this.metaStore = metaStore;
     this.serialNumber = serialNumber;
     this.queryContext = new QueryContext(contextId, serialNumber);
     this.options = options;
@@ -117,6 +124,7 @@ public class ExecutionContext {
 
       VerdictSingleResult result = stream.next();
       stream.close();
+      abort();
       return result;
     }
   }
@@ -128,10 +136,15 @@ public class ExecutionContext {
 
     if (queryType.equals(QueryType.select)) {
       LOG.debug("Query type: select");
-      SelectQueryCoordinator coordinator = new SelectQueryCoordinator(conn, options);
+      ScrambleMetaSet metaset = metaStore.retrieve();
+      SelectQueryCoordinator coordinator =
+          new SelectQueryCoordinator(conn, metaset, options);
+      runningCoordinator = coordinator;
+      
       ExecutionResultReader reader = coordinator.process(query, queryContext);
       VerdictResultStream stream = new VerdictResultStreamFromExecutionResultReader(reader, this);
       return stream;
+      
     } else if (queryType.equals(QueryType.scrambling)) {
       LOG.debug("Query type: scrambling");
       CreateScrambleQuery scrambleQuery = generateScrambleQuery(query);
@@ -156,6 +169,7 @@ public class ExecutionContext {
       // Add metadata to metastore
       ScrambleMetaStore metaStore = new ScrambleMetaStore(conn, options);
       metaStore.addToStore(meta);
+      refreshScrambleMetaStore();
       return null;
     } else if (queryType.equals(QueryType.set_default_schema)) {
       LOG.debug("Query type: set_default_schema");
@@ -176,6 +190,11 @@ public class ExecutionContext {
     } else {
       throw new VerdictDBTypeException("Unexpected type of query: " + query);
     }
+  }
+  
+  private void refreshScrambleMetaStore() {
+    // no type check was added to make it fail if non-cached metastore is used.
+    ((CachedScrambleMetaStore) this.metaStore).refreshCache();
   }
 
   private CreateScrambleQuery generateScrambleQuery(String query) {
@@ -270,6 +289,13 @@ public class ExecutionContext {
     String schema = parser.use_statement().database.getText();
     conn.setDefaultSchema(schema);
   }
+  
+  public void abort() {
+    if (runningCoordinator != null) {
+      runningCoordinator.abort();
+      runningCoordinator = null;
+    }
+  }
 
   /**
    * Terminates existing threads. The created database tables may still exist for successive uses.
@@ -277,6 +303,8 @@ public class ExecutionContext {
    * <p>This method also removes all temporary tables created by this ExecutionContext.
    */
   public void terminate() {
+    abort();
+    
     try {
       String schema = options.getVerdictTempSchemaName();
       String tempTablePrefix =
@@ -286,24 +314,30 @@ public class ExecutionContext {
               queryContext.getVerdictContextId(),
               this.serialNumber);
       List<String> tempTableList = new ArrayList<>();
-
-      DbmsQueryResult rs;
-
-      if (conn.getSyntax() instanceof RedshiftSyntax
-          || conn.getSyntax() instanceof PostgresqlSyntax) {
-        rs =
-            conn.execute(
-                String.format(
-                    "SELECT * FROM information_schema.tables WHERE table_schema = '%s'", schema));
-      } else {
-        rs = conn.execute(String.format("show tables in %s", schema));
-      }
-      while (rs.next()) {
-        String tableName = rs.getString(0);
+      
+      List<String> allTempTables = conn.getTables(schema);
+      for (String tableName : allTempTables) {
         if (tableName.startsWith(tempTablePrefix)) {
           tempTableList.add(tableName);
         }
       }
+
+//      DbmsQueryResult rs;
+//      if (conn.getSyntax() instanceof RedshiftSyntax
+//          || conn.getSyntax() instanceof PostgresqlSyntax) {
+//        rs =
+//            conn.execute(
+//                String.format(
+//                    "SELECT * FROM information_schema.tables WHERE table_schema = '%s'", schema));
+//      } else {
+//        rs = conn.execute(String.format("show tables in %s", schema));
+//      }
+//      while (rs.next()) {
+//        String tableName = rs.getString(0);
+//        if (tableName.startsWith(tempTablePrefix)) {
+//          tempTableList.add(tableName);
+//        }
+//      }
 
       for (String tempTable : tempTableList) {
         conn.execute(String.format("DROP TABLE IF EXISTS %s.%s", schema, tempTable));

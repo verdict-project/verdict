@@ -301,20 +301,27 @@ public class ExecutableNodeBase implements ExecutableNode, Serializable {
   }
 
   public void print() {
-    print(0);
+    System.out.println(print(0));
+  }
+  
+  public String getStructure() {
+    return print(0);
   }
 
-  void print(int indentSpace) {
+  private String print(int indentSpace) {
     StringBuilder builder = new StringBuilder();
     for (int i = 0; i < indentSpace; i++) {
       builder.append(" ");
     }
     builder.append(this.toString());
-    System.out.println(builder.toString());
+    builder.append("\n");
+//    System.out.println(builder.toString());
 
     for (ExecutableNodeBase dep : getExecutableNodeBaseDependents()) {
-      dep.print(indentSpace + 2);
+      builder.append(dep.print(indentSpace + 2));
     }
+    
+    return builder.toString();
   }
 
   public AggMeta getAggMeta() {
@@ -353,7 +360,7 @@ public class ExecutableNodeBase implements ExecutableNode, Serializable {
     return new ToStringBuilder(this, ToStringStyle.DEFAULT_STYLE)
         .append("subscriberCount", subscribers.size())
         //        .append("sources", sources)
-        .append("sourcCount", sources.size())
+        .append("sourceCount", sources.size())
         //        .append("channels", channels)
         //        .append("channels", channels)
         .toString();

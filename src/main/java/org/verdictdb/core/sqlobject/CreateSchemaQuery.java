@@ -14,9 +14,7 @@
  *    limitations under the License.
  */
 
-package org.verdictdb.core.querying;
-
-import org.verdictdb.core.sqlobject.SqlConvertible;
+package org.verdictdb.core.sqlobject;
 
 public class CreateSchemaQuery implements SqlConvertible {
 

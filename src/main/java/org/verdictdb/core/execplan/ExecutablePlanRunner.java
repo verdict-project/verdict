@@ -16,13 +16,16 @@
 
 package org.verdictdb.core.execplan;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
+import org.verdictdb.commons.VerdictDBLogger;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.core.querying.ExecutableNodeBase;
 import org.verdictdb.core.resulthandler.ExecutionResultReader;
@@ -36,6 +39,12 @@ public class ExecutablePlanRunner {
   private ExecutablePlan plan;
 
   private int nThreads = 1;
+  
+  private VerdictDBLogger log = VerdictDBLogger.getLogger(this.getClass());
+  
+  private List<ExecutableNodeRunner> nodeRunners = new ArrayList<>();
+  
+  private Map<Integer, ExecutorService> executorPool = new HashMap<>();
 
   public ExecutablePlanRunner(DbmsConnection conn, ExecutablePlan plan) {
     this.conn = conn;
@@ -67,25 +76,24 @@ public class ExecutablePlanRunner {
     ExecutionTokenReader reader;
     if (plan.getReportingNode() != null) {
       ExecutableNodeBase node = new ExecutableNodeBase(-1);
-      //      ExecutionTokenQueue outputQueue = new ExecutionTokenQueue();
       node.subscribeTo((ExecutableNodeBase) plan.getReportingNode());
-      //      plan.getReportingNode().getDestinationQueues().add(outputQueue);
       reader = new ExecutionTokenReader(node.getSourceQueues().get(0));
     } else {
       reader = new ExecutionTokenReader();
     }
 
-    // executes the nodes in a round-robin manner
-    //    ExecutorService executor = Executors.newCachedThreadPool();
-
-    Map<Integer, ExecutorService> executorPool = new HashMap<>();
-
+    // Run nodes in the executor pool.
+    executorPool.clear();
     Set<Integer> groupIds = plan.getNodeGroupIDs();
     for (int gid : groupIds) {
       List<ExecutableNode> nodes = plan.getNodesInGroup(gid);
       ExecutorService executor = Executors.newFixedThreadPool(nThreads);
       for (ExecutableNode n : nodes) {
-        executor.submit(new ExecutableNodeRunner(conn, n));
+        ExecutableNodeRunner nodeRunner = new ExecutableNodeRunner(conn, n);
+        nodeRunners.add(nodeRunner);
+        executor.submit(nodeRunner);
+        log.debug(String.format("Submitted a node of type (%s) belonging to the group %d.", 
+            n.getClass().getSimpleName(), gid));
       }
       executorPool.put(gid, executor);
     }
@@ -102,47 +110,25 @@ public class ExecutablePlanRunner {
     ExecutionTokenReader reader = getTokenReader();
     return new ExecutionResultReader(reader);
   }
-
-  //  public ExecutionResultReader run() {
-  //    // set up to get the results
-  //    ExecutionResultReader reader;
-  //    if (plan.getReportingNode() != null) {
-  //      ExecutionTokenQueue outputQueue = new ExecutionTokenQueue();
-  //      plan.getReportingNode().getDestinationQueues().add(outputQueue);
-  //      reader = new ExecutionResultReader(outputQueue);
-  //    } else {
-  //      reader = new ExecutionResultReader();
-  //    }
-  //
-  //    // executes the nodes in a round-robin manner
-  //    ExecutorService executor = Executors.newCachedThreadPool();
-  //
-  //    List<Integer> groupIds = plan.getNodeGroupIDs();
-  //    List<List<ExecutableNode>> nodeGroups = new ArrayList<>();
-  //    for (int gid : groupIds) {
-  //      List<ExecutableNode> nodes = plan.getNodesInGroup(gid);
-  //      nodeGroups.add(nodes);
-  //    }
-  //
-  //    while (true) {
-  //      boolean submittedAtLeastOne = false;
-  //      for (int i = 0; i < nodeGroups.size(); i++) {
-  //        List<ExecutableNode> nodes = nodeGroups.get(i);
-  //        if (!nodes.isEmpty()) {
-  //          ExecutableNode node = nodes.remove(0);
-  //          System.out.println("Submitting: " + node);
-  //          executor.submit(new ExecutableNodeRunner(conn, node));
-  //          submittedAtLeastOne = true;
-  //        }
-  //      }
-  //      if (submittedAtLeastOne) {
-  //        continue;
-  //      } else {
-  //        break;
-  //      }
-  //    }
-  //
-  //    return reader;
-  //  }
+  
+  /**
+   * Kill all currently running threads.
+   */
+  public void abort() {
+    for (ExecutableNodeRunner nodeRunner : nodeRunners) {
+      nodeRunner.abort();
+    }
+    
+    // wait for a while for until all the statements to be closed.
+    try {
+      TimeUnit.MILLISECONDS.sleep(1000);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
+    
+    for (ExecutorService service : executorPool.values()) {
+      service.shutdownNow();
+    }
+  }
 
 }

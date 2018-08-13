@@ -1,5 +1,19 @@
 package org.verdictdb.coordinator;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -33,6 +47,7 @@ import static org.junit.Assert.assertTrue;
 public class CreateScrambleTableFromSqlTest {
 
   private static final String[] targetDatabases = {"mysql", "impala", "redshift", "postgresql"};
+//  private static final String[] targetDatabases = {"mysql"};
 
   private static Map<String, Pair<Connection, Connection>> connections = new HashMap<>();
 
@@ -193,8 +208,10 @@ public class CreateScrambleTableFromSqlTest {
             DatabaseConnectionHelpers.POSTGRES_HOST, DatabaseConnectionHelpers.POSTGRES_DATABASE);
     String vcConnectionString =
         String.format(
-            "jdbc:verdict:postgresql://%s/%s",
-            DatabaseConnectionHelpers.POSTGRES_HOST, DatabaseConnectionHelpers.POSTGRES_DATABASE);
+            "jdbc:verdict:postgresql://%s/%s?verdictdbtempschema=%s",
+            DatabaseConnectionHelpers.POSTGRES_HOST, 
+            DatabaseConnectionHelpers.POSTGRES_DATABASE,
+            TEMP_SCHEMA_NAME);
     Connection conn =
         DatabaseConnectionHelpers.setupPostgresql(
             connectionString,
@@ -313,7 +330,8 @@ public class CreateScrambleTableFromSqlTest {
         String.format(
             "SELECT * FROM %s.lineitem LIMIT 1", DatabaseConnectionHelpers.COMMON_SCHEMA_NAME);
 
-    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(jdbcConn, options);
+    ScrambleMetaSet scrambleMetaSet = store.retrieve();
+    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(jdbcConn, scrambleMetaSet, options);
     ExecutionResultReader reader = coordinator.process(countOriginalSql);
     while (reader.hasNext()) {
       reader.next();
@@ -352,7 +370,8 @@ public class CreateScrambleTableFromSqlTest {
         String.format(
             "SELECT * FROM %s.lineitem LIMIT 1", DatabaseConnectionHelpers.COMMON_SCHEMA_NAME);
 
-    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(jdbcConn, options);
+    ScrambleMetaSet scrambleMetaSet = store.retrieve();
+    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(jdbcConn, scrambleMetaSet, options);
     ExecutionResultReader reader = coordinator.process(countOriginalSql);
     while (reader.hasNext()) {
       reader.next();

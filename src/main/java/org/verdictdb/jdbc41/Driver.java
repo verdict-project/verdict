@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Properties;
 import java.util.logging.Logger;
 
-import org.verdictdb.exception.VerdictDBDbmsException;
+import org.verdictdb.exception.VerdictDBException;
 
 import com.google.common.base.Joiner;
 
@@ -64,7 +64,7 @@ public class Driver implements java.sql.Driver {
         Connection verdictConnection = new org.verdictdb.jdbc41.VerdictConnection(newUrl, info);
         // System.out.println("VerdictConnection has been created: " + verdictConnection);
         return verdictConnection;
-      } catch (VerdictDBDbmsException e) {
+      } catch (VerdictDBException e) {
         e.printStackTrace();
         throw new SQLException(e.getMessage());
       }

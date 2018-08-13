@@ -41,7 +41,7 @@ import org.verdictdb.sqlsyntax.SqlSyntaxList;
 
 import com.google.common.collect.Sets;
 
-public class JdbcConnection implements DbmsConnection {
+public class JdbcConnection extends DbmsConnection {
 
   Connection conn;
 
@@ -52,8 +52,12 @@ public class JdbcConnection implements DbmsConnection {
   JdbcQueryResult jrs = null;
 
   private boolean outputDebugMessage = false;
+  
+  private Statement runningStatement = null;
 
   private VerdictDBLogger log;
+  
+  private boolean isAborting = false;
 
   public static JdbcConnection create(Connection conn) throws VerdictDBDbmsException {
     String connectionString = null;
@@ -76,11 +80,6 @@ public class JdbcConnection implements DbmsConnection {
     this.conn = conn;
     try {
       this.currentSchema = conn.getSchema();
-      //      if (syntax instanceof PostgresqlSyntax || syntax instanceof RedshiftSyntax) {
-      //
-      //      } else {
-      //        this.currentSchema = conn.getCatalog();
-      //      }
     } catch (SQLException e) {
       e.printStackTrace();
     }
@@ -93,9 +92,31 @@ public class JdbcConnection implements DbmsConnection {
     this.syntax = syntax;
     this.log = VerdictDBLogger.getLogger(this.getClass());
   }
+  
+  @Override
+  public void abort() {
+    log.trace("Aborts a statement if running.");
+    isAborting = true;
+    try {
+      synchronized (this) {
+        if (runningStatement != null && !runningStatement.isClosed()) {
+          log.trace("Aborts a running statement.");
+          runningStatement.cancel();
+          runningStatement.close();
+          runningStatement = null;
+        }
+      }
+      
+      isAborting = false;
+    } catch (SQLException e) {
+      e.printStackTrace();
+    }
+  }
 
   @Override
   public void close() {
+    log.debug("Closes a JDBC connection.");
+    abort();
     try {
       this.conn.close();
     } catch (SQLException e) {
@@ -168,14 +189,25 @@ public class JdbcConnection implements DbmsConnection {
 
     return splitted;
   }
+  
+  private void setRunningStatement(Statement stmt) {
+    synchronized (this) {
+      runningStatement = stmt;
+    }
+  }
+  
+  private Statement getRunningStatement() {
+    synchronized (this) {
+      return runningStatement;
+    }
+  }
 
   public DbmsQueryResult executeSingle(String sql) throws VerdictDBDbmsException {
-
-    VerdictDBLogger logger = VerdictDBLogger.getLogger(this.getClass());
-    logger.debug("Issuing the following query to DBMS: " + sql);
+    log.debug("Issuing the following query to DBMS: " + sql);
 
     try {
       Statement stmt = conn.createStatement();
+      setRunningStatement(stmt);
       JdbcQueryResult jrs = null;
       boolean doesResultExist = stmt.execute(sql);
       if (doesResultExist) {
@@ -185,53 +217,21 @@ public class JdbcConnection implements DbmsConnection {
       } else {
         jrs = null;
       }
+      setRunningStatement(null);
       stmt.close();
       return jrs;
     } catch (SQLException e) {
-      //      e.printStackTrace();
-      //      logger.debug(StackTraceReader.stackTrace2String(e));
-      throw new VerdictDBDbmsException(e.getMessage());
+      if (isAborting) {
+        return null;
+      } else {
+        throw new VerdictDBDbmsException(e.getMessage());
+      }
     }
   }
-
-  //  @Override
-  //  public DbmsQueryResult getResult() {
-  //    return jrs;
-  //  }
 
   public DbmsQueryResult executeQuery(String sql) throws VerdictDBDbmsException {
     return execute(sql);
   }
-
-  //  @Override
-  //  public DbmsQueryResult executeQuery(String query) throws VerdictDBDbmsException {
-  //    System.out.println("About to issue this query: " + query);
-  //    try {
-  //      Statement stmt = conn.createStatement();
-  //      ResultSet rs = stmt.executeQuery(query);
-  //      JdbcQueryResult jrs = new JdbcQueryResult(rs);
-  //      rs.close();
-  //      stmt.close();
-  //      return jrs;
-  //    } catch (SQLException e) {
-  //      throw new VerdictDBDbmsException(e.getMessage());
-  //    }
-  //  }
-  //
-  //  @Override
-  //  public int executeUpdate(String query) throws VerdictDBDbmsException {
-  //    System.out.println("About to issue this query: " + query);
-  //    try {
-  //      Statement stmt = conn.createStatement();
-  //      int r = stmt.executeUpdate(query);
-  //      stmt.close();
-  //      return r;
-  //    } catch (SQLException e) {
-  //      throw new VerdictDBDbmsException(e);
-  ////      e.printStackTrace();
-  ////      return 0;
-  //    }
-  //  }
 
   @Override
   public SqlSyntax getSyntax() {
@@ -255,14 +255,16 @@ public class JdbcConnection implements DbmsConnection {
   }
 
   @Override
-  public List<String> getTables(String schema) throws VerdictDBDbmsException {
+  public List<String> getTables(String schema) {
     List<String> tables = new ArrayList<>();
-    DbmsQueryResult queryResult = executeQuery(syntax.getTableCommand(schema));
-
-    while (queryResult.next()) {
-      tables.add(queryResult.getString(syntax.getTableNameColumnIndex()));
+    try {
+      DbmsQueryResult queryResult = executeQuery(syntax.getTableCommand(schema));
+      while (queryResult.next()) {
+        tables.add(queryResult.getString(syntax.getTableNameColumnIndex()));
+      }
+    } catch (VerdictDBDbmsException e) {
+      log.debug(e.getMessage());
     }
-
     return tables;
   }
 
@@ -289,9 +291,6 @@ public class JdbcConnection implements DbmsConnection {
         type = queryResult.getString(syntax.getColumnTypeColumnIndex());
       }
       type = type.toLowerCase();
-
-      //        // remove the size of type
-      //        type = type.replaceAll("\\(.*\\)", "");
 
       columns.add(
           new ImmutablePair<>(queryResult.getString(syntax.getColumnNameColumnIndex()), type));

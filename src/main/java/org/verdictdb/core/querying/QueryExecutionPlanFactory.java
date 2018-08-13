@@ -16,13 +16,23 @@
 
 package org.verdictdb.core.querying;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.coordinator.QueryContext;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
-import org.verdictdb.core.sqlobject.*;
-
-import java.util.ArrayList;
-import java.util.List;
+import org.verdictdb.core.sqlobject.AbstractRelation;
+import org.verdictdb.core.sqlobject.AliasedColumn;
+import org.verdictdb.core.sqlobject.AsteriskColumn;
+import org.verdictdb.core.sqlobject.BaseColumn;
+import org.verdictdb.core.sqlobject.BaseTable;
+import org.verdictdb.core.sqlobject.ColumnOp;
+import org.verdictdb.core.sqlobject.JoinTable;
+import org.verdictdb.core.sqlobject.SelectItem;
+import org.verdictdb.core.sqlobject.SelectQuery;
+import org.verdictdb.core.sqlobject.SubqueryColumn;
+import org.verdictdb.core.sqlobject.UnnamedColumn;
 
 public class QueryExecutionPlanFactory {
 
@@ -95,8 +105,8 @@ public class QueryExecutionPlanFactory {
         selectAll.createPlaceHolderTable("t");
     SelectQuery selectQuery =
         SelectQuery.create(new AsteriskColumn(), baseAndSubscriptionTicket.getLeft());
-    selectQuery.addOrderby(query.getOrderby());
-    if (query.getLimit().isPresent()) selectQuery.addLimit(query.getLimit().get());
+//    selectQuery.addOrderby(query.getOrderby());
+//    if (query.getLimit().isPresent()) selectQuery.addLimit(query.getLimit().get());
     selectAll.setSelectQuery(selectQuery);
 
     if (query.isSupportedAggregate()) {
@@ -116,6 +126,8 @@ public class QueryExecutionPlanFactory {
       IdCreator idCreator, SelectQuery query) {
     AggExecutionNode node = new AggExecutionNode(idCreator, null);
     convertSubqueriesToDependentNodes(query, node);
+//    query.addOrderby(query.getOrderby());
+//  if (query.getLimit().isPresent()) selectQuery.addLimit(query.getLimit().get());
     node.setSelectQuery(query);
     return node;
   }

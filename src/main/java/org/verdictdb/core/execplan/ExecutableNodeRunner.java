@@ -23,11 +23,14 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.TimeUnit;
 
 import org.verdictdb.commons.VerdictDBLogger;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.DbmsQueryResult;
+import org.verdictdb.core.querying.ExecutableNodeBase;
 import org.verdictdb.core.sqlobject.SqlConvertible;
+import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBValueException;
 import org.verdictdb.sqlwriter.QueryToSql;
@@ -41,6 +44,10 @@ public class ExecutableNodeRunner implements Runnable {
   int successSourceCount = 0;
 
   int dependentCount;
+  
+  private boolean isAborted = false;
+  
+  private VerdictDBLogger log = VerdictDBLogger.getLogger(this.getClass());
 
   public ExecutableNodeRunner(DbmsConnection conn, ExecutableNode node) {
     this.conn = conn;
@@ -58,14 +65,36 @@ public class ExecutableNodeRunner implements Runnable {
       throws VerdictDBException {
     return (new ExecutableNodeRunner(conn, node)).execute(tokens);
   }
+  
+  public void abort() {
+    log.debug(String.format("Aborts running this node %s:%d", 
+        node.getClass().getSimpleName(),
+        ((ExecutableNodeBase) node).getGroupId()));
+    isAborted = true;
+    conn.abort();
+  }
 
   @Override
   public void run() {
+    String nodeType = node.getClass().getSimpleName();
+    int nodeGroupId = ((ExecutableNodeBase) node).getGroupId();
+    
+    log.debug(String.format(
+        "Starts to run a node of type (%s) and group (%d).", 
+        nodeType, nodeGroupId));
+    
     // no dependency exists
     if (node.getSourceQueues().size() == 0) {
-      //      System.out.println("No loop: " + new ToStringBuilder(node,
-      // ToStringStyle.DEFAULT_STYLE));
-
+      if (isAborted) {
+        return;
+      }
+      
+      // standard interruption handling
+      if (Thread.currentThread().isInterrupted()) {
+        return;
+      }
+      
+      log.trace(String.format("No dependency exists. Simply run %s:%d", nodeType, nodeGroupId));
       try {
         executeAndBroadcast(Arrays.<ExecutionInfoToken>asList());
         broadcast(ExecutionInfoToken.successToken());
@@ -78,6 +107,10 @@ public class ExecutableNodeRunner implements Runnable {
 
     // dependency exists
     while (true) {
+      if (isAborted) {
+        return;
+      }
+      
       // standard interruption handling
       if (Thread.currentThread().isInterrupted()) {
         break;
@@ -85,8 +118,16 @@ public class ExecutableNodeRunner implements Runnable {
       
       List<ExecutionInfoToken> tokens = retrieve();
       if (tokens == null) {
+//        log.debug(String.format("Waiting for dependency %s:%d", nodeType, nodeGroupId));
+        try {
+          TimeUnit.MILLISECONDS.sleep(1);
+        } catch (InterruptedException e) {
+//          e.printStackTrace();
+        }
         continue;
       }
+      
+      log.trace(String.format("Starts to run %s:%d", nodeType, nodeGroupId));
 
       ExecutionInfoToken failureToken = getFailureTokenIfExists(tokens);
       if (failureToken != null) {
@@ -176,7 +217,15 @@ public class ExecutableNodeRunner implements Runnable {
     DbmsQueryResult intermediate = null;
     if (sqlObj != null) {
       String sql = QueryToSql.convert(conn.getSyntax(), sqlObj);
-      intermediate = conn.execute(sql);
+      try {
+        intermediate = conn.execute(sql);
+      } catch (VerdictDBDbmsException e) {
+        if (isAborted) {
+          // the errors from the underlying dbms are expected if the query is cancelled.
+        } else {
+          throw e;
+        }
+      }
     }
     ExecutionInfoToken token = node.createToken(intermediate);
 

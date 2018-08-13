@@ -56,39 +56,7 @@ public class QueryNodeBase extends ExecutableNodeBase {
 
   public void setSelectQuery(SelectQuery query) {
     this.selectQuery = query;
-    //    this.selectQuery = query.deepcopy(); // dyoon: this seems to cause problem in other unit
-    // tests.
   }
-  
-//  /**
-//   * Even in the case where multiple threads access this instance concurrently, the objects stored
-//   * using this method distinguish the original thread, thus can retrieve the correct one.
-//   *
-//   * @param key The key of the object to store
-//   * @param value The object to store
-//   */
-//  protected void storeObjectThreadSafely(String key, Object value) {
-//    long threadId = Thread.currentThread().getId();
-//    System.out.println("Stored for the thread: " + threadId);
-//    if (threadSafeStorage.containsKey(threadId) == false) {
-//      Map<String, Object> distinctStorage = new HashMap<>();
-//      threadSafeStorage.put(threadId, distinctStorage);
-//    }
-//
-//    final Map<String, Object> distinctStorage = threadSafeStorage.get(threadId);
-//    distinctStorage.put(key, value);
-//  }
-//
-//  protected Object retrieveStoredObjectThreadSafely(String key) {
-//    long threadId = Thread.currentThread().getId();
-//    System.out.println("Retrieved for the thread: " + threadId);
-//    if (threadSafeStorage.containsKey(threadId) == false) {
-//      return null;
-//    }
-//
-//    final Map<String, Object> distinctStorage = threadSafeStorage.get(threadId);
-//    return distinctStorage.get(key);
-//  }
 
   @Override
   public SqlConvertible createQuery(List<ExecutionInfoToken> tokens) throws VerdictDBException {

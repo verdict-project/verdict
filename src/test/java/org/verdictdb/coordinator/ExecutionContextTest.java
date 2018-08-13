@@ -1,7 +1,14 @@
 package org.verdictdb.coordinator;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.io.File;
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -16,14 +23,8 @@ import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.metastore.ScrambleMetaStore;
 
-import java.io.File;
-import java.io.IOException;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import com.google.common.base.Charsets;
+import com.google.common.io.Files;
 
 public class ExecutionContextTest {
 
@@ -98,7 +99,8 @@ public class ExecutionContextTest {
     String sql = String.format("select avg(l_quantity) from %s.lineitem_scrambled", MYSQL_DATABASE);
     DbmsConnection dbmsConn = JdbcConnection.create(conn);
     VerdictContext verdict = new VerdictContext(dbmsConn);
-    ExecutionContext exec = new ExecutionContext(dbmsConn, verdict.getContextId(), 0, options);
+    ExecutionContext exec = new ExecutionContext(
+        dbmsConn, verdict.getMetaStore(), verdict.getContextId(), 0, options);
 
     VerdictSingleResult result = exec.sql(sql);
   }
@@ -113,7 +115,8 @@ public class ExecutionContextTest {
     ((JdbcConnection) dbmsConn).setOutputDebugMessage(true);
     dbmsConn.setDefaultSchema(MYSQL_DATABASE);
     VerdictContext verdict = new VerdictContext(dbmsConn, options);
-    ExecutionContext exec = new ExecutionContext(dbmsConn, verdict.getContextId(), 0, options);
+    ExecutionContext exec = new ExecutionContext(
+        dbmsConn, verdict.getMetaStore(), verdict.getContextId(), 0, options);
 
     VerdictResultStream result = exec.streamsql(sql);
 
@@ -143,7 +146,8 @@ public class ExecutionContextTest {
     DbmsConnection dbmsConn = JdbcConnection.create(conn);
     dbmsConn.setDefaultSchema(MYSQL_DATABASE);
     VerdictContext verdict = new VerdictContext(dbmsConn, options);
-    ExecutionContext exec = new ExecutionContext(dbmsConn, verdict.getContextId(), 0, options);
+    ExecutionContext exec = new ExecutionContext(
+        dbmsConn, verdict.getMetaStore(), verdict.getContextId(), 0, options);
 
     VerdictResultStream result = exec.streamsql(sql);
 

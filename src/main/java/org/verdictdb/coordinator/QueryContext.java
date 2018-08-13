@@ -18,7 +18,9 @@ package org.verdictdb.coordinator;
 
 /** Created by Dong Young Yoon on 8/8/18. */
 public class QueryContext {
+  
   private String verdictContextId;
+  
   private Long executionSerialNumber;
 
   public QueryContext(String verdictContextId, Long executionSerialNumber) {

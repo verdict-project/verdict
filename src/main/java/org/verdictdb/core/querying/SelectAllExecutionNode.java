@@ -31,6 +31,8 @@ import org.verdictdb.exception.VerdictDBValueException;
 /** @author Yongjoo Park */
 public class SelectAllExecutionNode extends QueryNodeWithPlaceHolders {
 
+  private static final long serialVersionUID = -4794780058649322912L;
+
   public SelectAllExecutionNode(IdCreator idCreator, SelectQuery query) {
     super(idCreator, query);
   }
@@ -78,24 +80,6 @@ public class SelectAllExecutionNode extends QueryNodeWithPlaceHolders {
     token.setKeyValue("queryResult", result);
     return token;
   }
-
-  //  @Override
-  //  public ExecutionInfoToken executeNode(DbmsConnection conn, List<ExecutionInfoToken>
-  // downstreamResults)
-  //      throws VerdictDBException {
-  //    super.executeNode(conn, downstreamResults);
-  //    try {
-  //      String sql = QueryToSql.convert(conn.getSyntax(), selectQuery);
-  //      DbmsQueryResult queryResult = conn.executeQuery(sql);
-  //      ExecutionInfoToken result = new ExecutionInfoToken();
-  //      result.setKeyValue("queryResult", queryResult);
-  //      return result;
-  //
-  //    } catch (VerdictDBException e) {
-  //      e.printStackTrace();
-  //    }
-  //    return ExecutionInfoToken.empty();
-  //  }
 
   @Override
   public ExecutableNodeBase deepcopy() {

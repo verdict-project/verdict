@@ -19,20 +19,25 @@ package org.verdictdb.sqlreader;
 import java.util.Iterator;
 import java.util.List;
 
+import org.verdictdb.commons.VerdictDBLogger;
 import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
 import org.verdictdb.core.sqlobject.AbstractRelation;
 import org.verdictdb.core.sqlobject.BaseTable;
 import org.verdictdb.core.sqlobject.JoinTable;
 import org.verdictdb.core.sqlobject.SelectQuery;
-import org.verdictdb.metastore.ScrambleMetaStore;
 
 /** Created by Dong Young Yoon on 7/31/18. */
 public class ScrambleTableReplacer {
-  private ScrambleMetaStore store;
+  
+//  private ScrambleMetaStore store;
+  
+  private ScrambleMetaSet metaSet;
+  
+  private VerdictDBLogger log = VerdictDBLogger.getLogger(this.getClass());
 
-  public ScrambleTableReplacer(ScrambleMetaStore store) {
-    this.store = store;
+  public ScrambleTableReplacer(ScrambleMetaSet metaSet) {
+    this.metaSet = metaSet;
   }
 
   public void replace(SelectQuery query) {
@@ -46,20 +51,26 @@ public class ScrambleTableReplacer {
     if (table instanceof BaseTable) {
       BaseTable bt = (BaseTable) table;
       // replace original table with its scrambled table if exists.
-      if (store != null) {
-        ScrambleMetaSet metaSet = store.retrieve();
-        Iterator<ScrambleMeta> iterator = metaSet.iterator();
-        while (iterator.hasNext()) {
-          ScrambleMeta meta = iterator.next();
-          // substitute names with those of the first scrambled table found.
-          if (meta.getOriginalSchemaName().equals(bt.getSchemaName())
-              && meta.getOriginalTableName().equals(bt.getTableName())) {
-            bt.setSchemaName(meta.getSchemaName());
-            bt.setTableName(meta.getTableName());
-            break;
-          }
+//      if (store != null) {
+//      ScrambleMetaSet metaSet = store.retrieve();
+      Iterator<ScrambleMeta> iterator = metaSet.iterator();
+      while (iterator.hasNext()) {
+        ScrambleMeta meta = iterator.next();
+        
+        // substitute names with those of the first scrambled table found.
+        if (meta.getOriginalSchemaName().equals(bt.getSchemaName())
+            && meta.getOriginalTableName().equals(bt.getTableName())) {
+          bt.setSchemaName(meta.getSchemaName());
+          bt.setTableName(meta.getTableName());
+          
+          log.info(String.format("Automatic table replacement: %s.%s -> %s.%s",
+              meta.getOriginalSchemaName(), meta.getOriginalTableName(), 
+              meta.getSchemaName(), meta.getTableName()));
+          
+          break;
         }
       }
+//      }
     } else if (table instanceof JoinTable) {
       JoinTable jt = (JoinTable) table;
       for (AbstractRelation relation : jt.getJoinList()) {

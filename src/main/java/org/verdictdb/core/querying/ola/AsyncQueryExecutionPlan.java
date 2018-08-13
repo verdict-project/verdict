@@ -100,18 +100,9 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
     for (int i = 0; i < aggBlocks.size(); i++) {
       // this node block contains the links to those nodes belonging to this block.
       AggExecutionNodeBlock nodeBlock = aggBlocks.get(i);
-//      SelectQuery originalQuery = null;
-//      if (nodeBlock.getBlockRootNode() instanceof AggExecutionNode) {
-//        originalQuery = ((AggExecutionNode) nodeBlock.getBlockRootNode()).getSelectQuery();
-//      }
       
       ExecutableNodeBase oldNode = nodeBlock.getBlockRootNode();
-      //      ExecutableNodeBase newNode = nodeBlock.convertToProgressiveAgg(scrambleMeta);
       ExecutableNodeBase newNode = convertToProgressiveAgg(scrambleMeta, nodeBlock);
-      
-//      if (newNode instanceof AsyncAggExecutionNode && originalQuery != null) {
-//        ((AsyncAggExecutionNode) newNode).setSelectQuery(originalQuery);
-//      }
       
       List<ExecutableNodeBase> parents = oldNode.getExecutableNodeBaseParents();
       for (ExecutableNodeBase parent : parents) {
@@ -135,10 +126,11 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
    * <p>Basically aggregate subqueries are blocking operations while others operations are divided
    * into smaller- scale operations (which involve different portions of data).</p>
    *
-   * @param scrambleMeta
-   * @param aggNodeBlock
-   * @return Returns the root of the multiple aggregation nodes (each of which involves different
-   *     combinations of partitions)
+   * @param scrambleMeta The metadata about the scrambled tables.
+   * @param aggNodeBlock A set of the links to the nodes that will be processed in the asynchronous 
+   *                     manner.
+   * @return Returns     The root of the multiple aggregation nodes (each of which involves 
+   *                     different combinations of partitions)
    * @throws VerdictDBValueException
    */
   public ExecutableNodeBase convertToProgressiveAgg(
@@ -245,12 +237,7 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
 
     // Fourth, re-link the subscription relationship for the new AsyncAggNode
     ExecutableNodeBase newRoot =
-        AsyncAggExecutionNode.create(idCreator, individualAggNodes, combiners, scrambleMeta);
-    
-    // this newRoot must use the 
-    
-//    // Set hashmap of tier column alias for AsyncAggNode
-//    setTierColumnAlias((AsyncAggExecutionNode) newRoot);
+        AsyncAggExecutionNode.create(idCreator, individualAggNodes, combiners, scrambleMeta, aggNodeBlock);
 
     // Finally remove the old subscription information: old copied node -> still used old node
     for (Pair<ExecutableNodeBase, ExecutableNodeBase> parentToSource : oldSubscriptionInformation) {

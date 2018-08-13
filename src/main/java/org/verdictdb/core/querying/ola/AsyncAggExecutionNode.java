@@ -33,6 +33,7 @@ import org.verdictdb.core.querying.AggExecutionNode;
 import org.verdictdb.core.querying.ExecutableNodeBase;
 import org.verdictdb.core.querying.IdCreator;
 import org.verdictdb.core.querying.ProjectionNode;
+import org.verdictdb.core.querying.QueryNodeBase;
 import org.verdictdb.core.querying.SubscriptionTicket;
 import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
@@ -110,13 +111,15 @@ public class AsyncAggExecutionNode extends ProjectionNode {
    * @param individualAggs
    * @param combiners
    * @param meta
+   * @param aggNodeBlock 
    * @return
    */
   public static AsyncAggExecutionNode create(
       IdCreator idCreator,
       List<ExecutableNodeBase> individualAggs,
       List<ExecutableNodeBase> combiners,
-      ScrambleMetaSet meta) {
+      ScrambleMetaSet meta, 
+      AggExecutionNodeBlock aggNodeBlock) {
 
     AsyncAggExecutionNode node = new AsyncAggExecutionNode(idCreator);
 
@@ -153,28 +156,34 @@ public class AsyncAggExecutionNode extends ProjectionNode {
     node.scrambledTableTierInfo = new ImmutableMap.Builder<Integer, String>()
         .putAll(aggColumnsAndQuery.getRight())
         .build();
+    
+    // add (1) order-by, (2) limit, (3) having clauses to the select query
+    QueryNodeBase aggRoot = (QueryNodeBase) aggNodeBlock.getBlockRootNode();
+    SelectQuery originalAggQuery = aggRoot.getSelectQuery();
+    node.selectQuery.addOrderby(originalAggQuery.getOrderby());
+    if (originalAggQuery.getLimit().isPresent()) {
+      node.selectQuery.addLimit(originalAggQuery.getLimit().get());
+    }
+    if (originalAggQuery.getHaving().isPresent()) {
+      node.selectQuery.addHavingByAnd(originalAggQuery.getHaving().get());
+    }
+    
     return node;
   }
 
   @Override
   public SqlConvertible createQuery(List<ExecutionInfoToken> tokens) throws VerdictDBException {
-    super.createQuery(tokens);
+//    super.createQuery(tokens);
+    
+//    System.out.println("Starts the processing of AsyncAggNode.");
+//    System.out.println(selectQuery);
 
     ExecutionInfoToken token = tokens.get(0);
     AggMeta sourceAggMeta = (AggMeta) token.getValue("aggMeta");
 
     // First, calculate the scale factor and use it to replace the scale factor placeholder
-    //    HashMap<List<Integer>, Double> scaleFactor =
-    //        calculateScaleFactor(sourceAggMeta, scrambledTableTierInfo);
-
     List<Pair<UnnamedColumn, Double>> conditionToScaleFactor =
         composeScaleFactorForTierCombinations(sourceAggMeta, INNER_RAW_AGG_TABLE_ALIAS);
-
-//    // we store the original aggColumns to restore it later.
-//    List<ColumnOp> clonedAggColumns = new ArrayList<>();
-//    for (ColumnOp col : aggColumns) {
-//      clonedAggColumns.add(col.deepcopy());
-//    }
 
     // update the agg column scaling factor
     List<UnnamedColumn> scalingOperands = new ArrayList<>();
@@ -190,81 +199,11 @@ public class AsyncAggExecutionNode extends ProjectionNode {
       aggcol.setOperand(0, scalingColumn);
     }
 
-    //    // single-tier case
-    //    if (scaleFactor.size() == 1) {
-    //      // Substitute the scale factor
-    //      Double s = (Double) (scaleFactor.values().toArray())[0];
-    //      for (ColumnOp col : aggColumns) {
-    //        col.setOperand(0, ConstantColumn.valueOf(String.format("%.16f", s)));
-    //      }
-    //    }
-    //    // multiple-tiers case
-    //    else {
-    //      // If it has multiple tiers, we need to rewrite the multiply column into when-then-else column
-    //      for (ColumnOp col : aggColumns) {
-    //        //        String alias = ((BaseColumn) col.getOperand(1)).getColumnName();
-    //        col.setOpType("casewhen");
-    //        List<UnnamedColumn> operands = new ArrayList<>();
-    //        for (Map.Entry<List<Integer>, Double> entry : scaleFactor.entrySet()) {
-    //          List<Integer> tierPermutation = entry.getKey();
-    //          UnnamedColumn condition = generateCaseCondition(tierPermutation, scrambledTableTierInfo);
-    //          operands.add(condition);
-    //          ColumnOp multiply =
-    //              new ColumnOp(
-    //                  "multiply",
-    //                  Arrays.asList(
-    //                      ConstantColumn.valueOf(String.format("%.16f", entry.getValue())),
-    //                      col.getOperand(1)));
-    //          operands.add(multiply);
-    //        }
-    //        operands.add(ConstantColumn.valueOf(0));
-    //        col.setOperand(operands);
-    //      }
-    //    }
-
-    // If it has multiple tiers, we need to sum up the result
-    // We treat both single-tier and multi-tier cases simultaneously here to make alias management
-    // easier.
-    //      SelectQuery query = sumUpTierGroup(selectQuery.deepcopy(), sourceAggMeta);
-
-//    // Restore the original aggColumns
-//    for (int i = 0; i < clonedAggColumns.size(); i++) {
-//      ColumnOp cloned = clonedAggColumns.get(i);
-//      ColumnOp originalReference = aggColumns.get(i);
-//      originalReference.setOpType(cloned.getOpType());
-//      originalReference.setOperand(cloned.getOperands());
-//    }
-
-    //    if (multipleTierTableTierInfo.size() > 0) {
-    //      query = sumUpTierGroup(
-    //          (SelectQuery) aggColumnsAndQuery.getRight(), ((AggMeta) token.getValue("aggMeta")));
-    //    } else {
-    //      query = (SelectQuery) aggColumnsAndQuery.getRight();
-    //    }
-
-    //    Pair<String, String> tempTableFullName = getNamer().generateTempTableName();
-    //    newTableSchemaName = tempTableFullName.getLeft();
-    //    newTableName = tempTableFullName.getRight();
     selectQuery = replaceWithOriginalSelectList(selectQuery, sourceAggMeta);
+    
+//    System.out.println("Finished composing a query in AsyncAggNode.");
+//    System.out.println(selectQuery);
 
-    //    // TODO: this logic should have been placed in the root
-    //    if (selectQuery != null) {
-    //      if (!selectQuery.getGroupby().isEmpty() && selectQuery.getHaving().isPresent()) {
-    //        createTableQuery.addGroupby(selectQuery.getGroupby());
-    //      }
-    //      if (!selectQuery.getOrderby().isEmpty()) {
-    //        createTableQuery.addOrderby(selectQuery.getOrderby());
-    //      }
-    //      if (selectQuery.getHaving().isPresent()) {
-    //        createTableQuery.addHavingByAnd(selectQuery.getHaving().get());
-    //      }
-    //      if (selectQuery.getLimit().isPresent()) {
-    //        createTableQuery.addLimit(selectQuery.getLimit().get());
-    //      }
-    //    }
-
-    //    CreateTableAsSelectQuery createQuery =
-    //        new CreateTableAsSelectQuery(newTableSchemaName, newTableName, createTableQuery);
     return super.createQuery(tokens);
   }
 

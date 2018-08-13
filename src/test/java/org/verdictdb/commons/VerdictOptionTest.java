@@ -16,11 +16,11 @@
 
 package org.verdictdb.commons;
 
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 import java.util.Properties;
 
-import static org.junit.Assert.assertEquals;
+import org.junit.Test;
 
 /** Created by Dong Young Yoon on 8/9/18. */
 public class VerdictOptionTest {
