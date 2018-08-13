@@ -16,7 +16,23 @@
         </encoder>
     </appender>
 
-    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+    <appender name="ROOT_STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>INFO</level>
+        </filter>
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <Pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</Pattern>
+        </layout>
+        <filter class="ch.qos.logback.core.filter.EvaluatorFilter">
+            <evaluator>
+                <expression>return logger.startsWith("org.verdictdb");</expression>
+            </evaluator>
+            <OnMismatch>NEUTRAL</OnMismatch>
+            <OnMatch>DENY</OnMatch>
+        </filter>
+    </appender>
+
+    <appender name="VERDICTDB_STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
             <level>INFO</level>
         </filter>
@@ -24,10 +40,13 @@
             <Pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</Pattern>
         </layout>
     </appender>
+
     <statusListener class="ch.qos.logback.core.status.NopStatusListener"/>
-    <logger name="org.verdictdb" level="debug"/>
+    <logger name="org.verdictdb" level="debug">
+        <appender-ref ref="VERDICTDB_STDOUT"/>
+    </logger>
     <root level="warn">
-        <appender-ref ref="STDOUT"/>
+        <appender-ref ref="ROOT_STDOUT"/>
         <appender-ref ref="FILE"/>
     </root>
 </configuration>

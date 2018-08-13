@@ -18,14 +18,21 @@ package org.verdictdb.commons;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.filter.ThresholdFilter;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.Appender;
+import ch.qos.logback.core.ConsoleAppender;
+import ch.qos.logback.core.FileAppender;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
+
+import java.util.Iterator;
 
 public class VerdictDBLogger implements org.slf4j.Logger {
 
   private org.slf4j.Logger logger;
+
+  private static final String VERDICT_LOGGER_NAME = "org.verdictdb";
 
   private VerdictDBLogger(org.slf4j.Logger logger) {
     this.logger = logger;
@@ -37,6 +44,39 @@ public class VerdictDBLogger implements org.slf4j.Logger {
 
   public static VerdictDBLogger getLogger(String name) {
     return new VerdictDBLogger(LoggerFactory.getLogger(name));
+  }
+
+  public static void setConsoleLogLevel(String level) {
+    ThresholdFilter thresholdFilter = new ThresholdFilter();
+    thresholdFilter.setLevel(level);
+    Logger root = (Logger) LoggerFactory.getLogger(VERDICT_LOGGER_NAME);
+    Iterator<Appender<ILoggingEvent>> iterator = root.iteratorForAppenders();
+    while (iterator.hasNext()) {
+      Appender<ILoggingEvent> appender = iterator.next();
+      if (appender instanceof ConsoleAppender) {
+        ConsoleAppender ca = (ConsoleAppender) appender;
+        ca.clearAllFilters();
+        ca.addFilter(thresholdFilter);
+        thresholdFilter.start();
+      }
+    }
+  }
+
+  public static void setFileLogLevel(String level) {
+    ThresholdFilter thresholdFilter = new ThresholdFilter();
+    thresholdFilter.setLevel(level);
+    // For file log, we need to change root logger's appender.
+    Logger root = (Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
+    Iterator<Appender<ILoggingEvent>> iterator = root.iteratorForAppenders();
+    while (iterator.hasNext()) {
+      Appender<ILoggingEvent> appender = iterator.next();
+      if (appender instanceof FileAppender) {
+        FileAppender fa = (FileAppender) appender;
+        fa.clearAllFilters();
+        fa.addFilter(thresholdFilter);
+        thresholdFilter.start();
+      }
+    }
   }
 
   public void setLevel(Level level) {
