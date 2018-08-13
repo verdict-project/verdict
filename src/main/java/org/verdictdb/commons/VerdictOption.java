@@ -29,8 +29,13 @@ public class VerdictOption {
   private static final String DEFAULT_META_SCHEMA_NAME = "verdictdbmeta";
   private static final String DEFAULT_TEMP_SCHEMA_NAME = "verdictdbtemp";
 
+  private static final String DEFAULT_CONSOLE_LOG_LEVEL = "info";
+  private static final String DEFAULT_FILE_LOG_LEVEL = "debug";
+
   private String verdictMetaSchemaName = DEFAULT_META_SCHEMA_NAME;
   private String verdictTempSchemaName = DEFAULT_TEMP_SCHEMA_NAME;
+  private String verdictConsoleLogLevel = DEFAULT_CONSOLE_LOG_LEVEL;
+  private String verdictFileLogLevel = DEFAULT_FILE_LOG_LEVEL;
 
   public VerdictOption() {}
 
@@ -55,6 +60,24 @@ public class VerdictOption {
     return verdictTempSchemaName;
   }
 
+  public String getVerdictConsoleLogLevel() {
+    return verdictConsoleLogLevel;
+  }
+
+  public void setVerdictConsoleLogLevel(String level) {
+    this.verdictConsoleLogLevel = level;
+    VerdictDBLogger.setConsoleLogLevel(level);
+  }
+
+  public String getVerdictFileLogLevel() {
+    return verdictFileLogLevel;
+  }
+
+  public void setVerdictFileLogLevel(String level) {
+    this.verdictFileLogLevel = level;
+    VerdictDBLogger.setFileLogLevel(level);
+  }
+
   public void setVerdictTempSchemaName(String verdictTempSchemaName) {
     this.verdictTempSchemaName = verdictTempSchemaName;
   }
@@ -71,6 +94,14 @@ public class VerdictOption {
     return DEFAULT_TEMP_SCHEMA_NAME;
   }
 
+  public static String getDefaultConsoleLogLevel() {
+    return DEFAULT_CONSOLE_LOG_LEVEL;
+  }
+
+  public static String getDefaultFileLogLevel() {
+    return DEFAULT_FILE_LOG_LEVEL;
+  }
+
   public void parseConnectionString(String str) {
     String[] tokens = str.split("[&;?]");
     String pattern = "\\w+=\\w+";
@@ -81,10 +112,16 @@ public class VerdictOption {
         String[] option = token.split("=");
         switch (option[0].toLowerCase()) {
           case "verdictdbmetaschema":
-            verdictMetaSchemaName = option[1];
+            this.setVerdictMetaSchemaName(option[1]);
             break;
           case "verdictdbtempschema":
-            verdictTempSchemaName = option[1];
+            this.setVerdictTempSchemaName(option[1]);
+            break;
+          case "loglevel":
+            this.setVerdictConsoleLogLevel(option[1]);
+            break;
+          case "file_loglevel":
+            this.setVerdictFileLogLevel(option[1]);
             break;
           default:
             break;
