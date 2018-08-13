@@ -16,11 +16,16 @@
 
 package org.verdictdb.metastore;
 
-public class VerdictMetaStore {
+import org.verdictdb.core.scrambling.ScrambleMetaSet;
+
+public abstract class VerdictMetaStore {
 
   protected static final String METASTORE_TABLE_NAME = "verdictdbmeta";
 
   public String getMetaStoreTableName() {
     return METASTORE_TABLE_NAME;
   }
+  
+  public abstract ScrambleMetaSet retrieve();
+  
 }

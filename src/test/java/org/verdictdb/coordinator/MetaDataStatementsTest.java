@@ -275,7 +275,7 @@ public class MetaDataStatementsTest {
             new JdbcConnection(connMap.get(database), syntaxMap.get(database)));
     VerdictContext verdict = new VerdictContext(dbmsconn);
     ExecutionContext exec = new ExecutionContext(
-        dbmsconn, verdict.getScrambleMetaSet(), verdict.getContextId(), 0, options);
+        dbmsconn, verdict.getMetaStore(), verdict.getContextId(), 0, options);
     VerdictSingleResult result = exec.sql("show schemas");
 
     Set<String> expected = new HashSet<>();
@@ -322,7 +322,7 @@ public class MetaDataStatementsTest {
             new JdbcConnection(connMap.get(database), syntaxMap.get(database)));
     VerdictContext verdict = new VerdictContext(dbmsconn);
     ExecutionContext exec = new ExecutionContext(
-        dbmsconn, verdict.getScrambleMetaSet(), verdict.getContextId(), 0, options);
+        dbmsconn, verdict.getMetaStore(), verdict.getContextId(), 0, options);
     VerdictSingleResult result = exec.sql(vcsql);
 
     Set<String> expected = new HashSet<>();
@@ -373,7 +373,7 @@ public class MetaDataStatementsTest {
             new JdbcConnection(connMap.get(database), syntaxMap.get(database)));
     VerdictContext verdict = new VerdictContext(dbmsconn);
     ExecutionContext exec = new ExecutionContext(
-        dbmsconn, verdict.getScrambleMetaSet(), verdict.getContextId(), 0, options);
+        dbmsconn, verdict.getMetaStore(), verdict.getContextId(), 0, options);
     VerdictSingleResult result = exec.sql(vcsql);
     while (jdbcRs.next()) {
       result.next();

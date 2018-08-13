@@ -100,7 +100,7 @@ public class ExecutionContextTest {
     DbmsConnection dbmsConn = JdbcConnection.create(conn);
     VerdictContext verdict = new VerdictContext(dbmsConn);
     ExecutionContext exec = new ExecutionContext(
-        dbmsConn, verdict.getScrambleMetaSet(), verdict.getContextId(), 0, options);
+        dbmsConn, verdict.getMetaStore(), verdict.getContextId(), 0, options);
 
     VerdictSingleResult result = exec.sql(sql);
   }
@@ -116,7 +116,7 @@ public class ExecutionContextTest {
     dbmsConn.setDefaultSchema(MYSQL_DATABASE);
     VerdictContext verdict = new VerdictContext(dbmsConn, options);
     ExecutionContext exec = new ExecutionContext(
-        dbmsConn, verdict.getScrambleMetaSet(), verdict.getContextId(), 0, options);
+        dbmsConn, verdict.getMetaStore(), verdict.getContextId(), 0, options);
 
     VerdictResultStream result = exec.streamsql(sql);
 
@@ -147,7 +147,7 @@ public class ExecutionContextTest {
     dbmsConn.setDefaultSchema(MYSQL_DATABASE);
     VerdictContext verdict = new VerdictContext(dbmsConn, options);
     ExecutionContext exec = new ExecutionContext(
-        dbmsConn, verdict.getScrambleMetaSet(), verdict.getContextId(), 0, options);
+        dbmsConn, verdict.getMetaStore(), verdict.getContextId(), 0, options);
 
     VerdictResultStream result = exec.streamsql(sql);
 

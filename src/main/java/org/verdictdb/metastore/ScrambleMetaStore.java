@@ -215,6 +215,7 @@ public class ScrambleMetaStore extends VerdictMetaStore {
    *
    * @return a set of scramble meta
    */
+  @Override
   public ScrambleMetaSet retrieve() {
     ScrambleMetaSet retrieved = new ScrambleMetaSet();
 

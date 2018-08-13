@@ -35,7 +35,9 @@ import org.verdictdb.core.sqlobject.CreateScrambleQuery;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBTypeException;
+import org.verdictdb.metastore.CachedScrambleMetaStore;
 import org.verdictdb.metastore.ScrambleMetaStore;
+import org.verdictdb.metastore.VerdictMetaStore;
 import org.verdictdb.parser.VerdictSQLParser;
 import org.verdictdb.parser.VerdictSQLParserBaseVisitor;
 import org.verdictdb.sqlreader.NonValidatingSQLParser;
@@ -50,7 +52,9 @@ public class ExecutionContext {
 
   private DbmsConnection conn;
   
-  private ScrambleMetaSet scrambleMetaSet;
+//  private ScrambleMetaSet scrambleMetaSet;
+  
+  private VerdictMetaStore metaStore;
 
   private QueryContext queryContext;
   
@@ -79,9 +83,9 @@ public class ExecutionContext {
    * @param options
    */
   public ExecutionContext(
-      DbmsConnection conn, ScrambleMetaSet scrambleMetaSet, String contextId, long serialNumber, VerdictOption options) {
+      DbmsConnection conn, VerdictMetaStore metaStore, String contextId, long serialNumber, VerdictOption options) {
     this.conn = conn;
-    this.scrambleMetaSet = scrambleMetaSet;
+    this.metaStore = metaStore;
     this.serialNumber = serialNumber;
     this.queryContext = new QueryContext(contextId, serialNumber);
     this.options = options;
@@ -132,12 +136,11 @@ public class ExecutionContext {
 
     if (queryType.equals(QueryType.select)) {
       LOG.debug("Query type: select");
+      ScrambleMetaSet metaset = metaStore.retrieve();
       SelectQueryCoordinator coordinator =
-          new SelectQueryCoordinator(conn, scrambleMetaSet, options);
+          new SelectQueryCoordinator(conn, metaset, options);
       runningCoordinator = coordinator;
-//=======
-//      SelectQueryCoordinator coordinator = new SelectQueryCoordinator(conn, options);
-//>>>>>>> origin/master
+      
       ExecutionResultReader reader = coordinator.process(query, queryContext);
       VerdictResultStream stream = new VerdictResultStreamFromExecutionResultReader(reader, this);
       return stream;
@@ -166,6 +169,7 @@ public class ExecutionContext {
       // Add metadata to metastore
       ScrambleMetaStore metaStore = new ScrambleMetaStore(conn, options);
       metaStore.addToStore(meta);
+      refreshScrambleMetaStore();
       return null;
     } else if (queryType.equals(QueryType.set_default_schema)) {
       LOG.debug("Query type: set_default_schema");
@@ -186,6 +190,11 @@ public class ExecutionContext {
     } else {
       throw new VerdictDBTypeException("Unexpected type of query: " + query);
     }
+  }
+  
+  private void refreshScrambleMetaStore() {
+    // no type check was added to make it fail if non-cached metastore is used.
+    ((CachedScrambleMetaStore) this.metaStore).refreshCache();
   }
 
   private CreateScrambleQuery generateScrambleQuery(String query) {

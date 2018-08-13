@@ -36,7 +36,9 @@ import org.verdictdb.core.scrambling.ScrambleMetaSet;
 import org.verdictdb.core.sqlobject.CreateSchemaQuery;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.metastore.CachedScrambleMetaStore;
 import org.verdictdb.metastore.ScrambleMetaStore;
+import org.verdictdb.metastore.VerdictMetaStore;
 import org.verdictdb.sqlsyntax.SqlSyntax;
 import org.verdictdb.sqlsyntax.SqlSyntaxList;
 
@@ -45,8 +47,8 @@ public class VerdictContext {
   private DbmsConnection conn;
 
   private boolean isClosed = false;
-
-  private ScrambleMetaSet scrambleMetaSet;
+  
+  private VerdictMetaStore metaStore;
 
   private final String contextId;
 
@@ -63,14 +65,16 @@ public class VerdictContext {
     this.conn = new CachedDbmsConnection(conn);
     this.contextId = RandomStringUtils.randomAlphanumeric(5);
     this.options = new VerdictOption();
-    this.scrambleMetaSet = ScrambleMetaStore.retrieve(conn, options);
+    this.metaStore = new CachedScrambleMetaStore(new ScrambleMetaStore(conn, options));
+//    this.scrambleMetaSet = ScrambleMetaStore.retrieve(conn, options);
   }
 
   public VerdictContext(DbmsConnection conn, VerdictOption options) throws VerdictDBException {
     this.conn = new CachedDbmsConnection(conn);
     this.contextId = RandomStringUtils.randomAlphanumeric(5);
     this.options = options;
-    this.scrambleMetaSet = ScrambleMetaStore.retrieve(conn, options);
+    this.metaStore = new CachedScrambleMetaStore(new ScrambleMetaStore(conn, options));
+//    this.scrambleMetaSet = ScrambleMetaStore.retrieve(conn, options);
     initialize(options);
   }
   
@@ -231,7 +235,7 @@ public class VerdictContext {
   public ExecutionContext createNewExecutionContext() {
     long execSerialNumber = getNextExecutionSerialNumber();
     ExecutionContext exec =
-        new ExecutionContext(conn.copy(), scrambleMetaSet, contextId, execSerialNumber, options.copy());
+        new ExecutionContext(conn.copy(), metaStore, contextId, execSerialNumber, options.copy());
     executionContexts.add(exec);
     return exec;
   }
@@ -242,7 +246,11 @@ public class VerdictContext {
   }
 
   public ScrambleMetaSet getScrambleMetaSet() {
-    return scrambleMetaSet;
+    return metaStore.retrieve();
+  }
+  
+  public VerdictMetaStore getMetaStore() {
+    return metaStore;
   }
 
   private void removeExecutionContext(ExecutionContext exec) {
