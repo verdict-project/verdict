@@ -169,14 +169,15 @@ psql
 Create a schema for testing.
 
 ```
-postgres=# create schema "tpch1g";
+postgres=# create schema tpch1g;
+postgres=# set search_path to tpch1g;
 ```
 
 Create empty tables; simply copy and paste the following table definition statements into the PostgreSQL prompt. We will import the data later into these tables.
 
 ```sql
 -- nation
-CREATE TABLE IF NOT EXISTS "tpch1g"."nation" (
+CREATE TABLE IF NOT EXISTS "nation" (
   "n_nationkey"  INT,
   "n_name"       CHAR(25),
   "n_regionkey"  INT,
@@ -185,7 +186,7 @@ CREATE TABLE IF NOT EXISTS "tpch1g"."nation" (
   PRIMARY KEY ("n_nationkey"));
 
 -- region
-CREATE TABLE IF NOT EXISTS "tpch1g"."region" (
+CREATE TABLE IF NOT EXISTS "region" (
   "r_regionkey"  INT,
   "r_name"       CHAR(25),
   "r_comment"    VARCHAR(152),
@@ -193,7 +194,7 @@ CREATE TABLE IF NOT EXISTS "tpch1g"."region" (
   PRIMARY KEY ("r_regionkey"));
 
 -- supplier
-CREATE TABLE IF NOT EXISTS "tpch1g"."supplier" (
+CREATE TABLE IF NOT EXISTS "supplier" (
   "s_suppkey"     INT,
   "s_name"        CHAR(25),
   "s_address"     VARCHAR(40),
@@ -205,7 +206,7 @@ CREATE TABLE IF NOT EXISTS "tpch1g"."supplier" (
   PRIMARY KEY ("s_suppkey"));
 
 -- customer
-CREATE TABLE IF NOT EXISTS "tpch1g"."customer" (
+CREATE TABLE IF NOT EXISTS "customer" (
   "c_custkey"     INT,
   "c_name"        VARCHAR(25),
   "c_address"     VARCHAR(40),
@@ -218,7 +219,7 @@ CREATE TABLE IF NOT EXISTS "tpch1g"."customer" (
   PRIMARY KEY ("c_custkey"));
 
 -- part
-CREATE TABLE IF NOT EXISTS "tpch1g"."part" (
+CREATE TABLE IF NOT EXISTS "part" (
   "p_partkey"     INT,
   "p_name"        VARCHAR(55),
   "p_mfgr"        CHAR(25),
@@ -232,7 +233,7 @@ CREATE TABLE IF NOT EXISTS "tpch1g"."part" (
   PRIMARY KEY ("p_partkey"));
 
 -- partsupp
-CREATE TABLE IF NOT EXISTS "tpch1g"."partsupp" (
+CREATE TABLE IF NOT EXISTS "partsupp" (
   "ps_partkey"     INT,
   "ps_suppkey"     INT,
   "ps_availqty"    INT,
@@ -242,7 +243,7 @@ CREATE TABLE IF NOT EXISTS "tpch1g"."partsupp" (
   PRIMARY KEY ("ps_partkey"));
 
 -- orders
-CREATE TABLE IF NOT EXISTS "tpch1g"."orders" (
+CREATE TABLE IF NOT EXISTS "orders" (
   "o_orderkey"       INT,
   "o_custkey"        INT,
   "o_orderstatus"    CHAR(1),
@@ -256,7 +257,7 @@ CREATE TABLE IF NOT EXISTS "tpch1g"."orders" (
   PRIMARY KEY ("o_orderkey"));
 
 -- lineitem
-CREATE TABLE IF NOT EXISTS "tpch1g"."lineitem"(
+CREATE TABLE IF NOT EXISTS "lineitem"(
   "l_orderkey"          INT,
   "l_partkey"           INT,
   "l_suppkey"           INT,
@@ -281,14 +282,14 @@ CREATE TABLE IF NOT EXISTS "tpch1g"."lineitem"(
 Suppose your work directory is `/home/username/workspace` and the tpch1g data is stored in `/home/username/workspace/tpch1g`. Then, issue the following commands in the PostgreSQL prompt to load the data.
 
 ```bash
-\copy "tpch1g"."region"     from '/home/username/workspace/tpch1g/region/region.tbl'        DELIMITER '|' CSV;
-\copy "tpch1g"."nation"     from '/home/username/workspace/tpch1g/nation/nation.tbl'        DELIMITER '|' CSV;
-\copy "tpch1g"."customer"   from '/home/username/workspace/tpch1g/customer/customer.tbl'    DELIMITER '|' CSV;
-\copy "tpch1g"."supplier"   from '/home/username/workspace/tpch1g/supplier/supplier.tbl'    DELIMITER '|' CSV;
-\copy "tpch1g"."part"       from '/home/username/workspace/tpch1g/part/part.tbl'            DELIMITER '|' CSV;
-\copy "tpch1g"."partsupp"   from '/home/username/workspace/tpch1g/partsupp/partsupp.tbl'    DELIMITER '|' CSV;
-\copy "tpch1g"."orders"     from '/home/username/workspace/tpch1g/orders/orders.tbl'        DELIMITER '|' CSV;
-\copy "tpch1g"."lineitem"   from '/home/username/workspace/tpch1g/lineitem/lineitem.tbl'    DELIMITER '|' CSV;
+\copy "region"     from '/home/username/workspace/tpch1g/region/region.tbl'        DELIMITER '|' CSV;
+\copy "nation"     from '/home/username/workspace/tpch1g/nation/nation.tbl'        DELIMITER '|' CSV;
+\copy "customer"   from '/home/username/workspace/tpch1g/customer/customer.tbl'    DELIMITER '|' CSV;
+\copy "supplier"   from '/home/username/workspace/tpch1g/supplier/supplier.tbl'    DELIMITER '|' CSV;
+\copy "part"       from '/home/username/workspace/tpch1g/part/part.tbl'            DELIMITER '|' CSV;
+\copy "partsupp"   from '/home/username/workspace/tpch1g/partsupp/partsupp.tbl'    DELIMITER '|' CSV;
+\copy "orders"     from '/home/username/workspace/tpch1g/orders/orders.tbl'        DELIMITER '|' CSV;
+\copy "lineitem"   from '/home/username/workspace/tpch1g/lineitem/lineitem.tbl'    DELIMITER '|' CSV;
 ```
 
 ## Apache Spark
