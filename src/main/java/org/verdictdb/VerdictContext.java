@@ -65,17 +65,21 @@ public class VerdictContext {
     this.conn = new CachedDbmsConnection(conn);
     this.contextId = RandomStringUtils.randomAlphanumeric(5);
     this.options = new VerdictOption();
-    this.metaStore = new CachedScrambleMetaStore(new ScrambleMetaStore(conn, options));
-//    this.scrambleMetaSet = ScrambleMetaStore.retrieve(conn, options);
+    this.metaStore = getCachedMetaStore(conn, options);
   }
 
   public VerdictContext(DbmsConnection conn, VerdictOption options) throws VerdictDBException {
     this.conn = new CachedDbmsConnection(conn);
     this.contextId = RandomStringUtils.randomAlphanumeric(5);
     this.options = options;
-    this.metaStore = new CachedScrambleMetaStore(new ScrambleMetaStore(conn, options));
-//    this.scrambleMetaSet = ScrambleMetaStore.retrieve(conn, options);
+    this.metaStore = getCachedMetaStore(conn, options);
     initialize(options);
+  }
+  
+  private VerdictMetaStore getCachedMetaStore(DbmsConnection conn, VerdictOption option) {
+    CachedScrambleMetaStore metaStore = new CachedScrambleMetaStore(new ScrambleMetaStore(conn, options));
+    metaStore.refreshCache();
+    return metaStore;
   }
   
   /**
