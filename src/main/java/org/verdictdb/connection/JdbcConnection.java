@@ -98,11 +98,13 @@ public class JdbcConnection extends DbmsConnection {
     log.trace("Aborts a statement if running.");
     isAborting = true;
     try {
-      if (runningStatement != null && !runningStatement.isClosed()) {
-        log.trace("Aborts a running statement.");
-        runningStatement.cancel();
-        runningStatement.close();
-        runningStatement = null;
+      synchronized (this) {
+        if (runningStatement != null && !runningStatement.isClosed()) {
+          log.trace("Aborts a running statement.");
+          runningStatement.cancel();
+          runningStatement.close();
+          runningStatement = null;
+        }
       }
       
       isAborting = false;
@@ -187,13 +189,25 @@ public class JdbcConnection extends DbmsConnection {
 
     return splitted;
   }
+  
+  private void setRunningStatement(Statement stmt) {
+    synchronized (this) {
+      runningStatement = stmt;
+    }
+  }
+  
+  private Statement getRunningStatement() {
+    synchronized (this) {
+      return runningStatement;
+    }
+  }
 
   public DbmsQueryResult executeSingle(String sql) throws VerdictDBDbmsException {
     log.debug("Issuing the following query to DBMS: " + sql);
 
     try {
       Statement stmt = conn.createStatement();
-      runningStatement = stmt;
+      setRunningStatement(stmt);
       JdbcQueryResult jrs = null;
       boolean doesResultExist = stmt.execute(sql);
       if (doesResultExist) {
@@ -203,7 +217,7 @@ public class JdbcConnection extends DbmsConnection {
       } else {
         jrs = null;
       }
-      runningStatement = null;
+      setRunningStatement(null);
       stmt.close();
       return jrs;
     } catch (SQLException e) {
