@@ -276,10 +276,13 @@ public class ScramblingCoordinator {
     }
 
     // perform scrambling
+    log.info(String.format("Starts to create a new scramble %s.%s from %s.%s", 
+        newSchema, newTable, originalSchema, originalTable));
     ScramblingPlan plan =
         ScramblingPlan.create(
             newSchema, newTable, originalSchema, originalTable, scramblingMethod, effectiveOptions);
     ExecutablePlanRunner.runTillEnd(conn, plan);
+    log.info(String.format("Finished creating %s.%s", newSchema, newTable));
 
     // compose scramble meta
     String blockColumn = effectiveOptions.get("blockColumnName");

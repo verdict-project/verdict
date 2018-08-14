@@ -118,16 +118,16 @@ public class ExecutableNodeRunner implements Runnable {
       
       List<ExecutionInfoToken> tokens = retrieve();
       if (tokens == null) {
-//        log.debug(String.format("Waiting for dependency %s:%d", nodeType, nodeGroupId));
-        try {
-          TimeUnit.MILLISECONDS.sleep(1);
-        } catch (InterruptedException e) {
-//          e.printStackTrace();
-        }
+////        log.debug(String.format("Waiting for dependency %s:%d", nodeType, nodeGroupId));
+//        try {
+//          TimeUnit.MILLISECONDS.sleep(1);
+//        } catch (InterruptedException e) {
+////          e.printStackTrace();
+//        }
         continue;
       }
       
-      log.trace(String.format("Starts to run %s:%d", nodeType, nodeGroupId));
+      log.trace(String.format("Actual processing starts for %s:%d", nodeType, nodeGroupId));
 
       ExecutionInfoToken failureToken = getFailureTokenIfExists(tokens);
       if (failureToken != null) {
