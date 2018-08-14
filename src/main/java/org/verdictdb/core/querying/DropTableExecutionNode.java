@@ -27,6 +27,8 @@ import org.verdictdb.exception.VerdictDBValueException;
 
 public class DropTableExecutionNode extends ExecutableNodeBase {
   
+  private static final long serialVersionUID = -1178389286917949851L;
+
   public DropTableExecutionNode(int uniqueId) {
     super(uniqueId);
   }
