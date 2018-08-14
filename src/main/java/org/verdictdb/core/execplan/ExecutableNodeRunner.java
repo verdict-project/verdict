@@ -73,11 +73,14 @@ public class ExecutableNodeRunner implements Runnable {
     return (new ExecutableNodeRunner(conn, node)).execute(tokens);
   }
   
-  public void abort() {
-    log.debug(String.format("Aborts running this node %s:%d", 
-        node.getClass().getSimpleName(),
-        ((ExecutableNodeBase) node).getGroupId()));
+  public void setAborted() {
     isAborted = true;   // this will effectively end the loop within run().
+  }
+  
+  public void abort() {
+    log.trace(String.format("Aborts running this node %s", 
+        node.toString()));
+    setAborted();
     conn.abort();
   }
   
@@ -126,8 +129,13 @@ public class ExecutableNodeRunner implements Runnable {
         clearRunningTask();
         return;
       } catch (Exception e) {
-        e.printStackTrace();
-        broadcast(ExecutionInfoToken.failureToken(e));
+        if (isAborted) {
+          // do nothing
+          return;
+        } else {
+          e.printStackTrace();
+          broadcast(ExecutionInfoToken.failureToken(e));
+        }
       }
       clearRunningTask();
       return;
@@ -162,10 +170,15 @@ public class ExecutableNodeRunner implements Runnable {
         try {
           executeAndBroadcast(tokens);
         } catch (Exception e) {
-          e.printStackTrace();
-          broadcast(ExecutionInfoToken.failureToken(e));
-          clearRunningTask();
-          return;
+          if (isAborted) {
+            // do nothing
+            return;
+          } else {
+            e.printStackTrace();
+            broadcast(ExecutionInfoToken.failureToken(e));
+            clearRunningTask();
+            return;
+          }
         }
     }
   }
@@ -193,6 +206,9 @@ public class ExecutableNodeRunner implements Runnable {
   }
 
   void broadcast(ExecutionInfoToken token) {
+    if (isAborted) {
+      return;
+    }
   
     // for understandable logs
     synchronized (VerdictDBLogger.class) {

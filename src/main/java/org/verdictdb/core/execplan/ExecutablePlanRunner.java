@@ -127,6 +127,10 @@ public class ExecutablePlanRunner {
    */
   public void abort() {
     for (ExecutableNodeRunner nodeRunner : nodeRunners) {
+      nodeRunner.setAborted();
+    }
+    
+    for (ExecutableNodeRunner nodeRunner : nodeRunners) {
       nodeRunner.abort();
     }
     

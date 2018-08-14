@@ -287,8 +287,9 @@ public class ExecutionContext {
   
   public void abort() {
     if (runningCoordinator != null) {
-      runningCoordinator.abort();
+      Coordinator c = runningCoordinator;
       runningCoordinator = null;
+      c.abort();
     }
   }
 
