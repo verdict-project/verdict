@@ -180,7 +180,7 @@ public class FastConvergeScramblingMethodTest {
   public void testGetStatisticsNode() throws SQLException, VerdictDBException {
     int blockSize = 10;
     String scratchpadSchemaName = "test";
-    String primaryGroupColumnName = "NAME";
+    String primaryGroupColumnName = "name";
     FastConvergeScramblingMethod method = 
         new FastConvergeScramblingMethod(blockSize, scratchpadSchemaName, primaryGroupColumnName);
     
@@ -212,17 +212,17 @@ public class FastConvergeScramblingMethodTest {
   public void testGetTierExpressions() throws VerdictDBDbmsException {
     int blockSize = 10;
     String scratchpadSchemaName = "test";
-    String primaryGroupColumnName = "NAME";
+    String primaryGroupColumnName = "name";
     FastConvergeScramblingMethod method = 
         new FastConvergeScramblingMethod(blockSize, scratchpadSchemaName, primaryGroupColumnName);
     
     // query result; preparation
-    String sql = "select avg(t.\"ID\") as \"verdictdbavgID\", "
-        + "stddev_pop(t.\"ID\") as \"verdictdbstddevID\", "
-        + "avg(t.\"AGE\") as \"verdictdbavgAGE\", "
-        + "stddev_pop(t.\"AGE\") as \"verdictdbstddevAGE\", "
-        + "avg(t.\"HEIGHT\") as \"verdictdbavgHEIGHT\", "
-        + "stddev_pop(t.\"HEIGHT\") as \"verdictdbstddevHEIGHT\", "
+    String sql = "select avg(t.\"id\") as \"verdictdbavgID\", "
+        + "stddev_pop(t.\"id\") as \"verdictdbstddevID\", "
+        + "avg(t.\"age\") as \"verdictdbavgAGE\", "
+        + "stddev_pop(t.\"age\") as \"verdictdbstddevAGE\", "
+        + "avg(t.\"height\") as \"verdictdbavgHEIGHT\", "
+        + "stddev_pop(t.\"height\") as \"verdictdbstddevHEIGHT\", "
         + "count(*) as \"verdictdbtotalcount\" "
         + "from \"test\".\"people\" as t";
     DbmsConnection conn = JdbcConnection.create(h2conn);
