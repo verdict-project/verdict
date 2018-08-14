@@ -830,7 +830,8 @@ public class TpchAsyncExecutionPlanSimplifierTest {
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
-  @Test
+//  @Test
+//The previous simplify() function has been deprecated.
   public void Query7Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql =
@@ -1042,7 +1043,8 @@ public class TpchAsyncExecutionPlanSimplifierTest {
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
-  @Test
+//  @Test
+//The previous simplify() function has been deprecated.
   public void Query8Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql =
@@ -1239,7 +1241,8 @@ public class TpchAsyncExecutionPlanSimplifierTest {
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
-  @Test
+//  @Test
+//The previous simplify() function has been deprecated.
   public void Query9Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql =
@@ -1993,7 +1996,7 @@ public class TpchAsyncExecutionPlanSimplifierTest {
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
-  @Test
+//  @Test
   public void Query17Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql =
@@ -2076,6 +2079,7 @@ public class TpchAsyncExecutionPlanSimplifierTest {
     // queryExecutionPlan.root.getExecutableNodeBaseDependent(0).getExecutableNodeBaseDependent(0)
     //        .getExecutableNodeBaseDependent(0).getExecutableNodeBaseDependent(0)).selectQuery);
 
+    // this logic is no longer used
     QueryExecutionPlan plan = QueryExecutionPlanSimplifier.simplify(queryExecutionPlan);
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
     ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), plan);
@@ -2681,7 +2685,8 @@ public class TpchAsyncExecutionPlanSimplifierTest {
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
-  @Test
+//  @Test
+  // The previous simplify() function has been deprecated.
   public void Query21Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql =

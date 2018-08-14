@@ -77,7 +77,7 @@ public class ExecutableNodeRunner implements Runnable {
     log.debug(String.format("Aborts running this node %s:%d", 
         node.getClass().getSimpleName(),
         ((ExecutableNodeBase) node).getGroupId()));
-    isAborted = true;
+    isAborted = true;   // this will effectively end the loop within run().
     conn.abort();
   }
   
@@ -134,39 +134,39 @@ public class ExecutableNodeRunner implements Runnable {
     }
 
     // dependency exists
-    while (true) {
-      // not enough source nodes are finished.
-      List<ExecutionInfoToken> tokens = retrieve();
-      if (tokens == null) {
-        clearRunningTask();
-        return;
-      }
-
-      synchronized (VerdictDBLogger.class) {
-        log.debug(String.format("Actual processing starts for %s", node.toString()));
-      }
-
-      ExecutionInfoToken failureToken = getFailureTokenIfExists(tokens);
-      if (failureToken != null) {
-        broadcast(failureToken);
-        clearRunningTask();
-        return;
-      }
-      if (areAllSuccess(tokens)) {
-        broadcast(ExecutionInfoToken.successToken());
-        clearRunningTask();
-        return;
-      }
-
-      // actual processing
-      try {
-        executeAndBroadcast(tokens);
-      } catch (Exception e) {
-        e.printStackTrace();
-        broadcast(ExecutionInfoToken.failureToken(e));
-        clearRunningTask();
-        return;
-      }
+    while (!isAborted) {
+        // not enough source nodes are finished.
+        List<ExecutionInfoToken> tokens = retrieve();
+        if (tokens == null) {
+          clearRunningTask();
+          return;
+        }
+  
+        synchronized (VerdictDBLogger.class) {
+          log.debug(String.format("Actual processing starts for %s", node.toString()));
+        }
+  
+        ExecutionInfoToken failureToken = getFailureTokenIfExists(tokens);
+        if (failureToken != null) {
+          broadcast(failureToken);
+          clearRunningTask();
+          return;
+        }
+        if (areAllSuccess(tokens)) {
+          broadcast(ExecutionInfoToken.successToken());
+          clearRunningTask();
+          return;
+        }
+  
+        // actual processing
+        try {
+          executeAndBroadcast(tokens);
+        } catch (Exception e) {
+          e.printStackTrace();
+          broadcast(ExecutionInfoToken.failureToken(e));
+          clearRunningTask();
+          return;
+        }
     }
   }
   
