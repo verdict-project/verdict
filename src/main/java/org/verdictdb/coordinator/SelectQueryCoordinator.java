@@ -102,33 +102,35 @@ public class SelectQueryCoordinator implements Coordinator {
    * Use process(String query, QueryContext context) for actual applications instead.
    */
   public ExecutionResultReader process(String query) throws VerdictDBException {
+    
+    return process(query, null);
 
-    SelectQuery selectQuery = standardizeQuery(query);
-
-    // make plan
-    // if the plan does not include any aggregates, it will simply be a parsed structure of the
-    // original query.
-    QueryExecutionPlan plan =
-        QueryExecutionPlanFactory.create(scratchpadSchema, scrambleMetaSet, selectQuery);
-
-    // convert it to an asynchronous plan
-    // if the plan does not include any aggregates, this operation should not alter the original
-    // plan.
-    QueryExecutionPlan asyncPlan = AsyncQueryExecutionPlan.create(plan);
-
-    // simplify the plan
-    //    QueryExecutionPlan simplifiedAsyncPlan = QueryExecutionPlanSimplifier.simplify(asyncPlan);
-    QueryExecutionPlanSimplifier.simplify2(asyncPlan);
-
-    //    asyncPlan.getRootNode().print();
-
-    // execute the plan
-    planRunner = new ExecutablePlanRunner(conn, asyncPlan);
-    ExecutionResultReader reader = planRunner.getResultReader();
-
-    lastQuery = selectQuery;
-
-    return reader;
+//    SelectQuery selectQuery = standardizeQuery(query);
+//
+//    // make plan
+//    // if the plan does not include any aggregates, it will simply be a parsed structure of the
+//    // original query.
+//    QueryExecutionPlan plan =
+//        QueryExecutionPlanFactory.create(scratchpadSchema, scrambleMetaSet, selectQuery);
+//
+//    // convert it to an asynchronous plan
+//    // if the plan does not include any aggregates, this operation should not alter the original
+//    // plan.
+//    QueryExecutionPlan asyncPlan = AsyncQueryExecutionPlan.create(plan);
+//
+//    // simplify the plan
+//    //    QueryExecutionPlan simplifiedAsyncPlan = QueryExecutionPlanSimplifier.simplify(asyncPlan);
+//    QueryExecutionPlanSimplifier.simplify2(asyncPlan);
+//
+//    //    asyncPlan.getRootNode().print();
+//
+//    // execute the plan
+//    planRunner = new ExecutablePlanRunner(conn, asyncPlan);
+//    ExecutionResultReader reader = planRunner.getResultReader();
+//
+//    lastQuery = selectQuery;
+//
+//    return reader;
   }
 
   public ExecutionResultReader process(String query, QueryContext context)
@@ -146,12 +148,14 @@ public class SelectQueryCoordinator implements Coordinator {
     // if the plan does not include any aggregates, this operation should not alter the original
     // plan.
     QueryExecutionPlan asyncPlan = AsyncQueryExecutionPlan.create(plan);
+    log.debug("Async plan created.");
 
     // simplify the plan
     //    QueryExecutionPlan simplifiedAsyncPlan = QueryExecutionPlanSimplifier.simplify(asyncPlan);
     QueryExecutionPlanSimplifier.simplify2(asyncPlan);
+    log.debug("Plan simplification done.");
     
-    log.debug(asyncPlan.getRoot().getStructure());
+//    log.debug(asyncPlan.getRoot().getStructure());
 
     // execute the plan
     planRunner = new ExecutablePlanRunner(conn, asyncPlan);

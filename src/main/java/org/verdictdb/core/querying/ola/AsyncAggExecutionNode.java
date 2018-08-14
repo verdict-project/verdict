@@ -139,6 +139,14 @@ public class AsyncAggExecutionNode extends ProjectionNode {
       c.registerSubscriber(ticket);
       //      node.subscribeTo(c, 0);
     }
+    
+    // agg -> next agg (to enfore the execution order)
+    for (int i = 0; i < individualAggs.size()-1; i++) {
+      AggExecutionNode thisNode = (AggExecutionNode) individualAggs.get(i);
+      AggExecutionNode nextNode = (AggExecutionNode) individualAggs.get(i+1);
+      int channel = thisNode.getId();
+      nextNode.subscribeTo(thisNode, channel);
+    }
 
     node.setScrambleMetaSet(meta);   // the scramble meta must be not be shared; thus, thread-safe
     node.setNamer(idCreator);        // the name can be shared

@@ -36,6 +36,7 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.core.execplan.ExecutableNode;
+import org.verdictdb.core.execplan.ExecutableNodeRunner;
 import org.verdictdb.core.execplan.ExecutionInfoToken;
 import org.verdictdb.core.execplan.ExecutionTokenQueue;
 import org.verdictdb.core.execplan.MethodInvocationInformation;
@@ -61,6 +62,8 @@ public class ExecutableNodeBase implements ExecutableNode, Serializable {
   
   private UniqueChannelCreator channelCreator = new UniqueChannelCreator(this);
   
+  private ExecutableNodeRunner runner;
+
   public ExecutableNodeBase(IdCreator creator) {
     this(creator.generateSerialNumber());
   }
@@ -365,10 +368,22 @@ public class ExecutableNodeBase implements ExecutableNode, Serializable {
         //        .append("channels", channels)
         .toString();
   }
+  
+  @Override
+  public void registerNodeRunner(ExecutableNodeRunner runner) {
+    this.runner = runner;
+  }
+
+  @Override
+  public ExecutableNodeRunner getRegisteredRunner() {
+    return runner;
+  }
 }
 
 class UniqueChannelCreator implements Serializable {
   
+  private static final long serialVersionUID = -344656097467066883L;
+
   private int identifierNum = 0;
   
   private ExecutableNodeBase node;

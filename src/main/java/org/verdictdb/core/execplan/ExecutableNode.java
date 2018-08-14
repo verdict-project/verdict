@@ -25,10 +25,11 @@ import org.verdictdb.exception.VerdictDBException;
 
 public interface ExecutableNode {
 
-  //  // Setup methods
-  //  public void subscribeTo(ExecutableNode node);
-  //
-  //  public void subscribeTo(ExecutableNode node, int channel);
+  // Setup methods
+  
+  public void registerNodeRunner(ExecutableNodeRunner runner);
+  
+  public ExecutableNodeRunner getRegisteredRunner();
 
   // Execution methods
   /**

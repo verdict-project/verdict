@@ -49,8 +49,15 @@ public class ExecutableNodeRunner implements Runnable {
   
   private VerdictDBLogger log = VerdictDBLogger.getLogger(this.getClass());
 
+  private Thread runningTask = null;
+
+  private void clearRunningTask() {
+    this.runningTask = null;
+  }
+
   public ExecutableNodeRunner(DbmsConnection conn, ExecutableNode node) {
     this.conn = conn;
+    node.registerNodeRunner(this);
     this.node = node;
     this.dependentCount = node.getDependentNodeCount();
   }
@@ -73,72 +80,82 @@ public class ExecutableNodeRunner implements Runnable {
     isAborted = true;
     conn.abort();
   }
-
+  
+  public void runOnThread() {
+    log.trace(String.format("Invoked to run: %s", node.toString()));
+    
+    // https://stackoverflow.com/questions/11165852/java-singleton-and-synchronization
+    Thread runningTask = this.runningTask;
+    if (runningTask == null) {
+      synchronized (this) {
+        runningTask = this.runningTask;
+        if (runningTask == null) {
+          runningTask = new Thread(this);
+          this.runningTask = runningTask;
+          runningTask.start();
+          
+          // this.runningTask is set to null at the end of run()
+        }
+      }
+    }
+  }
+  
+  /**
+   * A single run of this method consumes all combinations of the tokens in the queue.
+   */
   @Override
   public void run() {
-    String nodeType = node.getClass().getSimpleName();
-    int nodeGroupId = ((ExecutableNodeBase) node).getGroupId();
+//    String nodeType = node.getClass().getSimpleName();
+//    int nodeGroupId = ((ExecutableNodeBase) node).getGroupId();
     
-    log.debug(String.format(
-        "Starts to run a node of type (%s) and group (%d).", 
-        nodeType, nodeGroupId));
+    if (isAborted) {
+      log.debug(String.format("This node (%s) has been aborted; do not run.",
+          node.toString()));
+      clearRunningTask();
+      return;
+    }
     
     // no dependency exists
     if (node.getSourceQueues().size() == 0) {
-      if (isAborted) {
-        return;
+      synchronized (VerdictDBLogger.class) {
+        log.debug(String.format("No dependency exists. Simply run %s", node.toString()));
       }
-      
-      // standard interruption handling
-      if (Thread.currentThread().isInterrupted()) {
-        return;
-      }
-      
-      log.trace(String.format("No dependency exists. Simply run %s:%d", nodeType, nodeGroupId));
       try {
         executeAndBroadcast(Arrays.<ExecutionInfoToken>asList());
         broadcast(ExecutionInfoToken.successToken());
+        clearRunningTask();
         return;
       } catch (Exception e) {
         e.printStackTrace();
         broadcast(ExecutionInfoToken.failureToken(e));
       }
+      clearRunningTask();
+      return;
     }
 
     // dependency exists
     while (true) {
-      if (isAborted) {
-        return;
-      }
-      
-      // standard interruption handling
-      if (Thread.currentThread().isInterrupted()) {
-        break;
-      }
-      
+      // not enough source nodes are finished.
       List<ExecutionInfoToken> tokens = retrieve();
       if (tokens == null) {
-////        log.debug(String.format("Waiting for dependency %s:%d", nodeType, nodeGroupId));
-//        try {
-//          TimeUnit.MILLISECONDS.sleep(1);
-//        } catch (InterruptedException e) {
-////          e.printStackTrace();
-//        }
-        continue;
+        clearRunningTask();
+        return;
       }
-      
-      log.trace(String.format("Actual processing starts for %s:%d", nodeType, nodeGroupId));
+
+      synchronized (VerdictDBLogger.class) {
+        log.debug(String.format("Actual processing starts for %s", node.toString()));
+      }
 
       ExecutionInfoToken failureToken = getFailureTokenIfExists(tokens);
       if (failureToken != null) {
         broadcast(failureToken);
-        break;
+        clearRunningTask();
+        return;
       }
       if (areAllSuccess(tokens)) {
-        //        System.out.println(new ToStringBuilder(node, ToStringStyle.DEFAULT_STYLE) +
-        // "sucess count: " + successSourceCount);
         broadcast(ExecutionInfoToken.successToken());
-        break;
+        clearRunningTask();
+        return;
       }
 
       // actual processing
@@ -147,11 +164,12 @@ public class ExecutableNodeRunner implements Runnable {
       } catch (Exception e) {
         e.printStackTrace();
         broadcast(ExecutionInfoToken.failureToken(e));
-        break;
+        clearRunningTask();
+        return;
       }
     }
   }
-
+  
   List<ExecutionInfoToken> retrieve() {
     Map<Integer, ExecutionTokenQueue> sourceChannelAndQueues = node.getSourceQueues();
     
@@ -161,12 +179,6 @@ public class ExecutableNodeRunner implements Runnable {
         return null;
       }
     }
-//    for (int i = 0; i < sourceQueues.size(); i++) {
-//      ExecutionInfoToken rs = sourceQueues.get(i).peek();
-//      if (rs == null) {
-//        return null;
-//      }
-//    }
 
     // all results available now
     List<ExecutionInfoToken> results = new ArrayList<>();
@@ -176,27 +188,33 @@ public class ExecutableNodeRunner implements Runnable {
       rs.setKeyValue("channel", channel);
       results.add(rs);
     }
-//    for (int i = 0; i < sourceQueues.size(); i++) {
-//      ExecutionInfoToken rs = sourceQueues.get(i).take();
-//      results.add(rs);
-//    }
+    
     return results;
   }
 
   void broadcast(ExecutionInfoToken token) {
   
-    VerdictDBLogger logger = VerdictDBLogger.getLogger(this.getClass());
-    logger.trace(String.format("[%s] Broadcasting:", node.toString()));
-    for (ExecutableNode dest : node.getSubscribers()) {
-      logger.trace(String.format("  -> %s", dest.toString()));
+    // for understandable logs
+    synchronized (VerdictDBLogger.class) {
+      VerdictDBLogger logger = VerdictDBLogger.getLogger(this.getClass());
+      logger.trace(String.format("[%s] Broadcasting:", node.toString()));
+      logger.trace(token.toString());
+      for (ExecutableNode dest : node.getSubscribers()) {
+        logger.trace(String.format("  -> %s", dest.toString()));
+      }
+      logger.trace(token.toString());
     }
-    logger.trace(token.toString());
     
     for (ExecutableNode dest : node.getSubscribers()) {
       ExecutionInfoToken copiedToken = token.deepcopy();
       dest.getNotified(node, copiedToken);
-//      logger.trace(String.format("[-> %s]", dest.toString()));
-//      logger.trace(copiedToken.toString());
+      
+      // signal the runner of the broadcasted node so that its associated runner performs
+      // execution if necessary.
+      ExecutableNodeRunner runner = dest.getRegisteredRunner();
+      if (runner != null) {
+        runner.runOnThread();
+      }
     }
   }
 
