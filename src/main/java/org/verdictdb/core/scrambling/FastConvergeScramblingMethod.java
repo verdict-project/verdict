@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.verdictdb.commons.VerdictDBLogger;
 import org.verdictdb.connection.DataTypeConverter;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.core.execplan.ExecutionInfoToken;
@@ -93,6 +94,8 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
   public static final String RIGHT_TABLE_SOURCE_ALIAS_NAME = "t2";
 
   private int totalNumberOfblocks = -1;
+  
+  private static VerdictDBLogger log = VerdictDBLogger.getLogger(FastConvergeScramblingMethod.class);
 
   public FastConvergeScramblingMethod(long blockSize, String scratchpadSchemaName) {
     super(blockSize);
@@ -165,14 +168,15 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
 
     return statisticsNodes;
   }
-
-  //  @Override
-  //  public int getBlockSize() {
-  //    return blockSize;
-  //  }
-
+  
   static UnnamedColumn createOutlierTuplePredicate(
       DbmsQueryResult percentileAndCountResult, String sourceTableAlias) {
+    boolean printLog = false;
+    return createOutlierTuplePredicate(percentileAndCountResult, sourceTableAlias, printLog);
+  }
+  
+  static UnnamedColumn createOutlierTuplePredicate(
+      DbmsQueryResult percentileAndCountResult, String sourceTableAlias, boolean printLog) {
     UnnamedColumn outlierPredicate = null;
 
     percentileAndCountResult.rewind();
@@ -190,6 +194,12 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
         double columnStddev = percentileAndCountResult.getDouble(i + 1);
         double lowCriteria = columnAverage - columnStddev * OUTLIER_STDDEV_MULTIPLIER;
         double highCriteria = columnAverage + columnStddev * OUTLIER_STDDEV_MULTIPLIER;
+        
+        if (printLog) {
+          log.info(String.format("In column %s, the values outside (%.2f,%.2f) "
+              + "will be prioritized in future query processing.",
+              columnName, lowCriteria, highCriteria));
+        }
 
         UnnamedColumn newOrPredicate =
             ColumnOp.or(
@@ -273,6 +283,10 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
     populateTier1CumulProbDist(metaData);
     populateTier2CumulProbDist(metaData);
   }
+  
+  private long calcuteEvenBlockSize(int totalNumberOfblocks, long tableSize) {
+    return (long) Math.round((float) tableSize / (float) totalNumberOfblocks);
+  }
 
   private void populateTier0CumulProbDist(Map<String, Object> metaData) {
     List<Double> cumulProbDist = new ArrayList<>();
@@ -281,6 +295,7 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
     Pair<Long, Integer> tableSizeAndBlockNumber = retrieveTableSizeAndBlockNumber(metaData);
     long tableSize = tableSizeAndBlockNumber.getLeft();
     int totalNumberOfblocks = tableSizeAndBlockNumber.getRight();
+    long evenBlockSize = calcuteEvenBlockSize(totalNumberOfblocks, tableSize);
 
     DbmsQueryResult outlierProportion =
         (DbmsQueryResult) metaData.get(OutlierProportionNode.class.getSimpleName());
@@ -299,12 +314,12 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
 
       while (outlierSize > 0 && remainingSize > 0) {
         // fill only p0 portion of each block at most
-        if (remainingSize <= p0 * blockSize) {
+        if (remainingSize <= p0 * evenBlockSize) {
           cumulProbDist.add(1.0);
           break;
         } else {
-          long thisBlockSize = (long) (blockSize * p0);
-          double ratio = thisBlockSize / outlierSize;
+          long thisBlockSize = (long) (evenBlockSize * p0);
+          double ratio = thisBlockSize / (float) outlierSize;
           if (cumulProbDist.size() == 0) {
             cumulProbDist.add(ratio);
           } else {
@@ -335,6 +350,7 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
     Pair<Long, Integer> tableSizeAndBlockNumber = retrieveTableSizeAndBlockNumber(metaData);
     long tableSize = tableSizeAndBlockNumber.getLeft();
     int totalNumberOfblocks = tableSizeAndBlockNumber.getRight();
+    long evenBlockSize = calcuteEvenBlockSize(totalNumberOfblocks, tableSize);
 
     if (!primaryColumnName.isPresent()) {
       while (cumulProbDist.size() < totalNumberOfblocks) {
@@ -353,10 +369,10 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
       long totalRemainingSizeUnderP1 = 0;
       for (int i = 0; i < tier0CumulProbDist.size(); i++) {
         if (i == 0) {
-          totalRemainingSizeUnderP1 += blockSize * p1 - outlierSize * tier0CumulProbDist.get(i);
+          totalRemainingSizeUnderP1 += evenBlockSize * p1 - outlierSize * tier0CumulProbDist.get(i);
         } else {
           totalRemainingSizeUnderP1 +=
-              blockSize * p1
+              evenBlockSize * p1
                   - outlierSize * (tier0CumulProbDist.get(i) - tier0CumulProbDist.get(i - 1));
         }
       }
@@ -373,11 +389,11 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
         long remainingSize = smallGroupSizeSum;
 
         while (remainingSize > 0) {
-          if (remainingSize <= (p1 - p0) * blockSize) {
+          if (remainingSize <= (p1 - p0) * evenBlockSize) {
             cumulProbDist.add(1.0);
             break;
           } else {
-            long thisBlockSize = (long) (blockSize * (p1 - p0));
+            long thisBlockSize = (long) (evenBlockSize * (p1 - p0));
             double ratio = thisBlockSize / smallGroupSizeSum;
             if (cumulProbDist.size() == 0) {
               cumulProbDist.add(ratio);
@@ -410,6 +426,7 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
     Pair<Long, Integer> tableSizeAndBlockNumber = retrieveTableSizeAndBlockNumber(metaData);
     long tableSize = tableSizeAndBlockNumber.getLeft();
     int totalNumberOfblocks = tableSizeAndBlockNumber.getRight();
+    long evenBlockSize = calcuteEvenBlockSize(totalNumberOfblocks, tableSize);
 
     //    System.out.println("table size: " + tableSize);
     //    System.out.println("outlier size: " + outlierSize);
@@ -429,15 +446,17 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
             (long)
                 (smallGroupSizeSum * (tier1CumulProbDist.get(i) - tier1CumulProbDist.get(i - 1)));
       }
-      long thisBlockSize = blockSize - thisTier0Size - thisTier1Size;
+      long thisBlockSize = evenBlockSize - thisTier0Size - thisTier1Size;
       if (tier2Size == 0) {
         cumulProbDist.add(1.0);
       } else {
         double thisBlockRatio = thisBlockSize / (double) tier2Size;
         if (i == 0) {
           cumulProbDist.add(thisBlockRatio);
+        } else if (i == totalNumberOfblocks - 1) {
+          cumulProbDist.add(1.0);
         } else {
-          cumulProbDist.add(cumulProbDist.get(i - 1) + thisBlockRatio);
+          cumulProbDist.add(Math.min(cumulProbDist.get(i - 1) + thisBlockRatio, 1.0));
         }
       }
     }
@@ -637,9 +656,10 @@ class OutlierProportionNode extends QueryNodeBase {
     DbmsQueryResult percentileAndCountResult =
         (DbmsQueryResult) tokens.get(0).getValue(PercentilesAndCountNode.class.getSimpleName());
     String tableSourceAliasName = FastConvergeScramblingMethod.MAIN_TABLE_SOURCE_ALIAS_NAME;
+    boolean pringInfoLog = true;
     UnnamedColumn outlierPrediacte =
         FastConvergeScramblingMethod.createOutlierTuplePredicate(
-            percentileAndCountResult, tableSourceAliasName);
+            percentileAndCountResult, tableSourceAliasName, pringInfoLog);
 
     selectQuery =
         SelectQuery.create(

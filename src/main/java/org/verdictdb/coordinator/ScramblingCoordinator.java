@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.verdictdb.commons.VerdictDBLogger;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.core.execplan.ExecutablePlanRunner;
 import org.verdictdb.core.scrambling.FastConvergeScramblingMethod;
@@ -61,6 +62,8 @@ public class ScramblingCoordinator {
   DbmsConnection conn;
 
   Optional<String> scratchpadSchema;
+  
+  private VerdictDBLogger log = VerdictDBLogger.getLogger(this.getClass());
 
   public ScramblingCoordinator(DbmsConnection conn) {
     this(conn, null);
@@ -156,71 +159,82 @@ public class ScramblingCoordinator {
     String methodName = query.getMethod();
     String primaryColumn = null;
     Map<String, String> customOptions = new HashMap<>(options);
-
-    // sanity check
-    if (!scramblingMethods.contains(methodName.toLowerCase())) {
-      throw new VerdictDBValueException("Not supported scrambling method: " + methodName);
-    }
-
-    // overwrite options with custom options.
-    Map<String, String> effectiveOptions = new HashMap<String, String>();
-    for (Entry<String, String> o : options.entrySet()) {
-      effectiveOptions.put(o.getKey(), o.getValue());
-    }
-    for (Entry<String, String> o : customOptions.entrySet()) {
-      effectiveOptions.put(o.getKey(), o.getValue());
-    }
-
-    if (query.isIfNotExists()) {
-      effectiveOptions.put("createIfNotExists", "true");
-    }
-
-    // determine scrambling method
-    long blockSize = Double.valueOf(effectiveOptions.get("scrambleTableBlockSize")).longValue();
-    ScramblingMethod scramblingMethod;
-    if (methodName.equalsIgnoreCase("uniform")) {
-      scramblingMethod = new UniformScramblingMethod(blockSize);
-    } else if (methodName.equalsIgnoreCase("FastConverge") && primaryColumn == null) {
-      scramblingMethod = new FastConvergeScramblingMethod(blockSize, scratchpadSchema.get());
-    } else if (methodName.equalsIgnoreCase("FastConverge") && primaryColumn != null) {
-      scramblingMethod =
-          new FastConvergeScramblingMethod(blockSize, scratchpadSchema.get(), primaryColumn);
-    } else {
-      throw new VerdictDBValueException("Invalid scrambling method: " + methodName);
-    }
-
-    // perform scrambling
-    ScramblingPlan plan =
-        ScramblingPlan.create(
-            newSchema, newTable, originalSchema, originalTable, scramblingMethod, effectiveOptions);
-    ExecutablePlanRunner.runTillEnd(conn, plan);
-
-    // compose scramble meta
-    String blockColumn = effectiveOptions.get("blockColumnName");
-    int blockCount = scramblingMethod.getBlockCount();
-    String tierColumn = effectiveOptions.get("tierColumnName");
-    int tierCount = scramblingMethod.getTierCount();
-
-    Map<Integer, List<Double>> cumulativeDistribution = new HashMap<>();
-    for (int i = 0; i < tierCount; i++) {
-      List<Double> dist = scramblingMethod.getStoredCumulativeProbabilityDistributionForTier(i);
-      cumulativeDistribution.put(i, dist);
-    }
-
-    ScrambleMeta meta =
-        new ScrambleMeta(
-            newSchema,
-            newTable,
-            originalSchema,
-            originalTable,
-            blockColumn,
-            blockCount,
-            tierColumn,
-            tierCount,
-            cumulativeDistribution,
-            methodName);
-
+    
+    ScrambleMeta meta = scramble(
+        originalSchema,
+        originalTable,
+        newSchema,
+        newTable,
+        methodName,
+        primaryColumn,
+        customOptions);
+    
     return meta;
+    
+//    // sanity check
+//    if (!scramblingMethods.contains(methodName.toLowerCase())) {
+//      throw new VerdictDBValueException("Not supported scrambling method: " + methodName);
+//    }
+//
+//    // overwrite options with custom options.
+//    Map<String, String> effectiveOptions = new HashMap<String, String>();
+//    for (Entry<String, String> o : options.entrySet()) {
+//      effectiveOptions.put(o.getKey(), o.getValue());
+//    }
+//    for (Entry<String, String> o : customOptions.entrySet()) {
+//      effectiveOptions.put(o.getKey(), o.getValue());
+//    }
+//
+//    if (query.isIfNotExists()) {
+//      effectiveOptions.put("createIfNotExists", "true");
+//    }
+//
+//    // determine scrambling method
+//    long blockSize = Double.valueOf(effectiveOptions.get("scrambleTableBlockSize")).longValue();
+//    ScramblingMethod scramblingMethod;
+//    if (methodName.equalsIgnoreCase("uniform")) {
+//      scramblingMethod = new UniformScramblingMethod(blockSize);
+//    } else if (methodName.equalsIgnoreCase("FastConverge") && primaryColumn == null) {
+//      scramblingMethod = new FastConvergeScramblingMethod(blockSize, scratchpadSchema.get());
+//    } else if (methodName.equalsIgnoreCase("FastConverge") && primaryColumn != null) {
+//      scramblingMethod =
+//          new FastConvergeScramblingMethod(blockSize, scratchpadSchema.get(), primaryColumn);
+//    } else {
+//      throw new VerdictDBValueException("Invalid scrambling method: " + methodName);
+//    }
+//
+//    // perform scrambling
+//    ScramblingPlan plan =
+//        ScramblingPlan.create(
+//            newSchema, newTable, originalSchema, originalTable, scramblingMethod, effectiveOptions);
+//    ExecutablePlanRunner.runTillEnd(conn, plan);
+//
+//    // compose scramble meta
+//    String blockColumn = effectiveOptions.get("blockColumnName");
+//    int blockCount = scramblingMethod.getBlockCount();
+//    String tierColumn = effectiveOptions.get("tierColumnName");
+//    int tierCount = scramblingMethod.getTierCount();
+//
+//    Map<Integer, List<Double>> cumulativeDistribution = new HashMap<>();
+//    for (int i = 0; i < tierCount; i++) {
+//      List<Double> dist = scramblingMethod.getStoredCumulativeProbabilityDistributionForTier(i);
+//      cumulativeDistribution.put(i, dist);
+//    }
+//
+//    ScrambleMeta meta =
+//        new ScrambleMeta(
+//            newSchema,
+//            newTable,
+//            originalSchema,
+//            originalTable,
+//            blockColumn,
+//            blockCount,
+//            tierColumn,
+//            tierCount,
+//            cumulativeDistribution,
+//            methodName);
+
+//    return meta;
   }
 
   public ScrambleMeta scramble(

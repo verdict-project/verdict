@@ -303,6 +303,11 @@ public class JdbcConnection extends DbmsConnection {
   public List<String> getPartitionColumns(String schema, String table)
       throws VerdictDBDbmsException {
     List<String> partition = new ArrayList<>();
+    
+    if (!syntax.doesSupportTablePartitioning()) {
+      return partition;
+    }
+    
     DbmsQueryResult queryResult;
     if (syntax instanceof ImpalaSyntax) {
       try {

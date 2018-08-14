@@ -42,7 +42,6 @@ public interface VerdictSingleResult {
 
   public boolean isEmpty();
 
-
   /** @return Meta Data from ResultSet */
   public DbmsQueryResultMetaData getMetaData();
 

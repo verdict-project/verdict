@@ -1,5 +1,8 @@
 package org.verdictdb.coordinator;
 
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
+
 import org.verdictdb.commons.AttributeValueRetrievalHelper;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.connection.DbmsQueryResultMetaData;
