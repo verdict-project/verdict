@@ -1,11 +1,14 @@
 [![Build Status](https://circleci.com/gh/mozafari/verdictdb/tree/master.svg?style=shield&circle-token=16a7386340ff7022b21ce007434f8caa2fa97aec)](https://circleci.com/gh/mozafari/verdictdb/tree/master)
 [![Code Coverage](https://codecov.io/gh/mozafari/verdictdb/branch/master/graph/badge.svg)](https://codecov.io/gh/mozafari/verdictdb)
 
+Aug 15, 2018: Now it works well for most common queries! We will update our online tutorial shortly. Anyone should be able to easily set up (with Maven central) and see huge speedups for MySQL, PostgreSQL, Impala, and Redshift. (The support for Spark is internally already done as well, so will be included shortly.)
+
 Aug 2, 2018: We have almost finished the lastest update; just working on final quality checks.
 
 July 29, 2018: We keep working on fix the bugs.
 
 July 25 2018: The current documentation is out of date; it will be updated in a few days.
+
 
 # Same SQL, Same DB, 100x-200x Faster Analytics
 
