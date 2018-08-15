@@ -12,7 +12,7 @@ public class VerdictResultStreamFromExecutionResultReader implements VerdictResu
   ExecutionContext execContext;
 
   public VerdictResultStreamFromExecutionResultReader(
-      ExecutionResultReader reader, 
+      ExecutionResultReader reader,
       ExecutionContext execContext) {
     super();
     this.reader = reader;
@@ -32,7 +32,6 @@ public class VerdictResultStreamFromExecutionResultReader implements VerdictResu
   @Override
   public VerdictSingleResult next() {
     DbmsQueryResult internalResult = reader.next();
-    System.out.println("result: " + internalResult);
     VerdictSingleResult result = new VerdictSingleResultFromDbmsQueryResult(internalResult);
     return result;
   }
@@ -49,7 +48,7 @@ public class VerdictResultStreamFromExecutionResultReader implements VerdictResu
 
   @Override
   public void close() {
-    
+
   }
 
 }
