@@ -17,6 +17,7 @@
 package org.verdictdb.connection;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.verdictdb.commons.VerdictDBLogger;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.sqlsyntax.SqlSyntax;
 import org.verdictdb.sqlsyntax.SqlSyntaxList;
@@ -28,8 +29,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
-import org.verdictdb.commons.VerdictDBLogger;
-
 /**
  * Maintains a pool of multiple java.sql.Connections to provide concurrent execution of queries to
  * the backend database.
@@ -37,22 +36,23 @@ import org.verdictdb.commons.VerdictDBLogger;
  * @author Yongjoo Park
  */
 public class ConcurrentJdbcConnection extends DbmsConnection {
-  
+
   private static final int CONNECTION_POOL_SIZE = 10;
 
   private List<JdbcConnection> connections = new ArrayList<>();
 
   private int nextConnectionIndex = 0;
-  
+
   private VerdictDBLogger logger = VerdictDBLogger.getLogger(getClass());
-  
+
   public ConcurrentJdbcConnection(List<JdbcConnection> connections) {
     this.connections.addAll(connections);
   }
 
   public ConcurrentJdbcConnection(String url, Properties info, SqlSyntax syntax)
       throws VerdictDBDbmsException {
-    logger.debug(String.format("Creating %d JDBC connections with this url: " + url, CONNECTION_POOL_SIZE));
+    logger.debug(
+        String.format("Creating %d JDBC connections with this url: " + url, CONNECTION_POOL_SIZE));
     for (int i = 0; i < CONNECTION_POOL_SIZE; i++) {
       try {
         Connection c;
@@ -132,7 +132,7 @@ public class ConcurrentJdbcConnection extends DbmsConnection {
   public SqlSyntax getSyntax() {
     return getNextConnection().getSyntax();
   }
-  
+
   @Override
   public void abort() {
     for (JdbcConnection c : connections) {
