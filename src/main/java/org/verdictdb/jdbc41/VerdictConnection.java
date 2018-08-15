@@ -16,30 +16,19 @@
 
 package org.verdictdb.jdbc41;
 
-import java.sql.Array;
-import java.sql.Blob;
-import java.sql.CallableStatement;
-import java.sql.Clob;
-import java.sql.DatabaseMetaData;
-import java.sql.NClob;
-import java.sql.SQLClientInfoException;
-import java.sql.SQLException;
-import java.sql.SQLFeatureNotSupportedException;
-import java.sql.SQLWarning;
-import java.sql.SQLXML;
-import java.sql.Savepoint;
-import java.sql.Struct;
-import java.util.Map;
-import java.util.Properties;
-import java.util.concurrent.Executor;
-
 import org.verdictdb.VerdictContext;
 import org.verdictdb.commons.VerdictOption;
 import org.verdictdb.connection.CachedDbmsConnection;
+import org.verdictdb.connection.ConcurrentJdbcConnection;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.exception.VerdictDBException;
+
+import java.sql.*;
+import java.util.Map;
+import java.util.Properties;
+import java.util.concurrent.Executor;
 
 public class VerdictConnection implements java.sql.Connection {
 
@@ -52,8 +41,7 @@ public class VerdictConnection implements java.sql.Connection {
     isOpen = true;
   }
 
-  public VerdictConnection(String url, Properties info)
-      throws SQLException, VerdictDBException {
+  public VerdictConnection(String url, Properties info) throws SQLException, VerdictDBException {
     vc = VerdictContext.fromConnectionString(url, info);
     isOpen = true;
   }
@@ -84,9 +72,19 @@ public class VerdictConnection implements java.sql.Connection {
   private java.sql.DatabaseMetaData getDatabaseMetaDataFromConnection(DbmsConnection conn) {
     if (conn instanceof CachedDbmsConnection) {
       DbmsConnection originalConn = ((CachedDbmsConnection) conn).getOriginalConnection();
+      if (originalConn instanceof ConcurrentJdbcConnection) {
+        originalConn = ((ConcurrentJdbcConnection) originalConn).getNextConnection();
+      }
       return getDatabaseMetaDataFromConnection(originalConn);
     } else if (conn instanceof JdbcConnection) {
       JdbcConnection jdbcConn = (JdbcConnection) conn;
+      try {
+        return jdbcConn.getMetadata();
+      } catch (VerdictDBDbmsException e) {
+        e.printStackTrace();
+      }
+    } else if (conn instanceof ConcurrentJdbcConnection) {
+      JdbcConnection jdbcConn = ((ConcurrentJdbcConnection) conn).getNextConnection();
       try {
         return jdbcConn.getMetadata();
       } catch (VerdictDBDbmsException e) {
