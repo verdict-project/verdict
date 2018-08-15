@@ -206,7 +206,6 @@
             <artifactId>opencsv</artifactId>
             <version>4.0</version>
         </dependency>
-
         <!-- test supports -->
         <dependency>
             <groupId>com.h2database</groupId>
