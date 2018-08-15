@@ -18,6 +18,7 @@ package org.verdictdb.core.resulthandler;
 
 import java.util.Iterator;
 
+import org.verdictdb.commons.VerdictDBLogger;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.core.execplan.ExecutionInfoToken;
 import org.verdictdb.core.execplan.ExecutionTokenQueue;
@@ -25,6 +26,8 @@ import org.verdictdb.core.execplan.ExecutionTokenQueue;
 public class ExecutionResultReader implements Iterable<DbmsQueryResult>, Iterator<DbmsQueryResult> {
 
   ExecutionTokenReader reader;
+  
+  private VerdictDBLogger log = VerdictDBLogger.getLogger(this.getClass());
 
   public ExecutionResultReader() {}
 
@@ -49,6 +52,7 @@ public class ExecutionResultReader implements Iterable<DbmsQueryResult>, Iterato
   @Override
   public DbmsQueryResult next() {
     ExecutionInfoToken token = reader.next();
+    log.trace("The following was read: " + token);
     if (token == null) {
       return null;
     }

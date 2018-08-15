@@ -24,6 +24,7 @@ import java.util.List;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.hive.com.esotericsoftware.minlog.Log;
 import org.verdictdb.commons.VerdictDBLogger;
 import org.verdictdb.commons.VerdictOption;
 import org.verdictdb.connection.DbmsConnection;
@@ -51,16 +52,16 @@ import org.verdictdb.sqlreader.RelationGen;
 public class ExecutionContext {
 
   private DbmsConnection conn;
-  
+
   private VerdictMetaStore metaStore;
 
   private QueryContext queryContext;
-  
+
   private Coordinator runningCoordinator = null;
 
   private final long serialNumber;
 
-  private static final VerdictDBLogger LOG = VerdictDBLogger.getLogger(ExecutionContext.class);
+  private final VerdictDBLogger log = VerdictDBLogger.getLogger(getClass());
 
   private VerdictOption options;
 
@@ -120,11 +121,36 @@ public class ExecutionContext {
         return null;
       }
 
-      VerdictSingleResult result = stream.next();
+      try {
+        VerdictSingleResult result = stream.next();
+        return result;
+      } catch (RuntimeException e) {
+        throw e;
+      } finally {
+        abortInParallel(stream);
+      }
+    }
+  }
+  
+  private void abortInParallel(VerdictResultStream stream) {
+    Thread task = new Thread(new ConcurrentAborter(stream));
+    task.start();
+  }
+  
+  class ConcurrentAborter implements Runnable {
+    
+    VerdictResultStream stream;
+    
+    public ConcurrentAborter(VerdictResultStream stream) {
+      this.stream = stream;
+    }
+
+    @Override
+    public void run() {
       stream.close();
       abort();
-      return result;
     }
+    
   }
 
   public VerdictResultStream streamsql(String query) throws VerdictDBException {
@@ -133,19 +159,20 @@ public class ExecutionContext {
     QueryType queryType = identifyQueryType(query);
 
     if (queryType.equals(QueryType.select)) {
-      LOG.debug("Query type: select");
+      log.debug("Query type: select");
       ScrambleMetaSet metaset = metaStore.retrieve();
       SelectQueryCoordinator coordinator =
           new SelectQueryCoordinator(conn, metaset, options);
       runningCoordinator = coordinator;
-      
+
       ExecutionResultReader reader = coordinator.process(query, queryContext);
       VerdictResultStream stream = new VerdictResultStreamFromExecutionResultReader(reader, this);
+
       return stream;
-      
+
     } else if (queryType.equals(QueryType.scrambling)) {
-      
-      LOG.debug("Query type: scrambling");
+
+      log.debug("Query type: scrambling");
       CreateScrambleQuery scrambleQuery = generateScrambleQuery(query);
       ScramblingCoordinator scrambler =
           new ScramblingCoordinator(
@@ -165,28 +192,28 @@ public class ExecutionContext {
       metaStore.addToStore(meta);
       refreshScrambleMetaStore();
       return null;
-      
+
     } else if (queryType.equals(QueryType.set_default_schema)) {
-      LOG.debug("Query type: set_default_schema");
+      log.debug("Query type: set_default_schema");
       updateDefaultSchemaFromQuery(query);
       return null;
     } else if (queryType.equals(QueryType.show_databases)) {
-      LOG.debug("Query type: show_databases");
+      log.debug("Query type: show_databases");
       VerdictResultStream stream = generateShowSchemaResultFromQuery();
       return stream;
     } else if (queryType.equals(QueryType.show_tables)) {
-      LOG.debug("Query type: show_tables");
+      log.debug("Query type: show_tables");
       VerdictResultStream stream = generateShowTablesResultFromQuery(query);
       return stream;
     } else if (queryType.equals(QueryType.describe_table)) {
-      LOG.debug("Query type: describe_table");
+      log.debug("Query type: describe_table");
       VerdictResultStream stream = generateDesribeTableResultFromQuery(query);
       return stream;
     } else {
       throw new VerdictDBTypeException("Unexpected type of query: " + query);
     }
   }
-  
+
   private void refreshScrambleMetaStore() {
     // no type check was added to make it fail if non-cached metastore is used.
     ((CachedScrambleMetaStore) this.metaStore).refreshCache();
@@ -196,34 +223,34 @@ public class ExecutionContext {
     VerdictSQLParser parser = NonValidatingSQLParser.parserOf(query);
     VerdictSQLParserBaseVisitor<CreateScrambleQuery> visitor =
         new VerdictSQLParserBaseVisitor<CreateScrambleQuery>() {
-          @Override
-          public CreateScrambleQuery visitCreate_scramble_statement(
-              VerdictSQLParser.Create_scramble_statementContext ctx) {
-            RelationGen g = new RelationGen();
-            BaseTable originalTable = (BaseTable) g.visit(ctx.original_table);
-            BaseTable scrambleTable = (BaseTable) g.visit(ctx.scrambled_table);
-            String method =
-                (ctx.scrambling_method_name() == null)
-                    ? "uniform"
-                    : ctx.scrambling_method_name()
-                        .getText()
-                        .replace("'", "")
-                        .replace("\"", "")
-                        .replace("`", ""); // remove all types of 'quotes'
-            double percent =
-                (ctx.percent == null) ? 1.0 : Double.parseDouble(ctx.percent.getText());
-            CreateScrambleQuery query =
-                new CreateScrambleQuery(
-                    scrambleTable.getSchemaName(),
-                    scrambleTable.getTableName(),
-                    originalTable.getSchemaName(),
-                    originalTable.getTableName(),
-                    method,
-                    percent);
-            if (ctx.IF() != null) query.setIfNotExists(true);
-            return query;
-          }
-        };
+      @Override
+      public CreateScrambleQuery visitCreate_scramble_statement(
+          VerdictSQLParser.Create_scramble_statementContext ctx) {
+        RelationGen g = new RelationGen();
+        BaseTable originalTable = (BaseTable) g.visit(ctx.original_table);
+        BaseTable scrambleTable = (BaseTable) g.visit(ctx.scrambled_table);
+        String method =
+            (ctx.scrambling_method_name() == null)
+            ? "uniform"
+                : ctx.scrambling_method_name()
+                .getText()
+                .replace("'", "")
+                .replace("\"", "")
+                .replace("`", ""); // remove all types of 'quotes'
+        double percent =
+            (ctx.percent == null) ? 1.0 : Double.parseDouble(ctx.percent.getText());
+        CreateScrambleQuery query =
+            new CreateScrambleQuery(
+                scrambleTable.getSchemaName(),
+                scrambleTable.getTableName(),
+                originalTable.getSchemaName(),
+                originalTable.getTableName(),
+                method,
+                percent);
+        if (ctx.IF() != null) query.setIfNotExists(true);
+        return query;
+      }
+    };
 
     CreateScrambleQuery scrambleQuery = visitor.visit(parser.create_scramble_statement());
     return scrambleQuery;
@@ -251,17 +278,17 @@ public class ExecutionContext {
     VerdictSQLParser parser = NonValidatingSQLParser.parserOf(query);
     VerdictSQLParserBaseVisitor<Pair<String, String>> visitor =
         new VerdictSQLParserBaseVisitor<Pair<String, String>>() {
-          @Override
-          public Pair<String, String> visitDescribe_table_statement(
-              VerdictSQLParser.Describe_table_statementContext ctx) {
-            String table = ctx.table.table.getText();
-            String schema = ctx.table.schema.getText();
-            if (schema == null) {
-              schema = conn.getDefaultSchema();
-            }
-            return new ImmutablePair<>(schema, table);
-          }
-        };
+      @Override
+      public Pair<String, String> visitDescribe_table_statement(
+          VerdictSQLParser.Describe_table_statementContext ctx) {
+        String table = ctx.table.table.getText();
+        String schema = ctx.table.schema.getText();
+        if (schema == null) {
+          schema = conn.getDefaultSchema();
+        }
+        return new ImmutablePair<>(schema, table);
+      }
+    };
     Pair<String, String> t = visitor.visit(parser.verdict_statement());
     String table = t.getRight();
     String schema = t.getLeft();
@@ -284,8 +311,9 @@ public class ExecutionContext {
     String schema = parser.use_statement().database.getText();
     conn.setDefaultSchema(schema);
   }
-  
+
   public void abort() {
+    log.debug("Aborts an ExecutionContext: " + this);
     if (runningCoordinator != null) {
       Coordinator c = runningCoordinator;
       runningCoordinator = null;
@@ -300,7 +328,7 @@ public class ExecutionContext {
    */
   public void terminate() {
     abort();
-    
+
     try {
       String schema = options.getVerdictTempSchemaName();
       String tempTablePrefix =
@@ -310,7 +338,7 @@ public class ExecutionContext {
               queryContext.getVerdictContextId(),
               this.serialNumber);
       List<String> tempTableList = new ArrayList<>();
-      
+
       List<String> allTempTables = conn.getTables(schema);
       for (String tableName : allTempTables) {
         if (tableName.startsWith(tempTablePrefix)) {
@@ -318,22 +346,22 @@ public class ExecutionContext {
         }
       }
 
-//      DbmsQueryResult rs;
-//      if (conn.getSyntax() instanceof RedshiftSyntax
-//          || conn.getSyntax() instanceof PostgresqlSyntax) {
-//        rs =
-//            conn.execute(
-//                String.format(
-//                    "SELECT * FROM information_schema.tables WHERE table_schema = '%s'", schema));
-//      } else {
-//        rs = conn.execute(String.format("show tables in %s", schema));
-//      }
-//      while (rs.next()) {
-//        String tableName = rs.getString(0);
-//        if (tableName.startsWith(tempTablePrefix)) {
-//          tempTableList.add(tableName);
-//        }
-//      }
+      //      DbmsQueryResult rs;
+      //      if (conn.getSyntax() instanceof RedshiftSyntax
+      //          || conn.getSyntax() instanceof PostgresqlSyntax) {
+      //        rs =
+      //            conn.execute(
+      //                String.format(
+      //                    "SELECT * FROM information_schema.tables WHERE table_schema = '%s'", schema));
+      //      } else {
+      //        rs = conn.execute(String.format("show tables in %s", schema));
+      //      }
+      //      while (rs.next()) {
+      //        String tableName = rs.getString(0);
+      //        if (tableName.startsWith(tempTablePrefix)) {
+      //          tempTableList.add(tableName);
+      //        }
+      //      }
 
       for (String tempTable : tempTableList) {
         conn.execute(String.format("DROP TABLE IF EXISTS %s.%s", schema, tempTable));
@@ -349,40 +377,40 @@ public class ExecutionContext {
     VerdictSQLParserBaseVisitor<QueryType> visitor =
         new VerdictSQLParserBaseVisitor<QueryType>() {
 
-          @Override
-          public QueryType visitSelect_statement(VerdictSQLParser.Select_statementContext ctx) {
-            return QueryType.select;
-          }
+      @Override
+      public QueryType visitSelect_statement(VerdictSQLParser.Select_statementContext ctx) {
+        return QueryType.select;
+      }
 
-          @Override
-          public QueryType visitCreate_scramble_statement(
-              VerdictSQLParser.Create_scramble_statementContext ctx) {
-            return QueryType.scrambling;
-          }
+      @Override
+      public QueryType visitCreate_scramble_statement(
+          VerdictSQLParser.Create_scramble_statementContext ctx) {
+        return QueryType.scrambling;
+      }
 
-          @Override
-          public QueryType visitUse_statement(VerdictSQLParser.Use_statementContext ctx) {
-            return QueryType.set_default_schema;
-          }
+      @Override
+      public QueryType visitUse_statement(VerdictSQLParser.Use_statementContext ctx) {
+        return QueryType.set_default_schema;
+      }
 
-          @Override
-          public QueryType visitShow_databases_statement(
-              VerdictSQLParser.Show_databases_statementContext ctx) {
-            return QueryType.show_databases;
-          }
+      @Override
+      public QueryType visitShow_databases_statement(
+          VerdictSQLParser.Show_databases_statementContext ctx) {
+        return QueryType.show_databases;
+      }
 
-          @Override
-          public QueryType visitShow_tables_statement(
-              VerdictSQLParser.Show_tables_statementContext ctx) {
-            return QueryType.show_tables;
-          }
+      @Override
+      public QueryType visitShow_tables_statement(
+          VerdictSQLParser.Show_tables_statementContext ctx) {
+        return QueryType.show_tables;
+      }
 
-          @Override
-          public QueryType visitDescribe_table_statement(
-              VerdictSQLParser.Describe_table_statementContext ctx) {
-            return QueryType.describe_table;
-          }
-        };
+      @Override
+      public QueryType visitDescribe_table_statement(
+          VerdictSQLParser.Describe_table_statementContext ctx) {
+        return QueryType.describe_table;
+      }
+    };
 
     QueryType type = visitor.visit(parser.verdict_statement());
     return type;

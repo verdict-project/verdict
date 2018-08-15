@@ -93,27 +93,6 @@ public class ExecutablePlanRunner {
       }
     }
 
-//    // Run nodes in the executor pool.
-//    executorPool.clear();
-//    Set<Integer> groupIds = plan.getNodeGroupIDs();
-//    for (int gid : groupIds) {
-//      List<ExecutableNode> nodes = plan.getNodesInGroup(gid);
-//      ExecutorService executor = Executors.newFixedThreadPool(nThreads);
-//      for (ExecutableNode n : nodes) {
-//        ExecutableNodeRunner nodeRunner = new ExecutableNodeRunner(conn, n);
-//        nodeRunners.add(nodeRunner);
-//        executor.submit(nodeRunner);
-//        log.debug(String.format("Submitted a node of type (%s) belonging to the group %d.", 
-//            n.getClass().getSimpleName(), gid));
-//      }
-//      executorPool.put(gid, executor);
-//    }
-//
-//    // accepts no more jobs
-//    for (ExecutorService service : executorPool.values()) {
-//      service.shutdown();
-//    }
-
     return reader;
   }
 
@@ -126,24 +105,13 @@ public class ExecutablePlanRunner {
    * Kill all currently running threads.
    */
   public void abort() {
+    // setting the flag first helps properly catching exceptions.
     for (ExecutableNodeRunner nodeRunner : nodeRunners) {
       nodeRunner.setAborted();
     }
-    
     for (ExecutableNodeRunner nodeRunner : nodeRunners) {
       nodeRunner.abort();
     }
-    
-//    // wait for a while for until all the statements to be closed.
-//    try {
-//      TimeUnit.MILLISECONDS.sleep(1000);
-//    } catch (InterruptedException e) {
-//      e.printStackTrace();
-//    }
-//    
-//    for (ExecutorService service : executorPool.values()) {
-//      service.shutdownNow();
-//    }
   }
 
 }
