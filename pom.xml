@@ -321,6 +321,7 @@
                         <artifactId>maven-surefire-plugin</artifactId>
                         <version>2.22.0</version>
                         <configuration>
+                            <trimStackTrace>false</trimStackTrace>
                             <excludes>
                                 <exclude>**/SparkTpchSelectQueryCoordinatorTest.java</exclude>
                                 <exclude>**/RedshiftTpchSelectQueryCoordinatorTest.java</exclude>
