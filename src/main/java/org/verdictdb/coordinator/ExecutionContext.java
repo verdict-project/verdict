@@ -52,8 +52,6 @@ public class ExecutionContext {
 
   private DbmsConnection conn;
   
-//  private ScrambleMetaSet scrambleMetaSet;
-  
   private VerdictMetaStore metaStore;
 
   private QueryContext queryContext;
@@ -146,6 +144,7 @@ public class ExecutionContext {
       return stream;
       
     } else if (queryType.equals(QueryType.scrambling)) {
+      
       LOG.debug("Query type: scrambling");
       CreateScrambleQuery scrambleQuery = generateScrambleQuery(query);
       ScramblingCoordinator scrambler =
@@ -160,17 +159,13 @@ public class ExecutionContext {
 
       // store this to our own metadata db.
       ScrambleMeta meta = scrambler.scramble(scrambleQuery);
-      //              scrambleQuery.getOriginalSchema(),
-      //              scrambleQuery.getOriginalTable(),
-      //              scrambleQuery.getNewSchema(),
-      //              scrambleQuery.getNewTable(),
-      //              scrambleQuery.getMethod()); // dyoon: size is not used atm?
 
       // Add metadata to metastore
       ScrambleMetaStore metaStore = new ScrambleMetaStore(conn, options);
       metaStore.addToStore(meta);
       refreshScrambleMetaStore();
       return null;
+      
     } else if (queryType.equals(QueryType.set_default_schema)) {
       LOG.debug("Query type: set_default_schema");
       updateDefaultSchemaFromQuery(query);
@@ -292,8 +287,9 @@ public class ExecutionContext {
   
   public void abort() {
     if (runningCoordinator != null) {
-      runningCoordinator.abort();
+      Coordinator c = runningCoordinator;
       runningCoordinator = null;
+      c.abort();
     }
   }
 

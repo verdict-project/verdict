@@ -116,7 +116,7 @@ public class VerdictContext {
    * @throws VerdictDBException 
    */
   public static VerdictContext fromConnectionString(String jdbcConnectionString)
-      throws SQLException, VerdictDBException {
+      throws VerdictDBException {
     attemptLoadDriverClass(jdbcConnectionString);
     VerdictOption options = new VerdictOption();
     options.parseConnectionString(jdbcConnectionString);
@@ -133,7 +133,7 @@ public class VerdictContext {
    * @throws VerdictDBException 
    */
   public static VerdictContext fromConnectionString(String jdbcConnectionString, Properties info)
-      throws SQLException, VerdictDBException {
+      throws VerdictDBException {
     attemptLoadDriverClass(jdbcConnectionString);
     VerdictOption options = new VerdictOption();
     options.parseConnectionString(jdbcConnectionString);
@@ -156,7 +156,7 @@ public class VerdictContext {
    */
   public static VerdictContext fromConnectionString(
       String jdbcConnectionString, String user, String password)
-      throws SQLException, VerdictDBException {
+      throws VerdictDBException {
     attemptLoadDriverClass(jdbcConnectionString);
     Properties info = new Properties();
     info.setProperty("user", user);
@@ -168,7 +168,7 @@ public class VerdictContext {
   
   public static VerdictContext fromConnectionString(
       String jdbcConnectionString, VerdictOption options)
-      throws SQLException, VerdictDBException {
+      throws VerdictDBException {
     attemptLoadDriverClass(jdbcConnectionString);
     options.parseConnectionString(jdbcConnectionString);
     return new VerdictContext(ConcurrentJdbcConnection.create(jdbcConnectionString), options);
@@ -176,7 +176,7 @@ public class VerdictContext {
 
   public static VerdictContext fromConnectionString(
       String jdbcConnectionString, String user, String password, VerdictOption options)
-      throws SQLException, VerdictDBException {
+      throws VerdictDBException {
     attemptLoadDriverClass(jdbcConnectionString);
     Properties info = new Properties();
     info.setProperty("user", user);

@@ -33,6 +33,16 @@ import org.verdictdb.sqlwriter.QueryToSql;
 public class FastConvergeScramblingMethodTest {
   
   static Connection h2conn;
+  
+  private final Map<String, String> options =
+      new HashMap<String, String>() {
+        {
+          put("tierColumnName", "verdictdbtier");
+          put("blockColumnName", "verdictdbblock");
+          put("scrambleTableSuffix", "_scrambled");
+          put("createIfNotExists", "false");
+        }
+      };
 
   @BeforeClass
   public static void setupH2Database() throws SQLException {
@@ -55,13 +65,13 @@ public class FastConvergeScramblingMethodTest {
     stmt.execute("CREATE SCHEMA IF NOT EXISTS \"test\"");
     stmt.execute("DROP TABLE \"test\".\"people\" IF EXISTS");
     stmt.execute("CREATE TABLE \"test\".\"people\" ("
-        + "id smallint, "
-        + "name varchar(255), "
-        + "gender varchar(8), "
-        + "age float, "
-        + "height float, "
-        + "nation varchar(8), "
-        + "birth timestamp)");
+        + "\"id\" smallint, "
+        + "\"name\" varchar(255), "
+        + "\"gender\" varchar(8), "
+        + "\"age\" float, "
+        + "\"height\" float, "
+        + "\"nation\" varchar(8), "
+        + "\"birth\" timestamp)");
     for (List<Object> row : contents) {
       String id = row.get(0).toString();
       String name = row.get(1).toString();
@@ -71,10 +81,41 @@ public class FastConvergeScramblingMethodTest {
       String nation = row.get(5).toString();
       String birth = row.get(6).toString();
       stmt.execute(String.format("INSERT INTO \"test\".\"people\" "
-          + "(id, name, gender, age, height, nation, birth) "
+          + "(\"id\", \"name\", \"gender\", \"age\", \"height\", \"nation\", \"birth\") "
           + "VALUES (%s, '%s', '%s', %s, %s, '%s', '%s')", 
           id, name, gender, age, height, nation, birth));
     }
+  }
+  
+  @Test
+  public void probabilityDistributionTest() throws VerdictDBException {
+    String newSchema = "test";
+    String newTable = "people_scramble";
+    String originalSchema = "test";
+    String originalTable = "people";
+    int blockSize = 3;
+    String tempTableSchema = "test";
+    FastConvergeScramblingMethod scramblingMethod = new FastConvergeScramblingMethod(blockSize, tempTableSchema);
+    
+    ScramblingPlan plan =
+        ScramblingPlan.create(
+            newSchema, newTable, originalSchema, originalTable, scramblingMethod, options);
+    JdbcConnection jdbcConn = JdbcConnection.create(h2conn);
+    ExecutablePlanRunner.runTillEnd(jdbcConn, plan);
+    
+//    System.out.println(scramblingMethod.tier0CumulProbDist);
+//    System.out.println(scramblingMethod.tier1CumulProbDist);
+//    System.out.println(scramblingMethod.tier2CumulProbDist);
+    
+    assertEquals(1.0, 
+        scramblingMethod.tier0CumulProbDist.get(
+            scramblingMethod.tier0CumulProbDist.size()-1), 1e-6);
+    assertEquals(1.0, 
+        scramblingMethod.tier1CumulProbDist.get(
+            scramblingMethod.tier1CumulProbDist.size()-1), 1e-6);
+    assertEquals(1.0, 
+        scramblingMethod.tier2CumulProbDist.get(
+            scramblingMethod.tier2CumulProbDist.size()-1), 1e-6);
   }
 
   @Test
@@ -139,7 +180,7 @@ public class FastConvergeScramblingMethodTest {
   public void testGetStatisticsNode() throws SQLException, VerdictDBException {
     int blockSize = 10;
     String scratchpadSchemaName = "test";
-    String primaryGroupColumnName = "NAME";
+    String primaryGroupColumnName = "name";
     FastConvergeScramblingMethod method = 
         new FastConvergeScramblingMethod(blockSize, scratchpadSchemaName, primaryGroupColumnName);
     
@@ -171,17 +212,17 @@ public class FastConvergeScramblingMethodTest {
   public void testGetTierExpressions() throws VerdictDBDbmsException {
     int blockSize = 10;
     String scratchpadSchemaName = "test";
-    String primaryGroupColumnName = "NAME";
+    String primaryGroupColumnName = "name";
     FastConvergeScramblingMethod method = 
         new FastConvergeScramblingMethod(blockSize, scratchpadSchemaName, primaryGroupColumnName);
     
     // query result; preparation
-    String sql = "select avg(t.\"ID\") as \"verdictdbavgID\", "
-        + "stddev_pop(t.\"ID\") as \"verdictdbstddevID\", "
-        + "avg(t.\"AGE\") as \"verdictdbavgAGE\", "
-        + "stddev_pop(t.\"AGE\") as \"verdictdbstddevAGE\", "
-        + "avg(t.\"HEIGHT\") as \"verdictdbavgHEIGHT\", "
-        + "stddev_pop(t.\"HEIGHT\") as \"verdictdbstddevHEIGHT\", "
+    String sql = "select avg(t.\"id\") as \"verdictdbavgID\", "
+        + "stddev_pop(t.\"id\") as \"verdictdbstddevID\", "
+        + "avg(t.\"age\") as \"verdictdbavgAGE\", "
+        + "stddev_pop(t.\"age\") as \"verdictdbstddevAGE\", "
+        + "avg(t.\"height\") as \"verdictdbavgHEIGHT\", "
+        + "stddev_pop(t.\"height\") as \"verdictdbstddevHEIGHT\", "
         + "count(*) as \"verdictdbtotalcount\" "
         + "from \"test\".\"people\" as t";
     DbmsConnection conn = JdbcConnection.create(h2conn);

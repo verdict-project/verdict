@@ -35,6 +35,7 @@ import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.sqlsyntax.HiveSyntax;
 import org.verdictdb.sqlsyntax.ImpalaSyntax;
 import org.verdictdb.sqlsyntax.PostgresqlSyntax;
+import org.verdictdb.sqlsyntax.RedshiftSyntax;
 import org.verdictdb.sqlsyntax.SparkSyntax;
 import org.verdictdb.sqlsyntax.SqlSyntax;
 import org.verdictdb.sqlsyntax.SqlSyntaxList;
@@ -224,7 +225,8 @@ public class JdbcConnection extends DbmsConnection {
       if (isAborting) {
         return null;
       } else {
-        throw new VerdictDBDbmsException(e.getMessage());
+        String msg = "Issued the following query: " + sql + "\n" + e.getMessage();
+        throw new VerdictDBDbmsException(msg);
       }
     }
   }
@@ -272,28 +274,38 @@ public class JdbcConnection extends DbmsConnection {
   public List<Pair<String, String>> getColumns(String schema, String table)
       throws VerdictDBDbmsException {
     List<Pair<String, String>> columns = new ArrayList<>();
-    DbmsQueryResult queryResult = executeQuery(syntax.getColumnsCommand(schema, table));
-
-    while (queryResult.next()) {
-      String type;
-      if (syntax instanceof PostgresqlSyntax) {
-        type = queryResult.getString(syntax.getColumnTypeColumnIndex());
-        if (queryResult.getInt(((PostgresqlSyntax) syntax).getCharacterMaximumLengthColumnIndex())
-            != 0) {
-          type =
-              type
-                  + "("
-                  + queryResult.getInt(
-                      ((PostgresqlSyntax) syntax).getCharacterMaximumLengthColumnIndex())
-                  + ")";
+    String sql = syntax.getColumnsCommand(schema, table);
+    
+    try {
+      DbmsQueryResult queryResult = executeQuery(sql);
+      while (queryResult.next()) {
+        String type;
+        if (syntax instanceof PostgresqlSyntax) {
+          type = queryResult.getString(syntax.getColumnTypeColumnIndex());
+          if (queryResult.getInt(((PostgresqlSyntax) syntax).getCharacterMaximumLengthColumnIndex())
+              != 0) {
+            type =
+                type
+                    + "("
+                    + queryResult.getInt(
+                        ((PostgresqlSyntax) syntax).getCharacterMaximumLengthColumnIndex())
+                    + ")";
+          }
+        } else {
+          type = queryResult.getString(syntax.getColumnTypeColumnIndex());
         }
-      } else {
-        type = queryResult.getString(syntax.getColumnTypeColumnIndex());
-      }
-      type = type.toLowerCase();
+        type = type.toLowerCase();
 
-      columns.add(
-          new ImmutablePair<>(queryResult.getString(syntax.getColumnNameColumnIndex()), type));
+        columns.add(
+            new ImmutablePair<>(queryResult.getString(syntax.getColumnNameColumnIndex()), type));
+      }
+      
+    } catch (Exception e) {
+      if (syntax instanceof RedshiftSyntax && e.getMessage().matches("(?s).*schema .* does not exist;.*")) {
+         return columns;
+      } else {
+        throw e;
+      }
     }
 
     return columns;
@@ -303,6 +315,11 @@ public class JdbcConnection extends DbmsConnection {
   public List<String> getPartitionColumns(String schema, String table)
       throws VerdictDBDbmsException {
     List<String> partition = new ArrayList<>();
+    
+    if (!syntax.doesSupportTablePartitioning()) {
+      return partition;
+    }
+    
     DbmsQueryResult queryResult;
     if (syntax instanceof ImpalaSyntax) {
       try {
@@ -316,6 +333,16 @@ public class JdbcConnection extends DbmsConnection {
         return partition;
       } catch (Exception e) {
         if (e.getMessage().contains("Table is not partitioned")) {
+          return partition;
+        } else {
+          throw e;
+        }
+      }
+    } else if (syntax instanceof RedshiftSyntax) {
+      try {
+        queryResult = executeQuery(syntax.getPartitionCommand(schema, table));
+      } catch (Exception e) {
+        if (e.getMessage().matches("(?s).*schema .* does not exist;.*")) {
           return partition;
         } else {
           throw e;

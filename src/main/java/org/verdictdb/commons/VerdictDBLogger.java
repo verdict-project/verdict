@@ -168,7 +168,9 @@ public class VerdictDBLogger implements org.slf4j.Logger {
 
   @Override
   public void debug(String s) {
-    logger.debug(s);
+    synchronized (VerdictDBLogger.class) {
+      logger.debug(s);
+    }
   }
 
   @Override

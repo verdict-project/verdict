@@ -38,13 +38,13 @@ public class ExecutablePlanRunner {
 
   private ExecutablePlan plan;
 
-  private int nThreads = 1;
+//  private int nThreads = 1;
   
   private VerdictDBLogger log = VerdictDBLogger.getLogger(this.getClass());
   
   private List<ExecutableNodeRunner> nodeRunners = new ArrayList<>();
   
-  private Map<Integer, ExecutorService> executorPool = new HashMap<>();
+//  private Map<Integer, ExecutorService> executorPool = new HashMap<>();
 
   public ExecutablePlanRunner(DbmsConnection conn, ExecutablePlan plan) {
     this.conn = conn;
@@ -81,27 +81,38 @@ public class ExecutablePlanRunner {
     } else {
       reader = new ExecutionTokenReader();
     }
-
-    // Run nodes in the executor pool.
-    executorPool.clear();
+    
+    // Run nodes
     Set<Integer> groupIds = plan.getNodeGroupIDs();
     for (int gid : groupIds) {
       List<ExecutableNode> nodes = plan.getNodesInGroup(gid);
-      ExecutorService executor = Executors.newFixedThreadPool(nThreads);
       for (ExecutableNode n : nodes) {
         ExecutableNodeRunner nodeRunner = new ExecutableNodeRunner(conn, n);
+        nodeRunner.runOnThread();
         nodeRunners.add(nodeRunner);
-        executor.submit(nodeRunner);
-        log.debug(String.format("Submitted a node of type (%s) belonging to the group %d.", 
-            n.getClass().getSimpleName(), gid));
       }
-      executorPool.put(gid, executor);
     }
 
-    // accepts no more jobs
-    for (ExecutorService service : executorPool.values()) {
-      service.shutdown();
-    }
+//    // Run nodes in the executor pool.
+//    executorPool.clear();
+//    Set<Integer> groupIds = plan.getNodeGroupIDs();
+//    for (int gid : groupIds) {
+//      List<ExecutableNode> nodes = plan.getNodesInGroup(gid);
+//      ExecutorService executor = Executors.newFixedThreadPool(nThreads);
+//      for (ExecutableNode n : nodes) {
+//        ExecutableNodeRunner nodeRunner = new ExecutableNodeRunner(conn, n);
+//        nodeRunners.add(nodeRunner);
+//        executor.submit(nodeRunner);
+//        log.debug(String.format("Submitted a node of type (%s) belonging to the group %d.", 
+//            n.getClass().getSimpleName(), gid));
+//      }
+//      executorPool.put(gid, executor);
+//    }
+//
+//    // accepts no more jobs
+//    for (ExecutorService service : executorPool.values()) {
+//      service.shutdown();
+//    }
 
     return reader;
   }
@@ -116,19 +127,23 @@ public class ExecutablePlanRunner {
    */
   public void abort() {
     for (ExecutableNodeRunner nodeRunner : nodeRunners) {
+      nodeRunner.setAborted();
+    }
+    
+    for (ExecutableNodeRunner nodeRunner : nodeRunners) {
       nodeRunner.abort();
     }
     
-    // wait for a while for until all the statements to be closed.
-    try {
-      TimeUnit.MILLISECONDS.sleep(1000);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    }
-    
-    for (ExecutorService service : executorPool.values()) {
-      service.shutdownNow();
-    }
+//    // wait for a while for until all the statements to be closed.
+//    try {
+//      TimeUnit.MILLISECONDS.sleep(1000);
+//    } catch (InterruptedException e) {
+//      e.printStackTrace();
+//    }
+//    
+//    for (ExecutorService service : executorPool.values()) {
+//      service.shutdownNow();
+//    }
   }
 
 }
