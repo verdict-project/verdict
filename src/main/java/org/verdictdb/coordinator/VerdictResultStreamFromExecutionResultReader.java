@@ -32,6 +32,7 @@ public class VerdictResultStreamFromExecutionResultReader implements VerdictResu
   @Override
   public VerdictSingleResult next() {
     DbmsQueryResult internalResult = reader.next();
+    System.out.println("result: " + internalResult);
     VerdictSingleResult result = new VerdictSingleResultFromDbmsQueryResult(internalResult);
     return result;
   }

@@ -18,6 +18,7 @@ package org.verdictdb.core.resulthandler;
 
 import java.util.Iterator;
 
+import org.verdictdb.commons.VerdictDBLogger;
 import org.verdictdb.core.execplan.ExecutionInfoToken;
 import org.verdictdb.core.execplan.ExecutionTokenQueue;
 
@@ -30,6 +31,8 @@ public class ExecutionTokenReader
   boolean hasEndOfQueueReached = false;
 
   ExecutionInfoToken queueBuffer = null;
+  
+  private VerdictDBLogger log = VerdictDBLogger.getLogger(getClass());
 
   public ExecutionTokenReader() {}
 
@@ -48,6 +51,7 @@ public class ExecutionTokenReader
     if (queueBuffer.isFailureToken()) {
       Exception e = (Exception) queueBuffer.getValue("errorMessage");
       if (e != null) {
+        log.trace("An runtime error is being thrown from ExecutionTokenReader.");
         throw new RuntimeException(e);
       }
     }
@@ -83,6 +87,7 @@ public class ExecutionTokenReader
     }
 
     if (queueBuffer.isStatusToken()) {
+      log.trace("A status token is read: " + queueBuffer);
       return null;
     } else {
       ExecutionInfoToken result = queueBuffer;

@@ -160,7 +160,6 @@ public class SelectQueryCoordinator implements Coordinator {
     // execute the plan
     planRunner = new ExecutablePlanRunner(conn, asyncPlan);
     ExecutionResultReader reader = planRunner.getResultReader();
-//    ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(conn, asyncPlan);
 
     lastQuery = selectQuery;
 
