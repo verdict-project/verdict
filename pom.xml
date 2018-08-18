@@ -206,6 +206,60 @@
             <artifactId>opencsv</artifactId>
             <version>4.0</version>
         </dependency>
+        
+        <!--  Test Support -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <version>1.4.197</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>42.2.2.jre7</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>5.1.46</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.xerial</groupId>
+            <artifactId>sqlite-jdbc</artifactId>
+            <version>3.8.11.2</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.amazon.redshift</groupId>
+            <artifactId>redshift-jdbc41</artifactId>
+            <version>1.2.10.1009</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.klarna</groupId>
+            <artifactId>hiverunner</artifactId>
+            <version>3.2.1</version>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-log4j12</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-simple</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
     </dependencies>
 
     <profiles>
@@ -219,65 +273,13 @@
                 </property>
             </activation>
             <dependencies>
-                <dependency>
-                    <groupId>com.h2database</groupId>
-                    <artifactId>h2</artifactId>
-                    <version>1.4.197</version>
-                    <scope>test</scope>
-                </dependency>
-                <dependency>
-                    <groupId>org.postgresql</groupId>
-                    <artifactId>postgresql</artifactId>
-                    <version>42.2.2.jre7</version>
-                    <scope>test</scope>
-                </dependency>
-                <dependency>
-                    <groupId>mysql</groupId>
-                    <artifactId>mysql-connector-java</artifactId>
-                    <version>5.1.46</version>
-                    <scope>test</scope>
-                </dependency>
-                <dependency>
-                    <groupId>org.xerial</groupId>
-                    <artifactId>sqlite-jdbc</artifactId>
-                    <version>3.8.11.2</version>
-                    <scope>test</scope>
-                </dependency>
-                <dependency>
-                    <groupId>junit</groupId>
-                    <artifactId>junit</artifactId>
-                    <version>${junit.version}</version>
-                    <scope>test</scope>
-                </dependency>
-                <!-- Install this using the following command: mvn install:install-file
-                  -Dfile=src/test/resources/jars/ImpalaJDBC41-2.6.3.jar -DgroupId=com.cloudera
-                  -DartifactId=impala-jdbc41 -Dversion=2.6.3 -Dpackaging=jar -->
+            <!-- Install this using the following command: mvn install:install-file
+          -Dfile=src/test/resources/jars/ImpalaJDBC41-2.6.3.jar -DgroupId=com.cloudera
+          -DartifactId=impala-jdbc41 -Dversion=2.6.3 -Dpackaging=jar -->
                 <dependency>
                     <groupId>com.cloudera</groupId>
                     <artifactId>impala-jdbc41</artifactId>
                     <version>2.6.3</version>
-                    <scope>test</scope>
-                    <exclusions>
-                        <exclusion>
-                            <groupId>org.slf4j</groupId>
-                            <artifactId>slf4j-log4j12</artifactId>
-                        </exclusion>
-                        <exclusion>
-                            <groupId>org.slf4j</groupId>
-                            <artifactId>slf4j-simple</artifactId>
-                        </exclusion>
-                    </exclusions>
-                </dependency>
-                <dependency>
-                    <groupId>com.amazon.redshift</groupId>
-                    <artifactId>redshift-jdbc41</artifactId>
-                    <version>1.2.10.1009</version>
-                    <scope>test</scope>
-                </dependency>
-                <dependency>
-                    <groupId>com.klarna</groupId>
-                    <artifactId>hiverunner</artifactId>
-                    <version>3.2.1</version>
                     <scope>test</scope>
                     <exclusions>
                         <exclusion>
