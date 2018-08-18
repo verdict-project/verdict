@@ -269,7 +269,7 @@
                 <activeByDefault>true</activeByDefault>
                 <property>
                     <name>testPhase</name>
-                    <value>!true</value>
+                    <value>true</value>
                 </property>
             </activation>
             <dependencies>
