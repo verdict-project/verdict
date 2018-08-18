@@ -927,6 +927,7 @@ simple_id
     | MONTHNAME
     | RIGHT
     | POWER
+    | SCALE
     | SECOND
     | TEXT
     | TIME
