@@ -5,7 +5,7 @@
     <groupId>org.verdictdb</groupId>
     <artifactId>verdictdb-core</artifactId>
     <packaging>jar</packaging>
-    <version>0.5.3-SNAPSHOT</version>
+    <version>0.5.4</version>
     <name>${project.groupId}:${project.artifactId}</name>
     <description>Platform-independent, interactive-speed data analytics system</description>
     <url>http://verdictdb.org</url>
@@ -187,6 +187,16 @@
             <version>1.2.3</version>
         </dependency>
         <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.7.25</version>
+        </dependency>
+        <dependency>
+            <groupId>org.codehaus.janino</groupId>
+            <artifactId>janino</artifactId>
+            <version>2.7.8</version>
+        </dependency>
+        <dependency>
             <groupId>log4j</groupId>
             <artifactId>log4j</artifactId>
             <version>1.2.17</version>
@@ -196,7 +206,6 @@
             <artifactId>opencsv</artifactId>
             <version>4.0</version>
         </dependency>
-
         <!-- test supports -->
         <dependency>
             <groupId>com.h2database</groupId>
