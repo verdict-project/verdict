@@ -127,7 +127,9 @@ public class ExecutionContext {
       } catch (RuntimeException e) {
         throw e;
       } finally {
-        abortInParallel(stream);
+        stream.close();
+        abort();
+//        abortInParallel(stream);
       }
     }
   }
