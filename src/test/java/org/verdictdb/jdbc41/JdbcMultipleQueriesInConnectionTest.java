@@ -62,8 +62,13 @@ public class JdbcMultipleQueriesInConnectionTest {
     dbmsConn.execute("drop database if exists " + MYSQL_DATABASE);
   }
   
+  @Test
+  public void test() {
+    
+  }
+  
 //  @Test
-  public void test() throws SQLException {
+  public void testMultipleQueries() throws SQLException {
     String url = String.format("jdbc:verdict:mysql://%s", MYSQL_HOST);
     Connection conn = DriverManager.getConnection(url, MYSQL_UESR, MYSQL_PASSWORD);
     
