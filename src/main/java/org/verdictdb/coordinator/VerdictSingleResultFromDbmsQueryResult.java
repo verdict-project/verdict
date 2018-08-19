@@ -97,7 +97,7 @@ public class VerdictSingleResultFromDbmsQueryResult
 
   @Override
   public Object getValue(int index) {
-    if (result.isPresent() == false) {
+    if (!result.isPresent()) {
       throw new RuntimeException("An empty result is accessed.");
     } else {
       Object value = result.get().getValue(index);
@@ -111,7 +111,7 @@ public class VerdictSingleResultFromDbmsQueryResult
   }
 
   public boolean next() {
-    if (result.isPresent() == false) {
+    if (!result.isPresent()) {
       return false;
     } else {
       return result.get().next();

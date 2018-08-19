@@ -5,7 +5,7 @@
     <groupId>org.verdictdb</groupId>
     <artifactId>verdictdb-core</artifactId>
     <packaging>jar</packaging>
-    <version>0.5.4</version>
+    <version>0.5.4-SNAPSHOT</version>
     <name>${project.groupId}:${project.artifactId}</name>
     <description>Platform-independent, interactive-speed data analytics system</description>
     <url>http://verdictdb.org</url>
@@ -89,6 +89,11 @@
         <repository>
             <id>redshift</id>
             <url>http://redshift-maven-repository.s3-website-us-east-1.amazonaws.com/release</url>
+        </repository>
+        <!--  For Impala JDBC; https://stackoverflow.com/questions/26618192/install-local-jar-dependency-as-part-of-the-lifecycle-before-maven-attempts-to -->
+        <repository>
+	       <id>Local repository</id>
+	       <url>file://${basedir}/lib</url>
         </repository>
     </repositories>
 
@@ -206,7 +211,8 @@
             <artifactId>opencsv</artifactId>
             <version>4.0</version>
         </dependency>
-        <!-- test supports -->
+        
+        <!--  Test Support -->
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
@@ -237,13 +243,16 @@
             <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
-        <!-- Install this using the following command: mvn install:install-file
-          -Dfile=src/test/resources/jars/ImpalaJDBC41-2.6.3.jar -DgroupId=com.cloudera
-          -DartifactId=impala-jdbc41 -Dversion=2.6.3 -Dpackaging=jar -->
         <dependency>
-            <groupId>com.cloudera</groupId>
-            <artifactId>impala-jdbc41</artifactId>
-            <version>2.6.3</version>
+            <groupId>com.amazon.redshift</groupId>
+            <artifactId>redshift-jdbc41</artifactId>
+            <version>1.2.10.1009</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.klarna</groupId>
+            <artifactId>hiverunner</artifactId>
+            <version>3.2.1</version>
             <scope>test</scope>
             <exclusions>
                 <exclusion>
@@ -256,16 +265,14 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        <!-- This has been installed in lib/ by 
+            mvn install:install-file -Dfile=src/test/resources/jars/ImpalaJDBC41-2.6.3.jar \
+            -DgroupId=com.cloudera -DartifactId=impala-jdbc41 -Dversion=2.6.3 \
+            -Dpackaging=jar -DlocalRepositoryPath=lib -->
         <dependency>
-            <groupId>com.amazon.redshift</groupId>
-            <artifactId>redshift-jdbc41</artifactId>
-            <version>1.2.10.1009</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.klarna</groupId>
-            <artifactId>hiverunner</artifactId>
-            <version>3.2.1</version>
+            <groupId>com.cloudera</groupId>
+            <artifactId>impala-jdbc41</artifactId>
+            <version>2.6.3</version>
             <scope>test</scope>
             <exclusions>
                 <exclusion>

@@ -17,6 +17,16 @@ import org.verdictdb.core.sqlobject.UnnamedColumn;
 import org.verdictdb.exception.VerdictDBException;
 
 public class SqlToRelationTest {
+  
+  @Test
+  public void testScaleIdentifier() {
+    String actual = "select avg(order_dow * scale), avg(order_hour_of_day * scale) from ("
+        + "select *, 1.0 / (1 + exp(- order_dow * 0.0- order_hour_of_day * 0.0)) "
+        + "- reordered as scale "
+        + "from pyongjoo_cidr19.single_joined limit 1000) t";
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    AbstractRelation sel = sqlToRelation.toRelation(actual);
+  }
 
   @Test
   public void testSelectAllBaseTable() throws VerdictDBException {

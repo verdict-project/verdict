@@ -116,7 +116,7 @@ public class MysqlSyntax extends SqlSyntax {
           currentPart.set(j, currentPart.get(j) + 1);
           carry = false;
         }
-        if (currentPart.get(j) == partitionCounts.get(j)) {
+        if (currentPart.get(j).equals(partitionCounts.get(j))) {
           carry = true;
           currentPart.set(j, 0);
         }
