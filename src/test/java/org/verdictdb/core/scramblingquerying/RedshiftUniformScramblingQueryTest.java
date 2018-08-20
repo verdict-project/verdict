@@ -118,8 +118,9 @@ public class RedshiftUniformScramblingQueryTest {
             "SELECT COUNT(\"orders\".\"o_orderkey\") as \"cnt\"\n"
                 + "FROM \"%s\".\"orders\" \"orders\"\n"
                 + "GROUP BY o_orderstatus\n"
-                + "HAVING avg(\"orders\".\"o_totalprice\") > 100000",
-            SCHEMA_NAME);
+                + "HAVING avg(\"orders\".\"o_totalprice\") >\n"
+                + "(SELECT avg(\"orders\".\"o_totalprice\") FROM \"%s\".\"orders\" \"orders\")",
+            SCHEMA_NAME, SCHEMA_NAME);
     ResultSet rs1 = vc.createStatement().executeQuery(sql);
     ResultSet rs2 = conn.createStatement().executeQuery(sql);
     if (rs2.next()) {
