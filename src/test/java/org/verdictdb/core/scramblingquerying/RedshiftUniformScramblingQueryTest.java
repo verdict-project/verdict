@@ -73,6 +73,7 @@ public class RedshiftUniformScramblingQueryTest {
   public static void setupDatabases() throws SQLException, VerdictDBDbmsException, IOException {
     options.setVerdictMetaSchemaName(VERDICT_META_SCHEMA);
     options.setVerdictTempSchemaName(VERDICT_TEMP_SCHEMA);
+    options.setVerdictConsoleLogLevel("all");
     setupRedshift();
   }
 
@@ -116,8 +117,16 @@ public class RedshiftUniformScramblingQueryTest {
         String.format(
             "SELECT COUNT(\"orders\".\"o_orderkey\") as \"cnt\"\n"
                 + "FROM \"%s\".\"orders\" \"orders\"\n"
-                + "HAVING min(\"orders\".\"o_shippriority\") > 0.5",
+                + "GROUP BY o_orderstatus\n"
+                + "HAVING avg(\"orders\".\"o_totalprice\") > 100000",
             SCHEMA_NAME);
-    ResultSet rs = vc.createStatement().executeQuery(sql);
+    ResultSet rs1 = vc.createStatement().executeQuery(sql);
+    ResultSet rs2 = conn.createStatement().executeQuery(sql);
+    if (rs2.next()) {
+      System.out.println(rs2.getInt(1));
+    }
+    if (rs1.next()) {
+      System.out.println(rs1.getInt(1));
+    }
   }
 }
