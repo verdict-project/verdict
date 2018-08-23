@@ -68,4 +68,6 @@ public interface ScramblingMethod {
       String originalSchema, String originalTable, Map<String, Object> metaData);
 
   public String getMainTableAlias();
+
+  public UnnamedColumn getBlockForTierExpr(int tier, Map<String, Object> metaData);
 }

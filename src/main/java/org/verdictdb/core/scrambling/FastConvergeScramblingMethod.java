@@ -50,6 +50,8 @@ import org.verdictdb.exception.VerdictDBValueException;
 
 import com.google.common.base.Optional;
 
+import static org.verdictdb.core.scrambling.ScramblingNode.computeConditionalProbabilityDistribution;
+
 /**
  * Policy: 1. Tier 0: tuples containing outlier values. 2. Tier 1: tuples containing rare groups 3.
  * Tier 2: other tuples
@@ -509,6 +511,29 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
   @Override
   public String getMainTableAlias() {
     return MAIN_TABLE_SOURCE_ALIAS_NAME;
+  }
+
+  @Override
+  public UnnamedColumn getBlockForTierExpr(int tier, Map<String, Object> metaData) {
+    List<Double> cumulProb = getCumulativeProbabilityDistributionForTier(metaData, tier);
+    List<Double> condProb = computeConditionalProbabilityDistribution(cumulProb);
+    int blockCount = cumulProb.size();
+
+    List<UnnamedColumn> blockForTierOperands = new ArrayList<>();
+    for (int j = 0; j < blockCount; j++) {
+      blockForTierOperands.add(
+          ColumnOp.lessequal(ColumnOp.rand(), ConstantColumn.valueOf(condProb.get(j))));
+      blockForTierOperands.add(ConstantColumn.valueOf(j));
+    }
+    UnnamedColumn blockForTierExpr;
+
+    if (blockForTierOperands.size() <= 1) {
+      blockForTierExpr = ConstantColumn.valueOf(0);
+    } else {
+      blockForTierExpr = ColumnOp.casewhen(blockForTierOperands);
+    }
+
+    return blockForTierExpr;
   }
 
   @Override

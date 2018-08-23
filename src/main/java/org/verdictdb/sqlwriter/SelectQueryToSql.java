@@ -38,6 +38,7 @@ import org.verdictdb.core.sqlobject.UnnamedColumn;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBTypeException;
 import org.verdictdb.exception.VerdictDBValueException;
+import org.verdictdb.sqlsyntax.MysqlSyntax;
 import org.verdictdb.sqlsyntax.PostgresqlSyntax;
 import org.verdictdb.sqlsyntax.SqlSyntax;
 
@@ -113,7 +114,15 @@ public class SelectQueryToSql {
         return quoteName(base.getColumnName());
       } else return base.getTableSourceAlias() + "." + quoteName(base.getColumnName());
     } else if (column instanceof ConstantColumn) {
-      return ((ConstantColumn) column).getValue().toString();
+      if (((ConstantColumn) column).getValue() instanceof ConstantColumn.databaseDataType) {
+        if (((ConstantColumn) column).getValue().equals(ConstantColumn.databaseDataType.intType)) {
+          if (syntax instanceof MysqlSyntax) {
+            return "unsigned";
+          }
+          else return "int";
+        }
+      }
+      else return ((ConstantColumn) column).getValue().toString();
     } else if (column instanceof AsteriskColumn) {
       return "*";
     } else if (column instanceof ColumnOp) {

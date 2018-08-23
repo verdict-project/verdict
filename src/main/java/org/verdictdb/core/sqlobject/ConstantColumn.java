@@ -25,6 +25,8 @@ public class ConstantColumn implements UnnamedColumn, SelectItem {
 
   private static final long serialVersionUID = -4530737413387725261L;
 
+  public enum databaseDataType {intType};
+
   Object value;
 
   public void setValue(Object value) {
@@ -48,6 +50,12 @@ public class ConstantColumn implements UnnamedColumn, SelectItem {
   }
 
   public static ConstantColumn valueOf(String value) {
+    ConstantColumn c = new ConstantColumn();
+    c.setValue(value);
+    return c;
+  }
+
+  public static ConstantColumn valueOf(Object value) {
     ConstantColumn c = new ConstantColumn();
     c.setValue(value);
     return c;
