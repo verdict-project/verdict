@@ -61,10 +61,6 @@ public class VerdictContext {
    */
   private List<ExecutionContext> executionContexts = new LinkedList<>();
 
-  public VerdictContext() throws VerdictDBException {
-    this.contextId = "";
-  }
-
   public VerdictContext(DbmsConnection conn) {
     this.conn = new CachedDbmsConnection(conn);
     this.contextId = RandomStringUtils.randomAlphanumeric(5);
