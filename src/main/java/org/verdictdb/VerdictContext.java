@@ -213,7 +213,6 @@ public class VerdictContext {
         Class.forName(className);
         log.debug(className + " has been loaded into the classpath.");
       } catch (ClassNotFoundException e) {
-        return false;
       }
     }
     return true;
