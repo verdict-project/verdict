@@ -552,7 +552,9 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
       if (selectItem instanceof AliasedColumn) {
         AliasedColumn ac = (AliasedColumn) selectItem;
         // Simply add the select item if it is HAVING condition used by outer query.
-        if (ac.getAliasName().startsWith(AsyncAggExecutionNode.getHavingConditionAlias())) {
+        if (ac.getAliasName().startsWith(AsyncAggExecutionNode.getHavingConditionAlias())
+            || ac.getAliasName().startsWith(AsyncAggExecutionNode.getGroupByAlias())
+            || ac.getAliasName().startsWith(AsyncAggExecutionNode.getOrderByAlias())) {
           newSelectlist.add(ac);
           continue;
         }

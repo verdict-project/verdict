@@ -120,6 +120,14 @@ public class QueryExecutionPlanFactory {
     //    query.addOrderby(query.getOrderby());
     //  if (query.getLimit().isPresent()) selectQuery.addLimit(query.getLimit().get());
 
+    int groupbyCount = 1;
+    for (GroupingAttribute attr : query.getGroupby()) {
+      UnnamedColumn groupByCol = findActualGroupByExpression(attr, query);
+      query.addSelectItem(
+          new AliasedColumn(
+              groupByCol, AsyncAggExecutionNode.getGroupByAlias() + (groupbyCount++)));
+    }
+
     // dyoon: when 'HAVING' clause is present, its condition is added as a select item in the inner
     // query so that outer query can use that column to test the same HAVING condition
     if (query.getHaving().isPresent()) {
@@ -128,8 +136,40 @@ public class QueryExecutionPlanFactory {
           new AliasedColumn(havingCopy, AsyncAggExecutionNode.getHavingConditionAlias());
       query.addSelectItem(havingColumn);
     }
+
+    int orderByCount = 1;
+    for (OrderbyAttribute attribute : query.getOrderby()) {
+      GroupingAttribute attr = attribute.getAttribute();
+      UnnamedColumn orderByCol = findActualGroupByExpression(attr, query);
+      query.addSelectItem(
+          new AliasedColumn(
+              orderByCol, AsyncAggExecutionNode.getOrderByAlias() + (orderByCount++)));
+    }
+
     node.setSelectQuery(query);
     return node;
+  }
+
+  private static UnnamedColumn findActualGroupByExpression(
+      GroupingAttribute attr, SelectQuery query) {
+    UnnamedColumn col = (UnnamedColumn) attr;
+    if (attr instanceof AliasReference) {
+      AliasReference ref = (AliasReference) attr;
+      String origAliasName =
+          ref.getAliasName().replaceAll("\"", "").replaceAll("'", "").replaceAll("`", "");
+      for (SelectItem item : query.getSelectList()) {
+        if (item instanceof AliasedColumn) {
+          AliasedColumn ac = (AliasedColumn) item;
+          String otherAliasName =
+              ac.getAliasName().replaceAll("\"", "").replaceAll("'", "").replaceAll("`", "");
+          if (origAliasName.equals(otherAliasName)) {
+            col = ac.getColumn();
+            break;
+          }
+        }
+      }
+    }
+    return col;
   }
 
   private static ProjectionNode createProjectionNodeAndItsDependents(

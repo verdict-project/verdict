@@ -54,6 +54,10 @@ public class AsyncAggExecutionNode extends ProjectionNode {
 
   private static final String HAVING_CONDITION_ALIAS = "verdictdb_having_cond";
 
+  private static final String GROUP_BY_ALIAS = "verdictdb_group_by";
+
+  private static final String ORDER_BY_ALIAS = "verdictdb_order_by";
+
   //  private static final String SCRAMBLE_META_STORE_KEY = "scrambleMeta";
 
   private ScrambleMetaSet scrambleMeta;
@@ -148,7 +152,23 @@ public class AsyncAggExecutionNode extends ProjectionNode {
     // add (1) order-by, (2) limit, (3) having clauses to the select query
     QueryNodeBase aggRoot = (QueryNodeBase) aggNodeBlock.getBlockRootNode();
     SelectQuery originalAggQuery = aggRoot.getSelectQuery();
-    node.selectQuery.addOrderby(originalAggQuery.getOrderby());
+    int orderByCount = 1;
+    for (OrderbyAttribute orderBy : originalAggQuery.getOrderby()) {
+      String aliasName = ORDER_BY_ALIAS + (orderByCount++);
+      //      if (orderBy.getAttribute() instanceof AliasedColumn) {
+      //        aliasName = ((AliasedColumn) orderBy.getAttribute()).getAliasName();
+      //      } else if (orderBy.getAttribute() instanceof AliasReference) {
+      //        aliasName = ((AliasReference) orderBy.getAttribute()).getAliasName();
+      //      } else {
+      //        // TODO
+      //        return null;
+      //      }
+      BaseColumn col = new BaseColumn(TIER_CONSOLIDATED_TABLE_ALIAS, aliasName);
+      node.selectQuery.addOrderby(
+          new OrderbyAttribute(col, orderBy.getOrder(), orderBy.getNullsOrder()));
+    }
+
+    //    node.selectQuery.addOrderby(originalAggQuery.getOrderby());
     if (originalAggQuery.getLimit().isPresent()) {
       node.selectQuery.addLimit(originalAggQuery.getLimit().get());
     }
@@ -639,8 +659,14 @@ public class AsyncAggExecutionNode extends ProjectionNode {
           if (!tierColumnAliases.contains(((AliasedColumn) sel).getAliasName())) {
             UnnamedColumn newcol =
                 new BaseColumn(TIER_CONSOLIDATED_TABLE_ALIAS, ((AliasedColumn) sel).getAliasName());
-            newSelectlist.add(new AliasedColumn(newcol, ((AliasedColumn) sel).getAliasName()));
             groupby.add(newcol);
+            AliasedColumn ac = (AliasedColumn) sel;
+            if (ac.getAliasName().startsWith(AsyncAggExecutionNode.getHavingConditionAlias())
+                || ac.getAliasName().startsWith(AsyncAggExecutionNode.getGroupByAlias())
+                || ac.getAliasName().startsWith(AsyncAggExecutionNode.getOrderByAlias())) {
+              continue;
+            }
+            newSelectlist.add(new AliasedColumn(newcol, ((AliasedColumn) sel).getAliasName()));
           }
         }
       }
@@ -655,6 +681,14 @@ public class AsyncAggExecutionNode extends ProjectionNode {
 
   public static String getHavingConditionAlias() {
     return HAVING_CONDITION_ALIAS;
+  }
+
+  public static String getGroupByAlias() {
+    return GROUP_BY_ALIAS;
+  }
+
+  public static String getOrderByAlias() {
+    return ORDER_BY_ALIAS;
   }
 
   @Override

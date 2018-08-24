@@ -32,6 +32,8 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.junit.Assert.assertEquals;
+
 /** Created by Dong Young Yoon on 8/16/18. */
 public class RedshiftUniformScramblingQueryTest {
 
@@ -119,15 +121,45 @@ public class RedshiftUniformScramblingQueryTest {
                 + "FROM \"%s\".\"orders\" \"orders\"\n"
                 + "GROUP BY o_orderstatus\n"
                 + "HAVING avg(\"orders\".\"o_totalprice\") >\n"
-                + "(SELECT avg(\"orders\".\"o_totalprice\") FROM \"%s\".\"orders\" \"orders\")",
+                + "(SELECT avg(\"orders\".\"o_totalprice\") FROM \"%s\".\"orders\" \"orders\")\n"
+                + "ORDER BY o_orderstatus\n",
             SCHEMA_NAME, SCHEMA_NAME);
     ResultSet rs1 = vc.createStatement().executeQuery(sql);
     ResultSet rs2 = conn.createStatement().executeQuery(sql);
-    if (rs2.next()) {
-      System.out.println(rs2.getInt(1));
+    while (rs1.next() && rs2.next()) {
+      assertEquals(rs1.getInt(1), rs2.getInt(1));
+      System.out.println(String.format("%d : %d", rs1.getInt(1), rs2.getInt(1)));
     }
-    if (rs1.next()) {
-      System.out.println(rs1.getInt(1));
+    assertEquals(rs1.next(), rs2.next());
+  }
+
+  @Test
+  public void runQuery2WithHavingTest() throws SQLException {
+    String sql =
+        String.format(
+            "SELECT o_orderpriority, COUNT(\"orders\".\"o_orderkey\") as \"cnt\"\n"
+                + "FROM \"%s\".\"orders\" \"orders\"\n"
+                + "GROUP BY o_orderpriority\n"
+                + "HAVING avg(\"orders\".\"o_totalprice\") >=\n"
+                + "(SELECT avg(\"orders\".\"o_totalprice\") FROM \"%s\".\"orders\" \"orders\")\n"
+                + "ORDER BY o_orderpriority + 4\n",
+            SCHEMA_NAME, SCHEMA_NAME);
+    ResultSet rs2 = conn.createStatement().executeQuery(sql);
+    ResultSet rs1 = vc.createStatement().executeQuery(sql);
+    //    while (rs2.next()) {
+    //      System.out.println(String.format("%s, %d", rs2.getString(1), rs2.getInt(2)));
+    //    }
+    //    System.out.println("----");
+    //    while (rs1.next()) {
+    //      System.out.println(String.format("%s, %d", rs1.getString(1), rs1.getInt(2)));
+    //    }
+    int columnCount = rs2.getMetaData().getColumnCount();
+    int columnCount2 = rs1.getMetaData().getColumnCount();
+    assertEquals(columnCount, columnCount2);
+    while (rs1.next() && rs2.next()) {
+      assertEquals(rs1.getString(1), rs2.getString(1));
+      assertEquals(rs1.getInt(2), rs2.getInt(2));
     }
+    assertEquals(rs1.next(), rs2.next());
   }
 }
