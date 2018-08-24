@@ -16,14 +16,8 @@
 
 package org.verdictdb;
 
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Properties;
-
 import org.apache.commons.lang3.RandomStringUtils;
+import org.verdictdb.commons.VerdictDBLogger;
 import org.verdictdb.commons.VerdictOption;
 import org.verdictdb.connection.CachedDbmsConnection;
 import org.verdictdb.connection.ConcurrentJdbcConnection;
@@ -42,12 +36,19 @@ import org.verdictdb.metastore.VerdictMetaStore;
 import org.verdictdb.sqlsyntax.SqlSyntax;
 import org.verdictdb.sqlsyntax.SqlSyntaxList;
 
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Properties;
+
 public class VerdictContext {
 
   private DbmsConnection conn;
 
   private boolean isClosed = false;
-  
+
   private VerdictMetaStore metaStore;
 
   private final String contextId;
@@ -55,6 +56,8 @@ public class VerdictContext {
   private long executionSerialNumber = 0;
 
   private VerdictOption options;
+
+  private static final VerdictDBLogger log = VerdictDBLogger.getLogger(VerdictContext.class);
 
   /**
    * Maintains the list of open executions. Each query is processed on a separate execution context.
@@ -75,16 +78,18 @@ public class VerdictContext {
     this.metaStore = getCachedMetaStore(conn, options);
     initialize(options);
   }
-  
+
   private VerdictMetaStore getCachedMetaStore(DbmsConnection conn, VerdictOption option) {
-    CachedScrambleMetaStore metaStore = new CachedScrambleMetaStore(new ScrambleMetaStore(conn, options));
+    CachedScrambleMetaStore metaStore =
+        new CachedScrambleMetaStore(new ScrambleMetaStore(conn, options));
     metaStore.refreshCache();
     return metaStore;
   }
-  
+
   /**
    * Creates the schema for temp tables.
-   * @throws VerdictDBException 
+   *
+   * @throws VerdictDBException
    */
   private void initialize(VerdictOption option) throws VerdictDBException {
     String schema = option.getVerdictTempSchemaName();
@@ -113,11 +118,15 @@ public class VerdictContext {
    * @param jdbcConnectionString
    * @return
    * @throws SQLException
-   * @throws VerdictDBException 
+   * @throws VerdictDBException
    */
   public static VerdictContext fromConnectionString(String jdbcConnectionString)
       throws VerdictDBException {
-    attemptLoadDriverClass(jdbcConnectionString);
+    if (!attemptLoadDriverClass(jdbcConnectionString)) {
+      throw new VerdictDBException(
+          String.format(
+              "JDBC driver not found for the connection string: %s", jdbcConnectionString));
+    }
     VerdictOption options = new VerdictOption();
     options.parseConnectionString(jdbcConnectionString);
     return new VerdictContext(ConcurrentJdbcConnection.create(jdbcConnectionString), options);
@@ -130,11 +139,15 @@ public class VerdictContext {
    * @param info
    * @return
    * @throws SQLException
-   * @throws VerdictDBException 
+   * @throws VerdictDBException
    */
   public static VerdictContext fromConnectionString(String jdbcConnectionString, Properties info)
       throws VerdictDBException {
-    attemptLoadDriverClass(jdbcConnectionString);
+    if (!attemptLoadDriverClass(jdbcConnectionString)) {
+      throw new VerdictDBException(
+          String.format(
+              "JDBC driver not found for the connection string: %s", jdbcConnectionString));
+    }
     VerdictOption options = new VerdictOption();
     options.parseConnectionString(jdbcConnectionString);
     options.parseProperties(info);
@@ -152,12 +165,15 @@ public class VerdictContext {
    * @param password
    * @return
    * @throws SQLException
-   * @throws VerdictDBException 
+   * @throws VerdictDBException
    */
   public static VerdictContext fromConnectionString(
-      String jdbcConnectionString, String user, String password)
-      throws VerdictDBException {
-    attemptLoadDriverClass(jdbcConnectionString);
+      String jdbcConnectionString, String user, String password) throws VerdictDBException {
+    if (!attemptLoadDriverClass(jdbcConnectionString)) {
+      throw new VerdictDBException(
+          String.format(
+              "JDBC driver not found for the connection string: %s", jdbcConnectionString));
+    }
     Properties info = new Properties();
     info.setProperty("user", user);
     info.setProperty("password", password);
@@ -165,10 +181,9 @@ public class VerdictContext {
     options.parseConnectionString(jdbcConnectionString);
     return new VerdictContext(ConcurrentJdbcConnection.create(jdbcConnectionString, info), options);
   }
-  
+
   public static VerdictContext fromConnectionString(
-      String jdbcConnectionString, VerdictOption options)
-      throws VerdictDBException {
+      String jdbcConnectionString, VerdictOption options) throws VerdictDBException {
     attemptLoadDriverClass(jdbcConnectionString);
     options.parseConnectionString(jdbcConnectionString);
     return new VerdictContext(ConcurrentJdbcConnection.create(jdbcConnectionString), options);
@@ -177,7 +192,11 @@ public class VerdictContext {
   public static VerdictContext fromConnectionString(
       String jdbcConnectionString, String user, String password, VerdictOption options)
       throws VerdictDBException {
-    attemptLoadDriverClass(jdbcConnectionString);
+    if (!attemptLoadDriverClass(jdbcConnectionString)) {
+      throw new VerdictDBException(
+          String.format(
+              "JDBC driver not found for the connection string: %s", jdbcConnectionString));
+    }
     Properties info = new Properties();
     info.setProperty("user", user);
     info.setProperty("password", password);
@@ -185,22 +204,25 @@ public class VerdictContext {
     return new VerdictContext(ConcurrentJdbcConnection.create(jdbcConnectionString, info), options);
   }
 
-  private static void attemptLoadDriverClass(String jdbcConnectionString) {
+  private static boolean attemptLoadDriverClass(String jdbcConnectionString) {
     SqlSyntax syntax = SqlSyntaxList.getSyntaxFromConnectionString(jdbcConnectionString);
+    if (syntax == null) return false;
     Collection<String> driverClassNames = syntax.getCandidateJDBCDriverClassNames();
     for (String className : driverClassNames) {
       try {
         Class.forName(className);
-        //        System.out.println(className + " has been loaded into the classpath.");
+        log.debug(className + " has been loaded into the classpath.");
       } catch (ClassNotFoundException e) {
+        return false;
       }
     }
+    return true;
   }
 
   public DbmsConnection getConnection() {
     return conn;
   }
-  
+
   public void setDefaultSchema(String schema) {
     conn.setDefaultSchema(schema);
   }
@@ -252,7 +274,7 @@ public class VerdictContext {
   public ScrambleMetaSet getScrambleMetaSet() {
     return metaStore.retrieve();
   }
-  
+
   public VerdictMetaStore getMetaStore() {
     return metaStore;
   }
