@@ -514,7 +514,7 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
   }
 
   @Override
-  public UnnamedColumn getBlockForTierExpr(int tier, Map<String, Object> metaData) {
+  public UnnamedColumn getBlockExprForTier(int tier, Map<String, Object> metaData) {
     List<Double> cumulProb = getCumulativeProbabilityDistributionForTier(metaData, tier);
     List<Double> condProb = computeConditionalProbabilityDistribution(cumulProb);
     int blockCount = cumulProb.size();

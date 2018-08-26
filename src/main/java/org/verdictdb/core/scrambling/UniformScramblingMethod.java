@@ -29,8 +29,6 @@ import org.verdictdb.core.sqlobject.*;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBValueException;
 
-import static javassist.CtClass.intType;
-
 public class UniformScramblingMethod extends ScramblingMethodBase {
 
   private final String MAIN_TABLE_SOURCE_ALIAS = "t";
@@ -89,14 +87,14 @@ public class UniformScramblingMethod extends ScramblingMethodBase {
   }
 
   @Override
-  public UnnamedColumn getBlockForTierExpr(int tier, Map<String, Object> metaData) {
+  public UnnamedColumn getBlockExprForTier(int tier, Map<String, Object> metaData) {
     DbmsQueryResult tableSizeResult =
         (DbmsQueryResult) metaData.get(TableSizeCountNode.class.getSimpleName());
     tableSizeResult.next();
     long tableSize = tableSizeResult.getLong(TableSizeCountNode.TOTAL_COUNT_ALIAS_NAME);
     totalNumberOfblocks = (int) Math.ceil(tableSize / (float) blockSize);
     UnnamedColumn blockForTierExpr = ColumnOp.cast(
-        ColumnOp.floor(ColumnOp.multiply(ColumnOp.rand(), ConstantColumn.valueOf(totalNumberOfblocks))), ConstantColumn.valueOf(ConstantColumn.databaseDataType.intType));
+        ColumnOp.floor(ColumnOp.multiply(ColumnOp.rand(), ConstantColumn.valueOf(totalNumberOfblocks))), ConstantColumn.valueOf("int"));
     return blockForTierExpr;
   }
 

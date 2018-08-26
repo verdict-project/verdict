@@ -182,7 +182,7 @@ public class ScramblingNode extends CreateScrambledTableNode {
 
 
     for (int i = 0; i < tierCount; i++) {
-      UnnamedColumn blockForTierExpr = method.getBlockForTierExpr(i, metaData);
+      UnnamedColumn blockForTierExpr = method.getBlockExprForTier(i, metaData);
       /*
       List<Double> cumulProb = method.getCumulativeProbabilityDistributionForTier(metaData, i);
       List<Double> condProb = computeConditionalProbabilityDistribution(cumulProb);

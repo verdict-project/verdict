@@ -114,15 +114,7 @@ public class SelectQueryToSql {
         return quoteName(base.getColumnName());
       } else return base.getTableSourceAlias() + "." + quoteName(base.getColumnName());
     } else if (column instanceof ConstantColumn) {
-      if (((ConstantColumn) column).getValue() instanceof ConstantColumn.databaseDataType) {
-        if (((ConstantColumn) column).getValue().equals(ConstantColumn.databaseDataType.intType)) {
-          if (syntax instanceof MysqlSyntax) {
-            return "unsigned";
-          }
-          else return "int";
-        }
-      }
-      else return ((ConstantColumn) column).getValue().toString();
+      return ((ConstantColumn) column).getValue().toString();
     } else if (column instanceof AsteriskColumn) {
       return "*";
     } else if (column instanceof ColumnOp) {
@@ -309,7 +301,17 @@ public class SelectQueryToSql {
       } else if (columnOp.getOpType().equals("rand")) {
         return syntax.randFunction();
       } else if (columnOp.getOpType().equals("cast")) {
-        return "cast("
+        // MySQL cast as int should be replaced by cast as unsigned
+        if (syntax instanceof MysqlSyntax
+            && columnOp.getOperand(1) instanceof ConstantColumn
+            && ((ConstantColumn) columnOp.getOperand(1)).getValue().toString().equals("int")) {
+          return "cast("
+              + withParentheses(columnOp.getOperand(0))
+              + " as "
+              + "unsigned"
+              + ")";
+        }
+        else return "cast("
             + withParentheses(columnOp.getOperand(0))
             + " as "
             + withParentheses(columnOp.getOperand(1))

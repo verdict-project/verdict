@@ -25,8 +25,6 @@ public class ConstantColumn implements UnnamedColumn, SelectItem {
 
   private static final long serialVersionUID = -4530737413387725261L;
 
-  public enum databaseDataType {intType};
-
   Object value;
 
   public void setValue(Object value) {
