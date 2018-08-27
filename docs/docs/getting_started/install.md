@@ -50,6 +50,19 @@ You only need a single jar file. This jar file is compiled with JDK8.
     ```
     Check the `target` directory for the created jar files.
 
+    Since Maven requires JDK. Please make sure you have installed JDK. You can use command
+    ```
+    javac -version
+    ```
+    to check your java compiler version. The output should look like this
+    ```
+    $ java -version
+    openjdk version "1.8.0_171-1-ojdkbuild"
+    OpenJDK Runtime Environment (build 1.8.0_171-1-ojdkbuild-b10)
+    OpenJDK 64-Bit Server VM (build 25.171-b10, mixed mode)
+    ```
+    If not, please install JDK first and then use maven to build the file.
+
 
 ## Python
 

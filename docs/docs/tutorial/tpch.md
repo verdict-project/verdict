@@ -25,16 +25,17 @@ It will create a new directory named `tpch1g` under your work directory. The dir
 
 ### Create tables
 
-Connect to your MySQL database.
+Connect to your MySQL database. Make sure you have already added MySQL to your PATH.
 
 ```bash
 mysql --local-infile -h 127.0.0.1 -uroot
 ```
 
-Create a schema for test.
+Create a schema for test. (In mysql shell)
 
 ```bash
-mysql> create database tpch1g;
+create database tpch1g;
+use tpch1g;
 ```
 
 Create empty tables; simply copy and paste the following table definition statements into the MySQL shell. We will import the data later into these tables.
