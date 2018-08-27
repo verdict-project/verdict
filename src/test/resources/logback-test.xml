@@ -10,7 +10,7 @@
     </appender>
     <appender name="ROOT_STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-            <level>INFO</level>
+            <level>TRACE</level>
         </filter>
         <layout class="ch.qos.logback.classic.PatternLayout">
             <Pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</Pattern>
@@ -35,7 +35,7 @@
 
     <!--<statusListener class="ch.qos.logback.core.status.OnConsoleStatusListener" />-->
     <statusListener class="ch.qos.logback.core.status.NopStatusListener"/>
-    <logger name="org.verdictdb" level="debug">
+    <logger name="org.verdictdb" level="trace">
         <appender-ref ref="VERDICTDB_STDOUT"/>
     </logger>
     <root level="ERROR">

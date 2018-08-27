@@ -46,6 +46,7 @@ public class ExecutionTokenReader
   }
 
   public void takeOne() {
+    log.trace("Attempts to take a result.");
     queueBuffer = queue.take();
 
     if (queueBuffer.isFailureToken()) {
