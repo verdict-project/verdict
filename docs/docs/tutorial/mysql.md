@@ -23,7 +23,7 @@ $ docker run --rm -d --name verdictdb-mysql -p 127.0.0.1:3306:3306 -e MYSQL_DATA
 This command launches a MySQL/MariaDB instance locally using the default port of 3306.
 You can access this database as a user 'root' without passwords.
 
-if you receive error like
+if you receive this error when executing the command
 
 !!! error
     userland proxy: Bind for 0.0.0.0:3306 failed: port is already allocated
