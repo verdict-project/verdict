@@ -24,10 +24,10 @@ This command launches a MySQL/MariaDB instance locally using the default port of
 You can access this database as a user 'root' without passwords.
 
 if you receive error like
-```
-userland proxy: Bind for 0.0.0.0:3306 failed: port is already allocated
-```
-that means the port 3306 has been occupied. One possible reason is MySQL has already taken this port. You can resolve the error by turning off your host machine MySQL Damon.
+
+!!! error
+    userland proxy: Bind for 0.0.0.0:3306 failed: port is already allocated
+The cause of the error is that port 3306 has been occupied. One possible reason is MySQL has already taken this port. You can resolve the error by turning off your host machine MySQL Damon. Otherwise, you can assign another unused port, such as 3305 to resolve the problem.
 
 
 

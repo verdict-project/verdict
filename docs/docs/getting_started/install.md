@@ -52,9 +52,9 @@ You only need a single jar file. This jar file is compiled with JDK8.
 
     Since Maven requires JDK. Please make sure you have installed JDK. You can use command
     ```
-    java -version
+    javac -version
     ```
-    to check your java version. The output should look like this
+    to check your java compiler version. The output should look like this
     ```
     $ java -version
     openjdk version "1.8.0_171-1-ojdkbuild"
