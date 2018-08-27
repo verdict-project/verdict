@@ -16,14 +16,14 @@
 
 package org.verdictdb;
 
-import static org.junit.Assert.assertEquals;
+import org.junit.Test;
+import org.verdictdb.commons.VerdictOption;
+import org.verdictdb.exception.VerdictDBException;
 
 import java.sql.SQLException;
 import java.util.Properties;
 
-import org.junit.Test;
-import org.verdictdb.commons.VerdictOption;
-import org.verdictdb.exception.VerdictDBException;
+import static org.junit.Assert.assertEquals;
 
 /** Created by Dong Young Yoon on 8/9/18. */
 public class VerdictContextInitTest {
@@ -42,6 +42,20 @@ public class VerdictContextInitTest {
   private static final String MYSQL_USER = "root";
 
   private static final String MYSQL_PASSWORD = "";
+
+  @Test(expected = VerdictDBException.class)
+  public void initFromUnsupportedConnectionStringTest() throws SQLException, VerdictDBException {
+    String url =
+        String.format(
+            "jdbc:unsupporteddb://%s?autoReconnect=true&useSSL=false&"
+                + "verdictdbmetaschema=mymeta&verdictdbtempschema=mytemp",
+            MYSQL_HOST);
+    VerdictContext context = VerdictContext.fromConnectionString(url, MYSQL_USER, MYSQL_PASSWORD);
+    VerdictOption options = context.getOptions();
+
+    assertEquals("mymeta", options.getVerdictMetaSchemaName());
+    assertEquals("mytemp", options.getVerdictTempSchemaName());
+  }
 
   @Test
   public void initFromConnectionStringTest1() throws SQLException, VerdictDBException {
