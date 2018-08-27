@@ -120,9 +120,7 @@ public class UniformScramblingNodeTest {
         + "partition p1 values in (1), "
         + "partition p2 values in (2)) "
         + "select t.`id`, 0 as `tiercolumn`, "
-        + "case when (rand() <= 0.3333333333333333) then 0 "
-        + "when (rand() <= 0.49999999999999994) then 1 "
-        + "when (rand() <= 1.0) then 2 else 2 end as `blockcolumn` "
+        + "cast(floor(rand() * 3) as unsigned) as `blockcolumn` "
         + "from `oldschema`.`oldtable` as t";
     assertEquals(expected, sql);
     mysqlConn.createStatement().execute("drop table if exists newschema.newtable");

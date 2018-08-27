@@ -179,7 +179,11 @@ public class ScramblingNode extends CreateScrambledTableNode {
     // compose block expression
     UnnamedColumn blockExpr = null;
     List<UnnamedColumn> blockOperands = new ArrayList<>();
+
+
     for (int i = 0; i < tierCount; i++) {
+      UnnamedColumn blockForTierExpr = method.getBlockExprForTier(i, metaData);
+      /*
       List<Double> cumulProb = method.getCumulativeProbabilityDistributionForTier(metaData, i);
       List<Double> condProb = computeConditionalProbabilityDistribution(cumulProb);
       int blockCount = cumulProb.size();
@@ -191,19 +195,20 @@ public class ScramblingNode extends CreateScrambledTableNode {
         blockForTierOperands.add(ConstantColumn.valueOf(j));
       }
       UnnamedColumn blockForTierExpr;
-      ;
+
       if (blockForTierOperands.size() <= 1) {
         blockForTierExpr = ConstantColumn.valueOf(0);
       } else {
         blockForTierExpr = ColumnOp.casewhen(blockForTierOperands);
       }
-
+      */
       if (i < tierCount - 1) {
         // "when" part in the case-when-else expression
         // for the last tier, we don't need this "when" part
         blockOperands.add(ColumnOp.equal(tierExpr, ConstantColumn.valueOf(i)));
       }
       blockOperands.add(blockForTierExpr);
+
     }
 
     // use a simple (non-nested) case expression when there is only a single tier
@@ -233,7 +238,7 @@ public class ScramblingNode extends CreateScrambledTableNode {
    * @param cumulativeProbabilityDistribution
    * @return
    */
-  List<Double> computeConditionalProbabilityDistribution(
+  static List<Double> computeConditionalProbabilityDistribution(
       List<Double> cumulativeProbabilityDistribution) {
     List<Double> cond = new ArrayList<>();
     int length = cumulativeProbabilityDistribution.size();

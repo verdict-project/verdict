@@ -38,6 +38,7 @@ import org.verdictdb.core.sqlobject.UnnamedColumn;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBTypeException;
 import org.verdictdb.exception.VerdictDBValueException;
+import org.verdictdb.sqlsyntax.MysqlSyntax;
 import org.verdictdb.sqlsyntax.PostgresqlSyntax;
 import org.verdictdb.sqlsyntax.SqlSyntax;
 
@@ -300,7 +301,17 @@ public class SelectQueryToSql {
       } else if (columnOp.getOpType().equals("rand")) {
         return syntax.randFunction();
       } else if (columnOp.getOpType().equals("cast")) {
-        return "cast("
+        // MySQL cast as int should be replaced by cast as unsigned
+        if (syntax instanceof MysqlSyntax
+            && columnOp.getOperand(1) instanceof ConstantColumn
+            && ((ConstantColumn) columnOp.getOperand(1)).getValue().toString().equals("int")) {
+          return "cast("
+              + withParentheses(columnOp.getOperand(0))
+              + " as "
+              + "unsigned"
+              + ")";
+        }
+        else return "cast("
             + withParentheses(columnOp.getOperand(0))
             + " as "
             + withParentheses(columnOp.getOperand(1))
