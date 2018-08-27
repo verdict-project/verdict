@@ -1,5 +1,5 @@
 site_name: VerdictDB Docs
-site_url: 'https://verdictdb.org/'
+site_url: 'https://docs.verdictdb.org/'
 
 copyright: 'Copyright &copy; 2018 The University of Michigan'
 
@@ -19,8 +19,8 @@ pages:
     - Setup MySQL (Optional): tutorial/mysql.md
     - Setup TPC-H Data: tutorial/tpch.md
     - Example VerdictDB Application: tutorial/example.md
-  - Reference:
-    - VerdictDB Queries: reference/supported_queries.md
+  # - Reference:
+  #   - VerdictDB Queries: reference/supported_queries.md
 
 # Appearance
 theme:
