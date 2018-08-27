@@ -53,6 +53,12 @@ public class ConstantColumn implements UnnamedColumn, SelectItem {
     return c;
   }
 
+  public static ConstantColumn valueOf(Object value) {
+    ConstantColumn c = new ConstantColumn();
+    c.setValue(value);
+    return c;
+  }
+
   @Override
   public int hashCode() {
     return HashCodeBuilder.reflectionHashCode(this);
