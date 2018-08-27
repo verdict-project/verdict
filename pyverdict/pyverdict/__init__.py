@@ -1,7 +1,6 @@
-import os 
-from .jvm import JVM
-from .resultset import ResultSet
-from .verdictcontext import VerdictContext
+import os
+from verdictcontext import VerdictContext
+from resultset import ResultSet
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 LIB_DIR = os.path.join(ROOT_DIR, 'lib')

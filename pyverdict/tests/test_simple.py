@@ -1,14 +1,12 @@
-from pyverdict.jvm import JVM
-from pyverdict.resultset import ResultSet
-from pyverdict.verdictcontext import VerdictContext
+import pyverdict as pv
 
 def main():
-    jvm = JVM() # call this only once
-    gateway = jvm.connect()
-    conn = VerdictContext(gateway, 'localhost', 3306, 'instacart', 'root', '')
-    result = conn.sql('select count(1) from instacart.orders_joined')
+    vc = pv.VerdictContext('jdbc:mysql://localhost:3306, 'root', '')
+    vc.sql('CREATE SCHEMA pyverdict_simple_test')
+    vc.sql('CREATE TABLE pyverdict_simple_test.test (id INT)')
+    vc.sql('INSERT INTO pyverdict_simple_test.test SELECT 1')
+    vc.sql('SELECT COUNT(1) from pyverdict_simple_test.test')
     result.parse()
-    jvm.stop()
 
 if __name__ == '__main__':
     main()
