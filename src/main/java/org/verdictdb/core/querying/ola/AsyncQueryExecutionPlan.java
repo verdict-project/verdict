@@ -551,12 +551,16 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
     for (SelectItem selectItem : selectList) {
       if (selectItem instanceof AliasedColumn) {
         AliasedColumn ac = (AliasedColumn) selectItem;
+        String aliasPrefix = "";
         // Simply add the select item if it is HAVING condition used by outer query.
-        if (ac.getAliasName().startsWith(AsyncAggExecutionNode.getHavingConditionAlias())
-            || ac.getAliasName().startsWith(AsyncAggExecutionNode.getGroupByAlias())
-            || ac.getAliasName().startsWith(AsyncAggExecutionNode.getOrderByAlias())) {
-          newSelectlist.add(ac);
-          continue;
+        if (ac.getAliasName().startsWith(AsyncAggExecutionNode.getHavingConditionAlias())) {
+          aliasPrefix = AsyncAggExecutionNode.getHavingConditionAlias();
+        } else if (ac.getAliasName().startsWith(AsyncAggExecutionNode.getGroupByAlias())) {
+          aliasPrefix = AsyncAggExecutionNode.getGroupByAlias();
+        } else if (ac.getAliasName().startsWith(AsyncAggExecutionNode.getOrderByAlias())) {
+          aliasPrefix = AsyncAggExecutionNode.getOrderByAlias();
+        } else {
+          aliasPrefix = "agg";
         }
         List<ColumnOp> columnOps = getAggregateColumn(((AliasedColumn) selectItem).getColumn());
         // If it contains agg columns
@@ -567,23 +571,27 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
               if (!meta.getAggColumnAggAliasPair()
                   .containsKey(new ImmutablePair<>("sum", col.getOperand(0)))) {
                 ColumnOp col1 = new ColumnOp("sum", col.getOperand(0));
-                newSelectlist.add(new AliasedColumn(col1, "agg" + aggColumnIdentiferNum));
+                newSelectlist.add(new AliasedColumn(col1, aliasPrefix + aggColumnIdentiferNum));
                 meta.getAggColumnAggAliasPair()
                     .put(
                         new ImmutablePair<>("sum", col1.getOperand(0)),
-                        "agg" + aggColumnIdentiferNum);
-                aggColumnAlias.add("agg" + aggColumnIdentiferNum++);
+                        aliasPrefix + aggColumnIdentiferNum);
+                aggColumnAlias.add(aliasPrefix + aggColumnIdentiferNum++);
+              } else {
+                ColumnOp col1 = new ColumnOp("sum", col.getOperand(0));
+                newSelectlist.add(new AliasedColumn(col1, aliasPrefix + aggColumnIdentiferNum));
+                aggColumnAlias.add(aliasPrefix + aggColumnIdentiferNum++);
               }
               if (!meta.getAggColumnAggAliasPair()
                   .containsKey(
                       new ImmutablePair<>("count", (UnnamedColumn) new AsteriskColumn()))) {
                 ColumnOp col2 = new ColumnOp("count", new AsteriskColumn());
-                newSelectlist.add(new AliasedColumn(col2, "agg" + aggColumnIdentiferNum));
+                newSelectlist.add(new AliasedColumn(col2, aliasPrefix + aggColumnIdentiferNum));
                 meta.getAggColumnAggAliasPair()
                     .put(
                         new ImmutablePair<>("count", (UnnamedColumn) new AsteriskColumn()),
-                        "agg" + aggColumnIdentiferNum);
-                aggColumnAlias.add("agg" + aggColumnIdentiferNum++);
+                        aliasPrefix + aggColumnIdentiferNum);
+                aggColumnAlias.add(aliasPrefix + aggColumnIdentiferNum++);
               }
             } else if (col.getOpType().equals("count") || col.getOpType().equals("sum")) {
               if (col.getOpType().equals("count")
@@ -591,22 +599,22 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
                       .containsKey(
                           new ImmutablePair<>("count", (UnnamedColumn) (new AsteriskColumn())))) {
                 ColumnOp col1 = new ColumnOp(col.getOpType());
-                newSelectlist.add(new AliasedColumn(col1, "agg" + aggColumnIdentiferNum));
+                newSelectlist.add(new AliasedColumn(col1, aliasPrefix + aggColumnIdentiferNum));
                 meta.getAggColumnAggAliasPair()
                     .put(
                         new ImmutablePair<>(col.getOpType(), (UnnamedColumn) new AsteriskColumn()),
-                        "agg" + aggColumnIdentiferNum);
-                aggColumnAlias.add("agg" + aggColumnIdentiferNum++);
+                        aliasPrefix + aggColumnIdentiferNum);
+                aggColumnAlias.add(aliasPrefix + aggColumnIdentiferNum++);
               } else if (col.getOpType().equals("sum")
                   && !meta.getAggColumnAggAliasPair()
                       .containsKey(new ImmutablePair<>(col.getOpType(), col.getOperand(0)))) {
                 ColumnOp col1 = new ColumnOp(col.getOpType(), col.getOperand(0));
-                newSelectlist.add(new AliasedColumn(col1, "agg" + aggColumnIdentiferNum));
+                newSelectlist.add(new AliasedColumn(col1, aliasPrefix + aggColumnIdentiferNum));
                 meta.getAggColumnAggAliasPair()
                     .put(
                         new ImmutablePair<>(col.getOpType(), col1.getOperand(0)),
-                        "agg" + aggColumnIdentiferNum);
-                aggColumnAlias.add("agg" + aggColumnIdentiferNum++);
+                        aliasPrefix + aggColumnIdentiferNum);
+                aggColumnAlias.add(aliasPrefix + aggColumnIdentiferNum++);
               }
             } else if (col.getOpType().equals("max") || col.getOpType().equals("min")) {
               ColumnOp col1 = new ColumnOp(col.getOpType(), col.getOperand(0));
@@ -614,8 +622,8 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
               meta.getAggColumnAggAliasPairOfMaxMin()
                   .put(
                       new ImmutablePair<>(col.getOpType(), col1.getOperand(0)),
-                      "agg" + aggColumnIdentiferNum);
-              maxminAlias.put("agg" + aggColumnIdentiferNum++, col.getOpType());
+                      aliasPrefix + aggColumnIdentiferNum);
+              maxminAlias.put(aliasPrefix + aggColumnIdentiferNum++, col.getOpType());
             }
           }
         } else {

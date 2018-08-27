@@ -174,10 +174,18 @@ public class AsyncAggExecutionNode extends ProjectionNode {
     }
     if (originalAggQuery.getHaving().isPresent()) {
       //      node.selectQuery.addHavingByAnd(originalAggQuery.getHaving().get());
-      node.selectQuery.addHavingByAnd(
-          ColumnOp.equal(
-              BaseColumn.create(TIER_CONSOLIDATED_TABLE_ALIAS, HAVING_CONDITION_ALIAS),
-              ConstantColumn.valueOf("TRUE")));
+      // Add Having from its select list
+      for (SelectItem item : node.selectQuery.getSelectList()) {
+        if (item instanceof AliasedColumn) {
+          AliasedColumn ac = (AliasedColumn) item;
+          if (ac.getAliasName().startsWith(HAVING_CONDITION_ALIAS)) {
+            node.selectQuery.addHavingByAnd(
+                ColumnOp.equal(
+                    BaseColumn.create(TIER_CONSOLIDATED_TABLE_ALIAS, ac.getAliasName()),
+                    ConstantColumn.valueOf("TRUE")));
+          }
+        }
+      }
     }
 
     return node;

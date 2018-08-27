@@ -114,10 +114,26 @@ public class RedshiftUniformScramblingQueryTest {
   }
 
   @Test
+  public void runSimpleAggQueryTest() throws SQLException {
+    String sql =
+        String.format(
+            "SELECT AVG(\"orders\".\"o_totalprice\") as \"avg_price\"\n"
+                + "FROM \"%s\".\"orders\" \"orders\"\n",
+            SCHEMA_NAME, SCHEMA_NAME);
+    ResultSet rs1 = vc.createStatement().executeQuery(sql);
+    ResultSet rs2 = conn.createStatement().executeQuery(sql);
+    while (rs1.next() && rs2.next()) {
+      assertEquals(rs1.getInt(1), rs2.getInt(1));
+      System.out.println(String.format("%d : %d", rs1.getInt(1), rs2.getInt(1)));
+    }
+    assertEquals(rs1.next(), rs2.next());
+  }
+
+  @Test
   public void runQueryWithHavingTest() throws SQLException {
     String sql =
         String.format(
-            "SELECT COUNT(\"orders\".\"o_orderkey\") as \"cnt\"\n"
+            "SELECT AVG(\"orders\".\"o_totalprice\") as \"avg_price\"\n"
                 + "FROM \"%s\".\"orders\" \"orders\"\n"
                 + "GROUP BY o_orderstatus\n"
                 + "HAVING avg(\"orders\".\"o_totalprice\") >\n"
