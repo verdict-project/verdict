@@ -10,15 +10,15 @@ VerdictDB is a thin, platform-independent, interactive analytics library that wo
 ## Contents
 
 1. Getting Started
-    - [Quickstart](/getting_started/quickstart.md)
-    - [Install / Download](/getting_started/install.md)
-    - [Connecting to Databases](/getting_started/connection.md)
-    - [Scrambling](/getting_started/scrambling.md)
-    - [Interactive Querying](/getting_started/querying.md)
+    - [Quickstart](/getting_started/quickstart)
+    - [Install / Download](/getting_started/install)
+    - [Connecting to Databases](/getting_started/connection)
+    - [Scrambling](/getting_started/scrambling)
+    - [Interactive Querying](/getting_started/querying)
 1. How it works
-    - [Basic Idea](/how_it_works/basic_idea.md)
-    - [Architecture](/how_it_works/architecture.md)
-    - [Query Processing](/how_it_works/query_processing.md)
+    - [Basics](/how_it_works/basics)
+    - [Architecture](/how_it_works/architecture)
+    - [Query Processing](/how_it_works/query_processing)
 1. Tutorial
     - [Setting up TPC-H data](/tutorial/tpch/)
 
