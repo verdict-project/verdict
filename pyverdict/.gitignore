@@ -9,3 +9,5 @@
 
 #virtualenv file
 env/
+
+build/

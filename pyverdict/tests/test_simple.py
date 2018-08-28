@@ -8,5 +8,8 @@ def main():
     result = vc.sql('SELECT COUNT(1) from pyverdict_simple_test.test')
     result.parse()
 
+    result = vc.sql('SELECT COUNT(1) from instacart.orders_joined')
+    result.parse()
+
 if __name__ == '__main__':
     main()
