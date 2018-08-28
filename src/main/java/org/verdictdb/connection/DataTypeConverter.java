@@ -149,6 +149,7 @@ public class DataTypeConverter {
     stringToIntMap.put("smallserial", INTEGER);
     stringToIntMap.put("serial", INTEGER);
     stringToIntMap.put("bigserial", BIGINT);
+    stringToIntMap.put("bigint unsigned", BIGINT);
     stringToIntMap.put("string", VARCHAR);
     stringToIntMap.put("datetime", TIMESTAMP);
     stringToIntMap.put("timestamp", TIMESTAMP);
