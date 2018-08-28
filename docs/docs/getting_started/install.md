@@ -56,10 +56,8 @@ You only need a single jar file. This jar file is compiled with JDK8.
     ```
     to check your java compiler version. The output should look like this
     ```
-    $ java -version
-    openjdk version "1.8.0_171-1-ojdkbuild"
-    OpenJDK Runtime Environment (build 1.8.0_171-1-ojdkbuild-b10)
-    OpenJDK 64-Bit Server VM (build 25.171-b10, mixed mode)
+    $ javac -version
+    javac 1.8.0_171-1-ojdkbuild
     ```
     If not, please install JDK first and then use maven to build the file.
 
