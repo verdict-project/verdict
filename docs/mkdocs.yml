@@ -12,15 +12,17 @@ pages:
     - Connecting to Data Sources: getting_started/connection.md
     - Creating Scrambles: getting_started/scrambling.md
     - Interactive Querying: getting_started/querying.md
+    - Result Structure: getting_started/results.md
   - How it works:
     - Basics: how_it_works/basics.md
     - Architecture: how_it_works/architecture.md
     - Query Processing: how_it_works/query_processing.md
   - Tutorial:
     - Setup MySQL (Optional): tutorial/mysql.md
-    - Setup TPC-H Data: tutorial/tpch.md
+    - Load TPC-H Data: tutorial/tpch.md
     - Example VerdictDB Application: tutorial/example.md
-  # - Reference:
+  - Reference:
+    - Javadoc: reference/javadoc.md
   #   - VerdictDB Queries: reference/supported_queries.md
 
 # Appearance

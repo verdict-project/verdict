@@ -2,6 +2,7 @@ package org.verdictdb.core.querying.simplifier;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map.Entry;
 
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.core.execplan.ExecutionInfoToken;
@@ -187,7 +188,13 @@ public class DirectRetrievalExecutionNode extends QueryNodeWithPlaceHolders {
   public SqlConvertible createQuery(List<ExecutionInfoToken> tokens) throws VerdictDBException {
     // this will replace the placeholders contained the subquery.
     childNode.createQuery(tokens);
-    parentNode.createQuery(tokens);
+    ExecutionInfoToken childToken = childNode.createToken(null);
+    
+    // also pass the tokens possibly created by child.
+    List<ExecutionInfoToken> newTokens = new ArrayList<>();
+    newTokens.addAll(tokens);
+    newTokens.add(childToken);
+    parentNode.createQuery(newTokens);
     return selectQuery;
   }
   

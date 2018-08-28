@@ -2,9 +2,7 @@
 
 ## Introduction
 
-VerdictDB is a thin, platform-independent, interactive analytics library that works on top of your existing (or backend) database system (e.g., MySQL, PostgreSQL, Redshift, etc.). For platform-independence, VerdictDB makes all communications with the backend database in SQL. For interactive querying, VerdictDB has the ability to properly adjust the output values even when only a fraction of the data is processed. The initial outputs are already pretty accurate, and they can become more accurate (naturally) as more data is processed. These partial (and incremental) data processing are performed automatically by VerdictDB using query rewriting. The connections to VerdictDB can be made in Java.
-
-*Note: Python interface will be soon added.*
+VerdictDB is a thin, platform-independent, interactive analytics library that works on top of your existing (or backend) database system (e.g., MySQL, PostgreSQL, Redshift, etc.). For platform-independence, VerdictDB makes all communications with the backend database in SQL. For interactive querying, VerdictDB intelligently **infers** the query answers based on the results processed on a part of the original data. Those inferred answers are highly accurate estimators of the exact answers. Furthermore, *even when only exact answers are needed*, VerdictDB can also be useful with its **streaming sql engine**. The streaming sql engine provides interactive-speed feedbacks in the process of computing exact answers. See [this page](/how_it_works/basics) if you want to know more about VerdictDB's internal mechanism.
 
 
 ## Contents
@@ -15,14 +13,18 @@ VerdictDB is a thin, platform-independent, interactive analytics library that wo
     - [Connecting to Databases](/getting_started/connection)
     - [Scrambling](/getting_started/scrambling)
     - [Interactive Querying](/getting_started/querying)
-1. How it works
+    - [Result Structure](/getting_started/results)
+1. How VerdictDB works
     - [Basics](/how_it_works/basics)
     - [Architecture](/how_it_works/architecture)
     - [Query Processing](/how_it_works/query_processing)
 1. Tutorial
-    - [Setting up TPC-H data](/tutorial/tpch/)
+    - [Setting up MySQL database](/tutorial/mysql)
+    - [Setting up TPC-H data](/tutorial/tpch)
+    - [An example Java application](/tutorial/example)
+
 
 
 ## License
 
-VerdictDB is under the Apache License, thus is completely free for both commercial and non-commercial purposes.
+VerdictDB is under [the Apache License](https://www.apache.org/licenses/LICENSE-2.0), thus is completely free for both commercial and non-commercial purposes.
