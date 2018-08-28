@@ -19,6 +19,7 @@ package org.verdictdb.commons;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.net.URL;
 import java.sql.Array;
 import java.sql.Blob;
@@ -129,6 +130,9 @@ public abstract class AttributeValueRetrievalHelper {
         return 0;
       }
     }
+    else if (value instanceof BigInteger) {
+      return ((BigInteger) value).intValue();
+    }
     return TypeCasting.toInteger(value);
   }
 
@@ -149,6 +153,9 @@ public abstract class AttributeValueRetrievalHelper {
       } else if (v.equals("f") || v.equals("false")) {
         return 0;
       }
+    }
+    else if (value instanceof BigInteger) {
+      return ((BigInteger) value).longValue();
     }
     return TypeCasting.toLong(value);
   }
