@@ -95,6 +95,14 @@ public class UniformScramblingMethod extends ScramblingMethodBase {
     totalNumberOfblocks = (int) Math.ceil(tableSize / (float) blockSize);
     UnnamedColumn blockForTierExpr = ColumnOp.cast(
         ColumnOp.floor(ColumnOp.multiply(ColumnOp.rand(), ConstantColumn.valueOf(totalNumberOfblocks))), ConstantColumn.valueOf("int"));
+
+    // store the cumulative probability
+    List<Double> prob = new ArrayList<>();
+    for (int i = 0; i < totalNumberOfblocks; i++) {
+      prob.add((i + 1) / (double) totalNumberOfblocks);
+    }
+    storeCumulativeProbabilityDistribution(tier, prob);
+
     return blockForTierExpr;
   }
 
