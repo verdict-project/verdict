@@ -19,7 +19,7 @@ import org.verdictdb.exception.VerdictDBValueException;
 
 public class AggMetaTest {
   
-  //@Test
+  @Test
   public void testTierCombinationTwoTableMultiTier() throws VerdictDBValueException {
     String schemaName1 = "new_schema1";
     String tableName1 = "new_table1";
